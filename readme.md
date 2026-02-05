@@ -24,7 +24,4 @@ Shared infrastructure lives under `packages/`.
   styled with Tailwind CSS.
 - `packages/config` contains shared TypeScript configuration.
 
-Each app and package contains its own README with implementation-level details.
-This file exists only to describe structure and boundaries.
-
 The project is led by @totallynotdavid.
