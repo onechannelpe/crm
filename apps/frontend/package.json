@@ -1,0 +1,25 @@
+{
+  "name": "a-solid-crm",
+  "type": "module",
+  "scripts": {
+    "dev": "bun --bun vinxi dev",
+    "build": "bun --bun vinxi build",
+    "start": "bun --bun vinxi start",
+    "format": "biome format --write",
+    "format:md": "bun x prettier \"**/*.{md,yml,yaml}\" --write --print-width=80 --prose-wrap=always"
+  },
+  "dependencies": {
+    "@oslojs/crypto": "^1.0.1",
+    "@oslojs/encoding": "^1.1.0",
+    "@solidjs/router": "^0.15.0",
+    "@solidjs/start": "^1.1.0",
+    "solid-js": "^1.9.5",
+    "vinxi": "^0.5.7"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.7",
+    "@types/bun": "^1.3.8",
+    "bun-types": "^1.3.8",
+    "tailwindcss": "^4.0.7"
+  }
+}
