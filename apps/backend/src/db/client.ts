@@ -1,14 +1,14 @@
-import SQLite from "better-sqlite3";
-import { Kysely, SqliteDialect } from "kysely";
+import { Kysely } from "kysely";
+import { BunWorkerDialect } from "kysely-bun-worker";
 import type { Database } from "./schema";
 
-const sqlite = new SQLite("core.db");
-
-sqlite.pragma("PRAGMA journal_mode = WAL");
-sqlite.pragma("PRAGMA foreign_keys = ON");
-
 export const db = new Kysely<Database>({
-	dialect: new SqliteDialect({
-		database: sqlite,
+	dialect: new BunWorkerDialect({
+		url: "core.db",
+		cacheStatment: true,
+		worker: new Worker(new URL("./worker.ts", import.meta.url).href, {
+			type: "module",
+		}),
+		dbOptions: { strict: true, create: true },
 	}),
 });
