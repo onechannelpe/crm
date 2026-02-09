@@ -24,7 +24,7 @@ app.route("/api/interactions", interactions);
 app.route("/api/team", team);
 
 export default {
-  // port: 3000,
+  port: 3001,
   hostname: "127.0.0.1",
   fetch: app.fetch,
 };
