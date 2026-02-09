@@ -1,6 +1,13 @@
 "use server";
 
 import { getCookie } from "vinxi/http";
+import {
+  ChargeNote,
+  Product,
+  RejectionLog,
+  User,
+  LeadAssignment,
+} from "../shared/types";
 
 const API_URL = "http://127.0.0.1:3001/api";
 
@@ -76,7 +83,7 @@ export async function completeLead(id: number) {
   return serverFetch(`/leads/${id}/complete`, { method: "POST" });
 }
 
-export async function getProducts() {
+export async function getProducts(): Promise<Product[]> {
   return serverFetch("/sales/products");
 }
 
@@ -98,7 +105,7 @@ export async function addChargeNoteItem(
   });
 }
 
-export async function submitChargeNote(noteId: number) {
+export async function submitChargeNote(noteId: number): Promise<void> {
   return serverFetch(`/sales/${noteId}/submit`, { method: "POST" });
 }
 
@@ -106,7 +113,7 @@ export async function getPendingSales() {
   return serverFetch("/sales/pending");
 }
 
-export async function getChargeNote(id: number) {
+export async function getChargeNote(id: number): Promise<ChargeNote> {
   return serverFetch(`/sales/${id}`);
 }
 
@@ -128,7 +135,9 @@ export async function getRejectedSales() {
   return serverFetch("/sales/my-rejected");
 }
 
-export async function getChargeNoteRejections(id: number) {
+export async function getChargeNoteRejections(
+  id: number,
+): Promise<RejectionLog[]> {
   return serverFetch(`/sales/${id}/rejections`);
 }
 

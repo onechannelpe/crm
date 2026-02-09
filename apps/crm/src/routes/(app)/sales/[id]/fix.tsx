@@ -2,32 +2,15 @@ import {
   query,
   createAsync,
   action,
-  redirect,
   useParams,
 } from "@solidjs/router";
 import { For, Show } from "solid-js";
-import {
-  getChargeNote,
-  getChargeNoteRejections,
-  submitChargeNote,
-} from "~/lib/server/api";
+import { SalesService } from "~/lib/server/services/sales";
 import Button from "~/components/shared/button";
 
-const loadSale = query(async (id: string) => {
-  "use server";
-  return getChargeNote(Number(id));
-}, "sale");
-
-const loadRejections = query(async (id: string) => {
-  "use server";
-  return getChargeNoteRejections(Number(id));
-}, "rejections");
-
-const resubmitAction = action(async (noteId: number) => {
-  "use server";
-  await submitChargeNote(noteId);
-  throw redirect("/search");
-});
+const loadSale = query(SalesService.getSale, "sale");
+const loadRejections = query(SalesService.getRejections, "rejections");
+const resubmitAction = action(SalesService.resubmitForValidation, "resubmitSale");
 
 export const route = {
   preload: ({ params }: { params: { id: string } }) => {
@@ -37,7 +20,7 @@ export const route = {
 };
 
 export default function FixSale() {
-  const params = useParams();
+  const params = useParams<{ id: string }>();
   const sale = createAsync(() => loadSale(params.id));
   const rejections = createAsync(() => loadRejections(params.id));
 
@@ -107,11 +90,11 @@ export default function FixSale() {
           Cancelar
         </Button>
         <form
-          action={resubmitAction}
+          action={resubmitAction.with(params.id)}
           method="post"
           onSubmit={(e) => {
             e.preventDefault();
-            resubmitAction(Number(params.id));
+            resubmitAction(params.id);
           }}
         >
           <Button type="submit">Reenviar para validación</Button>
