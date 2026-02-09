@@ -1,5 +1,5 @@
 import { db } from "../../db/client";
-import { requestUnassignedLeads, markLeadsAssigned } from "./engine-client";
+import { markLeadsAssigned, requestUnassignedLeads } from "./engine-client";
 
 const DEFAULT_BUFFER_SIZE = 10;
 const ASSIGNMENT_TTL = 24 * 60 * 60 * 1000;
