@@ -1,5 +1,5 @@
-import { db } from "./client";
 import { hashPassword } from "../modules/auth/password";
+import { db } from "./client";
 
 export async function seed() {
 	await db

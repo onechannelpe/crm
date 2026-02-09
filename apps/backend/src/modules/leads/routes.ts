@@ -1,11 +1,11 @@
 import { Hono } from "hono";
 import { requireRole } from "../auth/rbac";
 import {
-	getActiveAssignments,
 	assignLeads,
 	completeAssignment,
+	getActiveAssignments,
 } from "./assignment";
-import { searchLeads, getLeadDetails } from "./engine-client";
+import { getLeadDetails, searchLeads } from "./engine-client";
 
 const leads = new Hono();
 

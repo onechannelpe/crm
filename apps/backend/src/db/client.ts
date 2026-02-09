@@ -1,5 +1,5 @@
-import { Kysely, SqliteDialect } from "kysely";
 import SQLite from "better-sqlite3";
+import { Kysely, SqliteDialect } from "kysely";
 import type { Database } from "./schema";
 
 const sqlite = new SQLite("core.db");

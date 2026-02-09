@@ -1,10 +1,10 @@
 import { Hono } from "hono";
-import { setCookie, deleteCookie } from "hono/cookie";
+import { deleteCookie, setCookie } from "hono/cookie";
 import { db } from "../../db/client";
 import { verifyPassword } from "./password";
 import {
-	generateSessionToken,
 	createSession,
+	generateSessionToken,
 	invalidateSession,
 } from "./session";
 

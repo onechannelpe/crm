@@ -1,4 +1,4 @@
-import type { ColumnType, Selectable, Insertable } from "kysely";
+import type { ColumnType, Insertable, Selectable } from "kysely";
 
 export interface Database {
 	users: UsersTable;
