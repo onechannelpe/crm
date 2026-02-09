@@ -1,7 +1,10 @@
 {
 	"name": "crm-backend",
+	"type": "module",
 	"scripts": {
-		"dev": "bun run --hot src/index.ts"
+		"dev": "bun --hot --env-file=../../.env src/index.ts",
+		"start": "bun --env-file=../../.env src/index.ts",
+		"seed": "bun --env-file=../../.env src/seed.ts"
 	},
 	"dependencies": {
 		"@oslojs/crypto": "^1.0.1",
