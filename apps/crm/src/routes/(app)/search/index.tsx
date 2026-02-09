@@ -1,5 +1,5 @@
 import {
-  cache,
+  query,
   createAsync,
   action,
   revalidate,
@@ -14,7 +14,7 @@ import LeadCard from "~/components/leads/lead-card";
 import Button from "~/components/shared/button";
 import EmptyState from "~/components/shared/empty-state";
 
-const loadLeads = cache(async () => {
+const loadLeads = query(async () => {
   "use server";
   return getActiveLeads();
 }, "leads");

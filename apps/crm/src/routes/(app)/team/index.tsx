@@ -1,9 +1,9 @@
-import { cache, createAsync } from "@solidjs/router";
+import { query, createAsync } from "@solidjs/router";
 import { For, Show } from "solid-js";
 import { getTeamUsers } from "~/lib/server/api";
 import EmptyState from "~/components/shared/empty-state";
 
-const loadTeamUsers = cache(async () => {
+const loadTeamUsers = query(async () => {
   "use server";
   return getTeamUsers();
 }, "team-users");

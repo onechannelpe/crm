@@ -1,5 +1,5 @@
 import {
-  cache,
+  query,
   createAsync,
   action,
   redirect,
@@ -17,7 +17,7 @@ import ItemList from "~/components/sales/item-list";
 import Button from "~/components/shared/button";
 import type { ChargeNoteItem } from "~/lib/shared/types";
 
-const loadProducts = cache(async () => {
+const loadProducts = query(async () => {
   "use server";
   return getProducts();
 }, "products");

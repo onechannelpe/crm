@@ -1,5 +1,5 @@
 import {
-  cache,
+  query,
   createAsync,
   action,
   redirect,
@@ -13,12 +13,12 @@ import {
 } from "~/lib/server/api";
 import Button from "~/components/shared/button";
 
-const loadSale = cache(async (id: string) => {
+const loadSale = query(async (id: string) => {
   "use server";
   return getChargeNote(Number(id));
 }, "sale");
 
-const loadRejections = cache(async (id: string) => {
+const loadRejections = query(async (id: string) => {
   "use server";
   return getChargeNoteRejections(Number(id));
 }, "rejections");
