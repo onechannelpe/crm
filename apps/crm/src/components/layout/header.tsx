@@ -1,9 +1,9 @@
 import { A, useAction } from "@solidjs/router";
-import { cache, createAsync, action, redirect } from "@solidjs/router";
+import { query, createAsync, action, redirect } from "@solidjs/router";
 import { getMe, logout as logoutApi } from "~/lib/server/api";
 import { deleteCookie } from "vinxi/http";
 
-const loadUser = cache(async () => {
+const loadUser = query(async () => {
   "use server";
   return getMe();
 }, "user");

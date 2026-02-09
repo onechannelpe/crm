@@ -1,4 +1,4 @@
-import { cache, createAsync, action, revalidate } from "@solidjs/router";
+import { query, createAsync, action, revalidate } from "@solidjs/router";
 import { createSignal, For, Show } from "solid-js";
 import {
   getPendingSales,
@@ -9,7 +9,7 @@ import Button from "~/components/shared/button";
 import RejectionForm from "~/components/sales/rejection-form";
 import EmptyState from "~/components/shared/empty-state";
 
-const loadPendingSales = cache(async () => {
+const loadPendingSales = query(async () => {
   "use server";
   return getPendingSales();
 }, "pending-sales");
