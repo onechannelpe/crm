@@ -77,6 +77,7 @@ auth.post("/login", async (c) => {
 
   const response = {
     success: true,
+    token,
     user: {
       id: user.id,
       email: user.email,
@@ -215,6 +216,7 @@ auth.post("/passkey/login/verify", async (c) => {
 
   return c.json({
     success: true,
+    token,
     user: {
       id: user.id,
       email: user.email,

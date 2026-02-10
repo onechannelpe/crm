@@ -3,22 +3,19 @@ import { createMiddleware } from "@solidjs/start/middleware";
 import { getCookie } from "vinxi/http";
 
 export default createMiddleware({
-  onRequest: [
-    (event) => {
-      const url = new URL(event.request.url);
-      const isPublic =
-        url.pathname.startsWith("/login") ||
-        url.pathname.startsWith("/_") ||
-        url.pathname.includes(".");
+  onRequest: (event) => {
+    const url = new URL(event.request.url);
+    const isPublic =
+      url.pathname.startsWith("/login") ||
+      url.pathname.startsWith("/auth") ||
+      url.pathname.startsWith("/_") ||
+      url.pathname.includes(".");
 
-      const session = getCookie(event.nativeEvent, "session");
-      if (session) {
-        event.locals.session = session;
-      }
+    if (isPublic) return;
 
-      if (!isPublic && !session) {
-        return redirect("/login");
-      }
-    },
-  ],
+    const hasSession = !!getCookie(event.nativeEvent, "session");
+    if (!hasSession) {
+      return redirect("/login");
+    }
+  },
 });

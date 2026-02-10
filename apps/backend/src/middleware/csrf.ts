@@ -27,7 +27,20 @@ export async function csrfMiddleware(c: Context, next: Next) {
   }
 
   const origin = c.req.header("origin");
+
+  // Allow server-to-server calls without Origin header
+  // Server-side fetch (Node/Bun) doesn't include Origin by default
   if (!origin) {
+    const host = c.req.header("host");
+    // In development, allow same-host requests without Origin (server-to-server)
+    // In production, this should be replaced with a shared secret or specific header check
+    const isLocalhost =
+      host?.includes("localhost") || host?.includes("127.0.0.1");
+
+    if (isLocalhost) {
+      await next();
+      return;
+    }
     return c.json({ error: "Forbidden" }, 403);
   }
 

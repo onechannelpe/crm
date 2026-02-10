@@ -1,5 +1,13 @@
 import type { DocumentComponentProps } from "@solidjs/start/server";
 import { createHandler, StartServer } from "@solidjs/start/server";
+import { migrateToLatest } from "~/server/db/migrate";
+import { seed } from "~/server/db/seed";
+
+await migrateToLatest();
+
+if (process.env.NODE_ENV !== "production") {
+  await seed();
+}
 
 export default createHandler(() => (
   <StartServer

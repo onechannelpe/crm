@@ -1,34 +1,6 @@
-import { action, redirect, useSubmission } from "@solidjs/router";
+import { useSubmission } from "@solidjs/router";
 import { Show } from "solid-js";
-import { setCookie } from "vinxi/http";
-import { login } from "~/lib/server/api";
-
-const loginAction = action(async (formData: FormData) => {
-  "use server";
-
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-
-  try {
-    const result = await login(email, password);
-
-    setCookie("session", result.token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 30,
-      path: "/",
-    });
-
-    throw redirect("/search");
-  } catch (error: any) {
-    if (error instanceof Response) {
-      throw error;
-    }
-
-    return { error: error.message || "Error al iniciar sesión" };
-  }
-});
+import { loginAction } from "~/server/auth/actions";
 
 export default function Login() {
   const submission = useSubmission(loginAction);
