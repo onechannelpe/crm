@@ -43,7 +43,10 @@ async function serverFetch<T>(path: string, options?: RequestInit): Promise<T> {
   return response.json();
 }
 
-export async function login(email: string, password: string): Promise<{ success: true; sessionCookie: string | null }> {
+export async function login(
+  email: string,
+  password: string,
+): Promise<{ success: true; sessionCookie: string | null }> {
   const response = await fetch(`${API_URL}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -73,7 +76,9 @@ export async function getActiveLeads(): Promise<LeadAssignment[]> {
   return serverFetch<LeadAssignment[]>("/leads/active");
 }
 
-export async function requestLeads(bufferSize: number): Promise<LeadAssignment[]> {
+export async function requestLeads(
+  bufferSize: number,
+): Promise<LeadAssignment[]> {
   return serverFetch<LeadAssignment[]>("/leads/request", {
     method: "POST",
     body: JSON.stringify({ bufferSize }),

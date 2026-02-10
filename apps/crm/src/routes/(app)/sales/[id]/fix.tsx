@@ -1,16 +1,14 @@
-import {
-  query,
-  createAsync,
-  action,
-  useParams,
-} from "@solidjs/router";
+import { query, createAsync, action, useParams } from "@solidjs/router";
 import { For, Show } from "solid-js";
 import { SalesService } from "~/lib/server/services/sales";
 import Button from "~/components/shared/button";
 
 const loadSale = query(SalesService.getSale, "sale");
 const loadRejections = query(SalesService.getRejections, "rejections");
-const resubmitAction = action(SalesService.resubmitForValidation, "resubmitSale");
+const resubmitAction = action(
+  SalesService.resubmitForValidation,
+  "resubmitSale",
+);
 
 export const route = {
   preload: ({ params }: { params: { id: string } }) => {
