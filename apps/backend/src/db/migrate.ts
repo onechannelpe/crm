@@ -1,11 +1,18 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import { FileMigrationProvider, Migrator } from "kysely";
-import { db } from "./client";
+import { FileMigrationProvider, Kysely, Migrator } from "kysely";
+import { BunSqliteDialect } from "kysely-bun-worker/normal";
 
 export async function migrateToLatest() {
+  const migrationDb = new Kysely({
+    dialect: new BunSqliteDialect({
+      url: "core.db",
+      dbOptions: { strict: true, create: true },
+    }),
+  });
+
   const migrator = new Migrator({
-    db,
+    db: migrationDb,
     provider: new FileMigrationProvider({
       fs,
       path,
@@ -26,8 +33,11 @@ export async function migrateToLatest() {
   if (error) {
     console.error("Failed to migrate");
     console.error(error);
+    await migrationDb.destroy();
     throw error;
   }
+
+  await migrationDb.destroy();
 }
 
 if (import.meta.main) {
