@@ -8,8 +8,9 @@ import leads from "./modules/leads/routes";
 import salesCrud from "./modules/sales/crud";
 import salesReview from "./modules/sales/review";
 import team from "./modules/team/routes";
+import type { AppVariables } from "./types";
 
-const app = new Hono();
+const app = new Hono<{ Variables: AppVariables }>();
 
 app.use("*", logger());
 app.onError(errorHandler);

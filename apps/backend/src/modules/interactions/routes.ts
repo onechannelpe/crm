@@ -1,8 +1,9 @@
 import { Hono } from "hono";
+import type { AppVariables } from "../../types";
 import { requireRole } from "../auth/rbac";
 import { getContactInteractions, logInteraction } from "./logger";
 
-const interactions = new Hono();
+const interactions = new Hono<{ Variables: AppVariables }>();
 
 interactions.post("/", requireRole(["executive"]), async (c) => {
   const userId = c.get("userId");

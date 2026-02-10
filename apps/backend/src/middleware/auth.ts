@@ -1,8 +1,12 @@
 import type { Context, Next } from "hono";
 import { getCookie } from "hono/cookie";
 import { validateSessionToken } from "../modules/auth/session";
+import type { AppVariables } from "../types";
 
-export async function authMiddleware(c: Context, next: Next) {
+export async function authMiddleware(
+  c: Context<{ Variables: AppVariables }>,
+  next: Next,
+) {
   const token = getCookie(c, "session");
 
   if (!token) {

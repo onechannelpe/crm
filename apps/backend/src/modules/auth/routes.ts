@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { deleteCookie, setCookie } from "hono/cookie";
 import { db } from "../../db/client";
+import type { AppVariables } from "../../types";
 import { verifyPassword } from "./password";
 import {
   createSession,
@@ -8,7 +9,7 @@ import {
   invalidateSession,
 } from "./session";
 
-const auth = new Hono();
+const auth = new Hono<{ Variables: AppVariables }>();
 
 auth.post("/login", async (c) => {
   const { email, password } = await c.req.json();
