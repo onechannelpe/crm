@@ -22,8 +22,9 @@ const loadProducts = query(async () => {
   return getProducts();
 }, "products");
 
-const submitSaleAction = action(async (noteId: number) => {
+const submitSaleAction = action(async (formData: FormData) => {
   "use server";
+  const noteId = Number(formData.get("noteId"));
   await submitChargeNote(noteId);
   throw redirect("/search");
 });
@@ -90,13 +91,15 @@ export default function NewSale() {
           <ItemList items={items()} />
           <div class="flex justify-end">
             <form
-              action={submitSaleAction}
+              action={submitSaleAction as any}
               method="post"
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (noteId()) submitSaleAction(noteId()!);
+              onSubmit={(e: SubmitEvent) => {
+                if (!noteId()) {
+                  e.preventDefault();
+                }
               }}
             >
+              <input type="hidden" name="noteId" value={noteId() ?? ""} />
               <Button type="submit">Enviar a validación</Button>
             </form>
           </div>
