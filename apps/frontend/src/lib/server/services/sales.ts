@@ -15,7 +15,7 @@ export const SalesService = {
    */
   async getSale(id: string | number): Promise<ChargeNote> {
     const numericId = typeof id === "string" ? Number(id) : id;
-    if (isNaN(numericId)) {
+    if (Number.isNaN(numericId)) {
       throw new Error(`Invalid sale ID: ${id}`);
     }
     return api.getChargeNote(numericId);
@@ -26,7 +26,7 @@ export const SalesService = {
    */
   async getRejections(id: string | number): Promise<RejectionLog[]> {
     const numericId = typeof id === "string" ? Number(id) : id;
-    if (isNaN(numericId)) {
+    if (Number.isNaN(numericId)) {
       throw new Error(`Invalid sale ID: ${id}`);
     }
     return api.getChargeNoteRejections(numericId);
@@ -38,7 +38,7 @@ export const SalesService = {
    */
   async resubmitForValidation(id: string | number): Promise<never> {
     const numericId = typeof id === "string" ? Number(id) : id;
-    if (isNaN(numericId)) {
+    if (Number.isNaN(numericId)) {
       throw new Error(`Invalid sale ID: ${id}`);
     }
 

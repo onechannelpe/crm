@@ -54,10 +54,14 @@ export default function ProductSelector(props: ProductSelectorProps) {
 
         <div class="flex gap-2 items-center">
           <div class="flex-1">
-            <label class="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              for="quantity-input"
+              class="block text-sm font-medium text-gray-700 mb-1"
+            >
               Cantidad
             </label>
             <input
+              id="quantity-input"
               type="number"
               min="1"
               value={quantity()}

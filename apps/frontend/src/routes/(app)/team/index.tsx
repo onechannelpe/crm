@@ -21,34 +21,58 @@ export default function TeamPage() {
     <div class="space-y-6">
       <div class="flex items-center justify-between">
         <div class="flex gap-6 border-b border-gray-200">
-          <button class="pb-2 border-b-2 border-blue-600 text-blue-600 font-medium text-sm">
+          <button
+            type="button"
+            class="pb-2 border-b-2 border-blue-600 text-blue-600 font-medium text-sm"
+          >
             Activos <span class="text-xs ml-1 text-gray-500">(1)</span>
           </button>
-          <button class="pb-2 text-gray-500 font-medium text-sm hover:text-gray-700">
+          <button
+            type="button"
+            class="pb-2 text-gray-500 font-medium text-sm hover:text-gray-700"
+          >
             Empleados <span class="text-xs ml-1 text-gray-400">(0)</span>
           </button>
-          <button class="pb-2 text-gray-500 font-medium text-sm hover:text-gray-700">
+          <button
+            type="button"
+            class="pb-2 text-gray-500 font-medium text-sm hover:text-gray-700"
+          >
             Contratistas <span class="text-xs ml-1 text-gray-400">(1)</span>
           </button>
-          <button class="pb-2 text-gray-500 font-medium text-sm hover:text-gray-700">
+          <button
+            type="button"
+            class="pb-2 text-gray-500 font-medium text-sm hover:text-gray-700"
+          >
             Empleados directos{" "}
             <span class="text-xs ml-1 text-gray-400">(0)</span>
           </button>
-          <button class="pb-2 text-gray-500 font-medium text-sm hover:text-gray-700">
+          <button
+            type="button"
+            class="pb-2 text-gray-500 font-medium text-sm hover:text-gray-700"
+          >
             Inactivos <span class="text-xs ml-1 text-gray-400">(0)</span>
           </button>
         </div>
         <div class="flex items-center gap-3">
           <Button
+            type="button"
             variant="primary"
             class="gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full px-4 py-2 text-sm"
           >
             <Plus class="w-4 h-4" /> Agregar
           </Button>
-          <button class="p-2 text-gray-500 hover:text-gray-700" title="Buscar">
+          <button
+            type="button"
+            class="p-2 text-gray-500 hover:text-gray-700"
+            title="Buscar"
+          >
             <Search class="w-5 h-5" />
           </button>
-          <button class="p-2 text-gray-500 hover:text-gray-700" title="Filtrar">
+          <button
+            type="button"
+            class="p-2 text-gray-500 hover:text-gray-700"
+            title="Filtrar"
+          >
             <Funnel class="w-5 h-5" />
           </button>
         </div>
@@ -69,7 +93,10 @@ export default function TeamPage() {
         >
           <Funnel class="w-4 h-4" /> Filtrar
         </Button>
-        <button class="ml-auto p-2 text-gray-400 hover:text-gray-600">
+        <button
+          type="button"
+          class="ml-auto p-2 text-gray-400 hover:text-gray-600"
+        >
           <Ellipsis class="w-5 h-5" />
         </button>
       </div>

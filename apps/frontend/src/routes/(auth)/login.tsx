@@ -44,10 +44,14 @@ export default function Login() {
 
           <form action={loginAction} method="post" class="space-y-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                for="email"
+                class="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Correo electrónico <span class="text-red-600">*</span>
               </label>
               <input
+                id="email"
                 name="email"
                 type="email"
                 required
@@ -56,10 +60,14 @@ export default function Login() {
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                for="password"
+                class="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Contraseña <span class="text-red-600">*</span>
               </label>
               <input
+                id="password"
                 name="password"
                 type="password"
                 required

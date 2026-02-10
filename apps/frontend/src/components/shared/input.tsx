@@ -2,6 +2,7 @@ import { createSignal } from "solid-js";
 
 interface InputProps {
   name: string;
+  id?: string;
   type?: string;
   placeholder?: string;
   value?: string;
@@ -15,16 +16,21 @@ interface InputProps {
 
 export default function Input(props: InputProps) {
   const [touched, setTouched] = createSignal(false);
+  const inputId = () => props.id || props.name;
 
   return (
     <div class="w-full">
       {props.label && (
-        <label class="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          for={inputId()}
+          class="block text-sm font-medium text-gray-700 mb-1"
+        >
           {props.label}
           {props.required && <span class="text-red-600 ml-1">*</span>}
         </label>
       )}
       <input
+        id={inputId()}
         name={props.name}
         type={props.type || "text"}
         placeholder={props.placeholder}

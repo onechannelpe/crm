@@ -16,6 +16,7 @@ export default function EmptyState(props: EmptyStateProps) {
           stroke="currentColor"
           viewBox="0 0 24 24"
         >
+          <title>{props.title}</title>
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
