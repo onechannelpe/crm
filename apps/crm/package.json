@@ -2,9 +2,9 @@
   "name": "crm-frontend",
   "type": "module",
   "scripts": {
-    "dev": "bun run --bun vinxi dev",
-    "build": "bun run --bun vinxi build",
-    "start": "bun run --bun vinxi start"
+    "dev": "vinxi dev",
+    "build": "vinxi build",
+    "start": "vinxi start"
   },
   "dependencies": {
     "@solidjs/router": "^0.15.0",

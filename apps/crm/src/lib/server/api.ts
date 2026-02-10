@@ -1,6 +1,14 @@
 "use server";
 
 import { getCookie } from "vinxi/http";
+import {
+  ChargeNote,
+  Product,
+  RejectionLog,
+  User,
+  LeadAssignment,
+  Contact,
+} from "../shared/types";
 
 const API_URL = "http://127.0.0.1:3001/api";
 
@@ -13,7 +21,7 @@ class ApiError extends Error {
   }
 }
 
-async function serverFetch(path: string, options?: RequestInit) {
+async function serverFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const sessionCookie = getCookie("session");
 
   const response = await fetch(`${API_URL}${path}`, {
@@ -35,7 +43,10 @@ async function serverFetch(path: string, options?: RequestInit) {
   return response.json();
 }
 
-export async function login(email: string, password: string) {
+export async function login(
+  email: string,
+  password: string,
+): Promise<{ success: true; sessionCookie: string | null }> {
   const response = await fetch(`${API_URL}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -53,35 +64,37 @@ export async function login(email: string, password: string) {
   return { success: true, sessionCookie: setCookieHeader };
 }
 
-export async function getMe() {
-  return serverFetch("/auth/me");
+export async function getMe(): Promise<User> {
+  return serverFetch<User>("/auth/me");
 }
 
-export async function logout() {
-  return serverFetch("/auth/logout", { method: "POST" });
+export async function logout(): Promise<void> {
+  return serverFetch<void>("/auth/logout", { method: "POST" });
 }
 
-export async function getActiveLeads() {
-  return serverFetch("/leads/active");
+export async function getActiveLeads(): Promise<LeadAssignment[]> {
+  return serverFetch<LeadAssignment[]>("/leads/active");
 }
 
-export async function requestLeads(bufferSize: number) {
-  return serverFetch("/leads/request", {
+export async function requestLeads(
+  bufferSize: number,
+): Promise<LeadAssignment[]> {
+  return serverFetch<LeadAssignment[]>("/leads/request", {
     method: "POST",
     body: JSON.stringify({ bufferSize }),
   });
 }
 
-export async function completeLead(id: number) {
-  return serverFetch(`/leads/${id}/complete`, { method: "POST" });
+export async function completeLead(id: number): Promise<void> {
+  return serverFetch<void>(`/leads/${id}/complete`, { method: "POST" });
 }
 
-export async function getProducts() {
-  return serverFetch("/sales/products");
+export async function getProducts(): Promise<Product[]> {
+  return serverFetch<Product[]>("/sales/products");
 }
 
-export async function createChargeNote(contactId: number) {
-  return serverFetch("/sales", {
+export async function createChargeNote(contactId: number): Promise<ChargeNote> {
+  return serverFetch<ChargeNote>("/sales", {
     method: "POST",
     body: JSON.stringify({ contactId }),
   });
@@ -91,45 +104,47 @@ export async function addChargeNoteItem(
   noteId: number,
   productId: number,
   quantity: number,
-) {
-  return serverFetch(`/sales/${noteId}/items`, {
+): Promise<void> {
+  return serverFetch<void>(`/sales/${noteId}/items`, {
     method: "POST",
     body: JSON.stringify({ productId, quantity }),
   });
 }
 
-export async function submitChargeNote(noteId: number) {
-  return serverFetch(`/sales/${noteId}/submit`, { method: "POST" });
+export async function submitChargeNote(noteId: number): Promise<void> {
+  return serverFetch<void>(`/sales/${noteId}/submit`, { method: "POST" });
 }
 
-export async function getPendingSales() {
-  return serverFetch("/sales/pending");
+export async function getPendingSales(): Promise<ChargeNote[]> {
+  return serverFetch<ChargeNote[]>("/sales/pending");
 }
 
-export async function getChargeNote(id: number) {
-  return serverFetch(`/sales/${id}`);
+export async function getChargeNote(id: number): Promise<ChargeNote> {
+  return serverFetch<ChargeNote>(`/sales/${id}`);
 }
 
-export async function approveChargeNote(id: number) {
-  return serverFetch(`/sales/${id}/approve`, { method: "POST" });
+export async function approveChargeNote(id: number): Promise<void> {
+  return serverFetch<void>(`/sales/${id}/approve`, { method: "POST" });
 }
 
 export async function rejectChargeNote(
   id: number,
   rejections: Array<{ fieldId: string; note: string }>,
-) {
-  return serverFetch(`/sales/${id}/reject`, {
+): Promise<void> {
+  return serverFetch<void>(`/sales/${id}/reject`, {
     method: "POST",
     body: JSON.stringify({ rejections }),
   });
 }
 
-export async function getRejectedSales() {
-  return serverFetch("/sales/my-rejected");
+export async function getRejectedSales(): Promise<ChargeNote[]> {
+  return serverFetch<ChargeNote[]>("/sales/my-rejected");
 }
 
-export async function getChargeNoteRejections(id: number) {
-  return serverFetch(`/sales/${id}/rejections`);
+export async function getChargeNoteRejections(
+  id: number,
+): Promise<RejectionLog[]> {
+  return serverFetch<RejectionLog[]>(`/sales/${id}/rejections`);
 }
 
 export async function logInteraction(
@@ -137,13 +152,13 @@ export async function logInteraction(
   outcome: string,
   notes?: string,
   durationSeconds?: number,
-) {
-  return serverFetch("/interactions", {
+): Promise<void> {
+  return serverFetch<void>("/interactions", {
     method: "POST",
     body: JSON.stringify({ contactId, outcome, notes, durationSeconds }),
   });
 }
 
-export async function getTeamUsers() {
-  return serverFetch("/team/users");
+export async function getTeamUsers(): Promise<User[]> {
+  return serverFetch<User[]>("/team/users");
 }
