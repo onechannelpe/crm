@@ -12,21 +12,20 @@ const loginAction = action(async (formData: FormData) => {
   try {
     const result = await login(email, password);
 
-    if (result.sessionCookie) {
-      const match = result.sessionCookie.match(/session=([^;]+)/);
-      if (match) {
-        setCookie("session", match[1], {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "lax",
-          maxAge: 60 * 60 * 24 * 30,
-          path: "/",
-        });
-      }
-    }
+    setCookie("session", result.token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 30,
+      path: "/",
+    });
 
     throw redirect("/search");
   } catch (error: any) {
+    if (error instanceof Response) {
+      throw error;
+    }
+
     return { error: error.message || "Error al iniciar sesión" };
   }
 });
@@ -82,16 +81,6 @@ export default function Login() {
               {submission.pending ? "Validando..." : "Ingresar"}
             </button>
           </form>
-
-          <div class="mt-6 pt-6 border-t border-gray-200">
-            <p class="text-xs text-gray-500 text-center">
-              Credenciales de prueba:
-              <br />
-              <span class="font-mono">exec@crm.com / exec123</span>
-              <br />
-              <span class="font-mono">backoffice@crm.com / back123</span>
-            </p>
-          </div>
         </div>
       </div>
     </div>
