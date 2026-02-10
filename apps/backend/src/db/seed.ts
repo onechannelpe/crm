@@ -2,6 +2,12 @@ import { hashPassword } from "../modules/auth/password";
 import { db } from "./client";
 
 export async function seed() {
+  const existingUsers = await db.selectFrom("users").selectAll().execute();
+  if (existingUsers.length > 0) {
+    console.log("Database already seeded, skipping");
+    return;
+  }
+
   await db
     .insertInto("users")
     .values([
@@ -63,4 +69,9 @@ export async function seed() {
     .execute();
 
   console.log("Database seeded");
+}
+
+// Allow running directly via `bun seed`
+if (import.meta.main) {
+  seed().catch(console.error);
 }
