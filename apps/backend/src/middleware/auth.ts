@@ -1,5 +1,9 @@
 import type { Context, Next } from "hono";
 import { getCookie } from "hono/cookie";
+import {
+  deleteSessionTokenCookie,
+  setSessionTokenCookie,
+} from "../modules/auth/cookies";
 import { validateSessionToken } from "../modules/auth/session";
 import type { AppVariables } from "../types";
 
@@ -16,9 +20,11 @@ export async function authMiddleware(
   const { session, user } = await validateSessionToken(token);
 
   if (!session || !user) {
+    deleteSessionTokenCookie(c);
     return c.json({ error: "Unauthorized" }, 401);
   }
 
+  setSessionTokenCookie(c, token);
   c.set("sessionId", session.id);
   c.set("userId", user.id);
   c.set("userRole", user.role);

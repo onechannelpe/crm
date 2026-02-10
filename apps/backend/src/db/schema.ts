@@ -3,6 +3,8 @@ import type { ColumnType, Insertable, Selectable } from "kysely";
 export interface Database {
   users: UsersTable;
   sessions: SessionsTable;
+  passkeys: PasskeysTable;
+  webauthn_challenges: WebauthnChallengesTable;
   lead_assignments: LeadAssignmentsTable;
   products: ProductsTable;
   charge_notes: ChargeNotesTable;
@@ -28,6 +30,25 @@ export interface SessionsTable {
   id: string;
   user_id: number;
   expires_at: number;
+}
+
+export interface PasskeysTable {
+  id: string;
+  user_id: number;
+  public_key: string;
+  counter: number;
+  transports: string | null;
+  created_at: number;
+  last_used_at: number | null;
+}
+
+export interface WebauthnChallengesTable {
+  id: ColumnType<number, never, never>;
+  user_id: number | null;
+  type: "registration" | "authentication";
+  challenge: string;
+  expires_at: number;
+  created_at: number;
 }
 
 export interface LeadAssignmentsTable {
@@ -99,6 +120,8 @@ export interface StageHistoryTable {
 export type User = Selectable<UsersTable>;
 export type NewUser = Insertable<UsersTable>;
 export type Session = Selectable<SessionsTable>;
+export type Passkey = Selectable<PasskeysTable>;
+export type WebauthnChallenge = Selectable<WebauthnChallengesTable>;
 export type LeadAssignment = Selectable<LeadAssignmentsTable>;
 export type Product = Selectable<ProductsTable>;
 export type ChargeNote = Selectable<ChargeNotesTable>;
