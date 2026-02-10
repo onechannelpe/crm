@@ -1,5 +1,4 @@
 import {
-  A,
   action,
   createAsync,
   query,
@@ -8,6 +7,7 @@ import {
 } from "@solidjs/router";
 import { deleteCookie } from "vinxi/http";
 import { getMe, logout as logoutApi } from "~/lib/server/api";
+import { Search, HelpCircle, Bell } from "lucide-solid";
 
 const loadUser = query(async () => {
   "use server";
@@ -26,45 +26,25 @@ export default function Header() {
   const logout = useAction(logoutAction);
 
   return (
-    <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
-      <div class="flex items-center gap-8">
-        <A href="/" class="font-bold text-lg text-black">
-          CRM
-        </A>
-        <nav class="flex gap-6 text-sm font-medium">
-          <A
-            href="/search"
-            activeClass="text-black border-b-2 border-black"
-            class="text-gray-500 hover:text-black pb-1"
-          >
-            Búsqueda
-          </A>
-          <A
-            href="/validation"
-            activeClass="text-black border-b-2 border-black"
-            class="text-gray-500 hover:text-black pb-1"
-          >
-            Validación
-          </A>
-          <A
-            href="/team"
-            activeClass="text-black border-b-2 border-black"
-            class="text-gray-500 hover:text-black pb-1"
-          >
-            Equipo
-          </A>
-        </nav>
+    <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8">
+      {/* Breadcrumbs or Page Title could go here */}
+      <div class="font-bold text-xl text-gray-800">
+        {/* Dynamic Title if needed, or empty for now */}
       </div>
+
       <div class="flex items-center gap-4">
-        <span class="text-sm font-medium">{user()?.name}</span>
-        <span class="text-xs text-gray-500 px-2 py-1 bg-gray-100 rounded">
-          {user()?.role}
-        </span>
+        <button class="text-gray-400 hover:text-gray-600" title="Buscar">
+          <Search class="w-5 h-5" />
+        </button>
+        <button class="text-gray-400 hover:text-gray-600" title="Ayuda">
+          <HelpCircle class="w-5 h-5" />
+        </button>
         <button
-          onClick={() => logout()}
-          class="text-sm text-gray-500 hover:text-red-600 font-medium"
+          class="text-gray-400 hover:text-gray-600 relative"
+          title="Notificaciones"
         >
-          Salir
+          <Bell class="w-5 h-5" />
+          <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
         </button>
       </div>
     </header>
