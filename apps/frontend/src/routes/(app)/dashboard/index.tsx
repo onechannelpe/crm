@@ -6,6 +6,7 @@ import {
   MessageSquare,
   Users,
 } from "lucide-solid";
+import { For } from "solid-js";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { getMe } from "~/lib/server/api";
 
@@ -38,46 +39,50 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent class="p-0">
               <div class="divide-y divide-gray-100">
-                {[
-                  {
-                    icon: Users,
-                    iconColor: "text-blue-500 bg-blue-100",
-                    title: "Nuevo prospecto asignado: Juan Pérez",
-                    desc: "Interesado en plan empresarial.",
-                    time: "Hace 10m",
-                  },
-                  {
-                    icon: MessageSquare,
-                    iconColor: "text-green-500 bg-green-100",
-                    title: "Interacción registrada: Corporación Acme",
-                    desc: "Demostración programada para el próximo martes.",
-                    time: "Hace 1h",
-                  },
-                  {
-                    icon: FileText,
-                    iconColor: "text-purple-500 bg-purple-100",
-                    title: "Cotización enviada: TechStart Inc",
-                    desc: "Propuesta #1023 enviada para revisión.",
-                    time: "Hace 2h",
-                  },
-                ].map((item) => (
-                  <div class="flex items-start gap-4 p-4 hover:bg-gray-50 transition-colors cursor-pointer">
-                    <div
-                      class={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${item.iconColor}`}
-                    >
-                      <item.icon class="w-5 h-5" />
+                <For
+                  each={[
+                    {
+                      icon: Users,
+                      iconColor: "text-blue-500 bg-blue-100",
+                      title: "Nuevo prospecto asignado: Juan Pérez",
+                      desc: "Interesado en plan empresarial.",
+                      time: "Hace 10m",
+                    },
+                    {
+                      icon: MessageSquare,
+                      iconColor: "text-green-500 bg-green-100",
+                      title: "Interacción registrada: Corporación Acme",
+                      desc: "Demostración programada para el próximo martes.",
+                      time: "Hace 1h",
+                    },
+                    {
+                      icon: FileText,
+                      iconColor: "text-purple-500 bg-purple-100",
+                      title: "Cotización enviada: TechStart Inc",
+                      desc: "Propuesta #1023 enviada para revisión.",
+                      time: "Hace 2h",
+                    },
+                  ]}
+                >
+                  {(item) => (
+                    <div class="flex items-start gap-4 p-4 hover:bg-gray-50 transition-colors cursor-pointer">
+                      <div
+                        class={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${item.iconColor}`}
+                      >
+                        <item.icon class="w-5 h-5" />
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <h4 class="text-sm font-semibold text-gray-900">
+                          {item.title}
+                        </h4>
+                        <p class="text-xs text-gray-500 mt-0.5">{item.desc}</p>
+                      </div>
+                      <span class="text-xs text-gray-400 whitespace-nowrap">
+                        {item.time}
+                      </span>
                     </div>
-                    <div class="flex-1 min-w-0">
-                      <h4 class="text-sm font-semibold text-gray-900">
-                        {item.title}
-                      </h4>
-                      <p class="text-xs text-gray-500 mt-0.5">{item.desc}</p>
-                    </div>
-                    <span class="text-xs text-gray-400 whitespace-nowrap">
-                      {item.time}
-                    </span>
-                  </div>
-                ))}
+                  )}
+                </For>
               </div>
             </CardContent>
           </Card>
@@ -86,7 +91,10 @@ export default function DashboardPage() {
             <CardHeader>
               <div class="flex items-center justify-between w-full">
                 <CardTitle>Rendimiento de ventas</CardTitle>
-                <button class="text-sm text-blue-600 font-medium hover:text-blue-700 flex items-center gap-1">
+                <button
+                  type="button"
+                  class="text-sm text-blue-600 font-medium hover:text-blue-700 flex items-center gap-1"
+                >
                   Ver reporte <ChevronRight class="w-4 h-4" />
                 </button>
               </div>
@@ -122,7 +130,10 @@ export default function DashboardPage() {
                     (5)
                   </span>
                 </CardTitle>
-                <button class="text-sm text-blue-600 font-medium hover:text-blue-700 flex items-center gap-1">
+                <button
+                  type="button"
+                  class="text-sm text-blue-600 font-medium hover:text-blue-700 flex items-center gap-1"
+                >
                   Ver todo <ChevronRight class="w-4 h-4" />
                 </button>
               </div>

@@ -15,6 +15,7 @@ import {
   UserPlus,
   Users,
 } from "lucide-solid";
+import { For } from "solid-js";
 import { deleteCookie } from "vinxi/http";
 import { getMe, logout as logoutApi } from "~/lib/server/api";
 
@@ -66,21 +67,23 @@ export default function Sidebar() {
           CRM
         </div>
 
-        {navItems.map((item) => (
-          <A
-            href={item.href}
-            class={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-              isActive(item.href)
-                ? "text-blue-600 bg-blue-50"
-                : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-            }`}
-          >
-            <item.icon
-              class={`w-5 h-5 ${isActive(item.href) ? "text-blue-600" : "text-gray-400"}`}
-            />
-            {item.label}
-          </A>
-        ))}
+        <For each={navItems}>
+          {(item) => (
+            <A
+              href={item.href}
+              class={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                isActive(item.href)
+                  ? "text-blue-600 bg-blue-50"
+                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+              }`}
+            >
+              <item.icon
+                class={`w-5 h-5 ${isActive(item.href) ? "text-blue-600" : "text-gray-400"}`}
+              />
+              {item.label}
+            </A>
+          )}
+        </For>
       </nav>
 
       {/* User Profile */}
@@ -99,6 +102,7 @@ export default function Sidebar() {
             <p class="text-xs text-gray-500 truncate">{user()?.role}</p>
           </div>
           <button
+            type="button"
             onClick={() => logout()}
             class="text-gray-400 hover:text-red-500"
             title="Logout"
