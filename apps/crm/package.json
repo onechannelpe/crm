@@ -1,5 +1,5 @@
 {
-  "name": "crm-frontend",
+  "name": "@one/front",
   "type": "module",
   "scripts": {
     "dev": "vinxi dev",
