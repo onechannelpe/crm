@@ -1,5 +1,5 @@
-import { Hono } from "hono";
 import type { Context } from "hono";
+import { Hono } from "hono";
 import { db } from "../../db/client";
 import { authMiddleware } from "../../middleware/auth";
 import type { AppVariables } from "../../types";
