@@ -21,12 +21,14 @@ const loginAction = action(async (formData: FormData) => {
     });
 
     throw redirect("/search");
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof Response) {
       throw error;
     }
 
-    return { error: error.message || "Error al iniciar sesión" };
+    const message =
+      error instanceof Error ? error.message : "Error al iniciar sesión";
+    return { error: message };
   }
 });
 

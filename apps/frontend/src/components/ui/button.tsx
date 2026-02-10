@@ -1,10 +1,10 @@
-import { type JSX, splitProps } from "solid-js";
+import { type JSX, splitProps, type ValidComponent } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
 interface ButtonProps extends JSX.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
   size?: "sm" | "md" | "lg";
-  as?: string | any; // Allow polymorphism (e.g., passing 'a' for links)
+  as?: ValidComponent;
   href?: string;
 }
 
