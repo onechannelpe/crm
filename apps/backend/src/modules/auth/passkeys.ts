@@ -8,8 +8,8 @@ import {
   verifyAuthenticationResponse,
   verifyRegistrationResponse,
 } from "@simplewebauthn/server";
-import type { Passkey } from "../../db/schema";
 import { db } from "../../db/client";
+import type { Passkey } from "../../db/schema";
 
 const CHALLENGE_TTL_MS = 1000 * 60 * 5;
 
