@@ -8,6 +8,12 @@ To run the project:
 ```sh
 bun install
 bun run dev
+
+echo "SESSION_SECRET=$(openssl rand -hex 32)" > ../../.env
+echo "WEBAUTHN_RP_ID=localhost" >> ../../.env
+echo "WEBAUTHN_ORIGIN=http://localhost:3000" >> ../../.env
+echo "NODE_ENV=development" >> ../../.env
+ENGINE_URL=http://localhost:5000
 ```
 
 ## Repository structure
