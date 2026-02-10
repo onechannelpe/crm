@@ -1,8 +1,8 @@
 "use server";
 
-import * as api from "../api";
-import { ChargeNote, RejectionLog } from "../../shared/types";
 import { redirect } from "@solidjs/router";
+import type { ChargeNote, RejectionLog } from "../../shared/types";
+import * as api from "../api";
 
 /**
  * SalesService handles business logic for sales-related operations.

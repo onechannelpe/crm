@@ -1,13 +1,13 @@
-import { query, createAsync, action, revalidate } from "@solidjs/router";
+import { action, createAsync, query, revalidate } from "@solidjs/router";
 import { createSignal, For, Show } from "solid-js";
+import RejectionForm from "~/components/sales/rejection-form";
+import Button from "~/components/shared/button";
+import EmptyState from "~/components/shared/empty-state";
 import {
-  getPendingSales,
   approveChargeNote,
+  getPendingSales,
   rejectChargeNote,
 } from "~/lib/server/api";
-import Button from "~/components/shared/button";
-import RejectionForm from "~/components/sales/rejection-form";
-import EmptyState from "~/components/shared/empty-state";
 
 const loadPendingSales = query(async () => {
   "use server";

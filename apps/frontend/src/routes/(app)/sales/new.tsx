@@ -1,20 +1,20 @@
 import {
-  query,
-  createAsync,
   action,
+  createAsync,
+  query,
   redirect,
   useSearchParams,
 } from "@solidjs/router";
 import { createSignal, Show } from "solid-js";
+import ItemList from "~/components/sales/item-list";
+import ProductSelector from "~/components/sales/product-selector";
+import Button from "~/components/shared/button";
 import {
-  getProducts,
-  createChargeNote,
   addChargeNoteItem,
+  createChargeNote,
+  getProducts,
   submitChargeNote,
 } from "~/lib/server/api";
-import ProductSelector from "~/components/sales/product-selector";
-import ItemList from "~/components/sales/item-list";
-import Button from "~/components/shared/button";
 import type { ChargeNoteItem } from "~/lib/shared/types";
 
 const loadProducts = query(async () => {

@@ -1,8 +1,8 @@
+import { action, revalidate, useAction } from "@solidjs/router";
 import { createSignal, Show } from "solid-js";
-import { useAction, action, revalidate } from "@solidjs/router";
 import { completeLead, logInteraction } from "~/lib/server/api";
-import Button from "../shared/button";
 import type { LeadAssignment } from "~/lib/shared/types";
+import Button from "../shared/button";
 
 const completeAction = action(async (assignmentId: number) => {
   "use server";

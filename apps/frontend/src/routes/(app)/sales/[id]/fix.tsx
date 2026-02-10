@@ -1,7 +1,7 @@
-import { query, createAsync, action, useParams } from "@solidjs/router";
+import { action, createAsync, query, useParams } from "@solidjs/router";
 import { For, Show } from "solid-js";
-import { SalesService } from "~/lib/server/services/sales";
 import Button from "~/components/shared/button";
+import { SalesService } from "~/lib/server/services/sales";
 
 const loadSale = query(SalesService.getSale, "sale");
 const loadRejections = query(SalesService.getRejections, "rejections");

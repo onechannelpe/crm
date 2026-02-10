@@ -1,7 +1,7 @@
-import { query, createAsync } from "@solidjs/router";
+import { createAsync, query } from "@solidjs/router";
 import { For, Show } from "solid-js";
-import { getTeamUsers } from "~/lib/server/api";
 import EmptyState from "~/components/shared/empty-state";
+import { getTeamUsers } from "~/lib/server/api";
 
 const loadTeamUsers = query(async () => {
   "use server";

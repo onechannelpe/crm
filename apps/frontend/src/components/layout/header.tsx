@@ -1,7 +1,13 @@
-import { A, useAction } from "@solidjs/router";
-import { query, createAsync, action, redirect } from "@solidjs/router";
-import { getMe, logout as logoutApi } from "~/lib/server/api";
+import {
+  A,
+  action,
+  createAsync,
+  query,
+  redirect,
+  useAction,
+} from "@solidjs/router";
 import { deleteCookie } from "vinxi/http";
+import { getMe, logout as logoutApi } from "~/lib/server/api";
 
 const loadUser = query(async () => {
   "use server";

@@ -2,12 +2,12 @@
 
 import { getCookie } from "vinxi/http";
 import {
-  ChargeNote,
-  Product,
-  RejectionLog,
-  User,
-  LeadAssignment,
+  type ChargeNote,
   Contact,
+  type LeadAssignment,
+  type Product,
+  type RejectionLog,
+  type User,
 } from "../shared/types";
 
 const API_URL = "http://127.0.0.1:3001/api";
