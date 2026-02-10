@@ -47,7 +47,7 @@ export default function SearchPage() {
           </p>
         </div>
         <form
-          action={requestLeadsAction as any}
+          action={requestLeadsAction.url}
           method="post"
           onSubmit={(e: SubmitEvent) => {
             e.preventDefault();
@@ -66,7 +66,7 @@ export default function SearchPage() {
             description="Solicita nuevos leads para comenzar a trabajar"
             action={
               <form
-                action={requestLeadsAction as any}
+                action={requestLeadsAction.url}
                 method="post"
                 onSubmit={(e: SubmitEvent) => {
                   e.preventDefault();

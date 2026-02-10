@@ -91,7 +91,7 @@ export default function NewSale() {
           <ItemList items={items()} />
           <div class="flex justify-end">
             <form
-              action={submitSaleAction as any}
+              action={submitSaleAction.url}
               method="post"
               onSubmit={(e: SubmitEvent) => {
                 if (!noteId()) {
