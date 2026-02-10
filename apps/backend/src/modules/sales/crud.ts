@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import { requireRole } from "../auth/rbac";
 import { db } from "../../db/client";
+import { requireRole } from "../auth/rbac";
 import { getActiveProducts } from "./products";
 import { getChargeNote } from "./queries";
 

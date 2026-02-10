@@ -3,10 +3,10 @@ import { logger } from "hono/logger";
 import { authMiddleware } from "./middleware/auth";
 import { errorHandler } from "./middleware/error";
 import auth from "./modules/auth/routes";
+import interactions from "./modules/interactions/routes";
 import leads from "./modules/leads/routes";
 import salesCrud from "./modules/sales/crud";
 import salesReview from "./modules/sales/review";
-import interactions from "./modules/interactions/routes";
 import team from "./modules/team/routes";
 
 const app = new Hono();

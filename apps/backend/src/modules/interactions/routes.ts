@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { requireRole } from "../auth/rbac";
-import { logInteraction, getContactInteractions } from "./logger";
+import { getContactInteractions, logInteraction } from "./logger";
 
 const interactions = new Hono();
 
