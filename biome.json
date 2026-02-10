@@ -29,13 +29,11 @@
         "recommended": true
       },
       "security": {
-        "recommended": true,
-        "noSecrets": "off"
+        "recommended": true
       },
       "style": {
         "recommended": true,
-        "useNamingConvention": "off",
-        "useConst": "off"
+        "useNamingConvention": "off"
       },
       "suspicious": {
         "recommended": true
