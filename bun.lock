@@ -25,14 +25,14 @@
     "apps/frontend": {
       "name": "@one/front",
       "dependencies": {
-        "@solidjs/router": "^0.15.0",
-        "@solidjs/start": "^1.1.0",
-        "solid-js": "^1.9.5",
-        "vinxi": "^0.5.7",
+        "@solidjs/router": "^0.15.4",
+        "@solidjs/start": "1.2.1",
+        "solid-js": "^1.9.11",
+        "vinxi": "^0.5.11",
       },
       "devDependencies": {
-        "@tailwindcss/vite": "^4.0.7",
-        "tailwindcss": "^4.0.7",
+        "@tailwindcss/vite": "^4.1.18",
+        "tailwindcss": "^4.1.18",
       },
     },
   },
