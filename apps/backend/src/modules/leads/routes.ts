@@ -32,7 +32,7 @@ leads.post("/request", requireRole(["executive"]), async (c) => {
 });
 
 leads.post("/:id/complete", requireRole(["executive"]), async (c) => {
-  const assignmentId = parseInt(c.req.param("id"));
+  const assignmentId = parseInt(c.req.param("id"), 10);
   const userId = c.get("userId");
 
   await completeAssignment(assignmentId, userId);
