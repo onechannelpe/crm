@@ -1,8 +1,9 @@
 import { createHandler, StartServer } from "@solidjs/start/server";
+import type { DocumentComponentProps } from "@solidjs/start/server";
 
 export default createHandler(() => (
   <StartServer
-    document={({ assets, children, scripts }) => (
+    document={({ assets, children, scripts }: DocumentComponentProps) => (
       <html lang="es">
         <head>
           <meta charset="utf-8" />

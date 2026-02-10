@@ -91,9 +91,9 @@ export default function ValidationPage() {
                 >
                   <div class="flex gap-2">
                     <form
-                      action={approveAction}
+                      action={approveAction.url}
                       method="post"
-                      onSubmit={(e) => {
+                      onSubmit={(e: SubmitEvent) => {
                         e.preventDefault();
                         approveAction(sale.id);
                       }}
