@@ -1,17 +1,22 @@
-import { A, useLocation } from "@solidjs/router";
 import {
-  Users,
+  A,
+  action,
+  createAsync,
+  redirect,
+  useAction,
+  useLocation,
+} from "@solidjs/router";
+import {
   LayoutDashboard,
-  UserPlus,
+  LogOut,
+  MessageSquare,
   Receipt,
   Star,
-  MessageSquare,
-  LogOut,
+  UserPlus,
+  Users,
 } from "lucide-solid";
-import { createAsync, action, useAction, redirect } from "@solidjs/router";
-import { getMe, logout as logoutApi } from "~/lib/server/api";
 import { deleteCookie } from "vinxi/http";
-import { Show } from "solid-js";
+import { getMe, logout as logoutApi } from "~/lib/server/api";
 
 const loadUser = async () => {
   "use server";

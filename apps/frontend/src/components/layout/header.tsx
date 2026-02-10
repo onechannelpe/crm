@@ -5,9 +5,9 @@ import {
   redirect,
   useAction,
 } from "@solidjs/router";
+import { Bell, CircleQuestionMark, Search } from "lucide-solid";
 import { deleteCookie } from "vinxi/http";
 import { getMe, logout as logoutApi } from "~/lib/server/api";
-import { Search, HelpCircle, Bell } from "lucide-solid";
 
 const loadUser = query(async () => {
   "use server";
@@ -37,7 +37,7 @@ export default function Header() {
           <Search class="w-5 h-5" />
         </button>
         <button class="text-gray-400 hover:text-gray-600" title="Ayuda">
-          <HelpCircle class="w-5 h-5" />
+          <CircleQuestionMark class="w-5 h-5" />
         </button>
         <button
           class="text-gray-400 hover:text-gray-600 relative"
