@@ -13,7 +13,7 @@
     "format:md": "bun x prettier \"**/*.{md,yml,yaml}\" --write --print-width=80 --prose-wrap=always"
   },
   "devDependencies": {
-    "@types/bun": "1.3.8",
+    "@types/bun": "1.3.9",
     "@types/node": "^25.2.3",
     "bun-types": "^1.3.9",
     "shx": "^0.4.0",
