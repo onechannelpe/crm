@@ -1,27 +1,28 @@
-The system is built around three constraints: minimal latency, strict data
-integrity, and durable, mission-critical persistence. These constraints drive
-both the architecture and the choice of tooling.
+# onechannel.pe
 
-The project is organized as a single monorepo managed with bun workspaces. Code
-is split between runnable systems under `apps/` and shared foundations under
-`packages/`.
+A monorepo for a backend service, a CRM frontend, and a browser extension. Under
+active development; APIs and directory boundaries may change.
 
-- The backend service lives in `apps/backend`. It owns persistence, validation,
-  and API execution, and is going to be implemented with hono, libsql with
-  kysely, and typia.
-- The primary CRM frontend lives in `apps/crm` and is implemented with SolidJS.
-- The browser extension lives in `apps/extension`. It is planned to be
-  implemented with wxt and SolidJS, shares UI components with the CRM, and
-  includes a WebRTC engine.
+To run the project:
 
-Shared infrastructure lives under `packages/`.
+```sh
+bun install
+bun run dev
+```
 
-- `packages/api-contract` defines the canonical API contract, including shared
-  TypeScript interfaces and runtime validation via typia.
-- `packages/db` owns database schema definitions, migrations, and repository
-  patterns built on Kysely.
-- `packages/ui` provides shared SolidJS UI components and design primitives,
-  styled with Tailwind CSS.
-- `packages/config` contains shared TypeScript configuration.
+## Repository structure
 
-The project is led by @totallynotdavid.
+```txt
+.
+├── apps/
+│   ├── backend/         # Backend service. Hono (HTTP), bun:sqlite + Kysely, typia.
+│   ├── crm/             # Primary CRM frontend (SolidJS).
+│   └── extension/       # Browser extension (planned: WXT + SolidJS + WebRTC engine).
+└── packages/
+    ├── api-contract/    # Canonical API contract (types, validation).
+    ├── db/              # Schema definitions, migrations, repository patterns (Kysely).
+    ├── ui/              # Shared SolidJS UI components and primitives (Tailwind CSS).
+    └── config/          # Shared TypeScript configuration.
+```
+
+Maintainers: @totallynotdavid
