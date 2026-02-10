@@ -1,9 +1,10 @@
 import { redirect } from "@solidjs/router";
+import { getRequestEvent } from "solid-js/web";
 import { getCookie, getEvent } from "vinxi/http";
 
 export async function requireSession() {
-  const event = getEvent();
-  const session = getCookie(event, "session");
+  const event = getRequestEvent();
+  const session = event?.locals.session || getCookie(getEvent(), "session");
 
   if (!session) {
     throw redirect("/login");
