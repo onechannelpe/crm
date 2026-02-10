@@ -1,4 +1,5 @@
 import type { Context, Next } from "hono";
+import type { AppVariables } from "../../types";
 
 type Role =
   | "executive"
@@ -16,7 +17,7 @@ const ROLE_HIERARCHY: Record<Role, number> = {
 };
 
 export function requireRole(allowedRoles: Role[]) {
-  return async (c: Context, next: Next) => {
+  return async (c: Context<{ Variables: AppVariables }>, next: Next) => {
     const userRole = c.get("userRole") as Role;
     const userLevel = ROLE_HIERARCHY[userRole];
     const minRequired = Math.min(...allowedRoles.map((r) => ROLE_HIERARCHY[r]));

@@ -1,9 +1,10 @@
 import { Hono } from "hono";
 import { db } from "../../db/client";
+import type { AppVariables } from "../../types";
 import { hashPassword } from "../auth/password";
 import { requireRole } from "../auth/rbac";
 
-const team = new Hono();
+const team = new Hono<{ Variables: AppVariables }>();
 
 team.get("/users", requireRole(["supervisor", "admin"]), async (c) => {
   const users = await db

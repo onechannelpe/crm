@@ -1,9 +1,10 @@
 import { Hono } from "hono";
+import type { AppVariables } from "../../types";
 import { requireRole } from "../auth/rbac";
 import { getPendingSales, getRejectedSales, getRejections } from "./queries";
 import { transitionStatus } from "./workflow";
 
-const review = new Hono();
+const review = new Hono<{ Variables: AppVariables }>();
 
 review.post("/:id/submit", requireRole(["executive"]), async (c) => {
   const noteId = parseInt(c.req.param("id"), 10);

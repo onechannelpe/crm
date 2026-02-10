@@ -1,10 +1,11 @@
 import { Hono } from "hono";
 import { db } from "../../db/client";
+import type { AppVariables } from "../../types";
 import { requireRole } from "../auth/rbac";
 import { getActiveProducts } from "./products";
 import { getChargeNote } from "./queries";
 
-const crud = new Hono();
+const crud = new Hono<{ Variables: AppVariables }>();
 
 crud.get("/products", async (c) => {
   const products = await getActiveProducts();

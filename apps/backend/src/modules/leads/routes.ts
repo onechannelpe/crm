@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import type { AppVariables } from "../../types";
 import { requireRole } from "../auth/rbac";
 import {
   assignLeads,
@@ -7,7 +8,7 @@ import {
 } from "./assignment";
 import { getLeadDetails, searchLeads } from "./engine-client";
 
-const leads = new Hono();
+const leads = new Hono<{ Variables: AppVariables }>();
 
 leads.get("/active", requireRole(["executive"]), async (c) => {
   const userId = c.get("userId");
