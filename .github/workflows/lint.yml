@@ -1,4 +1,4 @@
-  name: Biome CI
+name: Biome CI
 
 on:
   workflow_dispatch:
