@@ -46,7 +46,7 @@ async function serverFetch<T>(path: string, options?: RequestInit): Promise<T> {
 export async function login(
   email: string,
   password: string,
-): Promise<{ success: true; sessionCookie: string | null }> {
+): Promise<{ success: true; token: string; user: User }> {
   const response = await fetch(`${API_URL}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -60,8 +60,9 @@ export async function login(
     throw new ApiError(error.error, response.status);
   }
 
-  const setCookieHeader = response.headers.get("set-cookie");
-  return { success: true, sessionCookie: setCookieHeader };
+  const data = await response.json();
+
+  return data;
 }
 
 export async function getMe(): Promise<User> {
