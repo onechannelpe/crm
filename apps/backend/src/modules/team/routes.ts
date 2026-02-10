@@ -1,7 +1,7 @@
 import { Hono } from "hono";
-import { requireRole } from "../auth/rbac";
 import { db } from "../../db/client";
 import { hashPassword } from "../auth/password";
+import { requireRole } from "../auth/rbac";
 
 const team = new Hono();
 
