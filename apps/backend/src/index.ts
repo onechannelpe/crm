@@ -3,6 +3,7 @@ import { logger } from "hono/logger";
 import { migrateToLatest } from "./db/migrate";
 import { seed } from "./db/seed";
 import { authMiddleware } from "./middleware/auth";
+import { csrfMiddleware } from "./middleware/csrf";
 import { errorHandler } from "./middleware/error";
 import auth from "./modules/auth/routes";
 import interactions from "./modules/interactions/routes";
@@ -22,6 +23,8 @@ const app = new Hono<{ Variables: AppVariables }>();
 
 app.use("*", logger());
 app.onError(errorHandler);
+app.use("/api/*", csrfMiddleware);
+app.use("/api/auth/*", csrfMiddleware);
 
 app.route("/api/auth", auth);
 
