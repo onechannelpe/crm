@@ -1,6 +1,5 @@
-import { getCookie } from "vinxi/http";
 import { redirect } from "@solidjs/router";
-import { getEvent } from "vinxi/http";
+import { getCookie, getEvent } from "vinxi/http";
 
 export async function requireSession() {
   const event = getEvent();

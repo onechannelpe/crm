@@ -1,18 +1,18 @@
 import {
-  query,
-  createAsync,
   action,
+  createAsync,
+  query,
   revalidate,
   useNavigate,
 } from "@solidjs/router";
 import { For, Show } from "solid-js";
+import LeadCard from "~/components/leads/lead-card";
+import Button from "~/components/shared/button";
+import EmptyState from "~/components/shared/empty-state";
 import {
   getActiveLeads,
   requestLeads as requestLeadsApi,
 } from "~/lib/server/api";
-import LeadCard from "~/components/leads/lead-card";
-import Button from "~/components/shared/button";
-import EmptyState from "~/components/shared/empty-state";
 
 const loadLeads = query(async () => {
   "use server";

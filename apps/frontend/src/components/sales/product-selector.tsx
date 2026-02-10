@@ -1,6 +1,6 @@
-import { For, createSignal } from "solid-js";
-import Button from "../shared/button";
+import { createSignal, For } from "solid-js";
 import type { Product } from "~/lib/shared/types";
+import Button from "../shared/button";
 
 interface ProductSelectorProps {
   products: Product[];

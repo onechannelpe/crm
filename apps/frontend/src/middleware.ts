@@ -1,6 +1,6 @@
+import { redirect } from "@solidjs/router";
 import { createMiddleware } from "@solidjs/start/middleware";
 import { getCookie } from "vinxi/http";
-import { redirect } from "@solidjs/router";
 
 export default createMiddleware({
   onRequest: [
