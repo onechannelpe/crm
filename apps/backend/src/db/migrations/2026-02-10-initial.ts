@@ -1,7 +1,6 @@
 import type { Kysely } from "kysely";
 
 export async function up(db: Kysely<any>): Promise<void> {
-  // Users table
   await db.schema
     .createTable("users")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
@@ -15,7 +14,6 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn("created_at", "integer", (col) => col.notNull())
     .execute();
 
-  // Sessions table
   await db.schema
     .createTable("sessions")
     .addColumn("id", "varchar(255)", (col) => col.primaryKey())
@@ -25,7 +23,6 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn("expires_at", "integer", (col) => col.notNull())
     .execute();
 
-  // Lead assignments table
   await db.schema
     .createTable("lead_assignments")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
@@ -38,7 +35,6 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn("status", "varchar(50)", (col) => col.notNull())
     .execute();
 
-  // Products table
   await db.schema
     .createTable("products")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
@@ -49,7 +45,6 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn("is_active", "integer", (col) => col.notNull().defaultTo(1))
     .execute();
 
-  // Charge notes table
   await db.schema
     .createTable("charge_notes")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
@@ -64,7 +59,6 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn("updated_at", "integer", (col) => col.notNull())
     .execute();
 
-  // Charge note items table
   await db.schema
     .createTable("charge_note_items")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
@@ -77,7 +71,6 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn("quantity", "integer", (col) => col.notNull())
     .execute();
 
-  // Rejection logs table
   await db.schema
     .createTable("rejection_logs")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
@@ -93,7 +86,6 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn("created_at", "integer", (col) => col.notNull())
     .execute();
 
-  // Interaction logs table
   await db.schema
     .createTable("interaction_logs")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
@@ -107,7 +99,6 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn("created_at", "integer", (col) => col.notNull())
     .execute();
 
-  // Stage history table
   await db.schema
     .createTable("stage_history")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
