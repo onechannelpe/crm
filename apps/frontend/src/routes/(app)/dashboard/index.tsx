@@ -1,14 +1,13 @@
 import { createAsync, query } from "@solidjs/router";
-import { getMe } from "~/lib/server/api";
 import {
   Briefcase,
-  MoreHorizontal,
   ChevronRight,
-  Users,
-  MessageSquare,
   FileText,
+  MessageSquare,
+  Users,
 } from "lucide-solid";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { getMe } from "~/lib/server/api";
 
 const loadUser = query(async () => {
   "use server";
@@ -24,7 +23,6 @@ export default function DashboardPage() {
 
   return (
     <div class="space-y-8">
-      {/* Welcome Header */}
       <div>
         <h1 class="text-2xl font-bold text-gray-900">
           Hola, {user()?.name || "Usuario"} 👋
@@ -33,9 +31,7 @@ export default function DashboardPage() {
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Content Column (2/3 width) */}
         <div class="lg:col-span-2 space-y-8">
-          {/* Recent Leads */}
           <Card>
             <CardHeader>
               <CardTitle>Prospectos recientes</CardTitle>
@@ -86,7 +82,6 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Sales Performance */}
           <Card>
             <CardHeader>
               <div class="flex items-center justify-between w-full">
@@ -117,9 +112,7 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* Sidebar Column (1/3 width) */}
         <div class="space-y-6">
-          {/* Active Work */}
           <Card>
             <CardHeader class="pb-2">
               <div class="flex items-center justify-between w-full">
@@ -152,7 +145,6 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Pending Actions */}
           <Card>
             <CardHeader class="pb-2">
               <div class="flex items-center justify-between w-full">

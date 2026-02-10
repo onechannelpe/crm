@@ -1,15 +1,9 @@
 import { createAsync, query } from "@solidjs/router";
+import { ChevronRight, Ellipsis, Funnel, Plus, Search } from "lucide-solid";
 import { For, Show } from "solid-js";
 import EmptyState from "~/components/shared/empty-state";
-import { getTeamUsers } from "~/lib/server/api";
 import { Button } from "~/components/ui/button";
-import {
-  Search,
-  Filter,
-  MoreHorizontal,
-  ChevronRight,
-  Plus,
-} from "lucide-solid";
+import { getTeamUsers } from "~/lib/server/api";
 
 const loadTeamUsers = query(async () => {
   "use server";
@@ -55,7 +49,7 @@ export default function TeamPage() {
             <Search class="w-5 h-5" />
           </button>
           <button class="p-2 text-gray-500 hover:text-gray-700" title="Filtrar">
-            <Filter class="w-5 h-5" />
+            <Funnel class="w-5 h-5" />
           </button>
         </div>
       </div>
@@ -73,10 +67,10 @@ export default function TeamPage() {
           variant="outline"
           class="gap-2 text-gray-600 border-gray-200 bg-white"
         >
-          <Filter class="w-4 h-4" /> Filtrar
+          <Funnel class="w-4 h-4" /> Filtrar
         </Button>
         <button class="ml-auto p-2 text-gray-400 hover:text-gray-600">
-          <MoreHorizontal class="w-5 h-5" />
+          <Ellipsis class="w-5 h-5" />
         </button>
       </div>
 

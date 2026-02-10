@@ -1,4 +1,4 @@
-import { JSX, splitProps } from "solid-js";
+import { type JSX, splitProps } from "solid-js";
 
 interface BadgeProps extends JSX.HTMLAttributes<HTMLSpanElement> {
   children: JSX.Element;
