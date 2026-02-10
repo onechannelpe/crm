@@ -3,8 +3,9 @@
   "type": "module",
   "scripts": {
     "dev": "bun --hot --env-file=../../.env src/index.ts",
-    "start": "bun --env-file=../../.env src/index.ts",
-    "seed": "bun --env-file=../../.env src/seed.ts"
+    "start": "NODE_ENV=production bun --env-file=../../.env src/index.ts",
+    "migrate": "bun --env-file=../../.env src/db/migrate.ts",
+    "seed": "bun --env-file=../../.env src/db/seed.ts"
   },
   "dependencies": {
     "@oslojs/crypto": "^1.0.1",

@@ -36,7 +36,18 @@ auth.post("/login", async (c) => {
     path: "/",
   });
 
-  return c.json({ success: true });
+  const response = {
+    success: true,
+    token,
+    user: {
+      id: user.id,
+      email: user.email,
+      full_name: user.full_name,
+      role: user.role,
+    },
+  };
+
+  return c.json(response);
 });
 
 auth.post("/logout", async (c) => {

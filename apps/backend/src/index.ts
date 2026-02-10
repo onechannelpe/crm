@@ -1,5 +1,7 @@
 import { Hono } from "hono";
 import { logger } from "hono/logger";
+import { migrateToLatest } from "./db/migrate";
+import { seed } from "./db/seed";
 import { authMiddleware } from "./middleware/auth";
 import { errorHandler } from "./middleware/error";
 import auth from "./modules/auth/routes";
@@ -9,6 +11,12 @@ import salesCrud from "./modules/sales/crud";
 import salesReview from "./modules/sales/review";
 import team from "./modules/team/routes";
 import type { AppVariables } from "./types";
+
+await migrateToLatest();
+
+if (process.env.NODE_ENV !== "production") {
+  await seed();
+}
 
 const app = new Hono<{ Variables: AppVariables }>();
 
