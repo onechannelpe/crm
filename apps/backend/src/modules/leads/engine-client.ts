@@ -18,7 +18,10 @@ export async function markLeadsAssigned(leadIds: number[], userId: number) {
   });
 }
 
-export async function searchLeads(query: string, filters: Record<string, any>) {
+export async function searchLeads(
+  query: string,
+  filters: Record<string, string | undefined>,
+) {
   const params = new URLSearchParams({ q: query, ...filters });
   const response = await fetch(`${LEAD_ENGINE_URL}/search?${params}`);
 

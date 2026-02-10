@@ -16,7 +16,7 @@ interactions.get(
   "/contact/:id",
   requireRole(["executive", "supervisor"]),
   async (c) => {
-    const contactId = parseInt(c.req.param("id"));
+    const contactId = parseInt(c.req.param("id"), 10);
     const logs = await getContactInteractions(contactId);
     return c.json(logs);
   },

@@ -6,7 +6,7 @@ import { transitionStatus } from "./workflow";
 const review = new Hono();
 
 review.post("/:id/submit", requireRole(["executive"]), async (c) => {
-  const noteId = parseInt(c.req.param("id"));
+  const noteId = parseInt(c.req.param("id"), 10);
   const userId = c.get("userId");
 
   await transitionStatus(noteId, "Pending_Back", userId);
@@ -19,7 +19,7 @@ review.get("/pending", requireRole(["back_office"]), async (c) => {
 });
 
 review.post("/:id/approve", requireRole(["back_office"]), async (c) => {
-  const noteId = parseInt(c.req.param("id"));
+  const noteId = parseInt(c.req.param("id"), 10);
   const userId = c.get("userId");
 
   await transitionStatus(noteId, "Approved", userId);
@@ -27,7 +27,7 @@ review.post("/:id/approve", requireRole(["back_office"]), async (c) => {
 });
 
 review.post("/:id/reject", requireRole(["back_office"]), async (c) => {
-  const noteId = parseInt(c.req.param("id"));
+  const noteId = parseInt(c.req.param("id"), 10);
   const userId = c.get("userId");
   const { rejections } = await c.req.json();
 
@@ -42,7 +42,7 @@ review.get("/my-rejected", requireRole(["executive"]), async (c) => {
 });
 
 review.get("/:id/rejections", async (c) => {
-  const noteId = parseInt(c.req.param("id"));
+  const noteId = parseInt(c.req.param("id"), 10);
   const rejections = await getRejections(noteId);
   return c.json(rejections);
 });

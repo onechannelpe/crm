@@ -1,6 +1,11 @@
 import { db } from "../../db/client";
 import { markLeadsAssigned, requestUnassignedLeads } from "./engine-client";
 
+interface Lead {
+  id: number;
+  [key: string]: unknown;
+}
+
 const DEFAULT_BUFFER_SIZE = 10;
 const ASSIGNMENT_TTL = 24 * 60 * 60 * 1000;
 
@@ -23,7 +28,7 @@ export async function assignLeads(userId: number, bufferSize?: number) {
   const now = Date.now();
   const expiresAt = now + ASSIGNMENT_TTL;
 
-  const assignments = leads.map((lead: any) => ({
+  const assignments = (leads as Lead[]).map((lead) => ({
     user_id: userId,
     contact_id: lead.id,
     assigned_at: now,
@@ -33,7 +38,7 @@ export async function assignLeads(userId: number, bufferSize?: number) {
 
   await db.insertInto("lead_assignments").values(assignments).execute();
   await markLeadsAssigned(
-    leads.map((l: any) => l.id),
+    (leads as Lead[]).map((l) => l.id),
     userId,
   );
 

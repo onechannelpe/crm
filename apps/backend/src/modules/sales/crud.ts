@@ -30,7 +30,7 @@ crud.post("/", requireRole(["executive"]), async (c) => {
 });
 
 crud.post("/:id/items", requireRole(["executive"]), async (c) => {
-  const noteId = parseInt(c.req.param("id"));
+  const noteId = parseInt(c.req.param("id"), 10);
   const { productId, quantity } = await c.req.json();
 
   await db
@@ -42,7 +42,7 @@ crud.post("/:id/items", requireRole(["executive"]), async (c) => {
 });
 
 crud.get("/:id", async (c) => {
-  const noteId = parseInt(c.req.param("id"));
+  const noteId = parseInt(c.req.param("id"), 10);
   const note = await getChargeNote(noteId);
 
   if (!note) return c.json({ error: "Not found" }, 404);
