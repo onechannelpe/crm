@@ -5,8 +5,14 @@ import {
 } from "@oslojs/encoding";
 import { db } from "../../db/client";
 import type { Session } from "../../db/schema";
+import type { SessionUser } from "../../types";
 
-const SESSION_MAX_AGE = 1000 * 60 * 60 * 24 * 30;
+export const SESSION_MAX_AGE = 1000 * 60 * 60 * 24 * 30;
+const SESSION_REFRESH_WINDOW = 1000 * 60 * 60 * 24 * 15;
+
+export type SessionValidationResult =
+  | { session: Session; user: SessionUser }
+  | { session: null; user: null };
 
 export function generateSessionToken(): string {
   const bytes = new Uint8Array(20);
@@ -29,7 +35,9 @@ export async function createSession(
   return { id: sessionId, user_id: userId, expires_at: expiresAt };
 }
 
-export async function validateSessionToken(token: string) {
+export async function validateSessionToken(
+  token: string,
+): Promise<SessionValidationResult> {
   const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
 
   const result = await db
@@ -47,16 +55,28 @@ export async function validateSessionToken(token: string) {
 
   if (!result) return { session: null, user: null };
 
-  if (Date.now() >= result.expires_at) {
+  const now = Date.now();
+  let expiresAt = result.expires_at;
+
+  if (now >= expiresAt) {
     await db.deleteFrom("sessions").where("id", "=", sessionId).execute();
     return { session: null, user: null };
+  }
+
+  if (expiresAt - now <= SESSION_REFRESH_WINDOW) {
+    expiresAt = now + SESSION_MAX_AGE;
+    await db
+      .updateTable("sessions")
+      .set({ expires_at: expiresAt })
+      .where("id", "=", sessionId)
+      .execute();
   }
 
   return {
     session: {
       id: result.id,
       user_id: result.user_id,
-      expires_at: result.expires_at,
+      expires_at: expiresAt,
     },
     user: { id: result.user_id, name: result.full_name, role: result.role },
   };
