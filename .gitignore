@@ -18,3 +18,4 @@ app.config.timestamp_*.js
 # noise
 *.log
 *.ps1
+*.sh
