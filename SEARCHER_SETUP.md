@@ -56,7 +56,7 @@ export DATA_PATH=/path/to/integrated_phone_data.csv
 
 # Server configuration (optional)
 export HOST=0.0.0.0
-export PORT=3000
+export PORT=3001
 
 # Logging level (optional)
 export RUST_LOG=phone_lookup_api=info
