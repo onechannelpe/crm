@@ -1,8 +1,7 @@
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
-pub struct ContactRecord {
+pub struct Contact {
     pub id: usize,
     pub dni: String,
     pub name: String,
@@ -13,7 +12,7 @@ pub struct ContactRecord {
 }
 
 #[derive(Debug, Serialize)]
-pub struct LeadSearchResult {
+pub struct Lead {
     pub id: usize,
     pub dni: String,
     pub name: String,
@@ -23,10 +22,18 @@ pub struct LeadSearchResult {
     pub org_name: Option<String>,
 }
 
-#[derive(Debug, Serialize)]
-pub struct LeadResponse {
-    pub leads: Vec<LeadSearchResult>,
-    pub count: usize,
+impl From<&Contact> for Lead {
+    fn from(c: &Contact) -> Self {
+        Self {
+            id: c.id,
+            dni: c.dni.clone(),
+            name: c.name.clone(),
+            phone_primary: c.phone_primary.clone(),
+            phone_secondary: c.phone_secondary.clone(),
+            org_ruc: c.org_ruc.clone(),
+            org_name: c.org_name.clone(),
+        }
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -37,11 +44,9 @@ pub struct AssignRequest {
 }
 
 #[derive(Debug, Serialize)]
-pub struct ServiceStats {
+pub struct Stats {
     pub total_contacts: usize,
     pub assigned_contacts: usize,
     pub available_contacts: usize,
     pub memory_mb: f64,
 }
-
-pub type ContactIndex = HashMap<String, Vec<usize>>;
