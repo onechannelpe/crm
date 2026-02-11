@@ -1,0 +1,18 @@
+{
+  "name": "@one/back",
+  "type": "module",
+  "scripts": {
+    "dev": "bun --hot --env-file=../../.env src/index.ts",
+    "start": "NODE_ENV=production bun --env-file=../../.env src/index.ts",
+    "migrate": "bun --env-file=../../.env src/db/migrate.ts",
+    "seed": "bun --env-file=../../.env src/db/seed.ts"
+  },
+  "dependencies": {
+    "@oslojs/crypto": "^1.0.1",
+    "@oslojs/encoding": "^1.1.0",
+    "@simplewebauthn/server": "^10.0.0",
+    "hono": "^4.11.9",
+    "kysely": "^0.28.11",
+    "kysely-bun-worker": "^1.2.1"
+  }
+}

@@ -36,7 +36,10 @@ export default function ValidationPage() {
   const pending = createAsync(() => loadPendingSales());
   const [showReject, setShowReject] = createSignal<number | null>(null);
 
-  const handleReject = async (id: number, rejections: any[]) => {
+  const handleReject = async (
+    id: number,
+    rejections: { fieldId: string; note: string }[],
+  ) => {
     await rejectAction(id, rejections);
     setShowReject(null);
   };

@@ -63,17 +63,17 @@ export default function LeadCard(props: LeadCardProps) {
       <div class="space-y-1 mb-4">
         {contact()?.dni && (
           <p class="text-sm">
-            <span class="font-medium">DNI:</span> {contact()!.dni}
+            <span class="font-medium">DNI:</span> {contact()?.dni}
           </p>
         )}
         {contact()?.phone_primary && (
           <p class="text-sm">
-            <span class="font-medium">Tel:</span> {contact()!.phone_primary}
+            <span class="font-medium">Tel:</span> {contact()?.phone_primary}
           </p>
         )}
         {contact()?.org_ruc && (
           <p class="text-sm">
-            <span class="font-medium">RUC:</span> {contact()!.org_ruc}
+            <span class="font-medium">RUC:</span> {contact()?.org_ruc}
           </p>
         )}
       </div>

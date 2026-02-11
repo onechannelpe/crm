@@ -14,11 +14,12 @@ export default function ProductSelector(props: ProductSelectorProps) {
   const [loading, setLoading] = createSignal(false);
 
   const handleAdd = async () => {
-    if (!selected()) return;
+    const productId = selected();
+    if (!productId) return;
 
     setLoading(true);
     try {
-      await props.onSelect(selected()!, quantity());
+      await props.onSelect(productId, quantity());
       setSelected(null);
       setQuantity(1);
     } catch (err) {
@@ -54,10 +55,14 @@ export default function ProductSelector(props: ProductSelectorProps) {
 
         <div class="flex gap-2 items-center">
           <div class="flex-1">
-            <label class="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              for="quantity-input"
+              class="block text-sm font-medium text-gray-700 mb-1"
+            >
               Cantidad
             </label>
             <input
+              id="quantity-input"
               type="number"
               min="1"
               value={quantity()}
@@ -71,7 +76,8 @@ export default function ProductSelector(props: ProductSelectorProps) {
           {selectedProduct() && (
             <div class="flex-1 pt-6">
               <p class="text-sm font-medium">
-                Total: S/. {(selectedProduct()!.price * quantity()).toFixed(2)}
+                Total: S/.{" "}
+                {((selectedProduct()?.price || 0) * quantity()).toFixed(2)}
               </p>
             </div>
           )}

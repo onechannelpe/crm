@@ -1,13 +1,12 @@
 "use server";
 
 import { getCookie } from "vinxi/http";
-import {
-  type ChargeNote,
-  Contact,
-  type LeadAssignment,
-  type Product,
-  type RejectionLog,
-  type User,
+import type {
+  ChargeNote,
+  LeadAssignment,
+  Product,
+  RejectionLog,
+  User,
 } from "../shared/types";
 
 const API_URL = "http://127.0.0.1:3001/api";
@@ -40,7 +39,8 @@ async function serverFetch<T>(path: string, options?: RequestInit): Promise<T> {
     throw new ApiError(error.error || "Request failed", response.status);
   }
 
-  return response.json();
+  const text = await response.text();
+  return text ? JSON.parse(text) : (null as T);
 }
 
 export async function login(
