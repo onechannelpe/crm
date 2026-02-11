@@ -32,7 +32,7 @@ NODE_ENV=development
 
 # External Services
 ENGINE_URL=http://localhost:5000
-SEARCHER_URL=http://localhost:3000
+SEARCHER_URL=http://localhost:3001
 
 # Searcher Service (for apps/searcher)
 DATA_PATH=path/to/integrated_phone_data.csv
