@@ -14,27 +14,15 @@ Request pipeline:
 
 ```mermaid
 flowchart LR
-  C[Client] --> R[Axum router]
-
-  R -->|GET /health| H[health handler]
-  H --> HJ[200 JSON]
-
-  R --> P[protected routes]
-  P --> RL[rate_limit middleware]
-  RL --> LIM[RateLimiter]
-  LIM --> AUTH[require_auth middleware]
-  AUTH --> AV[AuthValidator]
-
-  AUTH --> U[GET /leads/unassigned]
-  AUTH --> A[POST /leads/assign]
-  AUTH --> S[GET /stats]
-
-  LS[LeadService] --> V[contacts Vec]
-  LS --> AS[assigned set]
-
-  U --> LS --> UJ[200 JSON leads]
-  A --> LS --> AJ[200 JSON assigned count]
-  S --> LS --> SJ[200 JSON stats]
+  C[Client] --> S[HTTP server: trace, gzip]
+  S --> MW[protected middleware: rate_limit -> require_auth]
+  MW --> HD[handlers: /leads/*, /stats]
+  HD --> LS[LeadService]
+  LS --> RESP[JSON response]
+  LS -.-> ST[State: contacts Vec, assigned set]
+  HD -.-> E1[GET /leads/unassigned]
+  HD -.-> E2[POST /leads/assign]
+  HD -.-> E3[GET /stats]
 ```
 
 Endpoints:
