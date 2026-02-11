@@ -5,6 +5,7 @@ export interface Database {
   sessions: SessionsTable;
   passkeys: PasskeysTable;
   webauthn_challenges: WebauthnChallengesTable;
+  contacts: ContactsTable;
   lead_assignments: LeadAssignmentsTable;
   products: ProductsTable;
   charge_notes: ChargeNotesTable;
@@ -49,6 +50,18 @@ export interface WebauthnChallengesTable {
   challenge: string;
   expires_at: number;
   created_at: number;
+}
+
+export interface ContactsTable {
+  id: ColumnType<number, never, never>;
+  name: string;
+  dni: string | null;
+  phone_primary: string | null;
+  phone_secondary: string | null;
+  org_name: string;
+  org_ruc: string;
+  created_at: number;
+  uploaded_by: number;
 }
 
 export interface LeadAssignmentsTable {
@@ -122,6 +135,8 @@ export type NewUser = Insertable<UsersTable>;
 export type Session = Selectable<SessionsTable>;
 export type Passkey = Selectable<PasskeysTable>;
 export type WebauthnChallenge = Selectable<WebauthnChallengesTable>;
+export type Contact = Selectable<ContactsTable>;
+export type NewContact = Insertable<ContactsTable>;
 export type LeadAssignment = Selectable<LeadAssignmentsTable>;
 export type Product = Selectable<ProductsTable>;
 export type ChargeNote = Selectable<ChargeNotesTable>;

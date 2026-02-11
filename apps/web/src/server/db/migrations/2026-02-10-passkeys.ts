@@ -3,6 +3,7 @@ import type { Kysely } from "kysely";
 export async function up(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable("passkeys")
+    .ifNotExists()
     .addColumn("id", "varchar(512)", (col) => col.primaryKey())
     .addColumn("user_id", "integer", (col) =>
       col.notNull().references("users.id"),
@@ -16,6 +17,7 @@ export async function up(db: Kysely<any>): Promise<void> {
 
   await db.schema
     .createTable("webauthn_challenges")
+    .ifNotExists()
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("user_id", "integer", (col) => col.references("users.id"))
     .addColumn("type", "varchar(32)", (col) => col.notNull())
