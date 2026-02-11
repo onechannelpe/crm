@@ -1,13 +1,14 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import { FileMigrationProvider, Kysely, Migrator } from "kysely";
-import { BunSqliteDialect } from "kysely-bun-worker/normal";
+import SQLite from "better-sqlite3";
+import { FileMigrationProvider, Kysely, Migrator, SqliteDialect } from "kysely";
 
 export async function migrateToLatest() {
+  const sqlite = new SQLite("core.db");
+
   const migrationDb = new Kysely({
-    dialect: new BunSqliteDialect({
-      url: "core.db",
-      dbOptions: { strict: true, create: true },
+    dialect: new SqliteDialect({
+      database: sqlite,
     }),
   });
 
@@ -16,7 +17,10 @@ export async function migrateToLatest() {
     provider: new FileMigrationProvider({
       fs,
       path,
-      migrationFolder: path.join(import.meta.dir, "migrations"),
+      migrationFolder: path.join(
+        path.dirname(new URL(import.meta.url).pathname),
+        "migrations",
+      ),
     }),
   });
 
@@ -34,10 +38,12 @@ export async function migrateToLatest() {
     console.error("Failed to migrate");
     console.error(error);
     await migrationDb.destroy();
+    sqlite.close();
     throw error;
   }
 
   await migrationDb.destroy();
+  sqlite.close();
 }
 
 if (import.meta.main) {

@@ -15,10 +15,13 @@ export function usePasskeyRegistration() {
     setError("");
 
     try {
-      const optionsResponse = await fetch("/api/auth/passkey/registration-options", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
+      const optionsResponse = await fetch(
+        "/api/auth/passkey/registration-options",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        },
+      );
 
       if (!optionsResponse.ok) {
         throw new Error("Failed to get registration options");
@@ -27,9 +30,9 @@ export function usePasskeyRegistration() {
       const options = await optionsResponse.json();
       const formattedOptions = formatRegistrationOptions(options);
 
-      const credential = await navigator.credentials.create({
+      const credential = (await navigator.credentials.create({
         publicKey: formattedOptions,
-      }) as PublicKeyCredential;
+      })) as PublicKeyCredential;
 
       if (!credential) {
         throw new Error("No credential created");
@@ -37,7 +40,8 @@ export function usePasskeyRegistration() {
 
       return serializeRegistrationCredential(credential);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Registration failed";
+      const message =
+        err instanceof Error ? err.message : "Registration failed";
       setError(message);
       throw err;
     } finally {
@@ -57,10 +61,13 @@ export function usePasskeyAuthentication() {
     setError("");
 
     try {
-      const optionsResponse = await fetch("/api/auth/passkey/authentication-options", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
+      const optionsResponse = await fetch(
+        "/api/auth/passkey/authentication-options",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        },
+      );
 
       if (!optionsResponse.ok) {
         throw new Error("Failed to get authentication options");
@@ -69,9 +76,9 @@ export function usePasskeyAuthentication() {
       const options = await optionsResponse.json();
       const formattedOptions = formatAuthenticationOptions(options);
 
-      const credential = await navigator.credentials.get({
+      const credential = (await navigator.credentials.get({
         publicKey: formattedOptions,
-      }) as PublicKeyCredential;
+      })) as PublicKeyCredential;
 
       if (!credential) {
         throw new Error("No credential received");
@@ -79,7 +86,8 @@ export function usePasskeyAuthentication() {
 
       return serializeAuthenticationCredential(credential);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Authentication failed";
+      const message =
+        err instanceof Error ? err.message : "Authentication failed";
       setError(message);
       throw err;
     } finally {

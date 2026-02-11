@@ -11,7 +11,10 @@ import {
 import { db } from "~/server/db/client";
 import { requireAuth, getAuthSession } from "./session";
 import { verifyPassword } from "./password";
-import { getUserPasskeyCount, isPasskeyRequired } from "~/lib/server/passkey-utils";
+import {
+  getUserPasskeyCount,
+  isPasskeyRequired,
+} from "~/lib/server/passkey-utils";
 
 const RP_ID = process.env.WEBAUTHN_RP_ID ?? "localhost";
 const ORIGIN = process.env.WEBAUTHN_ORIGIN ?? "http://localhost:3000";

@@ -1,4 +1,7 @@
-import { setCookie as vinxiSetCookie, deleteCookie as vinxiDeleteCookie } from "vinxi/http";
+import {
+  setCookie as vinxiSetCookie,
+  deleteCookie as vinxiDeleteCookie,
+} from "vinxi/http";
 import { SESSION_MAX_AGE } from "./session";
 
 const SESSION_COOKIE = "session";
