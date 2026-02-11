@@ -16,6 +16,8 @@ async fn main() -> Result<()> {
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .init();
 
+    dotenvy::dotenv().ok();
+
     let config = Config::load()?;
     let service = Arc::new(LeadService::new(&config.data_path).await?);
 
