@@ -18,6 +18,6 @@ async fn main() -> Result<()> {
 
     let config = Config::load()?;
     let service = Arc::new(LeadService::new(&config.data_path).await?);
-    
+
     api::serve(service, config).await
 }

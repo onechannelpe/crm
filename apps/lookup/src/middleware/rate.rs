@@ -1,10 +1,11 @@
 use crate::{api::state::AppState, error::Error};
-use axum::{extract::{Request, Extension}, middleware::Next, response::Response};
-use dashmap::DashMap;
-use std::{
-    sync::Arc,
-    time::Instant,
+use axum::{
+    extract::{Extension, Request},
+    middleware::Next,
+    response::Response,
 };
+use dashmap::DashMap;
+use std::{sync::Arc, time::Instant};
 
 struct Bucket {
     tokens: u32,
@@ -20,10 +21,10 @@ impl Bucket {
             last_refill: Instant::now(),
         }
     }
-    
+
     fn consume(&mut self) -> bool {
         self.refill();
-        
+
         if self.tokens > 0 {
             self.tokens -= 1;
             true
@@ -31,11 +32,11 @@ impl Bucket {
             false
         }
     }
-    
+
     fn refill(&mut self) {
         let elapsed = self.last_refill.elapsed();
         let tokens_to_add = (elapsed.as_secs_f64() * (self.capacity as f64 / 60.0)) as u32;
-        
+
         if tokens_to_add > 0 {
             self.tokens = (self.tokens + tokens_to_add).min(self.capacity);
             self.last_refill = Instant::now();
@@ -55,7 +56,7 @@ impl RateLimiter {
             capacity: requests_per_minute,
         }
     }
-    
+
     pub fn check(&self, key: &str) -> bool {
         self.buckets
             .entry(key.to_string())
@@ -74,10 +75,10 @@ pub async fn rate_limit(
         .get("x-api-key")
         .and_then(|v| v.to_str().ok())
         .unwrap_or("anonymous");
-    
+
     if !state.limiter.check(key) {
         return Err(Error::RateLimit);
     }
-    
+
     Ok(next.run(request).await)
 }

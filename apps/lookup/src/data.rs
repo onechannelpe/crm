@@ -1,29 +1,30 @@
-use crate::{error::{Error, Result}, service::types::Contact};
+use crate::{
+    error::{Error, Result},
+    service::types::Contact,
+};
 use std::fs::File;
 
 pub async fn load_csv(path: &str) -> Result<Vec<Contact>> {
     tracing::info!("loading contacts from {}", path);
-    
-    let file = File::open(path)
-        .map_err(|e| Error::Data(format!("cannot open {}: {}", path, e)))?;
-    
+
+    let file = File::open(path).map_err(|e| Error::Data(format!("cannot open {}: {}", path, e)))?;
+
     let mut reader = csv::ReaderBuilder::new()
         .has_headers(true)
         .from_reader(file);
-    
+
     let mut contacts = Vec::new();
-    
+
     for (_, result) in reader.records().enumerate() {
-        let record = result
-            .map_err(|e| Error::Data(format!("csv parse error: {}", e)))?;
-        
+        let record = result.map_err(|e| Error::Data(format!("csv parse error: {}", e)))?;
+
         if record.len() < 3 {
             continue;
         }
-        
+
         let dni = get_field(&record, 0);
         let name = get_field(&record, 1);
-        
+
         if !dni.is_empty() && !name.is_empty() {
             let contact = Contact {
                 id: contacts.len(),
@@ -37,7 +38,7 @@ pub async fn load_csv(path: &str) -> Result<Vec<Contact>> {
             contacts.push(contact);
         }
     }
-    
+
     tracing::info!("loaded {} contacts", contacts.len());
     Ok(contacts)
 }

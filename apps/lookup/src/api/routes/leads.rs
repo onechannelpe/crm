@@ -5,11 +5,11 @@ use crate::{
     service::types::{AssignRequest, Lead, Stats},
 };
 use axum::{
+    Router,
     extract::{Query, State},
     middleware,
     response::Json,
     routing::{get, post},
-    Router,
 };
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -32,7 +32,7 @@ async fn get_unassigned(
     let limit = query.limit.unwrap_or(10).min(100);
     let leads = state.service.get_unassigned(limit);
     let count = leads.len();
-    
+
     Ok(Json(LeadList { leads, count }))
 }
 
@@ -49,9 +49,7 @@ async fn assign(
     Ok(Json(AssignResponse { assigned: count }))
 }
 
-async fn stats(
-    State(state): State<Arc<AppState>>
-) -> Json<Stats> {
+async fn stats(State(state): State<Arc<AppState>>) -> Json<Stats> {
     Json(state.service.stats())
 }
 

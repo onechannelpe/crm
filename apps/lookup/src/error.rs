@@ -1,14 +1,14 @@
-use axum::{http::StatusCode, response::IntoResponse, Json};
+use axum::{Json, http::StatusCode, response::IntoResponse};
 use serde::Serialize;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("data error: {0}")]
     Data(String),
-    
+
     #[error("unauthorized")]
     Unauthorized,
-    
+
     #[error("rate limit exceeded")]
     RateLimit,
 }

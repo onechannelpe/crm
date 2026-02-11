@@ -10,8 +10,12 @@ use tower::ServiceBuilder;
 use tower_http::{compression::CompressionLayer, trace::TraceLayer};
 
 pub async fn serve(service: Arc<LeadService>, config: Config) -> Result<()> {
-    let state = Arc::new(AppState::new(service, config.api_keys, config.rate_limit_per_minute));
-    
+    let state = Arc::new(AppState::new(
+        service,
+        config.api_keys,
+        config.rate_limit_per_minute,
+    ));
+
     let app = Router::new()
         .merge(health::routes())
         .merge(leads::routes())
@@ -22,13 +26,15 @@ pub async fn serve(service: Arc<LeadService>, config: Config) -> Result<()> {
                 .layer(CompressionLayer::new()),
         )
         .with_state(state);
-    
+
     let addr = format!("{}:{}", config.host, config.port);
     tracing::info!("listening on {}", addr);
-    
-    let listener = tokio::net::TcpListener::bind(&addr).await
+
+    let listener = tokio::net::TcpListener::bind(&addr)
+        .await
         .map_err(|e| crate::error::Error::Data(e.to_string()))?;
-    
-    axum::serve(listener, app).await
+
+    axum::serve(listener, app)
+        .await
         .map_err(|e| crate::error::Error::Data(e.to_string()))
 }
