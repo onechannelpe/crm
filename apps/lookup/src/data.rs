@@ -13,7 +13,7 @@ pub async fn load_csv(path: &str) -> Result<Vec<Contact>> {
     
     let mut contacts = Vec::new();
     
-    for (idx, result) in reader.records().enumerate() {
+    for (_, result) in reader.records().enumerate() {
         let record = result
             .map_err(|e| Error::Data(format!("csv parse error: {}", e)))?;
         
@@ -21,17 +21,19 @@ pub async fn load_csv(path: &str) -> Result<Vec<Contact>> {
             continue;
         }
         
-        let contact = Contact {
-            id: idx,
-            dni: get_field(&record, 0),
-            name: get_field(&record, 1),
-            phone_primary: get_optional(&record, 2),
-            phone_secondary: get_optional(&record, 3),
-            org_ruc: get_optional(&record, 4),
-            org_name: get_optional(&record, 5),
-        };
+        let dni = get_field(&record, 0);
+        let name = get_field(&record, 1);
         
-        if !contact.dni.is_empty() && !contact.name.is_empty() {
+        if !dni.is_empty() && !name.is_empty() {
+            let contact = Contact {
+                id: contacts.len(),
+                dni,
+                name,
+                phone_primary: get_optional(&record, 2),
+                phone_secondary: get_optional(&record, 3),
+                org_ruc: get_optional(&record, 4),
+                org_name: get_optional(&record, 5),
+            };
             contacts.push(contact);
         }
     }

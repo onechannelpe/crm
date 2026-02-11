@@ -1,28 +1,23 @@
-mod index;
 pub mod types;
 
-use crate::error::{Error, Result};
-use index::Index;
+use crate::error::Result;
 use std::{collections::HashSet, sync::RwLock};
 use types::{Contact, Lead, Stats};
 
 pub struct LeadService {
     contacts: Vec<Contact>,
-    index: Index,
     assigned: RwLock<HashSet<usize>>,
 }
 
 impl LeadService {
     pub async fn new(data_path: &str) -> Result<Self> {
         let contacts = crate::data::load_csv(data_path).await?;
-        let index = Index::build(&contacts);
         let assigned = RwLock::new(HashSet::new());
         
         tracing::info!("service initialized with {} contacts", contacts.len());
         
         Ok(Self {
             contacts,
-            index,
             assigned,
         })
     }

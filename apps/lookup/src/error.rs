@@ -11,9 +11,6 @@ pub enum Error {
     
     #[error("rate limit exceeded")]
     RateLimit,
-    
-    #[error("invalid request: {0}")]
-    InvalidRequest(String),
 }
 
 #[derive(Serialize)]
@@ -27,7 +24,6 @@ impl IntoResponse for Error {
             Error::Data(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg),
             Error::Unauthorized => (StatusCode::UNAUTHORIZED, self.to_string()),
             Error::RateLimit => (StatusCode::TOO_MANY_REQUESTS, self.to_string()),
-            Error::InvalidRequest(msg) => (StatusCode::BAD_REQUEST, msg),
         };
 
         (status, Json(ErrorBody { error: message })).into_response()

@@ -1,9 +1,9 @@
 use crate::{api::state::AppState, error::Error};
-use axum::{extract::State, http::Request, middleware::Next, response::Response};
+use axum::{extract::{Request, Extension}, middleware::Next, response::Response};
 use dashmap::DashMap;
 use std::{
     sync::Arc,
-    time::{Duration, Instant},
+    time::Instant,
 };
 
 struct Bucket {
@@ -34,10 +34,10 @@ impl Bucket {
     
     fn refill(&mut self) {
         let elapsed = self.last_refill.elapsed();
-        let refills = (elapsed.as_secs() / 60) as u32;
+        let tokens_to_add = (elapsed.as_secs_f64() * (self.capacity as f64 / 60.0)) as u32;
         
-        if refills > 0 {
-            self.tokens = (self.tokens + refills).min(self.capacity);
+        if tokens_to_add > 0 {
+            self.tokens = (self.tokens + tokens_to_add).min(self.capacity);
             self.last_refill = Instant::now();
         }
     }
@@ -64,10 +64,10 @@ impl RateLimiter {
     }
 }
 
-pub async fn rate_limit<B>(
-    State(state): State<Arc<AppState>>,
-    request: Request<B>,
-    next: Next<B>,
+pub async fn rate_limit(
+    Extension(state): Extension<Arc<AppState>>,
+    request: Request,
+    next: Next,
 ) -> Result<Response, Error> {
     let key = request
         .headers()

@@ -1,5 +1,5 @@
 use crate::{api::state::AppState, error::Error};
-use axum::{extract::State, http::Request, middleware::Next, response::Response};
+use axum::{extract::{Request, Extension}, middleware::Next, response::Response};
 use sha2::{Digest, Sha256};
 use std::sync::Arc;
 
@@ -25,10 +25,10 @@ impl AuthValidator {
     }
 }
 
-pub async fn require_auth<B>(
-    State(state): State<Arc<AppState>>,
-    request: Request<B>,
-    next: Next<B>,
+pub async fn require_auth(
+    Extension(state): Extension<Arc<AppState>>,
+    request: Request,
+    next: Next,
 ) -> Result<Response, Error> {
     let key = request
         .headers()

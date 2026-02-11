@@ -27,7 +27,7 @@ Endpoints (protected routes require `x-api-key` header):
 ```
 GET  /health                        # public
 GET  /leads/unassigned?limit=10     # protected
-POST /leads/assign                  # protected, body: {lead_ids, user_id, branch_id}
+POST /leads/assign                  # protected, body: {lead_ids}
 GET  /stats                         # protected
 ```
 

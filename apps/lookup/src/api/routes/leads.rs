@@ -1,8 +1,8 @@
 use crate::{
     api::state::AppState,
-    error::{Error, Result},
+    error::Result,
     middleware::{auth::require_auth, rate::rate_limit},
-    service::types::{AssignRequest, Lead},
+    service::types::{AssignRequest, Lead, Stats},
 };
 use axum::{
     extract::{Query, State},
@@ -49,10 +49,17 @@ async fn assign(
     Ok(Json(AssignResponse { assigned: count }))
 }
 
+async fn stats(
+    State(state): State<Arc<AppState>>
+) -> Json<Stats> {
+    Json(state.service.stats())
+}
+
 pub fn routes() -> Router<Arc<AppState>> {
     Router::new()
         .route("/leads/unassigned", get(get_unassigned))
         .route("/leads/assign", post(assign))
+        .route("/stats", get(stats))
         .layer(middleware::from_fn(rate_limit))
         .layer(middleware::from_fn(require_auth))
 }

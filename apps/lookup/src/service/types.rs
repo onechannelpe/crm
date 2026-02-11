@@ -39,8 +39,6 @@ impl From<&Contact> for Lead {
 #[derive(Debug, Deserialize)]
 pub struct AssignRequest {
     pub lead_ids: Vec<usize>,
-    pub user_id: i64,
-    pub branch_id: i64,
 }
 
 #[derive(Debug, Serialize)]
