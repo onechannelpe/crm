@@ -14,7 +14,7 @@ Flow:
 
 ```mermaid
 flowchart TD
-  A[Startup] --> B[Read CSV (DATA_PATH)]
+  A[Startup] --> B[Read CSV]
   B --> C[Validate + load contacts]
   C --> D[Serve HTTP :5000]
 
