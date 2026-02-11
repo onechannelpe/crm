@@ -10,17 +10,31 @@ cargo build --release
 API_KEYS="key1,key2" ./target/release/one-lookup
 ```
 
-Flow:
+Request pipeline:
 
 ```mermaid
-flowchart TD
-  A[Startup] --> B[Read CSV]
-  B --> C[Validate + load contacts]
-  C --> D[Serve HTTP :5000]
+flowchart LR
+  C[Client] --> R[Axum router]
 
-  D --> E[GET /leads/unassigned]
-  D --> F[POST /leads/assign]
-  D --> G[GET /stats]
+  R -->|GET /health| H[health handler]
+  H --> HJ[200 JSON]
+
+  R --> P[protected routes]
+  P --> RL[rate_limit middleware]
+  RL --> LIM[RateLimiter]
+  LIM --> AUTH[require_auth middleware]
+  AUTH --> AV[AuthValidator]
+
+  AUTH --> U[GET /leads/unassigned]
+  AUTH --> A[POST /leads/assign]
+  AUTH --> S[GET /stats]
+
+  LS[LeadService] --> V[contacts Vec]
+  LS --> AS[assigned set]
+
+  U --> LS --> UJ[200 JSON leads]
+  A --> LS --> AJ[200 JSON assigned count]
+  S --> LS --> SJ[200 JSON stats]
 ```
 
 Endpoints:
@@ -53,12 +67,12 @@ Code map:
 
 - src/main.rs entrypoint (config load, service init, server start)
 - src/config.rs env parsing and defaults
-- src/api/mod.rs Axum router and middleware stack
+- src/api/mod.rs Axum router + layers (trace, compression)
 - src/api/routes/health.rs /health
-- src/api/routes/leads.rs /leads/\* and /stats
-- src/api/state.rs AppState (service + auth + rate limiter)
-- src/middleware/auth.rs x-api-key validation
-- src/middleware/rate.rs per-key rate limiting
+- src/api/routes/leads.rs /leads/\* and /stats (middleware order: rate -> auth)
+- src/api/state.rs AppState (service + auth + limiter)
+- src/middleware/auth.rs x-api-key validation (sha256)
+- src/middleware/rate.rs per-key token bucket
 - src/data.rs CSV loading and validation
 - src/service/mod.rs lead selection + assignment tracking
 - src/service/types.rs Contact/Lead/Stats + request types
