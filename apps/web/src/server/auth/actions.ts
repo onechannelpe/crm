@@ -6,6 +6,7 @@ import { getAuthSession } from "./session";
 import { verifyPassword } from "./password";
 import { countUserPasskeys } from "./passkey";
 import { consumeRateLimit, passwordThrottler } from "./rate-limit";
+import { isPasskeyRequired } from "~/lib/server/passkey-utils";
 
 export const loginAction = action(async (formData: FormData) => {
   "use server";
@@ -38,7 +39,7 @@ export const loginAction = action(async (formData: FormData) => {
 
   passwordThrottler.reset(email);
 
-  const passkeyRequired = ["admin", "sales_manager"].includes(user.role);
+  const passkeyRequired = isPasskeyRequired(user.role);
   const passkeyCount = await countUserPasskeys(user.id);
 
   const session = await getAuthSession();

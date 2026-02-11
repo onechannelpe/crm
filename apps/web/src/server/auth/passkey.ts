@@ -11,6 +11,7 @@ import {
 import { db } from "~/server/db/client";
 import { requireAuth, getAuthSession } from "./session";
 import { verifyPassword } from "./password";
+import { getUserPasskeyCount, isPasskeyRequired } from "~/lib/server/passkey-utils";
 
 const RP_ID = process.env.WEBAUTHN_RP_ID ?? "localhost";
 const ORIGIN = process.env.WEBAUTHN_ORIGIN ?? "http://localhost:3000";
@@ -258,14 +259,5 @@ export async function verifyPasskeyAuthentication(
 }
 
 export async function countUserPasskeys(userId: number): Promise<number> {
-  const result = await db
-    .selectFrom("passkeys")
-    .select((eb) => eb.fn.count<number>("id").as("count"))
-    .where("user_id", "=", userId)
-    .executeTakeFirst();
-
-  if (!result) return 0;
-  return typeof result.count === "number"
-    ? result.count
-    : Number.parseInt(String(result.count), 10);
+  return await getUserPasskeyCount(userId);
 }

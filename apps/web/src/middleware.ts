@@ -1,9 +1,11 @@
 import { redirect } from "@solidjs/router";
 import { createMiddleware } from "@solidjs/start/middleware";
 import { getCookie } from "vinxi/http";
+import { getAuthSession } from "~/server/auth/session";
+import { getUserPasskeyCount, isPasskeyRequired } from "~/lib/server/passkey-utils";
 
 export default createMiddleware({
-  onRequest: (event) => {
+  onRequest: async (event) => {
     const url = new URL(event.request.url);
     const isPublic =
       url.pathname.startsWith("/login") ||
@@ -15,6 +17,20 @@ export default createMiddleware({
 
     const hasSession = !!getCookie(event.nativeEvent, "session");
     if (!hasSession) {
+      return redirect("/login");
+    }
+
+    try {
+      const session = await getAuthSession();
+      const sessionData = session.data;
+
+      if (sessionData?.userId && isPasskeyRequired(sessionData.role)) {
+        if (!sessionData.passkeyVerified) {
+          const count = await getUserPasskeyCount(sessionData.userId);
+          return redirect(count === 0 ? "/auth/passkey-enroll" : "/auth/passkey-verify");
+        }
+      }
+    } catch {
       return redirect("/login");
     }
   },

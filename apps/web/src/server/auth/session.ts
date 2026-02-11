@@ -3,6 +3,9 @@
 import { useSession as vinxiSession } from "vinxi/http";
 import { redirect } from "@solidjs/router";
 import type { User } from "~/server/db/schema";
+import { isPasskeyRequired } from "~/lib/server/passkey-utils";
+
+export const SESSION_MAX_AGE = 60 * 60 * 24 * 30 * 1000; // 30 days in milliseconds
 
 export interface SessionData {
   userId: number;
@@ -19,7 +22,7 @@ export async function getAuthSession() {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 30,
+      maxAge: Math.floor(SESSION_MAX_AGE / 1000),
       path: "/",
     },
   });
@@ -50,9 +53,7 @@ export async function requireRole(
 export async function requirePasskey(): Promise<SessionData> {
   const sessionData = await requireAuth();
 
-  const passkeyRequired = ["admin", "sales_manager"].includes(sessionData.role);
-
-  if (passkeyRequired && !sessionData.passkeyVerified) {
+  if (isPasskeyRequired(sessionData.role) && !sessionData.passkeyVerified) {
     throw redirect("/auth/passkey-verify");
   }
 
