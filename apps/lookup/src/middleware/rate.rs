@@ -1,12 +1,16 @@
 use crate::{api::state::AppState, error::Error};
-use axum::{extract::State, http::Request, middleware::Next, response::Response};
+use axum::{
+    extract::{Extension, Request},
+    middleware::Next,
+    response::Response,
+};
 use dashmap::DashMap;
 use std::{
     sync::Arc,
     time::{Duration, Instant},
 };
 
-struct Bucket {
+pub struct Bucket {
     tokens: u32,
     capacity: u32,
     last_refill: Instant,
@@ -20,10 +24,10 @@ impl Bucket {
             last_refill: Instant::now(),
         }
     }
-    
+
     fn consume(&mut self) -> bool {
         self.refill();
-        
+
         if self.tokens > 0 {
             self.tokens -= 1;
             true
@@ -31,14 +35,16 @@ impl Bucket {
             false
         }
     }
-    
+
     fn refill(&mut self) {
         let elapsed = self.last_refill.elapsed();
-        let refills = (elapsed.as_secs() / 60) as u32;
-        
-        if refills > 0 {
-            self.tokens = (self.tokens + refills).min(self.capacity);
-            self.last_refill = Instant::now();
+        let tokens_to_add = (elapsed.as_secs_f64() * (self.capacity as f64 / 60.0)) as u32;
+
+        if tokens_to_add > 0 {
+            self.tokens = (self.tokens + tokens_to_add).min(self.capacity);
+            let time_used_for_tokens =
+                Duration::from_secs_f64(tokens_to_add as f64 * 60.0 / self.capacity as f64);
+            self.last_refill += time_used_for_tokens;
         }
     }
 }
@@ -55,7 +61,7 @@ impl RateLimiter {
             capacity: requests_per_minute,
         }
     }
-    
+
     pub fn check(&self, key: &str) -> bool {
         self.buckets
             .entry(key.to_string())
@@ -64,20 +70,20 @@ impl RateLimiter {
     }
 }
 
-pub async fn rate_limit<B>(
-    State(state): State<Arc<AppState>>,
-    request: Request<B>,
-    next: Next<B>,
+pub async fn rate_limit(
+    Extension(state): Extension<Arc<AppState>>,
+    request: Request,
+    next: Next,
 ) -> Result<Response, Error> {
     let key = request
         .headers()
         .get("x-api-key")
         .and_then(|v| v.to_str().ok())
         .unwrap_or("anonymous");
-    
+
     if !state.limiter.check(key) {
         return Err(Error::RateLimit);
     }
-    
+
     Ok(next.run(request).await)
 }

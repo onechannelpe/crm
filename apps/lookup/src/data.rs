@@ -1,41 +1,44 @@
-use crate::{error::{Error, Result}, service::types::Contact};
+use crate::{
+    error::{Error, Result},
+    service::types::Contact,
+};
 use std::fs::File;
 
 pub async fn load_csv(path: &str) -> Result<Vec<Contact>> {
     tracing::info!("loading contacts from {}", path);
-    
-    let file = File::open(path)
-        .map_err(|e| Error::Data(format!("cannot open {}: {}", path, e)))?;
-    
+
+    let file = File::open(path).map_err(|e| Error::Data(format!("cannot open {}: {}", path, e)))?;
+
     let mut reader = csv::ReaderBuilder::new()
         .has_headers(true)
         .from_reader(file);
-    
+
     let mut contacts = Vec::new();
-    
-    for (idx, result) in reader.records().enumerate() {
-        let record = result
-            .map_err(|e| Error::Data(format!("csv parse error: {}", e)))?;
-        
+
+    for (_, result) in reader.records().enumerate() {
+        let record = result.map_err(|e| Error::Data(format!("csv parse error: {}", e)))?;
+
         if record.len() < 3 {
             continue;
         }
-        
-        let contact = Contact {
-            id: idx,
-            dni: get_field(&record, 0),
-            name: get_field(&record, 1),
-            phone_primary: get_optional(&record, 2),
-            phone_secondary: get_optional(&record, 3),
-            org_ruc: get_optional(&record, 4),
-            org_name: get_optional(&record, 5),
-        };
-        
-        if !contact.dni.is_empty() && !contact.name.is_empty() {
+
+        let dni = get_field(&record, 0);
+        let name = get_field(&record, 1);
+
+        if !dni.is_empty() && !name.is_empty() {
+            let contact = Contact {
+                id: contacts.len(),
+                dni,
+                name,
+                phone_primary: get_optional(&record, 2),
+                phone_secondary: get_optional(&record, 3),
+                org_ruc: get_optional(&record, 4),
+                org_name: get_optional(&record, 5),
+            };
             contacts.push(contact);
         }
     }
-    
+
     tracing::info!("loaded {} contacts", contacts.len());
     Ok(contacts)
 }

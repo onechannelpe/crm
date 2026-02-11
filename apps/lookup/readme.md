@@ -1,51 +1,74 @@
-# lookup service
+# one-lookup
 
-HTTP API for managing contact lead data from CSV. Data loaded into memory at
-startup and served via pre-built indexes.
+Lead distribution API backed by a CSV dataset. Contacts are loaded into memory
+at startup. Assignments are tracked in-process and reset on restart.
 
-Build and run:
+Run:
 
 ```sh
 cargo build --release
-export API_KEYS="key1,key2,key3"
-export DATA_PATH="./data/contacts.csv"
-./target/release/lead_searcher
+API_KEYS="key1,key2" ./target/release/one-lookup
 ```
 
-Configuration via environment variables:
+Request pipeline:
 
-```sh
-HOST=127.0.0.1                # default
-PORT=5000                     # default
-DATA_PATH=./data/contacts.csv # required
-API_KEYS=key1,key2            # required, comma-separated
-RATE_LIMIT_PER_MINUTE=60      # default
+```mermaid
+flowchart LR
+  C[Client] --> S[HTTP server: trace, gzip]
+  S --> MW[protected middleware: rate_limit -> require_auth]
+  MW --> HD[handlers: /leads/*, /stats]
+  HD --> LS[LeadService]
+  LS --> RESP[JSON response]
+  LS -.-> ST[State: contacts Vec, assigned set]
+  HD -.-> E1[GET /leads/unassigned]
+  HD -.-> E2[POST /leads/assign]
+  HD -.-> E3[GET /stats]
 ```
 
-Endpoints (protected routes require `x-api-key` header):
+Endpoints:
 
-```
-GET  /health                        # public
-GET  /leads/unassigned?limit=10     # protected
-POST /leads/assign                  # protected, body: {lead_ids, user_id, branch_id}
-GET  /stats                         # protected
+```txt
+GET  /health                         # public
+GET  /leads/unassigned?limit=10      # x-api-key required
+POST /leads/assign                   # x-api-key required, body: {lead_ids: number[]}
+GET  /stats                          # x-api-key required
 ```
 
-Data format (CSV at `./data/contacts.csv`):
+Configuration (env):
+
+- HOST (default: 127.0.0.1)
+- PORT (default: 5000)
+- DATA_PATH (default: ./data/contacts.csv)
+- API_KEYS (required, comma-separated)
+- RATE_LIMIT_PER_MINUTE (default: 60)
+
+CSV format:
 
 ```csv
 dni,name,phone_primary,phone_secondary,org_ruc,org_name
-12345678,Juan Perez,987654321,912345678,20123456789,Acme Corp
 ```
 
-Fields: `dni` and `name` required, others optional. Empty cells allowed.
+`dni` and `name` are required. Other fields are optional. Rows with missing
+required fields are skipped.
 
-Data directory structure:
+Code map:
 
-```txt
-project/
-├── src/
-├── data/              # create this
-│   └── contacts.csv   # place CSV here
-└── Cargo.toml
-```
+- src/main.rs entrypoint (config load, service init, server start)
+- src/config.rs env parsing and defaults
+- src/api/mod.rs Axum router + layers (trace, compression)
+- src/api/routes/health.rs /health
+- src/api/routes/leads.rs /leads/\* and /stats (middleware order: rate -> auth)
+- src/api/state.rs AppState (service + auth + limiter)
+- src/middleware/auth.rs x-api-key validation (sha256)
+- src/middleware/rate.rs per-key token bucket
+- src/data.rs CSV loading and validation
+- src/service/mod.rs lead selection + assignment tracking
+- src/service/types.rs Contact/Lead/Stats + request types
+- src/error.rs error type + HTTP mapping
+
+Notes:
+
+- Protected routes require `x-api-key` and are rate-limited.
+- Lead IDs are stable for the lifetime of the process. `id` is the in-memory
+  index.
+- Assignment state is not persisted.

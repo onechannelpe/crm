@@ -19,6 +19,10 @@ tower-http = { version = "0.6.8", features = ["cors", "compression-gzip", "trace
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
 
+[dev-dependencies]
+axum-test = "18.7.0"
+reqwest = "0.13.2"
+
 [profile.release]
 opt-level = 3
 lto = true
