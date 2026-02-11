@@ -11,4 +11,3 @@ Principles we MUST follow when writing code:
 - As a general rule, files should not be more than 70 lines long. If we have to
   add comments to subdivide a file, that's a sign it should be split into
   multiple files.
-  
