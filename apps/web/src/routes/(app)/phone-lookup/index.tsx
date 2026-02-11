@@ -16,9 +16,7 @@ export default function PhoneLookupPage() {
       <div class="bg-white rounded-lg shadow p-6 mb-6">
         <form action={searchPhoneAction} method="post" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium mb-2">
-              Search Type
-            </label>
+            <label class="block text-sm font-medium mb-2">Search Type</label>
             <select
               name="searchType"
               value={searchType()}
@@ -32,9 +30,7 @@ export default function PhoneLookupPage() {
           </div>
 
           <div>
-            <label class="block text-sm font-medium mb-2">
-              Search Value
-            </label>
+            <label class="block text-sm font-medium mb-2">Search Value</label>
             <Input
               name="searchValue"
               placeholder={
@@ -67,18 +63,14 @@ export default function PhoneLookupPage() {
             <Show when={data().result}>
               {(result) => (
                 <div>
-                  <h2 class="text-xl font-semibold mb-4">
-                    Search Results
-                  </h2>
+                  <h2 class="text-xl font-semibold mb-4">Search Results</h2>
                   <Show
                     when={result().found && result().count > 0}
-                    fallback={
-                      <p class="text-gray-500">No results found</p>
-                    }
+                    fallback={<p class="text-gray-500">No results found</p>}
                   >
                     <p class="text-sm text-gray-600 mb-4">
-                      Found {result().count} result(s) for{" "}
-                      {result().query_type}: {result().query}
+                      Found {result().count} result(s) for {result().query_type}
+                      : {result().query}
                     </p>
                     <div class="space-y-4">
                       <For each={result().results}>
@@ -99,16 +91,12 @@ export default function PhoneLookupPage() {
                               </Show>
                             </div>
                             <div class="mt-3">
-                              <span class="font-medium">
-                                Phone Numbers:
-                              </span>
+                              <span class="font-medium">Phone Numbers:</span>
                               <div class="mt-1 space-y-1">
                                 <For each={item.phones}>
                                   {(phone, idx) => (
                                     <div class="flex items-center gap-2">
-                                      <span class="text-lg">
-                                        {phone}
-                                      </span>
+                                      <span class="text-lg">{phone}</span>
                                       <Show when={item.operators[idx()]}>
                                         <span class="text-sm text-gray-500">
                                           ({item.operators[idx()]})

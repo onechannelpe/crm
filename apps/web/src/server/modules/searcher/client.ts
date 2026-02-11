@@ -1,5 +1,4 @@
-const SEARCHER_URL =
-  process.env.SEARCHER_URL || "http://localhost:3000";
+const SEARCHER_URL = process.env.SEARCHER_URL || "http://localhost:3000";
 
 export interface SearchResult {
   query: string;
@@ -14,9 +13,7 @@ export interface SearchResult {
   count: number;
 }
 
-export async function searchByDNI(
-  dni: string,
-): Promise<SearchResult | null> {
+export async function searchByDNI(dni: string): Promise<SearchResult | null> {
   try {
     const response = await fetch(`${SEARCHER_URL}/lookup/dni/${dni}`);
     if (!response.ok) return null;
@@ -26,9 +23,7 @@ export async function searchByDNI(
   }
 }
 
-export async function searchByRUC(
-  ruc: string,
-): Promise<SearchResult | null> {
+export async function searchByRUC(ruc: string): Promise<SearchResult | null> {
   try {
     const response = await fetch(`${SEARCHER_URL}/lookup/ruc/${ruc}`);
     if (!response.ok) return null;

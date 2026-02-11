@@ -5,7 +5,7 @@ import { FileMigrationProvider, Kysely, Migrator, SqliteDialect } from "kysely";
 
 export async function migrateToLatest() {
   const sqlite = new SQLite("core.db");
-  
+
   const migrationDb = new Kysely({
     dialect: new SqliteDialect({
       database: sqlite,
@@ -17,7 +17,10 @@ export async function migrateToLatest() {
     provider: new FileMigrationProvider({
       fs,
       path,
-      migrationFolder: path.join(path.dirname(new URL(import.meta.url).pathname), "migrations"),
+      migrationFolder: path.join(
+        path.dirname(new URL(import.meta.url).pathname),
+        "migrations",
+      ),
     }),
   });
 

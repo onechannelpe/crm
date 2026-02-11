@@ -8,9 +8,9 @@ export async function getUserPasskeyCount(userId: number): Promise<number> {
     .executeTakeFirst();
 
   if (!result?.count) return 0;
-  
-  return typeof result.count === "number" 
-    ? result.count 
+
+  return typeof result.count === "number"
+    ? result.count
     : Number.parseInt(String(result.count), 10);
 }
 

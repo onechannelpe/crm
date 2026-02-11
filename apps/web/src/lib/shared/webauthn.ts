@@ -36,7 +36,9 @@ export function formatAuthenticationOptions(options: any) {
   };
 }
 
-export function serializeRegistrationCredential(credential: PublicKeyCredential) {
+export function serializeRegistrationCredential(
+  credential: PublicKeyCredential,
+) {
   const response = credential.response as AuthenticatorAttestationResponse;
   return {
     id: credential.id,
@@ -50,7 +52,9 @@ export function serializeRegistrationCredential(credential: PublicKeyCredential)
   };
 }
 
-export function serializeAuthenticationCredential(credential: PublicKeyCredential) {
+export function serializeAuthenticationCredential(
+  credential: PublicKeyCredential,
+) {
   const response = credential.response as AuthenticatorAssertionResponse;
   return {
     id: credential.id,
@@ -59,7 +63,9 @@ export function serializeAuthenticationCredential(credential: PublicKeyCredentia
       authenticatorData: uint8ArrayToBase64(response.authenticatorData),
       clientDataJSON: uint8ArrayToBase64(credential.response.clientDataJSON),
       signature: uint8ArrayToBase64(response.signature),
-      userHandle: response.userHandle ? uint8ArrayToBase64(response.userHandle) : null,
+      userHandle: response.userHandle
+        ? uint8ArrayToBase64(response.userHandle)
+        : null,
     },
     type: credential.type,
   };

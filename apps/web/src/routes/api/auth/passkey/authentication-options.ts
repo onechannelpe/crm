@@ -6,7 +6,7 @@ import { db } from "~/server/db/client";
 export async function POST() {
   try {
     const { userId } = await requireAuth();
-    
+
     const user = await db
       .selectFrom("users")
       .select(["email"])
@@ -17,8 +17,11 @@ export async function POST() {
     return json(options);
   } catch (error) {
     return json(
-      { error: error instanceof Error ? error.message : "Failed to create options" },
-      { status: 500 }
+      {
+        error:
+          error instanceof Error ? error.message : "Failed to create options",
+      },
+      { status: 500 },
     );
   }
 }

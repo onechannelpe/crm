@@ -26,7 +26,9 @@ const passkeyVerifyAction = action(async (formData: FormData) => {
     await verifyPasskeyAuthentication(user.email, authResponse);
     return { success: true };
   } catch (error) {
-    return { error: error instanceof Error ? error.message : "Verification failed" };
+    return {
+      error: error instanceof Error ? error.message : "Verification failed",
+    };
   }
 }, "passkey-verify");
 
@@ -40,7 +42,7 @@ export default function PasskeyVerify() {
       const credential = await authenticate();
       const form = new FormData();
       form.append("response", JSON.stringify(credential));
-      
+
       const result = await passkeyVerifyAction(form);
       if (result?.success) {
         window.location.href = "/search";
@@ -57,8 +59,12 @@ export default function PasskeyVerify() {
       <div class="w-full max-w-md">
         <div class="bg-white rounded-lg shadow-lg p-8">
           <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-black">Verificación de Passkey</h1>
-            <p class="text-gray-500 mt-2">Usa tu passkey para completar el inicio de sesión</p>
+            <h1 class="text-3xl font-bold text-black">
+              Verificación de Passkey
+            </h1>
+            <p class="text-gray-500 mt-2">
+              Usa tu passkey para completar el inicio de sesión
+            </p>
           </div>
 
           <Show when={error()}>
@@ -83,10 +89,12 @@ export default function PasskeyVerify() {
                 disabled={loading() || submission.pending}
                 class="w-full px-4 py-3 bg-black text-white rounded font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading() || submission.pending ? "Verificando..." : "Verificar con Passkey"}
+                {loading() || submission.pending
+                  ? "Verificando..."
+                  : "Verificar con Passkey"}
               </button>
             </Show>
-            
+
             <a
               href="/login"
               class="inline-block text-sm text-gray-600 hover:text-black underline"
