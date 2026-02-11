@@ -8,11 +8,7 @@ pub struct AppState {
 }
 
 impl AppState {
-    pub fn new(
-        service: Arc<LeadService>,
-        api_keys: Vec<String>,
-        rate_limit: u32,
-    ) -> Self {
+    pub fn new(service: Arc<LeadService>, api_keys: Vec<String>, rate_limit: u32) -> Self {
         Self {
             service,
             auth: AuthValidator::new(api_keys),
