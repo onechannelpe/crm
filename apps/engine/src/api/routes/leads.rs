@@ -1,23 +1,17 @@
 use crate::{
     api::state::AppState,
     error::Result,
-    middleware::{auth::require_auth, rate::rate_limit},
+    middleware::user::UserContext,
     service::types::{AssignRequest, Lead, Stats},
 };
 use axum::{
-    Router,
-    extract::{Query, State},
-    middleware,
+    extract::{Extension, Query, State},
     response::Json,
     routing::{get, post},
+    Router,
 };
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-
-#[derive(Deserialize)]
-struct LeadQuery {
-    limit: Option<usize>,
-}
 
 #[derive(Serialize)]
 struct LeadList {
@@ -25,15 +19,41 @@ struct LeadList {
     count: usize,
 }
 
-async fn get_unassigned(
-    Query(query): Query<LeadQuery>,
+async fn get_my_leads(
     State(state): State<Arc<AppState>>,
-) -> Result<Json<LeadList>> {
-    let limit = query.limit.unwrap_or(10).min(100);
-    let leads = state.service.get_unassigned(limit);
+    Extension(user): Extension<UserContext>,
+) -> Json<LeadList> {
+    let service = state.service.read().unwrap();
+    let leads = service.get_my_leads(user.user_id);
     let count = leads.len();
 
-    Ok(Json(LeadList { leads, count }))
+    Json(LeadList { leads, count })
+}
+
+pub fn my_leads_route() -> Router<Arc<AppState>> {
+    Router::new().route("/leads/mine", get(get_my_leads))
+}
+
+#[derive(Deserialize)]
+struct UnassignedQuery {
+    #[serde(default = "default_limit")]
+    limit: usize,
+}
+
+fn default_limit() -> usize {
+    10
+}
+
+async fn get_unassigned(
+    State(state): State<Arc<AppState>>,
+    Query(query): Query<UnassignedQuery>,
+) -> Json<LeadList> {
+    let service = state.service.read().unwrap();
+    let limit = query.limit.min(100);
+    let leads = service.get_unassigned(limit);
+    let count = leads.len();
+
+    Json(LeadList { leads, count })
 }
 
 #[derive(Serialize)]
@@ -43,21 +63,26 @@ struct AssignResponse {
 
 async fn assign(
     State(state): State<Arc<AppState>>,
+    Extension(user): Extension<UserContext>,
     Json(req): Json<AssignRequest>,
 ) -> Result<Json<AssignResponse>> {
-    let count = state.service.mark_assigned(req.lead_ids);
+    let mut service = state.service.write().unwrap();
+    let count = service.mark_assigned(req.assigned_to, user.user_id, req.lead_ids);
+
     Ok(Json(AssignResponse { assigned: count }))
 }
 
-async fn stats(State(state): State<Arc<AppState>>) -> Json<Stats> {
-    Json(state.service.stats())
-}
-
-pub fn routes() -> Router<Arc<AppState>> {
+pub fn supervisor_routes() -> Router<Arc<AppState>> {
     Router::new()
         .route("/leads/unassigned", get(get_unassigned))
         .route("/leads/assign", post(assign))
-        .route("/stats", get(stats))
-        .layer(middleware::from_fn(rate_limit))
-        .layer(middleware::from_fn(require_auth))
+}
+
+async fn stats(State(state): State<Arc<AppState>>) -> Json<Stats> {
+    let service = state.service.read().unwrap();
+    Json(service.stats())
+}
+
+pub fn admin_routes() -> Router<Arc<AppState>> {
+    Router::new().route("/stats", get(stats))
 }

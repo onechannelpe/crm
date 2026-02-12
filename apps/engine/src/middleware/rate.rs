@@ -1,16 +1,9 @@
 use crate::{api::state::AppState, error::Error};
-use axum::{
-    extract::{Extension, Request},
-    middleware::Next,
-    response::Response,
-};
+use axum::{extract::{Extension, Request}, middleware::Next, response::Response};
 use dashmap::DashMap;
-use std::{
-    sync::Arc,
-    time::{Duration, Instant},
-};
+use std::{sync::Arc, time::{Duration, Instant}};
 
-pub struct Bucket {
+struct Bucket {
     tokens: u32,
     capacity: u32,
     last_refill: Instant,
@@ -42,9 +35,8 @@ impl Bucket {
 
         if tokens_to_add > 0 {
             self.tokens = (self.tokens + tokens_to_add).min(self.capacity);
-            let time_used_for_tokens =
-                Duration::from_secs_f64(tokens_to_add as f64 * 60.0 / self.capacity as f64);
-            self.last_refill += time_used_for_tokens;
+            let time_used = Duration::from_secs_f64(tokens_to_add as f64 * 60.0 / self.capacity as f64);
+            self.last_refill += time_used;
         }
     }
 }

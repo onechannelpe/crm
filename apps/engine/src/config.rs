@@ -7,6 +7,7 @@ pub struct Config {
     pub data_path: String,
     pub api_keys: Vec<String>,
     pub rate_limit_per_minute: u32,
+    pub default_daily_quota: u32,
 }
 
 impl Config {
@@ -25,6 +26,10 @@ impl Config {
                 .unwrap_or_else(|_| "60".into())
                 .parse()
                 .unwrap_or(60),
+            default_daily_quota: env::var("DEFAULT_DAILY_QUOTA")
+                .unwrap_or_else(|_| "100".into())
+                .parse()
+                .unwrap_or(100),
         })
     }
 

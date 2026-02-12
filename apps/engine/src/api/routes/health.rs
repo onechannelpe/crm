@@ -1,10 +1,10 @@
-use axum::{Json, Router, routing::get};
-use serde_json::{Value, json};
+use axum::{routing::get, Json, Router};
+use serde_json::{json, Value};
 
 async fn handler() -> Json<Value> {
     Json(json!({
         "status": "healthy",
-        "service": "lead_searcher",
+        "service": "lead_lookup",
         "version": env!("CARGO_PKG_VERSION")
     }))
 }

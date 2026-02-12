@@ -1,7 +1,4 @@
-use crate::{
-    error::{Error, Result},
-    service::types::Contact,
-};
+use crate::{error::{Error, Result}, service::types::Contact};
 use std::fs::File;
 
 pub async fn load_csv(path: &str) -> Result<Vec<Contact>> {
@@ -15,10 +12,10 @@ pub async fn load_csv(path: &str) -> Result<Vec<Contact>> {
 
     let mut contacts = Vec::new();
 
-    for (_, result) in reader.records().enumerate() {
+    for result in reader.records() {
         let record = result.map_err(|e| Error::Data(format!("csv parse error: {}", e)))?;
 
-        if record.len() < 3 {
+        if record.len() < 2 {
             continue;
         }
 
@@ -26,7 +23,7 @@ pub async fn load_csv(path: &str) -> Result<Vec<Contact>> {
         let name = get_field(&record, 1);
 
         if !dni.is_empty() && !name.is_empty() {
-            let contact = Contact {
+            contacts.push(Contact {
                 id: contacts.len(),
                 dni,
                 name,
@@ -34,8 +31,7 @@ pub async fn load_csv(path: &str) -> Result<Vec<Contact>> {
                 phone_secondary: get_optional(&record, 3),
                 org_ruc: get_optional(&record, 4),
                 org_name: get_optional(&record, 5),
-            };
-            contacts.push(contact);
+            });
         }
     }
 
