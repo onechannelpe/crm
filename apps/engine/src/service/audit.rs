@@ -54,10 +54,10 @@ impl AuditLog {
             .or_default()
             .push_back(entry);
 
-        if let Some(mut logs) = self.logs.get_mut(&user_id) {
-            if logs.len() > MAX_LOGS_PER_USER {
-                logs.pop_front();
-            }
+        if let Some(mut logs) = self.logs.get_mut(&user_id)
+            && logs.len() > MAX_LOGS_PER_USER
+        {
+            logs.pop_front();
         }
     }
 
