@@ -1,2 +1,1 @@
-# Ignore generated or test data CSVs in this data/ directory
 *.csv
