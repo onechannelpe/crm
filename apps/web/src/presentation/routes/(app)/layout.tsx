@@ -1,4 +1,4 @@
-import { type RouteSectionProps } from "@solidjs/router";
+import type { RouteSectionProps } from "@solidjs/router";
 import { Sidebar } from "~/presentation/ui/layout/sidebar";
 import { Header } from "~/presentation/ui/layout/header";
 
