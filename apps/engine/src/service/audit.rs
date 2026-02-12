@@ -51,7 +51,7 @@ impl AuditLog {
 
         self.logs
             .entry(user_id)
-            .or_insert_with(VecDeque::new)
+            .or_default()
             .push_back(entry);
 
         if let Some(mut logs) = self.logs.get_mut(&user_id) {
