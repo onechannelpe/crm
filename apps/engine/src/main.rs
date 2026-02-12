@@ -1,16 +1,18 @@
-mod api;
 mod config;
-mod data;
+mod csv_loader;
 mod error;
-mod middleware;
-mod service;
+mod hmac_auth;
+mod rate_limit;
+mod routes;
+mod search;
+mod search_index;
+mod types;
+mod validation;
 
 use config::Config;
-use error::Result;
-use service::LeadService;
 
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main() -> Result<(), error::StartupError> {
     tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .init();
@@ -18,7 +20,10 @@ async fn main() -> Result<()> {
     dotenvy::dotenv().ok();
 
     let config = Config::load()?;
-    let service = LeadService::new(&config.data_path, config.default_daily_quota).await?;
+    let records = csv_loader::load(&config.data_path)?;
+    let index = search_index::SearchIndex::build(&records);
 
-    api::serve(service, config).await
+    tracing::info!("loaded {} records, starting server", records.len());
+
+    routes::serve(index, config).await
 }
