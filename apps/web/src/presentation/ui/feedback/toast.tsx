@@ -12,21 +12,21 @@ export function ToastContainer() {
         <For each={toasts}>
           {(toast) => (
             <div
-              class={`rounded-lg shadow-lg p-4 flex items-start gap-3 ${
-                toast.type === "success"
+              class={`rounded-lg shadow-lg p-4 flex items-start gap-3 ${toast.type === "success"
                   ? "bg-green-50 text-green-900"
                   : toast.type === "error"
                     ? "bg-red-50 text-red-900"
                     : "bg-blue-50 text-blue-900"
-              }`}
+                }`}
             >
               {toast.type === "success" && <CheckCircle class="w-5 h-5 text-green-600" />}
               {toast.type === "error" && <AlertCircle class="w-5 h-5 text-red-600" />}
               {toast.type === "info" && <Info class="w-5 h-5 text-blue-600" />}
-              
+
               <p class="flex-1 text-sm font-medium">{toast.message}</p>
-              
+
               <button
+                type="button"
                 onClick={() => removeToast(toast.id)}
                 class="text-gray-400 hover:text-gray-600"
               >
