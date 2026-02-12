@@ -9,31 +9,31 @@ pub struct SearchIndex {
 
 impl SearchIndex {
     pub fn build(contacts: &[Contact]) -> Self {
-        let mut by_dni = HashMap::new();
-        let mut by_ruc = HashMap::new();
-        let mut by_phone = HashMap::new();
+        let mut by_dni: HashMap<String, Vec<usize>> = HashMap::new();
+        let mut by_ruc: HashMap<String, Vec<usize>> = HashMap::new();
+        let mut by_phone: HashMap<String, Vec<usize>> = HashMap::new();
 
         for (i, contact) in contacts.iter().enumerate() {
             by_dni
                 .entry(contact.dni.clone())
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push(i);
 
             if let Some(ref ruc) = contact.org_ruc {
-                by_ruc.entry(ruc.clone()).or_insert_with(Vec::new).push(i);
+                by_ruc.entry(ruc.clone()).or_default().push(i);
             }
 
             if let Some(ref phone) = contact.phone_primary {
                 by_phone
                     .entry(phone.clone())
-                    .or_insert_with(Vec::new)
+                    .or_default()
                     .push(i);
             }
 
             if let Some(ref phone) = contact.phone_secondary {
                 by_phone
                     .entry(phone.clone())
-                    .or_insert_with(Vec::new)
+                    .or_default()
                     .push(i);
             }
         }

@@ -153,7 +153,7 @@ impl LeadService {
                 if self
                     .assignments
                     .entry(assigned_to)
-                    .or_insert_with(HashSet::new)
+                    .or_default()
                     .insert(id)
                 {
                     self.audit.log_assignment(id, assigned_to, assigned_by);
