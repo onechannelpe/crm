@@ -86,8 +86,8 @@ async fn search_name(
 
 pub fn routes() -> Router<Arc<AppState>> {
     Router::new()
-        .route("/search/dni/:dni", get(search_dni))
-        .route("/search/ruc/:ruc", get(search_ruc))
-        .route("/search/phone/:phone", get(search_phone))
+        .route("/search/dni/{dni}", get(search_dni))
+        .route("/search/ruc/{ruc}", get(search_ruc))
+        .route("/search/phone/{phone}", get(search_phone))
         .route("/search/name", get(search_name))
 }

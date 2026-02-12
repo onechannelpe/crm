@@ -37,5 +37,5 @@ async fn get_audit(
 }
 
 pub fn routes() -> Router<Arc<AppState>> {
-    Router::new().route("/audit/:user_id", get(get_audit))
+    Router::new().route("/audit/{user_id}", get(get_audit))
 }

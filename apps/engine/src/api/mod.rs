@@ -7,7 +7,7 @@ use crate::{
     middleware::{
         auth::require_auth,
         rate::rate_limit,
-        user::{extract_user, require_admin, require_supervisor},
+        user::{require_admin, require_supervisor},
     },
     service::LeadService,
 };
@@ -43,7 +43,6 @@ pub async fn serve(service: LeadService, config: Config) -> Result<()> {
         .merge(executive_routes)
         .merge(supervisor_routes)
         .merge(admin_routes)
-        .layer(middleware::from_fn(extract_user))
         .layer(middleware::from_fn(rate_limit))
         .layer(middleware::from_fn(require_auth));
 

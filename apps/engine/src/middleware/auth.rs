@@ -1,20 +1,30 @@
-use crate::{api::state::AppState, error::Error};
+use crate::{api::state::AppState, error::Error, middleware::user::UserContext};
 use axum::{
     extract::{Extension, Request},
     middleware::Next,
     response::Response,
 };
 use sha2::{Digest, Sha256};
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 pub struct AuthValidator {
-    key_hashes: Vec<String>,
+    key_map: HashMap<String, UserContext>,
 }
 
 impl AuthValidator {
-    pub fn new(keys: Vec<String>) -> Self {
-        let key_hashes = keys.iter().map(|k| Self::hash(k)).collect();
-        Self { key_hashes }
+    pub fn new(keys: Vec<(String, crate::config::ApiKeyEntry)>) -> Self {
+        let key_map = keys
+            .into_iter()
+            .map(|(raw_key, entry)| {
+                let key_hash = Self::hash(&raw_key);
+                let context = UserContext {
+                    user_id: entry.user_id,
+                    role: entry.role,
+                };
+                (key_hash, context)
+            })
+            .collect();
+        Self { key_map }
     }
 
     fn hash(key: &str) -> String {
@@ -23,15 +33,15 @@ impl AuthValidator {
         hex::encode(hasher.finalize())
     }
 
-    pub fn validate(&self, key: &str) -> bool {
+    pub fn validate(&self, key: &str) -> Option<UserContext> {
         let hash = Self::hash(key);
-        self.key_hashes.contains(&hash)
+        self.key_map.get(&hash).copied()
     }
 }
 
 pub async fn require_auth(
     Extension(state): Extension<Arc<AppState>>,
-    request: Request,
+    mut request: Request,
     next: Next,
 ) -> Result<Response, Error> {
     let key = request
@@ -40,9 +50,8 @@ pub async fn require_auth(
         .and_then(|v| v.to_str().ok())
         .ok_or(Error::Unauthorized)?;
 
-    if !state.auth.validate(key) {
-        return Err(Error::Unauthorized);
-    }
+    let user_ctx = state.auth.validate(key).ok_or(Error::Unauthorized)?;
 
+    request.extensions_mut().insert(user_ctx);
     Ok(next.run(request).await)
 }

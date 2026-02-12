@@ -33,6 +33,6 @@ async fn set_quota(
 
 pub fn routes() -> Router<Arc<AppState>> {
     Router::new()
-        .route("/quota/:user_id", get(get_quota))
-        .route("/quota/:user_id", post(set_quota))
+        .route("/quota/{user_id}", get(get_quota))
+        .route("/quota/{user_id}", post(set_quota))
 }

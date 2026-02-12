@@ -7,13 +7,13 @@ use crate::error::Result;
 use audit::AuditLog;
 use index::SearchIndex;
 use quota::QuotaTracker;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use types::{Contact, Lead, QuotaInfo, SearchResult, Stats};
 
 pub struct LeadService {
     contacts: Vec<Contact>,
     index: SearchIndex,
-    assignments: HashMap<i64, Vec<usize>>,
+    assignments: HashMap<i64, HashSet<usize>>,
     quota: QuotaTracker,
     audit: AuditLog,
 }
@@ -120,7 +120,8 @@ impl LeadService {
             .map(|indices| {
                 indices
                     .iter()
-                    .filter_map(|&i| self.contacts.get(i))
+                    .copied()
+                    .filter_map(|i| self.contacts.get(i))
                     .map(Lead::from)
                     .collect()
             })
@@ -149,13 +150,15 @@ impl LeadService {
 
         for id in ids {
             if id < self.contacts.len() {
-                self.assignments
+                if self
+                    .assignments
                     .entry(assigned_to)
-                    .or_insert_with(Vec::new)
-                    .push(id);
-
-                self.audit.log_assignment(id, assigned_to, assigned_by);
-                count += 1;
+                    .or_insert_with(HashSet::new)
+                    .insert(id)
+                {
+                    self.audit.log_assignment(id, assigned_to, assigned_by);
+                    count += 1;
+                }
             }
         }
 
