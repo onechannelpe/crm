@@ -5,10 +5,10 @@ use crate::{
     service::types::{AssignRequest, Lead, Stats},
 };
 use axum::{
+    Router,
     extract::{Extension, Query, State},
     response::Json,
     routing::{get, post},
-    Router,
 };
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;

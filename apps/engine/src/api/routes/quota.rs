@@ -1,13 +1,9 @@
-use crate::{
-    api::state::AppState,
-    error::Result,
-    service::types::QuotaInfo,
-};
+use crate::{api::state::AppState, error::Result, service::types::QuotaInfo};
 use axum::{
+    Router,
     extract::{Path, State},
     response::Json,
     routing::{get, post},
-    Router,
 };
 use serde::Deserialize;
 use std::sync::Arc;

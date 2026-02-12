@@ -1,5 +1,9 @@
 use crate::{api::state::AppState, error::Error};
-use axum::{extract::{Extension, Request}, middleware::Next, response::Response};
+use axum::{
+    extract::{Extension, Request},
+    middleware::Next,
+    response::Response,
+};
 use sha2::{Digest, Sha256};
 use std::sync::Arc;
 

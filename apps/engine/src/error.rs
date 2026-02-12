@@ -1,4 +1,4 @@
-use axum::{http::StatusCode, response::IntoResponse, Json};
+use axum::{Json, http::StatusCode, response::IntoResponse};
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 
@@ -38,7 +38,11 @@ impl IntoResponse for Error {
                 let tomorrow = now.date_naive().succ_opt().unwrap();
                 let reset_time = tomorrow.and_hms_opt(0, 0, 0).unwrap();
                 let reset_dt = DateTime::from_naive_utc_and_offset(reset_time, Utc);
-                (StatusCode::TOO_MANY_REQUESTS, self.to_string(), Some(reset_dt))
+                (
+                    StatusCode::TOO_MANY_REQUESTS,
+                    self.to_string(),
+                    Some(reset_dt),
+                )
             }
             Error::Forbidden => (StatusCode::FORBIDDEN, self.to_string(), None),
         };

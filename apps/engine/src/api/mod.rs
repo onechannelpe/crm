@@ -4,10 +4,14 @@ pub mod state;
 use crate::{
     config::Config,
     error::Result,
-    middleware::{auth::require_auth, rate::rate_limit, user::{extract_user, require_admin, require_supervisor}},
+    middleware::{
+        auth::require_auth,
+        rate::rate_limit,
+        user::{extract_user, require_admin, require_supervisor},
+    },
     service::LeadService,
 };
-use axum::{middleware, Extension, Router};
+use axum::{Extension, Router, middleware};
 use routes::{audit, health, leads, quota, search};
 use state::AppState;
 use std::sync::Arc;
@@ -15,7 +19,11 @@ use tower::ServiceBuilder;
 use tower_http::{compression::CompressionLayer, trace::TraceLayer};
 
 pub async fn serve(service: LeadService, config: Config) -> Result<()> {
-    let state = Arc::new(AppState::new(service, config.api_keys, config.rate_limit_per_minute));
+    let state = Arc::new(AppState::new(
+        service,
+        config.api_keys,
+        config.rate_limit_per_minute,
+    ));
 
     let executive_routes = Router::new()
         .merge(search::routes())

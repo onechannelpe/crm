@@ -1,4 +1,7 @@
-use crate::{error::{Error, Result}, service::types::Contact};
+use crate::{
+    error::{Error, Result},
+    service::types::Contact,
+};
 use std::fs::File;
 
 pub async fn load_csv(path: &str) -> Result<Vec<Contact>> {

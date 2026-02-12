@@ -1,14 +1,12 @@
 use crate::{
-    api::state::AppState,
-    error::Result,
-    middleware::user::UserContext,
+    api::state::AppState, error::Result, middleware::user::UserContext,
     service::types::SearchResult,
 };
 use axum::{
+    Router,
     extract::{Extension, Path, Query, State},
     response::Json,
     routing::get,
-    Router,
 };
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;

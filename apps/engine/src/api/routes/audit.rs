@@ -1,12 +1,9 @@
-use crate::{
-    api::state::AppState,
-    service::audit::SearchEntry,
-};
+use crate::{api::state::AppState, service::audit::SearchEntry};
 use axum::{
+    Router,
     extract::{Path, Query, State},
     response::Json,
     routing::get,
-    Router,
 };
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
