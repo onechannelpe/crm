@@ -1,4 +1,4 @@
-# one-lookup
+# one-engine
 
 Lead distribution API backed by a CSV dataset. Contacts are loaded into memory
 at startup. Assignments are tracked in-process and reset on restart.
@@ -7,7 +7,7 @@ Run:
 
 ```sh
 cargo build --release
-API_KEYS="key1,key2" ./target/release/one-lookup
+API_KEYS="key1,key2" ./target/release/one-engine
 ```
 
 Request pipeline:
