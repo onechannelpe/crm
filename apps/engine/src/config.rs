@@ -17,6 +17,23 @@ pub struct Config {
 }
 
 impl Config {
+    #[allow(dead_code)]
+    pub fn new(
+        data_path: String,
+        api_keys: Vec<(String, ApiKeyEntry)>,
+        rate_limit_per_minute: u32,
+        default_daily_quota: u32,
+    ) -> Self {
+        Self {
+            host: "127.0.0.1".into(),
+            port: 5000,
+            data_path,
+            api_keys,
+            rate_limit_per_minute,
+            default_daily_quota,
+        }
+    }
+
     pub fn load() -> Result<Self> {
         let api_keys = Self::parse_api_keys()?;
 
