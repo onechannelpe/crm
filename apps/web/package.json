@@ -2,7 +2,7 @@
   "name": "@crm/web",
   "type": "module",
   "scripts": {
-    "dev": "vinxi dev",
+    "dev": "bun --bun run vinxi dev",
     "build": "vinxi build",
     "start": "vinxi start",
     "migrate": "bun --env-file=../../.env src/infrastructure/db/migrate.ts",
