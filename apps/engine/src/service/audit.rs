@@ -27,12 +27,18 @@ pub struct AssignmentEntry {
     pub assigned_at: DateTime<Utc>,
 }
 
-impl AuditLog {
-    pub fn new() -> Self {
+impl Default for AuditLog {
+    fn default() -> Self {
         Self {
             logs: DashMap::new(),
             assignments: DashMap::new(),
         }
+    }
+}
+
+impl AuditLog {
+    pub fn new() -> Self {
+        Self::default()
     }
 
     pub fn log_search(&self, user_id: i64, search_type: &str, query: &str, results_count: usize) {
