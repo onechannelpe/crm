@@ -150,11 +150,7 @@ impl LeadService {
 
         for id in ids {
             if id < self.contacts.len()
-                && self
-                    .assignments
-                    .entry(assigned_to)
-                    .or_default()
-                    .insert(id)
+                && self.assignments.entry(assigned_to).or_default().insert(id)
             {
                 self.audit.log_assignment(id, assigned_to, assigned_by);
                 count += 1;
