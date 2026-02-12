@@ -1,4 +1,4 @@
-import { Loader2 } from "lucide-solid";
+import { LoaderCircle } from "lucide-solid";
 
 interface LoadingProps {
   size?: "sm" | "md" | "lg";
@@ -18,7 +18,7 @@ export function Loading(props: LoadingProps) {
 
   return (
     <div class="flex items-center justify-center p-8">
-      <Loader2 class={`${sizeClass()} animate-spin text-blue-600`} />
+      <LoaderCircle class={`${sizeClass()} animate-spin text-blue-600`} />
     </div>
   );
 }

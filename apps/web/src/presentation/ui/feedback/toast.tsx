@@ -1,7 +1,7 @@
 import { For } from "solid-js";
 import { Portal } from "solid-js/web";
 import { useToast } from "./toast-provider";
-import { X, CheckCircle, AlertCircle, Info } from "lucide-solid";
+import { X, CircleCheckBig, CircleAlert, Info } from "lucide-solid";
 
 export function ToastContainer() {
   const { toasts, removeToast } = useToast();
@@ -19,8 +19,8 @@ export function ToastContainer() {
                     : "bg-blue-50 text-blue-900"
                 }`}
             >
-              {toast.type === "success" && <CheckCircle class="w-5 h-5 text-green-600" />}
-              {toast.type === "error" && <AlertCircle class="w-5 h-5 text-red-600" />}
+              {toast.type === "success" && <CircleCheckBig class="w-5 h-5 text-green-600" />}
+              {toast.type === "error" && <CircleAlert class="w-5 h-5 text-red-600" />}
               {toast.type === "info" && <Info class="w-5 h-5 text-blue-600" />}
 
               <p class="flex-1 text-sm font-medium">{toast.message}</p>
