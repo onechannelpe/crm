@@ -1,0 +1,122 @@
+dni,name,phone_primary,phone_secondary,org_ruc,org_name
+12345678,Juan Perez,987654321,912345678,20123456789,Tech SAC
+87654321,Maria Garcia,912345678,,20987654321,Finance Corp
+11111111,Carlos Lopez,999888777,988777666,,
+22222222,Ana Torres,,,20555555555,Logistics SA
+33333333,Luis Garcia,955111222,966222333,20333333333,Garcia Consulting
+44444444,Sofia Garcia,944555666,,20444444444,Garcia Industries
+55555555,Pedro Garcia,933777888,922888999,,
+66666666,Carmen Martinez,911222333,900333444,20666666666,Martinez Group
+77777777,Jose Rodriguez,999111222,,20777777777,Rodriguez SAC
+88888888,Isabel Garcia,988222333,977333444,20888888888,Garcia Enterprises
+10000000,Diego Silva,990597847,934140262,20703034293,Construcciones Silva Consulting
+10013579,Gonzalo Castro,981928292,,20491777726,Servicios Castro Industries
+10027158,Ricardo Chavez,939475615,,20261982114,Textil Chavez SA
+10040737,Victor Herrera,981256176,947496496,20925442398,Textil Herrera SAC
+10054316,Diego Rojas,970704869,,20155079393,Distribuidora Rojas Industries
+10067895,Patricia Chavez,931812840,,20569919116,Servicios Chavez SRL
+10081474,Raul Castro,980667419,969178588,20282011872,Comercial Castro SAC
+10095053,Patricia Ramos,926212172,,20471356497,Corporacion Ramos Group
+10108632,Alejandro Mendoza,976704341,,20321663992,Textil Mendoza SRL
+10122211,Monica Mendoza,993557076,979134195,20365352566,Corporacion Mendoza Group
+10135790,Roberto Chavez,950998076,,20112529339,Construcciones Chavez Group
+10149369,Andrea Chavez,950701167,,20223013866,Comercial Chavez EIRL
+10162948,Pablo Castro,938962846,918399243,20649535431,Distribuidora Castro Consulting
+10176527,Lucia Herrera,983083586,,20939854320,Distribuidora Herrera Industries
+10190106,Gonzalo Herrera,967439922,,20266348977,Servicios Herrera SA
+10203685,Miguel Rojas,999377772,959233018,20298424460,Grupo Rojas Corp
+10217264,Raul Vargas,983224604,,20935497780,Inversiones Vargas SA
+10230843,Alejandro Castro,973378370,,20708234087,Grupo Castro Consulting
+10244422,Ricardo Ortiz,938479071,960083164,20258648119,Corporacion Ortiz Corp
+10258001,Claudia Herrera,925908489,,20879376083,Comercial Herrera SRL
+10271580,Raul Ortiz,989438437,,20699871089,Comercial Ortiz Consulting
+10285159,Javier Silva,912088390,947186971,20487407490,Industrial Silva SAC
+10298738,Roberto Ramos,997747570,,20899776196,Distribuidora Ramos SA
+10312317,Andrea Gutierrez,920369789,,20472589239,Corporacion Gutierrez Group
+10325896,Javier Vargas,929517271,958626784,20541502781,Construcciones Vargas SAC
+10339475,Claudia Rojas,933623417,,20118634938,Comercial Rojas SA
+10353054,Beatriz Vargas,913132798,,20853606165,Inversiones Vargas SRL
+10366633,Alejandro Gutierrez,957486004,998658423,20671279022,Inversiones Gutierrez SRL
+10380212,Gonzalo Chavez,993262128,,20292585824,Grupo Chavez Industries
+10393791,Andrea Rojas,915106699,,20624584343,Inversiones Rojas Group
+10407370,Raul Mendoza,917566127,929929944,20765002428,Servicios Mendoza Consulting
+10420949,Pablo Flores,971707755,,20172841389,Exportadora Flores SRL
+10434528,Patricia Herrera,968950490,,20880182513,Grupo Herrera EIRL
+10448107,Patricia Herrera,920831757,973205789,20589625603,Exportadora Herrera SA
+10461686,Claudia Flores,965479318,,20825635683,Servicios Flores Industries
+10475265,Marco Castro,977426968,,20869350208,Comercial Castro SAC
+10488844,Fernando Silva,925257958,921731831,20917651673,Textil Silva SRL
+10502423,Beatriz Herrera,921074871,,20280901252,Grupo Herrera SAC
+10516002,Diego Mendoza,911923836,,20854284914,Comercial Mendoza Group
+10529581,Gonzalo Rojas,958790574,937408588,20588703237,Corporacion Rojas EIRL
+10543160,Monica Gomez,913864617,,20349806561,Distribuidora Gomez Consulting
+10556739,Roberto Castro,996580942,,20100898022,Grupo Castro SRL
+10570318,Raul Rojas,977260750,974026251,20542515437,Construcciones Rojas Group
+10583897,Roberto Diaz,943939936,,20470791108,Comercial Diaz Consulting
+10597476,Claudia Castro,929681524,,20523089333,Exportadora Castro SA
+10611055,Marco Castro,939864563,920068021,20752397131,Servicios Castro Industries
+10624634,Roberto Morales,946003032,,20662266241,Construcciones Morales Corp
+10638213,Daniel Ortiz,946178303,,20714123090,Distribuidora Ortiz Corp
+10651792,Beatriz Ortiz,985254518,938867560,20975231919,Construcciones Ortiz Group
+10665371,Victor Flores,927928255,,20242570375,Inversiones Flores Consulting
+10678950,Raul Diaz,917250568,,20790442060,Comercial Diaz SAC
+10692529,Victor Silva,922177954,995144957,20412072618,Servicios Silva EIRL
+10706108,Daniel Mendoza,948425065,,20908199607,Exportadora Mendoza SAC
+10719687,Lucia Flores,943483187,,20997344387,Industrial Flores Group
+10733266,Pablo Chavez,931662556,979177996,20929460968,Inversiones Chavez Industries
+10746845,Monica Ramos,997533915,,20253988082,Corporacion Ramos Consulting
+10760424,Raul Castro,971927095,,20914376971,Inversiones Castro SRL
+10774003,Alejandro Morales,925310649,984323718,20223672664,Corporacion Morales SAC
+10787582,Patricia Mendoza,968949854,,20449814393,Grupo Mendoza Consulting
+10801161,Marco Ortiz,968241873,,20240898568,Comercial Ortiz SRL
+10814740,Diego Silva,961727740,986550543,20604300625,Textil Silva Consulting
+10828319,Fernando Mendoza,981512310,,20501476245,Corporacion Mendoza SRL
+10841898,Raul Ortiz,933320926,,20998867346,Exportadora Ortiz Consulting
+10855477,Fernando Mendoza,917182768,945896716,20124801971,Corporacion Mendoza Industries
+10869056,Victor Morales,916732919,,20819950221,Exportadora Morales Industries
+10882635,Alejandro Ramos,935282702,,20878987162,Industrial Ramos SAC
+10896214,Roberto Vargas,954896663,952256229,20100544595,Textil Vargas Consulting
+10909793,Beatriz Rojas,936464152,,20901500921,Inversiones Rojas Group
+10923372,Beatriz Gomez,913800842,,20633618546,Comercial Gomez Group
+10936951,Elena Silva,914861991,929785467,20494220541,Construcciones Silva Industries
+10950530,Gonzalo Rojas,966512536,,20160832480,Corporacion Rojas SAC
+10964109,Miguel Reyes,990881181,,20990718321,Exportadora Reyes SRL
+10977688,Elena Rojas,919985131,935582911,20108951500,Grupo Rojas Consulting
+10991267,Pablo Ramos,961184943,,20872466035,Textil Ramos Industries
+11004846,Raul Morales,990160274,,20225918052,Grupo Morales SAC
+11018425,Andrea Herrera,985426584,993469658,20735623212,Distribuidora Herrera SA
+11032004,Daniel Ortiz,922883274,,20946697165,Industrial Ortiz Corp
+11045583,Ricardo Chavez,992140650,,20893317281,Servicios Chavez SRL
+11059162,Claudia Rojas,957114809,992328928,20646863627,Textil Rojas SAC
+11072741,Alejandro Gutierrez,944050013,,20979566727,Inversiones Gutierrez Industries
+11086320,Victor Morales,991636631,,20101857343,Distribuidora Morales SRL
+11099899,Victor Morales,966815158,980455549,20145035014,Distribuidora Morales Corp
+11113478,Elena Flores,923095252,,20347898145,Servicios Flores EIRL
+11127057,Fernando Ortiz,958579625,,20665431190,Construcciones Ortiz Consulting
+11140636,Ricardo Flores,933186155,991226449,20806665269,Industrial Flores Industries
+11154215,Ricardo Rojas,958285444,,20883395923,Servicios Rojas Consulting
+11167794,Alejandro Ortiz,942387827,,20363122224,Grupo Ortiz Group
+11181373,Miguel Morales,954090335,966424001,20638135387,Distribuidora Morales Corp
+11194952,Lucia Chavez,923340498,,20842406043,Inversiones Chavez Corp
+11208531,Pablo Morales,946186140,,,
+11222110,Gonzalo Chavez,949052575,970614967,,
+11235689,Victor Ortiz,962647421,,,
+11249268,Alejandro Mendoza,935138713,,,
+11262847,Fernando Silva,978701537,972027448,,
+11276426,Monica Gutierrez,954117445,,,
+11290005,Marco Herrera,991401018,,,
+11303584,Beatriz Chavez,991301534,979108297,,
+11317163,Pablo Castro,941577588,,,
+11330742,Lucia Rojas,978686842,,,
+11344321,Ricardo Reyes,963003511,985006659,,
+11357900,Pablo Ortiz,944144267,,,
+11371479,Elena Rojas,943874447,,,
+11385058,Pablo Ramos,924902061,993573068,,
+11398637,Victor Morales,954073361,,,
+11412216,Diego Ortiz,918033655,,,
+11425795,Roberto Reyes,962673175,985259542,,
+11439374,Miguel Vargas,,,20351442848,Comercial Vargas SRL
+11452953,Lucia Morales,,,20512165158,Inversiones Morales Group
+11466532,Pablo Silva,,,20255733075,Distribuidora Silva Industries
+11480111,Pablo Castro,,,20386026767,Servicios Castro EIRL
+11493690,Monica Vargas,,,20692656747,Grupo Vargas Group

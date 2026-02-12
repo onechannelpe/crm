@@ -18,13 +18,7 @@ use std::sync::Arc;
 use tower::ServiceBuilder;
 use tower_http::{compression::CompressionLayer, trace::TraceLayer};
 
-pub async fn serve(service: LeadService, config: Config) -> Result<()> {
-    let state = Arc::new(AppState::new(
-        service,
-        config.api_keys,
-        config.rate_limit_per_minute,
-    ));
-
+pub fn create_router(state: Arc<AppState>) -> Router {
     let executive_routes = Router::new()
         .merge(search::routes())
         .merge(leads::my_leads_route());
@@ -46,7 +40,7 @@ pub async fn serve(service: LeadService, config: Config) -> Result<()> {
         .layer(middleware::from_fn(rate_limit))
         .layer(middleware::from_fn(require_auth));
 
-    let app = Router::new()
+    Router::new()
         .merge(health::routes())
         .merge(protected_routes)
         .layer(Extension(state.clone()))
@@ -55,7 +49,17 @@ pub async fn serve(service: LeadService, config: Config) -> Result<()> {
                 .layer(TraceLayer::new_for_http())
                 .layer(CompressionLayer::new()),
         )
-        .with_state(state);
+        .with_state(state)
+}
+
+pub async fn serve(service: LeadService, config: Config) -> Result<()> {
+    let state = Arc::new(AppState::new(
+        service,
+        config.api_keys,
+        config.rate_limit_per_minute,
+    ));
+
+    let app = create_router(state);
 
     let addr = format!("{}:{}", config.host, config.port);
     tracing::info!("listening on {}", addr);
