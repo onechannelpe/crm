@@ -8,7 +8,6 @@ mod service;
 use config::Config;
 use error::Result;
 use service::LeadService;
-use std::sync::Arc;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -19,7 +18,7 @@ async fn main() -> Result<()> {
     dotenvy::dotenv().ok();
 
     let config = Config::load()?;
-    let service = Arc::new(LeadService::new(&config.data_path).await?);
+    let service = LeadService::new(&config.data_path, config.default_daily_quota).await?;
 
     api::serve(service, config).await
 }
