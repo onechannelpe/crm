@@ -9,7 +9,7 @@ export default function AppLayout(props: RouteSectionProps) {
             <div class="flex-1 md:ml-64 flex flex-col min-h-screen transition-all duration-300">
                 <Header />
                 <main class="flex-1 p-4 md:p-8 overflow-y-auto">
-                    <div class="max-w-[1600px] mx-auto w-full">
+                    <div class="max-w-400 mx-auto w-full">
                         {props.children}
                     </div>
                 </main>
