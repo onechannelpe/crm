@@ -1,5 +1,5 @@
 import { Navigate } from "@solidjs/router";
 
-export default function Home() {
-  return <Navigate href="/dashboard" />;
+export default function Index() {
+    return <Navigate href="/dashboard" />;
 }

@@ -1,148 +1,107 @@
+import { A, useLocation } from "@solidjs/router";
 import {
-  A,
-  action,
-  createAsync,
-  redirect,
-  useAction,
-  useLocation,
-} from "@solidjs/router";
-import {
-  LayoutDashboard,
-  LogOut,
-  MessageSquare,
-  Phone,
-  Receipt,
-  Star,
-  UserPlus,
-  Users,
+    Users,
+    MessageSquare,
+    ShieldCheck,
+    Package,
+    ChevronDown,
+    House,
+    Settings,
 } from "lucide-solid";
-import { For, Show } from "solid-js";
-import { deleteCookie } from "vinxi/http";
-import { getMe, logout as logoutApi } from "~/lib/server/api";
+import { createResource, For } from "solid-js";
+import { getMe, logout } from "~/actions/auth";
+import { cn } from "~/lib/utils";
 
-const loadUser = async () => {
-  "use server";
-  return getMe();
-};
+export function Sidebar() {
+    const location = useLocation();
+    const [user] = createResource(getMe);
 
-const logoutAction = action(async () => {
-  "use server";
-  await logoutApi();
-  deleteCookie("session");
-  throw redirect("/login");
-});
+    const navGroups = [
+        {
+            label: "Plataforma",
+            items: [
+                { label: "Inicio", href: "/dashboard", icon: House },
+                { label: "Equipo", href: "/team", icon: Users },
+                { label: "Configuración", href: "/settings", icon: Settings },
+            ]
+        },
+        {
+            label: "Ventas",
+            items: [
+                { label: "Leads", href: "/leads", icon: Users },
+                { label: "Cuota", href: "/quota", icon: ShieldCheck },
+                { label: "Validación", href: "/validation", icon: MessageSquare },
+            ]
+        },
+        {
+            label: "Inventario",
+            items: [
+                { label: "Inventario", href: "/inventory", icon: Package },
+            ]
+        }
+    ];
 
-export default function Sidebar() {
-  const location = useLocation();
-  const user = createAsync(() => loadUser());
-  const logout = useAction(logoutAction);
+    return (
+        <aside class="fixed inset-y-0 left-0 z-10 w-64 border-r bg-background flex flex-col transition-transform duration-300">
+            <div class="h-14 flex items-center px-6 border-b">
+                <span class="font-bold text-lg tracking-tight">OneChannel</span>
+            </div>
 
-  const isActive = (path: string) => {
-    return location.pathname === path;
-  };
+            <div class="p-4">
+                <button type="button" class="w-full flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-md shadow-sm bg-white hover:bg-gray-50 transition-colors">
+                    <span>Espacio de {user()?.fullName?.split(" ")[0]}</span>
+                    <ChevronDown class="w-4 h-4 text-muted-foreground" />
+                </button>
+            </div>
 
-  const navItems = [
-    { label: "Inicio", href: "/dashboard", icon: LayoutDashboard },
-    { label: "Prospectos", href: "/leads", icon: Users },
-    { label: "Ventas", href: "/sales", icon: Receipt },
-    { label: "Interacciones", href: "/interactions", icon: MessageSquare },
-    { label: "Equipo", href: "/team", icon: UserPlus },
-    { label: "Productos", href: "/products", icon: Star },
-  ];
+            <nav class="flex-1 overflow-y-auto px-4 space-y-6">
+                <For each={navGroups}>
+                    {(group) => (
+                        <div class="space-y-1">
+                            {group.label && (
+                                <h4 class="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                                    {group.label}
+                                </h4>
+                            )}
+                            <For each={group.items}>
+                                {(item) => {
+                                    const isActive = () => location.pathname.startsWith(item.href);
+                                    return (
+                                        <A
+                                            href={item.href}
+                                            class={cn(
+                                                "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
+                                                isActive()
+                                                    ? "bg-primary/10 text-primary"
+                                                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                            )}
+                                        >
+                                            <item.icon class={cn("w-4 h-4", isActive() ? "text-primary" : "text-muted-foreground")} />
+                                            {item.label}
+                                        </A>
+                                    );
+                                }}
+                            </For>
+                        </div>
+                    )}
+                </For>
+            </nav>
 
-  const executiveNavItems = [
-    {
-      label: "Búsqueda de Teléfonos",
-      href: "/phone-lookup",
-      icon: Phone,
-    },
-  ];
-
-  return (
-    <aside class="fixed top-0 left-0 h-screen w-64 bg-white border-r border-gray-200 flex flex-col z-10">
-      {/* Logo */}
-      <div class="h-16 flex items-center px-6 border-b border-gray-100">
-        <div class="flex items-center gap-2 text-blue-600 font-bold text-xl">
-          <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white text-lg">
-            OC
-          </div>
-          <span class="text-gray-900">OneChannel</span>
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-1">
-        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 px-2">
-          CRM
-        </div>
-
-        <For each={navItems}>
-          {(item) => (
-            <A
-              href={item.href}
-              class={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                isActive(item.href)
-                  ? "text-blue-600 bg-blue-50"
-                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-              }`}
-            >
-              <item.icon
-                class={`w-5 h-5 ${isActive(item.href) ? "text-blue-600" : "text-gray-400"}`}
-              />
-              {item.label}
-            </A>
-          )}
-        </For>
-
-        <Show when={user()?.role === "executive" || user()?.role === "admin"}>
-          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mt-6 mb-4 px-2">
-            Herramientas
-          </div>
-          <For each={executiveNavItems}>
-            {(item) => (
-              <A
-                href={item.href}
-                class={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                  isActive(item.href)
-                    ? "text-blue-600 bg-blue-50"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                }`}
-              >
-                <item.icon
-                  class={`w-5 h-5 ${isActive(item.href) ? "text-blue-600" : "text-gray-400"}`}
-                />
-                {item.label}
-              </A>
-            )}
-          </For>
-        </Show>
-      </nav>
-
-      {/* User Profile */}
-      <div class="p-4 border-t border-gray-200">
-        <div class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer group relative">
-          <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold overflow-hidden">
-            <img
-              src={`https://ui-avatars.com/api/?name=${user()?.name || "U"}&background=random`}
-              alt="User"
-            />
-          </div>
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-gray-900 truncate">
-              {user()?.name}
-            </p>
-            <p class="text-xs text-gray-500 truncate">{user()?.role}</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => logout()}
-            class="text-gray-400 hover:text-red-500"
-            title="Logout"
-          >
-            <LogOut class="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-    </aside>
-  );
+            <div class="p-4 border-t">
+                <button
+                    type="button"
+                    onClick={() => logout()}
+                    class="flex items-center gap-3 px-2 w-full hover:bg-muted rounded-md py-2 transition-colors"
+                >
+                    <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
+                        {user()?.fullName?.substring(0, 2).toUpperCase() ?? "ME"}
+                    </div>
+                    <div class="flex-1 text-left">
+                        <p class="text-sm font-medium text-foreground">{user()?.fullName ?? "Cargando..."}</p>
+                        <p class="text-xs text-muted-foreground">Cerrar sesión</p>
+                    </div>
+                </button>
+            </div>
+        </aside>
+    );
 }

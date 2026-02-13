@@ -1,13 +1,103 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a; /* Slate 900 */
+
+  /* Premium Indigo/Blue as Primary */
+  --primary: #4f46e5; /* Indigo 600 */
+  --primary-foreground: #ffffff;
+
+  /* Slate for Secondary items */
+  --secondary: #f1f5f9; /* Slate 100 */
+  --secondary-foreground: #0f172a; /* Slate 900 */
+
+  /* Muted text/backgrounds */
+  --muted: #f8fafc; /* Slate 50 */
+  --muted-foreground: #64748b; /* Slate 500 */
+
+  /* Accents (hover states, slight highlights) */
+  --accent: #f1f5f9; /* Slate 100 */
+  --accent-foreground: #0f172a;
+
+  /* Destructive actions */
+  --destructive: #ef4444; /* Red 500 */
+  --destructive-foreground: #ffffff;
+
+  /* Borders and Inputs */
+  --border: #e2e8f0; /* Slate 200 */
+  --input: #e2e8f0;
+  --ring: #4f46e5;
+
+  --radius: 0.5rem;
+}
+
+/* Dark mode support (optional but good to have ready) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #020617; /* Slate 950 */
+    --foreground: #f8fafc; /* Slate 50 */
+
+    --primary: #6366f1; /* Indigo 500 */
+    --primary-foreground: #ffffff;
+
+    --secondary: #1e293b; /* Slate 800 */
+    --secondary-foreground: #f8fafc;
+
+    --muted: #0f172a; /* Slate 900 */
+    --muted-foreground: #94a3b8; /* Slate 400 */
+
+    --accent: #1e293b; /* Slate 800 */
+    --accent-foreground: #f8fafc;
+
+    --destructive: #7f1d1d; /* Red 900 */
+    --destructive-foreground: #f8fafc;
+
+    --border: #1e293b; /* Slate 800 */
+    --input: #1e293b;
+    --ring: #6366f1;
+  }
+}
+
 * {
-  box-sizing: border-box;
+  border-color: var(--border);
+  outline-color: var(--ring);
 }
 
 body {
-  font-family:
-    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  @apply bg-gray-50 text-gray-900;
+  font-family: var(--font-sans);
+  background-color: var(--background);
+  color: var(--foreground);
   margin: 0;
   padding: 0;
   -webkit-font-smoothing: antialiased;
