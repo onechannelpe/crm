@@ -1,4 +1,4 @@
-import { createResource, For, Show } from "solid-js";
+import { createResource, Show } from "solid-js";
 import { Card } from "~/components/ui/card";
 import { Badge } from "~/components/ui/badge";
 import { EmptyState } from "~/components/feedback/empty-state";
