@@ -1,5 +1,4 @@
-import { Bell, HelpCircle, Search } from "lucide-solid";
-import { cn } from "~/lib/utils";
+import { Bell, CircleQuestionMark, Search } from "lucide-solid";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 
@@ -16,7 +15,9 @@ export function Header() {
             {/* Right Actions */}
             <div class="flex items-center gap-4">
                 <div class="hidden md:flex items-center gap-4 mr-4">
-                    <a href="#" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Documentation</a>
+                    <button type="button" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                        Documentation
+                    </button>
                     <Badge variant="warning" class="bg-orange-50 text-orange-700 border-orange-100">Sandbox</Badge>
                 </div>
 
@@ -29,7 +30,7 @@ export function Header() {
                         <span class="absolute top-2 right-2 w-1.5 h-1.5 bg-destructive rounded-full" />
                     </Button>
                     <Button variant="ghost" size="icon" class="text-muted-foreground md:hidden">
-                        <HelpCircle class="w-4 h-4" />
+                        <CircleQuestionMark class="w-4 h-4" />
                     </Button>
                 </div>
             </div>

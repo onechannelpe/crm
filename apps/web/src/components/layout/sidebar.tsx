@@ -1,17 +1,14 @@
 import { A, useLocation } from "@solidjs/router";
 import {
-    LayoutDashboard,
     Users,
-    Receipt,
     MessageSquare,
     ShieldCheck,
     Package,
     ChevronDown,
-    Home,
+    House,
     Settings,
-    FileText
 } from "lucide-solid";
-import { createResource, For, Show } from "solid-js";
+import { createResource, For } from "solid-js";
 import { getMe, logout } from "~/actions/auth";
 import { cn } from "~/lib/utils";
 
@@ -21,23 +18,23 @@ export function Sidebar() {
 
     const navGroups = [
         {
-            label: "Platform",
+            label: "Plataforma",
             items: [
-                { label: "Home", href: "/dashboard", icon: Home },
-                { label: "Team", href: "/team", icon: Users },
-                { label: "Settings", href: "/settings", icon: Settings },
+                { label: "Inicio", href: "/dashboard", icon: House },
+                { label: "Equipo", href: "/team", icon: Users },
+                { label: "Configuración", href: "/settings", icon: Settings },
             ]
         },
         {
-            label: "Sales",
+            label: "Ventas",
             items: [
-                { label: "Leads", href: "/leads", icon: Users },
-                { label: "Quota", href: "/quota", icon: ShieldCheck },
-                { label: "Validation", href: "/validation", icon: MessageSquare },
+                { label: "Clientes", href: "/leads", icon: Users },
+                { label: "Cuota", href: "/quota", icon: ShieldCheck },
+                { label: "Validación", href: "/validation", icon: MessageSquare },
             ]
         },
         {
-            label: "Inventory",
+            label: "Inventario",
             items: [
                 { label: "Stock", href: "/inventory", icon: Package },
             ]
@@ -53,7 +50,7 @@ export function Sidebar() {
 
             {/* Platform / Context Switcher */}
             <div class="p-4">
-                <button class="w-full flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-md shadow-sm bg-white hover:bg-gray-50 transition-colors">
+                <button type="button" class="w-full flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-md shadow-sm bg-white hover:bg-gray-50 transition-colors">
                     <span>{user()?.fullName?.split(' ')[0]}'s Workspace</span>
                     <ChevronDown class="w-4 h-4 text-muted-foreground" />
                 </button>
@@ -96,6 +93,7 @@ export function Sidebar() {
             {/* User Footer */}
             <div class="p-4 border-t">
                 <button
+                    type="button"
                     onClick={() => logout()}
                     class="flex items-center gap-3 px-2 w-full hover:bg-muted rounded-md py-2 transition-colors"
                 >

@@ -1,5 +1,5 @@
 import { env } from "~/lib/env";
-import { createHmac } from "crypto";
+import { createHmac } from "node:crypto";
 
 interface SearchResult {
     dni: string;

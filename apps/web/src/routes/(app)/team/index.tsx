@@ -47,7 +47,7 @@ export default function TeamPage() {
             </div>
 
             <Show
-                when={members() && members()!.length > 0}
+                when={(members()?.length ?? 0) > 0}
                 fallback={
                     <EmptyState
                         title="Sin miembros"

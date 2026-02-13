@@ -39,7 +39,7 @@ export default function InventoryPage() {
             </div>
 
             <Show
-                when={items() && items()!.length > 0}
+                when={(items()?.length ?? 0) > 0}
                 fallback={
                     <EmptyState
                         title="Sin registros"

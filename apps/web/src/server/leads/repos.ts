@@ -49,11 +49,12 @@ export function createLeadAssignmentsRepo(db: Kysely<Database>) {
             return rows.length;
         },
 
-        markCompleted(id: number) {
+        markCompleted(id: number, userId: number) {
             return db
                 .updateTable("lead_assignments")
                 .set({ status: "completed" })
                 .where("id", "=", id)
+                .where("user_id", "=", userId)
                 .execute();
         },
     };

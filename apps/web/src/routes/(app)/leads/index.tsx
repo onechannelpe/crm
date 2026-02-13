@@ -10,6 +10,11 @@ export default function LeadsPage() {
     const navigate = useNavigate();
     const [quota, { refetch: refetchQuota }] = createResource(getQuotaStatus);
     const [leads, { refetch: refetchLeads }] = createResource(getActiveLeads);
+    const quotaValues = () => {
+        const current = quota();
+        if (!current?.allocated) return null;
+        return { used: current.used, total: current.total };
+    };
 
     const handleRequestLeads = async () => {
         await requestLeads();
@@ -38,11 +43,10 @@ export default function LeadsPage() {
                 <RequestLeadsButton onRequest={handleRequestLeads} />
             </div>
 
-            <Show when={quota()?.allocated}>
-                <QuotaDisplay
-                    used={(quota() as any).used ?? 0}
-                    total={(quota() as any).total ?? 10}
-                />
+            <Show when={quotaValues()}>
+                {(values) => (
+                    <QuotaDisplay used={values().used} total={values().total} />
+                )}
             </Show>
 
             <LeadList

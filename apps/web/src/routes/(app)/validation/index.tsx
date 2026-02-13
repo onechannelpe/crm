@@ -1,8 +1,6 @@
 import { createResource, For, Show } from "solid-js";
 import { approveSale, rejectSale, getPendingReviewNotes } from "~/actions/sales";
 import { Button } from "~/components/ui/button";
-import { Card } from "~/components/ui/card";
-import { Badge } from "~/components/ui/badge";
 import {
     Table,
     TableBody,
@@ -13,6 +11,7 @@ import {
 } from "~/components/ui/table";
 import { EmptyState } from "~/components/feedback/empty-state";
 import { useToast } from "~/components/feedback/toast-provider";
+import { getErrorMessage } from "~/lib/errors";
 
 export default function ValidationPage() {
     const [notes, { refetch }] = createResource(getPendingReviewNotes);
@@ -23,8 +22,8 @@ export default function ValidationPage() {
             await approveSale(noteId);
             showToast("success", `Venta #${noteId} aprobada`);
             refetch();
-        } catch (err: any) {
-            showToast("error", err.message || "Error al aprobar");
+        } catch (err: unknown) {
+            showToast("error", getErrorMessage(err, "Error al aprobar"));
         }
     };
 
@@ -35,8 +34,8 @@ export default function ValidationPage() {
             ]);
             showToast("success", `Venta #${noteId} rechazada`);
             refetch();
-        } catch (err: any) {
-            showToast("error", err.message || "Error al rechazar");
+        } catch (err: unknown) {
+            showToast("error", getErrorMessage(err, "Error al rechazar"));
         }
     };
 
@@ -58,7 +57,7 @@ export default function ValidationPage() {
             </div>
 
             <Show
-                when={notes() && notes()!.length > 0}
+                when={(notes()?.length ?? 0) > 0}
                 fallback={
                     <EmptyState
                         title="Sin ventas pendientes"

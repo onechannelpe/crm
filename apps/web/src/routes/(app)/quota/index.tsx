@@ -4,6 +4,7 @@ import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import { QuotaDisplay } from "~/components/features/quota/quota-display";
 import { useToast } from "~/components/feedback/toast-provider";
+import { getErrorMessage } from "~/lib/errors";
 
 export default function QuotaPage() {
     const [quota, { refetch }] = createResource(getQuotaStatus);
@@ -11,6 +12,11 @@ export default function QuotaPage() {
     const [amount, setAmount] = createSignal("10");
     const [loading, setLoading] = createSignal(false);
     const { showToast } = useToast();
+    const quotaValues = () => {
+        const current = quota();
+        if (!current?.allocated) return null;
+        return { used: current.used, total: current.total };
+    };
 
     async function handleAllocate(e: Event) {
         e.preventDefault();
@@ -21,8 +27,8 @@ export default function QuotaPage() {
             refetch();
             setExecId("");
             setAmount("10");
-        } catch (err: any) {
-            showToast("error", err.message || "Error al asignar cuota");
+        } catch (err: unknown) {
+            showToast("error", getErrorMessage(err, "Error al asignar cuota"));
         } finally {
             setLoading(false);
         }
@@ -37,11 +43,10 @@ export default function QuotaPage() {
                 </p>
             </div>
 
-            <Show when={quota()?.allocated}>
-                <QuotaDisplay
-                    used={(quota() as any).used ?? 0}
-                    total={(quota() as any).total ?? 10}
-                />
+            <Show when={quotaValues()}>
+                {(values) => (
+                    <QuotaDisplay used={values().used} total={values().total} />
+                )}
             </Show>
             <Show when={!quota()?.allocated}>
                 <div class="bg-white border border-gray-200 rounded-lg p-4">

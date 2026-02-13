@@ -4,6 +4,7 @@ import { submitSale } from "~/actions/sales";
 import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
 import { useToast } from "~/components/feedback/toast-provider";
+import { getErrorMessage } from "~/lib/errors";
 
 export default function FixSalePage() {
     const params = useParams();
@@ -18,8 +19,8 @@ export default function FixSalePage() {
             await submitSale(noteId());
             showToast("success", "Nota reenviada a revisión");
             navigate("/leads");
-        } catch (err: any) {
-            showToast("error", err.message || "Error al reenviar");
+        } catch (err: unknown) {
+            showToast("error", getErrorMessage(err, "Error al reenviar"));
         } finally {
             setLoading(false);
         }

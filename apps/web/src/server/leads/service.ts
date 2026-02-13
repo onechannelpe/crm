@@ -64,7 +64,7 @@ export function createLeadAssignmentService(repos: Repositories) {
         },
 
         async completeLead(userId: number, assignmentId: number): Promise<Result<void, string>> {
-            await repos.leadAssignments.markCompleted(assignmentId);
+            await repos.leadAssignments.markCompleted(assignmentId, userId);
             return Ok(undefined);
         },
     };

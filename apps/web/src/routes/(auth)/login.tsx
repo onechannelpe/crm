@@ -1,9 +1,10 @@
 import { createSignal, Show } from "solid-js";
-import { A, useNavigate } from "@solidjs/router";
+import { useNavigate } from "@solidjs/router";
 import { login } from "~/actions/auth";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Card, CardContent, CardHeader } from "~/components/ui/card";
+import { getErrorMessage } from "~/lib/errors";
 
 export default function LoginPage() {
     const navigate = useNavigate();
@@ -20,8 +21,8 @@ export default function LoginPage() {
         try {
             await login(email(), password());
             navigate("/dashboard");
-        } catch (err: any) {
-            setError(err.message || "Credenciales inválidas");
+        } catch (err: unknown) {
+            setError(getErrorMessage(err, "Credenciales inválidas"));
         } finally {
             setLoading(false);
         }
@@ -35,6 +36,7 @@ export default function LoginPage() {
                     <div class="bg-black text-white p-3 rounded-xl">
                         {/* Simple Logo Placeholder */}
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-8">
+                            <title>OneChannel logo</title>
                             <path fill-rule="evenodd" d="M3 6a3 3 0 0 1 3-3h2.25a3 3 0 0 1 3 3v2.25a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6Zm9.75 0a3 3 0 0 1 3-3H18a3 3 0 0 1 3 3v2.25a3 3 0 0 1-3 3h-2.25a3 3 0 0 1-3-3V6ZM3 15.75a3 3 0 0 1 3-3h2.25a3 3 0 0 1 3 3V18a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3v-2.25Zm9.75 0a3 3 0 0 1 3-3H18a3 3 0 0 1 3 3V18a3 3 0 0 1-3 3h-2.25a3 3 0 0 1-3-3v-2.25Z" clip-rule="evenodd" />
                         </svg>
                     </div>
@@ -87,7 +89,7 @@ export default function LoginPage() {
                         </form>
 
                         <div class="text-center">
-                            <a href="#" class="text-sm text-muted-foreground hover:text-primary transition-colors">
+                            <a href="mailto:support@onechannel.local" class="text-sm text-muted-foreground hover:text-primary transition-colors">
                                 Forgot your password?
                             </a>
                         </div>
@@ -107,9 +109,9 @@ export default function LoginPage() {
                 {/* Disclaimer */}
                 <p class="text-xs text-center text-gray-400 px-8">
                     This site is protected by reCAPTCHA and the Google
-                    <a href="#" class="hover:underline mx-1">Privacy Policy</a>
+                    <a href="https://policies.google.com/privacy" class="hover:underline mx-1">Privacy Policy</a>
                     and
-                    <a href="#" class="hover:underline mx-1">Terms of Service</a>
+                    <a href="https://policies.google.com/terms" class="hover:underline mx-1">Terms of Service</a>
                     apply.
                 </p>
             </div>

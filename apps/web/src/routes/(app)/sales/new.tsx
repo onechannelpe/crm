@@ -5,6 +5,7 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Card } from "~/components/ui/card";
 import { useToast } from "~/components/feedback/toast-provider";
+import { getErrorMessage } from "~/lib/errors";
 
 export default function NewSalePage() {
     const navigate = useNavigate();
@@ -21,22 +22,23 @@ export default function NewSalePage() {
             const res = await createSale(Number(contactId()));
             setNoteId(res.id);
             showToast("success", `Nota de cargo #${res.id} creada`);
-        } catch (err: any) {
-            showToast("error", err.message || "Error al crear venta");
+        } catch (err: unknown) {
+            showToast("error", getErrorMessage(err, "Error al crear venta"));
         } finally {
             setLoading(false);
         }
     }
 
     async function handleSubmit() {
-        if (!noteId()) return;
+        const currentNoteId = noteId();
+        if (!currentNoteId) return;
         setLoading(true);
         try {
-            await submitSale(noteId()!);
+            await submitSale(currentNoteId);
             showToast("success", "Nota enviada a revisión");
             navigate("/leads");
-        } catch (err: any) {
-            showToast("error", err.message || "Error al enviar");
+        } catch (err: unknown) {
+            showToast("error", getErrorMessage(err, "Error al enviar"));
         } finally {
             setLoading(false);
         }

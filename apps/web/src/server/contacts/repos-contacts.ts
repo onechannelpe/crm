@@ -1,5 +1,5 @@
 import type { Kysely } from "kysely";
-import type { Database, NewContact } from "~/lib/db/schema";
+import type { Database } from "~/lib/db/schema";
 
 export function createContactsRepo(db: Kysely<Database>) {
     return {
@@ -26,7 +26,11 @@ export function createContactsRepo(db: Kysely<Database>) {
                 })
                 .executeTakeFirstOrThrow();
 
-            return (await this.findById(Number(result.insertId)))!;
+            const created = await this.findById(Number(result.insertId));
+            if (!created) {
+                throw new Error("Failed to load contact after creation");
+            }
+            return created;
         },
 
         updateCooldown(id: number, userId: number, cooldownUntil: number) {

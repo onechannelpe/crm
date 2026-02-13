@@ -20,7 +20,11 @@ export function createOrganizationsRepo(db: Kysely<Database>) {
                 .values({ ruc, name, created_at: Date.now() })
                 .executeTakeFirstOrThrow();
 
-            return (await this.findById(Number(result.insertId)))!;
+            const created = await this.findById(Number(result.insertId));
+            if (!created) {
+                throw new Error("Failed to load organization after creation");
+            }
+            return created;
         },
 
         lockToBranch(orgId: number, branchId: number, userId: number) {

@@ -69,12 +69,12 @@ export function createChargeNotesRepo(db: Kysely<Database>) {
                 .execute();
         },
 
-        async countByUserAndStatus(userId: number, status: string) {
+        async countByUserAndStatus(userId: number, status: NoteStatus) {
             const result = await db
                 .selectFrom("charge_notes")
                 .select(db.fn.countAll().as("count"))
                 .where("user_id", "=", userId)
-                .where("status", "=", status as any)
+                .where("status", "=", status)
                 .executeTakeFirst();
             return Number(result?.count ?? 0);
         },

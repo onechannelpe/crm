@@ -3,6 +3,8 @@ import {
     verifyRegistrationResponse,
     generateAuthenticationOptions,
     verifyAuthenticationResponse,
+    type RegistrationResponseJSON,
+    type AuthenticationResponseJSON,
 } from "@simplewebauthn/server";
 import type { Repositories } from "~/server/shared/registry";
 import { env } from "~/lib/env";
@@ -42,7 +44,7 @@ export function createPasskeyService(repos: Repositories) {
             return options;
         },
 
-        async verifyRegistration(userId: number, response: any, challenge: string) {
+        async verifyRegistration(userId: number, response: RegistrationResponseJSON, challenge: string) {
             const verification = await verifyRegistrationResponse({
                 response,
                 expectedChallenge: challenge,
@@ -83,7 +85,7 @@ export function createPasskeyService(repos: Repositories) {
             });
         },
 
-        async verifyAuthentication(response: any, challenge: string) {
+        async verifyAuthentication(response: AuthenticationResponseJSON, challenge: string) {
             const passkey = await repos.passkeys.findById(response.id);
             if (!passkey) throw new Error("Passkey not found");
 

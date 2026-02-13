@@ -9,6 +9,11 @@ export default function DashboardPage() {
     const [user] = createResource(getMe);
     const [quota] = createResource(getQuotaStatus);
     const [stats] = createResource(getDashboardStats);
+    const quotaValues = () => {
+        const current = quota();
+        if (!current?.allocated) return null;
+        return { used: current.used, total: current.total };
+    };
 
     return (
         <div class="space-y-6">
@@ -57,11 +62,10 @@ export default function DashboardPage() {
                 </Card>
             </div>
 
-            <Show when={quota()?.allocated}>
-                <QuotaDisplay
-                    used={(quota() as any).used ?? 0}
-                    total={(quota() as any).total ?? 10}
-                />
+            <Show when={quotaValues()}>
+                {(values) => (
+                    <QuotaDisplay used={values().used} total={values().total} />
+                )}
             </Show>
             <Show when={!quota()?.allocated}>
                 <Card>
