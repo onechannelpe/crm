@@ -1,6 +1,6 @@
 import { type JSX, splitProps } from "solid-js";
 import { cn } from "~/lib/utils";
-import { Check } from "lucide-solid";
+import { Check } from "./icons";
 
 interface CheckboxProps extends Omit<JSX.InputHTMLAttributes<HTMLInputElement>, "type"> {
     label?: string;
