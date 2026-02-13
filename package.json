@@ -6,6 +6,9 @@
     "apps/*",
     "packages/*"
   ],
+  "patchedDependencies": {
+    "@tanstack/directive-functions-plugin@1.121.21": "patches/@tanstack+directive-functions-plugin@1.121.21.patch"
+  },
   "scripts": {
     "clean": "bun x shx rm -rf apps/*/node_modules node_modules",
     "dev": "bun run --parallel --filter '@one/*' dev",
