@@ -1,0 +1,13 @@
+diff --git a/package.json b/package.json
+index eb6fd3a..9be3165 100644
+--- a/package.json
++++ b/package.json
+@@ -5,7 +5,7 @@
+   "homepage": "https://github.com/napi-rs/node-rs",
+   "main": "index.js",
+   "types": "index.d.ts",
+-  "browser": "browser.js",
++  "browser": "index.js",
+   "keywords": [
+     "argon2",
+     "argon2-password",

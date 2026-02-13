@@ -6,6 +6,9 @@
     "apps/*",
     "packages/*"
   ],
+  "patchedDependencies": {
+    "@node-rs/argon2@2.0.2": "patches/@node-rs+argon2@2.0.2.patch"
+  },
   "scripts": {
     "clean": "bun x shx rm -rf apps/*/node_modules node_modules",
     "dev": "bun run --parallel --filter '@one/*' dev",
