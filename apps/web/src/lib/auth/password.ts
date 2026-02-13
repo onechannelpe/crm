@@ -1,30 +1,31 @@
-import { hash, verify } from "@node-rs/argon2";
+const MAX_PASSWORD_LENGTH = 1000;
+const ARGON2_MEMORY_COST_KIB = 19 * 1024;
+const ARGON2_TIME_COST = 2;
 
-/**
- * Hashes password using Argon2id (most secure variant).
- * Runtime-portable implementation that works on Node.js and Bun.
- * @param password - Plain text password
- * @returns Argon2id hash string
- */
-export async function hashPassword(password: string): Promise<string> {
-    return hash(password, {
-        memoryCost: 19456,
-        timeCost: 2,
-        parallelism: 1,
-        outputLen: 32,
-    });
+function ensureValidPasswordInput(password: string): void {
+  if (password.length === 0) throw new Error("Password cannot be empty");
+  if (password.length > MAX_PASSWORD_LENGTH)
+    throw new Error("Password too long");
 }
 
-/**
- * Verifies password against Argon2id hash.
- * @param hash - Argon2id hash from database
- * @param password - Plain text password to verify
- * @returns true if password matches hash
- */
-export async function verifyPassword(hash: string, password: string): Promise<boolean> {
-    try {
-        return await verify(hash, password);
-    } catch {
-        return false;
-    }
+export async function hashPassword(password: string): Promise<string> {
+  ensureValidPasswordInput(password);
+  return Bun.password.hash(password, {
+    algorithm: "argon2id",
+    memoryCost: ARGON2_MEMORY_COST_KIB,
+    timeCost: ARGON2_TIME_COST,
+  });
+}
+
+export async function verifyPassword(
+  hash: string,
+  password: string,
+): Promise<boolean> {
+  if (password.length === 0 || password.length > MAX_PASSWORD_LENGTH)
+    return false;
+  try {
+    return await Bun.password.verify(password, hash);
+  } catch {
+    return false;
+  }
 }

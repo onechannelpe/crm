@@ -7,7 +7,7 @@
     "packages/*"
   ],
   "patchedDependencies": {
-    "@node-rs/argon2@2.0.2": "patches/@node-rs+argon2@2.0.2.patch"
+    "@tanstack/directive-functions-plugin@1.121.21": "patches/@tanstack+directive-functions-plugin@1.121.21.patch"
   },
   "scripts": {
     "clean": "bun x shx rm -rf apps/*/node_modules node_modules",
