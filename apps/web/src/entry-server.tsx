@@ -1,13 +1,12 @@
+// @refresh reload
 import type { DocumentComponentProps } from "@solidjs/start/server";
 import { createHandler, StartServer } from "@solidjs/start/server";
-import { migrateToLatest } from "~/server/db/migrate";
-import { seed } from "~/server/db/seed";
+import { migrateToLatest } from "~/lib/db/migrate";
+import { seedIfEmpty } from "~/lib/db/seed";
+import "~/lib/auth/cleanup";
 
 await migrateToLatest();
-
-if (process.env.NODE_ENV !== "production") {
-  await seed();
-}
+await seedIfEmpty();
 
 export default createHandler(() => (
   <StartServer
@@ -26,7 +25,7 @@ export default createHandler(() => (
             href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
             rel="stylesheet"
           />
-          <title>CRM | One Channel</title>
+          <title>CRM | OneChannel</title>
           {assets}
         </head>
         <body>
