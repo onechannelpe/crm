@@ -29,7 +29,7 @@ export default function FixSalePage() {
     return (
         <div class="max-w-4xl mx-auto space-y-6">
             <div class="flex items-center justify-between">
-                <h1 class="text-2xl font-bold text-gray-900">Corregir Venta</h1>
+                <h1 class="text-2xl font-bold text-gray-900">Corregir venta</h1>
                 <Button variant="secondary" onClick={() => navigate("/leads")}>
                     Volver
                 </Button>
@@ -39,7 +39,7 @@ export default function FixSalePage() {
                 <div class="p-6">
                     <div class="bg-red-50 border-2 border-red-200 rounded-lg p-6 mb-4">
                         <h2 class="font-bold text-red-900 mb-2">
-                            Correcciones Requeridas — Nota #{noteId()}
+                            Correcciones requeridas — nota #{noteId()}
                         </h2>
                         <p class="text-sm text-gray-700">
                             Los campos rechazados aparecerán aquí con las notas del revisor.
@@ -51,7 +51,7 @@ export default function FixSalePage() {
                             Cancelar
                         </Button>
                         <Button onClick={handleResubmit} disabled={loading()}>
-                            {loading() ? "Enviando..." : "Reenviar para Validación"}
+                            {loading() ? "Enviando..." : "Reenviar para validación"}
                         </Button>
                     </div>
                 </div>

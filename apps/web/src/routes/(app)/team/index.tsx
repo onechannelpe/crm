@@ -15,7 +15,7 @@ import { User, Mail } from "lucide-solid";
 const roleLabels: Record<string, string> = {
     executive: "Ejecutivo",
     supervisor: "Supervisor",
-    back_office: "Back Office",
+    back_office: "Validación",
     sales_manager: "Gerente de Ventas",
     logistics: "Logística",
     hr: "RRHH",
@@ -60,7 +60,7 @@ export default function TeamPage() {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Nombre</TableHead>
-                                <TableHead>Email</TableHead>
+                                <TableHead>Correo</TableHead>
                                 <TableHead>Rol</TableHead>
                                 <TableHead>Estado</TableHead>
                             </TableRow>

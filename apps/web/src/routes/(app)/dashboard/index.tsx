@@ -27,7 +27,7 @@ export default function DashboardPage() {
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <Card>
                     <div class="p-6">
-                        <p class="text-sm text-gray-500">Leads Activos</p>
+                        <p class="text-sm text-gray-500">Leads activos</p>
                         <p class="text-3xl font-bold text-gray-900 mt-2">
                             {stats()?.activeLeads ?? "—"}
                         </p>
@@ -36,7 +36,7 @@ export default function DashboardPage() {
 
                 <Card>
                     <div class="p-6">
-                        <p class="text-sm text-gray-500">Ventas Pendientes</p>
+                        <p class="text-sm text-gray-500">Ventas pendientes</p>
                         <p class="text-3xl font-bold text-gray-900 mt-2">
                             {stats()?.pendingSales ?? "—"}
                         </p>
@@ -54,7 +54,7 @@ export default function DashboardPage() {
 
                 <Card>
                     <div class="p-6">
-                        <p class="text-sm text-gray-500">Ventas Aprobadas</p>
+                        <p class="text-sm text-gray-500">Ventas aprobadas</p>
                         <p class="text-3xl font-bold text-gray-900 mt-2">
                             {stats()?.approvedSales ?? "—"}
                         </p>
@@ -70,7 +70,7 @@ export default function DashboardPage() {
             <Show when={!quota()?.allocated}>
                 <Card>
                     <div class="p-6">
-                        <p class="text-sm text-gray-500">Cuota Restante</p>
+                        <p class="text-sm text-gray-500">Cuota restante</p>
                         <p class="text-3xl font-bold text-gray-900 mt-2">—</p>
                         <p class="text-xs text-gray-400 mt-1">Sin cuota asignada</p>
                     </div>

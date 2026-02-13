@@ -20,7 +20,7 @@ export const QuotaDisplay: Component<QuotaDisplayProps> = (props) => {
     return (
         <div class="bg-white border border-gray-200 rounded-lg p-4">
             <div class="flex items-center justify-between mb-2">
-                <span class="text-sm font-medium text-gray-700">Cuota Diaria</span>
+                <span class="text-sm font-medium text-gray-700">Cuota diaria</span>
                 <Badge variant={variant()}>
                     {props.used}/{props.total}
                 </Badge>

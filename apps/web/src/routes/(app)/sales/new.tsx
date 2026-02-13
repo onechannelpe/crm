@@ -47,7 +47,7 @@ export default function NewSalePage() {
     return (
         <div class="max-w-4xl mx-auto space-y-6">
             <div class="flex items-center justify-between">
-                <h1 class="text-2xl font-bold text-gray-900">Nueva Venta</h1>
+                <h1 class="text-2xl font-bold text-gray-900">Nueva venta</h1>
                 <Button variant="secondary" onClick={() => navigate("/leads")}>
                     Cancelar
                 </Button>
@@ -65,7 +65,7 @@ export default function NewSalePage() {
                                 required
                             />
                             <Button type="submit" disabled={loading()}>
-                                {loading() ? "Creando..." : "Crear Nota de Cargo"}
+                                {loading() ? "Creando..." : "Crear nota de cargo"}
                             </Button>
                         </form>
                     </div>
@@ -77,7 +77,7 @@ export default function NewSalePage() {
                     <div class="p-6 space-y-4">
                         <div>
                             <h3 class="text-lg font-semibold text-gray-900">
-                                Nota de Cargo #{noteId()}
+                                Nota de cargo #{noteId()}
                             </h3>
                             <p class="text-sm text-gray-500 mt-1">
                                 Agrega productos y documentos, luego envía a revisión.
@@ -86,7 +86,7 @@ export default function NewSalePage() {
 
                         <div class="flex justify-end">
                             <Button onClick={handleSubmit} disabled={loading()}>
-                                {loading() ? "Enviando..." : "Enviar a Validación"}
+                                {loading() ? "Enviando..." : "Enviar a validación"}
                             </Button>
                         </div>
                     </div>

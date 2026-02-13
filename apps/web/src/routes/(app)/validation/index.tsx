@@ -50,7 +50,7 @@ export default function ValidationPage() {
     return (
         <div class="space-y-6">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Validación de Ventas</h1>
+                <h1 class="text-2xl font-bold text-gray-900">Validación de ventas</h1>
                 <p class="text-sm text-gray-500 mt-1">
                     {notes()?.length ?? 0} ventas pendientes de aprobación
                 </p>

@@ -35,7 +35,7 @@ export default function LeadsPage() {
         <div class="space-y-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Mis Leads</h1>
+                    <h1 class="text-2xl font-bold text-gray-900">Mis leads</h1>
                     <p class="text-sm text-gray-500 mt-1">
                         {leads()?.length ?? 0} leads activos
                     </p>

@@ -83,7 +83,7 @@ export const LeadList: Component<LeadListProps> = (props) => {
                                                 size="sm"
                                                 onClick={() => props.onCreateSale(lead.contactId)}
                                             >
-                                                Crear Venta
+                                                Crear venta
                                             </Button>
                                             <Button
                                                 size="sm"

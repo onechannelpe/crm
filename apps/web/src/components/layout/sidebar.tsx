@@ -28,7 +28,7 @@ export function Sidebar() {
         {
             label: "Ventas",
             items: [
-                { label: "Clientes", href: "/leads", icon: Users },
+                { label: "Leads", href: "/leads", icon: Users },
                 { label: "Cuota", href: "/quota", icon: ShieldCheck },
                 { label: "Validación", href: "/validation", icon: MessageSquare },
             ]
@@ -36,27 +36,24 @@ export function Sidebar() {
         {
             label: "Inventario",
             items: [
-                { label: "Stock", href: "/inventory", icon: Package },
+                { label: "Inventario", href: "/inventory", icon: Package },
             ]
         }
     ];
 
     return (
         <aside class="fixed inset-y-0 left-0 z-10 w-64 border-r bg-background flex flex-col transition-transform duration-300">
-            {/* Logo area */}
             <div class="h-14 flex items-center px-6 border-b">
                 <span class="font-bold text-lg tracking-tight">OneChannel</span>
             </div>
 
-            {/* Platform / Context Switcher */}
             <div class="p-4">
                 <button type="button" class="w-full flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-md shadow-sm bg-white hover:bg-gray-50 transition-colors">
-                    <span>{user()?.fullName?.split(' ')[0]}'s Workspace</span>
+                    <span>Espacio de {user()?.fullName?.split(" ")[0]}</span>
                     <ChevronDown class="w-4 h-4 text-muted-foreground" />
                 </button>
             </div>
 
-            {/* Navigation */}
             <nav class="flex-1 overflow-y-auto px-4 space-y-6">
                 <For each={navGroups}>
                     {(group) => (
@@ -90,7 +87,6 @@ export function Sidebar() {
                 </For>
             </nav>
 
-            {/* User Footer */}
             <div class="p-4 border-t">
                 <button
                     type="button"
@@ -101,8 +97,8 @@ export function Sidebar() {
                         {user()?.fullName?.substring(0, 2).toUpperCase() ?? "ME"}
                     </div>
                     <div class="flex-1 text-left">
-                        <p class="text-sm font-medium text-foreground">{user()?.fullName ?? "Loading..."}</p>
-                        <p class="text-xs text-muted-foreground">Logout</p>
+                        <p class="text-sm font-medium text-foreground">{user()?.fullName ?? "Cargando..."}</p>
+                        <p class="text-xs text-muted-foreground">Cerrar sesión</p>
                     </div>
                 </button>
             </div>

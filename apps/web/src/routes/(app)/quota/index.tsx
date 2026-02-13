@@ -37,7 +37,7 @@ export default function QuotaPage() {
     return (
         <div class="space-y-6 max-w-2xl">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Gestión de Cuotas</h1>
+                <h1 class="text-2xl font-bold text-gray-900">Gestión de cuotas</h1>
                 <p class="text-sm text-gray-500 mt-1">
                     Asigna cuotas diarias a tus ejecutivos
                 </p>
@@ -55,11 +55,11 @@ export default function QuotaPage() {
             </Show>
 
             <div class="bg-white border border-gray-200 rounded-lg p-6">
-                <h3 class="font-semibold mb-4">Asignar Cuota</h3>
+                <h3 class="font-semibold mb-4">Asignar cuota</h3>
                 <form onSubmit={handleAllocate} class="space-y-4">
                     <Input
                         type="number"
-                        label="ID del Ejecutivo"
+                        label="ID del ejecutivo"
                         value={execId()}
                         onInput={(e) => setExecId((e.target as HTMLInputElement).value)}
                         required
@@ -80,7 +80,7 @@ export default function QuotaPage() {
                         disabled={loading()}
                         class="w-full"
                     >
-                        {loading() ? "Asignando..." : "Asignar Cuota"}
+                        {loading() ? "Asignando..." : "Asignar cuota"}
                     </Button>
                 </form>
             </div>

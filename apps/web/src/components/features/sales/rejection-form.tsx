@@ -14,10 +14,10 @@ interface RejectionFormProps {
 }
 
 const REJECTABLE_FIELDS = [
-    { id: "exec_code_real", label: "Código Ejecutivo Real" },
-    { id: "exec_code_tdp", label: "Código Ejecutivo TDP" },
-    { id: "items", label: "Productos/Items" },
-    { id: "contact_info", label: "Información de Contacto" },
+    { id: "exec_code_real", label: "Código ejecutivo real" },
+    { id: "exec_code_tdp", label: "Código ejecutivo TDP" },
+    { id: "items", label: "Productos e ítems" },
+    { id: "contact_info", label: "Información de contacto" },
 ];
 
 export const RejectionForm: Component<RejectionFormProps> = (props) => {
