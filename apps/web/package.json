@@ -10,7 +10,7 @@
     "seed": "bun --env-file=../../.env src/lib/db/seed.ts"
   },
   "dependencies": {
-    "@libsql/client": "^0.8.0",
+    "@libsql/client": "^0.17.0",
     "@libsql/kysely-libsql": "^0.4.1",
     "@node-rs/argon2": "^2.0.2",
     "@oslojs/crypto": "^1.0.1",
