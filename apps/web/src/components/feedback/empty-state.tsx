@@ -1,5 +1,5 @@
-import { Inbox } from "lucide-solid";
 import type { JSX } from "solid-js";
+import { Inbox } from "./icons";
 
 interface EmptyStateProps {
     title: string;

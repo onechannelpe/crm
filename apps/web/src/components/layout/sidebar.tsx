@@ -1,16 +1,8 @@
 import { A, useLocation } from "@solidjs/router";
-import {
-    Users,
-    MessageSquare,
-    ShieldCheck,
-    Package,
-    ChevronDown,
-    House,
-    Settings,
-} from "lucide-solid";
 import { createResource, For } from "solid-js";
-import { getMe, logout } from "~/actions/auth";
+import { getMe, logout } from "~/actions/auth-session";
 import { AccountMenu } from "~/components/layout/account-menu";
+import { ChevronDown, House, MessageSquare, Package, Settings, ShieldCheck, Users } from "~/components/layout/icons";
 import { cn } from "~/lib/utils";
 
 export function Sidebar() {
