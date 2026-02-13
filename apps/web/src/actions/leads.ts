@@ -1,9 +1,15 @@
 "use server";
 
 import { leadService } from "~/server/shared/context";
+import { repos } from "~/server/shared/context";
 import { requireAuth } from "~/lib/auth/session";
 import { isErr } from "~/server/shared/result";
 import { config } from "~/lib/config";
+
+export async function getActiveLeads() {
+    const session = await requireAuth();
+    return repos.leadAssignments.findActiveByUserWithContacts(session.userId);
+}
 
 export async function requestLeads(bufferSize?: number) {
     const session = await requireAuth();

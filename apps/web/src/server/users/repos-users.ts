@@ -17,6 +17,23 @@ export function createUsersRepo(db: Kysely<Database>) {
             return db.selectFrom("users").selectAll().where("team_id", "=", teamId).execute();
         },
 
+        findByBranch(branchId: number) {
+            return db
+                .selectFrom("users")
+                .selectAll()
+                .where("branch_id", "=", branchId)
+                .where("is_active", "=", 1)
+                .execute();
+        },
+
+        findAllActive() {
+            return db
+                .selectFrom("users")
+                .selectAll()
+                .where("is_active", "=", 1)
+                .execute();
+        },
+
         async create(values: {
             branch_id: number;
             email: string;

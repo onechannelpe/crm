@@ -1,19 +1,25 @@
-import { Migrator, FileMigrationProvider } from "kysely";
+import { Migrator } from "kysely";
+import type { MigrationProvider } from "kysely";
 import { db } from "./client";
-import { promises as fs } from "node:fs";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import * as m001 from "./migrations/001-initial";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+/**
+ * Static migration provider that avoids FileMigrationProvider's dynamic import(),
+ * which fails on Windows under Vite SSR due to bare drive-letter paths (f:\...)
+ * not being valid file:// URLs for Node's ESM loader.
+ */
+const staticProvider: MigrationProvider = {
+    async getMigrations() {
+        return {
+            "001-initial": m001,
+        };
+    },
+};
 
 export async function migrateToLatest() {
     const migrator = new Migrator({
         db,
-        provider: new FileMigrationProvider({
-            fs,
-            path: { join },
-            migrationFolder: join(__dirname, "migrations"),
-        }),
+        provider: staticProvider,
     });
 
     const { error, results } = await migrator.migrateToLatest();

@@ -1,46 +1,39 @@
-import { type JSX, splitProps } from "solid-js";
+import { type JSX, splitProps, mergeProps } from "solid-js";
+import { cn } from "~/lib/utils";
 
 interface ButtonProps extends JSX.ButtonHTMLAttributes<HTMLButtonElement> {
-    variant?: "primary" | "secondary" | "danger" | "success" | "ghost";
-    size?: "sm" | "md" | "lg";
+    variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
+    size?: "default" | "sm" | "lg" | "icon";
 }
 
 export function Button(props: ButtonProps) {
-    const [local, others] = splitProps(props, ["variant", "size", "class", "children"]);
+    const merged = mergeProps({ variant: "default", size: "default" }, props);
+    const [local, others] = splitProps(merged, ["variant", "size", "class", "children"]);
 
-    const baseClass =
-        "inline-flex items-center justify-center font-medium rounded-md " +
-        "transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
-
-    const variantClass = () => {
-        switch (local.variant) {
-            case "danger":
-                return "bg-red-600 text-white hover:bg-red-700";
-            case "success":
-                return "bg-green-600 text-white hover:bg-green-700";
-            case "secondary":
-                return "bg-gray-200 text-gray-900 hover:bg-gray-300";
-            case "ghost":
-                return "hover:bg-gray-100";
-            default:
-                return "bg-blue-600 text-white hover:bg-blue-700";
-        }
+    const variants = {
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm",
+        outline: "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
     };
 
-    const sizeClass = () => {
-        switch (local.size) {
-            case "sm":
-                return "px-3 py-1.5 text-sm";
-            case "lg":
-                return "px-6 py-3 text-lg";
-            default:
-                return "px-4 py-2";
-        }
+    const sizes = {
+        default: "h-10 px-4 py-2",
+        sm: "h-9 rounded-md px-3",
+        lg: "h-11 rounded-md px-8",
+        icon: "h-10 w-10",
     };
 
     return (
         <button
-            class={`${baseClass} ${variantClass()} ${sizeClass()} ${local.class || ""}`}
+            class={cn(
+                "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+                variants[local.variant as keyof typeof variants],
+                sizes[local.size as keyof typeof sizes],
+                local.class
+            )}
             {...others}
         >
             {local.children}

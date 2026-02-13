@@ -1,6 +1,7 @@
 "use server";
 
 import { salesService } from "~/server/shared/context";
+import { repos } from "~/server/shared/context";
 import { requireAuth, requireRole } from "~/lib/auth/session";
 import { isErr } from "~/server/shared/result";
 
@@ -37,4 +38,9 @@ export async function rejectSale(
 
     if (isErr(result)) throw new Error(result.error);
     return { success: true };
+}
+
+export async function getPendingReviewNotes() {
+    await requireRole("supervisor");
+    return repos.chargeNotes.findPendingReviewWithContacts();
 }

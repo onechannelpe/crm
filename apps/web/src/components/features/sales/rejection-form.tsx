@@ -102,7 +102,7 @@ export const RejectionForm: Component<RejectionFormProps> = (props) => {
 
             <div class="flex gap-2 pt-2">
                 <Button
-                    variant="danger"
+                    variant="destructive"
                     onClick={handleSubmit}
                     disabled={rejections().length === 0 || loading()}
                 >

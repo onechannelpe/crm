@@ -49,5 +49,43 @@ export function createChargeNotesRepo(db: Kysely<Database>) {
                 .orderBy("created_at", "asc")
                 .execute();
         },
+
+        findPendingReviewWithContacts() {
+            return db
+                .selectFrom("charge_notes")
+                .innerJoin("contacts", "contacts.id", "charge_notes.contact_id")
+                .innerJoin("users", "users.id", "charge_notes.user_id")
+                .select([
+                    "charge_notes.id",
+                    "charge_notes.status",
+                    "charge_notes.created_at",
+                    "charge_notes.updated_at",
+                    "contacts.name as contactName",
+                    "contacts.dni as contactDni",
+                    "users.full_name as executiveName",
+                ])
+                .where("charge_notes.status", "=", "pending_review")
+                .orderBy("charge_notes.created_at", "asc")
+                .execute();
+        },
+
+        async countByUserAndStatus(userId: number, status: string) {
+            const result = await db
+                .selectFrom("charge_notes")
+                .select(db.fn.countAll().as("count"))
+                .where("user_id", "=", userId)
+                .where("status", "=", status as any)
+                .executeTakeFirst();
+            return Number(result?.count ?? 0);
+        },
+
+        async countPendingReview() {
+            const result = await db
+                .selectFrom("charge_notes")
+                .select(db.fn.countAll().as("count"))
+                .where("status", "=", "pending_review")
+                .executeTakeFirst();
+            return Number(result?.count ?? 0);
+        },
     };
 }

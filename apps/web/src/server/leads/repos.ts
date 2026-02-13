@@ -22,6 +22,28 @@ export function createLeadAssignmentsRepo(db: Kysely<Database>) {
                 .execute();
         },
 
+        findActiveByUserWithContacts(userId: number) {
+            return db
+                .selectFrom("lead_assignments")
+                .innerJoin("contacts", "contacts.id", "lead_assignments.contact_id")
+                .select([
+                    "lead_assignments.id as assignmentId",
+                    "lead_assignments.assigned_at",
+                    "lead_assignments.expires_at",
+                    "lead_assignments.status",
+                    "contacts.id as contactId",
+                    "contacts.name",
+                    "contacts.dni",
+                    "contacts.phone_primary",
+                    "contacts.organization_id",
+                ])
+                .where("lead_assignments.user_id", "=", userId)
+                .where("lead_assignments.status", "=", "active")
+                .where("lead_assignments.expires_at", ">", Date.now())
+                .orderBy("lead_assignments.assigned_at", "desc")
+                .execute();
+        },
+
         async countActiveByUser(userId: number) {
             const rows = await this.findActiveByUser(userId);
             return rows.length;

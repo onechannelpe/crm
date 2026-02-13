@@ -12,7 +12,7 @@ export const QuotaDisplay: Component<QuotaDisplayProps> = (props) => {
 
     const variant = () => {
         const pct = percentage();
-        if (pct >= 90) return "danger" as const;
+        if (pct >= 90) return "destructive" as const;
         if (pct >= 70) return "warning" as const;
         return "success" as const;
     };

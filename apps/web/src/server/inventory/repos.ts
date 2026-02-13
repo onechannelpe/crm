@@ -12,6 +12,23 @@ export function createInventoryRepo(db: Kysely<Database>) {
                 .execute();
         },
 
+        findAllWithProduct() {
+            return db
+                .selectFrom("inventory_items")
+                .innerJoin("products", "products.id", "inventory_items.product_id")
+                .select([
+                    "inventory_items.id",
+                    "inventory_items.serial_number",
+                    "inventory_items.status",
+                    "inventory_items.created_at",
+                    "products.name as productName",
+                    "products.category",
+                ])
+                .orderBy("products.name", "asc")
+                .orderBy("inventory_items.serial_number", "asc")
+                .execute();
+        },
+
         createLock(itemId: number, chargeNoteId: number, expiresAt: number) {
             return db
                 .insertInto("inventory_locks")
