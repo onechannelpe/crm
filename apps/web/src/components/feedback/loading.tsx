@@ -1,4 +1,4 @@
-import { LoaderCircle } from "lucide-solid";
+import { LoaderCircle } from "./icons";
 
 interface LoadingProps {
     size?: "sm" | "md" | "lg";

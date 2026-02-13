@@ -1,7 +1,7 @@
 import { For } from "solid-js";
 import { Portal } from "solid-js/web";
 import { useToast } from "./toast-provider";
-import { X, CircleCheckBig, CircleAlert, Info } from "lucide-solid";
+import { CircleAlert, CircleCheckBig, Info, X } from "./icons";
 
 export function ToastContainer() {
     const { toasts, removeToast } = useToast();

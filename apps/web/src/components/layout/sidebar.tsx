@@ -1,15 +1,8 @@
 import { A, useLocation } from "@solidjs/router";
-import {
-    Users,
-    MessageSquare,
-    ShieldCheck,
-    Package,
-    ChevronDown,
-    House,
-    Settings,
-} from "lucide-solid";
 import { createResource, For } from "solid-js";
-import { getMe, logout } from "~/actions/auth";
+import { getMe, logout } from "~/actions/auth-session";
+import { AccountMenu } from "~/components/layout/account-menu";
+import { ChevronDown, House, MessageSquare, Package, Settings, ShieldCheck, Users } from "~/components/layout/icons";
 import { cn } from "~/lib/utils";
 
 export function Sidebar() {
@@ -88,19 +81,7 @@ export function Sidebar() {
             </nav>
 
             <div class="p-4 border-t">
-                <button
-                    type="button"
-                    onClick={() => logout()}
-                    class="flex items-center gap-3 px-2 w-full hover:bg-muted rounded-md py-2 transition-colors"
-                >
-                    <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
-                        {user()?.fullName?.substring(0, 2).toUpperCase() ?? "ME"}
-                    </div>
-                    <div class="flex-1 text-left">
-                        <p class="text-sm font-medium text-foreground">{user()?.fullName ?? "Cargando..."}</p>
-                        <p class="text-xs text-muted-foreground">Cerrar sesión</p>
-                    </div>
-                </button>
+                <AccountMenu fullName={user()?.fullName ?? "Cargando..."} onLogout={logout} />
             </div>
         </aside>
     );

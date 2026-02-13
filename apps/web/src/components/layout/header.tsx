@@ -1,4 +1,4 @@
-import { Bell, CircleQuestionMark, Search } from "lucide-solid";
+import { Bell, CircleQuestionMark, Search } from "~/components/layout/icons";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 

@@ -10,7 +10,7 @@ import {
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
 import { EmptyState } from "~/components/feedback/empty-state";
-import { Phone, Building2, User, Check } from "lucide-solid";
+import { Building2, Check, Phone, User } from "./icons";
 
 interface LeadContact {
     assignmentId: number;
