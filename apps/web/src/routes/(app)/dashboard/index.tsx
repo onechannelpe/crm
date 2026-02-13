@@ -1,5 +1,5 @@
 import { createResource, Show } from "solid-js";
-import { getMe } from "~/actions/auth";
+import { getMe } from "~/actions/auth-session";
 import { getQuotaStatus } from "~/actions/quota";
 import { getDashboardStats } from "~/actions/dashboard";
 import { Card } from "~/components/ui/card";
