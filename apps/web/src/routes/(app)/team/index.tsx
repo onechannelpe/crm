@@ -10,7 +10,7 @@ import {
 } from "~/components/ui/table";
 import { Badge } from "~/components/ui/badge";
 import { EmptyState } from "~/components/feedback/empty-state";
-import { User, Mail } from "lucide-solid";
+import { Mail, User } from "./icons";
 
 const roleLabels: Record<string, string> = {
     executive: "Ejecutivo",
