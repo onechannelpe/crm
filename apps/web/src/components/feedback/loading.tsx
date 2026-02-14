@@ -1,4 +1,4 @@
-import { LoaderCircle } from "./icons";
+import LoaderCircle from "~/components/icons/loader-circle";
 
 interface LoadingProps {
     size?: "sm" | "md" | "lg";

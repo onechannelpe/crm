@@ -1,5 +1,7 @@
 import { createResource, For, Show } from "solid-js";
 import { getTeamMembers } from "~/actions/team";
+import Mail from "~/components/icons/mail";
+import User from "~/components/icons/user";
 import {
     Table,
     TableBody,
@@ -10,7 +12,6 @@ import {
 } from "~/components/ui/table";
 import { Badge } from "~/components/ui/badge";
 import { EmptyState } from "~/components/feedback/empty-state";
-import { Mail, User } from "./icons";
 
 const roleLabels: Record<string, string> = {
     executive: "Ejecutivo",
