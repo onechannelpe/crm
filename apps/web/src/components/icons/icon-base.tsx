@@ -22,6 +22,7 @@ export interface IconProps extends Omit<JSX.SvgSVGAttributes<SVGSVGElement>, "st
     absoluteStrokeWidth?: boolean;
     iconNode: IconNode;
     name?: string;
+    title?: string;
 }
 
 function hasA11yProp(props: JSX.SvgSVGAttributes<SVGSVGElement>) {
@@ -61,6 +62,7 @@ export function IconBase(props: IconProps) {
         "children",
         "class",
         "name",
+        "title",
         "iconNode",
         "absoluteStrokeWidth",
     ]);
@@ -73,6 +75,10 @@ export function IconBase(props: IconProps) {
 
         return (width * 24) / Number(local.size ?? defaultAttributes.width);
     };
+    const iconTitle = () => {
+        const title = local.title ?? local.name;
+        return typeof title === "string" && title.trim().length > 0 ? title : "icon";
+    };
 
     return (
         <svg
@@ -82,9 +88,10 @@ export function IconBase(props: IconProps) {
             stroke={local.color ?? defaultAttributes.stroke}
             stroke-width={strokeWidth()}
             class={mergeClasses("lucide", local.name ? `lucide-${local.name}` : undefined, local.class)}
-            aria-hidden={!local.children && !hasA11yProp(rest) ? "true" : undefined}
+            aria-hidden={!local.children && !hasA11yProp(rest) && iconTitle() === "icon" ? "true" : undefined}
             {...rest}
         >
+            <title>{iconTitle()}</title>
             <For each={local.iconNode}>
                 {([elementName, attrs]) => <Dynamic component={elementName} {...attrs} />}
             </For>

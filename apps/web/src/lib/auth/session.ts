@@ -1,5 +1,6 @@
 import { getSessionCookie } from "./cookies";
 import { validateSessionToken } from "./session-manager";
+import { hasPermission, type Permission } from "./rbac";
 
 export interface SessionData {
     userId: number;
@@ -54,6 +55,14 @@ export function hasRole(userRole: string, requiredRole: Role): boolean {
 export async function requireRole(role: Role) {
     const session = await requireAuth();
     if (!hasRole(session.role, role)) {
+        throw new Error("Forbidden");
+    }
+    return session;
+}
+
+export async function requirePermission(permission: Permission) {
+    const session = await requireAuth();
+    if (!hasPermission(session.role, permission)) {
         throw new Error("Forbidden");
     }
     return session;

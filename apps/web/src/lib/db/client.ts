@@ -19,5 +19,3 @@ export function createDb(path: string): Kysely<DatabaseSchema> {
         dialect: new LibsqlDialect({ client }),
     });
 }
-
-export const db = createDb("crm.db");

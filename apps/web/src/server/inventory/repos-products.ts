@@ -11,6 +11,10 @@ export function createProductsRepo(db: Kysely<Database>) {
             return db.selectFrom("products").selectAll().where("is_active", "=", 1).execute();
         },
 
+        findAll() {
+            return db.selectFrom("products").selectAll().orderBy("name", "asc").execute();
+        },
+
         async create(values: { name: string; category: string; subtype?: string; price: number }) {
             const result = await db
                 .insertInto("products")

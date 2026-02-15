@@ -1,6 +1,7 @@
-import { createResource, For, Show } from "solid-js";
+import { createResource, createSignal, For, Show } from "solid-js";
 import { approveSale, rejectSale, getPendingReviewNotes } from "~/actions/sales";
 import { Button } from "~/components/ui/button";
+import { RejectionForm } from "~/components/features/sales/rejection-form";
 import {
     Table,
     TableBody,
@@ -15,6 +16,7 @@ import { getErrorMessage } from "~/lib/errors";
 
 export default function ValidationPage() {
     const [notes, { refetch }] = createResource(getPendingReviewNotes);
+    const [rejectingNoteId, setRejectingNoteId] = createSignal<number | null>(null);
     const { showToast } = useToast();
 
     const handleApprove = async (noteId: number) => {
@@ -27,12 +29,17 @@ export default function ValidationPage() {
         }
     };
 
-    const handleReject = async (noteId: number) => {
+    const handleReject = async (
+        noteId: number,
+        rejections: Array<{ fieldId: string; note: string }>,
+    ) => {
         try {
-            await rejectSale(noteId, [
-                { field_id: "general", reviewer_note: "Requiere corrección" },
-            ]);
+            await rejectSale(
+                noteId,
+                rejections.map((it) => ({ field_id: it.fieldId, reviewer_note: it.note })),
+            );
             showToast("success", `Venta #${noteId} rechazada`);
+            setRejectingNoteId(null);
             refetch();
         } catch (err: unknown) {
             showToast("error", getErrorMessage(err, "Error al rechazar"));
@@ -65,6 +72,19 @@ export default function ValidationPage() {
                     />
                 }
             >
+                <Show when={rejectingNoteId()}>
+                    {(id) => (
+                        <div class="rounded-md border border-red-200 bg-red-50 p-4">
+                            <h2 class="font-semibold text-red-900 mb-2">
+                                Rechazar venta #{id()}
+                            </h2>
+                            <RejectionForm
+                                onReject={(rejections) => handleReject(id(), rejections)}
+                                onCancel={() => setRejectingNoteId(null)}
+                            />
+                        </div>
+                    )}
+                </Show>
                 <div class="rounded-md border bg-white">
                     <Table>
                         <TableHeader>
@@ -103,7 +123,7 @@ export default function ValidationPage() {
                                                 <Button
                                                     size="sm"
                                                     variant="destructive"
-                                                    onClick={() => handleReject(note.id)}
+                                                    onClick={() => setRejectingNoteId(note.id)}
                                                 >
                                                     Rechazar
                                                 </Button>
