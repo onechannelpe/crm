@@ -9,6 +9,8 @@
   "scripts": {
     "clean": "bun x shx rm -rf apps/*/node_modules node_modules",
     "dev": "bun run --parallel --filter '@one/*' dev",
+    "generate:engine-contract": "bun run scripts/generate-engine-contract.ts",
+    "check:engine-contract": "bun run scripts/generate-engine-contract.ts --check",
     "lint": "bun run lint:web",
     "lint:web": "bun x oxlint -c .oxlintrc.json --type-aware --tsconfig apps/web/tsconfig.json --deny-warnings apps/web",
     "format": "bun run format:web",
