@@ -2,6 +2,7 @@ import type { Repositories } from "~/server/shared/registry";
 import { createAuditService } from "~/server/shared/audit";
 import { canTransition } from "~/server/sales/domain";
 import { Ok, Err, type Result } from "~/server/shared/result";
+import { config } from "~/lib/config";
 
 export function createSalesWorkflowService(repos: Repositories) {
     const audit = createAuditService(repos);
@@ -20,20 +21,53 @@ export function createSalesWorkflowService(repos: Repositories) {
             if (!canTransition(note.status, "pending_review")) {
                 return Err(`Cannot submit from status: ${note.status}`);
             }
+            const itemCount = await repos.chargeNoteItems.countByChargeNote(noteId);
+            if (itemCount < 1) {
+                return Err("At least one product item is required before submission");
+            }
+
+            const documentCount = await repos.documents.countByChargeNote(noteId);
+            if (documentCount < 1) {
+                return Err("At least one document is required before submission");
+            }
+
+            const activeLock = await repos.inventory.findActiveLockByChargeNote(noteId);
+            if (!activeLock) {
+                return Err("An active inventory lock is required before submission");
+            }
 
             await repos.chargeNotes.updateStatus(noteId, "pending_review");
+            await repos.inventory.updateLockExpiry(
+                activeLock.id,
+                Date.now() + config.leadAssignment.ttlHours * 60 * 60 * 1000,
+            );
+            if (note.status === "rejected") {
+                const unresolved = await repos.rejectionLogs.findUnresolvedByChargeNote(noteId);
+                for (const rejection of unresolved) {
+                    await repos.rejectionLogs.markResolved(rejection.id);
+                }
+            }
             await audit.log(userId, "charge_note_submitted", "charge_note", noteId, { from: note.status, to: "pending_review" });
             return Ok(undefined);
         },
 
-        async approve(noteId: number, reviewerId: number): Promise<Result<void, string>> {
-            const note = await repos.chargeNotes.findById(noteId);
+        async approve(noteId: number, reviewerId: number, reviewerBranchId: number, bypassBranchScope: boolean): Promise<Result<void, string>> {
+            const note = await repos.chargeNotes.findByIdWithOwner(noteId);
             if (!note) return Err("Charge note not found");
+            if (!bypassBranchScope && note.owner_branch_id !== reviewerBranchId) {
+                return Err("Cannot review a sale from another branch");
+            }
             if (!canTransition(note.status, "approved")) {
                 return Err(`Cannot approve from status: ${note.status}`);
             }
+            const activeLock = await repos.inventory.findAnyLockByChargeNote(noteId);
+            if (!activeLock) {
+                return Err("Cannot approve without reserved inventory lock");
+            }
 
             await repos.chargeNotes.updateStatus(noteId, "approved");
+            await repos.inventory.markSold(activeLock.inventory_item_id);
+            await repos.inventory.deleteByChargeNote(noteId);
             await audit.log(reviewerId, "charge_note_approved", "charge_note", noteId, { from: note.status, to: "approved" });
             return Ok(undefined);
         },
@@ -41,10 +75,15 @@ export function createSalesWorkflowService(repos: Repositories) {
         async reject(
             noteId: number,
             reviewerId: number,
+            reviewerBranchId: number,
+            bypassBranchScope: boolean,
             rejections: Array<{ field_id: string; reviewer_note: string | null }>,
         ): Promise<Result<void, string>> {
-            const note = await repos.chargeNotes.findById(noteId);
+            const note = await repos.chargeNotes.findByIdWithOwner(noteId);
             if (!note) return Err("Charge note not found");
+            if (!bypassBranchScope && note.owner_branch_id !== reviewerBranchId) {
+                return Err("Cannot review a sale from another branch");
+            }
             if (!canTransition(note.status, "rejected")) {
                 return Err(`Cannot reject from status: ${note.status}`);
             }

@@ -1,10 +1,10 @@
 "use server";
 
 import { repos } from "~/server/shared/context";
-import { requireAuth } from "~/lib/auth/session";
+import { requirePermission } from "~/lib/auth/session";
 
 export async function getInventoryItems() {
-    await requireAuth();
+    await requirePermission("inventory:read");
 
     return repos.inventory.findAllWithProduct();
 }

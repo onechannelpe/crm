@@ -1,10 +1,10 @@
 "use server";
 
 import { repos } from "~/server/shared/context";
-import { requireAuth } from "~/lib/auth/session";
+import { requirePermission } from "~/lib/auth/session";
 
 export async function getTeamMembers() {
-    const session = await requireAuth();
+    const session = await requirePermission("team:read");
 
     const users = await repos.users.findByBranch(session.branchId);
 
