@@ -25,16 +25,14 @@ describe("session tokens", () => {
         expect(hash1).toBe("20d053ea3932fc0f863a19fd77994b9b371fdd18b841aefee1ec4e844a4c9b90");
     });
 
-    it("generates many tokens quickly and without collisions in sample", () => {
-        const started = Date.now();
+    it("generates many tokens without collisions in sample", () => {
         const tokens = new Set<string>();
 
         for (let i = 0; i < 2000; i++) {
             tokens.add(generateSessionToken());
         }
 
-        const durationMs = Date.now() - started;
         expect(tokens.size).toBe(2000);
-        expect(durationMs).toBeLessThan(3000);
     });
+
 });

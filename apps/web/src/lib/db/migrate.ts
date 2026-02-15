@@ -1,6 +1,6 @@
 import { Migrator } from "kysely";
 import type { MigrationProvider } from "kysely";
-import { db } from "./client";
+import { db } from "./db";
 import * as m001 from "./migrations/001-initial";
 
 /**

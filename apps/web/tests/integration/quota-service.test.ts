@@ -39,24 +39,26 @@ describe("quota service", () => {
 
         expect(c1.ok).toBe(true);
         expect(c2.ok).toBe(true);
+        if (c1.ok) expect(c1.value).toBe(1);
+        if (c2.ok) expect(c2.value).toBe(0);
         expect(c3.ok).toBe(false);
         if (!c3.ok) {
             expect(c3.error).toBe("Quota exhausted: 2/2 used.");
         }
     });
 
-    it("handles high-volume small consumes within reasonable time", async () => {
+    it("handles high-volume small consumes correctly", async () => {
         const quota = createQuotaService(ctx.repos);
         const day = today();
         await quota.allocate(2, 1, 120, day);
 
-        const started = Date.now();
         for (let i = 0; i < 100; i++) {
             const result = await quota.consume(1, 1);
             expect(result.ok).toBe(true);
+            if (result.ok) {
+                expect(result.value).toBe(119 - i);
+            }
         }
-        const durationMs = Date.now() - started;
-
-        expect(durationMs).toBeLessThan(5000);
     });
+
 });

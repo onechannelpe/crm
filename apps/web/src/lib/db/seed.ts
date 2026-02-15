@@ -1,4 +1,4 @@
-import { db } from "./client";
+import { db } from "./db";
 import { hashPassword } from "../auth/password";
 
 export async function seedIfEmpty() {

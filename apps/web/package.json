@@ -6,7 +6,8 @@
     "build": "vinxi build",
     "start": "vinxi start",
     "check": "bun x tsc --noEmit && biome check",
-    "test": "vitest run",
+    "test": "vitest run --project default",
+    "test:perf": "vitest run --project perf",
     "migrate": "bun --env-file=../../.env src/lib/db/migrate-cli.ts",
     "seed": "bun --env-file=../../.env src/lib/db/seed.ts"
   },

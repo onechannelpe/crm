@@ -99,8 +99,12 @@ describe("security invariant manifest", () => {
             expect(duplicate.error).toBe(QUOTA_ERROR_MANIFEST.duplicateDailyAllocation);
         }
 
-        expect((await quota.consume(1, 1)).ok).toBe(true);
-        expect((await quota.consume(1, 1)).ok).toBe(true);
+        const c1 = await quota.consume(1, 1);
+        const c2 = await quota.consume(1, 1);
+        expect(c1.ok).toBe(true);
+        expect(c2.ok).toBe(true);
+        if (c1.ok) expect(c1.value).toBe(1);
+        if (c2.ok) expect(c2.value).toBe(0);
 
         const exhausted = await quota.consume(1, 1);
         expect(exhausted.ok).toBe(false);
