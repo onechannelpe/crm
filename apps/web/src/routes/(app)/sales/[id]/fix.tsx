@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "@solidjs/router";
-import { createSignal } from "solid-js";
-import { submitSale } from "~/actions/sales";
+import { createResource, createSignal, For, Show } from "solid-js";
+import { getSaleFixContext, submitSale } from "~/actions/sales";
 import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
 import { useToast } from "~/components/feedback/toast-provider";
@@ -11,6 +11,7 @@ export default function FixSalePage() {
     const navigate = useNavigate();
     const noteId = () => Number(params.id);
     const [loading, setLoading] = createSignal(false);
+    const [fixContext] = createResource(noteId, getSaleFixContext);
     const { showToast } = useToast();
 
     async function handleResubmit() {
@@ -41,9 +42,25 @@ export default function FixSalePage() {
                         <h2 class="font-bold text-red-900 mb-2">
                             Correcciones requeridas — nota #{noteId()}
                         </h2>
-                        <p class="text-sm text-gray-700">
-                            Los campos rechazados aparecerán aquí con las notas del revisor.
-                        </p>
+                        <Show
+                            when={fixContext()?.rejections?.length}
+                            fallback={<p class="text-sm text-gray-700">No hay observaciones pendientes.</p>}
+                        >
+                            <ul class="space-y-2 text-sm text-gray-800">
+                                <For each={fixContext()?.rejections ?? []}>
+                                    {(rejection) => (
+                                        <li class="rounded border border-red-200 bg-white p-3">
+                                            <p class="font-medium text-red-900">
+                                                Campo: {rejection.field_id}
+                                            </p>
+                                            <p class="text-gray-700 mt-1">
+                                                {rejection.reviewer_note ?? "Sin nota del validador."}
+                                            </p>
+                                        </li>
+                                    )}
+                                </For>
+                            </ul>
+                        </Show>
                     </div>
 
                     <div class="flex justify-end gap-2">

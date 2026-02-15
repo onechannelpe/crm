@@ -16,6 +16,16 @@ export function createRejectionLogsRepo(db: Kysely<Database>) {
                 .execute();
         },
 
+        findUnresolvedByChargeNote(chargeNoteId: number) {
+            return db
+                .selectFrom("rejection_logs")
+                .selectAll()
+                .where("charge_note_id", "=", chargeNoteId)
+                .where("is_resolved", "=", 0)
+                .orderBy("created_at", "desc")
+                .execute();
+        },
+
         markResolved(id: number) {
             return db
                 .updateTable("rejection_logs")

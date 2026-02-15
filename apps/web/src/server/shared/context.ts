@@ -1,4 +1,4 @@
-import { db } from "~/lib/db/client";
+import { db } from "~/lib/db/db";
 import { createRepositories } from "~/server/shared/registry";
 import { createQuotaService } from "~/server/quota/service";
 import { createLeadAssignmentService } from "~/server/leads/service";

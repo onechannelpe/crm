@@ -1,25 +1,6 @@
-export type Role = "executive" | "supervisor" | "back_office" | "sales_manager" | "logistics" | "hr" | "admin" | "superuser";
+import type { Permission, Role } from "../../src/lib/auth/rbac";
 
-export type Permission =
-    | "leads:read"
-    | "leads:request"
-    | "quota:read"
-    | "quota:allocate"
-    | "sales:create"
-    | "sales:submit"
-    | "sales:review"
-    | "sales:approve"
-    | "team:read"
-    | "team:manage"
-    | "inventory:read"
-    | "inventory:manage"
-    | "hr:read"
-    | "hr:manage"
-    | "admin:read"
-    | "admin:manage"
-    | "audit:read";
-
-const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
+export const PERMISSION_MANIFEST: Record<Role, Permission[]> = {
     executive: ["leads:read", "leads:request", "quota:read", "sales:create", "sales:submit"],
     supervisor: ["leads:read", "leads:request", "quota:read", "quota:allocate", "sales:create", "sales:submit", "sales:review", "sales:approve", "team:read", "team:manage", "audit:read"],
     back_office: ["sales:review", "sales:approve", "audit:read"],
@@ -30,12 +11,14 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     superuser: ["leads:read", "leads:request", "quota:read", "quota:allocate", "sales:create", "sales:submit", "sales:review", "sales:approve", "team:read", "team:manage", "inventory:read", "inventory:manage", "hr:read", "hr:manage", "admin:read", "admin:manage", "audit:read"],
 };
 
-export function hasPermission(role: string, permission: Permission): boolean {
-    const perms = ROLE_PERMISSIONS[role as Role];
-    if (!perms) return false;
-    return perms.includes(permission);
-}
+export const SALES_ERROR_MANIFEST = {
+    missingItems: "At least one product item is required before submission",
+    missingDocuments: "At least one document is required before submission",
+    missingInventoryLock: "An active inventory lock is required before submission",
+    crossBranchReview: "Cannot review a sale from another branch",
+} as const;
 
-export function getPermissions(role: string): Permission[] {
-    return ROLE_PERMISSIONS[role as Role] ?? [];
-}
+export const QUOTA_ERROR_MANIFEST = {
+    duplicateDailyAllocation: "Quota already allocated for this date",
+    exhausted2of2: "Quota exhausted: 2/2 used.",
+} as const;
