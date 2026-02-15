@@ -1,4 +1,4 @@
-use crate::api::contract::{API_PREFIX, HEALTH_ENDPOINT, SEARCH_ENDPOINT};
+use crate::api::contract::{API_PREFIX, API_VERSION, HEALTH_ENDPOINT, SEARCH_ENDPOINT};
 use crate::api::handlers::{handle_health, handle_search};
 use crate::config::Config;
 use crate::error::StartupError;
@@ -36,6 +36,7 @@ pub async fn serve(index: SearchIndex, config: Config) -> Result<(), StartupErro
 
     let addr = format!("{}:{}", config.host, config.port);
     tracing::info!("listening on {} ({})", addr, API_PREFIX);
+    tracing::info!("engine API version: {}", API_VERSION);
 
     let listener = tokio::net::TcpListener::bind(&addr)
         .await
