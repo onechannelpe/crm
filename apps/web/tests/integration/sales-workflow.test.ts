@@ -1,9 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import {
-    cleanupTestDb,
-    createIsolatedTestDb,
-    type TestDbContext,
-} from "../support/test-db";
+import type { TestDbContext } from "../support/test-db";
+import { cleanupTestDb, createIsolatedTestDb } from "../support/test-db";
 
 async function prepareSubmittableNote(ctx: TestDbContext, status: "draft" | "rejected" = "draft") {
     const noteId = await ctx.repos.chargeNotes.create(1, 1);

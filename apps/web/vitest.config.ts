@@ -6,7 +6,7 @@ export default defineConfig({
         globalSetup: ["./tests/setup/global-setup.ts"],
         include: ["tests/**/*.test.ts"],
         environment: "node",
-        fileParallelism: false,
+        fileParallelism: true,
         alias: {
             "~": path.resolve(__dirname, "./src"),
         },
