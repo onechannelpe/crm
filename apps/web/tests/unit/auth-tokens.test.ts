@@ -11,7 +11,7 @@ describe("session tokens", () => {
     it("rejects malformed token formats", () => {
         expect(isValidTokenFormat("short")).toBe(false);
         expect(isValidTokenFormat("A".repeat(32))).toBe(false);
-        expect(isValidTokenFormat("a".repeat(31) + "!")).toBe(false);
+        expect(isValidTokenFormat(`${"a".repeat(31)}!`)).toBe(false);
     });
 
     it("hash is deterministic and non-reversible in shape", () => {

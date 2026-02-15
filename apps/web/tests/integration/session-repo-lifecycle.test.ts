@@ -6,7 +6,7 @@ describe("session repository lifecycle", () => {
         const ctx = await createIsolatedTestDb("session-lifecycle");
         try {
             const now = Date.now();
-            const sessionId = "s_" + Math.random().toString(36).slice(2);
+            const sessionId = `s_${Math.random().toString(36).slice(2)}`;
 
             await ctx.repos.sessions.create({
                 id: sessionId,
