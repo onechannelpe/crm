@@ -1,7 +1,7 @@
 import type { Repositories } from "~/server/shared/registry";
 import { createAuditService } from "~/server/shared/audit";
 import { createQuotaService } from "~/server/quota/service";
-import { searchEngine } from "~/server/shared/search";
+import { engineClient } from "~/server/shared/engine";
 import { createAssignment } from "~/server/leads/domain-assignment";
 import { canContactNow } from "~/server/leads/domain-cooldown";
 import { canLockOrganization } from "~/server/leads/domain-org-lock";
@@ -37,7 +37,7 @@ export function createLeadAssignmentService(repos: Repositories) {
         if (!canLockOrganization(org, branchId)) continue;
 
         // oxlint-disable-next-line no-await-in-loop -- preserve deterministic assignment order per organization.
-        const searchResults = await searchEngine("ruc", org.ruc);
+        const searchResults = await engineClient.search("ruc", org.ruc);
 
         for (const result of searchResults.results) {
           if (assignments.length >= needed) break;

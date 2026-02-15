@@ -1,9 +1,9 @@
+mod api;
 mod config;
 mod csv_loader;
 mod error;
 mod hmac_auth;
 mod rate_limit;
-mod routes;
 mod search;
 mod search_index;
 mod types;
@@ -25,5 +25,5 @@ async fn main() -> Result<(), error::StartupError> {
 
     tracing::info!("loaded {} records, starting server", records.len());
 
-    routes::serve(index, config).await
+    api::serve(index, config).await
 }
