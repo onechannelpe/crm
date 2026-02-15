@@ -1,4 +1,7 @@
-import { encodeBase32LowerCaseNoPadding, encodeHexLowerCase } from "@oslojs/encoding";
+import {
+  encodeBase32LowerCaseNoPadding,
+  encodeHexLowerCase,
+} from "@oslojs/encoding";
 import { sha256 } from "@oslojs/crypto/sha2";
 
 /**
@@ -7,9 +10,9 @@ import { sha256 } from "@oslojs/crypto/sha2";
  * @returns 32-character base32 string
  */
 export function generateSessionToken(): string {
-    const bytes = new Uint8Array(20);
-    crypto.getRandomValues(bytes);
-    return encodeBase32LowerCaseNoPadding(bytes);
+  const bytes = new Uint8Array(20);
+  crypto.getRandomValues(bytes);
+  return encodeBase32LowerCaseNoPadding(bytes);
 }
 
 /**
@@ -20,10 +23,10 @@ export function generateSessionToken(): string {
  * @returns 64-character hex string (SHA-256 hash)
  */
 export function hashSessionToken(token: string): string {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(token);
-    const hash = sha256(data);
-    return encodeHexLowerCase(hash);
+  const encoder = new TextEncoder();
+  const data = encoder.encode(token);
+  const hash = sha256(data);
+  return encodeHexLowerCase(hash);
 }
 
 /**
@@ -33,5 +36,5 @@ export function hashSessionToken(token: string): string {
  * @returns true if format is valid
  */
 export function isValidTokenFormat(token: string): boolean {
-    return /^[a-z2-7]{32}$/.test(token);
+  return /^[a-z2-7]{32}$/.test(token);
 }

@@ -9,31 +9,31 @@ import * as m001 from "./migrations/001-initial";
  * not being valid file:// URLs for Node's ESM loader.
  */
 const staticProvider: MigrationProvider = {
-    async getMigrations() {
-        return {
-            "001-initial": m001,
-        };
-    },
+  async getMigrations() {
+    return {
+      "001-initial": m001,
+    };
+  },
 };
 
 export async function migrateToLatest() {
-    const migrator = new Migrator({
-        db,
-        provider: staticProvider,
-    });
+  const migrator = new Migrator({
+    db,
+    provider: staticProvider,
+  });
 
-    const { error, results } = await migrator.migrateToLatest();
+  const { error, results } = await migrator.migrateToLatest();
 
-    results?.forEach((it) => {
-        if (it.status === "Success") {
-            console.log(`migration "${it.migrationName}" executed successfully`);
-        } else if (it.status === "Error") {
-            console.error(`migration "${it.migrationName}" failed`);
-        }
-    });
-
-    if (error) {
-        console.error("migration failed:", error);
-        throw error;
+  results?.forEach((it) => {
+    if (it.status === "Success") {
+      console.log(`migration "${it.migrationName}" executed successfully`);
+    } else if (it.status === "Error") {
+      console.error(`migration "${it.migrationName}" failed`);
     }
+  });
+
+  if (error) {
+    console.error("migration failed:", error);
+    throw error;
+  }
 }
