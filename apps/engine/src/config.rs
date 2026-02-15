@@ -11,8 +11,8 @@ pub struct Config {
 
 impl Config {
     pub fn load() -> Result<Self, StartupError> {
-        let hmac_secret = env::var("HMAC_SECRET")
-            .map_err(|_| StartupError::Config("HMAC_SECRET is required".into()))?;
+        let hmac_secret = env::var("ENGINE_HMAC_SECRET")
+            .map_err(|_| StartupError::Config("ENGINE_HMAC_SECRET is required".into()))?;
 
         Ok(Self {
             host: env::var("HOST").unwrap_or_else(|_| "127.0.0.1".into()),

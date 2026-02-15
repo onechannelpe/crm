@@ -1,52 +1,49 @@
 # onechannel.pe
 
-A monorepo for a backend service, a CRM frontend, and a browser extension. Under
-active development; APIs and directory boundaries may change.
+[![web quality](https://github.com/onechannelpe/crm/actions/workflows/lint.yml/badge.svg?branch=master)](https://github.com/onechannelpe/crm/actions/workflows/lint.yml)
+[![web tests](https://github.com/onechannelpe/crm/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/onechannelpe/crm/actions/workflows/tests.yml)
+[![repo guard](https://github.com/onechannelpe/crm/actions/workflows/repo-guard.yml/badge.svg?branch=master)](https://github.com/onechannelpe/crm/actions/workflows/repo-guard.yml)
 
-To run the project:
+crm monorepo (web app + engine service).
+
+## quick start
+
+bootstrap local dev environment:
 
 ```sh
-# Install dependencies
 bun install
-
-# Run CRM web app
-cd apps/web
-bun run dev
-
-# (Optional) Run phone lookup searcher service
-cd apps/searcher
-# Set DATA_PATH environment variable to your CSV file
-cargo run --release
+cp .env.example .env
+bun run generate:engine-contract
 ```
 
-## Environment Variables
-
-Create a `.env` file in the root directory:
+start services:
 
 ```sh
-# Session and Authentication
-SESSION_SECRET=$(openssl rand -hex 32)
-WEBAUTHN_RP_ID=localhost
-WEBAUTHN_ORIGIN=http://localhost:3000
-NODE_ENV=development
-
-# External Services
-ENGINE_URL=http://localhost:5000
-SEARCHER_URL=http://localhost:3001
-
-# Searcher Service (for apps/searcher)
-DATA_PATH=path/to/integrated_phone_data.csv
+bun run dev:engine
+bun run dev:web
 ```
 
-## Repository structure
+## repo docs
 
-```txt
-.
-├── apps/
-│   ├── web/             # Full-stack CRM app (SolidJS + SolidStart).
-│   └── searcher/        # Phone lookup microservice (Rust + Axum).
-└── packages/
-    └── (planned)        # Shared packages for future modularization.
+- web: [`apps/web/readme.md`](apps/web/readme.md)
+- engine: [`apps/engine/readme.md`](apps/engine/readme.md)
+- contract source of truth: [`contracts/engine-api.json`](contracts/engine-api.json)
+- contract generator: [`scripts/generate-engine-contract.ts`](scripts/generate-engine-contract.ts)
+
+## maintenance commands
+
+run full repository checks:
+
+```sh
+bun run check
 ```
 
-Maintainers: @totallynotdavid
+run checks individually:
+
+```sh
+bun run check:engine-contract
+bun run check:web
+bun run check:engine
+```
+
+for command details, read [`package.json`](package.json).

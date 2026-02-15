@@ -1,74 +1,67 @@
 # one-engine
 
-Lead distribution API backed by a CSV dataset. Contacts are loaded into memory
-at startup. Assignments are tracked in-process and reset on restart.
+rust/axum service for lead/contact search.
 
-Run:
+## quick start
+
+start the engine from repo root:
 
 ```sh
-cargo build --release
-API_KEYS="key1,key2" ./target/release/one-engine
+bun run dev:engine
 ```
 
-Request pipeline:
+## api
 
-```mermaid
-flowchart LR
-  C[Client] --> S[HTTP server: trace, gzip]
-  S --> MW[protected middleware: rate_limit -> require_auth]
-  MW --> HD[handlers: /leads/*, /stats]
-  HD --> LS[LeadService]
-  LS --> RESP[JSON response]
-  LS -.-> ST[State: contacts Vec, assigned set]
-  HD -.-> E1[GET /leads/unassigned]
-  HD -.-> E2[POST /leads/assign]
-  HD -.-> E3[GET /stats]
-```
+base prefix is generated in [`src/api/contract.rs`](src/api/contract.rs).
 
-Endpoints:
+endpoints:
 
 ```txt
-GET  /health                         # public
-GET  /leads/unassigned?limit=10      # x-api-key required
-POST /leads/assign                   # x-api-key required, body: {lead_ids: number[]}
-GET  /stats                          # x-api-key required
+GET  /v1/health
+POST /v1/search
 ```
 
-Configuration (env):
+`POST /v1/search` signing:
 
-- HOST (default: 127.0.0.1)
-- PORT (default: 5000)
-- DATA_PATH (default: ./data/contacts.csv)
-- API_KEYS (required, comma-separated)
-- RATE_LIMIT_PER_MINUTE (default: 60)
+- `x-timestamp`: unix seconds
+- `x-signature`: `hex(hmac_sha256(timestamp_be_u64 + raw_body, ENGINE_HMAC_SECRET))`
 
-CSV format:
+request body:
 
-```csv
-dni,name,phone_primary,phone_secondary,org_ruc,org_name
+```json
+{
+  "type": "dni | ruc | phone | name",
+  "value": "string",
+  "limit": 20
+}
 ```
 
-`dni` and `name` are required. Other fields are optional. Rows with missing
-required fields are skipped.
+## configuration
 
-Code map:
+source: [root `.env`](../../.env)
 
-- src/main.rs entrypoint (config load, service init, server start)
-- src/config.rs env parsing and defaults
-- src/api/mod.rs Axum router + layers (trace, compression)
-- src/api/routes/health.rs /health
-- src/api/routes/leads.rs /leads/\* and /stats (middleware order: rate -> auth)
-- src/api/state.rs AppState (service + auth + limiter)
-- src/middleware/auth.rs x-api-key validation (sha256)
-- src/middleware/rate.rs per-key token bucket
-- src/data.rs CSV loading and validation
-- src/service/mod.rs lead selection + assignment tracking
-- src/service/types.rs Contact/Lead/Stats + request types
-- src/error.rs error type + HTTP mapping
+- `ENGINE_HMAC_SECRET` (required)
+- `HOST` (default `127.0.0.1`)
+- `PORT` (default `3001`)
+- `DATA_PATH` (default `./data/contacts.csv`)
+- `RATE_LIMIT_PER_IP` (default `120`)
 
-Notes:
+## commands
 
-- Protected routes require `x-api-key` and are rate-limited.
-- Lead IDs are stable for the lifetime of the process. `id` is the in-memory
-  index.
-- Assignment state is not persisted.
+run engine checks from repo root:
+
+```sh
+bun run check:engine
+```
+
+run engine tests:
+
+```sh
+cargo test --manifest-path apps/engine/Cargo.toml
+```
+
+## references
+
+- contract source of truth: [`../../contracts/engine-api.json`](../../contracts/engine-api.json)
+- generated contract constants: [`src/api/contract.rs`](src/api/contract.rs)
+- script details: [`../../package.json`](../../package.json)
