@@ -9,10 +9,17 @@
   "scripts": {
     "clean": "bun x shx rm -rf apps/*/node_modules node_modules",
     "dev": "bun run --parallel --filter '@one/*' dev",
-    "format": "biome format --write",
+    "lint": "bun run lint:web",
+    "lint:web": "bun x oxlint -c .oxlintrc.json --deny-warnings apps/web",
+    "format": "bun run format:web",
+    "format:web": "bun x oxfmt --write apps/web",
+    "format:check": "bun run format:check:web",
+    "format:check:web": "bun x oxfmt --check apps/web",
     "format:md": "bun x prettier \"**/*.{md,yml,yaml}\" --write --print-width=80 --prose-wrap=always"
   },
   "devDependencies": {
+    "oxfmt": "^0.32.0",
+    "oxlint": "^1.47.0",
     "shx": "^0.4.0"
   }
 }

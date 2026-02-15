@@ -19,25 +19,25 @@ import { createBranchesRepo } from "~/server/users/repos-branches";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
 
 export function createRepositories(db: Kysely<Database>) {
-    return {
-        users: createUsersRepo(db),
-        sessions: createSessionRepository(db),
-        organizations: createOrganizationsRepo(db),
-        contacts: createContactsRepo(db),
-        leadAssignments: createLeadAssignmentsRepo(db),
-        quotaAllocations: createQuotaAllocationsRepo(db),
-        chargeNotes: createChargeNotesRepo(db),
-        chargeNoteItems: createChargeNoteItemsRepo(db),
-        rejectionLogs: createRejectionLogsRepo(db),
-        interactionLogs: createInteractionLogsRepo(db),
-        products: createProductsRepo(db),
-        inventory: createInventoryRepo(db),
-        documents: createDocumentsRepo(db),
-        auditLogs: createAuditLogsRepo(db),
-        agentStatus: createAgentStatusRepo(db),
-        passkeys: createPasskeysRepo(db),
-        branches: createBranchesRepo(db),
-    };
+  return {
+    users: createUsersRepo(db),
+    sessions: createSessionRepository(db),
+    organizations: createOrganizationsRepo(db),
+    contacts: createContactsRepo(db),
+    leadAssignments: createLeadAssignmentsRepo(db),
+    quotaAllocations: createQuotaAllocationsRepo(db),
+    chargeNotes: createChargeNotesRepo(db),
+    chargeNoteItems: createChargeNoteItemsRepo(db),
+    rejectionLogs: createRejectionLogsRepo(db),
+    interactionLogs: createInteractionLogsRepo(db),
+    products: createProductsRepo(db),
+    inventory: createInventoryRepo(db),
+    documents: createDocumentsRepo(db),
+    auditLogs: createAuditLogsRepo(db),
+    agentStatus: createAgentStatusRepo(db),
+    passkeys: createPasskeysRepo(db),
+    branches: createBranchesRepo(db),
+  };
 }
 
 export type Repositories = ReturnType<typeof createRepositories>;

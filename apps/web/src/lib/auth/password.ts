@@ -7,12 +7,12 @@ import { hash, verify } from "@node-rs/argon2";
  * @returns Argon2id hash string
  */
 export async function hashPassword(password: string): Promise<string> {
-    return hash(password, {
-        memoryCost: 19456,
-        timeCost: 2,
-        parallelism: 1,
-        outputLen: 32,
-    });
+  return hash(password, {
+    memoryCost: 19456,
+    timeCost: 2,
+    parallelism: 1,
+    outputLen: 32,
+  });
 }
 
 /**
@@ -21,10 +21,13 @@ export async function hashPassword(password: string): Promise<string> {
  * @param password - Plain text password to verify
  * @returns true if password matches hash
  */
-export async function verifyPassword(hash: string, password: string): Promise<boolean> {
-    try {
-        return await verify(hash, password);
-    } catch {
-        return false;
-    }
+export async function verifyPassword(
+  hash: string,
+  password: string,
+): Promise<boolean> {
+  try {
+    return await verify(hash, password);
+  } catch {
+    return false;
+  }
 }
