@@ -12,29 +12,7 @@ import {
 } from "~/components/ui/table";
 import { Badge } from "~/components/ui/badge";
 import { EmptyState } from "~/components/feedback/empty-state";
-
-const roleLabels: Record<string, string> = {
-  executive: "Ejecutivo",
-  supervisor: "Supervisor",
-  back_office: "Validación",
-  sales_manager: "Gerente de Ventas",
-  logistics: "Logística",
-  hr: "RRHH",
-  admin: "Administrador",
-  superuser: "Superusuario",
-};
-
-const roleBadgeVariant = (role: string) => {
-  switch (role) {
-    case "supervisor":
-      return "warning" as const;
-    case "admin":
-    case "superuser":
-      return "info" as const;
-    default:
-      return "default" as const;
-  }
-};
+import { getRoleBadgeVariant, getRoleLabel } from "~/lib/auth/role-display";
 
 export default function TeamPage() {
   const [members] = createResource(getTeamMembers);
@@ -88,8 +66,8 @@ export default function TeamPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={roleBadgeVariant(member.role)}>
-                        {roleLabels[member.role] ?? member.role}
+                      <Badge variant={getRoleBadgeVariant(member.role)}>
+                        {getRoleLabel(member.role)}
                       </Badge>
                     </TableCell>
                     <TableCell>

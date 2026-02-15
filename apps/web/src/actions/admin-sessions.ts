@@ -4,10 +4,22 @@ import { repos } from "~/server/shared/context";
 import { requireRole } from "~/lib/auth/session";
 import { invalidateUserSessions } from "~/lib/auth/session-manager";
 import type { UserSession } from "~/lib/db/schema";
+import type { Role } from "~/lib/auth/rbac";
+import type { ActionSuccess } from "~/lib/contracts/common";
+import {
+  allSessionsRevokedChanges,
+  serializeAuditChanges,
+  sessionRevokedByAdminChanges,
+} from "~/lib/contracts/audit";
+import {
+  assertNonEmptyString,
+  assertPositiveInt,
+} from "~/lib/contracts/guards";
 
 export async function listUserSessions(userId: number): Promise<UserSession[]> {
+  const safeUserId = assertPositiveInt(userId, "userId");
   await requireRole("admin");
-  return repos.sessions.listForUser(userId);
+  return repos.sessions.listForUser(safeUserId);
 }
 
 export async function getActiveSessionsCount(): Promise<number> {
@@ -18,34 +30,41 @@ export async function getActiveSessionsCount(): Promise<number> {
 export async function revokeUserSession(
   sessionId: string,
   targetUserId: number,
-) {
-  await requireRole("admin");
+): Promise<ActionSuccess> {
+  const safeSessionId = assertNonEmptyString(sessionId, "sessionId");
+  const safeTargetUserId = assertPositiveInt(targetUserId, "targetUserId");
+  const session = await requireRole("admin");
 
-  await repos.sessions.delete(sessionId);
+  await repos.sessions.delete(safeSessionId);
 
   await repos.auditLogs.create({
-    user_id: targetUserId,
+    user_id: session.userId,
     action: "session_revoked_by_admin",
     entity_type: "user_session",
-    entity_id: targetUserId,
-    changes: JSON.stringify({ sessionId }),
+    entity_id: safeTargetUserId,
+    changes: serializeAuditChanges(
+      sessionRevokedByAdminChanges(safeSessionId, session.userId),
+    ),
     created_at: Date.now(),
   });
 
   return { success: true };
 }
 
-export async function revokeAllUserSessions(targetUserId: number) {
+export async function revokeAllUserSessions(
+  targetUserId: number,
+): Promise<ActionSuccess> {
+  const safeTargetUserId = assertPositiveInt(targetUserId, "targetUserId");
   const session = await requireRole("admin");
 
-  await invalidateUserSessions(targetUserId);
+  await invalidateUserSessions(safeTargetUserId);
 
   await repos.auditLogs.create({
     user_id: session.userId,
     action: "all_sessions_revoked",
     entity_type: "user",
-    entity_id: targetUserId,
-    changes: JSON.stringify({ revokedBy: session.userId }),
+    entity_id: safeTargetUserId,
+    changes: serializeAuditChanges(allSessionsRevokedChanges(session.userId)),
     created_at: Date.now(),
   });
 
@@ -57,7 +76,7 @@ export interface SessionInfo {
   userId: number;
   userEmail: string;
   userName: string;
-  role: string;
+  role: Role;
   branchName: string;
   ipAddress: string | null;
   userAgent: string | null;

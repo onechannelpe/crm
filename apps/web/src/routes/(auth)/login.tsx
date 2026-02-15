@@ -55,7 +55,12 @@ export default function LoginPage() {
         <Card class="border-0 shadow-none sm:border sm:shadow-sm bg-transparent sm:bg-white">
           <CardHeader class="pb-0" />
           <CardContent class="space-y-6">
-            <form onSubmit={handleSubmit} class="space-y-4">
+            <form
+              onSubmit={(e) => {
+                void handleSubmit(e);
+              }}
+              class="space-y-4"
+            >
               <div class="space-y-2">
                 <Input
                   id="email"

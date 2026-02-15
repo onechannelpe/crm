@@ -18,8 +18,7 @@ export default function LeadsPage() {
 
   const handleRequestLeads = async () => {
     await requestLeads();
-    refetchQuota();
-    refetchLeads();
+    await Promise.all([refetchQuota(), refetchLeads()]);
   };
 
   const handleCreateSale = (contactId: number) => {
@@ -28,7 +27,7 @@ export default function LeadsPage() {
 
   const handleComplete = async (assignmentId: number) => {
     await completeLead(assignmentId);
-    refetchLeads();
+    await refetchLeads();
   };
 
   return (
@@ -52,7 +51,9 @@ export default function LeadsPage() {
       <LeadList
         contacts={leads() ?? []}
         onCreateSale={handleCreateSale}
-        onComplete={handleComplete}
+        onComplete={(assignmentId) => {
+          void handleComplete(assignmentId);
+        }}
       />
     </div>
   );

@@ -1,0 +1,89 @@
+import { describe, expect, it } from "vitest";
+import {
+  enforceAuthRequest,
+  isPublicPath,
+  type AuthRequestDeps,
+} from "../../src/lib/auth/request-auth";
+import type { AuthSession } from "../../src/lib/auth/session-types";
+
+function createDeps(params: {
+  token: string | null | undefined;
+  session: AuthSession | null;
+}): AuthRequestDeps {
+  return {
+    getSessionCookie: () => params.token,
+    validateSessionToken: async () => ({ session: params.session }),
+  };
+}
+
+describe("auth middleware request guard", () => {
+  it("detects public routes", () => {
+    expect(isPublicPath("/login")).toBe(true);
+    expect(isPublicPath("/auth/callback")).toBe(true);
+    expect(isPublicPath("/_build/assets.js")).toBe(true);
+    expect(isPublicPath("/robots.txt")).toBe(true);
+    expect(isPublicPath("/dashboard")).toBe(false);
+  });
+
+  it("returns 403 on csrf origin mismatch for non-get requests", async () => {
+    const decision = await enforceAuthRequest(
+      {
+        request: new Request("http://localhost:3000/dashboard", {
+          method: "POST",
+          headers: {
+            Origin: "http://evil.local",
+            Host: "localhost:3000",
+          },
+        }),
+      },
+      createDeps({ token: null, session: null }),
+    );
+
+    expect(decision.kind).toBe("reject");
+    const status = decision.kind === "reject" ? decision.response.status : null;
+    expect(status).toBe(403);
+  });
+
+  it("redirects to /login when private route has no session token", async () => {
+    const decision = await enforceAuthRequest(
+      {
+        request: new Request("http://localhost:3000/dashboard"),
+      },
+      createDeps({ token: null, session: null }),
+    );
+
+    expect(decision.kind).toBe("redirect_login");
+  });
+
+  it("redirects to /login when token is invalid", async () => {
+    const decision = await enforceAuthRequest(
+      {
+        request: new Request("http://localhost:3000/dashboard"),
+      },
+      createDeps({ token: "token", session: null }),
+    );
+
+    expect(decision.kind).toBe("redirect_login");
+  });
+
+  it("attaches session to locals when token is valid", async () => {
+    const session: AuthSession = {
+      id: "session-id",
+      userId: 1,
+      branchId: 1,
+      role: "executive",
+    };
+    const event: { request: Request; locals: App.RequestEventLocals } = {
+      request: new Request("http://localhost:3000/dashboard"),
+      locals: {},
+    };
+
+    const decision = await enforceAuthRequest(
+      event,
+      createDeps({ token: "token", session }),
+    );
+
+    expect(decision.kind).toBe("allow");
+    expect(event.locals.session).toEqual(session);
+  });
+});

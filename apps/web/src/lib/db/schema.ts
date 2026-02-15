@@ -200,7 +200,7 @@ export interface UserSessionsTable {
   id: string;
   user_id: number;
   branch_id: number;
-  role: string;
+  role: UsersTable["role"];
   ip_address: string | null;
   user_agent: string | null;
   created_at: number;

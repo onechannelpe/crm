@@ -1,9 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import {
-  getPermissions,
-  type Permission,
-  type Role,
-} from "../../src/lib/auth/rbac";
+import { getPermissions, ROLES } from "../../src/lib/auth/rbac";
 import { createQuotaService } from "../../src/server/quota/service";
 import type { TestDbContext } from "../support/test-db";
 import { cleanupTestDb, createIsolatedTestDb } from "../support/test-db";
@@ -57,9 +53,8 @@ describe("security invariant manifest", () => {
   });
 
   it("enforces exact RBAC permission manifest", () => {
-    for (const [role, expected] of Object.entries(PERMISSION_MANIFEST) as Array<
-      [Role, Permission[]]
-    >) {
+    for (const role of ROLES) {
+      const expected = PERMISSION_MANIFEST[role];
       const actual = [...getPermissions(role)].toSorted();
       expect(actual).toEqual([...expected].toSorted());
     }

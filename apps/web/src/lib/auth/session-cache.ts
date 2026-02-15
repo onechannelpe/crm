@@ -1,7 +1,9 @@
+import type { Role } from "./rbac";
+
 interface CachedSession {
   userId: number;
   branchId: number;
-  role: string;
+  role: Role;
   expiresAt: number;
   cachedUntil: number;
 }

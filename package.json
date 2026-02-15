@@ -10,7 +10,7 @@
     "clean": "bun x shx rm -rf apps/*/node_modules node_modules",
     "dev": "bun run --parallel --filter '@one/*' dev",
     "lint": "bun run lint:web",
-    "lint:web": "bun x oxlint -c .oxlintrc.json --deny-warnings apps/web",
+    "lint:web": "bun x oxlint -c .oxlintrc.json --type-aware --tsconfig apps/web/tsconfig.json --deny-warnings apps/web",
     "format": "bun run format:web",
     "format:web": "bun x oxfmt --write apps/web",
     "format:check": "bun run format:check:web",
@@ -20,6 +20,7 @@
   "devDependencies": {
     "oxfmt": "^0.32.0",
     "oxlint": "^1.47.0",
+    "oxlint-tsgolint": "^0.13.0",
     "shx": "^0.4.0"
   }
 }

@@ -734,5 +734,5 @@ async function seed() {
 }
 
 if (import.meta.main) {
-  seed();
+  void seed();
 }

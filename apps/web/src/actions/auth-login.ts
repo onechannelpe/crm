@@ -3,15 +3,27 @@
 import { getSessionCookie, setSessionCookie } from "~/lib/auth/cookies";
 import { verifyPassword } from "~/lib/auth/password";
 import { createSession, invalidateSession } from "~/lib/auth/session-manager";
+import type { Role } from "~/lib/auth/rbac";
 import { hashSessionToken } from "~/lib/auth/tokens";
 import { repos } from "~/server/shared/context";
+import { assertNonEmptyString } from "~/lib/contracts/guards";
 
-export async function login(email: string, password: string) {
-  const user = await repos.users.findByEmail(email);
+export interface LoginResult {
+  userId: number;
+  role: Role;
+}
+
+export async function login(
+  email: string,
+  password: string,
+): Promise<LoginResult> {
+  const safeEmail = assertNonEmptyString(email, "email");
+  const safePassword = assertNonEmptyString(password, "password");
+  const user = await repos.users.findByEmail(safeEmail);
   if (!user) throw new Error("Invalid credentials");
   if (!user.is_active) throw new Error("Account disabled");
 
-  const valid = await verifyPassword(user.password_hash, password);
+  const valid = await verifyPassword(user.password_hash, safePassword);
   if (!valid) throw new Error("Invalid credentials");
 
   const oldToken = getSessionCookie();

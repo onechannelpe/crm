@@ -37,7 +37,7 @@ export default function ValidationPage() {
     try {
       await approveSale(noteId);
       showToast("success", `Venta #${noteId} aprobada`);
-      refetch();
+      await refetch();
     } catch (err: unknown) {
       showToast("error", getErrorMessage(err, "Error al aprobar"));
     }
@@ -57,7 +57,7 @@ export default function ValidationPage() {
       );
       showToast("success", `Venta #${noteId} rechazada`);
       setRejectingNoteId(null);
-      refetch();
+      await refetch();
     } catch (err: unknown) {
       showToast("error", getErrorMessage(err, "Error al rechazar"));
     }
@@ -127,7 +127,9 @@ export default function ValidationPage() {
                         <Button
                           size="sm"
                           class="bg-emerald-600 hover:bg-emerald-700 text-white"
-                          onClick={() => handleApprove(note.id)}
+                          onClick={() => {
+                            void handleApprove(note.id);
+                          }}
                         >
                           Aprobar
                         </Button>

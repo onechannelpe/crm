@@ -3,7 +3,11 @@
 import { repos } from "~/server/shared/context";
 import { requirePermission } from "~/lib/auth/session";
 
-export async function getInventoryItems() {
+type InventoryItemWithProduct = Awaited<
+  ReturnType<typeof repos.inventory.findAllWithProduct>
+>[number];
+
+export async function getInventoryItems(): Promise<InventoryItemWithProduct[]> {
   await requirePermission("inventory:read");
 
   return repos.inventory.findAllWithProduct();

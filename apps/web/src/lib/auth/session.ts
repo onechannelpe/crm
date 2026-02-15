@@ -1,11 +1,11 @@
 import { getSessionCookie } from "./cookies";
 import { validateSessionToken } from "./session-manager";
-import { hasPermission, type Permission } from "./rbac";
+import { hasPermission, type Permission, type Role } from "./rbac";
 
 export interface SessionData {
   userId: number;
   email?: string;
-  role: string;
+  role: Role;
   branchId: number;
 }
 
@@ -33,16 +33,6 @@ export async function requireAuth(): Promise<SessionData> {
   return session;
 }
 
-type Role =
-  | "executive"
-  | "supervisor"
-  | "back_office"
-  | "sales_manager"
-  | "logistics"
-  | "hr"
-  | "admin"
-  | "superuser";
-
 const ROLE_HIERARCHY: Record<Role, number> = {
   executive: 0,
   supervisor: 1,
@@ -54,8 +44,8 @@ const ROLE_HIERARCHY: Record<Role, number> = {
   superuser: 4,
 };
 
-export function hasRole(userRole: string, requiredRole: Role): boolean {
-  const userLevel = ROLE_HIERARCHY[userRole as Role] ?? -1;
+export function hasRole(userRole: Role, requiredRole: Role): boolean {
+  const userLevel = ROLE_HIERARCHY[userRole];
   const requiredLevel = ROLE_HIERARCHY[requiredRole] ?? 99;
   return userLevel >= requiredLevel;
 }

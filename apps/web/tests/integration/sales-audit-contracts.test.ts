@@ -30,8 +30,17 @@ async function createSubmittableNote(ctx: TestDbContext) {
   return noteId;
 }
 
-function parseChanges(changes: string | null) {
-  return changes ? (JSON.parse(changes) as Record<string, unknown>) : {};
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function parseChanges(changes: string | null): Record<string, unknown> {
+  if (!changes) {
+    return {};
+  }
+
+  const parsed: unknown = JSON.parse(changes);
+  return isRecord(parsed) ? parsed : {};
 }
 
 describe("sales audit contracts", () => {

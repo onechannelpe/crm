@@ -28,7 +28,12 @@ export const RequestLeadsButton: Component<RequestLeadsButtonProps> = (
   };
 
   return (
-    <Button onClick={handleClick} disabled={loading() || props.disabled}>
+    <Button
+      onClick={() => {
+        void handleClick();
+      }}
+      disabled={loading() || props.disabled}
+    >
       <Show when={loading()} fallback="Solicitar leads">
         Solicitando...
       </Show>

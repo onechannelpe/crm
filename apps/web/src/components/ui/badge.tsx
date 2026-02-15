@@ -14,11 +14,26 @@ interface BadgeProps {
   children: JSX.Element;
 }
 
+const BADGE_VARIANTS = [
+  "default",
+  "secondary",
+  "destructive",
+  "outline",
+  "success",
+  "warning",
+  "info",
+] as const;
+type BadgeVariant = (typeof BADGE_VARIANTS)[number];
+
+function isBadgeVariant(value: string): value is BadgeVariant {
+  return BADGE_VARIANTS.some((variant) => variant === value);
+}
+
 export function Badge(props: BadgeProps) {
   const merged = mergeProps({ variant: "default" }, props);
   const [local, others] = splitProps(merged, ["variant", "class", "children"]);
 
-  const variants = {
+  const variants: Record<BadgeVariant, string> = {
     default:
       "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
     secondary:
@@ -30,12 +45,15 @@ export function Badge(props: BadgeProps) {
     warning: "border-transparent bg-yellow-500 text-white hover:bg-yellow-600",
     info: "border-transparent bg-blue-500 text-white hover:bg-blue-600",
   };
+  const variantInput = local.variant;
+  const variant: BadgeVariant =
+    variantInput && isBadgeVariant(variantInput) ? variantInput : "default";
 
   return (
     <div
       class={cn(
         "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-        variants[local.variant as keyof typeof variants],
+        variants[variant],
         local.class,
       )}
       {...others}
