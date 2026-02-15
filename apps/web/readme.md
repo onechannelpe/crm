@@ -1,4 +1,4 @@
-# one-web
+# one-crm
 
 solidstart crm application.
 
