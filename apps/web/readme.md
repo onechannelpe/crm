@@ -26,6 +26,10 @@ common:
 - `WEBAUTHN_RP_ID` (default `localhost`)
 - `WEBAUTHN_ORIGIN` (default `http://localhost:3000`)
 
+note:
+
+- engine runtime vars are namespaced as `ENGINE_*` to avoid web env collisions.
+
 production guards (code-enforced):
 
 - engine url must use `https`

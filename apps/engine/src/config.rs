@@ -24,14 +24,14 @@ impl Config {
             .map_err(|_| StartupError::Config("ENGINE_HMAC_SECRET is required".into()))?;
 
         Ok(Self {
-            host: env::var("HOST").unwrap_or_else(|_| "127.0.0.1".into()),
-            port: env::var("PORT")
+            host: env::var("ENGINE_HOST").unwrap_or_else(|_| "127.0.0.1".into()),
+            port: env::var("ENGINE_PORT")
                 .unwrap_or_else(|_| "3001".into())
                 .parse()
                 .unwrap_or(3001),
-            data_path: env::var("DATA_PATH").unwrap_or_else(|_| Self::default_data_path()),
+            data_path: env::var("ENGINE_DATA_PATH").unwrap_or_else(|_| Self::default_data_path()),
             hmac_secret,
-            rate_limit_per_ip: env::var("RATE_LIMIT_PER_IP")
+            rate_limit_per_ip: env::var("ENGINE_RATE_LIMIT_PER_IP")
                 .unwrap_or_else(|_| "120".into())
                 .parse()
                 .unwrap_or(120),
