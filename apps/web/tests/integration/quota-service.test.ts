@@ -3,11 +3,13 @@ import { createQuotaService } from "~/server/quota/service";
 import { createIsolatedTestDb, cleanupTestDb } from "../support/test-db";
 
 describe("quota service", () => {
+    const today = () => new Date().toISOString().slice(0, 10);
+
     it("prevents duplicate daily allocations", async () => {
         const ctx = await createIsolatedTestDb("quota-dup");
         try {
             const quota = createQuotaService(ctx.repos);
-            const day = "2026-02-14";
+            const day = today();
 
             const first = await quota.allocate(2, 1, 20, day);
             const second = await quota.allocate(2, 1, 10, day);
@@ -26,7 +28,7 @@ describe("quota service", () => {
         const ctx = await createIsolatedTestDb("quota-consume");
         try {
             const quota = createQuotaService(ctx.repos);
-            const day = "2026-02-14";
+            const day = today();
             await quota.allocate(2, 1, 2, day);
 
             const c1 = await quota.consume(1, 1);
@@ -48,7 +50,7 @@ describe("quota service", () => {
         const ctx = await createIsolatedTestDb("quota-perf");
         try {
             const quota = createQuotaService(ctx.repos);
-            const day = "2026-02-14";
+            const day = today();
             await quota.allocate(2, 1, 120, day);
 
             const started = Date.now();

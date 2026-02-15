@@ -52,6 +52,8 @@ async function prepareSubmittableNote(ctx: TestDbContext) {
 }
 
 describe("security invariant manifest", () => {
+    const today = () => new Date().toISOString().slice(0, 10);
+
     it("enforces exact RBAC permission manifest", () => {
         for (const [role, expected] of Object.entries(PERMISSION_MANIFEST) as Array<[Role, Permission[]]>) {
             const actual = [...getPermissions(role)].sort();
@@ -101,7 +103,7 @@ describe("security invariant manifest", () => {
         const ctx = await createIsolatedTestDb("manifest-quota");
         try {
             const quota = createQuotaService(ctx.repos);
-            const day = "2026-02-14";
+            const day = today();
 
             const first = await quota.allocate(2, 1, 2, day);
             expect(first.ok).toBe(true);
