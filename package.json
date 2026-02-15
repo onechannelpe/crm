@@ -8,21 +8,16 @@
   ],
   "scripts": {
     "clean": "bun x shx rm -rf apps/*/node_modules node_modules",
-    "dev": "bun run --parallel --filter '@one/*' dev",
+    "dev": "bun run --parallel dev:engine dev:web",
+    "dev:web": "bun --no-env-file --env-file=.env run --cwd apps/web dev",
+    "dev:engine": "cargo run --manifest-path apps/engine/Cargo.toml",
     "generate:engine-contract": "bun run scripts/generate-engine-contract.ts",
     "check:engine-contract": "bun run scripts/generate-engine-contract.ts --check",
-    "lint": "bun run lint:web",
-    "lint:web": "bun x oxlint -c .oxlintrc.json --type-aware --tsconfig apps/web/tsconfig.json --deny-warnings apps/web",
-    "format": "bun run format:web",
-    "format:web": "bun x oxfmt --write apps/web",
-    "format:check": "bun run format:check:web",
-    "format:check:web": "bun x oxfmt --check apps/web",
-    "format:md": "bun x prettier \"**/*.{md,yml,yaml}\" --write --print-width=80 --prose-wrap=always"
+    "check:web": "bun --no-env-file --env-file=.env run --cwd apps/web check",
+    "check:engine": "cargo check --manifest-path apps/engine/Cargo.toml",
+    "check": "bun run check:engine-contract && bun run check:web && bun run check:engine"
   },
   "devDependencies": {
-    "oxfmt": "^0.32.0",
-    "oxlint": "^1.47.0",
-    "oxlint-tsgolint": "^0.13.0",
     "shx": "^0.4.0"
   }
 }

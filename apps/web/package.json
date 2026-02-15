@@ -5,9 +5,9 @@
     "dev": "vinxi dev",
     "build": "vinxi build",
     "start": "vinxi start",
-    "lint": "bun run --cwd ../.. lint",
-    "format": "bun run --cwd ../.. format:web",
-    "format:check": "bun run --cwd ../.. format:check:web",
+    "lint": "bun x oxlint -c ../../.oxlintrc.json --type-aware --tsconfig tsconfig.json --deny-warnings src tests",
+    "format": "bun x oxfmt --write .",
+    "format:check": "bun x oxfmt --check .",
     "check": "bun x tsc --noEmit && bun run lint && bun run format:check",
     "test": "bun --env-file=../../.env vitest run --project default",
     "test:perf": "bun --env-file=../../.env vitest run --project perf",
@@ -31,6 +31,7 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.18",
+    "oxlint-tsgolint": "^0.13.0",
     "tailwindcss": "^4.1.18",
     "vitest": "^4.0.18"
   }
