@@ -1,6 +1,9 @@
 import type { Repositories } from "~/server/shared/registry";
+import { serializeAuditChanges } from "~/lib/contracts/audit";
 
-export function createAuditService(repos: Repositories) {
+type AuditRepos = Pick<Repositories, "auditLogs">;
+
+export function createAuditService(repos: AuditRepos) {
   return {
     log(
       userId: number,
@@ -14,7 +17,7 @@ export function createAuditService(repos: Repositories) {
         action,
         entity_type: entityType,
         entity_id: entityId,
-        changes: changes ? JSON.stringify(changes) : null,
+        changes: serializeAuditChanges(changes),
         created_at: Date.now(),
       });
     },

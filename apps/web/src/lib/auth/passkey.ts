@@ -13,6 +13,48 @@ const rpName = "CRM OneChannel";
 const rpID = env.webauthnRpId;
 const origin = env.webauthnOrigin;
 
+type PasskeyTransport = NonNullable<
+  RegistrationResponseJSON["response"]["transports"]
+>[number];
+
+const KNOWN_TRANSPORTS: readonly PasskeyTransport[] = [
+  "ble",
+  "cable",
+  "hybrid",
+  "internal",
+  "nfc",
+  "smart-card",
+  "usb",
+];
+
+function isPasskeyTransport(value: string): value is PasskeyTransport {
+  return KNOWN_TRANSPORTS.some((transport) => transport === value);
+}
+
+function parseStoredTransports(
+  value: string | null,
+): PasskeyTransport[] | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (
+      Array.isArray(parsed) &&
+      parsed.every(
+        (item) => typeof item === "string" && isPasskeyTransport(item),
+      )
+    ) {
+      return parsed;
+    }
+  } catch {
+    return undefined;
+  }
+
+  return undefined;
+}
+
 export function createPasskeyService(repos: Repositories) {
   return {
     async getRegistrationOptions(userId: number) {
@@ -24,7 +66,7 @@ export function createPasskeyService(repos: Repositories) {
         userName: `user-${userId}`,
         excludeCredentials: existingPasskeys.map((p) => ({
           id: p.id,
-          transports: p.transports ? JSON.parse(p.transports) : undefined,
+          transports: parseStoredTransports(p.transports),
         })),
         authenticatorSelection: {
           residentKey: "preferred",
@@ -78,7 +120,7 @@ export function createPasskeyService(repos: Repositories) {
       const allowCredentials = userId
         ? (await repos.passkeys.findByUser(userId)).map((p) => ({
             id: p.id,
-            transports: p.transports ? JSON.parse(p.transports) : undefined,
+            transports: parseStoredTransports(p.transports),
           }))
         : [];
 
@@ -105,9 +147,7 @@ export function createPasskeyService(repos: Repositories) {
           id: passkey.id,
           publicKey: Buffer.from(passkey.public_key, "base64"),
           counter: passkey.counter,
-          transports: passkey.transports
-            ? JSON.parse(passkey.transports)
-            : undefined,
+          transports: parseStoredTransports(passkey.transports),
         },
       });
 

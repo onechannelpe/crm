@@ -4,11 +4,24 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "0 6 * * *"
+  push:
+    branches:
+      - "master"
+    paths:
+      - "apps/web/**"
+      - "package.json"
+      - ".oxlintrc.json"
+      - ".oxfmtrc.json"
+      - "bun.lock"
+      - ".github/workflows/tests.yml"
   pull_request:
     branches:
       - "master"
     paths:
       - "apps/web/**"
+      - "package.json"
+      - ".oxlintrc.json"
+      - ".oxfmtrc.json"
       - "bun.lock"
       - ".github/workflows/tests.yml"
 
@@ -34,6 +47,16 @@ jobs:
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
+
+      - name: Generate test env
+        run: |
+          echo "SESSION_SECRET=$(openssl rand -hex 32)" >> .env
+          echo "ENGINE_HMAC_SECRET=$(openssl rand -hex 32)" >> .env
+          echo "ENGINE_URL=http://localhost:3001" >> .env
+          echo "WEBAUTHN_RP_ID=localhost" >> .env
+          echo "WEBAUTHN_ORIGIN=http://localhost:3000" >> .env
+          echo "AUTH_RP_ID=localhost" >> .env
+          echo "AUTH_ORIGIN=http://localhost:3000" >> .env
 
       - name: Typecheck + Oxc checks
         working-directory: apps/web
@@ -61,6 +84,16 @@ jobs:
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
+
+      - name: Generate test env
+        run: |
+          echo "SESSION_SECRET=$(openssl rand -hex 32)" >> .env
+          echo "ENGINE_HMAC_SECRET=$(openssl rand -hex 32)" >> .env
+          echo "ENGINE_URL=http://localhost:3001" >> .env
+          echo "WEBAUTHN_RP_ID=localhost" >> .env
+          echo "WEBAUTHN_ORIGIN=http://localhost:3000" >> .env
+          echo "AUTH_RP_ID=localhost" >> .env
+          echo "AUTH_ORIGIN=http://localhost:3000" >> .env
 
       - name: Run perf tests
         working-directory: apps/web

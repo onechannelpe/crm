@@ -60,7 +60,7 @@ export const RejectionForm: Component<RejectionFormProps> = (props) => {
       <Select
         value=""
         onChange={(e) => {
-          const value = (e.target as HTMLSelectElement).value;
+          const value = e.currentTarget.value;
           if (value) addRejection(value);
         }}
       >
@@ -93,9 +93,7 @@ export const RejectionForm: Component<RejectionFormProps> = (props) => {
                 <Input
                   placeholder="Motivo del rechazo"
                   value={rejection.note}
-                  onInput={(e) =>
-                    updateNote(index(), (e.target as HTMLInputElement).value)
-                  }
+                  onInput={(e) => updateNote(index(), e.currentTarget.value)}
                 />
               </div>
             );
@@ -106,7 +104,9 @@ export const RejectionForm: Component<RejectionFormProps> = (props) => {
       <div class="flex gap-2 pt-2">
         <Button
           variant="destructive"
-          onClick={handleSubmit}
+          onClick={() => {
+            void handleSubmit();
+          }}
           disabled={rejections().length === 0 || loading()}
         >
           {loading() ? "Rechazando..." : `Rechazar (${rejections().length})`}

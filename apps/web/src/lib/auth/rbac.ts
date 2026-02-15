@@ -27,6 +27,17 @@ export type Permission =
   | "admin:manage"
   | "audit:read";
 
+export const ROLES = [
+  "executive",
+  "supervisor",
+  "back_office",
+  "sales_manager",
+  "logistics",
+  "hr",
+  "admin",
+  "superuser",
+] as const satisfies ReadonlyArray<Role>;
+
 const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   executive: [
     "leads:read",
@@ -100,12 +111,18 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   ],
 };
 
+export function isRole(value: string): value is Role {
+  return ROLES.some((role) => role === value);
+}
+
 export function hasPermission(role: string, permission: Permission): boolean {
-  const perms = ROLE_PERMISSIONS[role as Role];
+  if (!isRole(role)) return false;
+  const perms = ROLE_PERMISSIONS[role];
   if (!perms) return false;
   return perms.includes(permission);
 }
 
 export function getPermissions(role: string): Permission[] {
-  return ROLE_PERMISSIONS[role as Role] ?? [];
+  if (!isRole(role)) return [];
+  return ROLE_PERMISSIONS[role] ?? [];
 }

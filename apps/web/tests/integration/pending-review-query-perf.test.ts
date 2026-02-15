@@ -20,7 +20,7 @@ async function seedPendingReviewDataset(ctx: TestDbContext, total: number) {
     })
     .execute();
 
-  const contacts = [] as Array<{
+  const contacts: Array<{
     id: number;
     organization_id: number;
     dni: string;
@@ -31,7 +31,7 @@ async function seedPendingReviewDataset(ctx: TestDbContext, total: number) {
     last_contacted_by_user_id: number | null;
     cooldown_until: number | null;
     created_at: number;
-  }>;
+  }> = [];
 
   for (let i = 0; i < total; i++) {
     contacts.push({
@@ -49,7 +49,7 @@ async function seedPendingReviewDataset(ctx: TestDbContext, total: number) {
   }
   await ctx.db.insertInto("contacts").values(contacts).execute();
 
-  const notes = [] as Array<{
+  const notes: Array<{
     contact_id: number;
     user_id: number;
     status: "pending_review";
@@ -57,7 +57,7 @@ async function seedPendingReviewDataset(ctx: TestDbContext, total: number) {
     updated_at: number;
     exec_code_real: string | null;
     exec_code_tdp: string | null;
-  }>;
+  }> = [];
 
   for (let i = 0; i < total; i++) {
     notes.push({

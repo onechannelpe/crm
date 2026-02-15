@@ -5,10 +5,11 @@ import {
   invalidateSession,
   validateSessionToken,
 } from "~/lib/auth/session-manager";
+import type { Role } from "~/lib/auth/rbac";
 import { hashSessionToken } from "~/lib/auth/tokens";
 import { repos } from "~/server/shared/context";
 
-export async function logout() {
+export async function logout(): Promise<void> {
   const token = getSessionCookie();
   if (!token) return;
 
@@ -30,7 +31,15 @@ export async function logout() {
   }
 }
 
-export async function getMe() {
+export interface CurrentUser {
+  id: number;
+  email: string;
+  fullName: string;
+  role: Role;
+  branchId: number;
+}
+
+export async function getMe(): Promise<CurrentUser | null> {
   const token = getSessionCookie();
   if (!token) return null;
 
@@ -44,7 +53,7 @@ export async function getMe() {
     id: user.id,
     email: user.email,
     fullName: user.full_name,
-    role: user.role,
+    role: session.role,
     branchId: user.branch_id,
   };
 }

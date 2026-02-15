@@ -2,17 +2,7 @@ import { createResource, Show } from "solid-js";
 import { getMe } from "~/actions/auth-session";
 import { Badge } from "~/components/ui/badge";
 import { Card } from "~/components/ui/card";
-
-const roleLabels: Record<string, string> = {
-  executive: "Ejecutivo",
-  supervisor: "Supervisor",
-  back_office: "Back-Office",
-  sales_manager: "Gerente de ventas",
-  logistics: "Logística",
-  hr: "RRHH",
-  admin: "Administrador",
-  superuser: "Superusuario",
-};
+import { getRoleBadgeVariant, getRoleLabel } from "~/lib/auth/role-display";
 
 export default function ProfilePage() {
   const [user] = createResource(getMe);
@@ -54,8 +44,8 @@ export default function ProfilePage() {
               <p class="text-xs uppercase tracking-wider text-muted-foreground">
                 Rol actual
               </p>
-              <Badge variant="info">
-                {roleLabels[currentUser().role] ?? currentUser().role}
+              <Badge variant={getRoleBadgeVariant(currentUser().role)}>
+                {getRoleLabel(currentUser().role)}
               </Badge>
             </div>
           </Card>

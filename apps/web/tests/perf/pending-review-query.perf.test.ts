@@ -20,7 +20,7 @@ async function seedDataset(ctx: TestDbContext) {
     })
     .execute();
 
-  const contacts = [] as Array<{
+  const contacts: Array<{
     id: number;
     organization_id: number;
     dni: string;
@@ -31,8 +31,8 @@ async function seedDataset(ctx: TestDbContext) {
     last_contacted_by_user_id: number | null;
     cooldown_until: number | null;
     created_at: number;
-  }>;
-  const notes = [] as Array<{
+  }> = [];
+  const notes: Array<{
     contact_id: number;
     user_id: number;
     status: "pending_review";
@@ -40,7 +40,7 @@ async function seedDataset(ctx: TestDbContext) {
     updated_at: number;
     exec_code_real: string | null;
     exec_code_tdp: string | null;
-  }>;
+  }> = [];
   for (let i = 0; i < 1200; i++) {
     contacts.push({
       id: 1000 + i,
@@ -57,7 +57,7 @@ async function seedDataset(ctx: TestDbContext) {
     notes.push({
       contact_id: 1000 + i,
       user_id: i % 2 === 0 ? 1 : 3,
-      status: "pending_review" as const,
+      status: "pending_review",
       created_at: now,
       updated_at: now,
       exec_code_real: null,

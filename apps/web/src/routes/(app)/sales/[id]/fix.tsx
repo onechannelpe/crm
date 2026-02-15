@@ -71,7 +71,12 @@ export default function FixSalePage() {
             <Button variant="secondary" onClick={() => navigate("/leads")}>
               Cancelar
             </Button>
-            <Button onClick={handleResubmit} disabled={loading()}>
+            <Button
+              onClick={() => {
+                void handleResubmit();
+              }}
+              disabled={loading()}
+            >
               {loading() ? "Enviando..." : "Reenviar para validación"}
             </Button>
           </div>

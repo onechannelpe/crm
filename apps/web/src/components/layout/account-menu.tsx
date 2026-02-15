@@ -76,7 +76,9 @@ export function AccountMenu(props: AccountMenuProps) {
             type="button"
             onClick={() => {
               setOpen(false);
-              void props.onLogout();
+              props.onLogout().catch((error: unknown) => {
+                console.error("Logout failed", error);
+              });
             }}
             class="flex w-full items-center gap-2 rounded-sm px-2 py-2 text-left text-sm text-destructive hover:bg-destructive/10"
           >

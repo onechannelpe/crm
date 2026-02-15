@@ -6,12 +6,69 @@ import { requirePermission } from "~/lib/auth/session";
 import { isErr } from "~/server/shared/result";
 import { config } from "~/lib/config";
 import { computeLockExpiry } from "~/server/inventory/domain";
+import type { ActionSuccess } from "~/lib/contracts/common";
+import {
+  assertFinitePositive,
+  assertNonEmptyString,
+  assertPositiveInt,
+} from "~/lib/contracts/guards";
 
-export async function createSale(contactId: number) {
+type PendingReviewNote = Awaited<
+  ReturnType<typeof repos.chargeNotes.findPendingReviewWithContacts>
+>[number];
+type RejectionItem = Awaited<
+  ReturnType<typeof repos.rejectionLogs.findUnresolvedByChargeNote>
+>[number];
+type DraftItem = Awaited<
+  ReturnType<typeof repos.chargeNoteItems.findByChargeNoteWithProducts>
+>[number];
+type DraftDocument = Awaited<
+  ReturnType<typeof repos.documents.findByChargeNote>
+>[number];
+type DraftInventoryLock = Awaited<
+  ReturnType<typeof repos.inventory.findLockWithItemByChargeNote>
+>;
+type AvailableProduct = Awaited<
+  ReturnType<typeof repos.products.findActive>
+>[number];
+type AvailableInventoryItem = Awaited<
+  ReturnType<typeof repos.inventory.findAllAvailableWithProduct>
+>[number];
+
+export interface CreateSaleResult {
+  id: number;
+}
+
+export interface RejectSaleInput {
+  field_id: string;
+  reviewer_note: string | null;
+}
+
+export interface SaleFixContext {
+  noteId: number;
+  status: string;
+  rejections: RejectionItem[];
+}
+
+export interface SaleDraftContext {
+  noteId: number;
+  status: string;
+  items: DraftItem[];
+  documents: DraftDocument[];
+  inventoryLock: DraftInventoryLock;
+  readiness: {
+    hasItems: boolean;
+    hasDocuments: boolean;
+    hasInventoryLock: boolean;
+  };
+}
+
+export async function createSale(contactId: number): Promise<CreateSaleResult> {
+  const safeContactId = assertPositiveInt(contactId, "contactId");
   const session = await requirePermission("sales:create");
   const hasLead = await repos.leadAssignments.hasActiveForContact(
     session.userId,
-    contactId,
+    safeContactId,
   );
   if (!hasLead) {
     throw new Error(
@@ -19,24 +76,26 @@ export async function createSale(contactId: number) {
     );
   }
 
-  const result = await salesService.createDraft(contactId, session.userId);
+  const result = await salesService.createDraft(safeContactId, session.userId);
 
   if (isErr(result)) throw new Error(result.error);
   return { id: result.value };
 }
 
-export async function submitSale(noteId: number) {
+export async function submitSale(noteId: number): Promise<ActionSuccess> {
+  const safeNoteId = assertPositiveInt(noteId, "noteId");
   const session = await requirePermission("sales:submit");
-  const result = await salesService.submit(noteId, session.userId);
+  const result = await salesService.submit(safeNoteId, session.userId);
 
   if (isErr(result)) throw new Error(result.error);
   return { success: true };
 }
 
-export async function approveSale(noteId: number) {
+export async function approveSale(noteId: number): Promise<ActionSuccess> {
+  const safeNoteId = assertPositiveInt(noteId, "noteId");
   const session = await requirePermission("sales:approve");
   const result = await salesService.approve(
-    noteId,
+    safeNoteId,
     session.userId,
     session.branchId,
     session.role === "superuser",
@@ -48,22 +107,33 @@ export async function approveSale(noteId: number) {
 
 export async function rejectSale(
   noteId: number,
-  rejections: Array<{ field_id: string; reviewer_note: string | null }>,
-) {
+  rejections: RejectSaleInput[],
+): Promise<ActionSuccess> {
+  const safeNoteId = assertPositiveInt(noteId, "noteId");
+  if (rejections.length === 0) {
+    throw new Error("rejections must contain at least one item");
+  }
+  const normalizedRejections = rejections.map((item) => ({
+    field_id: assertNonEmptyString(item.field_id, "rejections.field_id"),
+    reviewer_note:
+      item.reviewer_note === null
+        ? null
+        : assertNonEmptyString(item.reviewer_note, "rejections.reviewer_note"),
+  }));
   const session = await requirePermission("sales:approve");
   const result = await salesService.reject(
-    noteId,
+    safeNoteId,
     session.userId,
     session.branchId,
     session.role === "superuser",
-    rejections,
+    normalizedRejections,
   );
 
   if (isErr(result)) throw new Error(result.error);
   return { success: true };
 }
 
-export async function getPendingReviewNotes() {
+export async function getPendingReviewNotes(): Promise<PendingReviewNote[]> {
   const session = await requirePermission("sales:review");
   if (session.role === "superuser") {
     return repos.chargeNotes.findPendingReviewWithContacts();
@@ -73,14 +143,17 @@ export async function getPendingReviewNotes() {
   );
 }
 
-export async function getSaleFixContext(noteId: number) {
+export async function getSaleFixContext(
+  noteId: number,
+): Promise<SaleFixContext> {
+  const safeNoteId = assertPositiveInt(noteId, "noteId");
   const session = await requirePermission("sales:submit");
-  const note = await repos.chargeNotes.findById(noteId);
+  const note = await repos.chargeNotes.findById(safeNoteId);
   if (!note) throw new Error("Charge note not found");
   if (note.user_id !== session.userId) throw new Error("Forbidden");
 
   const rejections =
-    await repos.rejectionLogs.findUnresolvedByChargeNote(noteId);
+    await repos.rejectionLogs.findUnresolvedByChargeNote(safeNoteId);
   return {
     noteId: note.id,
     status: note.status,
@@ -88,20 +161,23 @@ export async function getSaleFixContext(noteId: number) {
   };
 }
 
-export async function getSaleDraftContext(noteId: number) {
+export async function getSaleDraftContext(
+  noteId: number,
+): Promise<SaleDraftContext> {
+  const safeNoteId = assertPositiveInt(noteId, "noteId");
   const session = await requirePermission("sales:create");
-  const note = await repos.chargeNotes.findById(noteId);
+  const note = await repos.chargeNotes.findById(safeNoteId);
   if (!note) throw new Error("Charge note not found");
   if (note.user_id !== session.userId) throw new Error("Forbidden");
 
   const [items, documents, inventoryLock] = await Promise.all([
-    repos.chargeNoteItems.findByChargeNoteWithProducts(noteId),
-    repos.documents.findByChargeNote(noteId),
-    repos.inventory.findLockWithItemByChargeNote(noteId),
+    repos.chargeNoteItems.findByChargeNoteWithProducts(safeNoteId),
+    repos.documents.findByChargeNote(safeNoteId),
+    repos.inventory.findLockWithItemByChargeNote(safeNoteId),
   ]);
 
   return {
-    noteId,
+    noteId: safeNoteId,
     status: note.status,
     items,
     documents,
@@ -115,12 +191,14 @@ export async function getSaleDraftContext(noteId: number) {
   };
 }
 
-export async function getAvailableProducts() {
+export async function getAvailableProducts(): Promise<AvailableProduct[]> {
   await requirePermission("sales:create");
   return repos.products.findActive();
 }
 
-export async function getAvailableInventory() {
+export async function getAvailableInventory(): Promise<
+  AvailableInventoryItem[]
+> {
   await requirePermission("sales:create");
   await repos.inventory.releaseExpiredLocks();
   return repos.inventory.findAllAvailableWithProduct();
@@ -130,22 +208,22 @@ export async function addSaleItem(
   noteId: number,
   productId: number,
   quantity: number,
-) {
+): Promise<ActionSuccess> {
+  const safeNoteId = assertPositiveInt(noteId, "noteId");
+  const safeProductId = assertPositiveInt(productId, "productId");
+  const safeQuantity = assertPositiveInt(quantity, "quantity");
   const session = await requirePermission("sales:create");
-  if (!Number.isFinite(quantity) || quantity < 1)
-    throw new Error("Quantity must be at least 1");
-
-  const note = await repos.chargeNotes.findById(noteId);
+  const note = await repos.chargeNotes.findById(safeNoteId);
   if (!note) throw new Error("Charge note not found");
   if (note.user_id !== session.userId) throw new Error("Forbidden");
   if (note.status !== "draft" && note.status !== "rejected") {
     throw new Error("Items can only be edited for draft or rejected notes");
   }
 
-  const product = await repos.products.findById(productId);
+  const product = await repos.products.findById(safeProductId);
   if (!product || !product.is_active) throw new Error("Product not available");
 
-  await repos.chargeNoteItems.create(noteId, productId, quantity);
+  await repos.chargeNoteItems.create(safeNoteId, safeProductId, safeQuantity);
   return { success: true };
 }
 
@@ -154,33 +232,36 @@ export async function addSaleDocument(
   filename: string,
   mimetype: string,
   size: number,
-) {
+): Promise<ActionSuccess> {
+  const safeNoteId = assertPositiveInt(noteId, "noteId");
+  const safeFilename = assertNonEmptyString(filename, "filename");
+  const safeMimetype = assertNonEmptyString(mimetype, "mimetype");
+  const safeSize = assertFinitePositive(size, "size");
   const session = await requirePermission("sales:create");
-  const note = await repos.chargeNotes.findById(noteId);
+  const note = await repos.chargeNotes.findById(safeNoteId);
   if (!note) throw new Error("Charge note not found");
   if (note.user_id !== session.userId) throw new Error("Forbidden");
   if (note.status !== "draft" && note.status !== "rejected") {
     throw new Error("Documents can only be edited for draft or rejected notes");
   }
 
-  if (
-    !config.uploads.allowedTypes.includes(
-      mimetype as (typeof config.uploads.allowedTypes)[number],
-    )
-  ) {
+  const isAllowedMimeType = config.uploads.allowedTypes.some(
+    (allowed) => allowed === safeMimetype,
+  );
+  if (!isAllowedMimeType) {
     throw new Error("File type not allowed");
   }
-  if (size > config.uploads.maxFileSizeMB * 1024 * 1024) {
+  if (safeSize > config.uploads.maxFileSizeMB * 1024 * 1024) {
     throw new Error(`File too large. Max ${config.uploads.maxFileSizeMB} MB`);
   }
 
-  const safeName = filename.trim().replace(/[^a-zA-Z0-9._-]/g, "_");
+  const safeName = safeFilename.replace(/[^a-zA-Z0-9._-]/g, "_");
   await repos.documents.create({
-    charge_note_id: noteId,
+    charge_note_id: safeNoteId,
     filename: safeName || "document.bin",
-    filepath: `uploads/manual/${noteId}/${Date.now()}-${safeName || "document.bin"}`,
-    mimetype,
-    size,
+    filepath: `uploads/manual/${safeNoteId}/${Date.now()}-${safeName || "document.bin"}`,
+    mimetype: safeMimetype,
+    size: safeSize,
   });
 
   return { success: true };
@@ -189,9 +270,14 @@ export async function addSaleDocument(
 export async function lockSaleInventory(
   noteId: number,
   inventoryItemId: number,
-) {
+): Promise<ActionSuccess> {
+  const safeNoteId = assertPositiveInt(noteId, "noteId");
+  const safeInventoryItemId = assertPositiveInt(
+    inventoryItemId,
+    "inventoryItemId",
+  );
   const session = await requirePermission("sales:create");
-  const note = await repos.chargeNotes.findById(noteId);
+  const note = await repos.chargeNotes.findById(safeNoteId);
   if (!note) throw new Error("Charge note not found");
   if (note.user_id !== session.userId) throw new Error("Forbidden");
   if (note.status !== "draft" && note.status !== "rejected") {
@@ -202,18 +288,19 @@ export async function lockSaleInventory(
 
   await repos.inventory.releaseExpiredLocks();
 
-  const existing = await repos.inventory.findAnyLockByChargeNote(noteId);
+  const existing = await repos.inventory.findAnyLockByChargeNote(safeNoteId);
   if (existing) {
     await repos.inventory.markAvailable(existing.inventory_item_id);
-    await repos.inventory.deleteByChargeNote(noteId);
+    await repos.inventory.deleteByChargeNote(safeNoteId);
   }
 
-  const reserved = await repos.inventory.reserveIfAvailable(inventoryItemId);
+  const reserved =
+    await repos.inventory.reserveIfAvailable(safeInventoryItemId);
   if (!reserved) throw new Error("Inventory item is no longer available");
 
   await repos.inventory.createLock(
-    inventoryItemId,
-    noteId,
+    safeInventoryItemId,
+    safeNoteId,
     computeLockExpiry(),
   );
   return { success: true };

@@ -3,7 +3,14 @@
 import { repos } from "~/server/shared/context";
 import { requireAuth } from "~/lib/auth/session";
 
-export async function getDashboardStats() {
+export interface DashboardStats {
+  activeLeads: number;
+  pendingSales: number;
+  draftSales: number;
+  approvedSales: number;
+}
+
+export async function getDashboardStats(): Promise<DashboardStats> {
   const session = await requireAuth();
 
   const activeLeads = await repos.leadAssignments.findActiveByUser(

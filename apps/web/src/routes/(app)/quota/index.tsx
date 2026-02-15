@@ -24,7 +24,7 @@ export default function QuotaPage() {
     try {
       await allocateQuota(Number(execId()), Number(amount()));
       showToast("success", "Cuota asignada correctamente");
-      refetch();
+      await refetch();
       setExecId("");
       setAmount("10");
     } catch (err: unknown) {
@@ -58,12 +58,17 @@ export default function QuotaPage() {
 
       <div class="bg-white border border-gray-200 rounded-lg p-6">
         <h3 class="font-semibold mb-4">Asignar cuota</h3>
-        <form onSubmit={handleAllocate} class="space-y-4">
+        <form
+          onSubmit={(e) => {
+            void handleAllocate(e);
+          }}
+          class="space-y-4"
+        >
           <Input
             type="number"
             label="ID del ejecutivo"
             value={execId()}
-            onInput={(e) => setExecId((e.target as HTMLInputElement).value)}
+            onInput={(e) => setExecId(e.currentTarget.value)}
             required
           />
 
@@ -71,7 +76,7 @@ export default function QuotaPage() {
             type="number"
             label="Cantidad de leads"
             value={amount()}
-            onInput={(e) => setAmount((e.target as HTMLInputElement).value)}
+            onInput={(e) => setAmount(e.currentTarget.value)}
             min="1"
             max="100"
             required

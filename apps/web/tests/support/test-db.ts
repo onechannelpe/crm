@@ -165,7 +165,7 @@ export async function createIsolatedTestDb(
     `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}.db`,
   );
   const db = createDb(dbPath);
-  await up(db as never);
+  await up(db);
   await seedTemplate(db);
   const repos = createRepositories(db);
   const sales = createSalesWorkflowService(repos);

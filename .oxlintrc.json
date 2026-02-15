@@ -1,6 +1,10 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": [
+    "import",
+    "node",
+    "promise",
+    "typescript",
     "vitest",
     "jsx-a11y"
   ],
@@ -8,6 +12,12 @@
     "correctness": "error",
     "suspicious": "error",
     "perf": "error"
+  },
+  "rules": {
+    "import/no-unassigned-import": "off",
+    "typescript/no-unsafe-type-assertion": "error",
+    "typescript/no-floating-promises": "error",
+    "typescript/no-misused-promises": "error"
   },
   "ignorePatterns": [
     "node_modules/**",

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  ROLES,
   getPermissions,
   hasPermission,
   type Permission,
@@ -32,9 +33,8 @@ const EXPECTED_ROLE_PERMISSIONS: Record<Role, Permission[]> =
 
 describe("rbac boundaries", () => {
   it("matches exact permission matrix for every role", () => {
-    for (const [role, expected] of Object.entries(
-      EXPECTED_ROLE_PERMISSIONS,
-    ) as Array<[Role, Permission[]]>) {
+    for (const role of ROLES) {
+      const expected = EXPECTED_ROLE_PERMISSIONS[role];
       const actual = [...getPermissions(role)].toSorted();
       expect(actual).toEqual([...expected].toSorted());
 

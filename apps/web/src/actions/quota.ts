@@ -4,10 +4,19 @@ import { quotaService } from "~/server/shared/context";
 import { requirePermission } from "~/lib/auth/session";
 import { repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
+import type { ActionSuccess } from "~/lib/contracts/common";
+import { assertPositiveInt } from "~/lib/contracts/guards";
 
-export async function allocateQuota(executiveId: number, amount: number) {
+type QuotaStatus = Awaited<ReturnType<typeof quotaService.getStatus>>;
+
+export async function allocateQuota(
+  executiveId: number,
+  amount: number,
+): Promise<ActionSuccess> {
+  const safeExecutiveId = assertPositiveInt(executiveId, "executiveId");
+  const safeAmount = assertPositiveInt(amount, "amount");
   const session = await requirePermission("quota:allocate");
-  const executive = await repos.users.findById(executiveId);
+  const executive = await repos.users.findById(safeExecutiveId);
   if (!executive) throw new Error("Executive not found");
   if (executive.role !== "executive")
     throw new Error("Quota can only be allocated to executive users");
@@ -20,15 +29,15 @@ export async function allocateQuota(executiveId: number, amount: number) {
 
   const result = await quotaService.allocate(
     session.userId,
-    executiveId,
-    amount,
+    safeExecutiveId,
+    safeAmount,
   );
 
   if (isErr(result)) throw new Error(result.error);
   return { success: true };
 }
 
-export async function getQuotaStatus() {
+export async function getQuotaStatus(): Promise<QuotaStatus> {
   const session = await requirePermission("quota:read");
   return quotaService.getStatus(session.userId);
 }

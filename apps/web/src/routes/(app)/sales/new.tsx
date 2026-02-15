@@ -65,7 +65,7 @@ export default function NewSalePage() {
         Number(quantity()),
       );
       showToast("success", "Producto agregado");
-      refetchDraft();
+      await refetchDraft();
     } catch (err: unknown) {
       showToast("error", getErrorMessage(err, "No se pudo agregar producto"));
     }
@@ -82,7 +82,7 @@ export default function NewSalePage() {
         Number(docSizeKb()) * 1024,
       );
       showToast("success", "Documento registrado");
-      refetchDraft();
+      await refetchDraft();
     } catch (err: unknown) {
       showToast(
         "error",
@@ -97,8 +97,7 @@ export default function NewSalePage() {
     try {
       await lockSaleInventory(currentNoteId, Number(selectedInventoryId()));
       showToast("success", "Equipo reservado");
-      refetchDraft();
-      refetchInventory();
+      await Promise.all([refetchDraft(), refetchInventory()]);
     } catch (err: unknown) {
       showToast(
         "error",
@@ -134,14 +133,17 @@ export default function NewSalePage() {
       <Show when={!noteId()}>
         <Card>
           <div class="p-6">
-            <form onSubmit={handleCreate} class="space-y-4 max-w-md">
+            <form
+              onSubmit={(e) => {
+                void handleCreate(e);
+              }}
+              class="space-y-4 max-w-md"
+            >
               <Input
                 type="number"
                 label="ID del Contacto"
                 value={contactId()}
-                onInput={(e) =>
-                  setContactId((e.target as HTMLInputElement).value)
-                }
+                onInput={(e) => setContactId(e.currentTarget.value)}
                 required
               />
               <Button type="submit" disabled={loading()}>
@@ -170,9 +172,7 @@ export default function NewSalePage() {
                 <select
                   class="w-full rounded border px-2 py-2 text-sm"
                   value={selectedProductId()}
-                  onInput={(e) =>
-                    setSelectedProductId((e.target as HTMLSelectElement).value)
-                  }
+                  onInput={(e) => setSelectedProductId(e.currentTarget.value)}
                 >
                   <option value="">Seleccionar producto</option>
                   <For each={products() ?? []}>
@@ -186,11 +186,15 @@ export default function NewSalePage() {
                   label="Cantidad"
                   value={quantity()}
                   min="1"
-                  onInput={(e) =>
-                    setQuantity((e.target as HTMLInputElement).value)
-                  }
+                  onInput={(e) => setQuantity(e.currentTarget.value)}
                 />
-                <Button onClick={handleAddItem}>Agregar</Button>
+                <Button
+                  onClick={() => {
+                    void handleAddItem();
+                  }}
+                >
+                  Agregar
+                </Button>
               </div>
 
               <div class="space-y-2 rounded border p-3">
@@ -198,26 +202,26 @@ export default function NewSalePage() {
                 <Input
                   label="Archivo"
                   value={docName()}
-                  onInput={(e) =>
-                    setDocName((e.target as HTMLInputElement).value)
-                  }
+                  onInput={(e) => setDocName(e.currentTarget.value)}
                 />
                 <Input
                   label="Tipo MIME"
                   value={docType()}
-                  onInput={(e) =>
-                    setDocType((e.target as HTMLInputElement).value)
-                  }
+                  onInput={(e) => setDocType(e.currentTarget.value)}
                 />
                 <Input
                   type="number"
                   label="Tamaño (KB)"
                   value={docSizeKb()}
-                  onInput={(e) =>
-                    setDocSizeKb((e.target as HTMLInputElement).value)
-                  }
+                  onInput={(e) => setDocSizeKb(e.currentTarget.value)}
                 />
-                <Button onClick={handleAddDocument}>Registrar</Button>
+                <Button
+                  onClick={() => {
+                    void handleAddDocument();
+                  }}
+                >
+                  Registrar
+                </Button>
               </div>
 
               <div class="space-y-2 rounded border p-3">
@@ -225,11 +229,7 @@ export default function NewSalePage() {
                 <select
                   class="w-full rounded border px-2 py-2 text-sm"
                   value={selectedInventoryId()}
-                  onInput={(e) =>
-                    setSelectedInventoryId(
-                      (e.target as HTMLSelectElement).value,
-                    )
-                  }
+                  onInput={(e) => setSelectedInventoryId(e.currentTarget.value)}
                 >
                   <option value="">Seleccionar serial</option>
                   <For each={inventory() ?? []}>
@@ -240,7 +240,13 @@ export default function NewSalePage() {
                     )}
                   </For>
                 </select>
-                <Button onClick={handleLockInventory}>Reservar</Button>
+                <Button
+                  onClick={() => {
+                    void handleLockInventory();
+                  }}
+                >
+                  Reservar
+                </Button>
               </div>
             </div>
 
@@ -258,7 +264,12 @@ export default function NewSalePage() {
             </Show>
 
             <div class="flex justify-end">
-              <Button onClick={handleSubmit} disabled={loading()}>
+              <Button
+                onClick={() => {
+                  void handleSubmit();
+                }}
+                disabled={loading()}
+              >
                 {loading() ? "Enviando..." : "Enviar a validación"}
               </Button>
             </div>

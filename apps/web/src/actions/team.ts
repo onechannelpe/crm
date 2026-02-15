@@ -2,8 +2,18 @@
 
 import { repos } from "~/server/shared/context";
 import { requirePermission } from "~/lib/auth/session";
+import type { Role } from "~/lib/auth/rbac";
 
-export async function getTeamMembers() {
+export interface TeamMember {
+  id: number;
+  fullName: string;
+  email: string;
+  role: Role;
+  teamId: number | null;
+  isActive: boolean;
+}
+
+export async function getTeamMembers(): Promise<TeamMember[]> {
   const session = await requirePermission("team:read");
 
   const users = await repos.users.findByBranch(session.branchId);

@@ -16,7 +16,7 @@ export default function SettingsPage() {
     try {
       await updateProductPricing(productId, Number(price), isActive);
       showToast("success", "Producto actualizado");
-      refetch();
+      await refetch();
     } catch (err: unknown) {
       showToast(
         "error",
@@ -55,7 +55,7 @@ export default function SettingsPage() {
                   class="grid grid-cols-1 md:grid-cols-[1fr_140px_140px_150px] gap-3 items-end border rounded p-3"
                   onSubmit={(e) => {
                     e.preventDefault();
-                    save(product.id, price(), isActive());
+                    void save(product.id, price(), isActive());
                   }}
                 >
                   <div>
@@ -70,17 +70,13 @@ export default function SettingsPage() {
                     step="0.01"
                     label="Precio"
                     value={price()}
-                    onInput={(e) =>
-                      setPrice((e.target as HTMLInputElement).value)
-                    }
+                    onInput={(e) => setPrice(e.currentTarget.value)}
                   />
                   <label class="flex items-center gap-2 text-sm">
                     <input
                       type="checkbox"
                       checked={isActive()}
-                      onInput={(e) =>
-                        setIsActive((e.target as HTMLInputElement).checked)
-                      }
+                      onInput={(e) => setIsActive(e.currentTarget.checked)}
                     />
                     Activo
                   </label>
