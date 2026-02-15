@@ -7,53 +7,53 @@ import { RequestLeadsButton } from "~/components/features/leads/request-leads-bu
 import { QuotaDisplay } from "~/components/features/quota/quota-display";
 
 export default function LeadsPage() {
-    const navigate = useNavigate();
-    const [quota, { refetch: refetchQuota }] = createResource(getQuotaStatus);
-    const [leads, { refetch: refetchLeads }] = createResource(getActiveLeads);
-    const quotaValues = () => {
-        const current = quota();
-        if (!current?.allocated) return null;
-        return { used: current.used, total: current.total };
-    };
+  const navigate = useNavigate();
+  const [quota, { refetch: refetchQuota }] = createResource(getQuotaStatus);
+  const [leads, { refetch: refetchLeads }] = createResource(getActiveLeads);
+  const quotaValues = () => {
+    const current = quota();
+    if (!current?.allocated) return null;
+    return { used: current.used, total: current.total };
+  };
 
-    const handleRequestLeads = async () => {
-        await requestLeads();
-        refetchQuota();
-        refetchLeads();
-    };
+  const handleRequestLeads = async () => {
+    await requestLeads();
+    refetchQuota();
+    refetchLeads();
+  };
 
-    const handleCreateSale = (contactId: number) => {
-        navigate(`/sales/new?contactId=${contactId}`);
-    };
+  const handleCreateSale = (contactId: number) => {
+    navigate(`/sales/new?contactId=${contactId}`);
+  };
 
-    const handleComplete = async (assignmentId: number) => {
-        await completeLead(assignmentId);
-        refetchLeads();
-    };
+  const handleComplete = async (assignmentId: number) => {
+    await completeLead(assignmentId);
+    refetchLeads();
+  };
 
-    return (
-        <div class="space-y-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Mis leads</h1>
-                    <p class="text-sm text-gray-500 mt-1">
-                        {leads()?.length ?? 0} leads activos
-                    </p>
-                </div>
-                <RequestLeadsButton onRequest={handleRequestLeads} />
-            </div>
-
-            <Show when={quotaValues()}>
-                {(values) => (
-                    <QuotaDisplay used={values().used} total={values().total} />
-                )}
-            </Show>
-
-            <LeadList
-                contacts={leads() ?? []}
-                onCreateSale={handleCreateSale}
-                onComplete={handleComplete}
-            />
+  return (
+    <div class="space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">Mis leads</h1>
+          <p class="text-sm text-gray-500 mt-1">
+            {leads()?.length ?? 0} leads activos
+          </p>
         </div>
-    );
+        <RequestLeadsButton onRequest={handleRequestLeads} />
+      </div>
+
+      <Show when={quotaValues()}>
+        {(values) => (
+          <QuotaDisplay used={values().used} total={values().total} />
+        )}
+      </Show>
+
+      <LeadList
+        contacts={leads() ?? []}
+        onCreateSale={handleCreateSale}
+        onComplete={handleComplete}
+      />
+    </div>
+  );
 }

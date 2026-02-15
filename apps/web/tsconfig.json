@@ -13,9 +13,7 @@
     "skipLibCheck": true,
     "isolatedModules": true,
     "paths": {
-      "~/*": [
-        "./src/*"
-      ]
+      "~/*": ["./src/*"]
     }
   }
 }

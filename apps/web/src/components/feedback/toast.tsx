@@ -7,38 +7,43 @@ import X from "~/components/icons/x";
 import { useToast } from "./toast-provider";
 
 export function ToastContainer() {
-    const { toasts, removeToast } = useToast();
+  const { toasts, removeToast } = useToast();
 
-    return (
-        <Portal>
-            <div class="fixed top-4 right-4 z-50 space-y-2 max-w-md">
-                <For each={toasts}>
-                    {(toast) => (
-                        <div
-                            class={`rounded-lg shadow-lg p-4 flex items-start gap-3 ${toast.type === "success"
-                                    ? "bg-green-50 text-green-900"
-                                    : toast.type === "error"
-                                        ? "bg-red-50 text-red-900"
-                                        : "bg-blue-50 text-blue-900"
-                                }`}
-                        >
-                            {toast.type === "success" && <CircleCheckBig class="w-5 h-5 text-green-600" />}
-                            {toast.type === "error" && <CircleAlert class="w-5 h-5 text-red-600" />}
-                            {toast.type === "info" && <Info class="w-5 h-5 text-blue-600" />}
+  return (
+    <Portal>
+      <div class="fixed top-4 right-4 z-50 space-y-2 max-w-md">
+        <For each={toasts}>
+          {(toast) => (
+            <div
+              class={`rounded-lg shadow-lg p-4 flex items-start gap-3 ${
+                toast.type === "success"
+                  ? "bg-green-50 text-green-900"
+                  : toast.type === "error"
+                    ? "bg-red-50 text-red-900"
+                    : "bg-blue-50 text-blue-900"
+              }`}
+            >
+              {toast.type === "success" && (
+                <CircleCheckBig class="w-5 h-5 text-green-600" />
+              )}
+              {toast.type === "error" && (
+                <CircleAlert class="w-5 h-5 text-red-600" />
+              )}
+              {toast.type === "info" && <Info class="w-5 h-5 text-blue-600" />}
 
-                            <p class="flex-1 text-sm font-medium">{toast.message}</p>
+              <p class="flex-1 text-sm font-medium">{toast.message}</p>
 
-                            <button
-                                type="button"
-                                onClick={() => removeToast(toast.id)}
-                                class="text-gray-400 hover:text-gray-600"
-                            >
-                                <X class="w-4 h-4" />
-                            </button>
-                        </div>
-                    )}
-                </For>
+              <button
+                type="button"
+                onClick={() => removeToast(toast.id)}
+                class="text-gray-400 hover:text-gray-600"
+              >
+                <X class="w-4 h-4" />
+              </button>
             </div>
-        </Portal>
-    );
+          )}
+        </For>
+      </div>
+    </Portal>
+  );
 }
