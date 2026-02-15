@@ -1,5 +1,5 @@
 import type { JSX } from "solid-js";
-import { Inbox } from "./icons";
+import Inbox from "~/components/icons/inbox";
 
 interface EmptyStateProps {
     title: string;

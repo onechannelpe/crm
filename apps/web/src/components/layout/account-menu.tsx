@@ -1,6 +1,9 @@
 import { A } from "@solidjs/router";
 import { Show, createSignal } from "solid-js";
-import { ChevronDown, LogOut, Settings, UserRound } from "~/components/layout/icons";
+import ChevronDown from "~/components/icons/chevron-down";
+import LogOut from "~/components/icons/log-out";
+import Settings from "~/components/icons/settings";
+import UserRound from "~/components/icons/user-round";
 import { getUserInitials, useMenuDismiss } from "~/components/layout/account-menu-utils";
 import { cn } from "~/lib/utils";
 
