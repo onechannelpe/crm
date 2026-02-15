@@ -31,6 +31,7 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.18",
+    "oxlint-tsgolint": "^0.13.0",
     "tailwindcss": "^4.1.18",
     "vitest": "^4.0.18"
   }
