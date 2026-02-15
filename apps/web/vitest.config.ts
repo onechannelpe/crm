@@ -3,6 +3,7 @@ import path from "node:path";
 
 export default defineConfig({
     test: {
+        reporters: process.env.GITHUB_ACTIONS ? ["dot", "github-actions"] : ["default"],
         projects: [
             {
                 test: {
