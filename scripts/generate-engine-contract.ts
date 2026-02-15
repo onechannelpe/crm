@@ -56,7 +56,9 @@ async function writeOrCheck(
     } catch {
       existing = "";
     }
-    if (existing !== content) throw new Error(`${path} is out of date`);
+    if (existing.trimEnd() !== content.trimEnd()) {
+      throw new Error(`${path} is out of date`);
+    }
     return;
   }
   await Bun.write(path, content);
