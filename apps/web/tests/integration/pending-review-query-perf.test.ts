@@ -73,9 +73,13 @@ describe("pending review query performance", () => {
             const branch1 = await ctx.repos.chargeNotes.findPendingReviewWithContactsByBranch(1);
             const branch2 = await ctx.repos.chargeNotes.findPendingReviewWithContactsByBranch(2);
             const durationMs = Date.now() - started;
+            const branch1Ids = new Set(branch1.map((row) => row.id));
 
-            expect(branch1.length).toBeGreaterThan(500);
-            expect(branch2.length).toBeGreaterThan(500);
+            expect(branch1.length).toBe(600);
+            expect(branch2.length).toBe(600);
+            for (const row of branch2) {
+                expect(branch1Ids.has(row.id)).toBe(false);
+            }
             expect(durationMs).toBeLessThan(5000);
         } finally {
             await cleanupTestDb(ctx);

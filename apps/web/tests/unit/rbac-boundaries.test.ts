@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { getPermissions, hasPermission, type Permission, type Role } from "../../src/lib/auth/rbac";
+import { PERMISSION_MANIFEST } from "../support/security-manifests";
 
 const ALL_PERMISSIONS: Permission[] = [
     "leads:read",
@@ -21,16 +22,7 @@ const ALL_PERMISSIONS: Permission[] = [
     "audit:read",
 ];
 
-const EXPECTED_ROLE_PERMISSIONS: Record<Role, Permission[]> = {
-    executive: ["leads:read", "leads:request", "quota:read", "sales:create", "sales:submit"],
-    supervisor: ["leads:read", "leads:request", "quota:read", "quota:allocate", "sales:create", "sales:submit", "sales:review", "sales:approve", "team:read", "team:manage", "audit:read"],
-    back_office: ["sales:review", "sales:approve", "audit:read"],
-    sales_manager: ["leads:read", "quota:read", "quota:allocate", "sales:review", "sales:approve", "team:read", "team:manage", "inventory:read", "audit:read", "admin:read", "admin:manage"],
-    logistics: ["inventory:read", "inventory:manage"],
-    hr: ["hr:read", "hr:manage", "team:read"],
-    admin: ["leads:read", "quota:read", "quota:allocate", "sales:review", "team:read", "team:manage", "inventory:read", "inventory:manage", "hr:read", "hr:manage", "admin:read", "admin:manage", "audit:read"],
-    superuser: ["leads:read", "leads:request", "quota:read", "quota:allocate", "sales:create", "sales:submit", "sales:review", "sales:approve", "team:read", "team:manage", "inventory:read", "inventory:manage", "hr:read", "hr:manage", "admin:read", "admin:manage", "audit:read"],
-};
+const EXPECTED_ROLE_PERMISSIONS: Record<Role, Permission[]> = PERMISSION_MANIFEST;
 
 describe("rbac boundaries", () => {
     it("matches exact permission matrix for every role", () => {
