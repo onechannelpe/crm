@@ -1,0 +1,7 @@
+{
+  "version": "v1",
+  "endpoints": {
+    "search": "/search",
+    "health": "/health"
+  }
+}

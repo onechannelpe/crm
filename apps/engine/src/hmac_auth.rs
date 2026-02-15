@@ -38,8 +38,12 @@ impl HmacVerifier {
         mac.update(&timestamp.to_be_bytes());
         mac.update(body);
 
-        let expected = hex::encode(mac.finalize().into_bytes());
-        expected == signature
+        let provided = match hex::decode(signature) {
+            Ok(bytes) => bytes,
+            Err(_) => return false,
+        };
+
+        mac.verify_slice(&provided).is_ok()
     }
 }
 
