@@ -1,4 +1,8 @@
 import { type Component, For, Show } from "solid-js";
+import Building2 from "~/components/icons/building-2";
+import Check from "~/components/icons/check";
+import Phone from "~/components/icons/phone";
+import User from "~/components/icons/user";
 import {
     Table,
     TableBody,
@@ -10,7 +14,6 @@ import {
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
 import { EmptyState } from "~/components/feedback/empty-state";
-import { Building2, Check, Phone, User } from "./icons";
 
 interface LeadContact {
     assignmentId: number;

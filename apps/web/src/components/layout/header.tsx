@@ -1,4 +1,6 @@
-import { Bell, CircleQuestionMark, Search } from "~/components/layout/icons";
+import Bell from "~/components/icons/bell";
+import CircleQuestionMark from "~/components/icons/circle-question-mark";
+import Search from "~/components/icons/search";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 
