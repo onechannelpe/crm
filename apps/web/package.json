@@ -6,6 +6,7 @@
     "build": "vinxi build",
     "start": "vinxi start",
     "check": "bun x tsc --noEmit",
+    "test": "vitest run",
     "migrate": "bun --env-file=../../.env src/lib/db/migrate-cli.ts",
     "seed": "bun --env-file=../../.env src/lib/db/seed.ts"
   },
@@ -26,6 +27,7 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.18",
-    "tailwindcss": "^4.1.18"
+    "tailwindcss": "^4.1.18",
+    "vitest": "^4.0.18"
   }
 }
