@@ -43,7 +43,7 @@ source: [root `.env`](../../.env)
 - `ENGINE_HMAC_SECRET` (required)
 - `HOST` (default `127.0.0.1`)
 - `PORT` (default `3001`)
-- `DATA_PATH` (default `./data/contacts.csv`)
+- `DATA_PATH` (default `<engine-crate>/data/contacts.csv`)
 - `RATE_LIMIT_PER_IP` (default `120`)
 
 ## commands
