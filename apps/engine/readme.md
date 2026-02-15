@@ -41,10 +41,10 @@ request body:
 source: [root `.env`](../../.env)
 
 - `ENGINE_HMAC_SECRET` (required)
-- `HOST` (default `127.0.0.1`)
-- `PORT` (default `3001`)
-- `DATA_PATH` (default `<engine-crate>/data/contacts.csv`)
-- `RATE_LIMIT_PER_IP` (default `120`)
+- `ENGINE_HOST` (default `127.0.0.1`)
+- `ENGINE_PORT` (default `3001`)
+- `ENGINE_DATA_PATH` (default `<engine-crate>/data/contacts.csv`)
+- `ENGINE_RATE_LIMIT_PER_IP` (default `120`)
 
 ## commands
 
