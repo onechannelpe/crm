@@ -8,6 +8,21 @@ import {
   type AuthRequestDeps,
 } from "../../src/lib/auth/access/request-auth";
 
+function createSession(
+  role: AuthSession["role"],
+  onboardingCompleted = true,
+): AuthSession {
+  return {
+    id: "session-id",
+    userId: 1,
+    branchId: 1,
+    role,
+    onboardingCompleted,
+    authMethod: "password",
+    strongAuthAt: null,
+  };
+}
+
 function createDeps(params: {
   token: string | null | undefined;
   session: AuthSession | null;
@@ -69,15 +84,6 @@ describe("auth middleware request guard", () => {
   });
 
   it("attaches session to locals when token is valid", async () => {
-    const session: AuthSession = {
-      id: "session-id",
-      userId: 1,
-      branchId: 1,
-      role: "executive",
-      onboardingCompleted: true,
-      authMethod: "password",
-      strongAuthAt: null,
-    };
     const event: { request: Request; locals: App.RequestEventLocals } = {
       request: new Request("http://localhost:3000/dashboard"),
       locals: {},
@@ -85,52 +91,57 @@ describe("auth middleware request guard", () => {
 
     const decision = await enforceAuthRequest(
       event,
-      createDeps({ token: "token", session }),
+      createDeps({ token: "token", session: createSession("executive") }),
     );
 
     expect(decision.kind).toBe("allow");
-    expect(event.locals.session).toEqual(session);
+    expect(event.locals.session).toEqual(createSession("executive"));
   });
 
   it("redirects to /onboarding when session is not onboarded", async () => {
-    const session: AuthSession = {
-      id: "session-id",
-      userId: 1,
-      branchId: 1,
-      role: "executive",
-      onboardingCompleted: false,
-      authMethod: "password",
-      strongAuthAt: null,
-    };
-
     const decision = await enforceAuthRequest(
       {
         request: new Request("http://localhost:3000/dashboard"),
       },
-      createDeps({ token: "token", session }),
+      createDeps({
+        token: "token",
+        session: createSession("executive", false),
+      }),
     );
 
     expect(decision.kind).toBe("redirect_onboarding");
   });
 
   it("redirects onboarded users away from /onboarding", async () => {
-    const session: AuthSession = {
-      id: "session-id",
-      userId: 1,
-      branchId: 1,
-      role: "executive",
-      onboardingCompleted: true,
-      authMethod: "password",
-      strongAuthAt: null,
-    };
-
     const decision = await enforceAuthRequest(
       {
         request: new Request("http://localhost:3000/onboarding"),
       },
-      createDeps({ token: "token", session }),
+      createDeps({ token: "token", session: createSession("executive") }),
     );
 
     expect(decision.kind).toBe("redirect_dashboard");
+  });
+
+  it("redirects users from routes they cannot access", async () => {
+    const decision = await enforceAuthRequest(
+      {
+        request: new Request("http://localhost:3000/settings"),
+      },
+      createDeps({ token: "token", session: createSession("executive") }),
+    );
+
+    expect(decision.kind).toBe("redirect_dashboard");
+  });
+
+  it("allows users to access permitted routes", async () => {
+    const decision = await enforceAuthRequest(
+      {
+        request: new Request("http://localhost:3000/settings"),
+      },
+      createDeps({ token: "token", session: createSession("admin") }),
+    );
+
+    expect(decision.kind).toBe("allow");
   });
 });
