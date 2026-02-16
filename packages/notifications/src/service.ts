@@ -13,8 +13,8 @@ function isEmailConfigured(config: NotificationsConfig): boolean {
 function isWhatsAppConfigured(config: NotificationsConfig): boolean {
   return Boolean(
     config.whatsappAccessToken &&
-      config.whatsappPhoneNumberId &&
-      config.whatsappApiVersion,
+    config.whatsappPhoneNumberId &&
+    config.whatsappApiVersion,
   );
 }
 
