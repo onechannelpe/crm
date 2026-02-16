@@ -1,11 +1,13 @@
-import { Glob } from "bun";
 import { dirname, basename } from "node:path";
+
+import { Glob } from "bun";
+
 import type { DocFile, DocSection } from "./types.ts";
 
 export async function buildCompactIndex(
   docsRoot: string,
   frameworkName: string,
-  transform?: (files: DocFile[]) => DocFile[]
+  transform?: (files: DocFile[]) => DocFile[],
 ): Promise<string> {
   const files = await collectDocFiles(docsRoot, transform);
   const sections = buildDocTree(files);
@@ -14,15 +16,19 @@ export async function buildCompactIndex(
 
 async function collectDocFiles(
   docsRoot: string,
-  transform?: (files: DocFile[]) => DocFile[]
+  transform?: (files: DocFile[]) => DocFile[],
 ): Promise<DocFile[]> {
   const glob = new Glob("**/*.{md,mdx}");
   const files: DocFile[] = [];
 
   for await (const file of glob.scan(docsRoot)) {
     const relativePath = file.replace(/\\/g, "/");
-    const category = dirname(relativePath) === "." ? undefined : dirname(relativePath);
-    const name = basename(relativePath, basename(relativePath).endsWith(".mdx") ? ".mdx" : ".md");
+    const category =
+      dirname(relativePath) === "." ? undefined : dirname(relativePath);
+    const name = basename(
+      relativePath,
+      basename(relativePath).endsWith(".mdx") ? ".mdx" : ".md",
+    );
 
     files.push({ relativePath, category, name });
   }
@@ -56,10 +62,13 @@ function buildDocTree(files: DocFile[]): DocSection[] {
 function generateCompactIndex(
   docsRoot: string,
   frameworkName: string,
-  sections: DocSection[]
+  sections: DocSection[],
 ): string {
   const parts = sections.map((section) => {
-    const key = section.directory === "root" ? "root" : section.directory.replace(/\//g, "/");
+    const key =
+      section.directory === "root"
+        ? "root"
+        : section.directory.replace(/\//g, "/");
     const fileList = section.files.join(",");
     return `${key}:{${fileList}}`;
   });

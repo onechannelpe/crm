@@ -15,6 +15,6 @@ export const solidjsConfig: FrameworkConfig = {
         f.relativePath.startsWith("concepts/") ||
         f.relativePath.startsWith("advanced-concepts/") ||
         f.relativePath.startsWith("solid-router/") ||
-        f.relativePath.startsWith("solid-start/")
+        f.relativePath.startsWith("solid-start/"),
     ),
 };

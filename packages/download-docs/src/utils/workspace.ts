@@ -7,10 +7,10 @@ export function getWorkspaceRoot(): string {
   if (cachedRoot) return cachedRoot;
 
   let current = process.cwd();
-  
+
   while (current !== dirname(current)) {
     const packageJsonPath = resolve(current, "package.json");
-    
+
     if (existsSync(packageJsonPath)) {
       const content = require(packageJsonPath);
       if (content.workspaces) {
@@ -18,9 +18,11 @@ export function getWorkspaceRoot(): string {
         return current;
       }
     }
-    
+
     current = dirname(current);
   }
-  
-  throw new Error("Could not find workspace root (no package.json with workspaces field)");
+
+  throw new Error(
+    "Could not find workspace root (no package.json with workspaces field)",
+  );
 }
