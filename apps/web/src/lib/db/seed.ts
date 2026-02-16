@@ -15,7 +15,6 @@ export async function seedIfEmpty() {
   console.log("Seeding database with initial data...");
   const now = Date.now();
 
-  // Use INSERT OR IGNORE for idempotent seeding
   await db
     .insertInto("branches")
     .values([
@@ -33,36 +32,52 @@ export async function seedIfEmpty() {
     .values([
       {
         branch_id: 1,
-        email: "admin@crm.local",
+        email: "valeria.paredes@onechannel.pe",
         password_hash: passwordHash,
-        full_name: "Admin User",
+        full_name: "Valeria Paredes",
+        phone_e164: "+51911000001",
+        phone_verified_at: now,
+        profile_confirmed_at: now,
+        onboarding_completed_at: now,
         role: "admin",
         is_active: 1,
         created_at: now,
       },
       {
         branch_id: 1,
-        email: "supervisor@crm.local",
+        email: "diego.ramirez@onechannel.pe",
         password_hash: passwordHash,
-        full_name: "Supervisor User",
+        full_name: "Diego Ramirez",
+        phone_e164: "+51911000002",
+        phone_verified_at: now,
+        profile_confirmed_at: now,
+        onboarding_completed_at: now,
         role: "supervisor",
         is_active: 1,
         created_at: now,
       },
       {
         branch_id: 1,
-        email: "exec@crm.local",
+        email: "camila.rojas@onechannel.pe",
         password_hash: passwordHash,
-        full_name: "Executive User",
+        full_name: "Camila Rojas",
+        phone_e164: "+51911000003",
+        phone_verified_at: now,
+        profile_confirmed_at: now,
+        onboarding_completed_at: now,
         role: "executive",
         is_active: 1,
         created_at: now,
       },
       {
         branch_id: 1,
-        email: "backoffice@crm.local",
+        email: "josefina.salazar@onechannel.pe",
         password_hash: passwordHash,
-        full_name: "Back-Office User",
+        full_name: "Josefina Salazar",
+        phone_e164: "+51911000004",
+        phone_verified_at: now,
+        profile_confirmed_at: now,
+        onboarding_completed_at: now,
         role: "back_office",
         is_active: 1,
         created_at: now,
@@ -109,6 +124,27 @@ export async function seedIfEmpty() {
         price: 129.9,
         is_active: 1,
       },
+      {
+        name: "Plan Movil 120GB",
+        category: "mobile",
+        subtype: "mono",
+        price: 109.9,
+        is_active: 1,
+      },
+      {
+        name: "Trio Empresa Full",
+        category: "bundle",
+        subtype: "trio",
+        price: 219.9,
+        is_active: 1,
+      },
+      {
+        name: "Plan Legacy 20GB",
+        category: "mobile",
+        subtype: "mono",
+        price: 49.9,
+        is_active: 0,
+      },
     ])
     .onConflict((oc) => oc.doNothing())
     .execute();
@@ -127,7 +163,7 @@ export async function seedIfEmpty() {
     .onConflict((oc) => oc.doNothing())
     .execute();
 
-  // ── Organizations ──
+  // Organizations
   await db
     .insertInto("organizations")
     .values([
@@ -159,7 +195,7 @@ export async function seedIfEmpty() {
     .onConflict((oc) => oc.doNothing())
     .execute();
 
-  // ── Contacts ──
+  // Contacts
   await db
     .insertInto("contacts")
     .values([
@@ -279,16 +315,20 @@ export async function seedIfEmpty() {
     .onConflict((oc) => oc.doNothing())
     .execute();
 
-  // ── Additional Users & Teams ──
+  // Additional users & teams
   await db
     .insertInto("users")
     .values([
       {
         branch_id: 1,
         team_id: 1,
-        email: "exec2@crm.local",
+        email: "patricia.navarro@onechannel.pe",
         password_hash: passwordHash,
         full_name: "Patricia Navarro",
+        phone_e164: "+51911000005",
+        phone_verified_at: now,
+        profile_confirmed_at: now,
+        onboarding_completed_at: now,
         role: "executive",
         is_active: 1,
         created_at: now,
@@ -296,64 +336,196 @@ export async function seedIfEmpty() {
       {
         branch_id: 1,
         team_id: 1,
-        email: "exec3@crm.local",
+        email: "roberto.diaz@onechannel.pe",
         password_hash: passwordHash,
         full_name: "Roberto Díaz Luna",
+        phone_e164: null,
+        phone_verified_at: null,
+        profile_confirmed_at: null,
+        onboarding_completed_at: null,
         role: "executive",
         is_active: 1,
         created_at: now,
       },
       {
         branch_id: 1,
-        email: "logistics@crm.local",
+        email: "sandra.morales@onechannel.pe",
         password_hash: passwordHash,
         full_name: "Sandra Morales",
+        phone_e164: "+51911000007",
+        phone_verified_at: now,
+        profile_confirmed_at: now,
+        onboarding_completed_at: now,
         role: "logistics",
         is_active: 1,
         created_at: now,
       },
       {
         branch_id: 2,
-        email: "north-supervisor@crm.local",
+        email: "nicolas.torres@onechannel.pe",
         password_hash: passwordHash,
-        full_name: "North Supervisor",
+        full_name: "Nicolas Torres",
+        phone_e164: "+51912000008",
+        phone_verified_at: now,
+        profile_confirmed_at: now,
+        onboarding_completed_at: now,
         role: "supervisor",
         is_active: 1,
         created_at: now,
       },
       {
         branch_id: 2,
-        email: "north-exec@crm.local",
+        email: "andrea.quispe@onechannel.pe",
         password_hash: passwordHash,
-        full_name: "North Executive",
+        full_name: "Andrea Quispe",
+        phone_e164: "+51912000009",
+        phone_verified_at: now,
+        profile_confirmed_at: now,
+        onboarding_completed_at: now,
         role: "executive",
         is_active: 1,
         created_at: now,
       },
       {
         branch_id: 2,
-        email: "north-backoffice@crm.local",
+        email: "lucia.cespedes@onechannel.pe",
         password_hash: passwordHash,
-        full_name: "North Back-Office",
+        full_name: "Lucia Cespedes",
+        phone_e164: "+51912000010",
+        phone_verified_at: now,
+        profile_confirmed_at: now,
+        onboarding_completed_at: now,
         role: "back_office",
         is_active: 1,
         created_at: now,
       },
       {
         branch_id: 2,
-        email: "north-logistics@crm.local",
+        email: "franco.cabrera@onechannel.pe",
         password_hash: passwordHash,
-        full_name: "North Logistics",
+        full_name: "Franco Cabrera",
+        phone_e164: "+51912000011",
+        phone_verified_at: now,
+        profile_confirmed_at: now,
+        onboarding_completed_at: now,
         role: "logistics",
         is_active: 1,
         created_at: now,
       },
       {
         branch_id: 1,
-        email: "manager@crm.local",
+        email: "mario.aguirre@onechannel.pe",
         password_hash: passwordHash,
-        full_name: "Sales Manager Lima",
+        full_name: "Mario Aguirre",
+        phone_e164: "+51911000012",
+        phone_verified_at: now,
+        profile_confirmed_at: now,
+        onboarding_completed_at: now,
         role: "sales_manager",
+        is_active: 1,
+        created_at: now,
+      },
+      {
+        branch_id: 1,
+        email: "elena.chavez@onechannel.pe",
+        password_hash: passwordHash,
+        full_name: "Elena Chavez",
+        phone_e164: "+51911000013",
+        phone_verified_at: now,
+        profile_confirmed_at: now,
+        onboarding_completed_at: now,
+        role: "hr",
+        is_active: 1,
+        created_at: now,
+      },
+      {
+        branch_id: 1,
+        email: "sebastian.mejia@onechannel.pe",
+        password_hash: passwordHash,
+        full_name: "Sebastian Mejia",
+        phone_e164: "+51911000014",
+        phone_verified_at: now,
+        profile_confirmed_at: now,
+        onboarding_completed_at: now,
+        role: "superuser",
+        is_active: 1,
+        created_at: now,
+      },
+      {
+        branch_id: 1,
+        email: "renato.guzman@onechannel.pe",
+        password_hash: passwordHash,
+        full_name: "Renato Guzman",
+        phone_e164: "+51911000015",
+        phone_verified_at: now,
+        profile_confirmed_at: now,
+        onboarding_completed_at: now,
+        role: "executive",
+        is_active: 1,
+        created_at: now,
+      },
+      {
+        branch_id: 1,
+        email: "daniela.mendoza@onechannel.pe",
+        password_hash: passwordHash,
+        full_name: "Daniela Mendoza",
+        phone_e164: "+51911000016",
+        phone_verified_at: now,
+        profile_confirmed_at: now,
+        onboarding_completed_at: now,
+        role: "executive",
+        is_active: 1,
+        created_at: now,
+      },
+      {
+        branch_id: 2,
+        email: "gabriel.rios@onechannel.pe",
+        password_hash: passwordHash,
+        full_name: "Gabriel Rios",
+        phone_e164: "+51912000017",
+        phone_verified_at: now,
+        profile_confirmed_at: now,
+        onboarding_completed_at: now,
+        role: "executive",
+        is_active: 1,
+        created_at: now,
+      },
+      {
+        branch_id: 2,
+        email: "paola.suarez@onechannel.pe",
+        password_hash: passwordHash,
+        full_name: "Paola Suarez",
+        phone_e164: "+51912000018",
+        phone_verified_at: now,
+        profile_confirmed_at: now,
+        onboarding_completed_at: now,
+        role: "executive",
+        is_active: 1,
+        created_at: now,
+      },
+      {
+        branch_id: 2,
+        email: "mariana.velasquez@onechannel.pe",
+        password_hash: passwordHash,
+        full_name: "Mariana Velasquez",
+        phone_e164: "+51912000019",
+        phone_verified_at: now,
+        profile_confirmed_at: now,
+        onboarding_completed_at: now,
+        role: "supervisor",
+        is_active: 1,
+        created_at: now,
+      },
+      {
+        branch_id: 1,
+        email: "ivan.romero@onechannel.pe",
+        password_hash: passwordHash,
+        full_name: "Ivan Romero",
+        phone_e164: "+51911000020",
+        phone_verified_at: now,
+        profile_confirmed_at: now,
+        onboarding_completed_at: now,
+        role: "back_office",
         is_active: 1,
         created_at: now,
       },
@@ -366,7 +538,12 @@ export async function seedIfEmpty() {
     .values([
       { branch_id: 1, name: "Team Bravo", supervisor_id: 2, created_at: now },
       { branch_id: 2, name: "Team Norte", supervisor_id: 8, created_at: now },
-      { branch_id: 2, name: "Team Norte B", supervisor_id: 8, created_at: now },
+      {
+        branch_id: 2,
+        name: "Team Norte B",
+        supervisor_id: 19,
+        created_at: now,
+      },
     ])
     .onConflict((oc) => oc.doNothing())
     .execute();
@@ -375,8 +552,18 @@ export async function seedIfEmpty() {
     .set({ team_id: 3 })
     .where("id", "=", 9)
     .execute();
+  await db
+    .updateTable("users")
+    .set({ team_id: 2 })
+    .where("id", "in", [15, 16, 20])
+    .execute();
+  await db
+    .updateTable("users")
+    .set({ team_id: 4 })
+    .where("id", "in", [17, 18])
+    .execute();
 
-  // ── Lead Assignments for executive user (id=3) ──
+  // Lead assignments for executive user (id=3)
   const oneDay = 86400000;
   const sevenDays = oneDay * 7;
   await db
@@ -459,11 +646,53 @@ export async function seedIfEmpty() {
         expires_at: now + sevenDays,
         status: "active",
       },
+      {
+        user_id: 15,
+        contact_id: 6,
+        assigned_at: now - oneDay,
+        expires_at: now + sevenDays,
+        status: "active",
+      },
+      {
+        user_id: 15,
+        contact_id: 8,
+        assigned_at: now - oneDay * 2,
+        expires_at: now + sevenDays,
+        status: "active",
+      },
+      {
+        user_id: 16,
+        contact_id: 10,
+        assigned_at: now - oneDay * 3,
+        expires_at: now + sevenDays,
+        status: "active",
+      },
+      {
+        user_id: 16,
+        contact_id: 12,
+        assigned_at: now - oneDay * 2,
+        expires_at: now - oneDay,
+        status: "expired",
+      },
+      {
+        user_id: 17,
+        contact_id: 16,
+        assigned_at: now - oneDay,
+        expires_at: now + sevenDays,
+        status: "active",
+      },
+      {
+        user_id: 18,
+        contact_id: 4,
+        assigned_at: now - oneDay * 2,
+        expires_at: now + sevenDays,
+        status: "active",
+      },
     ])
     .onConflict((oc) => oc.doNothing())
     .execute();
 
-  // ── Charge Notes (Sales) ──
+  // Charge notes (sales)
   await db
     .insertInto("charge_notes")
     .values([
@@ -510,11 +739,40 @@ export async function seedIfEmpty() {
         created_at: now - oneDay * 4,
         updated_at: now - oneDay * 2,
       },
+      {
+        contact_id: 6,
+        user_id: 15,
+        status: "pending_review",
+        created_at: now - oneDay,
+        updated_at: now - oneDay / 2,
+      },
+      {
+        contact_id: 10,
+        user_id: 16,
+        status: "draft",
+        created_at: now - oneDay * 2,
+        updated_at: now - oneDay,
+      },
+      {
+        contact_id: 16,
+        user_id: 17,
+        status: "approved",
+        exec_code_real: "EX-2026-017",
+        created_at: now - oneDay * 3,
+        updated_at: now - oneDay,
+      },
+      {
+        contact_id: 4,
+        user_id: 18,
+        status: "pending_review",
+        created_at: now - oneDay * 2,
+        updated_at: now - oneDay,
+      },
     ])
     .onConflict((oc) => oc.doNothing())
     .execute();
 
-  // ── Charge Note Items ──
+  // Charge note items
   await db
     .insertInto("charge_note_items")
     .values([
@@ -525,11 +783,15 @@ export async function seedIfEmpty() {
       { charge_note_id: 4, product_id: 1, quantity: 1 },
       { charge_note_id: 5, product_id: 2, quantity: 1 },
       { charge_note_id: 6, product_id: 1, quantity: 1 },
+      { charge_note_id: 7, product_id: 4, quantity: 1 },
+      { charge_note_id: 8, product_id: 1, quantity: 1 },
+      { charge_note_id: 9, product_id: 2, quantity: 1 },
+      { charge_note_id: 10, product_id: 5, quantity: 1 },
     ])
     .onConflict((oc) => oc.doNothing())
     .execute();
 
-  // ── Inventory Items ──
+  // Inventory items
   await db
     .insertInto("inventory_items")
     .values([
@@ -643,11 +905,20 @@ export async function seedIfEmpty() {
         version: 1,
         created_at: now - oneDay,
       },
+      {
+        charge_note_id: 6,
+        filename: "voucher.png",
+        filepath: "uploads/manual/6/voucher-v2.png",
+        mimetype: "image/png",
+        size: 142_000,
+        version: 2,
+        created_at: now - oneDay / 2,
+      },
     ])
     .onConflict((oc) => oc.doNothing())
     .execute();
 
-  // ── Interaction Logs ──
+  // Interaction logs
   await db
     .insertInto("interaction_logs")
     .values([
@@ -691,11 +962,54 @@ export async function seedIfEmpty() {
         duration_seconds: 180,
         created_at: now - oneDay * 2,
       },
+      {
+        contact_id: 6,
+        user_id: 15,
+        outcome: "Cliente solicita upgrade",
+        notes: "Interesado en plan de 120GB",
+        duration_seconds: 260,
+        created_at: now - oneDay,
+      },
+      {
+        contact_id: 10,
+        user_id: 16,
+        outcome: "No answer",
+        notes: "Reprogramar llamada a las 16:00",
+        duration_seconds: 95,
+        created_at: now - oneDay / 2,
+      },
+      {
+        contact_id: 16,
+        user_id: 17,
+        outcome: "Sale closed",
+        notes: "Contrato validado en primera revisión",
+        duration_seconds: 310,
+        created_at: now - oneDay * 2,
+      },
     ])
     .onConflict((oc) => oc.doNothing())
     .execute();
 
-  // ── Lock some orgs to branch ──
+  await db
+    .updateTable("contacts")
+    .set({
+      last_contacted_at: now - oneDay,
+      last_contacted_by_user_id: 3,
+      cooldown_until: now + oneDay,
+    })
+    .where("id", "=", 1)
+    .execute();
+  await db
+    .updateTable("contacts")
+    .set({
+      last_contacted_at: now - oneDay * 2,
+      last_contacted_by_user_id: 9,
+      cooldown_until: now - oneDay,
+    })
+    .where("id", "=", 14)
+    .execute();
+
+  // Lock some orgs to branch
   await db
     .updateTable("organizations")
     .set({ locked_branch_id: 1, locked_at: now, locked_by_user_id: 3 })
@@ -717,6 +1031,577 @@ export async function seedIfEmpty() {
       used_amount: 3,
       created_at: now,
     })
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+  await db
+    .insertInto("quota_allocations")
+    .values([
+      {
+        user_id: 15,
+        allocated_by_user_id: 2,
+        date: today,
+        quota_amount: 35,
+        used_amount: 2,
+        created_at: now,
+      },
+      {
+        user_id: 16,
+        allocated_by_user_id: 2,
+        date: today,
+        quota_amount: 30,
+        used_amount: 1,
+        created_at: now,
+      },
+      {
+        user_id: 17,
+        allocated_by_user_id: 19,
+        date: today,
+        quota_amount: 45,
+        used_amount: 6,
+        created_at: now,
+      },
+      {
+        user_id: 18,
+        allocated_by_user_id: 19,
+        date: today,
+        quota_amount: 40,
+        used_amount: 4,
+        created_at: now,
+      },
+    ])
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
+  await db
+    .insertInto("rejection_logs")
+    .values([
+      {
+        charge_note_id: 6,
+        reviewer_id: 10,
+        field_id: "document_attachments.voucher",
+        reviewer_note: "La imagen está borrosa, sube una versión legible.",
+        is_resolved: 0,
+        created_at: now - oneDay,
+      },
+      {
+        charge_note_id: 6,
+        reviewer_id: 10,
+        field_id: "contact.phone_primary",
+        reviewer_note: "El número no coincide con el contrato firmado.",
+        is_resolved: 1,
+        created_at: now - oneDay * 2,
+      },
+    ])
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
+  await db
+    .insertInto("agent_status_logs")
+    .values([
+      {
+        user_id: 3,
+        status: "available",
+        latitude: -12.0464,
+        longitude: -77.0428,
+        comment: "Inicio de turno",
+        started_at: now - oneDay / 2,
+        ended_at: now - oneDay / 3,
+      },
+      {
+        user_id: 3,
+        status: "break",
+        latitude: -12.0461,
+        longitude: -77.0431,
+        comment: "Refrigerio",
+        started_at: now - oneDay / 3,
+        ended_at: now - oneDay / 4,
+      },
+      {
+        user_id: 5,
+        status: "feedback",
+        latitude: -12.0459,
+        longitude: -77.043,
+        comment: "Sesión con supervisor",
+        started_at: now - oneDay / 2,
+        ended_at: now - oneDay / 3,
+      },
+      {
+        user_id: 9,
+        status: "training",
+        latitude: -11.996,
+        longitude: -77.058,
+        comment: "Capacitación producto nuevo",
+        started_at: now - oneDay / 2,
+        ended_at: null,
+      },
+      {
+        user_id: 9,
+        status: "services",
+        latitude: -11.995,
+        longitude: -77.057,
+        comment: "Gestión en plataforma externa",
+        started_at: now - oneDay,
+        ended_at: now - oneDay / 2,
+      },
+      {
+        user_id: 6,
+        status: "unavailable",
+        latitude: -12.0444,
+        longitude: -77.0455,
+        comment: "Permiso médico",
+        started_at: now - oneDay * 2,
+        ended_at: now - oneDay,
+      },
+      {
+        user_id: 15,
+        status: "available",
+        latitude: -12.0468,
+        longitude: -77.0418,
+        comment: "Backlog en curso",
+        started_at: now - oneDay / 3,
+        ended_at: null,
+      },
+      {
+        user_id: 16,
+        status: "services",
+        latitude: -12.0472,
+        longitude: -77.0402,
+        comment: "Verificando datos del cliente",
+        started_at: now - oneDay / 2,
+        ended_at: null,
+      },
+      {
+        user_id: 17,
+        status: "feedback",
+        latitude: -11.9971,
+        longitude: -77.0562,
+        comment: "Revisión de KPI semanal",
+        started_at: now - oneDay / 4,
+        ended_at: null,
+      },
+      {
+        user_id: 18,
+        status: "break",
+        latitude: -11.9982,
+        longitude: -77.0554,
+        comment: "Pausa activa",
+        started_at: now - oneDay / 6,
+        ended_at: null,
+      },
+    ])
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
+  await db
+    .insertInto("audit_logs")
+    .values([
+      {
+        user_id: 12,
+        action: "product_updated",
+        entity_type: "product",
+        entity_id: 1,
+        changes: JSON.stringify({
+          previous: { price: 69.9, is_active: 1 },
+          next: { price: 72.9, is_active: 1 },
+        }),
+        created_at: now - oneDay * 2,
+      },
+      {
+        user_id: 10,
+        action: "sale_rejected",
+        entity_type: "charge_note",
+        entity_id: 6,
+        changes: JSON.stringify({
+          reason: "documentation_invalid",
+          flaggedFields: [
+            "document_attachments.voucher",
+            "contact.phone_primary",
+          ],
+        }),
+        created_at: now - oneDay,
+      },
+      {
+        user_id: 3,
+        action: "charge_note_resubmitted",
+        entity_type: "charge_note",
+        entity_id: 6,
+        changes: JSON.stringify({
+          previousStatus: "rejected",
+          nextStatus: "pending_review",
+        }),
+        created_at: now - oneDay / 2,
+      },
+    ])
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
+  await db
+    .insertInto("auth_events")
+    .values([
+      {
+        user_id: 1,
+        method: "password",
+        stage: "login",
+        outcome: "success",
+        reason: null,
+        identifier_hash: "seed_admin_identifier_hash",
+        ip_hash: "seed_ip_hash_1",
+        created_at: now - oneDay,
+      },
+      {
+        user_id: 1,
+        method: "totp",
+        stage: "verify",
+        outcome: "success",
+        reason: "totp_verified",
+        identifier_hash: "seed_admin_identifier_hash",
+        ip_hash: "seed_ip_hash_1",
+        created_at: now - oneDay + 10_000,
+      },
+      {
+        user_id: 12,
+        method: "password",
+        stage: "login",
+        outcome: "failure",
+        reason: "invalid_password",
+        identifier_hash: "seed_manager_identifier_hash",
+        ip_hash: "seed_ip_hash_2",
+        created_at: now - oneDay / 2,
+      },
+      {
+        user_id: 12,
+        method: "password",
+        stage: "login",
+        outcome: "throttled",
+        reason: "threshold_exceeded",
+        identifier_hash: "seed_manager_identifier_hash",
+        ip_hash: "seed_ip_hash_2",
+        created_at: now - oneDay / 2 + 10_000,
+      },
+    ])
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
+  await db
+    .insertInto("user_totp_factors")
+    .values([
+      {
+        user_id: 1,
+        secret_encrypted: "seed_totp_secret_admin",
+        is_enabled: 1,
+        created_at: now - oneDay * 10,
+        updated_at: now - oneDay,
+        enabled_at: now - oneDay * 9,
+      },
+      {
+        user_id: 12,
+        secret_encrypted: "seed_totp_secret_manager",
+        is_enabled: 1,
+        created_at: now - oneDay * 8,
+        updated_at: now - oneDay * 2,
+        enabled_at: now - oneDay * 7,
+      },
+    ])
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
+  await db
+    .insertInto("user_totp_recovery_codes")
+    .values([
+      {
+        user_id: 1,
+        code_hash: "seed_code_hash_admin_1",
+        used_at: null,
+        created_at: now - oneDay * 9,
+      },
+      {
+        user_id: 1,
+        code_hash: "seed_code_hash_admin_2",
+        used_at: now - oneDay * 2,
+        created_at: now - oneDay * 9,
+      },
+      {
+        user_id: 12,
+        code_hash: "seed_code_hash_manager_1",
+        used_at: null,
+        created_at: now - oneDay * 7,
+      },
+    ])
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
+  await db
+    .insertInto("notification_contacts")
+    .values([
+      {
+        id: 1,
+        user_id: 1,
+        channel: "email",
+        address: "valeria.paredes@onechannel.pe",
+        is_primary: 1,
+        is_verified: 1,
+        verified_at: now - oneDay * 10,
+        created_at: now - oneDay * 10,
+        updated_at: now - oneDay,
+      },
+      {
+        id: 2,
+        user_id: 1,
+        channel: "whatsapp",
+        address: "+51911000001",
+        is_primary: 1,
+        is_verified: 1,
+        verified_at: now - oneDay * 10,
+        created_at: now - oneDay * 10,
+        updated_at: now - oneDay,
+      },
+      {
+        id: 3,
+        user_id: 12,
+        channel: "email",
+        address: "mario.aguirre@onechannel.pe",
+        is_primary: 1,
+        is_verified: 1,
+        verified_at: now - oneDay * 8,
+        created_at: now - oneDay * 8,
+        updated_at: now - oneDay,
+      },
+      {
+        id: 4,
+        user_id: 12,
+        channel: "whatsapp",
+        address: "+51911000012",
+        is_primary: 1,
+        is_verified: 1,
+        verified_at: now - oneDay * 8,
+        created_at: now - oneDay * 8,
+        updated_at: now - oneDay,
+      },
+    ])
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
+  await db
+    .insertInto("notification_preferences")
+    .values([
+      {
+        id: 1,
+        user_id: 1,
+        event_type: "security.privileged_login",
+        channel: "email",
+        is_enabled: 1,
+        created_at: now - oneDay * 8,
+        updated_at: now - oneDay,
+      },
+      {
+        id: 2,
+        user_id: 1,
+        event_type: "security.privileged_login",
+        channel: "whatsapp",
+        is_enabled: 1,
+        created_at: now - oneDay * 8,
+        updated_at: now - oneDay,
+      },
+      {
+        id: 3,
+        user_id: 12,
+        event_type: "broadcast.general",
+        channel: "email",
+        is_enabled: 1,
+        created_at: now - oneDay * 6,
+        updated_at: now - oneDay,
+      },
+      {
+        id: 4,
+        user_id: 12,
+        event_type: "broadcast.general",
+        channel: "whatsapp",
+        is_enabled: 0,
+        created_at: now - oneDay * 6,
+        updated_at: now - oneDay,
+      },
+    ])
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
+  await db
+    .insertInto("notification_campaigns")
+    .values([
+      {
+        id: 1,
+        type: "security_event",
+        event_type: "security.privileged_login",
+        audience_type: "user",
+        audience_ref: "1",
+        title: "Security alert: privileged login (admin)",
+        body_text: "Admin login from a new location was detected.",
+        created_by_user_id: null,
+        status: "completed",
+        scheduled_at: null,
+        created_at: now - oneDay,
+        processed_at: now - oneDay + 15_000,
+      },
+      {
+        id: 2,
+        type: "broadcast",
+        event_type: "broadcast.general",
+        audience_type: "role",
+        audience_ref: "supervisor",
+        title: "Cambio en guion comercial",
+        body_text: "Revisar guion actualizado para campaña fibra.",
+        created_by_user_id: 12,
+        status: "completed",
+        scheduled_at: now - oneDay / 2,
+        created_at: now - oneDay / 2,
+        processed_at: now - oneDay / 2 + 20_000,
+      },
+    ])
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
+  await db
+    .insertInto("notification_recipients")
+    .values([
+      {
+        id: 1,
+        campaign_id: 1,
+        user_id: 1,
+        channel: "email",
+        address: "valeria.paredes@onechannel.pe",
+        status: "sent",
+        status_reason: null,
+        created_at: now - oneDay,
+        sent_at: now - oneDay + 30_000,
+        failed_at: null,
+      },
+      {
+        id: 2,
+        campaign_id: 1,
+        user_id: 1,
+        channel: "whatsapp",
+        address: "+51911000001",
+        status: "sent",
+        status_reason: null,
+        created_at: now - oneDay,
+        sent_at: now - oneDay + 35_000,
+        failed_at: null,
+      },
+      {
+        id: 3,
+        campaign_id: 2,
+        user_id: 2,
+        channel: "email",
+        address: "diego.ramirez@onechannel.pe",
+        status: "sent",
+        status_reason: null,
+        created_at: now - oneDay / 2,
+        sent_at: now - oneDay / 2 + 40_000,
+        failed_at: null,
+      },
+      {
+        id: 4,
+        campaign_id: 2,
+        user_id: 8,
+        channel: "email",
+        address: "nicolas.torres@onechannel.pe",
+        status: "failed",
+        status_reason: "mailbox_unreachable",
+        created_at: now - oneDay / 2,
+        sent_at: null,
+        failed_at: now - oneDay / 2 + 50_000,
+      },
+    ])
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
+  await db
+    .insertInto("notification_jobs")
+    .values([
+      {
+        id: 1,
+        recipient_id: 1,
+        status: "sent",
+        attempt_count: 1,
+        available_at: now - oneDay,
+        lease_until: null,
+        last_error: null,
+        created_at: now - oneDay,
+        updated_at: now - oneDay + 30_000,
+      },
+      {
+        id: 2,
+        recipient_id: 2,
+        status: "sent",
+        attempt_count: 1,
+        available_at: now - oneDay,
+        lease_until: null,
+        last_error: null,
+        created_at: now - oneDay,
+        updated_at: now - oneDay + 35_000,
+      },
+      {
+        id: 3,
+        recipient_id: 3,
+        status: "sent",
+        attempt_count: 1,
+        available_at: now - oneDay / 2,
+        lease_until: null,
+        last_error: null,
+        created_at: now - oneDay / 2,
+        updated_at: now - oneDay / 2 + 40_000,
+      },
+      {
+        id: 4,
+        recipient_id: 4,
+        status: "failed",
+        attempt_count: 5,
+        available_at: now - oneDay / 2,
+        lease_until: null,
+        last_error: "mailbox_unreachable",
+        created_at: now - oneDay / 2,
+        updated_at: now - oneDay / 2 + 50_000,
+      },
+    ])
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
+  await db
+    .insertInto("notification_deliveries")
+    .values([
+      {
+        id: 1,
+        recipient_id: 1,
+        provider: "resend",
+        provider_message_id: "seed-msg-resend-1",
+        status: "sent",
+        error_code: null,
+        error_message: null,
+        latency_ms: 420,
+        created_at: now - oneDay + 30_000,
+      },
+      {
+        id: 2,
+        recipient_id: 2,
+        provider: "whatsapp_cloud",
+        provider_message_id: "seed-msg-wa-1",
+        status: "sent",
+        error_code: null,
+        error_message: null,
+        latency_ms: 690,
+        created_at: now - oneDay + 35_000,
+      },
+      {
+        id: 3,
+        recipient_id: 4,
+        provider: "resend",
+        provider_message_id: null,
+        status: "failed",
+        error_code: "mailbox_unreachable",
+        error_message: "Mailbox does not exist",
+        latency_ms: 510,
+        created_at: now - oneDay / 2 + 50_000,
+      },
+    ])
     .onConflict((oc) => oc.doNothing())
     .execute();
 
