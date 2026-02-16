@@ -1,7 +1,7 @@
 import { A, useLocation } from "@solidjs/router";
-import { createResource, For } from "solid-js";
+import { For } from "solid-js";
 
-import { getMe, logout } from "~/actions/auth-session";
+import { logout } from "~/actions/auth-session";
 import ChevronDown from "~/components/icons/chevron-down";
 import House from "~/components/icons/house";
 import MessageSquare from "~/components/icons/message-square";
@@ -10,11 +10,12 @@ import Settings from "~/components/icons/settings";
 import ShieldCheck from "~/components/icons/shield-check";
 import Users from "~/components/icons/users";
 import { AccountMenu } from "~/components/layout/account-menu";
+import { useSession } from "~/components/providers/session-provider";
 import { cn } from "~/lib/utils";
 
 export function Sidebar() {
   const location = useLocation();
-  const [user] = createResource(getMe);
+  const { user } = useSession();
 
   const navGroups = [
     {

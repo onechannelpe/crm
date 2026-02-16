@@ -18,6 +18,7 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import { getErrorMessage } from "~/lib/errors";
+import { runOptimistic } from "~/lib/ui/run-optimistic";
 
 function formatDate(timestamp: number) {
   return new Date(timestamp).toLocaleDateString("es-PE", {
@@ -28,7 +29,12 @@ function formatDate(timestamp: number) {
 }
 
 export default function ValidationPage() {
-  const [notes, { refetch }] = createResource(getPendingReviewNotes);
+  const [notes, { mutate, refetch }] = createResource(
+    () => true,
+    async () => getPendingReviewNotes(),
+    { initialValue: [], ssrLoadFrom: "initial" },
+  );
+  const currentNotes = () => notes.latest ?? [];
   const [rejectingNoteId, setRejectingNoteId] = createSignal<number | null>(
     null,
   );
@@ -36,9 +42,18 @@ export default function ValidationPage() {
 
   const handleApprove = async (noteId: number) => {
     try {
-      await approveSale(noteId);
+      await runOptimistic({
+        read: currentNotes,
+        write: (next) => mutate(() => next),
+        optimistic: (prev) => prev.filter((note) => note.id !== noteId),
+        commit: async () => {
+          await approveSale(noteId);
+        },
+        reconcile: () => {
+          void refetch();
+        },
+      });
       showToast("success", `Venta #${noteId} aprobada`);
-      await refetch();
     } catch (err: unknown) {
       showToast("error", getErrorMessage(err, "Error al aprobar"));
     }
@@ -49,16 +64,25 @@ export default function ValidationPage() {
     rejections: Array<{ fieldId: string; note: string }>,
   ) => {
     try {
-      await rejectSale(
-        noteId,
-        rejections.map((it) => ({
-          field_id: it.fieldId,
-          reviewer_note: it.note,
-        })),
-      );
+      await runOptimistic({
+        read: currentNotes,
+        write: (next) => mutate(() => next),
+        optimistic: (prev) => prev.filter((note) => note.id !== noteId),
+        commit: async () => {
+          await rejectSale(
+            noteId,
+            rejections.map((it) => ({
+              field_id: it.fieldId,
+              reviewer_note: it.note,
+            })),
+          );
+        },
+        reconcile: () => {
+          void refetch();
+        },
+      });
       showToast("success", `Venta #${noteId} rechazada`);
       setRejectingNoteId(null);
-      await refetch();
     } catch (err: unknown) {
       showToast("error", getErrorMessage(err, "Error al rechazar"));
     }
@@ -69,12 +93,12 @@ export default function ValidationPage() {
       <div>
         <h1 class="text-2xl font-bold text-gray-900">Validación de ventas</h1>
         <p class="text-sm text-gray-500 mt-1">
-          {notes()?.length ?? 0} ventas pendientes de aprobación
+          {currentNotes().length} ventas pendientes de aprobación
         </p>
       </div>
 
       <Show
-        when={(notes()?.length ?? 0) > 0}
+        when={currentNotes().length > 0}
         fallback={
           <EmptyState
             title="Sin ventas pendientes"
@@ -107,7 +131,7 @@ export default function ValidationPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              <For each={notes()}>
+              <For each={currentNotes()}>
                 {(note) => (
                   <TableRow>
                     <TableCell class="font-medium">#{note.id}</TableCell>

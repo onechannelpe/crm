@@ -7,18 +7,43 @@ import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import { getErrorMessage } from "~/lib/errors";
+import { runOptimistic } from "~/lib/ui/run-optimistic";
 
 export default function SettingsPage() {
-  const [products, { refetch }] = createResource(getProductCatalog);
+  const [products, { mutate, refetch }] = createResource(
+    () => true,
+    async () => getProductCatalog(),
+    { initialValue: [], ssrLoadFrom: "initial" },
+  );
+  const currentProducts = () => products.latest ?? [];
   const [savingId, setSavingId] = createSignal<number | null>(null);
   const { showToast } = useToast();
 
   const save = async (productId: number, price: string, isActive: boolean) => {
     setSavingId(productId);
     try {
-      await updateProductPricing(productId, Number(price), isActive);
+      const numericPrice = Number(price);
+      await runOptimistic({
+        read: currentProducts,
+        write: (next) => mutate(() => next),
+        optimistic: (prev) =>
+          prev.map((product) =>
+            product.id === productId
+              ? {
+                  ...product,
+                  price: numericPrice,
+                  is_active: isActive ? 1 : 0,
+                }
+              : product,
+          ),
+        commit: async () => {
+          await updateProductPricing(productId, numericPrice, isActive);
+        },
+        reconcile: () => {
+          void refetch();
+        },
+      });
       showToast("success", "Producto actualizado");
-      await refetch();
     } catch (err: unknown) {
       showToast(
         "error",
@@ -46,7 +71,7 @@ export default function SettingsPage() {
           Cambios de precio y activación se aplican inmediatamente.
         </p>
         <div class="space-y-3">
-          <For each={products() ?? []}>
+          <For each={currentProducts()}>
             {(product) => {
               const [price, setPrice] = createSignal(String(product.price));
               const [isActive, setIsActive] = createSignal(
