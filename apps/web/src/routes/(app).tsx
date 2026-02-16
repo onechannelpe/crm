@@ -1,5 +1,4 @@
 import type { RouteSectionProps } from "@solidjs/router";
-
 import { Show, Suspense } from "solid-js";
 
 import { Loading } from "~/components/feedback/loading";

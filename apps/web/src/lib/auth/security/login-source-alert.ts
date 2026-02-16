@@ -1,7 +1,6 @@
+import { hashAuthKey } from "~/lib/auth/password/key-hash";
 import type { User } from "~/lib/db/schema";
 import type { Repositories } from "~/server/shared/registry";
-
-import { hashAuthKey } from "~/lib/auth/password/key-hash";
 
 import { sendPrivilegedLoginAlert } from "./login-alerts";
 

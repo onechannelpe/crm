@@ -1,12 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import type { AuthSession } from "../../src/lib/auth/access/session-types";
-
 import {
   enforceAuthRequest,
   isPublicPath,
   type AuthRequestDeps,
 } from "../../src/lib/auth/access/request-auth";
+import type { AuthSession } from "../../src/lib/auth/access/session-types";
 
 function createSession(
   role: AuthSession["role"],

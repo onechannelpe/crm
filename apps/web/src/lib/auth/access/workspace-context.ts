@@ -1,5 +1,4 @@
 import type { Role } from "./rbac";
-
 import {
   getWorkspaceScopeForRole,
   requiresStrictTeamHierarchy,

@@ -1,5 +1,4 @@
 import type { MigrationProvider } from "kysely";
-
 import { Migrator } from "kysely";
 
 import { db } from "./db";

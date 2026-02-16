@@ -3,8 +3,6 @@ import type {
   RegistrationResponseJSON,
 } from "@simplewebauthn/server";
 
-import type { Repositories } from "~/server/shared/registry";
-
 import {
   checkPasskeyChallengeThrottle,
   checkPasskeyVerifyThrottle,
@@ -14,6 +12,7 @@ import {
 } from "~/lib/auth/password/throttle";
 import { config } from "~/lib/config";
 import { assertPositiveInt } from "~/lib/contracts/guards";
+import type { Repositories } from "~/server/shared/registry";
 
 const INVALID_REQUEST = "Invalid passkey request";
 

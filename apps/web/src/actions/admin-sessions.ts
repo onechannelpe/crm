@@ -1,9 +1,6 @@
 "use server";
 
 import type { Role } from "~/lib/auth/access/rbac";
-import type { ActionSuccess } from "~/lib/contracts/common";
-import type { UserSession } from "~/lib/db/schema";
-
 import { requireRole } from "~/lib/auth/access/session";
 import { assertRecentStrongAuth } from "~/lib/auth/security/step-up";
 import { invalidateUserSessions } from "~/lib/auth/session/session-manager";
@@ -12,10 +9,12 @@ import {
   serializeAuditChanges,
   sessionRevokedByAdminChanges,
 } from "~/lib/contracts/audit";
+import type { ActionSuccess } from "~/lib/contracts/common";
 import {
   assertNonEmptyString,
   assertPositiveInt,
 } from "~/lib/contracts/guards";
+import type { UserSession } from "~/lib/db/schema";
 import { repos } from "~/server/shared/context";
 
 export async function listUserSessions(userId: number): Promise<UserSession[]> {

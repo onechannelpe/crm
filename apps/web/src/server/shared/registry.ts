@@ -1,7 +1,6 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/schema";
-
 import { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import {

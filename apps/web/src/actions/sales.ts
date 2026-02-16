@@ -1,9 +1,8 @@
 "use server";
 
-import type { ActionSuccess } from "~/lib/contracts/common";
-
 import { requirePermission } from "~/lib/auth/access/session";
 import { config } from "~/lib/config";
+import type { ActionSuccess } from "~/lib/contracts/common";
 import {
   assertFinitePositive,
   assertNonEmptyString,

@@ -3,7 +3,6 @@
 import { getRequestEvent } from "solid-js/web";
 
 import type { Role } from "~/lib/auth/access/rbac";
-
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { authenticatePasswordLogin } from "~/lib/auth/password/password-login";
 import { getSessionCookie, setSessionCookie } from "~/lib/auth/session/cookies";
