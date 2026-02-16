@@ -26,7 +26,7 @@ import { createAppQuery } from "~/lib/ui/create-app-query";
 import { runOptimistic } from "~/lib/ui/run-optimistic";
 
 export default function ProfilePage() {
-  const { user } = useSession();
+  const { currentUser } = useSession();
   const [passkeySupported, setPasskeySupported] = createSignal(false);
   const [passkeyLoading, setPasskeyLoading] = createSignal(false);
   const [passkeyMessage, setPasskeyMessage] = createSignal("");
@@ -38,6 +38,7 @@ export default function ProfilePage() {
   const [totpQrCode, setTotpQrCode] = createSignal("");
   const [totpCode, setTotpCode] = createSignal("");
   const [recoveryCodes, setRecoveryCodes] = createSignal<string[]>([]);
+  const user = () => currentUser();
 
   onMount(() => {
     setPasskeySupported(isPasskeySupported());
@@ -117,122 +118,107 @@ export default function ProfilePage() {
         </p>
       </div>
 
-      <Show
-        when={user()}
-        fallback={
-          <Card class="p-6 text-sm text-muted-foreground">
-            Cargando perfil...
-          </Card>
-        }
-      >
-        {(currentUser) => (
-          <Card class="p-6 space-y-4">
-            <div>
-              <p class="text-xs uppercase tracking-wider text-muted-foreground">
-                Nombre
-              </p>
-              <p class="text-base font-medium text-foreground">
-                {currentUser().fullName}
-              </p>
-            </div>
-            <div>
-              <p class="text-xs uppercase tracking-wider text-muted-foreground">
-                Correo
-              </p>
-              <p class="text-base text-foreground">{currentUser().email}</p>
-            </div>
-            <div class="flex items-center justify-between">
-              <p class="text-xs uppercase tracking-wider text-muted-foreground">
-                Rol actual
-              </p>
-              <Badge variant={getRoleBadgeVariant(currentUser().role)}>
-                {getRoleLabel(currentUser().role)}
-              </Badge>
-            </div>
-            <div class="border-t pt-4 space-y-3">
-              <p class="text-xs uppercase tracking-wider text-muted-foreground">
-                Seguridad
-              </p>
+      <Card class="p-6 space-y-4">
+        <div>
+          <p class="text-xs uppercase tracking-wider text-muted-foreground">
+            Nombre
+          </p>
+          <p class="text-base font-medium text-foreground">{user().fullName}</p>
+        </div>
+        <div>
+          <p class="text-xs uppercase tracking-wider text-muted-foreground">
+            Correo
+          </p>
+          <p class="text-base text-foreground">{user().email}</p>
+        </div>
+        <div class="flex items-center justify-between">
+          <p class="text-xs uppercase tracking-wider text-muted-foreground">
+            Rol actual
+          </p>
+          <Badge variant={getRoleBadgeVariant(user().role)}>
+            {getRoleLabel(user().role)}
+          </Badge>
+        </div>
+        <div class="border-t pt-4 space-y-3">
+          <p class="text-xs uppercase tracking-wider text-muted-foreground">
+            Seguridad
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={!passkeySupported() || passkeyLoading()}
+            onClick={() => {
+              void registerPasskey();
+            }}
+          >
+            {passkeyLoading() ? "Registrando passkey..." : "Registrar passkey"}
+          </Button>
+          <Show when={!passkeySupported()}>
+            <p class="text-sm text-muted-foreground">
+              Este dispositivo o navegador no soporta passkeys.
+            </p>
+          </Show>
+          <Show when={passkeyMessage()}>
+            <p class="text-sm text-muted-foreground">{passkeyMessage()}</p>
+          </Show>
+          <div class="space-y-3 border-t pt-3">
+            <p class="text-xs uppercase tracking-wider text-muted-foreground">
+              TOTP
+            </p>
+            <Show when={totpStatus()?.enabled}>
+              <p class="text-sm text-muted-foreground">TOTP habilitado</p>
+            </Show>
+            <Show when={!totpStatus()?.enabled}>
               <Button
                 type="button"
                 variant="outline"
-                disabled={!passkeySupported() || passkeyLoading()}
+                disabled={totpLoading()}
                 onClick={() => {
-                  void registerPasskey();
+                  void startTotpSetup();
                 }}
               >
-                {passkeyLoading()
-                  ? "Registrando passkey..."
-                  : "Registrar passkey"}
+                {totpLoading() ? "Preparando TOTP..." : "Configurar TOTP"}
               </Button>
-              <Show when={!passkeySupported()}>
-                <p class="text-sm text-muted-foreground">
-                  Este dispositivo o navegador no soporta passkeys.
-                </p>
+              <Show when={totpQrCode()}>
+                <img src={totpQrCode()} alt="QR TOTP" class="w-48 h-48" />
+                <Input
+                  id="totp-setup-code"
+                  type="text"
+                  placeholder="Ingresa código TOTP"
+                  value={totpCode()}
+                  onInput={(
+                    e: InputEvent & { currentTarget: HTMLInputElement },
+                  ) => setTotpCode(e.currentTarget.value)}
+                />
+                <Button
+                  type="button"
+                  disabled={totpLoading()}
+                  onClick={() => {
+                    void confirmTotpSetup();
+                  }}
+                >
+                  Confirmar TOTP
+                </Button>
               </Show>
-              <Show when={passkeyMessage()}>
-                <p class="text-sm text-muted-foreground">{passkeyMessage()}</p>
-              </Show>
-              <div class="space-y-3 border-t pt-3">
-                <p class="text-xs uppercase tracking-wider text-muted-foreground">
-                  TOTP
+            </Show>
+            <Show when={totpMessage()}>
+              <p class="text-sm text-muted-foreground">{totpMessage()}</p>
+            </Show>
+            <Show when={recoveryCodes().length > 0}>
+              <div class="rounded border p-3 space-y-2">
+                <p class="text-sm font-medium">
+                  Códigos de recuperación (solo una vez)
                 </p>
-                <Show when={totpStatus()?.enabled}>
-                  <p class="text-sm text-muted-foreground">TOTP habilitado</p>
-                </Show>
-                <Show when={!totpStatus()?.enabled}>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={totpLoading()}
-                    onClick={() => {
-                      void startTotpSetup();
-                    }}
-                  >
-                    {totpLoading() ? "Preparando TOTP..." : "Configurar TOTP"}
-                  </Button>
-                  <Show when={totpQrCode()}>
-                    <img src={totpQrCode()} alt="QR TOTP" class="w-48 h-48" />
-                    <Input
-                      id="totp-setup-code"
-                      type="text"
-                      placeholder="Ingresa código TOTP"
-                      value={totpCode()}
-                      onInput={(
-                        e: InputEvent & { currentTarget: HTMLInputElement },
-                      ) => setTotpCode(e.currentTarget.value)}
-                    />
-                    <Button
-                      type="button"
-                      disabled={totpLoading()}
-                      onClick={() => {
-                        void confirmTotpSetup();
-                      }}
-                    >
-                      Confirmar TOTP
-                    </Button>
-                  </Show>
-                </Show>
-                <Show when={totpMessage()}>
-                  <p class="text-sm text-muted-foreground">{totpMessage()}</p>
-                </Show>
-                <Show when={recoveryCodes().length > 0}>
-                  <div class="rounded border p-3 space-y-2">
-                    <p class="text-sm font-medium">
-                      Códigos de recuperación (solo una vez)
-                    </p>
-                    <ul class="grid grid-cols-2 gap-2 text-sm">
-                      {recoveryCodes().map((code) => (
-                        <li class="font-mono">{code}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </Show>
+                <ul class="grid grid-cols-2 gap-2 text-sm">
+                  {recoveryCodes().map((code) => (
+                    <li class="font-mono">{code}</li>
+                  ))}
+                </ul>
               </div>
-            </div>
-          </Card>
-        )}
-      </Show>
+            </Show>
+          </div>
+        </div>
+      </Card>
     </div>
   );
 }

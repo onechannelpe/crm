@@ -15,7 +15,7 @@ import { cn } from "~/lib/utils";
 
 export function Sidebar() {
   const location = useLocation();
-  const { user } = useSession();
+  const { currentUser } = useSession();
 
   const navGroups = [
     {
@@ -51,7 +51,7 @@ export function Sidebar() {
           type="button"
           class="w-full flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-md shadow-sm bg-white hover:bg-gray-50 transition-colors"
         >
-          <span>Espacio de {user()?.fullName?.split(" ")[0]}</span>
+          <span>Espacio de {currentUser().fullName.split(" ")[0]}</span>
           <ChevronDown class="w-4 h-4 text-muted-foreground" />
         </button>
       </div>
@@ -96,10 +96,7 @@ export function Sidebar() {
       </nav>
 
       <div class="p-4 border-t">
-        <AccountMenu
-          fullName={user()?.fullName ?? "Cargando..."}
-          onLogout={logout}
-        />
+        <AccountMenu fullName={currentUser().fullName} onLogout={logout} />
       </div>
     </aside>
   );
