@@ -1,14 +1,14 @@
 import { Show } from "solid-js";
 
-import { getMe } from "~/actions/auth-session";
 import { getDashboardStats } from "~/actions/dashboard";
 import { getQuotaStatus } from "~/actions/quota";
 import { QuotaDisplay } from "~/components/features/quota/quota-display";
+import { useSession } from "~/components/providers/session-provider";
 import { Card } from "~/components/ui/card";
 import { createAppQuery } from "~/lib/ui/create-app-query";
 
 export default function DashboardPage() {
-  const [user] = createAppQuery(getMe, null);
+  const { user } = useSession();
   const [quota] = createAppQuery(getQuotaStatus, { allocated: false });
   const [stats] = createAppQuery(getDashboardStats, {
     activeLeads: 0,
@@ -26,7 +26,7 @@ export default function DashboardPage() {
     <div class="space-y-6">
       <div>
         <h1 class="text-2xl font-bold text-gray-900">
-          Hola, {user()?.fullName || "Usuario"} 👋
+          Hola, {user()?.fullName ?? "Usuario"} 👋
         </h1>
         <p class="text-gray-500 mt-1">Aquí tienes un resumen de hoy.</p>
       </div>
