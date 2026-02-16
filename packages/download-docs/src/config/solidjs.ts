@@ -8,4 +8,13 @@ export const solidjsConfig: FrameworkConfig = {
   agentSection: "WHEN writing SolidJS",
   markerStart: "<!-- SOLIDJS-DOCS-START -->",
   markerEnd: "<!-- SOLIDJS-DOCS-END -->",
+  transform: (files) =>
+    files.filter(
+      (f) =>
+        f.relativePath.startsWith("reference/") ||
+        f.relativePath.startsWith("concepts/") ||
+        f.relativePath.startsWith("advanced-concepts/") ||
+        f.relativePath.startsWith("solid-router/") ||
+        f.relativePath.startsWith("solid-start/")
+    ),
 };
