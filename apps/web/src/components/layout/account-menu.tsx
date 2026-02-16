@@ -1,4 +1,4 @@
-import { A } from "@solidjs/router";
+import { A, useNavigate } from "@solidjs/router";
 import { Show, createSignal } from "solid-js";
 
 import ChevronDown from "~/components/icons/chevron-down";
@@ -18,6 +18,7 @@ interface AccountMenuProps {
 
 export function AccountMenu(props: AccountMenuProps) {
   const [open, setOpen] = createSignal(false);
+  const navigate = useNavigate();
   let containerRef: HTMLDivElement | undefined;
   useMenuDismiss(
     open,
@@ -77,9 +78,12 @@ export function AccountMenu(props: AccountMenuProps) {
             type="button"
             onClick={() => {
               setOpen(false);
-              props.onLogout().catch((error: unknown) => {
-                console.error("Logout failed", error);
-              });
+              void props
+                .onLogout()
+                .then(() => navigate("/login", { replace: true }))
+                .catch((error: unknown) => {
+                  console.error("Logout failed", error);
+                });
             }}
             class="flex w-full items-center gap-2 rounded-sm px-2 py-2 text-left text-sm text-destructive hover:bg-destructive/10"
           >
