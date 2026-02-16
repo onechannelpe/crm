@@ -201,6 +201,8 @@ export interface UserSessionsTable {
   user_id: number;
   branch_id: number;
   role: UsersTable["role"];
+  auth_method: "password" | "password_totp" | "passkey";
+  strong_auth_at: number | null;
   ip_address: string | null;
   user_agent: string | null;
   created_at: number;
@@ -221,12 +223,30 @@ export interface AuthThrottleCountersTable {
 export interface AuthEventsTable {
   id: Generated<number>;
   user_id: number | null;
-  method: "password" | "passkey";
-  stage: "login" | "challenge" | "verify";
+  method: "password" | "passkey" | "totp";
+  stage: "login" | "challenge" | "verify" | "recovery";
   outcome: "success" | "failure" | "throttled";
   reason: string | null;
   identifier_hash: string;
   ip_hash: string;
+  created_at: number;
+}
+
+export interface UserTotpFactorsTable {
+  id: Generated<number>;
+  user_id: number;
+  secret_encrypted: string;
+  is_enabled: number;
+  created_at: number;
+  updated_at: number;
+  enabled_at: number | null;
+}
+
+export interface UserTotpRecoveryCodesTable {
+  id: Generated<number>;
+  user_id: number;
+  code_hash: string;
+  used_at: number | null;
   created_at: number;
 }
 
@@ -237,6 +257,8 @@ export interface Database {
   user_sessions: UserSessionsTable;
   auth_throttle_counters: AuthThrottleCountersTable;
   auth_events: AuthEventsTable;
+  user_totp_factors: UserTotpFactorsTable;
+  user_totp_recovery_codes: UserTotpRecoveryCodesTable;
   organizations: OrganizationsTable;
   contacts: ContactsTable;
   lead_assignments: LeadAssignmentsTable;
@@ -275,11 +297,15 @@ export type Passkey = Selectable<PasskeysTable>;
 export type UserSession = Selectable<UserSessionsTable>;
 export type AuthThrottleCounter = Selectable<AuthThrottleCountersTable>;
 export type AuthEvent = Selectable<AuthEventsTable>;
+export type UserTotpFactor = Selectable<UserTotpFactorsTable>;
+export type UserTotpRecoveryCode = Selectable<UserTotpRecoveryCodesTable>;
 
 export type NewUser = Insertable<UsersTable>;
 export type NewUserSession = Insertable<UserSessionsTable>;
 export type NewAuthThrottleCounter = Insertable<AuthThrottleCountersTable>;
 export type NewAuthEvent = Insertable<AuthEventsTable>;
+export type NewUserTotpFactor = Insertable<UserTotpFactorsTable>;
+export type NewUserTotpRecoveryCode = Insertable<UserTotpRecoveryCodesTable>;
 export type NewOrganization = Insertable<OrganizationsTable>;
 export type NewContact = Insertable<ContactsTable>;
 export type NewLeadAssignment = Insertable<LeadAssignmentsTable>;

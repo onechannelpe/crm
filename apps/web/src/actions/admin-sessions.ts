@@ -5,6 +5,7 @@ import type { ActionSuccess } from "~/lib/contracts/common";
 import type { UserSession } from "~/lib/db/schema";
 
 import { requireRole } from "~/lib/auth/access/session";
+import { assertRecentStrongAuth } from "~/lib/auth/security/step-up";
 import { invalidateUserSessions } from "~/lib/auth/session/session-manager";
 import {
   allSessionsRevokedChanges,
@@ -19,12 +20,14 @@ import { repos } from "~/server/shared/context";
 
 export async function listUserSessions(userId: number): Promise<UserSession[]> {
   const safeUserId = assertPositiveInt(userId, "userId");
-  await requireRole("admin");
+  const session = await requireRole("admin");
+  assertRecentStrongAuth(session);
   return repos.sessions.listForUser(safeUserId);
 }
 
 export async function getActiveSessionsCount(): Promise<number> {
-  await requireRole("admin");
+  const session = await requireRole("admin");
+  assertRecentStrongAuth(session);
   return repos.sessions.countActive();
 }
 
@@ -35,6 +38,7 @@ export async function revokeUserSession(
   const safeSessionId = assertNonEmptyString(sessionId, "sessionId");
   const safeTargetUserId = assertPositiveInt(targetUserId, "targetUserId");
   const session = await requireRole("admin");
+  assertRecentStrongAuth(session);
 
   await repos.sessions.delete(safeSessionId);
 
@@ -57,6 +61,7 @@ export async function revokeAllUserSessions(
 ): Promise<ActionSuccess> {
   const safeTargetUserId = assertPositiveInt(targetUserId, "targetUserId");
   const session = await requireRole("admin");
+  assertRecentStrongAuth(session);
 
   await invalidateUserSessions(safeTargetUserId);
 
@@ -87,7 +92,8 @@ export interface SessionInfo {
 }
 
 export async function listAllActiveSessions(): Promise<SessionInfo[]> {
-  await requireRole("admin");
+  const session = await requireRole("admin");
+  assertRecentStrongAuth(session);
 
   const sessions = await repos.sessions.db
     .selectFrom("user_sessions")

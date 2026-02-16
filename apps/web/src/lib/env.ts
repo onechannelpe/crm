@@ -15,4 +15,9 @@ export const env = {
   engineHmacSecret: required("ENGINE_HMAC_SECRET"),
   webauthnRpId: optional("WEBAUTHN_RP_ID", "localhost"),
   webauthnOrigin: optional("WEBAUTHN_ORIGIN", "http://localhost:3000"),
+  smtpHost: optional("SMTP_HOST", ""),
+  smtpPort: Number(optional("SMTP_PORT", "587")),
+  smtpUser: optional("SMTP_USER", ""),
+  smtpPass: optional("SMTP_PASS", ""),
+  smtpFrom: optional("SMTP_FROM", ""),
 } as const;

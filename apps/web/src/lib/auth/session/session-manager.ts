@@ -16,6 +16,7 @@ import {
 const SESSION_DURATION = 30 * 24 * 60 * 60 * 1000;
 const ACTIVITY_UPDATE_THRESHOLD = 5 * 60 * 1000;
 const EXTENSION_THRESHOLD = 7 * 24 * 60 * 60 * 1000;
+const AUTH_METHODS = ["password", "password_totp", "passkey"] as const;
 
 export interface SessionValidationResult {
   session: AuthSession | null;
@@ -46,12 +47,20 @@ function isSessionConsistent(params: {
   return true;
 }
 
+function isValidAuthMethod(
+  value: string,
+): value is (typeof AUTH_METHODS)[number] {
+  return AUTH_METHODS.some((method) => method === value);
+}
+
 export async function createSession(
   userId: number,
   branchId: number,
   role: Role,
   ipAddress: string | null,
   userAgent: string | null,
+  authMethod: "password" | "password_totp" | "passkey",
+  strongAuthAt: number | null,
   deps?: SessionDeps,
 ): Promise<string> {
   const { sessions } = getSessionDeps(deps);
@@ -64,6 +73,8 @@ export async function createSession(
     user_id: userId,
     branch_id: branchId,
     role,
+    auth_method: authMethod,
+    strong_auth_at: strongAuthAt,
     ip_address: ipAddress,
     user_agent: userAgent,
     created_at: now,
@@ -109,6 +120,8 @@ export async function validateSessionToken(
         userId: cached.userId,
         branchId: cached.branchId,
         role: cached.role,
+        authMethod: cached.authMethod,
+        strongAuthAt: cached.strongAuthAt,
       },
     };
   }
@@ -120,6 +133,10 @@ export async function validateSessionToken(
   }
 
   if (!isRole(dbSession.role)) {
+    await sessions.delete(sessionId);
+    return { session: null };
+  }
+  if (!isValidAuthMethod(dbSession.auth_method)) {
     await sessions.delete(sessionId);
     return { session: null };
   }
@@ -155,6 +172,8 @@ export async function validateSessionToken(
     userId: dbSession.user_id,
     branchId: dbSession.branch_id,
     role: dbSession.role,
+    authMethod: dbSession.auth_method,
+    strongAuthAt: dbSession.strong_auth_at,
     expiresAt: dbSession.expires_at,
   });
 
@@ -164,6 +183,8 @@ export async function validateSessionToken(
       userId: dbSession.user_id,
       branchId: dbSession.branch_id,
       role: dbSession.role,
+      authMethod: dbSession.auth_method,
+      strongAuthAt: dbSession.strong_auth_at,
     },
   };
 }

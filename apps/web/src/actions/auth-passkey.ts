@@ -76,6 +76,8 @@ export async function finishPasskeyLogin(
     user.role,
     ipAddress,
     userAgent,
+    "passkey",
+    Date.now(),
   );
   setSessionCookie(token);
 

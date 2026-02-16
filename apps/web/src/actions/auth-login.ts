@@ -18,6 +18,7 @@ export interface LoginResult {
 export async function login(
   email: string,
   password: string,
+  totpCode?: string,
 ): Promise<LoginResult> {
   const event = getRequestEvent();
   const ipAddress = getClientIp(event?.request.headers ?? new Headers());
@@ -32,6 +33,7 @@ export async function login(
   const result = await authenticatePasswordLogin({
     email,
     password,
+    totpCode,
     ipAddress,
     userAgent,
   });

@@ -262,6 +262,8 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
       col.notNull().references("branches.id"),
     )
     .addColumn("role", "text", (col) => col.notNull())
+    .addColumn("auth_method", "varchar(32)", (col) => col.notNull())
+    .addColumn("strong_auth_at", "integer")
     .addColumn("ip_address", "text")
     .addColumn("user_agent", "text")
     .addColumn("created_at", "integer", (col) => col.notNull())
@@ -292,6 +294,30 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     .addColumn("reason", "varchar(64)")
     .addColumn("identifier_hash", "varchar(64)", (col) => col.notNull())
     .addColumn("ip_hash", "varchar(64)", (col) => col.notNull())
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await db.schema
+    .createTable("user_totp_factors")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("user_id", "integer", (col) =>
+      col.notNull().references("users.id").onDelete("cascade"),
+    )
+    .addColumn("secret_encrypted", "text", (col) => col.notNull())
+    .addColumn("is_enabled", "integer", (col) => col.notNull().defaultTo(0))
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .addColumn("enabled_at", "integer")
+    .execute();
+
+  await db.schema
+    .createTable("user_totp_recovery_codes")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("user_id", "integer", (col) =>
+      col.notNull().references("users.id").onDelete("cascade"),
+    )
+    .addColumn("code_hash", "varchar(255)", (col) => col.notNull())
+    .addColumn("used_at", "integer")
     .addColumn("created_at", "integer", (col) => col.notNull())
     .execute();
 
@@ -370,5 +396,16 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     .createIndex("idx_auth_events_outcome_created")
     .on("auth_events")
     .columns(["outcome", "created_at"])
+    .execute();
+  await db.schema
+    .createIndex("idx_totp_factors_user_id")
+    .on("user_totp_factors")
+    .column("user_id")
+    .unique()
+    .execute();
+  await db.schema
+    .createIndex("idx_totp_recovery_user_used")
+    .on("user_totp_recovery_codes")
+    .columns(["user_id", "used_at"])
     .execute();
 }

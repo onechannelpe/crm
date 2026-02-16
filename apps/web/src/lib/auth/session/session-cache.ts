@@ -4,6 +4,8 @@ interface CachedSession {
   userId: number;
   branchId: number;
   role: Role;
+  authMethod: "password" | "password_totp" | "passkey";
+  strongAuthAt: number | null;
   expiresAt: number;
   cachedUntil: number;
 }

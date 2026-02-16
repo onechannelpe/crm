@@ -74,6 +74,8 @@ describe("auth middleware request guard", () => {
       userId: 1,
       branchId: 1,
       role: "executive",
+      authMethod: "password",
+      strongAuthAt: null,
     };
     const event: { request: Request; locals: App.RequestEventLocals } = {
       request: new Request("http://localhost:3000/dashboard"),

@@ -17,6 +17,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = createSignal("");
   const [password, setPassword] = createSignal("");
+  const [totpCode, setTotpCode] = createSignal("");
   const [error, setError] = createSignal("");
   const [loading, setLoading] = createSignal(false);
   const [passkeyLoading, setPasskeyLoading] = createSignal(false);
@@ -32,7 +33,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await login(email(), password());
+      await login(email(), password(), totpCode());
       navigate("/dashboard");
     } catch (err: unknown) {
       setError(getErrorMessage(err, "Credenciales inválidas"));
@@ -125,6 +126,16 @@ export default function LoginPage() {
                   value={password()}
                   onInput={(e) => setPassword(e.currentTarget.value)}
                   required
+                  class="h-11 bg-gray-50/50 border-gray-200 focus:bg-white transition-all"
+                />
+              </div>
+              <div class="space-y-2">
+                <Input
+                  id="totp"
+                  type="text"
+                  placeholder="Código TOTP o recuperación (si aplica)"
+                  value={totpCode()}
+                  onInput={(e) => setTotpCode(e.currentTarget.value)}
                   class="h-11 bg-gray-50/50 border-gray-200 focus:bg-white transition-all"
                 />
               </div>

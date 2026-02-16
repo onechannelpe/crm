@@ -164,3 +164,27 @@ export async function clearPasskeyVerifyFailureState(
 ): Promise<void> {
   await clearFailureState("passkey_verify", identifier, ipAddress, deps);
 }
+
+export async function checkTotpVerifyThrottle(
+  identifier: string,
+  ipAddress: string,
+  deps?: Deps,
+): Promise<CheckResult> {
+  return checkThrottle("totp_verify", identifier, ipAddress, deps);
+}
+
+export async function recordTotpVerifyFailure(
+  identifier: string,
+  ipAddress: string,
+  deps?: Deps,
+): Promise<void> {
+  await recordFailure("totp_verify", identifier, ipAddress, deps);
+}
+
+export async function clearTotpVerifyFailureState(
+  identifier: string,
+  ipAddress: string,
+  deps?: Deps,
+): Promise<void> {
+  await clearFailureState("totp_verify", identifier, ipAddress, deps);
+}

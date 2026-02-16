@@ -4,6 +4,10 @@ import type { Database } from "~/lib/db/schema";
 
 import { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
+import {
+  createUserTotpFactorsRepo,
+  createUserTotpRecoveryCodesRepo,
+} from "~/server/auth/repos-user-totp-factors";
 import { createContactsRepo } from "~/server/contacts/repos-contacts";
 import { createOrganizationsRepo } from "~/server/contacts/repos-organizations";
 import { createInventoryRepo } from "~/server/inventory/repos";
@@ -30,6 +34,8 @@ export function createRepositories(db: Kysely<Database>) {
     sessions: createSessionRepository(db),
     authEvents: createAuthEventsRepo(db),
     authThrottle: createAuthThrottleRepo(db),
+    userTotpFactors: createUserTotpFactorsRepo(db),
+    userTotpRecoveryCodes: createUserTotpRecoveryCodesRepo(db),
     organizations: createOrganizationsRepo(db),
     contacts: createContactsRepo(db),
     leadAssignments: createLeadAssignmentsRepo(db),

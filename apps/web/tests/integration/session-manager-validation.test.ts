@@ -36,8 +36,8 @@ describe("session manager validation", () => {
 
     await sql`
       insert into user_sessions
-      (id, user_id, branch_id, role, ip_address, user_agent, created_at, last_activity, expires_at)
-      values (${sessionId}, ${1}, ${1}, ${"invalid_role"}, ${null}, ${null}, ${now}, ${now}, ${now + 60_000})
+      (id, user_id, branch_id, role, auth_method, strong_auth_at, ip_address, user_agent, created_at, last_activity, expires_at)
+      values (${sessionId}, ${1}, ${1}, ${"invalid_role"}, ${"password"}, ${null}, ${null}, ${null}, ${now}, ${now}, ${now + 60_000})
     `.execute(ctx.db);
 
     const result = await validateSessionToken(token, ctx.repos);
@@ -46,7 +46,16 @@ describe("session manager validation", () => {
   });
 
   it("invalidates cached session immediately after user deactivation", async () => {
-    const token = await createSession(1, 1, "executive", null, null, ctx.repos);
+    const token = await createSession(
+      1,
+      1,
+      "executive",
+      null,
+      null,
+      "password",
+      null,
+      ctx.repos,
+    );
     const sessionId = hashSessionToken(token);
 
     const first = await validateSessionToken(token, ctx.repos);
@@ -64,7 +73,16 @@ describe("session manager validation", () => {
   });
 
   it("invalidates cached session when user role changes", async () => {
-    const token = await createSession(1, 1, "executive", null, null, ctx.repos);
+    const token = await createSession(
+      1,
+      1,
+      "executive",
+      null,
+      null,
+      "password",
+      null,
+      ctx.repos,
+    );
     const sessionId = hashSessionToken(token);
 
     const first = await validateSessionToken(token, ctx.repos);
@@ -82,7 +100,16 @@ describe("session manager validation", () => {
   });
 
   it("invalidates cached session when user branch changes", async () => {
-    const token = await createSession(1, 1, "executive", null, null, ctx.repos);
+    const token = await createSession(
+      1,
+      1,
+      "executive",
+      null,
+      null,
+      "password",
+      null,
+      ctx.repos,
+    );
     const sessionId = hashSessionToken(token);
 
     const first = await validateSessionToken(token, ctx.repos);
