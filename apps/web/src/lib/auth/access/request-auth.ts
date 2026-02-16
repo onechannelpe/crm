@@ -22,6 +22,8 @@ const defaultDeps: AuthRequestDeps = {
 export type AuthRequestDecision =
   | { kind: "allow" }
   | { kind: "redirect_login" }
+  | { kind: "redirect_onboarding" }
+  | { kind: "redirect_dashboard" }
   | { kind: "reject"; response: Response };
 
 export function isPublicPath(pathname: string): boolean {
@@ -60,6 +62,14 @@ export async function enforceAuthRequest(
   const { session } = await deps.validateSessionToken(token);
   if (!session) {
     return { kind: "redirect_login" };
+  }
+
+  if (!session.onboardingCompleted && url.pathname !== "/onboarding") {
+    return { kind: "redirect_onboarding" };
+  }
+
+  if (session.onboardingCompleted && url.pathname === "/onboarding") {
+    return { kind: "redirect_dashboard" };
   }
 
   event.locals = event.locals ?? {};

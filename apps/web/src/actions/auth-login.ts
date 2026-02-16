@@ -13,11 +13,13 @@ import { hashSessionToken } from "~/lib/auth/session/tokens";
 export interface LoginResult {
   userId: number;
   role: Role;
+  onboardingCompleted: boolean;
 }
 
 export async function login(
   email: string,
   password: string,
+  totpCode?: string,
 ): Promise<LoginResult> {
   const event = getRequestEvent();
   const ipAddress = getClientIp(event?.request.headers ?? new Headers());
@@ -32,10 +34,15 @@ export async function login(
   const result = await authenticatePasswordLogin({
     email,
     password,
+    totpCode,
     ipAddress,
     userAgent,
   });
   setSessionCookie(result.token);
 
-  return { userId: result.userId, role: result.role };
+  return {
+    userId: result.userId,
+    role: result.role,
+    onboardingCompleted: result.onboardingCompleted,
+  };
 }

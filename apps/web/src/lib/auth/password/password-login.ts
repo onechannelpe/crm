@@ -6,6 +6,8 @@ import { repos } from "~/server/shared/context";
 import type { Role } from "../access/rbac";
 
 import { recordAuthEvent } from "../security/auth-events";
+import { sendAlertOnNewLoginSource } from "../security/login-source-alert";
+import { resolvePasswordStrongAuth } from "../security/password-strong-auth";
 import { createSession } from "../session/session-manager";
 import { verifyPassword } from "./password";
 import {
@@ -18,12 +20,19 @@ const INVALID_CREDENTIALS = "Invalid credentials";
 
 type Deps = Pick<
   Repositories,
-  "users" | "sessions" | "auditLogs" | "authThrottle" | "authEvents"
+  | "users"
+  | "sessions"
+  | "auditLogs"
+  | "authThrottle"
+  | "authEvents"
+  | "userTotpFactors"
+  | "userTotpRecoveryCodes"
 >;
 
 export interface PasswordLoginInput {
   email: string;
   password: string;
+  totpCode?: string;
   ipAddress: string;
   userAgent: string | null;
 }
@@ -31,6 +40,7 @@ export interface PasswordLoginInput {
 export interface PasswordLoginResult {
   userId: number;
   role: Role;
+  onboardingCompleted: boolean;
   token: string;
 }
 
@@ -92,6 +102,19 @@ export async function authenticatePasswordLogin(
   }
 
   await clearLoginFailureState(safeEmail, input.ipAddress, resolvedDeps);
+  const strongAuth = await resolvePasswordStrongAuth({
+    user,
+    ipAddress: input.ipAddress,
+    totpCode: input.totpCode,
+    deps: resolvedDeps,
+  });
+
+  await sendAlertOnNewLoginSource({
+    user,
+    ipAddress: input.ipAddress,
+    method: strongAuth.authMethod,
+    deps: resolvedDeps,
+  });
 
   const token = await createSession(
     user.id,
@@ -99,6 +122,8 @@ export async function authenticatePasswordLogin(
     user.role,
     input.ipAddress,
     input.userAgent,
+    strongAuth.authMethod,
+    strongAuth.strongAuthAt,
     resolvedDeps,
   );
 
@@ -117,7 +142,13 @@ export async function authenticatePasswordLogin(
     method: "password",
     stage: "login",
     outcome: "success",
+    reason: strongAuth.authMethod === "password_totp" ? "totp_verified" : null,
   });
 
-  return { userId: user.id, role: user.role, token };
+  return {
+    userId: user.id,
+    role: user.role,
+    onboardingCompleted: user.onboarding_completed_at !== null,
+    token,
+  };
 }

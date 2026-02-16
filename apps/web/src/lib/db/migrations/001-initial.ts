@@ -18,8 +18,112 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     .addColumn("email", "varchar(255)", (col) => col.notNull().unique())
     .addColumn("password_hash", "varchar(255)", (col) => col.notNull())
     .addColumn("full_name", "varchar(255)", (col) => col.notNull())
+    .addColumn("phone_e164", "varchar(20)")
+    .addColumn("phone_verified_at", "integer")
+    .addColumn("profile_confirmed_at", "integer")
+    .addColumn("onboarding_completed_at", "integer")
     .addColumn("role", "varchar(50)", (col) => col.notNull())
     .addColumn("is_active", "integer", (col) => col.notNull().defaultTo(1))
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await db.schema
+    .createTable("notification_contacts")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("user_id", "integer", (col) =>
+      col.notNull().references("users.id").onDelete("cascade"),
+    )
+    .addColumn("channel", "varchar(20)", (col) => col.notNull())
+    .addColumn("address", "varchar(255)", (col) => col.notNull())
+    .addColumn("is_primary", "integer", (col) => col.notNull().defaultTo(1))
+    .addColumn("is_verified", "integer", (col) => col.notNull().defaultTo(0))
+    .addColumn("verified_at", "integer")
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await db.schema
+    .createTable("notification_preferences")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("user_id", "integer", (col) =>
+      col.notNull().references("users.id").onDelete("cascade"),
+    )
+    .addColumn("event_type", "varchar(64)", (col) => col.notNull())
+    .addColumn("channel", "varchar(20)", (col) => col.notNull())
+    .addColumn("is_enabled", "integer", (col) => col.notNull().defaultTo(1))
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await db.schema
+    .createTable("notification_campaigns")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("type", "varchar(32)", (col) => col.notNull())
+    .addColumn("event_type", "varchar(64)", (col) => col.notNull())
+    .addColumn("audience_type", "varchar(20)", (col) => col.notNull())
+    .addColumn("audience_ref", "varchar(64)")
+    .addColumn("title", "varchar(255)")
+    .addColumn("body_text", "text", (col) => col.notNull())
+    .addColumn("created_by_user_id", "integer", (col) =>
+      col.references("users.id").onDelete("set null"),
+    )
+    .addColumn("status", "varchar(20)", (col) => col.notNull())
+    .addColumn("scheduled_at", "integer")
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("processed_at", "integer")
+    .execute();
+
+  await db.schema
+    .createTable("notification_recipients")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("campaign_id", "integer", (col) =>
+      col.notNull().references("notification_campaigns.id").onDelete("cascade"),
+    )
+    .addColumn("user_id", "integer", (col) =>
+      col.references("users.id").onDelete("set null"),
+    )
+    .addColumn("channel", "varchar(20)", (col) => col.notNull())
+    .addColumn("address", "varchar(255)", (col) => col.notNull())
+    .addColumn("status", "varchar(20)", (col) => col.notNull())
+    .addColumn("status_reason", "varchar(128)")
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("sent_at", "integer")
+    .addColumn("failed_at", "integer")
+    .execute();
+
+  await db.schema
+    .createTable("notification_jobs")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("recipient_id", "integer", (col) =>
+      col
+        .notNull()
+        .references("notification_recipients.id")
+        .onDelete("cascade"),
+    )
+    .addColumn("status", "varchar(20)", (col) => col.notNull())
+    .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
+    .addColumn("available_at", "integer", (col) => col.notNull())
+    .addColumn("lease_until", "integer")
+    .addColumn("last_error", "text")
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await db.schema
+    .createTable("notification_deliveries")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("recipient_id", "integer", (col) =>
+      col
+        .notNull()
+        .references("notification_recipients.id")
+        .onDelete("cascade"),
+    )
+    .addColumn("provider", "varchar(32)", (col) => col.notNull())
+    .addColumn("provider_message_id", "varchar(255)")
+    .addColumn("status", "varchar(20)", (col) => col.notNull())
+    .addColumn("error_code", "varchar(64)")
+    .addColumn("error_message", "text")
+    .addColumn("latency_ms", "integer")
     .addColumn("created_at", "integer", (col) => col.notNull())
     .execute();
 
@@ -262,6 +366,8 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
       col.notNull().references("branches.id"),
     )
     .addColumn("role", "text", (col) => col.notNull())
+    .addColumn("auth_method", "varchar(32)", (col) => col.notNull())
+    .addColumn("strong_auth_at", "integer")
     .addColumn("ip_address", "text")
     .addColumn("user_agent", "text")
     .addColumn("created_at", "integer", (col) => col.notNull())
@@ -296,9 +402,86 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
+    .createTable("user_totp_factors")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("user_id", "integer", (col) =>
+      col.notNull().references("users.id").onDelete("cascade"),
+    )
+    .addColumn("secret_encrypted", "text", (col) => col.notNull())
+    .addColumn("is_enabled", "integer", (col) => col.notNull().defaultTo(0))
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .addColumn("enabled_at", "integer")
+    .execute();
+
+  await db.schema
+    .createTable("user_totp_recovery_codes")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("user_id", "integer", (col) =>
+      col.notNull().references("users.id").onDelete("cascade"),
+    )
+    .addColumn("code_hash", "varchar(255)", (col) => col.notNull())
+    .addColumn("used_at", "integer")
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await db.schema
     .createIndex("idx_users_email")
     .on("users")
     .column("email")
+    .execute();
+  await db.schema
+    .createIndex("idx_users_onboarding")
+    .on("users")
+    .column("onboarding_completed_at")
+    .execute();
+  await db.schema
+    .createIndex("idx_notification_contacts_user_channel")
+    .on("notification_contacts")
+    .columns(["user_id", "channel"])
+    .execute();
+  await db.schema
+    .createIndex("idx_notification_contacts_channel_address")
+    .on("notification_contacts")
+    .columns(["channel", "address"])
+    .unique()
+    .execute();
+  await db.schema
+    .createIndex("idx_notification_prefs_user_event_channel")
+    .on("notification_preferences")
+    .columns(["user_id", "event_type", "channel"])
+    .unique()
+    .execute();
+  await db.schema
+    .createIndex("idx_notification_campaigns_status_scheduled")
+    .on("notification_campaigns")
+    .columns(["status", "scheduled_at"])
+    .execute();
+  await db.schema
+    .createIndex("idx_notification_recipients_campaign_status")
+    .on("notification_recipients")
+    .columns(["campaign_id", "status"])
+    .execute();
+  await db.schema
+    .createIndex("idx_notification_jobs_status_available")
+    .on("notification_jobs")
+    .columns(["status", "available_at"])
+    .execute();
+  await db.schema
+    .createIndex("idx_notification_jobs_lease_until")
+    .on("notification_jobs")
+    .column("lease_until")
+    .execute();
+  await db.schema
+    .createIndex("idx_notification_jobs_recipient")
+    .on("notification_jobs")
+    .column("recipient_id")
+    .unique()
+    .execute();
+  await db.schema
+    .createIndex("idx_notification_deliveries_recipient_created")
+    .on("notification_deliveries")
+    .columns(["recipient_id", "created_at"])
     .execute();
   await db.schema
     .createIndex("idx_organizations_ruc")
@@ -370,5 +553,16 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     .createIndex("idx_auth_events_outcome_created")
     .on("auth_events")
     .columns(["outcome", "created_at"])
+    .execute();
+  await db.schema
+    .createIndex("idx_totp_factors_user_id")
+    .on("user_totp_factors")
+    .column("user_id")
+    .unique()
+    .execute();
+  await db.schema
+    .createIndex("idx_totp_recovery_user_used")
+    .on("user_totp_recovery_codes")
+    .columns(["user_id", "used_at"])
     .execute();
 }

@@ -1,0 +1,12 @@
+{
+  "name": "@crm/notifications",
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "mjml": "^4.18.0",
+    "resend": "^6.9.2"
+  }
+}

@@ -1,6 +1,7 @@
 "use server";
 
 import { requireRole } from "~/lib/auth/access/session";
+import { assertRecentStrongAuth } from "~/lib/auth/security/step-up";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
 import { repos } from "~/server/shared/context";
 
@@ -25,7 +26,8 @@ export async function getUserLoginRetryReport(
   email: string,
 ): Promise<UserLoginRetryReport | null> {
   const safeEmail = assertNonEmptyString(email, "email").toLowerCase();
-  await requireRole("admin");
+  const session = await requireRole("admin");
+  assertRecentStrongAuth(session);
   const user = await repos.users.findByEmail(safeEmail);
   if (!user) return null;
 

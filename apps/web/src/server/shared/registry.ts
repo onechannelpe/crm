@@ -4,11 +4,18 @@ import type { Database } from "~/lib/db/schema";
 
 import { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
+import {
+  createUserTotpFactorsRepo,
+  createUserTotpRecoveryCodesRepo,
+} from "~/server/auth/repos-user-totp-factors";
 import { createContactsRepo } from "~/server/contacts/repos-contacts";
 import { createOrganizationsRepo } from "~/server/contacts/repos-organizations";
 import { createInventoryRepo } from "~/server/inventory/repos";
 import { createProductsRepo } from "~/server/inventory/repos-products";
 import { createLeadAssignmentsRepo } from "~/server/leads/repos";
+import { createNotificationCampaignsRepo } from "~/server/notifications/repos-campaigns";
+import { createNotificationContactsRepo } from "~/server/notifications/repos-contacts";
+import { createNotificationPreferencesRepo } from "~/server/notifications/repos-preferences";
 import { createQuotaAllocationsRepo } from "~/server/quota/repos";
 import { createChargeNotesRepo } from "~/server/sales/repos-charge-notes";
 import { createDocumentsRepo } from "~/server/sales/repos-documents";
@@ -30,6 +37,8 @@ export function createRepositories(db: Kysely<Database>) {
     sessions: createSessionRepository(db),
     authEvents: createAuthEventsRepo(db),
     authThrottle: createAuthThrottleRepo(db),
+    userTotpFactors: createUserTotpFactorsRepo(db),
+    userTotpRecoveryCodes: createUserTotpRecoveryCodesRepo(db),
     organizations: createOrganizationsRepo(db),
     contacts: createContactsRepo(db),
     leadAssignments: createLeadAssignmentsRepo(db),
@@ -39,6 +48,9 @@ export function createRepositories(db: Kysely<Database>) {
     rejectionLogs: createRejectionLogsRepo(db),
     interactionLogs: createInteractionLogsRepo(db),
     products: createProductsRepo(db),
+    notificationCampaigns: createNotificationCampaignsRepo(db),
+    notificationContacts: createNotificationContactsRepo(db),
+    notificationPreferences: createNotificationPreferencesRepo(db),
     inventory: createInventoryRepo(db),
     documents: createDocumentsRepo(db),
     auditLogs: createAuditLogsRepo(db),
