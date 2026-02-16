@@ -58,9 +58,21 @@ run = "bun --no-env-file --env-file=../../.env run --cwd apps/web check"
 description = "Run engine type/build checks"
 run = "cargo check --manifest-path apps/engine/Cargo.toml"
 
+[tasks.format]
+description = "Format all JS/TS files"
+run = "bun run format"
+
+[tasks.format-check]
+description = "Check JS/TS formatting"
+run = "bun run format:check"
+
 [tasks.check]
-description = "Run root checks"
-depends = ["check-engine-contract", "check-web", "check-engine"]
+description = "Run all checks"
+depends = ["check-engine-contract", "check-web", "check-engine", "format-check"]
+
+[tasks.download-docs]
+description = "Download framework docs for LLM context"
+run = "bun run --cwd packages/download-docs download"
 
 [tasks.engine-clippy]
 description = "Run Clippy for the engine crate"

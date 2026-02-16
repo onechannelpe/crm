@@ -7,27 +7,15 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "mise run dev-web ::: dev-engine",
-    "dev:web": "bun --no-env-file --env-file=../../.env run --cwd apps/web dev",
-    "check:web": "bun --no-env-file --env-file=../../.env run --cwd apps/web check",
-    "generate:engine-contract": "bun run scripts/generate-engine-contract.ts",
-    "check:engine-contract": "bun run scripts/generate-engine-contract.ts --check",
-    "check": "bun run check:engine-contract && bun run check:web"
-    "clean": "bun x shx rm -rf apps/web/*.db* apps/*/node_modules node_modules",
-    "dev": "bun run --parallel dev:engine dev:web",
-    "dev:web": "bun --filter='@crm/web' --no-env-file --env-file=../../.env run dev",
-    "dev:engine": "cargo run --manifest-path apps/engine/Cargo.toml",
-    "generate:engine-contract": "bun run scripts/generate-engine-contract.ts",
-    "check:engine-contract": "bun run scripts/generate-engine-contract.ts --check",
-    "check:web": "bun --filter='@crm/web' run check",
+    "check:web": "bun run --cwd apps/web check",
     "check:engine": "cargo check --manifest-path apps/engine/Cargo.toml",
+    "check:engine-contract": "bun run scripts/generate-engine-contract.ts --check",
     "check": "bun run check:engine-contract && bun run check:web && bun run check:engine && bun run format:check",
+    "generate:engine-contract": "bun run scripts/generate-engine-contract.ts",
     "format": "oxfmt apps/web packages scripts",
-    "format:check": "oxfmt --check apps/web packages scripts",
-    "download:solidjs-docs": "bun --filter='@crm/download-docs' run download solidjs"
+    "format:check": "oxfmt --check apps/web packages scripts"
   },
   "devDependencies": {
-    "oxfmt": "^0.33.0",
-    "shx": "^0.4.0"
+    "oxfmt": "^0.33.0"
   }
 }
