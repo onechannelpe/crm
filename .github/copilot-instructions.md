@@ -40,13 +40,12 @@ Do not assume bug from error messages alone.
 
 ## WHEN writing TypeScript
 
-Use `satisfies` to enforce contracts without widening:
-
-- Prefer `satisfies` over type annotations and `as const` for configs (validation + autocomplete + narrow inference)
-- Catch key typos and invalid values at declaration site, not call site
-- Use `satisfies Record<K, V>` for dictionaries/maps (validate keys/values, keep literal specificity)
-- Use `satisfies` with template-literal types (validate formats, preserve literal)
-- End union/enum `switch` with `satisfies never` (exhaustiveness—adding case breaks compilation until handled)
+- Extract types from repo/service returns: `Awaited<ReturnType<typeof repos.foo.bar>>`
+- Use utility types: `Pick<T, K>`, `Omit<T, K>`, `Partial<T>` over manual type redefinition
+- Use `unknown` for external/untrusted data (errors, JSON parsing, API responses); narrow with type predicates `(value: unknown): value is Type`
+- Use `as const` for literal values to enable discriminated unions: `{ status: "ok" as const }`
+- Use `satisfies` for validation without widening: configs, `Record<K, V>` dictionaries, template literals
+- End union/enum `switch` with `satisfies never` for exhaustiveness checks
 
 ## WHEN writing documentation
 
