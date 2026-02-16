@@ -16,6 +16,7 @@ import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import { getErrorMessage } from "~/lib/errors";
+import { runOptimistic } from "~/lib/ui/run-optimistic";
 
 export default function NewSalePage() {
   const navigate = useNavigate();
@@ -33,14 +34,21 @@ export default function NewSalePage() {
   const [docSizeKb, setDocSizeKb] = createSignal("400");
   const { showToast } = useToast();
 
-  const [products] = createResource(getAvailableProducts);
+  const [products] = createResource(
+    () => true,
+    async () => getAvailableProducts(),
+    { initialValue: [], ssrLoadFrom: "initial" },
+  );
+  const currentProducts = () => products.latest ?? [];
   const [inventory, { refetch: refetchInventory }] = createResource(
-    getAvailableInventory,
+    () => true,
+    async () => getAvailableInventory(),
+    { initialValue: [], ssrLoadFrom: "initial" },
   );
-  const [draft, { refetch: refetchDraft }] = createResource(
-    noteId,
-    getSaleDraftContext,
-  );
+  const currentInventory = () => inventory.latest ?? [];
+  const [draft, { refetch: refetchDraft, mutate: mutateDraft }] =
+    createResource(noteId, getSaleDraftContext);
+  const currentDraft = () => draft.latest;
 
   async function handleCreate(e: Event) {
     e.preventDefault();
@@ -59,14 +67,43 @@ export default function NewSalePage() {
   async function handleAddItem() {
     const currentNoteId = noteId();
     if (!currentNoteId || !selectedProductId()) return;
+    const product = currentProducts().find(
+      (it) => it.id === Number(selectedProductId()),
+    );
+    if (!product) return;
     try {
-      await addSaleItem(
-        currentNoteId,
-        Number(selectedProductId()),
-        Number(quantity()),
-      );
+      const safeQuantity = Number(quantity());
+      await runOptimistic({
+        read: currentDraft,
+        write: (next) => {
+          mutateDraft(() => next);
+        },
+        optimistic: (prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            items: [
+              {
+                id: -Date.now(),
+                charge_note_id: currentNoteId,
+                product_id: product.id,
+                quantity: safeQuantity,
+                product_name: product.name,
+                product_category: product.category,
+              },
+              ...prev.items,
+            ],
+            readiness: { ...prev.readiness, hasItems: true },
+          };
+        },
+        commit: async () => {
+          await addSaleItem(currentNoteId, product.id, safeQuantity);
+        },
+        reconcile: () => {
+          void refetchDraft();
+        },
+      });
       showToast("success", "Producto agregado");
-      await refetchDraft();
     } catch (err: unknown) {
       showToast("error", getErrorMessage(err, "No se pudo agregar producto"));
     }
@@ -76,14 +113,40 @@ export default function NewSalePage() {
     const currentNoteId = noteId();
     if (!currentNoteId) return;
     try {
-      await addSaleDocument(
-        currentNoteId,
-        docName(),
-        docType(),
-        Number(docSizeKb()) * 1024,
-      );
+      const size = Number(docSizeKb()) * 1024;
+      await runOptimistic({
+        read: currentDraft,
+        write: (next) => {
+          mutateDraft(() => next);
+        },
+        optimistic: (prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            documents: [
+              {
+                id: -Date.now(),
+                charge_note_id: currentNoteId,
+                filename: docName(),
+                filepath: `pending://${docName()}`,
+                mimetype: docType(),
+                size,
+                version: 1,
+                created_at: Date.now(),
+              },
+              ...prev.documents,
+            ],
+            readiness: { ...prev.readiness, hasDocuments: true },
+          };
+        },
+        commit: async () => {
+          await addSaleDocument(currentNoteId, docName(), docType(), size);
+        },
+        reconcile: () => {
+          void refetchDraft();
+        },
+      });
       showToast("success", "Documento registrado");
-      await refetchDraft();
     } catch (err: unknown) {
       showToast(
         "error",
@@ -95,10 +158,41 @@ export default function NewSalePage() {
   async function handleLockInventory() {
     const currentNoteId = noteId();
     if (!currentNoteId || !selectedInventoryId()) return;
+    const selected = currentInventory().find(
+      (item) => item.id === Number(selectedInventoryId()),
+    );
+    if (!selected) return;
     try {
-      await lockSaleInventory(currentNoteId, Number(selectedInventoryId()));
+      const selectedId = selected.id;
+      await runOptimistic({
+        read: currentDraft,
+        write: (next) => {
+          mutateDraft(() => next);
+        },
+        optimistic: (prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            inventoryLock: {
+              id: -Date.now(),
+              inventory_item_id: selectedId,
+              charge_note_id: currentNoteId,
+              locked_at: Date.now(),
+              expires_at: Date.now() + 30 * 60 * 1000,
+              serial_number: selected.serial_number,
+              inventory_status: "reserved" as const,
+            },
+            readiness: { ...prev.readiness, hasInventoryLock: true },
+          };
+        },
+        commit: async () => {
+          await lockSaleInventory(currentNoteId, selectedId);
+        },
+        reconcile: async () => {
+          await Promise.all([refetchDraft(), refetchInventory()]);
+        },
+      });
       showToast("success", "Equipo reservado");
-      await Promise.all([refetchDraft(), refetchInventory()]);
     } catch (err: unknown) {
       showToast(
         "error",
@@ -176,7 +270,7 @@ export default function NewSalePage() {
                   onInput={(e) => setSelectedProductId(e.currentTarget.value)}
                 >
                   <option value="">Seleccionar producto</option>
-                  <For each={products() ?? []}>
+                  <For each={currentProducts()}>
                     {(product) => (
                       <option value={product.id}>{product.name}</option>
                     )}
@@ -233,7 +327,7 @@ export default function NewSalePage() {
                   onInput={(e) => setSelectedInventoryId(e.currentTarget.value)}
                 >
                   <option value="">Seleccionar serial</option>
-                  <For each={inventory() ?? []}>
+                  <For each={currentInventory()}>
                     {(item) => (
                       <option value={item.id}>
                         {item.serial_number} - {item.product_name}
@@ -251,7 +345,7 @@ export default function NewSalePage() {
               </div>
             </div>
 
-            <Show when={draft()}>
+            <Show when={currentDraft()}>
               {(ctx) => (
                 <div class="rounded border p-3 text-sm space-y-1">
                   <p>Items: {ctx().items.length}</p>

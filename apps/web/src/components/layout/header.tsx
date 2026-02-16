@@ -1,14 +1,12 @@
-import { createResource } from "solid-js";
-
-import { getMe } from "~/actions/auth-session";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import { HeaderNotificationsPanel } from "~/components/layout/header-notifications-panel";
 import { HeaderSearchPanel } from "~/components/layout/header-search-panel";
+import { useSession } from "~/components/providers/session-provider";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 
 export function Header() {
-  const [user] = createResource(getMe);
+  const { user } = useSession();
 
   return (
     <header class="h-14 bg-background border-b flex items-center justify-between px-6 sticky top-0 z-10">
