@@ -1,4 +1,5 @@
 import { existsSync } from "node:fs";
+
 import type { Result } from "../utils/result.ts";
 import { Ok, Err } from "../utils/result.ts";
 import { ensureCleanDirectory, copyDirectory } from "./file-system.ts";
@@ -8,7 +9,7 @@ const TEMP_DIR = ".temp-docs-clone";
 export async function downloadDocs(
   repoUrl: string,
   paths: string[],
-  destination: string
+  destination: string,
 ): Promise<Result<void, string>> {
   ensureCleanDirectory(TEMP_DIR);
 
@@ -29,16 +30,19 @@ export async function downloadDocs(
 
 async function cloneWithSparseCheckout(
   repoUrl: string,
-  paths: string[]
+  paths: string[],
 ): Promise<Result<void, string>> {
-  const initResult = Bun.spawnSync(["git", "init"], { cwd: TEMP_DIR, stdio: ["ignore", "pipe", "pipe"] });
+  const initResult = Bun.spawnSync(["git", "init"], {
+    cwd: TEMP_DIR,
+    stdio: ["ignore", "pipe", "pipe"],
+  });
   if (initResult.exitCode !== 0) {
     return Err(`Git init failed: ${initResult.stderr.toString()}`);
   }
 
   const configResult = Bun.spawnSync(
     ["git", "config", "core.sparseCheckout", "true"],
-    { cwd: TEMP_DIR, stdio: ["ignore", "pipe", "pipe"] }
+    { cwd: TEMP_DIR, stdio: ["ignore", "pipe", "pipe"] },
   );
   if (configResult.exitCode !== 0) {
     return Err(`Git config failed: ${configResult.stderr.toString()}`);
@@ -49,7 +53,7 @@ async function cloneWithSparseCheckout(
 
   const remoteResult = Bun.spawnSync(
     ["git", "remote", "add", "origin", repoUrl],
-    { cwd: TEMP_DIR, stdio: ["ignore", "pipe", "pipe"] }
+    { cwd: TEMP_DIR, stdio: ["ignore", "pipe", "pipe"] },
   );
   if (remoteResult.exitCode !== 0) {
     return Err(`Git remote add failed: ${remoteResult.stderr.toString()}`);
@@ -57,7 +61,7 @@ async function cloneWithSparseCheckout(
 
   const pullResult = Bun.spawnSync(
     ["git", "pull", "origin", "main", "--depth=1"],
-    { cwd: TEMP_DIR, stdio: ["ignore", "pipe", "pipe"] }
+    { cwd: TEMP_DIR, stdio: ["ignore", "pipe", "pipe"] },
   );
   if (pullResult.exitCode !== 0) {
     return Err(`Git pull failed: ${pullResult.stderr.toString()}`);

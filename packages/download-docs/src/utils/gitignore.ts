@@ -14,4 +14,3 @@ async function ensureDocsDirectoryGitignore(): Promise<void> {
     await Bun.write(docsGitignorePath, "*\n");
   }
 }
-

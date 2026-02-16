@@ -6,12 +6,14 @@ const AGENTS_MD_PATH = "AGENTS.md";
 export async function injectDocsIndex(
   markerStart: string,
   markerEnd: string,
-  indexContent: string
+  indexContent: string,
 ): Promise<Result<void, string>> {
   const content = await Bun.file(AGENTS_MD_PATH).text();
 
   if (!content.includes(markerStart) || !content.includes(markerEnd)) {
-    return Err(`Markers not found in AGENTS.md. Expected:\n${markerStart}\n${markerEnd}`);
+    return Err(
+      `Markers not found in AGENTS.md. Expected:\n${markerStart}\n${markerEnd}`,
+    );
   }
 
   const startIndex = content.indexOf(markerStart);

@@ -1,19 +1,25 @@
-import { getFrameworkConfig, getAllFrameworkConfigs, getFrameworkNames } from "./config/index.ts";
+import {
+  getFrameworkConfig,
+  getAllFrameworkConfigs,
+  getFrameworkNames,
+} from "./config/index.ts";
+import { injectDocsIndex } from "./core/agents-injector.ts";
 import { downloadDocs } from "./core/download.ts";
 import { buildCompactIndex } from "./core/index-builder.ts";
-import { injectDocsIndex } from "./core/agents-injector.ts";
-import { ensureDocsGitignored } from "./utils/gitignore.ts";
-import { getWorkspaceRoot } from "./utils/workspace.ts";
-import { isErr } from "./utils/result.ts";
 import type { FrameworkConfig } from "./core/types.ts";
+import { ensureDocsGitignored } from "./utils/gitignore.ts";
+import { isErr } from "./utils/result.ts";
+import { getWorkspaceRoot } from "./utils/workspace.ts";
 
 async function main(): Promise<void> {
   process.chdir(getWorkspaceRoot());
-  
+
   const args = process.argv.slice(2);
 
   if (args.length === 0) {
-    console.error("Usage: bun run docs:download <framework> | --all | <framework1,framework2,...>");
+    console.error(
+      "Usage: bun run docs:download <framework> | --all | <framework1,framework2,...>",
+    );
     console.error(`Available frameworks: ${getFrameworkNames().join(", ")}`);
     process.exit(1);
   }
@@ -55,7 +61,11 @@ async function processFramework(config: FrameworkConfig): Promise<void> {
   console.log(`\n  Processing ${config.name}...`);
 
   console.log(`  Downloading from ${config.gitRepo}...`);
-  const downloadResult = await downloadDocs(config.gitRepo, config.gitPaths, config.docsRoot);
+  const downloadResult = await downloadDocs(
+    config.gitRepo,
+    config.gitPaths,
+    config.docsRoot,
+  );
 
   if (isErr(downloadResult)) {
     console.error(`  Download failed: ${downloadResult.error}`);
@@ -66,14 +76,14 @@ async function processFramework(config: FrameworkConfig): Promise<void> {
   const indexContent = await buildCompactIndex(
     config.docsRoot,
     config.name,
-    config.transform
+    config.transform,
   );
 
   console.log(`  Injecting into AGENTS.md...`);
   const injectResult = await injectDocsIndex(
     config.markerStart,
     config.markerEnd,
-    indexContent
+    indexContent,
   );
 
   if (isErr(injectResult)) {
