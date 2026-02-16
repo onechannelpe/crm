@@ -128,6 +128,36 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
+    .createTable("app_notifications")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("user_id", "integer", (col) =>
+      col.notNull().references("users.id").onDelete("cascade"),
+    )
+    .addColumn("event_type", "varchar(64)", (col) => col.notNull())
+    .addColumn("priority", "varchar(16)", (col) => col.notNull())
+    .addColumn("title", "varchar(255)", (col) => col.notNull())
+    .addColumn("body_text", "text", (col) => col.notNull())
+    .addColumn("action_url", "varchar(255)")
+    .addColumn("dedupe_key", "varchar(255)")
+    .addColumn("metadata_json", "text")
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("read_at", "integer")
+    .execute();
+
+  await db.schema
+    .createIndex("idx_app_notifications_user_created")
+    .on("app_notifications")
+    .columns(["user_id", "created_at"])
+    .execute();
+
+  await db.schema
+    .createIndex("idx_app_notifications_dedupe")
+    .on("app_notifications")
+    .columns(["user_id", "dedupe_key"])
+    .unique()
+    .execute();
+
+  await db.schema
     .createTable("teams")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("branch_id", "integer", (col) =>
