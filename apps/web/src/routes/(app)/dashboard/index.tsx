@@ -1,15 +1,21 @@
-import { createResource, Show } from "solid-js";
+import { Show } from "solid-js";
 
 import { getMe } from "~/actions/auth-session";
 import { getDashboardStats } from "~/actions/dashboard";
 import { getQuotaStatus } from "~/actions/quota";
 import { QuotaDisplay } from "~/components/features/quota/quota-display";
 import { Card } from "~/components/ui/card";
+import { createAppQuery } from "~/lib/ui/create-app-query";
 
 export default function DashboardPage() {
-  const [user] = createResource(getMe);
-  const [quota] = createResource(getQuotaStatus);
-  const [stats] = createResource(getDashboardStats);
+  const [user] = createAppQuery(getMe, null);
+  const [quota] = createAppQuery(getQuotaStatus, { allocated: false });
+  const [stats] = createAppQuery(getDashboardStats, {
+    activeLeads: 0,
+    pendingSales: 0,
+    draftSales: 0,
+    approvedSales: 0,
+  });
   const quotaValues = () => {
     const current = quota();
     if (!current?.allocated) return null;

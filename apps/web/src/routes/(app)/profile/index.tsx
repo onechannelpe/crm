@@ -1,4 +1,4 @@
-import { createResource, createSignal, onMount, Show } from "solid-js";
+import { createSignal, onMount, Show } from "solid-js";
 
 import {
   beginPasskeyRegistration,
@@ -7,7 +7,7 @@ import {
   finishTotpEnrollment,
   getTotpStatus,
 } from "~/actions/auth";
-import { getMe } from "~/actions/auth-session";
+import { useSession } from "~/components/providers/session-provider";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
@@ -22,13 +22,17 @@ import {
   toRegistrationPayload,
 } from "~/lib/auth/passkey/browser";
 import { getErrorMessage } from "~/lib/errors";
+import { createAppQuery } from "~/lib/ui/create-app-query";
+import { runOptimistic } from "~/lib/ui/run-optimistic";
 
 export default function ProfilePage() {
-  const [user] = createResource(getMe);
+  const { user } = useSession();
   const [passkeySupported, setPasskeySupported] = createSignal(false);
   const [passkeyLoading, setPasskeyLoading] = createSignal(false);
   const [passkeyMessage, setPasskeyMessage] = createSignal("");
-  const [totpStatus, { refetch: refetchTotp }] = createResource(getTotpStatus);
+  const [totpStatus, { mutate: mutateTotpStatus, refetch: refetchTotp }] =
+    createAppQuery(getTotpStatus, { enabled: false });
+  const currentTotpStatus = () => totpStatus();
   const [totpLoading, setTotpLoading] = createSignal(false);
   const [totpMessage, setTotpMessage] = createSignal("");
   const [totpQrCode, setTotpQrCode] = createSignal("");
@@ -81,12 +85,22 @@ export default function ProfilePage() {
     setTotpMessage("");
     setTotpLoading(true);
     try {
-      const codes = await finishTotpEnrollment(totpCode());
+      let codes: string[] = [];
+      await runOptimistic({
+        read: currentTotpStatus,
+        write: (next) => mutateTotpStatus(() => next),
+        optimistic: (prev) => ({ ...prev, enabled: true }),
+        commit: async () => {
+          codes = await finishTotpEnrollment(totpCode());
+        },
+        reconcile: () => {
+          void refetchTotp();
+        },
+      });
       setRecoveryCodes(codes);
       setTotpQrCode("");
       setTotpCode("");
       setTotpMessage("TOTP activado. Guarda los códigos de recuperación.");
-      await refetchTotp();
     } catch (err: unknown) {
       setTotpMessage(getErrorMessage(err, "Código TOTP inválido"));
     } finally {
