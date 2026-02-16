@@ -3,18 +3,26 @@ import { createResource, createSignal, Show } from "solid-js";
 import { getQuotaStatus, allocateQuota } from "~/actions/quota";
 import { QuotaDisplay } from "~/components/features/quota/quota-display";
 import { useToast } from "~/components/feedback/toast-provider";
+import { useSession } from "~/components/providers/session-provider";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { getErrorMessage } from "~/lib/errors";
+import { runOptimistic } from "~/lib/ui/run-optimistic";
 
 export default function QuotaPage() {
-  const [quota, { refetch }] = createResource(getQuotaStatus);
+  const [quota, { mutate, refetch }] = createResource(
+    () => true,
+    async () => getQuotaStatus(),
+    { initialValue: { allocated: false }, ssrLoadFrom: "initial" },
+  );
+  const currentQuota = () => quota.latest ?? { allocated: false };
+  const { user } = useSession();
   const [execId, setExecId] = createSignal("");
   const [amount, setAmount] = createSignal("10");
   const [loading, setLoading] = createSignal(false);
   const { showToast } = useToast();
   const quotaValues = () => {
-    const current = quota();
+    const current = currentQuota();
     if (!current?.allocated) return null;
     return { used: current.used, total: current.total };
   };
@@ -23,9 +31,32 @@ export default function QuotaPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      await allocateQuota(Number(execId()), Number(amount()));
+      const targetExecutiveId = Number(execId());
+      const safeAmount = Number(amount());
+      await runOptimistic({
+        read: currentQuota,
+        write: (next) => mutate(() => next),
+        optimistic: (prev) => {
+          if (!prev.allocated) {
+            return prev;
+          }
+          if (user()?.id !== targetExecutiveId) {
+            return prev;
+          }
+          return {
+            ...prev,
+            total: prev.total + safeAmount,
+            remaining: prev.remaining + safeAmount,
+          };
+        },
+        commit: async () => {
+          await allocateQuota(targetExecutiveId, safeAmount);
+        },
+        reconcile: () => {
+          void refetch();
+        },
+      });
       showToast("success", "Cuota asignada correctamente");
-      await refetch();
       setExecId("");
       setAmount("10");
     } catch (err: unknown) {
@@ -49,7 +80,7 @@ export default function QuotaPage() {
           <QuotaDisplay used={values().used} total={values().total} />
         )}
       </Show>
-      <Show when={!quota()?.allocated}>
+      <Show when={!currentQuota().allocated}>
         <div class="bg-white border border-gray-200 rounded-lg p-4">
           <p class="text-sm text-gray-500">
             Sin cuota asignada por el momento.
