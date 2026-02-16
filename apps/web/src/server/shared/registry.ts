@@ -25,6 +25,7 @@ import { createRejectionLogsRepo } from "~/server/sales/repos-rejections";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
 import { createBranchesRepo } from "~/server/users/repos-branches";
 import { createPasskeysRepo } from "~/server/users/repos-passkeys";
+import { createTeamsRepo } from "~/server/users/repos-teams";
 import { createUsersRepo } from "~/server/users/repos-users";
 import { createWebauthnChallengesRepo } from "~/server/users/repos-webauthn-challenges";
 
@@ -60,6 +61,7 @@ export function createRepositories(db: Kysely<Database>) {
     passkeys: createPasskeysRepo(db),
     webauthnChallenges: createWebauthnChallengesRepo(db),
     branches: createBranchesRepo(db),
+    teams: createTeamsRepo(db),
   };
 }
 
