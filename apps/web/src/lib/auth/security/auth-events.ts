@@ -1,0 +1,39 @@
+import type { Repositories } from "~/server/shared/registry";
+
+import { hashAuthKey } from "~/lib/auth/password/key-hash";
+
+type Deps = Pick<Repositories, "authEvents">;
+
+export type AuthEventMethod = "password" | "passkey";
+export type AuthEventStage = "login" | "challenge" | "verify";
+export type AuthEventOutcome = "success" | "failure" | "throttled";
+
+function normalize(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+interface AuthEventInput {
+  userId: number | null;
+  identifier: string;
+  ipAddress: string;
+  method: AuthEventMethod;
+  stage: AuthEventStage;
+  outcome: AuthEventOutcome;
+  reason?: string | null;
+}
+
+export async function recordAuthEvent(
+  deps: Deps,
+  input: AuthEventInput,
+): Promise<void> {
+  await deps.authEvents.create({
+    user_id: input.userId,
+    method: input.method,
+    stage: input.stage,
+    outcome: input.outcome,
+    reason: input.reason ?? null,
+    identifier_hash: hashAuthKey(`id:${normalize(input.identifier)}`),
+    ip_hash: hashAuthKey(`ip:${input.ipAddress}`),
+    created_at: Date.now(),
+  });
+}

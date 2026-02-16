@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { getUserLoginRetryReport } from "../../src/actions/admin-auth-security";
 import {
   listUserSessions,
   revokeUserSession,
@@ -38,6 +39,9 @@ describe("action guards fail fast", () => {
     ).rejects.toThrow("rejections.field_id is required");
     await expect(revokeUserSession("   ", 1)).rejects.toThrow(
       "sessionId is required",
+    );
+    await expect(getUserLoginRetryReport("   ")).rejects.toThrow(
+      "email is required",
     );
   });
 
