@@ -1,10 +1,16 @@
 import { useNavigate } from "@solidjs/router";
-import { createSignal, Show } from "solid-js";
+import { createSignal, onMount, Show } from "solid-js";
 
+import { beginPasskeyLogin, finishPasskeyLogin } from "~/actions/auth";
 import { login } from "~/actions/auth-login";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
+import {
+  isPasskeySupported,
+  toAuthenticationPayload,
+  toRequestOptions,
+} from "~/lib/auth/passkey/browser";
 import { getErrorMessage } from "~/lib/errors";
 
 export default function LoginPage() {
@@ -13,6 +19,12 @@ export default function LoginPage() {
   const [password, setPassword] = createSignal("");
   const [error, setError] = createSignal("");
   const [loading, setLoading] = createSignal(false);
+  const [passkeyLoading, setPasskeyLoading] = createSignal(false);
+  const [passkeySupported, setPasskeySupported] = createSignal(false);
+
+  onMount(() => {
+    setPasskeySupported(isPasskeySupported());
+  });
 
   async function handleSubmit(e: Event) {
     e.preventDefault();
@@ -26,6 +38,38 @@ export default function LoginPage() {
       setError(getErrorMessage(err, "Credenciales inválidas"));
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handlePasskeyLogin() {
+    setError("");
+    setPasskeyLoading(true);
+
+    try {
+      if (!isPasskeySupported()) {
+        throw new Error("Este dispositivo no soporta passkeys");
+      }
+
+      if (!email().trim()) {
+        throw new Error("Ingresa tu correo para usar passkey");
+      }
+
+      const challenge = await beginPasskeyLogin(email());
+      const credential = await navigator.credentials.get({
+        publicKey: toRequestOptions(challenge.options),
+      });
+
+      if (!(credential instanceof PublicKeyCredential)) {
+        throw new Error("No se obtuvo una credencial válida");
+      }
+
+      const payload = toAuthenticationPayload(credential);
+      await finishPasskeyLogin(challenge.challengeId, payload);
+      navigate("/dashboard");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "No se pudo iniciar sesión con passkey"));
+    } finally {
+      setPasskeyLoading(false);
     }
   }
 
@@ -94,10 +138,28 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 class="w-full h-11 text-base bg-blue-600 hover:bg-blue-700 shadow-sm"
-                disabled={loading()}
+                disabled={loading() || passkeyLoading()}
               >
                 {loading() ? "Iniciando sesión..." : "Iniciar sesión"}
               </Button>
+              <Button
+                type="button"
+                variant="outline"
+                class="w-full h-11 text-base"
+                disabled={loading() || passkeyLoading() || !passkeySupported()}
+                onClick={() => {
+                  void handlePasskeyLogin();
+                }}
+              >
+                {passkeyLoading()
+                  ? "Validando passkey..."
+                  : "Iniciar con passkey"}
+              </Button>
+              <Show when={!passkeySupported()}>
+                <p class="text-xs text-muted-foreground text-center">
+                  Este dispositivo o navegador no soporta passkeys.
+                </p>
+              </Show>
             </form>
 
             <div class="text-center">
