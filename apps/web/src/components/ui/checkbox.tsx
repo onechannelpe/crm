@@ -1,4 +1,5 @@
 import { type JSX, splitProps } from "solid-js";
+
 import Check from "~/components/icons/check";
 import { cn } from "~/lib/utils";
 

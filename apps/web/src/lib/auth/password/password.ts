@@ -1,8 +1,7 @@
 import { hash, verify } from "@node-rs/argon2";
 
 /**
- * Hashes password using Argon2id (most secure variant).
- * Runtime-portable implementation that works on Node.js and Bun.
+ * Hashes password using Argon2id algorithm.
  * @param password - Plain text password
  * @returns Argon2id hash string
  */

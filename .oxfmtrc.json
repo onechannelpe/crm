@@ -10,6 +10,9 @@
   "arrowParens": "always",
   "bracketSameLine": false,
   "bracketSpacing": true,
+  "experimentalSortImports": {
+    "newlinesBetween": true
+  },
   "ignorePatterns": [
     "apps/web/src/server/shared/engine/contract.ts"
   ]

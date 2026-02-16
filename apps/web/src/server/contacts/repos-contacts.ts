@@ -1,4 +1,5 @@
 import type { Kysely } from "kysely";
+
 import type { Database } from "~/lib/db/schema";
 
 export function createContactsRepo(db: Kysely<Database>) {

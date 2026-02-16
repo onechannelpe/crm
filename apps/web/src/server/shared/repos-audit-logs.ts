@@ -1,4 +1,5 @@
 import type { Kysely } from "kysely";
+
 import type { Database, NewAuditLog } from "~/lib/db/schema";
 
 export function createAuditLogsRepo(db: Kysely<Database>) {

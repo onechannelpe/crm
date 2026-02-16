@@ -1,9 +1,10 @@
 import { createResource, createSignal, For } from "solid-js";
+
 import { getProductCatalog, updateProductPricing } from "~/actions/settings";
-import { Card } from "~/components/ui/card";
-import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
 import { useToast } from "~/components/feedback/toast-provider";
+import { Button } from "~/components/ui/button";
+import { Card } from "~/components/ui/card";
+import { Input } from "~/components/ui/input";
 import { getErrorMessage } from "~/lib/errors";
 
 export default function SettingsPage() {

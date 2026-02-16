@@ -1,4 +1,6 @@
 import type { EngineClientConfig } from "~/server/shared/engine/config";
+import type { SearchResponse, SearchType } from "~/server/shared/engine/types";
+
 import {
   ENGINE_ENDPOINTS,
   engineApiPath,
@@ -6,7 +8,6 @@ import {
 import { validateSearchInput } from "~/server/shared/engine/input";
 import { signRequest } from "~/server/shared/engine/signature";
 import { assertSearchResponse } from "~/server/shared/engine/validation";
-import type { SearchResponse, SearchType } from "~/server/shared/engine/types";
 
 export interface EngineClient {
   search(

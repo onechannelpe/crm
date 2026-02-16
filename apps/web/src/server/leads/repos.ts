@@ -1,4 +1,5 @@
 import type { Kysely } from "kysely";
+
 import type { Database, NewLeadAssignment } from "~/lib/db/schema";
 
 export function createLeadAssignmentsRepo(db: Kysely<Database>) {

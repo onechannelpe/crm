@@ -1,5 +1,5 @@
-import { getSessionCookie } from "./cookies";
-import { validateSessionToken } from "./session-manager";
+import { getSessionCookie } from "../session/cookies";
+import { validateSessionToken } from "../session/session-manager";
 import { hasPermission, type Permission, type Role } from "./rbac";
 
 export interface SessionData {

@@ -1,4 +1,5 @@
 import type { JSX } from "solid-js";
+
 import { IconBase, type IconNode, type IconProps } from "./icon-base";
 
 export function createIcon(name: string, iconNode: IconNode) {

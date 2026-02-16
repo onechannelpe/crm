@@ -1,5 +1,6 @@
 import { A, useLocation } from "@solidjs/router";
 import { createResource, For } from "solid-js";
+
 import { getMe, logout } from "~/actions/auth-session";
 import ChevronDown from "~/components/icons/chevron-down";
 import House from "~/components/icons/house";

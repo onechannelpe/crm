@@ -1,11 +1,14 @@
+import type { Kysely } from "kysely";
+
 import { mkdir, rm } from "node:fs/promises";
 import { join } from "node:path";
-import type { Kysely } from "kysely";
-import { createDb } from "../../src/lib/db/client";
+
 import type { Database } from "../../src/lib/db/schema";
+
+import { createDb } from "../../src/lib/db/client";
 import { up } from "../../src/lib/db/migrations/001-initial";
-import { createRepositories } from "../../src/server/shared/registry";
 import { createSalesWorkflowService } from "../../src/server/sales/service";
+import { createRepositories } from "../../src/server/shared/registry";
 
 const ARTIFACT_DIR = join(process.cwd(), ".vitest-db");
 

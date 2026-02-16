@@ -1,4 +1,5 @@
 import type { JSX } from "solid-js";
+
 import Inbox from "~/components/icons/inbox";
 
 interface EmptyStateProps {
