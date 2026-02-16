@@ -1,4 +1,4 @@
-import { createResource, For, Show } from "solid-js";
+import { For, Show } from "solid-js";
 
 import { getInventoryItems } from "~/actions/inventory";
 import { EmptyState } from "~/components/feedback/empty-state";
@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
+import { createAppQuery } from "~/lib/ui/create-app-query";
 
 const statusLabels: Record<string, string> = {
   available: "Disponible",
@@ -32,7 +33,7 @@ const statusVariant = (status: string) => {
 };
 
 export default function InventoryPage() {
-  const [items] = createResource(getInventoryItems);
+  const [items] = createAppQuery(getInventoryItems, []);
 
   return (
     <div class="space-y-6">
