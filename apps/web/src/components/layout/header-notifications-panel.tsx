@@ -1,13 +1,19 @@
 import { useNavigate } from "@solidjs/router";
-import { createResource, createSignal, For, Show } from "solid-js";
+import { createResource, createSignal, For, Show, onMount } from "solid-js";
 
 import {
+  type HeaderNotificationFeed,
   getHeaderNotifications,
   markAllNotificationsRead,
   markNotificationRead,
 } from "~/actions/app-notifications";
 import Bell from "~/components/icons/bell";
 import { Button } from "~/components/ui/button";
+
+const EMPTY_FEED: HeaderNotificationFeed = {
+  unreadCount: 0,
+  notifications: [],
+};
 
 function priorityClass(priority: "high" | "normal" | "low"): string {
   if (priority === "high") return "border-l-red-500";
@@ -27,16 +33,56 @@ function formatTime(timestamp: number): string {
 export function HeaderNotificationsPanel() {
   const navigate = useNavigate();
   const [open, setOpen] = createSignal(false);
-  const [feed, { refetch }] = createResource(getHeaderNotifications);
+  const [feed, { mutate, refetch }] = createResource(
+    () => true,
+    async () => getHeaderNotifications(),
+    { initialValue: EMPTY_FEED, ssrLoadFrom: "initial" },
+  );
+  const currentFeed = () => feed.latest ?? EMPTY_FEED;
+
+  onMount(() => {
+    void refetch();
+  });
 
   const handleMarkAll = async () => {
-    await markAllNotificationsRead();
-    await refetch();
+    const now = Date.now();
+    mutate((prev) => ({
+      unreadCount: 0,
+      notifications: (prev?.notifications ?? []).map((item) => ({
+        ...item,
+        readAt: item.readAt ?? now,
+      })),
+    }));
+    try {
+      await markAllNotificationsRead();
+      void refetch();
+    } catch {
+      void refetch();
+    }
   };
 
   const handleOpenItem = async (id: number, actionUrl: string | null) => {
-    await markNotificationRead(id);
-    await refetch();
+    mutate((prev) => {
+      if (!prev) return prev;
+      let changed = false;
+      const notifications = prev.notifications.map((item) => {
+        if (item.id !== id || item.readAt) return item;
+        changed = true;
+        return { ...item, readAt: Date.now() };
+      });
+      return {
+        unreadCount: changed
+          ? Math.max(0, prev.unreadCount - 1)
+          : prev.unreadCount,
+        notifications,
+      };
+    });
+    try {
+      await markNotificationRead(id);
+      void refetch();
+    } catch {
+      void refetch();
+    }
     if (actionUrl) navigate(actionUrl);
   };
 
@@ -48,13 +94,12 @@ export function HeaderNotificationsPanel() {
         class="text-muted-foreground relative"
         onClick={() => {
           setOpen((prev) => !prev);
-          void refetch();
         }}
       >
         <Bell class="w-4 h-4" />
-        <Show when={(feed()?.unreadCount ?? 0) > 0}>
+        <Show when={currentFeed().unreadCount > 0}>
           <span class="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-destructive text-white text-[10px] leading-4 text-center">
-            {Math.min(feed()?.unreadCount ?? 0, 99)}
+            {Math.min(currentFeed().unreadCount, 99)}
           </span>
         </Show>
       </Button>
@@ -65,7 +110,7 @@ export function HeaderNotificationsPanel() {
             <Button
               variant="ghost"
               class="h-8 px-2 text-xs"
-              disabled={(feed()?.unreadCount ?? 0) === 0}
+              disabled={currentFeed().unreadCount === 0}
               onClick={() => {
                 void handleMarkAll();
               }}
@@ -75,14 +120,14 @@ export function HeaderNotificationsPanel() {
           </div>
           <div class="max-h-96 overflow-auto p-2 space-y-2">
             <Show
-              when={(feed()?.notifications.length ?? 0) > 0}
+              when={currentFeed().notifications.length > 0}
               fallback={
                 <p class="text-sm text-muted-foreground px-2 py-4">
                   Sin notificaciones por ahora.
                 </p>
               }
             >
-              <For each={feed()?.notifications ?? []}>
+              <For each={currentFeed().notifications}>
                 {(item) => (
                   <button
                     type="button"

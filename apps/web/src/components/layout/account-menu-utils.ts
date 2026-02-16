@@ -22,12 +22,12 @@ export function useMenuDismiss(
   };
 
   onMount(() => {
+    if (typeof document === "undefined") return;
     document.addEventListener("pointerdown", closeOnOutsideClick);
     document.addEventListener("keydown", closeOnEscape);
-  });
-
-  onCleanup(() => {
-    document.removeEventListener("pointerdown", closeOnOutsideClick);
-    document.removeEventListener("keydown", closeOnEscape);
+    onCleanup(() => {
+      document.removeEventListener("pointerdown", closeOnOutsideClick);
+      document.removeEventListener("keydown", closeOnEscape);
+    });
   });
 }
