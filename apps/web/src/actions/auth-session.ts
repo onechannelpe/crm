@@ -39,6 +39,8 @@ export interface CurrentUser {
   id: number;
   email: string;
   fullName: string;
+  phoneE164: string | null;
+  onboardingCompletedAt: number | null;
   role: Role;
   branchId: number;
 }
@@ -57,6 +59,8 @@ export async function getMe(): Promise<CurrentUser | null> {
     id: user.id,
     email: user.email,
     fullName: user.full_name,
+    phoneE164: user.phone_e164,
+    onboardingCompletedAt: user.onboarding_completed_at,
     role: session.role,
     branchId: user.branch_id,
   };

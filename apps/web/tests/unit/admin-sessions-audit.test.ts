@@ -46,6 +46,7 @@ describe("admin sessions audit contracts", () => {
       userId: 9001,
       branchId: 1,
       role: "admin",
+      onboardingCompleted: true,
       authMethod: "passkey",
       strongAuthAt: Date.now(),
     });

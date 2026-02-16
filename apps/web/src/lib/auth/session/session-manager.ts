@@ -120,6 +120,7 @@ export async function validateSessionToken(
         userId: cached.userId,
         branchId: cached.branchId,
         role: cached.role,
+        onboardingCompleted: cached.onboardingCompleted,
         authMethod: cached.authMethod,
         strongAuthAt: cached.strongAuthAt,
       },
@@ -157,6 +158,11 @@ export async function validateSessionToken(
     await sessions.delete(sessionId);
     return { session: null };
   }
+  if (!user) {
+    await sessions.delete(sessionId);
+    return { session: null };
+  }
+  const sessionUser = user;
 
   if (now - dbSession.last_activity > ACTIVITY_UPDATE_THRESHOLD) {
     sessions.updateActivity(sessionId, now).catch(console.error);
@@ -172,6 +178,7 @@ export async function validateSessionToken(
     userId: dbSession.user_id,
     branchId: dbSession.branch_id,
     role: dbSession.role,
+    onboardingCompleted: sessionUser.onboarding_completed_at !== null,
     authMethod: dbSession.auth_method,
     strongAuthAt: dbSession.strong_auth_at,
     expiresAt: dbSession.expires_at,
@@ -183,6 +190,7 @@ export async function validateSessionToken(
       userId: dbSession.user_id,
       branchId: dbSession.branch_id,
       role: dbSession.role,
+      onboardingCompleted: sessionUser.onboarding_completed_at !== null,
       authMethod: dbSession.auth_method,
       strongAuthAt: dbSession.strong_auth_at,
     },

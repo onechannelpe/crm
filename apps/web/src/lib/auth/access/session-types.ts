@@ -5,6 +5,7 @@ export interface AuthSession {
   userId: number;
   branchId: number;
   role: Role;
+  onboardingCompleted: boolean;
   authMethod: "password" | "password_totp" | "passkey";
   strongAuthAt: number | null;
 }

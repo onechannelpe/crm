@@ -26,6 +26,7 @@ export async function sendAlertOnNewLoginSource(params: {
   }
 
   await sendPrivilegedLoginAlert({
+    userId: params.user.id,
     email: params.user.email,
     fullName: params.user.full_name,
     role: params.user.role,

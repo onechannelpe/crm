@@ -52,11 +52,20 @@ export function createUsersRepo(db: Kysely<Database>) {
       email: string;
       password_hash: string;
       full_name: string;
+      phone_e164?: string | null;
       role: UserRole;
     }) {
       const result = await db
         .insertInto("users")
-        .values({ ...values, is_active: 1, created_at: Date.now() })
+        .values({
+          ...values,
+          is_active: 1,
+          phone_e164: values.phone_e164 ?? null,
+          phone_verified_at: null,
+          profile_confirmed_at: null,
+          onboarding_completed_at: null,
+          created_at: Date.now(),
+        })
         .executeTakeFirstOrThrow();
       return Number(result.insertId);
     },
@@ -65,6 +74,23 @@ export function createUsersRepo(db: Kysely<Database>) {
       return db
         .updateTable("users")
         .set({ password_hash: passwordHash })
+        .where("id", "=", id)
+        .execute();
+    },
+
+    completeOnboarding(
+      id: number,
+      values: { full_name: string; phone_e164: string; completedAt: number },
+    ) {
+      return db
+        .updateTable("users")
+        .set({
+          full_name: values.full_name,
+          phone_e164: values.phone_e164,
+          phone_verified_at: values.completedAt,
+          profile_confirmed_at: values.completedAt,
+          onboarding_completed_at: values.completedAt,
+        })
         .where("id", "=", id)
         .execute();
     },

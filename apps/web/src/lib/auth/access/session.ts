@@ -8,6 +8,7 @@ export interface SessionData {
   email?: string;
   role: Role;
   branchId: number;
+  onboardingCompleted: boolean;
   authMethod: "password" | "password_totp" | "passkey";
   strongAuthAt: number | null;
 }
@@ -24,6 +25,7 @@ export async function getSession(): Promise<SessionData | null> {
     userId: session.userId,
     role: session.role,
     branchId: session.branchId,
+    onboardingCompleted: session.onboardingCompleted,
     authMethod: session.authMethod,
     strongAuthAt: session.strongAuthAt,
   };
@@ -36,6 +38,18 @@ export async function requireAuth(): Promise<SessionData> {
     throw new Error("Unauthorized");
   }
 
+  if (!session.onboardingCompleted) {
+    throw new Error("Onboarding required");
+  }
+
+  return session;
+}
+
+export async function requireSession(): Promise<SessionData> {
+  const session = await getSession();
+  if (!session) {
+    throw new Error("Unauthorized");
+  }
   return session;
 }
 

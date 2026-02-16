@@ -21,6 +21,10 @@ export interface UsersTable {
   email: string;
   password_hash: string;
   full_name: string;
+  phone_e164: string | null;
+  phone_verified_at: number | null;
+  profile_confirmed_at: number | null;
+  onboarding_completed_at: number | null;
   role:
     | "executive"
     | "supervisor"
@@ -31,6 +35,80 @@ export interface UsersTable {
     | "admin"
     | "superuser";
   is_active: number;
+  created_at: number;
+}
+
+export interface NotificationContactsTable {
+  id: Generated<number>;
+  user_id: number;
+  channel: "email" | "whatsapp";
+  address: string;
+  is_primary: number;
+  is_verified: number;
+  verified_at: number | null;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface NotificationPreferencesTable {
+  id: Generated<number>;
+  user_id: number;
+  event_type: string;
+  channel: "email" | "whatsapp";
+  is_enabled: number;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface NotificationCampaignsTable {
+  id: Generated<number>;
+  type: "security_event" | "broadcast";
+  event_type: string;
+  audience_type: "user" | "role" | "global";
+  audience_ref: string | null;
+  title: string | null;
+  body_text: string;
+  created_by_user_id: number | null;
+  status: "queued" | "processing" | "completed" | "failed";
+  scheduled_at: number | null;
+  created_at: number;
+  processed_at: number | null;
+}
+
+export interface NotificationRecipientsTable {
+  id: Generated<number>;
+  campaign_id: number;
+  user_id: number | null;
+  channel: "email" | "whatsapp";
+  address: string;
+  status: "pending" | "sent" | "failed" | "skipped";
+  status_reason: string | null;
+  created_at: number;
+  sent_at: number | null;
+  failed_at: number | null;
+}
+
+export interface NotificationJobsTable {
+  id: Generated<number>;
+  recipient_id: number;
+  status: "pending" | "leased" | "sent" | "failed";
+  attempt_count: number;
+  available_at: number;
+  lease_until: number | null;
+  last_error: string | null;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface NotificationDeliveriesTable {
+  id: Generated<number>;
+  recipient_id: number;
+  provider: "resend" | "whatsapp_cloud";
+  provider_message_id: string | null;
+  status: "sent" | "failed";
+  error_code: string | null;
+  error_message: string | null;
+  latency_ms: number | null;
   created_at: number;
 }
 
@@ -254,6 +332,12 @@ export interface Database {
   branches: BranchesTable;
   teams: TeamsTable;
   users: UsersTable;
+  notification_contacts: NotificationContactsTable;
+  notification_preferences: NotificationPreferencesTable;
+  notification_campaigns: NotificationCampaignsTable;
+  notification_recipients: NotificationRecipientsTable;
+  notification_jobs: NotificationJobsTable;
+  notification_deliveries: NotificationDeliveriesTable;
   user_sessions: UserSessionsTable;
   auth_throttle_counters: AuthThrottleCountersTable;
   auth_events: AuthEventsTable;
@@ -279,6 +363,12 @@ export interface Database {
 
 export type Branch = Selectable<BranchesTable>;
 export type User = Selectable<UsersTable>;
+export type NotificationContact = Selectable<NotificationContactsTable>;
+export type NotificationPreference = Selectable<NotificationPreferencesTable>;
+export type NotificationCampaign = Selectable<NotificationCampaignsTable>;
+export type NotificationRecipient = Selectable<NotificationRecipientsTable>;
+export type NotificationJob = Selectable<NotificationJobsTable>;
+export type NotificationDelivery = Selectable<NotificationDeliveriesTable>;
 export type Organization = Selectable<OrganizationsTable>;
 export type Contact = Selectable<ContactsTable>;
 export type LeadAssignment = Selectable<LeadAssignmentsTable>;
@@ -301,6 +391,13 @@ export type UserTotpFactor = Selectable<UserTotpFactorsTable>;
 export type UserTotpRecoveryCode = Selectable<UserTotpRecoveryCodesTable>;
 
 export type NewUser = Insertable<UsersTable>;
+export type NewNotificationContact = Insertable<NotificationContactsTable>;
+export type NewNotificationPreference =
+  Insertable<NotificationPreferencesTable>;
+export type NewNotificationCampaign = Insertable<NotificationCampaignsTable>;
+export type NewNotificationRecipient = Insertable<NotificationRecipientsTable>;
+export type NewNotificationJob = Insertable<NotificationJobsTable>;
+export type NewNotificationDelivery = Insertable<NotificationDeliveriesTable>;
 export type NewUserSession = Insertable<UserSessionsTable>;
 export type NewAuthThrottleCounter = Insertable<AuthThrottleCountersTable>;
 export type NewAuthEvent = Insertable<AuthEventsTable>;

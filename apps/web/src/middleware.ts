@@ -8,5 +8,7 @@ export default createMiddleware({
     const decision = await enforceAuthRequest(event);
     if (decision.kind === "reject") return decision.response;
     if (decision.kind === "redirect_login") return redirect("/login");
+    if (decision.kind === "redirect_onboarding") return redirect("/onboarding");
+    if (decision.kind === "redirect_dashboard") return redirect("/dashboard");
   },
 });
