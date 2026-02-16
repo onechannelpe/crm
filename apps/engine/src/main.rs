@@ -19,8 +19,10 @@ fn load_root_env() {
 
 #[tokio::main]
 async fn main() -> Result<(), error::StartupError> {
+    let env_filter = tracing_subscriber::EnvFilter::try_from_default_env()
+        .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info"));
     tracing_subscriber::fmt()
-        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .with_env_filter(env_filter)
         .init();
 
     load_root_env();
@@ -28,6 +30,11 @@ async fn main() -> Result<(), error::StartupError> {
     let config = Config::load()?;
     let records = csv_loader::load(&config.data_path)?;
     let index = search_index::SearchIndex::build(&records);
+    if index.by_ruc.is_empty() {
+        return Err(error::StartupError::Config(
+            "engine dataset contains zero RUC entries".into(),
+        ));
+    }
 
     tracing::info!("loaded {} records, starting server", records.len());
 

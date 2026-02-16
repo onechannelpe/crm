@@ -63,6 +63,28 @@ export function createQuotaService(repos: Repositories) {
       return Ok(allocation.quota_amount - allocation.used_amount - amount);
     },
 
+    async refund(
+      userId: number,
+      amount: number = 1,
+    ): Promise<Result<void, string>> {
+      if (amount <= 0) return Ok(undefined);
+      const today = todayDateString();
+      const allocation = await repos.quotaAllocations.findByUserAndDate(
+        userId,
+        today,
+      );
+      if (!allocation) {
+        return Err("No quota allocated for today. Contact your supervisor.");
+      }
+      if (allocation.used_amount < amount) {
+        return Err(
+          `Cannot refund ${amount}. Used amount is ${allocation.used_amount}.`,
+        );
+      }
+      await repos.quotaAllocations.decrementUsage(allocation.id, amount);
+      return Ok(undefined);
+    },
+
     async getStatus(userId: number) {
       const today = todayDateString();
       const allocation = await repos.quotaAllocations.findByUserAndDate(

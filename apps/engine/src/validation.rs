@@ -19,13 +19,9 @@ pub fn validate_ruc(value: &str) -> Result<(), RequestError> {
 }
 
 pub fn validate_phone(value: &str) -> Result<(), RequestError> {
-    if value.len() < 7
-        || value.len() > 15
-        || !value.chars().all(|c| c.is_ascii_digit() || c == '+')
+    if value.len() < 7 || value.len() > 15 || !value.chars().all(|c| c.is_ascii_digit() || c == '+')
     {
-        return Err(RequestError::Validation(
-            "phone must be 7-15 digits".into(),
-        ));
+        return Err(RequestError::Validation("phone must be 7-15 digits".into()));
     }
     Ok(())
 }

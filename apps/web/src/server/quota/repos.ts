@@ -32,5 +32,13 @@ export function createQuotaAllocationsRepo(db: Kysely<Database>) {
         .where("id", "=", id)
         .execute();
     },
+
+    decrementUsage(id: number, amount: number) {
+      return db
+        .updateTable("quota_allocations")
+        .set((eb) => ({ used_amount: eb("used_amount", "-", amount) }))
+        .where("id", "=", id)
+        .execute();
+    },
   };
 }

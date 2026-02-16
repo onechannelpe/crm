@@ -6,6 +6,7 @@ import { getQuotaStatus } from "~/actions/quota";
 import { LeadList } from "~/components/features/leads/lead-list";
 import { RequestLeadsButton } from "~/components/features/leads/request-leads-button";
 import { QuotaDisplay } from "~/components/features/quota/quota-display";
+import { EmptyState } from "~/components/feedback/empty-state";
 import { runOptimistic } from "~/lib/ui/run-optimistic";
 
 export default function LeadsPage() {
@@ -30,8 +31,9 @@ export default function LeadsPage() {
   };
 
   const handleRequestLeads = async () => {
-    await requestLeads();
+    const result = await requestLeads();
     void Promise.all([refetchQuota(), refetchLeads()]);
+    return result.assigned;
   };
 
   const handleCreateSale = (contactId: number) => {
@@ -71,13 +73,23 @@ export default function LeadsPage() {
         )}
       </Show>
 
-      <LeadList
-        contacts={currentLeads()}
-        onCreateSale={handleCreateSale}
-        onComplete={(assignmentId) => {
-          void handleComplete(assignmentId);
-        }}
-      />
+      <Show
+        when={!leads.error}
+        fallback={
+          <EmptyState
+            title="No se pudieron cargar los leads"
+            description="Recarga la pagina para intentar nuevamente."
+          />
+        }
+      >
+        <LeadList
+          contacts={currentLeads()}
+          onCreateSale={handleCreateSale}
+          onComplete={(assignmentId) => {
+            void handleComplete(assignmentId);
+          }}
+        />
+      </Show>
     </div>
   );
 }

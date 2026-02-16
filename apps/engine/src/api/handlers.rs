@@ -34,9 +34,7 @@ pub async fn handle_search(
     Ok(Json(SearchResponse { results, count }))
 }
 
-pub async fn handle_health(
-    Extension(index): Extension<Arc<SearchIndex>>,
-) -> Json<HealthResponse> {
+pub async fn handle_health(Extension(index): Extension<Arc<SearchIndex>>) -> Json<HealthResponse> {
     Json(HealthResponse {
         status: "ok",
         records: index.record_count(),

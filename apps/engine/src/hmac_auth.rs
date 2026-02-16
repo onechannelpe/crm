@@ -1,6 +1,6 @@
 use crate::error::RequestError;
-use axum::{extract::Request, middleware::Next, response::Response};
 use ::hmac::{Hmac, Mac};
+use axum::{extract::Request, middleware::Next, response::Response};
 use sha2::Sha256;
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -47,10 +47,7 @@ impl HmacVerifier {
     }
 }
 
-pub async fn require_hmac(
-    request: Request,
-    next: Next,
-) -> Result<Response, RequestError> {
+pub async fn require_hmac(request: Request, next: Next) -> Result<Response, RequestError> {
     let verifier = request
         .extensions()
         .get::<Arc<HmacVerifier>>()
