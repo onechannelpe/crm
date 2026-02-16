@@ -12,17 +12,10 @@ interface SessionContextValue {
 const SessionContext = createContext<SessionContextValue>();
 
 export function SessionProvider(props: ParentProps) {
-  const [user] = createResource(
-    () => true,
-    async () => getMe(),
-    {
-      initialValue: null,
-      ssrLoadFrom: "initial",
-    },
-  );
+  const [user] = createResource(getMe);
 
   return (
-    <SessionContext.Provider value={{ user: () => user.latest ?? null }}>
+    <SessionContext.Provider value={{ user: () => user() ?? null }}>
       {props.children}
     </SessionContext.Provider>
   );
