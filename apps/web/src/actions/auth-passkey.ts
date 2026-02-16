@@ -32,6 +32,7 @@ export interface PasskeyChallengeResult {
 export interface PasskeyLoginResult {
   userId: number;
   role: Role;
+  onboardingCompleted: boolean;
 }
 
 export async function beginPasskeyLogin(
@@ -90,5 +91,9 @@ export async function finishPasskeyLogin(
     created_at: Date.now(),
   });
 
-  return { userId: user.id, role: user.role };
+  return {
+    userId: user.id,
+    role: user.role,
+    onboardingCompleted: user.onboarding_completed_at !== null,
+  };
 }

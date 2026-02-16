@@ -13,6 +13,7 @@ import { hashSessionToken } from "~/lib/auth/session/tokens";
 export interface LoginResult {
   userId: number;
   role: Role;
+  onboardingCompleted: boolean;
 }
 
 export async function login(
@@ -39,5 +40,9 @@ export async function login(
   });
   setSessionCookie(result.token);
 
-  return { userId: result.userId, role: result.role };
+  return {
+    userId: result.userId,
+    role: result.role,
+    onboardingCompleted: result.onboardingCompleted,
+  };
 }

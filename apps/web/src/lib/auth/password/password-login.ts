@@ -40,6 +40,7 @@ export interface PasswordLoginInput {
 export interface PasswordLoginResult {
   userId: number;
   role: Role;
+  onboardingCompleted: boolean;
   token: string;
 }
 
@@ -144,5 +145,10 @@ export async function authenticatePasswordLogin(
     reason: strongAuth.authMethod === "password_totp" ? "totp_verified" : null,
   });
 
-  return { userId: user.id, role: user.role, token };
+  return {
+    userId: user.id,
+    role: user.role,
+    onboardingCompleted: user.onboarding_completed_at !== null,
+    token,
+  };
 }

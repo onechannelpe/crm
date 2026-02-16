@@ -33,8 +33,8 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await login(email(), password(), totpCode());
-      navigate("/dashboard");
+      const result = await login(email(), password(), totpCode());
+      navigate(result.onboardingCompleted ? "/dashboard" : "/onboarding");
     } catch (err: unknown) {
       setError(getErrorMessage(err, "Credenciales inválidas"));
     } finally {
@@ -65,8 +65,8 @@ export default function LoginPage() {
       }
 
       const payload = toAuthenticationPayload(credential);
-      await finishPasskeyLogin(challenge.challengeId, payload);
-      navigate("/dashboard");
+      const result = await finishPasskeyLogin(challenge.challengeId, payload);
+      navigate(result.onboardingCompleted ? "/dashboard" : "/onboarding");
     } catch (err: unknown) {
       setError(getErrorMessage(err, "No se pudo iniciar sesión con passkey"));
     } finally {

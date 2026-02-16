@@ -114,13 +114,30 @@ export async function validateSessionToken(
       sessionCache.delete(sessionId);
       return { session: null };
     }
+    if (!user) {
+      await sessions.delete(sessionId);
+      sessionCache.delete(sessionId);
+      return { session: null };
+    }
+    const onboardingCompleted = user.onboarding_completed_at !== null;
+    if (cached.onboardingCompleted !== onboardingCompleted) {
+      sessionCache.set(sessionId, {
+        userId: cached.userId,
+        branchId: cached.branchId,
+        role: cached.role,
+        onboardingCompleted,
+        authMethod: cached.authMethod,
+        strongAuthAt: cached.strongAuthAt,
+        expiresAt: cached.expiresAt,
+      });
+    }
     return {
       session: {
         id: sessionId,
         userId: cached.userId,
         branchId: cached.branchId,
         role: cached.role,
-        onboardingCompleted: cached.onboardingCompleted,
+        onboardingCompleted,
         authMethod: cached.authMethod,
         strongAuthAt: cached.strongAuthAt,
       },
