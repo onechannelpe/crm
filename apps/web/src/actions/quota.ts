@@ -4,6 +4,7 @@ import type { ActionSuccess } from "~/lib/contracts/common";
 
 import { requirePermission } from "~/lib/auth/access/session";
 import { assertPositiveInt } from "~/lib/contracts/guards";
+import { appNotificationCenter } from "~/server/shared/context";
 import { quotaService } from "~/server/shared/context";
 import { repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
@@ -35,6 +36,15 @@ export async function allocateQuota(
   );
 
   if (isErr(result)) throw new Error(result.error);
+  await appNotificationCenter.notifyUsers([safeExecutiveId], {
+    type: "quota.assigned",
+    title: "Nueva cuota asignada",
+    bodyText: `Tu supervisor te asigno ${safeAmount} leads para hoy.`,
+    actionUrl: "/quota",
+    priority: "normal",
+    dedupeKey: `quota.assigned:${safeExecutiveId}:${new Date().toISOString().slice(0, 10)}`,
+    metadata: { executiveId: safeExecutiveId, amount: safeAmount },
+  });
   return { success: true };
 }
 

@@ -142,4 +142,33 @@ describe("sales workflow invariants", () => {
     const item = await ctx.repos.inventory.findById(1);
     expect(item?.status).toBe("sold");
   });
+
+  it("emits review notification on sale submission", async () => {
+    const noteId = await prepareSubmittableNote(ctx);
+    const submitted = await ctx.sales.submit(noteId, 1);
+    expect(submitted.ok).toBe(true);
+
+    const reviewerFeed = await ctx.repos.appNotifications.listByUser(2, 10);
+    expect(reviewerFeed.length).toBe(1);
+    expect(reviewerFeed[0]?.event_type).toBe("sale.submitted");
+    expect(reviewerFeed[0]?.action_url).toBe("/validation");
+  });
+
+  it("emits executive notification on rejection", async () => {
+    const noteId = await prepareSubmittableNote(ctx);
+    const submitted = await ctx.sales.submit(noteId, 1);
+    expect(submitted.ok).toBe(true);
+
+    const rejected = await ctx.sales.reject(noteId, 2, 1, false, [
+      { field_id: "dni_file", reviewer_note: "No legible" },
+    ]);
+    expect(rejected.ok).toBe(true);
+
+    const executiveFeed = await ctx.repos.appNotifications.listByUser(1, 10);
+    const rejection = executiveFeed.find(
+      (it) => it.event_type === "sale.rejected",
+    );
+    expect(rejection).toBeDefined();
+    expect(rejection?.action_url).toBe(`/sales/${noteId}/fix`);
+  });
 });

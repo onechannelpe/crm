@@ -7,6 +7,7 @@ import type { Database } from "../../src/lib/db/schema";
 
 import { createDb } from "../../src/lib/db/client";
 import { up as up001 } from "../../src/lib/db/migrations/001-initial";
+import { createAppNotificationCenter } from "../../src/server/notifications/app-center-service";
 import { createSalesWorkflowService } from "../../src/server/sales/service";
 import { createRepositories } from "../../src/server/shared/registry";
 
@@ -191,7 +192,10 @@ export async function createIsolatedTestDb(
   await up001(db);
   await seedTemplate(db);
   const repos = createRepositories(db);
-  const sales = createSalesWorkflowService(repos);
+  const notifications = createAppNotificationCenter({
+    repos: { appNotifications: repos.appNotifications, users: repos.users },
+  });
+  const sales = createSalesWorkflowService(repos, { notifications });
 
   return { dbPath, db, repos, sales };
 }

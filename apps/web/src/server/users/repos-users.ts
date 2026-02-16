@@ -39,6 +39,19 @@ export function createUsersRepo(db: Kysely<Database>) {
         .execute();
     },
 
+    findActiveIdsByBranchAndRoles(branchId: number, roles: UserRole[]) {
+      if (roles.length === 0)
+        return Promise.resolve([] as Array<{ id: number }>);
+      return db
+        .selectFrom("users")
+        .select("id")
+        .where("branch_id", "=", branchId)
+        .where("is_active", "=", 1)
+        .where("onboarding_completed_at", "is not", null)
+        .where("role", "in", roles)
+        .execute();
+    },
+
     findAllActive() {
       return db
         .selectFrom("users")

@@ -1,10 +1,15 @@
-import Bell from "~/components/icons/bell";
+import { createResource } from "solid-js";
+
+import { getMe } from "~/actions/auth-session";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
-import Search from "~/components/icons/search";
+import { HeaderNotificationsPanel } from "~/components/layout/header-notifications-panel";
+import { HeaderSearchPanel } from "~/components/layout/header-search-panel";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 
 export function Header() {
+  const [user] = createResource(getMe);
+
   return (
     <header class="h-14 bg-background border-b flex items-center justify-between px-6 sticky top-0 z-10">
       <div class="flex items-center gap-2 text-sm text-muted-foreground">
@@ -32,17 +37,8 @@ export function Header() {
         </div>
 
         <div class="flex items-center gap-2">
-          <Button variant="ghost" size="icon" class="text-muted-foreground">
-            <Search class="w-4 h-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            class="text-muted-foreground relative"
-          >
-            <Bell class="w-4 h-4" />
-            <span class="absolute top-2 right-2 w-1.5 h-1.5 bg-destructive rounded-full" />
-          </Button>
+          <HeaderSearchPanel role={user()?.role} />
+          <HeaderNotificationsPanel />
           <Button
             variant="ghost"
             size="icon"
