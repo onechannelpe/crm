@@ -13,7 +13,7 @@ describe("workspace label policy", () => {
       branch: { id: 1, name: "Lima" },
     });
 
-    expect(label).toBe("equipo de Diego");
+    expect(label).toBe("Equipo de Diego");
   });
 
   it("renders supervisor label from team name", () => {
@@ -26,7 +26,7 @@ describe("workspace label policy", () => {
       branch: { id: 1, name: "Lima" },
     });
 
-    expect(label).toBe("equipo Alpha");
+    expect(label).toBe("Equipo Alpha");
   });
 
   it("renders branch label for branch-scoped roles", () => {
@@ -39,7 +39,7 @@ describe("workspace label policy", () => {
       branch: { id: 1, name: "Lima" },
     });
 
-    expect(label).toBe("sucursal Lima");
+    expect(label).toBe("Sucursal Lima");
   });
 
   it("renders global label for superuser", () => {
@@ -52,6 +52,6 @@ describe("workspace label policy", () => {
       branch: null,
     });
 
-    expect(label).toBe("plataforma global");
+    expect(label).toBe("Plataforma global");
   });
 });
