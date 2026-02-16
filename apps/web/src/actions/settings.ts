@@ -1,11 +1,10 @@
 "use server";
 
-import type { ProductUpdatedChanges } from "~/lib/contracts/audit";
-import type { ActionSuccess } from "~/lib/contracts/common";
-
 import { requirePermission } from "~/lib/auth/access/session";
 import { assertRecentStrongAuth } from "~/lib/auth/security/step-up";
+import type { ProductUpdatedChanges } from "~/lib/contracts/audit";
 import { serializeAuditChanges } from "~/lib/contracts/audit";
+import type { ActionSuccess } from "~/lib/contracts/common";
 import {
   assertBoolean,
   assertFinitePositive,

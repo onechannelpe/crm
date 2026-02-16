@@ -1,6 +1,5 @@
-import type { Repositories } from "~/server/shared/registry";
-
 import { repos } from "~/server/shared/context";
+import type { Repositories } from "~/server/shared/registry";
 
 import { buildThrottleKeys } from "./throttle-keys";
 import {

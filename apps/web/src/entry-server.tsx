@@ -1,6 +1,5 @@
 // @refresh reload
 import type { DocumentComponentProps } from "@solidjs/start/server";
-
 import { createHandler, StartServer } from "@solidjs/start/server";
 
 import { migrateToLatest } from "~/lib/db/migrate";

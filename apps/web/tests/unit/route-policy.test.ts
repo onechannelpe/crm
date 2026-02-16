@@ -23,17 +23,19 @@ describe("route policy", () => {
   });
 
   it("filters search and sidebar routes by role", () => {
-    const executiveSearch = getSearchRoutes("executive").map((it) => it.href);
+    const executiveSearch = getSearchRoutes("executive").map(
+      (route) => route.href,
+    );
     expect(executiveSearch).toContain("/leads");
     expect(executiveSearch).not.toContain("/settings");
 
     const inventorySidebar = getSidebarRoutes("logistics", "inventory").map(
-      (it) => it.href,
+      (route) => route.href,
     );
     expect(inventorySidebar).toEqual(["/inventory"]);
 
     const salesSidebar = getSidebarRoutes("logistics", "sales").map(
-      (it) => it.href,
+      (route) => route.href,
     );
     expect(salesSidebar).toEqual([]);
   });

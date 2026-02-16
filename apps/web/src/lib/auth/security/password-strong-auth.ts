@@ -1,6 +1,3 @@
-import type { User } from "~/lib/db/schema";
-import type { Repositories } from "~/server/shared/registry";
-
 import {
   checkTotpVerifyThrottle,
   clearTotpVerifyFailureState,
@@ -9,6 +6,8 @@ import {
 import { matchesRecoveryCode } from "~/lib/auth/totp/recovery-codes";
 import { decryptTotpSecret } from "~/lib/auth/totp/secret-crypto";
 import { verifyTotpCode } from "~/lib/auth/totp/totp";
+import type { User } from "~/lib/db/schema";
+import type { Repositories } from "~/server/shared/registry";
 
 import { recordAuthEvent } from "./auth-events";
 import { isPrivilegedRole } from "./policy";

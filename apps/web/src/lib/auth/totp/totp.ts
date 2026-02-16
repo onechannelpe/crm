@@ -1,3 +1,5 @@
+import { randomBytes } from "node:crypto";
+
 import {
   decodeBase32IgnorePadding,
   encodeBase32UpperCaseNoPadding,
@@ -7,7 +9,6 @@ import {
   generateTOTP,
   verifyTOTPWithGracePeriod,
 } from "@oslojs/otp";
-import { randomBytes } from "node:crypto";
 
 const SECRET_BYTES = 20; // 160 bits per Copenhagen recommendations
 const PERIOD_SECONDS = 30;

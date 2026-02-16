@@ -1,6 +1,5 @@
-import type { Repositories } from "~/server/shared/registry";
-
 import { hashAuthKey } from "~/lib/auth/password/key-hash";
+import type { Repositories } from "~/server/shared/registry";
 
 type Deps = Pick<Repositories, "authEvents">;
 
