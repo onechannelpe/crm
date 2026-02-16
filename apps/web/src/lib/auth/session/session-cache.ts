@@ -1,4 +1,4 @@
-import type { Role } from "./rbac";
+import type { Role } from "../access/rbac";
 
 interface CachedSession {
   userId: number;

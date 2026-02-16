@@ -1,10 +1,12 @@
 import type { RouteSectionProps } from "@solidjs/router";
+
 import { Suspense } from "solid-js";
+
 import { Loading } from "~/components/feedback/loading";
 import { ToastContainer } from "~/components/feedback/toast";
 import { ToastProvider } from "~/components/feedback/toast-provider";
-import { Sidebar } from "~/components/layout/sidebar";
 import { Header } from "~/components/layout/header";
+import { Sidebar } from "~/components/layout/sidebar";
 
 export default function AppLayout(props: RouteSectionProps) {
   return (

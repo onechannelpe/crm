@@ -1,9 +1,11 @@
 // @refresh reload
 import type { DocumentComponentProps } from "@solidjs/start/server";
+
 import { createHandler, StartServer } from "@solidjs/start/server";
+
 import { migrateToLatest } from "~/lib/db/migrate";
 import { seedIfEmpty } from "~/lib/db/seed";
-import "~/lib/auth/cleanup";
+import "~/lib/auth/session/cleanup";
 
 await migrateToLatest();
 await seedIfEmpty();

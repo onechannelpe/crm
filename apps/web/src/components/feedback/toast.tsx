@@ -1,9 +1,11 @@
 import { For } from "solid-js";
 import { Portal } from "solid-js/web";
+
 import CircleAlert from "~/components/icons/circle-alert";
 import CircleCheckBig from "~/components/icons/circle-check-big";
 import Info from "~/components/icons/info";
 import X from "~/components/icons/x";
+
 import { useToast } from "./toast-provider";
 
 export function ToastContainer() {

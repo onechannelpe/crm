@@ -1,4 +1,5 @@
 import type { Kysely } from "kysely";
+
 import type { Database, NewRejectionLog } from "~/lib/db/schema";
 
 export function createRejectionLogsRepo(db: Kysely<Database>) {

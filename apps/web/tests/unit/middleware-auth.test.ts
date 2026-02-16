@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
+
+import type { AuthSession } from "../../src/lib/auth/access/session-types";
+
 import {
   enforceAuthRequest,
   isPublicPath,
   type AuthRequestDeps,
-} from "../../src/lib/auth/request-auth";
-import type { AuthSession } from "../../src/lib/auth/session-types";
+} from "../../src/lib/auth/access/request-auth";
 
 function createDeps(params: {
   token: string | null | undefined;

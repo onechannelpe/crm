@@ -1,4 +1,5 @@
 import type { NewLeadAssignment } from "~/lib/db/schema";
+
 import { config } from "~/lib/config";
 
 export function createAssignment(

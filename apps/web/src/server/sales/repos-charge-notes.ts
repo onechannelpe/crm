@@ -1,4 +1,5 @@
 import type { Kysely } from "kysely";
+
 import type { Database, ChargeNotesTable } from "~/lib/db/schema";
 
 type NoteStatus = ChargeNotesTable["status"];

@@ -1,7 +1,7 @@
 "use server";
 
+import { requirePermission } from "~/lib/auth/access/session";
 import { repos } from "~/server/shared/context";
-import { requirePermission } from "~/lib/auth/session";
 
 type InventoryItemWithProduct = Awaited<
   ReturnType<typeof repos.inventory.findAllWithProduct>

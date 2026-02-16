@@ -7,11 +7,11 @@ const mocks = vi.hoisted(() => ({
   auditCreate: vi.fn(),
 }));
 
-vi.mock("~/lib/auth/session", () => ({
+vi.mock("~/lib/auth/access/session", () => ({
   requireRole: mocks.requireRole,
 }));
 
-vi.mock("~/lib/auth/session-manager", () => ({
+vi.mock("~/lib/auth/session/session-manager", () => ({
   invalidateUserSessions: mocks.invalidateUserSessions,
 }));
 

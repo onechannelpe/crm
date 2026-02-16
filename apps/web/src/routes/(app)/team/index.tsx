@@ -1,7 +1,10 @@
 import { createResource, For, Show } from "solid-js";
+
 import { getTeamMembers } from "~/actions/team";
+import { EmptyState } from "~/components/feedback/empty-state";
 import Mail from "~/components/icons/mail";
 import User from "~/components/icons/user";
+import { Badge } from "~/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -10,9 +13,10 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
-import { Badge } from "~/components/ui/badge";
-import { EmptyState } from "~/components/feedback/empty-state";
-import { getRoleBadgeVariant, getRoleLabel } from "~/lib/auth/role-display";
+import {
+  getRoleBadgeVariant,
+  getRoleLabel,
+} from "~/lib/auth/access/role-display";
 
 export default function TeamPage() {
   const [members] = createResource(getTeamMembers);

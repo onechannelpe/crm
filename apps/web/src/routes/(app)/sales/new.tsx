@@ -1,5 +1,6 @@
-import { createResource, createSignal, For, Show } from "solid-js";
 import { useNavigate, useSearchParams } from "@solidjs/router";
+import { createResource, createSignal, For, Show } from "solid-js";
+
 import {
   addSaleDocument,
   addSaleItem,
@@ -10,10 +11,10 @@ import {
   lockSaleInventory,
   submitSale,
 } from "~/actions/sales";
-import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
-import { Card } from "~/components/ui/card";
 import { useToast } from "~/components/feedback/toast-provider";
+import { Button } from "~/components/ui/button";
+import { Card } from "~/components/ui/card";
+import { Input } from "~/components/ui/input";
 import { getErrorMessage } from "~/lib/errors";
 
 export default function NewSalePage() {

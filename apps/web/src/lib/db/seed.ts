@@ -1,5 +1,5 @@
+import { hashPassword } from "../auth/password/password";
 import { db } from "./db";
-import { hashPassword } from "../auth/password";
 
 export async function seedIfEmpty() {
   const userCount = await db

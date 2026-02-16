@@ -1,4 +1,5 @@
 import type { Kysely } from "kysely";
+
 import type { Database, UsersTable } from "~/lib/db/schema";
 
 type UserRole = UsersTable["role"];

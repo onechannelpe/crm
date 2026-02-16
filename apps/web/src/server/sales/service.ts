@@ -1,8 +1,9 @@
 import type { Repositories } from "~/server/shared/registry";
-import { createAuditService } from "~/server/shared/audit";
-import { canTransition } from "~/server/sales/domain";
-import { Ok, Err, type Result } from "~/server/shared/result";
+
 import { config } from "~/lib/config";
+import { canTransition } from "~/server/sales/domain";
+import { createAuditService } from "~/server/shared/audit";
+import { Ok, Err, type Result } from "~/server/shared/result";
 
 export function createSalesWorkflowService(repos: Repositories) {
   const audit = createAuditService(repos);

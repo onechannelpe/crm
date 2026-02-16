@@ -1,4 +1,5 @@
 import type { Kysely } from "kysely";
+
 import type { Database, NewUserSession, UserSession } from "~/lib/db/schema";
 
 export function createSessionRepository(db: Kysely<Database>) {

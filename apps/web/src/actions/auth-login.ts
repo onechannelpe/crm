@@ -1,12 +1,14 @@
 "use server";
 
-import { getSessionCookie, setSessionCookie } from "~/lib/auth/cookies";
-import { verifyPassword } from "~/lib/auth/password";
-import { createSession, invalidateSession } from "~/lib/auth/session-manager";
-import type { Role } from "~/lib/auth/rbac";
-import { hashSessionToken } from "~/lib/auth/tokens";
-import { repos } from "~/server/shared/context";
-import { assertNonEmptyString } from "~/lib/contracts/guards";
+import { getRequestEvent } from "solid-js/web";
+
+import type { Role } from "~/lib/auth/access/rbac";
+
+import { getClientIp } from "~/lib/auth/password/client-ip";
+import { authenticatePasswordLogin } from "~/lib/auth/password/password-login";
+import { getSessionCookie, setSessionCookie } from "~/lib/auth/session/cookies";
+import { invalidateSession } from "~/lib/auth/session/session-manager";
+import { hashSessionToken } from "~/lib/auth/session/tokens";
 
 export interface LoginResult {
   userId: number;
@@ -17,14 +19,9 @@ export async function login(
   email: string,
   password: string,
 ): Promise<LoginResult> {
-  const safeEmail = assertNonEmptyString(email, "email");
-  const safePassword = assertNonEmptyString(password, "password");
-  const user = await repos.users.findByEmail(safeEmail);
-  if (!user) throw new Error("Invalid credentials");
-  if (!user.is_active) throw new Error("Account disabled");
-
-  const valid = await verifyPassword(user.password_hash, safePassword);
-  if (!valid) throw new Error("Invalid credentials");
+  const event = getRequestEvent();
+  const ipAddress = getClientIp(event?.request.headers ?? new Headers());
+  const userAgent = event?.request.headers.get("user-agent") ?? null;
 
   const oldToken = getSessionCookie();
   if (oldToken) {
@@ -32,23 +29,13 @@ export async function login(
     await invalidateSession(oldSessionId).catch(() => {});
   }
 
-  const token = await createSession(
-    user.id,
-    user.branch_id,
-    user.role,
-    null,
-    null,
-  );
-  setSessionCookie(token);
-
-  await repos.auditLogs.create({
-    user_id: user.id,
-    action: "login",
-    entity_type: "user",
-    entity_id: user.id,
-    changes: null,
-    created_at: Date.now(),
+  const result = await authenticatePasswordLogin({
+    email,
+    password,
+    ipAddress,
+    userAgent,
   });
+  setSessionCookie(result.token);
 
-  return { userId: user.id, role: user.role };
+  return { userId: result.userId, role: result.role };
 }

@@ -1,11 +1,14 @@
 import { createResource, createSignal, For, Show } from "solid-js";
+
 import {
   approveSale,
   rejectSale,
   getPendingReviewNotes,
 } from "~/actions/sales";
-import { Button } from "~/components/ui/button";
 import { RejectionForm } from "~/components/features/sales/rejection-form";
+import { EmptyState } from "~/components/feedback/empty-state";
+import { useToast } from "~/components/feedback/toast-provider";
+import { Button } from "~/components/ui/button";
 import {
   Table,
   TableBody,
@@ -14,8 +17,6 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
-import { EmptyState } from "~/components/feedback/empty-state";
-import { useToast } from "~/components/feedback/toast-provider";
 import { getErrorMessage } from "~/lib/errors";
 
 function formatDate(timestamp: number) {

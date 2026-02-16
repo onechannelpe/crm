@@ -1,5 +1,6 @@
-import { createResource, Show } from "solid-js";
 import { useNavigate } from "@solidjs/router";
+import { createResource, Show } from "solid-js";
+
 import { requestLeads, getActiveLeads, completeLead } from "~/actions/leads";
 import { getQuotaStatus } from "~/actions/quota";
 import { LeadList } from "~/components/features/leads/lead-list";

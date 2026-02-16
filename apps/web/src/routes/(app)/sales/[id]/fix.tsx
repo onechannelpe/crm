@@ -1,9 +1,10 @@
 import { useParams, useNavigate } from "@solidjs/router";
 import { createResource, createSignal, For, Show } from "solid-js";
+
 import { getSaleFixContext, submitSale } from "~/actions/sales";
+import { useToast } from "~/components/feedback/toast-provider";
 import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
-import { useToast } from "~/components/feedback/toast-provider";
 import { getErrorMessage } from "~/lib/errors";
 
 export default function FixSalePage() {

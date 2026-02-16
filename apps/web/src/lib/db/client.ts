@@ -1,6 +1,7 @@
 import { createClient } from "@libsql/client";
-import { Kysely } from "kysely";
 import { LibsqlDialect } from "@libsql/kysely-libsql";
+import { Kysely } from "kysely";
+
 import type { Database as DatabaseSchema } from "./schema";
 
 export function createDb(path: string): Kysely<DatabaseSchema> {

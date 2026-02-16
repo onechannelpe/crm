@@ -1,9 +1,10 @@
 import { createResource, createSignal, Show } from "solid-js";
+
 import { getQuotaStatus, allocateQuota } from "~/actions/quota";
-import { Input } from "~/components/ui/input";
-import { Button } from "~/components/ui/button";
 import { QuotaDisplay } from "~/components/features/quota/quota-display";
 import { useToast } from "~/components/feedback/toast-provider";
+import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
 import { getErrorMessage } from "~/lib/errors";
 
 export default function QuotaPage() {

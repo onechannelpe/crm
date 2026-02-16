@@ -1,13 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { getPermissions, ROLES } from "../../src/lib/auth/rbac";
-import { createQuotaService } from "../../src/server/quota/service";
+
 import type { TestDbContext } from "../support/test-db";
-import { cleanupTestDb, createIsolatedTestDb } from "../support/test-db";
+
+import { getPermissions, ROLES } from "../../src/lib/auth/access/rbac";
+import { createQuotaService } from "../../src/server/quota/service";
 import {
   PERMISSION_MANIFEST,
   QUOTA_ERROR_MANIFEST,
   SALES_ERROR_MANIFEST,
 } from "../support/security-manifests";
+import { cleanupTestDb, createIsolatedTestDb } from "../support/test-db";
 
 async function prepareSubmittableNote(ctx: TestDbContext) {
   const noteId = await ctx.repos.chargeNotes.create(1, 1);
