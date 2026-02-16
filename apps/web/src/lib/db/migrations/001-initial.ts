@@ -270,6 +270,17 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
+    .createTable("auth_throttle_counters")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("scope", "varchar(20)", (col) => col.notNull())
+    .addColumn("key_hash", "varchar(64)", (col) => col.notNull())
+    .addColumn("window_started_at", "integer", (col) => col.notNull())
+    .addColumn("failure_count", "integer", (col) => col.notNull())
+    .addColumn("blocked_until", "integer")
+    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await db.schema
     .createIndex("idx_users_email")
     .on("users")
     .column("email")
@@ -313,5 +324,21 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     .createIndex("idx_user_sessions_expires_at")
     .on("user_sessions")
     .column("expires_at")
+    .execute();
+  await db.schema
+    .createIndex("idx_auth_throttle_scope_key")
+    .on("auth_throttle_counters")
+    .columns(["scope", "key_hash"])
+    .unique()
+    .execute();
+  await db.schema
+    .createIndex("idx_auth_throttle_blocked_until")
+    .on("auth_throttle_counters")
+    .column("blocked_until")
+    .execute();
+  await db.schema
+    .createIndex("idx_auth_throttle_updated_at")
+    .on("auth_throttle_counters")
+    .column("updated_at")
     .execute();
 }

@@ -17,11 +17,13 @@ import { createAgentStatusRepo } from "./repos-agent-status";
 import { createPasskeysRepo } from "~/server/users/repos-passkeys";
 import { createBranchesRepo } from "~/server/users/repos-branches";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
+import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 
 export function createRepositories(db: Kysely<Database>) {
   return {
     users: createUsersRepo(db),
     sessions: createSessionRepository(db),
+    authThrottle: createAuthThrottleRepo(db),
     organizations: createOrganizationsRepo(db),
     contacts: createContactsRepo(db),
     leadAssignments: createLeadAssignmentsRepo(db),

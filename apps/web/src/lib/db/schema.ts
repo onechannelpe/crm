@@ -208,11 +208,22 @@ export interface UserSessionsTable {
   expires_at: number;
 }
 
+export interface AuthThrottleCountersTable {
+  id: Generated<number>;
+  scope: "ip" | "account" | "ip_account";
+  key_hash: string;
+  window_started_at: number;
+  failure_count: number;
+  blocked_until: number | null;
+  updated_at: number;
+}
+
 export interface Database {
   branches: BranchesTable;
   teams: TeamsTable;
   users: UsersTable;
   user_sessions: UserSessionsTable;
+  auth_throttle_counters: AuthThrottleCountersTable;
   organizations: OrganizationsTable;
   contacts: ContactsTable;
   lead_assignments: LeadAssignmentsTable;
@@ -249,9 +260,11 @@ export type AgentStatusLog = Selectable<AgentStatusLogsTable>;
 export type AuditLog = Selectable<AuditLogsTable>;
 export type Passkey = Selectable<PasskeysTable>;
 export type UserSession = Selectable<UserSessionsTable>;
+export type AuthThrottleCounter = Selectable<AuthThrottleCountersTable>;
 
 export type NewUser = Insertable<UsersTable>;
 export type NewUserSession = Insertable<UserSessionsTable>;
+export type NewAuthThrottleCounter = Insertable<AuthThrottleCountersTable>;
 export type NewOrganization = Insertable<OrganizationsTable>;
 export type NewContact = Insertable<ContactsTable>;
 export type NewLeadAssignment = Insertable<LeadAssignmentsTable>;
