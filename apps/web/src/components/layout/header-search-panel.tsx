@@ -3,38 +3,19 @@ import { createMemo, createSignal, For, Show } from "solid-js";
 
 import Search from "~/components/icons/search";
 import { Button } from "~/components/ui/button";
-import { type Role, hasPermission } from "~/lib/auth/access/rbac";
+import { type Role } from "~/lib/auth/access/rbac";
+import { getSearchRoutes } from "~/lib/auth/access/route-policy";
 
 interface HeaderSearchPanelProps {
   role?: Role;
 }
 
-interface SearchItem {
-  label: string;
-  href: string;
-  permission?: Parameters<typeof hasPermission>[1];
-}
-
-const SEARCH_ITEMS: SearchItem[] = [
-  { label: "Inicio", href: "/dashboard" },
-  { label: "Leads", href: "/leads", permission: "leads:read" },
-  { label: "Cuotas", href: "/quota", permission: "quota:read" },
-  { label: "Validacion", href: "/validation", permission: "sales:review" },
-  { label: "Equipo", href: "/team", permission: "team:read" },
-  { label: "Inventario", href: "/inventory", permission: "inventory:read" },
-  { label: "Configuracion", href: "/settings" },
-];
-
 export function HeaderSearchPanel(props: HeaderSearchPanelProps) {
   const [open, setOpen] = createSignal(false);
   const [query, setQuery] = createSignal("");
   const visibleItems = createMemo(() => {
-    const role = props.role;
     const text = query().trim().toLowerCase();
-    return SEARCH_ITEMS.filter((it) => {
-      if (it.permission && (!role || !hasPermission(role, it.permission))) {
-        return false;
-      }
+    return getSearchRoutes(props.role).filter((it) => {
       if (!text) return true;
       return it.label.toLowerCase().includes(text) || it.href.includes(text);
     });

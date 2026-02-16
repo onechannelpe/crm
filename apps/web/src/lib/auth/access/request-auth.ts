@@ -3,6 +3,7 @@ import {
   validateSessionToken,
   type SessionValidationResult,
 } from "../session/session-manager";
+import { canAccessPath } from "./route-policy";
 
 export interface AuthRequestEvent {
   request: Request;
@@ -69,6 +70,10 @@ export async function enforceAuthRequest(
   }
 
   if (session.onboardingCompleted && url.pathname === "/onboarding") {
+    return { kind: "redirect_dashboard" };
+  }
+
+  if (!canAccessPath(session.role, url.pathname)) {
     return { kind: "redirect_dashboard" };
   }
 
