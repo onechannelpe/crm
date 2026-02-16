@@ -6,20 +6,32 @@ import { getQuotaStatus } from "~/actions/quota";
 import { LeadList } from "~/components/features/leads/lead-list";
 import { RequestLeadsButton } from "~/components/features/leads/request-leads-button";
 import { QuotaDisplay } from "~/components/features/quota/quota-display";
+import { runOptimistic } from "~/lib/ui/run-optimistic";
 
 export default function LeadsPage() {
   const navigate = useNavigate();
-  const [quota, { refetch: refetchQuota }] = createResource(getQuotaStatus);
-  const [leads, { refetch: refetchLeads }] = createResource(getActiveLeads);
+  const [quota, { refetch: refetchQuota }] = createResource(
+    () => true,
+    async () => getQuotaStatus(),
+    { initialValue: { allocated: false }, ssrLoadFrom: "initial" },
+  );
+  const currentQuota = () => quota.latest ?? { allocated: false };
+  const [leads, { mutate: mutateLeads, refetch: refetchLeads }] =
+    createResource(
+      () => true,
+      async () => getActiveLeads(),
+      { initialValue: [], ssrLoadFrom: "initial" },
+    );
+  const currentLeads = () => leads.latest ?? [];
   const quotaValues = () => {
-    const current = quota();
+    const current = currentQuota();
     if (!current?.allocated) return null;
     return { used: current.used, total: current.total };
   };
 
   const handleRequestLeads = async () => {
     await requestLeads();
-    await Promise.all([refetchQuota(), refetchLeads()]);
+    void Promise.all([refetchQuota(), refetchLeads()]);
   };
 
   const handleCreateSale = (contactId: number) => {
@@ -27,8 +39,18 @@ export default function LeadsPage() {
   };
 
   const handleComplete = async (assignmentId: number) => {
-    await completeLead(assignmentId);
-    await refetchLeads();
+    await runOptimistic({
+      read: currentLeads,
+      write: (next) => mutateLeads(() => next),
+      optimistic: (prev) =>
+        prev.filter((lead) => lead.assignmentId !== assignmentId),
+      commit: async () => {
+        await completeLead(assignmentId);
+      },
+      reconcile: () => {
+        void Promise.all([refetchLeads(), refetchQuota()]);
+      },
+    });
   };
 
   return (
@@ -37,7 +59,7 @@ export default function LeadsPage() {
         <div>
           <h1 class="text-2xl font-bold text-gray-900">Mis leads</h1>
           <p class="text-sm text-gray-500 mt-1">
-            {leads()?.length ?? 0} leads activos
+            {currentLeads().length} leads activos
           </p>
         </div>
         <RequestLeadsButton onRequest={handleRequestLeads} />
@@ -50,7 +72,7 @@ export default function LeadsPage() {
       </Show>
 
       <LeadList
-        contacts={leads() ?? []}
+        contacts={currentLeads()}
         onCreateSale={handleCreateSale}
         onComplete={(assignmentId) => {
           void handleComplete(assignmentId);

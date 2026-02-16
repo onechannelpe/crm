@@ -9,6 +9,7 @@ import {
 } from "~/actions/app-notifications";
 import Bell from "~/components/icons/bell";
 import { Button } from "~/components/ui/button";
+import { runOptimistic } from "~/lib/ui/run-optimistic";
 
 const EMPTY_FEED: HeaderNotificationFeed = {
   unreadCount: 0,
@@ -45,41 +46,58 @@ export function HeaderNotificationsPanel() {
   });
 
   const handleMarkAll = async () => {
-    const now = Date.now();
-    mutate((prev) => ({
-      unreadCount: 0,
-      notifications: (prev?.notifications ?? []).map((item) => ({
-        ...item,
-        readAt: item.readAt ?? now,
-      })),
-    }));
     try {
-      await markAllNotificationsRead();
-      void refetch();
+      await runOptimistic({
+        read: currentFeed,
+        write: (next) => mutate(() => next),
+        optimistic: (prev) => {
+          const now = Date.now();
+          return {
+            unreadCount: 0,
+            notifications: prev.notifications.map((item) => ({
+              ...item,
+              readAt: item.readAt ?? now,
+            })),
+          };
+        },
+        commit: async () => {
+          await markAllNotificationsRead();
+        },
+        reconcile: () => {
+          void refetch();
+        },
+      });
     } catch {
       void refetch();
     }
   };
 
   const handleOpenItem = async (id: number, actionUrl: string | null) => {
-    mutate((prev) => {
-      if (!prev) return prev;
-      let changed = false;
-      const notifications = prev.notifications.map((item) => {
-        if (item.id !== id || item.readAt) return item;
-        changed = true;
-        return { ...item, readAt: Date.now() };
-      });
-      return {
-        unreadCount: changed
-          ? Math.max(0, prev.unreadCount - 1)
-          : prev.unreadCount,
-        notifications,
-      };
-    });
     try {
-      await markNotificationRead(id);
-      void refetch();
+      await runOptimistic({
+        read: currentFeed,
+        write: (next) => mutate(() => next),
+        optimistic: (prev) => {
+          let changed = false;
+          const notifications = prev.notifications.map((item) => {
+            if (item.id !== id || item.readAt) return item;
+            changed = true;
+            return { ...item, readAt: Date.now() };
+          });
+          return {
+            unreadCount: changed
+              ? Math.max(0, prev.unreadCount - 1)
+              : prev.unreadCount,
+            notifications,
+          };
+        },
+        commit: async () => {
+          await markNotificationRead(id);
+        },
+        reconcile: () => {
+          void refetch();
+        },
+      });
     } catch {
       void refetch();
     }
