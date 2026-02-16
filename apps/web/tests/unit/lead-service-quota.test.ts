@@ -51,6 +51,7 @@ describe("lead service quota invariants", () => {
   });
 
   it("does not consume quota when engine health is down", async () => {
+    // oxlint-disable-next-line typescript-eslint/unbound-method
     vi.mocked(engineClient.health).mockResolvedValueOnce(false);
     const quota = createQuotaService(ctx.repos);
     const service = createLeadAssignmentService(ctx.repos);

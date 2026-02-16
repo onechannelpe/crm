@@ -6,7 +6,7 @@ import { createQuotaService } from "~/server/quota/service";
 import { createAuditService } from "~/server/shared/audit";
 import { engineClient } from "~/server/shared/engine";
 import type { Repositories } from "~/server/shared/registry";
-import { Ok, isErr, type Result } from "~/server/shared/result";
+import { Err, Ok, isErr, type Result } from "~/server/shared/result";
 
 export function createLeadAssignmentService(repos: Repositories) {
   const quotaService = createQuotaService(repos);
@@ -24,7 +24,9 @@ export function createLeadAssignmentService(repos: Repositories) {
       if (needed === 0) return Ok(0);
       const engineHealthy = await engineClient.health();
       if (!engineHealthy) {
-        return Err("Lead engine unavailable. Verify engine service and dataset.");
+        return Err(
+          "Lead engine unavailable. Verify engine service and dataset.",
+        );
       }
 
       const quotaResult = await quotaService.consume(userId, needed);
@@ -75,6 +77,7 @@ export function createLeadAssignmentService(repos: Repositories) {
         if (isErr(refundOnError)) {
           throw new Error(
             `Lead assignment failed and quota refund failed: ${refundOnError.error}`,
+            { cause: error },
           );
         }
         throw error;
