@@ -1,11 +1,9 @@
 "use server";
 
 import type { AuthenticationResponseJSON } from "@simplewebauthn/server";
-
 import { getRequestEvent } from "solid-js/web";
 
 import type { Role } from "~/lib/auth/access/rbac";
-
 import {
   beginPasskeyLoginFlow,
   finishPasskeyLoginFlow,

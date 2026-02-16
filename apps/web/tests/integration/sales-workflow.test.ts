@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import type { TestDbContext } from "../support/test-db";
-
 import { cleanupTestDb, createIsolatedTestDb } from "../support/test-db";
 
 async function prepareSubmittableNote(
@@ -166,7 +165,7 @@ describe("sales workflow invariants", () => {
 
     const executiveFeed = await ctx.repos.appNotifications.listByUser(1, 10);
     const rejection = executiveFeed.find(
-      (it) => it.event_type === "sale.rejected",
+      (evt) => evt.event_type === "sale.rejected",
     );
     expect(rejection).toBeDefined();
     expect(rejection?.action_url).toBe(`/sales/${noteId}/fix`);

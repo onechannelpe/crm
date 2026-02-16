@@ -1,5 +1,4 @@
 import type { NotificationsConfig } from "@crm/notifications";
-
 import { createNotificationService } from "@crm/notifications";
 
 import type { UsersTable } from "~/lib/db/schema";

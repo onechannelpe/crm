@@ -1,6 +1,5 @@
-import type { AuthThrottleEndpoint } from "./throttle-policy";
-
 import { hashAuthKey } from "./key-hash";
+import type { AuthThrottleEndpoint } from "./throttle-policy";
 
 function normalizeIdentifier(identifier: string): string {
   return identifier.trim().toLowerCase();

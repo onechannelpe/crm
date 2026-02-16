@@ -1,12 +1,11 @@
-import type { Kysely } from "kysely";
-
 import { mkdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 
-import type { Database } from "../../src/lib/db/schema";
+import type { Kysely } from "kysely";
 
 import { createDb } from "../../src/lib/db/client";
 import { up as up001 } from "../../src/lib/db/migrations/001-initial";
+import type { Database } from "../../src/lib/db/schema";
 import { createAppNotificationCenter } from "../../src/server/notifications/app-center-service";
 import { createSalesWorkflowService } from "../../src/server/sales/service";
 import { createRepositories } from "../../src/server/shared/registry";

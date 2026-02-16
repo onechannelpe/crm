@@ -3,8 +3,6 @@ import type {
   PublicKeyCredentialRequestOptionsJSON,
 } from "@simplewebauthn/server";
 
-import type { Repositories } from "~/server/shared/registry";
-
 import { checkPasskeyChallengeThrottle } from "~/lib/auth/password/throttle";
 import {
   checkPasskeyVerifyThrottle,
@@ -19,6 +17,7 @@ import {
   assertNonEmptyString,
   assertPositiveInt,
 } from "~/lib/contracts/guards";
+import type { Repositories } from "~/server/shared/registry";
 
 const INVALID_CREDENTIALS = "Invalid credentials";
 

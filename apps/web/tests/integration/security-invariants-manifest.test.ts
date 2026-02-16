@@ -1,7 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import type { TestDbContext } from "../support/test-db";
-
 import { getPermissions, ROLES } from "../../src/lib/auth/access/rbac";
 import { createQuotaService } from "../../src/server/quota/service";
 import {
@@ -9,6 +7,7 @@ import {
   QUOTA_ERROR_MANIFEST,
   SALES_ERROR_MANIFEST,
 } from "../support/security-manifests";
+import type { TestDbContext } from "../support/test-db";
 import { cleanupTestDb, createIsolatedTestDb } from "../support/test-db";
 
 async function prepareSubmittableNote(ctx: TestDbContext) {
