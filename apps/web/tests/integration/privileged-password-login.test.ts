@@ -59,7 +59,6 @@ describe("privileged password login", () => {
     expect(stored).toBeDefined();
     const code = generateCurrentTotpCode(
       await decryptTotpSecret(stored!.secret_encrypted),
-      email,
     );
 
     await authenticatePasswordLogin(

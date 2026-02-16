@@ -103,7 +103,6 @@ export async function authenticatePasswordLogin(
   await clearLoginFailureState(safeEmail, input.ipAddress, resolvedDeps);
   const strongAuth = await resolvePasswordStrongAuth({
     user,
-    email: safeEmail,
     ipAddress: input.ipAddress,
     totpCode: input.totpCode,
     deps: resolvedDeps,

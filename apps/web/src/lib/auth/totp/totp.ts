@@ -1,43 +1,50 @@
-import * as OTPAuth from "otpauth";
+import {
+  decodeBase32IgnorePadding,
+  encodeBase32UpperCaseNoPadding,
+} from "@oslojs/encoding";
+import {
+  createTOTPKeyURI,
+  generateTOTP,
+  verifyTOTPWithGracePeriod,
+} from "@oslojs/otp";
+import { randomBytes } from "node:crypto";
 
-export function generateTotpSecret(): string {
-  const secret = new OTPAuth.Secret({ size: 20 });
-  return secret.base32;
+const SECRET_BYTES = 20; // 160 bits per Copenhagen recommendations
+const PERIOD_SECONDS = 30;
+const DIGITS = 6;
+const GRACE_PERIOD_SECONDS = 30;
+
+function decodeSecret(secretBase32: string): Uint8Array {
+  return decodeBase32IgnorePadding(secretBase32);
 }
 
-function buildTotp(secretBase32: string, label: string): OTPAuth.TOTP {
-  return new OTPAuth.TOTP({
-    issuer: "OneChannel CRM",
-    label,
-    algorithm: "SHA1",
-    digits: 6,
-    period: 30,
-    secret: OTPAuth.Secret.fromBase32(secretBase32),
-  });
+export function generateTotpSecret(): string {
+  return encodeBase32UpperCaseNoPadding(randomBytes(SECRET_BYTES));
 }
 
 export function buildTotpProvisioningUri(
   secretBase32: string,
   email: string,
 ): string {
-  return buildTotp(secretBase32, email).toString();
+  return createTOTPKeyURI(
+    "OneChannel CRM",
+    email,
+    decodeSecret(secretBase32),
+    PERIOD_SECONDS,
+    DIGITS,
+  );
 }
 
-export function verifyTotpCode(
-  secretBase32: string,
-  email: string,
-  token: string,
-): boolean {
-  const delta = buildTotp(secretBase32, email).validate({
+export function verifyTotpCode(secretBase32: string, token: string): boolean {
+  return verifyTOTPWithGracePeriod(
+    decodeSecret(secretBase32),
+    PERIOD_SECONDS,
+    DIGITS,
     token,
-    window: 1,
-  });
-  return delta !== null;
+    GRACE_PERIOD_SECONDS,
+  );
 }
 
-export function generateCurrentTotpCode(
-  secretBase32: string,
-  email: string,
-): string {
-  return buildTotp(secretBase32, email).generate();
+export function generateCurrentTotpCode(secretBase32: string): string {
+  return generateTOTP(decodeSecret(secretBase32), PERIOD_SECONDS, DIGITS);
 }

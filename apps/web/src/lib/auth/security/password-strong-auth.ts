@@ -20,7 +20,6 @@ type Deps = Pick<
 
 export async function resolvePasswordStrongAuth(params: {
   user: User;
-  email: string;
   ipAddress: string;
   totpCode?: string;
   deps: Deps;
@@ -28,7 +27,7 @@ export async function resolvePasswordStrongAuth(params: {
   authMethod: "password" | "password_totp";
   strongAuthAt: number | null;
 }> {
-  const { user, email, ipAddress, totpCode, deps } = params;
+  const { user, ipAddress, totpCode, deps } = params;
   if (!isPrivilegedRole(user.role)) {
     return { authMethod: "password", strongAuthAt: null };
   }
@@ -59,7 +58,7 @@ export async function resolvePasswordStrongAuth(params: {
   }
 
   const secret = await decryptTotpSecret(factor.secret_encrypted);
-  if (verifyTotpCode(secret, email, safeCode)) {
+  if (verifyTotpCode(secret, safeCode)) {
     await clearTotpVerifyFailureState(identifier, ipAddress, deps);
     await recordAuthEvent(deps, {
       userId: user.id,

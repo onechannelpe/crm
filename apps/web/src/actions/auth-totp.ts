@@ -62,7 +62,7 @@ export async function finishTotpEnrollment(code: string): Promise<string[]> {
   }
 
   const secret = await decryptTotpSecret(factor.secret_encrypted);
-  const valid = verifyTotpCode(secret, user.email, safeCode);
+  const valid = verifyTotpCode(secret, safeCode);
   if (!valid) {
     throw new Error("Invalid TOTP code");
   }
