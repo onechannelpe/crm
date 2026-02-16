@@ -4,7 +4,7 @@
 
 - Prefer retrieval-led reasoning over pre-training for libraries/frameworks. Use MCP context7 for current docs before writing code.
 - Follow framework conventions—do not invent workarounds.
-- Implement what requested. If request conflicts with architecture or standards, state concern and suggest alternatives.
+- Implement ONLY what requested (no extra features, no improvements). If request conflicts with architecture or standards, state concern and suggest alternatives.
 - If ambiguous, ask up to 2 clarifying questions OR choose simplest valid interpretation.
 - Keep responses brief: 3-6 sentences for typical answers. For multi-step work: short overview + ≤5 bullets (what changed, where, next steps).
 - State what you verified vs what you're inferring. If uncertain about line numbers or API details, say so.
@@ -12,6 +12,7 @@
 ## WHEN implementing
 
 - Make one change at a time. Run `bun run check` after each change.
+- After edits: briefly state what changed, where (file/lines), and validation performed.
 - Parallelize independent tool calls (file reads, searches) when possible.
 - Provide brief updates (1-2 sentences) only when starting major work phases or plan changes.
 - For complex architectural decisions: propose multiple options, evaluate with a rubric (pros/cons/tradeoffs), choose best or suggest hybrid. For straightforward implementations, proceed directly.
