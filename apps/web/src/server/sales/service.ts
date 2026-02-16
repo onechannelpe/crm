@@ -1,11 +1,17 @@
+import type { createAppNotificationCenter } from "~/server/notifications/app-center-service";
 import type { Repositories } from "~/server/shared/registry";
 
 import { config } from "~/lib/config";
+import { REVIEW_AUDIENCE_ROLES } from "~/server/notifications/app-events";
 import { canTransition } from "~/server/sales/domain";
 import { createAuditService } from "~/server/shared/audit";
 import { Ok, Err, type Result } from "~/server/shared/result";
 
-export function createSalesWorkflowService(repos: Repositories) {
+interface Deps {
+  notifications: ReturnType<typeof createAppNotificationCenter>;
+}
+
+export function createSalesWorkflowService(repos: Repositories, deps: Deps) {
   const audit = createAuditService(repos);
 
   return {
@@ -62,6 +68,31 @@ export function createSalesWorkflowService(repos: Repositories) {
         from: note.status,
         to: "pending_review",
       });
+      const owner = await repos.users.findById(note.user_id);
+      if (owner) {
+        await deps.notifications.notifyBranchRoles(
+          owner.branch_id,
+          REVIEW_AUDIENCE_ROLES,
+          {
+            type:
+              note.status === "rejected"
+                ? "sale.resubmitted"
+                : "sale.submitted",
+            title:
+              note.status === "rejected"
+                ? `Venta #${noteId} reenviada`
+                : `Venta #${noteId} pendiente de validacion`,
+            bodyText:
+              note.status === "rejected"
+                ? "Una venta rechazada fue corregida y reenviada."
+                : "Nueva venta enviada para revision del back-office.",
+            actionUrl: "/validation",
+            priority: "normal",
+            dedupeKey: null,
+            metadata: { noteId, executiveId: note.user_id },
+          },
+        );
+      }
       return Ok(undefined);
     },
 
@@ -94,6 +125,15 @@ export function createSalesWorkflowService(repos: Repositories) {
         noteId,
         { from: note.status, to: "approved" },
       );
+      await deps.notifications.notifyUsers([note.user_id], {
+        type: "sale.approved",
+        title: `Venta #${noteId} aprobada`,
+        bodyText: "La nota de cargo fue aprobada por back-office.",
+        actionUrl: "/leads",
+        priority: "normal",
+        dedupeKey: null,
+        metadata: { noteId, reviewerId },
+      });
       return Ok(undefined);
     },
 
@@ -140,6 +180,15 @@ export function createSalesWorkflowService(repos: Repositories) {
           fields: rejections.map((r) => r.field_id),
         },
       );
+      await deps.notifications.notifyUsers([note.user_id], {
+        type: "sale.rejected",
+        title: `Venta #${noteId} rechazada`,
+        bodyText: "Revisa los campos observados y reenvia la nota.",
+        actionUrl: `/sales/${noteId}/fix`,
+        priority: "high",
+        dedupeKey: null,
+        metadata: { noteId, reviewerId },
+      });
       return Ok(undefined);
     },
   };

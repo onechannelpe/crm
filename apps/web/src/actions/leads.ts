@@ -5,6 +5,8 @@ import type { ActionSuccess } from "~/lib/contracts/common";
 import { requirePermission } from "~/lib/auth/access/session";
 import { config } from "~/lib/config";
 import { assertPositiveInt } from "~/lib/contracts/guards";
+import { SUPERVISOR_AUDIENCE_ROLES } from "~/server/notifications/app-events";
+import { appNotificationCenter } from "~/server/shared/context";
 import { leadService } from "~/server/shared/context";
 import { repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
@@ -37,6 +39,23 @@ export async function requestLeads(
   );
 
   if (isErr(result)) throw new Error(result.error);
+  const requester = await repos.users.findById(session.userId);
+  const supervisors = await repos.users.findActiveIdsByBranchAndRoles(
+    session.branchId,
+    SUPERVISOR_AUDIENCE_ROLES,
+  );
+  await appNotificationCenter.notifyUsers(
+    supervisors.map((user) => user.id).filter((id) => id !== session.userId),
+    {
+      type: "lead.more_requested",
+      title: "Solicitud de mas leads",
+      bodyText: `${requester?.full_name ?? "Un ejecutivo"} solicito mas leads y recibio ${result.value}.`,
+      actionUrl: "/leads",
+      priority: result.value === 0 ? "high" : "normal",
+      dedupeKey: null,
+      metadata: { executiveId: session.userId, assigned: result.value },
+    },
+  );
   return { assigned: result.value };
 }
 

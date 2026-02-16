@@ -13,6 +13,7 @@ import { createOrganizationsRepo } from "~/server/contacts/repos-organizations";
 import { createInventoryRepo } from "~/server/inventory/repos";
 import { createProductsRepo } from "~/server/inventory/repos-products";
 import { createLeadAssignmentsRepo } from "~/server/leads/repos";
+import { createAppNotificationsRepo } from "~/server/notifications/repos-app-notifications";
 import { createNotificationCampaignsRepo } from "~/server/notifications/repos-campaigns";
 import { createNotificationContactsRepo } from "~/server/notifications/repos-contacts";
 import { createNotificationPreferencesRepo } from "~/server/notifications/repos-preferences";
@@ -51,6 +52,7 @@ export function createRepositories(db: Kysely<Database>) {
     notificationCampaigns: createNotificationCampaignsRepo(db),
     notificationContacts: createNotificationContactsRepo(db),
     notificationPreferences: createNotificationPreferencesRepo(db),
+    appNotifications: createAppNotificationsRepo(db),
     inventory: createInventoryRepo(db),
     documents: createDocumentsRepo(db),
     auditLogs: createAuditLogsRepo(db),
