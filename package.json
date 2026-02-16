@@ -7,17 +7,11 @@
     "packages/*"
   ],
   "scripts": {
-    "clean": "bun x shx rm -rf apps/web/*.db* apps/*/node_modules node_modules",
-    "dev": "bun run --parallel dev:engine dev:web",
+    "dev": "mise run dev-web ::: dev-engine",
     "dev:web": "bun --no-env-file --env-file=../../.env run --cwd apps/web dev",
-    "dev:engine": "cargo run --manifest-path apps/engine/Cargo.toml",
+    "check:web": "bun --no-env-file --env-file=../../.env run --cwd apps/web check",
     "generate:engine-contract": "bun run scripts/generate-engine-contract.ts",
     "check:engine-contract": "bun run scripts/generate-engine-contract.ts --check",
-    "check:web": "bun --no-env-file --env-file=../../.env run --cwd apps/web check",
-    "check:engine": "cargo check --manifest-path apps/engine/Cargo.toml",
-    "check": "bun run check:engine-contract && bun run check:web && bun run check:engine"
-  },
-  "devDependencies": {
-    "shx": "^0.4.0"
+    "check": "bun run check:engine-contract && bun run check:web"
   }
 }
