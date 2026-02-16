@@ -2,6 +2,7 @@ import { createResource, createSignal, For } from "solid-js";
 
 import { getProductCatalog, updateProductPricing } from "~/actions/settings";
 import { useToast } from "~/components/feedback/toast-provider";
+import { LoginRetriesCard } from "~/components/settings/login-retries-card";
 import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
@@ -90,6 +91,8 @@ export default function SettingsPage() {
           </For>
         </div>
       </Card>
+
+      <LoginRetriesCard />
     </div>
   );
 }

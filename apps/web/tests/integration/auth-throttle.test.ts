@@ -2,8 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   checkLoginThrottle,
+  checkPasskeyChallengeThrottle,
   clearLoginFailureState,
   recordLoginFailure,
+  recordPasskeyChallengeFailure,
 } from "../../src/lib/auth/password/throttle";
 import {
   cleanupTestDb,
@@ -73,5 +75,48 @@ describe("auth throttle", () => {
     );
     vi.setSystemTime(Date.now() + 16 * 60_000);
     expect((await checkLoginThrottle(email, ip, ctx.repos)).allowed).toBe(true);
+  });
+
+  it("keeps password and passkey counters isolated per endpoint", async () => {
+    const email = "exec1@test.local";
+    const ip = "198.51.100.77";
+
+    await runSeries(9, () =>
+      recordPasskeyChallengeFailure(email, ip, ctx.repos),
+    );
+
+    expect(
+      (await checkPasskeyChallengeThrottle(email, ip, ctx.repos)).allowed,
+    ).toBe(false);
+    expect((await checkLoginThrottle(email, ip, ctx.repos)).allowed).toBe(true);
+  });
+
+  it("cleans expired and stale throttle counters", async () => {
+    const now = Date.now();
+    await ctx.repos.authThrottle.upsert({
+      scope: "ip",
+      key_hash: "k-expired",
+      window_started_at: now - 1000,
+      failure_count: 100,
+      blocked_until: now - 1,
+      updated_at: now - 1000,
+    });
+    await ctx.repos.authThrottle.upsert({
+      scope: "account",
+      key_hash: "k-stale",
+      window_started_at: now - 1000,
+      failure_count: 1,
+      blocked_until: null,
+      updated_at: now - 8 * 24 * 60 * 60 * 1000,
+    });
+
+    const deletedExpired =
+      await ctx.repos.authThrottle.deleteExpiredBlocks(now);
+    const deletedStale = await ctx.repos.authThrottle.deleteUpdatedBefore(
+      now - 7 * 24 * 60 * 60 * 1000,
+    );
+
+    expect(deletedExpired).toBe(1);
+    expect(deletedStale).toBe(1);
   });
 });

@@ -218,12 +218,25 @@ export interface AuthThrottleCountersTable {
   updated_at: number;
 }
 
+export interface AuthEventsTable {
+  id: Generated<number>;
+  user_id: number | null;
+  method: "password" | "passkey";
+  stage: "login" | "challenge" | "verify";
+  outcome: "success" | "failure" | "throttled";
+  reason: string | null;
+  identifier_hash: string;
+  ip_hash: string;
+  created_at: number;
+}
+
 export interface Database {
   branches: BranchesTable;
   teams: TeamsTable;
   users: UsersTable;
   user_sessions: UserSessionsTable;
   auth_throttle_counters: AuthThrottleCountersTable;
+  auth_events: AuthEventsTable;
   organizations: OrganizationsTable;
   contacts: ContactsTable;
   lead_assignments: LeadAssignmentsTable;
@@ -261,10 +274,12 @@ export type AuditLog = Selectable<AuditLogsTable>;
 export type Passkey = Selectable<PasskeysTable>;
 export type UserSession = Selectable<UserSessionsTable>;
 export type AuthThrottleCounter = Selectable<AuthThrottleCountersTable>;
+export type AuthEvent = Selectable<AuthEventsTable>;
 
 export type NewUser = Insertable<UsersTable>;
 export type NewUserSession = Insertable<UserSessionsTable>;
 export type NewAuthThrottleCounter = Insertable<AuthThrottleCountersTable>;
+export type NewAuthEvent = Insertable<AuthEventsTable>;
 export type NewOrganization = Insertable<OrganizationsTable>;
 export type NewContact = Insertable<ContactsTable>;
 export type NewLeadAssignment = Insertable<LeadAssignmentsTable>;

@@ -2,6 +2,7 @@ import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/schema";
 
+import { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import { createContactsRepo } from "~/server/contacts/repos-contacts";
 import { createOrganizationsRepo } from "~/server/contacts/repos-organizations";
@@ -17,6 +18,7 @@ import { createSessionRepository } from "~/server/sessions/repos-sessions";
 import { createBranchesRepo } from "~/server/users/repos-branches";
 import { createPasskeysRepo } from "~/server/users/repos-passkeys";
 import { createUsersRepo } from "~/server/users/repos-users";
+import { createWebauthnChallengesRepo } from "~/server/users/repos-webauthn-challenges";
 
 import { createAgentStatusRepo } from "./repos-agent-status";
 import { createAuditLogsRepo } from "./repos-audit-logs";
@@ -26,6 +28,7 @@ export function createRepositories(db: Kysely<Database>) {
   return {
     users: createUsersRepo(db),
     sessions: createSessionRepository(db),
+    authEvents: createAuthEventsRepo(db),
     authThrottle: createAuthThrottleRepo(db),
     organizations: createOrganizationsRepo(db),
     contacts: createContactsRepo(db),
@@ -41,6 +44,7 @@ export function createRepositories(db: Kysely<Database>) {
     auditLogs: createAuditLogsRepo(db),
     agentStatus: createAgentStatusRepo(db),
     passkeys: createPasskeysRepo(db),
+    webauthnChallenges: createWebauthnChallengesRepo(db),
     branches: createBranchesRepo(db),
   };
 }
