@@ -1,5 +1,15 @@
+use crm_engine::api::router;
 use crm_engine::config::Config;
+use crm_engine::domain::search_service::SearchService;
+use crm_engine::errors::StartupError;
+use crm_engine::observability::logging;
+use crm_engine::security::hmac::HmacVerifier;
+use crm_engine::security::rate_limit::RateLimiter;
+use crm_engine::state::AppState;
+use crm_engine::storage::sqlite::connection;
+use crm_engine::storage::sqlite::schema_guard;
 use std::path::Path;
+use std::sync::Arc;
 
 fn load_root_env() {
     let env_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.env");
@@ -7,23 +17,37 @@ fn load_root_env() {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), crm_engine::error::StartupError> {
-    let env_filter = tracing_subscriber::EnvFilter::try_from_default_env()
-        .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info"));
-    tracing_subscriber::fmt().with_env_filter(env_filter).init();
-
+async fn main() -> Result<(), StartupError> {
+    logging::init();
     load_root_env();
 
-    let config = Config::load()?;
-    let records = crm_engine::ingest::csv_mmap::load(&config.data_path)?;
-    let index = crm_engine::index::store::SearchIndex::build(records);
-    if index.by_ruc.is_empty() {
-        return Err(crm_engine::error::StartupError::Config(
-            "engine dataset contains zero RUC entries".into(),
-        ));
+    let cfg = Config::load()?;
+    let pool = connection::make_pool(&cfg.db_path)?;
+
+    {
+        let conn = pool
+            .get()
+            .map_err(|e| StartupError::Database(format!("pool get failed: {e}")))?;
+        schema_guard::validate(&conn)?;
     }
 
-    tracing::info!("loaded {} records, starting server", index.record_count());
+    let state = AppState {
+        search: Arc::new(SearchService::new(pool.clone(), cfg.max_limit)),
+        hmac: Arc::new(HmacVerifier::new(cfg.hmac_secret.clone(), 60)),
+        limiter: Arc::new(RateLimiter::new(cfg.rate_limit_per_ip)),
+    };
 
-    crm_engine::api::serve(index, config).await
+    let app = router::build_router(state);
+    let bind = format!("{}:{}", cfg.host, cfg.port);
+    let listener = tokio::net::TcpListener::bind(&bind)
+        .await
+        .map_err(|e| StartupError::Config(format!("bind failed: {e}")))?;
+
+    tracing::info!("engine listening on {bind}");
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<std::net::SocketAddr>(),
+    )
+    .await
+    .map_err(|e| StartupError::Config(format!("server error: {e}")))
 }
