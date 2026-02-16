@@ -1,4 +1,5 @@
 import type { Kysely } from "kysely";
+
 import type { Database, AgentStatusLogsTable } from "~/lib/db/schema";
 
 type AgentStatus = AgentStatusLogsTable["status"];

@@ -1,10 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { sql } from "kysely";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
+import { sessionCache } from "../../src/lib/auth/session/session-cache";
 import {
   createSession,
   validateSessionToken,
 } from "../../src/lib/auth/session/session-manager";
-import { sessionCache } from "../../src/lib/auth/session/session-cache";
 import {
   generateSessionToken,
   hashSessionToken,

@@ -1,14 +1,17 @@
+import type { Repositories } from "~/server/shared/registry";
+
 import { assertNonEmptyString } from "~/lib/contracts/guards";
-import { verifyPassword } from "./password";
+import { repos } from "~/server/shared/context";
+
+import type { Role } from "../access/rbac";
+
 import { createSession } from "../session/session-manager";
+import { verifyPassword } from "./password";
 import {
   checkLoginThrottle,
   clearLoginFailureState,
   recordLoginFailure,
 } from "./throttle";
-import { repos } from "~/server/shared/context";
-import type { Role } from "../access/rbac";
-import type { Repositories } from "~/server/shared/registry";
 
 const INVALID_CREDENTIALS = "Invalid credentials";
 
@@ -76,6 +79,6 @@ export async function authenticatePasswordLogin(
     changes: null,
     created_at: Date.now(),
   });
-  
+
   return { userId: user.id, role: user.role, token };
 }

@@ -1,6 +1,7 @@
 import { type Component, createSignal, Show } from "solid-js";
-import { Button } from "~/components/ui/button";
+
 import { useToast } from "~/components/feedback/toast-provider";
+import { Button } from "~/components/ui/button";
 
 interface RequestLeadsButtonProps {
   onRequest: () => Promise<void>;

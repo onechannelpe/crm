@@ -1,12 +1,14 @@
 "use server";
 
-import { getSessionCookie, setSessionCookie } from "~/lib/auth/session/cookies";
-import { invalidateSession } from "~/lib/auth/session/session-manager";
-import type { Role } from "~/lib/auth/access/rbac";
-import { hashSessionToken } from "~/lib/auth/session/tokens";
 import { getRequestEvent } from "solid-js/web";
+
+import type { Role } from "~/lib/auth/access/rbac";
+
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { authenticatePasswordLogin } from "~/lib/auth/password/password-login";
+import { getSessionCookie, setSessionCookie } from "~/lib/auth/session/cookies";
+import { invalidateSession } from "~/lib/auth/session/session-manager";
+import { hashSessionToken } from "~/lib/auth/session/tokens";
 
 export interface LoginResult {
   userId: number;

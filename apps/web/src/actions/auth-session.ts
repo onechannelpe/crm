@@ -1,5 +1,7 @@
 "use server";
 
+import type { Role } from "~/lib/auth/access/rbac";
+
 import {
   deleteSessionCookie,
   getSessionCookie,
@@ -8,7 +10,6 @@ import {
   invalidateSession,
   validateSessionToken,
 } from "~/lib/auth/session/session-manager";
-import type { Role } from "~/lib/auth/access/rbac";
 import { hashSessionToken } from "~/lib/auth/session/tokens";
 import { repos } from "~/server/shared/context";
 

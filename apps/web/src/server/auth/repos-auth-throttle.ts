@@ -1,4 +1,5 @@
 import type { Kysely } from "kysely";
+
 import type {
   AuthThrottleCounter,
   Database,

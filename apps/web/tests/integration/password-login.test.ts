@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import { hashPassword } from "../../src/lib/auth/password/password";
 import { authenticatePasswordLogin } from "../../src/lib/auth/password/password-login";
 import {

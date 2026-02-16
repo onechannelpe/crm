@@ -1,7 +1,9 @@
-import { repos } from "~/server/shared/context";
 import type { Repositories } from "~/server/shared/registry";
-import { AUTH_THROTTLE_POLICY, AUTH_THROTTLE_SCOPES } from "./throttle-policy";
+
+import { repos } from "~/server/shared/context";
+
 import { buildThrottleKeys } from "./throttle-keys";
+import { AUTH_THROTTLE_POLICY, AUTH_THROTTLE_SCOPES } from "./throttle-policy";
 import { calculateBlockMs, isThrottleWindowExpired } from "./throttle-state";
 
 type Deps = Pick<Repositories, "authThrottle">;
@@ -15,6 +17,7 @@ export async function checkLoginThrottle(
   const now = Date.now();
   const resolvedDeps = deps ?? repos;
   const keyMap = buildThrottleKeys(email, ip);
+
   const rows = await Promise.all(
     AUTH_THROTTLE_SCOPES.map((scope) =>
       resolvedDeps.authThrottle.findByScopeAndKey(scope, keyMap[scope]),
@@ -39,6 +42,7 @@ export async function recordLoginFailure(
   const now = Date.now();
   const keyMap = buildThrottleKeys(email, ip);
   const resolvedDeps = deps ?? repos;
+
   const rows = await Promise.all(
     AUTH_THROTTLE_SCOPES.map((scope) =>
       resolvedDeps.authThrottle.findByScopeAndKey(scope, keyMap[scope]),

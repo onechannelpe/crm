@@ -1,23 +1,26 @@
 import type { Kysely } from "kysely";
+
 import type { Database } from "~/lib/db/schema";
-import { createUsersRepo } from "~/server/users/repos-users";
-import { createOrganizationsRepo } from "~/server/contacts/repos-organizations";
+
+import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import { createContactsRepo } from "~/server/contacts/repos-contacts";
+import { createOrganizationsRepo } from "~/server/contacts/repos-organizations";
+import { createInventoryRepo } from "~/server/inventory/repos";
+import { createProductsRepo } from "~/server/inventory/repos-products";
 import { createLeadAssignmentsRepo } from "~/server/leads/repos";
 import { createQuotaAllocationsRepo } from "~/server/quota/repos";
 import { createChargeNotesRepo } from "~/server/sales/repos-charge-notes";
+import { createDocumentsRepo } from "~/server/sales/repos-documents";
 import { createChargeNoteItemsRepo } from "~/server/sales/repos-items";
 import { createRejectionLogsRepo } from "~/server/sales/repos-rejections";
-import { createInteractionLogsRepo } from "./repos-interaction-logs";
-import { createProductsRepo } from "~/server/inventory/repos-products";
-import { createInventoryRepo } from "~/server/inventory/repos";
-import { createDocumentsRepo } from "~/server/sales/repos-documents";
-import { createAuditLogsRepo } from "./repos-audit-logs";
-import { createAgentStatusRepo } from "./repos-agent-status";
-import { createPasskeysRepo } from "~/server/users/repos-passkeys";
-import { createBranchesRepo } from "~/server/users/repos-branches";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
-import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
+import { createBranchesRepo } from "~/server/users/repos-branches";
+import { createPasskeysRepo } from "~/server/users/repos-passkeys";
+import { createUsersRepo } from "~/server/users/repos-users";
+
+import { createAgentStatusRepo } from "./repos-agent-status";
+import { createAuditLogsRepo } from "./repos-audit-logs";
+import { createInteractionLogsRepo } from "./repos-interaction-logs";
 
 export function createRepositories(db: Kysely<Database>) {
   return {

@@ -1,11 +1,11 @@
 "use server";
 
-import { repos } from "~/server/shared/context";
-import { requireRole } from "~/lib/auth/access/session";
-import { invalidateUserSessions } from "~/lib/auth/session/session-manager";
-import type { UserSession } from "~/lib/db/schema";
 import type { Role } from "~/lib/auth/access/rbac";
 import type { ActionSuccess } from "~/lib/contracts/common";
+import type { UserSession } from "~/lib/db/schema";
+
+import { requireRole } from "~/lib/auth/access/session";
+import { invalidateUserSessions } from "~/lib/auth/session/session-manager";
 import {
   allSessionsRevokedChanges,
   serializeAuditChanges,
@@ -15,6 +15,7 @@ import {
   assertNonEmptyString,
   assertPositiveInt,
 } from "~/lib/contracts/guards";
+import { repos } from "~/server/shared/context";
 
 export async function listUserSessions(userId: number): Promise<UserSession[]> {
   const safeUserId = assertPositiveInt(userId, "userId");

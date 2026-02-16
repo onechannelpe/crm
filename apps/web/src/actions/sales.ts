@@ -1,17 +1,18 @@
 "use server";
 
-import { salesService } from "~/server/shared/context";
-import { repos } from "~/server/shared/context";
-import { requirePermission } from "~/lib/auth/access/session";
-import { isErr } from "~/server/shared/result";
-import { config } from "~/lib/config";
-import { computeLockExpiry } from "~/server/inventory/domain";
 import type { ActionSuccess } from "~/lib/contracts/common";
+
+import { requirePermission } from "~/lib/auth/access/session";
+import { config } from "~/lib/config";
 import {
   assertFinitePositive,
   assertNonEmptyString,
   assertPositiveInt,
 } from "~/lib/contracts/guards";
+import { computeLockExpiry } from "~/server/inventory/domain";
+import { salesService } from "~/server/shared/context";
+import { repos } from "~/server/shared/context";
+import { isErr } from "~/server/shared/result";
 
 type PendingReviewNote = Awaited<
   ReturnType<typeof repos.chargeNotes.findPendingReviewWithContacts>

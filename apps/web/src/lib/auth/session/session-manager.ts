@@ -1,14 +1,17 @@
+import type { NewUserSession } from "~/lib/db/schema";
+import type { Repositories } from "~/server/shared/registry";
+
+import { repos } from "~/server/shared/context";
+
+import type { AuthSession } from "../access/session-types";
+
+import { isRole, type Role } from "../access/rbac";
+import { sessionCache } from "./session-cache";
 import {
   generateSessionToken,
   hashSessionToken,
   isValidTokenFormat,
 } from "./tokens";
-import { sessionCache } from "./session-cache";
-import { isRole, type Role } from "../access/rbac";
-import type { AuthSession } from "../access/session-types";
-import { repos } from "~/server/shared/context";
-import type { Repositories } from "~/server/shared/registry";
-import type { NewUserSession } from "~/lib/db/schema";
 
 const SESSION_DURATION = 30 * 24 * 60 * 60 * 1000;
 const ACTIVITY_UPDATE_THRESHOLD = 5 * 60 * 1000;

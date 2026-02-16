@@ -1,15 +1,16 @@
 "use server";
 
-import { requirePermission } from "~/lib/auth/access/session";
-import { repos } from "~/server/shared/context";
-import type { ActionSuccess } from "~/lib/contracts/common";
 import type { ProductUpdatedChanges } from "~/lib/contracts/audit";
+import type { ActionSuccess } from "~/lib/contracts/common";
+
+import { requirePermission } from "~/lib/auth/access/session";
 import { serializeAuditChanges } from "~/lib/contracts/audit";
 import {
   assertBoolean,
   assertFinitePositive,
   assertPositiveInt,
 } from "~/lib/contracts/guards";
+import { repos } from "~/server/shared/context";
 
 type ProductCatalogItem = Awaited<
   ReturnType<typeof repos.products.findAll>
