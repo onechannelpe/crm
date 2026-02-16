@@ -9,13 +9,14 @@
   "scripts": {
     "clean": "bun x shx rm -rf apps/web/*.db* apps/*/node_modules node_modules",
     "dev": "bun run --parallel dev:engine dev:web",
-    "dev:web": "bun --no-env-file --env-file=../../.env run --cwd apps/web dev",
+    "dev:web": "bun --filter='@crm/web' --no-env-file --env-file=../../.env run dev",
     "dev:engine": "cargo run --manifest-path apps/engine/Cargo.toml",
     "generate:engine-contract": "bun run scripts/generate-engine-contract.ts",
     "check:engine-contract": "bun run scripts/generate-engine-contract.ts --check",
-    "check:web": "bun --no-env-file --env-file=../../.env run --cwd apps/web check",
+    "check:web": "bun --filter='@crm/web' run check",
     "check:engine": "cargo check --manifest-path apps/engine/Cargo.toml",
-    "check": "bun run check:engine-contract && bun run check:web && bun run check:engine"
+    "check": "bun run check:engine-contract && bun run check:web && bun run check:engine",
+    "download:solidjs-docs": "bun --filter='@crm/download-docs' run download solidjs"
   },
   "devDependencies": {
     "shx": "^0.4.0"
