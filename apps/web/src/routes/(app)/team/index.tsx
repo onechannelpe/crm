@@ -1,4 +1,4 @@
-import { createResource, For, Show } from "solid-js";
+import { For, Show } from "solid-js";
 
 import { getTeamMembers } from "~/actions/team";
 import { EmptyState } from "~/components/feedback/empty-state";
@@ -17,9 +17,10 @@ import {
   getRoleBadgeVariant,
   getRoleLabel,
 } from "~/lib/auth/access/role-display";
+import { createAppQuery } from "~/lib/ui/create-app-query";
 
 export default function TeamPage() {
-  const [members] = createResource(getTeamMembers);
+  const [members] = createAppQuery(getTeamMembers, []);
 
   return (
     <div class="space-y-6">
