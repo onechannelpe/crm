@@ -7,24 +7,74 @@ export type ScopePolicy = {
   maxBlockMs: number;
 };
 
-export const AUTH_THROTTLE_POLICY: Record<AuthThrottleScope, ScopePolicy> = {
-  ip: {
-    threshold: 30,
-    windowMs: 10 * 60_000,
-    baseBlockMs: 60_000,
-    maxBlockMs: 10 * 60_000,
+export type AuthThrottleEndpoint =
+  | "password_login"
+  | "passkey_challenge"
+  | "passkey_verify";
+
+export const AUTH_THROTTLE_POLICY: Record<
+  AuthThrottleEndpoint,
+  Record<AuthThrottleScope, ScopePolicy>
+> = {
+  password_login: {
+    ip: {
+      threshold: 30,
+      windowMs: 10 * 60_000,
+      baseBlockMs: 60_000,
+      maxBlockMs: 10 * 60_000,
+    },
+    account: {
+      threshold: 5,
+      windowMs: 15 * 60_000,
+      baseBlockMs: 60_000,
+      maxBlockMs: 15 * 60_000,
+    },
+    ip_account: {
+      threshold: 5,
+      windowMs: 5 * 60_000,
+      baseBlockMs: 60_000,
+      maxBlockMs: 10 * 60_000,
+    },
   },
-  account: {
-    threshold: 5,
-    windowMs: 15 * 60_000,
-    baseBlockMs: 60_000,
-    maxBlockMs: 15 * 60_000,
+  passkey_challenge: {
+    ip: {
+      threshold: 40,
+      windowMs: 10 * 60_000,
+      baseBlockMs: 60_000,
+      maxBlockMs: 10 * 60_000,
+    },
+    account: {
+      threshold: 8,
+      windowMs: 15 * 60_000,
+      baseBlockMs: 60_000,
+      maxBlockMs: 15 * 60_000,
+    },
+    ip_account: {
+      threshold: 8,
+      windowMs: 10 * 60_000,
+      baseBlockMs: 60_000,
+      maxBlockMs: 10 * 60_000,
+    },
   },
-  ip_account: {
-    threshold: 5,
-    windowMs: 5 * 60_000,
-    baseBlockMs: 60_000,
-    maxBlockMs: 10 * 60_000,
+  passkey_verify: {
+    ip: {
+      threshold: 30,
+      windowMs: 10 * 60_000,
+      baseBlockMs: 60_000,
+      maxBlockMs: 10 * 60_000,
+    },
+    account: {
+      threshold: 8,
+      windowMs: 15 * 60_000,
+      baseBlockMs: 60_000,
+      maxBlockMs: 15 * 60_000,
+    },
+    ip_account: {
+      threshold: 8,
+      windowMs: 10 * 60_000,
+      baseBlockMs: 60_000,
+      maxBlockMs: 10 * 60_000,
+    },
   },
 };
 

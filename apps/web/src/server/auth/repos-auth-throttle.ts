@@ -48,6 +48,25 @@ export function createAuthThrottleRepo(db: Kysely<Database>) {
         .where("key_hash", "=", keyHash)
         .execute();
     },
+
+    async deleteExpiredBlocks(now = Date.now()): Promise<number> {
+      const result = await db
+        .deleteFrom("auth_throttle_counters")
+        .where("blocked_until", "is not", null)
+        .where("blocked_until", "<", now)
+        .executeTakeFirst();
+
+      return Number(result.numDeletedRows ?? 0);
+    },
+
+    async deleteUpdatedBefore(timestamp: number): Promise<number> {
+      const result = await db
+        .deleteFrom("auth_throttle_counters")
+        .where("updated_at", "<", timestamp)
+        .executeTakeFirst();
+
+      return Number(result.numDeletedRows ?? 0);
+    },
   };
 }
 

@@ -21,4 +21,8 @@ export const config = {
   session: {
     maxAgeSeconds: 60 * 60 * 24 * 30,
   },
+  auth: {
+    webauthnChallengeTtlMs: 5 * 60_000,
+    throttleRetentionMs: 7 * 24 * 60 * 60 * 1000,
+  },
 } as const;
