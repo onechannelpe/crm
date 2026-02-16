@@ -1,7 +1,6 @@
 "use server";
 
 import type { RegistrationResponseJSON } from "@simplewebauthn/server";
-
 import { getRequestEvent } from "solid-js/web";
 
 import { requireAuth } from "~/lib/auth/access/session";

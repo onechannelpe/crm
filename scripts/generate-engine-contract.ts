@@ -55,4 +55,6 @@ async function writeOrCheck(
 const check = Bun.argv.includes("--check");
 const spec = await loadSpec();
 await writeOrCheck(TS_OUT, ts(spec), check);
-console.log(check ? "engine contract is up to date" : "engine contract generated");
+console.log(
+  check ? "engine contract is up to date" : "engine contract generated",
+);

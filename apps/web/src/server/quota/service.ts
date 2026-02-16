@@ -1,7 +1,6 @@
-import type { Repositories } from "~/server/shared/registry";
-
 import { canConsume, todayDateString } from "~/server/quota/domain";
 import { createAuditService } from "~/server/shared/audit";
+import type { Repositories } from "~/server/shared/registry";
 import { Ok, Err, type Result } from "~/server/shared/result";
 
 export function createQuotaService(repos: Repositories) {

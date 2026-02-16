@@ -1,5 +1,6 @@
 import type { Kysely } from "kysely";
 
+import { isRole } from "~/lib/auth/access/rbac";
 import type {
   Database,
   NewNotificationCampaign,
@@ -9,8 +10,6 @@ import type {
   NotificationCampaignsTable,
   UsersTable,
 } from "~/lib/db/schema";
-
-import { isRole } from "~/lib/auth/access/rbac";
 
 export interface AudienceUser {
   id: number;

@@ -16,16 +16,16 @@ export async function hashPassword(password: string): Promise<string> {
 
 /**
  * Verifies password against Argon2id hash.
- * @param hash - Argon2id hash from database
+ * @param passwordHash - Argon2id hash from database
  * @param password - Plain text password to verify
  * @returns true if password matches hash
  */
 export async function verifyPassword(
-  hash: string,
+  passwordHash: string,
   password: string,
 ): Promise<boolean> {
   try {
-    return await verify(hash, password);
+    return await verify(passwordHash, password);
   } catch {
     return false;
   }

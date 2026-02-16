@@ -1,11 +1,9 @@
 import type { NewUserSession } from "~/lib/db/schema";
+import { repos } from "~/server/shared/context";
 import type { Repositories } from "~/server/shared/registry";
 
-import { repos } from "~/server/shared/context";
-
-import type { AuthSession } from "../access/session-types";
-
 import { isRole, type Role } from "../access/rbac";
+import type { AuthSession } from "../access/session-types";
 import { sessionCache } from "./session-cache";
 import {
   generateSessionToken,

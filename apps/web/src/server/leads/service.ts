@@ -1,5 +1,3 @@
-import type { Repositories } from "~/server/shared/registry";
-
 import { config } from "~/lib/config";
 import { createAssignment } from "~/server/leads/domain-assignment";
 import { canContactNow } from "~/server/leads/domain-cooldown";
@@ -7,7 +5,8 @@ import { canLockOrganization } from "~/server/leads/domain-org-lock";
 import { createQuotaService } from "~/server/quota/service";
 import { createAuditService } from "~/server/shared/audit";
 import { engineClient } from "~/server/shared/engine";
-import { Err, Ok, isErr, type Result } from "~/server/shared/result";
+import type { Repositories } from "~/server/shared/registry";
+import { Ok, isErr, type Result } from "~/server/shared/result";
 
 export function createLeadAssignmentService(repos: Repositories) {
   const quotaService = createQuotaService(repos);

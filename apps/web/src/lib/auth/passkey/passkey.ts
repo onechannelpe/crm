@@ -7,9 +7,8 @@ import {
   type AuthenticationResponseJSON,
 } from "@simplewebauthn/server";
 
-import type { Repositories } from "~/server/shared/registry";
-
 import { env } from "~/lib/env";
+import type { Repositories } from "~/server/shared/registry";
 
 const rpName = "CRM OneChannel";
 const rpID = env.webauthnRpId;

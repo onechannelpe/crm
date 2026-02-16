@@ -1,5 +1,4 @@
 import type { SessionData } from "~/lib/auth/access/session";
-
 import { config } from "~/lib/config";
 
 import { isPrivilegedRole } from "./policy";

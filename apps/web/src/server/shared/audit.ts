@@ -1,6 +1,5 @@
-import type { Repositories } from "~/server/shared/registry";
-
 import { serializeAuditChanges } from "~/lib/contracts/audit";
+import type { Repositories } from "~/server/shared/registry";
 
 type AuditRepos = Pick<Repositories, "auditLogs">;
 
