@@ -12,6 +12,7 @@ import Users from "~/components/icons/users";
 import { AccountMenu } from "~/components/layout/account-menu";
 import { useSession } from "~/components/providers/session-provider";
 import { getSidebarRoutes } from "~/lib/auth/access/route-policy";
+import { getWorkspaceLabel } from "~/lib/auth/access/workspace-label";
 import { cn } from "~/lib/utils";
 
 const SIDEBAR_GROUPS = [
@@ -50,7 +51,7 @@ export function Sidebar() {
           type="button"
           class="w-full flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-md shadow-sm bg-white hover:bg-gray-50 transition-colors"
         >
-          <span>Espacio de {currentUser().fullName.split(" ")[0]}</span>
+          <span>{getWorkspaceLabel(currentUser())}</span>
           <ChevronDown class="w-4 h-4 text-muted-foreground" />
         </button>
       </div>

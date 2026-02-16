@@ -3,6 +3,11 @@
 import type { Role } from "~/lib/auth/access/rbac";
 
 import {
+  resolveWorkspaceContext,
+  type WorkspaceIdentity,
+} from "~/lib/auth/access/workspace-context";
+import { type WorkspaceScopeType } from "~/lib/auth/access/workspace-scope";
+import {
   deleteSessionCookie,
   getSessionCookie,
 } from "~/lib/auth/session/cookies";
@@ -35,7 +40,7 @@ export async function logout(): Promise<void> {
   }
 }
 
-export interface CurrentUser {
+export interface CurrentUser extends WorkspaceIdentity {
   id: number;
   email: string;
   fullName: string;
@@ -43,6 +48,7 @@ export interface CurrentUser {
   onboardingCompletedAt: number | null;
   role: Role;
   branchId: number;
+  scopeType: WorkspaceScopeType;
 }
 
 export async function getMe(): Promise<CurrentUser | null> {
@@ -55,6 +61,39 @@ export async function getMe(): Promise<CurrentUser | null> {
   const user = await repos.users.findById(session.userId);
   if (!user) return null;
 
+  const [branch, assignedTeam, managedTeam] = await Promise.all([
+    repos.branches.findById(user.branch_id),
+    user.team_id ? repos.teams.findByIdWithSupervisor(user.team_id) : null,
+    session.role === "supervisor"
+      ? repos.teams.findBySupervisorId(user.id)
+      : Promise.resolve(null),
+  ]);
+  const workspace = resolveWorkspaceContext({
+    role: session.role,
+    userId: user.id,
+    branchId: user.branch_id,
+    branchName: branch?.name ?? null,
+    userTeamId: user.team_id,
+    assignedTeam: assignedTeam
+      ? {
+          id: assignedTeam.id,
+          name: assignedTeam.name,
+          branch_id: assignedTeam.branch_id,
+          supervisor_id: assignedTeam.supervisor_id,
+          supervisor_name: assignedTeam.supervisor_name,
+          supervisor_role: assignedTeam.supervisor_role,
+          supervisor_branch_id: assignedTeam.supervisor_branch_id,
+        }
+      : null,
+    managedTeam: managedTeam
+      ? {
+          id: managedTeam.id,
+          name: managedTeam.name,
+          branch_id: managedTeam.branch_id,
+        }
+      : null,
+  });
+
   return {
     id: user.id,
     email: user.email,
@@ -63,5 +102,9 @@ export async function getMe(): Promise<CurrentUser | null> {
     onboardingCompletedAt: user.onboarding_completed_at,
     role: session.role,
     branchId: user.branch_id,
+    scopeType: workspace.scopeType,
+    team: workspace.team,
+    supervisor: workspace.supervisor,
+    branch: workspace.branch,
   };
 }
