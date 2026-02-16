@@ -23,7 +23,7 @@ export function createAuthEventsRepo(db: Kysely<Database>) {
         .selectFrom("auth_events")
         .selectAll()
         .where("user_id", "=", userId)
-        .where("stage", "in", ["login", "challenge", "verify"])
+        .where("stage", "in", ["login", "challenge", "verify", "recovery"])
         .where("outcome", "in", ["failure", "throttled"])
         .orderBy("created_at", "desc")
         .limit(limit)
@@ -35,11 +35,29 @@ export function createAuthEventsRepo(db: Kysely<Database>) {
         .selectFrom("auth_events")
         .select((eb) => eb.fn.count<number>("id").as("total"))
         .where("user_id", "=", userId)
-        .where("stage", "in", ["login", "challenge", "verify"])
+        .where("stage", "in", ["login", "challenge", "verify", "recovery"])
         .where("outcome", "in", ["failure", "throttled"])
         .where("created_at", ">=", since)
         .executeTakeFirst()
         .then((row) => Number(row?.total ?? 0));
+    },
+
+    async hasRecentSuccessFromIp(
+      userId: number,
+      ipHash: string,
+      since: number,
+    ): Promise<boolean> {
+      const row = await db
+        .selectFrom("auth_events")
+        .select("id")
+        .where("user_id", "=", userId)
+        .where("stage", "in", ["login", "verify", "recovery"])
+        .where("outcome", "=", "success")
+        .where("ip_hash", "=", ipHash)
+        .where("created_at", ">=", since)
+        .limit(1)
+        .executeTakeFirst();
+      return Boolean(row);
     },
 
     findLastByIdentifier(

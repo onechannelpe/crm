@@ -87,4 +87,24 @@ describe("password login service", () => {
     expect(events[0]?.outcome).toBe("success");
     expect(events[0]?.reason).toBeNull();
   });
+
+  it("marks login as not onboarded when onboarding is incomplete", async () => {
+    await ctx.db
+      .updateTable("users")
+      .set({
+        onboarding_completed_at: null,
+        phone_e164: null,
+        phone_verified_at: null,
+        profile_confirmed_at: null,
+      })
+      .where("id", "=", 1)
+      .execute();
+
+    const result = await authenticatePasswordLogin(
+      { email, password: rightPassword, ipAddress, userAgent },
+      ctx.repos,
+    );
+
+    expect(result.onboardingCompleted).toBe(false);
+  });
 });

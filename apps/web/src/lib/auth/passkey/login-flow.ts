@@ -13,6 +13,7 @@ import {
   recordPasskeyVerifyFailure,
 } from "~/lib/auth/password/throttle";
 import { recordAuthEvent } from "~/lib/auth/security/auth-events";
+import { sendAlertOnNewLoginSource } from "~/lib/auth/security/login-source-alert";
 import { config } from "~/lib/config";
 import {
   assertNonEmptyString,
@@ -185,6 +186,12 @@ export async function finishPasskeyLoginFlow(
     throw new Error(INVALID_CREDENTIALS);
   }
 
+  await sendAlertOnNewLoginSource({
+    user,
+    ipAddress,
+    method: "passkey",
+    deps,
+  });
   await clearPasskeyVerifyFailureState(identifier, ipAddress, deps);
   await recordAuthEvent(deps, {
     userId: user.id,

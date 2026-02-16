@@ -4,6 +4,7 @@ import type { ProductUpdatedChanges } from "~/lib/contracts/audit";
 import type { ActionSuccess } from "~/lib/contracts/common";
 
 import { requirePermission } from "~/lib/auth/access/session";
+import { assertRecentStrongAuth } from "~/lib/auth/security/step-up";
 import { serializeAuditChanges } from "~/lib/contracts/audit";
 import {
   assertBoolean,
@@ -30,6 +31,7 @@ export async function updateProductPricing(
   const safePrice = assertFinitePositive(price, "price");
   const safeIsActive = assertBoolean(isActive, "isActive");
   const session = await requirePermission("admin:manage");
+  assertRecentStrongAuth(session);
   const product = await repos.products.findById(safeProductId);
   if (!product) throw new Error("Product not found");
 

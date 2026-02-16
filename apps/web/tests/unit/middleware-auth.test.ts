@@ -74,6 +74,9 @@ describe("auth middleware request guard", () => {
       userId: 1,
       branchId: 1,
       role: "executive",
+      onboardingCompleted: true,
+      authMethod: "password",
+      strongAuthAt: null,
     };
     const event: { request: Request; locals: App.RequestEventLocals } = {
       request: new Request("http://localhost:3000/dashboard"),
@@ -87,5 +90,47 @@ describe("auth middleware request guard", () => {
 
     expect(decision.kind).toBe("allow");
     expect(event.locals.session).toEqual(session);
+  });
+
+  it("redirects to /onboarding when session is not onboarded", async () => {
+    const session: AuthSession = {
+      id: "session-id",
+      userId: 1,
+      branchId: 1,
+      role: "executive",
+      onboardingCompleted: false,
+      authMethod: "password",
+      strongAuthAt: null,
+    };
+
+    const decision = await enforceAuthRequest(
+      {
+        request: new Request("http://localhost:3000/dashboard"),
+      },
+      createDeps({ token: "token", session }),
+    );
+
+    expect(decision.kind).toBe("redirect_onboarding");
+  });
+
+  it("redirects onboarded users away from /onboarding", async () => {
+    const session: AuthSession = {
+      id: "session-id",
+      userId: 1,
+      branchId: 1,
+      role: "executive",
+      onboardingCompleted: true,
+      authMethod: "password",
+      strongAuthAt: null,
+    };
+
+    const decision = await enforceAuthRequest(
+      {
+        request: new Request("http://localhost:3000/onboarding"),
+      },
+      createDeps({ token: "token", session }),
+    );
+
+    expect(decision.kind).toBe("redirect_dashboard");
   });
 });

@@ -25,5 +25,6 @@ export const config = {
     webauthnChallengeTtlMs: 5 * 60_000,
     throttleRetentionMs: 7 * 24 * 60 * 60 * 1000,
     eventsRetentionMs: 90 * 24 * 60 * 60 * 1000,
+    strongAuthMaxAgeMs: 15 * 60_000,
   },
 } as const;

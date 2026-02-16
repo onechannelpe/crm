@@ -42,9 +42,13 @@ describe("admin sessions audit contracts", () => {
     mocks.auditCreate.mockReset();
 
     mocks.requireRole.mockResolvedValue({
+      sessionId: "sid-admin",
       userId: 9001,
       branchId: 1,
       role: "admin",
+      onboardingCompleted: true,
+      authMethod: "passkey",
+      strongAuthAt: Date.now(),
     });
     mocks.sessionsDelete.mockResolvedValue(undefined);
     mocks.invalidateUserSessions.mockResolvedValue(undefined);

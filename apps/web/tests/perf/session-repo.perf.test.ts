@@ -26,6 +26,8 @@ describe("session repository performance", () => {
           user_id: 1,
           branch_id: 1,
           role: "executive",
+          auth_method: "password",
+          strong_auth_at: null,
           ip_address: null,
           user_agent: null,
           created_at: now,

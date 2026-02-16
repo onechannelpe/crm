@@ -4,8 +4,8 @@ import { hashAuthKey } from "~/lib/auth/password/key-hash";
 
 type Deps = Pick<Repositories, "authEvents">;
 
-export type AuthEventMethod = "password" | "passkey";
-export type AuthEventStage = "login" | "challenge" | "verify";
+export type AuthEventMethod = "password" | "passkey" | "totp";
+export type AuthEventStage = "login" | "challenge" | "verify" | "recovery";
 export type AuthEventOutcome = "success" | "failure" | "throttled";
 
 function normalize(value: string): string {
