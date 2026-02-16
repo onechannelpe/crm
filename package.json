@@ -15,10 +15,13 @@
     "check:engine-contract": "bun run scripts/generate-engine-contract.ts --check",
     "check:web": "bun --filter='@crm/web' run check",
     "check:engine": "cargo check --manifest-path apps/engine/Cargo.toml",
-    "check": "bun run check:engine-contract && bun run check:web && bun run check:engine",
+    "check": "bun run check:engine-contract && bun run check:web && bun run check:engine && bun run format:check",
+    "format": "oxfmt apps/web packages scripts",
+    "format:check": "oxfmt --check apps/web packages scripts",
     "download:solidjs-docs": "bun --filter='@crm/download-docs' run download solidjs"
   },
   "devDependencies": {
+    "oxfmt": "^0.33.0",
     "shx": "^0.4.0"
   }
 }
