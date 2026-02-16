@@ -13,22 +13,22 @@ function firstName(fullName: string): string {
 
 export function getWorkspaceLabel(user: LabelUser): string {
   if (user.role === "executive") {
-    if (!user.supervisor) return "equipo sin supervisor";
-    return `equipo de ${firstName(user.supervisor.fullName)}`;
+    if (!user.supervisor) return "Equipo sin supervisor";
+    return `Equipo de ${firstName(user.supervisor.fullName)}`;
   }
 
   if (user.role === "supervisor") {
-    if (!user.team) return "mi equipo";
-    return `equipo ${user.team.name}`;
+    if (!user.team) return "Mi equipo";
+    return `Equipo ${user.team.name}`;
   }
 
   if (user.scopeType === "global") {
-    return "plataforma global";
+    return "Plataforma global";
   }
 
   if (user.branch) {
-    return `sucursal ${user.branch.name}`;
+    return `Sucursal ${user.branch.name}`;
   }
 
-  return `espacio de ${firstName(user.fullName)}`;
+  return `Espacio de ${firstName(user.fullName)}`;
 }
