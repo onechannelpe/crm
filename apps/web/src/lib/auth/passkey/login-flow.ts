@@ -12,6 +12,7 @@ import {
   recordPasskeyChallengeFailure,
   recordPasskeyVerifyFailure,
 } from "~/lib/auth/password/throttle";
+import { recordAuthEvent } from "~/lib/auth/security/auth-events";
 import { config } from "~/lib/config";
 import {
   assertNonEmptyString,
@@ -32,7 +33,7 @@ type PasskeyService = {
 
 type Deps = Pick<
   Repositories,
-  "users" | "webauthnChallenges" | "auditLogs" | "authThrottle"
+  "users" | "webauthnChallenges" | "auditLogs" | "authThrottle" | "authEvents"
 >;
 
 export async function beginPasskeyLoginFlow(
@@ -50,11 +51,32 @@ export async function beginPasskeyLoginFlow(
     ipAddress,
     deps,
   );
-  if (!throttle.allowed) throw new Error(INVALID_CREDENTIALS);
+  if (!throttle.allowed) {
+    const blockedUser = await deps.users.findByEmail(safeEmail);
+    await recordAuthEvent(deps, {
+      userId: blockedUser?.id ?? null,
+      identifier: safeEmail,
+      ipAddress,
+      method: "passkey",
+      stage: "challenge",
+      outcome: "throttled",
+      reason: "threshold_exceeded",
+    });
+    throw new Error(INVALID_CREDENTIALS);
+  }
 
   const user = await deps.users.findByEmail(safeEmail);
   if (!user || !user.is_active) {
     await recordPasskeyChallengeFailure(safeEmail, ipAddress, deps);
+    await recordAuthEvent(deps, {
+      userId: user?.id ?? null,
+      identifier: safeEmail,
+      ipAddress,
+      method: "passkey",
+      stage: "challenge",
+      outcome: "failure",
+      reason: user ? "inactive_user" : "user_not_found",
+    });
     throw new Error(INVALID_CREDENTIALS);
   }
 
@@ -86,15 +108,44 @@ export async function finishPasskeyLoginFlow(
     ipAddress,
     deps,
   );
-  if (!throttle.allowed) throw new Error(INVALID_CREDENTIALS);
+  if (!throttle.allowed) {
+    await recordAuthEvent(deps, {
+      userId: challenge?.user_id ?? null,
+      identifier,
+      ipAddress,
+      method: "passkey",
+      stage: "verify",
+      outcome: "throttled",
+      reason: "threshold_exceeded",
+    });
+    throw new Error(INVALID_CREDENTIALS);
+  }
   if (!challenge || challenge.type !== "authentication") {
     await recordPasskeyVerifyFailure(identifier, ipAddress, deps);
+    await recordAuthEvent(deps, {
+      userId: null,
+      identifier,
+      ipAddress,
+      method: "passkey",
+      stage: "verify",
+      outcome: "failure",
+      reason: "invalid_challenge",
+    });
     throw new Error(INVALID_CREDENTIALS);
   }
 
   await deps.webauthnChallenges.delete(challenge.id);
   if (challenge.expires_at < Date.now()) {
     await recordPasskeyVerifyFailure(identifier, ipAddress, deps);
+    await recordAuthEvent(deps, {
+      userId: challenge.user_id,
+      identifier,
+      ipAddress,
+      method: "passkey",
+      stage: "verify",
+      outcome: "failure",
+      reason: "challenge_expired",
+    });
     throw new Error(INVALID_CREDENTIALS);
   }
 
@@ -107,15 +158,41 @@ export async function finishPasskeyLoginFlow(
     verifiedUserId = verification.userId;
   } catch {
     await recordPasskeyVerifyFailure(identifier, ipAddress, deps);
+    await recordAuthEvent(deps, {
+      userId: challenge.user_id,
+      identifier,
+      ipAddress,
+      method: "passkey",
+      stage: "verify",
+      outcome: "failure",
+      reason: "assertion_invalid",
+    });
     throw new Error(INVALID_CREDENTIALS);
   }
 
   const user = await deps.users.findById(verifiedUserId);
   if (!user || !user.is_active) {
     await recordPasskeyVerifyFailure(identifier, ipAddress, deps);
+    await recordAuthEvent(deps, {
+      userId: user?.id ?? verifiedUserId,
+      identifier,
+      ipAddress,
+      method: "passkey",
+      stage: "verify",
+      outcome: "failure",
+      reason: user ? "inactive_user" : "user_not_found",
+    });
     throw new Error(INVALID_CREDENTIALS);
   }
 
   await clearPasskeyVerifyFailureState(identifier, ipAddress, deps);
+  await recordAuthEvent(deps, {
+    userId: user.id,
+    identifier,
+    ipAddress,
+    method: "passkey",
+    stage: "verify",
+    outcome: "success",
+  });
   return { userId: user.id };
 }

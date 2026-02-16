@@ -6,7 +6,7 @@ import { join } from "node:path";
 import type { Database } from "../../src/lib/db/schema";
 
 import { createDb } from "../../src/lib/db/client";
-import { up } from "../../src/lib/db/migrations/001-initial";
+import { up as up001 } from "../../src/lib/db/migrations/001-initial";
 import { createSalesWorkflowService } from "../../src/server/sales/service";
 import { createRepositories } from "../../src/server/shared/registry";
 
@@ -168,7 +168,7 @@ export async function createIsolatedTestDb(
     `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}.db`,
   );
   const db = createDb(dbPath);
-  await up(db);
+  await up001(db);
   await seedTemplate(db);
   const repos = createRepositories(db);
   const sales = createSalesWorkflowService(repos);

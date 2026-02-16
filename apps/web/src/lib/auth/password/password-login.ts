@@ -5,6 +5,7 @@ import { repos } from "~/server/shared/context";
 
 import type { Role } from "../access/rbac";
 
+import { recordAuthEvent } from "../security/auth-events";
 import { createSession } from "../session/session-manager";
 import { verifyPassword } from "./password";
 import {
@@ -17,7 +18,7 @@ const INVALID_CREDENTIALS = "Invalid credentials";
 
 type Deps = Pick<
   Repositories,
-  "users" | "sessions" | "auditLogs" | "authThrottle"
+  "users" | "sessions" | "auditLogs" | "authThrottle" | "authEvents"
 >;
 
 export interface PasswordLoginInput {
@@ -46,17 +47,47 @@ export async function authenticatePasswordLogin(
     resolvedDeps,
   );
 
-  if (!throttle.allowed) throw new Error(INVALID_CREDENTIALS);
+  if (!throttle.allowed) {
+    const blockedUser = await resolvedDeps.users.findByEmail(safeEmail);
+    await recordAuthEvent(resolvedDeps, {
+      userId: blockedUser?.id ?? null,
+      identifier: safeEmail,
+      ipAddress: input.ipAddress,
+      method: "password",
+      stage: "login",
+      outcome: "throttled",
+      reason: "threshold_exceeded",
+    });
+    throw new Error(INVALID_CREDENTIALS);
+  }
 
   const user = await resolvedDeps.users.findByEmail(safeEmail);
 
   if (!user || !user.is_active) {
     await recordLoginFailure(safeEmail, input.ipAddress, resolvedDeps);
+    await recordAuthEvent(resolvedDeps, {
+      userId: user?.id ?? null,
+      identifier: safeEmail,
+      ipAddress: input.ipAddress,
+      method: "password",
+      stage: "login",
+      outcome: "failure",
+      reason: user ? "inactive_user" : "user_not_found",
+    });
     throw new Error(INVALID_CREDENTIALS);
   }
 
   if (!(await verifyPassword(user.password_hash, safePassword))) {
     await recordLoginFailure(safeEmail, input.ipAddress, resolvedDeps);
+    await recordAuthEvent(resolvedDeps, {
+      userId: user.id,
+      identifier: safeEmail,
+      ipAddress: input.ipAddress,
+      method: "password",
+      stage: "login",
+      outcome: "failure",
+      reason: "invalid_password",
+    });
     throw new Error(INVALID_CREDENTIALS);
   }
 
@@ -78,6 +109,14 @@ export async function authenticatePasswordLogin(
     entity_id: user.id,
     changes: null,
     created_at: Date.now(),
+  });
+  await recordAuthEvent(resolvedDeps, {
+    userId: user.id,
+    identifier: safeEmail,
+    ipAddress: input.ipAddress,
+    method: "password",
+    stage: "login",
+    outcome: "success",
   });
 
   return { userId: user.id, role: user.role, token };

@@ -281,6 +281,21 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
+    .createTable("auth_events")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("user_id", "integer", (col) =>
+      col.references("users.id").onDelete("set null"),
+    )
+    .addColumn("method", "varchar(20)", (col) => col.notNull())
+    .addColumn("stage", "varchar(20)", (col) => col.notNull())
+    .addColumn("outcome", "varchar(20)", (col) => col.notNull())
+    .addColumn("reason", "varchar(64)")
+    .addColumn("identifier_hash", "varchar(64)", (col) => col.notNull())
+    .addColumn("ip_hash", "varchar(64)", (col) => col.notNull())
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await db.schema
     .createIndex("idx_users_email")
     .on("users")
     .column("email")
@@ -340,5 +355,20 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     .createIndex("idx_auth_throttle_updated_at")
     .on("auth_throttle_counters")
     .column("updated_at")
+    .execute();
+  await db.schema
+    .createIndex("idx_auth_events_user_created")
+    .on("auth_events")
+    .columns(["user_id", "created_at"])
+    .execute();
+  await db.schema
+    .createIndex("idx_auth_events_identifier_created")
+    .on("auth_events")
+    .columns(["identifier_hash", "created_at"])
+    .execute();
+  await db.schema
+    .createIndex("idx_auth_events_outcome_created")
+    .on("auth_events")
+    .columns(["outcome", "created_at"])
     .execute();
 }

@@ -30,6 +30,15 @@ export async function cleanupStaleAuthThrottle(): Promise<void> {
   }
 }
 
+export async function cleanupStaleAuthEvents(): Promise<void> {
+  const deleted = await repos.authEvents.deleteCreatedBefore(
+    Date.now() - config.auth.eventsRetentionMs,
+  );
+  if (deleted > 0) {
+    console.log(`[Auth cleanup] Deleted ${deleted} old auth events`);
+  }
+}
+
 export function getCacheStats() {
   return sessionCache.getStats();
 }
@@ -40,6 +49,7 @@ if (typeof setInterval !== "undefined") {
       cleanupExpiredSessions().catch(console.error);
       cleanupExpiredWebauthnChallenges().catch(console.error);
       cleanupStaleAuthThrottle().catch(console.error);
+      cleanupStaleAuthEvents().catch(console.error);
     },
     60 * 60 * 1000,
   );

@@ -83,6 +83,15 @@ describe("passkey flows", () => {
       key,
     );
     expect(counter?.failure_count).toBe(1);
+
+    const retries = await ctx.repos.authEvents.findRecentLoginRetriesByUser(
+      1,
+      5,
+    );
+    expect(retries[0]?.method).toBe("passkey");
+    expect(retries[0]?.stage).toBe("verify");
+    expect(retries[0]?.outcome).toBe("failure");
+    expect(retries[0]?.reason).toBe("assertion_invalid");
   });
 
   it("begin passkey registration creates registration challenge", async () => {

@@ -57,6 +57,17 @@ describe("password login service", () => {
         ctx.repos,
       ),
     ).rejects.toThrow("Invalid credentials");
+
+    const retries = await ctx.repos.authEvents.findRecentLoginRetriesByUser(
+      1,
+      20,
+    );
+    expect(retries).toHaveLength(7);
+    expect(retries[0]?.outcome).toBe("throttled");
+    expect(retries[0]?.reason).toBe("threshold_exceeded");
+    expect(retries.filter((event) => event.outcome === "failure")).toHaveLength(
+      6,
+    );
   });
 
   it("creates session with request metadata on successful auth", async () => {
@@ -69,5 +80,11 @@ describe("password login service", () => {
     const session = await ctx.repos.sessions.listForUser(1);
     expect(session[0]?.ip_address).toBe(ipAddress);
     expect(session[0]?.user_agent).toBe(userAgent);
+
+    const events = await ctx.repos.authEvents.findRecentByUser(1, 5);
+    expect(events[0]?.method).toBe("password");
+    expect(events[0]?.stage).toBe("login");
+    expect(events[0]?.outcome).toBe("success");
+    expect(events[0]?.reason).toBeNull();
   });
 });

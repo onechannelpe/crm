@@ -2,6 +2,7 @@ import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/schema";
 
+import { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import { createContactsRepo } from "~/server/contacts/repos-contacts";
 import { createOrganizationsRepo } from "~/server/contacts/repos-organizations";
@@ -27,6 +28,7 @@ export function createRepositories(db: Kysely<Database>) {
   return {
     users: createUsersRepo(db),
     sessions: createSessionRepository(db),
+    authEvents: createAuthEventsRepo(db),
     authThrottle: createAuthThrottleRepo(db),
     organizations: createOrganizationsRepo(db),
     contacts: createContactsRepo(db),
