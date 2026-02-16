@@ -1,30 +1,34 @@
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 
 #[derive(Debug, Clone)]
 pub struct Record {
-    pub dni: String,
-    pub name: String,
-    pub phone_primary: Option<String>,
-    pub phone_secondary: Option<String>,
-    pub org_ruc: Option<String>,
-    pub org_name: Option<String>,
+    pub dni: Arc<str>,
+    pub name: Option<Arc<str>>,
+    pub phone_primary: Option<Arc<str>>,
+    pub phone_secondary: Option<Arc<str>>,
+    pub org_ruc: Option<Arc<str>>,
+    pub org_name: Option<Arc<str>>,
 }
 
 #[derive(Debug, Serialize)]
 pub struct SearchResult {
-    pub dni: String,
-    pub name: String,
-    pub phone_primary: Option<String>,
-    pub phone_secondary: Option<String>,
-    pub org_ruc: Option<String>,
-    pub org_name: Option<String>,
+    pub dni: Arc<str>,
+    pub name: Arc<str>,
+    pub phone_primary: Option<Arc<str>>,
+    pub phone_secondary: Option<Arc<str>>,
+    pub org_ruc: Option<Arc<str>>,
+    pub org_name: Option<Arc<str>>,
 }
 
 impl From<&Record> for SearchResult {
     fn from(r: &Record) -> Self {
         Self {
             dni: r.dni.clone(),
-            name: r.name.clone(),
+            name: r
+                .name
+                .clone()
+                .unwrap_or_else(|| Arc::<str>::from(format!("Contacto {}", r.dni))),
             phone_primary: r.phone_primary.clone(),
             phone_secondary: r.phone_secondary.clone(),
             org_ruc: r.org_ruc.clone(),

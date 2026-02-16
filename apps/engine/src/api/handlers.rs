@@ -1,6 +1,6 @@
 use crate::error::RequestError;
-use crate::search;
-use crate::search_index::SearchIndex;
+use crate::index::store::SearchIndex;
+use crate::query::lookup;
 use crate::types::{HealthResponse, SearchRequest, SearchResponse, SearchType};
 use crate::validation;
 use axum::response::Json;
@@ -14,19 +14,19 @@ pub async fn handle_search(
     let results = match body.search_type {
         SearchType::Dni => {
             validation::validate_dni(&body.value)?;
-            search::by_dni(&index, &body.value)
+            lookup::by_dni(&index, &body.value)
         }
         SearchType::Ruc => {
             validation::validate_ruc(&body.value)?;
-            search::by_ruc(&index, &body.value)
+            lookup::by_ruc(&index, &body.value)
         }
         SearchType::Phone => {
             validation::validate_phone(&body.value)?;
-            search::by_phone(&index, &body.value)
+            lookup::by_phone(&index, &body.value)
         }
         SearchType::Name => {
             validation::validate_name(&body.value)?;
-            search::by_name(&index, &body.value, body.limit)
+            lookup::by_name(&index, &body.value, body.limit)
         }
     };
 

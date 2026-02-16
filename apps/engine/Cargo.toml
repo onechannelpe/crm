@@ -8,9 +8,11 @@ axum = "0.8.8"
 csv = "1.4.0"
 dashmap = "6.1.0"
 dotenvy = "0.15.7"
+hashbrown = "0.16.0"
 hex = "0.4.3"
 hmac = "0.12.1"
-serde = { version = "1.0.228", features = ["derive"] }
+memmap2 = "0.9.9"
+serde = { version = "1.0.228", features = ["derive", "rc"] }
 serde_json = "1.0.149"
 sha2 = "0.10.9"
 thiserror = "2.0.18"

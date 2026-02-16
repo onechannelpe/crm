@@ -20,7 +20,7 @@ impl HmacVerifier {
         }
     }
 
-    fn verify(&self, body: &[u8], timestamp: u64, signature: &str) -> bool {
+    fn verify(&self, body: &[u8], timestamp: u64, signature: &[u8]) -> bool {
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()
@@ -38,12 +38,7 @@ impl HmacVerifier {
         mac.update(&timestamp.to_be_bytes());
         mac.update(body);
 
-        let provided = match hex::decode(signature) {
-            Ok(bytes) => bytes,
-            Err(_) => return false,
-        };
-
-        mac.verify_slice(&provided).is_ok()
+        mac.verify_slice(signature).is_ok()
     }
 }
 
@@ -65,15 +60,19 @@ pub async fn require_hmac(request: Request, next: Next) -> Result<Response, Requ
         .headers()
         .get("x-signature")
         .and_then(|v| v.to_str().ok())
-        .ok_or(RequestError::InvalidSignature)?
-        .to_string();
+        .ok_or(RequestError::InvalidSignature)?;
+    // SHA-256 hex digest is always 32 bytes decoded. Keep this fixed-size to
+    // avoid per-request heap allocation in the auth path.
+    let mut signature_bytes = [0u8; 32];
+    hex::decode_to_slice(signature, &mut signature_bytes)
+        .map_err(|_| RequestError::InvalidSignature)?;
 
     let (parts, body) = request.into_parts();
     let body_bytes = axum::body::to_bytes(body, 1024 * 64)
         .await
         .map_err(|_| RequestError::InvalidSignature)?;
 
-    if !verifier.verify(&body_bytes, timestamp, &signature) {
+    if !verifier.verify(&body_bytes, timestamp, &signature_bytes) {
         return Err(RequestError::InvalidSignature);
     }
 
