@@ -5,8 +5,7 @@
   "type": "module",
   "main": "./src/cli.ts",
   "scripts": {
-    "download": "bun run src/cli.ts",
-    "format": "bun x oxfmt --write ."
+    "download": "bun run src/cli.ts"
   },
   "dependencies": {
     "picocolors": "^1.1.1"
