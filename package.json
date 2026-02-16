@@ -7,7 +7,7 @@
     "packages/*"
   ],
   "scripts": {
-    "clean": "bun x shx rm -rf apps/*/node_modules node_modules",
+    "clean": "bun x shx rm -rf apps/web/*.db* apps/*/node_modules node_modules",
     "dev": "bun run --parallel dev:engine dev:web",
     "dev:web": "bun --no-env-file --env-file=../../.env run --cwd apps/web dev",
     "dev:engine": "cargo run --manifest-path apps/engine/Cargo.toml",
