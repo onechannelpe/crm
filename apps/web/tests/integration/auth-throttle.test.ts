@@ -3,7 +3,7 @@ import {
   checkLoginThrottle,
   clearLoginFailureState,
   recordLoginFailure,
-} from "../../src/lib/auth/throttle";
+} from "../../src/lib/auth/password/throttle";
 import {
   cleanupTestDb,
   createIsolatedTestDb,

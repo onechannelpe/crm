@@ -1,10 +1,10 @@
 "use server";
 
 import { repos } from "~/server/shared/context";
-import { requireRole } from "~/lib/auth/session";
-import { invalidateUserSessions } from "~/lib/auth/session-manager";
+import { requireRole } from "~/lib/auth/access/session";
+import { invalidateUserSessions } from "~/lib/auth/session/session-manager";
 import type { UserSession } from "~/lib/db/schema";
-import type { Role } from "~/lib/auth/rbac";
+import type { Role } from "~/lib/auth/access/rbac";
 import type { ActionSuccess } from "~/lib/contracts/common";
 import {
   allSessionsRevokedChanges,

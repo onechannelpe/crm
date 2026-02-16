@@ -1,7 +1,7 @@
 "use server";
 
 import { repos } from "~/server/shared/context";
-import { requireAuth } from "~/lib/auth/session";
+import { requireAuth } from "~/lib/auth/access/session";
 
 export interface DashboardStats {
   activeLeads: number;

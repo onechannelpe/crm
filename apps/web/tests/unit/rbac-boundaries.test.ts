@@ -5,7 +5,7 @@ import {
   hasPermission,
   type Permission,
   type Role,
-} from "../../src/lib/auth/rbac";
+} from "../../src/lib/auth/access/rbac";
 import { PERMISSION_MANIFEST } from "../support/security-manifests";
 
 const ALL_PERMISSIONS: Permission[] = [

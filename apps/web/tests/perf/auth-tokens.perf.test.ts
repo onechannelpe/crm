@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { generateSessionToken } from "../../src/lib/auth/tokens";
+import { generateSessionToken } from "../../src/lib/auth/session/tokens";
 
 describe("auth token performance", () => {
   it("generates many tokens within a performance budget", () => {

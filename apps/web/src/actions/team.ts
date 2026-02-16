@@ -1,8 +1,8 @@
 "use server";
 
 import { repos } from "~/server/shared/context";
-import { requirePermission } from "~/lib/auth/session";
-import type { Role } from "~/lib/auth/rbac";
+import { requirePermission } from "~/lib/auth/access/session";
+import type { Role } from "~/lib/auth/access/rbac";
 
 export interface TeamMember {
   id: number;

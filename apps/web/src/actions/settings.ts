@@ -1,6 +1,6 @@
 "use server";
 
-import { requirePermission } from "~/lib/auth/session";
+import { requirePermission } from "~/lib/auth/access/session";
 import { repos } from "~/server/shared/context";
 import type { ActionSuccess } from "~/lib/contracts/common";
 import type { ProductUpdatedChanges } from "~/lib/contracts/audit";

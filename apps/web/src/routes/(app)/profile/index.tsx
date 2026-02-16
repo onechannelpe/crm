@@ -2,7 +2,10 @@ import { createResource, Show } from "solid-js";
 import { getMe } from "~/actions/auth-session";
 import { Badge } from "~/components/ui/badge";
 import { Card } from "~/components/ui/card";
-import { getRoleBadgeVariant, getRoleLabel } from "~/lib/auth/role-display";
+import {
+  getRoleBadgeVariant,
+  getRoleLabel,
+} from "~/lib/auth/access/role-display";
 
 export default function ProfilePage() {
   const [user] = createResource(getMe);

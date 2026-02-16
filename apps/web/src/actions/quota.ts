@@ -1,7 +1,7 @@
 "use server";
 
 import { quotaService } from "~/server/shared/context";
-import { requirePermission } from "~/lib/auth/session";
+import { requirePermission } from "~/lib/auth/access/session";
 import { repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 import type { ActionSuccess } from "~/lib/contracts/common";

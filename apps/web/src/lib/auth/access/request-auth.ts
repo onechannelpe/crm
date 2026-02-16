@@ -1,8 +1,8 @@
-import { getSessionCookie } from "./cookies";
+import { getSessionCookie } from "../session/cookies";
 import {
   validateSessionToken,
   type SessionValidationResult,
-} from "./session-manager";
+} from "../session/session-manager";
 
 export interface AuthRequestEvent {
   request: Request;

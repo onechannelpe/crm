@@ -1,4 +1,4 @@
-import type { Permission, Role } from "../../src/lib/auth/rbac";
+import type { Permission, Role } from "../../src/lib/auth/access/rbac";
 
 export const PERMISSION_MANIFEST: Record<Role, Permission[]> = {
   executive: [

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getClientIp } from "../../src/lib/auth/client-ip";
+import { getClientIp } from "../../src/lib/auth/password/client-ip";
 
 describe("client ip resolution", () => {
   it("prefers cf-connecting-ip", () => {

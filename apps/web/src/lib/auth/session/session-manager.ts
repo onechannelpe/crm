@@ -4,8 +4,8 @@ import {
   isValidTokenFormat,
 } from "./tokens";
 import { sessionCache } from "./session-cache";
-import { isRole, type Role } from "./rbac";
-import type { AuthSession } from "./session-types";
+import { isRole, type Role } from "../access/rbac";
+import type { AuthSession } from "../access/session-types";
 import { repos } from "~/server/shared/context";
 import type { Repositories } from "~/server/shared/registry";
 import type { NewUserSession } from "~/lib/db/schema";

@@ -1,12 +1,15 @@
 "use server";
 
-import { deleteSessionCookie, getSessionCookie } from "~/lib/auth/cookies";
+import {
+  deleteSessionCookie,
+  getSessionCookie,
+} from "~/lib/auth/session/cookies";
 import {
   invalidateSession,
   validateSessionToken,
-} from "~/lib/auth/session-manager";
-import type { Role } from "~/lib/auth/rbac";
-import { hashSessionToken } from "~/lib/auth/tokens";
+} from "~/lib/auth/session/session-manager";
+import type { Role } from "~/lib/auth/access/rbac";
+import { hashSessionToken } from "~/lib/auth/session/tokens";
 import { repos } from "~/server/shared/context";
 
 export async function logout(): Promise<void> {

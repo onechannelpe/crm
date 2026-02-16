@@ -1,13 +1,13 @@
 import { assertNonEmptyString } from "~/lib/contracts/guards";
 import { verifyPassword } from "./password";
-import { createSession } from "./session-manager";
+import { createSession } from "../session/session-manager";
 import {
   checkLoginThrottle,
   clearLoginFailureState,
   recordLoginFailure,
 } from "./throttle";
 import { repos } from "~/server/shared/context";
-import type { Role } from "./rbac";
+import type { Role } from "../access/rbac";
 import type { Repositories } from "~/server/shared/registry";
 const INVALID_CREDENTIALS = "Invalid credentials";
 type Deps = Pick<

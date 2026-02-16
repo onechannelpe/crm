@@ -2,7 +2,7 @@
 
 import { leadService } from "~/server/shared/context";
 import { repos } from "~/server/shared/context";
-import { requirePermission } from "~/lib/auth/session";
+import { requirePermission } from "~/lib/auth/access/session";
 import { isErr } from "~/server/shared/result";
 import { config } from "~/lib/config";
 import type { ActionSuccess } from "~/lib/contracts/common";

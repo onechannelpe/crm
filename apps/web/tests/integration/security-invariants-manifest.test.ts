@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { getPermissions, ROLES } from "../../src/lib/auth/rbac";
+import { getPermissions, ROLES } from "../../src/lib/auth/access/rbac";
 import { createQuotaService } from "../../src/server/quota/service";
 import type { TestDbContext } from "../support/test-db";
 import { cleanupTestDb, createIsolatedTestDb } from "../support/test-db";
