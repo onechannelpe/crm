@@ -6,7 +6,7 @@ import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 
 export function Header() {
-  const { user } = useSession();
+  const { currentUser } = useSession();
 
   return (
     <header class="h-14 bg-background border-b flex items-center justify-between px-6 sticky top-0 z-10">
@@ -35,7 +35,7 @@ export function Header() {
         </div>
 
         <div class="flex items-center gap-2">
-          <HeaderSearchPanel role={user()?.role} />
+          <HeaderSearchPanel role={currentUser().role} />
           <HeaderNotificationsPanel />
           <Button
             variant="ghost"

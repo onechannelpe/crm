@@ -8,7 +8,7 @@ import { Card } from "~/components/ui/card";
 import { createAppQuery } from "~/lib/ui/create-app-query";
 
 export default function DashboardPage() {
-  const { user } = useSession();
+  const { currentUser } = useSession();
   const [quota] = createAppQuery(getQuotaStatus, { allocated: false });
   const [stats] = createAppQuery(getDashboardStats, {
     activeLeads: 0,
@@ -26,7 +26,7 @@ export default function DashboardPage() {
     <div class="space-y-6">
       <div>
         <h1 class="text-2xl font-bold text-gray-900">
-          Hola, {user()?.fullName ?? "Usuario"} 👋
+          Hola, {currentUser().fullName} 👋
         </h1>
         <p class="text-gray-500 mt-1">Aquí tienes un resumen de hoy.</p>
       </div>

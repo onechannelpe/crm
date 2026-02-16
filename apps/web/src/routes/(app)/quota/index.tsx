@@ -16,7 +16,7 @@ export default function QuotaPage() {
     { initialValue: { allocated: false }, ssrLoadFrom: "initial" },
   );
   const currentQuota = () => quota.latest ?? { allocated: false };
-  const { user } = useSession();
+  const { currentUser } = useSession();
   const [execId, setExecId] = createSignal("");
   const [amount, setAmount] = createSignal("10");
   const [loading, setLoading] = createSignal(false);
@@ -40,7 +40,7 @@ export default function QuotaPage() {
           if (!prev.allocated) {
             return prev;
           }
-          if (user()?.id !== targetExecutiveId) {
+          if (currentUser().id !== targetExecutiveId) {
             return prev;
           }
           return {
