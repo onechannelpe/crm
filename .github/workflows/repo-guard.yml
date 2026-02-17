@@ -43,7 +43,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: check contract sync
-        run: bun run check:engine-contract
+        run: bun run check:contract
 
       - name: check engine
         run: bun run check:engine
