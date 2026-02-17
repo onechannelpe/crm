@@ -12,7 +12,6 @@
     "dev:web": "bun --no-env-file --env-file=.env run --cwd apps/web dev",
     "build:engine:sqlite": "python3 scripts/build_engine_sqlite.py --input apps/engine/data/contacts.csv --output apps/engine/data/contacts.sqlite",
     "test:engine": "cargo test --manifest-path apps/engine/Cargo.toml",
-    "bench:engine": "cargo test --manifest-path apps/engine/Cargo.toml --test perf_regression perf_regression_probe -- --ignored --nocapture",
     "check": "bun run --parallel check:contract check:web check:engine check:format",
     "check:contract": "bun run scripts/generate-engine-contract.ts --check",
     "check:web": "bun run --cwd apps/web check",
