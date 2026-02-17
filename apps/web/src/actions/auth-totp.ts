@@ -2,7 +2,7 @@
 
 import QRCode from "qrcode";
 
-import { requireAuth } from "~/lib/auth/access/session";
+import { requireSession } from "~/lib/auth/access/session";
 import {
   generateRecoveryCodes,
   hashRecoveryCodes,
@@ -24,7 +24,7 @@ export interface TotpStatusResult {
 }
 
 export async function getTotpStatus(): Promise<TotpStatusResult> {
-  const session = await requireAuth();
+  const session = await requireSession();
   const factor = await repos.userTotpFactors.findByUserId(session.userId);
   return { enabled: factor?.is_enabled === 1 };
 }
@@ -33,7 +33,7 @@ export async function beginTotpEnrollment(): Promise<{
   otpauthUri: string;
   qrCodeDataUrl: string;
 }> {
-  const session = await requireAuth();
+  const session = await requireSession();
   const user = await repos.users.findById(session.userId);
   if (!user) {
     throw new Error("Unauthorized");
@@ -53,7 +53,7 @@ export async function beginTotpEnrollment(): Promise<{
 }
 
 export async function finishTotpEnrollment(code: string): Promise<string[]> {
-  const session = await requireAuth();
+  const session = await requireSession();
   const safeCode = assertNonEmptyString(code, "code");
   const user = await repos.users.findById(session.userId);
   const factor = await repos.userTotpFactors.findByUserId(session.userId);

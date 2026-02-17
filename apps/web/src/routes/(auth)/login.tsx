@@ -138,6 +138,10 @@ export default function LoginPage() {
                   onInput={(e) => setTotpCode(e.currentTarget.value)}
                   class="h-11 bg-gray-50/50 border-gray-200 focus:bg-white transition-all"
                 />
+                <p class="text-xs text-muted-foreground">
+                  Usa tu código TOTP o de recuperación si tienes TOTP
+                  habilitado.
+                </p>
               </div>
 
               <Show when={error()}>
