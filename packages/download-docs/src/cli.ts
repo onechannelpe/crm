@@ -33,6 +33,7 @@ async function main(): Promise<void> {
   await ensureDocsGitignored();
 
   for (const config of frameworks) {
+    // oxlint-disable-next-line no-await-in-loop -- run per-framework updates sequentially to keep logs deterministic and avoid concurrent AGENTS.md writes.
     await processFramework(config);
   }
 }
