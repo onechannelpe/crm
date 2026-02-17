@@ -56,7 +56,7 @@ export function Sidebar() {
             <p class="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
               OneChannel
             </p>
-            <p class="font-semibold text-lg tracking-tight">Control hub</p>
+            <p class="font-semibold text-lg tracking-tight">Panel de control</p>
           </div>
         </div>
         <div class="px-4 pb-3">
