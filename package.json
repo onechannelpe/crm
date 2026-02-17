@@ -10,29 +10,30 @@
     "dev": "bun run --parallel dev:engine dev:web",
     "dev:engine": "cargo run --manifest-path apps/engine/Cargo.toml",
     "dev:web": "bun --no-env-file --env-file=.env run --cwd apps/web dev",
-
     "build:engine:sqlite": "uv run scripts/build_engine_sqlite.py --input apps/engine/data/contacts.csv --output apps/engine/data/contacts.sqlite",
     "test:engine": "cargo test --manifest-path apps/engine/Cargo.toml",
-
-    "check": "bun run --parallel check:contract check:web check:engine check:format check:clippy",
+    "check": "bun run --parallel check:contract check:web check:engine check:lint check:format check:clippy",
     "check:contract": "bun run scripts/generate-engine-contract.ts --check",
     "check:web": "bun run --cwd apps/web check",
     "check:engine": "cargo check --manifest-path apps/engine/Cargo.toml",
+    "check:lint": "bun run --parallel check:lint:web check:lint:other",
+    "check:lint:web": "oxlint -c .oxlintrc.json --type-aware --tsconfig apps/web/tsconfig.json --deny-warnings apps/web/src apps/web/tests",
+    "check:lint:other": "oxlint -c .oxlintrc.json --deny-warnings packages scripts",
     "check:format": "bun run --parallel check:format:ts check:format:rust",
     "check:format:ts": "oxfmt --check apps/web packages scripts",
     "check:format:rust": "cargo fmt --manifest-path apps/engine/Cargo.toml --check",
     "check:clippy": "cargo clippy --manifest-path apps/engine/Cargo.toml --workspace --all-targets --all-features -- -D warnings",
-
     "format": "bun run --parallel format:ts format:rust",
     "format:ts": "oxfmt apps/web packages scripts",
     "format:rust": "cargo fmt --manifest-path apps/engine/Cargo.toml",
-
     "clean": "shx rm -rf apps/web/*.db* 'apps/*/node_modules' node_modules",
     "generate:engine-contract": "bun run scripts/generate-engine-contract.ts",
     "download:docs": "bun run --cwd packages/download-docs download"
   },
   "devDependencies": {
     "oxfmt": "^0.33.0",
+    "oxlint": "^1.48.0",
+    "oxlint-tsgolint": "^0.14.0",
     "shx": "^0.3.4"
   }
 }
