@@ -126,6 +126,24 @@ export interface AppNotificationsTable {
   read_at: number | null;
 }
 
+export interface ClientSearchViewsTable {
+  id: Generated<number>;
+  user_id: number;
+  name: string;
+  search_type:
+    | "dni"
+    | "ruc"
+    | "phone"
+    | "person_name"
+    | "company_name"
+    | "phone_enriched";
+  query_value: string;
+  limit_value: number;
+  is_default: number;
+  created_at: number;
+  updated_at: number;
+}
+
 export interface OrganizationsTable {
   id: Generated<number>;
   ruc: string;
@@ -353,6 +371,7 @@ export interface Database {
   notification_jobs: NotificationJobsTable;
   notification_deliveries: NotificationDeliveriesTable;
   app_notifications: AppNotificationsTable;
+  client_search_views: ClientSearchViewsTable;
   user_sessions: UserSessionsTable;
   auth_throttle_counters: AuthThrottleCountersTable;
   auth_events: AuthEventsTable;
@@ -385,6 +404,7 @@ export type NotificationRecipient = Selectable<NotificationRecipientsTable>;
 export type NotificationJob = Selectable<NotificationJobsTable>;
 export type NotificationDelivery = Selectable<NotificationDeliveriesTable>;
 export type AppNotification = Selectable<AppNotificationsTable>;
+export type ClientSearchView = Selectable<ClientSearchViewsTable>;
 export type Organization = Selectable<OrganizationsTable>;
 export type Contact = Selectable<ContactsTable>;
 export type LeadAssignment = Selectable<LeadAssignmentsTable>;
@@ -415,6 +435,7 @@ export type NewNotificationRecipient = Insertable<NotificationRecipientsTable>;
 export type NewNotificationJob = Insertable<NotificationJobsTable>;
 export type NewNotificationDelivery = Insertable<NotificationDeliveriesTable>;
 export type NewAppNotification = Insertable<AppNotificationsTable>;
+export type NewClientSearchView = Insertable<ClientSearchViewsTable>;
 export type NewUserSession = Insertable<UserSessionsTable>;
 export type NewAuthThrottleCounter = Insertable<AuthThrottleCountersTable>;
 export type NewAuthEvent = Insertable<AuthEventsTable>;

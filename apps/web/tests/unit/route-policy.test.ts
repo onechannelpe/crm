@@ -17,6 +17,7 @@ describe("route policy", () => {
 
   it("enforces role access checks for restricted paths", () => {
     expect(canAccessPath("executive", "/settings")).toBe(false);
+    expect(canAccessPath("executive", "/quota")).toBe(false);
     expect(canAccessPath("admin", "/settings")).toBe(true);
     expect(canAccessPath("sales_manager", "/sales/42/fix")).toBe(false);
     expect(canAccessPath("executive", "/sales/42/fix")).toBe(true);
@@ -28,6 +29,7 @@ describe("route policy", () => {
     );
     expect(executiveSearch).toContain("/leads");
     expect(executiveSearch).toContain("/client-search");
+    expect(executiveSearch).not.toContain("/quota");
     expect(executiveSearch).not.toContain("/settings");
 
     const inventorySidebar = getSidebarRoutes("logistics", "inventory").map(

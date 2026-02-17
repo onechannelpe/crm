@@ -109,7 +109,7 @@ export function HeaderNotificationsPanel() {
       <Button
         variant="ghost"
         size="icon"
-        class="text-muted-foreground relative"
+        class="relative rounded-full text-muted-foreground"
         onClick={() => {
           setOpen((prev) => !prev);
         }}
@@ -122,8 +122,8 @@ export function HeaderNotificationsPanel() {
         </Show>
       </Button>
       <Show when={open()}>
-        <div class="absolute right-0 mt-2 w-96 rounded-md border bg-white shadow-md z-20">
-          <div class="p-3 border-b flex items-center justify-between">
+        <div class="crm-surface absolute right-0 z-20 mt-2 w-96 rounded-2xl">
+          <div class="flex items-center justify-between border-b p-3">
             <p class="text-sm font-semibold">Notificaciones</p>
             <Button
               variant="ghost"
@@ -136,7 +136,7 @@ export function HeaderNotificationsPanel() {
               Marcar todas leidas
             </Button>
           </div>
-          <div class="max-h-96 overflow-auto p-2 space-y-2">
+          <div class="max-h-96 space-y-2 overflow-auto p-2">
             <Show
               when={currentFeed().notifications.length > 0}
               fallback={
@@ -149,7 +149,7 @@ export function HeaderNotificationsPanel() {
                 {(item) => (
                   <button
                     type="button"
-                    class={`w-full text-left border rounded p-2 border-l-4 hover:bg-muted/40 ${priorityClass(item.priority)} ${item.readAt ? "opacity-70" : ""}`}
+                    class={`w-full rounded-xl border border-l-4 p-2.5 text-left hover:bg-muted/40 ${priorityClass(item.priority)} ${item.readAt ? "opacity-70" : ""}`}
                     onClick={() => {
                       void handleOpenItem(item.id, item.actionUrl);
                     }}

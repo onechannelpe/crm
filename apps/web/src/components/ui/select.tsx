@@ -28,10 +28,10 @@ export function Select(props: SelectProps) {
       )}
       <select
         id={selectId}
-        class={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+        class={`w-full rounded-2xl border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 ${
           local.error
             ? "border-red-500 focus:ring-red-500"
-            : "border-gray-300 focus:ring-blue-500"
+            : "border-input/85 bg-white/75 focus:ring-ring/70"
         } disabled:bg-gray-100 disabled:cursor-not-allowed ${local.class || ""}`}
         {...others}
       >

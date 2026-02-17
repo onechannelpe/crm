@@ -49,7 +49,7 @@ export const STATIC_ROUTES: StaticRoute[] = [
     id: "quota",
     label: "Cuota",
     href: "/quota",
-    permission: "quota:read",
+    permission: "quota:allocate",
     sidebarGroup: "sales",
   },
   {
