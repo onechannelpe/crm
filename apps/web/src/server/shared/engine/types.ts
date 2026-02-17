@@ -5,6 +5,7 @@ export interface SearchResult {
   phone_secondary: string | null;
   org_ruc: string | null;
   org_name: string | null;
+  sibling_phones: string[] | null;
 }
 
 export interface SearchResponse {
@@ -12,4 +13,19 @@ export interface SearchResponse {
   count: number;
 }
 
-export type SearchType = "dni" | "ruc" | "phone" | "name";
+export type SearchType =
+  | "dni"
+  | "ruc"
+  | "phone"
+  | "person_name"
+  | "company_name"
+  | "phone_enriched";
+
+export const SEARCH_TYPES = [
+  "dni",
+  "ruc",
+  "phone",
+  "person_name",
+  "company_name",
+  "phone_enriched",
+] as const satisfies ReadonlyArray<SearchType>;

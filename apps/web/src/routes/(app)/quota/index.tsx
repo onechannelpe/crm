@@ -67,57 +67,80 @@ export default function QuotaPage() {
   }
 
   return (
-    <div class="space-y-6 max-w-2xl">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">Gestión de cuotas</h1>
-        <p class="text-sm text-gray-500 mt-1">
-          Asigna cuotas diarias a tus ejecutivos
+    <div class="max-w-4xl space-y-6">
+      <div class="crm-surface rounded-3xl p-6 md:p-7">
+        <p class="text-xs uppercase tracking-[0.14em] text-muted-foreground">
+          Control de capacidad
+        </p>
+        <h1 class="mt-1 text-3xl font-semibold text-foreground">
+          Gestión de cuotas
+        </h1>
+        <p class="mt-2 text-sm text-muted-foreground md:text-base">
+          Define cuántos leads puede trabajar cada ejecutivo hoy. Esta cuota
+          afecta la asignación automática de leads.
         </p>
       </div>
 
-      <Show when={quotaValues()}>
-        {(values) => (
-          <QuotaDisplay used={values().used} total={values().total} />
-        )}
-      </Show>
-      <Show when={!currentQuota().allocated}>
-        <div class="bg-white border border-gray-200 rounded-lg p-4">
-          <p class="text-sm text-gray-500">
-            Sin cuota asignada por el momento.
-          </p>
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_360px]">
+        <div class="space-y-4">
+          <Show
+            when={quotaValues()}
+            fallback={
+              <div class="crm-surface rounded-3xl p-5">
+                <p class="text-sm text-muted-foreground">
+                  Sin cuota asignada por el momento.
+                </p>
+              </div>
+            }
+          >
+            {(values) => (
+              <QuotaDisplay used={values().used} total={values().total} />
+            )}
+          </Show>
+
+          <div class="crm-surface rounded-3xl p-5">
+            <p class="text-xs uppercase tracking-[0.12em] text-muted-foreground">
+              Reglas
+            </p>
+            <ul class="mt-3 space-y-2 text-sm text-muted-foreground">
+              <li>Solo puedes asignar cuota al inicio de jornada.</li>
+              <li>Evita sobreasignar si hay ventas pendientes de validar.</li>
+              <li>Confirma el `ID` del ejecutivo antes de guardar.</li>
+            </ul>
+          </div>
         </div>
-      </Show>
 
-      <div class="bg-white border border-gray-200 rounded-lg p-6">
-        <h3 class="font-semibold mb-4">Asignar cuota</h3>
-        <form
-          onSubmit={(e) => {
-            void handleAllocate(e);
-          }}
-          class="space-y-4"
-        >
-          <Input
-            type="number"
-            label="ID del ejecutivo"
-            value={execId()}
-            onInput={(e) => setExecId(e.currentTarget.value)}
-            required
-          />
+        <div class="crm-surface rounded-3xl p-6">
+          <h3 class="mb-4 text-lg font-semibold">Asignar cuota</h3>
+          <form
+            onSubmit={(e) => {
+              void handleAllocate(e);
+            }}
+            class="space-y-4"
+          >
+            <Input
+              type="number"
+              label="ID del ejecutivo"
+              value={execId()}
+              onInput={(e) => setExecId(e.currentTarget.value)}
+              required
+            />
 
-          <Input
-            type="number"
-            label="Cantidad de leads"
-            value={amount()}
-            onInput={(e) => setAmount(e.currentTarget.value)}
-            min="1"
-            max="100"
-            required
-          />
+            <Input
+              type="number"
+              label="Cantidad de leads"
+              value={amount()}
+              onInput={(e) => setAmount(e.currentTarget.value)}
+              min="1"
+              max="100"
+              required
+            />
 
-          <Button type="submit" disabled={loading()} class="w-full">
-            {loading() ? "Asignando..." : "Asignar cuota"}
-          </Button>
-        </form>
+            <Button type="submit" disabled={loading()} class="w-full">
+              {loading() ? "Asignando..." : "Asignar cuota"}
+            </Button>
+          </form>
+        </div>
       </div>
     </div>
   );

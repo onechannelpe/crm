@@ -10,6 +10,7 @@ import {
   finishPasskeyRegistrationFlow,
 } from "../../src/lib/auth/passkey/registration-flow";
 import { hashAuthKey } from "../../src/lib/auth/password/key-hash";
+import type { SendPrivilegedLoginAlert } from "../../src/lib/auth/security/privileged-login-alert";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -17,6 +18,7 @@ import {
 } from "../support/test-db";
 
 describe("passkey flows", () => {
+  const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
   let ctx: TestDbContext;
   const ipAddress = "198.51.100.66";
 
@@ -71,6 +73,7 @@ describe("passkey flows", () => {
         ipAddress,
         ctx.repos,
         passkeyService,
+        sendPrivilegedLoginAlert,
       ),
     ).rejects.toThrow("Invalid credentials");
 

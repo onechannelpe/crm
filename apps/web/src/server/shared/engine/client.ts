@@ -35,7 +35,7 @@ export function createEngineClient(config: EngineClientConfig): EngineClient {
 
   return {
     async search(type, value, limit = 20) {
-      validateSearchInput(value, limit);
+      validateSearchInput(type, value, limit);
       const body = JSON.stringify({ type, value, limit });
       const response = await post(engineApiPath(ENGINE_ENDPOINTS.search), body);
 

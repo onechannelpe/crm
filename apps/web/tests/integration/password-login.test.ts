@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { hashPassword } from "../../src/lib/auth/password/password";
 import { authenticatePasswordLogin } from "../../src/lib/auth/password/password-login";
+import type { SendPrivilegedLoginAlert } from "../../src/lib/auth/security/privileged-login-alert";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -9,6 +10,7 @@ import {
 } from "../support/test-db";
 
 describe("password login service", () => {
+  const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
   let ctx: TestDbContext;
   const ipAddress = "198.51.100.44";
   const userAgent = "vitest-agent";
@@ -46,7 +48,10 @@ describe("password login service", () => {
       try {
         await authenticatePasswordLogin(
           { email, password: "wrong", ipAddress, userAgent },
-          ctx.repos,
+          {
+            repos: ctx.repos,
+            sendPrivilegedLoginAlert,
+          },
         );
       } catch {}
     });
@@ -54,7 +59,10 @@ describe("password login service", () => {
     await expect(
       authenticatePasswordLogin(
         { email, password: rightPassword, ipAddress, userAgent },
-        ctx.repos,
+        {
+          repos: ctx.repos,
+          sendPrivilegedLoginAlert,
+        },
       ),
     ).rejects.toThrow("Invalid credentials");
 
@@ -73,7 +81,7 @@ describe("password login service", () => {
   it("creates session with request metadata on successful auth", async () => {
     const result = await authenticatePasswordLogin(
       { email, password: rightPassword, ipAddress, userAgent },
-      ctx.repos,
+      { repos: ctx.repos, sendPrivilegedLoginAlert },
     );
 
     expect(result.userId).toBe(1);
@@ -102,7 +110,7 @@ describe("password login service", () => {
 
     const result = await authenticatePasswordLogin(
       { email, password: rightPassword, ipAddress, userAgent },
-      ctx.repos,
+      { repos: ctx.repos, sendPrivilegedLoginAlert },
     );
 
     expect(result.onboardingCompleted).toBe(false);

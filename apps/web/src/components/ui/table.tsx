@@ -3,7 +3,7 @@ import type { JSX } from "solid-js";
 import { cn } from "~/lib/utils";
 
 const Table = (props: JSX.HTMLAttributes<HTMLTableElement>) => (
-  <div class="relative w-full overflow-auto rounded-lg border bg-white shadow-sm">
+  <div class="relative w-full overflow-auto rounded-3xl border bg-white/85 shadow-[0_12px_30px_-20px_rgba(34,30,24,0.45)]">
     <table
       class={cn("w-full caption-bottom text-sm", props.class)}
       {...props}
@@ -12,7 +12,7 @@ const Table = (props: JSX.HTMLAttributes<HTMLTableElement>) => (
 );
 
 const TableHeader = (props: JSX.HTMLAttributes<HTMLTableSectionElement>) => (
-  <thead class={cn("[&_tr]:border-b bg-muted/40", props.class)} {...props} />
+  <thead class={cn("[&_tr]:border-b bg-muted/55", props.class)} {...props} />
 );
 
 const TableBody = (props: JSX.HTMLAttributes<HTMLTableSectionElement>) => (
@@ -42,7 +42,7 @@ const TableRow = (props: JSX.HTMLAttributes<HTMLTableRowElement>) => (
 const TableHead = (props: JSX.ThHTMLAttributes<HTMLTableCellElement>) => (
   <th
     class={cn(
-      "h-10 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0",
+      "h-11 px-4 text-left align-middle text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground [&:has([role=checkbox])]:pr-0",
       props.class,
     )}
     {...props}

@@ -1,40 +1,45 @@
+import { useLocation } from "@solidjs/router";
+
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import { HeaderNotificationsPanel } from "~/components/layout/header-notifications-panel";
 import { HeaderSearchPanel } from "~/components/layout/header-search-panel";
 import { useSession } from "~/components/providers/session-provider";
-import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
+
+const ROUTE_LABELS: Record<string, string> = {
+  dashboard: "Inicio",
+  leads: "Leads",
+  "client-search": "Búsqueda de clientes",
+  quota: "Cuota",
+  validation: "Validación",
+  inventory: "Inventario",
+  team: "Equipo",
+  settings: "Configuración",
+  profile: "Perfil",
+  sales: "Ventas",
+};
 
 export function Header() {
   const { currentUser } = useSession();
+  const location = useLocation();
+  const currentLabel = () => {
+    const segment =
+      location.pathname.split("/").filter(Boolean)[0] ?? "dashboard";
+    return ROUTE_LABELS[segment] ?? "Plataforma";
+  };
 
   return (
-    <header class="h-14 bg-background border-b flex items-center justify-between px-6 sticky top-0 z-10">
-      <div class="flex items-center gap-2 text-sm text-muted-foreground">
-        <span class="hover:text-foreground cursor-pointer transition-colors">
-          Plataforma
-        </span>
-        <span class="text-gray-300">/</span>
-        <span class="font-medium text-foreground">Inicio</span>
-      </div>
-
-      <div class="flex items-center gap-4">
-        <div class="hidden md:flex items-center gap-4 mr-4">
-          <button
-            type="button"
-            class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Documentación
-          </button>
-          <Badge
-            variant="warning"
-            class="bg-orange-50 text-orange-700 border-orange-100"
-          >
-            Pruebas
-          </Badge>
+    <header class="sticky top-0 z-10 border-b border-border/70 bg-background/80 px-4 py-3 backdrop-blur md:px-8">
+      <div class="mx-auto flex w-full max-w-[1200px] items-center justify-between">
+        <div class="flex items-center gap-2 text-sm text-muted-foreground">
+          <span class="rounded-full border border-border/80 bg-white/70 px-3 py-1 text-[11px] uppercase tracking-[0.18em]">
+            CRM
+          </span>
+          <span>/</span>
+          <span class="font-medium text-foreground">{currentLabel()}</span>
         </div>
 
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1.5">
           <HeaderSearchPanel role={currentUser().role} />
           <HeaderNotificationsPanel />
           <Button

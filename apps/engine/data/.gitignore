@@ -1,6 +1,0 @@
-*.csv
-*.sqlite
-*.sqlite-*
-sqlite_workload*.json
-perf_baseline*.json
-bench-history/

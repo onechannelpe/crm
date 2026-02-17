@@ -3,6 +3,7 @@ import { Migrator } from "kysely";
 
 import { db } from "./db";
 import * as m001 from "./migrations/001-initial";
+import * as m002 from "./migrations/002-client-search-views";
 
 /**
  * Static migration provider that avoids FileMigrationProvider's dynamic import(),
@@ -13,6 +14,7 @@ const staticProvider: MigrationProvider = {
   async getMigrations() {
     return {
       "001-initial": m001,
+      "002-client-search-views": m002,
     };
   },
 };

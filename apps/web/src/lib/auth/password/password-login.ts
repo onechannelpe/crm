@@ -6,6 +6,7 @@ import type { Role } from "../access/rbac";
 import { recordAuthEvent } from "../security/auth-events";
 import { sendAlertOnNewLoginSource } from "../security/login-source-alert";
 import { resolvePasswordStrongAuth } from "../security/password-strong-auth";
+import { type SendPrivilegedLoginAlert } from "../security/privileged-login-alert";
 import { createSession } from "../session/session-manager";
 import { verifyPassword } from "./password";
 import {
@@ -42,13 +43,18 @@ export interface PasswordLoginResult {
   token: string;
 }
 
+interface PasswordLoginDeps {
+  repos?: Deps;
+  sendPrivilegedLoginAlert: SendPrivilegedLoginAlert;
+}
+
 export async function authenticatePasswordLogin(
   input: PasswordLoginInput,
-  deps?: Deps,
+  deps: PasswordLoginDeps,
 ): Promise<PasswordLoginResult> {
   const safeEmail = assertNonEmptyString(input.email, "email");
   const safePassword = assertNonEmptyString(input.password, "password");
-  const resolvedDeps = deps ?? repos;
+  const resolvedDeps = deps.repos ?? repos;
   const throttle = await checkLoginThrottle(
     safeEmail,
     input.ipAddress,
@@ -112,6 +118,7 @@ export async function authenticatePasswordLogin(
     ipAddress: input.ipAddress,
     method: strongAuth.authMethod,
     deps: resolvedDeps,
+    sendPrivilegedLoginAlert: deps.sendPrivilegedLoginAlert,
   });
 
   const token = await createSession(

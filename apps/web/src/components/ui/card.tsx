@@ -11,7 +11,7 @@ export function Card(props: CardProps) {
   return (
     <div
       class={cn(
-        "rounded-lg border bg-card text-card-foreground shadow-sm",
+        "rounded-3xl border bg-card/85 text-card-foreground shadow-[0_12px_30px_-22px_rgba(35,30,24,0.5)] backdrop-blur",
         props.class,
       )}
     >
@@ -22,7 +22,7 @@ export function Card(props: CardProps) {
 
 export function CardHeader(props: CardProps) {
   return (
-    <div class={cn("flex flex-col space-y-1.5 p-6", props.class)}>
+    <div class={cn("flex flex-col space-y-1.5 p-7", props.class)}>
       {props.children}
     </div>
   );
@@ -50,12 +50,12 @@ export function CardDescription(props: CardProps) {
 }
 
 export function CardContent(props: CardProps) {
-  return <div class={cn("p-6 pt-0", props.class)}>{props.children}</div>;
+  return <div class={cn("p-7 pt-0", props.class)}>{props.children}</div>;
 }
 
 export function CardFooter(props: CardProps) {
   return (
-    <div class={cn("flex items-center p-6 pt-0", props.class)}>
+    <div class={cn("flex items-center p-7 pt-0", props.class)}>
       {props.children}
     </div>
   );

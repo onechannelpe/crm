@@ -38,9 +38,9 @@ export function AccountMenu(props: AccountMenuProps) {
         aria-haspopup="menu"
         aria-expanded={open()}
         onClick={() => setOpen((prev) => !prev)}
-        class="flex w-full items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-muted"
+        class="flex w-full items-center gap-3 rounded-2xl border border-border/70 bg-white/70 px-3 py-2.5 transition-colors hover:bg-white"
       >
-        <div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+        <div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
           {getUserInitials(props.fullName)}
         </div>
         <div class="flex-1 text-left">
@@ -56,11 +56,11 @@ export function AccountMenu(props: AccountMenuProps) {
       </button>
 
       <Show when={open()}>
-        <div class="absolute inset-x-0 bottom-full z-20 mb-2 rounded-md border bg-background p-1 shadow-sm">
+        <div class="absolute inset-x-0 bottom-full z-20 mb-2 rounded-2xl border bg-background p-1.5 shadow-md">
           <A
             href="/profile"
             onClick={() => setOpen(false)}
-            class="flex items-center gap-2 rounded-sm px-2 py-2 text-sm hover:bg-muted"
+            class="flex items-center gap-2 rounded-xl px-2.5 py-2 text-sm hover:bg-muted"
           >
             <UserRound class="h-4 w-4 text-muted-foreground" />
             Mi perfil
@@ -68,7 +68,7 @@ export function AccountMenu(props: AccountMenuProps) {
           <A
             href="/settings"
             onClick={() => setOpen(false)}
-            class="flex items-center gap-2 rounded-sm px-2 py-2 text-sm hover:bg-muted"
+            class="flex items-center gap-2 rounded-xl px-2.5 py-2 text-sm hover:bg-muted"
           >
             <Settings class="h-4 w-4 text-muted-foreground" />
             Configuración
@@ -85,7 +85,7 @@ export function AccountMenu(props: AccountMenuProps) {
                   console.error("Logout failed", error);
                 });
             }}
-            class="flex w-full items-center gap-2 rounded-sm px-2 py-2 text-left text-sm text-destructive hover:bg-destructive/10"
+            class="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-sm text-destructive hover:bg-destructive/10"
           >
             <LogOut class="h-4 w-4" />
             Cerrar sesión

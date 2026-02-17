@@ -12,6 +12,7 @@ import {
 } from "~/lib/auth/password/throttle";
 import { recordAuthEvent } from "~/lib/auth/security/auth-events";
 import { sendAlertOnNewLoginSource } from "~/lib/auth/security/login-source-alert";
+import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
 import { config } from "~/lib/config";
 import {
   assertNonEmptyString,
@@ -97,6 +98,7 @@ export async function finishPasskeyLoginFlow(
   ipAddress: string,
   deps: Deps,
   passkeyService: PasskeyService,
+  sendPrivilegedLoginAlert: SendPrivilegedLoginAlert,
 ): Promise<{ userId: number }> {
   const safeChallengeId = assertPositiveInt(challengeId, "challengeId");
   const challenge = await deps.webauthnChallenges.findById(safeChallengeId);
@@ -190,6 +192,7 @@ export async function finishPasskeyLoginFlow(
     ipAddress,
     method: "passkey",
     deps,
+    sendPrivilegedLoginAlert,
   });
   await clearPasskeyVerifyFailureState(identifier, ipAddress, deps);
   await recordAuthEvent(deps, {
