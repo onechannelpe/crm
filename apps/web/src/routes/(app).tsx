@@ -16,12 +16,12 @@ function AuthenticatedAppShell(props: RouteSectionProps) {
 
   return (
     <Show when={user()} fallback={<Loading />}>
-      <div class="min-h-screen bg-muted/20 flex font-sans text-foreground">
+      <div class="crm-shell min-h-screen flex font-sans text-foreground">
         <Sidebar />
-        <div class="flex-1 md:ml-64 flex flex-col min-h-screen transition-all duration-300">
+        <div class="flex-1 md:ml-72 flex flex-col min-h-screen transition-all duration-300">
           <Header />
           <main class="flex-1 p-4 md:p-8 overflow-y-auto">
-            <div class="max-w-400 mx-auto w-full">
+            <div class="mx-auto w-full max-w-[1200px] crm-fade-up">
               <Suspense fallback={<Loading />}>{props.children}</Suspense>
             </div>
           </main>

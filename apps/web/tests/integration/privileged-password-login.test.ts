@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { hashPassword } from "../../src/lib/auth/password/password";
 import { authenticatePasswordLogin } from "../../src/lib/auth/password/password-login";
+import type { SendPrivilegedLoginAlert } from "../../src/lib/auth/security/privileged-login-alert";
 import {
   decryptTotpSecret,
   encryptTotpSecret,
@@ -17,6 +18,7 @@ import {
 } from "../support/test-db";
 
 describe("privileged password login", () => {
+  const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
   let ctx: TestDbContext;
   const ipAddress = "198.51.100.88";
   const userAgent = "vitest-agent";
@@ -40,7 +42,10 @@ describe("privileged password login", () => {
     await expect(
       authenticatePasswordLogin(
         { email, password: rightPassword, ipAddress, userAgent },
-        ctx.repos,
+        {
+          repos: ctx.repos,
+          sendPrivilegedLoginAlert,
+        },
       ),
     ).rejects.toThrow("Strong authentication required");
   });
@@ -54,7 +59,7 @@ describe("privileged password login", () => {
 
     const result = await authenticatePasswordLogin(
       { email, password: rightPassword, ipAddress, userAgent },
-      ctx.repos,
+      { repos: ctx.repos, sendPrivilegedLoginAlert },
     );
 
     expect(result.role).toBe("superuser");
@@ -79,7 +84,10 @@ describe("privileged password login", () => {
           ipAddress,
           userAgent,
         },
-        ctx.repos,
+        {
+          repos: ctx.repos,
+          sendPrivilegedLoginAlert,
+        },
       ),
     ).rejects.toThrow("Strong authentication required");
   });
@@ -99,7 +107,7 @@ describe("privileged password login", () => {
 
     await authenticatePasswordLogin(
       { email, password: rightPassword, totpCode: code, ipAddress, userAgent },
-      ctx.repos,
+      { repos: ctx.repos, sendPrivilegedLoginAlert },
     );
 
     const sessions = await ctx.repos.sessions.listForUser(5);
@@ -123,7 +131,10 @@ describe("privileged password login", () => {
           ipAddress,
           userAgent,
         },
-        ctx.repos,
+        {
+          repos: ctx.repos,
+          sendPrivilegedLoginAlert,
+        },
       ),
     ).rejects.toThrow("Invalid TOTP code");
   });

@@ -17,6 +17,7 @@ export type Permission =
   | "sales:submit"
   | "sales:review"
   | "sales:approve"
+  | "client_search:read"
   | "team:read"
   | "team:manage"
   | "inventory:read"
@@ -45,6 +46,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "quota:read",
     "sales:create",
     "sales:submit",
+    "client_search:read",
   ],
   supervisor: [
     "leads:read",
@@ -55,6 +57,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "sales:submit",
     "sales:review",
     "sales:approve",
+    "client_search:read",
     "team:read",
     "team:manage",
     "audit:read",
@@ -69,6 +72,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "team:read",
     "team:manage",
     "inventory:read",
+    "client_search:read",
     "audit:read",
     "admin:read",
     "admin:manage",
@@ -84,6 +88,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "team:manage",
     "inventory:read",
     "inventory:manage",
+    "client_search:read",
     "hr:read",
     "hr:manage",
     "admin:read",
@@ -99,6 +104,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "sales:submit",
     "sales:review",
     "sales:approve",
+    "client_search:read",
     "team:read",
     "team:manage",
     "inventory:read",

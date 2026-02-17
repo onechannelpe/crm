@@ -20,20 +20,24 @@ export const QuotaDisplay: Component<QuotaDisplayProps> = (props) => {
   };
 
   return (
-    <div class="bg-white border border-gray-200 rounded-lg p-4">
-      <div class="flex items-center justify-between mb-2">
-        <span class="text-sm font-medium text-gray-700">Cuota diaria</span>
-        <Badge variant={variant()}>
+    <div class="crm-surface rounded-3xl p-5">
+      <div class="mb-2 flex items-center justify-between">
+        <span class="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          Cuota diaria
+        </span>
+        <Badge variant={variant()} class="px-2.5 py-1">
           {props.used}/{props.total}
         </Badge>
       </div>
-      <div class="w-full bg-gray-200 rounded-full h-2">
+      <div class="h-2 w-full rounded-full bg-secondary">
         <div
-          class="bg-blue-600 h-2 rounded-full transition-all"
+          class="h-2 rounded-full bg-primary transition-all"
           style={{ width: `${percentage()}%` }}
         />
       </div>
-      <p class="text-xs text-gray-500 mt-2">{remaining()} leads restantes</p>
+      <p class="mt-2 text-sm text-muted-foreground">
+        {remaining()} leads restantes para hoy
+      </p>
     </div>
   );
 };

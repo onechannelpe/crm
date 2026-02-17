@@ -1,3 +1,9 @@
+# generated (build artifacts)
 .vinxi
 .output
 app.config.timestamp_*.js
+
+# data
+*.db
+*.db-shm
+*.db-wal

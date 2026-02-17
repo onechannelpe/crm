@@ -89,12 +89,50 @@ export default function ValidationPage() {
   };
 
   return (
-    <div class="space-y-6">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">Validación de ventas</h1>
-        <p class="text-sm text-gray-500 mt-1">
-          {currentNotes().length} ventas pendientes de aprobación
+    <div class="space-y-7">
+      <div class="crm-surface rounded-3xl p-6 md:p-7">
+        <p class="text-xs uppercase tracking-[0.14em] text-muted-foreground">
+          Mesa de revisión
         </p>
+        <h1 class="mt-1 text-3xl font-semibold text-foreground md:text-4xl">
+          Validación de ventas
+        </h1>
+        <p class="mt-2 text-sm text-muted-foreground md:text-base">
+          {currentNotes().length} ventas pendientes. Revisa evidencia, aprueba
+          lo correcto y rechaza con observaciones claras.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div class="crm-surface rounded-3xl p-5">
+          <p class="text-xs uppercase tracking-[0.12em] text-muted-foreground">
+            Pendientes
+          </p>
+          <p class="mt-1 text-3xl font-semibold">{currentNotes().length}</p>
+          <p class="text-xs text-muted-foreground">Esperando decisión</p>
+        </div>
+        <div class="crm-surface rounded-3xl p-5">
+          <p class="text-xs uppercase tracking-[0.12em] text-muted-foreground">
+            SLA recomendado
+          </p>
+          <p class="mt-1 text-3xl font-semibold">24h</p>
+          <p class="text-xs text-muted-foreground">
+            Tiempo máximo de respuesta
+          </p>
+        </div>
+        <div class="crm-surface rounded-3xl p-5">
+          <p class="text-xs uppercase tracking-[0.12em] text-muted-foreground">
+            Modo actual
+          </p>
+          <p class="mt-1 text-2xl font-semibold">
+            {rejectingNoteId() ? "Rechazo activo" : "Revisión rápida"}
+          </p>
+          <p class="text-xs text-muted-foreground">
+            {rejectingNoteId()
+              ? "Completa observaciones antes de continuar"
+              : "Aprueba o abre un rechazo detallado"}
+          </p>
+        </div>
       </div>
 
       <Show
@@ -108,8 +146,8 @@ export default function ValidationPage() {
       >
         <Show when={rejectingNoteId()}>
           {(id) => (
-            <div class="rounded-md border border-red-200 bg-red-50 p-4">
-              <h2 class="font-semibold text-red-900 mb-2">
+            <div class="rounded-3xl border border-red-200 bg-red-50 p-5">
+              <h2 class="mb-2 text-lg font-semibold text-red-900">
                 Rechazar venta #{id()}
               </h2>
               <RejectionForm
@@ -119,7 +157,7 @@ export default function ValidationPage() {
             </div>
           )}
         </Show>
-        <div class="rounded-md border bg-white">
+        <div class="crm-surface rounded-3xl p-2 md:p-3">
           <Table>
             <TableHeader>
               <TableRow>
@@ -148,10 +186,10 @@ export default function ValidationPage() {
                       {formatDate(note.created_at)}
                     </TableCell>
                     <TableCell class="text-right">
-                      <div class="flex items-center justify-end gap-2">
+                      <div class="flex items-center justify-end gap-2 whitespace-nowrap">
                         <Button
                           size="sm"
-                          class="bg-emerald-600 hover:bg-emerald-700 text-white"
+                          variant="secondary"
                           onClick={() => {
                             void handleApprove(note.id);
                           }}

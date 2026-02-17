@@ -18,7 +18,7 @@ export function Loading(props: LoadingProps) {
 
   return (
     <div class="flex items-center justify-center p-8">
-      <LoaderCircle class={`${sizeClass()} animate-spin text-blue-600`} />
+      <LoaderCircle class={`${sizeClass()} animate-spin text-primary`} />
     </div>
   );
 }

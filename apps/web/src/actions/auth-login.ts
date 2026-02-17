@@ -5,9 +5,20 @@ import { getRequestEvent } from "solid-js/web";
 import type { Role } from "~/lib/auth/access/rbac";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { authenticatePasswordLogin } from "~/lib/auth/password/password-login";
+import { createPrivilegedLoginAlertSender } from "~/lib/auth/security/login-alerts";
 import { getSessionCookie, setSessionCookie } from "~/lib/auth/session/cookies";
 import { invalidateSession } from "~/lib/auth/session/session-manager";
 import { hashSessionToken } from "~/lib/auth/session/tokens";
+import { env } from "~/lib/env";
+import { repos } from "~/server/shared/context";
+
+const sendPrivilegedLoginAlert = createPrivilegedLoginAlertSender(repos, {
+  resendApiKey: env.resendApiKey || undefined,
+  fromEmail: env.emailFrom || undefined,
+  whatsappAccessToken: env.whatsappAccessToken || undefined,
+  whatsappPhoneNumberId: env.whatsappPhoneNumberId || undefined,
+  whatsappApiVersion: env.whatsappApiVersion || undefined,
+});
 
 export interface LoginResult {
   userId: number;
@@ -30,13 +41,16 @@ export async function login(
     await invalidateSession(oldSessionId).catch(() => {});
   }
 
-  const result = await authenticatePasswordLogin({
-    email,
-    password,
-    totpCode,
-    ipAddress,
-    userAgent,
-  });
+  const result = await authenticatePasswordLogin(
+    {
+      email,
+      password,
+      totpCode,
+      ipAddress,
+      userAgent,
+    },
+    { sendPrivilegedLoginAlert },
+  );
   setSessionCookie(result.token);
 
   return {

@@ -10,13 +10,23 @@ import {
 } from "~/lib/auth/passkey/login-flow";
 import { createPasskeyService } from "~/lib/auth/passkey/passkey";
 import { getClientIp } from "~/lib/auth/password/client-ip";
+import { createPrivilegedLoginAlertSender } from "~/lib/auth/security/login-alerts";
 import { getSessionCookie, setSessionCookie } from "~/lib/auth/session/cookies";
 import {
   createSession,
   invalidateSession,
 } from "~/lib/auth/session/session-manager";
 import { hashSessionToken } from "~/lib/auth/session/tokens";
+import { env } from "~/lib/env";
 import { repos } from "~/server/shared/context";
+
+const sendPrivilegedLoginAlert = createPrivilegedLoginAlertSender(repos, {
+  resendApiKey: env.resendApiKey || undefined,
+  fromEmail: env.emailFrom || undefined,
+  whatsappAccessToken: env.whatsappAccessToken || undefined,
+  whatsappPhoneNumberId: env.whatsappPhoneNumberId || undefined,
+  whatsappApiVersion: env.whatsappApiVersion || undefined,
+});
 
 export interface PasskeyChallengeResult {
   challengeId: number;
@@ -59,6 +69,7 @@ export async function finishPasskeyLogin(
     ipAddress,
     repos,
     createPasskeyService(repos),
+    sendPrivilegedLoginAlert,
   );
   const user = await repos.users.findById(flowResult.userId);
   if (!user) throw new Error("Invalid credentials");

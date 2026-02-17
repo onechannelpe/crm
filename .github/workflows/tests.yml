@@ -25,6 +25,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  SESSION_SECRET: ci-session-secret
+  ENGINE_HMAC_SECRET: ci-engine-hmac-secret
+
 jobs:
   web-build:
     runs-on: ubuntu-latest
@@ -43,12 +47,6 @@ jobs:
 
       - name: install dependencies
         run: bun install --frozen-lockfile
-
-      - name: generate test env
-        run: |
-          cp .env.example .env
-          sed -i "s/your-session-secret-at-least-32-chars-long/$(openssl rand -hex 32)/" .env
-          sed -i "s/your-hmac-secret-must-match-engine/$(openssl rand -hex 32)/" .env
 
       - name: build web app
         run: bun --filter='@crm/web' run build
@@ -71,18 +69,12 @@ jobs:
       - name: install dependencies
         run: bun install --frozen-lockfile
 
-      - name: generate test env
-        run: |
-          cp .env.example .env
-          sed -i "s/your-session-secret-at-least-32-chars-long/$(openssl rand -hex 32)/" .env
-          sed -i "s/your-hmac-secret-must-match-engine/$(openssl rand -hex 32)/" .env
-
       - name: run checks
         run: bun run check:web
 
       - name: run default tests
         working-directory: apps/web
-        run: bun run test
+        run: bun x vitest run --project default
 
   perf-tests:
     runs-on: ubuntu-latest
@@ -103,12 +95,6 @@ jobs:
       - name: install dependencies
         run: bun install --frozen-lockfile
 
-      - name: generate test env
-        run: |
-          cp .env.example .env
-          sed -i "s/your-session-secret-at-least-32-chars-long/$(openssl rand -hex 32)/" .env
-          sed -i "s/your-hmac-secret-must-match-engine/$(openssl rand -hex 32)/" .env
-
       - name: run perf tests
         working-directory: apps/web
-        run: bun run test:perf
+        run: bun x vitest run --project perf

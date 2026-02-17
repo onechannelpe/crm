@@ -6,6 +6,7 @@ import ChevronDown from "~/components/icons/chevron-down";
 import House from "~/components/icons/house";
 import MessageSquare from "~/components/icons/message-square";
 import Package from "~/components/icons/package";
+import Search from "~/components/icons/search";
 import Settings from "~/components/icons/settings";
 import ShieldCheck from "~/components/icons/shield-check";
 import Users from "~/components/icons/users";
@@ -26,6 +27,7 @@ const ICONS: Record<string, Component<{ class?: string }>> = {
   team: Users,
   settings: Settings,
   leads: Users,
+  "client-search": Search,
   quota: ShieldCheck,
   validation: MessageSquare,
   inventory: Package,
@@ -40,65 +42,100 @@ export function Sidebar() {
       items: getSidebarRoutes(currentUser().role, group.key),
     })).filter((group) => group.items.length > 0),
   );
+  const mobileItems = createMemo(() =>
+    navGroups()
+      .flatMap((group) => group.items)
+      .slice(0, 5),
+  );
 
   return (
-    <aside class="fixed inset-y-0 left-0 z-10 w-64 border-r bg-background flex flex-col transition-transform duration-300">
-      <div class="h-14 flex items-center px-6 border-b">
-        <span class="font-bold text-lg tracking-tight">OneChannel</span>
-      </div>
-      <div class="p-4">
-        <button
-          type="button"
-          class="w-full flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-md shadow-sm bg-white hover:bg-gray-50 transition-colors"
-        >
-          <span>{getWorkspaceLabel(currentUser())}</span>
-          <ChevronDown class="w-4 h-4 text-muted-foreground" />
-        </button>
-      </div>
-      <nav class="flex-1 overflow-y-auto px-4 space-y-6">
-        <For each={navGroups()}>
-          {(group) => (
-            <div class="space-y-1">
-              <h4 class="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                {group.label}
-              </h4>
-              <For each={group.items}>
-                {(item) => {
-                  const isActive = () =>
-                    location.pathname.startsWith(item.href);
-                  const Icon = ICONS[item.id];
-                  return (
-                    <A
-                      href={item.href}
-                      class={cn(
-                        "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
-                        isActive()
-                          ? "bg-primary/10 text-primary"
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                      )}
-                    >
-                      {Icon ? (
-                        <Icon
-                          class={cn(
-                            "w-4 h-4",
-                            isActive()
-                              ? "text-primary"
-                              : "text-muted-foreground",
-                          )}
-                        />
-                      ) : null}
-                      {item.label}
-                    </A>
-                  );
-                }}
-              </For>
-            </div>
-          )}
+    <>
+      <aside class="crm-surface fixed inset-y-4 left-4 z-20 hidden w-68 flex-col rounded-3xl md:flex">
+        <div class="flex h-18 items-center px-6">
+          <div>
+            <p class="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+              OneChannel
+            </p>
+            <p class="font-semibold text-lg tracking-tight">Control hub</p>
+          </div>
+        </div>
+        <div class="px-4 pb-3">
+          <button
+            type="button"
+            class="flex w-full items-center justify-between rounded-2xl border border-border/80 bg-white/80 px-4 py-3 text-sm font-medium shadow-sm transition-colors hover:bg-white"
+          >
+            <span>{getWorkspaceLabel(currentUser())}</span>
+            <ChevronDown class="h-4 w-4 text-muted-foreground" />
+          </button>
+        </div>
+        <nav class="flex-1 space-y-5 overflow-y-auto px-4 pb-4">
+          <For each={navGroups()}>
+            {(group) => (
+              <div class="space-y-1.5">
+                <h4 class="px-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  {group.label}
+                </h4>
+                <For each={group.items}>
+                  {(item) => {
+                    const isActive = () =>
+                      location.pathname.startsWith(item.href);
+                    const Icon = ICONS[item.id];
+                    return (
+                      <A
+                        href={item.href}
+                        class={cn(
+                          "flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-sm transition-all",
+                          isActive()
+                            ? "bg-primary text-primary-foreground shadow-sm"
+                            : "text-muted-foreground hover:bg-white/85 hover:text-foreground",
+                        )}
+                      >
+                        {Icon ? (
+                          <Icon
+                            class={cn(
+                              "h-4 w-4",
+                              isActive()
+                                ? "text-primary-foreground"
+                                : "text-muted-foreground",
+                            )}
+                          />
+                        ) : null}
+                        <span class="font-medium">{item.label}</span>
+                      </A>
+                    );
+                  }}
+                </For>
+              </div>
+            )}
+          </For>
+        </nav>
+        <div class="border-t border-border/70 px-4 py-4">
+          <AccountMenu fullName={currentUser().fullName} onLogout={logout} />
+        </div>
+      </aside>
+
+      <nav class="crm-surface fixed inset-x-3 bottom-3 z-30 flex items-center justify-between rounded-2xl px-2 py-1.5 md:hidden">
+        <For each={mobileItems()}>
+          {(item) => {
+            const isActive = () => location.pathname.startsWith(item.href);
+            const Icon = ICONS[item.id];
+            return (
+              <A
+                href={item.href}
+                class={cn(
+                  "flex min-w-0 flex-1 items-center justify-center gap-1 rounded-xl px-2 py-2 text-[11px]",
+                  isActive()
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground",
+                )}
+              >
+                {Icon ? <Icon class="h-3.5 w-3.5" /> : null}
+                <span class="truncate">{item.label}</span>
+              </A>
+            );
+          }}
         </For>
       </nav>
-      <div class="p-4 border-t">
-        <AccountMenu fullName={currentUser().fullName} onLogout={logout} />
-      </div>
-    </aside>
+    </>
   );
 }

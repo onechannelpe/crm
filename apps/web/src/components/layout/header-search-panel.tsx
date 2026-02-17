@@ -26,25 +26,25 @@ export function HeaderSearchPanel(props: HeaderSearchPanelProps) {
       <Button
         variant="ghost"
         size="icon"
-        class="text-muted-foreground"
+        class="text-muted-foreground rounded-full"
         onClick={() => setOpen((prev) => !prev)}
       >
         <Search class="w-4 h-4" />
       </Button>
       <Show when={open()}>
-        <div class="absolute right-0 mt-2 w-72 rounded-md border bg-white shadow-md p-2 z-20">
+        <div class="crm-surface absolute right-0 z-20 mt-2 w-80 rounded-2xl p-2.5">
           <input
-            class="w-full rounded border px-2 py-1.5 text-sm"
+            class="w-full rounded-xl border border-border/80 bg-white/70 px-3 py-2 text-sm"
             placeholder="Buscar modulo o ruta"
             value={query()}
             onInput={(event) => setQuery(event.currentTarget.value)}
           />
-          <div class="mt-2 max-h-72 overflow-auto space-y-1">
+          <div class="mt-2 max-h-72 space-y-1 overflow-auto">
             <For each={visibleItems()}>
               {(item) => (
                 <A
                   href={item.href}
-                  class="block rounded px-2 py-1.5 text-sm hover:bg-muted"
+                  class="block rounded-xl px-2.5 py-2 text-sm hover:bg-muted"
                   onClick={() => setOpen(false)}
                 >
                   {item.label}

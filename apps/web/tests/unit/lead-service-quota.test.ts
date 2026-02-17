@@ -97,6 +97,7 @@ describe("lead service quota invariants", () => {
           phone_secondary: null,
           org_ruc: "20100000001",
           org_name: "Org Lima",
+          sibling_phones: null,
         },
       ],
     });

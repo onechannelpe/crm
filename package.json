@@ -9,8 +9,8 @@
   "scripts": {
     "dev": "bun run --parallel dev:engine dev:web",
     "dev:engine": "cargo run --manifest-path apps/engine/Cargo.toml",
-    "dev:web": "bun --no-env-file --env-file=.env run --cwd apps/web dev",
-    "build:engine:sqlite": "uv run scripts/build_engine_sqlite.py --input apps/engine/data/contacts.csv --output apps/engine/data/contacts.sqlite",
+    "dev:web": "bun --no-env-file --env-file=../../.env run --cwd apps/web dev",
+    "build:engine:sqlite": "uv run scripts/build-engine-sqlite.py --input apps/engine/data/contacts.csv --output apps/engine/data/contacts.sqlite",
     "test:engine": "cargo test --manifest-path apps/engine/Cargo.toml",
     "check": "bun run --parallel check:contract check:web check:engine check:lint check:format check:clippy",
     "check:contract": "bun run scripts/generate-engine-contract.ts --check",

@@ -2,7 +2,7 @@ import { hashAuthKey } from "~/lib/auth/password/key-hash";
 import type { User } from "~/lib/db/schema";
 import type { Repositories } from "~/server/shared/registry";
 
-import { sendPrivilegedLoginAlert } from "./login-alerts";
+import type { SendPrivilegedLoginAlert } from "./privileged-login-alert";
 
 type Deps = Pick<Repositories, "authEvents">;
 
@@ -13,6 +13,7 @@ export async function sendAlertOnNewLoginSource(params: {
   ipAddress: string;
   method: string;
   deps: Deps;
+  sendPrivilegedLoginAlert: SendPrivilegedLoginAlert;
 }): Promise<void> {
   const ipHash = hashAuthKey(`ip:${params.ipAddress}`);
   const knownIp = await params.deps.authEvents.hasRecentSuccessFromIp(
@@ -24,7 +25,7 @@ export async function sendAlertOnNewLoginSource(params: {
     return;
   }
 
-  await sendPrivilegedLoginAlert({
+  await params.sendPrivilegedLoginAlert({
     userId: params.user.id,
     email: params.user.email,
     fullName: params.user.full_name,
