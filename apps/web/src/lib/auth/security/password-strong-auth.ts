@@ -36,6 +36,9 @@ export async function resolvePasswordStrongAuth(params: {
   const hasTotp = factor?.is_enabled === 1;
   const safeCode = totpCode?.trim();
   if (!hasTotp) {
+    if (user.onboarding_completed_at === null) {
+      return { authMethod: "password", strongAuthAt: null };
+    }
     await recordAuthEvent(deps, {
       userId: user.id,
       identifier,

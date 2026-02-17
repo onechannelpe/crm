@@ -36,7 +36,7 @@ describe("privileged password login", () => {
     await cleanupTestDb(ctx);
   });
 
-  it("rejects privileged login when strong auth is not enrolled", async () => {
+  it("rejects privileged login without strong auth after onboarding", async () => {
     await expect(
       authenticatePasswordLogin(
         { email, password: rightPassword, ipAddress, userAgent },
@@ -45,7 +45,26 @@ describe("privileged password login", () => {
     ).rejects.toThrow("Strong authentication required");
   });
 
-  it("rejects privileged login when totp is enrolled but code is missing", async () => {
+  it("allows privileged bootstrap login without strong marker before onboarding", async () => {
+    await ctx.db
+      .updateTable("users")
+      .set({ onboarding_completed_at: null })
+      .where("id", "=", 5)
+      .execute();
+
+    const result = await authenticatePasswordLogin(
+      { email, password: rightPassword, ipAddress, userAgent },
+      ctx.repos,
+    );
+
+    expect(result.role).toBe("superuser");
+    expect(result.onboardingCompleted).toBe(false);
+    const sessions = await ctx.repos.sessions.listForUser(5);
+    expect(sessions[0]?.auth_method).toBe("password");
+    expect(sessions[0]?.strong_auth_at).toBeNull();
+  });
+
+  it("rejects onboarded privileged login when totp code is missing", async () => {
     await ctx.repos.userTotpFactors.createOrRotate(
       5,
       await encryptTotpSecret(generateTotpSecret()),
@@ -54,7 +73,12 @@ describe("privileged password login", () => {
 
     await expect(
       authenticatePasswordLogin(
-        { email, password: rightPassword, ipAddress, userAgent },
+        {
+          email,
+          password: rightPassword,
+          ipAddress,
+          userAgent,
+        },
         ctx.repos,
       ),
     ).rejects.toThrow("Strong authentication required");
