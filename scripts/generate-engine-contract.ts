@@ -4,7 +4,6 @@ type Spec = {
 };
 
 const SPEC_PATH = "contracts/engine-api.json";
-const RUST_OUT = "apps/engine/src/api/contract.rs";
 const TS_OUT = "apps/web/src/server/shared/engine/contract.ts";
 
 async function loadSpec(): Promise<Spec> {
@@ -15,17 +14,6 @@ async function loadSpec(): Promise<Spec> {
     if (!v.startsWith("/")) throw new Error("endpoint must start with /");
   }
   return spec;
-}
-
-function rust(spec: Spec): string {
-  return [
-    "// GENERATED FILE. DO NOT EDIT.",
-    `pub const API_VERSION: &str = \"${spec.version}\";`,
-    `pub const API_PREFIX: &str = \"/${spec.version}\";`,
-    `pub const SEARCH_ENDPOINT: &str = \"${spec.endpoints.search}\";`,
-    `pub const HEALTH_ENDPOINT: &str = \"${spec.endpoints.health}\";`,
-    "",
-  ].join("\n");
 }
 
 function ts(spec: Spec): string {
@@ -66,7 +54,6 @@ async function writeOrCheck(
 
 const check = Bun.argv.includes("--check");
 const spec = await loadSpec();
-await writeOrCheck(RUST_OUT, rust(spec), check);
 await writeOrCheck(TS_OUT, ts(spec), check);
 console.log(
   check ? "engine contract is up to date" : "engine contract generated",

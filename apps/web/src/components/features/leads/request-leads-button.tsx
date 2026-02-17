@@ -4,7 +4,7 @@ import { useToast } from "~/components/feedback/toast-provider";
 import { Button } from "~/components/ui/button";
 
 interface RequestLeadsButtonProps {
-  onRequest: () => Promise<void>;
+  onRequest: () => Promise<number>;
   disabled?: boolean;
 }
 
@@ -17,11 +17,19 @@ export const RequestLeadsButton: Component<RequestLeadsButtonProps> = (
   const handleClick = async () => {
     setLoading(true);
     try {
-      await props.onRequest();
-      showToast("success", "Leads asignados correctamente");
+      const assigned = await props.onRequest();
+      if (assigned > 0) {
+        showToast("success", `${assigned} leads asignados`);
+      } else {
+        showToast("error", "No se encontraron leads nuevos para asignar");
+      }
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Error al solicitar leads";
+        error instanceof TypeError
+          ? "No se pudo conectar con el servidor"
+          : error instanceof Error
+            ? error.message
+            : "Error al solicitar leads";
       showToast("error", message);
     } finally {
       setLoading(false);
