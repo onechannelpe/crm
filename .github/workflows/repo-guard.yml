@@ -47,3 +47,17 @@ jobs:
 
       - name: check engine
         run: bun run check:engine
+
+  engine-build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: build engine
+        run: cargo build --manifest-path apps/engine/Cargo.toml --locked
