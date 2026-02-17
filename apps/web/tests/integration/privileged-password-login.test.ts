@@ -36,16 +36,28 @@ describe("privileged password login", () => {
     await cleanupTestDb(ctx);
   });
 
-  it("allows privileged password login without strong marker when no totp code is provided", async () => {
-    const result = await authenticatePasswordLogin(
-      { email, password: rightPassword, ipAddress, userAgent },
-      ctx.repos,
-    );
+  it("rejects privileged login when strong auth is not enrolled", async () => {
+    await expect(
+      authenticatePasswordLogin(
+        { email, password: rightPassword, ipAddress, userAgent },
+        ctx.repos,
+      ),
+    ).rejects.toThrow("Strong authentication required");
+  });
 
-    expect(result.role).toBe("superuser");
-    const sessions = await ctx.repos.sessions.listForUser(5);
-    expect(sessions[0]?.auth_method).toBe("password");
-    expect(sessions[0]?.strong_auth_at).toBeNull();
+  it("rejects privileged login when totp is enrolled but code is missing", async () => {
+    await ctx.repos.userTotpFactors.createOrRotate(
+      5,
+      await encryptTotpSecret(generateTotpSecret()),
+    );
+    await ctx.repos.userTotpFactors.markEnabled(5);
+
+    await expect(
+      authenticatePasswordLogin(
+        { email, password: rightPassword, ipAddress, userAgent },
+        ctx.repos,
+      ),
+    ).rejects.toThrow("Strong authentication required");
   });
 
   it("marks session as strong-auth when privileged user logs in with valid totp", async () => {

@@ -31,17 +31,35 @@ export async function resolvePasswordStrongAuth(params: {
     return { authMethod: "password", strongAuthAt: null };
   }
 
+  const identifier = `user:${user.id}`;
   const factor = await deps.userTotpFactors.findByUserId(user.id);
   const hasTotp = factor?.is_enabled === 1;
   const safeCode = totpCode?.trim();
   if (!hasTotp) {
-    return { authMethod: "password", strongAuthAt: null };
+    await recordAuthEvent(deps, {
+      userId: user.id,
+      identifier,
+      ipAddress,
+      method: "totp",
+      stage: "verify",
+      outcome: "failure",
+      reason: "strong_auth_not_enrolled",
+    });
+    throw new Error("Strong authentication required");
   }
   if (!safeCode) {
-    return { authMethod: "password", strongAuthAt: null };
+    await recordAuthEvent(deps, {
+      userId: user.id,
+      identifier,
+      ipAddress,
+      method: "totp",
+      stage: "verify",
+      outcome: "failure",
+      reason: "strong_auth_missing",
+    });
+    throw new Error("Strong authentication required");
   }
 
-  const identifier = `user:${user.id}`;
   const throttle = await checkTotpVerifyThrottle(identifier, ipAddress, deps);
   if (!throttle.allowed) {
     await recordAuthEvent(deps, {
