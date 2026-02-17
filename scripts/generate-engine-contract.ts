@@ -19,11 +19,11 @@ async function loadSpec(): Promise<Spec> {
 function ts(spec: Spec): string {
   return [
     "// GENERATED FILE. DO NOT EDIT.",
-    `export const ENGINE_API_VERSION = \"${spec.version}\";`,
+    `export const ENGINE_API_VERSION = "${spec.version}";`,
     "export const ENGINE_API_PREFIX = `/${ENGINE_API_VERSION}`;",
     "export const ENGINE_ENDPOINTS = {",
-    `  search: \"${spec.endpoints.search}\",`,
-    `  health: \"${spec.endpoints.health}\",`,
+    `  search: "${spec.endpoints.search}",`,
+    `  health: "${spec.endpoints.health}",`,
     "} as const;",
     "export function engineApiPath(endpoint: (typeof ENGINE_ENDPOINTS)[keyof typeof ENGINE_ENDPOINTS]): string {",
     "  return `${ENGINE_API_PREFIX}${endpoint}`;",
