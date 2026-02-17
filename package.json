@@ -7,15 +7,24 @@
     "packages/*"
   ],
   "scripts": {
+    "dev": "bun run --parallel dev:engine dev:web",
+    "dev:engine": "cargo run --manifest-path apps/engine/Cargo.toml",
+    "dev:web": "bun --no-env-file --env-file=.env run --cwd apps/web dev",
+    "build:engine:sqlite": "python3 scripts/build_engine_sqlite.py --input apps/engine/data/contacts.csv --output apps/engine/data/contacts.sqlite",
+    "test:engine": "cargo test --manifest-path apps/engine/Cargo.toml",
+    "bench:engine": "cargo test --manifest-path apps/engine/Cargo.toml --test perf_regression perf_regression_probe -- --ignored --nocapture",
+    "check": "bun run --parallel check:contract check:web check:engine check:format",
+    "check:contract": "bun run scripts/generate-engine-contract.ts --check",
     "check:web": "bun run --cwd apps/web check",
     "check:engine": "cargo check --manifest-path apps/engine/Cargo.toml",
-    "check:engine-contract": "bun run scripts/generate-engine-contract.ts --check",
-    "check": "bun run check:engine-contract && bun run check:web && bun run check:engine && bun run format:check",
-    "generate:engine-contract": "bun run scripts/generate-engine-contract.ts",
+    "check:format": "oxfmt --check apps/web packages scripts",
+    "clean": "shx rm -rf apps/web/*.db* 'apps/*/node_modules' node_modules",
     "format": "oxfmt apps/web packages scripts",
-    "format:check": "oxfmt --check apps/web packages scripts"
+    "generate:engine-contract": "bun run scripts/generate-engine-contract.ts",
+    "download:docs": "bun run --cwd packages/download-docs download"
   },
   "devDependencies": {
-    "oxfmt": "^0.33.0"
+    "oxfmt": "^0.33.0",
+    "shx": "^0.3.4"
   }
 }
