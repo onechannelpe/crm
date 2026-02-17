@@ -66,4 +66,53 @@ describe("lead service quota invariants", () => {
     const after = await quota.getStatus(1);
     expect(after).toMatchObject({ allocated: true, used: 0, remaining: 5 });
   });
+
+  it("refunds consumed quota when engine search fails mid-assignment", async () => {
+    // oxlint-disable-next-line typescript-eslint/unbound-method
+    vi.mocked(engineClient.search).mockRejectedValueOnce(
+      new Error("engine search outage"),
+    );
+    const quota = createQuotaService(ctx.repos);
+    const service = createLeadAssignmentService(ctx.repos);
+    const day = today();
+
+    await quota.allocate(2, 1, 5, day);
+    await expect(service.requestLeads(1, 1, 1)).rejects.toThrow(
+      "engine search outage",
+    );
+
+    const after = await quota.getStatus(1);
+    expect(after).toMatchObject({ allocated: true, used: 0, remaining: 5 });
+  });
+
+  it("refunds consumed quota when persistence fails after assignment selection", async () => {
+    // oxlint-disable-next-line typescript-eslint/unbound-method
+    vi.mocked(engineClient.search).mockResolvedValueOnce({
+      count: 1,
+      results: [
+        {
+          dni: "70010001",
+          name: "Contacto Caido",
+          phone_primary: "+51911111111",
+          phone_secondary: null,
+          org_ruc: "20100000001",
+          org_name: "Org Lima",
+        },
+      ],
+    });
+    vi.spyOn(ctx.repos.leadAssignments, "createMany").mockRejectedValueOnce(
+      new Error("db write outage"),
+    );
+    const quota = createQuotaService(ctx.repos);
+    const service = createLeadAssignmentService(ctx.repos);
+    const day = today();
+
+    await quota.allocate(2, 1, 5, day);
+    await expect(service.requestLeads(1, 1, 1)).rejects.toThrow(
+      "db write outage",
+    );
+
+    const after = await quota.getStatus(1);
+    expect(after).toMatchObject({ allocated: true, used: 0, remaining: 5 });
+  });
 });
