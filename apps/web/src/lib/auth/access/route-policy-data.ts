@@ -39,6 +39,13 @@ export const STATIC_ROUTES: StaticRoute[] = [
     sidebarGroup: "sales",
   },
   {
+    id: "client-search",
+    label: "Búsqueda de clientes",
+    href: "/client-search",
+    permission: "client_search:read",
+    sidebarGroup: "sales",
+  },
+  {
     id: "quota",
     label: "Cuota",
     href: "/quota",

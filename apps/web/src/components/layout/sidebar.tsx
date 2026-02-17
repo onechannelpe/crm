@@ -6,6 +6,7 @@ import ChevronDown from "~/components/icons/chevron-down";
 import House from "~/components/icons/house";
 import MessageSquare from "~/components/icons/message-square";
 import Package from "~/components/icons/package";
+import Search from "~/components/icons/search";
 import Settings from "~/components/icons/settings";
 import ShieldCheck from "~/components/icons/shield-check";
 import Users from "~/components/icons/users";
@@ -26,6 +27,7 @@ const ICONS: Record<string, Component<{ class?: string }>> = {
   team: Users,
   settings: Settings,
   leads: Users,
+  "client-search": Search,
   quota: ShieldCheck,
   validation: MessageSquare,
   inventory: Package,

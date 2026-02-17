@@ -9,6 +9,11 @@ function prop(source: object, key: string): unknown {
 
 function isSearchResult(value: unknown): value is SearchResult {
   if (typeof value !== "object" || value === null) return false;
+  const siblingPhones = prop(value, "sibling_phones");
+  const validSiblingPhones =
+    siblingPhones === null ||
+    (Array.isArray(siblingPhones) &&
+      siblingPhones.every((item) => typeof item === "string"));
 
   return (
     typeof prop(value, "dni") === "string" &&
@@ -20,7 +25,8 @@ function isSearchResult(value: unknown): value is SearchResult {
     (typeof prop(value, "org_ruc") === "string" ||
       prop(value, "org_ruc") === null) &&
     (typeof prop(value, "org_name") === "string" ||
-      prop(value, "org_name") === null)
+      prop(value, "org_name") === null) &&
+    validSiblingPhones
   );
 }
 

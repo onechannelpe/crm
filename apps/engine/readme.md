@@ -12,13 +12,7 @@ bun run dev:engine
 
 ## data pipeline
 
-1) build canonical contacts CSV from raw `Transfer/data`:
-
-```sh
-bun run build:contacts
-```
-
-2) build SQLite snapshot used by engine:
+1) build SQLite snapshot used by engine from consolidated CSV (`apps/engine/data/contacts.csv`):
 
 ```sh
 bun run build:engine:sqlite

@@ -27,6 +27,7 @@ describe("route policy", () => {
       (route) => route.href,
     );
     expect(executiveSearch).toContain("/leads");
+    expect(executiveSearch).toContain("/client-search");
     expect(executiveSearch).not.toContain("/settings");
 
     const inventorySidebar = getSidebarRoutes("logistics", "inventory").map(
