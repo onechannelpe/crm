@@ -5,6 +5,8 @@
     "dev": "vinxi dev",
     "build": "vinxi build",
     "start": "vinxi start",
+    "worker:inventory-locks": "bun --env-file=../../.env src/workers/inventory-lock-cleaner.ts",
+    "worker:inventory-locks:once": "bun --env-file=../../.env src/workers/inventory-lock-cleaner.ts --once",
     "lint": "oxlint -c ../../.oxlintrc.json --type-aware --tsconfig tsconfig.json --deny-warnings src tests",
     "check": "bun x tsc --noEmit && bun run lint",
     "test": "bun --env-file=../../.env vitest run --project default",
