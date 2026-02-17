@@ -2,7 +2,7 @@
 
 @font-face {
   font-family: "DM Sans";
-  src: url("/fonts/DMSans-Variable-v1.woff2") format("woff2");
+  src: url("./assets/fonts/DMSans-Variable-v1.woff2") format("woff2");
   font-style: normal;
   font-weight: 100 900;
   font-display: swap;
