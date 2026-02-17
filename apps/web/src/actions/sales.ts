@@ -200,7 +200,6 @@ export async function getAvailableInventory(): Promise<
   AvailableInventoryItem[]
 > {
   await requirePermission("sales:create");
-  await repos.inventory.releaseExpiredLocks();
   return repos.inventory.findAllAvailableWithProduct();
 }
 
@@ -285,8 +284,6 @@ export async function lockSaleInventory(
       "Inventory can only be selected for draft or rejected notes",
     );
   }
-
-  await repos.inventory.releaseExpiredLocks();
 
   const existing = await repos.inventory.findAnyLockByChargeNote(safeNoteId);
   if (existing) {
