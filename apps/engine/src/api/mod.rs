@@ -1,5 +1,3 @@
-mod contract;
-mod handlers;
-mod router;
-
-pub use router::serve;
+pub mod contracts;
+pub mod handlers;
+pub mod router;

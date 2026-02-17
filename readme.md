@@ -11,16 +11,23 @@ crm monorepo (web app + engine service).
 bootstrap local dev environment:
 
 ```sh
+mise install
 bun install
 cp .env.example .env
-bun run generate:engine-contract
+mise run generate-engine-contract
 ```
 
 start services:
 
 ```sh
-bun run dev:engine
-bun run dev:web
+bun run dev
+```
+
+or run them individually:
+
+```sh
+mise run dev-engine
+mise run dev-web
 ```
 
 ## repo docs
@@ -35,15 +42,15 @@ bun run dev:web
 run full repository checks:
 
 ```sh
-bun run check
+mise run check
 ```
 
 run checks individually:
 
 ```sh
-bun run check:engine-contract
-bun run check:web
-bun run check:engine
+mise run check-engine-contract
+mise run check-web
+mise run check-engine
 ```
 
-for command details, read [`package.json`](package.json).
+for task details, read [`mise.toml`](mise.toml). web-only scripts are in [`package.json`](package.json).
