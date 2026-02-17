@@ -14,7 +14,7 @@ pub struct SearchRow {
 impl SearchRow {
     pub fn with_siblings(mut self, phones_csv: Option<String>) -> Self {
         self.sibling_phones = phones_csv.map(|raw| {
-            raw.split(|c| c == ';' || c == ',')
+            raw.split([';', ','])
                 .filter(|p| !p.trim().is_empty())
                 .map(|p| p.trim().to_string())
                 .collect()
