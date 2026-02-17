@@ -1,19 +1,41 @@
 import { useNavigate } from "@solidjs/router";
 import { createEffect, createResource, createSignal, Show } from "solid-js";
 
-import { completeOnboarding, getMe } from "~/actions/auth";
+import {
+  beginTotpEnrollment,
+  completeOnboarding,
+  finishTotpEnrollment,
+  getMe,
+  getTotpStatus,
+} from "~/actions/auth";
 import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
+import { isPrivilegedRole } from "~/lib/auth/security/policy";
 import { getErrorMessage } from "~/lib/errors";
+import { createAppQuery } from "~/lib/ui/create-app-query";
 
 export default function OnboardingPage() {
   const navigate = useNavigate();
   const [user] = createResource(getMe);
+  const [totpStatus, { refetch: refetchTotp }] = createAppQuery(getTotpStatus, {
+    enabled: false,
+  });
   const [fullName, setFullName] = createSignal("");
   const [phone, setPhone] = createSignal("");
+  const [totpCode, setTotpCode] = createSignal("");
+  const [totpQrCode, setTotpQrCode] = createSignal("");
+  const [recoveryCodes, setRecoveryCodes] = createSignal<string[]>([]);
+  const [totpMessage, setTotpMessage] = createSignal("");
+  const [totpLoading, setTotpLoading] = createSignal(false);
   const [error, setError] = createSignal("");
   const [submitting, setSubmitting] = createSignal(false);
+
+  const requiresStrongAuth = () => {
+    const currentUser = user();
+    if (!currentUser) return false;
+    return isPrivilegedRole(currentUser.role);
+  };
 
   createEffect(() => {
     const currentUser = user();
@@ -28,12 +50,48 @@ export default function OnboardingPage() {
     setSubmitting(true);
 
     try {
+      if (requiresStrongAuth() && !totpStatus().enabled) {
+        throw new Error(
+          "Debes configurar TOTP antes de activar una cuenta administrativa.",
+        );
+      }
       await completeOnboarding(fullName(), phone());
       navigate("/dashboard");
     } catch (err: unknown) {
       setError(getErrorMessage(err, "No se pudo completar el onboarding"));
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function startTotpSetup() {
+    setTotpMessage("");
+    setTotpLoading(true);
+    try {
+      const enrollment = await beginTotpEnrollment();
+      setTotpQrCode(enrollment.qrCodeDataUrl);
+      setTotpMessage("Escanea el QR y confirma con tu código TOTP.");
+    } catch (err: unknown) {
+      setTotpMessage(getErrorMessage(err, "No se pudo iniciar TOTP"));
+    } finally {
+      setTotpLoading(false);
+    }
+  }
+
+  async function confirmTotpSetup() {
+    setTotpMessage("");
+    setTotpLoading(true);
+    try {
+      const codes = await finishTotpEnrollment(totpCode());
+      setRecoveryCodes(codes);
+      setTotpQrCode("");
+      setTotpCode("");
+      await refetchTotp();
+      setTotpMessage("TOTP activado. Guarda tus códigos de recuperación.");
+    } catch (err: unknown) {
+      setTotpMessage(getErrorMessage(err, "Código TOTP inválido"));
+    } finally {
+      setTotpLoading(false);
     }
   }
 
@@ -89,6 +147,71 @@ export default function OnboardingPage() {
                   required
                 />
               </div>
+
+              <Show when={requiresStrongAuth()}>
+                <div class="space-y-3 border rounded p-3">
+                  <p class="text-sm font-medium text-foreground">
+                    Configuración obligatoria de seguridad (TOTP)
+                  </p>
+                  <Show when={totpStatus().enabled}>
+                    <p class="text-sm text-muted-foreground">
+                      TOTP habilitado.
+                    </p>
+                  </Show>
+                  <Show when={!totpStatus().enabled}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={totpLoading()}
+                      onClick={() => {
+                        void startTotpSetup();
+                      }}
+                    >
+                      {totpLoading() ? "Preparando TOTP..." : "Configurar TOTP"}
+                    </Button>
+                    <Show when={totpQrCode()}>
+                      <div class="space-y-2">
+                        <img
+                          src={totpQrCode()}
+                          alt="QR TOTP"
+                          class="w-48 h-48"
+                        />
+                        <Input
+                          id="onboarding-totp-code"
+                          type="text"
+                          placeholder="Ingresa código TOTP"
+                          value={totpCode()}
+                          onInput={(e) => setTotpCode(e.currentTarget.value)}
+                        />
+                        <Button
+                          type="button"
+                          disabled={totpLoading()}
+                          onClick={() => {
+                            void confirmTotpSetup();
+                          }}
+                        >
+                          Confirmar TOTP
+                        </Button>
+                      </div>
+                    </Show>
+                  </Show>
+                  <Show when={totpMessage()}>
+                    <p class="text-sm text-muted-foreground">{totpMessage()}</p>
+                  </Show>
+                  <Show when={recoveryCodes().length > 0}>
+                    <div class="rounded border p-3 space-y-2">
+                      <p class="text-sm font-medium">
+                        Códigos de recuperación (solo una vez)
+                      </p>
+                      <ul class="grid grid-cols-2 gap-2 text-sm">
+                        {recoveryCodes().map((code) => (
+                          <li class="font-mono">{code}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </Show>
+                </div>
+              </Show>
 
               <Show when={error()}>
                 <p class="text-sm text-destructive">{error()}</p>
