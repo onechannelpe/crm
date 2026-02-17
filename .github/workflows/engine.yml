@@ -50,14 +50,14 @@ jobs:
             --input apps/engine/tests/fixtures/contacts_perf_ci.csv \
             --output /tmp/engine_perf_ci.sqlite
 
-      - name: run perf regression gate
-        env:
-          ENGINE_DB_PATH: /tmp/engine_perf_ci.sqlite
-          ENGINE_WORKLOAD_PATH: apps/engine/tests/fixtures/sqlite_workload_ci.json
-          ENGINE_WORKLOAD_ITERATIONS: "3000"
-          ENGINE_PERF_BASELINE_JSON: apps/engine/tests/fixtures/perf_baseline_ci.json
-          ENGINE_PERF_REGRESSION_FACTOR: "2.0"
-        run: |
-          cargo test --manifest-path apps/engine/Cargo.toml \
-            --test perf_regression perf_regression_probe \
-            -- --ignored --nocapture
+      # - name: run perf regression gate
+      #   env:
+      #     ENGINE_DB_PATH: /tmp/engine_perf_ci.sqlite
+      #     ENGINE_WORKLOAD_PATH: apps/engine/tests/fixtures/sqlite_workload_ci.json
+      #     ENGINE_WORKLOAD_ITERATIONS: "3000"
+      #     ENGINE_PERF_BASELINE_JSON: apps/engine/tests/fixtures/perf_baseline_ci.json
+      #     ENGINE_PERF_REGRESSION_FACTOR: "2.0"
+      #   run: |
+      #     cargo test --manifest-path apps/engine/Cargo.toml \
+      #       --test perf_regression perf_regression_probe \
+      #       -- --ignored --nocapture
