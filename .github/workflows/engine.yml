@@ -7,7 +7,7 @@ on:
       - "master"
     paths:
       - "apps/engine/**"
-      - "scripts/build_engine_sqlite.py"
+      - "scripts/build-engine-sqlite.py"
       - "package.json"
       - ".github/workflows/engine.yml"
   pull_request:
@@ -15,7 +15,7 @@ on:
       - "master"
     paths:
       - "apps/engine/**"
-      - "scripts/build_engine_sqlite.py"
+      - "scripts/build-engine-sqlite.py"
       - "package.json"
       - ".github/workflows/engine.yml"
 
@@ -50,7 +50,7 @@ jobs:
 
       - name: build perf fixture sqlite
         run: |
-          python3 scripts/build_engine_sqlite.py \
+          python3 scripts/build-engine-sqlite.py \
             --input apps/engine/tests/fixtures/contacts_perf_ci.csv \
             --output /tmp/engine_perf_ci.sqlite
 
