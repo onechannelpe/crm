@@ -51,7 +51,18 @@ bun run test
 bun run test:perf
 bun run migrate
 bun run seed
+bun run worker:inventory-locks
+bun run worker:inventory-locks:once
 ```
+
+## production runtime
+
+run the web app and the inventory-lock worker as separate processes:
+
+1. web server: `bun run start`
+2. inventory cleanup worker: `bun run worker:inventory-locks`
+
+for one-shot operational runs, use `bun run worker:inventory-locks:once`.
 
 ## references
 

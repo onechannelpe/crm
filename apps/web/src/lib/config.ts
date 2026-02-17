@@ -9,6 +9,7 @@ export const config = {
   },
   inventoryLock: {
     expiryMinutes: 30,
+    cleanupIntervalMs: 60_000,
   },
   quota: {
     minAmount: 1,
