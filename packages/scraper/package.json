@@ -1,0 +1,6 @@
+{
+  "name": "scraper",
+  "private": true,
+  "type": "module",
+  "module": "index.ts"
+}
