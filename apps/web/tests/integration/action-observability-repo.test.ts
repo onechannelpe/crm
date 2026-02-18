@@ -67,4 +67,63 @@ describe("action observability repository", () => {
     expect(Number(summary[0]?.count ?? 0)).toBe(2);
     expect(Number(summary[0]?.error_count ?? 0)).toBe(1);
   });
+
+  it("uses fixed validation error code and can delete old records", async () => {
+    ctx = await createIsolatedTestDb("observability-retention");
+    const service = createObservabilityService({
+      actionObservations: ctx.repos.actionObservations,
+    });
+    const baseTime = 1_700_000_000_000;
+
+    await service.recordAction({
+      traceId: "trace-old",
+      requestId: "req-old",
+      routePath: "/team/invite",
+      httpMethod: "POST",
+      actionName: "team.invite.create",
+      actorUserId: 5,
+      actorRole: "superuser",
+      status: "error",
+      durationMs: 10,
+      errorMessage: "email must be valid",
+      input: { role: "executive" },
+      createdAt: baseTime - 1_000,
+    });
+
+    await service.recordAction({
+      traceId: "trace-new",
+      requestId: "req-new",
+      routePath: "/team/invite",
+      httpMethod: "POST",
+      actionName: "team.invite.create",
+      actorUserId: 5,
+      actorRole: "superuser",
+      status: "error",
+      durationMs: 11,
+      errorMessage: "fullName is invalid",
+      input: { role: "executive" },
+      createdAt: baseTime + 1_000,
+    });
+
+    const beforeCleanup = await service.listRecent({
+      fromInclusive: baseTime - 10_000,
+      toInclusive: baseTime + 10_000,
+      limit: 10,
+    });
+    expect(beforeCleanup).toHaveLength(2);
+    expect(beforeCleanup[0]?.error_code).toBe("validation_failed");
+    expect(beforeCleanup[1]?.error_code).toBe("validation_failed");
+
+    const deleted =
+      await ctx.repos.actionObservations.deleteCreatedBefore(baseTime);
+    expect(deleted).toBe(1);
+
+    const afterCleanup = await service.listRecent({
+      fromInclusive: baseTime - 10_000,
+      toInclusive: baseTime + 10_000,
+      limit: 10,
+    });
+    expect(afterCleanup).toHaveLength(1);
+    expect(afterCleanup[0]?.trace_id).toBe("trace-new");
+  });
 });

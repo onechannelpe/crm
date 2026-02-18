@@ -28,16 +28,6 @@ function summarizeInput(input: unknown): string | null {
   return `${serialized.slice(0, 400)}…`;
 }
 
-function classifyError(message: string | null): string | null {
-  if (!message) return null;
-  const normalized = message
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "")
-    .slice(0, 120);
-  return normalized || null;
-}
-
 type ErrorCategory =
   | "none"
   | "validation"
@@ -115,7 +105,7 @@ function resolveErrorDetails(
     safeMessage.includes("must")
   ) {
     return {
-      code: classifyError(message) ?? "validation_failed",
+      code: "validation_failed",
       category: "validation",
       publicError: "Validation failed",
       isSensitive: 0,

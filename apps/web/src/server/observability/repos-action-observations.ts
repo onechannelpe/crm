@@ -73,6 +73,14 @@ export function createActionObservationsRepo(db: Kysely<Database>) {
         .orderBy("count", "desc")
         .execute();
     },
+
+    async deleteCreatedBefore(cutoffMs: number): Promise<number> {
+      const result = await db
+        .deleteFrom("action_observations")
+        .where("created_at", "<", cutoffMs)
+        .executeTakeFirst();
+      return Number(result.numDeletedRows ?? 0);
+    },
   };
 }
 
