@@ -2,5 +2,8 @@
   "name": "scraper",
   "private": true,
   "type": "module",
-  "module": "index.ts"
+  "module": "index.ts",
+  "dependencies": {
+    "@inquirer/prompts": "^8.2.1"
+  }
 }
