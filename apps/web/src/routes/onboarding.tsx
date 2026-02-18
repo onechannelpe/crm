@@ -6,21 +6,15 @@ import {
   completeOnboarding,
   finishTotpEnrollment,
   getMe,
-  getTotpStatus,
 } from "~/actions/auth";
 import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
-import { isPrivilegedRole } from "~/lib/auth/security/policy";
 import { getErrorMessage } from "~/lib/errors";
-import { createAppQuery } from "~/lib/ui/create-app-query";
 
 export default function OnboardingPage() {
   const navigate = useNavigate();
-  const [user] = createResource(getMe);
-  const [totpStatus, { refetch: refetchTotp }] = createAppQuery(getTotpStatus, {
-    enabled: false,
-  });
+  const [user, { refetch: refetchUser }] = createResource(getMe);
   const [fullName, setFullName] = createSignal("");
   const [phone, setPhone] = createSignal("");
   const [totpCode, setTotpCode] = createSignal("");
@@ -34,7 +28,13 @@ export default function OnboardingPage() {
   const requiresStrongAuth = () => {
     const currentUser = user();
     if (!currentUser) return false;
-    return isPrivilegedRole(currentUser.role);
+    return currentUser.strongAuthRequired;
+  };
+
+  const strongAuthIsEnrolled = () => {
+    const currentUser = user();
+    if (!currentUser) return false;
+    return currentUser.strongAuthEnrolledAt !== null;
   };
 
   createEffect(() => {
@@ -50,7 +50,7 @@ export default function OnboardingPage() {
     setSubmitting(true);
 
     try {
-      if (requiresStrongAuth() && !totpStatus().enabled) {
+      if (requiresStrongAuth() && !strongAuthIsEnrolled()) {
         throw new Error(
           "Debes configurar TOTP antes de activar una cuenta administrativa.",
         );
@@ -86,7 +86,7 @@ export default function OnboardingPage() {
       setRecoveryCodes(codes);
       setTotpQrCode("");
       setTotpCode("");
-      await refetchTotp();
+      await refetchUser();
       setTotpMessage("TOTP activado. Guarda tus códigos de recuperación.");
     } catch (err: unknown) {
       setTotpMessage(getErrorMessage(err, "Código TOTP inválido"));
@@ -153,12 +153,12 @@ export default function OnboardingPage() {
                   <p class="text-sm font-medium text-foreground">
                     Configuración obligatoria de seguridad (TOTP)
                   </p>
-                  <Show when={totpStatus().enabled}>
+                  <Show when={strongAuthIsEnrolled()}>
                     <p class="text-sm text-muted-foreground">
                       TOTP habilitado.
                     </p>
                   </Show>
-                  <Show when={!totpStatus().enabled}>
+                  <Show when={!strongAuthIsEnrolled()}>
                     <Button
                       type="button"
                       variant="outline"

@@ -28,4 +28,7 @@ export const config = {
     eventsRetentionMs: 90 * 24 * 60 * 60 * 1000,
     strongAuthMaxAgeMs: 15 * 60_000,
   },
+  observability: {
+    retentionMs: 90 * 24 * 60 * 60 * 1000,
+  },
 } as const;

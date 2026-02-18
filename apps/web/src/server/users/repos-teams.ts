@@ -4,6 +4,15 @@ import type { Database } from "~/lib/db/schema";
 
 export function createTeamsRepo(db: Kysely<Database>) {
   return {
+    findByBranch(branchId: number) {
+      return db
+        .selectFrom("teams")
+        .selectAll()
+        .where("branch_id", "=", branchId)
+        .orderBy("name", "asc")
+        .execute();
+    },
+
     findByIdWithSupervisor(id: number) {
       return db
         .selectFrom("teams")

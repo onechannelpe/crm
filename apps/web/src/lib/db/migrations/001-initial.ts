@@ -22,6 +22,10 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     .addColumn("phone_verified_at", "integer")
     .addColumn("profile_confirmed_at", "integer")
     .addColumn("onboarding_completed_at", "integer")
+    .addColumn("strong_auth_required", "integer", (col) =>
+      col.notNull().defaultTo(0),
+    )
+    .addColumn("strong_auth_enrolled_at", "integer")
     .addColumn("role", "varchar(50)", (col) => col.notNull())
     .addColumn("is_active", "integer", (col) => col.notNull().defaultTo(1))
     .addColumn("created_at", "integer", (col) => col.notNull())

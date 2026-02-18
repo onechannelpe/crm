@@ -1,7 +1,10 @@
 "use server";
 
 import { requireSession } from "~/lib/auth/access/session";
-import { isPrivilegedRole } from "~/lib/auth/security/policy";
+import {
+  isStrongAuthEnrolled,
+  requiresStrongAuth,
+} from "~/lib/auth/security/strong-auth-state";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
 import { repos } from "~/server/shared/context";
 
@@ -28,11 +31,8 @@ export async function completeOnboarding(
     return;
   }
 
-  if (isPrivilegedRole(user.role)) {
-    const factor = await repos.userTotpFactors.findByUserId(user.id);
-    if (factor?.is_enabled !== 1) {
-      throw new Error("Strong authentication setup required");
-    }
+  if (requiresStrongAuth(user) && !isStrongAuthEnrolled(user)) {
+    throw new Error("Strong authentication setup required");
   }
 
   const now = Date.now();

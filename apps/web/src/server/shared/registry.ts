@@ -17,6 +17,7 @@ import { createAppNotificationsRepo } from "~/server/notifications/repos-app-not
 import { createNotificationCampaignsRepo } from "~/server/notifications/repos-campaigns";
 import { createNotificationContactsRepo } from "~/server/notifications/repos-contacts";
 import { createNotificationPreferencesRepo } from "~/server/notifications/repos-preferences";
+import { createActionObservationsRepo } from "~/server/observability/repos-action-observations";
 import { createQuotaAllocationsRepo } from "~/server/quota/repos";
 import { createChargeNotesRepo } from "~/server/sales/repos-charge-notes";
 import { createDocumentsRepo } from "~/server/sales/repos-documents";
@@ -26,6 +27,7 @@ import { createSessionRepository } from "~/server/sessions/repos-sessions";
 import { createBranchesRepo } from "~/server/users/repos-branches";
 import { createPasskeysRepo } from "~/server/users/repos-passkeys";
 import { createTeamsRepo } from "~/server/users/repos-teams";
+import { createUserInvitesRepo } from "~/server/users/repos-user-invites";
 import { createUsersRepo } from "~/server/users/repos-users";
 import { createWebauthnChallengesRepo } from "~/server/users/repos-webauthn-challenges";
 
@@ -36,6 +38,7 @@ import { createInteractionLogsRepo } from "./repos-interaction-logs";
 export function createRepositories(db: Kysely<Database>) {
   return {
     users: createUsersRepo(db),
+    userInvites: createUserInvitesRepo(db),
     sessions: createSessionRepository(db),
     authEvents: createAuthEventsRepo(db),
     authThrottle: createAuthThrottleRepo(db),
@@ -55,6 +58,7 @@ export function createRepositories(db: Kysely<Database>) {
     notificationContacts: createNotificationContactsRepo(db),
     notificationPreferences: createNotificationPreferencesRepo(db),
     appNotifications: createAppNotificationsRepo(db),
+    actionObservations: createActionObservationsRepo(db),
     inventory: createInventoryRepo(db),
     documents: createDocumentsRepo(db),
     auditLogs: createAuditLogsRepo(db),

@@ -6,6 +6,8 @@ import type { Kysely } from "kysely";
 import { createDb } from "../../src/lib/db/client";
 import { up as up001 } from "../../src/lib/db/migrations/001-initial";
 import { up as up002 } from "../../src/lib/db/migrations/002-client-search-views";
+import { up as up003 } from "../../src/lib/db/migrations/003-user-invites";
+import { up as up004 } from "../../src/lib/db/migrations/004-action-observability";
 import type { Database } from "../../src/lib/db/schema";
 import { createAppNotificationCenter } from "../../src/server/notifications/app-center-service";
 import { createSalesWorkflowService } from "../../src/server/sales/service";
@@ -38,6 +40,8 @@ async function seedTemplate(db: Kysely<Database>) {
         phone_verified_at: now,
         profile_confirmed_at: now,
         onboarding_completed_at: now,
+        strong_auth_required: 0,
+        strong_auth_enrolled_at: null,
         role: "executive",
         is_active: 1,
         created_at: now,
@@ -53,6 +57,8 @@ async function seedTemplate(db: Kysely<Database>) {
         phone_verified_at: now,
         profile_confirmed_at: now,
         onboarding_completed_at: now,
+        strong_auth_required: 0,
+        strong_auth_enrolled_at: null,
         role: "back_office",
         is_active: 1,
         created_at: now,
@@ -68,6 +74,8 @@ async function seedTemplate(db: Kysely<Database>) {
         phone_verified_at: now,
         profile_confirmed_at: now,
         onboarding_completed_at: now,
+        strong_auth_required: 0,
+        strong_auth_enrolled_at: null,
         role: "executive",
         is_active: 1,
         created_at: now,
@@ -83,6 +91,8 @@ async function seedTemplate(db: Kysely<Database>) {
         phone_verified_at: now,
         profile_confirmed_at: now,
         onboarding_completed_at: now,
+        strong_auth_required: 0,
+        strong_auth_enrolled_at: null,
         role: "back_office",
         is_active: 1,
         created_at: now,
@@ -98,6 +108,8 @@ async function seedTemplate(db: Kysely<Database>) {
         phone_verified_at: now,
         profile_confirmed_at: now,
         onboarding_completed_at: now,
+        strong_auth_required: 1,
+        strong_auth_enrolled_at: null,
         role: "superuser",
         is_active: 1,
         created_at: now,
@@ -191,6 +203,8 @@ export async function createIsolatedTestDb(
   const db = createDb(dbPath);
   await up001(db);
   await up002(db);
+  await up003(db);
+  await up004(db);
   await seedTemplate(db);
   const repos = createRepositories(db);
   const notifications = createAppNotificationCenter({

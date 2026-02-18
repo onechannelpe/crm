@@ -39,6 +39,17 @@ export async function cleanupStaleAuthEvents(): Promise<void> {
   }
 }
 
+export async function cleanupStaleActionObservations(): Promise<void> {
+  const deleted = await repos.actionObservations.deleteCreatedBefore(
+    Date.now() - config.observability.retentionMs,
+  );
+  if (deleted > 0) {
+    console.log(
+      `[Observability cleanup] Deleted ${deleted} old action observations`,
+    );
+  }
+}
+
 export function getCacheStats() {
   return sessionCache.getStats();
 }
@@ -50,6 +61,7 @@ if (typeof setInterval !== "undefined") {
       cleanupExpiredWebauthnChallenges().catch(console.error);
       cleanupStaleAuthThrottle().catch(console.error);
       cleanupStaleAuthEvents().catch(console.error);
+      cleanupStaleActionObservations().catch(console.error);
     },
     60 * 60 * 1000,
   );

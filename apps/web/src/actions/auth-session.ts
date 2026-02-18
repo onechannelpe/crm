@@ -46,6 +46,8 @@ export interface CurrentUser extends WorkspaceIdentity {
   phoneE164: string | null;
   onboardingCompletedAt: number | null;
   role: Role;
+  strongAuthRequired: boolean;
+  strongAuthEnrolledAt: number | null;
   branchId: number;
   scopeType: WorkspaceScopeType;
 }
@@ -100,6 +102,8 @@ export async function getMe(): Promise<CurrentUser | null> {
     phoneE164: user.phone_e164,
     onboardingCompletedAt: user.onboarding_completed_at,
     role: session.role,
+    strongAuthRequired: user.strong_auth_required === 1,
+    strongAuthEnrolledAt: user.strong_auth_enrolled_at,
     branchId: user.branch_id,
     scopeType: workspace.scopeType,
     team: workspace.team,

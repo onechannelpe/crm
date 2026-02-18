@@ -1,5 +1,6 @@
 import type { Kysely } from "kysely";
 
+import { deriveStrongAuthRequired } from "~/lib/auth/security/strong-auth-state";
 import type { Database, UsersTable } from "~/lib/db/schema";
 
 type UserRole = UsersTable["role"];
@@ -20,6 +21,14 @@ export function createUsersRepo(db: Kysely<Database>) {
         .selectAll()
         .where("email", "=", email)
         .executeTakeFirst();
+    },
+
+    findByBranchIncludingInactive(branchId: number) {
+      return db
+        .selectFrom("users")
+        .selectAll()
+        .where("branch_id", "=", branchId)
+        .execute();
     },
 
     findByTeam(teamId: number) {
@@ -68,6 +77,7 @@ export function createUsersRepo(db: Kysely<Database>) {
       phone_e164?: string | null;
       role: UserRole;
     }) {
+      const strongAuthRequired = deriveStrongAuthRequired(values.role);
       const result = await db
         .insertInto("users")
         .values({
@@ -77,6 +87,8 @@ export function createUsersRepo(db: Kysely<Database>) {
           phone_verified_at: null,
           profile_confirmed_at: null,
           onboarding_completed_at: null,
+          strong_auth_required: strongAuthRequired,
+          strong_auth_enrolled_at: null,
           created_at: Date.now(),
         })
         .executeTakeFirstOrThrow();
@@ -87,6 +99,44 @@ export function createUsersRepo(db: Kysely<Database>) {
       return db
         .updateTable("users")
         .set({ password_hash: passwordHash })
+        .where("id", "=", id)
+        .execute();
+    },
+
+    updateInviteProvisioning(
+      id: number,
+      values: {
+        team_id: number | null;
+        full_name: string;
+        role: UserRole;
+        is_active: number;
+      },
+    ) {
+      const strongAuthRequired = deriveStrongAuthRequired(values.role);
+      if (strongAuthRequired === 1) {
+        return db
+          .updateTable("users")
+          .set({
+            team_id: values.team_id,
+            full_name: values.full_name,
+            role: values.role,
+            is_active: values.is_active,
+            strong_auth_required: 1,
+          })
+          .where("id", "=", id)
+          .execute();
+      }
+
+      return db
+        .updateTable("users")
+        .set({
+          team_id: values.team_id,
+          full_name: values.full_name,
+          role: values.role,
+          is_active: values.is_active,
+          strong_auth_required: 0,
+          strong_auth_enrolled_at: null,
+        })
         .where("id", "=", id)
         .execute();
     },

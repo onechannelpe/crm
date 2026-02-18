@@ -10,6 +10,7 @@ import { getSessionCookie, setSessionCookie } from "~/lib/auth/session/cookies";
 import { invalidateSession } from "~/lib/auth/session/session-manager";
 import { hashSessionToken } from "~/lib/auth/session/tokens";
 import { env } from "~/lib/env";
+import { runObservedAction } from "~/lib/observability/run-observed-action";
 import { repos } from "~/server/shared/context";
 
 const sendPrivilegedLoginAlert = createPrivilegedLoginAlertSender(repos, {
@@ -31,31 +32,42 @@ export async function login(
   password: string,
   totpCode?: string,
 ): Promise<LoginResult> {
-  const event = getRequestEvent();
-  const ipAddress = getClientIp(event?.request.headers ?? new Headers());
-  const userAgent = event?.request.headers.get("user-agent") ?? null;
+  return runObservedAction({
+    actionName: "auth.login",
+    actor: { userId: null, role: null },
+    input: { hasTotpCode: Boolean(totpCode) },
+    resolveActor: (result) => ({
+      userId: result.userId,
+      role: result.role,
+    }),
+    run: async () => {
+      const event = getRequestEvent();
+      const ipAddress = getClientIp(event?.request.headers ?? new Headers());
+      const userAgent = event?.request.headers.get("user-agent") ?? null;
 
-  const oldToken = getSessionCookie();
-  if (oldToken) {
-    const oldSessionId = hashSessionToken(oldToken);
-    await invalidateSession(oldSessionId).catch(() => {});
-  }
+      const oldToken = getSessionCookie();
+      if (oldToken) {
+        const oldSessionId = hashSessionToken(oldToken);
+        await invalidateSession(oldSessionId).catch(() => {});
+      }
 
-  const result = await authenticatePasswordLogin(
-    {
-      email,
-      password,
-      totpCode,
-      ipAddress,
-      userAgent,
+      const result = await authenticatePasswordLogin(
+        {
+          email,
+          password,
+          totpCode,
+          ipAddress,
+          userAgent,
+        },
+        { sendPrivilegedLoginAlert },
+      );
+      setSessionCookie(result.token);
+
+      return {
+        userId: result.userId,
+        role: result.role,
+        onboardingCompleted: result.onboardingCompleted,
+      };
     },
-    { sendPrivilegedLoginAlert },
-  );
-  setSessionCookie(result.token);
-
-  return {
-    userId: result.userId,
-    role: result.role,
-    onboardingCompleted: result.onboardingCompleted,
-  };
+  });
 }
