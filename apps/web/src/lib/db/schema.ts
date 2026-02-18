@@ -1,4 +1,4 @@
-import type { Generated, Insertable, Selectable } from "kysely";
+import type { ColumnType, Generated, Insertable, Selectable } from "kysely";
 
 export interface BranchesTable {
   id: Generated<number>;
@@ -25,6 +25,12 @@ export interface UsersTable {
   phone_verified_at: number | null;
   profile_confirmed_at: number | null;
   onboarding_completed_at: number | null;
+  strong_auth_required: ColumnType<number, number | undefined, number>;
+  strong_auth_enrolled_at: ColumnType<
+    number | null,
+    number | null | undefined,
+    number | null
+  >;
   role:
     | "executive"
     | "supervisor"
