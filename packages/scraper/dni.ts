@@ -7,20 +7,21 @@ export interface DniData {
 }
 
 export async function getDniInfo(dni: string): Promise<DniData | null> {
-  const url =
-    "https://ww1.sunat.gob.pe/ol-ti-itatencionf5030/registro/solicitante";
-
   const body = JSON.stringify({
     tipDocu: "1",
     numDocu: dni,
     tipPers: "1",
+    token: Math.random().toString(36).substring(2, 57),
   });
 
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body,
-  });
+  const res = await fetch(
+    "https://ww1.sunat.gob.pe/ol-ti-itatencionf5030/registro/solicitante",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+    },
+  );
 
   const json = await res.json().catch(() => null);
   if (!json || typeof json !== "object") {
