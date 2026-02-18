@@ -160,6 +160,9 @@ export function createObservabilityService(repos: ObservabilityRepos) {
     async summarizeByAction(params: {
       fromInclusive: number;
       toInclusive: number;
+      actionName?: string;
+      status?: "ok" | "error";
+      actorUserId?: number;
     }) {
       return repos.actionObservations.summarizeByAction(params);
     },

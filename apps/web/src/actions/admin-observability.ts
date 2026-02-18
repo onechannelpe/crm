@@ -72,6 +72,8 @@ export async function getObservabilitySnapshot(params?: {
     observabilityService.summarizeByAction({
       fromInclusive,
       toInclusive: now,
+      actionName,
+      status,
     }),
     observabilityService.listRecent({
       fromInclusive,

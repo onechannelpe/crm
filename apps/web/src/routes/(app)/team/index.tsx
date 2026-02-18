@@ -37,6 +37,7 @@ export default function TeamPage() {
     null,
   );
   const { showToast } = useToast();
+  const canManageInviteActions = () => directory().canManageInvites;
 
   async function handleResend(inviteId: number): Promise<void> {
     setPendingActionId(inviteId);
@@ -177,28 +178,37 @@ export default function TeamPage() {
                         {new Date(invite.expiresAt).toLocaleString("es-PE")}
                       </TableCell>
                       <TableCell>
-                        <div class="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={pendingActionId() === invite.inviteId}
-                            onClick={() => {
-                              void handleResend(invite.inviteId);
-                            }}
-                          >
-                            Reenviar
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            disabled={pendingActionId() === invite.inviteId}
-                            onClick={() => {
-                              void handleRevoke(invite.inviteId);
-                            }}
-                          >
-                            Revocar
-                          </Button>
-                        </div>
+                        <Show
+                          when={canManageInviteActions()}
+                          fallback={
+                            <span class="text-xs text-muted-foreground">
+                              Sin permisos
+                            </span>
+                          }
+                        >
+                          <div class="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={pendingActionId() === invite.inviteId}
+                              onClick={() => {
+                                void handleResend(invite.inviteId);
+                              }}
+                            >
+                              Reenviar
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              disabled={pendingActionId() === invite.inviteId}
+                              onClick={() => {
+                                void handleRevoke(invite.inviteId);
+                              }}
+                            >
+                              Revocar
+                            </Button>
+                          </div>
+                        </Show>
                       </TableCell>
                     </TableRow>
                   )}

@@ -126,4 +126,67 @@ describe("action observability repository", () => {
     expect(afterCleanup).toHaveLength(1);
     expect(afterCleanup[0]?.trace_id).toBe("trace-new");
   });
+
+  it("applies status and action filters consistently to summary", async () => {
+    ctx = await createIsolatedTestDb("observability-summary-filters");
+    const service = createObservabilityService({
+      actionObservations: ctx.repos.actionObservations,
+    });
+    const baseTime = 1_700_000_000_000;
+
+    await service.recordAction({
+      traceId: "trace-1",
+      requestId: "req-1",
+      routePath: "/team/invite",
+      httpMethod: "POST",
+      actionName: "team.invite.create",
+      actorUserId: 5,
+      actorRole: "superuser",
+      status: "error",
+      durationMs: 10,
+      errorMessage: "invalid email",
+      input: {},
+      createdAt: baseTime,
+    });
+    await service.recordAction({
+      traceId: "trace-2",
+      requestId: "req-2",
+      routePath: "/team/invite",
+      httpMethod: "POST",
+      actionName: "team.invite.create",
+      actorUserId: 5,
+      actorRole: "superuser",
+      status: "ok",
+      durationMs: 11,
+      errorMessage: null,
+      input: {},
+      createdAt: baseTime + 1,
+    });
+    await service.recordAction({
+      traceId: "trace-3",
+      requestId: "req-3",
+      routePath: "/sales/new",
+      httpMethod: "POST",
+      actionName: "sales.create",
+      actorUserId: 1,
+      actorRole: "executive",
+      status: "error",
+      durationMs: 12,
+      errorMessage: "forbidden",
+      input: {},
+      createdAt: baseTime + 2,
+    });
+
+    const filteredSummary = await service.summarizeByAction({
+      fromInclusive: baseTime - 1000,
+      toInclusive: baseTime + 1000,
+      actionName: "team.invite.create",
+      status: "error",
+    });
+
+    expect(filteredSummary).toHaveLength(1);
+    expect(filteredSummary[0]?.action_name).toBe("team.invite.create");
+    expect(Number(filteredSummary[0]?.count ?? 0)).toBe(1);
+    expect(Number(filteredSummary[0]?.error_count ?? 0)).toBe(1);
+  });
 });

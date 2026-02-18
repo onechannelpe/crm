@@ -20,6 +20,9 @@ export interface ActionObservationFilter {
 export interface ActionObservationSummaryFilter {
   fromInclusive: number;
   toInclusive: number;
+  actionName?: string;
+  status?: ObservationStatus;
+  actorUserId?: number;
 }
 
 export function createActionObservationsRepo(db: Kysely<Database>) {
@@ -54,7 +57,7 @@ export function createActionObservationsRepo(db: Kysely<Database>) {
     },
 
     async summarizeByAction(filter: ActionObservationSummaryFilter) {
-      return db
+      let query = db
         .selectFrom("action_observations")
         .select((eb) => [
           "action_name",
@@ -68,10 +71,19 @@ export function createActionObservationsRepo(db: Kysely<Database>) {
           eb.fn.max<number>("duration_ms").as("max_duration_ms"),
         ])
         .where("created_at", ">=", filter.fromInclusive)
-        .where("created_at", "<=", filter.toInclusive)
-        .groupBy("action_name")
-        .orderBy("count", "desc")
-        .execute();
+        .where("created_at", "<=", filter.toInclusive);
+
+      if (filter.actionName) {
+        query = query.where("action_name", "=", filter.actionName);
+      }
+      if (filter.status) {
+        query = query.where("status", "=", filter.status);
+      }
+      if (filter.actorUserId !== undefined) {
+        query = query.where("actor_user_id", "=", filter.actorUserId);
+      }
+
+      return query.groupBy("action_name").orderBy("count", "desc").execute();
     },
 
     async deleteCreatedBefore(cutoffMs: number): Promise<number> {
