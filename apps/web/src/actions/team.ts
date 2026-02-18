@@ -15,6 +15,7 @@ import {
   assertPositiveInt,
 } from "~/lib/contracts/guards";
 import { env } from "~/lib/env";
+import { runObservedAction } from "~/lib/observability/run-observed-action";
 import { repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 import { createUserProvisioningService } from "~/server/users/service-user-provisioning";
@@ -179,74 +180,107 @@ export async function createTeamInvite(input: {
     teamId: assertOptionalTeamId(input.teamId),
   };
 
-  const session = await requirePermission("hr:manage");
-  const result = await provisioning.createInvite({
-    actorUserId: session.userId,
-    actorRole: session.role,
-    branchId: session.branchId,
-    fullName: safeInput.fullName,
-    email: safeInput.email,
-    role: safeInput.role,
-    teamId: safeInput.teamId,
-  });
-  if (isErr(result)) {
-    throw new Error(result.error);
-  }
+  const actor = { userId: null as number | null, role: null as Role | null };
+  return runObservedAction({
+    actionName: "team.invite.create",
+    actor,
+    input: {
+      role: safeInput.role,
+      hasTeamId: safeInput.teamId !== null,
+    },
+    run: async () => {
+      const session = await requirePermission("hr:manage");
+      actor.userId = session.userId;
+      actor.role = session.role;
+      const result = await provisioning.createInvite({
+        actorUserId: session.userId,
+        actorRole: session.role,
+        branchId: session.branchId,
+        fullName: safeInput.fullName,
+        email: safeInput.email,
+        role: safeInput.role,
+        teamId: safeInput.teamId,
+      });
+      if (isErr(result)) {
+        throw new Error(result.error);
+      }
 
-  await sendInviteEmail({
-    email: safeInput.email,
-    fullName: safeInput.fullName,
-    role: safeInput.role,
-    inviteUrl: getInviteUrl(result.value.token),
-    expiresAt: result.value.expiresAt,
-  });
-  await provisioning.markInviteDelivered(result.value.inviteId);
+      await sendInviteEmail({
+        email: safeInput.email,
+        fullName: safeInput.fullName,
+        role: safeInput.role,
+        inviteUrl: getInviteUrl(result.value.token),
+        expiresAt: result.value.expiresAt,
+      });
+      await provisioning.markInviteDelivered(result.value.inviteId);
 
-  return { inviteId: result.value.inviteId };
+      return { inviteId: result.value.inviteId };
+    },
+  });
 }
 
 export async function resendTeamInvite(inviteId: number): Promise<void> {
   const safeInviteId = assertPositiveInt(inviteId, "inviteId");
-  const session = await requirePermission("hr:manage");
+  const actor = { userId: null as number | null, role: null as Role | null };
+  await runObservedAction({
+    actionName: "team.invite.resend",
+    actor,
+    input: { inviteId: safeInviteId },
+    run: async () => {
+      const session = await requirePermission("hr:manage");
+      actor.userId = session.userId;
+      actor.role = session.role;
 
-  const result = await provisioning.resendInvite({
-    actorUserId: session.userId,
-    actorRole: session.role,
-    branchId: session.branchId,
-    inviteId: safeInviteId,
+      const result = await provisioning.resendInvite({
+        actorUserId: session.userId,
+        actorRole: session.role,
+        branchId: session.branchId,
+        inviteId: safeInviteId,
+      });
+      if (isErr(result)) {
+        throw new Error(result.error);
+      }
+
+      const invite = await repos.userInvites.findById(result.value.inviteId);
+      const user = invite ? await repos.users.findById(invite.user_id) : null;
+      if (!user) {
+        throw new Error("Invite target user was not found");
+      }
+
+      await sendInviteEmail({
+        email: user.email,
+        fullName: user.full_name,
+        role: user.role,
+        inviteUrl: getInviteUrl(result.value.token),
+        expiresAt: result.value.expiresAt,
+      });
+      await provisioning.markInviteDelivered(result.value.inviteId);
+    },
   });
-  if (isErr(result)) {
-    throw new Error(result.error);
-  }
-
-  const invite = await repos.userInvites.findById(result.value.inviteId);
-  const user = invite ? await repos.users.findById(invite.user_id) : null;
-  if (!user) {
-    throw new Error("Invite target user was not found");
-  }
-
-  await sendInviteEmail({
-    email: user.email,
-    fullName: user.full_name,
-    role: user.role,
-    inviteUrl: getInviteUrl(result.value.token),
-    expiresAt: result.value.expiresAt,
-  });
-  await provisioning.markInviteDelivered(result.value.inviteId);
 }
 
 export async function revokeTeamInvite(inviteId: number): Promise<void> {
   const safeInviteId = assertPositiveInt(inviteId, "inviteId");
-  const session = await requirePermission("hr:manage");
-  const result = await provisioning.revokeInvite({
-    actorUserId: session.userId,
-    actorRole: session.role,
-    branchId: session.branchId,
-    inviteId: safeInviteId,
+  const actor = { userId: null as number | null, role: null as Role | null };
+  await runObservedAction({
+    actionName: "team.invite.revoke",
+    actor,
+    input: { inviteId: safeInviteId },
+    run: async () => {
+      const session = await requirePermission("hr:manage");
+      actor.userId = session.userId;
+      actor.role = session.role;
+      const result = await provisioning.revokeInvite({
+        actorUserId: session.userId,
+        actorRole: session.role,
+        branchId: session.branchId,
+        inviteId: safeInviteId,
+      });
+      if (isErr(result)) {
+        throw new Error(result.error);
+      }
+    },
   });
-  if (isErr(result)) {
-    throw new Error(result.error);
-  }
 }
 
 export async function acceptTeamInvite(input: {
@@ -261,26 +295,36 @@ export async function acceptTeamInvite(input: {
   const safeFullName = assertNonEmptyString(input.fullName, "fullName");
   const safePassword = assertStrongPassword(input.password);
 
-  const result = await provisioning.acceptInvite({
-    token: safeToken,
-    fullName: safeFullName,
-    passwordHash: await hashPassword(safePassword),
-  });
-  if (isErr(result)) {
-    throw new Error(result.error);
-  }
+  const actor = { userId: null as number | null, role: null as Role | null };
+  await runObservedAction({
+    actionName: "team.invite.accept",
+    actor,
+    input: { hasToken: true },
+    run: async () => {
+      const result = await provisioning.acceptInvite({
+        token: safeToken,
+        fullName: safeFullName,
+        passwordHash: await hashPassword(safePassword),
+      });
+      if (isErr(result)) {
+        throw new Error(result.error);
+      }
+      actor.userId = result.value.userId;
+      actor.role = result.value.role;
 
-  const event = getRequestEvent();
-  const ipAddress = getClientIp(event?.request.headers ?? new Headers());
-  const userAgent = event?.request.headers.get("user-agent") ?? null;
-  const token = await createSession(
-    result.value.userId,
-    result.value.branchId,
-    result.value.role,
-    ipAddress,
-    userAgent,
-    "password",
-    null,
-  );
-  setSessionCookie(token);
+      const event = getRequestEvent();
+      const ipAddress = getClientIp(event?.request.headers ?? new Headers());
+      const userAgent = event?.request.headers.get("user-agent") ?? null;
+      const token = await createSession(
+        result.value.userId,
+        result.value.branchId,
+        result.value.role,
+        ipAddress,
+        userAgent,
+        "password",
+        null,
+      );
+      setSessionCookie(token);
+    },
+  });
 }

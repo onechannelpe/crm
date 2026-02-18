@@ -17,6 +17,7 @@ import { createAppNotificationsRepo } from "~/server/notifications/repos-app-not
 import { createNotificationCampaignsRepo } from "~/server/notifications/repos-campaigns";
 import { createNotificationContactsRepo } from "~/server/notifications/repos-contacts";
 import { createNotificationPreferencesRepo } from "~/server/notifications/repos-preferences";
+import { createActionObservationsRepo } from "~/server/observability/repos-action-observations";
 import { createQuotaAllocationsRepo } from "~/server/quota/repos";
 import { createChargeNotesRepo } from "~/server/sales/repos-charge-notes";
 import { createDocumentsRepo } from "~/server/sales/repos-documents";
@@ -57,6 +58,7 @@ export function createRepositories(db: Kysely<Database>) {
     notificationContacts: createNotificationContactsRepo(db),
     notificationPreferences: createNotificationPreferencesRepo(db),
     appNotifications: createAppNotificationsRepo(db),
+    actionObservations: createActionObservationsRepo(db),
     inventory: createInventoryRepo(db),
     documents: createDocumentsRepo(db),
     auditLogs: createAuditLogsRepo(db),

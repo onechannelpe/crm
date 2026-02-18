@@ -18,6 +18,8 @@ describe("route policy", () => {
 
   it("enforces role access checks for restricted paths", () => {
     expect(canAccessPath("executive", "/settings")).toBe(false);
+    expect(canAccessPath("executive", "/audit")).toBe(false);
+    expect(canAccessPath("supervisor", "/audit")).toBe(true);
     expect(canAccessPath("executive", "/quota")).toBe(false);
     expect(canAccessPath("executive", "/team/new")).toBe(false);
     expect(canAccessPath("hr", "/team/new")).toBe(true);
@@ -32,8 +34,14 @@ describe("route policy", () => {
     );
     expect(executiveSearch).toContain("/leads");
     expect(executiveSearch).toContain("/client-search");
+    expect(executiveSearch).not.toContain("/audit");
     expect(executiveSearch).not.toContain("/quota");
     expect(executiveSearch).not.toContain("/settings");
+
+    const supervisorSearch = getSearchRoutes("supervisor").map(
+      (route) => route.href,
+    );
+    expect(supervisorSearch).toContain("/audit");
 
     const inventorySidebar = getSidebarRoutes("logistics", "inventory").map(
       (route) => route.href,

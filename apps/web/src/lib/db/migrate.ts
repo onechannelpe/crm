@@ -5,6 +5,7 @@ import { db } from "./db";
 import * as m001 from "./migrations/001-initial";
 import * as m002 from "./migrations/002-client-search-views";
 import * as m003 from "./migrations/003-user-invites";
+import * as m004 from "./migrations/004-action-observability";
 
 /**
  * Static migration provider that avoids FileMigrationProvider's dynamic import(),
@@ -17,6 +18,7 @@ const staticProvider: MigrationProvider = {
       "001-initial": m001,
       "002-client-search-views": m002,
       "003-user-invites": m003,
+      "004-action-observability": m004,
     };
   },
 };

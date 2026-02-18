@@ -287,6 +287,23 @@ export interface AuditLogsTable {
   created_at: number;
 }
 
+export interface ActionObservationsTable {
+  id: Generated<number>;
+  trace_id: string;
+  request_id: string;
+  route_path: string | null;
+  http_method: string | null;
+  action_name: string;
+  actor_user_id: number | null;
+  actor_role: UsersTable["role"] | null;
+  status: "ok" | "error";
+  duration_ms: number;
+  error_code: string | null;
+  error_message: string | null;
+  input_summary: string | null;
+  created_at: number;
+}
+
 export interface PasskeysTable {
   id: string;
   user_id: number;
@@ -408,6 +425,7 @@ export interface Database {
   document_attachments: DocumentAttachmentsTable;
   agent_status_logs: AgentStatusLogsTable;
   audit_logs: AuditLogsTable;
+  action_observations: ActionObservationsTable;
   passkeys: PasskeysTable;
   webauthn_challenges: WebauthnChallengesTable;
 }
@@ -436,6 +454,7 @@ export type InventoryLock = Selectable<InventoryLocksTable>;
 export type DocumentAttachment = Selectable<DocumentAttachmentsTable>;
 export type AgentStatusLog = Selectable<AgentStatusLogsTable>;
 export type AuditLog = Selectable<AuditLogsTable>;
+export type ActionObservation = Selectable<ActionObservationsTable>;
 export type Passkey = Selectable<PasskeysTable>;
 export type UserSession = Selectable<UserSessionsTable>;
 export type AuthThrottleCounter = Selectable<AuthThrottleCountersTable>;
@@ -469,3 +488,4 @@ export type NewChargeNoteItem = Insertable<ChargeNoteItemsTable>;
 export type NewRejectionLog = Insertable<RejectionLogsTable>;
 export type NewInteractionLog = Insertable<InteractionLogsTable>;
 export type NewAuditLog = Insertable<AuditLogsTable>;
+export type NewActionObservation = Insertable<ActionObservationsTable>;

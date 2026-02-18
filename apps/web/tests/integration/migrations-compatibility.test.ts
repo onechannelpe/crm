@@ -8,6 +8,7 @@ import { createDb } from "../../src/lib/db/client";
 import * as m001 from "../../src/lib/db/migrations/001-initial";
 import * as m002 from "../../src/lib/db/migrations/002-client-search-views";
 import * as m003 from "../../src/lib/db/migrations/003-user-invites";
+import * as m004 from "../../src/lib/db/migrations/004-action-observability";
 
 const ARTIFACT_DIR = join(process.cwd(), ".vitest-db");
 
@@ -17,6 +18,7 @@ const staticProvider: MigrationProvider = {
       "001-initial": m001,
       "002-client-search-views": m002,
       "003-user-invites": m003,
+      "004-action-observability": m004,
     };
   },
 };
@@ -57,6 +59,7 @@ describe("migration compatibility", () => {
       expect(tableNames.has("charge_notes")).toBe(true);
       expect(tableNames.has("audit_logs")).toBe(true);
       expect(tableNames.has("user_invites")).toBe(true);
+      expect(tableNames.has("action_observations")).toBe(true);
 
       const indexes = await sql<{ name: string }>`
         SELECT name
@@ -110,6 +113,7 @@ describe("migration compatibility", () => {
         { name: "001-initial" },
         { name: "002-client-search-views" },
         { name: "003-user-invites" },
+        { name: "004-action-observability" },
       ]);
     } finally {
       await db.destroy();

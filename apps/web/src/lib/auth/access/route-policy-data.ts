@@ -25,6 +25,13 @@ export const STATIC_ROUTES: StaticRoute[] = [
     sidebarGroup: "platform",
   },
   {
+    id: "observability",
+    label: "Observabilidad",
+    href: "/audit",
+    permission: "audit:read",
+    sidebarGroup: "platform",
+  },
+  {
     id: "settings",
     label: "Configuración",
     href: "/settings",
