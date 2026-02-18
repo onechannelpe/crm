@@ -7,10 +7,6 @@ export function isPrivilegedRole(role: Role): boolean {
   return deriveStrongAuthRequired(role) === 1;
 }
 
-export function isStrongAuthRequiredForRole(role: Role): boolean {
-  return deriveStrongAuthRequired(role) === 1;
-}
-
 export function requiresStepUp(permission: Permission): boolean {
   return STEP_UP_PERMISSIONS.has(permission);
 }
