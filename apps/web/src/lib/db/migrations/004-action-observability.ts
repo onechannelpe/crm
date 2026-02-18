@@ -14,7 +14,9 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     .addColumn("status", "varchar(20)", (col) => col.notNull())
     .addColumn("duration_ms", "integer", (col) => col.notNull())
     .addColumn("error_code", "varchar(120)")
-    .addColumn("error_message", "varchar(255)")
+    .addColumn("error_category", "varchar(40)", (col) => col.notNull())
+    .addColumn("public_error", "varchar(120)")
+    .addColumn("is_sensitive", "integer", (col) => col.notNull().defaultTo(0))
     .addColumn("input_summary", "text")
     .addColumn("created_at", "integer", (col) => col.notNull())
     .execute();

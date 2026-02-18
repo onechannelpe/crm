@@ -36,6 +36,10 @@ export async function login(
     actionName: "auth.login",
     actor: { userId: null, role: null },
     input: { hasTotpCode: Boolean(totpCode) },
+    resolveActor: (result) => ({
+      userId: result.userId,
+      role: result.role,
+    }),
     run: async () => {
       const event = getRequestEvent();
       const ipAddress = getClientIp(event?.request.headers ?? new Headers());

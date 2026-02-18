@@ -24,7 +24,9 @@ export interface ObservabilityActionEvent {
   actorRole: string | null;
   routePath: string | null;
   errorCode: string | null;
-  errorMessage: string | null;
+  errorCategory: string;
+  publicError: string | null;
+  isSensitive: boolean;
 }
 
 export interface ObservabilitySnapshot {
@@ -99,7 +101,9 @@ export async function getObservabilitySnapshot(params?: {
       actorRole: row.actor_role,
       routePath: row.route_path,
       errorCode: row.error_code,
-      errorMessage: row.error_message,
+      errorCategory: row.error_category,
+      publicError: row.public_error,
+      isSensitive: row.is_sensitive === 1,
     })),
   };
 }

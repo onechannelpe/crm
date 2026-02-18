@@ -299,7 +299,16 @@ export interface ActionObservationsTable {
   status: "ok" | "error";
   duration_ms: number;
   error_code: string | null;
-  error_message: string | null;
+  error_category:
+    | "none"
+    | "validation"
+    | "authorization"
+    | "conflict"
+    | "not_found"
+    | "rate_limit"
+    | "internal";
+  public_error: string | null;
+  is_sensitive: number;
   input_summary: string | null;
   created_at: number;
 }

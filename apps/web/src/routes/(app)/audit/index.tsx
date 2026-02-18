@@ -129,6 +129,7 @@ export default function AuditObservabilityPage() {
               <TableHead>Estado</TableHead>
               <TableHead>Duracion</TableHead>
               <TableHead>Actor</TableHead>
+              <TableHead>Categoria</TableHead>
               <TableHead>Error</TableHead>
             </TableRow>
           </TableHeader>
@@ -145,7 +146,10 @@ export default function AuditObservabilityPage() {
                   <TableCell>
                     {row.actorUserId ? `#${row.actorUserId}` : "N/A"}
                   </TableCell>
-                  <TableCell>{row.errorCode ?? "-"}</TableCell>
+                  <TableCell>{row.errorCategory}</TableCell>
+                  <TableCell>
+                    {row.publicError ?? row.errorCode ?? "-"}
+                  </TableCell>
                 </TableRow>
               )}
             </For>

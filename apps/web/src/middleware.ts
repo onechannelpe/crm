@@ -9,9 +9,8 @@ export default createMiddleware({
     const url = new URL(event.request.url);
     event.locals = event.locals ?? {};
     event.locals.observability = {
-      traceId: event.request.headers.get("x-trace-id") ?? generateTraceId(),
-      requestId:
-        event.request.headers.get("x-request-id") ?? generateRequestId(),
+      traceId: generateTraceId(),
+      requestId: generateRequestId(),
       routePath: url.pathname,
       httpMethod: event.request.method,
       requestStartedAt: Date.now(),
