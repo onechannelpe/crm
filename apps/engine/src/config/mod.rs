@@ -28,7 +28,7 @@ impl Config {
         let db_path = env::var("ENGINE_DB_PATH").unwrap_or_else(|_| Self::default_db_path());
 
         Ok(Self {
-            host: env::var("ENGINE_HOST").unwrap_or_else(|_| "127.0.0.1".into()),
+            host: env::var("ENGINE_HOST").unwrap_or_else(|_| "localhost".into()),
             port: env::var("ENGINE_PORT")
                 .unwrap_or_else(|_| "3001".into())
                 .parse()

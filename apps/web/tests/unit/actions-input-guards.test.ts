@@ -9,6 +9,12 @@ import { requestLeads } from "../../src/actions/leads";
 import { allocateQuota } from "../../src/actions/quota";
 import { createSale } from "../../src/actions/sales";
 import { updateProductPricing } from "../../src/actions/settings";
+import {
+  acceptTeamInvite,
+  createTeamInvite,
+  resendTeamInvite,
+  revokeTeamInvite,
+} from "../../src/actions/team";
 
 describe("action input guards", () => {
   it("fails fast for invalid sales ids before auth", async () => {
@@ -45,5 +51,37 @@ describe("action input guards", () => {
     await expect(getUserLoginRetryReport("   ")).rejects.toThrow(
       "email is required",
     );
+  });
+
+  it("fails fast for invalid team invite params before auth", async () => {
+    await expect(
+      createTeamInvite({
+        fullName: "Test User",
+        email: "invalid-email",
+        role: "executive",
+        teamId: null,
+      }),
+    ).rejects.toThrow("email must be valid");
+    await expect(
+      createTeamInvite({
+        fullName: "Test User",
+        email: "test@example.com",
+        role: "invalid-role",
+        teamId: null,
+      }),
+    ).rejects.toThrow("role is invalid");
+    await expect(resendTeamInvite(0)).rejects.toThrow(
+      "inviteId must be a positive integer",
+    );
+    await expect(revokeTeamInvite(0)).rejects.toThrow(
+      "inviteId must be a positive integer",
+    );
+    await expect(
+      acceptTeamInvite({
+        token: "invalid",
+        fullName: "Test User",
+        password: "Password123",
+      }),
+    ).rejects.toThrow("token is invalid");
   });
 });

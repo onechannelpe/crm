@@ -25,6 +25,7 @@ const SIDEBAR_GROUPS = [
 const ICONS: Record<string, Component<{ class?: string }>> = {
   dashboard: House,
   team: Users,
+  observability: ShieldCheck,
   settings: Settings,
   leads: Users,
   "client-search": Search,

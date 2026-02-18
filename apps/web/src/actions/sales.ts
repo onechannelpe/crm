@@ -1,5 +1,6 @@
 "use server";
 
+import type { Role } from "~/lib/auth/access/rbac";
 import { requirePermission } from "~/lib/auth/access/session";
 import { config } from "~/lib/config";
 import type { ActionSuccess } from "~/lib/contracts/common";
@@ -8,6 +9,7 @@ import {
   assertNonEmptyString,
   assertPositiveInt,
 } from "~/lib/contracts/guards";
+import { runObservedAction } from "~/lib/observability/run-observed-action";
 import { computeLockExpiry } from "~/server/inventory/domain";
 import { salesService } from "~/server/shared/context";
 import { repos } from "~/server/shared/context";
@@ -65,44 +67,76 @@ export interface SaleDraftContext {
 
 export async function createSale(contactId: number): Promise<CreateSaleResult> {
   const safeContactId = assertPositiveInt(contactId, "contactId");
-  const session = await requirePermission("sales:create");
-  const hasLead = await repos.leadAssignments.hasActiveForContact(
-    session.userId,
-    safeContactId,
-  );
-  if (!hasLead) {
-    throw new Error(
-      "You can only create sales from your active assigned leads",
-    );
-  }
+  const actor = { userId: null as number | null, role: null as Role | null };
+  return runObservedAction({
+    actionName: "sales.create",
+    actor,
+    input: { contactId: safeContactId },
+    run: async () => {
+      const session = await requirePermission("sales:create");
+      actor.userId = session.userId;
+      const hasLead = await repos.leadAssignments.hasActiveForContact(
+        session.userId,
+        safeContactId,
+      );
+      if (!hasLead) {
+        throw new Error(
+          "You can only create sales from your active assigned leads",
+        );
+      }
 
-  const result = await salesService.createDraft(safeContactId, session.userId);
+      const result = await salesService.createDraft(
+        safeContactId,
+        session.userId,
+      );
 
-  if (isErr(result)) throw new Error(result.error);
-  return { id: result.value };
+      if (isErr(result)) throw new Error(result.error);
+      return { id: result.value };
+    },
+  });
 }
 
 export async function submitSale(noteId: number): Promise<ActionSuccess> {
   const safeNoteId = assertPositiveInt(noteId, "noteId");
-  const session = await requirePermission("sales:submit");
-  const result = await salesService.submit(safeNoteId, session.userId);
+  const actor = { userId: null as number | null, role: null as Role | null };
+  return runObservedAction({
+    actionName: "sales.submit",
+    actor,
+    input: { noteId: safeNoteId },
+    run: async () => {
+      const session = await requirePermission("sales:submit");
+      actor.userId = session.userId;
+      actor.role = session.role;
+      const result = await salesService.submit(safeNoteId, session.userId);
 
-  if (isErr(result)) throw new Error(result.error);
-  return { success: true };
+      if (isErr(result)) throw new Error(result.error);
+      return { success: true };
+    },
+  });
 }
 
 export async function approveSale(noteId: number): Promise<ActionSuccess> {
   const safeNoteId = assertPositiveInt(noteId, "noteId");
-  const session = await requirePermission("sales:approve");
-  const result = await salesService.approve(
-    safeNoteId,
-    session.userId,
-    session.branchId,
-    session.role === "superuser",
-  );
+  const actor = { userId: null as number | null, role: null as Role | null };
+  return runObservedAction({
+    actionName: "sales.approve",
+    actor,
+    input: { noteId: safeNoteId },
+    run: async () => {
+      const session = await requirePermission("sales:approve");
+      actor.userId = session.userId;
+      actor.role = session.role;
+      const result = await salesService.approve(
+        safeNoteId,
+        session.userId,
+        session.branchId,
+        session.role === "superuser",
+      );
 
-  if (isErr(result)) throw new Error(result.error);
-  return { success: true };
+      if (isErr(result)) throw new Error(result.error);
+      return { success: true };
+    },
+  });
 }
 
 export async function rejectSale(
@@ -120,17 +154,30 @@ export async function rejectSale(
         ? null
         : assertNonEmptyString(item.reviewer_note, "rejections.reviewer_note"),
   }));
-  const session = await requirePermission("sales:approve");
-  const result = await salesService.reject(
-    safeNoteId,
-    session.userId,
-    session.branchId,
-    session.role === "superuser",
-    normalizedRejections,
-  );
+  const actor = { userId: null as number | null, role: null as Role | null };
+  return runObservedAction({
+    actionName: "sales.reject",
+    actor,
+    input: {
+      noteId: safeNoteId,
+      rejectionsCount: normalizedRejections.length,
+    },
+    run: async () => {
+      const session = await requirePermission("sales:approve");
+      actor.userId = session.userId;
+      actor.role = session.role;
+      const result = await salesService.reject(
+        safeNoteId,
+        session.userId,
+        session.branchId,
+        session.role === "superuser",
+        normalizedRejections,
+      );
 
-  if (isErr(result)) throw new Error(result.error);
-  return { success: true };
+      if (isErr(result)) throw new Error(result.error);
+      return { success: true };
+    },
+  });
 }
 
 export async function getPendingReviewNotes(): Promise<PendingReviewNote[]> {

@@ -92,6 +92,29 @@ describe("privileged password login", () => {
     ).rejects.toThrow("Strong authentication required");
   });
 
+  it("rejects privileged login when enrolled marker exists but factor is missing", async () => {
+    await ctx.db
+      .updateTable("users")
+      .set({ strong_auth_enrolled_at: Date.now() })
+      .where("id", "=", 5)
+      .execute();
+
+    await expect(
+      authenticatePasswordLogin(
+        {
+          email,
+          password: rightPassword,
+          ipAddress,
+          userAgent,
+        },
+        {
+          repos: ctx.repos,
+          sendPrivilegedLoginAlert,
+        },
+      ),
+    ).rejects.toThrow("Strong authentication required");
+  });
+
   it("marks session as strong-auth when privileged user logs in with valid totp", async () => {
     const secret = generateTotpSecret();
     await ctx.repos.userTotpFactors.createOrRotate(
@@ -137,5 +160,28 @@ describe("privileged password login", () => {
         },
       ),
     ).rejects.toThrow("Invalid TOTP code");
+  });
+
+  it("clears strong-auth enrollment marker when provisioning downgrades role", async () => {
+    const secret = generateTotpSecret();
+    await ctx.repos.userTotpFactors.createOrRotate(
+      5,
+      await encryptTotpSecret(secret),
+    );
+    await ctx.repos.userTotpFactors.markEnabled(5);
+
+    const enrolledUser = await ctx.repos.users.findById(5);
+    expect(enrolledUser?.strong_auth_enrolled_at).not.toBeNull();
+
+    await ctx.repos.users.updateInviteProvisioning(5, {
+      team_id: null,
+      full_name: "Super User",
+      role: "executive",
+      is_active: 1,
+    });
+
+    const downgradedUser = await ctx.repos.users.findById(5);
+    expect(downgradedUser?.strong_auth_required).toBe(0);
+    expect(downgradedUser?.strong_auth_enrolled_at).toBeNull();
   });
 });

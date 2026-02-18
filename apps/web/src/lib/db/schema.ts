@@ -1,4 +1,4 @@
-import type { Generated, Insertable, Selectable } from "kysely";
+import type { ColumnType, Generated, Insertable, Selectable } from "kysely";
 
 export interface BranchesTable {
   id: Generated<number>;
@@ -25,6 +25,12 @@ export interface UsersTable {
   phone_verified_at: number | null;
   profile_confirmed_at: number | null;
   onboarding_completed_at: number | null;
+  strong_auth_required: ColumnType<number, number | undefined, number>;
+  strong_auth_enrolled_at: ColumnType<
+    number | null,
+    number | null | undefined,
+    number | null
+  >;
   role:
     | "executive"
     | "supervisor"
@@ -287,6 +293,32 @@ export interface AuditLogsTable {
   created_at: number;
 }
 
+export interface ActionObservationsTable {
+  id: Generated<number>;
+  trace_id: string;
+  request_id: string;
+  route_path: string | null;
+  http_method: string | null;
+  action_name: string;
+  actor_user_id: number | null;
+  actor_role: UsersTable["role"] | null;
+  status: "ok" | "error";
+  duration_ms: number;
+  error_code: string | null;
+  error_category:
+    | "none"
+    | "validation"
+    | "authorization"
+    | "conflict"
+    | "not_found"
+    | "rate_limit"
+    | "internal";
+  public_error: string | null;
+  is_sensitive: number;
+  input_summary: string | null;
+  created_at: number;
+}
+
 export interface PasskeysTable {
   id: string;
   user_id: number;
@@ -360,6 +392,22 @@ export interface UserTotpRecoveryCodesTable {
   created_at: number;
 }
 
+export interface UserInvitesTable {
+  id: Generated<number>;
+  user_id: number;
+  branch_id: number;
+  email: string;
+  role: UsersTable["role"];
+  token_hash: string;
+  status: "pending" | "accepted" | "revoked" | "expired";
+  expires_at: number;
+  created_by_user_id: number;
+  accepted_at: number | null;
+  revoked_at: number | null;
+  created_at: number;
+  sent_at: number | null;
+}
+
 export interface Database {
   branches: BranchesTable;
   teams: TeamsTable;
@@ -377,6 +425,7 @@ export interface Database {
   auth_events: AuthEventsTable;
   user_totp_factors: UserTotpFactorsTable;
   user_totp_recovery_codes: UserTotpRecoveryCodesTable;
+  user_invites: UserInvitesTable;
   organizations: OrganizationsTable;
   contacts: ContactsTable;
   lead_assignments: LeadAssignmentsTable;
@@ -391,6 +440,7 @@ export interface Database {
   document_attachments: DocumentAttachmentsTable;
   agent_status_logs: AgentStatusLogsTable;
   audit_logs: AuditLogsTable;
+  action_observations: ActionObservationsTable;
   passkeys: PasskeysTable;
   webauthn_challenges: WebauthnChallengesTable;
 }
@@ -419,12 +469,14 @@ export type InventoryLock = Selectable<InventoryLocksTable>;
 export type DocumentAttachment = Selectable<DocumentAttachmentsTable>;
 export type AgentStatusLog = Selectable<AgentStatusLogsTable>;
 export type AuditLog = Selectable<AuditLogsTable>;
+export type ActionObservation = Selectable<ActionObservationsTable>;
 export type Passkey = Selectable<PasskeysTable>;
 export type UserSession = Selectable<UserSessionsTable>;
 export type AuthThrottleCounter = Selectable<AuthThrottleCountersTable>;
 export type AuthEvent = Selectable<AuthEventsTable>;
 export type UserTotpFactor = Selectable<UserTotpFactorsTable>;
 export type UserTotpRecoveryCode = Selectable<UserTotpRecoveryCodesTable>;
+export type UserInvite = Selectable<UserInvitesTable>;
 
 export type NewUser = Insertable<UsersTable>;
 export type NewNotificationContact = Insertable<NotificationContactsTable>;
@@ -441,6 +493,7 @@ export type NewAuthThrottleCounter = Insertable<AuthThrottleCountersTable>;
 export type NewAuthEvent = Insertable<AuthEventsTable>;
 export type NewUserTotpFactor = Insertable<UserTotpFactorsTable>;
 export type NewUserTotpRecoveryCode = Insertable<UserTotpRecoveryCodesTable>;
+export type NewUserInvite = Insertable<UserInvitesTable>;
 export type NewOrganization = Insertable<OrganizationsTable>;
 export type NewContact = Insertable<ContactsTable>;
 export type NewLeadAssignment = Insertable<LeadAssignmentsTable>;
@@ -450,3 +503,4 @@ export type NewChargeNoteItem = Insertable<ChargeNoteItemsTable>;
 export type NewRejectionLog = Insertable<RejectionLogsTable>;
 export type NewInteractionLog = Insertable<InteractionLogsTable>;
 export type NewAuditLog = Insertable<AuditLogsTable>;
+export type NewActionObservation = Insertable<ActionObservationsTable>;

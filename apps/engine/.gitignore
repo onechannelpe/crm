@@ -4,3 +4,4 @@ target
 # data
 *.sqlite
 *.sqlite-*
+*.csv
