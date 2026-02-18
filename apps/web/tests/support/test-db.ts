@@ -6,6 +6,7 @@ import type { Kysely } from "kysely";
 import { createDb } from "../../src/lib/db/client";
 import { up as up001 } from "../../src/lib/db/migrations/001-initial";
 import { up as up002 } from "../../src/lib/db/migrations/002-client-search-views";
+import { up as up003 } from "../../src/lib/db/migrations/003-user-invites";
 import type { Database } from "../../src/lib/db/schema";
 import { createAppNotificationCenter } from "../../src/server/notifications/app-center-service";
 import { createSalesWorkflowService } from "../../src/server/sales/service";
@@ -191,6 +192,7 @@ export async function createIsolatedTestDb(
   const db = createDb(dbPath);
   await up001(db);
   await up002(db);
+  await up003(db);
   await seedTemplate(db);
   const repos = createRepositories(db);
   const notifications = createAppNotificationCenter({

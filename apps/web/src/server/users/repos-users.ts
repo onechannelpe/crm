@@ -22,6 +22,14 @@ export function createUsersRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
+    findByBranchIncludingInactive(branchId: number) {
+      return db
+        .selectFrom("users")
+        .selectAll()
+        .where("branch_id", "=", branchId)
+        .execute();
+    },
+
     findByTeam(teamId: number) {
       return db
         .selectFrom("users")
@@ -87,6 +95,27 @@ export function createUsersRepo(db: Kysely<Database>) {
       return db
         .updateTable("users")
         .set({ password_hash: passwordHash })
+        .where("id", "=", id)
+        .execute();
+    },
+
+    updateInviteProvisioning(
+      id: number,
+      values: {
+        team_id: number | null;
+        full_name: string;
+        role: UserRole;
+        is_active: number;
+      },
+    ) {
+      return db
+        .updateTable("users")
+        .set({
+          team_id: values.team_id,
+          full_name: values.full_name,
+          role: values.role,
+          is_active: values.is_active,
+        })
         .where("id", "=", id)
         .execute();
     },

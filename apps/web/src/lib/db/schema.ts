@@ -360,6 +360,22 @@ export interface UserTotpRecoveryCodesTable {
   created_at: number;
 }
 
+export interface UserInvitesTable {
+  id: Generated<number>;
+  user_id: number;
+  branch_id: number;
+  email: string;
+  role: UsersTable["role"];
+  token_hash: string;
+  status: "pending" | "accepted" | "revoked" | "expired";
+  expires_at: number;
+  created_by_user_id: number;
+  accepted_at: number | null;
+  revoked_at: number | null;
+  created_at: number;
+  sent_at: number | null;
+}
+
 export interface Database {
   branches: BranchesTable;
   teams: TeamsTable;
@@ -377,6 +393,7 @@ export interface Database {
   auth_events: AuthEventsTable;
   user_totp_factors: UserTotpFactorsTable;
   user_totp_recovery_codes: UserTotpRecoveryCodesTable;
+  user_invites: UserInvitesTable;
   organizations: OrganizationsTable;
   contacts: ContactsTable;
   lead_assignments: LeadAssignmentsTable;
@@ -425,6 +442,7 @@ export type AuthThrottleCounter = Selectable<AuthThrottleCountersTable>;
 export type AuthEvent = Selectable<AuthEventsTable>;
 export type UserTotpFactor = Selectable<UserTotpFactorsTable>;
 export type UserTotpRecoveryCode = Selectable<UserTotpRecoveryCodesTable>;
+export type UserInvite = Selectable<UserInvitesTable>;
 
 export type NewUser = Insertable<UsersTable>;
 export type NewNotificationContact = Insertable<NotificationContactsTable>;
@@ -441,6 +459,7 @@ export type NewAuthThrottleCounter = Insertable<AuthThrottleCountersTable>;
 export type NewAuthEvent = Insertable<AuthEventsTable>;
 export type NewUserTotpFactor = Insertable<UserTotpFactorsTable>;
 export type NewUserTotpRecoveryCode = Insertable<UserTotpRecoveryCodesTable>;
+export type NewUserInvite = Insertable<UserInvitesTable>;
 export type NewOrganization = Insertable<OrganizationsTable>;
 export type NewContact = Insertable<ContactsTable>;
 export type NewLeadAssignment = Insertable<LeadAssignmentsTable>;

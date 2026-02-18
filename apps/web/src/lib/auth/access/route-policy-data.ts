@@ -72,6 +72,7 @@ export const DYNAMIC_ROUTE_PERMISSIONS: Array<{
   pattern: RegExp;
   permission: Permission;
 }> = [
+  { pattern: /^\/team\/new$/, permission: "hr:manage" },
   { pattern: /^\/sales\/new$/, permission: "sales:create" },
   { pattern: /^\/sales\/[^/]+\/fix$/, permission: "sales:submit" },
 ];

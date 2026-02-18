@@ -26,6 +26,7 @@ import { createSessionRepository } from "~/server/sessions/repos-sessions";
 import { createBranchesRepo } from "~/server/users/repos-branches";
 import { createPasskeysRepo } from "~/server/users/repos-passkeys";
 import { createTeamsRepo } from "~/server/users/repos-teams";
+import { createUserInvitesRepo } from "~/server/users/repos-user-invites";
 import { createUsersRepo } from "~/server/users/repos-users";
 import { createWebauthnChallengesRepo } from "~/server/users/repos-webauthn-challenges";
 
@@ -36,6 +37,7 @@ import { createInteractionLogsRepo } from "./repos-interaction-logs";
 export function createRepositories(db: Kysely<Database>) {
   return {
     users: createUsersRepo(db),
+    userInvites: createUserInvitesRepo(db),
     sessions: createSessionRepository(db),
     authEvents: createAuthEventsRepo(db),
     authThrottle: createAuthThrottleRepo(db),

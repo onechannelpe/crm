@@ -13,6 +13,12 @@ import {
   rejectSale,
 } from "../../src/actions/sales";
 import { updateProductPricing } from "../../src/actions/settings";
+import {
+  acceptTeamInvite,
+  createTeamInvite,
+  resendTeamInvite,
+  revokeTeamInvite,
+} from "../../src/actions/team";
 
 describe("action guards fail fast", () => {
   it("rejects malformed numeric ids before auth", async () => {
@@ -43,6 +49,29 @@ describe("action guards fail fast", () => {
     await expect(getUserLoginRetryReport("   ")).rejects.toThrow(
       "email is required",
     );
+    await expect(
+      createTeamInvite({
+        fullName: "Test User",
+        email: "bad-email",
+        role: "executive",
+        teamId: null,
+      }),
+    ).rejects.toThrow("email must be valid");
+    await expect(
+      createTeamInvite({
+        fullName: "Test User",
+        email: "test@example.com",
+        role: "bad-role",
+        teamId: null,
+      }),
+    ).rejects.toThrow("role is invalid");
+    await expect(
+      acceptTeamInvite({
+        token: "invalid",
+        fullName: "Test User",
+        password: "Password123",
+      }),
+    ).rejects.toThrow("token is invalid");
   });
 
   it("rejects invalid range/count values before auth", async () => {
@@ -51,6 +80,12 @@ describe("action guards fail fast", () => {
     );
     await expect(allocateQuota(1, 0)).rejects.toThrow(
       "amount must be a positive integer",
+    );
+    await expect(resendTeamInvite(0)).rejects.toThrow(
+      "inviteId must be a positive integer",
+    );
+    await expect(revokeTeamInvite(0)).rejects.toThrow(
+      "inviteId must be a positive integer",
     );
   });
 });
