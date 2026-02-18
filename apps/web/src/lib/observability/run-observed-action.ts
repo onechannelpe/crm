@@ -8,6 +8,23 @@ export interface ObservedActionActor {
   role: Role | null;
 }
 
+function recordActionInBackground(params: {
+  traceId: string;
+  requestId: string;
+  routePath: string | null;
+  httpMethod: string | null;
+  actionName: string;
+  actorUserId: number | null;
+  actorRole: Role | null;
+  status: "ok" | "error";
+  durationMs: number;
+  errorMessage: string | null;
+  input: unknown;
+  createdAt: number;
+}): void {
+  void observabilityService.recordAction(params).catch(() => {});
+}
+
 export async function runObservedAction<T>(params: {
   actionName: string;
   actor: ObservedActionActor;
@@ -21,40 +38,36 @@ export async function runObservedAction<T>(params: {
   try {
     const result = await params.run();
     const actor = params.resolveActor?.(result) ?? params.actor;
-    await observabilityService
-      .recordAction({
-        traceId: context.traceId,
-        requestId: context.requestId,
-        routePath: context.routePath,
-        httpMethod: context.httpMethod,
-        actionName: params.actionName,
-        actorUserId: actor.userId,
-        actorRole: actor.role,
-        status: "ok",
-        durationMs: Date.now() - startedAt,
-        errorMessage: null,
-        input: params.input ?? null,
-        createdAt: Date.now(),
-      })
-      .catch(() => {});
+    recordActionInBackground({
+      traceId: context.traceId,
+      requestId: context.requestId,
+      routePath: context.routePath,
+      httpMethod: context.httpMethod,
+      actionName: params.actionName,
+      actorUserId: actor.userId,
+      actorRole: actor.role,
+      status: "ok",
+      durationMs: Date.now() - startedAt,
+      errorMessage: null,
+      input: params.input ?? null,
+      createdAt: Date.now(),
+    });
     return result;
   } catch (error: unknown) {
-    await observabilityService
-      .recordAction({
-        traceId: context.traceId,
-        requestId: context.requestId,
-        routePath: context.routePath,
-        httpMethod: context.httpMethod,
-        actionName: params.actionName,
-        actorUserId: params.actor.userId,
-        actorRole: params.actor.role,
-        status: "error",
-        durationMs: Date.now() - startedAt,
-        errorMessage: getErrorMessage(error, "Unknown error"),
-        input: params.input ?? null,
-        createdAt: Date.now(),
-      })
-      .catch(() => {});
+    recordActionInBackground({
+      traceId: context.traceId,
+      requestId: context.requestId,
+      routePath: context.routePath,
+      httpMethod: context.httpMethod,
+      actionName: params.actionName,
+      actorUserId: params.actor.userId,
+      actorRole: params.actor.role,
+      status: "error",
+      durationMs: Date.now() - startedAt,
+      errorMessage: getErrorMessage(error, "Unknown error"),
+      input: params.input ?? null,
+      createdAt: Date.now(),
+    });
     throw error;
   }
 }

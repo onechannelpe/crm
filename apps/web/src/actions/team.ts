@@ -16,11 +16,13 @@ import {
 } from "~/lib/contracts/guards";
 import { env } from "~/lib/env";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
-import { repos } from "~/server/shared/context";
+import { repos, runInRepositoryTransaction } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 import { createUserProvisioningService } from "~/server/users/service-user-provisioning";
 
-const provisioning = createUserProvisioningService(repos);
+const provisioning = createUserProvisioningService(repos, {
+  runInTransaction: runInRepositoryTransaction,
+});
 const notificationSender = createNotificationService({
   resendApiKey: env.resendApiKey || undefined,
   fromEmail: env.emailFrom || undefined,

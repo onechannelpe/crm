@@ -76,4 +76,51 @@ describe("user invite lifecycle", () => {
     const invite = await ctx.repos.userInvites.findById(created.value.inviteId);
     expect(invite?.status).toBe("revoked");
   });
+
+  it("handles raced user creation without escaping the Result contract", async () => {
+    ctx = await createIsolatedTestDb("user-invites-race");
+    let shouldSimulateRace = true;
+    const baseUsersRepo = ctx.repos.users;
+    type CreateUserInput = Parameters<typeof baseUsersRepo.create>[0];
+
+    const reposWithRace = {
+      ...ctx.repos,
+      users: {
+        ...baseUsersRepo,
+        async create(values: CreateUserInput): Promise<number> {
+          if (!shouldSimulateRace) {
+            return baseUsersRepo.create(values);
+          }
+          shouldSimulateRace = false;
+          const racedUserId = await baseUsersRepo.create(values);
+          await baseUsersRepo.updateInviteProvisioning(racedUserId, {
+            team_id: null,
+            full_name: values.full_name,
+            role: values.role,
+            is_active: 0,
+          });
+          throw new Error(
+            "SQLITE_CONSTRAINT_UNIQUE: UNIQUE constraint failed: users.email",
+          );
+        },
+      },
+    };
+
+    const service = createUserProvisioningService(reposWithRace, {
+      now: () => 1_700_000_000_000,
+    });
+
+    const created = await service.createInvite({
+      actorUserId: 5,
+      actorRole: "superuser",
+      branchId: 2,
+      fullName: "Race User",
+      email: "race-user@test.local",
+      role: "executive",
+      teamId: null,
+    });
+
+    expect(created.ok).toBe(true);
+    expect(shouldSimulateRace).toBe(false);
+  });
 });

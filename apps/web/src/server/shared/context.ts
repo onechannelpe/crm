@@ -9,6 +9,16 @@ import { createRepositories } from "~/server/shared/registry";
 
 const repos = createRepositories(db);
 
+export function runInRepositoryTransaction<T>(
+  operation: (
+    transactionRepos: ReturnType<typeof createRepositories>,
+  ) => Promise<T>,
+): Promise<T> {
+  return db
+    .transaction()
+    .execute((transactionDb) => operation(createRepositories(transactionDb)));
+}
+
 export const appNotificationCenter = createAppNotificationCenter({
   repos: { appNotifications: repos.appNotifications, users: repos.users },
 });
