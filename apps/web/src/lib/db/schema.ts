@@ -255,15 +255,43 @@ export interface InventoryLocksTable {
   expires_at: number;
 }
 
-export interface DocumentAttachmentsTable {
+export interface SalesDocumentsTable {
   id: Generated<number>;
   charge_note_id: number;
-  filename: string;
-  filepath: string;
-  mimetype: string;
-  size: number;
-  version: number;
+  original_name: string;
+  mime_type: string;
+  size_bytes: number;
+  sha256: string;
+  storage_key: string;
+  status: "available" | "deleted_soft" | "deleted_hard";
+  created_by_user_id: number;
   created_at: number;
+  deleted_at: number | null;
+}
+
+export interface SalesDocumentEventsTable {
+  id: Generated<number>;
+  document_id: number;
+  charge_note_id: number;
+  actor_user_id: number | null;
+  event_type:
+    | "uploaded"
+    | "soft_deleted"
+    | "hard_deleted"
+    | "integrity_missing_blob";
+  details: string | null;
+  created_at: number;
+}
+
+export interface SalesDocumentPoliciesTable {
+  id: Generated<number>;
+  scope: "global";
+  max_file_size_bytes: number;
+  allowed_mime_types_json: string;
+  retention_days: number;
+  hard_delete_enabled: number;
+  created_at: number;
+  updated_at: number;
 }
 
 export interface AgentStatusLogsTable {
@@ -447,7 +475,9 @@ export interface Database {
   interaction_logs: InteractionLogsTable;
   inventory_items: InventoryItemsTable;
   inventory_locks: InventoryLocksTable;
-  document_attachments: DocumentAttachmentsTable;
+  sales_documents: SalesDocumentsTable;
+  sales_document_events: SalesDocumentEventsTable;
+  sales_document_policies: SalesDocumentPoliciesTable;
   agent_status_logs: AgentStatusLogsTable;
   audit_logs: AuditLogsTable;
   audit_action_policies: AuditActionPoliciesTable;
@@ -477,7 +507,9 @@ export type RejectionLog = Selectable<RejectionLogsTable>;
 export type InteractionLog = Selectable<InteractionLogsTable>;
 export type InventoryItem = Selectable<InventoryItemsTable>;
 export type InventoryLock = Selectable<InventoryLocksTable>;
-export type DocumentAttachment = Selectable<DocumentAttachmentsTable>;
+export type SalesDocument = Selectable<SalesDocumentsTable>;
+export type SalesDocumentEvent = Selectable<SalesDocumentEventsTable>;
+export type SalesDocumentPolicy = Selectable<SalesDocumentPoliciesTable>;
 export type AgentStatusLog = Selectable<AgentStatusLogsTable>;
 export type AuditLog = Selectable<AuditLogsTable>;
 export type AuditActionPolicy = Selectable<AuditActionPoliciesTable>;

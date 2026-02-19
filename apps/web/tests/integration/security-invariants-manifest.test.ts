@@ -15,10 +15,13 @@ async function prepareSubmittableNote(ctx: TestDbContext) {
   await ctx.repos.chargeNoteItems.create(noteId, 1, 1);
   await ctx.repos.documents.create({
     charge_note_id: noteId,
-    filename: "dni.pdf",
-    filepath: `uploads/${noteId}/dni.pdf`,
-    mimetype: "application/pdf",
-    size: 120_000,
+    original_name: "dni.pdf",
+    mime_type: "application/pdf",
+    size_bytes: 120_000,
+    sha256: "4717c905ec347b5915318770f92f818ee5ca111b7088f79f2f138b57fd6595d0",
+    storage_key:
+      "47/17/4717c905ec347b5915318770f92f818ee5ca111b7088f79f2f138b57fd6595d0.blob",
+    created_by_user_id: 1,
   });
 
   await ctx.db
@@ -83,10 +86,14 @@ describe("security invariant manifest", () => {
     await ctx.repos.chargeNoteItems.create(noteC, 1, 1);
     await ctx.repos.documents.create({
       charge_note_id: noteC,
-      filename: "dni.pdf",
-      filepath: `uploads/${noteC}/dni.pdf`,
-      mimetype: "application/pdf",
-      size: 120_000,
+      original_name: "dni.pdf",
+      mime_type: "application/pdf",
+      size_bytes: 120_000,
+      sha256:
+        "4717c905ec347b5915318770f92f818ee5ca111b7088f79f2f138b57fd6595d0",
+      storage_key:
+        "47/17/4717c905ec347b5915318770f92f818ee5ca111b7088f79f2f138b57fd6595d0.blob",
+      created_by_user_id: 1,
     });
     const rC = await ctx.sales.submit(noteC, 1);
     expect(rC.ok).toBe(false);

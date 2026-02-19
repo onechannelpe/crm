@@ -330,18 +330,72 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createTable("document_attachments")
+    .createTable("sales_documents")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("charge_note_id", "integer", (col) =>
       col.notNull().references("charge_notes.id"),
     )
-    .addColumn("filename", "varchar(255)", (col) => col.notNull())
-    .addColumn("filepath", "varchar(500)", (col) => col.notNull())
-    .addColumn("mimetype", "varchar(100)", (col) => col.notNull())
-    .addColumn("size", "integer", (col) => col.notNull())
-    .addColumn("version", "integer", (col) => col.notNull().defaultTo(1))
+    .addColumn("original_name", "varchar(255)", (col) => col.notNull())
+    .addColumn("mime_type", "varchar(100)", (col) => col.notNull())
+    .addColumn("size_bytes", "integer", (col) => col.notNull())
+    .addColumn("sha256", "varchar(64)", (col) => col.notNull())
+    .addColumn("storage_key", "varchar(255)", (col) => col.notNull())
+    .addColumn("status", "varchar(20)", (col) => col.notNull())
+    .addColumn("created_by_user_id", "integer", (col) =>
+      col.notNull().references("users.id"),
+    )
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("deleted_at", "integer")
+    .execute();
+
+  await db.schema
+    .createTable("sales_document_events")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("document_id", "integer", (col) =>
+      col.notNull().references("sales_documents.id").onDelete("cascade"),
+    )
+    .addColumn("charge_note_id", "integer", (col) =>
+      col.notNull().references("charge_notes.id"),
+    )
+    .addColumn("actor_user_id", "integer", (col) => col.references("users.id"))
+    .addColumn("event_type", "varchar(40)", (col) => col.notNull())
+    .addColumn("details", "text")
     .addColumn("created_at", "integer", (col) => col.notNull())
     .execute();
+
+  await db.schema
+    .createTable("sales_document_policies")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("scope", "varchar(20)", (col) => col.notNull().unique())
+    .addColumn("max_file_size_bytes", "integer", (col) => col.notNull())
+    .addColumn("allowed_mime_types_json", "text", (col) => col.notNull())
+    .addColumn("retention_days", "integer", (col) => col.notNull())
+    .addColumn("hard_delete_enabled", "integer", (col) =>
+      col.notNull().defaultTo(1),
+    )
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await sql`
+    INSERT INTO sales_document_policies (
+      scope,
+      max_file_size_bytes,
+      allowed_mime_types_json,
+      retention_days,
+      hard_delete_enabled,
+      created_at,
+      updated_at
+    ) VALUES (
+      'global',
+      ${20 * 1024 * 1024},
+      '["image/jpeg","image/png","image/webp","application/pdf"]',
+      90,
+      1,
+      ${now},
+      ${now}
+    )
+  `.execute(db);
 
   await db.schema
     .createTable("agent_status_logs")
@@ -575,6 +629,31 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     .createIndex("idx_charge_notes_user")
     .on("charge_notes")
     .columns(["user_id", "status"])
+    .execute();
+  await db.schema
+    .createIndex("idx_sales_documents_charge_status_created")
+    .on("sales_documents")
+    .columns(["charge_note_id", "status", "created_at"])
+    .execute();
+  await db.schema
+    .createIndex("idx_sales_documents_status_deleted_at")
+    .on("sales_documents")
+    .columns(["status", "deleted_at"])
+    .execute();
+  await db.schema
+    .createIndex("idx_sales_documents_sha256")
+    .on("sales_documents")
+    .column("sha256")
+    .execute();
+  await db.schema
+    .createIndex("idx_sales_document_events_document_created")
+    .on("sales_document_events")
+    .columns(["document_id", "created_at"])
+    .execute();
+  await db.schema
+    .createIndex("idx_sales_document_events_charge_created")
+    .on("sales_document_events")
+    .columns(["charge_note_id", "created_at"])
     .execute();
   await db.schema
     .createIndex("idx_audit_created_at")

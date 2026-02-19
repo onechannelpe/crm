@@ -15,10 +15,13 @@ async function prepareSubmittableNote(
   await ctx.repos.chargeNoteItems.create(noteId, 1, 1);
   await ctx.repos.documents.create({
     charge_note_id: noteId,
-    filename: "dni.pdf",
-    filepath: `uploads/${noteId}/dni.pdf`,
-    mimetype: "application/pdf",
-    size: 120_000,
+    original_name: "dni.pdf",
+    mime_type: "application/pdf",
+    size_bytes: 120_000,
+    sha256: "4717c905ec347b5915318770f92f818ee5ca111b7088f79f2f138b57fd6595d0",
+    storage_key:
+      "47/17/4717c905ec347b5915318770f92f818ee5ca111b7088f79f2f138b57fd6595d0.blob",
+    created_by_user_id: 1,
   });
 
   await ctx.db
@@ -80,10 +83,14 @@ describe("sales workflow invariants", () => {
     await ctx.repos.chargeNoteItems.create(noteId, 1, 1);
     await ctx.repos.documents.create({
       charge_note_id: noteId,
-      filename: "dni.pdf",
-      filepath: `uploads/${noteId}/dni.pdf`,
-      mimetype: "application/pdf",
-      size: 120_000,
+      original_name: "dni.pdf",
+      mime_type: "application/pdf",
+      size_bytes: 120_000,
+      sha256:
+        "4717c905ec347b5915318770f92f818ee5ca111b7088f79f2f138b57fd6595d0",
+      storage_key:
+        "47/17/4717c905ec347b5915318770f92f818ee5ca111b7088f79f2f138b57fd6595d0.blob",
+      created_by_user_id: 1,
     });
     const result = await ctx.sales.submit(noteId, 1);
     expect(result.ok).toBe(false);
@@ -92,6 +99,32 @@ describe("sales workflow invariants", () => {
     }
     expect(result.error).toBe(
       "An active inventory lock is required before submission",
+    );
+  });
+
+  it("rejects submit after the only document is soft deleted", async () => {
+    const noteId = await ctx.repos.chargeNotes.create(1, 1);
+    await ctx.repos.chargeNoteItems.create(noteId, 1, 1);
+    const inserted = await ctx.repos.documents.create({
+      charge_note_id: noteId,
+      original_name: "dni.pdf",
+      mime_type: "application/pdf",
+      size_bytes: 120_000,
+      sha256:
+        "4717c905ec347b5915318770f92f818ee5ca111b7088f79f2f138b57fd6595d0",
+      storage_key:
+        "47/17/4717c905ec347b5915318770f92f818ee5ca111b7088f79f2f138b57fd6595d0.blob",
+      created_by_user_id: 1,
+    });
+    await ctx.repos.documents.markSoftDeleted(inserted.id, 1);
+
+    const result = await ctx.sales.submit(noteId, 1);
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error("Expected submit without active documents to fail");
+    }
+    expect(result.error).toBe(
+      "At least one document is required before submission",
     );
   });
 

@@ -2,16 +2,14 @@
 
 import type { Role } from "~/lib/auth/access/rbac";
 import { requirePermission } from "~/lib/auth/access/session";
-import { config } from "~/lib/config";
 import type { ActionSuccess } from "~/lib/contracts/common";
 import {
-  assertFinitePositive,
   assertNonEmptyString,
   assertPositiveInt,
 } from "~/lib/contracts/guards";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
 import { computeLockExpiry } from "~/server/inventory/domain";
-import { salesService } from "~/server/shared/context";
+import { salesDocumentService, salesService } from "~/server/shared/context";
 import { repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
@@ -277,12 +275,15 @@ export async function addSaleDocument(
   noteId: number,
   filename: string,
   mimetype: string,
-  size: number,
+  contentBase64: string,
 ): Promise<ActionSuccess> {
   const safeNoteId = assertPositiveInt(noteId, "noteId");
   const safeFilename = assertNonEmptyString(filename, "filename");
   const safeMimetype = assertNonEmptyString(mimetype, "mimetype");
-  const safeSize = assertFinitePositive(size, "size");
+  const safeContentBase64 = assertNonEmptyString(
+    contentBase64,
+    "contentBase64",
+  );
   const session = await requirePermission("sales:create");
   const note = await repos.chargeNotes.findById(safeNoteId);
   if (!note) throw new Error("Charge note not found");
@@ -291,24 +292,45 @@ export async function addSaleDocument(
     throw new Error("Documents can only be edited for draft or rejected notes");
   }
 
-  const isAllowedMimeType = config.uploads.allowedTypes.some(
-    (allowed) => allowed === safeMimetype,
-  );
-  if (!isAllowedMimeType) {
-    throw new Error("File type not allowed");
-  }
-  if (safeSize > config.uploads.maxFileSizeMB * 1024 * 1024) {
-    throw new Error(`File too large. Max ${config.uploads.maxFileSizeMB} MB`);
+  const upload = await salesDocumentService.upload({
+    chargeNoteId: safeNoteId,
+    userId: session.userId,
+    originalName: safeFilename,
+    mimeType: safeMimetype,
+    contentBase64: safeContentBase64,
+  });
+  if (isErr(upload)) throw new Error(upload.error);
+
+  return { success: true };
+}
+
+export async function removeSaleDocument(
+  noteId: number,
+  documentId: number,
+): Promise<ActionSuccess> {
+  const safeNoteId = assertPositiveInt(noteId, "noteId");
+  const safeDocumentId = assertPositiveInt(documentId, "documentId");
+  const session = await requirePermission("sales:create");
+
+  const note = await repos.chargeNotes.findById(safeNoteId);
+  if (!note) throw new Error("Charge note not found");
+  if (note.user_id !== session.userId) throw new Error("Forbidden");
+  if (note.status !== "draft" && note.status !== "rejected") {
+    throw new Error("Documents can only be edited for draft or rejected notes");
   }
 
-  const safeName = safeFilename.replace(/[^a-zA-Z0-9._-]/g, "_");
-  await repos.documents.create({
-    charge_note_id: safeNoteId,
-    filename: safeName || "document.bin",
-    filepath: `uploads/manual/${safeNoteId}/${Date.now()}-${safeName || "document.bin"}`,
-    mimetype: safeMimetype,
-    size: safeSize,
-  });
+  const document = await repos.documents.findById(safeDocumentId);
+  if (!document || document.charge_note_id !== safeNoteId) {
+    throw new Error("Document not found");
+  }
+
+  const wasDeleted = await repos.documents.markSoftDeleted(
+    safeDocumentId,
+    session.userId,
+  );
+  if (!wasDeleted) {
+    throw new Error("Document is not available");
+  }
 
   return { success: true };
 }

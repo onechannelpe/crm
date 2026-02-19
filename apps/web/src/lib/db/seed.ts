@@ -986,34 +986,49 @@ export async function seedIfEmpty() {
     .execute();
 
   await db
-    .insertInto("document_attachments")
+    .insertInto("sales_documents")
     .values([
       {
         charge_note_id: 2,
-        filename: "dni-frente.pdf",
-        filepath: "uploads/manual/2/dni-frente.pdf",
-        mimetype: "application/pdf",
-        size: 180_000,
-        version: 1,
+        original_name: "dni-frente.pdf",
+        mime_type: "application/pdf",
+        size_bytes: 180_000,
+        sha256:
+          "f7af2f5923204a76003a8fbb7d82d87ec3d0cca1f18f31b55db207f0f6fd09f0",
+        storage_key:
+          "f7/af/f7af2f5923204a76003a8fbb7d82d87ec3d0cca1f18f31b55db207f0f6fd09f0.blob",
+        status: "available",
+        created_by_user_id: 3,
         created_at: now - oneDay,
+        deleted_at: null,
       },
       {
         charge_note_id: 6,
-        filename: "voucher.png",
-        filepath: "uploads/manual/6/voucher.png",
-        mimetype: "image/png",
-        size: 120_000,
-        version: 1,
+        original_name: "voucher.png",
+        mime_type: "image/png",
+        size_bytes: 120_000,
+        sha256:
+          "fd4f38dd49f032f95d42f1b7c6f3f8f8b4db3d6f6a2a43e6169ba34baf0fbe15",
+        storage_key:
+          "fd/4f/fd4f38dd49f032f95d42f1b7c6f3f8f8b4db3d6f6a2a43e6169ba34baf0fbe15.blob",
+        status: "available",
+        created_by_user_id: 3,
         created_at: now - oneDay,
+        deleted_at: null,
       },
       {
         charge_note_id: 6,
-        filename: "voucher.png",
-        filepath: "uploads/manual/6/voucher-v2.png",
-        mimetype: "image/png",
-        size: 142_000,
-        version: 2,
+        original_name: "voucher-v2.png",
+        mime_type: "image/png",
+        size_bytes: 142_000,
+        sha256:
+          "f8397c6b847b4a9b4e8705eb037e2564526eec0ec14b32f650fcb275f611fbe2",
+        storage_key:
+          "f8/39/f8397c6b847b4a9b4e8705eb037e2564526eec0ec14b32f650fcb275f611fbe2.blob",
+        status: "available",
+        created_by_user_id: 3,
         created_at: now - oneDay / 2,
+        deleted_at: null,
       },
     ])
     .onConflict((oc) => oc.doNothing())
@@ -1179,7 +1194,7 @@ export async function seedIfEmpty() {
       {
         charge_note_id: 6,
         reviewer_id: 10,
-        field_id: "document_attachments.voucher",
+        field_id: "sales_documents.voucher",
         reviewer_note: "La imagen está borrosa, sube una versión legible.",
         is_resolved: 0,
         created_at: now - oneDay,
@@ -1314,10 +1329,7 @@ export async function seedIfEmpty() {
         entity_id: 6,
         changes: JSON.stringify({
           reason: "documentation_invalid",
-          flaggedFields: [
-            "document_attachments.voucher",
-            "contact.phone_primary",
-          ],
+          flaggedFields: ["sales_documents.voucher", "contact.phone_primary"],
         }),
         created_at: now - oneDay,
       },

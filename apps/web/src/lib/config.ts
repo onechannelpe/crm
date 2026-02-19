@@ -16,8 +16,12 @@ export const config = {
     maxAmount: 100,
   },
   uploads: {
-    maxFileSizeMB: 10,
+    storageRoot: process.env.CRM_UPLOADS_ROOT ?? ".local-storage/documents",
+    maxFileSizeMB: 20,
     allowedTypes: ["image/jpeg", "image/png", "image/webp", "application/pdf"],
+    retentionDays: 90,
+    hardDeleteEnabled: 1,
+    retentionSweepIntervalMs: 60 * 60 * 1000,
   },
   session: {
     maxAgeSeconds: 60 * 60 * 24 * 30,

@@ -9,6 +9,7 @@ import {
   getAvailableProducts,
   getSaleDraftContext,
   lockSaleInventory,
+  removeSaleDocument,
   submitSale,
 } from "~/actions/sales";
 import { useToast } from "~/components/feedback/toast-provider";
@@ -29,9 +30,8 @@ export default function NewSalePage() {
   const [selectedProductId, setSelectedProductId] = createSignal("");
   const [quantity, setQuantity] = createSignal("1");
   const [selectedInventoryId, setSelectedInventoryId] = createSignal("");
-  const [docName, setDocName] = createSignal("dni-frente.pdf");
-  const [docType, setDocType] = createSignal("application/pdf");
-  const [docSizeKb, setDocSizeKb] = createSignal("400");
+  const [selectedDocumentFile, setSelectedDocumentFile] =
+    createSignal<File | null>(null);
   const { showToast } = useToast();
 
   const [products] = createResource(
@@ -49,6 +49,14 @@ export default function NewSalePage() {
   const [draft, { refetch: refetchDraft, mutate: mutateDraft }] =
     createResource(noteId, getSaleDraftContext);
   const currentDraft = () => draft.latest;
+
+  function bytesToBase64(bytes: Uint8Array) {
+    let binary = "";
+    for (const byte of bytes) {
+      binary += String.fromCharCode(byte);
+    }
+    return btoa(binary);
+  }
 
   async function handleCreate(e: Event) {
     e.preventDefault();
@@ -111,9 +119,11 @@ export default function NewSalePage() {
 
   async function handleAddDocument() {
     const currentNoteId = noteId();
-    if (!currentNoteId) return;
+    const file = selectedDocumentFile();
+    if (!currentNoteId || !file) return;
     try {
-      const size = Number(docSizeKb()) * 1024;
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const contentBase64 = bytesToBase64(bytes);
       await runOptimistic({
         read: currentDraft,
         write: (next) => {
@@ -127,12 +137,15 @@ export default function NewSalePage() {
               {
                 id: -Date.now(),
                 charge_note_id: currentNoteId,
-                filename: docName(),
-                filepath: `pending://${docName()}`,
-                mimetype: docType(),
-                size,
-                version: 1,
+                original_name: file.name,
+                mime_type: file.type,
+                size_bytes: file.size,
+                sha256: "pending",
+                storage_key: "pending",
+                status: "available" as const,
+                created_by_user_id: -1,
                 created_at: Date.now(),
+                deleted_at: null,
               },
               ...prev.documents,
             ],
@@ -140,12 +153,18 @@ export default function NewSalePage() {
           };
         },
         commit: async () => {
-          await addSaleDocument(currentNoteId, docName(), docType(), size);
+          await addSaleDocument(
+            currentNoteId,
+            file.name,
+            file.type || "application/octet-stream",
+            contentBase64,
+          );
         },
         reconcile: () => {
           void refetchDraft();
         },
       });
+      setSelectedDocumentFile(null);
       showToast("success", "Documento registrado");
     } catch (err: unknown) {
       showToast(
@@ -198,6 +217,43 @@ export default function NewSalePage() {
         "error",
         getErrorMessage(err, "No se pudo reservar inventario"),
       );
+    }
+  }
+
+  async function handleRemoveDocument(documentId: number) {
+    const currentNoteId = noteId();
+    if (!currentNoteId) return;
+
+    try {
+      await runOptimistic({
+        read: currentDraft,
+        write: (next) => {
+          mutateDraft(() => next);
+        },
+        optimistic: (prev) => {
+          if (!prev) return prev;
+          const remaining = prev.documents.filter(
+            (doc) => doc.id !== documentId,
+          );
+          return {
+            ...prev,
+            documents: remaining,
+            readiness: {
+              ...prev.readiness,
+              hasDocuments: remaining.length > 0,
+            },
+          };
+        },
+        commit: async () => {
+          await removeSaleDocument(currentNoteId, documentId);
+        },
+        reconcile: () => {
+          void refetchDraft();
+        },
+      });
+      showToast("success", "Documento eliminado");
+    } catch (err: unknown) {
+      showToast("error", getErrorMessage(err, "No se pudo eliminar documento"));
     }
   }
 
@@ -293,27 +349,25 @@ export default function NewSalePage() {
               </div>
 
               <div class="space-y-2 rounded border p-3">
-                <p class="text-sm font-medium">Documento manual</p>
-                <Input
-                  label="Archivo"
-                  value={docName()}
-                  onInput={(e) => setDocName(e.currentTarget.value)}
-                />
-                <Input
-                  label="Tipo MIME"
-                  value={docType()}
-                  onInput={(e) => setDocType(e.currentTarget.value)}
-                />
-                <Input
-                  type="number"
-                  label="Tamaño (KB)"
-                  value={docSizeKb()}
-                  onInput={(e) => setDocSizeKb(e.currentTarget.value)}
-                />
+                <p class="text-sm font-medium">Documento</p>
+                <label class="flex flex-col gap-1 text-sm">
+                  Archivo
+                  <input
+                    type="file"
+                    accept=".pdf,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg,image/webp"
+                    class="w-full rounded border px-2 py-2 text-sm"
+                    onInput={(e) => {
+                      setSelectedDocumentFile(
+                        e.currentTarget.files?.[0] ?? null,
+                      );
+                    }}
+                  />
+                </label>
                 <Button
                   onClick={() => {
                     void handleAddDocument();
                   }}
+                  disabled={!selectedDocumentFile()}
                 >
                   Registrar
                 </Button>
@@ -347,13 +401,36 @@ export default function NewSalePage() {
 
             <Show when={currentDraft()}>
               {(ctx) => (
-                <div class="rounded border p-3 text-sm space-y-1">
+                <div class="rounded border p-3 text-sm space-y-2">
                   <p>Items: {ctx().items.length}</p>
                   <p>Documentos: {ctx().documents.length}</p>
                   <p>
                     Inventario bloqueado:{" "}
                     {ctx().inventoryLock?.serial_number ?? "No"}
                   </p>
+                  <Show when={ctx().documents.length > 0}>
+                    <ul class="space-y-1">
+                      <For each={ctx().documents}>
+                        {(document) => (
+                          <li class="flex items-center justify-between rounded border px-2 py-1">
+                            <span>
+                              {document.original_name} (
+                              {Math.ceil(document.size_bytes / 1024)} KB)
+                            </span>
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => {
+                                void handleRemoveDocument(document.id);
+                              }}
+                            >
+                              Eliminar
+                            </Button>
+                          </li>
+                        )}
+                      </For>
+                    </ul>
+                  </Show>
                 </div>
               )}
             </Show>
