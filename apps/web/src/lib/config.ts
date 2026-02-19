@@ -24,6 +24,8 @@ export const config = {
     retentionDays: DEFAULT_UPLOAD_POLICY.retentionDays,
     hardDeleteEnabled: DEFAULT_UPLOAD_POLICY.hardDeleteEnabled,
     retentionSweepIntervalMs: DEFAULT_UPLOAD_POLICY.retentionSweepIntervalMs,
+    integrityScanIntervalMs: 60 * 60 * 1000,
+    integrityScanBatchSize: 200,
   },
   session: {
     maxAgeSeconds: 60 * 60 * 24 * 30,

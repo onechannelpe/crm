@@ -986,17 +986,51 @@ export async function seedIfEmpty() {
     .execute();
 
   await db
+    .insertInto("sales_document_blobs")
+    .values([
+      {
+        sha256:
+          "f7af2f5923204a76003a8fbb7d82d87ec3d0cca1f18f31b55db207f0f6fd09f0",
+        storage_key:
+          "f7/af/f7af2f5923204a76003a8fbb7d82d87ec3d0cca1f18f31b55db207f0f6fd09f0.blob",
+        size_bytes: 180_000,
+        ref_count: 1,
+        created_at: now - oneDay,
+        updated_at: now - oneDay,
+      },
+      {
+        sha256:
+          "fd4f38dd49f032f95d42f1b7c6f3f8f8b4db3d6f6a2a43e6169ba34baf0fbe15",
+        storage_key:
+          "fd/4f/fd4f38dd49f032f95d42f1b7c6f3f8f8b4db3d6f6a2a43e6169ba34baf0fbe15.blob",
+        size_bytes: 120_000,
+        ref_count: 1,
+        created_at: now - oneDay,
+        updated_at: now - oneDay,
+      },
+      {
+        sha256:
+          "f8397c6b847b4a9b4e8705eb037e2564526eec0ec14b32f650fcb275f611fbe2",
+        storage_key:
+          "f8/39/f8397c6b847b4a9b4e8705eb037e2564526eec0ec14b32f650fcb275f611fbe2.blob",
+        size_bytes: 142_000,
+        ref_count: 1,
+        created_at: now - oneDay / 2,
+        updated_at: now - oneDay / 2,
+      },
+    ])
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
+  await db
     .insertInto("sales_documents")
     .values([
       {
         charge_note_id: 2,
         original_name: "dni-frente.pdf",
         mime_type: "application/pdf",
-        size_bytes: 180_000,
-        sha256:
+        blob_sha256:
           "f7af2f5923204a76003a8fbb7d82d87ec3d0cca1f18f31b55db207f0f6fd09f0",
-        storage_key:
-          "f7/af/f7af2f5923204a76003a8fbb7d82d87ec3d0cca1f18f31b55db207f0f6fd09f0.blob",
         status: "available",
         created_by_user_id: 3,
         created_at: now - oneDay,
@@ -1006,11 +1040,8 @@ export async function seedIfEmpty() {
         charge_note_id: 6,
         original_name: "voucher.png",
         mime_type: "image/png",
-        size_bytes: 120_000,
-        sha256:
+        blob_sha256:
           "fd4f38dd49f032f95d42f1b7c6f3f8f8b4db3d6f6a2a43e6169ba34baf0fbe15",
-        storage_key:
-          "fd/4f/fd4f38dd49f032f95d42f1b7c6f3f8f8b4db3d6f6a2a43e6169ba34baf0fbe15.blob",
         status: "available",
         created_by_user_id: 3,
         created_at: now - oneDay,
@@ -1020,11 +1051,8 @@ export async function seedIfEmpty() {
         charge_note_id: 6,
         original_name: "voucher-v2.png",
         mime_type: "image/png",
-        size_bytes: 142_000,
-        sha256:
+        blob_sha256:
           "f8397c6b847b4a9b4e8705eb037e2564526eec0ec14b32f650fcb275f611fbe2",
-        storage_key:
-          "f8/39/f8397c6b847b4a9b4e8705eb037e2564526eec0ec14b32f650fcb275f611fbe2.blob",
         status: "available",
         created_by_user_id: 3,
         created_at: now - oneDay / 2,

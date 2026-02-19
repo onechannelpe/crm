@@ -57,6 +57,7 @@ describe("migration compatibility", () => {
       expect(tableNames.has("users")).toBe(true);
       expect(tableNames.has("quota_allocations")).toBe(true);
       expect(tableNames.has("charge_notes")).toBe(true);
+      expect(tableNames.has("sales_document_blobs")).toBe(true);
       expect(tableNames.has("sales_documents")).toBe(true);
       expect(tableNames.has("sales_document_events")).toBe(true);
       expect(tableNames.has("sales_document_policies")).toBe(true);
@@ -78,7 +79,9 @@ describe("migration compatibility", () => {
       expect(indexNames.has("idx_sales_documents_status_deleted_at")).toBe(
         true,
       );
-      expect(indexNames.has("idx_sales_documents_sha256")).toBe(true);
+      expect(indexNames.has("idx_sales_documents_blob_sha256")).toBe(true);
+      expect(indexNames.has("idx_sales_document_blobs_ref_count")).toBe(true);
+      expect(indexNames.has("idx_sales_document_blobs_storage_key")).toBe(true);
       expect(indexNames.has("idx_sales_document_events_document_created")).toBe(
         true,
       );

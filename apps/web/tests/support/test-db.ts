@@ -224,10 +224,6 @@ export async function createIsolatedTestDb(
   );
   const sales = createSalesWorkflowService(repos, {
     notifications,
-    documents: {
-      countReadyByChargeNote: (noteId) =>
-        documents.countReadyByChargeNote(noteId),
-    },
   });
 
   return { dbPath, storageRoot, db, repos, documents, sales };

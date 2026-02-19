@@ -260,13 +260,20 @@ export interface SalesDocumentsTable {
   charge_note_id: number;
   original_name: string;
   mime_type: string;
-  size_bytes: number;
-  sha256: string;
-  storage_key: string;
+  blob_sha256: string | null;
   status: "available" | "deleted_soft" | "deleted_hard";
   created_by_user_id: number;
   created_at: number;
   deleted_at: number | null;
+}
+
+export interface SalesDocumentBlobsTable {
+  sha256: string;
+  storage_key: string;
+  size_bytes: number;
+  ref_count: number;
+  created_at: number;
+  updated_at: number;
 }
 
 export interface SalesDocumentEventsTable {
@@ -476,6 +483,7 @@ export interface Database {
   inventory_items: InventoryItemsTable;
   inventory_locks: InventoryLocksTable;
   sales_documents: SalesDocumentsTable;
+  sales_document_blobs: SalesDocumentBlobsTable;
   sales_document_events: SalesDocumentEventsTable;
   sales_document_policies: SalesDocumentPoliciesTable;
   agent_status_logs: AgentStatusLogsTable;
@@ -508,6 +516,7 @@ export type InteractionLog = Selectable<InteractionLogsTable>;
 export type InventoryItem = Selectable<InventoryItemsTable>;
 export type InventoryLock = Selectable<InventoryLocksTable>;
 export type SalesDocument = Selectable<SalesDocumentsTable>;
+export type SalesDocumentBlob = Selectable<SalesDocumentBlobsTable>;
 export type SalesDocumentEvent = Selectable<SalesDocumentEventsTable>;
 export type SalesDocumentPolicy = Selectable<SalesDocumentPoliciesTable>;
 export type AgentStatusLog = Selectable<AgentStatusLogsTable>;

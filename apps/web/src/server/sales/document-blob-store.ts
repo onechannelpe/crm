@@ -36,9 +36,12 @@ export function createDocumentBlobStore(rootPath: string) {
           storageKey,
           absolutePath,
           sizeBytes: bytes.byteLength,
+          created: false as const,
         };
-      } catch {
-        // Continue with write path.
+      } catch (error) {
+        if (!isNodeErrorWithCode(error, "ENOENT")) {
+          throw error;
+        }
       }
 
       const tempDir = join(absoluteRoot, "tmp");
@@ -46,16 +49,25 @@ export function createDocumentBlobStore(rootPath: string) {
       const tempPath = join(tempDir, `${randomUUID()}.part`);
 
       await writeFile(tempPath, bytes, { flag: "wx" });
+      let created = true;
       try {
         await rename(tempPath, absolutePath);
       } catch (error) {
         await rm(tempPath, { force: true });
-        if (!isNodeErrorWithCode(error, "EEXIST")) {
+        if (isNodeErrorWithCode(error, "EEXIST")) {
+          created = false;
+        } else {
           throw error;
         }
       }
 
-      return { sha256, storageKey, absolutePath, sizeBytes: bytes.byteLength };
+      return {
+        sha256,
+        storageKey,
+        absolutePath,
+        sizeBytes: bytes.byteLength,
+        created,
+      };
     },
 
     async deleteByStorageKey(storageKey: string) {
@@ -68,7 +80,10 @@ export function createDocumentBlobStore(rootPath: string) {
       try {
         await stat(absolutePath);
         return true;
-      } catch {
+      } catch (error) {
+        if (!isNodeErrorWithCode(error, "ENOENT")) {
+          throw error;
+        }
         return false;
       }
     },

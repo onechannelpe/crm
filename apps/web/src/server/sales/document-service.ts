@@ -140,30 +140,20 @@ export function createSalesDocumentService(
           storage_key: blob.storageKey,
           created_by_user_id: input.userId,
         });
+        const blobStillPresent = await blobStore.existsByStorageKey(
+          blob.storageKey,
+        );
+        if (!blobStillPresent) {
+          await blobStore.put(input.contentBytes);
+        }
 
         return Ok({ documentId: inserted.id });
       } catch (error) {
-        await blobStore.deleteByStorageKey(blob.storageKey);
+        if (blob.created) {
+          await blobStore.deleteByStorageKey(blob.storageKey);
+        }
         throw error;
       }
-    },
-
-    async countReadyByChargeNote(chargeNoteId: number) {
-      const documents = await repos.documents.findByChargeNote(chargeNoteId);
-
-      const readiness = await Promise.all(
-        documents.map(async (document) => {
-          const exists = await blobStore.existsByStorageKey(
-            document.storage_key,
-          );
-          if (!exists) {
-            await repos.documents.logIntegrityMissingBlob(document.id, null);
-          }
-          return exists;
-        }),
-      );
-
-      return readiness.filter(Boolean).length;
     },
 
     async runRetentionSweep(actorUserId: number | null = null) {
@@ -179,15 +169,100 @@ export function createSalesDocumentService(
 
       const cutoff = Date.now() - retentionDays * 24 * 60 * 60 * 1000;
       const candidates = await repos.documents.findHardDeleteCandidates(cutoff);
+      let deletedCount = 0;
+      for (const candidate of candidates) {
+        // Process in-order to keep reference-count updates deterministic.
+        // eslint-disable-next-line no-await-in-loop
+        const released = await repos.documents.releaseForHardDelete(
+          candidate.id,
+          actorUserId,
+        );
+        if (!released) {
+          continue;
+        }
+        if (released.shouldDeleteBlob) {
+          // eslint-disable-next-line no-await-in-loop
+          const deleted = await repos.documents.deleteBlobIfUnreferenced(
+            released.blobSha256,
+          );
+          if (deleted) {
+            // eslint-disable-next-line no-await-in-loop
+            const recreatedBlob = await repos.documents.findBlobBySha(
+              released.blobSha256,
+            );
+            if (!recreatedBlob) {
+              // eslint-disable-next-line no-await-in-loop
+              await blobStore.deleteByStorageKey(released.storageKey);
+            }
+          }
+        }
+        deletedCount += 1;
+      }
 
+      const unreferenced = await repos.documents.listUnreferencedBlobs(200);
       await Promise.all(
-        candidates.map(async (candidate) => {
-          await blobStore.deleteByStorageKey(candidate.storage_key);
-          await repos.documents.markHardDeleted(candidate.id, actorUserId);
+        unreferenced.map(async (blob) => {
+          const deleted = await repos.documents.deleteBlobIfUnreferenced(
+            blob.sha256,
+          );
+          if (!deleted) {
+            return;
+          }
+          const recreatedBlob = await repos.documents.findBlobBySha(
+            blob.sha256,
+          );
+          if (!recreatedBlob) {
+            await blobStore.deleteByStorageKey(blob.storage_key);
+          }
         }),
       );
 
-      return candidates.length;
+      return deletedCount;
+    },
+
+    async runIntegritySweep(
+      batchSize: number,
+      actorUserId: number | null = null,
+    ) {
+      let afterId = 0;
+      let quarantinedCount = 0;
+
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        // eslint-disable-next-line no-await-in-loop
+        const batch = await repos.documents.listAvailableForIntegrityScan(
+          afterId,
+          batchSize,
+        );
+        if (batch.length < 1) {
+          break;
+        }
+
+        // eslint-disable-next-line no-await-in-loop
+        const quarantined = await Promise.all(
+          batch.map(async (document) => {
+            const exists = await blobStore.existsByStorageKey(
+              document.storage_key,
+            );
+            if (!exists) {
+              return repos.documents.markMissingBlobIntegrity(
+                document.id,
+                actorUserId,
+              );
+            }
+            return false;
+          }),
+        );
+        quarantinedCount += quarantined.filter(Boolean).length;
+
+        const last = batch[batch.length - 1];
+        if (!last) {
+          break;
+        }
+        afterId = last.id;
+      }
+
+      return quarantinedCount;
     },
   };
 }

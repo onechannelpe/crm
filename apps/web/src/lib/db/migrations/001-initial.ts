@@ -335,6 +335,16 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
+    .createTable("sales_document_blobs")
+    .addColumn("sha256", "varchar(64)", (col) => col.primaryKey())
+    .addColumn("storage_key", "varchar(255)", (col) => col.notNull())
+    .addColumn("size_bytes", "integer", (col) => col.notNull())
+    .addColumn("ref_count", "integer", (col) => col.notNull())
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await db.schema
     .createTable("sales_documents")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("charge_note_id", "integer", (col) =>
@@ -342,9 +352,9 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     )
     .addColumn("original_name", "varchar(255)", (col) => col.notNull())
     .addColumn("mime_type", "varchar(100)", (col) => col.notNull())
-    .addColumn("size_bytes", "integer", (col) => col.notNull())
-    .addColumn("sha256", "varchar(64)", (col) => col.notNull())
-    .addColumn("storage_key", "varchar(255)", (col) => col.notNull())
+    .addColumn("blob_sha256", "varchar(64)", (col) =>
+      col.references("sales_document_blobs.sha256"),
+    )
     .addColumn("status", "varchar(20)", (col) => col.notNull())
     .addColumn("created_by_user_id", "integer", (col) =>
       col.notNull().references("users.id"),
@@ -641,14 +651,25 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     .columns(["charge_note_id", "status", "created_at"])
     .execute();
   await db.schema
+    .createIndex("idx_sales_documents_blob_sha256")
+    .on("sales_documents")
+    .column("blob_sha256")
+    .execute();
+  await db.schema
     .createIndex("idx_sales_documents_status_deleted_at")
     .on("sales_documents")
     .columns(["status", "deleted_at"])
     .execute();
   await db.schema
-    .createIndex("idx_sales_documents_sha256")
-    .on("sales_documents")
-    .column("sha256")
+    .createIndex("idx_sales_document_blobs_ref_count")
+    .on("sales_document_blobs")
+    .column("ref_count")
+    .execute();
+  await db.schema
+    .createIndex("idx_sales_document_blobs_storage_key")
+    .on("sales_document_blobs")
+    .column("storage_key")
+    .unique()
     .execute();
   await db.schema
     .createIndex("idx_sales_document_events_document_created")
