@@ -1,6 +1,4 @@
-import { Buffer } from "node:buffer";
-
-import { config } from "~/lib/config";
+import { DEFAULT_UPLOAD_POLICY } from "~/lib/uploads/policy-defaults";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -11,7 +9,7 @@ interface UploadDocumentInput {
   userId: number;
   originalName: string;
   mimeType: string;
-  contentBase64: string;
+  contentBytes: Uint8Array;
 }
 
 function sanitizeFilename(name: string) {
@@ -21,30 +19,78 @@ function sanitizeFilename(name: string) {
 
 function parseAllowedMimeTypes(raw: string | null) {
   if (!raw) {
-    return [...config.uploads.allowedTypes];
+    return [...DEFAULT_UPLOAD_POLICY.allowedMimeTypes];
   }
 
   try {
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) {
-      return [...config.uploads.allowedTypes];
+      return [...DEFAULT_UPLOAD_POLICY.allowedMimeTypes];
     }
 
     const mimeTypes = parsed.filter(
       (value): value is string => typeof value === "string" && value.length > 0,
     );
-    return mimeTypes.length > 0 ? mimeTypes : [...config.uploads.allowedTypes];
+    return mimeTypes.length > 0
+      ? mimeTypes
+      : [...DEFAULT_UPLOAD_POLICY.allowedMimeTypes];
   } catch {
-    return [...config.uploads.allowedTypes];
+    return [...DEFAULT_UPLOAD_POLICY.allowedMimeTypes];
   }
 }
 
-function decodeBase64Payload(contentBase64: string) {
-  try {
-    return Buffer.from(contentBase64, "base64");
-  } catch {
-    return null;
+function detectMimeTypeFromContent(content: Uint8Array): string | null {
+  if (content.byteLength >= 5) {
+    const isPdf =
+      content[0] === 0x25 &&
+      content[1] === 0x50 &&
+      content[2] === 0x44 &&
+      content[3] === 0x46 &&
+      content[4] === 0x2d;
+    if (isPdf) {
+      return "application/pdf";
+    }
   }
+
+  if (content.byteLength >= 8) {
+    const isPng =
+      content[0] === 0x89 &&
+      content[1] === 0x50 &&
+      content[2] === 0x4e &&
+      content[3] === 0x47 &&
+      content[4] === 0x0d &&
+      content[5] === 0x0a &&
+      content[6] === 0x1a &&
+      content[7] === 0x0a;
+    if (isPng) {
+      return "image/png";
+    }
+  }
+
+  if (content.byteLength >= 3) {
+    const isJpeg =
+      content[0] === 0xff && content[1] === 0xd8 && content[2] === 0xff;
+    if (isJpeg) {
+      return "image/jpeg";
+    }
+  }
+
+  if (content.byteLength >= 12) {
+    const isWebp =
+      content[0] === 0x52 &&
+      content[1] === 0x49 &&
+      content[2] === 0x46 &&
+      content[3] === 0x46 &&
+      content[8] === 0x57 &&
+      content[9] === 0x45 &&
+      content[10] === 0x42 &&
+      content[11] === 0x50;
+    if (isWebp) {
+      return "image/webp";
+    }
+  }
+
+  return null;
 }
 
 export function createSalesDocumentService(
@@ -55,16 +101,14 @@ export function createSalesDocumentService(
     async upload(
       input: UploadDocumentInput,
     ): Promise<Result<{ documentId: number }, string>> {
-      const content = decodeBase64Payload(input.contentBase64);
-      if (!content || content.byteLength === 0) {
+      if (input.contentBytes.byteLength === 0) {
         return Err("Document content is required");
       }
 
       const policy = await repos.documents.findRetentionPolicy();
       const maxFileSizeBytes =
-        policy?.max_file_size_bytes ??
-        config.uploads.maxFileSizeMB * 1024 * 1024;
-      if (content.byteLength > maxFileSizeBytes) {
+        policy?.max_file_size_bytes ?? DEFAULT_UPLOAD_POLICY.maxFileSizeBytes;
+      if (input.contentBytes.byteLength > maxFileSizeBytes) {
         return Err(
           `File too large. Max ${Math.floor(maxFileSizeBytes / (1024 * 1024))} MB`,
         );
@@ -80,26 +124,55 @@ export function createSalesDocumentService(
         return Err("File type not allowed");
       }
 
-      const blob = await blobStore.put(content);
-      const inserted = await repos.documents.create({
-        charge_note_id: input.chargeNoteId,
-        original_name: sanitizeFilename(input.originalName),
-        mime_type: input.mimeType,
-        size_bytes: content.byteLength,
-        sha256: blob.sha256,
-        storage_key: blob.storageKey,
-        created_by_user_id: input.userId,
-      });
+      const detectedMimeType = detectMimeTypeFromContent(input.contentBytes);
+      if (!detectedMimeType || detectedMimeType !== input.mimeType) {
+        return Err("File content does not match declared MIME type");
+      }
 
-      return Ok({ documentId: inserted.id });
+      const blob = await blobStore.put(input.contentBytes);
+      try {
+        const inserted = await repos.documents.create({
+          charge_note_id: input.chargeNoteId,
+          original_name: sanitizeFilename(input.originalName),
+          mime_type: input.mimeType,
+          size_bytes: input.contentBytes.byteLength,
+          sha256: blob.sha256,
+          storage_key: blob.storageKey,
+          created_by_user_id: input.userId,
+        });
+
+        return Ok({ documentId: inserted.id });
+      } catch (error) {
+        await blobStore.deleteByStorageKey(blob.storageKey);
+        throw error;
+      }
+    },
+
+    async countReadyByChargeNote(chargeNoteId: number) {
+      const documents = await repos.documents.findByChargeNote(chargeNoteId);
+
+      const readiness = await Promise.all(
+        documents.map(async (document) => {
+          const exists = await blobStore.existsByStorageKey(
+            document.storage_key,
+          );
+          if (!exists) {
+            await repos.documents.logIntegrityMissingBlob(document.id, null);
+          }
+          return exists;
+        }),
+      );
+
+      return readiness.filter(Boolean).length;
     },
 
     async runRetentionSweep(actorUserId: number | null = null) {
       const policy = await repos.documents.findRetentionPolicy();
       const retentionDays =
-        policy?.retention_days ?? config.uploads.retentionDays;
+        policy?.retention_days ?? DEFAULT_UPLOAD_POLICY.retentionDays;
       const hardDeleteEnabled =
-        (policy?.hard_delete_enabled ?? config.uploads.hardDeleteEnabled) === 1;
+        (policy?.hard_delete_enabled ??
+          DEFAULT_UPLOAD_POLICY.hardDeleteEnabled) === 1;
       if (!hardDeleteEnabled) {
         return 0;
       }

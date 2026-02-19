@@ -13,16 +13,43 @@ if (runOnce) {
   process.exit(0);
 }
 
-const timer = setInterval(() => {
-  void runSweep();
-}, config.uploads.retentionSweepIntervalMs);
+let stopped = false;
+let inFlight = false;
+
+const runLoop = async () => {
+  if (stopped) {
+    return;
+  }
+  if (inFlight) {
+    setTimeout(() => {
+      void runLoop();
+    }, config.uploads.retentionSweepIntervalMs);
+    return;
+  }
+
+  inFlight = true;
+  try {
+    await runSweep();
+  } catch (error) {
+    console.error("[Document retention] Sweep failed", error);
+  } finally {
+    inFlight = false;
+    if (!stopped) {
+      setTimeout(() => {
+        void runLoop();
+      }, config.uploads.retentionSweepIntervalMs);
+    }
+  }
+};
+
+void runLoop();
 
 console.log(
   `[Document retention] Worker running every ${config.uploads.retentionSweepIntervalMs} ms`,
 );
 
 function shutdown() {
-  clearInterval(timer);
+  stopped = true;
   process.exit(0);
 }
 

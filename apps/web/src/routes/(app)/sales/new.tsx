@@ -50,14 +50,6 @@ export default function NewSalePage() {
     createResource(noteId, getSaleDraftContext);
   const currentDraft = () => draft.latest;
 
-  function bytesToBase64(bytes: Uint8Array) {
-    let binary = "";
-    for (const byte of bytes) {
-      binary += String.fromCharCode(byte);
-    }
-    return btoa(binary);
-  }
-
   async function handleCreate(e: Event) {
     e.preventDefault();
     setLoading(true);
@@ -123,7 +115,6 @@ export default function NewSalePage() {
     if (!currentNoteId || !file) return;
     try {
       const bytes = new Uint8Array(await file.arrayBuffer());
-      const contentBase64 = bytesToBase64(bytes);
       await runOptimistic({
         read: currentDraft,
         write: (next) => {
@@ -157,7 +148,7 @@ export default function NewSalePage() {
             currentNoteId,
             file.name,
             file.type || "application/octet-stream",
-            contentBase64,
+            bytes,
           );
         },
         reconcile: () => {

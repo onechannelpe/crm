@@ -158,5 +158,31 @@ export function createDocumentsRepo(db: Kysely<Database>) {
           .executeTakeFirstOrThrow();
       });
     },
+
+    logIntegrityMissingBlob(documentId: number, actorUserId: number | null) {
+      const now = Date.now();
+      return db.transaction().execute(async (trx) => {
+        const row = await trx
+          .selectFrom("sales_documents")
+          .select(["id", "charge_note_id"])
+          .where("id", "=", documentId)
+          .executeTakeFirst();
+        if (!row) {
+          return;
+        }
+
+        await trx
+          .insertInto("sales_document_events")
+          .values({
+            document_id: row.id,
+            charge_note_id: row.charge_note_id,
+            actor_user_id: actorUserId,
+            event_type: "integrity_missing_blob",
+            details: null,
+            created_at: now,
+          })
+          .executeTakeFirstOrThrow();
+      });
+    },
   };
 }

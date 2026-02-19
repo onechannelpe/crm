@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { getPermissions, ROLES } from "../../src/lib/auth/access/rbac";
 import { createQuotaService } from "../../src/server/quota/service";
+import { uploadTestPdf } from "../support/document-fixtures";
 import {
   PERMISSION_MANIFEST,
   QUOTA_ERROR_MANIFEST,
@@ -13,16 +14,7 @@ import { cleanupTestDb, createIsolatedTestDb } from "../support/test-db";
 async function prepareSubmittableNote(ctx: TestDbContext) {
   const noteId = await ctx.repos.chargeNotes.create(1, 1);
   await ctx.repos.chargeNoteItems.create(noteId, 1, 1);
-  await ctx.repos.documents.create({
-    charge_note_id: noteId,
-    original_name: "dni.pdf",
-    mime_type: "application/pdf",
-    size_bytes: 120_000,
-    sha256: "4717c905ec347b5915318770f92f818ee5ca111b7088f79f2f138b57fd6595d0",
-    storage_key:
-      "47/17/4717c905ec347b5915318770f92f818ee5ca111b7088f79f2f138b57fd6595d0.blob",
-    created_by_user_id: 1,
-  });
+  await uploadTestPdf(ctx, noteId);
 
   await ctx.db
     .insertInto("inventory_items")
@@ -84,17 +76,7 @@ describe("security invariant manifest", () => {
 
     const noteC = await ctx.repos.chargeNotes.create(1, 1);
     await ctx.repos.chargeNoteItems.create(noteC, 1, 1);
-    await ctx.repos.documents.create({
-      charge_note_id: noteC,
-      original_name: "dni.pdf",
-      mime_type: "application/pdf",
-      size_bytes: 120_000,
-      sha256:
-        "4717c905ec347b5915318770f92f818ee5ca111b7088f79f2f138b57fd6595d0",
-      storage_key:
-        "47/17/4717c905ec347b5915318770f92f818ee5ca111b7088f79f2f138b57fd6595d0.blob",
-      created_by_user_id: 1,
-    });
+    await uploadTestPdf(ctx, noteC);
     const rC = await ctx.sales.submit(noteC, 1);
     expect(rC.ok).toBe(false);
     if (rC.ok) {

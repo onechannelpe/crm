@@ -1,3 +1,5 @@
+import { DEFAULT_UPLOAD_POLICY } from "~/lib/uploads/policy-defaults";
+
 export const config = {
   leadAssignment: {
     ttlHours: 24,
@@ -17,11 +19,11 @@ export const config = {
   },
   uploads: {
     storageRoot: process.env.CRM_UPLOADS_ROOT ?? ".local-storage/documents",
-    maxFileSizeMB: 20,
-    allowedTypes: ["image/jpeg", "image/png", "image/webp", "application/pdf"],
-    retentionDays: 90,
-    hardDeleteEnabled: 1,
-    retentionSweepIntervalMs: 60 * 60 * 1000,
+    maxFileSizeMB: DEFAULT_UPLOAD_POLICY.maxFileSizeBytes / (1024 * 1024),
+    allowedTypes: DEFAULT_UPLOAD_POLICY.allowedMimeTypes,
+    retentionDays: DEFAULT_UPLOAD_POLICY.retentionDays,
+    hardDeleteEnabled: DEFAULT_UPLOAD_POLICY.hardDeleteEnabled,
+    retentionSweepIntervalMs: DEFAULT_UPLOAD_POLICY.retentionSweepIntervalMs,
   },
   session: {
     maxAgeSeconds: 60 * 60 * 24 * 30,

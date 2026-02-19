@@ -22,10 +22,6 @@ export function createDocumentBlobStore(rootPath: string) {
   const absoluteRoot = resolve(rootPath);
 
   return {
-    getRootPath() {
-      return absoluteRoot;
-    },
-
     async put(bytes: Uint8Array) {
       const sha256 = createHash("sha256").update(bytes).digest("hex");
       const storageKey = toStorageKey(sha256);
@@ -65,6 +61,16 @@ export function createDocumentBlobStore(rootPath: string) {
     async deleteByStorageKey(storageKey: string) {
       const absolutePath = join(absoluteRoot, storageKey);
       await rm(absolutePath, { force: true });
+    },
+
+    async existsByStorageKey(storageKey: string) {
+      const absolutePath = join(absoluteRoot, storageKey);
+      try {
+        await stat(absolutePath);
+        return true;
+      } catch {
+        return false;
+      }
     },
   };
 }

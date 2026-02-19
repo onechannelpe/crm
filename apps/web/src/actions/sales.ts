@@ -275,15 +275,19 @@ export async function addSaleDocument(
   noteId: number,
   filename: string,
   mimetype: string,
-  contentBase64: string,
+  contentBytes: Uint8Array | number[],
 ): Promise<ActionSuccess> {
   const safeNoteId = assertPositiveInt(noteId, "noteId");
   const safeFilename = assertNonEmptyString(filename, "filename");
   const safeMimetype = assertNonEmptyString(mimetype, "mimetype");
-  const safeContentBase64 = assertNonEmptyString(
-    contentBase64,
-    "contentBase64",
-  );
+  const safeContentBytes = Array.isArray(contentBytes)
+    ? Uint8Array.from(contentBytes)
+    : contentBytes instanceof Uint8Array
+      ? contentBytes
+      : null;
+  if (!safeContentBytes || safeContentBytes.byteLength === 0) {
+    throw new Error("contentBytes must be a non-empty byte array");
+  }
   const session = await requirePermission("sales:create");
   const note = await repos.chargeNotes.findById(safeNoteId);
   if (!note) throw new Error("Charge note not found");
@@ -297,7 +301,7 @@ export async function addSaleDocument(
     userId: session.userId,
     originalName: safeFilename,
     mimeType: safeMimetype,
-    contentBase64: safeContentBase64,
+    contentBytes: safeContentBytes,
   });
   if (isErr(upload)) throw new Error(upload.error);
 

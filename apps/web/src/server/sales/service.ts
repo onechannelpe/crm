@@ -8,6 +8,9 @@ import { Ok, Err, type Result } from "~/server/shared/result";
 
 interface Deps {
   notifications: ReturnType<typeof createAppNotificationCenter>;
+  documents: {
+    countReadyByChargeNote(noteId: number): Promise<number>;
+  };
 }
 
 export function createSalesWorkflowService(repos: Repositories, deps: Deps) {
@@ -38,7 +41,7 @@ export function createSalesWorkflowService(repos: Repositories, deps: Deps) {
         return Err("At least one product item is required before submission");
       }
 
-      const documentCount = await repos.documents.countByChargeNote(noteId);
+      const documentCount = await deps.documents.countReadyByChargeNote(noteId);
       if (documentCount < 1) {
         return Err("At least one document is required before submission");
       }

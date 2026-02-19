@@ -1,6 +1,11 @@
 import type { Kysely } from "kysely";
 import { sql } from "kysely";
 
+import {
+  DEFAULT_UPLOAD_POLICY,
+  DEFAULT_UPLOAD_POLICY_ALLOWED_TYPES_JSON,
+} from "~/lib/uploads/policy-defaults";
+
 export async function up<T>(db: Kysely<T>): Promise<void> {
   const now = Date.now();
 
@@ -388,10 +393,10 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
       updated_at
     ) VALUES (
       'global',
-      ${20 * 1024 * 1024},
-      '["image/jpeg","image/png","image/webp","application/pdf"]',
-      90,
-      1,
+      ${DEFAULT_UPLOAD_POLICY.maxFileSizeBytes},
+      ${DEFAULT_UPLOAD_POLICY_ALLOWED_TYPES_JSON},
+      ${DEFAULT_UPLOAD_POLICY.retentionDays},
+      ${DEFAULT_UPLOAD_POLICY.hardDeleteEnabled},
       ${now},
       ${now}
     )

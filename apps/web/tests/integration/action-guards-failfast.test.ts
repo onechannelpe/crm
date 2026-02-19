@@ -37,9 +37,9 @@ describe("action guards fail fast", () => {
   });
 
   it("rejects malformed textual payloads before auth", async () => {
-    await expect(
-      addSaleDocument(1, "   ", "text/plain", "AA=="),
-    ).rejects.toThrow("filename is required");
+    await expect(addSaleDocument(1, "   ", "text/plain", [1])).rejects.toThrow(
+      "filename is required",
+    );
     await expect(
       rejectSale(1, [{ field_id: "  ", reviewer_note: null }]),
     ).rejects.toThrow("rejections.field_id is required");

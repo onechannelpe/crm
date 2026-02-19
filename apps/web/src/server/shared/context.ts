@@ -37,6 +37,10 @@ export const salesDocumentService = createSalesDocumentService(
 );
 export const salesService = createSalesWorkflowService(repos, {
   notifications: appNotificationCenter,
+  documents: {
+    countReadyByChargeNote: (noteId) =>
+      salesDocumentService.countReadyByChargeNote(noteId),
+  },
 });
 
 export { repos };
