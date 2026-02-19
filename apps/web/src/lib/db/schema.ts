@@ -293,6 +293,16 @@ export interface AuditLogsTable {
   created_at: number;
 }
 
+export interface AuditActionPoliciesTable {
+  action: string;
+  risk_level: "high" | "medium" | "low";
+  is_active: number;
+  is_protected: number;
+  updated_by_user_id: number | null;
+  created_at: number;
+  updated_at: number;
+}
+
 export interface ActionObservationsTable {
   id: Generated<number>;
   trace_id: string;
@@ -440,6 +450,7 @@ export interface Database {
   document_attachments: DocumentAttachmentsTable;
   agent_status_logs: AgentStatusLogsTable;
   audit_logs: AuditLogsTable;
+  audit_action_policies: AuditActionPoliciesTable;
   action_observations: ActionObservationsTable;
   passkeys: PasskeysTable;
   webauthn_challenges: WebauthnChallengesTable;
@@ -469,6 +480,7 @@ export type InventoryLock = Selectable<InventoryLocksTable>;
 export type DocumentAttachment = Selectable<DocumentAttachmentsTable>;
 export type AgentStatusLog = Selectable<AgentStatusLogsTable>;
 export type AuditLog = Selectable<AuditLogsTable>;
+export type AuditActionPolicy = Selectable<AuditActionPoliciesTable>;
 export type ActionObservation = Selectable<ActionObservationsTable>;
 export type Passkey = Selectable<PasskeysTable>;
 export type UserSession = Selectable<UserSessionsTable>;
@@ -503,4 +515,5 @@ export type NewChargeNoteItem = Insertable<ChargeNoteItemsTable>;
 export type NewRejectionLog = Insertable<RejectionLogsTable>;
 export type NewInteractionLog = Insertable<InteractionLogsTable>;
 export type NewAuditLog = Insertable<AuditLogsTable>;
+export type NewAuditActionPolicy = Insertable<AuditActionPoliciesTable>;
 export type NewActionObservation = Insertable<ActionObservationsTable>;

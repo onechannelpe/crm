@@ -32,6 +32,7 @@ import { createUsersRepo } from "~/server/users/repos-users";
 import { createWebauthnChallengesRepo } from "~/server/users/repos-webauthn-challenges";
 
 import { createAgentStatusRepo } from "./repos-agent-status";
+import { createAuditActionPoliciesRepo } from "./repos-audit-action-policies";
 import { createAuditLogsRepo } from "./repos-audit-logs";
 import { createInteractionLogsRepo } from "./repos-interaction-logs";
 
@@ -62,6 +63,7 @@ export function createRepositories(db: Kysely<Database>) {
     inventory: createInventoryRepo(db),
     documents: createDocumentsRepo(db),
     auditLogs: createAuditLogsRepo(db),
+    auditActionPolicies: createAuditActionPoliciesRepo(db),
     agentStatus: createAgentStatusRepo(db),
     passkeys: createPasskeysRepo(db),
     webauthnChallenges: createWebauthnChallengesRepo(db),

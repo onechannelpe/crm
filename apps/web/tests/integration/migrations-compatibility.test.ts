@@ -58,6 +58,7 @@ describe("migration compatibility", () => {
       expect(tableNames.has("quota_allocations")).toBe(true);
       expect(tableNames.has("charge_notes")).toBe(true);
       expect(tableNames.has("audit_logs")).toBe(true);
+      expect(tableNames.has("audit_action_policies")).toBe(true);
       expect(tableNames.has("user_invites")).toBe(true);
       expect(tableNames.has("action_observations")).toBe(true);
 
@@ -69,6 +70,10 @@ describe("migration compatibility", () => {
       const indexNames = new Set(indexes.rows.map((row) => row.name));
       expect(indexNames.has("idx_quota_user_date")).toBe(true);
       expect(indexNames.has("idx_app_notifications_dedupe")).toBe(true);
+      expect(indexNames.has("idx_audit_created_at")).toBe(true);
+      expect(indexNames.has("idx_audit_action_created")).toBe(true);
+      expect(indexNames.has("idx_audit_user_created")).toBe(true);
+      expect(indexNames.has("idx_audit_policy_risk_active")).toBe(true);
     } finally {
       await db.destroy();
     }
