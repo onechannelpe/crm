@@ -178,12 +178,19 @@ export function createDocumentsRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    findHardDeleteCandidates(cutoffMs: number) {
+    listHardDeleteCandidatesAfterId(
+      cutoffMs: number,
+      afterId: number,
+      limit: number,
+    ) {
       return db
         .selectFrom("sales_documents")
         .select(["id", "blob_sha256"])
         .where("status", "=", "deleted_soft")
         .where("deleted_at", "<=", cutoffMs)
+        .where("id", ">", afterId)
+        .orderBy("id", "asc")
+        .limit(limit)
         .execute();
     },
 

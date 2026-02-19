@@ -97,6 +97,8 @@ export function createSalesDocumentService(
   repos: Repositories,
   blobStore: DocumentBlobStore,
 ) {
+  const RETENTION_BATCH_SIZE = 200;
+
   return {
     async upload(
       input: UploadDocumentInput,
@@ -169,36 +171,72 @@ export function createSalesDocumentService(
       }
 
       const cutoff = Date.now() - retentionDays * 24 * 60 * 60 * 1000;
-      const candidates = await repos.documents.findHardDeleteCandidates(cutoff);
-      let deletedCount = 0;
-      for (const candidate of candidates) {
-        // Process in-order to keep reference-count updates deterministic.
-        // eslint-disable-next-line no-await-in-loop
+      const processCandidateBatch = async (
+        candidates: Awaited<
+          ReturnType<typeof repos.documents.listHardDeleteCandidatesAfterId>
+        >,
+        index: number,
+        deletedCount: number,
+      ): Promise<number> => {
+        const candidate = candidates[index];
+        if (!candidate) {
+          return deletedCount;
+        }
+
         const released = await repos.documents.releaseForHardDelete(
           candidate.id,
           actorUserId,
         );
-        if (!released) {
-          continue;
-        }
-        if (released.shouldDeleteBlob) {
-          // eslint-disable-next-line no-await-in-loop
+        if (released?.shouldDeleteBlob) {
           await repos.documentJobs.enqueueDeleteBlob({
             blob_sha256: released.blobSha256,
             storage_key: released.storageKey,
           });
         }
-        deletedCount += 1;
-      }
+
+        return processCandidateBatch(
+          candidates,
+          index + 1,
+          deletedCount + (released ? 1 : 0),
+        );
+      };
+
+      const processHardDeleteBatches = async (
+        afterId: number,
+        deletedCount: number,
+      ): Promise<number> => {
+        const candidates =
+          await repos.documents.listHardDeleteCandidatesAfterId(
+            cutoff,
+            afterId,
+            RETENTION_BATCH_SIZE,
+          );
+        if (candidates.length < 1) {
+          return deletedCount;
+        }
+
+        const nextDeletedCount = await processCandidateBatch(
+          candidates,
+          0,
+          deletedCount,
+        );
+        const last = candidates[candidates.length - 1];
+        if (!last) {
+          return nextDeletedCount;
+        }
+        return processHardDeleteBatches(last.id, nextDeletedCount);
+      };
+      const deletedCount = await processHardDeleteBatches(0, 0);
 
       const unreferenced = await repos.documents.listUnreferencedBlobs(200);
-      for (const blob of unreferenced) {
-        // eslint-disable-next-line no-await-in-loop
-        await repos.documentJobs.enqueueDeleteBlob({
-          blob_sha256: blob.sha256,
-          storage_key: blob.storage_key,
-        });
-      }
+      await Promise.all(
+        unreferenced.map(async (blob) =>
+          repos.documentJobs.enqueueDeleteBlob({
+            blob_sha256: blob.sha256,
+            storage_key: blob.storage_key,
+          }),
+        ),
+      );
 
       return deletedCount;
     },
