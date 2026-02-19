@@ -11,6 +11,7 @@ import { up as up004 } from "../../src/lib/db/migrations/004-action-observabilit
 import type { Database } from "../../src/lib/db/schema";
 import { createAppNotificationCenter } from "../../src/server/notifications/app-center-service";
 import { createDocumentBlobStore } from "../../src/server/sales/document-blob-store";
+import { createDocumentJobProcessor } from "../../src/server/sales/document-job-processor";
 import { createSalesDocumentService } from "../../src/server/sales/document-service";
 import { createSalesWorkflowService } from "../../src/server/sales/service";
 import { createRepositories } from "../../src/server/shared/registry";
@@ -192,6 +193,7 @@ export interface TestDbContext {
   db: Kysely<Database>;
   repos: ReturnType<typeof createRepositories>;
   documents: ReturnType<typeof createSalesDocumentService>;
+  documentJobs: ReturnType<typeof createDocumentJobProcessor>;
   sales: ReturnType<typeof createSalesWorkflowService>;
 }
 
@@ -222,11 +224,32 @@ export async function createIsolatedTestDb(
     repos,
     createDocumentBlobStore(storageRoot),
   );
+  const documentJobs = createDocumentJobProcessor(
+    repos,
+    createDocumentBlobStore(storageRoot),
+  );
   const sales = createSalesWorkflowService(repos, {
     notifications,
   });
 
-  return { dbPath, storageRoot, db, repos, documents, sales };
+  return { dbPath, storageRoot, db, repos, documents, documentJobs, sales };
+}
+
+export async function drainDocumentJobs(
+  ctx: TestDbContext,
+  maxLoops = 10,
+): Promise<number> {
+  let processedTotal = 0;
+  for (let i = 0; i < maxLoops; i += 1) {
+    // Use short leases for deterministic test execution.
+    // eslint-disable-next-line no-await-in-loop
+    const processed = await ctx.documentJobs.runBatch(50, 1_000);
+    if (processed < 1) {
+      break;
+    }
+    processedTotal += processed;
+  }
+  return processedTotal;
 }
 
 export async function cleanupTestDb(ctx: TestDbContext): Promise<void> {

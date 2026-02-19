@@ -140,27 +140,21 @@ export function createSalesDocumentService(
         created_by_user_id: input.userId,
       });
       try {
-        await blobStore.put(input.contentBytes);
-        const finalized = await repos.documents.markUploadedAvailable(
-          inserted.id,
-          input.userId,
-        );
-        if (!finalized) {
-          await repos.documents.markUploadFailedAndRelease(
-            inserted.id,
-            input.userId,
-          );
-          return Err("Document upload could not be finalized");
-        }
-
-        return Ok({ documentId: inserted.id });
+        await repos.documentJobs.enqueuePersistUpload({
+          document_id: inserted.id,
+          blob_sha256: prepared.sha256,
+          storage_key: prepared.storageKey,
+          payload_bytes: input.contentBytes,
+        });
       } catch {
         await repos.documents.markUploadFailedAndRelease(
           inserted.id,
           input.userId,
         );
-        return Err("Failed to persist document content");
+        return Err("Failed to queue document persistence");
       }
+
+      return Ok({ documentId: inserted.id });
     },
 
     async runRetentionSweep(actorUserId: number | null = null) {
@@ -189,23 +183,22 @@ export function createSalesDocumentService(
         }
         if (released.shouldDeleteBlob) {
           // eslint-disable-next-line no-await-in-loop
-          await repos.documents.deleteBlobIfUnreferencedWithFile(
-            released.blobSha256,
-            async (storageKey) => blobStore.deleteByStorageKey(storageKey),
-          );
+          await repos.documentJobs.enqueueDeleteBlob({
+            blob_sha256: released.blobSha256,
+            storage_key: released.storageKey,
+          });
         }
         deletedCount += 1;
       }
 
       const unreferenced = await repos.documents.listUnreferencedBlobs(200);
-      await Promise.all(
-        unreferenced.map(async (blob) => {
-          await repos.documents.deleteBlobIfUnreferencedWithFile(
-            blob.sha256,
-            async (storageKey) => blobStore.deleteByStorageKey(storageKey),
-          );
-        }),
-      );
+      for (const blob of unreferenced) {
+        // eslint-disable-next-line no-await-in-loop
+        await repos.documentJobs.enqueueDeleteBlob({
+          blob_sha256: blob.sha256,
+          storage_key: blob.storage_key,
+        });
+      }
 
       return deletedCount;
     },

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import type { DocumentBlobStore } from "../../src/server/sales/document-blob-store";
+import { createDocumentJobProcessor } from "../../src/server/sales/document-job-processor";
 import { createSalesDocumentService } from "../../src/server/sales/document-service";
 import { PDF_BYTES } from "../support/document-fixtures";
 import type { TestDbContext } from "../support/test-db";
@@ -20,10 +21,9 @@ describe("sales document race invariants", () => {
     await cleanupTestDb(ctx);
   });
 
-  it("marks upload_failed and returns Err when file persistence fails after metadata commit", async () => {
+  it("marks upload_failed when queued persistence job fails", async () => {
     const noteId = await ctx.repos.chargeNotes.create(1, 1);
     const fixedTimestamp = Date.now();
-    let deleteCalls = 0;
 
     const blobStore: DocumentBlobStore = {
       prepare() {
@@ -37,14 +37,13 @@ describe("sales document race invariants", () => {
       async put() {
         throw new Error("simulated write failure");
       },
-      async deleteByStorageKey() {
-        deleteCalls += 1;
-      },
+      async deleteByStorageKey() {},
       async existsByStorageKey() {
         return false;
       },
     };
     const service = createSalesDocumentService(ctx.repos, blobStore);
+    const processor = createDocumentJobProcessor(ctx.repos, blobStore);
 
     const result = await service.upload({
       chargeNoteId: noteId,
@@ -54,12 +53,11 @@ describe("sales document race invariants", () => {
       contentBytes: PDF_BYTES,
     });
 
-    expect(result.ok).toBe(false);
-    if (result.ok) {
-      throw new Error("Expected upload failure");
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      throw new Error("Expected upload queue success");
     }
-    expect(result.error).toBe("Failed to persist document content");
-    expect(deleteCalls).toBe(0);
+    await processor.runBatch(20, 1_000);
     expect(await ctx.repos.documents.countByChargeNote(noteId)).toBe(0);
 
     const persistedRows = await ctx.db
@@ -87,7 +85,7 @@ describe("sales document race invariants", () => {
     );
   });
 
-  it("fails safe when a concurrent re-reference is attempted during deletion", async () => {
+  it("retries delete jobs when blob delete is temporarily busy", async () => {
     const noteId = await ctx.repos.chargeNotes.create(1, 1);
     const inserted = await ctx.repos.documents.create({
       charge_note_id: noteId,
@@ -106,7 +104,6 @@ describe("sales document race invariants", () => {
       .execute();
 
     const files = new Set([FIXTURE_STORAGE_KEY]);
-    let raceTriggered = false;
     const blobStore: DocumentBlobStore = {
       prepare() {
         return {
@@ -127,20 +124,11 @@ describe("sales document race invariants", () => {
         };
       },
       async deleteByStorageKey(storageKey: string) {
-        if (!raceTriggered) {
-          raceTriggered = true;
-          const noteId2 = await ctx.repos.chargeNotes.create(2, 1);
-          await ctx.repos.documents.create({
-            charge_note_id: noteId2,
-            original_name: "dni-copy.pdf",
-            mime_type: "application/pdf",
-            size_bytes: PDF_BYTES.byteLength,
-            sha256: FIXTURE_SHA256,
-            storage_key: FIXTURE_STORAGE_KEY,
-            created_by_user_id: 1,
-          });
-        }
-        files.delete(storageKey);
+        const error = new Error(`busy deleting ${storageKey}`) as Error & {
+          code?: string;
+        };
+        error.code = "SQLITE_BUSY";
+        throw error;
       },
       async existsByStorageKey(storageKey: string) {
         return files.has(storageKey);
@@ -148,13 +136,22 @@ describe("sales document race invariants", () => {
     };
     const service = createSalesDocumentService(ctx.repos, blobStore);
 
-    await expect(service.runRetentionSweep(null)).rejects.toThrow(
-      "database is locked",
-    );
+    await expect(service.runRetentionSweep(null)).resolves.toBe(1);
+    const processor = createDocumentJobProcessor(ctx.repos, blobStore);
+    const processed = await processor.runBatch(20, 1_000);
+    expect(processed).toBe(0);
 
     const liveBlob = await ctx.repos.documents.findBlobBySha(FIXTURE_SHA256);
     expect(liveBlob).toBeDefined();
     expect(liveBlob?.ref_count).toBe(0);
     expect(files.has(FIXTURE_STORAGE_KEY)).toBe(true);
+
+    const pendingDeleteJobs = await ctx.db
+      .selectFrom("sales_document_jobs")
+      .selectAll()
+      .where("operation", "=", "delete_blob")
+      .where("status", "=", "pending")
+      .execute();
+    expect(pendingDeleteJobs.length).toBeGreaterThan(0);
   });
 });

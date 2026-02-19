@@ -307,6 +307,23 @@ export interface SalesDocumentPoliciesTable {
   updated_at: number;
 }
 
+export interface SalesDocumentJobsTable {
+  id: Generated<number>;
+  document_id: number | null;
+  blob_sha256: string;
+  storage_key: string;
+  operation: "persist_upload" | "delete_blob";
+  payload_bytes: Uint8Array | null;
+  status: "pending" | "leased" | "completed" | "failed";
+  attempt_count: number;
+  max_attempts: number;
+  available_at: number;
+  lease_until: number | null;
+  last_error: string | null;
+  created_at: number;
+  updated_at: number;
+}
+
 export interface AgentStatusLogsTable {
   id: Generated<number>;
   user_id: number;
@@ -492,6 +509,7 @@ export interface Database {
   sales_document_blobs: SalesDocumentBlobsTable;
   sales_document_events: SalesDocumentEventsTable;
   sales_document_policies: SalesDocumentPoliciesTable;
+  sales_document_jobs: SalesDocumentJobsTable;
   agent_status_logs: AgentStatusLogsTable;
   audit_logs: AuditLogsTable;
   audit_action_policies: AuditActionPoliciesTable;
@@ -525,6 +543,7 @@ export type SalesDocument = Selectable<SalesDocumentsTable>;
 export type SalesDocumentBlob = Selectable<SalesDocumentBlobsTable>;
 export type SalesDocumentEvent = Selectable<SalesDocumentEventsTable>;
 export type SalesDocumentPolicy = Selectable<SalesDocumentPoliciesTable>;
+export type SalesDocumentJob = Selectable<SalesDocumentJobsTable>;
 export type AgentStatusLog = Selectable<AgentStatusLogsTable>;
 export type AuditLog = Selectable<AuditLogsTable>;
 export type AuditActionPolicy = Selectable<AuditActionPoliciesTable>;

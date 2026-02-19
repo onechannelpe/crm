@@ -61,6 +61,7 @@ describe("migration compatibility", () => {
       expect(tableNames.has("sales_documents")).toBe(true);
       expect(tableNames.has("sales_document_events")).toBe(true);
       expect(tableNames.has("sales_document_policies")).toBe(true);
+      expect(tableNames.has("sales_document_jobs")).toBe(true);
       expect(tableNames.has("audit_logs")).toBe(true);
       expect(tableNames.has("audit_action_policies")).toBe(true);
       expect(tableNames.has("user_invites")).toBe(true);
@@ -85,6 +86,10 @@ describe("migration compatibility", () => {
       expect(indexNames.has("idx_sales_document_events_document_created")).toBe(
         true,
       );
+      expect(indexNames.has("idx_sales_document_jobs_status_available")).toBe(
+        true,
+      );
+      expect(indexNames.has("idx_sales_document_jobs_lease_until")).toBe(true);
       expect(indexNames.has("idx_app_notifications_dedupe")).toBe(true);
       expect(indexNames.has("idx_audit_created_at")).toBe(true);
       expect(indexNames.has("idx_audit_action_created")).toBe(true);

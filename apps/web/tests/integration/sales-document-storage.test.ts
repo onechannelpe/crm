@@ -5,7 +5,11 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { PDF_BYTES, uploadTestPdf } from "../support/document-fixtures";
 import type { TestDbContext } from "../support/test-db";
-import { cleanupTestDb, createIsolatedTestDb } from "../support/test-db";
+import {
+  cleanupTestDb,
+  createIsolatedTestDb,
+  drainDocumentJobs,
+} from "../support/test-db";
 
 describe("sales document storage lifecycle", () => {
   let ctx: TestDbContext;
@@ -113,6 +117,7 @@ describe("sales document storage lifecycle", () => {
       .where("id", "=", docA)
       .execute();
     await ctx.documents.runRetentionSweep(null);
+    await drainDocumentJobs(ctx);
 
     const blobAfterFirstDelete =
       await ctx.repos.documents.findBlobByDocumentId(docB);
@@ -128,6 +133,7 @@ describe("sales document storage lifecycle", () => {
       .where("id", "=", docB)
       .execute();
     await ctx.documents.runRetentionSweep(null);
+    await drainDocumentJobs(ctx);
 
     const blobAfterSecondDelete =
       await ctx.repos.documents.findBlobByDocumentId(docB);

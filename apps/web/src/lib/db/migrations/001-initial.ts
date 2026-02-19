@@ -413,6 +413,26 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
   `.execute(db);
 
   await db.schema
+    .createTable("sales_document_jobs")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("document_id", "integer", (col) =>
+      col.references("sales_documents.id").onDelete("set null"),
+    )
+    .addColumn("blob_sha256", "varchar(64)", (col) => col.notNull())
+    .addColumn("storage_key", "varchar(255)", (col) => col.notNull())
+    .addColumn("operation", "varchar(24)", (col) => col.notNull())
+    .addColumn("payload_bytes", "blob")
+    .addColumn("status", "varchar(16)", (col) => col.notNull())
+    .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
+    .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(8))
+    .addColumn("available_at", "integer", (col) => col.notNull())
+    .addColumn("lease_until", "integer")
+    .addColumn("last_error", "text")
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await db.schema
     .createTable("agent_status_logs")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("user_id", "integer", (col) =>
@@ -680,6 +700,26 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     .createIndex("idx_sales_document_events_charge_created")
     .on("sales_document_events")
     .columns(["charge_note_id", "created_at"])
+    .execute();
+  await db.schema
+    .createIndex("idx_sales_document_jobs_status_available")
+    .on("sales_document_jobs")
+    .columns(["status", "available_at"])
+    .execute();
+  await db.schema
+    .createIndex("idx_sales_document_jobs_lease_until")
+    .on("sales_document_jobs")
+    .column("lease_until")
+    .execute();
+  await db.schema
+    .createIndex("idx_sales_document_jobs_document_operation")
+    .on("sales_document_jobs")
+    .columns(["document_id", "operation"])
+    .execute();
+  await db.schema
+    .createIndex("idx_sales_document_jobs_blob_operation_status")
+    .on("sales_document_jobs")
+    .columns(["blob_sha256", "operation", "status"])
     .execute();
   await db.schema
     .createIndex("idx_audit_created_at")

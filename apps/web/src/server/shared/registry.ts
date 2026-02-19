@@ -20,6 +20,7 @@ import { createNotificationPreferencesRepo } from "~/server/notifications/repos-
 import { createActionObservationsRepo } from "~/server/observability/repos-action-observations";
 import { createQuotaAllocationsRepo } from "~/server/quota/repos";
 import { createChargeNotesRepo } from "~/server/sales/repos-charge-notes";
+import { createDocumentJobsRepo } from "~/server/sales/repos-document-jobs";
 import { createDocumentsRepo } from "~/server/sales/repos-documents";
 import { createChargeNoteItemsRepo } from "~/server/sales/repos-items";
 import { createRejectionLogsRepo } from "~/server/sales/repos-rejections";
@@ -62,6 +63,7 @@ export function createRepositories(db: Kysely<Database>) {
     actionObservations: createActionObservationsRepo(db),
     inventory: createInventoryRepo(db),
     documents: createDocumentsRepo(db),
+    documentJobs: createDocumentJobsRepo(db),
     auditLogs: createAuditLogsRepo(db),
     auditActionPolicies: createAuditActionPoliciesRepo(db),
     agentStatus: createAgentStatusRepo(db),
