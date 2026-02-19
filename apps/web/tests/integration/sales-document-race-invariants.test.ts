@@ -20,24 +20,22 @@ describe("sales document race invariants", () => {
     await cleanupTestDb(ctx);
   });
 
-  it("returns success if metadata commit succeeded, even when post-commit file check fails", async () => {
+  it("marks upload_failed and returns Err when file persistence fails after metadata commit", async () => {
     const noteId = await ctx.repos.chargeNotes.create(1, 1);
-    let putCalls = 0;
+    const fixedTimestamp = Date.now();
     let deleteCalls = 0;
 
     const blobStore: DocumentBlobStore = {
-      async put() {
-        putCalls += 1;
-        if (putCalls > 1) {
-          throw new Error("repair put failed");
-        }
+      prepare() {
         return {
           sha256: FIXTURE_SHA256,
           storageKey: FIXTURE_STORAGE_KEY,
           absolutePath: "/tmp/test.blob",
           sizeBytes: PDF_BYTES.byteLength,
-          created: true,
         };
+      },
+      async put() {
+        throw new Error("simulated write failure");
       },
       async deleteByStorageKey() {
         deleteCalls += 1;
@@ -56,9 +54,37 @@ describe("sales document race invariants", () => {
       contentBytes: PDF_BYTES,
     });
 
-    expect(result.ok).toBe(true);
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error("Expected upload failure");
+    }
+    expect(result.error).toBe("Failed to persist document content");
     expect(deleteCalls).toBe(0);
-    expect(await ctx.repos.documents.countByChargeNote(noteId)).toBe(1);
+    expect(await ctx.repos.documents.countByChargeNote(noteId)).toBe(0);
+
+    const persistedRows = await ctx.db
+      .selectFrom("sales_documents")
+      .selectAll()
+      .where("charge_note_id", "=", noteId)
+      .execute();
+    expect(persistedRows.length).toBe(1);
+    expect(persistedRows[0]?.status).toBe("upload_failed");
+    expect(persistedRows[0]?.blob_sha256).toBe(null);
+    expect((persistedRows[0]?.deleted_at ?? 0) > 0).toBe(true);
+
+    const blob = await ctx.repos.documents.findBlobBySha(FIXTURE_SHA256);
+    expect(blob?.ref_count).toBe(0);
+
+    const failedEvents = await ctx.db
+      .selectFrom("sales_document_events")
+      .selectAll()
+      .where("charge_note_id", "=", noteId)
+      .where("event_type", "=", "upload_failed")
+      .execute();
+    expect(failedEvents.length).toBe(1);
+    expect((failedEvents[0]?.created_at ?? 0) <= fixedTimestamp + 10_000).toBe(
+      true,
+    );
   });
 
   it("fails safe when a concurrent re-reference is attempted during deletion", async () => {
@@ -82,6 +108,14 @@ describe("sales document race invariants", () => {
     const files = new Set([FIXTURE_STORAGE_KEY]);
     let raceTriggered = false;
     const blobStore: DocumentBlobStore = {
+      prepare() {
+        return {
+          sha256: FIXTURE_SHA256,
+          storageKey: FIXTURE_STORAGE_KEY,
+          absolutePath: "/tmp/test.blob",
+          sizeBytes: PDF_BYTES.byteLength,
+        };
+      },
       async put() {
         files.add(FIXTURE_STORAGE_KEY);
         return {

@@ -129,24 +129,37 @@ export function createSalesDocumentService(
         return Err("File content does not match declared MIME type");
       }
 
-      const blob = await blobStore.put(input.contentBytes);
+      const prepared = blobStore.prepare(input.contentBytes);
+      const inserted = await repos.documents.createPendingUpload({
+        charge_note_id: input.chargeNoteId,
+        original_name: sanitizeFilename(input.originalName),
+        mime_type: input.mimeType,
+        size_bytes: input.contentBytes.byteLength,
+        sha256: prepared.sha256,
+        storage_key: prepared.storageKey,
+        created_by_user_id: input.userId,
+      });
       try {
-        const inserted = await repos.documents.create({
-          charge_note_id: input.chargeNoteId,
-          original_name: sanitizeFilename(input.originalName),
-          mime_type: input.mimeType,
-          size_bytes: input.contentBytes.byteLength,
-          sha256: blob.sha256,
-          storage_key: blob.storageKey,
-          created_by_user_id: input.userId,
-        });
+        await blobStore.put(input.contentBytes);
+        const finalized = await repos.documents.markUploadedAvailable(
+          inserted.id,
+          input.userId,
+        );
+        if (!finalized) {
+          await repos.documents.markUploadFailedAndRelease(
+            inserted.id,
+            input.userId,
+          );
+          return Err("Document upload could not be finalized");
+        }
 
         return Ok({ documentId: inserted.id });
-      } catch (error) {
-        if (blob.created) {
-          await blobStore.deleteByStorageKey(blob.storageKey);
-        }
-        throw error;
+      } catch {
+        await repos.documents.markUploadFailedAndRelease(
+          inserted.id,
+          input.userId,
+        );
+        return Err("Failed to persist document content");
       }
     },
 

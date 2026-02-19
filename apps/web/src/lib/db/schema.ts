@@ -261,7 +261,12 @@ export interface SalesDocumentsTable {
   original_name: string;
   mime_type: string;
   blob_sha256: string | null;
-  status: "available" | "deleted_soft" | "deleted_hard";
+  status:
+    | "pending_upload"
+    | "available"
+    | "upload_failed"
+    | "deleted_soft"
+    | "deleted_hard";
   created_by_user_id: number;
   created_at: number;
   deleted_at: number | null;
@@ -283,6 +288,7 @@ export interface SalesDocumentEventsTable {
   actor_user_id: number | null;
   event_type:
     | "uploaded"
+    | "upload_failed"
     | "soft_deleted"
     | "hard_deleted"
     | "integrity_missing_blob";

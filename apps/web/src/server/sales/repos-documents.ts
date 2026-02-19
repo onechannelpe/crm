@@ -3,6 +3,33 @@ import { sql, type Kysely } from "kysely";
 import type { Database } from "~/lib/db/schema";
 
 export function createDocumentsRepo(db: Kysely<Database>) {
+  const upsertBlobReference = (
+    trx: Kysely<Database>,
+    values: {
+      sha256: string;
+      storage_key: string;
+      size_bytes: number;
+    },
+    updatedAt: number,
+  ) =>
+    trx
+      .insertInto("sales_document_blobs")
+      .values({
+        sha256: values.sha256,
+        storage_key: values.storage_key,
+        size_bytes: values.size_bytes,
+        ref_count: 1,
+        created_at: updatedAt,
+        updated_at: updatedAt,
+      })
+      .onConflict((oc) =>
+        oc.column("sha256").doUpdateSet({
+          ref_count: sql`ref_count + 1`,
+          updated_at: updatedAt,
+        }),
+      )
+      .executeTakeFirstOrThrow();
+
   return {
     create(values: {
       charge_note_id: number;
@@ -15,23 +42,7 @@ export function createDocumentsRepo(db: Kysely<Database>) {
     }) {
       const createdAt = Date.now();
       return db.transaction().execute(async (trx) => {
-        await trx
-          .insertInto("sales_document_blobs")
-          .values({
-            sha256: values.sha256,
-            storage_key: values.storage_key,
-            size_bytes: values.size_bytes,
-            ref_count: 1,
-            created_at: createdAt,
-            updated_at: createdAt,
-          })
-          .onConflict((oc) =>
-            oc.column("sha256").doUpdateSet({
-              ref_count: sql`ref_count + 1`,
-              updated_at: createdAt,
-            }),
-          )
-          .executeTakeFirstOrThrow();
+        await upsertBlobReference(trx, values, createdAt);
 
         const inserted = await trx
           .insertInto("sales_documents")
@@ -61,6 +72,36 @@ export function createDocumentsRepo(db: Kysely<Database>) {
           .executeTakeFirstOrThrow();
 
         return inserted;
+      });
+    },
+
+    createPendingUpload(values: {
+      charge_note_id: number;
+      original_name: string;
+      mime_type: string;
+      size_bytes: number;
+      sha256: string;
+      storage_key: string;
+      created_by_user_id: number;
+    }) {
+      const createdAt = Date.now();
+      return db.transaction().execute(async (trx) => {
+        await upsertBlobReference(trx, values, createdAt);
+
+        return trx
+          .insertInto("sales_documents")
+          .values({
+            charge_note_id: values.charge_note_id,
+            original_name: values.original_name,
+            mime_type: values.mime_type,
+            blob_sha256: values.sha256,
+            status: "pending_upload",
+            created_by_user_id: values.created_by_user_id,
+            created_at: createdAt,
+            deleted_at: null,
+          })
+          .returning("id")
+          .executeTakeFirstOrThrow();
       });
     },
 
@@ -204,6 +245,91 @@ export function createDocumentsRepo(db: Kysely<Database>) {
       });
     },
 
+    markUploadedAvailable(documentId: number, actorUserId: number | null) {
+      const now = Date.now();
+      return db.transaction().execute(async (trx) => {
+        const row = await trx
+          .selectFrom("sales_documents")
+          .select(["id", "charge_note_id", "status"])
+          .where("id", "=", documentId)
+          .executeTakeFirst();
+        if (!row || row.status !== "pending_upload") {
+          return false;
+        }
+
+        await trx
+          .updateTable("sales_documents")
+          .set({
+            status: "available",
+          })
+          .where("id", "=", documentId)
+          .executeTakeFirstOrThrow();
+
+        await trx
+          .insertInto("sales_document_events")
+          .values({
+            document_id: row.id,
+            charge_note_id: row.charge_note_id,
+            actor_user_id: actorUserId,
+            event_type: "uploaded",
+            details: null,
+            created_at: now,
+          })
+          .executeTakeFirstOrThrow();
+
+        return true;
+      });
+    },
+
+    markUploadFailedAndRelease(documentId: number, actorUserId: number | null) {
+      const now = Date.now();
+      return db.transaction().execute(async (trx) => {
+        const row = await trx
+          .selectFrom("sales_documents")
+          .select(["id", "charge_note_id", "status", "blob_sha256"])
+          .where("id", "=", documentId)
+          .executeTakeFirst();
+        if (!row || row.status !== "pending_upload") {
+          return false;
+        }
+
+        await trx
+          .updateTable("sales_documents")
+          .set({
+            status: "upload_failed",
+            blob_sha256: null,
+            deleted_at: now,
+          })
+          .where("id", "=", documentId)
+          .executeTakeFirstOrThrow();
+
+        if (row.blob_sha256) {
+          await trx
+            .updateTable("sales_document_blobs")
+            .set({
+              ref_count: sql`CASE WHEN ref_count > 0 THEN ref_count - 1 ELSE 0 END`,
+              updated_at: now,
+            })
+            .where("sha256", "=", row.blob_sha256)
+            .executeTakeFirstOrThrow();
+        }
+
+        await trx
+          .insertInto("sales_document_events")
+          .values({
+            document_id: row.id,
+            charge_note_id: row.charge_note_id,
+            actor_user_id: actorUserId,
+            event_type: "upload_failed",
+            details: null,
+            created_at: now,
+          })
+          .executeTakeFirstOrThrow();
+
+        return true;
+      });
+    },
+
     releaseForHardDelete(documentId: number, actorUserId: number | null) {
       const now = Date.now();
       return db.transaction().execute(async (trx) => {
@@ -273,15 +399,6 @@ export function createDocumentsRepo(db: Kysely<Database>) {
           shouldDeleteBlob: (blob?.ref_count ?? 0) < 1,
         };
       });
-    },
-
-    deleteBlobIfUnreferenced(blobSha256: string) {
-      return db
-        .deleteFrom("sales_document_blobs")
-        .where("sha256", "=", blobSha256)
-        .where("ref_count", "=", 0)
-        .executeTakeFirst()
-        .then((result) => Number(result.numDeletedRows ?? 0) > 0);
     },
 
     deleteBlobIfUnreferencedWithFile(

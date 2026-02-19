@@ -22,10 +22,21 @@ export function createDocumentBlobStore(rootPath: string) {
   const absoluteRoot = resolve(rootPath);
 
   return {
-    async put(bytes: Uint8Array) {
+    prepare(bytes: Uint8Array) {
       const sha256 = createHash("sha256").update(bytes).digest("hex");
       const storageKey = toStorageKey(sha256);
       const absolutePath = join(absoluteRoot, storageKey);
+      return {
+        sha256,
+        storageKey,
+        absolutePath,
+        sizeBytes: bytes.byteLength,
+      };
+    },
+
+    async put(bytes: Uint8Array) {
+      const prepared = this.prepare(bytes);
+      const { sha256, storageKey, absolutePath } = prepared;
 
       await mkdir(dirname(absolutePath), { recursive: true });
 
@@ -35,7 +46,7 @@ export function createDocumentBlobStore(rootPath: string) {
           sha256,
           storageKey,
           absolutePath,
-          sizeBytes: bytes.byteLength,
+          sizeBytes: prepared.sizeBytes,
           created: false as const,
         };
       } catch (error) {
@@ -65,7 +76,7 @@ export function createDocumentBlobStore(rootPath: string) {
         sha256,
         storageKey,
         absolutePath,
-        sizeBytes: bytes.byteLength,
+        sizeBytes: prepared.sizeBytes,
         created,
       };
     },
