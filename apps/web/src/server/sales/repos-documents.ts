@@ -284,6 +284,32 @@ export function createDocumentsRepo(db: Kysely<Database>) {
         .then((result) => Number(result.numDeletedRows ?? 0) > 0);
     },
 
+    deleteBlobIfUnreferencedWithFile(
+      blobSha256: string,
+      deleteFile: (storageKey: string) => Promise<void>,
+    ) {
+      return db.transaction().execute(async (trx) => {
+        const row = await trx
+          .selectFrom("sales_document_blobs")
+          .select(["sha256", "storage_key", "ref_count"])
+          .where("sha256", "=", blobSha256)
+          .executeTakeFirst();
+        if (!row || row.ref_count !== 0) {
+          return false;
+        }
+
+        await deleteFile(row.storage_key);
+
+        const deleted = await trx
+          .deleteFrom("sales_document_blobs")
+          .where("sha256", "=", blobSha256)
+          .where("ref_count", "=", 0)
+          .executeTakeFirst();
+
+        return Number(deleted.numDeletedRows ?? 0) > 0;
+      });
+    },
+
     listUnreferencedBlobs(limit: number) {
       return db
         .selectFrom("sales_document_blobs")

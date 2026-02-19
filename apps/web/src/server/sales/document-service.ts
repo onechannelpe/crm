@@ -140,12 +140,6 @@ export function createSalesDocumentService(
           storage_key: blob.storageKey,
           created_by_user_id: input.userId,
         });
-        const blobStillPresent = await blobStore.existsByStorageKey(
-          blob.storageKey,
-        );
-        if (!blobStillPresent) {
-          await blobStore.put(input.contentBytes);
-        }
 
         return Ok({ documentId: inserted.id });
       } catch (error) {
@@ -182,19 +176,10 @@ export function createSalesDocumentService(
         }
         if (released.shouldDeleteBlob) {
           // eslint-disable-next-line no-await-in-loop
-          const deleted = await repos.documents.deleteBlobIfUnreferenced(
+          await repos.documents.deleteBlobIfUnreferencedWithFile(
             released.blobSha256,
+            async (storageKey) => blobStore.deleteByStorageKey(storageKey),
           );
-          if (deleted) {
-            // eslint-disable-next-line no-await-in-loop
-            const recreatedBlob = await repos.documents.findBlobBySha(
-              released.blobSha256,
-            );
-            if (!recreatedBlob) {
-              // eslint-disable-next-line no-await-in-loop
-              await blobStore.deleteByStorageKey(released.storageKey);
-            }
-          }
         }
         deletedCount += 1;
       }
@@ -202,18 +187,10 @@ export function createSalesDocumentService(
       const unreferenced = await repos.documents.listUnreferencedBlobs(200);
       await Promise.all(
         unreferenced.map(async (blob) => {
-          const deleted = await repos.documents.deleteBlobIfUnreferenced(
+          await repos.documents.deleteBlobIfUnreferencedWithFile(
             blob.sha256,
+            async (storageKey) => blobStore.deleteByStorageKey(storageKey),
           );
-          if (!deleted) {
-            return;
-          }
-          const recreatedBlob = await repos.documents.findBlobBySha(
-            blob.sha256,
-          );
-          if (!recreatedBlob) {
-            await blobStore.deleteByStorageKey(blob.storage_key);
-          }
         }),
       );
 
