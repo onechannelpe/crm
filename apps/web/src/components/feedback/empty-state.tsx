@@ -10,13 +10,13 @@ interface EmptyStateProps {
 
 export function EmptyState(props: EmptyStateProps) {
   return (
-    <div class="text-center py-12">
-      <div class="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-        <Inbox class="w-8 h-8 text-gray-400" />
+    <div class="crm-surface rounded-3xl py-10 text-center">
+      <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-secondary">
+        <Inbox class="h-8 w-8 text-muted-foreground" />
       </div>
-      <h3 class="text-lg font-medium text-gray-900 mb-1">{props.title}</h3>
+      <h3 class="mb-1 text-lg font-semibold text-foreground">{props.title}</h3>
       {props.description && (
-        <p class="text-gray-500 text-sm mb-4">{props.description}</p>
+        <p class="mb-4 text-sm text-muted-foreground">{props.description}</p>
       )}
       {props.action}
     </div>

@@ -2,6 +2,11 @@ import { For, Show } from "solid-js";
 
 import { getInventoryItems } from "~/actions/inventory";
 import { EmptyState } from "~/components/feedback/empty-state";
+import {
+  AppPage,
+  AppPageHeader,
+  AppPageSection,
+} from "~/components/layout/page";
 import { Badge } from "~/components/ui/badge";
 import {
   Table,
@@ -34,18 +39,18 @@ const statusVariant = (status: string) => {
 
 export default function InventoryPage() {
   const [items] = createAppQuery(getInventoryItems, []);
+  const itemCount = () => items()?.length ?? 0;
 
   return (
-    <div class="space-y-6">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">Inventario</h1>
-        <p class="text-sm text-gray-500 mt-1">
-          {items()?.length ?? 0} items en inventario
-        </p>
-      </div>
+    <AppPage>
+      <AppPageHeader
+        eyebrow="Operación"
+        title="Inventario"
+        description={`${itemCount()} items registrados.`}
+      />
 
       <Show
-        when={(items()?.length ?? 0) > 0}
+        when={itemCount() > 0}
         fallback={
           <EmptyState
             title="Sin registros"
@@ -53,7 +58,7 @@ export default function InventoryPage() {
           />
         }
       >
-        <div class="rounded-md border bg-white">
+        <AppPageSection class="p-2 md:p-3">
           <Table>
             <TableHeader>
               <TableRow>
@@ -86,8 +91,8 @@ export default function InventoryPage() {
               </For>
             </TableBody>
           </Table>
-        </div>
+        </AppPageSection>
       </Show>
-    </div>
+    </AppPage>
   );
 }
