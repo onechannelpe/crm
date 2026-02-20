@@ -5,6 +5,7 @@ import {
   hashSessionToken,
   isValidTokenFormat,
 } from "../../src/lib/auth/session/tokens";
+import { fixedIterations } from "./shared";
 
 describe("auth token performance", () => {
   bench(
@@ -15,7 +16,7 @@ describe("auth token performance", () => {
         throw new Error("generated token format is invalid");
       }
     },
-    { throws: true },
+    fixedIterations(40_000),
   );
 
   bench(
@@ -26,6 +27,6 @@ describe("auth token performance", () => {
         throw new Error(`expected hash length 64, got ${hash.length}`);
       }
     },
-    { throws: true },
+    fixedIterations(40_000),
   );
 });

@@ -13,6 +13,7 @@ import {
   createIsolatedTestDb,
   type TestDbContext,
 } from "../support/test-db";
+import { fixedIterations } from "./shared";
 
 describe("pending review query performance", () => {
   const workload = createPendingReviewWorkload(1_200);
@@ -53,7 +54,7 @@ describe("pending review query performance", () => {
         `expected ${workload.expectedBranchOne} rows, got ${rows.length}`,
       );
     }
-  });
+  }, fixedIterations(96));
 
   bench("component path: branch query", async () => {
     const rows =
@@ -65,5 +66,5 @@ describe("pending review query performance", () => {
         `expected ${workload.expectedBranchOne} rows, got ${rows.length}`,
       );
     }
-  });
+  }, fixedIterations(96));
 });

@@ -15,21 +15,8 @@ export default defineConfig({
           name: "default",
           globalSetup: ["./tests/setup/global-setup.ts"],
           include: ["tests/**/*.test.ts"],
-          exclude: ["tests/**/*.perf.test.ts"],
           environment: "node",
           fileParallelism: true,
-          alias: {
-            "~": path.resolve(__dirname, "./src"),
-          },
-        },
-      },
-      {
-        test: {
-          name: "perf",
-          globalSetup: ["./tests/setup/global-setup.ts"],
-          include: ["tests/**/*.perf.test.ts"],
-          environment: "node",
-          fileParallelism: false,
           alias: {
             "~": path.resolve(__dirname, "./src"),
           },
