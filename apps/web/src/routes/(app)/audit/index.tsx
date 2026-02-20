@@ -7,8 +7,14 @@ import {
 } from "~/actions/admin-audit-policy";
 import { getAuditReaderSnapshot } from "~/actions/admin-audit-reader";
 import { getObservabilitySnapshot } from "~/actions/admin-observability";
+import {
+  AppPage,
+  AppPageHeader,
+  AppPageSection,
+} from "~/components/layout/page";
 import { Button } from "~/components/ui/button";
-import { Card } from "~/components/ui/card";
+import { Input } from "~/components/ui/input";
+import { Select } from "~/components/ui/select";
 import {
   Table,
   TableBody,
@@ -125,43 +131,42 @@ export default function AuditObservabilityPage() {
   }
 
   return (
-    <div class="space-y-6">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">Observabilidad</h1>
-        <p class="mt-1 text-sm text-gray-500">
-          Tiempos, errores y volumen de ejecucion de acciones del CRM.
-        </p>
-      </div>
+    <AppPage>
+      <AppPageHeader
+        eyebrow="Observabilidad"
+        title="Monitoreo y auditoría"
+        description="Tiempos, errores y volumen de ejecución de acciones del CRM."
+      />
 
-      <Card class="p-4 flex flex-wrap gap-3 items-end">
-        <label class="space-y-2 block">
-          <span class="text-sm font-medium">Ventana</span>
-          <select
+      <AppPageSection class="flex flex-wrap items-end gap-3 p-4">
+        <div class="w-44">
+          <Select
+            label="Ventana"
             value={windowMinutes()}
             onInput={(event) =>
               setWindowMinutes(Number(event.currentTarget.value))
             }
-            class="h-10 rounded-md border px-3 text-sm"
+            class="h-10"
           >
             <For each={WINDOW_OPTIONS}>
               {(option) => <option value={option.value}>{option.label}</option>}
             </For>
-          </select>
-        </label>
-        <label class="space-y-2 block">
-          <span class="text-sm font-medium">Estado</span>
-          <select
+          </Select>
+        </div>
+        <div class="w-40">
+          <Select
+            label="Estado"
             value={status()}
             onInput={(event) =>
               setStatus(parseStatus(event.currentTarget.value))
             }
-            class="h-10 rounded-md border px-3 text-sm"
+            class="h-10"
           >
             <option value="all">Todos</option>
             <option value="ok">OK</option>
             <option value="error">Errores</option>
-          </select>
-        </label>
+          </Select>
+        </div>
         <Button
           onClick={() => {
             void refetch();
@@ -169,50 +174,50 @@ export default function AuditObservabilityPage() {
         >
           Actualizar
         </Button>
-      </Card>
+      </AppPageSection>
 
-      <Card class="p-4 flex flex-wrap gap-3 items-end">
-        <label class="space-y-2 block">
-          <span class="text-sm font-medium">Ventana auditoria</span>
-          <select
+      <AppPageSection class="flex flex-wrap items-end gap-3 p-4">
+        <div class="w-44">
+          <Select
+            label="Ventana auditoria"
             value={auditWindowMinutes()}
             onInput={(event) =>
               setAuditWindowMinutes(Number(event.currentTarget.value))
             }
-            class="h-10 rounded-md border px-3 text-sm"
+            class="h-10"
           >
             <For each={AUDIT_WINDOW_OPTIONS}>
               {(option) => <option value={option.value}>{option.label}</option>}
             </For>
-          </select>
-        </label>
-        <label class="space-y-2 block">
-          <span class="text-sm font-medium">Accion</span>
-          <input
+          </Select>
+        </div>
+        <div class="w-52">
+          <Input
+            label="Accion"
             value={actionFilter()}
             onInput={(event) => setActionFilter(event.currentTarget.value)}
             placeholder="charge_note_approved"
-            class="h-10 rounded-md border px-3 text-sm"
+            class="h-10"
           />
-        </label>
-        <label class="space-y-2 block">
-          <span class="text-sm font-medium">Entidad</span>
-          <input
+        </div>
+        <div class="w-44">
+          <Input
+            label="Entidad"
             value={entityTypeFilter()}
             onInput={(event) => setEntityTypeFilter(event.currentTarget.value)}
             placeholder="charge_note"
-            class="h-10 rounded-md border px-3 text-sm"
+            class="h-10"
           />
-        </label>
-        <label class="space-y-2 block">
-          <span class="text-sm font-medium">Actor #</span>
-          <input
+        </div>
+        <div class="w-28">
+          <Input
+            label="Actor #"
             value={actorUserIdFilter()}
             onInput={(event) => setActorUserIdFilter(event.currentTarget.value)}
             placeholder="5"
-            class="h-10 rounded-md border px-3 text-sm"
+            class="h-10"
           />
-        </label>
+        </div>
         <label class="flex items-center gap-2 h-10 px-2 text-sm">
           <input
             type="checkbox"
@@ -228,9 +233,9 @@ export default function AuditObservabilityPage() {
         >
           Actualizar auditoria
         </Button>
-      </Card>
+      </AppPageSection>
 
-      <Card class="p-4 space-y-3">
+      <AppPageSection class="space-y-3 p-4">
         <h2 class="text-base font-semibold">Resumen por accion</h2>
         <Table>
           <TableHeader>
@@ -256,9 +261,9 @@ export default function AuditObservabilityPage() {
             </For>
           </TableBody>
         </Table>
-      </Card>
+      </AppPageSection>
 
-      <Card class="p-4 space-y-3">
+      <AppPageSection class="space-y-3 p-4">
         <h2 class="text-base font-semibold">Eventos recientes</h2>
         <Table>
           <TableHeader>
@@ -294,9 +299,9 @@ export default function AuditObservabilityPage() {
             </For>
           </TableBody>
         </Table>
-      </Card>
+      </AppPageSection>
 
-      <Card class="p-4 space-y-3">
+      <AppPageSection class="space-y-3 p-4">
         <h2 class="text-base font-semibold">Transiciones de auditoria</h2>
         <Table>
           <TableHeader>
@@ -326,36 +331,36 @@ export default function AuditObservabilityPage() {
             </For>
           </TableBody>
         </Table>
-      </Card>
+      </AppPageSection>
 
-      <Card class="p-4 space-y-3">
+      <AppPageSection class="space-y-3 p-4">
         <h2 class="text-base font-semibold">
           Politicas de riesgo de auditoria
         </h2>
-        <div class="flex flex-wrap gap-3 items-end">
-          <label class="space-y-2 block">
-            <span class="text-sm font-medium">Accion</span>
-            <input
+        <div class="flex flex-wrap items-end gap-3">
+          <div class="w-52">
+            <Input
+              label="Accion"
               value={policyAction()}
               onInput={(event) => setPolicyAction(event.currentTarget.value)}
               placeholder="leads_requested"
-              class="h-10 rounded-md border px-3 text-sm"
+              class="h-10"
             />
-          </label>
-          <label class="space-y-2 block">
-            <span class="text-sm font-medium">Riesgo</span>
-            <select
+          </div>
+          <div class="w-36">
+            <Select
+              label="Riesgo"
               value={policyRiskLevel()}
               onInput={(event) =>
                 setPolicyRiskLevel(parseRiskLevel(event.currentTarget.value))
               }
-              class="h-10 rounded-md border px-3 text-sm"
+              class="h-10"
             >
               <option value="high">high</option>
               <option value="medium">medium</option>
               <option value="low">low</option>
-            </select>
-          </label>
+            </Select>
+          </div>
           <label class="flex items-center gap-2 h-10 px-2 text-sm">
             <input
               type="checkbox"
@@ -409,7 +414,7 @@ export default function AuditObservabilityPage() {
             </For>
           </TableBody>
         </Table>
-      </Card>
-    </div>
+      </AppPageSection>
+    </AppPage>
   );
 }

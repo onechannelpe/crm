@@ -8,6 +8,11 @@ import {
 import { RejectionForm } from "~/components/features/sales/rejection-form";
 import { EmptyState } from "~/components/feedback/empty-state";
 import { useToast } from "~/components/feedback/toast-provider";
+import {
+  AppPage,
+  AppPageHeader,
+  AppPageSection,
+} from "~/components/layout/page";
 import { Button } from "~/components/ui/button";
 import {
   Table,
@@ -89,40 +94,24 @@ export default function ValidationPage() {
   };
 
   return (
-    <div class="space-y-7">
-      <div class="crm-surface rounded-3xl p-6 md:p-7">
-        <p class="text-xs uppercase tracking-[0.14em] text-muted-foreground">
-          Mesa de revisión
-        </p>
-        <h1 class="mt-1 text-3xl font-semibold text-foreground md:text-4xl">
-          Validación de ventas
-        </h1>
-        <p class="mt-2 text-sm text-muted-foreground md:text-base">
-          {currentNotes().length} ventas pendientes. Revisa evidencia, aprueba
-          lo correcto y rechaza con observaciones claras.
-        </p>
-      </div>
+    <AppPage class="space-y-7">
+      <AppPageHeader
+        eyebrow="Mesa de revisión"
+        title="Validación de ventas"
+        description={`${currentNotes().length} ventas pendientes. Revisa evidencia, aprueba lo correcto y rechaza con observaciones claras.`}
+      />
 
-      <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <div class="crm-surface rounded-3xl p-5">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <AppPageSection class="p-5">
           <p class="text-xs uppercase tracking-[0.12em] text-muted-foreground">
             Pendientes
           </p>
           <p class="mt-1 text-3xl font-semibold">{currentNotes().length}</p>
           <p class="text-xs text-muted-foreground">Esperando decisión</p>
-        </div>
-        <div class="crm-surface rounded-3xl p-5">
+        </AppPageSection>
+        <AppPageSection class="p-5">
           <p class="text-xs uppercase tracking-[0.12em] text-muted-foreground">
-            SLA recomendado
-          </p>
-          <p class="mt-1 text-3xl font-semibold">24h</p>
-          <p class="text-xs text-muted-foreground">
-            Tiempo máximo de respuesta
-          </p>
-        </div>
-        <div class="crm-surface rounded-3xl p-5">
-          <p class="text-xs uppercase tracking-[0.12em] text-muted-foreground">
-            Modo actual
+            Estado de revisión
           </p>
           <p class="mt-1 text-2xl font-semibold">
             {rejectingNoteId() ? "Rechazo activo" : "Revisión rápida"}
@@ -132,7 +121,7 @@ export default function ValidationPage() {
               ? "Completa observaciones antes de continuar"
               : "Aprueba o abre un rechazo detallado"}
           </p>
-        </div>
+        </AppPageSection>
       </div>
 
       <Show
@@ -146,7 +135,7 @@ export default function ValidationPage() {
       >
         <Show when={rejectingNoteId()}>
           {(id) => (
-            <div class="rounded-3xl border border-red-200 bg-red-50 p-5">
+            <AppPageSection class="border border-red-200 bg-red-50 p-5 shadow-none backdrop-blur-0">
               <h2 class="mb-2 text-lg font-semibold text-red-900">
                 Rechazar venta #{id()}
               </h2>
@@ -154,10 +143,10 @@ export default function ValidationPage() {
                 onReject={(rejections) => handleReject(id(), rejections)}
                 onCancel={() => setRejectingNoteId(null)}
               />
-            </div>
+            </AppPageSection>
           )}
         </Show>
-        <div class="crm-surface rounded-3xl p-2 md:p-3">
+        <AppPageSection class="p-2 md:p-3">
           <Table>
             <TableHeader>
               <TableRow>
@@ -210,8 +199,8 @@ export default function ValidationPage() {
               </For>
             </TableBody>
           </Table>
-        </div>
+        </AppPageSection>
       </Show>
-    </div>
+    </AppPage>
   );
 }

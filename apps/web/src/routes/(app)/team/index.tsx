@@ -10,6 +10,11 @@ import { EmptyState } from "~/components/feedback/empty-state";
 import { useToast } from "~/components/feedback/toast-provider";
 import Mail from "~/components/icons/mail";
 import User from "~/components/icons/user";
+import {
+  AppPage,
+  AppPageHeader,
+  AppPageSection,
+} from "~/components/layout/page";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import {
@@ -66,21 +71,19 @@ export default function TeamPage() {
   }
 
   return (
-    <div class="space-y-6">
-      <div class="flex items-center justify-between gap-3">
-        <div>
-          <h1 class="text-2xl font-bold text-gray-900">Equipo</h1>
-          <p class="text-sm text-gray-500 mt-1">
-            {directory().members.length} miembros activos y{" "}
-            {directory().pendingInvites.length} invitaciones pendientes
-          </p>
-        </div>
-        <Show when={directory().canManageInvites}>
-          <A href="/team/new">
-            <Button>Invitar usuario</Button>
-          </A>
-        </Show>
-      </div>
+    <AppPage>
+      <AppPageHeader
+        eyebrow="Gestión interna"
+        title="Equipo"
+        description={`${directory().members.length} miembros activos y ${directory().pendingInvites.length} invitaciones pendientes.`}
+        actions={
+          <Show when={directory().canManageInvites}>
+            <A href="/team/new">
+              <Button>Invitar usuario</Button>
+            </A>
+          </Show>
+        }
+      />
 
       <Show
         when={directory().members.length > 0}
@@ -91,7 +94,7 @@ export default function TeamPage() {
           />
         }
       >
-        <div class="rounded-md border bg-white">
+        <AppPageSection class="p-2 md:p-3">
           <Table>
             <TableHeader>
               <TableRow>
@@ -134,7 +137,7 @@ export default function TeamPage() {
               </For>
             </TableBody>
           </Table>
-        </div>
+        </AppPageSection>
       </Show>
 
       <div class="space-y-3">
@@ -150,7 +153,7 @@ export default function TeamPage() {
             />
           }
         >
-          <div class="rounded-md border bg-white">
+          <AppPageSection class="p-2 md:p-3">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -215,9 +218,9 @@ export default function TeamPage() {
                 </For>
               </TableBody>
             </Table>
-          </div>
+          </AppPageSection>
         </Show>
       </div>
-    </div>
+    </AppPage>
   );
 }

@@ -33,7 +33,7 @@ describe("route policy", () => {
       (route) => route.href,
     );
     expect(executiveSearch).toContain("/leads");
-    expect(executiveSearch).toContain("/client-search");
+    expect(executiveSearch).toContain("/client-search/people");
     expect(executiveSearch).not.toContain("/audit");
     expect(executiveSearch).not.toContain("/quota");
     expect(executiveSearch).not.toContain("/settings");

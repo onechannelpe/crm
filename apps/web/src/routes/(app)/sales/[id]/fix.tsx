@@ -3,8 +3,12 @@ import { createResource, createSignal, For, Show } from "solid-js";
 
 import { getSaleFixContext, submitSale } from "~/actions/sales";
 import { useToast } from "~/components/feedback/toast-provider";
+import {
+  AppPage,
+  AppPageHeader,
+  AppPageSection,
+} from "~/components/layout/page";
 import { Button } from "~/components/ui/button";
-import { Card } from "~/components/ui/card";
 import { getErrorMessage } from "~/lib/errors";
 
 export default function FixSalePage() {
@@ -29,60 +33,62 @@ export default function FixSalePage() {
   }
 
   return (
-    <div class="max-w-4xl mx-auto space-y-6">
-      <div class="flex items-center justify-between">
-        <h1 class="text-2xl font-bold text-gray-900">Corregir venta</h1>
-        <Button variant="secondary" onClick={() => navigate("/leads")}>
-          Volver
-        </Button>
-      </div>
+    <AppPage class="mx-auto max-w-4xl">
+      <AppPageHeader
+        eyebrow="Ventas"
+        title="Corregir venta"
+        description="Revisa observaciones y vuelve a enviar la nota."
+        actions={
+          <Button variant="secondary" onClick={() => navigate("/leads")}>
+            Volver
+          </Button>
+        }
+      />
 
-      <Card>
-        <div class="p-6">
-          <div class="bg-red-50 border-2 border-red-200 rounded-lg p-6 mb-4">
-            <h2 class="font-bold text-red-900 mb-2">
-              Correcciones requeridas — nota #{noteId()}
-            </h2>
-            <Show
-              when={fixContext()?.rejections?.length}
-              fallback={
-                <p class="text-sm text-gray-700">
-                  No hay observaciones pendientes.
-                </p>
-              }
-            >
-              <ul class="space-y-2 text-sm text-gray-800">
-                <For each={fixContext()?.rejections ?? []}>
-                  {(rejection) => (
-                    <li class="rounded border border-red-200 bg-white p-3">
-                      <p class="font-medium text-red-900">
-                        Campo: {rejection.field_id}
-                      </p>
-                      <p class="text-gray-700 mt-1">
-                        {rejection.reviewer_note ?? "Sin nota del validador."}
-                      </p>
-                    </li>
-                  )}
-                </For>
-              </ul>
-            </Show>
-          </div>
-
-          <div class="flex justify-end gap-2">
-            <Button variant="secondary" onClick={() => navigate("/leads")}>
-              Cancelar
-            </Button>
-            <Button
-              onClick={() => {
-                void handleResubmit();
-              }}
-              disabled={loading()}
-            >
-              {loading() ? "Enviando..." : "Reenviar para validación"}
-            </Button>
-          </div>
+      <AppPageSection class="p-6">
+        <div class="mb-4 rounded-2xl border-2 border-red-200 bg-red-50 p-6">
+          <h2 class="mb-2 font-bold text-red-900">
+            Correcciones requeridas — nota #{noteId()}
+          </h2>
+          <Show
+            when={fixContext()?.rejections?.length}
+            fallback={
+              <p class="text-sm text-gray-700">
+                No hay observaciones pendientes.
+              </p>
+            }
+          >
+            <ul class="space-y-2 text-sm text-gray-800">
+              <For each={fixContext()?.rejections ?? []}>
+                {(rejection) => (
+                  <li class="rounded-xl border border-red-200 bg-white p-3">
+                    <p class="font-medium text-red-900">
+                      Campo: {rejection.field_id}
+                    </p>
+                    <p class="mt-1 text-gray-700">
+                      {rejection.reviewer_note ?? "Sin nota del validador."}
+                    </p>
+                  </li>
+                )}
+              </For>
+            </ul>
+          </Show>
         </div>
-      </Card>
-    </div>
+
+        <div class="flex justify-end gap-2">
+          <Button variant="secondary" onClick={() => navigate("/leads")}>
+            Cancelar
+          </Button>
+          <Button
+            onClick={() => {
+              void handleResubmit();
+            }}
+            disabled={loading()}
+          >
+            {loading() ? "Enviando..." : "Reenviar para validación"}
+          </Button>
+        </div>
+      </AppPageSection>
+    </AppPage>
   );
 }
