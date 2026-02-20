@@ -3,6 +3,11 @@ import { createResource, createSignal, Show } from "solid-js";
 import { getQuotaStatus, allocateQuota } from "~/actions/quota";
 import { QuotaDisplay } from "~/components/features/quota/quota-display";
 import { useToast } from "~/components/feedback/toast-provider";
+import {
+  AppPage,
+  AppPageHeader,
+  AppPageSection,
+} from "~/components/layout/page";
 import { useSession } from "~/components/providers/session-provider";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -67,30 +72,23 @@ export default function QuotaPage() {
   }
 
   return (
-    <div class="max-w-4xl space-y-6">
-      <div class="crm-surface rounded-3xl p-6 md:p-7">
-        <p class="text-xs uppercase tracking-[0.14em] text-muted-foreground">
-          Control de capacidad
-        </p>
-        <h1 class="mt-1 text-3xl font-semibold text-foreground">
-          Gestión de cuotas
-        </h1>
-        <p class="mt-2 text-sm text-muted-foreground md:text-base">
-          Define cuántos leads puede trabajar cada ejecutivo hoy. Esta cuota
-          afecta la asignación automática de leads.
-        </p>
-      </div>
+    <AppPage class="max-w-4xl">
+      <AppPageHeader
+        eyebrow="Control de capacidad"
+        title="Gestión de cuotas"
+        description="Define cuántos leads puede trabajar cada ejecutivo hoy. Esta cuota afecta la asignación automática de leads."
+      />
 
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_360px]">
         <div class="space-y-4">
           <Show
             when={quotaValues()}
             fallback={
-              <div class="crm-surface rounded-3xl p-5">
+              <AppPageSection class="p-5">
                 <p class="text-sm text-muted-foreground">
                   Sin cuota asignada por el momento.
                 </p>
-              </div>
+              </AppPageSection>
             }
           >
             {(values) => (
@@ -98,19 +96,19 @@ export default function QuotaPage() {
             )}
           </Show>
 
-          <div class="crm-surface rounded-3xl p-5">
+          <AppPageSection class="p-5">
             <p class="text-xs uppercase tracking-[0.12em] text-muted-foreground">
-              Reglas
+              Consideraciones
             </p>
             <ul class="mt-3 space-y-2 text-sm text-muted-foreground">
               <li>Solo puedes asignar cuota al inicio de jornada.</li>
               <li>Evita sobreasignar si hay ventas pendientes de validar.</li>
               <li>Confirma el `ID` del ejecutivo antes de guardar.</li>
             </ul>
-          </div>
+          </AppPageSection>
         </div>
 
-        <div class="crm-surface rounded-3xl p-6">
+        <AppPageSection class="p-6">
           <h3 class="mb-4 text-lg font-semibold">Asignar cuota</h3>
           <form
             onSubmit={(e) => {
@@ -140,8 +138,8 @@ export default function QuotaPage() {
               {loading() ? "Asignando..." : "Asignar cuota"}
             </Button>
           </form>
-        </div>
+        </AppPageSection>
       </div>
-    </div>
+    </AppPage>
   );
 }

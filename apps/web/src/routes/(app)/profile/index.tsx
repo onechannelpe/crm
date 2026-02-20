@@ -7,10 +7,15 @@ import {
   finishTotpEnrollment,
   getTotpStatus,
 } from "~/actions/auth";
+import {
+  AppInsetPanel,
+  AppPage,
+  AppPageHeader,
+  AppPageSection,
+} from "~/components/layout/page";
 import { useSession } from "~/components/providers/session-provider";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
-import { Card } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import {
   getRoleBadgeVariant,
@@ -110,15 +115,14 @@ export default function ProfilePage() {
   }
 
   return (
-    <div class="space-y-6">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">Mi perfil</h1>
-        <p class="mt-1 text-sm text-gray-500">
-          Datos de tu sesión y permisos actuales.
-        </p>
-      </div>
+    <AppPage>
+      <AppPageHeader
+        eyebrow="Cuenta"
+        title="Mi perfil"
+        description="Datos de tu sesión y controles de seguridad."
+      />
 
-      <Card class="p-6 space-y-4">
+      <AppPageSection class="space-y-4 p-6">
         <div>
           <p class="text-xs uppercase tracking-wider text-muted-foreground">
             Nombre
@@ -205,7 +209,7 @@ export default function ProfilePage() {
               <p class="text-sm text-muted-foreground">{totpMessage()}</p>
             </Show>
             <Show when={recoveryCodes().length > 0}>
-              <div class="rounded border p-3 space-y-2">
+              <AppInsetPanel class="space-y-2">
                 <p class="text-sm font-medium">
                   Códigos de recuperación (solo una vez)
                 </p>
@@ -214,11 +218,11 @@ export default function ProfilePage() {
                     <li class="font-mono">{code}</li>
                   ))}
                 </ul>
-              </div>
+              </AppInsetPanel>
             </Show>
           </div>
         </div>
-      </Card>
-    </div>
+      </AppPageSection>
+    </AppPage>
   );
 }

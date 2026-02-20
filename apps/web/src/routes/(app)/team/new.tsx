@@ -3,9 +3,14 @@ import { createResource, createSignal, For } from "solid-js";
 
 import { createTeamInvite, getBranchTeamsForInvite } from "~/actions/team";
 import { useToast } from "~/components/feedback/toast-provider";
+import {
+  AppPage,
+  AppPageHeader,
+  AppPageSection,
+} from "~/components/layout/page";
 import { Button } from "~/components/ui/button";
-import { Card } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
+import { Select } from "~/components/ui/select";
 import { getErrorMessage } from "~/lib/errors";
 
 const ROLE_OPTIONS = [
@@ -51,17 +56,21 @@ export default function NewTeamInvitePage() {
   }
 
   return (
-    <div class="max-w-2xl mx-auto space-y-6">
-      <div class="flex items-center justify-between">
-        <h1 class="text-2xl font-bold text-gray-900">Invitar usuario</h1>
-        <Button variant="secondary" onClick={() => navigate("/team")}>
-          Cancelar
-        </Button>
-      </div>
+    <AppPage class="mx-auto max-w-2xl">
+      <AppPageHeader
+        eyebrow="Equipo"
+        title="Invitar usuario"
+        description="Genera una invitación con rol y equipo opcional."
+        actions={
+          <Button variant="secondary" onClick={() => navigate("/team")}>
+            Cancelar
+          </Button>
+        }
+      />
 
-      <Card>
+      <AppPageSection class="p-6">
         <form
-          class="p-6 space-y-4"
+          class="space-y-4"
           onSubmit={(event) => {
             void handleSubmit(event);
           }}
@@ -79,42 +88,31 @@ export default function NewTeamInvitePage() {
             onInput={(event) => setEmail(event.currentTarget.value)}
             required
           />
-          <div class="space-y-2">
-            <label class="space-y-2 block">
-              <span class="text-sm font-medium">Rol</span>
-              <select
-                value={role()}
-                onInput={(event) => setRole(event.currentTarget.value)}
-                class="flex h-11 w-full rounded-2xl border border-input/85 bg-white/75 px-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-2 transition-colors"
-              >
-                <For each={ROLE_OPTIONS}>
-                  {(option) => (
-                    <option value={option.value}>{option.label}</option>
-                  )}
-                </For>
-              </select>
-            </label>
-          </div>
-          <div class="space-y-2">
-            <label class="space-y-2 block">
-              <span class="text-sm font-medium">Equipo (opcional)</span>
-              <select
-                value={teamId()}
-                onInput={(event) => setTeamId(event.currentTarget.value)}
-                class="flex h-11 w-full rounded-2xl border border-input/85 bg-white/75 px-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-2 transition-colors"
-              >
-                <option value="">Sin equipo asignado</option>
-                <For each={teams() ?? []}>
-                  {(team) => <option value={team.id}>{team.name}</option>}
-                </For>
-              </select>
-            </label>
-          </div>
+          <Select
+            label="Rol"
+            value={role()}
+            onInput={(event) => setRole(event.currentTarget.value)}
+          >
+            <For each={ROLE_OPTIONS}>
+              {(option) => <option value={option.value}>{option.label}</option>}
+            </For>
+          </Select>
+
+          <Select
+            label="Equipo (opcional)"
+            value={teamId()}
+            onInput={(event) => setTeamId(event.currentTarget.value)}
+          >
+            <option value="">Sin equipo asignado</option>
+            <For each={teams() ?? []}>
+              {(team) => <option value={team.id}>{team.name}</option>}
+            </For>
+          </Select>
           <Button type="submit" disabled={saving()}>
             {saving() ? "Enviando..." : "Enviar invitacion"}
           </Button>
         </form>
-      </Card>
-    </div>
+      </AppPageSection>
+    </AppPage>
   );
 }
