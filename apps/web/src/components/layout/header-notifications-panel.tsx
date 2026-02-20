@@ -9,6 +9,8 @@ import {
 } from "~/actions/app-notifications";
 import Bell from "~/components/icons/bell";
 import { Button } from "~/components/ui/button";
+import { DS_Z_INDEX } from "~/components/ui/theme/design-system";
+import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
 import { runOptimistic } from "~/lib/ui/run-optimistic";
 
 const EMPTY_FEED: HeaderNotificationFeed = {
@@ -17,9 +19,9 @@ const EMPTY_FEED: HeaderNotificationFeed = {
 };
 
 function priorityClass(priority: "high" | "normal" | "low"): string {
-  if (priority === "high") return "border-l-red-500";
-  if (priority === "low") return "border-l-slate-300";
-  return "border-l-blue-500";
+  if (priority === "high") return "border-l-destructive";
+  if (priority === "low") return "border-l-border";
+  return "border-l-primary";
 }
 
 function formatTime(timestamp: number): string {
@@ -34,6 +36,13 @@ function formatTime(timestamp: number): string {
 export function HeaderNotificationsPanel() {
   const navigate = useNavigate();
   const [open, setOpen] = createSignal(false);
+  let containerRef: HTMLDivElement | undefined;
+
+  useDismissibleLayer({
+    enabled: open,
+    onDismiss: () => setOpen(false),
+    getContainer: () => containerRef,
+  });
   const [feed, { mutate, refetch }] = createResource(
     () => true,
     async () => getHeaderNotifications(),
@@ -105,7 +114,12 @@ export function HeaderNotificationsPanel() {
   };
 
   return (
-    <div class="relative">
+    <div
+      class="relative"
+      ref={(element) => {
+        containerRef = element;
+      }}
+    >
       <Button
         variant="ghost"
         size="icon"
@@ -122,7 +136,10 @@ export function HeaderNotificationsPanel() {
         </Show>
       </Button>
       <Show when={open()}>
-        <div class="crm-surface absolute right-0 z-20 mt-2 w-96 rounded-2xl">
+        <div
+          class="crm-overlay-panel absolute right-0 mt-2 w-96 rounded-2xl"
+          style={{ "z-index": DS_Z_INDEX.overlay }}
+        >
           <div class="flex items-center justify-between border-b p-3">
             <p class="text-sm font-semibold">Notificaciones</p>
             <Button
@@ -147,11 +164,13 @@ export function HeaderNotificationsPanel() {
             >
               <For each={currentFeed().notifications}>
                 {(item) => (
-                  <button
+                  <Button
                     type="button"
-                    class={`w-full rounded-xl border border-l-4 p-2.5 text-left hover:bg-muted/40 ${priorityClass(item.priority)} ${item.readAt ? "opacity-70" : ""}`}
+                    variant="ghost"
+                    class={`h-auto w-full justify-start rounded-xl border border-l-4 p-2.5 text-left hover:bg-muted/40 ${priorityClass(item.priority)} ${item.readAt ? "opacity-70" : ""}`}
                     onClick={() => {
                       void handleOpenItem(item.id, item.actionUrl);
+                      setOpen(false);
                     }}
                   >
                     <p class="text-sm font-medium">{item.title}</p>
@@ -161,7 +180,7 @@ export function HeaderNotificationsPanel() {
                     <p class="text-[11px] text-muted-foreground mt-2">
                       {formatTime(item.createdAt)}
                     </p>
-                  </button>
+                  </Button>
                 )}
               </For>
             </Show>

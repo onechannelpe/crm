@@ -12,6 +12,8 @@ import ShieldCheck from "~/components/icons/shield-check";
 import Users from "~/components/icons/users";
 import { AccountMenu } from "~/components/layout/account-menu";
 import { useSession } from "~/components/providers/session-provider";
+import { Button } from "~/components/ui/button";
+import { DS_Z_INDEX } from "~/components/ui/theme/design-system";
 import { getSidebarRoutes } from "~/lib/auth/access/route-policy";
 import { getWorkspaceLabel } from "~/lib/auth/access/workspace-label";
 import { cn } from "~/lib/utils";
@@ -51,7 +53,10 @@ export function Sidebar() {
 
   return (
     <>
-      <aside class="crm-surface fixed inset-y-4 left-4 z-20 hidden w-68 flex-col rounded-3xl md:flex">
+      <aside
+        class="crm-surface fixed inset-y-4 left-4 hidden w-68 flex-col rounded-3xl md:flex"
+        style={{ "z-index": DS_Z_INDEX.navigation }}
+      >
         <div class="flex h-18 items-center px-6">
           <div>
             <p class="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
@@ -61,13 +66,14 @@ export function Sidebar() {
           </div>
         </div>
         <div class="px-4 pb-3">
-          <button
+          <Button
             type="button"
-            class="flex w-full items-center justify-between rounded-2xl border border-border/80 bg-white/80 px-4 py-3 text-sm font-medium shadow-sm transition-colors hover:bg-white"
+            variant="outline"
+            class="h-auto w-full justify-between rounded-2xl bg-surface px-4 py-3 text-sm font-medium shadow-elevation-1 hover:bg-card"
           >
             <span>{getWorkspaceLabel(currentUser())}</span>
             <ChevronDown class="h-4 w-4 text-muted-foreground" />
-          </button>
+          </Button>
         </div>
         <nav class="flex-1 space-y-5 overflow-y-auto px-4 pb-4">
           <For each={navGroups()}>
@@ -88,7 +94,7 @@ export function Sidebar() {
                           "flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-sm transition-all",
                           isActive()
                             ? "bg-primary text-primary-foreground shadow-sm"
-                            : "text-muted-foreground hover:bg-white/85 hover:text-foreground",
+                            : "text-muted-foreground hover:bg-surface hover:text-foreground",
                         )}
                       >
                         {Icon ? (
@@ -115,7 +121,10 @@ export function Sidebar() {
         </div>
       </aside>
 
-      <nav class="crm-surface fixed inset-x-3 bottom-3 z-30 flex items-center justify-between rounded-2xl px-2 py-1.5 md:hidden">
+      <nav
+        class="crm-surface fixed inset-x-3 bottom-3 flex items-center justify-between rounded-2xl px-2 py-1.5 md:hidden"
+        style={{ "z-index": DS_Z_INDEX.navigation }}
+      >
         <For each={mobileItems()}>
           {(item) => {
             const isActive = () => location.pathname.startsWith(item.href);

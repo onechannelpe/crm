@@ -102,7 +102,7 @@ export default function DashboardPage() {
 
         <div class="space-y-2">
           {focusItems().map((item) => (
-            <div class="flex flex-col gap-3 rounded-2xl border border-border/70 bg-white/70 px-4 py-3 md:flex-row md:items-center md:justify-between">
+            <div class="flex flex-col gap-3 rounded-2xl border border-border/70 bg-surface px-4 py-3 md:flex-row md:items-center md:justify-between">
               <div class="min-w-0">
                 <p class="text-sm font-semibold text-foreground">
                   {item.label}

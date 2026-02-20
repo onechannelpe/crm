@@ -135,8 +135,8 @@ export default function ValidationPage() {
       >
         <Show when={rejectingNoteId()}>
           {(id) => (
-            <AppPageSection class="border border-red-200 bg-red-50 p-5 shadow-none backdrop-blur-0">
-              <h2 class="mb-2 text-lg font-semibold text-red-900">
+            <AppPageSection class="border border-destructive/30 bg-destructive/10 p-5 shadow-none backdrop-blur-0">
+              <h2 class="mb-2 text-lg font-semibold text-destructive">
                 Rechazar venta #{id()}
               </h2>
               <RejectionForm

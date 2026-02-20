@@ -46,26 +46,26 @@ export default function FixSalePage() {
       />
 
       <AppPageSection class="p-6">
-        <div class="mb-4 rounded-2xl border-2 border-red-200 bg-red-50 p-6">
-          <h2 class="mb-2 font-bold text-red-900">
+        <div class="mb-4 rounded-2xl border-2 border-destructive/30 bg-destructive/10 p-6">
+          <h2 class="mb-2 font-bold text-destructive">
             Correcciones requeridas — nota #{noteId()}
           </h2>
           <Show
             when={fixContext()?.rejections?.length}
             fallback={
-              <p class="text-sm text-gray-700">
+              <p class="text-sm text-muted-foreground">
                 No hay observaciones pendientes.
               </p>
             }
           >
-            <ul class="space-y-2 text-sm text-gray-800">
+            <ul class="space-y-2 text-sm text-foreground">
               <For each={fixContext()?.rejections ?? []}>
                 {(rejection) => (
-                  <li class="rounded-xl border border-red-200 bg-white p-3">
-                    <p class="font-medium text-red-900">
+                  <li class="rounded-xl border border-destructive/35 bg-card p-3">
+                    <p class="font-medium text-destructive">
                       Campo: {rejection.field_id}
                     </p>
-                    <p class="mt-1 text-gray-700">
+                    <p class="mt-1 text-muted-foreground">
                       {rejection.reviewer_note ?? "Sin nota del validador."}
                     </p>
                   </li>

@@ -18,6 +18,7 @@ export function useMenuDismiss(
   };
 
   const closeOnEscape = (event: KeyboardEvent) => {
+    if (!isOpen()) return;
     if (event.key === "Escape") close();
   };
 

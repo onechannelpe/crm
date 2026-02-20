@@ -3,6 +3,9 @@ import { createMemo, createSignal, For, Show } from "solid-js";
 
 import Search from "~/components/icons/search";
 import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
+import { DS_Z_INDEX } from "~/components/ui/theme/design-system";
+import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
 import { type Role } from "~/lib/auth/access/rbac";
 import { getSearchRoutes } from "~/lib/auth/access/route-policy";
 
@@ -13,6 +16,14 @@ interface HeaderSearchPanelProps {
 export function HeaderSearchPanel(props: HeaderSearchPanelProps) {
   const [open, setOpen] = createSignal(false);
   const [query, setQuery] = createSignal("");
+  let containerRef: HTMLDivElement | undefined;
+
+  useDismissibleLayer({
+    enabled: open,
+    onDismiss: () => setOpen(false),
+    getContainer: () => containerRef,
+  });
+
   const visibleItems = createMemo(() => {
     const text = query().trim().toLowerCase();
     return getSearchRoutes(props.role).filter((it) => {
@@ -22,7 +33,12 @@ export function HeaderSearchPanel(props: HeaderSearchPanelProps) {
   });
 
   return (
-    <div class="relative">
+    <div
+      class="relative"
+      ref={(element) => {
+        containerRef = element;
+      }}
+    >
       <Button
         variant="ghost"
         size="icon"
@@ -32,9 +48,12 @@ export function HeaderSearchPanel(props: HeaderSearchPanelProps) {
         <Search class="w-4 h-4" />
       </Button>
       <Show when={open()}>
-        <div class="crm-surface absolute right-0 z-20 mt-2 w-80 rounded-2xl p-2.5">
-          <input
-            class="w-full rounded-xl border border-border/80 bg-white/70 px-3 py-2 text-sm"
+        <div
+          class="crm-overlay-panel absolute right-0 mt-2 w-80 rounded-2xl p-2.5"
+          style={{ "z-index": DS_Z_INDEX.overlay }}
+        >
+          <Input
+            class="h-10"
             placeholder="Buscar modulo o ruta"
             value={query()}
             onInput={(event) => setQuery(event.currentTarget.value)}

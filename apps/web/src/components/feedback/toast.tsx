@@ -5,6 +5,8 @@ import CircleAlert from "~/components/icons/circle-alert";
 import CircleCheckBig from "~/components/icons/circle-check-big";
 import Info from "~/components/icons/info";
 import X from "~/components/icons/x";
+import { Button } from "~/components/ui/button";
+import { DS_Z_INDEX } from "~/components/ui/theme/design-system";
 
 import { useToast } from "./toast-provider";
 
@@ -13,35 +15,36 @@ export function ToastContainer() {
 
   return (
     <Portal>
-      <div class="fixed top-4 right-4 z-50 space-y-2 max-w-md">
+      <div
+        class="fixed right-4 top-4 max-w-md space-y-2"
+        style={{ "z-index": DS_Z_INDEX.toast }}
+      >
         <For each={toasts}>
           {(toast) => (
             <div
-              class={`rounded-lg shadow-lg p-4 flex items-start gap-3 ${
+              class={`crm-overlay-panel flex items-start gap-3 rounded-2xl p-4 ${
                 toast.type === "success"
-                  ? "bg-green-50 text-green-900"
+                  ? "bg-[color-mix(in_oklab,#effaf4_84%,var(--overlay))] text-[color-mix(in_oklab,#1d6a43_90%,black)]"
                   : toast.type === "error"
-                    ? "bg-red-50 text-red-900"
-                    : "bg-blue-50 text-blue-900"
+                    ? "bg-[color-mix(in_oklab,#fef0f0_82%,var(--overlay))] text-[color-mix(in_oklab,#7b1f1f_90%,black)]"
+                    : "bg-[color-mix(in_oklab,#edf5ff_84%,var(--overlay))] text-[color-mix(in_oklab,#1c4f7c_90%,black)]"
               }`}
             >
-              {toast.type === "success" && (
-                <CircleCheckBig class="w-5 h-5 text-green-600" />
-              )}
-              {toast.type === "error" && (
-                <CircleAlert class="w-5 h-5 text-red-600" />
-              )}
-              {toast.type === "info" && <Info class="w-5 h-5 text-blue-600" />}
+              {toast.type === "success" && <CircleCheckBig class="h-5 w-5" />}
+              {toast.type === "error" && <CircleAlert class="h-5 w-5" />}
+              {toast.type === "info" && <Info class="h-5 w-5" />}
 
               <p class="flex-1 text-sm font-medium">{toast.message}</p>
 
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => removeToast(toast.id)}
-                class="text-gray-400 hover:text-gray-600"
+                class="h-6 w-6 text-muted-foreground hover:text-foreground"
               >
                 <X class="w-4 h-4" />
-              </button>
+              </Button>
             </div>
           )}
         </For>

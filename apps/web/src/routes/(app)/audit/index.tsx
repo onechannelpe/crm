@@ -13,6 +13,7 @@ import {
   AppPageSection,
 } from "~/components/layout/page";
 import { Button } from "~/components/ui/button";
+import { Checkbox } from "~/components/ui/checkbox";
 import { Input } from "~/components/ui/input";
 import { Select } from "~/components/ui/select";
 import {
@@ -218,14 +219,12 @@ export default function AuditObservabilityPage() {
             class="h-10"
           />
         </div>
-        <label class="flex items-center gap-2 h-10 px-2 text-sm">
-          <input
-            type="checkbox"
-            checked={onlyHighRisk()}
-            onInput={(event) => setOnlyHighRisk(event.currentTarget.checked)}
-          />
-          Solo alto riesgo
-        </label>
+        <Checkbox
+          label="Solo alto riesgo"
+          checked={onlyHighRisk()}
+          onInput={(event) => setOnlyHighRisk(event.currentTarget.checked)}
+          class="mt-1"
+        />
         <Button
           onClick={() => {
             void refetchAuditSnapshot();
@@ -361,16 +360,12 @@ export default function AuditObservabilityPage() {
               <option value="low">low</option>
             </Select>
           </div>
-          <label class="flex items-center gap-2 h-10 px-2 text-sm">
-            <input
-              type="checkbox"
-              checked={policyIsActive()}
-              onInput={(event) =>
-                setPolicyIsActive(event.currentTarget.checked)
-              }
-            />
-            Activa
-          </label>
+          <Checkbox
+            label="Activa"
+            checked={policyIsActive()}
+            onInput={(event) => setPolicyIsActive(event.currentTarget.checked)}
+            class="mt-1"
+          />
           <Button
             disabled={!canManagePolicies()}
             onClick={() => {
@@ -380,14 +375,14 @@ export default function AuditObservabilityPage() {
             Guardar politica
           </Button>
         </div>
-        <p class="text-xs text-gray-500">
+        <p class="text-xs text-muted-foreground">
           Acciones sin politica explicita se tratan como riesgo high para evitar
           ocultar eventos criticos.
         </p>
-        <p class="text-xs text-gray-500">
+        <p class="text-xs text-muted-foreground">
           Solo admin y superuser pueden editar politicas.
         </p>
-        <p class="text-xs text-red-600">{policyError() ?? ""}</p>
+        <p class="text-xs text-destructive">{policyError() ?? ""}</p>
         <Table>
           <TableHeader>
             <TableRow>

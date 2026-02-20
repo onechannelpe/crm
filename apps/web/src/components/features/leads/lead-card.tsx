@@ -21,12 +21,12 @@ const LEAD_EXPIRY_TEXT = "24h restantes";
 
 export const LeadCard: Component<LeadCardProps> = (props) => {
   return (
-    <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+    <div class="crm-surface rounded-2xl border border-border/85 p-4 transition-shadow hover:shadow-elevation-2">
       <div class="flex items-start justify-between mb-3">
         <div class="flex-1">
-          <h3 class="font-semibold text-gray-900">{props.contact.name}</h3>
+          <h3 class="font-semibold text-foreground">{props.contact.name}</h3>
           <Show when={props.contact.organization_id}>
-            <p class="text-sm text-gray-500">
+            <p class="text-sm text-muted-foreground">
               Org: {props.contact.organization_id}
             </p>
           </Show>
@@ -36,13 +36,13 @@ export const LeadCard: Component<LeadCardProps> = (props) => {
 
       <div class="space-y-1 mb-4">
         <p class="text-sm">
-          <span class="font-medium text-gray-700">DNI:</span>{" "}
-          <span class="text-gray-900">{props.contact.dni}</span>
+          <span class="font-medium text-muted-foreground">DNI:</span>{" "}
+          <span class="text-foreground">{props.contact.dni}</span>
         </p>
         <Show when={props.contact.phone_primary}>
           <p class="text-sm">
-            <span class="font-medium text-gray-700">Tel:</span>{" "}
-            <span class="text-gray-900">{props.contact.phone_primary}</span>
+            <span class="font-medium text-muted-foreground">Tel:</span>{" "}
+            <span class="text-foreground">{props.contact.phone_primary}</span>
           </p>
         </Show>
       </div>

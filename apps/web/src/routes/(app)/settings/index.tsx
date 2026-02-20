@@ -11,6 +11,7 @@ import {
 } from "~/components/layout/page";
 import { LoginRetriesCard } from "~/components/settings/login-retries-card";
 import { Button } from "~/components/ui/button";
+import { Checkbox } from "~/components/ui/checkbox";
 import { Input } from "~/components/ui/input";
 import { getErrorMessage } from "~/lib/errors";
 import { runOptimistic } from "~/lib/ui/run-optimistic";
@@ -103,14 +104,12 @@ export default function SettingsPage() {
                       value={price()}
                       onInput={(e) => setPrice(e.currentTarget.value)}
                     />
-                    <label class="flex items-center gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        checked={isActive()}
-                        onInput={(e) => setIsActive(e.currentTarget.checked)}
-                      />
-                      Activo
-                    </label>
+                    <Checkbox
+                      label="Activo"
+                      checked={isActive()}
+                      onInput={(e) => setIsActive(e.currentTarget.checked)}
+                      class="mt-1"
+                    />
                     <Button type="submit" disabled={savingId() === product.id}>
                       {savingId() === product.id ? "Guardando..." : "Guardar"}
                     </Button>
