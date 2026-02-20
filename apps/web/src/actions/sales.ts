@@ -9,6 +9,7 @@ import {
 } from "~/lib/contracts/guards";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
 import { computeLockExpiry } from "~/server/inventory/domain";
+import { getPendingReviewNotesForSession } from "~/server/sales/pending-review";
 import { salesDocumentService, salesService } from "~/server/shared/context";
 import { repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
@@ -180,11 +181,12 @@ export async function rejectSale(
 
 export async function getPendingReviewNotes(): Promise<PendingReviewNote[]> {
   const session = await requirePermission("sales:review");
-  if (session.role === "superuser") {
-    return repos.chargeNotes.findPendingReviewWithContacts();
-  }
-  return repos.chargeNotes.findPendingReviewWithContactsByBranch(
-    session.branchId,
+  return getPendingReviewNotesForSession(
+    { repos },
+    {
+      role: session.role,
+      branchId: session.branchId,
+    },
   );
 }
 
