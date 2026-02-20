@@ -19,10 +19,6 @@ describe("pending review query performance", () => {
   let actionCtx: TestDbContext | null = null;
   let componentCtx: TestDbContext | null = null;
 
-  // CodSpeed's AnalysisRunner calls beforeAll/afterAll but ignores bench setup/teardown.
-  // The standard NodeBenchmarkRunner calls bench setup/teardown but ignores beforeAll/afterAll.
-  // Both sets are needed so each runner can initialize the database contexts.
-
   beforeAll(async () => {
     actionCtx = await createIsolatedTestDb("pending-action-bench");
     await seedPendingReviewWorkload(actionCtx, workload);
@@ -47,71 +43,27 @@ describe("pending review query performance", () => {
     }
   });
 
-  bench(
-    "action path: executive loads branch-scoped queue",
-    async () => {
-      if (!actionCtx) {
-        throw new Error("action benchmark context is not initialized");
-      }
-      const rows = await getPendingReviewNotesForSession(
-        { repos: actionCtx.repos },
-        { role: "executive", branchId: 1 },
+  bench("action path: executive loads branch-scoped queue", async () => {
+    const rows = await getPendingReviewNotesForSession(
+      { repos: actionCtx!.repos },
+      { role: "executive", branchId: 1 },
+    );
+    if (rows.length !== workload.expectedBranchOne) {
+      throw new Error(
+        `expected ${workload.expectedBranchOne} rows, got ${rows.length}`,
       );
-      if (rows.length !== workload.expectedBranchOne) {
-        throw new Error(
-          `expected ${workload.expectedBranchOne} rows, got ${rows.length}`,
-        );
-      }
-    },
-    {
-      throws: true,
-      setup: async () => {
-        actionCtx = await createIsolatedTestDb("pending-action-bench");
-        await seedPendingReviewWorkload(actionCtx, workload);
-        assertPendingReviewRows(
-          await readPendingReviewRows(actionCtx),
-          workload,
-        );
-      },
-      teardown: async () => {
-        if (!actionCtx) return;
-        await cleanupTestDb(actionCtx);
-        actionCtx = null;
-      },
-    },
-  );
+    }
+  });
 
-  bench(
-    "component path: branch query",
-    async () => {
-      if (!componentCtx) {
-        throw new Error("component benchmark context is not initialized");
-      }
-      const rows =
-        await componentCtx.repos.chargeNotes.findPendingReviewWithContactsByBranch(
-          1,
-        );
-      if (rows.length !== workload.expectedBranchOne) {
-        throw new Error(
-          `expected ${workload.expectedBranchOne} rows, got ${rows.length}`,
-        );
-      }
-    },
-    {
-      throws: true,
-      setup: async () => {
-        componentCtx = await createIsolatedTestDb("pending-component-bench");
-        await seedPendingReviewWorkload(componentCtx, workload);
-        assertPendingReviewRows(
-          await readPendingReviewRows(componentCtx),
-          workload,
-        );
-      },
-      teardown: async () => {
-        if (!componentCtx) return;
-        await cleanupTestDb(componentCtx);
-        componentCtx = null;
-      },
-    },
-  );
+  bench("component path: branch query", async () => {
+    const rows =
+      await componentCtx!.repos.chargeNotes.findPendingReviewWithContactsByBranch(
+        1,
+      );
+    if (rows.length !== workload.expectedBranchOne) {
+      throw new Error(
+        `expected ${workload.expectedBranchOne} rows, got ${rows.length}`,
+      );
+    }
+  });
 });
