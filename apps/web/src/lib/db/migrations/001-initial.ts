@@ -1,6 +1,9 @@
 import type { Kysely } from "kysely";
+import { sql } from "kysely";
 
 export async function up<T>(db: Kysely<T>): Promise<void> {
+  const now = Date.now();
+
   await db.schema
     .createTable("branches")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
@@ -368,6 +371,37 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
+    .createTable("audit_action_policies")
+    .addColumn("action", "varchar(120)", (col) => col.primaryKey())
+    .addColumn("risk_level", "varchar(10)", (col) => col.notNull())
+    .addColumn("is_active", "integer", (col) => col.notNull().defaultTo(1))
+    .addColumn("is_protected", "integer", (col) => col.notNull().defaultTo(0))
+    .addColumn("updated_by_user_id", "integer", (col) =>
+      col.references("users.id"),
+    )
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await sql`
+    INSERT INTO audit_action_policies (
+      action,
+      risk_level,
+      is_active,
+      is_protected,
+      updated_by_user_id,
+      created_at,
+      updated_at
+    ) VALUES
+      ('all_sessions_revoked', 'high', 1, 1, NULL, ${now}, ${now}),
+      ('session_revoked_by_admin', 'high', 1, 1, NULL, ${now}, ${now}),
+      ('product_updated', 'high', 1, 1, NULL, ${now}, ${now}),
+      ('charge_note_approved', 'high', 1, 1, NULL, ${now}, ${now}),
+      ('charge_note_rejected', 'high', 1, 1, NULL, ${now}, ${now}),
+      ('quota_allocated', 'high', 1, 1, NULL, ${now}, ${now})
+  `.execute(db);
+
+  await db.schema
     .createTable("passkeys")
     .addColumn("id", "varchar(512)", (col) => col.primaryKey())
     .addColumn("user_id", "integer", (col) =>
@@ -543,9 +577,29 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     .columns(["user_id", "status"])
     .execute();
   await db.schema
-    .createIndex("idx_audit_entity")
+    .createIndex("idx_audit_created_at")
     .on("audit_logs")
-    .columns(["entity_type", "entity_id"])
+    .column("created_at")
+    .execute();
+  await db.schema
+    .createIndex("idx_audit_action_created")
+    .on("audit_logs")
+    .columns(["action", "created_at"])
+    .execute();
+  await db.schema
+    .createIndex("idx_audit_user_created")
+    .on("audit_logs")
+    .columns(["user_id", "created_at"])
+    .execute();
+  await db.schema
+    .createIndex("idx_audit_entity_created")
+    .on("audit_logs")
+    .columns(["entity_type", "entity_id", "created_at"])
+    .execute();
+  await db.schema
+    .createIndex("idx_audit_policy_risk_active")
+    .on("audit_action_policies")
+    .columns(["risk_level", "is_active"])
     .execute();
   await db.schema
     .createIndex("idx_user_sessions_user_id")
