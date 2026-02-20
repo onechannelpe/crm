@@ -43,6 +43,29 @@ function assertStatus(
   throw new Error("status is invalid");
 }
 
+function resolveBoundedPositiveInt(params: {
+  value: number | undefined;
+  fallback: number;
+  name: string;
+  max: number;
+  maxMessage: string;
+}): number {
+  const resolved = assertPositiveInt(
+    params.value ?? params.fallback,
+    params.name,
+  );
+  if (resolved > params.max) {
+    throw new Error(params.maxMessage);
+  }
+  return resolved;
+}
+
+function trimOrUndefined(value: string | undefined): string | undefined {
+  const trimmed = value?.trim();
+  if (!trimmed) return undefined;
+  return trimmed;
+}
+
 export async function getObservabilitySnapshot(params?: {
   windowMinutes?: number;
   limit?: number;
@@ -51,22 +74,25 @@ export async function getObservabilitySnapshot(params?: {
 }): Promise<ObservabilitySnapshot> {
   await requirePermission("audit:read");
 
-  const windowMinutesRaw = params?.windowMinutes ?? 60;
-  const windowMinutes = assertPositiveInt(windowMinutesRaw, "windowMinutes");
-  if (windowMinutes > 24 * 60) {
-    throw new Error("windowMinutes must be <= 1440");
-  }
-
-  const limitRaw = params?.limit ?? 50;
-  const limit = assertPositiveInt(limitRaw, "limit");
-  if (limit > 200) {
-    throw new Error("limit must be <= 200");
-  }
+  const windowMinutes = resolveBoundedPositiveInt({
+    value: params?.windowMinutes,
+    fallback: 60,
+    name: "windowMinutes",
+    max: 24 * 60,
+    maxMessage: "windowMinutes must be <= 1440",
+  });
+  const limit = resolveBoundedPositiveInt({
+    value: params?.limit,
+    fallback: 50,
+    name: "limit",
+    max: 200,
+    maxMessage: "limit must be <= 200",
+  });
 
   const now = Date.now();
   const fromInclusive = now - windowMinutes * 60 * 1000;
   const status = assertStatus(params?.status);
-  const actionName = params?.actionName?.trim() || undefined;
+  const actionName = trimOrUndefined(params?.actionName);
 
   const [summary, recent] = await Promise.all([
     observabilityService.summarizeByAction({

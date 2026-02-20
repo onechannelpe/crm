@@ -171,6 +171,67 @@ export async function seedIfEmpty() {
     .onConflict((oc) => oc.doNothing())
     .execute();
 
+  await db
+    .insertInto("audit_action_policies")
+    .values([
+      {
+        action: "all_sessions_revoked",
+        risk_level: "high",
+        is_active: 1,
+        is_protected: 1,
+        updated_by_user_id: null,
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        action: "session_revoked_by_admin",
+        risk_level: "high",
+        is_active: 1,
+        is_protected: 1,
+        updated_by_user_id: null,
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        action: "product_updated",
+        risk_level: "high",
+        is_active: 1,
+        is_protected: 1,
+        updated_by_user_id: null,
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        action: "charge_note_approved",
+        risk_level: "high",
+        is_active: 1,
+        is_protected: 1,
+        updated_by_user_id: null,
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        action: "charge_note_rejected",
+        risk_level: "high",
+        is_active: 1,
+        is_protected: 1,
+        updated_by_user_id: null,
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        action: "quota_allocated",
+        risk_level: "high",
+        is_active: 1,
+        is_protected: 1,
+        updated_by_user_id: null,
+        created_at: now,
+        updated_at: now,
+      },
+    ])
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
   // Organizations
   await db
     .insertInto("organizations")
