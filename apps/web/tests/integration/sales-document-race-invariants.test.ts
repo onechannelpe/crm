@@ -137,6 +137,16 @@ describe("sales document race invariants", () => {
     const service = createSalesDocumentService(ctx.repos, blobStore);
 
     await expect(service.runRetentionSweep(null)).resolves.toBe(1);
+    await expect(service.runRetentionSweep(null)).resolves.toBe(0);
+    await expect(service.runRetentionSweep(null)).resolves.toBe(0);
+
+    const queuedBeforeProcessing = await ctx.db
+      .selectFrom("sales_document_gc")
+      .select((eb) => eb.fn.countAll().as("count"))
+      .where("blob_sha256", "=", FIXTURE_SHA256)
+      .executeTakeFirstOrThrow();
+    expect(Number(queuedBeforeProcessing.count)).toBe(1);
+
     const processor = createDocumentJobProcessor(ctx.repos, blobStore);
     const processed = await processor.runBatch(20, 1_000);
     expect(processed).toBe(0);
@@ -146,12 +156,98 @@ describe("sales document race invariants", () => {
     expect(liveBlob?.ref_count).toBe(0);
     expect(files.has(FIXTURE_STORAGE_KEY)).toBe(true);
 
-    const pendingDeleteJobs = await ctx.db
-      .selectFrom("sales_document_jobs")
+    const gcRows = await ctx.db
+      .selectFrom("sales_document_gc")
       .selectAll()
-      .where("operation", "=", "delete_blob")
-      .where("status", "=", "pending")
+      .where("blob_sha256", "=", FIXTURE_SHA256)
       .execute();
-    expect(pendingDeleteJobs.length).toBeGreaterThan(0);
+    expect(gcRows.length).toBe(1);
+    expect(gcRows[0]?.state).toBe("retry_wait");
+  });
+
+  it("keeps blob gc non-terminal when blob is referenced again", async () => {
+    const noteA = await ctx.repos.chargeNotes.create(1, 1);
+    const docA = await ctx.repos.documents.create({
+      charge_note_id: noteA,
+      original_name: "dni.pdf",
+      mime_type: "application/pdf",
+      size_bytes: PDF_BYTES.byteLength,
+      sha256: FIXTURE_SHA256,
+      storage_key: FIXTURE_STORAGE_KEY,
+      created_by_user_id: 1,
+    });
+    await ctx.repos.documents.markSoftDeleted(docA.id, 1);
+    await ctx.db
+      .updateTable("sales_documents")
+      .set({ deleted_at: 0 })
+      .where("id", "=", docA.id)
+      .execute();
+
+    await expect(ctx.documents.runRetentionSweep(null)).resolves.toBe(1);
+
+    const noteB = await ctx.repos.chargeNotes.create(1, 1);
+    await ctx.repos.documents.create({
+      charge_note_id: noteB,
+      original_name: "dni.pdf",
+      mime_type: "application/pdf",
+      size_bytes: PDF_BYTES.byteLength,
+      sha256: FIXTURE_SHA256,
+      storage_key: FIXTURE_STORAGE_KEY,
+      created_by_user_id: 1,
+    });
+
+    const processor = createDocumentJobProcessor(ctx.repos, {
+      prepare() {
+        return {
+          sha256: FIXTURE_SHA256,
+          storageKey: FIXTURE_STORAGE_KEY,
+          absolutePath: "/tmp/test.blob",
+          sizeBytes: PDF_BYTES.byteLength,
+        };
+      },
+      async put() {
+        return {
+          sha256: FIXTURE_SHA256,
+          storageKey: FIXTURE_STORAGE_KEY,
+          absolutePath: "/tmp/test.blob",
+          sizeBytes: PDF_BYTES.byteLength,
+          created: false,
+        };
+      },
+      async deleteByStorageKey() {},
+      async existsByStorageKey() {
+        return true;
+      },
+    });
+    const processed = await processor.runDeleteJobs(20, 1_000);
+    expect(processed).toBe(0);
+
+    const gcAfterReferencedRun = await ctx.db
+      .selectFrom("sales_document_gc")
+      .selectAll()
+      .where("blob_sha256", "=", FIXTURE_SHA256)
+      .executeTakeFirstOrThrow();
+    expect(gcAfterReferencedRun.state).toBe("idle");
+
+    const docB = await ctx.db
+      .selectFrom("sales_documents")
+      .select(["id"])
+      .where("charge_note_id", "=", noteB)
+      .where("status", "=", "available")
+      .executeTakeFirstOrThrow();
+    await ctx.repos.documents.markSoftDeleted(docB.id, 1);
+    await ctx.db
+      .updateTable("sales_documents")
+      .set({ deleted_at: 0 })
+      .where("id", "=", docB.id)
+      .execute();
+
+    await expect(ctx.documents.runRetentionSweep(null)).resolves.toBe(1);
+    const gcAfterSecondSweep = await ctx.db
+      .selectFrom("sales_document_gc")
+      .selectAll()
+      .where("blob_sha256", "=", FIXTURE_SHA256)
+      .executeTakeFirstOrThrow();
+    expect(gcAfterSecondSweep.state).toBe("queued");
   });
 });

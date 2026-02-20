@@ -188,7 +188,7 @@ export function createSalesDocumentService(
           actorUserId,
         );
         if (released?.shouldDeleteBlob) {
-          await repos.documentJobs.enqueueDeleteBlob({
+          await repos.documentJobs.requestBlobGc({
             blob_sha256: released.blobSha256,
             storage_key: released.storageKey,
           });
@@ -231,7 +231,7 @@ export function createSalesDocumentService(
       const unreferenced = await repos.documents.listUnreferencedBlobs(200);
       await Promise.all(
         unreferenced.map(async (blob) =>
-          repos.documentJobs.enqueueDeleteBlob({
+          repos.documentJobs.requestBlobGc({
             blob_sha256: blob.sha256,
             storage_key: blob.storage_key,
           }),
@@ -245,21 +245,18 @@ export function createSalesDocumentService(
       batchSize: number,
       actorUserId: number | null = null,
     ) {
-      let afterId = 0;
-      let quarantinedCount = 0;
-
-      // eslint-disable-next-line no-constant-condition
-      while (true) {
-        // eslint-disable-next-line no-await-in-loop
+      const processBatch = async (
+        afterId: number,
+        quarantinedCount: number,
+      ): Promise<number> => {
         const batch = await repos.documents.listAvailableForIntegrityScan(
           afterId,
           batchSize,
         );
         if (batch.length < 1) {
-          break;
+          return quarantinedCount;
         }
 
-        // eslint-disable-next-line no-await-in-loop
         const quarantined = await Promise.all(
           batch.map(async (document) => {
             const exists = await blobStore.existsByStorageKey(
@@ -274,16 +271,17 @@ export function createSalesDocumentService(
             return false;
           }),
         );
-        quarantinedCount += quarantined.filter(Boolean).length;
+        const nextCount = quarantinedCount + quarantined.filter(Boolean).length;
 
         const last = batch[batch.length - 1];
         if (!last) {
-          break;
+          return nextCount;
         }
-        afterId = last.id;
-      }
 
-      return quarantinedCount;
+        return processBatch(last.id, nextCount);
+      };
+
+      return processBatch(0, 0);
     },
   };
 }

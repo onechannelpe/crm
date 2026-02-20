@@ -15,12 +15,11 @@ export function createDocumentJobsRepo(db: Kysely<Database>) {
     }) {
       const now = Date.now();
       return db
-        .insertInto("sales_document_jobs")
+        .insertInto("sales_document_upload_jobs")
         .values({
           document_id: values.document_id,
           blob_sha256: values.blob_sha256,
           storage_key: values.storage_key,
-          operation: "persist_upload",
           payload_bytes: values.payload_bytes,
           status: "pending",
           attempt_count: 0,
@@ -34,17 +33,15 @@ export function createDocumentJobsRepo(db: Kysely<Database>) {
         .executeTakeFirstOrThrow();
     },
 
-    enqueueDeleteBlob(values: { blob_sha256: string; storage_key: string }) {
+    async requestBlobGc(values: { blob_sha256: string; storage_key: string }) {
       const now = Date.now();
-      return db
-        .insertInto("sales_document_jobs")
+      await db
+        .insertInto("sales_document_gc")
         .values({
-          document_id: null,
           blob_sha256: values.blob_sha256,
           storage_key: values.storage_key,
-          operation: "delete_blob",
-          payload_bytes: null,
-          status: "pending",
+          state: "queued",
+          generation: 0,
           attempt_count: 0,
           max_attempts: DEFAULT_MAX_ATTEMPTS,
           available_at: now,
@@ -53,15 +50,32 @@ export function createDocumentJobsRepo(db: Kysely<Database>) {
           created_at: now,
           updated_at: now,
         })
+        .onConflict((oc) => oc.column("blob_sha256").doNothing())
+        .executeTakeFirstOrThrow();
+
+      await db
+        .updateTable("sales_document_gc")
+        .set({
+          storage_key: values.storage_key,
+          state: "queued",
+          available_at: now,
+          lease_until: null,
+          last_error: null,
+          updated_at: now,
+          attempt_count: 0,
+          max_attempts: DEFAULT_MAX_ATTEMPTS,
+        })
+        .where("blob_sha256", "=", values.blob_sha256)
+        .where("state", "in", ["idle", "retry_wait", "dead"])
         .executeTakeFirstOrThrow();
     },
 
-    async leasePending(limit: number, leaseMs: number) {
+    async leasePendingUploadJobs(limit: number, leaseMs: number) {
       const now = Date.now();
       const leaseUntil = now + leaseMs;
 
       const pending = await db
-        .selectFrom("sales_document_jobs")
+        .selectFrom("sales_document_upload_jobs")
         .selectAll()
         .where((eb) =>
           eb.or([
@@ -81,7 +95,7 @@ export function createDocumentJobsRepo(db: Kysely<Database>) {
       const leased = await Promise.all(
         pending.map(async (job) => {
           const updated = await db
-            .updateTable("sales_document_jobs")
+            .updateTable("sales_document_upload_jobs")
             .set({
               status: "leased",
               lease_until: leaseUntil,
@@ -107,10 +121,66 @@ export function createDocumentJobsRepo(db: Kysely<Database>) {
       );
     },
 
-    markCompleted(jobId: number) {
+    async leaseBlobGc(limit: number, leaseMs: number) {
+      const now = Date.now();
+      const leaseUntil = now + leaseMs;
+
+      const pending = await db
+        .selectFrom("sales_document_gc")
+        .selectAll()
+        .where((eb) =>
+          eb.or([
+            eb.and([
+              eb("state", "in", ["queued", "retry_wait"]),
+              eb("available_at", "<=", now),
+            ]),
+            eb.and([
+              eb("state", "=", "leased"),
+              eb("lease_until", "is not", null),
+              eb("lease_until", "<", now),
+            ]),
+          ]),
+        )
+        .orderBy("available_at", "asc")
+        .limit(limit)
+        .execute();
+
+      const leased = await Promise.all(
+        pending.map(async (job) => {
+          const updated = await db
+            .updateTable("sales_document_gc")
+            .set({
+              state: "leased",
+              generation: job.generation + 1,
+              lease_until: leaseUntil,
+              updated_at: now,
+            })
+            .where("blob_sha256", "=", job.blob_sha256)
+            .where("generation", "=", job.generation)
+            .where("updated_at", "=", job.updated_at)
+            .executeTakeFirst();
+          if (Number(updated.numUpdatedRows ?? 0) < 1) {
+            return null;
+          }
+          return {
+            ...job,
+            state: "leased" as const,
+            generation: job.generation + 1,
+            lease_until: leaseUntil,
+            updated_at: now,
+          };
+        }),
+      );
+
+      return leased.filter(
+        (job): job is NonNullable<typeof job> => job !== null,
+      );
+    },
+
+    markUploadCompleted(jobId: number) {
       const now = Date.now();
       return db
-        .updateTable("sales_document_jobs")
+        .updateTable("sales_document_upload_jobs")
         .set({
           status: "completed",
           lease_until: null,
@@ -120,10 +190,42 @@ export function createDocumentJobsRepo(db: Kysely<Database>) {
         .executeTakeFirstOrThrow();
     },
 
-    async markFailedOrRetry(jobId: number, message: string) {
+    markBlobGcDone(blobSha256: string, generation: number) {
+      const now = Date.now();
+      return db
+        .updateTable("sales_document_gc")
+        .set({
+          state: "done",
+          lease_until: null,
+          last_error: null,
+          updated_at: now,
+        })
+        .where("blob_sha256", "=", blobSha256)
+        .where("state", "=", "leased")
+        .where("generation", "=", generation)
+        .executeTakeFirstOrThrow();
+    },
+
+    markBlobGcIdle(blobSha256: string, generation: number) {
+      const now = Date.now();
+      return db
+        .updateTable("sales_document_gc")
+        .set({
+          state: "idle",
+          lease_until: null,
+          last_error: null,
+          updated_at: now,
+        })
+        .where("blob_sha256", "=", blobSha256)
+        .where("state", "=", "leased")
+        .where("generation", "=", generation)
+        .executeTakeFirstOrThrow();
+    },
+
+    async markUploadFailedOrRetry(jobId: number, message: string) {
       const now = Date.now();
       const existing = await db
-        .selectFrom("sales_document_jobs")
+        .selectFrom("sales_document_upload_jobs")
         .select(["id", "attempt_count", "max_attempts"])
         .where("id", "=", jobId)
         .executeTakeFirst();
@@ -134,7 +236,7 @@ export function createDocumentJobsRepo(db: Kysely<Database>) {
       const attempts = existing.attempt_count + 1;
       const exhausted = attempts >= existing.max_attempts;
       await db
-        .updateTable("sales_document_jobs")
+        .updateTable("sales_document_upload_jobs")
         .set({
           status: exhausted ? "failed" : "pending",
           attempt_count: attempts,
@@ -144,6 +246,39 @@ export function createDocumentJobsRepo(db: Kysely<Database>) {
           updated_at: now,
         })
         .where("id", "=", jobId)
+        .executeTakeFirstOrThrow();
+    },
+
+    async markBlobGcRetryOrDead(
+      blobSha256: string,
+      generation: number,
+      message: string,
+    ) {
+      const now = Date.now();
+      const existing = await db
+        .selectFrom("sales_document_gc")
+        .select(["blob_sha256", "attempt_count", "max_attempts", "generation"])
+        .where("blob_sha256", "=", blobSha256)
+        .executeTakeFirst();
+      if (!existing || existing.generation !== generation) {
+        return;
+      }
+
+      const attempts = existing.attempt_count + 1;
+      const exhausted = attempts >= existing.max_attempts;
+      await db
+        .updateTable("sales_document_gc")
+        .set({
+          state: exhausted ? "dead" : "retry_wait",
+          attempt_count: attempts,
+          available_at: exhausted ? now : now + RETRY_BACKOFF_MS,
+          lease_until: null,
+          last_error: message,
+          updated_at: now,
+        })
+        .where("blob_sha256", "=", blobSha256)
+        .where("state", "=", "leased")
+        .where("generation", "=", generation)
         .executeTakeFirstOrThrow();
     },
   };

@@ -239,17 +239,20 @@ export async function drainDocumentJobs(
   ctx: TestDbContext,
   maxLoops = 10,
 ): Promise<number> {
-  let processedTotal = 0;
-  for (let i = 0; i < maxLoops; i += 1) {
-    // Use short leases for deterministic test execution.
-    // eslint-disable-next-line no-await-in-loop
+  const drain = async (remainingLoops: number, processedTotal: number) => {
+    if (remainingLoops < 1) {
+      return processedTotal;
+    }
+
     const processed = await ctx.documentJobs.runBatch(50, 1_000);
     if (processed < 1) {
-      break;
+      return processedTotal;
     }
-    processedTotal += processed;
-  }
-  return processedTotal;
+
+    return drain(remainingLoops - 1, processedTotal + processed);
+  };
+
+  return drain(maxLoops, 0);
 }
 
 export async function cleanupTestDb(ctx: TestDbContext): Promise<void> {

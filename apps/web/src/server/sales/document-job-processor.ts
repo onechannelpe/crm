@@ -37,51 +37,72 @@ export function createDocumentJobProcessor(
   repos: Repositories,
   blobStore: DocumentBlobStore,
 ) {
-  async function processLeasedJob(
+  async function processUploadJob(
     job: Awaited<
-      ReturnType<Repositories["documentJobs"]["leasePending"]>
+      ReturnType<Repositories["documentJobs"]["leasePendingUploadJobs"]>
     >[number],
   ) {
     try {
-      if (job.operation === "persist_upload") {
-        const payloadBytes = toUint8Array(job.payload_bytes);
-        if (!job.document_id || !payloadBytes) {
-          throw new Error("Invalid persist_upload job payload");
-        }
-        await blobStore.put(payloadBytes);
-        const finalized = await repos.documents.markUploadedAvailable(
-          job.document_id,
-          null,
-        );
-        if (!finalized) {
-          throw new Error("Could not finalize pending upload");
-        }
-        await repos.documentJobs.markCompleted(job.id);
-        return true;
+      const payloadBytes = toUint8Array(job.payload_bytes);
+      if (!payloadBytes) {
+        throw new Error("Invalid persist_upload job payload");
       }
-
-      await repos.documents.deleteBlobIfUnreferencedWithFile(
-        job.blob_sha256,
-        async (storageKey) => blobStore.deleteByStorageKey(storageKey),
+      await blobStore.put(payloadBytes);
+      const finalized = await repos.documents.markUploadedAvailable(
+        job.document_id,
+        null,
       );
-      await repos.documentJobs.markCompleted(job.id);
+      if (!finalized) {
+        throw new Error("Could not finalize pending upload");
+      }
+      await repos.documentJobs.markUploadCompleted(job.id);
       return true;
     } catch (error) {
       try {
-        if (job.document_id) {
-          await repos.documents.markUploadFailedAndRelease(
-            job.document_id,
-            null,
-          );
-        }
+        await repos.documents.markUploadFailedAndRelease(job.document_id, null);
       } catch (releaseError) {
         if (!isSqliteBusy(releaseError)) {
           throw releaseError;
         }
       }
       try {
-        await repos.documentJobs.markFailedOrRetry(
+        await repos.documentJobs.markUploadFailedOrRetry(
           job.id,
+          toErrorMessage(error),
+        );
+      } catch (retryError) {
+        if (!isSqliteBusy(retryError)) {
+          throw retryError;
+        }
+      }
+      return false;
+    }
+  }
+
+  async function processBlobGcJob(
+    job: Awaited<
+      ReturnType<Repositories["documentJobs"]["leaseBlobGc"]>
+    >[number],
+  ) {
+    try {
+      const deleted = await repos.documents.deleteBlobIfUnreferencedWithFile(
+        job.blob_sha256,
+        async (storageKey) => blobStore.deleteByStorageKey(storageKey),
+      );
+      if (!deleted) {
+        await repos.documentJobs.markBlobGcIdle(
+          job.blob_sha256,
+          job.generation,
+        );
+        return false;
+      }
+      await repos.documentJobs.markBlobGcDone(job.blob_sha256, job.generation);
+      return true;
+    } catch (error) {
+      try {
+        await repos.documentJobs.markBlobGcRetryOrDead(
+          job.blob_sha256,
+          job.generation,
           toErrorMessage(error),
         );
       } catch (retryError) {
@@ -95,9 +116,22 @@ export function createDocumentJobProcessor(
 
   return {
     async runBatch(limit: number, leaseMs: number) {
-      const leased = await repos.documentJobs.leasePending(limit, leaseMs);
+      const [leasedUploads, leasedBlobGc] = await Promise.all([
+        repos.documentJobs.leasePendingUploadJobs(limit, leaseMs),
+        repos.documentJobs.leaseBlobGc(limit, leaseMs),
+      ]);
+      const [uploadSettled, deleteSettled] = await Promise.all([
+        Promise.all(leasedUploads.map((job) => processUploadJob(job))),
+        Promise.all(leasedBlobGc.map((job) => processBlobGcJob(job))),
+      ]);
+      const settled = [...uploadSettled, ...deleteSettled];
+      return settled.filter(Boolean).length;
+    },
+
+    async runDeleteJobs(limit: number, leaseMs: number) {
+      const leasedBlobGc = await repos.documentJobs.leaseBlobGc(limit, leaseMs);
       const settled = await Promise.all(
-        leased.map((job) => processLeasedJob(job)),
+        leasedBlobGc.map((job) => processBlobGcJob(job)),
       );
       return settled.filter(Boolean).length;
     },
