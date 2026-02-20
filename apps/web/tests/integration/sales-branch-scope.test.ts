@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { uploadTestPdf } from "../support/document-fixtures";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -39,13 +40,7 @@ describe("sales branch scoping", () => {
     await ctx.repos.chargeNotes.updateStatus(noteLima, "pending_review");
 
     await ctx.repos.chargeNoteItems.create(noteLima, 1, 1);
-    await ctx.repos.documents.create({
-      charge_note_id: noteLima,
-      filename: "dni.pdf",
-      filepath: `uploads/${noteLima}/dni.pdf`,
-      mimetype: "application/pdf",
-      size: 120_000,
-    });
+    await uploadTestPdf(ctx, noteLima);
 
     await ctx.db
       .insertInto("inventory_items")

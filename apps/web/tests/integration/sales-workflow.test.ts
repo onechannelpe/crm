@@ -1,7 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { uploadTestPdf } from "../support/document-fixtures";
 import type { TestDbContext } from "../support/test-db";
 import { cleanupTestDb, createIsolatedTestDb } from "../support/test-db";
+
+async function uploadDocument(ctx: TestDbContext, noteId: number) {
+  return uploadTestPdf(ctx, noteId);
+}
 
 async function prepareSubmittableNote(
   ctx: TestDbContext,
@@ -13,13 +18,7 @@ async function prepareSubmittableNote(
   }
 
   await ctx.repos.chargeNoteItems.create(noteId, 1, 1);
-  await ctx.repos.documents.create({
-    charge_note_id: noteId,
-    filename: "dni.pdf",
-    filepath: `uploads/${noteId}/dni.pdf`,
-    mimetype: "application/pdf",
-    size: 120_000,
-  });
+  await uploadDocument(ctx, noteId);
 
   await ctx.db
     .insertInto("inventory_items")
@@ -78,13 +77,7 @@ describe("sales workflow invariants", () => {
   it("rejects submit when inventory lock is missing", async () => {
     const noteId = await ctx.repos.chargeNotes.create(1, 1);
     await ctx.repos.chargeNoteItems.create(noteId, 1, 1);
-    await ctx.repos.documents.create({
-      charge_note_id: noteId,
-      filename: "dni.pdf",
-      filepath: `uploads/${noteId}/dni.pdf`,
-      mimetype: "application/pdf",
-      size: 120_000,
-    });
+    await uploadDocument(ctx, noteId);
     const result = await ctx.sales.submit(noteId, 1);
     expect(result.ok).toBe(false);
     if (result.ok) {
@@ -92,6 +85,22 @@ describe("sales workflow invariants", () => {
     }
     expect(result.error).toBe(
       "An active inventory lock is required before submission",
+    );
+  });
+
+  it("rejects submit after the only document is soft deleted", async () => {
+    const noteId = await ctx.repos.chargeNotes.create(1, 1);
+    await ctx.repos.chargeNoteItems.create(noteId, 1, 1);
+    const documentId = await uploadDocument(ctx, noteId);
+    await ctx.repos.documents.markSoftDeleted(documentId, 1);
+
+    const result = await ctx.sales.submit(noteId, 1);
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error("Expected submit without active documents to fail");
+    }
+    expect(result.error).toBe(
+      "At least one document is required before submission",
     );
   });
 

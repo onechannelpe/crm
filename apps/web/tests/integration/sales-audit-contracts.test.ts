@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { uploadTestPdf } from "../support/document-fixtures";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -9,13 +10,7 @@ import {
 async function createSubmittableNote(ctx: TestDbContext) {
   const noteId = await ctx.repos.chargeNotes.create(1, 1);
   await ctx.repos.chargeNoteItems.create(noteId, 1, 1);
-  await ctx.repos.documents.create({
-    charge_note_id: noteId,
-    filename: "dni.pdf",
-    filepath: `uploads/${noteId}/dni.pdf`,
-    mimetype: "application/pdf",
-    size: 120_000,
-  });
+  await uploadTestPdf(ctx, noteId);
   await ctx.db
     .insertInto("inventory_items")
     .values({
