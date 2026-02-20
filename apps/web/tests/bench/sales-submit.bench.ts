@@ -47,9 +47,8 @@ describe("sales workflow performance", () => {
         })
         .execute();
 
-      // oxlint-disable-next-line eslint(no-await-in-loop)
       const reserved =
-        await benchCtx.repos.inventory.reserveIfAvailable(inventoryId);
+        await benchCtx.repos.inventory.reserveIfAvailable(inventoryId); // oxlint-disable-line no-await-in-loop
       if (!reserved) {
         throw new Error("expected seeded inventory to be reserved");
       }
