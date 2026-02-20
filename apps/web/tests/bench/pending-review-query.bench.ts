@@ -12,7 +12,7 @@ import {
   createPendingReviewWorkload,
   readPendingReviewRows,
   seedPendingReviewWorkload,
-} from "./workloads/pending-review-workload";
+} from "../support/pending-review-workload";
 
 describe("pending review query performance", () => {
   const workload = createPendingReviewWorkload(1_200);

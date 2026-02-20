@@ -10,7 +10,7 @@ export default defineConfig({
     benchmark: {
       include: ["tests/**/*.bench.ts"],
     },
-    runner: "./tests/perf/runner.ts",
+    runner: "./tests/bench/runner.ts",
     environment: "node",
     fileParallelism: false,
     alias: {
