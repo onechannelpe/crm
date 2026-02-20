@@ -44,27 +44,35 @@ describe("pending review query performance", () => {
     }
   });
 
-  bench("action path: executive loads branch-scoped queue", async () => {
-    const rows = await getPendingReviewNotesForSession(
-      { repos: actionCtx!.repos },
-      { role: "executive", branchId: 1 },
-    );
-    if (rows.length !== workload.expectedBranchOne) {
-      throw new Error(
-        `expected ${workload.expectedBranchOne} rows, got ${rows.length}`,
+  bench(
+    "action path: executive loads branch-scoped queue",
+    async () => {
+      const rows = await getPendingReviewNotesForSession(
+        { repos: actionCtx!.repos },
+        { role: "executive", branchId: 1 },
       );
-    }
-  }, fixedIterations(96));
+      if (rows.length !== workload.expectedBranchOne) {
+        throw new Error(
+          `expected ${workload.expectedBranchOne} rows, got ${rows.length}`,
+        );
+      }
+    },
+    fixedIterations(96),
+  );
 
-  bench("component path: branch query", async () => {
-    const rows =
-      await componentCtx!.repos.chargeNotes.findPendingReviewWithContactsByBranch(
-        1,
-      );
-    if (rows.length !== workload.expectedBranchOne) {
-      throw new Error(
-        `expected ${workload.expectedBranchOne} rows, got ${rows.length}`,
-      );
-    }
-  }, fixedIterations(96));
+  bench(
+    "component path: branch query",
+    async () => {
+      const rows =
+        await componentCtx!.repos.chargeNotes.findPendingReviewWithContactsByBranch(
+          1,
+        );
+      if (rows.length !== workload.expectedBranchOne) {
+        throw new Error(
+          `expected ${workload.expectedBranchOne} rows, got ${rows.length}`,
+        );
+      }
+    },
+    fixedIterations(96),
+  );
 });

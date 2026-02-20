@@ -86,7 +86,9 @@ describe("session bulk delete performance", () => {
       await ctx!.repos.sessions.deleteAllForUser(userId);
       const remaining = await ctx!.repos.sessions.listForUser(userId);
       if (remaining.length !== 0) {
-        throw new Error(`expected 0 sessions after delete, got ${remaining.length}`);
+        throw new Error(
+          `expected 0 sessions after delete, got ${remaining.length}`,
+        );
       }
     },
     fixedIterations(SESSION_DELETE_USER_POOL_SIZE),

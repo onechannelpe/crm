@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
+import { hashAuthKey } from "~/lib/auth/password/key-hash";
 import { hashPassword } from "~/lib/auth/password/password";
 import { authenticatePasswordLogin } from "~/lib/auth/password/password-login";
-import { hashAuthKey } from "~/lib/auth/password/key-hash";
 import { buildThrottleKeys } from "~/lib/auth/password/throttle-keys";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
 

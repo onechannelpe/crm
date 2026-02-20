@@ -31,8 +31,7 @@ describe("inventory lock cleanup performance", () => {
       nowValues.push(expiry + 1);
 
       for (let offset = 0; offset < LOCKS_PER_GROUP; offset += 1) {
-        const itemId =
-          INVENTORY_ID_START + group * LOCKS_PER_GROUP + offset;
+        const itemId = INVENTORY_ID_START + group * LOCKS_PER_GROUP + offset;
         // oxlint-disable-next-line eslint(no-await-in-loop)
         const noteId = await benchCtx.repos.chargeNotes.create(1, 1);
         // oxlint-disable-next-line eslint(no-await-in-loop)

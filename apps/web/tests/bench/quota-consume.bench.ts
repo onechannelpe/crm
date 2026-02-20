@@ -55,7 +55,9 @@ describe("quota consume performance", () => {
       // oxlint-disable-next-line eslint(no-await-in-loop)
       const result = await quota.allocate(2, userId, 2, day);
       if (!result.ok) {
-        throw new Error(`expected quota allocation success, got ${result.error}`);
+        throw new Error(
+          `expected quota allocation success, got ${result.error}`,
+        );
       }
     }
   });
