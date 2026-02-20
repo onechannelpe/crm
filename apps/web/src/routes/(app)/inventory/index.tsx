@@ -7,7 +7,7 @@ import {
   AppPageHeader,
   AppPageSection,
 } from "~/components/layout/page";
-import { Badge } from "~/components/ui/badge";
+import { Badge } from "~/components/ui/display/badge";
 import {
   Table,
   TableBody,
@@ -15,7 +15,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "~/components/ui/table";
+} from "~/components/ui/layout/table";
 import { createAppQuery } from "~/lib/ui/create-app-query";
 
 const statusLabels: Record<string, string> = {

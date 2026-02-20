@@ -17,15 +17,17 @@ const ToastContext = createContext<ToastContextValue>();
 
 export function ToastProvider(props: { children: JSX.Element }) {
   const [toasts, setToasts] = createStore<Toast[]>([]);
+  let toastCounter = 0;
 
   const showToast = (type: Toast["type"], message: string) => {
-    const id = Math.random().toString(36);
-    setToasts([...toasts, { id, type, message }]);
+    toastCounter += 1;
+    const id = `toast-${Date.now()}-${toastCounter}`;
+    setToasts((prev) => [...prev, { id, type, message }]);
     setTimeout(() => removeToast(id), 5000);
   };
 
   const removeToast = (id: string) => {
-    setToasts(toasts.filter((t) => t.id !== id));
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
   };
 
   return (

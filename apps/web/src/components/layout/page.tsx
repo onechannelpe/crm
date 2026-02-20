@@ -70,7 +70,7 @@ export function AppInsetPanel(props: BaseProps) {
   return (
     <div
       class={cn(
-        "rounded-2xl border border-border/80 bg-white/75 p-3",
+        "rounded-2xl border border-border/80 bg-surface p-3",
         props.class,
       )}
     >

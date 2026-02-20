@@ -1,8 +1,8 @@
 import { type Component, For, createSignal } from "solid-js";
 
-import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
-import { Select } from "~/components/ui/select";
+import { Button } from "~/components/ui/input/button";
+import { Input } from "~/components/ui/input/input";
+import { Select } from "~/components/ui/input/select";
 
 interface RejectionItem {
   fieldId: string;
@@ -78,18 +78,20 @@ export const RejectionForm: Component<RejectionFormProps> = (props) => {
               (f) => f.id === rejection.fieldId,
             )?.label;
             return (
-              <div class="border border-red-200 rounded-lg p-3 bg-red-50">
+              <div class="rounded-2xl border border-destructive/30 bg-destructive/10 p-3">
                 <div class="flex items-start justify-between mb-2">
-                  <span class="text-sm font-medium text-red-900">
+                  <span class="text-sm font-medium text-destructive">
                     {fieldLabel}
                   </span>
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="sm"
                     onClick={() => removeRejection(index())}
-                    class="text-red-600 hover:text-red-800"
+                    class="h-7 px-2 text-destructive hover:bg-destructive/10"
                   >
                     ×
-                  </button>
+                  </Button>
                 </div>
                 <Input
                   placeholder="Motivo del rechazo"

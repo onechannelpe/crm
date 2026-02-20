@@ -8,9 +8,9 @@ import {
   AppPageHeader,
   AppPageSection,
 } from "~/components/layout/page";
-import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
-import { Select } from "~/components/ui/select";
+import { Button } from "~/components/ui/input/button";
+import { Input } from "~/components/ui/input/input";
+import { Select } from "~/components/ui/input/select";
 import { getErrorMessage } from "~/lib/errors";
 
 const ROLE_OPTIONS = [

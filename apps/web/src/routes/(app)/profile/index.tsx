@@ -14,9 +14,9 @@ import {
   AppPageSection,
 } from "~/components/layout/page";
 import { useSession } from "~/components/providers/session-provider";
-import { Badge } from "~/components/ui/badge";
-import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
+import { Badge } from "~/components/ui/display/badge";
+import { Button } from "~/components/ui/input/button";
+import { Input } from "~/components/ui/input/input";
 import {
   getRoleBadgeVariant,
   getRoleLabel,

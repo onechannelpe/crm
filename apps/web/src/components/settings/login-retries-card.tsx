@@ -2,9 +2,9 @@ import { createSignal, For, Show } from "solid-js";
 
 import { getUserLoginRetryReport } from "~/actions/admin-auth-security";
 import { useToast } from "~/components/feedback/toast-provider";
-import { Button } from "~/components/ui/button";
-import { Card } from "~/components/ui/card";
-import { Input } from "~/components/ui/input";
+import { Button } from "~/components/ui/input/button";
+import { Input } from "~/components/ui/input/input";
+import { Card } from "~/components/ui/layout/card";
 import {
   Table,
   TableBody,
@@ -12,7 +12,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "~/components/ui/table";
+} from "~/components/ui/layout/table";
 import { getErrorMessage } from "~/lib/errors";
 
 function formatDate(value: number): string {

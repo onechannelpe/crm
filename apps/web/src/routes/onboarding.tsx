@@ -7,9 +7,9 @@ import {
   finishTotpEnrollment,
   getMe,
 } from "~/actions/auth";
-import { Button } from "~/components/ui/button";
-import { Card } from "~/components/ui/card";
-import { Input } from "~/components/ui/input";
+import { Button } from "~/components/ui/input/button";
+import { Input } from "~/components/ui/input/input";
+import { Card } from "~/components/ui/layout/card";
 import { getErrorMessage } from "~/lib/errors";
 
 export default function OnboardingPage() {
@@ -96,10 +96,10 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div class="min-h-screen grid items-center justify-center bg-gray-50/50 px-4">
+    <div class="crm-shell grid min-h-screen items-center justify-center px-4">
       <Card class="w-full max-w-xl p-6 space-y-5">
         <div>
-          <h1 class="text-2xl font-semibold text-gray-900">
+          <h1 class="text-2xl font-semibold text-foreground">
             Completa tu perfil
           </h1>
           <p class="mt-1 text-sm text-muted-foreground">
@@ -149,7 +149,7 @@ export default function OnboardingPage() {
               </div>
 
               <Show when={requiresStrongAuth()}>
-                <div class="space-y-3 border rounded p-3">
+                <div class="space-y-3 rounded-2xl border border-border/85 bg-surface p-3">
                   <p class="text-sm font-medium text-foreground">
                     Configuración obligatoria de seguridad (TOTP)
                   </p>
@@ -199,7 +199,7 @@ export default function OnboardingPage() {
                     <p class="text-sm text-muted-foreground">{totpMessage()}</p>
                   </Show>
                   <Show when={recoveryCodes().length > 0}>
-                    <div class="rounded border p-3 space-y-2">
+                    <div class="rounded-xl border border-border/80 bg-card p-3 space-y-2">
                       <p class="text-sm font-medium">
                         Códigos de recuperación (solo una vez)
                       </p>

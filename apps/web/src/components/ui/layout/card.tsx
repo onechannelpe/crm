@@ -11,7 +11,7 @@ export function Card(props: CardProps) {
   return (
     <div
       class={cn(
-        "rounded-3xl border bg-card/85 text-card-foreground shadow-[0_12px_30px_-22px_rgba(35,30,24,0.5)] backdrop-blur",
+        "rounded-3xl border border-border/85 bg-card/90 text-card-foreground shadow-elevation-2 backdrop-blur",
         props.class,
       )}
     >
