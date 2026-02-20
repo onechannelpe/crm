@@ -1,4 +1,4 @@
-import type { TestDbContext } from "../../support/test-db";
+import type { TestDbContext } from "./test-db";
 
 export interface PendingReviewWorkload {
   totalNotes: number;

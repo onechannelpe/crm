@@ -3,16 +3,16 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { getPendingReviewNotesForSession } from "~/server/sales/pending-review";
 
 import {
-  cleanupTestDb,
-  createIsolatedTestDb,
-  type TestDbContext,
-} from "../support/test-db";
-import {
   assertPendingReviewRows,
   createPendingReviewWorkload,
   readPendingReviewRows,
   seedPendingReviewWorkload,
-} from "./workloads/pending-review-workload";
+} from "../support/pending-review-workload";
+import {
+  cleanupTestDb,
+  createIsolatedTestDb,
+  type TestDbContext,
+} from "../support/test-db";
 
 describe("pending review query performance", () => {
   const workload = createPendingReviewWorkload(1_200);

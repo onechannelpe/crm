@@ -36,9 +36,6 @@ export default defineConfig({
         },
       },
     ],
-    benchmark: {
-      include: ["tests/**/*.bench.ts"],
-    },
   },
   resolve: {
     alias: {
