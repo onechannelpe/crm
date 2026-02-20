@@ -52,5 +52,5 @@ jobs:
         uses: CodSpeedHQ/action@v4
         with:
           mode: simulation
-          run: bun x vitest bench --run
+          run: bun x vitest bench --run --project perf
           working-directory: apps/web
