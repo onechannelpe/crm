@@ -48,7 +48,7 @@ export const STATIC_ROUTES: StaticRoute[] = [
   {
     id: "client-search",
     label: "Búsqueda de clientes",
-    href: "/client-search",
+    href: "/client-search/people",
     permission: "client_search:read",
     sidebarGroup: "sales",
   },
@@ -82,4 +82,8 @@ export const DYNAMIC_ROUTE_PERMISSIONS: Array<{
   { pattern: /^\/team\/new$/, permission: "hr:manage" },
   { pattern: /^\/sales\/new$/, permission: "sales:create" },
   { pattern: /^\/sales\/[^/]+\/fix$/, permission: "sales:submit" },
+  {
+    pattern: /^\/client-search\/(people|companies)$/,
+    permission: "client_search:read",
+  },
 ];
