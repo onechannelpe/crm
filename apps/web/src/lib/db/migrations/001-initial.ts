@@ -1,6 +1,11 @@
 import type { Kysely } from "kysely";
 import { sql } from "kysely";
 
+import {
+  DEFAULT_UPLOAD_POLICY,
+  DEFAULT_UPLOAD_POLICY_ALLOWED_TYPES_JSON,
+} from "~/lib/uploads/policy-defaults";
+
 export async function up<T>(db: Kysely<T>): Promise<void> {
   const now = Date.now();
 
@@ -330,17 +335,120 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createTable("document_attachments")
+    .createTable("sales_document_blobs")
+    .addColumn("sha256", "varchar(64)", (col) => col.primaryKey())
+    .addColumn("storage_key", "varchar(255)", (col) => col.notNull())
+    .addColumn("size_bytes", "integer", (col) => col.notNull())
+    .addColumn("ref_count", "integer", (col) => col.notNull())
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await db.schema
+    .createTable("sales_documents")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("charge_note_id", "integer", (col) =>
       col.notNull().references("charge_notes.id"),
     )
-    .addColumn("filename", "varchar(255)", (col) => col.notNull())
-    .addColumn("filepath", "varchar(500)", (col) => col.notNull())
-    .addColumn("mimetype", "varchar(100)", (col) => col.notNull())
-    .addColumn("size", "integer", (col) => col.notNull())
-    .addColumn("version", "integer", (col) => col.notNull().defaultTo(1))
+    .addColumn("original_name", "varchar(255)", (col) => col.notNull())
+    .addColumn("mime_type", "varchar(100)", (col) => col.notNull())
+    .addColumn("blob_sha256", "varchar(64)", (col) =>
+      col.references("sales_document_blobs.sha256"),
+    )
+    .addColumn("status", "varchar(20)", (col) => col.notNull())
+    .addColumn("created_by_user_id", "integer", (col) =>
+      col.notNull().references("users.id"),
+    )
     .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("deleted_at", "integer")
+    .execute();
+
+  await db.schema
+    .createTable("sales_document_events")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("document_id", "integer", (col) =>
+      col.notNull().references("sales_documents.id").onDelete("cascade"),
+    )
+    .addColumn("charge_note_id", "integer", (col) =>
+      col.notNull().references("charge_notes.id"),
+    )
+    .addColumn("actor_user_id", "integer", (col) => col.references("users.id"))
+    .addColumn("event_type", "varchar(40)", (col) => col.notNull())
+    .addColumn("details", "text")
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await db.schema
+    .createTable("sales_document_policies")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("scope", "varchar(20)", (col) => col.notNull().unique())
+    .addColumn("max_file_size_bytes", "integer", (col) => col.notNull())
+    .addColumn("allowed_mime_types_json", "text", (col) => col.notNull())
+    .addColumn("retention_days", "integer", (col) => col.notNull())
+    .addColumn("hard_delete_enabled", "integer", (col) =>
+      col.notNull().defaultTo(1),
+    )
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await sql`
+    INSERT INTO sales_document_policies (
+      scope,
+      max_file_size_bytes,
+      allowed_mime_types_json,
+      retention_days,
+      hard_delete_enabled,
+      created_at,
+      updated_at
+    ) VALUES (
+      'global',
+      ${DEFAULT_UPLOAD_POLICY.maxFileSizeBytes},
+      ${DEFAULT_UPLOAD_POLICY_ALLOWED_TYPES_JSON},
+      ${DEFAULT_UPLOAD_POLICY.retentionDays},
+      ${DEFAULT_UPLOAD_POLICY.hardDeleteEnabled},
+      ${now},
+      ${now}
+    )
+  `.execute(db);
+
+  await db.schema
+    .createTable("sales_document_upload_jobs")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("document_id", "integer", (col) =>
+      col.notNull().references("sales_documents.id").onDelete("cascade"),
+    )
+    .addColumn("blob_sha256", "varchar(64)", (col) => col.notNull())
+    .addColumn("storage_key", "varchar(255)", (col) => col.notNull())
+    .addColumn("payload_bytes", "blob")
+    .addColumn("status", "varchar(16)", (col) => col.notNull())
+    .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
+    .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(8))
+    .addColumn("available_at", "integer", (col) => col.notNull())
+    .addColumn("lease_until", "integer")
+    .addColumn("last_error", "text")
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await db.schema
+    .createTable("sales_document_gc")
+    .addColumn("blob_sha256", "varchar(64)", (col) =>
+      col
+        .primaryKey()
+        .references("sales_document_blobs.sha256")
+        .onDelete("cascade"),
+    )
+    .addColumn("storage_key", "varchar(255)", (col) => col.notNull())
+    .addColumn("state", "varchar(16)", (col) => col.notNull())
+    .addColumn("generation", "integer", (col) => col.notNull().defaultTo(0))
+    .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
+    .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(8))
+    .addColumn("available_at", "integer", (col) => col.notNull())
+    .addColumn("lease_until", "integer")
+    .addColumn("last_error", "text")
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("updated_at", "integer", (col) => col.notNull())
     .execute();
 
   await db.schema
@@ -575,6 +683,67 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     .createIndex("idx_charge_notes_user")
     .on("charge_notes")
     .columns(["user_id", "status"])
+    .execute();
+  await db.schema
+    .createIndex("idx_sales_documents_charge_status_created")
+    .on("sales_documents")
+    .columns(["charge_note_id", "status", "created_at"])
+    .execute();
+  await db.schema
+    .createIndex("idx_sales_documents_blob_sha256")
+    .on("sales_documents")
+    .column("blob_sha256")
+    .execute();
+  await db.schema
+    .createIndex("idx_sales_documents_status_deleted_at")
+    .on("sales_documents")
+    .columns(["status", "deleted_at"])
+    .execute();
+  await db.schema
+    .createIndex("idx_sales_document_blobs_ref_count")
+    .on("sales_document_blobs")
+    .column("ref_count")
+    .execute();
+  await db.schema
+    .createIndex("idx_sales_document_blobs_storage_key")
+    .on("sales_document_blobs")
+    .column("storage_key")
+    .unique()
+    .execute();
+  await db.schema
+    .createIndex("idx_sales_document_events_document_created")
+    .on("sales_document_events")
+    .columns(["document_id", "created_at"])
+    .execute();
+  await db.schema
+    .createIndex("idx_sales_document_events_charge_created")
+    .on("sales_document_events")
+    .columns(["charge_note_id", "created_at"])
+    .execute();
+  await db.schema
+    .createIndex("idx_sales_document_upload_jobs_status_available")
+    .on("sales_document_upload_jobs")
+    .columns(["status", "available_at"])
+    .execute();
+  await db.schema
+    .createIndex("idx_sales_document_upload_jobs_lease_until")
+    .on("sales_document_upload_jobs")
+    .column("lease_until")
+    .execute();
+  await db.schema
+    .createIndex("idx_sales_document_upload_jobs_document_status")
+    .on("sales_document_upload_jobs")
+    .columns(["document_id", "status"])
+    .execute();
+  await db.schema
+    .createIndex("idx_sales_document_gc_state_available")
+    .on("sales_document_gc")
+    .columns(["state", "available_at"])
+    .execute();
+  await db.schema
+    .createIndex("idx_sales_document_gc_lease_until")
+    .on("sales_document_gc")
+    .column("lease_until")
     .execute();
   await db.schema
     .createIndex("idx_audit_created_at")

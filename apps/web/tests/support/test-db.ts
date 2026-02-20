@@ -10,6 +10,9 @@ import { up as up003 } from "../../src/lib/db/migrations/003-user-invites";
 import { up as up004 } from "../../src/lib/db/migrations/004-action-observability";
 import type { Database } from "../../src/lib/db/schema";
 import { createAppNotificationCenter } from "../../src/server/notifications/app-center-service";
+import { createDocumentBlobStore } from "../../src/server/sales/document-blob-store";
+import { createDocumentJobProcessor } from "../../src/server/sales/document-job-processor";
+import { createSalesDocumentService } from "../../src/server/sales/document-service";
 import { createSalesWorkflowService } from "../../src/server/sales/service";
 import { createRepositories } from "../../src/server/shared/registry";
 
@@ -186,8 +189,11 @@ async function seedTemplate(db: Kysely<Database>) {
 
 export interface TestDbContext {
   dbPath: string;
+  storageRoot: string;
   db: Kysely<Database>;
   repos: ReturnType<typeof createRepositories>;
+  documents: ReturnType<typeof createSalesDocumentService>;
+  documentJobs: ReturnType<typeof createDocumentJobProcessor>;
   sales: ReturnType<typeof createSalesWorkflowService>;
 }
 
@@ -200,6 +206,10 @@ export async function createIsolatedTestDb(
     ARTIFACT_DIR,
     `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}.db`,
   );
+  const storageRoot = join(
+    ARTIFACT_DIR,
+    `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}-files`,
+  );
   const db = createDb(dbPath);
   await up001(db);
   await up002(db);
@@ -210,9 +220,39 @@ export async function createIsolatedTestDb(
   const notifications = createAppNotificationCenter({
     repos: { appNotifications: repos.appNotifications, users: repos.users },
   });
-  const sales = createSalesWorkflowService(repos, { notifications });
+  const documents = createSalesDocumentService(
+    repos,
+    createDocumentBlobStore(storageRoot),
+  );
+  const documentJobs = createDocumentJobProcessor(
+    repos,
+    createDocumentBlobStore(storageRoot),
+  );
+  const sales = createSalesWorkflowService(repos, {
+    notifications,
+  });
 
-  return { dbPath, db, repos, sales };
+  return { dbPath, storageRoot, db, repos, documents, documentJobs, sales };
+}
+
+export async function drainDocumentJobs(
+  ctx: TestDbContext,
+  maxLoops = 10,
+): Promise<number> {
+  const drain = async (remainingLoops: number, processedTotal: number) => {
+    if (remainingLoops < 1) {
+      return processedTotal;
+    }
+
+    const processed = await ctx.documentJobs.runBatch(50, 1_000);
+    if (processed < 1) {
+      return processedTotal;
+    }
+
+    return drain(remainingLoops - 1, processedTotal + processed);
+  };
+
+  return drain(maxLoops, 0);
 }
 
 export async function cleanupTestDb(ctx: TestDbContext): Promise<void> {
@@ -220,6 +260,7 @@ export async function cleanupTestDb(ctx: TestDbContext): Promise<void> {
 
   try {
     await rm(ctx.dbPath, { force: true });
+    await rm(ctx.storageRoot, { force: true, recursive: true });
   } catch (error) {
     if (
       !(error instanceof Error) ||

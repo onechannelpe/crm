@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { getPermissions, ROLES } from "../../src/lib/auth/access/rbac";
 import { createQuotaService } from "../../src/server/quota/service";
+import { uploadTestPdf } from "../support/document-fixtures";
 import {
   PERMISSION_MANIFEST,
   QUOTA_ERROR_MANIFEST,
@@ -13,13 +14,7 @@ import { cleanupTestDb, createIsolatedTestDb } from "../support/test-db";
 async function prepareSubmittableNote(ctx: TestDbContext) {
   const noteId = await ctx.repos.chargeNotes.create(1, 1);
   await ctx.repos.chargeNoteItems.create(noteId, 1, 1);
-  await ctx.repos.documents.create({
-    charge_note_id: noteId,
-    filename: "dni.pdf",
-    filepath: `uploads/${noteId}/dni.pdf`,
-    mimetype: "application/pdf",
-    size: 120_000,
-  });
+  await uploadTestPdf(ctx, noteId);
 
   await ctx.db
     .insertInto("inventory_items")
@@ -81,13 +76,7 @@ describe("security invariant manifest", () => {
 
     const noteC = await ctx.repos.chargeNotes.create(1, 1);
     await ctx.repos.chargeNoteItems.create(noteC, 1, 1);
-    await ctx.repos.documents.create({
-      charge_note_id: noteC,
-      filename: "dni.pdf",
-      filepath: `uploads/${noteC}/dni.pdf`,
-      mimetype: "application/pdf",
-      size: 120_000,
-    });
+    await uploadTestPdf(ctx, noteC);
     const rC = await ctx.sales.submit(noteC, 1);
     expect(rC.ok).toBe(false);
     if (rC.ok) {
