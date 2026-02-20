@@ -2,8 +2,8 @@ import { useNavigate, useParams } from "@solidjs/router";
 import { createSignal } from "solid-js";
 
 import { acceptTeamInvite } from "~/actions/team";
-import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
+import { Button } from "~/components/ui/input/button";
+import { Input } from "~/components/ui/input/input";
 import { getErrorMessage } from "~/lib/errors";
 
 export default function AcceptInvitePage() {

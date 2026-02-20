@@ -2,8 +2,8 @@ import { A } from "@solidjs/router";
 import { createMemo, createSignal, For, Show } from "solid-js";
 
 import Search from "~/components/icons/search";
-import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
+import { Button } from "~/components/ui/input/button";
+import { Input } from "~/components/ui/input/input";
 import { DS_Z_INDEX } from "~/components/ui/theme/design-system";
 import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
 import { type Role } from "~/lib/auth/access/rbac";

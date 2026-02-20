@@ -12,8 +12,8 @@ import {
   AppPageSectionTitle,
 } from "~/components/layout/page";
 import { useSession } from "~/components/providers/session-provider";
-import { Badge } from "~/components/ui/badge";
-import { Button } from "~/components/ui/button";
+import { Badge } from "~/components/ui/display/badge";
+import { Button } from "~/components/ui/input/button";
 import { hasPermission } from "~/lib/auth/access/rbac";
 import { createAppQuery } from "~/lib/ui/create-app-query";
 

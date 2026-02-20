@@ -7,9 +7,9 @@ import {
   finishTotpEnrollment,
   getMe,
 } from "~/actions/auth";
-import { Button } from "~/components/ui/button";
-import { Card } from "~/components/ui/card";
-import { Input } from "~/components/ui/input";
+import { Button } from "~/components/ui/input/button";
+import { Input } from "~/components/ui/input/input";
+import { Card } from "~/components/ui/layout/card";
 import { getErrorMessage } from "~/lib/errors";
 
 export default function OnboardingPage() {

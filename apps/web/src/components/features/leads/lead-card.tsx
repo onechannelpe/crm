@@ -1,7 +1,7 @@
 import { type Component, Show } from "solid-js";
 
-import { Badge } from "~/components/ui/badge";
-import { Button } from "~/components/ui/button";
+import { Badge } from "~/components/ui/display/badge";
+import { Button } from "~/components/ui/input/button";
 
 interface LeadContact {
   id: number;

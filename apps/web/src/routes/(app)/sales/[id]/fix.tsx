@@ -8,7 +8,7 @@ import {
   AppPageHeader,
   AppPageSection,
 } from "~/components/layout/page";
-import { Button } from "~/components/ui/button";
+import { Button } from "~/components/ui/input/button";
 import { getErrorMessage } from "~/lib/errors";
 
 export default function FixSalePage() {

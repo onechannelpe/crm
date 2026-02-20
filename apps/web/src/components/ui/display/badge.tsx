@@ -28,11 +28,9 @@ const variantClassName: Record<BadgeVariant, string> = {
   secondary: "border-transparent bg-secondary text-secondary-foreground",
   outline: "border-border/85 bg-surface text-foreground",
   destructive: "border-transparent bg-destructive text-destructive-foreground",
-  success:
-    "border-transparent bg-[color-mix(in_oklab,#2d8d5f_90%,white)] text-white",
-  warning:
-    "border-transparent bg-[color-mix(in_oklab,#9a6a1f_90%,white)] text-white",
-  info: "border-transparent bg-[color-mix(in_oklab,#3b699d_92%,white)] text-white",
+  success: "border-transparent bg-success text-success-foreground",
+  warning: "border-transparent bg-warning text-warning-foreground",
+  info: "border-transparent bg-info text-info-foreground",
 };
 
 export function Badge(props: BadgeProps) {

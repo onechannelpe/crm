@@ -3,8 +3,8 @@ import { createMemo, For, onMount, Show } from "solid-js";
 
 import { EmptyState } from "~/components/feedback/empty-state";
 import { AppPage } from "~/components/layout/page";
-import { Badge } from "~/components/ui/badge";
-import { Button } from "~/components/ui/button";
+import { Badge } from "~/components/ui/display/badge";
+import { Button } from "~/components/ui/input/button";
 import { createClientSearchController } from "~/features/client-search/controller";
 import { groupPeopleByDni } from "~/features/client-search/grouping";
 import {

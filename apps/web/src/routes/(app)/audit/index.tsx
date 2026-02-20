@@ -12,10 +12,10 @@ import {
   AppPageHeader,
   AppPageSection,
 } from "~/components/layout/page";
-import { Button } from "~/components/ui/button";
-import { Checkbox } from "~/components/ui/checkbox";
-import { Input } from "~/components/ui/input";
-import { Select } from "~/components/ui/select";
+import { Button } from "~/components/ui/input/button";
+import { Checkbox } from "~/components/ui/input/checkbox";
+import { Input } from "~/components/ui/input/input";
+import { Select } from "~/components/ui/input/select";
 import {
   Table,
   TableBody,
@@ -23,7 +23,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "~/components/ui/table";
+} from "~/components/ui/layout/table";
 import { createAppQuery } from "~/lib/ui/create-app-query";
 
 const WINDOW_OPTIONS = [

@@ -8,7 +8,7 @@ import {
   markNotificationRead,
 } from "~/actions/app-notifications";
 import Bell from "~/components/icons/bell";
-import { Button } from "~/components/ui/button";
+import { Button } from "~/components/ui/input/button";
 import { DS_Z_INDEX } from "~/components/ui/theme/design-system";
 import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
 import { runOptimistic } from "~/lib/ui/run-optimistic";
@@ -130,7 +130,7 @@ export function HeaderNotificationsPanel() {
       >
         <Bell class="w-4 h-4" />
         <Show when={currentFeed().unreadCount > 0}>
-          <span class="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-destructive text-white text-[10px] leading-4 text-center">
+          <span class="absolute -top-0.5 -right-0.5 min-w-4 h-4 rounded-full bg-destructive px-1 text-center text-[10px] leading-4 text-destructive-foreground">
             {Math.min(currentFeed().unreadCount, 99)}
           </span>
         </Show>

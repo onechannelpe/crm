@@ -5,7 +5,7 @@ import CircleAlert from "~/components/icons/circle-alert";
 import CircleCheckBig from "~/components/icons/circle-check-big";
 import Info from "~/components/icons/info";
 import X from "~/components/icons/x";
-import { Button } from "~/components/ui/button";
+import { Button } from "~/components/ui/input/button";
 import { DS_Z_INDEX } from "~/components/ui/theme/design-system";
 
 import { useToast } from "./toast-provider";
@@ -24,10 +24,10 @@ export function ToastContainer() {
             <div
               class={`crm-overlay-panel flex items-start gap-3 rounded-2xl p-4 ${
                 toast.type === "success"
-                  ? "bg-[color-mix(in_oklab,#effaf4_84%,var(--overlay))] text-[color-mix(in_oklab,#1d6a43_90%,black)]"
+                  ? "border-success/35 bg-success/14 text-success"
                   : toast.type === "error"
-                    ? "bg-[color-mix(in_oklab,#fef0f0_82%,var(--overlay))] text-[color-mix(in_oklab,#7b1f1f_90%,black)]"
-                    : "bg-[color-mix(in_oklab,#edf5ff_84%,var(--overlay))] text-[color-mix(in_oklab,#1c4f7c_90%,black)]"
+                    ? "border-destructive/35 bg-destructive/14 text-destructive"
+                    : "border-info/35 bg-info/14 text-info"
               }`}
             >
               {toast.type === "success" && <CircleCheckBig class="h-5 w-5" />}

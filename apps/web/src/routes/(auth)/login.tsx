@@ -3,8 +3,8 @@ import { createSignal, onMount, Show } from "solid-js";
 
 import { beginPasskeyLogin, finishPasskeyLogin } from "~/actions/auth";
 import { login } from "~/actions/auth-login";
-import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
+import { Button } from "~/components/ui/input/button";
+import { Input } from "~/components/ui/input/input";
 import {
   isPasskeySupported,
   toAuthenticationPayload,

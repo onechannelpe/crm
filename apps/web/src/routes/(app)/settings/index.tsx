@@ -10,9 +10,9 @@ import {
   AppPageSectionTitle,
 } from "~/components/layout/page";
 import { LoginRetriesCard } from "~/components/settings/login-retries-card";
-import { Button } from "~/components/ui/button";
-import { Checkbox } from "~/components/ui/checkbox";
-import { Input } from "~/components/ui/input";
+import { Button } from "~/components/ui/input/button";
+import { Checkbox } from "~/components/ui/input/checkbox";
+import { Input } from "~/components/ui/input/input";
 import { getErrorMessage } from "~/lib/errors";
 import { runOptimistic } from "~/lib/ui/run-optimistic";
 

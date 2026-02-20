@@ -5,12 +5,10 @@ import ChevronDown from "~/components/icons/chevron-down";
 import LogOut from "~/components/icons/log-out";
 import Settings from "~/components/icons/settings";
 import UserRound from "~/components/icons/user-round";
-import {
-  getUserInitials,
-  useMenuDismiss,
-} from "~/components/layout/account-menu-utils";
-import { Button } from "~/components/ui/button";
+import { getUserInitials } from "~/components/layout/account-menu-utils";
+import { Button } from "~/components/ui/input/button";
 import { DS_Z_INDEX } from "~/components/ui/theme/design-system";
+import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
 import { cn } from "~/lib/utils";
 
 interface AccountMenuProps {
@@ -22,11 +20,11 @@ export function AccountMenu(props: AccountMenuProps) {
   const [open, setOpen] = createSignal(false);
   const navigate = useNavigate();
   let containerRef: HTMLDivElement | undefined;
-  useMenuDismiss(
-    open,
-    () => setOpen(false),
-    () => containerRef,
-  );
+  useDismissibleLayer({
+    enabled: open,
+    onDismiss: () => setOpen(false),
+    getContainer: () => containerRef,
+  });
 
   return (
     <div

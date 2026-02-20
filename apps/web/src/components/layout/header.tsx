@@ -4,7 +4,7 @@ import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import { HeaderNotificationsPanel } from "~/components/layout/header-notifications-panel";
 import { HeaderSearchPanel } from "~/components/layout/header-search-panel";
 import { useSession } from "~/components/providers/session-provider";
-import { Button } from "~/components/ui/button";
+import { Button } from "~/components/ui/input/button";
 import { DS_Z_INDEX } from "~/components/ui/theme/design-system";
 
 const ROUTE_LABELS: Record<string, string> = {

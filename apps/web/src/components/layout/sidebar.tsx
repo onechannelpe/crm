@@ -12,7 +12,7 @@ import ShieldCheck from "~/components/icons/shield-check";
 import Users from "~/components/icons/users";
 import { AccountMenu } from "~/components/layout/account-menu";
 import { useSession } from "~/components/providers/session-provider";
-import { Button } from "~/components/ui/button";
+import { Button } from "~/components/ui/input/button";
 import { DS_Z_INDEX } from "~/components/ui/theme/design-system";
 import { getSidebarRoutes } from "~/lib/auth/access/route-policy";
 import { getWorkspaceLabel } from "~/lib/auth/access/workspace-label";
