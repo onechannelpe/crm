@@ -1,4 +1,4 @@
-import { bench, describe } from "vitest";
+import { afterAll, beforeAll, bench, describe } from "vitest";
 
 import { getPendingReviewNotesForSession } from "~/server/sales/pending-review";
 
@@ -18,6 +18,34 @@ describe("pending review query performance", () => {
   const workload = createPendingReviewWorkload(1_200);
   let actionCtx: TestDbContext | null = null;
   let componentCtx: TestDbContext | null = null;
+
+  // CodSpeed's AnalysisRunner calls beforeAll/afterAll but ignores bench setup/teardown.
+  // The standard NodeBenchmarkRunner calls bench setup/teardown but ignores beforeAll/afterAll.
+  // Both sets are needed so each runner can initialize the database contexts.
+
+  beforeAll(async () => {
+    actionCtx = await createIsolatedTestDb("pending-action-bench");
+    await seedPendingReviewWorkload(actionCtx, workload);
+    assertPendingReviewRows(await readPendingReviewRows(actionCtx), workload);
+
+    componentCtx = await createIsolatedTestDb("pending-component-bench");
+    await seedPendingReviewWorkload(componentCtx, workload);
+    assertPendingReviewRows(
+      await readPendingReviewRows(componentCtx),
+      workload,
+    );
+  });
+
+  afterAll(async () => {
+    if (actionCtx) {
+      await cleanupTestDb(actionCtx);
+      actionCtx = null;
+    }
+    if (componentCtx) {
+      await cleanupTestDb(componentCtx);
+      componentCtx = null;
+    }
+  });
 
   bench(
     "action path: executive loads branch-scoped queue",
