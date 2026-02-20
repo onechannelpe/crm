@@ -67,6 +67,13 @@ describe("client search grouping", () => {
         org_name: "ACME SAC",
         phone_secondary: "999333444",
       }),
+      row({
+        dni: "12345678",
+        name: "GARCIA PINCHI RICARDO",
+        org_ruc: "20100000001",
+        org_name: "ACME SAC",
+        phone_secondary: "999777888",
+      }),
     ]);
 
     expect(groups).toHaveLength(1);
@@ -76,13 +83,25 @@ describe("client search grouping", () => {
       { dni: "12345678", name: "RICARDO GARCIA PINCHI" },
       { dni: "87654321", name: "MARIA LOPEZ" },
     ]);
-    expect(groups[0]?.phones).toEqual(["999111222", "999333444"]);
+    expect(groups[0]?.phones).toEqual(["999111222", "999333444", "999777888"]);
   });
 
-  it("does not merge companies when org_ruc is missing", () => {
+  it("does not merge entries when org_ruc is missing", () => {
     const groups = groupCompaniesByRuc([
-      row({ dni: "11111111", name: "A", org_ruc: null, org_name: null }),
-      row({ dni: "22222222", name: "B", org_ruc: null, org_name: null }),
+      row({
+        dni: "11111111",
+        name: "A",
+        org_ruc: null,
+        org_name: null,
+        phone_primary: "999111111",
+      }),
+      row({
+        dni: "11111111",
+        name: "A",
+        org_ruc: null,
+        org_name: null,
+        phone_primary: "999111111",
+      }),
     ]);
 
     expect(groups).toHaveLength(2);

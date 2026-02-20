@@ -15,6 +15,7 @@ export interface PersonGroup {
 }
 
 export interface CompanyGroup {
+  key: string;
   ruc: string | null;
   name: string | null;
   people: Array<{ dni: string; name: string }>;
@@ -26,10 +27,16 @@ function normalized(value: string | null | undefined): string {
   return (value ?? "").trim();
 }
 
-function pushUnique(values: string[], value: string | null | undefined): void {
+function pushUnique(
+  values: string[],
+  seen: Set<string>,
+  value: string | null | undefined,
+): void {
   const safe = normalized(value);
   if (!safe) return;
-  if (!values.includes(safe)) values.push(safe);
+  if (seen.has(safe)) return;
+  seen.add(safe);
+  values.push(safe);
 }
 
 function firstNonEmpty(values: readonly string[]): string {
@@ -59,16 +66,18 @@ export function groupPeopleByDni(
 
   return [...groups.entries()].map(([dni, rows]) => {
     const aliases: string[] = [];
+    const aliasSet = new Set<string>();
     const phones: string[] = [];
+    const phoneSet = new Set<string>();
     const companies: CompanyRef[] = [];
     const companyKeys = new Set<string>();
 
     for (const row of rows) {
-      pushUnique(aliases, row.name);
-      pushUnique(phones, row.phone_primary);
-      pushUnique(phones, row.phone_secondary);
+      pushUnique(aliases, aliasSet, row.name);
+      pushUnique(phones, phoneSet, row.phone_primary);
+      pushUnique(phones, phoneSet, row.phone_secondary);
       for (const siblingPhone of row.sibling_phones ?? []) {
-        pushUnique(phones, siblingPhone);
+        pushUnique(phones, phoneSet, siblingPhone);
       }
 
       const key = companyKey(row.org_ruc, row.org_name);
@@ -104,12 +113,9 @@ export function groupCompaniesByRuc(
   results: readonly SearchResult[],
 ): CompanyGroup[] {
   const groups = new Map<string, CompanyGroup>();
-
-  for (const row of results) {
+  for (const [index, row] of results.entries()) {
     const ruc = normalized(row.org_ruc);
-    const key = ruc
-      ? `ruc:${ruc}`
-      : `row:${row.dni}|${row.name}|${row.phone_primary ?? ""}`;
+    const key = ruc ? `ruc:${ruc}` : `row:${index}`;
     const existing = groups.get(key);
     if (existing) {
       existing.rows.push(row);
@@ -117,38 +123,41 @@ export function groupCompaniesByRuc(
         existing.name,
         normalized(row.org_name) || null,
       );
-      pushUnique(existing.phones, row.phone_primary);
-      pushUnique(existing.phones, row.phone_secondary);
+      const phoneSet = new Set(existing.phones);
+      pushUnique(existing.phones, phoneSet, row.phone_primary);
+      pushUnique(existing.phones, phoneSet, row.phone_secondary);
       for (const siblingPhone of row.sibling_phones ?? []) {
-        pushUnique(existing.phones, siblingPhone);
+        pushUnique(existing.phones, phoneSet, siblingPhone);
       }
-      const personKey = `${normalized(row.dni)}|${normalized(row.name)}`;
-      const peopleKeys = new Set(
-        existing.people.map((person) => `${person.dni}|${person.name}`),
-      );
-      if (!peopleKeys.has(personKey) && normalized(row.dni)) {
+      const personDni = normalized(row.dni);
+      const personName = normalized(row.name);
+      const peopleDniSet = new Set(existing.people.map((person) => person.dni));
+      if (personDni && !peopleDniSet.has(personDni)) {
         existing.people.push({
-          dni: normalized(row.dni),
-          name: normalized(row.name),
+          dni: personDni,
+          name: personName,
         });
       }
       continue;
     }
 
+    const phoneSet = new Set<string>();
+    const phones: string[] = [];
+    pushUnique(phones, phoneSet, row.phone_primary);
+    pushUnique(phones, phoneSet, row.phone_secondary);
+    for (const siblingPhone of row.sibling_phones ?? []) {
+      pushUnique(phones, phoneSet, siblingPhone);
+    }
+
+    const personDni = normalized(row.dni);
     const company: CompanyGroup = {
+      key,
       ruc: ruc || null,
       name: normalized(row.org_name) || null,
-      people: normalized(row.dni)
-        ? [{ dni: normalized(row.dni), name: normalized(row.name) }]
-        : [],
-      phones: [],
+      people: personDni ? [{ dni: personDni, name: normalized(row.name) }] : [],
+      phones,
       rows: [row],
     };
-    pushUnique(company.phones, row.phone_primary);
-    pushUnique(company.phones, row.phone_secondary);
-    for (const siblingPhone of row.sibling_phones ?? []) {
-      pushUnique(company.phones, siblingPhone);
-    }
     groups.set(key, company);
   }
 

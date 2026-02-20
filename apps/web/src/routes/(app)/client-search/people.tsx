@@ -1,15 +1,13 @@
 import { A, useNavigate, useSearchParams } from "@solidjs/router";
-import { createMemo, createSignal, For, onMount, Show } from "solid-js";
+import { createMemo, For, onMount, Show } from "solid-js";
 
-import { searchClients } from "~/actions/client-search";
 import { EmptyState } from "~/components/feedback/empty-state";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Select } from "~/components/ui/select";
+import { createClientSearchController } from "~/features/client-search/controller";
 import { groupPeopleByDni } from "~/features/client-search/grouping";
-import { getErrorMessage } from "~/lib/errors";
-import type { SearchResult, SearchType } from "~/server/shared/engine/types";
 
 const PEOPLE_SEARCH_TYPES = [
   "dni",
@@ -25,71 +23,26 @@ const SEARCH_LABELS = {
   phone_enriched: "Teléfono enriquecido",
 } as const satisfies Record<(typeof PEOPLE_SEARCH_TYPES)[number], string>;
 
-function isPeopleSearchType(
-  value: string,
-): value is (typeof PEOPLE_SEARCH_TYPES)[number] {
-  return PEOPLE_SEARCH_TYPES.some((type) => type === value);
-}
-
-function getFirstParam(value: string | string[] | undefined): string | null {
-  if (typeof value === "string") return value;
-  if (Array.isArray(value)) return value[0] ?? null;
-  return null;
-}
-
 export default function ClientSearchPeoplePage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const [searchType, setSearchType] =
-    createSignal<(typeof PEOPLE_SEARCH_TYPES)[number]>("dni");
-  const [query, setQuery] = createSignal("");
-  const [limit, setLimit] = createSignal("20");
-  const [searching, setSearching] = createSignal(false);
-  const [searched, setSearched] = createSignal(false);
-  const [error, setError] = createSignal<string | null>(null);
-  const [results, setResults] = createSignal<SearchResult[]>([]);
+  const controller = createClientSearchController({
+    defaultType: "dni",
+    allowedTypes: PEOPLE_SEARCH_TYPES,
+    searchParams,
+    errorFallback: "No se pudo completar la búsqueda",
+  });
 
-  const grouped = createMemo(() => groupPeopleByDni(results()));
-
-  const runSearch = async (
-    type: SearchType,
-    value: string,
-    limitValue: number,
-  ) => {
-    setSearching(true);
-    setError(null);
-    try {
-      const response = await searchClients(type, value, limitValue);
-      setResults(response.results);
-      setSearched(true);
-    } catch (searchError: unknown) {
-      setResults([]);
-      setSearched(true);
-      setError(
-        getErrorMessage(searchError, "No se pudo completar la búsqueda"),
-      );
-    } finally {
-      setSearching(false);
-    }
-  };
+  const grouped = createMemo(() => groupPeopleByDni(controller.results()));
 
   const handleSearch = (event: SubmitEvent) => {
     event.preventDefault();
-    const parsedLimit = Number.parseInt(limit(), 10);
-    void runSearch(searchType(), query(), parsedLimit);
+    void controller.runCurrentSearch();
   };
 
   onMount(() => {
-    const nextType = getFirstParam(searchParams.type);
-    const nextQuery = getFirstParam(searchParams.query);
-    const nextLimit = getFirstParam(searchParams.limit);
-    if (!nextType || !nextQuery) return;
-    if (!isPeopleSearchType(nextType)) return;
-    setSearchType(nextType);
-    setQuery(nextQuery);
-    if (nextLimit) setLimit(nextLimit);
-    void runSearch(nextType, nextQuery, Number.parseInt(nextLimit ?? "20", 10));
+    void controller.initializeFromParams();
   });
 
   return (
@@ -134,11 +87,11 @@ export default function ClientSearchPeoplePage() {
           <form class="space-y-4" onSubmit={handleSearch}>
             <Select
               label="Tipo de búsqueda"
-              value={searchType()}
+              value={controller.searchType()}
               onInput={(event) => {
                 const nextType = event.currentTarget.value;
-                if (!isPeopleSearchType(nextType)) return;
-                setSearchType(nextType);
+                if (!controller.isAllowedType(nextType)) return;
+                controller.setSearchType(nextType);
               }}
             >
               <For each={PEOPLE_SEARCH_TYPES}>
@@ -149,8 +102,10 @@ export default function ClientSearchPeoplePage() {
             <Input
               label="Valor"
               placeholder="Ingresa valor de búsqueda"
-              value={query()}
-              onInput={(event) => setQuery(event.currentTarget.value)}
+              value={controller.query()}
+              onInput={(event) =>
+                controller.setQuery(event.currentTarget.value)
+              }
               required
             />
 
@@ -159,13 +114,19 @@ export default function ClientSearchPeoplePage() {
               type="number"
               min="1"
               max="100"
-              value={limit()}
-              onInput={(event) => setLimit(event.currentTarget.value)}
+              value={controller.limit()}
+              onInput={(event) =>
+                controller.setLimit(event.currentTarget.value)
+              }
               required
             />
 
-            <Button type="submit" class="w-full" disabled={searching()}>
-              <Show when={searching()} fallback="Buscar personas">
+            <Button
+              type="submit"
+              class="w-full"
+              disabled={controller.searching()}
+            >
+              <Show when={controller.searching()} fallback="Buscar personas">
                 Buscando...
               </Show>
             </Button>
@@ -177,19 +138,19 @@ export default function ClientSearchPeoplePage() {
             <div class="flex items-center justify-between">
               <p class="text-sm text-muted-foreground">
                 <Show
-                  when={searched()}
+                  when={controller.searched()}
                   fallback="Define filtros y ejecuta una búsqueda."
                 >
                   {grouped().length} personas encontradas
                 </Show>
               </p>
-              <Show when={searched()}>
+              <Show when={controller.searched()}>
                 <Badge variant="outline">{grouped().length}</Badge>
               </Show>
             </div>
           </div>
 
-          <Show when={error()}>
+          <Show when={controller.error()}>
             {(message) => (
               <div class="rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
                 {message()}
@@ -197,7 +158,13 @@ export default function ClientSearchPeoplePage() {
             )}
           </Show>
 
-          <Show when={searched() && !error() && grouped().length === 0}>
+          <Show
+            when={
+              controller.searched() &&
+              !controller.error() &&
+              grouped().length === 0
+            }
+          >
             <EmptyState
               title="Sin resultados"
               description="No se encontraron personas con los filtros indicados."
@@ -301,7 +268,7 @@ export default function ClientSearchPeoplePage() {
             )}
           </For>
 
-          <Show when={!searched()}>
+          <Show when={!controller.searched()}>
             <div class="rounded-2xl border border-border/70 bg-white/70 px-4 py-3 text-sm text-muted-foreground">
               Ir a <A href="/client-search/companies">empresas</A>.
             </div>
