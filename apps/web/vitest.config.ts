@@ -37,7 +37,6 @@ export default defineConfig({
       },
     ],
     benchmark: {
-      globalSetup: ["./tests/setup/global-setup.ts"],
       include: ["tests/**/*.bench.ts"],
     },
   },
