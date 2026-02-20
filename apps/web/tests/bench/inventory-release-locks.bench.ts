@@ -10,7 +10,7 @@ import {
 import { fixedIterations } from "./shared";
 
 const LOCK_GROUP_COUNT = 80;
-const LOCKS_PER_GROUP = 4;
+const LOCKS_PER_GROUP = 20;
 const INVENTORY_ID_START = 50_000;
 const EXPIRY_BASE = 10_000_000;
 

@@ -9,7 +9,7 @@ import { fixedIterations } from "./shared";
 
 const SESSION_DELETE_USER_POOL_SIZE = 60;
 const SESSION_DELETE_USER_ID_START = 40_000;
-const SESSIONS_PER_USER = 120;
+const SESSIONS_PER_USER = 800;
 
 describe("session bulk delete performance", () => {
   let ctx: TestDbContext | null = null;
