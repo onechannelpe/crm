@@ -3,7 +3,6 @@ import { createSignal } from "solid-js";
 
 import { acceptTeamInvite } from "~/actions/team";
 import { Button } from "~/components/ui/button";
-import { Card } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import { getErrorMessage } from "~/lib/errors";
 
@@ -40,17 +39,19 @@ export default function AcceptInvitePage() {
   }
 
   return (
-    <div class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-100 to-slate-200">
-      <Card class="w-full max-w-md">
+    <div class="crm-shell flex min-h-screen items-center justify-center p-4">
+      <section class="crm-surface w-full max-w-md rounded-3xl p-6">
         <form
-          class="p-6 space-y-4"
+          class="space-y-4"
           onSubmit={(event) => {
             void handleSubmit(event);
           }}
         >
           <div>
-            <h1 class="text-2xl font-bold text-gray-900">Activar cuenta</h1>
-            <p class="text-sm text-muted-foreground mt-1">
+            <h1 class="text-2xl font-semibold text-foreground">
+              Activar cuenta
+            </h1>
+            <p class="mt-1 text-sm text-muted-foreground">
               Completa tus datos para activar el acceso al CRM.
             </p>
           </div>
@@ -77,7 +78,7 @@ export default function AcceptInvitePage() {
           />
 
           {error() ? (
-            <div class="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <div class="rounded-2xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {error()}
             </div>
           ) : null}
@@ -86,7 +87,7 @@ export default function AcceptInvitePage() {
             {submitting() ? "Activando..." : "Activar cuenta"}
           </Button>
         </form>
-      </Card>
+      </section>
     </div>
   );
 }

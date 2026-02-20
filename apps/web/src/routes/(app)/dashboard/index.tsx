@@ -5,6 +5,12 @@ import { getDashboardStats } from "~/actions/dashboard";
 import { getQuotaStatus } from "~/actions/quota";
 import { QuotaDisplay } from "~/components/features/quota/quota-display";
 import { EmptyState } from "~/components/feedback/empty-state";
+import {
+  AppPage,
+  AppPageHeader,
+  AppPageSection,
+  AppPageSectionTitle,
+} from "~/components/layout/page";
 import { useSession } from "~/components/providers/session-provider";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -76,35 +82,23 @@ export default function DashboardPage() {
     (stats()?.draftSales ?? 0);
 
   return (
-    <div class="space-y-7">
-      <section class="crm-surface rounded-3xl p-6 md:p-7">
-        <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p class="text-xs uppercase tracking-[0.14em] text-muted-foreground">
-              Operación diaria
-            </p>
-            <h1 class="mt-1 text-3xl font-semibold text-foreground md:text-4xl">
-              Centro de ejecución
-            </h1>
-            <p class="mt-2 max-w-[680px] text-sm text-muted-foreground md:text-base">
-              Prioriza primero pendientes y mantén la cola de leads en flujo.
-            </p>
-          </div>
+    <AppPage class="space-y-7">
+      <AppPageHeader
+        eyebrow="Operación diaria"
+        title="Centro de ejecución"
+        description="Prioriza primero pendientes y mantén la cola de leads en flujo."
+        actions={
           <Badge variant="outline" class="text-[11px]">
             Vista de hoy
           </Badge>
-        </div>
-      </section>
+        }
+      />
 
-      <section class="crm-surface rounded-3xl p-4 md:p-5">
-        <div class="mb-3 flex items-center justify-between">
-          <h2 class="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-            Focos de trabajo
-          </h2>
-          <p class="text-xs text-muted-foreground">
-            Orden recomendado de atención
-          </p>
-        </div>
+      <AppPageSection>
+        <AppPageSectionTitle
+          title="Focos de trabajo"
+          description="Orden recomendado de atención"
+        />
 
         <div class="space-y-2">
           {focusItems().map((item) => (
@@ -130,7 +124,7 @@ export default function DashboardPage() {
             </div>
           ))}
         </div>
-      </section>
+      </AppPageSection>
 
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-[1.2fr_1fr]">
         <Show
@@ -153,7 +147,7 @@ export default function DashboardPage() {
           )}
         </Show>
 
-        <section class="crm-surface rounded-3xl p-5">
+        <AppPageSection class="p-5">
           <p class="text-xs uppercase tracking-[0.12em] text-muted-foreground">
             Estado del pipeline
           </p>
@@ -178,7 +172,7 @@ export default function DashboardPage() {
           <p class="mt-2 text-xs text-muted-foreground">
             Proporción de operaciones cerradas frente a carga pendiente.
           </p>
-        </section>
+        </AppPageSection>
       </div>
 
       <Show when={completed() === 0 && openLoad() === 0}>
@@ -187,6 +181,6 @@ export default function DashboardPage() {
           description="Solicita leads para iniciar la jornada comercial."
         />
       </Show>
-    </div>
+    </AppPage>
   );
 }

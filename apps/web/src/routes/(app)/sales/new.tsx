@@ -13,9 +13,15 @@ import {
   submitSale,
 } from "~/actions/sales";
 import { useToast } from "~/components/feedback/toast-provider";
+import {
+  AppInsetPanel,
+  AppPage,
+  AppPageHeader,
+  AppPageSection,
+} from "~/components/layout/page";
 import { Button } from "~/components/ui/button";
-import { Card } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
+import { Select } from "~/components/ui/select";
 import { getErrorMessage } from "~/lib/errors";
 import { runOptimistic } from "~/lib/ui/run-optimistic";
 
@@ -263,181 +269,178 @@ export default function NewSalePage() {
   }
 
   return (
-    <div class="max-w-4xl mx-auto space-y-6">
-      <div class="flex items-center justify-between">
-        <h1 class="text-2xl font-bold text-gray-900">Nueva venta</h1>
-        <Button variant="secondary" onClick={() => navigate("/leads")}>
-          Cancelar
-        </Button>
-      </div>
+    <AppPage class="mx-auto max-w-4xl">
+      <AppPageHeader
+        eyebrow="Ventas"
+        title="Nueva venta"
+        description="Crea una nota y completa productos, documentos e inventario."
+        actions={
+          <Button variant="secondary" onClick={() => navigate("/leads")}>
+            Cancelar
+          </Button>
+        }
+      />
 
       <Show when={!noteId()}>
-        <Card>
-          <div class="p-6">
-            <form
-              onSubmit={(e) => {
-                void handleCreate(e);
-              }}
-              class="space-y-4 max-w-md"
-            >
-              <Input
-                type="number"
-                label="ID del Contacto"
-                value={contactId()}
-                onInput={(e) => setContactId(e.currentTarget.value)}
-                required
-              />
-              <Button type="submit" disabled={loading()}>
-                {loading() ? "Creando..." : "Crear nota de cargo"}
-              </Button>
-            </form>
-          </div>
-        </Card>
+        <AppPageSection class="p-6">
+          <form
+            onSubmit={(e) => {
+              void handleCreate(e);
+            }}
+            class="max-w-md space-y-4"
+          >
+            <Input
+              type="number"
+              label="ID del Contacto"
+              value={contactId()}
+              onInput={(e) => setContactId(e.currentTarget.value)}
+              required
+            />
+            <Button type="submit" disabled={loading()}>
+              {loading() ? "Creando..." : "Crear nota de cargo"}
+            </Button>
+          </form>
+        </AppPageSection>
       </Show>
 
       <Show when={noteId()}>
-        <Card>
-          <div class="p-6 space-y-6">
-            <div>
-              <h3 class="text-lg font-semibold text-gray-900">
-                Nota de cargo #{noteId()}
-              </h3>
-              <p class="text-sm text-gray-500 mt-1">
-                Debe tener productos, documentos y equipo bloqueado.
-              </p>
-            </div>
+        <AppPageSection class="space-y-6 p-6">
+          <div>
+            <h3 class="text-lg font-semibold text-foreground">
+              Nota de cargo #{noteId()}
+            </h3>
+            <p class="mt-1 text-sm text-muted-foreground">
+              Debe tener productos, documentos y equipo bloqueado.
+            </p>
+          </div>
 
-            <div class="grid gap-4 md:grid-cols-3">
-              <div class="space-y-2 rounded border p-3">
-                <p class="text-sm font-medium">Productos</p>
-                <select
-                  class="w-full rounded border px-2 py-2 text-sm"
-                  value={selectedProductId()}
-                  onInput={(e) => setSelectedProductId(e.currentTarget.value)}
-                >
-                  <option value="">Seleccionar producto</option>
-                  <For each={currentProducts()}>
-                    {(product) => (
-                      <option value={product.id}>{product.name}</option>
-                    )}
-                  </For>
-                </select>
-                <Input
-                  type="number"
-                  label="Cantidad"
-                  value={quantity()}
-                  min="1"
-                  onInput={(e) => setQuantity(e.currentTarget.value)}
-                />
-                <Button
-                  onClick={() => {
-                    void handleAddItem();
-                  }}
-                >
-                  Agregar
-                </Button>
-              </div>
-
-              <div class="space-y-2 rounded border p-3">
-                <p class="text-sm font-medium">Documento</p>
-                <label class="flex flex-col gap-1 text-sm">
-                  Archivo
-                  <input
-                    type="file"
-                    accept=".pdf,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg,image/webp"
-                    class="w-full rounded border px-2 py-2 text-sm"
-                    onInput={(e) => {
-                      setSelectedDocumentFile(
-                        e.currentTarget.files?.[0] ?? null,
-                      );
-                    }}
-                  />
-                </label>
-                <Button
-                  onClick={() => {
-                    void handleAddDocument();
-                  }}
-                  disabled={!selectedDocumentFile()}
-                >
-                  Registrar
-                </Button>
-              </div>
-
-              <div class="space-y-2 rounded border p-3">
-                <p class="text-sm font-medium">Equipo (S/N)</p>
-                <select
-                  class="w-full rounded border px-2 py-2 text-sm"
-                  value={selectedInventoryId()}
-                  onInput={(e) => setSelectedInventoryId(e.currentTarget.value)}
-                >
-                  <option value="">Seleccionar serial</option>
-                  <For each={currentInventory()}>
-                    {(item) => (
-                      <option value={item.id}>
-                        {item.serial_number} - {item.product_name}
-                      </option>
-                    )}
-                  </For>
-                </select>
-                <Button
-                  onClick={() => {
-                    void handleLockInventory();
-                  }}
-                >
-                  Reservar
-                </Button>
-              </div>
-            </div>
-
-            <Show when={currentDraft()}>
-              {(ctx) => (
-                <div class="rounded border p-3 text-sm space-y-2">
-                  <p>Items: {ctx().items.length}</p>
-                  <p>Documentos: {ctx().documents.length}</p>
-                  <p>
-                    Inventario bloqueado:{" "}
-                    {ctx().inventoryLock?.serial_number ?? "No"}
-                  </p>
-                  <Show when={ctx().documents.length > 0}>
-                    <ul class="space-y-1">
-                      <For each={ctx().documents}>
-                        {(document) => (
-                          <li class="flex items-center justify-between rounded border px-2 py-1">
-                            <span>
-                              {document.original_name} (
-                              {Math.ceil(document.size_bytes / 1024)} KB)
-                            </span>
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              onClick={() => {
-                                void handleRemoveDocument(document.id);
-                              }}
-                            >
-                              Eliminar
-                            </Button>
-                          </li>
-                        )}
-                      </For>
-                    </ul>
-                  </Show>
-                </div>
-              )}
-            </Show>
-
-            <div class="flex justify-end">
+          <div class="grid gap-4 md:grid-cols-3">
+            <AppInsetPanel class="space-y-2">
+              <p class="text-sm font-medium">Productos</p>
+              <Select
+                value={selectedProductId()}
+                onInput={(e) => setSelectedProductId(e.currentTarget.value)}
+              >
+                <option value="">Seleccionar producto</option>
+                <For each={currentProducts()}>
+                  {(product) => (
+                    <option value={product.id}>{product.name}</option>
+                  )}
+                </For>
+              </Select>
+              <Input
+                type="number"
+                label="Cantidad"
+                value={quantity()}
+                min="1"
+                onInput={(e) => setQuantity(e.currentTarget.value)}
+              />
               <Button
                 onClick={() => {
-                  void handleSubmit();
+                  void handleAddItem();
                 }}
-                disabled={loading()}
               >
-                {loading() ? "Enviando..." : "Enviar a validación"}
+                Agregar
               </Button>
-            </div>
+            </AppInsetPanel>
+
+            <AppInsetPanel class="space-y-2">
+              <p class="text-sm font-medium">Documento</p>
+              <label class="flex flex-col gap-1 text-sm">
+                Archivo
+                <input
+                  type="file"
+                  accept=".pdf,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg,image/webp"
+                  class="w-full rounded-xl border border-input/85 px-2 py-2 text-sm"
+                  onInput={(e) => {
+                    setSelectedDocumentFile(e.currentTarget.files?.[0] ?? null);
+                  }}
+                />
+              </label>
+              <Button
+                onClick={() => {
+                  void handleAddDocument();
+                }}
+                disabled={!selectedDocumentFile()}
+              >
+                Registrar
+              </Button>
+            </AppInsetPanel>
+
+            <AppInsetPanel class="space-y-2">
+              <p class="text-sm font-medium">Equipo (S/N)</p>
+              <Select
+                value={selectedInventoryId()}
+                onInput={(e) => setSelectedInventoryId(e.currentTarget.value)}
+              >
+                <option value="">Seleccionar serial</option>
+                <For each={currentInventory()}>
+                  {(item) => (
+                    <option value={item.id}>
+                      {item.serial_number} - {item.product_name}
+                    </option>
+                  )}
+                </For>
+              </Select>
+              <Button
+                onClick={() => {
+                  void handleLockInventory();
+                }}
+              >
+                Reservar
+              </Button>
+            </AppInsetPanel>
           </div>
-        </Card>
+
+          <Show when={currentDraft()}>
+            {(ctx) => (
+              <AppInsetPanel class="space-y-2 text-sm">
+                <p>Items: {ctx().items.length}</p>
+                <p>Documentos: {ctx().documents.length}</p>
+                <p class="text-sm font-medium">Productos</p>
+                <p>
+                  Inventario bloqueado:{" "}
+                  {ctx().inventoryLock?.serial_number ?? "No"}
+                </p>
+                <Show when={ctx().documents.length > 0}>
+                  <ul class="space-y-1">
+                    <For each={ctx().documents}>
+                      {(document) => (
+                        <li class="flex items-center justify-between rounded-xl border border-border/80 bg-white px-2 py-1">
+                          <span>
+                            {document.original_name} (
+                            {Math.ceil(document.size_bytes / 1024)} KB)
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => {
+                              void handleRemoveDocument(document.id);
+                            }}
+                          >
+                            Eliminar
+                          </Button>
+                        </li>
+                      )}
+                    </For>
+                  </ul>
+                </Show>
+              </AppInsetPanel>
+            )}
+          </Show>
+
+          <div class="flex justify-end">
+            <Button
+              onClick={() => {
+                void handleSubmit();
+              }}
+              disabled={loading()}
+            >
+              {loading() ? "Enviando..." : "Enviar a validación"}
+            </Button>
+          </div>
+        </AppPageSection>
       </Show>
-    </div>
+    </AppPage>
   );
 }

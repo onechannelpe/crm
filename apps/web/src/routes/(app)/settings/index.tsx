@@ -2,9 +2,15 @@ import { createResource, createSignal, For } from "solid-js";
 
 import { getProductCatalog, updateProductPricing } from "~/actions/settings";
 import { useToast } from "~/components/feedback/toast-provider";
+import {
+  AppInsetPanel,
+  AppPage,
+  AppPageHeader,
+  AppPageSection,
+  AppPageSectionTitle,
+} from "~/components/layout/page";
 import { LoginRetriesCard } from "~/components/settings/login-retries-card";
 import { Button } from "~/components/ui/button";
-import { Card } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import { getErrorMessage } from "~/lib/errors";
 import { runOptimistic } from "~/lib/ui/run-optimistic";
@@ -55,21 +61,18 @@ export default function SettingsPage() {
   };
 
   return (
-    <div class="space-y-6">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">Configuración</h1>
-        <p class="mt-1 text-sm text-gray-500">
-          Ajustes operativos y parámetros administrables del CRM.
-        </p>
-      </div>
+    <AppPage>
+      <AppPageHeader
+        eyebrow="Configuración"
+        title="Parámetros operativos"
+        description="Ajustes administrables del CRM."
+      />
 
-      <Card class="p-6 space-y-4">
-        <h2 class="text-base font-semibold text-foreground">
-          Catálogo de productos
-        </h2>
-        <p class="text-sm text-muted-foreground">
-          Cambios de precio y activación se aplican inmediatamente.
-        </p>
+      <AppPageSection class="p-6">
+        <AppPageSectionTitle
+          title="Catálogo de productos"
+          description="Cambios de precio y activación se aplican inmediatamente."
+        />
         <div class="space-y-3">
           <For each={currentProducts()}>
             {(product) => {
@@ -79,45 +82,47 @@ export default function SettingsPage() {
               );
               return (
                 <form
-                  class="grid grid-cols-1 md:grid-cols-[1fr_140px_140px_150px] gap-3 items-end border rounded p-3"
+                  class="space-y-0"
                   onSubmit={(e) => {
                     e.preventDefault();
                     void save(product.id, price(), isActive());
                   }}
                 >
-                  <div>
-                    <p class="font-medium text-foreground">{product.name}</p>
-                    <p class="text-xs text-muted-foreground">
-                      {product.category}
-                    </p>
-                  </div>
-                  <Input
-                    type="number"
-                    min="0.01"
-                    step="0.01"
-                    label="Precio"
-                    value={price()}
-                    onInput={(e) => setPrice(e.currentTarget.value)}
-                  />
-                  <label class="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={isActive()}
-                      onInput={(e) => setIsActive(e.currentTarget.checked)}
+                  <AppInsetPanel class="grid grid-cols-1 items-end gap-3 md:grid-cols-[1fr_140px_140px_150px]">
+                    <div>
+                      <p class="font-medium text-foreground">{product.name}</p>
+                      <p class="text-xs text-muted-foreground">
+                        {product.category}
+                      </p>
+                    </div>
+                    <Input
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      label="Precio"
+                      value={price()}
+                      onInput={(e) => setPrice(e.currentTarget.value)}
                     />
-                    Activo
-                  </label>
-                  <Button type="submit" disabled={savingId() === product.id}>
-                    {savingId() === product.id ? "Guardando..." : "Guardar"}
-                  </Button>
+                    <label class="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={isActive()}
+                        onInput={(e) => setIsActive(e.currentTarget.checked)}
+                      />
+                      Activo
+                    </label>
+                    <Button type="submit" disabled={savingId() === product.id}>
+                      {savingId() === product.id ? "Guardando..." : "Guardar"}
+                    </Button>
+                  </AppInsetPanel>
                 </form>
               );
             }}
           </For>
         </div>
-      </Card>
+      </AppPageSection>
 
       <LoginRetriesCard />
-    </div>
+    </AppPage>
   );
 }

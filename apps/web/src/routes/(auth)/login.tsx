@@ -4,7 +4,6 @@ import { createSignal, onMount, Show } from "solid-js";
 import { beginPasskeyLogin, finishPasskeyLogin } from "~/actions/auth";
 import { login } from "~/actions/auth-login";
 import { Button } from "~/components/ui/button";
-import { Card, CardContent } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import {
   isPasskeySupported,
@@ -111,100 +110,93 @@ export default function LoginPage() {
             </h2>
           </div>
 
-          <Card class="border-0 bg-transparent shadow-none">
-            <CardContent class="space-y-4">
-              <form
-                onSubmit={(e) => {
-                  void handleSubmit(e);
-                }}
-                class="space-y-4"
-              >
-                <div class="space-y-2">
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Correo corporativo"
-                    value={email()}
-                    onInput={(e) => setEmail(e.currentTarget.value)}
-                    required
-                    class="h-12"
-                  />
-                </div>
-                <div class="space-y-2">
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Contraseña"
-                    value={password()}
-                    onInput={(e) => setPassword(e.currentTarget.value)}
-                    required
-                    class="h-12"
-                  />
-                </div>
-                <div class="space-y-2">
-                  <Input
-                    id="totp"
-                    type="text"
-                    placeholder="Código TOTP o recuperación (si aplica)"
-                    value={totpCode()}
-                    onInput={(e) => setTotpCode(e.currentTarget.value)}
-                    class="h-12"
-                  />
-                  <p class="text-xs text-muted-foreground">
-                    Usa tu código TOTP o de recuperación si tienes TOTP
-                    habilitado.
-                  </p>
-                </div>
+          <form
+            onSubmit={(e) => {
+              void handleSubmit(e);
+            }}
+            class="space-y-4"
+          >
+            <Input
+              id="email"
+              type="email"
+              placeholder="Correo corporativo"
+              value={email()}
+              onInput={(e) => setEmail(e.currentTarget.value)}
+              required
+              class="h-12"
+            />
 
-                <Show when={error()}>
-                  <div class="text-sm text-destructive font-medium text-center">
-                    {error()}
-                  </div>
-                </Show>
+            <Input
+              id="password"
+              type="password"
+              placeholder="Contraseña"
+              value={password()}
+              onInput={(e) => setPassword(e.currentTarget.value)}
+              required
+              class="h-12"
+            />
 
-                <Button
-                  type="submit"
-                  class="h-11 w-full text-base"
-                  disabled={loading() || passkeyLoading()}
-                >
-                  {loading() ? "Iniciando sesión..." : "Entrar"}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  class="h-11 w-full text-base"
-                  disabled={
-                    loading() ||
-                    passkeyLoading() ||
-                    passkeySupport() !== "supported"
-                  }
-                  onClick={() => {
-                    void handlePasskeyLogin();
-                  }}
-                >
-                  {passkeyLoading()
-                    ? "Validando passkey..."
-                    : "Iniciar con passkey"}
-                </Button>
-                <div class="min-h-5">
-                  <Show when={passkeySupport() === "unsupported"}>
-                    <p class="text-xs text-muted-foreground text-center">
-                      Este dispositivo o navegador no soporta passkeys.
-                    </p>
-                  </Show>
-                </div>
-              </form>
+            <div class="space-y-2">
+              <Input
+                id="totp"
+                type="text"
+                placeholder="Código TOTP o recuperación (si aplica)"
+                value={totpCode()}
+                onInput={(e) => setTotpCode(e.currentTarget.value)}
+                class="h-12"
+              />
+              <p class="text-xs text-muted-foreground">
+                Usa tu código TOTP o de recuperación si tienes TOTP habilitado.
+              </p>
+            </div>
 
-              <div class="text-center">
-                <a
-                  href="mailto:support@onechannel.local"
-                  class="text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                  ¿Olvidaste tu contraseña?
-                </a>
+            <Show when={error()}>
+              <div class="rounded-2xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive">
+                {error()}
               </div>
-            </CardContent>
-          </Card>
+            </Show>
+
+            <Button
+              type="submit"
+              class="h-11 w-full text-base"
+              disabled={loading() || passkeyLoading()}
+            >
+              {loading() ? "Iniciando sesión..." : "Entrar"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              class="h-11 w-full text-base"
+              disabled={
+                loading() ||
+                passkeyLoading() ||
+                passkeySupport() !== "supported"
+              }
+              onClick={() => {
+                void handlePasskeyLogin();
+              }}
+            >
+              {passkeyLoading()
+                ? "Validando passkey..."
+                : "Iniciar con passkey"}
+            </Button>
+            <div class="min-h-5">
+              <Show when={passkeySupport() === "unsupported"}>
+                <p class="text-center text-xs text-muted-foreground">
+                  Este dispositivo o navegador no soporta passkeys.
+                </p>
+              </Show>
+            </div>
+          </form>
+
+          <div class="mt-4 text-center">
+            <a
+              href="mailto:david.duran@onechannel.pe"
+              class="text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              ¿Olvidaste tu contraseña?
+            </a>
+          </div>
         </section>
       </div>
 

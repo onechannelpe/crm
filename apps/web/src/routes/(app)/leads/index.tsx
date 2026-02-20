@@ -7,6 +7,12 @@ import { LeadList } from "~/components/features/leads/lead-list";
 import { RequestLeadsButton } from "~/components/features/leads/request-leads-button";
 import { QuotaDisplay } from "~/components/features/quota/quota-display";
 import { EmptyState } from "~/components/feedback/empty-state";
+import {
+  AppPage,
+  AppPageHeader,
+  AppPageSection,
+  AppPageSectionTitle,
+} from "~/components/layout/page";
 import { runOptimistic } from "~/lib/ui/run-optimistic";
 
 export default function LeadsPage() {
@@ -56,37 +62,21 @@ export default function LeadsPage() {
   };
 
   return (
-    <div class="space-y-7">
-      <div class="crm-surface rounded-3xl p-6 md:p-7">
-        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p class="text-xs uppercase tracking-[0.14em] text-muted-foreground">
-              Bandeja de ejecución
-            </p>
-            <h1 class="mt-1 text-3xl font-semibold text-foreground">
-              Mis leads
-            </h1>
-            <p class="mt-1 text-sm text-muted-foreground">
-              {currentLeads().length} contactos activos para gestionar en esta
-              sesión.
-            </p>
-          </div>
-          <div class="flex items-center gap-2">
-            <RequestLeadsButton onRequest={handleRequestLeads} />
-          </div>
-        </div>
-      </div>
+    <AppPage class="space-y-7">
+      <AppPageHeader
+        eyebrow="Bandeja de ejecución"
+        title="Mis leads"
+        description={`${currentLeads().length} contactos activos para gestionar en esta sesión.`}
+        actions={<RequestLeadsButton onRequest={handleRequestLeads} />}
+      />
 
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
         <div class="space-y-4">
-          <div class="flex items-center justify-between px-1">
-            <h2 class="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-              Cola de trabajo
-            </h2>
-            <p class="text-xs text-muted-foreground">
-              Ordena por prioridad de vencimiento
-            </p>
-          </div>
+          <AppPageSectionTitle
+            title="Cola de trabajo"
+            description="Ordena por prioridad de vencimiento"
+            class="px-1"
+          />
           <Show
             when={!leads.error}
             fallback={
@@ -110,7 +100,7 @@ export default function LeadsPage() {
           <Show
             when={quotaValues()}
             fallback={
-              <div class="crm-surface rounded-3xl p-5">
+              <AppPageSection class="p-5">
                 <p class="text-xs uppercase tracking-[0.12em] text-muted-foreground">
                   Cuota diaria
                 </p>
@@ -118,7 +108,7 @@ export default function LeadsPage() {
                 <p class="mt-1 text-sm text-muted-foreground">
                   Solicita cuota al supervisor para poder pedir más leads.
                 </p>
-              </div>
+              </AppPageSection>
             }
           >
             {(values) => (
@@ -126,7 +116,7 @@ export default function LeadsPage() {
             )}
           </Show>
 
-          <div class="crm-surface rounded-3xl p-5">
+          <AppPageSection class="p-5">
             <p class="text-xs uppercase tracking-[0.12em] text-muted-foreground">
               Recomendaciones
             </p>
@@ -135,9 +125,9 @@ export default function LeadsPage() {
               <li>Registra ventas al terminar cada llamada efectiva.</li>
               <li>Solicita más leads solo si tu cola activa es baja.</li>
             </ul>
-          </div>
+          </AppPageSection>
         </aside>
       </div>
-    </div>
+    </AppPage>
   );
 }
