@@ -3,6 +3,7 @@
 [![web quality](https://github.com/onechannelpe/crm/actions/workflows/lint.yml/badge.svg?branch=master)](https://github.com/onechannelpe/crm/actions/workflows/lint.yml)
 [![web tests](https://github.com/onechannelpe/crm/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/onechannelpe/crm/actions/workflows/tests.yml)
 [![repo guard](https://github.com/onechannelpe/crm/actions/workflows/repo-guard.yml/badge.svg?branch=master)](https://github.com/onechannelpe/crm/actions/workflows/repo-guard.yml)
+[![CodSpeed](https://img.shields.io/endpoint?url=https://codspeed.io/badge/onechannelpe/crm)](https://codspeed.io/onechannelpe/crm?utm_source=badge)
 
 crm monorepo (web app + engine service).
 

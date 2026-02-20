@@ -39,6 +39,7 @@
     "vinxi": "^0.5.11"
   },
   "devDependencies": {
+    "@codspeed/vitest-plugin": "^5.2.0",
     "@tailwindcss/vite": "^4.2.0",
     "@types/mjml": "^4.7.4",
     "@types/qrcode": "^1.5.6",
