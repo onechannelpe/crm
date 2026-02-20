@@ -2,10 +2,10 @@ import { useNavigate } from "@solidjs/router";
 import { For, Show, type JSX } from "solid-js";
 
 import { AppPageHeader, AppPageSection } from "~/components/layout/page";
-import { Badge } from "~/components/ui/badge";
-import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
-import { Select } from "~/components/ui/select";
+import { Badge } from "~/components/ui/display/badge";
+import { Button } from "~/components/ui/input/button";
+import { Input } from "~/components/ui/input/input";
+import { Select } from "~/components/ui/input/select";
 import type { SearchType } from "~/server/shared/engine/types";
 
 interface SearchPageHeaderProps {

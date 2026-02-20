@@ -3,8 +3,8 @@ import { createSignal, onMount, Show } from "solid-js";
 
 import { beginPasskeyLogin, finishPasskeyLogin } from "~/actions/auth";
 import { login } from "~/actions/auth-login";
-import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
+import { Button } from "~/components/ui/input/button";
+import { Input } from "~/components/ui/input/input";
 import {
   isPasskeySupported,
   toAuthenticationPayload,
@@ -79,7 +79,7 @@ export default function LoginPage() {
     <div class="crm-shell min-h-screen px-4 py-12 md:py-20">
       <div class="mx-auto grid w-full max-w-6xl gap-12 md:grid-cols-[1.1fr_1fr] md:items-center">
         <section class="space-y-4">
-          <div class="inline-flex items-center rounded-full border border-border/80 bg-white/70 px-4 py-1.5 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+          <div class="inline-flex items-center rounded-full border border-border/80 bg-surface px-4 py-1.5 text-xs uppercase tracking-[0.18em] text-muted-foreground">
             One Channel
           </div>
           <div class="space-y-4">

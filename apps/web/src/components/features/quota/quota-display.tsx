@@ -1,6 +1,6 @@
 import type { Component } from "solid-js";
 
-import { Badge } from "~/components/ui/badge";
+import { Badge } from "~/components/ui/display/badge";
 
 interface QuotaDisplayProps {
   used: number;

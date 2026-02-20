@@ -19,9 +19,10 @@ import {
   AppPageHeader,
   AppPageSection,
 } from "~/components/layout/page";
-import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
-import { Select } from "~/components/ui/select";
+import { Button } from "~/components/ui/input/button";
+import { FileInput } from "~/components/ui/input/file-input";
+import { Input } from "~/components/ui/input/input";
+import { Select } from "~/components/ui/input/select";
 import { getErrorMessage } from "~/lib/errors";
 import { runOptimistic } from "~/lib/ui/run-optimistic";
 
@@ -346,17 +347,13 @@ export default function NewSalePage() {
 
             <AppInsetPanel class="space-y-2">
               <p class="text-sm font-medium">Documento</p>
-              <label class="flex flex-col gap-1 text-sm">
-                Archivo
-                <input
-                  type="file"
-                  accept=".pdf,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg,image/webp"
-                  class="w-full rounded-xl border border-input/85 px-2 py-2 text-sm"
-                  onInput={(e) => {
-                    setSelectedDocumentFile(e.currentTarget.files?.[0] ?? null);
-                  }}
-                />
-              </label>
+              <FileInput
+                label="Archivo"
+                accept=".pdf,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg,image/webp"
+                onInput={(e) => {
+                  setSelectedDocumentFile(e.currentTarget.files?.[0] ?? null);
+                }}
+              />
               <Button
                 onClick={() => {
                   void handleAddDocument();
@@ -406,7 +403,7 @@ export default function NewSalePage() {
                   <ul class="space-y-1">
                     <For each={ctx().documents}>
                       {(document) => (
-                        <li class="flex items-center justify-between rounded-xl border border-border/80 bg-white px-2 py-1">
+                        <li class="flex items-center justify-between rounded-xl border border-border/80 bg-surface px-2 py-1">
                           <span>
                             {document.original_name} (
                             {Math.ceil(document.size_bytes / 1024)} KB)

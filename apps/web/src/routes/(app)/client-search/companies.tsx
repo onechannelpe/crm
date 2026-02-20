@@ -3,7 +3,8 @@ import { createMemo, For, onMount, Show } from "solid-js";
 
 import { EmptyState } from "~/components/feedback/empty-state";
 import { AppPage } from "~/components/layout/page";
-import { Badge } from "~/components/ui/badge";
+import { Badge } from "~/components/ui/display/badge";
+import { Button } from "~/components/ui/input/button";
 import { createClientSearchController } from "~/features/client-search/controller";
 import { groupCompaniesByRuc } from "~/features/client-search/grouping";
 import {
@@ -123,16 +124,18 @@ export default function ClientSearchCompaniesPage() {
                       }
                     >
                       {(representative) => (
-                        <button
+                        <Button
                           type="button"
-                          class="rounded-full bg-secondary px-2.5 py-1 text-xs text-foreground hover:bg-secondary/80"
+                          variant="secondary"
+                          size="sm"
+                          class="h-7 px-2.5 text-xs"
                           onClick={() => {
                             const href = `/client-search/people?type=dni&query=${encodeURIComponent(representative().dni)}`;
                             navigate(href);
                           }}
                         >
                           {representative().name || representative().dni}
-                        </button>
+                        </Button>
                       )}
                     </Show>
                   </div>
@@ -170,16 +173,18 @@ export default function ClientSearchCompaniesPage() {
                     <div class="flex flex-wrap gap-2">
                       <For each={company.people.slice(1)}>
                         {(person) => (
-                          <button
+                          <Button
                             type="button"
-                            class="rounded-full border border-border/80 px-2.5 py-1 text-xs text-foreground hover:bg-secondary/60"
+                            variant="outline"
+                            size="sm"
+                            class="h-7 px-2.5 text-xs"
                             onClick={() => {
                               const href = `/client-search/people?type=dni&query=${encodeURIComponent(person.dni)}`;
                               navigate(href);
                             }}
                           >
                             {person.name || person.dni}
-                          </button>
+                          </Button>
                         )}
                       </For>
                     </div>

@@ -9,8 +9,8 @@ import {
   AppPageSection,
 } from "~/components/layout/page";
 import { useSession } from "~/components/providers/session-provider";
-import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
+import { Button } from "~/components/ui/input/button";
+import { Input } from "~/components/ui/input/input";
 import { getErrorMessage } from "~/lib/errors";
 import { runOptimistic } from "~/lib/ui/run-optimistic";
 

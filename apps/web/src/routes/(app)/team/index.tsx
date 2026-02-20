@@ -15,8 +15,8 @@ import {
   AppPageHeader,
   AppPageSection,
 } from "~/components/layout/page";
-import { Badge } from "~/components/ui/badge";
-import { Button } from "~/components/ui/button";
+import { Badge } from "~/components/ui/display/badge";
+import { Button } from "~/components/ui/input/button";
 import {
   Table,
   TableBody,
@@ -24,7 +24,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "~/components/ui/table";
+} from "~/components/ui/layout/table";
 import {
   getRoleBadgeVariant,
   getRoleLabel,

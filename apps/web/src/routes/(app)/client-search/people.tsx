@@ -3,7 +3,8 @@ import { createMemo, For, onMount, Show } from "solid-js";
 
 import { EmptyState } from "~/components/feedback/empty-state";
 import { AppPage } from "~/components/layout/page";
-import { Badge } from "~/components/ui/badge";
+import { Badge } from "~/components/ui/display/badge";
+import { Button } from "~/components/ui/input/button";
 import { createClientSearchController } from "~/features/client-search/controller";
 import { groupPeopleByDni } from "~/features/client-search/grouping";
 import {
@@ -125,9 +126,11 @@ export default function ClientSearchPeoplePage() {
                       <div class="flex flex-wrap gap-2">
                         <For each={person.companies}>
                           {(company) => (
-                            <button
+                            <Button
                               type="button"
-                              class="rounded-full bg-secondary px-2.5 py-1 text-xs text-foreground hover:bg-secondary/80"
+                              variant="secondary"
+                              size="sm"
+                              class="h-7 px-2.5 text-xs"
                               onClick={() => {
                                 const href = company.ruc
                                   ? `/client-search/companies?type=ruc&query=${encodeURIComponent(company.ruc)}`
@@ -137,7 +140,7 @@ export default function ClientSearchPeoplePage() {
                             >
                               {company.name ?? "Empresa sin nombre"}
                               <Show when={company.ruc}> ({company.ruc})</Show>
-                            </button>
+                            </Button>
                           )}
                         </For>
                       </div>

@@ -13,11 +13,18 @@
     "DM Sans", "Segoe UI", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
   --font-display:
     "DM Sans", "Segoe UI", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+  --font-mono:
+    "IBM Plex Mono", "SFMono-Regular", "Menlo", "Monaco", "Consolas",
+    "Liberation Mono", "Courier New", monospace;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
+  --color-surface: var(--surface);
+  --color-surface-foreground: var(--surface-foreground);
+  --color-overlay: var(--overlay);
+  --color-scrim: var(--scrim);
 
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
@@ -33,44 +40,123 @@
 
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
 
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
 
+  --shadow-elevation-1: var(--shadow-elevation-1);
+  --shadow-elevation-2: var(--shadow-elevation-2);
+  --shadow-elevation-3: var(--shadow-elevation-3);
+  --shadow-elevation-4: var(--shadow-elevation-4);
+
+  --animate-enter-fade-up: enter-fade-up var(--motion-normal) var(--ease-snappy);
+  --animate-enter-fade: enter-fade var(--motion-fast) var(--ease-standard);
+  --animate-pulse-soft: pulse-soft 2.2s ease-in-out infinite;
+
   --radius-lg: var(--radius-lg);
   --radius-md: var(--radius-md);
   --radius-sm: var(--radius-sm);
+
+  --spacing-rhythm: 4px;
+  --breakpoint-mobile: 52rem;
+
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-snappy: cubic-bezier(0.17, 0.84, 0.44, 1);
+  --motion-instant: 75ms;
+  --motion-fast: 150ms;
+  --motion-normal: 300ms;
+  --motion-slow: 500ms;
+
+  @keyframes enter-fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes enter-fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes pulse-soft {
+    0% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.76;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
 }
 
 :root {
-  --background: #f5f3ef;
-  --foreground: #1b1a18;
+  --background: #f4f2ee;
+  --foreground: #1a1916;
   --card: #ffffff;
-  --card-foreground: #1b1a18;
+  --card-foreground: #1a1916;
+  --surface: rgba(255, 255, 255, 0.8);
+  --surface-foreground: #1f1d1a;
+  --overlay: rgba(244, 241, 236, 0.92);
+  --scrim: rgba(24, 22, 18, 0.42);
 
-  --primary: #191816;
-  --primary-foreground: #f4f1eb;
+  --primary: #191713;
+  --primary-foreground: #f5f2ec;
 
-  --secondary: #ece7df;
+  --secondary: #ebe5db;
   --secondary-foreground: #1f1d1a;
 
-  --muted: #efebe5;
-  --muted-foreground: #726d65;
+  --muted: #efe9df;
+  --muted-foreground: #6d685f;
 
-  --accent: #e8e2d8;
+  --accent: #e7e0d5;
   --accent-foreground: #1b1a18;
 
-  --destructive: #b43737;
+  --destructive: #b63b39;
   --destructive-foreground: #fff8f8;
+  --success: #2d8d5f;
+  --success-foreground: #f5fbf8;
+  --warning: #9a6a1f;
+  --warning-foreground: #fffaf2;
+  --info: #3b699d;
+  --info-foreground: #f4f8ff;
 
-  --border: #d8d1c6;
-  --input: #d6cec1;
+  --border: #d7d0c4;
+  --input: #d3cbbb;
   --ring: #181715;
+
+  --shadow-elevation-1: 0 4px 12px -8px rgba(24, 21, 17, 0.25);
+  --shadow-elevation-2: 0 12px 28px -20px rgba(29, 25, 20, 0.38);
+  --shadow-elevation-3: 0 16px 34px -24px rgba(34, 30, 24, 0.44);
+  --shadow-elevation-4: 0 22px 46px -28px rgba(24, 20, 15, 0.52);
 
   --radius-lg: 1.25rem;
   --radius-md: 1rem;
   --radius-sm: 0.75rem;
+
+  --z-base: 1;
+  --z-sticky: 10;
+  --z-nav: 20;
+  --z-overlay: 40;
+  --z-dialog: 50;
+  --z-toast: 60;
 }
 
 * {
@@ -90,12 +176,12 @@ body {
   background-image:
     radial-gradient(
       circle at 0% 0%,
-      rgba(255, 255, 255, 0.72),
+      rgba(255, 255, 255, 0.68),
       transparent 45%
     ),
     radial-gradient(
       circle at 100% 0%,
-      rgba(226, 218, 204, 0.36),
+      rgba(223, 213, 197, 0.34),
       transparent 40%
     );
 }
@@ -110,28 +196,31 @@ h4 {
 
 .crm-shell {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.44), transparent 30%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.46), transparent 30%),
     var(--background);
 }
 
 .crm-surface {
-  background: rgba(255, 255, 255, 0.78);
-  border: 1px solid rgba(216, 209, 198, 0.8);
-  box-shadow: 0 16px 35px -25px rgba(34, 30, 24, 0.4);
+  background: var(--surface);
+  border: 1px solid color-mix(in oklab, var(--border) 82%, transparent);
+  box-shadow: var(--shadow-elevation-3);
   backdrop-filter: blur(10px);
 }
 
 .crm-fade-up {
-  animation: fade-up 320ms ease-out;
+  animation: var(--animate-enter-fade-up);
 }
 
-@keyframes fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.crm-overlay-panel {
+  background: var(--overlay);
+  border: 1px solid color-mix(in oklab, var(--border) 84%, transparent);
+  box-shadow: var(--shadow-elevation-4);
+  backdrop-filter: blur(12px);
+}
+
+.crm-focus-ring {
+  outline: none;
+  box-shadow:
+    0 0 0 2px color-mix(in oklab, var(--ring) 65%, transparent),
+    0 0 0 4px color-mix(in oklab, var(--background) 76%, transparent);
 }

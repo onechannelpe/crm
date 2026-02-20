@@ -5,8 +5,8 @@ import Building2 from "~/components/icons/building-2";
 import Check from "~/components/icons/check";
 import Phone from "~/components/icons/phone";
 import User from "~/components/icons/user";
-import { Badge } from "~/components/ui/badge";
-import { Button } from "~/components/ui/button";
+import { Badge } from "~/components/ui/display/badge";
+import { Button } from "~/components/ui/input/button";
 
 interface LeadContact {
   assignmentId: number;
