@@ -28,6 +28,9 @@ export default defineConfig({
           name: "perf",
           globalSetup: ["./tests/setup/global-setup.ts"],
           include: ["tests/**/*.perf.test.ts"],
+          benchmark: {
+            include: ["tests/**/*.bench.ts"],
+          },
           environment: "node",
           fileParallelism: false,
           alias: {
@@ -36,9 +39,6 @@ export default defineConfig({
         },
       },
     ],
-    benchmark: {
-      include: ["tests/**/*.bench.ts"],
-    },
   },
   resolve: {
     alias: {
