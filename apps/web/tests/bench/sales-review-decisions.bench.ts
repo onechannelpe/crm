@@ -11,6 +11,7 @@ import { fixedIterations } from "./shared";
 const DECISION_POOL_SIZE = 80;
 const APPROVE_ITEM_ID_START = 60_000;
 const REJECT_ITEM_ID_START = 70_000;
+const SALES_REVIEW_BENCH_NOW = 1_700_000_000_000;
 
 describe("sales review decision performance", () => {
   let ctx: TestDbContext | null = null;
@@ -42,14 +43,14 @@ describe("sales review decision performance", () => {
           product_id: 1,
           serial_number: `SN-APPROVE-${APPROVE_ITEM_ID_START + i}`,
           status: "reserved",
-          created_at: Date.now(),
+          created_at: SALES_REVIEW_BENCH_NOW,
         })
         .execute();
       // oxlint-disable-next-line eslint(no-await-in-loop)
       await benchCtx.repos.inventory.createLock(
         APPROVE_ITEM_ID_START + i,
         approveNoteId,
-        Date.now() + 60_000,
+        SALES_REVIEW_BENCH_NOW + 60_000,
       );
       // oxlint-disable-next-line eslint(no-await-in-loop)
       await benchCtx.repos.chargeNotes.updateStatus(
@@ -73,14 +74,14 @@ describe("sales review decision performance", () => {
           product_id: 1,
           serial_number: `SN-REJECT-${REJECT_ITEM_ID_START + i}`,
           status: "reserved",
-          created_at: Date.now(),
+          created_at: SALES_REVIEW_BENCH_NOW,
         })
         .execute();
       // oxlint-disable-next-line eslint(no-await-in-loop)
       await benchCtx.repos.inventory.createLock(
         REJECT_ITEM_ID_START + i,
         rejectNoteId,
-        Date.now() + 60_000,
+        SALES_REVIEW_BENCH_NOW + 60_000,
       );
       // oxlint-disable-next-line eslint(no-await-in-loop)
       await benchCtx.repos.chargeNotes.updateStatus(

@@ -34,9 +34,12 @@ import { fixedIterations } from "./shared";
 const LEADS_REQUEST_USER_POOL_SIZE = 80;
 const LEADS_REQUEST_USER_ID_START = 90_000;
 const LEADS_REQUEST_ORG_ID_START = 80_000;
+const LEADS_REQUEST_BENCH_NOW = 1_700_000_000_000;
 
 describe("lead assignment performance", () => {
   let ctx: TestDbContext | null = null;
+  let leadAssignmentService: ReturnType<typeof createLeadAssignmentService> | null =
+    null;
   let userIds: number[] = [];
   let userCursor = 0;
 
@@ -46,8 +49,9 @@ describe("lead assignment performance", () => {
     if (!benchCtx) {
       throw new Error("expected benchmark db context");
     }
+    leadAssignmentService = createLeadAssignmentService(benchCtx.repos);
 
-    const now = Date.now();
+    const now = LEADS_REQUEST_BENCH_NOW;
     const users = Array.from(
       { length: LEADS_REQUEST_USER_POOL_SIZE },
       (_, i) => ({
@@ -86,10 +90,10 @@ describe("lead assignment performance", () => {
     await benchCtx.db.insertInto("organizations").values(orgs).execute();
 
     const quota = createQuotaService(benchCtx.repos);
-    const day = new Date().toISOString().slice(0, 10);
+    const benchDay = new Date().toISOString().slice(0, 10);
     for (const userId of userIds) {
       // oxlint-disable-next-line no-await-in-loop
-      const allocated = await quota.allocate(2, userId, 1, day);
+      const allocated = await quota.allocate(2, userId, 1, benchDay);
       if (!allocated.ok) {
         throw new Error(
           `expected quota allocation success, got ${allocated.error}`,
@@ -103,6 +107,7 @@ describe("lead assignment performance", () => {
       await cleanupTestDb(ctx);
       ctx = null;
     }
+    leadAssignmentService = null;
   });
 
   bench(
@@ -116,11 +121,7 @@ describe("lead assignment performance", () => {
         );
       }
 
-      const result = await createLeadAssignmentService(ctx!.repos).requestLeads(
-        userId,
-        1,
-        1,
-      );
+      const result = await leadAssignmentService!.requestLeads(userId, 1, 1);
       if (!result.ok) {
         throw new Error(`expected lead request success, got ${result.error}`);
       }

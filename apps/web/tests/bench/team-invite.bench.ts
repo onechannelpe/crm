@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
+import { hashInviteToken } from "~/lib/auth/invite/tokens";
 import { createUserProvisioningService } from "~/server/users/service-user-provisioning";
 
 import {
@@ -11,10 +12,13 @@ import { fixedIterations } from "./shared";
 
 const TEAM_INVITE_CREATE_POOL_SIZE = 80;
 const TEAM_INVITE_ACCEPT_POOL_SIZE = 80;
+const TEAM_INVITE_ACCEPT_USER_ID_START = 110_000;
 const BENCH_NOW = 10_000_000;
 
 describe("team invite performance", () => {
   let ctx: TestDbContext | null = null;
+  let provisioning: ReturnType<typeof createUserProvisioningService> | null =
+    null;
   let createEmails: string[] = [];
   let acceptFixtures: Array<{ token: string; fullName: string }> = [];
   let createCursor = 0;
@@ -27,36 +31,58 @@ describe("team invite performance", () => {
       throw new Error("expected benchmark db context");
     }
 
-    const provisioning = createUserProvisioningService(benchCtx.repos, {
-      now: () => BENCH_NOW,
-    });
-
     createEmails = Array.from(
       { length: TEAM_INVITE_CREATE_POOL_SIZE },
       (_, i) => `bench-team-create-${i}@test.local`,
     );
+    provisioning = createUserProvisioningService(benchCtx.repos, {
+      now: () => BENCH_NOW,
+    });
 
-    for (let i = 0; i < TEAM_INVITE_ACCEPT_POOL_SIZE; i += 1) {
-      // oxlint-disable-next-line no-await-in-loop
-      const created = await provisioning.createInvite({
-        actorUserId: 5,
-        actorRole: "superuser",
-        branchId: 2,
-        fullName: `Bench Accept ${i}`,
+    const acceptUsers = Array.from(
+      { length: TEAM_INVITE_ACCEPT_POOL_SIZE },
+      (_, i) => ({
+        id: TEAM_INVITE_ACCEPT_USER_ID_START + i,
+        branch_id: 2,
+        team_id: null,
         email: `bench-team-accept-${i}@test.local`,
-        role: "executive",
-        teamId: null,
-      });
-      if (!created.ok) {
-        throw new Error(
-          `expected invite create success for accept pool, got ${created.error}`,
-        );
-      }
+        password_hash: "bench-pending-hash",
+        full_name: `Bench Accept ${i}`,
+        phone_e164: null,
+        phone_verified_at: null,
+        profile_confirmed_at: null,
+        onboarding_completed_at: null,
+        strong_auth_required: 0,
+        strong_auth_enrolled_at: null,
+        role: "executive" as const,
+        is_active: 0,
+        created_at: BENCH_NOW,
+      }),
+    );
+    await benchCtx.db.insertInto("users").values(acceptUsers).execute();
+
+    const pendingInvites = acceptUsers.map((user, i) => {
+      const token = `bench-team-token-${String(i).padStart(3, "0")}`;
       acceptFixtures.push({
-        token: created.value.token,
+        token,
         fullName: `Bench Accepted ${i}`,
       });
-    }
+      return {
+        user_id: user.id,
+        branch_id: 2,
+        email: user.email,
+        role: "executive" as const,
+        token_hash: hashInviteToken(token),
+        status: "pending" as const,
+        expires_at: BENCH_NOW + 7 * 24 * 60 * 60 * 1000,
+        created_by_user_id: 5,
+        accepted_at: null,
+        revoked_at: null,
+        created_at: BENCH_NOW,
+        sent_at: null,
+      };
+    });
+    await benchCtx.db.insertInto("user_invites").values(pendingInvites).execute();
   });
 
   afterAll(async () => {
@@ -64,6 +90,7 @@ describe("team invite performance", () => {
       await cleanupTestDb(ctx);
       ctx = null;
     }
+    provisioning = null;
   });
 
   bench(
@@ -77,9 +104,7 @@ describe("team invite performance", () => {
         );
       }
 
-      const result = await createUserProvisioningService(ctx!.repos, {
-        now: () => BENCH_NOW,
-      }).createInvite({
+      const result = await provisioning!.createInvite({
         actorUserId: 5,
         actorRole: "superuser",
         branchId: 2,
@@ -107,9 +132,7 @@ describe("team invite performance", () => {
         );
       }
 
-      const result = await createUserProvisioningService(ctx!.repos, {
-        now: () => BENCH_NOW,
-      }).acceptInvite({
+      const result = await provisioning!.acceptInvite({
         token: fixture.token,
         fullName: fixture.fullName,
         passwordHash: "bench-password-hash",

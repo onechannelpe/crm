@@ -12,9 +12,11 @@ import { fixedIterations } from "./shared";
 
 const QUOTA_BENCH_USER_POOL_SIZE = 80;
 const QUOTA_BENCH_USER_ID_START = 30_000;
+const QUOTA_BENCH_NOW = 1_700_000_000_000;
 
 describe("quota consume performance", () => {
   let ctx: TestDbContext | null = null;
+  let quotaService: ReturnType<typeof createQuotaService> | null = null;
   let quotaUsers: number[] = [];
   let userCursor = 0;
 
@@ -25,7 +27,7 @@ describe("quota consume performance", () => {
       throw new Error("expected benchmark db context");
     }
 
-    const now = Date.now();
+    const now = QUOTA_BENCH_NOW;
     const users = Array.from({ length: QUOTA_BENCH_USER_POOL_SIZE }, (_, i) => {
       const id = QUOTA_BENCH_USER_ID_START + i;
       return {
@@ -49,11 +51,11 @@ describe("quota consume performance", () => {
     await benchCtx.db.insertInto("users").values(users).execute();
     quotaUsers = users.map((user) => user.id);
 
-    const quota = createQuotaService(benchCtx.repos);
-    const day = new Date().toISOString().slice(0, 10);
+    quotaService = createQuotaService(benchCtx.repos);
+    const benchDay = new Date().toISOString().slice(0, 10);
     for (const userId of quotaUsers) {
       // oxlint-disable-next-line eslint(no-await-in-loop)
-      const result = await quota.allocate(2, userId, 2, day);
+      const result = await quotaService.allocate(2, userId, 2, benchDay);
       if (!result.ok) {
         throw new Error(
           `expected quota allocation success, got ${result.error}`,
@@ -67,6 +69,7 @@ describe("quota consume performance", () => {
       await cleanupTestDb(ctx);
       ctx = null;
     }
+    quotaService = null;
   });
 
   bench(
@@ -78,7 +81,7 @@ describe("quota consume performance", () => {
         throw new Error("benchmark pool exhausted before iterations completed");
       }
 
-      const result = await createQuotaService(ctx!.repos).consume(userId, 1);
+      const result = await quotaService!.consume(userId, 1);
       if (!result.ok) {
         throw new Error(`expected quota consume success, got ${result.error}`);
       }

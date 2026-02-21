@@ -12,6 +12,8 @@ import { fixedIterations } from "./shared";
 
 const SALES_SUBMIT_POOL_SIZE = 96;
 const SALES_INVENTORY_ID_START = 20_000;
+const SALES_SUBMIT_BENCH_NOW = 1_700_000_000_000;
+const SALES_SUBMIT_LOCK_EXPIRY = 4_000_000_000_000;
 
 describe("sales workflow performance", () => {
   let ctx: TestDbContext | null = null;
@@ -38,14 +40,14 @@ describe("sales workflow performance", () => {
       // oxlint-disable-next-line eslint(no-await-in-loop)
       await benchCtx.db
         .insertInto("inventory_items")
-        .values({
-          id: inventoryId,
-          product_id: 1,
-          serial_number: `SN-BENCH-${inventoryId}`,
-          status: "available",
-          created_at: Date.now(),
-        })
-        .execute();
+          .values({
+            id: inventoryId,
+            product_id: 1,
+            serial_number: `SN-BENCH-${inventoryId}`,
+            status: "available",
+            created_at: SALES_SUBMIT_BENCH_NOW,
+          })
+          .execute();
 
       const reserved =
         await benchCtx.repos.inventory.reserveIfAvailable(inventoryId); // oxlint-disable-line no-await-in-loop
@@ -57,7 +59,7 @@ describe("sales workflow performance", () => {
       await benchCtx.repos.inventory.createLock(
         inventoryId,
         noteId,
-        Date.now() + 30 * 60_000,
+        SALES_SUBMIT_LOCK_EXPIRY,
       );
       seededNoteIds.push(noteId);
     }

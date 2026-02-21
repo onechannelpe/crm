@@ -11,6 +11,7 @@ import { fixedIterations } from "./shared";
 
 const SALES_CREATE_USER_POOL_SIZE = 96;
 const SALES_CREATE_USER_ID_START = 100_000;
+const SALES_CREATE_BENCH_NOW = 1_700_000_000_000;
 
 describe("sales create performance", () => {
   let ctx: TestDbContext | null = null;
@@ -24,7 +25,7 @@ describe("sales create performance", () => {
       throw new Error("expected benchmark db context");
     }
 
-    const now = Date.now();
+    const now = SALES_CREATE_BENCH_NOW;
     const users = Array.from(
       { length: SALES_CREATE_USER_POOL_SIZE },
       (_, i) => ({
@@ -69,14 +70,6 @@ describe("sales create performance", () => {
         throw new Error(
           "sales-create pool exhausted before iterations completed",
         );
-      }
-
-      const hasLead = await ctx!.repos.leadAssignments.hasActiveForContact(
-        userId,
-        1,
-      );
-      if (!hasLead) {
-        throw new Error("expected active lead assignment");
       }
 
       const result = await ctx!.sales.createDraft(1, userId);

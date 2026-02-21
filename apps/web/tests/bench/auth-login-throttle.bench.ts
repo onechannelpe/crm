@@ -16,6 +16,7 @@ import { fixedIterations } from "./shared";
 const AUTH_BENCH_PASSWORD = "Secret123!";
 const AUTH_BENCH_USER_POOL_SIZE = 256;
 const AUTH_BENCH_USER_ID_START = 10_000;
+const AUTH_BENCH_NOW = 1_700_000_000_000;
 const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
 
 interface AuthLoginFixture {
@@ -31,7 +32,7 @@ describe("auth login and throttle performance", () => {
   beforeAll(async () => {
     ctx = await createIsolatedTestDb("auth-login-bench");
     const passwordHash = await hashPassword(AUTH_BENCH_PASSWORD);
-    const now = Date.now();
+    const now = AUTH_BENCH_NOW;
 
     const users = Array.from({ length: AUTH_BENCH_USER_POOL_SIZE }, (_, i) => {
       const id = AUTH_BENCH_USER_ID_START + i;
