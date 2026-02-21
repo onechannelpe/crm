@@ -3,9 +3,9 @@ import type { JSX } from "solid-js";
 import { cn } from "~/lib/utils";
 
 export const Table = (props: JSX.HTMLAttributes<HTMLTableElement>) => (
-  <div class="relative w-full overflow-auto rounded-3xl border border-border/85 bg-surface shadow-elevation-2">
+  <div class="relative w-full overflow-auto">
     <table
-      class={cn("w-full caption-bottom text-sm", props.class)}
+      class={cn("w-full caption-bottom text-[13px]", props.class)}
       {...props}
     />
   </div>
@@ -14,7 +14,7 @@ export const Table = (props: JSX.HTMLAttributes<HTMLTableElement>) => (
 export const TableHeader = (
   props: JSX.HTMLAttributes<HTMLTableSectionElement>,
 ) => (
-  <thead class={cn("[&_tr]:border-b bg-muted/55", props.class)} {...props} />
+  <thead class={cn("[&_tr]:border-b border-border bg-surface", props.class)} {...props} />
 );
 
 export const TableBody = (
@@ -26,7 +26,7 @@ export const TableFooter = (
 ) => (
   <tfoot
     class={cn(
-      "border-t border-border/85 bg-muted/50 font-medium [&>tr]:last:border-b-0",
+      "border-t border-border bg-surface font-medium [&>tr]:last:border-b-0",
       props.class,
     )}
     {...props}
@@ -36,7 +36,7 @@ export const TableFooter = (
 export const TableRow = (props: JSX.HTMLAttributes<HTMLTableRowElement>) => (
   <tr
     class={cn(
-      "border-b border-border/75 transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",
+      "h-8 border-b border-border transition-colors hover:bg-muted/35 data-[state=selected]:bg-muted/40",
       props.class,
     )}
     {...props}
@@ -48,7 +48,7 @@ export const TableHead = (
 ) => (
   <th
     class={cn(
-      "h-11 px-4 text-left align-middle text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground [&:has([role=checkbox])]:pr-0",
+      "h-8 border-r border-border px-2 text-left align-middle text-[13px] font-medium text-muted-foreground last:border-r-0 [&:has([role=checkbox])]:pr-0",
       props.class,
     )}
     {...props}
@@ -59,7 +59,10 @@ export const TableCell = (
   props: JSX.TdHTMLAttributes<HTMLTableCellElement>,
 ) => (
   <td
-    class={cn("p-4 align-middle [&:has([role=checkbox])]:pr-0", props.class)}
+    class={cn(
+      "h-8 border-r border-border px-2 align-middle last:border-r-0 [&:has([role=checkbox])]:pr-0",
+      props.class,
+    )}
     {...props}
   />
 );

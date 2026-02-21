@@ -9,7 +9,6 @@ import {
 } from "~/actions/auth";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
-import { Card } from "~/components/ui/layout/card";
 import { getErrorMessage } from "~/lib/errors";
 
 export default function OnboardingPage() {
@@ -52,13 +51,13 @@ export default function OnboardingPage() {
     try {
       if (requiresStrongAuth() && !strongAuthIsEnrolled()) {
         throw new Error(
-          "Debes configurar TOTP antes de activar una cuenta administrativa.",
+          "TOTP is required before activating an administrative account.",
         );
       }
       await completeOnboarding(fullName(), phone());
       navigate("/dashboard");
     } catch (err: unknown) {
-      setError(getErrorMessage(err, "No se pudo completar el onboarding"));
+      setError(getErrorMessage(err, "Failed to complete onboarding"));
     } finally {
       setSubmitting(false);
     }
@@ -70,9 +69,9 @@ export default function OnboardingPage() {
     try {
       const enrollment = await beginTotpEnrollment();
       setTotpQrCode(enrollment.qrCodeDataUrl);
-      setTotpMessage("Escanea el QR y confirma con tu código TOTP.");
+      setTotpMessage("Scan the QR code and confirm with your TOTP code.");
     } catch (err: unknown) {
-      setTotpMessage(getErrorMessage(err, "No se pudo iniciar TOTP"));
+      setTotpMessage(getErrorMessage(err, "Failed to initialize TOTP"));
     } finally {
       setTotpLoading(false);
     }
@@ -87,9 +86,9 @@ export default function OnboardingPage() {
       setTotpQrCode("");
       setTotpCode("");
       await refetchUser();
-      setTotpMessage("TOTP activado. Guarda tus códigos de recuperación.");
+      setTotpMessage("TOTP enabled. Save your recovery codes.");
     } catch (err: unknown) {
-      setTotpMessage(getErrorMessage(err, "Código TOTP inválido"));
+      setTotpMessage(getErrorMessage(err, "Invalid TOTP code"));
     } finally {
       setTotpLoading(false);
     }
@@ -97,14 +96,13 @@ export default function OnboardingPage() {
 
   return (
     <div class="crm-shell grid min-h-screen items-center justify-center px-4">
-      <Card class="w-full max-w-xl p-6 space-y-5">
+      <section class="tw-record-index-panel w-full max-w-xl space-y-5 p-5">
         <div>
           <h1 class="text-2xl font-semibold text-foreground">
-            Completa tu perfil
+            Complete your profile
           </h1>
           <p class="mt-1 text-sm text-muted-foreground">
-            Para continuar debes confirmar tus datos y registrar tu número
-            principal.
+            Confirm your profile details and primary phone number.
           </p>
         </div>
 
@@ -120,7 +118,7 @@ export default function OnboardingPage() {
                 <Input
                   id="onboarding-email"
                   type="email"
-                  label="Correo"
+                  label="Email"
                   value={currentUser().email}
                   disabled
                 />
@@ -130,7 +128,7 @@ export default function OnboardingPage() {
                 <Input
                   id="onboarding-name"
                   type="text"
-                  label="Nombre completo"
+                  label="Full name"
                   value={fullName()}
                   onInput={(e) => setFullName(e.currentTarget.value)}
                   required
@@ -141,7 +139,7 @@ export default function OnboardingPage() {
                 <Input
                   id="onboarding-phone"
                   type="tel"
-                  label="WhatsApp (E.164, ejemplo +51987654321)"
+                  label="WhatsApp (E.164, ex: +51987654321)"
                   value={phone()}
                   onInput={(e) => setPhone(e.currentTarget.value)}
                   required
@@ -149,14 +147,12 @@ export default function OnboardingPage() {
               </div>
 
               <Show when={requiresStrongAuth()}>
-                <div class="space-y-3 rounded-2xl border border-border/85 bg-surface p-3">
+                <div class="space-y-3 border border-border p-3">
                   <p class="text-sm font-medium text-foreground">
-                    Configuración obligatoria de seguridad (TOTP)
+                    Required security setup (TOTP)
                   </p>
                   <Show when={strongAuthIsEnrolled()}>
-                    <p class="text-sm text-muted-foreground">
-                      TOTP habilitado.
-                    </p>
+                    <p class="text-sm text-muted-foreground">TOTP enabled.</p>
                   </Show>
                   <Show when={!strongAuthIsEnrolled()}>
                     <Button
@@ -167,19 +163,19 @@ export default function OnboardingPage() {
                         void startTotpSetup();
                       }}
                     >
-                      {totpLoading() ? "Preparando TOTP..." : "Configurar TOTP"}
+                      {totpLoading() ? "Preparing TOTP..." : "Set up TOTP"}
                     </Button>
                     <Show when={totpQrCode()}>
                       <div class="space-y-2">
                         <img
                           src={totpQrCode()}
-                          alt="QR TOTP"
+                          alt="TOTP QR code"
                           class="w-48 h-48"
                         />
                         <Input
                           id="onboarding-totp-code"
                           type="text"
-                          placeholder="Ingresa código TOTP"
+                          placeholder="Enter TOTP code"
                           value={totpCode()}
                           onInput={(e) => setTotpCode(e.currentTarget.value)}
                         />
@@ -190,7 +186,7 @@ export default function OnboardingPage() {
                             void confirmTotpSetup();
                           }}
                         >
-                          Confirmar TOTP
+                          Confirm TOTP
                         </Button>
                       </div>
                     </Show>
@@ -199,9 +195,9 @@ export default function OnboardingPage() {
                     <p class="text-sm text-muted-foreground">{totpMessage()}</p>
                   </Show>
                   <Show when={recoveryCodes().length > 0}>
-                    <div class="rounded-xl border border-border/80 bg-card p-3 space-y-2">
+                    <div class="space-y-2 border border-border px-3 py-2">
                       <p class="text-sm font-medium">
-                        Códigos de recuperación (solo una vez)
+                        Recovery codes (shown once)
                       </p>
                       <ul class="grid grid-cols-2 gap-2 text-sm">
                         {recoveryCodes().map((code) => (
@@ -218,12 +214,12 @@ export default function OnboardingPage() {
               </Show>
 
               <Button type="submit" class="w-full" disabled={submitting()}>
-                {submitting() ? "Guardando..." : "Guardar y continuar"}
+                {submitting() ? "Saving..." : "Save and continue"}
               </Button>
             </form>
           )}
         </Show>
-      </Card>
+      </section>
     </div>
   );
 }

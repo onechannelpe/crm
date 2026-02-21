@@ -1,7 +1,7 @@
 import { useNavigate } from "@solidjs/router";
 import { For, Show, type JSX } from "solid-js";
 
-import { AppPageHeader, AppPageSection } from "~/components/layout/page";
+import { AppPageHeader } from "~/components/layout/page";
 import { Badge } from "~/components/ui/display/badge";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
@@ -42,7 +42,7 @@ export function ClientSearchHeader(props: SearchPageHeaderProps) {
 
   return (
     <AppPageHeader
-      eyebrow="Búsqueda"
+      eyebrow="Search"
       title={props.title}
       description={props.description}
       actions={
@@ -53,7 +53,7 @@ export function ClientSearchHeader(props: SearchPageHeaderProps) {
               navigate("/client-search/people");
             }}
           >
-            Personas
+            People
           </Button>
           <Button
             variant={props.current === "companies" ? "secondary" : "outline"}
@@ -61,7 +61,7 @@ export function ClientSearchHeader(props: SearchPageHeaderProps) {
               navigate("/client-search/companies");
             }}
           >
-            Empresas
+            Companies
           </Button>
         </>
       }
@@ -71,10 +71,10 @@ export function ClientSearchHeader(props: SearchPageHeaderProps) {
 
 export function ClientSearchFiltersForm(props: SearchFiltersFormProps) {
   return (
-    <AppPageSection class="p-4 md:p-5">
+    <section class="tw-record-index-panel p-4 md:p-5">
       <form class="space-y-4" onSubmit={props.onSubmit}>
         <Select
-          label="Tipo de búsqueda"
+          label="Search type"
           value={props.searchType}
           onInput={(event) => {
             const nextType = event.currentTarget.value;
@@ -93,15 +93,15 @@ export function ClientSearchFiltersForm(props: SearchFiltersFormProps) {
         </Select>
 
         <Input
-          label="Valor"
-          placeholder="Ingresa valor de búsqueda"
+          label="Value"
+          placeholder="Enter search value"
           value={props.query}
           onInput={(event) => props.onQueryChange(event.currentTarget.value)}
           required
         />
 
         <Input
-          label="Límite"
+          label="Limit"
           type="number"
           min="1"
           max="100"
@@ -112,31 +112,28 @@ export function ClientSearchFiltersForm(props: SearchFiltersFormProps) {
 
         <Button type="submit" class="w-full" disabled={props.searching}>
           <Show when={props.searching} fallback={props.submitLabel}>
-            Buscando...
+            Searching...
           </Show>
         </Button>
       </form>
-    </AppPageSection>
+    </section>
   );
 }
 
 export function ClientSearchStatus(props: SearchStatusProps) {
   return (
-    <AppPageSection class="p-4 md:p-5">
+    <section class="tw-record-index-panel p-4 md:p-5">
       <div class="flex items-center justify-between">
         <p class="text-sm text-muted-foreground">
-          <Show
-            when={props.searched}
-            fallback="Define filtros y ejecuta una búsqueda."
-          >
-            {props.count} resultados encontrados
+          <Show when={props.searched} fallback="Set filters and run a search.">
+            {props.count} results found
           </Show>
         </p>
         <Show when={props.searched}>
           <Badge variant="outline">{props.count}</Badge>
         </Show>
       </div>
-    </AppPageSection>
+    </section>
   );
 }
 
@@ -144,7 +141,7 @@ export function ClientSearchError(props: SearchErrorProps) {
   return (
     <Show when={props.message}>
       {(message) => (
-        <div class="rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <div class="rounded-sm border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {message()}
         </div>
       )}
@@ -154,7 +151,7 @@ export function ClientSearchError(props: SearchErrorProps) {
 
 export function ClientSearchHint(props: { children: JSX.Element }) {
   return (
-    <div class="rounded-2xl border border-border/70 bg-white/70 px-4 py-3 text-sm text-muted-foreground">
+    <div class="border border-border px-4 py-3 text-sm text-muted-foreground">
       {props.children}
     </div>
   );

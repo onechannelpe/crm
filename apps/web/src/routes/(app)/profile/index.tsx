@@ -8,10 +8,8 @@ import {
   getTotpStatus,
 } from "~/actions/auth";
 import {
-  AppInsetPanel,
   AppPage,
   AppPageHeader,
-  AppPageSection,
 } from "~/components/layout/page";
 import { useSession } from "~/components/providers/session-provider";
 import { Badge } from "~/components/ui/display/badge";
@@ -21,6 +19,7 @@ import {
   getRoleBadgeVariant,
   getRoleLabel,
 } from "~/lib/auth/access/role-display";
+import { getWorkspaceLabel } from "~/lib/auth/access/workspace-label";
 import {
   isPasskeySupported,
   toCreationOptions,
@@ -58,16 +57,14 @@ export default function ProfilePage() {
         publicKey: toCreationOptions(challenge.options),
       });
       if (!(credential instanceof PublicKeyCredential)) {
-        throw new Error("No se obtuvo una credencial válida");
+        throw new Error("Invalid credential response");
       }
 
       const payload = toRegistrationPayload(credential);
       await finishPasskeyRegistration(challenge.challengeId, payload);
-      setPasskeyMessage("Passkey registrada correctamente");
+      setPasskeyMessage("Passkey registered");
     } catch (err: unknown) {
-      setPasskeyMessage(
-        getErrorMessage(err, "No se pudo completar el registro de passkey"),
-      );
+      setPasskeyMessage(getErrorMessage(err, "Failed to register passkey"));
     } finally {
       setPasskeyLoading(false);
     }
@@ -79,9 +76,9 @@ export default function ProfilePage() {
     try {
       const enrollment = await beginTotpEnrollment();
       setTotpQrCode(enrollment.qrCodeDataUrl);
-      setTotpMessage("Escanea el QR y confirma con tu código TOTP");
+      setTotpMessage("Scan the QR and confirm with your TOTP code");
     } catch (err: unknown) {
-      setTotpMessage(getErrorMessage(err, "No se pudo iniciar TOTP"));
+      setTotpMessage(getErrorMessage(err, "Failed to start TOTP"));
     } finally {
       setTotpLoading(false);
     }
@@ -106,123 +103,138 @@ export default function ProfilePage() {
       setRecoveryCodes(codes);
       setTotpQrCode("");
       setTotpCode("");
-      setTotpMessage("TOTP activado. Guarda los códigos de recuperación.");
+      setTotpMessage("TOTP enabled. Save the recovery codes.");
     } catch (err: unknown) {
-      setTotpMessage(getErrorMessage(err, "Código TOTP inválido"));
+      setTotpMessage(getErrorMessage(err, "Invalid TOTP code"));
     } finally {
       setTotpLoading(false);
     }
   }
 
   return (
-    <AppPage>
-      <AppPageHeader
-        eyebrow="Cuenta"
-        title="Mi perfil"
-        description="Datos de tu sesión y controles de seguridad."
-      />
+    <AppPage class="space-y-0 pb-0">
+      <AppPageHeader eyebrow="User" title="Profile" description="Personal information and account security." />
 
-      <AppPageSection class="space-y-4 p-6">
-        <div>
-          <p class="text-xs uppercase tracking-wider text-muted-foreground">
-            Nombre
-          </p>
-          <p class="text-base font-medium text-foreground">{user().fullName}</p>
+      <section class="tw-record-index-panel">
+        <div class="tw-view-bar">
+          <div class="tw-view-picker">
+            <span>User</span>
+            <span>/</span>
+            <span class="text-foreground">Profile</span>
+          </div>
         </div>
-        <div>
-          <p class="text-xs uppercase tracking-wider text-muted-foreground">
-            Correo
-          </p>
-          <p class="text-base text-foreground">{user().email}</p>
-        </div>
-        <div class="flex items-center justify-between">
-          <p class="text-xs uppercase tracking-wider text-muted-foreground">
-            Rol actual
-          </p>
-          <Badge variant={getRoleBadgeVariant(user().role)}>
-            {getRoleLabel(user().role)}
-          </Badge>
-        </div>
-        <div class="border-t pt-4 space-y-3">
-          <p class="text-xs uppercase tracking-wider text-muted-foreground">
-            Seguridad
-          </p>
-          <Button
-            type="button"
-            variant="outline"
-            disabled={!passkeySupported() || passkeyLoading()}
-            onClick={() => {
-              void registerPasskey();
-            }}
-          >
-            {passkeyLoading() ? "Registrando passkey..." : "Registrar passkey"}
-          </Button>
-          <Show when={!passkeySupported()}>
-            <p class="text-sm text-muted-foreground">
-              Este dispositivo o navegador no soporta passkeys.
-            </p>
-          </Show>
-          <Show when={passkeyMessage()}>
-            <p class="text-sm text-muted-foreground">{passkeyMessage()}</p>
-          </Show>
-          <div class="space-y-3 border-t pt-3">
-            <p class="text-xs uppercase tracking-wider text-muted-foreground">
-              TOTP
-            </p>
-            <Show when={totpStatus()?.enabled}>
-              <p class="text-sm text-muted-foreground">TOTP habilitado</p>
-            </Show>
-            <Show when={!totpStatus()?.enabled}>
+
+        <div class="px-6 py-5">
+          <div class="mx-auto flex max-w-[640px] flex-col gap-8">
+            <section class="space-y-3 border-b border-border pb-6">
+              <h2 class="text-[16px] font-semibold text-foreground">Identity</h2>
+              <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <div>
+                  <p class="text-[12px] text-muted-foreground">Name</p>
+                  <p class="mt-1 text-[14px] font-medium text-foreground">{user().fullName}</p>
+                </div>
+                <div>
+                  <p class="text-[12px] text-muted-foreground">Email</p>
+                  <p class="mt-1 text-[14px] text-foreground">{user().email}</p>
+                </div>
+              </div>
+              <div class="inline-flex items-center gap-2">
+                <span class="text-[12px] text-muted-foreground">Role</span>
+                <Badge variant={getRoleBadgeVariant(user().role)}>
+                  {getRoleLabel(user().role)}
+                </Badge>
+              </div>
+              <div class="inline-flex items-center gap-2">
+                <span class="text-[12px] text-muted-foreground">Team</span>
+                <span class="text-[13px] text-foreground">{getWorkspaceLabel(user())}</span>
+              </div>
+            </section>
+
+            <section class="space-y-3 border-b border-border pb-6">
+              <h2 class="text-[16px] font-semibold text-foreground">Passkey</h2>
+              <p class="text-[13px] text-muted-foreground">
+                Register a passkey to speed up login and improve security.
+              </p>
               <Button
                 type="button"
                 variant="outline"
-                disabled={totpLoading()}
+                disabled={!passkeySupported() || passkeyLoading()}
                 onClick={() => {
-                  void startTotpSetup();
+                  void registerPasskey();
                 }}
               >
-                {totpLoading() ? "Preparando TOTP..." : "Configurar TOTP"}
+                {passkeyLoading() ? "Registering passkey..." : "Register passkey"}
               </Button>
-              <Show when={totpQrCode()}>
-                <img src={totpQrCode()} alt="QR TOTP" class="w-48 h-48" />
-                <Input
-                  id="totp-setup-code"
-                  type="text"
-                  placeholder="Ingresa código TOTP"
-                  value={totpCode()}
-                  onInput={(
-                    e: InputEvent & { currentTarget: HTMLInputElement },
-                  ) => setTotpCode(e.currentTarget.value)}
-                />
+              <Show when={!passkeySupported()}>
+                <p class="text-[13px] text-muted-foreground">
+                  This browser does not support passkeys.
+                </p>
+              </Show>
+              <Show when={passkeyMessage()}>
+                <p class="text-[13px] text-muted-foreground">{passkeyMessage()}</p>
+              </Show>
+            </section>
+
+            <section class="space-y-3">
+              <h2 class="text-[16px] font-semibold text-foreground">Two-factor authentication</h2>
+              <Show when={totpStatus()?.enabled}>
+                <p class="text-[13px] text-muted-foreground">TOTP enabled</p>
+              </Show>
+              <Show when={!totpStatus()?.enabled}>
+                <p class="text-[13px] text-muted-foreground">
+                  Add an authenticator app to require a one-time code on login.
+                </p>
                 <Button
                   type="button"
+                  variant="outline"
                   disabled={totpLoading()}
                   onClick={() => {
-                    void confirmTotpSetup();
+                    void startTotpSetup();
                   }}
                 >
-                  Confirmar TOTP
+                  {totpLoading() ? "Preparing TOTP..." : "Set up TOTP"}
                 </Button>
+                <Show when={totpQrCode()}>
+                  <div class="space-y-2">
+                    <img src={totpQrCode()} alt="TOTP QR code" class="h-48 w-48 border border-border p-2" />
+                    <Input
+                      id="totp-setup-code"
+                      type="text"
+                      placeholder="Enter TOTP code"
+                      value={totpCode()}
+                      onInput={(
+                        e: InputEvent & { currentTarget: HTMLInputElement },
+                      ) => setTotpCode(e.currentTarget.value)}
+                    />
+                    <Button
+                      type="button"
+                      disabled={totpLoading()}
+                      onClick={() => {
+                        void confirmTotpSetup();
+                      }}
+                    >
+                      Confirm TOTP
+                    </Button>
+                  </div>
+                </Show>
               </Show>
-            </Show>
-            <Show when={totpMessage()}>
-              <p class="text-sm text-muted-foreground">{totpMessage()}</p>
-            </Show>
-            <Show when={recoveryCodes().length > 0}>
-              <AppInsetPanel class="space-y-2">
-                <p class="text-sm font-medium">
-                  Códigos de recuperación (solo una vez)
-                </p>
-                <ul class="grid grid-cols-2 gap-2 text-sm">
-                  {recoveryCodes().map((code) => (
-                    <li class="font-mono">{code}</li>
-                  ))}
-                </ul>
-              </AppInsetPanel>
-            </Show>
+              <Show when={totpMessage()}>
+                <p class="text-[13px] text-muted-foreground">{totpMessage()}</p>
+              </Show>
+              <Show when={recoveryCodes().length > 0}>
+                <div class="space-y-2 border border-border px-3 py-2">
+                  <p class="text-sm font-medium">Recovery codes (shown once)</p>
+                  <ul class="grid grid-cols-2 gap-2 text-sm">
+                    {recoveryCodes().map((code) => (
+                      <li class="font-mono">{code}</li>
+                    ))}
+                  </ul>
+                </div>
+              </Show>
+            </section>
           </div>
         </div>
-      </AppPageSection>
+      </section>
     </AppPage>
   );
 }

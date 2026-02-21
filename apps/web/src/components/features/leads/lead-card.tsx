@@ -17,17 +17,17 @@ interface LeadCardProps {
   onComplete: (contactId: number) => void;
 }
 
-const LEAD_EXPIRY_TEXT = "24h restantes";
+const LEAD_EXPIRY_TEXT = "24h left";
 
 export const LeadCard: Component<LeadCardProps> = (props) => {
   return (
-    <div class="crm-surface rounded-2xl border border-border/85 p-4 transition-shadow hover:shadow-elevation-2">
+    <div class="rounded-sm border border-border bg-surface p-4">
       <div class="flex items-start justify-between mb-3">
         <div class="flex-1">
           <h3 class="font-semibold text-foreground">{props.contact.name}</h3>
           <Show when={props.contact.organization_id}>
             <p class="text-sm text-muted-foreground">
-              Org: {props.contact.organization_id}
+              Org #{props.contact.organization_id}
             </p>
           </Show>
         </div>
@@ -41,7 +41,7 @@ export const LeadCard: Component<LeadCardProps> = (props) => {
         </p>
         <Show when={props.contact.phone_primary}>
           <p class="text-sm">
-            <span class="font-medium text-muted-foreground">Tel:</span>{" "}
+            <span class="font-medium text-muted-foreground">Phone:</span>{" "}
             <span class="text-foreground">{props.contact.phone_primary}</span>
           </p>
         </Show>
@@ -49,14 +49,14 @@ export const LeadCard: Component<LeadCardProps> = (props) => {
 
       <div class="flex gap-2">
         <Button size="sm" onClick={() => props.onCreateSale(props.contact.id)}>
-          Crear venta
+          Create sale
         </Button>
         <Button
           size="sm"
           variant="secondary"
           onClick={() => props.onComplete(props.contact.id)}
         >
-          Completar
+          Complete
         </Button>
       </div>
     </div>

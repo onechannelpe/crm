@@ -1,204 +1,364 @@
-import { A, useNavigate, useSearchParams } from "@solidjs/router";
-import { createMemo, For, onMount, Show } from "solid-js";
+import { A, useSearchParams } from "@solidjs/router";
+import { createMemo, createSignal, For, Show, onMount } from "solid-js";
 
-import { EmptyState } from "~/components/feedback/empty-state";
+import Building2 from "~/components/icons/building-2";
+import ChevronDown from "~/components/icons/chevron-down";
+import Phone from "~/components/icons/phone";
+import User from "~/components/icons/user";
 import { AppPage } from "~/components/layout/page";
-import { Badge } from "~/components/ui/display/badge";
-import { Button } from "~/components/ui/input/button";
 import { createClientSearchController } from "~/features/client-search/controller";
 import { groupPeopleByDni } from "~/features/client-search/grouping";
-import {
-  ClientSearchError,
-  ClientSearchFiltersForm,
-  ClientSearchHeader,
-  ClientSearchHint,
-  ClientSearchStatus,
-} from "~/features/client-search/ui";
+import type { SearchType } from "~/server/shared/engine/types";
 
 const PEOPLE_SEARCH_TYPES = [
   "dni",
   "person_name",
+  "company_name",
+  "ruc",
   "phone",
   "phone_enriched",
 ] as const;
 
-const SEARCH_LABELS = {
+const SEARCH_LABELS: Partial<Record<SearchType, string>> = {
   dni: "DNI",
-  person_name: "Nombre de persona",
-  phone: "Teléfono",
-  phone_enriched: "Teléfono enriquecido",
-} as const satisfies Record<(typeof PEOPLE_SEARCH_TYPES)[number], string>;
+  person_name: "Person name",
+  company_name: "Company name",
+  ruc: "RUC",
+  phone: "Phone",
+  phone_enriched: "Phone (enriched)",
+};
+
+type PersonTableRow = {
+  id: string;
+  name: string;
+  dni: string;
+  aliases: string;
+  companies: string;
+  rucs: string;
+  phones: string;
+  companyLinks: Array<{ name: string; ruc: string | null }>;
+};
+
+function toInitial(value: string): string {
+  return value.trim().charAt(0).toUpperCase() || "?";
+}
+
+function buildRows(
+  grouped: ReturnType<typeof groupPeopleByDni>,
+): PersonTableRow[] {
+  return grouped.map((person, index) => {
+    const aliases = person.aliases.filter((alias) => alias !== person.displayName);
+    const companies = person.companies
+      .map((company) => company.name?.trim() || "")
+      .filter(Boolean);
+    const rucs = person.companies
+      .map((company) => company.ruc?.trim() || "")
+      .filter(Boolean);
+
+    return {
+      id: `${person.dni}-${index}`,
+      name: person.displayName || `Person ${person.dni}`,
+      dni: person.dni,
+      aliases: aliases.length > 0 ? aliases.join(" · ") : "-",
+      companies: companies.length > 0 ? companies.join(" · ") : "-",
+      rucs: rucs.length > 0 ? rucs.join(" · ") : "-",
+      phones: person.phones.length > 0 ? person.phones.join(" · ") : "-",
+      companyLinks: person.companies
+        .filter((company) => company.name?.trim() || company.ruc?.trim())
+        .map((company) => ({
+          name: company.name?.trim() || company.ruc?.trim() || "Company",
+          ruc: company.ruc?.trim() || null,
+        })),
+    };
+  });
+}
+
+function inferPeopleSearchType(query: string): SearchType {
+  const value = query.trim();
+  if (/^\d{8}$/.test(value)) return "dni";
+  if (/^\d{11}$/.test(value)) return "ruc";
+  if (/^[+\d()\s-]{6,}$/.test(value)) return "phone";
+  if (/\b(inc|llc|ltd|corp|company|sac|sa)\b/i.test(value)) {
+    return "company_name";
+  }
+  return "person_name";
+}
 
 export default function ClientSearchPeoplePage() {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-
+  const [autoType, setAutoType] = createSignal(true);
   const controller = createClientSearchController({
-    defaultType: "dni",
+    defaultType: "person_name",
     allowedTypes: PEOPLE_SEARCH_TYPES,
     searchParams,
-    errorFallback: "No se pudo completar la búsqueda",
+    errorFallback: "Search request failed",
   });
 
   const grouped = createMemo(() => groupPeopleByDni(controller.results()));
+  const rows = createMemo(() => buildRows(grouped()));
+  const uniqueDniCount = createMemo(
+    () => new Set(rows().map((row) => row.dni)).size,
+  );
 
   onMount(() => {
     void controller.initializeFromParams();
   });
 
   return (
-    <AppPage>
-      <ClientSearchHeader
-        current="people"
-        title="Personas"
-        description="Se agrupa por DNI. Múltiples filas con el mismo DNI se muestran como una sola persona."
-      />
-
-      <div class="grid grid-cols-1 gap-4 xl:grid-cols-[320px_1fr]">
-        <ClientSearchFiltersForm
-          searchType={controller.searchType()}
-          allowedTypes={PEOPLE_SEARCH_TYPES}
-          labels={SEARCH_LABELS}
-          query={controller.query()}
-          limit={controller.limit()}
-          searching={controller.searching()}
-          submitLabel="Buscar personas"
-          onSearchTypeChange={(value) => controller.setSearchType(value)}
-          onQueryChange={(value) => controller.setQuery(value)}
-          onLimitChange={(value) => controller.setLimit(value)}
-          onSubmit={(event) => {
-            event.preventDefault();
-            void controller.runCurrentSearch();
-          }}
-        />
-
-        <section class="space-y-3">
-          <ClientSearchStatus
-            searched={controller.searched()}
-            count={grouped().length}
-          />
-
-          <ClientSearchError message={controller.error()} />
-
-          <Show
-            when={
-              controller.searched() &&
-              !controller.error() &&
-              grouped().length === 0
-            }
+    <AppPage class="space-y-0 pb-0">
+      <section class="tw-record-index-panel">
+        <div class="tw-search-panel">
+          <div class="tw-search-tab-list">
+            <A
+              href="/client-search/people"
+              class="tw-search-tab"
+              data-active="true"
+            >
+              People
+            </A>
+            <A
+              href="/client-search/companies"
+              class="tw-search-tab"
+              data-active="false"
+            >
+              Companies
+            </A>
+          </div>
+          <form
+            class="tw-search-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (autoType()) {
+                controller.setSearchType(inferPeopleSearchType(controller.query()));
+              }
+              void controller.runCurrentSearch();
+            }}
           >
-            <EmptyState
-              title="Sin resultados"
-              description="No se encontraron personas con los filtros indicados."
-            />
-          </Show>
+            <label class="tw-search-field">
+              <span class="tw-search-label">Type</span>
+              <select
+                class="tw-search-select"
+                value={controller.searchType()}
+                onInput={(event) => {
+                  const nextType = event.currentTarget.value;
+                  const allowedType = PEOPLE_SEARCH_TYPES.find(
+                    (type) => type === nextType,
+                  );
+                  if (!allowedType) return;
+                  controller.setSearchType(allowedType);
+                }}
+                disabled={autoType()}
+              >
+                <For each={PEOPLE_SEARCH_TYPES}>
+                  {(type) => (
+                    <option value={type}>{SEARCH_LABELS[type] ?? type}</option>
+                  )}
+                </For>
+              </select>
+            </label>
 
-          <For each={grouped()}>
-            {(person) => (
-              <article class="crm-surface rounded-3xl px-4 py-4 md:px-5">
-                <div class="flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <p class="text-base font-semibold text-foreground">
-                      {person.displayName || `Persona ${person.dni}`}
-                    </p>
-                    <p class="text-xs text-muted-foreground">
-                      DNI {person.dni}
-                    </p>
+            <label class="tw-search-field">
+              <span class="tw-search-label">
+                Value <span class="text-foreground">*</span>
+              </span>
+              <input
+                class="tw-search-input"
+                placeholder="Name, DNI, company, RUC or phone"
+                value={controller.query()}
+                onInput={(event) => controller.setQuery(event.currentTarget.value)}
+                required
+              />
+            </label>
+
+            <label class="tw-search-field">
+              <span class="tw-search-label">
+                Limit <span class="text-foreground">*</span>
+              </span>
+              <input
+                class="tw-search-input"
+                type="number"
+                min="1"
+                max="100"
+                value={controller.limit()}
+                onInput={(event) => controller.setLimit(event.currentTarget.value)}
+                required
+              />
+            </label>
+
+            <div class="tw-search-field justify-end">
+              <span class="tw-search-label opacity-0" aria-hidden="true">
+                Search
+              </span>
+              <button
+                type="submit"
+                class="h-8 rounded-sm border border-primary bg-primary px-3 text-[13px] font-medium text-primary-foreground transition-colors hover:brightness-95 disabled:opacity-50"
+                disabled={controller.searching()}
+              >
+                {controller.searching() ? "Searching..." : "Search"}
+              </button>
+            </div>
+          </form>
+
+          <div class="tw-search-controls">
+            <label class="inline-flex items-center gap-2 text-[13px] font-medium text-foreground">
+              <input
+                type="checkbox"
+                class="h-4 w-4 rounded-[2px] border border-input"
+                checked={autoType()}
+                onInput={(event) => setAutoType(event.currentTarget.checked)}
+              />
+              Auto detect search type
+            </label>
+            <span class="tw-search-helper">
+              Current type:{" "}
+              {SEARCH_LABELS[controller.searchType()] ?? controller.searchType()}
+            </span>
+          </div>
+        </div>
+
+        <Show when={controller.error()}>
+          {(message) => (
+            <div class="border-b border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+              {message()}
+            </div>
+          )}
+        </Show>
+
+        <div class="tw-view-bar">
+          <div class="tw-view-picker">
+            <span>All People</span>
+            <span class="text-muted-foreground">· {rows().length}</span>
+            <ChevronDown class="h-4 w-4 text-muted-foreground" />
+          </div>
+          <div class="tw-view-actions">
+            <span>Filter</span>
+            <span>Sort</span>
+            <span>Options</span>
+          </div>
+        </div>
+
+        <div class="tw-record-table-scroll">
+          <table class="tw-record-table">
+            <thead>
+              <tr>
+                <th>
+                  <input type="checkbox" class="h-4 w-4 rounded-sm border-border" />
+                </th>
+                <th>
+                  <div class="inline-flex items-center gap-2">
+                    <User class="h-4 w-4" />
+                    Name
                   </div>
-                  <Badge variant="secondary">
-                    {person.rows.length} registros fuente
-                  </Badge>
-                </div>
-
-                <div class="mt-3 grid gap-3 md:grid-cols-2">
-                  <div class="space-y-1">
-                    <p class="text-xs uppercase tracking-[0.1em] text-muted-foreground">
-                      Empresas asociadas
-                    </p>
-                    <Show
-                      when={person.companies.length > 0}
-                      fallback={
-                        <p class="text-sm text-muted-foreground">
-                          Sin empresas asociadas
-                        </p>
-                      }
-                    >
-                      <div class="flex flex-wrap gap-2">
-                        <For each={person.companies}>
+                </th>
+                <th>
+                  <div class="inline-flex items-center gap-2">
+                    <User class="h-4 w-4" />
+                    DNI
+                  </div>
+                </th>
+                <th>
+                  <div class="inline-flex items-center gap-2">
+                    <Building2 class="h-4 w-4" />
+                    Aliases
+                  </div>
+                </th>
+                <th>
+                  <div class="inline-flex items-center gap-2">
+                    <Building2 class="h-4 w-4" />
+                    Companies
+                  </div>
+                </th>
+                <th>
+                  <div class="inline-flex items-center gap-2">
+                    <Building2 class="h-4 w-4" />
+                    RUCs
+                  </div>
+                </th>
+                <th>
+                  <div class="inline-flex items-center gap-2">
+                    <Phone class="h-4 w-4" />
+                    Phones
+                  </div>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <For each={rows()}>
+                {(row) => (
+                  <tr>
+                    <td>
+                      <input
+                        type="checkbox"
+                        class="h-4 w-4 rounded-sm border-border"
+                      />
+                    </td>
+                    <td>
+                      <span class="tw-chip">
+                        <span class="tw-avatar-dot">
+                          {toInitial(row.name)}
+                        </span>
+                        <span>{row.name}</span>
+                      </span>
+                    </td>
+                    <td>
+                      <span class="tw-pill">{row.dni}</span>
+                    </td>
+                    <td>
+                      <span class="tw-pill">{row.aliases}</span>
+                    </td>
+                    <td>
+                      <div class="flex flex-wrap gap-1">
+                        <For each={row.companyLinks}>
                           {(company) => (
-                            <Button
-                              type="button"
-                              variant="secondary"
-                              size="sm"
-                              class="h-7 px-2.5 text-xs"
-                              onClick={() => {
-                                const href = company.ruc
-                                  ? `/client-search/companies?type=ruc&query=${encodeURIComponent(company.ruc)}`
-                                  : `/client-search/companies?type=company_name&query=${encodeURIComponent(company.name ?? "")}`;
-                                navigate(href);
-                              }}
+                            <A
+                              href={`/client-search/companies?type=${company.ruc ? "ruc" : "company_name"}&query=${encodeURIComponent(company.ruc ?? company.name)}&limit=${encodeURIComponent(controller.limit())}`}
+                              class="tw-pill"
                             >
-                              {company.name ?? "Empresa sin nombre"}
-                              <Show when={company.ruc}> ({company.ruc})</Show>
-                            </Button>
+                              {company.name}
+                            </A>
                           )}
                         </For>
+                        <Show when={row.companyLinks.length === 0}>
+                          <span class="tw-pill">-</span>
+                        </Show>
                       </div>
-                    </Show>
-                  </div>
+                    </td>
+                    <td>
+                      <span class="tw-pill">{row.rucs}</span>
+                    </td>
+                    <td>
+                      <span class="tw-pill">{row.phones}</span>
+                    </td>
+                  </tr>
+                )}
+              </For>
+              <Show when={rows().length === 0}>
+                <tr>
+                  <td colSpan={7} class="tw-table-empty">
+                    Run a search by DNI, name, company, RUC or phone to list people
+                    and follow linked companies.
+                  </td>
+                </tr>
+              </Show>
+            </tbody>
+          </table>
+        </div>
 
-                  <div class="space-y-1">
-                    <p class="text-xs uppercase tracking-[0.1em] text-muted-foreground">
-                      Números asociados
-                    </p>
-                    <Show
-                      when={person.phones.length > 0}
-                      fallback={
-                        <p class="text-sm text-muted-foreground">
-                          Sin números asociados
-                        </p>
-                      }
-                    >
-                      <div class="flex flex-wrap gap-2">
-                        <For each={person.phones}>
-                          {(phone) => (
-                            <span class="rounded-full bg-secondary px-2.5 py-1 text-xs text-foreground">
-                              {phone}
-                            </span>
-                          )}
-                        </For>
-                      </div>
-                    </Show>
-                  </div>
-                </div>
+        <div class="tw-table-add-row">+ Add New</div>
 
-                <Show when={person.aliases.length > 1}>
-                  <div class="mt-3 border-t border-border/60 pt-3">
-                    <p class="mb-1 text-xs uppercase tracking-[0.1em] text-muted-foreground">
-                      Nombres observados
-                    </p>
-                    <div class="flex flex-wrap gap-2">
-                      <For each={person.aliases.slice(1)}>
-                        {(alias) => (
-                          <span class="rounded-full border border-border/80 px-2.5 py-1 text-xs text-foreground">
-                            {alias}
-                          </span>
-                        )}
-                      </For>
-                    </div>
-                  </div>
-                </Show>
-              </article>
-            )}
-          </For>
-
-          <Show when={!controller.searched()}>
-            <ClientSearchHint>
-              Ir a <A href="/client-search/companies">empresas</A>.
-            </ClientSearchHint>
-          </Show>
-        </section>
-      </div>
+        <div class="tw-table-footer">
+          <div class="inline-flex items-center gap-2">
+            <span>Calculate</span>
+            <ChevronDown class="h-4 w-4" />
+          </div>
+          <div>
+            Unique of DNI <span class="tw-footer-strong">{uniqueDniCount()}</span>
+          </div>
+          <div class="text-right">
+            People rows <span class="tw-footer-strong">{rows().length}</span>
+          </div>
+        </div>
+      </section>
     </AppPage>
   );
 }

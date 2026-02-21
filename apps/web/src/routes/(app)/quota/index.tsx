@@ -3,11 +3,7 @@ import { createResource, createSignal, Show } from "solid-js";
 import { getQuotaStatus, allocateQuota } from "~/actions/quota";
 import { QuotaDisplay } from "~/components/features/quota/quota-display";
 import { useToast } from "~/components/feedback/toast-provider";
-import {
-  AppPage,
-  AppPageHeader,
-  AppPageSection,
-} from "~/components/layout/page";
+import { AppPage, AppPageHeader } from "~/components/layout/page";
 import { useSession } from "~/components/providers/session-provider";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
@@ -61,11 +57,11 @@ export default function QuotaPage() {
           void refetch();
         },
       });
-      showToast("success", "Cuota asignada correctamente");
+      showToast("success", "Quota assigned");
       setExecId("");
       setAmount("10");
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "Error al asignar cuota"));
+      showToast("error", getErrorMessage(err, "Failed to assign quota"));
     } finally {
       setLoading(false);
     }
@@ -74,9 +70,9 @@ export default function QuotaPage() {
   return (
     <AppPage class="max-w-4xl">
       <AppPageHeader
-        eyebrow="Control de capacidad"
-        title="Gestión de cuotas"
-        description="Define cuántos leads puede trabajar cada ejecutivo hoy. Esta cuota afecta la asignación automática de leads."
+        eyebrow="Capacity"
+        title="Quota management"
+        description="Allocate daily lead capacity per executive."
       />
 
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_360px]">
@@ -84,32 +80,21 @@ export default function QuotaPage() {
           <Show
             when={quotaValues()}
             fallback={
-              <AppPageSection class="p-5">
+              <section class="tw-record-index-panel p-4">
                 <p class="text-sm text-muted-foreground">
-                  Sin cuota asignada por el momento.
+                  No quota assigned yet.
                 </p>
-              </AppPageSection>
+              </section>
             }
           >
             {(values) => (
               <QuotaDisplay used={values().used} total={values().total} />
             )}
           </Show>
-
-          <AppPageSection class="p-5">
-            <p class="text-xs uppercase tracking-[0.12em] text-muted-foreground">
-              Consideraciones
-            </p>
-            <ul class="mt-3 space-y-2 text-sm text-muted-foreground">
-              <li>Solo puedes asignar cuota al inicio de jornada.</li>
-              <li>Evita sobreasignar si hay ventas pendientes de validar.</li>
-              <li>Confirma el `ID` del ejecutivo antes de guardar.</li>
-            </ul>
-          </AppPageSection>
         </div>
 
-        <AppPageSection class="p-6">
-          <h3 class="mb-4 text-lg font-semibold">Asignar cuota</h3>
+        <section class="tw-record-index-panel p-4">
+          <h3 class="mb-4 text-lg font-semibold">Assign quota</h3>
           <form
             onSubmit={(e) => {
               void handleAllocate(e);
@@ -118,7 +103,7 @@ export default function QuotaPage() {
           >
             <Input
               type="number"
-              label="ID del ejecutivo"
+              label="Executive ID"
               value={execId()}
               onInput={(e) => setExecId(e.currentTarget.value)}
               required
@@ -126,7 +111,7 @@ export default function QuotaPage() {
 
             <Input
               type="number"
-              label="Cantidad de leads"
+              label="Lead amount"
               value={amount()}
               onInput={(e) => setAmount(e.currentTarget.value)}
               min="1"
@@ -135,10 +120,10 @@ export default function QuotaPage() {
             />
 
             <Button type="submit" disabled={loading()} class="w-full">
-              {loading() ? "Asignando..." : "Asignar cuota"}
+              {loading() ? "Assigning..." : "Assign quota"}
             </Button>
           </form>
-        </AppPageSection>
+        </section>
       </div>
     </AppPage>
   );

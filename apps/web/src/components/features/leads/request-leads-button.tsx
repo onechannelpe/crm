@@ -19,17 +19,17 @@ export const RequestLeadsButton: Component<RequestLeadsButtonProps> = (
     try {
       const assigned = await props.onRequest();
       if (assigned > 0) {
-        showToast("success", `${assigned} leads asignados`);
+        showToast("success", `${assigned} leads assigned`);
       } else {
-        showToast("error", "No se encontraron leads nuevos para asignar");
+        showToast("error", "No additional leads available");
       }
     } catch (error) {
       const message =
         error instanceof TypeError
-          ? "No se pudo conectar con el servidor"
+          ? "Could not connect to server"
           : error instanceof Error
             ? error.message
-            : "Error al solicitar leads";
+            : "Failed to request leads";
       showToast("error", message);
     } finally {
       setLoading(false);
@@ -43,8 +43,8 @@ export const RequestLeadsButton: Component<RequestLeadsButtonProps> = (
       }}
       disabled={loading() || props.disabled}
     >
-      <Show when={loading()} fallback="Solicitar leads">
-        Solicitando...
+      <Show when={loading()} fallback="Request leads">
+        Requesting...
       </Show>
     </Button>
   );

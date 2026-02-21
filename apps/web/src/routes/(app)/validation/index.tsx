@@ -8,11 +8,7 @@ import {
 import { RejectionForm } from "~/components/features/sales/rejection-form";
 import { EmptyState } from "~/components/feedback/empty-state";
 import { useToast } from "~/components/feedback/toast-provider";
-import {
-  AppPage,
-  AppPageHeader,
-  AppPageSection,
-} from "~/components/layout/page";
+import { AppPage, AppPageHeader } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import {
   Table,
@@ -26,7 +22,7 @@ import { getErrorMessage } from "~/lib/errors";
 import { runOptimistic } from "~/lib/ui/run-optimistic";
 
 function formatDate(timestamp: number) {
-  return new Date(timestamp).toLocaleDateString("es-PE", {
+  return new Date(timestamp).toLocaleDateString("en-US", {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -58,9 +54,9 @@ export default function ValidationPage() {
           void refetch();
         },
       });
-      showToast("success", `Venta #${noteId} aprobada`);
+      showToast("success", `Sale #${noteId} approved`);
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "Error al aprobar"));
+      showToast("error", getErrorMessage(err, "Approval failed"));
     }
   };
 
@@ -86,75 +82,52 @@ export default function ValidationPage() {
           void refetch();
         },
       });
-      showToast("success", `Venta #${noteId} rechazada`);
+      showToast("success", `Sale #${noteId} rejected`);
       setRejectingNoteId(null);
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "Error al rechazar"));
+      showToast("error", getErrorMessage(err, "Rejection failed"));
     }
   };
 
   return (
-    <AppPage class="space-y-7">
+    <AppPage>
       <AppPageHeader
-        eyebrow="Mesa de revisión"
-        title="Validación de ventas"
-        description={`${currentNotes().length} ventas pendientes. Revisa evidencia, aprueba lo correcto y rechaza con observaciones claras.`}
+        eyebrow="Review"
+        title="Sales validation"
+        description={`${currentNotes().length} notes pending review.`}
       />
-
-      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <AppPageSection class="p-5">
-          <p class="text-xs uppercase tracking-[0.12em] text-muted-foreground">
-            Pendientes
-          </p>
-          <p class="mt-1 text-3xl font-semibold">{currentNotes().length}</p>
-          <p class="text-xs text-muted-foreground">Esperando decisión</p>
-        </AppPageSection>
-        <AppPageSection class="p-5">
-          <p class="text-xs uppercase tracking-[0.12em] text-muted-foreground">
-            Estado de revisión
-          </p>
-          <p class="mt-1 text-2xl font-semibold">
-            {rejectingNoteId() ? "Rechazo activo" : "Revisión rápida"}
-          </p>
-          <p class="text-xs text-muted-foreground">
-            {rejectingNoteId()
-              ? "Completa observaciones antes de continuar"
-              : "Aprueba o abre un rechazo detallado"}
-          </p>
-        </AppPageSection>
-      </div>
 
       <Show
         when={currentNotes().length > 0}
         fallback={
           <EmptyState
-            title="Sin ventas pendientes"
-            description="Las ventas enviadas aparecerán aquí automáticamente"
+            title="No sales pending review"
+            description="Submitted sales will appear here."
           />
         }
       >
         <Show when={rejectingNoteId()}>
           {(id) => (
-            <AppPageSection class="border border-destructive/30 bg-destructive/10 p-5 shadow-none backdrop-blur-0">
+            <section class="border border-destructive/30 bg-destructive/5 p-4">
               <h2 class="mb-2 text-lg font-semibold text-destructive">
-                Rechazar venta #{id()}
+                Reject sale #{id()}
               </h2>
               <RejectionForm
                 onReject={(rejections) => handleReject(id(), rejections)}
                 onCancel={() => setRejectingNoteId(null)}
               />
-            </AppPageSection>
+            </section>
           )}
         </Show>
-        <AppPageSection class="p-2 md:p-3">
+        <section class="tw-record-index-panel">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>ID</TableHead>
-                <TableHead>Contacto</TableHead>
-                <TableHead>Ejecutivo</TableHead>
-                <TableHead>Fecha</TableHead>
-                <TableHead class="text-right">Acciones</TableHead>
+                <TableHead>Contact</TableHead>
+                <TableHead>Owner</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead class="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -183,14 +156,14 @@ export default function ValidationPage() {
                             void handleApprove(note.id);
                           }}
                         >
-                          Aprobar
+                          Approve
                         </Button>
                         <Button
                           size="sm"
                           variant="destructive"
                           onClick={() => setRejectingNoteId(note.id)}
                         >
-                          Rechazar
+                          Reject
                         </Button>
                       </div>
                     </TableCell>
@@ -199,7 +172,7 @@ export default function ValidationPage() {
               </For>
             </TableBody>
           </Table>
-        </AppPageSection>
+        </section>
       </Show>
     </AppPage>
   );

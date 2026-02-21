@@ -19,7 +19,7 @@ export function Checkbox(props: CheckboxProps) {
         <input
           type="checkbox"
           class={cn(
-            "peer h-4 w-4 appearance-none rounded-sm border border-primary/85 bg-surface",
+            "peer h-4 w-4 appearance-none rounded-[2px] border border-input bg-surface",
             "transition-colors duration-[var(--motion-fast)] ease-[var(--ease-standard)]",
             "checked:border-primary checked:bg-primary",
             "focus-visible:crm-focus-ring",
@@ -31,7 +31,7 @@ export function Checkbox(props: CheckboxProps) {
         <Check class="pointer-events-none absolute left-1/2 top-1/2 hidden h-3 w-3 -translate-x-1/2 -translate-y-1/2 text-primary-foreground peer-checked:block" />
       </span>
       {local.label && (
-        <span class="text-sm font-medium leading-none text-foreground transition-colors group-hover:text-foreground/85 peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+        <span class="text-[13px] font-medium leading-none text-foreground transition-colors group-hover:text-foreground/85 peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
           {local.label}
         </span>
       )}

@@ -18,7 +18,7 @@ export default function AcceptInvitePage() {
   async function handleSubmit(event: Event): Promise<void> {
     event.preventDefault();
     if (password() !== confirmPassword()) {
-      setError("Las contrasenas no coinciden");
+      setError("Passwords do not match");
       return;
     }
 
@@ -32,7 +32,7 @@ export default function AcceptInvitePage() {
       });
       navigate("/onboarding");
     } catch (err: unknown) {
-      setError(getErrorMessage(err, "No se pudo activar la cuenta"));
+      setError(getErrorMessage(err, "Failed to activate account"));
     } finally {
       setSubmitting(false);
     }
@@ -40,7 +40,7 @@ export default function AcceptInvitePage() {
 
   return (
     <div class="crm-shell flex min-h-screen items-center justify-center p-4">
-      <section class="crm-surface w-full max-w-md rounded-3xl p-6">
+      <section class="tw-record-index-panel w-full max-w-md p-6">
         <form
           class="space-y-4"
           onSubmit={(event) => {
@@ -49,28 +49,28 @@ export default function AcceptInvitePage() {
         >
           <div>
             <h1 class="text-2xl font-semibold text-foreground">
-              Activar cuenta
+              Activate account
             </h1>
             <p class="mt-1 text-sm text-muted-foreground">
-              Completa tus datos para activar el acceso al CRM.
+              Complete your details to activate workspace access.
             </p>
           </div>
 
           <Input
-            label="Nombre completo"
+            label="Full name"
             value={fullName()}
             onInput={(event) => setFullName(event.currentTarget.value)}
             required
           />
           <Input
-            label="Contrasena"
+            label="Password"
             type="password"
             value={password()}
             onInput={(event) => setPassword(event.currentTarget.value)}
             required
           />
           <Input
-            label="Confirmar contrasena"
+            label="Confirm password"
             type="password"
             value={confirmPassword()}
             onInput={(event) => setConfirmPassword(event.currentTarget.value)}
@@ -78,13 +78,13 @@ export default function AcceptInvitePage() {
           />
 
           {error() ? (
-            <div class="rounded-2xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <div class="border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {error()}
             </div>
           ) : null}
 
           <Button type="submit" class="w-full" disabled={submitting()}>
-            {submitting() ? "Activando..." : "Activar cuenta"}
+            {submitting() ? "Activating..." : "Activate account"}
           </Button>
         </form>
       </section>

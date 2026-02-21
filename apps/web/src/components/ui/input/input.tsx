@@ -16,7 +16,7 @@ export function Input(props: InputProps) {
       {local.label && (
         <label
           for={inputId}
-          class="text-sm font-medium leading-none text-foreground peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          class="text-[13px] font-medium leading-none text-foreground peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
         >
           {local.label}
           {props.required && <span class="ml-1 text-destructive">*</span>}
@@ -25,8 +25,8 @@ export function Input(props: InputProps) {
       <input
         id={inputId}
         class={cn(
-          "peer flex h-11 w-full rounded-2xl border border-input/90 bg-surface px-4 py-2 text-sm text-foreground",
-          "placeholder:text-muted-foreground",
+          "peer flex h-8 w-full rounded-sm border border-input bg-surface px-3 py-1.5 text-[13px] text-foreground shadow-none",
+          "placeholder:text-muted-foreground/90",
           "transition-colors duration-[var(--motion-fast)] ease-[var(--ease-standard)]",
           "focus-visible:crm-focus-ring",
           "disabled:cursor-not-allowed disabled:opacity-50",

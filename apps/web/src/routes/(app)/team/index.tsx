@@ -10,11 +10,7 @@ import { EmptyState } from "~/components/feedback/empty-state";
 import { useToast } from "~/components/feedback/toast-provider";
 import Mail from "~/components/icons/mail";
 import User from "~/components/icons/user";
-import {
-  AppPage,
-  AppPageHeader,
-  AppPageSection,
-} from "~/components/layout/page";
+import { AppPage, AppPageHeader } from "~/components/layout/page";
 import { Badge } from "~/components/ui/display/badge";
 import { Button } from "~/components/ui/input/button";
 import {
@@ -48,10 +44,10 @@ export default function TeamPage() {
     setPendingActionId(inviteId);
     try {
       await resendTeamInvite(inviteId);
-      showToast("success", "Invitacion reenviada");
+      showToast("success", "Invite resent");
       await refetch();
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "No se pudo reenviar"));
+      showToast("error", getErrorMessage(err, "Failed to resend invite"));
     } finally {
       setPendingActionId(null);
     }
@@ -61,10 +57,10 @@ export default function TeamPage() {
     setPendingActionId(inviteId);
     try {
       await revokeTeamInvite(inviteId);
-      showToast("success", "Invitacion revocada");
+      showToast("success", "Invite revoked");
       await refetch();
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "No se pudo revocar"));
+      showToast("error", getErrorMessage(err, "Failed to revoke invite"));
     } finally {
       setPendingActionId(null);
     }
@@ -73,13 +69,13 @@ export default function TeamPage() {
   return (
     <AppPage>
       <AppPageHeader
-        eyebrow="Gestión interna"
-        title="Equipo"
-        description={`${directory().members.length} miembros activos y ${directory().pendingInvites.length} invitaciones pendientes.`}
+        eyebrow="People"
+        title="Team directory"
+        description={`${directory().members.length} active members and ${directory().pendingInvites.length} pending invites.`}
         actions={
           <Show when={directory().canManageInvites}>
             <A href="/team/new">
-              <Button>Invitar usuario</Button>
+              <Button>Invite member</Button>
             </A>
           </Show>
         }
@@ -89,19 +85,19 @@ export default function TeamPage() {
         when={directory().members.length > 0}
         fallback={
           <EmptyState
-            title="Sin miembros"
-            description="No se encontraron miembros activos en tu sucursal."
+            title="No team members"
+            description="No active users found for this branch."
           />
         }
       >
-        <AppPageSection class="p-2 md:p-3">
+        <section class="tw-record-index-panel">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Nombre</TableHead>
-                <TableHead>Correo</TableHead>
-                <TableHead>Rol</TableHead>
-                <TableHead>Estado</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -129,7 +125,7 @@ export default function TeamPage() {
                     </TableCell>
                     <TableCell>
                       <Badge variant={member.isActive ? "success" : "default"}>
-                        {member.isActive ? "Activo" : "Inactivo"}
+                        {member.isActive ? "Active" : "Inactive"}
                       </Badge>
                     </TableCell>
                   </TableRow>
@@ -137,31 +133,29 @@ export default function TeamPage() {
               </For>
             </TableBody>
           </Table>
-        </AppPageSection>
+        </section>
       </Show>
 
       <div class="space-y-3">
-        <h2 class="text-lg font-semibold text-foreground">
-          Invitaciones pendientes
-        </h2>
+        <h2 class="text-lg font-semibold text-foreground">Pending invites</h2>
         <Show
           when={directory().pendingInvites.length > 0}
           fallback={
             <EmptyState
-              title="Sin invitaciones"
-              description="No hay invitaciones pendientes por activar."
+              title="No pending invites"
+              description="All invites are already resolved."
             />
           }
         >
-          <AppPageSection class="p-2 md:p-3">
+          <section class="tw-record-index-panel">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Nombre</TableHead>
-                  <TableHead>Correo</TableHead>
-                  <TableHead>Rol</TableHead>
-                  <TableHead>Vence</TableHead>
-                  <TableHead>Acciones</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Expires</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -178,14 +172,14 @@ export default function TeamPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {new Date(invite.expiresAt).toLocaleString("es-PE")}
+                        {new Date(invite.expiresAt).toLocaleString("en-US")}
                       </TableCell>
                       <TableCell>
                         <Show
                           when={canManageInviteActions()}
                           fallback={
                             <span class="text-xs text-muted-foreground">
-                              Sin permisos
+                              No permission
                             </span>
                           }
                         >
@@ -198,7 +192,7 @@ export default function TeamPage() {
                                 void handleResend(invite.inviteId);
                               }}
                             >
-                              Reenviar
+                              Resend
                             </Button>
                             <Button
                               size="sm"
@@ -208,7 +202,7 @@ export default function TeamPage() {
                                 void handleRevoke(invite.inviteId);
                               }}
                             >
-                              Revocar
+                              Revoke
                             </Button>
                           </div>
                         </Show>
@@ -218,7 +212,7 @@ export default function TeamPage() {
                 </For>
               </TableBody>
             </Table>
-          </AppPageSection>
+          </section>
         </Show>
       </div>
     </AppPage>

@@ -2,11 +2,7 @@ import { For, Show } from "solid-js";
 
 import { getInventoryItems } from "~/actions/inventory";
 import { EmptyState } from "~/components/feedback/empty-state";
-import {
-  AppPage,
-  AppPageHeader,
-  AppPageSection,
-} from "~/components/layout/page";
+import { AppPage, AppPageHeader } from "~/components/layout/page";
 import { Badge } from "~/components/ui/display/badge";
 import {
   Table,
@@ -19,9 +15,9 @@ import {
 import { createAppQuery } from "~/lib/ui/create-app-query";
 
 const statusLabels: Record<string, string> = {
-  available: "Disponible",
-  reserved: "Reservado",
-  sold: "Vendido",
+  available: "Available",
+  reserved: "Reserved",
+  sold: "Sold",
 };
 
 const statusVariant = (status: string) => {
@@ -44,28 +40,28 @@ export default function InventoryPage() {
   return (
     <AppPage>
       <AppPageHeader
-        eyebrow="Operación"
-        title="Inventario"
-        description={`${itemCount()} items registrados.`}
+        eyebrow="Operations"
+        title="Inventory"
+        description={`${itemCount()} serialized items tracked.`}
       />
 
       <Show
         when={itemCount() > 0}
         fallback={
           <EmptyState
-            title="Sin registros"
-            description="Los productos del inventario aparecerán aquí"
+            title="No inventory records"
+            description="Items will appear here when available."
           />
         }
       >
-        <AppPageSection class="p-2 md:p-3">
+        <section class="tw-record-index-panel">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Producto</TableHead>
-                <TableHead>Número de Serie</TableHead>
-                <TableHead>Categoría</TableHead>
-                <TableHead>Estado</TableHead>
+                <TableHead>Product</TableHead>
+                <TableHead>Serial number</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -91,7 +87,7 @@ export default function InventoryPage() {
               </For>
             </TableBody>
           </Table>
-        </AppPageSection>
+        </section>
       </Show>
     </AppPage>
   );

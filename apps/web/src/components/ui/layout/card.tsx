@@ -11,7 +11,7 @@ export function Card(props: CardProps) {
   return (
     <div
       class={cn(
-        "rounded-3xl border border-border/85 bg-card/90 text-card-foreground shadow-elevation-2 backdrop-blur",
+        "rounded-md border border-border bg-surface text-surface-foreground",
         props.class,
       )}
     >
@@ -22,7 +22,7 @@ export function Card(props: CardProps) {
 
 export function CardHeader(props: CardProps) {
   return (
-    <div class={cn("flex flex-col space-y-1.5 p-7", props.class)}>
+    <div class={cn("flex flex-col space-y-1 p-4", props.class)}>
       {props.children}
     </div>
   );
@@ -32,7 +32,7 @@ export function CardTitle(props: CardProps) {
   return (
     <h3
       class={cn(
-        "text-2xl font-semibold leading-none tracking-tight",
+        "text-lg font-semibold leading-none tracking-tight",
         props.class,
       )}
     >
@@ -50,12 +50,12 @@ export function CardDescription(props: CardProps) {
 }
 
 export function CardContent(props: CardProps) {
-  return <div class={cn("p-7 pt-0", props.class)}>{props.children}</div>;
+  return <div class={cn("p-4 pt-0", props.class)}>{props.children}</div>;
 }
 
 export function CardFooter(props: CardProps) {
   return (
-    <div class={cn("flex items-center p-7 pt-0", props.class)}>
+    <div class={cn("flex items-center p-4 pt-0", props.class)}>
       {props.children}
     </div>
   );

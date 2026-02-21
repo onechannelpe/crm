@@ -6,7 +6,6 @@ import { useToast } from "~/components/feedback/toast-provider";
 import {
   AppPage,
   AppPageHeader,
-  AppPageSection,
 } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { getErrorMessage } from "~/lib/errors";
@@ -23,10 +22,10 @@ export default function FixSalePage() {
     setLoading(true);
     try {
       await submitSale(noteId());
-      showToast("success", "Nota reenviada a revisión");
+      showToast("success", "Sales note resubmitted");
       navigate("/leads");
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "Error al reenviar"));
+      showToast("error", getErrorMessage(err, "Resubmit failed"));
     } finally {
       setLoading(false);
     }
@@ -35,38 +34,38 @@ export default function FixSalePage() {
   return (
     <AppPage class="mx-auto max-w-4xl">
       <AppPageHeader
-        eyebrow="Ventas"
-        title="Corregir venta"
-        description="Revisa observaciones y vuelve a enviar la nota."
+        eyebrow="Sales"
+        title="Fix sale"
+        description="Apply reviewer feedback and resubmit."
         actions={
           <Button variant="secondary" onClick={() => navigate("/leads")}>
-            Volver
+            Back
           </Button>
         }
       />
 
-      <AppPageSection class="p-6">
-        <div class="mb-4 rounded-2xl border-2 border-destructive/30 bg-destructive/10 p-6">
+      <section class="tw-record-index-panel p-4">
+        <div class="mb-4 border border-destructive/30 bg-destructive/5 p-4">
           <h2 class="mb-2 font-bold text-destructive">
-            Correcciones requeridas — nota #{noteId()}
+            Required corrections - note #{noteId()}
           </h2>
           <Show
             when={fixContext()?.rejections?.length}
             fallback={
               <p class="text-sm text-muted-foreground">
-                No hay observaciones pendientes.
+                No pending reviewer notes.
               </p>
             }
           >
             <ul class="space-y-2 text-sm text-foreground">
               <For each={fixContext()?.rejections ?? []}>
                 {(rejection) => (
-                  <li class="rounded-xl border border-destructive/35 bg-card p-3">
+                  <li class="border border-destructive/25 bg-background px-3 py-2">
                     <p class="font-medium text-destructive">
-                      Campo: {rejection.field_id}
+                      Field: {rejection.field_id}
                     </p>
                     <p class="mt-1 text-muted-foreground">
-                      {rejection.reviewer_note ?? "Sin nota del validador."}
+                      {rejection.reviewer_note ?? "No reviewer note provided."}
                     </p>
                   </li>
                 )}
@@ -77,7 +76,7 @@ export default function FixSalePage() {
 
         <div class="flex justify-end gap-2">
           <Button variant="secondary" onClick={() => navigate("/leads")}>
-            Cancelar
+            Cancel
           </Button>
           <Button
             onClick={() => {
@@ -85,10 +84,10 @@ export default function FixSalePage() {
             }}
             disabled={loading()}
           >
-            {loading() ? "Enviando..." : "Reenviar para validación"}
+            {loading() ? "Submitting..." : "Resubmit for review"}
           </Button>
         </div>
-      </AppPageSection>
+      </section>
     </AppPage>
   );
 }

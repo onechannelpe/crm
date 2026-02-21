@@ -25,7 +25,7 @@ function priorityClass(priority: "high" | "normal" | "low"): string {
 }
 
 function formatTime(timestamp: number): string {
-  return new Date(timestamp).toLocaleString("es-PE", {
+  return new Date(timestamp).toLocaleString("en-US", {
     day: "2-digit",
     month: "short",
     hour: "2-digit",
@@ -123,7 +123,7 @@ export function HeaderNotificationsPanel() {
       <Button
         variant="ghost"
         size="icon"
-        class="relative rounded-full text-muted-foreground"
+        class="relative text-muted-foreground"
         onClick={() => {
           setOpen((prev) => !prev);
         }}
@@ -137,20 +137,20 @@ export function HeaderNotificationsPanel() {
       </Button>
       <Show when={open()}>
         <div
-          class="crm-overlay-panel absolute right-0 mt-2 w-96 rounded-2xl"
+          class="crm-overlay-panel absolute right-0 mt-2 w-96 rounded-sm"
           style={{ "z-index": DS_Z_INDEX.overlay }}
         >
-          <div class="flex items-center justify-between border-b p-3">
-            <p class="text-sm font-semibold">Notificaciones</p>
+          <div class="flex items-center justify-between border-b p-2.5">
+            <p class="text-sm font-semibold">Notifications</p>
             <Button
               variant="ghost"
-              class="h-8 px-2 text-xs"
+              class="h-7 px-2 text-xs"
               disabled={currentFeed().unreadCount === 0}
               onClick={() => {
                 void handleMarkAll();
               }}
             >
-              Marcar todas leidas
+              Mark all read
             </Button>
           </div>
           <div class="max-h-96 space-y-2 overflow-auto p-2">
@@ -158,7 +158,7 @@ export function HeaderNotificationsPanel() {
               when={currentFeed().notifications.length > 0}
               fallback={
                 <p class="text-sm text-muted-foreground px-2 py-4">
-                  Sin notificaciones por ahora.
+                  No new notifications.
                 </p>
               }
             >
@@ -167,7 +167,7 @@ export function HeaderNotificationsPanel() {
                   <Button
                     type="button"
                     variant="ghost"
-                    class={`h-auto w-full justify-start rounded-xl border border-l-4 p-2.5 text-left hover:bg-muted/40 ${priorityClass(item.priority)} ${item.readAt ? "opacity-70" : ""}`}
+                    class={`h-auto w-full justify-start rounded-sm border border-l-4 p-2.5 text-left hover:bg-muted/40 ${priorityClass(item.priority)} ${item.readAt ? "opacity-70" : ""}`}
                     onClick={() => {
                       void handleOpenItem(item.id, item.actionUrl);
                       setOpen(false);

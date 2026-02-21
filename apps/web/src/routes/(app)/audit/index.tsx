@@ -10,7 +10,6 @@ import { getObservabilitySnapshot } from "~/actions/admin-observability";
 import {
   AppPage,
   AppPageHeader,
-  AppPageSection,
 } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { Checkbox } from "~/components/ui/input/checkbox";
@@ -28,16 +27,16 @@ import { createAppQuery } from "~/lib/ui/create-app-query";
 
 const WINDOW_OPTIONS = [
   { value: 15, label: "15 min" },
-  { value: 60, label: "1 hora" },
-  { value: 240, label: "4 horas" },
-  { value: 1440, label: "24 horas" },
+  { value: 60, label: "1 hour" },
+  { value: 240, label: "4 hours" },
+  { value: 1440, label: "24 hours" },
 ] as const;
 
 const AUDIT_WINDOW_OPTIONS = [
-  { value: 240, label: "4 horas" },
-  { value: 1440, label: "24 horas" },
-  { value: 10080, label: "7 dias" },
-  { value: 43200, label: "30 dias" },
+  { value: 240, label: "4 hours" },
+  { value: 1440, label: "24 hours" },
+  { value: 10080, label: "7 days" },
+  { value: 43200, label: "30 days" },
 ] as const;
 
 function parseStatus(value: string): "all" | "ok" | "error" {
@@ -125,24 +124,22 @@ export default function AuditObservabilityPage() {
       });
       await Promise.all([refetchPolicySnapshot(), refetchAuditSnapshot()]);
     } catch {
-      setPolicyError(
-        "No se pudo guardar la politica. Verifica permisos y valores.",
-      );
+      setPolicyError("Failed to save policy. Check values and permissions.");
     }
   }
 
   return (
     <AppPage>
       <AppPageHeader
-        eyebrow="Observabilidad"
-        title="Monitoreo y auditoría"
-        description="Tiempos, errores y volumen de ejecución de acciones del CRM."
+        eyebrow="Admin"
+        title="Audit and observability"
+        description="Execution times, error rate, and event volume."
       />
 
-      <AppPageSection class="flex flex-wrap items-end gap-3 p-4">
+      <section class="tw-record-index-panel flex flex-wrap items-end gap-3 p-4">
         <div class="w-44">
           <Select
-            label="Ventana"
+            label="Window"
             value={windowMinutes()}
             onInput={(event) =>
               setWindowMinutes(Number(event.currentTarget.value))
@@ -156,16 +153,16 @@ export default function AuditObservabilityPage() {
         </div>
         <div class="w-40">
           <Select
-            label="Estado"
+            label="Status"
             value={status()}
             onInput={(event) =>
               setStatus(parseStatus(event.currentTarget.value))
             }
             class="h-10"
           >
-            <option value="all">Todos</option>
+            <option value="all">All</option>
             <option value="ok">OK</option>
-            <option value="error">Errores</option>
+            <option value="error">Errors</option>
           </Select>
         </div>
         <Button
@@ -173,14 +170,14 @@ export default function AuditObservabilityPage() {
             void refetch();
           }}
         >
-          Actualizar
+          Refresh
         </Button>
-      </AppPageSection>
+      </section>
 
-      <AppPageSection class="flex flex-wrap items-end gap-3 p-4">
+      <section class="tw-record-index-panel flex flex-wrap items-end gap-3 p-4">
         <div class="w-44">
           <Select
-            label="Ventana auditoria"
+            label="Audit window"
             value={auditWindowMinutes()}
             onInput={(event) =>
               setAuditWindowMinutes(Number(event.currentTarget.value))
@@ -194,7 +191,7 @@ export default function AuditObservabilityPage() {
         </div>
         <div class="w-52">
           <Input
-            label="Accion"
+            label="Action"
             value={actionFilter()}
             onInput={(event) => setActionFilter(event.currentTarget.value)}
             placeholder="charge_note_approved"
@@ -203,7 +200,7 @@ export default function AuditObservabilityPage() {
         </div>
         <div class="w-44">
           <Input
-            label="Entidad"
+            label="Entity"
             value={entityTypeFilter()}
             onInput={(event) => setEntityTypeFilter(event.currentTarget.value)}
             placeholder="charge_note"
@@ -220,7 +217,7 @@ export default function AuditObservabilityPage() {
           />
         </div>
         <Checkbox
-          label="Solo alto riesgo"
+          label="High risk only"
           checked={onlyHighRisk()}
           onInput={(event) => setOnlyHighRisk(event.currentTarget.checked)}
           class="mt-1"
@@ -230,12 +227,12 @@ export default function AuditObservabilityPage() {
             void refetchAuditSnapshot();
           }}
         >
-          Actualizar auditoria
+          Refresh audit
         </Button>
-      </AppPageSection>
+      </section>
 
-      <AppPageSection class="space-y-3 p-4">
-        <h2 class="text-base font-semibold">Resumen por accion</h2>
+      <section class="tw-record-index-panel space-y-3 p-4">
+        <h2 class="text-base font-semibold">Summary by action</h2>
         <Table>
           <TableHeader>
             <TableRow>
@@ -260,9 +257,9 @@ export default function AuditObservabilityPage() {
             </For>
           </TableBody>
         </Table>
-      </AppPageSection>
+      </section>
 
-      <AppPageSection class="space-y-3 p-4">
+      <section class="tw-record-index-panel space-y-3 p-4">
         <h2 class="text-base font-semibold">Eventos recientes</h2>
         <Table>
           <TableHeader>
@@ -298,9 +295,9 @@ export default function AuditObservabilityPage() {
             </For>
           </TableBody>
         </Table>
-      </AppPageSection>
+      </section>
 
-      <AppPageSection class="space-y-3 p-4">
+      <section class="tw-record-index-panel space-y-3 p-4">
         <h2 class="text-base font-semibold">Transiciones de auditoria</h2>
         <Table>
           <TableHeader>
@@ -330,9 +327,9 @@ export default function AuditObservabilityPage() {
             </For>
           </TableBody>
         </Table>
-      </AppPageSection>
+      </section>
 
-      <AppPageSection class="space-y-3 p-4">
+      <section class="tw-record-index-panel space-y-3 p-4">
         <h2 class="text-base font-semibold">
           Politicas de riesgo de auditoria
         </h2>
@@ -409,7 +406,7 @@ export default function AuditObservabilityPage() {
             </For>
           </TableBody>
         </Table>
-      </AppPageSection>
+      </section>
     </AppPage>
   );
 }

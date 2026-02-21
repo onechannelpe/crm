@@ -4,7 +4,6 @@ import { getUserLoginRetryReport } from "~/actions/admin-auth-security";
 import { useToast } from "~/components/feedback/toast-provider";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
-import { Card } from "~/components/ui/layout/card";
 import {
   Table,
   TableBody,
@@ -37,22 +36,18 @@ export function LoginRetriesCard() {
     try {
       const next = await getUserLoginRetryReport(email());
       setReport(next);
-      if (!next) showToast("info", "Usuario no encontrado");
+      if (!next) showToast("info", "User not found");
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "No se pudo consultar"));
+      showToast("error", getErrorMessage(err, "Lookup failed"));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Card class="p-6 space-y-4">
-      <h2 class="text-base font-semibold text-foreground">
-        Seguridad de acceso
-      </h2>
-      <p class="text-sm text-muted-foreground">
-        Consulta reintentos de login por usuario.
-      </p>
+    <section class="space-y-4">
+      <h2 class="text-base font-semibold text-foreground">Login security</h2>
+      <p class="text-sm text-muted-foreground">Inspect user login retries.</p>
       <form
         class="grid grid-cols-1 md:grid-cols-[1fr_180px] gap-3 items-end"
         onSubmit={(e) => {
@@ -62,13 +57,13 @@ export function LoginRetriesCard() {
       >
         <Input
           type="email"
-          label="Correo del usuario"
+          label="User email"
           value={email()}
           onInput={(e) => setEmail(e.currentTarget.value)}
           required
         />
         <Button type="submit" disabled={loading()}>
-          {loading() ? "Consultando..." : "Ver reintentos"}
+          {loading() ? "Loading..." : "View retries"}
         </Button>
       </form>
 
@@ -79,22 +74,22 @@ export function LoginRetriesCard() {
               {data().user.fullName} ({data().user.email})
             </p>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <Card class="p-3">
-                <p class="text-xs text-muted-foreground">reintentos en 15m</p>
+              <div class="border border-border px-3 py-2">
+                <p class="text-xs text-muted-foreground">retries in 15m</p>
                 <p class="text-2xl font-semibold">{data().retryCount15m}</p>
-              </Card>
-              <Card class="p-3">
-                <p class="text-xs text-muted-foreground">reintentos en 24h</p>
+              </div>
+              <div class="border border-border px-3 py-2">
+                <p class="text-xs text-muted-foreground">retries in 24h</p>
                 <p class="text-2xl font-semibold">{data().retryCount24h}</p>
-              </Card>
+              </div>
             </div>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead>Etapa</TableHead>
-                  <TableHead>Resultado</TableHead>
-                  <TableHead>Motivo</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Stage</TableHead>
+                  <TableHead>Outcome</TableHead>
+                  <TableHead>Reason</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -113,6 +108,6 @@ export function LoginRetriesCard() {
           </div>
         )}
       </Show>
-    </Card>
+    </section>
   );
 }

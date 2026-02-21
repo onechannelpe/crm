@@ -16,7 +16,7 @@ export function FileInput(props: FileInputProps) {
       {local.label && (
         <label
           for={inputId}
-          class="text-sm font-medium leading-none text-foreground peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          class="text-[13px] font-medium leading-none text-foreground peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
         >
           {local.label}
           {props.required && <span class="ml-1 text-destructive">*</span>}
@@ -26,7 +26,7 @@ export function FileInput(props: FileInputProps) {
         id={inputId}
         type="file"
         class={cn(
-          "peer w-full rounded-xl border border-input/90 bg-surface px-2 py-2 text-sm text-foreground",
+          "peer w-full rounded-sm border border-input bg-surface px-2 py-1.5 text-[13px] text-foreground",
           "transition-colors duration-[var(--motion-fast)] ease-[var(--ease-standard)]",
           "focus-visible:crm-focus-ring disabled:cursor-not-allowed disabled:opacity-50",
           local.error && "border-destructive focus-visible:shadow-none",

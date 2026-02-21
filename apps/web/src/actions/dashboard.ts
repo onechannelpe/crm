@@ -1,6 +1,7 @@
 "use server";
 
 import { requireAuth } from "~/lib/auth/access/session";
+import { requirePermission } from "~/lib/auth/access/session";
 import { repos } from "~/server/shared/context";
 
 export interface DashboardStats {
@@ -12,6 +13,7 @@ export interface DashboardStats {
 
 export async function getDashboardStats(): Promise<DashboardStats> {
   const session = await requireAuth();
+  await requirePermission("sales:review");
 
   const activeLeads = await repos.leadAssignments.findActiveByUser(
     session.userId,

@@ -1,4 +1,4 @@
-import { A } from "@solidjs/router";
+import { A, useNavigate } from "@solidjs/router";
 import { createMemo, createSignal, For, Show } from "solid-js";
 
 import Search from "~/components/icons/search";
@@ -14,6 +14,7 @@ interface HeaderSearchPanelProps {
 }
 
 export function HeaderSearchPanel(props: HeaderSearchPanelProps) {
+  const navigate = useNavigate();
   const [open, setOpen] = createSignal(false);
   const [query, setQuery] = createSignal("");
   let containerRef: HTMLDivElement | undefined;
@@ -42,28 +43,36 @@ export function HeaderSearchPanel(props: HeaderSearchPanelProps) {
       <Button
         variant="ghost"
         size="icon"
-        class="text-muted-foreground rounded-full"
+        class="text-muted-foreground"
         onClick={() => setOpen((prev) => !prev)}
       >
         <Search class="w-4 h-4" />
       </Button>
       <Show when={open()}>
         <div
-          class="crm-overlay-panel absolute right-0 mt-2 w-80 rounded-2xl p-2.5"
+          class="crm-overlay-panel absolute right-0 mt-2 w-80 rounded-sm p-2"
           style={{ "z-index": DS_Z_INDEX.overlay }}
         >
           <Input
-            class="h-10"
-            placeholder="Buscar modulo o ruta"
+            class="h-8"
+            placeholder="Search page"
             value={query()}
             onInput={(event) => setQuery(event.currentTarget.value)}
+            onKeyDown={(event) => {
+              if (event.key !== "Enter") return;
+              const firstMatch = visibleItems()[0];
+              if (!firstMatch) return;
+              event.preventDefault();
+              navigate(firstMatch.href);
+              setOpen(false);
+            }}
           />
           <div class="mt-2 max-h-72 space-y-1 overflow-auto">
             <For each={visibleItems()}>
               {(item) => (
                 <A
                   href={item.href}
-                  class="block rounded-xl px-2.5 py-2 text-sm hover:bg-muted"
+                  class="block rounded-sm px-2 py-1.5 text-sm hover:bg-muted"
                   onClick={() => setOpen(false)}
                 >
                   {item.label}

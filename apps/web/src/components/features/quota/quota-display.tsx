@@ -20,10 +20,10 @@ export const QuotaDisplay: Component<QuotaDisplayProps> = (props) => {
   };
 
   return (
-    <div class="crm-surface rounded-3xl p-5">
+    <div class="border border-border p-4">
       <div class="mb-2 flex items-center justify-between">
-        <span class="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-          Cuota diaria
+        <span class="text-xs text-muted-foreground">
+          Daily quota
         </span>
         <Badge variant={variant()} class="px-2.5 py-1">
           {props.used}/{props.total}
@@ -36,7 +36,7 @@ export const QuotaDisplay: Component<QuotaDisplayProps> = (props) => {
         />
       </div>
       <p class="mt-2 text-sm text-muted-foreground">
-        {remaining()} leads restantes para hoy
+        {remaining()} leads remaining today
       </p>
     </div>
   );

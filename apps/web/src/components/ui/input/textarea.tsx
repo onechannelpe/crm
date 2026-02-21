@@ -25,7 +25,7 @@ export function Textarea(props: TextareaProps) {
       <textarea
         id={textareaId}
         class={cn(
-          "peer w-full rounded-2xl border bg-surface px-4 py-2.5 text-sm text-foreground",
+          "peer min-h-24 w-full rounded-sm border bg-surface px-3 py-2 text-sm text-foreground",
           "transition-colors duration-[var(--motion-fast)] ease-[var(--ease-standard)]",
           "focus-visible:crm-focus-ring disabled:cursor-not-allowed disabled:opacity-50",
           local.error

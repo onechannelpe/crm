@@ -30,23 +30,23 @@ function isButtonSize(value: string): value is ButtonSize {
 
 const variantClassName: Record<ButtonVariant, string> = {
   primary:
-    "rounded-full bg-primary text-primary-foreground shadow-elevation-1 hover:bg-primary/92",
+    "rounded-sm border border-primary/70 bg-primary text-primary-foreground hover:brightness-95",
   secondary:
-    "rounded-full bg-secondary text-secondary-foreground shadow-elevation-1 hover:bg-secondary/82",
+    "rounded-sm border border-border/70 bg-secondary text-secondary-foreground hover:bg-accent",
   outline:
-    "rounded-full border border-input/90 bg-surface text-foreground shadow-elevation-1 hover:bg-accent hover:text-accent-foreground",
+    "rounded-sm border border-border/70 bg-surface text-foreground hover:bg-muted",
   ghost:
-    "rounded-full text-muted-foreground hover:bg-muted hover:text-foreground",
+    "rounded-sm border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
   destructive:
-    "rounded-full bg-destructive text-destructive-foreground shadow-elevation-1 hover:bg-destructive/90",
+    "rounded-sm border border-destructive bg-destructive text-destructive-foreground hover:brightness-95",
   link: "text-primary underline-offset-4 hover:underline",
 };
 
 const sizeClassName: Record<ButtonSize, string> = {
-  sm: "h-9 px-3.5 text-sm",
-  md: "h-10 px-4 text-sm",
-  lg: "h-11 px-8 text-sm",
-  icon: "h-10 w-10",
+  sm: "h-8 px-3 text-[13px]",
+  md: "h-8 px-3 text-[13px]",
+  lg: "h-10 px-4 text-[13px]",
+  icon: "h-8 w-8",
 };
 
 export function Button(props: ButtonProps) {
@@ -69,7 +69,7 @@ export function Button(props: ButtonProps) {
   return (
     <button
       class={cn(
-        "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-all duration-[var(--motion-fast)] ease-[var(--ease-standard)]",
+        "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors duration-[var(--motion-fast)] ease-[var(--ease-standard)]",
         "ring-offset-background focus-visible:crm-focus-ring",
         "disabled:pointer-events-none disabled:opacity-50",
         variantClassName[variant],

@@ -1,5 +1,13 @@
 import { A, useLocation } from "@solidjs/router";
-import { createMemo, For, type Component } from "solid-js";
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  onMount,
+  Show,
+  type Component,
+} from "solid-js";
 
 import { logout } from "~/actions/auth-session";
 import ChevronDown from "~/components/icons/chevron-down";
@@ -14,132 +22,272 @@ import { AccountMenu } from "~/components/layout/account-menu";
 import { useSession } from "~/components/providers/session-provider";
 import { Button } from "~/components/ui/input/button";
 import { DS_Z_INDEX } from "~/components/ui/theme/design-system";
-import { getSidebarRoutes } from "~/lib/auth/access/route-policy";
-import { getWorkspaceLabel } from "~/lib/auth/access/workspace-label";
+import { canAccessPath } from "~/lib/auth/access/route-policy";
 import { cn } from "~/lib/utils";
 
-const SIDEBAR_GROUPS = [
-  { key: "platform", label: "Plataforma" },
-  { key: "sales", label: "Ventas" },
-  { key: "inventory", label: "Inventario" },
-] as const;
-
-const ICONS: Record<string, Component<{ class?: string }>> = {
-  dashboard: House,
-  team: Users,
-  observability: ShieldCheck,
-  settings: Settings,
-  leads: Users,
-  "client-search": Search,
-  quota: ShieldCheck,
-  validation: MessageSquare,
-  inventory: Package,
+type SidebarItem = {
+  label: string;
+  href: string;
+  icon: Component<{ class?: string }>;
+  isActive?: (pathname: string) => boolean;
 };
+
+const WORKSPACE_ITEMS: SidebarItem[] = [
+  { label: "People", href: "/team", icon: Users },
+  { label: "Companies", href: "/inventory", icon: House },
+  {
+    label: "Opportunities",
+    href: "/leads",
+    icon: MessageSquare,
+    isActive: (pathname) => /^\/(dashboard|leads)(\/|$)/.test(pathname),
+  },
+  { label: "Tasks", href: "/validation", icon: ShieldCheck },
+  { label: "Notes", href: "/audit", icon: MessageSquare },
+  { label: "Dashboards", href: "/quota", icon: Package },
+];
+
+const OPPORTUNITY_VIEWS: Array<Omit<SidebarItem, "icon">> = [
+  { label: "All Opportunities", href: "/leads" },
+  { label: "By Stage", href: "/dashboard" },
+];
+
+const SEARCH_VIEWS: Array<Omit<SidebarItem, "icon">> = [
+  { label: "People", href: "/client-search/people" },
+  { label: "Companies", href: "/client-search/companies" },
+];
+
+const SIDEBAR_EXPANDED_STORAGE_KEY = "crm-sidebar-expanded";
 
 export function Sidebar() {
   const location = useLocation();
   const { currentUser } = useSession();
-  const navGroups = createMemo(() =>
-    SIDEBAR_GROUPS.map((group) => ({
-      label: group.label,
-      items: getSidebarRoutes(currentUser().role, group.key),
-    })).filter((group) => group.items.length > 0),
+  const role = () => currentUser().role;
+  const firstName = createMemo(
+    () => currentUser().fullName.trim().split(/\s+/)[0] || currentUser().fullName,
   );
+  const [expanded, setExpanded] = createSignal(true);
+  const [hovered, setHovered] = createSignal(false);
+
+  const canAccess = (href: string) => canAccessPath(role(), href);
+
+  const showSearch = createMemo(() => canAccess("/client-search/people"));
+  const showSettings = createMemo(() => canAccess("/settings"));
+
+  const workspaceItems = createMemo(() =>
+    WORKSPACE_ITEMS.filter((item) => canAccess(item.href)),
+  );
+  const opportunityViews = createMemo(() =>
+    OPPORTUNITY_VIEWS.filter((item) => canAccess(item.href)),
+  );
+  const isDashboardRoute = createMemo(() =>
+    /^\/dashboard(\/|$)/.test(location.pathname),
+  );
+  const isLeadsRoute = createMemo(() => /^\/leads(\/|$)/.test(location.pathname));
+  const isSearchRoute = createMemo(() =>
+    /^\/client-search\/(people|companies)(\/|$)/.test(location.pathname),
+  );
+  const searchViews = createMemo(() =>
+    SEARCH_VIEWS.filter((item) => canAccess(item.href)),
+  );
+  const isPathActive = (href: string) =>
+    location.pathname === href || location.pathname.startsWith(`${href}/`);
+
+  onMount(() => {
+    const stored =
+      typeof window !== "undefined"
+        ? window.localStorage.getItem(SIDEBAR_EXPANDED_STORAGE_KEY)
+        : null;
+    if (stored === "false") {
+      setExpanded(false);
+    }
+  });
+
+  createEffect(() => {
+    if (typeof document === "undefined") return;
+    const width = expanded()
+      ? "var(--tw-navigation-drawer-width)"
+      : "var(--tw-navigation-drawer-collapsed-width)";
+    document.documentElement.style.setProperty(
+      "--tw-navigation-drawer-current-width",
+      width,
+    );
+  });
+
+  const toggleExpanded = () => {
+    const next = !expanded();
+    setExpanded(next);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(SIDEBAR_EXPANDED_STORAGE_KEY, String(next));
+    }
+  };
+
   const mobileItems = createMemo(() =>
-    navGroups()
-      .flatMap((group) => group.items)
-      .slice(0, 5),
+    [
+      ...(showSearch() ? [{ label: "Search", href: "/client-search/people", icon: Search }] : []),
+      ...workspaceItems(),
+    ].slice(0, 5),
   );
 
   return (
     <>
       <aside
-        class="crm-surface fixed inset-y-4 left-4 hidden w-68 flex-col rounded-3xl md:flex"
+        class="tw-sidebar fixed inset-y-0 left-0 hidden w-[var(--tw-navigation-drawer-current-width)] flex-col md:flex"
+        data-collapsed={!expanded()}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
         style={{ "z-index": DS_Z_INDEX.navigation }}
       >
-        <div class="flex h-18 items-center px-6">
-          <div>
-            <p class="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-              OneChannel
-            </p>
-            <p class="font-semibold text-lg tracking-tight">Panel de control</p>
-          </div>
-        </div>
-        <div class="px-4 pb-3">
+        <div class="tw-sidebar-top gap-2">
+          <AccountMenu
+            label={firstName()}
+            collapsed={!expanded()}
+            onLogout={logout}
+          />
           <Button
             type="button"
-            variant="outline"
-            class="h-auto w-full justify-between rounded-2xl bg-surface px-4 py-3 text-sm font-medium shadow-elevation-1 hover:bg-card"
+            variant="ghost"
+            size="icon"
+            onClick={toggleExpanded}
+            class={cn(
+              "tw-sidebar-collapse hidden h-7 w-7 text-muted-foreground md:inline-flex",
+              expanded() ? (hovered() ? "opacity-100" : "opacity-0") : "opacity-100",
+            )}
+            title={expanded() ? "Collapse sidebar" : "Expand sidebar"}
+            aria-label={expanded() ? "Collapse sidebar" : "Expand sidebar"}
           >
-            <span>{getWorkspaceLabel(currentUser())}</span>
-            <ChevronDown class="h-4 w-4 text-muted-foreground" />
+            <ChevronDown
+              class={cn(
+                "h-4 w-4 transition-transform",
+                expanded() ? "rotate-90" : "-rotate-90",
+              )}
+            />
           </Button>
         </div>
-        <nav class="flex-1 space-y-5 overflow-y-auto px-4 pb-4">
-          <For each={navGroups()}>
-            {(group) => (
-              <div class="space-y-1.5">
-                <h4 class="px-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                  {group.label}
-                </h4>
-                <For each={group.items}>
-                  {(item) => {
-                    const isActive = () =>
-                      location.pathname.startsWith(item.href);
-                    const Icon = ICONS[item.id];
-                    return (
-                      <A
-                        href={item.href}
-                        class={cn(
-                          "flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-sm transition-all",
-                          isActive()
-                            ? "bg-primary text-primary-foreground shadow-sm"
-                            : "text-muted-foreground hover:bg-surface hover:text-foreground",
-                        )}
-                      >
-                        {Icon ? (
-                          <Icon
-                            class={cn(
-                              "h-4 w-4",
-                              isActive()
-                                ? "text-primary-foreground"
-                                : "text-muted-foreground",
-                            )}
-                          />
-                        ) : null}
-                        <span class="font-medium">{item.label}</span>
-                      </A>
-                    );
-                  }}
+
+        <nav class="tw-sidebar-scroll">
+          <section class="tw-nav-section">
+            <Show when={showSearch()}>
+              <A
+                href="/client-search/people"
+                class={cn(
+                  "tw-sidebar-link",
+                  isSearchRoute() && "tw-sidebar-link-active",
+                )}
+              >
+                <Search class="h-4 w-4" />
+                <span class="tw-sidebar-label">Search</span>
+              </A>
+            </Show>
+            <Show when={showSearch() && searchViews().length > 0}>
+              <div
+                class="tw-sidebar-subgroup"
+                data-expanded="true"
+              >
+                <For each={searchViews()}>
+                  {(view) => (
+                    <A
+                      href={view.href}
+                      class={cn(
+                        "tw-sidebar-link",
+                        location.pathname === view.href && "tw-sidebar-link-active",
+                      )}
+                      data-indent="2"
+                    >
+                      <span class="h-1.5 w-1.5 rounded-full bg-muted-foreground/70" />
+                      <span class="tw-sidebar-label">{view.label}</span>
+                    </A>
+                  )}
                 </For>
               </div>
-            )}
-          </For>
+            </Show>
+            <Show when={showSettings()}>
+              <A
+                href="/settings"
+                class={cn(
+                  "tw-sidebar-link",
+                  location.pathname.startsWith("/settings") &&
+                    "tw-sidebar-link-active",
+                )}
+              >
+                <Settings class="h-4 w-4" />
+                <span class="tw-sidebar-label">Settings</span>
+              </A>
+            </Show>
+          </section>
+
+          <section class="tw-nav-section">
+            <h4 class="tw-sidebar-group-title tw-sidebar-label">Workspace</h4>
+            <For each={workspaceItems()}>
+              {(item) => {
+                const isActive =
+                  item.isActive?.(location.pathname) ?? isPathActive(item.href);
+                const Icon = item.icon;
+                return (
+                  <>
+                    <A
+                      href={item.href}
+                      class={cn("tw-sidebar-link", isActive && "tw-sidebar-link-active")}
+                    >
+                      <Icon class="h-4 w-4" />
+                      <span class="tw-sidebar-label">{item.label}</span>
+                    </A>
+                    <Show
+                      when={
+                        item.label === "Opportunities" &&
+                        opportunityViews().length > 0
+                      }
+                    >
+                      <div class="tw-sidebar-subgroup" data-expanded="true">
+                        <For each={opportunityViews()}>
+                          {(view) => (
+                            <A
+                              href={view.href}
+                              class={cn(
+                                "tw-sidebar-link",
+                                (view.href === "/dashboard"
+                                  ? isDashboardRoute()
+                                  : isLeadsRoute()) && "tw-sidebar-link-active",
+                              )}
+                              data-indent="2"
+                            >
+                              <span class="h-1.5 w-1.5 rounded-full bg-muted-foreground/70" />
+                              <span class="tw-sidebar-label">{view.label}</span>
+                            </A>
+                          )}
+                        </For>
+                      </div>
+                    </Show>
+                  </>
+                );
+              }}
+            </For>
+          </section>
         </nav>
-        <div class="border-t border-border/70 px-4 py-4">
-          <AccountMenu fullName={currentUser().fullName} onLogout={logout} />
-        </div>
+
       </aside>
 
       <nav
-        class="crm-surface fixed inset-x-3 bottom-3 flex items-center justify-between rounded-2xl px-2 py-1.5 md:hidden"
+        class="fixed inset-x-3 bottom-3 flex items-center justify-between border border-border bg-surface p-1 md:hidden"
         style={{ "z-index": DS_Z_INDEX.navigation }}
       >
         <For each={mobileItems()}>
           {(item) => {
-            const isActive = () => location.pathname.startsWith(item.href);
-            const Icon = ICONS[item.id];
+            const isActive =
+              location.pathname === item.href ||
+              location.pathname.startsWith(`${item.href}/`);
+            const Icon = item.icon;
+
             return (
               <A
                 href={item.href}
                 class={cn(
-                  "flex min-w-0 flex-1 items-center justify-center gap-1 rounded-xl px-2 py-2 text-[11px]",
-                  isActive()
-                    ? "bg-primary text-primary-foreground"
+                  "flex min-w-0 flex-1 items-center justify-center gap-1 rounded-sm px-2 py-2 text-[11px] font-medium",
+                  isActive
+                    ? "bg-muted text-foreground"
                     : "text-muted-foreground",
                 )}
               >
-                {Icon ? <Icon class="h-3.5 w-3.5" /> : null}
+                <Icon class="h-3.5 w-3.5" />
                 <span class="truncate">{item.label}</span>
               </A>
             );
