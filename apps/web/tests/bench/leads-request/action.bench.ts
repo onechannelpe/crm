@@ -24,7 +24,7 @@ describe("lead assignment action benchmark", () => {
 
     leadService = createLeadAssignmentService(ctx.repos, {
       quotaService: fixtures.quotaService,
-      engine: fixtures.engine,
+      engineClient: fixtures.engineClient,
     });
   });
 

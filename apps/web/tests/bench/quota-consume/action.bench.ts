@@ -21,7 +21,7 @@ describe("quota consume action benchmark", () => {
   beforeAll(async () => {
     ctx = await createIsolatedTestDb("bench-quota-consume-action");
     quotaService = createQuotaService(ctx.repos, {
-      today: () => BENCH_DATE,
+      todayDateString: () => BENCH_DATE,
     });
     userIds = await seedQuotaUsers(ctx);
 

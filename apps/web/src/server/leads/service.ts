@@ -3,13 +3,24 @@ import { createAssignment } from "~/server/leads/domain-assignment";
 import { canContactNow } from "~/server/leads/domain-cooldown";
 import { canLockOrganization } from "~/server/leads/domain-org-lock";
 import { createQuotaService } from "~/server/quota/service";
+import type { QuotaService } from "~/server/quota/service";
 import { createAuditService } from "~/server/shared/audit";
 import { engineClient } from "~/server/shared/engine";
+import type { EngineClient } from "~/server/shared/engine/client";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, isErr, type Result } from "~/server/shared/result";
 
-export function createLeadAssignmentService(repos: Repositories) {
-  const quotaService = createQuotaService(repos);
+interface LeadAssignmentPorts {
+  quotaService?: QuotaService;
+  engineClient?: EngineClient;
+}
+
+export function createLeadAssignmentService(
+  repos: Repositories,
+  ports: LeadAssignmentPorts = {},
+) {
+  const quotaService = ports.quotaService ?? createQuotaService(repos);
+  const engine = ports.engineClient ?? engineClient;
   const audit = createAuditService(repos);
 
   return {
@@ -22,7 +33,7 @@ export function createLeadAssignmentService(repos: Repositories) {
         await repos.leadAssignments.countActiveByUser(userId);
       const needed = Math.max(0, bufferSize - currentCount);
       if (needed === 0) return Ok(0);
-      const engineHealthy = await engineClient.health();
+      const engineHealthy = await engine.health();
       if (!engineHealthy) {
         return Err(
           "Lead engine unavailable. Verify engine service and dataset.",
@@ -44,7 +55,7 @@ export function createLeadAssignmentService(repos: Repositories) {
           if (!canLockOrganization(org, branchId)) continue;
 
           // oxlint-disable-next-line no-await-in-loop -- preserve deterministic assignment order per organization.
-          const searchResults = await engineClient.search("ruc", org.ruc);
+          const searchResults = await engine.search("ruc", org.ruc);
 
           for (const result of searchResults.results) {
             if (assignments.length >= needed) break;

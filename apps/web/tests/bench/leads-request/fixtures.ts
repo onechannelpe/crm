@@ -11,7 +11,7 @@ const ORG_ID_START = 80_000;
 export interface LeadsRequestSeed {
   userIds: number[];
   quotaService: ReturnType<typeof createQuotaService>;
-  engine: EngineClient;
+  engineClient: EngineClient;
 }
 
 export async function seedLeadsRequestFixtures(
@@ -51,7 +51,7 @@ export async function seedLeadsRequestFixtures(
   await ctx.db.insertInto("organizations").values(organizations).execute();
 
   const quotaService = createQuotaService(ctx.repos, {
-    today: () => BENCH_DATE,
+    todayDateString: () => BENCH_DATE,
   });
 
   for (const userId of userIds) {
@@ -62,7 +62,7 @@ export async function seedLeadsRequestFixtures(
     }
   }
 
-  const engine: EngineClient = {
+  const engineClient: EngineClient = {
     async health() {
       return true;
     },
@@ -84,5 +84,5 @@ export async function seedLeadsRequestFixtures(
     },
   };
 
-  return { userIds, quotaService, engine };
+  return { userIds, quotaService, engineClient };
 }
