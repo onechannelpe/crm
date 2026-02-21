@@ -93,10 +93,10 @@ export function Sidebar() {
   createEffect(() => {
     if (typeof document === "undefined") return;
     const width = expanded()
-      ? "var(--tw-navigation-drawer-width)"
-      : "var(--tw-navigation-drawer-collapsed-width)";
+      ? "var(--nav-drawer-width)"
+      : "var(--nav-drawer-collapsed-width)";
     document.documentElement.style.setProperty(
-      "--tw-navigation-drawer-current-width",
+      "--nav-drawer-current-width",
       width,
     );
   });

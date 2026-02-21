@@ -9,26 +9,14 @@
     "IBM Plex Mono", "SFMono-Regular", Menlo, Monaco, Consolas,
     "Liberation Mono", "Courier New", monospace;
 
-  --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
   --color-surface: var(--surface);
-  --color-surface-foreground: var(--surface-foreground);
-  --color-overlay: var(--overlay);
-  --color-scrim: var(--scrim);
 
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
 
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
-
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
 
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
@@ -40,8 +28,6 @@
   --color-info-foreground: var(--info-foreground);
 
   --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
 
   --shadow-elevation-1: var(--shadow-elevation-1);
   --shadow-elevation-2: var(--shadow-elevation-2);
@@ -52,24 +38,12 @@
   --radius-md: var(--radius-md);
   --radius-sm: var(--radius-sm);
 
-  --spacing-rhythm: 4px;
-  --breakpoint-mobile: 48rem;
-
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
-  --ease-snappy: cubic-bezier(0.17, 0.84, 0.44, 1);
-  --motion-instant: 75ms;
   --motion-fast: 150ms;
-  --motion-normal: 300ms;
-  --motion-slow: 1500ms;
 }
 
 :root {
-  /* spacing */
-  --spacing-unit: 4px;
-  --between-siblings-gap: 2px;
-
-  /* typography (rem = target-px ÷ 16) */
-  --font-8: 0.5rem;       /* 8px  */
+  /* typography — numeric primitives (rem = target-px ÷ 16) */
   --font-10: 0.625rem;    /* 10px */
   --font-11: 0.6875rem;   /* 11px */
   --font-12: 0.75rem;     /* 12px */
@@ -96,7 +70,6 @@
 
   /* line height */
   --line-height-md: 1.1;
-  --line-height-lg: 1.5;
 
   /* navigation */
   --nav-drawer-width: 220px;
@@ -107,11 +80,6 @@
   /* table */
   --table-checkbox-width: 32px;
   --table-cell-padding-x: 8px;
-
-  /* shell */
-  --shell-padding-x: 12px;
-  --shell-padding-top: 8px;
-  --shell-padding-bottom: 12px;
 
   /* panel */
   --panel-border: 1px solid var(--border);
@@ -165,7 +133,6 @@
   --info-foreground: color(display-p3 1 1 1);
 
   --border: color(display-p3 0.945 0.945 0.945);
-  --border-medium: color(display-p3 0.922 0.922 0.922);
   --input: color(display-p3 0.945 0.945 0.945);
   --ring: color(display-p3 0.2 0.2 0.2);
 
@@ -184,13 +151,6 @@
   --radius-lg: 8px;
   --radius-md: 8px;
   --radius-sm: 4px;
-
-  --z-base: 1;
-  --z-sticky: 10;
-  --z-nav: 20;
-  --z-overlay: 40;
-  --z-dialog: 50;
-  --z-toast: 60;
 }
 
 :root[data-theme="dark"] {
@@ -230,7 +190,6 @@
   --info-foreground: color(display-p3 0.09 0.09 0.09);
 
   --border: color(display-p3 0.114 0.114 0.114);
-  --border-medium: color(display-p3 0.133 0.133 0.133);
   --input: color(display-p3 0.114 0.114 0.114);
   --ring: color(display-p3 0.922 0.922 0.922);
 
