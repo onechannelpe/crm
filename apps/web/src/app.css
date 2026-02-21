@@ -1,6 +1,7 @@
-@import "tailwindcss";
+@layer reset, base;
 
-@theme {
+:root {
+  /* font families */
   --font-sans:
     Inter, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-display:
@@ -9,40 +10,16 @@
     "IBM Plex Mono", "SFMono-Regular", Menlo, Monaco, Consolas,
     "Liberation Mono", "Courier New", monospace;
 
-  --color-foreground: var(--foreground);
-  --color-surface: var(--surface);
-
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-success: var(--success);
-  --color-success-foreground: var(--success-foreground);
-  --color-warning: var(--warning);
-  --color-warning-foreground: var(--warning-foreground);
-  --color-info: var(--info);
-  --color-info-foreground: var(--info-foreground);
-
-  --color-border: var(--border);
-
-  --shadow-elevation-1: var(--shadow-elevation-1);
-  --shadow-elevation-2: var(--shadow-elevation-2);
-  --shadow-elevation-3: var(--shadow-elevation-3);
-  --shadow-elevation-4: var(--shadow-elevation-4);
-
-  --radius-lg: var(--radius-lg);
-  --radius-md: var(--radius-md);
-  --radius-sm: var(--radius-sm);
-
+  /* motion */
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --motion-fast: 150ms;
-}
 
-:root {
+  /* focus ring */
+  --focus-ring-shadow:
+    0 0 0 1px color-mix(in oklab, var(--ring) 70%, transparent),
+    0 0 0 3px color-mix(in oklab, var(--background) 75%, transparent);
+
+
   /* typography — numeric primitives (rem = target-px ÷ 16) */
   --font-10: 0.625rem;    /* 10px */
   --font-11: 0.6875rem;   /* 11px */
@@ -206,48 +183,93 @@
   --avatar-fg: color(display-p3 0.922 0.922 0.922);
 }
 
-* {
-  border-color: var(--border);
-  outline-color: var(--ring);
-  box-sizing: border-box;
+@layer reset {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-size: inherit;
+    font-weight: inherit;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: none;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: inherit;
+  }
+
+  img,
+  svg,
+  video {
+    display: block;
+    max-width: 100%;
+  }
+
+  ul,
+  ol {
+    list-style: none;
+  }
+
+  table {
+    border-collapse: collapse;
+  }
 }
 
-html,
-body,
-#app {
-  min-height: 100vh;
+@layer base {
+  * {
+    border-color: var(--border);
+    outline-color: var(--ring);
+  }
+
+  html {
+    font-size: 16px;
+  }
+
+  html,
+  body,
+  #app {
+    min-height: 100vh;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-md);
+    background-color: var(--background);
+    color: var(--foreground);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+  }
+
+  button {
+    font-size: var(--font-size-body);
+    cursor: pointer;
+  }
 }
 
-html {
-  font-size: 16px;
-}
-
-button {
-  font-size: var(--font-size-body);
-}
-
-body {
-  margin: 0;
-  padding: 0;
-  font-family: var(--font-sans);
-  font-size: var(--font-size-body);
-  line-height: var(--line-height-md);
-  background-color: var(--background);
-  color: var(--foreground);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-h1,
-h2,
-h3,
-h4 {
-  font-family: var(--font-display);
-}
-
-.crm-focus-ring {
-  outline: none;
-  box-shadow:
-    0 0 0 1px color-mix(in oklab, var(--ring) 70%, transparent),
-    0 0 0 3px color-mix(in oklab, var(--background) 75%, transparent);
-}

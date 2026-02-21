@@ -1,6 +1,7 @@
+import { clsx } from "clsx";
 import { mergeProps, splitProps, type JSX } from "solid-js";
 
-import { cn } from "~/lib/utils";
+import styles from "./badge.module.css";
 
 const BADGE_VARIANTS = [
   "default",
@@ -23,16 +24,6 @@ function isBadgeVariant(value: string): value is BadgeVariant {
   return BADGE_VARIANTS.some((variant) => variant === value);
 }
 
-const variantClassName: Record<BadgeVariant, string> = {
-  default: "border-transparent bg-primary text-primary-foreground",
-  secondary: "border-border bg-secondary text-secondary-foreground",
-  outline: "border-border bg-surface text-foreground",
-  destructive: "border-transparent bg-destructive text-destructive-foreground",
-  success: "border-transparent bg-success text-success-foreground",
-  warning: "border-transparent bg-warning text-warning-foreground",
-  info: "border-transparent bg-info text-info-foreground",
-};
-
 export function Badge(props: BadgeProps) {
   const merged = mergeProps({ variant: "default" }, props);
   const [local, others] = splitProps(merged, ["variant", "class", "children"]);
@@ -43,13 +34,7 @@ export function Badge(props: BadgeProps) {
 
   return (
     <div
-      class={cn(
-        "inline-flex items-center rounded-sm border px-2 py-0.5 text-[11px] font-semibold",
-        "transition-colors duration-[var(--motion-fast)] ease-[var(--ease-standard)]",
-        "focus-visible:crm-focus-ring",
-        variantClassName[variant],
-        local.class,
-      )}
+      class={clsx(styles.badge, styles[variant], local.class)}
       {...others}
     >
       {local.children}
