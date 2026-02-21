@@ -9,7 +9,7 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  margin-left: var(--tw-navigation-drawer-current-width);
+  margin-left: var(--nav-drawer-current-width);
   min-width: 0;
   transition: margin-left 150ms var(--ease-standard);
 }
@@ -25,7 +25,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: var(--tw-top-bar-height);
+  height: var(--topbar-height);
   margin: 0 auto;
   max-width: 1800px;
   padding: 0 8px 0 12px;
@@ -36,8 +36,8 @@
   align-items: center;
   gap: 8px;
   color: var(--foreground);
-  font-size: var(--tw-font-size-md);
-  font-weight: var(--tw-font-weight-medium);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
 }
 
 .topbarActions {
@@ -57,18 +57,18 @@
   height: 28px;
   min-width: 28px;
   padding: 0 8px;
-  font-size: var(--tw-font-size-md);
-  font-weight: var(--tw-font-weight-medium);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
 }
 
 .topbarGhost:hover {
-  background: var(--tw-bg-transparent-light);
+  background: var(--bg-translucent);
   color: var(--foreground);
 }
 
 .topbarOutline {
   border: 1px solid var(--border);
-  background: var(--tw-panel-background);
+  background: var(--panel-bg);
   color: var(--foreground);
 }
 
@@ -86,9 +86,9 @@
 
 .panel {
   background: var(--background);
-  border: var(--tw-panel-border);
-  border-radius: var(--tw-panel-radius);
-  min-height: calc(100vh - var(--tw-top-bar-height) - 32px);
+  border: var(--panel-border);
+  border-radius: var(--panel-radius);
+  min-height: calc(100vh - var(--topbar-height) - 32px);
   overflow: hidden;
 }
 
@@ -96,7 +96,7 @@
   position: fixed;
   inset: 0 auto 0 0;
   z-index: 20;
-  width: var(--tw-navigation-drawer-current-width);
+  width: var(--nav-drawer-current-width);
   background: var(--background);
   display: none;
   flex-direction: column;
@@ -132,8 +132,8 @@
   display: flex;
   align-items: center;
   color: var(--foreground-tertiary);
-  font-size: var(--tw-font-size-xs);
-  font-weight: var(--tw-font-weight-semibold);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-semibold);
 }
 
 .link {
@@ -148,17 +148,17 @@
   gap: 8px;
   text-decoration: none;
   color: var(--foreground-secondary);
-  font-size: var(--tw-font-size-md);
-  font-weight: var(--tw-font-weight-medium);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
 }
 
 .link:hover {
-  background: var(--tw-bg-transparent-light);
+  background: var(--bg-translucent);
   color: var(--foreground);
 }
 
 .linkActive {
-  background: var(--tw-bg-transparent-light);
+  background: var(--bg-translucent);
   color: var(--foreground);
 }
 
@@ -199,7 +199,7 @@
 }
 
 .collapse:hover {
-  background: var(--tw-bg-transparent-light);
+  background: var(--bg-translucent);
   color: var(--foreground);
 }
 

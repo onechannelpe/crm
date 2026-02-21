@@ -16,10 +16,10 @@
 }
 
 .section {
-  border: var(--tw-panel-border);
-  border-radius: var(--tw-panel-radius);
+  border: var(--panel-border);
+  border-radius: var(--panel-radius);
   overflow: hidden;
-  background: var(--tw-panel-background);
+  background: var(--panel-bg);
 }
 
 .sectionBody {
@@ -40,13 +40,13 @@
 }
 
 .title {
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 500;
   color: var(--foreground);
 }
 
 .description {
   margin-top: 4px;
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   color: var(--muted-foreground);
 }

@@ -22,7 +22,7 @@
 
 .totpTitle {
   margin: 0;
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 500;
   color: var(--foreground);
 }
@@ -41,7 +41,7 @@
 
 .recoveryTitle {
   margin: 0;
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 500;
 }
 
@@ -52,7 +52,7 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
-  font-size: 13px;
+  font-size: var(--font-size-body);
 }
 
 .mono {
@@ -61,6 +61,6 @@
 
 .error {
   margin: 0;
-  font-size: 13px;
+  font-size: var(--font-size-body);
   color: var(--destructive);
 }

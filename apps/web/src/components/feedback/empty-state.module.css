@@ -19,13 +19,13 @@
 
 .title {
   margin: 0 0 4px;
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 500;
   color: var(--foreground);
 }
 
 .description {
   margin: 0 0 12px;
-  font-size: 13px;
+  font-size: var(--font-size-body);
   color: var(--muted-foreground);
 }

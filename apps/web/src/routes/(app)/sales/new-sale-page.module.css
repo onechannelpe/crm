@@ -4,9 +4,9 @@
 }
 
 .panel {
-  border: var(--tw-panel-border);
-  border-radius: var(--tw-panel-radius);
-  background: var(--tw-panel-background);
+  border: var(--panel-border);
+  border-radius: var(--panel-radius);
+  background: var(--panel-bg);
   padding: 12px;
 }
 
@@ -23,14 +23,14 @@
 
 .draftTitle {
   margin: 0;
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 500;
   color: var(--foreground);
 }
 
 .draftHint {
   margin: 4px 0 0;
-  font-size: 13px;
+  font-size: var(--font-size-body);
   color: var(--muted-foreground);
 }
 
@@ -48,7 +48,7 @@
 
 .columnTitle {
   margin: 0;
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 500;
   color: var(--foreground);
 }
@@ -58,12 +58,12 @@
   padding: 8px 12px;
   display: grid;
   gap: 8px;
-  font-size: 13px;
+  font-size: var(--font-size-body);
 }
 
 .summaryTitle {
   margin: 0;
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 500;
 }
 
@@ -78,7 +78,7 @@
 .documentItem {
   border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
   border-radius: var(--radius-sm);
-  background: var(--tw-panel-background);
+  background: var(--panel-bg);
   padding: 4px 8px;
   display: flex;
   align-items: center;

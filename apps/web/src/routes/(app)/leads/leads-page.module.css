@@ -11,28 +11,28 @@
 }
 
 .quotaFallback {
-  border: var(--tw-panel-border);
-  border-radius: var(--tw-panel-radius);
-  background: var(--tw-panel-background);
+  border: var(--panel-border);
+  border-radius: var(--panel-radius);
+  background: var(--panel-bg);
   padding: 12px;
 }
 
 .quotaLabel {
   margin: 0;
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   color: var(--muted-foreground);
 }
 
 .quotaValue {
   margin: 4px 0 0;
-  font-size: 20px;
+  font-size: var(--font-size-heading-md);
   font-weight: 500;
   color: var(--foreground);
 }
 
 .quotaHint {
   margin: 4px 0 0;
-  font-size: 13px;
+  font-size: var(--font-size-body);
   color: var(--muted-foreground);
 }
 

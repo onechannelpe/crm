@@ -16,7 +16,7 @@
 }
 
 .trigger:hover {
-  background: var(--tw-bg-transparent-light);
+  background: var(--bg-translucent);
   color: var(--foreground);
 }
 
@@ -29,7 +29,7 @@
   border-radius: 999px;
   background: var(--destructive);
   color: var(--destructive-foreground);
-  font-size: 10px;
+  font-size: var(--font-10);
   line-height: 16px;
   text-align: center;
   padding: 0 4px;
@@ -57,7 +57,7 @@
 }
 
 .panelTitle {
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 600;
   color: var(--foreground);
 }
@@ -68,18 +68,18 @@
   border-radius: 4px;
   background: transparent;
   color: var(--muted-foreground);
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   padding: 0 8px;
 }
 
 .markAll:hover {
-  background: var(--tw-bg-transparent-light);
+  background: var(--bg-translucent);
   color: var(--foreground);
 }
 
 .empty {
   padding: 16px;
-  font-size: 13px;
+  font-size: var(--font-size-body);
   color: var(--muted-foreground);
 }
 
@@ -105,24 +105,24 @@
 .itemUnread {
   background: color-mix(
     in oklab,
-    var(--tw-bg-transparent-light) 90%,
+    var(--bg-translucent) 90%,
     transparent
   );
 }
 
 .item:hover {
-  background: var(--tw-bg-transparent-light);
+  background: var(--bg-translucent);
 }
 
 .title {
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 500;
   color: var(--foreground);
 }
 
 .body {
   margin-top: 4px;
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   color: var(--muted-foreground);
 }
 
@@ -135,7 +135,7 @@
 }
 
 .time {
-  font-size: 11px;
+  font-size: var(--font-size-label);
   color: var(--muted-foreground);
 }
 
@@ -145,11 +145,11 @@
   border-radius: 4px;
   background: transparent;
   color: var(--muted-foreground);
-  font-size: 11px;
+  font-size: var(--font-size-label);
   padding: 0 6px;
 }
 
 .readBtn:hover {
-  background: var(--tw-bg-transparent-light);
+  background: var(--bg-translucent);
   color: var(--foreground);
 }

@@ -1,16 +1,16 @@
 .noAccess {
-  border: var(--tw-panel-border);
-  border-radius: var(--tw-panel-radius);
-  background: var(--tw-panel-background);
+  border: var(--panel-border);
+  border-radius: var(--panel-radius);
+  background: var(--panel-bg);
   padding: 12px;
   color: var(--muted-foreground);
-  font-size: 13px;
+  font-size: var(--font-size-body);
 }
 
 .layout {
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);
-  min-height: calc(100vh - var(--tw-top-bar-height) - 24px);
+  min-height: calc(100vh - var(--topbar-height) - 24px);
 }
 
 .nav {
@@ -38,7 +38,7 @@
   display: flex;
   align-items: center;
   color: var(--muted-foreground);
-  font-size: 11px;
+  font-size: var(--font-size-label);
   font-weight: 600;
 }
 
@@ -54,7 +54,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 500;
   text-align: left;
 }
@@ -65,12 +65,12 @@
 }
 
 .item:hover {
-  background: var(--tw-bg-transparent-light);
+  background: var(--bg-translucent);
   color: var(--foreground);
 }
 
 .itemActive {
-  background: var(--tw-bg-transparent-light);
+  background: var(--bg-translucent);
   color: var(--foreground);
 }
 
@@ -94,7 +94,7 @@
   align-items: center;
   gap: 8px;
   color: var(--muted-foreground);
-  font-size: 13px;
+  font-size: var(--font-size-body);
 }
 
 .crumbCurrent {
@@ -120,7 +120,7 @@
 }
 
 .title {
-  font-size: 16px;
+  font-size: var(--font-size-heading-sm);
   font-weight: 600;
   color: var(--foreground);
 }
@@ -128,12 +128,12 @@
 .description {
   margin-top: 4px;
   color: var(--muted-foreground);
-  font-size: 13px;
+  font-size: var(--font-size-body);
 }
 
 .placeholderText {
   color: var(--muted-foreground);
-  font-size: 13px;
+  font-size: var(--font-size-body);
 }
 
 .products {
@@ -158,13 +158,13 @@
 }
 
 .productName {
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 500;
   color: var(--foreground);
 }
 
 .productCategory {
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   color: var(--muted-foreground);
 }
 

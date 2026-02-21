@@ -7,7 +7,7 @@
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  font-size: var(--tw-font-size-md);
+  font-size: var(--font-size-body);
 }
 
 .row {
@@ -16,17 +16,17 @@
 }
 
 .row:hover {
-  background: var(--tw-bg-transparent-light);
+  background: var(--bg-translucent);
 }
 
 .head {
   height: 32px;
-  padding: 0 var(--tw-table-horizontal-cell-padding);
+  padding: 0 var(--table-cell-padding-x);
   text-align: left;
   vertical-align: middle;
   color: var(--foreground-secondary);
-  font-size: var(--tw-font-size-md);
-  font-weight: var(--tw-font-weight-regular);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
   background: var(--background);
   border-bottom: 1px solid var(--border);
   border-right: 1px solid var(--border);
@@ -34,10 +34,10 @@
 
 .cell {
   height: 32px;
-  padding: 0 var(--tw-table-horizontal-cell-padding);
+  padding: 0 var(--table-cell-padding-x);
   vertical-align: middle;
   color: var(--foreground);
-  font-size: var(--tw-font-size-md);
+  font-size: var(--font-size-body);
   border-bottom: 1px solid var(--border);
   border-right: 1px solid var(--border);
 }
@@ -50,5 +50,5 @@
 .caption {
   margin-top: 12px;
   color: var(--foreground-tertiary);
-  font-size: var(--tw-font-size-sm);
+  font-size: var(--font-size-caption);
 }

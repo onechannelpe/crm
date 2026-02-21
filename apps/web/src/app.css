@@ -64,36 +64,67 @@
 }
 
 :root {
-  --tw-spacing-unit: 4px;
-  --tw-between-siblings-gap: 2px;
-  --tw-text-line-height-md: 1.1;
-  --tw-text-line-height-lg: 1.5;
-  --tw-font-size-xxs: 0.625rem;
-  --tw-font-size-xs: 0.85rem;
-  --tw-font-size-sm: 0.92rem;
-  --tw-font-size-md: 1rem;
-  --tw-font-size-lg: 1.23rem;
-  --tw-font-size-xl: 1.54rem;
-  --tw-font-size-xxl: 1.85rem;
-  --tw-font-weight-regular: 400;
-  --tw-font-weight-medium: 500;
-  --tw-font-weight-semibold: 600;
-  --tw-navigation-drawer-width: 220px;
-  --tw-navigation-drawer-collapsed-width: 40px;
-  --tw-navigation-drawer-current-width: var(--tw-navigation-drawer-width);
-  --tw-top-bar-height: 39px;
-  --tw-table-checkbox-column-width: 32px;
-  --tw-table-horizontal-cell-padding: 8px;
-  --tw-shell-padding-x: 12px;
-  --tw-shell-padding-top: 8px;
-  --tw-shell-padding-bottom: 12px;
-  --tw-panel-border: 1px solid var(--border);
-  --tw-panel-radius: 8px;
-  --tw-panel-background: var(--surface);
-  --tw-bg-transparent-lighter: color(display-p3 0 0 0 / 0.02);
-  --tw-bg-transparent-light: color(display-p3 0 0 0 / 0.039);
-  --tw-workspace-avatar-bg: color(display-p3 0.913 0.854 0.971);
-  --tw-workspace-avatar-fg: color(display-p3 0.224 0.137 0.297);
+  /* spacing */
+  --spacing-unit: 4px;
+  --between-siblings-gap: 2px;
+
+  /* typography (rem = target-px ÷ 16) */
+  --font-8: 0.5rem;       /* 8px  */
+  --font-10: 0.625rem;    /* 10px */
+  --font-11: 0.6875rem;   /* 11px */
+  --font-12: 0.75rem;     /* 12px */
+  --font-13: 0.8125rem;   /* 13px */
+  --font-14: 0.875rem;    /* 14px */
+  --font-16: 1rem;        /* 16px */
+  --font-20: 1.25rem;     /* 20px */
+  --font-22: 1.375rem;    /* 22px */
+  --font-24: 1.5rem;      /* 24px */
+  --font-26: 1.625rem;    /* 26px */
+
+  /* typography */
+  --font-size-label: var(--font-11);
+  --font-size-caption: var(--font-12);
+  --font-size-body: var(--font-13);
+  --font-size-heading-sm: var(--font-16);
+  --font-size-heading-md: var(--font-20);
+  --font-size-heading-lg: var(--font-24);
+
+  /* font weight */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+
+  /* line height */
+  --line-height-md: 1.1;
+  --line-height-lg: 1.5;
+
+  /* navigation */
+  --nav-drawer-width: 220px;
+  --nav-drawer-collapsed-width: 40px;
+  --nav-drawer-current-width: var(--nav-drawer-width);
+  --topbar-height: 39px;
+
+  /* table */
+  --table-checkbox-width: 32px;
+  --table-cell-padding-x: 8px;
+
+  /* shell */
+  --shell-padding-x: 12px;
+  --shell-padding-top: 8px;
+  --shell-padding-bottom: 12px;
+
+  /* panel */
+  --panel-border: 1px solid var(--border);
+  --panel-radius: 8px;
+  --panel-bg: var(--surface);
+
+  /* translucent fills */
+  --bg-translucent-subtle: color(display-p3 0 0 0 / 0.02);
+  --bg-translucent: color(display-p3 0 0 0 / 0.039);
+
+  /* avatar */
+  --avatar-bg: color(display-p3 0.913 0.854 0.971);
+  --avatar-fg: color(display-p3 0.224 0.137 0.297);
 }
 
 :root,
@@ -210,10 +241,10 @@
   --shadow-elevation-3:
     2px 4px 16px 0px rgba(0, 0, 0, 0.12), 0px 2px 4px 0px rgba(0, 0, 0, 0.04);
   --shadow-elevation-4: var(--shadow-elevation-3);
-  --tw-bg-transparent-lighter: color(display-p3 1 1 1 / 0.031);
-  --tw-bg-transparent-light: color(display-p3 1 1 1 / 0.059);
-  --tw-workspace-avatar-bg: color(display-p3 0.298 0.298 0.298);
-  --tw-workspace-avatar-fg: color(display-p3 0.922 0.922 0.922);
+  --bg-translucent-subtle: color(display-p3 1 1 1 / 0.031);
+  --bg-translucent: color(display-p3 1 1 1 / 0.059);
+  --avatar-bg: color(display-p3 0.298 0.298 0.298);
+  --avatar-fg: color(display-p3 0.922 0.922 0.922);
 }
 
 * {
@@ -229,19 +260,19 @@ body,
 }
 
 html {
-  font-size: 13px;
+  font-size: 16px;
 }
 
 button {
-  font-size: 13px;
+  font-size: var(--font-size-body);
 }
 
 body {
   margin: 0;
   padding: 0;
   font-family: var(--font-sans);
-  font-size: var(--tw-font-size-md);
-  line-height: var(--tw-text-line-height-md);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-md);
   background-color: var(--background);
   color: var(--foreground);
   -webkit-font-smoothing: antialiased;

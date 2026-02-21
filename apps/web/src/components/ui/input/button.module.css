@@ -6,8 +6,8 @@
   border-radius: 4px;
   border: 1px solid transparent;
   white-space: nowrap;
-  font-size: var(--tw-font-size-md);
-  font-weight: var(--tw-font-weight-medium);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
   transition: background 0.1s ease;
 }
 
@@ -64,7 +64,7 @@
 }
 
 .outline:hover {
-  background: var(--tw-bg-transparent-light);
+  background: var(--bg-translucent);
 }
 
 .ghost {
@@ -74,7 +74,7 @@
 }
 
 .ghost:hover {
-  background: var(--tw-bg-transparent-light);
+  background: var(--bg-translucent);
   color: var(--foreground);
 }
 

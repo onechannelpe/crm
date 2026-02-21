@@ -1,21 +1,21 @@
 .rejectPanel {
   border: 1px solid color-mix(in oklab, var(--destructive) 24%, transparent);
   background: color-mix(in oklab, var(--destructive) 8%, var(--surface));
-  border-radius: var(--tw-panel-radius);
+  border-radius: var(--panel-radius);
   padding: 12px;
 }
 
 .rejectTitle {
   margin: 0 0 8px;
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 500;
   color: var(--destructive);
 }
 
 .tablePanel {
-  border: var(--tw-panel-border);
-  border-radius: var(--tw-panel-radius);
-  background: var(--tw-panel-background);
+  border: var(--panel-border);
+  border-radius: var(--panel-radius);
+  background: var(--panel-bg);
   overflow: hidden;
 }
 
@@ -35,7 +35,7 @@
 
 .contactMeta {
   margin: 0;
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   color: var(--muted-foreground);
 }
 

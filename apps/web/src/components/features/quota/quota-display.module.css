@@ -1,7 +1,7 @@
 .root {
-  border: var(--tw-panel-border);
-  border-radius: var(--tw-panel-radius);
-  background: var(--tw-panel-background);
+  border: var(--panel-border);
+  border-radius: var(--panel-radius);
+  background: var(--panel-bg);
   padding: 12px;
 }
 
@@ -13,7 +13,7 @@
 }
 
 .label {
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   color: var(--muted-foreground);
 }
 
@@ -37,6 +37,6 @@
 
 .meta {
   margin: 8px 0 0;
-  font-size: 13px;
+  font-size: var(--font-size-body);
   color: var(--muted-foreground);
 }

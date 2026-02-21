@@ -4,9 +4,9 @@
 }
 
 .panel {
-  border: var(--tw-panel-border);
-  border-radius: var(--tw-panel-radius);
-  background: var(--tw-panel-background);
+  border: var(--panel-border);
+  border-radius: var(--panel-radius);
+  background: var(--panel-bg);
   padding: 12px;
 }
 
@@ -48,7 +48,7 @@
 
 .title {
   margin: 0;
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 500;
   color: var(--foreground);
 }
@@ -59,12 +59,12 @@
 
 .helperText {
   margin: 0;
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   color: var(--muted-foreground);
 }
 
 .errorText {
   margin: 0;
-  font-size: 12px;
+  font-size: var(--font-size-caption);
   color: var(--destructive);
 }

@@ -7,8 +7,8 @@
 
 .label {
   color: var(--foreground);
-  font-size: var(--tw-font-size-md);
-  font-weight: var(--tw-font-weight-medium);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
 }
 
 .required {
@@ -22,7 +22,7 @@
   border-radius: 4px;
   background: var(--surface);
   color: var(--foreground);
-  font-size: var(--tw-font-size-md);
+  font-size: var(--font-size-body);
   padding: 0 8px;
 }
 
@@ -33,7 +33,7 @@
   border-radius: 4px;
   background: var(--surface);
   color: var(--foreground);
-  font-size: var(--tw-font-size-md);
+  font-size: var(--font-size-body);
   padding: 6px 8px;
 }
 
@@ -44,7 +44,7 @@
   border-radius: 4px;
   background: var(--surface);
   color: var(--foreground);
-  font-size: var(--tw-font-size-md);
+  font-size: var(--font-size-body);
   padding: 8px;
   resize: vertical;
 }
@@ -68,8 +68,8 @@
 
 .errorText {
   color: var(--destructive);
-  font-size: var(--tw-font-size-sm);
-  font-weight: var(--tw-font-weight-medium);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
 }
 
 .checkboxLabel {
@@ -98,8 +98,8 @@
 
 .checkboxText {
   color: var(--foreground);
-  font-size: var(--tw-font-size-md);
-  font-weight: var(--tw-font-weight-medium);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
 }
 
 .checkIcon {

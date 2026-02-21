@@ -1,7 +1,7 @@
 .panel {
-  border: var(--tw-panel-border);
-  border-radius: var(--tw-panel-radius);
-  background: var(--tw-panel-background);
+  border: var(--panel-border);
+  border-radius: var(--panel-radius);
+  background: var(--panel-bg);
   overflow: hidden;
 }
 
@@ -19,7 +19,7 @@
   align-items: center;
   gap: 8px;
   color: var(--foreground);
-  font-size: 13px;
+  font-size: var(--font-size-body);
   font-weight: 500;
 }
 
@@ -47,13 +47,13 @@
 }
 
 .title {
-  font-size: 16px;
+  font-size: var(--font-size-heading-sm);
   font-weight: 600;
   color: var(--foreground);
 }
 
 .muted {
-  font-size: 13px;
+  font-size: var(--font-size-body);
   color: var(--muted-foreground);
 }
 
@@ -71,13 +71,13 @@
 
 .label {
   color: var(--muted-foreground);
-  font-size: 12px;
+  font-size: var(--font-size-caption);
 }
 
 .value {
   margin-top: 4px;
   color: var(--foreground);
-  font-size: 14px;
+  font-size: var(--font-14);
 }
 
 .valueStrong {
@@ -113,7 +113,7 @@
 }
 
 .recoveryTitle {
-  font-size: 14px;
+  font-size: var(--font-14);
   font-weight: 500;
 }
 
@@ -121,7 +121,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  font-size: 14px;
+  font-size: var(--font-14);
 }
 
 .mono {
