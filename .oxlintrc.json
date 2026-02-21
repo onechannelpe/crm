@@ -19,6 +19,17 @@
     "typescript/no-floating-promises": "error",
     "typescript/no-misused-promises": "error"
   },
+  "overrides": [
+    {
+      "files": [
+        "**/tests/**/*.ts",
+        "**/tests/**/*.tsx"
+      ],
+      "rules": {
+        "eslint/no-await-in-loop": "off"
+      }
+    }
+  ],
   "ignorePatterns": [
     "node_modules/**",
     "dist/**",

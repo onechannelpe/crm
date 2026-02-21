@@ -48,7 +48,7 @@ export async function seedSessionDeleteFixtures(
       last_activity: BENCH_NOW,
       expires_at: BENCH_NOW + 60_000,
     }));
-    // oxlint-disable-next-line eslint(no-await-in-loop)
+
     await ctx.db.insertInto("user_sessions").values(sessions).execute();
   }
 

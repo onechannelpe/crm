@@ -19,9 +19,9 @@ export async function seedInventoryReleaseLocks(
     for (let offset = 0; offset < LOCKS_PER_GROUP; offset += 1) {
       const itemId =
         itemOffset + INVENTORY_ID_START + group * LOCKS_PER_GROUP + offset;
-      // oxlint-disable-next-line eslint(no-await-in-loop)
+
       const noteId = await ctx.repos.chargeNotes.create(1, 1);
-      // oxlint-disable-next-line eslint(no-await-in-loop)
+
       await ctx.db
         .insertInto("inventory_items")
         .values({
@@ -32,7 +32,7 @@ export async function seedInventoryReleaseLocks(
           created_at: BENCH_NOW,
         })
         .execute();
-      // oxlint-disable-next-line eslint(no-await-in-loop)
+
       await ctx.repos.inventory.createLock(itemId, noteId, expiry);
     }
   }

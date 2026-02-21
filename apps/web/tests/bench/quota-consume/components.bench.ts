@@ -20,7 +20,6 @@ describe("quota consume component benchmark", () => {
     userIds = await seedQuotaUsers(ctx);
 
     for (const userId of userIds) {
-      // oxlint-disable-next-line eslint(no-await-in-loop)
       await ctx.repos.quotaAllocations.create({
         user_id: userId,
         allocated_by_user_id: 2,
