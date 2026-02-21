@@ -82,7 +82,10 @@ describe("team invite performance", () => {
         sent_at: null,
       };
     });
-    await benchCtx.db.insertInto("user_invites").values(pendingInvites).execute();
+    await benchCtx.db
+      .insertInto("user_invites")
+      .values(pendingInvites)
+      .execute();
   });
 
   afterAll(async () => {

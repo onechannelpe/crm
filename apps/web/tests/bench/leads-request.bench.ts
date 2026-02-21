@@ -38,8 +38,9 @@ const LEADS_REQUEST_BENCH_NOW = 1_700_000_000_000;
 
 describe("lead assignment performance", () => {
   let ctx: TestDbContext | null = null;
-  let leadAssignmentService: ReturnType<typeof createLeadAssignmentService> | null =
-    null;
+  let leadAssignmentService: ReturnType<
+    typeof createLeadAssignmentService
+  > | null = null;
   let userIds: number[] = [];
   let userCursor = 0;
 

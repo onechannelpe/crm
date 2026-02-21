@@ -40,14 +40,14 @@ describe("sales workflow performance", () => {
       // oxlint-disable-next-line eslint(no-await-in-loop)
       await benchCtx.db
         .insertInto("inventory_items")
-          .values({
-            id: inventoryId,
-            product_id: 1,
-            serial_number: `SN-BENCH-${inventoryId}`,
-            status: "available",
-            created_at: SALES_SUBMIT_BENCH_NOW,
-          })
-          .execute();
+        .values({
+          id: inventoryId,
+          product_id: 1,
+          serial_number: `SN-BENCH-${inventoryId}`,
+          status: "available",
+          created_at: SALES_SUBMIT_BENCH_NOW,
+        })
+        .execute();
 
       const reserved =
         await benchCtx.repos.inventory.reserveIfAvailable(inventoryId); // oxlint-disable-line no-await-in-loop
