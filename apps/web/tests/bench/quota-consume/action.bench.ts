@@ -26,7 +26,6 @@ describe("quota consume action benchmark", () => {
     userIds = await seedQuotaUsers(ctx);
 
     for (const userId of userIds) {
-      // oxlint-disable-next-line eslint(no-await-in-loop)
       const result = await quotaService.allocate(2, userId, 2, BENCH_DATE);
       if (!result.ok) {
         throw new Error(

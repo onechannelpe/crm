@@ -11,9 +11,14 @@ async function callSuiteHooks(
   suite: Suite,
   type: "beforeAll" | "afterAll",
 ): Promise<void> {
-  for (const hook of getHooks(suite)[type]) await hook(suite); // eslint-disable-line no-await-in-loop
+  for (const hook of getHooks(suite)[type]) {
+    await hook(suite);
+  }
+
   for (const task of suite.tasks) {
-    if (task.type === "suite") await callSuiteHooks(task as Suite, type); // eslint-disable-line no-await-in-loop
+    if (task.type === "suite") {
+      await callSuiteHooks(task as Suite, type);
+    }
   }
 }
 
