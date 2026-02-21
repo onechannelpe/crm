@@ -55,7 +55,6 @@ export async function seedLeadsRequestFixtures(
   });
 
   for (const userId of userIds) {
-    // oxlint-disable-next-line eslint(no-await-in-loop)
     const result = await quotaService.allocate(2, userId, 1, BENCH_DATE);
     if (!result.ok) {
       throw new Error(`expected quota allocation success, got ${result.error}`);

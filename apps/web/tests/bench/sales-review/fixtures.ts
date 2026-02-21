@@ -18,13 +18,12 @@ export async function seedSalesReviewFixtures(
   const rejectNoteIds: number[] = [];
 
   for (let index = 0; index < DECISION_POOL_SIZE; index += 1) {
-    // oxlint-disable-next-line eslint(no-await-in-loop)
     const approveNoteId = await ctx.repos.chargeNotes.create(1, 1);
-    // oxlint-disable-next-line eslint(no-await-in-loop)
+
     await ctx.repos.chargeNoteItems.create(approveNoteId, 1, 1);
-    // oxlint-disable-next-line eslint(no-await-in-loop)
+
     await uploadTestPdf(ctx, approveNoteId);
-    // oxlint-disable-next-line eslint(no-await-in-loop)
+
     await ctx.db
       .insertInto("inventory_items")
       .values({
@@ -35,23 +34,22 @@ export async function seedSalesReviewFixtures(
         created_at: BENCH_NOW,
       })
       .execute();
-    // oxlint-disable-next-line eslint(no-await-in-loop)
+
     await ctx.repos.inventory.createLock(
       APPROVE_ITEM_ID_START + index,
       approveNoteId,
       BENCH_NOW + 60_000,
     );
-    // oxlint-disable-next-line eslint(no-await-in-loop)
+
     await ctx.repos.chargeNotes.updateStatus(approveNoteId, "pending_review");
     approveNoteIds.push(approveNoteId);
 
-    // oxlint-disable-next-line eslint(no-await-in-loop)
     const rejectNoteId = await ctx.repos.chargeNotes.create(1, 1);
-    // oxlint-disable-next-line eslint(no-await-in-loop)
+
     await ctx.repos.chargeNoteItems.create(rejectNoteId, 1, 1);
-    // oxlint-disable-next-line eslint(no-await-in-loop)
+
     await uploadTestPdf(ctx, rejectNoteId);
-    // oxlint-disable-next-line eslint(no-await-in-loop)
+
     await ctx.db
       .insertInto("inventory_items")
       .values({
@@ -62,13 +60,13 @@ export async function seedSalesReviewFixtures(
         created_at: BENCH_NOW,
       })
       .execute();
-    // oxlint-disable-next-line eslint(no-await-in-loop)
+
     await ctx.repos.inventory.createLock(
       REJECT_ITEM_ID_START + index,
       rejectNoteId,
       BENCH_NOW + 60_000,
     );
-    // oxlint-disable-next-line eslint(no-await-in-loop)
+
     await ctx.repos.chargeNotes.updateStatus(rejectNoteId, "pending_review");
     rejectNoteIds.push(rejectNoteId);
   }
