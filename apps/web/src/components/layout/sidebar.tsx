@@ -56,7 +56,8 @@ export function Sidebar() {
 
   const role = () => currentUser().role;
   const firstName = createMemo(
-    () => currentUser().fullName.trim().split(/\s+/)[0] || currentUser().fullName,
+    () =>
+      currentUser().fullName.trim().split(/\s+/)[0] || currentUser().fullName,
   );
 
   const isRouteActive = (route: AppRoute) => {
@@ -75,7 +76,9 @@ export function Sidebar() {
   };
 
   const quickItems = createMemo(() => getSidebarRoutes(role(), "quick"));
-  const workspaceItems = createMemo(() => getSidebarRoutes(role(), "workspace"));
+  const workspaceItems = createMemo(() =>
+    getSidebarRoutes(role(), "workspace"),
+  );
 
   onMount(() => {
     const stored =
@@ -113,7 +116,11 @@ export function Sidebar() {
       onMouseLeave={() => setHovered(false)}
     >
       <div class={cn(styles.sidebarTop, !expanded() && styles.collapsedTop)}>
-        <AccountMenu label={firstName()} collapsed={!expanded()} onLogout={logout} />
+        <AccountMenu
+          label={firstName()}
+          collapsed={!expanded()}
+          onLogout={logout}
+        />
         <button
           type="button"
           class={styles.collapse}
@@ -135,8 +142,12 @@ export function Sidebar() {
         </button>
       </div>
 
-      <nav class={cn(styles.sidebarScroll, !expanded() && styles.collapsedScroll)}>
-        <section class={cn(styles.section, !expanded() && styles.collapsedSection)}>
+      <nav
+        class={cn(styles.sidebarScroll, !expanded() && styles.collapsedScroll)}
+      >
+        <section
+          class={cn(styles.section, !expanded() && styles.collapsedSection)}
+        >
           <For each={quickItems()}>
             {(item) => {
               const Icon = ICON_BY_ROUTE[item.icon];
@@ -188,8 +199,15 @@ export function Sidebar() {
           </For>
         </section>
 
-        <section class={cn(styles.section, !expanded() && styles.collapsedSection)}>
-          <h4 class={cn(styles.sectionTitle, !expanded() && styles.collapsedTitle)}>
+        <section
+          class={cn(styles.section, !expanded() && styles.collapsedSection)}
+        >
+          <h4
+            class={cn(
+              styles.sectionTitle,
+              !expanded() && styles.collapsedTitle,
+            )}
+          >
             Workspace
           </h4>
           <For each={workspaceItems()}>

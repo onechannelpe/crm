@@ -5,6 +5,7 @@ import { acceptTeamInvite } from "~/actions/team";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { getErrorMessage } from "~/lib/errors";
+
 import styles from "../../auth-shell.module.css";
 
 export default function AcceptInvitePage() {
@@ -49,9 +50,7 @@ export default function AcceptInvitePage() {
           }}
         >
           <div>
-            <h1 class={styles.title}>
-              Activate account
-            </h1>
+            <h1 class={styles.title}>Activate account</h1>
             <p class={styles.muted}>
               Complete your details to activate workspace access.
             </p>
@@ -78,11 +77,7 @@ export default function AcceptInvitePage() {
             required
           />
 
-          {error() ? (
-            <div class={styles.errorBox}>
-              {error()}
-            </div>
-          ) : null}
+          {error() ? <div class={styles.errorBox}>{error()}</div> : null}
 
           <Button type="submit" class={styles.full} disabled={submitting()}>
             {submitting() ? "Activating..." : "Activate account"}

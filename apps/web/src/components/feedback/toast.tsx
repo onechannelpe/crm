@@ -10,6 +10,7 @@ import { DS_Z_INDEX } from "~/components/ui/theme/design-system";
 import { cn } from "~/lib/utils";
 
 import { useToast } from "./toast-provider";
+
 import styles from "./toast.module.css";
 
 export function ToastContainer() {
@@ -17,10 +18,7 @@ export function ToastContainer() {
 
   return (
     <Portal>
-      <div
-        class={styles.container}
-        style={{ "z-index": DS_Z_INDEX.toast }}
-      >
+      <div class={styles.container} style={{ "z-index": DS_Z_INDEX.toast }}>
         <For each={toasts}>
           {(toast) => (
             <div

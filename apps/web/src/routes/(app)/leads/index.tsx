@@ -5,10 +5,7 @@ import { requestLeads, getActiveLeads, completeLead } from "~/actions/leads";
 import { LeadList } from "~/components/features/leads/lead-list";
 import { RequestLeadsButton } from "~/components/features/leads/request-leads-button";
 import { EmptyState } from "~/components/feedback/empty-state";
-import {
-  AppPage,
-  AppPageHeader,
-} from "~/components/layout/page";
+import { AppPage, AppPageHeader } from "~/components/layout/page";
 import { runOptimistic } from "~/lib/ui/run-optimistic";
 
 import styles from "./leads-page.module.css";
@@ -58,7 +55,10 @@ export default function LeadsPage() {
         <Show
           when={!leads.error}
           fallback={
-            <EmptyState title="Failed to load leads" description="Refresh and retry." />
+            <EmptyState
+              title="Failed to load leads"
+              description="Refresh and retry."
+            />
           }
         >
           <LeadList

@@ -25,7 +25,10 @@ export function HeaderNotificationsPanel() {
   const [feed, { mutate, refetch }] = createResource(
     () => true,
     () => getHeaderNotifications(),
-    { initialValue: { unreadCount: 0, notifications: [] }, ssrLoadFrom: "initial" },
+    {
+      initialValue: { unreadCount: 0, notifications: [] },
+      ssrLoadFrom: "initial",
+    },
   );
 
   let containerRef: HTMLDivElement | undefined;
@@ -110,17 +113,25 @@ export function HeaderNotificationsPanel() {
             </button>
           </div>
 
-          <Show when={feed().notifications.length > 0} fallback={<p class={styles.empty}>No notifications yet.</p>}>
+          <Show
+            when={feed().notifications.length > 0}
+            fallback={<p class={styles.empty}>No notifications yet.</p>}
+          >
             <div class={styles.list}>
               <For each={feed().notifications}>
                 {(item) => (
                   <article
-                    class={cn(styles.item, item.readAt === null && styles.itemUnread)}
+                    class={cn(
+                      styles.item,
+                      item.readAt === null && styles.itemUnread,
+                    )}
                   >
                     <p class={styles.title}>{item.title}</p>
                     <p class={styles.body}>{item.bodyText}</p>
                     <div class={styles.meta}>
-                      <span class={styles.time}>{formatTimestamp(item.createdAt)}</span>
+                      <span class={styles.time}>
+                        {formatTimestamp(item.createdAt)}
+                      </span>
                       <Show when={item.readAt === null}>
                         <button
                           type="button"

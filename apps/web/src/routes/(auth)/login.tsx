@@ -6,13 +6,14 @@ import { login } from "~/actions/auth-login";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { initializeThemeMode } from "~/components/ui/theme/theme-mode";
+import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import {
   isPasskeySupported,
   toAuthenticationPayload,
   toRequestOptions,
 } from "~/lib/auth/passkey/browser";
-import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { getErrorMessage } from "~/lib/errors";
+
 import styles from "../auth/auth-shell.module.css";
 
 export default function LoginPage() {
@@ -40,7 +41,9 @@ export default function LoginPage() {
     try {
       const result = await login(email(), password(), totpCode());
       navigate(
-        result.onboardingCompleted ? getDefaultAppPath(result.role) : "/onboarding",
+        result.onboardingCompleted
+          ? getDefaultAppPath(result.role)
+          : "/onboarding",
       );
     } catch (err: unknown) {
       setError(getErrorMessage(err, "Invalid credentials"));
@@ -74,7 +77,9 @@ export default function LoginPage() {
       const payload = toAuthenticationPayload(credential);
       const result = await finishPasskeyLogin(challenge.challengeId, payload);
       navigate(
-        result.onboardingCompleted ? getDefaultAppPath(result.role) : "/onboarding",
+        result.onboardingCompleted
+          ? getDefaultAppPath(result.role)
+          : "/onboarding",
       );
     } catch (err: unknown) {
       setError(getErrorMessage(err, "Passkey sign in failed"));
@@ -87,13 +92,9 @@ export default function LoginPage() {
     <div class={styles.shell}>
       <div class={`${styles.panel} ${styles.panelSm}`}>
         <div class={styles.stack1}>
-          <p class={styles.eyebrow}>
-            CRM Workspace
-          </p>
+          <p class={styles.eyebrow}>CRM Workspace</p>
           <h1 class={styles.titleSm}>Sign in</h1>
-          <p class={styles.muted}>
-            Continue with password or passkey.
-          </p>
+          <p class={styles.muted}>Continue with password or passkey.</p>
         </div>
 
         <form
@@ -131,9 +132,7 @@ export default function LoginPage() {
           />
 
           <Show when={error()}>
-            <div class={styles.errorBox}>
-              {error()}
-            </div>
+            <div class={styles.errorBox}>{error()}</div>
           </Show>
 
           <div class={styles.stack2}>

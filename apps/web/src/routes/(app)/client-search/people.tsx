@@ -8,8 +8,9 @@ import User from "~/components/icons/user";
 import { AppPage } from "~/components/layout/page";
 import { createClientSearchController } from "~/features/client-search/controller";
 import { groupPeopleByDni } from "~/features/client-search/grouping";
-import type { SearchType } from "~/server/shared/engine/types";
 import { cn } from "~/lib/utils";
+import type { SearchType } from "~/server/shared/engine/types";
+
 import styles from "./search-page.module.css";
 
 const PEOPLE_SEARCH_TYPES = [
@@ -49,7 +50,9 @@ function buildRows(
   grouped: ReturnType<typeof groupPeopleByDni>,
 ): PersonTableRow[] {
   return grouped.map((person, index) => {
-    const aliases = person.aliases.filter((alias) => alias !== person.displayName);
+    const aliases = person.aliases.filter(
+      (alias) => alias !== person.displayName,
+    );
     const companies = person.companies
       .map((company) => company.name?.trim() || "")
       .filter(Boolean);
@@ -117,10 +120,7 @@ export default function ClientSearchPeoplePage() {
             >
               People
             </A>
-            <A
-              href="/client-search/companies"
-              class={styles.tab}
-            >
+            <A href="/client-search/companies" class={styles.tab}>
               Companies
             </A>
           </div>
@@ -129,7 +129,9 @@ export default function ClientSearchPeoplePage() {
             onSubmit={(event) => {
               event.preventDefault();
               if (autoType()) {
-                controller.setSearchType(inferPeopleSearchType(controller.query()));
+                controller.setSearchType(
+                  inferPeopleSearchType(controller.query()),
+                );
               }
               void controller.runCurrentSearch();
             }}
@@ -165,7 +167,9 @@ export default function ClientSearchPeoplePage() {
                 class={styles.searchInput}
                 placeholder="Name, DNI, company, RUC or phone"
                 value={controller.query()}
-                onInput={(event) => controller.setQuery(event.currentTarget.value)}
+                onInput={(event) =>
+                  controller.setQuery(event.currentTarget.value)
+                }
                 required
               />
             </label>
@@ -180,13 +184,18 @@ export default function ClientSearchPeoplePage() {
                 min="1"
                 max="100"
                 value={controller.limit()}
-                onInput={(event) => controller.setLimit(event.currentTarget.value)}
+                onInput={(event) =>
+                  controller.setLimit(event.currentTarget.value)
+                }
                 required
               />
             </label>
 
             <div class={cn(styles.searchField, styles.alignEnd)}>
-              <span class={cn(styles.searchLabel, styles.hiddenLabel)} aria-hidden="true">
+              <span
+                class={cn(styles.searchLabel, styles.hiddenLabel)}
+                aria-hidden="true"
+              >
                 Search
               </span>
               <button
@@ -211,17 +220,14 @@ export default function ClientSearchPeoplePage() {
             </label>
             <span class={styles.searchHelper}>
               Current type:{" "}
-              {SEARCH_LABELS[controller.searchType()] ?? controller.searchType()}
+              {SEARCH_LABELS[controller.searchType()] ??
+                controller.searchType()}
             </span>
           </div>
         </div>
 
         <Show when={controller.error()}>
-          {(message) => (
-            <div class={styles.errorBar}>
-              {message()}
-            </div>
-          )}
+          {(message) => <div class={styles.errorBar}>{message()}</div>}
         </Show>
 
         <div class={styles.viewBar}>
@@ -331,9 +337,12 @@ export default function ClientSearchPeoplePage() {
               </For>
               <Show when={rows().length === 0}>
                 <tr>
-                  <td colSpan={7} class={cn(styles.tableCell, styles.tableEmpty)}>
-                    Run a search by DNI, name, company, RUC or phone to list people
-                    and follow linked companies.
+                  <td
+                    colSpan={7}
+                    class={cn(styles.tableCell, styles.tableEmpty)}
+                  >
+                    Run a search by DNI, name, company, RUC or phone to list
+                    people and follow linked companies.
                   </td>
                 </tr>
               </Show>
@@ -349,7 +358,8 @@ export default function ClientSearchPeoplePage() {
             <ChevronDown size={16} />
           </div>
           <div>
-            Unique of DNI <span class={styles.footerStrong}>{uniqueDniCount()}</span>
+            Unique of DNI{" "}
+            <span class={styles.footerStrong}>{uniqueDniCount()}</span>
           </div>
           <div class={styles.footerRight}>
             People rows <span class={styles.footerStrong}>{rows().length}</span>

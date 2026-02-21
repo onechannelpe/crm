@@ -204,14 +204,11 @@
   --ring: color(display-p3 0.922 0.922 0.922);
 
   --shadow-elevation-1:
-    0px 2px 4px 0px rgba(0, 0, 0, 0.04),
-    0px 0px 4px 0px rgba(0, 0, 0, 0.08);
+    0px 2px 4px 0px rgba(0, 0, 0, 0.04), 0px 0px 4px 0px rgba(0, 0, 0, 0.08);
   --shadow-elevation-2:
-    2px 4px 16px 0px rgba(0, 0, 0, 0.16),
-    0px 2px 4px 0px rgba(0, 0, 0, 0.08);
+    2px 4px 16px 0px rgba(0, 0, 0, 0.16), 0px 2px 4px 0px rgba(0, 0, 0, 0.08);
   --shadow-elevation-3:
-    2px 4px 16px 0px rgba(0, 0, 0, 0.12),
-    0px 2px 4px 0px rgba(0, 0, 0, 0.04);
+    2px 4px 16px 0px rgba(0, 0, 0, 0.12), 0px 2px 4px 0px rgba(0, 0, 0, 0.04);
   --shadow-elevation-4: var(--shadow-elevation-3);
   --tw-bg-transparent-lighter: color(display-p3 1 1 1 / 0.031);
   --tw-bg-transparent-light: color(display-p3 1 1 1 / 0.059);

@@ -11,6 +11,7 @@ import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { getErrorMessage } from "~/lib/errors";
+
 import authStyles from "./auth/auth-shell.module.css";
 import styles from "./onboarding-page.module.css";
 
@@ -103,11 +104,11 @@ export default function OnboardingPage() {
 
   return (
     <div class={authStyles.shellGrid}>
-      <section class={`${authStyles.panel} ${authStyles.panelXl} ${styles.panel}`}>
+      <section
+        class={`${authStyles.panel} ${authStyles.panelXl} ${styles.panel}`}
+      >
         <div>
-          <h1 class={authStyles.title}>
-            Complete your profile
-          </h1>
+          <h1 class={authStyles.title}>Complete your profile</h1>
           <p class={authStyles.muted}>
             Confirm your profile details and primary phone number.
           </p>
@@ -155,9 +156,7 @@ export default function OnboardingPage() {
 
               <Show when={requiresStrongAuth()}>
                 <div class={styles.totpBox}>
-                  <p class={styles.totpTitle}>
-                    Required security setup (TOTP)
-                  </p>
+                  <p class={styles.totpTitle}>Required security setup (TOTP)</p>
                   <Show when={strongAuthIsEnrolled()}>
                     <p class={authStyles.muted}>TOTP enabled.</p>
                   </Show>
@@ -220,7 +219,11 @@ export default function OnboardingPage() {
                 <p class={styles.error}>{error()}</p>
               </Show>
 
-              <Button type="submit" class={authStyles.full} disabled={submitting()}>
+              <Button
+                type="submit"
+                class={authStyles.full}
+                disabled={submitting()}
+              >
                 {submitting() ? "Saving..." : "Save and continue"}
               </Button>
             </form>

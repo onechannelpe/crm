@@ -47,7 +47,10 @@ export function Header() {
           <span>{currentRoute().label}</span>
         </div>
         <div class={styles.topbarActions}>
-          <button class={cn(styles.topbarGhost, styles.topbarOutline)} type="button">
+          <button
+            class={cn(styles.topbarGhost, styles.topbarOutline)}
+            type="button"
+          >
             + New record
           </button>
           <button class={styles.topbarGhost} type="button">

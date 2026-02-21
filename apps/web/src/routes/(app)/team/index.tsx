@@ -177,7 +177,9 @@ export default function TeamPage() {
                         <Show
                           when={canManageInviteActions()}
                           fallback={
-                            <span class={styles.noPermission}>No permission</span>
+                            <span class={styles.noPermission}>
+                              No permission
+                            </span>
                           }
                         >
                           <div class={styles.actions}>

@@ -32,9 +32,7 @@ export const QuotaDisplay: Component<QuotaDisplayProps> = (props) => {
       <div class={styles.track}>
         <div class={styles.fill} style={{ width: `${percentage()}%` }} />
       </div>
-      <p class={styles.meta}>
-        {remaining()} leads remaining today
-      </p>
+      <p class={styles.meta}>{remaining()} leads remaining today</p>
     </div>
   );
 };

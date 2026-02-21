@@ -7,10 +7,7 @@ import {
 } from "~/actions/admin-audit-policy";
 import { getAuditReaderSnapshot } from "~/actions/admin-audit-reader";
 import { getObservabilitySnapshot } from "~/actions/admin-observability";
-import {
-  AppPage,
-  AppPageHeader,
-} from "~/components/layout/page";
+import { AppPage, AppPageHeader } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { Checkbox } from "~/components/ui/input/checkbox";
 import { Input } from "~/components/ui/input/input";
@@ -24,6 +21,7 @@ import {
   TableRow,
 } from "~/components/ui/layout/table";
 import { createAppQuery } from "~/lib/ui/create-app-query";
+
 import styles from "./audit-page.module.css";
 
 const WINDOW_OPTIONS = [
@@ -135,94 +133,102 @@ export default function AuditObservabilityPage() {
 
       <section class={styles.panel}>
         <div class={styles.filterRow}>
-        <div class={styles.fieldW44}>
-          <Select
-            label="Window"
-            value={windowMinutes()}
-            onInput={(event) =>
-              setWindowMinutes(Number(event.currentTarget.value))
-            }
+          <div class={styles.fieldW44}>
+            <Select
+              label="Window"
+              value={windowMinutes()}
+              onInput={(event) =>
+                setWindowMinutes(Number(event.currentTarget.value))
+              }
+            >
+              <For each={WINDOW_OPTIONS}>
+                {(option) => (
+                  <option value={option.value}>{option.label}</option>
+                )}
+              </For>
+            </Select>
+          </div>
+          <div class={styles.fieldW40}>
+            <Select
+              label="Status"
+              value={status()}
+              onInput={(event) =>
+                setStatus(parseStatus(event.currentTarget.value))
+              }
+            >
+              <option value="all">All</option>
+              <option value="ok">OK</option>
+              <option value="error">Errors</option>
+            </Select>
+          </div>
+          <Button
+            onClick={() => {
+              void refetch();
+            }}
           >
-            <For each={WINDOW_OPTIONS}>
-              {(option) => <option value={option.value}>{option.label}</option>}
-            </For>
-          </Select>
-        </div>
-        <div class={styles.fieldW40}>
-          <Select
-            label="Status"
-            value={status()}
-            onInput={(event) =>
-              setStatus(parseStatus(event.currentTarget.value))
-            }
-          >
-            <option value="all">All</option>
-            <option value="ok">OK</option>
-            <option value="error">Errors</option>
-          </Select>
-        </div>
-        <Button
-          onClick={() => {
-            void refetch();
-          }}
-        >
-          Refresh
-        </Button>
+            Refresh
+          </Button>
         </div>
       </section>
 
       <section class={styles.panel}>
         <div class={styles.filterRow}>
-        <div class={styles.fieldW44}>
-          <Select
-            label="Audit window"
-            value={auditWindowMinutes()}
-            onInput={(event) =>
-              setAuditWindowMinutes(Number(event.currentTarget.value))
-            }
+          <div class={styles.fieldW44}>
+            <Select
+              label="Audit window"
+              value={auditWindowMinutes()}
+              onInput={(event) =>
+                setAuditWindowMinutes(Number(event.currentTarget.value))
+              }
+            >
+              <For each={AUDIT_WINDOW_OPTIONS}>
+                {(option) => (
+                  <option value={option.value}>{option.label}</option>
+                )}
+              </For>
+            </Select>
+          </div>
+          <div class={styles.fieldW52}>
+            <Input
+              label="Action"
+              value={actionFilter()}
+              onInput={(event) => setActionFilter(event.currentTarget.value)}
+              placeholder="charge_note_approved"
+            />
+          </div>
+          <div class={styles.fieldW44}>
+            <Input
+              label="Entity"
+              value={entityTypeFilter()}
+              onInput={(event) =>
+                setEntityTypeFilter(event.currentTarget.value)
+              }
+              placeholder="charge_note"
+            />
+          </div>
+          <div class={styles.fieldW28}>
+            <Input
+              label="Actor #"
+              value={actorUserIdFilter()}
+              onInput={(event) =>
+                setActorUserIdFilter(event.currentTarget.value)
+              }
+              placeholder="5"
+            />
+          </div>
+          <Checkbox
+            label="High risk only"
+            checked={onlyHighRisk()}
+            onInput={(event) => setOnlyHighRisk(event.currentTarget.checked)}
+            class={styles.mt1}
+          />
+          <Button
+            onClick={() => {
+              void refetchAuditSnapshot();
+            }}
           >
-            <For each={AUDIT_WINDOW_OPTIONS}>
-              {(option) => <option value={option.value}>{option.label}</option>}
-            </For>
-          </Select>
-        </div>
-        <div class={styles.fieldW52}>
-          <Input
-            label="Action"
-            value={actionFilter()}
-            onInput={(event) => setActionFilter(event.currentTarget.value)}
-            placeholder="charge_note_approved"
-          />
-        </div>
-        <div class={styles.fieldW44}>
-          <Input
-            label="Entity"
-            value={entityTypeFilter()}
-            onInput={(event) => setEntityTypeFilter(event.currentTarget.value)}
-            placeholder="charge_note"
-          />
-        </div>
-        <div class={styles.fieldW28}>
-          <Input
-            label="Actor #"
-            value={actorUserIdFilter()}
-            onInput={(event) => setActorUserIdFilter(event.currentTarget.value)}
-            placeholder="5"
-          />
-        </div>
-        <Checkbox
-          label="High risk only"
-          checked={onlyHighRisk()}
-          onInput={(event) => setOnlyHighRisk(event.currentTarget.checked)}
-          class={styles.mt1}
-        />
-        <Button
-          onClick={() => {
-            void refetchAuditSnapshot();
-          }}
-        >
-          Refresh audit
-        </Button>
+            Refresh audit
+          </Button>
         </div>
       </section>
 
@@ -325,9 +331,7 @@ export default function AuditObservabilityPage() {
       </section>
 
       <section class={`${styles.panel} ${styles.section}`}>
-        <h2 class={styles.title}>
-          Politicas de riesgo de auditoria
-        </h2>
+        <h2 class={styles.title}>Politicas de riesgo de auditoria</h2>
         <div class={styles.filterRow}>
           <div class={styles.fieldW52}>
             <Input

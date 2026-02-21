@@ -6,5 +6,7 @@ import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 
 export default function Index() {
   const [user] = createResource(getMe);
-  return <Navigate href={user() ? getDefaultAppPath(user()!.role) : "/login"} />;
+  return (
+    <Navigate href={user() ? getDefaultAppPath(user()!.role) : "/login"} />
+  );
 }

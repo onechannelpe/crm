@@ -7,10 +7,7 @@ import {
   finishTotpEnrollment,
   getTotpStatus,
 } from "~/actions/auth";
-import {
-  AppPage,
-  AppPageHeader,
-} from "~/components/layout/page";
+import { AppPage, AppPageHeader } from "~/components/layout/page";
 import { useSession } from "~/components/providers/session-provider";
 import { Badge } from "~/components/ui/display/badge";
 import { Button } from "~/components/ui/input/button";
@@ -28,6 +25,7 @@ import {
 import { getErrorMessage } from "~/lib/errors";
 import { createAppQuery } from "~/lib/ui/create-app-query";
 import { runOptimistic } from "~/lib/ui/run-optimistic";
+
 import styles from "./profile-page.module.css";
 
 export default function ProfilePage() {
@@ -114,7 +112,11 @@ export default function ProfilePage() {
 
   return (
     <AppPage>
-      <AppPageHeader eyebrow="User" title="Profile" description="Personal information and account security." />
+      <AppPageHeader
+        eyebrow="User"
+        title="Profile"
+        description="Personal information and account security."
+      />
 
       <section class={styles.panel}>
         <div class={styles.topbar}>
@@ -132,7 +134,9 @@ export default function ProfilePage() {
               <div class={styles.identityGrid}>
                 <div>
                   <p class={styles.label}>Name</p>
-                  <p class={`${styles.value} ${styles.valueStrong}`}>{user().fullName}</p>
+                  <p class={`${styles.value} ${styles.valueStrong}`}>
+                    {user().fullName}
+                  </p>
                 </div>
                 <div>
                   <p class={styles.label}>Email</p>
@@ -164,7 +168,9 @@ export default function ProfilePage() {
                   void registerPasskey();
                 }}
               >
-                {passkeyLoading() ? "Registering passkey..." : "Register passkey"}
+                {passkeyLoading()
+                  ? "Registering passkey..."
+                  : "Register passkey"}
               </Button>
               <Show when={!passkeySupported()}>
                 <p class={styles.muted}>
@@ -197,7 +203,11 @@ export default function ProfilePage() {
                 </Button>
                 <Show when={totpQrCode()}>
                   <div class={styles.qrWrap}>
-                    <img src={totpQrCode()} alt="TOTP QR code" class={styles.qr} />
+                    <img
+                      src={totpQrCode()}
+                      alt="TOTP QR code"
+                      class={styles.qr}
+                    />
                     <Input
                       id="totp-setup-code"
                       type="text"
@@ -224,7 +234,9 @@ export default function ProfilePage() {
               </Show>
               <Show when={recoveryCodes().length > 0}>
                 <div class={styles.recovery}>
-                  <p class={styles.recoveryTitle}>Recovery codes (shown once)</p>
+                  <p class={styles.recoveryTitle}>
+                    Recovery codes (shown once)
+                  </p>
                   <ul class={styles.recoveryList}>
                     {recoveryCodes().map((code) => (
                       <li class={styles.mono}>{code}</li>

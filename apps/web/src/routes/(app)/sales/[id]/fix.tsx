@@ -3,12 +3,10 @@ import { createResource, createSignal, For, Show } from "solid-js";
 
 import { getSaleFixContext, submitSale } from "~/actions/sales";
 import { useToast } from "~/components/feedback/toast-provider";
-import {
-  AppPage,
-  AppPageHeader,
-} from "~/components/layout/page";
+import { AppPage, AppPageHeader } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { getErrorMessage } from "~/lib/errors";
+
 import styles from "../fix-sale-page.module.css";
 
 export default function FixSalePage() {
@@ -52,19 +50,13 @@ export default function FixSalePage() {
           </h2>
           <Show
             when={fixContext()?.rejections?.length}
-            fallback={
-              <p class={styles.muted}>
-                No pending reviewer notes.
-              </p>
-            }
+            fallback={<p class={styles.muted}>No pending reviewer notes.</p>}
           >
             <ul class={styles.list}>
               <For each={fixContext()?.rejections ?? []}>
                 {(rejection) => (
                   <li class={styles.item}>
-                    <p class={styles.itemTitle}>
-                      Field: {rejection.field_id}
-                    </p>
+                    <p class={styles.itemTitle}>Field: {rejection.field_id}</p>
                     <p class={styles.itemBody}>
                       {rejection.reviewer_note ?? "No reviewer note provided."}
                     </p>

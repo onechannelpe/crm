@@ -124,7 +124,10 @@ export function getDefaultAppPath(role: Role): string {
   return candidate?.href ?? "/dashboard";
 }
 
-export function getSidebarRoutes(role: Role, section: SidebarSection): SidebarRoute[] {
+export function getSidebarRoutes(
+  role: Role,
+  section: SidebarSection,
+): SidebarRoute[] {
   return APP_ROUTES.filter((route): route is SidebarRoute => {
     if (!isSidebarRoute(route)) return false;
     if (route.sidebar.section !== section) return false;

@@ -9,6 +9,7 @@ import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { getErrorMessage } from "~/lib/errors";
 import { runOptimistic } from "~/lib/ui/run-optimistic";
+
 import styles from "./quota-page.module.css";
 
 export default function QuotaPage() {
@@ -82,9 +83,7 @@ export default function QuotaPage() {
             when={quotaValues()}
             fallback={
               <section class={styles.panel}>
-                <p class={styles.muted}>
-                  No quota assigned yet.
-                </p>
+                <p class={styles.muted}>No quota assigned yet.</p>
               </section>
             }
           >

@@ -3,14 +3,12 @@ import { createResource, createSignal, For } from "solid-js";
 
 import { createTeamInvite, getBranchTeamsForInvite } from "~/actions/team";
 import { useToast } from "~/components/feedback/toast-provider";
-import {
-  AppPage,
-  AppPageHeader,
-} from "~/components/layout/page";
+import { AppPage, AppPageHeader } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { Select } from "~/components/ui/input/select";
 import { getErrorMessage } from "~/lib/errors";
+
 import styles from "./new-team-page.module.css";
 
 const ROLE_OPTIONS = [

@@ -13,7 +13,12 @@ export interface CheckboxProps extends Omit<
 }
 
 export function Checkbox(props: CheckboxProps) {
-  const [local, others] = splitProps(props, ["class", "label", "id", "checked"]);
+  const [local, others] = splitProps(props, [
+    "class",
+    "label",
+    "id",
+    "checked",
+  ]);
 
   return (
     <label class={styles.checkboxLabel}>

@@ -9,8 +9,9 @@ import User from "~/components/icons/user";
 import { AppPage } from "~/components/layout/page";
 import { createClientSearchController } from "~/features/client-search/controller";
 import { groupCompaniesByRuc } from "~/features/client-search/grouping";
-import type { SearchType } from "~/server/shared/engine/types";
 import { cn } from "~/lib/utils";
+import type { SearchType } from "~/server/shared/engine/types";
+
 import styles from "./search-page.module.css";
 
 const COMPANY_SEARCH_TYPES = [
@@ -54,7 +55,9 @@ function buildRows(
     const contacts = company.people
       .map((person) => person.name || person.dni)
       .filter(Boolean);
-    const contactDnis = company.people.map((person) => person.dni).filter(Boolean);
+    const contactDnis = company.people
+      .map((person) => person.dni)
+      .filter(Boolean);
 
     return {
       id: `${company.key}-${index}`,
@@ -94,7 +97,12 @@ export default function ClientSearchCompaniesPage() {
   const grouped = createMemo(() => groupCompaniesByRuc(controller.results()));
   const rows = createMemo(() => buildRows(grouped()));
   const uniqueRucCount = createMemo(
-    () => new Set(rows().filter((row) => row.ruc !== "-").map((row) => row.ruc)).size,
+    () =>
+      new Set(
+        rows()
+          .filter((row) => row.ruc !== "-")
+          .map((row) => row.ruc),
+      ).size,
   );
 
   onMount(() => {
@@ -106,10 +114,7 @@ export default function ClientSearchCompaniesPage() {
       <section class={styles.panel}>
         <div class={styles.searchPanel}>
           <div class={styles.tabList}>
-            <A
-              href="/client-search/people"
-              class={styles.tab}
-            >
+            <A href="/client-search/people" class={styles.tab}>
               People
             </A>
             <A
@@ -124,7 +129,9 @@ export default function ClientSearchCompaniesPage() {
             onSubmit={(event) => {
               event.preventDefault();
               if (autoType()) {
-                controller.setSearchType(inferCompanySearchType(controller.query()));
+                controller.setSearchType(
+                  inferCompanySearchType(controller.query()),
+                );
               }
               void controller.runCurrentSearch();
             }}
@@ -160,7 +167,9 @@ export default function ClientSearchCompaniesPage() {
                 class={styles.searchInput}
                 placeholder="Company, RUC, contact, DNI or phone"
                 value={controller.query()}
-                onInput={(event) => controller.setQuery(event.currentTarget.value)}
+                onInput={(event) =>
+                  controller.setQuery(event.currentTarget.value)
+                }
                 required
               />
             </label>
@@ -175,13 +184,18 @@ export default function ClientSearchCompaniesPage() {
                 min="1"
                 max="100"
                 value={controller.limit()}
-                onInput={(event) => controller.setLimit(event.currentTarget.value)}
+                onInput={(event) =>
+                  controller.setLimit(event.currentTarget.value)
+                }
                 required
               />
             </label>
 
             <div class={cn(styles.searchField, styles.alignEnd)}>
-              <span class={cn(styles.searchLabel, styles.hiddenLabel)} aria-hidden="true">
+              <span
+                class={cn(styles.searchLabel, styles.hiddenLabel)}
+                aria-hidden="true"
+              >
                 Search
               </span>
               <button
@@ -206,17 +220,14 @@ export default function ClientSearchCompaniesPage() {
             </label>
             <span class={styles.searchHelper}>
               Current type:{" "}
-              {SEARCH_LABELS[controller.searchType()] ?? controller.searchType()}
+              {SEARCH_LABELS[controller.searchType()] ??
+                controller.searchType()}
             </span>
           </div>
         </div>
 
         <Show when={controller.error()}>
-          {(message) => (
-            <div class={styles.errorBar}>
-              {message()}
-            </div>
-          )}
+          {(message) => <div class={styles.errorBar}>{message()}</div>}
         </Show>
 
         <div class={styles.viewBar}>
@@ -326,7 +337,10 @@ export default function ClientSearchCompaniesPage() {
               </For>
               <Show when={rows().length === 0}>
                 <tr>
-                  <td colSpan={7} class={cn(styles.tableCell, styles.tableEmpty)}>
+                  <td
+                    colSpan={7}
+                    class={cn(styles.tableCell, styles.tableEmpty)}
+                  >
                     Run a search by RUC, company, contact, DNI or phone to list
                     companies and jump to related people.
                   </td>
@@ -344,10 +358,12 @@ export default function ClientSearchCompaniesPage() {
             <ChevronDown size={16} />
           </div>
           <div>
-            Unique of RUC <span class={styles.footerStrong}>{uniqueRucCount()}</span>
+            Unique of RUC{" "}
+            <span class={styles.footerStrong}>{uniqueRucCount()}</span>
           </div>
           <div class={styles.footerRight}>
-            Company rows <span class={styles.footerStrong}>{rows().length}</span>
+            Company rows{" "}
+            <span class={styles.footerStrong}>{rows().length}</span>
           </div>
         </div>
       </section>
