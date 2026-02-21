@@ -1,0 +1,43 @@
+import { afterAll, beforeAll, bench, describe } from "vitest";
+
+import {
+  cleanupTestDb,
+  createIsolatedTestDb,
+  type TestDbContext,
+} from "../../support/test-db";
+import { fixedIterations } from "../_shared/options";
+import {
+  pendingReviewWorkload,
+  QUERY_ITERATIONS,
+  seedPendingReviewFixtures,
+} from "./fixtures";
+
+describe("pending review component benchmark", () => {
+  let ctx: TestDbContext | null = null;
+
+  beforeAll(async () => {
+    ctx = await createIsolatedTestDb("bench-pending-review-component");
+    await seedPendingReviewFixtures(ctx);
+  });
+
+  afterAll(async () => {
+    if (!ctx) return;
+    await cleanupTestDb(ctx);
+    ctx = null;
+  });
+
+  bench(
+    "component path: branch pending-review query",
+    async () => {
+      const rows =
+        await ctx!.repos.chargeNotes.findPendingReviewWithContactsByBranch(1);
+
+      if (rows.length !== pendingReviewWorkload.expectedBranchOne) {
+        throw new Error(
+          `expected ${pendingReviewWorkload.expectedBranchOne} rows, got ${rows.length}`,
+        );
+      }
+    },
+    fixedIterations(QUERY_ITERATIONS),
+  );
+});

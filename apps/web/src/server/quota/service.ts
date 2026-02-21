@@ -3,15 +3,47 @@ import { createAuditService } from "~/server/shared/audit";
 import type { Repositories } from "~/server/shared/registry";
 import { Ok, Err, type Result } from "~/server/shared/result";
 
-export function createQuotaService(repos: Repositories) {
+export interface QuotaClock {
+  todayDateString(): string;
+}
+
+export interface QuotaService {
+  allocate(
+    supervisorId: number,
+    executiveId: number,
+    amount: number,
+    date?: string,
+  ): Promise<Result<void, string>>;
+  consume(userId: number, amount?: number): Promise<Result<number, string>>;
+  refund(userId: number, amount?: number): Promise<Result<void, string>>;
+  getStatus(userId: number): Promise<
+    | { allocated: false }
+    | {
+        allocated: true;
+        total: number;
+        used: number;
+        remaining: number;
+      }
+  >;
+}
+
+const systemQuotaClock: QuotaClock = {
+  todayDateString,
+};
+
+export function createQuotaService(
+  repos: Repositories,
+  clock: QuotaClock = systemQuotaClock,
+): QuotaService {
   const audit = createAuditService(repos);
+  const today = () => clock.todayDateString();
 
   return {
     async allocate(
       supervisorId: number,
       executiveId: number,
       amount: number,
-      date: string = todayDateString(),
+      date: string = today(),
     ): Promise<Result<void, string>> {
       const existing = await repos.quotaAllocations.findByUserAndDate(
         executiveId,
@@ -42,10 +74,10 @@ export function createQuotaService(repos: Repositories) {
       userId: number,
       amount: number = 1,
     ): Promise<Result<number, string>> {
-      const today = todayDateString();
+      const date = today();
       const allocation = await repos.quotaAllocations.findByUserAndDate(
         userId,
-        today,
+        date,
       );
 
       if (!allocation) {
@@ -67,10 +99,10 @@ export function createQuotaService(repos: Repositories) {
       amount: number = 1,
     ): Promise<Result<void, string>> {
       if (amount <= 0) return Ok(undefined);
-      const today = todayDateString();
+      const date = today();
       const allocation = await repos.quotaAllocations.findByUserAndDate(
         userId,
-        today,
+        date,
       );
       if (!allocation) {
         return Err("No quota allocated for today. Contact your supervisor.");
@@ -85,10 +117,10 @@ export function createQuotaService(repos: Repositories) {
     },
 
     async getStatus(userId: number) {
-      const today = todayDateString();
+      const date = today();
       const allocation = await repos.quotaAllocations.findByUserAndDate(
         userId,
-        today,
+        date,
       );
 
       if (!allocation) {

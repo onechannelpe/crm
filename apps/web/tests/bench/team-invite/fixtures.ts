@@ -1,0 +1,122 @@
+import { hashInviteToken } from "~/lib/auth/invite/tokens";
+
+import type { TestDbContext } from "../../support/test-db";
+import { BENCH_NOW } from "../_shared/constants";
+
+export const CREATE_POOL_SIZE = 80;
+export const ACCEPT_POOL_SIZE = 80;
+export const QUERY_POOL_SIZE = 80;
+const ACCEPT_USER_ID_START = 110_000;
+const QUERY_USER_ID_START = 120_000;
+
+export interface AcceptFixture {
+  token: string;
+  fullName: string;
+}
+
+export interface TeamInviteFixtures {
+  createEmails: string[];
+  acceptFixtures: AcceptFixture[];
+  pendingInviteTokenHashes: string[];
+}
+
+export async function seedTeamInviteFixtures(
+  ctx: TestDbContext,
+): Promise<TeamInviteFixtures> {
+  const createEmails = Array.from(
+    { length: CREATE_POOL_SIZE },
+    (_, index) => `bench-team-create-${index}@test.local`,
+  );
+
+  const acceptFixtures: AcceptFixture[] = [];
+  const pendingInviteTokenHashes: string[] = [];
+
+  const acceptUsers = Array.from({ length: ACCEPT_POOL_SIZE }, (_, index) => ({
+    id: ACCEPT_USER_ID_START + index,
+    branch_id: 2,
+    team_id: null,
+    email: `bench-team-accept-${index}@test.local`,
+    password_hash: "bench-pending-hash",
+    full_name: `Bench Accept ${index}`,
+    phone_e164: null,
+    phone_verified_at: null,
+    profile_confirmed_at: null,
+    onboarding_completed_at: null,
+    strong_auth_required: 0,
+    strong_auth_enrolled_at: null,
+    role: "executive" as const,
+    is_active: 0,
+    created_at: BENCH_NOW,
+  }));
+  const queryUsers = Array.from({ length: QUERY_POOL_SIZE }, (_, index) => ({
+    id: QUERY_USER_ID_START + index,
+    branch_id: 2,
+    team_id: null,
+    email: `bench-team-query-${index}@test.local`,
+    password_hash: "bench-pending-hash",
+    full_name: `Bench Query ${index}`,
+    phone_e164: null,
+    phone_verified_at: null,
+    profile_confirmed_at: null,
+    onboarding_completed_at: null,
+    strong_auth_required: 0,
+    strong_auth_enrolled_at: null,
+    role: "executive" as const,
+    is_active: 0,
+    created_at: BENCH_NOW,
+  }));
+
+  await ctx.db
+    .insertInto("users")
+    .values([...acceptUsers, ...queryUsers])
+    .execute();
+
+  const acceptInvites = acceptUsers.map((user, index) => {
+    const token = `bench-team-token-${String(index).padStart(3, "0")}`;
+    acceptFixtures.push({ token, fullName: `Bench Accepted ${index}` });
+    return {
+      user_id: user.id,
+      branch_id: 2,
+      email: user.email,
+      role: "executive" as const,
+      token_hash: hashInviteToken(token),
+      status: "pending" as const,
+      expires_at: BENCH_NOW + 7 * 24 * 60 * 60 * 1000,
+      created_by_user_id: 5,
+      accepted_at: null,
+      revoked_at: null,
+      created_at: BENCH_NOW,
+      sent_at: null,
+    };
+  });
+
+  const queryInvites = queryUsers.map((user, index) => {
+    const token = `bench-team-query-token-${String(index).padStart(3, "0")}`;
+    pendingInviteTokenHashes.push(hashInviteToken(token));
+    return {
+      user_id: user.id,
+      branch_id: 2,
+      email: user.email,
+      role: "executive" as const,
+      token_hash: hashInviteToken(token),
+      status: "pending" as const,
+      expires_at: BENCH_NOW + 7 * 24 * 60 * 60 * 1000,
+      created_by_user_id: 5,
+      accepted_at: null,
+      revoked_at: null,
+      created_at: BENCH_NOW,
+      sent_at: null,
+    };
+  });
+
+  await ctx.db
+    .insertInto("user_invites")
+    .values([...acceptInvites, ...queryInvites])
+    .execute();
+
+  return {
+    createEmails,
+    acceptFixtures,
+    pendingInviteTokenHashes,
+  };
+}

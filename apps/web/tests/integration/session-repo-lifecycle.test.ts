@@ -19,7 +19,7 @@ describe("session repository lifecycle", () => {
 
   it("creates, reads, updates, extends, and deletes session", async () => {
     const now = Date.now();
-    const sessionId = `s_${Math.random().toString(36).slice(2)}`;
+    const sessionId = `s-${now}`;
 
     await ctx.repos.sessions.create({
       id: sessionId,

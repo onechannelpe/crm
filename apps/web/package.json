@@ -16,7 +16,7 @@
     "lint": "oxlint -c ../../.oxlintrc.json --type-aware --tsconfig tsconfig.json --deny-warnings src tests",
     "check": "bun x tsc --noEmit && bun run lint",
     "test": "bun --env-file=../../.env vitest run --project default",
-    "test:perf": "bun --env-file=../../.env vitest run --project perf",
+    "test:perf": "bun --env-file=../../.env vitest bench --config vitest.bench.config.ts",
     "migrate": "bun --env-file=../../.env src/lib/db/migrate-cli.ts",
     "seed": "bun --env-file=../../.env src/lib/db/seed.ts"
   },
