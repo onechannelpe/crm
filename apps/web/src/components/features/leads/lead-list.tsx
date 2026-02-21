@@ -16,6 +16,8 @@ import {
   TableRow,
 } from "~/components/ui/layout/table";
 
+import styles from "./lead-list.module.css";
+
 interface LeadContact {
   assignmentId: number;
   contactId: number;
@@ -64,33 +66,33 @@ export const LeadList: Component<LeadListProps> = (props) => {
             <TableHead>Organization</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Expires</TableHead>
-            <TableHead class="text-right">Actions</TableHead>
+            <TableHead class={styles.actionsHead}>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           <For each={props.contacts}>
             {(lead) => (
               <TableRow>
-                <TableCell>
-                  <div class="flex items-center gap-2">
-                    <span class="tw-avatar-dot bg-muted text-muted-foreground">
-                      <User class="h-3.5 w-3.5" />
+                <TableCell class={styles.leadCell}>
+                  <div class={styles.leadIdentity}>
+                    <span class={styles.avatar}>
+                      <User size={14} />
                     </span>
-                    <div class="min-w-0">
-                      <p class="truncate font-medium text-foreground">{lead.name}</p>
-                      <p class="text-xs text-muted-foreground">DNI {lead.dni}</p>
+                    <div class={styles.leadInfo}>
+                      <p class={styles.leadName}>{lead.name}</p>
+                      <p class={styles.leadMeta}>DNI {lead.dni}</p>
                     </div>
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div class="inline-flex items-center gap-1.5 text-muted-foreground">
-                    <Phone class="h-3.5 w-3.5" />
+                  <div class={styles.inlineInfo}>
+                    <Phone size={14} />
                     <span>{lead.phone_primary || "No phone"}</span>
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div class="inline-flex items-center gap-1.5 text-muted-foreground">
-                    <Building2 class="h-3.5 w-3.5" />
+                  <div class={styles.inlineInfo}>
+                    <Building2 size={14} />
                     <span>Org #{lead.organization_id}</span>
                   </div>
                 </TableCell>
@@ -110,8 +112,8 @@ export const LeadList: Component<LeadListProps> = (props) => {
                     {formatTimeLeft(lead.expires_at)}
                   </Badge>
                 </TableCell>
-                <TableCell class="text-right">
-                  <div class="inline-flex items-center gap-2">
+                <TableCell class={styles.actionsCell}>
+                  <div class={styles.actions}>
                     <Button
                       size="sm"
                       onClick={() => props.onCreateSale(lead.contactId)}
@@ -123,7 +125,7 @@ export const LeadList: Component<LeadListProps> = (props) => {
                       variant="outline"
                       onClick={() => props.onComplete(lead.assignmentId)}
                     >
-                      <Check class="h-3.5 w-3.5" />
+                      <Check size={14} />
                       Complete
                     </Button>
                   </div>

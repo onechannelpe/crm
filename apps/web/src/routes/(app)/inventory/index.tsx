@@ -14,6 +14,8 @@ import {
 } from "~/components/ui/layout/table";
 import { createAppQuery } from "~/lib/ui/create-app-query";
 
+import styles from "./inventory-page.module.css";
+
 const statusLabels: Record<string, string> = {
   available: "Available",
   reserved: "Reserved",
@@ -39,11 +41,7 @@ export default function InventoryPage() {
 
   return (
     <AppPage>
-      <AppPageHeader
-        eyebrow="Operations"
-        title="Inventory"
-        description={`${itemCount()} serialized items tracked.`}
-      />
+      <AppPageHeader />
 
       <Show
         when={itemCount() > 0}
@@ -54,7 +52,7 @@ export default function InventoryPage() {
           />
         }
       >
-        <section class="tw-record-index-panel">
+        <section class={styles.panel}>
           <Table>
             <TableHeader>
               <TableRow>
@@ -68,10 +66,10 @@ export default function InventoryPage() {
               <For each={items()}>
                 {(item) => (
                   <TableRow>
-                    <TableCell class="font-medium">
+                    <TableCell class={styles.product}>
                       {item.productName}
                     </TableCell>
-                    <TableCell class="font-mono text-sm text-muted-foreground">
+                    <TableCell class={styles.serial}>
                       {item.serial_number}
                     </TableCell>
                     <TableCell>

@@ -1,0 +1,60 @@
+.page {
+  margin: 0 auto;
+  max-width: 960px;
+}
+
+.panel {
+  border: var(--tw-panel-border);
+  border-radius: var(--tw-panel-radius);
+  background: var(--tw-panel-background);
+  padding: 16px;
+}
+
+.alert {
+  margin-bottom: 16px;
+  border: 1px solid color-mix(in oklab, var(--destructive) 30%, transparent);
+  background: color-mix(in oklab, var(--destructive) 5%, transparent);
+  padding: 16px;
+}
+
+.alertTitle {
+  margin-bottom: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--destructive);
+}
+
+.muted {
+  font-size: 13px;
+  color: var(--muted-foreground);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--foreground);
+}
+
+.item {
+  border: 1px solid color-mix(in oklab, var(--destructive) 25%, transparent);
+  background: var(--background);
+  padding: 8px 12px;
+}
+
+.itemTitle {
+  color: var(--destructive);
+  font-weight: 500;
+}
+
+.itemBody {
+  margin-top: 4px;
+  color: var(--muted-foreground);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

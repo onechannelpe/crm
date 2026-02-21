@@ -11,7 +11,9 @@ import {
   toAuthenticationPayload,
   toRequestOptions,
 } from "~/lib/auth/passkey/browser";
+import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { getErrorMessage } from "~/lib/errors";
+import styles from "../auth/auth-shell.module.css";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -37,7 +39,9 @@ export default function LoginPage() {
 
     try {
       const result = await login(email(), password(), totpCode());
-      navigate(result.onboardingCompleted ? "/dashboard" : "/onboarding");
+      navigate(
+        result.onboardingCompleted ? getDefaultAppPath(result.role) : "/onboarding",
+      );
     } catch (err: unknown) {
       setError(getErrorMessage(err, "Invalid credentials"));
     } finally {
@@ -69,7 +73,9 @@ export default function LoginPage() {
 
       const payload = toAuthenticationPayload(credential);
       const result = await finishPasskeyLogin(challenge.challengeId, payload);
-      navigate(result.onboardingCompleted ? "/dashboard" : "/onboarding");
+      navigate(
+        result.onboardingCompleted ? getDefaultAppPath(result.role) : "/onboarding",
+      );
     } catch (err: unknown) {
       setError(getErrorMessage(err, "Passkey sign in failed"));
     } finally {
@@ -78,14 +84,14 @@ export default function LoginPage() {
   }
 
   return (
-    <div class="crm-shell flex min-h-screen items-center justify-center p-4">
-      <div class="tw-record-index-panel w-full max-w-[420px] p-5">
-        <div class="mb-5 space-y-1">
-          <p class="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+    <div class={styles.shell}>
+      <div class={`${styles.panel} ${styles.panelSm}`}>
+        <div class={styles.stack1}>
+          <p class={styles.eyebrow}>
             CRM Workspace
           </p>
-          <h1 class="text-xl font-semibold text-foreground">Sign in</h1>
-          <p class="text-sm text-muted-foreground">
+          <h1 class={styles.titleSm}>Sign in</h1>
+          <p class={styles.muted}>
             Continue with password or passkey.
           </p>
         </div>
@@ -94,7 +100,7 @@ export default function LoginPage() {
           onSubmit={(e) => {
             void handleSubmit(e);
           }}
-          class="space-y-3"
+          class={styles.stack3}
         >
           <Input
             id="email"
@@ -125,15 +131,15 @@ export default function LoginPage() {
           />
 
           <Show when={error()}>
-            <div class="border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm font-medium text-destructive">
+            <div class={styles.errorBox}>
               {error()}
             </div>
           </Show>
 
-          <div class="space-y-2 pt-1">
+          <div class={styles.stack2}>
             <Button
               type="submit"
-              class="h-9 w-full"
+              class={styles.full}
               disabled={loading() || passkeyLoading()}
             >
               {loading() ? "Signing in..." : "Sign in"}
@@ -141,7 +147,7 @@ export default function LoginPage() {
             <Button
               type="button"
               variant="outline"
-              class="h-9 w-full"
+              class={styles.full}
               disabled={
                 loading() ||
                 passkeyLoading() ||
@@ -156,7 +162,7 @@ export default function LoginPage() {
           </div>
 
           <Show when={passkeySupport() === "unsupported"}>
-            <p class="text-xs text-muted-foreground">
+            <p class={styles.muted}>
               Passkeys are not supported on this device.
             </p>
           </Show>

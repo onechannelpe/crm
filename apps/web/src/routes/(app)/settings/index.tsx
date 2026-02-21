@@ -13,10 +13,15 @@ import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { Checkbox } from "~/components/ui/input/checkbox";
 import { Input } from "~/components/ui/input/input";
-import { canAccessPath } from "~/lib/auth/access/route-policy";
+import {
+  canAccessPath,
+  getDefaultAppPath,
+} from "~/lib/auth/access/route-policy";
 import { getErrorMessage } from "~/lib/errors";
 import { runOptimistic } from "~/lib/ui/run-optimistic";
 import { useSession } from "~/components/providers/session-provider";
+import { cn } from "~/lib/utils";
+import styles from "./settings-page.module.css";
 
 type SettingsTabId = "profile" | "experience" | "general" | "members" | "security";
 
@@ -93,38 +98,43 @@ export default function SettingsPage() {
     SETTINGS_NAV_ITEMS.filter((item) => item.section === section);
 
   return (
-    <AppPage class="space-y-0 pb-0">
+    <AppPage>
       <Show
         when={canSeeSettings()}
         fallback={
-          <section class="tw-record-index-panel p-4 text-[13px] text-muted-foreground">
+          <section class={styles.noAccess}>
             You do not have permission to access settings.
           </section>
         }
       >
-      <section class="tw-settings-layout">
-        <aside class="tw-settings-nav">
-          <div class="tw-settings-nav-scroll">
-            <A href="/dashboard" class="tw-sidebar-link mb-3">
-              <X class="h-4 w-4" />
+      <section class={styles.layout}>
+        <aside class={styles.nav}>
+          <div class={styles.navScroll}>
+            <A
+              href={getDefaultAppPath(currentUser().role)}
+              class={cn(styles.item, styles.exit)}
+            >
+              <X class={styles.icon} />
               <span>Exit settings</span>
             </A>
 
             <For each={["User", "Workspace"] as const}>
               {(section) => (
-                <section class="tw-nav-section mb-3">
-                  <h4 class="tw-sidebar-group-title">{section}</h4>
+                <section class={styles.section}>
+                  <h4 class={styles.groupTitle}>{section}</h4>
                   <For each={sectionItems(section)}>
                     {(item) => {
                       const Icon = item.icon;
                       return (
                         <button
                           type="button"
-                          class="tw-sidebar-link w-full"
-                          data-active={activeTab() === item.id}
+                          class={cn(
+                            styles.item,
+                            activeTab() === item.id && styles.itemActive,
+                          )}
                           onClick={() => setActiveTab(item.id)}
                         >
-                          <Icon class="h-4 w-4" />
+                          <Icon class={styles.icon} />
                           <span>{item.label}</span>
                         </button>
                       );
@@ -136,40 +146,38 @@ export default function SettingsPage() {
           </div>
         </aside>
 
-        <div class="tw-settings-page">
-          <div class="tw-settings-topbar">
-            <nav class="inline-flex items-center gap-2 text-[13px]">
+        <div class={styles.page}>
+          <div class={styles.topbar}>
+            <nav class={styles.crumbs}>
               <span>{activeSection().section}</span>
               <span>/</span>
-              <span class="text-foreground">{activeSection().label}</span>
+              <span class={styles.crumbCurrent}>{activeSection().label}</span>
             </nav>
           </div>
 
-          <div class="tw-settings-content-scroll">
+          <div class={styles.contentScroll}>
             <Show
               when={activeTab() === "general"}
               fallback={
-                <div class="tw-settings-content">
-                  <section class="tw-settings-block">
-                    <h2 class="text-[16px] font-semibold text-foreground">
-                      {activeSection().label}
-                    </h2>
-                    <p class="text-[13px] text-muted-foreground">
+                <div class={styles.content}>
+                  <section class={styles.block}>
+                    <h2 class={styles.title}>{activeSection().label}</h2>
+                    <p class={styles.placeholderText}>
                       Configuration for this section is not available yet.
                     </p>
                   </section>
                 </div>
               }
             >
-              <div class="tw-settings-content">
-                <section class="tw-settings-block">
+              <div class={styles.content}>
+                <section class={styles.block}>
                   <div>
-                    <h2 class="text-[16px] font-semibold text-foreground">Product catalog</h2>
-                    <p class="mt-1 text-[13px] text-muted-foreground">
+                    <h2 class={styles.title}>Product catalog</h2>
+                    <p class={styles.description}>
                       Update product price and activation state.
                     </p>
                   </div>
-                  <div class="space-y-2">
+                  <div class={styles.products}>
                     <For each={currentProducts()}>
                       {(product) => {
                         const [price, setPrice] = createSignal(String(product.price));
@@ -178,16 +186,15 @@ export default function SettingsPage() {
                         );
                         return (
                           <form
-                            class="space-y-0"
                             onSubmit={(event) => {
                               event.preventDefault();
                               void save(product.id, price(), isActive());
                             }}
                           >
-                            <div class="grid grid-cols-1 items-end gap-3 border-b border-border py-2 md:grid-cols-[1fr_140px_140px_150px]">
+                            <div class={styles.productRow}>
                               <div>
-                                <p class="font-medium text-foreground">{product.name}</p>
-                                <p class="text-xs text-muted-foreground">{product.category}</p>
+                                <p class={styles.productName}>{product.name}</p>
+                                <p class={styles.productCategory}>{product.category}</p>
                               </div>
                               <Input
                                 type="number"
@@ -203,7 +210,6 @@ export default function SettingsPage() {
                                 onInput={(event) =>
                                   setIsActive(event.currentTarget.checked)
                                 }
-                                class="mt-1"
                               />
                               <Button type="submit" disabled={savingId() === product.id}>
                                 {savingId() === product.id ? "Saving..." : "Save"}
@@ -215,7 +221,7 @@ export default function SettingsPage() {
                     </For>
                   </div>
                 </section>
-                <section class="tw-settings-block border-t border-border pt-6">
+                <section class={cn(styles.block, styles.securityBlock)}>
                   <LoginRetriesCard />
                 </section>
               </div>

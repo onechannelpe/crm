@@ -1,0 +1,55 @@
+.container {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  max-width: 28rem;
+  display: grid;
+  gap: 8px;
+}
+
+.toast {
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--overlay);
+  box-shadow: var(--shadow-elevation-2);
+  padding: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.success {
+  border-color: color-mix(in oklab, var(--success) 35%, transparent);
+  background: color-mix(in oklab, var(--success) 14%, var(--overlay));
+  color: var(--success);
+}
+
+.error {
+  border-color: color-mix(in oklab, var(--destructive) 35%, transparent);
+  background: color-mix(in oklab, var(--destructive) 14%, var(--overlay));
+  color: var(--destructive);
+}
+
+.info {
+  border-color: color-mix(in oklab, var(--info) 35%, transparent);
+  background: color-mix(in oklab, var(--info) 14%, var(--overlay));
+  color: var(--info);
+}
+
+.message {
+  margin: 0;
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.dismiss {
+  width: 24px;
+  height: 24px;
+  color: var(--muted-foreground);
+}
+
+.dismiss:hover {
+  color: var(--foreground);
+}

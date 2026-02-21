@@ -1,0 +1,66 @@
+.panel {
+  display: grid;
+  gap: 20px;
+}
+
+.form {
+  display: grid;
+  gap: 16px;
+}
+
+.section {
+  display: grid;
+  gap: 8px;
+}
+
+.totpBox {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--border);
+  padding: 12px;
+}
+
+.totpTitle {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.qr {
+  width: 192px;
+  height: 192px;
+}
+
+.recovery {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+}
+
+.recoveryTitle {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.recoveryList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  font-size: 13px;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.error {
+  margin: 0;
+  font-size: 13px;
+  color: var(--destructive);
+}

@@ -4,6 +4,8 @@ import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { Select } from "~/components/ui/input/select";
 
+import styles from "./rejection-form.module.css";
+
 interface RejectionItem {
   fieldId: string;
   note: string;
@@ -57,7 +59,7 @@ export const RejectionForm: Component<RejectionFormProps> = (props) => {
     );
 
   return (
-    <div class="space-y-4">
+    <div class={styles.root}>
       <Select
         value=""
         onChange={(e) => {
@@ -71,24 +73,22 @@ export const RejectionForm: Component<RejectionFormProps> = (props) => {
         </For>
       </Select>
 
-      <div class="space-y-3">
+      <div class={styles.list}>
         <For each={rejections()}>
           {(rejection, index) => {
             const fieldLabel = REJECTABLE_FIELDS.find(
               (f) => f.id === rejection.fieldId,
             )?.label;
             return (
-              <div class="rounded-sm border border-destructive/30 bg-destructive/10 p-3">
-                <div class="flex items-start justify-between mb-2">
-                  <span class="text-sm font-medium text-destructive">
-                    {fieldLabel}
-                  </span>
+              <div class={styles.item}>
+                <div class={styles.itemHead}>
+                  <span class={styles.itemTitle}>{fieldLabel}</span>
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
                     onClick={() => removeRejection(index())}
-                    class="h-7 px-2 text-destructive hover:bg-destructive/10"
+                    class={styles.remove}
                   >
                     ×
                   </Button>
@@ -104,7 +104,7 @@ export const RejectionForm: Component<RejectionFormProps> = (props) => {
         </For>
       </div>
 
-      <div class="flex gap-2 pt-2">
+      <div class={styles.actions}>
         <Button
           variant="destructive"
           onClick={() => {

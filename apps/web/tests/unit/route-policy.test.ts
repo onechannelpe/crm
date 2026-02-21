@@ -2,9 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import {
   canAccessPath,
+  getDefaultAppPath,
+  getHeaderRoute,
   getRoutePermission,
-  getSearchRoutes,
+  getSidebarChildren,
   getSidebarRoutes,
+  isKnownProtectedRoute,
 } from "../../src/lib/auth/access/route-policy";
 
 describe("route policy", () => {
@@ -13,7 +16,7 @@ describe("route policy", () => {
     expect(getRoutePermission("/team/new")).toBe("hr:manage");
     expect(getRoutePermission("/sales/new")).toBe("sales:create");
     expect(getRoutePermission("/sales/123/fix")).toBe("sales:submit");
-    expect(getRoutePermission("/dashboard")).toBeNull();
+    expect(getRoutePermission("/dashboard")).toBe("sales:review");
   });
 
   it("enforces role access checks for restricted paths", () => {
@@ -28,29 +31,63 @@ describe("route policy", () => {
     expect(canAccessPath("executive", "/sales/42/fix")).toBe(true);
   });
 
-  it("filters search and sidebar routes by role", () => {
-    const executiveSearch = getSearchRoutes("executive").map(
+  it("filters sidebar route sections by role", () => {
+    const executiveQuick = getSidebarRoutes("executive", "quick").map(
       (route) => route.href,
     );
-    expect(executiveSearch).toContain("/leads");
-    expect(executiveSearch).toContain("/client-search/people");
-    expect(executiveSearch).not.toContain("/audit");
-    expect(executiveSearch).not.toContain("/quota");
-    expect(executiveSearch).not.toContain("/settings");
+    expect(executiveQuick).toContain("/client-search/people");
+    expect(executiveQuick).not.toContain("/settings");
 
-    const supervisorSearch = getSearchRoutes("supervisor").map(
+    const supervisorWorkspace = getSidebarRoutes("supervisor", "workspace").map(
       (route) => route.href,
     );
-    expect(supervisorSearch).toContain("/audit");
+    expect(supervisorWorkspace).toContain("/audit");
 
-    const inventorySidebar = getSidebarRoutes("logistics", "inventory").map(
+    const inventorySidebar = getSidebarRoutes("logistics", "workspace").map(
       (route) => route.href,
     );
     expect(inventorySidebar).toEqual(["/inventory"]);
 
-    const salesSidebar = getSidebarRoutes("logistics", "sales").map(
-      (route) => route.href,
+    const salesSidebar = getSidebarChildren("logistics", "leads").map(
+      (child) => child.route.href,
     );
     expect(salesSidebar).toEqual([]);
+  });
+
+  it("returns a role-safe default path", () => {
+    expect(getDefaultAppPath("executive")).toBe("/leads");
+    expect(getDefaultAppPath("logistics")).toBe("/inventory");
+    expect(getDefaultAppPath("hr")).toBe("/team");
+    expect(getDefaultAppPath("admin")).toBe("/dashboard");
+  });
+
+  it("covers all protected app routes in the route catalog", () => {
+    const protectedPaths = [
+      "/dashboard",
+      "/leads",
+      "/client-search/people",
+      "/client-search/companies",
+      "/team",
+      "/team/new",
+      "/inventory",
+      "/validation",
+      "/audit",
+      "/quota",
+      "/sales/new",
+      "/sales/42/fix",
+      "/settings",
+      "/profile",
+    ];
+
+    for (const pathname of protectedPaths) {
+      expect(isKnownProtectedRoute(pathname)).toBe(true);
+    }
+  });
+
+  it("resolves header metadata from the same catalog", () => {
+    expect(getHeaderRoute("/sales/new").label).toBe("Workflows");
+    expect(getHeaderRoute("/sales/42/fix").label).toBe("Workflows");
+    expect(getHeaderRoute("/profile").label).toBe("Profile");
+    expect(getHeaderRoute("/unknown").label).toBe("Workspace");
   });
 });

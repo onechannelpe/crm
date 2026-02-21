@@ -9,6 +9,8 @@ import { hasPermission } from "~/lib/auth/access/rbac";
 import { createAppQuery } from "~/lib/ui/create-app-query";
 import { useSession } from "~/components/providers/session-provider";
 
+import styles from "./dashboard-page.module.css";
+
 export default function DashboardPage() {
   const navigate = useNavigate();
   const { currentUser } = useSession();
@@ -30,7 +32,7 @@ export default function DashboardPage() {
       return {
         key: "quota",
         label: "Quota",
-        tone: "bg-emerald-500/80",
+        tone: styles.tagQuota,
         amount: totalQuota(),
         cards: [
           {
@@ -47,7 +49,7 @@ export default function DashboardPage() {
     {
       key: "new",
       label: "New",
-      tone: "bg-red-500/80",
+      tone: styles.tagNew,
       amount: stats().activeLeads,
       cards: [
         {
@@ -61,7 +63,7 @@ export default function DashboardPage() {
     {
       key: "screening",
       label: "Screening",
-      tone: "bg-purple-500/80",
+      tone: styles.tagScreening,
       amount: stats().draftSales,
       cards: [
         {
@@ -75,7 +77,7 @@ export default function DashboardPage() {
     {
       key: "review",
       label: "Review",
-      tone: "bg-sky-500/80",
+      tone: styles.tagReview,
       amount: stats().pendingSales,
       cards: [
         {
@@ -89,7 +91,7 @@ export default function DashboardPage() {
     {
       key: "won",
       label: "Customer",
-      tone: "bg-amber-500/80",
+      tone: styles.tagCustomer,
       amount: stats().approvedSales,
       cards: [
         {
@@ -103,57 +105,45 @@ export default function DashboardPage() {
   ];
 
   return (
-    <AppPage class="space-y-2">
-      <AppPageHeader
-        eyebrow="Opportunities"
-        title="By stage"
-        description="Pipeline board"
-      />
+    <AppPage class={styles.page}>
+      <AppPageHeader />
 
-      <section class="flex items-center justify-between border-b border-border/50 px-1 pb-2 text-sm">
-        <div class="flex items-center gap-2 text-muted-foreground">
-          <span class="rounded-sm border border-border bg-surface px-2 py-0.5 text-xs font-medium">
-            By Stage
-          </span>
+      <section class={styles.toolbar}>
+        <div class={styles.toolbarMeta}>
+          <span class={styles.toolbarPill}>By Stage</span>
           <span>·</span>
           <span>6 views</span>
         </div>
-        <div class="flex items-center gap-3 text-xs text-muted-foreground">
-          <button class="hover:text-foreground">Filter</button>
-          <button class="hover:text-foreground">Sort</button>
-          <button class="hover:text-foreground">Options</button>
+        <div class={styles.toolbarActions}>
+          <button class={styles.toolbarAction}>Filter</button>
+          <button class={styles.toolbarAction}>Sort</button>
+          <button class={styles.toolbarAction}>Options</button>
         </div>
       </section>
 
-      <section class="overflow-x-auto pb-2">
-        <div class="grid min-w-[1220px] grid-cols-5 gap-3">
+      <section class={styles.boardWrap}>
+        <div class={styles.board}>
         <For each={boardColumns()}>
           {(column) => (
-            <div class="rounded-sm border border-border/55 bg-background/50 p-2">
-              <div class="mb-2 flex items-center gap-2 px-1">
-                <span
-                  class={`inline-flex rounded-sm px-1.5 py-0.5 text-[11px] font-semibold text-white ${column.tone}`}
-                >
+            <div class={styles.column}>
+              <div class={styles.columnHead}>
+                <span class={`${styles.tag} ${column.tone}`}>
                   {column.label}
                 </span>
-                <span class="text-xs text-muted-foreground">{column.amount}</span>
+                <span class={styles.columnAmount}>{column.amount}</span>
               </div>
 
               <For each={column.cards}>
                 {(card) => (
-                  <article class="mb-2 rounded-sm border border-border/60 bg-surface p-3">
-                    <p class="truncate text-sm font-semibold text-foreground">
-                      {card.title}
-                    </p>
-                    <p class="mt-2 text-lg font-semibold text-foreground">
-                      {card.value}
-                    </p>
-                    <p class="mt-1 text-xs text-muted-foreground">{card.detail}</p>
-                    <div class="mt-2 space-y-1 text-xs text-muted-foreground">
+                  <article class={styles.card}>
+                    <p class={styles.cardTitle}>{card.title}</p>
+                    <p class={styles.cardValue}>{card.value}</p>
+                    <p class={styles.cardDetail}>{card.detail}</p>
+                    <div class={styles.cardMeta}>
                       <p>$ {card.value}</p>
                       <p>System</p>
                     </div>
-                    <div class="mt-3">
+                    <div class={styles.cardAction}>
                       <Button
                         size="sm"
                         variant={
@@ -161,7 +151,7 @@ export default function DashboardPage() {
                             ? "outline"
                             : "secondary"
                         }
-                        class="h-7"
+                        class={styles.openButton}
                         onClick={() => navigate(card.href)}
                       >
                         Open
@@ -170,7 +160,7 @@ export default function DashboardPage() {
                   </article>
                 )}
               </For>
-              <button class="inline-flex h-7 items-center gap-1 rounded-sm px-2 text-xs text-muted-foreground hover:bg-muted hover:text-foreground">
+              <button class={styles.newButton}>
                 + New
               </button>
             </div>

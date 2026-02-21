@@ -1,0 +1,98 @@
+.page {
+  margin: 0 auto;
+  max-width: 960px;
+}
+
+.panel {
+  border: var(--tw-panel-border);
+  border-radius: var(--tw-panel-radius);
+  background: var(--tw-panel-background);
+  padding: 12px;
+}
+
+.createForm {
+  max-width: 420px;
+  display: grid;
+  gap: 16px;
+}
+
+.draftLayout {
+  display: grid;
+  gap: 24px;
+}
+
+.draftTitle {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.draftHint {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--muted-foreground);
+}
+
+.columns {
+  display: grid;
+  gap: 12px;
+}
+
+.column {
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.columnTitle {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.summary {
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.summaryTitle {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.documentList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+}
+
+.documentItem {
+  border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
+  border-radius: var(--radius-sm);
+  background: var(--tw-panel-background);
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.submitRow {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (min-width: 768px) {
+  .columns {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

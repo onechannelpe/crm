@@ -2,10 +2,8 @@ import { useNavigate } from "@solidjs/router";
 import { createResource, Show } from "solid-js";
 
 import { requestLeads, getActiveLeads, completeLead } from "~/actions/leads";
-import { getQuotaStatus } from "~/actions/quota";
 import { LeadList } from "~/components/features/leads/lead-list";
 import { RequestLeadsButton } from "~/components/features/leads/request-leads-button";
-import { QuotaDisplay } from "~/components/features/quota/quota-display";
 import { EmptyState } from "~/components/feedback/empty-state";
 import {
   AppPage,
@@ -13,14 +11,10 @@ import {
 } from "~/components/layout/page";
 import { runOptimistic } from "~/lib/ui/run-optimistic";
 
+import styles from "./leads-page.module.css";
+
 export default function LeadsPage() {
   const navigate = useNavigate();
-  const [quota, { refetch: refetchQuota }] = createResource(
-    () => true,
-    async () => getQuotaStatus(),
-    { initialValue: { allocated: false }, ssrLoadFrom: "initial" },
-  );
-  const currentQuota = () => quota.latest ?? { allocated: false };
   const [leads, { mutate: mutateLeads, refetch: refetchLeads }] =
     createResource(
       () => true,
@@ -28,15 +22,10 @@ export default function LeadsPage() {
       { initialValue: [], ssrLoadFrom: "initial" },
     );
   const currentLeads = () => leads.latest ?? [];
-  const quotaValues = () => {
-    const current = currentQuota();
-    if (!current?.allocated) return null;
-    return { used: current.used, total: current.total };
-  };
 
   const handleRequestLeads = async () => {
     const result = await requestLeads();
-    void Promise.all([refetchQuota(), refetchLeads()]);
+    void refetchLeads();
     return result.assigned;
   };
 
@@ -54,7 +43,7 @@ export default function LeadsPage() {
         await completeLead(assignmentId);
       },
       reconcile: () => {
-        void Promise.all([refetchLeads(), refetchQuota()]);
+        void refetchLeads();
       },
     });
   };
@@ -62,13 +51,10 @@ export default function LeadsPage() {
   return (
     <AppPage>
       <AppPageHeader
-        eyebrow="Pipeline"
-        title="Lead queue"
-        description={`${currentLeads().length} active leads currently assigned.`}
         actions={<RequestLeadsButton onRequest={handleRequestLeads} />}
       />
 
-      <div class="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_260px]">
+      <div class={styles.layout}>
         <Show
           when={!leads.error}
           fallback={
@@ -83,27 +69,6 @@ export default function LeadsPage() {
             }}
           />
         </Show>
-
-        <aside class="space-y-3">
-          <Show
-            when={quotaValues()}
-            fallback={
-              <section class="tw-record-index-panel p-4">
-                <p class="text-xs text-muted-foreground">
-                  Daily quota
-                </p>
-                <p class="mt-1 text-lg font-medium">Not assigned</p>
-                <p class="mt-1 text-sm text-muted-foreground">
-                  Quota is required before requesting new leads.
-                </p>
-              </section>
-            }
-          >
-            {(values) => (
-              <QuotaDisplay used={values().used} total={values().total} />
-            )}
-          </Show>
-        </aside>
       </div>
     </AppPage>
   );

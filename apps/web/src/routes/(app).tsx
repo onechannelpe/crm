@@ -10,19 +10,20 @@ import {
   SessionProvider,
   useSession,
 } from "~/components/providers/session-provider";
+import shellStyles from "~/components/layout/shell.module.css";
 
 function AuthenticatedAppShell(props: RouteSectionProps) {
   const { user } = useSession();
 
   return (
     <Show when={user()} fallback={<Loading />}>
-      <div class="crm-shell min-h-screen flex font-sans text-foreground">
+      <div class={shellStyles.root}>
         <Sidebar />
-        <div class="tw-app-shell-main">
+        <div class={shellStyles.main}>
           <Header />
-          <main class="tw-app-shell-body">
-            <div class="tw-app-shell-content crm-fade-up">
-              <div class="tw-app-shell-panel">
+          <main class={shellStyles.body}>
+            <div class={shellStyles.content}>
+              <div class={shellStyles.panel}>
                 <Suspense fallback={<Loading />}>{props.children}</Suspense>
               </div>
             </div>

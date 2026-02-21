@@ -21,6 +21,8 @@ import {
 import { getErrorMessage } from "~/lib/errors";
 import { runOptimistic } from "~/lib/ui/run-optimistic";
 
+import styles from "./validation-page.module.css";
+
 function formatDate(timestamp: number) {
   return new Date(timestamp).toLocaleDateString("en-US", {
     day: "2-digit",
@@ -91,11 +93,7 @@ export default function ValidationPage() {
 
   return (
     <AppPage>
-      <AppPageHeader
-        eyebrow="Review"
-        title="Sales validation"
-        description={`${currentNotes().length} notes pending review.`}
-      />
+      <AppPageHeader />
 
       <Show
         when={currentNotes().length > 0}
@@ -108,10 +106,8 @@ export default function ValidationPage() {
       >
         <Show when={rejectingNoteId()}>
           {(id) => (
-            <section class="border border-destructive/30 bg-destructive/5 p-4">
-              <h2 class="mb-2 text-lg font-semibold text-destructive">
-                Reject sale #{id()}
-              </h2>
+            <section class={styles.rejectPanel}>
+              <h2 class={styles.rejectTitle}>Reject sale #{id()}</h2>
               <RejectionForm
                 onReject={(rejections) => handleReject(id(), rejections)}
                 onCancel={() => setRejectingNoteId(null)}
@@ -119,7 +115,7 @@ export default function ValidationPage() {
             </section>
           )}
         </Show>
-        <section class="tw-record-index-panel">
+        <section class={styles.tablePanel}>
           <Table>
             <TableHeader>
               <TableRow>
@@ -127,28 +123,26 @@ export default function ValidationPage() {
                 <TableHead>Contact</TableHead>
                 <TableHead>Owner</TableHead>
                 <TableHead>Date</TableHead>
-                <TableHead class="text-right">Actions</TableHead>
+                <TableHead class={styles.actionsHead}>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               <For each={currentNotes()}>
                 {(note) => (
                   <TableRow>
-                    <TableCell class="font-medium">#{note.id}</TableCell>
+                    <TableCell class={styles.idCell}>#{note.id}</TableCell>
                     <TableCell>
-                      <div>
-                        <p class="font-medium">{note.contactName}</p>
-                        <p class="text-xs text-muted-foreground">
-                          {note.contactDni}
-                        </p>
+                      <div class={styles.contactWrap}>
+                        <p class={styles.contactName}>{note.contactName}</p>
+                        <p class={styles.contactMeta}>{note.contactDni}</p>
                       </div>
                     </TableCell>
                     <TableCell>{note.executiveName}</TableCell>
-                    <TableCell class="text-muted-foreground">
+                    <TableCell class={styles.dateCell}>
                       {formatDate(note.created_at)}
                     </TableCell>
-                    <TableCell class="text-right">
-                      <div class="flex items-center justify-end gap-2 whitespace-nowrap">
+                    <TableCell class={styles.actionsCell}>
+                      <div class={styles.actions}>
                         <Button
                           size="sm"
                           variant="secondary"

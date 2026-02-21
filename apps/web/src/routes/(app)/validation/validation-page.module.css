@@ -1,0 +1,60 @@
+.rejectPanel {
+  border: 1px solid color-mix(in oklab, var(--destructive) 24%, transparent);
+  background: color-mix(in oklab, var(--destructive) 8%, var(--surface));
+  border-radius: var(--tw-panel-radius);
+  padding: 12px;
+}
+
+.rejectTitle {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--destructive);
+}
+
+.tablePanel {
+  border: var(--tw-panel-border);
+  border-radius: var(--tw-panel-radius);
+  background: var(--tw-panel-background);
+  overflow: hidden;
+}
+
+.idCell {
+  font-weight: 500;
+}
+
+.contactWrap {
+  display: grid;
+  gap: 2px;
+}
+
+.contactName {
+  margin: 0;
+  font-weight: 500;
+}
+
+.contactMeta {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.dateCell {
+  color: var(--muted-foreground);
+}
+
+.actionsHead {
+  text-align: right;
+}
+
+.actionsCell {
+  text-align: right;
+}
+
+.actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  white-space: nowrap;
+}

@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "~/components/ui/layout/table";
 import { getErrorMessage } from "~/lib/errors";
+import styles from "./login-retries-card.module.css";
 
 function formatDate(value: number): string {
   return new Date(value).toLocaleString();
@@ -45,11 +46,11 @@ export function LoginRetriesCard() {
   };
 
   return (
-    <section class="space-y-4">
-      <h2 class="text-base font-semibold text-foreground">Login security</h2>
-      <p class="text-sm text-muted-foreground">Inspect user login retries.</p>
+    <section class={styles.root}>
+      <h2 class={styles.title}>Login security</h2>
+      <p class={styles.description}>Inspect user login retries.</p>
       <form
-        class="grid grid-cols-1 md:grid-cols-[1fr_180px] gap-3 items-end"
+        class={styles.form}
         onSubmit={(e) => {
           e.preventDefault();
           void lookup();
@@ -69,18 +70,18 @@ export function LoginRetriesCard() {
 
       <Show when={report()}>
         {(data) => (
-          <div class="space-y-3">
-            <p class="text-sm text-foreground">
+          <div class={styles.report}>
+            <p class={styles.user}>
               {data().user.fullName} ({data().user.email})
             </p>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div class="border border-border px-3 py-2">
-                <p class="text-xs text-muted-foreground">retries in 15m</p>
-                <p class="text-2xl font-semibold">{data().retryCount15m}</p>
+            <div class={styles.stats}>
+              <div class={styles.statCard}>
+                <p class={styles.statLabel}>retries in 15m</p>
+                <p class={styles.statValue}>{data().retryCount15m}</p>
               </div>
-              <div class="border border-border px-3 py-2">
-                <p class="text-xs text-muted-foreground">retries in 24h</p>
-                <p class="text-2xl font-semibold">{data().retryCount24h}</p>
+              <div class={styles.statCard}>
+                <p class={styles.statLabel}>retries in 24h</p>
+                <p class={styles.statValue}>{data().retryCount24h}</p>
               </div>
             </div>
             <Table>

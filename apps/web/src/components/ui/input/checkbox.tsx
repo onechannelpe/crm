@@ -1,7 +1,9 @@
-import { type JSX, splitProps } from "solid-js";
+import { Show, type JSX, splitProps } from "solid-js";
 
 import Check from "~/components/icons/check";
 import { cn } from "~/lib/utils";
+
+import styles from "./field.module.css";
 
 export interface CheckboxProps extends Omit<
   JSX.InputHTMLAttributes<HTMLInputElement>,
@@ -11,30 +13,22 @@ export interface CheckboxProps extends Omit<
 }
 
 export function Checkbox(props: CheckboxProps) {
-  const [local, others] = splitProps(props, ["class", "label", "id"]);
+  const [local, others] = splitProps(props, ["class", "label", "id", "checked"]);
 
   return (
-    <label class="group inline-flex cursor-pointer items-center gap-2">
-      <span class="relative inline-flex items-center">
+    <label class={styles.checkboxLabel}>
+      <span class={styles.checkboxWrap}>
         <input
           type="checkbox"
-          class={cn(
-            "peer h-4 w-4 appearance-none rounded-[2px] border border-input bg-surface",
-            "transition-colors duration-[var(--motion-fast)] ease-[var(--ease-standard)]",
-            "checked:border-primary checked:bg-primary",
-            "focus-visible:crm-focus-ring",
-            "disabled:cursor-not-allowed disabled:opacity-50",
-            local.class,
-          )}
+          checked={local.checked}
+          class={cn(styles.checkboxInput, local.class)}
           {...others}
         />
-        <Check class="pointer-events-none absolute left-1/2 top-1/2 hidden h-3 w-3 -translate-x-1/2 -translate-y-1/2 text-primary-foreground peer-checked:block" />
+        <Show when={local.checked}>
+          <Check class={styles.checkIcon} />
+        </Show>
       </span>
-      {local.label && (
-        <span class="text-[13px] font-medium leading-none text-foreground transition-colors group-hover:text-foreground/85 peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-          {local.label}
-        </span>
-      )}
+      {local.label && <span class={styles.checkboxText}>{local.label}</span>}
     </label>
   );
 }

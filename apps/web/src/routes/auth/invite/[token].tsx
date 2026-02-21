@@ -5,6 +5,7 @@ import { acceptTeamInvite } from "~/actions/team";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { getErrorMessage } from "~/lib/errors";
+import styles from "../../auth-shell.module.css";
 
 export default function AcceptInvitePage() {
   const navigate = useNavigate();
@@ -39,19 +40,19 @@ export default function AcceptInvitePage() {
   }
 
   return (
-    <div class="crm-shell flex min-h-screen items-center justify-center p-4">
-      <section class="tw-record-index-panel w-full max-w-md p-6">
+    <div class={styles.shell}>
+      <section class={`${styles.panel} ${styles.panelMd}`}>
         <form
-          class="space-y-4"
+          class={styles.stack4}
           onSubmit={(event) => {
             void handleSubmit(event);
           }}
         >
           <div>
-            <h1 class="text-2xl font-semibold text-foreground">
+            <h1 class={styles.title}>
               Activate account
             </h1>
-            <p class="mt-1 text-sm text-muted-foreground">
+            <p class={styles.muted}>
               Complete your details to activate workspace access.
             </p>
           </div>
@@ -78,12 +79,12 @@ export default function AcceptInvitePage() {
           />
 
           {error() ? (
-            <div class="border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <div class={styles.errorBox}>
               {error()}
             </div>
           ) : null}
 
-          <Button type="submit" class="w-full" disabled={submitting()}>
+          <Button type="submit" class={styles.full} disabled={submitting()}>
             {submitting() ? "Activating..." : "Activate account"}
           </Button>
         </form>

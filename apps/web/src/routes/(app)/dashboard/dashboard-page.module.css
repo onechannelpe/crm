@@ -1,0 +1,175 @@
+.page {
+  display: grid;
+  gap: 8px;
+}
+
+.toolbar {
+  border-bottom: 1px solid color-mix(in oklab, var(--border) 60%, transparent);
+  padding: 0 4px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.toolbarMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted-foreground);
+}
+
+.toolbarPill {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.toolbarActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.toolbarAction {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.toolbarAction:hover {
+  color: var(--foreground);
+}
+
+.boardWrap {
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.board {
+  min-width: 1220px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.column {
+  border: 1px solid color-mix(in oklab, var(--border) 65%, transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--background) 94%, transparent);
+  padding: 8px;
+}
+
+.columnHead {
+  margin-bottom: 8px;
+  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tag {
+  display: inline-flex;
+  border-radius: var(--radius-sm);
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.tagQuota {
+  color: color(display-p3 0.239 0.482 0.263);
+  background: color(display-p3 0.93 0.976 0.933);
+}
+
+.tagNew {
+  color: color(display-p3 0.642 0.198 0.242);
+  background: color(display-p3 0.992 0.941 0.945);
+}
+
+.tagScreening {
+  color: color(display-p3 0.403 0.262 0.659);
+  background: color(display-p3 0.953 0.937 0.988);
+}
+
+.tagReview {
+  color: color(display-p3 0.058 0.42 0.55);
+  background: color(display-p3 0.921 0.972 0.99);
+}
+
+.tagCustomer {
+  color: color(display-p3 0.58 0.451 0.111);
+  background: color(display-p3 0.99 0.969 0.894);
+}
+
+.columnAmount {
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.card {
+  margin-bottom: 8px;
+  border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  padding: 12px;
+}
+
+.cardTitle {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.cardValue {
+  margin: 8px 0 0;
+  font-size: 22px;
+  font-weight: 500;
+}
+
+.cardDetail {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.cardMeta {
+  margin-top: 8px;
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.cardAction {
+  margin-top: 12px;
+}
+
+.openButton {
+  height: 28px;
+}
+
+.newButton {
+  height: 28px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.newButton:hover {
+  background: var(--tw-bg-transparent-light);
+  color: var(--foreground);
+}

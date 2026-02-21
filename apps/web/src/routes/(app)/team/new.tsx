@@ -11,6 +11,7 @@ import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { Select } from "~/components/ui/input/select";
 import { getErrorMessage } from "~/lib/errors";
+import styles from "./new-team-page.module.css";
 
 const ROLE_OPTIONS = [
   { value: "executive", label: "Executive" },
@@ -52,7 +53,7 @@ export default function NewTeamInvitePage() {
   }
 
   return (
-    <AppPage class="mx-auto max-w-2xl">
+    <AppPage class={styles.page}>
       <AppPageHeader
         eyebrow="People"
         title="Invite member"
@@ -64,9 +65,9 @@ export default function NewTeamInvitePage() {
         }
       />
 
-      <section class="tw-record-index-panel p-4">
+      <section class={styles.panel}>
         <form
-          class="space-y-4"
+          class={styles.form}
           onSubmit={(event) => {
             void handleSubmit(event);
           }}

@@ -24,6 +24,8 @@ import { Select } from "~/components/ui/input/select";
 import { getErrorMessage } from "~/lib/errors";
 import { runOptimistic } from "~/lib/ui/run-optimistic";
 
+import styles from "./new-sale-page.module.css";
+
 export default function NewSalePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -262,11 +264,8 @@ export default function NewSalePage() {
   }
 
   return (
-    <AppPage class="mx-auto max-w-4xl">
+    <AppPage class={styles.page}>
       <AppPageHeader
-        eyebrow="Sales"
-        title="New sale"
-        description="Create a sales note with items, documents, and reserved inventory."
         actions={
           <Button variant="secondary" onClick={() => navigate("/leads")}>
             Cancel
@@ -275,12 +274,12 @@ export default function NewSalePage() {
       />
 
       <Show when={!noteId()}>
-        <section class="tw-record-index-panel p-4">
+        <section class={styles.panel}>
           <form
             onSubmit={(e) => {
               void handleCreate(e);
             }}
-            class="max-w-md space-y-4"
+            class={styles.createForm}
           >
             <Input
               type="number"
@@ -297,19 +296,17 @@ export default function NewSalePage() {
       </Show>
 
       <Show when={noteId()}>
-        <section class="tw-record-index-panel space-y-6 p-4">
+        <section class={`${styles.panel} ${styles.draftLayout}`}>
           <div>
-            <h3 class="text-lg font-semibold text-foreground">
-              Sales note #{noteId()}
-            </h3>
-            <p class="mt-1 text-sm text-muted-foreground">
+            <h3 class={styles.draftTitle}>Sales note #{noteId()}</h3>
+            <p class={styles.draftHint}>
               Requires items, documents, and locked inventory before submit.
             </p>
           </div>
 
-          <div class="grid gap-4 md:grid-cols-3">
-            <div class="space-y-2 border border-border px-3 py-2">
-              <p class="text-sm font-medium">Items</p>
+          <div class={styles.columns}>
+            <div class={styles.column}>
+              <p class={styles.columnTitle}>Items</p>
               <Select
                 value={selectedProductId()}
                 onInput={(e) => setSelectedProductId(e.currentTarget.value)}
@@ -337,8 +334,8 @@ export default function NewSalePage() {
               </Button>
             </div>
 
-            <div class="space-y-2 border border-border px-3 py-2">
-              <p class="text-sm font-medium">Document</p>
+            <div class={styles.column}>
+              <p class={styles.columnTitle}>Document</p>
               <FileInput
                 label="File"
                 accept=".pdf,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg,image/webp"
@@ -356,8 +353,8 @@ export default function NewSalePage() {
               </Button>
             </div>
 
-            <div class="space-y-2 border border-border px-3 py-2">
-              <p class="text-sm font-medium">Inventory serial</p>
+            <div class={styles.column}>
+              <p class={styles.columnTitle}>Inventory serial</p>
               <Select
                 value={selectedInventoryId()}
                 onInput={(e) => setSelectedInventoryId(e.currentTarget.value)}
@@ -383,18 +380,18 @@ export default function NewSalePage() {
 
           <Show when={currentDraft()}>
             {(ctx) => (
-              <div class="space-y-2 border border-border px-3 py-2 text-sm">
+              <div class={styles.summary}>
                 <p>Items: {ctx().items.length}</p>
                 <p>Documents: {ctx().documents.length}</p>
-                <p class="text-sm font-medium">Items</p>
+                <p class={styles.summaryTitle}>Items</p>
                 <p>
                   Inventory locked: {ctx().inventoryLock?.serial_number ?? "No"}
                 </p>
                 <Show when={ctx().documents.length > 0}>
-                  <ul class="space-y-1">
+                  <ul class={styles.documentList}>
                     <For each={ctx().documents}>
                       {(document) => (
-                        <li class="flex items-center justify-between rounded-sm border border-border/80 bg-surface px-2 py-1">
+                        <li class={styles.documentItem}>
                           <span>
                             {document.original_name} (
                             {Math.ceil(document.size_bytes / 1024)} KB)
@@ -417,7 +414,7 @@ export default function NewSalePage() {
             )}
           </Show>
 
-          <div class="flex justify-end">
+          <div class={styles.submitRow}>
             <Button
               onClick={() => {
                 void handleSubmit();

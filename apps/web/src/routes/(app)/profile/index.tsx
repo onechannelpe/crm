@@ -28,6 +28,7 @@ import {
 import { getErrorMessage } from "~/lib/errors";
 import { createAppQuery } from "~/lib/ui/create-app-query";
 import { runOptimistic } from "~/lib/ui/run-optimistic";
+import styles from "./profile-page.module.css";
 
 export default function ProfilePage() {
   const { currentUser } = useSession();
@@ -112,47 +113,47 @@ export default function ProfilePage() {
   }
 
   return (
-    <AppPage class="space-y-0 pb-0">
+    <AppPage>
       <AppPageHeader eyebrow="User" title="Profile" description="Personal information and account security." />
 
-      <section class="tw-record-index-panel">
-        <div class="tw-view-bar">
-          <div class="tw-view-picker">
+      <section class={styles.panel}>
+        <div class={styles.topbar}>
+          <div class={styles.crumbs}>
             <span>User</span>
             <span>/</span>
-            <span class="text-foreground">Profile</span>
+            <span>Profile</span>
           </div>
         </div>
 
-        <div class="px-6 py-5">
-          <div class="mx-auto flex max-w-[640px] flex-col gap-8">
-            <section class="space-y-3 border-b border-border pb-6">
-              <h2 class="text-[16px] font-semibold text-foreground">Identity</h2>
-              <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <div class={styles.contentWrap}>
+          <div class={styles.content}>
+            <section class={`${styles.section} ${styles.sectionBorder}`}>
+              <h2 class={styles.title}>Identity</h2>
+              <div class={styles.identityGrid}>
                 <div>
-                  <p class="text-[12px] text-muted-foreground">Name</p>
-                  <p class="mt-1 text-[14px] font-medium text-foreground">{user().fullName}</p>
+                  <p class={styles.label}>Name</p>
+                  <p class={`${styles.value} ${styles.valueStrong}`}>{user().fullName}</p>
                 </div>
                 <div>
-                  <p class="text-[12px] text-muted-foreground">Email</p>
-                  <p class="mt-1 text-[14px] text-foreground">{user().email}</p>
+                  <p class={styles.label}>Email</p>
+                  <p class={styles.value}>{user().email}</p>
                 </div>
               </div>
-              <div class="inline-flex items-center gap-2">
-                <span class="text-[12px] text-muted-foreground">Role</span>
+              <div class={styles.inline}>
+                <span class={styles.label}>Role</span>
                 <Badge variant={getRoleBadgeVariant(user().role)}>
                   {getRoleLabel(user().role)}
                 </Badge>
               </div>
-              <div class="inline-flex items-center gap-2">
-                <span class="text-[12px] text-muted-foreground">Team</span>
-                <span class="text-[13px] text-foreground">{getWorkspaceLabel(user())}</span>
+              <div class={styles.inline}>
+                <span class={styles.label}>Team</span>
+                <span class={styles.muted}>{getWorkspaceLabel(user())}</span>
               </div>
             </section>
 
-            <section class="space-y-3 border-b border-border pb-6">
-              <h2 class="text-[16px] font-semibold text-foreground">Passkey</h2>
-              <p class="text-[13px] text-muted-foreground">
+            <section class={`${styles.section} ${styles.sectionBorder}`}>
+              <h2 class={styles.title}>Passkey</h2>
+              <p class={styles.muted}>
                 Register a passkey to speed up login and improve security.
               </p>
               <Button
@@ -166,22 +167,22 @@ export default function ProfilePage() {
                 {passkeyLoading() ? "Registering passkey..." : "Register passkey"}
               </Button>
               <Show when={!passkeySupported()}>
-                <p class="text-[13px] text-muted-foreground">
+                <p class={styles.muted}>
                   This browser does not support passkeys.
                 </p>
               </Show>
               <Show when={passkeyMessage()}>
-                <p class="text-[13px] text-muted-foreground">{passkeyMessage()}</p>
+                <p class={styles.muted}>{passkeyMessage()}</p>
               </Show>
             </section>
 
-            <section class="space-y-3">
-              <h2 class="text-[16px] font-semibold text-foreground">Two-factor authentication</h2>
+            <section class={styles.section}>
+              <h2 class={styles.title}>Two-factor authentication</h2>
               <Show when={totpStatus()?.enabled}>
-                <p class="text-[13px] text-muted-foreground">TOTP enabled</p>
+                <p class={styles.muted}>TOTP enabled</p>
               </Show>
               <Show when={!totpStatus()?.enabled}>
-                <p class="text-[13px] text-muted-foreground">
+                <p class={styles.muted}>
                   Add an authenticator app to require a one-time code on login.
                 </p>
                 <Button
@@ -195,8 +196,8 @@ export default function ProfilePage() {
                   {totpLoading() ? "Preparing TOTP..." : "Set up TOTP"}
                 </Button>
                 <Show when={totpQrCode()}>
-                  <div class="space-y-2">
-                    <img src={totpQrCode()} alt="TOTP QR code" class="h-48 w-48 border border-border p-2" />
+                  <div class={styles.qrWrap}>
+                    <img src={totpQrCode()} alt="TOTP QR code" class={styles.qr} />
                     <Input
                       id="totp-setup-code"
                       type="text"
@@ -219,14 +220,14 @@ export default function ProfilePage() {
                 </Show>
               </Show>
               <Show when={totpMessage()}>
-                <p class="text-[13px] text-muted-foreground">{totpMessage()}</p>
+                <p class={styles.muted}>{totpMessage()}</p>
               </Show>
               <Show when={recoveryCodes().length > 0}>
-                <div class="space-y-2 border border-border px-3 py-2">
-                  <p class="text-sm font-medium">Recovery codes (shown once)</p>
-                  <ul class="grid grid-cols-2 gap-2 text-sm">
+                <div class={styles.recovery}>
+                  <p class={styles.recoveryTitle}>Recovery codes (shown once)</p>
+                  <ul class={styles.recoveryList}>
                     {recoveryCodes().map((code) => (
-                      <li class="font-mono">{code}</li>
+                      <li class={styles.mono}>{code}</li>
                     ))}
                   </ul>
                 </div>

@@ -9,6 +9,7 @@ import {
 } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { getErrorMessage } from "~/lib/errors";
+import styles from "../fix-sale-page.module.css";
 
 export default function FixSalePage() {
   const params = useParams();
@@ -32,7 +33,7 @@ export default function FixSalePage() {
   }
 
   return (
-    <AppPage class="mx-auto max-w-4xl">
+    <AppPage class={styles.page}>
       <AppPageHeader
         eyebrow="Sales"
         title="Fix sale"
@@ -44,27 +45,27 @@ export default function FixSalePage() {
         }
       />
 
-      <section class="tw-record-index-panel p-4">
-        <div class="mb-4 border border-destructive/30 bg-destructive/5 p-4">
-          <h2 class="mb-2 font-bold text-destructive">
+      <section class={styles.panel}>
+        <div class={styles.alert}>
+          <h2 class={styles.alertTitle}>
             Required corrections - note #{noteId()}
           </h2>
           <Show
             when={fixContext()?.rejections?.length}
             fallback={
-              <p class="text-sm text-muted-foreground">
+              <p class={styles.muted}>
                 No pending reviewer notes.
               </p>
             }
           >
-            <ul class="space-y-2 text-sm text-foreground">
+            <ul class={styles.list}>
               <For each={fixContext()?.rejections ?? []}>
                 {(rejection) => (
-                  <li class="border border-destructive/25 bg-background px-3 py-2">
-                    <p class="font-medium text-destructive">
+                  <li class={styles.item}>
+                    <p class={styles.itemTitle}>
                       Field: {rejection.field_id}
                     </p>
-                    <p class="mt-1 text-muted-foreground">
+                    <p class={styles.itemBody}>
                       {rejection.reviewer_note ?? "No reviewer note provided."}
                     </p>
                   </li>
@@ -74,7 +75,7 @@ export default function FixSalePage() {
           </Show>
         </div>
 
-        <div class="flex justify-end gap-2">
+        <div class={styles.actions}>
           <Button variant="secondary" onClick={() => navigate("/leads")}>
             Cancel
           </Button>

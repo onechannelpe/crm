@@ -28,6 +28,8 @@ import {
 import { getErrorMessage } from "~/lib/errors";
 import { createAppQuery } from "~/lib/ui/create-app-query";
 
+import styles from "./team-page.module.css";
+
 export default function TeamPage() {
   const [directory, { refetch }] = createAppQuery(getTeamDirectory, {
     members: [],
@@ -69,9 +71,6 @@ export default function TeamPage() {
   return (
     <AppPage>
       <AppPageHeader
-        eyebrow="People"
-        title="Team directory"
-        description={`${directory().members.length} active members and ${directory().pendingInvites.length} pending invites.`}
         actions={
           <Show when={directory().canManageInvites}>
             <A href="/team/new">
@@ -90,7 +89,7 @@ export default function TeamPage() {
           />
         }
       >
-        <section class="tw-record-index-panel">
+        <section class={styles.panel}>
           <Table>
             <TableHeader>
               <TableRow>
@@ -104,17 +103,17 @@ export default function TeamPage() {
               <For each={directory().members}>
                 {(member) => (
                   <TableRow>
-                    <TableCell class="font-medium">
-                      <div class="flex items-center gap-3">
-                        <div class="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                          <User class="h-4 w-4" />
+                    <TableCell class={styles.memberName}>
+                      <div class={styles.personCell}>
+                        <div class={styles.avatar}>
+                          <User size={16} />
                         </div>
                         <span>{member.fullName}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div class="flex items-center gap-2 text-muted-foreground">
-                        <Mail class="h-3 w-3" />
+                      <div class={styles.mailCell}>
+                        <Mail size={12} />
                         <span>{member.email}</span>
                       </div>
                     </TableCell>
@@ -136,8 +135,8 @@ export default function TeamPage() {
         </section>
       </Show>
 
-      <div class="space-y-3">
-        <h2 class="text-lg font-semibold text-foreground">Pending invites</h2>
+      <div class={styles.section}>
+        <h2 class={styles.sectionTitle}>Pending invites</h2>
         <Show
           when={directory().pendingInvites.length > 0}
           fallback={
@@ -147,7 +146,7 @@ export default function TeamPage() {
             />
           }
         >
-          <section class="tw-record-index-panel">
+          <section class={styles.panel}>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -162,7 +161,7 @@ export default function TeamPage() {
                 <For each={directory().pendingInvites}>
                   {(invite) => (
                     <TableRow>
-                      <TableCell class="font-medium">
+                      <TableCell class={styles.memberName}>
                         {invite.fullName}
                       </TableCell>
                       <TableCell>{invite.email}</TableCell>
@@ -178,12 +177,10 @@ export default function TeamPage() {
                         <Show
                           when={canManageInviteActions()}
                           fallback={
-                            <span class="text-xs text-muted-foreground">
-                              No permission
-                            </span>
+                            <span class={styles.noPermission}>No permission</span>
                           }
                         >
-                          <div class="flex gap-2">
+                          <div class={styles.actions}>
                             <Button
                               size="sm"
                               variant="outline"

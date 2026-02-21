@@ -1,0 +1,100 @@
+.shell {
+  min-height: 100vh;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--tertiary);
+}
+
+.shellGrid {
+  min-height: 100vh;
+  padding: 0 16px;
+  display: grid;
+  align-items: center;
+  justify-content: center;
+  background: var(--tertiary);
+}
+
+.panel {
+  width: 100%;
+  border: var(--tw-panel-border);
+  border-radius: var(--tw-panel-radius);
+  background: var(--tw-panel-background);
+}
+
+.panelSm {
+  max-width: 420px;
+  padding: 20px;
+}
+
+.panelMd {
+  max-width: 448px;
+  padding: 24px;
+}
+
+.panelXl {
+  max-width: 768px;
+  padding: 20px;
+}
+
+.stack1 {
+  display: grid;
+  gap: 4px;
+}
+
+.stack2 {
+  display: grid;
+  gap: 8px;
+}
+
+.stack3 {
+  display: grid;
+  gap: 12px;
+}
+
+.stack4 {
+  display: grid;
+  gap: 16px;
+}
+
+.title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.titleSm {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.muted {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted-foreground);
+}
+
+.errorBox {
+  border: 1px solid color-mix(in oklab, var(--destructive) 30%, transparent);
+  background: color-mix(in oklab, var(--destructive) 5%, var(--surface));
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--destructive);
+}
+
+.full {
+  width: 100%;
+}

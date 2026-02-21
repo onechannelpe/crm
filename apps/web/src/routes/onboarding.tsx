@@ -9,7 +9,10 @@ import {
 } from "~/actions/auth";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
+import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { getErrorMessage } from "~/lib/errors";
+import authStyles from "./auth/auth-shell.module.css";
+import styles from "./onboarding-page.module.css";
 
 export default function OnboardingPage() {
   const navigate = useNavigate();
@@ -54,8 +57,12 @@ export default function OnboardingPage() {
           "TOTP is required before activating an administrative account.",
         );
       }
+      const currentUser = user();
+      if (!currentUser) {
+        throw new Error("Session not found");
+      }
       await completeOnboarding(fullName(), phone());
-      navigate("/dashboard");
+      navigate(getDefaultAppPath(currentUser.role));
     } catch (err: unknown) {
       setError(getErrorMessage(err, "Failed to complete onboarding"));
     } finally {
@@ -95,13 +102,13 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div class="crm-shell grid min-h-screen items-center justify-center px-4">
-      <section class="tw-record-index-panel w-full max-w-xl space-y-5 p-5">
+    <div class={authStyles.shellGrid}>
+      <section class={`${authStyles.panel} ${authStyles.panelXl} ${styles.panel}`}>
         <div>
-          <h1 class="text-2xl font-semibold text-foreground">
+          <h1 class={authStyles.title}>
             Complete your profile
           </h1>
-          <p class="mt-1 text-sm text-muted-foreground">
+          <p class={authStyles.muted}>
             Confirm your profile details and primary phone number.
           </p>
         </div>
@@ -109,12 +116,12 @@ export default function OnboardingPage() {
         <Show when={user()}>
           {(currentUser) => (
             <form
-              class="space-y-4"
+              class={styles.form}
               onSubmit={(e) => {
                 void handleSubmit(e);
               }}
             >
-              <div class="space-y-2">
+              <div class={styles.section}>
                 <Input
                   id="onboarding-email"
                   type="email"
@@ -124,7 +131,7 @@ export default function OnboardingPage() {
                 />
               </div>
 
-              <div class="space-y-2">
+              <div class={styles.section}>
                 <Input
                   id="onboarding-name"
                   type="text"
@@ -135,7 +142,7 @@ export default function OnboardingPage() {
                 />
               </div>
 
-              <div class="space-y-2">
+              <div class={styles.section}>
                 <Input
                   id="onboarding-phone"
                   type="tel"
@@ -147,12 +154,12 @@ export default function OnboardingPage() {
               </div>
 
               <Show when={requiresStrongAuth()}>
-                <div class="space-y-3 border border-border p-3">
-                  <p class="text-sm font-medium text-foreground">
+                <div class={styles.totpBox}>
+                  <p class={styles.totpTitle}>
                     Required security setup (TOTP)
                   </p>
                   <Show when={strongAuthIsEnrolled()}>
-                    <p class="text-sm text-muted-foreground">TOTP enabled.</p>
+                    <p class={authStyles.muted}>TOTP enabled.</p>
                   </Show>
                   <Show when={!strongAuthIsEnrolled()}>
                     <Button
@@ -166,11 +173,11 @@ export default function OnboardingPage() {
                       {totpLoading() ? "Preparing TOTP..." : "Set up TOTP"}
                     </Button>
                     <Show when={totpQrCode()}>
-                      <div class="space-y-2">
+                      <div class={styles.section}>
                         <img
                           src={totpQrCode()}
                           alt="TOTP QR code"
-                          class="w-48 h-48"
+                          class={styles.qr}
                         />
                         <Input
                           id="onboarding-totp-code"
@@ -192,16 +199,16 @@ export default function OnboardingPage() {
                     </Show>
                   </Show>
                   <Show when={totpMessage()}>
-                    <p class="text-sm text-muted-foreground">{totpMessage()}</p>
+                    <p class={authStyles.muted}>{totpMessage()}</p>
                   </Show>
                   <Show when={recoveryCodes().length > 0}>
-                    <div class="space-y-2 border border-border px-3 py-2">
-                      <p class="text-sm font-medium">
+                    <div class={styles.recovery}>
+                      <p class={styles.recoveryTitle}>
                         Recovery codes (shown once)
                       </p>
-                      <ul class="grid grid-cols-2 gap-2 text-sm">
+                      <ul class={styles.recoveryList}>
                         {recoveryCodes().map((code) => (
-                          <li class="font-mono">{code}</li>
+                          <li class={styles.mono}>{code}</li>
                         ))}
                       </ul>
                     </div>
@@ -210,10 +217,10 @@ export default function OnboardingPage() {
               </Show>
 
               <Show when={error()}>
-                <p class="text-sm text-destructive">{error()}</p>
+                <p class={styles.error}>{error()}</p>
               </Show>
 
-              <Button type="submit" class="w-full" disabled={submitting()}>
+              <Button type="submit" class={authStyles.full} disabled={submitting()}>
                 {submitting() ? "Saving..." : "Save and continue"}
               </Button>
             </form>

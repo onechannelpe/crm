@@ -1,4 +1,7 @@
 import LoaderCircle from "~/components/icons/loader-circle";
+import { cn } from "~/lib/utils";
+
+import styles from "./loading.module.css";
 
 interface LoadingProps {
   size?: "sm" | "md" | "lg";
@@ -8,17 +11,17 @@ export function Loading(props: LoadingProps) {
   const sizeClass = () => {
     switch (props.size) {
       case "sm":
-        return "w-4 h-4";
+        return styles.sm;
       case "lg":
-        return "w-12 h-12";
+        return styles.lg;
       default:
-        return "w-8 h-8";
+        return styles.md;
     }
   };
 
   return (
-    <div class="flex items-center justify-center p-8">
-      <LoaderCircle class={`${sizeClass()} animate-spin text-primary`} />
+    <div class={styles.root}>
+      <LoaderCircle class={cn(styles.spinner, sizeClass())} />
     </div>
   );
 }

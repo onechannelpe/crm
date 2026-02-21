@@ -1,0 +1,52 @@
+.page {
+  padding: 0 0 8px;
+}
+
+.header {
+  padding: 4px 4px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.headerActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section {
+  border: var(--tw-panel-border);
+  border-radius: var(--tw-panel-radius);
+  overflow: hidden;
+  background: var(--tw-panel-background);
+}
+
+.sectionBody {
+  padding: 12px;
+}
+
+.insetPanel {
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+}
+
+.sectionTitle {
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.description {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}

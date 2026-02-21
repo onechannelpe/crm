@@ -10,6 +10,8 @@ import { AppPage } from "~/components/layout/page";
 import { createClientSearchController } from "~/features/client-search/controller";
 import { groupCompaniesByRuc } from "~/features/client-search/grouping";
 import type { SearchType } from "~/server/shared/engine/types";
+import { cn } from "~/lib/utils";
+import styles from "./search-page.module.css";
 
 const COMPANY_SEARCH_TYPES = [
   "ruc",
@@ -100,27 +102,25 @@ export default function ClientSearchCompaniesPage() {
   });
 
   return (
-    <AppPage class="space-y-0 pb-0">
-      <section class="tw-record-index-panel">
-        <div class="tw-search-panel">
-          <div class="tw-search-tab-list">
+    <AppPage class={styles.page}>
+      <section class={styles.panel}>
+        <div class={styles.searchPanel}>
+          <div class={styles.tabList}>
             <A
               href="/client-search/people"
-              class="tw-search-tab"
-              data-active="false"
+              class={styles.tab}
             >
               People
             </A>
             <A
               href="/client-search/companies"
-              class="tw-search-tab"
-              data-active="true"
+              class={cn(styles.tab, styles.tabActive)}
             >
               Companies
             </A>
           </div>
           <form
-            class="tw-search-form"
+            class={styles.searchForm}
             onSubmit={(event) => {
               event.preventDefault();
               if (autoType()) {
@@ -129,10 +129,10 @@ export default function ClientSearchCompaniesPage() {
               void controller.runCurrentSearch();
             }}
           >
-            <label class="tw-search-field">
-              <span class="tw-search-label">Type</span>
+            <label class={styles.searchField}>
+              <span class={styles.searchLabel}>Type</span>
               <select
-                class="tw-search-select"
+                class={styles.searchSelect}
                 value={controller.searchType()}
                 onInput={(event) => {
                   const nextType = event.currentTarget.value;
@@ -152,12 +152,12 @@ export default function ClientSearchCompaniesPage() {
               </select>
             </label>
 
-            <label class="tw-search-field">
-              <span class="tw-search-label">
-                Value <span class="text-foreground">*</span>
+            <label class={styles.searchField}>
+              <span class={styles.searchLabel}>
+                Value <span class={styles.requiredMark}>*</span>
               </span>
               <input
-                class="tw-search-input"
+                class={styles.searchInput}
                 placeholder="Company, RUC, contact, DNI or phone"
                 value={controller.query()}
                 onInput={(event) => controller.setQuery(event.currentTarget.value)}
@@ -165,12 +165,12 @@ export default function ClientSearchCompaniesPage() {
               />
             </label>
 
-            <label class="tw-search-field">
-              <span class="tw-search-label">
-                Limit <span class="text-foreground">*</span>
+            <label class={styles.searchField}>
+              <span class={styles.searchLabel}>
+                Limit <span class={styles.requiredMark}>*</span>
               </span>
               <input
-                class="tw-search-input"
+                class={styles.searchInput}
                 type="number"
                 min="1"
                 max="100"
@@ -180,13 +180,13 @@ export default function ClientSearchCompaniesPage() {
               />
             </label>
 
-            <div class="tw-search-field justify-end">
-              <span class="tw-search-label opacity-0" aria-hidden="true">
+            <div class={cn(styles.searchField, styles.alignEnd)}>
+              <span class={cn(styles.searchLabel, styles.hiddenLabel)} aria-hidden="true">
                 Search
               </span>
               <button
                 type="submit"
-                class="h-8 rounded-sm border border-primary bg-primary px-3 text-[13px] font-medium text-primary-foreground transition-colors hover:brightness-95 disabled:opacity-50"
+                class={styles.searchButton}
                 disabled={controller.searching()}
               >
                 {controller.searching() ? "Searching..." : "Search"}
@@ -194,17 +194,17 @@ export default function ClientSearchCompaniesPage() {
             </div>
           </form>
 
-          <div class="tw-search-controls">
-            <label class="inline-flex items-center gap-2 text-[13px] font-medium text-foreground">
+          <div class={styles.searchControls}>
+            <label class={styles.searchToggleLabel}>
               <input
                 type="checkbox"
-                class="h-4 w-4 rounded-[2px] border border-input"
+                class={styles.searchToggleInput}
                 checked={autoType()}
                 onInput={(event) => setAutoType(event.currentTarget.checked)}
               />
               Auto detect search type
             </label>
-            <span class="tw-search-helper">
+            <span class={styles.searchHelper}>
               Current type:{" "}
               {SEARCH_LABELS[controller.searchType()] ?? controller.searchType()}
             </span>
@@ -213,65 +213,65 @@ export default function ClientSearchCompaniesPage() {
 
         <Show when={controller.error()}>
           {(message) => (
-            <div class="border-b border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <div class={styles.errorBar}>
               {message()}
             </div>
           )}
         </Show>
 
-        <div class="tw-view-bar">
-          <div class="tw-view-picker">
+        <div class={styles.viewBar}>
+          <div class={styles.viewPicker}>
             <span>All Companies</span>
-            <span class="text-muted-foreground">· {rows().length}</span>
-            <ChevronDown class="h-4 w-4 text-muted-foreground" />
+            <span class={styles.muted}>· {rows().length}</span>
+            <ChevronDown class={styles.pickerIcon} size={16} />
           </div>
-          <div class="tw-view-actions">
-            <span>Filter</span>
-            <span>Sort</span>
-            <span>Options</span>
+          <div class={styles.viewActions}>
+            <span class={styles.viewAction}>Filter</span>
+            <span class={styles.viewAction}>Sort</span>
+            <span class={styles.viewAction}>Options</span>
           </div>
         </div>
 
-        <div class="tw-record-table-scroll">
-          <table class="tw-record-table">
+        <div class={styles.tableWrap}>
+          <table class={styles.table}>
             <thead>
               <tr>
-                <th>
-                  <input type="checkbox" class="h-4 w-4 rounded-sm border-border" />
+                <th class={cn(styles.tableHeadCell, styles.tableCheckboxCell)}>
+                  <input type="checkbox" class={styles.checkbox} />
                 </th>
-                <th>
-                  <div class="inline-flex items-center gap-2">
-                    <Building2 class="h-4 w-4" />
+                <th class={styles.tableHeadCell}>
+                  <div class={styles.tableLabel}>
+                    <Building2 class={styles.headerIcon} size={16} />
                     Company
                   </div>
                 </th>
-                <th>
-                  <div class="inline-flex items-center gap-2">
-                    <Building2 class="h-4 w-4" />
+                <th class={styles.tableHeadCell}>
+                  <div class={styles.tableLabel}>
+                    <Building2 class={styles.headerIcon} size={16} />
                     RUC
                   </div>
                 </th>
-                <th>
-                  <div class="inline-flex items-center gap-2">
-                    <User class="h-4 w-4" />
+                <th class={styles.tableHeadCell}>
+                  <div class={styles.tableLabel}>
+                    <User class={styles.headerIcon} size={16} />
                     Contacts
                   </div>
                 </th>
-                <th>
-                  <div class="inline-flex items-center gap-2">
-                    <User class="h-4 w-4" />
+                <th class={styles.tableHeadCell}>
+                  <div class={styles.tableLabel}>
+                    <User class={styles.headerIcon} size={16} />
                     Contact DNIs
                   </div>
                 </th>
-                <th>
-                  <div class="inline-flex items-center gap-2">
-                    <Phone class="h-4 w-4" />
+                <th class={styles.tableHeadCell}>
+                  <div class={styles.tableLabel}>
+                    <Phone class={styles.headerIcon} size={16} />
                     Phones
                   </div>
                 </th>
-                <th>
-                  <div class="inline-flex items-center gap-2">
-                    <Building2 class="h-4 w-4" />
+                <th class={styles.tableHeadCell}>
+                  <div class={styles.tableLabel}>
+                    <Building2 class={styles.headerIcon} size={16} />
                     Records
                   </div>
                 </th>
@@ -281,55 +281,52 @@ export default function ClientSearchCompaniesPage() {
               <For each={rows()}>
                 {(row) => (
                   <tr>
-                    <td>
-                      <input
-                        type="checkbox"
-                        class="h-4 w-4 rounded-sm border-border"
-                      />
+                    <td class={cn(styles.tableCell, styles.tableCheckboxCell)}>
+                      <input type="checkbox" class={styles.checkbox} />
                     </td>
-                    <td>
-                      <span class="tw-chip">
-                        <span class="tw-square-dot">
+                    <td class={styles.tableCell}>
+                      <span class={styles.chip}>
+                        <span class={styles.squareDot}>
                           {toInitial(row.name)}
                         </span>
                         <span>{row.name}</span>
                       </span>
                     </td>
-                    <td>
-                      <span class="tw-pill">{row.ruc}</span>
+                    <td class={styles.tableCell}>
+                      <span class={styles.pill}>{row.ruc}</span>
                     </td>
-                    <td>
-                      <div class="flex flex-wrap gap-1">
+                    <td class={styles.tableCell}>
+                      <div class={styles.pillWrap}>
                         <For each={row.contactLinks}>
                           {(person) => (
                             <A
                               href={`/client-search/people?type=${person.dni ? "dni" : "person_name"}&query=${encodeURIComponent(person.dni ?? person.name)}&limit=${encodeURIComponent(controller.limit())}`}
-                              class="tw-pill"
+                              class={styles.pill}
                             >
                               {person.name}
                             </A>
                           )}
                         </For>
                         <Show when={row.contactLinks.length === 0}>
-                          <span class="tw-pill">-</span>
+                          <span class={styles.pill}>-</span>
                         </Show>
                       </div>
                     </td>
-                    <td>
-                      <span class="tw-pill">{row.contactDnis}</span>
+                    <td class={styles.tableCell}>
+                      <span class={styles.pill}>{row.contactDnis}</span>
                     </td>
-                    <td>
-                      <span class="tw-pill">{row.phones}</span>
+                    <td class={styles.tableCell}>
+                      <span class={styles.pill}>{row.phones}</span>
                     </td>
-                    <td>
-                      <span class="tw-pill">{row.records}</span>
+                    <td class={styles.tableCell}>
+                      <span class={styles.pill}>{row.records}</span>
                     </td>
                   </tr>
                 )}
               </For>
               <Show when={rows().length === 0}>
                 <tr>
-                  <td colSpan={7} class="tw-table-empty">
+                  <td colSpan={7} class={cn(styles.tableCell, styles.tableEmpty)}>
                     Run a search by RUC, company, contact, DNI or phone to list
                     companies and jump to related people.
                   </td>
@@ -339,18 +336,18 @@ export default function ClientSearchCompaniesPage() {
           </table>
         </div>
 
-        <div class="tw-table-add-row">+ Add New</div>
+        <div class={styles.addRow}>+ Add New</div>
 
-        <div class="tw-table-footer">
-          <div class="inline-flex items-center gap-2">
+        <div class={styles.footer}>
+          <div class={styles.calcWrap}>
             <span>Calculate</span>
-            <ChevronDown class="h-4 w-4" />
+            <ChevronDown size={16} />
           </div>
           <div>
-            Unique of RUC <span class="tw-footer-strong">{uniqueRucCount()}</span>
+            Unique of RUC <span class={styles.footerStrong}>{uniqueRucCount()}</span>
           </div>
-          <div class="text-right">
-            Company rows <span class="tw-footer-strong">{rows().length}</span>
+          <div class={styles.footerRight}>
+            Company rows <span class={styles.footerStrong}>{rows().length}</span>
           </div>
         </div>
       </section>

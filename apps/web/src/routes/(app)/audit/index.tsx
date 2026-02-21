@@ -24,6 +24,7 @@ import {
   TableRow,
 } from "~/components/ui/layout/table";
 import { createAppQuery } from "~/lib/ui/create-app-query";
+import styles from "./audit-page.module.css";
 
 const WINDOW_OPTIONS = [
   { value: 15, label: "15 min" },
@@ -129,36 +130,31 @@ export default function AuditObservabilityPage() {
   }
 
   return (
-    <AppPage>
-      <AppPageHeader
-        eyebrow="Admin"
-        title="Audit and observability"
-        description="Execution times, error rate, and event volume."
-      />
+    <AppPage class={styles.page}>
+      <AppPageHeader />
 
-      <section class="tw-record-index-panel flex flex-wrap items-end gap-3 p-4">
-        <div class="w-44">
+      <section class={styles.panel}>
+        <div class={styles.filterRow}>
+        <div class={styles.fieldW44}>
           <Select
             label="Window"
             value={windowMinutes()}
             onInput={(event) =>
               setWindowMinutes(Number(event.currentTarget.value))
             }
-            class="h-10"
           >
             <For each={WINDOW_OPTIONS}>
               {(option) => <option value={option.value}>{option.label}</option>}
             </For>
           </Select>
         </div>
-        <div class="w-40">
+        <div class={styles.fieldW40}>
           <Select
             label="Status"
             value={status()}
             onInput={(event) =>
               setStatus(parseStatus(event.currentTarget.value))
             }
-            class="h-10"
           >
             <option value="all">All</option>
             <option value="ok">OK</option>
@@ -172,55 +168,53 @@ export default function AuditObservabilityPage() {
         >
           Refresh
         </Button>
+        </div>
       </section>
 
-      <section class="tw-record-index-panel flex flex-wrap items-end gap-3 p-4">
-        <div class="w-44">
+      <section class={styles.panel}>
+        <div class={styles.filterRow}>
+        <div class={styles.fieldW44}>
           <Select
             label="Audit window"
             value={auditWindowMinutes()}
             onInput={(event) =>
               setAuditWindowMinutes(Number(event.currentTarget.value))
             }
-            class="h-10"
           >
             <For each={AUDIT_WINDOW_OPTIONS}>
               {(option) => <option value={option.value}>{option.label}</option>}
             </For>
           </Select>
         </div>
-        <div class="w-52">
+        <div class={styles.fieldW52}>
           <Input
             label="Action"
             value={actionFilter()}
             onInput={(event) => setActionFilter(event.currentTarget.value)}
             placeholder="charge_note_approved"
-            class="h-10"
           />
         </div>
-        <div class="w-44">
+        <div class={styles.fieldW44}>
           <Input
             label="Entity"
             value={entityTypeFilter()}
             onInput={(event) => setEntityTypeFilter(event.currentTarget.value)}
             placeholder="charge_note"
-            class="h-10"
           />
         </div>
-        <div class="w-28">
+        <div class={styles.fieldW28}>
           <Input
             label="Actor #"
             value={actorUserIdFilter()}
             onInput={(event) => setActorUserIdFilter(event.currentTarget.value)}
             placeholder="5"
-            class="h-10"
           />
         </div>
         <Checkbox
           label="High risk only"
           checked={onlyHighRisk()}
           onInput={(event) => setOnlyHighRisk(event.currentTarget.checked)}
-          class="mt-1"
+          class={styles.mt1}
         />
         <Button
           onClick={() => {
@@ -229,10 +223,11 @@ export default function AuditObservabilityPage() {
         >
           Refresh audit
         </Button>
+        </div>
       </section>
 
-      <section class="tw-record-index-panel space-y-3 p-4">
-        <h2 class="text-base font-semibold">Summary by action</h2>
+      <section class={`${styles.panel} ${styles.section}`}>
+        <h2 class={styles.title}>Summary by action</h2>
         <Table>
           <TableHeader>
             <TableRow>
@@ -247,7 +242,7 @@ export default function AuditObservabilityPage() {
             <For each={snapshot().summary}>
               {(row) => (
                 <TableRow>
-                  <TableCell class="font-medium">{row.actionName}</TableCell>
+                  <TableCell class={styles.strong}>{row.actionName}</TableCell>
                   <TableCell>{row.count}</TableCell>
                   <TableCell>{row.errorCount}</TableCell>
                   <TableCell>{Math.round(row.avgDurationMs)}</TableCell>
@@ -259,8 +254,8 @@ export default function AuditObservabilityPage() {
         </Table>
       </section>
 
-      <section class="tw-record-index-panel space-y-3 p-4">
-        <h2 class="text-base font-semibold">Eventos recientes</h2>
+      <section class={`${styles.panel} ${styles.section}`}>
+        <h2 class={styles.title}>Eventos recientes</h2>
         <Table>
           <TableHeader>
             <TableRow>
@@ -280,7 +275,7 @@ export default function AuditObservabilityPage() {
                   <TableCell>
                     {new Date(row.createdAt).toLocaleTimeString("es-PE")}
                   </TableCell>
-                  <TableCell class="font-medium">{row.actionName}</TableCell>
+                  <TableCell class={styles.strong}>{row.actionName}</TableCell>
                   <TableCell>{row.status}</TableCell>
                   <TableCell>{row.durationMs}ms</TableCell>
                   <TableCell>
@@ -297,8 +292,8 @@ export default function AuditObservabilityPage() {
         </Table>
       </section>
 
-      <section class="tw-record-index-panel space-y-3 p-4">
-        <h2 class="text-base font-semibold">Transiciones de auditoria</h2>
+      <section class={`${styles.panel} ${styles.section}`}>
+        <h2 class={styles.title}>Transiciones de auditoria</h2>
         <Table>
           <TableHeader>
             <TableRow>
@@ -316,7 +311,7 @@ export default function AuditObservabilityPage() {
                   <TableCell>
                     {new Date(row.createdAt).toLocaleTimeString("es-PE")}
                   </TableCell>
-                  <TableCell class="font-medium">{row.action}</TableCell>
+                  <TableCell class={styles.strong}>{row.action}</TableCell>
                   <TableCell>
                     {row.entityType}#{row.entityId}
                   </TableCell>
@@ -329,28 +324,26 @@ export default function AuditObservabilityPage() {
         </Table>
       </section>
 
-      <section class="tw-record-index-panel space-y-3 p-4">
-        <h2 class="text-base font-semibold">
+      <section class={`${styles.panel} ${styles.section}`}>
+        <h2 class={styles.title}>
           Politicas de riesgo de auditoria
         </h2>
-        <div class="flex flex-wrap items-end gap-3">
-          <div class="w-52">
+        <div class={styles.filterRow}>
+          <div class={styles.fieldW52}>
             <Input
               label="Accion"
               value={policyAction()}
               onInput={(event) => setPolicyAction(event.currentTarget.value)}
               placeholder="leads_requested"
-              class="h-10"
             />
           </div>
-          <div class="w-36">
+          <div class={styles.fieldW36}>
             <Select
               label="Riesgo"
               value={policyRiskLevel()}
               onInput={(event) =>
                 setPolicyRiskLevel(parseRiskLevel(event.currentTarget.value))
               }
-              class="h-10"
             >
               <option value="high">high</option>
               <option value="medium">medium</option>
@@ -361,7 +354,7 @@ export default function AuditObservabilityPage() {
             label="Activa"
             checked={policyIsActive()}
             onInput={(event) => setPolicyIsActive(event.currentTarget.checked)}
-            class="mt-1"
+            class={styles.mt1}
           />
           <Button
             disabled={!canManagePolicies()}
@@ -372,14 +365,14 @@ export default function AuditObservabilityPage() {
             Guardar politica
           </Button>
         </div>
-        <p class="text-xs text-muted-foreground">
+        <p class={styles.helperText}>
           Acciones sin politica explicita se tratan como riesgo high para evitar
           ocultar eventos criticos.
         </p>
-        <p class="text-xs text-muted-foreground">
+        <p class={styles.helperText}>
           Solo admin y superuser pueden editar politicas.
         </p>
-        <p class="text-xs text-destructive">{policyError() ?? ""}</p>
+        <p class={styles.errorText}>{policyError() ?? ""}</p>
         <Table>
           <TableHeader>
             <TableRow>
@@ -394,7 +387,7 @@ export default function AuditObservabilityPage() {
             <For each={policySnapshot().items}>
               {(item) => (
                 <TableRow>
-                  <TableCell class="font-medium">{item.action}</TableCell>
+                  <TableCell class={styles.strong}>{item.action}</TableCell>
                   <TableCell>{item.riskLevel}</TableCell>
                   <TableCell>{item.isActive ? "si" : "no"}</TableCell>
                   <TableCell>{item.isProtected ? "si" : "no"}</TableCell>

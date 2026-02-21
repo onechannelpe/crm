@@ -1,190 +1,141 @@
-import { useNavigate } from "@solidjs/router";
-import { createResource, createSignal, For, Show, onMount } from "solid-js";
+import { createResource, createSignal, For, Show } from "solid-js";
 
 import {
-  type HeaderNotificationFeed,
   getHeaderNotifications,
   markAllNotificationsRead,
   markNotificationRead,
 } from "~/actions/app-notifications";
 import Bell from "~/components/icons/bell";
-import { Button } from "~/components/ui/input/button";
-import { DS_Z_INDEX } from "~/components/ui/theme/design-system";
 import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
-import { runOptimistic } from "~/lib/ui/run-optimistic";
+import { cn } from "~/lib/utils";
 
-const EMPTY_FEED: HeaderNotificationFeed = {
-  unreadCount: 0,
-  notifications: [],
-};
+import styles from "./header-notifications-panel.module.css";
 
-function priorityClass(priority: "high" | "normal" | "low"): string {
-  if (priority === "high") return "border-l-destructive";
-  if (priority === "low") return "border-l-border";
-  return "border-l-primary";
-}
-
-function formatTime(timestamp: number): string {
-  return new Date(timestamp).toLocaleString("en-US", {
-    day: "2-digit",
+function formatTimestamp(value: number): string {
+  return new Date(value).toLocaleString("en-US", {
     month: "short",
+    day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
   });
 }
 
 export function HeaderNotificationsPanel() {
-  const navigate = useNavigate();
   const [open, setOpen] = createSignal(false);
-  let containerRef: HTMLDivElement | undefined;
+  const [feed, { mutate, refetch }] = createResource(
+    () => true,
+    () => getHeaderNotifications(),
+    { initialValue: { unreadCount: 0, notifications: [] }, ssrLoadFrom: "initial" },
+  );
 
+  let containerRef: HTMLDivElement | undefined;
   useDismissibleLayer({
     enabled: open,
     onDismiss: () => setOpen(false),
     getContainer: () => containerRef,
   });
-  const [feed, { mutate, refetch }] = createResource(
-    () => true,
-    async () => getHeaderNotifications(),
-    { initialValue: EMPTY_FEED, ssrLoadFrom: "initial" },
-  );
-  const currentFeed = () => feed.latest ?? EMPTY_FEED;
 
-  onMount(() => {
-    void refetch();
-  });
-
-  const handleMarkAll = async () => {
+  const handleMarkRead = async (notificationId: number) => {
+    const previous = feed.latest ?? feed();
+    const now = Date.now();
+    mutate((current) => ({
+      unreadCount: Math.max(
+        0,
+        current.unreadCount -
+          (current.notifications.some(
+            (item) => item.id === notificationId && item.readAt === null,
+          )
+            ? 1
+            : 0),
+      ),
+      notifications: current.notifications.map((item) =>
+        item.id === notificationId ? { ...item, readAt: now } : item,
+      ),
+    }));
     try {
-      await runOptimistic({
-        read: currentFeed,
-        write: (next) => mutate(() => next),
-        optimistic: (prev) => {
-          const now = Date.now();
-          return {
-            unreadCount: 0,
-            notifications: prev.notifications.map((item) => ({
-              ...item,
-              readAt: item.readAt ?? now,
-            })),
-          };
-        },
-        commit: async () => {
-          await markAllNotificationsRead();
-        },
-        reconcile: () => {
-          void refetch();
-        },
-      });
+      await markNotificationRead(notificationId);
     } catch {
-      void refetch();
+      mutate(() => previous);
     }
   };
 
-  const handleOpenItem = async (id: number, actionUrl: string | null) => {
+  const handleMarkAllRead = async () => {
+    const previous = feed.latest ?? feed();
+    const now = Date.now();
+    mutate((current) => ({
+      unreadCount: 0,
+      notifications: current.notifications.map((item) => ({
+        ...item,
+        readAt: item.readAt ?? now,
+      })),
+    }));
     try {
-      await runOptimistic({
-        read: currentFeed,
-        write: (next) => mutate(() => next),
-        optimistic: (prev) => {
-          let changed = false;
-          const notifications = prev.notifications.map((item) => {
-            if (item.id !== id || item.readAt) return item;
-            changed = true;
-            return { ...item, readAt: Date.now() };
-          });
-          return {
-            unreadCount: changed
-              ? Math.max(0, prev.unreadCount - 1)
-              : prev.unreadCount,
-            notifications,
-          };
-        },
-        commit: async () => {
-          await markNotificationRead(id);
-        },
-        reconcile: () => {
-          void refetch();
-        },
-      });
+      await markAllNotificationsRead();
+      await refetch();
     } catch {
-      void refetch();
+      mutate(() => previous);
     }
-    if (actionUrl) navigate(actionUrl);
   };
 
   return (
     <div
-      class="relative"
       ref={(element) => {
         containerRef = element;
       }}
+      class={styles.root}
     >
-      <Button
-        variant="ghost"
-        size="icon"
-        class="relative text-muted-foreground"
-        onClick={() => {
-          setOpen((prev) => !prev);
-        }}
+      <button
+        type="button"
+        class={styles.trigger}
+        aria-label="Notifications"
+        onClick={() => setOpen((value) => !value)}
       >
-        <Bell class="w-4 h-4" />
-        <Show when={currentFeed().unreadCount > 0}>
-          <span class="absolute -top-0.5 -right-0.5 min-w-4 h-4 rounded-full bg-destructive px-1 text-center text-[10px] leading-4 text-destructive-foreground">
-            {Math.min(currentFeed().unreadCount, 99)}
-          </span>
+        <Bell size={16} />
+        <Show when={feed().unreadCount > 0}>
+          <span class={styles.badge}>{Math.min(feed().unreadCount, 99)}</span>
         </Show>
-      </Button>
+      </button>
+
       <Show when={open()}>
-        <div
-          class="crm-overlay-panel absolute right-0 mt-2 w-96 rounded-sm"
-          style={{ "z-index": DS_Z_INDEX.overlay }}
-        >
-          <div class="flex items-center justify-between border-b p-2.5">
-            <p class="text-sm font-semibold">Notifications</p>
-            <Button
-              variant="ghost"
-              class="h-7 px-2 text-xs"
-              disabled={currentFeed().unreadCount === 0}
-              onClick={() => {
-                void handleMarkAll();
-              }}
+        <div class={styles.panel}>
+          <div class={styles.panelHeader}>
+            <p class={styles.panelTitle}>Notifications</p>
+            <button
+              type="button"
+              class={styles.markAll}
+              onClick={() => void handleMarkAllRead()}
+              disabled={feed().unreadCount === 0}
             >
-              Mark all read
-            </Button>
+              Mark all as read
+            </button>
           </div>
-          <div class="max-h-96 space-y-2 overflow-auto p-2">
-            <Show
-              when={currentFeed().notifications.length > 0}
-              fallback={
-                <p class="text-sm text-muted-foreground px-2 py-4">
-                  No new notifications.
-                </p>
-              }
-            >
-              <For each={currentFeed().notifications}>
+
+          <Show when={feed().notifications.length > 0} fallback={<p class={styles.empty}>No notifications yet.</p>}>
+            <div class={styles.list}>
+              <For each={feed().notifications}>
                 {(item) => (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    class={`h-auto w-full justify-start rounded-sm border border-l-4 p-2.5 text-left hover:bg-muted/40 ${priorityClass(item.priority)} ${item.readAt ? "opacity-70" : ""}`}
-                    onClick={() => {
-                      void handleOpenItem(item.id, item.actionUrl);
-                      setOpen(false);
-                    }}
+                  <article
+                    class={cn(styles.item, item.readAt === null && styles.itemUnread)}
                   >
-                    <p class="text-sm font-medium">{item.title}</p>
-                    <p class="text-xs text-muted-foreground mt-1">
-                      {item.bodyText}
-                    </p>
-                    <p class="text-[11px] text-muted-foreground mt-2">
-                      {formatTime(item.createdAt)}
-                    </p>
-                  </Button>
+                    <p class={styles.title}>{item.title}</p>
+                    <p class={styles.body}>{item.bodyText}</p>
+                    <div class={styles.meta}>
+                      <span class={styles.time}>{formatTimestamp(item.createdAt)}</span>
+                      <Show when={item.readAt === null}>
+                        <button
+                          type="button"
+                          class={styles.readBtn}
+                          onClick={() => void handleMarkRead(item.id)}
+                        >
+                          Mark read
+                        </button>
+                      </Show>
+                    </div>
+                  </article>
                 )}
               </For>
-            </Show>
-          </div>
+            </div>
+          </Show>
         </div>
       </Show>
     </div>

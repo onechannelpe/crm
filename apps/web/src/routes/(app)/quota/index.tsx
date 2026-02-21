@@ -9,6 +9,7 @@ import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { getErrorMessage } from "~/lib/errors";
 import { runOptimistic } from "~/lib/ui/run-optimistic";
+import styles from "./quota-page.module.css";
 
 export default function QuotaPage() {
   const [quota, { mutate, refetch }] = createResource(
@@ -68,20 +69,20 @@ export default function QuotaPage() {
   }
 
   return (
-    <AppPage class="max-w-4xl">
+    <AppPage class={styles.page}>
       <AppPageHeader
         eyebrow="Capacity"
         title="Quota management"
         description="Allocate daily lead capacity per executive."
       />
 
-      <div class="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_360px]">
-        <div class="space-y-4">
+      <div class={styles.grid}>
+        <div class={styles.left}>
           <Show
             when={quotaValues()}
             fallback={
-              <section class="tw-record-index-panel p-4">
-                <p class="text-sm text-muted-foreground">
+              <section class={styles.panel}>
+                <p class={styles.muted}>
                   No quota assigned yet.
                 </p>
               </section>
@@ -93,13 +94,13 @@ export default function QuotaPage() {
           </Show>
         </div>
 
-        <section class="tw-record-index-panel p-4">
-          <h3 class="mb-4 text-lg font-semibold">Assign quota</h3>
+        <section class={styles.panel}>
+          <h3 class={styles.title}>Assign quota</h3>
           <form
             onSubmit={(e) => {
               void handleAllocate(e);
             }}
-            class="space-y-4"
+            class={styles.form}
           >
             <Input
               type="number"
@@ -119,7 +120,7 @@ export default function QuotaPage() {
               required
             />
 
-            <Button type="submit" disabled={loading()} class="w-full">
+            <Button type="submit" disabled={loading()} class={styles.full}>
               {loading() ? "Assigning..." : "Assign quota"}
             </Button>
           </form>

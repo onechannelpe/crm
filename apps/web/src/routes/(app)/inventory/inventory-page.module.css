@@ -1,0 +1,16 @@
+.panel {
+  border: var(--tw-panel-border);
+  border-radius: var(--tw-panel-radius);
+  background: var(--tw-panel-background);
+  overflow: hidden;
+}
+
+.product {
+  font-weight: 500;
+}
+
+.serial {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
