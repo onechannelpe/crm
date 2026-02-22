@@ -1,3 +1,8 @@
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .panel {
   border: var(--panel-border);
   border-radius: var(--panel-radius);

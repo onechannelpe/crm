@@ -131,11 +131,6 @@
   font-size: var(--font-size-body);
 }
 
-.placeholderText {
-  color: var(--muted-foreground);
-  font-size: var(--font-size-body);
-}
-
 .products {
   display: flex;
   flex-direction: column;
@@ -204,55 +199,6 @@
   border-radius: var(--radius-sm);
   background: color-mix(in oklab, var(--muted) 5%, transparent);
   font-size: var(--font-size-body);
-  color: var(--muted-foreground);
-}
-
-.fieldHelper {
-  margin: -12px 0 0;
-  font-size: var(--font-size-caption);
-  color: var(--muted-foreground);
-}
-
-.preferenceGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.preferenceLabel {
-  font-size: var(--font-size-body);
-  font-weight: var(--font-weight-medium);
-  color: var(--foreground);
-}
-
-.radioGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.radioLabel {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: var(--font-size-body);
-  color: var(--foreground);
-  cursor: pointer;
-}
-
-.checkboxLabel {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: var(--font-size-body);
-  color: var(--foreground);
-  cursor: pointer;
-}
-
-.helperText {
-  margin: 0;
-  padding-left: 24px;
-  font-size: var(--font-size-caption);
   color: var(--muted-foreground);
 }
 

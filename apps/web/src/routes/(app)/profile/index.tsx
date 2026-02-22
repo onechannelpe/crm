@@ -1,4 +1,4 @@
-import { createSignal, onMount, Show } from "solid-js";
+import { createSignal, For, onMount, Show } from "solid-js";
 
 import {
   beginPasskeyRegistration,
@@ -7,7 +7,9 @@ import {
   finishTotpEnrollment,
   getTotpStatus,
 } from "~/actions/auth";
-import { AppPage, AppPageHeader } from "~/components/layout/page";
+import { updateUserProfile } from "~/actions/settings";
+import { useToast } from "~/components/feedback/toast-provider";
+import { AppPage } from "~/components/layout/page";
 import { useSession } from "~/components/providers/session-provider";
 import { Badge } from "~/components/ui/display/badge";
 import { Button } from "~/components/ui/input/button";
@@ -30,9 +32,17 @@ import styles from "./profile-page.module.css";
 
 export default function ProfilePage() {
   const { currentUser } = useSession();
+  const { showToast } = useToast();
+  const user = () => currentUser();
+
+  const [profileName, setProfileName] = createSignal(user().fullName || "");
+  const [profilePhone, setProfilePhone] = createSignal(user().phoneE164 || "");
+  const [savingProfile, setSavingProfile] = createSignal(false);
+
   const [passkeySupported, setPasskeySupported] = createSignal(false);
   const [passkeyLoading, setPasskeyLoading] = createSignal(false);
   const [passkeyMessage, setPasskeyMessage] = createSignal("");
+
   const [totpStatus, { mutate: mutateTotpStatus, refetch: refetchTotp }] =
     createAppQuery(getTotpStatus, { enabled: false });
   const currentTotpStatus = () => totpStatus();
@@ -41,11 +51,23 @@ export default function ProfilePage() {
   const [totpQrCode, setTotpQrCode] = createSignal("");
   const [totpCode, setTotpCode] = createSignal("");
   const [recoveryCodes, setRecoveryCodes] = createSignal<string[]>([]);
-  const user = () => currentUser();
 
   onMount(() => {
     setPasskeySupported(isPasskeySupported());
   });
+
+  const saveProfile = async (e: Event) => {
+    e.preventDefault();
+    setSavingProfile(true);
+    try {
+      await updateUserProfile(profileName(), profilePhone());
+      showToast("success", "Profile updated");
+    } catch (err: unknown) {
+      showToast("error", getErrorMessage(err, "Failed to update profile"));
+    } finally {
+      setSavingProfile(false);
+    }
+  };
 
   async function registerPasskey() {
     setPasskeyMessage("");
@@ -58,7 +80,6 @@ export default function ProfilePage() {
       if (!(credential instanceof PublicKeyCredential)) {
         throw new Error("Invalid credential response");
       }
-
       const payload = toRegistrationPayload(credential);
       await finishPasskeyRegistration(challenge.challengeId, payload);
       setPasskeyMessage("Passkey registered");
@@ -112,39 +133,50 @@ export default function ProfilePage() {
 
   return (
     <AppPage>
-      <AppPageHeader
-        eyebrow="Account"
-        title="Profile"
-        description="Personal information and account security."
-      />
-
       <section class={styles.panel}>
         <div class={styles.contentWrap}>
           <div class={styles.content}>
             <section class={`${styles.section} ${styles.sectionBorder}`}>
               <h2 class={styles.title}>Identity</h2>
-              <div class={styles.identityGrid}>
-                <div>
-                  <p class={styles.label}>Name</p>
-                  <p class={`${styles.value} ${styles.valueStrong}`}>
-                    {user().fullName}
-                  </p>
+              <form
+                onSubmit={(e) => {
+                  void saveProfile(e);
+                }}
+              >
+                <div class={styles.formGrid}>
+                  <Input
+                    label="Full name"
+                    value={profileName()}
+                    onInput={(e) => setProfileName(e.currentTarget.value)}
+                    required
+                  />
+                  <Input label="Email" value={user().email} disabled />
+                  <Input
+                    label="Phone"
+                    value={profilePhone()}
+                    onInput={(e) => setProfilePhone(e.currentTarget.value)}
+                  />
                 </div>
-                <div>
-                  <p class={styles.label}>Email</p>
-                  <p class={styles.value}>{user().email}</p>
+                <div class={styles.identityMeta}>
+                  <div class={styles.inline}>
+                    <span class={styles.label}>Role</span>
+                    <Badge variant={getRoleBadgeVariant(user().role)}>
+                      {getRoleLabel(user().role)}
+                    </Badge>
+                  </div>
+                  <div class={styles.inline}>
+                    <span class={styles.label}>Team</span>
+                    <span class={styles.muted}>
+                      {getWorkspaceLabel(user())}
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <div class={styles.inline}>
-                <span class={styles.label}>Role</span>
-                <Badge variant={getRoleBadgeVariant(user().role)}>
-                  {getRoleLabel(user().role)}
-                </Badge>
-              </div>
-              <div class={styles.inline}>
-                <span class={styles.label}>Team</span>
-                <span class={styles.muted}>{getWorkspaceLabel(user())}</span>
-              </div>
+                <div class={styles.formActions}>
+                  <Button type="submit" disabled={savingProfile()}>
+                    {savingProfile() ? "Saving..." : "Save changes"}
+                  </Button>
+                </div>
+              </form>
             </section>
 
             <section class={`${styles.section} ${styles.sectionBorder}`}>
@@ -230,9 +262,9 @@ export default function ProfilePage() {
                     Recovery codes (shown once)
                   </p>
                   <ul class={styles.recoveryList}>
-                    {recoveryCodes().map((code) => (
-                      <li class={styles.mono}>{code}</li>
-                    ))}
+                    <For each={recoveryCodes()}>
+                      {(code) => <li class={styles.mono}>{code}</li>}
+                    </For>
                   </ul>
                 </div>
               </Show>

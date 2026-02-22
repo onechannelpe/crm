@@ -14,6 +14,109 @@
   padding: 8px 12px 12px;
 }
 
+.searchHead {
+  margin-bottom: 10px;
+}
+
+.searchBar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.searchBarInput {
+  flex: 1;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 8px;
+  background: var(--panel-bg);
+  color: var(--foreground);
+  font-size: var(--font-size-body);
+  min-width: 0;
+}
+
+.searchBarInput::placeholder {
+  color: var(--muted-foreground);
+}
+
+.typeBadge {
+  flex-shrink: 0;
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--font-size-caption);
+  color: var(--muted-foreground);
+  background: color-mix(in oklab, var(--muted) 20%, transparent);
+  white-space: nowrap;
+}
+
+.advancedToggle {
+  flex-shrink: 0;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: var(--font-size-body);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.advancedToggle:hover {
+  background: var(--bg-translucent);
+  color: var(--foreground);
+}
+
+.advancedToggleActive {
+  background: var(--bg-translucent);
+  color: var(--foreground);
+}
+
+.advancedRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.advancedField {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.advancedLabel {
+  color: var(--muted-foreground);
+  font-size: var(--font-size-caption);
+}
+
+.advancedSelect {
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 6px;
+  background: var(--panel-bg);
+  color: var(--foreground);
+  font-size: var(--font-size-body);
+}
+
+.advancedInput {
+  width: 80px;
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 6px;
+  background: var(--panel-bg);
+  color: var(--foreground);
+  font-size: var(--font-size-body);
+}
+
 .tabList {
   display: inline-flex;
   align-items: center;
@@ -202,18 +305,6 @@
 }
 
 .muted {
-  color: var(--muted-foreground);
-}
-
-.pickerIcon {
-  color: var(--muted-foreground);
-}
-
-.viewPicker:hover {
-  background: var(--bg-translucent);
-}
-
-.viewActions {
   display: inline-flex;
   align-items: center;
   gap: 2px;

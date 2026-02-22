@@ -21,6 +21,13 @@
   gap: 24px;
 }
 
+.draftHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
 .draftTitle {
   margin: 0;
   font-size: var(--font-size-body);
@@ -58,6 +65,34 @@
   padding: 8px 12px;
   display: grid;
   gap: 8px;
+  font-size: var(--font-size-body);
+}
+
+.readiness {
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.readinessRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-size-body);
+  color: var(--foreground);
+}
+
+.readinessOk {
+  width: 16px;
+  color: var(--success);
+  font-size: var(--font-size-body);
+}
+
+.readinessMissing {
+  width: 16px;
+  color: var(--muted-foreground);
   font-size: var(--font-size-body);
 }
 

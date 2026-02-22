@@ -39,16 +39,24 @@
   color: var(--muted-foreground);
 }
 
-.identityGrid {
+.formGrid {
   display: grid;
-  gap: 12px;
-  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
-@media (min-width: 768px) {
-  .identityGrid {
-    grid-template-columns: 1fr 1fr;
-  }
+.identityMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
 }
 
 .label {
@@ -59,7 +67,7 @@
 .value {
   margin-top: 4px;
   color: var(--foreground);
-  font-size: var(--font-14);
+  font-size: var(--font-size-body);
 }
 
 .valueStrong {
@@ -95,7 +103,7 @@
 }
 
 .recoveryTitle {
-  font-size: var(--font-14);
+  font-size: var(--font-size-body);
   font-weight: 500;
 }
 
@@ -103,7 +111,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  font-size: var(--font-14);
+  font-size: var(--font-size-body);
 }
 
 .mono {

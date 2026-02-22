@@ -1,5 +1,5 @@
 import { useNavigate, useSearchParams } from "@solidjs/router";
-import { createResource, createSignal, For, Show } from "solid-js";
+import { createResource, createSignal, For, onMount, Show } from "solid-js";
 
 import {
   addSaleDocument,
@@ -13,7 +13,7 @@ import {
   submitSale,
 } from "~/actions/sales";
 import { useToast } from "~/components/feedback/toast-provider";
-import { AppPage, AppPageHeader } from "~/components/layout/page";
+import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { FileInput } from "~/components/ui/input/file-input";
 import { Input } from "~/components/ui/input/input";
@@ -54,11 +54,10 @@ export default function NewSalePage() {
     createResource(noteId, getSaleDraftContext);
   const currentDraft = () => draft.latest;
 
-  async function handleCreate(e: Event) {
-    e.preventDefault();
+  async function doCreateSale(id: number) {
     setLoading(true);
     try {
-      const res = await createSale(Number(contactId()));
+      const res = await createSale(id);
       setNoteId(res.id);
       showToast("success", `Sales note #${res.id} created`);
     } catch (err: unknown) {
@@ -66,6 +65,17 @@ export default function NewSalePage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  onMount(() => {
+    if (searchParams.contactId) {
+      void doCreateSale(Number(searchParams.contactId));
+    }
+  });
+
+  async function handleCreate(e: Event) {
+    e.preventDefault();
+    void doCreateSale(Number(contactId()));
   }
 
   async function handleAddItem() {
@@ -211,7 +221,6 @@ export default function NewSalePage() {
   async function handleRemoveDocument(documentId: number) {
     const currentNoteId = noteId();
     if (!currentNoteId) return;
-
     try {
       await runOptimistic({
         read: currentDraft,
@@ -262,14 +271,6 @@ export default function NewSalePage() {
 
   return (
     <AppPage class={styles.page}>
-      <AppPageHeader
-        actions={
-          <Button variant="secondary" onClick={() => navigate("/leads")}>
-            Cancel
-          </Button>
-        }
-      />
-
       <Show when={!noteId()}>
         <section class={styles.panel}>
           <form
@@ -294,11 +295,21 @@ export default function NewSalePage() {
 
       <Show when={noteId()}>
         <section class={`${styles.panel} ${styles.draftLayout}`}>
-          <div>
-            <h3 class={styles.draftTitle}>Sales note #{noteId()}</h3>
-            <p class={styles.draftHint}>
-              Requires items, documents, and locked inventory before submit.
-            </p>
+          <div class={styles.draftHeader}>
+            <div>
+              <h3 class={styles.draftTitle}>Sales note #{noteId()}</h3>
+              <p class={styles.draftHint}>
+                Add items, upload a document, and reserve inventory before
+                submitting.
+              </p>
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => navigate("/leads")}
+            >
+              Cancel
+            </Button>
           </div>
 
           <div class={styles.columns}>
@@ -351,7 +362,7 @@ export default function NewSalePage() {
             </div>
 
             <div class={styles.column}>
-              <p class={styles.columnTitle}>Inventory serial</p>
+              <p class={styles.columnTitle}>Inventory</p>
               <Select
                 value={selectedInventoryId()}
                 onInput={(e) => setSelectedInventoryId(e.currentTarget.value)}
@@ -360,7 +371,7 @@ export default function NewSalePage() {
                 <For each={currentInventory()}>
                   {(item) => (
                     <option value={item.id}>
-                      {item.serial_number} - {item.product_name}
+                      {item.serial_number} — {item.product_name}
                     </option>
                   )}
                 </For>
@@ -370,19 +381,52 @@ export default function NewSalePage() {
                   void handleLockInventory();
                 }}
               >
-                Reserve inventory
+                Reserve
               </Button>
             </div>
           </div>
 
           <Show when={currentDraft()}>
             {(ctx) => (
-              <div class={styles.summary}>
-                <p>Items: {ctx().items.length}</p>
-                <p>Documents: {ctx().documents.length}</p>
-                <p class={styles.summaryTitle}>Items</p>
-                <p>
-                  Inventory locked: {ctx().inventoryLock?.serial_number ?? "No"}
+              <div class={styles.readiness}>
+                <p class={styles.readinessRow}>
+                  <span
+                    class={
+                      ctx().readiness.hasItems
+                        ? styles.readinessOk
+                        : styles.readinessMissing
+                    }
+                  >
+                    {ctx().readiness.hasItems ? "✓" : "○"}
+                  </span>
+                  Items — {ctx().items.length} added
+                </p>
+                <p class={styles.readinessRow}>
+                  <span
+                    class={
+                      ctx().readiness.hasDocuments
+                        ? styles.readinessOk
+                        : styles.readinessMissing
+                    }
+                  >
+                    {ctx().readiness.hasDocuments ? "✓" : "○"}
+                  </span>
+                  Documents — {ctx().documents.length} uploaded
+                </p>
+                <p class={styles.readinessRow}>
+                  <span
+                    class={
+                      ctx().readiness.hasInventoryLock
+                        ? styles.readinessOk
+                        : styles.readinessMissing
+                    }
+                  >
+                    {ctx().readiness.hasInventoryLock ? "✓" : "○"}
+                  </span>
+                  Inventory —{" "}
+                  {ctx().inventoryLock
+                    ? ctx().inventoryLock!.serial_number
+                    : "not reserved"}
                 </p>
                 <Show when={ctx().documents.length > 0}>
                   <ul class={styles.documentList}>

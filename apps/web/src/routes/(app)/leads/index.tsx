@@ -5,7 +5,7 @@ import { requestLeads, getActiveLeads, completeLead } from "~/actions/leads";
 import { LeadList } from "~/components/features/leads/lead-list";
 import { RequestLeadsButton } from "~/components/features/leads/request-leads-button";
 import { EmptyState } from "~/components/feedback/empty-state";
-import { AppPage, AppPageHeader } from "~/components/layout/page";
+import { AppPage } from "~/components/layout/page";
 import { runOptimistic } from "~/lib/ui/run-optimistic";
 
 import styles from "./leads-page.module.css";
@@ -47,9 +47,9 @@ export default function LeadsPage() {
 
   return (
     <AppPage>
-      <AppPageHeader
-        actions={<RequestLeadsButton onRequest={handleRequestLeads} />}
-      />
+      <div class={styles.toolbar}>
+        <RequestLeadsButton onRequest={handleRequestLeads} />
+      </div>
 
       <div class={styles.layout}>
         <Show

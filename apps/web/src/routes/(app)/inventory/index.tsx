@@ -2,7 +2,7 @@ import { For, Show } from "solid-js";
 
 import { getInventoryItems } from "~/actions/inventory";
 import { EmptyState } from "~/components/feedback/empty-state";
-import { AppPage, AppPageHeader } from "~/components/layout/page";
+import { AppPage } from "~/components/layout/page";
 import { Badge } from "~/components/ui/display/badge";
 import {
   Table,
@@ -41,8 +41,6 @@ export default function InventoryPage() {
 
   return (
     <AppPage>
-      <AppPageHeader />
-
       <Show
         when={itemCount() > 0}
         fallback={

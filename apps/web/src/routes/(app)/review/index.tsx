@@ -8,7 +8,7 @@ import {
 import { RejectionForm } from "~/components/features/sales/rejection-form";
 import { EmptyState } from "~/components/feedback/empty-state";
 import { useToast } from "~/components/feedback/toast-provider";
-import { AppPage, AppPageHeader } from "~/components/layout/page";
+import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import {
   Table,
@@ -86,8 +86,6 @@ export default function ReviewPage() {
 
   return (
     <AppPage>
-      <AppPageHeader />
-
       <Show
         when={currentNotes().length > 0}
         fallback={

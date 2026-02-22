@@ -2,7 +2,6 @@ import { A, useSearchParams } from "@solidjs/router";
 import { createMemo, createSignal, For, onMount, Show } from "solid-js";
 
 import Building2 from "~/components/icons/building-2";
-import ChevronDown from "~/components/icons/chevron-down";
 import Phone from "~/components/icons/phone";
 import User from "~/components/icons/user";
 import { AppPage } from "~/components/layout/page";
@@ -67,7 +66,7 @@ function buildRows(
 
 export default function ClientSearchCompaniesPage() {
   const [searchParams] = useSearchParams();
-  const [autoType, setAutoType] = createSignal(true);
+  const [showAdvanced, setShowAdvanced] = createSignal(false);
   const [selectedRows, setSelectedRows] = createSignal<Set<string>>(new Set());
   const [filterHasPhone, setFilterHasPhone] = createSignal(false);
   const [filterMinRecords, setFilterMinRecords] = createSignal<number | null>(
@@ -91,22 +90,18 @@ export default function ClientSearchCompaniesPage() {
 
   const filteredRows = createMemo(() => {
     let result = rows();
-
     if (filterHasPhone()) {
       result = result.filter((row) => row.phones !== "-");
     }
-
     if (filterMinRecords() !== null) {
       result = result.filter((row) => row.records >= filterMinRecords()!);
     }
-
     return result;
   });
 
   const sortedRows = createMemo(() => {
     const result = [...filteredRows()];
     const sort = sortBy();
-
     if (sort === "name") {
       result.sort((a, b) => a.name.localeCompare(b.name));
     } else if (sort === "records") {
@@ -118,7 +113,6 @@ export default function ClientSearchCompaniesPage() {
         return bCount - aCount;
       });
     }
-
     return result;
   });
 
@@ -136,6 +130,14 @@ export default function ClientSearchCompaniesPage() {
       sortedRows().length > 0 && selectedRows().size === sortedRows().length,
   );
 
+  const currentTypeLabel = createMemo(() => {
+    if (!showAdvanced()) {
+      const inferred = inferCompanySearchType(controller.query());
+      return SEARCH_LABELS[inferred] ?? inferred;
+    }
+    return SEARCH_LABELS[controller.searchType()] ?? controller.searchType();
+  });
+
   const toggleAll = () => {
     if (allSelected()) {
       setSelectedRows(new Set<string>());
@@ -146,13 +148,13 @@ export default function ClientSearchCompaniesPage() {
 
   const toggleRow = (id: string) => {
     setSelectedRows((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
       } else {
-        newSet.add(id);
+        next.add(id);
       }
-      return newSet;
+      return next;
     });
   };
 
@@ -173,11 +175,6 @@ export default function ClientSearchCompaniesPage() {
     URL.revokeObjectURL(url);
   };
 
-  const clearFilters = () => {
-    setFilterHasPhone(false);
-    setFilterMinRecords(null);
-  };
-
   const hasActiveFilters = () =>
     filterHasPhone() || filterMinRecords() !== null;
 
@@ -189,22 +186,25 @@ export default function ClientSearchCompaniesPage() {
     <AppPage class={styles.page}>
       <section class={styles.panel}>
         <div class={styles.searchPanel}>
-          <div class={styles.tabList}>
-            <A href="/contacts/people" class={styles.tab}>
-              People
-            </A>
-            <A
-              href="/contacts/companies"
-              class={cn(styles.tab, styles.tabActive)}
-            >
-              Companies
-            </A>
+          <div class={styles.searchHead}>
+            <div class={styles.tabList}>
+              <A href="/contacts/people" class={styles.tab}>
+                People
+              </A>
+              <A
+                href="/contacts/companies"
+                class={cn(styles.tab, styles.tabActive)}
+              >
+                Companies
+              </A>
+            </div>
           </div>
+
           <form
-            class={styles.searchForm}
+            class={styles.searchBar}
             onSubmit={(event) => {
               event.preventDefault();
-              if (autoType()) {
+              if (!showAdvanced()) {
                 controller.setSearchType(
                   inferCompanySearchType(controller.query()),
                 );
@@ -212,94 +212,69 @@ export default function ClientSearchCompaniesPage() {
               void controller.runCurrentSearch();
             }}
           >
-            <label class={styles.searchField}>
-              <span class={styles.searchLabel}>Type</span>
-              <select
-                class={styles.searchSelect}
-                value={controller.searchType()}
-                onInput={(event) => {
-                  const nextType = event.currentTarget.value;
-                  const allowedType = COMPANY_SEARCH_TYPES.find(
-                    (type) => type === nextType,
-                  );
-                  if (!allowedType) return;
-                  controller.setSearchType(allowedType);
-                }}
-                disabled={autoType()}
-              >
-                <For each={COMPANY_SEARCH_TYPES}>
-                  {(type) => (
-                    <option value={type}>{SEARCH_LABELS[type] ?? type}</option>
-                  )}
-                </For>
-              </select>
-            </label>
-
-            <label class={styles.searchField}>
-              <span class={styles.searchLabel}>
-                Value <span class={styles.requiredMark}>*</span>
-              </span>
-              <input
-                class={styles.searchInput}
-                placeholder="Company, RUC, contact, DNI or phone"
-                value={controller.query()}
-                onInput={(event) =>
-                  controller.setQuery(event.currentTarget.value)
-                }
-                required
-              />
-            </label>
-
-            <label class={styles.searchField}>
-              <span class={styles.searchLabel}>
-                Limit <span class={styles.requiredMark}>*</span>
-              </span>
-              <input
-                class={styles.searchInput}
-                type="number"
-                min="1"
-                max="100"
-                value={controller.limit()}
-                onInput={(event) =>
-                  controller.setLimit(event.currentTarget.value)
-                }
-                required
-              />
-            </label>
-
-            <div class={cn(styles.searchField, styles.alignEnd)}>
-              <span
-                class={cn(styles.searchLabel, styles.hiddenLabel)}
-                aria-hidden="true"
-              >
-                Search
-              </span>
-              <button
-                type="submit"
-                class={styles.searchButton}
-                disabled={controller.searching()}
-              >
-                {controller.searching() ? "Searching..." : "Search"}
-              </button>
-            </div>
+            <input
+              class={styles.searchBarInput}
+              placeholder="Company, RUC, contact, DNI or phone"
+              value={controller.query()}
+              onInput={(e) => controller.setQuery(e.currentTarget.value)}
+              required
+            />
+            <span class={styles.typeBadge}>{currentTypeLabel()}</span>
+            <button
+              type="submit"
+              class={styles.searchButton}
+              disabled={controller.searching()}
+            >
+              {controller.searching() ? "Searching..." : "Search"}
+            </button>
+            <button
+              type="button"
+              class={cn(
+                styles.advancedToggle,
+                showAdvanced() && styles.advancedToggleActive,
+              )}
+              onClick={() => setShowAdvanced(!showAdvanced())}
+            >
+              Advanced
+            </button>
           </form>
 
-          <div class={styles.searchControls}>
-            <label class={styles.searchToggleLabel}>
-              <input
-                type="checkbox"
-                class={styles.searchToggleInput}
-                checked={autoType()}
-                onInput={(event) => setAutoType(event.currentTarget.checked)}
-              />
-              Auto detect search type
-            </label>
-            <span class={styles.searchHelper}>
-              Current type:{" "}
-              {SEARCH_LABELS[controller.searchType()] ??
-                controller.searchType()}
-            </span>
-          </div>
+          <Show when={showAdvanced()}>
+            <div class={styles.advancedRow}>
+              <div class={styles.advancedField}>
+                <span class={styles.advancedLabel}>Type</span>
+                <select
+                  class={styles.advancedSelect}
+                  value={controller.searchType()}
+                  onInput={(e) => {
+                    const next = COMPANY_SEARCH_TYPES.find(
+                      (t) => t === e.currentTarget.value,
+                    );
+                    if (next) controller.setSearchType(next);
+                  }}
+                >
+                  <For each={COMPANY_SEARCH_TYPES}>
+                    {(type) => (
+                      <option value={type}>
+                        {SEARCH_LABELS[type] ?? type}
+                      </option>
+                    )}
+                  </For>
+                </select>
+              </div>
+              <div class={styles.advancedField}>
+                <span class={styles.advancedLabel}>Limit</span>
+                <input
+                  class={styles.advancedInput}
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={controller.limit()}
+                  onInput={(e) => controller.setLimit(e.currentTarget.value)}
+                />
+              </div>
+            </div>
+          </Show>
         </div>
 
         <Show when={controller.error()}>
@@ -330,7 +305,6 @@ export default function ClientSearchCompaniesPage() {
           <div class={styles.viewPicker}>
             <span>All Companies</span>
             <span class={styles.muted}>· {sortedRows().length}</span>
-            <ChevronDown class={styles.pickerIcon} size={16} />
           </div>
           <div class={styles.viewActions}>
             <div class={styles.filterMenu}>
@@ -392,7 +366,10 @@ export default function ClientSearchCompaniesPage() {
                     <button
                       type="button"
                       class={styles.dropdownButton}
-                      onClick={clearFilters}
+                      onClick={() => {
+                        setFilterHasPhone(false);
+                        setFilterMinRecords(null);
+                      }}
                     >
                       Clear filters
                     </button>
@@ -574,7 +551,7 @@ export default function ClientSearchCompaniesPage() {
 
         <div class={styles.footer}>
           <div>
-            Unique of RUC{" "}
+            Unique RUCs{" "}
             <span class={styles.footerStrong}>{uniqueRucCount()}</span>
           </div>
           <div class={styles.footerRight}>

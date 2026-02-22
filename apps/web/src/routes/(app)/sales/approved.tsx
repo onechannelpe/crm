@@ -2,7 +2,7 @@ import { createResource, For, Show } from "solid-js";
 
 import { getApprovedSales } from "~/actions/sales";
 import { EmptyState } from "~/components/feedback/empty-state";
-import { AppPage, AppPageHeader } from "~/components/layout/page";
+import { AppPage } from "~/components/layout/page";
 import {
   Table,
   TableBody,
@@ -24,8 +24,6 @@ export default function ApprovedSalesPage() {
 
   return (
     <AppPage>
-      <AppPageHeader />
-
       <Show
         when={sales().length > 0}
         fallback={
@@ -35,41 +33,39 @@ export default function ApprovedSalesPage() {
           />
         }
       >
-        <section class={styles.tablePanel}>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Company</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Executive</TableHead>
-                <TableHead>Approved</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <For each={sales()}>
-                {(sale) => (
-                  <TableRow>
-                    <TableCell class={styles.idCell}>#{sale.id}</TableCell>
-                    <TableCell>
-                      {sale.companyName || <span class={styles.muted}>—</span>}
-                    </TableCell>
-                    <TableCell>
-                      <div class={styles.contactWrap}>
-                        <p class={styles.contactName}>{sale.contactName}</p>
-                        <p class={styles.contactMeta}>{sale.contactDni}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>{sale.executiveName}</TableCell>
-                    <TableCell class={styles.dateCell}>
-                      {formatDate(sale.updated_at)}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </For>
-            </TableBody>
-          </Table>
-        </section>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>ID</TableHead>
+              <TableHead>Company</TableHead>
+              <TableHead>Contact</TableHead>
+              <TableHead>Executive</TableHead>
+              <TableHead>Approved</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <For each={sales()}>
+              {(sale) => (
+                <TableRow>
+                  <TableCell class={styles.idCell}>#{sale.id}</TableCell>
+                  <TableCell>
+                    {sale.companyName || <span class={styles.muted}>—</span>}
+                  </TableCell>
+                  <TableCell>
+                    <div class={styles.contactWrap}>
+                      <p class={styles.contactName}>{sale.contactName}</p>
+                      <p class={styles.contactMeta}>{sale.contactDni}</p>
+                    </div>
+                  </TableCell>
+                  <TableCell>{sale.executiveName}</TableCell>
+                  <TableCell class={styles.dateCell}>
+                    {formatDate(sale.updated_at)}
+                  </TableCell>
+                </TableRow>
+              )}
+            </For>
+          </TableBody>
+        </Table>
       </Show>
     </AppPage>
   );

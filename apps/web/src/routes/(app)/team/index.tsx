@@ -10,7 +10,7 @@ import { EmptyState } from "~/components/feedback/empty-state";
 import { useToast } from "~/components/feedback/toast-provider";
 import Mail from "~/components/icons/mail";
 import User from "~/components/icons/user";
-import { AppPage, AppPageHeader } from "~/components/layout/page";
+import { AppPage } from "~/components/layout/page";
 import { Badge } from "~/components/ui/display/badge";
 import { Button } from "~/components/ui/input/button";
 import {
@@ -70,15 +70,13 @@ export default function TeamPage() {
 
   return (
     <AppPage>
-      <AppPageHeader
-        actions={
-          <Show when={directory().canManageInvites}>
-            <A href="/team/new">
-              <Button>Invite member</Button>
-            </A>
-          </Show>
-        }
-      />
+      <Show when={directory().canManageInvites}>
+        <div class={styles.toolbar}>
+          <A href="/team/new">
+            <Button>Invite member</Button>
+          </A>
+        </div>
+      </Show>
 
       <Show
         when={directory().members.length > 0}

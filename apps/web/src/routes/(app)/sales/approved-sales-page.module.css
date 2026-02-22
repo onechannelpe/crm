@@ -1,10 +1,3 @@
-.tablePanel {
-  border: var(--panel-border);
-  border-radius: var(--panel-radius);
-  background: var(--panel-bg);
-  overflow: hidden;
-}
-
 .idCell {
   font-family: var(--font-mono);
   font-size: var(--font-size-caption);
