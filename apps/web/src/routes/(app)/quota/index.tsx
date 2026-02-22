@@ -88,7 +88,9 @@ export default function QuotaPage() {
             }
           >
             {(values) => (
-              <QuotaDisplay used={values().used} total={values().total} />
+              <AppPanel>
+                <QuotaDisplay used={values().used} total={values().total} />
+              </AppPanel>
             )}
           </Show>
         </div>

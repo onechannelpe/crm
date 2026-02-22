@@ -20,10 +20,12 @@
   border-radius: var(--radius-sm);
   background: color-mix(in oklab, var(--background) 94%, transparent);
   padding: 8px;
+  display: grid;
+  gap: 8px;
+  align-content: start;
 }
 
 .columnHead {
-  margin-bottom: 8px;
   padding: 0 4px;
   display: inline-flex;
   align-items: center;
@@ -94,8 +96,8 @@
 }
 
 .card {
-  display: block;
-  margin-bottom: 8px;
+  display: grid;
+  gap: 4px;
   border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
   border-radius: var(--radius-sm);
   background: var(--surface);
@@ -118,13 +120,13 @@
 }
 
 .cardValue {
-  margin: 8px 0 0;
+  margin: 0;
   font-size: var(--font-22);
   font-weight: 500;
 }
 
 .cardDetail {
-  margin: 4px 0 0;
+  margin: 0;
   font-size: var(--font-size-caption);
   color: var(--muted-foreground);
 }

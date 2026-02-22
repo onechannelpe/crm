@@ -1,7 +1,4 @@
 .noAccess {
-  border: var(--panel-border);
-  border-radius: var(--panel-radius);
-  background: var(--panel-bg);
   padding: 12px;
   color: var(--muted-foreground);
   font-size: var(--font-size-body);
@@ -22,14 +19,15 @@
   height: 100%;
   overflow-y: auto;
   padding: 0 32px 0 20px;
-}
-
-.exit {
-  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .section {
-  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .groupTitle {
@@ -44,7 +42,6 @@
 
 .item {
   width: 100%;
-  margin-top: 2px;
   border: 1px solid transparent;
   border-radius: 4px;
   background: transparent;
@@ -126,9 +123,8 @@
 }
 
 .description {
-  margin-top: 4px;
-  color: var(--muted-foreground);
   font-size: var(--font-size-body);
+  color: var(--muted-foreground);
 }
 
 .products {

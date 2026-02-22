@@ -15,10 +15,11 @@
   border: 1px solid color-mix(in oklab, var(--destructive) 24%, transparent);
   background: color-mix(in oklab, var(--destructive) 9%, var(--surface));
   padding: 12px;
+  display: grid;
+  gap: 8px;
 }
 
 .itemHead {
-  margin-bottom: 8px;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;

@@ -2,6 +2,21 @@
   padding: 0 0 8px;
 }
 
+.pageNarrow {
+  max-width: 640px;
+  margin-inline: auto;
+}
+
+.pageMedium {
+  max-width: 960px;
+  margin-inline: auto;
+}
+
+.pageWide {
+  max-width: 1400px;
+  margin-inline: auto;
+}
+
 .header {
   padding: 4px 4px 8px;
   display: flex;
@@ -37,7 +52,6 @@
 }
 
 .headerDescription {
-  margin-top: 2px;
   font-size: var(--font-size-body);
   color: var(--muted-foreground);
 }
@@ -53,6 +67,7 @@
   border: var(--panel-border);
   border-radius: var(--panel-radius);
   background: var(--panel-bg);
+  box-shadow: var(--shadow-elevation-1);
   overflow: hidden;
 }
 
@@ -73,7 +88,6 @@
 }
 
 .sectionTitle {
-  margin-bottom: 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -87,7 +101,6 @@
 }
 
 .description {
-  margin-top: 4px;
   font-size: var(--font-size-caption);
   color: var(--muted-foreground);
 }

@@ -1,0 +1,153 @@
+.page {
+  max-width: 1400px;
+  margin-inline: auto;
+}
+
+.searchPanel {
+  display: grid;
+  gap: 0;
+}
+
+.tabBar {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab {
+  padding: 8px 16px;
+  border-bottom: 2px solid transparent;
+  color: var(--foreground-secondary);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+}
+
+.tab:hover {
+  color: var(--foreground);
+}
+
+.tabActive {
+  color: var(--foreground);
+  border-bottom-color: var(--primary);
+}
+
+.searchBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.searchInput {
+  flex: 1;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--foreground);
+  font-size: var(--font-size-body);
+  padding: 0 8px;
+}
+
+.searchInput::placeholder {
+  color: var(--muted-foreground);
+}
+
+.statusBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: var(--font-size-caption);
+  color: var(--foreground-secondary);
+}
+
+.errorBar {
+  padding: 8px 12px;
+  background: color-mix(in oklab, var(--destructive) 8%, var(--surface));
+  color: var(--destructive);
+  font-size: var(--font-size-body);
+  border-bottom: 1px solid
+    color-mix(in oklab, var(--destructive) 20%, transparent);
+}
+
+.emptyWrap {
+  padding: 48px 16px;
+  text-align: center;
+  color: var(--muted-foreground);
+  font-size: var(--font-size-body);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-top: 1px solid var(--border);
+  font-size: var(--font-size-caption);
+  color: var(--foreground-secondary);
+}
+
+.footerStrong {
+  font-weight: var(--font-weight-semibold);
+  color: var(--foreground);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.avatarDot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--secondary);
+  color: var(--foreground-secondary);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-semibold);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.squareDot {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background: var(--secondary);
+  color: var(--foreground-secondary);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-semibold);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pillWrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--secondary);
+  color: var(--foreground-secondary);
+  font-size: var(--font-size-caption);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+a.pill:hover {
+  background: var(--bg-translucent);
+  color: var(--primary);
+}

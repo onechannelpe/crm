@@ -151,7 +151,7 @@ export const NAV_ROUTES: NavRoute[] = [
   },
   {
     id: "sales",
-    href: "/leads",
+    href: "/sales/new",
     label: "Sales",
     navLabel: "Sales",
     icon: "sales",

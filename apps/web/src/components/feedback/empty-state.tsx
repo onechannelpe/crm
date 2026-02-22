@@ -1,20 +1,28 @@
-import type { JSX } from "solid-js";
+import type { Component, JSX } from "solid-js";
 
+import type { IconProps } from "~/components/icons/icon-base";
 import Inbox from "~/components/icons/inbox";
 
 import styles from "./empty-state.module.css";
 
+type IconComponent = Component<Omit<IconProps, "name" | "iconNode">>;
+
 interface EmptyStateProps {
+  icon?: IconComponent;
   title: string;
   description?: string;
   action?: JSX.Element;
 }
 
 export function EmptyState(props: EmptyStateProps) {
+  const Icon = () => props.icon ?? Inbox;
   return (
     <div class={styles.root}>
       <div class={styles.iconWrap}>
-        <Inbox size={20} />
+        {(() => {
+          const I = Icon();
+          return <I size={20} />;
+        })()}
       </div>
       <h3 class={styles.title}>{props.title}</h3>
       {props.description && (
