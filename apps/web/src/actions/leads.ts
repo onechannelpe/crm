@@ -71,3 +71,31 @@ export async function completeLead(
   if (isErr(result)) throw new Error(result.error);
   return { success: true };
 }
+
+export async function registerCall(
+  assignmentId: number,
+  contactId: number,
+  outcome: string,
+  notes?: string,
+): Promise<ActionSuccess> {
+  const safeAssignmentId = assertPositiveInt(assignmentId, "assignmentId");
+  const safeContactId = assertPositiveInt(contactId, "contactId");
+  const session = await requirePermission("leads:read");
+
+  await repos.interactionLogs.create({
+    contact_id: safeContactId,
+    user_id: session.userId,
+    outcome: outcome,
+    notes: notes || null,
+    duration_seconds: null,
+    created_at: Date.now(),
+  });
+
+  const result = await leadService.completeLead(
+    session.userId,
+    safeAssignmentId,
+  );
+
+  if (isErr(result)) throw new Error(result.error);
+  return { success: true };
+}

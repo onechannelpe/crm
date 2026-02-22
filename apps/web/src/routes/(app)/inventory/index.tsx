@@ -2,7 +2,7 @@ import { For, Show } from "solid-js";
 
 import { getInventoryItems } from "~/actions/inventory";
 import { EmptyState } from "~/components/feedback/empty-state";
-import { AppPage } from "~/components/layout/page";
+import { AppPage, AppPanel } from "~/components/layout/page";
 import { Badge } from "~/components/ui/display/badge";
 import {
   Table,
@@ -50,7 +50,7 @@ export default function InventoryPage() {
           />
         }
       >
-        <section class={styles.panel}>
+        <AppPanel>
           <Table>
             <TableHeader>
               <TableRow>
@@ -83,7 +83,7 @@ export default function InventoryPage() {
               </For>
             </TableBody>
           </Table>
-        </section>
+        </AppPanel>
       </Show>
     </AppPage>
   );

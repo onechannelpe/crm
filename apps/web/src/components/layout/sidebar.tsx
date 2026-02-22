@@ -51,9 +51,9 @@ export function Sidebar() {
     );
   };
 
-  const quickItems = createMemo(() => getSidebarRoutes(role(), "quick"));
+  const quickItems = createMemo(() => getSidebarRoutes(role(), "primary"));
   const workspaceItems = createMemo(() =>
-    getSidebarRoutes(role(), "workspace"),
+    getSidebarRoutes(role(), "secondary"),
   );
 
   onMount(() => {
@@ -176,14 +176,7 @@ export function Sidebar() {
         <section
           class={cn(styles.section, !expanded() && styles.collapsedSection)}
         >
-          <h4
-            class={cn(
-              styles.sectionTitle,
-              !expanded() && styles.collapsedTitle,
-            )}
-          >
-            Workspace
-          </h4>
+          <div class={styles.divider} />
           <For each={workspaceItems()}>
             {(item) => {
               const Icon = ICON_BY_ROUTE[item.icon];

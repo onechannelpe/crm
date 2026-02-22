@@ -11,9 +11,10 @@ export type RouteIcon =
   | "review"
   | "audit"
   | "quota"
-  | "profile";
+  | "profile"
+  | "schedule";
 
-export type SidebarSection = "quick" | "workspace";
+export type SidebarSection = "primary" | "secondary";
 
 export interface NavChild {
   href: string;
@@ -52,7 +53,7 @@ export const NAV_ROUTES: NavRoute[] = [
     icon: "search",
     header: { label: "People", icon: "search" },
     sidebar: {
-      section: "quick",
+      section: "secondary",
       order: 1,
       children: [
         { href: "/contacts/people", label: "People", order: 1 },
@@ -75,7 +76,7 @@ export const NAV_ROUTES: NavRoute[] = [
     navLabel: "Settings",
     icon: "settings",
     header: { label: "Settings", icon: "settings" },
-    sidebar: { section: "quick", order: 2 },
+    sidebar: { section: "secondary", order: 7 },
   },
   {
     id: "team",
@@ -84,12 +85,12 @@ export const NAV_ROUTES: NavRoute[] = [
     navLabel: "Team",
     icon: "team",
     header: { label: "Team", icon: "team" },
-    sidebar: { section: "workspace", order: 1 },
+    sidebar: { section: "secondary", order: 4 },
   },
   {
     id: "team-new",
     href: "/team/new",
-    label: "New team member",
+    label: "Create team member",
     icon: "team",
     header: { label: "Team", icon: "team" },
   },
@@ -100,7 +101,7 @@ export const NAV_ROUTES: NavRoute[] = [
     navLabel: "Inventory",
     icon: "inventory",
     header: { label: "Inventory", icon: "inventory" },
-    sidebar: { section: "workspace", order: 3 },
+    sidebar: { section: "secondary", order: 3 },
   },
   {
     id: "leads",
@@ -112,16 +113,27 @@ export const NAV_ROUTES: NavRoute[] = [
   {
     id: "dashboard",
     href: "/dashboard",
-    label: "Pipeline",
+    label: "Home",
     icon: "dashboard",
-    header: { label: "Pipeline", icon: "dashboard" },
+    header: { label: "Home", icon: "dashboard" },
+    sidebar: { section: "primary", order: 1 },
   },
   {
     id: "sales-new",
     href: "/sales/new",
-    label: "New sale",
+    label: "Create sale",
     icon: "new-sale",
-    header: { label: "New sale", icon: "new-sale" },
+    header: { label: "Create sale", icon: "new-sale" },
+    sidebar: { section: "primary", order: 2 },
+  },
+  {
+    id: "schedule",
+    href: "/schedule",
+    label: "Schedule",
+    navLabel: "Schedule",
+    icon: "schedule",
+    header: { label: "Schedule", icon: "schedule" },
+    sidebar: { section: "primary", order: 3 },
   },
   {
     id: "sales-approved",
@@ -144,12 +156,10 @@ export const NAV_ROUTES: NavRoute[] = [
     navLabel: "Sales",
     icon: "sales",
     sidebar: {
-      section: "workspace",
+      section: "secondary",
       order: 2,
       children: [
         { href: "/leads", label: "Leads", order: 1 },
-        { href: "/dashboard", label: "Pipeline", order: 2 },
-        { href: "/sales/new", label: "New sale", order: 3 },
         { href: "/sales/approved", label: "Approved", order: 4 },
         { href: "/review", label: "Review queue", order: 5 },
       ],
@@ -163,7 +173,7 @@ export const NAV_ROUTES: NavRoute[] = [
     navLabel: "Audit",
     icon: "audit",
     header: { label: "Audit", icon: "audit" },
-    sidebar: { section: "workspace", order: 4 },
+    sidebar: { section: "secondary", order: 5 },
   },
   {
     id: "quota",
@@ -172,7 +182,7 @@ export const NAV_ROUTES: NavRoute[] = [
     navLabel: "Quota",
     icon: "quota",
     header: { label: "Quota", icon: "quota" },
-    sidebar: { section: "workspace", order: 5 },
+    sidebar: { section: "secondary", order: 6 },
   },
   {
     id: "profile",

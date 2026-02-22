@@ -3,10 +3,7 @@
   max-width: 960px;
 }
 
-.panel {
-  border: var(--panel-border);
-  border-radius: var(--panel-radius);
-  background: var(--panel-bg);
+.panelPadded {
   padding: 16px;
   display: grid;
   gap: 20px;

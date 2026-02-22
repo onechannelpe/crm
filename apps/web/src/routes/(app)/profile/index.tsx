@@ -9,7 +9,7 @@ import {
 } from "~/actions/auth";
 import { updateUserProfile } from "~/actions/settings";
 import { useToast } from "~/components/feedback/toast-provider";
-import { AppPage } from "~/components/layout/page";
+import { AppPage, AppPanel } from "~/components/layout/page";
 import { useSession } from "~/components/providers/session-provider";
 import { Badge } from "~/components/ui/display/badge";
 import { Button } from "~/components/ui/input/button";
@@ -133,7 +133,7 @@ export default function ProfilePage() {
 
   return (
     <AppPage>
-      <section class={styles.panel}>
+      <AppPanel>
         <div class={styles.contentWrap}>
           <div class={styles.content}>
             <section class={`${styles.section} ${styles.sectionBorder}`}>
@@ -271,7 +271,7 @@ export default function ProfilePage() {
             </section>
           </div>
         </div>
-      </section>
+      </AppPanel>
     </AppPage>
   );
 }

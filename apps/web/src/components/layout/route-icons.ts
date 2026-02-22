@@ -1,6 +1,7 @@
 import type { Component } from "solid-js";
 
 import Building2 from "~/components/icons/building-2";
+import CalendarDays from "~/components/icons/calendar-days";
 import CircleCheckBig from "~/components/icons/circle-check-big";
 import House from "~/components/icons/house";
 import Inbox from "~/components/icons/inbox";
@@ -32,4 +33,5 @@ export const ICON_BY_ROUTE: Record<
   audit: Info,
   quota: Building2,
   profile: UserRound,
+  schedule: CalendarDays,
 };

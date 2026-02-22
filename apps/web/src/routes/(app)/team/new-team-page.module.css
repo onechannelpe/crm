@@ -1,17 +1,7 @@
 .page {
-  margin: 0 auto;
-  max-width: 640px;
+  max-width: 960px;
 }
 
-.panel {
-  border: var(--panel-border);
-  border-radius: var(--panel-radius);
-  background: var(--panel-bg);
+.panelPadded {
   padding: 16px;
-}
-
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
 }

@@ -7,7 +7,7 @@ import {
 } from "~/actions/admin-audit-policy";
 import { getAuditReaderSnapshot } from "~/actions/admin-audit-reader";
 import { getObservabilitySnapshot } from "~/actions/admin-observability";
-import { AppPage, AppPageHeader } from "~/components/layout/page";
+import { AppPage, AppPageHeader, AppPanel } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { Checkbox } from "~/components/ui/input/checkbox";
 import { Input } from "~/components/ui/input/input";
@@ -131,7 +131,7 @@ export default function AuditObservabilityPage() {
     <AppPage class={styles.page}>
       <AppPageHeader />
 
-      <section class={styles.panel}>
+      <AppPanel class={styles.panelPadded}>
         <div class={styles.filterRow}>
           <div class={styles.fieldW44}>
             <Select
@@ -169,9 +169,9 @@ export default function AuditObservabilityPage() {
             Refresh
           </Button>
         </div>
-      </section>
+      </AppPanel>
 
-      <section class={styles.panel}>
+      <AppPanel class={styles.panelPadded}>
         <div class={styles.filterRow}>
           <div class={styles.fieldW44}>
             <Select
@@ -220,7 +220,6 @@ export default function AuditObservabilityPage() {
             label="High risk only"
             checked={onlyHighRisk()}
             onInput={(event) => setOnlyHighRisk(event.currentTarget.checked)}
-            class={styles.mt1}
           />
           <Button
             onClick={() => {
@@ -230,9 +229,9 @@ export default function AuditObservabilityPage() {
             Refresh audit
           </Button>
         </div>
-      </section>
+      </AppPanel>
 
-      <section class={`${styles.panel} ${styles.section}`}>
+      <AppPanel class={`${styles.panelPadded} ${styles.section}`}>
         <h2 class={styles.title}>Summary by action</h2>
         <Table>
           <TableHeader>
@@ -258,9 +257,9 @@ export default function AuditObservabilityPage() {
             </For>
           </TableBody>
         </Table>
-      </section>
+      </AppPanel>
 
-      <section class={`${styles.panel} ${styles.section}`}>
+      <AppPanel class={`${styles.panelPadded} ${styles.section}`}>
         <h2 class={styles.title}>Recent events</h2>
         <Table>
           <TableHeader>
@@ -296,9 +295,9 @@ export default function AuditObservabilityPage() {
             </For>
           </TableBody>
         </Table>
-      </section>
+      </AppPanel>
 
-      <section class={`${styles.panel} ${styles.section}`}>
+      <AppPanel class={`${styles.panelPadded} ${styles.section}`}>
         <h2 class={styles.title}>Audit transitions</h2>
         <Table>
           <TableHeader>
@@ -328,9 +327,9 @@ export default function AuditObservabilityPage() {
             </For>
           </TableBody>
         </Table>
-      </section>
+      </AppPanel>
 
-      <section class={`${styles.panel} ${styles.section}`}>
+      <AppPanel class={`${styles.panelPadded} ${styles.section}`}>
         <h2 class={styles.title}>Audit risk policies</h2>
         <div class={styles.filterRow}>
           <div class={styles.fieldW52}>
@@ -358,7 +357,6 @@ export default function AuditObservabilityPage() {
             label="Active"
             checked={policyIsActive()}
             onInput={(event) => setPolicyIsActive(event.currentTarget.checked)}
-            class={styles.mt1}
           />
           <Button
             disabled={!canManagePolicies()}
@@ -403,7 +401,7 @@ export default function AuditObservabilityPage() {
             </For>
           </TableBody>
         </Table>
-      </section>
+      </AppPanel>
     </AppPage>
   );
 }

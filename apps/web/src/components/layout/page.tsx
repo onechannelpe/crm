@@ -29,6 +29,10 @@ export function AppPage(props: BaseProps) {
   return <div class={cn(styles.page, props.class)}>{props.children}</div>;
 }
 
+export function AppPanel(props: BaseProps) {
+  return <div class={cn(styles.panel, props.class)}>{props.children}</div>;
+}
+
 export function AppPageHeader(props: HeaderProps) {
   const hasMeta = () => !!(props.eyebrow || props.title || props.description);
   return (

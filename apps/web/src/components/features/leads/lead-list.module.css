@@ -44,14 +44,6 @@
   color: var(--muted-foreground);
 }
 
-.actionsHead {
-  text-align: right;
-}
-
-.actionsCell {
-  text-align: right;
-}
-
 .actions {
   display: inline-flex;
   align-items: center;

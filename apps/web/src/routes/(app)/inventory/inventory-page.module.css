@@ -1,10 +1,3 @@
-.panel {
-  border: var(--panel-border);
-  border-radius: var(--panel-radius);
-  background: var(--panel-bg);
-  overflow: hidden;
-}
-
 .product {
   font-weight: 500;
 }

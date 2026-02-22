@@ -1,11 +1,11 @@
 import { useNavigate } from "@solidjs/router";
 import { createResource, Show } from "solid-js";
 
-import { requestLeads, getActiveLeads, completeLead } from "~/actions/leads";
+import { registerCall, requestLeads, getActiveLeads } from "~/actions/leads";
 import { LeadList } from "~/components/features/leads/lead-list";
 import { RequestLeadsButton } from "~/components/features/leads/request-leads-button";
 import { EmptyState } from "~/components/feedback/empty-state";
-import { AppPage } from "~/components/layout/page";
+import { AppPage, AppPanel } from "~/components/layout/page";
 import { runOptimistic } from "~/lib/ui/run-optimistic";
 
 import styles from "./leads-page.module.css";
@@ -26,32 +26,33 @@ export default function LeadsPage() {
     return result.assigned;
   };
 
-  const handleCreateSale = (contactId: number) => {
-    navigate(`/sales/new?contactId=${contactId}`);
-  };
-
-  const handleComplete = async (assignmentId: number) => {
+  const handleRegisterCall = async (
+    assignmentId: number,
+    contactId: number,
+    outcome: string,
+    notes: string,
+  ) => {
     await runOptimistic({
       read: currentLeads,
       write: (next) => mutateLeads(() => next),
       optimistic: (prev) =>
         prev.filter((lead) => lead.assignmentId !== assignmentId),
       commit: async () => {
-        await completeLead(assignmentId);
+        await registerCall(assignmentId, contactId, outcome, notes);
       },
       reconcile: () => {
         void refetchLeads();
       },
     });
+
+    if (outcome === "sale_made") {
+      navigate(`/sales/new?contactId=${contactId}`);
+    }
   };
 
   return (
     <AppPage>
-      <div class={styles.toolbar}>
-        <RequestLeadsButton onRequest={handleRequestLeads} />
-      </div>
-
-      <div class={styles.layout}>
+      <AppPanel class={styles.panelPadded}>
         <Show
           when={!leads.error}
           fallback={
@@ -63,12 +64,13 @@ export default function LeadsPage() {
         >
           <LeadList
             contacts={currentLeads()}
-            onCreateSale={handleCreateSale}
-            onComplete={(assignmentId) => {
-              void handleComplete(assignmentId);
-            }}
+            onRegisterCall={handleRegisterCall}
+            emptyAction={<RequestLeadsButton onRequest={handleRequestLeads} />}
           />
         </Show>
+      </AppPanel>
+      <div class={styles.fabContainer}>
+        <RequestLeadsButton onRequest={handleRequestLeads} />
       </div>
     </AppPage>
   );

@@ -4,7 +4,8 @@ import { createMemo, createSignal, For, onMount, Show } from "solid-js";
 import Building2 from "~/components/icons/building-2";
 import Phone from "~/components/icons/phone";
 import User from "~/components/icons/user";
-import { AppPage } from "~/components/layout/page";
+import { AppPage, AppPanel } from "~/components/layout/page";
+import { Button } from "~/components/ui/input/button";
 import { createClientSearchController } from "~/features/client-search/controller";
 import {
   inferCompanySearchType,
@@ -184,7 +185,7 @@ export default function ClientSearchCompaniesPage() {
 
   return (
     <AppPage class={styles.page}>
-      <section class={styles.panel}>
+      <AppPanel>
         <div class={styles.searchPanel}>
           <div class={styles.searchHead}>
             <div class={styles.tabList}>
@@ -220,13 +221,9 @@ export default function ClientSearchCompaniesPage() {
               required
             />
             <span class={styles.typeBadge}>{currentTypeLabel()}</span>
-            <button
-              type="submit"
-              class={styles.searchButton}
-              disabled={controller.searching()}
-            >
+            <Button type="submit" disabled={controller.searching()}>
               {controller.searching() ? "Searching..." : "Search"}
-            </button>
+            </Button>
             <button
               type="button"
               class={cn(
@@ -432,122 +429,128 @@ export default function ClientSearchCompaniesPage() {
           </div>
         </div>
 
-        <div class={styles.tableWrap}>
-          <table class={styles.table}>
-            <thead>
-              <tr>
-                <th class={cn(styles.tableHeadCell, styles.tableCheckboxCell)}>
-                  <input
-                    type="checkbox"
-                    class={styles.checkbox}
-                    checked={allSelected()}
-                    onInput={toggleAll}
-                  />
-                </th>
-                <th class={styles.tableHeadCell}>
-                  <div class={styles.tableLabel}>
-                    <Building2 class={styles.headerIcon} size={16} />
-                    Company
-                  </div>
-                </th>
-                <th class={styles.tableHeadCell}>
-                  <div class={styles.tableLabel}>
-                    <Building2 class={styles.headerIcon} size={16} />
-                    RUC
-                  </div>
-                </th>
-                <th class={styles.tableHeadCell}>
-                  <div class={styles.tableLabel}>
-                    <User class={styles.headerIcon} size={16} />
-                    Contacts
-                  </div>
-                </th>
-                <th class={styles.tableHeadCell}>
-                  <div class={styles.tableLabel}>
-                    <User class={styles.headerIcon} size={16} />
-                    Contact DNIs
-                  </div>
-                </th>
-                <th class={styles.tableHeadCell}>
-                  <div class={styles.tableLabel}>
-                    <Phone class={styles.headerIcon} size={16} />
-                    Phones
-                  </div>
-                </th>
-                <th class={styles.tableHeadCell}>
-                  <div class={styles.tableLabel}>
-                    <Building2 class={styles.headerIcon} size={16} />
-                    Records
-                  </div>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <For each={sortedRows()}>
-                {(row) => (
-                  <tr>
-                    <td class={cn(styles.tableCell, styles.tableCheckboxCell)}>
-                      <input
-                        type="checkbox"
-                        class={styles.checkbox}
-                        checked={selectedRows().has(row.id)}
-                        onInput={() => toggleRow(row.id)}
-                      />
-                    </td>
-                    <td class={styles.tableCell}>
-                      <span class={styles.chip}>
-                        <span class={styles.squareDot}>
-                          {toInitial(row.name)}
-                        </span>
-                        <span>{row.name}</span>
-                      </span>
-                    </td>
-                    <td class={styles.tableCell}>
-                      <span class={styles.pill}>{row.ruc}</span>
-                    </td>
-                    <td class={styles.tableCell}>
-                      <div class={styles.pillWrap}>
-                        <For each={row.contactLinks}>
-                          {(person) => (
-                            <A
-                              href={`/contacts/people?type=${person.dni ? "dni" : "person_name"}&query=${encodeURIComponent(person.dni ?? person.name)}&limit=${encodeURIComponent(controller.limit())}`}
-                              class={styles.pill}
-                            >
-                              {person.name}
-                            </A>
-                          )}
-                        </For>
-                        <Show when={row.contactLinks.length === 0}>
-                          <span class={styles.pill}>-</span>
-                        </Show>
-                      </div>
-                    </td>
-                    <td class={styles.tableCell}>
-                      <span class={styles.pill}>{row.contactDnis}</span>
-                    </td>
-                    <td class={styles.tableCell}>
-                      <span class={styles.pill}>{row.phones}</span>
-                    </td>
-                    <td class={styles.tableCell}>
-                      <span class={styles.pill}>{row.records}</span>
-                    </td>
-                  </tr>
-                )}
-              </For>
-              <Show when={sortedRows().length === 0}>
+        <Show
+          when={sortedRows().length > 0 || controller.searching()}
+          fallback={
+            <div
+              class={cn(styles.tableCell, styles.tableEmpty)}
+              style={{ "text-align": "center", padding: "var(--font-24)" }}
+            >
+              Run a search by RUC, company, contact, DNI or phone to list
+              companies and jump to related people.
+            </div>
+          }
+        >
+          <div class={styles.tableWrap}>
+            <table class={styles.table}>
+              <thead>
                 <tr>
-                  <td
-                    colSpan={7}
-                    class={cn(styles.tableCell, styles.tableEmpty)}
+                  <th
+                    class={cn(styles.tableHeadCell, styles.tableCheckboxCell)}
                   >
-                    Run a search by RUC, company, contact, DNI or phone to list
-                    companies and jump to related people.
-                  </td>
+                    <input
+                      type="checkbox"
+                      class={styles.checkbox}
+                      checked={allSelected()}
+                      onInput={toggleAll}
+                    />
+                  </th>
+                  <th class={styles.tableHeadCell}>
+                    <div class={styles.tableLabel}>
+                      <Building2 class={styles.headerIcon} size={16} />
+                      Company
+                    </div>
+                  </th>
+                  <th class={styles.tableHeadCell}>
+                    <div class={styles.tableLabel}>
+                      <Building2 class={styles.headerIcon} size={16} />
+                      RUC
+                    </div>
+                  </th>
+                  <th class={styles.tableHeadCell}>
+                    <div class={styles.tableLabel}>
+                      <User class={styles.headerIcon} size={16} />
+                      Contacts
+                    </div>
+                  </th>
+                  <th class={styles.tableHeadCell}>
+                    <div class={styles.tableLabel}>
+                      <User class={styles.headerIcon} size={16} />
+                      Contact DNIs
+                    </div>
+                  </th>
+                  <th class={styles.tableHeadCell}>
+                    <div class={styles.tableLabel}>
+                      <Phone class={styles.headerIcon} size={16} />
+                      Phones
+                    </div>
+                  </th>
+                  <th class={styles.tableHeadCell}>
+                    <div class={styles.tableLabel}>
+                      <Building2 class={styles.headerIcon} size={16} />
+                      Records
+                    </div>
+                  </th>
                 </tr>
-              </Show>
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                <For each={sortedRows()}>
+                  {(row) => (
+                    <tr>
+                      <td
+                        class={cn(styles.tableCell, styles.tableCheckboxCell)}
+                      >
+                        <input
+                          type="checkbox"
+                          class={styles.checkbox}
+                          checked={selectedRows().has(row.id)}
+                          onInput={() => toggleRow(row.id)}
+                        />
+                      </td>
+                      <td class={styles.tableCell}>
+                        <span class={styles.chip}>
+                          <span class={styles.squareDot}>
+                            {toInitial(row.name)}
+                          </span>
+                          <span>{row.name}</span>
+                        </span>
+                      </td>
+                      <td class={styles.tableCell}>
+                        <span class={styles.pill}>{row.ruc}</span>
+                      </td>
+                      <td class={styles.tableCell}>
+                        <div class={styles.pillWrap}>
+                          <For each={row.contactLinks}>
+                            {(person) => (
+                              <A
+                                href={`/contacts/people?type=${person.dni ? "dni" : "person_name"}&query=${encodeURIComponent(person.dni ?? person.name)}&limit=${encodeURIComponent(controller.limit())}`}
+                                class={styles.pill}
+                              >
+                                {person.name}
+                              </A>
+                            )}
+                          </For>
+                          <Show when={row.contactLinks.length === 0}>
+                            <span class={styles.pill}>-</span>
+                          </Show>
+                        </div>
+                      </td>
+                      <td class={styles.tableCell}>
+                        <span class={styles.pill}>{row.contactDnis}</span>
+                      </td>
+                      <td class={styles.tableCell}>
+                        <span class={styles.pill}>{row.phones}</span>
+                      </td>
+                      <td class={styles.tableCell}>
+                        <span class={styles.pill}>{row.records}</span>
+                      </td>
+                    </tr>
+                  )}
+                </For>
+              </tbody>
+            </table>
+          </div>
+        </Show>
 
         <div class={styles.footer}>
           <div>
@@ -559,7 +562,7 @@ export default function ClientSearchCompaniesPage() {
             <span class={styles.footerStrong}>{rows().length}</span>
           </div>
         </div>
-      </section>
+      </AppPanel>
     </AppPage>
   );
 }

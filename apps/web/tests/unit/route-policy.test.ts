@@ -43,18 +43,18 @@ describe("route permissions", () => {
 
 describe("nav policy", () => {
   it("filters sidebar route sections by role", () => {
-    const executiveQuick = getSidebarRoutes("executive", "quick").map(
+    const executivePrimary = getSidebarRoutes("executive", "primary").map(
       (route) => route.href,
     );
-    expect(executiveQuick).toContain("/contacts/people");
-    expect(executiveQuick).not.toContain("/settings");
+    expect(executivePrimary).toContain("/contacts/people");
+    expect(executivePrimary).not.toContain("/settings");
 
-    const supervisorWorkspace = getSidebarRoutes("supervisor", "workspace").map(
+    const supervisorSecondary = getSidebarRoutes("supervisor", "secondary").map(
       (route) => route.href,
     );
-    expect(supervisorWorkspace).toContain("/audit");
+    expect(supervisorSecondary).toContain("/audit");
 
-    const inventorySidebar = getSidebarRoutes("logistics", "workspace").map(
+    const inventorySidebar = getSidebarRoutes("logistics", "secondary").map(
       (route) => route.href,
     );
     expect(inventorySidebar).toEqual(["/inventory"]);

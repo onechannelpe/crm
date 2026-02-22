@@ -1,10 +1,10 @@
-.toolbar {
-  display: flex;
-  justify-content: flex-end;
+.panelPadded {
+  padding: 24px;
 }
 
-.layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 12px;
+.fabContainer {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  z-index: 50;
 }

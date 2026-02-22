@@ -3,11 +3,10 @@
   justify-content: flex-end;
 }
 
-.panel {
-  border: var(--panel-border);
-  border-radius: var(--panel-radius);
-  background: var(--panel-bg);
-  overflow: hidden;
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .memberName {
@@ -17,12 +16,12 @@
 .personCell {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .avatar {
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
@@ -34,14 +33,13 @@
 .mailCell {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  color: var(--muted-foreground);
+  gap: 6px;
 }
 
-.section {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+.actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .sectionTitle {
@@ -50,12 +48,6 @@
   font-size: var(--font-size-body);
   font-weight: 500;
   color: var(--foreground);
-}
-
-.actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .noPermission {

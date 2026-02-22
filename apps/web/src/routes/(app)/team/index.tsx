@@ -10,7 +10,7 @@ import { EmptyState } from "~/components/feedback/empty-state";
 import { useToast } from "~/components/feedback/toast-provider";
 import Mail from "~/components/icons/mail";
 import User from "~/components/icons/user";
-import { AppPage } from "~/components/layout/page";
+import { AppPage, AppPanel } from "~/components/layout/page";
 import { Badge } from "~/components/ui/display/badge";
 import { Button } from "~/components/ui/input/button";
 import {
@@ -87,7 +87,7 @@ export default function TeamPage() {
           />
         }
       >
-        <section class={styles.panel}>
+        <AppPanel>
           <Table>
             <TableHeader>
               <TableRow>
@@ -130,7 +130,7 @@ export default function TeamPage() {
               </For>
             </TableBody>
           </Table>
-        </section>
+        </AppPanel>
       </Show>
 
       <div class={styles.section}>
@@ -144,7 +144,7 @@ export default function TeamPage() {
             />
           }
         >
-          <section class={styles.panel}>
+          <AppPanel>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -209,7 +209,7 @@ export default function TeamPage() {
                 </For>
               </TableBody>
             </Table>
-          </section>
+          </AppPanel>
         </Show>
       </div>
     </AppPage>
