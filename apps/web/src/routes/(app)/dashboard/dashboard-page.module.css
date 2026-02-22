@@ -34,16 +34,52 @@
   gap: 12px;
 }
 
+.viewMenu {
+  position: relative;
+}
+
 .toolbarAction {
   border: 0;
   background: transparent;
-  padding: 0;
+  padding: 4px 8px;
   font-size: var(--font-size-caption);
   color: var(--muted-foreground);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
 }
 
 .toolbarAction:hover {
   color: var(--foreground);
+}
+
+.viewDropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  min-width: 120px;
+  z-index: 10;
+}
+
+.viewDropdown button {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 8px 12px;
+  text-align: left;
+  font-size: var(--font-size-caption);
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+.viewDropdown button:hover {
+  background: var(--bg-translucent);
 }
 
 .boardWrap {
@@ -171,5 +207,22 @@
 
 .newButton:hover {
   background: var(--bg-translucent);
+  color: var(--foreground);
+}
+
+.columnAction {
+  width: 100%;
+  height: 32px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-size: var(--font-size-caption);
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+
+.columnAction:hover {
+  background: var(--bg-translucent);
+  border-color: var(--foreground);
   color: var(--foreground);
 }

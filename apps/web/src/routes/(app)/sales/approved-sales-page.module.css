@@ -1,0 +1,39 @@
+.tablePanel {
+  border: var(--panel-border);
+  border-radius: var(--panel-radius);
+  background: var(--panel-bg);
+  overflow: hidden;
+}
+
+.idCell {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-caption);
+  color: var(--muted-foreground);
+}
+
+.contactWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.contactName {
+  margin: 0;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+}
+
+.contactMeta {
+  margin: 0;
+  font-size: var(--font-size-caption);
+  color: var(--muted-foreground);
+}
+
+.dateCell {
+  font-size: var(--font-size-caption);
+  color: var(--muted-foreground);
+}
+
+.muted {
+  color: var(--muted-foreground);
+}

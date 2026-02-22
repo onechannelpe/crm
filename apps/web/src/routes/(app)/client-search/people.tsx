@@ -92,6 +92,12 @@ function inferPeopleSearchType(query: string): SearchType {
 export default function ClientSearchPeoplePage() {
   const [searchParams] = useSearchParams();
   const [autoType, setAutoType] = createSignal(true);
+  const [selectedRows, setSelectedRows] = createSignal<Set<string>>(new Set());
+  const [filterHasPhone, setFilterHasPhone] = createSignal(false);
+  const [sortBy, setSortBy] = createSignal<"name" | "companies">("name");
+  const [showFilterMenu, setShowFilterMenu] = createSignal(false);
+  const [showSortMenu, setShowSortMenu] = createSignal(false);
+
   const controller = createClientSearchController({
     defaultType: "person_name",
     allowedTypes: PEOPLE_SEARCH_TYPES,
@@ -101,9 +107,85 @@ export default function ClientSearchPeoplePage() {
 
   const grouped = createMemo(() => groupPeopleByDni(controller.results()));
   const rows = createMemo(() => buildRows(grouped()));
+
+  const filteredRows = createMemo(() => {
+    let result = rows();
+
+    if (filterHasPhone()) {
+      result = result.filter((row) => row.phones !== "-");
+    }
+
+    return result;
+  });
+
+  const sortedRows = createMemo(() => {
+    const result = [...filteredRows()];
+    const sort = sortBy();
+
+    if (sort === "name") {
+      result.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sort === "companies") {
+      result.sort((a, b) => {
+        const aCount = a.companies === "-" ? 0 : a.companies.split(" · ").length;
+        const bCount = b.companies === "-" ? 0 : b.companies.split(" · ").length;
+        return bCount - aCount;
+      });
+    }
+
+    return result;
+  });
+
   const uniqueDniCount = createMemo(
-    () => new Set(rows().map((row) => row.dni)).size,
+    () => new Set(sortedRows().map((row) => row.dni)).size,
   );
+
+  const allSelected = createMemo(
+    () => sortedRows().length > 0 && selectedRows().size === sortedRows().length,
+  );
+
+  const toggleAll = () => {
+    if (allSelected()) {
+      setSelectedRows(new Set<string>());
+    } else {
+      setSelectedRows(new Set<string>(sortedRows().map((row) => row.id)));
+    }
+  };
+
+  const toggleRow = (id: string) => {
+    setSelectedRows((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const exportSelected = () => {
+    const selected = sortedRows().filter((row) => selectedRows().has(row.id));
+    const csv = [
+      "Name,DNI,Aliases,Companies,RUCs,Phones",
+      ...selected.map(
+        (row) =>
+          `"${row.name}","${row.dni}","${row.aliases}","${row.companies}","${row.rucs}","${row.phones}"`,
+      ),
+    ].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "people.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const clearFilters = () => {
+    setFilterHasPhone(false);
+  };
+
+  const hasActiveFilters = () => filterHasPhone();
 
   onMount(() => {
     void controller.initializeFromParams();
@@ -230,16 +312,110 @@ export default function ClientSearchPeoplePage() {
           {(message) => <div class={styles.errorBar}>{message()}</div>}
         </Show>
 
+        <Show when={selectedRows().size > 0}>
+          <div class={styles.bulkBar}>
+            <span>
+              {selectedRows().size} selected
+            </span>
+            <button
+              type="button"
+              class={styles.bulkAction}
+              onClick={exportSelected}
+            >
+              Export to CSV
+            </button>
+            <button
+              type="button"
+              class={styles.bulkAction}
+              onClick={() => setSelectedRows(new Set<string>())}
+            >
+              Clear selection
+            </button>
+          </div>
+        </Show>
+
         <div class={styles.viewBar}>
           <div class={styles.viewPicker}>
             <span>All People</span>
-            <span class={styles.muted}>· {rows().length}</span>
+            <span class={styles.muted}>· {sortedRows().length}</span>
             <ChevronDown class={styles.pickerIcon} size={16} />
           </div>
           <div class={styles.viewActions}>
-            <span class={styles.viewAction}>Filter</span>
-            <span class={styles.viewAction}>Sort</span>
-            <span class={styles.viewAction}>Options</span>
+            <div class={styles.filterMenu}>
+              <button
+                type="button"
+                class={styles.viewAction}
+                onClick={() => setShowFilterMenu(!showFilterMenu())}
+              >
+                Filter
+                <Show when={hasActiveFilters()}>
+                  <span class={styles.activeDot} />
+                </Show>
+              </button>
+              <Show when={showFilterMenu()}>
+                <div class={styles.dropdown}>
+                  <label class={styles.dropdownItem}>
+                    <input
+                      type="checkbox"
+                      checked={filterHasPhone()}
+                      onInput={(e) =>
+                        setFilterHasPhone(e.currentTarget.checked)
+                      }
+                    />
+                    Has phone number
+                  </label>
+                  <Show when={hasActiveFilters()}>
+                    <div class={styles.dropdownDivider} />
+                    <button
+                      type="button"
+                      class={styles.dropdownButton}
+                      onClick={clearFilters}
+                    >
+                      Clear filters
+                    </button>
+                  </Show>
+                </div>
+              </Show>
+            </div>
+            <div class={styles.sortMenu}>
+              <button
+                type="button"
+                class={styles.viewAction}
+                onClick={() => setShowSortMenu(!showSortMenu())}
+              >
+                Sort
+              </button>
+              <Show when={showSortMenu()}>
+                <div class={styles.dropdown}>
+                  <button
+                    type="button"
+                    class={cn(
+                      styles.dropdownButton,
+                      sortBy() === "name" && styles.dropdownButtonActive,
+                    )}
+                    onClick={() => {
+                      setSortBy("name");
+                      setShowSortMenu(false);
+                    }}
+                  >
+                    By name
+                  </button>
+                  <button
+                    type="button"
+                    class={cn(
+                      styles.dropdownButton,
+                      sortBy() === "companies" && styles.dropdownButtonActive,
+                    )}
+                    onClick={() => {
+                      setSortBy("companies");
+                      setShowSortMenu(false);
+                    }}
+                  >
+                    By companies
+                  </button>
+                </div>
+              </Show>
+            </div>
           </div>
         </div>
 
@@ -248,6 +424,14 @@ export default function ClientSearchPeoplePage() {
             <thead>
               <tr>
                 <th class={cn(styles.tableHeadCell, styles.tableCheckboxCell)}>
+                  <input
+                    type="checkbox"
+                    class={styles.checkbox}
+                    checked={allSelected()}
+                    onInput={toggleAll}
+                  />
+                </th>
+                <th class={styles.tableHeadCell}>
                   <input type="checkbox" class={styles.checkbox} />
                 </th>
                 <th class={styles.tableHeadCell}>
@@ -289,11 +473,16 @@ export default function ClientSearchPeoplePage() {
               </tr>
             </thead>
             <tbody>
-              <For each={rows()}>
+              <For each={sortedRows()}>
                 {(row) => (
                   <tr>
                     <td class={cn(styles.tableCell, styles.tableCheckboxCell)}>
-                      <input type="checkbox" class={styles.checkbox} />
+                      <input
+                        type="checkbox"
+                        class={styles.checkbox}
+                        checked={selectedRows().has(row.id)}
+                        onInput={() => toggleRow(row.id)}
+                      />
                     </td>
                     <td class={styles.tableCell}>
                       <span class={styles.chip}>
@@ -335,7 +524,7 @@ export default function ClientSearchPeoplePage() {
                   </tr>
                 )}
               </For>
-              <Show when={rows().length === 0}>
+              <Show when={sortedRows().length === 0}>
                 <tr>
                   <td
                     colSpan={7}
@@ -350,13 +539,7 @@ export default function ClientSearchPeoplePage() {
           </table>
         </div>
 
-        <div class={styles.addRow}>+ Add New</div>
-
         <div class={styles.footer}>
-          <div class={styles.calcWrap}>
-            <span>Calculate</span>
-            <ChevronDown size={16} />
-          </div>
           <div>
             Unique of DNI{" "}
             <span class={styles.footerStrong}>{uniqueDniCount()}</span>

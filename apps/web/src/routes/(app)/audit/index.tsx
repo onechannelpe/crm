@@ -237,10 +237,10 @@ export default function AuditObservabilityPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Accion</TableHead>
-              <TableHead>Ejecuciones</TableHead>
-              <TableHead>Errores</TableHead>
-              <TableHead>Promedio (ms)</TableHead>
+              <TableHead>Action</TableHead>
+              <TableHead>Executions</TableHead>
+              <TableHead>Errors</TableHead>
+              <TableHead>Average (ms)</TableHead>
               <TableHead>Max (ms)</TableHead>
             </TableRow>
           </TableHeader>

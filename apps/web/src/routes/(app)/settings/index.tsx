@@ -8,12 +8,16 @@ import {
   type JSX,
 } from "solid-js";
 
-import { getProductCatalog, updateProductPricing } from "~/actions/settings";
+import {
+  getProductCatalog,
+  updateProductPricing,
+  updateUserProfile,
+  changePassword,
+} from "~/actions/settings";
 import { useToast } from "~/components/feedback/toast-provider";
 import SettingsIcon from "~/components/icons/settings";
 import ShieldCheck from "~/components/icons/shield-check";
 import UserRound from "~/components/icons/user-round";
-import Users from "~/components/icons/users";
 import X from "~/components/icons/x";
 import { AppPage } from "~/components/layout/page";
 import { useSession } from "~/components/providers/session-provider";
@@ -21,6 +25,7 @@ import { LoginRetriesCard } from "~/components/settings/login-retries-card";
 import { Button } from "~/components/ui/input/button";
 import { Checkbox } from "~/components/ui/input/checkbox";
 import { Input } from "~/components/ui/input/input";
+import { getRoleLabel } from "~/lib/auth/access/role-display";
 import {
   canAccessPath,
   getDefaultAppPath,
@@ -31,12 +36,7 @@ import { cn } from "~/lib/utils";
 
 import styles from "./settings-page.module.css";
 
-type SettingsTabId =
-  | "profile"
-  | "experience"
-  | "general"
-  | "members"
-  | "security";
+type SettingsTabId = "profile" | "preferences" | "general" | "security";
 
 type SettingsNavItem = {
   id: SettingsTabId;
@@ -48,13 +48,12 @@ type SettingsNavItem = {
 const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
   { id: "profile", label: "Profile", section: "User", icon: UserRound },
   {
-    id: "experience",
-    label: "Experience",
+    id: "preferences",
+    label: "Preferences",
     section: "User",
     icon: SettingsIcon,
   },
   { id: "general", label: "General", section: "Workspace", icon: SettingsIcon },
-  { id: "members", label: "Members", section: "Workspace", icon: Users },
   {
     id: "security",
     label: "Security",
@@ -78,6 +77,19 @@ export default function SettingsPage() {
   );
   const currentProducts = () => products.latest ?? [];
   const [savingId, setSavingId] = createSignal<number | null>(null);
+
+  const [profileName, setProfileName] = createSignal(
+    currentUser().fullName || "",
+  );
+  const [profilePhone, setProfilePhone] = createSignal(
+    currentUser().phoneE164 || "",
+  );
+  const [savingProfile, setSavingProfile] = createSignal(false);
+
+  const [currentPassword, setCurrentPassword] = createSignal("");
+  const [newPassword, setNewPassword] = createSignal("");
+  const [confirmPassword, setConfirmPassword] = createSignal("");
+  const [changingPassword, setChangingPassword] = createSignal(false);
 
   const save = async (productId: number, price: string, isActive: boolean) => {
     setSavingId(productId);
@@ -108,6 +120,43 @@ export default function SettingsPage() {
       showToast("error", getErrorMessage(err, "Failed to update product"));
     } finally {
       setSavingId(null);
+    }
+  };
+
+  const saveProfile = async (e: Event) => {
+    e.preventDefault();
+    setSavingProfile(true);
+    try {
+      await updateUserProfile(profileName(), profilePhone());
+      showToast("success", "Profile updated");
+    } catch (err: unknown) {
+      showToast("error", getErrorMessage(err, "Failed to update profile"));
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  const handleChangePassword = async (e: Event) => {
+    e.preventDefault();
+    if (newPassword() !== confirmPassword()) {
+      showToast("error", "Passwords do not match");
+      return;
+    }
+    if (newPassword().length < 8) {
+      showToast("error", "Password must be at least 8 characters");
+      return;
+    }
+    setChangingPassword(true);
+    try {
+      await changePassword(currentPassword(), newPassword());
+      showToast("success", "Password changed successfully");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err: unknown) {
+      showToast("error", getErrorMessage(err, "Failed to change password"));
+    } finally {
+      setChangingPassword(false);
     }
   };
 
@@ -179,19 +228,162 @@ export default function SettingsPage() {
             </div>
 
             <div class={styles.contentScroll}>
-              <Show
-                when={activeTab() === "general"}
-                fallback={
-                  <div class={styles.content}>
+              <Show when={activeTab() === "profile"}>
+                <div class={styles.content}>
+                  <form
+                    onSubmit={(e) => {
+                      void saveProfile(e);
+                    }}
+                  >
                     <section class={styles.block}>
-                      <h2 class={styles.title}>{activeSection().label}</h2>
-                      <p class={styles.placeholderText}>
-                        Configuration for this section is not available yet.
+                      <h2 class={styles.title}>Profile information</h2>
+                      <p class={styles.description}>
+                        Update your personal details.
                       </p>
+                      <div class={styles.formGrid}>
+                        <Input
+                          label="Full name"
+                          value={profileName()}
+                          onInput={(e) => setProfileName(e.currentTarget.value)}
+                          required
+                        />
+                        <Input
+                          label="Email"
+                          value={currentUser().email}
+                          disabled
+                        />
+                        <p class={styles.fieldHelper}>
+                          Email cannot be changed
+                        </p>
+                        <Input
+                          label="Phone"
+                          value={profilePhone()}
+                          onInput={(e) =>
+                            setProfilePhone(e.currentTarget.value)
+                          }
+                          required
+                        />
+                        <div class={styles.readOnlyField}>
+                          <span class={styles.readOnlyLabel}>Role</span>
+                          <p class={styles.readOnlyValue}>
+                            {getRoleLabel(currentUser().role)}
+                          </p>
+                        </div>
+                      </div>
+                      <div class={styles.formActions}>
+                        <Button type="submit" disabled={savingProfile()}>
+                          {savingProfile() ? "Saving..." : "Save changes"}
+                        </Button>
+                      </div>
                     </section>
-                  </div>
-                }
-              >
+                  </form>
+                </div>
+              </Show>
+
+              <Show when={activeTab() === "preferences"}>
+                <div class={styles.content}>
+                  <section class={styles.block}>
+                    <h2 class={styles.title}>Dashboard</h2>
+                    <p class={styles.description}>
+                      Customize your dashboard view.
+                    </p>
+                    <div class={styles.preferenceGroup}>
+                      <span class={styles.preferenceLabel}>
+                        Default view mode
+                      </span>
+                      <div class={styles.radioGroup}>
+                        <label class={styles.radioLabel}>
+                          <input
+                            type="radio"
+                            name="dashboardView"
+                            value="detailed"
+                            checked
+                          />
+                          Detailed
+                        </label>
+                        <label class={styles.radioLabel}>
+                          <input
+                            type="radio"
+                            name="dashboardView"
+                            value="compact"
+                          />
+                          Compact
+                        </label>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section class={styles.block}>
+                    <h2 class={styles.title}>Search</h2>
+                    <p class={styles.description}>
+                      Configure search behavior.
+                    </p>
+                    <div class={styles.preferenceGroup}>
+                      <label class={styles.checkboxLabel}>
+                        <input type="checkbox" checked />
+                        Auto-detect search type
+                      </label>
+                      <p class={styles.helperText}>
+                        Automatically determine if you're searching by RUC, DNI,
+                        phone, or name
+                      </p>
+                    </div>
+                  </section>
+                </div>
+              </Show>
+
+              <Show when={activeTab() === "security"}>
+                <div class={styles.content}>
+                  <form
+                    onSubmit={(e) => {
+                      void handleChangePassword(e);
+                    }}
+                  >
+                    <section class={styles.block}>
+                      <h2 class={styles.title}>Change password</h2>
+                      <p class={styles.description}>
+                        Update your password to keep your account secure.
+                      </p>
+                      <div class={styles.formGrid}>
+                        <Input
+                          type="password"
+                          label="Current password"
+                          value={currentPassword()}
+                          onInput={(e) =>
+                            setCurrentPassword(e.currentTarget.value)
+                          }
+                          required
+                        />
+                        <Input
+                          type="password"
+                          label="New password"
+                          value={newPassword()}
+                          onInput={(e) => setNewPassword(e.currentTarget.value)}
+                          required
+                        />
+                        <Input
+                          type="password"
+                          label="Confirm new password"
+                          value={confirmPassword()}
+                          onInput={(e) =>
+                            setConfirmPassword(e.currentTarget.value)
+                          }
+                          required
+                        />
+                      </div>
+                      <div class={styles.formActions}>
+                        <Button type="submit" disabled={changingPassword()}>
+                          {changingPassword()
+                            ? "Changing..."
+                            : "Change password"}
+                        </Button>
+                      </div>
+                    </section>
+                  </form>
+                </div>
+              </Show>
+
+              <Show when={activeTab() === "general"}>
                 <div class={styles.content}>
                   <section class={styles.block}>
                     <div>

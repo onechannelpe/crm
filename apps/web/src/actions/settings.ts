@@ -1,6 +1,6 @@
 "use server";
 
-import { requirePermission } from "~/lib/auth/access/session";
+import { requirePermission, requireSession } from "~/lib/auth/access/session";
 import { assertRecentStrongAuth } from "~/lib/auth/security/step-up";
 import type { ProductUpdatedChanges } from "~/lib/contracts/audit";
 import { serializeAuditChanges } from "~/lib/contracts/audit";
@@ -8,6 +8,7 @@ import type { ActionSuccess } from "~/lib/contracts/common";
 import {
   assertBoolean,
   assertFinitePositive,
+  assertNonEmptyString,
   assertPositiveInt,
 } from "~/lib/contracts/guards";
 import { repos } from "~/server/shared/context";
@@ -53,3 +54,51 @@ export async function updateProductPricing(
 
   return { success: true };
 }
+
+export async function updateUserProfile(
+  fullName: string,
+  phone: string,
+): Promise<ActionSuccess> {
+  const safeName = assertNonEmptyString(fullName, "fullName");
+  const safePhone = assertNonEmptyString(phone, "phone");
+  const session = await requireSession();
+
+  await repos.users.updateProfile(session.userId, {
+    full_name: safeName,
+    phone: safePhone,
+  });
+
+  return { success: true };
+}
+
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string,
+): Promise<ActionSuccess> {
+  const safeCurrent = assertNonEmptyString(currentPassword, "currentPassword");
+  const safeNew = assertNonEmptyString(newPassword, "newPassword");
+  const session = await requireSession();
+
+  const user = await repos.users.findById(session.userId);
+  if (!user) throw new Error("User not found");
+
+  const { verifyPassword } = await import("~/lib/auth/password/password");
+  const valid = await verifyPassword(user.password_hash, safeCurrent);
+  if (!valid) throw new Error("Current password is incorrect");
+
+  const { hashPassword } = await import("~/lib/auth/password/password");
+  const newHash = await hashPassword(safeNew);
+  await repos.users.updatePassword(session.userId, newHash);
+
+  await repos.auditLogs.create({
+    user_id: session.userId,
+    action: "password_changed",
+    entity_type: "user",
+    entity_id: session.userId,
+    changes: null,
+    created_at: Date.now(),
+  });
+
+  return { success: true };
+}
+

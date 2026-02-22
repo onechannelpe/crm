@@ -157,5 +157,19 @@ export function createUsersRepo(db: Kysely<Database>) {
         .where("id", "=", id)
         .execute();
     },
+
+    updateProfile(
+      id: number,
+      values: { full_name: string; phone: string },
+    ) {
+      return db
+        .updateTable("users")
+        .set({
+          full_name: values.full_name,
+          phone_e164: values.phone,
+        })
+        .where("id", "=", id)
+        .execute();
+    },
   };
 }

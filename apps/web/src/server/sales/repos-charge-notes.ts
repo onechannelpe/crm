@@ -131,5 +131,56 @@ export function createChargeNotesRepo(db: Kysely<Database>) {
         .executeTakeFirst();
       return Number(result?.count ?? 0);
     },
+
+    findApprovedWithContacts() {
+      return db
+        .selectFrom("charge_notes")
+        .innerJoin("contacts", "contacts.id", "charge_notes.contact_id")
+        .innerJoin("users", "users.id", "charge_notes.user_id")
+        .innerJoin(
+          "organizations",
+          "organizations.id",
+          "contacts.organization_id",
+        )
+        .select([
+          "charge_notes.id",
+          "charge_notes.status",
+          "charge_notes.created_at",
+          "charge_notes.updated_at",
+          "contacts.name as contactName",
+          "contacts.dni as contactDni",
+          "organizations.name as companyName",
+          "users.full_name as executiveName",
+        ])
+        .where("charge_notes.status", "=", "approved")
+        .orderBy("charge_notes.updated_at", "desc")
+        .execute();
+    },
+
+    findApprovedWithContactsByUser(userId: number) {
+      return db
+        .selectFrom("charge_notes")
+        .innerJoin("contacts", "contacts.id", "charge_notes.contact_id")
+        .innerJoin("users", "users.id", "charge_notes.user_id")
+        .innerJoin(
+          "organizations",
+          "organizations.id",
+          "contacts.organization_id",
+        )
+        .select([
+          "charge_notes.id",
+          "charge_notes.status",
+          "charge_notes.created_at",
+          "charge_notes.updated_at",
+          "contacts.name as contactName",
+          "contacts.dni as contactDni",
+          "organizations.name as companyName",
+          "users.full_name as executiveName",
+        ])
+        .where("charge_notes.status", "=", "approved")
+        .where("charge_notes.user_id", "=", userId)
+        .orderBy("charge_notes.updated_at", "desc")
+        .execute();
+    },
   };
 }

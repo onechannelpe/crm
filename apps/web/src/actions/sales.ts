@@ -190,6 +190,18 @@ export async function getPendingReviewNotes(): Promise<PendingReviewNote[]> {
   );
 }
 
+type ApprovedSaleNote = Awaited<
+  ReturnType<typeof repos.chargeNotes.findApprovedWithContacts>
+>[number];
+
+export async function getApprovedSales(): Promise<ApprovedSaleNote[]> {
+  const session = await requirePermission("sales:review");
+  if (session.role === "executive") {
+    return repos.chargeNotes.findApprovedWithContactsByUser(session.userId);
+  }
+  return repos.chargeNotes.findApprovedWithContacts();
+}
+
 export async function getSaleFixContext(
   noteId: number,
 ): Promise<SaleFixContext> {

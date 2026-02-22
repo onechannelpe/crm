@@ -1,8 +1,9 @@
 import { useNavigate } from "@solidjs/router";
-import { For } from "solid-js";
+import { createSignal, For, Show } from "solid-js";
 
 import { getDashboardStats } from "~/actions/dashboard";
 import { getQuotaStatus } from "~/actions/quota";
+import ChevronDown from "~/components/icons/chevron-down";
 import { AppPage, AppPageHeader } from "~/components/layout/page";
 import { useSession } from "~/components/providers/session-provider";
 import { Button } from "~/components/ui/input/button";
@@ -22,6 +23,11 @@ export default function DashboardPage() {
     approvedSales: 0,
   });
 
+  const [viewMode, setViewMode] = createSignal<"detailed" | "compact">(
+    "detailed",
+  );
+  const [showViewMenu, setShowViewMenu] = createSignal(false);
+
   const totalQuota = () => {
     const current = quota();
     return current.allocated ? current.total : 0;
@@ -34,6 +40,7 @@ export default function DashboardPage() {
         label: "Quota",
         tone: styles.tagQuota,
         amount: totalQuota(),
+        action: { label: "View quota", href: "/quota" },
         cards: [
           {
             title: "Daily capacity",
@@ -51,6 +58,7 @@ export default function DashboardPage() {
       label: "New",
       tone: styles.tagNew,
       amount: stats().activeLeads,
+      action: { label: "View leads", href: "/leads" },
       cards: [
         {
           title: "Lead queue",
@@ -65,6 +73,7 @@ export default function DashboardPage() {
       label: "Screening",
       tone: styles.tagScreening,
       amount: stats().draftSales,
+      action: { label: "Continue draft", href: "/sales/new" },
       cards: [
         {
           title: "Sales draft",
@@ -79,6 +88,7 @@ export default function DashboardPage() {
       label: "Review",
       tone: styles.tagReview,
       amount: stats().pendingSales,
+      action: { label: "View pending", href: "/validation" },
       cards: [
         {
           title: "Pending approvals",
@@ -93,12 +103,13 @@ export default function DashboardPage() {
       label: "Customer",
       tone: styles.tagCustomer,
       amount: stats().approvedSales,
+      action: { label: "View approved", href: "/sales/approved" },
       cards: [
         {
           title: "Approved sales",
           value: `${stats().approvedSales}`,
           detail: "Closed operations",
-          href: "/validation",
+          href: "/sales/approved",
         },
       ],
     },
@@ -111,13 +122,40 @@ export default function DashboardPage() {
       <section class={styles.toolbar}>
         <div class={styles.toolbarMeta}>
           <span class={styles.toolbarPill}>By Stage</span>
-          <span>·</span>
-          <span>6 views</span>
         </div>
         <div class={styles.toolbarActions}>
-          <button class={styles.toolbarAction}>Filter</button>
-          <button class={styles.toolbarAction}>Sort</button>
-          <button class={styles.toolbarAction}>Options</button>
+          <div class={styles.viewMenu}>
+            <button
+              class={styles.toolbarAction}
+              type="button"
+              onClick={() => setShowViewMenu(!showViewMenu())}
+            >
+              View: {viewMode() === "detailed" ? "Detailed" : "Compact"}
+              <ChevronDown size={14} />
+            </button>
+            <Show when={showViewMenu()}>
+              <div class={styles.viewDropdown}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setViewMode("detailed");
+                    setShowViewMenu(false);
+                  }}
+                >
+                  Detailed
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setViewMode("compact");
+                    setShowViewMenu(false);
+                  }}
+                >
+                  Compact
+                </button>
+              </div>
+            </Show>
+          </div>
         </div>
       </section>
 
@@ -137,12 +175,10 @@ export default function DashboardPage() {
                   {(card) => (
                     <article class={styles.card}>
                       <p class={styles.cardTitle}>{card.title}</p>
-                      <p class={styles.cardValue}>{card.value}</p>
-                      <p class={styles.cardDetail}>{card.detail}</p>
-                      <div class={styles.cardMeta}>
-                        <p>$ {card.value}</p>
-                        <p>System</p>
-                      </div>
+                      <Show when={viewMode() === "detailed"}>
+                        <p class={styles.cardValue}>{card.value}</p>
+                        <p class={styles.cardDetail}>{card.detail}</p>
+                      </Show>
                       <div class={styles.cardAction}>
                         <Button
                           size="sm"
@@ -160,7 +196,14 @@ export default function DashboardPage() {
                     </article>
                   )}
                 </For>
-                <button class={styles.newButton}>+ New</button>
+
+                <button
+                  class={styles.columnAction}
+                  type="button"
+                  onClick={() => navigate(column.action.href)}
+                >
+                  {column.action.label}
+                </button>
               </div>
             )}
           </For>

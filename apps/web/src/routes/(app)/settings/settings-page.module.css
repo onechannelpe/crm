@@ -173,6 +173,89 @@
   padding-top: 24px;
 }
 
+.formGrid {
+  display: grid;
+  gap: 16px;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.readOnlyField {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.readOnlyLabel {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  color: var(--foreground);
+}
+
+.readOnlyValue {
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--muted) 5%, transparent);
+  font-size: var(--font-size-body);
+  color: var(--muted-foreground);
+}
+
+.fieldHelper {
+  margin: -12px 0 0;
+  font-size: var(--font-size-caption);
+  color: var(--muted-foreground);
+}
+
+.preferenceGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.preferenceLabel {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  color: var(--foreground);
+}
+
+.radioGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.radioLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-size-body);
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-size-body);
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+.helperText {
+  margin: 0;
+  padding-left: 24px;
+  font-size: var(--font-size-caption);
+  color: var(--muted-foreground);
+}
+
 @media (max-width: 768px) {
   .layout {
     grid-template-columns: 1fr;
