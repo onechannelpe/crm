@@ -30,8 +30,26 @@ export function AppPage(props: BaseProps) {
 }
 
 export function AppPageHeader(props: HeaderProps) {
+  const hasMeta = () => !!(props.eyebrow || props.title || props.description);
   return (
-    <header class={cn(styles.header, props.class)}>
+    <header
+      class={cn(styles.header, hasMeta() && styles.headerWithMeta, props.class)}
+    >
+      <Show when={hasMeta()}>
+        <div class={styles.headerMeta}>
+          <Show when={props.eyebrow}>
+            {(eyebrow) => <p class={styles.headerEyebrow}>{eyebrow()}</p>}
+          </Show>
+          <Show when={props.title}>
+            {(title) => <h1 class={styles.headerTitle}>{title()}</h1>}
+          </Show>
+          <Show when={props.description}>
+            {(description) => (
+              <p class={styles.headerDescription}>{description()}</p>
+            )}
+          </Show>
+        </div>
+      </Show>
       <Show when={props.actions}>
         {(actions) => <div class={styles.headerActions}>{actions()}</div>}
       </Show>

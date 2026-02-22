@@ -1,5 +1,5 @@
 import { A, useSearchParams } from "@solidjs/router";
-import { createMemo, createSignal, For, Show, onMount } from "solid-js";
+import { createMemo, createSignal, For, onMount, Show } from "solid-js";
 
 import Building2 from "~/components/icons/building-2";
 import ChevronDown from "~/components/icons/chevron-down";
@@ -7,9 +7,13 @@ import Phone from "~/components/icons/phone";
 import User from "~/components/icons/user";
 import { AppPage } from "~/components/layout/page";
 import { createClientSearchController } from "~/features/client-search/controller";
+import {
+  inferPeopleSearchType,
+  SEARCH_LABELS,
+  toInitial,
+} from "~/features/client-search/display";
 import { groupPeopleByDni } from "~/features/client-search/grouping";
 import { cn } from "~/lib/utils";
-import type { SearchType } from "~/server/shared/engine/types";
 
 import styles from "./search-page.module.css";
 
@@ -22,15 +26,6 @@ const PEOPLE_SEARCH_TYPES = [
   "phone_enriched",
 ] as const;
 
-const SEARCH_LABELS: Partial<Record<SearchType, string>> = {
-  dni: "DNI",
-  person_name: "Person name",
-  company_name: "Company name",
-  ruc: "RUC",
-  phone: "Phone",
-  phone_enriched: "Phone (enriched)",
-};
-
 type PersonTableRow = {
   id: string;
   name: string;
@@ -41,10 +36,6 @@ type PersonTableRow = {
   phones: string;
   companyLinks: Array<{ name: string; ruc: string | null }>;
 };
-
-function toInitial(value: string): string {
-  return value.trim().charAt(0).toUpperCase() || "?";
-}
 
 function buildRows(
   grouped: ReturnType<typeof groupPeopleByDni>,
@@ -76,17 +67,6 @@ function buildRows(
         })),
     };
   });
-}
-
-function inferPeopleSearchType(query: string): SearchType {
-  const value = query.trim();
-  if (/^\d{8}$/.test(value)) return "dni";
-  if (/^\d{11}$/.test(value)) return "ruc";
-  if (/^[+\d()\s-]{6,}$/.test(value)) return "phone";
-  if (/\b(inc|llc|ltd|corp|company|sac|sa)\b/i.test(value)) {
-    return "company_name";
-  }
-  return "person_name";
 }
 
 export default function ClientSearchPeoplePage() {
@@ -126,8 +106,10 @@ export default function ClientSearchPeoplePage() {
       result.sort((a, b) => a.name.localeCompare(b.name));
     } else if (sort === "companies") {
       result.sort((a, b) => {
-        const aCount = a.companies === "-" ? 0 : a.companies.split(" · ").length;
-        const bCount = b.companies === "-" ? 0 : b.companies.split(" · ").length;
+        const aCount =
+          a.companies === "-" ? 0 : a.companies.split(" · ").length;
+        const bCount =
+          b.companies === "-" ? 0 : b.companies.split(" · ").length;
         return bCount - aCount;
       });
     }
@@ -140,7 +122,8 @@ export default function ClientSearchPeoplePage() {
   );
 
   const allSelected = createMemo(
-    () => sortedRows().length > 0 && selectedRows().size === sortedRows().length,
+    () =>
+      sortedRows().length > 0 && selectedRows().size === sortedRows().length,
   );
 
   const toggleAll = () => {
@@ -196,13 +179,10 @@ export default function ClientSearchPeoplePage() {
       <section class={styles.panel}>
         <div class={styles.searchPanel}>
           <div class={styles.tabList}>
-            <A
-              href="/client-search/people"
-              class={cn(styles.tab, styles.tabActive)}
-            >
+            <A href="/contacts/people" class={cn(styles.tab, styles.tabActive)}>
               People
             </A>
-            <A href="/client-search/companies" class={styles.tab}>
+            <A href="/contacts/companies" class={styles.tab}>
               Companies
             </A>
           </div>
@@ -314,9 +294,7 @@ export default function ClientSearchPeoplePage() {
 
         <Show when={selectedRows().size > 0}>
           <div class={styles.bulkBar}>
-            <span>
-              {selectedRows().size} selected
-            </span>
+            <span>{selectedRows().size} selected</span>
             <button
               type="button"
               class={styles.bulkAction}
@@ -432,9 +410,6 @@ export default function ClientSearchPeoplePage() {
                   />
                 </th>
                 <th class={styles.tableHeadCell}>
-                  <input type="checkbox" class={styles.checkbox} />
-                </th>
-                <th class={styles.tableHeadCell}>
                   <div class={styles.tableLabel}>
                     <User class={styles.headerIcon} size={16} />
                     Name
@@ -503,7 +478,7 @@ export default function ClientSearchPeoplePage() {
                         <For each={row.companyLinks}>
                           {(company) => (
                             <A
-                              href={`/client-search/companies?type=${company.ruc ? "ruc" : "company_name"}&query=${encodeURIComponent(company.ruc ?? company.name)}&limit=${encodeURIComponent(controller.limit())}`}
+                              href={`/contacts/companies?type=${company.ruc ? "ruc" : "company_name"}&query=${encodeURIComponent(company.ruc ?? company.name)}&limit=${encodeURIComponent(controller.limit())}`}
                               class={styles.pill}
                             >
                               {company.name}

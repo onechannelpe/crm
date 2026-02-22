@@ -261,16 +261,16 @@ export default function AuditObservabilityPage() {
       </section>
 
       <section class={`${styles.panel} ${styles.section}`}>
-        <h2 class={styles.title}>Eventos recientes</h2>
+        <h2 class={styles.title}>Recent events</h2>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Hora</TableHead>
-              <TableHead>Accion</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead>Duracion</TableHead>
+              <TableHead>Time</TableHead>
+              <TableHead>Action</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Duration</TableHead>
               <TableHead>Actor</TableHead>
-              <TableHead>Categoria</TableHead>
+              <TableHead>Category</TableHead>
               <TableHead>Error</TableHead>
             </TableRow>
           </TableHeader>
@@ -279,7 +279,7 @@ export default function AuditObservabilityPage() {
               {(row) => (
                 <TableRow>
                   <TableCell>
-                    {new Date(row.createdAt).toLocaleTimeString("es-PE")}
+                    {new Date(row.createdAt).toLocaleTimeString("en-US")}
                   </TableCell>
                   <TableCell class={styles.strong}>{row.actionName}</TableCell>
                   <TableCell>{row.status}</TableCell>
@@ -299,15 +299,15 @@ export default function AuditObservabilityPage() {
       </section>
 
       <section class={`${styles.panel} ${styles.section}`}>
-        <h2 class={styles.title}>Transiciones de auditoria</h2>
+        <h2 class={styles.title}>Audit transitions</h2>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Hora</TableHead>
-              <TableHead>Accion</TableHead>
-              <TableHead>Entidad</TableHead>
+              <TableHead>Time</TableHead>
+              <TableHead>Action</TableHead>
+              <TableHead>Entity</TableHead>
               <TableHead>Actor</TableHead>
-              <TableHead>Cambios</TableHead>
+              <TableHead>Changes</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -331,11 +331,11 @@ export default function AuditObservabilityPage() {
       </section>
 
       <section class={`${styles.panel} ${styles.section}`}>
-        <h2 class={styles.title}>Politicas de riesgo de auditoria</h2>
+        <h2 class={styles.title}>Audit risk policies</h2>
         <div class={styles.filterRow}>
           <div class={styles.fieldW52}>
             <Input
-              label="Accion"
+              label="Action"
               value={policyAction()}
               onInput={(event) => setPolicyAction(event.currentTarget.value)}
               placeholder="leads_requested"
@@ -343,7 +343,7 @@ export default function AuditObservabilityPage() {
           </div>
           <div class={styles.fieldW36}>
             <Select
-              label="Riesgo"
+              label="Risk level"
               value={policyRiskLevel()}
               onInput={(event) =>
                 setPolicyRiskLevel(parseRiskLevel(event.currentTarget.value))
@@ -355,7 +355,7 @@ export default function AuditObservabilityPage() {
             </Select>
           </div>
           <Checkbox
-            label="Activa"
+            label="Active"
             checked={policyIsActive()}
             onInput={(event) => setPolicyIsActive(event.currentTarget.checked)}
             class={styles.mt1}
@@ -366,24 +366,24 @@ export default function AuditObservabilityPage() {
               void savePolicy();
             }}
           >
-            Guardar politica
+            Save policy
           </Button>
         </div>
         <p class={styles.helperText}>
-          Acciones sin politica explicita se tratan como riesgo high para evitar
-          ocultar eventos criticos.
+          Actions without an explicit policy are treated as high risk to avoid
+          hiding critical events.
         </p>
         <p class={styles.helperText}>
-          Solo admin y superuser pueden editar politicas.
+          Only admin and superuser can edit policies.
         </p>
         <p class={styles.errorText}>{policyError() ?? ""}</p>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Accion</TableHead>
-              <TableHead>Riesgo</TableHead>
-              <TableHead>Activa</TableHead>
-              <TableHead>Protegida</TableHead>
+              <TableHead>Action</TableHead>
+              <TableHead>Risk</TableHead>
+              <TableHead>Active</TableHead>
+              <TableHead>Protected</TableHead>
               <TableHead>Actualizada por</TableHead>
             </TableRow>
           </TableHeader>
@@ -393,8 +393,8 @@ export default function AuditObservabilityPage() {
                 <TableRow>
                   <TableCell class={styles.strong}>{item.action}</TableCell>
                   <TableCell>{item.riskLevel}</TableCell>
-                  <TableCell>{item.isActive ? "si" : "no"}</TableCell>
-                  <TableCell>{item.isProtected ? "si" : "no"}</TableCell>
+                  <TableCell>{item.isActive ? "yes" : "no"}</TableCell>
+                  <TableCell>{item.isProtected ? "yes" : "no"}</TableCell>
                   <TableCell>
                     {item.updatedByUserId ? `#${item.updatedByUserId}` : "-"}
                   </TableCell>

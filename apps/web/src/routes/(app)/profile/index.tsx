@@ -113,20 +113,12 @@ export default function ProfilePage() {
   return (
     <AppPage>
       <AppPageHeader
-        eyebrow="User"
+        eyebrow="Account"
         title="Profile"
         description="Personal information and account security."
       />
 
       <section class={styles.panel}>
-        <div class={styles.topbar}>
-          <div class={styles.crumbs}>
-            <span>User</span>
-            <span>/</span>
-            <span>Profile</span>
-          </div>
-        </div>
-
         <div class={styles.contentWrap}>
           <div class={styles.content}>
             <section class={`${styles.section} ${styles.sectionBorder}`}>

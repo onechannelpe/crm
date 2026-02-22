@@ -315,9 +315,7 @@ export default function SettingsPage() {
 
                   <section class={styles.block}>
                     <h2 class={styles.title}>Search</h2>
-                    <p class={styles.description}>
-                      Configure search behavior.
-                    </p>
+                    <p class={styles.description}>Configure search behavior.</p>
                     <div class={styles.preferenceGroup}>
                       <label class={styles.checkboxLabel}>
                         <input type="checkbox" checked />

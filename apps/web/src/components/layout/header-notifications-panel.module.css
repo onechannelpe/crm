@@ -103,11 +103,7 @@
 }
 
 .itemUnread {
-  background: color-mix(
-    in oklab,
-    var(--bg-translucent) 90%,
-    transparent
-  );
+  background: color-mix(in oklab, var(--bg-translucent) 90%, transparent);
 }
 
 .item:hover {

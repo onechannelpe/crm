@@ -6,47 +6,23 @@ import {
   For,
   onMount,
   Show,
-  type Component,
 } from "solid-js";
 
 import { logout } from "~/actions/auth-session";
 import ChevronDown from "~/components/icons/chevron-down";
-import House from "~/components/icons/house";
-import MessageSquare from "~/components/icons/message-square";
-import Package from "~/components/icons/package";
-import Search from "~/components/icons/search";
-import Settings from "~/components/icons/settings";
-import ShieldCheck from "~/components/icons/shield-check";
-import Users from "~/components/icons/users";
 import { AccountMenu } from "~/components/layout/account-menu";
+import { ICON_BY_ROUTE } from "~/components/layout/route-icons";
 import { useSession } from "~/components/providers/session-provider";
 import {
   getSidebarChildren,
   getSidebarRoutes,
-  type AppRoute,
-  type RouteIcon,
-} from "~/lib/auth/access/route-policy";
+  type NavRoute,
+} from "~/lib/nav/nav-policy";
 import { cn } from "~/lib/utils";
 
 import styles from "./shell.module.css";
 
 const SIDEBAR_EXPANDED_STORAGE_KEY = "crm-sidebar-expanded";
-
-const ICON_BY_ROUTE: Record<
-  RouteIcon,
-  Component<{ class?: string; size?: string | number }>
-> = {
-  search: Search,
-  settings: Settings,
-  people: Users,
-  companies: House,
-  opportunities: MessageSquare,
-  tasks: ShieldCheck,
-  notes: MessageSquare,
-  dashboards: Package,
-  profile: Users,
-  workflows: MessageSquare,
-};
 
 export function Sidebar() {
   const location = useLocation();
@@ -54,13 +30,13 @@ export function Sidebar() {
   const [expanded, setExpanded] = createSignal(true);
   const [hovered, setHovered] = createSignal(false);
 
-  const role = () => currentUser().role;
+  const role = createMemo(() => currentUser().role);
   const firstName = createMemo(
     () =>
       currentUser().fullName.trim().split(/\s+/)[0] || currentUser().fullName,
   );
 
-  const isRouteActive = (route: AppRoute) => {
+  const isRouteActive = (route: NavRoute) => {
     const prefixes = route.activePrefixes;
     if (prefixes && prefixes.length > 0) {
       return prefixes.some(
@@ -151,6 +127,9 @@ export function Sidebar() {
           <For each={quickItems()}>
             {(item) => {
               const Icon = ICON_BY_ROUTE[item.icon];
+              const children = createMemo(() =>
+                getSidebarChildren(role(), item.id),
+              );
               return (
                 <>
                   <A
@@ -166,22 +145,17 @@ export function Sidebar() {
                       {item.navLabel ?? item.label}
                     </span>
                   </A>
-                  <Show
-                    when={
-                      item.id === "client-search-people" &&
-                      getSidebarChildren(role(), item.id).length > 0 &&
-                      expanded()
-                    }
-                  >
+                  <Show when={children().length > 0 && expanded()}>
                     <div class={styles.subgroup}>
-                      <For each={getSidebarChildren(role(), item.id)}>
+                      <For each={children()}>
                         {(child) => (
                           <A
-                            href={child.route.href}
+                            href={child.href}
                             class={cn(
                               styles.link,
                               styles.subItem,
-                              isRouteActive(child.route)
+                              location.pathname === child.href ||
+                                location.pathname.startsWith(`${child.href}/`)
                                 ? styles.linkActive
                                 : undefined,
                             )}
@@ -213,6 +187,9 @@ export function Sidebar() {
           <For each={workspaceItems()}>
             {(item) => {
               const Icon = ICON_BY_ROUTE[item.icon];
+              const children = createMemo(() =>
+                getSidebarChildren(role(), item.id),
+              );
               return (
                 <>
                   <A
@@ -228,22 +205,17 @@ export function Sidebar() {
                       {item.navLabel ?? item.label}
                     </span>
                   </A>
-                  <Show
-                    when={
-                      item.id === "leads" &&
-                      getSidebarChildren(role(), item.id).length > 0 &&
-                      expanded()
-                    }
-                  >
+                  <Show when={children().length > 0 && expanded()}>
                     <div class={styles.subgroup}>
-                      <For each={getSidebarChildren(role(), item.id)}>
+                      <For each={children()}>
                         {(child) => (
                           <A
-                            href={child.route.href}
+                            href={child.href}
                             class={cn(
                               styles.link,
                               styles.subItem,
-                              isRouteActive(child.route)
+                              location.pathname === child.href ||
+                                location.pathname.startsWith(`${child.href}/`)
                                 ? styles.linkActive
                                 : undefined,
                             )}

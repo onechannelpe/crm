@@ -31,7 +31,7 @@ export default function FixSalePage() {
     try {
       await submitSale(noteId());
       showToast("success", "Sales note resubmitted");
-      navigate("/validation");
+      navigate("/review");
     } catch (err: unknown) {
       showToast("error", getErrorMessage(err, "Resubmit failed"));
     } finally {

@@ -158,10 +158,7 @@ export function createUsersRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    updateProfile(
-      id: number,
-      values: { full_name: string; phone: string },
-    ) {
+    updateProfile(id: number, values: { full_name: string; phone: string }) {
       return db
         .updateTable("users")
         .set({

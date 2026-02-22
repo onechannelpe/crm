@@ -5,24 +5,6 @@
   overflow: hidden;
 }
 
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 39px;
-  border-bottom: 1px solid var(--border);
-  padding: 0 8px;
-}
-
-.crumbs {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--foreground);
-  font-size: var(--font-size-body);
-  font-weight: 500;
-}
-
 .contentWrap {
   padding: 20px 24px;
 }

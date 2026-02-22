@@ -1,53 +1,27 @@
 import { useLocation } from "@solidjs/router";
-import { createSignal, onCleanup, onMount, type Component } from "solid-js";
+import { createEffect, createMemo, createSignal, onCleanup } from "solid-js";
 
 import { CommandPalette } from "~/components/features/command-palette/command-palette";
-import House from "~/components/icons/house";
-import MessageSquare from "~/components/icons/message-square";
-import Package from "~/components/icons/package";
-import Search from "~/components/icons/search";
-import Settings from "~/components/icons/settings";
-import ShieldCheck from "~/components/icons/shield-check";
-import Users from "~/components/icons/users";
 import { HeaderNotificationsPanel } from "~/components/layout/header-notifications-panel";
-import { getHeaderRoute } from "~/lib/auth/access/route-policy";
-import type { RouteIcon } from "~/lib/auth/access/route-policy-data";
+import { ICON_BY_ROUTE } from "~/components/layout/route-icons";
+import { getHeaderRoute } from "~/lib/nav/nav-policy";
 
 import styles from "./shell.module.css";
 
-const ICON_BY_ROUTE: Record<
-  RouteIcon,
-  Component<{ class?: string; size?: string | number }>
-> = {
-  search: Search,
-  settings: Settings,
-  people: Users,
-  companies: House,
-  opportunities: MessageSquare,
-  tasks: ShieldCheck,
-  notes: MessageSquare,
-  dashboards: Package,
-  profile: Users,
-  workflows: MessageSquare,
-};
-
 export function Header() {
   const location = useLocation();
-  const currentRoute = () => getHeaderRoute(location.pathname);
+  const currentRoute = createMemo(() => getHeaderRoute(location.pathname));
   const [paletteOpen, setPaletteOpen] = createSignal(false);
 
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-      e.preventDefault();
-      setPaletteOpen(true);
-    }
-  };
-
-  onMount(() => {
-    document.addEventListener("keydown", handleKeyDown);
-    onCleanup(() => {
-      document.removeEventListener("keydown", handleKeyDown);
-    });
+  createEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setPaletteOpen(true);
+      }
+    };
+    document.addEventListener("keydown", handler);
+    onCleanup(() => document.removeEventListener("keydown", handler));
   });
 
   return (
@@ -70,8 +44,10 @@ export function Header() {
               class={styles.topbarGhost}
               type="button"
               onClick={() => setPaletteOpen(true)}
+              aria-label="Open command palette"
             >
-              : | Ctrl K
+              <span class={styles.topbarKbd}>Ctrl</span>
+              <span class={styles.topbarKbd}>K</span>
             </button>
             <HeaderNotificationsPanel />
           </div>

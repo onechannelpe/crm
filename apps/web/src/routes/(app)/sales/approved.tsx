@@ -11,16 +11,9 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
+import { formatDate } from "~/lib/utils";
 
 import styles from "./approved-sales-page.module.css";
-
-function formatDate(timestamp: number) {
-  return new Date(timestamp).toLocaleDateString("en-US", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
 
 export default function ApprovedSalesPage() {
   const [sales] = createResource(

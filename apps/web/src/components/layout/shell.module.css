@@ -66,6 +66,21 @@
   color: var(--foreground);
 }
 
+.topbarKbd {
+  min-width: 18px;
+  height: 18px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--secondary);
+  padding: 0 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-label);
+  font-family: var(--font-mono);
+  color: var(--foreground-secondary);
+}
+
 .topbarOutline {
   border: 1px solid var(--border);
   background: var(--panel-bg);

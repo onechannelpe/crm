@@ -1,6 +1,5 @@
-import { A } from "@solidjs/router";
-import { useSearchParams } from "@solidjs/router";
-import { createMemo, createSignal, For, Show, onMount } from "solid-js";
+import { A, useSearchParams } from "@solidjs/router";
+import { createMemo, createSignal, For, onMount, Show } from "solid-js";
 
 import Building2 from "~/components/icons/building-2";
 import ChevronDown from "~/components/icons/chevron-down";
@@ -8,9 +7,13 @@ import Phone from "~/components/icons/phone";
 import User from "~/components/icons/user";
 import { AppPage } from "~/components/layout/page";
 import { createClientSearchController } from "~/features/client-search/controller";
+import {
+  inferCompanySearchType,
+  SEARCH_LABELS,
+  toInitial,
+} from "~/features/client-search/display";
 import { groupCompaniesByRuc } from "~/features/client-search/grouping";
 import { cn } from "~/lib/utils";
-import type { SearchType } from "~/server/shared/engine/types";
 
 import styles from "./search-page.module.css";
 
@@ -23,15 +26,6 @@ const COMPANY_SEARCH_TYPES = [
   "phone_enriched",
 ] as const;
 
-const SEARCH_LABELS: Partial<Record<SearchType, string>> = {
-  ruc: "RUC",
-  company_name: "Company name",
-  person_name: "Person name",
-  dni: "DNI",
-  phone: "Phone",
-  phone_enriched: "Phone (enriched)",
-};
-
 type CompanyTableRow = {
   id: string;
   name: string;
@@ -42,10 +36,6 @@ type CompanyTableRow = {
   records: number;
   contactLinks: Array<{ name: string; dni: string | null }>;
 };
-
-function toInitial(value: string): string {
-  return value.trim().charAt(0).toUpperCase() || "?";
-}
 
 function buildRows(
   grouped: ReturnType<typeof groupCompaniesByRuc>,
@@ -73,15 +63,6 @@ function buildRows(
       })),
     };
   });
-}
-
-function inferCompanySearchType(query: string): SearchType {
-  const value = query.trim();
-  if (/^\d{11}$/.test(value)) return "ruc";
-  if (/^\d{8}$/.test(value)) return "dni";
-  if (/^[+\d()\s-]{6,}$/.test(value)) return "phone";
-  if (value.includes(" ")) return "person_name";
-  return "company_name";
 }
 
 export default function ClientSearchCompaniesPage() {
@@ -151,7 +132,8 @@ export default function ClientSearchCompaniesPage() {
   );
 
   const allSelected = createMemo(
-    () => sortedRows().length > 0 && selectedRows().size === sortedRows().length,
+    () =>
+      sortedRows().length > 0 && selectedRows().size === sortedRows().length,
   );
 
   const toggleAll = () => {
@@ -208,11 +190,11 @@ export default function ClientSearchCompaniesPage() {
       <section class={styles.panel}>
         <div class={styles.searchPanel}>
           <div class={styles.tabList}>
-            <A href="/client-search/people" class={styles.tab}>
+            <A href="/contacts/people" class={styles.tab}>
               People
             </A>
             <A
-              href="/client-search/companies"
+              href="/contacts/companies"
               class={cn(styles.tab, styles.tabActive)}
             >
               Companies
@@ -326,9 +308,7 @@ export default function ClientSearchCompaniesPage() {
 
         <Show when={selectedRows().size > 0}>
           <div class={styles.bulkBar}>
-            <span>
-              {selectedRows().size} selected
-            </span>
+            <span>{selectedRows().size} selected</span>
             <button
               type="button"
               class={styles.bulkAction}
@@ -553,7 +533,7 @@ export default function ClientSearchCompaniesPage() {
                         <For each={row.contactLinks}>
                           {(person) => (
                             <A
-                              href={`/client-search/people?type=${person.dni ? "dni" : "person_name"}&query=${encodeURIComponent(person.dni ?? person.name)}&limit=${encodeURIComponent(controller.limit())}`}
+                              href={`/contacts/people?type=${person.dni ? "dni" : "person_name"}&query=${encodeURIComponent(person.dni ?? person.name)}&limit=${encodeURIComponent(controller.limit())}`}
                               class={styles.pill}
                             >
                               {person.name}

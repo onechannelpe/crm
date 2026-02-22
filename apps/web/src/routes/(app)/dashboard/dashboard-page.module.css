@@ -62,7 +62,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--surface);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-elevation-1);
   min-width: 120px;
   z-index: 10;
 }
@@ -140,6 +140,31 @@
 .tagCustomer {
   color: color(display-p3 0.58 0.451 0.111);
   background: color(display-p3 0.99 0.969 0.894);
+}
+
+:root[data-theme="dark"] .tagQuota {
+  color: color(display-p3 0.68 0.92 0.72);
+  background: color(display-p3 0.1 0.19 0.12);
+}
+
+:root[data-theme="dark"] .tagNew {
+  color: color(display-p3 0.94 0.68 0.7);
+  background: color(display-p3 0.2 0.1 0.11);
+}
+
+:root[data-theme="dark"] .tagScreening {
+  color: color(display-p3 0.8 0.72 0.96);
+  background: color(display-p3 0.15 0.11 0.22);
+}
+
+:root[data-theme="dark"] .tagReview {
+  color: color(display-p3 0.6 0.86 0.96);
+  background: color(display-p3 0.08 0.16 0.22);
+}
+
+:root[data-theme="dark"] .tagCustomer {
+  color: color(display-p3 0.94 0.84 0.58);
+  background: color(display-p3 0.2 0.16 0.06);
 }
 
 .columnAmount {

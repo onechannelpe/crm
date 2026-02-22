@@ -20,18 +20,11 @@ import {
 } from "~/components/ui/layout/table";
 import { getErrorMessage } from "~/lib/errors";
 import { runOptimistic } from "~/lib/ui/run-optimistic";
+import { formatDate } from "~/lib/utils";
 
-import styles from "./validation-page.module.css";
+import styles from "./review-page.module.css";
 
-function formatDate(timestamp: number) {
-  return new Date(timestamp).toLocaleDateString("en-US", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
-
-export default function ValidationPage() {
+export default function ReviewPage() {
   const [notes, { mutate, refetch }] = createResource(
     () => true,
     async () => getPendingReviewNotes(),
