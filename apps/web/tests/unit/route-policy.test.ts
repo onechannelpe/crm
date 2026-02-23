@@ -46,7 +46,7 @@ describe("nav policy", () => {
     const executivePrimary = getSidebarRoutes("executive", "primary").map(
       (route) => route.href,
     );
-    expect(executivePrimary).toContain("/contacts/people");
+    expect(executivePrimary).toContain("/sales/new");
     expect(executivePrimary).not.toContain("/settings");
 
     const supervisorSecondary = getSidebarRoutes("supervisor", "secondary").map(
@@ -70,26 +70,20 @@ describe("nav policy", () => {
   });
 
   it("returns accessible children ordered correctly", () => {
-    // superuser has all permissions — all 5 sales children are visible and ordered
+    // superuser has all permissions — all sales children are visible and ordered
     const salesChildren = getSidebarChildren("superuser", "sales").map(
       (child) => child.href,
     );
-    expect(salesChildren).toEqual([
-      "/leads",
-      "/dashboard",
-      "/sales/new",
-      "/sales/approved",
-      "/review",
-    ]);
+    expect(salesChildren).toEqual(["/leads", "/sales/approved", "/review"]);
   });
 
   it("filters sales children for executive (no sales:review)", () => {
-    // executive has leads:read + sales:create but NOT sales:review, so
-    // /dashboard, /sales/approved, and /review are excluded
+    // executive has leads:read but NOT sales:review, so
+    // /sales/approved and /review are excluded
     const salesChildren = getSidebarChildren("executive", "sales").map(
       (child) => child.href,
     );
-    expect(salesChildren).toEqual(["/leads", "/sales/new"]);
+    expect(salesChildren).toEqual(["/leads"]);
   });
 
   it("resolves header metadata for static routes", () => {
@@ -109,6 +103,6 @@ describe("nav policy", () => {
     // its own nav entry with a header, so it should return "Leads"
     expect(getHeaderRoute("/leads").label).toBe("Leads");
     // /dashboard sub-path resolution
-    expect(getHeaderRoute("/dashboard").label).toBe("Pipeline");
+    expect(getHeaderRoute("/dashboard").label).toBe("Home");
   });
 });
