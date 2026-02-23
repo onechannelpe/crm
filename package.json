@@ -31,9 +31,9 @@
     "download:docs": "bun run --cwd packages/download-docs download"
   },
   "devDependencies": {
-    "oxfmt": "^0.34.0",
-    "oxlint": "^1.49.0",
-    "oxlint-tsgolint": "^0.14.1",
+    "oxfmt": "^0.35.0",
+    "oxlint": "^1.50.0",
+    "oxlint-tsgolint": "^0.14.2",
     "shx": "^0.4.0"
   }
 }
