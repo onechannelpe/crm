@@ -23,10 +23,8 @@ function AuthenticatedAppShell(props: RouteSectionProps) {
         <div class={shellStyles.main}>
           <Header />
           <main class={shellStyles.body}>
-            <div class={shellStyles.content}>
-              <div class={shellStyles.panel}>
-                <Suspense fallback={<Loading />}>{props.children}</Suspense>
-              </div>
+            <div class={shellStyles.panel}>
+              <Suspense fallback={<Loading />}>{props.children}</Suspense>
             </div>
           </main>
         </div>

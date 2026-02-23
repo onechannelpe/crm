@@ -132,11 +132,17 @@ export default function ProfilePage() {
   }
 
   return (
-    <AppPage width="narrow">
-      <div class={styles.contentWrap}>
-        <div class={styles.content}>
-          <section class={`${styles.section} ${styles.sectionBorder}`}>
-            <h2 class={styles.title}>Identity</h2>
+    <AppPage width="medium">
+      <div class={styles.content}>
+        {/* Identity Section */}
+        <section class={styles.section}>
+          <div class={styles.sectionHeader}>
+            <h2 class={styles.sectionTitle}>Personal Info</h2>
+            <p class={styles.sectionDesc}>
+              Update your contact details and view your role.
+            </p>
+          </div>
+          <div class={styles.sectionContent}>
             <form
               onSubmit={(e) => {
                 void saveProfile(e);
@@ -174,13 +180,19 @@ export default function ProfilePage() {
                 </Button>
               </div>
             </form>
-          </section>
+          </div>
+        </section>
 
-          <section class={`${styles.section} ${styles.sectionBorder}`}>
-            <h2 class={styles.title}>Passkey</h2>
-            <p class={styles.muted}>
-              Register a passkey to speed up login and improve security.
+        {/* Passkey Section */}
+        <section class={styles.section}>
+          <div class={styles.sectionHeader}>
+            <h2 class={styles.sectionTitle}>Passkey</h2>
+            <p class={styles.sectionDesc}>
+              Register a passkey to speed up login and improve security (FaceID,
+              TouchID, Windows Hello).
             </p>
+          </div>
+          <div class={styles.sectionContent}>
             <Button
               type="button"
               variant="outline"
@@ -192,24 +204,44 @@ export default function ProfilePage() {
               {passkeyLoading() ? "Registering passkey..." : "Register passkey"}
             </Button>
             <Show when={!passkeySupported()}>
-              <p class={styles.muted}>
+              <p
+                class={styles.muted}
+                style={{ "margin-top": "8px", "margin-bottom": "0" }}
+              >
                 This browser does not support passkeys.
               </p>
             </Show>
             <Show when={passkeyMessage()}>
-              <p class={styles.muted}>{passkeyMessage()}</p>
-            </Show>
-          </section>
-
-          <section class={styles.section}>
-            <h2 class={styles.title}>Two-factor authentication</h2>
-            <Show when={totpStatus()?.enabled}>
-              <p class={styles.muted}>TOTP enabled</p>
-            </Show>
-            <Show when={!totpStatus()?.enabled}>
-              <p class={styles.muted}>
-                Add an authenticator app to require a one-time code on login.
+              <p
+                class={styles.muted}
+                style={{ "margin-top": "8px", "margin-bottom": "0" }}
+              >
+                {passkeyMessage()}
               </p>
+            </Show>
+          </div>
+        </section>
+
+        {/* TOTP Section */}
+        <section class={styles.section}>
+          <div class={styles.sectionHeader}>
+            <h2 class={styles.sectionTitle}>Two-factor auth</h2>
+            <p class={styles.sectionDesc}>
+              Add an authenticator app (like Google Authenticator or Authy) to
+              require a one-time code on login.
+            </p>
+          </div>
+          <div class={styles.sectionContent}>
+            <Show when={totpStatus()?.enabled}>
+              <p
+                class={styles.sectionTitle}
+                style={{ color: "var(--success)" }}
+              >
+                ✓ TOTP is currently enabled
+              </p>
+            </Show>
+
+            <Show when={!totpStatus()?.enabled}>
               <Button
                 type="button"
                 variant="outline"
@@ -220,6 +252,7 @@ export default function ProfilePage() {
               >
                 {totpLoading() ? "Preparing TOTP..." : "Set up TOTP"}
               </Button>
+
               <Show when={totpQrCode()}>
                 <div class={styles.qrWrap}>
                   <img
@@ -230,30 +263,39 @@ export default function ProfilePage() {
                   <Input
                     id="totp-setup-code"
                     type="text"
-                    placeholder="Enter TOTP code"
+                    placeholder="Enter 6-digit TOTP code"
                     value={totpCode()}
                     onInput={(
                       e: InputEvent & { currentTarget: HTMLInputElement },
                     ) => setTotpCode(e.currentTarget.value)}
                   />
-                  <Button
-                    type="button"
-                    disabled={totpLoading()}
-                    onClick={() => {
-                      void confirmTotpSetup();
-                    }}
-                  >
-                    Confirm TOTP
-                  </Button>
+                  <div>
+                    <Button
+                      type="button"
+                      disabled={totpLoading() || totpCode().length < 6}
+                      onClick={() => {
+                        void confirmTotpSetup();
+                      }}
+                    >
+                      Confirm code
+                    </Button>
+                  </div>
                 </div>
               </Show>
             </Show>
+
             <Show when={totpMessage()}>
-              <p class={styles.muted}>{totpMessage()}</p>
+              <p
+                class={styles.muted}
+                style={{ "margin-top": "8px", "margin-bottom": "0" }}
+              >
+                {totpMessage()}
+              </p>
             </Show>
+
             <Show when={recoveryCodes().length > 0}>
               <div class={styles.recovery}>
-                <p class={styles.recoveryTitle}>Recovery codes (shown once)</p>
+                <p class={styles.recoveryTitle}>Recovery codes (shown once!)</p>
                 <ul class={styles.recoveryList}>
                   <For each={recoveryCodes()}>
                     {(code) => <li class={styles.mono}>{code}</li>}
@@ -261,8 +303,8 @@ export default function ProfilePage() {
                 </ul>
               </div>
             </Show>
-          </section>
-        </div>
+          </div>
+        </section>
       </div>
     </AppPage>
   );

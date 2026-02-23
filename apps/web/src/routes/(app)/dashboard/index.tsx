@@ -115,33 +115,35 @@ export default function DashboardPage() {
   });
 
   return (
-    <AppPage class={styles.page}>
-      <div class={styles.boardWrap}>
-        <div class={styles.board}>
-          <For each={columns()}>
-            {(column) => (
-              <div class={styles.column}>
-                <div class={styles.columnHead}>
-                  <span class={`${styles.tag} ${column.tone}`}>
-                    {column.label}
-                  </span>
-                  <span class={styles.columnAmount}>{column.amount}</span>
+    <AppPage>
+      <div class={styles.boardGrid}>
+        <div class={styles.boardWrap}>
+          <div class={styles.board}>
+            <For each={columns()}>
+              {(column) => (
+                <div class={styles.column}>
+                  <div class={styles.columnHead}>
+                    <span class={`${styles.tag} ${column.tone}`}>
+                      {column.label}
+                    </span>
+                    <span class={styles.columnAmount}>{column.amount}</span>
+                  </div>
+                  <For each={column.cards}>
+                    {(card) => (
+                      <A href={card.href} class={styles.card}>
+                        <p class={styles.cardTitle}>{card.title}</p>
+                        <p class={styles.cardValue}>{card.value}</p>
+                        <p class={styles.cardDetail}>{card.detail}</p>
+                      </A>
+                    )}
+                  </For>
+                  <A href={column.actionHref} class={styles.columnAction}>
+                    {column.actionLabel}
+                  </A>
                 </div>
-                <For each={column.cards}>
-                  {(card) => (
-                    <A href={card.href} class={styles.card}>
-                      <p class={styles.cardTitle}>{card.title}</p>
-                      <p class={styles.cardValue}>{card.value}</p>
-                      <p class={styles.cardDetail}>{card.detail}</p>
-                    </A>
-                  )}
-                </For>
-                <A href={column.actionHref} class={styles.columnAction}>
-                  {column.actionLabel}
-                </A>
-              </div>
-            )}
-          </For>
+              )}
+            </For>
+          </div>
         </div>
       </div>
     </AppPage>

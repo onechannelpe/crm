@@ -3,7 +3,7 @@ import { createResource, createSignal, For, Show } from "solid-js";
 
 import { getSaleFixContext, submitSale } from "~/actions/sales";
 import { useToast } from "~/components/feedback/toast-provider";
-import { AppPage, AppPageHeader } from "~/components/layout/page";
+import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { Textarea } from "~/components/ui/input/textarea";
 import { getErrorMessage } from "~/lib/errors";
@@ -41,17 +41,6 @@ export default function FixSalePage() {
 
   return (
     <AppPage width="medium">
-      <AppPageHeader
-        eyebrow="Sales"
-        title={`Fix sale #${noteId()}`}
-        description="Address reviewer feedback and resubmit for approval."
-        actions={
-          <Button variant="secondary" onClick={() => navigate("/sales/new")}>
-            Back to draft
-          </Button>
-        }
-      />
-
       <Show when={fixContext()}>
         <form
           onSubmit={(e) => {

@@ -1,10 +1,11 @@
 .root {
-  border: 1px solid var(--border);
-  background: var(--surface);
+  flex: 1;
   padding: 32px 16px;
-  display: grid;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 4px;
-  justify-items: center;
   text-align: center;
 }
 

@@ -1,13 +1,3 @@
-.panelPadded {
-  padding: 12px;
-}
-
-.createForm {
-  max-width: 420px;
-  display: grid;
-  gap: 16px;
-}
-
 .draftLayout {
   display: grid;
   gap: 24px;
@@ -58,6 +48,21 @@
   display: grid;
   gap: 8px;
   font-size: var(--font-size-body);
+}
+
+.formGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 32px;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px dashed var(--border);
 }
 
 .readiness {

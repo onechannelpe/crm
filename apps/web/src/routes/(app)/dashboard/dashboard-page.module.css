@@ -1,4 +1,4 @@
-.page {
+.boardGrid {
   display: grid;
   gap: 8px;
 }

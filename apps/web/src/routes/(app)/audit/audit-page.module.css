@@ -1,10 +1,6 @@
-.page {
+.auditGrid {
   display: grid;
   gap: 12px;
-}
-
-.panelPadded {
-  padding: 12px;
 }
 
 .filterRow {

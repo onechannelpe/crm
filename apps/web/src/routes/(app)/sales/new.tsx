@@ -4,6 +4,7 @@ import { createResource, createSignal, For, onMount, Show } from "solid-js";
 import {
   addSaleDocument,
   addSaleItem,
+  createManualSale,
   createSale,
   getAvailableInventory,
   getAvailableProducts,
@@ -26,11 +27,16 @@ import styles from "./new-sale-page.module.css";
 export default function NewSalePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [contactId, setContactId] = createSignal(
-    searchParams.contactId?.toString() || "",
-  );
   const [noteId, setNoteId] = createSignal<number | null>(null);
   const [loading, setLoading] = createSignal(false);
+
+  // Manual creation form state
+  const [ruc, setRuc] = createSignal("");
+  const [orgName, setOrgName] = createSignal("");
+  const [dni, setDni] = createSignal("");
+  const [contactName, setContactName] = createSignal("");
+  const [phone, setPhone] = createSignal("");
+
   const [selectedProductId, setSelectedProductId] = createSignal("");
   const [quantity, setQuantity] = createSignal("1");
   const [selectedInventoryId, setSelectedInventoryId] = createSignal("");
@@ -54,10 +60,10 @@ export default function NewSalePage() {
     createResource(noteId, getSaleDraftContext);
   const currentDraft = () => draft.latest;
 
-  async function doCreateSale(id: number) {
+  async function doCreateSale(contactId: number) {
     setLoading(true);
     try {
-      const res = await createSale(id);
+      const res = await createSale(contactId);
       setNoteId(res.id);
       showToast("success", `Sales note #${res.id} created`);
     } catch (err: unknown) {
@@ -73,9 +79,24 @@ export default function NewSalePage() {
     }
   });
 
-  async function handleCreate(e: Event) {
+  async function handleCreateManual(e: Event) {
     e.preventDefault();
-    void doCreateSale(Number(contactId()));
+    setLoading(true);
+    try {
+      const res = await createManualSale({
+        ruc: ruc(),
+        orgName: orgName(),
+        dni: dni(),
+        contactName: contactName(),
+        phoneE164: phone() || null,
+      });
+      setNoteId(res.id);
+      showToast("success", `Sales note #${res.id} created`);
+    } catch (err: unknown) {
+      showToast("error", getErrorMessage(err, "Failed to create manual sale"));
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleAddItem() {
@@ -272,29 +293,57 @@ export default function NewSalePage() {
   return (
     <AppPage width="medium">
       <Show when={!noteId()}>
-        <div class={styles.panelPadded}>
-          <form
-            onSubmit={(e) => {
-              void handleCreate(e);
-            }}
-            class={styles.createForm}
-          >
+        <form
+          onSubmit={(e) => {
+            void handleCreateManual(e);
+          }}
+        >
+          <div class={styles.formGrid}>
             <Input
-              type="number"
-              label="Contact ID"
-              value={contactId()}
-              onInput={(e) => setContactId(e.currentTarget.value)}
+              label="RUC"
+              placeholder="20100200300"
+              value={ruc()}
+              onInput={(e) => setRuc(e.currentTarget.value)}
               required
             />
-            <Button type="submit" disabled={loading()}>
-              {loading() ? "Creating..." : "Create sales note"}
+            <Input
+              label="Organization Name"
+              placeholder="Acme Corp"
+              value={orgName()}
+              onInput={(e) => setOrgName(e.currentTarget.value)}
+              required
+            />
+            <Input
+              label="DNI"
+              placeholder="12345678"
+              value={dni()}
+              onInput={(e) => setDni(e.currentTarget.value)}
+              required
+            />
+            <Input
+              label="Contact Name"
+              value={contactName()}
+              onInput={(e) => setContactName(e.currentTarget.value)}
+              required
+            />
+            <Input
+              type="tel"
+              label="Phone (optional)"
+              placeholder="+51..."
+              value={phone()}
+              onInput={(e) => setPhone(e.currentTarget.value)}
+            />
+          </div>
+          <div class={styles.formActions}>
+            <Button type="submit" disabled={loading() || !ruc() || !dni()}>
+              {loading() ? "Creating draft..." : "Create draft sales note"}
             </Button>
-          </form>
-        </div>
+          </div>
+        </form>
       </Show>
 
       <Show when={noteId()}>
-        <div class={`${styles.panelPadded} ${styles.draftLayout}`}>
+        <div class={styles.draftLayout}>
           <div class={styles.draftHeader}>
             <div>
               <h3 class={styles.draftTitle}>Sales note #{noteId()}</h3>

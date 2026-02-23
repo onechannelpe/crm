@@ -52,23 +52,21 @@ export default function LeadsPage() {
 
   return (
     <AppPage>
-      <div class={styles.panelPadded}>
-        <Show
-          when={!leads.error}
-          fallback={
-            <EmptyState
-              title="Failed to load leads"
-              description="Refresh and retry."
-            />
-          }
-        >
-          <LeadList
-            contacts={currentLeads()}
-            onRegisterCall={handleRegisterCall}
-            emptyAction={<RequestLeadsButton onRequest={handleRequestLeads} />}
+      <Show
+        when={!leads.error}
+        fallback={
+          <EmptyState
+            title="Failed to load leads"
+            description="Refresh and retry."
           />
-        </Show>
-      </div>
+        }
+      >
+        <LeadList
+          contacts={currentLeads()}
+          onRegisterCall={handleRegisterCall}
+          emptyAction={<RequestLeadsButton onRequest={handleRequestLeads} />}
+        />
+      </Show>
       <div class={styles.fabContainer}>
         <RequestLeadsButton onRequest={handleRequestLeads} />
       </div>

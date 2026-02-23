@@ -3,7 +3,7 @@ import { createResource, createSignal, For } from "solid-js";
 
 import { createTeamInvite, getBranchTeamsForInvite } from "~/actions/team";
 import { useToast } from "~/components/feedback/toast-provider";
-import { AppPage, AppPageHeader } from "~/components/layout/page";
+import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { Select } from "~/components/ui/input/select";
@@ -52,18 +52,7 @@ export default function NewTeamInvitePage() {
 
   return (
     <AppPage width="medium">
-      <AppPageHeader
-        eyebrow="People"
-        title="Invite member"
-        description="Create an invite with role and optional team assignment."
-        actions={
-          <Button variant="secondary" onClick={() => navigate("/team")}>
-            Cancel
-          </Button>
-        }
-      />
-
-      <div class={styles.panelPadded}>
+      <div>
         <form
           class={styles.form}
           onSubmit={(event) => {
@@ -103,9 +92,19 @@ export default function NewTeamInvitePage() {
               {(team) => <option value={team.id}>{team.name}</option>}
             </For>
           </Select>
-          <Button type="submit" disabled={saving()}>
-            {saving() ? "Sending..." : "Send invite"}
-          </Button>
+
+          <div class={styles.formActions}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => navigate("/team")}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={saving()}>
+              {saving() ? "Sending..." : "Send invite"}
+            </Button>
+          </div>
         </form>
       </div>
     </AppPage>
