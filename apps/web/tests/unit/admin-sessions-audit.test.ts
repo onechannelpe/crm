@@ -32,7 +32,7 @@ vi.mock("~/server/shared/context", () => ({
 import {
   revokeAllUserSessions,
   revokeUserSession,
-} from "../../src/actions/admin-sessions";
+} from "../../src/actions/admin";
 
 describe("admin sessions audit contracts", () => {
   beforeEach(() => {

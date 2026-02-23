@@ -8,7 +8,7 @@ import {
   Show,
 } from "solid-js";
 
-import { logout } from "~/actions/auth-session";
+import { logout } from "~/actions/auth";
 import ChevronDown from "~/components/icons/chevron-down";
 import { AccountMenu } from "~/components/layout/account-menu";
 import { ICON_BY_ROUTE } from "~/components/layout/route-icons";

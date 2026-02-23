@@ -3,10 +3,10 @@ import { createSignal, For } from "solid-js";
 import {
   canManageAuditPolicies,
   getAuditPolicySnapshot,
+  getAuditReaderSnapshot,
+  getObservabilitySnapshot,
   upsertAuditPolicy,
-} from "~/actions/admin-audit-policy";
-import { getAuditReaderSnapshot } from "~/actions/admin-audit-reader";
-import { getObservabilitySnapshot } from "~/actions/admin-observability";
+} from "~/actions/admin";
 import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { Checkbox } from "~/components/ui/input/checkbox";

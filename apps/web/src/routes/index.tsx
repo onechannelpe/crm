@@ -1,7 +1,7 @@
 import { Navigate } from "@solidjs/router";
 import { createResource } from "solid-js";
 
-import { getMe } from "~/actions/auth-session";
+import { getMe } from "~/actions/auth";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 
 export default function Index() {
