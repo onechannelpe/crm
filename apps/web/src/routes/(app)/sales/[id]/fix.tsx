@@ -3,7 +3,7 @@ import { createResource, createSignal, For, Show } from "solid-js";
 
 import { getSaleFixContext, submitSale } from "~/actions/sales";
 import { useToast } from "~/components/feedback/toast-provider";
-import { AppPage, AppPageHeader, AppPanel } from "~/components/layout/page";
+import { AppPage, AppPageHeader } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { Textarea } from "~/components/ui/input/textarea";
 import { getErrorMessage } from "~/lib/errors";
@@ -40,7 +40,7 @@ export default function FixSalePage() {
   }
 
   return (
-    <AppPage class={styles.page}>
+    <AppPage width="medium">
       <AppPageHeader
         eyebrow="Sales"
         title={`Fix sale #${noteId()}`}
@@ -58,7 +58,7 @@ export default function FixSalePage() {
             void handleResubmit(e);
           }}
         >
-          <AppPanel class={styles.panelPadded}>
+          <div class={styles.panelPadded}>
             <Show when={hasRejections()}>
               <div class={styles.rejectionBlock}>
                 <h2 class={styles.blockTitle}>Reviewer feedback</h2>
@@ -108,7 +108,7 @@ export default function FixSalePage() {
                 {loading() ? "Submitting..." : "Resubmit for approval"}
               </Button>
             </div>
-          </AppPanel>
+          </div>
         </form>
       </Show>
     </AppPage>

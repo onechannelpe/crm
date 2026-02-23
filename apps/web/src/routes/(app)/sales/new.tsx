@@ -13,7 +13,7 @@ import {
   submitSale,
 } from "~/actions/sales";
 import { useToast } from "~/components/feedback/toast-provider";
-import { AppPage, AppPanel } from "~/components/layout/page";
+import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { FileInput } from "~/components/ui/input/file-input";
 import { Input } from "~/components/ui/input/input";
@@ -270,9 +270,9 @@ export default function NewSalePage() {
   }
 
   return (
-    <AppPage class={styles.page}>
+    <AppPage width="medium">
       <Show when={!noteId()}>
-        <AppPanel class={styles.panelPadded}>
+        <div class={styles.panelPadded}>
           <form
             onSubmit={(e) => {
               void handleCreate(e);
@@ -290,11 +290,11 @@ export default function NewSalePage() {
               {loading() ? "Creating..." : "Create sales note"}
             </Button>
           </form>
-        </AppPanel>
+        </div>
       </Show>
 
       <Show when={noteId()}>
-        <AppPanel class={`${styles.panelPadded} ${styles.draftLayout}`}>
+        <div class={`${styles.panelPadded} ${styles.draftLayout}`}>
           <div class={styles.draftHeader}>
             <div>
               <h3 class={styles.draftTitle}>Sales note #{noteId()}</h3>
@@ -465,7 +465,7 @@ export default function NewSalePage() {
               {loading() ? "Submitting..." : "Submit for review"}
             </Button>
           </div>
-        </AppPanel>
+        </div>
       </Show>
     </AppPage>
   );

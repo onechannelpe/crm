@@ -1,7 +1,3 @@
-.page {
-  max-width: 960px;
-}
-
 .grid {
   display: grid;
   gap: 16px;

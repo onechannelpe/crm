@@ -9,7 +9,7 @@ import {
 } from "~/actions/auth";
 import { updateUserProfile } from "~/actions/settings";
 import { useToast } from "~/components/feedback/toast-provider";
-import { AppPage, AppPanel } from "~/components/layout/page";
+import { AppPage } from "~/components/layout/page";
 import { useSession } from "~/components/providers/session-provider";
 import { Badge } from "~/components/ui/display/badge";
 import { Button } from "~/components/ui/input/button";
@@ -132,146 +132,138 @@ export default function ProfilePage() {
   }
 
   return (
-    <AppPage>
-      <AppPanel>
-        <div class={styles.contentWrap}>
-          <div class={styles.content}>
-            <section class={`${styles.section} ${styles.sectionBorder}`}>
-              <h2 class={styles.title}>Identity</h2>
-              <form
-                onSubmit={(e) => {
-                  void saveProfile(e);
-                }}
-              >
-                <div class={styles.formGrid}>
-                  <Input
-                    label="Full name"
-                    value={profileName()}
-                    onInput={(e) => setProfileName(e.currentTarget.value)}
-                    required
-                  />
-                  <Input label="Email" value={user().email} disabled />
-                  <Input
-                    label="Phone"
-                    value={profilePhone()}
-                    onInput={(e) => setProfilePhone(e.currentTarget.value)}
-                  />
+    <AppPage width="narrow">
+      <div class={styles.contentWrap}>
+        <div class={styles.content}>
+          <section class={`${styles.section} ${styles.sectionBorder}`}>
+            <h2 class={styles.title}>Identity</h2>
+            <form
+              onSubmit={(e) => {
+                void saveProfile(e);
+              }}
+            >
+              <div class={styles.formGrid}>
+                <Input
+                  label="Full name"
+                  value={profileName()}
+                  onInput={(e) => setProfileName(e.currentTarget.value)}
+                  required
+                />
+                <Input label="Email" value={user().email} disabled />
+                <Input
+                  label="Phone"
+                  value={profilePhone()}
+                  onInput={(e) => setProfilePhone(e.currentTarget.value)}
+                />
+              </div>
+              <div class={styles.identityMeta}>
+                <div class={styles.inline}>
+                  <span class={styles.label}>Role</span>
+                  <Badge variant={getRoleBadgeVariant(user().role)}>
+                    {getRoleLabel(user().role)}
+                  </Badge>
                 </div>
-                <div class={styles.identityMeta}>
-                  <div class={styles.inline}>
-                    <span class={styles.label}>Role</span>
-                    <Badge variant={getRoleBadgeVariant(user().role)}>
-                      {getRoleLabel(user().role)}
-                    </Badge>
-                  </div>
-                  <div class={styles.inline}>
-                    <span class={styles.label}>Team</span>
-                    <span class={styles.muted}>
-                      {getWorkspaceLabel(user())}
-                    </span>
-                  </div>
+                <div class={styles.inline}>
+                  <span class={styles.label}>Team</span>
+                  <span class={styles.muted}>{getWorkspaceLabel(user())}</span>
                 </div>
-                <div class={styles.formActions}>
-                  <Button type="submit" disabled={savingProfile()}>
-                    {savingProfile() ? "Saving..." : "Save changes"}
-                  </Button>
-                </div>
-              </form>
-            </section>
+              </div>
+              <div class={styles.formActions}>
+                <Button type="submit" disabled={savingProfile()}>
+                  {savingProfile() ? "Saving..." : "Save changes"}
+                </Button>
+              </div>
+            </form>
+          </section>
 
-            <section class={`${styles.section} ${styles.sectionBorder}`}>
-              <h2 class={styles.title}>Passkey</h2>
+          <section class={`${styles.section} ${styles.sectionBorder}`}>
+            <h2 class={styles.title}>Passkey</h2>
+            <p class={styles.muted}>
+              Register a passkey to speed up login and improve security.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={!passkeySupported() || passkeyLoading()}
+              onClick={() => {
+                void registerPasskey();
+              }}
+            >
+              {passkeyLoading() ? "Registering passkey..." : "Register passkey"}
+            </Button>
+            <Show when={!passkeySupported()}>
               <p class={styles.muted}>
-                Register a passkey to speed up login and improve security.
+                This browser does not support passkeys.
+              </p>
+            </Show>
+            <Show when={passkeyMessage()}>
+              <p class={styles.muted}>{passkeyMessage()}</p>
+            </Show>
+          </section>
+
+          <section class={styles.section}>
+            <h2 class={styles.title}>Two-factor authentication</h2>
+            <Show when={totpStatus()?.enabled}>
+              <p class={styles.muted}>TOTP enabled</p>
+            </Show>
+            <Show when={!totpStatus()?.enabled}>
+              <p class={styles.muted}>
+                Add an authenticator app to require a one-time code on login.
               </p>
               <Button
                 type="button"
                 variant="outline"
-                disabled={!passkeySupported() || passkeyLoading()}
+                disabled={totpLoading()}
                 onClick={() => {
-                  void registerPasskey();
+                  void startTotpSetup();
                 }}
               >
-                {passkeyLoading()
-                  ? "Registering passkey..."
-                  : "Register passkey"}
+                {totpLoading() ? "Preparing TOTP..." : "Set up TOTP"}
               </Button>
-              <Show when={!passkeySupported()}>
-                <p class={styles.muted}>
-                  This browser does not support passkeys.
-                </p>
-              </Show>
-              <Show when={passkeyMessage()}>
-                <p class={styles.muted}>{passkeyMessage()}</p>
-              </Show>
-            </section>
-
-            <section class={styles.section}>
-              <h2 class={styles.title}>Two-factor authentication</h2>
-              <Show when={totpStatus()?.enabled}>
-                <p class={styles.muted}>TOTP enabled</p>
-              </Show>
-              <Show when={!totpStatus()?.enabled}>
-                <p class={styles.muted}>
-                  Add an authenticator app to require a one-time code on login.
-                </p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={totpLoading()}
-                  onClick={() => {
-                    void startTotpSetup();
-                  }}
-                >
-                  {totpLoading() ? "Preparing TOTP..." : "Set up TOTP"}
-                </Button>
-                <Show when={totpQrCode()}>
-                  <div class={styles.qrWrap}>
-                    <img
-                      src={totpQrCode()}
-                      alt="TOTP QR code"
-                      class={styles.qr}
-                    />
-                    <Input
-                      id="totp-setup-code"
-                      type="text"
-                      placeholder="Enter TOTP code"
-                      value={totpCode()}
-                      onInput={(
-                        e: InputEvent & { currentTarget: HTMLInputElement },
-                      ) => setTotpCode(e.currentTarget.value)}
-                    />
-                    <Button
-                      type="button"
-                      disabled={totpLoading()}
-                      onClick={() => {
-                        void confirmTotpSetup();
-                      }}
-                    >
-                      Confirm TOTP
-                    </Button>
-                  </div>
-                </Show>
-              </Show>
-              <Show when={totpMessage()}>
-                <p class={styles.muted}>{totpMessage()}</p>
-              </Show>
-              <Show when={recoveryCodes().length > 0}>
-                <div class={styles.recovery}>
-                  <p class={styles.recoveryTitle}>
-                    Recovery codes (shown once)
-                  </p>
-                  <ul class={styles.recoveryList}>
-                    <For each={recoveryCodes()}>
-                      {(code) => <li class={styles.mono}>{code}</li>}
-                    </For>
-                  </ul>
+              <Show when={totpQrCode()}>
+                <div class={styles.qrWrap}>
+                  <img
+                    src={totpQrCode()}
+                    alt="TOTP QR code"
+                    class={styles.qr}
+                  />
+                  <Input
+                    id="totp-setup-code"
+                    type="text"
+                    placeholder="Enter TOTP code"
+                    value={totpCode()}
+                    onInput={(
+                      e: InputEvent & { currentTarget: HTMLInputElement },
+                    ) => setTotpCode(e.currentTarget.value)}
+                  />
+                  <Button
+                    type="button"
+                    disabled={totpLoading()}
+                    onClick={() => {
+                      void confirmTotpSetup();
+                    }}
+                  >
+                    Confirm TOTP
+                  </Button>
                 </div>
               </Show>
-            </section>
-          </div>
+            </Show>
+            <Show when={totpMessage()}>
+              <p class={styles.muted}>{totpMessage()}</p>
+            </Show>
+            <Show when={recoveryCodes().length > 0}>
+              <div class={styles.recovery}>
+                <p class={styles.recoveryTitle}>Recovery codes (shown once)</p>
+                <ul class={styles.recoveryList}>
+                  <For each={recoveryCodes()}>
+                    {(code) => <li class={styles.mono}>{code}</li>}
+                  </For>
+                </ul>
+              </div>
+            </Show>
+          </section>
         </div>
-      </AppPanel>
+      </div>
     </AppPage>
   );
 }

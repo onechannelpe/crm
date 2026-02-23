@@ -10,7 +10,7 @@ import { EmptyState } from "~/components/feedback/empty-state";
 import { useToast } from "~/components/feedback/toast-provider";
 import Mail from "~/components/icons/mail";
 import User from "~/components/icons/user";
-import { AppPage, AppPanel } from "~/components/layout/page";
+import { AppPage } from "~/components/layout/page";
 import { Badge } from "~/components/ui/display/badge";
 import { Button } from "~/components/ui/input/button";
 import {
@@ -87,50 +87,48 @@ export default function TeamPage() {
           />
         }
       >
-        <AppPanel>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <For each={directory().members}>
-                {(member) => (
-                  <TableRow>
-                    <TableCell class={styles.memberName}>
-                      <div class={styles.personCell}>
-                        <div class={styles.avatar}>
-                          <User size={16} />
-                        </div>
-                        <span>{member.fullName}</span>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <For each={directory().members}>
+              {(member) => (
+                <TableRow>
+                  <TableCell class={styles.memberName}>
+                    <div class={styles.personCell}>
+                      <div class={styles.avatar}>
+                        <User size={16} />
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <div class={styles.mailCell}>
-                        <Mail size={12} />
-                        <span>{member.email}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getRoleBadgeVariant(member.role)}>
-                        {getRoleLabel(member.role)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={member.isActive ? "success" : "default"}>
-                        {member.isActive ? "Active" : "Inactive"}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </For>
-            </TableBody>
-          </Table>
-        </AppPanel>
+                      <span>{member.fullName}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div class={styles.mailCell}>
+                      <Mail size={12} />
+                      <span>{member.email}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={getRoleBadgeVariant(member.role)}>
+                      {getRoleLabel(member.role)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={member.isActive ? "success" : "default"}>
+                      {member.isActive ? "Active" : "Inactive"}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              )}
+            </For>
+          </TableBody>
+        </Table>
       </Show>
 
       <div class={styles.section}>
@@ -144,72 +142,68 @@ export default function TeamPage() {
             />
           }
         >
-          <AppPanel>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Expires</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <For each={directory().pendingInvites}>
-                  {(invite) => (
-                    <TableRow>
-                      <TableCell class={styles.memberName}>
-                        {invite.fullName}
-                      </TableCell>
-                      <TableCell>{invite.email}</TableCell>
-                      <TableCell>
-                        <Badge variant={getRoleBadgeVariant(invite.role)}>
-                          {getRoleLabel(invite.role)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(invite.expiresAt).toLocaleString("en-US")}
-                      </TableCell>
-                      <TableCell>
-                        <Show
-                          when={canManageInviteActions()}
-                          fallback={
-                            <span class={styles.noPermission}>
-                              No permission
-                            </span>
-                          }
-                        >
-                          <div class={styles.actions}>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              disabled={pendingActionId() === invite.inviteId}
-                              onClick={() => {
-                                void handleResend(invite.inviteId);
-                              }}
-                            >
-                              Resend
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              disabled={pendingActionId() === invite.inviteId}
-                              onClick={() => {
-                                void handleRevoke(invite.inviteId);
-                              }}
-                            >
-                              Revoke
-                            </Button>
-                          </div>
-                        </Show>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </For>
-              </TableBody>
-            </Table>
-          </AppPanel>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Expires</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <For each={directory().pendingInvites}>
+                {(invite) => (
+                  <TableRow>
+                    <TableCell class={styles.memberName}>
+                      {invite.fullName}
+                    </TableCell>
+                    <TableCell>{invite.email}</TableCell>
+                    <TableCell>
+                      <Badge variant={getRoleBadgeVariant(invite.role)}>
+                        {getRoleLabel(invite.role)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {new Date(invite.expiresAt).toLocaleString("en-US")}
+                    </TableCell>
+                    <TableCell>
+                      <Show
+                        when={canManageInviteActions()}
+                        fallback={
+                          <span class={styles.noPermission}>No permission</span>
+                        }
+                      >
+                        <div class={styles.actions}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={pendingActionId() === invite.inviteId}
+                            onClick={() => {
+                              void handleResend(invite.inviteId);
+                            }}
+                          >
+                            Resend
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            disabled={pendingActionId() === invite.inviteId}
+                            onClick={() => {
+                              void handleRevoke(invite.inviteId);
+                            }}
+                          >
+                            Revoke
+                          </Button>
+                        </div>
+                      </Show>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </For>
+            </TableBody>
+          </Table>
         </Show>
       </div>
     </AppPage>

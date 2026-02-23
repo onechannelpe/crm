@@ -63,14 +63,6 @@
   flex-shrink: 0;
 }
 
-.panel {
-  border: var(--panel-border);
-  border-radius: var(--panel-radius);
-  background: var(--panel-bg);
-  box-shadow: var(--shadow-elevation-1);
-  overflow: hidden;
-}
-
 .section {
   border: var(--panel-border);
   border-radius: var(--panel-radius);

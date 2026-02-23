@@ -8,7 +8,7 @@ import {
 import { RejectionForm } from "~/components/features/sales/rejection-form";
 import { EmptyState } from "~/components/feedback/empty-state";
 import { useToast } from "~/components/feedback/toast-provider";
-import { AppPage, AppPageHeader, AppPanel } from "~/components/layout/page";
+import { AppPage, AppPageHeader } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import {
   Table,
@@ -109,58 +109,56 @@ export default function ReviewPage() {
             </section>
           )}
         </Show>
-        <AppPanel>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Owner</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead class={styles.actionsHead}>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <For each={currentNotes()}>
-                {(note) => (
-                  <TableRow>
-                    <TableCell class={styles.idCell}>#{note.id}</TableCell>
-                    <TableCell>
-                      <div class={styles.contactWrap}>
-                        <p class={styles.contactName}>{note.contactName}</p>
-                        <p class={styles.contactMeta}>{note.contactDni}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>{note.executiveName}</TableCell>
-                    <TableCell class={styles.dateCell}>
-                      {formatDate(note.created_at)}
-                    </TableCell>
-                    <TableCell class={styles.actionsCell}>
-                      <div class={styles.actions}>
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          onClick={() => {
-                            void handleApprove(note.id);
-                          }}
-                        >
-                          Approve
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => setRejectingNoteId(note.id)}
-                        >
-                          Reject
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </For>
-            </TableBody>
-          </Table>
-        </AppPanel>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>ID</TableHead>
+              <TableHead>Contact</TableHead>
+              <TableHead>Owner</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead class={styles.actionsHead}>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <For each={currentNotes()}>
+              {(note) => (
+                <TableRow>
+                  <TableCell class={styles.idCell}>#{note.id}</TableCell>
+                  <TableCell>
+                    <div class={styles.contactWrap}>
+                      <p class={styles.contactName}>{note.contactName}</p>
+                      <p class={styles.contactMeta}>{note.contactDni}</p>
+                    </div>
+                  </TableCell>
+                  <TableCell>{note.executiveName}</TableCell>
+                  <TableCell class={styles.dateCell}>
+                    {formatDate(note.created_at)}
+                  </TableCell>
+                  <TableCell class={styles.actionsCell}>
+                    <div class={styles.actions}>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => {
+                          void handleApprove(note.id);
+                        }}
+                      >
+                        Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => setRejectingNoteId(note.id)}
+                      >
+                        Reject
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+            </For>
+          </TableBody>
+        </Table>
       </Show>
     </AppPage>
   );

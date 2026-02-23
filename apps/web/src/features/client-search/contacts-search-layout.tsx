@@ -3,7 +3,7 @@ import type { JSX } from "solid-js";
 import { For, Show } from "solid-js";
 
 import { EmptyState } from "~/components/feedback/empty-state";
-import { AppPage, AppPanel } from "~/components/layout/page";
+import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import {
   Table,
@@ -31,94 +31,92 @@ interface ContactsSearchLayoutProps {
 
 export function ContactsSearchLayout(props: ContactsSearchLayoutProps) {
   return (
-    <AppPage class={styles.page}>
-      <AppPanel>
-        <div class={styles.searchPanel}>
-          <div class={styles.tabBar}>
-            <A
-              href="/contacts/people"
-              class={cn(
-                styles.tab,
-                props.activeTab === "people" && styles.tabActive,
-              )}
-            >
-              People
-            </A>
-            <A
-              href="/contacts/companies"
-              class={cn(
-                styles.tab,
-                props.activeTab === "companies" && styles.tabActive,
-              )}
-            >
-              Companies
-            </A>
-          </div>
-
-          <form
-            class={styles.searchBar}
-            onSubmit={(event) => {
-              event.preventDefault();
-              const inferred = props.inferType(props.controller.query());
-              if (props.controller.isAllowedType(inferred)) {
-                props.controller.setSearchType(inferred);
-              }
-              void props.controller.runCurrentSearch();
-            }}
+    <AppPage width="wide">
+      <div class={styles.searchPanel}>
+        <div class={styles.tabBar}>
+          <A
+            href="/contacts/people"
+            class={cn(
+              styles.tab,
+              props.activeTab === "people" && styles.tabActive,
+            )}
           >
-            <input
-              class={styles.searchInput}
-              placeholder={props.placeholder}
-              value={props.controller.query()}
-              onInput={(e) => props.controller.setQuery(e.currentTarget.value)}
-              required
-            />
-            <Button type="submit" disabled={props.controller.searching()}>
-              {props.controller.searching() ? "Searching..." : "Search"}
-            </Button>
-          </form>
+            People
+          </A>
+          <A
+            href="/contacts/companies"
+            class={cn(
+              styles.tab,
+              props.activeTab === "companies" && styles.tabActive,
+            )}
+          >
+            Companies
+          </A>
         </div>
 
-        <Show when={props.controller.error()}>
-          {(message) => <div class={styles.errorBar}>{message()}</div>}
-        </Show>
-
-        <Show when={props.controller.searched()}>
-          <div class={styles.statusBar}>
-            <span>{props.resultCount()} results</span>
-          </div>
-        </Show>
-
-        <Show
-          when={props.resultCount() > 0}
-          fallback={
-            <Show when={props.controller.searched()}>
-              <EmptyState
-                title="No results"
-                description="Try a different search term."
-              />
-            </Show>
-          }
+        <form
+          class={styles.searchBar}
+          onSubmit={(event) => {
+            event.preventDefault();
+            const inferred = props.inferType(props.controller.query());
+            if (props.controller.isAllowedType(inferred)) {
+              props.controller.setSearchType(inferred);
+            }
+            void props.controller.runCurrentSearch();
+          }}
         >
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <For each={props.columns}>
-                  {(col) => <TableHead>{col.label}</TableHead>}
-                </For>
-              </TableRow>
-            </TableHeader>
-            <TableBody>{props.rows()}</TableBody>
-          </Table>
-        </Show>
+          <input
+            class={styles.searchInput}
+            placeholder={props.placeholder}
+            value={props.controller.query()}
+            onInput={(e) => props.controller.setQuery(e.currentTarget.value)}
+            required
+          />
+          <Button type="submit" disabled={props.controller.searching()}>
+            {props.controller.searching() ? "Searching..." : "Search"}
+          </Button>
+        </form>
+      </div>
 
-        <Show when={props.resultCount() > 0}>
-          <div class={styles.footer}>
-            <div>{props.footerLeft()}</div>
-            <div>{props.footerRight()}</div>
-          </div>
-        </Show>
-      </AppPanel>
+      <Show when={props.controller.error()}>
+        {(message) => <div class={styles.errorBar}>{message()}</div>}
+      </Show>
+
+      <Show when={props.controller.searched()}>
+        <div class={styles.statusBar}>
+          <span>{props.resultCount()} results</span>
+        </div>
+      </Show>
+
+      <Show
+        when={props.resultCount() > 0}
+        fallback={
+          <Show when={props.controller.searched()}>
+            <EmptyState
+              title="No results"
+              description="Try a different search term."
+            />
+          </Show>
+        }
+      >
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <For each={props.columns}>
+                {(col) => <TableHead>{col.label}</TableHead>}
+              </For>
+            </TableRow>
+          </TableHeader>
+          <TableBody>{props.rows()}</TableBody>
+        </Table>
+      </Show>
+
+      <Show when={props.resultCount() > 0}>
+        <div class={styles.footer}>
+          <div>{props.footerLeft()}</div>
+          <div>{props.footerRight()}</div>
+        </div>
+      </Show>
     </AppPage>
   );
 }

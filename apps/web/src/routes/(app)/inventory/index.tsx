@@ -2,7 +2,7 @@ import { For, Show } from "solid-js";
 
 import { getInventoryItems } from "~/actions/inventory";
 import { EmptyState } from "~/components/feedback/empty-state";
-import { AppPage, AppPanel } from "~/components/layout/page";
+import { AppPage } from "~/components/layout/page";
 import { Badge } from "~/components/ui/display/badge";
 import {
   Table,
@@ -50,40 +50,38 @@ export default function InventoryPage() {
           />
         }
       >
-        <AppPanel>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead>Serial number</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <For each={items()}>
-                {(item) => (
-                  <TableRow>
-                    <TableCell class={styles.product}>
-                      {item.productName}
-                    </TableCell>
-                    <TableCell class={styles.serial}>
-                      {item.serial_number}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{item.category}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={statusVariant(item.status)}>
-                        {statusLabels[item.status] ?? item.status}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </For>
-            </TableBody>
-          </Table>
-        </AppPanel>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Product</TableHead>
+              <TableHead>Serial number</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead>Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <For each={items()}>
+              {(item) => (
+                <TableRow>
+                  <TableCell class={styles.product}>
+                    {item.productName}
+                  </TableCell>
+                  <TableCell class={styles.serial}>
+                    {item.serial_number}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{item.category}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={statusVariant(item.status)}>
+                      {statusLabels[item.status] ?? item.status}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              )}
+            </For>
+          </TableBody>
+        </Table>
       </Show>
     </AppPage>
   );

@@ -5,7 +5,7 @@ import { registerCall, requestLeads, getActiveLeads } from "~/actions/leads";
 import { LeadList } from "~/components/features/leads/lead-list";
 import { RequestLeadsButton } from "~/components/features/leads/request-leads-button";
 import { EmptyState } from "~/components/feedback/empty-state";
-import { AppPage, AppPanel } from "~/components/layout/page";
+import { AppPage } from "~/components/layout/page";
 import { runOptimistic } from "~/lib/ui/run-optimistic";
 
 import styles from "./leads-page.module.css";
@@ -52,7 +52,7 @@ export default function LeadsPage() {
 
   return (
     <AppPage>
-      <AppPanel class={styles.panelPadded}>
+      <div class={styles.panelPadded}>
         <Show
           when={!leads.error}
           fallback={
@@ -68,7 +68,7 @@ export default function LeadsPage() {
             emptyAction={<RequestLeadsButton onRequest={handleRequestLeads} />}
           />
         </Show>
-      </AppPanel>
+      </div>
       <div class={styles.fabContainer}>
         <RequestLeadsButton onRequest={handleRequestLeads} />
       </div>
