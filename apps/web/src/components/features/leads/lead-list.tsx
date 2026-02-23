@@ -1,12 +1,32 @@
-import { type Component, For, Show } from "solid-js";
+import {
+  type Component,
+  type JSX,
+  createMemo,
+  createSignal,
+  For,
+  Show,
+} from "solid-js";
 
 import { EmptyState } from "~/components/feedback/empty-state";
 import Building2 from "~/components/icons/building-2";
 import Check from "~/components/icons/check";
+import ChevronDown from "~/components/icons/chevron-down";
+import ChevronUp from "~/components/icons/chevron-up";
 import Phone from "~/components/icons/phone";
 import User from "~/components/icons/user";
-import { Badge } from "~/components/ui/display/badge";
 import { Button } from "~/components/ui/input/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "~/components/ui/layout/table";
+
+import { RegisterCallDialog } from "./register-call-dialog";
+
+import styles from "./lead-list.module.css";
 
 interface LeadContact {
   assignmentId: number;
@@ -22,100 +42,134 @@ interface LeadContact {
 
 interface LeadListProps {
   contacts: LeadContact[];
-  onCreateSale: (contactId: number) => void;
-  onComplete: (assignmentId: number) => void;
-}
-
-function formatTimeLeft(expiresAt: number): string {
-  const remainingMs = Math.max(0, expiresAt - Date.now());
-  const remainingHours = Math.floor(remainingMs / (60 * 60 * 1000));
-  const remainingMinutes = Math.floor(
-    (remainingMs % (60 * 60 * 1000)) / (60 * 1000),
-  );
-  if (remainingHours <= 0 && remainingMinutes <= 0) return "Vencido";
-  if (remainingHours <= 0) return `${remainingMinutes}m restantes`;
-  return `${remainingHours}h ${remainingMinutes}m restantes`;
+  onRegisterCall: (
+    assignmentId: number,
+    contactId: number,
+    outcome: string,
+    notes: string,
+  ) => Promise<void> | void;
+  emptyAction?: JSX.Element;
 }
 
 export const LeadList: Component<LeadListProps> = (props) => {
+  const [registerActive, setRegisterActive] = createSignal<{
+    assignmentId: number;
+    contactId: number;
+  } | null>(null);
+
+  // Sorting state: field is implicitly 'organization_id'. Only asc/desc toggles.
+  const [sortAsc, setSortAsc] = createSignal(true);
+
+  const sortedContacts = createMemo(() => {
+    const list = [...props.contacts];
+    return list.sort((a, b) => {
+      const valA = a.organization_id;
+      const valB = b.organization_id;
+      if (valA < valB) return sortAsc() ? -1 : 1;
+      if (valA > valB) return sortAsc() ? 1 : -1;
+      return 0;
+    });
+  });
+
   return (
     <Show
       when={props.contacts.length > 0}
       fallback={
         <EmptyState
-          title="Sin leads activos"
-          description="Solicita nuevos leads para comenzar a trabajar."
+          title="No active leads"
+          description="Request new leads to fill the queue."
         />
       }
     >
-      <div class="space-y-3">
-        <For each={props.contacts}>
-          {(lead) => (
-            <div class="crm-surface rounded-3xl px-4 py-4 md:px-5">
-              <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div class="grid flex-1 gap-2 md:grid-cols-[1.2fr_1fr_1fr] md:items-center">
-                  <div class="min-w-0">
-                    <div class="flex items-center gap-2">
-                      <div class="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
-                        <User class="h-4 w-4" />
-                      </div>
-                      <div class="min-w-0">
-                        <p class="truncate font-semibold text-foreground">
-                          {lead.name}
-                        </p>
-                        <p class="text-xs text-muted-foreground">
-                          DNI {lead.dni}
-                        </p>
-                      </div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Lead ({props.contacts.length})</TableHead>
+            <TableHead>Phone</TableHead>
+            <TableHead
+              onClick={() => setSortAsc((prev) => !prev)}
+              style={{ cursor: "pointer", "user-select": "none" }}
+            >
+              <div
+                style={{ display: "flex", "align-items": "center", gap: "4px" }}
+              >
+                Organization
+                {sortAsc() ? (
+                  <ChevronUp size={14} />
+                ) : (
+                  <ChevronDown size={14} />
+                )}
+              </div>
+            </TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <For each={sortedContacts()}>
+            {(lead) => (
+              <TableRow>
+                <TableCell class={styles.leadCell}>
+                  <div class={styles.leadIdentity}>
+                    <span class={styles.avatar}>
+                      <User size={14} />
+                    </span>
+                    <div class={styles.leadInfo}>
+                      <p class={styles.leadName}>{lead.name}</p>
+                      <p class={styles.leadMeta}>DNI {lead.dni}</p>
                     </div>
                   </div>
-
-                  <div class="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Phone class="h-3.5 w-3.5" />
-                    <span>{lead.phone_primary || "Sin teléfono"}</span>
+                </TableCell>
+                <TableCell>
+                  <div class={styles.inlineInfo}>
+                    <Phone size={14} />
+                    <span>{lead.phone_primary || "No phone"}</span>
                   </div>
-
-                  <div class="flex flex-wrap items-center gap-2">
-                    <Badge variant="outline" class="gap-1">
-                      <Building2 class="h-3 w-3" />
-                      Org #{lead.organization_id}
-                    </Badge>
-                    <Badge
-                      variant={lead.status === "active" ? "success" : "outline"}
-                    >
-                      {lead.status === "active" ? "Activo" : lead.status}
-                    </Badge>
-                    <Badge
-                      variant={
-                        lead.expires_at < Date.now() ? "destructive" : "warning"
+                </TableCell>
+                <TableCell>
+                  <div class={styles.inlineInfo}>
+                    <Building2 size={14} />
+                    <span>Org #{lead.organization_id}</span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div class={styles.actions}>
+                    <Button
+                      size="icon"
+                      variant="secondary"
+                      onClick={() =>
+                        setRegisterActive({
+                          assignmentId: lead.assignmentId,
+                          contactId: lead.contactId,
+                        })
                       }
+                      aria-label="Register call"
                     >
-                      {formatTimeLeft(lead.expires_at)}
-                    </Badge>
+                      <Check size={16} />
+                    </Button>
                   </div>
-                </div>
+                </TableCell>
+              </TableRow>
+            )}
+          </For>
+        </TableBody>
+      </Table>
 
-                <div class="flex items-center gap-2 lg:pl-4">
-                  <Button
-                    size="sm"
-                    onClick={() => props.onCreateSale(lead.contactId)}
-                  >
-                    Crear venta
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => props.onComplete(lead.assignmentId)}
-                  >
-                    <Check class="h-3.5 w-3.5" />
-                    Completar
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-        </For>
-      </div>
+      <RegisterCallDialog
+        isOpen={!!registerActive()}
+        onClose={() => setRegisterActive(null)}
+        onSubmit={(outcome, notes) => {
+          const active = registerActive();
+          if (active) {
+            void props.onRegisterCall(
+              active.assignmentId,
+              active.contactId,
+              outcome,
+              notes,
+            );
+            setRegisterActive(null);
+          }
+        }}
+      />
     </Show>
   );
 };

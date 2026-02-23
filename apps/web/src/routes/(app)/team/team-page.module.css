@@ -1,0 +1,56 @@
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.memberName {
+  font-weight: 500;
+}
+
+.personCell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-translucent);
+  color: var(--foreground);
+}
+
+.mailCell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sectionTitle {
+  margin: 0;
+  padding: 0 4px;
+  font-size: var(--font-size-body);
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.noPermission {
+  font-size: var(--font-size-caption);
+  color: var(--muted-foreground);
+}

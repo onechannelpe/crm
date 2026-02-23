@@ -2,15 +2,19 @@ import { useNavigate } from "@solidjs/router";
 import { createSignal, onMount, Show } from "solid-js";
 
 import { beginPasskeyLogin, finishPasskeyLogin } from "~/actions/auth";
-import { login } from "~/actions/auth-login";
+import { login } from "~/actions/auth";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
+import { initializeThemeMode } from "~/components/ui/theme/theme-mode";
+import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import {
   isPasskeySupported,
   toAuthenticationPayload,
   toRequestOptions,
 } from "~/lib/auth/passkey/browser";
 import { getErrorMessage } from "~/lib/errors";
+
+import styles from "../auth/auth-shell.module.css";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -25,6 +29,7 @@ export default function LoginPage() {
   >("unknown");
 
   onMount(() => {
+    initializeThemeMode();
     setPasskeySupport(isPasskeySupported() ? "supported" : "unsupported");
   });
 
@@ -35,9 +40,13 @@ export default function LoginPage() {
 
     try {
       const result = await login(email(), password(), totpCode());
-      navigate(result.onboardingCompleted ? "/dashboard" : "/onboarding");
+      navigate(
+        result.onboardingCompleted
+          ? getDefaultAppPath(result.role)
+          : "/onboarding",
+      );
     } catch (err: unknown) {
-      setError(getErrorMessage(err, "Credenciales inválidas"));
+      setError(getErrorMessage(err, "Invalid credentials"));
     } finally {
       setLoading(false);
     }
@@ -49,11 +58,11 @@ export default function LoginPage() {
 
     try {
       if (!isPasskeySupported()) {
-        throw new Error("Este dispositivo no soporta passkeys");
+        throw new Error("This browser does not support passkeys");
       }
 
       if (!email().trim()) {
-        throw new Error("Ingresa tu correo para usar passkey");
+        throw new Error("Enter email before using passkey");
       }
 
       const challenge = await beginPasskeyLogin(email());
@@ -62,111 +71,82 @@ export default function LoginPage() {
       });
 
       if (!(credential instanceof PublicKeyCredential)) {
-        throw new Error("No se obtuvo una credencial válida");
+        throw new Error("Invalid credential response");
       }
 
       const payload = toAuthenticationPayload(credential);
       const result = await finishPasskeyLogin(challenge.challengeId, payload);
-      navigate(result.onboardingCompleted ? "/dashboard" : "/onboarding");
+      navigate(
+        result.onboardingCompleted
+          ? getDefaultAppPath(result.role)
+          : "/onboarding",
+      );
     } catch (err: unknown) {
-      setError(getErrorMessage(err, "No se pudo iniciar sesión con passkey"));
+      setError(getErrorMessage(err, "Passkey sign in failed"));
     } finally {
       setPasskeyLoading(false);
     }
   }
 
   return (
-    <div class="crm-shell min-h-screen px-4 py-12 md:py-20">
-      <div class="mx-auto grid w-full max-w-6xl gap-12 md:grid-cols-[1.1fr_1fr] md:items-center">
-        <section class="space-y-4">
-          <div class="inline-flex items-center rounded-full border border-border/80 bg-surface px-4 py-1.5 text-xs uppercase tracking-[0.18em] text-muted-foreground">
-            One Channel
-          </div>
-          <div class="space-y-4">
-            <h1 class="text-4xl font-semibold leading-tight text-foreground md:text-5xl">
-              Bienvenido de vuelta
-            </h1>
-            <p class="max-w-[560px] text-base text-muted-foreground md:text-lg">
-              Gestiona leads, registra ventas, valida operaciones y consulta
-              clientes, cuotas e inventario.
-            </p>
-            <p class="max-w-[560px] text-sm text-muted-foreground">
-              ¿Alguna duda o encontraste un bug? Escribe al{" "}
-              <a
-                href="mailto:david.duran@onechannel.pe"
-                class="font-semibold text-foreground hover:underline"
-              >
-                soporte interno
-              </a>
-              .
-            </p>
-          </div>
-        </section>
+    <div class={styles.shell}>
+      <div class={`${styles.panel} ${styles.panelSm}`}>
+        <div class={styles.stack1}>
+          <p class={styles.eyebrow}>CRM Workspace</p>
+          <h1 class={styles.titleSm}>Sign in</h1>
+          <p class={styles.muted}>Continue with password or passkey.</p>
+        </div>
 
-        <section class="crm-surface rounded-3xl p-6 md:p-8">
-          <div class="mb-4 text-center">
-            <h2 class="text-2xl font-semibold tracking-tight text-foreground">
-              Iniciar sesión
-            </h2>
-          </div>
+        <form
+          onSubmit={(e) => {
+            void handleSubmit(e);
+          }}
+          class={styles.stack3}
+        >
+          <Input
+            id="email"
+            type="email"
+            label="Email"
+            placeholder="name@company.com"
+            value={email()}
+            onInput={(e) => setEmail(e.currentTarget.value)}
+            required
+          />
 
-          <form
-            onSubmit={(e) => {
-              void handleSubmit(e);
-            }}
-            class="space-y-4"
-          >
-            <Input
-              id="email"
-              type="email"
-              placeholder="Correo corporativo"
-              value={email()}
-              onInput={(e) => setEmail(e.currentTarget.value)}
-              required
-              class="h-12"
-            />
+          <Input
+            id="password"
+            type="password"
+            label="Password"
+            value={password()}
+            onInput={(e) => setPassword(e.currentTarget.value)}
+            required
+          />
 
-            <Input
-              id="password"
-              type="password"
-              placeholder="Contraseña"
-              value={password()}
-              onInput={(e) => setPassword(e.currentTarget.value)}
-              required
-              class="h-12"
-            />
+          <Input
+            id="totp"
+            type="text"
+            label="TOTP or recovery code"
+            placeholder="Optional"
+            value={totpCode()}
+            onInput={(e) => setTotpCode(e.currentTarget.value)}
+          />
 
-            <div class="space-y-2">
-              <Input
-                id="totp"
-                type="text"
-                placeholder="Código TOTP o recuperación (si aplica)"
-                value={totpCode()}
-                onInput={(e) => setTotpCode(e.currentTarget.value)}
-                class="h-12"
-              />
-              <p class="text-xs text-muted-foreground">
-                Usa tu código TOTP o de recuperación si tienes TOTP habilitado.
-              </p>
-            </div>
+          <Show when={error()}>
+            <div class={styles.errorBox}>{error()}</div>
+          </Show>
 
-            <Show when={error()}>
-              <div class="rounded-2xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive">
-                {error()}
-              </div>
-            </Show>
-
+          <div class={styles.stack2}>
             <Button
               type="submit"
-              class="h-11 w-full text-base"
+              class={styles.full}
               disabled={loading() || passkeyLoading()}
             >
-              {loading() ? "Iniciando sesión..." : "Entrar"}
+              {loading() ? "Signing in..." : "Sign in"}
             </Button>
             <Button
               type="button"
               variant="outline"
-              class="h-11 w-full text-base"
+              class={styles.full}
               disabled={
                 loading() ||
                 passkeyLoading() ||
@@ -176,51 +156,17 @@ export default function LoginPage() {
                 void handlePasskeyLogin();
               }}
             >
-              {passkeyLoading()
-                ? "Validando passkey..."
-                : "Iniciar con passkey"}
+              {passkeyLoading() ? "Checking passkey..." : "Use passkey"}
             </Button>
-            <div class="min-h-5">
-              <Show when={passkeySupport() === "unsupported"}>
-                <p class="text-center text-xs text-muted-foreground">
-                  Este dispositivo o navegador no soporta passkeys.
-                </p>
-              </Show>
-            </div>
-          </form>
-
-          <div class="mt-4 text-center">
-            <a
-              href="mailto:david.duran@onechannel.pe"
-              class="text-sm text-muted-foreground transition-colors hover:text-foreground"
-            >
-              ¿Olvidaste tu contraseña?
-            </a>
           </div>
-        </section>
-      </div>
 
-      <p class="mt-10 px-8 text-center text-xs text-muted-foreground">
-        Este sitio está protegido por Cloudflare Turnstile y se aplican la
-        <a
-          href="https://www.cloudflare.com/turnstile-privacy-policy/"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="hover:underline mx-1"
-        >
-          Política de privacidad
-        </a>
-        y los
-        <a
-          href="https://www.cloudflare.com/terms/"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="hover:underline mx-1"
-        >
-          Términos del servicio
-        </a>
-        .
-      </p>
+          <Show when={passkeySupport() === "unsupported"}>
+            <p class={styles.muted}>
+              Passkeys are not supported on this device.
+            </p>
+          </Show>
+        </form>
+      </div>
     </div>
   );
 }

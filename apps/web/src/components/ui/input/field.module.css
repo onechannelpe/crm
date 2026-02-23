@@ -1,0 +1,120 @@
+.field {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  color: var(--foreground);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+}
+
+.required {
+  margin-inline-start: 4px;
+}
+
+.control {
+  width: 100%;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--foreground);
+  font-size: var(--font-size-body);
+  padding: 0 8px;
+}
+
+.fileControl {
+  width: 100%;
+  min-height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--foreground);
+  font-size: var(--font-size-body);
+  padding: 6px 8px;
+}
+
+.textareaControl {
+  width: 100%;
+  min-height: 96px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--foreground);
+  font-size: var(--font-size-body);
+  padding: 8px;
+  resize: vertical;
+}
+
+.control::placeholder {
+  color: var(--muted-foreground);
+}
+
+.textareaControl::placeholder {
+  color: var(--muted-foreground);
+}
+
+.control:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.errorControl {
+  border-color: var(--destructive);
+}
+
+.errorText {
+  color: var(--destructive);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+}
+
+.checkboxLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.checkboxInput {
+  width: 16px;
+  height: 16px;
+  appearance: none;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: var(--surface);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checkboxInput:checked {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.checkboxText {
+  color: var(--foreground);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+}
+
+.checkIcon {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  color: var(--primary-foreground);
+  pointer-events: none;
+}
+
+.checkboxWrap {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}

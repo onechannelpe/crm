@@ -1,9 +1,10 @@
 import { useNavigate, useSearchParams } from "@solidjs/router";
-import { createResource, createSignal, For, Show } from "solid-js";
+import { createResource, createSignal, For, onMount, Show } from "solid-js";
 
 import {
   addSaleDocument,
   addSaleItem,
+  createManualSale,
   createSale,
   getAvailableInventory,
   getAvailableProducts,
@@ -13,12 +14,7 @@ import {
   submitSale,
 } from "~/actions/sales";
 import { useToast } from "~/components/feedback/toast-provider";
-import {
-  AppInsetPanel,
-  AppPage,
-  AppPageHeader,
-  AppPageSection,
-} from "~/components/layout/page";
+import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { FileInput } from "~/components/ui/input/file-input";
 import { Input } from "~/components/ui/input/input";
@@ -26,14 +22,20 @@ import { Select } from "~/components/ui/input/select";
 import { getErrorMessage } from "~/lib/errors";
 import { runOptimistic } from "~/lib/ui/run-optimistic";
 
+import styles from "./new-sale-page.module.css";
+
 export default function NewSalePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [contactId, setContactId] = createSignal(
-    searchParams.contactId?.toString() || "",
-  );
   const [noteId, setNoteId] = createSignal<number | null>(null);
   const [loading, setLoading] = createSignal(false);
+
+  const [ruc, setRuc] = createSignal("");
+  const [orgName, setOrgName] = createSignal("");
+  const [dni, setDni] = createSignal("");
+  const [contactName, setContactName] = createSignal("");
+  const [phone, setPhone] = createSignal("");
+
   const [selectedProductId, setSelectedProductId] = createSignal("");
   const [quantity, setQuantity] = createSignal("1");
   const [selectedInventoryId, setSelectedInventoryId] = createSignal("");
@@ -57,15 +59,40 @@ export default function NewSalePage() {
     createResource(noteId, getSaleDraftContext);
   const currentDraft = () => draft.latest;
 
-  async function handleCreate(e: Event) {
+  async function doCreateSale(contactId: number) {
+    setLoading(true);
+    try {
+      const res = await createSale(contactId);
+      setNoteId(res.id);
+      showToast("success", `Sales note #${res.id} created`);
+    } catch (err: unknown) {
+      showToast("error", getErrorMessage(err, "Failed to create sale"));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  onMount(() => {
+    if (searchParams.contactId) {
+      void doCreateSale(Number(searchParams.contactId));
+    }
+  });
+
+  async function handleCreateManual(e: Event) {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await createSale(Number(contactId()));
+      const res = await createManualSale({
+        ruc: ruc(),
+        orgName: orgName(),
+        dni: dni(),
+        contactName: contactName(),
+        phoneE164: phone() || null,
+      });
       setNoteId(res.id);
-      showToast("success", `Nota de cargo #${res.id} creada`);
+      showToast("success", `Sales note #${res.id} created`);
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "Error al crear venta"));
+      showToast("error", getErrorMessage(err, "Failed to create manual sale"));
     } finally {
       setLoading(false);
     }
@@ -110,9 +137,9 @@ export default function NewSalePage() {
           void refetchDraft();
         },
       });
-      showToast("success", "Producto agregado");
+      showToast("success", "Item added");
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "No se pudo agregar producto"));
+      showToast("error", getErrorMessage(err, "Failed to add item"));
     }
   }
 
@@ -162,12 +189,9 @@ export default function NewSalePage() {
         },
       });
       setSelectedDocumentFile(null);
-      showToast("success", "Documento registrado");
+      showToast("success", "Document uploaded");
     } catch (err: unknown) {
-      showToast(
-        "error",
-        getErrorMessage(err, "No se pudo registrar documento"),
-      );
+      showToast("error", getErrorMessage(err, "Failed to upload document"));
     }
   }
 
@@ -208,19 +232,15 @@ export default function NewSalePage() {
           await Promise.all([refetchDraft(), refetchInventory()]);
         },
       });
-      showToast("success", "Equipo reservado");
+      showToast("success", "Inventory reserved");
     } catch (err: unknown) {
-      showToast(
-        "error",
-        getErrorMessage(err, "No se pudo reservar inventario"),
-      );
+      showToast("error", getErrorMessage(err, "Failed to reserve inventory"));
     }
   }
 
   async function handleRemoveDocument(documentId: number) {
     const currentNoteId = noteId();
     if (!currentNoteId) return;
-
     try {
       await runOptimistic({
         read: currentDraft,
@@ -248,9 +268,9 @@ export default function NewSalePage() {
           void refetchDraft();
         },
       });
-      showToast("success", "Documento eliminado");
+      showToast("success", "Document removed");
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "No se pudo eliminar documento"));
+      showToast("error", getErrorMessage(err, "Failed to remove document"));
     }
   }
 
@@ -260,69 +280,94 @@ export default function NewSalePage() {
     setLoading(true);
     try {
       await submitSale(currentNoteId);
-      showToast("success", "Nota enviada a revisión");
+      showToast("success", "Sales note submitted");
       navigate("/leads");
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "Error al enviar"));
+      showToast("error", getErrorMessage(err, "Submit failed"));
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <AppPage class="mx-auto max-w-4xl">
-      <AppPageHeader
-        eyebrow="Ventas"
-        title="Nueva venta"
-        description="Crea una nota y completa productos, documentos e inventario."
-        actions={
-          <Button variant="secondary" onClick={() => navigate("/leads")}>
-            Cancelar
-          </Button>
-        }
-      />
-
+    <AppPage width="medium">
       <Show when={!noteId()}>
-        <AppPageSection class="p-6">
-          <form
-            onSubmit={(e) => {
-              void handleCreate(e);
-            }}
-            class="max-w-md space-y-4"
-          >
+        <form
+          onSubmit={(e) => {
+            void handleCreateManual(e);
+          }}
+        >
+          <div class={styles.formGrid}>
             <Input
-              type="number"
-              label="ID del Contacto"
-              value={contactId()}
-              onInput={(e) => setContactId(e.currentTarget.value)}
+              label="RUC"
+              placeholder="20100200300"
+              value={ruc()}
+              onInput={(e) => setRuc(e.currentTarget.value)}
               required
             />
-            <Button type="submit" disabled={loading()}>
-              {loading() ? "Creando..." : "Crear nota de cargo"}
+            <Input
+              label="Organization Name"
+              placeholder="Acme Corp"
+              value={orgName()}
+              onInput={(e) => setOrgName(e.currentTarget.value)}
+              required
+            />
+            <Input
+              label="DNI"
+              placeholder="12345678"
+              value={dni()}
+              onInput={(e) => setDni(e.currentTarget.value)}
+              required
+            />
+            <Input
+              label="Contact Name"
+              value={contactName()}
+              onInput={(e) => setContactName(e.currentTarget.value)}
+              required
+            />
+            <Input
+              type="tel"
+              label="Phone (optional)"
+              placeholder="+51..."
+              value={phone()}
+              onInput={(e) => setPhone(e.currentTarget.value)}
+            />
+          </div>
+          <div class={styles.formActions}>
+            <Button type="submit" disabled={loading() || !ruc() || !dni()}>
+              {loading() ? "Creating draft..." : "Create draft sales note"}
             </Button>
-          </form>
-        </AppPageSection>
+          </div>
+        </form>
       </Show>
 
       <Show when={noteId()}>
-        <AppPageSection class="space-y-6 p-6">
-          <div>
-            <h3 class="text-lg font-semibold text-foreground">
-              Nota de cargo #{noteId()}
-            </h3>
-            <p class="mt-1 text-sm text-muted-foreground">
-              Debe tener productos, documentos y equipo bloqueado.
-            </p>
+        <div class={styles.draftLayout}>
+          <div class={styles.draftHeader}>
+            <div>
+              <h3 class={styles.draftTitle}>Sales note #{noteId()}</h3>
+              <p class={styles.draftHint}>
+                Add items, upload a document, and reserve inventory before
+                submitting.
+              </p>
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => navigate("/leads")}
+            >
+              Cancel
+            </Button>
           </div>
 
-          <div class="grid gap-4 md:grid-cols-3">
-            <AppInsetPanel class="space-y-2">
-              <p class="text-sm font-medium">Productos</p>
+          <div class={styles.columns}>
+            <div class={styles.column}>
+              <p class={styles.columnTitle}>Items</p>
               <Select
                 value={selectedProductId()}
                 onInput={(e) => setSelectedProductId(e.currentTarget.value)}
               >
-                <option value="">Seleccionar producto</option>
+                <option value="">Select product</option>
                 <For each={currentProducts()}>
                   {(product) => (
                     <option value={product.id}>{product.name}</option>
@@ -331,7 +376,7 @@ export default function NewSalePage() {
               </Select>
               <Input
                 type="number"
-                label="Cantidad"
+                label="Quantity"
                 value={quantity()}
                 min="1"
                 onInput={(e) => setQuantity(e.currentTarget.value)}
@@ -341,14 +386,14 @@ export default function NewSalePage() {
                   void handleAddItem();
                 }}
               >
-                Agregar
+                Add item
               </Button>
-            </AppInsetPanel>
+            </div>
 
-            <AppInsetPanel class="space-y-2">
-              <p class="text-sm font-medium">Documento</p>
+            <div class={styles.column}>
+              <p class={styles.columnTitle}>Document</p>
               <FileInput
-                label="Archivo"
+                label="File"
                 accept=".pdf,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg,image/webp"
                 onInput={(e) => {
                   setSelectedDocumentFile(e.currentTarget.files?.[0] ?? null);
@@ -360,21 +405,21 @@ export default function NewSalePage() {
                 }}
                 disabled={!selectedDocumentFile()}
               >
-                Registrar
+                Upload document
               </Button>
-            </AppInsetPanel>
+            </div>
 
-            <AppInsetPanel class="space-y-2">
-              <p class="text-sm font-medium">Equipo (S/N)</p>
+            <div class={styles.column}>
+              <p class={styles.columnTitle}>Inventory</p>
               <Select
                 value={selectedInventoryId()}
                 onInput={(e) => setSelectedInventoryId(e.currentTarget.value)}
               >
-                <option value="">Seleccionar serial</option>
+                <option value="">Select serial</option>
                 <For each={currentInventory()}>
                   {(item) => (
                     <option value={item.id}>
-                      {item.serial_number} - {item.product_name}
+                      {item.serial_number} — {item.product_name}
                     </option>
                   )}
                 </For>
@@ -384,26 +429,58 @@ export default function NewSalePage() {
                   void handleLockInventory();
                 }}
               >
-                Reservar
+                Reserve
               </Button>
-            </AppInsetPanel>
+            </div>
           </div>
 
           <Show when={currentDraft()}>
             {(ctx) => (
-              <AppInsetPanel class="space-y-2 text-sm">
-                <p>Items: {ctx().items.length}</p>
-                <p>Documentos: {ctx().documents.length}</p>
-                <p class="text-sm font-medium">Productos</p>
-                <p>
-                  Inventario bloqueado:{" "}
-                  {ctx().inventoryLock?.serial_number ?? "No"}
+              <div class={styles.readiness}>
+                <p class={styles.readinessRow}>
+                  <span
+                    class={
+                      ctx().readiness.hasItems
+                        ? styles.readinessOk
+                        : styles.readinessMissing
+                    }
+                  >
+                    {ctx().readiness.hasItems ? "✓" : "○"}
+                  </span>
+                  Items — {ctx().items.length} added
+                </p>
+                <p class={styles.readinessRow}>
+                  <span
+                    class={
+                      ctx().readiness.hasDocuments
+                        ? styles.readinessOk
+                        : styles.readinessMissing
+                    }
+                  >
+                    {ctx().readiness.hasDocuments ? "✓" : "○"}
+                  </span>
+                  Documents — {ctx().documents.length} uploaded
+                </p>
+                <p class={styles.readinessRow}>
+                  <span
+                    class={
+                      ctx().readiness.hasInventoryLock
+                        ? styles.readinessOk
+                        : styles.readinessMissing
+                    }
+                  >
+                    {ctx().readiness.hasInventoryLock ? "✓" : "○"}
+                  </span>
+                  Inventory —{" "}
+                  {ctx().inventoryLock
+                    ? ctx().inventoryLock!.serial_number
+                    : "not reserved"}
                 </p>
                 <Show when={ctx().documents.length > 0}>
-                  <ul class="space-y-1">
+                  <ul class={styles.documentList}>
                     <For each={ctx().documents}>
                       {(document) => (
-                        <li class="flex items-center justify-between rounded-xl border border-border/80 bg-surface px-2 py-1">
+                        <li class={styles.documentItem}>
                           <span>
                             {document.original_name} (
                             {Math.ceil(document.size_bytes / 1024)} KB)
@@ -415,28 +492,28 @@ export default function NewSalePage() {
                               void handleRemoveDocument(document.id);
                             }}
                           >
-                            Eliminar
+                            Remove
                           </Button>
                         </li>
                       )}
                     </For>
                   </ul>
                 </Show>
-              </AppInsetPanel>
+              </div>
             )}
           </Show>
 
-          <div class="flex justify-end">
+          <div class={styles.submitRow}>
             <Button
               onClick={() => {
                 void handleSubmit();
               }}
               disabled={loading()}
             >
-              {loading() ? "Enviando..." : "Enviar a validación"}
+              {loading() ? "Submitting..." : "Submit for review"}
             </Button>
           </div>
-        </AppPageSection>
+        </div>
       </Show>
     </AppPage>
   );

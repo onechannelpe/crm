@@ -3,24 +3,22 @@ import { createResource, createSignal, For } from "solid-js";
 
 import { createTeamInvite, getBranchTeamsForInvite } from "~/actions/team";
 import { useToast } from "~/components/feedback/toast-provider";
-import {
-  AppPage,
-  AppPageHeader,
-  AppPageSection,
-} from "~/components/layout/page";
+import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { Select } from "~/components/ui/input/select";
 import { getErrorMessage } from "~/lib/errors";
 
+import styles from "./new-team-page.module.css";
+
 const ROLE_OPTIONS = [
-  { value: "executive", label: "Ejecutivo" },
+  { value: "executive", label: "Executive" },
   { value: "supervisor", label: "Supervisor" },
-  { value: "back_office", label: "Validacion" },
-  { value: "sales_manager", label: "Gerente de ventas" },
-  { value: "logistics", label: "Logistica" },
-  { value: "hr", label: "RRHH" },
-  { value: "admin", label: "Administrador" },
+  { value: "back_office", label: "Back office" },
+  { value: "sales_manager", label: "Sales manager" },
+  { value: "logistics", label: "Logistics" },
+  { value: "hr", label: "HR" },
+  { value: "admin", label: "Admin" },
 ] as const;
 
 export default function NewTeamInvitePage() {
@@ -43,53 +41,39 @@ export default function NewTeamInvitePage() {
         role: role(),
         teamId: teamId() ? Number(teamId()) : null,
       });
-      showToast("success", "Invitacion creada y enviada");
+      showToast("success", "Invite sent");
       navigate("/team");
     } catch (err: unknown) {
-      showToast(
-        "error",
-        getErrorMessage(err, "No se pudo crear la invitacion"),
-      );
+      showToast("error", getErrorMessage(err, "Failed to create invite"));
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <AppPage class="mx-auto max-w-2xl">
-      <AppPageHeader
-        eyebrow="Equipo"
-        title="Invitar usuario"
-        description="Genera una invitación con rol y equipo opcional."
-        actions={
-          <Button variant="secondary" onClick={() => navigate("/team")}>
-            Cancelar
-          </Button>
-        }
-      />
-
-      <AppPageSection class="p-6">
+    <AppPage width="medium">
+      <div>
         <form
-          class="space-y-4"
+          class={styles.form}
           onSubmit={(event) => {
             void handleSubmit(event);
           }}
         >
           <Input
-            label="Nombre completo"
+            label="Full name"
             value={fullName()}
             onInput={(event) => setFullName(event.currentTarget.value)}
             required
           />
           <Input
             type="email"
-            label="Correo laboral"
+            label="Work email"
             value={email()}
             onInput={(event) => setEmail(event.currentTarget.value)}
             required
           />
           <Select
-            label="Rol"
+            label="Role"
             value={role()}
             onInput={(event) => setRole(event.currentTarget.value)}
           >
@@ -99,20 +83,30 @@ export default function NewTeamInvitePage() {
           </Select>
 
           <Select
-            label="Equipo (opcional)"
+            label="Team (optional)"
             value={teamId()}
             onInput={(event) => setTeamId(event.currentTarget.value)}
           >
-            <option value="">Sin equipo asignado</option>
+            <option value="">No team</option>
             <For each={teams() ?? []}>
               {(team) => <option value={team.id}>{team.name}</option>}
             </For>
           </Select>
-          <Button type="submit" disabled={saving()}>
-            {saving() ? "Enviando..." : "Enviar invitacion"}
-          </Button>
+
+          <div class={styles.formActions}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => navigate("/team")}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={saving()}>
+              {saving() ? "Sending..." : "Send invite"}
+            </Button>
+          </div>
         </form>
-      </AppPageSection>
+      </div>
     </AppPage>
   );
 }

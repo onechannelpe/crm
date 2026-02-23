@@ -1,60 +1,58 @@
 import { useLocation } from "@solidjs/router";
+import { createEffect, createMemo, createSignal, onCleanup } from "solid-js";
 
-import CircleQuestionMark from "~/components/icons/circle-question-mark";
+import { CommandPalette } from "~/components/features/command-palette/command-palette";
 import { HeaderNotificationsPanel } from "~/components/layout/header-notifications-panel";
-import { HeaderSearchPanel } from "~/components/layout/header-search-panel";
-import { useSession } from "~/components/providers/session-provider";
-import { Button } from "~/components/ui/input/button";
-import { DS_Z_INDEX } from "~/components/ui/theme/design-system";
+import { ICON_BY_ROUTE } from "~/components/layout/route-icons";
+import { getHeaderRoute } from "~/lib/nav/nav-policy";
 
-const ROUTE_LABELS: Record<string, string> = {
-  dashboard: "Inicio",
-  leads: "Leads",
-  "client-search": "Búsqueda de clientes",
-  quota: "Cuota",
-  validation: "Validación",
-  inventory: "Inventario",
-  team: "Equipo",
-  settings: "Configuración",
-  profile: "Perfil",
-  sales: "Ventas",
-};
+import styles from "./shell.module.css";
 
 export function Header() {
-  const { currentUser } = useSession();
   const location = useLocation();
-  const currentLabel = () => {
-    const segment =
-      location.pathname.split("/").filter(Boolean)[0] ?? "dashboard";
-    return ROUTE_LABELS[segment] ?? "Plataforma";
-  };
+  const currentRoute = createMemo(() => getHeaderRoute(location.pathname));
+  const [paletteOpen, setPaletteOpen] = createSignal(false);
+
+  createEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setPaletteOpen(true);
+      }
+    };
+    document.addEventListener("keydown", handler);
+    onCleanup(() => document.removeEventListener("keydown", handler));
+  });
 
   return (
-    <header
-      class="sticky top-0 border-b border-border/70 bg-background/80 px-4 py-3 backdrop-blur md:px-8"
-      style={{ "z-index": DS_Z_INDEX.sticky }}
-    >
-      <div class="mx-auto flex w-full max-w-[1200px] items-center justify-between">
-        <div class="flex items-center gap-2 text-sm text-muted-foreground">
-          <span class="rounded-full border border-border/80 bg-surface px-3 py-1 text-[11px] uppercase tracking-[0.18em]">
-            CRM
-          </span>
-          <span>/</span>
-          <span class="font-medium text-foreground">{currentLabel()}</span>
+    <>
+      <CommandPalette
+        open={paletteOpen()}
+        onClose={() => setPaletteOpen(false)}
+      />
+      <header class={styles.topbar}>
+        <div class={styles.topbarInner}>
+          <div class={styles.topbarTitle}>
+            {(() => {
+              const Icon = ICON_BY_ROUTE[currentRoute().icon];
+              return <Icon size={16} />;
+            })()}
+            <span>{currentRoute().label}</span>
+          </div>
+          <div class={styles.topbarActions}>
+            <button
+              class={styles.topbarGhost}
+              type="button"
+              onClick={() => setPaletteOpen(true)}
+              aria-label="Open command palette"
+            >
+              <span class={styles.topbarKbd}>Ctrl</span>
+              <span class={styles.topbarKbd}>K</span>
+            </button>
+            <HeaderNotificationsPanel />
+          </div>
         </div>
-
-        <div class="flex items-center gap-1.5">
-          <HeaderSearchPanel role={currentUser().role} />
-          <HeaderNotificationsPanel />
-          <Button
-            variant="ghost"
-            size="icon"
-            class="text-muted-foreground md:hidden"
-          >
-            <CircleQuestionMark class="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
-    </header>
+      </header>
+    </>
   );
 }

@@ -1,33 +1,24 @@
-import { useNavigate } from "@solidjs/router";
-import { Show } from "solid-js";
+import { A } from "@solidjs/router";
+import { createMemo, For } from "solid-js";
 
 import { getDashboardStats } from "~/actions/dashboard";
 import { getQuotaStatus } from "~/actions/quota";
-import { QuotaDisplay } from "~/components/features/quota/quota-display";
-import { EmptyState } from "~/components/feedback/empty-state";
-import {
-  AppPage,
-  AppPageHeader,
-  AppPageSection,
-  AppPageSectionTitle,
-} from "~/components/layout/page";
-import { useSession } from "~/components/providers/session-provider";
-import { Badge } from "~/components/ui/display/badge";
-import { Button } from "~/components/ui/input/button";
-import { hasPermission } from "~/lib/auth/access/rbac";
+import { AppPage } from "~/components/layout/page";
 import { createAppQuery } from "~/lib/ui/create-app-query";
 
-type FocusItem = {
+import styles from "./dashboard-page.module.css";
+
+type DashboardColumn = {
+  key: string;
   label: string;
-  value: number;
-  detail: string;
-  cta: string;
-  href: string;
+  tone: string;
+  amount: number;
+  cards: Array<{ title: string; value: string; detail: string; href: string }>;
+  actionLabel: string;
+  actionHref: string;
 };
 
 export default function DashboardPage() {
-  const navigate = useNavigate();
-  const { currentUser } = useSession();
   const [quota] = createAppQuery(getQuotaStatus, { allocated: false });
   const [stats] = createAppQuery(getDashboardStats, {
     activeLeads: 0,
@@ -36,151 +27,125 @@ export default function DashboardPage() {
     approvedSales: 0,
   });
 
-  const quotaValues = () => {
-    const current = quota();
-    if (!current?.allocated) return null;
-    return { used: current.used, total: current.total };
-  };
-
-  const focusItems = (): FocusItem[] => {
-    const items: FocusItem[] = [];
-
-    if (hasPermission(currentUser().role, "sales:review")) {
-      items.push({
-        label: "Ventas pendientes",
-        value: stats()?.pendingSales ?? 0,
-        detail: "Requieren validación para avanzar",
-        cta: "Abrir validación",
-        href: "/validation",
-      });
-    }
-
-    items.push(
+  const columns = createMemo<DashboardColumn[]>(() => {
+    const q = quota();
+    const s = stats();
+    return [
       {
-        label: "Leads activos",
-        value: stats()?.activeLeads ?? 0,
-        detail: "Contactos disponibles para gestión",
-        cta: "Ir a leads",
-        href: "/leads",
+        key: "quota",
+        label: "Quota",
+        tone: styles.tagQuota,
+        amount: q.allocated ? q.total : 0,
+        cards: [
+          {
+            title: "Daily capacity",
+            value: q.allocated ? `${q.used}/${q.total}` : "0",
+            detail: q.allocated ? "Used / total" : "Not assigned",
+            href: "/quota",
+          },
+        ],
+        actionLabel: "View quota",
+        actionHref: "/quota",
       },
       {
-        label: "Borradores",
-        value: stats()?.draftSales ?? 0,
-        detail: "Ventas en preparación",
-        cta: "Continuar ventas",
-        href: "/leads",
+        key: "new",
+        label: "New",
+        tone: styles.tagNew,
+        amount: s.activeLeads,
+        cards: [
+          {
+            title: "Lead queue",
+            value: `${s.activeLeads}`,
+            detail: "Active leads",
+            href: "/leads",
+          },
+        ],
+        actionLabel: "View leads",
+        actionHref: "/leads",
       },
-    );
-
-    return items;
-  };
-
-  const completed = () => stats()?.approvedSales ?? 0;
-  const openLoad = () =>
-    (stats()?.pendingSales ?? 0) +
-    (stats()?.activeLeads ?? 0) +
-    (stats()?.draftSales ?? 0);
+      {
+        key: "screening",
+        label: "Screening",
+        tone: styles.tagScreening,
+        amount: s.draftSales,
+        cards: [
+          {
+            title: "Sales draft",
+            value: `${s.draftSales}`,
+            detail: "Draft notes",
+            href: "/sales/new",
+          },
+        ],
+        actionLabel: "Continue draft",
+        actionHref: "/sales/new",
+      },
+      {
+        key: "review",
+        label: "Review",
+        tone: styles.tagReview,
+        amount: s.pendingSales,
+        cards: [
+          {
+            title: "Pending approvals",
+            value: `${s.pendingSales}`,
+            detail: "Awaiting validation",
+            href: "/review",
+          },
+        ],
+        actionLabel: "View pending",
+        actionHref: "/review",
+      },
+      {
+        key: "customer",
+        label: "Customer",
+        tone: styles.tagCustomer,
+        amount: s.approvedSales,
+        cards: [
+          {
+            title: "Approved sales",
+            value: `${s.approvedSales}`,
+            detail: "Closed operations",
+            href: "/sales/approved",
+          },
+        ],
+        actionLabel: "View approved",
+        actionHref: "/sales/approved",
+      },
+    ];
+  });
 
   return (
-    <AppPage class="space-y-7">
-      <AppPageHeader
-        eyebrow="Operación diaria"
-        title="Centro de ejecución"
-        description="Prioriza primero pendientes y mantén la cola de leads en flujo."
-        actions={
-          <Badge variant="outline" class="text-[11px]">
-            Vista de hoy
-          </Badge>
-        }
-      />
-
-      <AppPageSection>
-        <AppPageSectionTitle
-          title="Focos de trabajo"
-          description="Orden recomendado de atención"
-        />
-
-        <div class="space-y-2">
-          {focusItems().map((item) => (
-            <div class="flex flex-col gap-3 rounded-2xl border border-border/70 bg-surface px-4 py-3 md:flex-row md:items-center md:justify-between">
-              <div class="min-w-0">
-                <p class="text-sm font-semibold text-foreground">
-                  {item.label}
-                </p>
-                <p class="text-xs text-muted-foreground">{item.detail}</p>
-              </div>
-              <div class="flex items-center gap-3">
-                <span class="min-w-12 text-right text-2xl font-semibold">
-                  {item.value}
-                </span>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => navigate(item.href)}
-                >
-                  {item.cta}
-                </Button>
-              </div>
-            </div>
-          ))}
+    <AppPage>
+      <div class={styles.boardGrid}>
+        <div class={styles.boardWrap}>
+          <div class={styles.board}>
+            <For each={columns()}>
+              {(column) => (
+                <div class={styles.column}>
+                  <div class={styles.columnHead}>
+                    <span class={`${styles.tag} ${column.tone}`}>
+                      {column.label}
+                    </span>
+                    <span class={styles.columnAmount}>{column.amount}</span>
+                  </div>
+                  <For each={column.cards}>
+                    {(card) => (
+                      <A href={card.href} class={styles.card}>
+                        <p class={styles.cardTitle}>{card.title}</p>
+                        <p class={styles.cardValue}>{card.value}</p>
+                        <p class={styles.cardDetail}>{card.detail}</p>
+                      </A>
+                    )}
+                  </For>
+                  <A href={column.actionHref} class={styles.columnAction}>
+                    {column.actionLabel}
+                  </A>
+                </div>
+              )}
+            </For>
+          </div>
         </div>
-      </AppPageSection>
-
-      <div class="grid grid-cols-1 gap-4 lg:grid-cols-[1.2fr_1fr]">
-        <Show
-          when={quotaValues()}
-          fallback={
-            <div class="crm-surface rounded-3xl p-5">
-              <p class="text-xs uppercase tracking-[0.12em] text-muted-foreground">
-                Cuota diaria
-              </p>
-              <p class="mt-2 text-2xl font-semibold">Sin cuota asignada</p>
-              <p class="mt-1 text-sm text-muted-foreground">
-                Solicita asignación al supervisor para habilitar nuevos pedidos
-                de leads.
-              </p>
-            </div>
-          }
-        >
-          {(values) => (
-            <QuotaDisplay used={values().used} total={values().total} />
-          )}
-        </Show>
-
-        <AppPageSection class="p-5">
-          <p class="text-xs uppercase tracking-[0.12em] text-muted-foreground">
-            Estado del pipeline
-          </p>
-          <div class="mt-3 space-y-2">
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-muted-foreground">Aprobadas</span>
-              <span class="text-lg font-semibold">{completed()}</span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-muted-foreground">Carga abierta</span>
-              <span class="text-lg font-semibold">{openLoad()}</span>
-            </div>
-          </div>
-          <div class="mt-4 h-2 rounded-full bg-secondary">
-            <div
-              class="h-2 rounded-full bg-primary transition-all"
-              style={{
-                width: `${Math.min(100, (completed() / Math.max(1, completed() + openLoad())) * 100).toFixed(2)}%`,
-              }}
-            />
-          </div>
-          <p class="mt-2 text-xs text-muted-foreground">
-            Proporción de operaciones cerradas frente a carga pendiente.
-          </p>
-        </AppPageSection>
       </div>
-
-      <Show when={completed() === 0 && openLoad() === 0}>
-        <EmptyState
-          title="No hay carga operativa activa"
-          description="Solicita leads para iniciar la jornada comercial."
-        />
-      </Show>
     </AppPage>
   );
 }

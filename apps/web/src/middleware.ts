@@ -20,6 +20,6 @@ export default createMiddleware({
     if (decision.kind === "reject") return decision.response;
     if (decision.kind === "redirect_login") return redirect("/login");
     if (decision.kind === "redirect_onboarding") return redirect("/onboarding");
-    if (decision.kind === "redirect_dashboard") return redirect("/dashboard");
+    if (decision.kind === "redirect_home") return redirect(decision.to);
   },
 });

@@ -2,11 +2,7 @@ import { For, Show } from "solid-js";
 
 import { getInventoryItems } from "~/actions/inventory";
 import { EmptyState } from "~/components/feedback/empty-state";
-import {
-  AppPage,
-  AppPageHeader,
-  AppPageSection,
-} from "~/components/layout/page";
+import { AppPage } from "~/components/layout/page";
 import { Badge } from "~/components/ui/display/badge";
 import {
   Table,
@@ -18,10 +14,12 @@ import {
 } from "~/components/ui/layout/table";
 import { createAppQuery } from "~/lib/ui/create-app-query";
 
+import styles from "./inventory-page.module.css";
+
 const statusLabels: Record<string, string> = {
-  available: "Disponible",
-  reserved: "Reservado",
-  sold: "Vendido",
+  available: "Available",
+  reserved: "Reserved",
+  sold: "Sold",
 };
 
 const statusVariant = (status: string) => {
@@ -43,55 +41,47 @@ export default function InventoryPage() {
 
   return (
     <AppPage>
-      <AppPageHeader
-        eyebrow="Operación"
-        title="Inventario"
-        description={`${itemCount()} items registrados.`}
-      />
-
       <Show
         when={itemCount() > 0}
         fallback={
           <EmptyState
-            title="Sin registros"
-            description="Los productos del inventario aparecerán aquí"
+            title="No inventory records"
+            description="Items will appear here when available."
           />
         }
       >
-        <AppPageSection class="p-2 md:p-3">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Producto</TableHead>
-                <TableHead>Número de Serie</TableHead>
-                <TableHead>Categoría</TableHead>
-                <TableHead>Estado</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <For each={items()}>
-                {(item) => (
-                  <TableRow>
-                    <TableCell class="font-medium">
-                      {item.productName}
-                    </TableCell>
-                    <TableCell class="font-mono text-sm text-muted-foreground">
-                      {item.serial_number}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{item.category}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={statusVariant(item.status)}>
-                        {statusLabels[item.status] ?? item.status}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </For>
-            </TableBody>
-          </Table>
-        </AppPageSection>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Product</TableHead>
+              <TableHead>Serial number</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead>Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <For each={items()}>
+              {(item) => (
+                <TableRow>
+                  <TableCell class={styles.product}>
+                    {item.productName}
+                  </TableCell>
+                  <TableCell class={styles.serial}>
+                    {item.serial_number}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{item.category}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={statusVariant(item.status)}>
+                      {statusLabels[item.status] ?? item.status}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              )}
+            </For>
+          </TableBody>
+        </Table>
       </Show>
     </AppPage>
   );

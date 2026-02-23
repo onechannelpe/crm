@@ -1,19 +1,29 @@
 import { hasPermission, type Permission, type Role } from "./rbac";
-import {
-  DYNAMIC_ROUTE_PERMISSIONS,
-  STATIC_ROUTES,
-  type SidebarGroup,
-  type StaticRoute,
-} from "./route-policy-data";
+import { ROUTE_PERMISSIONS, type RoutePermission } from "./route-permissions";
+
+export type { RoutePermission } from "./route-permissions";
+export type { Role, Permission } from "./rbac";
+
+function hasHref(
+  route: RoutePermission,
+): route is RoutePermission & { href: string } {
+  return typeof route.href === "string" && route.href.length > 0;
+}
+
+function findRoute(pathname: string): RoutePermission | undefined {
+  const exact = ROUTE_PERMISSIONS.find((r) => r.href === pathname);
+  if (exact) return exact;
+
+  const dynamic = ROUTE_PERMISSIONS.find((r) => r.pattern?.test(pathname));
+  if (dynamic) return dynamic;
+
+  return ROUTE_PERMISSIONS.find((r) =>
+    hasHref(r) ? pathname.startsWith(`${r.href}/`) : false,
+  );
+}
 
 export function getRoutePermission(pathname: string): Permission | null {
-  const staticRoute = STATIC_ROUTES.find((route) => route.href === pathname);
-  if (staticRoute) return staticRoute.permission ?? null;
-  const dynamicRoute = DYNAMIC_ROUTE_PERMISSIONS.find((route) =>
-    route.pattern.test(pathname),
-  );
-  if (!dynamicRoute) return null;
-  return dynamicRoute.permission;
+  return findRoute(pathname)?.permission ?? null;
 }
 
 export function canAccessPath(role: Role, pathname: string): boolean {
@@ -22,21 +32,13 @@ export function canAccessPath(role: Role, pathname: string): boolean {
   return hasPermission(role, permission);
 }
 
-export function getSearchRoutes(role?: Role): StaticRoute[] {
-  return STATIC_ROUTES.filter((route) => {
-    if (!route.permission) return true;
-    if (!role) return false;
-    return hasPermission(role, route.permission);
-  });
-}
+export function getDefaultAppPath(role: Role): string {
+  const candidate = ROUTE_PERMISSIONS.filter(
+    (r): r is RoutePermission & { href: string; landingPriority: number } =>
+      r.landingPriority !== undefined && hasHref(r),
+  )
+    .sort((a, b) => a.landingPriority - b.landingPriority)
+    .find((r) => !r.permission || hasPermission(role, r.permission));
 
-export function getSidebarRoutes(
-  role: Role,
-  group: SidebarGroup,
-): StaticRoute[] {
-  return STATIC_ROUTES.filter((route) => {
-    if (route.sidebarGroup !== group) return false;
-    if (!route.permission) return true;
-    return hasPermission(role, route.permission);
-  });
+  return candidate?.href ?? "/dashboard";
 }

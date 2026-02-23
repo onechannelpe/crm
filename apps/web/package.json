@@ -15,8 +15,8 @@
     "worker:document-retention:once": "bun --env-file=../../.env src/workers/document-retention-cleaner.ts --once",
     "lint": "oxlint -c ../../.oxlintrc.json --type-aware --tsconfig tsconfig.json --deny-warnings src tests",
     "check": "bun x tsc --noEmit && bun run lint",
-    "test": "bun --env-file=../../.env vitest run --project default",
-    "test:perf": "bun --env-file=../../.env vitest bench --config vitest.bench.config.ts",
+    "test": "bun --env-file=../../.env.test vitest run --project default",
+    "test:perf": "bun --env-file=../../.env.test vitest bench --config vitest.bench.config.ts",
     "migrate": "bun --env-file=../../.env src/lib/db/migrate-cli.ts",
     "seed": "bun --env-file=../../.env src/lib/db/seed.ts"
   },
@@ -35,15 +35,12 @@
     "kysely": "^0.28.11",
     "qrcode": "^1.5.4",
     "solid-js": "^1.9.11",
-    "tailwind-merge": "^3.4.0",
     "vinxi": "^0.5.11"
   },
   "devDependencies": {
     "@codspeed/vitest-plugin": "^5.2.0",
-    "@tailwindcss/vite": "^4.2.0",
     "@types/mjml": "^4.7.4",
     "@types/qrcode": "^1.5.6",
-    "tailwindcss": "^4.2.0",
     "vitest": "^4.0.18"
   }
 }

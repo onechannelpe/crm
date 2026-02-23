@@ -1,86 +1,96 @@
 import { A, useNavigate } from "@solidjs/router";
-import { Show, createSignal } from "solid-js";
+import { Show, createSignal, onMount } from "solid-js";
 
 import ChevronDown from "~/components/icons/chevron-down";
 import LogOut from "~/components/icons/log-out";
 import Settings from "~/components/icons/settings";
 import UserRound from "~/components/icons/user-round";
 import { getUserInitials } from "~/components/layout/account-menu-utils";
-import { Button } from "~/components/ui/input/button";
-import { DS_Z_INDEX } from "~/components/ui/theme/design-system";
+import {
+  applyThemeMode,
+  getThemeMode,
+  saveThemeMode,
+  type ThemeMode,
+} from "~/components/ui/theme/theme-mode";
 import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
 import { cn } from "~/lib/utils";
 
+import styles from "./account-menu.module.css";
+
 interface AccountMenuProps {
-  fullName: string;
+  label: string;
+  collapsed?: boolean;
   onLogout: () => Promise<void>;
 }
 
 export function AccountMenu(props: AccountMenuProps) {
   const [open, setOpen] = createSignal(false);
+  const [theme, setTheme] = createSignal<ThemeMode>("light");
   const navigate = useNavigate();
   let containerRef: HTMLDivElement | undefined;
+
   useDismissibleLayer({
     enabled: open,
     onDismiss: () => setOpen(false),
     getContainer: () => containerRef,
   });
 
+  onMount(() => setTheme(getThemeMode()));
+
+  const toggleTheme = () => {
+    const nextTheme = theme() === "light" ? "dark" : "light";
+    setTheme(nextTheme);
+    applyThemeMode(nextTheme);
+    saveThemeMode(nextTheme);
+  };
+
   return (
     <div
       ref={(element) => {
         containerRef = element;
       }}
-      class="relative"
+      class={styles.container}
     >
-      <Button
+      <button
         type="button"
-        variant="outline"
         aria-haspopup="menu"
         aria-expanded={open()}
         onClick={() => setOpen((prev) => !prev)}
-        class="h-auto w-full justify-start gap-3 rounded-2xl bg-surface px-3 py-2.5 transition-colors hover:bg-card"
+        class={cn(styles.trigger, props.collapsed && styles.triggerCollapsed)}
       >
-        <div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-          {getUserInitials(props.fullName)}
-        </div>
-        <div class="flex-1 text-left">
-          <p class="text-sm font-medium text-foreground">{props.fullName}</p>
-          <p class="text-xs text-muted-foreground">Mi cuenta</p>
-        </div>
-        <ChevronDown
-          class={cn(
-            "h-4 w-4 text-muted-foreground transition-transform",
-            open() && "rotate-180",
-          )}
-        />
-      </Button>
+        <span class={styles.avatar}>{getUserInitials(props.label)}</span>
+        <Show when={!props.collapsed}>
+          <span class={styles.label}>{props.label}</span>
+        </Show>
+        <Show when={!props.collapsed}>
+          <ChevronDown
+            class={cn(styles.chevron, open() && styles.chevronOpen)}
+            size={16}
+          />
+        </Show>
+      </button>
 
       <Show when={open()}>
-        <div
-          class="crm-overlay-panel absolute inset-x-0 bottom-full mb-2 rounded-2xl p-1.5"
-          style={{ "z-index": DS_Z_INDEX.overlay }}
-        >
-          <A
-            href="/profile"
-            onClick={() => setOpen(false)}
-            class="flex items-center gap-2 rounded-xl px-2.5 py-2 text-sm hover:bg-muted"
-          >
-            <UserRound class="h-4 w-4 text-muted-foreground" />
-            Mi perfil
+        <div class={styles.menu}>
+          <A href="/profile" onClick={() => setOpen(false)} class={styles.item}>
+            <UserRound size={16} />
+            Profile
           </A>
-          <A
-            href="/settings"
-            onClick={() => setOpen(false)}
-            class="flex items-center gap-2 rounded-xl px-2.5 py-2 text-sm hover:bg-muted"
-          >
-            <Settings class="h-4 w-4 text-muted-foreground" />
-            Configuración
-          </A>
-          <div class="my-1 border-t" />
-          <Button
+          <button
             type="button"
-            variant="ghost"
+            onClick={() => {
+              toggleTheme();
+              setOpen(false);
+            }}
+            class={styles.item}
+          >
+            <Settings size={16} />
+            Theme {theme() === "light" ? "Light" : "Dark"}
+          </button>
+          <hr class={styles.separator} />
+          <button
+            type="button"
+            class={cn(styles.item, styles.danger)}
             onClick={() => {
               setOpen(false);
               void props
@@ -90,11 +100,10 @@ export function AccountMenu(props: AccountMenuProps) {
                   console.error("Logout failed", error);
                 });
             }}
-            class="h-auto w-full justify-start gap-2 rounded-xl px-2.5 py-2 text-left text-sm text-destructive hover:bg-destructive/10"
           >
-            <LogOut class="h-4 w-4" />
-            Cerrar sesión
-          </Button>
+            <LogOut size={16} />
+            Sign out
+          </button>
         </div>
       </Show>
     </div>

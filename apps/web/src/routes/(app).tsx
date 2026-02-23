@@ -11,17 +11,19 @@ import {
   useSession,
 } from "~/components/providers/session-provider";
 
+import shellStyles from "~/components/layout/shell.module.css";
+
 function AuthenticatedAppShell(props: RouteSectionProps) {
   const { user } = useSession();
 
   return (
     <Show when={user()} fallback={<Loading />}>
-      <div class="crm-shell min-h-screen flex font-sans text-foreground">
+      <div class={shellStyles.root}>
         <Sidebar />
-        <div class="flex-1 md:ml-72 flex flex-col min-h-screen transition-all duration-300">
+        <div class={shellStyles.main}>
           <Header />
-          <main class="flex-1 p-4 md:p-8 overflow-y-auto">
-            <div class="mx-auto w-full max-w-[1200px] crm-fade-up">
+          <main class={shellStyles.body}>
+            <div class={shellStyles.panel}>
               <Suspense fallback={<Loading />}>{props.children}</Suspense>
             </div>
           </main>

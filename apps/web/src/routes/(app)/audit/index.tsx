@@ -3,15 +3,11 @@ import { createSignal, For } from "solid-js";
 import {
   canManageAuditPolicies,
   getAuditPolicySnapshot,
+  getAuditReaderSnapshot,
+  getObservabilitySnapshot,
   upsertAuditPolicy,
-} from "~/actions/admin-audit-policy";
-import { getAuditReaderSnapshot } from "~/actions/admin-audit-reader";
-import { getObservabilitySnapshot } from "~/actions/admin-observability";
-import {
-  AppPage,
-  AppPageHeader,
-  AppPageSection,
-} from "~/components/layout/page";
+} from "~/actions/admin";
+import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { Checkbox } from "~/components/ui/input/checkbox";
 import { Input } from "~/components/ui/input/input";
@@ -26,18 +22,20 @@ import {
 } from "~/components/ui/layout/table";
 import { createAppQuery } from "~/lib/ui/create-app-query";
 
+import styles from "./audit-page.module.css";
+
 const WINDOW_OPTIONS = [
   { value: 15, label: "15 min" },
-  { value: 60, label: "1 hora" },
-  { value: 240, label: "4 horas" },
-  { value: 1440, label: "24 horas" },
+  { value: 60, label: "1 hour" },
+  { value: 240, label: "4 hours" },
+  { value: 1440, label: "24 hours" },
 ] as const;
 
 const AUDIT_WINDOW_OPTIONS = [
-  { value: 240, label: "4 horas" },
-  { value: 1440, label: "24 horas" },
-  { value: 10080, label: "7 dias" },
-  { value: 43200, label: "30 dias" },
+  { value: 240, label: "4 hours" },
+  { value: 1440, label: "24 hours" },
+  { value: 10080, label: "7 days" },
+  { value: 43200, label: "30 days" },
 ] as const;
 
 function parseStatus(value: string): "all" | "ok" | "error" {
@@ -125,291 +123,291 @@ export default function AuditObservabilityPage() {
       });
       await Promise.all([refetchPolicySnapshot(), refetchAuditSnapshot()]);
     } catch {
-      setPolicyError(
-        "No se pudo guardar la politica. Verifica permisos y valores.",
-      );
+      setPolicyError("Failed to save policy. Check values and permissions.");
     }
   }
 
   return (
     <AppPage>
-      <AppPageHeader
-        eyebrow="Observabilidad"
-        title="Monitoreo y auditoría"
-        description="Tiempos, errores y volumen de ejecución de acciones del CRM."
-      />
-
-      <AppPageSection class="flex flex-wrap items-end gap-3 p-4">
-        <div class="w-44">
-          <Select
-            label="Ventana"
-            value={windowMinutes()}
-            onInput={(event) =>
-              setWindowMinutes(Number(event.currentTarget.value))
-            }
-            class="h-10"
-          >
-            <For each={WINDOW_OPTIONS}>
-              {(option) => <option value={option.value}>{option.label}</option>}
-            </For>
-          </Select>
-        </div>
-        <div class="w-40">
-          <Select
-            label="Estado"
-            value={status()}
-            onInput={(event) =>
-              setStatus(parseStatus(event.currentTarget.value))
-            }
-            class="h-10"
-          >
-            <option value="all">Todos</option>
-            <option value="ok">OK</option>
-            <option value="error">Errores</option>
-          </Select>
-        </div>
-        <Button
-          onClick={() => {
-            void refetch();
-          }}
-        >
-          Actualizar
-        </Button>
-      </AppPageSection>
-
-      <AppPageSection class="flex flex-wrap items-end gap-3 p-4">
-        <div class="w-44">
-          <Select
-            label="Ventana auditoria"
-            value={auditWindowMinutes()}
-            onInput={(event) =>
-              setAuditWindowMinutes(Number(event.currentTarget.value))
-            }
-            class="h-10"
-          >
-            <For each={AUDIT_WINDOW_OPTIONS}>
-              {(option) => <option value={option.value}>{option.label}</option>}
-            </For>
-          </Select>
-        </div>
-        <div class="w-52">
-          <Input
-            label="Accion"
-            value={actionFilter()}
-            onInput={(event) => setActionFilter(event.currentTarget.value)}
-            placeholder="charge_note_approved"
-            class="h-10"
-          />
-        </div>
-        <div class="w-44">
-          <Input
-            label="Entidad"
-            value={entityTypeFilter()}
-            onInput={(event) => setEntityTypeFilter(event.currentTarget.value)}
-            placeholder="charge_note"
-            class="h-10"
-          />
-        </div>
-        <div class="w-28">
-          <Input
-            label="Actor #"
-            value={actorUserIdFilter()}
-            onInput={(event) => setActorUserIdFilter(event.currentTarget.value)}
-            placeholder="5"
-            class="h-10"
-          />
-        </div>
-        <Checkbox
-          label="Solo alto riesgo"
-          checked={onlyHighRisk()}
-          onInput={(event) => setOnlyHighRisk(event.currentTarget.checked)}
-          class="mt-1"
-        />
-        <Button
-          onClick={() => {
-            void refetchAuditSnapshot();
-          }}
-        >
-          Actualizar auditoria
-        </Button>
-      </AppPageSection>
-
-      <AppPageSection class="space-y-3 p-4">
-        <h2 class="text-base font-semibold">Resumen por accion</h2>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Accion</TableHead>
-              <TableHead>Ejecuciones</TableHead>
-              <TableHead>Errores</TableHead>
-              <TableHead>Promedio (ms)</TableHead>
-              <TableHead>Max (ms)</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <For each={snapshot().summary}>
-              {(row) => (
-                <TableRow>
-                  <TableCell class="font-medium">{row.actionName}</TableCell>
-                  <TableCell>{row.count}</TableCell>
-                  <TableCell>{row.errorCount}</TableCell>
-                  <TableCell>{Math.round(row.avgDurationMs)}</TableCell>
-                  <TableCell>{Math.round(row.maxDurationMs)}</TableCell>
-                </TableRow>
-              )}
-            </For>
-          </TableBody>
-        </Table>
-      </AppPageSection>
-
-      <AppPageSection class="space-y-3 p-4">
-        <h2 class="text-base font-semibold">Eventos recientes</h2>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Hora</TableHead>
-              <TableHead>Accion</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead>Duracion</TableHead>
-              <TableHead>Actor</TableHead>
-              <TableHead>Categoria</TableHead>
-              <TableHead>Error</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <For each={snapshot().recent}>
-              {(row) => (
-                <TableRow>
-                  <TableCell>
-                    {new Date(row.createdAt).toLocaleTimeString("es-PE")}
-                  </TableCell>
-                  <TableCell class="font-medium">{row.actionName}</TableCell>
-                  <TableCell>{row.status}</TableCell>
-                  <TableCell>{row.durationMs}ms</TableCell>
-                  <TableCell>
-                    {row.actorUserId ? `#${row.actorUserId}` : "N/A"}
-                  </TableCell>
-                  <TableCell>{row.errorCategory}</TableCell>
-                  <TableCell>
-                    {row.publicError ?? row.errorCode ?? "-"}
-                  </TableCell>
-                </TableRow>
-              )}
-            </For>
-          </TableBody>
-        </Table>
-      </AppPageSection>
-
-      <AppPageSection class="space-y-3 p-4">
-        <h2 class="text-base font-semibold">Transiciones de auditoria</h2>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Hora</TableHead>
-              <TableHead>Accion</TableHead>
-              <TableHead>Entidad</TableHead>
-              <TableHead>Actor</TableHead>
-              <TableHead>Cambios</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <For each={auditSnapshot().events}>
-              {(row) => (
-                <TableRow>
-                  <TableCell>
-                    {new Date(row.createdAt).toLocaleTimeString("es-PE")}
-                  </TableCell>
-                  <TableCell class="font-medium">{row.action}</TableCell>
-                  <TableCell>
-                    {row.entityType}#{row.entityId}
-                  </TableCell>
-                  <TableCell>#{row.userId}</TableCell>
-                  <TableCell>{row.changes ?? "-"}</TableCell>
-                </TableRow>
-              )}
-            </For>
-          </TableBody>
-        </Table>
-      </AppPageSection>
-
-      <AppPageSection class="space-y-3 p-4">
-        <h2 class="text-base font-semibold">
-          Politicas de riesgo de auditoria
-        </h2>
-        <div class="flex flex-wrap items-end gap-3">
-          <div class="w-52">
-            <Input
-              label="Accion"
-              value={policyAction()}
-              onInput={(event) => setPolicyAction(event.currentTarget.value)}
-              placeholder="leads_requested"
-              class="h-10"
-            />
-          </div>
-          <div class="w-36">
-            <Select
-              label="Riesgo"
-              value={policyRiskLevel()}
-              onInput={(event) =>
-                setPolicyRiskLevel(parseRiskLevel(event.currentTarget.value))
-              }
-              class="h-10"
+      <div class={styles.auditGrid}>
+        <div>
+          <div class={styles.filterRow}>
+            <div class={styles.fieldW44}>
+              <Select
+                label="Window"
+                value={windowMinutes()}
+                onInput={(event) =>
+                  setWindowMinutes(Number(event.currentTarget.value))
+                }
+              >
+                <For each={WINDOW_OPTIONS}>
+                  {(option) => (
+                    <option value={option.value}>{option.label}</option>
+                  )}
+                </For>
+              </Select>
+            </div>
+            <div class={styles.fieldW40}>
+              <Select
+                label="Status"
+                value={status()}
+                onInput={(event) =>
+                  setStatus(parseStatus(event.currentTarget.value))
+                }
+              >
+                <option value="all">All</option>
+                <option value="ok">OK</option>
+                <option value="error">Errors</option>
+              </Select>
+            </div>
+            <Button
+              onClick={() => {
+                void refetch();
+              }}
             >
-              <option value="high">high</option>
-              <option value="medium">medium</option>
-              <option value="low">low</option>
-            </Select>
+              Refresh
+            </Button>
           </div>
-          <Checkbox
-            label="Activa"
-            checked={policyIsActive()}
-            onInput={(event) => setPolicyIsActive(event.currentTarget.checked)}
-            class="mt-1"
-          />
-          <Button
-            disabled={!canManagePolicies()}
-            onClick={() => {
-              void savePolicy();
-            }}
-          >
-            Guardar politica
-          </Button>
         </div>
-        <p class="text-xs text-muted-foreground">
-          Acciones sin politica explicita se tratan como riesgo high para evitar
-          ocultar eventos criticos.
-        </p>
-        <p class="text-xs text-muted-foreground">
-          Solo admin y superuser pueden editar politicas.
-        </p>
-        <p class="text-xs text-destructive">{policyError() ?? ""}</p>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Accion</TableHead>
-              <TableHead>Riesgo</TableHead>
-              <TableHead>Activa</TableHead>
-              <TableHead>Protegida</TableHead>
-              <TableHead>Actualizada por</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <For each={policySnapshot().items}>
-              {(item) => (
-                <TableRow>
-                  <TableCell class="font-medium">{item.action}</TableCell>
-                  <TableCell>{item.riskLevel}</TableCell>
-                  <TableCell>{item.isActive ? "si" : "no"}</TableCell>
-                  <TableCell>{item.isProtected ? "si" : "no"}</TableCell>
-                  <TableCell>
-                    {item.updatedByUserId ? `#${item.updatedByUserId}` : "-"}
-                  </TableCell>
-                </TableRow>
-              )}
-            </For>
-          </TableBody>
-        </Table>
-      </AppPageSection>
+
+        <div>
+          <div class={styles.filterRow}>
+            <div class={styles.fieldW44}>
+              <Select
+                label="Audit window"
+                value={auditWindowMinutes()}
+                onInput={(event) =>
+                  setAuditWindowMinutes(Number(event.currentTarget.value))
+                }
+              >
+                <For each={AUDIT_WINDOW_OPTIONS}>
+                  {(option) => (
+                    <option value={option.value}>{option.label}</option>
+                  )}
+                </For>
+              </Select>
+            </div>
+            <div class={styles.fieldW52}>
+              <Input
+                label="Action"
+                value={actionFilter()}
+                onInput={(event) => setActionFilter(event.currentTarget.value)}
+                placeholder="charge_note_approved"
+              />
+            </div>
+            <div class={styles.fieldW44}>
+              <Input
+                label="Entity"
+                value={entityTypeFilter()}
+                onInput={(event) =>
+                  setEntityTypeFilter(event.currentTarget.value)
+                }
+                placeholder="charge_note"
+              />
+            </div>
+            <div class={styles.fieldW28}>
+              <Input
+                label="Actor #"
+                value={actorUserIdFilter()}
+                onInput={(event) =>
+                  setActorUserIdFilter(event.currentTarget.value)
+                }
+                placeholder="5"
+              />
+            </div>
+            <Checkbox
+              label="High risk only"
+              checked={onlyHighRisk()}
+              onInput={(event) => setOnlyHighRisk(event.currentTarget.checked)}
+            />
+            <Button
+              onClick={() => {
+                void refetchAuditSnapshot();
+              }}
+            >
+              Refresh audit
+            </Button>
+          </div>
+        </div>
+
+        <section class={styles.section}>
+          <h2 class={styles.title}>Summary by action</h2>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Action</TableHead>
+                <TableHead>Executions</TableHead>
+                <TableHead>Errors</TableHead>
+                <TableHead>Average (ms)</TableHead>
+                <TableHead>Max (ms)</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <For each={snapshot().summary}>
+                {(row) => (
+                  <TableRow>
+                    <TableCell class={styles.strong}>
+                      {row.actionName}
+                    </TableCell>
+                    <TableCell>{row.count}</TableCell>
+                    <TableCell>{row.errorCount}</TableCell>
+                    <TableCell>{Math.round(row.avgDurationMs)}</TableCell>
+                    <TableCell>{Math.round(row.maxDurationMs)}</TableCell>
+                  </TableRow>
+                )}
+              </For>
+            </TableBody>
+          </Table>
+        </section>
+
+        <section class={styles.section}>
+          <h2 class={styles.title}>Recent events</h2>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Time</TableHead>
+                <TableHead>Action</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Duration</TableHead>
+                <TableHead>Actor</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Error</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <For each={snapshot().recent}>
+                {(row) => (
+                  <TableRow>
+                    <TableCell>
+                      {new Date(row.createdAt).toLocaleTimeString("en-US")}
+                    </TableCell>
+                    <TableCell class={styles.strong}>
+                      {row.actionName}
+                    </TableCell>
+                    <TableCell>{row.status}</TableCell>
+                    <TableCell>{row.durationMs}ms</TableCell>
+                    <TableCell>
+                      {row.actorUserId ? `#${row.actorUserId}` : "N/A"}
+                    </TableCell>
+                    <TableCell>{row.errorCategory}</TableCell>
+                    <TableCell>
+                      {row.publicError ?? row.errorCode ?? "-"}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </For>
+            </TableBody>
+          </Table>
+        </section>
+
+        <section class={styles.section}>
+          <h2 class={styles.title}>Audit transitions</h2>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Time</TableHead>
+                <TableHead>Action</TableHead>
+                <TableHead>Entity</TableHead>
+                <TableHead>Actor</TableHead>
+                <TableHead>Changes</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <For each={auditSnapshot().events}>
+                {(row) => (
+                  <TableRow>
+                    <TableCell>
+                      {new Date(row.createdAt).toLocaleTimeString("es-PE")}
+                    </TableCell>
+                    <TableCell class={styles.strong}>{row.action}</TableCell>
+                    <TableCell>
+                      {row.entityType}#{row.entityId}
+                    </TableCell>
+                    <TableCell>#{row.userId}</TableCell>
+                    <TableCell>{row.changes ?? "-"}</TableCell>
+                  </TableRow>
+                )}
+              </For>
+            </TableBody>
+          </Table>
+        </section>
+
+        <section class={styles.section}>
+          <h2 class={styles.title}>Audit risk policies</h2>
+          <div class={styles.filterRow}>
+            <div class={styles.fieldW52}>
+              <Input
+                label="Action"
+                value={policyAction()}
+                onInput={(event) => setPolicyAction(event.currentTarget.value)}
+                placeholder="leads_requested"
+              />
+            </div>
+            <div class={styles.fieldW36}>
+              <Select
+                label="Risk level"
+                value={policyRiskLevel()}
+                onInput={(event) =>
+                  setPolicyRiskLevel(parseRiskLevel(event.currentTarget.value))
+                }
+              >
+                <option value="high">high</option>
+                <option value="medium">medium</option>
+                <option value="low">low</option>
+              </Select>
+            </div>
+            <Checkbox
+              label="Active"
+              checked={policyIsActive()}
+              onInput={(event) =>
+                setPolicyIsActive(event.currentTarget.checked)
+              }
+            />
+            <Button
+              disabled={!canManagePolicies()}
+              onClick={() => {
+                void savePolicy();
+              }}
+            >
+              Save policy
+            </Button>
+          </div>
+          <p class={styles.helperText}>
+            Actions without an explicit policy are treated as high risk to avoid
+            hiding critical events.
+          </p>
+          <p class={styles.helperText}>
+            Only admin and superuser can edit policies.
+          </p>
+          <p class={styles.errorText}>{policyError() ?? ""}</p>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Action</TableHead>
+                <TableHead>Risk</TableHead>
+                <TableHead>Active</TableHead>
+                <TableHead>Protected</TableHead>
+                <TableHead>Actualizada por</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <For each={policySnapshot().items}>
+                {(item) => (
+                  <TableRow>
+                    <TableCell class={styles.strong}>{item.action}</TableCell>
+                    <TableCell>{item.riskLevel}</TableCell>
+                    <TableCell>{item.isActive ? "yes" : "no"}</TableCell>
+                    <TableCell>{item.isProtected ? "yes" : "no"}</TableCell>
+                    <TableCell>
+                      {item.updatedByUserId ? `#${item.updatedByUserId}` : "-"}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </For>
+            </TableBody>
+          </Table>
+        </section>
+      </div>
     </AppPage>
   );
 }

@@ -10,11 +10,7 @@ import { EmptyState } from "~/components/feedback/empty-state";
 import { useToast } from "~/components/feedback/toast-provider";
 import Mail from "~/components/icons/mail";
 import User from "~/components/icons/user";
-import {
-  AppPage,
-  AppPageHeader,
-  AppPageSection,
-} from "~/components/layout/page";
+import { AppPage } from "~/components/layout/page";
 import { Badge } from "~/components/ui/display/badge";
 import { Button } from "~/components/ui/input/button";
 import {
@@ -32,6 +28,8 @@ import {
 import { getErrorMessage } from "~/lib/errors";
 import { createAppQuery } from "~/lib/ui/create-app-query";
 
+import styles from "./team-page.module.css";
+
 export default function TeamPage() {
   const [directory, { refetch }] = createAppQuery(getTeamDirectory, {
     members: [],
@@ -48,10 +46,10 @@ export default function TeamPage() {
     setPendingActionId(inviteId);
     try {
       await resendTeamInvite(inviteId);
-      showToast("success", "Invitacion reenviada");
+      showToast("success", "Invite resent");
       await refetch();
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "No se pudo reenviar"));
+      showToast("error", getErrorMessage(err, "Failed to resend invite"));
     } finally {
       setPendingActionId(null);
     }
@@ -61,10 +59,10 @@ export default function TeamPage() {
     setPendingActionId(inviteId);
     try {
       await revokeTeamInvite(inviteId);
-      showToast("success", "Invitacion revocada");
+      showToast("success", "Invite revoked");
       await refetch();
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "No se pudo revocar"));
+      showToast("error", getErrorMessage(err, "Failed to revoke invite"));
     } finally {
       setPendingActionId(null);
     }
@@ -72,153 +70,140 @@ export default function TeamPage() {
 
   return (
     <AppPage>
-      <AppPageHeader
-        eyebrow="Gestión interna"
-        title="Equipo"
-        description={`${directory().members.length} miembros activos y ${directory().pendingInvites.length} invitaciones pendientes.`}
-        actions={
-          <Show when={directory().canManageInvites}>
-            <A href="/team/new">
-              <Button>Invitar usuario</Button>
-            </A>
-          </Show>
-        }
-      />
+      <Show when={directory().canManageInvites}>
+        <div class={styles.toolbar}>
+          <A href="/team/new">
+            <Button>Invite member</Button>
+          </A>
+        </div>
+      </Show>
 
       <Show
         when={directory().members.length > 0}
         fallback={
           <EmptyState
-            title="Sin miembros"
-            description="No se encontraron miembros activos en tu sucursal."
+            title="No team members"
+            description="No active users found for this branch."
           />
         }
       >
-        <AppPageSection class="p-2 md:p-3">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <For each={directory().members}>
+              {(member) => (
+                <TableRow>
+                  <TableCell class={styles.memberName}>
+                    <div class={styles.personCell}>
+                      <div class={styles.avatar}>
+                        <User size={16} />
+                      </div>
+                      <span>{member.fullName}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div class={styles.mailCell}>
+                      <Mail size={12} />
+                      <span>{member.email}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={getRoleBadgeVariant(member.role)}>
+                      {getRoleLabel(member.role)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={member.isActive ? "success" : "default"}>
+                      {member.isActive ? "Active" : "Inactive"}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              )}
+            </For>
+          </TableBody>
+        </Table>
+      </Show>
+
+      <div class={styles.section}>
+        <h2 class={styles.sectionTitle}>Pending invites</h2>
+        <Show
+          when={directory().pendingInvites.length > 0}
+          fallback={
+            <EmptyState
+              title="No pending invites"
+              description="All invites are already resolved."
+            />
+          }
+        >
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Correo</TableHead>
-                <TableHead>Rol</TableHead>
-                <TableHead>Estado</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Expires</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              <For each={directory().members}>
-                {(member) => (
+              <For each={directory().pendingInvites}>
+                {(invite) => (
                   <TableRow>
-                    <TableCell class="font-medium">
-                      <div class="flex items-center gap-3">
-                        <div class="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                          <User class="h-4 w-4" />
+                    <TableCell class={styles.memberName}>
+                      {invite.fullName}
+                    </TableCell>
+                    <TableCell>{invite.email}</TableCell>
+                    <TableCell>
+                      <Badge variant={getRoleBadgeVariant(invite.role)}>
+                        {getRoleLabel(invite.role)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {new Date(invite.expiresAt).toLocaleString("en-US")}
+                    </TableCell>
+                    <TableCell>
+                      <Show
+                        when={canManageInviteActions()}
+                        fallback={
+                          <span class={styles.noPermission}>No permission</span>
+                        }
+                      >
+                        <div class={styles.actions}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={pendingActionId() === invite.inviteId}
+                            onClick={() => {
+                              void handleResend(invite.inviteId);
+                            }}
+                          >
+                            Resend
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            disabled={pendingActionId() === invite.inviteId}
+                            onClick={() => {
+                              void handleRevoke(invite.inviteId);
+                            }}
+                          >
+                            Revoke
+                          </Button>
                         </div>
-                        <span>{member.fullName}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div class="flex items-center gap-2 text-muted-foreground">
-                        <Mail class="h-3 w-3" />
-                        <span>{member.email}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getRoleBadgeVariant(member.role)}>
-                        {getRoleLabel(member.role)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={member.isActive ? "success" : "default"}>
-                        {member.isActive ? "Activo" : "Inactivo"}
-                      </Badge>
+                      </Show>
                     </TableCell>
                   </TableRow>
                 )}
               </For>
             </TableBody>
           </Table>
-        </AppPageSection>
-      </Show>
-
-      <div class="space-y-3">
-        <h2 class="text-lg font-semibold text-foreground">
-          Invitaciones pendientes
-        </h2>
-        <Show
-          when={directory().pendingInvites.length > 0}
-          fallback={
-            <EmptyState
-              title="Sin invitaciones"
-              description="No hay invitaciones pendientes por activar."
-            />
-          }
-        >
-          <AppPageSection class="p-2 md:p-3">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead>Correo</TableHead>
-                  <TableHead>Rol</TableHead>
-                  <TableHead>Vence</TableHead>
-                  <TableHead>Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <For each={directory().pendingInvites}>
-                  {(invite) => (
-                    <TableRow>
-                      <TableCell class="font-medium">
-                        {invite.fullName}
-                      </TableCell>
-                      <TableCell>{invite.email}</TableCell>
-                      <TableCell>
-                        <Badge variant={getRoleBadgeVariant(invite.role)}>
-                          {getRoleLabel(invite.role)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(invite.expiresAt).toLocaleString("es-PE")}
-                      </TableCell>
-                      <TableCell>
-                        <Show
-                          when={canManageInviteActions()}
-                          fallback={
-                            <span class="text-xs text-muted-foreground">
-                              Sin permisos
-                            </span>
-                          }
-                        >
-                          <div class="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              disabled={pendingActionId() === invite.inviteId}
-                              onClick={() => {
-                                void handleResend(invite.inviteId);
-                              }}
-                            >
-                              Reenviar
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              disabled={pendingActionId() === invite.inviteId}
-                              onClick={() => {
-                                void handleRevoke(invite.inviteId);
-                              }}
-                            >
-                              Revocar
-                            </Button>
-                          </div>
-                        </Show>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </For>
-              </TableBody>
-            </Table>
-          </AppPageSection>
         </Show>
       </div>
     </AppPage>

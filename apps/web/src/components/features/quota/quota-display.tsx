@@ -2,6 +2,8 @@ import type { Component } from "solid-js";
 
 import { Badge } from "~/components/ui/display/badge";
 
+import styles from "./quota-display.module.css";
+
 interface QuotaDisplayProps {
   used: number;
   total: number;
@@ -20,24 +22,17 @@ export const QuotaDisplay: Component<QuotaDisplayProps> = (props) => {
   };
 
   return (
-    <div class="crm-surface rounded-3xl p-5">
-      <div class="mb-2 flex items-center justify-between">
-        <span class="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-          Cuota diaria
-        </span>
-        <Badge variant={variant()} class="px-2.5 py-1">
+    <div class={styles.root}>
+      <div class={styles.head}>
+        <span class={styles.label}>Daily quota</span>
+        <Badge variant={variant()} class={styles.badge}>
           {props.used}/{props.total}
         </Badge>
       </div>
-      <div class="h-2 w-full rounded-full bg-secondary">
-        <div
-          class="h-2 rounded-full bg-primary transition-all"
-          style={{ width: `${percentage()}%` }}
-        />
+      <div class={styles.track}>
+        <div class={styles.fill} style={{ width: `${percentage()}%` }} />
       </div>
-      <p class="mt-2 text-sm text-muted-foreground">
-        {remaining()} leads restantes para hoy
-      </p>
+      <p class={styles.meta}>{remaining()} leads remaining today</p>
     </div>
   );
 };

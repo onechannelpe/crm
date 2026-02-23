@@ -1,11 +1,20 @@
 import { type Component, createSignal, Show } from "solid-js";
 
 import { useToast } from "~/components/feedback/toast-provider";
-import { Button } from "~/components/ui/input/button";
+import LoaderCircle from "~/components/icons/loader-circle";
+import Plus from "~/components/icons/plus";
+import {
+  Button,
+  type ButtonSize,
+  type ButtonVariant,
+} from "~/components/ui/input/button";
 
 interface RequestLeadsButtonProps {
   onRequest: () => Promise<number>;
   disabled?: boolean;
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  class?: string;
 }
 
 export const RequestLeadsButton: Component<RequestLeadsButtonProps> = (
@@ -19,17 +28,17 @@ export const RequestLeadsButton: Component<RequestLeadsButtonProps> = (
     try {
       const assigned = await props.onRequest();
       if (assigned > 0) {
-        showToast("success", `${assigned} leads asignados`);
+        showToast("success", `${assigned} leads assigned`);
       } else {
-        showToast("error", "No se encontraron leads nuevos para asignar");
+        showToast("error", "No additional leads available");
       }
     } catch (error) {
       const message =
         error instanceof TypeError
-          ? "No se pudo conectar con el servidor"
+          ? "Could not connect to server"
           : error instanceof Error
             ? error.message
-            : "Error al solicitar leads";
+            : "Failed to request leads";
       showToast("error", message);
     } finally {
       setLoading(false);
@@ -38,13 +47,16 @@ export const RequestLeadsButton: Component<RequestLeadsButtonProps> = (
 
   return (
     <Button
+      variant={props.variant || "primary"}
+      size={props.size || "md"}
+      class={props.class}
       onClick={() => {
         void handleClick();
       }}
       disabled={loading() || props.disabled}
     >
-      <Show when={loading()} fallback="Solicitar leads">
-        Solicitando...
+      <Show when={loading()} fallback={<Plus size={16} />}>
+        <LoaderCircle size={16} class="animate-spin" />
       </Show>
     </Button>
   );

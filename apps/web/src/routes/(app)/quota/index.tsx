@@ -3,16 +3,14 @@ import { createResource, createSignal, Show } from "solid-js";
 import { getQuotaStatus, allocateQuota } from "~/actions/quota";
 import { QuotaDisplay } from "~/components/features/quota/quota-display";
 import { useToast } from "~/components/feedback/toast-provider";
-import {
-  AppPage,
-  AppPageHeader,
-  AppPageSection,
-} from "~/components/layout/page";
+import { AppPage } from "~/components/layout/page";
 import { useSession } from "~/components/providers/session-provider";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { getErrorMessage } from "~/lib/errors";
 import { runOptimistic } from "~/lib/ui/run-optimistic";
+
+import styles from "./quota-page.module.css";
 
 export default function QuotaPage() {
   const [quota, { mutate, refetch }] = createResource(
@@ -61,64 +59,47 @@ export default function QuotaPage() {
           void refetch();
         },
       });
-      showToast("success", "Cuota asignada correctamente");
+      showToast("success", "Quota assigned");
       setExecId("");
       setAmount("10");
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "Error al asignar cuota"));
+      showToast("error", getErrorMessage(err, "Failed to assign quota"));
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <AppPage class="max-w-4xl">
-      <AppPageHeader
-        eyebrow="Control de capacidad"
-        title="Gestión de cuotas"
-        description="Define cuántos leads puede trabajar cada ejecutivo hoy. Esta cuota afecta la asignación automática de leads."
-      />
-
-      <div class="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_360px]">
-        <div class="space-y-4">
+    <AppPage width="medium">
+      <div class={styles.grid}>
+        <div class={styles.left}>
           <Show
             when={quotaValues()}
             fallback={
-              <AppPageSection class="p-5">
-                <p class="text-sm text-muted-foreground">
-                  Sin cuota asignada por el momento.
-                </p>
-              </AppPageSection>
+              <div>
+                <p class={styles.muted}>No quota assigned yet.</p>
+              </div>
             }
           >
             {(values) => (
-              <QuotaDisplay used={values().used} total={values().total} />
+              <div>
+                <QuotaDisplay used={values().used} total={values().total} />
+              </div>
             )}
           </Show>
-
-          <AppPageSection class="p-5">
-            <p class="text-xs uppercase tracking-[0.12em] text-muted-foreground">
-              Consideraciones
-            </p>
-            <ul class="mt-3 space-y-2 text-sm text-muted-foreground">
-              <li>Solo puedes asignar cuota al inicio de jornada.</li>
-              <li>Evita sobreasignar si hay ventas pendientes de validar.</li>
-              <li>Confirma el `ID` del ejecutivo antes de guardar.</li>
-            </ul>
-          </AppPageSection>
         </div>
 
-        <AppPageSection class="p-6">
-          <h3 class="mb-4 text-lg font-semibold">Asignar cuota</h3>
+        <div>
+          <h3 class={`${styles.title} ${styles.titleSpaced}`}>Assign quota</h3>
           <form
             onSubmit={(e) => {
               void handleAllocate(e);
             }}
-            class="space-y-4"
+            class={styles.form}
           >
             <Input
               type="number"
-              label="ID del ejecutivo"
+              label="Executive ID"
               value={execId()}
               onInput={(e) => setExecId(e.currentTarget.value)}
               required
@@ -126,7 +107,7 @@ export default function QuotaPage() {
 
             <Input
               type="number"
-              label="Cantidad de leads"
+              label="Lead amount"
               value={amount()}
               onInput={(e) => setAmount(e.currentTarget.value)}
               min="1"
@@ -134,11 +115,11 @@ export default function QuotaPage() {
               required
             />
 
-            <Button type="submit" disabled={loading()} class="w-full">
-              {loading() ? "Asignando..." : "Asignar cuota"}
+            <Button type="submit" disabled={loading()} class={styles.full}>
+              {loading() ? "Assigning..." : "Assign quota"}
             </Button>
           </form>
-        </AppPageSection>
+        </div>
       </div>
     </AppPage>
   );

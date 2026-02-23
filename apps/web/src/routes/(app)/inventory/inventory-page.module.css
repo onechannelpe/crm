@@ -1,0 +1,9 @@
+.product {
+  font-weight: 500;
+}
+
+.serial {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-caption);
+  color: var(--muted-foreground);
+}
