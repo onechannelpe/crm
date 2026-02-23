@@ -1,3 +1,5 @@
 import { createDb } from "./client";
 
-export const db = createDb("crm.db");
+const dbPath = process.env.WEB_DB_PATH ?? "crm.db";
+
+export const db = createDb(dbPath);
