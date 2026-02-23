@@ -1,17 +1,14 @@
-.page {
-  margin: 0 auto;
-  max-width: 640px;
-}
-
-.panel {
-  border: var(--panel-border);
-  border-radius: var(--panel-radius);
-  background: var(--panel-bg);
-  padding: 16px;
-}
-
 .form {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--border);
 }

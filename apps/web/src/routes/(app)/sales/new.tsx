@@ -1,9 +1,10 @@
 import { useNavigate, useSearchParams } from "@solidjs/router";
-import { createResource, createSignal, For, Show } from "solid-js";
+import { createResource, createSignal, For, onMount, Show } from "solid-js";
 
 import {
   addSaleDocument,
   addSaleItem,
+  createManualSale,
   createSale,
   getAvailableInventory,
   getAvailableProducts,
@@ -13,7 +14,7 @@ import {
   submitSale,
 } from "~/actions/sales";
 import { useToast } from "~/components/feedback/toast-provider";
-import { AppPage, AppPageHeader } from "~/components/layout/page";
+import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { FileInput } from "~/components/ui/input/file-input";
 import { Input } from "~/components/ui/input/input";
@@ -26,11 +27,15 @@ import styles from "./new-sale-page.module.css";
 export default function NewSalePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [contactId, setContactId] = createSignal(
-    searchParams.contactId?.toString() || "",
-  );
   const [noteId, setNoteId] = createSignal<number | null>(null);
   const [loading, setLoading] = createSignal(false);
+
+  const [ruc, setRuc] = createSignal("");
+  const [orgName, setOrgName] = createSignal("");
+  const [dni, setDni] = createSignal("");
+  const [contactName, setContactName] = createSignal("");
+  const [phone, setPhone] = createSignal("");
+
   const [selectedProductId, setSelectedProductId] = createSignal("");
   const [quantity, setQuantity] = createSignal("1");
   const [selectedInventoryId, setSelectedInventoryId] = createSignal("");
@@ -54,15 +59,40 @@ export default function NewSalePage() {
     createResource(noteId, getSaleDraftContext);
   const currentDraft = () => draft.latest;
 
-  async function handleCreate(e: Event) {
-    e.preventDefault();
+  async function doCreateSale(contactId: number) {
     setLoading(true);
     try {
-      const res = await createSale(Number(contactId()));
+      const res = await createSale(contactId);
       setNoteId(res.id);
       showToast("success", `Sales note #${res.id} created`);
     } catch (err: unknown) {
       showToast("error", getErrorMessage(err, "Failed to create sale"));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  onMount(() => {
+    if (searchParams.contactId) {
+      void doCreateSale(Number(searchParams.contactId));
+    }
+  });
+
+  async function handleCreateManual(e: Event) {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await createManualSale({
+        ruc: ruc(),
+        orgName: orgName(),
+        dni: dni(),
+        contactName: contactName(),
+        phoneE164: phone() || null,
+      });
+      setNoteId(res.id);
+      showToast("success", `Sales note #${res.id} created`);
+    } catch (err: unknown) {
+      showToast("error", getErrorMessage(err, "Failed to create manual sale"));
     } finally {
       setLoading(false);
     }
@@ -211,7 +241,6 @@ export default function NewSalePage() {
   async function handleRemoveDocument(documentId: number) {
     const currentNoteId = noteId();
     if (!currentNoteId) return;
-
     try {
       await runOptimistic({
         read: currentDraft,
@@ -261,44 +290,74 @@ export default function NewSalePage() {
   }
 
   return (
-    <AppPage class={styles.page}>
-      <AppPageHeader
-        actions={
-          <Button variant="secondary" onClick={() => navigate("/leads")}>
-            Cancel
-          </Button>
-        }
-      />
-
+    <AppPage width="medium">
       <Show when={!noteId()}>
-        <section class={styles.panel}>
-          <form
-            onSubmit={(e) => {
-              void handleCreate(e);
-            }}
-            class={styles.createForm}
-          >
+        <form
+          onSubmit={(e) => {
+            void handleCreateManual(e);
+          }}
+        >
+          <div class={styles.formGrid}>
             <Input
-              type="number"
-              label="Contact ID"
-              value={contactId()}
-              onInput={(e) => setContactId(e.currentTarget.value)}
+              label="RUC"
+              placeholder="20100200300"
+              value={ruc()}
+              onInput={(e) => setRuc(e.currentTarget.value)}
               required
             />
-            <Button type="submit" disabled={loading()}>
-              {loading() ? "Creating..." : "Create sales note"}
+            <Input
+              label="Organization Name"
+              placeholder="Acme Corp"
+              value={orgName()}
+              onInput={(e) => setOrgName(e.currentTarget.value)}
+              required
+            />
+            <Input
+              label="DNI"
+              placeholder="12345678"
+              value={dni()}
+              onInput={(e) => setDni(e.currentTarget.value)}
+              required
+            />
+            <Input
+              label="Contact Name"
+              value={contactName()}
+              onInput={(e) => setContactName(e.currentTarget.value)}
+              required
+            />
+            <Input
+              type="tel"
+              label="Phone (optional)"
+              placeholder="+51..."
+              value={phone()}
+              onInput={(e) => setPhone(e.currentTarget.value)}
+            />
+          </div>
+          <div class={styles.formActions}>
+            <Button type="submit" disabled={loading() || !ruc() || !dni()}>
+              {loading() ? "Creating draft..." : "Create draft sales note"}
             </Button>
-          </form>
-        </section>
+          </div>
+        </form>
       </Show>
 
       <Show when={noteId()}>
-        <section class={`${styles.panel} ${styles.draftLayout}`}>
-          <div>
-            <h3 class={styles.draftTitle}>Sales note #{noteId()}</h3>
-            <p class={styles.draftHint}>
-              Requires items, documents, and locked inventory before submit.
-            </p>
+        <div class={styles.draftLayout}>
+          <div class={styles.draftHeader}>
+            <div>
+              <h3 class={styles.draftTitle}>Sales note #{noteId()}</h3>
+              <p class={styles.draftHint}>
+                Add items, upload a document, and reserve inventory before
+                submitting.
+              </p>
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => navigate("/leads")}
+            >
+              Cancel
+            </Button>
           </div>
 
           <div class={styles.columns}>
@@ -351,7 +410,7 @@ export default function NewSalePage() {
             </div>
 
             <div class={styles.column}>
-              <p class={styles.columnTitle}>Inventory serial</p>
+              <p class={styles.columnTitle}>Inventory</p>
               <Select
                 value={selectedInventoryId()}
                 onInput={(e) => setSelectedInventoryId(e.currentTarget.value)}
@@ -360,7 +419,7 @@ export default function NewSalePage() {
                 <For each={currentInventory()}>
                   {(item) => (
                     <option value={item.id}>
-                      {item.serial_number} - {item.product_name}
+                      {item.serial_number} — {item.product_name}
                     </option>
                   )}
                 </For>
@@ -370,19 +429,52 @@ export default function NewSalePage() {
                   void handleLockInventory();
                 }}
               >
-                Reserve inventory
+                Reserve
               </Button>
             </div>
           </div>
 
           <Show when={currentDraft()}>
             {(ctx) => (
-              <div class={styles.summary}>
-                <p>Items: {ctx().items.length}</p>
-                <p>Documents: {ctx().documents.length}</p>
-                <p class={styles.summaryTitle}>Items</p>
-                <p>
-                  Inventory locked: {ctx().inventoryLock?.serial_number ?? "No"}
+              <div class={styles.readiness}>
+                <p class={styles.readinessRow}>
+                  <span
+                    class={
+                      ctx().readiness.hasItems
+                        ? styles.readinessOk
+                        : styles.readinessMissing
+                    }
+                  >
+                    {ctx().readiness.hasItems ? "✓" : "○"}
+                  </span>
+                  Items — {ctx().items.length} added
+                </p>
+                <p class={styles.readinessRow}>
+                  <span
+                    class={
+                      ctx().readiness.hasDocuments
+                        ? styles.readinessOk
+                        : styles.readinessMissing
+                    }
+                  >
+                    {ctx().readiness.hasDocuments ? "✓" : "○"}
+                  </span>
+                  Documents — {ctx().documents.length} uploaded
+                </p>
+                <p class={styles.readinessRow}>
+                  <span
+                    class={
+                      ctx().readiness.hasInventoryLock
+                        ? styles.readinessOk
+                        : styles.readinessMissing
+                    }
+                  >
+                    {ctx().readiness.hasInventoryLock ? "✓" : "○"}
+                  </span>
+                  Inventory —{" "}
+                  {ctx().inventoryLock
+                    ? ctx().inventoryLock!.serial_number
+                    : "not reserved"}
                 </p>
                 <Show when={ctx().documents.length > 0}>
                   <ul class={styles.documentList}>
@@ -421,7 +513,7 @@ export default function NewSalePage() {
               {loading() ? "Submitting..." : "Submit for review"}
             </Button>
           </div>
-        </section>
+        </div>
       </Show>
     </AppPage>
   );

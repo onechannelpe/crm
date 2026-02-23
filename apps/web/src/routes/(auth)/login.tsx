@@ -2,7 +2,7 @@ import { useNavigate } from "@solidjs/router";
 import { createSignal, onMount, Show } from "solid-js";
 
 import { beginPasskeyLogin, finishPasskeyLogin } from "~/actions/auth";
-import { login } from "~/actions/auth-login";
+import { login } from "~/actions/auth";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { initializeThemeMode } from "~/components/ui/theme/theme-mode";

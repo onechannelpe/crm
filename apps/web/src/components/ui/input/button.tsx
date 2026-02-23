@@ -12,10 +12,10 @@ const BUTTON_VARIANTS = [
   "destructive",
   "link",
 ] as const;
-type ButtonVariant = (typeof BUTTON_VARIANTS)[number];
+export type ButtonVariant = (typeof BUTTON_VARIANTS)[number];
 
-const BUTTON_SIZES = ["sm", "md", "lg", "icon"] as const;
-type ButtonSize = (typeof BUTTON_SIZES)[number];
+const BUTTON_SIZES = ["sm", "md", "lg", "icon", "compact"] as const;
+export type ButtonSize = (typeof BUTTON_SIZES)[number];
 
 export interface ButtonProps extends JSX.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;

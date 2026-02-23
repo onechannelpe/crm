@@ -1,24 +1,13 @@
-.page {
-  margin: 0 auto;
-  max-width: 960px;
-}
-
-.panel {
-  border: var(--panel-border);
-  border-radius: var(--panel-radius);
-  background: var(--panel-bg);
-  padding: 12px;
-}
-
-.createForm {
-  max-width: 420px;
-  display: grid;
-  gap: 16px;
-}
-
 .draftLayout {
   display: grid;
   gap: 24px;
+}
+
+.draftHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .draftTitle {
@@ -58,6 +47,49 @@
   padding: 8px 12px;
   display: grid;
   gap: 8px;
+  font-size: var(--font-size-body);
+}
+
+.formGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 32px;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px dashed var(--border);
+}
+
+.readiness {
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.readinessRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-size-body);
+  color: var(--foreground);
+}
+
+.readinessOk {
+  width: 16px;
+  color: var(--success);
+  font-size: var(--font-size-body);
+}
+
+.readinessMissing {
+  width: 16px;
+  color: var(--muted-foreground);
   font-size: var(--font-size-body);
 }
 

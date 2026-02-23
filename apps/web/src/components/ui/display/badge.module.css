@@ -3,7 +3,7 @@
   align-items: center;
   border-radius: var(--panel-radius);
   border: 1px solid transparent;
-  padding: 0.125rem 0.5rem;
+  padding: 2px 8px;
   font-size: var(--font-size-label);
   font-weight: var(--font-weight-semibold);
   transition-property: color, background-color, border-color;

@@ -1,7 +1,4 @@
 .noAccess {
-  border: var(--panel-border);
-  border-radius: var(--panel-radius);
-  background: var(--panel-bg);
   padding: 12px;
   color: var(--muted-foreground);
   font-size: var(--font-size-body);
@@ -10,7 +7,7 @@
 .layout {
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);
-  min-height: calc(100vh - var(--topbar-height) - 24px);
+  flex: 1;
 }
 
 .nav {
@@ -22,14 +19,15 @@
   height: 100%;
   overflow-y: auto;
   padding: 0 32px 0 20px;
-}
-
-.exit {
-  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .section {
-  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .groupTitle {
@@ -44,7 +42,6 @@
 
 .item {
   width: 100%;
-  margin-top: 2px;
   border: 1px solid transparent;
   border-radius: 4px;
   background: transparent;
@@ -126,14 +123,8 @@
 }
 
 .description {
-  margin-top: 4px;
-  color: var(--muted-foreground);
   font-size: var(--font-size-body);
-}
-
-.placeholderText {
   color: var(--muted-foreground);
-  font-size: var(--font-size-body);
 }
 
 .products {
@@ -171,6 +162,40 @@
 .securityBlock {
   border-top: 1px solid var(--border);
   padding-top: 24px;
+}
+
+.formGrid {
+  display: grid;
+  gap: 16px;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.readOnlyField {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.readOnlyLabel {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  color: var(--foreground);
+}
+
+.readOnlyValue {
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--muted) 5%, transparent);
+  font-size: var(--font-size-body);
+  color: var(--muted-foreground);
 }
 
 @media (max-width: 768px) {

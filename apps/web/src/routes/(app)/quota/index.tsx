@@ -3,7 +3,7 @@ import { createResource, createSignal, Show } from "solid-js";
 import { getQuotaStatus, allocateQuota } from "~/actions/quota";
 import { QuotaDisplay } from "~/components/features/quota/quota-display";
 import { useToast } from "~/components/feedback/toast-provider";
-import { AppPage, AppPageHeader } from "~/components/layout/page";
+import { AppPage } from "~/components/layout/page";
 import { useSession } from "~/components/providers/session-provider";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
@@ -70,31 +70,27 @@ export default function QuotaPage() {
   }
 
   return (
-    <AppPage class={styles.page}>
-      <AppPageHeader
-        eyebrow="Capacity"
-        title="Quota management"
-        description="Allocate daily lead capacity per executive."
-      />
-
+    <AppPage width="medium">
       <div class={styles.grid}>
         <div class={styles.left}>
           <Show
             when={quotaValues()}
             fallback={
-              <section class={styles.panel}>
+              <div>
                 <p class={styles.muted}>No quota assigned yet.</p>
-              </section>
+              </div>
             }
           >
             {(values) => (
-              <QuotaDisplay used={values().used} total={values().total} />
+              <div>
+                <QuotaDisplay used={values().used} total={values().total} />
+              </div>
             )}
           </Show>
         </div>
 
-        <section class={styles.panel}>
-          <h3 class={styles.title}>Assign quota</h3>
+        <div>
+          <h3 class={`${styles.title} ${styles.titleSpaced}`}>Assign quota</h3>
           <form
             onSubmit={(e) => {
               void handleAllocate(e);
@@ -123,7 +119,7 @@ export default function QuotaPage() {
               {loading() ? "Assigning..." : "Assign quota"}
             </Button>
           </form>
-        </section>
+        </div>
       </div>
     </AppPage>
   );

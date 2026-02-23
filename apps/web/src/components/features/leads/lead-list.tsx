@@ -1,11 +1,19 @@
-import { type Component, For, Show } from "solid-js";
+import {
+  type Component,
+  type JSX,
+  createMemo,
+  createSignal,
+  For,
+  Show,
+} from "solid-js";
 
 import { EmptyState } from "~/components/feedback/empty-state";
 import Building2 from "~/components/icons/building-2";
 import Check from "~/components/icons/check";
+import ChevronDown from "~/components/icons/chevron-down";
+import ChevronUp from "~/components/icons/chevron-up";
 import Phone from "~/components/icons/phone";
 import User from "~/components/icons/user";
-import { Badge } from "~/components/ui/display/badge";
 import { Button } from "~/components/ui/input/button";
 import {
   Table,
@@ -15,6 +23,8 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
+
+import { RegisterCallDialog } from "./register-call-dialog";
 
 import styles from "./lead-list.module.css";
 
@@ -32,22 +42,35 @@ interface LeadContact {
 
 interface LeadListProps {
   contacts: LeadContact[];
-  onCreateSale: (contactId: number) => void;
-  onComplete: (assignmentId: number) => void;
-}
-
-function formatTimeLeft(expiresAt: number): string {
-  const remainingMs = Math.max(0, expiresAt - Date.now());
-  const remainingHours = Math.floor(remainingMs / (60 * 60 * 1000));
-  const remainingMinutes = Math.floor(
-    (remainingMs % (60 * 60 * 1000)) / (60 * 1000),
-  );
-  if (remainingHours <= 0 && remainingMinutes <= 0) return "Expired";
-  if (remainingHours <= 0) return `${remainingMinutes}m left`;
-  return `${remainingHours}h ${remainingMinutes}m left`;
+  onRegisterCall: (
+    assignmentId: number,
+    contactId: number,
+    outcome: string,
+    notes: string,
+  ) => Promise<void> | void;
+  emptyAction?: JSX.Element;
 }
 
 export const LeadList: Component<LeadListProps> = (props) => {
+  const [registerActive, setRegisterActive] = createSignal<{
+    assignmentId: number;
+    contactId: number;
+  } | null>(null);
+
+  // Sorting state: field is implicitly 'organization_id'. Only asc/desc toggles.
+  const [sortAsc, setSortAsc] = createSignal(true);
+
+  const sortedContacts = createMemo(() => {
+    const list = [...props.contacts];
+    return list.sort((a, b) => {
+      const valA = a.organization_id;
+      const valB = b.organization_id;
+      if (valA < valB) return sortAsc() ? -1 : 1;
+      if (valA > valB) return sortAsc() ? 1 : -1;
+      return 0;
+    });
+  });
+
   return (
     <Show
       when={props.contacts.length > 0}
@@ -61,16 +84,28 @@ export const LeadList: Component<LeadListProps> = (props) => {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Lead</TableHead>
+            <TableHead>Lead ({props.contacts.length})</TableHead>
             <TableHead>Phone</TableHead>
-            <TableHead>Organization</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Expires</TableHead>
-            <TableHead class={styles.actionsHead}>Actions</TableHead>
+            <TableHead
+              onClick={() => setSortAsc((prev) => !prev)}
+              style={{ cursor: "pointer", "user-select": "none" }}
+            >
+              <div
+                style={{ display: "flex", "align-items": "center", gap: "4px" }}
+              >
+                Organization
+                {sortAsc() ? (
+                  <ChevronUp size={14} />
+                ) : (
+                  <ChevronDown size={14} />
+                )}
+              </div>
+            </TableHead>
+            <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          <For each={props.contacts}>
+          <For each={sortedContacts()}>
             {(lead) => (
               <TableRow>
                 <TableCell class={styles.leadCell}>
@@ -97,36 +132,19 @@ export const LeadList: Component<LeadListProps> = (props) => {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Badge
-                    variant={lead.status === "active" ? "success" : "outline"}
-                  >
-                    {lead.status === "active" ? "Active" : lead.status}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge
-                    variant={
-                      lead.expires_at < Date.now() ? "destructive" : "warning"
-                    }
-                  >
-                    {formatTimeLeft(lead.expires_at)}
-                  </Badge>
-                </TableCell>
-                <TableCell class={styles.actionsCell}>
                   <div class={styles.actions}>
                     <Button
-                      size="sm"
-                      onClick={() => props.onCreateSale(lead.contactId)}
+                      size="icon"
+                      variant="secondary"
+                      onClick={() =>
+                        setRegisterActive({
+                          assignmentId: lead.assignmentId,
+                          contactId: lead.contactId,
+                        })
+                      }
+                      aria-label="Register call"
                     >
-                      Create sale
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => props.onComplete(lead.assignmentId)}
-                    >
-                      <Check size={14} />
-                      Complete
+                      <Check size={16} />
                     </Button>
                   </div>
                 </TableCell>
@@ -135,6 +153,23 @@ export const LeadList: Component<LeadListProps> = (props) => {
           </For>
         </TableBody>
       </Table>
+
+      <RegisterCallDialog
+        isOpen={!!registerActive()}
+        onClose={() => setRegisterActive(null)}
+        onSubmit={(outcome, notes) => {
+          const active = registerActive();
+          if (active) {
+            void props.onRegisterCall(
+              active.assignmentId,
+              active.contactId,
+              outcome,
+              notes,
+            );
+            setRegisterActive(null);
+          }
+        }}
+      />
     </Show>
   );
 };

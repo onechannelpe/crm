@@ -1,7 +1,3 @@
-.page {
-  max-width: 960px;
-}
-
 .grid {
   display: grid;
   gap: 16px;
@@ -20,23 +16,19 @@
   gap: 16px;
 }
 
-.panel {
-  border: var(--panel-border);
-  border-radius: var(--panel-radius);
-  background: var(--panel-bg);
-  padding: 16px;
-}
-
 .muted {
   font-size: var(--font-size-body);
   color: var(--muted-foreground);
 }
 
 .title {
-  margin-bottom: 16px;
   font-size: var(--font-size-heading-sm);
   font-weight: 600;
   color: var(--foreground);
+}
+
+.titleSpaced {
+  padding-bottom: 16px;
 }
 
 .form {

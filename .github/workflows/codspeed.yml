@@ -52,5 +52,5 @@ jobs:
         uses: CodSpeedHQ/action@v4
         with:
           mode: simulation
-          run: bun x vitest bench --run --config vitest.bench.config.ts
+          run: bun run test:perf
           working-directory: apps/web

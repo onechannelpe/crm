@@ -5,17 +5,21 @@ import { cn } from "~/lib/utils";
 
 import styles from "./page.module.css";
 
+type PageWidth = "narrow" | "medium" | "wide";
+
+const WIDTH_CLASS: Record<PageWidth, string> = {
+  narrow: styles.pageNarrow,
+  medium: styles.pageMedium,
+  wide: styles.pageWide,
+};
+
 interface BaseProps {
   children: JSX.Element;
   class?: string;
 }
 
-interface HeaderProps {
-  class?: string;
-  eyebrow?: string;
-  title?: string;
-  description?: string;
-  actions?: JSX.Element;
+interface PageProps extends BaseProps {
+  width?: PageWidth;
 }
 
 interface SectionTitleProps {
@@ -25,17 +29,17 @@ interface SectionTitleProps {
   actions?: JSX.Element;
 }
 
-export function AppPage(props: BaseProps) {
-  return <div class={cn(styles.page, props.class)}>{props.children}</div>;
-}
-
-export function AppPageHeader(props: HeaderProps) {
+export function AppPage(props: PageProps) {
   return (
-    <header class={cn(styles.header, props.class)}>
-      <Show when={props.actions}>
-        {(actions) => <div class={styles.headerActions}>{actions()}</div>}
-      </Show>
-    </header>
+    <div
+      class={cn(
+        styles.page,
+        props.width ? WIDTH_CLASS[props.width] : undefined,
+        props.class,
+      )}
+    >
+      {props.children}
+    </div>
   );
 }
 

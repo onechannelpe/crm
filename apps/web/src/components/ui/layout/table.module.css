@@ -11,7 +11,7 @@
 }
 
 .row {
-  height: 32px;
+  height: 48px;
   transition: background 0.1s ease;
 }
 
@@ -19,9 +19,17 @@
   background: var(--bg-translucent);
 }
 
+.table.compact .row,
+.table.compact .head,
+.table.compact .cell {
+  height: 24px;
+  font-size: var(--font-size-caption);
+  padding: 0 8px;
+}
+
 .head {
-  height: 32px;
-  padding: 0 var(--table-cell-padding-x);
+  height: 48px;
+  padding: 0 16px;
   text-align: left;
   vertical-align: middle;
   color: var(--foreground-secondary);
@@ -33,8 +41,8 @@
 }
 
 .cell {
-  height: 32px;
-  padding: 0 var(--table-cell-padding-x);
+  height: 48px;
+  padding: 0 16px;
   vertical-align: middle;
   color: var(--foreground);
   font-size: var(--font-size-body);

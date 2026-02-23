@@ -85,7 +85,7 @@ export function createSalesWorkflowService(repos: Repositories, deps: Deps) {
               note.status === "rejected"
                 ? "Una venta rechazada fue corregida y reenviada."
                 : "Nueva venta enviada para revision del back-office.",
-            actionUrl: "/validation",
+            actionUrl: "/review",
             priority: "normal",
             dedupeKey: null,
             metadata: { noteId, executiveId: note.user_id },

@@ -10,17 +10,8 @@ import { leadService } from "~/server/shared/context";
 import { repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
-type ActiveLead = Awaited<
-  ReturnType<typeof repos.leadAssignments.findActiveByUserWithContacts>
->[number];
-
 export interface RequestLeadsResult {
   assigned: number;
-}
-
-export async function getActiveLeads(): Promise<ActiveLead[]> {
-  const session = await requirePermission("leads:read");
-  return repos.leadAssignments.findActiveByUserWithContacts(session.userId);
 }
 
 export async function requestLeads(

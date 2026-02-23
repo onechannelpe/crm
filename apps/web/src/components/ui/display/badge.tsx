@@ -33,10 +33,7 @@ export function Badge(props: BadgeProps) {
     variantInput && isBadgeVariant(variantInput) ? variantInput : "default";
 
   return (
-    <div
-      class={clsx(styles.badge, styles[variant], local.class)}
-      {...others}
-    >
+    <div class={clsx(styles.badge, styles[variant], local.class)} {...others}>
       {local.children}
     </div>
   );

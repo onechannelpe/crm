@@ -1,13 +1,6 @@
-.page {
+.auditGrid {
   display: grid;
   gap: 12px;
-}
-
-.panel {
-  border: var(--panel-border);
-  border-radius: var(--panel-radius);
-  background: var(--panel-bg);
-  padding: 12px;
 }
 
 .filterRow {
@@ -35,10 +28,6 @@
 
 .fieldW36 {
   width: 144px;
-}
-
-.mt1 {
-  margin-top: 4px;
 }
 
 .section {

@@ -159,7 +159,7 @@ describe("sales workflow invariants", () => {
     const reviewerFeed = await ctx.repos.appNotifications.listByUser(2, 10);
     expect(reviewerFeed.length).toBe(1);
     expect(reviewerFeed[0]?.event_type).toBe("sale.submitted");
-    expect(reviewerFeed[0]?.action_url).toBe("/validation");
+    expect(reviewerFeed[0]?.action_url).toBe("/review");
   });
 
   it("emits executive notification on rejection", async () => {

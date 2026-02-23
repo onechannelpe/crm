@@ -8,7 +8,7 @@ import {
 import { RejectionForm } from "~/components/features/sales/rejection-form";
 import { EmptyState } from "~/components/feedback/empty-state";
 import { useToast } from "~/components/feedback/toast-provider";
-import { AppPage, AppPageHeader } from "~/components/layout/page";
+import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import {
   Table,
@@ -20,18 +20,11 @@ import {
 } from "~/components/ui/layout/table";
 import { getErrorMessage } from "~/lib/errors";
 import { runOptimistic } from "~/lib/ui/run-optimistic";
+import { formatDate } from "~/lib/utils";
 
-import styles from "./validation-page.module.css";
+import styles from "./review-page.module.css";
 
-function formatDate(timestamp: number) {
-  return new Date(timestamp).toLocaleDateString("en-US", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
-
-export default function ValidationPage() {
+export default function ReviewPage() {
   const [notes, { mutate, refetch }] = createResource(
     () => true,
     async () => getPendingReviewNotes(),
@@ -93,8 +86,6 @@ export default function ValidationPage() {
 
   return (
     <AppPage>
-      <AppPageHeader />
-
       <Show
         when={currentNotes().length > 0}
         fallback={
@@ -115,58 +106,56 @@ export default function ValidationPage() {
             </section>
           )}
         </Show>
-        <section class={styles.tablePanel}>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Owner</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead class={styles.actionsHead}>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <For each={currentNotes()}>
-                {(note) => (
-                  <TableRow>
-                    <TableCell class={styles.idCell}>#{note.id}</TableCell>
-                    <TableCell>
-                      <div class={styles.contactWrap}>
-                        <p class={styles.contactName}>{note.contactName}</p>
-                        <p class={styles.contactMeta}>{note.contactDni}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>{note.executiveName}</TableCell>
-                    <TableCell class={styles.dateCell}>
-                      {formatDate(note.created_at)}
-                    </TableCell>
-                    <TableCell class={styles.actionsCell}>
-                      <div class={styles.actions}>
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          onClick={() => {
-                            void handleApprove(note.id);
-                          }}
-                        >
-                          Approve
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => setRejectingNoteId(note.id)}
-                        >
-                          Reject
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </For>
-            </TableBody>
-          </Table>
-        </section>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>ID</TableHead>
+              <TableHead>Contact</TableHead>
+              <TableHead>Owner</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead class={styles.actionsHead}>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <For each={currentNotes()}>
+              {(note) => (
+                <TableRow>
+                  <TableCell class={styles.idCell}>#{note.id}</TableCell>
+                  <TableCell>
+                    <div class={styles.contactWrap}>
+                      <p class={styles.contactName}>{note.contactName}</p>
+                      <p class={styles.contactMeta}>{note.contactDni}</p>
+                    </div>
+                  </TableCell>
+                  <TableCell>{note.executiveName}</TableCell>
+                  <TableCell class={styles.dateCell}>
+                    {formatDate(note.created_at)}
+                  </TableCell>
+                  <TableCell class={styles.actionsCell}>
+                    <div class={styles.actions}>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => {
+                          void handleApprove(note.id);
+                        }}
+                      >
+                        Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => setRejectingNoteId(note.id)}
+                      >
+                        Reject
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+            </For>
+          </TableBody>
+        </Table>
       </Show>
     </AppPage>
   );

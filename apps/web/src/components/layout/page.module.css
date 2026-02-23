@@ -1,18 +1,25 @@
 .page {
-  padding: 0 0 8px;
-}
-
-.header {
-  padding: 4px 4px 8px;
+  flex: 1;
   display: flex;
-  align-items: center;
-  justify-content: flex-end;
+  flex-direction: column;
 }
 
-.headerActions {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+.pageNarrow {
+  width: 100%;
+  max-width: 640px;
+  margin-inline: auto;
+}
+
+.pageMedium {
+  width: 100%;
+  max-width: 960px;
+  margin-inline: auto;
+}
+
+.pageWide {
+  width: 100%;
+  max-width: 1400px;
+  margin-inline: auto;
 }
 
 .section {
@@ -32,7 +39,6 @@
 }
 
 .sectionTitle {
-  margin-bottom: 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -46,7 +52,6 @@
 }
 
 .description {
-  margin-top: 4px;
   font-size: var(--font-size-caption);
   color: var(--muted-foreground);
 }

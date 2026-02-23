@@ -18,7 +18,7 @@ export const config = {
     maxAmount: 100,
   },
   uploads: {
-    storageRoot: process.env.CRM_UPLOADS_ROOT ?? ".local-storage/documents",
+    storageRoot: process.env.WEB_UPLOADS_ROOT ?? ".local-storage/documents",
     maxFileSizeMB: DEFAULT_UPLOAD_POLICY.maxFileSizeBytes / (1024 * 1024),
     allowedTypes: DEFAULT_UPLOAD_POLICY.allowedMimeTypes,
     retentionDays: DEFAULT_UPLOAD_POLICY.retentionDays,

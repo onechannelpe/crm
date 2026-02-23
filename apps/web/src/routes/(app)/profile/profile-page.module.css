@@ -1,35 +1,4 @@
-.panel {
-  border: var(--panel-border);
-  border-radius: var(--panel-radius);
-  background: var(--panel-bg);
-  overflow: hidden;
-}
-
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 39px;
-  border-bottom: 1px solid var(--border);
-  padding: 0 8px;
-}
-
-.crumbs {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--foreground);
-  font-size: var(--font-size-body);
-  font-weight: 500;
-}
-
-.contentWrap {
-  padding: 20px 24px;
-}
-
 .content {
-  margin: 0 auto;
-  max-width: 640px;
   display: flex;
   flex-direction: column;
   gap: 32px;
@@ -38,50 +7,64 @@
 .section {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-}
-
-.sectionBorder {
+  padding: 32px 0;
   border-bottom: 1px solid var(--border);
-  padding-bottom: 24px;
 }
 
-.title {
-  font-size: var(--font-size-heading-sm);
+.section:last-child {
+  border-bottom: none;
+}
+
+@media (min-width: 768px) {
+  .section {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+}
+
+.sectionHeader {
+  flex: 1;
+  padding-bottom: 16px;
+}
+
+@media (min-width: 768px) {
+  .sectionHeader {
+    max-width: 280px;
+    padding-right: 32px;
+    padding-bottom: 0;
+  }
+}
+
+.sectionContent {
+  flex: 2;
+}
+
+.sectionTitle {
+  margin: 0 0 8px;
+  font-size: var(--font-size-body);
   font-weight: 600;
   color: var(--foreground);
 }
 
-.muted {
+.sectionDesc {
+  margin: 0;
   font-size: var(--font-size-body);
   color: var(--muted-foreground);
+  line-height: 1.5;
 }
 
-.identityGrid {
+.formGrid {
   display: grid;
-  gap: 12px;
-  grid-template-columns: 1fr;
+  gap: 16px;
 }
 
-@media (min-width: 768px) {
-  .identityGrid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-.label {
-  color: var(--muted-foreground);
-  font-size: var(--font-size-caption);
-}
-
-.value {
-  margin-top: 4px;
-  color: var(--foreground);
-  font-size: var(--font-14);
-}
-
-.valueStrong {
-  font-weight: 500;
+.identityMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--border);
 }
 
 .inline {
@@ -90,40 +73,79 @@
   gap: 8px;
 }
 
+.label {
+  color: var(--muted-foreground);
+  font-size: var(--font-size-caption);
+  width: 48px;
+}
+
+.muted {
+  font-size: var(--font-size-body);
+  color: var(--muted-foreground);
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.feedbackHint {
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+
+.statusEnabled {
+  color: var(--success);
+}
+
 .qrWrap {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 16px;
+  margin-top: 16px;
 }
 
 .qr {
-  width: 192px;
-  height: 192px;
+  width: 160px;
+  height: 160px;
   border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   padding: 8px;
-  background: var(--background);
+  background: #ffffff;
 }
 
 .recovery {
+  margin-top: 16px;
   border: 1px solid var(--border);
-  padding: 8px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  background: var(--bg-translucent);
 }
 
 .recoveryTitle {
-  font-size: var(--font-14);
+  margin: 0 0 12px;
+  font-size: var(--font-size-body);
   font-weight: 500;
+  color: var(--foreground);
 }
 
 .recoveryList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  font-size: var(--font-14);
+  font-size: var(--font-size-body);
 }
 
 .mono {
   font-family: var(--font-mono);
+  color: var(--foreground);
+  background: var(--background);
+  border: 1px solid var(--border);
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-align: center;
 }
