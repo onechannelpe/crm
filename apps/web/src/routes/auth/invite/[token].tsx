@@ -6,7 +6,7 @@ import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { getErrorMessage } from "~/lib/errors";
 
-import styles from "../../auth-shell.module.css";
+import styles from "../auth-shell.module.css";
 
 export default function AcceptInvitePage() {
   const navigate = useNavigate();
