@@ -30,7 +30,6 @@ export default function NewSalePage() {
   const [noteId, setNoteId] = createSignal<number | null>(null);
   const [loading, setLoading] = createSignal(false);
 
-  // Manual creation form state
   const [ruc, setRuc] = createSignal("");
   const [orgName, setOrgName] = createSignal("");
   const [dni, setDni] = createSignal("");

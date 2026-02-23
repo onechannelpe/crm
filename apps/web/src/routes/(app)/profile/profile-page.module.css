@@ -4,11 +4,6 @@
   gap: 32px;
 }
 
-.content {
-  display: flex;
-  flex-direction: column;
-}
-
 .section {
   display: flex;
   flex-direction: column;
@@ -51,7 +46,7 @@
   color: var(--foreground);
 }
 
-.cardDesc {
+.sectionDesc {
   margin: 0;
   font-size: var(--font-size-body);
   color: var(--muted-foreground);
@@ -93,6 +88,15 @@
   display: flex;
   justify-content: flex-end;
   margin-top: 24px;
+}
+
+.feedbackHint {
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+
+.statusEnabled {
+  color: var(--success);
 }
 
 .qrWrap {

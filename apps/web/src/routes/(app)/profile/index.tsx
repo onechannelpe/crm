@@ -204,18 +204,12 @@ export default function ProfilePage() {
               {passkeyLoading() ? "Registering passkey..." : "Register passkey"}
             </Button>
             <Show when={!passkeySupported()}>
-              <p
-                class={styles.muted}
-                style={{ "margin-top": "8px", "margin-bottom": "0" }}
-              >
+              <p class={`${styles.muted} ${styles.feedbackHint}`}>
                 This browser does not support passkeys.
               </p>
             </Show>
             <Show when={passkeyMessage()}>
-              <p
-                class={styles.muted}
-                style={{ "margin-top": "8px", "margin-bottom": "0" }}
-              >
+              <p class={`${styles.muted} ${styles.feedbackHint}`}>
                 {passkeyMessage()}
               </p>
             </Show>
@@ -233,10 +227,7 @@ export default function ProfilePage() {
           </div>
           <div class={styles.sectionContent}>
             <Show when={totpStatus()?.enabled}>
-              <p
-                class={styles.sectionTitle}
-                style={{ color: "var(--success)" }}
-              >
+              <p class={`${styles.sectionTitle} ${styles.statusEnabled}`}>
                 ✓ TOTP is currently enabled
               </p>
             </Show>
@@ -285,10 +276,7 @@ export default function ProfilePage() {
             </Show>
 
             <Show when={totpMessage()}>
-              <p
-                class={styles.muted}
-                style={{ "margin-top": "8px", "margin-bottom": "0" }}
-              >
+              <p class={`${styles.muted} ${styles.feedbackHint}`}>
                 {totpMessage()}
               </p>
             </Show>

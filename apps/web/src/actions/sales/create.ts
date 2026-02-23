@@ -9,8 +9,11 @@ import {
 import { runObservedAction } from "~/lib/observability/run-observed-action";
 import { createAssignment } from "~/server/leads/domain-assignment";
 import { createAuditService } from "~/server/shared/audit";
-import { repos, runInRepositoryTransaction } from "~/server/shared/context";
-import { salesService } from "~/server/shared/context";
+import {
+  repos,
+  runInRepositoryTransaction,
+  salesService,
+} from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
 import type { CreateSaleResult, ManualSaleInput } from "./types";
