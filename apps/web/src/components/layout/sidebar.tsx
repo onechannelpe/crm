@@ -1,151 +1,231 @@
 import { A, useLocation } from "@solidjs/router";
-import { createMemo, For, type Component } from "solid-js";
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  onMount,
+  Show,
+} from "solid-js";
 
-import { logout } from "~/actions/auth-session";
+import { logout } from "~/actions/auth";
 import ChevronDown from "~/components/icons/chevron-down";
-import House from "~/components/icons/house";
-import MessageSquare from "~/components/icons/message-square";
-import Package from "~/components/icons/package";
-import Search from "~/components/icons/search";
-import Settings from "~/components/icons/settings";
-import ShieldCheck from "~/components/icons/shield-check";
-import Users from "~/components/icons/users";
 import { AccountMenu } from "~/components/layout/account-menu";
+import { ICON_BY_ROUTE } from "~/components/layout/route-icons";
 import { useSession } from "~/components/providers/session-provider";
-import { Button } from "~/components/ui/input/button";
-import { DS_Z_INDEX } from "~/components/ui/theme/design-system";
-import { getSidebarRoutes } from "~/lib/auth/access/route-policy";
-import { getWorkspaceLabel } from "~/lib/auth/access/workspace-label";
+import {
+  getSidebarChildren,
+  getSidebarRoutes,
+  type NavRoute,
+} from "~/lib/nav/nav-policy";
 import { cn } from "~/lib/utils";
 
-const SIDEBAR_GROUPS = [
-  { key: "platform", label: "Plataforma" },
-  { key: "sales", label: "Ventas" },
-  { key: "inventory", label: "Inventario" },
-] as const;
+import styles from "./shell.module.css";
 
-const ICONS: Record<string, Component<{ class?: string }>> = {
-  dashboard: House,
-  team: Users,
-  observability: ShieldCheck,
-  settings: Settings,
-  leads: Users,
-  "client-search": Search,
-  quota: ShieldCheck,
-  validation: MessageSquare,
-  inventory: Package,
-};
+const SIDEBAR_EXPANDED_STORAGE_KEY = "crm-sidebar-expanded";
 
 export function Sidebar() {
   const location = useLocation();
   const { currentUser } = useSession();
-  const navGroups = createMemo(() =>
-    SIDEBAR_GROUPS.map((group) => ({
-      label: group.label,
-      items: getSidebarRoutes(currentUser().role, group.key),
-    })).filter((group) => group.items.length > 0),
+  const [expanded, setExpanded] = createSignal(true);
+  const [hovered, setHovered] = createSignal(false);
+
+  const role = createMemo(() => currentUser().role);
+  const firstName = createMemo(
+    () =>
+      currentUser().fullName.trim().split(/\s+/)[0] || currentUser().fullName,
   );
-  const mobileItems = createMemo(() =>
-    navGroups()
-      .flatMap((group) => group.items)
-      .slice(0, 5),
+
+  const isRouteActive = (route: NavRoute) => {
+    const prefixes = route.activePrefixes;
+    if (prefixes && prefixes.length > 0) {
+      return prefixes.some(
+        (prefix) =>
+          location.pathname === prefix ||
+          location.pathname.startsWith(`${prefix}/`),
+      );
+    }
+    return (
+      location.pathname === route.href ||
+      location.pathname.startsWith(`${route.href}/`)
+    );
+  };
+
+  const quickItems = createMemo(() => getSidebarRoutes(role(), "primary"));
+  const workspaceItems = createMemo(() =>
+    getSidebarRoutes(role(), "secondary"),
   );
+
+  onMount(() => {
+    const stored =
+      typeof window !== "undefined"
+        ? window.localStorage.getItem(SIDEBAR_EXPANDED_STORAGE_KEY)
+        : null;
+    if (stored === "false") {
+      setExpanded(false);
+    }
+  });
+
+  createEffect(() => {
+    if (typeof document === "undefined") return;
+    const width = expanded()
+      ? "var(--nav-drawer-width)"
+      : "var(--nav-drawer-collapsed-width)";
+    document.documentElement.style.setProperty(
+      "--nav-drawer-current-width",
+      width,
+    );
+  });
+
+  const toggleExpanded = () => {
+    const next = !expanded();
+    setExpanded(next);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(SIDEBAR_EXPANDED_STORAGE_KEY, String(next));
+    }
+  };
 
   return (
-    <>
-      <aside
-        class="crm-surface fixed inset-y-4 left-4 hidden w-68 flex-col rounded-3xl md:flex"
-        style={{ "z-index": DS_Z_INDEX.navigation }}
-      >
-        <div class="flex h-18 items-center px-6">
-          <div>
-            <p class="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-              OneChannel
-            </p>
-            <p class="font-semibold text-lg tracking-tight">Panel de control</p>
-          </div>
-        </div>
-        <div class="px-4 pb-3">
-          <Button
-            type="button"
-            variant="outline"
-            class="h-auto w-full justify-between rounded-2xl bg-surface px-4 py-3 text-sm font-medium shadow-elevation-1 hover:bg-card"
-          >
-            <span>{getWorkspaceLabel(currentUser())}</span>
-            <ChevronDown class="h-4 w-4 text-muted-foreground" />
-          </Button>
-        </div>
-        <nav class="flex-1 space-y-5 overflow-y-auto px-4 pb-4">
-          <For each={navGroups()}>
-            {(group) => (
-              <div class="space-y-1.5">
-                <h4 class="px-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                  {group.label}
-                </h4>
-                <For each={group.items}>
-                  {(item) => {
-                    const isActive = () =>
-                      location.pathname.startsWith(item.href);
-                    const Icon = ICONS[item.id];
-                    return (
-                      <A
-                        href={item.href}
-                        class={cn(
-                          "flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-sm transition-all",
-                          isActive()
-                            ? "bg-primary text-primary-foreground shadow-sm"
-                            : "text-muted-foreground hover:bg-surface hover:text-foreground",
-                        )}
-                      >
-                        {Icon ? (
-                          <Icon
-                            class={cn(
-                              "h-4 w-4",
-                              isActive()
-                                ? "text-primary-foreground"
-                                : "text-muted-foreground",
-                            )}
-                          />
-                        ) : null}
-                        <span class="font-medium">{item.label}</span>
-                      </A>
-                    );
-                  }}
-                </For>
-              </div>
-            )}
-          </For>
-        </nav>
-        <div class="border-t border-border/70 px-4 py-4">
-          <AccountMenu fullName={currentUser().fullName} onLogout={logout} />
-        </div>
-      </aside>
+    <aside
+      class={styles.sidebar}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <div class={cn(styles.sidebarTop, !expanded() && styles.collapsedTop)}>
+        <AccountMenu
+          label={firstName()}
+          collapsed={!expanded()}
+          onLogout={logout}
+        />
+        <button
+          type="button"
+          class={styles.collapse}
+          onClick={toggleExpanded}
+          title={expanded() ? "Collapse sidebar" : "Expand sidebar"}
+          aria-label={expanded() ? "Collapse sidebar" : "Expand sidebar"}
+          style={{
+            opacity: expanded() ? (hovered() ? "1" : "0") : "1",
+            transition: "opacity 150ms var(--ease-standard)",
+          }}
+        >
+          <ChevronDown
+            size={16}
+            style={{
+              transform: expanded() ? "rotate(90deg)" : "rotate(-90deg)",
+              transition: "transform 150ms var(--ease-standard)",
+            }}
+          />
+        </button>
+      </div>
 
       <nav
-        class="crm-surface fixed inset-x-3 bottom-3 flex items-center justify-between rounded-2xl px-2 py-1.5 md:hidden"
-        style={{ "z-index": DS_Z_INDEX.navigation }}
+        class={cn(styles.sidebarScroll, !expanded() && styles.collapsedScroll)}
       >
-        <For each={mobileItems()}>
-          {(item) => {
-            const isActive = () => location.pathname.startsWith(item.href);
-            const Icon = ICONS[item.id];
-            return (
-              <A
-                href={item.href}
-                class={cn(
-                  "flex min-w-0 flex-1 items-center justify-center gap-1 rounded-xl px-2 py-2 text-[11px]",
-                  isActive()
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground",
-                )}
-              >
-                {Icon ? <Icon class="h-3.5 w-3.5" /> : null}
-                <span class="truncate">{item.label}</span>
-              </A>
-            );
-          }}
-        </For>
+        <section
+          class={cn(styles.section, !expanded() && styles.collapsedSection)}
+        >
+          <For each={quickItems()}>
+            {(item) => {
+              const Icon = ICON_BY_ROUTE[item.icon];
+              const children = createMemo(() =>
+                getSidebarChildren(role(), item.id),
+              );
+              return (
+                <>
+                  <A
+                    href={item.href}
+                    class={cn(
+                      styles.link,
+                      !expanded() && styles.collapsedLink,
+                      isRouteActive(item) ? styles.linkActive : undefined,
+                    )}
+                  >
+                    <Icon size={16} />
+                    <span class={cn(!expanded() && styles.collapsedLabel)}>
+                      {item.navLabel ?? item.label}
+                    </span>
+                  </A>
+                  <Show when={children().length > 0 && expanded()}>
+                    <div class={styles.subgroup}>
+                      <For each={children()}>
+                        {(child) => (
+                          <A
+                            href={child.href}
+                            class={cn(
+                              styles.link,
+                              styles.subItem,
+                              location.pathname === child.href ||
+                                location.pathname.startsWith(`${child.href}/`)
+                                ? styles.linkActive
+                                : undefined,
+                            )}
+                          >
+                            <span class={styles.dot} />
+                            <span>{child.label}</span>
+                          </A>
+                        )}
+                      </For>
+                    </div>
+                  </Show>
+                </>
+              );
+            }}
+          </For>
+        </section>
+
+        <section
+          class={cn(styles.section, !expanded() && styles.collapsedSection)}
+        >
+          <div class={styles.divider} />
+          <For each={workspaceItems()}>
+            {(item) => {
+              const Icon = ICON_BY_ROUTE[item.icon];
+              const children = createMemo(() =>
+                getSidebarChildren(role(), item.id),
+              );
+              return (
+                <>
+                  <A
+                    href={item.href}
+                    class={cn(
+                      styles.link,
+                      !expanded() && styles.collapsedLink,
+                      isRouteActive(item) ? styles.linkActive : undefined,
+                    )}
+                  >
+                    <Icon size={16} />
+                    <span class={cn(!expanded() && styles.collapsedLabel)}>
+                      {item.navLabel ?? item.label}
+                    </span>
+                  </A>
+                  <Show when={children().length > 0 && expanded()}>
+                    <div class={styles.subgroup}>
+                      <For each={children()}>
+                        {(child) => (
+                          <A
+                            href={child.href}
+                            class={cn(
+                              styles.link,
+                              styles.subItem,
+                              location.pathname === child.href ||
+                                location.pathname.startsWith(`${child.href}/`)
+                                ? styles.linkActive
+                                : undefined,
+                            )}
+                          >
+                            <span class={styles.dot} />
+                            <span>{child.label}</span>
+                          </A>
+                        )}
+                      </For>
+                    </div>
+                  </Show>
+                </>
+              );
+            }}
+          </For>
+        </section>
       </nav>
-    </>
+    </aside>
   );
 }

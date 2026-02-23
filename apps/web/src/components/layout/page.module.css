@@ -1,0 +1,57 @@
+.page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.pageNarrow {
+  width: 100%;
+  max-width: 640px;
+  margin-inline: auto;
+}
+
+.pageMedium {
+  width: 100%;
+  max-width: 960px;
+  margin-inline: auto;
+}
+
+.pageWide {
+  width: 100%;
+  max-width: 1400px;
+  margin-inline: auto;
+}
+
+.section {
+  border: var(--panel-border);
+  border-radius: var(--panel-radius);
+  overflow: hidden;
+  background: var(--panel-bg);
+}
+
+.sectionBody {
+  padding: 12px;
+}
+
+.insetPanel {
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.title {
+  font-size: var(--font-size-body);
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.description {
+  font-size: var(--font-size-caption);
+  color: var(--muted-foreground);
+}

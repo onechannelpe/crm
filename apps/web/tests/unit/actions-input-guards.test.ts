@@ -1,10 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { getUserLoginRetryReport } from "../../src/actions/admin-auth-security";
-import {
-  listUserSessions,
-  revokeUserSession,
-} from "../../src/actions/admin-sessions";
+import { getUserLoginRetryReport } from "../../src/actions/admin";
+import { listUserSessions, revokeUserSession } from "../../src/actions/admin";
 import { requestLeads } from "../../src/actions/leads";
 import { allocateQuota } from "../../src/actions/quota";
 import { createSale } from "../../src/actions/sales";

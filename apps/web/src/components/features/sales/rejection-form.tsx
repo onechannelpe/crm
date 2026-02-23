@@ -4,6 +4,8 @@ import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { Select } from "~/components/ui/input/select";
 
+import styles from "./rejection-form.module.css";
+
 interface RejectionItem {
   fieldId: string;
   note: string;
@@ -15,10 +17,10 @@ interface RejectionFormProps {
 }
 
 const REJECTABLE_FIELDS = [
-  { id: "exec_code_real", label: "Código ejecutivo real" },
-  { id: "exec_code_tdp", label: "Código ejecutivo TDP" },
-  { id: "items", label: "Productos e ítems" },
-  { id: "contact_info", label: "Información de contacto" },
+  { id: "exec_code_real", label: "Executive code (real)" },
+  { id: "exec_code_tdp", label: "Executive code (TDP)" },
+  { id: "items", label: "Items" },
+  { id: "contact_info", label: "Contact information" },
 ];
 
 export const RejectionForm: Component<RejectionFormProps> = (props) => {
@@ -57,7 +59,7 @@ export const RejectionForm: Component<RejectionFormProps> = (props) => {
     );
 
   return (
-    <div class="space-y-4">
+    <div class={styles.root}>
       <Select
         value=""
         onChange={(e) => {
@@ -65,36 +67,34 @@ export const RejectionForm: Component<RejectionFormProps> = (props) => {
           if (value) addRejection(value);
         }}
       >
-        <option value="">Agregar campo...</option>
+        <option value="">Add field...</option>
         <For each={availableFields()}>
           {(field) => <option value={field.id}>{field.label}</option>}
         </For>
       </Select>
 
-      <div class="space-y-3">
+      <div class={styles.list}>
         <For each={rejections()}>
           {(rejection, index) => {
             const fieldLabel = REJECTABLE_FIELDS.find(
               (f) => f.id === rejection.fieldId,
             )?.label;
             return (
-              <div class="rounded-2xl border border-destructive/30 bg-destructive/10 p-3">
-                <div class="flex items-start justify-between mb-2">
-                  <span class="text-sm font-medium text-destructive">
-                    {fieldLabel}
-                  </span>
+              <div class={styles.item}>
+                <div class={styles.itemHead}>
+                  <span class={styles.itemTitle}>{fieldLabel}</span>
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
                     onClick={() => removeRejection(index())}
-                    class="h-7 px-2 text-destructive hover:bg-destructive/10"
+                    class={styles.remove}
                   >
                     ×
                   </Button>
                 </div>
                 <Input
-                  placeholder="Motivo del rechazo"
+                  placeholder="Reason for rejection"
                   value={rejection.note}
                   onInput={(e) => updateNote(index(), e.currentTarget.value)}
                 />
@@ -104,7 +104,7 @@ export const RejectionForm: Component<RejectionFormProps> = (props) => {
         </For>
       </div>
 
-      <div class="flex gap-2 pt-2">
+      <div class={styles.actions}>
         <Button
           variant="destructive"
           onClick={() => {
@@ -112,10 +112,10 @@ export const RejectionForm: Component<RejectionFormProps> = (props) => {
           }}
           disabled={rejections().length === 0 || loading()}
         >
-          {loading() ? "Rechazando..." : `Rechazar (${rejections().length})`}
+          {loading() ? "Rejecting..." : `Reject (${rejections().length})`}
         </Button>
         <Button variant="secondary" onClick={props.onCancel}>
-          Cancelar
+          Cancel
         </Button>
       </div>
     </div>

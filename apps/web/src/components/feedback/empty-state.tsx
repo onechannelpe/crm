@@ -1,22 +1,32 @@
-import type { JSX } from "solid-js";
+import type { Component, JSX } from "solid-js";
 
+import type { IconProps } from "~/components/icons/icon-base";
 import Inbox from "~/components/icons/inbox";
 
+import styles from "./empty-state.module.css";
+
+type IconComponent = Component<Omit<IconProps, "name" | "iconNode">>;
+
 interface EmptyStateProps {
+  icon?: IconComponent;
   title: string;
   description?: string;
   action?: JSX.Element;
 }
 
 export function EmptyState(props: EmptyStateProps) {
+  const Icon = () => props.icon ?? Inbox;
   return (
-    <div class="crm-surface rounded-3xl py-10 text-center">
-      <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-secondary">
-        <Inbox class="h-8 w-8 text-muted-foreground" />
+    <div class={styles.root}>
+      <div class={styles.iconWrap}>
+        {(() => {
+          const I = Icon();
+          return <I size={20} />;
+        })()}
       </div>
-      <h3 class="mb-1 text-lg font-semibold text-foreground">{props.title}</h3>
+      <h3 class={styles.title}>{props.title}</h3>
       {props.description && (
-        <p class="mb-4 text-sm text-muted-foreground">{props.description}</p>
+        <p class={styles.description}>{props.description}</p>
       )}
       {props.action}
     </div>

@@ -3,7 +3,7 @@ import {
   validateSessionToken,
   type SessionValidationResult,
 } from "../session/session-manager";
-import { canAccessPath } from "./route-policy";
+import { canAccessPath, getDefaultAppPath } from "./route-policy";
 
 export interface AuthRequestEvent {
   request: Request;
@@ -24,7 +24,7 @@ export type AuthRequestDecision =
   | { kind: "allow" }
   | { kind: "redirect_login" }
   | { kind: "redirect_onboarding" }
-  | { kind: "redirect_dashboard" }
+  | { kind: "redirect_home"; to: string }
   | { kind: "reject"; response: Response };
 
 export function isPublicPath(pathname: string): boolean {
@@ -70,11 +70,15 @@ export async function enforceAuthRequest(
   }
 
   if (session.onboardingCompleted && url.pathname === "/onboarding") {
-    return { kind: "redirect_dashboard" };
+    return { kind: "redirect_home", to: getDefaultAppPath(session.role) };
+  }
+
+  if (url.pathname === "/") {
+    return { kind: "redirect_home", to: getDefaultAppPath(session.role) };
   }
 
   if (!canAccessPath(session.role, url.pathname)) {
-    return { kind: "redirect_dashboard" };
+    return { kind: "redirect_home", to: getDefaultAppPath(session.role) };
   }
 
   event.locals = event.locals ?? {};

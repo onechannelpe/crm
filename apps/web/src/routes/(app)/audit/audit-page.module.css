@@ -1,0 +1,59 @@
+.auditGrid {
+  display: grid;
+  gap: 12px;
+}
+
+.filterRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.fieldW44 {
+  width: 176px;
+}
+
+.fieldW40 {
+  width: 160px;
+}
+
+.fieldW52 {
+  width: 208px;
+}
+
+.fieldW28 {
+  width: 112px;
+}
+
+.fieldW36 {
+  width: 144px;
+}
+
+.section {
+  display: grid;
+  gap: 12px;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-body);
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.strong {
+  font-weight: 500;
+}
+
+.helperText {
+  margin: 0;
+  font-size: var(--font-size-caption);
+  color: var(--muted-foreground);
+}
+
+.errorText {
+  margin: 0;
+  font-size: var(--font-size-caption);
+  color: var(--destructive);
+}

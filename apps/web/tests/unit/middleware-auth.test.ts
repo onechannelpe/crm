@@ -84,7 +84,7 @@ describe("auth middleware request guard", () => {
 
   it("attaches session to locals when token is valid", async () => {
     const event: { request: Request; locals: App.RequestEventLocals } = {
-      request: new Request("http://localhost:3000/dashboard"),
+      request: new Request("http://localhost:3000/leads"),
       locals: {},
     };
 
@@ -119,7 +119,10 @@ describe("auth middleware request guard", () => {
       createDeps({ token: "token", session: createSession("executive") }),
     );
 
-    expect(decision.kind).toBe("redirect_dashboard");
+    expect(decision.kind).toBe("redirect_home");
+    if (decision.kind === "redirect_home") {
+      expect(decision.to).toBe("/leads");
+    }
   });
 
   it("redirects users from routes they cannot access", async () => {
@@ -130,7 +133,24 @@ describe("auth middleware request guard", () => {
       createDeps({ token: "token", session: createSession("executive") }),
     );
 
-    expect(decision.kind).toBe("redirect_dashboard");
+    expect(decision.kind).toBe("redirect_home");
+    if (decision.kind === "redirect_home") {
+      expect(decision.to).toBe("/leads");
+    }
+  });
+
+  it("redirects authenticated users from root to their home route", async () => {
+    const decision = await enforceAuthRequest(
+      {
+        request: new Request("http://localhost:3000/"),
+      },
+      createDeps({ token: "token", session: createSession("logistics") }),
+    );
+
+    expect(decision.kind).toBe("redirect_home");
+    if (decision.kind === "redirect_home") {
+      expect(decision.to).toBe("/inventory");
+    }
   });
 
   it("allows users to access permitted routes", async () => {

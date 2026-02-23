@@ -1,0 +1,150 @@
+.root {
+  position: relative;
+}
+
+.trigger {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted-foreground);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.trigger:hover {
+  background: var(--bg-translucent);
+  color: var(--foreground);
+}
+
+.badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--destructive);
+  color: var(--destructive-foreground);
+  font-size: var(--font-10);
+  line-height: 16px;
+  text-align: center;
+  padding: 0 4px;
+}
+
+.panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: 384px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--overlay);
+  box-shadow: var(--shadow-elevation-2);
+  overflow: hidden;
+  z-index: 40;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  padding: 10px;
+}
+
+.panelTitle {
+  font-size: var(--font-size-body);
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.markAll {
+  height: 28px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: var(--font-size-caption);
+  padding: 0 8px;
+}
+
+.markAll:hover {
+  background: var(--bg-translucent);
+  color: var(--foreground);
+}
+
+.empty {
+  padding: 16px;
+  font-size: var(--font-size-body);
+  color: var(--muted-foreground);
+}
+
+.list {
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.item {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  text-align: left;
+  padding: 10px;
+}
+
+.item:last-child {
+  border-bottom: 0;
+}
+
+.itemUnread {
+  background: color-mix(in oklab, var(--bg-translucent) 90%, transparent);
+}
+
+.item:hover {
+  background: var(--bg-translucent);
+}
+
+.title {
+  font-size: var(--font-size-body);
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.body {
+  font-size: var(--font-size-caption);
+  color: var(--muted-foreground);
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.time {
+  font-size: var(--font-size-label);
+  color: var(--muted-foreground);
+}
+
+.readBtn {
+  height: 22px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: var(--font-size-label);
+  padding: 0 6px;
+}
+
+.readBtn:hover {
+  background: var(--bg-translucent);
+  color: var(--foreground);
+}

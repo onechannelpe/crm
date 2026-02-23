@@ -1,10 +1,9 @@
 import { createSignal, For, Show } from "solid-js";
 
-import { getUserLoginRetryReport } from "~/actions/admin-auth-security";
+import { getUserLoginRetryReport } from "~/actions/admin";
 import { useToast } from "~/components/feedback/toast-provider";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
-import { Card } from "~/components/ui/layout/card";
 import {
   Table,
   TableBody,
@@ -14,6 +13,8 @@ import {
   TableRow,
 } from "~/components/ui/layout/table";
 import { getErrorMessage } from "~/lib/errors";
+
+import styles from "./login-retries-card.module.css";
 
 function formatDate(value: number): string {
   return new Date(value).toLocaleString();
@@ -37,24 +38,20 @@ export function LoginRetriesCard() {
     try {
       const next = await getUserLoginRetryReport(email());
       setReport(next);
-      if (!next) showToast("info", "Usuario no encontrado");
+      if (!next) showToast("info", "User not found");
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "No se pudo consultar"));
+      showToast("error", getErrorMessage(err, "Lookup failed"));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Card class="p-6 space-y-4">
-      <h2 class="text-base font-semibold text-foreground">
-        Seguridad de acceso
-      </h2>
-      <p class="text-sm text-muted-foreground">
-        Consulta reintentos de login por usuario.
-      </p>
+    <section class={styles.root}>
+      <h2 class={styles.title}>Login security</h2>
+      <p class={styles.description}>Inspect user login retries.</p>
       <form
-        class="grid grid-cols-1 md:grid-cols-[1fr_180px] gap-3 items-end"
+        class={styles.form}
         onSubmit={(e) => {
           e.preventDefault();
           void lookup();
@@ -62,39 +59,39 @@ export function LoginRetriesCard() {
       >
         <Input
           type="email"
-          label="Correo del usuario"
+          label="User email"
           value={email()}
           onInput={(e) => setEmail(e.currentTarget.value)}
           required
         />
         <Button type="submit" disabled={loading()}>
-          {loading() ? "Consultando..." : "Ver reintentos"}
+          {loading() ? "Loading..." : "View retries"}
         </Button>
       </form>
 
       <Show when={report()}>
         {(data) => (
-          <div class="space-y-3">
-            <p class="text-sm text-foreground">
+          <div class={styles.report}>
+            <p class={styles.user}>
               {data().user.fullName} ({data().user.email})
             </p>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <Card class="p-3">
-                <p class="text-xs text-muted-foreground">reintentos en 15m</p>
-                <p class="text-2xl font-semibold">{data().retryCount15m}</p>
-              </Card>
-              <Card class="p-3">
-                <p class="text-xs text-muted-foreground">reintentos en 24h</p>
-                <p class="text-2xl font-semibold">{data().retryCount24h}</p>
-              </Card>
+            <div class={styles.stats}>
+              <div class={styles.statCard}>
+                <p class={styles.statLabel}>retries in 15m</p>
+                <p class={styles.statValue}>{data().retryCount15m}</p>
+              </div>
+              <div class={styles.statCard}>
+                <p class={styles.statLabel}>retries in 24h</p>
+                <p class={styles.statValue}>{data().retryCount24h}</p>
+              </div>
             </div>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead>Etapa</TableHead>
-                  <TableHead>Resultado</TableHead>
-                  <TableHead>Motivo</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Stage</TableHead>
+                  <TableHead>Outcome</TableHead>
+                  <TableHead>Reason</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -113,6 +110,6 @@ export function LoginRetriesCard() {
           </div>
         )}
       </Show>
-    </Card>
+    </section>
   );
 }
