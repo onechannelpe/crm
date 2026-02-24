@@ -53,16 +53,31 @@ export function createLeadAssignmentsRepo(db: Kysely<Database>) {
       return rows.length;
     },
 
-    async hasActiveForContact(userId: number, contactId: number) {
-      const row = await db
+    findActiveForContact(userId: number, contactId: number) {
+      return db
         .selectFrom("lead_assignments")
-        .select("id")
+        .selectAll()
         .where("user_id", "=", userId)
         .where("contact_id", "=", contactId)
         .where("status", "=", "active")
         .where("expires_at", ">", Date.now())
         .executeTakeFirst();
+    },
+
+    async hasActiveForContact(userId: number, contactId: number) {
+      const row = await this.findActiveForContact(userId, contactId);
       return !!row;
+    },
+
+    findActiveByIdForUser(id: number, userId: number) {
+      return db
+        .selectFrom("lead_assignments")
+        .selectAll()
+        .where("id", "=", id)
+        .where("user_id", "=", userId)
+        .where("status", "=", "active")
+        .where("expires_at", ">", Date.now())
+        .executeTakeFirst();
     },
 
     markCompleted(id: number, userId: number) {

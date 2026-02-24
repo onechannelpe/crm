@@ -1,5 +1,3 @@
-import { createAssignment } from "~/server/leads/domain-assignment";
-
 import type { TestDbContext } from "../../support/test-db";
 import { BENCH_NOW } from "../_shared/constants";
 
@@ -28,11 +26,5 @@ export async function seedSalesCreateUsers(
   }));
 
   await ctx.db.insertInto("users").values(users).execute();
-  const userIds = users.map((user) => user.id);
-
-  await ctx.repos.leadAssignments.createMany(
-    userIds.map((userId) => createAssignment(userId, 1)),
-  );
-
-  return userIds;
+  return users.map((user) => user.id);
 }

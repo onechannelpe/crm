@@ -1,6 +1,7 @@
 # build artifacts
 .vinxi
 .output
+dist
 app.config.timestamp_*.js
 
 # rollup-plugin-visualizer artifacts

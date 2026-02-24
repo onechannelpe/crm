@@ -4,11 +4,11 @@ import { getUserLoginRetryReport } from "../../src/actions/admin";
 import { listUserSessions, revokeUserSession } from "../../src/actions/admin";
 import { requestLeads } from "../../src/actions/leads";
 import { allocateQuota } from "../../src/actions/quota";
+import { requestSalesExport } from "../../src/actions/sales-exports";
 import {
-  addSaleDocument,
-  createSale,
-  rejectSale,
-} from "../../src/actions/sales";
+  createSalesRecordDraft,
+  rejectSalesRecord,
+} from "../../src/actions/sales-records";
 import { updateProductPricing } from "../../src/actions/settings";
 import {
   acceptTeamInvite,
@@ -19,8 +19,8 @@ import {
 
 describe("action guards fail fast", () => {
   it("rejects malformed numeric ids before auth", async () => {
-    await expect(createSale(0)).rejects.toThrow(
-      "contactId must be a positive integer",
+    await expect(rejectSalesRecord(0, "missing docs")).rejects.toThrow(
+      "recordId must be a positive integer",
     );
     await expect(allocateQuota(0, 1)).rejects.toThrow(
       "executiveId must be a positive integer",
@@ -34,12 +34,12 @@ describe("action guards fail fast", () => {
   });
 
   it("rejects malformed textual payloads before auth", async () => {
-    await expect(addSaleDocument(1, "   ", "text/plain", [1])).rejects.toThrow(
-      "filename is required",
+    await expect(requestSalesExport("pdf")).rejects.toThrow(
+      "format is invalid",
     );
-    await expect(
-      rejectSale(1, [{ field_id: "  ", reviewer_note: null }]),
-    ).rejects.toThrow("rejections.field_id is required");
+    await expect(rejectSalesRecord(1, "   ")).rejects.toThrow(
+      "reason is required",
+    );
     await expect(revokeUserSession("   ", 1)).rejects.toThrow(
       "sessionId is required",
     );
@@ -72,6 +72,35 @@ describe("action guards fail fast", () => {
   });
 
   it("rejects invalid range/count values before auth", async () => {
+    await expect(
+      createSalesRecordDraft({
+        source: "manual",
+        leadAssignmentId: null,
+        client: {
+          ruc: null,
+          companyName: "Acme",
+          contactName: "Contact",
+          dni: "12345678",
+          phones: [],
+          engineMatchId: null,
+          completenessScore: 10,
+        },
+        addresses: [
+          {
+            addressType: "installation",
+            fullText: "",
+            department: null,
+            province: null,
+            district: null,
+            ubigeo: null,
+            latitude: null,
+            longitude: null,
+            isPrimary: true,
+          },
+        ],
+        products: [{ productId: 1, quantity: 1 }],
+      }),
+    ).rejects.toThrow("addresses[0].fullText is required");
     await expect(requestLeads(0)).rejects.toThrow(
       "bufferSize must be a positive integer",
     );

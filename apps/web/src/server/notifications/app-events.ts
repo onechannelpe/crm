@@ -9,7 +9,7 @@ export interface AppNotificationEvent {
     | "quota.assigned"
     | "sale.submitted"
     | "sale.rejected"
-    | "sale.approved"
+    | "sale.confirmed"
     | "sale.resubmitted";
   title: string;
   bodyText: string;

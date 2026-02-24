@@ -24,7 +24,7 @@ export default function DashboardPage() {
     activeLeads: 0,
     pendingSales: 0,
     draftSales: 0,
-    approvedSales: 0,
+    confirmedSales: 0,
   });
 
   const columns = createMemo<DashboardColumn[]>(() => {
@@ -57,11 +57,11 @@ export default function DashboardPage() {
             title: "Lead queue",
             value: `${s.activeLeads}`,
             detail: "Active leads",
-            href: "/leads",
+            href: "/sales/leads",
           },
         ],
         actionLabel: "View leads",
-        actionHref: "/leads",
+        actionHref: "/sales/leads",
       },
       {
         key: "screening",
@@ -73,11 +73,11 @@ export default function DashboardPage() {
             title: "Sales draft",
             value: `${s.draftSales}`,
             detail: "Draft notes",
-            href: "/sales/new",
+            href: "/sales/records/new",
           },
         ],
         actionLabel: "Continue draft",
-        actionHref: "/sales/new",
+        actionHref: "/sales/records/new",
       },
       {
         key: "review",
@@ -86,30 +86,30 @@ export default function DashboardPage() {
         amount: s.pendingSales,
         cards: [
           {
-            title: "Pending approvals",
+            title: "Pending confirmations",
             value: `${s.pendingSales}`,
             detail: "Awaiting validation",
-            href: "/review",
+            href: "/sales/confirmations",
           },
         ],
         actionLabel: "View pending",
-        actionHref: "/review",
+        actionHref: "/sales/confirmations",
       },
       {
         key: "customer",
         label: "Customer",
         tone: styles.tagCustomer,
-        amount: s.approvedSales,
+        amount: s.confirmedSales,
         cards: [
           {
-            title: "Approved sales",
-            value: `${s.approvedSales}`,
+            title: "Confirmed sales",
+            value: `${s.confirmedSales}`,
             detail: "Closed operations",
-            href: "/sales/approved",
+            href: "/sales/confirmed",
           },
         ],
-        actionLabel: "View approved",
-        actionHref: "/sales/approved",
+        actionLabel: "View confirmed",
+        actionHref: "/sales/confirmed",
       },
     ];
   });
