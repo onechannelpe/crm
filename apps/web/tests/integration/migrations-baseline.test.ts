@@ -60,13 +60,7 @@ describe("migration baseline", () => {
       const tableNames = new Set(tables.rows.map((row) => row.name));
       expect(tableNames.has("users")).toBe(true);
       expect(tableNames.has("quota_allocations")).toBe(true);
-      expect(tableNames.has("charge_notes")).toBe(true);
-      expect(tableNames.has("sales_document_blobs")).toBe(true);
-      expect(tableNames.has("sales_documents")).toBe(true);
-      expect(tableNames.has("sales_document_events")).toBe(true);
-      expect(tableNames.has("sales_document_policies")).toBe(true);
-      expect(tableNames.has("sales_document_upload_jobs")).toBe(true);
-      expect(tableNames.has("sales_document_gc")).toBe(true);
+      expect(tableNames.has("inventory_items")).toBe(true);
       expect(tableNames.has("audit_logs")).toBe(true);
       expect(tableNames.has("audit_action_policies")).toBe(true);
       expect(tableNames.has("user_invites")).toBe(true);
@@ -82,28 +76,6 @@ describe("migration baseline", () => {
       `.execute(db);
       const indexNames = new Set(indexes.rows.map((row) => row.name));
       expect(indexNames.has("idx_quota_user_date")).toBe(true);
-      expect(indexNames.has("idx_sales_documents_charge_status_created")).toBe(
-        true,
-      );
-      expect(indexNames.has("idx_sales_documents_status_deleted_at")).toBe(
-        true,
-      );
-      expect(indexNames.has("idx_sales_documents_blob_sha256")).toBe(true);
-      expect(indexNames.has("idx_sales_document_blobs_ref_count")).toBe(true);
-      expect(indexNames.has("idx_sales_document_blobs_storage_key")).toBe(true);
-      expect(indexNames.has("idx_sales_document_events_document_created")).toBe(
-        true,
-      );
-      expect(
-        indexNames.has("idx_sales_document_upload_jobs_status_available"),
-      ).toBe(true);
-      expect(indexNames.has("idx_sales_document_upload_jobs_lease_until")).toBe(
-        true,
-      );
-      expect(indexNames.has("idx_sales_document_gc_state_available")).toBe(
-        true,
-      );
-      expect(indexNames.has("idx_sales_document_gc_lease_until")).toBe(true);
       expect(indexNames.has("idx_app_notifications_dedupe")).toBe(true);
       expect(indexNames.has("idx_audit_created_at")).toBe(true);
       expect(indexNames.has("idx_audit_action_created")).toBe(true);

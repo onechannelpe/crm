@@ -11,9 +11,6 @@ import { up as up004 } from "../../src/lib/db/migrations/004-action-observabilit
 import { up as up005 } from "../../src/lib/db/migrations/005-report-export-observability";
 import { up as up006 } from "../../src/lib/db/migrations/006-sales-records-core";
 import type { Database } from "../../src/lib/db/schema";
-import { createDocumentBlobStore } from "../../src/server/sales/document-blob-store";
-import { createDocumentJobProcessor } from "../../src/server/sales/document-job-processor";
-import { createSalesDocumentService } from "../../src/server/sales/document-service";
 import { createSalesRecordsWorkflowService } from "../../src/server/sales/records-service";
 import { createRepositories } from "../../src/server/shared/registry";
 
@@ -193,8 +190,6 @@ export interface TestDbContext {
   storageRoot: string;
   db: Kysely<Database>;
   repos: ReturnType<typeof createRepositories>;
-  documents: ReturnType<typeof createSalesDocumentService>;
-  documentJobs: ReturnType<typeof createDocumentJobProcessor>;
   salesRecords: ReturnType<typeof createSalesRecordsWorkflowService>;
 }
 
@@ -220,14 +215,6 @@ export async function createIsolatedTestDb(
   await up006(db);
   await seedTemplate(db);
   const repos = createRepositories(db);
-  const documents = createSalesDocumentService(
-    repos,
-    createDocumentBlobStore(storageRoot),
-  );
-  const documentJobs = createDocumentJobProcessor(
-    repos,
-    createDocumentBlobStore(storageRoot),
-  );
   const salesRecords = createSalesRecordsWorkflowService(repos);
 
   return {
@@ -235,30 +222,8 @@ export async function createIsolatedTestDb(
     storageRoot,
     db,
     repos,
-    documents,
-    documentJobs,
     salesRecords,
   };
-}
-
-export async function drainDocumentJobs(
-  ctx: TestDbContext,
-  maxLoops = 10,
-): Promise<number> {
-  const drain = async (remainingLoops: number, processedTotal: number) => {
-    if (remainingLoops < 1) {
-      return processedTotal;
-    }
-
-    const processed = await ctx.documentJobs.runBatch(50, 1_000);
-    if (processed < 1) {
-      return processedTotal;
-    }
-
-    return drain(remainingLoops - 1, processedTotal + processed);
-  };
-
-  return drain(maxLoops, 0);
 }
 
 export async function cleanupTestDb(ctx: TestDbContext): Promise<void> {

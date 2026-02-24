@@ -5,9 +5,6 @@ import { createLeadAssignmentService } from "~/server/leads/service";
 import { createAppNotificationCenter } from "~/server/notifications/app-center-service";
 import { createObservabilityService } from "~/server/observability/service";
 import { createQuotaService } from "~/server/quota/service";
-import { createDocumentBlobStore } from "~/server/sales/document-blob-store";
-import { createDocumentJobProcessor } from "~/server/sales/document-job-processor";
-import { createSalesDocumentService } from "~/server/sales/document-service";
 import { createSalesExportBlobStore } from "~/server/sales/export-blob-store";
 import { createSalesExportService } from "~/server/sales/export-service";
 import { createSalesRecordsWorkflowService } from "~/server/sales/records-service";
@@ -34,14 +31,6 @@ export const leadService = createLeadAssignmentService(repos);
 export const observabilityService = createObservabilityService({
   actionObservations: repos.actionObservations,
 });
-export const salesDocumentService = createSalesDocumentService(
-  repos,
-  createDocumentBlobStore(config.uploads.storageRoot),
-);
-export const salesDocumentJobProcessor = createDocumentJobProcessor(
-  repos,
-  createDocumentBlobStore(config.uploads.storageRoot),
-);
 export const salesExportBlobStore = createSalesExportBlobStore(
   config.uploads.storageRoot,
 );

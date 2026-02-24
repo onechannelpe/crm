@@ -202,7 +202,7 @@ export async function seedIfEmpty() {
         updated_at: now,
       },
       {
-        action: "charge_note_confirmed",
+        action: "sales_record_confirmed",
         risk_level: "high",
         is_active: 1,
         is_protected: 1,
@@ -211,7 +211,7 @@ export async function seedIfEmpty() {
         updated_at: now,
       },
       {
-        action: "charge_note_rejected",
+        action: "sales_record_rejected",
         risk_level: "high",
         is_active: 1,
         is_protected: 1,
@@ -793,105 +793,6 @@ export async function seedIfEmpty() {
     .onConflict((oc) => oc.doNothing())
     .execute();
 
-  // Charge notes (sales)
-  await db
-    .insertInto("charge_notes")
-    .values([
-      {
-        contact_id: 1,
-        user_id: 3,
-        status: "draft",
-        created_at: now - oneDay * 2,
-        updated_at: now - oneDay,
-      },
-      {
-        contact_id: 3,
-        user_id: 3,
-        status: "pending_confirmation",
-        created_at: now - oneDay,
-        updated_at: now - oneDay,
-      },
-      {
-        contact_id: 11,
-        user_id: 3,
-        status: "confirmed",
-        exec_code_real: "EX-2026-001",
-        created_at: now - oneDay * 5,
-        updated_at: now - oneDay * 3,
-      },
-      {
-        contact_id: 2,
-        user_id: 5,
-        status: "pending_confirmation",
-        created_at: now - oneDay * 2,
-        updated_at: now - oneDay * 2,
-      },
-      {
-        contact_id: 13,
-        user_id: 9,
-        status: "draft",
-        created_at: now - oneDay,
-        updated_at: now - oneDay,
-      },
-      {
-        contact_id: 14,
-        user_id: 9,
-        status: "rejected",
-        created_at: now - oneDay * 4,
-        updated_at: now - oneDay * 2,
-      },
-      {
-        contact_id: 6,
-        user_id: 15,
-        status: "pending_confirmation",
-        created_at: now - oneDay,
-        updated_at: now - oneDay / 2,
-      },
-      {
-        contact_id: 10,
-        user_id: 16,
-        status: "draft",
-        created_at: now - oneDay * 2,
-        updated_at: now - oneDay,
-      },
-      {
-        contact_id: 16,
-        user_id: 17,
-        status: "confirmed",
-        exec_code_real: "EX-2026-017",
-        created_at: now - oneDay * 3,
-        updated_at: now - oneDay,
-      },
-      {
-        contact_id: 4,
-        user_id: 18,
-        status: "pending_confirmation",
-        created_at: now - oneDay * 2,
-        updated_at: now - oneDay,
-      },
-    ])
-    .onConflict((oc) => oc.doNothing())
-    .execute();
-
-  // Charge note items
-  await db
-    .insertInto("charge_note_items")
-    .values([
-      { charge_note_id: 1, product_id: 1, quantity: 1 },
-      { charge_note_id: 2, product_id: 3, quantity: 1 },
-      { charge_note_id: 3, product_id: 2, quantity: 1 },
-      { charge_note_id: 3, product_id: 1, quantity: 2 },
-      { charge_note_id: 4, product_id: 1, quantity: 1 },
-      { charge_note_id: 5, product_id: 2, quantity: 1 },
-      { charge_note_id: 6, product_id: 1, quantity: 1 },
-      { charge_note_id: 7, product_id: 4, quantity: 1 },
-      { charge_note_id: 8, product_id: 1, quantity: 1 },
-      { charge_note_id: 9, product_id: 2, quantity: 1 },
-      { charge_note_id: 10, product_id: 5, quantity: 1 },
-    ])
-    .onConflict((oc) => oc.doNothing())
-    .execute();
-
   // Inventory items
   await db
     .insertInto("inventory_items")
@@ -961,102 +862,6 @@ export async function seedIfEmpty() {
         serial_number: "FIB-2026-0102",
         status: "reserved",
         created_at: now,
-      },
-    ])
-    .onConflict((oc) => oc.doNothing())
-    .execute();
-
-  await db
-    .insertInto("inventory_locks")
-    .values([
-      {
-        inventory_item_id: 3,
-        charge_note_id: 2,
-        locked_at: now - oneDay,
-        expires_at: now + oneDay,
-      },
-      {
-        inventory_item_id: 11,
-        charge_note_id: 6,
-        locked_at: now - oneDay,
-        expires_at: now + oneDay,
-      },
-    ])
-    .onConflict((oc) => oc.doNothing())
-    .execute();
-
-  await db
-    .insertInto("sales_document_blobs")
-    .values([
-      {
-        sha256:
-          "f7af2f5923204a76003a8fbb7d82d87ec3d0cca1f18f31b55db207f0f6fd09f0",
-        storage_key:
-          "f7/af/f7af2f5923204a76003a8fbb7d82d87ec3d0cca1f18f31b55db207f0f6fd09f0.blob",
-        size_bytes: 180_000,
-        ref_count: 1,
-        created_at: now - oneDay,
-        updated_at: now - oneDay,
-      },
-      {
-        sha256:
-          "fd4f38dd49f032f95d42f1b7c6f3f8f8b4db3d6f6a2a43e6169ba34baf0fbe15",
-        storage_key:
-          "fd/4f/fd4f38dd49f032f95d42f1b7c6f3f8f8b4db3d6f6a2a43e6169ba34baf0fbe15.blob",
-        size_bytes: 120_000,
-        ref_count: 1,
-        created_at: now - oneDay,
-        updated_at: now - oneDay,
-      },
-      {
-        sha256:
-          "f8397c6b847b4a9b4e8705eb037e2564526eec0ec14b32f650fcb275f611fbe2",
-        storage_key:
-          "f8/39/f8397c6b847b4a9b4e8705eb037e2564526eec0ec14b32f650fcb275f611fbe2.blob",
-        size_bytes: 142_000,
-        ref_count: 1,
-        created_at: now - oneDay / 2,
-        updated_at: now - oneDay / 2,
-      },
-    ])
-    .onConflict((oc) => oc.doNothing())
-    .execute();
-
-  await db
-    .insertInto("sales_documents")
-    .values([
-      {
-        charge_note_id: 2,
-        original_name: "dni-frente.pdf",
-        mime_type: "application/pdf",
-        blob_sha256:
-          "f7af2f5923204a76003a8fbb7d82d87ec3d0cca1f18f31b55db207f0f6fd09f0",
-        status: "available",
-        created_by_user_id: 3,
-        created_at: now - oneDay,
-        deleted_at: null,
-      },
-      {
-        charge_note_id: 6,
-        original_name: "voucher.png",
-        mime_type: "image/png",
-        blob_sha256:
-          "fd4f38dd49f032f95d42f1b7c6f3f8f8b4db3d6f6a2a43e6169ba34baf0fbe15",
-        status: "available",
-        created_by_user_id: 3,
-        created_at: now - oneDay,
-        deleted_at: null,
-      },
-      {
-        charge_note_id: 6,
-        original_name: "voucher-v2.png",
-        mime_type: "image/png",
-        blob_sha256:
-          "f8397c6b847b4a9b4e8705eb037e2564526eec0ec14b32f650fcb275f611fbe2",
-        status: "available",
-        created_by_user_id: 3,
-        created_at: now - oneDay / 2,
-        deleted_at: null,
       },
     ])
     .onConflict((oc) => oc.doNothing())
@@ -1217,29 +1022,6 @@ export async function seedIfEmpty() {
     .execute();
 
   await db
-    .insertInto("rejection_logs")
-    .values([
-      {
-        charge_note_id: 6,
-        reviewer_id: 10,
-        field_id: "sales_documents.voucher",
-        reviewer_note: "La imagen está borrosa, sube una versión legible.",
-        is_resolved: 0,
-        created_at: now - oneDay,
-      },
-      {
-        charge_note_id: 6,
-        reviewer_id: 10,
-        field_id: "contact.phone_primary",
-        reviewer_note: "El número no coincide con el contrato firmado.",
-        is_resolved: 1,
-        created_at: now - oneDay * 2,
-      },
-    ])
-    .onConflict((oc) => oc.doNothing())
-    .execute();
-
-  await db
     .insertInto("agent_status_logs")
     .values([
       {
@@ -1352,23 +1134,23 @@ export async function seedIfEmpty() {
       },
       {
         user_id: 10,
-        action: "sale_rejected",
-        entity_type: "charge_note",
+        action: "sales_record_rejected",
+        entity_type: "sales_record",
         entity_id: 6,
         changes: JSON.stringify({
-          reason: "documentation_invalid",
-          flaggedFields: ["sales_documents.voucher", "contact.phone_primary"],
+          reason: "validation_failed",
+          flaggedFields: ["client.phone", "address.installation"],
         }),
         created_at: now - oneDay,
       },
       {
         user_id: 3,
-        action: "charge_note_resubmitted",
-        entity_type: "charge_note",
+        action: "sales_record_submitted",
+        entity_type: "sales_record",
         entity_id: 6,
         changes: JSON.stringify({
           previousStatus: "rejected",
-          nextStatus: "pending_confirmation",
+          nextStatus: "submitted_for_confirmation",
         }),
         created_at: now - oneDay / 2,
       },
