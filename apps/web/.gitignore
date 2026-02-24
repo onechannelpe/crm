@@ -1,7 +1,10 @@
-# generated (build artifacts)
+# build artifacts
 .vinxi
 .output
 app.config.timestamp_*.js
+
+# rollup-plugin-visualizer artifacts
+stats.*
 
 # data
 *.db
