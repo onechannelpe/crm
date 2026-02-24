@@ -39,7 +39,7 @@ export async function allocateQuota(
     type: "quota.assigned",
     title: "Nueva cuota asignada",
     bodyText: `Tu supervisor te asigno ${safeAmount} leads para hoy.`,
-    actionUrl: "/leads",
+    actionUrl: "/sales/leads",
     priority: "normal",
     dedupeKey: `quota.assigned:${safeExecutiveId}:${new Date().toISOString().slice(0, 10)}`,
     metadata: { executiveId: safeExecutiveId, amount: safeAmount },

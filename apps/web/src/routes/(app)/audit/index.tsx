@@ -192,7 +192,7 @@ export default function AuditObservabilityPage() {
                 label="Action"
                 value={actionFilter()}
                 onInput={(event) => setActionFilter(event.currentTarget.value)}
-                placeholder="charge_note_approved"
+                placeholder="charge_note_confirmed"
               />
             </div>
             <div class={styles.fieldW44}>

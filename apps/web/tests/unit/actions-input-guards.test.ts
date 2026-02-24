@@ -4,7 +4,7 @@ import { getUserLoginRetryReport } from "../../src/actions/admin";
 import { listUserSessions, revokeUserSession } from "../../src/actions/admin";
 import { requestLeads } from "../../src/actions/leads";
 import { allocateQuota } from "../../src/actions/quota";
-import { createSale } from "../../src/actions/sales";
+import { rejectSalesRecord } from "../../src/actions/sales-records";
 import { updateProductPricing } from "../../src/actions/settings";
 import {
   acceptTeamInvite,
@@ -15,8 +15,8 @@ import {
 
 describe("action input guards", () => {
   it("fails fast for invalid sales ids before auth", async () => {
-    await expect(createSale(0)).rejects.toThrow(
-      "contactId must be a positive integer",
+    await expect(rejectSalesRecord(0, "missing docs")).rejects.toThrow(
+      "recordId must be a positive integer",
     );
   });
 

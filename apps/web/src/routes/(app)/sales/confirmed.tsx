@@ -1,6 +1,6 @@
 import { createResource, For, Show } from "solid-js";
 
-import { getApprovedSales } from "~/actions/sales";
+import { listConfirmedSalesRecords } from "~/actions/sales-records";
 import { EmptyState } from "~/components/feedback/empty-state";
 import { AppPage } from "~/components/layout/page";
 import {
@@ -13,12 +13,12 @@ import {
 } from "~/components/ui/layout/table";
 import { formatDate } from "~/lib/utils";
 
-import styles from "./approved-sales-page.module.css";
+import styles from "./confirmed-sales-page.module.css";
 
-export default function ApprovedSalesPage() {
+export default function ConfirmedSalesPage() {
   const [sales] = createResource(
     () => true,
-    async () => getApprovedSales(),
+    async () => listConfirmedSalesRecords(),
     { initialValue: [], ssrLoadFrom: "initial" },
   );
 
@@ -28,8 +28,8 @@ export default function ApprovedSalesPage() {
         when={sales().length > 0}
         fallback={
           <EmptyState
-            title="No approved sales"
-            description="Approved sales will appear here."
+            title="No confirmed sales"
+            description="Confirmed sales will appear here."
           />
         }
       >
@@ -40,7 +40,7 @@ export default function ApprovedSalesPage() {
               <TableHead>Company</TableHead>
               <TableHead>Contact</TableHead>
               <TableHead>Executive</TableHead>
-              <TableHead>Approved</TableHead>
+              <TableHead>Confirmed</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -59,7 +59,7 @@ export default function ApprovedSalesPage() {
                   </TableCell>
                   <TableCell>{sale.executiveName}</TableCell>
                   <TableCell class={styles.dateCell}>
-                    {formatDate(sale.updated_at)}
+                    {formatDate(sale.updatedAt)}
                   </TableCell>
                 </TableRow>
               )}

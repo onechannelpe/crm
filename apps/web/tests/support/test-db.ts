@@ -8,12 +8,15 @@ import { up as up001 } from "../../src/lib/db/migrations/001-initial";
 import { up as up002 } from "../../src/lib/db/migrations/002-client-search-views";
 import { up as up003 } from "../../src/lib/db/migrations/003-user-invites";
 import { up as up004 } from "../../src/lib/db/migrations/004-action-observability";
+import { up as up005 } from "../../src/lib/db/migrations/005-report-export-observability";
+import { up as up007 } from "../../src/lib/db/migrations/007-charge-note-status-vocabulary";
+import { up as up008 } from "../../src/lib/db/migrations/008-event-vocabulary-confirmed";
+import { up as up009 } from "../../src/lib/db/migrations/009-sales-records-core";
 import type { Database } from "../../src/lib/db/schema";
-import { createAppNotificationCenter } from "../../src/server/notifications/app-center-service";
 import { createDocumentBlobStore } from "../../src/server/sales/document-blob-store";
 import { createDocumentJobProcessor } from "../../src/server/sales/document-job-processor";
 import { createSalesDocumentService } from "../../src/server/sales/document-service";
-import { createSalesWorkflowService } from "../../src/server/sales/service";
+import { createSalesRecordsWorkflowService } from "../../src/server/sales/records-service";
 import { createRepositories } from "../../src/server/shared/registry";
 
 const ARTIFACT_DIR = join(process.cwd(), ".vitest-db");
@@ -194,7 +197,7 @@ export interface TestDbContext {
   repos: ReturnType<typeof createRepositories>;
   documents: ReturnType<typeof createSalesDocumentService>;
   documentJobs: ReturnType<typeof createDocumentJobProcessor>;
-  sales: ReturnType<typeof createSalesWorkflowService>;
+  salesRecords: ReturnType<typeof createSalesRecordsWorkflowService>;
 }
 
 export async function createIsolatedTestDb(
@@ -215,11 +218,12 @@ export async function createIsolatedTestDb(
   await up002(db);
   await up003(db);
   await up004(db);
+  await up005(db);
+  await up007(db);
+  await up008(db);
+  await up009(db);
   await seedTemplate(db);
   const repos = createRepositories(db);
-  const notifications = createAppNotificationCenter({
-    repos: { appNotifications: repos.appNotifications, users: repos.users },
-  });
   const documents = createSalesDocumentService(
     repos,
     createDocumentBlobStore(storageRoot),
@@ -228,11 +232,17 @@ export async function createIsolatedTestDb(
     repos,
     createDocumentBlobStore(storageRoot),
   );
-  const sales = createSalesWorkflowService(repos, {
-    notifications,
-  });
+  const salesRecords = createSalesRecordsWorkflowService(repos);
 
-  return { dbPath, storageRoot, db, repos, documents, documentJobs, sales };
+  return {
+    dbPath,
+    storageRoot,
+    db,
+    repos,
+    documents,
+    documentJobs,
+    salesRecords,
+  };
 }
 
 export async function drainDocumentJobs(

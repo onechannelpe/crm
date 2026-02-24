@@ -504,7 +504,7 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
       ('all_sessions_revoked', 'high', 1, 1, NULL, ${now}, ${now}),
       ('session_revoked_by_admin', 'high', 1, 1, NULL, ${now}, ${now}),
       ('product_updated', 'high', 1, 1, NULL, ${now}, ${now}),
-      ('charge_note_approved', 'high', 1, 1, NULL, ${now}, ${now}),
+      ('charge_note_confirmed', 'high', 1, 1, NULL, ${now}, ${now}),
       ('charge_note_rejected', 'high', 1, 1, NULL, ${now}, ${now}),
       ('quota_allocated', 'high', 1, 1, NULL, ${now}, ${now})
   `.execute(db);

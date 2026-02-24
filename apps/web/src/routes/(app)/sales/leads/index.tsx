@@ -46,7 +46,7 @@ export default function LeadsPage() {
     });
 
     if (outcome === "sale_made") {
-      navigate(`/sales/new?contactId=${contactId}`);
+      navigate(`/sales/records/new?contactId=${contactId}`);
     }
   };
 

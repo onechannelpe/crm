@@ -15,8 +15,12 @@ describe("route permissions", () => {
   it("resolves static and dynamic route permissions", () => {
     expect(getRoutePermission("/settings")).toBe("admin:manage");
     expect(getRoutePermission("/team/new")).toBe("hr:manage");
-    expect(getRoutePermission("/sales/new")).toBe("sales:create");
-    expect(getRoutePermission("/sales/123/fix")).toBe("sales:submit");
+    expect(getRoutePermission("/sales/records/new")).toBe("sales:create");
+    expect(getRoutePermission("/sales/records/123/edit")).toBe("sales:submit");
+    expect(getRoutePermission("/sales/reports/exports")).toBe("sales:review");
+    expect(getRoutePermission("/sales/reports/exports/123")).toBe(
+      "sales:review",
+    );
     expect(getRoutePermission("/dashboard")).toBe("sales:review");
     expect(getRoutePermission("/profile")).toBeNull();
   });
@@ -29,12 +33,14 @@ describe("route permissions", () => {
     expect(canAccessPath("executive", "/team/new")).toBe(false);
     expect(canAccessPath("hr", "/team/new")).toBe(true);
     expect(canAccessPath("admin", "/settings")).toBe(true);
-    expect(canAccessPath("sales_manager", "/sales/42/fix")).toBe(false);
-    expect(canAccessPath("executive", "/sales/42/fix")).toBe(true);
+    expect(canAccessPath("sales_manager", "/sales/records/42/edit")).toBe(
+      false,
+    );
+    expect(canAccessPath("executive", "/sales/records/42/edit")).toBe(true);
   });
 
   it("returns a role-safe default path", () => {
-    expect(getDefaultAppPath("executive")).toBe("/leads");
+    expect(getDefaultAppPath("executive")).toBe("/sales/leads");
     expect(getDefaultAppPath("logistics")).toBe("/inventory");
     expect(getDefaultAppPath("hr")).toBe("/team");
     expect(getDefaultAppPath("admin")).toBe("/dashboard");
@@ -46,7 +52,7 @@ describe("nav policy", () => {
     const executivePrimary = getSidebarRoutes("executive", "primary").map(
       (route) => route.href,
     );
-    expect(executivePrimary).toContain("/sales/new");
+    expect(executivePrimary).toContain("/sales/records/new");
     expect(executivePrimary).not.toContain("/settings");
 
     const supervisorSecondary = getSidebarRoutes("supervisor", "secondary").map(
@@ -74,16 +80,21 @@ describe("nav policy", () => {
     const salesChildren = getSidebarChildren("superuser", "sales").map(
       (child) => child.href,
     );
-    expect(salesChildren).toEqual(["/leads", "/sales/approved", "/review"]);
+    expect(salesChildren).toEqual([
+      "/sales/leads",
+      "/sales/confirmed",
+      "/sales/confirmations",
+      "/sales/reports/exports",
+    ]);
   });
 
   it("filters sales children for executive (no sales:review)", () => {
     // executive has leads:read but NOT sales:review, so
-    // /sales/approved and /review are excluded
+    // confirmed, confirmations and exports routes are excluded
     const salesChildren = getSidebarChildren("executive", "sales").map(
       (child) => child.href,
     );
-    expect(salesChildren).toEqual(["/leads"]);
+    expect(salesChildren).toEqual(["/sales/leads"]);
   });
 
   it("resolves header metadata for static routes", () => {
@@ -94,14 +105,13 @@ describe("nav policy", () => {
   });
 
   it("resolves header metadata for dynamic routes", () => {
-    expect(getHeaderRoute("/sales/42/fix").label).toBe("Fix sale");
-    expect(getHeaderRoute("/sales/42/fix").icon).toBe("new-sale");
+    expect(getHeaderRoute("/sales/records/42/edit").label).toBe("Edit sale");
+    expect(getHeaderRoute("/sales/records/42/edit").icon).toBe("new-sale");
   });
 
   it("resolves header via active-prefix for sub-paths", () => {
-    // /leads is an active prefix of the Sales group — but /leads itself has
-    // its own nav entry with a header, so it should return "Leads"
-    expect(getHeaderRoute("/leads").label).toBe("Leads");
+    // /sales/leads has its own nav entry with a header, so it returns "Leads"
+    expect(getHeaderRoute("/sales/leads").label).toBe("Leads");
     // /dashboard sub-path resolution
     expect(getHeaderRoute("/dashboard").label).toBe("Home");
   });

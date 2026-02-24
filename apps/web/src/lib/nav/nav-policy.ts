@@ -34,8 +34,12 @@ const DYNAMIC_ROUTE_HEADERS: Array<{
   header: HeaderDescriptor;
 }> = [
   {
-    pattern: /^\/sales\/[^/]+\/fix$/,
-    header: { label: "Fix sale", icon: "new-sale" },
+    pattern: /^\/sales\/records\/[^/]+\/edit$/,
+    header: { label: "Edit sale", icon: "new-sale" },
+  },
+  {
+    pattern: /^\/sales\/reports\/exports\/[^/]+$/,
+    header: { label: "Export detail", icon: "confirmed" },
   },
 ];
 

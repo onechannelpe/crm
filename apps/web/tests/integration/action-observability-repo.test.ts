@@ -23,7 +23,7 @@ describe("action observability repository", () => {
     await service.recordAction({
       traceId: "trace-a",
       requestId: "req-a",
-      routePath: "/sales/new",
+      routePath: "/sales/records/new",
       httpMethod: "POST",
       actionName: "sales.create",
       actorUserId: 1,
@@ -38,7 +38,7 @@ describe("action observability repository", () => {
     await service.recordAction({
       traceId: "trace-b",
       requestId: "req-b",
-      routePath: "/sales/new",
+      routePath: "/sales/records/new",
       httpMethod: "POST",
       actionName: "sales.create",
       actorUserId: 1,
@@ -165,7 +165,7 @@ describe("action observability repository", () => {
     await service.recordAction({
       traceId: "trace-3",
       requestId: "req-3",
-      routePath: "/sales/new",
+      routePath: "/sales/records/new",
       httpMethod: "POST",
       actionName: "sales.create",
       actorUserId: 1,

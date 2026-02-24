@@ -28,7 +28,7 @@ export const ICON_BY_ROUTE: Record<
   leads: User,
   dashboard: House,
   "new-sale": Mail,
-  approved: CircleCheckBig,
+  confirmed: CircleCheckBig,
   review: ShieldCheck,
   audit: Info,
   quota: Building2,

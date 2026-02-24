@@ -65,16 +65,16 @@ export function createChargeNotesRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    findPendingReview() {
+    findPendingConfirmation() {
       return db
         .selectFrom("charge_notes")
         .selectAll()
-        .where("status", "=", "pending_review")
+        .where("status", "=", "pending_confirmation")
         .orderBy("created_at", "asc")
         .execute();
     },
 
-    findPendingReviewWithContacts() {
+    findPendingConfirmationWithContacts() {
       return db
         .selectFrom("charge_notes")
         .innerJoin("contacts", "contacts.id", "charge_notes.contact_id")
@@ -88,12 +88,12 @@ export function createChargeNotesRepo(db: Kysely<Database>) {
           "contacts.dni as contactDni",
           "users.full_name as executiveName",
         ])
-        .where("charge_notes.status", "=", "pending_review")
+        .where("charge_notes.status", "=", "pending_confirmation")
         .orderBy("charge_notes.created_at", "asc")
         .execute();
     },
 
-    findPendingReviewWithContactsByBranch(branchId: number) {
+    findPendingConfirmationWithContactsByBranch(branchId: number) {
       return db
         .selectFrom("charge_notes")
         .innerJoin("contacts", "contacts.id", "charge_notes.contact_id")
@@ -107,7 +107,7 @@ export function createChargeNotesRepo(db: Kysely<Database>) {
           "contacts.dni as contactDni",
           "users.full_name as executiveName",
         ])
-        .where("charge_notes.status", "=", "pending_review")
+        .where("charge_notes.status", "=", "pending_confirmation")
         .where("users.branch_id", "=", branchId)
         .orderBy("charge_notes.created_at", "asc")
         .execute();
@@ -123,16 +123,16 @@ export function createChargeNotesRepo(db: Kysely<Database>) {
       return Number(result?.count ?? 0);
     },
 
-    async countPendingReview() {
+    async countPendingConfirmation() {
       const result = await db
         .selectFrom("charge_notes")
         .select(db.fn.countAll().as("count"))
-        .where("status", "=", "pending_review")
+        .where("status", "=", "pending_confirmation")
         .executeTakeFirst();
       return Number(result?.count ?? 0);
     },
 
-    findApprovedWithContacts() {
+    findConfirmedWithContacts() {
       return db
         .selectFrom("charge_notes")
         .innerJoin("contacts", "contacts.id", "charge_notes.contact_id")
@@ -152,12 +152,12 @@ export function createChargeNotesRepo(db: Kysely<Database>) {
           "organizations.name as companyName",
           "users.full_name as executiveName",
         ])
-        .where("charge_notes.status", "=", "approved")
+        .where("charge_notes.status", "=", "confirmed")
         .orderBy("charge_notes.updated_at", "desc")
         .execute();
     },
 
-    findApprovedWithContactsByUser(userId: number) {
+    findConfirmedWithContactsByBranch(branchId: number) {
       return db
         .selectFrom("charge_notes")
         .innerJoin("contacts", "contacts.id", "charge_notes.contact_id")
@@ -177,7 +177,33 @@ export function createChargeNotesRepo(db: Kysely<Database>) {
           "organizations.name as companyName",
           "users.full_name as executiveName",
         ])
-        .where("charge_notes.status", "=", "approved")
+        .where("charge_notes.status", "=", "confirmed")
+        .where("users.branch_id", "=", branchId)
+        .orderBy("charge_notes.updated_at", "desc")
+        .execute();
+    },
+
+    findConfirmedWithContactsByUser(userId: number) {
+      return db
+        .selectFrom("charge_notes")
+        .innerJoin("contacts", "contacts.id", "charge_notes.contact_id")
+        .innerJoin("users", "users.id", "charge_notes.user_id")
+        .innerJoin(
+          "organizations",
+          "organizations.id",
+          "contacts.organization_id",
+        )
+        .select([
+          "charge_notes.id",
+          "charge_notes.status",
+          "charge_notes.created_at",
+          "charge_notes.updated_at",
+          "contacts.name as contactName",
+          "contacts.dni as contactDni",
+          "organizations.name as companyName",
+          "users.full_name as executiveName",
+        ])
+        .where("charge_notes.status", "=", "confirmed")
         .where("charge_notes.user_id", "=", userId)
         .orderBy("charge_notes.updated_at", "desc")
         .execute();

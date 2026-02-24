@@ -202,7 +202,7 @@ export async function seedIfEmpty() {
         updated_at: now,
       },
       {
-        action: "charge_note_approved",
+        action: "charge_note_confirmed",
         risk_level: "high",
         is_active: 1,
         is_protected: 1,
@@ -807,14 +807,14 @@ export async function seedIfEmpty() {
       {
         contact_id: 3,
         user_id: 3,
-        status: "pending_review",
+        status: "pending_confirmation",
         created_at: now - oneDay,
         updated_at: now - oneDay,
       },
       {
         contact_id: 11,
         user_id: 3,
-        status: "approved",
+        status: "confirmed",
         exec_code_real: "EX-2026-001",
         created_at: now - oneDay * 5,
         updated_at: now - oneDay * 3,
@@ -822,7 +822,7 @@ export async function seedIfEmpty() {
       {
         contact_id: 2,
         user_id: 5,
-        status: "pending_review",
+        status: "pending_confirmation",
         created_at: now - oneDay * 2,
         updated_at: now - oneDay * 2,
       },
@@ -843,7 +843,7 @@ export async function seedIfEmpty() {
       {
         contact_id: 6,
         user_id: 15,
-        status: "pending_review",
+        status: "pending_confirmation",
         created_at: now - oneDay,
         updated_at: now - oneDay / 2,
       },
@@ -857,7 +857,7 @@ export async function seedIfEmpty() {
       {
         contact_id: 16,
         user_id: 17,
-        status: "approved",
+        status: "confirmed",
         exec_code_real: "EX-2026-017",
         created_at: now - oneDay * 3,
         updated_at: now - oneDay,
@@ -865,7 +865,7 @@ export async function seedIfEmpty() {
       {
         contact_id: 4,
         user_id: 18,
-        status: "pending_review",
+        status: "pending_confirmation",
         created_at: now - oneDay * 2,
         updated_at: now - oneDay,
       },
@@ -1368,7 +1368,7 @@ export async function seedIfEmpty() {
         entity_id: 6,
         changes: JSON.stringify({
           previousStatus: "rejected",
-          nextStatus: "pending_review",
+          nextStatus: "pending_confirmation",
         }),
         created_at: now - oneDay / 2,
       },

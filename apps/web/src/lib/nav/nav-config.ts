@@ -7,7 +7,7 @@ export type RouteIcon =
   | "leads"
   | "dashboard"
   | "new-sale"
-  | "approved"
+  | "confirmed"
   | "review"
   | "audit"
   | "quota"
@@ -105,7 +105,7 @@ export const NAV_ROUTES: NavRoute[] = [
   },
   {
     id: "leads",
-    href: "/leads",
+    href: "/sales/leads",
     label: "Leads",
     icon: "leads",
     header: { label: "Leads", icon: "leads" },
@@ -119,8 +119,8 @@ export const NAV_ROUTES: NavRoute[] = [
     sidebar: { section: "primary", order: 1 },
   },
   {
-    id: "sales-new",
-    href: "/sales/new",
+    id: "sales-records-new",
+    href: "/sales/records/new",
     label: "Create sale",
     icon: "new-sale",
     header: { label: "Create sale", icon: "new-sale" },
@@ -136,22 +136,29 @@ export const NAV_ROUTES: NavRoute[] = [
     sidebar: { section: "primary", order: 3 },
   },
   {
-    id: "sales-approved",
-    href: "/sales/approved",
-    label: "Approved sales",
-    icon: "approved",
-    header: { label: "Approved sales", icon: "approved" },
+    id: "sales-confirmed",
+    href: "/sales/confirmed",
+    label: "Confirmed sales",
+    icon: "confirmed",
+    header: { label: "Confirmed sales", icon: "confirmed" },
   },
   {
-    id: "review",
-    href: "/review",
-    label: "Review queue",
+    id: "sales-confirmations",
+    href: "/sales/confirmations",
+    label: "Confirmation queue",
     icon: "review",
-    header: { label: "Review queue", icon: "review" },
+    header: { label: "Confirmation queue", icon: "review" },
+  },
+  {
+    id: "sales-exports",
+    href: "/sales/reports/exports",
+    label: "Exports",
+    icon: "confirmed",
+    header: { label: "Exports", icon: "confirmed" },
   },
   {
     id: "sales",
-    href: "/sales/new",
+    href: "/sales/records/new",
     label: "Sales",
     navLabel: "Sales",
     icon: "sales",
@@ -159,12 +166,13 @@ export const NAV_ROUTES: NavRoute[] = [
       section: "secondary",
       order: 2,
       children: [
-        { href: "/leads", label: "Leads", order: 1 },
-        { href: "/sales/approved", label: "Approved", order: 4 },
-        { href: "/review", label: "Review queue", order: 5 },
+        { href: "/sales/leads", label: "Leads", order: 1 },
+        { href: "/sales/confirmed", label: "Confirmed", order: 4 },
+        { href: "/sales/confirmations", label: "Confirmations", order: 5 },
+        { href: "/sales/reports/exports", label: "Exports", order: 6 },
       ],
     },
-    activePrefixes: ["/leads", "/dashboard", "/sales", "/review"],
+    activePrefixes: ["/sales", "/dashboard"],
   },
   {
     id: "audit",

@@ -85,14 +85,8 @@ describe("sales document storage lifecycle", () => {
       .execute();
     expect(events.length).toBe(1);
 
-    const result = await ctx.sales.submit(noteId, 1);
-    expect(result.ok).toBe(false);
-    if (result.ok) {
-      throw new Error("Expected submit without active documents to fail");
-    }
-    expect(result.error).toBe(
-      "At least one document is required before submission",
-    );
+    const activeCount = await ctx.repos.documents.countByChargeNote(noteId);
+    expect(activeCount).toBe(0);
   });
 
   it("keeps shared blob until the final document reference is hard deleted", async () => {

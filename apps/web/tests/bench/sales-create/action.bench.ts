@@ -26,7 +26,7 @@ describe("sales create action benchmark", () => {
   });
 
   bench(
-    "action path: create sales draft from assigned lead",
+    "action path: create sales record draft",
     async () => {
       const userId = takeFromPool(
         userIds,
@@ -34,7 +34,35 @@ describe("sales create action benchmark", () => {
         "sales-create pool exhausted before iterations completed",
       );
 
-      const result = await ctx!.sales.createDraft(1, userId);
+      const result = await ctx!.salesRecords.createDraft({
+        source: "lead_assignment",
+        executiveUserId: userId,
+        branchId: 1,
+        leadAssignmentId: null,
+        client: {
+          ruc: "20100000001",
+          companyName: "Org Lima",
+          contactName: "Contacto Lima",
+          dni: "70000001",
+          phones: ["+51999999111"],
+          engineMatchId: null,
+          completenessScore: 75,
+        },
+        addresses: [
+          {
+            addressType: "installation",
+            fullText: "Av. Demo 123",
+            department: null,
+            province: null,
+            district: null,
+            ubigeo: null,
+            latitude: null,
+            longitude: null,
+            isPrimary: true,
+          },
+        ],
+        products: [{ productId: 1, quantity: 1 }],
+      });
       if (!result.ok) {
         throw new Error(`expected draft creation success, got ${result.error}`);
       }

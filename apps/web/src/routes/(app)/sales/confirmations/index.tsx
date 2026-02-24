@@ -1,10 +1,10 @@
 import { createResource, createSignal, For, Show } from "solid-js";
 
 import {
-  approveSale,
-  rejectSale,
-  getPendingReviewNotes,
-} from "~/actions/sales";
+  confirmSalesRecord,
+  listPendingSalesRecords,
+  rejectSalesRecord,
+} from "~/actions/sales-records";
 import { RejectionForm } from "~/components/features/sales/rejection-form";
 import { EmptyState } from "~/components/feedback/empty-state";
 import { useToast } from "~/components/feedback/toast-provider";
@@ -22,12 +22,12 @@ import { getErrorMessage } from "~/lib/errors";
 import { runOptimistic } from "~/lib/ui/run-optimistic";
 import { formatDate } from "~/lib/utils";
 
-import styles from "./review-page.module.css";
+import styles from "./confirmations-page.module.css";
 
-export default function ReviewPage() {
+export default function SalesConfirmationsPage() {
   const [notes, { mutate, refetch }] = createResource(
     () => true,
-    async () => getPendingReviewNotes(),
+    async () => listPendingSalesRecords(),
     { initialValue: [], ssrLoadFrom: "initial" },
   );
   const currentNotes = () => notes.latest ?? [];
@@ -43,13 +43,13 @@ export default function ReviewPage() {
         write: (next) => mutate(() => next),
         optimistic: (prev) => prev.filter((note) => note.id !== noteId),
         commit: async () => {
-          await approveSale(noteId);
+          await confirmSalesRecord(noteId);
         },
         reconcile: () => {
           void refetch();
         },
       });
-      showToast("success", `Sale #${noteId} approved`);
+      showToast("success", `Sale #${noteId} confirmed`);
     } catch (err: unknown) {
       showToast("error", getErrorMessage(err, "Approval failed"));
     }
@@ -65,13 +65,10 @@ export default function ReviewPage() {
         write: (next) => mutate(() => next),
         optimistic: (prev) => prev.filter((note) => note.id !== noteId),
         commit: async () => {
-          await rejectSale(
-            noteId,
-            rejections.map((it) => ({
-              field_id: it.fieldId,
-              reviewer_note: it.note,
-            })),
-          );
+          const reason = rejections
+            .map((it) => `${it.fieldId}: ${it.note}`)
+            .join(" | ");
+          await rejectSalesRecord(noteId, reason);
         },
         reconcile: () => {
           void refetch();
@@ -90,7 +87,7 @@ export default function ReviewPage() {
         when={currentNotes().length > 0}
         fallback={
           <EmptyState
-            title="No sales pending review"
+            title="No sales pending confirmation"
             description="Submitted sales will appear here."
           />
         }
@@ -129,7 +126,7 @@ export default function ReviewPage() {
                   </TableCell>
                   <TableCell>{note.executiveName}</TableCell>
                   <TableCell class={styles.dateCell}>
-                    {formatDate(note.created_at)}
+                    {formatDate(note.createdAt)}
                   </TableCell>
                   <TableCell class={styles.actionsCell}>
                     <div class={styles.actions}>
@@ -140,7 +137,7 @@ export default function ReviewPage() {
                           void handleApprove(note.id);
                         }}
                       >
-                        Approve
+                        Confirm
                       </Button>
                       <Button
                         size="sm"
