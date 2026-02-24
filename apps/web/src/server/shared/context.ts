@@ -38,6 +38,9 @@ export const salesExportService = createSalesExportService(
   repos,
   salesExportBlobStore,
 );
-export const salesRecordsService = createSalesRecordsWorkflowService(repos);
+export const salesRecordsService = createSalesRecordsWorkflowService(
+  repos,
+  runInRepositoryTransaction,
+);
 
 export { repos };

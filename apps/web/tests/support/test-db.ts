@@ -215,7 +215,11 @@ export async function createIsolatedTestDb(
   await up006(db);
   await seedTemplate(db);
   const repos = createRepositories(db);
-  const salesRecords = createSalesRecordsWorkflowService(repos);
+  const salesRecords = createSalesRecordsWorkflowService(repos, (operation) =>
+    db
+      .transaction()
+      .execute((transactionDb) => operation(createRepositories(transactionDb))),
+  );
 
   return {
     dbPath,

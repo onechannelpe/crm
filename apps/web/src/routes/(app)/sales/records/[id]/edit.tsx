@@ -210,7 +210,7 @@ export default function FixSalePage() {
       await submitSalesRecord(noteId());
       await refetchFixContext();
       showToast("success", "Sales record resubmitted");
-      navigate("/sales/review/queue");
+      navigate("/sales/confirmations");
     } catch (err: unknown) {
       showToast("error", getErrorMessage(err, "Resubmit failed"));
     } finally {

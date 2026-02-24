@@ -9,12 +9,7 @@ import {
 } from "~/lib/contracts/guards";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
 import { computeClientCompletenessScore } from "~/server/sales/completeness";
-import { createSalesRecordsWorkflowService } from "~/server/sales/records-service";
-import {
-  repos,
-  runInRepositoryTransaction,
-  salesRecordsService,
-} from "~/server/shared/context";
+import { repos, salesRecordsService } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
 type SalesRecordSource = "lead_assignment" | "manual";
@@ -270,21 +265,18 @@ export async function createSalesRecordDraft(
       actor.userId = session.userId;
       actor.role = session.role;
 
-      const result = await runInRepositoryTransaction(
-        async (transactionRepos) =>
-          createSalesRecordsWorkflowService(transactionRepos).createDraft({
-            source: input.source,
-            executiveUserId: session.userId,
-            branchId: session.branchId,
-            leadAssignmentId: input.leadAssignmentId,
-            client: {
-              ...input.client,
-              completenessScore: computeClientCompletenessScore(input.client),
-            },
-            addresses: input.addresses,
-            products: input.products,
-          }),
-      );
+      const result = await salesRecordsService.createDraft({
+        source: input.source,
+        executiveUserId: session.userId,
+        branchId: session.branchId,
+        leadAssignmentId: input.leadAssignmentId,
+        client: {
+          ...input.client,
+          completenessScore: computeClientCompletenessScore(input.client),
+        },
+        addresses: input.addresses,
+        products: input.products,
+      });
       if (isErr(result)) throw new Error(result.error);
       return { id: result.value };
     },
@@ -508,20 +500,17 @@ export async function updateSalesRecordDraft(
       actor.userId = session.userId;
       actor.role = session.role;
 
-      const result = await runInRepositoryTransaction(
-        async (transactionRepos) =>
-          createSalesRecordsWorkflowService(transactionRepos).updateDraft(
-            safeRecordId,
-            session.userId,
-            {
-              ...input,
-              client: {
-                ...input.client,
-                completenessScore: computeClientCompletenessScore(input.client),
-              },
-            },
-            safeCorrectionNotes,
-          ),
+      const result = await salesRecordsService.updateDraft(
+        safeRecordId,
+        session.userId,
+        {
+          ...input,
+          client: {
+            ...input.client,
+            completenessScore: computeClientCompletenessScore(input.client),
+          },
+        },
+        safeCorrectionNotes,
       );
       if (isErr(result)) throw new Error(result.error);
       return { success: true };

@@ -5,6 +5,21 @@ import { requirePermission } from "~/lib/auth/access/session";
 import { assertPositiveInt } from "~/lib/contracts/guards";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
 import { repos, salesExportBlobStore } from "~/server/shared/context";
+import type { Repositories } from "~/server/shared/registry";
+
+interface SalesExportDownloadSession {
+  userId: number;
+  role: Role;
+  branchId: number;
+}
+
+interface DownloadSalesExportDeps {
+  repos: Pick<Repositories, "reportExportJobs">;
+  blobStore: {
+    get(storageKey: string): Promise<Uint8Array>;
+  };
+  now?: () => number;
+}
 
 function mapErrorToStatus(error: unknown): number {
   const message = error instanceof Error ? error.message : "Unexpected error";
@@ -26,7 +41,54 @@ function mapErrorToMessage(error: unknown): string {
   return "Unexpected error";
 }
 
-export async function GET(event: APIEvent): Promise<Response> {
+export async function downloadSalesExportById(
+  jobId: number,
+  session: SalesExportDownloadSession,
+  deps: DownloadSalesExportDeps,
+): Promise<Response> {
+  const job = await deps.repos.reportExportJobs.findJobById(jobId);
+  if (!job) throw new Error("Export job not found");
+  if (session.role !== "superuser" && job.branch_id !== session.branchId) {
+    throw new Error("Export job not found");
+  }
+  if (job.status !== "completed" || !job.file_storage_key) {
+    throw new Error("Export file is not ready");
+  }
+
+  let fileBytes: Uint8Array;
+  try {
+    fileBytes = await deps.blobStore.get(job.file_storage_key);
+  } catch {
+    throw new Error("Export file not found");
+  }
+
+  await deps.repos.reportExportJobs.createDownload({
+    export_job_id: jobId,
+    downloaded_by_user_id: session.userId,
+    downloaded_at: deps.now?.() ?? Date.now(),
+    ip_hash: null,
+    user_agent_hash: null,
+  });
+
+  const extension = job.format === "xlsx" ? "xlsx" : "csv";
+  const mimeType =
+    job.format === "xlsx"
+      ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      : "text/csv; charset=utf-8";
+
+  const bodyBuffer = new ArrayBuffer(fileBytes.byteLength);
+  new Uint8Array(bodyBuffer).set(fileBytes);
+  return new Response(bodyBuffer, {
+    status: 200,
+    headers: {
+      "content-type": mimeType,
+      "content-disposition": `attachment; filename="sales-export-${job.id}.${extension}"`,
+      "cache-control": "no-store",
+    },
+  });
+}
+
+export async function GET(event: Pick<APIEvent, "params">): Promise<Response> {
   try {
     const safeJobId = assertPositiveInt(Number(event.params.jobId), "jobId");
     const actor = { userId: null as number | null, role: null as Role | null };
@@ -38,49 +100,9 @@ export async function GET(event: APIEvent): Promise<Response> {
         const session = await requirePermission("sales:review");
         actor.userId = session.userId;
         actor.role = session.role;
-
-        const job = await repos.reportExportJobs.findJobById(safeJobId);
-        if (!job) throw new Error("Export job not found");
-        if (
-          session.role !== "superuser" &&
-          job.branch_id !== session.branchId
-        ) {
-          throw new Error("Export job not found");
-        }
-        if (job.status !== "completed" || !job.file_storage_key) {
-          throw new Error("Export file is not ready");
-        }
-
-        let fileBytes: Uint8Array;
-        try {
-          fileBytes = await salesExportBlobStore.get(job.file_storage_key);
-        } catch {
-          throw new Error("Export file not found");
-        }
-
-        await repos.reportExportJobs.createDownload({
-          export_job_id: safeJobId,
-          downloaded_by_user_id: session.userId,
-          downloaded_at: Date.now(),
-          ip_hash: null,
-          user_agent_hash: null,
-        });
-
-        const extension = job.format === "xlsx" ? "xlsx" : "csv";
-        const mimeType =
-          job.format === "xlsx"
-            ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            : "text/csv; charset=utf-8";
-
-        const bodyBuffer = new ArrayBuffer(fileBytes.byteLength);
-        new Uint8Array(bodyBuffer).set(fileBytes);
-        return new Response(bodyBuffer, {
-          status: 200,
-          headers: {
-            "content-type": mimeType,
-            "content-disposition": `attachment; filename="sales-export-${job.id}.${extension}"`,
-            "cache-control": "no-store",
-          },
+        return downloadSalesExportById(safeJobId, session, {
+          repos,
+          blobStore: salesExportBlobStore,
         });
       },
     });

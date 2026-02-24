@@ -52,8 +52,8 @@ export const ROUTE_PERMISSIONS: RoutePermission[] = [
     permission: "sales:create",
   },
   {
-    id: "sales-review-confirmed",
-    href: "/sales/review/confirmed",
+    id: "sales-confirmed",
+    href: "/sales/confirmed",
     permission: "sales:review",
   },
   {
@@ -62,8 +62,8 @@ export const ROUTE_PERMISSIONS: RoutePermission[] = [
     permission: "sales:create",
   },
   {
-    id: "sales-review-queue",
-    href: "/sales/review/queue",
+    id: "sales-confirmations",
+    href: "/sales/confirmations",
     permission: "sales:review",
     landingPriority: 4,
   },

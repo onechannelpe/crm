@@ -68,7 +68,7 @@ describe("nav policy", () => {
 
   it("returns empty children when role lacks permission for all", () => {
     // logistics role has no leads:read permission, so the sales group's
-    // children (leads, dashboard, review etc.) should all be filtered out
+    // children (leads, confirmations etc.) should all be filtered out
     const salesChildren = getSidebarChildren("logistics", "sales").map(
       (child) => child.href,
     );
@@ -82,8 +82,8 @@ describe("nav policy", () => {
     );
     expect(salesChildren).toEqual([
       "/sales/leads",
-      "/sales/review/confirmed",
-      "/sales/review/queue",
+      "/sales/confirmed",
+      "/sales/confirmations",
       "/sales/reports/exports",
     ]);
   });
