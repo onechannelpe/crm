@@ -129,7 +129,7 @@ export default function NewSalePage() {
           dni: dni().trim(),
           phones: phone().trim() ? [phone().trim()] : [],
           engineMatchId: null,
-          completenessScore: source() === "lead_assignment" ? 60 : 40,
+          completenessScore: 0,
         },
         addresses: [
           {

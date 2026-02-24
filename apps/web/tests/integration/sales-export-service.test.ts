@@ -93,4 +93,86 @@ describe("sales export service", () => {
     const signature = String.fromCharCode(file[0] ?? 0, file[1] ?? 0);
     expect(signature).toBe("PK");
   });
+
+  it("does not lease the same job while lease is active", async () => {
+    const now = Date.now();
+    await ctx.repos.reportExportJobs.createJob({
+      requested_by_user_id: 2,
+      branch_id: 1,
+      format: "csv",
+      filters_json: JSON.stringify({
+        status: "confirmed",
+        scope: "branch",
+        branchId: 1,
+      }),
+      status: "queued",
+      rows_count: null,
+      file_storage_key: null,
+      file_sha256: null,
+      error_message: null,
+      requested_at: now,
+      completed_at: null,
+      expires_at: null,
+      lease_owner: null,
+      lease_until: null,
+      attempt_count: 0,
+      max_attempts: 5,
+    });
+
+    const firstLease = await ctx.repos.reportExportJobs.leaseQueuedJobs(
+      10,
+      30_000,
+      "worker-a",
+    );
+    const secondLease = await ctx.repos.reportExportJobs.leaseQueuedJobs(
+      10,
+      30_000,
+      "worker-b",
+    );
+
+    expect(firstLease).toHaveLength(1);
+    expect(secondLease).toHaveLength(0);
+  });
+
+  it("expires completed jobs and removes stored artifacts", async () => {
+    const now = Date.now();
+    const blobStore = createSalesExportBlobStore(ctx.storageRoot);
+    const service = createSalesExportService(ctx.repos, blobStore);
+
+    const storageKey = "sales-export-expire-test.csv";
+    await blobStore.put(storageKey, new TextEncoder().encode("a,b\n1,2\n"));
+
+    const jobId = await ctx.repos.reportExportJobs.createJob({
+      requested_by_user_id: 2,
+      branch_id: 1,
+      format: "csv",
+      filters_json: JSON.stringify({
+        status: "confirmed",
+        scope: "branch",
+        branchId: 1,
+      }),
+      status: "completed",
+      rows_count: 1,
+      file_storage_key: storageKey,
+      file_sha256: "abc123",
+      error_message: null,
+      requested_at: now - 1_000,
+      completed_at: now - 900,
+      expires_at: now - 1,
+      lease_owner: null,
+      lease_until: null,
+      attempt_count: 0,
+      max_attempts: 5,
+    });
+
+    const expired = await service.expireCompleted(10);
+    expect(expired).toBe(1);
+
+    const job = await ctx.repos.reportExportJobs.findJobById(jobId);
+    expect(job?.status).toBe("expired");
+    expect(job?.file_storage_key).toBeNull();
+    expect(job?.file_sha256).toBeNull();
+
+    await expect(blobStore.get(storageKey)).rejects.toBeTruthy();
+  });
 });

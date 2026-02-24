@@ -155,7 +155,7 @@ export default function FixSalePage() {
             dni: dni().trim(),
             phones: phone().trim() ? [phone().trim()] : [],
             engineMatchId: null,
-            completenessScore: 60,
+            completenessScore: 0,
           },
           addresses: [
             {

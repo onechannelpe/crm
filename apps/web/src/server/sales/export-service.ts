@@ -1,4 +1,4 @@
-import ExcelJS from "exceljs";
+import * as XLSX from "xlsx";
 
 import type { Repositories } from "~/server/shared/registry";
 
@@ -52,28 +52,33 @@ function toCsv(rows: ExportRow[]): string {
 }
 
 async function toXlsxBytes(rows: ExportRow[]): Promise<Uint8Array> {
-  const workbook = new ExcelJS.Workbook();
-  const worksheet = workbook.addWorksheet("Confirmed sales");
-  worksheet.columns = [
-    { header: "record_id", key: "recordId", width: 12 },
-    { header: "company_name", key: "companyName", width: 28 },
-    { header: "contact_name", key: "contactName", width: 28 },
-    { header: "contact_dni", key: "contactDni", width: 16 },
-    { header: "executive_name", key: "executiveName", width: 28 },
-    { header: "confirmed_at", key: "confirmedAt", width: 18 },
-  ];
-  rows.forEach((row) => {
-    worksheet.addRow({
-      recordId: row.recordId,
-      companyName: row.companyName ?? "",
-      contactName: row.contactName ?? "",
-      contactDni: row.contactDni ?? "",
-      executiveName: row.executiveName,
-      confirmedAt: row.confirmedAt,
-    });
+  const records = rows.map((row) => ({
+    record_id: row.recordId,
+    company_name: row.companyName ?? "",
+    contact_name: row.contactName ?? "",
+    contact_dni: row.contactDni ?? "",
+    executive_name: row.executiveName,
+    confirmed_at: row.confirmedAt,
+  }));
+  const worksheet = XLSX.utils.json_to_sheet(records, {
+    header: [
+      "record_id",
+      "company_name",
+      "contact_name",
+      "contact_dni",
+      "executive_name",
+      "confirmed_at",
+    ],
   });
-  const buffer = await workbook.xlsx.writeBuffer();
-  return buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Confirmed sales");
+  const output: unknown = XLSX.write(workbook, {
+    bookType: "xlsx",
+    type: "buffer",
+  });
+  if (output instanceof Uint8Array) return output;
+  if (output instanceof ArrayBuffer) return new Uint8Array(output);
+  throw new Error("XLSX writer returned an unsupported output type");
 }
 
 async function buildExportBytes(

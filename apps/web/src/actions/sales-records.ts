@@ -8,6 +8,7 @@ import {
   assertPositiveInt,
 } from "~/lib/contracts/guards";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
+import { computeClientCompletenessScore } from "~/server/sales/completeness";
 import { createSalesRecordsWorkflowService } from "~/server/sales/records-service";
 import {
   repos,
@@ -181,7 +182,14 @@ export async function getSalesRecordBootstrap(
         dni: null,
         phones: [],
         engineMatchId: null,
-        completenessScore: 0,
+        completenessScore: computeClientCompletenessScore({
+          ruc: null,
+          companyName: null,
+          contactName: null,
+          dni: null,
+          phones: [],
+          engineMatchId: null,
+        }),
       },
     };
   }
@@ -215,7 +223,14 @@ export async function getSalesRecordBootstrap(
       dni: contact.dni,
       phones: contact.phone_primary ? [contact.phone_primary] : [],
       engineMatchId: null,
-      completenessScore: 60,
+      completenessScore: computeClientCompletenessScore({
+        ruc: organization.ruc,
+        companyName: organization.name,
+        contactName: contact.name,
+        dni: contact.dni,
+        phones: contact.phone_primary ? [contact.phone_primary] : [],
+        engineMatchId: null,
+      }),
     },
   };
 }
@@ -262,7 +277,10 @@ export async function createSalesRecordDraft(
             executiveUserId: session.userId,
             branchId: session.branchId,
             leadAssignmentId: input.leadAssignmentId,
-            client: input.client,
+            client: {
+              ...input.client,
+              completenessScore: computeClientCompletenessScore(input.client),
+            },
             addresses: input.addresses,
             products: input.products,
           }),
@@ -495,7 +513,13 @@ export async function updateSalesRecordDraft(
           createSalesRecordsWorkflowService(transactionRepos).updateDraft(
             safeRecordId,
             session.userId,
-            input,
+            {
+              ...input,
+              client: {
+                ...input.client,
+                completenessScore: computeClientCompletenessScore(input.client),
+              },
+            },
             safeCorrectionNotes,
           ),
       );
