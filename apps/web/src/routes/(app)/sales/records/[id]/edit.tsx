@@ -145,64 +145,68 @@ export default function FixSalePage() {
 
     setLoading(true);
     try {
-      await updateSalesRecordDraft(noteId(), {
-        client: {
-          ruc: ruc().trim() || null,
-          companyName: companyName().trim(),
-          contactName: contactName().trim(),
-          dni: dni().trim(),
-          phones: phone().trim() ? [phone().trim()] : [],
-          engineMatchId: null,
-          completenessScore: 60,
-        },
-        addresses: [
-          {
-            addressType: "installation",
-            fullText: installationAddress().trim(),
-            department: null,
-            province: null,
-            district: null,
-            ubigeo: null,
-            latitude: null,
-            longitude: null,
-            isPrimary: true,
+      await updateSalesRecordDraft(
+        noteId(),
+        {
+          client: {
+            ruc: ruc().trim() || null,
+            companyName: companyName().trim(),
+            contactName: contactName().trim(),
+            dni: dni().trim(),
+            phones: phone().trim() ? [phone().trim()] : [],
+            engineMatchId: null,
+            completenessScore: 60,
           },
-          ...(billingAddress().trim()
-            ? [
-                {
-                  addressType: "billing" as const,
-                  fullText: billingAddress().trim(),
-                  department: null,
-                  province: null,
-                  district: null,
-                  ubigeo: null,
-                  latitude: null,
-                  longitude: null,
-                  isPrimary: false,
-                },
-              ]
-            : []),
-          ...(referenceAddress().trim()
-            ? [
-                {
-                  addressType: "reference" as const,
-                  fullText: referenceAddress().trim(),
-                  department: null,
-                  province: null,
-                  district: null,
-                  ubigeo: null,
-                  latitude: null,
-                  longitude: null,
-                  isPrimary: false,
-                },
-              ]
-            : []),
-        ],
-        products: productLines().map((line) => ({
-          productId: line.productId,
-          quantity: line.quantity,
-        })),
-      });
+          addresses: [
+            {
+              addressType: "installation",
+              fullText: installationAddress().trim(),
+              department: null,
+              province: null,
+              district: null,
+              ubigeo: null,
+              latitude: null,
+              longitude: null,
+              isPrimary: true,
+            },
+            ...(billingAddress().trim()
+              ? [
+                  {
+                    addressType: "billing" as const,
+                    fullText: billingAddress().trim(),
+                    department: null,
+                    province: null,
+                    district: null,
+                    ubigeo: null,
+                    latitude: null,
+                    longitude: null,
+                    isPrimary: false,
+                  },
+                ]
+              : []),
+            ...(referenceAddress().trim()
+              ? [
+                  {
+                    addressType: "reference" as const,
+                    fullText: referenceAddress().trim(),
+                    department: null,
+                    province: null,
+                    district: null,
+                    ubigeo: null,
+                    latitude: null,
+                    longitude: null,
+                    isPrimary: false,
+                  },
+                ]
+              : []),
+          ],
+          products: productLines().map((line) => ({
+            productId: line.productId,
+            quantity: line.quantity,
+          })),
+        },
+        fixNotes().trim(),
+      );
       await submitSalesRecord(noteId());
       await refetchFixContext();
       showToast("success", "Sales record resubmitted");

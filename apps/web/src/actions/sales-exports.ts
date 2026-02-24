@@ -4,11 +4,7 @@ import type { Role } from "~/lib/auth/access/rbac";
 import { requirePermission } from "~/lib/auth/access/session";
 import { assertPositiveInt } from "~/lib/contracts/guards";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
-import {
-  repos,
-  salesExportBlobStore,
-  salesExportService,
-} from "~/server/shared/context";
+import { repos } from "~/server/shared/context";
 
 type SalesExportFormat = "csv" | "xlsx";
 
@@ -176,8 +172,11 @@ export async function requestSalesExport(
         requested_at: now,
         completed_at: null,
         expires_at: null,
+        lease_owner: null,
+        lease_until: null,
+        attempt_count: 0,
+        max_attempts: 5,
       });
-      await salesExportService.processJob(jobId);
 
       const newest = await repos.reportExportJobs.findJobById(jobId);
       if (!newest) throw new Error("Export job not found after creation");
@@ -193,53 +192,6 @@ export async function requestSalesExport(
         completedAt: newest.completed_at,
         expiresAt: newest.expires_at,
         filters: parseFiltersJson(newest.filters_json),
-      };
-    },
-  });
-}
-
-export async function downloadSalesExportFile(
-  jobId: number,
-): Promise<{ filename: string; mimeType: string; base64Content: string }> {
-  const safeJobId = assertPositiveInt(jobId, "jobId");
-  const actor = { userId: null as number | null, role: null as Role | null };
-  return runObservedAction({
-    actionName: "sales.export.download",
-    actor,
-    input: { jobId: safeJobId },
-    run: async () => {
-      const session = await requirePermission("sales:review");
-      actor.userId = session.userId;
-      actor.role = session.role;
-
-      const job = await repos.reportExportJobs.findJobById(safeJobId);
-      if (!job) throw new Error("Export job not found");
-      if (session.role !== "superuser" && job.branch_id !== session.branchId) {
-        throw new Error("Export job not found");
-      }
-      if (job.status !== "completed" || !job.file_storage_key) {
-        throw new Error("Export file is not ready");
-      }
-
-      const fileBytes = await salesExportBlobStore.get(job.file_storage_key);
-
-      await repos.reportExportJobs.createDownload({
-        export_job_id: safeJobId,
-        downloaded_by_user_id: session.userId,
-        downloaded_at: Date.now(),
-        ip_hash: null,
-        user_agent_hash: null,
-      });
-
-      const extension = job.format === "xlsx" ? "xls" : "csv";
-      const mimeType =
-        job.format === "xlsx"
-          ? "application/vnd.ms-excel"
-          : "text/csv; charset=utf-8";
-      return {
-        filename: `sales-export-${job.id}.${extension}`,
-        mimeType,
-        base64Content: Buffer.from(fileBytes).toString("base64"),
       };
     },
   });

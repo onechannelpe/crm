@@ -16,7 +16,7 @@ describe("route permissions", () => {
     expect(getRoutePermission("/settings")).toBe("admin:manage");
     expect(getRoutePermission("/team/new")).toBe("hr:manage");
     expect(getRoutePermission("/sales/records/new")).toBe("sales:create");
-    expect(getRoutePermission("/sales/records/123/edit")).toBe("sales:submit");
+    expect(getRoutePermission("/sales/records/123/edit")).toBe("sales:create");
     expect(getRoutePermission("/sales/reports/exports")).toBe("sales:review");
     expect(getRoutePermission("/sales/reports/exports/123")).toBe(
       "sales:review",

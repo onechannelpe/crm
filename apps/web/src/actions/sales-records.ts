@@ -460,8 +460,13 @@ export async function getSalesRecordFixContext(
 export async function updateSalesRecordDraft(
   recordId: number,
   input: Omit<CreateSalesRecordDraftInput, "source" | "leadAssignmentId">,
+  correctionNotes: string | null = null,
 ): Promise<ActionSuccess> {
   const safeRecordId = assertPositiveInt(recordId, "recordId");
+  const safeCorrectionNotes =
+    correctionNotes !== null && correctionNotes.trim().length > 0
+      ? correctionNotes.trim()
+      : null;
   input.addresses.forEach((address, index) => {
     assertNonEmptyString(address.fullText, `addresses[${index}].fullText`);
   });
@@ -478,16 +483,21 @@ export async function updateSalesRecordDraft(
       recordId: safeRecordId,
       addresses: input.addresses.length,
       products: input.products.length,
+      hasCorrectionNotes: safeCorrectionNotes !== null,
     },
     run: async () => {
       const session = await requirePermission("sales:create");
       actor.userId = session.userId;
       actor.role = session.role;
 
-      const result = await salesRecordsService.updateDraft(
-        safeRecordId,
-        session.userId,
-        input,
+      const result = await runInRepositoryTransaction(
+        async (transactionRepos) =>
+          createSalesRecordsWorkflowService(transactionRepos).updateDraft(
+            safeRecordId,
+            session.userId,
+            input,
+            safeCorrectionNotes,
+          ),
       );
       if (isErr(result)) throw new Error(result.error);
       return { success: true };

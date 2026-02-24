@@ -53,3 +53,28 @@
   gap: 8px;
   white-space: nowrap;
 }
+
+.attemptPanel {
+  border: 1px solid color-mix(in oklab, var(--brand) 24%, transparent);
+  background: color-mix(in oklab, var(--brand) 8%, var(--surface));
+  border-radius: var(--panel-radius);
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.attemptTitle {
+  margin: 0;
+  font-size: var(--font-size-body);
+  font-weight: 500;
+}
+
+.attemptFields {
+  display: grid;
+  gap: 10px;
+}
+
+.attemptActions {
+  display: inline-flex;
+  gap: 8px;
+}

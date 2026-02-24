@@ -490,6 +490,10 @@ export interface ReportExportJobsTable {
   requested_at: number;
   completed_at: number | null;
   expires_at: number | null;
+  lease_owner: string | null;
+  lease_until: number | null;
+  attempt_count: number;
+  max_attempts: number;
 }
 
 export interface ReportExportDownloadsTable {

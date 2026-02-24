@@ -2,7 +2,6 @@ import { useParams } from "@solidjs/router";
 import { createResource, For, Show } from "solid-js";
 
 import {
-  downloadSalesExportFile,
   getSalesExportJob,
   listSalesExportDownloads,
 } from "~/actions/sales-exports";
@@ -25,6 +24,7 @@ import styles from "./export-detail-page.module.css";
 export default function SalesExportDetailPage() {
   const params = useParams();
   const jobId = () => Number(params.jobId);
+  const { showToast } = useToast();
 
   const [job] = createResource(jobId, async (id) => getSalesExportJob(id));
   const [downloads, { refetch: refetchDownloads }] = createResource(
@@ -35,14 +35,25 @@ export default function SalesExportDetailPage() {
 
   async function handleDownload() {
     try {
-      const payload = await downloadSalesExportFile(jobId());
-      const dataUrl = `data:${payload.mimeType};base64,${payload.base64Content}`;
+      const response = await fetch(
+        `/api/sales/reports/exports/${jobId()}/download`,
+      );
+      if (!response.ok) {
+        const message = await response.text();
+        throw new Error(message || "Download failed");
+      }
+      const blob = await response.blob();
+      const contentDisposition = response.headers.get("content-disposition");
+      const filenameMatch = contentDisposition?.match(/filename="?([^"]+)"?/);
+      const filename = filenameMatch?.[1] ?? `sales-export-${jobId()}.bin`;
+      const objectUrl = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
-      anchor.href = dataUrl;
-      anchor.download = payload.filename;
+      anchor.href = objectUrl;
+      anchor.download = filename;
       document.body.append(anchor);
       anchor.click();
       anchor.remove();
+      URL.revokeObjectURL(objectUrl);
       await refetchDownloads();
       showToast("success", "Export downloaded");
     } catch (error: unknown) {
@@ -107,4 +118,3 @@ export default function SalesExportDetailPage() {
     </AppPage>
   );
 }
-const { showToast } = useToast();

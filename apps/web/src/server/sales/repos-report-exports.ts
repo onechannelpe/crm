@@ -54,14 +54,60 @@ export function createReportExportRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    listQueuedJobs(limit: number) {
-      return db
+    async leaseQueuedJobs(limit: number, leaseMs: number, leaseOwner: string) {
+      const now = Date.now();
+      const leaseUntil = now + leaseMs;
+      const candidates = await db
         .selectFrom("report_export_jobs")
-        .selectAll()
-        .where("status", "=", "queued")
+        .select(["id"])
+        .where((eb) =>
+          eb.and([
+            eb.or([eb("status", "=", "queued"), eb("status", "=", "running")]),
+            eb.or([eb("lease_until", "is", null), eb("lease_until", "<", now)]),
+          ]),
+        )
         .orderBy("requested_at", "asc")
         .limit(limit)
         .execute();
+
+      const leased = await Promise.all(
+        candidates.map(async ({ id }) => {
+          const updated = await db
+            .updateTable("report_export_jobs")
+            .set({
+              status: "running",
+              lease_owner: leaseOwner,
+              lease_until: leaseUntil,
+              error_message: null,
+            })
+            .where("id", "=", id)
+            .where((eb) =>
+              eb.and([
+                eb.or([
+                  eb("status", "=", "queued"),
+                  eb("status", "=", "running"),
+                ]),
+                eb.or([
+                  eb("lease_until", "is", null),
+                  eb("lease_until", "<", now),
+                ]),
+              ]),
+            )
+            .executeTakeFirst();
+          if (Number(updated.numUpdatedRows ?? 0) === 0) return null;
+          return db
+            .selectFrom("report_export_jobs")
+            .selectAll()
+            .where("id", "=", id)
+            .where("status", "=", "running")
+            .where("lease_owner", "=", leaseOwner)
+            .executeTakeFirst();
+        }),
+      );
+
+      return leased.filter(
+        (job): job is NonNullable<(typeof leased)[number]> => job !== null,
+      );
     },
 
     listJobsByBranch(limit: number, branchId: number) {
@@ -107,16 +153,9 @@ export function createReportExportRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    markJobRunning(id: number) {
-      return db
-        .updateTable("report_export_jobs")
-        .set({ status: "running", error_message: null })
-        .where("id", "=", id)
-        .execute();
-    },
-
     markJobCompleted(
       id: number,
+      leaseOwner: string,
       rowsCount: number,
       fileStorageKey: string,
       fileSha256: string,
@@ -133,20 +172,72 @@ export function createReportExportRepo(db: Kysely<Database>) {
           error_message: null,
           completed_at: completedAt,
           expires_at: expiresAt,
+          lease_owner: null,
+          lease_until: null,
         })
         .where("id", "=", id)
+        .where("status", "=", "running")
+        .where("lease_owner", "=", leaseOwner)
         .execute();
     },
 
-    markJobFailed(id: number, errorMessage: string, completedAt: number) {
+    async markJobFailed(
+      id: number,
+      leaseOwner: string,
+      errorMessage: string,
+      completedAt: number,
+    ) {
+      const job = await db
+        .selectFrom("report_export_jobs")
+        .select(["attempt_count", "max_attempts"])
+        .where("id", "=", id)
+        .where("status", "=", "running")
+        .where("lease_owner", "=", leaseOwner)
+        .executeTakeFirst();
+      if (!job) return "missing" as const;
+
+      const nextAttemptCount = job.attempt_count + 1;
+      const exhausted = nextAttemptCount >= job.max_attempts;
       return db
         .updateTable("report_export_jobs")
         .set({
-          status: "failed",
+          status: exhausted ? "failed" : "queued",
+          attempt_count: nextAttemptCount,
           error_message: errorMessage,
-          completed_at: completedAt,
+          completed_at: exhausted ? completedAt : null,
+          lease_owner: null,
+          lease_until: null,
         })
         .where("id", "=", id)
+        .where("status", "=", "running")
+        .where("lease_owner", "=", leaseOwner)
+        .execute();
+    },
+
+    listJobsToExpire(limit: number, now: number) {
+      return db
+        .selectFrom("report_export_jobs")
+        .select(["id", "file_storage_key"])
+        .where("status", "=", "completed")
+        .where("expires_at", "is not", null)
+        .where("expires_at", "<=", now)
+        .orderBy("expires_at", "asc")
+        .limit(limit)
+        .execute();
+    },
+
+    markJobExpired(id: number) {
+      return db
+        .updateTable("report_export_jobs")
+        .set({
+          status: "expired",
+          file_storage_key: null,
+          file_sha256: null,
+          lease_owner: null,
+          lease_until: null,
+        })
+        .where("id", "=", id)
+        .where("status", "=", "completed")
         .execute();
     },
 

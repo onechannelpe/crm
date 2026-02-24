@@ -108,10 +108,15 @@ describe("report export observability", () => {
       requested_at: now,
       completed_at: null,
       expires_at: null,
+      lease_owner: null,
+      lease_until: null,
+      attempt_count: 0,
+      max_attempts: 5,
     });
 
     await ctx.repos.reportExportJobs.markJobCompleted(
       jobId,
+      "test-worker",
       9,
       "sales-export-1.csv",
       "abc123",

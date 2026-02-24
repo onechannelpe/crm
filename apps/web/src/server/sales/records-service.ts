@@ -247,6 +247,7 @@ export function createSalesRecordsWorkflowService(repos: Repositories) {
       recordId: number,
       executiveUserId: number,
       input: UpdateSalesRecordDraftInput,
+      correctionNotes: string | null = null,
     ): Promise<Result<void, string>> {
       const record = await repos.salesRecords.findById(recordId);
       if (!record) return Err("Sales record not found");
@@ -327,7 +328,10 @@ export function createSalesRecordsWorkflowService(repos: Repositories) {
         "sales_record_draft_updated",
         "sales_record",
         recordId,
-        { status: record.status },
+        {
+          status: record.status,
+          correctionNotes,
+        },
       );
       return Ok(undefined);
     },

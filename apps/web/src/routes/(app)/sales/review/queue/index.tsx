@@ -11,6 +11,9 @@ import { EmptyState } from "~/components/feedback/empty-state";
 import { useToast } from "~/components/feedback/toast-provider";
 import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
+import { Input } from "~/components/ui/input/input";
+import { Select } from "~/components/ui/input/select";
+import { Textarea } from "~/components/ui/input/textarea";
 import {
   Table,
   TableBody,
@@ -25,6 +28,20 @@ import { formatDate } from "~/lib/utils";
 
 import styles from "./confirmations-page.module.css";
 
+const ATTEMPT_OUTCOMES = [
+  { value: "no_answer", label: "No answer" },
+  { value: "callback_scheduled", label: "Callback scheduled" },
+  { value: "validated", label: "Validated" },
+  { value: "invalid_data", label: "Invalid data" },
+  { value: "rejected", label: "Rejected" },
+] as const;
+
+function isAttemptOutcome(
+  value: string,
+): value is (typeof ATTEMPT_OUTCOMES)[number]["value"] {
+  return ATTEMPT_OUTCOMES.some((outcome) => outcome.value === value);
+}
+
 export default function SalesConfirmationsPage() {
   const [notes, { mutate, refetch }] = createResource(
     () => true,
@@ -35,6 +52,13 @@ export default function SalesConfirmationsPage() {
   const [rejectingNoteId, setRejectingNoteId] = createSignal<number | null>(
     null,
   );
+  const [attemptingNoteId, setAttemptingNoteId] = createSignal<number | null>(
+    null,
+  );
+  const [attemptOutcome, setAttemptOutcome] =
+    createSignal<(typeof ATTEMPT_OUTCOMES)[number]["value"]>("no_answer");
+  const [attemptNotes, setAttemptNotes] = createSignal("");
+  const [nextAttemptAt, setNextAttemptAt] = createSignal("");
   const { showToast } = useToast();
 
   const handleApprove = async (noteId: number) => {
@@ -82,11 +106,35 @@ export default function SalesConfirmationsPage() {
     }
   };
 
-  const handleNoAnswer = async (noteId: number) => {
+  const resetAttemptState = () => {
+    setAttemptingNoteId(null);
+    setAttemptOutcome("no_answer");
+    setAttemptNotes("");
+    setNextAttemptAt("");
+  };
+
+  const handleAttempt = async (noteId: number) => {
     try {
-      await registerSalesRecordAttempt(noteId, "no_answer");
+      const nextAttemptAtValue = nextAttemptAt().trim();
+      const parsedNextAttemptAt =
+        nextAttemptAtValue.length > 0 ? Date.parse(nextAttemptAtValue) : null;
+      if (
+        nextAttemptAtValue.length > 0 &&
+        (Number.isNaN(parsedNextAttemptAt) || parsedNextAttemptAt === null)
+      ) {
+        showToast("error", "Next attempt date is invalid");
+        return;
+      }
+
+      await registerSalesRecordAttempt(
+        noteId,
+        attemptOutcome(),
+        attemptNotes().trim() || null,
+        parsedNextAttemptAt,
+      );
       showToast("success", `Attempt logged for sale #${noteId}`);
       await refetch();
+      resetAttemptState();
     } catch (err: unknown) {
       showToast("error", getErrorMessage(err, "Attempt logging failed"));
     }
@@ -111,6 +159,57 @@ export default function SalesConfirmationsPage() {
                 onReject={(rejections) => handleReject(id(), rejections)}
                 onCancel={() => setRejectingNoteId(null)}
               />
+            </section>
+          )}
+        </Show>
+        <Show when={attemptingNoteId()}>
+          {(id) => (
+            <section class={styles.attemptPanel}>
+              <h2 class={styles.attemptTitle}>Log attempt for sale #{id()}</h2>
+              <div class={styles.attemptFields}>
+                <Select
+                  value={attemptOutcome()}
+                  onInput={(e) => {
+                    const value = e.currentTarget.value;
+                    if (isAttemptOutcome(value)) setAttemptOutcome(value);
+                  }}
+                >
+                  <For each={ATTEMPT_OUTCOMES}>
+                    {(outcome) => (
+                      <option value={outcome.value}>{outcome.label}</option>
+                    )}
+                  </For>
+                </Select>
+                <Input
+                  type="datetime-local"
+                  label="Next attempt at (optional)"
+                  value={nextAttemptAt()}
+                  onInput={(e) => setNextAttemptAt(e.currentTarget.value)}
+                />
+                <Textarea
+                  label="Notes (optional)"
+                  value={attemptNotes()}
+                  onInput={(e) => setAttemptNotes(e.currentTarget.value)}
+                  rows={3}
+                />
+                <div class={styles.attemptActions}>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => resetAttemptState()}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      void handleAttempt(id());
+                    }}
+                  >
+                    Save attempt
+                  </Button>
+                </div>
+              </div>
             </section>
           )}
         </Show>
@@ -161,10 +260,10 @@ export default function SalesConfirmationsPage() {
                         size="sm"
                         variant="ghost"
                         onClick={() => {
-                          void handleNoAnswer(note.id);
+                          setAttemptingNoteId(note.id);
                         }}
                       >
-                        No answer
+                        Log attempt
                       </Button>
                     </div>
                   </TableCell>

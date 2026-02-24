@@ -20,6 +20,10 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     .addColumn("requested_at", "integer", (col) => col.notNull())
     .addColumn("completed_at", "integer")
     .addColumn("expires_at", "integer")
+    .addColumn("lease_owner", "varchar(64)")
+    .addColumn("lease_until", "integer")
+    .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
+    .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(5))
     .execute();
 
   await db.schema
@@ -29,15 +33,21 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createIndex("idx_report_export_jobs_status_time")
+    .createIndex("idx_report_export_jobs_status_lease_time")
     .on("report_export_jobs")
-    .columns(["status", "requested_at"])
+    .columns(["status", "lease_until", "requested_at"])
     .execute();
 
   await db.schema
     .createIndex("idx_report_export_jobs_branch_time")
     .on("report_export_jobs")
     .columns(["branch_id", "requested_at"])
+    .execute();
+
+  await db.schema
+    .createIndex("idx_report_export_jobs_expires_time")
+    .on("report_export_jobs")
+    .columns(["status", "expires_at"])
     .execute();
 
   await db.schema

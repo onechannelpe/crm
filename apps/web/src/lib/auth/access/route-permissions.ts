@@ -59,7 +59,7 @@ export const ROUTE_PERMISSIONS: RoutePermission[] = [
   {
     id: "sales-records-edit",
     pattern: /^\/sales\/records\/[^/]+\/edit$/,
-    permission: "sales:submit",
+    permission: "sales:create",
   },
   {
     id: "sales-review-queue",

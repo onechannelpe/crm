@@ -3,12 +3,20 @@ import { salesExportService } from "~/server/shared/context";
 const runOnce = process.argv.includes("--once");
 
 const BATCH_SIZE = 25;
+const LEASE_MS = 30_000;
 const LOOP_INTERVAL_MS = 1_000;
+const WORKER_ID = `sales-export-worker-${process.pid}`;
 
 async function runBatch() {
-  const processed = await salesExportService.runBatch(BATCH_SIZE);
+  const [processed, expired] = await Promise.all([
+    salesExportService.runBatch(BATCH_SIZE, LEASE_MS, WORKER_ID),
+    salesExportService.expireCompleted(BATCH_SIZE),
+  ]);
   if (processed > 0) {
     console.log(`[Sales export jobs] Processed ${processed} job(s)`);
+  }
+  if (expired > 0) {
+    console.log(`[Sales export jobs] Expired ${expired} job(s)`);
   }
 }
 
