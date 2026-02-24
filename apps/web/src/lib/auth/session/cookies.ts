@@ -1,4 +1,4 @@
-import { getCookie, setCookie, deleteCookie } from "vinxi/http";
+import { getCookie, setCookie, deleteCookie } from "@solidjs/start/http";
 
 const COOKIE_NAME = "session";
 const COOKIE_MAX_AGE = 30 * 24 * 60 * 60;

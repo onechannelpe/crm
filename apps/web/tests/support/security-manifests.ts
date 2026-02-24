@@ -79,11 +79,10 @@ export const PERMISSION_MANIFEST: Record<Role, Permission[]> = {
 };
 
 export const SALES_ERROR_MANIFEST = {
-  missingItems: "At least one product item is required before submission",
-  missingDocuments: "At least one document is required before submission",
-  missingInventoryLock:
-    "An active inventory lock is required before submission",
-  crossBranchReview: "Cannot review a sale from another branch",
+  missingAddresses: "At least one address is required",
+  missingProducts: "At least one product is required",
+  crossBranchConfirm: "Cannot confirm a sales record from another branch",
+  emptyRejectionReason: "Rejection reason is required",
 } as const;
 
 export const QUOTA_ERROR_MANIFEST = {

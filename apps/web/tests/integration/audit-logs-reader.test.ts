@@ -18,10 +18,10 @@ describe("audit logs reader repository", () => {
 
     await ctx.repos.auditLogs.create({
       user_id: 5,
-      action: "charge_note_approved",
-      entity_type: "charge_note",
+      action: "sales_record_confirmed",
+      entity_type: "sales_record",
       entity_id: 101,
-      changes: '{"from":"pending_review","to":"approved"}',
+      changes: '{"from":"pending_confirmation","to":"confirmed"}',
       created_at: baseTime,
     });
     await ctx.repos.auditLogs.create({
@@ -50,7 +50,7 @@ describe("audit logs reader repository", () => {
     expect(highRiskDefault).toHaveLength(3);
     expect(highRiskDefault[0]?.action).toBe("all_sessions_revoked");
     expect(highRiskDefault[1]?.action).toBe("leads_requested");
-    expect(highRiskDefault[2]?.action).toBe("charge_note_approved");
+    expect(highRiskDefault[2]?.action).toBe("sales_record_confirmed");
 
     await ctx.repos.auditActionPolicies.upsert({
       action: "leads_requested",
@@ -69,7 +69,7 @@ describe("audit logs reader repository", () => {
     });
     expect(highRiskAfterPolicy).toHaveLength(2);
     expect(highRiskAfterPolicy[0]?.action).toBe("all_sessions_revoked");
-    expect(highRiskAfterPolicy[1]?.action).toBe("charge_note_approved");
+    expect(highRiskAfterPolicy[1]?.action).toBe("sales_record_confirmed");
 
     const byAction = await ctx.repos.auditLogs.listRecent({
       fromInclusive: baseTime - 1000,

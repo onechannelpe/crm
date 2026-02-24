@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { getPermissions, ROLES } from "../../src/lib/auth/access/rbac";
 import { createQuotaService } from "../../src/server/quota/service";
-import { uploadTestPdf } from "../support/document-fixtures";
 import {
   PERMISSION_MANIFEST,
   QUOTA_ERROR_MANIFEST,
@@ -11,26 +10,41 @@ import {
 import type { TestDbContext } from "../support/test-db";
 import { cleanupTestDb, createIsolatedTestDb } from "../support/test-db";
 
-async function prepareSubmittableNote(ctx: TestDbContext) {
-  const noteId = await ctx.repos.chargeNotes.create(1, 1);
-  await ctx.repos.chargeNoteItems.create(noteId, 1, 1);
-  await uploadTestPdf(ctx, noteId);
-
-  await ctx.db
-    .insertInto("inventory_items")
-    .values({
-      id: 1,
-      product_id: 1,
-      serial_number: "SN-MANIFEST-001",
-      status: "available",
-      created_at: Date.now(),
-    })
-    .execute();
-
-  const reserved = await ctx.repos.inventory.reserveIfAvailable(1);
-  expect(reserved).toBe(true);
-  await ctx.repos.inventory.createLock(1, noteId, Date.now() + 60_000);
-  return noteId;
+async function createSubmittableRecord(ctx: TestDbContext) {
+  const created = await ctx.salesRecords.createDraft({
+    source: "manual",
+    executiveUserId: 1,
+    branchId: 1,
+    leadAssignmentId: null,
+    client: {
+      ruc: null,
+      companyName: "Org Lima",
+      contactName: "Contacto Lima",
+      dni: "70000001",
+      phones: ["+51999999111"],
+      engineMatchId: null,
+      completenessScore: 60,
+    },
+    addresses: [
+      {
+        addressType: "installation",
+        fullText: "Av. Demo 123",
+        department: null,
+        province: null,
+        district: null,
+        ubigeo: null,
+        latitude: null,
+        longitude: null,
+        isPrimary: true,
+      },
+    ],
+    products: [{ productId: 1, quantity: 1 }],
+  });
+  expect(created.ok).toBe(true);
+  if (!created.ok) {
+    throw new Error("Expected sales record draft creation to succeed");
+  }
+  return created.value;
 }
 
 function today() {
@@ -57,42 +71,82 @@ describe("security invariant manifest", () => {
   });
 
   it("enforces sales workflow deny contracts", async () => {
-    const noteA = await ctx.repos.chargeNotes.create(1, 1);
-    const rA = await ctx.sales.submit(noteA, 1);
+    const rA = await ctx.salesRecords.createDraft({
+      source: "manual",
+      executiveUserId: 1,
+      branchId: 1,
+      leadAssignmentId: null,
+      client: {
+        ruc: null,
+        companyName: "Org A",
+        contactName: "Contact A",
+        dni: "70000011",
+        phones: [],
+        engineMatchId: null,
+        completenessScore: 10,
+      },
+      addresses: [],
+      products: [{ productId: 1, quantity: 1 }],
+    });
     expect(rA.ok).toBe(false);
     if (rA.ok) {
-      throw new Error("Expected missing-items submit contract to fail");
+      throw new Error("Expected missing-addresses draft contract to fail");
     }
-    expect(rA.error).toBe(SALES_ERROR_MANIFEST.missingItems);
+    expect(rA.error).toBe(SALES_ERROR_MANIFEST.missingAddresses);
 
-    const noteB = await ctx.repos.chargeNotes.create(1, 1);
-    await ctx.repos.chargeNoteItems.create(noteB, 1, 1);
-    const rB = await ctx.sales.submit(noteB, 1);
+    const rB = await ctx.salesRecords.createDraft({
+      source: "manual",
+      executiveUserId: 1,
+      branchId: 1,
+      leadAssignmentId: null,
+      client: {
+        ruc: null,
+        companyName: "Org B",
+        contactName: "Contact B",
+        dni: "70000012",
+        phones: [],
+        engineMatchId: null,
+        completenessScore: 10,
+      },
+      addresses: [
+        {
+          addressType: "installation",
+          fullText: "Av. Demo 123",
+          department: null,
+          province: null,
+          district: null,
+          ubigeo: null,
+          latitude: null,
+          longitude: null,
+          isPrimary: true,
+        },
+      ],
+      products: [],
+    });
     expect(rB.ok).toBe(false);
     if (rB.ok) {
-      throw new Error("Expected missing-documents submit contract to fail");
+      throw new Error("Expected missing-products draft contract to fail");
     }
-    expect(rB.error).toBe(SALES_ERROR_MANIFEST.missingDocuments);
+    expect(rB.error).toBe(SALES_ERROR_MANIFEST.missingProducts);
 
-    const noteC = await ctx.repos.chargeNotes.create(1, 1);
-    await ctx.repos.chargeNoteItems.create(noteC, 1, 1);
-    await uploadTestPdf(ctx, noteC);
-    const rC = await ctx.sales.submit(noteC, 1);
-    expect(rC.ok).toBe(false);
-    if (rC.ok) {
-      throw new Error("Expected missing-lock submit contract to fail");
-    }
-    expect(rC.error).toBe(SALES_ERROR_MANIFEST.missingInventoryLock);
-
-    const noteD = await prepareSubmittableNote(ctx);
-    const submitted = await ctx.sales.submit(noteD, 1);
+    const recordId = await createSubmittableRecord(ctx);
+    const submitted = await ctx.salesRecords.submit(recordId, 1);
     expect(submitted.ok).toBe(true);
-    const denied = await ctx.sales.approve(noteD, 4, 2, false);
+
+    const denied = await ctx.salesRecords.confirm(recordId, 4, 2, false);
     expect(denied.ok).toBe(false);
     if (denied.ok) {
-      throw new Error("Expected cross-branch review deny contract to fail");
+      throw new Error("Expected cross-branch confirm deny contract to fail");
     }
-    expect(denied.error).toBe(SALES_ERROR_MANIFEST.crossBranchReview);
+
+    expect(denied.error).toBe(SALES_ERROR_MANIFEST.crossBranchConfirm);
+
+    const rejected = await ctx.salesRecords.reject(recordId, 2, 1, false, " ");
+    expect(rejected.ok).toBe(false);
+    if (rejected.ok) {
+      throw new Error("Expected empty-reason reject deny contract to fail");
+    }
+    expect(rejected.error).toBe(SALES_ERROR_MANIFEST.emptyRejectionReason);
   });
 
   it("enforces quota deny contracts", async () => {

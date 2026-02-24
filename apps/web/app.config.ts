@@ -1,17 +1,15 @@
-import { defineConfig } from "@solidjs/start/config";
+import { solidStart } from "@solidjs/start/config";
 import { visualizer } from "rollup-plugin-visualizer";
-import { type PluginOption } from "vite";
+import { defineConfig } from "vite";
 
 export default defineConfig({
-  middleware: "./src/middleware.ts",
-  server: {
-    esbuild: {
-      options: {
-        target: "es2022",
-      },
-    },
-  },
-  vite: {
-    plugins: [visualizer() as PluginOption],
+  plugins: [
+    solidStart({
+      middleware: "./src/middleware.ts",
+    }),
+    visualizer(),
+  ],
+  esbuild: {
+    target: "es2022",
   },
 });

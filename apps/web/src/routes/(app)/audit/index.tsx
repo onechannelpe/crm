@@ -192,7 +192,7 @@ export default function AuditObservabilityPage() {
                 label="Action"
                 value={actionFilter()}
                 onInput={(event) => setActionFilter(event.currentTarget.value)}
-                placeholder="charge_note_approved"
+                placeholder="sales_record_confirmed"
               />
             </div>
             <div class={styles.fieldW44}>
@@ -202,7 +202,7 @@ export default function AuditObservabilityPage() {
                 onInput={(event) =>
                   setEntityTypeFilter(event.currentTarget.value)
                 }
-                placeholder="charge_note"
+                placeholder="sales_record"
               />
             </div>
             <div class={styles.fieldW28}>

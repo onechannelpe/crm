@@ -19,11 +19,8 @@ import { createNotificationContactsRepo } from "~/server/notifications/repos-con
 import { createNotificationPreferencesRepo } from "~/server/notifications/repos-preferences";
 import { createActionObservationsRepo } from "~/server/observability/repos-action-observations";
 import { createQuotaAllocationsRepo } from "~/server/quota/repos";
-import { createChargeNotesRepo } from "~/server/sales/repos-charge-notes";
-import { createDocumentJobsRepo } from "~/server/sales/repos-document-jobs";
-import { createDocumentsRepo } from "~/server/sales/repos-documents";
-import { createChargeNoteItemsRepo } from "~/server/sales/repos-items";
-import { createRejectionLogsRepo } from "~/server/sales/repos-rejections";
+import { createReportExportRepo } from "~/server/sales/repos-report-exports";
+import { createSalesRecordsRepo } from "~/server/sales/repos-sales-records";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
 import { createBranchesRepo } from "~/server/users/repos-branches";
 import { createPasskeysRepo } from "~/server/users/repos-passkeys";
@@ -51,9 +48,8 @@ export function createRepositories(db: Kysely<Database>) {
     contacts: createContactsRepo(db),
     leadAssignments: createLeadAssignmentsRepo(db),
     quotaAllocations: createQuotaAllocationsRepo(db),
-    chargeNotes: createChargeNotesRepo(db),
-    chargeNoteItems: createChargeNoteItemsRepo(db),
-    rejectionLogs: createRejectionLogsRepo(db),
+    reportExportJobs: createReportExportRepo(db),
+    salesRecords: createSalesRecordsRepo(db),
     interactionLogs: createInteractionLogsRepo(db),
     products: createProductsRepo(db),
     notificationCampaigns: createNotificationCampaignsRepo(db),
@@ -62,8 +58,6 @@ export function createRepositories(db: Kysely<Database>) {
     appNotifications: createAppNotificationsRepo(db),
     actionObservations: createActionObservationsRepo(db),
     inventory: createInventoryRepo(db),
-    documents: createDocumentsRepo(db),
-    documentJobs: createDocumentJobsRepo(db),
     auditLogs: createAuditLogsRepo(db),
     auditActionPolicies: createAuditActionPoliciesRepo(db),
     agentStatus: createAgentStatusRepo(db),

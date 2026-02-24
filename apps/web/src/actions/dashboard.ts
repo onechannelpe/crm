@@ -8,7 +8,7 @@ export interface DashboardStats {
   activeLeads: number;
   pendingSales: number;
   draftSales: number;
-  approvedSales: number;
+  confirmedSales: number;
 }
 
 export async function getDashboardStats(): Promise<DashboardStats> {
@@ -18,23 +18,24 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   const activeLeads = await repos.leadAssignments.findActiveByUser(
     session.userId,
   );
-  const pendingSalesCount = await repos.chargeNotes.countByUserAndStatus(
+  const pendingSalesCount = await repos.salesRecords.countByExecutiveAndStatus(
     session.userId,
-    "pending_review",
+    "submitted_for_confirmation",
   );
-  const draftSalesCount = await repos.chargeNotes.countByUserAndStatus(
+  const draftSalesCount = await repos.salesRecords.countByExecutiveAndStatus(
     session.userId,
     "draft",
   );
-  const approvedSalesCount = await repos.chargeNotes.countByUserAndStatus(
-    session.userId,
-    "approved",
-  );
+  const confirmedSalesCount =
+    await repos.salesRecords.countByExecutiveAndStatus(
+      session.userId,
+      "confirmed",
+    );
 
   return {
     activeLeads: activeLeads.length,
     pendingSales: pendingSalesCount,
     draftSales: draftSalesCount,
-    approvedSales: approvedSalesCount,
+    confirmedSales: confirmedSalesCount,
   };
 }

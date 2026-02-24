@@ -6,6 +6,8 @@ import * as m001 from "./migrations/001-initial";
 import * as m002 from "./migrations/002-client-search-views";
 import * as m003 from "./migrations/003-user-invites";
 import * as m004 from "./migrations/004-action-observability";
+import * as m005 from "./migrations/005-report-export-observability";
+import * as m006 from "./migrations/006-sales-records-core";
 
 /**
  * Static migration provider that avoids FileMigrationProvider's dynamic import(),
@@ -19,6 +21,8 @@ const staticProvider: MigrationProvider = {
       "002-client-search-views": m002,
       "003-user-invites": m003,
       "004-action-observability": m004,
+      "005-report-export-observability": m005,
+      "006-sales-records-core": m006,
     };
   },
 };

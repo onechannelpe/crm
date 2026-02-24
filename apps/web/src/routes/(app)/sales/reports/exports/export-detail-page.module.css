@@ -1,0 +1,19 @@
+.emptyText {
+  color: var(--color-text-muted);
+}
+
+.title {
+  margin: 0 0 12px 0;
+}
+
+.meta {
+  margin: 0 0 6px 0;
+}
+
+.metaLast {
+  margin: 0 0 12px 0;
+}
+
+.auditTitle {
+  margin: 20px 0 8px 0;
+}
