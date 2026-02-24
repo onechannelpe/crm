@@ -7,9 +7,7 @@ import * as m002 from "./migrations/002-client-search-views";
 import * as m003 from "./migrations/003-user-invites";
 import * as m004 from "./migrations/004-action-observability";
 import * as m005 from "./migrations/005-report-export-observability";
-import * as m007 from "./migrations/007-charge-note-status-vocabulary";
-import * as m008 from "./migrations/008-event-vocabulary-confirmed";
-import * as m009 from "./migrations/009-sales-records-core";
+import * as m006 from "./migrations/006-sales-records-core";
 
 /**
  * Static migration provider that avoids FileMigrationProvider's dynamic import(),
@@ -24,9 +22,7 @@ const staticProvider: MigrationProvider = {
       "003-user-invites": m003,
       "004-action-observability": m004,
       "005-report-export-observability": m005,
-      "007-charge-note-status-vocabulary": m007,
-      "008-event-vocabulary-confirmed": m008,
-      "009-sales-records-core": m009,
+      "006-sales-records-core": m006,
     };
   },
 };

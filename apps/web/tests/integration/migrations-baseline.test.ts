@@ -9,6 +9,8 @@ import * as m001 from "../../src/lib/db/migrations/001-initial";
 import * as m002 from "../../src/lib/db/migrations/002-client-search-views";
 import * as m003 from "../../src/lib/db/migrations/003-user-invites";
 import * as m004 from "../../src/lib/db/migrations/004-action-observability";
+import * as m005 from "../../src/lib/db/migrations/005-report-export-observability";
+import * as m006 from "../../src/lib/db/migrations/006-sales-records-core";
 
 const ARTIFACT_DIR = join(process.cwd(), ".vitest-db");
 
@@ -19,6 +21,8 @@ const staticProvider: MigrationProvider = {
       "002-client-search-views": m002,
       "003-user-invites": m003,
       "004-action-observability": m004,
+      "005-report-export-observability": m005,
+      "006-sales-records-core": m006,
     };
   },
 };
@@ -35,14 +39,14 @@ async function createMigrationTestDb(prefix: string) {
   return createDb(dbPath);
 }
 
-describe("migration compatibility", () => {
+describe("migration baseline", () => {
   afterEach(async () => {
     const paths = createdDbPaths.splice(0, createdDbPaths.length);
     await Promise.all(paths.map((dbPath) => rm(dbPath, { force: true })));
   });
 
   it("creates expected schema objects on a fresh database", async () => {
-    const db = await createMigrationTestDb("migration-fresh");
+    const db = await createMigrationTestDb("migration-baseline-fresh");
     try {
       const migrator = new Migrator({ db, provider: staticProvider });
       const { error } = await migrator.migrateToLatest();
@@ -67,6 +71,9 @@ describe("migration compatibility", () => {
       expect(tableNames.has("audit_action_policies")).toBe(true);
       expect(tableNames.has("user_invites")).toBe(true);
       expect(tableNames.has("action_observations")).toBe(true);
+      expect(tableNames.has("report_export_jobs")).toBe(true);
+      expect(tableNames.has("sales_records")).toBe(true);
+      expect(tableNames.has("sales_record_attempts")).toBe(true);
 
       const indexes = await sql<{ name: string }>`
         SELECT name
@@ -102,13 +109,18 @@ describe("migration compatibility", () => {
       expect(indexNames.has("idx_audit_action_created")).toBe(true);
       expect(indexNames.has("idx_audit_user_created")).toBe(true);
       expect(indexNames.has("idx_audit_policy_risk_active")).toBe(true);
+      expect(indexNames.has("idx_report_export_jobs_branch_time")).toBe(true);
+      expect(indexNames.has("idx_sales_records_branch_status_time")).toBe(true);
+      expect(indexNames.has("idx_sales_record_attempts_record_time")).toBe(
+        true,
+      );
     } finally {
       await db.destroy();
     }
   });
 
   it("is idempotent and does not reapply executed migrations", async () => {
-    const db = await createMigrationTestDb("migration-rerun");
+    const db = await createMigrationTestDb("migration-baseline-rerun");
     try {
       const migrator = new Migrator({ db, provider: staticProvider });
       const first = await migrator.migrateToLatest();
@@ -147,6 +159,8 @@ describe("migration compatibility", () => {
         { name: "002-client-search-views" },
         { name: "003-user-invites" },
         { name: "004-action-observability" },
+        { name: "005-report-export-observability" },
+        { name: "006-sales-records-core" },
       ]);
     } finally {
       await db.destroy();

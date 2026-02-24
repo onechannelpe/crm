@@ -1,0 +1,10 @@
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.empty {
+  margin: 16px 0;
+  color: var(--color-text-muted);
+}

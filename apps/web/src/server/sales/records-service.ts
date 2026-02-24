@@ -10,6 +10,12 @@ type SalesRecordStatus =
   | "cancelled";
 
 type SalesRecordSource = "lead_assignment" | "manual";
+type SalesRecordAttemptOutcome =
+  | "no_answer"
+  | "callback_scheduled"
+  | "validated"
+  | "invalid_data"
+  | "rejected";
 
 const STATUS_TRANSITIONS: Record<SalesRecordStatus, SalesRecordStatus[]> = {
   draft: ["submitted_for_confirmation", "cancelled"],
@@ -63,6 +69,12 @@ interface CreateSalesRecordDraftInput {
   products: DraftProductInput[];
 }
 
+interface UpdateSalesRecordDraftInput {
+  client: DraftClientInput;
+  addresses: DraftAddressInput[];
+  products: DraftProductInput[];
+}
+
 export function createSalesRecordsWorkflowService(repos: Repositories) {
   const audit = createAuditService(repos);
 
@@ -82,6 +94,35 @@ export function createSalesRecordsWorkflowService(repos: Repositories) {
       }
       if (input.products.some((it) => it.quantity < 1)) {
         return Err("All product quantities must be positive");
+      }
+
+      if (
+        input.source === "lead_assignment" &&
+        input.leadAssignmentId === null
+      ) {
+        return Err("leadAssignmentId is required for lead-assignment sales");
+      }
+      if (input.source === "manual" && input.leadAssignmentId !== null) {
+        return Err("leadAssignmentId must be null for manual sales");
+      }
+
+      if (input.leadAssignmentId !== null) {
+        const assignment = await repos.leadAssignments.findActiveByIdForUser(
+          input.leadAssignmentId,
+          input.executiveUserId,
+        );
+        if (!assignment) {
+          return Err(
+            "Lead assignment is not active or does not belong to user",
+          );
+        }
+      }
+
+      const products = await Promise.all(
+        input.products.map((item) => repos.products.findById(item.productId)),
+      );
+      if (products.some((product) => !product)) {
+        return Err("One or more products do not exist");
       }
 
       const now = Date.now();
@@ -129,13 +170,6 @@ export function createSalesRecordsWorkflowService(repos: Repositories) {
           updated_at: now,
         })),
       );
-
-      const products = await Promise.all(
-        input.products.map((item) => repos.products.findById(item.productId)),
-      );
-      if (products.some((product) => !product)) {
-        return Err("One or more products do not exist");
-      }
 
       await repos.salesRecords.replaceProducts(
         recordId,
@@ -205,6 +239,95 @@ export function createSalesRecordsWorkflowService(repos: Repositories) {
         "sales_record",
         recordId,
         { from: record.status, to: "submitted_for_confirmation" },
+      );
+      return Ok(undefined);
+    },
+
+    async updateDraft(
+      recordId: number,
+      executiveUserId: number,
+      input: UpdateSalesRecordDraftInput,
+    ): Promise<Result<void, string>> {
+      const record = await repos.salesRecords.findById(recordId);
+      if (!record) return Err("Sales record not found");
+      if (record.executive_user_id !== executiveUserId) {
+        return Err("Not your sales record");
+      }
+      if (record.status !== "draft" && record.status !== "rejected") {
+        return Err("Only draft or rejected records can be edited");
+      }
+
+      if (input.addresses.length < 1) {
+        return Err("At least one address is required");
+      }
+      const primaryCount = input.addresses.filter((it) => it.isPrimary).length;
+      if (primaryCount !== 1) {
+        return Err("Exactly one primary address is required");
+      }
+      if (input.products.length < 1) {
+        return Err("At least one product is required");
+      }
+      if (input.products.some((it) => it.quantity < 1)) {
+        return Err("All product quantities must be positive");
+      }
+
+      const products = await Promise.all(
+        input.products.map((item) => repos.products.findById(item.productId)),
+      );
+      if (products.some((product) => !product)) {
+        return Err("One or more products do not exist");
+      }
+
+      const now = Date.now();
+      await repos.salesRecords.upsertClient({
+        sales_record_id: recordId,
+        ruc: input.client.ruc,
+        company_name: input.client.companyName,
+        contact_name: input.client.contactName,
+        dni: input.client.dni,
+        phones_json: JSON.stringify(input.client.phones),
+        engine_match_id: input.client.engineMatchId,
+        completeness_score: input.client.completenessScore,
+        created_at: now,
+        updated_at: now,
+      });
+      await repos.salesRecords.replaceAddresses(
+        recordId,
+        input.addresses.map((address) => ({
+          sales_record_id: recordId,
+          address_type: address.addressType,
+          full_text: address.fullText,
+          department: address.department,
+          province: address.province,
+          district: address.district,
+          ubigeo: address.ubigeo,
+          latitude: address.latitude,
+          longitude: address.longitude,
+          is_primary: address.isPrimary ? 1 : 0,
+          created_at: now,
+          updated_at: now,
+        })),
+      );
+      await repos.salesRecords.replaceProducts(
+        recordId,
+        input.products.map((line, index) => ({
+          sales_record_id: recordId,
+          product_id: line.productId,
+          product_name_snapshot: products[index]!.name,
+          category_snapshot: products[index]!.category,
+          subtype_snapshot: products[index]!.subtype,
+          quantity: line.quantity,
+          unit_price_snapshot: products[index]!.price,
+          created_at: now,
+        })),
+      );
+      await repos.salesRecords.touch(recordId, now);
+      await audit.log(
+        executiveUserId,
+        "sales_record_draft_updated",
+        "sales_record",
+        recordId,
+        { status: record.status },
       );
       return Ok(undefined);
     },
@@ -294,6 +417,42 @@ export function createSalesRecordsWorkflowService(repos: Repositories) {
         "sales_record",
         recordId,
         { from: record.status, to: "cancelled" },
+      );
+      return Ok(undefined);
+    },
+
+    async registerAttempt(
+      recordId: number,
+      reviewerUserId: number,
+      reviewerBranchId: number,
+      bypassBranchScope: boolean,
+      outcome: SalesRecordAttemptOutcome,
+      notes: string | null,
+      nextAttemptAt: number | null,
+    ): Promise<Result<void, string>> {
+      const record = await repos.salesRecords.findById(recordId);
+      if (!record) return Err("Sales record not found");
+      if (!bypassBranchScope && record.branch_id !== reviewerBranchId) {
+        return Err("Cannot update a sales record from another branch");
+      }
+      if (record.status !== "submitted_for_confirmation") {
+        return Err("Attempts are only allowed while pending confirmation");
+      }
+
+      await repos.salesRecords.createAttempt({
+        sales_record_id: recordId,
+        reviewer_user_id: reviewerUserId,
+        outcome,
+        notes,
+        next_attempt_at: nextAttemptAt,
+        created_at: Date.now(),
+      });
+      await audit.log(
+        reviewerUserId,
+        "sales_record_attempt_logged",
+        "sales_record",
+        recordId,
+        { outcome, hasNotes: notes !== null, nextAttemptAt },
       );
       return Ok(undefined);
     },

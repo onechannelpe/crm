@@ -2,10 +2,11 @@ import { useParams } from "@solidjs/router";
 import { createResource, For, Show } from "solid-js";
 
 import {
+  downloadSalesExportFile,
   getSalesExportJob,
   listSalesExportDownloads,
-  recordSalesExportDownload,
 } from "~/actions/sales-exports";
+import { useToast } from "~/components/feedback/toast-provider";
 import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import {
@@ -16,7 +17,10 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
+import { getErrorMessage } from "~/lib/errors";
 import { formatDate } from "~/lib/utils";
+
+import styles from "./export-detail-page.module.css";
 
 export default function SalesExportDetailPage() {
   const params = useParams();
@@ -29,45 +33,50 @@ export default function SalesExportDetailPage() {
     { initialValue: [] },
   );
 
-  async function handleRecordDownload() {
-    await recordSalesExportDownload(jobId());
-    await refetchDownloads();
+  async function handleDownload() {
+    try {
+      const payload = await downloadSalesExportFile(jobId());
+      const dataUrl = `data:${payload.mimeType};base64,${payload.base64Content}`;
+      const anchor = document.createElement("a");
+      anchor.href = dataUrl;
+      anchor.download = payload.filename;
+      document.body.append(anchor);
+      anchor.click();
+      anchor.remove();
+      await refetchDownloads();
+      showToast("success", "Export downloaded");
+    } catch (error: unknown) {
+      showToast("error", getErrorMessage(error, "Download failed"));
+    }
   }
 
   return (
     <AppPage>
       <Show
         when={job()}
-        fallback={
-          <p style={{ color: "var(--color-text-muted)" }}>Export not found.</p>
-        }
+        fallback={<p class={styles.emptyText}>Export not found.</p>}
       >
         {(currentJob) => (
           <>
-            <h2 style={{ margin: "0 0 12px 0" }}>Export #{currentJob().id}</h2>
-            <p style={{ margin: "0 0 6px 0" }}>
+            <h2 class={styles.title}>Export #{currentJob().id}</h2>
+            <p class={styles.meta}>
               Format: {currentJob().format.toUpperCase()}
             </p>
-            <p style={{ margin: "0 0 6px 0" }}>Status: {currentJob().status}</p>
-            <p style={{ margin: "0 0 12px 0" }}>
-              Rows: {currentJob().rowsCount ?? "—"}
-            </p>
+            <p class={styles.meta}>Status: {currentJob().status}</p>
+            <p class={styles.metaLast}>Rows: {currentJob().rowsCount ?? "—"}</p>
             <Button
+              disabled={currentJob().status !== "completed"}
               onClick={() => {
-                void handleRecordDownload();
+                void handleDownload();
               }}
             >
-              Record download
+              Download export
             </Button>
 
-            <h3 style={{ margin: "20px 0 8px 0" }}>Download audit</h3>
+            <h3 class={styles.auditTitle}>Download audit</h3>
             <Show
               when={downloads().length > 0}
-              fallback={
-                <p style={{ color: "var(--color-text-muted)" }}>
-                  No download events yet.
-                </p>
-              }
+              fallback={<p class={styles.emptyText}>No download events yet.</p>}
             >
               <Table>
                 <TableHeader>
@@ -98,3 +107,4 @@ export default function SalesExportDetailPage() {
     </AppPage>
   );
 }
+const { showToast } = useToast();

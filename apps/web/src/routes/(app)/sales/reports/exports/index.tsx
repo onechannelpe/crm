@@ -17,6 +17,8 @@ import {
 } from "~/components/ui/layout/table";
 import { formatDate } from "~/lib/utils";
 
+import styles from "./exports-page.module.css";
+
 export default function SalesExportsPage() {
   const [jobs, { refetch: refetchJobs }] = createResource(
     () => true,
@@ -31,9 +33,7 @@ export default function SalesExportsPage() {
 
   return (
     <AppPage>
-      <div
-        style={{ display: "flex", "justify-content": "flex-end", gap: "8px" }}
-      >
+      <div class={styles.actions}>
         <Button
           variant="secondary"
           onClick={() => {
@@ -53,11 +53,7 @@ export default function SalesExportsPage() {
 
       <Show
         when={jobs().length > 0}
-        fallback={
-          <p style={{ margin: "16px 0", color: "var(--color-text-muted)" }}>
-            No exports requested yet.
-          </p>
-        }
+        fallback={<p class={styles.empty}>No exports requested yet.</p>}
       >
         <Table>
           <TableHeader>

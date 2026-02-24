@@ -89,11 +89,11 @@ export default function DashboardPage() {
             title: "Pending confirmations",
             value: `${s.pendingSales}`,
             detail: "Awaiting validation",
-            href: "/sales/confirmations",
+            href: "/sales/review/queue",
           },
         ],
         actionLabel: "View pending",
-        actionHref: "/sales/confirmations",
+        actionHref: "/sales/review/queue",
       },
       {
         key: "customer",
@@ -105,11 +105,11 @@ export default function DashboardPage() {
             title: "Confirmed sales",
             value: `${s.confirmedSales}`,
             detail: "Closed operations",
-            href: "/sales/confirmed",
+            href: "/sales/review/confirmed",
           },
         ],
         actionLabel: "View confirmed",
-        actionHref: "/sales/confirmed",
+        actionHref: "/sales/review/confirmed",
       },
     ];
   });

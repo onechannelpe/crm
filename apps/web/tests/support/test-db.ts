@@ -9,9 +9,7 @@ import { up as up002 } from "../../src/lib/db/migrations/002-client-search-views
 import { up as up003 } from "../../src/lib/db/migrations/003-user-invites";
 import { up as up004 } from "../../src/lib/db/migrations/004-action-observability";
 import { up as up005 } from "../../src/lib/db/migrations/005-report-export-observability";
-import { up as up007 } from "../../src/lib/db/migrations/007-charge-note-status-vocabulary";
-import { up as up008 } from "../../src/lib/db/migrations/008-event-vocabulary-confirmed";
-import { up as up009 } from "../../src/lib/db/migrations/009-sales-records-core";
+import { up as up006 } from "../../src/lib/db/migrations/006-sales-records-core";
 import type { Database } from "../../src/lib/db/schema";
 import { createDocumentBlobStore } from "../../src/server/sales/document-blob-store";
 import { createDocumentJobProcessor } from "../../src/server/sales/document-job-processor";
@@ -219,9 +217,7 @@ export async function createIsolatedTestDb(
   await up003(db);
   await up004(db);
   await up005(db);
-  await up007(db);
-  await up008(db);
-  await up009(db);
+  await up006(db);
   await seedTemplate(db);
   const repos = createRepositories(db);
   const documents = createSalesDocumentService(

@@ -8,13 +8,36 @@ import {
   assertPositiveInt,
 } from "~/lib/contracts/guards";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
-import { repos, salesRecordsService } from "~/server/shared/context";
+import { createSalesRecordsWorkflowService } from "~/server/sales/records-service";
+import {
+  repos,
+  runInRepositoryTransaction,
+  salesRecordsService,
+} from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
 type SalesRecordSource = "lead_assignment" | "manual";
+type SalesRecordAttemptOutcome =
+  | "no_answer"
+  | "callback_scheduled"
+  | "validated"
+  | "invalid_data"
+  | "rejected";
 
 function isSalesRecordSource(value: string): value is SalesRecordSource {
   return value === "lead_assignment" || value === "manual";
+}
+
+function isSalesRecordAttemptOutcome(
+  value: string,
+): value is SalesRecordAttemptOutcome {
+  return (
+    value === "no_answer" ||
+    value === "callback_scheduled" ||
+    value === "validated" ||
+    value === "invalid_data" ||
+    value === "rejected"
+  );
 }
 
 export interface SalesRecordClientInput {
@@ -81,9 +104,11 @@ export interface SalesRecordFixContext {
   id: number;
   status: string;
   client: {
+    ruc: string | null;
     companyName: string | null;
     contactName: string | null;
     dni: string | null;
+    phones: string[];
   } | null;
   addresses: Array<{
     id: number;
@@ -95,6 +120,14 @@ export interface SalesRecordFixContext {
     id: number;
     productName: string;
     quantity: number;
+  }>;
+  attempts: Array<{
+    id: number;
+    outcome: SalesRecordAttemptOutcome;
+    notes: string | null;
+    nextAttemptAt: number | null;
+    createdAt: number;
+    reviewerName: string;
   }>;
 }
 
@@ -113,6 +146,16 @@ function mapQueueItem(
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
+}
+
+function parsePhonesJson(raw: string): string[] {
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((value): value is string => typeof value === "string");
+  } catch {
+    return [];
+  }
 }
 
 export async function listSalesRecordProducts(): Promise<
@@ -144,11 +187,11 @@ export async function getSalesRecordBootstrap(
   }
 
   const safeContactId = assertPositiveInt(contactId, "contactId");
-  const hasLead = await repos.leadAssignments.hasActiveForContact(
+  const assignment = await repos.leadAssignments.findActiveForContact(
     session.userId,
     safeContactId,
   );
-  if (!hasLead) {
+  if (!assignment) {
     throw new Error(
       "You can only create sales from your active assigned leads",
     );
@@ -164,7 +207,7 @@ export async function getSalesRecordBootstrap(
 
   return {
     source: "lead_assignment",
-    leadAssignmentId: null,
+    leadAssignmentId: assignment.id,
     client: {
       ruc: organization.ruc,
       companyName: organization.name,
@@ -182,6 +225,12 @@ export async function createSalesRecordDraft(
 ): Promise<{ id: number }> {
   if (!isSalesRecordSource(input.source)) {
     throw new Error("source is invalid");
+  }
+  if (input.source === "lead_assignment") {
+    assertPositiveInt(input.leadAssignmentId ?? 0, "leadAssignmentId");
+  }
+  if (input.source === "manual" && input.leadAssignmentId !== null) {
+    throw new Error("leadAssignmentId must be null for manual sales");
   }
 
   input.addresses.forEach((address, index) => {
@@ -206,15 +255,18 @@ export async function createSalesRecordDraft(
       actor.userId = session.userId;
       actor.role = session.role;
 
-      const result = await salesRecordsService.createDraft({
-        source: input.source,
-        executiveUserId: session.userId,
-        branchId: session.branchId,
-        leadAssignmentId: input.leadAssignmentId,
-        client: input.client,
-        addresses: input.addresses,
-        products: input.products,
-      });
+      const result = await runInRepositoryTransaction(
+        async (transactionRepos) =>
+          createSalesRecordsWorkflowService(transactionRepos).createDraft({
+            source: input.source,
+            executiveUserId: session.userId,
+            branchId: session.branchId,
+            leadAssignmentId: input.leadAssignmentId,
+            client: input.client,
+            addresses: input.addresses,
+            products: input.products,
+          }),
+      );
       if (isErr(result)) throw new Error(result.error);
       return { id: result.value };
     },
@@ -364,10 +416,11 @@ export async function getSalesRecordFixContext(
     throw new Error("Not your sales record");
   }
 
-  const [client, addresses, products] = await Promise.all([
+  const [client, addresses, products, attempts] = await Promise.all([
     repos.salesRecords.findClientByRecord(safeRecordId),
     repos.salesRecords.findAddressesByRecord(safeRecordId),
     repos.salesRecords.findProductsByRecord(safeRecordId),
+    repos.salesRecords.listAttemptsByRecord(safeRecordId),
   ]);
 
   return {
@@ -375,9 +428,11 @@ export async function getSalesRecordFixContext(
     status: record.status,
     client: client
       ? {
+          ruc: client.ruc,
           companyName: client.company_name,
           contactName: client.contact_name,
           dni: client.dni,
+          phones: parsePhonesJson(client.phones_json),
         }
       : null,
     addresses: addresses.map((address) => ({
@@ -387,9 +442,89 @@ export async function getSalesRecordFixContext(
       isPrimary: address.is_primary,
     })),
     products: products.map((product) => ({
-      id: product.id,
+      id: product.product_id,
       productName: product.product_name_snapshot,
       quantity: product.quantity,
     })),
+    attempts: attempts.map((attempt) => ({
+      id: attempt.id,
+      outcome: attempt.outcome,
+      notes: attempt.notes,
+      nextAttemptAt: attempt.next_attempt_at,
+      createdAt: attempt.created_at,
+      reviewerName: attempt.reviewer_name,
+    })),
   };
+}
+
+export async function updateSalesRecordDraft(
+  recordId: number,
+  input: Omit<CreateSalesRecordDraftInput, "source" | "leadAssignmentId">,
+): Promise<ActionSuccess> {
+  const safeRecordId = assertPositiveInt(recordId, "recordId");
+  input.addresses.forEach((address, index) => {
+    assertNonEmptyString(address.fullText, `addresses[${index}].fullText`);
+  });
+  input.products.forEach((product, index) => {
+    assertPositiveInt(product.productId, `products[${index}].productId`);
+    assertPositiveInt(product.quantity, `products[${index}].quantity`);
+  });
+
+  const actor = { userId: null as number | null, role: null as Role | null };
+  return runObservedAction({
+    actionName: "sales_records.update_draft",
+    actor,
+    input: {
+      recordId: safeRecordId,
+      addresses: input.addresses.length,
+      products: input.products.length,
+    },
+    run: async () => {
+      const session = await requirePermission("sales:create");
+      actor.userId = session.userId;
+      actor.role = session.role;
+
+      const result = await salesRecordsService.updateDraft(
+        safeRecordId,
+        session.userId,
+        input,
+      );
+      if (isErr(result)) throw new Error(result.error);
+      return { success: true };
+    },
+  });
+}
+
+export async function registerSalesRecordAttempt(
+  recordId: number,
+  outcome: string,
+  notes: string | null = null,
+  nextAttemptAt: number | null = null,
+): Promise<ActionSuccess> {
+  const safeRecordId = assertPositiveInt(recordId, "recordId");
+  if (!isSalesRecordAttemptOutcome(outcome)) {
+    throw new Error("outcome is invalid");
+  }
+  const actor = { userId: null as number | null, role: null as Role | null };
+  return runObservedAction({
+    actionName: "sales_records.attempt",
+    actor,
+    input: { recordId: safeRecordId, outcome },
+    run: async () => {
+      const session = await requirePermission("sales:approve");
+      actor.userId = session.userId;
+      actor.role = session.role;
+      const result = await salesRecordsService.registerAttempt(
+        safeRecordId,
+        session.userId,
+        session.branchId,
+        session.role === "superuser",
+        outcome,
+        notes,
+        nextAttemptAt,
+      );
+      if (isErr(result)) throw new Error(result.error);
+      return { success: true };
+    },
+  });
 }

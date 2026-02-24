@@ -7,6 +7,9 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     .addColumn("requested_by_user_id", "integer", (col) =>
       col.notNull().references("users.id"),
     )
+    .addColumn("branch_id", "integer", (col) =>
+      col.notNull().references("branches.id"),
+    )
     .addColumn("format", "varchar(10)", (col) => col.notNull())
     .addColumn("filters_json", "text", (col) => col.notNull())
     .addColumn("status", "varchar(20)", (col) => col.notNull())
@@ -29,6 +32,12 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     .createIndex("idx_report_export_jobs_status_time")
     .on("report_export_jobs")
     .columns(["status", "requested_at"])
+    .execute();
+
+  await db.schema
+    .createIndex("idx_report_export_jobs_branch_time")
+    .on("report_export_jobs")
+    .columns(["branch_id", "requested_at"])
     .execute();
 
   await db.schema

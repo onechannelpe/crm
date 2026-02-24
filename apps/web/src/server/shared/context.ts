@@ -8,6 +8,8 @@ import { createQuotaService } from "~/server/quota/service";
 import { createDocumentBlobStore } from "~/server/sales/document-blob-store";
 import { createDocumentJobProcessor } from "~/server/sales/document-job-processor";
 import { createSalesDocumentService } from "~/server/sales/document-service";
+import { createSalesExportBlobStore } from "~/server/sales/export-blob-store";
+import { createSalesExportService } from "~/server/sales/export-service";
 import { createSalesRecordsWorkflowService } from "~/server/sales/records-service";
 import { createRepositories } from "~/server/shared/registry";
 
@@ -39,6 +41,13 @@ export const salesDocumentService = createSalesDocumentService(
 export const salesDocumentJobProcessor = createDocumentJobProcessor(
   repos,
   createDocumentBlobStore(config.uploads.storageRoot),
+);
+export const salesExportBlobStore = createSalesExportBlobStore(
+  config.uploads.storageRoot,
+);
+export const salesExportService = createSalesExportService(
+  repos,
+  salesExportBlobStore,
 );
 export const salesRecordsService = createSalesRecordsWorkflowService(repos);
 

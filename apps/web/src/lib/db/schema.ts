@@ -243,6 +243,21 @@ export interface SalesRecordProductsTable {
   created_at: number;
 }
 
+export interface SalesRecordAttemptsTable {
+  id: Generated<number>;
+  sales_record_id: number;
+  reviewer_user_id: number;
+  outcome:
+    | "no_answer"
+    | "callback_scheduled"
+    | "validated"
+    | "invalid_data"
+    | "rejected";
+  notes: string | null;
+  next_attempt_at: number | null;
+  created_at: number;
+}
+
 export interface QuotaAllocationsTable {
   id: Generated<number>;
   user_id: number;
@@ -464,6 +479,7 @@ export interface ActionObservationsTable {
 export interface ReportExportJobsTable {
   id: Generated<number>;
   requested_by_user_id: number;
+  branch_id: number;
   format: "csv" | "xlsx";
   filters_json: string;
   status: "queued" | "running" | "completed" | "failed" | "expired";
@@ -599,6 +615,7 @@ export interface Database {
   sales_record_client: SalesRecordClientTable;
   sales_record_addresses: SalesRecordAddressesTable;
   sales_record_products: SalesRecordProductsTable;
+  sales_record_attempts: SalesRecordAttemptsTable;
   quota_allocations: QuotaAllocationsTable;
   products: ProductsTable;
   charge_notes: ChargeNotesTable;
@@ -640,6 +657,7 @@ export type SalesRecord = Selectable<SalesRecordsTable>;
 export type SalesRecordClient = Selectable<SalesRecordClientTable>;
 export type SalesRecordAddress = Selectable<SalesRecordAddressesTable>;
 export type SalesRecordProduct = Selectable<SalesRecordProductsTable>;
+export type SalesRecordAttempt = Selectable<SalesRecordAttemptsTable>;
 export type QuotaAllocation = Selectable<QuotaAllocationsTable>;
 export type Product = Selectable<ProductsTable>;
 export type ChargeNote = Selectable<ChargeNotesTable>;
@@ -691,6 +709,7 @@ export type NewSalesRecord = Insertable<SalesRecordsTable>;
 export type NewSalesRecordClient = Insertable<SalesRecordClientTable>;
 export type NewSalesRecordAddress = Insertable<SalesRecordAddressesTable>;
 export type NewSalesRecordProduct = Insertable<SalesRecordProductsTable>;
+export type NewSalesRecordAttempt = Insertable<SalesRecordAttemptsTable>;
 export type NewQuotaAllocation = Insertable<QuotaAllocationsTable>;
 export type NewChargeNote = Insertable<ChargeNotesTable>;
 export type NewChargeNoteItem = Insertable<ChargeNoteItemsTable>;

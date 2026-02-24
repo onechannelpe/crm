@@ -82,15 +82,15 @@ describe("nav policy", () => {
     );
     expect(salesChildren).toEqual([
       "/sales/leads",
-      "/sales/confirmed",
-      "/sales/confirmations",
+      "/sales/review/confirmed",
+      "/sales/review/queue",
       "/sales/reports/exports",
     ]);
   });
 
   it("filters sales children for executive (no sales:review)", () => {
     // executive has leads:read but NOT sales:review, so
-    // confirmed, confirmations and exports routes are excluded
+    // confirmed, queue and exports routes are excluded
     const salesChildren = getSidebarChildren("executive", "sales").map(
       (child) => child.href,
     );

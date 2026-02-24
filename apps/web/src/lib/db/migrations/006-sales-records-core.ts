@@ -98,9 +98,31 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     .on("sales_record_products")
     .columns(["sales_record_id", "product_id"])
     .execute();
+
+  await db.schema
+    .createTable("sales_record_attempts")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("sales_record_id", "integer", (col) =>
+      col.notNull().references("sales_records.id").onDelete("cascade"),
+    )
+    .addColumn("reviewer_user_id", "integer", (col) =>
+      col.notNull().references("users.id"),
+    )
+    .addColumn("outcome", "varchar(40)", (col) => col.notNull())
+    .addColumn("notes", "text")
+    .addColumn("next_attempt_at", "integer")
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await db.schema
+    .createIndex("idx_sales_record_attempts_record_time")
+    .on("sales_record_attempts")
+    .columns(["sales_record_id", "created_at"])
+    .execute();
 }
 
 export async function down<T>(db: Kysely<T>): Promise<void> {
+  await db.schema.dropTable("sales_record_attempts").execute();
   await db.schema.dropTable("sales_record_products").execute();
   await db.schema.dropTable("sales_record_addresses").execute();
   await db.schema.dropTable("sales_record_client").execute();

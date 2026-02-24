@@ -2,6 +2,7 @@ import type { Kysely } from "kysely";
 
 import type {
   Database,
+  NewSalesRecordAttempt,
   NewSalesRecord,
   NewSalesRecordAddress,
   NewSalesRecordClient,
@@ -206,6 +207,14 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
         .execute();
     },
 
+    touch(id: number, updatedAt: number) {
+      return db
+        .updateTable("sales_records")
+        .set({ updated_at: updatedAt })
+        .where("id", "=", id)
+        .execute();
+    },
+
     upsertClient(values: NewSalesRecordClient) {
       return db
         .insertInto("sales_record_client")
@@ -273,6 +282,36 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
         .selectAll()
         .where("sales_record_id", "=", salesRecordId)
         .orderBy("id", "asc")
+        .execute();
+    },
+
+    createAttempt(values: NewSalesRecordAttempt) {
+      return db
+        .insertInto("sales_record_attempts")
+        .values(values)
+        .executeTakeFirstOrThrow();
+    },
+
+    listAttemptsByRecord(salesRecordId: number) {
+      return db
+        .selectFrom("sales_record_attempts")
+        .innerJoin(
+          "users",
+          "users.id",
+          "sales_record_attempts.reviewer_user_id",
+        )
+        .select([
+          "sales_record_attempts.id",
+          "sales_record_attempts.sales_record_id",
+          "sales_record_attempts.reviewer_user_id",
+          "sales_record_attempts.outcome",
+          "sales_record_attempts.notes",
+          "sales_record_attempts.next_attempt_at",
+          "sales_record_attempts.created_at",
+          "users.full_name as reviewer_name",
+        ])
+        .where("sales_record_attempts.sales_record_id", "=", salesRecordId)
+        .orderBy("sales_record_attempts.created_at", "desc")
         .execute();
     },
   };

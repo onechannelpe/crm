@@ -30,6 +30,9 @@ export default function NewSalePage() {
   const [source, setSource] = createSignal<"lead_assignment" | "manual">(
     "manual",
   );
+  const [leadAssignmentId, setLeadAssignmentId] = createSignal<number | null>(
+    null,
+  );
 
   const [ruc, setRuc] = createSignal("");
   const [companyName, setCompanyName] = createSignal("");
@@ -61,6 +64,7 @@ export default function NewSalePage() {
       try {
         const bootstrap = await getSalesRecordBootstrap(contactId);
         setSource(bootstrap.source);
+        setLeadAssignmentId(bootstrap.leadAssignmentId);
         setRuc(bootstrap.client.ruc ?? "");
         setCompanyName(bootstrap.client.companyName ?? "");
         setContactName(bootstrap.client.contactName ?? "");
@@ -117,7 +121,7 @@ export default function NewSalePage() {
     try {
       const created = await createSalesRecordDraft({
         source: source(),
-        leadAssignmentId: null,
+        leadAssignmentId: leadAssignmentId(),
         client: {
           ruc: ruc().trim() || null,
           companyName: companyName().trim(),

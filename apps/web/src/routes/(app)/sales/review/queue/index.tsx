@@ -3,6 +3,7 @@ import { createResource, createSignal, For, Show } from "solid-js";
 import {
   confirmSalesRecord,
   listPendingSalesRecords,
+  registerSalesRecordAttempt,
   rejectSalesRecord,
 } from "~/actions/sales-records";
 import { RejectionForm } from "~/components/features/sales/rejection-form";
@@ -81,6 +82,16 @@ export default function SalesConfirmationsPage() {
     }
   };
 
+  const handleNoAnswer = async (noteId: number) => {
+    try {
+      await registerSalesRecordAttempt(noteId, "no_answer");
+      showToast("success", `Attempt logged for sale #${noteId}`);
+      await refetch();
+    } catch (err: unknown) {
+      showToast("error", getErrorMessage(err, "Attempt logging failed"));
+    }
+  };
+
   return (
     <AppPage>
       <Show
@@ -145,6 +156,15 @@ export default function SalesConfirmationsPage() {
                         onClick={() => setRejectingNoteId(note.id)}
                       >
                         Reject
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          void handleNoAnswer(note.id);
+                        }}
+                      >
+                        No answer
                       </Button>
                     </div>
                   </TableCell>

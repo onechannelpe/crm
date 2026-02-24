@@ -2,10 +2,13 @@
 
 import type { Role } from "~/lib/auth/access/rbac";
 import { requirePermission } from "~/lib/auth/access/session";
-import type { ActionSuccess } from "~/lib/contracts/common";
 import { assertPositiveInt } from "~/lib/contracts/guards";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
-import { repos } from "~/server/shared/context";
+import {
+  repos,
+  salesExportBlobStore,
+  salesExportService,
+} from "~/server/shared/context";
 
 type SalesExportFormat = "csv" | "xlsx";
 
@@ -31,7 +34,6 @@ interface SalesExportDownload {
 }
 
 const EXPORT_FORMATS: ReadonlyArray<SalesExportFormat> = ["csv", "xlsx"];
-const EXPORT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 function isSalesExportFormat(value: string): value is SalesExportFormat {
   return EXPORT_FORMATS.some((format) => format === value);
@@ -86,8 +88,14 @@ export async function listSalesExportJobs(
   limit = 20,
 ): Promise<SalesExportJob[]> {
   const safeLimit = Math.min(assertPositiveInt(limit, "limit"), 100);
-  await requirePermission("sales:review");
-  const rows = await repos.reportExportJobs.listJobs(safeLimit);
+  const session = await requirePermission("sales:review");
+  const rows =
+    session.role === "superuser"
+      ? await repos.reportExportJobs.listJobs(safeLimit)
+      : await repos.reportExportJobs.listJobsByBranch(
+          safeLimit,
+          session.branchId,
+        );
   return rows.map(mapJob);
 }
 
@@ -95,9 +103,12 @@ export async function getSalesExportJob(
   jobId: number,
 ): Promise<SalesExportJob | null> {
   const safeJobId = assertPositiveInt(jobId, "jobId");
-  await requirePermission("sales:review");
+  const session = await requirePermission("sales:review");
   const job = await repos.reportExportJobs.findJobById(safeJobId);
   if (!job) return null;
+  if (session.role !== "superuser" && job.branch_id !== session.branchId) {
+    return null;
+  }
 
   const user = await repos.users.findById(job.requested_by_user_id);
   return {
@@ -118,7 +129,12 @@ export async function listSalesExportDownloads(
   jobId: number,
 ): Promise<SalesExportDownload[]> {
   const safeJobId = assertPositiveInt(jobId, "jobId");
-  await requirePermission("sales:review");
+  const session = await requirePermission("sales:review");
+  const job = await repos.reportExportJobs.findJobById(safeJobId);
+  if (!job) return [];
+  if (session.role !== "superuser" && job.branch_id !== session.branchId) {
+    return [];
+  }
   const rows = await repos.reportExportJobs.listDownloadsByJob(safeJobId);
   return rows.map(mapDownload);
 }
@@ -149,6 +165,7 @@ export async function requestSalesExport(
       };
       const jobId = await repos.reportExportJobs.createJob({
         requested_by_user_id: session.userId,
+        branch_id: session.branchId,
         format,
         filters_json: JSON.stringify(filters),
         status: "queued",
@@ -160,35 +177,34 @@ export async function requestSalesExport(
         completed_at: null,
         expires_at: null,
       });
+      await salesExportService.processJob(jobId);
 
-      const confirmedRows = branchScoped
-        ? await repos.salesRecords.findConfirmedWithClientByBranch(
-            session.branchId,
-          )
-        : await repos.salesRecords.findConfirmedWithClient();
-
-      await repos.reportExportJobs.markJobCompleted(
-        jobId,
-        confirmedRows.length,
-        now,
-        now + EXPORT_TTL_MS,
-      );
-
-      const jobs = await repos.reportExportJobs.listJobs(1);
-      const newest = jobs.find((job) => job.id === jobId);
+      const newest = await repos.reportExportJobs.findJobById(jobId);
       if (!newest) throw new Error("Export job not found after creation");
-      return mapJob(newest);
+      const user = await repos.users.findById(newest.requested_by_user_id);
+      return {
+        id: newest.id,
+        requestedByUserId: newest.requested_by_user_id,
+        requestedByName: user?.full_name ?? "Unknown",
+        format: newest.format,
+        status: newest.status,
+        rowsCount: newest.rows_count,
+        requestedAt: newest.requested_at,
+        completedAt: newest.completed_at,
+        expiresAt: newest.expires_at,
+        filters: parseFiltersJson(newest.filters_json),
+      };
     },
   });
 }
 
-export async function recordSalesExportDownload(
+export async function downloadSalesExportFile(
   jobId: number,
-): Promise<ActionSuccess> {
+): Promise<{ filename: string; mimeType: string; base64Content: string }> {
   const safeJobId = assertPositiveInt(jobId, "jobId");
   const actor = { userId: null as number | null, role: null as Role | null };
   return runObservedAction({
-    actionName: "sales.export.download_recorded",
+    actionName: "sales.export.download",
     actor,
     input: { jobId: safeJobId },
     run: async () => {
@@ -198,6 +214,14 @@ export async function recordSalesExportDownload(
 
       const job = await repos.reportExportJobs.findJobById(safeJobId);
       if (!job) throw new Error("Export job not found");
+      if (session.role !== "superuser" && job.branch_id !== session.branchId) {
+        throw new Error("Export job not found");
+      }
+      if (job.status !== "completed" || !job.file_storage_key) {
+        throw new Error("Export file is not ready");
+      }
+
+      const fileBytes = await salesExportBlobStore.get(job.file_storage_key);
 
       await repos.reportExportJobs.createDownload({
         export_job_id: safeJobId,
@@ -206,7 +230,17 @@ export async function recordSalesExportDownload(
         ip_hash: null,
         user_agent_hash: null,
       });
-      return { success: true };
+
+      const extension = job.format === "xlsx" ? "xls" : "csv";
+      const mimeType =
+        job.format === "xlsx"
+          ? "application/vnd.ms-excel"
+          : "text/csv; charset=utf-8";
+      return {
+        filename: `sales-export-${job.id}.${extension}`,
+        mimeType,
+        base64Content: Buffer.from(fileBytes).toString("base64"),
+      };
     },
   });
 }

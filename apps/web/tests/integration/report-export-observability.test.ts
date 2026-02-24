@@ -20,25 +20,62 @@ describe("report export observability", () => {
   it("lists confirmed sales by branch scope", async () => {
     const now = Date.now();
     await ctx.db
-      .insertInto("charge_notes")
+      .insertInto("sales_records")
       .values([
         {
           id: 101,
-          contact_id: 1,
-          user_id: 1,
+          source: "manual",
           status: "confirmed",
-          exec_code_real: null,
-          exec_code_tdp: null,
+          executive_user_id: 1,
+          lead_assignment_id: null,
+          branch_id: 1,
+          submitted_at: now - 100,
+          confirmed_at: now - 50,
+          rejected_at: null,
+          cancelled_at: null,
           created_at: now,
           updated_at: now,
         },
         {
           id: 202,
-          contact_id: 2,
-          user_id: 3,
+          source: "manual",
           status: "confirmed",
-          exec_code_real: null,
-          exec_code_tdp: null,
+          executive_user_id: 3,
+          lead_assignment_id: null,
+          branch_id: 2,
+          submitted_at: now - 100,
+          confirmed_at: now - 50,
+          rejected_at: null,
+          cancelled_at: null,
+          created_at: now,
+          updated_at: now,
+        },
+      ])
+      .execute();
+    await ctx.db
+      .insertInto("sales_record_client")
+      .values([
+        {
+          sales_record_id: 101,
+          ruc: "20100000001",
+          company_name: "Org Lima",
+          contact_name: "Contacto Lima",
+          dni: "70000001",
+          phones_json: "[]",
+          engine_match_id: null,
+          completeness_score: 80,
+          created_at: now,
+          updated_at: now,
+        },
+        {
+          sales_record_id: 202,
+          ruc: "20100000002",
+          company_name: "Org Norte",
+          contact_name: "Contacto Norte",
+          dni: "70000002",
+          phones_json: "[]",
+          engine_match_id: null,
+          completeness_score: 80,
           created_at: now,
           updated_at: now,
         },
@@ -46,9 +83,9 @@ describe("report export observability", () => {
       .execute();
 
     const branchOne =
-      await ctx.repos.chargeNotes.findConfirmedWithContactsByBranch(1);
+      await ctx.repos.salesRecords.findConfirmedWithClientByBranch(1);
     const branchTwo =
-      await ctx.repos.chargeNotes.findConfirmedWithContactsByBranch(2);
+      await ctx.repos.salesRecords.findConfirmedWithClientByBranch(2);
 
     expect(branchOne).toHaveLength(1);
     expect(branchOne[0]?.id).toBe(101);
@@ -60,6 +97,7 @@ describe("report export observability", () => {
     const now = Date.now();
     const jobId = await ctx.repos.reportExportJobs.createJob({
       requested_by_user_id: 2,
+      branch_id: 1,
       format: "csv",
       filters_json: JSON.stringify({ status: "confirmed", scope: "branch" }),
       status: "queued",
@@ -75,6 +113,8 @@ describe("report export observability", () => {
     await ctx.repos.reportExportJobs.markJobCompleted(
       jobId,
       9,
+      "sales-export-1.csv",
+      "abc123",
       now + 10,
       now + 1000,
     );
