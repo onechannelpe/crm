@@ -1,5 +1,8 @@
 import type { NotificationsConfig } from "@crm/notifications";
-import { createNotificationService } from "@crm/notifications";
+import {
+  createNotificationService,
+  renderCampaignEmail,
+} from "@crm/notifications";
 
 import type { UsersTable } from "~/lib/db/schema";
 import type { Repositories } from "~/server/shared/registry";
@@ -142,11 +145,20 @@ export function createAppNotificationService(deps: NotificationServiceDeps) {
           const startedAt = Date.now();
 
           try {
+            const emailHtml =
+              job.channel === "email"
+                ? renderCampaignEmail({
+                    title: job.title,
+                    bodyText: job.bodyText,
+                  }).html
+                : undefined;
+
             await sender.send({
               channel: job.channel,
               to: job.address,
               subject: job.title ?? undefined,
               text: job.bodyText,
+              html: emailHtml,
             });
 
             const sentAt = Date.now();
