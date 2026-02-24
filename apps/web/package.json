@@ -2,9 +2,9 @@
   "name": "@crm/web",
   "type": "module",
   "scripts": {
-    "dev": "vite --config app.config.ts",
-    "build": "vite build --config app.config.ts",
-    "start": "vite preview --config app.config.ts",
+    "dev": "bun --bun vite --config app.config.ts",
+    "build": "bun --bun vite build --config app.config.ts",
+    "start": "bun --bun vite preview --config app.config.ts",
     "worker:sales-export-jobs": "bun --env-file=../../.env src/workers/sales-export-job-runner.ts",
     "worker:sales-export-jobs:once": "bun --env-file=../../.env src/workers/sales-export-job-runner.ts --once",
     "lint": "oxlint -c ../../.oxlintrc.json --type-aware --tsconfig tsconfig.json --deny-warnings src tests",
