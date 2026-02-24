@@ -1,6 +1,6 @@
 import { createClient } from "@libsql/client";
-import { LibsqlDialect } from "@libsql/kysely-libsql";
 import { Kysely } from "kysely";
+import { LibSQLDialect } from "kysely-turso/libsql";
 
 import type { Database as DatabaseSchema } from "./schema";
 
@@ -23,6 +23,6 @@ export function createDb(path: string): Kysely<DatabaseSchema> {
   applyPragma("PRAGMA cache_size = -32000");
 
   return new Kysely<DatabaseSchema>({
-    dialect: new LibsqlDialect({ client }),
+    dialect: new LibSQLDialect({ client }),
   });
 }
