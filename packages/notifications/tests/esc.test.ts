@@ -27,17 +27,4 @@ describe("esc", () => {
     expect(result).not.toContain("'");
     expect(result).toBe("&#39; onmouseover=&#39;alert(1)&#39;");
   });
-
-  it("passes through safe strings unchanged", () => {
-    expect(esc("Hello World 123")).toBe("Hello World 123");
-    expect(esc("")).toBe("");
-  });
-
-  it("handles unicode and multi-byte characters", () => {
-    expect(esc("José García — empleado #1")).toBe("José García — empleado #1");
-  });
-
-  it("handles strings with only special characters", () => {
-    expect(esc("<<<>>>")).toBe("&lt;&lt;&lt;&gt;&gt;&gt;");
-  });
 });

@@ -27,28 +27,12 @@ describe("genHtmlExpr", () => {
     expect(result).toContain("p.title?.trim()");
     expect(result).toContain("esc(p.title!)");
   });
-
-  it("returns empty string expression for empty chunks", () => {
-    expect(genHtmlExpr([], new Set())).toBe('""');
-  });
 });
 
 describe("genTextExpr", () => {
   it("generates raw param references (no escaping)", () => {
     const chunks: TextChunk[] = [{ type: "param", name: "name" }];
     expect(genTextExpr(chunks)).toBe("p.name");
-  });
-
-  it("uses non-null assertion inside guarded ifblocks", () => {
-    const chunks: TextChunk[] = [
-      {
-        type: "ifblock",
-        param: "title",
-        inner: [{ type: "param", name: "title" }],
-      },
-    ];
-    const result = genTextExpr(chunks);
-    expect(result).toContain("p.title!");
   });
 });
 

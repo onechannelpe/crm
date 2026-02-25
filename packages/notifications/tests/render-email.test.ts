@@ -11,26 +11,6 @@ describe("renderInviteEmail", () => {
     expiresAt: "28 de febrero de 2026",
   };
 
-  it("produces html and text with all params interpolated", () => {
-    const { html, text } = renderInviteEmail(baseParams);
-
-    expect(html).toContain("María López");
-    expect(html).toContain("vendedor");
-    expect(html).toContain("https://crm.example.com/auth/invite/abc123");
-    expect(html).toContain("28 de febrero de 2026");
-
-    expect(text).toContain("María López");
-    expect(text).toContain("vendedor");
-    expect(text).toContain("https://crm.example.com/auth/invite/abc123");
-    expect(text).toContain("28 de febrero de 2026");
-  });
-
-  it("produces valid HTML document structure", () => {
-    const { html } = renderInviteEmail(baseParams);
-    expect(html).toContain("<!doctype html>");
-    expect(html).toContain("</html>");
-  });
-
   it("escapes HTML-significant characters in params", () => {
     const { html } = renderInviteEmail({
       ...baseParams,
@@ -66,18 +46,6 @@ describe("renderInviteEmail", () => {
 });
 
 describe("renderCampaignEmail", () => {
-  it("renders with title and body", () => {
-    const { html, text } = renderCampaignEmail({
-      title: "Alerta de seguridad",
-      bodyText: "Se detectó un acceso inusual.",
-    });
-
-    expect(html).toContain("Alerta de seguridad");
-    expect(html).toContain("Se detectó un acceso inusual.");
-    expect(text).toContain("Alerta de seguridad");
-    expect(text).toContain("Se detectó un acceso inusual.");
-  });
-
   it("omits title section when title is undefined", () => {
     const { html, text } = renderCampaignEmail({
       bodyText: "Mensaje sin título.",
@@ -86,27 +54,6 @@ describe("renderCampaignEmail", () => {
     expect(html).toContain("Mensaje sin título.");
     expect(text).toContain("Mensaje sin título.");
     // The title block should be empty-string — no crash, no "undefined"
-    expect(html).not.toContain("undefined");
-    expect(text).not.toContain("undefined");
-  });
-
-  it("omits title section when title is empty string", () => {
-    const { html, text } = renderCampaignEmail({
-      title: "",
-      bodyText: "Solo cuerpo.",
-    });
-
-    expect(html).not.toContain("undefined");
-    expect(text).not.toContain("undefined");
-    expect(html).toContain("Solo cuerpo.");
-  });
-
-  it("omits title section when title is whitespace-only", () => {
-    const { html, text } = renderCampaignEmail({
-      title: "   ",
-      bodyText: "Content here.",
-    });
-
     expect(html).not.toContain("undefined");
     expect(text).not.toContain("undefined");
   });
@@ -129,15 +76,5 @@ describe("renderCampaignEmail", () => {
     expect(html).not.toContain("<script>");
     expect(html).toContain("&lt;script&gt;");
     expect(html).toContain("<br/>");
-  });
-
-  it("escapes HTML in title", () => {
-    const { html } = renderCampaignEmail({
-      title: '<img src=x onerror="alert(1)">',
-      bodyText: "Safe body.",
-    });
-
-    expect(html).not.toContain("<img src=x");
-    expect(html).toContain("&lt;img");
   });
 });

@@ -42,8 +42,11 @@ export async function sendWithResend(
     try {
       const body: unknown = await response.json();
       message = parseResendError(body) ?? message;
-    } catch {
-      // response body was not JSON (e.g. CDN error page); fall back to status
+    } catch (parseError) {
+      console.error("Failed to parse Resend error response", {
+        status: response.status,
+        parseError,
+      });
     }
     throw new Error(`Resend send failed: ${message}`);
   }

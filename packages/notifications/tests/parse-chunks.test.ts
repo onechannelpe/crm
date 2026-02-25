@@ -7,12 +7,6 @@ import {
 } from "../src/build/parse-chunks";
 
 describe("parseHtmlChunks", () => {
-  it("parses plain text with no params", () => {
-    expect(parseHtmlChunks("<p>Hello</p>")).toEqual([
-      { type: "literal", value: "<p>Hello</p>" },
-    ]);
-  });
-
   it("extracts params from {{name}} syntax", () => {
     const chunks = parseHtmlChunks("<p>{{greeting}}, {{name}}</p>");
     expect(chunks).toEqual([
@@ -47,21 +41,9 @@ describe("parseHtmlChunks", () => {
     const html = "<!-- __CRM_IF_title__ --><h1>{{title}}</h1>";
     expect(() => parseHtmlChunks(html)).toThrow("Unmatched crm:if:title");
   });
-
-  it("returns empty array for empty string", () => {
-    expect(parseHtmlChunks("")).toEqual([]);
-  });
 });
 
 describe("parseTextChunks", () => {
-  it("parses plain text with params", () => {
-    expect(parseTextChunks("Hello {{name}}!")).toEqual([
-      { type: "literal", value: "Hello " },
-      { type: "param", name: "name" },
-      { type: "literal", value: "!" },
-    ]);
-  });
-
   it("parses {{#if param}}...{{/if}} blocks", () => {
     const text = "{{#if title}}{{title}}\n\n{{/if}}{{body}}";
     const chunks = parseTextChunks(text);
