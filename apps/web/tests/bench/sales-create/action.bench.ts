@@ -35,7 +35,7 @@ describe("sales create action benchmark", () => {
       );
 
       const result = await ctx!.salesRecords.createDraft({
-        source: "lead_assignment",
+        source: "manual",
         executiveUserId: userId,
         branchId: 1,
         leadAssignmentId: null,
