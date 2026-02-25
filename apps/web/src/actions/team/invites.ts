@@ -49,7 +49,11 @@ async function sendInviteEmail(params: {
     fullName: params.fullName,
     role: params.role,
     inviteUrl: params.inviteUrl,
-    expiresAt: params.expiresAt,
+    expiresAt: new Date(params.expiresAt).toLocaleDateString("es-MX", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }),
   });
 
   await notificationSender.send({

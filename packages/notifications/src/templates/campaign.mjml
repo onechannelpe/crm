@@ -19,14 +19,15 @@
       padding="40px 48px"
     >
       <mj-column>
-        <!-- crm-title-start -->
+        <!-- crm:multiline:bodyText -->
+        <!-- crm:if:title -->
         <mj-text
           font-size="18px"
           font-weight="600"
           color="#333333"
           padding-bottom="20px"
         >{{title}}</mj-text>
-        <!-- crm-title-end -->
+        <!-- crm:endif -->
 
         <mj-text color="#333333" padding-bottom="0">{{bodyText}}</mj-text>
       </mj-column>

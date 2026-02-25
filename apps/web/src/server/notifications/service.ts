@@ -148,7 +148,7 @@ export function createAppNotificationService(deps: NotificationServiceDeps) {
             const emailHtml =
               job.channel === "email"
                 ? renderCampaignEmail({
-                    title: job.title,
+                    title: job.title ?? undefined,
                     bodyText: job.bodyText,
                   }).html
                 : undefined;
