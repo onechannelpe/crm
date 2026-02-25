@@ -14,6 +14,8 @@
     "newlinesBetween": true
   },
   "ignorePatterns": [
-    "apps/web/src/server/shared/engine/contract.ts"
+    "apps/web/src/server/shared/engine/contract.ts",
+    "packages/notifications/src/templates/**/*.mjml",
+    "packages/notifications/src/templates/compiled/**"
   ]
 }

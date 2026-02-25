@@ -1,6 +1,9 @@
 "use server";
 
-import { createNotificationService } from "@crm/notifications";
+import {
+  createNotificationService,
+  renderInviteEmail,
+} from "@crm/notifications";
 import { getRequestEvent } from "solid-js/web";
 
 import type { Role } from "~/lib/auth/access/rbac";
@@ -42,23 +45,23 @@ async function sendInviteEmail(params: {
   inviteUrl: string;
   expiresAt: number;
 }): Promise<void> {
+  const { html, text } = renderInviteEmail({
+    fullName: params.fullName,
+    role: params.role,
+    inviteUrl: params.inviteUrl,
+    expiresAt: new Date(params.expiresAt).toLocaleDateString("es-MX", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }),
+  });
+
   await notificationSender.send({
     channel: "email",
     to: params.email,
-    subject: "Activacion de cuenta CRM",
-    text: [
-      `Hola ${params.fullName},`,
-      "",
-      `Se creo tu cuenta con rol ${params.role}.`,
-      `Activa tu acceso aqui: ${params.inviteUrl}`,
-      `Este enlace vence: ${new Date(params.expiresAt).toISOString()}`,
-    ].join("\n"),
-    html: [
-      `<p>Hola ${params.fullName},</p>`,
-      `<p>Se creo tu cuenta con rol <strong>${params.role}</strong>.</p>`,
-      `<p><a href="${params.inviteUrl}">Activar cuenta</a></p>`,
-      `<p>Este enlace vence: ${new Date(params.expiresAt).toISOString()}</p>`,
-    ].join(""),
+    subject: "Activa tu acceso al CRM",
+    html,
+    text,
   });
 }
 
