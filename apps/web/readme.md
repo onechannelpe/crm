@@ -1,10 +1,10 @@
 # web
 
-SolidStart CRM application. See [root readme](../../readme.md) for project overview.
+SolidStart application. See [root readme](../../readme.md) for project overview.
 
 ## Environment
 
-Read from root [`.env`](../../.env):
+Read from root `.env`]:
 
 - `SESSION_SECRET` (required)
 - `ENGINE_HMAC_SECRET` (required): authenticates requests to engine
@@ -13,24 +13,24 @@ Read from root [`.env`](../../.env):
 - `WEBAUTHN_RP_ID` (default `localhost`)
 - `WEBAUTHN_ORIGIN` (default `http://localhost:3000`)
 
-See [`app.config.ts`](app.config.ts) for full configuration.
+See [`app.config.ts`](app.config.ts) for vite configuration.
 
 ## Commands
 
 From repo root:
 
 ```sh
-bun run dev:web                        # dev server
-bun run check:web                      # typecheck + lint
+bun run dev               # dev server
+bun run check             # typecheck + lint
 ```
 
 From `apps/web/`:
 
 ```sh
-bun run test                           # unit/integration tests
-bun run test:perf                      # benchmarks
-bun run migrate                        # run pending migrations
-bun run seed                           # seed dev data
+bun run test              # unit/integration tests
+bun run test:perf         # benchmarks
+bun run migrate           # run pending migrations
+bun run seed              # seed dev data
 ```
 
 ## Deploy
