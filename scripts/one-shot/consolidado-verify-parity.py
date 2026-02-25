@@ -101,7 +101,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--out",
-        default="apps/engine/data/build/staged/consolidado.parity.json",
+        default="apps/pipeline/data/build/staged/consolidado.parity.json",
     )
     args = parser.parse_args()
 

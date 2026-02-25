@@ -281,11 +281,11 @@ def main() -> None:
     )
     parser.add_argument(
         "--out-tsv",
-        default="apps/engine/data/build/staged/Consolidado_RUC20_Representantes_MERGED.tsv",
+        default="apps/pipeline/data/build/staged/Consolidado_RUC20_Representantes_MERGED.tsv",
     )
     parser.add_argument(
         "--out-report",
-        default="apps/engine/data/build/staged/consolidado.merge-report.json",
+        default="apps/pipeline/data/build/staged/consolidado.merge-report.json",
     )
     parser.add_argument("--txt-row-cap", type=int, default=None)
     parser.add_argument("--xlsx-row-cap", type=int, default=None)

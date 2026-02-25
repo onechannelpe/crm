@@ -241,7 +241,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--out",
-        default="apps/engine/data/build/staged/consolidado.diff-report.json",
+        default="apps/pipeline/data/build/staged/consolidado.diff-report.json",
     )
     parser.add_argument(
         "--sample-limit",

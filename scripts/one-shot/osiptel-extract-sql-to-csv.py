@@ -90,7 +90,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--output",
-        default="apps/engine/data/build/staged/osiptel.sample.csv",
+        default="apps/pipeline/data/build/staged/osiptel.sample.csv",
         help="Output CSV path",
     )
     parser.add_argument(
