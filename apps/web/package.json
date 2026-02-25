@@ -8,6 +8,7 @@
     "worker:sales-export-jobs": "bun --env-file=../../.env src/workers/sales-export-job-runner.ts",
     "worker:sales-export-jobs:once": "bun --env-file=../../.env src/workers/sales-export-job-runner.ts --once",
     "lint": "oxlint -c ../../.oxlintrc.json --type-aware --tsconfig tsconfig.json --deny-warnings src tests",
+    "precheck": "bun run --cwd ../../packages/notifications build:emails",
     "check": "bun x tsc --noEmit && bun run lint",
     "test": "bun --env-file=../../.env.test vitest run --project default",
     "test:perf": "bun --env-file=../../.env.test vitest bench --config vitest.bench.config.ts",

@@ -46,9 +46,6 @@ jobs:
       - name: install dependencies
         run: bun install --frozen-lockfile
 
-      - name: build email templates
-        run: bun run build:emails
-
       - name: lint
         working-directory: apps/web
         run: bun run lint
