@@ -15,7 +15,7 @@
     "build:emails": "bun run --cwd packages/notifications build:emails",
     "check": "bun run build:emails && bun run --parallel check:contract check:web check:engine check:lint check:format check:clippy",
     "check:contract": "bun run scripts/generate-engine-contract.ts --check",
-    "check:web": "bun run --cwd apps/web check",
+    "check:web": "bun run build:emails && bun run --cwd apps/web check",
     "check:engine": "cargo check --manifest-path apps/engine/Cargo.toml",
     "check:lint": "bun run --parallel check:lint:web check:lint:other",
     "check:lint:web": "oxlint -c .oxlintrc.json --type-aware --tsconfig apps/web/tsconfig.json --deny-warnings apps/web/src apps/web/tests",
