@@ -1,57 +1,60 @@
-# onechannel.pe
+<h1 align="center">onechannel.pe</h1>
 
-[![web quality](https://github.com/onechannelpe/crm/actions/workflows/lint.yml/badge.svg?branch=master)](https://github.com/onechannelpe/crm/actions/workflows/lint.yml)
-[![web tests](https://github.com/onechannelpe/crm/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/onechannelpe/crm/actions/workflows/tests.yml)
-[![repo guard](https://github.com/onechannelpe/crm/actions/workflows/repo-guard.yml/badge.svg?branch=master)](https://github.com/onechannelpe/crm/actions/workflows/repo-guard.yml)
-[![CodSpeed Badge](https://img.shields.io/endpoint?url=https://codspeed.io/badge.json)](https://codspeed.io/onechannelpe/crm?utm_source=badge)
+<p align="center">
+  Internal CRM for sales operations, org management, and contact search.
+</p>
 
-crm monorepo (web app + engine service).
+<p align="center">
+  <a href="apps/web/readme.md">Web</a>
+  ·
+  <a href="apps/engine/readme.md">Engine</a>
+  ·
+  <a href="contracts/engine-api.json">Contract</a>
+</p>
 
-## quick start
+<p align="center">
+  <a href="https://github.com/onechannelpe/crm/actions/workflows/lint.yml"><img src="https://github.com/onechannelpe/crm/actions/workflows/lint.yml/badge.svg?branch=master" alt="web quality"></a>
+  <a href="https://github.com/onechannelpe/crm/actions/workflows/tests.yml"><img src="https://github.com/onechannelpe/crm/actions/workflows/tests.yml/badge.svg?branch=master" alt="web tests"></a>
+  <a href="https://github.com/onechannelpe/crm/actions/workflows/repo-guard.yml"><img src="https://github.com/onechannelpe/crm/actions/workflows/repo-guard.yml/badge.svg?branch=master" alt="repo guard"></a>
+  <a href="https://codspeed.io/onechannelpe/crm?utm_source=badge"><img src="https://img.shields.io/endpoint?url=https://codspeed.io/badge.json" alt="CodSpeed"></a>
+</p>
 
-bootstrap local dev environment:
+## Architecture
+
+| Component | Path | Stack | Description |
+|---|---|---|---|
+| Web | [`apps/web/`](apps/web/) | TypeScript, SolidStart, Turso | CRM app: org structure, sales, leads, inventory, auth, notifications |
+| Engine | [`apps/engine/`](apps/engine/) | Rust, Axum, SQLite | Contact search over millions of external records on read-only SQLite |
+| Notifications | [`packages/notifications/`](packages/notifications/) | MJML, Resend, WhatsApp | Email and WhatsApp delivery with compiled MJML templates |
+| Download Docs | [`packages/download-docs/`](packages/download-docs/) | TypeScript | CLI to download framework docs for AI-assisted development |
+
+Web and engine have separate databases and deploy independently.
+
+| Path | Purpose |
+|---|---|
+| [`contracts/engine-api.json`](contracts/engine-api.json) | Source of truth for web-to-engine API |
+| [`scripts/generate-engine-contract.ts`](scripts/generate-engine-contract.ts) | Generate TypeScript bindings from the contract |
+| [`scripts/build-engine-sqlite.py`](scripts/build-engine-sqlite.py) | Build engine SQLite snapshot from consolidated CSV |
+
+## Quick start
 
 ```sh
 mise install
 bun install
 cp .env.example .env
-mise run generate-engine-contract
-```
-
-start services:
-
-```sh
+bun run generate:engine-contract
 bun run dev
 ```
 
-or run them individually:
+`bun run dev:web` and `bun run dev:engine` to start them individually.
+
+## Checks
 
 ```sh
-mise run dev-engine
-mise run dev-web
+bun run check            # all (contract, web, engine, lint, format, clippy)
+bun run check:web        # typecheck + lint
+bun run check:engine     # cargo check
+bun run check:contract   # verify bindings match contract
 ```
 
-## repo docs
-
-- web: [`apps/web/readme.md`](apps/web/readme.md)
-- engine: [`apps/engine/readme.md`](apps/engine/readme.md)
-- contract source of truth: [`contracts/engine-api.json`](contracts/engine-api.json)
-- contract generator: [`scripts/generate-engine-contract.ts`](scripts/generate-engine-contract.ts)
-
-## maintenance commands
-
-run full repository checks:
-
-```sh
-mise run check
-```
-
-run checks individually:
-
-```sh
-mise run check-engine-contract
-mise run check-web
-mise run check-engine
-```
-
-for task details, read [`mise.toml`](mise.toml). web-only scripts are in [`package.json`](package.json).
+See [`package.json`](package.json) for all scripts.
