@@ -1255,7 +1255,7 @@ fn normalize_source_entry(
             header_index.as_ref(),
         )?;
 
-        let (phones, had_phone_input) =
+        let (phones, had_phone_input, invalid_phone_reasons) =
             collect_phones_bytes(&mapping, &row, headers.as_ref(), header_index.as_ref())?;
 
         let mut errors: Vec<&str> = Vec::new();
@@ -1267,9 +1267,11 @@ fn normalize_source_entry(
             summary.invalid_ruc_rows += 1;
             errors.push("invalid_ruc");
         }
+        let mut invalid_phone_detail = String::new();
         if had_phone_input && phones.is_empty() {
             summary.invalid_phone_rows += 1;
             errors.push("invalid_phone");
+            invalid_phone_detail = invalid_phone_reasons.join(";");
         }
 
         let has_any_payload = person_dni.is_some()
@@ -1294,7 +1296,7 @@ fn normalize_source_entry(
                 source.snapshot_label.as_str(),
                 &source_row_number.to_string(),
                 &errors.join(";"),
-                "",
+                &invalid_phone_detail,
                 &raw_payload,
             ])?;
         }
@@ -1427,7 +1429,7 @@ fn collect_phones_bytes(
     record: &csv::ByteRecord,
     headers: Option<&csv::ByteRecord>,
     header_index: Option<&HashMap<String, usize>>,
-) -> Result<(Vec<String>, bool), PipelineError> {
+) -> Result<(Vec<String>, bool, Vec<String>), PipelineError> {
     let mut raw_values = Vec::new();
     let mut had_phone_input = false;
 
@@ -1464,14 +1466,57 @@ fn collect_phones_bytes(
 
     let mut unique = HashSet::new();
     let mut phones = Vec::new();
+    let mut invalid_reasons = HashSet::new();
     for value in raw_values {
         if let Some(phone) = normalize_phone(&value)
             && unique.insert(phone.clone())
         {
             phones.push(phone);
+            continue;
+        }
+
+        if let Some(reason) = classify_phone_issue(&value) {
+            invalid_reasons.insert(reason.to_owned());
         }
     }
-    Ok((phones, had_phone_input))
+
+    let mut reason_list: Vec<String> = invalid_reasons.into_iter().collect();
+    reason_list.sort();
+    Ok((phones, had_phone_input, reason_list))
+}
+
+fn classify_phone_issue(value: &str) -> Option<&'static str> {
+    if value.trim().is_empty() {
+        return None;
+    }
+
+    if normalize_phone_with_kind(value).is_some() {
+        return None;
+    }
+
+    if value.chars().any(|c| c.is_alphabetic()) {
+        return Some("alphanumeric");
+    }
+
+    let digits = value
+        .chars()
+        .filter(char::is_ascii_digit)
+        .collect::<String>();
+    if digits.is_empty() {
+        return Some("no_digits");
+    }
+
+    let normalized = if digits.starts_with("51") && digits.len() >= 9 {
+        digits[2..].to_owned()
+    } else {
+        digits
+    };
+
+    match normalized.len() {
+        9 => Some("invalid_mobile_prefix"),
+        7 | 8 => Some("invalid_fixed_prefix"),
+        _ => Some("unsupported_length"),
+    }
 }
 
 fn build_header_index_bytes(headers: Option<&csv::ByteRecord>) -> Option<HashMap<String, usize>> {
