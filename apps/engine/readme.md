@@ -4,11 +4,7 @@ Rust/Axum contact search API backed by read-only SQLite. See [root readme](../..
 
 ## Data pipeline
 
-Engine reads from `apps/engine/data/contacts.sqlite`, a read-only SQLite snapshot. Rebuilt from consolidated CSV via [`scripts/build-engine-sqlite.py`](../../scripts/build-engine-sqlite.py). Swapping the file requires an engine restart.
-
-```sh
-bun run build:engine:sqlite
-```
+Engine reads from `apps/engine/data/contacts.sqlite`, a read-only SQLite snapshot built by the [processing pipeline](../pipeline/readme.md). Swapping the file requires an engine restart.
 
 ## API
 
