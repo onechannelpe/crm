@@ -1,7 +1,8 @@
 use crate::pipeline::PipelineError;
 use crate::pipeline::mapping::SourceMapping;
 use crate::pipeline::normalize::{
-    derive_dni_from_natural_ruc, normalize_dni, normalize_phone, normalize_ruc, normalize_text,
+    PhoneKind, derive_dni_from_natural_ruc, normalize_dni, normalize_phone,
+    normalize_phone_with_kind, normalize_ruc, normalize_text,
 };
 use csv::{ReaderBuilder, StringRecord};
 use rusqlite::{Connection, OptionalExtension, Transaction, params};
@@ -1005,6 +1006,8 @@ struct NormalizationSummary {
     invalid_ruc_rows: usize,
     invalid_phone_rows: usize,
     empty_payload_rows: usize,
+    mobile_phone_rows: usize,
+    fixed_phone_rows: usize,
 }
 
 fn verify_manifest(manifest_path: &str) -> Result<(), PipelineError> {
@@ -1122,6 +1125,7 @@ fn normalize_source_entry(
         "role_name",
         "role_start_date",
         "phone",
+        "phone_type",
     ])?;
     error_writer.write_record([
         "source_key",
@@ -1313,10 +1317,22 @@ fn normalize_source_entry(
                     &role_name,
                     &role_start_date,
                     "",
+                    "",
                 ])?;
                 summary.normalized_rows += 1;
             } else {
                 for phone in phones {
+                    let phone_type = match normalize_phone_with_kind(&phone) {
+                        Some((_, PhoneKind::Mobile)) => {
+                            summary.mobile_phone_rows += 1;
+                            "mobile"
+                        }
+                        Some((_, PhoneKind::Fixed)) => {
+                            summary.fixed_phone_rows += 1;
+                            "fixed"
+                        }
+                        None => "",
+                    };
                     normalized_writer.write_record([
                         source.source_key.as_str(),
                         source.snapshot_label.as_str(),
@@ -1333,6 +1349,7 @@ fn normalize_source_entry(
                         &role_name,
                         &role_start_date,
                         &phone,
+                        phone_type,
                     ])?;
                     summary.normalized_rows += 1;
                 }

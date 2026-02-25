@@ -18,15 +18,37 @@ pub fn normalize_ruc(value: &str) -> Option<String> {
     None
 }
 
-pub fn normalize_phone(value: &str) -> Option<String> {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PhoneKind {
+    Mobile,
+    Fixed,
+}
+
+pub fn normalize_phone_with_kind(value: &str) -> Option<(String, PhoneKind)> {
+    if value.chars().any(|c| c.is_alphabetic()) {
+        return None;
+    }
+
     let mut cleaned = digits(value);
-    if cleaned.len() == 11 && cleaned.starts_with("51") {
+    if cleaned.starts_with("51") && cleaned.len() >= 9 {
         cleaned = cleaned[2..].to_owned();
     }
+
     if cleaned.len() == 9 && cleaned.starts_with('9') {
-        return Some(cleaned);
+        return Some((cleaned, PhoneKind::Mobile));
     }
+
+    // National fixed-line without country code (common source patterns: 7/8 digits).
+    let first = cleaned.chars().next()?;
+    if (cleaned.len() == 7 || cleaned.len() == 8) && ('1'..='8').contains(&first) {
+        return Some((cleaned, PhoneKind::Fixed));
+    }
+
     None
+}
+
+pub fn normalize_phone(value: &str) -> Option<String> {
+    normalize_phone_with_kind(value).map(|(phone, _)| phone)
 }
 
 pub fn normalize_text(value: &str) -> String {
@@ -45,13 +67,32 @@ pub fn derive_dni_from_natural_ruc(ruc: &str) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::{derive_dni_from_natural_ruc, normalize_phone};
+    use super::{
+        PhoneKind, derive_dni_from_natural_ruc, normalize_phone, normalize_phone_with_kind,
+    };
 
     #[test]
     fn normalizes_phone_without_country_code_storage() {
         assert_eq!(normalize_phone("51987111222"), Some("987111222".to_owned()));
         assert_eq!(normalize_phone("987111222"), Some("987111222".to_owned()));
         assert_eq!(normalize_phone("123"), None);
+    }
+
+    #[test]
+    fn classifies_mobile_and_fixed_phones() {
+        assert_eq!(
+            normalize_phone_with_kind("51987111222"),
+            Some(("987111222".to_owned(), PhoneKind::Mobile))
+        );
+        assert_eq!(
+            normalize_phone_with_kind("5154252803"),
+            Some(("54252803".to_owned(), PhoneKind::Fixed))
+        );
+        assert_eq!(
+            normalize_phone_with_kind("513826193"),
+            Some(("3826193".to_owned(), PhoneKind::Fixed))
+        );
+        assert_eq!(normalize_phone_with_kind("51CID.814791"), None);
     }
 
     #[test]
