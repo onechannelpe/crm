@@ -1,57 +1,43 @@
-# onechannel.pe
+<h1 align="center">onechannel.pe</h1>
 
-[![web quality](https://github.com/onechannelpe/crm/actions/workflows/lint.yml/badge.svg?branch=master)](https://github.com/onechannelpe/crm/actions/workflows/lint.yml)
-[![web tests](https://github.com/onechannelpe/crm/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/onechannelpe/crm/actions/workflows/tests.yml)
-[![repo guard](https://github.com/onechannelpe/crm/actions/workflows/repo-guard.yml/badge.svg?branch=master)](https://github.com/onechannelpe/crm/actions/workflows/repo-guard.yml)
-[![CodSpeed Badge](https://img.shields.io/endpoint?url=https://codspeed.io/badge.json)](https://codspeed.io/onechannelpe/crm?utm_source=badge)
+<p align="center">
+  The next iteration of our CRM for sales operations, org management, and contact search.
+</p>
 
-crm monorepo (web app + engine service).
+<p align="center">
+  <a href="apps/web/">web</a>
+  ·
+  <a href="apps/engine/">engine</a>
+  ·
+  <a href="apps/pipeline/">processing</a>
+</p>
 
-## quick start
+<p align="center">
+  <a href="https://github.com/onechannelpe/crm/actions/workflows/lint.yml"><img src="https://github.com/onechannelpe/crm/actions/workflows/lint.yml/badge.svg?branch=master" alt="web quality"></a>
+  <a href="https://github.com/onechannelpe/crm/actions/workflows/tests.yml"><img src="https://github.com/onechannelpe/crm/actions/workflows/tests.yml/badge.svg?branch=master" alt="web tests"></a>
+  <a href="https://github.com/onechannelpe/crm/actions/workflows/repo-guard.yml"><img src="https://github.com/onechannelpe/crm/actions/workflows/repo-guard.yml/badge.svg?branch=master" alt="repo guard"></a>
+  <a href="https://codspeed.io/onechannelpe/crm?utm_source=badge"><img src="https://img.shields.io/endpoint?url=https://codspeed.io/badge.json" alt="CodSpeed"></a>
+</p>
 
-bootstrap local dev environment:
+## Quick start
 
 ```sh
 mise install
 bun install
 cp .env.example .env
-mise run generate-engine-contract
-```
-
-start services:
-
-```sh
+bun run generate:engine-contract
 bun run dev
 ```
 
-or run them individually:
+`bun run dev:web` and `bun run dev:engine` to start individually.
+
+## Checks
 
 ```sh
-mise run dev-engine
-mise run dev-web
+bun run check            # all (contract, web, engine, lint, format, clippy)
+bun run check:web        # typecheck + lint
+bun run check:engine     # cargo check
+bun run check:contract   # verify bindings match contract
 ```
 
-## repo docs
-
-- web: [`apps/web/readme.md`](apps/web/readme.md)
-- engine: [`apps/engine/readme.md`](apps/engine/readme.md)
-- contract source of truth: [`contracts/engine-api.json`](contracts/engine-api.json)
-- contract generator: [`scripts/generate-engine-contract.ts`](scripts/generate-engine-contract.ts)
-
-## maintenance commands
-
-run full repository checks:
-
-```sh
-mise run check
-```
-
-run checks individually:
-
-```sh
-mise run check-engine-contract
-mise run check-web
-mise run check-engine
-```
-
-for task details, read [`mise.toml`](mise.toml). web-only scripts are in [`package.json`](package.json).
+See [`package.json`](package.json) for all scripts.

@@ -1,40 +1,32 @@
 # engine
 
-Rust + Axum search API backed by a read-only SQLite snapshot.
+Rust/Axum contact search API backed by read-only SQLite. See [root readme](../../readme.md) for project overview.
 
-## quick start
+## Data pipeline
 
-from repo root:
-
-```sh
-bun run dev:engine
-```
-
-## data pipeline
-
-1) build SQLite snapshot used by engine from consolidated CSV (`apps/engine/data/contacts.csv`):
+Engine reads from `apps/engine/data/contacts.sqlite`, a read-only SQLite snapshot. Rebuilt from consolidated CSV via [`scripts/build-engine-sqlite.py`](../../scripts/build-engine-sqlite.py). Swapping the file requires an engine restart.
 
 ```sh
 bun run build:engine:sqlite
 ```
 
-default output database: `apps/engine/data/contacts.sqlite`
-
 ## API
 
-endpoints:
-
-```txt
+```
 GET  /v1/health
 POST /v1/search
 ```
 
-`POST /v1/search` headers:
+### POST /v1/search
+
+HMAC-authenticated. See [`src/security/hmac.rs`](src/security/hmac.rs) for implementation.
+
+Required headers:
 
 - `x-timestamp`: unix seconds
 - `x-signature`: `hex(hmac_sha256(timestamp_be_u64 + raw_body, ENGINE_HMAC_SECRET))`
 
-request body:
+Body:
 
 ```json
 {
@@ -44,49 +36,23 @@ request body:
 }
 ```
 
-## config
+Response: `{ results: SearchRow[], count: number }`
 
-read from root `.env`:
+## Config
 
-- `ENGINE_HMAC_SECRET` (required)
-- `ENGINE_HOST` (default `127.0.0.1`)
+Read from root [`.env`](../../.env):
+
+- `ENGINE_HMAC_SECRET` (required): HMAC signing key
 - `ENGINE_PORT` (default `3001`)
+- `ENGINE_HOST` (default `127.0.0.1`)
 - `ENGINE_DB_PATH` (default `apps/engine/data/contacts.sqlite`)
-- `ENGINE_RATE_LIMIT_PER_IP` (default `120`)
-- `ENGINE_SEARCH_TIMEOUT_MS` (reserved)
-- `ENGINE_MAX_LIMIT` (default `100`)
+- `ENGINE_RATE_LIMIT_PER_IP` (default `120`): requests per second per IP
+- `ENGINE_MAX_LIMIT` (default `100`): max results per query
 
-## testing
-
-run unit/integration tests:
+## Testing
 
 ```sh
-mise x -- cargo test --manifest-path apps/engine/Cargo.toml
+bun run test:engine
 ```
 
-run performance probe (ignored test):
-
-```sh
-ENGINE_DB_PATH=apps/engine/data/contacts.sqlite \
-ENGINE_WORKLOAD_PATH=apps/engine/data/sqlite_workload.json \
-ENGINE_WORKLOAD_ITERATIONS=5000 \
-mise x -- cargo test --manifest-path apps/engine/Cargo.toml --test perf_regression perf_regression_probe -- --ignored --nocapture
-```
-
-output includes a machine-readable line:
-
-```txt
-PERF_METRICS_JSON {...}
-```
-
-optional regression gate:
-
-- set `ENGINE_PERF_BASELINE_JSON` to previous metrics JSON
-- set `ENGINE_PERF_REGRESSION_FACTOR` (default `1.20`)
-- sample baseline artifact: `apps/engine/data/perf_baseline.sample.json`
-
-memory measurement example:
-
-```sh
-/usr/bin/time -v mise x -- cargo test --manifest-path apps/engine/Cargo.toml --test perf_regression perf_regression_probe -- --ignored --nocapture
-```
+See [`tests/perf_regression.rs`](tests/perf_regression.rs) for performance regression probes and [`data/perf_baseline.sample.json`](data/perf_baseline.sample.json) for baseline format.
