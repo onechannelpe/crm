@@ -21,20 +21,15 @@
 
 ## Architecture
 
-| Component | Path | Stack | Description |
-|---|---|---|---|
-| Web | [`apps/web/`](apps/web/) | TypeScript, SolidStart, Turso | CRM app: org structure, sales, leads, inventory, auth, notifications |
-| Engine | [`apps/engine/`](apps/engine/) | Rust, Axum, SQLite | Contact search over millions of external records on read-only SQLite |
-| Notifications | [`packages/notifications/`](packages/notifications/) | MJML, Resend, WhatsApp | Email and WhatsApp delivery with compiled MJML templates |
-| Download Docs | [`packages/download-docs/`](packages/download-docs/) | TypeScript | CLI to download framework docs for AI-assisted development |
-
-Web and engine have separate databases and deploy independently.
-
-| Path | Purpose |
+| Apps | |
 |---|---|
-| [`contracts/engine-api.json`](contracts/engine-api.json) | Source of truth for web-to-engine API |
-| [`scripts/generate-engine-contract.ts`](scripts/generate-engine-contract.ts) | Generate TypeScript bindings from the contract |
-| [`scripts/build-engine-sqlite.py`](scripts/build-engine-sqlite.py) | Build engine SQLite snapshot from consolidated CSV |
+| [Web](apps/web/readme.md) | [Engine](apps/engine/readme.md) |
+
+| Packages | |
+|---|---|
+| [Notifications](packages/notifications/) | [Download Docs](packages/download-docs/) |
+
+The web-to-engine API is defined in [`contracts/engine-api.json`](contracts/engine-api.json) and code-generated via [`scripts/generate-engine-contract.ts`](scripts/generate-engine-contract.ts).
 
 ## Quick start
 
@@ -46,7 +41,7 @@ bun run generate:engine-contract
 bun run dev
 ```
 
-`bun run dev:web` and `bun run dev:engine` to start them individually.
+`bun run dev:web` and `bun run dev:engine` to start individually.
 
 ## Checks
 

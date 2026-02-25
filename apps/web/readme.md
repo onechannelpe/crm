@@ -6,14 +6,12 @@ SolidStart CRM application. See [root readme](../../readme.md) for project overv
 
 Read from root [`.env`](../../.env):
 
-| Variable | Required | Default | Notes |
-|---|---|---|---|
-| `SESSION_SECRET` | yes | | |
-| `ENGINE_HMAC_SECRET` | yes | | Authenticates requests to engine |
-| `ENGINE_URL` | | `http://localhost:3001` | Must be `https` and non-localhost in production |
-| `NODE_ENV` | | `development` | |
-| `WEBAUTHN_RP_ID` | | `localhost` | |
-| `WEBAUTHN_ORIGIN` | | `http://localhost:3000` | |
+- `SESSION_SECRET` (required)
+- `ENGINE_HMAC_SECRET` (required): authenticates requests to engine
+- `ENGINE_URL` (default `http://localhost:3001`): must be `https` and non-localhost in production
+- `NODE_ENV` (default `development`)
+- `WEBAUTHN_RP_ID` (default `localhost`)
+- `WEBAUTHN_ORIGIN` (default `http://localhost:3000`)
 
 See [`app.config.ts`](app.config.ts) for full configuration.
 
@@ -49,8 +47,6 @@ bun run worker:sales-export-jobs:once  # one-shot run
 
 Web calls engine via HMAC-signed HTTP. Client bindings are generated from the contract.
 
-| Path | Role |
-|---|---|
-| [`../../contracts/engine-api.json`](../../contracts/engine-api.json) | Contract source of truth |
-| [`src/server/shared/engine/contract.ts`](src/server/shared/engine/contract.ts) | Generated client bindings |
-| [`src/server/client-search/`](src/server/client-search/) | Search UI wiring |
+- Contract source: [`../../contracts/engine-api.json`](../../contracts/engine-api.json)
+- Generated client: [`src/server/shared/engine/contract.ts`](src/server/shared/engine/contract.ts)
+- Search UI wiring: [`src/server/client-search/`](src/server/client-search/)

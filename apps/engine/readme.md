@@ -2,14 +2,6 @@
 
 Rust/Axum contact search API backed by read-only SQLite. See [root readme](../../readme.md) for project overview.
 
-## Quick start
-
-From repo root:
-
-```sh
-bun run dev:engine
-```
-
 ## Data pipeline
 
 Engine reads from `apps/engine/data/contacts.sqlite`, a read-only SQLite snapshot. Rebuilt from consolidated CSV via [`scripts/build-engine-sqlite.py`](../../scripts/build-engine-sqlite.py). Swapping the file requires an engine restart.
@@ -29,10 +21,10 @@ POST /v1/search
 
 HMAC-authenticated. See [`src/security/hmac.rs`](src/security/hmac.rs) for implementation.
 
-| Header | Value |
-|---|---|
-| `x-timestamp` | Unix seconds |
-| `x-signature` | `hex(hmac_sha256(timestamp_be_u64 + raw_body, ENGINE_HMAC_SECRET))` |
+Required headers:
+
+- `x-timestamp`: unix seconds
+- `x-signature`: `hex(hmac_sha256(timestamp_be_u64 + raw_body, ENGINE_HMAC_SECRET))`
 
 Body:
 
@@ -50,14 +42,12 @@ Response: `{ results: SearchRow[], count: number }`
 
 Read from root [`.env`](../../.env):
 
-| Variable | Required | Default | Notes |
-|---|---|---|---|
-| `ENGINE_HMAC_SECRET` | yes | | HMAC signing key |
-| `ENGINE_PORT` | | `3001` | |
-| `ENGINE_HOST` | | `127.0.0.1` | |
-| `ENGINE_DB_PATH` | | `apps/engine/data/contacts.sqlite` | |
-| `ENGINE_RATE_LIMIT_PER_IP` | | `120` | Requests per second per IP |
-| `ENGINE_MAX_LIMIT` | | `100` | Max results per query |
+- `ENGINE_HMAC_SECRET` (required): HMAC signing key
+- `ENGINE_PORT` (default `3001`)
+- `ENGINE_HOST` (default `127.0.0.1`)
+- `ENGINE_DB_PATH` (default `apps/engine/data/contacts.sqlite`)
+- `ENGINE_RATE_LIMIT_PER_IP` (default `120`): requests per second per IP
+- `ENGINE_MAX_LIMIT` (default `100`): max results per query
 
 ## Testing
 
