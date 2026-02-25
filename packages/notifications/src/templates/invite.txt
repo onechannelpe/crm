@@ -1,0 +1,5 @@
+Hola {{fullName}},
+
+Se creó tu cuenta con el rol {{role}}.
+Activa tu acceso aquí: {{inviteUrl}}
+Este enlace vence el {{expiresAt}}.

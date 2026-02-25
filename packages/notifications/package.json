@@ -5,8 +5,14 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "dependencies": {
+  "scripts": {
+    "build:emails": "bun run scripts/build-emails.ts",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/mjml": "^4.7.4",
+    "@types/node": "^25.3.0",
     "mjml": "^4.18.0",
-    "resend": "^6.9.2"
+    "vitest": "^4.0.18"
   }
 }
