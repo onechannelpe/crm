@@ -5,3 +5,10 @@ export type {
   NotificationService,
   NotificationsConfig,
 } from "./types";
+
+// Email template renderers
+// Run `bun run build:emails` if these imports are missing.
+export { renderInviteEmail } from "./templates/compiled/invite.js";
+export type { InviteEmailParams } from "./templates/compiled/invite.js";
+export { renderCampaignEmail } from "./templates/compiled/campaign.js";
+export type { CampaignEmailParams } from "./templates/compiled/campaign.js";
