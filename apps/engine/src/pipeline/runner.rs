@@ -7,8 +7,27 @@ use csv::{ReaderBuilder, StringRecord};
 use rusqlite::{Connection, OptionalExtension, Transaction, params};
 use sha2::{Digest, Sha256};
 use std::collections::{HashMap, HashSet};
-use std::fs;
-use std::path::Path;
+use std::fs::{self, File};
+use std::io::{BufRead, BufReader, BufWriter, Write};
+use std::path::{Path, PathBuf};
+
+#[derive(Debug, Clone, serde::Deserialize)]
+struct SourceManifest {
+    version: u32,
+    sources: Vec<SourceManifestEntry>,
+}
+
+#[derive(Debug, Clone, serde::Deserialize)]
+struct SourceManifestEntry {
+    source_key: String,
+    snapshot_label: String,
+    snapshot_date: String,
+    raw_path: String,
+    mapping_path: String,
+    reliability_rank: i64,
+    priority: i64,
+    enabled: bool,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Command {
@@ -42,6 +61,30 @@ pub enum Command {
     PromoteDb {
         from: String,
         to: String,
+    },
+    RunMatrix {
+        db: String,
+        build_dir: String,
+        raw_dir: String,
+        mapping_dir: String,
+        row_cap_a: usize,
+        row_cap_b: usize,
+        run_osiptel_sample: bool,
+        osiptel_row_cap: usize,
+    },
+    VerifyManifest {
+        manifest: String,
+    },
+    NormalizeSource {
+        manifest: String,
+        source_key: String,
+        row_cap: usize,
+        out_dir: String,
+    },
+    NormalizeMatrix {
+        manifest: String,
+        row_cap: usize,
+        out_dir: String,
     },
 }
 
@@ -125,6 +168,103 @@ pub fn parse_args(args: &[String]) -> Result<Command, PipelineError> {
             from: required_flag(&flags, "--from")?.to_owned(),
             to: required_flag(&flags, "--to")?.to_owned(),
         }),
+        "run-matrix" => {
+            let row_cap_a = flags
+                .get("--row-cap-a")
+                .map(String::as_str)
+                .unwrap_or("200000")
+                .parse::<usize>()
+                .map_err(|_| PipelineError::Args("expected integer for --row-cap-a".to_owned()))?;
+            let row_cap_b = flags
+                .get("--row-cap-b")
+                .map(String::as_str)
+                .unwrap_or("150000")
+                .parse::<usize>()
+                .map_err(|_| PipelineError::Args("expected integer for --row-cap-b".to_owned()))?;
+            let osiptel_row_cap = flags
+                .get("--osiptel-row-cap")
+                .map(String::as_str)
+                .unwrap_or("500000")
+                .parse::<usize>()
+                .map_err(|_| {
+                    PipelineError::Args("expected integer for --osiptel-row-cap".to_owned())
+                })?;
+
+            let run_osiptel_sample = flags
+                .get("--run-osiptel-sample")
+                .map(String::as_str)
+                .unwrap_or("0")
+                == "1";
+
+            Ok(Command::RunMatrix {
+                db: flags
+                    .get("--db")
+                    .cloned()
+                    .unwrap_or_else(|| default_staged_db().to_string_lossy().to_string()),
+                build_dir: flags
+                    .get("--build-dir")
+                    .cloned()
+                    .unwrap_or_else(|| default_build_dir().to_string_lossy().to_string()),
+                raw_dir: flags
+                    .get("--raw-dir")
+                    .cloned()
+                    .unwrap_or_else(|| default_raw_dir().to_string_lossy().to_string()),
+                mapping_dir: flags
+                    .get("--mapping-dir")
+                    .cloned()
+                    .unwrap_or_else(|| default_mapping_dir().to_string_lossy().to_string()),
+                row_cap_a,
+                row_cap_b,
+                run_osiptel_sample,
+                osiptel_row_cap,
+            })
+        }
+        "verify-manifest" => Ok(Command::VerifyManifest {
+            manifest: flags
+                .get("--manifest")
+                .cloned()
+                .unwrap_or_else(|| default_source_manifest().to_string_lossy().to_string()),
+        }),
+        "normalize-source" => {
+            let row_cap = flags
+                .get("--row-cap")
+                .map(String::as_str)
+                .unwrap_or("10000")
+                .parse::<usize>()
+                .map_err(|_| PipelineError::Args("expected integer for --row-cap".to_owned()))?;
+
+            Ok(Command::NormalizeSource {
+                manifest: flags
+                    .get("--manifest")
+                    .cloned()
+                    .unwrap_or_else(|| default_source_manifest().to_string_lossy().to_string()),
+                source_key: required_flag(&flags, "--source-key")?.to_owned(),
+                row_cap,
+                out_dir: flags
+                    .get("--out-dir")
+                    .cloned()
+                    .unwrap_or_else(|| default_normalized_dir().to_string_lossy().to_string()),
+            })
+        }
+        "normalize-matrix" => {
+            let row_cap = flags
+                .get("--row-cap")
+                .map(String::as_str)
+                .unwrap_or("10000")
+                .parse::<usize>()
+                .map_err(|_| PipelineError::Args("expected integer for --row-cap".to_owned()))?;
+            Ok(Command::NormalizeMatrix {
+                manifest: flags
+                    .get("--manifest")
+                    .cloned()
+                    .unwrap_or_else(|| default_source_manifest().to_string_lossy().to_string()),
+                row_cap,
+                out_dir: flags
+                    .get("--out-dir")
+                    .cloned()
+                    .unwrap_or_else(|| default_normalized_dir().to_string_lossy().to_string()),
+            })
+        }
         _ => Err(PipelineError::Args(format!("unknown command: {cmd}"))),
     }
 }
@@ -167,6 +307,37 @@ pub fn run(command: Command) -> Result<(), PipelineError> {
         Command::MaterializeServing { db } => materialize_serving(&db),
         Command::ValidateSnapshot { db, snapshot_label } => validate_snapshot(&db, &snapshot_label),
         Command::PromoteDb { from, to } => promote_db(&from, &to),
+        Command::RunMatrix {
+            db,
+            build_dir,
+            raw_dir,
+            mapping_dir,
+            row_cap_a,
+            row_cap_b,
+            run_osiptel_sample,
+            osiptel_row_cap,
+        } => run_matrix(
+            &db,
+            &build_dir,
+            &raw_dir,
+            &mapping_dir,
+            row_cap_a,
+            row_cap_b,
+            run_osiptel_sample,
+            osiptel_row_cap,
+        ),
+        Command::VerifyManifest { manifest } => verify_manifest(&manifest),
+        Command::NormalizeSource {
+            manifest,
+            source_key,
+            row_cap,
+            out_dir,
+        } => normalize_source(&manifest, &source_key, row_cap, &out_dir),
+        Command::NormalizeMatrix {
+            manifest,
+            row_cap,
+            out_dir,
+        } => normalize_matrix(&manifest, row_cap, &out_dir),
     }
 }
 
@@ -619,6 +790,691 @@ fn promote_db(from: &str, to: &str) -> Result<(), PipelineError> {
     fs::rename(&tmp, to)?;
     println!("promoted db to {to}");
     Ok(())
+}
+
+#[allow(clippy::too_many_arguments)]
+fn run_matrix(
+    db_path: &str,
+    build_dir: &str,
+    raw_dir: &str,
+    mapping_dir: &str,
+    row_cap_a: usize,
+    row_cap_b: usize,
+    run_osiptel_sample: bool,
+    osiptel_row_cap: usize,
+) -> Result<(), PipelineError> {
+    let build_dir_path = Path::new(build_dir);
+    fs::create_dir_all(build_dir_path)?;
+    if Path::new(db_path).exists() {
+        fs::remove_file(db_path)?;
+    }
+
+    println!("[pipeline] init schema");
+    init_schema(db_path)?;
+
+    let sample_celulares = build_dir_path.join("celulares.sample.csv");
+    let sample_claro = build_dir_path.join("claro.sample.txt");
+    let sample_consolidado = build_dir_path.join("consolidado.sample.tsv");
+    let sample_representantes = build_dir_path.join("representantes.sample.txt");
+
+    println!("[pipeline] prepare sampled inputs");
+    sample_with_header(
+        Path::new(raw_dir).join("celulares.txt"),
+        sample_celulares.clone(),
+        row_cap_a,
+    )?;
+    sample_with_header(
+        Path::new(raw_dir).join("CLARO_POST_202508.txt"),
+        sample_claro.clone(),
+        row_cap_a,
+    )?;
+    sample_with_header(
+        Path::new(raw_dir).join("Consolidado_RUC20_Representantes_OK.txt"),
+        sample_consolidado.clone(),
+        row_cap_b,
+    )?;
+    sample_with_header(
+        Path::new(raw_dir).join("Representantes_ENRIQUECIDO.txt"),
+        sample_representantes.clone(),
+        row_cap_b,
+    )?;
+
+    run_ingest_phase(
+        db_path,
+        &Path::new(mapping_dir).join("celulares.json"),
+        &sample_celulares,
+        "celulares-sample",
+    )?;
+    run_ingest_phase(
+        db_path,
+        &Path::new(mapping_dir).join("claro_post_202508.json"),
+        &sample_claro,
+        "claro-sample",
+    )?;
+    run_ingest_phase(
+        db_path,
+        &Path::new(mapping_dir).join("consolidado_ruc_representantes_ok.json"),
+        &sample_consolidado,
+        "consolidado-sample",
+    )?;
+    run_ingest_phase(
+        db_path,
+        &Path::new(mapping_dir).join("representantes_enriquecido.json"),
+        &sample_representantes,
+        "representantes-sample",
+    )?;
+
+    if run_osiptel_sample {
+        let osiptel_source = build_dir_path.join("osiptel.sample.csv");
+        if !osiptel_source.exists() {
+            return Err(PipelineError::Args(format!(
+                "missing osiptel sample file: {}",
+                osiptel_source.display()
+            )));
+        }
+        let osiptel_capped = build_dir_path.join("osiptel.sample.capped.csv");
+        sample_with_header(osiptel_source, osiptel_capped.clone(), osiptel_row_cap)?;
+        run_ingest_phase(
+            db_path,
+            &Path::new(mapping_dir).join("osiptel_2025.json"),
+            &osiptel_capped,
+            "osiptel-sample",
+        )?;
+    }
+
+    println!("[pipeline] materialize serving tables");
+    materialize_serving(db_path)?;
+
+    println!("[pipeline] quick checks");
+    let conn = open_rw(db_path)?;
+    for table in [
+        "person_profile",
+        "company_profile",
+        "person_company_role",
+        "role_phone",
+        "contacts_serving",
+        "phone_index",
+    ] {
+        let sql = format!("SELECT EXISTS(SELECT 1 FROM {table} LIMIT 1)");
+        let has_rows: i64 = conn.query_row(&sql, [], |r| r.get(0))?;
+        println!("{table}_has_rows={has_rows}");
+    }
+    let max_id: i64 = conn.query_row(
+        "SELECT COALESCE(MAX(id), 0) FROM contacts_serving",
+        [],
+        |r| r.get(0),
+    )?;
+    println!("contacts_serving_max_id={max_id}");
+    println!("[pipeline] done: {db_path}");
+
+    Ok(())
+}
+
+fn run_ingest_phase(
+    db_path: &str,
+    mapping_path: &Path,
+    input_path: &Path,
+    snapshot_label: &str,
+) -> Result<(), PipelineError> {
+    println!(
+        "[pipeline] ingest {snapshot_label} from {}",
+        input_path.display()
+    );
+    ingest_snapshot(
+        db_path,
+        &mapping_path.to_string_lossy(),
+        &input_path.to_string_lossy(),
+        snapshot_label,
+        "2026-02-25",
+        20_000,
+    )?;
+    validate_snapshot(db_path, snapshot_label)?;
+    Ok(())
+}
+
+fn sample_with_header(src: PathBuf, out: PathBuf, cap: usize) -> Result<(), PipelineError> {
+    let in_file = File::open(&src)?;
+    let mut reader = BufReader::new(in_file);
+    let out_file = File::create(out)?;
+    let mut writer = BufWriter::new(out_file);
+
+    let mut buf = Vec::new();
+    let mut line_no = 0usize;
+    loop {
+        buf.clear();
+        let bytes = reader.read_until(b'\n', &mut buf)?;
+        if bytes == 0 {
+            break;
+        }
+        if line_no > cap {
+            break;
+        }
+        // Keep UTF-8 output stable for CSV parser while streaming.
+        let normalized = String::from_utf8_lossy(&buf);
+        writer.write_all(normalized.as_bytes())?;
+        line_no += 1;
+    }
+    writer.flush()?;
+    Ok(())
+}
+
+fn default_raw_dir() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("data/raw")
+}
+
+fn default_build_dir() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("data/build/staged")
+}
+
+fn default_mapping_dir() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("data/mappings/sources")
+}
+
+fn default_staged_db() -> PathBuf {
+    default_build_dir().join("contacts.pipeline.staged.sqlite")
+}
+
+fn default_source_manifest() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("data/mappings/source-manifest.json")
+}
+
+fn default_normalized_dir() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("data/normalized")
+}
+
+#[derive(Debug, serde::Serialize)]
+struct ManifestCheckResult {
+    source_key: String,
+    enabled: bool,
+    reliability_rank: i64,
+    priority: i64,
+    raw_exists: bool,
+    mapping_exists: bool,
+}
+
+#[derive(Default, serde::Serialize)]
+struct NormalizationSummary {
+    source_key: String,
+    snapshot_label: String,
+    reliability_rank: i64,
+    priority: i64,
+    total_rows: usize,
+    normalized_rows: usize,
+    error_rows: usize,
+    invalid_dni_rows: usize,
+    invalid_ruc_rows: usize,
+    invalid_phone_rows: usize,
+    empty_payload_rows: usize,
+}
+
+fn verify_manifest(manifest_path: &str) -> Result<(), PipelineError> {
+    let manifest = load_manifest(manifest_path)?;
+    if manifest.version != 1 {
+        return Err(PipelineError::Args(format!(
+            "unsupported manifest version: {}",
+            manifest.version
+        )));
+    }
+
+    let mut checks: Vec<ManifestCheckResult> = Vec::with_capacity(manifest.sources.len());
+    for source in &manifest.sources {
+        let raw_exists = Path::new(&source.raw_path).exists();
+        let mapping_exists = Path::new(&source.mapping_path).exists();
+
+        if source.enabled && (!raw_exists || !mapping_exists) {
+            return Err(PipelineError::Args(format!(
+                "manifest validation failed for {}: raw_exists={}, mapping_exists={}",
+                source.source_key, raw_exists, mapping_exists
+            )));
+        }
+
+        if mapping_exists {
+            let mapping = SourceMapping::from_path(&source.mapping_path)?;
+            if mapping.source_key != source.source_key {
+                return Err(PipelineError::Args(format!(
+                    "source_key mismatch: manifest={} mapping={}",
+                    source.source_key, mapping.source_key
+                )));
+            }
+        }
+
+        checks.push(ManifestCheckResult {
+            source_key: source.source_key.clone(),
+            enabled: source.enabled,
+            reliability_rank: source.reliability_rank,
+            priority: source.priority,
+            raw_exists,
+            mapping_exists,
+        });
+    }
+
+    println!("{}", serde_json::to_string(&checks)?);
+    Ok(())
+}
+
+fn normalize_source(
+    manifest_path: &str,
+    source_key: &str,
+    row_cap: usize,
+    out_dir: &str,
+) -> Result<(), PipelineError> {
+    let manifest = load_manifest(manifest_path)?;
+    let source = manifest
+        .sources
+        .iter()
+        .find(|s| s.source_key == source_key)
+        .ok_or_else(|| PipelineError::Args(format!("source key not found: {source_key}")))?;
+    normalize_source_entry(source, row_cap, out_dir)
+}
+
+fn normalize_matrix(
+    manifest_path: &str,
+    row_cap: usize,
+    out_dir: &str,
+) -> Result<(), PipelineError> {
+    let manifest = load_manifest(manifest_path)?;
+    verify_manifest(manifest_path)?;
+
+    for source in &manifest.sources {
+        if !source.enabled {
+            continue;
+        }
+        normalize_source_entry(source, row_cap, out_dir)?;
+    }
+    Ok(())
+}
+
+fn normalize_source_entry(
+    source: &SourceManifestEntry,
+    row_cap: usize,
+    out_dir: &str,
+) -> Result<(), PipelineError> {
+    let mapping = SourceMapping::from_path(&source.mapping_path)?;
+    let target_dir = Path::new(out_dir)
+        .join(&source.source_key)
+        .join(&source.snapshot_label);
+    fs::create_dir_all(&target_dir)?;
+
+    let normalized_path = target_dir.join("normalized.part-00001.csv");
+    let errors_path = target_dir.join("errors.csv");
+    let summary_path = target_dir.join("summary.json");
+
+    let mut normalized_writer = csv::WriterBuilder::new()
+        .has_headers(true)
+        .from_path(&normalized_path)?;
+    let mut error_writer = csv::WriterBuilder::new()
+        .has_headers(true)
+        .from_path(&errors_path)?;
+
+    normalized_writer.write_record([
+        "source_key",
+        "snapshot_label",
+        "snapshot_date",
+        "source_row_number",
+        "record_hash",
+        "person_dni",
+        "person_full_name",
+        "company_ruc",
+        "company_name",
+        "rep_doc_type",
+        "rep_doc_number",
+        "rep_name",
+        "role_name",
+        "role_start_date",
+        "phone",
+    ])?;
+    error_writer.write_record([
+        "source_key",
+        "snapshot_label",
+        "source_row_number",
+        "error_code",
+        "error_detail",
+        "raw_payload",
+    ])?;
+
+    let mut reader = ReaderBuilder::new()
+        .delimiter(mapping.delimiter_byte())
+        .has_headers(mapping.has_header)
+        .flexible(mapping.flexible)
+        .from_path(&source.raw_path)?;
+
+    let headers = if mapping.has_header {
+        Some(reader.byte_headers()?.clone())
+    } else {
+        None
+    };
+    let header_index = build_header_index_bytes(headers.as_ref());
+
+    let mut summary = NormalizationSummary {
+        source_key: source.source_key.clone(),
+        snapshot_label: source.snapshot_label.clone(),
+        reliability_rank: source.reliability_rank,
+        priority: source.priority,
+        ..NormalizationSummary::default()
+    };
+
+    for (row_idx, row_result) in reader.byte_records().enumerate() {
+        if row_idx >= row_cap {
+            break;
+        }
+        let source_row_number = row_idx + 1;
+
+        let row = match row_result {
+            Ok(record) => record,
+            Err(err) => {
+                summary.total_rows += 1;
+                summary.error_rows += 1;
+                error_writer.write_record([
+                    source.source_key.as_str(),
+                    source.snapshot_label.as_str(),
+                    &source_row_number.to_string(),
+                    "csv_parse_error",
+                    &err.to_string(),
+                    "",
+                ])?;
+                continue;
+            }
+        };
+
+        summary.total_rows += 1;
+        let delimiter = mapping.delimiter_byte();
+        let raw_payload = row
+            .iter()
+            .map(|v| String::from_utf8_lossy(v).to_string())
+            .collect::<Vec<_>>()
+            .join(&(delimiter as char).to_string());
+        let record_hash = hash_record_bytes(&row, delimiter);
+
+        let person_dni_raw = mapped_value_bytes(
+            "person_dni",
+            &mapping,
+            &row,
+            headers.as_ref(),
+            header_index.as_ref(),
+        )?;
+        let person_dni = normalize_dni(&person_dni_raw);
+        let company_ruc_raw = mapped_value_bytes(
+            "company_ruc",
+            &mapping,
+            &row,
+            headers.as_ref(),
+            header_index.as_ref(),
+        )?;
+        let company_ruc = normalize_ruc(&company_ruc_raw);
+        let person_full_name = mapped_value_bytes(
+            "person_full_name",
+            &mapping,
+            &row,
+            headers.as_ref(),
+            header_index.as_ref(),
+        )?;
+        let company_name = mapped_value_bytes(
+            "company_name",
+            &mapping,
+            &row,
+            headers.as_ref(),
+            header_index.as_ref(),
+        )?;
+        let rep_doc_type = mapped_value_bytes(
+            "rep_doc_type",
+            &mapping,
+            &row,
+            headers.as_ref(),
+            header_index.as_ref(),
+        )?;
+        let rep_doc_number = mapped_value_bytes(
+            "rep_doc_number",
+            &mapping,
+            &row,
+            headers.as_ref(),
+            header_index.as_ref(),
+        )?;
+        let rep_name = mapped_value_bytes(
+            "rep_name",
+            &mapping,
+            &row,
+            headers.as_ref(),
+            header_index.as_ref(),
+        )?;
+        let role_name = mapped_value_bytes(
+            "role_name",
+            &mapping,
+            &row,
+            headers.as_ref(),
+            header_index.as_ref(),
+        )?;
+        let role_start_date = mapped_value_bytes(
+            "role_start_date",
+            &mapping,
+            &row,
+            headers.as_ref(),
+            header_index.as_ref(),
+        )?;
+
+        let (phones, had_phone_input) =
+            collect_phones_bytes(&mapping, &row, headers.as_ref(), header_index.as_ref())?;
+
+        let mut errors: Vec<&str> = Vec::new();
+        if !person_dni_raw.is_empty() && person_dni.is_none() {
+            summary.invalid_dni_rows += 1;
+            errors.push("invalid_dni");
+        }
+        if !company_ruc_raw.is_empty() && company_ruc.is_none() {
+            summary.invalid_ruc_rows += 1;
+            errors.push("invalid_ruc");
+        }
+        if had_phone_input && phones.is_empty() {
+            summary.invalid_phone_rows += 1;
+            errors.push("invalid_phone");
+        }
+
+        let has_any_payload = person_dni.is_some()
+            || company_ruc.is_some()
+            || !person_full_name.is_empty()
+            || !company_name.is_empty()
+            || !rep_doc_type.is_empty()
+            || !rep_doc_number.is_empty()
+            || !rep_name.is_empty()
+            || !role_name.is_empty()
+            || !phones.is_empty();
+
+        if !has_any_payload {
+            summary.empty_payload_rows += 1;
+            errors.push("empty_payload");
+        }
+
+        if !errors.is_empty() {
+            summary.error_rows += 1;
+            error_writer.write_record([
+                source.source_key.as_str(),
+                source.snapshot_label.as_str(),
+                &source_row_number.to_string(),
+                &errors.join(";"),
+                "",
+                &raw_payload,
+            ])?;
+        }
+
+        if has_any_payload {
+            if phones.is_empty() {
+                normalized_writer.write_record([
+                    source.source_key.as_str(),
+                    source.snapshot_label.as_str(),
+                    source.snapshot_date.as_str(),
+                    &source_row_number.to_string(),
+                    &record_hash,
+                    person_dni.as_deref().unwrap_or(""),
+                    &person_full_name,
+                    company_ruc.as_deref().unwrap_or(""),
+                    &company_name,
+                    &rep_doc_type,
+                    &rep_doc_number,
+                    &rep_name,
+                    &role_name,
+                    &role_start_date,
+                    "",
+                ])?;
+                summary.normalized_rows += 1;
+            } else {
+                for phone in phones {
+                    normalized_writer.write_record([
+                        source.source_key.as_str(),
+                        source.snapshot_label.as_str(),
+                        source.snapshot_date.as_str(),
+                        &source_row_number.to_string(),
+                        &record_hash,
+                        person_dni.as_deref().unwrap_or(""),
+                        &person_full_name,
+                        company_ruc.as_deref().unwrap_or(""),
+                        &company_name,
+                        &rep_doc_type,
+                        &rep_doc_number,
+                        &rep_name,
+                        &role_name,
+                        &role_start_date,
+                        &phone,
+                    ])?;
+                    summary.normalized_rows += 1;
+                }
+            }
+        }
+    }
+
+    normalized_writer.flush()?;
+    error_writer.flush()?;
+    fs::write(summary_path, serde_json::to_string_pretty(&summary)?)?;
+    println!("{}", serde_json::to_string(&summary)?);
+    Ok(())
+}
+
+fn load_manifest(path: &str) -> Result<SourceManifest, PipelineError> {
+    let raw = fs::read_to_string(path)?;
+    let manifest = serde_json::from_str::<SourceManifest>(&raw)?;
+    Ok(manifest)
+}
+
+fn mapped_value_bytes(
+    canonical: &str,
+    mapping: &SourceMapping,
+    record: &csv::ByteRecord,
+    headers: Option<&csv::ByteRecord>,
+    header_index: Option<&HashMap<String, usize>>,
+) -> Result<String, PipelineError> {
+    let Some(column) = mapping.fields.get(canonical) else {
+        return Ok(String::new());
+    };
+
+    let Some(raw) = value_from_column_bytes(column, record, headers, header_index)? else {
+        return Ok(String::new());
+    };
+
+    Ok(normalize_text(&raw))
+}
+
+fn value_from_column_bytes(
+    column: &str,
+    record: &csv::ByteRecord,
+    headers: Option<&csv::ByteRecord>,
+    header_index: Option<&HashMap<String, usize>>,
+) -> Result<Option<String>, PipelineError> {
+    if let Ok(index) = column.parse::<usize>() {
+        let value = record.get(index).unwrap_or(b"");
+        return Ok(Some(String::from_utf8_lossy(value).to_string()));
+    }
+
+    let Some(hdrs) = headers else {
+        return Err(PipelineError::Args(format!(
+            "column mapping requires header, but source has no header: {column}"
+        )));
+    };
+    let Some(indexes) = header_index else {
+        return Err(PipelineError::Args("missing header index".to_owned()));
+    };
+
+    let has_header = hdrs
+        .iter()
+        .any(|h| String::from_utf8_lossy(h).as_ref() == column);
+    if !has_header {
+        return Ok(None);
+    }
+
+    let Some(idx) = indexes.get(column) else {
+        return Ok(None);
+    };
+    let value = record.get(*idx).unwrap_or(b"");
+    Ok(Some(String::from_utf8_lossy(value).to_string()))
+}
+
+fn collect_phones_bytes(
+    mapping: &SourceMapping,
+    record: &csv::ByteRecord,
+    headers: Option<&csv::ByteRecord>,
+    header_index: Option<&HashMap<String, usize>>,
+) -> Result<(Vec<String>, bool), PipelineError> {
+    let mut raw_values = Vec::new();
+    let mut had_phone_input = false;
+
+    let direct_phone = mapped_value_bytes("phone", mapping, record, headers, header_index)?;
+    if !direct_phone.is_empty() {
+        had_phone_input = true;
+        raw_values.push(direct_phone);
+    }
+
+    for column in &mapping.phone_columns {
+        if let Some(value) = value_from_column_bytes(column, record, headers, header_index)?
+            && !value.is_empty()
+        {
+            had_phone_input = true;
+            raw_values.push(value);
+        }
+    }
+
+    if let Some(hdr) = headers {
+        for (idx, name) in hdr.iter().enumerate() {
+            let name = String::from_utf8_lossy(name);
+            for prefix in &mapping.phone_prefixes {
+                if name.starts_with(prefix) {
+                    let value = String::from_utf8_lossy(record.get(idx).unwrap_or(b"")).to_string();
+                    if !value.is_empty() {
+                        had_phone_input = true;
+                        raw_values.push(value);
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    let mut unique = HashSet::new();
+    let mut phones = Vec::new();
+    for value in raw_values {
+        if let Some(phone) = normalize_phone(&value)
+            && unique.insert(phone.clone())
+        {
+            phones.push(phone);
+        }
+    }
+    Ok((phones, had_phone_input))
+}
+
+fn build_header_index_bytes(headers: Option<&csv::ByteRecord>) -> Option<HashMap<String, usize>> {
+    headers.map(|hdrs| {
+        hdrs.iter()
+            .enumerate()
+            .map(|(idx, name)| (String::from_utf8_lossy(name).to_string(), idx))
+            .collect::<HashMap<_, _>>()
+    })
+}
+
+fn hash_record_bytes(record: &csv::ByteRecord, delimiter: u8) -> String {
+    let joined = record
+        .iter()
+        .map(|v| String::from_utf8_lossy(v).to_string())
+        .collect::<Vec<_>>()
+        .join(&(delimiter as char).to_string());
+    let mut hasher = Sha256::new();
+    hasher.update(joined.as_bytes());
+    hex::encode(hasher.finalize())
 }
 
 fn map_record(
