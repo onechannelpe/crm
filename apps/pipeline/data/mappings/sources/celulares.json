@@ -1,0 +1,14 @@
+{
+  "source_key": "celulares",
+  "source_name": "celulares",
+  "delimiter": ",",
+  "has_header": true,
+  "flexible": true,
+  "fields": {
+    "person_dni": "DOCUMENTO",
+    "phone": "CELULAR",
+    "role_start_date": "FECHA"
+  },
+  "phone_columns": [],
+  "phone_prefixes": []
+}

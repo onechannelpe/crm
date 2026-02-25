@@ -1,0 +1,16 @@
+{
+  "source_key": "mov_me_sal_2025",
+  "source_name": "Mov_MeSal",
+  "delimiter": "|",
+  "has_header": true,
+  "flexible": true,
+  "fields": {
+    "rep_doc_type": "bi_tipo",
+    "rep_doc_number": "bi_doc",
+    "phone": "bi_tele",
+    "role_name": "bi_linea",
+    "role_start_date": "bi_ul_fac"
+  },
+  "phone_columns": [],
+  "phone_prefixes": []
+}

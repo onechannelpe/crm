@@ -1,4 +1,4 @@
-use crm_engine::pipeline::runner;
+use crm_pipeline::pipeline::runner;
 use std::env;
 
 fn main() {

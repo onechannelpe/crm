@@ -11,7 +11,7 @@
     "dev:engine": "cargo run --manifest-path apps/engine/Cargo.toml",
     "dev:web": "bun --no-env-file --env-file=../../.env run --cwd apps/web dev",
     "build:engine:sqlite": "uv run scripts/build-engine-sqlite.py --input apps/engine/data/contacts.csv --output apps/engine/data/contacts.sqlite",
-    "pipeline:engine": "cargo run --manifest-path apps/engine/Cargo.toml --bin pipeline --",
+    "pipeline:engine": "cargo run --manifest-path apps/pipeline/Cargo.toml --",
     "pipeline:staged-test": "bun run pipeline:engine run-matrix",
     "pipeline:verify-manifest": "bun run pipeline:engine verify-manifest",
     "pipeline:normalize-sample": "bun run pipeline:engine normalize-matrix --row-cap 10000",

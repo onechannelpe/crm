@@ -1,0 +1,15 @@
+{
+  "source_key": "bitel_post_ms_2025",
+  "source_name": "BITEL_POST_MS",
+  "delimiter": "|",
+  "has_header": true,
+  "flexible": true,
+  "fields": {
+    "rep_doc_type": "TipoDocumento",
+    "rep_doc_number": "NumDocumento",
+    "phone": "telefono",
+    "role_start_date": "fechacreacion"
+  },
+  "phone_columns": [],
+  "phone_prefixes": []
+}

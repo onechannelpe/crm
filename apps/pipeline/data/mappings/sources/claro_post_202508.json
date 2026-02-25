@@ -1,0 +1,16 @@
+{
+  "source_key": "claro_post_202508",
+  "source_name": "CLARO_POST_202508",
+  "delimiter": "|",
+  "has_header": true,
+  "flexible": true,
+  "fields": {
+    "rep_doc_type": "ID_CARD_TYPE_VALUE",
+    "rep_doc_number": "ID_CARD_VALUE",
+    "person_full_name": "CUSTOMER_FULL_NAME",
+    "phone": "SUBSCRIPTION_ACCESS_NUMBER",
+    "role_start_date": "SUBSCRIPTION_START_DATE"
+  },
+  "phone_columns": [],
+  "phone_prefixes": []
+}
