@@ -6,10 +6,16 @@ interface ResendMailInput {
   text: string;
 }
 
-interface ResendErrorBody {
-  name: string;
-  message: string;
-  statusCode: number;
+export function parseResendError(body: unknown): string | undefined {
+  if (
+    typeof body === "object" &&
+    body !== null &&
+    "message" in body &&
+    typeof (body as { message: unknown }).message === "string"
+  ) {
+    return (body as { message: string }).message;
+  }
+  return undefined;
 }
 
 export async function sendWithResend(
@@ -34,8 +40,8 @@ export async function sendWithResend(
   if (!response.ok) {
     let message = `HTTP ${response.status}`;
     try {
-      const err = (await response.json()) as ResendErrorBody;
-      message = err.message ?? message;
+      const body: unknown = await response.json();
+      message = parseResendError(body) ?? message;
     } catch {
       // response body was not JSON (e.g. CDN error page); fall back to status
     }

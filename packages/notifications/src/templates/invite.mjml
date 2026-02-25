@@ -11,12 +11,12 @@
     </mj-style>
   </mj-head>
   <mj-body background-color="#f7f7f7">
-    <!-- Spacer -->
+    <!-- spacer -->
     <mj-section padding="32px 0 0 0" background-color="#f7f7f7">
       <mj-column><mj-text> </mj-text></mj-column>
     </mj-section>
 
-    <!-- Card -->
+    <!-- card -->
     <mj-section
       background-color="#ffffff"
       border="1px solid #e8e8e8"
@@ -31,7 +31,7 @@
           color="#333333"
           padding-bottom="24px"
         >
-          Tu acceso al CRM está listo
+          Tu acceso a One Channel está listo
         </mj-text>
 
         <mj-text padding-bottom="8px">Hola {{fullName}},</mj-text>
@@ -41,7 +41,6 @@
           antes de que venza el enlace.
         </mj-text>
 
-        <!-- CTA -->
         <mj-button
           href="{{inviteUrl}}"
           background-color="#333333"
@@ -63,7 +62,6 @@
       </mj-column>
     </mj-section>
 
-    <!-- Footer spacer -->
     <mj-section padding="32px 0" background-color="#f7f7f7">
       <mj-column>
         <mj-text align="center" color="#999999" font-size="12px">

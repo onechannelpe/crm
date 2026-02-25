@@ -6,12 +6,11 @@
     </mj-attributes>
   </mj-head>
   <mj-body background-color="#f7f7f7">
-    <!-- Spacer -->
     <mj-section padding="32px 0 0 0" background-color="#f7f7f7">
       <mj-column><mj-text> </mj-text></mj-column>
     </mj-section>
 
-    <!-- Card -->
+    <!-- card -->
     <mj-section
       background-color="#ffffff"
       border="1px solid #e8e8e8"
@@ -33,7 +32,6 @@
       </mj-column>
     </mj-section>
 
-    <!-- Footer spacer -->
     <mj-section padding="32px 0" background-color="#f7f7f7">
       <mj-column>
         <mj-text align="center" color="#999999" font-size="12px">
