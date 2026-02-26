@@ -3,6 +3,7 @@ import { createSignal, onMount, Show } from "solid-js";
 
 import { beginPasskeyLogin, finishPasskeyLogin } from "~/actions/auth";
 import { login } from "~/actions/auth";
+import { useToast } from "~/components/feedback/toast-provider";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { initializeThemeMode } from "~/components/ui/theme/theme-mode";
@@ -18,10 +19,10 @@ import styles from "../auth/auth-shell.module.css";
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [email, setEmail] = createSignal("");
   const [password, setPassword] = createSignal("");
   const [totpCode, setTotpCode] = createSignal("");
-  const [error, setError] = createSignal("");
   const [loading, setLoading] = createSignal(false);
   const [passkeyLoading, setPasskeyLoading] = createSignal(false);
   const [showTotp, setShowTotp] = createSignal(false);
@@ -36,7 +37,6 @@ export default function LoginPage() {
 
   async function handleSubmit(e: Event) {
     e.preventDefault();
-    setError("");
     setLoading(true);
 
     try {
@@ -47,14 +47,13 @@ export default function LoginPage() {
           : "/onboarding",
       );
     } catch (err: unknown) {
-      setError(getErrorMessage(err, "Invalid credentials"));
+      showToast("error", getErrorMessage(err, "Invalid credentials"));
     } finally {
       setLoading(false);
     }
   }
 
   async function handlePasskeyLogin() {
-    setError("");
     setPasskeyLoading(true);
 
     try {
@@ -83,7 +82,7 @@ export default function LoginPage() {
           : "/onboarding",
       );
     } catch (err: unknown) {
-      setError(getErrorMessage(err, "Passkey sign in failed"));
+      showToast("error", getErrorMessage(err, "Passkey sign in failed"));
     } finally {
       setPasskeyLoading(false);
     }
@@ -103,26 +102,6 @@ export default function LoginPage() {
           }}
           class={styles.stack3}
         >
-          <Show when={error()}>
-            <div class={styles.errorOverlay} role="alert">
-              <svg
-                class={styles.errorIcon}
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
-                <path d="M12 9v4" />
-                <path d="M12 17h.01" />
-              </svg>
-              <span>{error()}</span>
-            </div>
-          </Show>
-
           <Input
             id="email"
             type="email"
@@ -154,38 +133,33 @@ export default function LoginPage() {
               </button>
             }
           >
-            <Input
-              id="totp"
-              type="text"
-              label="TOTP or recovery code"
-              placeholder="Optional"
-              value={totpCode()}
-              onInput={(e) => setTotpCode(e.currentTarget.value)}
-            />
+            <div class={styles.reveal}>
+              <Input
+                id="totp"
+                type="text"
+                label="TOTP or recovery code"
+                placeholder="Optional"
+                value={totpCode()}
+                onInput={(e) => setTotpCode(e.currentTarget.value)}
+              />
+            </div>
           </Show>
 
           <div class={styles.stack2}>
-            <Button
-              type="submit"
-              class={styles.full}
-              disabled={loading() || passkeyLoading()}
-            >
-              {loading() ? "Signing in..." : "Sign in"}
+            <Button type="submit" class={styles.full} loading={loading()}>
+              Sign in
             </Button>
             <Button
               type="button"
               variant="outline"
               class={styles.full}
-              disabled={
-                loading() ||
-                passkeyLoading() ||
-                passkeySupport() !== "supported"
-              }
+              disabled={loading() || passkeySupport() !== "supported"}
+              loading={passkeyLoading()}
               onClick={() => {
                 void handlePasskeyLogin();
               }}
             >
-              {passkeyLoading() ? "Checking passkey..." : "Use passkey"}
+              Use passkey
             </Button>
           </div>
 
