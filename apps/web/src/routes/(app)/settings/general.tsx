@@ -8,30 +8,21 @@ import { Input } from "~/components/ui/input/input";
 import { getErrorMessage } from "~/lib/errors";
 import { productCatalogQuery } from "~/lib/queries/settings";
 import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
-import { runOptimistic } from "~/lib/ui/run-optimistic";
 
 import styles from "./settings-page.module.css";
 
 export default function SettingsGeneralPage() {
   const { showToast } = useToast();
 
-  const {
-    data: currentProducts,
-    write: writeProducts,
-    revalidate: revalidateProducts,
-  } = createOptimisticQuery(() => productCatalogQuery(), {
-    initialValue: [],
-    key: productCatalogQuery.key,
-  });
+  const { data: currentProducts, update: updateProducts } =
+    createOptimisticQuery(productCatalogQuery, { initialValue: [] });
   const [savingId, setSavingId] = createSignal<number | null>(null);
 
   const save = async (productId: number, price: string, isActive: boolean) => {
     setSavingId(productId);
     try {
       const numericPrice = Number(price);
-      await runOptimistic({
-        read: currentProducts,
-        write: writeProducts,
+      await updateProducts({
         optimistic: (prev) =>
           prev.map((product) =>
             product.id === productId
@@ -41,7 +32,7 @@ export default function SettingsGeneralPage() {
         commit: async () => {
           await updateProductPricing(productId, numericPrice, isActive);
         },
-        reconcile: revalidateProducts,
+        reconcile: true,
       });
       showToast("success", "Product updated");
     } catch (err: unknown) {

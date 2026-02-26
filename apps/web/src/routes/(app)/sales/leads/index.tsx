@@ -6,24 +6,17 @@ import { RequestLeadsButton } from "~/components/features/leads/request-leads-bu
 import { AppPage } from "~/components/layout/page";
 import { activeLeadsQuery } from "~/lib/queries/leads";
 import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
-import { runOptimistic } from "~/lib/ui/run-optimistic";
 
 import styles from "./leads-page.module.css";
 
 export default function LeadsPage() {
   const navigate = useNavigate();
-  const {
-    data: currentLeads,
-    write: writeLeads,
-    revalidate: revalidateLeads,
-  } = createOptimisticQuery(() => activeLeadsQuery(), {
-    initialValue: [],
-    key: activeLeadsQuery.key,
-  });
+  const { data: currentLeads, update: updateLeads, invalidate: invalidateLeads } =
+    createOptimisticQuery(activeLeadsQuery, { initialValue: [] });
 
   const handleRequestLeads = async () => {
     const result = await requestLeads();
-    void revalidateLeads();
+    void invalidateLeads();
     return result.assigned;
   };
 
@@ -33,15 +26,13 @@ export default function LeadsPage() {
     outcome: string,
     notes: string,
   ) => {
-    await runOptimistic({
-      read: currentLeads,
-      write: writeLeads,
+    await updateLeads({
       optimistic: (prev) =>
         prev.filter((lead) => lead.assignmentId !== assignmentId),
       commit: async () => {
         await registerCall(assignmentId, contactId, outcome, notes);
       },
-reconcile: revalidateLeads,
+      reconcile: true,
     });
 
     if (outcome === "sale_made") {

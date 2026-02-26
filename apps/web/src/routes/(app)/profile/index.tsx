@@ -26,7 +26,6 @@ import {
 import { getErrorMessage } from "~/lib/errors";
 import { totpStatusQuery } from "~/lib/queries/profile";
 import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
-import { runOptimistic } from "~/lib/ui/run-optimistic";
 
 import styles from "./profile-page.module.css";
 
@@ -43,14 +42,8 @@ export default function ProfilePage() {
   const [passkeyLoading, setPasskeyLoading] = createSignal(false);
   const [passkeyMessage, setPasskeyMessage] = createSignal("");
 
-  const {
-    data: currentTotpStatus,
-    write: writeTotpStatus,
-    revalidate: revalidateTotp,
-  } = createOptimisticQuery(() => totpStatusQuery(), {
-    initialValue: { enabled: false },
-    key: totpStatusQuery.key,
-  });
+  const { data: currentTotpStatus, update: updateTotpStatus } =
+    createOptimisticQuery(totpStatusQuery, { initialValue: { enabled: false } });
   const [totpLoading, setTotpLoading] = createSignal(false);
   const [totpMessage, setTotpMessage] = createSignal("");
   const [totpQrCode, setTotpQrCode] = createSignal("");
@@ -114,14 +107,12 @@ export default function ProfilePage() {
     setTotpLoading(true);
     try {
       let codes: string[] = [];
-      await runOptimistic({
-        read: currentTotpStatus,
-        write: writeTotpStatus,
+      await updateTotpStatus({
         optimistic: (prev) => ({ ...prev, enabled: true }),
         commit: async () => {
           codes = await finishTotpEnrollment(totpCode());
         },
-        reconcile: revalidateTotp,
+        reconcile: true,
       });
       setRecoveryCodes(codes);
       setTotpQrCode("");

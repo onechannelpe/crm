@@ -8,7 +8,6 @@ import Bell from "~/components/icons/bell";
 import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
 import { headerNotificationsQuery } from "~/lib/queries/notifications";
 import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
-import { runOptimistic } from "~/lib/ui/run-optimistic";
 import { cn } from "~/lib/utils";
 
 import styles from "./header-notifications-panel.module.css";
@@ -24,14 +23,10 @@ function formatTimestamp(value: number): string {
 
 export function HeaderNotificationsPanel() {
   const [open, setOpen] = createSignal(false);
-  const {
-    data: feed,
-    write: writeFeed,
-    revalidate: revalidateFeed,
-  } = createOptimisticQuery(() => headerNotificationsQuery(), {
-    initialValue: { unreadCount: 0, notifications: [] },
-    key: headerNotificationsQuery.key,
-  });
+  const { data: feed, update: updateFeed } = createOptimisticQuery(
+    headerNotificationsQuery,
+    { initialValue: { unreadCount: 0, notifications: [] } },
+  );
 
   let containerRef: HTMLDivElement | undefined;
   useDismissibleLayer({
@@ -42,9 +37,7 @@ export function HeaderNotificationsPanel() {
 
   const handleMarkRead = async (notificationId: number) => {
     try {
-      await runOptimistic({
-        read: feed,
-        write: writeFeed,
+      await updateFeed({
         optimistic: (prev) => ({
           unreadCount: Math.max(
             0,
@@ -66,15 +59,13 @@ export function HeaderNotificationsPanel() {
         },
       });
     } catch {
-      // Rollback handled by runOptimistic
+      // Rollback handled by update()
     }
   };
 
   const handleMarkAllRead = async () => {
     try {
-      await runOptimistic({
-        read: feed,
-        write: writeFeed,
+      await updateFeed({
         optimistic: (prev) => ({
           unreadCount: 0,
           notifications: prev.notifications.map((item) => ({
@@ -85,10 +76,10 @@ export function HeaderNotificationsPanel() {
         commit: async () => {
           await markAllNotificationsRead();
         },
-        reconcile: revalidateFeed,
+        reconcile: true,
       });
     } catch {
-      // Rollback handled by runOptimistic
+      // Rollback handled by update()
     }
   };
 

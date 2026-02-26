@@ -10,19 +10,14 @@ import { Input } from "~/components/ui/input/input";
 import { getErrorMessage } from "~/lib/errors";
 import { quotaStatusQuery } from "~/lib/queries/quota";
 import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
-import { runOptimistic } from "~/lib/ui/run-optimistic";
 
 import styles from "./quota-page.module.css";
 
 export default function QuotaPage() {
-  const {
-    data: currentQuota,
-    write: writeQuota,
-    revalidate: revalidateQuota,
-  } = createOptimisticQuery(() => quotaStatusQuery(), {
-    initialValue: { allocated: false },
-    key: quotaStatusQuery.key,
-  });
+  const { data: currentQuota, update: updateQuota } = createOptimisticQuery(
+    quotaStatusQuery,
+    { initialValue: { allocated: false } },
+  );
   const { currentUser } = useSession();
   const [execId, setExecId] = createSignal("");
   const [amount, setAmount] = createSignal("10");
@@ -40,9 +35,7 @@ export default function QuotaPage() {
     try {
       const targetExecutiveId = Number(execId());
       const safeAmount = Number(amount());
-      await runOptimistic({
-        read: currentQuota,
-        write: writeQuota,
+      await updateQuota({
         optimistic: (prev) => {
           if (!prev.allocated) {
             return prev;
@@ -59,7 +52,7 @@ export default function QuotaPage() {
         commit: async () => {
           await allocateQuota(targetExecutiveId, safeAmount);
         },
-        reconcile: revalidateQuota,
+        reconcile: true,
       });
       showToast("success", "Quota assigned");
       setExecId("");
