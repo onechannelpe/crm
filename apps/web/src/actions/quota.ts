@@ -14,7 +14,10 @@ import { quotaService } from "~/server/shared/context";
 import { repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
-type QuotaStatus = Awaited<ReturnType<typeof quotaService.getStatus>>;
+type QuotaStatus = Extract<
+  Awaited<ReturnType<typeof quotaService.getStatus>>,
+  { ok: true }
+>["value"];
 
 export async function allocateQuota(
   executiveId: number,
@@ -68,5 +71,18 @@ export async function allocateQuota(
 
 export async function getQuotaStatus(): Promise<QuotaStatus> {
   const session = await requirePermission("quota:read");
-  return quotaService.getStatus(session.userId);
+  const result = await quotaService.getStatus(session.userId);
+  if (isErr(result)) {
+    switch (result.error.reason) {
+      case "unexpected":
+        throw internalError(result.error.message);
+      default: {
+        const exhausted: never = result.error;
+        throw internalError(
+          `Unhandled quota status error: ${String(exhausted)}`,
+        );
+      }
+    }
+  }
+  return result.value;
 }

@@ -17,6 +17,8 @@ export type QuotaRefundError =
   | { reason: "invalid_refund_amount"; message: string }
   | { reason: "unexpected"; message: string };
 
+export type QuotaStatusError = { reason: "unexpected"; message: string };
+
 export interface QuotaClock {
   todayDateString(): string;
 }
@@ -37,13 +39,16 @@ export interface QuotaService {
     amount?: number,
   ): Promise<Result<void, QuotaRefundError>>;
   getStatus(userId: number): Promise<
-    | { allocated: false }
-    | {
-        allocated: true;
-        total: number;
-        used: number;
-        remaining: number;
-      }
+    Result<
+      | { allocated: false }
+      | {
+          allocated: true;
+          total: number;
+          used: number;
+          remaining: number;
+        },
+      QuotaStatusError
+    >
   >;
 }
 
@@ -183,23 +188,41 @@ export function createQuotaService(
       }
     },
 
-    async getStatus(userId: number) {
-      const date = today();
-      const allocation = await repos.quotaAllocations.findByUserAndDate(
-        userId,
-        date,
-      );
+    async getStatus(userId: number): Promise<
+      Result<
+        | { allocated: false }
+        | {
+            allocated: true;
+            total: number;
+            used: number;
+            remaining: number;
+          },
+        QuotaStatusError
+      >
+    > {
+      try {
+        const date = today();
+        const allocation = await repos.quotaAllocations.findByUserAndDate(
+          userId,
+          date,
+        );
 
-      if (!allocation) {
-        return { allocated: false as const };
+        if (!allocation) {
+          return Ok({ allocated: false as const });
+        }
+
+        return Ok({
+          allocated: true as const,
+          total: allocation.quota_amount,
+          used: allocation.used_amount,
+          remaining: allocation.quota_amount - allocation.used_amount,
+        });
+      } catch {
+        return Err({
+          reason: "unexpected",
+          message: "Unexpected quota status read failure",
+        });
       }
-
-      return {
-        allocated: true as const,
-        total: allocation.quota_amount,
-        used: allocation.used_amount,
-        remaining: allocation.quota_amount - allocation.used_amount,
-      };
     },
   };
 }

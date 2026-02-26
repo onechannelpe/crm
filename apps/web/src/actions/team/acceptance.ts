@@ -16,25 +16,17 @@ import { createSession } from "~/lib/auth/session/session-manager";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
 import { isErr } from "~/server/shared/result";
-import type { UserProvisioningError } from "~/server/users/service-user-provisioning";
+import type { AcceptInviteError } from "~/server/users/service-user-provisioning";
 
 import { provisioning } from "./provisioning";
 import { assertStrongPassword } from "./validators";
 
-function throwProvisioningError(error: UserProvisioningError): never {
+function throwProvisioningError(error: AcceptInviteError): never {
   switch (error.reason) {
     case "invite_invalid_or_expired":
       throw validationError(error.message);
     case "invite_target_active":
-    case "invite_not_pending":
       throw conflictError(error.message);
-    case "role_not_assignable":
-    case "invalid_team":
-    case "active_user_exists":
-    case "pending_user_other_branch":
-    case "invite_target_missing":
-    case "invite_not_found":
-    case "cross_branch_forbidden":
     case "unexpected":
       throw internalError(error.message);
     default: {

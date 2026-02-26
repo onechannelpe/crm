@@ -5,9 +5,5 @@ export function getErrorMessage(error: unknown, fallback: string): string {
 }
 
 export function getErrorCode(error: unknown): AppErrorCode | null {
-  try {
-    return toAppError(error, "Unexpected error").code;
-  } catch {
-    return null;
-  }
+  return toAppError(error, "Unexpected error").code;
 }

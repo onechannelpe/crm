@@ -75,6 +75,10 @@ interface UpdateSalesRecordDraftInput {
   products: DraftProductInput[];
 }
 
+type SalesProductRow = NonNullable<
+  Awaited<ReturnType<Repositories["products"]["findById"]>>
+>;
+
 export type SalesRecordsWorkflowError =
   | { reason: "not_found"; message: string }
   | { reason: "forbidden"; message: string }
@@ -110,6 +114,90 @@ export function createSalesRecordsWorkflowService(
     }
   }
 
+  function validateDraftPayload(input: {
+    addresses: DraftAddressInput[];
+    products: DraftProductInput[];
+  }): Result<void, SalesRecordsWorkflowError> {
+    if (input.addresses.length < 1) {
+      return fail("invalid_data", "At least one address is required");
+    }
+    const primaryCount = input.addresses.filter((it) => it.isPrimary).length;
+    if (primaryCount !== 1) {
+      return fail("invalid_data", "Exactly one primary address is required");
+    }
+    if (input.products.length < 1) {
+      return fail("invalid_data", "At least one product is required");
+    }
+    if (input.products.some((it) => it.quantity < 1)) {
+      return fail("invalid_data", "All product quantities must be positive");
+    }
+    return Ok(undefined);
+  }
+
+  async function loadProducts(
+    activeRepos: Repositories,
+    lines: DraftProductInput[],
+  ): Promise<Result<SalesProductRow[], SalesRecordsWorkflowError>> {
+    const products = await Promise.all(
+      lines.map((item) => activeRepos.products.findById(item.productId)),
+    );
+    if (products.some((product) => !product)) {
+      return fail("not_found", "One or more products do not exist");
+    }
+    return Ok(products as SalesProductRow[]);
+  }
+
+  async function persistDraftState(params: {
+    activeRepos: Repositories;
+    recordId: number;
+    input: UpdateSalesRecordDraftInput;
+    products: SalesProductRow[];
+    now: number;
+  }): Promise<void> {
+    await params.activeRepos.salesRecords.upsertClient({
+      sales_record_id: params.recordId,
+      ruc: params.input.client.ruc,
+      company_name: params.input.client.companyName,
+      contact_name: params.input.client.contactName,
+      dni: params.input.client.dni,
+      phones_json: JSON.stringify(params.input.client.phones),
+      engine_match_id: params.input.client.engineMatchId,
+      completeness_score: params.input.client.completenessScore,
+      created_at: params.now,
+      updated_at: params.now,
+    });
+    await params.activeRepos.salesRecords.replaceAddresses(
+      params.recordId,
+      params.input.addresses.map((address) => ({
+        sales_record_id: params.recordId,
+        address_type: address.addressType,
+        full_text: address.fullText,
+        department: address.department,
+        province: address.province,
+        district: address.district,
+        ubigeo: address.ubigeo,
+        latitude: address.latitude,
+        longitude: address.longitude,
+        is_primary: address.isPrimary ? 1 : 0,
+        created_at: params.now,
+        updated_at: params.now,
+      })),
+    );
+    await params.activeRepos.salesRecords.replaceProducts(
+      params.recordId,
+      params.input.products.map((line, index) => ({
+        sales_record_id: params.recordId,
+        product_id: line.productId,
+        product_name_snapshot: params.products[index].name,
+        category_snapshot: params.products[index].category,
+        subtype_snapshot: params.products[index].subtype,
+        quantity: line.quantity,
+        unit_price_snapshot: params.products[index].price,
+        created_at: params.now,
+      })),
+    );
+  }
+
   return {
     async createDraft(
       input: CreateSalesRecordDraftInput,
@@ -118,26 +206,12 @@ export function createSalesRecordsWorkflowService(
         withTransaction(async (activeRepos) => {
           const audit = createAuditService(activeRepos);
 
-          if (input.addresses.length < 1) {
-            return fail("invalid_data", "At least one address is required");
-          }
-          const primaryCount = input.addresses.filter(
-            (it) => it.isPrimary,
-          ).length;
-          if (primaryCount !== 1) {
-            return fail(
-              "invalid_data",
-              "Exactly one primary address is required",
-            );
-          }
-          if (input.products.length < 1) {
-            return fail("invalid_data", "At least one product is required");
-          }
-          if (input.products.some((it) => it.quantity < 1)) {
-            return fail(
-              "invalid_data",
-              "All product quantities must be positive",
-            );
+          const payloadValidation = validateDraftPayload({
+            addresses: input.addresses,
+            products: input.products,
+          });
+          if (!payloadValidation.ok) {
+            return payloadValidation;
           }
 
           if (
@@ -170,14 +244,11 @@ export function createSalesRecordsWorkflowService(
             }
           }
 
-          const products = await Promise.all(
-            input.products.map((item) =>
-              activeRepos.products.findById(item.productId),
-            ),
+          const productsResult = await loadProducts(
+            activeRepos,
+            input.products,
           );
-          if (products.some((product) => !product)) {
-            return fail("not_found", "One or more products do not exist");
-          }
+          if (!productsResult.ok) return productsResult;
 
           const now = Date.now();
           const recordId = await activeRepos.salesRecords.create({
@@ -194,50 +265,13 @@ export function createSalesRecordsWorkflowService(
             updated_at: now,
           });
 
-          await activeRepos.salesRecords.upsertClient({
-            sales_record_id: recordId,
-            ruc: input.client.ruc,
-            company_name: input.client.companyName,
-            contact_name: input.client.contactName,
-            dni: input.client.dni,
-            phones_json: JSON.stringify(input.client.phones),
-            engine_match_id: input.client.engineMatchId,
-            completeness_score: input.client.completenessScore,
-            created_at: now,
-            updated_at: now,
+          await persistDraftState({
+            activeRepos,
+            recordId,
+            input,
+            products: productsResult.value,
+            now,
           });
-
-          await activeRepos.salesRecords.replaceAddresses(
-            recordId,
-            input.addresses.map((address) => ({
-              sales_record_id: recordId,
-              address_type: address.addressType,
-              full_text: address.fullText,
-              department: address.department,
-              province: address.province,
-              district: address.district,
-              ubigeo: address.ubigeo,
-              latitude: address.latitude,
-              longitude: address.longitude,
-              is_primary: address.isPrimary ? 1 : 0,
-              created_at: now,
-              updated_at: now,
-            })),
-          );
-
-          await activeRepos.salesRecords.replaceProducts(
-            recordId,
-            input.products.map((line, index) => ({
-              sales_record_id: recordId,
-              product_id: line.productId,
-              product_name_snapshot: products[index]!.name,
-              category_snapshot: products[index]!.category,
-              subtype_snapshot: products[index]!.subtype,
-              quantity: line.quantity,
-              unit_price_snapshot: products[index]!.price,
-              created_at: now,
-            })),
-          );
 
           await audit.log(
             input.executiveUserId,
@@ -342,80 +376,28 @@ export function createSalesRecordsWorkflowService(
             );
           }
 
-          if (input.addresses.length < 1) {
-            return fail("invalid_data", "At least one address is required");
-          }
-          const primaryCount = input.addresses.filter(
-            (it) => it.isPrimary,
-          ).length;
-          if (primaryCount !== 1) {
-            return fail(
-              "invalid_data",
-              "Exactly one primary address is required",
-            );
-          }
-          if (input.products.length < 1) {
-            return fail("invalid_data", "At least one product is required");
-          }
-          if (input.products.some((it) => it.quantity < 1)) {
-            return fail(
-              "invalid_data",
-              "All product quantities must be positive",
-            );
+          const payloadValidation = validateDraftPayload({
+            addresses: input.addresses,
+            products: input.products,
+          });
+          if (!payloadValidation.ok) {
+            return payloadValidation;
           }
 
-          const products = await Promise.all(
-            input.products.map((item) =>
-              activeRepos.products.findById(item.productId),
-            ),
+          const productsResult = await loadProducts(
+            activeRepos,
+            input.products,
           );
-          if (products.some((product) => !product)) {
-            return fail("not_found", "One or more products do not exist");
-          }
+          if (!productsResult.ok) return productsResult;
 
           const now = Date.now();
-          await activeRepos.salesRecords.upsertClient({
-            sales_record_id: recordId,
-            ruc: input.client.ruc,
-            company_name: input.client.companyName,
-            contact_name: input.client.contactName,
-            dni: input.client.dni,
-            phones_json: JSON.stringify(input.client.phones),
-            engine_match_id: input.client.engineMatchId,
-            completeness_score: input.client.completenessScore,
-            created_at: now,
-            updated_at: now,
+          await persistDraftState({
+            activeRepos,
+            recordId,
+            input,
+            products: productsResult.value,
+            now,
           });
-          await activeRepos.salesRecords.replaceAddresses(
-            recordId,
-            input.addresses.map((address) => ({
-              sales_record_id: recordId,
-              address_type: address.addressType,
-              full_text: address.fullText,
-              department: address.department,
-              province: address.province,
-              district: address.district,
-              ubigeo: address.ubigeo,
-              latitude: address.latitude,
-              longitude: address.longitude,
-              is_primary: address.isPrimary ? 1 : 0,
-              created_at: now,
-              updated_at: now,
-            })),
-          );
-          await activeRepos.salesRecords.replaceProducts(
-            recordId,
-            input.products.map((line, index) => ({
-              sales_record_id: recordId,
-              product_id: line.productId,
-              product_name_snapshot: products[index]!.name,
-              category_snapshot: products[index]!.category,
-              subtype_snapshot: products[index]!.subtype,
-              quantity: line.quantity,
-              unit_price_snapshot: products[index]!.price,
-              created_at: now,
-            })),
-          );
           await activeRepos.salesRecords.touch(recordId, now);
           await audit.log(
             executiveUserId,

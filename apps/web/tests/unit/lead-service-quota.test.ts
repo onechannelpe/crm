@@ -39,7 +39,13 @@ describe("lead service quota invariants", () => {
 
     await quota.allocate(2, 1, 5, day);
     const before = await quota.getStatus(1);
-    expect(before).toMatchObject({ allocated: true, used: 0, remaining: 5 });
+    expect(before.ok).toBe(true);
+    if (!before.ok) throw new Error("Expected quota status read to succeed");
+    expect(before.value).toMatchObject({
+      allocated: true,
+      used: 0,
+      remaining: 5,
+    });
 
     const result = await service.requestLeads(1, 1, 3);
     expect(result.ok).toBe(true);
@@ -47,7 +53,13 @@ describe("lead service quota invariants", () => {
     expect(result.value).toBe(0);
 
     const after = await quota.getStatus(1);
-    expect(after).toMatchObject({ allocated: true, used: 0, remaining: 5 });
+    expect(after.ok).toBe(true);
+    if (!after.ok) throw new Error("Expected quota status read to succeed");
+    expect(after.value).toMatchObject({
+      allocated: true,
+      used: 0,
+      remaining: 5,
+    });
   });
 
   it("does not consume quota when engine health is down", async () => {
@@ -64,7 +76,13 @@ describe("lead service quota invariants", () => {
     expect(result.error.reason).toBe("engine_unavailable");
 
     const after = await quota.getStatus(1);
-    expect(after).toMatchObject({ allocated: true, used: 0, remaining: 5 });
+    expect(after.ok).toBe(true);
+    if (!after.ok) throw new Error("Expected quota status read to succeed");
+    expect(after.value).toMatchObject({
+      allocated: true,
+      used: 0,
+      remaining: 5,
+    });
   });
 
   it("refunds consumed quota when engine search fails mid-assignment", async () => {
@@ -85,7 +103,13 @@ describe("lead service quota invariants", () => {
     expect(result.error.reason).toBe("unexpected");
 
     const after = await quota.getStatus(1);
-    expect(after).toMatchObject({ allocated: true, used: 0, remaining: 5 });
+    expect(after.ok).toBe(true);
+    if (!after.ok) throw new Error("Expected quota status read to succeed");
+    expect(after.value).toMatchObject({
+      allocated: true,
+      used: 0,
+      remaining: 5,
+    });
   });
 
   it("refunds consumed quota when persistence fails after assignment selection", async () => {
@@ -120,6 +144,12 @@ describe("lead service quota invariants", () => {
     expect(result.error.reason).toBe("unexpected");
 
     const after = await quota.getStatus(1);
-    expect(after).toMatchObject({ allocated: true, used: 0, remaining: 5 });
+    expect(after.ok).toBe(true);
+    if (!after.ok) throw new Error("Expected quota status read to succeed");
+    expect(after.value).toMatchObject({
+      allocated: true,
+      used: 0,
+      remaining: 5,
+    });
   });
 });
