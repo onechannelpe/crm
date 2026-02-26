@@ -61,7 +61,7 @@ describe("lead service quota invariants", () => {
     const result = await service.requestLeads(1, 1, 3);
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error("Expected engine-down request to fail fast");
-    expect(result.error).toContain("Lead engine unavailable");
+    expect(result.error.reason).toBe("engine_unavailable");
 
     const after = await quota.getStatus(1);
     expect(after).toMatchObject({ allocated: true, used: 0, remaining: 5 });
@@ -77,9 +77,12 @@ describe("lead service quota invariants", () => {
     const day = today();
 
     await quota.allocate(2, 1, 5, day);
-    await expect(service.requestLeads(1, 1, 1)).rejects.toThrow(
-      "engine search outage",
-    );
+    const result = await service.requestLeads(1, 1, 1);
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error("Expected engine search failure to be mapped to Result");
+    }
+    expect(result.error.reason).toBe("unexpected");
 
     const after = await quota.getStatus(1);
     expect(after).toMatchObject({ allocated: true, used: 0, remaining: 5 });
@@ -109,9 +112,12 @@ describe("lead service quota invariants", () => {
     const day = today();
 
     await quota.allocate(2, 1, 5, day);
-    await expect(service.requestLeads(1, 1, 1)).rejects.toThrow(
-      "db write outage",
-    );
+    const result = await service.requestLeads(1, 1, 1);
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error("Expected persistence failure to be mapped to Result");
+    }
+    expect(result.error.reason).toBe("unexpected");
 
     const after = await quota.getStatus(1);
     expect(after).toMatchObject({ allocated: true, used: 0, remaining: 5 });

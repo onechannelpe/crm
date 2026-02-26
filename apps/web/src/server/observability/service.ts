@@ -98,7 +98,6 @@ function mapCodeToDetails(code: AppErrorCode): ErrorDetails {
 function resolveErrorDetails(
   status: "ok" | "error",
   appErrorCode: AppErrorCode | null,
-  message: string | null,
 ): ErrorDetails {
   if (status === "ok") {
     return {
@@ -111,62 +110,6 @@ function resolveErrorDetails(
   if (appErrorCode) {
     return mapCodeToDetails(appErrorCode);
   }
-
-  const safeMessage = message?.toLowerCase() ?? "";
-
-  if (
-    safeMessage.includes("unauthorized") ||
-    safeMessage.includes("forbidden") ||
-    safeMessage.includes("onboarding required")
-  ) {
-    return {
-      code: "authorization_denied",
-      category: "authorization",
-      publicError: "Authorization failed",
-      isSensitive: 1,
-    };
-  }
-
-  if (safeMessage.includes("not found")) {
-    return {
-      code: "resource_not_found",
-      category: "not_found",
-      publicError: "Requested resource was not found",
-      isSensitive: 0,
-    };
-  }
-
-  if (safeMessage.includes("rate") || safeMessage.includes("throttle")) {
-    return {
-      code: "rate_limited",
-      category: "rate_limit",
-      publicError: "Request was rate limited",
-      isSensitive: 0,
-    };
-  }
-
-  if (safeMessage.includes("already") || safeMessage.includes("cannot")) {
-    return {
-      code: "state_conflict",
-      category: "conflict",
-      publicError: "Operation conflicts with current state",
-      isSensitive: 0,
-    };
-  }
-
-  if (
-    safeMessage.includes("required") ||
-    safeMessage.includes("invalid") ||
-    safeMessage.includes("must")
-  ) {
-    return {
-      code: "validation_failed",
-      category: "validation",
-      publicError: "Validation failed",
-      isSensitive: 0,
-    };
-  }
-
   return {
     code: "internal_error",
     category: "internal",
@@ -178,11 +121,7 @@ function resolveErrorDetails(
 export function createObservabilityService(repos: ObservabilityRepos) {
   return {
     async recordAction(input: RecordActionObservationInput): Promise<void> {
-      const errorDetails = resolveErrorDetails(
-        input.status,
-        input.errorCode,
-        input.errorMessage,
-      );
+      const errorDetails = resolveErrorDetails(input.status, input.errorCode);
       await repos.actionObservations.create({
         trace_id: input.traceId,
         request_id: input.requestId,

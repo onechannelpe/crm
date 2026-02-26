@@ -2,7 +2,11 @@
 
 import { getRequestEvent } from "solid-js/web";
 
-import { appErrorFromMessage, validationError } from "~/lib/app-errors";
+import {
+  conflictError,
+  internalError,
+  validationError,
+} from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { isValidInviteTokenFormat } from "~/lib/auth/invite/tokens";
 import { getClientIp } from "~/lib/auth/password/client-ip";
@@ -12,9 +16,35 @@ import { createSession } from "~/lib/auth/session/session-manager";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
 import { isErr } from "~/server/shared/result";
+import type { UserProvisioningError } from "~/server/users/service-user-provisioning";
 
 import { provisioning } from "./provisioning";
 import { assertStrongPassword } from "./validators";
+
+function throwProvisioningError(error: UserProvisioningError): never {
+  switch (error.reason) {
+    case "invite_invalid_or_expired":
+      throw validationError(error.message);
+    case "invite_target_active":
+    case "invite_not_pending":
+      throw conflictError(error.message);
+    case "role_not_assignable":
+    case "invalid_team":
+    case "active_user_exists":
+    case "pending_user_other_branch":
+    case "invite_target_missing":
+    case "invite_not_found":
+    case "cross_branch_forbidden":
+    case "unexpected":
+      throw internalError(error.message);
+    default: {
+      const exhausted: never = error;
+      throw internalError(
+        `Unhandled invite acceptance error: ${String(exhausted)}`,
+      );
+    }
+  }
+}
 
 export async function acceptTeamInvite(input: {
   token: string;
@@ -40,7 +70,7 @@ export async function acceptTeamInvite(input: {
         passwordHash: await hashPassword(safePassword),
       });
       if (isErr(result)) {
-        throw appErrorFromMessage(result.error);
+        throwProvisioningError(result.error);
       }
       actor.userId = result.value.userId;
       actor.role = result.value.role;

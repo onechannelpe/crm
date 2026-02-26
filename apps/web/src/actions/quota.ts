@@ -1,9 +1,10 @@
 "use server";
 
 import {
-  appErrorFromMessage,
   conflictError,
+  internalError,
   notFoundError,
+  rateLimitError,
   validationError,
 } from "~/lib/app-errors";
 import { requirePermission } from "~/lib/auth/access/session";
@@ -40,7 +41,24 @@ export async function allocateQuota(
     safeAmount,
   );
 
-  if (isErr(result)) throw appErrorFromMessage(result.error);
+  if (isErr(result)) {
+    switch (result.error.reason) {
+      case "quota_already_allocated":
+        throw conflictError(result.error.message);
+      case "quota_not_allocated":
+      case "invalid_refund_amount":
+      case "unexpected":
+        throw internalError(result.error.message);
+      case "quota_exhausted":
+        throw rateLimitError(result.error.message);
+      default: {
+        const exhausted: never = result.error;
+        throw internalError(
+          `Unhandled quota allocation error: ${String(exhausted)}`,
+        );
+      }
+    }
+  }
   await appNotificationCenter.notifyUsers([safeExecutiveId], {
     type: "quota.assigned",
     title: "Nueva cuota asignada",

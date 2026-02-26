@@ -1,8 +1,8 @@
 "use server";
 
 import {
-  appErrorFromMessage,
   forbiddenError,
+  internalError,
   notFoundError,
   validationError,
 } from "~/lib/app-errors";
@@ -15,6 +15,7 @@ import {
 } from "~/lib/contracts/guards";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
 import { computeClientCompletenessScore } from "~/server/sales/completeness";
+import type { SalesRecordsWorkflowError } from "~/server/sales/records-service";
 import { repos, salesRecordsService } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
@@ -160,6 +161,26 @@ function parsePhonesJson(raw: string): string[] {
   }
 }
 
+function throwSalesWorkflowError(error: SalesRecordsWorkflowError): never {
+  switch (error.reason) {
+    case "not_found":
+      throw notFoundError(error.message);
+    case "forbidden":
+      throw forbiddenError(error.message);
+    case "invalid_data":
+    case "invalid_state":
+      throw validationError(error.message);
+    case "unexpected":
+      throw internalError(error.message);
+    default: {
+      const exhausted: never = error;
+      throw internalError(
+        `Unhandled sales workflow error: ${String(exhausted)}`,
+      );
+    }
+  }
+}
+
 export async function listSalesRecordProducts(): Promise<
   SalesRecordProductOption[]
 > {
@@ -283,7 +304,7 @@ export async function createSalesRecordDraft(
         addresses: input.addresses,
         products: input.products,
       });
-      if (isErr(result)) throw appErrorFromMessage(result.error);
+      if (isErr(result)) throwSalesWorkflowError(result.error);
       return { id: result.value };
     },
   });
@@ -306,7 +327,7 @@ export async function submitSalesRecord(
         safeRecordId,
         session.userId,
       );
-      if (isErr(result)) throw appErrorFromMessage(result.error);
+      if (isErr(result)) throwSalesWorkflowError(result.error);
       return { success: true };
     },
   });
@@ -331,7 +352,7 @@ export async function confirmSalesRecord(
         session.branchId,
         session.role === "superuser",
       );
-      if (isErr(result)) throw appErrorFromMessage(result.error);
+      if (isErr(result)) throwSalesWorkflowError(result.error);
       return { success: true };
     },
   });
@@ -359,7 +380,7 @@ export async function rejectSalesRecord(
         session.role === "superuser",
         safeReason,
       );
-      if (isErr(result)) throw appErrorFromMessage(result.error);
+      if (isErr(result)) throwSalesWorkflowError(result.error);
       return { success: true };
     },
   });
@@ -382,7 +403,7 @@ export async function cancelSalesRecord(
         safeRecordId,
         session.userId,
       );
-      if (isErr(result)) throw appErrorFromMessage(result.error);
+      if (isErr(result)) throwSalesWorkflowError(result.error);
       return { success: true };
     },
   });
@@ -518,7 +539,7 @@ export async function updateSalesRecordDraft(
         },
         safeCorrectionNotes,
       );
-      if (isErr(result)) throw appErrorFromMessage(result.error);
+      if (isErr(result)) throwSalesWorkflowError(result.error);
       return { success: true };
     },
   });
@@ -552,7 +573,7 @@ export async function registerSalesRecordAttempt(
         notes,
         nextAttemptAt,
       );
-      if (isErr(result)) throw appErrorFromMessage(result.error);
+      if (isErr(result)) throwSalesWorkflowError(result.error);
       return { success: true };
     },
   });

@@ -3,6 +3,7 @@ import { createAssignment } from "~/server/leads/domain-assignment";
 import { canContactNow } from "~/server/leads/domain-cooldown";
 import { canLockOrganization } from "~/server/leads/domain-org-lock";
 import { createQuotaService } from "~/server/quota/service";
+import type { QuotaServiceError } from "~/server/quota/service";
 import type { QuotaService } from "~/server/quota/service";
 import { createAuditService } from "~/server/shared/audit";
 import { engineClient } from "~/server/shared/engine";
@@ -15,6 +16,11 @@ interface LeadAssignmentPorts {
   engineClient?: EngineClient;
 }
 
+export type LeadAssignmentError =
+  | { reason: "engine_unavailable"; message: string }
+  | { reason: "quota_error"; quotaError: QuotaServiceError; message: string }
+  | { reason: "unexpected"; message: string };
+
 export function createLeadAssignmentService(
   repos: Repositories,
   ports: LeadAssignmentPorts = {},
@@ -23,25 +29,39 @@ export function createLeadAssignmentService(
   const engine = ports.engineClient ?? engineClient;
   const audit = createAuditService(repos);
 
+  function fail(
+    error: LeadAssignmentError,
+  ): Result<never, LeadAssignmentError> {
+    return Err(error);
+  }
+
   return {
     async requestLeads(
       userId: number,
       branchId: number,
       bufferSize: number = config.leadAssignment.defaultBufferSize,
-    ): Promise<Result<number, string>> {
+    ): Promise<Result<number, LeadAssignmentError>> {
       const currentCount =
         await repos.leadAssignments.countActiveByUser(userId);
       const needed = Math.max(0, bufferSize - currentCount);
       if (needed === 0) return Ok(0);
       const engineHealthy = await engine.health();
       if (!engineHealthy) {
-        return Err(
-          "Lead engine unavailable. Verify engine service and dataset.",
-        );
+        return fail({
+          reason: "engine_unavailable",
+          message:
+            "Lead engine unavailable. Verify engine service and dataset.",
+        });
       }
 
       const quotaResult = await quotaService.consume(userId, needed);
-      if (isErr(quotaResult)) return quotaResult;
+      if (isErr(quotaResult)) {
+        return fail({
+          reason: "quota_error",
+          quotaError: quotaResult.error,
+          message: quotaResult.error.message,
+        });
+      }
 
       const orgs = await repos.organizations.findUnlockedOrLockedToBranch(
         branchId,
@@ -83,21 +103,31 @@ export function createLeadAssignmentService(
         if (assignments.length > 0) {
           await repos.leadAssignments.createMany(assignments);
         }
-      } catch (error) {
+      } catch {
         const refundOnError = await quotaService.refund(userId, needed);
         if (isErr(refundOnError)) {
-          throw new Error(
-            `Lead assignment failed and quota refund failed: ${refundOnError.error}`,
-            { cause: error },
-          );
+          return fail({
+            reason: "unexpected",
+            message:
+              "Lead assignment failed and quota refund also failed unexpectedly",
+          });
         }
-        throw error;
+        return fail({
+          reason: "unexpected",
+          message: "Unexpected lead assignment failure",
+        });
       }
 
       const unusedQuota = needed - assignments.length;
       if (unusedQuota > 0) {
         const refundResult = await quotaService.refund(userId, unusedQuota);
-        if (isErr(refundResult)) return refundResult;
+        if (isErr(refundResult)) {
+          return fail({
+            reason: "quota_error",
+            quotaError: refundResult.error,
+            message: refundResult.error.message,
+          });
+        }
       }
 
       await audit.log(userId, "leads_requested", "lead_assignment", userId, {
@@ -111,9 +141,16 @@ export function createLeadAssignmentService(
     async completeLead(
       userId: number,
       assignmentId: number,
-    ): Promise<Result<void, string>> {
-      await repos.leadAssignments.markCompleted(assignmentId, userId);
-      return Ok(undefined);
+    ): Promise<Result<void, LeadAssignmentError>> {
+      try {
+        await repos.leadAssignments.markCompleted(assignmentId, userId);
+        return Ok(undefined);
+      } catch {
+        return fail({
+          reason: "unexpected",
+          message: "Unexpected lead completion failure",
+        });
+      }
     },
   };
 }

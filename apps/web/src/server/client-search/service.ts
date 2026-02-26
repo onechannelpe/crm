@@ -9,11 +9,15 @@ interface SearchParams {
   limit?: number;
 }
 
+export type ClientSearchError =
+  | { reason: "engine_request_failed"; message: string }
+  | { reason: "unexpected"; message: string };
+
 export function createClientSearchService(client: EngineClient = engineClient) {
   return {
     async search(
       params: SearchParams,
-    ): Promise<Result<SearchResponse, string>> {
+    ): Promise<Result<SearchResponse, ClientSearchError>> {
       try {
         const response = await client.search(
           params.type,
@@ -22,9 +26,16 @@ export function createClientSearchService(client: EngineClient = engineClient) {
         );
         return Ok(response);
       } catch (error: unknown) {
-        const message =
-          error instanceof Error ? error.message : "Client search failed";
-        return Err(message);
+        if (error instanceof Error) {
+          return Err({
+            reason: "engine_request_failed",
+            message: error.message || "Client search failed",
+          });
+        }
+        return Err({
+          reason: "unexpected",
+          message: "Client search failed unexpectedly",
+        });
       }
     },
   };

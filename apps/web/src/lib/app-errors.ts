@@ -36,57 +36,21 @@ export function isAppError(error: unknown): error is AppError {
   return error instanceof AppError;
 }
 
-function resolveCodeFromMessage(message: string): AppErrorCode {
-  const safe = message.toLowerCase();
-  if (
-    safe.includes("unauthorized") ||
-    safe.includes("forbidden") ||
-    safe.includes("not your")
-  ) {
-    return "forbidden";
-  }
-  if (safe.includes("not found")) {
-    return "not_found";
-  }
-  if (safe.includes("rate") || safe.includes("throttle")) {
-    return "rate_limit";
-  }
-  if (
-    safe.includes("already") ||
-    safe.includes("conflict") ||
-    safe.includes("cannot")
-  ) {
-    return "conflict";
-  }
-  if (
-    safe.includes("required") ||
-    safe.includes("invalid") ||
-    safe.includes("must")
-  ) {
-    return "validation";
-  }
-  return "internal";
-}
-
-export function appErrorFromMessage(message: string): AppError {
-  return new AppError({
-    code: resolveCodeFromMessage(message),
-    publicMessage: message,
-  });
-}
-
 export function toAppError(error: unknown, fallback: string): AppError {
   if (isAppError(error)) return error;
   if (error instanceof Error) {
-    if (error.message.trim().length > 0) {
-      return appErrorFromMessage(error.message);
-    }
-    return new AppError({ code: "internal", publicMessage: fallback });
+    return new AppError({
+      code: "internal",
+      publicMessage: fallback,
+      internalMessage: error.message,
+      cause: error,
+    });
   }
-  if (typeof error === "string" && error.trim().length > 0) {
-    return appErrorFromMessage(error);
-  }
-  return new AppError({ code: "internal", publicMessage: fallback });
+  return new AppError({
+    code: "internal",
+    publicMessage: fallback,
+    cause: error,
+  });
 }
 
 export function validationError(publicMessage: string): AppError {

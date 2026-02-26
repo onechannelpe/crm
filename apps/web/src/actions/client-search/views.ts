@@ -67,24 +67,29 @@ export async function createClientSearchView(
   }
 
   const session = await requirePermission("client_search:read");
+  const existingViews = await repos.clientSearchViews.listByUser(
+    session.userId,
+  );
+  const hasDuplicateName = existingViews.some(
+    (view) => view.name.toLowerCase() === safeName.toLowerCase(),
+  );
+  if (hasDuplicateName) {
+    throw conflictError("A view with this name already exists");
+  }
 
   if (isDefault) {
     await repos.clientSearchViews.clearDefaultForUser(session.userId);
   }
 
-  try {
-    const created = await repos.clientSearchViews.create({
-      user_id: session.userId,
-      name: safeName,
-      search_type: searchType,
-      query_value: safeQuery,
-      limit_value: safeLimit,
-      is_default: isDefault ? 1 : 0,
-    });
-    return mapView(created);
-  } catch {
-    throw conflictError("A view with this name already exists");
-  }
+  const created = await repos.clientSearchViews.create({
+    user_id: session.userId,
+    name: safeName,
+    search_type: searchType,
+    query_value: safeQuery,
+    limit_value: safeLimit,
+    is_default: isDefault ? 1 : 0,
+  });
+  return mapView(created);
 }
 
 export async function updateClientSearchView(
