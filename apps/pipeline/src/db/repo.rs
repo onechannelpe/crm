@@ -1,9 +1,9 @@
 use crate::PipelineError;
 use crate::domain::canonical::CanonicalRow;
+use crate::domain::record_hash::hash_record;
 use crate::stages::consolidate::IngestCounters;
 use csv::StringRecord;
 use rusqlite::{Transaction, params};
-use sha2::{Digest, Sha256};
 
 pub(crate) fn ingest_one_row(
     tx: &Transaction<'_>,
@@ -143,37 +143,29 @@ pub(crate) fn upsert_snapshot(
     file_path: &str,
     reliability_rank: i64,
 ) -> Result<i64, PipelineError> {
-    tx.execute(
+    let source_id: i64 = tx.query_row(
         r#"
         INSERT INTO source_registry(source_key, source_name, reliability_rank)
         VALUES (?1, ?2, ?3)
         ON CONFLICT(source_key) DO UPDATE SET
             source_name=excluded.source_name,
             reliability_rank=excluded.reliability_rank
+        RETURNING source_id
         "#,
         params![source_key, source_name, reliability_rank],
-    )?;
-
-    let source_id: i64 = tx.query_row(
-        "SELECT source_id FROM source_registry WHERE source_key=?1",
-        [source_key],
         |row| row.get(0),
     )?;
 
-    tx.execute(
+    let snapshot_id: i64 = tx.query_row(
         r#"
         INSERT INTO source_snapshot(source_id, snapshot_label, snapshot_date, file_path, status)
         VALUES (?1, ?2, ?3, ?4, 'registered')
         ON CONFLICT(source_id, snapshot_label) DO UPDATE SET
             snapshot_date=excluded.snapshot_date,
             file_path=excluded.file_path
+        RETURNING snapshot_id
         "#,
         params![source_id, snapshot_label, snapshot_date, file_path],
-    )?;
-
-    let snapshot_id: i64 = tx.query_row(
-        "SELECT snapshot_id FROM source_snapshot WHERE source_id=?1 AND snapshot_label=?2",
-        params![source_id, snapshot_label],
         |row| row.get(0),
     )?;
     Ok(snapshot_id)
@@ -186,7 +178,7 @@ fn upsert_person(
     full_name: &str,
 ) -> Result<Option<i64>, PipelineError> {
     if let Some(dni) = dni {
-        tx.execute(
+        let id: i64 = tx.query_row(
             r#"
             INSERT INTO person_profile(dni, natural_ruc10, full_name)
             VALUES (?1, ?2, ?3)
@@ -200,12 +192,9 @@ fn upsert_person(
                     WHEN excluded.full_name <> '' THEN excluded.full_name
                     ELSE person_profile.full_name
                 END
+            RETURNING person_id
             "#,
             params![dni, natural_ruc10, full_name],
-        )?;
-        let id = tx.query_row(
-            "SELECT person_id FROM person_profile WHERE dni=?1",
-            [dni],
             |row| row.get(0),
         )?;
         return Ok(Some(id));
@@ -214,11 +203,12 @@ fn upsert_person(
     if full_name.is_empty() {
         return Ok(None);
     }
-    tx.execute(
-        "INSERT INTO person_profile(dni, natural_ruc10, full_name) VALUES (NULL, ?1, ?2)",
+    let person_id: i64 = tx.query_row(
+        "INSERT INTO person_profile(dni, natural_ruc10, full_name) VALUES (NULL, ?1, ?2) RETURNING person_id",
         params![natural_ruc10, full_name],
+        |row| row.get(0),
     )?;
-    Ok(Some(tx.last_insert_rowid()))
+    Ok(Some(person_id))
 }
 
 fn upsert_company(
@@ -230,7 +220,7 @@ fn upsert_company(
         return Ok(None);
     };
 
-    tx.execute(
+    let company_id: i64 = tx.query_row(
         r#"
         INSERT INTO company_profile(ruc, legal_name)
         VALUES (?1, ?2)
@@ -239,12 +229,9 @@ fn upsert_company(
                 WHEN excluded.legal_name <> '' THEN excluded.legal_name
                 ELSE company_profile.legal_name
             END
+        RETURNING company_id
         "#,
         params![ruc, legal_name],
-    )?;
-    let company_id = tx.query_row(
-        "SELECT company_id FROM company_profile WHERE ruc=?1",
-        [ruc],
         |row| row.get(0),
     )?;
     Ok(Some(company_id))
@@ -261,7 +248,7 @@ fn upsert_role(
     role_name: &str,
     role_start_date: &str,
 ) -> Result<Option<i64>, PipelineError> {
-    tx.execute(
+    let role_id: i64 = tx.query_row(
         r#"
         INSERT INTO person_company_role(
             person_id, company_id, rep_doc_type, rep_doc_number, rep_name, role_name, role_start_date, resolution_status
@@ -274,6 +261,7 @@ fn upsert_role(
                 ELSE person_company_role.rep_name
             END,
             resolution_status = excluded.resolution_status
+        RETURNING role_id
         "#,
         params![
             person_id,
@@ -288,25 +276,6 @@ fn upsert_role(
             } else {
                 "unresolved"
             }
-        ],
-    )?;
-
-    let role_id = tx.query_row(
-        r#"
-        SELECT role_id
-        FROM person_company_role
-        WHERE company_id=?1
-          AND rep_doc_type=?2
-          AND rep_doc_number=?3
-          AND role_name=?4
-          AND role_start_date=?5
-        "#,
-        params![
-            company_id,
-            rep_doc_type,
-            rep_doc_number,
-            role_name,
-            role_start_date
         ],
         |row| row.get(0),
     )?;
@@ -384,12 +353,4 @@ fn insert_evidence(
         params![entity_kind, entity_pk, snapshot_id, source_row_number, raw_hash],
     )?;
     Ok(())
-}
-
-fn hash_record(record: &StringRecord, delimiter: &str) -> String {
-    let joined = record.iter().collect::<Vec<_>>().join(delimiter);
-    let mut hasher = Sha256::new();
-    hasher.update(joined.as_bytes());
-    let output = hasher.finalize();
-    hex::encode(output)
 }

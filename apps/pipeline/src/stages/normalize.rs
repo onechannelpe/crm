@@ -5,8 +5,8 @@ use crate::domain::canonical;
 use crate::domain::normalize_helpers::{
     PhoneKind, normalize_phone_with_kind,
 };
+use crate::domain::record_hash::hash_record;
 use csv::ReaderBuilder;
-use sha2::{Digest, Sha256};
 use std::fs;
 use std::path::Path;
 
@@ -268,13 +268,6 @@ fn normalize_source_entry(
     fs::write(summary_path, serde_json::to_string_pretty(&summary)?)?;
     println!("{}", serde_json::to_string(&summary)?);
     Ok(())
-}
-
-fn hash_record(record: &csv::StringRecord, delimiter: &str) -> String {
-    let joined = record.iter().collect::<Vec<_>>().join(delimiter);
-    let mut hasher = Sha256::new();
-    hasher.update(joined.as_bytes());
-    hex::encode(hasher.finalize())
 }
 
 #[cfg(test)]

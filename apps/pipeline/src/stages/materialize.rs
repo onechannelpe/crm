@@ -14,41 +14,49 @@ pub fn materialize_serving(db_path: &str) -> Result<(), PipelineError> {
         DELETE FROM dni_phone_agg;
         DELETE FROM contacts_fts;
 
+        WITH first_role AS (
+            SELECT r.person_id, r.company_id
+            FROM person_company_role r
+            JOIN (
+                SELECT person_id, MIN(role_id) AS min_role_id
+                FROM person_company_role
+                WHERE person_id IS NOT NULL
+                GROUP BY person_id
+            ) min_role
+                ON min_role.person_id = r.person_id
+               AND min_role.min_role_id = r.role_id
+        ),
+        ranked_phone AS (
+            SELECT
+                pp.person_id,
+                pp.phone,
+                ROW_NUMBER() OVER (
+                    PARTITION BY pp.person_id
+                    ORDER BY pp.confidence DESC, pp.phone
+                ) AS rank_position
+            FROM person_phone pp
+        ),
+        top_two_phones AS (
+            SELECT
+                person_id,
+                MAX(CASE WHEN rank_position = 1 THEN phone END) AS phone_primary,
+                MAX(CASE WHEN rank_position = 2 THEN phone END) AS phone_secondary
+            FROM ranked_phone
+            WHERE rank_position <= 2
+            GROUP BY person_id
+        )
         INSERT INTO contacts_serving(dni, name, org_ruc, org_name, phone_primary, phone_secondary)
         SELECT
             p.dni,
             p.full_name,
-            (
-                SELECT c.ruc
-                FROM person_company_role r
-                JOIN company_profile c ON c.company_id = r.company_id
-                WHERE r.person_id = p.person_id
-                ORDER BY r.role_id
-                LIMIT 1
-            ) AS org_ruc,
-            (
-                SELECT c.legal_name
-                FROM person_company_role r
-                JOIN company_profile c ON c.company_id = r.company_id
-                WHERE r.person_id = p.person_id
-                ORDER BY r.role_id
-                LIMIT 1
-            ) AS org_name,
-            (
-                SELECT pp.phone
-                FROM person_phone pp
-                WHERE pp.person_id = p.person_id
-                ORDER BY pp.confidence DESC, pp.phone
-                LIMIT 1
-            ) AS phone_primary,
-            (
-                SELECT pp.phone
-                FROM person_phone pp
-                WHERE pp.person_id = p.person_id
-                ORDER BY pp.confidence DESC, pp.phone
-                LIMIT 1 OFFSET 1
-            ) AS phone_secondary
+            c.ruc AS org_ruc,
+            c.legal_name AS org_name,
+            phones.phone_primary,
+            phones.phone_secondary
         FROM person_profile p
+        LEFT JOIN first_role role ON role.person_id = p.person_id
+        LEFT JOIN company_profile c ON c.company_id = role.company_id
+        LEFT JOIN top_two_phones phones ON phones.person_id = p.person_id
         WHERE p.dni IS NOT NULL AND p.dni <> '';
 
         INSERT INTO phone_index(phone, contact_id)

@@ -92,43 +92,59 @@ pub fn ingest_snapshot(
     };
     let header_index = canonical::build_header_index(headers.as_ref());
 
-    let mut counters = IngestCounters::default();
-    let mut processed_in_batch = 0usize;
-    let mut tx = conn.transaction()?;
+    let ingest_result = (|| -> Result<IngestCounters, PipelineError> {
+        let mut counters = IngestCounters::default();
+        let mut processed_in_batch = 0usize;
+        let mut tx = conn.transaction()?;
 
-    for (i, result) in reader.records().enumerate() {
-        let record = result?;
-        counters.total_rows += 1;
-        let source_row_number = (i + 1) as i64;
-        let canonical_row =
-            canonical::map_record(&mapping, &record, headers.as_ref(), header_index.as_ref())?;
-        let accepted = repo::ingest_one_row(
-            &tx,
-            snapshot_id,
-            source_row_number,
-            mapping.delimiter.as_str(),
-            &record,
-            canonical_row,
-            &mut counters,
+        for (i, result) in reader.records().enumerate() {
+            let record = result?;
+            counters.total_rows += 1;
+            let source_row_number = (i + 1) as i64;
+            let canonical_row =
+                canonical::map_record(&mapping, &record, headers.as_ref(), header_index.as_ref())?;
+            let accepted = repo::ingest_one_row(
+                &tx,
+                snapshot_id,
+                source_row_number,
+                mapping.delimiter.as_str(),
+                &record,
+                canonical_row,
+                &mut counters,
+            )?;
+            if accepted {
+                counters.accepted_rows += 1;
+            }
+
+            processed_in_batch += 1;
+            if processed_in_batch >= batch_size {
+                tx.commit()?;
+                tx = conn.transaction()?;
+                processed_in_batch = 0;
+            }
+        }
+
+        repo::persist_metrics(&tx, snapshot_id, &counters)?;
+        tx.execute(
+            "UPDATE source_snapshot SET status='completed' WHERE snapshot_id=?1",
+            [snapshot_id],
         )?;
-        if accepted {
-            counters.accepted_rows += 1;
-        }
+        tx.commit()?;
+        Ok(counters)
+    })();
 
-        processed_in_batch += 1;
-        if processed_in_batch >= batch_size {
+    let counters = match ingest_result {
+        Ok(counters) => counters,
+        Err(err) => {
+            let tx = conn.transaction()?;
+            tx.execute(
+                "UPDATE source_snapshot SET status='failed' WHERE snapshot_id=?1",
+                [snapshot_id],
+            )?;
             tx.commit()?;
-            tx = conn.transaction()?;
-            processed_in_batch = 0;
+            return Err(err);
         }
-    }
-
-    repo::persist_metrics(&tx, snapshot_id, &counters)?;
-    tx.execute(
-        "UPDATE source_snapshot SET status='completed' WHERE snapshot_id=?1",
-        [snapshot_id],
-    )?;
-    tx.commit()?;
+    };
 
     println!(
         "{{\"snapshot_id\":{snapshot_id},\"total_rows\":{},\"accepted_rows\":{},\"invalid_dni_rows\":{},\"invalid_ruc_rows\":{},\"invalid_phone_rows\":{}}}",

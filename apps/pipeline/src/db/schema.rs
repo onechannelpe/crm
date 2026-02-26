@@ -75,6 +75,8 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             FOREIGN KEY(person_id) REFERENCES person_profile(person_id),
             FOREIGN KEY(company_id) REFERENCES company_profile(company_id)
         );
+        CREATE INDEX IF NOT EXISTS idx_role_person_id_role_id
+            ON person_company_role(person_id, role_id);
 
         CREATE TABLE IF NOT EXISTS person_phone (
             person_id INTEGER NOT NULL,
@@ -86,6 +88,8 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             FOREIGN KEY(person_id) REFERENCES person_profile(person_id)
         );
         CREATE INDEX IF NOT EXISTS idx_person_phone_phone ON person_phone(phone);
+        CREATE INDEX IF NOT EXISTS idx_person_phone_person_conf_phone
+            ON person_phone(person_id, confidence DESC, phone);
 
         CREATE TABLE IF NOT EXISTS company_phone (
             company_id INTEGER NOT NULL,

@@ -198,7 +198,7 @@ fn value_from_column(
         return Ok(Some(record.get(index).unwrap_or("").to_owned()));
     }
 
-    let Some(hdrs) = headers else {
+    let Some(_headers) = headers else {
         return Err(PipelineError::Args(format!(
             "column mapping requires header, but source has no header: {column}"
         )));
@@ -207,11 +207,8 @@ fn value_from_column(
         return Err(PipelineError::Args("missing header index".to_owned()));
     };
 
-    if !hdrs.iter().any(|h| h == column) {
+    let Some(index) = indexes.get(column) else {
         return Ok(None);
-    }
-    let idx = indexes
-        .get(column)
-        .ok_or_else(|| PipelineError::Args(format!("header not found: {column}")))?;
-    Ok(Some(record.get(*idx).unwrap_or("").to_owned()))
+    };
+    Ok(Some(record.get(*index).unwrap_or("").to_owned()))
 }
