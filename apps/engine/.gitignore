@@ -1,6 +1,5 @@
 # generated (build artifacts)
 target
-data
 
 # data
 *.sql*
