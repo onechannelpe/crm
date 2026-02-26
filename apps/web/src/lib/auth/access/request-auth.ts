@@ -1,9 +1,9 @@
+import { verifyCsrf } from "../../security/csrf";
 import { getSessionCookie } from "../session/cookies";
 import {
   validateSessionToken,
   type SessionValidationResult,
 } from "../session/session-manager";
-import { verifyCsrf } from "../../security/csrf";
 import { canAccessPath, getDefaultAppPath } from "./route-policy";
 
 export interface AuthRequestEvent {
