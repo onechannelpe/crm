@@ -1,17 +1,6 @@
-import { CSRF_CONFIG } from "./csrf";
+import { CSRF_CONFIG } from "./csrf-config";
 
 const SAFE_METHODS = ["GET", "HEAD", "OPTIONS", "TRACE"];
-
-/**
- * Helper to retrieve a cookie value by name in a browser context.
- */
-function getCookie(name: string): string | null {
-    if (typeof document === "undefined") return null;
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop()?.split(";").shift() ?? null;
-    return null;
-}
 
 /**
  * Patches window.fetch to automatically include the CSRF token header for mutations.
@@ -32,7 +21,6 @@ export function setupCsrfInterceptor() {
     ): Promise<Response> => {
         const method = init?.method?.toUpperCase() || "GET";
 
-        // Only inject headers for non-safe methods (mutations)
         if (!SAFE_METHODS.includes(method)) {
             const token = getCookie(CSRF_CONFIG.COOKIE_NAME);
 
@@ -40,7 +28,6 @@ export function setupCsrfInterceptor() {
                 init = init || {};
                 const headers = new Headers(init.headers || {});
 
-                // Only add if not already present to avoid collisions
                 if (!headers.has(CSRF_CONFIG.HEADER_NAME)) {
                     headers.set(CSRF_CONFIG.HEADER_NAME, token);
                     init.headers = headers;
@@ -51,15 +38,22 @@ export function setupCsrfInterceptor() {
         return originalFetch(input, init);
     };
 
-    // Preserve all original fetch properties (e.g. polyfills, instrumentation)
     Object.assign(patchedFetch, originalFetch);
 
-    // We use Object.defineProperty to bypass strict linting rules regarding
-    // the reassignment of window.fetch and to ensure all properties are preserved.
+    // Object.defineProperty bypasses lint rules on window.fetch reassignment
+    // while preserving configurability for other instrumentation layers.
     Object.defineProperty(window, "fetch", {
         value: patchedFetch,
         configurable: true,
         writable: true,
         enumerable: true,
     });
+}
+
+function getCookie(name: string): string | null {
+    if (typeof document === "undefined") return null;
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop()?.split(";").shift() ?? null;
+    return null;
 }

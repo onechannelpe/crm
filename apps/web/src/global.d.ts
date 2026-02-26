@@ -14,5 +14,6 @@ declare namespace App {
   interface RequestEventLocals {
     session?: AuthSession;
     observability?: RequestObservabilityContext;
+    nonce: string;
   }
 }

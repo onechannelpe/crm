@@ -35,6 +35,6 @@ export default createHandler(
   },
   (event) => ({
     mode: "async",
-    nonce: typeof event.locals.nonce === "string" ? event.locals.nonce : undefined,
+    nonce: event.locals.nonce,
   }),
 );

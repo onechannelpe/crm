@@ -26,31 +26,29 @@ export default createMiddleware({
       requestStartedAt: Date.now(),
     };
 
-    if (event.request.method === "GET") {
-      const csrfToken = getCsrfFromCookie();
-      if (!csrfToken) {
-        setCsrfCookie(await generateCsrfToken());
-      }
+    const csrfToken = getCsrfFromCookie();
+    if (!csrfToken) {
+      setCsrfCookie(await generateCsrfToken());
     }
 
-    const decision = await enforceAuthRequest(event);
-
-    // Set Strict Content Security Policy
-    // We allow 'unsafe-inline' for styles as many UI libraries depend on it,
-    // but we use nonces for scripts to neutralize XSS.
+    // Nonce-based strict CSP per https://docs.solidjs.com/solid-start/guides/security
+    // 'unsafe-eval' is required for SolidStart SSR hydration.
+    // 'unsafe-inline' in style-src is required — first-party style={{}} props compile to inline styles.
     const csp = `
       default-src 'self';
-      script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'unsafe-inline' https:;
+      script-src 'nonce-${nonce}' 'strict-dynamic' 'unsafe-eval';
       style-src 'self' 'unsafe-inline';
       img-src 'self' data: https:;
       font-src 'self' data:;
-      connect-src 'self';
+      object-src 'none';
       frame-ancestors 'none';
       form-action 'self';
       base-uri 'none';
     `.replace(/\s+/g, " ");
 
     event.response.headers.set("Content-Security-Policy", csp);
+
+    const decision = await enforceAuthRequest(event);
 
     if (decision.kind === "reject") return decision.response;
     if (decision.kind === "redirect_login") return redirect("/login");
