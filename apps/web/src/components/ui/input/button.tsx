@@ -1,5 +1,6 @@
-import { type JSX, mergeProps, splitProps } from "solid-js";
+import { Show, type JSX, mergeProps, splitProps } from "solid-js";
 
+import { Loader } from "~/components/feedback/loader";
 import { cn } from "~/lib/utils";
 
 import styles from "./button.module.css";
@@ -20,6 +21,7 @@ export type ButtonSize = (typeof BUTTON_SIZES)[number];
 export interface ButtonProps extends JSX.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
+  loading?: boolean;
 }
 
 function isButtonVariant(value: string): value is ButtonVariant {
@@ -37,6 +39,7 @@ export function Button(props: ButtonProps) {
     "size",
     "class",
     "children",
+    "loading",
   ]);
 
   const variantInput = local.variant;
@@ -50,8 +53,12 @@ export function Button(props: ButtonProps) {
   return (
     <button
       class={cn(styles.button, styles[size], styles[variant], local.class)}
+      disabled={others.disabled || local.loading}
       {...others}
     >
+      <Show when={local.loading}>
+        <Loader />
+      </Show>
       {local.children}
     </button>
   );

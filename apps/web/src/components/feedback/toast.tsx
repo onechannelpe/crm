@@ -14,7 +14,7 @@ import { useToast } from "./toast-provider";
 import styles from "./toast.module.css";
 
 export function ToastContainer() {
-  const { toasts, removeToast } = useToast();
+  const { toasts, removeToast, pauseToast, resumeToast } = useToast();
 
   return (
     <Portal>
@@ -30,10 +30,24 @@ export function ToastContainer() {
                     ? styles.error
                     : styles.info,
               )}
+              onMouseEnter={() => pauseToast(toast.id)}
+              onMouseLeave={() => resumeToast(toast.id)}
             >
-              {toast.type === "success" && <CircleCheckBig size={20} />}
-              {toast.type === "error" && <CircleAlert size={20} />}
-              {toast.type === "info" && <Info size={20} />}
+              <div
+                class={styles.progressBar}
+                style={{
+                  width: `${(toast.remaining / toast.duration) * 100}%`,
+                }}
+              />
+              {toast.type === "success" && (
+                <CircleCheckBig size={18} class="flex-shrink-0" />
+              )}
+              {toast.type === "error" && (
+                <CircleAlert size={18} class="flex-shrink-0" />
+              )}
+              {toast.type === "info" && (
+                <Info size={18} class="flex-shrink-0" />
+              )}
 
               <p class={styles.message}>{toast.message}</p>
 
@@ -44,7 +58,7 @@ export function ToastContainer() {
                 onClick={() => removeToast(toast.id)}
                 class={styles.dismiss}
               >
-                <X size={16} />
+                <X size={14} />
               </Button>
             </div>
           )}

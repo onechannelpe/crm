@@ -2,8 +2,6 @@ import type { RouteSectionProps } from "@solidjs/router";
 import { Show, Suspense } from "solid-js";
 
 import { Loading } from "~/components/feedback/loading";
-import { ToastContainer } from "~/components/feedback/toast";
-import { ToastProvider } from "~/components/feedback/toast-provider";
 import { Header } from "~/components/layout/header";
 import { Sidebar } from "~/components/layout/sidebar";
 import {
@@ -35,13 +33,10 @@ function AuthenticatedAppShell(props: RouteSectionProps) {
 
 export default function AppLayout(props: RouteSectionProps) {
   return (
-    <ToastProvider>
-      <SessionProvider>
-        <Suspense fallback={<Loading />}>
-          <AuthenticatedAppShell {...props} />
-        </Suspense>
-      </SessionProvider>
-      <ToastContainer />
-    </ToastProvider>
+    <SessionProvider>
+      <Suspense fallback={<Loading />}>
+        <AuthenticatedAppShell {...props} />
+      </Suspense>
+    </SessionProvider>
   );
 }
