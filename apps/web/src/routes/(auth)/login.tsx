@@ -93,9 +93,8 @@ export default function LoginPage() {
     <div class={styles.shell}>
       <div class={`${styles.panel} ${styles.panelSm}`}>
         <div class={styles.stack1}>
-          <p class={styles.eyebrow}>CRM Workspace</p>
+          <p class={styles.eyebrow}>One Channel</p>
           <h1 class={styles.titleSm}>Sign in</h1>
-          <p class={styles.muted}>Continue with password or passkey.</p>
         </div>
 
         <form
