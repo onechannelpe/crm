@@ -1,10 +1,6 @@
-import { A } from "@solidjs/router";
-import { createResource, For, Show } from "solid-js";
+import { A, createAsync, useAction } from "@solidjs/router";
+import { For, Show } from "solid-js";
 
-import {
-  listSalesExportJobs,
-  requestSalesExport,
-} from "~/actions/sales-exports";
 import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import {
@@ -15,20 +11,20 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
+import { requestSalesExportMutation } from "~/lib/mutations/sales-exports";
+import { salesExportJobsQuery } from "~/lib/queries/sales-exports";
 import { formatDate } from "~/lib/utils";
 
 import styles from "./exports-page.module.css";
 
 export default function SalesExportsPage() {
-  const [jobs, { refetch: refetchJobs }] = createResource(
-    () => true,
-    async () => listSalesExportJobs(),
-    { initialValue: [], ssrLoadFrom: "initial" },
-  );
+  const jobs = createAsync(() => salesExportJobsQuery(), {
+    initialValue: [],
+  });
+  const requestExport = useAction(requestSalesExportMutation);
 
   async function handleRequestExport(format: "csv" | "xlsx") {
-    await requestSalesExport(format);
-    await refetchJobs();
+    await requestExport(format);
   }
 
   return (

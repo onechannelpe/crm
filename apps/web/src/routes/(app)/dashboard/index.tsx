@@ -1,10 +1,9 @@
-import { A } from "@solidjs/router";
+import { A, createAsync } from "@solidjs/router";
 import { createMemo, For } from "solid-js";
 
-import { getDashboardStats } from "~/actions/dashboard";
-import { getQuotaStatus } from "~/actions/quota";
 import { AppPage } from "~/components/layout/page";
-import { createAppQuery } from "~/lib/ui/create-app-query";
+import { dashboardStatsQuery } from "~/lib/queries/dashboard";
+import { quotaStatusQuery } from "~/lib/queries/quota";
 
 import styles from "./dashboard-page.module.css";
 
@@ -19,12 +18,16 @@ type DashboardColumn = {
 };
 
 export default function DashboardPage() {
-  const [quota] = createAppQuery(getQuotaStatus, { allocated: false });
-  const [stats] = createAppQuery(getDashboardStats, {
-    activeLeads: 0,
-    pendingSales: 0,
-    draftSales: 0,
-    confirmedSales: 0,
+  const quota = createAsync(() => quotaStatusQuery(), {
+    initialValue: { allocated: false },
+  });
+  const stats = createAsync(() => dashboardStatsQuery(), {
+    initialValue: {
+      activeLeads: 0,
+      pendingSales: 0,
+      draftSales: 0,
+      confirmedSales: 0,
+    },
   });
 
   const columns = createMemo<DashboardColumn[]>(() => {

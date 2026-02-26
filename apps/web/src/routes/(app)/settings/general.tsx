@@ -1,32 +1,32 @@
-import { createResource, createSignal, For } from "solid-js";
+import { useAction, useSubmissions } from "@solidjs/router";
+import { createSignal, For } from "solid-js";
 
-import { getProductCatalog, updateProductPricing } from "~/actions/settings";
 import { useToast } from "~/components/feedback/toast-provider";
 import { Button } from "~/components/ui/input/button";
 import { Checkbox } from "~/components/ui/input/checkbox";
 import { Input } from "~/components/ui/input/input";
 import { getErrorMessage } from "~/lib/errors";
-import { runOptimistic } from "~/lib/ui/run-optimistic";
+import { updateProductPricingMutation } from "~/lib/mutations/settings";
+import { productCatalogQuery } from "~/lib/queries/settings";
+import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
 
 import styles from "./settings-page.module.css";
 
 export default function SettingsGeneralPage() {
   const { showToast } = useToast();
 
-  const [products, { mutate, refetch }] = createResource(
-    async () => getProductCatalog(),
-    { initialValue: [], ssrLoadFrom: "initial" },
-  );
-  const currentProducts = () => products.latest ?? [];
-  const [savingId, setSavingId] = createSignal<number | null>(null);
+  const { data: currentProducts, update: updateProducts } =
+    createOptimisticQuery(productCatalogQuery, { initialValue: [] });
+  const saveProduct = useAction(updateProductPricingMutation);
+  const saveSubmissions = useSubmissions(updateProductPricingMutation);
+
+  const isSaving = (productId: number) =>
+    saveSubmissions.some((s) => s.pending && s.input[0] === productId);
 
   const save = async (productId: number, price: string, isActive: boolean) => {
-    setSavingId(productId);
     try {
       const numericPrice = Number(price);
-      await runOptimistic({
-        read: currentProducts,
-        write: (next) => mutate(() => next),
+      await updateProducts({
         optimistic: (prev) =>
           prev.map((product) =>
             product.id === productId
@@ -34,17 +34,12 @@ export default function SettingsGeneralPage() {
               : product,
           ),
         commit: async () => {
-          await updateProductPricing(productId, numericPrice, isActive);
-        },
-        reconcile: () => {
-          void refetch();
+          await saveProduct(productId, numericPrice, isActive);
         },
       });
       showToast("success", "Product updated");
     } catch (err: unknown) {
       showToast("error", getErrorMessage(err, "Failed to update product"));
-    } finally {
-      setSavingId(null);
     }
   };
 
@@ -89,8 +84,8 @@ export default function SettingsGeneralPage() {
                         setIsActive(event.currentTarget.checked)
                       }
                     />
-                    <Button type="submit" disabled={savingId() === product.id}>
-                      {savingId() === product.id ? "Saving..." : "Save"}
+                    <Button type="submit" disabled={isSaving(product.id)}>
+                      {isSaving(product.id) ? "Saving..." : "Save"}
                     </Button>
                   </div>
                 </form>

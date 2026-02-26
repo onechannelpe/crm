@@ -1,28 +1,30 @@
-import { useNavigate } from "@solidjs/router";
-import { createResource, Show } from "solid-js";
+import { useAction, useNavigate } from "@solidjs/router";
 
-import { registerCall, requestLeads, getActiveLeads } from "~/actions/leads";
 import { LeadList } from "~/components/features/leads/lead-list";
 import { RequestLeadsButton } from "~/components/features/leads/request-leads-button";
-import { EmptyState } from "~/components/feedback/empty-state";
 import { AppPage } from "~/components/layout/page";
-import { runOptimistic } from "~/lib/ui/run-optimistic";
+import {
+  registerCallMutation,
+  requestLeadsMutation,
+} from "~/lib/mutations/leads";
+import { activeLeadsQuery } from "~/lib/queries/leads";
+import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
 
 import styles from "./leads-page.module.css";
 
 export default function LeadsPage() {
   const navigate = useNavigate();
-  const [leads, { mutate: mutateLeads, refetch: refetchLeads }] =
-    createResource(
-      () => true,
-      async () => getActiveLeads(),
-      { initialValue: [], ssrLoadFrom: "initial" },
-    );
-  const currentLeads = () => leads.latest ?? [];
+  const { data: currentLeads, update: updateLeads } = createOptimisticQuery(
+    activeLeadsQuery,
+    { initialValue: [] },
+  );
+  const requestLeadsAction = useAction(requestLeadsMutation);
+  const registerCallAction = useAction(registerCallMutation);
 
   const handleRequestLeads = async () => {
-    const result = await requestLeads();
-    void refetchLeads();
+    const result = await requestLeadsAction();
+    // Do not await: the assigned count is returned immediately so the caller
+    // (RequestLeadsButton) can display it without waiting for the list refresh.
     return result.assigned;
   };
 
@@ -32,16 +34,11 @@ export default function LeadsPage() {
     outcome: string,
     notes: string,
   ) => {
-    await runOptimistic({
-      read: currentLeads,
-      write: (next) => mutateLeads(() => next),
+    await updateLeads({
       optimistic: (prev) =>
         prev.filter((lead) => lead.assignmentId !== assignmentId),
       commit: async () => {
-        await registerCall(assignmentId, contactId, outcome, notes);
-      },
-      reconcile: () => {
-        void refetchLeads();
+        await registerCallAction(assignmentId, contactId, outcome, notes);
       },
     });
 
@@ -52,21 +49,11 @@ export default function LeadsPage() {
 
   return (
     <AppPage>
-      <Show
-        when={!leads.error}
-        fallback={
-          <EmptyState
-            title="Failed to load leads"
-            description="Refresh and retry."
-          />
-        }
-      >
-        <LeadList
-          contacts={currentLeads()}
-          onRegisterCall={handleRegisterCall}
-          emptyAction={<RequestLeadsButton onRequest={handleRequestLeads} />}
-        />
-      </Show>
+      <LeadList
+        contacts={currentLeads()}
+        onRegisterCall={handleRegisterCall}
+        emptyAction={<RequestLeadsButton onRequest={handleRequestLeads} />}
+      />
       <div class={styles.fabContainer}>
         <RequestLeadsButton onRequest={handleRequestLeads} />
       </div>

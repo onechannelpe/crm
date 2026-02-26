@@ -1,12 +1,6 @@
+import { createAsync, revalidate, useAction } from "@solidjs/router";
 import { createSignal, For } from "solid-js";
 
-import {
-  canManageAuditPolicies,
-  getAuditPolicySnapshot,
-  getAuditReaderSnapshot,
-  getObservabilitySnapshot,
-  upsertAuditPolicy,
-} from "~/actions/admin";
 import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { Checkbox } from "~/components/ui/input/checkbox";
@@ -20,7 +14,13 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
-import { createAppQuery } from "~/lib/ui/create-app-query";
+import { upsertAuditPolicyMutation } from "~/lib/mutations/audit";
+import {
+  auditPolicySnapshotQuery,
+  auditReaderSnapshotQuery,
+  canManageAuditPoliciesQuery,
+  observabilitySnapshotQuery,
+} from "~/lib/queries/audit";
 
 import styles from "./audit-page.module.css";
 
@@ -74,22 +74,24 @@ export default function AuditObservabilityPage() {
   >("medium");
   const [policyIsActive, setPolicyIsActive] = createSignal(true);
   const [policyError, setPolicyError] = createSignal<string | null>(null);
-  const [snapshot, { refetch }] = createAppQuery(
-    async () =>
-      getObservabilitySnapshot({
+  const snapshot = createAsync(
+    () =>
+      observabilitySnapshotQuery({
         windowMinutes: windowMinutes(),
         status: status() === "all" ? undefined : status(),
         limit: 80,
       }),
     {
-      windowMinutes: 60,
-      summary: [],
-      recent: [],
+      initialValue: {
+        windowMinutes: 60,
+        summary: [],
+        recent: [],
+      },
     },
   );
-  const [auditSnapshot, { refetch: refetchAuditSnapshot }] = createAppQuery(
-    async () =>
-      getAuditReaderSnapshot({
+  const auditSnapshot = createAsync(
+    () =>
+      auditReaderSnapshotQuery({
         windowMinutes: auditWindowMinutes(),
         limit: 80,
         onlyHighRisk: onlyHighRisk(),
@@ -98,30 +100,31 @@ export default function AuditObservabilityPage() {
         actorUserId: parseActorUserId(actorUserIdFilter()),
       }),
     {
-      windowMinutes: 1440,
-      events: [],
+      initialValue: {
+        windowMinutes: 1440,
+        events: [],
+      },
     },
   );
-  const [policySnapshot, { refetch: refetchPolicySnapshot }] = createAppQuery(
-    () => getAuditPolicySnapshot(),
-    {
+  const policySnapshot = createAsync(() => auditPolicySnapshotQuery(), {
+    initialValue: {
       items: [],
     },
-  );
-  const [canManagePolicies] = createAppQuery(
-    () => canManageAuditPolicies(),
-    false,
-  );
+  });
+  const canManagePolicies = createAsync(() => canManageAuditPoliciesQuery(), {
+    initialValue: false,
+  });
+
+  const saveAuditPolicy = useAction(upsertAuditPolicyMutation);
 
   async function savePolicy(): Promise<void> {
     setPolicyError(null);
     try {
-      await upsertAuditPolicy({
+      await saveAuditPolicy({
         action: policyAction(),
         riskLevel: policyRiskLevel(),
         isActive: policyIsActive(),
       });
-      await Promise.all([refetchPolicySnapshot(), refetchAuditSnapshot()]);
     } catch {
       setPolicyError("Failed to save policy. Check values and permissions.");
     }
@@ -162,7 +165,7 @@ export default function AuditObservabilityPage() {
             </div>
             <Button
               onClick={() => {
-                void refetch();
+                void revalidate(observabilitySnapshotQuery.key);
               }}
             >
               Refresh
@@ -222,7 +225,7 @@ export default function AuditObservabilityPage() {
             />
             <Button
               onClick={() => {
-                void refetchAuditSnapshot();
+                void revalidate(auditReaderSnapshotQuery.key);
               }}
             >
               Refresh audit
