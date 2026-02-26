@@ -1,10 +1,6 @@
+import { useAction } from "@solidjs/router";
 import { createSignal, For, Show } from "solid-js";
 
-import {
-  confirmSalesRecord,
-  registerSalesRecordAttempt,
-  rejectSalesRecord,
-} from "~/actions/sales-records";
 import { RejectionForm } from "~/components/features/sales/rejection-form";
 import { EmptyState } from "~/components/feedback/empty-state";
 import { useToast } from "~/components/feedback/toast-provider";
@@ -22,6 +18,11 @@ import {
   TableRow,
 } from "~/components/ui/layout/table";
 import { getErrorMessage } from "~/lib/errors";
+import {
+  confirmSalesRecordMutation,
+  registerSalesRecordAttemptMutation,
+  rejectSalesRecordMutation,
+} from "~/lib/mutations/sales-records";
 import { pendingSalesRecordsQuery } from "~/lib/queries/sales-records";
 import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
 import { formatDate } from "~/lib/utils";
@@ -43,8 +44,13 @@ function isAttemptOutcome(
 }
 
 export default function SalesConfirmationsPage() {
-  const { data: currentNotes, update: updateNotes, invalidate: invalidateNotes } =
-    createOptimisticQuery(pendingSalesRecordsQuery, { initialValue: [] });
+  const { data: currentNotes, update: updateNotes } = createOptimisticQuery(
+    pendingSalesRecordsQuery,
+    { initialValue: [] },
+  );
+  const confirmRecord = useAction(confirmSalesRecordMutation);
+  const rejectRecord = useAction(rejectSalesRecordMutation);
+  const registerAttempt = useAction(registerSalesRecordAttemptMutation);
   const [rejectingNoteId, setRejectingNoteId] = createSignal<number | null>(
     null,
   );
@@ -62,9 +68,8 @@ export default function SalesConfirmationsPage() {
       await updateNotes({
         optimistic: (prev) => prev.filter((note) => note.id !== noteId),
         commit: async () => {
-          await confirmSalesRecord(noteId);
+          await confirmRecord(noteId);
         },
-        reconcile: true,
       });
       showToast("success", `Sale #${noteId} confirmed`);
     } catch (err: unknown) {
@@ -83,9 +88,8 @@ export default function SalesConfirmationsPage() {
           const reason = rejections
             .map((it) => `${it.fieldId}: ${it.note}`)
             .join(" | ");
-          await rejectSalesRecord(noteId, reason);
+          await rejectRecord(noteId, reason);
         },
-        reconcile: true,
       });
       showToast("success", `Sale #${noteId} rejected`);
       setRejectingNoteId(null);
@@ -114,14 +118,13 @@ export default function SalesConfirmationsPage() {
         return;
       }
 
-      await registerSalesRecordAttempt(
+      await registerAttempt(
         noteId,
         attemptOutcome(),
         attemptNotes().trim() || null,
         parsedNextAttemptAt,
       );
       showToast("success", `Attempt logged for sale #${noteId}`);
-      await invalidateNotes();
       resetAttemptState();
     } catch (err: unknown) {
       showToast("error", getErrorMessage(err, "Attempt logging failed"));

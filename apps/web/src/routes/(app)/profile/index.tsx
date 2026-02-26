@@ -1,10 +1,10 @@
+import { useAction } from "@solidjs/router";
 import { createSignal, For, onMount, Show } from "solid-js";
 
 import {
   beginPasskeyRegistration,
   beginTotpEnrollment,
   finishPasskeyRegistration,
-  finishTotpEnrollment,
 } from "~/actions/auth";
 import { updateUserProfile } from "~/actions/settings";
 import { useToast } from "~/components/feedback/toast-provider";
@@ -24,6 +24,7 @@ import {
   toRegistrationPayload,
 } from "~/lib/auth/passkey/browser";
 import { getErrorMessage } from "~/lib/errors";
+import { finishTotpEnrollmentMutation } from "~/lib/mutations/profile";
 import { totpStatusQuery } from "~/lib/queries/profile";
 import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
 
@@ -43,7 +44,10 @@ export default function ProfilePage() {
   const [passkeyMessage, setPasskeyMessage] = createSignal("");
 
   const { data: currentTotpStatus, update: updateTotpStatus } =
-    createOptimisticQuery(totpStatusQuery, { initialValue: { enabled: false } });
+    createOptimisticQuery(totpStatusQuery, {
+      initialValue: { enabled: false },
+    });
+  const finishTotpAction = useAction(finishTotpEnrollmentMutation);
   const [totpLoading, setTotpLoading] = createSignal(false);
   const [totpMessage, setTotpMessage] = createSignal("");
   const [totpQrCode, setTotpQrCode] = createSignal("");
@@ -110,9 +114,8 @@ export default function ProfilePage() {
       await updateTotpStatus({
         optimistic: (prev) => ({ ...prev, enabled: true }),
         commit: async () => {
-          codes = await finishTotpEnrollment(totpCode());
+          codes = await finishTotpAction(totpCode());
         },
-        reconcile: true,
       });
       setRecoveryCodes(codes);
       setTotpQrCode("");

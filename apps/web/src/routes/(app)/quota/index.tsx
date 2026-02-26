@@ -37,12 +37,8 @@ export default function QuotaPage() {
       const safeAmount = Number(amount());
       await updateQuota({
         optimistic: (prev) => {
-          if (!prev.allocated) {
-            return prev;
-          }
-          if (currentUser().id !== targetExecutiveId) {
-            return prev;
-          }
+          if (!prev.allocated) return prev;
+          if (currentUser().id !== targetExecutiveId) return prev;
           return {
             ...prev,
             total: prev.total + safeAmount,
@@ -52,7 +48,6 @@ export default function QuotaPage() {
         commit: async () => {
           await allocateQuota(targetExecutiveId, safeAmount);
         },
-        reconcile: true,
       });
       showToast("success", "Quota assigned");
       setExecId("");

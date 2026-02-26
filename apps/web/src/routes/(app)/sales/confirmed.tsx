@@ -1,7 +1,6 @@
 import { createAsync } from "@solidjs/router";
 import { For, Show } from "solid-js";
 
-import { confirmedSalesRecordsQuery } from "~/lib/queries/sales-records";
 import { EmptyState } from "~/components/feedback/empty-state";
 import { AppPage } from "~/components/layout/page";
 import {
@@ -12,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
+import { confirmedSalesRecordsQuery } from "~/lib/queries/sales-records";
 import { formatDate } from "~/lib/utils";
 
 import styles from "./confirmed-sales-page.module.css";

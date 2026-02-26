@@ -1,7 +1,6 @@
 import { createAsync } from "@solidjs/router";
 import { For, Show } from "solid-js";
 
-import { inventoryItemsQuery } from "~/lib/queries/inventory";
 import { EmptyState } from "~/components/feedback/empty-state";
 import { AppPage } from "~/components/layout/page";
 import { Badge } from "~/components/ui/display/badge";
@@ -13,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
+import { inventoryItemsQuery } from "~/lib/queries/inventory";
 
 import styles from "./inventory-page.module.css";
 

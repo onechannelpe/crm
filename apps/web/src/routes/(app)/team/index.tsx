@@ -1,7 +1,6 @@
-import { A, createAsync, revalidate } from "@solidjs/router";
-import { createSignal, For, Show } from "solid-js";
+import { A, createAsync, useAction, useSubmissions } from "@solidjs/router";
+import { For, Show } from "solid-js";
 
-import { resendTeamInvite, revokeTeamInvite } from "~/actions/team";
 import { EmptyState } from "~/components/feedback/empty-state";
 import { useToast } from "~/components/feedback/toast-provider";
 import Mail from "~/components/icons/mail";
@@ -22,6 +21,10 @@ import {
   getRoleLabel,
 } from "~/lib/auth/access/role-display";
 import { getErrorMessage } from "~/lib/errors";
+import {
+  resendTeamInviteMutation,
+  revokeTeamInviteMutation,
+} from "~/lib/mutations/team";
 import { teamDirectoryQuery } from "~/lib/queries/team";
 
 import styles from "./team-page.module.css";
@@ -34,35 +37,34 @@ export default function TeamPage() {
       canManageInvites: false,
     },
   });
-  const [pendingActionId, setPendingActionId] = createSignal<number | null>(
-    null,
-  );
+  const resendInvite = useAction(resendTeamInviteMutation);
+  const revokeInvite = useAction(revokeTeamInviteMutation);
+  const resendSubmissions = useSubmissions(resendTeamInviteMutation);
+  const revokeSubmissions = useSubmissions(revokeTeamInviteMutation);
+
   const { showToast } = useToast();
   const canManageInviteActions = () => directory().canManageInvites;
 
+  const isResendPending = (inviteId: number) =>
+    resendSubmissions.some((s) => s.pending && s.input[0] === inviteId);
+  const isRevokePending = (inviteId: number) =>
+    revokeSubmissions.some((s) => s.pending && s.input[0] === inviteId);
+
   async function handleResend(inviteId: number): Promise<void> {
-    setPendingActionId(inviteId);
     try {
-      await resendTeamInvite(inviteId);
+      await resendInvite(inviteId);
       showToast("success", "Invite resent");
-      await revalidate(teamDirectoryQuery.key);
     } catch (err: unknown) {
       showToast("error", getErrorMessage(err, "Failed to resend invite"));
-    } finally {
-      setPendingActionId(null);
     }
   }
 
   async function handleRevoke(inviteId: number): Promise<void> {
-    setPendingActionId(inviteId);
     try {
-      await revokeTeamInvite(inviteId);
+      await revokeInvite(inviteId);
       showToast("success", "Invite revoked");
-      await revalidate(teamDirectoryQuery.key);
     } catch (err: unknown) {
       showToast("error", getErrorMessage(err, "Failed to revoke invite"));
-    } finally {
-      setPendingActionId(null);
     }
   }
 
@@ -177,7 +179,7 @@ export default function TeamPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            disabled={pendingActionId() === invite.inviteId}
+                            disabled={isResendPending(invite.inviteId)}
                             onClick={() => {
                               void handleResend(invite.inviteId);
                             }}
@@ -187,7 +189,7 @@ export default function TeamPage() {
                           <Button
                             size="sm"
                             variant="destructive"
-                            disabled={pendingActionId() === invite.inviteId}
+                            disabled={isRevokePending(invite.inviteId)}
                             onClick={() => {
                               void handleRevoke(invite.inviteId);
                             }}

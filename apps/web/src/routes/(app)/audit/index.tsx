@@ -1,7 +1,6 @@
-import { createAsync, revalidate } from "@solidjs/router";
+import { createAsync, revalidate, useAction } from "@solidjs/router";
 import { createSignal, For } from "solid-js";
 
-import { upsertAuditPolicy } from "~/actions/admin";
 import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { Checkbox } from "~/components/ui/input/checkbox";
@@ -15,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
+import { upsertAuditPolicyMutation } from "~/lib/mutations/audit";
 import {
   auditPolicySnapshotQuery,
   auditReaderSnapshotQuery,
@@ -106,33 +106,25 @@ export default function AuditObservabilityPage() {
       },
     },
   );
-  const policySnapshot = createAsync(
-    () => auditPolicySnapshotQuery(),
-    {
-      initialValue: {
-        items: [],
-      },
+  const policySnapshot = createAsync(() => auditPolicySnapshotQuery(), {
+    initialValue: {
+      items: [],
     },
-  );
-  const canManagePolicies = createAsync(
-    () => canManageAuditPoliciesQuery(),
-    {
-      initialValue: false,
-    },
-  );
+  });
+  const canManagePolicies = createAsync(() => canManageAuditPoliciesQuery(), {
+    initialValue: false,
+  });
+
+  const saveAuditPolicy = useAction(upsertAuditPolicyMutation);
 
   async function savePolicy(): Promise<void> {
     setPolicyError(null);
     try {
-      await upsertAuditPolicy({
+      await saveAuditPolicy({
         action: policyAction(),
         riskLevel: policyRiskLevel(),
         isActive: policyIsActive(),
       });
-      await Promise.all([
-        revalidate(auditPolicySnapshotQuery.key),
-        revalidate(auditReaderSnapshotQuery.key),
-      ]);
     } catch {
       setPolicyError("Failed to save policy. Check values and permissions.");
     }

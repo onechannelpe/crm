@@ -6,13 +6,13 @@ import {
   getSalesRecordBootstrap,
   submitSalesRecord,
 } from "~/actions/sales-records";
-import { salesRecordProductsQuery } from "~/lib/queries/sales-records";
 import { useToast } from "~/components/feedback/toast-provider";
 import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { Select } from "~/components/ui/input/select";
 import { getErrorMessage } from "~/lib/errors";
+import { salesRecordProductsQuery } from "~/lib/queries/sales-records";
 
 import styles from "./new-sale-page.module.css";
 

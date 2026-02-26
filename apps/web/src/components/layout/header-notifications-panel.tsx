@@ -1,11 +1,12 @@
+import { useAction } from "@solidjs/router";
 import { createSignal, For, Show } from "solid-js";
 
-import {
-  markAllNotificationsRead,
-  markNotificationRead,
-} from "~/actions/app-notifications";
 import Bell from "~/components/icons/bell";
 import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
+import {
+  markAllNotificationsReadMutation,
+  markNotificationReadMutation,
+} from "~/lib/mutations/notifications";
 import { headerNotificationsQuery } from "~/lib/queries/notifications";
 import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
 import { cn } from "~/lib/utils";
@@ -27,6 +28,8 @@ export function HeaderNotificationsPanel() {
     headerNotificationsQuery,
     { initialValue: { unreadCount: 0, notifications: [] } },
   );
+  const markRead = useAction(markNotificationReadMutation);
+  const markAllRead = useAction(markAllNotificationsReadMutation);
 
   let containerRef: HTMLDivElement | undefined;
   useDismissibleLayer({
@@ -49,13 +52,11 @@ export function HeaderNotificationsPanel() {
                 : 0),
           ),
           notifications: prev.notifications.map((item) =>
-            item.id === notificationId
-              ? { ...item, readAt: Date.now() }
-              : item,
+            item.id === notificationId ? { ...item, readAt: Date.now() } : item,
           ),
         }),
         commit: async () => {
-          await markNotificationRead(notificationId);
+          await markRead(notificationId);
         },
       });
     } catch {
@@ -74,9 +75,8 @@ export function HeaderNotificationsPanel() {
           })),
         }),
         commit: async () => {
-          await markAllNotificationsRead();
+          await markAllRead();
         },
-        reconcile: true,
       });
     } catch {
       // Rollback handled by update()

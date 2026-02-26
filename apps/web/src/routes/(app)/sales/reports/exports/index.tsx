@@ -1,8 +1,6 @@
-import { A, createAsync, revalidate } from "@solidjs/router";
+import { A, createAsync, useAction } from "@solidjs/router";
 import { For, Show } from "solid-js";
 
-import { requestSalesExport } from "~/actions/sales-exports";
-import { salesExportJobsQuery } from "~/lib/queries/sales-exports";
 import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import {
@@ -13,6 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
+import { requestSalesExportMutation } from "~/lib/mutations/sales-exports";
+import { salesExportJobsQuery } from "~/lib/queries/sales-exports";
 import { formatDate } from "~/lib/utils";
 
 import styles from "./exports-page.module.css";
@@ -21,10 +21,10 @@ export default function SalesExportsPage() {
   const jobs = createAsync(() => salesExportJobsQuery(), {
     initialValue: [],
   });
+  const requestExport = useAction(requestSalesExportMutation);
 
   async function handleRequestExport(format: "csv" | "xlsx") {
-    await requestSalesExport(format);
-    await revalidate(salesExportJobsQuery.key);
+    await requestExport(format);
   }
 
   return (
