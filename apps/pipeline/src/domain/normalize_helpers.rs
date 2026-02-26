@@ -47,10 +47,6 @@ pub fn normalize_phone_with_kind(value: &str) -> Option<(String, PhoneKind)> {
     None
 }
 
-pub fn normalize_phone(value: &str) -> Option<String> {
-    normalize_phone_with_kind(value).map(|(phone, _)| phone)
-}
-
 pub fn normalize_text(value: &str) -> String {
     value.trim().to_owned()
 }
@@ -65,9 +61,7 @@ pub fn derive_dni_from_natural_ruc(ruc: &str) -> Option<String> {
     Some(ruc[2..10].to_owned())
 }
 
-pub fn normalize_person_document_with_natural_ruc(
-    value: &str,
-) -> (Option<String>, Option<String>) {
+pub fn normalize_person_document_with_natural_ruc(value: &str) -> (Option<String>, Option<String>) {
     if let Some(dni) = normalize_dni(value) {
         return (Some(dni), None);
     }
@@ -83,14 +77,20 @@ pub fn normalize_person_document_with_natural_ruc(
 mod tests {
     use super::{
         PhoneKind, derive_dni_from_natural_ruc, normalize_person_document_with_natural_ruc,
-        normalize_phone, normalize_phone_with_kind,
+        normalize_phone_with_kind,
     };
 
     #[test]
     fn normalizes_phone_without_country_code_storage() {
-        assert_eq!(normalize_phone("51987111222"), Some("987111222".to_owned()));
-        assert_eq!(normalize_phone("987111222"), Some("987111222".to_owned()));
-        assert_eq!(normalize_phone("123"), None);
+        assert_eq!(
+            normalize_phone_with_kind("51987111222"),
+            Some(("987111222".to_owned(), PhoneKind::Mobile))
+        );
+        assert_eq!(
+            normalize_phone_with_kind("987111222"),
+            Some(("987111222".to_owned(), PhoneKind::Mobile))
+        );
+        assert_eq!(normalize_phone_with_kind("123"), None);
     }
 
     #[test]

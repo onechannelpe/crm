@@ -2,8 +2,7 @@ use crate::PipelineError;
 use crate::config::mapping::SourceMapping;
 use crate::domain::normalize_helpers::{
     normalize_dni, normalize_person_document_with_natural_ruc, normalize_phone_with_kind,
-    normalize_ruc,
-    normalize_text,
+    normalize_ruc, normalize_text,
 };
 use csv::StringRecord;
 use std::collections::{HashMap, HashSet};
@@ -27,33 +26,31 @@ pub(crate) struct CanonicalRow {
     pub(crate) invalid_phone_reasons: Vec<String>,
 }
 
-pub(crate) fn map_record(
-    mapping: &SourceMapping,
-    record: &StringRecord,
-    headers: Option<&StringRecord>,
-    header_index: Option<&HashMap<String, usize>>,
-) -> Result<CanonicalRow, PipelineError> {
-    let person_dni_raw = mapped_value("person_dni", mapping, record, headers, header_index);
-    let rep_doc_type = mapped_value("rep_doc_type", mapping, record, headers, header_index);
-    let rep_doc_number = mapped_value("rep_doc_number", mapping, record, headers, header_index);
-    let person_full_name = mapped_value("person_full_name", mapping, record, headers, header_index);
-    let rep_name = mapped_value("rep_name", mapping, record, headers, header_index);
-    let company_ruc_raw = mapped_value("company_ruc", mapping, record, headers, header_index);
-    let (phones, had_phone_input, invalid_phone_reasons) =
-        collect_phones(mapping, record, headers, header_index)?;
+pub(crate) struct ResolvedMapping {
+    fields: HashMap<String, Option<usize>>,
+    phone_columns: Vec<usize>,
+}
+
+pub(crate) fn map_record(resolved: &ResolvedMapping, record: &StringRecord) -> CanonicalRow {
+    let person_dni_raw = mapped_value("person_dni", resolved, record);
+    let rep_doc_type = mapped_value("rep_doc_type", resolved, record);
+    let rep_doc_number = mapped_value("rep_doc_number", resolved, record);
+    let person_full_name = mapped_value("person_full_name", resolved, record);
+    let rep_name = mapped_value("rep_name", resolved, record);
+    let company_ruc_raw = mapped_value("company_ruc", resolved, record);
+    let (phones, had_phone_input, invalid_phone_reasons) = collect_phones(resolved, record);
 
     let (person_dni_from_person_doc, person_natural_ruc) =
         normalize_person_document_with_natural_ruc(&person_dni_raw);
 
-    Ok(CanonicalRow {
-        person_dni: person_dni_from_person_doc
-            .or_else(|| {
-                if rep_doc_type.eq_ignore_ascii_case("DNI") {
-                    normalize_dni(&rep_doc_number)
-                } else {
-                    None
-                }
-            }),
+    CanonicalRow {
+        person_dni: person_dni_from_person_doc.or_else(|| {
+            if rep_doc_type.eq_ignore_ascii_case("DNI") {
+                normalize_dni(&rep_doc_number)
+            } else {
+                None
+            }
+        }),
         person_natural_ruc,
         had_person_dni_input: !person_dni_raw.is_empty(),
         person_full_name: if !person_full_name.is_empty() {
@@ -63,63 +60,76 @@ pub(crate) fn map_record(
         },
         company_ruc: normalize_ruc(&company_ruc_raw),
         had_company_ruc_input: !company_ruc_raw.is_empty(),
-        company_name: mapped_value("company_name", mapping, record, headers, header_index),
-        role_name: mapped_value("role_name", mapping, record, headers, header_index),
-        role_start_date: mapped_value("role_start_date", mapping, record, headers, header_index),
+        company_name: mapped_value("company_name", resolved, record),
+        role_name: mapped_value("role_name", resolved, record),
+        role_start_date: mapped_value("role_start_date", resolved, record),
         rep_doc_type,
         rep_doc_number,
         rep_name,
         phones,
         had_phone_input,
         invalid_phone_reasons,
-    })
+    }
 }
 
-pub(crate) fn build_header_index(headers: Option<&StringRecord>) -> Option<HashMap<String, usize>> {
-    headers.map(|h| {
-        h.iter()
-            .enumerate()
-            .map(|(idx, name)| (name.to_owned(), idx))
-            .collect::<HashMap<_, _>>()
-    })
-}
-
-fn collect_phones(
+pub(crate) fn resolve_mapping(
     mapping: &SourceMapping,
-    record: &StringRecord,
     headers: Option<&StringRecord>,
-    header_index: Option<&HashMap<String, usize>>,
-) -> Result<(Vec<String>, bool, Vec<String>), PipelineError> {
-    let mut raw_values: Vec<String> = Vec::new();
-    let mut had_phone_input = false;
-
-    let direct_phone = mapped_value("phone", mapping, record, headers, header_index);
-    if !direct_phone.is_empty() {
-        had_phone_input = true;
-        raw_values.push(direct_phone);
+) -> Result<ResolvedMapping, PipelineError> {
+    let header_index = build_header_index(headers);
+    let mut fields = HashMap::with_capacity(mapping.fields.len());
+    for (canonical_field, column_name) in &mapping.fields {
+        let resolved = resolve_column(column_name, headers.is_some(), header_index.as_ref())?;
+        fields.insert(canonical_field.clone(), resolved);
     }
 
-    for column in &mapping.phone_columns {
-        if let Some(value) = value_from_column(column, record, headers, header_index)?
-            && !value.is_empty()
+    let mut phone_columns = Vec::new();
+    for column_name in &mapping.phone_columns {
+        if let Some(index) = resolve_column(column_name, headers.is_some(), header_index.as_ref())?
         {
-            had_phone_input = true;
-            raw_values.push(value);
+            phone_columns.push(index);
         }
     }
 
     if let Some(hdr) = headers {
         for (idx, name) in hdr.iter().enumerate() {
-            for prefix in &mapping.phone_prefixes {
-                if name.starts_with(prefix) {
-                    let value = record.get(idx).unwrap_or("").to_owned();
-                    if !value.is_empty() {
-                        had_phone_input = true;
-                        raw_values.push(value);
-                    }
-                    break;
-                }
+            if mapping
+                .phone_prefixes
+                .iter()
+                .any(|prefix| name.starts_with(prefix))
+            {
+                phone_columns.push(idx);
             }
+        }
+    }
+
+    phone_columns.sort_unstable();
+    phone_columns.dedup();
+
+    Ok(ResolvedMapping {
+        fields,
+        phone_columns,
+    })
+}
+
+fn collect_phones(
+    resolved: &ResolvedMapping,
+    record: &StringRecord,
+) -> (Vec<String>, bool, Vec<String>) {
+    let mut raw_values: Vec<String> = Vec::new();
+    let mut had_phone_input = false;
+
+    let direct_phone = mapped_value("phone", resolved, record);
+    if !direct_phone.is_empty() {
+        had_phone_input = true;
+        raw_values.push(direct_phone);
+    }
+
+    for index in &resolved.phone_columns {
+        let value = record.get(*index).unwrap_or("").to_owned();
+        if !value.is_empty() {
+            had_phone_input = true;
+            raw_values.push(value);
         }
     }
 
@@ -139,7 +149,7 @@ fn collect_phones(
     }
     let mut reason_list: Vec<String> = invalid_reasons.into_iter().collect();
     reason_list.sort();
-    Ok((phones, had_phone_input, reason_list))
+    (phones, had_phone_input, reason_list)
 }
 
 fn classify_phone_issue(value: &str) -> Option<&'static str> {
@@ -171,38 +181,27 @@ fn classify_phone_issue(value: &str) -> Option<&'static str> {
     }
 }
 
-fn mapped_value(
-    canonical: &str,
-    mapping: &SourceMapping,
-    record: &StringRecord,
-    headers: Option<&StringRecord>,
-    header_index: Option<&HashMap<String, usize>>,
-) -> String {
-    let Some(column) = mapping.fields.get(canonical) else {
+fn mapped_value(canonical: &str, resolved: &ResolvedMapping, record: &StringRecord) -> String {
+    let Some(Some(index)) = resolved.fields.get(canonical) else {
         return String::new();
     };
-    value_from_column(column, record, headers, header_index)
-        .ok()
-        .flatten()
-        .map(|v| normalize_text(&v))
-        .unwrap_or_default()
+    normalize_text(record.get(*index).unwrap_or(""))
 }
 
-fn value_from_column(
+fn resolve_column(
     column: &str,
-    record: &StringRecord,
-    headers: Option<&StringRecord>,
+    has_header: bool,
     header_index: Option<&HashMap<String, usize>>,
-) -> Result<Option<String>, PipelineError> {
+) -> Result<Option<usize>, PipelineError> {
     if let Ok(index) = column.parse::<usize>() {
-        return Ok(Some(record.get(index).unwrap_or("").to_owned()));
+        return Ok(Some(index));
     }
 
-    let Some(_headers) = headers else {
+    if !has_header {
         return Err(PipelineError::Args(format!(
             "column mapping requires header, but source has no header: {column}"
         )));
-    };
+    }
     let Some(indexes) = header_index else {
         return Err(PipelineError::Args("missing header index".to_owned()));
     };
@@ -210,5 +209,14 @@ fn value_from_column(
     let Some(index) = indexes.get(column) else {
         return Ok(None);
     };
-    Ok(Some(record.get(*index).unwrap_or("").to_owned()))
+    Ok(Some(*index))
+}
+
+fn build_header_index(headers: Option<&StringRecord>) -> Option<HashMap<String, usize>> {
+    headers.map(|h| {
+        h.iter()
+            .enumerate()
+            .map(|(idx, name)| (name.to_owned(), idx))
+            .collect::<HashMap<_, _>>()
+    })
 }

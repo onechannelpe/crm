@@ -2,9 +2,7 @@ use crate::PipelineError;
 use crate::config::manifest::{SourceManifestEntry, load_manifest, verify_manifest};
 use crate::config::mapping::SourceMapping;
 use crate::domain::canonical;
-use crate::domain::normalize_helpers::{
-    PhoneKind, normalize_phone_with_kind,
-};
+use crate::domain::normalize_helpers::{PhoneKind, normalize_phone_with_kind};
 use crate::domain::record_hash::hash_record;
 use csv::ReaderBuilder;
 use std::fs;
@@ -119,7 +117,7 @@ fn normalize_source_entry(
     } else {
         None
     };
-    let header_index = canonical::build_header_index(headers.as_ref());
+    let resolved_mapping = canonical::resolve_mapping(&mapping, headers.as_ref())?;
 
     let mut summary = NormalizationSummary {
         source_key: source.source_key.clone(),
@@ -153,12 +151,8 @@ fn normalize_source_entry(
         };
 
         summary.total_rows += 1;
-        let raw_payload = record
-            .iter()
-            .collect::<Vec<_>>()
-            .join(mapping.delimiter.as_str());
         let record_hash = hash_record(&record, mapping.delimiter.as_str());
-        let row = canonical::map_record(&mapping, &record, headers.as_ref(), header_index.as_ref())?;
+        let row = canonical::map_record(&resolved_mapping, &record);
 
         let mut errors: Vec<&str> = Vec::new();
         if row.had_person_dni_input && row.person_dni.is_none() {
@@ -193,6 +187,7 @@ fn normalize_source_entry(
 
         if !errors.is_empty() {
             summary.error_rows += 1;
+            let raw_payload = render_record_payload(&record, mapping.delimiter.as_str());
             error_writer.write_record([
                 source.source_key.as_str(),
                 source.snapshot_label.as_str(),
@@ -268,6 +263,19 @@ fn normalize_source_entry(
     fs::write(summary_path, serde_json::to_string_pretty(&summary)?)?;
     println!("{}", serde_json::to_string(&summary)?);
     Ok(())
+}
+
+fn render_record_payload(record: &csv::StringRecord, delimiter: &str) -> String {
+    let mut payload = String::new();
+    let mut iter = record.iter();
+    if let Some(first) = iter.next() {
+        payload.push_str(first);
+    }
+    for field in iter {
+        payload.push_str(delimiter);
+        payload.push_str(field);
+    }
+    payload
 }
 
 #[cfg(test)]

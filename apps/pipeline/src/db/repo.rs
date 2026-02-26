@@ -14,15 +14,19 @@ pub(crate) fn ingest_one_row(
     row: CanonicalRow,
     counters: &mut IngestCounters,
 ) -> Result<bool, PipelineError> {
+    if !row.rep_doc_number.is_empty()
+        && row.person_dni.is_none()
+        && row.rep_doc_type.eq_ignore_ascii_case("DNI")
+    {
+        counters.invalid_dni_rows += 1;
+    }
+
     if row.person_dni.is_none()
         && row.company_ruc.is_none()
         && row.role_name.is_empty()
         && row.rep_doc_number.is_empty()
         && row.phones.is_empty()
     {
-        if !row.rep_doc_number.is_empty() && row.person_dni.is_none() {
-            counters.invalid_dni_rows += 1;
-        }
         if row.company_ruc.is_none() && !row.company_name.is_empty() {
             counters.invalid_ruc_rows += 1;
         }
@@ -109,7 +113,7 @@ pub(crate) fn persist_metrics(
     snapshot_id: i64,
     counters: &IngestCounters,
 ) -> Result<(), PipelineError> {
-    tx.execute(
+    let mut statement = tx.prepare_cached(
         r#"
         INSERT INTO snapshot_metrics(
             snapshot_id, total_rows, accepted_rows, invalid_dni_rows, invalid_ruc_rows, invalid_phone_rows
@@ -122,15 +126,15 @@ pub(crate) fn persist_metrics(
             invalid_ruc_rows=excluded.invalid_ruc_rows,
             invalid_phone_rows=excluded.invalid_phone_rows
         "#,
-        params![
-            snapshot_id,
-            counters.total_rows,
-            counters.accepted_rows,
-            counters.invalid_dni_rows,
-            counters.invalid_ruc_rows,
-            counters.invalid_phone_rows
-        ],
     )?;
+    statement.execute(params![
+        snapshot_id,
+        counters.total_rows,
+        counters.accepted_rows,
+        counters.invalid_dni_rows,
+        counters.invalid_ruc_rows,
+        counters.invalid_phone_rows
+    ])?;
     Ok(())
 }
 
@@ -143,7 +147,7 @@ pub(crate) fn upsert_snapshot(
     file_path: &str,
     reliability_rank: i64,
 ) -> Result<i64, PipelineError> {
-    let source_id: i64 = tx.query_row(
+    let mut source_statement = tx.prepare_cached(
         r#"
         INSERT INTO source_registry(source_key, source_name, reliability_rank)
         VALUES (?1, ?2, ?3)
@@ -152,11 +156,13 @@ pub(crate) fn upsert_snapshot(
             reliability_rank=excluded.reliability_rank
         RETURNING source_id
         "#,
-        params![source_key, source_name, reliability_rank],
-        |row| row.get(0),
     )?;
+    let source_id: i64 = source_statement
+        .query_row(params![source_key, source_name, reliability_rank], |row| {
+            row.get(0)
+        })?;
 
-    let snapshot_id: i64 = tx.query_row(
+    let mut snapshot_statement = tx.prepare_cached(
         r#"
         INSERT INTO source_snapshot(source_id, snapshot_label, snapshot_date, file_path, status)
         VALUES (?1, ?2, ?3, ?4, 'registered')
@@ -165,6 +171,8 @@ pub(crate) fn upsert_snapshot(
             file_path=excluded.file_path
         RETURNING snapshot_id
         "#,
+    )?;
+    let snapshot_id: i64 = snapshot_statement.query_row(
         params![source_id, snapshot_label, snapshot_date, file_path],
         |row| row.get(0),
     )?;
@@ -178,7 +186,7 @@ fn upsert_person(
     full_name: &str,
 ) -> Result<Option<i64>, PipelineError> {
     if let Some(dni) = dni {
-        let id: i64 = tx.query_row(
+        let mut statement = tx.prepare_cached(
             r#"
             INSERT INTO person_profile(dni, natural_ruc10, full_name)
             VALUES (?1, ?2, ?3)
@@ -194,20 +202,20 @@ fn upsert_person(
                 END
             RETURNING person_id
             "#,
-            params![dni, natural_ruc10, full_name],
-            |row| row.get(0),
         )?;
+        let id: i64 =
+            statement.query_row(params![dni, natural_ruc10, full_name], |row| row.get(0))?;
         return Ok(Some(id));
     }
 
     if full_name.is_empty() {
         return Ok(None);
     }
-    let person_id: i64 = tx.query_row(
+    let mut statement = tx.prepare_cached(
         "INSERT INTO person_profile(dni, natural_ruc10, full_name) VALUES (NULL, ?1, ?2) RETURNING person_id",
-        params![natural_ruc10, full_name],
-        |row| row.get(0),
     )?;
+    let person_id: i64 =
+        statement.query_row(params![natural_ruc10, full_name], |row| row.get(0))?;
     Ok(Some(person_id))
 }
 
@@ -220,7 +228,7 @@ fn upsert_company(
         return Ok(None);
     };
 
-    let company_id: i64 = tx.query_row(
+    let mut statement = tx.prepare_cached(
         r#"
         INSERT INTO company_profile(ruc, legal_name)
         VALUES (?1, ?2)
@@ -231,9 +239,8 @@ fn upsert_company(
             END
         RETURNING company_id
         "#,
-        params![ruc, legal_name],
-        |row| row.get(0),
     )?;
+    let company_id: i64 = statement.query_row(params![ruc, legal_name], |row| row.get(0))?;
     Ok(Some(company_id))
 }
 
@@ -248,7 +255,7 @@ fn upsert_role(
     role_name: &str,
     role_start_date: &str,
 ) -> Result<Option<i64>, PipelineError> {
-    let role_id: i64 = tx.query_row(
+    let mut statement = tx.prepare_cached(
         r#"
         INSERT INTO person_company_role(
             person_id, company_id, rep_doc_type, rep_doc_number, rep_name, role_name, role_start_date, resolution_status
@@ -263,6 +270,8 @@ fn upsert_role(
             resolution_status = excluded.resolution_status
         RETURNING role_id
         "#,
+    )?;
+    let role_id: i64 = statement.query_row(
         params![
             person_id,
             company_id,
@@ -288,15 +297,15 @@ fn upsert_person_phone(
     phone: &str,
     snapshot_id: i64,
 ) -> Result<(), PipelineError> {
-    tx.execute(
+    let mut statement = tx.prepare_cached(
         r#"
         INSERT INTO person_phone(person_id, phone, first_seen_snapshot_id, last_seen_snapshot_id, confidence)
         VALUES (?1, ?2, ?3, ?3, 100)
         ON CONFLICT(person_id, phone) DO UPDATE SET
             last_seen_snapshot_id=excluded.last_seen_snapshot_id
         "#,
-        params![person_id, phone, snapshot_id],
     )?;
+    statement.execute(params![person_id, phone, snapshot_id])?;
     Ok(())
 }
 
@@ -306,15 +315,15 @@ fn upsert_company_phone(
     phone: &str,
     snapshot_id: i64,
 ) -> Result<(), PipelineError> {
-    tx.execute(
+    let mut statement = tx.prepare_cached(
         r#"
         INSERT INTO company_phone(company_id, phone, first_seen_snapshot_id, last_seen_snapshot_id, confidence)
         VALUES (?1, ?2, ?3, ?3, 100)
         ON CONFLICT(company_id, phone) DO UPDATE SET
             last_seen_snapshot_id=excluded.last_seen_snapshot_id
         "#,
-        params![company_id, phone, snapshot_id],
     )?;
+    statement.execute(params![company_id, phone, snapshot_id])?;
     Ok(())
 }
 
@@ -324,15 +333,15 @@ fn upsert_role_phone(
     phone: &str,
     snapshot_id: i64,
 ) -> Result<(), PipelineError> {
-    tx.execute(
+    let mut statement = tx.prepare_cached(
         r#"
         INSERT INTO role_phone(role_id, phone, first_seen_snapshot_id, last_seen_snapshot_id, confidence)
         VALUES (?1, ?2, ?3, ?3, 70)
         ON CONFLICT(role_id, phone) DO UPDATE SET
             last_seen_snapshot_id=excluded.last_seen_snapshot_id
         "#,
-        params![role_id, phone, snapshot_id],
     )?;
+    statement.execute(params![role_id, phone, snapshot_id])?;
     Ok(())
 }
 
@@ -344,13 +353,19 @@ fn insert_evidence(
     source_row_number: i64,
     raw_hash: &str,
 ) -> Result<(), PipelineError> {
-    tx.execute(
+    let mut statement = tx.prepare_cached(
         r#"
         INSERT INTO entity_evidence(entity_kind, entity_pk, snapshot_id, source_row_number, raw_hash)
         VALUES (?1, ?2, ?3, ?4, ?5)
         ON CONFLICT(entity_kind, entity_pk, snapshot_id, source_row_number) DO NOTHING
         "#,
-        params![entity_kind, entity_pk, snapshot_id, source_row_number, raw_hash],
     )?;
+    statement.execute(params![
+        entity_kind,
+        entity_pk,
+        snapshot_id,
+        source_row_number,
+        raw_hash
+    ])?;
     Ok(())
 }

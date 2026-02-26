@@ -44,7 +44,9 @@ pub fn run(command: Command) -> Result<(), PipelineError> {
             batch_size,
         ),
         Command::MaterializeServing { db } => materialize::materialize_serving(&db),
-        Command::ValidateSnapshot { db, snapshot_label } => validate::validate_snapshot(&db, &snapshot_label),
+        Command::ValidateSnapshot { db, snapshot_label } => {
+            validate::validate_snapshot(&db, &snapshot_label)
+        }
         Command::PromoteDb { from, to } => materialize::promote_db(&from, &to),
         Command::RunMatrix {
             db,

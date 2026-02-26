@@ -90,7 +90,7 @@ pub fn ingest_snapshot(
     } else {
         None
     };
-    let header_index = canonical::build_header_index(headers.as_ref());
+    let resolved_mapping = canonical::resolve_mapping(&mapping, headers.as_ref())?;
 
     let ingest_result = (|| -> Result<IngestCounters, PipelineError> {
         let mut counters = IngestCounters::default();
@@ -101,8 +101,7 @@ pub fn ingest_snapshot(
             let record = result?;
             counters.total_rows += 1;
             let source_row_number = (i + 1) as i64;
-            let canonical_row =
-                canonical::map_record(&mapping, &record, headers.as_ref(), header_index.as_ref())?;
+            let canonical_row = canonical::map_record(&resolved_mapping, &record);
             let accepted = repo::ingest_one_row(
                 &tx,
                 snapshot_id,

@@ -128,7 +128,7 @@ fn sample_with_header(src: PathBuf, out: PathBuf, cap: usize) -> Result<(), Pipe
         if bytes == 0 {
             break;
         }
-        if line_no > cap {
+        if line_no >= cap {
             break;
         }
         let normalized = String::from_utf8_lossy(&buf);
