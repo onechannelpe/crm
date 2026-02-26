@@ -1,6 +1,38 @@
-function required(key: string): string {
+const SECRET_MIN_LENGTH = 32;
+const SECRET_MIN_UNIQUE_CHARS = 10;
+const SEQUENTIAL_CHARS =
+  "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+export function validateSecret(key: string, value: string): void {
+  if (value.length < SECRET_MIN_LENGTH) {
+    throw new Error(
+      `${key} must be at least ${SECRET_MIN_LENGTH} characters long`,
+    );
+  }
+
+  if (/^(.)\1+$/.test(value)) {
+    throw new Error(`${key} cannot be a repeating sequence of one character`);
+  }
+
+  if (
+    SEQUENTIAL_CHARS.includes(value) ||
+    SEQUENTIAL_CHARS.split("").reverse().join("").includes(value)
+  ) {
+    throw new Error(`${key} cannot be a simple sequential string`);
+  }
+
+  const uniqueChars = new Set(value).size;
+  if (uniqueChars < SECRET_MIN_UNIQUE_CHARS) {
+    throw new Error(
+      `${key} has too little entropy (only ${uniqueChars} unique characters)`,
+    );
+  }
+}
+
+function required(key: string, secret = false): string {
   const value = process.env[key];
   if (!value) throw new Error(`Missing required env: ${key}`);
+  if (secret) validateSecret(key, value);
   return value;
 }
 
@@ -10,9 +42,9 @@ function optional(key: string, fallback: string): string {
 
 export const env = {
   nodeEnv: optional("NODE_ENV", "development"),
-  sessionSecret: required("SESSION_SECRET"),
+  sessionSecret: required("SESSION_SECRET", true),
   engineUrl: optional("ENGINE_URL", "http://localhost:3001"),
-  engineHmacSecret: required("ENGINE_HMAC_SECRET"),
+  engineHmacSecret: required("ENGINE_HMAC_SECRET", true),
   webauthnRpId: optional("WEBAUTHN_RP_ID", "localhost"),
   webauthnOrigin: optional("WEBAUTHN_ORIGIN", "http://localhost:3000"),
   resendApiKey: optional("RESEND_API_KEY", ""),
