@@ -1,8 +1,7 @@
-import { createResource, createSignal, For, Show } from "solid-js";
+import { createSignal, For, Show } from "solid-js";
 
 import {
   confirmSalesRecord,
-  listPendingSalesRecords,
   registerSalesRecordAttempt,
   rejectSalesRecord,
 } from "~/actions/sales-records";
@@ -23,6 +22,8 @@ import {
   TableRow,
 } from "~/components/ui/layout/table";
 import { getErrorMessage } from "~/lib/errors";
+import { pendingSalesRecordsQuery } from "~/lib/queries/sales-records";
+import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
 import { runOptimistic } from "~/lib/ui/run-optimistic";
 import { formatDate } from "~/lib/utils";
 
@@ -43,12 +44,14 @@ function isAttemptOutcome(
 }
 
 export default function SalesConfirmationsPage() {
-  const [notes, { mutate, refetch }] = createResource(
-    () => true,
-    async () => listPendingSalesRecords(),
-    { initialValue: [], ssrLoadFrom: "initial" },
-  );
-  const currentNotes = () => notes.latest ?? [];
+  const {
+    data: currentNotes,
+    write: writeNotes,
+    revalidate: revalidateNotes,
+  } = createOptimisticQuery(() => pendingSalesRecordsQuery(), {
+    initialValue: [],
+    key: pendingSalesRecordsQuery.key,
+  });
   const [rejectingNoteId, setRejectingNoteId] = createSignal<number | null>(
     null,
   );
@@ -65,14 +68,12 @@ export default function SalesConfirmationsPage() {
     try {
       await runOptimistic({
         read: currentNotes,
-        write: (next) => mutate(() => next),
+        write: writeNotes,
         optimistic: (prev) => prev.filter((note) => note.id !== noteId),
         commit: async () => {
           await confirmSalesRecord(noteId);
         },
-        reconcile: () => {
-          void refetch();
-        },
+        reconcile: revalidateNotes,
       });
       showToast("success", `Sale #${noteId} confirmed`);
     } catch (err: unknown) {
@@ -87,7 +88,7 @@ export default function SalesConfirmationsPage() {
     try {
       await runOptimistic({
         read: currentNotes,
-        write: (next) => mutate(() => next),
+        write: writeNotes,
         optimistic: (prev) => prev.filter((note) => note.id !== noteId),
         commit: async () => {
           const reason = rejections
@@ -95,9 +96,7 @@ export default function SalesConfirmationsPage() {
             .join(" | ");
           await rejectSalesRecord(noteId, reason);
         },
-        reconcile: () => {
-          void refetch();
-        },
+        reconcile: revalidateNotes,
       });
       showToast("success", `Sale #${noteId} rejected`);
       setRejectingNoteId(null);
@@ -133,7 +132,7 @@ export default function SalesConfirmationsPage() {
         parsedNextAttemptAt,
       );
       showToast("success", `Attempt logged for sale #${noteId}`);
-      await refetch();
+      await revalidateNotes();
       resetAttemptState();
     } catch (err: unknown) {
       showToast("error", getErrorMessage(err, "Attempt logging failed"));

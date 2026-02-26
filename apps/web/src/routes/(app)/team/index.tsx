@@ -1,11 +1,7 @@
-import { A } from "@solidjs/router";
+import { A, createAsync, revalidate } from "@solidjs/router";
 import { createSignal, For, Show } from "solid-js";
 
-import {
-  getTeamDirectory,
-  resendTeamInvite,
-  revokeTeamInvite,
-} from "~/actions/team";
+import { resendTeamInvite, revokeTeamInvite } from "~/actions/team";
 import { EmptyState } from "~/components/feedback/empty-state";
 import { useToast } from "~/components/feedback/toast-provider";
 import Mail from "~/components/icons/mail";
@@ -26,15 +22,17 @@ import {
   getRoleLabel,
 } from "~/lib/auth/access/role-display";
 import { getErrorMessage } from "~/lib/errors";
-import { createAppQuery } from "~/lib/ui/create-app-query";
+import { teamDirectoryQuery } from "~/lib/queries/team";
 
 import styles from "./team-page.module.css";
 
 export default function TeamPage() {
-  const [directory, { refetch }] = createAppQuery(getTeamDirectory, {
-    members: [],
-    pendingInvites: [],
-    canManageInvites: false,
+  const directory = createAsync(() => teamDirectoryQuery(), {
+    initialValue: {
+      members: [],
+      pendingInvites: [],
+      canManageInvites: false,
+    },
   });
   const [pendingActionId, setPendingActionId] = createSignal<number | null>(
     null,
@@ -47,7 +45,7 @@ export default function TeamPage() {
     try {
       await resendTeamInvite(inviteId);
       showToast("success", "Invite resent");
-      await refetch();
+      await revalidate(teamDirectoryQuery.key);
     } catch (err: unknown) {
       showToast("error", getErrorMessage(err, "Failed to resend invite"));
     } finally {
@@ -60,7 +58,7 @@ export default function TeamPage() {
     try {
       await revokeTeamInvite(inviteId);
       showToast("success", "Invite revoked");
-      await refetch();
+      await revalidate(teamDirectoryQuery.key);
     } catch (err: unknown) {
       showToast("error", getErrorMessage(err, "Failed to revoke invite"));
     } finally {

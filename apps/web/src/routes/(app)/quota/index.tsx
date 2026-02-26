@@ -1,6 +1,6 @@
-import { createResource, createSignal, Show } from "solid-js";
+import { createSignal, Show } from "solid-js";
 
-import { getQuotaStatus, allocateQuota } from "~/actions/quota";
+import { allocateQuota } from "~/actions/quota";
 import { QuotaDisplay } from "~/components/features/quota/quota-display";
 import { useToast } from "~/components/feedback/toast-provider";
 import { AppPage } from "~/components/layout/page";
@@ -8,17 +8,21 @@ import { useSession } from "~/components/providers/session-provider";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { getErrorMessage } from "~/lib/errors";
+import { quotaStatusQuery } from "~/lib/queries/quota";
+import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
 import { runOptimistic } from "~/lib/ui/run-optimistic";
 
 import styles from "./quota-page.module.css";
 
 export default function QuotaPage() {
-  const [quota, { mutate, refetch }] = createResource(
-    () => true,
-    async () => getQuotaStatus(),
-    { initialValue: { allocated: false }, ssrLoadFrom: "initial" },
-  );
-  const currentQuota = () => quota.latest ?? { allocated: false };
+  const {
+    data: currentQuota,
+    write: writeQuota,
+    revalidate: revalidateQuota,
+  } = createOptimisticQuery(() => quotaStatusQuery(), {
+    initialValue: { allocated: false },
+    key: quotaStatusQuery.key,
+  });
   const { currentUser } = useSession();
   const [execId, setExecId] = createSignal("");
   const [amount, setAmount] = createSignal("10");
@@ -38,7 +42,7 @@ export default function QuotaPage() {
       const safeAmount = Number(amount());
       await runOptimistic({
         read: currentQuota,
-        write: (next) => mutate(() => next),
+        write: writeQuota,
         optimistic: (prev) => {
           if (!prev.allocated) {
             return prev;
@@ -55,9 +59,7 @@ export default function QuotaPage() {
         commit: async () => {
           await allocateQuota(targetExecutiveId, safeAmount);
         },
-        reconcile: () => {
-          void refetch();
-        },
+        reconcile: revalidateQuota,
       });
       showToast("success", "Quota assigned");
       setExecId("");

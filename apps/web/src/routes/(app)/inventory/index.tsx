@@ -1,6 +1,7 @@
+import { createAsync } from "@solidjs/router";
 import { For, Show } from "solid-js";
 
-import { getInventoryItems } from "~/actions/inventory";
+import { inventoryItemsQuery } from "~/lib/queries/inventory";
 import { EmptyState } from "~/components/feedback/empty-state";
 import { AppPage } from "~/components/layout/page";
 import { Badge } from "~/components/ui/display/badge";
@@ -12,7 +13,6 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
-import { createAppQuery } from "~/lib/ui/create-app-query";
 
 import styles from "./inventory-page.module.css";
 
@@ -36,7 +36,7 @@ const statusVariant = (status: string) => {
 };
 
 export default function InventoryPage() {
-  const [items] = createAppQuery(getInventoryItems, []);
+  const items = createAsync(() => inventoryItemsQuery(), { initialValue: [] });
   const itemCount = () => items()?.length ?? 0;
 
   return (

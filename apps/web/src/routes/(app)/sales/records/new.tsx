@@ -1,12 +1,12 @@
-import { useNavigate, useSearchParams } from "@solidjs/router";
-import { createResource, createSignal, For, onMount, Show } from "solid-js";
+import { createAsync, useNavigate, useSearchParams } from "@solidjs/router";
+import { createSignal, For, onMount, Show } from "solid-js";
 
 import {
   createSalesRecordDraft,
   getSalesRecordBootstrap,
-  listSalesRecordProducts,
   submitSalesRecord,
 } from "~/actions/sales-records";
+import { salesRecordProductsQuery } from "~/lib/queries/sales-records";
 import { useToast } from "~/components/feedback/toast-provider";
 import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
@@ -48,12 +48,9 @@ export default function NewSalePage() {
   const [selectedProductQty, setSelectedProductQty] = createSignal("1");
   const [productLines, setProductLines] = createSignal<ProductLine[]>([]);
 
-  const [products] = createResource(
-    () => true,
-    async () => listSalesRecordProducts(),
-    { initialValue: [], ssrLoadFrom: "initial" },
-  );
-  const currentProducts = () => products.latest ?? [];
+  const currentProducts = createAsync(() => salesRecordProductsQuery(), {
+    initialValue: [],
+  });
 
   onMount(() => {
     const contactIdRaw = searchParams.contactId;

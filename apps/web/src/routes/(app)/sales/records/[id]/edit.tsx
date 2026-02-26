@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from "@solidjs/router";
+import { createAsync, useNavigate, useParams } from "@solidjs/router";
 import {
   createEffect,
   createResource,
@@ -9,10 +9,10 @@ import {
 
 import {
   getSalesRecordFixContext,
-  listSalesRecordProducts,
   submitSalesRecord,
   updateSalesRecordDraft,
 } from "~/actions/sales-records";
+import { salesRecordProductsQuery } from "~/lib/queries/sales-records";
 import { useToast } from "~/components/feedback/toast-provider";
 import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
@@ -52,12 +52,9 @@ export default function FixSalePage() {
     noteId,
     getSalesRecordFixContext,
   );
-  const [products] = createResource(
-    () => true,
-    async () => listSalesRecordProducts(),
-    { initialValue: [], ssrLoadFrom: "initial" },
-  );
-  const currentProducts = () => products.latest ?? [];
+  const currentProducts = createAsync(() => salesRecordProductsQuery(), {
+    initialValue: [],
+  });
   const { showToast } = useToast();
 
   createEffect(() => {

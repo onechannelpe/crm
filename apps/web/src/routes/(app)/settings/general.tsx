@@ -1,11 +1,13 @@
-import { createResource, createSignal, For } from "solid-js";
+import { createSignal, For } from "solid-js";
 
-import { getProductCatalog, updateProductPricing } from "~/actions/settings";
+import { updateProductPricing } from "~/actions/settings";
 import { useToast } from "~/components/feedback/toast-provider";
 import { Button } from "~/components/ui/input/button";
 import { Checkbox } from "~/components/ui/input/checkbox";
 import { Input } from "~/components/ui/input/input";
 import { getErrorMessage } from "~/lib/errors";
+import { productCatalogQuery } from "~/lib/queries/settings";
+import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
 import { runOptimistic } from "~/lib/ui/run-optimistic";
 
 import styles from "./settings-page.module.css";
@@ -13,11 +15,14 @@ import styles from "./settings-page.module.css";
 export default function SettingsGeneralPage() {
   const { showToast } = useToast();
 
-  const [products, { mutate, refetch }] = createResource(
-    async () => getProductCatalog(),
-    { initialValue: [], ssrLoadFrom: "initial" },
-  );
-  const currentProducts = () => products.latest ?? [];
+  const {
+    data: currentProducts,
+    write: writeProducts,
+    revalidate: revalidateProducts,
+  } = createOptimisticQuery(() => productCatalogQuery(), {
+    initialValue: [],
+    key: productCatalogQuery.key,
+  });
   const [savingId, setSavingId] = createSignal<number | null>(null);
 
   const save = async (productId: number, price: string, isActive: boolean) => {
@@ -26,7 +31,7 @@ export default function SettingsGeneralPage() {
       const numericPrice = Number(price);
       await runOptimistic({
         read: currentProducts,
-        write: (next) => mutate(() => next),
+        write: writeProducts,
         optimistic: (prev) =>
           prev.map((product) =>
             product.id === productId
@@ -36,9 +41,7 @@ export default function SettingsGeneralPage() {
         commit: async () => {
           await updateProductPricing(productId, numericPrice, isActive);
         },
-        reconcile: () => {
-          void refetch();
-        },
+        reconcile: revalidateProducts,
       });
       showToast("success", "Product updated");
     } catch (err: unknown) {

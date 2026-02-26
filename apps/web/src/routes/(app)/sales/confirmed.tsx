@@ -1,6 +1,7 @@
-import { createResource, For, Show } from "solid-js";
+import { createAsync } from "@solidjs/router";
+import { For, Show } from "solid-js";
 
-import { listConfirmedSalesRecords } from "~/actions/sales-records";
+import { confirmedSalesRecordsQuery } from "~/lib/queries/sales-records";
 import { EmptyState } from "~/components/feedback/empty-state";
 import { AppPage } from "~/components/layout/page";
 import {
@@ -16,11 +17,9 @@ import { formatDate } from "~/lib/utils";
 import styles from "./confirmed-sales-page.module.css";
 
 export default function ConfirmedSalesPage() {
-  const [sales] = createResource(
-    () => true,
-    async () => listConfirmedSalesRecords(),
-    { initialValue: [], ssrLoadFrom: "initial" },
-  );
+  const sales = createAsync(() => confirmedSalesRecordsQuery(), {
+    initialValue: [],
+  });
 
   return (
     <AppPage>
