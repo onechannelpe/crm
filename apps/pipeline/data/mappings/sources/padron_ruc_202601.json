@@ -1,0 +1,14 @@
+{
+  "source_key": "padron_ruc_202601",
+  "source_name": "PadronRUC_202601",
+  "delimiter": ",",
+  "has_header": true,
+  "flexible": true,
+  "fields": {
+    "company_ruc": "RUC",
+    "role_name": "Tipo",
+    "company_name": "Actividad_Economica_CIIU_revision4_Principal"
+  },
+  "phone_columns": [],
+  "phone_prefixes": []
+}

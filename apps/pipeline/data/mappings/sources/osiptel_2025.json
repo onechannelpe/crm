@@ -1,0 +1,16 @@
+{
+  "source_key": "osiptel",
+  "source_name": "osiptel_2025",
+  "delimiter": ",",
+  "has_header": false,
+  "flexible": true,
+  "fields": {
+    "person_dni": "0",
+    "person_full_name": "6",
+    "company_name": "7",
+    "phone": "1",
+    "role_name": "10"
+  },
+  "phone_columns": [],
+  "phone_prefixes": []
+}

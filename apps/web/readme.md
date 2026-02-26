@@ -4,7 +4,7 @@ SolidStart application. See [root readme](../../readme.md) for project overview.
 
 ## Environment
 
-Read from root `.env`]:
+Read from root [`.env`](../../.env):
 
 - `SESSION_SECRET` (required)
 - `ENGINE_HMAC_SECRET` (required): authenticates requests to engine

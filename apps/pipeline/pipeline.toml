@@ -1,0 +1,30 @@
+[paths]
+manifest = "apps/pipeline/data/mappings/source-manifest.json"
+normalized_dir = "apps/pipeline/data/normalized"
+staged_db = "apps/pipeline/data/build/staged/contacts.pipeline.staged.sqlite"
+bench_dir = "apps/pipeline/data/build/bench"
+engine_db = "apps/engine/data/contacts.sqlite"
+
+[profiles.quick]
+mode = "sample"
+row_cap = 10000
+batch_size = 50000
+include_osiptel = false
+
+[profiles.standard]
+mode = "sample"
+row_cap = 100000
+batch_size = 50000
+include_osiptel = false
+
+[profiles.heavy]
+mode = "sample"
+row_cap = 100000
+batch_size = 50000
+include_osiptel = true
+source_row_caps = { osiptel = 100000 }
+
+[profiles.full]
+mode = "full"
+batch_size = 50000
+include_osiptel = true
