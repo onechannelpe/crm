@@ -57,7 +57,9 @@ export async function seedLeadsRequestFixtures(
   for (const userId of userIds) {
     const result = await quotaService.allocate(2, userId, 1, BENCH_DATE);
     if (!result.ok) {
-      throw new Error(`expected quota allocation success, got ${result.error}`);
+      throw new Error(
+        `expected quota allocation success, got ${result.error.message}`,
+      );
     }
   }
 

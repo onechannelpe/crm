@@ -104,7 +104,8 @@ describe("sales records workflow service", () => {
     const blocked = await ctx.salesRecords.confirm(created.value, 4, 2, false);
     expect(blocked.ok).toBe(false);
     if (blocked.ok) throw new Error("Expected branch scope block");
-    expect(blocked.error).toBe(
+    expect(blocked.error.reason).toBe("forbidden");
+    expect(blocked.error.message).toBe(
       "Cannot confirm a sales record from another branch",
     );
 
@@ -175,6 +176,7 @@ describe("sales records workflow service", () => {
     );
     expect(rejected.ok).toBe(false);
     if (rejected.ok) throw new Error("Expected reject validation failure");
-    expect(rejected.error).toBe("Rejection reason is required");
+    expect(rejected.error.reason).toBe("invalid_data");
+    expect(rejected.error.message).toBe("Rejection reason is required");
   });
 });

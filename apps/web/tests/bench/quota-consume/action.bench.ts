@@ -29,7 +29,7 @@ describe("quota consume action benchmark", () => {
       const result = await quotaService.allocate(2, userId, 2, BENCH_DATE);
       if (!result.ok) {
         throw new Error(
-          `expected quota allocation success, got ${result.error}`,
+          `expected quota allocation success, got ${result.error.message}`,
         );
       }
     }
@@ -53,7 +53,9 @@ describe("quota consume action benchmark", () => {
 
       const result = await quotaService!.consume(userId, 1);
       if (!result.ok) {
-        throw new Error(`expected quota consume success, got ${result.error}`);
+        throw new Error(
+          `expected quota consume success, got ${result.error.message}`,
+        );
       }
     },
     fixedIterations(USER_POOL_SIZE),

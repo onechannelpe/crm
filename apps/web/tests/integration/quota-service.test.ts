@@ -35,7 +35,7 @@ describe("quota service", () => {
     if (second.ok) {
       throw new Error("Expected duplicate quota allocation to fail");
     }
-    expect(second.error).toBe("Quota already allocated for this date");
+    expect(second.error.reason).toBe("quota_already_allocated");
   });
 
   it("enforces quota exhaustion while consuming", async () => {
@@ -60,7 +60,7 @@ describe("quota service", () => {
     if (c3.ok) {
       throw new Error("Expected third quota consumption to fail");
     }
-    expect(c3.error).toBe("Quota exhausted: 2/2 used.");
+    expect(c3.error.reason).toBe("quota_exhausted");
   });
 
   it("handles high-volume small consumes correctly", async () => {

@@ -6,6 +6,13 @@ import {
 } from "@crm/notifications";
 import { getRequestEvent } from "solid-js/web";
 
+import {
+  conflictError,
+  forbiddenError,
+  internalError,
+  notFoundError,
+  validationError,
+} from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { requirePermission } from "~/lib/auth/access/session";
 import {
@@ -16,6 +23,12 @@ import { env } from "~/lib/env";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
 import { repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
+import type {
+  CreateInviteError,
+  MarkInviteDeliveredError,
+  ResendInviteError,
+  RevokeInviteError,
+} from "~/server/users/service-user-provisioning";
 
 import { provisioning } from "./provisioning";
 import { assertEmail, assertOptionalTeamId, assertRole } from "./validators";
@@ -65,6 +78,85 @@ async function sendInviteEmail(params: {
   });
 }
 
+function throwCreateInviteError(error: CreateInviteError): never {
+  switch (error.reason) {
+    case "role_not_assignable":
+      throw forbiddenError(error.message);
+    case "invalid_team":
+      throw validationError(error.message);
+    case "active_user_exists":
+      throw conflictError(error.message);
+    case "pending_user_other_branch":
+      throw forbiddenError(error.message);
+    case "invite_target_missing":
+      throw notFoundError(error.message);
+    case "unexpected":
+      throw internalError(error.message);
+    default: {
+      const exhausted: never = error;
+      throw internalError(
+        `Unhandled invite create error: ${String(exhausted)}`,
+      );
+    }
+  }
+}
+
+function throwResendInviteError(error: ResendInviteError): never {
+  switch (error.reason) {
+    case "invite_not_found":
+    case "invite_target_missing":
+      throw notFoundError(error.message);
+    case "cross_branch_forbidden":
+    case "role_not_assignable":
+      throw forbiddenError(error.message);
+    case "invite_not_pending":
+    case "invite_target_active":
+      throw conflictError(error.message);
+    case "unexpected":
+      throw internalError(error.message);
+    default: {
+      const exhausted: never = error;
+      throw internalError(
+        `Unhandled invite resend error: ${String(exhausted)}`,
+      );
+    }
+  }
+}
+
+function throwRevokeInviteError(error: RevokeInviteError): never {
+  switch (error.reason) {
+    case "invite_not_found":
+    case "invite_target_missing":
+      throw notFoundError(error.message);
+    case "cross_branch_forbidden":
+    case "role_not_assignable":
+      throw forbiddenError(error.message);
+    case "invite_not_pending":
+      throw conflictError(error.message);
+    case "unexpected":
+      throw internalError(error.message);
+    default: {
+      const exhausted: never = error;
+      throw internalError(
+        `Unhandled invite revoke error: ${String(exhausted)}`,
+      );
+    }
+  }
+}
+
+function throwMarkInviteDeliveredError(error: MarkInviteDeliveredError): never {
+  switch (error.reason) {
+    case "unexpected":
+      throw internalError(error.message);
+    default: {
+      const exhausted: never = error.reason;
+      throw internalError(
+        `Unhandled invite delivery mark error: ${String(exhausted)}`,
+      );
+    }
+  }
+}
+
 export async function createTeamInvite(input: {
   fullName: string;
   email: string;
@@ -100,7 +192,7 @@ export async function createTeamInvite(input: {
         teamId: safeInput.teamId,
       });
       if (isErr(result)) {
-        throw new Error(result.error);
+        throwCreateInviteError(result.error);
       }
 
       await sendInviteEmail({
@@ -110,7 +202,12 @@ export async function createTeamInvite(input: {
         inviteUrl: getInviteUrl(result.value.token),
         expiresAt: result.value.expiresAt,
       });
-      await provisioning.markInviteDelivered(result.value.inviteId);
+      const deliveryResult = await provisioning.markInviteDelivered(
+        result.value.inviteId,
+      );
+      if (isErr(deliveryResult)) {
+        throwMarkInviteDeliveredError(deliveryResult.error);
+      }
 
       return { inviteId: result.value.inviteId };
     },
@@ -136,13 +233,13 @@ export async function resendTeamInvite(inviteId: number): Promise<void> {
         inviteId: safeInviteId,
       });
       if (isErr(result)) {
-        throw new Error(result.error);
+        throwResendInviteError(result.error);
       }
 
       const invite = await repos.userInvites.findById(result.value.inviteId);
       const user = invite ? await repos.users.findById(invite.user_id) : null;
       if (!user) {
-        throw new Error("Invite target user was not found");
+        throw notFoundError("Invite target user was not found");
       }
 
       await sendInviteEmail({
@@ -152,7 +249,12 @@ export async function resendTeamInvite(inviteId: number): Promise<void> {
         inviteUrl: getInviteUrl(result.value.token),
         expiresAt: result.value.expiresAt,
       });
-      await provisioning.markInviteDelivered(result.value.inviteId);
+      const deliveryResult = await provisioning.markInviteDelivered(
+        result.value.inviteId,
+      );
+      if (isErr(deliveryResult)) {
+        throwMarkInviteDeliveredError(deliveryResult.error);
+      }
     },
   });
 }
@@ -175,7 +277,7 @@ export async function revokeTeamInvite(inviteId: number): Promise<void> {
         inviteId: safeInviteId,
       });
       if (isErr(result)) {
-        throw new Error(result.error);
+        throwRevokeInviteError(result.error);
       }
     },
   });

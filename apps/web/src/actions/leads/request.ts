@@ -10,6 +10,8 @@ import { leadService } from "~/server/shared/context";
 import { repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
+import { throwLeadError } from "./error-mapping";
+
 export interface RequestLeadsResult {
   assigned: number;
 }
@@ -28,7 +30,7 @@ export async function requestLeads(
     size,
   );
 
-  if (isErr(result)) throw new Error(result.error);
+  if (isErr(result)) throwLeadError(result.error);
   const requester = await repos.users.findById(session.userId);
   const supervisors = await repos.users.findActiveIdsByBranchAndRoles(
     session.branchId,
@@ -59,6 +61,6 @@ export async function completeLead(
     safeAssignmentId,
   );
 
-  if (isErr(result)) throw new Error(result.error);
+  if (isErr(result)) throwLeadError(result.error);
   return { success: true };
 }

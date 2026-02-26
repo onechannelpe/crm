@@ -64,7 +64,9 @@ describe("team invite action benchmark", () => {
       });
 
       if (!result.ok) {
-        throw new Error(`expected invite create success, got ${result.error}`);
+        throw new Error(
+          `expected invite create success, got ${result.error.message}`,
+        );
       }
     },
     fixedIterations(CREATE_POOL_SIZE),
@@ -86,7 +88,9 @@ describe("team invite action benchmark", () => {
       });
 
       if (!result.ok) {
-        throw new Error(`expected invite accept success, got ${result.error}`);
+        throw new Error(
+          `expected invite accept success, got ${result.error.message}`,
+        );
       }
     },
     fixedIterations(ACCEPT_POOL_SIZE),

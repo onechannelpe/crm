@@ -46,7 +46,9 @@ describe("lead assignment action benchmark", () => {
 
       const result = await leadService!.requestLeads(userId, 1, 1);
       if (!result.ok) {
-        throw new Error(`expected lead request success, got ${result.error}`);
+        throw new Error(
+          `expected lead request success, got ${result.error.message}`,
+        );
       }
       if (result.value !== 1) {
         throw new Error(`expected one assigned lead, got ${result.value}`);

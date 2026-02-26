@@ -3,6 +3,22 @@ import { createAuditService } from "~/server/shared/audit";
 import type { Repositories } from "~/server/shared/registry";
 import { Ok, Err, type Result } from "~/server/shared/result";
 
+export type QuotaAllocateError =
+  | { reason: "quota_already_allocated"; message: string }
+  | { reason: "unexpected"; message: string };
+
+export type QuotaConsumeError =
+  | { reason: "quota_not_allocated"; message: string }
+  | { reason: "quota_exhausted"; message: string }
+  | { reason: "unexpected"; message: string };
+
+export type QuotaRefundError =
+  | { reason: "quota_not_allocated"; message: string }
+  | { reason: "invalid_refund_amount"; message: string }
+  | { reason: "unexpected"; message: string };
+
+export type QuotaStatusError = { reason: "unexpected"; message: string };
+
 export interface QuotaClock {
   todayDateString(): string;
 }
@@ -13,17 +29,26 @@ export interface QuotaService {
     executiveId: number,
     amount: number,
     date?: string,
-  ): Promise<Result<void, string>>;
-  consume(userId: number, amount?: number): Promise<Result<number, string>>;
-  refund(userId: number, amount?: number): Promise<Result<void, string>>;
+  ): Promise<Result<void, QuotaAllocateError>>;
+  consume(
+    userId: number,
+    amount?: number,
+  ): Promise<Result<number, QuotaConsumeError>>;
+  refund(
+    userId: number,
+    amount?: number,
+  ): Promise<Result<void, QuotaRefundError>>;
   getStatus(userId: number): Promise<
-    | { allocated: false }
-    | {
-        allocated: true;
-        total: number;
-        used: number;
-        remaining: number;
-      }
+    Result<
+      | { allocated: false }
+      | {
+          allocated: true;
+          total: number;
+          used: number;
+          remaining: number;
+        },
+      QuotaStatusError
+    >
   >;
 }
 
@@ -38,101 +63,166 @@ export function createQuotaService(
   const audit = createAuditService(repos);
   const today = () => clock.todayDateString();
 
+  function failAllocate(
+    reason: QuotaAllocateError["reason"],
+    message: string,
+  ): Result<never, QuotaAllocateError> {
+    return Err({ reason, message });
+  }
+
+  function failConsume(
+    reason: QuotaConsumeError["reason"],
+    message: string,
+  ): Result<never, QuotaConsumeError> {
+    return Err({ reason, message });
+  }
+
+  function failRefund(
+    reason: QuotaRefundError["reason"],
+    message: string,
+  ): Result<never, QuotaRefundError> {
+    return Err({ reason, message });
+  }
+
   return {
     async allocate(
       supervisorId: number,
       executiveId: number,
       amount: number,
       date: string = today(),
-    ): Promise<Result<void, string>> {
-      const existing = await repos.quotaAllocations.findByUserAndDate(
-        executiveId,
-        date,
-      );
-      if (existing) {
-        return Err("Quota already allocated for this date");
+    ): Promise<Result<void, QuotaAllocateError>> {
+      try {
+        const existing = await repos.quotaAllocations.findByUserAndDate(
+          executiveId,
+          date,
+        );
+        if (existing) {
+          return failAllocate(
+            "quota_already_allocated",
+            "Quota already allocated for this date",
+          );
+        }
+
+        await repos.quotaAllocations.create({
+          user_id: executiveId,
+          allocated_by_user_id: supervisorId,
+          date,
+          quota_amount: amount,
+        });
+
+        await audit.log(
+          supervisorId,
+          "quota_allocated",
+          "quota_allocation",
+          executiveId,
+          { amount, date },
+        );
+        return Ok(undefined);
+      } catch {
+        return failAllocate(
+          "unexpected",
+          "Unexpected quota allocation failure",
+        );
       }
-
-      await repos.quotaAllocations.create({
-        user_id: executiveId,
-        allocated_by_user_id: supervisorId,
-        date,
-        quota_amount: amount,
-      });
-
-      await audit.log(
-        supervisorId,
-        "quota_allocated",
-        "quota_allocation",
-        executiveId,
-        { amount, date },
-      );
-      return Ok(undefined);
     },
 
     async consume(
       userId: number,
       amount: number = 1,
-    ): Promise<Result<number, string>> {
-      const date = today();
-      const allocation = await repos.quotaAllocations.findByUserAndDate(
-        userId,
-        date,
-      );
-
-      if (!allocation) {
-        return Err("No quota allocated for today. Contact your supervisor.");
-      }
-
-      if (!canConsume(allocation, amount)) {
-        return Err(
-          `Quota exhausted: ${allocation.used_amount}/${allocation.quota_amount} used.`,
+    ): Promise<Result<number, QuotaConsumeError>> {
+      try {
+        const date = today();
+        const allocation = await repos.quotaAllocations.findByUserAndDate(
+          userId,
+          date,
         );
-      }
 
-      await repos.quotaAllocations.incrementUsage(allocation.id, amount);
-      return Ok(allocation.quota_amount - allocation.used_amount - amount);
+        if (!allocation) {
+          return failConsume(
+            "quota_not_allocated",
+            "No quota allocated for today. Contact your supervisor.",
+          );
+        }
+
+        if (!canConsume(allocation, amount)) {
+          return failConsume(
+            "quota_exhausted",
+            `Quota exhausted: ${allocation.used_amount}/${allocation.quota_amount} used.`,
+          );
+        }
+
+        await repos.quotaAllocations.incrementUsage(allocation.id, amount);
+        return Ok(allocation.quota_amount - allocation.used_amount - amount);
+      } catch {
+        return failConsume("unexpected", "Unexpected quota consume failure");
+      }
     },
 
     async refund(
       userId: number,
       amount: number = 1,
-    ): Promise<Result<void, string>> {
-      if (amount <= 0) return Ok(undefined);
-      const date = today();
-      const allocation = await repos.quotaAllocations.findByUserAndDate(
-        userId,
-        date,
-      );
-      if (!allocation) {
-        return Err("No quota allocated for today. Contact your supervisor.");
-      }
-      if (allocation.used_amount < amount) {
-        return Err(
-          `Cannot refund ${amount}. Used amount is ${allocation.used_amount}.`,
+    ): Promise<Result<void, QuotaRefundError>> {
+      try {
+        if (amount <= 0) return Ok(undefined);
+        const date = today();
+        const allocation = await repos.quotaAllocations.findByUserAndDate(
+          userId,
+          date,
         );
+        if (!allocation) {
+          return failRefund(
+            "quota_not_allocated",
+            "No quota allocated for today. Contact your supervisor.",
+          );
+        }
+        if (allocation.used_amount < amount) {
+          return failRefund(
+            "invalid_refund_amount",
+            `Cannot refund ${amount}. Used amount is ${allocation.used_amount}.`,
+          );
+        }
+        await repos.quotaAllocations.decrementUsage(allocation.id, amount);
+        return Ok(undefined);
+      } catch {
+        return failRefund("unexpected", "Unexpected quota refund failure");
       }
-      await repos.quotaAllocations.decrementUsage(allocation.id, amount);
-      return Ok(undefined);
     },
 
-    async getStatus(userId: number) {
-      const date = today();
-      const allocation = await repos.quotaAllocations.findByUserAndDate(
-        userId,
-        date,
-      );
+    async getStatus(userId: number): Promise<
+      Result<
+        | { allocated: false }
+        | {
+            allocated: true;
+            total: number;
+            used: number;
+            remaining: number;
+          },
+        QuotaStatusError
+      >
+    > {
+      try {
+        const date = today();
+        const allocation = await repos.quotaAllocations.findByUserAndDate(
+          userId,
+          date,
+        );
 
-      if (!allocation) {
-        return { allocated: false as const };
+        if (!allocation) {
+          return Ok({ allocated: false as const });
+        }
+
+        return Ok({
+          allocated: true as const,
+          total: allocation.quota_amount,
+          used: allocation.used_amount,
+          remaining: allocation.quota_amount - allocation.used_amount,
+        });
+      } catch {
+        return Err({
+          reason: "unexpected",
+          message: "Unexpected quota status read failure",
+        });
       }
-
-      return {
-        allocated: true as const,
-        total: allocation.quota_amount,
-        used: allocation.used_amount,
-        remaining: allocation.quota_amount - allocation.used_amount,
-      };
     },
   };
 }
