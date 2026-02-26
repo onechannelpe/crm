@@ -1,4 +1,4 @@
-use crate::pipeline::PipelineError;
+use crate::PipelineError;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;

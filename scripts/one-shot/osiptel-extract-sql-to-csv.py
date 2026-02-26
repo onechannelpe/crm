@@ -85,7 +85,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--input",
-        default="apps/engine/data/raw/osiptel_2025.sql",
+        default="apps/pipeline/data/raw/osiptel_2025.sql",
         help="Path to osiptel SQL dump",
     )
     parser.add_argument(

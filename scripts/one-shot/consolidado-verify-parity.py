@@ -93,11 +93,11 @@ def main() -> None:
     )
     parser.add_argument(
         "--txt",
-        default="apps/engine/data/raw/Consolidado_RUC20_Representantes_OK.txt",
+        default="apps/pipeline/data/raw/Consolidado_RUC20_Representantes_OK.txt",
     )
     parser.add_argument(
         "--xlsx",
-        default="apps/engine/data/raw/Consolidado_RUC20_Representantes_OK.xlsx",
+        default="apps/pipeline/data/raw/Consolidado_RUC20_Representantes_OK.xlsx",
     )
     parser.add_argument(
         "--out",

@@ -1,10 +1,10 @@
-# processing
+# Pipeline processing
 
 Rust pipeline that consolidates raw contact data from multiple sources into the engine's SQLite database. See [root readme](../../readme.md) for project overview.
 
 ## Data sources
 
-Configured in [`data/mappings/source-manifest.json`](data/mappings/source-manifest.json). Each entry specifies a raw file path, field mapping, reliability rank, and ingestion priority. Raw files live in `../engine/data/raw/` and are not committed.
+Configured in [`data/mappings/source-manifest.json`](data/mappings/source-manifest.json). Each entry specifies a raw file path, field mapping, reliability rank, and ingestion priority. Raw files live in `data/raw/` and are not committed.
 
 Per-source field mappings are in `data/mappings/sources/`. Canonical field names: [`data/mappings/canonical-fields.json`](data/mappings/canonical-fields.json).
 
@@ -42,8 +42,14 @@ bun run pipeline:staged-test
 
 ## Layout
 
+- `src/pipeline/cli.rs`: thin command parsing and defaults
+- `src/pipeline/runner.rs`: command dispatch only
+- `src/pipeline/config/`: manifest, field mapping, path defaults
+- `src/pipeline/domain/`: shared normalization rules and primitives
+- `src/pipeline/infra/`: SQLite connection and schema initialization
+- `src/pipeline/stages/`: ingest, normalize, matrix orchestration, serving materialization
 - `data/mappings/`: source manifest and per-source field mappings
+- `data/raw/`: raw source files (not committed)
 - `data/normalized/`: normalize-matrix output (not committed)
 - `data/pipeline/runs/`: frozen outputs for each validation run
 - `data/pipeline/triage/`: triage files and run-diff reports
-- `../engine/data/raw/`: raw source files (not committed)
