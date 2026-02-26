@@ -32,10 +32,6 @@ jobs:
     name: Run benchmarks
     runs-on: ubuntu-latest
 
-    env:
-      SESSION_SECRET: ci-session-secret
-      ENGINE_HMAC_SECRET: ci-engine-hmac-secret
-
     steps:
       - uses: actions/checkout@v6
         with:
