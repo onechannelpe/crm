@@ -1,5 +1,11 @@
 "use server";
 
+import {
+  appErrorFromMessage,
+  forbiddenError,
+  notFoundError,
+  validationError,
+} from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { requirePermission } from "~/lib/auth/access/session";
 import type { ActionSuccess } from "~/lib/contracts/common";
@@ -195,18 +201,18 @@ export async function getSalesRecordBootstrap(
     safeContactId,
   );
   if (!assignment) {
-    throw new Error(
+    throw forbiddenError(
       "You can only create sales from your active assigned leads",
     );
   }
 
   const contact = await repos.contacts.findById(safeContactId);
-  if (!contact) throw new Error("Contact not found");
+  if (!contact) throw notFoundError("Contact not found");
 
   const organization = await repos.organizations.findById(
     contact.organization_id,
   );
-  if (!organization) throw new Error("Organization not found");
+  if (!organization) throw notFoundError("Organization not found");
 
   return {
     source: "lead_assignment",
@@ -234,13 +240,13 @@ export async function createSalesRecordDraft(
   input: CreateSalesRecordDraftInput,
 ): Promise<{ id: number }> {
   if (!isSalesRecordSource(input.source)) {
-    throw new Error("source is invalid");
+    throw validationError("source is invalid");
   }
   if (input.source === "lead_assignment") {
     assertPositiveInt(input.leadAssignmentId ?? 0, "leadAssignmentId");
   }
   if (input.source === "manual" && input.leadAssignmentId !== null) {
-    throw new Error("leadAssignmentId must be null for manual sales");
+    throw validationError("leadAssignmentId must be null for manual sales");
   }
 
   input.addresses.forEach((address, index) => {
@@ -277,7 +283,7 @@ export async function createSalesRecordDraft(
         addresses: input.addresses,
         products: input.products,
       });
-      if (isErr(result)) throw new Error(result.error);
+      if (isErr(result)) throw appErrorFromMessage(result.error);
       return { id: result.value };
     },
   });
@@ -300,7 +306,7 @@ export async function submitSalesRecord(
         safeRecordId,
         session.userId,
       );
-      if (isErr(result)) throw new Error(result.error);
+      if (isErr(result)) throw appErrorFromMessage(result.error);
       return { success: true };
     },
   });
@@ -325,7 +331,7 @@ export async function confirmSalesRecord(
         session.branchId,
         session.role === "superuser",
       );
-      if (isErr(result)) throw new Error(result.error);
+      if (isErr(result)) throw appErrorFromMessage(result.error);
       return { success: true };
     },
   });
@@ -353,7 +359,7 @@ export async function rejectSalesRecord(
         session.role === "superuser",
         safeReason,
       );
-      if (isErr(result)) throw new Error(result.error);
+      if (isErr(result)) throw appErrorFromMessage(result.error);
       return { success: true };
     },
   });
@@ -376,7 +382,7 @@ export async function cancelSalesRecord(
         safeRecordId,
         session.userId,
       );
-      if (isErr(result)) throw new Error(result.error);
+      if (isErr(result)) throw appErrorFromMessage(result.error);
       return { success: true };
     },
   });
@@ -421,9 +427,9 @@ export async function getSalesRecordFixContext(
   const safeRecordId = assertPositiveInt(recordId, "recordId");
   const session = await requirePermission("sales:create");
   const record = await repos.salesRecords.findById(safeRecordId);
-  if (!record) throw new Error("Sales record not found");
+  if (!record) throw notFoundError("Sales record not found");
   if (record.executive_user_id !== session.userId) {
-    throw new Error("Not your sales record");
+    throw forbiddenError("Not your sales record");
   }
 
   const [client, addresses, products, attempts] = await Promise.all([
@@ -512,7 +518,7 @@ export async function updateSalesRecordDraft(
         },
         safeCorrectionNotes,
       );
-      if (isErr(result)) throw new Error(result.error);
+      if (isErr(result)) throw appErrorFromMessage(result.error);
       return { success: true };
     },
   });
@@ -526,7 +532,7 @@ export async function registerSalesRecordAttempt(
 ): Promise<ActionSuccess> {
   const safeRecordId = assertPositiveInt(recordId, "recordId");
   if (!isSalesRecordAttemptOutcome(outcome)) {
-    throw new Error("outcome is invalid");
+    throw validationError("outcome is invalid");
   }
   const actor = { userId: null as number | null, role: null as Role | null };
   return runObservedAction({
@@ -546,7 +552,7 @@ export async function registerSalesRecordAttempt(
         notes,
         nextAttemptAt,
       );
-      if (isErr(result)) throw new Error(result.error);
+      if (isErr(result)) throw appErrorFromMessage(result.error);
       return { success: true };
     },
   });

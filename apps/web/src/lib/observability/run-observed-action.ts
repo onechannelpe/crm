@@ -1,3 +1,5 @@
+import type { AppErrorCode } from "~/lib/app-errors";
+import { toAppError } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { getErrorMessage } from "~/lib/errors";
 import { getActionRequestContext } from "~/lib/observability/context";
@@ -18,6 +20,7 @@ function recordActionInBackground(params: {
   actorRole: Role | null;
   status: "ok" | "error";
   durationMs: number;
+  errorCode: AppErrorCode | null;
   errorMessage: string | null;
   input: unknown;
   createdAt: number;
@@ -48,12 +51,14 @@ export async function runObservedAction<T>(params: {
       actorRole: actor.role,
       status: "ok",
       durationMs: Date.now() - startedAt,
+      errorCode: null,
       errorMessage: null,
       input: params.input ?? null,
       createdAt: Date.now(),
     });
     return result;
   } catch (error: unknown) {
+    const appError = toAppError(error, "Unexpected error");
     recordActionInBackground({
       traceId: context.traceId,
       requestId: context.requestId,
@@ -64,6 +69,7 @@ export async function runObservedAction<T>(params: {
       actorRole: params.actor.role,
       status: "error",
       durationMs: Date.now() - startedAt,
+      errorCode: appError.code,
       errorMessage: getErrorMessage(error, "Unknown error"),
       input: params.input ?? null,
       createdAt: Date.now(),

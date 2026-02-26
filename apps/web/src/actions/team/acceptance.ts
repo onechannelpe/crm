@@ -2,6 +2,7 @@
 
 import { getRequestEvent } from "solid-js/web";
 
+import { appErrorFromMessage, validationError } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { isValidInviteTokenFormat } from "~/lib/auth/invite/tokens";
 import { getClientIp } from "~/lib/auth/password/client-ip";
@@ -22,7 +23,7 @@ export async function acceptTeamInvite(input: {
 }): Promise<void> {
   const safeToken = assertNonEmptyString(input.token, "token");
   if (!isValidInviteTokenFormat(safeToken)) {
-    throw new Error("token is invalid");
+    throw validationError("token is invalid");
   }
   const safeFullName = assertNonEmptyString(input.fullName, "fullName");
   const safePassword = assertStrongPassword(input.password);
@@ -39,7 +40,7 @@ export async function acceptTeamInvite(input: {
         passwordHash: await hashPassword(safePassword),
       });
       if (isErr(result)) {
-        throw new Error(result.error);
+        throw appErrorFromMessage(result.error);
       }
       actor.userId = result.value.userId;
       actor.role = result.value.role;

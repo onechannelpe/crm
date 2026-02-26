@@ -1,5 +1,6 @@
 "use server";
 
+import { appErrorFromMessage } from "~/lib/app-errors";
 import { requirePermission } from "~/lib/auth/access/session";
 import { config } from "~/lib/config";
 import type { ActionSuccess } from "~/lib/contracts/common";
@@ -28,7 +29,7 @@ export async function requestLeads(
     size,
   );
 
-  if (isErr(result)) throw new Error(result.error);
+  if (isErr(result)) throw appErrorFromMessage(result.error);
   const requester = await repos.users.findById(session.userId);
   const supervisors = await repos.users.findActiveIdsByBranchAndRoles(
     session.branchId,
@@ -59,6 +60,6 @@ export async function completeLead(
     safeAssignmentId,
   );
 
-  if (isErr(result)) throw new Error(result.error);
+  if (isErr(result)) throw appErrorFromMessage(result.error);
   return { success: true };
 }

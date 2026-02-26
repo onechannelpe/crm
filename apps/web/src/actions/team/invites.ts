@@ -6,6 +6,7 @@ import {
 } from "@crm/notifications";
 import { getRequestEvent } from "solid-js/web";
 
+import { appErrorFromMessage, notFoundError } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { requirePermission } from "~/lib/auth/access/session";
 import {
@@ -100,7 +101,7 @@ export async function createTeamInvite(input: {
         teamId: safeInput.teamId,
       });
       if (isErr(result)) {
-        throw new Error(result.error);
+        throw appErrorFromMessage(result.error);
       }
 
       await sendInviteEmail({
@@ -136,13 +137,13 @@ export async function resendTeamInvite(inviteId: number): Promise<void> {
         inviteId: safeInviteId,
       });
       if (isErr(result)) {
-        throw new Error(result.error);
+        throw appErrorFromMessage(result.error);
       }
 
       const invite = await repos.userInvites.findById(result.value.inviteId);
       const user = invite ? await repos.users.findById(invite.user_id) : null;
       if (!user) {
-        throw new Error("Invite target user was not found");
+        throw notFoundError("Invite target user was not found");
       }
 
       await sendInviteEmail({
@@ -175,7 +176,7 @@ export async function revokeTeamInvite(inviteId: number): Promise<void> {
         inviteId: safeInviteId,
       });
       if (isErr(result)) {
-        throw new Error(result.error);
+        throw appErrorFromMessage(result.error);
       }
     },
   });

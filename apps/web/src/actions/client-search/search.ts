@@ -1,5 +1,6 @@
 "use server";
 
+import { appErrorFromMessage } from "~/lib/app-errors";
 import { requirePermission } from "~/lib/auth/access/session";
 import { clientSearchService } from "~/server/shared/context";
 import type { SearchResponse, SearchType } from "~/server/shared/engine/types";
@@ -14,7 +15,7 @@ export async function searchClients(
   const result = await clientSearchService.search({ type, value, limit });
 
   if (isErr(result)) {
-    throw new Error(result.error);
+    throw appErrorFromMessage(result.error);
   }
 
   return result.value;

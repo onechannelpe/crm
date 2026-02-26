@@ -1,5 +1,6 @@
 "use server";
 
+import { notFoundError, validationError } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { requirePermission } from "~/lib/auth/access/session";
 import { assertPositiveInt } from "~/lib/contracts/guards";
@@ -139,7 +140,7 @@ export async function requestSalesExport(
   format: string,
 ): Promise<SalesExportJob> {
   if (!isSalesExportFormat(format)) {
-    throw new Error("format is invalid");
+    throw validationError("format is invalid");
   }
   const actor = { userId: null as number | null, role: null as Role | null };
 
@@ -179,7 +180,7 @@ export async function requestSalesExport(
       });
 
       const newest = await repos.reportExportJobs.findJobById(jobId);
-      if (!newest) throw new Error("Export job not found after creation");
+      if (!newest) throw notFoundError("Export job not found after creation");
       const user = await repos.users.findById(newest.requested_by_user_id);
       return {
         id: newest.id,

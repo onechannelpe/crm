@@ -3,6 +3,7 @@
 import type { AuthenticationResponseJSON } from "@simplewebauthn/server";
 import { getRequestEvent } from "solid-js/web";
 
+import { forbiddenError } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import {
   beginPasskeyLoginFlow,
@@ -72,7 +73,7 @@ export async function finishPasskeyLogin(
     sendPrivilegedLoginAlert,
   );
   const user = await repos.users.findById(flowResult.userId);
-  if (!user) throw new Error("Invalid credentials");
+  if (!user) throw forbiddenError("Invalid credentials");
 
   const oldToken = getSessionCookie();
   if (oldToken) {

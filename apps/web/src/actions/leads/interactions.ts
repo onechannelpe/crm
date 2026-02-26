@@ -1,5 +1,6 @@
 "use server";
 
+import { appErrorFromMessage } from "~/lib/app-errors";
 import { requirePermission } from "~/lib/auth/access/session";
 import type { ActionSuccess } from "~/lib/contracts/common";
 import { assertPositiveInt } from "~/lib/contracts/guards";
@@ -31,6 +32,6 @@ export async function registerCall(
     safeAssignmentId,
   );
 
-  if (isErr(result)) throw new Error(result.error);
+  if (isErr(result)) throw appErrorFromMessage(result.error);
   return { success: true };
 }

@@ -1,5 +1,11 @@
 "use server";
 
+import {
+  appErrorFromMessage,
+  conflictError,
+  notFoundError,
+  validationError,
+} from "~/lib/app-errors";
 import { requirePermission } from "~/lib/auth/access/session";
 import type { ActionSuccess } from "~/lib/contracts/common";
 import { assertPositiveInt } from "~/lib/contracts/guards";
@@ -18,14 +24,14 @@ export async function allocateQuota(
   const safeAmount = assertPositiveInt(amount, "amount");
   const session = await requirePermission("quota:allocate");
   const executive = await repos.users.findById(safeExecutiveId);
-  if (!executive) throw new Error("Executive not found");
+  if (!executive) throw notFoundError("Executive not found");
   if (executive.role !== "executive")
-    throw new Error("Quota can only be allocated to executive users");
+    throw validationError("Quota can only be allocated to executive users");
   if (
     session.role !== "superuser" &&
     executive.branch_id !== session.branchId
   ) {
-    throw new Error("Cannot allocate quota across branches");
+    throw conflictError("Cannot allocate quota across branches");
   }
 
   const result = await quotaService.allocate(
@@ -34,7 +40,7 @@ export async function allocateQuota(
     safeAmount,
   );
 
-  if (isErr(result)) throw new Error(result.error);
+  if (isErr(result)) throw appErrorFromMessage(result.error);
   await appNotificationCenter.notifyUsers([safeExecutiveId], {
     type: "quota.assigned",
     title: "Nueva cuota asignada",

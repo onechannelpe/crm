@@ -1,3 +1,4 @@
+import { validationError } from "~/lib/app-errors";
 import { isRole, type Role } from "~/lib/auth/access/rbac";
 import {
   assertNonEmptyString,
@@ -7,14 +8,14 @@ import {
 export function assertEmail(value: string): string {
   const safe = assertNonEmptyString(value, "email").toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(safe)) {
-    throw new Error("email must be valid");
+    throw validationError("email must be valid");
   }
   return safe;
 }
 
 export function assertRole(value: string): Role {
   if (!isRole(value)) {
-    throw new Error("role is invalid");
+    throw validationError("role is invalid");
   }
   return value;
 }
@@ -31,16 +32,16 @@ export function assertOptionalTeamId(
 export function assertStrongPassword(value: string): string {
   const safe = assertNonEmptyString(value, "password");
   if (safe.length < 12) {
-    throw new Error("password must contain at least 12 characters");
+    throw validationError("password must contain at least 12 characters");
   }
   if (!/[A-Z]/.test(safe)) {
-    throw new Error("password must include an uppercase letter");
+    throw validationError("password must include an uppercase letter");
   }
   if (!/[a-z]/.test(safe)) {
-    throw new Error("password must include a lowercase letter");
+    throw validationError("password must include a lowercase letter");
   }
   if (!/[0-9]/.test(safe)) {
-    throw new Error("password must include a number");
+    throw validationError("password must include a number");
   }
   return safe;
 }
