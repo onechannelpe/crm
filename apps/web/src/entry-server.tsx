@@ -10,26 +10,31 @@ await migrateToLatest();
 await seedIfEmpty();
 
 export default createHandler(
-  () => (
-    <StartServer
-      document={({ assets, children, scripts }: DocumentComponentProps) => (
-        <html lang="es">
-          <head>
-            <meta charset="utf-8" />
-            <meta
-              name="viewport"
-              content="width=device-width, initial-scale=1"
-            />
-            <title>CRM | One Channel</title>
-            {assets}
-          </head>
-          <body>
-            <div id="app">{children}</div>
-            {scripts}
-          </body>
-        </html>
-      )}
-    />
-  ),
-  { mode: "async" },
+  () => {
+    return (
+      <StartServer
+        document={({ assets, children, scripts }: DocumentComponentProps) => (
+          <html lang="es">
+            <head>
+              <meta charset="utf-8" />
+              <meta
+                name="viewport"
+                content="width=device-width, initial-scale=1"
+              />
+              <title>CRM | One Channel</title>
+              {assets}
+            </head>
+            <body>
+              <div id="app">{children}</div>
+              {scripts}
+            </body>
+          </html>
+        )}
+      />
+    );
+  },
+  (event) => ({
+    mode: "async",
+    nonce: event.locals.nonce,
+  }),
 );
