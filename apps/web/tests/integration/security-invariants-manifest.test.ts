@@ -92,7 +92,7 @@ describe("security invariant manifest", () => {
     if (rA.ok) {
       throw new Error("Expected missing-addresses draft contract to fail");
     }
-    expect(rA.error).toBe(SALES_ERROR_MANIFEST.missingAddresses);
+    expect(rA.error.message).toBe(SALES_ERROR_MANIFEST.missingAddresses);
 
     const rB = await ctx.salesRecords.createDraft({
       source: "manual",
@@ -127,7 +127,7 @@ describe("security invariant manifest", () => {
     if (rB.ok) {
       throw new Error("Expected missing-products draft contract to fail");
     }
-    expect(rB.error).toBe(SALES_ERROR_MANIFEST.missingProducts);
+    expect(rB.error.message).toBe(SALES_ERROR_MANIFEST.missingProducts);
 
     const recordId = await createSubmittableRecord(ctx);
     const submitted = await ctx.salesRecords.submit(recordId, 1);
@@ -139,14 +139,16 @@ describe("security invariant manifest", () => {
       throw new Error("Expected cross-branch confirm deny contract to fail");
     }
 
-    expect(denied.error).toBe(SALES_ERROR_MANIFEST.crossBranchConfirm);
+    expect(denied.error.message).toBe(SALES_ERROR_MANIFEST.crossBranchConfirm);
 
     const rejected = await ctx.salesRecords.reject(recordId, 2, 1, false, " ");
     expect(rejected.ok).toBe(false);
     if (rejected.ok) {
       throw new Error("Expected empty-reason reject deny contract to fail");
     }
-    expect(rejected.error).toBe(SALES_ERROR_MANIFEST.emptyRejectionReason);
+    expect(rejected.error.message).toBe(
+      SALES_ERROR_MANIFEST.emptyRejectionReason,
+    );
   });
 
   it("enforces quota deny contracts", async () => {
@@ -161,7 +163,9 @@ describe("security invariant manifest", () => {
     if (duplicate.ok) {
       throw new Error("Expected duplicate daily allocation to fail");
     }
-    expect(duplicate.error).toBe(QUOTA_ERROR_MANIFEST.duplicateDailyAllocation);
+    expect(duplicate.error.message).toBe(
+      QUOTA_ERROR_MANIFEST.duplicateDailyAllocation,
+    );
 
     const c1 = await quota.consume(1, 1);
     const c2 = await quota.consume(1, 1);
@@ -178,6 +182,6 @@ describe("security invariant manifest", () => {
     if (exhausted.ok) {
       throw new Error("Expected exhausted quota contract to fail");
     }
-    expect(exhausted.error).toBe(QUOTA_ERROR_MANIFEST.exhausted2of2);
+    expect(exhausted.error.message).toBe(QUOTA_ERROR_MANIFEST.exhausted2of2);
   });
 });

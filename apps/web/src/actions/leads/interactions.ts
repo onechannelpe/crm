@@ -7,6 +7,8 @@ import { leadService } from "~/server/shared/context";
 import { repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
+import { throwLeadError } from "./error-mapping";
+
 export async function registerCall(
   assignmentId: number,
   contactId: number,
@@ -17,6 +19,12 @@ export async function registerCall(
   const safeContactId = assertPositiveInt(contactId, "contactId");
   const session = await requirePermission("leads:read");
 
+  const result = await leadService.completeLead(
+    session.userId,
+    safeAssignmentId,
+  );
+
+  if (isErr(result)) throwLeadError(result.error);
   await repos.interactionLogs.create({
     contact_id: safeContactId,
     user_id: session.userId,
@@ -25,12 +33,5 @@ export async function registerCall(
     duration_seconds: null,
     created_at: Date.now(),
   });
-
-  const result = await leadService.completeLead(
-    session.userId,
-    safeAssignmentId,
-  );
-
-  if (isErr(result)) throw new Error(result.error);
   return { success: true };
 }

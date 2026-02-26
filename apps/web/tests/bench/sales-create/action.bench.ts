@@ -64,7 +64,9 @@ describe("sales create action benchmark", () => {
         products: [{ productId: 1, quantity: 1 }],
       });
       if (!result.ok) {
-        throw new Error(`expected draft creation success, got ${result.error}`);
+        throw new Error(
+          `expected draft creation success, got ${result.error.message}`,
+        );
       }
     },
     fixedIterations(USER_POOL_SIZE),
