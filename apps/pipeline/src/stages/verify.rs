@@ -1,23 +1,32 @@
 use crate::PipelineError;
 use crate::config::manifest::{SourceManifestEntry, verify_manifest};
+use crate::config::runtime::IngestMode;
 use crate::db::schema::{init_schema, open_rw};
-use crate::stages::consolidate::ingest_snapshot;
+use crate::stages::consolidate::{ingest_snapshot, ingest_snapshot_sharded};
 use crate::stages::materialize::materialize_serving;
 use crate::stages::validate::validate_snapshot;
 use std::collections::HashMap;
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader, BufWriter, Write};
 use std::path::{Path, PathBuf};
+use std::time::Instant;
+
+struct IngestPhaseStats {
+    duration_secs: f64,
+}
 
 pub fn run_matrix(
     db_path: &str,
     build_dir: &str,
     manifest_path: &str,
+    ingest_mode: IngestMode,
     row_cap: usize,
     run_osiptel_sample: bool,
     batch_size: usize,
     source_row_caps: &HashMap<String, usize>,
 ) -> Result<(), PipelineError> {
+    let run_started_at = Instant::now();
+    let mut ingest_total_secs = 0.0f64;
     let build_dir_path = Path::new(build_dir);
     fs::create_dir_all(build_dir_path)?;
     if Path::new(db_path).exists() {
@@ -57,26 +66,38 @@ pub fn run_matrix(
             sample_cap,
         )?;
 
-        run_ingest_phase(
+        let ingest_stats = run_ingest_phase(
             db_path,
             Path::new(&source.mapping_path),
             &sample_file,
             &format!("{}-sample", source.source_key),
             &source.snapshot_date,
             batch_size,
+            ingest_mode,
+            Some(&source.source_key),
         )?;
+        ingest_total_secs += ingest_stats.duration_secs;
     }
 
+    let materialize_started_at = Instant::now();
     materialize_and_quick_check(db_path)?;
+    let materialize_secs = materialize_started_at.elapsed().as_secs_f64();
+    let total_secs = run_started_at.elapsed().as_secs_f64();
+    println!(
+        "[pipeline] run_timing mode=sample ingest_secs={ingest_total_secs:.3} materialize_secs={materialize_secs:.3} total_secs={total_secs:.3}",
+    );
     Ok(())
 }
 
 pub fn run_full(
     db_path: &str,
     manifest_path: &str,
+    ingest_mode: IngestMode,
     include_osiptel: bool,
     batch_size: usize,
 ) -> Result<(), PipelineError> {
+    let run_started_at = Instant::now();
+    let mut ingest_total_secs = 0.0f64;
     if Path::new(db_path).exists() {
         fs::remove_file(db_path)?;
     }
@@ -97,17 +118,26 @@ pub fn run_full(
         if source.source_key == "osiptel" && !include_osiptel {
             continue;
         }
-        run_ingest_phase(
+        let ingest_stats = run_ingest_phase(
             db_path,
             Path::new(&source.mapping_path),
             Path::new(&source.raw_path),
             &source.snapshot_label,
             &source.snapshot_date,
             batch_size,
+            ingest_mode,
+            Some(&source.source_key),
         )?;
+        ingest_total_secs += ingest_stats.duration_secs;
     }
 
+    let materialize_started_at = Instant::now();
     materialize_and_quick_check(db_path)?;
+    let materialize_secs = materialize_started_at.elapsed().as_secs_f64();
+    let total_secs = run_started_at.elapsed().as_secs_f64();
+    println!(
+        "[pipeline] run_timing mode=full ingest_secs={ingest_total_secs:.3} materialize_secs={materialize_secs:.3} total_secs={total_secs:.3}",
+    );
     Ok(())
 }
 
@@ -118,21 +148,42 @@ fn run_ingest_phase(
     snapshot_label: &str,
     snapshot_date: &str,
     batch_size: usize,
-) -> Result<(), PipelineError> {
+    ingest_mode: IngestMode,
+    source_key: Option<&str>,
+) -> Result<IngestPhaseStats, PipelineError> {
+    let ingest_started_at = Instant::now();
     println!(
         "[pipeline] ingest {snapshot_label} from {}",
         input_path.display()
     );
-    ingest_snapshot(
-        db_path,
-        &mapping_path.to_string_lossy(),
-        &input_path.to_string_lossy(),
-        snapshot_label,
-        snapshot_date,
-        batch_size,
-    )?;
+    match ingest_mode {
+        IngestMode::Single => ingest_snapshot(
+            db_path,
+            &mapping_path.to_string_lossy(),
+            &input_path.to_string_lossy(),
+            snapshot_label,
+            snapshot_date,
+            batch_size,
+        )?,
+        IngestMode::Sharded => ingest_snapshot_sharded(
+            db_path,
+            &mapping_path.to_string_lossy(),
+            &input_path.to_string_lossy(),
+            snapshot_label,
+            snapshot_date,
+            batch_size,
+        )?,
+    }
     validate_snapshot(db_path, snapshot_label)?;
-    Ok(())
+    let duration_secs = ingest_started_at.elapsed().as_secs_f64();
+    if let Some(source_key) = source_key {
+        println!(
+            "[pipeline] ingest_timing source_key={source_key} snapshot_label={snapshot_label} seconds={duration_secs:.3}",
+        );
+    } else {
+        println!("[pipeline] ingest_timing snapshot_label={snapshot_label} seconds={duration_secs:.3}");
+    }
+    Ok(IngestPhaseStats { duration_secs })
 }
 
 fn sample_with_header(src: PathBuf, out: PathBuf, cap: usize) -> Result<(), PipelineError> {

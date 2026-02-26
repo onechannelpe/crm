@@ -26,6 +26,7 @@ pub(crate) struct CanonicalRow {
     pub(crate) invalid_phone_reasons: Vec<String>,
 }
 
+#[derive(Clone)]
 pub(crate) struct ResolvedMapping {
     fields: HashMap<String, Option<usize>>,
     phone_columns: Vec<usize>,

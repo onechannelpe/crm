@@ -7,18 +7,21 @@ engine_db = "apps/engine/data/contacts.sqlite"
 
 [profiles.quick]
 mode = "sample"
+ingest_mode = "single"
 row_cap = 10000
 batch_size = 50000
 include_osiptel = false
 
 [profiles.standard]
 mode = "sample"
+ingest_mode = "single"
 row_cap = 100000
 batch_size = 50000
 include_osiptel = false
 
 [profiles.heavy]
 mode = "sample"
+ingest_mode = "single"
 row_cap = 100000
 batch_size = 50000
 include_osiptel = true
@@ -26,5 +29,6 @@ source_row_caps = { osiptel = 100000 }
 
 [profiles.full]
 mode = "full"
+ingest_mode = "single"
 batch_size = 50000
 include_osiptel = true

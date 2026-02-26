@@ -34,6 +34,7 @@ pub fn run(command: Command) -> Result<(), PipelineError> {
                 &bench_db.to_string_lossy(),
                 &bench_build_dir.to_string_lossy(),
                 &runtime.paths.manifest,
+                resolved.ingest_mode,
                 resolved.row_cap,
                 resolved.include_osiptel,
                 resolved.batch_size,
@@ -53,6 +54,7 @@ pub fn run(command: Command) -> Result<(), PipelineError> {
             verify::run_full(
                 &runtime.paths.staged_db,
                 &runtime.paths.manifest,
+                resolved.ingest_mode,
                 resolved.include_osiptel,
                 resolved.batch_size,
             )

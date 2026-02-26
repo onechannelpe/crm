@@ -22,6 +22,8 @@ pub struct RuntimePaths {
 pub struct RuntimeProfile {
     pub mode: String,
     #[serde(default)]
+    pub ingest_mode: Option<String>,
+    #[serde(default)]
     pub row_cap: Option<usize>,
     #[serde(default)]
     pub batch_size: Option<usize>,
@@ -34,6 +36,7 @@ pub struct RuntimeProfile {
 #[derive(Debug)]
 pub struct ResolvedProfile {
     pub mode: ProfileMode,
+    pub ingest_mode: IngestMode,
     pub row_cap: usize,
     pub batch_size: usize,
     pub include_osiptel: bool,
@@ -44,6 +47,12 @@ pub struct ResolvedProfile {
 pub enum ProfileMode {
     Sample,
     Full,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum IngestMode {
+    Single,
+    Sharded,
 }
 
 impl PipelineRuntimeConfig {
@@ -73,10 +82,24 @@ impl PipelineRuntimeConfig {
 
         Ok(ResolvedProfile {
             mode,
+            ingest_mode: resolve_ingest_mode(profile.ingest_mode.as_deref(), profile_name)?,
             row_cap: profile.row_cap.unwrap_or(10_000),
             batch_size: profile.batch_size.unwrap_or(50_000),
             include_osiptel: profile.include_osiptel,
             source_row_caps: profile.source_row_caps.clone(),
         })
+    }
+}
+
+fn resolve_ingest_mode(
+    ingest_mode: Option<&str>,
+    profile_name: &str,
+) -> Result<IngestMode, PipelineError> {
+    match ingest_mode.unwrap_or("single") {
+        "single" => Ok(IngestMode::Single),
+        "sharded" => Ok(IngestMode::Sharded),
+        other => Err(PipelineError::Args(format!(
+            "unsupported ingest mode '{other}' for profile '{profile_name}'"
+        ))),
     }
 }
