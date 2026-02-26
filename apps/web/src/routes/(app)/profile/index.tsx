@@ -1,11 +1,10 @@
+import { useAction } from "@solidjs/router";
 import { createSignal, For, onMount, Show } from "solid-js";
 
 import {
   beginPasskeyRegistration,
   beginTotpEnrollment,
   finishPasskeyRegistration,
-  finishTotpEnrollment,
-  getTotpStatus,
 } from "~/actions/auth";
 import { updateUserProfile } from "~/actions/settings";
 import { useToast } from "~/components/feedback/toast-provider";
@@ -25,8 +24,9 @@ import {
   toRegistrationPayload,
 } from "~/lib/auth/passkey/browser";
 import { getErrorMessage } from "~/lib/errors";
-import { createAppQuery } from "~/lib/ui/create-app-query";
-import { runOptimistic } from "~/lib/ui/run-optimistic";
+import { finishTotpEnrollmentMutation } from "~/lib/mutations/profile";
+import { totpStatusQuery } from "~/lib/queries/profile";
+import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
 
 import styles from "./profile-page.module.css";
 
@@ -43,9 +43,11 @@ export default function ProfilePage() {
   const [passkeyLoading, setPasskeyLoading] = createSignal(false);
   const [passkeyMessage, setPasskeyMessage] = createSignal("");
 
-  const [totpStatus, { mutate: mutateTotpStatus, refetch: refetchTotp }] =
-    createAppQuery(getTotpStatus, { enabled: false });
-  const currentTotpStatus = () => totpStatus();
+  const { data: currentTotpStatus, update: updateTotpStatus } =
+    createOptimisticQuery(totpStatusQuery, {
+      initialValue: { enabled: false },
+    });
+  const finishTotpAction = useAction(finishTotpEnrollmentMutation);
   const [totpLoading, setTotpLoading] = createSignal(false);
   const [totpMessage, setTotpMessage] = createSignal("");
   const [totpQrCode, setTotpQrCode] = createSignal("");
@@ -109,15 +111,10 @@ export default function ProfilePage() {
     setTotpLoading(true);
     try {
       let codes: string[] = [];
-      await runOptimistic({
-        read: currentTotpStatus,
-        write: (next) => mutateTotpStatus(() => next),
+      await updateTotpStatus({
         optimistic: (prev) => ({ ...prev, enabled: true }),
         commit: async () => {
-          codes = await finishTotpEnrollment(totpCode());
-        },
-        reconcile: () => {
-          void refetchTotp();
+          codes = await finishTotpAction(totpCode());
         },
       });
       setRecoveryCodes(codes);
@@ -226,13 +223,13 @@ export default function ProfilePage() {
             </p>
           </div>
           <div class={styles.sectionContent}>
-            <Show when={totpStatus()?.enabled}>
+            <Show when={currentTotpStatus()?.enabled}>
               <p class={`${styles.sectionTitle} ${styles.statusEnabled}`}>
                 ✓ TOTP is currently enabled
               </p>
             </Show>
 
-            <Show when={!totpStatus()?.enabled}>
+            <Show when={!currentTotpStatus()?.enabled}>
               <Button
                 type="button"
                 variant="outline"

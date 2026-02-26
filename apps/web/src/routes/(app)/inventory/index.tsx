@@ -1,6 +1,6 @@
+import { createAsync } from "@solidjs/router";
 import { For, Show } from "solid-js";
 
-import { getInventoryItems } from "~/actions/inventory";
 import { EmptyState } from "~/components/feedback/empty-state";
 import { AppPage } from "~/components/layout/page";
 import { Badge } from "~/components/ui/display/badge";
@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
-import { createAppQuery } from "~/lib/ui/create-app-query";
+import { inventoryItemsQuery } from "~/lib/queries/inventory";
 
 import styles from "./inventory-page.module.css";
 
@@ -36,13 +36,12 @@ const statusVariant = (status: string) => {
 };
 
 export default function InventoryPage() {
-  const [items] = createAppQuery(getInventoryItems, []);
-  const itemCount = () => items()?.length ?? 0;
+  const items = createAsync(() => inventoryItemsQuery(), { initialValue: [] });
 
   return (
     <AppPage>
       <Show
-        when={itemCount() > 0}
+        when={items().length > 0}
         fallback={
           <EmptyState
             title="No inventory records"
