@@ -1,0 +1,7 @@
+target
+data/normalized
+data/build
+data/pipeline/runs/*
+!data/pipeline/runs/.gitkeep
+data/pipeline/triage/*
+!data/pipeline/triage/.gitkeep

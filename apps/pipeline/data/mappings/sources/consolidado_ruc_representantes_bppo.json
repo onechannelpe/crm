@@ -1,0 +1,23 @@
+{
+  "source_key": "consolidado_ruc_representantes_bppo",
+  "source_name": "Consolidado_RUC20_Representantes_BPPO",
+  "delimiter": "\t",
+  "has_header": true,
+  "flexible": true,
+  "fields": {
+    "company_ruc": "ruc",
+    "company_name": "razon_social",
+    "rep_doc_type": "documento",
+    "rep_doc_number": "nro_documento",
+    "rep_name": "nombre",
+    "role_name": "cargo",
+    "role_start_date": "fecha_desde"
+  },
+  "phone_columns": [
+    "TELEFONO_IBK",
+    "TELEFONO_CIP"
+  ],
+  "phone_prefixes": [
+    "TELEFONO"
+  ]
+}

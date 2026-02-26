@@ -1,0 +1,17 @@
+{
+  "source_key": "movistar_post_202508",
+  "source_name": "MOVISTAR_POST_202508",
+  "delimiter": "|",
+  "has_header": true,
+  "flexible": true,
+  "fields": {
+    "rep_doc_type": "bi_tipo_doc",
+    "rep_doc_number": "bi_doc",
+    "person_full_name": "bi_razon",
+    "phone": "bi_telefono",
+    "role_name": "bi_linea",
+    "role_start_date": "bi_fecha_activacion"
+  },
+  "phone_columns": [],
+  "phone_prefixes": []
+}
