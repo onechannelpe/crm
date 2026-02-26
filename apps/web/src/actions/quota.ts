@@ -4,7 +4,6 @@ import {
   conflictError,
   internalError,
   notFoundError,
-  rateLimitError,
   validationError,
 } from "~/lib/app-errors";
 import { requirePermission } from "~/lib/auth/access/session";
@@ -45,12 +44,8 @@ export async function allocateQuota(
     switch (result.error.reason) {
       case "quota_already_allocated":
         throw conflictError(result.error.message);
-      case "quota_not_allocated":
-      case "invalid_refund_amount":
       case "unexpected":
         throw internalError(result.error.message);
-      case "quota_exhausted":
-        throw rateLimitError(result.error.message);
       default: {
         const exhausted: never = result.error;
         throw internalError(

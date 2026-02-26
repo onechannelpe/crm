@@ -209,7 +209,10 @@ export function createUserProvisioningService(
             } catch {
               const racedUser = await transactionRepos.users.findByEmail(email);
               if (!racedUser) {
-                throw new Error("invite_target_creation_failed");
+                return fail(
+                  "unexpected",
+                  "Unexpected invite target creation failure",
+                );
               }
               if (racedUser.is_active === 1) {
                 return fail(
