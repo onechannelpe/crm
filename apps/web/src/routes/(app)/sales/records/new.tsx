@@ -1,10 +1,9 @@
-import { useNavigate, useSearchParams } from "@solidjs/router";
-import { createResource, createSignal, For, onMount, Show } from "solid-js";
+import { createAsync, useNavigate, useSearchParams } from "@solidjs/router";
+import { createSignal, For, onMount, Show } from "solid-js";
 
 import {
   createSalesRecordDraft,
   getSalesRecordBootstrap,
-  listSalesRecordProducts,
   submitSalesRecord,
 } from "~/actions/sales-records";
 import { useToast } from "~/components/feedback/toast-provider";
@@ -13,6 +12,7 @@ import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { Select } from "~/components/ui/input/select";
 import { getErrorMessage } from "~/lib/errors";
+import { salesRecordProductsQuery } from "~/lib/queries/sales-records";
 
 import styles from "./new-sale-page.module.css";
 
@@ -48,12 +48,9 @@ export default function NewSalePage() {
   const [selectedProductQty, setSelectedProductQty] = createSignal("1");
   const [productLines, setProductLines] = createSignal<ProductLine[]>([]);
 
-  const [products] = createResource(
-    () => true,
-    async () => listSalesRecordProducts(),
-    { initialValue: [], ssrLoadFrom: "initial" },
-  );
-  const currentProducts = () => products.latest ?? [];
+  const currentProducts = createAsync(() => salesRecordProductsQuery(), {
+    initialValue: [],
+  });
 
   onMount(() => {
     const contactIdRaw = searchParams.contactId;

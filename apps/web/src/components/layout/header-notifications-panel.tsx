@@ -1,12 +1,14 @@
-import { createResource, createSignal, For, Show } from "solid-js";
+import { useAction } from "@solidjs/router";
+import { createSignal, For, Show } from "solid-js";
 
-import {
-  getHeaderNotifications,
-  markAllNotificationsRead,
-  markNotificationRead,
-} from "~/actions/app-notifications";
 import Bell from "~/components/icons/bell";
 import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
+import {
+  markAllNotificationsReadMutation,
+  markNotificationReadMutation,
+} from "~/lib/mutations/notifications";
+import { headerNotificationsQuery } from "~/lib/queries/notifications";
+import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
 import { cn } from "~/lib/utils";
 
 import styles from "./header-notifications-panel.module.css";
@@ -22,14 +24,12 @@ function formatTimestamp(value: number): string {
 
 export function HeaderNotificationsPanel() {
   const [open, setOpen] = createSignal(false);
-  const [feed, { mutate, refetch }] = createResource(
-    () => true,
-    () => getHeaderNotifications(),
-    {
-      initialValue: { unreadCount: 0, notifications: [] },
-      ssrLoadFrom: "initial",
-    },
+  const { data: feed, update: updateFeed } = createOptimisticQuery(
+    headerNotificationsQuery,
+    { initialValue: { unreadCount: 0, notifications: [] } },
   );
+  const markRead = useAction(markNotificationReadMutation);
+  const markAllRead = useAction(markAllNotificationsReadMutation);
 
   let containerRef: HTMLDivElement | undefined;
   useDismissibleLayer({
@@ -39,44 +39,47 @@ export function HeaderNotificationsPanel() {
   });
 
   const handleMarkRead = async (notificationId: number) => {
-    const previous = feed.latest ?? feed();
-    const now = Date.now();
-    mutate((current) => ({
-      unreadCount: Math.max(
-        0,
-        current.unreadCount -
-          (current.notifications.some(
-            (item) => item.id === notificationId && item.readAt === null,
-          )
-            ? 1
-            : 0),
-      ),
-      notifications: current.notifications.map((item) =>
-        item.id === notificationId ? { ...item, readAt: now } : item,
-      ),
-    }));
     try {
-      await markNotificationRead(notificationId);
+      await updateFeed({
+        optimistic: (prev) => ({
+          unreadCount: Math.max(
+            0,
+            prev.unreadCount -
+              (prev.notifications.some(
+                (item) => item.id === notificationId && item.readAt === null,
+              )
+                ? 1
+                : 0),
+          ),
+          notifications: prev.notifications.map((item) =>
+            item.id === notificationId ? { ...item, readAt: Date.now() } : item,
+          ),
+        }),
+        commit: async () => {
+          await markRead(notificationId);
+        },
+      });
     } catch {
-      mutate(() => previous);
+      // Rollback handled by update()
     }
   };
 
   const handleMarkAllRead = async () => {
-    const previous = feed.latest ?? feed();
-    const now = Date.now();
-    mutate((current) => ({
-      unreadCount: 0,
-      notifications: current.notifications.map((item) => ({
-        ...item,
-        readAt: item.readAt ?? now,
-      })),
-    }));
     try {
-      await markAllNotificationsRead();
-      await refetch();
+      await updateFeed({
+        optimistic: (prev) => ({
+          unreadCount: 0,
+          notifications: prev.notifications.map((item) => ({
+            ...item,
+            readAt: item.readAt ?? Date.now(),
+          })),
+        }),
+        commit: async () => {
+          await markAllRead();
+        },
+      });
     } catch {
-      mutate(() => previous);
+      // Rollback handled by update()
     }
   };
 

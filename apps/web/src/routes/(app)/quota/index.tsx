@@ -1,6 +1,6 @@
-import { createResource, createSignal, Show } from "solid-js";
+import { useAction, useSubmission } from "@solidjs/router";
+import { createSignal, Show } from "solid-js";
 
-import { getQuotaStatus, allocateQuota } from "~/actions/quota";
 import { QuotaDisplay } from "~/components/features/quota/quota-display";
 import { useToast } from "~/components/feedback/toast-provider";
 import { AppPage } from "~/components/layout/page";
@@ -8,21 +8,22 @@ import { useSession } from "~/components/providers/session-provider";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { getErrorMessage } from "~/lib/errors";
-import { runOptimistic } from "~/lib/ui/run-optimistic";
+import { allocateQuotaMutation } from "~/lib/mutations/quota";
+import { quotaStatusQuery } from "~/lib/queries/quota";
+import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
 
 import styles from "./quota-page.module.css";
 
 export default function QuotaPage() {
-  const [quota, { mutate, refetch }] = createResource(
-    () => true,
-    async () => getQuotaStatus(),
-    { initialValue: { allocated: false }, ssrLoadFrom: "initial" },
+  const { data: currentQuota, update: updateQuota } = createOptimisticQuery(
+    quotaStatusQuery,
+    { initialValue: { allocated: false } },
   );
-  const currentQuota = () => quota.latest ?? { allocated: false };
   const { currentUser } = useSession();
+  const allocateQuota = useAction(allocateQuotaMutation);
+  const allocating = useSubmission(allocateQuotaMutation);
   const [execId, setExecId] = createSignal("");
   const [amount, setAmount] = createSignal("10");
-  const [loading, setLoading] = createSignal(false);
   const { showToast } = useToast();
   const quotaValues = () => {
     const current = currentQuota();
@@ -32,20 +33,13 @@ export default function QuotaPage() {
 
   async function handleAllocate(e: Event) {
     e.preventDefault();
-    setLoading(true);
     try {
       const targetExecutiveId = Number(execId());
       const safeAmount = Number(amount());
-      await runOptimistic({
-        read: currentQuota,
-        write: (next) => mutate(() => next),
+      await updateQuota({
         optimistic: (prev) => {
-          if (!prev.allocated) {
-            return prev;
-          }
-          if (currentUser().id !== targetExecutiveId) {
-            return prev;
-          }
+          if (!prev.allocated) return prev;
+          if (currentUser().id !== targetExecutiveId) return prev;
           return {
             ...prev,
             total: prev.total + safeAmount,
@@ -55,17 +49,12 @@ export default function QuotaPage() {
         commit: async () => {
           await allocateQuota(targetExecutiveId, safeAmount);
         },
-        reconcile: () => {
-          void refetch();
-        },
       });
       showToast("success", "Quota assigned");
       setExecId("");
       setAmount("10");
     } catch (err: unknown) {
       showToast("error", getErrorMessage(err, "Failed to assign quota"));
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -115,8 +104,12 @@ export default function QuotaPage() {
               required
             />
 
-            <Button type="submit" disabled={loading()} class={styles.full}>
-              {loading() ? "Assigning..." : "Assign quota"}
+            <Button
+              type="submit"
+              disabled={allocating.pending}
+              class={styles.full}
+            >
+              {allocating.pending ? "Assigning..." : "Assign quota"}
             </Button>
           </form>
         </div>
