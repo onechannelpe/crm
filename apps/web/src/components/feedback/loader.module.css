@@ -1,0 +1,48 @@
+.container {
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  width: 24px;
+  height: 12px;
+  border-radius: 9999px;
+  border: 1px solid currentColor;
+  overflow: hidden;
+  position: relative;
+  opacity: 0.8;
+}
+
+.dot {
+  background-color: currentColor;
+  border-radius: 9999px;
+  height: 8px;
+  width: 8px;
+  animation: slide 0.8s infinite ease-in-out;
+}
+
+@keyframes slide {
+  0% {
+    transform: translateX(-12px);
+    width: 8px;
+    height: 8px;
+  }
+
+  15% {
+    transform: translateX(0px);
+    width: 12px;
+    height: 2px;
+  }
+
+  30% {
+    transform: translateX(12px);
+    width: 8px;
+    height: 8px;
+  }
+
+  100% {
+    transform: translateX(12px);
+    width: 8px;
+    height: 8px;
+  }
+}
