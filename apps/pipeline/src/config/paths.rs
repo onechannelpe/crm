@@ -23,3 +23,7 @@ pub fn default_source_manifest() -> PathBuf {
 pub fn default_normalized_dir() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("data/normalized")
 }
+
+pub fn default_pipeline_config() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("pipeline.toml")
+}

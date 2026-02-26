@@ -1,17 +1,40 @@
-ROW_CAP ?= 10000
+ROOT := ../..
+PIPELINE_MANIFEST := apps/pipeline/Cargo.toml
+
 RUN_ID ?=
 BASE_RUN ?=
 CANDIDATE_RUN ?=
+ROW_CAP ?= 10000
 
-ROOT := ../..
 RUNS_DIR := data/pipeline/runs
 TRIAGE_DIR := data/pipeline/triage
 NORMALIZED_DIR := data/normalized
 
-.PHONY: validate-slice capture-run generate-triage compare-runs
+.PHONY: verify validate-quick validate-standard bench-quick bench-standard bench-heavy build-full promote capture-run generate-triage compare-runs
 
-validate-slice:
-	cd $(ROOT) && cargo run --manifest-path apps/pipeline/Cargo.toml -- normalize-matrix --row-cap $(ROW_CAP)
+verify:
+	cd $(ROOT) && cargo run --manifest-path $(PIPELINE_MANIFEST) -- verify-manifest
+
+validate-quick:
+	cd $(ROOT) && cargo run --manifest-path $(PIPELINE_MANIFEST) -- validate --profile quick
+
+validate-standard:
+	cd $(ROOT) && cargo run --manifest-path $(PIPELINE_MANIFEST) -- validate --profile standard
+
+bench-quick:
+	cd $(ROOT) && cargo run --manifest-path $(PIPELINE_MANIFEST) -- bench --profile quick
+
+bench-standard:
+	cd $(ROOT) && cargo run --manifest-path $(PIPELINE_MANIFEST) -- bench --profile standard
+
+bench-heavy:
+	cd $(ROOT) && cargo run --manifest-path $(PIPELINE_MANIFEST) -- bench --profile heavy
+
+build-full:
+	cd $(ROOT) && cargo run --manifest-path $(PIPELINE_MANIFEST) -- build --profile full
+
+promote:
+	cd $(ROOT) && cargo run --manifest-path $(PIPELINE_MANIFEST) -- promote
 
 capture-run:
 	@if [ -z "$(RUN_ID)" ]; then echo "RUN_ID is required"; exit 1; fi
