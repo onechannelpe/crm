@@ -33,6 +33,7 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
         CREATE TABLE IF NOT EXISTS person_profile (
             person_id INTEGER PRIMARY KEY,
             dni TEXT UNIQUE,
+            natural_ruc10 TEXT UNIQUE,
             full_name TEXT NOT NULL DEFAULT '',
             birth_date TEXT,
             birth_place TEXT,

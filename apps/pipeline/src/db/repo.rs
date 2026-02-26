@@ -29,7 +29,12 @@ pub(crate) fn ingest_one_row(
         return Ok(false);
     }
 
-    let person_id = upsert_person(tx, row.person_dni.as_deref(), &row.person_full_name)?;
+    let person_id = upsert_person(
+        tx,
+        row.person_dni.as_deref(),
+        row.person_natural_ruc.as_deref(),
+        &row.person_full_name,
+    )?;
     let company_id = upsert_company(tx, row.company_ruc.as_deref(), &row.company_name)?;
 
     let role_id = if let Some(company_id) = company_id {
@@ -51,7 +56,7 @@ pub(crate) fn ingest_one_row(
         None
     };
 
-    if row.phones.is_empty() && !record.is_empty() {
+    if row.had_phone_input && row.phones.is_empty() {
         counters.invalid_phone_rows += 1;
     }
     for phone in &row.phones {
@@ -177,20 +182,26 @@ pub(crate) fn upsert_snapshot(
 fn upsert_person(
     tx: &Transaction<'_>,
     dni: Option<&str>,
+    natural_ruc10: Option<&str>,
     full_name: &str,
 ) -> Result<Option<i64>, PipelineError> {
     if let Some(dni) = dni {
         tx.execute(
             r#"
-            INSERT INTO person_profile(dni, full_name)
-            VALUES (?1, ?2)
+            INSERT INTO person_profile(dni, natural_ruc10, full_name)
+            VALUES (?1, ?2, ?3)
             ON CONFLICT(dni) DO UPDATE SET
+                natural_ruc10 = CASE
+                    WHEN excluded.natural_ruc10 IS NOT NULL AND excluded.natural_ruc10 <> ''
+                        THEN excluded.natural_ruc10
+                    ELSE person_profile.natural_ruc10
+                END,
                 full_name = CASE
                     WHEN excluded.full_name <> '' THEN excluded.full_name
                     ELSE person_profile.full_name
                 END
             "#,
-            params![dni, full_name],
+            params![dni, natural_ruc10, full_name],
         )?;
         let id = tx.query_row(
             "SELECT person_id FROM person_profile WHERE dni=?1",
@@ -204,8 +215,8 @@ fn upsert_person(
         return Ok(None);
     }
     tx.execute(
-        "INSERT INTO person_profile(dni, full_name) VALUES (NULL, ?1)",
-        [full_name],
+        "INSERT INTO person_profile(dni, natural_ruc10, full_name) VALUES (NULL, ?1, ?2)",
+        params![natural_ruc10, full_name],
     )?;
     Ok(Some(tx.last_insert_rowid()))
 }

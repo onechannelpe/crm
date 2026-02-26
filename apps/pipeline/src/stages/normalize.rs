@@ -1,14 +1,12 @@
-#[path = "normalize_row.rs"]
-mod row;
-
 use crate::PipelineError;
 use crate::config::manifest::{SourceManifestEntry, load_manifest, verify_manifest};
 use crate::config::mapping::SourceMapping;
+use crate::domain::canonical;
 use crate::domain::normalize_helpers::{
-    PhoneKind, derive_dni_from_natural_ruc, normalize_dni, normalize_phone_with_kind,
-    normalize_ruc,
+    PhoneKind, normalize_phone_with_kind,
 };
 use csv::ReaderBuilder;
+use sha2::{Digest, Sha256};
 use std::fs;
 use std::path::Path;
 
@@ -89,6 +87,7 @@ fn normalize_source_entry(
         "source_row_number",
         "record_hash",
         "person_dni",
+        "person_natural_ruc",
         "person_full_name",
         "company_ruc",
         "company_name",
@@ -116,11 +115,11 @@ fn normalize_source_entry(
         .from_path(&source.raw_path)?;
 
     let headers = if mapping.has_header {
-        Some(reader.byte_headers()?.clone())
+        Some(reader.headers()?.clone())
     } else {
         None
     };
-    let header_index = row::build_header_index_bytes(headers.as_ref());
+    let header_index = canonical::build_header_index(headers.as_ref());
 
     let mut summary = NormalizationSummary {
         source_key: source.source_key.clone(),
@@ -130,13 +129,13 @@ fn normalize_source_entry(
         ..NormalizationSummary::default()
     };
 
-    for (row_idx, row_result) in reader.byte_records().enumerate() {
+    for (row_idx, row_result) in reader.records().enumerate() {
         if row_idx >= row_cap {
             break;
         }
         let source_row_number = row_idx + 1;
 
-        let row_record = match row_result {
+        let record = match row_result {
             Ok(record) => record,
             Err(err) => {
                 summary.total_rows += 1;
@@ -154,112 +153,38 @@ fn normalize_source_entry(
         };
 
         summary.total_rows += 1;
-        let delimiter = mapping.delimiter_byte();
-        let raw_payload = row_record
+        let raw_payload = record
             .iter()
-            .map(|v| String::from_utf8_lossy(v).to_string())
             .collect::<Vec<_>>()
-            .join(&(delimiter as char).to_string());
-        let record_hash = row::hash_record_bytes(&row_record, delimiter);
-
-        let person_dni_raw = row::mapped_value_bytes(
-            "person_dni",
-            &mapping,
-            &row_record,
-            headers.as_ref(),
-            header_index.as_ref(),
-        )?;
-        let person_dni = resolve_person_dni(&person_dni_raw);
-        let company_ruc_raw = row::mapped_value_bytes(
-            "company_ruc",
-            &mapping,
-            &row_record,
-            headers.as_ref(),
-            header_index.as_ref(),
-        )?;
-        let company_ruc = normalize_ruc(&company_ruc_raw);
-        let person_full_name = row::mapped_value_bytes(
-            "person_full_name",
-            &mapping,
-            &row_record,
-            headers.as_ref(),
-            header_index.as_ref(),
-        )?;
-        let company_name = row::mapped_value_bytes(
-            "company_name",
-            &mapping,
-            &row_record,
-            headers.as_ref(),
-            header_index.as_ref(),
-        )?;
-        let rep_doc_type = row::mapped_value_bytes(
-            "rep_doc_type",
-            &mapping,
-            &row_record,
-            headers.as_ref(),
-            header_index.as_ref(),
-        )?;
-        let rep_doc_number = row::mapped_value_bytes(
-            "rep_doc_number",
-            &mapping,
-            &row_record,
-            headers.as_ref(),
-            header_index.as_ref(),
-        )?;
-        let rep_name = row::mapped_value_bytes(
-            "rep_name",
-            &mapping,
-            &row_record,
-            headers.as_ref(),
-            header_index.as_ref(),
-        )?;
-        let role_name = row::mapped_value_bytes(
-            "role_name",
-            &mapping,
-            &row_record,
-            headers.as_ref(),
-            header_index.as_ref(),
-        )?;
-        let role_start_date = row::mapped_value_bytes(
-            "role_start_date",
-            &mapping,
-            &row_record,
-            headers.as_ref(),
-            header_index.as_ref(),
-        )?;
-
-        let (phones, had_phone_input, invalid_phone_reasons) = row::collect_phones_bytes(
-            &mapping,
-            &row_record,
-            headers.as_ref(),
-            header_index.as_ref(),
-        )?;
+            .join(mapping.delimiter.as_str());
+        let record_hash = hash_record(&record, mapping.delimiter.as_str());
+        let row = canonical::map_record(&mapping, &record, headers.as_ref(), header_index.as_ref())?;
 
         let mut errors: Vec<&str> = Vec::new();
-        if !person_dni_raw.is_empty() && person_dni.is_none() {
+        if row.had_person_dni_input && row.person_dni.is_none() {
             summary.invalid_dni_rows += 1;
             errors.push("invalid_dni");
         }
-        if !company_ruc_raw.is_empty() && company_ruc.is_none() {
+        if row.had_company_ruc_input && row.company_ruc.is_none() {
             summary.invalid_ruc_rows += 1;
             errors.push("invalid_ruc");
         }
         let mut invalid_phone_detail = String::new();
-        if had_phone_input && phones.is_empty() {
+        if row.had_phone_input && row.phones.is_empty() {
             summary.invalid_phone_rows += 1;
             errors.push("invalid_phone");
-            invalid_phone_detail = invalid_phone_reasons.join(";");
+            invalid_phone_detail = row.invalid_phone_reasons.join(";");
         }
 
-        let has_any_payload = person_dni.is_some()
-            || company_ruc.is_some()
-            || !person_full_name.is_empty()
-            || !company_name.is_empty()
-            || !rep_doc_type.is_empty()
-            || !rep_doc_number.is_empty()
-            || !rep_name.is_empty()
-            || !role_name.is_empty()
-            || !phones.is_empty();
+        let has_any_payload = row.person_dni.is_some()
+            || row.company_ruc.is_some()
+            || !row.person_full_name.is_empty()
+            || !row.company_name.is_empty()
+            || !row.rep_doc_type.is_empty()
+            || !row.rep_doc_number.is_empty()
+            || !row.rep_name.is_empty()
+            || !row.role_name.is_empty()
+            || !row.phones.is_empty();
 
         if !has_any_payload {
             summary.empty_payload_rows += 1;
@@ -279,28 +204,29 @@ fn normalize_source_entry(
         }
 
         if has_any_payload {
-            if phones.is_empty() {
+            if row.phones.is_empty() {
                 normalized_writer.write_record([
                     source.source_key.as_str(),
                     source.snapshot_label.as_str(),
                     source.snapshot_date.as_str(),
                     &source_row_number.to_string(),
                     &record_hash,
-                    person_dni.as_deref().unwrap_or(""),
-                    &person_full_name,
-                    company_ruc.as_deref().unwrap_or(""),
-                    &company_name,
-                    &rep_doc_type,
-                    &rep_doc_number,
-                    &rep_name,
-                    &role_name,
-                    &role_start_date,
+                    row.person_dni.as_deref().unwrap_or(""),
+                    row.person_natural_ruc.as_deref().unwrap_or(""),
+                    &row.person_full_name,
+                    row.company_ruc.as_deref().unwrap_or(""),
+                    &row.company_name,
+                    &row.rep_doc_type,
+                    &row.rep_doc_number,
+                    &row.rep_name,
+                    &row.role_name,
+                    &row.role_start_date,
                     "",
                     "",
                 ])?;
                 summary.normalized_rows += 1;
             } else {
-                for phone in phones {
+                for phone in row.phones {
                     let phone_type = match normalize_phone_with_kind(&phone) {
                         Some((_, PhoneKind::Mobile)) => {
                             summary.mobile_phone_rows += 1;
@@ -318,15 +244,16 @@ fn normalize_source_entry(
                         source.snapshot_date.as_str(),
                         &source_row_number.to_string(),
                         &record_hash,
-                        person_dni.as_deref().unwrap_or(""),
-                        &person_full_name,
-                        company_ruc.as_deref().unwrap_or(""),
-                        &company_name,
-                        &rep_doc_type,
-                        &rep_doc_number,
-                        &rep_name,
-                        &role_name,
-                        &role_start_date,
+                        row.person_dni.as_deref().unwrap_or(""),
+                        row.person_natural_ruc.as_deref().unwrap_or(""),
+                        &row.person_full_name,
+                        row.company_ruc.as_deref().unwrap_or(""),
+                        &row.company_name,
+                        &row.rep_doc_type,
+                        &row.rep_doc_number,
+                        &row.rep_name,
+                        &row.role_name,
+                        &row.role_start_date,
                         &phone,
                         phone_type,
                     ])?;
@@ -343,20 +270,30 @@ fn normalize_source_entry(
     Ok(())
 }
 
-fn resolve_person_dni(raw_document: &str) -> Option<String> {
-    normalize_dni(raw_document).or_else(|| {
-        normalize_ruc(raw_document).and_then(|ruc| derive_dni_from_natural_ruc(&ruc))
-    })
+fn hash_record(record: &csv::StringRecord, delimiter: &str) -> String {
+    let joined = record.iter().collect::<Vec<_>>().join(delimiter);
+    let mut hasher = Sha256::new();
+    hasher.update(joined.as_bytes());
+    hex::encode(hasher.finalize())
 }
 
 #[cfg(test)]
 mod tests {
-    use super::resolve_person_dni;
+    use crate::domain::normalize_helpers::normalize_person_document_with_natural_ruc;
 
     #[test]
     fn resolves_dni_from_natural_person_ruc_document() {
-        assert_eq!(resolve_person_dni("10441792498"), Some("44179249".to_owned()));
-        assert_eq!(resolve_person_dni("044179249"), None);
-        assert_eq!(resolve_person_dni("00023AT1919"), None);
+        assert_eq!(
+            normalize_person_document_with_natural_ruc("10441792498"),
+            (Some("44179249".to_owned()), Some("10441792498".to_owned()))
+        );
+        assert_eq!(
+            normalize_person_document_with_natural_ruc("044179249"),
+            (None, None)
+        );
+        assert_eq!(
+            normalize_person_document_with_natural_ruc("00023AT1919"),
+            (None, None)
+        );
     }
 }
