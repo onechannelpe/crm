@@ -51,4 +51,4 @@ Read from root [`.env`](../../.env):
 bun run test:engine
 ```
 
-See [`tests/perf_regression.rs`](tests/perf_regression.rs) for performance regression probes and [`data/perf_baseline.sample.json`](data/perf_baseline.sample.json) for baseline format.
+See [`tests/perf_regression.rs`](tests/perf_regression.rs) for performance regression probes and [`tests/fixtures/perf_baseline_ci.json`](tests/fixtures/perf_baseline_ci.json) for baseline format.

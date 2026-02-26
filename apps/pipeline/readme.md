@@ -42,12 +42,13 @@ bun run pipeline:staged-test
 
 ## Layout
 
-- `src/pipeline/cli.rs`: thin command parsing and defaults
-- `src/pipeline/runner.rs`: command dispatch only
-- `src/pipeline/config/`: manifest, field mapping, path defaults
-- `src/pipeline/domain/`: shared normalization rules and primitives
-- `src/pipeline/infra/`: SQLite connection and schema initialization
-- `src/pipeline/stages/`: ingest, normalize, matrix orchestration, serving materialization
+- `src/main.rs`: entrypoint wiring for pipeline commands
+- `src/cli.rs`: thin command parsing and defaults
+- `src/pipeline.rs`: command dispatch and high-level orchestration
+- `src/config/`: manifest, field mapping, and path defaults
+- `src/db/`: SQLite connection, schema, and repository operations
+- `src/domain/`: shared normalization rules and canonical mapping primitives
+- `src/stages/`: ingest, normalize, validate, verify, and materialization stages
 - `data/mappings/`: source manifest and per-source field mappings
 - `data/raw/`: raw source files (not committed)
 - `data/normalized/`: normalize-matrix output (not committed)
