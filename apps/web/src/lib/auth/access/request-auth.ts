@@ -3,6 +3,7 @@ import {
   validateSessionToken,
   type SessionValidationResult,
 } from "../session/session-manager";
+import { verifyCsrf } from "../../security/csrf";
 import { canAccessPath, getDefaultAppPath } from "./route-policy";
 
 export interface AuthRequestEvent {
@@ -42,10 +43,22 @@ export async function enforceAuthRequest(
 ): Promise<AuthRequestDecision> {
   const url = new URL(event.request.url);
 
-  if (event.request.method !== "GET") {
+  if (event.request.method !== "GET" && event.request.method !== "HEAD") {
+    // 1. Basic Origin vs Host check (already present)
     const origin = event.request.headers.get("Origin");
     const host = event.request.headers.get("Host");
     if (origin && new URL(origin).host !== host) {
+      return {
+        kind: "reject",
+        response: new Response("CSRF validation failed (Origin mismatch)", {
+          status: 403,
+        }),
+      };
+    }
+
+    // 2. Double-Submit Cookie Check
+    const isCsrfValid = await verifyCsrf(event.request);
+    if (!isCsrfValid) {
       return {
         kind: "reject",
         response: new Response("CSRF validation failed", { status: 403 }),
