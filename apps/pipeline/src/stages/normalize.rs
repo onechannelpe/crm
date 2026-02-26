@@ -5,7 +5,8 @@ use crate::PipelineError;
 use crate::config::manifest::{SourceManifestEntry, load_manifest, verify_manifest};
 use crate::config::mapping::SourceMapping;
 use crate::domain::normalize_helpers::{
-    PhoneKind, normalize_dni, normalize_phone_with_kind, normalize_ruc,
+    PhoneKind, derive_dni_from_natural_ruc, normalize_dni, normalize_phone_with_kind,
+    normalize_ruc,
 };
 use csv::ReaderBuilder;
 use std::fs;
@@ -168,7 +169,7 @@ fn normalize_source_entry(
             headers.as_ref(),
             header_index.as_ref(),
         )?;
-        let person_dni = normalize_dni(&person_dni_raw);
+        let person_dni = resolve_person_dni(&person_dni_raw);
         let company_ruc_raw = row::mapped_value_bytes(
             "company_ruc",
             &mapping,
@@ -340,4 +341,22 @@ fn normalize_source_entry(
     fs::write(summary_path, serde_json::to_string_pretty(&summary)?)?;
     println!("{}", serde_json::to_string(&summary)?);
     Ok(())
+}
+
+fn resolve_person_dni(raw_document: &str) -> Option<String> {
+    normalize_dni(raw_document).or_else(|| {
+        normalize_ruc(raw_document).and_then(|ruc| derive_dni_from_natural_ruc(&ruc))
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::resolve_person_dni;
+
+    #[test]
+    fn resolves_dni_from_natural_person_ruc_document() {
+        assert_eq!(resolve_person_dni("10441792498"), Some("44179249".to_owned()));
+        assert_eq!(resolve_person_dni("044179249"), None);
+        assert_eq!(resolve_person_dni("00023AT1919"), None);
+    }
 }
