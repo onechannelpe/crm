@@ -24,6 +24,7 @@ export default function LoginPage() {
   const [error, setError] = createSignal("");
   const [loading, setLoading] = createSignal(false);
   const [passkeyLoading, setPasskeyLoading] = createSignal(false);
+  const [showTotp, setShowTotp] = createSignal(false);
   const [passkeySupport, setPasskeySupport] = createSignal<
     "unknown" | "supported" | "unsupported"
   >("unknown");
@@ -92,9 +93,8 @@ export default function LoginPage() {
     <div class={styles.shell}>
       <div class={`${styles.panel} ${styles.panelSm}`}>
         <div class={styles.stack1}>
-          <p class={styles.eyebrow}>CRM Workspace</p>
+          <p class={styles.eyebrow}>One Channel</p>
           <h1 class={styles.titleSm}>Sign in</h1>
-          <p class={styles.muted}>Continue with password or passkey.</p>
         </div>
 
         <form
@@ -103,6 +103,26 @@ export default function LoginPage() {
           }}
           class={styles.stack3}
         >
+          <Show when={error()}>
+            <div class={styles.errorOverlay} role="alert">
+              <svg
+                class={styles.errorIcon}
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                <path d="M12 9v4" />
+                <path d="M12 17h.01" />
+              </svg>
+              <span>{error()}</span>
+            </div>
+          </Show>
+
           <Input
             id="email"
             type="email"
@@ -122,17 +142,26 @@ export default function LoginPage() {
             required
           />
 
-          <Input
-            id="totp"
-            type="text"
-            label="TOTP or recovery code"
-            placeholder="Optional"
-            value={totpCode()}
-            onInput={(e) => setTotpCode(e.currentTarget.value)}
-          />
-
-          <Show when={error()}>
-            <div class={styles.errorBox}>{error()}</div>
+          <Show
+            when={showTotp()}
+            fallback={
+              <button
+                type="button"
+                class={styles.textButton}
+                onClick={() => setShowTotp(true)}
+              >
+                I have a two-factor code
+              </button>
+            }
+          >
+            <Input
+              id="totp"
+              type="text"
+              label="TOTP or recovery code"
+              placeholder="Optional"
+              value={totpCode()}
+              onInput={(e) => setTotpCode(e.currentTarget.value)}
+            />
           </Show>
 
           <div class={styles.stack2}>
