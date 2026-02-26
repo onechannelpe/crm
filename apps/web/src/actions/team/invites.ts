@@ -149,7 +149,7 @@ function throwMarkInviteDeliveredError(error: MarkInviteDeliveredError): never {
     case "unexpected":
       throw internalError(error.message);
     default: {
-      const exhausted: never = error;
+      const exhausted: never = error.reason;
       throw internalError(
         `Unhandled invite delivery mark error: ${String(exhausted)}`,
       );

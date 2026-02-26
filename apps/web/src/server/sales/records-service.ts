@@ -141,10 +141,14 @@ export function createSalesRecordsWorkflowService(
     const products = await Promise.all(
       lines.map((item) => activeRepos.products.findById(item.productId)),
     );
-    if (products.some((product) => !product)) {
-      return fail("not_found", "One or more products do not exist");
+    const resolvedProducts: SalesProductRow[] = [];
+    for (const product of products) {
+      if (!product) {
+        return fail("not_found", "One or more products do not exist");
+      }
+      resolvedProducts.push(product);
     }
-    return Ok(products as SalesProductRow[]);
+    return Ok(resolvedProducts);
   }
 
   async function persistDraftState(params: {

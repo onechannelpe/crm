@@ -19,7 +19,7 @@ export async function getTeamDirectory(): Promise<TeamDirectory> {
       case "unexpected":
         throw internalError(pendingInvitesResult.error.message);
       default: {
-        const exhausted: never = pendingInvitesResult.error;
+        const exhausted: never = pendingInvitesResult.error.reason;
         throw internalError(
           `Unhandled pending invites read error: ${String(exhausted)}`,
         );

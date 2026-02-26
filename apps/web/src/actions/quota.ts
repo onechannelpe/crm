@@ -77,7 +77,7 @@ export async function getQuotaStatus(): Promise<QuotaStatus> {
       case "unexpected":
         throw internalError(result.error.message);
       default: {
-        const exhausted: never = result.error;
+        const exhausted: never = result.error.reason;
         throw internalError(
           `Unhandled quota status error: ${String(exhausted)}`,
         );
