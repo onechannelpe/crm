@@ -45,6 +45,7 @@ pub enum Command {
         row_cap_b: usize,
         run_osiptel_sample: bool,
         osiptel_row_cap: usize,
+        batch_size: usize,
     },
     VerifyManifest {
         manifest: String,
@@ -95,7 +96,7 @@ pub fn parse_args(args: &[String]) -> Result<Command, PipelineError> {
             let batch_size = flags
                 .get("--batch-size")
                 .map(String::as_str)
-                .unwrap_or("20000")
+                .unwrap_or("50000")
                 .parse::<usize>()
                 .map_err(|_| PipelineError::Args("expected integer for --batch-size".to_owned()))?;
 
@@ -120,6 +121,12 @@ pub fn parse_args(args: &[String]) -> Result<Command, PipelineError> {
             to: required_flag(&flags, "--to")?.to_owned(),
         }),
         "run-matrix" => {
+            let batch_size = flags
+                .get("--batch-size")
+                .map(String::as_str)
+                .unwrap_or("20000")
+                .parse::<usize>()
+                .map_err(|_| PipelineError::Args("expected integer for --batch-size".to_owned()))?;
             let row_cap_a = flags
                 .get("--row-cap-a")
                 .map(String::as_str)
@@ -164,6 +171,7 @@ pub fn parse_args(args: &[String]) -> Result<Command, PipelineError> {
                 row_cap_b,
                 run_osiptel_sample,
                 osiptel_row_cap,
+                batch_size,
             })
         }
         "verify-manifest" => Ok(Command::VerifyManifest {

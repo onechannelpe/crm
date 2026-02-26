@@ -96,6 +96,7 @@ pub fn ingest_snapshot(
         let mut counters = IngestCounters::default();
         let mut processed_in_batch = 0usize;
         let mut tx = conn.transaction()?;
+        let mut statements = repo::IngestStatements::new(&tx)?;
 
         for (i, result) in reader.records().enumerate() {
             let record = result?;
@@ -103,7 +104,7 @@ pub fn ingest_snapshot(
             let source_row_number = (i + 1) as i64;
             let canonical_row = canonical::map_record(&resolved_mapping, &record);
             let accepted = repo::ingest_one_row(
-                &tx,
+                &mut statements,
                 snapshot_id,
                 source_row_number,
                 mapping.delimiter.as_str(),
@@ -117,12 +118,15 @@ pub fn ingest_snapshot(
 
             processed_in_batch += 1;
             if processed_in_batch >= batch_size {
+                drop(statements);
                 tx.commit()?;
                 tx = conn.transaction()?;
+                statements = repo::IngestStatements::new(&tx)?;
                 processed_in_batch = 0;
             }
         }
 
+        drop(statements);
         repo::persist_metrics(&tx, snapshot_id, &counters)?;
         tx.execute(
             "UPDATE source_snapshot SET status='completed' WHERE snapshot_id=?1",

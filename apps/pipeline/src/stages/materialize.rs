@@ -8,6 +8,11 @@ pub fn materialize_serving(db_path: &str) -> Result<(), PipelineError> {
     let tx = conn.transaction()?;
     tx.execute_batch(
         r#"
+        CREATE INDEX IF NOT EXISTS idx_role_person_id_role_id
+            ON person_company_role(person_id, role_id);
+        CREATE INDEX IF NOT EXISTS idx_person_phone_person_conf_phone
+            ON person_phone(person_id, confidence DESC, phone);
+
         DELETE FROM contacts_serving;
         DELETE FROM phone_index;
         DELETE FROM ruc_phone_agg;
@@ -59,6 +64,9 @@ pub fn materialize_serving(db_path: &str) -> Result<(), PipelineError> {
         LEFT JOIN top_two_phones phones ON phones.person_id = p.person_id
         WHERE p.dni IS NOT NULL AND p.dni <> '';
 
+        CREATE INDEX IF NOT EXISTS idx_contacts_serving_dni ON contacts_serving(dni);
+        CREATE INDEX IF NOT EXISTS idx_contacts_serving_ruc ON contacts_serving(org_ruc);
+
         INSERT INTO phone_index(phone, contact_id)
         SELECT DISTINCT pp.phone, cs.id
         FROM contacts_serving cs
@@ -92,6 +100,11 @@ pub fn materialize_serving(db_path: &str) -> Result<(), PipelineError> {
         INSERT INTO contacts_fts(rowid, person_name, company_name)
         SELECT id, COALESCE(name,''), COALESCE(org_name,'')
         FROM contacts_serving;
+
+        CREATE INDEX IF NOT EXISTS idx_phone_index_phone ON phone_index(phone);
+        CREATE INDEX IF NOT EXISTS idx_person_phone_phone ON person_phone(phone);
+        CREATE INDEX IF NOT EXISTS idx_company_phone_phone ON company_phone(phone);
+        CREATE INDEX IF NOT EXISTS idx_role_phone_phone ON role_phone(phone);
         "#,
     )?;
 

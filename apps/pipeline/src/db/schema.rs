@@ -75,8 +75,6 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             FOREIGN KEY(person_id) REFERENCES person_profile(person_id),
             FOREIGN KEY(company_id) REFERENCES company_profile(company_id)
         );
-        CREATE INDEX IF NOT EXISTS idx_role_person_id_role_id
-            ON person_company_role(person_id, role_id);
 
         CREATE TABLE IF NOT EXISTS person_phone (
             person_id INTEGER NOT NULL,
@@ -87,9 +85,6 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             PRIMARY KEY(person_id, phone),
             FOREIGN KEY(person_id) REFERENCES person_profile(person_id)
         );
-        CREATE INDEX IF NOT EXISTS idx_person_phone_phone ON person_phone(phone);
-        CREATE INDEX IF NOT EXISTS idx_person_phone_person_conf_phone
-            ON person_phone(person_id, confidence DESC, phone);
 
         CREATE TABLE IF NOT EXISTS company_phone (
             company_id INTEGER NOT NULL,
@@ -100,7 +95,6 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             PRIMARY KEY(company_id, phone),
             FOREIGN KEY(company_id) REFERENCES company_profile(company_id)
         );
-        CREATE INDEX IF NOT EXISTS idx_company_phone_phone ON company_phone(phone);
 
         CREATE TABLE IF NOT EXISTS role_phone (
             role_id INTEGER NOT NULL,
@@ -111,7 +105,6 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             PRIMARY KEY(role_id, phone),
             FOREIGN KEY(role_id) REFERENCES person_company_role(role_id)
         );
-        CREATE INDEX IF NOT EXISTS idx_role_phone_phone ON role_phone(phone);
 
         CREATE TABLE IF NOT EXISTS entity_evidence (
             evidence_id INTEGER PRIMARY KEY,
@@ -145,14 +138,11 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             phone_primary TEXT,
             phone_secondary TEXT
         );
-        CREATE INDEX IF NOT EXISTS idx_contacts_serving_dni ON contacts_serving(dni);
-        CREATE INDEX IF NOT EXISTS idx_contacts_serving_ruc ON contacts_serving(org_ruc);
 
         CREATE TABLE IF NOT EXISTS phone_index (
             phone TEXT NOT NULL,
             contact_id INTEGER NOT NULL
         );
-        CREATE INDEX IF NOT EXISTS idx_phone_index_phone ON phone_index(phone);
 
         CREATE TABLE IF NOT EXISTS ruc_phone_agg (
             org_ruc TEXT PRIMARY KEY,

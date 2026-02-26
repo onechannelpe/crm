@@ -17,6 +17,7 @@ pub fn run_matrix(
     row_cap_b: usize,
     run_osiptel_sample: bool,
     osiptel_row_cap: usize,
+    batch_size: usize,
 ) -> Result<(), PipelineError> {
     let build_dir_path = Path::new(build_dir);
     fs::create_dir_all(build_dir_path)?;
@@ -60,6 +61,7 @@ pub fn run_matrix(
             &sample_file,
             &format!("{}-sample", source.source_key),
             &source.snapshot_date,
+            batch_size,
         )?;
     }
 
@@ -97,6 +99,7 @@ fn run_ingest_phase(
     input_path: &Path,
     snapshot_label: &str,
     snapshot_date: &str,
+    batch_size: usize,
 ) -> Result<(), PipelineError> {
     println!(
         "[pipeline] ingest {snapshot_label} from {}",
@@ -108,7 +111,7 @@ fn run_ingest_phase(
         &input_path.to_string_lossy(),
         snapshot_label,
         snapshot_date,
-        20_000,
+        batch_size,
     )?;
     validate_snapshot(db_path, snapshot_label)?;
     Ok(())

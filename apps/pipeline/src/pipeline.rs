@@ -56,6 +56,7 @@ pub fn run(command: Command) -> Result<(), PipelineError> {
             row_cap_b,
             run_osiptel_sample,
             osiptel_row_cap,
+            batch_size,
         } => verify::run_matrix(
             &db,
             &build_dir,
@@ -64,6 +65,7 @@ pub fn run(command: Command) -> Result<(), PipelineError> {
             row_cap_b,
             run_osiptel_sample,
             osiptel_row_cap,
+            batch_size,
         ),
         Command::VerifyManifest { manifest } => {
             verify_manifest(&manifest)?;
