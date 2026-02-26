@@ -1,10 +1,5 @@
 import { createAsync, useNavigate, useParams } from "@solidjs/router";
-import {
-  createEffect,
-  createSignal,
-  For,
-  Show,
-} from "solid-js";
+import { createEffect, createSignal, For, Show } from "solid-js";
 
 import {
   submitSalesRecord,

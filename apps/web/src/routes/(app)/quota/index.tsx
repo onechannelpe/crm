@@ -104,7 +104,11 @@ export default function QuotaPage() {
               required
             />
 
-            <Button type="submit" disabled={allocating.pending} class={styles.full}>
+            <Button
+              type="submit"
+              disabled={allocating.pending}
+              class={styles.full}
+            >
               {allocating.pending ? "Assigning..." : "Assign quota"}
             </Button>
           </form>
