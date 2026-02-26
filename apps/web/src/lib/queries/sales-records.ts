@@ -1,6 +1,7 @@
 import { query } from "@solidjs/router";
 
 import {
+  getSalesRecordFixContext,
   listConfirmedSalesRecords,
   listPendingSalesRecords,
   listSalesRecordProducts,
@@ -19,4 +20,9 @@ export const confirmedSalesRecordsQuery = query(
 export const salesRecordProductsQuery = query(
   listSalesRecordProducts,
   "salesRecordProducts",
+);
+
+export const salesRecordFixContextQuery = query(
+  getSalesRecordFixContext,
+  "salesRecordFixContext",
 );

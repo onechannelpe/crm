@@ -1,5 +1,4 @@
-import { useAction } from "@solidjs/router";
-import { useNavigate } from "@solidjs/router";
+import { useAction, useNavigate } from "@solidjs/router";
 
 import { LeadList } from "~/components/features/leads/lead-list";
 import { RequestLeadsButton } from "~/components/features/leads/request-leads-button";

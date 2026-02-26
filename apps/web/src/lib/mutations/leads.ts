@@ -1,7 +1,6 @@
 import { action, json } from "@solidjs/router";
 
 import { registerCall, requestLeads } from "~/actions/leads";
-import type { RequestLeadsResult } from "~/actions/leads";
 import { activeLeadsQuery } from "~/lib/queries/leads";
 
 export const requestLeadsMutation = action(async () => {
@@ -21,5 +20,3 @@ export const registerCallMutation = action(
   },
   "registerCall",
 );
-
-export type { RequestLeadsResult };

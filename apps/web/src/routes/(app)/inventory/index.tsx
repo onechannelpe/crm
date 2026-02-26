@@ -37,12 +37,11 @@ const statusVariant = (status: string) => {
 
 export default function InventoryPage() {
   const items = createAsync(() => inventoryItemsQuery(), { initialValue: [] });
-  const itemCount = () => items()?.length ?? 0;
 
   return (
     <AppPage>
       <Show
-        when={itemCount() > 0}
+        when={items().length > 0}
         fallback={
           <EmptyState
             title="No inventory records"

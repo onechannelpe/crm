@@ -1,14 +1,12 @@
 import { createAsync, useNavigate, useParams } from "@solidjs/router";
 import {
   createEffect,
-  createResource,
   createSignal,
   For,
   Show,
 } from "solid-js";
 
 import {
-  getSalesRecordFixContext,
   submitSalesRecord,
   updateSalesRecordDraft,
 } from "~/actions/sales-records";
@@ -19,7 +17,10 @@ import { Input } from "~/components/ui/input/input";
 import { Select } from "~/components/ui/input/select";
 import { Textarea } from "~/components/ui/input/textarea";
 import { getErrorMessage } from "~/lib/errors";
-import { salesRecordProductsQuery } from "~/lib/queries/sales-records";
+import {
+  salesRecordFixContextQuery,
+  salesRecordProductsQuery,
+} from "~/lib/queries/sales-records";
 
 import styles from "../../edit-sale-page.module.css";
 
@@ -33,7 +34,6 @@ export default function FixSalePage() {
   const navigate = useNavigate();
   const noteId = () => Number(params.id);
   const [loading, setLoading] = createSignal(false);
-  const [initialized, setInitialized] = createSignal(false);
   const [fixNotes, setFixNotes] = createSignal("");
 
   const [ruc, setRuc] = createSignal("");
@@ -48,10 +48,7 @@ export default function FixSalePage() {
   const [selectedProductQty, setSelectedProductQty] = createSignal("1");
   const [productLines, setProductLines] = createSignal<ProductLine[]>([]);
 
-  const [fixContext, { refetch: refetchFixContext }] = createResource(
-    noteId,
-    getSalesRecordFixContext,
-  );
+  const fixContext = createAsync(() => salesRecordFixContextQuery(noteId()));
   const currentProducts = createAsync(() => salesRecordProductsQuery(), {
     initialValue: [],
   });
@@ -59,7 +56,7 @@ export default function FixSalePage() {
 
   createEffect(() => {
     const context = fixContext();
-    if (!context || initialized()) return;
+    if (!context) return;
 
     setRuc(context.client?.ruc ?? "");
     setCompanyName(context.client?.companyName ?? "");
@@ -86,8 +83,6 @@ export default function FixSalePage() {
         quantity: line.quantity,
       })),
     );
-
-    setInitialized(true);
   });
 
   const canResubmit = () => {
@@ -205,7 +200,6 @@ export default function FixSalePage() {
         fixNotes().trim(),
       );
       await submitSalesRecord(noteId());
-      await refetchFixContext();
       showToast("success", "Sales record resubmitted");
       navigate("/sales/confirmations");
     } catch (err: unknown) {
