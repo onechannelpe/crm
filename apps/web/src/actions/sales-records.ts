@@ -1,13 +1,17 @@
 "use server";
 
+import { getRequestEvent } from "solid-js/web";
+
 import type { Role } from "~/lib/auth/access/rbac";
 import { requirePermission } from "~/lib/auth/access/session";
+import { getClientIp } from "~/lib/auth/password/client-ip";
 import type { ActionSuccess } from "~/lib/contracts/common";
 import {
   assertNonEmptyString,
   assertPositiveInt,
 } from "~/lib/contracts/guards";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
+import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
 import { computeClientCompletenessScore } from "~/server/sales/completeness";
 import { repos, salesRecordsService } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
@@ -264,6 +268,16 @@ export async function createSalesRecordDraft(
       const session = await requirePermission("sales:create");
       actor.userId = session.userId;
       actor.role = session.role;
+      const event = getRequestEvent();
+      const ip = event?.request
+        ? getClientIp(event.request.headers)
+        : "unknown";
+      await checkActionRateLimit(
+        "sales_records.create_draft",
+        session.userId,
+        ip,
+        repos,
+      );
 
       const result = await salesRecordsService.createDraft({
         source: input.source,
@@ -296,6 +310,16 @@ export async function submitSalesRecord(
       const session = await requirePermission("sales:submit");
       actor.userId = session.userId;
       actor.role = session.role;
+      const event = getRequestEvent();
+      const ip = event?.request
+        ? getClientIp(event.request.headers)
+        : "unknown";
+      await checkActionRateLimit(
+        "sales_records.submit",
+        session.userId,
+        ip,
+        repos,
+      );
       const result = await salesRecordsService.submit(
         safeRecordId,
         session.userId,

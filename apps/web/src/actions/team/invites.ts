@@ -8,12 +8,14 @@ import { getRequestEvent } from "solid-js/web";
 
 import type { Role } from "~/lib/auth/access/rbac";
 import { requirePermission } from "~/lib/auth/access/session";
+import { getClientIp } from "~/lib/auth/password/client-ip";
 import {
   assertNonEmptyString,
   assertPositiveInt,
 } from "~/lib/contracts/guards";
 import { env } from "~/lib/env";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
+import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
 import { repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
@@ -90,6 +92,16 @@ export async function createTeamInvite(input: {
       const session = await requirePermission("hr:manage");
       actor.userId = session.userId;
       actor.role = session.role;
+      const event = getRequestEvent();
+      const ip = event?.request
+        ? getClientIp(event.request.headers)
+        : "unknown";
+      await checkActionRateLimit(
+        "team.invite.create",
+        session.userId,
+        ip,
+        repos,
+      );
       const result = await provisioning.createInvite({
         actorUserId: session.userId,
         actorRole: session.role,

@@ -1,8 +1,12 @@
 "use server";
 
+import { getRequestEvent } from "solid-js/web";
+
 import { requirePermission } from "~/lib/auth/access/session";
+import { getClientIp } from "~/lib/auth/password/client-ip";
 import type { ActionSuccess } from "~/lib/contracts/common";
 import { assertPositiveInt } from "~/lib/contracts/guards";
+import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
 import { appNotificationCenter } from "~/server/shared/context";
 import { quotaService } from "~/server/shared/context";
 import { repos } from "~/server/shared/context";
@@ -17,6 +21,9 @@ export async function allocateQuota(
   const safeExecutiveId = assertPositiveInt(executiveId, "executiveId");
   const safeAmount = assertPositiveInt(amount, "amount");
   const session = await requirePermission("quota:allocate");
+  const event = getRequestEvent();
+  const ip = event?.request ? getClientIp(event.request.headers) : "unknown";
+  await checkActionRateLimit("quota.allocate", session.userId, ip, repos);
   const executive = await repos.users.findById(safeExecutiveId);
   if (!executive) throw new Error("Executive not found");
   if (executive.role !== "executive")

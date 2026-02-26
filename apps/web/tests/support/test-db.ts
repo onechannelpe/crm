@@ -10,6 +10,7 @@ import { up as up003 } from "../../src/lib/db/migrations/003-user-invites";
 import { up as up004 } from "../../src/lib/db/migrations/004-action-observability";
 import { up as up005 } from "../../src/lib/db/migrations/005-report-export-observability";
 import { up as up006 } from "../../src/lib/db/migrations/006-sales-records-core";
+import { up as up007 } from "../../src/lib/db/migrations/007-action-rate-limit";
 import type { Database } from "../../src/lib/db/schema";
 import { createSalesRecordsWorkflowService } from "../../src/server/sales/records-service";
 import { createRepositories } from "../../src/server/shared/registry";
@@ -213,6 +214,7 @@ export async function createIsolatedTestDb(
   await up004(db);
   await up005(db);
   await up006(db);
+  await up007(db);
   await seedTemplate(db);
   const repos = createRepositories(db);
   const salesRecords = createSalesRecordsWorkflowService(repos, (operation) =>
