@@ -31,8 +31,21 @@ export function validateSecret(key: string, value: string): void {
 
 function required(key: string, secret = false): string {
   const value = process.env[key];
-  if (!value) throw new Error(`Missing required env: ${key}`);
-  if (secret) validateSecret(key, value);
+  if (!value) {
+    let msg = `Missing required env: ${key}`;
+    if (secret) {
+      msg += `. Generate one with: openssl rand -base64 32`;
+    }
+    throw new Error(msg);
+  }
+  try {
+    if (secret) validateSecret(key, value);
+  } catch (e) {
+    if (e instanceof Error) {
+      e.message += ". Generate a new one with: openssl rand -base64 32";
+    }
+    throw e;
+  }
   return value;
 }
 

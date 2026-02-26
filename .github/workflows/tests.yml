@@ -25,10 +25,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  SESSION_SECRET: ci-session-secret
-  ENGINE_HMAC_SECRET: ci-engine-hmac-secret
-
 jobs:
   web-build:
     runs-on: ubuntu-latest
