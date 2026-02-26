@@ -65,10 +65,25 @@ pub fn derive_dni_from_natural_ruc(ruc: &str) -> Option<String> {
     Some(ruc[2..10].to_owned())
 }
 
+pub fn normalize_person_document_with_natural_ruc(
+    value: &str,
+) -> (Option<String>, Option<String>) {
+    if let Some(dni) = normalize_dni(value) {
+        return (Some(dni), None);
+    }
+    if let Some(ruc) = normalize_ruc(value)
+        && let Some(dni) = derive_dni_from_natural_ruc(&ruc)
+    {
+        return (Some(dni), Some(ruc));
+    }
+    (None, None)
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
-        PhoneKind, derive_dni_from_natural_ruc, normalize_phone, normalize_phone_with_kind,
+        PhoneKind, derive_dni_from_natural_ruc, normalize_person_document_with_natural_ruc,
+        normalize_phone, normalize_phone_with_kind,
     };
 
     #[test]
@@ -102,5 +117,21 @@ mod tests {
             Some("12345678".to_owned())
         );
         assert_eq!(derive_dni_from_natural_ruc("20123456789"), None);
+    }
+
+    #[test]
+    fn normalizes_person_document_with_natural_ruc() {
+        assert_eq!(
+            normalize_person_document_with_natural_ruc("12345678"),
+            (Some("12345678".to_owned()), None)
+        );
+        assert_eq!(
+            normalize_person_document_with_natural_ruc("10441792498"),
+            (Some("44179249".to_owned()), Some("10441792498".to_owned()))
+        );
+        assert_eq!(
+            normalize_person_document_with_natural_ruc("00023AT1919"),
+            (None, None)
+        );
     }
 }
