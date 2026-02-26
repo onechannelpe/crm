@@ -5,6 +5,17 @@ use crate::db::schema::open_rw;
 use crate::domain::canonical;
 use csv::ReaderBuilder;
 use std::path::Path;
+use std::time::Instant;
+
+const DEFAULT_PROGRESS_EVERY_ROWS: i64 = 500_000;
+
+fn progress_every_rows() -> i64 {
+    std::env::var("CRM_PIPELINE_PROGRESS_EVERY_ROWS")
+        .ok()
+        .and_then(|value| value.parse::<i64>().ok())
+        .filter(|value| *value > 0)
+        .unwrap_or(DEFAULT_PROGRESS_EVERY_ROWS)
+}
 
 #[derive(Default)]
 pub(crate) struct IngestCounters {
@@ -93,6 +104,8 @@ pub fn ingest_snapshot(
     let resolved_mapping = canonical::resolve_mapping(&mapping, headers.as_ref())?;
 
     let ingest_result = (|| -> Result<IngestCounters, PipelineError> {
+        let started_at = Instant::now();
+        let progress_every = progress_every_rows();
         let mut counters = IngestCounters::default();
         let mut processed_in_batch = 0usize;
         let mut tx = conn.transaction()?;
@@ -114,6 +127,20 @@ pub fn ingest_snapshot(
             )?;
             if accepted {
                 counters.accepted_rows += 1;
+            }
+
+            if counters.total_rows % progress_every == 0 {
+                let elapsed_secs = started_at.elapsed().as_secs_f64();
+                let rows_per_sec = if elapsed_secs > 0.0 {
+                    counters.total_rows as f64 / elapsed_secs
+                } else {
+                    0.0
+                };
+                println!(
+                    "[pipeline] ingest progress snapshot_id={snapshot_id} total_rows={} accepted_rows={} rate_rows_per_sec={rows_per_sec:.0}",
+                    counters.total_rows,
+                    counters.accepted_rows
+                );
             }
 
             processed_in_batch += 1;
