@@ -1,9 +1,6 @@
 "use server";
 
-import { getRequestEvent } from "solid-js/web";
-
 import { requirePermission } from "~/lib/auth/access/session";
-import { getClientIp } from "~/lib/auth/password/client-ip";
 import { config } from "~/lib/config";
 import type { ActionSuccess } from "~/lib/contracts/common";
 import { assertPositiveInt } from "~/lib/contracts/guards";
@@ -26,9 +23,7 @@ export async function requestLeads(
       ? config.leadAssignment.defaultBufferSize
       : assertPositiveInt(bufferSize, "bufferSize");
   const session = await requirePermission("leads:request");
-  const event = getRequestEvent();
-  const ip = event?.request ? getClientIp(event.request.headers) : "unknown";
-  await checkActionRateLimit("leads.request", session.userId, ip, repos);
+  await checkActionRateLimit("leads.request", session.userId, repos);
   const result = await leadService.requestLeads(
     session.userId,
     session.branchId,

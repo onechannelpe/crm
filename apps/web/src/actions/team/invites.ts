@@ -8,7 +8,6 @@ import { getRequestEvent } from "solid-js/web";
 
 import type { Role } from "~/lib/auth/access/rbac";
 import { requirePermission } from "~/lib/auth/access/session";
-import { getClientIp } from "~/lib/auth/password/client-ip";
 import {
   assertNonEmptyString,
   assertPositiveInt,
@@ -92,16 +91,7 @@ export async function createTeamInvite(input: {
       const session = await requirePermission("hr:manage");
       actor.userId = session.userId;
       actor.role = session.role;
-      const event = getRequestEvent();
-      const ip = event?.request
-        ? getClientIp(event.request.headers)
-        : "unknown";
-      await checkActionRateLimit(
-        "team.invite.create",
-        session.userId,
-        ip,
-        repos,
-      );
+      await checkActionRateLimit("team.invite.create", session.userId, repos);
       const result = await provisioning.createInvite({
         actorUserId: session.userId,
         actorRole: session.role,

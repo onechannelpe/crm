@@ -28,7 +28,7 @@ describe("action rate limit", () => {
     const limit = ACTION_RATE_LIMIT_POLICY["leads.request"].limit;
     for (let i = 0; i < limit; i++) {
       await expect(
-        checkActionRateLimit("leads.request", 1, "198.51.100.1", ctx.repos),
+        checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1"),
       ).resolves.toBeUndefined();
     }
   });
@@ -36,14 +36,14 @@ describe("action rate limit", () => {
   it("blocks the next request after the limit is reached", async () => {
     const { limit } = ACTION_RATE_LIMIT_POLICY["leads.request"];
     for (let i = 0; i < limit; i++) {
-      await checkActionRateLimit("leads.request", 1, "198.51.100.1", ctx.repos);
+      await checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1");
     }
 
     const result = checkActionRateLimit(
       "leads.request",
       1,
-      "198.51.100.1",
       ctx.repos,
+      "198.51.100.1",
     );
     await expect(result).rejects.toBeInstanceOf(Response);
   });
@@ -51,12 +51,12 @@ describe("action rate limit", () => {
   it("returns 429 with Retry-After header on block", async () => {
     const { limit } = ACTION_RATE_LIMIT_POLICY["leads.request"];
     for (let i = 0; i < limit; i++) {
-      await checkActionRateLimit("leads.request", 1, "198.51.100.1", ctx.repos);
+      await checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1");
     }
 
     let blocked: Response | undefined;
     try {
-      await checkActionRateLimit("leads.request", 1, "198.51.100.1", ctx.repos);
+      await checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1");
     } catch (err) {
       if (err instanceof Response) blocked = err;
     }
@@ -72,7 +72,7 @@ describe("action rate limit", () => {
   it("retry-after decreases as window elapses", async () => {
     const { limit, windowMs } = ACTION_RATE_LIMIT_POLICY["leads.request"];
     for (let i = 0; i < limit; i++) {
-      await checkActionRateLimit("leads.request", 1, "198.51.100.1", ctx.repos);
+      await checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1");
     }
 
     const getRetryAfter = async () => {
@@ -80,8 +80,8 @@ describe("action rate limit", () => {
         await checkActionRateLimit(
           "leads.request",
           1,
-          "198.51.100.1",
           ctx.repos,
+          "198.51.100.1",
         );
       } catch (err) {
         if (err instanceof Response) {
@@ -102,44 +102,44 @@ describe("action rate limit", () => {
   it("resets the counter after the window expires", async () => {
     const { limit, windowMs } = ACTION_RATE_LIMIT_POLICY["leads.request"];
     for (let i = 0; i < limit; i++) {
-      await checkActionRateLimit("leads.request", 1, "198.51.100.1", ctx.repos);
+      await checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1");
     }
 
     vi.setSystemTime(Date.now() + windowMs + 1);
 
     await expect(
-      checkActionRateLimit("leads.request", 1, "198.51.100.1", ctx.repos),
+      checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1"),
     ).resolves.toBeUndefined();
   });
 
   it("isolates counters by user", async () => {
     const { limit } = ACTION_RATE_LIMIT_POLICY["leads.request"];
     for (let i = 0; i < limit; i++) {
-      await checkActionRateLimit("leads.request", 1, "198.51.100.1", ctx.repos);
+      await checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1");
     }
 
     // user 2 has a separate counter
     await expect(
-      checkActionRateLimit("leads.request", 2, "198.51.100.1", ctx.repos),
+      checkActionRateLimit("leads.request", 2, ctx.repos, "198.51.100.1"),
     ).resolves.toBeUndefined();
   });
 
   it("isolates counters by ip", async () => {
     const { limit } = ACTION_RATE_LIMIT_POLICY["leads.request"];
     for (let i = 0; i < limit; i++) {
-      await checkActionRateLimit("leads.request", 1, "198.51.100.1", ctx.repos);
+      await checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1");
     }
 
     // different IP, same user, separate counter
     await expect(
-      checkActionRateLimit("leads.request", 1, "198.51.100.2", ctx.repos),
+      checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.2"),
     ).resolves.toBeUndefined();
   });
 
   it("isolates counters by action name", async () => {
     const { limit } = ACTION_RATE_LIMIT_POLICY["leads.request"];
     for (let i = 0; i < limit; i++) {
-      await checkActionRateLimit("leads.request", 1, "198.51.100.1", ctx.repos);
+      await checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1");
     }
 
     // different action — separate counter
@@ -147,8 +147,8 @@ describe("action rate limit", () => {
       checkActionRateLimit(
         "sales_records.create_draft",
         1,
-        "198.51.100.1",
         ctx.repos,
+        "198.51.100.1",
       ),
     ).resolves.toBeUndefined();
   });
@@ -160,8 +160,8 @@ describe("action rate limit", () => {
       await checkActionRateLimit(
         "leads.request",
         userId,
-        "198.51.100.1",
         ctx.repos,
+        "198.51.100.1",
       );
     }
 
@@ -169,8 +169,8 @@ describe("action rate limit", () => {
       await checkActionRateLimit(
         "leads.request",
         userId,
-        "198.51.100.1",
         ctx.repos,
+        "198.51.100.1",
       );
     } catch {
       // expected 429
@@ -193,20 +193,20 @@ describe("action rate limit", () => {
       await checkActionRateLimit(
         "team.invite.create",
         1,
-        "198.51.100.1",
         ctx.repos,
+        "198.51.100.1",
       );
     }
 
     // still blocked after 30 minutes
     vi.setSystemTime(Date.now() + 30 * 60_000);
     await expect(
-      checkActionRateLimit("team.invite.create", 1, "198.51.100.1", ctx.repos),
+      checkActionRateLimit("team.invite.create", 1, ctx.repos, "198.51.100.1"),
     ).rejects.toBeInstanceOf(Response);
   });
 
   it("cleans up stale counters", async () => {
-    await checkActionRateLimit("leads.request", 1, "198.51.100.1", ctx.repos);
+    await checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1");
     const deleted = await ctx.repos.actionRateLimits.deleteUpdatedBefore(
       Date.now() + 1,
     );

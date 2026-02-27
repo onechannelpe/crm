@@ -1,45 +1,41 @@
-import type { Kysely } from "kysely";
+import { sql, type Kysely } from "kysely";
 
-import type {
-  ActionRateLimitCounter,
-  Database,
-  NewActionRateLimitCounter,
-} from "~/lib/db/schema";
+import type { Database } from "~/lib/db/schema";
+
+interface CounterSnapshot {
+  request_count: number;
+  window_started_at: number;
+}
 
 export function createActionRateLimitsRepo(db: Kysely<Database>) {
   return {
-    async findByKey(keyHash: string): Promise<ActionRateLimitCounter | null> {
-      const row = await db
-        .selectFrom("action_rate_limit_counters")
-        .selectAll()
-        .where("key_hash", "=", keyHash)
-        .executeTakeFirst();
-      return row ?? null;
-    },
-
-    async upsert(values: NewActionRateLimitCounter): Promise<void> {
-      await db
-        .insertInto("action_rate_limit_counters")
-        .values(values)
-        .onConflict((oc) =>
-          oc.column("key_hash").doUpdateSet({
-            window_started_at: values.window_started_at,
-            request_count: values.request_count,
-            updated_at: values.updated_at,
-          }),
-        )
-        .execute();
-    },
-
-    async increment(keyHash: string, updatedAt: number): Promise<void> {
-      await db
-        .updateTable("action_rate_limit_counters")
-        .set((eb) => ({
-          request_count: eb("request_count", "+", 1),
-          updated_at: updatedAt,
-        }))
-        .where("key_hash", "=", keyHash)
-        .execute();
+    /**
+     * Atomically upserts the counter for the given key and window, then returns
+     * the post-increment snapshot. If the existing window has expired (elapsed >=
+     * windowMs) the counter is reset to 1 and a new window starts.
+     *
+     * Single round-trip: INSERT … ON CONFLICT DO UPDATE … RETURNING.
+     * No separate read, no TOCTOU race.
+     */
+    async checkAndIncrement(
+      keyHash: string,
+      now: number,
+      windowMs: number,
+    ): Promise<CounterSnapshot> {
+      const rows = await sql<CounterSnapshot>`
+        INSERT INTO action_rate_limit_counters (key_hash, window_started_at, request_count, updated_at)
+        VALUES (${keyHash}, ${now}, 1, ${now})
+        ON CONFLICT (key_hash) DO UPDATE SET
+          window_started_at = CASE WHEN (${now} - window_started_at) >= ${windowMs}
+                                   THEN ${now} ELSE window_started_at END,
+          request_count     = CASE WHEN (${now} - window_started_at) >= ${windowMs}
+                                   THEN 1 ELSE request_count + 1 END,
+          updated_at        = ${now}
+        RETURNING request_count, window_started_at
+      `.execute(db);
+      const row = rows.rows[0];
+      if (!row) throw new Error("checkAndIncrement returned no row");
+      return row;
     },
 
     async deleteUpdatedBefore(timestamp: number): Promise<number> {

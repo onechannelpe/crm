@@ -1,3 +1,6 @@
+import { getRequestEvent } from "solid-js/web";
+
+import { getClientIp } from "~/lib/auth/password/client-ip";
 import { hashAuthKey } from "~/lib/auth/password/key-hash";
 import type { NewAuditLog } from "~/lib/db/schema";
 import type { ActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
@@ -25,59 +28,63 @@ type RateLimitDeps = {
   };
 };
 
+function resolveRequestIp(): string {
+  const event = getRequestEvent();
+  if (!event?.request) {
+    console.warn("[RateLimit] getRequestEvent() returned no request; falling back to 127.0.0.1");
+    return "127.0.0.1";
+  }
+  return getClientIp(event.request.headers);
+}
+
 function buildKey(actionName: string, userId: number, ip: string): string {
   return hashAuthKey(`action:${actionName}:user:${userId}:ip:${ip}`);
 }
 
 /**
  * Enforces a fixed-window rate limit for the given action and caller.
- * Throws a 429 Response with Retry-After on violation, after writing an
- * audit log entry. No-ops when policy is not satisfied yet.
+ *
+ * Uses a single atomic INSERT … ON CONFLICT DO UPDATE … RETURNING to eliminate
+ * the read-check-write race. The `ip` parameter defaults to the IP resolved from
+ * the current SolidStart request context; tests can supply it explicitly.
+ *
+ * Throws a 429 Response with Retry-After on violation, after writing an audit
+ * log entry.
  */
 export async function checkActionRateLimit(
   actionName: RateLimitedAction,
   userId: number,
-  ip: string,
   deps: RateLimitDeps,
+  ip: string = resolveRequestIp(),
 ): Promise<void> {
   const policy = ACTION_RATE_LIMIT_POLICY[actionName];
   const now = Date.now();
   const keyHash = buildKey(actionName, userId, ip);
 
-  const counter = await deps.actionRateLimits.findByKey(keyHash);
+  const { request_count, window_started_at } =
+    await deps.actionRateLimits.checkAndIncrement(keyHash, now, policy.windowMs);
 
-  if (counter !== null && now - counter.window_started_at < policy.windowMs) {
-    if (counter.request_count >= policy.limit) {
-      const retryAfterMs = policy.windowMs - (now - counter.window_started_at);
-      const retryAfterSeconds = Math.max(1, Math.ceil(retryAfterMs / 1000));
+  if (request_count > policy.limit) {
+    const retryAfterMs = policy.windowMs - (now - window_started_at);
+    const retryAfterSeconds = Math.max(1, Math.ceil(retryAfterMs / 1000));
 
-      await deps.auditLogs.create({
-        user_id: userId,
-        action: "rate_limit_exceeded",
-        entity_type: "user",
-        entity_id: userId,
-        changes: JSON.stringify({
-          actionName,
-          limit: policy.limit,
-          windowMs: policy.windowMs,
-          retryAfterMs,
-        }),
-        created_at: now,
-      });
+    await deps.auditLogs.create({
+      user_id: userId,
+      action: "rate_limit_exceeded",
+      entity_type: "user",
+      entity_id: userId,
+      changes: JSON.stringify({
+        actionName,
+        limit: policy.limit,
+        windowMs: policy.windowMs,
+        retryAfterMs,
+      }),
+      created_at: now,
+    });
 
-      throw new Response("Too many requests", {
-        status: 429,
-        headers: { "Retry-After": String(retryAfterSeconds) },
-      });
-    }
-
-    await deps.actionRateLimits.increment(keyHash, now);
-  } else {
-    await deps.actionRateLimits.upsert({
-      key_hash: keyHash,
-      window_started_at: now,
-      request_count: 1,
-      updated_at: now,
+    throw new Response("Too many requests", {
+      status: 429,
+      headers: { "Retry-After": String(retryAfterSeconds) },
     });
   }
 }

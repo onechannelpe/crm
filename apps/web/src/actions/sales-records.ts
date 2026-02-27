@@ -1,10 +1,7 @@
 "use server";
 
-import { getRequestEvent } from "solid-js/web";
-
 import type { Role } from "~/lib/auth/access/rbac";
 import { requirePermission } from "~/lib/auth/access/session";
-import { getClientIp } from "~/lib/auth/password/client-ip";
 import type { ActionSuccess } from "~/lib/contracts/common";
 import {
   assertNonEmptyString,
@@ -268,16 +265,7 @@ export async function createSalesRecordDraft(
       const session = await requirePermission("sales:create");
       actor.userId = session.userId;
       actor.role = session.role;
-      const event = getRequestEvent();
-      const ip = event?.request
-        ? getClientIp(event.request.headers)
-        : "unknown";
-      await checkActionRateLimit(
-        "sales_records.create_draft",
-        session.userId,
-        ip,
-        repos,
-      );
+      await checkActionRateLimit("sales_records.create_draft", session.userId, repos);
 
       const result = await salesRecordsService.createDraft({
         source: input.source,
@@ -310,16 +298,7 @@ export async function submitSalesRecord(
       const session = await requirePermission("sales:submit");
       actor.userId = session.userId;
       actor.role = session.role;
-      const event = getRequestEvent();
-      const ip = event?.request
-        ? getClientIp(event.request.headers)
-        : "unknown";
-      await checkActionRateLimit(
-        "sales_records.submit",
-        session.userId,
-        ip,
-        repos,
-      );
+      await checkActionRateLimit("sales_records.submit", session.userId, repos);
       const result = await salesRecordsService.submit(
         safeRecordId,
         session.userId,
