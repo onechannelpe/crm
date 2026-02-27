@@ -10,6 +10,3 @@ node_modules/
 *.log
 *.ps1
 *.sh
-*.md 
-*.txt
-*.html
