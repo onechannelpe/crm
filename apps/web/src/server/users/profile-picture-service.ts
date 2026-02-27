@@ -10,7 +10,7 @@ const MIME_TO_EXTENSION: Record<string, string> = {
   "image/gif": "gif",
 };
 
-type AvatarDomainErrorCode =
+export type AvatarDomainErrorCode =
   | "invalid_file"
   | "too_large"
   | "unsupported_mime"
@@ -42,7 +42,7 @@ export interface ProfilePictureService {
   get(userId: number): Promise<Result<AvatarRecord, AvatarDomainError>>;
 }
 
-interface AvatarUsersRepository {
+export interface AvatarUsersRepository {
   findAvatarMetaById: (userId: number) => Promise<
     | {
         id: number;
@@ -206,7 +206,11 @@ export function createProfilePictureService(
         return Err({ code: "repository_unavailable" });
       }
 
-      if (!avatar || !avatar.avatar_storage_key || !avatar.avatar_mime_type) {
+      if (!avatar) {
+        return Err({ code: "user_not_found" });
+      }
+
+      if (!avatar.avatar_storage_key || !avatar.avatar_mime_type) {
         return Err({ code: "avatar_not_found" });
       }
 
@@ -214,7 +218,7 @@ export function createProfilePictureService(
       try {
         bytes = await blobStore.get(avatar.avatar_storage_key);
       } catch {
-        return Err({ code: "avatar_not_found" });
+        return Err({ code: "storage_unavailable" });
       }
 
       return Ok({

@@ -1,12 +1,5 @@
 import { useLocation, type RouteSectionProps } from "@solidjs/router";
-import {
-  createMemo,
-  createSignal,
-  onCleanup,
-  onMount,
-  Show,
-  Suspense,
-} from "solid-js";
+import { Show, Suspense } from "solid-js";
 
 import { Loading } from "~/components/feedback/loading";
 import { Header } from "~/components/layout/header";
@@ -21,39 +14,12 @@ import { cn } from "~/lib/utils";
 
 import shellStyles from "~/components/layout/shell.module.css";
 
-const SETTINGS_DRAWER_WIDTH = 220;
-const SETTINGS_CONTENT_WIDTH = 512;
-const SETTINGS_LAYOUT_GUTTER = 76;
-
 function AuthenticatedAppShell(props: RouteSectionProps) {
   const { user } = useSession();
   const location = useLocation();
-  const [viewportWidth, setViewportWidth] = createSignal(0);
-  const isSettingsRoute = () => location.pathname.startsWith("/settings/");
-
-  onMount(() => {
-    if (typeof window === "undefined") return;
-    const updateViewportWidth = () => setViewportWidth(window.innerWidth);
-    updateViewportWidth();
-    window.addEventListener("resize", updateViewportWidth);
-    onCleanup(() => window.removeEventListener("resize", updateViewportWidth));
-  });
-
-  const settingsContainerStyle = createMemo(() => {
-    if (!isSettingsRoute()) return null;
-    if (viewportWidth() < 768) return { "margin-left": "0px" };
-
-    const centeredExtra = Math.max(
-      0,
-      (viewportWidth() -
-        (SETTINGS_CONTENT_WIDTH +
-          SETTINGS_DRAWER_WIDTH +
-          SETTINGS_LAYOUT_GUTTER)) /
-        2,
-    );
-
-    return { "margin-left": `${centeredExtra}px` };
-  });
+  const isSettingsRoute = () =>
+    location.pathname === "/settings" ||
+    location.pathname.startsWith("/settings/");
 
   return (
     <Show when={user()} fallback={<Loading />}>
@@ -74,10 +40,7 @@ function AuthenticatedAppShell(props: RouteSectionProps) {
             </>
           }
         >
-          <div
-            class={shellStyles.settingsLayout}
-            style={settingsContainerStyle() ?? undefined}
-          >
+          <div class={shellStyles.settingsLayout}>
             <SettingsShell />
             <div class={cn(shellStyles.main, shellStyles.settingsMain)}>
               <SettingsTopbar />

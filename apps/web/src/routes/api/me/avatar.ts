@@ -1,30 +1,47 @@
 import type { APIEvent } from "@solidjs/start/server";
 
-import { requireSession } from "~/lib/auth/access/session";
+import { getSession } from "~/lib/auth/access/session";
 import { profilePictureService } from "~/server/shared/context";
+import type { AvatarDomainErrorCode } from "~/server/users/profile-picture-service";
 
-function mapAvatarErrorStatus(code: string): number {
+interface AvatarErrorResponse {
+  status: number;
+  body: string;
+}
+
+function mapAvatarErrorResponse(
+  code: AvatarDomainErrorCode,
+): AvatarErrorResponse {
   switch (code) {
     case "avatar_not_found":
+      return { status: 404, body: "Profile picture not found" };
     case "user_not_found":
-      return 404;
+      return { status: 404, body: "User not found" };
     case "repository_unavailable":
     case "storage_unavailable":
-      return 503;
-    default:
-      return 500;
+      return { status: 503, body: "Profile picture service unavailable" };
+    case "invalid_file":
+    case "too_large":
+    case "unsupported_mime":
+      return { status: 400, body: "Invalid profile picture request" };
   }
+
+  const exhaustiveCheck: never = code;
+  return exhaustiveCheck satisfies never;
 }
 
 export async function GET(event: Pick<APIEvent, "request">): Promise<Response> {
   try {
-    const session = await requireSession();
+    const session = await getSession();
+    if (!session) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
     const avatarResult = await profilePictureService.get(session.userId);
 
     if (!avatarResult.ok) {
-      return new Response("Profile picture not found", {
-        status: mapAvatarErrorStatus(avatarResult.error.code),
-      });
+      const errorResponse = mapAvatarErrorResponse(avatarResult.error.code);
+      return new Response(errorResponse.body, { status: errorResponse.status });
     }
 
     const avatar = avatarResult.value;
@@ -51,11 +68,7 @@ export async function GET(event: Pick<APIEvent, "request">): Promise<Response> {
         etag,
       },
     });
-  } catch (error: unknown) {
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return new Response("Unauthorized", { status: 401 });
-    }
-
+  } catch {
     return new Response("Unexpected error", { status: 500 });
   }
 }

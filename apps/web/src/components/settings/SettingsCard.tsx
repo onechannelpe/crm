@@ -4,7 +4,7 @@ import { type JSX, Match, Show, Switch } from "solid-js";
 import ChevronRight from "~/components/icons/chevron-right";
 import { cn } from "~/lib/utils";
 
-import styles from "../../routes/(app)/settings/settings-page.module.css";
+import styles from "./settings-card.module.css";
 
 interface SettingsCardProps {
   title: string;

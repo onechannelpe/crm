@@ -1,6 +1,6 @@
 import { type JSX, type ParentProps } from "solid-js";
 
-import styles from "../../routes/(app)/settings/settings-page.module.css";
+import styles from "./settings-section.module.css";
 
 interface SettingsSectionProps extends ParentProps {
   title: string;

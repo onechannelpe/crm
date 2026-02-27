@@ -3,8 +3,9 @@
 import { internalError, validationError } from "~/lib/app-errors";
 import { requireSession } from "~/lib/auth/access/session";
 import { profilePictureService } from "~/server/shared/context";
+import type { AvatarDomainErrorCode } from "~/server/users/profile-picture-service";
 
-function mapAvatarErrorToMessage(code: string): string {
+function mapAvatarErrorToMessage(code: AvatarDomainErrorCode): string {
   switch (code) {
     case "invalid_file":
       return "Profile picture file is invalid.";
@@ -19,19 +20,27 @@ function mapAvatarErrorToMessage(code: string): string {
     case "storage_unavailable":
     case "repository_unavailable":
       return "Profile picture service is unavailable.";
-    default:
-      return "Failed to update profile picture.";
   }
+
+  const exhaustiveCheck: never = code;
+  return exhaustiveCheck;
 }
 
-function isValidationAvatarError(code: string): boolean {
-  return (
-    code === "invalid_file" ||
-    code === "too_large" ||
-    code === "unsupported_mime" ||
-    code === "avatar_not_found" ||
-    code === "user_not_found"
-  );
+function isValidationAvatarError(code: AvatarDomainErrorCode): boolean {
+  switch (code) {
+    case "invalid_file":
+    case "too_large":
+    case "unsupported_mime":
+    case "avatar_not_found":
+    case "user_not_found":
+      return true;
+    case "storage_unavailable":
+    case "repository_unavailable":
+      return false;
+  }
+
+  const exhaustiveCheck: never = code;
+  return exhaustiveCheck;
 }
 
 function avatarUrl(version: number): string {

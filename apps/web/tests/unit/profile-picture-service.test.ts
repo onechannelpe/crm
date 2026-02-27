@@ -1,21 +1,44 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { createProfilePictureService } from "../../src/server/users/profile-picture-service";
+import type { ProfilePictureBlobStore } from "../../src/server/users/profile-picture-blob-store";
+import {
+  createProfilePictureService,
+  type AvatarUsersRepository,
+} from "../../src/server/users/profile-picture-service";
+
+type FindAvatarMetaById = AvatarUsersRepository["findAvatarMetaById"];
+type UpdateAvatar = AvatarUsersRepository["updateAvatar"];
+type ClearAvatar = AvatarUsersRepository["clearAvatar"];
+type PutBlob = ProfilePictureBlobStore["put"];
+type GetBlob = ProfilePictureBlobStore["get"];
+type DeleteBlob = ProfilePictureBlobStore["delete"];
 
 function createUsersRepoMock() {
-  return {
-    findAvatarMetaById: vi.fn(),
-    updateAvatar: vi.fn(),
-    clearAvatar: vi.fn(),
+  const findAvatarMetaById = vi.fn<FindAvatarMetaById>();
+  const updateAvatar = vi.fn<UpdateAvatar>();
+  const clearAvatar = vi.fn<ClearAvatar>();
+
+  const users: AvatarUsersRepository = {
+    findAvatarMetaById,
+    updateAvatar,
+    clearAvatar,
   };
+
+  return { users, findAvatarMetaById, updateAvatar, clearAvatar };
 }
 
 function createBlobStoreMock() {
-  return {
-    put: vi.fn(),
-    get: vi.fn(),
-    delete: vi.fn(),
+  const put = vi.fn<PutBlob>();
+  const get = vi.fn<GetBlob>();
+  const remove = vi.fn<DeleteBlob>();
+
+  const blobStore: ProfilePictureBlobStore = {
+    put,
+    get,
+    delete: remove,
   };
+
+  return { blobStore, put, get, remove };
 }
 
 describe("profile picture service", () => {
@@ -33,15 +56,15 @@ describe("profile picture service", () => {
     usersRepo.updateAvatar.mockResolvedValue(undefined);
 
     blobStore.put.mockResolvedValue(undefined);
-    blobStore.delete.mockImplementation(async (storageKey: string) => {
+    blobStore.remove.mockImplementation(async (storageKey: string) => {
       if (storageKey === "10/old.png") {
         throw new Error("delete failed");
       }
     });
 
     const service = createProfilePictureService(
-      { users: usersRepo },
-      blobStore,
+      { users: usersRepo.users },
+      blobStore.blobStore,
     );
 
     const file = new File([new Uint8Array([1, 2, 3])], "avatar.png", {
@@ -55,7 +78,7 @@ describe("profile picture service", () => {
       expect(result.value.avatarVersion).toBe(3);
     }
     expect(usersRepo.updateAvatar).toHaveBeenCalledOnce();
-    expect(blobStore.delete).toHaveBeenCalledWith("10/old.png");
+    expect(blobStore.remove).toHaveBeenCalledWith("10/old.png");
   });
 
   it("keeps remove successful when old file cleanup fails", async () => {
@@ -71,11 +94,11 @@ describe("profile picture service", () => {
     });
     usersRepo.clearAvatar.mockResolvedValue(undefined);
 
-    blobStore.delete.mockRejectedValue(new Error("delete failed"));
+    blobStore.remove.mockRejectedValue(new Error("delete failed"));
 
     const service = createProfilePictureService(
-      { users: usersRepo },
-      blobStore,
+      { users: usersRepo.users },
+      blobStore.blobStore,
     );
 
     const result = await service.remove(10);
@@ -91,8 +114,8 @@ describe("profile picture service", () => {
     const usersRepo = createUsersRepoMock();
     const blobStore = createBlobStoreMock();
     const service = createProfilePictureService(
-      { users: usersRepo },
-      blobStore,
+      { users: usersRepo.users },
+      blobStore.blobStore,
     );
 
     const file = new File([new Uint8Array([1])], "avatar.webp", {
@@ -111,8 +134,8 @@ describe("profile picture service", () => {
     const usersRepo = createUsersRepoMock();
     const blobStore = createBlobStoreMock();
     const service = createProfilePictureService(
-      { users: usersRepo },
-      blobStore,
+      { users: usersRepo.users },
+      blobStore.blobStore,
     );
 
     const bytes = new Uint8Array(10 * 1024 * 1024 + 1);
@@ -139,8 +162,8 @@ describe("profile picture service", () => {
     });
 
     const service = createProfilePictureService(
-      { users: usersRepo },
-      blobStore,
+      { users: usersRepo.users },
+      blobStore.blobStore,
     );
 
     const result = await service.get(2);
@@ -148,6 +171,32 @@ describe("profile picture service", () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.error.code).toBe("avatar_not_found");
+    }
+  });
+
+  it("returns storage_unavailable when avatar bytes cannot be read", async () => {
+    const usersRepo = createUsersRepoMock();
+    const blobStore = createBlobStoreMock();
+
+    usersRepo.findAvatarMetaById.mockResolvedValue({
+      id: 2,
+      avatar_storage_key: "2/avatar.png",
+      avatar_mime_type: "image/png",
+      avatar_updated_at: Date.now(),
+      avatar_version: 6,
+    });
+    blobStore.get.mockRejectedValue(new Error("blob read failed"));
+
+    const service = createProfilePictureService(
+      { users: usersRepo.users },
+      blobStore.blobStore,
+    );
+
+    const result = await service.get(2);
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.code).toBe("storage_unavailable");
     }
   });
 });
