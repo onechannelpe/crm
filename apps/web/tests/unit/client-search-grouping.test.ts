@@ -28,12 +28,31 @@ function row(partial: {
     person: {
       dni,
       name,
+      ruc: null,
+      birth_date: null,
+      birth_place: null,
+      sex: null,
+      marital_status: null,
+      location_text: null,
+      ubigeo_code: null,
+      mother_name: null,
+      father_name: null,
+      email: null,
     },
     org:
       org_ruc != null
         ? {
             ruc: org_ruc,
             name: org_name,
+            trade_name: null,
+            company_type: null,
+            status: null,
+            condition: null,
+            fiscal_address: null,
+            registration_date: null,
+            activity_start_date: null,
+            line_of_business: null,
+            economic_activity: null,
           }
         : null,
     role: null,

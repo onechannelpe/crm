@@ -15,8 +15,10 @@ import {
 } from "~/actions/client-search";
 import Building2Icon from "~/components/icons/building-2";
 import CalendarDaysIcon from "~/components/icons/calendar-days";
+import MailIcon from "~/components/icons/mail";
 import PhoneIcon from "~/components/icons/phone";
 import UserIcon from "~/components/icons/user";
+import UsersIcon from "~/components/icons/users";
 import XIcon from "~/components/icons/x";
 
 import { toInitial } from "./display";

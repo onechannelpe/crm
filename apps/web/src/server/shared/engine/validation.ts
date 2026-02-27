@@ -8,6 +8,10 @@ function prop(source: object, key: string): unknown {
   return Reflect.get(source, key);
 }
 
+function isNullableString(value: unknown): value is string | null {
+  return value === null || typeof value === "string";
+}
+
 function isSearchResult(value: unknown): value is SearchResult {
   if (typeof value !== "object" || value === null) return false;
   const person = prop(value, "person");
@@ -17,67 +21,60 @@ function isSearchResult(value: unknown): value is SearchResult {
 
   if (typeof person !== "object" || person === null) return false;
   if (typeof prop(person, "dni") !== "string") return false;
-  if (
-    typeof prop(person, "name") !== "string" &&
-    prop(person, "name") !== null
-  ) {
-    return false;
+  const personNullableFields = [
+    "name",
+    "ruc",
+    "birth_date",
+    "birth_place",
+    "sex",
+    "marital_status",
+    "location_text",
+    "ubigeo_code",
+    "mother_name",
+    "father_name",
+    "email",
+  ] as const;
+  for (const field of personNullableFields) {
+    if (!isNullableString(prop(person, field))) return false;
   }
 
   if (org !== null) {
     if (typeof org !== "object") return false;
-    if (typeof prop(org, "ruc") !== "string" && prop(org, "ruc") !== null) {
-      return false;
-    }
-    if (typeof prop(org, "name") !== "string" && prop(org, "name") !== null) {
-      return false;
+    const orgNullableFields = [
+      "ruc",
+      "name",
+      "trade_name",
+      "company_type",
+      "status",
+      "condition",
+      "fiscal_address",
+      "registration_date",
+      "activity_start_date",
+      "line_of_business",
+      "economic_activity",
+    ] as const;
+    for (const field of orgNullableFields) {
+      if (!isNullableString(prop(org, field))) return false;
     }
   }
 
   if (role !== null) {
     if (typeof role !== "object") return false;
-    if (typeof prop(role, "name") !== "string" && prop(role, "name") !== null) {
-      return false;
-    }
-    if (
-      typeof prop(role, "start_date") !== "string" &&
-      prop(role, "start_date") !== null
-    ) {
-      return false;
-    }
-    if (
-      typeof prop(role, "rep_doc_type") !== "string" &&
-      prop(role, "rep_doc_type") !== null
-    ) {
-      return false;
-    }
-    if (
-      typeof prop(role, "rep_doc_number") !== "string" &&
-      prop(role, "rep_doc_number") !== null
-    ) {
-      return false;
-    }
-    if (
-      typeof prop(role, "rep_name") !== "string" &&
-      prop(role, "rep_name") !== null
-    ) {
-      return false;
+    const roleNullableFields = [
+      "name",
+      "start_date",
+      "rep_doc_type",
+      "rep_doc_number",
+      "rep_name",
+    ] as const;
+    for (const field of roleNullableFields) {
+      if (!isNullableString(prop(role, field))) return false;
     }
   }
 
   if (typeof phones !== "object" || phones === null) return false;
-  if (
-    typeof prop(phones, "primary") !== "string" &&
-    prop(phones, "primary") !== null
-  ) {
-    return false;
-  }
-  if (
-    typeof prop(phones, "secondary") !== "string" &&
-    prop(phones, "secondary") !== null
-  ) {
-    return false;
-  }
+  if (!isNullableString(prop(phones, "primary"))) return false;
+  if (!isNullableString(prop(phones, "secondary"))) return false;
 
   const siblings = prop(phones, "siblings");
   return (

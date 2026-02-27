@@ -3,166 +3,214 @@
   "fields": [
     {
       "path": "person.dni",
-      "canonical_fields": [
-        "person_dni"
-      ],
+      "canonical_fields": ["person_dni"],
       "nullable": false,
-      "storage": [
-        {
-          "table": "search_projection",
-          "column": "dni"
-        }
-      ]
+      "storage": [{"table": "search_projection", "column": "dni"}]
     },
     {
       "path": "person.name",
-      "canonical_fields": [
-        "person_full_name"
-      ],
+      "canonical_fields": ["person_full_name"],
       "nullable": true,
-      "storage": [
-        {
-          "table": "search_projection",
-          "column": "name"
-        }
-      ]
+      "storage": [{"table": "search_projection", "column": "name"}]
+    },
+    {
+      "path": "person.ruc",
+      "canonical_fields": ["person_natural_ruc"],
+      "nullable": true,
+      "derivation": "person_natural_ruc_from_profile",
+      "storage": [{"table": "search_projection", "column": "person_ruc"}]
+    },
+    {
+      "path": "person.birth_date",
+      "canonical_fields": ["birth_date"],
+      "nullable": true,
+      "derivation": "reniec_profile",
+      "storage": [{"table": "search_projection", "column": "birth_date"}]
+    },
+    {
+      "path": "person.birth_place",
+      "canonical_fields": ["birth_place"],
+      "nullable": true,
+      "derivation": "reniec_profile",
+      "storage": [{"table": "search_projection", "column": "birth_place"}]
+    },
+    {
+      "path": "person.sex",
+      "canonical_fields": ["sex"],
+      "nullable": true,
+      "derivation": "reniec_profile",
+      "storage": [{"table": "search_projection", "column": "sex"}]
+    },
+    {
+      "path": "person.marital_status",
+      "canonical_fields": ["marital_status"],
+      "nullable": true,
+      "derivation": "reniec_profile",
+      "storage": [{"table": "search_projection", "column": "marital_status"}]
+    },
+    {
+      "path": "person.location_text",
+      "canonical_fields": ["location_text"],
+      "nullable": true,
+      "derivation": "reniec_profile",
+      "storage": [{"table": "search_projection", "column": "location_text"}]
+    },
+    {
+      "path": "person.ubigeo_code",
+      "canonical_fields": ["ubigeo_code"],
+      "nullable": true,
+      "derivation": "reniec_profile",
+      "storage": [{"table": "search_projection", "column": "ubigeo_code"}]
+    },
+    {
+      "path": "person.mother_name",
+      "canonical_fields": ["mother_name"],
+      "nullable": true,
+      "derivation": "reniec_profile",
+      "storage": [{"table": "search_projection", "column": "mother_name"}]
+    },
+    {
+      "path": "person.father_name",
+      "canonical_fields": ["father_name"],
+      "nullable": true,
+      "derivation": "reniec_profile",
+      "storage": [{"table": "search_projection", "column": "father_name"}]
+    },
+    {
+      "path": "person.email",
+      "canonical_fields": ["email"],
+      "nullable": true,
+      "derivation": "reniec_profile",
+      "storage": [{"table": "search_projection", "column": "email"}]
     },
     {
       "path": "org.ruc",
-      "canonical_fields": [
-        "company_ruc"
-      ],
+      "canonical_fields": ["company_ruc"],
       "nullable": true,
-      "storage": [
-        {
-          "table": "search_projection",
-          "column": "org_ruc"
-        }
-      ]
+      "storage": [{"table": "search_projection", "column": "org_ruc"}]
     },
     {
       "path": "org.name",
-      "canonical_fields": [
-        "company_name"
-      ],
+      "canonical_fields": ["company_name"],
       "nullable": true,
-      "storage": [
-        {
-          "table": "search_projection",
-          "column": "org_name"
-        }
-      ]
+      "storage": [{"table": "search_projection", "column": "org_name"}]
+    },
+    {
+      "path": "org.trade_name",
+      "canonical_fields": ["trade_name"],
+      "nullable": true,
+      "derivation": "sunat_padron_ruc",
+      "storage": [{"table": "search_projection", "column": "trade_name"}]
+    },
+    {
+      "path": "org.company_type",
+      "canonical_fields": ["company_type"],
+      "nullable": true,
+      "derivation": "sunat_padron_ruc",
+      "storage": [{"table": "search_projection", "column": "company_type"}]
+    },
+    {
+      "path": "org.status",
+      "canonical_fields": ["company_status"],
+      "nullable": true,
+      "derivation": "sunat_padron_ruc",
+      "storage": [{"table": "search_projection", "column": "org_status"}]
+    },
+    {
+      "path": "org.condition",
+      "canonical_fields": ["company_condition"],
+      "nullable": true,
+      "derivation": "sunat_padron_ruc",
+      "storage": [{"table": "search_projection", "column": "org_condition"}]
+    },
+    {
+      "path": "org.fiscal_address",
+      "canonical_fields": ["fiscal_address"],
+      "nullable": true,
+      "derivation": "sunat_padron_ruc",
+      "storage": [{"table": "search_projection", "column": "fiscal_address"}]
+    },
+    {
+      "path": "org.registration_date",
+      "canonical_fields": ["registration_date"],
+      "nullable": true,
+      "derivation": "sunat_padron_ruc",
+      "storage": [{"table": "search_projection", "column": "registration_date"}]
+    },
+    {
+      "path": "org.activity_start_date",
+      "canonical_fields": ["activity_start_date"],
+      "nullable": true,
+      "derivation": "sunat_padron_ruc",
+      "storage": [{"table": "search_projection", "column": "activity_start_date"}]
+    },
+    {
+      "path": "org.line_of_business",
+      "canonical_fields": ["line_of_business"],
+      "nullable": true,
+      "derivation": "sunat_padron_ruc",
+      "storage": [{"table": "search_projection", "column": "line_of_business"}]
+    },
+    {
+      "path": "org.economic_activity",
+      "canonical_fields": ["economic_activity"],
+      "nullable": true,
+      "derivation": "sunat_padron_ruc",
+      "storage": [{"table": "search_projection", "column": "economic_activity"}]
     },
     {
       "path": "role.name",
-      "canonical_fields": [
-        "role_name"
-      ],
+      "canonical_fields": ["role_name"],
       "nullable": true,
-      "storage": [
-        {
-          "table": "search_projection",
-          "column": "role_name"
-        }
-      ]
+      "storage": [{"table": "search_projection", "column": "role_name"}]
     },
     {
       "path": "role.start_date",
-      "canonical_fields": [
-        "role_start_date"
-      ],
+      "canonical_fields": ["role_start_date"],
       "nullable": true,
-      "storage": [
-        {
-          "table": "search_projection",
-          "column": "role_start_date"
-        }
-      ]
+      "storage": [{"table": "search_projection", "column": "role_start_date"}]
     },
     {
       "path": "role.rep_doc_type",
-      "canonical_fields": [
-        "rep_doc_type"
-      ],
+      "canonical_fields": ["rep_doc_type"],
       "nullable": true,
-      "storage": [
-        {
-          "table": "search_projection",
-          "column": "rep_doc_type"
-        }
-      ]
+      "storage": [{"table": "search_projection", "column": "rep_doc_type"}]
     },
     {
       "path": "role.rep_doc_number",
-      "canonical_fields": [
-        "rep_doc_number"
-      ],
+      "canonical_fields": ["rep_doc_number"],
       "nullable": true,
-      "storage": [
-        {
-          "table": "search_projection",
-          "column": "rep_doc_number"
-        }
-      ]
+      "storage": [{"table": "search_projection", "column": "rep_doc_number"}]
     },
     {
       "path": "role.rep_name",
-      "canonical_fields": [
-        "rep_name"
-      ],
+      "canonical_fields": ["rep_name"],
       "nullable": true,
-      "storage": [
-        {
-          "table": "search_projection",
-          "column": "rep_name"
-        }
-      ]
+      "storage": [{"table": "search_projection", "column": "rep_name"}]
     },
     {
       "path": "phones.primary",
-      "canonical_fields": [
-        "phone"
-      ],
+      "canonical_fields": ["phone"],
       "nullable": true,
       "derivation": "ranked_top_phone_per_person",
-      "storage": [
-        {
-          "table": "search_projection",
-          "column": "phone_primary"
-        }
-      ]
+      "storage": [{"table": "search_projection", "column": "phone_primary"}]
     },
     {
       "path": "phones.secondary",
-      "canonical_fields": [
-        "phone"
-      ],
+      "canonical_fields": ["phone"],
       "nullable": true,
       "derivation": "ranked_second_phone_per_person",
-      "storage": [
-        {
-          "table": "search_projection",
-          "column": "phone_secondary"
-        }
-      ]
+      "storage": [{"table": "search_projection", "column": "phone_secondary"}]
     },
     {
       "path": "phones.siblings",
-      "canonical_fields": [
-        "phone"
-      ],
+      "canonical_fields": ["phone"],
       "nullable": true,
       "value_type": "string_array",
       "derivation": "grouped_phone_aggregate_per_dni_or_ruc",
       "storage": [
-        {
-          "table": "ruc_phone_agg",
-          "column": "phones"
-        },
-        {
-          "table": "dni_phone_agg",
-          "column": "phones"
-        }
+        {"table": "ruc_phone_agg", "column": "phones"},
+        {"table": "dni_phone_agg", "column": "phones"}
       ]
     }
   ]

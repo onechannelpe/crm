@@ -4,7 +4,7 @@ use crate::storage::sqlite::models::SearchRow;
 use rusqlite::{Connection, Row, params};
 use std::sync::LazyLock;
 
-// Same standard columns, plus sibling_phones at col 11.
+// Same standard columns, plus sibling_phones at col 30.
 // Driving table is search_projection_phone_index.
 static SQL_PHONE_ENRICHED: LazyLock<String> = LazyLock::new(|| {
     format!(
@@ -36,6 +36,6 @@ pub fn search_phone_enriched(
 
 fn map_row_with_siblings(row: &Row<'_>) -> rusqlite::Result<SearchRow> {
     let base = map_row(row)?;
-    let siblings: Option<String> = row.get(11)?;
+    let siblings: Option<String> = row.get(30)?;
     Ok(base.with_siblings(siblings))
 }

@@ -31,6 +31,7 @@ interface SourceContract {
 interface ProjectionField {
   path: string;
   canonical_fields: string[];
+  derivation?: string;
   storage: ProjectionStorage[];
 }
 
@@ -187,7 +188,9 @@ function parseProjectionContract(input: unknown): ProjectionContract {
     if (typeof path !== "string") {
       throw new Error(`projection contract fields[${index}] missing path`);
     }
-    return { path, canonical_fields, storage };
+    const derivation =
+      typeof row.derivation === "string" ? row.derivation : undefined;
+    return { path, canonical_fields, derivation, storage };
   });
 
   return { projection, fields };
@@ -303,7 +306,7 @@ async function main(): Promise<void> {
         );
         continue;
       }
-      if (!mappedByEnabledSources.has(canonicalField)) {
+      if (!field.derivation && !mappedByEnabledSources.has(canonicalField)) {
         errors.push(
           `projection field ${field.path} is not backed by enabled source mappings: ${canonicalField}`,
         );

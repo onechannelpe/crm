@@ -2,11 +2,30 @@
 export interface PersonInfo {
   dni: string;
   name: string | null;
+  ruc: string | null;
+  birth_date: string | null;
+  birth_place: string | null;
+  sex: string | null;
+  marital_status: string | null;
+  location_text: string | null;
+  ubigeo_code: string | null;
+  mother_name: string | null;
+  father_name: string | null;
+  email: string | null;
 }
 
 export interface OrgInfo {
   ruc: string | null;
   name: string | null;
+  trade_name: string | null;
+  company_type: string | null;
+  status: string | null;
+  condition: string | null;
+  fiscal_address: string | null;
+  registration_date: string | null;
+  activity_start_date: string | null;
+  line_of_business: string | null;
+  economic_activity: string | null;
 }
 
 export interface RoleInfo {
