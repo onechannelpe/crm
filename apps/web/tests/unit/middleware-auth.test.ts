@@ -156,7 +156,7 @@ describe("auth middleware request guard", () => {
   it("allows users to access permitted routes", async () => {
     const decision = await enforceAuthRequest(
       {
-        request: new Request("http://localhost:3000/settings"),
+        request: new Request("http://localhost:3000/settings/profile"),
       },
       createDeps({ token: "token", session: createSession("admin") }),
     );

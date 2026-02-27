@@ -25,13 +25,13 @@ describe("route permissions", () => {
   });
 
   it("enforces role access checks for restricted paths", () => {
-    expect(canAccessPath("executive", "/settings")).toBe(true);
+    expect(canAccessPath("executive", "/settings/general")).toBe(false);
     expect(canAccessPath("executive", "/audit")).toBe(false);
     expect(canAccessPath("supervisor", "/audit")).toBe(true);
     expect(canAccessPath("executive", "/quota")).toBe(false);
     expect(canAccessPath("executive", "/team/new")).toBe(false);
     expect(canAccessPath("hr", "/team/new")).toBe(true);
-    expect(canAccessPath("admin", "/settings")).toBe(true);
+    expect(canAccessPath("admin", "/settings/general")).toBe(true);
     expect(canAccessPath("sales_manager", "/sales/records/42/edit")).toBe(
       false,
     );
@@ -62,7 +62,7 @@ describe("nav policy", () => {
     const inventorySidebar = getSidebarRoutes("logistics", "secondary").map(
       (route) => route.href,
     );
-    expect(inventorySidebar).toEqual(["/inventory", "/settings"]);
+    expect(inventorySidebar).toEqual(["/inventory"]);
   });
 
   it("returns empty children when role lacks permission for all", () => {

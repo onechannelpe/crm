@@ -64,5 +64,5 @@ export function getSettingsSectionHref(section: SettingsNavSectionId): string {
     (item) => item.section === section && !item.advanced,
   );
 
-  return defaultItem?.href ?? "/settings";
+  return defaultItem?.href ?? "/settings/profile";
 }

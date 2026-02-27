@@ -29,9 +29,7 @@ function AuthenticatedAppShell(props: RouteSectionProps) {
   const { user } = useSession();
   const location = useLocation();
   const [viewportWidth, setViewportWidth] = createSignal(0);
-  const isSettingsRoute = () =>
-    location.pathname === "/settings" ||
-    location.pathname.startsWith("/settings/");
+  const isSettingsRoute = () => location.pathname.startsWith("/settings/");
 
   onMount(() => {
     if (typeof window === "undefined") return;

@@ -21,11 +21,6 @@ export const ROUTE_PERMISSIONS: RoutePermission[] = [
     permission: "client_search:read",
   },
   {
-    id: "settings",
-    href: "/settings",
-    landingPriority: 9,
-  },
-  {
     id: "settings-general",
     href: "/settings/general",
     permission: "admin:manage",
