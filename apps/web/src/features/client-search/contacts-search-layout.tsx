@@ -31,7 +31,7 @@ interface ContactsSearchLayoutProps {
 
 export function ContactsSearchLayout(props: ContactsSearchLayoutProps) {
   return (
-    <AppPage width="wide">
+    <AppPage>
       <div class={styles.searchPanel}>
         <div class={styles.tabBar}>
           <A
