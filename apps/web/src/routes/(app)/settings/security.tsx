@@ -57,18 +57,21 @@ export default function SecurityPage() {
   const handleChangePassword = async (e: Event) => {
     e.preventDefault();
     if (newPassword() !== confirmPassword()) {
-      showToast("error", "Passwords do not match");
+      showToast("error", "Las contraseñas no coinciden");
       return;
     }
     setChangingPassword(true);
     try {
       await changePassword(currentPassword(), newPassword());
-      showToast("success", "Password updated");
+      showToast("success", "Contraseña actualizada");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "Failed to change password"));
+      showToast(
+        "error",
+        getErrorMessage(err, "No se pudo cambiar la contraseña"),
+      );
     } finally {
       setChangingPassword(false);
     }
@@ -84,14 +87,17 @@ export default function SecurityPage() {
       });
 
       if (!credential || !(credential instanceof PublicKeyCredential)) {
-        throw new Error("Failed to create passkey");
+        throw new Error("No se pudo crear la clave de acceso");
       }
 
       const response = toRegistrationPayload(credential);
       await finishPasskeyRegistration(challengeId, response);
-      showToast("success", "Passkey added");
+      showToast("success", "Clave de acceso añadida");
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "Failed to add passkey"));
+      showToast(
+        "error",
+        getErrorMessage(err, "No se pudo añadir la clave de acceso"),
+      );
     } finally {
       setPasskeyLoading(false);
     }
@@ -105,7 +111,7 @@ export default function SecurityPage() {
     } catch (err: unknown) {
       showToast(
         "error",
-        getErrorMessage(err, "Failed to start authenticator setup"),
+        getErrorMessage(err, "No se pudo iniciar la configuración del 2FA"),
       );
     } finally {
       setTotpEnrolling(false);
@@ -119,34 +125,37 @@ export default function SecurityPage() {
       setRecoveryCodes(codes);
       setTotpEnrollment(null);
       await invalidateTotp();
-      showToast("success", "Two-factor authentication enabled");
+      showToast("success", "Autenticación en dos pasos activada");
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "Invalid verification code"));
+      showToast(
+        "error",
+        getErrorMessage(err, "Código de verificación inválido"),
+      );
     }
   };
 
   return (
     <div class={styles.content}>
-      <SettingsSection title="Change password">
+      <SettingsSection title="Cambiar contraseña">
         <form onSubmit={(e) => void handleChangePassword(e)}>
           <div class={styles.formGrid}>
             <Input
               type="password"
-              label="Current password"
+              label="Contraseña actual"
               value={currentPassword()}
               onInput={(e) => setCurrentPassword(e.currentTarget.value)}
               required
             />
             <Input
               type="password"
-              label="New password"
+              label="Nueva contraseña"
               value={newPassword()}
               onInput={(e) => setNewPassword(e.currentTarget.value)}
               required
             />
             <Input
               type="password"
-              label="Confirm new password"
+              label="Confirmar nueva contraseña"
               value={confirmPassword()}
               onInput={(e) => setConfirmPassword(e.currentTarget.value)}
               required
@@ -154,18 +163,18 @@ export default function SecurityPage() {
           </div>
           <div class={styles.formActions}>
             <Button type="submit" disabled={changingPassword()}>
-              {changingPassword() ? "Updating..." : "Update password"}
+              {changingPassword() ? "Actualizando..." : "Actualizar contraseña"}
             </Button>
           </div>
         </form>
       </SettingsSection>
 
-      <SettingsSection title="Two Factor Authentication">
+      <SettingsSection title="Autenticación en dos pasos">
         <SettingsCard
-          title="Authenticator App"
+          title="Aplicación de autenticación"
           icon={ShieldCheck}
           status={{
-            text: currentTotpStatus()?.enabled ? "Active" : "Deactivated",
+            text: currentTotpStatus()?.enabled ? "Activa" : "Desactivada",
             active: currentTotpStatus()?.enabled ?? false,
           }}
         />
@@ -186,20 +195,20 @@ export default function SecurityPage() {
               disabled={totpEnrolling()}
             >
               {totpEnrolling()
-                ? "Starting setup..."
-                : "Set up authenticator app"}
+                ? "Iniciando configuración..."
+                : "Configurar aplicación de autenticación"}
             </Button>
           </div>
         </Show>
 
         <Show when={totpEnrollment()}>
           <div class={securityStyles.qrWrap}>
-            <p class={styles.sectionDescription}>Scan the QR code.</p>
+            <p class={styles.sectionDescription}>Escanea el código QR.</p>
             <div class={securityStyles.qrContainer}>
               <img
                 src={totpEnrollment()?.qrCodeDataUrl}
                 class={securityStyles.qr}
-                alt="QR Code"
+                alt="Código QR"
               />
             </div>
             <form
@@ -207,22 +216,22 @@ export default function SecurityPage() {
               class={securityStyles.qrInput}
             >
               <Input
-                label="Verification code"
+                label="Código de verificación"
                 value={totpCode()}
                 onInput={(e) => setTotpCode(e.currentTarget.value)}
                 placeholder="123456"
                 required
               />
-              <Button type="submit">Verify code</Button>
+              <Button type="submit">Verificar</Button>
             </form>
           </div>
         </Show>
 
         <Show when={recoveryCodes()}>
           <div class={securityStyles.recovery}>
-            <p class={securityStyles.recoveryTitle}>Recovery codes</p>
+            <p class={securityStyles.recoveryTitle}>Códigos de recuperación</p>
             <p class={styles.sectionDescription}>
-              Save these codes in a safe place.
+              Guarda estos códigos en un lugar seguro.
             </p>
             <div class={securityStyles.recoveryList}>
               <For each={recoveryCodes()}>
@@ -231,15 +240,15 @@ export default function SecurityPage() {
             </div>
             <div class={securityStyles.recoveryActions}>
               <Button onClick={() => setRecoveryCodes(null)}>
-                I saved my codes
+                Guardar mis códigos
               </Button>
             </div>
           </div>
         </Show>
       </SettingsSection>
 
-      <SettingsSection title="Passkeys">
-        <SettingsCard title="Device passkey" icon={Phone} />
+      <SettingsSection title="Claves de acceso">
+        <SettingsCard title="Clave de acceso del dispositivo" icon={Phone} />
         <div
           class={`${styles.sectionActions} ${securityStyles.sectionActionsSpaced}`}
         >
@@ -248,7 +257,9 @@ export default function SecurityPage() {
             disabled={!passkeySupported() || passkeyLoading()}
             onClick={() => void onRegisterPasskey()}
           >
-            {passkeyLoading() ? "Adding passkey..." : "Add passkey"}
+            {passkeyLoading()
+              ? "Añadiendo clave de acceso..."
+              : "Añadir clave de acceso"}
           </Button>
         </div>
       </SettingsSection>

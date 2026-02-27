@@ -29,25 +29,25 @@ export const RegisterCallDialog: Component<RegisterCallDialogProps> = (
       <Portal>
         <div class={styles.overlay}>
           <form class={styles.dialog} onSubmit={handleSubmit}>
-            <h3 class={styles.title}>Register Call</h3>
+            <h3 class={styles.title}>Registrar llamada</h3>
 
             <Select
-              label="Outcome"
+              label="Resultado"
               value={outcome()}
               required
               onChange={(e) => setOutcome(e.currentTarget.value)}
             >
-              <option value="sale_made">Sale Made</option>
-              <option value="no_answer">No Answer</option>
-              <option value="not_interested">Not Interested</option>
-              <option value="follow_up_later">Follow Up Later</option>
-              <option value="wrong_number">Wrong Number</option>
+              <option value="sale_made">Venta realizada</option>
+              <option value="no_answer">Sin respuesta</option>
+              <option value="not_interested">No interesado</option>
+              <option value="follow_up_later">Seguimiento posterior</option>
+              <option value="wrong_number">Número incorrecto</option>
             </Select>
 
             <Show when={outcome() !== "sale_made"}>
               <Textarea
-                label="Notes"
-                placeholder="Details about the call..."
+                label="Notas"
+                placeholder="Detalles de la llamada..."
                 value={notes()}
                 onInput={(e) => setNotes(e.currentTarget.value)}
                 rows={3}
@@ -56,10 +56,10 @@ export const RegisterCallDialog: Component<RegisterCallDialogProps> = (
 
             <div class={styles.actions}>
               <Button type="button" variant="outline" onClick={props.onClose}>
-                Cancel
+                Cancelar
               </Button>
               <Button type="submit" variant="primary">
-                {outcome() === "sale_made" ? "Create sale" : "Complete"}
+                {outcome() === "sale_made" ? "Crear venta" : "Completar"}
               </Button>
             </div>
           </form>

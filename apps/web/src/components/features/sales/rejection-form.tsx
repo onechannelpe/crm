@@ -17,10 +17,10 @@ interface RejectionFormProps {
 }
 
 const REJECTABLE_FIELDS = [
-  { id: "exec_code_real", label: "Executive code (real)" },
-  { id: "exec_code_tdp", label: "Executive code (TDP)" },
-  { id: "items", label: "Items" },
-  { id: "contact_info", label: "Contact information" },
+  { id: "exec_code_real", label: "Código de ejecutivo (real)" },
+  { id: "exec_code_tdp", label: "Código de ejecutivo (TDP)" },
+  { id: "items", label: "Artículos" },
+  { id: "contact_info", label: "Información de contacto" },
 ];
 
 export const RejectionForm: Component<RejectionFormProps> = (props) => {
@@ -67,7 +67,7 @@ export const RejectionForm: Component<RejectionFormProps> = (props) => {
           if (value) addRejection(value);
         }}
       >
-        <option value="">Add field...</option>
+        <option value="">Añadir campo...</option>
         <For each={availableFields()}>
           {(field) => <option value={field.id}>{field.label}</option>}
         </For>
@@ -94,7 +94,7 @@ export const RejectionForm: Component<RejectionFormProps> = (props) => {
                   </Button>
                 </div>
                 <Input
-                  placeholder="Reason for rejection"
+                  placeholder="Motivo del rechazo"
                   value={rejection.note}
                   onInput={(e) => updateNote(index(), e.currentTarget.value)}
                 />
@@ -112,10 +112,10 @@ export const RejectionForm: Component<RejectionFormProps> = (props) => {
           }}
           disabled={rejections().length === 0 || loading()}
         >
-          {loading() ? "Rejecting..." : `Reject (${rejections().length})`}
+          {loading() ? "Rechazando..." : `Rechazar (${rejections().length})`}
         </Button>
         <Button variant="secondary" onClick={props.onCancel}>
-          Cancel
+          Cancelar
         </Button>
       </div>
     </div>

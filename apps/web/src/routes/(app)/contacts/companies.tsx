@@ -35,10 +35,10 @@ const COMPANY_SEARCH_TYPES = [
 ] as const;
 
 const COLUMNS = [
-  { label: "Company" },
+  { label: "Empresa" },
   { label: "RUC" },
-  { label: "Contacts" },
-  { label: "Phones" },
+  { label: "Contactos" },
+  { label: "Teléfonos" },
 ];
 const PILL_PAGE_SIZE = 3;
 
@@ -139,7 +139,7 @@ export default function ClientSearchCompaniesPage() {
   return (
     <ContactsSearchLayout
       activeTab="companies"
-      placeholder="Company, RUC, contact, DNI or phone"
+      placeholder="Empresa, RUC, contacto, DNI o teléfono"
       controller={controller}
       inferType={inferCompanySearchType}
       columns={COLUMNS}
@@ -201,7 +201,7 @@ export default function ClientSearchCompaniesPage() {
       )}
       footerLeft={() => (
         <>
-          Unique RUCs{" "}
+          RUCs únicos{" "}
           <span class={styles.footerStrong}>
             {
               new Set(
@@ -215,7 +215,7 @@ export default function ClientSearchCompaniesPage() {
       )}
       footerRight={() => (
         <>
-          Companies <span class={styles.footerStrong}>{rows().length}</span>
+          Empresas <span class={styles.footerStrong}>{rows().length}</span>
         </>
       )}
     />

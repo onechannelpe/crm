@@ -85,7 +85,7 @@ export function AccountMenu(props: AccountMenuProps) {
             class={styles.item}
           >
             <UserRound size={16} />
-            Profile
+            Mi perfil
           </A>
           <button
             type="button"
@@ -96,7 +96,7 @@ export function AccountMenu(props: AccountMenuProps) {
             class={styles.item}
           >
             <Settings size={16} />
-            Theme {theme() === "light" ? "Light" : "Dark"}
+            Tema {theme() === "light" ? "claro" : "oscuro"}
           </button>
           <hr class={styles.separator} />
           <button
@@ -113,7 +113,7 @@ export function AccountMenu(props: AccountMenuProps) {
             }}
           >
             <LogOut size={16} />
-            Sign out
+            Cerrar sesión
           </button>
         </div>
       </Show>

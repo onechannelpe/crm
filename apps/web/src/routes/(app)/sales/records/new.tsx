@@ -102,15 +102,15 @@ export default function NewSalePage() {
   async function handleSubmit(e: Event) {
     e.preventDefault();
     if (!companyName().trim() || !contactName().trim() || !dni().trim()) {
-      showToast("error", "Company, contact, and DNI are required");
+      showToast("error", "Empresa, contacto y DNI son requeridos");
       return;
     }
     if (!installationAddress().trim()) {
-      showToast("error", "Installation address is required");
+      showToast("error", "La dirección de instalación es requerida");
       return;
     }
     if (productLines().length < 1) {
-      showToast("error", "At least one product is required");
+      showToast("error", "Por lo menos un producto es requerido");
       return;
     }
 
@@ -178,7 +178,7 @@ export default function NewSalePage() {
       });
 
       await submitSalesRecord(created.id);
-      showToast("success", `Sales record #${created.id} submitted`);
+      showToast("success", `Registro de venta #${created.id} enviado`);
       navigate("/sales/leads");
     } catch (err: unknown) {
       showToast("error", getErrorMessage(err, "Failed to submit sales record"));
@@ -202,13 +202,13 @@ export default function NewSalePage() {
             onInput={(e) => setRuc(e.currentTarget.value)}
           />
           <Input
-            label="Company"
+            label="Empresa"
             value={companyName()}
             onInput={(e) => setCompanyName(e.currentTarget.value)}
             required
           />
           <Input
-            label="Contact"
+            label="Contacto"
             value={contactName()}
             onInput={(e) => setContactName(e.currentTarget.value)}
             required
@@ -220,25 +220,25 @@ export default function NewSalePage() {
             required
           />
           <Input
-            label="Phone"
+            label="Teléfono"
             type="tel"
             value={phone()}
             onInput={(e) => setPhone(e.currentTarget.value)}
             placeholder="+51..."
           />
           <Input
-            label="Installation address"
+            label="Dirección de instalación"
             value={installationAddress()}
             onInput={(e) => setInstallationAddress(e.currentTarget.value)}
             required
           />
           <Input
-            label="Billing address (optional)"
+            label="Dirección de facturación (opcional)"
             value={billingAddress()}
             onInput={(e) => setBillingAddress(e.currentTarget.value)}
           />
           <Input
-            label="Reference address (optional)"
+            label="Dirección de referencia (opcional)"
             value={referenceAddress()}
             onInput={(e) => setReferenceAddress(e.currentTarget.value)}
           />

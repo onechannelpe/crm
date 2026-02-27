@@ -20,7 +20,7 @@ export default function AcceptInvitePage() {
   async function handleSubmit(event: Event): Promise<void> {
     event.preventDefault();
     if (password() !== confirmPassword()) {
-      setError("Passwords do not match");
+      setError("Las contraseñas no coinciden");
       return;
     }
 
@@ -34,7 +34,7 @@ export default function AcceptInvitePage() {
       });
       navigate("/onboarding");
     } catch (err: unknown) {
-      setError(getErrorMessage(err, "Failed to activate account"));
+      setError(getErrorMessage(err, "No se pudo activar la cuenta"));
     } finally {
       setSubmitting(false);
     }
@@ -50,27 +50,27 @@ export default function AcceptInvitePage() {
           }}
         >
           <div>
-            <h1 class={styles.title}>Activate account</h1>
+            <h1 class={styles.title}>Activar cuenta</h1>
             <p class={styles.muted}>
-              Complete your details to activate workspace access.
+              Completa tus datos para activar el acceso al espacio de trabajo
             </p>
           </div>
 
           <Input
-            label="Full name"
+            label="Nombre completo"
             value={fullName()}
             onInput={(event) => setFullName(event.currentTarget.value)}
             required
           />
           <Input
-            label="Password"
+            label="Contraseña"
             type="password"
             value={password()}
             onInput={(event) => setPassword(event.currentTarget.value)}
             required
           />
           <Input
-            label="Confirm password"
+            label="Confirmar contraseña"
             type="password"
             value={confirmPassword()}
             onInput={(event) => setConfirmPassword(event.currentTarget.value)}
@@ -80,7 +80,7 @@ export default function AcceptInvitePage() {
           {error() ? <div class={styles.errorBox}>{error()}</div> : null}
 
           <Button type="submit" class={styles.full} disabled={submitting()}>
-            {submitting() ? "Activating..." : "Activate account"}
+            {submitting() ? "Activando..." : "Activar cuenta"}
           </Button>
         </form>
       </section>

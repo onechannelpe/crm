@@ -47,7 +47,7 @@ export default function LoginPage() {
           : "/onboarding",
       );
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "Invalid credentials"));
+      showToast("error", getErrorMessage(err, "Credenciales inválidas"));
     } finally {
       setLoading(false);
     }
@@ -82,7 +82,13 @@ export default function LoginPage() {
           : "/onboarding",
       );
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "Passkey sign in failed"));
+      showToast(
+        "error",
+        getErrorMessage(
+          err,
+          "No se pudo iniciar sesión con la clave de acceso",
+        ),
+      );
     } finally {
       setPasskeyLoading(false);
     }
@@ -93,7 +99,7 @@ export default function LoginPage() {
       <div class={`${styles.panel} ${styles.panelSm}`}>
         <div class={styles.stack1}>
           <p class={styles.eyebrow}>One Channel</p>
-          <h1 class={styles.titleSm}>Sign in</h1>
+          <h1 class={styles.titleSm}>Iniciar sesión</h1>
         </div>
 
         <form
@@ -105,8 +111,7 @@ export default function LoginPage() {
           <Input
             id="email"
             type="email"
-            label="Email"
-            placeholder="name@company.com"
+            label="Correo"
             value={email()}
             onInput={(e) => setEmail(e.currentTarget.value)}
             required
@@ -115,7 +120,7 @@ export default function LoginPage() {
           <Input
             id="password"
             type="password"
-            label="Password"
+            label="Contraseña"
             value={password()}
             onInput={(e) => setPassword(e.currentTarget.value)}
             required
@@ -129,7 +134,7 @@ export default function LoginPage() {
                 class={styles.textButton}
                 onClick={() => setShowTotp(true)}
               >
-                I have a two-factor code
+                Tengo un código de verificación
               </button>
             }
           >
@@ -137,8 +142,8 @@ export default function LoginPage() {
               <Input
                 id="totp"
                 type="text"
-                label="TOTP or recovery code"
-                placeholder="Optional"
+                label="Código TOTP o de recuperación"
+                placeholder="Opcional"
                 value={totpCode()}
                 onInput={(e) => setTotpCode(e.currentTarget.value)}
               />
@@ -147,7 +152,7 @@ export default function LoginPage() {
 
           <div class={styles.stack2}>
             <Button type="submit" class={styles.full} loading={loading()}>
-              Sign in
+              Iniciar sesión
             </Button>
             <Button
               type="button"
@@ -159,13 +164,13 @@ export default function LoginPage() {
                 void handlePasskeyLogin();
               }}
             >
-              Use passkey
+              Usar clave de acceso
             </Button>
           </div>
 
           <Show when={passkeySupport() === "unsupported"}>
             <p class={styles.muted}>
-              Passkeys are not supported on this device.
+              Las claves de acceso no son compatibles con este dispositivo.
             </p>
           </Show>
         </form>

@@ -53,18 +53,24 @@ export default function TeamPage() {
   async function handleResend(inviteId: number): Promise<void> {
     try {
       await resendInvite(inviteId);
-      showToast("success", "Invite resent");
+      showToast("success", "Invitación reenviada");
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "Failed to resend invite"));
+      showToast(
+        "error",
+        getErrorMessage(err, "No se pudo reenviar la invitación"),
+      );
     }
   }
 
   async function handleRevoke(inviteId: number): Promise<void> {
     try {
       await revokeInvite(inviteId);
-      showToast("success", "Invite revoked");
+      showToast("success", "Invitación revocada");
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "Failed to revoke invite"));
+      showToast(
+        "error",
+        getErrorMessage(err, "No se pudo revocar la invitación"),
+      );
     }
   }
 
@@ -73,7 +79,7 @@ export default function TeamPage() {
       <Show when={directory().canManageInvites}>
         <div class={styles.toolbar}>
           <A href="/team/new">
-            <Button>Invite member</Button>
+            <Button>Invitar miembro</Button>
           </A>
         </div>
       </Show>
@@ -82,18 +88,18 @@ export default function TeamPage() {
         when={directory().members.length > 0}
         fallback={
           <EmptyState
-            title="No team members"
-            description="No active users found for this branch."
+            title="No hay miembros del equipo"
+            description="No se encontraron usuarios activos para esta sucursal."
           />
         }
       >
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>Nombre</TableHead>
+              <TableHead>Correo</TableHead>
+              <TableHead>Rol</TableHead>
+              <TableHead>Estado</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -121,7 +127,7 @@ export default function TeamPage() {
                   </TableCell>
                   <TableCell>
                     <Badge variant={member.isActive ? "success" : "default"}>
-                      {member.isActive ? "Active" : "Inactive"}
+                      {member.isActive ? "Activo" : "Inactivo"}
                     </Badge>
                   </TableCell>
                 </TableRow>
@@ -132,24 +138,24 @@ export default function TeamPage() {
       </Show>
 
       <div class={styles.section}>
-        <h2 class={styles.sectionTitle}>Pending invites</h2>
+        <h2 class={styles.sectionTitle}>Invitaciones pendientes</h2>
         <Show
           when={directory().pendingInvites.length > 0}
           fallback={
             <EmptyState
-              title="No pending invites"
-              description="All invites are already resolved."
+              title="No hay invitaciones pendientes"
+              description="Todas las invitaciones ya fueron resueltas."
             />
           }
         >
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Expires</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>Nombre</TableHead>
+                <TableHead>Correo</TableHead>
+                <TableHead>Rol</TableHead>
+                <TableHead>Vence</TableHead>
+                <TableHead>Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -172,7 +178,9 @@ export default function TeamPage() {
                       <Show
                         when={canManageInviteActions()}
                         fallback={
-                          <span class={styles.noPermission}>No permission</span>
+                          <span class={styles.noPermission}>
+                            No tienes permisos
+                          </span>
                         }
                       >
                         <div class={styles.actions}>
@@ -184,7 +192,7 @@ export default function TeamPage() {
                               void handleResend(invite.inviteId);
                             }}
                           >
-                            Resend
+                            Reenviar
                           </Button>
                           <Button
                             size="sm"
@@ -194,7 +202,7 @@ export default function TeamPage() {
                               void handleRevoke(invite.inviteId);
                             }}
                           >
-                            Revoke
+                            Revocar
                           </Button>
                         </div>
                       </Show>
