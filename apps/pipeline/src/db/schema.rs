@@ -130,6 +130,22 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             FOREIGN KEY(snapshot_id) REFERENCES source_snapshot(snapshot_id)
         );
 
+        CREATE TABLE IF NOT EXISTS source_row_hash_latest (
+            source_id INTEGER NOT NULL,
+            source_row_number INTEGER NOT NULL,
+            raw_hash TEXT NOT NULL,
+            updated_snapshot_id INTEGER NOT NULL,
+            PRIMARY KEY(source_id, source_row_number),
+            FOREIGN KEY(source_id) REFERENCES source_registry(source_id),
+            FOREIGN KEY(updated_snapshot_id) REFERENCES source_snapshot(snapshot_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS projection_dirty_person (
+            person_id INTEGER PRIMARY KEY,
+            updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+            FOREIGN KEY(person_id) REFERENCES person_profile(person_id)
+        );
+
         CREATE TABLE IF NOT EXISTS ruc_phone_agg (
             org_ruc TEXT PRIMARY KEY,
             phones TEXT NOT NULL
@@ -183,6 +199,9 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             person_name,
             company_name
         );
+
+        CREATE INDEX IF NOT EXISTS idx_source_row_hash_latest_source_hash
+            ON source_row_hash_latest(source_id, raw_hash);
 
         "#,
     )?;

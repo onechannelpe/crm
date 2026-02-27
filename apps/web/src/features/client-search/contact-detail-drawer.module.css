@@ -243,3 +243,68 @@
   cursor: pointer;
   appearance: none;
 }
+
+.enrichmentCard {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin: 4px 12px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.enrichmentTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.enrichmentDoc {
+  color: var(--foreground-secondary);
+  font-size: var(--font-size-caption);
+}
+
+.enrichmentStatus {
+  color: var(--foreground);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+}
+
+.enrichmentValue {
+  color: var(--foreground);
+  font-size: var(--font-size-body);
+  line-height: 1.4;
+}
+
+.enrichmentError {
+  color: var(--destructive);
+  font-size: var(--font-size-caption);
+}
+
+.enrichmentActions {
+  display: flex;
+  gap: 8px;
+}
+
+.enrichmentButton {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--foreground-secondary);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: var(--font-size-caption);
+  cursor: pointer;
+}
+
+.enrichmentButton:hover:not(:disabled) {
+  color: var(--foreground);
+  border-color: var(--foreground-tertiary);
+}
+
+.enrichmentButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

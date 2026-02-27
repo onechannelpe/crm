@@ -1,5 +1,6 @@
 import { config } from "~/lib/config";
 import { db } from "~/lib/db/db";
+import { createSearchEnrichmentService } from "~/server/client-search/enrichment-service";
 import { createClientSearchService } from "~/server/client-search/service";
 import { createLeadAssignmentService } from "~/server/leads/service";
 import { createAppNotificationCenter } from "~/server/notifications/app-center-service";
@@ -28,6 +29,7 @@ export const appNotificationCenter = createAppNotificationCenter({
   repos: { appNotifications: repos.appNotifications, users: repos.users },
 });
 export const clientSearchService = createClientSearchService();
+export const searchEnrichmentService = createSearchEnrichmentService(repos);
 export const quotaService = createQuotaService(repos);
 export const leadService = createLeadAssignmentService(repos);
 export const observabilityService = createObservabilityService({

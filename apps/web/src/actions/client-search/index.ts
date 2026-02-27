@@ -1,4 +1,8 @@
 export { searchClients } from "./search";
+export {
+  getSearchEnrichmentStatus,
+  requestSearchEnrichment,
+} from "./enrichment";
 
 export {
   createClientSearchView,
