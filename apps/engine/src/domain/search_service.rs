@@ -19,12 +19,8 @@ impl SearchService {
         match req.search_type {
             SearchType::Dni => input::validate_dni(&req.value)?,
             SearchType::Ruc => input::validate_ruc(&req.value)?,
-            SearchType::Phone | SearchType::PhoneEnriched => {
-                input::validate_phone(&req.value)?
-            }
-            SearchType::PersonName | SearchType::CompanyName => {
-                input::validate_text(&req.value)?
-            }
+            SearchType::Phone | SearchType::PhoneEnriched => input::validate_phone(&req.value)?,
+            SearchType::PersonName | SearchType::CompanyName => input::validate_text(&req.value)?,
         }
 
         let limit = req.limit.min(self.max_limit).max(1);
@@ -39,9 +35,7 @@ impl SearchService {
             SearchType::Phone => queries::search_phone(&conn, &req.value, limit)?,
             SearchType::PersonName => queries::search_person_name(&conn, &req.value, limit)?,
             SearchType::CompanyName => queries::search_company_name(&conn, &req.value, limit)?,
-            SearchType::PhoneEnriched => {
-                queries::search_phone_enriched(&conn, &req.value, limit)?
-            }
+            SearchType::PhoneEnriched => queries::search_phone_enriched(&conn, &req.value, limit)?,
         };
 
         let count = rows.len();
