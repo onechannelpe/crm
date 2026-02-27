@@ -22,6 +22,10 @@ export interface UsersTable {
   password_hash: string;
   full_name: string;
   phone_e164: string | null;
+  avatar_storage_key: string | null;
+  avatar_mime_type: string | null;
+  avatar_updated_at: number | null;
+  avatar_version: ColumnType<number, number | undefined, number>;
   phone_verified_at: number | null;
   profile_confirmed_at: number | null;
   onboarding_completed_at: number | null;

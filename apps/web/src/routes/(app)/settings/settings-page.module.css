@@ -62,26 +62,6 @@
   padding-top: 12px;
 }
 
-.pictureRow {
-  display: flex;
-  align-items: center;
-}
-
-.pictureAvatar {
-  width: 56px;
-  height: 56px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--bg-translucent);
-  color: var(--foreground);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--font-size-heading-sm);
-  font-weight: var(--font-weight-semibold);
-  text-transform: uppercase;
-}
-
 .card {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);

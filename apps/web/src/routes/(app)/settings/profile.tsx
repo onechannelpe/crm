@@ -2,13 +2,60 @@ import { createSignal } from "solid-js";
 
 import { updateUserProfile } from "~/actions/settings";
 import { useToast } from "~/components/feedback/toast-provider";
+import { getUserInitials } from "~/components/layout/account-menu-utils";
 import { useSession } from "~/components/providers/session-provider";
+import { ProfileImageInput } from "~/components/settings/ProfileImageInput";
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { getErrorMessage } from "~/lib/errors";
 
 import styles from "./settings-page.module.css";
+
+interface ProfilePictureMutationResponse {
+  success: boolean;
+  avatarVersion: number;
+  avatarUrl: string | null;
+}
+
+async function readPictureMutationResponse(
+  response: Response,
+): Promise<ProfilePictureMutationResponse> {
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+
+  const data: unknown = await response.json();
+  if (
+    typeof data !== "object" ||
+    data === null ||
+    !("success" in data) ||
+    !("avatarVersion" in data) ||
+    !("avatarUrl" in data)
+  ) {
+    throw new Error("Unexpected profile picture response");
+  }
+
+  const typed = data as {
+    success: unknown;
+    avatarVersion: unknown;
+    avatarUrl: unknown;
+  };
+
+  if (
+    typeof typed.success !== "boolean" ||
+    typeof typed.avatarVersion !== "number" ||
+    !(typeof typed.avatarUrl === "string" || typed.avatarUrl === null)
+  ) {
+    throw new Error("Unexpected profile picture response");
+  }
+
+  return {
+    success: typed.success,
+    avatarVersion: typed.avatarVersion,
+    avatarUrl: typed.avatarUrl,
+  };
+}
 
 export default function ProfilePage() {
   const { currentUser } = useSession();
@@ -18,6 +65,10 @@ export default function ProfilePage() {
   const [profileName, setProfileName] = createSignal(user().fullName || "");
   const [profilePhone, setProfilePhone] = createSignal(user().phoneE164 || "");
   const [savingProfile, setSavingProfile] = createSignal(false);
+  const [avatarUrl, setAvatarUrl] = createSignal<string | null>(
+    user().avatarUrl,
+  );
+  const [uploadingAvatar, setUploadingAvatar] = createSignal(false);
 
   const saveProfile = async (e: Event) => {
     e.preventDefault();
@@ -32,14 +83,58 @@ export default function ProfilePage() {
     }
   };
 
+  const uploadProfilePicture = async (file: File) => {
+    setUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.set("file", file);
+
+      const response = await fetch("/api/settings/profile/picture", {
+        method: "POST",
+        body: formData,
+      });
+      const payload = await readPictureMutationResponse(response);
+      setAvatarUrl(payload.avatarUrl);
+      showToast("success", "Profile picture updated");
+    } catch (error: unknown) {
+      showToast(
+        "error",
+        getErrorMessage(error, "Failed to upload profile picture"),
+      );
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const removeProfilePicture = async () => {
+    setUploadingAvatar(true);
+    try {
+      const response = await fetch("/api/settings/profile/picture", {
+        method: "DELETE",
+      });
+      const payload = await readPictureMutationResponse(response);
+      setAvatarUrl(payload.avatarUrl);
+      showToast("success", "Profile picture removed");
+    } catch (error: unknown) {
+      showToast(
+        "error",
+        getErrorMessage(error, "Failed to remove profile picture"),
+      );
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   return (
     <div class={styles.content}>
       <SettingsSection title="Picture">
-        <div class={styles.pictureRow}>
-          <div class={styles.pictureAvatar}>
-            {user().fullName?.charAt(0) || user().email.charAt(0)}
-          </div>
-        </div>
+        <ProfileImageInput
+          pictureUrl={avatarUrl()}
+          initials={getUserInitials(profileName() || user().email)}
+          uploading={uploadingAvatar()}
+          onUpload={uploadProfilePicture}
+          onRemove={removeProfilePicture}
+        />
       </SettingsSection>
 
       <SettingsSection

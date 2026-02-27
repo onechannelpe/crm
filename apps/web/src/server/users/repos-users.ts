@@ -168,5 +168,59 @@ export function createUsersRepo(db: Kysely<Database>) {
         .where("id", "=", id)
         .execute();
     },
+
+    findAvatarMetaById(id: number) {
+      return db
+        .selectFrom("users")
+        .select([
+          "id",
+          "avatar_storage_key",
+          "avatar_mime_type",
+          "avatar_updated_at",
+          "avatar_version",
+        ])
+        .where("id", "=", id)
+        .executeTakeFirst();
+    },
+
+    updateAvatar(
+      id: number,
+      values: {
+        storage_key: string;
+        mime_type: string;
+        updated_at: number;
+        version: number;
+      },
+    ) {
+      return db
+        .updateTable("users")
+        .set({
+          avatar_storage_key: values.storage_key,
+          avatar_mime_type: values.mime_type,
+          avatar_updated_at: values.updated_at,
+          avatar_version: values.version,
+        })
+        .where("id", "=", id)
+        .execute();
+    },
+
+    clearAvatar(
+      id: number,
+      values: {
+        updated_at: number;
+        version: number;
+      },
+    ) {
+      return db
+        .updateTable("users")
+        .set({
+          avatar_storage_key: null,
+          avatar_mime_type: null,
+          avatar_updated_at: values.updated_at,
+          avatar_version: values.version,
+        })
+        .where("id", "=", id)
+        .execute();
+    },
   };
 }
