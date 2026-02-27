@@ -2,7 +2,10 @@ use crate::errors::StartupError;
 use rusqlite::{Connection, OptionalExtension};
 
 const REQUIRED_TABLES: &[&str] = &[
-    "contacts",
+    "contacts_serving",
+    "person_profile",
+    "company_profile",
+    "person_company_role",
     "phone_index",
     "contacts_fts",
     "ruc_phone_agg",
