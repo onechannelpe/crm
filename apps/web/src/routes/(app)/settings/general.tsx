@@ -2,6 +2,7 @@ import { useAction, useSubmissions } from "@solidjs/router";
 import { createSignal, For } from "solid-js";
 
 import { useToast } from "~/components/feedback/toast-provider";
+import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Button } from "~/components/ui/input/button";
 import { Checkbox } from "~/components/ui/input/checkbox";
 import { Input } from "~/components/ui/input/input";
@@ -45,12 +46,11 @@ export default function SettingsGeneralPage() {
 
   return (
     <div class={styles.content}>
-      <section class={styles.block}>
-        <h2 class={styles.title}>Product catalog</h2>
-        <p class={styles.description}>
-          Update product price and activation state.
-        </p>
-        <div class={styles.products}>
+      <SettingsSection
+        title="Product catalog"
+        description="Configure pricing and visibility for your workspace products."
+      >
+        <div class={styles.card}>
           <For each={currentProducts()}>
             {(product) => {
               const [price, setPrice] = createSignal(String(product.price));
@@ -63,37 +63,66 @@ export default function SettingsGeneralPage() {
                     event.preventDefault();
                     void save(product.id, price(), isActive());
                   }}
+                  class={styles.cardItem}
+                  style={{ "flex-wrap": "wrap", gap: "16px" }}
                 >
-                  <div class={styles.productRow}>
-                    <div>
-                      <p class={styles.productName}>{product.name}</p>
-                      <p class={styles.productCategory}>{product.category}</p>
+                  <div class={styles.cardMain}>
+                    <span class={styles.cardTitle}>{product.name}</span>
+                    <span class={styles.cardDescription}>
+                      {product.category}
+                    </span>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      "align-items": "flex-end",
+                      gap: "16px",
+                      "flex-wrap": "wrap",
+                    }}
+                  >
+                    <div style={{ width: "120px" }}>
+                      <Input
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        label="Price"
+                        value={price()}
+                        onInput={(event) => setPrice(event.currentTarget.value)}
+                      />
                     </div>
-                    <Input
-                      type="number"
-                      min="0.01"
-                      step="0.01"
-                      label="Price"
-                      value={price()}
-                      onInput={(event) => setPrice(event.currentTarget.value)}
-                    />
-                    <Checkbox
-                      label="Active"
-                      checked={isActive()}
-                      onInput={(event) =>
-                        setIsActive(event.currentTarget.checked)
-                      }
-                    />
-                    <Button type="submit" disabled={isSaving(product.id)}>
-                      {isSaving(product.id) ? "Saving..." : "Save"}
-                    </Button>
+                    <div
+                      style={{
+                        display: "flex",
+                        "align-items": "center",
+                        gap: "12px",
+                        "padding-bottom": "8px",
+                      }}
+                    >
+                      <Checkbox
+                        label="Active"
+                        checked={isActive()}
+                        onInput={(event) =>
+                          setIsActive(event.currentTarget.checked)
+                        }
+                      />
+                    </div>
+                    <div style={{ "padding-bottom": "4px" }}>
+                      <Button
+                        type="submit"
+                        disabled={isSaving(product.id)}
+                        size="sm"
+                      >
+                        {isSaving(product.id) ? "Saving..." : "Save"}
+                      </Button>
+                    </div>
                   </div>
                 </form>
               );
             }}
           </For>
         </div>
-      </section>
+      </SettingsSection>
     </div>
   );
 }

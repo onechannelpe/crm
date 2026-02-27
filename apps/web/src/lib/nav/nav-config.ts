@@ -194,7 +194,7 @@ export const NAV_ROUTES: NavRoute[] = [
   },
   {
     id: "profile",
-    href: "/profile",
+    href: "/settings/profile",
     label: "Profile",
     icon: "profile",
     header: { label: "Profile", icon: "profile" },

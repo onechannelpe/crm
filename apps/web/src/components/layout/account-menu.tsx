@@ -72,7 +72,11 @@ export function AccountMenu(props: AccountMenuProps) {
 
       <Show when={open()}>
         <div class={styles.menu}>
-          <A href="/profile" onClick={() => setOpen(false)} class={styles.item}>
+          <A
+            href="/settings/profile"
+            onClick={() => setOpen(false)}
+            class={styles.item}
+          >
             <UserRound size={16} />
             Profile
           </A>

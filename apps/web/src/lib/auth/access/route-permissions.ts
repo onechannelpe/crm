@@ -23,8 +23,21 @@ export const ROUTE_PERMISSIONS: RoutePermission[] = [
   {
     id: "settings",
     href: "/settings",
-    permission: "admin:manage",
     landingPriority: 9,
+  },
+  {
+    id: "settings-general",
+    href: "/settings/general",
+    permission: "admin:manage",
+  },
+  {
+    id: "settings-security",
+    href: "/settings/security",
+  },
+  {
+    id: "settings-login-protection",
+    href: "/settings/login-protection",
+    permission: "admin:manage",
   },
   { id: "team", href: "/team", permission: "team:read", landingPriority: 6 },
   { id: "team-new", href: "/team/new", permission: "hr:manage" },
@@ -84,5 +97,5 @@ export const ROUTE_PERMISSIONS: RoutePermission[] = [
     permission: "quota:allocate",
     landingPriority: 7,
   },
-  { id: "profile", href: "/profile" },
+  { id: "profile", href: "/settings/profile" },
 ];
