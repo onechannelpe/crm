@@ -31,7 +31,7 @@ interface ContactsSearchLayoutProps {
 
 export function ContactsSearchLayout(props: ContactsSearchLayoutProps) {
   return (
-    <AppPage width="wide">
+    <AppPage>
       <div class={styles.searchPanel}>
         <div class={styles.tabBar}>
           <A
@@ -88,35 +88,45 @@ export function ContactsSearchLayout(props: ContactsSearchLayoutProps) {
         </div>
       </Show>
 
-      <Show
-        when={props.resultCount() > 0}
-        fallback={
-          <Show when={props.controller.searched()}>
-            <EmptyState
-              title="No results"
-              description="Try a different search term."
-            />
+      <div class={styles.contentWrap}>
+        <div class={styles.mainPane}>
+          <Show
+            when={props.resultCount() > 0}
+            fallback={
+              <Show when={props.controller.searched()}>
+                <EmptyState
+                  title="No results"
+                  description="Try a different search term."
+                />
+              </Show>
+            }
+          >
+            <Table
+              class={cn(
+                styles.resultsTable,
+                props.activeTab === "people" && styles.resultsTablePeople,
+                props.activeTab === "companies" && styles.resultsTableCompanies,
+              )}
+            >
+              <TableHeader>
+                <TableRow>
+                  <For each={props.columns}>
+                    {(col) => <TableHead>{col.label}</TableHead>}
+                  </For>
+                </TableRow>
+              </TableHeader>
+              <TableBody>{props.rows()}</TableBody>
+            </Table>
           </Show>
-        }
-      >
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <For each={props.columns}>
-                {(col) => <TableHead>{col.label}</TableHead>}
-              </For>
-            </TableRow>
-          </TableHeader>
-          <TableBody>{props.rows()}</TableBody>
-        </Table>
-      </Show>
 
-      <Show when={props.resultCount() > 0}>
-        <div class={styles.footer}>
-          <div>{props.footerLeft()}</div>
-          <div>{props.footerRight()}</div>
+          <Show when={props.resultCount() > 0}>
+            <div class={styles.footer}>
+              <div>{props.footerLeft()}</div>
+              <div>{props.footerRight()}</div>
+            </div>
+          </Show>
         </div>
-      </Show>
+      </div>
     </AppPage>
   );
 }

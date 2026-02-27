@@ -54,7 +54,7 @@ export function groupPeopleByDni(
 ): PersonGroup[] {
   const groups = new Map<string, SearchResult[]>();
   for (const row of results) {
-    const dni = normalized(row.dni);
+    const dni = normalized(row.person.dni);
     if (!dni) continue;
     const existing = groups.get(dni);
     if (existing) {
@@ -73,19 +73,19 @@ export function groupPeopleByDni(
     const companyKeys = new Set<string>();
 
     for (const row of rows) {
-      pushUnique(aliases, aliasSet, row.name);
-      pushUnique(phones, phoneSet, row.phone_primary);
-      pushUnique(phones, phoneSet, row.phone_secondary);
-      for (const siblingPhone of row.sibling_phones ?? []) {
+      pushUnique(aliases, aliasSet, row.person.name);
+      pushUnique(phones, phoneSet, row.phones.primary);
+      pushUnique(phones, phoneSet, row.phones.secondary);
+      for (const siblingPhone of row.phones.siblings ?? []) {
         pushUnique(phones, phoneSet, siblingPhone);
       }
 
-      const key = companyKey(row.org_ruc, row.org_name);
+      const key = companyKey(row.org?.ruc ?? null, row.org?.name ?? null);
       if (key !== "|" && !companyKeys.has(key)) {
         companyKeys.add(key);
         companies.push({
-          ruc: normalized(row.org_ruc) || null,
-          name: normalized(row.org_name) || null,
+          ruc: normalized(row.org?.ruc) || null,
+          name: normalized(row.org?.name) || null,
         });
       }
     }
@@ -114,23 +114,23 @@ export function groupCompaniesByRuc(
 ): CompanyGroup[] {
   const groups = new Map<string, CompanyGroup>();
   for (const [index, row] of results.entries()) {
-    const ruc = normalized(row.org_ruc);
+    const ruc = normalized(row.org?.ruc ?? null);
     const key = ruc ? `ruc:${ruc}` : `row:${index}`;
     const existing = groups.get(key);
     if (existing) {
       existing.rows.push(row);
       existing.name = mergeCompanyName(
         existing.name,
-        normalized(row.org_name) || null,
+        normalized(row.org?.name ?? null) || null,
       );
       const phoneSet = new Set(existing.phones);
-      pushUnique(existing.phones, phoneSet, row.phone_primary);
-      pushUnique(existing.phones, phoneSet, row.phone_secondary);
-      for (const siblingPhone of row.sibling_phones ?? []) {
+      pushUnique(existing.phones, phoneSet, row.phones.primary);
+      pushUnique(existing.phones, phoneSet, row.phones.secondary);
+      for (const siblingPhone of row.phones.siblings ?? []) {
         pushUnique(existing.phones, phoneSet, siblingPhone);
       }
-      const personDni = normalized(row.dni);
-      const personName = normalized(row.name);
+      const personDni = normalized(row.person.dni);
+      const personName = normalized(row.person.name);
       const peopleDniSet = new Set(existing.people.map((person) => person.dni));
       if (personDni && !peopleDniSet.has(personDni)) {
         existing.people.push({
@@ -143,18 +143,20 @@ export function groupCompaniesByRuc(
 
     const phoneSet = new Set<string>();
     const phones: string[] = [];
-    pushUnique(phones, phoneSet, row.phone_primary);
-    pushUnique(phones, phoneSet, row.phone_secondary);
-    for (const siblingPhone of row.sibling_phones ?? []) {
+    pushUnique(phones, phoneSet, row.phones.primary);
+    pushUnique(phones, phoneSet, row.phones.secondary);
+    for (const siblingPhone of row.phones.siblings ?? []) {
       pushUnique(phones, phoneSet, siblingPhone);
     }
 
-    const personDni = normalized(row.dni);
+    const personDni = normalized(row.person.dni);
     const company: CompanyGroup = {
       key,
       ruc: ruc || null,
-      name: normalized(row.org_name) || null,
-      people: personDni ? [{ dni: personDni, name: normalized(row.name) }] : [],
+      name: normalized(row.org?.name ?? null) || null,
+      people: personDni
+        ? [{ dni: personDni, name: normalized(row.person.name) }]
+        : [],
       phones,
       rows: [row],
     };

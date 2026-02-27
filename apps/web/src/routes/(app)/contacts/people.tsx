@@ -1,8 +1,19 @@
 import { useSearchParams } from "@solidjs/router";
 import { A } from "@solidjs/router";
-import { createMemo, For, onMount, Show } from "solid-js";
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  onCleanup,
+  onMount,
+  Show,
+  type JSX,
+} from "solid-js";
 
+import { useMainDetailPanel } from "~/components/providers/main-detail-panel-provider";
 import { TableCell, TableRow } from "~/components/ui/layout/table";
+import { PersonDetailDrawer } from "~/features/client-search/contact-detail-drawer";
 import { ContactsSearchLayout } from "~/features/client-search/contacts-search-layout";
 import { createClientSearchController } from "~/features/client-search/controller";
 import { inferPeopleSearchType } from "~/features/client-search/display";
@@ -29,6 +40,47 @@ const COLUMNS = [
   { label: "Companies" },
   { label: "Phones" },
 ];
+const PILL_PAGE_SIZE = 3;
+
+interface CollapsedPillListProps<T> {
+  items: readonly T[];
+  maxVisible?: number;
+  class?: string;
+  onMoreClick?: () => void;
+  renderItem: (item: T) => JSX.Element;
+}
+
+function CollapsedPillList<T>(props: CollapsedPillListProps<T>) {
+  const visibleItems = createMemo(() =>
+    props.items.slice(0, props.maxVisible ?? PILL_PAGE_SIZE),
+  );
+  const hiddenCount = createMemo(() =>
+    Math.max(0, props.items.length - visibleItems().length),
+  );
+
+  return (
+    <div class={`${styles.pillWrap}${props.class ? ` ${props.class}` : ""}`}>
+      <Show
+        when={props.items.length > 0}
+        fallback={<span class={styles.pill}>—</span>}
+      >
+        <For each={visibleItems()}>{(item) => props.renderItem(item)}</For>
+      </Show>
+      <Show when={hiddenCount() > 0}>
+        <button
+          type="button"
+          class={`${styles.pill} ${styles.pillButton}`}
+          onClick={(event) => {
+            event.stopPropagation();
+            props.onMoreClick?.();
+          }}
+        >
+          +{hiddenCount()} more
+        </button>
+      </Show>
+    </div>
+  );
+}
 
 function buildDisplayRows(groups: PersonGroup[]) {
   return groups.map((person, index) => {
@@ -59,9 +111,31 @@ export default function ClientSearchPeoplePage() {
 
   const grouped = createMemo(() => groupPeopleByDni(controller.results()));
   const rows = createMemo(() => buildDisplayRows(grouped()));
+  const { setPanel, clearPanel } = useMainDetailPanel();
+
+  const [selectedDni, setSelectedDni] = createSignal<string | null>(null);
+  const selectedGroup = createMemo(
+    () => grouped().find((g) => g.dni === selectedDni()) ?? null,
+  );
 
   onMount(() => {
     void controller.initializeFromParams();
+  });
+
+  createEffect(() => {
+    const group = selectedGroup();
+    if (!group) {
+      clearPanel();
+      return;
+    }
+
+    setPanel(
+      <PersonDetailDrawer group={group} onClose={() => setSelectedDni(null)} />,
+    );
+  });
+
+  onCleanup(() => {
+    clearPanel();
   });
 
   return (
@@ -74,46 +148,54 @@ export default function ClientSearchPeoplePage() {
       resultCount={() => rows().length}
       rows={() => (
         <For each={rows()}>
-          {(row) => (
-            <TableRow>
-              <TableCell>
-                <span class={styles.chip}>
-                  <span class={styles.avatarDot}>{toInitial(row.name)}</span>
-                  <span>{row.name}</span>
-                </span>
-              </TableCell>
-              <TableCell>
-                <span class={styles.pill}>{row.dni}</span>
-              </TableCell>
-              <TableCell>
-                <div class={styles.pillWrap}>
-                  <For each={row.companies}>
-                    {(company) => (
+          {(row) => {
+            const isActive = () => selectedDni() === row.dni;
+            return (
+              <TableRow
+                class={`${styles.rowClickable}${isActive() ? ` ${styles.rowActive}` : ""}`}
+                onClick={() => setSelectedDni(isActive() ? null : row.dni)}
+              >
+                <TableCell>
+                  <span class={styles.chip}>
+                    <span class={styles.avatarDot}>{toInitial(row.name)}</span>
+                    <span class={styles.chipLabel}>{row.name}</span>
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <span class={styles.pill}>{row.dni}</span>
+                </TableCell>
+                <TableCell>
+                  <CollapsedPillList
+                    items={row.companies}
+                    class={styles.pillWrapTable}
+                    onMoreClick={() => setSelectedDni(row.dni)}
+                    renderItem={(company) => (
                       <A
                         href={`/contacts/companies?type=${company.ruc ? "ruc" : "company_name"}&query=${encodeURIComponent(company.ruc ?? company.name)}&limit=20`}
                         class={styles.pill}
+                        onClick={(e) => e.stopPropagation()}
+                        title={company.name}
                       >
-                        {company.name}
+                        <span class={styles.pillText}>{company.name}</span>
                       </A>
                     )}
-                  </For>
-                  <Show when={row.companies.length === 0}>
-                    <span class={styles.pill}>—</span>
-                  </Show>
-                </div>
-              </TableCell>
-              <TableCell>
-                <div class={styles.pillWrap}>
-                  <For each={row.phones}>
-                    {(phone) => <span class={styles.pill}>{phone}</span>}
-                  </For>
-                  <Show when={row.phones.length === 0}>
-                    <span class={styles.pill}>—</span>
-                  </Show>
-                </div>
-              </TableCell>
-            </TableRow>
-          )}
+                  />
+                </TableCell>
+                <TableCell>
+                  <CollapsedPillList
+                    items={row.phones}
+                    class={styles.pillWrapTable}
+                    onMoreClick={() => setSelectedDni(row.dni)}
+                    renderItem={(phone) => (
+                      <span class={styles.pill} title={phone}>
+                        <span class={styles.pillText}>{phone}</span>
+                      </span>
+                    )}
+                  />
+                </TableCell>
+              </TableRow>
+            );
+          }}
         </For>
       )}
       footerLeft={() => (
