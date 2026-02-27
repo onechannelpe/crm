@@ -87,14 +87,14 @@ export function createLeadAssignmentService(
 
             for (const result of searchResults.results) {
               if (assignments.length >= needed) break;
-              if (!result.org_ruc) continue;
+              if (!result.org?.ruc) continue;
 
               // oxlint-disable-next-line no-await-in-loop -- each contact decision depends on previous assignment count checks.
               const contact = await repos.contacts.findOrCreate(
                 org.id,
-                result.dni,
-                result.name,
-                result.phone_primary,
+                result.person.dni,
+                result.person.name,
+                result.phones.primary,
               );
 
               if (!canContactNow(contact)) continue;

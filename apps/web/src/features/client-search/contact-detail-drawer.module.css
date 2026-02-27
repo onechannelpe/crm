@@ -1,0 +1,245 @@
+.drawer {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  background: var(--background);
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.headerAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: var(--secondary);
+  color: var(--foreground-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  flex-shrink: 0;
+}
+
+.headerAvatarSquare {
+  border-radius: 6px;
+}
+
+.headerInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.headerName {
+  font-size: var(--font-size-body);
+  color: var(--foreground);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.headerSubtitle {
+  font-size: var(--font-size-caption);
+  color: var(--foreground-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.closeBtn {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  background: transparent;
+  border-radius: 6px;
+  color: var(--foreground-tertiary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.closeBtn:hover {
+  background: var(--secondary);
+  color: var(--foreground);
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.section {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 24px;
+  padding-left: 12px;
+  padding-right: 8px;
+  margin-bottom: 8px;
+}
+
+.sectionTitleWrap {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: var(--font-size-body);
+  color: var(--foreground);
+  font-weight: var(--font-weight-medium);
+}
+
+.sectionLink {
+  color: var(--foreground-secondary);
+  text-decoration: none;
+  font-size: var(--font-size-caption);
+}
+
+.sectionLink:hover {
+  color: var(--foreground);
+}
+
+.sectionBody {
+  display: flex;
+  flex-direction: column;
+}
+
+.fieldRow {
+  display: grid;
+  grid-template-columns: 16px 96px minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  min-height: 28px;
+  padding: 4px 12px;
+}
+
+.fieldIcon {
+  width: 16px;
+  height: 16px;
+  color: var(--foreground-tertiary);
+  margin-top: 2px;
+}
+
+.fieldLabel {
+  color: var(--foreground-secondary);
+  font-size: var(--font-size-caption);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-top: 1px;
+}
+
+.fieldValue {
+  min-width: 0;
+  color: var(--foreground);
+  font-size: var(--font-size-body);
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.recordItem {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-height: 40px;
+  padding: 10px 12px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.recordItem:hover {
+  background: var(--secondary);
+}
+
+.recordItemMain {
+  color: var(--foreground);
+  font-size: var(--font-size-body);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recordItemMeta {
+  color: var(--foreground-secondary);
+  font-size: var(--font-size-caption);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sectionMoreButton {
+  margin: 6px 12px 0;
+  border: 0;
+  background: transparent;
+  color: var(--foreground-secondary);
+  font-size: var(--font-size-caption);
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+}
+
+.sectionMoreButton:hover {
+  color: var(--foreground);
+}
+
+.pillWrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  height: 16px;
+  max-width: min(100%, 220px);
+  border-radius: 999px;
+  background: var(--bg-translucent);
+  color: var(--foreground-secondary);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-medium);
+  padding: 0 8px;
+  overflow: hidden;
+}
+
+.pillText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pillButton {
+  border: 0;
+  cursor: pointer;
+  appearance: none;
+}
