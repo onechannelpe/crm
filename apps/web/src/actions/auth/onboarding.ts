@@ -1,5 +1,10 @@
 "use server";
 
+import {
+  conflictError,
+  notFoundError,
+  validationError,
+} from "~/lib/app-errors";
 import { requireSession } from "~/lib/auth/access/session";
 import {
   isStrongAuthEnrolled,
@@ -11,7 +16,7 @@ import { repos } from "~/server/shared/context";
 function assertE164Phone(value: string): string {
   const normalized = value.replace(/\s+/g, "").trim();
   if (!/^\+[1-9]\d{7,14}$/.test(normalized)) {
-    throw new Error("phone must be a valid E.164 number");
+    throw validationError("phone must be a valid E.164 number");
   }
   return normalized;
 }
@@ -24,7 +29,7 @@ export async function completeOnboarding(
   const user = await repos.users.findById(session.userId);
 
   if (!user) {
-    throw new Error("User not found");
+    throw notFoundError("User not found");
   }
 
   if (user.onboarding_completed_at) {
@@ -32,7 +37,7 @@ export async function completeOnboarding(
   }
 
   if (requiresStrongAuth(user) && !isStrongAuthEnrolled(user)) {
-    throw new Error("Strong authentication setup required");
+    throw conflictError("Strong authentication setup required");
   }
 
   const now = Date.now();

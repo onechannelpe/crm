@@ -1,5 +1,6 @@
 "use server";
 
+import { validationError } from "~/lib/app-errors";
 import { isRole, type Role } from "~/lib/auth/access/rbac";
 import { requireRole } from "~/lib/auth/access/session";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
@@ -26,7 +27,7 @@ function assertAudienceType(value: string): "user" | "role" | "global" {
   if (value === "user" || value === "role" || value === "global") {
     return value;
   }
-  throw new Error("Invalid audience type");
+  throw validationError("Invalid audience type");
 }
 
 function assertAudienceRef(
@@ -51,14 +52,14 @@ function assertAudienceRef(
       "superuser",
     ];
     if (!isRole(ref) || !allowedRoles.includes(ref)) {
-      throw new Error("Invalid role audience");
+      throw validationError("Invalid role audience");
     }
   }
 
   if (audienceType === "user") {
     const userId = Number(ref);
     if (!Number.isInteger(userId) || userId <= 0) {
-      throw new Error("Invalid user audience");
+      throw validationError("Invalid user audience");
     }
   }
 

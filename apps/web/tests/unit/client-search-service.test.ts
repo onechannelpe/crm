@@ -42,6 +42,7 @@ describe("client search service", () => {
     const result = await service.search({ type: "dni", value: "12345678" });
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error("Expected error result");
-    expect(result.error).toContain("engine unavailable");
+    expect(result.error.reason).toBe("engine_request_failed");
+    expect(result.error.message).toContain("engine unavailable");
   });
 });

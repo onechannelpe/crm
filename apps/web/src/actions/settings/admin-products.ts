@@ -1,5 +1,6 @@
 "use server";
 
+import { notFoundError } from "~/lib/app-errors";
 import { requirePermission } from "~/lib/auth/access/session";
 import { assertRecentStrongAuth } from "~/lib/auth/security/step-up";
 import type { ProductUpdatedChanges } from "~/lib/contracts/audit";
@@ -32,7 +33,7 @@ export async function updateProductPricing(
   const session = await requirePermission("admin:manage");
   assertRecentStrongAuth(session);
   const product = await repos.products.findById(safeProductId);
-  if (!product) throw new Error("Product not found");
+  if (!product) throw notFoundError("Product not found");
 
   await repos.products.update(safeProductId, {
     price: safePrice,

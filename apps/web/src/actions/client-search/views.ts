@@ -1,5 +1,10 @@
 "use server";
 
+import {
+  conflictError,
+  notFoundError,
+  validationError,
+} from "~/lib/app-errors";
 import { requirePermission } from "~/lib/auth/access/session";
 import {
   assertNonEmptyString,
@@ -23,7 +28,7 @@ function isSearchType(value: string): value is SearchType {
 
 function validateLimit(limitValue: number): number {
   if (!Number.isInteger(limitValue) || limitValue < 1 || limitValue > 100) {
-    throw new Error("limitValue must be an integer between 1 and 100");
+    throw validationError("limitValue must be an integer between 1 and 100");
   }
   return limitValue;
 }
@@ -58,28 +63,33 @@ export async function createClientSearchView(
   const safeQuery = assertNonEmptyString(queryValue, "queryValue");
   const safeLimit = validateLimit(limitValue);
   if (!isSearchType(searchType)) {
-    throw new Error("searchType is invalid");
+    throw validationError("searchType is invalid");
   }
 
   const session = await requirePermission("client_search:read");
+  const existingViews = await repos.clientSearchViews.listByUser(
+    session.userId,
+  );
+  const hasDuplicateName = existingViews.some(
+    (view) => view.name.toLowerCase() === safeName.toLowerCase(),
+  );
+  if (hasDuplicateName) {
+    throw conflictError("A view with this name already exists");
+  }
 
   if (isDefault) {
     await repos.clientSearchViews.clearDefaultForUser(session.userId);
   }
 
-  try {
-    const created = await repos.clientSearchViews.create({
-      user_id: session.userId,
-      name: safeName,
-      search_type: searchType,
-      query_value: safeQuery,
-      limit_value: safeLimit,
-      is_default: isDefault ? 1 : 0,
-    });
-    return mapView(created);
-  } catch {
-    throw new Error("A view with this name already exists");
-  }
+  const created = await repos.clientSearchViews.create({
+    user_id: session.userId,
+    name: safeName,
+    search_type: searchType,
+    query_value: safeQuery,
+    limit_value: safeLimit,
+    is_default: isDefault ? 1 : 0,
+  });
+  return mapView(created);
 }
 
 export async function updateClientSearchView(
@@ -94,7 +104,7 @@ export async function updateClientSearchView(
   const safeQuery = assertNonEmptyString(queryValue, "queryValue");
   const safeLimit = validateLimit(limitValue);
   if (!isSearchType(searchType)) {
-    throw new Error("searchType is invalid");
+    throw validationError("searchType is invalid");
   }
 
   const session = await requirePermission("client_search:read");
@@ -105,7 +115,7 @@ export async function updateClientSearchView(
     query_value: safeQuery,
     limit_value: safeLimit,
   });
-  if (!updated) throw new Error("View not found");
+  if (!updated) throw notFoundError("View not found");
   return mapView(updated);
 }
 
@@ -124,7 +134,7 @@ export async function setDefaultClientSearchView(id: number): Promise<void> {
     safeId,
     session.userId,
   );
-  if (!existing) throw new Error("View not found");
+  if (!existing) throw notFoundError("View not found");
 
   await repos.clientSearchViews.setDefault(safeId, session.userId);
 }

@@ -2,6 +2,11 @@
 
 import QRCode from "qrcode";
 
+import {
+  conflictError,
+  forbiddenError,
+  validationError,
+} from "~/lib/app-errors";
 import { requireSession } from "~/lib/auth/access/session";
 import {
   generateRecoveryCodes,
@@ -36,11 +41,11 @@ export async function beginTotpEnrollment(): Promise<{
   const session = await requireSession();
   const user = await repos.users.findById(session.userId);
   if (!user) {
-    throw new Error("Unauthorized");
+    throw forbiddenError("Unauthorized");
   }
   const existing = await repos.userTotpFactors.findByUserId(user.id);
   if (existing?.is_enabled === 1) {
-    throw new Error("TOTP already enabled");
+    throw conflictError("TOTP already enabled");
   }
 
   const secret = generateTotpSecret();
@@ -58,13 +63,13 @@ export async function finishTotpEnrollment(code: string): Promise<string[]> {
   const user = await repos.users.findById(session.userId);
   const factor = await repos.userTotpFactors.findByUserId(session.userId);
   if (!user || !factor) {
-    throw new Error("Invalid TOTP setup request");
+    throw validationError("Invalid TOTP setup request");
   }
 
   const secret = await decryptTotpSecret(factor.secret_encrypted);
   const valid = verifyTotpCode(secret, safeCode);
   if (!valid) {
-    throw new Error("Invalid TOTP code");
+    throw validationError("Invalid TOTP code");
   }
 
   await repos.userTotpFactors.markEnabled(user.id);

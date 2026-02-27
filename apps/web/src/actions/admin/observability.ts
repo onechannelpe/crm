@@ -1,5 +1,6 @@
 "use server";
 
+import { validationError } from "~/lib/app-errors";
 import { requirePermission } from "~/lib/auth/access/session";
 import { assertPositiveInt } from "~/lib/contracts/guards";
 import { observabilityService } from "~/server/shared/context";
@@ -40,7 +41,7 @@ function assertStatus(
 ): ObservationStatus | undefined {
   if (!value) return undefined;
   if (value === "ok" || value === "error") return value;
-  throw new Error("status is invalid");
+  throw validationError("status is invalid");
 }
 
 function resolveBoundedPositiveInt(params: {
@@ -55,7 +56,7 @@ function resolveBoundedPositiveInt(params: {
     params.name,
   );
   if (resolved > params.max) {
-    throw new Error(params.maxMessage);
+    throw validationError(params.maxMessage);
   }
   return resolved;
 }

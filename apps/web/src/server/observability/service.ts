@@ -1,3 +1,4 @@
+import type { AppErrorCode } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { serializeAuditChanges } from "~/lib/contracts/audit";
 import type { Repositories } from "~/server/shared/registry";
@@ -16,6 +17,7 @@ export interface RecordActionObservationInput {
   actorRole: Role | null;
   status: "ok" | "error";
   durationMs: number;
+  errorCode: AppErrorCode | null;
   errorMessage: string | null;
   input: unknown;
   createdAt: number;
@@ -44,9 +46,58 @@ interface ErrorDetails {
   isSensitive: number;
 }
 
+function mapCodeToDetails(code: AppErrorCode): ErrorDetails {
+  if (code === "forbidden") {
+    return {
+      code: "authorization_denied",
+      category: "authorization",
+      publicError: "Authorization failed",
+      isSensitive: 1,
+    };
+  }
+  if (code === "not_found") {
+    return {
+      code: "resource_not_found",
+      category: "not_found",
+      publicError: "Requested resource was not found",
+      isSensitive: 0,
+    };
+  }
+  if (code === "rate_limit") {
+    return {
+      code: "rate_limited",
+      category: "rate_limit",
+      publicError: "Request was rate limited",
+      isSensitive: 0,
+    };
+  }
+  if (code === "conflict") {
+    return {
+      code: "state_conflict",
+      category: "conflict",
+      publicError: "Operation conflicts with current state",
+      isSensitive: 0,
+    };
+  }
+  if (code === "validation") {
+    return {
+      code: "validation_failed",
+      category: "validation",
+      publicError: "Validation failed",
+      isSensitive: 0,
+    };
+  }
+  return {
+    code: "internal_error",
+    category: "internal",
+    publicError: "Unexpected error",
+    isSensitive: 1,
+  };
+}
+
 function resolveErrorDetails(
   status: "ok" | "error",
-  message: string | null,
+  appErrorCode: AppErrorCode | null,
 ): ErrorDetails {
   if (status === "ok") {
     return {
@@ -56,62 +107,9 @@ function resolveErrorDetails(
       isSensitive: 0,
     };
   }
-
-  const safeMessage = message?.toLowerCase() ?? "";
-
-  if (
-    safeMessage.includes("unauthorized") ||
-    safeMessage.includes("forbidden") ||
-    safeMessage.includes("onboarding required")
-  ) {
-    return {
-      code: "authorization_denied",
-      category: "authorization",
-      publicError: "Authorization failed",
-      isSensitive: 1,
-    };
+  if (appErrorCode) {
+    return mapCodeToDetails(appErrorCode);
   }
-
-  if (safeMessage.includes("not found")) {
-    return {
-      code: "resource_not_found",
-      category: "not_found",
-      publicError: "Requested resource was not found",
-      isSensitive: 0,
-    };
-  }
-
-  if (safeMessage.includes("rate") || safeMessage.includes("throttle")) {
-    return {
-      code: "rate_limited",
-      category: "rate_limit",
-      publicError: "Request was rate limited",
-      isSensitive: 0,
-    };
-  }
-
-  if (safeMessage.includes("already") || safeMessage.includes("cannot")) {
-    return {
-      code: "state_conflict",
-      category: "conflict",
-      publicError: "Operation conflicts with current state",
-      isSensitive: 0,
-    };
-  }
-
-  if (
-    safeMessage.includes("required") ||
-    safeMessage.includes("invalid") ||
-    safeMessage.includes("must")
-  ) {
-    return {
-      code: "validation_failed",
-      category: "validation",
-      publicError: "Validation failed",
-      isSensitive: 0,
-    };
-  }
-
   return {
     code: "internal_error",
     category: "internal",
@@ -123,10 +121,7 @@ function resolveErrorDetails(
 export function createObservabilityService(repos: ObservabilityRepos) {
   return {
     async recordAction(input: RecordActionObservationInput): Promise<void> {
-      const errorDetails = resolveErrorDetails(
-        input.status,
-        input.errorMessage,
-      );
+      const errorDetails = resolveErrorDetails(input.status, input.errorCode);
       await repos.actionObservations.create({
         trace_id: input.traceId,
         request_id: input.requestId,
