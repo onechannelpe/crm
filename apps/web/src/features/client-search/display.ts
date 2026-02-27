@@ -2,11 +2,11 @@ import type { SearchType } from "~/server/shared/engine/types";
 
 export const SEARCH_LABELS: Partial<Record<SearchType, string>> = {
   dni: "DNI",
-  person_name: "Person name",
-  company_name: "Company name",
+  person_name: "Nombre de persona",
+  company_name: "Nombre de empresa",
   ruc: "RUC",
-  phone: "Phone",
-  phone_enriched: "Phone (enriched)",
+  phone: "Teléfono",
+  phone_enriched: "Teléfono (relacionado)",
 };
 
 export function toInitial(value: string): string {

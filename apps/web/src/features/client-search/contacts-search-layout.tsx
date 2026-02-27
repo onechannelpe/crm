@@ -41,7 +41,7 @@ export function ContactsSearchLayout(props: ContactsSearchLayoutProps) {
               props.activeTab === "people" && styles.tabActive,
             )}
           >
-            People
+            Personas
           </A>
           <A
             href="/contacts/companies"
@@ -50,7 +50,7 @@ export function ContactsSearchLayout(props: ContactsSearchLayoutProps) {
               props.activeTab === "companies" && styles.tabActive,
             )}
           >
-            Companies
+            Empresas
           </A>
         </div>
 
@@ -73,7 +73,7 @@ export function ContactsSearchLayout(props: ContactsSearchLayoutProps) {
             required
           />
           <Button type="submit" disabled={props.controller.searching()}>
-            {props.controller.searching() ? "Searching..." : "Search"}
+            {props.controller.searching() ? "Buscando..." : "Buscar"}
           </Button>
         </form>
       </div>
@@ -84,7 +84,7 @@ export function ContactsSearchLayout(props: ContactsSearchLayoutProps) {
 
       <Show when={props.controller.searched()}>
         <div class={styles.statusBar}>
-          <span>{props.resultCount()} results</span>
+          <span>{props.resultCount()} resultados</span>
         </div>
       </Show>
 
@@ -95,8 +95,8 @@ export function ContactsSearchLayout(props: ContactsSearchLayoutProps) {
             fallback={
               <Show when={props.controller.searched()}>
                 <EmptyState
-                  title="No results"
-                  description="Try a different search term."
+                  title="Sin resultados"
+                  description="Prueba con otro término de búsqueda"
                 />
               </Show>
             }

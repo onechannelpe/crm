@@ -89,7 +89,7 @@ function ExpandablePillList(props: ExpandablePillListProps) {
           class={`${styles.pill} ${styles.pillButton}`}
           onClick={() => setVisibleCount((count) => count + PANEL_PAGE_SIZE)}
         >
-          +{hiddenCount()} more
+          +{hiddenCount()} más
         </button>
       </Show>
     </div>
@@ -139,7 +139,7 @@ function DrawerHeader(props: DrawerHeaderProps) {
       <button
         class={styles.closeBtn}
         onClick={props.onClose}
-        aria-label="Close"
+        aria-label="Cerrar"
       >
         <XIcon size={14} />
       </button>
@@ -224,7 +224,7 @@ export function PersonDetailDrawer(props: PersonDetailDrawerProps) {
             <For each={props.group.companies}>
               {(company) => {
                 const companyName = () =>
-                  company.name ?? company.ruc ?? "Company";
+                  company.name ?? company.ruc ?? "Empresa";
                 return (
                   <A
                     class={styles.recordItem}
@@ -248,7 +248,7 @@ export function PersonDetailDrawer(props: PersonDetailDrawerProps) {
               <span class={styles.fieldIcon}>
                 <PhoneIcon size={16} />
               </span>
-              <span class={styles.fieldLabel}>Numbers</span>
+              <span class={styles.fieldLabel}>Números</span>
               <div class={styles.fieldValue}>
                 <ExpandablePillList items={props.group.phones} />
               </div>
@@ -291,19 +291,19 @@ export function PersonDetailDrawer(props: PersonDetailDrawerProps) {
             <DetailSection
               title="Empresa principal"
               linkHref={buildCompanyHref(
-                company().name ?? company().ruc ?? "Company",
+                company().name ?? company().ruc ?? "Empresa",
                 company().ruc,
               )}
-              linkLabel="Open"
+              linkLabel="Abrir"
             >
               <FieldRow
                 icon={<Building2Icon size={16} />}
-                label="Name"
+                label="Nombre"
                 value={company().name}
               />
               <FieldRow
                 icon={<Building2Icon size={16} />}
-                label="Trade name"
+                label="Razón social"
                 value={company().trade_name}
               />
               <FieldRow
@@ -315,7 +315,7 @@ export function PersonDetailDrawer(props: PersonDetailDrawerProps) {
                 {(roleInfo) => (
                   <FieldRow
                     icon={<UserIcon size={16} />}
-                    label="Role"
+                    label="Cargo"
                     value={roleInfo().name}
                   />
                 )}
@@ -396,7 +396,7 @@ export function CompanyDetailDrawer(props: CompanyDetailDrawerProps) {
               />
               <FieldRow
                 icon={<CalendarDaysIcon size={16} />}
-                label="Registrada"
+                label="Fecha de registro"
                 value={company().registration_date}
               />
               <FieldRow
