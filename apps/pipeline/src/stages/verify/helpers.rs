@@ -21,7 +21,9 @@ pub(super) struct IngestPhaseStats {
     pub total_secs: f64,
 }
 
-pub(super) fn load_enabled_sources(manifest_path: &str) -> Result<Vec<SourceManifestEntry>, PipelineError> {
+pub(super) fn load_enabled_sources(
+    manifest_path: &str,
+) -> Result<Vec<SourceManifestEntry>, PipelineError> {
     let SourceManifest { mut sources, .. } = verify_manifest(manifest_path)?;
     sources.retain(|source| source.enabled);
     sources.sort_by(|a, b| {

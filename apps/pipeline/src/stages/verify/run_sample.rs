@@ -27,13 +27,7 @@ pub fn run_matrix(
     let mut checkpoints = Vec::new();
 
     let run_ctx = RunContext::new(db_path)?;
-    run_ctx.write_metadata(
-        db_path,
-        manifest_path,
-        "sample",
-        workers,
-        batch_size,
-    )?;
+    run_ctx.write_metadata(db_path, manifest_path, "sample", workers, batch_size)?;
 
     let build_dir_path = Path::new(build_dir);
     fs::create_dir_all(build_dir_path)?;

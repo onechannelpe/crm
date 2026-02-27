@@ -22,13 +22,7 @@ pub fn run_full(
     let mut checkpoints = Vec::new();
 
     let run_ctx = RunContext::new(db_path)?;
-    run_ctx.write_metadata(
-        db_path,
-        manifest_path,
-        "full",
-        workers,
-        batch_size,
-    )?;
+    run_ctx.write_metadata(db_path, manifest_path, "full", workers, batch_size)?;
 
     if Path::new(db_path).exists() {
         fs::remove_file(db_path)?;

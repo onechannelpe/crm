@@ -1,0 +1,92 @@
+{
+  "projection": "search_projection",
+  "fields": [
+    {
+      "path": "person.dni",
+      "canonical_fields": [
+        "person_dni"
+      ],
+      "nullable": false
+    },
+    {
+      "path": "person.name",
+      "canonical_fields": [
+        "person_full_name"
+      ],
+      "nullable": true
+    },
+    {
+      "path": "org.ruc",
+      "canonical_fields": [
+        "company_ruc"
+      ],
+      "nullable": true
+    },
+    {
+      "path": "org.name",
+      "canonical_fields": [
+        "company_name"
+      ],
+      "nullable": true
+    },
+    {
+      "path": "role.name",
+      "canonical_fields": [
+        "role_name"
+      ],
+      "nullable": true
+    },
+    {
+      "path": "role.start_date",
+      "canonical_fields": [
+        "role_start_date"
+      ],
+      "nullable": true
+    },
+    {
+      "path": "role.rep_doc_type",
+      "canonical_fields": [
+        "rep_doc_type"
+      ],
+      "nullable": true
+    },
+    {
+      "path": "role.rep_doc_number",
+      "canonical_fields": [
+        "rep_doc_number"
+      ],
+      "nullable": true
+    },
+    {
+      "path": "role.rep_name",
+      "canonical_fields": [
+        "rep_name"
+      ],
+      "nullable": true
+    },
+    {
+      "path": "phones.primary",
+      "canonical_fields": [
+        "phone"
+      ],
+      "nullable": true,
+      "derivation": "ranked_top_phone_per_person"
+    },
+    {
+      "path": "phones.secondary",
+      "canonical_fields": [
+        "phone"
+      ],
+      "nullable": true,
+      "derivation": "ranked_second_phone_per_person"
+    },
+    {
+      "path": "phones.siblings",
+      "canonical_fields": [
+        "phone"
+      ],
+      "nullable": true,
+      "derivation": "grouped_phone_aggregate_per_dni_or_ruc"
+    }
+  ]
+}

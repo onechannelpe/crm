@@ -21,11 +21,8 @@ pub fn merge_ingest_session(
     let mut conn = open_rw(db_path)?;
     let mut merge_stats = MergePhaseStats::default();
     for shard_result in &session.shard_results {
-        let shard_timings: MergeShardTimings = merge_one_shard(
-            &mut conn,
-            &shard_result.shard_db_path,
-            session.snapshot_id,
-        )?;
+        let shard_timings: MergeShardTimings =
+            merge_one_shard(&mut conn, &shard_result.shard_db_path, session.snapshot_id)?;
         merge_stats.core_secs += shard_timings.core_secs;
         merge_stats.phone_secs += shard_timings.phone_secs;
         merge_stats.evidence_secs += shard_timings.evidence_secs;
@@ -63,7 +60,11 @@ pub fn merge_ingest_session(
     Ok(merge_stats)
 }
 
-pub fn fail_snapshot(db_path: &str, snapshot_id: i64, err: PipelineError) -> Result<(), PipelineError> {
+pub fn fail_snapshot(
+    db_path: &str,
+    snapshot_id: i64,
+    err: PipelineError,
+) -> Result<(), PipelineError> {
     let mut conn = open_rw(db_path)?;
     let tx = conn.transaction()?;
     repo::set_snapshot_status(&tx, snapshot_id, "failed")?;

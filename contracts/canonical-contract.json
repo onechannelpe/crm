@@ -1,0 +1,15 @@
+{
+  "fields": [
+    "person_dni",
+    "person_natural_ruc",
+    "person_full_name",
+    "company_ruc",
+    "company_name",
+    "rep_doc_type",
+    "rep_doc_number",
+    "rep_name",
+    "role_name",
+    "role_start_date",
+    "phone"
+  ]
+}

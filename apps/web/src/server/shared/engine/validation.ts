@@ -1,3 +1,4 @@
+import { SEARCH_PROJECTION_PATHS } from "~/server/shared/engine/projection-contract";
 import type {
   SearchResponse,
   SearchResult,
@@ -33,6 +34,24 @@ function isSearchResult(value: unknown): value is SearchResult {
     ) {
       return false;
     }
+    if (
+      typeof prop(role, "rep_doc_type") !== "string" &&
+      prop(role, "rep_doc_type") !== null
+    ) {
+      return false;
+    }
+    if (
+      typeof prop(role, "rep_doc_number") !== "string" &&
+      prop(role, "rep_doc_number") !== null
+    ) {
+      return false;
+    }
+    if (
+      typeof prop(role, "rep_name") !== "string" &&
+      prop(role, "rep_name") !== null
+    ) {
+      return false;
+    }
   }
 
   if (typeof phones !== "object" || phones === null) return false;
@@ -57,6 +76,19 @@ function isSearchResult(value: unknown): value is SearchResult {
   );
 }
 
+function hasPath(source: unknown, path: string): boolean {
+  if (typeof source !== "object" || source === null) return false;
+
+  const parts = path.split(".");
+  let cursor: unknown = source;
+  for (const part of parts) {
+    if (typeof cursor !== "object" || cursor === null) return false;
+    if (!Object.hasOwn(cursor, part)) return false;
+    cursor = Reflect.get(cursor, part);
+  }
+  return true;
+}
+
 export function assertSearchResponse(value: unknown): SearchResponse {
   if (typeof value !== "object" || value === null) {
     throw new Error("Engine returned invalid response shape");
@@ -70,6 +102,14 @@ export function assertSearchResponse(value: unknown): SearchResponse {
 
   if (!results.every(isSearchResult)) {
     throw new Error("Engine returned invalid response shape");
+  }
+
+  for (const row of results) {
+    for (const path of SEARCH_PROJECTION_PATHS) {
+      if (!hasPath(row, path)) {
+        throw new Error(`Engine result missing projection field: ${path}`);
+      }
+    }
   }
 
   return { results, count };

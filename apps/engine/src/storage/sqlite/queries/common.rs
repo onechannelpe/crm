@@ -28,9 +28,12 @@ use rusqlite::{Connection, Row};
 //            22  economic_activity
 //   role   : 23  role_name
 //            24  role_start_date
-//  phones  : 25  phone_primary
-//            26  phone_secondary
-// enriched adds column 27: sibling_phones
+//            25  rep_doc_type
+//            26  rep_doc_number
+//            27  rep_name
+//  phones  : 28  phone_primary
+//            29  phone_secondary
+// enriched adds column 30: sibling_phones
 
 // The 26-column projection shared by all query variants. No SELECT keyword or FROM.
 // Keeping projection and FROM separate lets enriched.rs use a different driving
@@ -61,6 +64,9 @@ pub const SELECT_COLUMNS: &str = "
   NULLIF(cp.economic_activity, '') AS economic_activity,
   NULLIF(pcr.role_name, '') AS role_name,
   NULLIF(pcr.role_start_date, '') AS role_start_date,
+  NULLIF(pcr.rep_doc_type, '') AS rep_doc_type,
+  NULLIF(pcr.rep_doc_number, '') AS rep_doc_number,
+  NULLIF(pcr.rep_name, '') AS rep_name,
   NULLIF(c.phone_primary, '') AS phone_primary,
   NULLIF(c.phone_secondary, '') AS phone_secondary";
 
@@ -118,6 +124,9 @@ pub fn map_row(row: &Row<'_>) -> rusqlite::Result<SearchRow> {
             Ok(RoleInfo {
                 name,
                 start_date: row.get(24)?,
+                rep_doc_type: row.get(25)?,
+                rep_doc_number: row.get(26)?,
+                rep_name: row.get(27)?,
             })
         })
         .transpose()?;
@@ -140,8 +149,8 @@ pub fn map_row(row: &Row<'_>) -> rusqlite::Result<SearchRow> {
         org,
         role,
         phones: PhoneInfo {
-            primary: row.get(25)?,
-            secondary: row.get(26)?,
+            primary: row.get(28)?,
+            secondary: row.get(29)?,
             siblings: None,
         },
     })

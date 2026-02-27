@@ -35,6 +35,9 @@ pub struct OrgInfo {
 pub struct RoleInfo {
     pub name: String,
     pub start_date: Option<String>,
+    pub rep_doc_type: Option<String>,
+    pub rep_doc_number: Option<String>,
+    pub rep_name: Option<String>,
 }
 
 #[derive(Debug, Serialize)]

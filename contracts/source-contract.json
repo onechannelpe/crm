@@ -1,0 +1,54 @@
+{
+  "sources": [
+    {
+      "source_key": "celulares",
+      "required_canonical_fields": ["person_dni"],
+      "requires_any_phone_input": true
+    },
+    {
+      "source_key": "claro_post_202508",
+      "required_canonical_fields": [
+        "rep_doc_type",
+        "rep_doc_number",
+        "person_full_name",
+        "role_start_date"
+      ],
+      "requires_any_phone_input": true
+    },
+    {
+      "source_key": "consolidado_ruc_representantes_ok",
+      "required_canonical_fields": [
+        "company_ruc",
+        "company_name",
+        "rep_doc_type",
+        "rep_doc_number",
+        "rep_name",
+        "role_name",
+        "role_start_date"
+      ],
+      "requires_any_phone_input": true
+    },
+    {
+      "source_key": "representantes_enriquecido",
+      "required_canonical_fields": [
+        "company_ruc",
+        "rep_doc_type",
+        "rep_doc_number",
+        "rep_name",
+        "role_name",
+        "role_start_date"
+      ],
+      "requires_any_phone_input": true
+    },
+    {
+      "source_key": "osiptel",
+      "required_canonical_fields": [
+        "person_dni",
+        "person_full_name",
+        "company_name",
+        "role_name"
+      ],
+      "requires_any_phone_input": true
+    }
+  ]
+}

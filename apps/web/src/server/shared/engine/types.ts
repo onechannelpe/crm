@@ -30,6 +30,9 @@ export interface OrgInfo {
 export interface RoleInfo {
   name: string;
   start_date: string | null;
+  rep_doc_type: string | null;
+  rep_doc_number: string | null;
+  rep_name: string | null;
 }
 
 export interface PhoneInfo {
