@@ -46,10 +46,7 @@ export default function SettingsGeneralPage() {
 
   return (
     <div class={styles.content}>
-      <SettingsSection
-        title="Product catalog"
-        description="Configure pricing and visibility for your workspace products."
-      >
+      <SettingsSection title="Product pricing">
         <div class={styles.card}>
           <For each={currentProducts()}>
             {(product) => {
@@ -78,7 +75,7 @@ export default function SettingsGeneralPage() {
                         type="number"
                         min="0.01"
                         step="0.01"
-                        label="Price"
+                        label="Unit price"
                         value={price()}
                         onInput={(event) => setPrice(event.currentTarget.value)}
                       />

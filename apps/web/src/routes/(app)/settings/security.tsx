@@ -35,7 +35,6 @@ export default function SecurityPage() {
 
   const [passkeySupported, setPasskeySupported] = createSignal(false);
   const [passkeyLoading, setPasskeyLoading] = createSignal(false);
-  const [passkeyMessage, setPasskeyMessage] = createSignal("");
 
   const [totpEnrolling, setTotpEnrolling] = createSignal(false);
   const [totpEnrollment, setTotpEnrollment] = createSignal<{
@@ -63,7 +62,7 @@ export default function SecurityPage() {
     setChangingPassword(true);
     try {
       await changePassword(currentPassword(), newPassword());
-      showToast("success", "Password changed successfully");
+      showToast("success", "Password updated");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -76,7 +75,6 @@ export default function SecurityPage() {
 
   const onRegisterPasskey = async () => {
     setPasskeyLoading(true);
-    setPasskeyMessage("");
     try {
       const { challengeId, options } = await beginPasskeyRegistration();
       const creationOptions = toCreationOptions(options);
@@ -90,9 +88,9 @@ export default function SecurityPage() {
 
       const response = toRegistrationPayload(credential);
       await finishPasskeyRegistration(challengeId, response);
-      showToast("success", "Passkey registered successfully");
+      showToast("success", "Passkey added");
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "Failed to register passkey"));
+      showToast("error", getErrorMessage(err, "Failed to add passkey"));
     } finally {
       setPasskeyLoading(false);
     }
@@ -106,7 +104,7 @@ export default function SecurityPage() {
     } catch (err: unknown) {
       showToast(
         "error",
-        getErrorMessage(err, "Failed to begin TOTP enrollment"),
+        getErrorMessage(err, "Failed to start authenticator setup"),
       );
     } finally {
       setTotpEnrolling(false);
@@ -128,10 +126,7 @@ export default function SecurityPage() {
 
   return (
     <div class={styles.content}>
-      <SettingsSection
-        title="Password"
-        description="Update your password to keep your account secure."
-      >
+      <SettingsSection title="Change password">
         <form onSubmit={(e) => void handleChangePassword(e)}>
           <div class={styles.formGrid}>
             <Input
@@ -158,19 +153,15 @@ export default function SecurityPage() {
           </div>
           <div class={styles.formActions}>
             <Button type="submit" disabled={changingPassword()}>
-              {changingPassword() ? "Changing..." : "Change password"}
+              {changingPassword() ? "Updating..." : "Update password"}
             </Button>
           </div>
         </form>
       </SettingsSection>
 
-      <SettingsSection
-        title="Two-factor auth"
-        description="Add an extra layer of security to your account."
-      >
+      <SettingsSection title="Two Factor Authentication">
         <SettingsCard
           title="Authenticator App"
-          description="Use an app like Google Authenticator or 1Password."
           icon={ShieldCheck}
           status={{
             text: currentTotpStatus()?.enabled ? "Active" : "Deactivated",
@@ -193,16 +184,16 @@ export default function SecurityPage() {
               onClick={() => void onBeginTotp()}
               disabled={totpEnrolling()}
             >
-              {totpEnrolling() ? "Loading..." : "Enable 2FA"}
+              {totpEnrolling()
+                ? "Starting setup..."
+                : "Set up authenticator app"}
             </Button>
           </div>
         </Show>
 
         <Show when={totpEnrollment()}>
           <div class={styles.qrWrap}>
-            <p class={styles.sectionDescription}>
-              Scan this QR code with your authenticator app.
-            </p>
+            <p class={styles.sectionDescription}>Scan the QR code.</p>
             <div class={styles.qrContainer}>
               <img
                 src={totpEnrollment()?.qrCodeDataUrl}
@@ -218,16 +209,16 @@ export default function SecurityPage() {
                 placeholder="123456"
                 required
               />
-              <Button type="submit">Verify</Button>
+              <Button type="submit">Verify code</Button>
             </form>
           </div>
         </Show>
 
         <Show when={recoveryCodes()}>
           <div class={styles.recovery}>
-            <p class={styles.recoveryTitle}>Save your recovery codes</p>
+            <p class={styles.recoveryTitle}>Recovery codes</p>
             <p class={styles.sectionDescription}>
-              If you lose your device, you can use these codes to log in.
+              Save these codes in a safe place.
             </p>
             <div class={styles.recoveryList}>
               <For each={recoveryCodes()}>
@@ -235,39 +226,25 @@ export default function SecurityPage() {
               </For>
             </div>
             <div class={styles.recoveryActions}>
-              <Button onClick={() => setRecoveryCodes(null)}>Done</Button>
+              <Button onClick={() => setRecoveryCodes(null)}>
+                I saved my codes
+              </Button>
             </div>
           </div>
         </Show>
       </SettingsSection>
 
-      <SettingsSection
-        title="Passkeys"
-        description="Login using FaceID, TouchID, or Windows Hello."
-      >
-        <SettingsCard
-          title="Browser Passkey"
-          description={
-            passkeySupported()
-              ? "Supported by your browser"
-              : "Not supported by your browser"
-          }
-          icon={Phone}
-        />
+      <SettingsSection title="Passkeys">
+        <SettingsCard title="Device passkey" icon={Phone} />
         <div class={`${styles.sectionActions} ${styles.sectionActionsSpaced}`}>
           <Button
             variant="outline"
             disabled={!passkeySupported() || passkeyLoading()}
             onClick={() => void onRegisterPasskey()}
           >
-            {passkeyLoading() ? "Registering..." : "Register passkey"}
+            {passkeyLoading() ? "Adding passkey..." : "Add passkey"}
           </Button>
         </div>
-        <Show when={passkeyMessage()}>
-          <p class={`${styles.sectionDescription} ${styles.passkeyMessage}`}>
-            {passkeyMessage()}
-          </p>
-        </Show>
       </SettingsSection>
     </div>
   );

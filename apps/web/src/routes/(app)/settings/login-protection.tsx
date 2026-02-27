@@ -6,10 +6,7 @@ import styles from "./settings-page.module.css";
 export default function LoginProtectionPage() {
   return (
     <div class={styles.content}>
-      <SettingsSection
-        title="Login Protection"
-        description="View and manage recent login attempts and security status for the workspace."
-      >
+      <SettingsSection title="Login security">
         <LoginRetriesCard />
       </SettingsSection>
     </div>
