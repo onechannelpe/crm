@@ -75,6 +75,7 @@ export async function seedLeadsRequestFixtures(
             person: {
               dni: `bench-${value}`,
               name: `Bench Contact ${value}`,
+              ruc: null,
               birth_date: null,
               birth_place: null,
               sex: null,
@@ -84,7 +85,6 @@ export async function seedLeadsRequestFixtures(
               mother_name: null,
               father_name: null,
               email: null,
-              ruc: null,
             },
             org: {
               ruc: value,

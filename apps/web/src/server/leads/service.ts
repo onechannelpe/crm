@@ -93,7 +93,7 @@ export function createLeadAssignmentService(
               const contact = await repos.contacts.findOrCreate(
                 org.id,
                 result.person.dni,
-                result.person.name,
+                result.person.name ?? result.person.dni,
                 result.phones.primary,
               );
 

@@ -10,6 +10,7 @@
     "dev": "bun run --parallel dev:engine dev:web",
     "dev:engine": "cargo run --manifest-path apps/engine/Cargo.toml",
     "dev:web": "bun --no-env-file --env-file=../../.env run --cwd apps/web dev",
+    "dev:worker": "bun --no-env-file --env-file=.env run --cwd apps/web worker:search-enrichment-jobs",
     "build:engine:sqlite": "uv run scripts/build-engine-sqlite.py --input apps/engine/data/contacts.csv --output apps/engine/data/contacts.sqlite",
     "pipeline:engine": "cargo run --manifest-path apps/pipeline/Cargo.toml --",
     "pipeline:staged-test": "bun run pipeline:engine bench --profile standard",
@@ -17,7 +18,7 @@
     "pipeline:normalize-sample": "bun run pipeline:engine validate --profile quick",
     "test:engine": "cargo test --manifest-path apps/engine/Cargo.toml",
     "build:notifications": "bun run --cwd packages/notifications build:emails",
-    "check": "bun run --parallel check:contract check:web check:engine check:lint check:format check:clippy",
+    "check": "bun run --parallel check:contract check:projection-contract check:search-contract check:web check:engine check:lint check:format check:clippy",
     "check:contract": "bun run scripts/generate-engine-contract.ts --check",
     "check:web": "bun run --cwd apps/web check",
     "check:engine": "cargo check --manifest-path apps/engine/Cargo.toml",
@@ -33,9 +34,13 @@
     "format:rust": "cargo fmt --manifest-path apps/engine/Cargo.toml",
     "clean": "shx rm -rf apps/web/*.db* 'apps/*/node_modules' node_modules",
     "generate:engine-contract": "bun run scripts/generate-engine-contract.ts",
-    "refs:fetch": "bun run --cwd packages/fetch-refs fetch"
+    "generate:search-projection-contract": "bun run scripts/generate-search-projection-contract.ts",
+    "refs:fetch": "bun run --cwd packages/fetch-refs fetch",
+    "check:search-contract": "bun run scripts/check-search-contract.ts",
+    "check:projection-contract": "bun run scripts/generate-search-projection-contract.ts --check"
   },
   "devDependencies": {
+    "@types/bun": "^1.3.9",
     "oxfmt": "^0.35.0",
     "oxlint": "^1.50.0",
     "oxlint-tsgolint": "^0.15.0",

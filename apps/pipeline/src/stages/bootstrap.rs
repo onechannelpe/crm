@@ -99,7 +99,10 @@ impl RunContext {
 
 fn write_json<T: Serialize + ?Sized>(path: &Path, value: &T) -> Result<(), PipelineError> {
     let content = serde_json::to_vec_pretty(value).map_err(|err| {
-        PipelineError::Args(format!("failed to serialize json {}: {err}", path.display()))
+        PipelineError::Args(format!(
+            "failed to serialize json {}: {err}",
+            path.display()
+        ))
     })?;
     fs::write(path, content)?;
     Ok(())
@@ -113,7 +116,10 @@ fn now_epoch_secs() -> u64 {
 }
 
 fn git_commit_hash() -> Option<String> {
-    let output = Command::new("git").args(["rev-parse", "HEAD"]).output().ok()?;
+    let output = Command::new("git")
+        .args(["rev-parse", "HEAD"])
+        .output()
+        .ok()?;
     if !output.status.success() {
         return None;
     }

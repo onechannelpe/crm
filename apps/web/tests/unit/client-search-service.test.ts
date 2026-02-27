@@ -14,6 +14,7 @@ describe("client search service", () => {
             person: {
               dni: "12345678",
               name: "Juan Perez",
+              ruc: null,
               birth_date: null,
               birth_place: null,
               sex: null,
@@ -23,7 +24,6 @@ describe("client search service", () => {
               mother_name: null,
               father_name: null,
               email: null,
-              ruc: null,
             },
             org: {
               ruc: "20100000001",

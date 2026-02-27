@@ -1,66 +1,11 @@
+import { migrateToLatest } from "~/lib/db/migrate";
 import { salesExportService } from "~/server/shared/context";
 
-const runOnce = process.argv.includes("--once");
+await migrateToLatest();
 
-const BATCH_SIZE = 25;
-const LEASE_MS = 30_000;
-const LOOP_INTERVAL_MS = 1_000;
-const WORKER_ID = `sales-export-worker-${process.pid}`;
-
-async function runBatch() {
-  const [processed, expired] = await Promise.all([
-    salesExportService.runBatch(BATCH_SIZE, LEASE_MS, WORKER_ID),
-    salesExportService.expireCompleted(BATCH_SIZE),
-  ]);
-  if (processed > 0) {
-    console.log(`[Sales export jobs] Processed ${processed} job(s)`);
-  }
-  if (expired > 0) {
-    console.log(`[Sales export jobs] Expired ${expired} job(s)`);
-  }
-}
-
-if (runOnce) {
-  await runBatch();
-  process.exit(0);
-}
-
-let stopped = false;
-let inFlight = false;
-
-const loop = async () => {
-  if (stopped) {
-    return;
-  }
-  if (inFlight) {
-    setTimeout(() => {
-      void loop();
-    }, LOOP_INTERVAL_MS);
-    return;
-  }
-
-  inFlight = true;
-  try {
-    await runBatch();
-  } catch (error) {
-    console.error("[Sales export jobs] Batch failed", error);
-  } finally {
-    inFlight = false;
-    if (!stopped) {
-      setTimeout(() => {
-        void loop();
-      }, LOOP_INTERVAL_MS);
-    }
-  }
-};
-
-void loop();
-console.log(`[Sales export jobs] Worker running every ${LOOP_INTERVAL_MS} ms`);
-
-function shutdown() {
-  stopped = true;
-  process.exit(0);
-}
-
-process.on("SIGINT", shutdown);
-process.on("SIGTERM", shutdown);
+const WORKER_ID = `sales-export-cli-${process.pid}`;
+const [processed, expired] = await Promise.all([
+  salesExportService.runBatch(25, 30_000, WORKER_ID),
+  salesExportService.expireCompleted(25),
+]);
+console.log(`[Sales export jobs] Processed ${processed}, expired ${expired}`);

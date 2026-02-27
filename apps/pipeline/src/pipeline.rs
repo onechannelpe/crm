@@ -2,6 +2,7 @@ use crate::PipelineError;
 use crate::cli::Command;
 use crate::config::manifest::verify_manifest;
 use crate::config::runtime::{PipelineRuntimeConfig, ProfileMode};
+use crate::contract_guard::validate_contracts;
 use crate::stages::normalize;
 use crate::stages::promote;
 use crate::stages::verify;
@@ -11,10 +12,12 @@ pub fn run(command: Command) -> Result<(), PipelineError> {
     match command {
         Command::VerifyManifest { manifest } => {
             verify_manifest(&manifest)?;
+            validate_contracts(&manifest)?;
             Ok(())
         }
         Command::Validate { config, profile } => {
             let runtime = PipelineRuntimeConfig::from_path(&config)?;
+            validate_contracts(&runtime.paths.manifest)?;
             let resolved = runtime.resolve_profile(&profile)?;
             normalize::normalize_matrix(
                 &runtime.paths.manifest,
@@ -24,6 +27,7 @@ pub fn run(command: Command) -> Result<(), PipelineError> {
         }
         Command::Bench { config, profile } => {
             let runtime = PipelineRuntimeConfig::from_path(&config)?;
+            validate_contracts(&runtime.paths.manifest)?;
             let resolved = runtime.resolve_profile(&profile)?;
             let bench_db =
                 Path::new(&runtime.paths.bench_dir).join(format!("bench-{}.sqlite", profile));
@@ -43,6 +47,7 @@ pub fn run(command: Command) -> Result<(), PipelineError> {
         }
         Command::BenchMap { config, profile } => {
             let runtime = PipelineRuntimeConfig::from_path(&config)?;
+            validate_contracts(&runtime.paths.manifest)?;
             let resolved = runtime.resolve_profile(&profile)?;
             let bench_build_dir =
                 Path::new(&runtime.paths.bench_dir).join(format!("bench-map-{}", profile));
@@ -57,6 +62,7 @@ pub fn run(command: Command) -> Result<(), PipelineError> {
         }
         Command::Build { config, profile } => {
             let runtime = PipelineRuntimeConfig::from_path(&config)?;
+            validate_contracts(&runtime.paths.manifest)?;
             let resolved = runtime.resolve_profile(&profile)?;
 
             if resolved.mode != ProfileMode::Full {

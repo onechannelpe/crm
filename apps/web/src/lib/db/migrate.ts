@@ -8,6 +8,8 @@ import * as m003 from "./migrations/003-user-invites";
 import * as m004 from "./migrations/004-action-observability";
 import * as m005 from "./migrations/005-report-export-observability";
 import * as m006 from "./migrations/006-sales-records-core";
+import * as m007 from "./migrations/007-action-rate-limit";
+import * as m008 from "./migrations/008-search-enrichment";
 
 /**
  * Static migration provider that avoids FileMigrationProvider's dynamic import(),
@@ -23,6 +25,8 @@ const staticProvider: MigrationProvider = {
       "004-action-observability": m004,
       "005-report-export-observability": m005,
       "006-sales-records-core": m006,
+      "007-action-rate-limit": m007,
+      "008-search-enrichment": m008,
     };
   },
 };

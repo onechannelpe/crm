@@ -2,85 +2,39 @@ use crate::errors::ApiError;
 use crate::storage::sqlite::models::{OrgInfo, PersonInfo, PhoneInfo, RoleInfo, SearchRow};
 use rusqlite::{Connection, Row};
 
-// Column layout (0-indexed):
-//   person :  0  dni
-//             1  name (COALESCE fallback)
-//             2  birth_date
-//             3  birth_place
-//             4  sex
-//             5  marital_status
-//             6  location_text
-//             7  ubigeo_code
-//             8  mother_name
-//             9  father_name
-//            10  email
-//            11  person_ruc  (natural_ruc10)
-//   org    : 12  org_ruc
-//            13  org_name
-//            14  trade_name
-//            15  company_type
-//            16  org_status
-//            17  org_condition
-//            18  fiscal_address
-//            19  registration_date
-//            20  activity_start_date
-//            21  line_of_business
-//            22  economic_activity
-//   role   : 23  role_name
-//            24  role_start_date
-//  phones  : 25  phone_primary
-//            26  phone_secondary
-// enriched adds column 27: sibling_phones
-
-// The 26-column projection shared by all query variants. No SELECT keyword or FROM.
-// Keeping projection and FROM separate lets enriched.rs use a different driving
-// table (phone_index) without duplicating columns.
+// The 30-column projection shared by all query variants. No SELECT keyword or FROM.
+// search_projection already resolves profile/company/role joins during materialization.
 pub const SELECT_COLUMNS: &str = "
   c.dni,
-  COALESCE(NULLIF(c.name, ''), 'Contacto ' || c.dni) AS name,
-  pp.birth_date,
-  pp.birth_place,
-  pp.sex,
-  pp.marital_status,
-  pp.location_text,
-  pp.ubigeo_code,
-  pp.mother_name,
-  pp.father_name,
-  pp.email,
-  NULLIF(pp.natural_ruc10, '') AS person_ruc,
+  NULLIF(c.name, '') AS name,
+  NULLIF(c.person_ruc, '') AS ruc,
+  NULLIF(c.birth_date, '') AS birth_date,
+  NULLIF(c.birth_place, '') AS birth_place,
+  NULLIF(c.sex, '') AS sex,
+  NULLIF(c.marital_status, '') AS marital_status,
+  NULLIF(c.location_text, '') AS location_text,
+  NULLIF(c.ubigeo_code, '') AS ubigeo_code,
+  NULLIF(c.mother_name, '') AS mother_name,
+  NULLIF(c.father_name, '') AS father_name,
+  NULLIF(c.email, '') AS email,
   NULLIF(c.org_ruc, '') AS org_ruc,
   NULLIF(c.org_name, '') AS org_name,
-  NULLIF(cp.trade_name, '') AS trade_name,
-  NULLIF(cp.company_type, '') AS company_type,
-  NULLIF(cp.status, '') AS org_status,
-  NULLIF(cp.condition, '') AS org_condition,
-  NULLIF(cp.fiscal_address, '') AS fiscal_address,
-  NULLIF(cp.registration_date, '') AS registration_date,
-  NULLIF(cp.activity_start_date, '') AS activity_start_date,
-  NULLIF(cp.line_of_business, '') AS line_of_business,
-  NULLIF(cp.economic_activity, '') AS economic_activity,
-  NULLIF(pcr.role_name, '') AS role_name,
-  NULLIF(pcr.role_start_date, '') AS role_start_date,
+  NULLIF(c.trade_name, '') AS trade_name,
+  NULLIF(c.company_type, '') AS company_type,
+  NULLIF(c.org_status, '') AS org_status,
+  NULLIF(c.org_condition, '') AS org_condition,
+  NULLIF(c.fiscal_address, '') AS fiscal_address,
+  NULLIF(c.registration_date, '') AS registration_date,
+  NULLIF(c.activity_start_date, '') AS activity_start_date,
+  NULLIF(c.line_of_business, '') AS line_of_business,
+  NULLIF(c.economic_activity, '') AS economic_activity,
+  NULLIF(c.role_name, '') AS role_name,
+  NULLIF(c.role_start_date, '') AS role_start_date,
+  NULLIF(c.rep_doc_type, '') AS rep_doc_type,
+  NULLIF(c.rep_doc_number, '') AS rep_doc_number,
+  NULLIF(c.rep_name, '') AS rep_name,
   NULLIF(c.phone_primary, '') AS phone_primary,
   NULLIF(c.phone_secondary, '') AS phone_secondary";
-
-// The normalized-table JOIN chain. Assumes `c` aliases contacts_serving.
-// Shared by all query paths; enriched and exact-phone prepend their own driving join.
-pub const JOIN_CHAIN: &str = "
-LEFT JOIN person_profile pp ON pp.dni = c.dni
-LEFT JOIN company_profile cp ON cp.ruc = c.org_ruc
-LEFT JOIN person_company_role pcr
-  ON pcr.person_id = pp.person_id
-  AND pcr.company_id = cp.company_id
-  AND pcr.role_id = (
-    SELECT MIN(r2.role_id)
-    FROM person_company_role r2
-    WHERE r2.person_id = pp.person_id
-      AND r2.company_id = cp.company_id
-  )";
-
-// Standard base query is assembled in each query module via SELECT_COLUMNS + JOIN_CHAIN
-// using module-level LazyLock<String> statics.
 
 pub fn query_rows<P>(conn: &Connection, sql: &str, params: P) -> Result<Vec<SearchRow>, ApiError>
 where
@@ -92,56 +46,89 @@ where
 }
 
 pub fn map_row(row: &Row<'_>) -> rusqlite::Result<SearchRow> {
-    let org_ruc: Option<String> = row.get(12)?;
-    let org_name: Option<String> = row.get(13)?;
+    let org_ruc: Option<String> = row.get("org_ruc")?;
+    let org_name: Option<String> = row.get("org_name")?;
+    let trade_name: Option<String> = row.get("trade_name")?;
+    let company_type: Option<String> = row.get("company_type")?;
+    let org_status: Option<String> = row.get("org_status")?;
+    let org_condition: Option<String> = row.get("org_condition")?;
+    let fiscal_address: Option<String> = row.get("fiscal_address")?;
+    let registration_date: Option<String> = row.get("registration_date")?;
+    let activity_start_date: Option<String> = row.get("activity_start_date")?;
+    let line_of_business: Option<String> = row.get("line_of_business")?;
+    let economic_activity: Option<String> = row.get("economic_activity")?;
 
-    let org = match (org_ruc, org_name) {
-        (Some(ruc), Some(name)) => Some(OrgInfo {
-            ruc,
-            name,
-            trade_name: row.get(14)?,
-            company_type: row.get(15)?,
-            status: row.get(16)?,
-            condition: row.get(17)?,
-            fiscal_address: row.get(18)?,
-            registration_date: row.get(19)?,
-            activity_start_date: row.get(20)?,
-            line_of_business: row.get(21)?,
-            economic_activity: row.get(22)?,
-        }),
-        _ => None,
+    let org = if org_ruc.is_none()
+        && org_name.is_none()
+        && trade_name.is_none()
+        && company_type.is_none()
+        && org_status.is_none()
+        && org_condition.is_none()
+        && fiscal_address.is_none()
+        && registration_date.is_none()
+        && activity_start_date.is_none()
+        && line_of_business.is_none()
+        && economic_activity.is_none()
+    {
+        None
+    } else {
+        Some(OrgInfo {
+            ruc: org_ruc,
+            name: org_name,
+            trade_name,
+            company_type,
+            status: org_status,
+            condition: org_condition,
+            fiscal_address,
+            registration_date,
+            activity_start_date,
+            line_of_business,
+            economic_activity,
+        })
     };
 
-    let role_name: Option<String> = row.get(23)?;
-    let role = role_name
-        .map(|name| -> rusqlite::Result<RoleInfo> {
-            Ok(RoleInfo {
-                name,
-                start_date: row.get(24)?,
-            })
+    let role_name: Option<String> = row.get("role_name")?;
+    let role_start_date: Option<String> = row.get("role_start_date")?;
+    let rep_doc_type: Option<String> = row.get("rep_doc_type")?;
+    let rep_doc_number: Option<String> = row.get("rep_doc_number")?;
+    let rep_name: Option<String> = row.get("rep_name")?;
+    let role = if role_name.is_none()
+        && role_start_date.is_none()
+        && rep_doc_type.is_none()
+        && rep_doc_number.is_none()
+        && rep_name.is_none()
+    {
+        None
+    } else {
+        Some(RoleInfo {
+            name: role_name,
+            start_date: role_start_date,
+            rep_doc_type,
+            rep_doc_number,
+            rep_name,
         })
-        .transpose()?;
+    };
 
     Ok(SearchRow {
         person: PersonInfo {
-            dni: row.get(0)?,
-            name: row.get(1)?,
-            birth_date: row.get(2)?,
-            birth_place: row.get(3)?,
-            sex: row.get(4)?,
-            marital_status: row.get(5)?,
-            location_text: row.get(6)?,
-            ubigeo_code: row.get(7)?,
-            mother_name: row.get(8)?,
-            father_name: row.get(9)?,
-            email: row.get(10)?,
-            ruc: row.get(11)?,
+            dni: row.get("dni")?,
+            name: row.get("name")?,
+            ruc: row.get("ruc")?,
+            birth_date: row.get("birth_date")?,
+            birth_place: row.get("birth_place")?,
+            sex: row.get("sex")?,
+            marital_status: row.get("marital_status")?,
+            location_text: row.get("location_text")?,
+            ubigeo_code: row.get("ubigeo_code")?,
+            mother_name: row.get("mother_name")?,
+            father_name: row.get("father_name")?,
+            email: row.get("email")?,
         },
         org,
         role,
         phones: PhoneInfo {
-            primary: row.get(25)?,
-            secondary: row.get(26)?,
+            primary: row.get("phone_primary")?,
+            secondary: row.get("phone_secondary")?,
             siblings: None,
         },
     })

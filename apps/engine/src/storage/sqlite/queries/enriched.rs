@@ -1,11 +1,11 @@
-use super::common::{JOIN_CHAIN, SELECT_COLUMNS, db_err, map_row};
+use super::common::{SELECT_COLUMNS, db_err, map_row};
 use crate::errors::ApiError;
 use crate::storage::sqlite::models::SearchRow;
 use rusqlite::{Connection, Row, params};
 use std::sync::LazyLock;
 
-// Same 26 columns as the standard queries, plus sibling_phones at col 27.
-// Driving table is phone_index (INNER join) → contacts_serving, then JOIN_CHAIN.
+// Same standard columns, plus sibling_phones at col 30.
+// Driving table is search_projection_phone_index.
 static SQL_PHONE_ENRICHED: LazyLock<String> = LazyLock::new(|| {
     format!(
         "SELECT{SELECT_COLUMNS},
@@ -13,8 +13,8 @@ static SQL_PHONE_ENRICHED: LazyLock<String> = LazyLock::new(|| {
     WHEN c.org_ruc IS NOT NULL AND c.org_ruc <> '' THEN rpa.phones
     ELSE dpa.phones
   END AS sibling_phones
-FROM phone_index pi
-JOIN contacts_serving c ON c.id = pi.contact_id{JOIN_CHAIN}
+FROM search_projection_phone_index pi
+JOIN search_projection c ON c.id = pi.projection_id
 LEFT JOIN ruc_phone_agg rpa ON rpa.org_ruc = c.org_ruc
 LEFT JOIN dni_phone_agg dpa ON dpa.dni = c.dni
 WHERE pi.phone = ?1
@@ -36,6 +36,6 @@ pub fn search_phone_enriched(
 
 fn map_row_with_siblings(row: &Row<'_>) -> rusqlite::Result<SearchRow> {
     let base = map_row(row)?;
-    let siblings: Option<String> = row.get(27)?;
+    let siblings: Option<String> = row.get("sibling_phones")?;
     Ok(base.with_siblings(siblings))
 }

@@ -51,19 +51,46 @@ pub fn create_test_db() -> tempfile::NamedTempFile {
             role_start_date TEXT NOT NULL DEFAULT '',
             resolution_status TEXT NOT NULL DEFAULT 'unresolved'
         );
-        CREATE TABLE contacts_serving (
+        CREATE TABLE ruc_phone_agg (org_ruc TEXT PRIMARY KEY, phones TEXT NOT NULL);
+        CREATE TABLE dni_phone_agg (dni TEXT PRIMARY KEY, phones TEXT NOT NULL);
+        CREATE TABLE search_projection (
             id INTEGER PRIMARY KEY,
             dni TEXT NOT NULL,
             name TEXT,
+            birth_date TEXT,
+            birth_place TEXT,
+            sex TEXT,
+            marital_status TEXT,
+            location_text TEXT,
+            ubigeo_code TEXT,
+            mother_name TEXT,
+            father_name TEXT,
+            email TEXT,
+            person_ruc TEXT,
             org_ruc TEXT,
             org_name TEXT,
+            trade_name TEXT,
+            company_type TEXT,
+            org_status TEXT,
+            org_condition TEXT,
+            fiscal_address TEXT,
+            registration_date TEXT,
+            activity_start_date TEXT,
+            line_of_business TEXT,
+            economic_activity TEXT,
+            role_name TEXT,
+            role_start_date TEXT,
+            rep_doc_type TEXT,
+            rep_doc_number TEXT,
+            rep_name TEXT,
             phone_primary TEXT,
             phone_secondary TEXT
         );
-        CREATE TABLE phone_index (phone TEXT NOT NULL, contact_id INTEGER NOT NULL);
-        CREATE TABLE ruc_phone_agg (org_ruc TEXT PRIMARY KEY, phones TEXT NOT NULL);
-        CREATE TABLE dni_phone_agg (dni TEXT PRIMARY KEY, phones TEXT NOT NULL);
-        CREATE VIRTUAL TABLE contacts_fts USING fts5(person_name, company_name);
+        CREATE TABLE search_projection_phone_index (
+            phone TEXT NOT NULL,
+            projection_id INTEGER NOT NULL
+        );
+        CREATE VIRTUAL TABLE search_projection_fts USING fts5(person_name, company_name);
 
         INSERT INTO person_profile(person_id,dni,full_name,sex,birth_date) VALUES
           (1,'12345678','JUAN PEREZ','M','1980-05-10'),
@@ -77,12 +104,16 @@ pub fn create_test_db() -> tempfile::NamedTempFile {
           (1,1,1,'GERENTE GENERAL','2020-01-01'),
           (2,2,1,'SOCIO','2020-01-01');
 
-        INSERT INTO contacts_serving(id,dni,name,org_ruc,org_name,phone_primary,phone_secondary) VALUES
-          (1,'12345678','JUAN PEREZ','20100011111','ACME SAC','999111222','999333444'),
-          (2,'87654321','MARIA LOPEZ','20100011111','ACME SAC','988777666',NULL),
-          (3,'11223344','CARLOS DIAZ','','','977000111',NULL);
+        INSERT INTO search_projection(
+          id,dni,name,birth_date,birth_place,sex,marital_status,location_text,ubigeo_code,mother_name,father_name,email,person_ruc,
+          org_ruc,org_name,trade_name,company_type,org_status,org_condition,fiscal_address,registration_date,activity_start_date,
+          line_of_business,economic_activity,role_name,role_start_date,rep_doc_type,rep_doc_number,rep_name,phone_primary,phone_secondary
+        ) VALUES
+          (1,'12345678','JUAN PEREZ','1980-05-10',NULL,'M',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'20100011111','ACME SAC','ACME',NULL,'ACTIVO',NULL,'AV. LIMA 123',NULL,NULL,NULL,NULL,'GERENTE GENERAL','2020-01-01','','','', '999111222','999333444'),
+          (2,'87654321','MARIA LOPEZ',NULL,NULL,'F',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'20100011111','ACME SAC','ACME',NULL,'ACTIVO',NULL,'AV. LIMA 123',NULL,NULL,NULL,NULL,'SOCIO','2020-01-01','','','', '988777666',NULL),
+          (3,'11223344','CARLOS DIAZ',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'','',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'','','', '977000111',NULL);
 
-        INSERT INTO phone_index(phone, contact_id) VALUES
+        INSERT INTO search_projection_phone_index(phone, projection_id) VALUES
           ('999111222',1),('999333444',1),('988777666',2),('977000111',3);
 
         INSERT INTO ruc_phone_agg(org_ruc, phones) VALUES
@@ -92,8 +123,9 @@ pub fn create_test_db() -> tempfile::NamedTempFile {
           ('87654321','988777666'),
           ('11223344','977000111');
 
-        INSERT INTO contacts_fts(rowid, person_name, company_name)
-        SELECT id, COALESCE(name,''), COALESCE(org_name,'') FROM contacts_serving;
+        INSERT INTO search_projection_fts(rowid, person_name, company_name)
+        SELECT id, COALESCE(name,''), COALESCE(org_name,'')
+        FROM search_projection;
         ",
     )
     .expect("seed db");

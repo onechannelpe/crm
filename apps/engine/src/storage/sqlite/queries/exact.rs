@@ -1,25 +1,20 @@
-use super::common::{JOIN_CHAIN, SELECT_COLUMNS, query_rows};
+use super::common::{SELECT_COLUMNS, query_rows};
 use crate::errors::ApiError;
 use crate::storage::sqlite::models::SearchRow;
 use rusqlite::{Connection, params};
 use std::sync::LazyLock;
 
 static SQL_DNI: LazyLock<String> = LazyLock::new(|| {
-    format!(
-        "SELECT{SELECT_COLUMNS}\nFROM contacts_serving c{JOIN_CHAIN}\nWHERE c.dni = ?1 LIMIT ?2"
-    )
+    format!("SELECT{SELECT_COLUMNS}\nFROM search_projection c\nWHERE c.dni = ?1 LIMIT ?2")
 });
 
 static SQL_RUC: LazyLock<String> = LazyLock::new(|| {
-    format!(
-        "SELECT{SELECT_COLUMNS}\nFROM contacts_serving c{JOIN_CHAIN}\nWHERE c.org_ruc = ?1 LIMIT ?2"
-    )
+    format!("SELECT{SELECT_COLUMNS}\nFROM search_projection c\nWHERE c.org_ruc = ?1 LIMIT ?2")
 });
 
-// phone_index is an inner join — placed before the LEFT JOINs for optimizer clarity.
 static SQL_PHONE: LazyLock<String> = LazyLock::new(|| {
     format!(
-        "SELECT{SELECT_COLUMNS}\nFROM contacts_serving c\nJOIN phone_index p ON p.contact_id = c.id{JOIN_CHAIN}\nWHERE p.phone = ?1 LIMIT ?2"
+        "SELECT{SELECT_COLUMNS}\nFROM search_projection c\nJOIN search_projection_phone_index p ON p.projection_id = c.id\nWHERE p.phone = ?1 LIMIT ?2"
     )
 });
 
