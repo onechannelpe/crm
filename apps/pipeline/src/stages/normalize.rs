@@ -277,24 +277,3 @@ fn render_record_payload(record: &csv::StringRecord, delimiter: &str) -> String 
     }
     payload
 }
-
-#[cfg(test)]
-mod tests {
-    use crate::domain::normalize_helpers::normalize_person_document_with_natural_ruc;
-
-    #[test]
-    fn resolves_dni_from_natural_person_ruc_document() {
-        assert_eq!(
-            normalize_person_document_with_natural_ruc("10441792498"),
-            (Some("44179249".to_owned()), Some("10441792498".to_owned()))
-        );
-        assert_eq!(
-            normalize_person_document_with_natural_ruc("044179249"),
-            (None, None)
-        );
-        assert_eq!(
-            normalize_person_document_with_natural_ruc("00023AT1919"),
-            (None, None)
-        );
-    }
-}

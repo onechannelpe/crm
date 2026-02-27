@@ -15,6 +15,10 @@ pub enum Command {
         config: String,
         profile: String,
     },
+    BenchMap {
+        config: String,
+        profile: String,
+    },
     Build {
         config: String,
         profile: String,
@@ -52,6 +56,16 @@ pub fn parse_args(args: &[String]) -> Result<Command, PipelineError> {
                 .unwrap_or_else(|| "quick".to_owned()),
         }),
         "bench" => Ok(Command::Bench {
+            config: flags
+                .get("--config")
+                .cloned()
+                .unwrap_or_else(|| default_pipeline_config().to_string_lossy().to_string()),
+            profile: flags
+                .get("--profile")
+                .cloned()
+                .unwrap_or_else(|| "standard".to_owned()),
+        }),
+        "bench-map" => Ok(Command::BenchMap {
             config: flags
                 .get("--config")
                 .cloned()

@@ -1,0 +1,74 @@
+use std::path::PathBuf;
+
+#[derive(Default, Clone)]
+pub struct IngestCounters {
+    pub total_rows: i64,
+    pub accepted_rows: i64,
+    pub invalid_dni_rows: i64,
+    pub invalid_ruc_rows: i64,
+    pub invalid_phone_rows: i64,
+}
+
+impl IngestCounters {
+    pub fn add_from(&mut self, other: &IngestCounters) {
+        self.total_rows += other.total_rows;
+        self.accepted_rows += other.accepted_rows;
+        self.invalid_dni_rows += other.invalid_dni_rows;
+        self.invalid_ruc_rows += other.invalid_ruc_rows;
+        self.invalid_phone_rows += other.invalid_phone_rows;
+    }
+}
+
+pub struct ShardResult {
+    pub shard_index: usize,
+    pub shard_db_path: PathBuf,
+}
+
+pub struct IngestSession {
+    pub snapshot_id: i64,
+    pub source_key: String,
+    pub counters: IngestCounters,
+    pub dispatched_rows: i64,
+    pub shard_results: Vec<ShardResult>,
+}
+
+pub(super) struct ShardTask {
+    pub source_row_number: i64,
+    pub record: csv::StringRecord,
+}
+
+pub(super) struct ShardWorkerResult {
+    pub shard_index: usize,
+    pub shard_db_path: PathBuf,
+    pub counters: IngestCounters,
+}
+
+#[derive(Default)]
+pub(super) struct StageRow {
+    pub source_row_number: i64,
+    pub person_dni: Option<String>,
+    pub person_natural_ruc: Option<String>,
+    pub person_full_name: String,
+    pub company_ruc: Option<String>,
+    pub company_name: String,
+    pub role_name: String,
+    pub role_start_date: String,
+    pub rep_doc_type: String,
+    pub rep_doc_number: String,
+    pub rep_name: String,
+    pub phones: Vec<String>,
+    pub had_phone_input: bool,
+    pub raw_hash: String,
+}
+
+pub(super) fn sanitize_path_component(value: &str) -> String {
+    let mut out = String::with_capacity(value.len());
+    for ch in value.chars() {
+        if ch.is_ascii_alphanumeric() || ch == '-' || ch == '_' {
+            out.push(ch);
+        } else {
+            out.push('_');
+        }
+    }
+    out
+}
