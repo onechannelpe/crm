@@ -13,7 +13,6 @@ import {
 
 describe("route permissions", () => {
   it("resolves static and dynamic route permissions", () => {
-    expect(getRoutePermission("/settings")).toBe("admin:manage");
     expect(getRoutePermission("/team/new")).toBe("hr:manage");
     expect(getRoutePermission("/sales/records/new")).toBe("sales:create");
     expect(getRoutePermission("/sales/records/123/edit")).toBe("sales:create");
@@ -22,17 +21,17 @@ describe("route permissions", () => {
       "sales:review",
     );
     expect(getRoutePermission("/dashboard")).toBe("sales:review");
-    expect(getRoutePermission("/profile")).toBeNull();
+    expect(getRoutePermission("/settings/profile")).toBeNull();
   });
 
   it("enforces role access checks for restricted paths", () => {
-    expect(canAccessPath("executive", "/settings")).toBe(false);
+    expect(canAccessPath("executive", "/settings/general")).toBe(false);
     expect(canAccessPath("executive", "/audit")).toBe(false);
     expect(canAccessPath("supervisor", "/audit")).toBe(true);
     expect(canAccessPath("executive", "/quota")).toBe(false);
     expect(canAccessPath("executive", "/team/new")).toBe(false);
     expect(canAccessPath("hr", "/team/new")).toBe(true);
-    expect(canAccessPath("admin", "/settings")).toBe(true);
+    expect(canAccessPath("admin", "/settings/general")).toBe(true);
     expect(canAccessPath("sales_manager", "/sales/records/42/edit")).toBe(
       false,
     );
@@ -100,7 +99,7 @@ describe("nav policy", () => {
   it("resolves header metadata for static routes", () => {
     expect(getHeaderRoute("/contacts/people").label).toBe("People");
     expect(getHeaderRoute("/contacts/companies").label).toBe("Companies");
-    expect(getHeaderRoute("/profile").label).toBe("Profile");
+    expect(getHeaderRoute("/settings/profile").label).toBe("Profile");
     expect(getHeaderRoute("/unknown").label).toBe("Workspace");
   });
 

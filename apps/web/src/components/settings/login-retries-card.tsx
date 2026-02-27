@@ -40,7 +40,7 @@ export function LoginRetriesCard() {
       setReport(next);
       if (!next) showToast("info", "User not found");
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "Lookup failed"));
+      showToast("error", getErrorMessage(err, "Failed to load report"));
     } finally {
       setLoading(false);
     }
@@ -48,8 +48,6 @@ export function LoginRetriesCard() {
 
   return (
     <section class={styles.root}>
-      <h2 class={styles.title}>Login security</h2>
-      <p class={styles.description}>Inspect user login retries.</p>
       <form
         class={styles.form}
         onSubmit={(e) => {
@@ -65,7 +63,7 @@ export function LoginRetriesCard() {
           required
         />
         <Button type="submit" disabled={loading()}>
-          {loading() ? "Loading..." : "View retries"}
+          {loading() ? "Loading report..." : "View report"}
         </Button>
       </form>
 
@@ -77,11 +75,11 @@ export function LoginRetriesCard() {
             </p>
             <div class={styles.stats}>
               <div class={styles.statCard}>
-                <p class={styles.statLabel}>retries in 15m</p>
+                <p class={styles.statLabel}>Retries in last 15 minutes</p>
                 <p class={styles.statValue}>{data().retryCount15m}</p>
               </div>
               <div class={styles.statCard}>
-                <p class={styles.statLabel}>retries in 24h</p>
+                <p class={styles.statLabel}>Retries in last 24 hours</p>
                 <p class={styles.statValue}>{data().retryCount24h}</p>
               </div>
             </div>

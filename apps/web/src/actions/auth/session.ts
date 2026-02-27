@@ -44,6 +44,8 @@ export interface CurrentUser extends WorkspaceIdentity {
   email: string;
   fullName: string;
   phoneE164: string | null;
+  avatarUrl: string | null;
+  avatarVersion: number;
   onboardingCompletedAt: number | null;
   role: Role;
   strongAuthRequired: boolean;
@@ -100,6 +102,10 @@ export async function getMe(): Promise<CurrentUser | null> {
     email: user.email,
     fullName: user.full_name,
     phoneE164: user.phone_e164,
+    avatarUrl: user.avatar_storage_key
+      ? `/api/settings/profile/picture?v=${user.avatar_version}`
+      : null,
+    avatarVersion: user.avatar_version,
     onboardingCompletedAt: user.onboarding_completed_at,
     role: session.role,
     strongAuthRequired: user.strong_auth_required === 1,

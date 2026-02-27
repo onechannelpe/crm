@@ -9,6 +9,8 @@ import { createSalesExportBlobStore } from "~/server/sales/export-blob-store";
 import { createSalesExportService } from "~/server/sales/export-service";
 import { createSalesRecordsWorkflowService } from "~/server/sales/records-service";
 import { createRepositories } from "~/server/shared/registry";
+import { createProfilePictureBlobStore } from "~/server/users/profile-picture-blob-store";
+import { createProfilePictureService } from "~/server/users/profile-picture-service";
 
 const repos = createRepositories(db);
 
@@ -34,9 +36,16 @@ export const observabilityService = createObservabilityService({
 export const salesExportBlobStore = createSalesExportBlobStore(
   config.uploads.storageRoot,
 );
+export const profilePictureBlobStore = createProfilePictureBlobStore(
+  config.uploads.storageRoot,
+);
 export const salesExportService = createSalesExportService(
   repos,
   salesExportBlobStore,
+);
+export const profilePictureService = createProfilePictureService(
+  repos,
+  profilePictureBlobStore,
 );
 export const salesRecordsService = createSalesRecordsWorkflowService(
   repos,
