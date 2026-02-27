@@ -154,7 +154,9 @@ export function groupCompaniesByRuc(
       key,
       ruc: ruc || null,
       name: normalized(row.org?.name ?? null) || null,
-      people: personDni ? [{ dni: personDni, name: normalized(row.person.name) }] : [],
+      people: personDni
+        ? [{ dni: personDni, name: normalized(row.person.name) }]
+        : [],
       phones,
       rows: [row],
     };

@@ -95,9 +95,7 @@ export default function ClientSearchPeoplePage() {
             return (
               <TableRow
                 class={`${styles.rowClickable}${isActive() ? ` ${styles.rowActive}` : ""}`}
-                onClick={() =>
-                  setSelectedDni(isActive() ? null : row.dni)
-                }
+                onClick={() => setSelectedDni(isActive() ? null : row.dni)}
               >
                 <TableCell>
                   <span class={styles.chip}>

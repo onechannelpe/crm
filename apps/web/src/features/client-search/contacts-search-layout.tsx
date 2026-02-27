@@ -91,7 +91,12 @@ export function ContactsSearchLayout(props: ContactsSearchLayoutProps) {
         </div>
       </Show>
 
-      <div class={cn(styles.contentWrap, detailContent() !== null && styles.contentWrapSplit)}>
+      <div
+        class={cn(
+          styles.contentWrap,
+          detailContent() !== null && styles.contentWrapSplit,
+        )}
+      >
         <div class={styles.mainPane}>
           <Show
             when={props.resultCount() > 0}
@@ -125,9 +130,7 @@ export function ContactsSearchLayout(props: ContactsSearchLayoutProps) {
         </div>
 
         <Show when={detailContent() !== null}>
-          <aside class={styles.detailPane}>
-            {detailContent()}
-          </aside>
+          <aside class={styles.detailPane}>{detailContent()}</aside>
         </Show>
       </div>
     </AppPage>
