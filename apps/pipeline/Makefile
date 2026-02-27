@@ -13,28 +13,28 @@ NORMALIZED_DIR := data/normalized
 .PHONY: verify validate-quick validate-standard bench-quick bench-standard bench-heavy build-full promote capture-run generate-triage compare-runs
 
 verify:
-	cd $(ROOT) && cargo run --manifest-path $(PIPELINE_MANIFEST) -- verify-manifest
+	cd $(ROOT) && cargo run --release --manifest-path $(PIPELINE_MANIFEST) -- verify-manifest
 
 validate-quick:
-	cd $(ROOT) && cargo run --manifest-path $(PIPELINE_MANIFEST) -- validate --profile quick
+	cd $(ROOT) && cargo run --release --manifest-path $(PIPELINE_MANIFEST) -- validate --profile quick
 
 validate-standard:
-	cd $(ROOT) && cargo run --manifest-path $(PIPELINE_MANIFEST) -- validate --profile standard
+	cd $(ROOT) && cargo run --release --manifest-path $(PIPELINE_MANIFEST) -- validate --profile standard
 
 bench-quick:
-	cd $(ROOT) && cargo run --manifest-path $(PIPELINE_MANIFEST) -- bench --profile quick
+	cd $(ROOT) && cargo run --release --manifest-path $(PIPELINE_MANIFEST) -- bench --profile quick
 
 bench-standard:
-	cd $(ROOT) && cargo run --manifest-path $(PIPELINE_MANIFEST) -- bench --profile standard
+	cd $(ROOT) && cargo run --release --manifest-path $(PIPELINE_MANIFEST) -- bench --profile standard
 
 bench-heavy:
-	cd $(ROOT) && cargo run --manifest-path $(PIPELINE_MANIFEST) -- bench --profile heavy
+	cd $(ROOT) && cargo run --release --manifest-path $(PIPELINE_MANIFEST) -- bench --profile heavy
 
 build-full:
-	cd $(ROOT) && cargo run --manifest-path $(PIPELINE_MANIFEST) -- build --profile full
+	cd $(ROOT) && cargo run --release --manifest-path $(PIPELINE_MANIFEST) -- build --profile full
 
 promote:
-	cd $(ROOT) && cargo run --manifest-path $(PIPELINE_MANIFEST) -- promote
+	cd $(ROOT) && cargo run --release --manifest-path $(PIPELINE_MANIFEST) -- promote
 
 capture-run:
 	@if [ -z "$(RUN_ID)" ]; then echo "RUN_ID is required"; exit 1; fi

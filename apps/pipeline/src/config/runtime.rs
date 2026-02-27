@@ -22,6 +22,8 @@ pub struct RuntimePaths {
 pub struct RuntimeProfile {
     pub mode: String,
     #[serde(default)]
+    pub workers: Option<usize>,
+    #[serde(default)]
     pub row_cap: Option<usize>,
     #[serde(default)]
     pub batch_size: Option<usize>,
@@ -34,6 +36,7 @@ pub struct RuntimeProfile {
 #[derive(Debug)]
 pub struct ResolvedProfile {
     pub mode: ProfileMode,
+    pub workers: usize,
     pub row_cap: usize,
     pub batch_size: usize,
     pub include_osiptel: bool,
@@ -73,6 +76,7 @@ impl PipelineRuntimeConfig {
 
         Ok(ResolvedProfile {
             mode,
+            workers: profile.workers.unwrap_or(4).clamp(1, 64),
             row_cap: profile.row_cap.unwrap_or(10_000),
             batch_size: profile.batch_size.unwrap_or(50_000),
             include_osiptel: profile.include_osiptel,
