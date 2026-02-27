@@ -14,6 +14,7 @@ import {
   assertPositiveInt,
 } from "~/lib/contracts/guards";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
+import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
 import { computeClientCompletenessScore } from "~/server/sales/completeness";
 import type { SalesRecordsWorkflowError } from "~/server/sales/records-service";
 import { repos, salesRecordsService } from "~/server/shared/context";
@@ -291,6 +292,11 @@ export async function createSalesRecordDraft(
       const session = await requirePermission("sales:create");
       actor.userId = session.userId;
       actor.role = session.role;
+      await checkActionRateLimit(
+        "sales_records.create_draft",
+        session.userId,
+        repos,
+      );
 
       const result = await salesRecordsService.createDraft({
         source: input.source,
@@ -323,6 +329,7 @@ export async function submitSalesRecord(
       const session = await requirePermission("sales:submit");
       actor.userId = session.userId;
       actor.role = session.role;
+      await checkActionRateLimit("sales_records.submit", session.userId, repos);
       const result = await salesRecordsService.submit(
         safeRecordId,
         session.userId,

@@ -50,6 +50,17 @@ export async function cleanupStaleActionObservations(): Promise<void> {
   }
 }
 
+export async function cleanupStaleActionRateLimits(): Promise<void> {
+  const deleted = await repos.actionRateLimits.deleteUpdatedBefore(
+    Date.now() - config.security.rateLimitRetentionMs,
+  );
+  if (deleted > 0) {
+    console.log(
+      `[Rate limit cleanup] Deleted ${deleted} stale rate limit counters`,
+    );
+  }
+}
+
 export function getCacheStats() {
   return sessionCache.getStats();
 }
@@ -62,6 +73,7 @@ if (typeof setInterval !== "undefined") {
       cleanupStaleAuthThrottle().catch(console.error);
       cleanupStaleAuthEvents().catch(console.error);
       cleanupStaleActionObservations().catch(console.error);
+      cleanupStaleActionRateLimits().catch(console.error);
     },
     60 * 60 * 1000,
   );

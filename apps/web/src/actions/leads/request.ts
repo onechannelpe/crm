@@ -4,6 +4,7 @@ import { requirePermission } from "~/lib/auth/access/session";
 import { config } from "~/lib/config";
 import type { ActionSuccess } from "~/lib/contracts/common";
 import { assertPositiveInt } from "~/lib/contracts/guards";
+import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
 import { SUPERVISOR_AUDIENCE_ROLES } from "~/server/notifications/app-events";
 import { appNotificationCenter } from "~/server/shared/context";
 import { leadService } from "~/server/shared/context";
@@ -24,6 +25,7 @@ export async function requestLeads(
       ? config.leadAssignment.defaultBufferSize
       : assertPositiveInt(bufferSize, "bufferSize");
   const session = await requirePermission("leads:request");
+  await checkActionRateLimit("leads.request", session.userId, repos);
   const result = await leadService.requestLeads(
     session.userId,
     session.branchId,
