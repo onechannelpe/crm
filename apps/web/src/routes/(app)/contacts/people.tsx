@@ -14,14 +14,14 @@ import { createStore } from "solid-js/store";
 
 import { useMainDetailPanel } from "~/components/providers/main-detail-panel-provider";
 import { TableCell, TableRow } from "~/components/ui/layout/table";
-import {
-  PersonDetailDrawer,
-  type OverlayChangeHandler,
-} from "~/features/client-search/contact-detail-drawer";
 import { ContactsSearchLayout } from "~/features/client-search/contacts-search-layout";
 import { createClientSearchController } from "~/features/client-search/controller";
 import { inferPeopleSearchType } from "~/features/client-search/display";
 import { toInitial } from "~/features/client-search/display";
+import {
+  PersonDetailDrawer,
+  type OverlayChangeHandler,
+} from "~/features/client-search/drawer";
 import {
   groupPeopleByDni,
   type PersonGroup,
