@@ -6,16 +6,13 @@ use std::fs;
 use std::path::Path;
 
 const REQUIRED_TABLES: &[&str] = &[
-    "contacts_serving",
-    "person_profile",
-    "company_profile",
-    "person_company_role",
-    "phone_index",
-    "contacts_fts",
+    "search_projection",
+    "search_projection_phone_index",
+    "search_projection_fts",
     "ruc_phone_agg",
     "dni_phone_agg",
 ];
-const REQUIRED_VIEWS: &[&str] = &["search_projection"];
+const REQUIRED_VIEWS: &[&str] = &[];
 
 const SUPPORTED_PROJECTION_PATHS: &[&str] = &[
     "person.dni",

@@ -16,7 +16,9 @@ pub fn materialize_serving(db_path: &str) -> Result<(), PipelineError> {
         DELETE FROM ruc_phone_agg;
         DELETE FROM dni_phone_agg;
         DELETE FROM contacts_fts;
-        DROP VIEW IF EXISTS search_projection;
+        DELETE FROM search_projection;
+        DELETE FROM search_projection_phone_index;
+        DELETE FROM search_projection_fts;
 
         WITH first_role AS (
             SELECT r.person_id, r.company_id
@@ -100,7 +102,39 @@ pub fn materialize_serving(db_path: &str) -> Result<(), PipelineError> {
         SELECT id, COALESCE(name,''), COALESCE(org_name,'')
         FROM contacts_serving;
 
-        CREATE VIEW search_projection AS
+        INSERT INTO search_projection(
+            id,
+            dni,
+            name,
+            birth_date,
+            birth_place,
+            sex,
+            marital_status,
+            location_text,
+            ubigeo_code,
+            mother_name,
+            father_name,
+            email,
+            person_ruc,
+            org_ruc,
+            org_name,
+            trade_name,
+            company_type,
+            org_status,
+            org_condition,
+            fiscal_address,
+            registration_date,
+            activity_start_date,
+            line_of_business,
+            economic_activity,
+            role_name,
+            role_start_date,
+            rep_doc_type,
+            rep_doc_number,
+            rep_name,
+            phone_primary,
+            phone_secondary
+        )
         SELECT
             cs.id AS id,
             cs.dni AS dni,
@@ -146,7 +180,19 @@ pub fn materialize_serving(db_path: &str) -> Result<(), PipelineError> {
                   AND r2.company_id = cp.company_id
             );
 
+        INSERT INTO search_projection_phone_index(phone, projection_id)
+        SELECT DISTINCT pi.phone, pi.contact_id
+        FROM phone_index pi;
+
+        INSERT INTO search_projection_fts(rowid, person_name, company_name)
+        SELECT id, COALESCE(name,''), COALESCE(org_name,'')
+        FROM search_projection;
+
         CREATE INDEX IF NOT EXISTS idx_phone_index_phone ON phone_index(phone);
+        CREATE INDEX IF NOT EXISTS idx_search_projection_dni ON search_projection(dni);
+        CREATE INDEX IF NOT EXISTS idx_search_projection_ruc ON search_projection(org_ruc);
+        CREATE INDEX IF NOT EXISTS idx_search_projection_phone_index_phone
+            ON search_projection_phone_index(phone);
         CREATE INDEX IF NOT EXISTS idx_person_phone_phone ON person_phone(phone);
         CREATE INDEX IF NOT EXISTS idx_company_phone_phone ON company_phone(phone);
         CREATE INDEX IF NOT EXISTS idx_role_phone_phone ON role_phone(phone);

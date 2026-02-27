@@ -64,6 +64,44 @@ pub fn create_test_db() -> tempfile::NamedTempFile {
         CREATE TABLE ruc_phone_agg (org_ruc TEXT PRIMARY KEY, phones TEXT NOT NULL);
         CREATE TABLE dni_phone_agg (dni TEXT PRIMARY KEY, phones TEXT NOT NULL);
         CREATE VIRTUAL TABLE contacts_fts USING fts5(person_name, company_name);
+        CREATE TABLE search_projection (
+            id INTEGER PRIMARY KEY,
+            dni TEXT NOT NULL,
+            name TEXT,
+            birth_date TEXT,
+            birth_place TEXT,
+            sex TEXT,
+            marital_status TEXT,
+            location_text TEXT,
+            ubigeo_code TEXT,
+            mother_name TEXT,
+            father_name TEXT,
+            email TEXT,
+            person_ruc TEXT,
+            org_ruc TEXT,
+            org_name TEXT,
+            trade_name TEXT,
+            company_type TEXT,
+            org_status TEXT,
+            org_condition TEXT,
+            fiscal_address TEXT,
+            registration_date TEXT,
+            activity_start_date TEXT,
+            line_of_business TEXT,
+            economic_activity TEXT,
+            role_name TEXT,
+            role_start_date TEXT,
+            rep_doc_type TEXT,
+            rep_doc_number TEXT,
+            rep_name TEXT,
+            phone_primary TEXT,
+            phone_secondary TEXT
+        );
+        CREATE TABLE search_projection_phone_index (
+            phone TEXT NOT NULL,
+            projection_id INTEGER NOT NULL
+        );
+        CREATE VIRTUAL TABLE search_projection_fts USING fts5(person_name, company_name);
 
         INSERT INTO person_profile(person_id,dni,full_name,sex,birth_date) VALUES
           (1,'12345678','JUAN PEREZ','M','1980-05-10'),
@@ -95,7 +133,39 @@ pub fn create_test_db() -> tempfile::NamedTempFile {
         INSERT INTO contacts_fts(rowid, person_name, company_name)
         SELECT id, COALESCE(name,''), COALESCE(org_name,'') FROM contacts_serving;
 
-        CREATE VIEW search_projection AS
+        INSERT INTO search_projection(
+          id,
+          dni,
+          name,
+          birth_date,
+          birth_place,
+          sex,
+          marital_status,
+          location_text,
+          ubigeo_code,
+          mother_name,
+          father_name,
+          email,
+          person_ruc,
+          org_ruc,
+          org_name,
+          trade_name,
+          company_type,
+          org_status,
+          org_condition,
+          fiscal_address,
+          registration_date,
+          activity_start_date,
+          line_of_business,
+          economic_activity,
+          role_name,
+          role_start_date,
+          rep_doc_type,
+          rep_doc_number,
+          rep_name,
+          phone_primary,
+          phone_secondary
+        )
         SELECT
           cs.id AS id,
           cs.dni AS dni,
@@ -140,6 +210,14 @@ pub fn create_test_db() -> tempfile::NamedTempFile {
             WHERE r2.person_id = pp.person_id
               AND r2.company_id = cp.company_id
           );
+
+        INSERT INTO search_projection_phone_index(phone, projection_id)
+        SELECT DISTINCT phone, contact_id
+        FROM phone_index;
+
+        INSERT INTO search_projection_fts(rowid, person_name, company_name)
+        SELECT id, COALESCE(name,''), COALESCE(org_name,'')
+        FROM search_projection;
         ",
     )
     .expect("seed db");

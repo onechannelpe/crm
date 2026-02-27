@@ -8,7 +8,7 @@ use std::sync::LazyLock;
 // selector (person_name: / company_name:) is part of the ?1 parameter.
 static SQL_FTS: LazyLock<String> = LazyLock::new(|| {
     format!(
-        "SELECT{SELECT_COLUMNS}\nFROM search_projection c\nJOIN contacts_fts f ON f.rowid = c.id WHERE contacts_fts MATCH ?1 LIMIT ?2"
+        "SELECT{SELECT_COLUMNS}\nFROM search_projection c\nJOIN search_projection_fts f ON f.rowid = c.id WHERE search_projection_fts MATCH ?1 LIMIT ?2"
     )
 });
 

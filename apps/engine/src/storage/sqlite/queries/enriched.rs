@@ -5,7 +5,7 @@ use rusqlite::{Connection, Row, params};
 use std::sync::LazyLock;
 
 // Same standard columns, plus sibling_phones at col 30.
-// Driving table is phone_index (INNER join) → contacts_serving, then JOIN_CHAIN.
+// Driving table is search_projection_phone_index.
 static SQL_PHONE_ENRICHED: LazyLock<String> = LazyLock::new(|| {
     format!(
         "SELECT{SELECT_COLUMNS},
@@ -13,8 +13,8 @@ static SQL_PHONE_ENRICHED: LazyLock<String> = LazyLock::new(|| {
     WHEN c.org_ruc IS NOT NULL AND c.org_ruc <> '' THEN rpa.phones
     ELSE dpa.phones
   END AS sibling_phones
-FROM phone_index pi
-JOIN search_projection c ON c.id = pi.contact_id
+FROM search_projection_phone_index pi
+JOIN search_projection c ON c.id = pi.projection_id
 LEFT JOIN ruc_phone_agg rpa ON rpa.org_ruc = c.org_ruc
 LEFT JOIN dni_phone_agg dpa ON dpa.dni = c.dni
 WHERE pi.phone = ?1

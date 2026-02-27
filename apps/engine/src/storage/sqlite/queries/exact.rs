@@ -14,7 +14,7 @@ static SQL_RUC: LazyLock<String> = LazyLock::new(|| {
 
 static SQL_PHONE: LazyLock<String> = LazyLock::new(|| {
     format!(
-        "SELECT{SELECT_COLUMNS}\nFROM search_projection c\nJOIN phone_index p ON p.contact_id = c.id\nWHERE p.phone = ?1 LIMIT ?2"
+        "SELECT{SELECT_COLUMNS}\nFROM search_projection c\nJOIN search_projection_phone_index p ON p.projection_id = c.id\nWHERE p.phone = ?1 LIMIT ?2"
     )
 });
 
