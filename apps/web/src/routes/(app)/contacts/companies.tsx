@@ -10,10 +10,14 @@ import {
   Show,
   type JSX,
 } from "solid-js";
+import { createStore } from "solid-js/store";
 
 import { useMainDetailPanel } from "~/components/providers/main-detail-panel-provider";
 import { TableCell, TableRow } from "~/components/ui/layout/table";
-import { CompanyDetailDrawer } from "~/features/client-search/contact-detail-drawer";
+import {
+  CompanyDetailDrawer,
+  type OverlayChangeHandler,
+} from "~/features/client-search/contact-detail-drawer";
 import { ContactsSearchLayout } from "~/features/client-search/contacts-search-layout";
 import { createClientSearchController } from "~/features/client-search/controller";
 import { inferCompanySearchType } from "~/features/client-search/display";
@@ -22,6 +26,7 @@ import {
   groupCompaniesByRuc,
   type CompanyGroup,
 } from "~/features/client-search/grouping";
+import type { SearchEnrichmentOverlay } from "~/server/client-search/enrichment-service";
 
 import styles from "~/features/client-search/contacts-search-layout.module.css";
 
@@ -108,6 +113,13 @@ export default function ClientSearchCompaniesPage() {
   const rows = createMemo(() => buildDisplayRows(grouped()));
   const { setPanel, clearPanel } = useMainDetailPanel();
 
+  const [overlays, setOverlays] = createStore<
+    Record<string, SearchEnrichmentOverlay | null>
+  >({});
+  const handleOverlayChange: OverlayChangeHandler = (key, overlay) => {
+    setOverlays(key, overlay);
+  };
+
   const [selectedKey, setSelectedKey] = createSignal<string | null>(null);
   const selectedGroup = createMemo(
     () => grouped().find((g) => g.key === selectedKey()) ?? null,
@@ -128,6 +140,7 @@ export default function ClientSearchCompaniesPage() {
       <CompanyDetailDrawer
         group={group}
         onClose={() => setSelectedKey(null)}
+        onOverlayChange={handleOverlayChange}
       />,
     );
   });
@@ -157,10 +170,21 @@ export default function ClientSearchCompaniesPage() {
                 }
               >
                 <TableCell>
-                  <span class={styles.chip}>
-                    <span class={styles.squareDot}>{toInitial(row.name)}</span>
-                    <span class={styles.chipLabel}>{row.name}</span>
-                  </span>
+                  {(() => {
+                    const ruc = row.ruc !== "—" ? row.ruc : null;
+                    const enrichedName = ruc
+                      ? (overlays[`ruc:${ruc}`]?.legalName ?? null)
+                      : null;
+                    const displayName = enrichedName || row.name;
+                    return (
+                      <span class={styles.chip}>
+                        <span class={styles.squareDot}>
+                          {toInitial(displayName)}
+                        </span>
+                        <span class={styles.chipLabel}>{displayName}</span>
+                      </span>
+                    );
+                  })()}
                 </TableCell>
                 <TableCell>
                   <span class={styles.pill}>{row.ruc}</span>

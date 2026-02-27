@@ -10,10 +10,14 @@ import {
   Show,
   type JSX,
 } from "solid-js";
+import { createStore } from "solid-js/store";
 
 import { useMainDetailPanel } from "~/components/providers/main-detail-panel-provider";
 import { TableCell, TableRow } from "~/components/ui/layout/table";
-import { PersonDetailDrawer } from "~/features/client-search/contact-detail-drawer";
+import {
+  PersonDetailDrawer,
+  type OverlayChangeHandler,
+} from "~/features/client-search/contact-detail-drawer";
 import { ContactsSearchLayout } from "~/features/client-search/contacts-search-layout";
 import { createClientSearchController } from "~/features/client-search/controller";
 import { inferPeopleSearchType } from "~/features/client-search/display";
@@ -22,6 +26,7 @@ import {
   groupPeopleByDni,
   type PersonGroup,
 } from "~/features/client-search/grouping";
+import type { SearchEnrichmentOverlay } from "~/server/client-search/enrichment-service";
 
 import styles from "~/features/client-search/contacts-search-layout.module.css";
 
@@ -113,6 +118,13 @@ export default function ClientSearchPeoplePage() {
   const rows = createMemo(() => buildDisplayRows(grouped()));
   const { setPanel, clearPanel } = useMainDetailPanel();
 
+  const [overlays, setOverlays] = createStore<
+    Record<string, SearchEnrichmentOverlay | null>
+  >({});
+  const handleOverlayChange: OverlayChangeHandler = (key, overlay) => {
+    setOverlays(key, overlay);
+  };
+
   const [selectedDni, setSelectedDni] = createSignal<string | null>(null);
   const selectedGroup = createMemo(
     () => grouped().find((g) => g.dni === selectedDni()) ?? null,
@@ -130,7 +142,11 @@ export default function ClientSearchPeoplePage() {
     }
 
     setPanel(
-      <PersonDetailDrawer group={group} onClose={() => setSelectedDni(null)} />,
+      <PersonDetailDrawer
+        group={group}
+        onClose={() => setSelectedDni(null)}
+        onOverlayChange={handleOverlayChange}
+      />,
     );
   });
 
@@ -156,10 +172,19 @@ export default function ClientSearchPeoplePage() {
                 onClick={() => setSelectedDni(isActive() ? null : row.dni)}
               >
                 <TableCell>
-                  <span class={styles.chip}>
-                    <span class={styles.avatarDot}>{toInitial(row.name)}</span>
-                    <span class={styles.chipLabel}>{row.name}</span>
-                  </span>
+                  {(() => {
+                    const enrichedName =
+                      overlays[`dni:${row.dni}`]?.fullName ?? null;
+                    const displayName = enrichedName || row.name;
+                    return (
+                      <span class={styles.chip}>
+                        <span class={styles.avatarDot}>
+                          {toInitial(displayName)}
+                        </span>
+                        <span class={styles.chipLabel}>{displayName}</span>
+                      </span>
+                    );
+                  })()}
                 </TableCell>
                 <TableCell>
                   <span class={styles.pill}>{row.dni}</span>

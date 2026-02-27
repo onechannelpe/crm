@@ -7,9 +7,10 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "bun run --parallel dev:engine dev:web",
+    "dev": "bun run --parallel dev:engine dev:web dev:worker",
     "dev:engine": "cargo run --manifest-path apps/engine/Cargo.toml",
     "dev:web": "bun --no-env-file --env-file=../../.env run --cwd apps/web dev",
+    "dev:worker": "bun --no-env-file --env-file=.env run --cwd apps/web worker:search-enrichment-jobs",
     "build:engine:sqlite": "uv run scripts/build-engine-sqlite.py --input apps/engine/data/contacts.csv --output apps/engine/data/contacts.sqlite",
     "pipeline:engine": "cargo run --manifest-path apps/pipeline/Cargo.toml --",
     "pipeline:staged-test": "bun run pipeline:engine bench --profile standard",

@@ -1,4 +1,4 @@
-import { A } from "@solidjs/router";
+import { A, createAsync, revalidate, useAction } from "@solidjs/router";
 import {
   createEffect,
   createMemo,
@@ -9,10 +9,6 @@ import {
   type JSX,
 } from "solid-js";
 
-import {
-  getSearchEnrichmentStatus,
-  requestSearchEnrichment,
-} from "~/actions/client-search";
 import Building2Icon from "~/components/icons/building-2";
 import CalendarDaysIcon from "~/components/icons/calendar-days";
 import MailIcon from "~/components/icons/mail";
@@ -20,6 +16,9 @@ import PhoneIcon from "~/components/icons/phone";
 import UserIcon from "~/components/icons/user";
 import UsersIcon from "~/components/icons/users";
 import XIcon from "~/components/icons/x";
+import { requestEnrichmentMutation } from "~/lib/mutations/enrichment";
+import { enrichmentStatusQuery } from "~/lib/queries/enrichment";
+import type { SearchEnrichmentOverlay } from "~/server/client-search/enrichment-service";
 
 import { toInitial } from "./display";
 import type { CompanyGroup, PersonGroup } from "./grouping";
@@ -27,7 +26,133 @@ import type { CompanyGroup, PersonGroup } from "./grouping";
 import styles from "./contact-detail-drawer.module.css";
 
 const PANEL_PAGE_SIZE = 5;
-const ENRICHMENT_POLL_MS = 5_000;
+const ENRICHMENT_POLL_MS = 3_000;
+
+interface EnrichmentDocumentEntry {
+  documentType: "dni" | "ruc";
+  documentValue: string;
+  label: string;
+}
+
+export type OverlayChangeHandler = (
+  key: string,
+  overlay: SearchEnrichmentOverlay | null,
+) => void;
+
+interface EnrichmentCardProps {
+  entry: EnrichmentDocumentEntry;
+  onOverlayChange?: OverlayChangeHandler;
+}
+
+function EnrichmentCard(props: EnrichmentCardProps) {
+  const key = () => `${props.entry.documentType}:${props.entry.documentValue}`;
+
+  const status = createAsync(
+    () =>
+      enrichmentStatusQuery(
+        props.entry.documentType,
+        props.entry.documentValue,
+      ),
+    { deferStream: true },
+  );
+
+  const requestEnrichment = useAction(requestEnrichmentMutation);
+  const [requesting, setRequesting] = createSignal(false);
+
+  createEffect(() => {
+    const overlay = status()?.overlay ?? null;
+    props.onOverlayChange?.(key(), overlay);
+  });
+
+  createEffect(() => {
+    const s = status()?.status;
+    if (s !== "queued" && s !== "running") return;
+    const timer = setInterval(() => {
+      void revalidate(
+        enrichmentStatusQuery.keyFor(
+          props.entry.documentType,
+          props.entry.documentValue,
+        ),
+      );
+    }, ENRICHMENT_POLL_MS);
+    onCleanup(() => clearInterval(timer));
+  });
+
+  const overlayDisplay = () =>
+    props.entry.documentType === "dni"
+      ? (status()?.overlay?.fullName ?? null)
+      : (status()?.overlay?.legalName ?? null);
+
+  const blocked = () => {
+    const s = status()?.status;
+    return requesting() || s === "queued" || s === "running";
+  };
+
+  const handleRequest = async () => {
+    setRequesting(true);
+    try {
+      await requestEnrichment(
+        props.entry.documentType,
+        props.entry.documentValue,
+      );
+    } finally {
+      setRequesting(false);
+    }
+  };
+
+  return (
+    <div class={styles.enrichmentCard}>
+      <div class={styles.enrichmentTop}>
+        <span class={styles.enrichmentDoc}>
+          {props.entry.label}: {props.entry.documentValue}
+        </span>
+        <span class={styles.enrichmentStatus}>
+          {status()?.status ?? "idle"}
+        </span>
+      </div>
+      <Show when={overlayDisplay()}>
+        {(value) => <div class={styles.enrichmentValue}>{value()}</div>}
+      </Show>
+      <Show when={status()?.lastError}>
+        {(error) => (
+          <div class={styles.enrichmentError} title={error()}>
+            {error()}
+          </div>
+        )}
+      </Show>
+      <div class={styles.enrichmentActions}>
+        <button
+          type="button"
+          class={styles.enrichmentButton}
+          disabled={blocked()}
+          onClick={() => void handleRequest()}
+        >
+          {requesting() ? "Queuing..." : "Request"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+interface EnrichmentSectionProps {
+  entries: readonly EnrichmentDocumentEntry[];
+  onOverlayChange?: OverlayChangeHandler;
+}
+
+function EnrichmentSection(props: EnrichmentSectionProps) {
+  return (
+    <DetailSection title="Enrichment">
+      <For each={props.entries}>
+        {(entry) => (
+          <EnrichmentCard
+            entry={entry}
+            onOverlayChange={props.onOverlayChange}
+          />
+        )}
+      </For>
+    </DetailSection>
+  );
+}
 
 interface FieldRowProps {
   label: string;
@@ -121,184 +246,6 @@ function buildCompanyHref(name: string, ruc: string | null) {
   return `/contacts/companies?type=${type}&query=${query}&limit=20`;
 }
 
-type EnrichmentStatus = Awaited<ReturnType<typeof getSearchEnrichmentStatus>>;
-
-interface EnrichmentDocumentEntry {
-  documentType: "dni" | "ruc";
-  documentValue: string;
-  label: string;
-}
-
-function entryKey(entry: EnrichmentDocumentEntry): string {
-  return `${entry.documentType}:${entry.documentValue}`;
-}
-
-interface EnrichmentSectionProps {
-  entries: readonly EnrichmentDocumentEntry[];
-}
-
-function EnrichmentSection(props: EnrichmentSectionProps) {
-  const [statuses, setStatuses] = createSignal<
-    Record<string, EnrichmentStatus>
-  >({});
-  const [requesting, setRequesting] = createSignal<Record<string, boolean>>({});
-
-  const assignStatus = (key: string, value: EnrichmentStatus) => {
-    setStatuses((current) => ({ ...current, [key]: value }));
-  };
-
-  const setRequestingState = (key: string, value: boolean) => {
-    setRequesting((current) => ({ ...current, [key]: value }));
-  };
-
-  const refreshEntry = async (entry: EnrichmentDocumentEntry) => {
-    const key = entryKey(entry);
-    try {
-      const status = await getSearchEnrichmentStatus(
-        entry.documentType,
-        entry.documentValue,
-      );
-      assignStatus(key, status);
-    } catch {
-      const current = statuses()[key];
-      assignStatus(key, {
-        documentType: entry.documentType,
-        documentValue: entry.documentValue,
-        status: "failed",
-        overlay: current?.overlay ?? null,
-        requestedAt: current?.requestedAt ?? null,
-        completedAt: current?.completedAt ?? null,
-        lastError: "Failed to refresh status",
-      });
-    }
-  };
-
-  const requestEntry = async (entry: EnrichmentDocumentEntry) => {
-    const key = entryKey(entry);
-    const current = statuses()[key];
-    assignStatus(key, {
-      documentType: entry.documentType,
-      documentValue: entry.documentValue,
-      status: "queued",
-      overlay: current?.overlay ?? null,
-      requestedAt: Date.now(),
-      completedAt: null,
-      lastError: null,
-    });
-    setRequestingState(key, true);
-    try {
-      const status = await requestSearchEnrichment(
-        entry.documentType,
-        entry.documentValue,
-      );
-      assignStatus(key, status);
-    } catch {
-      assignStatus(key, {
-        documentType: entry.documentType,
-        documentValue: entry.documentValue,
-        status: "failed",
-        overlay: current?.overlay ?? null,
-        requestedAt: current?.requestedAt ?? null,
-        completedAt: current?.completedAt ?? null,
-        lastError: "Failed to enqueue enrichment",
-      });
-    } finally {
-      setRequestingState(key, false);
-    }
-  };
-
-  createEffect(() => {
-    const docs = props.entries;
-    if (docs.length < 1) return;
-
-    let stopped = false;
-    const run = async () => {
-      await Promise.all(
-        docs.map(async (entry) => {
-          if (!stopped) await refreshEntry(entry);
-        }),
-      );
-    };
-
-    void run();
-    const timer = setInterval(() => {
-      void run();
-    }, ENRICHMENT_POLL_MS);
-    onCleanup(() => {
-      stopped = true;
-      clearInterval(timer);
-    });
-  });
-
-  return (
-    <DetailSection title="Enrichment">
-      <For each={props.entries}>
-        {(entry) => {
-          const key = () => entryKey(entry);
-          const status = () => statuses()[key()];
-          const isRequesting = () => requesting()[key()];
-          const overlayDisplay = () =>
-            entry.documentType === "dni"
-              ? (status()?.overlay?.fullName ?? null)
-              : (status()?.overlay?.legalName ?? null);
-          const blocked = () => {
-            const currentStatus = status()?.status;
-            return (
-              isRequesting() ||
-              currentStatus === "queued" ||
-              currentStatus === "running"
-            );
-          };
-
-          return (
-            <div class={styles.enrichmentCard}>
-              <div class={styles.enrichmentTop}>
-                <span class={styles.enrichmentDoc}>
-                  {entry.label}: {entry.documentValue}
-                </span>
-                <span class={styles.enrichmentStatus}>
-                  {status()?.status ?? "idle"}
-                </span>
-              </div>
-              <Show when={overlayDisplay()}>
-                {(value) => <div class={styles.enrichmentValue}>{value()}</div>}
-              </Show>
-              <Show when={status()?.lastError}>
-                {(error) => (
-                  <div class={styles.enrichmentError} title={error()}>
-                    {error()}
-                  </div>
-                )}
-              </Show>
-              <div class={styles.enrichmentActions}>
-                <button
-                  type="button"
-                  class={styles.enrichmentButton}
-                  disabled={blocked()}
-                  onClick={() => {
-                    void requestEntry(entry);
-                  }}
-                >
-                  {isRequesting() ? "Queuing..." : "Request"}
-                </button>
-                <button
-                  type="button"
-                  class={styles.enrichmentButton}
-                  onClick={() => {
-                    void refreshEntry(entry);
-                  }}
-                >
-                  Refresh
-                </button>
-              </div>
-            </div>
-          );
-        }}
-      </For>
-    </DetailSection>
-  );
-}
-
 interface DrawerHeaderProps {
   initial: string;
   title: string;
@@ -341,6 +288,7 @@ function DrawerHeader(props: DrawerHeaderProps) {
 interface PersonDetailDrawerProps {
   group: PersonGroup;
   onClose: () => void;
+  onOverlayChange?: OverlayChangeHandler;
 }
 
 export function PersonDetailDrawer(props: PersonDetailDrawerProps) {
@@ -429,7 +377,10 @@ export function PersonDetailDrawer(props: PersonDetailDrawerProps) {
         </DetailSection>
 
         <Show when={enrichmentEntries().length > 0}>
-          <EnrichmentSection entries={enrichmentEntries()} />
+          <EnrichmentSection
+            entries={enrichmentEntries()}
+            onOverlayChange={props.onOverlayChange}
+          />
         </Show>
 
         <Show when={props.group.companies.length > 0}>
@@ -566,6 +517,7 @@ export function PersonDetailDrawer(props: PersonDetailDrawerProps) {
 interface CompanyDetailDrawerProps {
   group: CompanyGroup;
   onClose: () => void;
+  onOverlayChange?: OverlayChangeHandler;
 }
 
 export function CompanyDetailDrawer(props: CompanyDetailDrawerProps) {
@@ -691,7 +643,10 @@ export function CompanyDetailDrawer(props: CompanyDetailDrawerProps) {
         </Show>
 
         <Show when={enrichmentEntries().length > 0}>
-          <EnrichmentSection entries={enrichmentEntries()} />
+          <EnrichmentSection
+            entries={enrichmentEntries()}
+            onOverlayChange={props.onOverlayChange}
+          />
         </Show>
 
         <Show when={props.group.people.length > 0}>
