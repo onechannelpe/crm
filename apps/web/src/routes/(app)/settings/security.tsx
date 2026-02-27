@@ -57,7 +57,7 @@ export default function SecurityPage() {
   const handleChangePassword = async (e: Event) => {
     e.preventDefault();
     if (newPassword() !== confirmPassword()) {
-      showToast("error", "Passwords do not match");
+      showToast("error", "Las contraseñas no coinciden");
       return;
     }
     setChangingPassword(true);
@@ -68,7 +68,10 @@ export default function SecurityPage() {
       setNewPassword("");
       setConfirmPassword("");
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "Failed to change password"));
+      showToast(
+        "error",
+        getErrorMessage(err, "No se pudo cambiar la contraseña"),
+      );
     } finally {
       setChangingPassword(false);
     }
@@ -84,14 +87,17 @@ export default function SecurityPage() {
       });
 
       if (!credential || !(credential instanceof PublicKeyCredential)) {
-        throw new Error("Failed to create passkey");
+        throw new Error("No se pudo crear la clave de acceso");
       }
 
       const response = toRegistrationPayload(credential);
       await finishPasskeyRegistration(challengeId, response);
-      showToast("success", "Contraseña añadida");
+      showToast("success", "Clave de acceso añadida");
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "Failed to add passkey"));
+      showToast(
+        "error",
+        getErrorMessage(err, "No se pudo añadir la clave de acceso"),
+      );
     } finally {
       setPasskeyLoading(false);
     }
@@ -105,7 +111,7 @@ export default function SecurityPage() {
     } catch (err: unknown) {
       showToast(
         "error",
-        getErrorMessage(err, "No pudimos iniciar la configuración del 2FA"),
+        getErrorMessage(err, "No se pudo iniciar la configuración del 2FA"),
       );
     } finally {
       setTotpEnrolling(false);
@@ -119,9 +125,12 @@ export default function SecurityPage() {
       setRecoveryCodes(codes);
       setTotpEnrollment(null);
       await invalidateTotp();
-      showToast("success", "Two-factor authentication enabled");
+      showToast("success", "Autenticación en dos pasos activada");
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "Invalid verification code"));
+      showToast(
+        "error",
+        getErrorMessage(err, "Código de verificación inválido"),
+      );
     }
   };
 
@@ -199,7 +208,7 @@ export default function SecurityPage() {
               <img
                 src={totpEnrollment()?.qrCodeDataUrl}
                 class={securityStyles.qr}
-                alt="QR Code"
+                alt="Código QR"
               />
             </div>
             <form
@@ -231,7 +240,7 @@ export default function SecurityPage() {
             </div>
             <div class={securityStyles.recoveryActions}>
               <Button onClick={() => setRecoveryCodes(null)}>
-                Guarde mis códigos
+                Guardar mis códigos
               </Button>
             </div>
           </div>

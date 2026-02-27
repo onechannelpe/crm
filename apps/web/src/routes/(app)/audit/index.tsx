@@ -126,7 +126,9 @@ export default function AuditObservabilityPage() {
         isActive: policyIsActive(),
       });
     } catch {
-      setPolicyError("Failed to save policy. Check values and permissions.");
+      setPolicyError(
+        "No se pudo guardar la política. Revisa los valores y los permisos.",
+      );
     }
   }
 
@@ -228,7 +230,7 @@ export default function AuditObservabilityPage() {
                 void revalidate(auditReaderSnapshotQuery.key);
               }}
             >
-              Recargar auditoría
+              Recargar
             </Button>
           </div>
         </div>
@@ -282,7 +284,7 @@ export default function AuditObservabilityPage() {
                 {(row) => (
                   <TableRow>
                     <TableCell>
-                      {new Date(row.createdAt).toLocaleTimeString("en-US")}
+                      {new Date(row.createdAt).toLocaleTimeString("es-PE")}
                     </TableCell>
                     <TableCell class={styles.strong}>
                       {row.actionName}
@@ -376,20 +378,20 @@ export default function AuditObservabilityPage() {
             </Button>
           </div>
           <p class={styles.helperText}>
-            Actions without an explicit policy are treated as high risk to avoid
-            hiding critical events.
+            Las acciones sin una política explícita se tratan como de alto
+            riesgo para evitar ocultar eventos críticos.
           </p>
           <p class={styles.helperText}>
-            Only admin and superuser can edit policies.
+            Solo admin y superuser pueden editar políticas.
           </p>
           <p class={styles.errorText}>{policyError() ?? ""}</p>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Action</TableHead>
-                <TableHead>Risk</TableHead>
-                <TableHead>Active</TableHead>
-                <TableHead>Protected</TableHead>
+                <TableHead>Acción</TableHead>
+                <TableHead>Riesgo</TableHead>
+                <TableHead>Activo</TableHead>
+                <TableHead>Protegido</TableHead>
                 <TableHead>Actualizada por</TableHead>
               </TableRow>
             </TableHeader>
@@ -399,8 +401,8 @@ export default function AuditObservabilityPage() {
                   <TableRow>
                     <TableCell class={styles.strong}>{item.action}</TableCell>
                     <TableCell>{item.riskLevel}</TableCell>
-                    <TableCell>{item.isActive ? "yes" : "no"}</TableCell>
-                    <TableCell>{item.isProtected ? "yes" : "no"}</TableCell>
+                    <TableCell>{item.isActive ? "sí" : "no"}</TableCell>
+                    <TableCell>{item.isProtected ? "sí" : "no"}</TableCell>
                     <TableCell>
                       {item.updatedByUserId ? `#${item.updatedByUserId}` : "-"}
                     </TableCell>

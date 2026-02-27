@@ -127,7 +127,10 @@ export default function SalesConfirmationsPage() {
       showToast("success", `Intento registrado para la venta #${noteId}`);
       resetAttemptState();
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "No se pudo registrar el intento"));
+      showToast(
+        "error",
+        getErrorMessage(err, "No se pudo registrar el intento"),
+      );
     }
   };
 

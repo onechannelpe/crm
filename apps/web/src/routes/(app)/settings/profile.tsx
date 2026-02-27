@@ -147,7 +147,10 @@ export default function ProfilePage() {
         />
       </SettingsSection>
 
-      <SettingsSection title="Nombre" description="Tu nombre, tal como se mostrará">
+      <SettingsSection
+        title="Nombre"
+        description="Tu nombre, tal como se mostrará"
+      >
         <form
           onSubmit={(e) => {
             void saveProfile(e);
