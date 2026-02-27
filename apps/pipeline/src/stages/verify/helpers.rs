@@ -1,6 +1,5 @@
 use crate::PipelineError;
 use crate::config::manifest::{SourceManifest, SourceManifestEntry, verify_manifest};
-use crate::config::runtime::IngestMode;
 use crate::db::schema::open_rw;
 use crate::stages::materialize::materialize_serving;
 use crate::stages::merge::{fail_snapshot, merge_ingest_session};
@@ -44,7 +43,6 @@ pub(super) fn run_ingest_phase(
     reliability_rank: i64,
     batch_size: usize,
     workers: usize,
-    ingest_mode: IngestMode,
     source_key: Option<&str>,
 ) -> Result<IngestPhaseStats, PipelineError> {
     let ingest_started_at = Instant::now();
@@ -52,11 +50,6 @@ pub(super) fn run_ingest_phase(
         "[pipeline] ingest {snapshot_label} from {}",
         input_path.display()
     );
-
-    let effective_workers = match ingest_mode {
-        IngestMode::Single => 1,
-        IngestMode::Sharded => workers,
-    };
 
     let shard_ingest_started_at = Instant::now();
     let session = ingest_to_shards(
@@ -68,7 +61,7 @@ pub(super) fn run_ingest_phase(
         snapshot_date,
         reliability_rank,
         batch_size,
-        effective_workers,
+        workers,
     )?;
     let shard_ingest_secs = shard_ingest_started_at.elapsed().as_secs_f64();
 

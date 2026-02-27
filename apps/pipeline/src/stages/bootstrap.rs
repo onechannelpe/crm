@@ -1,5 +1,4 @@
 use crate::PipelineError;
-use crate::config::runtime::IngestMode;
 use serde::Serialize;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -65,14 +64,13 @@ impl RunContext {
         db_path: &str,
         manifest_path: &str,
         mode: &str,
-        ingest_mode: IngestMode,
         workers: usize,
         batch_size: usize,
     ) -> Result<(), PipelineError> {
         let metadata = RunMetadata {
             run_id: self.run_id.clone(),
             mode: mode.to_owned(),
-            ingest_mode: ingest_mode_name(ingest_mode).to_owned(),
+            ingest_mode: "sharded".to_owned(),
             workers,
             batch_size,
             manifest_path: manifest_path.to_owned(),
@@ -112,13 +110,6 @@ fn now_epoch_secs() -> u64 {
         .duration_since(UNIX_EPOCH)
         .map(|value| value.as_secs())
         .unwrap_or(0)
-}
-
-fn ingest_mode_name(mode: IngestMode) -> &'static str {
-    match mode {
-        IngestMode::Single => "single",
-        IngestMode::Sharded => "sharded",
-    }
 }
 
 fn git_commit_hash() -> Option<String> {

@@ -1,5 +1,4 @@
 use crate::PipelineError;
-use crate::config::runtime::IngestMode;
 use crate::db::schema::init_schema;
 use crate::stages::bootstrap::{PhaseTiming, RunContext, SourceCheckpoint};
 use crate::stages::verify::helpers::{
@@ -14,7 +13,6 @@ use std::time::Instant;
 pub fn run_full(
     db_path: &str,
     manifest_path: &str,
-    ingest_mode: IngestMode,
     workers: usize,
     include_osiptel: bool,
     batch_size: usize,
@@ -28,7 +26,6 @@ pub fn run_full(
         db_path,
         manifest_path,
         "full",
-        ingest_mode,
         workers,
         batch_size,
     )?;
@@ -55,7 +52,6 @@ pub fn run_full(
             source.reliability_rank,
             batch_size,
             workers,
-            ingest_mode,
             Some(&source.source_key),
         )?;
         timings.push(PhaseTiming {

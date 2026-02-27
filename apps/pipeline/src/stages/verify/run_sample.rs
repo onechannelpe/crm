@@ -1,5 +1,4 @@
 use crate::PipelineError;
-use crate::config::runtime::IngestMode;
 use crate::db::schema::init_schema;
 use crate::stages::bootstrap::{PhaseTiming, RunContext, SourceCheckpoint};
 use crate::stages::extract::sample_with_header;
@@ -17,7 +16,6 @@ pub fn run_matrix(
     db_path: &str,
     build_dir: &str,
     manifest_path: &str,
-    ingest_mode: IngestMode,
     workers: usize,
     row_cap: usize,
     run_osiptel_sample: bool,
@@ -33,7 +31,6 @@ pub fn run_matrix(
         db_path,
         manifest_path,
         "sample",
-        ingest_mode,
         workers,
         batch_size,
     )?;
@@ -85,7 +82,6 @@ pub fn run_matrix(
             source.reliability_rank,
             batch_size,
             workers,
-            ingest_mode,
             Some(&source.source_key),
         )?;
         timings.push(PhaseTiming {
