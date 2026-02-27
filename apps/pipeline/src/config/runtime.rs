@@ -24,8 +24,6 @@ pub struct RuntimeProfile {
     #[serde(default)]
     pub ingest_mode: Option<String>,
     #[serde(default)]
-    pub evidence_mode: Option<String>,
-    #[serde(default)]
     pub workers: Option<usize>,
     #[serde(default)]
     pub row_cap: Option<usize>,
@@ -41,7 +39,6 @@ pub struct RuntimeProfile {
 pub struct ResolvedProfile {
     pub mode: ProfileMode,
     pub ingest_mode: IngestMode,
-    pub evidence_mode: EvidenceMode,
     pub workers: usize,
     pub row_cap: usize,
     pub batch_size: usize,
@@ -59,13 +56,6 @@ pub enum ProfileMode {
 pub enum IngestMode {
     Single,
     Sharded,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum EvidenceMode {
-    Inline,
-    Deferred,
-    Off,
 }
 
 impl PipelineRuntimeConfig {
@@ -96,7 +86,6 @@ impl PipelineRuntimeConfig {
         Ok(ResolvedProfile {
             mode,
             ingest_mode: resolve_ingest_mode(profile.ingest_mode.as_deref(), profile_name)?,
-            evidence_mode: resolve_evidence_mode(profile.evidence_mode.as_deref(), profile_name)?,
             workers: profile.workers.unwrap_or(4).clamp(1, 64),
             row_cap: profile.row_cap.unwrap_or(10_000),
             batch_size: profile.batch_size.unwrap_or(50_000),
@@ -115,20 +104,6 @@ fn resolve_ingest_mode(
         "sharded" => Ok(IngestMode::Sharded),
         other => Err(PipelineError::Args(format!(
             "unsupported ingest mode '{other}' for profile '{profile_name}'"
-        ))),
-    }
-}
-
-fn resolve_evidence_mode(
-    evidence_mode: Option<&str>,
-    profile_name: &str,
-) -> Result<EvidenceMode, PipelineError> {
-    match evidence_mode.unwrap_or("inline") {
-        "inline" => Ok(EvidenceMode::Inline),
-        "deferred" => Ok(EvidenceMode::Deferred),
-        "off" => Ok(EvidenceMode::Off),
-        other => Err(PipelineError::Args(format!(
-            "unsupported evidence mode '{other}' for profile '{profile_name}'"
         ))),
     }
 }

@@ -159,6 +159,7 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             person_name,
             company_name
         );
+
         "#,
     )?;
 

@@ -16,6 +16,11 @@ SELECT
     raw_hash
 FROM shard.stage_rows;
 
+CREATE INDEX tmp_stage_person_dni_idx ON tmp_stage(person_dni);
+CREATE INDEX tmp_stage_company_ruc_idx ON tmp_stage(company_ruc);
+CREATE INDEX tmp_stage_role_lookup_idx
+    ON tmp_stage(company_ruc, rep_doc_type, rep_doc_number, role_name, role_start_date);
+
 CREATE TEMP TABLE tmp_person_dedup AS
 SELECT
     person_dni,

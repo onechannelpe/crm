@@ -1,5 +1,5 @@
 use crate::PipelineError;
-use crate::config::runtime::{EvidenceMode, IngestMode};
+use crate::config::runtime::IngestMode;
 use serde::Serialize;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -11,7 +11,6 @@ pub struct RunMetadata {
     pub run_id: String,
     pub mode: String,
     pub ingest_mode: String,
-    pub evidence_mode: String,
     pub workers: usize,
     pub batch_size: usize,
     pub manifest_path: String,
@@ -67,7 +66,6 @@ impl RunContext {
         manifest_path: &str,
         mode: &str,
         ingest_mode: IngestMode,
-        evidence_mode: EvidenceMode,
         workers: usize,
         batch_size: usize,
     ) -> Result<(), PipelineError> {
@@ -75,7 +73,6 @@ impl RunContext {
             run_id: self.run_id.clone(),
             mode: mode.to_owned(),
             ingest_mode: ingest_mode_name(ingest_mode).to_owned(),
-            evidence_mode: evidence_mode_name(evidence_mode).to_owned(),
             workers,
             batch_size,
             manifest_path: manifest_path.to_owned(),
@@ -121,14 +118,6 @@ fn ingest_mode_name(mode: IngestMode) -> &'static str {
     match mode {
         IngestMode::Single => "single",
         IngestMode::Sharded => "sharded",
-    }
-}
-
-fn evidence_mode_name(mode: EvidenceMode) -> &'static str {
-    match mode {
-        EvidenceMode::Inline => "inline",
-        EvidenceMode::Deferred => "deferred",
-        EvidenceMode::Off => "off",
     }
 }
 

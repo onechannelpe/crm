@@ -24,7 +24,14 @@ SELECT
     NULLIF(person_natural_ruc, ''),
     person_full_name
 FROM tmp_stage
-WHERE person_dni IS NULL AND person_full_name <> '';
+WHERE person_dni IS NULL
+    AND NULLIF(person_natural_ruc, '') IS NOT NULL
+ON CONFLICT(natural_ruc10) DO UPDATE SET
+    full_name = CASE
+        WHEN excluded.full_name <> '' THEN excluded.full_name
+        ELSE person_profile.full_name
+    END
+WHERE excluded.full_name <> '' AND excluded.full_name <> person_profile.full_name;
 
 INSERT INTO company_profile(ruc, legal_name)
 SELECT

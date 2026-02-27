@@ -8,7 +8,6 @@ engine_db = "apps/engine/data/contacts.sqlite"
 [profiles.quick]
 mode = "sample"
 ingest_mode = "single"
-evidence_mode = "inline"
 workers = 4
 row_cap = 10000
 batch_size = 50000
@@ -16,8 +15,7 @@ include_osiptel = false
 
 [profiles.standard]
 mode = "sample"
-ingest_mode = "single"
-evidence_mode = "inline"
+ingest_mode = "sharded"
 workers = 4
 row_cap = 100000
 batch_size = 50000
@@ -25,18 +23,16 @@ include_osiptel = false
 
 [profiles.heavy]
 mode = "sample"
-ingest_mode = "single"
-evidence_mode = "inline"
-workers = 8
+ingest_mode = "sharded"
+workers = 2
 row_cap = 100000
-batch_size = 50000
+batch_size = 100000
 include_osiptel = true
 source_row_caps = { osiptel = 100000 }
 
 [profiles.full]
 mode = "full"
-ingest_mode = "single"
-evidence_mode = "inline"
-workers = 8
-batch_size = 50000
+ingest_mode = "sharded"
+workers = 2
+batch_size = 100000
 include_osiptel = true

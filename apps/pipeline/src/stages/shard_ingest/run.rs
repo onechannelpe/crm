@@ -17,10 +17,12 @@ const MAX_SHARDED_WORKERS: usize = 64;
 
 pub fn ingest_to_shards(
     db_path: &str,
+    run_id: &str,
     mapping_path: &str,
     input_path: &str,
     snapshot_label: &str,
     snapshot_date: &str,
+    reliability_rank: i64,
     batch_size: usize,
     workers: usize,
 ) -> Result<IngestSession, PipelineError> {
@@ -35,18 +37,23 @@ pub fn ingest_to_shards(
     println!("[pipeline] ingest mode=sharded workers={workers}");
 
     let resolved_mapping = resolve_mapping(&mapping, input_path)?;
-    let snapshot_id = register_snapshot(db_path, &mapping, input_path, snapshot_label, snapshot_date)?;
+    let snapshot_id = register_snapshot(
+        db_path,
+        &mapping,
+        input_path,
+        snapshot_label,
+        snapshot_date,
+        reliability_rank,
+    )?;
 
     let shard_root = Path::new(db_path)
         .parent()
         .unwrap_or_else(|| Path::new("."))
         .join("runs")
-        .join(format!(
-            "{}-{}",
-            sanitize_path_component(&mapping.source_key),
-            sanitize_path_component(snapshot_label)
-        ))
+        .join(sanitize_path_component(run_id))
         .join("staging")
+        .join(sanitize_path_component(&mapping.source_key))
+        .join(sanitize_path_component(snapshot_label))
         .join("shards");
 
     if shard_root.exists() {
@@ -78,10 +85,19 @@ pub fn ingest_to_shards(
 
     let mut worker_results = Vec::with_capacity(workers);
     for handle in handles {
-        let worker_result = handle
-            .join()
-            .map_err(|_| PipelineError::Args("sharded ingest worker panicked".to_owned()))?
-            .map_err(PipelineError::Args)?;
+        let worker_result = match handle.join() {
+            Ok(Ok(worker_result)) => worker_result,
+            Ok(Err(err)) => {
+                mark_snapshot_failed(db_path, snapshot_id)?;
+                return Err(PipelineError::Args(err));
+            }
+            Err(_) => {
+                mark_snapshot_failed(db_path, snapshot_id)?;
+                return Err(PipelineError::Args(
+                    "sharded ingest worker panicked".to_owned(),
+                ));
+            }
+        };
         worker_results.push(worker_result);
     }
     worker_results.sort_by_key(|result| result.shard_index);
@@ -128,6 +144,7 @@ fn register_snapshot(
     input_path: &str,
     snapshot_label: &str,
     snapshot_date: &str,
+    reliability_rank: i64,
 ) -> Result<i64, PipelineError> {
     let mut conn = open_rw(db_path)?;
     let tx = conn.transaction()?;
@@ -138,12 +155,9 @@ fn register_snapshot(
         snapshot_label,
         snapshot_date,
         input_path,
-        100,
+        reliability_rank,
     )?;
-    tx.execute(
-        "UPDATE source_snapshot SET status='loading' WHERE snapshot_id=?1",
-        [snapshot_id],
-    )?;
+    repo::set_snapshot_status(&tx, snapshot_id, "loading")?;
     tx.commit()?;
     Ok(snapshot_id)
 }
@@ -222,12 +236,10 @@ fn dispatch_records(
 }
 
 fn mark_snapshot_failed(db_path: &str, snapshot_id: i64) -> Result<(), PipelineError> {
+    use crate::db::repo;
     let mut conn = open_rw(db_path)?;
     let tx = conn.transaction()?;
-    tx.execute(
-        "UPDATE source_snapshot SET status='failed' WHERE snapshot_id=?1",
-        [snapshot_id],
-    )?;
+    repo::set_snapshot_status(&tx, snapshot_id, "failed")?;
     tx.commit()?;
     Ok(())
 }

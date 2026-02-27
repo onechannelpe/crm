@@ -1,9 +1,12 @@
 use crate::PipelineError;
-use crate::config::runtime::{EvidenceMode, IngestMode};
+use crate::config::runtime::IngestMode;
 use crate::db::schema::init_schema;
 use crate::stages::bootstrap::{PhaseTiming, RunContext, SourceCheckpoint};
 use crate::stages::extract::sample_with_header;
-use crate::stages::verify::helpers::{load_enabled_sources, materialize_and_quick_check, run_ingest_phase};
+use crate::stages::verify::helpers::{
+    load_enabled_sources, mark_snapshots_materialized, materialize_and_quick_check,
+    run_ingest_phase,
+};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -15,7 +18,6 @@ pub fn run_matrix(
     build_dir: &str,
     manifest_path: &str,
     ingest_mode: IngestMode,
-    evidence_mode: EvidenceMode,
     workers: usize,
     row_cap: usize,
     run_osiptel_sample: bool,
@@ -32,7 +34,6 @@ pub fn run_matrix(
         manifest_path,
         "sample",
         ingest_mode,
-        evidence_mode,
         workers,
         batch_size,
     )?;
@@ -76,20 +77,66 @@ pub fn run_matrix(
         let snapshot_label = format!("{}-sample", source.source_key);
         let ingest_stats = run_ingest_phase(
             db_path,
+            &run_ctx.run_id,
             Path::new(&source.mapping_path),
             &sample_file,
             &snapshot_label,
             &source.snapshot_date,
+            source.reliability_rank,
             batch_size,
             workers,
             ingest_mode,
-            evidence_mode,
             Some(&source.source_key),
         )?;
         timings.push(PhaseTiming {
             phase: "shard_ingest".to_owned(),
             key: source.source_key.clone(),
-            seconds: ingest_stats.duration_secs,
+            seconds: ingest_stats.shard_ingest_secs,
+        });
+        timings.push(PhaseTiming {
+            phase: "merge_sql".to_owned(),
+            key: source.source_key.clone(),
+            seconds: ingest_stats.merge_sql_secs,
+        });
+        timings.push(PhaseTiming {
+            phase: "merge_prepare".to_owned(),
+            key: source.source_key.clone(),
+            seconds: ingest_stats.merge_prepare_secs,
+        });
+        timings.push(PhaseTiming {
+            phase: "merge_core".to_owned(),
+            key: source.source_key.clone(),
+            seconds: ingest_stats.merge_core_secs,
+        });
+        timings.push(PhaseTiming {
+            phase: "merge_phone".to_owned(),
+            key: source.source_key.clone(),
+            seconds: ingest_stats.merge_phone_secs,
+        });
+        timings.push(PhaseTiming {
+            phase: "merge_evidence".to_owned(),
+            key: source.source_key.clone(),
+            seconds: ingest_stats.merge_evidence_secs,
+        });
+        timings.push(PhaseTiming {
+            phase: "merge_cleanup".to_owned(),
+            key: source.source_key.clone(),
+            seconds: ingest_stats.merge_cleanup_secs,
+        });
+        timings.push(PhaseTiming {
+            phase: "merge_attach_detach".to_owned(),
+            key: source.source_key.clone(),
+            seconds: ingest_stats.merge_attach_detach_secs,
+        });
+        timings.push(PhaseTiming {
+            phase: "validate".to_owned(),
+            key: source.source_key.clone(),
+            seconds: ingest_stats.validate_secs,
+        });
+        timings.push(PhaseTiming {
+            phase: "ingest_total".to_owned(),
+            key: source.source_key.clone(),
+            seconds: ingest_stats.total_secs,
         });
         checkpoints.push(SourceCheckpoint {
             source_key: source.source_key.clone(),
@@ -101,6 +148,7 @@ pub fn run_matrix(
 
     let materialize_started_at = Instant::now();
     materialize_and_quick_check(db_path)?;
+    mark_snapshots_materialized(db_path)?;
     let materialize_secs = materialize_started_at.elapsed().as_secs_f64();
     timings.push(PhaseTiming {
         phase: "materialize".to_owned(),

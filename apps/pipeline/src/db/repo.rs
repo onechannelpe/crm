@@ -72,3 +72,15 @@ pub(crate) fn upsert_snapshot(
     )?;
     Ok(snapshot_id)
 }
+
+pub(crate) fn set_snapshot_status(
+    tx: &Transaction<'_>,
+    snapshot_id: i64,
+    status: &str,
+) -> Result<(), PipelineError> {
+    tx.execute(
+        "UPDATE source_snapshot SET status=?2 WHERE snapshot_id=?1",
+        params![snapshot_id, status],
+    )?;
+    Ok(())
+}
