@@ -1,33 +1,33 @@
-use super::common::{db_err, map_row};
+use super::common::{JOIN_CHAIN, SELECT_COLUMNS, db_err, map_row};
 use crate::errors::ApiError;
 use crate::storage::sqlite::models::SearchRow;
 use rusqlite::{Connection, Row, params};
+use std::sync::LazyLock;
 
-const SQL_PHONE_ENRICHED: &str = "
-SELECT c.dni,
-       COALESCE(NULLIF(c.name, ''), 'Contacto ' || c.dni) AS name,
-       NULLIF(c.org_ruc, '') AS org_ruc,
-       NULLIF(c.org_name, '') AS org_name,
-       NULLIF(c.phone_primary, '') AS phone_primary,
-       NULLIF(c.phone_secondary, '') AS phone_secondary,
-       CASE
-         WHEN c.org_ruc IS NOT NULL AND c.org_ruc <> '' THEN rpa.phones
-         ELSE dpa.phones
-       END AS sibling_phones
-FROM phone_index p
-JOIN contacts c ON c.id = p.contact_id
+// Same 26 columns as the standard queries, plus sibling_phones at col 27.
+// Driving table is phone_index (INNER join) → contacts_serving, then JOIN_CHAIN.
+static SQL_PHONE_ENRICHED: LazyLock<String> = LazyLock::new(|| {
+    format!(
+        "SELECT{SELECT_COLUMNS},
+  CASE
+    WHEN c.org_ruc IS NOT NULL AND c.org_ruc <> '' THEN rpa.phones
+    ELSE dpa.phones
+  END AS sibling_phones
+FROM phone_index pi
+JOIN contacts_serving c ON c.id = pi.contact_id{JOIN_CHAIN}
 LEFT JOIN ruc_phone_agg rpa ON rpa.org_ruc = c.org_ruc
 LEFT JOIN dni_phone_agg dpa ON dpa.dni = c.dni
-WHERE p.phone = ?1
-LIMIT ?2
-";
+WHERE pi.phone = ?1
+LIMIT ?2"
+    )
+});
 
 pub fn search_phone_enriched(
     conn: &Connection,
     phone: &str,
     limit: usize,
 ) -> Result<Vec<SearchRow>, ApiError> {
-    let mut stmt = conn.prepare_cached(SQL_PHONE_ENRICHED).map_err(db_err)?;
+    let mut stmt = conn.prepare_cached(&SQL_PHONE_ENRICHED).map_err(db_err)?;
     let rows = stmt
         .query_map(params![phone, limit as i64], map_row_with_siblings)
         .map_err(db_err)?;
@@ -36,6 +36,6 @@ pub fn search_phone_enriched(
 
 fn map_row_with_siblings(row: &Row<'_>) -> rusqlite::Result<SearchRow> {
     let base = map_row(row)?;
-    let siblings: Option<String> = row.get(6)?;
+    let siblings: Option<String> = row.get(27)?;
     Ok(base.with_siblings(siblings))
 }
