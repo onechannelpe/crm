@@ -55,17 +55,17 @@ export default function OnboardingPage() {
     try {
       if (requiresStrongAuth() && !strongAuthIsEnrolled()) {
         throw new Error(
-          "TOTP is required before activating an administrative account.",
+          "Debes configurar el 2FA (TOTP) antes de activar una cuenta administrativa",
         );
       }
       const currentUser = user();
       if (!currentUser) {
-        throw new Error("Session not found");
+        throw new Error("No se encontró la sesión");
       }
       await completeOnboarding(fullName(), phone());
       navigate(getDefaultAppPath(currentUser.role));
     } catch (err: unknown) {
-      setError(getErrorMessage(err, "Failed to complete onboarding"));
+      setError(getErrorMessage(err, "No se pudo completar el registro."));
     } finally {
       setSubmitting(false);
     }
@@ -77,9 +77,11 @@ export default function OnboardingPage() {
     try {
       const enrollment = await beginTotpEnrollment();
       setTotpQrCode(enrollment.qrCodeDataUrl);
-      setTotpMessage("Scan the QR code and confirm with your TOTP code.");
+      setTotpMessage(
+        "Escena el código QR y confirma con tu código de verificación.",
+      );
     } catch (err: unknown) {
-      setTotpMessage(getErrorMessage(err, "Failed to initialize TOTP"));
+      setTotpMessage(getErrorMessage(err, "Código de verificación inválido"));
     } finally {
       setTotpLoading(false);
     }
@@ -94,9 +96,9 @@ export default function OnboardingPage() {
       setTotpQrCode("");
       setTotpCode("");
       await refetchUser();
-      setTotpMessage("TOTP enabled. Save your recovery codes.");
+      setTotpMessage("2FA (TOTP) activado. Guarda tus códigos de verificación");
     } catch (err: unknown) {
-      setTotpMessage(getErrorMessage(err, "Invalid TOTP code"));
+      setTotpMessage(getErrorMessage(err, "Código de verificación inválido"));
     } finally {
       setTotpLoading(false);
     }
@@ -108,9 +110,9 @@ export default function OnboardingPage() {
         class={`${authStyles.panel} ${authStyles.panelXl} ${styles.panel}`}
       >
         <div>
-          <h1 class={authStyles.title}>Complete your profile</h1>
+          <h1 class={authStyles.title}>Completa tu perfil</h1>
           <p class={authStyles.muted}>
-            Confirm your profile details and primary phone number.
+            Confirma los detalles de perfil y tu número de teléfono corporativo.
           </p>
         </div>
 
@@ -126,7 +128,7 @@ export default function OnboardingPage() {
                 <Input
                   id="onboarding-email"
                   type="email"
-                  label="Email"
+                  label="Correo"
                   value={currentUser().email}
                   disabled
                 />
@@ -136,7 +138,7 @@ export default function OnboardingPage() {
                 <Input
                   id="onboarding-name"
                   type="text"
-                  label="Full name"
+                  label="Nombre completo"
                   value={fullName()}
                   onInput={(e) => setFullName(e.currentTarget.value)}
                   required
@@ -147,7 +149,7 @@ export default function OnboardingPage() {
                 <Input
                   id="onboarding-phone"
                   type="tel"
-                  label="WhatsApp (E.164, ex: +51987654321)"
+                  label="WhatsApp (ej: +51987654321)"
                   value={phone()}
                   onInput={(e) => setPhone(e.currentTarget.value)}
                   required
@@ -156,9 +158,11 @@ export default function OnboardingPage() {
 
               <Show when={requiresStrongAuth()}>
                 <div class={styles.totpBox}>
-                  <p class={styles.totpTitle}>Required security setup (TOTP)</p>
+                  <p class={styles.totpTitle}>
+                    Configuración de seguridad obligatoria (TOTP)
+                  </p>
                   <Show when={strongAuthIsEnrolled()}>
-                    <p class={authStyles.muted}>TOTP enabled.</p>
+                    <p class={authStyles.muted}>2FA (TOTP) activado.</p>
                   </Show>
                   <Show when={!strongAuthIsEnrolled()}>
                     <Button
@@ -169,19 +173,21 @@ export default function OnboardingPage() {
                         void startTotpSetup();
                       }}
                     >
-                      {totpLoading() ? "Preparing TOTP..." : "Set up TOTP"}
+                      {totpLoading()
+                        ? "Preparando 2FA..."
+                        : "Configurar 2FA (TOTP)"}
                     </Button>
                     <Show when={totpQrCode()}>
                       <div class={styles.section}>
                         <img
                           src={totpQrCode()}
-                          alt="TOTP QR code"
+                          alt="Código QR para 2FA (TOTP)"
                           class={styles.qr}
                         />
                         <Input
                           id="onboarding-totp-code"
                           type="text"
-                          placeholder="Enter TOTP code"
+                          placeholder="Ingresa el código de verificación"
                           value={totpCode()}
                           onInput={(e) => setTotpCode(e.currentTarget.value)}
                         />
@@ -192,7 +198,7 @@ export default function OnboardingPage() {
                             void confirmTotpSetup();
                           }}
                         >
-                          Confirm TOTP
+                          Confirmar
                         </Button>
                       </div>
                     </Show>
@@ -203,7 +209,7 @@ export default function OnboardingPage() {
                   <Show when={recoveryCodes().length > 0}>
                     <div class={styles.recovery}>
                       <p class={styles.recoveryTitle}>
-                        Recovery codes (shown once)
+                        Códigos de recuperación (se muestran una sola vez)
                       </p>
                       <ul class={styles.recoveryList}>
                         {recoveryCodes().map((code) => (
@@ -224,7 +230,7 @@ export default function OnboardingPage() {
                 class={authStyles.full}
                 disabled={submitting()}
               >
-                {submitting() ? "Saving..." : "Save and continue"}
+                {submitting() ? "Guardando..." : "Guardar y continuar"}
               </Button>
             </form>
           )}

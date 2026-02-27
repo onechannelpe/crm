@@ -25,7 +25,7 @@ export interface HeaderDescriptor {
 }
 
 const HEADER_FALLBACK: HeaderDescriptor = {
-  label: "Workspace",
+  label: "Espacio de trabajo",
   icon: "dashboard",
 };
 
@@ -35,11 +35,11 @@ const DYNAMIC_ROUTE_HEADERS: Array<{
 }> = [
   {
     pattern: /^\/sales\/records\/[^/]+\/edit$/,
-    header: { label: "Edit sale", icon: "new-sale" },
+    header: { label: "Editar venta", icon: "new-sale" },
   },
   {
     pattern: /^\/sales\/reports\/exports\/[^/]+$/,
-    header: { label: "Export detail", icon: "confirmed" },
+    header: { label: "Detalle", icon: "confirmed" },
   },
 ];
 

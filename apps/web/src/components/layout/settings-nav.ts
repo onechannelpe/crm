@@ -18,7 +18,7 @@ export interface SettingsNavItem {
 export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
   {
     id: "profile",
-    label: "Profile",
+    label: "Perfil",
     href: "/settings/profile",
     icon: UserIcon,
     section: "user",
@@ -32,7 +32,7 @@ export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
   },
   {
     id: "security",
-    label: "Security",
+    label: "Seguridad",
     href: "/settings/security",
     icon: ShieldCheck,
     section: "workspace",
@@ -40,7 +40,7 @@ export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
   },
   {
     id: "login-protection",
-    label: "Login protection",
+    label: "Protección de inicio de sesión",
     href: "/settings/login-protection",
     icon: ShieldCheck,
     section: "workspace",
@@ -56,7 +56,7 @@ export function getCurrentSettingsItem(pathname: string): SettingsNavItem {
 }
 
 export function getSettingsSectionLabel(section: SettingsNavSectionId): string {
-  return section === "user" ? "User" : "Workspace";
+  return section === "user" ? "Usuario" : "Espacio de trabajo";
 }
 
 export function getSettingsSectionHref(section: SettingsNavSectionId): string {

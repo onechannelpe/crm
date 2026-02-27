@@ -27,8 +27,8 @@ export default function ConfirmedSalesPage() {
         when={sales().length > 0}
         fallback={
           <EmptyState
-            title="No confirmed sales"
-            description="Confirmed sales will appear here."
+            title="Sin ventas confirmadas"
+            description="Las ventas confirmadas aparecerán aquí."
           />
         }
       >
@@ -36,10 +36,10 @@ export default function ConfirmedSalesPage() {
           <TableHeader>
             <TableRow>
               <TableHead>ID</TableHead>
-              <TableHead>Company</TableHead>
-              <TableHead>Contact</TableHead>
-              <TableHead>Executive</TableHead>
-              <TableHead>Confirmed</TableHead>
+              <TableHead>Empresa</TableHead>
+              <TableHead>Contacto</TableHead>
+              <TableHead>Ejecutivo</TableHead>
+              <TableHead>Confirmado</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

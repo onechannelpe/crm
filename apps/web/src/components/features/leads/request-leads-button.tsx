@@ -28,17 +28,20 @@ export const RequestLeadsButton: Component<RequestLeadsButtonProps> = (
     try {
       const assigned = await props.onRequest();
       if (assigned > 0) {
-        showToast("success", `${assigned} leads assigned`);
+        showToast(
+          "success",
+          assigned === 1 ? "1 lead asignado" : `${assigned} leads asignados`,
+        );
       } else {
-        showToast("error", "No additional leads available");
+        showToast("error", "No hay más leads disponibles");
       }
     } catch (error) {
       const message =
         error instanceof TypeError
-          ? "Could not connect to server"
+          ? "No se pudo conectar con el servidor"
           : error instanceof Error
             ? error.message
-            : "Failed to request leads";
+            : "No se pudieron solicitar los leads";
       showToast("error", message);
     } finally {
       setLoading(false);
