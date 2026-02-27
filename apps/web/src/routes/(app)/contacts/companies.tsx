@@ -8,6 +8,7 @@ import {
   onCleanup,
   onMount,
   Show,
+  type JSX,
 } from "solid-js";
 
 import { useMainDetailPanel } from "~/components/providers/main-detail-panel-provider";
@@ -39,6 +40,46 @@ const COLUMNS = [
   { label: "Contacts" },
   { label: "Phones" },
 ];
+const PILL_PAGE_SIZE = 5;
+
+interface CollapsedPillListProps<T> {
+  items: readonly T[];
+  maxVisible?: number;
+  onMoreClick?: () => void;
+  renderItem: (item: T) => JSX.Element;
+}
+
+function CollapsedPillList<T>(props: CollapsedPillListProps<T>) {
+  const visibleItems = createMemo(() =>
+    props.items.slice(0, props.maxVisible ?? PILL_PAGE_SIZE),
+  );
+  const hiddenCount = createMemo(() =>
+    Math.max(0, props.items.length - visibleItems().length),
+  );
+
+  return (
+    <div class={styles.pillWrap}>
+      <Show
+        when={props.items.length > 0}
+        fallback={<span class={styles.pill}>—</span>}
+      >
+        <For each={visibleItems()}>{(item) => props.renderItem(item)}</For>
+      </Show>
+      <Show when={hiddenCount() > 0}>
+        <button
+          type="button"
+          class={`${styles.pill} ${styles.pillButton}`}
+          onClick={(event) => {
+            event.stopPropagation();
+            props.onMoreClick?.();
+          }}
+        >
+          +{hiddenCount()} more
+        </button>
+      </Show>
+    </div>
+  );
+}
 
 function buildDisplayRows(groups: CompanyGroup[]) {
   return groups.map((company, index) => ({
@@ -117,39 +158,38 @@ export default function ClientSearchCompaniesPage() {
                 <TableCell>
                   <span class={styles.chip}>
                     <span class={styles.squareDot}>{toInitial(row.name)}</span>
-                    <span>{row.name}</span>
+                    <span class={styles.chipLabel}>{row.name}</span>
                   </span>
                 </TableCell>
                 <TableCell>
                   <span class={styles.pill}>{row.ruc}</span>
                 </TableCell>
                 <TableCell>
-                  <div class={styles.pillWrap}>
-                    <For each={row.contacts}>
-                      {(person) => (
-                        <A
-                          href={`/contacts/people?type=${person.dni ? "dni" : "person_name"}&query=${encodeURIComponent(person.dni ?? person.name)}&limit=20`}
-                          class={styles.pill}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {person.name}
-                        </A>
-                      )}
-                    </For>
-                    <Show when={row.contacts.length === 0}>
-                      <span class={styles.pill}>—</span>
-                    </Show>
-                  </div>
+                  <CollapsedPillList
+                    items={row.contacts}
+                    onMoreClick={() => setSelectedKey(group()?.key ?? null)}
+                    renderItem={(person) => (
+                      <A
+                        href={`/contacts/people?type=${person.dni ? "dni" : "person_name"}&query=${encodeURIComponent(person.dni ?? person.name)}&limit=20`}
+                        class={styles.pill}
+                        onClick={(e) => e.stopPropagation()}
+                        title={person.name}
+                      >
+                        <span class={styles.pillText}>{person.name}</span>
+                      </A>
+                    )}
+                  />
                 </TableCell>
                 <TableCell>
-                  <div class={styles.pillWrap}>
-                    <For each={row.phones}>
-                      {(phone) => <span class={styles.pill}>{phone}</span>}
-                    </For>
-                    <Show when={row.phones.length === 0}>
-                      <span class={styles.pill}>—</span>
-                    </Show>
-                  </div>
+                  <CollapsedPillList
+                    items={row.phones}
+                    onMoreClick={() => setSelectedKey(group()?.key ?? null)}
+                    renderItem={(phone) => (
+                      <span class={styles.pill} title={phone}>
+                        <span class={styles.pillText}>{phone}</span>
+                      </span>
+                    )}
+                  />
                 </TableCell>
               </TableRow>
             );

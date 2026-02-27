@@ -1,4 +1,5 @@
-import { For, Show, type JSX } from "solid-js";
+import { A } from "@solidjs/router";
+import { createMemo, createSignal, For, Show, type JSX } from "solid-js";
 
 import Building2Icon from "~/components/icons/building-2";
 import CalendarDaysIcon from "~/components/icons/calendar-days";
@@ -13,6 +14,8 @@ import type { CompanyGroup, PersonGroup } from "./grouping";
 
 import styles from "./contact-detail-drawer.module.css";
 
+const PANEL_PAGE_SIZE = 5;
+
 interface FieldRowProps {
   label: string;
   value: string | null | undefined;
@@ -22,18 +25,127 @@ interface FieldRowProps {
 function FieldRow(props: FieldRowProps) {
   return (
     <Show when={props.value?.trim()}>
-      {(val) => (
+      {(value) => (
         <div class={styles.fieldRow}>
           <span class={styles.fieldIcon}>{props.icon}</span>
           <span class={styles.fieldLabel}>{props.label}</span>
-          <span class={styles.fieldValue}>{val()}</span>
+          <span class={styles.fieldValue} title={value()}>
+            {value()}
+          </span>
         </div>
       )}
     </Show>
   );
 }
 
-// ─── Person drawer ──────────────────────────────────────────────────────────
+interface DetailSectionProps {
+  title: string;
+  linkHref?: string;
+  linkLabel?: string;
+  children: JSX.Element;
+}
+
+function DetailSection(props: DetailSectionProps) {
+  return (
+    <section class={styles.section}>
+      <header class={styles.sectionHeader}>
+        <div class={styles.sectionTitleWrap}>
+          <h3 class={styles.sectionTitle}>{props.title}</h3>
+          <Show when={props.linkHref && props.linkLabel}>
+            <A href={props.linkHref!} class={styles.sectionLink}>
+              {props.linkLabel}
+            </A>
+          </Show>
+        </div>
+      </header>
+      <div class={styles.sectionBody}>{props.children}</div>
+    </section>
+  );
+}
+
+interface ExpandablePillListProps {
+  items: readonly string[];
+}
+
+function ExpandablePillList(props: ExpandablePillListProps) {
+  const [visibleCount, setVisibleCount] = createSignal(PANEL_PAGE_SIZE);
+  const visibleItems = createMemo(() => props.items.slice(0, visibleCount()));
+  const hiddenCount = createMemo(() =>
+    Math.max(0, props.items.length - visibleItems().length),
+  );
+
+  return (
+    <div class={styles.pillWrap}>
+      <For each={visibleItems()}>
+        {(item) => (
+          <span class={styles.pill} title={item}>
+            <span class={styles.pillText}>{item}</span>
+          </span>
+        )}
+      </For>
+      <Show when={hiddenCount() > 0}>
+        <button
+          type="button"
+          class={`${styles.pill} ${styles.pillButton}`}
+          onClick={() => setVisibleCount((count) => count + PANEL_PAGE_SIZE)}
+        >
+          +{hiddenCount()} more
+        </button>
+      </Show>
+    </div>
+  );
+}
+
+function buildPersonHref(name: string, dni: string | null) {
+  const type = dni ? "dni" : "person_name";
+  const query = encodeURIComponent(dni ?? name);
+  return `/contacts/people?type=${type}&query=${query}&limit=20`;
+}
+
+function buildCompanyHref(name: string, ruc: string | null) {
+  const type = ruc ? "ruc" : "company_name";
+  const query = encodeURIComponent(ruc ?? name);
+  return `/contacts/companies?type=${type}&query=${query}&limit=20`;
+}
+
+interface DrawerHeaderProps {
+  initial: string;
+  title: string;
+  subtitle?: string | null;
+  onClose: () => void;
+  squareAvatar?: boolean;
+}
+
+function DrawerHeader(props: DrawerHeaderProps) {
+  return (
+    <header class={styles.header}>
+      <span
+        class={`${styles.headerAvatar}${props.squareAvatar ? ` ${styles.headerAvatarSquare}` : ""}`}
+      >
+        {props.initial}
+      </span>
+      <div class={styles.headerInfo}>
+        <div class={styles.headerName} title={props.title}>
+          {props.title}
+        </div>
+        <Show when={props.subtitle?.trim()}>
+          {(subtitle) => (
+            <div class={styles.headerSubtitle} title={subtitle()}>
+              {subtitle()}
+            </div>
+          )}
+        </Show>
+      </div>
+      <button
+        class={styles.closeBtn}
+        onClick={props.onClose}
+        aria-label="Close"
+      >
+        <XIcon size={14} />
+      </button>
+    </header>
+  );
+}
 
 interface PersonDetailDrawerProps {
   group: PersonGroup;
@@ -45,53 +157,38 @@ export function PersonDetailDrawer(props: PersonDetailDrawerProps) {
   const person = () => row().person;
   const org = () => row().org;
   const role = () => row().role;
-  const allPhones = () => props.group.phones;
+  const aliasValues = () =>
+    props.group.aliases.filter((alias) => alias !== props.group.displayName);
 
   return (
     <div class={styles.drawer}>
-      <div class={styles.header}>
-        <span class={styles.headerAvatar}>
-          {toInitial(props.group.displayName)}
-        </span>
-        <div class={styles.headerInfo}>
-          <div class={styles.headerName}>{props.group.displayName || "—"}</div>
-          <Show when={person().ruc}>
-            {(ruc) => <div class={styles.headerSub}>RUC {ruc()}</div>}
-          </Show>
-        </div>
-        <button
-          class={styles.closeBtn}
-          onClick={props.onClose}
-          aria-label="Close"
-        >
-          <XIcon size={14} />
-        </button>
-      </div>
+      <DrawerHeader
+        initial={toInitial(props.group.displayName)}
+        title={props.group.displayName || "—"}
+        subtitle={person().dni ? `DNI ${person().dni}` : null}
+        onClose={props.onClose}
+      />
 
       <div class={styles.body}>
-        {/* Identity */}
-        <div class={styles.section}>
-          <div class={styles.sectionTitle}>Identity</div>
-          <FieldRow
-            icon={<UserIcon size={16} />}
-            label="DNI"
-            value={person().dni}
-          />
+        <DetailSection title="Identity">
           <FieldRow
             icon={<UserIcon size={16} />}
             label="Full name"
             value={person().name}
           />
-          <Show when={props.group.aliases.length > 1}>
+          <FieldRow
+            icon={<UserIcon size={16} />}
+            label="DNI"
+            value={person().dni}
+          />
+          <Show when={aliasValues().length > 0}>
             <div class={styles.fieldRow}>
               <span class={styles.fieldIcon}>
                 <UserIcon size={16} />
               </span>
               <span class={styles.fieldLabel}>Aliases</span>
               <div class={styles.fieldValue}>
-                <For each={props.group.aliases.slice(1)}>
-                  {(alias) => <div class={styles.aliasRow}>{alias}</div>}
-                </For>
+                <ExpandablePillList items={aliasValues()} />
               </div>
             </div>
           </Show>
@@ -120,12 +217,47 @@ export function PersonDetailDrawer(props: PersonDetailDrawerProps) {
             label="Email"
             value={person().email}
           />
-        </div>
+        </DetailSection>
 
-        {/* Location */}
+        <Show when={props.group.companies.length > 0}>
+          <DetailSection title="Companies">
+            <For each={props.group.companies}>
+              {(company) => {
+                const companyName = () =>
+                  company.name ?? company.ruc ?? "Company";
+                return (
+                  <A
+                    class={styles.recordItem}
+                    href={buildCompanyHref(companyName(), company.ruc)}
+                    title={companyName()}
+                  >
+                    <span class={styles.recordItemMain}>{companyName()}</span>
+                    <span class={styles.recordItemMeta}>
+                      {company.ruc ? `RUC ${company.ruc}` : "Open search"}
+                    </span>
+                  </A>
+                );
+              }}
+            </For>
+          </DetailSection>
+        </Show>
+
+        <Show when={props.group.phones.length > 0}>
+          <DetailSection title="Phones">
+            <div class={styles.fieldRow}>
+              <span class={styles.fieldIcon}>
+                <PhoneIcon size={16} />
+              </span>
+              <span class={styles.fieldLabel}>Numbers</span>
+              <div class={styles.fieldValue}>
+                <ExpandablePillList items={props.group.phones} />
+              </div>
+            </div>
+          </DetailSection>
+        </Show>
+
         <Show when={person().location_text || person().ubigeo_code}>
-          <div class={styles.section}>
-            <div class={styles.sectionTitle}>Location</div>
+          <DetailSection title="Location">
             <FieldRow
               icon={<Building2Icon size={16} />}
               label="Address"
@@ -136,13 +268,11 @@ export function PersonDetailDrawer(props: PersonDetailDrawerProps) {
               label="Ubigeo"
               value={person().ubigeo_code}
             />
-          </div>
+          </DetailSection>
         </Show>
 
-        {/* Family */}
         <Show when={person().mother_name || person().father_name}>
-          <div class={styles.section}>
-            <div class={styles.sectionTitle}>Family</div>
+          <DetailSection title="Family">
             <FieldRow
               icon={<UsersIcon size={16} />}
               label="Mother"
@@ -153,99 +283,44 @@ export function PersonDetailDrawer(props: PersonDetailDrawerProps) {
               label="Father"
               value={person().father_name}
             />
-          </div>
+          </DetailSection>
         </Show>
 
-        {/* Phones */}
-        <Show when={allPhones().length > 0}>
-          <div class={styles.section}>
-            <div class={styles.sectionTitle}>Phones</div>
-            <div class={styles.fieldRow}>
-              <span class={styles.fieldIcon}>
-                <PhoneIcon size={16} />
-              </span>
-              <span class={styles.fieldLabel}>Numbers</span>
-              <div class={styles.fieldValue}>
-                <div class={styles.phonePills}>
-                  <For each={allPhones()}>
-                    {(phone) => <span class={styles.phonePill}>{phone}</span>}
-                  </For>
-                </div>
-              </div>
-            </div>
-          </div>
-        </Show>
-
-        {/* Company */}
         <Show when={org()}>
-          {(o) => (
-            <div class={styles.section}>
-              <div class={styles.sectionTitle}>Company</div>
+          {(company) => (
+            <DetailSection
+              title="Primary company"
+              linkHref={buildCompanyHref(
+                company().name ?? company().ruc ?? "Company",
+                company().ruc,
+              )}
+              linkLabel="Open"
+            >
               <FieldRow
                 icon={<Building2Icon size={16} />}
                 label="Name"
-                value={o().name}
+                value={company().name}
               />
               <FieldRow
                 icon={<Building2Icon size={16} />}
                 label="Trade name"
-                value={o().trade_name}
+                value={company().trade_name}
               />
               <FieldRow
                 icon={<Building2Icon size={16} />}
                 label="RUC"
-                value={o().ruc}
+                value={company().ruc}
               />
               <Show when={role()}>
-                {(r) => (
+                {(roleInfo) => (
                   <FieldRow
                     icon={<UserIcon size={16} />}
                     label="Role"
-                    value={r().name}
+                    value={roleInfo().name}
                   />
                 )}
               </Show>
-              <FieldRow
-                icon={<Building2Icon size={16} />}
-                label="Type"
-                value={o().company_type}
-              />
-              <FieldRow
-                icon={<Building2Icon size={16} />}
-                label="Status"
-                value={o().status}
-              />
-              <FieldRow
-                icon={<Building2Icon size={16} />}
-                label="Condition"
-                value={o().condition}
-              />
-              <FieldRow
-                icon={<Building2Icon size={16} />}
-                label="Address"
-                value={o().fiscal_address}
-              />
-              <FieldRow
-                icon={<CalendarDaysIcon size={16} />}
-                label="Registered"
-                value={o().registration_date}
-              />
-              <FieldRow
-                icon={<CalendarDaysIcon size={16} />}
-                label="Active since"
-                value={o().activity_start_date}
-              />
-              <FieldRow
-                icon={<Building2Icon size={16} />}
-                label="Activity"
-                value={o().economic_activity}
-              />
-              <FieldRow
-                icon={<Building2Icon size={16} />}
-                label="Industry"
-                value={o().line_of_business}
-              />
-            </div>
+            </DetailSection>
           )}
         </Show>
       </div>
@@ -253,150 +328,151 @@ export function PersonDetailDrawer(props: PersonDetailDrawerProps) {
   );
 }
 
-// ─── Company drawer ──────────────────────────────────────────────────────────
-
 interface CompanyDetailDrawerProps {
   group: CompanyGroup;
   onClose: () => void;
 }
 
 export function CompanyDetailDrawer(props: CompanyDetailDrawerProps) {
+  const [visiblePeopleCount, setVisiblePeopleCount] =
+    createSignal(PANEL_PAGE_SIZE);
+  const visiblePeople = createMemo(() =>
+    props.group.people.slice(0, visiblePeopleCount()),
+  );
+  const hiddenPeopleCount = createMemo(() =>
+    Math.max(0, props.group.people.length - visiblePeople().length),
+  );
   const row = () => props.group.rows[0];
   const org = () => row().org;
-  const allPhones = () => props.group.phones;
 
   return (
     <div class={styles.drawer}>
-      <div class={styles.header}>
-        <span class={`${styles.headerAvatar} ${styles.headerAvatarSquare}`}>
-          {toInitial(props.group.name ?? "?")}
-        </span>
-        <div class={styles.headerInfo}>
-          <div class={styles.headerName}>{props.group.name ?? "—"}</div>
-          <Show when={props.group.ruc}>
-            {(ruc) => <div class={styles.headerSub}>RUC {ruc()}</div>}
-          </Show>
-        </div>
-        <button
-          class={styles.closeBtn}
-          onClick={props.onClose}
-          aria-label="Close"
-        >
-          <XIcon size={14} />
-        </button>
-      </div>
+      <DrawerHeader
+        initial={toInitial(props.group.name ?? "?")}
+        title={props.group.name ?? "—"}
+        subtitle={props.group.ruc ? `RUC ${props.group.ruc}` : null}
+        onClose={props.onClose}
+        squareAvatar
+      />
 
       <div class={styles.body}>
-        {/* Company details */}
         <Show when={org()}>
-          {(o) => (
-            <div class={styles.section}>
-              <div class={styles.sectionTitle}>Details</div>
+          {(company) => (
+            <DetailSection title="Details">
               <FieldRow
                 icon={<Building2Icon size={16} />}
                 label="Name"
-                value={o().name}
+                value={company().name}
               />
               <FieldRow
                 icon={<Building2Icon size={16} />}
                 label="Trade name"
-                value={o().trade_name}
+                value={company().trade_name}
               />
               <FieldRow
                 icon={<Building2Icon size={16} />}
                 label="RUC"
-                value={o().ruc}
+                value={company().ruc}
               />
               <FieldRow
                 icon={<Building2Icon size={16} />}
                 label="Type"
-                value={o().company_type}
+                value={company().company_type}
               />
               <FieldRow
                 icon={<Building2Icon size={16} />}
                 label="Status"
-                value={o().status}
+                value={company().status}
               />
               <FieldRow
                 icon={<Building2Icon size={16} />}
                 label="Condition"
-                value={o().condition}
+                value={company().condition}
               />
               <FieldRow
                 icon={<Building2Icon size={16} />}
                 label="Address"
-                value={o().fiscal_address}
+                value={company().fiscal_address}
               />
               <FieldRow
                 icon={<CalendarDaysIcon size={16} />}
                 label="Registered"
-                value={o().registration_date}
+                value={company().registration_date}
               />
               <FieldRow
                 icon={<CalendarDaysIcon size={16} />}
                 label="Active since"
-                value={o().activity_start_date}
+                value={company().activity_start_date}
               />
               <FieldRow
                 icon={<Building2Icon size={16} />}
                 label="Activity"
-                value={o().economic_activity}
+                value={company().economic_activity}
               />
               <FieldRow
                 icon={<Building2Icon size={16} />}
                 label="Industry"
-                value={o().line_of_business}
+                value={company().line_of_business}
               />
-            </div>
+            </DetailSection>
           )}
         </Show>
 
-        {/* Contacts */}
         <Show when={props.group.people.length > 0}>
-          <div class={styles.section}>
-            <div class={styles.sectionTitle}>Contacts</div>
-            <div class={styles.fieldRow}>
-              <span class={styles.fieldIcon}>
-                <UsersIcon size={16} />
-              </span>
-              <span class={styles.fieldLabel}>People</span>
-              <div class={styles.fieldValue}>
-                <For each={props.group.people}>
-                  {(person) => (
-                    <div class={styles.aliasRow}>
-                      {person.name || person.dni}
-                      <Show when={person.name && person.dni}>
-                        <span class={styles.fieldValueEmpty}>
-                          {" "}
-                          · {person.dni}
-                        </span>
-                      </Show>
-                    </div>
-                  )}
-                </For>
-              </div>
-            </div>
-          </div>
+          <DetailSection
+            title="Contacts"
+            linkHref={
+              props.group.ruc
+                ? `/contacts/people?type=ruc&query=${encodeURIComponent(props.group.ruc)}&limit=20`
+                : undefined
+            }
+            linkLabel={
+              props.group.ruc ? `All (${props.group.people.length})` : undefined
+            }
+          >
+            <For each={visiblePeople()}>
+              {(person) => {
+                const personName = () => person.name || person.dni;
+                return (
+                  <A
+                    class={styles.recordItem}
+                    href={buildPersonHref(personName(), person.dni || null)}
+                    title={`${personName()}${person.dni ? ` · ${person.dni}` : ""}`}
+                  >
+                    <span class={styles.recordItemMain}>{personName()}</span>
+                    <span class={styles.recordItemMeta}>
+                      {person.dni ? `DNI ${person.dni}` : "Open search"}
+                    </span>
+                  </A>
+                );
+              }}
+            </For>
+            <Show when={hiddenPeopleCount() > 0}>
+              <button
+                type="button"
+                class={styles.sectionMoreButton}
+                onClick={() =>
+                  setVisiblePeopleCount((count) => count + PANEL_PAGE_SIZE)
+                }
+              >
+                +{hiddenPeopleCount()} more
+              </button>
+            </Show>
+          </DetailSection>
         </Show>
 
-        {/* Phones */}
-        <Show when={allPhones().length > 0}>
-          <div class={styles.section}>
-            <div class={styles.sectionTitle}>Phones</div>
+        <Show when={props.group.phones.length > 0}>
+          <DetailSection title="Phones">
             <div class={styles.fieldRow}>
               <span class={styles.fieldIcon}>
                 <PhoneIcon size={16} />
               </span>
               <span class={styles.fieldLabel}>Numbers</span>
               <div class={styles.fieldValue}>
-                <div class={styles.phonePills}>
-                  <For each={allPhones()}>
-                    {(phone) => <span class={styles.phonePill}>{phone}</span>}
-                  </For>
-                </div>
+                <ExpandablePillList items={props.group.phones} />
               </div>
             </div>
-          </div>
+          </DetailSection>
         </Show>
       </div>
     </div>

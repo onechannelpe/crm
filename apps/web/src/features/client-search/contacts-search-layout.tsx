@@ -101,7 +101,13 @@ export function ContactsSearchLayout(props: ContactsSearchLayoutProps) {
               </Show>
             }
           >
-            <Table>
+            <Table
+              class={cn(
+                styles.resultsTable,
+                props.activeTab === "people" && styles.resultsTablePeople,
+                props.activeTab === "companies" && styles.resultsTableCompanies,
+              )}
+            >
               <TableHeader>
                 <TableRow>
                   <For each={props.columns}>

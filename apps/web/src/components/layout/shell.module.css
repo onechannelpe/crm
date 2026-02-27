@@ -129,6 +129,9 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 0 12px 12px;
 }
 
 .panel {
@@ -139,7 +142,7 @@
   background: var(--background);
   border: var(--panel-border);
   border-radius: var(--panel-radius);
-  min-height: calc(100vh - var(--topbar-height) - 32px);
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -148,9 +151,6 @@
   flex: 1 1 0%;
   flex-direction: row;
   min-height: 0;
-  padding-bottom: 12px;
-  padding-right: 12px;
-  padding-left: 0;
   background: transparent;
   border: 0;
   border-radius: 0;

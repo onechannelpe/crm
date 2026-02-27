@@ -89,6 +89,15 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.chipLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .avatarDot {
@@ -122,24 +131,48 @@
 .pillWrap {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .pill {
   display: inline-flex;
   align-items: center;
-  padding: 2px 8px;
-  border-radius: 4px;
-  background: var(--secondary);
+  justify-content: flex-start;
+  gap: 4px;
+  height: 16px;
+  max-width: min(100%, 220px);
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--bg-translucent);
   color: var(--foreground-secondary);
-  font-size: var(--font-size-caption);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.4;
   text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pillText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 a.pill:hover {
-  background: var(--bg-translucent);
-  color: var(--primary);
+  background: color-mix(in oklab, var(--bg-translucent) 70%, transparent);
+  color: var(--foreground-secondary);
+}
+
+.pillButton {
+  cursor: pointer;
+  border: 0;
+  appearance: none;
 }
 
 /* Split layout for list + detail panel */
@@ -147,13 +180,59 @@ a.pill:hover {
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-height: 0;
 }
 
 .mainPane {
   flex: 1;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
+}
+
+.resultsTable {
+  table-layout: fixed;
+}
+
+.resultsTablePeople th:nth-child(1),
+.resultsTablePeople td:nth-child(1) {
+  width: 30%;
+}
+
+.resultsTablePeople th:nth-child(2),
+.resultsTablePeople td:nth-child(2) {
+  width: 14%;
+}
+
+.resultsTablePeople th:nth-child(3),
+.resultsTablePeople td:nth-child(3) {
+  width: 36%;
+}
+
+.resultsTablePeople th:nth-child(4),
+.resultsTablePeople td:nth-child(4) {
+  width: 20%;
+}
+
+.resultsTableCompanies th:nth-child(1),
+.resultsTableCompanies td:nth-child(1) {
+  width: 34%;
+}
+
+.resultsTableCompanies th:nth-child(2),
+.resultsTableCompanies td:nth-child(2) {
+  width: 14%;
+}
+
+.resultsTableCompanies th:nth-child(3),
+.resultsTableCompanies td:nth-child(3) {
+  width: 34%;
+}
+
+.resultsTableCompanies th:nth-child(4),
+.resultsTableCompanies td:nth-child(4) {
+  width: 18%;
 }
 
 /* Active row highlight */
