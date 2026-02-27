@@ -33,7 +33,7 @@
     "format:rust": "cargo fmt --manifest-path apps/engine/Cargo.toml",
     "clean": "shx rm -rf apps/web/*.db* 'apps/*/node_modules' node_modules",
     "generate:engine-contract": "bun run scripts/generate-engine-contract.ts",
-    "download:docs": "bun run --cwd packages/download-docs download"
+    "refs:fetch": "bun run --cwd packages/fetch-refs fetch"
   },
   "devDependencies": {
     "oxfmt": "^0.35.0",
