@@ -34,6 +34,33 @@
   border-radius: 6px;
 }
 
+.headerAvatarClickable {
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  appearance: none;
+  transition: outline 0.1s;
+}
+
+.headerAvatarClickable:hover {
+  outline: 2px solid var(--border);
+  outline-offset: 2px;
+}
+
+@keyframes avatarPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.headerAvatarPending {
+  animation: avatarPulse 1.4s ease-in-out infinite;
+}
+
 .headerInfo {
   display: flex;
   flex-direction: column;

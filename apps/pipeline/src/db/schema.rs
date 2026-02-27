@@ -130,19 +130,20 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             FOREIGN KEY(snapshot_id) REFERENCES source_snapshot(snapshot_id)
         );
 
-        CREATE TABLE IF NOT EXISTS contacts_serving (
-            id INTEGER PRIMARY KEY,
-            dni TEXT NOT NULL,
-            name TEXT,
-            org_ruc TEXT,
-            org_name TEXT,
-            phone_primary TEXT,
-            phone_secondary TEXT
+        CREATE TABLE IF NOT EXISTS source_row_hash_latest (
+            source_id INTEGER NOT NULL,
+            source_row_number INTEGER NOT NULL,
+            raw_hash TEXT NOT NULL,
+            updated_snapshot_id INTEGER NOT NULL,
+            PRIMARY KEY(source_id, source_row_number),
+            FOREIGN KEY(source_id) REFERENCES source_registry(source_id),
+            FOREIGN KEY(updated_snapshot_id) REFERENCES source_snapshot(snapshot_id)
         );
 
-        CREATE TABLE IF NOT EXISTS phone_index (
-            phone TEXT NOT NULL,
-            contact_id INTEGER NOT NULL
+        CREATE TABLE IF NOT EXISTS projection_dirty_person (
+            person_id INTEGER PRIMARY KEY,
+            updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+            FOREIGN KEY(person_id) REFERENCES person_profile(person_id)
         );
 
         CREATE TABLE IF NOT EXISTS ruc_phone_agg (
@@ -155,10 +156,52 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             phones TEXT NOT NULL
         );
 
-        CREATE VIRTUAL TABLE IF NOT EXISTS contacts_fts USING fts5(
+        CREATE TABLE IF NOT EXISTS search_projection (
+            id INTEGER PRIMARY KEY,
+            dni TEXT NOT NULL,
+            name TEXT,
+            birth_date TEXT,
+            birth_place TEXT,
+            sex TEXT,
+            marital_status TEXT,
+            location_text TEXT,
+            ubigeo_code TEXT,
+            mother_name TEXT,
+            father_name TEXT,
+            email TEXT,
+            person_ruc TEXT,
+            org_ruc TEXT,
+            org_name TEXT,
+            trade_name TEXT,
+            company_type TEXT,
+            org_status TEXT,
+            org_condition TEXT,
+            fiscal_address TEXT,
+            registration_date TEXT,
+            activity_start_date TEXT,
+            line_of_business TEXT,
+            economic_activity TEXT,
+            role_name TEXT,
+            role_start_date TEXT,
+            rep_doc_type TEXT,
+            rep_doc_number TEXT,
+            rep_name TEXT,
+            phone_primary TEXT,
+            phone_secondary TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS search_projection_phone_index (
+            phone TEXT NOT NULL,
+            projection_id INTEGER NOT NULL
+        );
+
+        CREATE VIRTUAL TABLE IF NOT EXISTS search_projection_fts USING fts5(
             person_name,
             company_name
         );
+
+        CREATE INDEX IF NOT EXISTS idx_source_row_hash_latest_source_hash
+            ON source_row_hash_latest(source_id, raw_hash);
 
         "#,
     )?;

@@ -28,6 +28,7 @@ function row(partial: {
     person: {
       dni,
       name,
+      ruc: null,
       birth_date: null,
       birth_place: null,
       sex: null,
@@ -37,13 +38,12 @@ function row(partial: {
       mother_name: null,
       father_name: null,
       email: null,
-      ruc: null,
     },
     org:
       org_ruc != null
         ? {
             ruc: org_ruc,
-            name: org_name ?? "",
+            name: org_name,
             trade_name: null,
             company_type: null,
             status: null,

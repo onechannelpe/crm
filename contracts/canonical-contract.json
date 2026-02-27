@@ -1,0 +1,33 @@
+{
+  "fields": [
+    "person_dni",
+    "person_natural_ruc",
+    "person_full_name",
+    "birth_date",
+    "birth_place",
+    "sex",
+    "marital_status",
+    "location_text",
+    "ubigeo_code",
+    "mother_name",
+    "father_name",
+    "email",
+    "company_ruc",
+    "company_name",
+    "trade_name",
+    "company_type",
+    "company_status",
+    "company_condition",
+    "fiscal_address",
+    "registration_date",
+    "activity_start_date",
+    "line_of_business",
+    "economic_activity",
+    "rep_doc_type",
+    "rep_doc_number",
+    "rep_name",
+    "role_name",
+    "role_start_date",
+    "phone"
+  ]
+}

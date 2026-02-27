@@ -121,6 +121,7 @@ describe("lead service quota invariants", () => {
           person: {
             dni: "70010001",
             name: "Contacto Caido",
+            ruc: null,
             birth_date: null,
             birth_place: null,
             sex: null,
@@ -130,7 +131,6 @@ describe("lead service quota invariants", () => {
             mother_name: null,
             father_name: null,
             email: null,
-            ruc: null,
           },
           org: {
             ruc: "20100000001",

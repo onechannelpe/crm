@@ -4,7 +4,7 @@ use crate::stages::bootstrap::{PhaseTiming, RunContext, SourceCheckpoint};
 use crate::stages::extract::sample_with_header;
 use crate::stages::verify::helpers::{
     load_enabled_sources, mark_snapshots_materialized, materialize_and_quick_check,
-    run_ingest_phase,
+    push_ingest_timings, run_ingest_phase, IngestPhaseConfig,
 };
 use std::collections::HashMap;
 use std::fs;
@@ -27,13 +27,7 @@ pub fn run_matrix(
     let mut checkpoints = Vec::new();
 
     let run_ctx = RunContext::new(db_path)?;
-    run_ctx.write_metadata(
-        db_path,
-        manifest_path,
-        "sample",
-        workers,
-        batch_size,
-    )?;
+    run_ctx.write_metadata(db_path, manifest_path, "sample", workers, batch_size)?;
 
     let build_dir_path = Path::new(build_dir);
     fs::create_dir_all(build_dir_path)?;
@@ -72,68 +66,19 @@ pub fn run_matrix(
         });
 
         let snapshot_label = format!("{}-sample", source.source_key);
-        let ingest_stats = run_ingest_phase(
+        let ingest_stats = run_ingest_phase(&IngestPhaseConfig {
             db_path,
-            &run_ctx.run_id,
-            Path::new(&source.mapping_path),
-            &sample_file,
-            &snapshot_label,
-            &source.snapshot_date,
-            source.reliability_rank,
+            run_id: &run_ctx.run_id,
+            mapping_path: Path::new(&source.mapping_path),
+            input_path: &sample_file,
+            snapshot_label: &snapshot_label,
+            snapshot_date: &source.snapshot_date,
+            reliability_rank: source.reliability_rank,
             batch_size,
             workers,
-            Some(&source.source_key),
-        )?;
-        timings.push(PhaseTiming {
-            phase: "shard_ingest".to_owned(),
-            key: source.source_key.clone(),
-            seconds: ingest_stats.shard_ingest_secs,
-        });
-        timings.push(PhaseTiming {
-            phase: "merge_sql".to_owned(),
-            key: source.source_key.clone(),
-            seconds: ingest_stats.merge_sql_secs,
-        });
-        timings.push(PhaseTiming {
-            phase: "merge_prepare".to_owned(),
-            key: source.source_key.clone(),
-            seconds: ingest_stats.merge_prepare_secs,
-        });
-        timings.push(PhaseTiming {
-            phase: "merge_core".to_owned(),
-            key: source.source_key.clone(),
-            seconds: ingest_stats.merge_core_secs,
-        });
-        timings.push(PhaseTiming {
-            phase: "merge_phone".to_owned(),
-            key: source.source_key.clone(),
-            seconds: ingest_stats.merge_phone_secs,
-        });
-        timings.push(PhaseTiming {
-            phase: "merge_evidence".to_owned(),
-            key: source.source_key.clone(),
-            seconds: ingest_stats.merge_evidence_secs,
-        });
-        timings.push(PhaseTiming {
-            phase: "merge_cleanup".to_owned(),
-            key: source.source_key.clone(),
-            seconds: ingest_stats.merge_cleanup_secs,
-        });
-        timings.push(PhaseTiming {
-            phase: "merge_attach_detach".to_owned(),
-            key: source.source_key.clone(),
-            seconds: ingest_stats.merge_attach_detach_secs,
-        });
-        timings.push(PhaseTiming {
-            phase: "validate".to_owned(),
-            key: source.source_key.clone(),
-            seconds: ingest_stats.validate_secs,
-        });
-        timings.push(PhaseTiming {
-            phase: "ingest_total".to_owned(),
-            key: source.source_key.clone(),
-            seconds: ingest_stats.total_secs,
-        });
+            source_key: Some(&source.source_key),
+        })?;
+        push_ingest_timings(&mut timings, &source.source_key, &ingest_stats);
         checkpoints.push(SourceCheckpoint {
             source_key: source.source_key.clone(),
             snapshot_label,
