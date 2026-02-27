@@ -3,8 +3,8 @@ use crate::storage::sqlite::models::{OrgInfo, PersonInfo, PhoneInfo, RoleInfo, S
 use rusqlite::{Connection, Row};
 
 // Column layout (0-indexed):
-//   person : 0  dni
-//             1  name
+//   person :  0  dni
+//             1  name (COALESCE fallback)
 //             2  birth_date
 //             3  birth_place
 //             4  sex
@@ -31,8 +31,11 @@ use rusqlite::{Connection, Row};
 //  phones  : 25  phone_primary
 //            26  phone_secondary
 // enriched adds column 27: sibling_phones
-pub const SELECT_BASE: &str = "
-SELECT
+
+// The 26-column projection shared by all query variants. No SELECT keyword or FROM.
+// Keeping projection and FROM separate lets enriched.rs use a different driving
+// table (phone_index) without duplicating columns.
+pub const SELECT_COLUMNS: &str = "
   c.dni,
   COALESCE(NULLIF(c.name, ''), 'Contacto ' || c.dni) AS name,
   pp.birth_date,
@@ -59,8 +62,11 @@ SELECT
   NULLIF(pcr.role_name, '') AS role_name,
   NULLIF(pcr.role_start_date, '') AS role_start_date,
   NULLIF(c.phone_primary, '') AS phone_primary,
-  NULLIF(c.phone_secondary, '') AS phone_secondary
-FROM contacts_serving c
+  NULLIF(c.phone_secondary, '') AS phone_secondary";
+
+// The normalized-table JOIN chain. Assumes `c` aliases contacts_serving.
+// Shared by all query paths; enriched and exact-phone prepend their own driving join.
+pub const JOIN_CHAIN: &str = "
 LEFT JOIN person_profile pp ON pp.dni = c.dni
 LEFT JOIN company_profile cp ON cp.ruc = c.org_ruc
 LEFT JOIN person_company_role pcr
@@ -71,8 +77,10 @@ LEFT JOIN person_company_role pcr
     FROM person_company_role r2
     WHERE r2.person_id = pp.person_id
       AND r2.company_id = cp.company_id
-  )
-";
+  )";
+
+// Standard base query is assembled in each query module via SELECT_COLUMNS + JOIN_CHAIN
+// using module-level LazyLock<String> statics.
 
 pub fn query_rows<P>(conn: &Connection, sql: &str, params: P) -> Result<Vec<SearchRow>, ApiError>
 where

@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Serialize)]
 pub struct PersonInfo {
     pub dni: String,
     pub name: String,
@@ -16,7 +16,7 @@ pub struct PersonInfo {
     pub ruc: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Serialize)]
 pub struct OrgInfo {
     pub ruc: String,
     pub name: String,
@@ -31,20 +31,20 @@ pub struct OrgInfo {
     pub economic_activity: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Serialize)]
 pub struct RoleInfo {
     pub name: String,
     pub start_date: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Serialize)]
 pub struct PhoneInfo {
     pub primary: Option<String>,
     pub secondary: Option<String>,
     pub siblings: Option<Vec<String>>,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Serialize)]
 pub struct SearchRow {
     pub person: PersonInfo,
     pub org: Option<OrgInfo>,

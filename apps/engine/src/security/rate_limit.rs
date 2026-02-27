@@ -23,20 +23,25 @@ impl RateLimiter {
 
     pub fn allow(&self, key: &str) -> bool {
         let now = Instant::now();
-        let mut entry = self.buckets.entry(key.to_string()).or_insert(Bucket {
-            count: 0,
+
+        // Hot path: IP already known — borrow via &str, no allocation.
+        if let Some(mut bucket) = self.buckets.get_mut(key) {
+            if now >= bucket.reset_at {
+                bucket.count = 0;
+                bucket.reset_at = now + Duration::from_secs(60);
+            }
+            if bucket.count >= self.per_minute {
+                return false;
+            }
+            bucket.count += 1;
+            return true;
+        }
+
+        // Cold path: first request from this IP — allocate once.
+        self.buckets.entry(key.to_string()).or_insert(Bucket {
+            count: 1,
             reset_at: now + Duration::from_secs(60),
         });
-
-        if now >= entry.reset_at {
-            entry.count = 0;
-            entry.reset_at = now + Duration::from_secs(60);
-        }
-
-        if entry.count >= self.per_minute {
-            return false;
-        }
-        entry.count += 1;
         true
     }
 }
