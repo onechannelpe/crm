@@ -7,12 +7,14 @@ import { getMe } from "~/actions/auth";
 interface SessionContextValue {
   user: () => CurrentUser | null | undefined;
   currentUser: () => CurrentUser;
+  updateCurrentUser: (update: (current: CurrentUser) => CurrentUser) => void;
+  refreshCurrentUser: () => Promise<CurrentUser | null | undefined>;
 }
 
 const SessionContext = createContext<SessionContextValue>();
 
 export function SessionProvider(props: ParentProps) {
-  const [user] = createResource(getMe);
+  const [user, { mutate, refetch }] = createResource(getMe);
   const currentUser = () => {
     const value = user();
     if (!value) {
@@ -21,8 +23,19 @@ export function SessionProvider(props: ParentProps) {
     return value;
   };
 
+  const updateCurrentUser = (update: (current: CurrentUser) => CurrentUser) => {
+    mutate((existing) => (existing ? update(existing) : existing));
+  };
+
   return (
-    <SessionContext.Provider value={{ user, currentUser }}>
+    <SessionContext.Provider
+      value={{
+        user,
+        currentUser,
+        updateCurrentUser,
+        refreshCurrentUser: async () => refetch(),
+      }}
+    >
       {props.children}
     </SessionContext.Provider>
   );

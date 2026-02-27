@@ -1,4 +1,7 @@
 .root {
+  --settings-shell-width: 220px;
+  --settings-content-width: 512px;
+  --settings-layout-gutter: 76px;
   display: flex;
   min-height: 100vh;
   background: var(--tertiary);
@@ -18,6 +21,19 @@
   display: flex;
   flex: 1;
   min-width: 0;
+  margin-left: max(
+    0px,
+    calc(
+      (
+          100vw -
+            (
+              var(--settings-content-width) + var(--settings-shell-width) +
+                var(--settings-layout-gutter)
+            )
+        ) /
+        2
+    )
+  );
   transition: margin-left 150ms var(--ease-standard);
 }
 
@@ -291,6 +307,10 @@
 
 @media (max-width: 768px) {
   .main {
+    margin-left: 0;
+  }
+
+  .settingsLayout {
     margin-left: 0;
   }
 
