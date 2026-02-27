@@ -1,0 +1,77 @@
+.sectionActionsSpaced {
+  margin-top: 12px;
+}
+
+.qrWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.qrContainer {
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  width: fit-content;
+}
+
+.qr {
+  width: 160px;
+  height: 160px;
+}
+
+.qrInput {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.recovery {
+  margin-top: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  background: var(--bg-translucent);
+}
+
+.recoveryActions {
+  margin-top: 16px;
+}
+
+.recoveryTitle {
+  margin: 0 0 12px;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  color: var(--foreground);
+}
+
+.recoveryList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  font-size: var(--font-size-body);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  color: var(--foreground);
+  background: var(--background);
+  border: 1px solid var(--border);
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .qrInput {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

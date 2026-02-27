@@ -2,6 +2,7 @@ import { useAction, useSubmissions } from "@solidjs/router";
 import { createSignal, For } from "solid-js";
 
 import { useToast } from "~/components/feedback/toast-provider";
+import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Button } from "~/components/ui/input/button";
 import { Checkbox } from "~/components/ui/input/checkbox";
 import { Input } from "~/components/ui/input/input";
@@ -10,6 +11,7 @@ import { updateProductPricingMutation } from "~/lib/mutations/settings";
 import { productCatalogQuery } from "~/lib/queries/settings";
 import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
 
+import generalStyles from "./general-page.module.css";
 import styles from "./settings-page.module.css";
 
 export default function SettingsGeneralPage() {
@@ -45,12 +47,8 @@ export default function SettingsGeneralPage() {
 
   return (
     <div class={styles.content}>
-      <section class={styles.block}>
-        <h2 class={styles.title}>Product catalog</h2>
-        <p class={styles.description}>
-          Update product price and activation state.
-        </p>
-        <div class={styles.products}>
+      <SettingsSection title="Product pricing">
+        <div class={styles.card}>
           <For each={currentProducts()}>
             {(product) => {
               const [price, setPrice] = createSignal(String(product.price));
@@ -63,37 +61,51 @@ export default function SettingsGeneralPage() {
                     event.preventDefault();
                     void save(product.id, price(), isActive());
                   }}
+                  class={`${styles.cardItem} ${styles.cardItemWrap}`}
                 >
-                  <div class={styles.productRow}>
-                    <div>
-                      <p class={styles.productName}>{product.name}</p>
-                      <p class={styles.productCategory}>{product.category}</p>
+                  <div class={styles.cardMain}>
+                    <span class={styles.cardTitle}>{product.name}</span>
+                    <span class={styles.cardDescription}>
+                      {product.category}
+                    </span>
+                  </div>
+
+                  <div class={generalStyles.productEditorControls}>
+                    <div class={generalStyles.productPriceField}>
+                      <Input
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        label="Unit price"
+                        value={price()}
+                        onInput={(event) => setPrice(event.currentTarget.value)}
+                      />
                     </div>
-                    <Input
-                      type="number"
-                      min="0.01"
-                      step="0.01"
-                      label="Price"
-                      value={price()}
-                      onInput={(event) => setPrice(event.currentTarget.value)}
-                    />
-                    <Checkbox
-                      label="Active"
-                      checked={isActive()}
-                      onInput={(event) =>
-                        setIsActive(event.currentTarget.checked)
-                      }
-                    />
-                    <Button type="submit" disabled={isSaving(product.id)}>
-                      {isSaving(product.id) ? "Saving..." : "Save"}
-                    </Button>
+                    <div class={generalStyles.productActiveToggle}>
+                      <Checkbox
+                        label="Active"
+                        checked={isActive()}
+                        onInput={(event) =>
+                          setIsActive(event.currentTarget.checked)
+                        }
+                      />
+                    </div>
+                    <div class={generalStyles.productSubmit}>
+                      <Button
+                        type="submit"
+                        disabled={isSaving(product.id)}
+                        size="sm"
+                      >
+                        {isSaving(product.id) ? "Saving..." : "Save"}
+                      </Button>
+                    </div>
                   </div>
                 </form>
               );
             }}
           </For>
         </div>
-      </section>
+      </SettingsSection>
     </div>
   );
 }

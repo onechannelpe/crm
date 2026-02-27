@@ -70,15 +70,6 @@ export const NAV_ROUTES: NavRoute[] = [
     header: { label: "Companies", icon: "search" },
   },
   {
-    id: "settings",
-    href: "/settings",
-    label: "Settings",
-    navLabel: "Settings",
-    icon: "settings",
-    header: { label: "Settings", icon: "settings" },
-    sidebar: { section: "secondary", order: 7 },
-  },
-  {
     id: "team",
     href: "/team",
     label: "Team",
@@ -194,7 +185,7 @@ export const NAV_ROUTES: NavRoute[] = [
   },
   {
     id: "profile",
-    href: "/profile",
+    href: "/settings/profile",
     label: "Profile",
     icon: "profile",
     header: { label: "Profile", icon: "profile" },
