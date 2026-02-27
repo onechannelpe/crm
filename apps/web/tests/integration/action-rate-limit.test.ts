@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { AppError } from "../../src/lib/app-errors";
 import {
   ACTION_RATE_LIMIT_POLICY,
   checkActionRateLimit,
@@ -45,7 +46,7 @@ describe("action rate limit", () => {
       ctx.repos,
       "198.51.100.1",
     );
-    await expect(result).rejects.toBeInstanceOf(Response);
+    await expect(result).rejects.toBeInstanceOf(AppError);
   });
 
   it("returns 429 with Retry-After header on block", async () => {
@@ -54,15 +55,15 @@ describe("action rate limit", () => {
       await checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1");
     }
 
-    let blocked: Response | undefined;
+    let blocked: AppError | undefined;
     try {
       await checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1");
     } catch (err) {
-      if (err instanceof Response) blocked = err;
+      if (err instanceof AppError) blocked = err;
     }
 
-    expect(blocked?.status).toBe(429);
-    const retryAfter = Number(blocked?.headers.get("Retry-After"));
+    expect(blocked?.code).toBe("rate_limit");
+    const retryAfter = blocked?.retryAfterSeconds ?? 0;
     expect(retryAfter).toBeGreaterThan(0);
     expect(retryAfter).toBeLessThanOrEqual(
       ACTION_RATE_LIMIT_POLICY["leads.request"].windowMs / 1000,
@@ -84,8 +85,8 @@ describe("action rate limit", () => {
           "198.51.100.1",
         );
       } catch (err) {
-        if (err instanceof Response) {
-          return Number(err.headers.get("Retry-After"));
+        if (err instanceof AppError) {
+          return err.retryAfterSeconds ?? 0;
         }
       }
       return 0;
@@ -202,7 +203,7 @@ describe("action rate limit", () => {
     vi.setSystemTime(Date.now() + 30 * 60_000);
     await expect(
       checkActionRateLimit("team.invite.create", 1, ctx.repos, "198.51.100.1"),
-    ).rejects.toBeInstanceOf(Response);
+    ).rejects.toBeInstanceOf(AppError);
   });
 
   it("cleans up stale counters", async () => {

@@ -292,7 +292,11 @@ export async function createSalesRecordDraft(
       const session = await requirePermission("sales:create");
       actor.userId = session.userId;
       actor.role = session.role;
-      await checkActionRateLimit("sales_records.create_draft", session.userId, repos);
+      await checkActionRateLimit(
+        "sales_records.create_draft",
+        session.userId,
+        repos,
+      );
 
       const result = await salesRecordsService.createDraft({
         source: input.source,

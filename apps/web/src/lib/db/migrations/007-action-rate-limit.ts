@@ -1,3 +1,4 @@
+import { sql } from "kysely";
 import type { Kysely } from "kysely";
 
 export async function up<T>(db: Kysely<T>): Promise<void> {
@@ -22,6 +23,13 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     .on("action_rate_limit_counters")
     .column("updated_at")
     .execute();
+
+  const now = Date.now();
+  await sql`
+    INSERT INTO audit_action_policies (action, risk_level, is_active, is_protected, updated_by_user_id, created_at, updated_at)
+    VALUES ('rate_limit_exceeded', 'high', 1, 1, NULL, ${now}, ${now})
+    ON CONFLICT (action) DO NOTHING
+  `.execute(db);
 }
 
 export async function down<T>(db: Kysely<T>): Promise<void> {

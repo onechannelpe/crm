@@ -1,5 +1,6 @@
 import { getRequestEvent } from "solid-js/web";
 
+import { rateLimitError } from "~/lib/app-errors";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { hashAuthKey } from "~/lib/auth/password/key-hash";
 import type { NewAuditLog } from "~/lib/db/schema";
@@ -10,7 +11,6 @@ interface ActionRateLimitPolicy {
   windowMs: number;
 }
 
-// Centralized policy. Changing limits here affects all enforcement points.
 export const ACTION_RATE_LIMIT_POLICY = {
   "leads.request": { limit: 10, windowMs: 60_000 },
   "sales_records.create_draft": { limit: 20, windowMs: 60_000 },
@@ -21,7 +21,7 @@ export const ACTION_RATE_LIMIT_POLICY = {
 
 export type RateLimitedAction = keyof typeof ACTION_RATE_LIMIT_POLICY;
 
-type RateLimitDeps = {
+export type RateLimitDeps = {
   actionRateLimits: ActionRateLimitsRepo;
   auditLogs: {
     create(values: NewAuditLog): unknown;
@@ -31,7 +31,9 @@ type RateLimitDeps = {
 function resolveRequestIp(): string {
   const event = getRequestEvent();
   if (!event?.request) {
-    console.warn("[RateLimit] getRequestEvent() returned no request; falling back to 127.0.0.1");
+    console.warn(
+      "[RateLimit] getRequestEvent() returned no request; falling back to 127.0.0.1",
+    );
     return "127.0.0.1";
   }
   return getClientIp(event.request.headers);
@@ -41,16 +43,6 @@ function buildKey(actionName: string, userId: number, ip: string): string {
   return hashAuthKey(`action:${actionName}:user:${userId}:ip:${ip}`);
 }
 
-/**
- * Enforces a fixed-window rate limit for the given action and caller.
- *
- * Uses a single atomic INSERT … ON CONFLICT DO UPDATE … RETURNING to eliminate
- * the read-check-write race. The `ip` parameter defaults to the IP resolved from
- * the current SolidStart request context; tests can supply it explicitly.
- *
- * Throws a 429 Response with Retry-After on violation, after writing an audit
- * log entry.
- */
 export async function checkActionRateLimit(
   actionName: RateLimitedAction,
   userId: number,
@@ -62,7 +54,11 @@ export async function checkActionRateLimit(
   const keyHash = buildKey(actionName, userId, ip);
 
   const { request_count, window_started_at } =
-    await deps.actionRateLimits.checkAndIncrement(keyHash, now, policy.windowMs);
+    await deps.actionRateLimits.checkAndIncrement(
+      keyHash,
+      now,
+      policy.windowMs,
+    );
 
   if (request_count > policy.limit) {
     const retryAfterMs = policy.windowMs - (now - window_started_at);
@@ -82,9 +78,9 @@ export async function checkActionRateLimit(
       created_at: now,
     });
 
-    throw new Response("Too many requests", {
-      status: 429,
-      headers: { "Retry-After": String(retryAfterSeconds) },
-    });
+    throw rateLimitError(
+      `Too many requests for ${actionName}. Try again in ${retryAfterSeconds}s.`,
+      retryAfterSeconds,
+    );
   }
 }

@@ -1,5 +1,6 @@
 import { sql, type Kysely } from "kysely";
 
+import { internalError } from "~/lib/app-errors";
 import type { Database } from "~/lib/db/schema";
 
 interface CounterSnapshot {
@@ -9,14 +10,6 @@ interface CounterSnapshot {
 
 export function createActionRateLimitsRepo(db: Kysely<Database>) {
   return {
-    /**
-     * Atomically upserts the counter for the given key and window, then returns
-     * the post-increment snapshot. If the existing window has expired (elapsed >=
-     * windowMs) the counter is reset to 1 and a new window starts.
-     *
-     * Single round-trip: INSERT … ON CONFLICT DO UPDATE … RETURNING.
-     * No separate read, no TOCTOU race.
-     */
     async checkAndIncrement(
       keyHash: string,
       now: number,
@@ -34,7 +27,7 @@ export function createActionRateLimitsRepo(db: Kysely<Database>) {
         RETURNING request_count, window_started_at
       `.execute(db);
       const row = rows.rows[0];
-      if (!row) throw new Error("checkAndIncrement returned no row");
+      if (!row) throw internalError("Rate limit counter write returned no row");
       return row;
     },
 

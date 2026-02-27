@@ -55,7 +55,9 @@ export async function cleanupStaleActionRateLimits(): Promise<void> {
     Date.now() - config.auth.throttleRetentionMs,
   );
   if (deleted > 0) {
-    console.log(`[Rate limit cleanup] Deleted ${deleted} stale rate limit counters`);
+    console.log(
+      `[Rate limit cleanup] Deleted ${deleted} stale rate limit counters`,
+    );
   }
 }
 

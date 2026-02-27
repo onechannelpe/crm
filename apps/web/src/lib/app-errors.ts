@@ -13,6 +13,8 @@ interface AppErrorInit {
   code: AppErrorCode;
   publicMessage: string;
   internalMessage?: string;
+  /** Seconds until the client may retry. Only set for code === "rate_limit". */
+  retryAfterSeconds?: number;
   cause?: unknown;
 }
 
@@ -20,6 +22,7 @@ export class AppError extends Error {
   readonly code: AppErrorCode;
   readonly publicMessage: string;
   readonly internalMessage: string | null;
+  readonly retryAfterSeconds: number | null;
   readonly cause: unknown;
 
   constructor(init: AppErrorInit) {
@@ -28,6 +31,7 @@ export class AppError extends Error {
     this.code = init.code;
     this.publicMessage = init.publicMessage;
     this.internalMessage = init.internalMessage ?? null;
+    this.retryAfterSeconds = init.retryAfterSeconds ?? null;
     this.cause = init.cause;
   }
 }
@@ -69,8 +73,11 @@ export function conflictError(publicMessage: string): AppError {
   return new AppError({ code: "conflict", publicMessage });
 }
 
-export function rateLimitError(publicMessage: string): AppError {
-  return new AppError({ code: "rate_limit", publicMessage });
+export function rateLimitError(
+  publicMessage: string,
+  retryAfterSeconds?: number,
+): AppError {
+  return new AppError({ code: "rate_limit", publicMessage, retryAfterSeconds });
 }
 
 export function internalError(publicMessage: string): AppError {
