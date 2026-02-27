@@ -102,8 +102,12 @@ export function Sidebar() {
           type="button"
           class={styles.collapse}
           onClick={toggleExpanded}
-          title={expanded() ? "Collapse sidebar" : "Expand sidebar"}
-          aria-label={expanded() ? "Collapse sidebar" : "Expand sidebar"}
+          title={
+            expanded() ? "Contraer barra lateral" : "Expandir barra lateral"
+          }
+          aria-label={
+            expanded() ? "Contraer barra lateral" : "Expandir barra lateral"
+          }
           style={{
             opacity: expanded() ? (hovered() ? "1" : "0") : "1",
             transition: "opacity 150ms var(--ease-standard)",

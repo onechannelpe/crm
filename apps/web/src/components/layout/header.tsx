@@ -44,7 +44,7 @@ export function Header() {
               class={styles.topbarGhost}
               type="button"
               onClick={() => setPaletteOpen(true)}
-              aria-label="Open command palette"
+              aria-label="Abrir lista de comandos"
             >
               <span class={styles.topbarKbd}>Ctrl</span>
               <span class={styles.topbarKbd}>K</span>

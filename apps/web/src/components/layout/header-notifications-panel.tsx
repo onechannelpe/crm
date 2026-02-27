@@ -93,7 +93,7 @@ export function HeaderNotificationsPanel() {
       <button
         type="button"
         class={styles.trigger}
-        aria-label="Notifications"
+        aria-label="Notificaciones"
         onClick={() => setOpen((value) => !value)}
       >
         <Bell size={16} />
@@ -105,20 +105,20 @@ export function HeaderNotificationsPanel() {
       <Show when={open()}>
         <div class={styles.panel}>
           <div class={styles.panelHeader}>
-            <p class={styles.panelTitle}>Notifications</p>
+            <p class={styles.panelTitle}>Notificaciones</p>
             <button
               type="button"
               class={styles.markAll}
               onClick={() => void handleMarkAllRead()}
               disabled={feed().unreadCount === 0}
             >
-              Mark all as read
+              Marcar todas como leídas
             </button>
           </div>
 
           <Show
             when={feed().notifications.length > 0}
-            fallback={<p class={styles.empty}>No notifications yet.</p>}
+            fallback={<p class={styles.empty}>Sin notificaciones aún.</p>}
           >
             <div class={styles.list}>
               <For each={feed().notifications}>

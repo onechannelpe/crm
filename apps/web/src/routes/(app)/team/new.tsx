@@ -12,13 +12,13 @@ import { getErrorMessage } from "~/lib/errors";
 import styles from "./new-team-page.module.css";
 
 const ROLE_OPTIONS = [
-  { value: "executive", label: "Executive" },
+  { value: "executive", label: "Ejecutivo" },
   { value: "supervisor", label: "Supervisor" },
   { value: "back_office", label: "Back office" },
-  { value: "sales_manager", label: "Sales manager" },
-  { value: "logistics", label: "Logistics" },
-  { value: "hr", label: "HR" },
-  { value: "admin", label: "Admin" },
+  { value: "sales_manager", label: "Gerente de Ventas" },
+  { value: "logistics", label: "Logística" },
+  { value: "hr", label: "Recursos Humanos" },
+  { value: "admin", label: "Administrador" },
 ] as const;
 
 export default function NewTeamInvitePage() {
@@ -41,7 +41,7 @@ export default function NewTeamInvitePage() {
         role: role(),
         teamId: teamId() ? Number(teamId()) : null,
       });
-      showToast("success", "Invite sent");
+      showToast("success", "Invitación enviada");
       navigate("/team");
     } catch (err: unknown) {
       showToast("error", getErrorMessage(err, "Failed to create invite"));
@@ -60,20 +60,20 @@ export default function NewTeamInvitePage() {
           }}
         >
           <Input
-            label="Full name"
+            label="Nombre completo"
             value={fullName()}
             onInput={(event) => setFullName(event.currentTarget.value)}
             required
           />
           <Input
             type="email"
-            label="Work email"
+            label="Correo corporativo"
             value={email()}
             onInput={(event) => setEmail(event.currentTarget.value)}
             required
           />
           <Select
-            label="Role"
+            label="Rol"
             value={role()}
             onInput={(event) => setRole(event.currentTarget.value)}
           >
@@ -83,11 +83,11 @@ export default function NewTeamInvitePage() {
           </Select>
 
           <Select
-            label="Team (optional)"
+            label="Equipo (opcional)"
             value={teamId()}
             onInput={(event) => setTeamId(event.currentTarget.value)}
           >
-            <option value="">No team</option>
+            <option value="">Sin equipo</option>
             <For each={teams() ?? []}>
               {(team) => <option value={team.id}>{team.name}</option>}
             </For>
@@ -99,10 +99,10 @@ export default function NewTeamInvitePage() {
               variant="secondary"
               onClick={() => navigate("/team")}
             >
-              Cancel
+              Cancelar
             </Button>
             <Button type="submit" disabled={saving()}>
-              {saving() ? "Sending..." : "Send invite"}
+              {saving() ? "Enviando..." : "Enviar invitación"}
             </Button>
           </div>
         </form>

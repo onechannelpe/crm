@@ -7,8 +7,8 @@ export default function SchedulePage() {
     <AppPage>
       <EmptyState
         icon={CalendarDays}
-        title="No upcoming events"
-        description="Your appointments and scheduled events will appear here."
+        title="Sin eventos próximos"
+        description="Tus citas y eventos programados aparecerán aquí."
       />
     </AppPage>
   );

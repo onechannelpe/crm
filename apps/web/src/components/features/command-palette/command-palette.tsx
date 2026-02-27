@@ -38,9 +38,9 @@ export function CommandPalette(props: CommandPaletteProps) {
   const commands = createMemo<Command[]>(() =>
     getNavigableRoutes(role()).map((route) => ({
       id: route.id,
-      label: `Go to ${route.navLabel ?? route.label}`,
+      label: `Ir a ${route.navLabel ?? route.label}`,
       action: () => navigate(route.href),
-      group: "Navigation",
+      group: "Navegación",
     })),
   );
 
@@ -110,7 +110,7 @@ export function CommandPalette(props: CommandPaletteProps) {
             <input
               type="text"
               class={styles.searchInput}
-              placeholder="Search or jump to..."
+              placeholder="Buscar o ir a..."
               value={query()}
               onInput={(e) => setQuery(e.currentTarget.value)}
               autofocus
@@ -120,7 +120,9 @@ export function CommandPalette(props: CommandPaletteProps) {
           <div class={styles.results}>
             <Show
               when={filteredCommands().length > 0}
-              fallback={<div class={styles.empty}>No commands found</div>}
+              fallback={
+                <div class={styles.empty}>No se encontraron comandos</div>
+              }
             >
               <For each={filteredCommands()}>
                 {(cmd, index) => (
@@ -148,15 +150,15 @@ export function CommandPalette(props: CommandPaletteProps) {
             <span class={styles.hint}>
               <kbd class={styles.kbd}>↑</kbd>
               <kbd class={styles.kbd}>↓</kbd>
-              Navigate
+              Navegar
             </span>
             <span class={styles.hint}>
               <kbd class={styles.kbd}>Enter</kbd>
-              Select
+              Seleccionar
             </span>
             <span class={styles.hint}>
               <kbd class={styles.kbd}>Esc</kbd>
-              Close
+              Cerrar
             </span>
           </div>
         </div>

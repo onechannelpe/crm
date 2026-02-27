@@ -89,15 +89,15 @@ export default function FixSalePage() {
     const productId = Number(selectedProductId());
     const quantity = Number(selectedProductQty());
     if (!productId || Number.isNaN(productId)) {
-      showToast("error", "Select a product");
+      showToast("error", "Selecciona un producto");
       return;
     }
     if (!quantity || Number.isNaN(quantity) || quantity < 1) {
-      showToast("error", "Quantity must be at least 1");
+      showToast("error", "La cantidad debe ser al menos 1");
       return;
     }
     if (productLines().some((line) => line.productId === productId)) {
-      showToast("error", "This product is already in the list");
+      showToast("error", "Este producto ya está en la lista");
       return;
     }
     setProductLines((prev) => [...prev, { productId, quantity }]);
@@ -114,19 +114,19 @@ export default function FixSalePage() {
   async function handleResubmit(e: Event) {
     e.preventDefault();
     if (!fixNotes().trim()) {
-      showToast("error", "Please describe the corrections made");
+      showToast("error", "Describe las correcciones realizadas");
       return;
     }
     if (!companyName().trim() || !contactName().trim() || !dni().trim()) {
-      showToast("error", "Company, contact, and DNI are required");
+      showToast("error", "Empresa, contacto y DNI son obligatorios");
       return;
     }
     if (!installationAddress().trim()) {
-      showToast("error", "Installation address is required");
+      showToast("error", "La dirección de instalación es obligatoria");
       return;
     }
     if (productLines().length < 1) {
-      showToast("error", "At least one product is required");
+      showToast("error", "Se require al menos un producto");
       return;
     }
 
@@ -195,10 +195,10 @@ export default function FixSalePage() {
         fixNotes().trim(),
       );
       await submitSalesRecord(noteId());
-      showToast("success", "Sales record resubmitted");
+      showToast("success", "Registro de venta reenviado");
       navigate("/sales/confirmations");
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "Resubmit failed"));
+      showToast("error", getErrorMessage(err, "No se pudo reenviar"));
     } finally {
       setLoading(false);
     }
@@ -214,20 +214,20 @@ export default function FixSalePage() {
         >
           <div class={styles.panelPadded}>
             <div class={styles.formBlock}>
-              <h2 class={styles.blockTitle}>Client correction</h2>
+              <h2 class={styles.blockTitle}>Corrección del cliente</h2>
               <Input
                 label="RUC"
                 value={ruc()}
                 onInput={(e) => setRuc(e.currentTarget.value)}
               />
               <Input
-                label="Company"
+                label="Empresa"
                 value={companyName()}
                 onInput={(e) => setCompanyName(e.currentTarget.value)}
                 required
               />
               <Input
-                label="Contact"
+                label="Contacto"
                 value={contactName()}
                 onInput={(e) => setContactName(e.currentTarget.value)}
                 required
@@ -239,35 +239,35 @@ export default function FixSalePage() {
                 required
               />
               <Input
-                label="Phone"
+                label="Teléfono"
                 value={phone()}
                 onInput={(e) => setPhone(e.currentTarget.value)}
               />
               <Input
-                label="Installation address"
+                label="Dirección de instalación"
                 value={installationAddress()}
                 onInput={(e) => setInstallationAddress(e.currentTarget.value)}
                 required
               />
               <Input
-                label="Billing address (optional)"
+                label="Dirección de facturación (opcional)"
                 value={billingAddress()}
                 onInput={(e) => setBillingAddress(e.currentTarget.value)}
               />
               <Input
-                label="Reference address (optional)"
+                label="Dirección de referencia (optional)"
                 value={referenceAddress()}
                 onInput={(e) => setReferenceAddress(e.currentTarget.value)}
               />
             </div>
 
             <div class={styles.formBlock}>
-              <h2 class={styles.blockTitle}>Product correction</h2>
+              <h2 class={styles.blockTitle}>Corrección de productos</h2>
               <Select
                 value={selectedProductId()}
                 onInput={(e) => setSelectedProductId(e.currentTarget.value)}
               >
-                <option value="">Select product</option>
+                <option value="">Selecciona un producto</option>
                 <For each={currentProducts()}>
                   {(product) => (
                     <option value={product.id}>
@@ -278,7 +278,7 @@ export default function FixSalePage() {
               </Select>
               <Input
                 type="number"
-                label="Quantity"
+                label="Cantidad"
                 value={selectedProductQty()}
                 min="1"
                 onInput={(e) => setSelectedProductQty(e.currentTarget.value)}
@@ -288,7 +288,7 @@ export default function FixSalePage() {
                 onClick={handleAddProductLine}
                 disabled={!selectedProductId()}
               >
-                Add product
+                Agregar producto
               </Button>
               <Show when={productLines().length > 0}>
                 <ul class={styles.rejectionList}>
@@ -304,7 +304,7 @@ export default function FixSalePage() {
                             {product()?.name ?? `Product #${line.productId}`}
                           </p>
                           <p class={styles.rejectionNote}>
-                            Quantity: {line.quantity}
+                            Cantidad: {line.quantity}
                           </p>
                           <Button
                             type="button"
@@ -314,7 +314,7 @@ export default function FixSalePage() {
                               handleRemoveProductLine(line.productId)
                             }
                           >
-                            Remove
+                            Quitar
                           </Button>
                         </li>
                       );
@@ -326,7 +326,7 @@ export default function FixSalePage() {
 
             <Show when={(fixContext()?.attempts.length ?? 0) > 0}>
               <div class={styles.rejectionBlock}>
-                <h2 class={styles.blockTitle}>Back-office attempts</h2>
+                <h2 class={styles.blockTitle}>Intentos del back office</h2>
                 <ul class={styles.rejectionList}>
                   <For each={fixContext()?.attempts ?? []}>
                     {(attempt) => (
@@ -335,7 +335,7 @@ export default function FixSalePage() {
                           {attempt.outcome} - {attempt.reviewerName}
                         </p>
                         <p class={styles.rejectionNote}>
-                          {attempt.notes ?? "No notes"}
+                          {attempt.notes ?? "Sin notas"}
                         </p>
                       </li>
                     )}
@@ -345,9 +345,9 @@ export default function FixSalePage() {
             </Show>
 
             <div class={styles.formBlock}>
-              <h2 class={styles.blockTitle}>Corrections made</h2>
+              <h2 class={styles.blockTitle}>Correcciones realizadas</h2>
               <Textarea
-                label="Correction notes"
+                label="Notas de corrección"
                 value={fixNotes()}
                 onInput={(e) => setFixNotes(e.currentTarget.value)}
                 rows={4}
@@ -361,10 +361,10 @@ export default function FixSalePage() {
                 variant="secondary"
                 onClick={() => navigate("/sales/leads")}
               >
-                Back to leads
+                Volver a leads
               </Button>
               <Button type="submit" disabled={loading() || !canResubmit()}>
-                {loading() ? "Submitting..." : "Resubmit for approval"}
+                {loading() ? "Enviando..." : "Reenviar para aprobación"}
               </Button>
             </div>
           </div>

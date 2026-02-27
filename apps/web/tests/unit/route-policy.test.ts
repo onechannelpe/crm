@@ -97,14 +97,14 @@ describe("nav policy", () => {
   });
 
   it("resolves header metadata for static routes", () => {
-    expect(getHeaderRoute("/contacts/people").label).toBe("People");
-    expect(getHeaderRoute("/contacts/companies").label).toBe("Companies");
-    expect(getHeaderRoute("/settings/profile").label).toBe("Profile");
-    expect(getHeaderRoute("/unknown").label).toBe("Workspace");
+    expect(getHeaderRoute("/contacts/people").label).toBe("Personas");
+    expect(getHeaderRoute("/contacts/companies").label).toBe("Empresas");
+    expect(getHeaderRoute("/settings/profile").label).toBe("Perfil");
+    expect(getHeaderRoute("/unknown").label).toBe("Espacio de trabajo");
   });
 
   it("resolves header metadata for dynamic routes", () => {
-    expect(getHeaderRoute("/sales/records/42/edit").label).toBe("Edit sale");
+    expect(getHeaderRoute("/sales/records/42/edit").label).toBe("Editar venta");
     expect(getHeaderRoute("/sales/records/42/edit").icon).toBe("new-sale");
   });
 
@@ -112,6 +112,6 @@ describe("nav policy", () => {
     // /sales/leads has its own nav entry with a header, so it returns "Leads"
     expect(getHeaderRoute("/sales/leads").label).toBe("Leads");
     // /dashboard sub-path resolution
-    expect(getHeaderRoute("/dashboard").label).toBe("Home");
+    expect(getHeaderRoute("/dashboard").label).toBe("Inicio");
   });
 });

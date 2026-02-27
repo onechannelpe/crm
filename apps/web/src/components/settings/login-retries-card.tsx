@@ -17,13 +17,13 @@ import { getErrorMessage } from "~/lib/errors";
 import styles from "./login-retries-card.module.css";
 
 function formatDate(value: number): string {
-  return new Date(value).toLocaleString();
+  return new Date(value).toLocaleString("es-PE");
 }
 
 function labelFor(stage: string): string {
-  if (stage === "challenge") return "Passkey challenge";
-  if (stage === "verify") return "Passkey verify";
-  return "Password login";
+  if (stage === "challenge") return "Desafío de clave de acceso";
+  if (stage === "verify") return "Verificación de clave de acceso";
+  return "Inicio de sesión con contraseña";
 }
 
 export function LoginRetriesCard() {
@@ -38,9 +38,9 @@ export function LoginRetriesCard() {
     try {
       const next = await getUserLoginRetryReport(email());
       setReport(next);
-      if (!next) showToast("info", "User not found");
+      if (!next) showToast("info", "Usuario no encontrado");
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "Failed to load report"));
+      showToast("error", getErrorMessage(err, "No se pudo cargar el reporte"));
     } finally {
       setLoading(false);
     }
@@ -57,13 +57,13 @@ export function LoginRetriesCard() {
       >
         <Input
           type="email"
-          label="User email"
+          label="Correo del usuario"
           value={email()}
           onInput={(e) => setEmail(e.currentTarget.value)}
           required
         />
         <Button type="submit" disabled={loading()}>
-          {loading() ? "Loading report..." : "View report"}
+          {loading() ? "Cargando reporte..." : "Ver reporte"}
         </Button>
       </form>
 
@@ -75,21 +75,25 @@ export function LoginRetriesCard() {
             </p>
             <div class={styles.stats}>
               <div class={styles.statCard}>
-                <p class={styles.statLabel}>Retries in last 15 minutes</p>
+                <p class={styles.statLabel}>
+                  Reintentos en los últimos 15 minutos
+                </p>
                 <p class={styles.statValue}>{data().retryCount15m}</p>
               </div>
               <div class={styles.statCard}>
-                <p class={styles.statLabel}>Retries in last 24 hours</p>
+                <p class={styles.statLabel}>
+                  Reintentos en las últimas 24 horas
+                </p>
                 <p class={styles.statValue}>{data().retryCount24h}</p>
               </div>
             </div>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Stage</TableHead>
-                  <TableHead>Outcome</TableHead>
-                  <TableHead>Reason</TableHead>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Etapa</TableHead>
+                  <TableHead>Resultado</TableHead>
+                  <TableHead>Motivo</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

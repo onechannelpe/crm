@@ -73,7 +73,7 @@ export function ProfileImageInput(props: ProfileImageInputProps) {
             onClick={openFilePicker}
             disabled={props.uploading}
           >
-            {props.uploading ? "Uploading..." : "Upload"}
+            {props.uploading ? "Subiendo..." : "Subir"}
           </Button>
           <Button
             type="button"
@@ -84,11 +84,11 @@ export function ProfileImageInput(props: ProfileImageInputProps) {
             }}
             disabled={props.uploading || !props.pictureUrl}
           >
-            Remove
+            Eliminar
           </Button>
         </div>
         <p class={styles.helpText}>
-          We support your square PNGs, JPEGs and GIFs under 10MB
+          Admitimos imágenes en formato PNG, JPEG y GIF de hasta 5 MB.
         </p>
         <Show when={props.errorMessage}>
           {(message) => <p class={styles.errorText}>{message()}</p>}

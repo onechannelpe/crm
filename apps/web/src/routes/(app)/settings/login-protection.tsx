@@ -6,7 +6,7 @@ import styles from "./settings-page.module.css";
 export default function LoginProtectionPage() {
   return (
     <div class={styles.content}>
-      <SettingsSection title="Login security">
+      <SettingsSection title="Intentos de inicio de sesión">
         <LoginRetriesCard />
       </SettingsSection>
     </div>
