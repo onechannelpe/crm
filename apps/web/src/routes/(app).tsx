@@ -11,6 +11,7 @@ import {
 import { Loading } from "~/components/feedback/loading";
 import { Header } from "~/components/layout/header";
 import { SettingsShell } from "~/components/layout/settings-shell";
+import { SettingsTopbar } from "~/components/layout/settings-topbar";
 import { Sidebar } from "~/components/layout/sidebar";
 import {
   SessionProvider,
@@ -81,7 +82,8 @@ function AuthenticatedAppShell(props: RouteSectionProps) {
           >
             <SettingsShell />
             <div class={cn(shellStyles.main, shellStyles.settingsMain)}>
-              <main class={shellStyles.body}>
+              <SettingsTopbar />
+              <main class={cn(shellStyles.body, shellStyles.settingsBody)}>
                 <div class={cn(shellStyles.panel, shellStyles.settingsPanel)}>
                   <Suspense fallback={<Loading />}>{props.children}</Suspense>
                 </div>

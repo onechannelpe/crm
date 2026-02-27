@@ -1,11 +1,7 @@
-import { A, type RouteSectionProps, useLocation } from "@solidjs/router";
+import { type RouteSectionProps, useLocation } from "@solidjs/router";
 import { createMemo } from "solid-js";
 
-import {
-  getCurrentSettingsItem,
-  getSettingsSectionHref,
-  getSettingsSectionLabel,
-} from "~/components/layout/settings-nav";
+import { getCurrentSettingsItem } from "~/components/layout/settings-nav";
 
 import styles from "./settings/settings-page.module.css";
 
@@ -17,24 +13,9 @@ export default function SettingsLayout(props: RouteSectionProps) {
   );
 
   return (
-    <>
-      <div class={styles.topbar}>
-        <nav class={styles.crumbs} aria-label="Breadcrumb">
-          <A
-            href={getSettingsSectionHref(currentItem().section)}
-            class={styles.crumbLink}
-          >
-            {getSettingsSectionLabel(currentItem().section)}
-          </A>
-          <span class={styles.crumbSeparator}>/</span>
-          <span class={styles.crumbCurrent}>{currentItem().label}</span>
-        </nav>
-      </div>
-
-      <div class={styles.contentScroll}>
-        <h1 class={styles.pageTitle}>{currentItem().label}</h1>
-        {props.children}
-      </div>
-    </>
+    <div class={styles.contentScroll}>
+      <h1 class={styles.pageTitle}>{currentItem().label}</h1>
+      {props.children}
+    </div>
   );
 }

@@ -25,6 +25,50 @@
   margin-left: 0;
 }
 
+.settingsBody {
+  padding-top: 0;
+}
+
+.settingsTopbar {
+  height: var(--topbar-height);
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  padding: 0 16px;
+}
+
+.settingsCrumbs {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted-foreground);
+  font-size: var(--font-size-body);
+  min-width: 0;
+}
+
+.settingsCrumbLink {
+  color: var(--muted-foreground);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.settingsCrumbLink:hover {
+  color: var(--foreground-secondary);
+}
+
+.settingsCrumbSeparator {
+  color: var(--muted-foreground);
+  opacity: 0.5;
+  user-select: none;
+}
+
+.settingsCrumbCurrent {
+  color: var(--foreground);
+  font-weight: var(--font-weight-medium);
+}
+
 .topbar {
   position: sticky;
   top: 0;
@@ -280,5 +324,13 @@
 @media (max-width: 768px) {
   .main {
     margin-left: 0;
+  }
+
+  .settingsTopbar {
+    display: none;
+  }
+
+  .settingsBody {
+    padding-top: 8px;
   }
 }
