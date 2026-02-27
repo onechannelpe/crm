@@ -70,8 +70,3 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     .columns(["export_job_id", "downloaded_at"])
     .execute();
 }
-
-export async function down<T>(db: Kysely<T>): Promise<void> {
-  await db.schema.dropTable("report_export_downloads").execute();
-  await db.schema.dropTable("report_export_jobs").execute();
-}

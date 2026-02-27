@@ -7,16 +7,19 @@ import type { NewAuditLog } from "~/lib/db/schema";
 import type { ActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 
 interface ActionRateLimitPolicy {
+  /** Max requests per authenticated user per window. */
   limit: number;
+  /** Max requests from a single source IP per window (guards against credential-stuffing / shared-IP flooding). */
+  ipLimit: number;
   windowMs: number;
 }
 
 export const ACTION_RATE_LIMIT_POLICY = {
-  "leads.request": { limit: 10, windowMs: 60_000 },
-  "sales_records.create_draft": { limit: 20, windowMs: 60_000 },
-  "sales_records.submit": { limit: 30, windowMs: 60_000 },
-  "quota.allocate": { limit: 5, windowMs: 60_000 },
-  "team.invite.create": { limit: 10, windowMs: 60 * 60_000 },
+  "leads.request":              { limit: 10, ipLimit: 50,  windowMs: 60_000 },
+  "sales_records.create_draft": { limit: 20, ipLimit: 100, windowMs: 60_000 },
+  "sales_records.submit":       { limit: 30, ipLimit: 150, windowMs: 60_000 },
+  "quota.allocate":             { limit: 5,  ipLimit: 25,  windowMs: 60_000 },
+  "team.invite.create":         { limit: 10, ipLimit: 30,  windowMs: 60 * 60_000 },
 } satisfies Record<string, ActionRateLimitPolicy>;
 
 export type RateLimitedAction = keyof typeof ACTION_RATE_LIMIT_POLICY;
@@ -31,16 +34,19 @@ export type RateLimitDeps = {
 function resolveRequestIp(): string {
   const event = getRequestEvent();
   if (!event?.request) {
-    console.warn(
-      "[RateLimit] getRequestEvent() returned no request; falling back to 127.0.0.1",
+    throw new Error(
+      "[RateLimit] checkActionRateLimit called outside a request context; pass ip explicitly",
     );
-    return "127.0.0.1";
   }
   return getClientIp(event.request.headers);
 }
 
-function buildKey(actionName: string, userId: number, ip: string): string {
-  return hashAuthKey(`action:${actionName}:user:${userId}:ip:${ip}`);
+function buildUserKey(actionName: string, userId: number): string {
+  return hashAuthKey(`action:${actionName}:user:${userId}`);
+}
+
+function buildIpKey(actionName: string, ip: string): string {
+  return hashAuthKey(`action:${actionName}:ip:${ip}`);
 }
 
 export async function checkActionRateLimit(
@@ -51,17 +57,20 @@ export async function checkActionRateLimit(
 ): Promise<void> {
   const policy = ACTION_RATE_LIMIT_POLICY[actionName];
   const now = Date.now();
-  const keyHash = buildKey(actionName, userId, ip);
 
-  const { request_count, window_started_at } =
-    await deps.actionRateLimits.checkAndIncrement(
-      keyHash,
-      now,
-      policy.windowMs,
-    );
+  const [userSnapshot, ipSnapshot] = await Promise.all([
+    deps.actionRateLimits.checkAndIncrement(buildUserKey(actionName, userId), now, policy.windowMs),
+    deps.actionRateLimits.checkAndIncrement(buildIpKey(actionName, ip), now, policy.windowMs),
+  ]);
 
-  if (request_count > policy.limit) {
-    const retryAfterMs = policy.windowMs - (now - window_started_at);
+  const scope: "user" | "ip" | null =
+    userSnapshot.request_count > policy.limit ? "user"
+    : ipSnapshot.request_count > policy.ipLimit ? "ip"
+    : null;
+
+  if (scope !== null) {
+    const snapshot = scope === "user" ? userSnapshot : ipSnapshot;
+    const retryAfterMs = policy.windowMs - (now - snapshot.window_started_at);
     const retryAfterSeconds = Math.max(1, Math.ceil(retryAfterMs / 1000));
 
     await deps.auditLogs.create({
@@ -71,7 +80,8 @@ export async function checkActionRateLimit(
       entity_id: userId,
       changes: JSON.stringify({
         actionName,
-        limit: policy.limit,
+        scope,
+        limit: scope === "user" ? policy.limit : policy.ipLimit,
         windowMs: policy.windowMs,
         retryAfterMs,
       }),

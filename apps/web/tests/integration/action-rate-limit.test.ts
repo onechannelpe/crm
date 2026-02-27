@@ -125,16 +125,36 @@ describe("action rate limit", () => {
     ).resolves.toBeUndefined();
   });
 
-  it("isolates counters by ip", async () => {
+  it("user counter is ip-agnostic: same user from a different IP is still blocked", async () => {
     const { limit } = ACTION_RATE_LIMIT_POLICY["leads.request"];
     for (let i = 0; i < limit; i++) {
       await checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1");
     }
 
-    // different IP, same user, separate counter
+    // Switching IP does not reset the per-user counter.
     await expect(
       checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.2"),
-    ).resolves.toBeUndefined();
+    ).rejects.toBeInstanceOf(AppError);
+  });
+
+  it("blocks a single IP that exceeds the ip limit across different users", async () => {
+    const { ipLimit } = ACTION_RATE_LIMIT_POLICY["leads.request"];
+    // Spread requests across many iterations of the same users so no single
+    // user counter is exhausted, but the shared IP counter is.
+    for (let i = 0; i < ipLimit; i++) {
+      // Cycle through seed users 1-5 so no individual user counter fills up.
+      await checkActionRateLimit(
+        "leads.request",
+        (i % 5) + 1,
+        ctx.repos,
+        "198.51.100.99",
+      );
+    }
+
+    // One more request from the same IP (any existing user) should hit the IP cap.
+    await expect(
+      checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.99"),
+    ).rejects.toBeInstanceOf(AppError);
   });
 
   it("isolates counters by action name", async () => {
@@ -183,6 +203,7 @@ describe("action rate limit", () => {
     expect(entry?.entity_type).toBe("user");
     expect(entry?.entity_id).toBe(userId);
     expect(entry?.changes).toContain('"actionName":"leads.request"');
+    expect(entry?.changes).toContain('"scope":"user"');
     expect(entry?.changes).toContain('"retryAfterMs"');
   });
 

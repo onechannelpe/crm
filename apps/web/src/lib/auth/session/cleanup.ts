@@ -52,7 +52,7 @@ export async function cleanupStaleActionObservations(): Promise<void> {
 
 export async function cleanupStaleActionRateLimits(): Promise<void> {
   const deleted = await repos.actionRateLimits.deleteUpdatedBefore(
-    Date.now() - config.auth.throttleRetentionMs,
+    Date.now() - config.security.rateLimitRetentionMs,
   );
   if (deleted > 0) {
     console.log(

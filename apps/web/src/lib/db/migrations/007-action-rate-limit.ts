@@ -31,7 +31,3 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     ON CONFLICT (action) DO NOTHING
   `.execute(db);
 }
-
-export async function down<T>(db: Kysely<T>): Promise<void> {
-  await db.schema.dropTable("action_rate_limit_counters").execute();
-}
