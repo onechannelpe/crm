@@ -13,7 +13,6 @@ import {
 
 describe("route permissions", () => {
   it("resolves static and dynamic route permissions", () => {
-    expect(getRoutePermission("/settings")).toBe("admin:manage");
     expect(getRoutePermission("/team/new")).toBe("hr:manage");
     expect(getRoutePermission("/sales/records/new")).toBe("sales:create");
     expect(getRoutePermission("/sales/records/123/edit")).toBe("sales:create");
@@ -22,11 +21,11 @@ describe("route permissions", () => {
       "sales:review",
     );
     expect(getRoutePermission("/dashboard")).toBe("sales:review");
-    expect(getRoutePermission("/profile")).toBeNull();
+    expect(getRoutePermission("/settings/profile")).toBeNull();
   });
 
   it("enforces role access checks for restricted paths", () => {
-    expect(canAccessPath("executive", "/settings")).toBe(false);
+    expect(canAccessPath("executive", "/settings")).toBe(true);
     expect(canAccessPath("executive", "/audit")).toBe(false);
     expect(canAccessPath("supervisor", "/audit")).toBe(true);
     expect(canAccessPath("executive", "/quota")).toBe(false);
@@ -63,7 +62,7 @@ describe("nav policy", () => {
     const inventorySidebar = getSidebarRoutes("logistics", "secondary").map(
       (route) => route.href,
     );
-    expect(inventorySidebar).toEqual(["/inventory"]);
+    expect(inventorySidebar).toEqual(["/inventory", "/settings"]);
   });
 
   it("returns empty children when role lacks permission for all", () => {
@@ -100,7 +99,7 @@ describe("nav policy", () => {
   it("resolves header metadata for static routes", () => {
     expect(getHeaderRoute("/contacts/people").label).toBe("People");
     expect(getHeaderRoute("/contacts/companies").label).toBe("Companies");
-    expect(getHeaderRoute("/profile").label).toBe("Profile");
+    expect(getHeaderRoute("/settings/profile").label).toBe("Profile");
     expect(getHeaderRoute("/unknown").label).toBe("Workspace");
   });
 
