@@ -7,12 +7,34 @@ import { SettingsShell } from "~/components/layout/settings-shell";
 import { SettingsTopbar } from "~/components/layout/settings-topbar";
 import { Sidebar } from "~/components/layout/sidebar";
 import {
+  MainDetailPanelProvider,
+  useMainDetailPanel,
+} from "~/components/providers/main-detail-panel-provider";
+import {
   SessionProvider,
   useSession,
 } from "~/components/providers/session-provider";
 import { cn } from "~/lib/utils";
 
 import shellStyles from "~/components/layout/shell.module.css";
+
+function MainPanelWithDetail(props: RouteSectionProps) {
+  const { panel } = useMainDetailPanel();
+
+  return (
+    <div
+      class={cn(shellStyles.panel, panel() && shellStyles.panelWithDetail)}
+      data-has-detail-panel={panel() ? "true" : "false"}
+    >
+      <div class={shellStyles.panelMain}>
+        <Suspense fallback={<Loading />}>{props.children}</Suspense>
+      </div>
+      <Show when={panel()}>
+        {(detail) => <aside class={shellStyles.detailPanel}>{detail()}</aside>}
+      </Show>
+    </div>
+  );
+}
 
 function AuthenticatedAppShell(props: RouteSectionProps) {
   const { user } = useSession();
@@ -29,14 +51,14 @@ function AuthenticatedAppShell(props: RouteSectionProps) {
           fallback={
             <>
               <Sidebar />
-              <div class={shellStyles.main}>
-                <Header />
-                <main class={shellStyles.body}>
-                  <div class={shellStyles.panel}>
-                    <Suspense fallback={<Loading />}>{props.children}</Suspense>
-                  </div>
-                </main>
-              </div>
+              <MainDetailPanelProvider>
+                <div class={shellStyles.main}>
+                  <Header />
+                  <main class={shellStyles.body}>
+                    <MainPanelWithDetail {...props} />
+                  </main>
+                </div>
+              </MainDetailPanelProvider>
             </>
           }
         >

@@ -1,7 +1,16 @@
 import { useSearchParams } from "@solidjs/router";
 import { A } from "@solidjs/router";
-import { createMemo, createSignal, For, onMount, Show } from "solid-js";
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  onCleanup,
+  onMount,
+  Show,
+} from "solid-js";
 
+import { useMainDetailPanel } from "~/components/providers/main-detail-panel-provider";
 import { TableCell, TableRow } from "~/components/ui/layout/table";
 import { CompanyDetailDrawer } from "~/features/client-search/contact-detail-drawer";
 import { ContactsSearchLayout } from "~/features/client-search/contacts-search-layout";
@@ -55,6 +64,7 @@ export default function ClientSearchCompaniesPage() {
 
   const grouped = createMemo(() => groupCompaniesByRuc(controller.results()));
   const rows = createMemo(() => buildDisplayRows(grouped()));
+  const { setPanel, clearPanel } = useMainDetailPanel();
 
   const [selectedKey, setSelectedKey] = createSignal<string | null>(null);
   const selectedGroup = createMemo(
@@ -65,6 +75,25 @@ export default function ClientSearchCompaniesPage() {
     void controller.initializeFromParams();
   });
 
+  createEffect(() => {
+    const group = selectedGroup();
+    if (!group) {
+      clearPanel();
+      return;
+    }
+
+    setPanel(
+      <CompanyDetailDrawer
+        group={group}
+        onClose={() => setSelectedKey(null)}
+      />,
+    );
+  });
+
+  onCleanup(() => {
+    clearPanel();
+  });
+
   return (
     <ContactsSearchLayout
       activeTab="companies"
@@ -73,16 +102,6 @@ export default function ClientSearchCompaniesPage() {
       inferType={inferCompanySearchType}
       columns={COLUMNS}
       resultCount={() => rows().length}
-      detail={() => {
-        const group = selectedGroup();
-        if (!group) return null;
-        return (
-          <CompanyDetailDrawer
-            group={group}
-            onClose={() => setSelectedKey(null)}
-          />
-        );
-      }}
       rows={() => (
         <For each={rows()}>
           {(row, i) => {

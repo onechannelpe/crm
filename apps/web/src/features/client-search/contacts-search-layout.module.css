@@ -149,28 +149,9 @@ a.pill:hover {
   flex: 1;
 }
 
-.contentWrapSplit {
-  flex-direction: row;
-  align-items: stretch;
-  overflow: hidden;
-}
-
 .mainPane {
   flex: 1;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Fix table overflow when split */
-.contentWrapSplit .mainPane > div {
-  overflow-x: auto;
-}
-
-.detailPane {
-  width: 340px;
-  flex-shrink: 0;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
 }

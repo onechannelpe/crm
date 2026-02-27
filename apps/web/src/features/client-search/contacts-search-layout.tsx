@@ -1,5 +1,5 @@
 import { A } from "@solidjs/router";
-import { createMemo, type JSX } from "solid-js";
+import type { JSX } from "solid-js";
 import { For, Show } from "solid-js";
 
 import { EmptyState } from "~/components/feedback/empty-state";
@@ -27,12 +27,9 @@ interface ContactsSearchLayoutProps {
   footerLeft: () => JSX.Element;
   footerRight: () => JSX.Element;
   resultCount: () => number;
-  detail?: () => JSX.Element | null;
 }
 
 export function ContactsSearchLayout(props: ContactsSearchLayoutProps) {
-  const detailContent = createMemo(() => props.detail?.() ?? null);
-
   return (
     <AppPage width="wide">
       <div class={styles.searchPanel}>
@@ -91,12 +88,7 @@ export function ContactsSearchLayout(props: ContactsSearchLayoutProps) {
         </div>
       </Show>
 
-      <div
-        class={cn(
-          styles.contentWrap,
-          detailContent() !== null && styles.contentWrapSplit,
-        )}
-      >
+      <div class={styles.contentWrap}>
         <div class={styles.mainPane}>
           <Show
             when={props.resultCount() > 0}
@@ -128,10 +120,6 @@ export function ContactsSearchLayout(props: ContactsSearchLayoutProps) {
             </div>
           </Show>
         </div>
-
-        <Show when={detailContent() !== null}>
-          <aside class={styles.detailPane}>{detailContent()}</aside>
-        </Show>
       </div>
     </AppPage>
   );
