@@ -12,7 +12,8 @@ export function getWorkspaceRoot(): string {
     const packageJsonPath = resolve(current, "package.json");
 
     if (existsSync(packageJsonPath)) {
-      const content = require(packageJsonPath);
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const content = require(packageJsonPath) as Record<string, unknown>;
       if (content.workspaces) {
         cachedRoot = current;
         return current;
