@@ -36,6 +36,6 @@ pub fn search_phone_enriched(
 
 fn map_row_with_siblings(row: &Row<'_>) -> rusqlite::Result<SearchRow> {
     let base = map_row(row)?;
-    let siblings: Option<String> = row.get(30)?;
+    let siblings: Option<String> = row.get("sibling_phones")?;
     Ok(base.with_siblings(siblings))
 }

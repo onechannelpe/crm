@@ -2,39 +2,6 @@ use crate::errors::ApiError;
 use crate::storage::sqlite::models::{OrgInfo, PersonInfo, PhoneInfo, RoleInfo, SearchRow};
 use rusqlite::{Connection, Row};
 
-// Column layout (0-indexed):
-//   person : 0  dni
-//            1  name
-//            2  ruc (person_ruc column)
-//            3  birth_date
-//            4  birth_place
-//            5  sex
-//            6  marital_status
-//            7  location_text
-//            8  ubigeo_code
-//            9  mother_name
-//           10  father_name
-//           11  email
-//   org    : 12 org_ruc
-//            13 org_name
-//            14 trade_name
-//            15 company_type
-//            16 org_status
-//            17 org_condition
-//            18 fiscal_address
-//            19 registration_date
-//            20 activity_start_date
-//            21 line_of_business
-//            22 economic_activity
-//   role   : 23 role_name
-//            24 role_start_date
-//            25 rep_doc_type
-//            26 rep_doc_number
-//            27 rep_name
-//  phones  : 28 phone_primary
-//            29 phone_secondary
-// enriched adds column 30: sibling_phones
-//
 // The 30-column projection shared by all query variants. No SELECT keyword or FROM.
 // search_projection already resolves profile/company/role joins during materialization.
 pub const SELECT_COLUMNS: &str = "
@@ -79,17 +46,17 @@ where
 }
 
 pub fn map_row(row: &Row<'_>) -> rusqlite::Result<SearchRow> {
-    let org_ruc: Option<String> = row.get(12)?;
-    let org_name: Option<String> = row.get(13)?;
-    let trade_name: Option<String> = row.get(14)?;
-    let company_type: Option<String> = row.get(15)?;
-    let org_status: Option<String> = row.get(16)?;
-    let org_condition: Option<String> = row.get(17)?;
-    let fiscal_address: Option<String> = row.get(18)?;
-    let registration_date: Option<String> = row.get(19)?;
-    let activity_start_date: Option<String> = row.get(20)?;
-    let line_of_business: Option<String> = row.get(21)?;
-    let economic_activity: Option<String> = row.get(22)?;
+    let org_ruc: Option<String> = row.get("org_ruc")?;
+    let org_name: Option<String> = row.get("org_name")?;
+    let trade_name: Option<String> = row.get("trade_name")?;
+    let company_type: Option<String> = row.get("company_type")?;
+    let org_status: Option<String> = row.get("org_status")?;
+    let org_condition: Option<String> = row.get("org_condition")?;
+    let fiscal_address: Option<String> = row.get("fiscal_address")?;
+    let registration_date: Option<String> = row.get("registration_date")?;
+    let activity_start_date: Option<String> = row.get("activity_start_date")?;
+    let line_of_business: Option<String> = row.get("line_of_business")?;
+    let economic_activity: Option<String> = row.get("economic_activity")?;
 
     let org = if org_ruc.is_none()
         && org_name.is_none()
@@ -120,11 +87,11 @@ pub fn map_row(row: &Row<'_>) -> rusqlite::Result<SearchRow> {
         })
     };
 
-    let role_name: Option<String> = row.get(23)?;
-    let role_start_date: Option<String> = row.get(24)?;
-    let rep_doc_type: Option<String> = row.get(25)?;
-    let rep_doc_number: Option<String> = row.get(26)?;
-    let rep_name: Option<String> = row.get(27)?;
+    let role_name: Option<String> = row.get("role_name")?;
+    let role_start_date: Option<String> = row.get("role_start_date")?;
+    let rep_doc_type: Option<String> = row.get("rep_doc_type")?;
+    let rep_doc_number: Option<String> = row.get("rep_doc_number")?;
+    let rep_name: Option<String> = row.get("rep_name")?;
     let role = if role_name.is_none()
         && role_start_date.is_none()
         && rep_doc_type.is_none()
@@ -144,24 +111,24 @@ pub fn map_row(row: &Row<'_>) -> rusqlite::Result<SearchRow> {
 
     Ok(SearchRow {
         person: PersonInfo {
-            dni: row.get(0)?,
-            name: row.get(1)?,
-            ruc: row.get(2)?,
-            birth_date: row.get(3)?,
-            birth_place: row.get(4)?,
-            sex: row.get(5)?,
-            marital_status: row.get(6)?,
-            location_text: row.get(7)?,
-            ubigeo_code: row.get(8)?,
-            mother_name: row.get(9)?,
-            father_name: row.get(10)?,
-            email: row.get(11)?,
+            dni: row.get("dni")?,
+            name: row.get("name")?,
+            ruc: row.get("ruc")?,
+            birth_date: row.get("birth_date")?,
+            birth_place: row.get("birth_place")?,
+            sex: row.get("sex")?,
+            marital_status: row.get("marital_status")?,
+            location_text: row.get("location_text")?,
+            ubigeo_code: row.get("ubigeo_code")?,
+            mother_name: row.get("mother_name")?,
+            father_name: row.get("father_name")?,
+            email: row.get("email")?,
         },
         org,
         role,
         phones: PhoneInfo {
-            primary: row.get(28)?,
-            secondary: row.get(29)?,
+            primary: row.get("phone_primary")?,
+            secondary: row.get("phone_secondary")?,
             siblings: None,
         },
     })

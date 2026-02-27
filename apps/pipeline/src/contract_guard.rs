@@ -1,5 +1,5 @@
 use crate::PipelineError;
-use crate::config::manifest::verify_manifest;
+use crate::config::manifest::{SourceManifestEntry, verify_manifest};
 use crate::config::mapping::SourceMapping;
 use serde::Deserialize;
 use std::collections::{HashMap, HashSet};
@@ -60,50 +60,85 @@ pub fn validate_contracts(manifest_path: &str) -> Result<(), PipelineError> {
         .collect::<HashMap<_, _>>();
 
     let manifest = verify_manifest(manifest_path)?;
-    let enabled_sources = manifest.sources.into_iter().filter(|source| source.enabled);
+    let enabled_sources: Vec<SourceManifestEntry> =
+        manifest.sources.into_iter().filter(|s| s.enabled).collect();
 
+    let mut errors: Vec<String> = Vec::new();
+
+    let (source_errors, mapped_by_enabled) =
+        validate_source_mappings(&enabled_sources, &canonical_fields, &source_contract_by_key);
+    errors.extend(source_errors);
+
+    let projection_errors =
+        validate_projection_fields(&projection.fields, &canonical_fields, &mapped_by_enabled);
+    errors.extend(projection_errors);
+
+    if errors.is_empty() {
+        Ok(())
+    } else {
+        Err(PipelineError::Args(errors.join("\n")))
+    }
+}
+
+fn validate_source_mappings(
+    enabled_sources: &[SourceManifestEntry],
+    canonical_fields: &HashSet<String>,
+    source_contract_by_key: &HashMap<String, SourceContractEntry>,
+) -> (Vec<String>, HashSet<String>) {
+    let mut errors = Vec::new();
     let mut mapped_by_enabled = HashSet::<String>::new();
 
     for source in enabled_sources {
         let Some(contract_entry) = source_contract_by_key.get(&source.source_key) else {
-            return Err(PipelineError::Args(format!(
+            errors.push(format!(
                 "missing source contract entry for enabled source: {}",
                 source.source_key
-            )));
+            ));
+            continue;
         };
 
-        let mapping = SourceMapping::from_path(&source.mapping_path)?;
-
-        for (key, mapped) in &mapping.fields {
-            if !canonical_fields.contains(key) {
-                return Err(PipelineError::Args(format!(
-                    "mapping {} uses non-canonical field key: {}",
-                    source.mapping_path, key
-                )));
+        let mapping = match SourceMapping::from_path(&source.mapping_path) {
+            Ok(mapping) => mapping,
+            Err(err) => {
+                errors.push(format!(
+                    "failed to load mapping {}: {err}",
+                    source.mapping_path
+                ));
+                continue;
             }
-            if !mapped.trim().is_empty() {
+        };
+
+        for (key, mapped_value) in &mapping.fields {
+            if !canonical_fields.contains(key) {
+                errors.push(format!(
+                    "mapping {} uses non-canonical field key: {key}",
+                    source.mapping_path
+                ));
+                continue;
+            }
+            if !mapped_value.trim().is_empty() {
                 mapped_by_enabled.insert(key.clone());
             }
         }
 
         for required in &contract_entry.required_canonical_fields {
             if !canonical_fields.contains(required) {
-                return Err(PipelineError::Args(format!(
-                    "source contract {} requires unknown canonical field: {}",
-                    source.source_key, required
-                )));
+                errors.push(format!(
+                    "source contract {} requires unknown canonical field: {required}",
+                    source.source_key
+                ));
+                continue;
             }
-
             let exists = mapping
                 .fields
                 .get(required)
                 .map(|value| !value.trim().is_empty())
                 .unwrap_or(false);
             if !exists {
-                return Err(PipelineError::Args(format!(
-                    "source {} is missing required mapping field: {}",
-                    source.source_key, required
-                )));
+                errors.push(format!(
+                    "source {} is missing required mapping field: {required}",
+                    source.source_key
+                ));
             }
         }
 
@@ -117,48 +152,61 @@ pub fn validate_contracts(manifest_path: &str) -> Result<(), PipelineError> {
                 || !mapping.phone_prefixes.is_empty();
 
             if !has_phone_mapping {
-                return Err(PipelineError::Args(format!(
+                errors.push(format!(
                     "source {} requires phone input but has no phone field/columns/prefixes",
                     source.source_key
-                )));
+                ));
+            } else {
+                mapped_by_enabled.insert("phone".to_string());
             }
-
-            mapped_by_enabled.insert("phone".to_string());
         }
     }
 
-    let mut seen_projection_paths = HashSet::<String>::new();
-    for field in projection.fields {
+    (errors, mapped_by_enabled)
+}
+
+fn validate_projection_fields(
+    fields: &[ProjectionField],
+    canonical_fields: &HashSet<String>,
+    mapped_by_enabled: &HashSet<String>,
+) -> Vec<String> {
+    let mut errors = Vec::new();
+    let mut seen_paths = HashSet::<String>::new();
+
+    for field in fields {
         if field.canonical_fields.is_empty() {
-            return Err(PipelineError::Args(format!(
+            errors.push(format!(
                 "projection field {} has empty canonical_fields",
                 field.path
-            )));
+            ));
+            continue;
         }
-        if !seen_projection_paths.insert(field.path.clone()) {
-            return Err(PipelineError::Args(format!(
+        if !seen_paths.insert(field.path.clone()) {
+            errors.push(format!(
                 "projection contract has duplicate path: {}",
                 field.path
-            )));
+            ));
+            continue;
         }
 
-        for canonical in field.canonical_fields {
-            if !canonical_fields.contains(&canonical) {
-                return Err(PipelineError::Args(format!(
-                    "projection field {} references unknown canonical field: {}",
-                    field.path, canonical
-                )));
+        for canonical in &field.canonical_fields {
+            if !canonical_fields.contains(canonical) {
+                errors.push(format!(
+                    "projection field {} references unknown canonical field: {canonical}",
+                    field.path
+                ));
+                continue;
             }
-            if !mapped_by_enabled.contains(&canonical) {
-                return Err(PipelineError::Args(format!(
-                    "projection field {} is not backed by enabled source mappings: {}",
-                    field.path, canonical
-                )));
+            if !mapped_by_enabled.contains(canonical) {
+                errors.push(format!(
+                    "projection field {} is not backed by enabled source mappings: {canonical}",
+                    field.path
+                ));
             }
         }
     }
 
-    Ok(())
+    errors
 }
 
 fn load_json_embedded<T: for<'de> Deserialize<'de>>(

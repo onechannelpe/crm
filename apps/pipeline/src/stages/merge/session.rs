@@ -32,15 +32,14 @@ pub fn merge_ingest_session(
     }
 
     if session.dispatched_rows != session.counters.total_rows {
-        fail_snapshot(
+        return Err(fail_snapshot(
             db_path,
             session.snapshot_id,
             PipelineError::Args(format!(
                 "sharded ingest row mismatch source={} dispatched={} merged_total={}",
                 session.source_key, session.dispatched_rows, session.counters.total_rows
             )),
-        )?;
-        unreachable!();
+        ));
     }
 
     let tx = conn.transaction()?;
@@ -60,14 +59,19 @@ pub fn merge_ingest_session(
     Ok(merge_stats)
 }
 
-pub fn fail_snapshot(
-    db_path: &str,
-    snapshot_id: i64,
-    err: PipelineError,
-) -> Result<(), PipelineError> {
+pub fn fail_snapshot(db_path: &str, snapshot_id: i64, err: PipelineError) -> PipelineError {
+    if let Err(update_err) = mark_snapshot_failed(db_path, snapshot_id) {
+        eprintln!(
+            "[pipeline] warning: could not record snapshot {snapshot_id} failure in db: {update_err}"
+        );
+    }
+    err
+}
+
+fn mark_snapshot_failed(db_path: &str, snapshot_id: i64) -> Result<(), PipelineError> {
     let mut conn = open_rw(db_path)?;
     let tx = conn.transaction()?;
     repo::set_snapshot_status(&tx, snapshot_id, "failed")?;
     tx.commit()?;
-    Err(err)
+    Ok(())
 }

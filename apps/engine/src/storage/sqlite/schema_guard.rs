@@ -12,20 +12,12 @@ const REQUIRED_TABLES: &[&str] = &[
     "ruc_phone_agg",
     "dni_phone_agg",
 ];
-const REQUIRED_VIEWS: &[&str] = &[];
 
 pub fn validate(conn: &Connection) -> Result<(), StartupError> {
     for name in REQUIRED_TABLES {
         if !sqlite_object_exists(conn, "table", name)? {
             return Err(StartupError::Database(format!(
                 "missing required table: {name}"
-            )));
-        }
-    }
-    for name in REQUIRED_VIEWS {
-        if !sqlite_object_exists(conn, "view", name)? {
-            return Err(StartupError::Database(format!(
-                "missing required view: {name}"
             )));
         }
     }
