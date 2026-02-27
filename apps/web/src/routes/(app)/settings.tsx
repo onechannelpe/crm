@@ -3,7 +3,7 @@ import { createMemo } from "solid-js";
 
 import { getCurrentSettingsItem } from "~/components/layout/settings-nav";
 
-import styles from "./settings/settings-page.module.css";
+import styles from "./settings/settings-layout.module.css";
 
 export default function SettingsLayout(props: RouteSectionProps) {
   const location = useLocation();

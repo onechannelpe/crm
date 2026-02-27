@@ -1,6 +1,7 @@
-import { A, useLocation } from "@solidjs/router";
+import { useLocation } from "@solidjs/router";
 import { createMemo } from "solid-js";
 
+import { AppBreadcrumb } from "~/components/layout/app-breadcrumb";
 import {
   getCurrentSettingsItem,
   getSettingsSectionHref,
@@ -17,16 +18,15 @@ export function SettingsTopbar() {
 
   return (
     <header class={styles.settingsTopbar}>
-      <nav class={styles.settingsCrumbs} aria-label="Breadcrumb">
-        <A
-          href={getSettingsSectionHref(currentItem().section)}
-          class={styles.settingsCrumbLink}
-        >
-          {getSettingsSectionLabel(currentItem().section)}
-        </A>
-        <span class={styles.settingsCrumbSeparator}>/</span>
-        <span class={styles.settingsCrumbCurrent}>{currentItem().label}</span>
-      </nav>
+      <AppBreadcrumb
+        links={[
+          {
+            label: getSettingsSectionLabel(currentItem().section),
+            href: getSettingsSectionHref(currentItem().section),
+          },
+          { label: currentItem().label },
+        ]}
+      />
     </header>
   );
 }

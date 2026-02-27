@@ -185,7 +185,9 @@ export default function SecurityPage() {
             !recoveryCodes()
           }
         >
-          <div class={styles.sectionActions} style={{ "margin-top": "12px" }}>
+          <div
+            class={`${styles.sectionActions} ${styles.sectionActionsSpaced}`}
+          >
             <Button
               variant="outline"
               onClick={() => void onBeginTotp()}
@@ -232,7 +234,7 @@ export default function SecurityPage() {
                 {(code) => <div class={styles.mono}>{code}</div>}
               </For>
             </div>
-            <div style={{ "margin-top": "16px" }}>
+            <div class={styles.recoveryActions}>
               <Button onClick={() => setRecoveryCodes(null)}>Done</Button>
             </div>
           </div>
@@ -252,7 +254,7 @@ export default function SecurityPage() {
           }
           icon={Phone}
         />
-        <div class={styles.sectionActions} style={{ "margin-top": "12px" }}>
+        <div class={`${styles.sectionActions} ${styles.sectionActionsSpaced}`}>
           <Button
             variant="outline"
             disabled={!passkeySupported() || passkeyLoading()}
@@ -262,7 +264,7 @@ export default function SecurityPage() {
           </Button>
         </div>
         <Show when={passkeyMessage()}>
-          <p class={styles.sectionDescription} style={{ "margin-top": "8px" }}>
+          <p class={`${styles.sectionDescription} ${styles.passkeyMessage}`}>
             {passkeyMessage()}
           </p>
         </Show>
