@@ -51,19 +51,8 @@ pub fn create_test_db() -> tempfile::NamedTempFile {
             role_start_date TEXT NOT NULL DEFAULT '',
             resolution_status TEXT NOT NULL DEFAULT 'unresolved'
         );
-        CREATE TABLE contacts_serving (
-            id INTEGER PRIMARY KEY,
-            dni TEXT NOT NULL,
-            name TEXT,
-            org_ruc TEXT,
-            org_name TEXT,
-            phone_primary TEXT,
-            phone_secondary TEXT
-        );
-        CREATE TABLE phone_index (phone TEXT NOT NULL, contact_id INTEGER NOT NULL);
         CREATE TABLE ruc_phone_agg (org_ruc TEXT PRIMARY KEY, phones TEXT NOT NULL);
         CREATE TABLE dni_phone_agg (dni TEXT PRIMARY KEY, phones TEXT NOT NULL);
-        CREATE VIRTUAL TABLE contacts_fts USING fts5(person_name, company_name);
         CREATE TABLE search_projection (
             id INTEGER PRIMARY KEY,
             dni TEXT NOT NULL,
@@ -115,12 +104,16 @@ pub fn create_test_db() -> tempfile::NamedTempFile {
           (1,1,1,'GERENTE GENERAL','2020-01-01'),
           (2,2,1,'SOCIO','2020-01-01');
 
-        INSERT INTO contacts_serving(id,dni,name,org_ruc,org_name,phone_primary,phone_secondary) VALUES
-          (1,'12345678','JUAN PEREZ','20100011111','ACME SAC','999111222','999333444'),
-          (2,'87654321','MARIA LOPEZ','20100011111','ACME SAC','988777666',NULL),
-          (3,'11223344','CARLOS DIAZ','','','977000111',NULL);
+        INSERT INTO search_projection(
+          id,dni,name,birth_date,birth_place,sex,marital_status,location_text,ubigeo_code,mother_name,father_name,email,person_ruc,
+          org_ruc,org_name,trade_name,company_type,org_status,org_condition,fiscal_address,registration_date,activity_start_date,
+          line_of_business,economic_activity,role_name,role_start_date,rep_doc_type,rep_doc_number,rep_name,phone_primary,phone_secondary
+        ) VALUES
+          (1,'12345678','JUAN PEREZ','1980-05-10',NULL,'M',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'20100011111','ACME SAC','ACME',NULL,'ACTIVO',NULL,'AV. LIMA 123',NULL,NULL,NULL,NULL,'GERENTE GENERAL','2020-01-01','','','', '999111222','999333444'),
+          (2,'87654321','MARIA LOPEZ',NULL,NULL,'F',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'20100011111','ACME SAC','ACME',NULL,'ACTIVO',NULL,'AV. LIMA 123',NULL,NULL,NULL,NULL,'SOCIO','2020-01-01','','','', '988777666',NULL),
+          (3,'11223344','CARLOS DIAZ',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'','',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'','','', '977000111',NULL);
 
-        INSERT INTO phone_index(phone, contact_id) VALUES
+        INSERT INTO search_projection_phone_index(phone, projection_id) VALUES
           ('999111222',1),('999333444',1),('988777666',2),('977000111',3);
 
         INSERT INTO ruc_phone_agg(org_ruc, phones) VALUES
@@ -129,91 +122,6 @@ pub fn create_test_db() -> tempfile::NamedTempFile {
           ('12345678','999111222;999333444'),
           ('87654321','988777666'),
           ('11223344','977000111');
-
-        INSERT INTO contacts_fts(rowid, person_name, company_name)
-        SELECT id, COALESCE(name,''), COALESCE(org_name,'') FROM contacts_serving;
-
-        INSERT INTO search_projection(
-          id,
-          dni,
-          name,
-          birth_date,
-          birth_place,
-          sex,
-          marital_status,
-          location_text,
-          ubigeo_code,
-          mother_name,
-          father_name,
-          email,
-          person_ruc,
-          org_ruc,
-          org_name,
-          trade_name,
-          company_type,
-          org_status,
-          org_condition,
-          fiscal_address,
-          registration_date,
-          activity_start_date,
-          line_of_business,
-          economic_activity,
-          role_name,
-          role_start_date,
-          rep_doc_type,
-          rep_doc_number,
-          rep_name,
-          phone_primary,
-          phone_secondary
-        )
-        SELECT
-          cs.id AS id,
-          cs.dni AS dni,
-          cs.name AS name,
-          pp.birth_date AS birth_date,
-          pp.birth_place AS birth_place,
-          pp.sex AS sex,
-          pp.marital_status AS marital_status,
-          pp.location_text AS location_text,
-          pp.ubigeo_code AS ubigeo_code,
-          pp.mother_name AS mother_name,
-          pp.father_name AS father_name,
-          pp.email AS email,
-          pp.natural_ruc10 AS person_ruc,
-          cs.org_ruc AS org_ruc,
-          cs.org_name AS org_name,
-          cp.trade_name AS trade_name,
-          cp.company_type AS company_type,
-          cp.status AS org_status,
-          cp.condition AS org_condition,
-          cp.fiscal_address AS fiscal_address,
-          cp.registration_date AS registration_date,
-          cp.activity_start_date AS activity_start_date,
-          cp.line_of_business AS line_of_business,
-          cp.economic_activity AS economic_activity,
-          pcr.role_name AS role_name,
-          pcr.role_start_date AS role_start_date,
-          pcr.rep_doc_type AS rep_doc_type,
-          pcr.rep_doc_number AS rep_doc_number,
-          pcr.rep_name AS rep_name,
-          cs.phone_primary AS phone_primary,
-          cs.phone_secondary AS phone_secondary
-        FROM contacts_serving cs
-        LEFT JOIN person_profile pp ON pp.dni = cs.dni
-        LEFT JOIN company_profile cp ON cp.ruc = cs.org_ruc
-        LEFT JOIN person_company_role pcr
-          ON pcr.person_id = pp.person_id
-          AND pcr.company_id = cp.company_id
-          AND pcr.role_id = (
-            SELECT MIN(r2.role_id)
-            FROM person_company_role r2
-            WHERE r2.person_id = pp.person_id
-              AND r2.company_id = cp.company_id
-          );
-
-        INSERT INTO search_projection_phone_index(phone, projection_id)
-        SELECT DISTINCT phone, contact_id
-        FROM phone_index;
 
         INSERT INTO search_projection_fts(rowid, person_name, company_name)
         SELECT id, COALESCE(name,''), COALESCE(org_name,'')

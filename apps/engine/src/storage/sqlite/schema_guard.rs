@@ -14,21 +14,6 @@ const REQUIRED_TABLES: &[&str] = &[
 ];
 const REQUIRED_VIEWS: &[&str] = &[];
 
-const SUPPORTED_PROJECTION_PATHS: &[&str] = &[
-    "person.dni",
-    "person.name",
-    "org.ruc",
-    "org.name",
-    "role.name",
-    "role.start_date",
-    "role.rep_doc_type",
-    "role.rep_doc_number",
-    "role.rep_name",
-    "phones.primary",
-    "phones.secondary",
-    "phones.siblings",
-];
-
 #[derive(Debug, Deserialize)]
 struct ProjectionContract {
     projection: String,
@@ -39,6 +24,13 @@ struct ProjectionContract {
 struct ProjectionField {
     path: String,
     canonical_fields: Vec<String>,
+    storage: Vec<ProjectionStorage>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ProjectionStorage {
+    table: String,
+    column: String,
 }
 
 pub fn validate(conn: &Connection) -> Result<(), StartupError> {
@@ -87,10 +79,6 @@ fn validate_projection_paths(contract: &ProjectionContract) -> Result<(), Startu
         ));
     }
 
-    let supported = SUPPORTED_PROJECTION_PATHS
-        .iter()
-        .copied()
-        .collect::<HashSet<_>>();
     let mut seen = HashSet::new();
 
     for field in &contract.fields {
@@ -106,11 +94,19 @@ fn validate_projection_paths(contract: &ProjectionContract) -> Result<(), Startu
                 field.path
             )));
         }
-        if !supported.contains(field.path.as_str()) {
+        if field.storage.is_empty() {
             return Err(StartupError::Config(format!(
-                "projection path not supported by engine: {}",
+                "projection field '{}' must include at least one storage mapping",
                 field.path
             )));
+        }
+        for storage in &field.storage {
+            if storage.table.trim().is_empty() || storage.column.trim().is_empty() {
+                return Err(StartupError::Config(format!(
+                    "projection path '{}' has invalid storage mapping",
+                    field.path
+                )));
+            }
         }
     }
 
@@ -122,42 +118,17 @@ fn validate_required_columns(
     contract: &ProjectionContract,
 ) -> Result<(), StartupError> {
     for field in &contract.fields {
-        let required_columns = required_columns_for_path(&field.path).ok_or_else(|| {
-            StartupError::Config(format!(
-                "missing schema requirements for projection path: {}",
-                field.path
-            ))
-        })?;
-
-        for (table, column) in required_columns {
-            if !table_has_column(conn, table, column)? {
+        for storage in &field.storage {
+            if !table_has_column(conn, &storage.table, &storage.column)? {
                 return Err(StartupError::Database(format!(
                     "missing required column for projection path '{}': {}.{}",
-                    field.path, table, column
+                    field.path, storage.table, storage.column
                 )));
             }
         }
     }
 
     Ok(())
-}
-
-fn required_columns_for_path(path: &str) -> Option<&'static [(&'static str, &'static str)]> {
-    match path {
-        "person.dni" => Some(&[("search_projection", "dni")]),
-        "person.name" => Some(&[("search_projection", "name")]),
-        "org.ruc" => Some(&[("search_projection", "org_ruc")]),
-        "org.name" => Some(&[("search_projection", "org_name")]),
-        "role.name" => Some(&[("search_projection", "role_name")]),
-        "role.start_date" => Some(&[("search_projection", "role_start_date")]),
-        "role.rep_doc_type" => Some(&[("search_projection", "rep_doc_type")]),
-        "role.rep_doc_number" => Some(&[("search_projection", "rep_doc_number")]),
-        "role.rep_name" => Some(&[("search_projection", "rep_name")]),
-        "phones.primary" => Some(&[("search_projection", "phone_primary")]),
-        "phones.secondary" => Some(&[("search_projection", "phone_secondary")]),
-        "phones.siblings" => Some(&[("ruc_phone_agg", "phones"), ("dni_phone_agg", "phones")]),
-        _ => None,
-    }
 }
 
 fn sqlite_object_exists(

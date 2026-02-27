@@ -130,21 +130,6 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             FOREIGN KEY(snapshot_id) REFERENCES source_snapshot(snapshot_id)
         );
 
-        CREATE TABLE IF NOT EXISTS contacts_serving (
-            id INTEGER PRIMARY KEY,
-            dni TEXT NOT NULL,
-            name TEXT,
-            org_ruc TEXT,
-            org_name TEXT,
-            phone_primary TEXT,
-            phone_secondary TEXT
-        );
-
-        CREATE TABLE IF NOT EXISTS phone_index (
-            phone TEXT NOT NULL,
-            contact_id INTEGER NOT NULL
-        );
-
         CREATE TABLE IF NOT EXISTS ruc_phone_agg (
             org_ruc TEXT PRIMARY KEY,
             phones TEXT NOT NULL
@@ -192,11 +177,6 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
         CREATE TABLE IF NOT EXISTS search_projection_phone_index (
             phone TEXT NOT NULL,
             projection_id INTEGER NOT NULL
-        );
-
-        CREATE VIRTUAL TABLE IF NOT EXISTS contacts_fts USING fts5(
-            person_name,
-            company_name
         );
 
         CREATE VIRTUAL TABLE IF NOT EXISTS search_projection_fts USING fts5(

@@ -31,6 +31,12 @@ interface SourceContract {
 interface ProjectionField {
   path: string;
   canonical_fields: string[];
+  storage: ProjectionStorage[];
+}
+
+interface ProjectionStorage {
+  table: string;
+  column: string;
 }
 
 interface ProjectionContract {
@@ -155,10 +161,33 @@ function parseProjectionContract(input: unknown): ProjectionContract {
       row.canonical_fields,
       `projection field ${index} canonical_fields`,
     );
+    const storageRaw = row.storage;
+    if (!Array.isArray(storageRaw) || storageRaw.length === 0) {
+      throw new Error(`projection contract fields[${index}] missing storage[]`);
+    }
+    const storage = storageRaw.map((entry, storageIndex) => {
+      const storageRow = asObject(
+        entry,
+        `projection field ${index} storage[${storageIndex}]`,
+      );
+      const table = storageRow.table;
+      const column = storageRow.column;
+      if (typeof table !== "string" || table.trim().length === 0) {
+        throw new Error(
+          `projection contract fields[${index}] storage[${storageIndex}].table must be a non-empty string`,
+        );
+      }
+      if (typeof column !== "string" || column.trim().length === 0) {
+        throw new Error(
+          `projection contract fields[${index}] storage[${storageIndex}].column must be a non-empty string`,
+        );
+      }
+      return { table, column } satisfies ProjectionStorage;
+    });
     if (typeof path !== "string") {
       throw new Error(`projection contract fields[${index}] missing path`);
     }
-    return { path, canonical_fields };
+    return { path, canonical_fields, storage };
   });
 
   return { projection, fields };

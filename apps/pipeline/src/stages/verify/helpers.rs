@@ -129,19 +129,19 @@ pub(super) fn materialize_and_quick_check(db_path: &str) -> Result<(), PipelineE
         "company_profile",
         "person_company_role",
         "role_phone",
-        "contacts_serving",
-        "phone_index",
+        "search_projection",
+        "search_projection_phone_index",
     ] {
         let sql = format!("SELECT EXISTS(SELECT 1 FROM {table} LIMIT 1)");
         let has_rows: i64 = conn.query_row(&sql, [], |row| row.get(0))?;
         println!("{table}_has_rows={has_rows}");
     }
     let max_id: i64 = conn.query_row(
-        "SELECT COALESCE(MAX(id), 0) FROM contacts_serving",
+        "SELECT COALESCE(MAX(id), 0) FROM search_projection",
         [],
         |row| row.get(0),
     )?;
-    println!("contacts_serving_max_id={max_id}");
+    println!("search_projection_max_id={max_id}");
     println!("[pipeline] done: {db_path}");
     Ok(())
 }
