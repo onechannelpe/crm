@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 
 let cachedRoot: string | undefined;
@@ -12,8 +12,9 @@ export function getWorkspaceRoot(): string {
     const packageJsonPath = resolve(current, "package.json");
 
     if (existsSync(packageJsonPath)) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const content = require(packageJsonPath) as Record<string, unknown>;
+      const content = JSON.parse(
+        readFileSync(packageJsonPath, "utf8"),
+      ) as Record<string, unknown>;
       if (content.workspaces) {
         cachedRoot = current;
         return current;

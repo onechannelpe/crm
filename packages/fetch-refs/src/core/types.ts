@@ -12,9 +12,9 @@ export interface Mount {
 
 /**
  * When set on a SourceConfig, after fetching the tool will build a compact
- * file-tree index of the first mount and inject it between the given markers
- * in AGENTS.md. Useful for documentation sources where the AI benefits from
- * knowing what files exist.
+ * file-tree index of the **first mount only** and inject it between the given
+ * markers in AGENTS.md. Additional mounts are fetched but not indexed.
+ * Useful for documentation sources where the AI benefits from knowing what files exist.
  */
 export interface IndexConfig {
   markerStart: string;
