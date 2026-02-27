@@ -11,16 +11,14 @@ describe("client search service", () => {
         count: 1,
         results: [
           {
-            dni: "12345678",
-            name: "Juan Perez",
-            phone_primary: "999111222",
-            phone_secondary: null,
-            org_ruc: "20100000001",
-            org_name: "ACME SAC",
-            sibling_phones: null,
+            person: { dni: "12345678", name: "Juan Perez", birth_date: null, birth_place: null, sex: null, marital_status: null, location_text: null, ubigeo_code: null, mother_name: null, father_name: null, email: null, ruc: null },
+            org: { ruc: "20100000001", name: "ACME SAC", trade_name: null, company_type: null, status: null, condition: null, fiscal_address: null, registration_date: null, activity_start_date: null, line_of_business: null, economic_activity: null },
+            role: null,
+            phones: { primary: "999111222", secondary: null, siblings: null },
           },
         ],
       })),
+
     };
     const service = createClientSearchService(engine);
 

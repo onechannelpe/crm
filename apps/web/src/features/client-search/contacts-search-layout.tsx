@@ -1,5 +1,5 @@
 import { A } from "@solidjs/router";
-import type { JSX } from "solid-js";
+import { createMemo, type JSX } from "solid-js";
 import { For, Show } from "solid-js";
 
 import { EmptyState } from "~/components/feedback/empty-state";
@@ -27,9 +27,12 @@ interface ContactsSearchLayoutProps {
   footerLeft: () => JSX.Element;
   footerRight: () => JSX.Element;
   resultCount: () => number;
+  detail?: () => JSX.Element | null;
 }
 
 export function ContactsSearchLayout(props: ContactsSearchLayoutProps) {
+  const detailContent = createMemo(() => props.detail?.() ?? null);
+
   return (
     <AppPage width="wide">
       <div class={styles.searchPanel}>
@@ -88,35 +91,45 @@ export function ContactsSearchLayout(props: ContactsSearchLayoutProps) {
         </div>
       </Show>
 
-      <Show
-        when={props.resultCount() > 0}
-        fallback={
-          <Show when={props.controller.searched()}>
-            <EmptyState
-              title="No results"
-              description="Try a different search term."
-            />
+      <div class={cn(styles.contentWrap, detailContent() !== null && styles.contentWrapSplit)}>
+        <div class={styles.mainPane}>
+          <Show
+            when={props.resultCount() > 0}
+            fallback={
+              <Show when={props.controller.searched()}>
+                <EmptyState
+                  title="No results"
+                  description="Try a different search term."
+                />
+              </Show>
+            }
+          >
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <For each={props.columns}>
+                    {(col) => <TableHead>{col.label}</TableHead>}
+                  </For>
+                </TableRow>
+              </TableHeader>
+              <TableBody>{props.rows()}</TableBody>
+            </Table>
           </Show>
-        }
-      >
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <For each={props.columns}>
-                {(col) => <TableHead>{col.label}</TableHead>}
-              </For>
-            </TableRow>
-          </TableHeader>
-          <TableBody>{props.rows()}</TableBody>
-        </Table>
-      </Show>
 
-      <Show when={props.resultCount() > 0}>
-        <div class={styles.footer}>
-          <div>{props.footerLeft()}</div>
-          <div>{props.footerRight()}</div>
+          <Show when={props.resultCount() > 0}>
+            <div class={styles.footer}>
+              <div>{props.footerLeft()}</div>
+              <div>{props.footerRight()}</div>
+            </div>
+          </Show>
         </div>
-      </Show>
+
+        <Show when={detailContent() !== null}>
+          <aside class={styles.detailPane}>
+            {detailContent()}
+          </aside>
+        </Show>
+      </div>
     </AppPage>
   );
 }

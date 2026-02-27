@@ -6,36 +6,29 @@ import {
 } from "~/features/client-search/grouping";
 import type { SearchResult } from "~/server/shared/engine/types";
 
-function row(partial: Partial<SearchResult>): SearchResult {
+function row(partial: {
+  dni?: string;
+  name?: string;
+  phone_primary?: string | null;
+  phone_secondary?: string | null;
+  org_ruc?: string | null;
+  org_name?: string | null;
+  sibling_phones?: string[] | null;
+}): SearchResult {
+  const { dni = "12345678", name = "RICARDO GARCIA PINCHI", phone_primary = null, phone_secondary = null, org_ruc = null, org_name = null, sibling_phones = null } = partial;
   return {
-    dni: "12345678",
-    name: "RICARDO GARCIA PINCHI",
-    phone_primary: null,
-    phone_secondary: null,
-    org_ruc: null,
-    org_name: null,
-    sibling_phones: null,
-    ...partial,
+    person: { dni, name, birth_date: null, birth_place: null, sex: null, marital_status: null, location_text: null, ubigeo_code: null, mother_name: null, father_name: null, email: null, ruc: null },
+    org: org_ruc != null ? { ruc: org_ruc, name: org_name ?? "", trade_name: null, company_type: null, status: null, condition: null, fiscal_address: null, registration_date: null, activity_start_date: null, line_of_business: null, economic_activity: null } : null,
+    role: null,
+    phones: { primary: phone_primary, secondary: phone_secondary, siblings: sibling_phones },
   };
 }
 
 describe("client search grouping", () => {
   it("groups people by dni and keeps first name as displayName", () => {
     const groups = groupPeopleByDni([
-      row({
-        dni: "12345678",
-        name: "RICARDO GARCIA PINCHI",
-        org_ruc: "20100000001",
-        org_name: "ACME SAC",
-        phone_primary: "999111222",
-      }),
-      row({
-        dni: "12345678",
-        name: "GARCIA PINCHI RICARDO",
-        org_ruc: "20100000002",
-        org_name: "GLOBEX SAC",
-        phone_secondary: "999333444",
-      }),
+      row({ dni: "12345678", name: "RICARDO GARCIA PINCHI", org_ruc: "20100000001", org_name: "ACME SAC", phone_primary: "999111222" }),
+      row({ dni: "12345678", name: "GARCIA PINCHI RICARDO", org_ruc: "20100000002", org_name: "GLOBEX SAC", phone_secondary: "999333444" }),
     ]);
 
     expect(groups).toHaveLength(1);
@@ -53,27 +46,9 @@ describe("client search grouping", () => {
 
   it("groups companies by ruc and aggregates associated people and phones", () => {
     const groups = groupCompaniesByRuc([
-      row({
-        dni: "12345678",
-        name: "RICARDO GARCIA PINCHI",
-        org_ruc: "20100000001",
-        org_name: "ACME SAC",
-        phone_primary: "999111222",
-      }),
-      row({
-        dni: "87654321",
-        name: "MARIA LOPEZ",
-        org_ruc: "20100000001",
-        org_name: "ACME SAC",
-        phone_secondary: "999333444",
-      }),
-      row({
-        dni: "12345678",
-        name: "GARCIA PINCHI RICARDO",
-        org_ruc: "20100000001",
-        org_name: "ACME SAC",
-        phone_secondary: "999777888",
-      }),
+      row({ dni: "12345678", name: "RICARDO GARCIA PINCHI", org_ruc: "20100000001", org_name: "ACME SAC", phone_primary: "999111222" }),
+      row({ dni: "87654321", name: "MARIA LOPEZ", org_ruc: "20100000001", org_name: "ACME SAC", phone_secondary: "999333444" }),
+      row({ dni: "12345678", name: "GARCIA PINCHI RICARDO", org_ruc: "20100000001", org_name: "ACME SAC", phone_secondary: "999777888" }),
     ]);
 
     expect(groups).toHaveLength(1);
@@ -88,20 +63,8 @@ describe("client search grouping", () => {
 
   it("does not merge entries when org_ruc is missing", () => {
     const groups = groupCompaniesByRuc([
-      row({
-        dni: "11111111",
-        name: "A",
-        org_ruc: null,
-        org_name: null,
-        phone_primary: "999111111",
-      }),
-      row({
-        dni: "11111111",
-        name: "A",
-        org_ruc: null,
-        org_name: null,
-        phone_primary: "999111111",
-      }),
+      row({ dni: "11111111", name: "A", org_ruc: null, org_name: null, phone_primary: "999111111" }),
+      row({ dni: "11111111", name: "A", org_ruc: null, org_name: null, phone_primary: "999111111" }),
     ]);
 
     expect(groups).toHaveLength(2);

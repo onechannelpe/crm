@@ -1,8 +1,9 @@
 import { useSearchParams } from "@solidjs/router";
 import { A } from "@solidjs/router";
-import { createMemo, For, onMount, Show } from "solid-js";
+import { createMemo, createSignal, For, onMount, Show } from "solid-js";
 
 import { TableCell, TableRow } from "~/components/ui/layout/table";
+import { CompanyDetailDrawer } from "~/features/client-search/contact-detail-drawer";
 import { ContactsSearchLayout } from "~/features/client-search/contacts-search-layout";
 import { createClientSearchController } from "~/features/client-search/controller";
 import { inferCompanySearchType } from "~/features/client-search/display";
@@ -55,6 +56,11 @@ export default function ClientSearchCompaniesPage() {
   const grouped = createMemo(() => groupCompaniesByRuc(controller.results()));
   const rows = createMemo(() => buildDisplayRows(grouped()));
 
+  const [selectedKey, setSelectedKey] = createSignal<string | null>(null);
+  const selectedGroup = createMemo(
+    () => grouped().find((g) => g.key === selectedKey()) ?? null,
+  );
+
   onMount(() => {
     void controller.initializeFromParams();
   });
@@ -67,48 +73,68 @@ export default function ClientSearchCompaniesPage() {
       inferType={inferCompanySearchType}
       columns={COLUMNS}
       resultCount={() => rows().length}
+      detail={() => {
+        const group = selectedGroup();
+        if (!group) return null;
+        return (
+          <CompanyDetailDrawer
+            group={group}
+            onClose={() => setSelectedKey(null)}
+          />
+        );
+      }}
       rows={() => (
         <For each={rows()}>
-          {(row) => (
-            <TableRow>
-              <TableCell>
-                <span class={styles.chip}>
-                  <span class={styles.squareDot}>{toInitial(row.name)}</span>
-                  <span>{row.name}</span>
-                </span>
-              </TableCell>
-              <TableCell>
-                <span class={styles.pill}>{row.ruc}</span>
-              </TableCell>
-              <TableCell>
-                <div class={styles.pillWrap}>
-                  <For each={row.contacts}>
-                    {(person) => (
-                      <A
-                        href={`/contacts/people?type=${person.dni ? "dni" : "person_name"}&query=${encodeURIComponent(person.dni ?? person.name)}&limit=20`}
-                        class={styles.pill}
-                      >
-                        {person.name}
-                      </A>
-                    )}
-                  </For>
-                  <Show when={row.contacts.length === 0}>
-                    <span class={styles.pill}>—</span>
-                  </Show>
-                </div>
-              </TableCell>
-              <TableCell>
-                <div class={styles.pillWrap}>
-                  <For each={row.phones}>
-                    {(phone) => <span class={styles.pill}>{phone}</span>}
-                  </For>
-                  <Show when={row.phones.length === 0}>
-                    <span class={styles.pill}>—</span>
-                  </Show>
-                </div>
-              </TableCell>
-            </TableRow>
-          )}
+          {(row, i) => {
+            const group = () => grouped()[i()];
+            const isActive = () => selectedKey() === group()?.key;
+            return (
+              <TableRow
+                class={`${styles.rowClickable}${isActive() ? ` ${styles.rowActive}` : ""}`}
+                onClick={() =>
+                  setSelectedKey(isActive() ? null : (group()?.key ?? null))
+                }
+              >
+                <TableCell>
+                  <span class={styles.chip}>
+                    <span class={styles.squareDot}>{toInitial(row.name)}</span>
+                    <span>{row.name}</span>
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <span class={styles.pill}>{row.ruc}</span>
+                </TableCell>
+                <TableCell>
+                  <div class={styles.pillWrap}>
+                    <For each={row.contacts}>
+                      {(person) => (
+                        <A
+                          href={`/contacts/people?type=${person.dni ? "dni" : "person_name"}&query=${encodeURIComponent(person.dni ?? person.name)}&limit=20`}
+                          class={styles.pill}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {person.name}
+                        </A>
+                      )}
+                    </For>
+                    <Show when={row.contacts.length === 0}>
+                      <span class={styles.pill}>—</span>
+                    </Show>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div class={styles.pillWrap}>
+                    <For each={row.phones}>
+                      {(phone) => <span class={styles.pill}>{phone}</span>}
+                    </For>
+                    <Show when={row.phones.length === 0}>
+                      <span class={styles.pill}>—</span>
+                    </Show>
+                  </div>
+                </TableCell>
+              </TableRow>
+            );
+          }}
         </For>
       )}
       footerLeft={() => (
