@@ -1,9 +1,9 @@
 use crate::errors::StartupError;
+use crate::storage::sqlite::projection_contract_generated::{
+    SEARCH_PROJECTION_NAME, SEARCH_PROJECTION_PATHS, SEARCH_PROJECTION_STORAGE_MAPPINGS,
+};
 use rusqlite::{Connection, OptionalExtension};
-use serde::Deserialize;
 use std::collections::HashSet;
-use std::fs;
-use std::path::Path;
 
 const REQUIRED_TABLES: &[&str] = &[
     "search_projection",
@@ -13,25 +13,6 @@ const REQUIRED_TABLES: &[&str] = &[
     "dni_phone_agg",
 ];
 const REQUIRED_VIEWS: &[&str] = &[];
-
-#[derive(Debug, Deserialize)]
-struct ProjectionContract {
-    projection: String,
-    fields: Vec<ProjectionField>,
-}
-
-#[derive(Debug, Deserialize)]
-struct ProjectionField {
-    path: String,
-    canonical_fields: Vec<String>,
-    storage: Vec<ProjectionStorage>,
-}
-
-#[derive(Debug, Deserialize)]
-struct ProjectionStorage {
-    table: String,
-    column: String,
-}
 
 pub fn validate(conn: &Connection) -> Result<(), StartupError> {
     for name in REQUIRED_TABLES {
@@ -49,31 +30,13 @@ pub fn validate(conn: &Connection) -> Result<(), StartupError> {
         }
     }
 
-    let projection_contract = load_projection_contract()?;
-    validate_projection_paths(&projection_contract)?;
-    validate_required_columns(conn, &projection_contract)?;
+    validate_projection_paths()?;
+    validate_required_columns(conn)?;
     Ok(())
 }
 
-fn load_projection_contract() -> Result<ProjectionContract, StartupError> {
-    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../contracts/search-projection.json");
-    let raw = fs::read_to_string(&path).map_err(|e| {
-        StartupError::Config(format!(
-            "failed to read projection contract {}: {e}",
-            path.display()
-        ))
-    })?;
-
-    serde_json::from_str::<ProjectionContract>(&raw).map_err(|e| {
-        StartupError::Config(format!(
-            "failed to parse projection contract {}: {e}",
-            path.display()
-        ))
-    })
-}
-
-fn validate_projection_paths(contract: &ProjectionContract) -> Result<(), StartupError> {
-    if contract.projection.trim().is_empty() {
+fn validate_projection_paths() -> Result<(), StartupError> {
+    if SEARCH_PROJECTION_NAME.trim().is_empty() {
         return Err(StartupError::Config(
             "projection contract must include a non-empty projection name".into(),
         ));
@@ -81,50 +44,31 @@ fn validate_projection_paths(contract: &ProjectionContract) -> Result<(), Startu
 
     let mut seen = HashSet::new();
 
-    for field in &contract.fields {
-        if field.canonical_fields.is_empty() {
-            return Err(StartupError::Config(format!(
-                "projection field '{}' must include at least one canonical field",
-                field.path
-            )));
-        }
-        if !seen.insert(field.path.as_str()) {
+    for path in SEARCH_PROJECTION_PATHS {
+        if !seen.insert(*path) {
             return Err(StartupError::Config(format!(
                 "duplicate projection path in contract: {}",
-                field.path
+                path
             )));
-        }
-        if field.storage.is_empty() {
-            return Err(StartupError::Config(format!(
-                "projection field '{}' must include at least one storage mapping",
-                field.path
-            )));
-        }
-        for storage in &field.storage {
-            if storage.table.trim().is_empty() || storage.column.trim().is_empty() {
-                return Err(StartupError::Config(format!(
-                    "projection path '{}' has invalid storage mapping",
-                    field.path
-                )));
-            }
         }
     }
 
     Ok(())
 }
 
-fn validate_required_columns(
-    conn: &Connection,
-    contract: &ProjectionContract,
-) -> Result<(), StartupError> {
-    for field in &contract.fields {
-        for storage in &field.storage {
-            if !table_has_column(conn, &storage.table, &storage.column)? {
-                return Err(StartupError::Database(format!(
-                    "missing required column for projection path '{}': {}.{}",
-                    field.path, storage.table, storage.column
-                )));
-            }
+fn validate_required_columns(conn: &Connection) -> Result<(), StartupError> {
+    for mapping in SEARCH_PROJECTION_STORAGE_MAPPINGS {
+        if mapping.table.trim().is_empty() || mapping.column.trim().is_empty() {
+            return Err(StartupError::Config(format!(
+                "projection path '{}' has invalid storage mapping",
+                mapping.path
+            )));
+        }
+        if !table_has_column(conn, mapping.table, mapping.column)? {
+            return Err(StartupError::Database(format!(
+                "missing required column for projection path '{}': {}.{}",
+                mapping.path, mapping.table, mapping.column
+            )));
         }
     }
 

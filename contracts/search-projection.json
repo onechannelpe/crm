@@ -152,6 +152,7 @@
         "phone"
       ],
       "nullable": true,
+      "value_type": "string_array",
       "derivation": "grouped_phone_aggregate_per_dni_or_ruc",
       "storage": [
         {

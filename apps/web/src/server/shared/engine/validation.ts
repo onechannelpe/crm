@@ -17,17 +17,28 @@ function isSearchResult(value: unknown): value is SearchResult {
 
   if (typeof person !== "object" || person === null) return false;
   if (typeof prop(person, "dni") !== "string") return false;
-  if (typeof prop(person, "name") !== "string") return false;
+  if (
+    typeof prop(person, "name") !== "string" &&
+    prop(person, "name") !== null
+  ) {
+    return false;
+  }
 
   if (org !== null) {
     if (typeof org !== "object") return false;
-    if (typeof prop(org, "ruc") !== "string") return false;
-    if (typeof prop(org, "name") !== "string") return false;
+    if (typeof prop(org, "ruc") !== "string" && prop(org, "ruc") !== null) {
+      return false;
+    }
+    if (typeof prop(org, "name") !== "string" && prop(org, "name") !== null) {
+      return false;
+    }
   }
 
   if (role !== null) {
     if (typeof role !== "object") return false;
-    if (typeof prop(role, "name") !== "string") return false;
+    if (typeof prop(role, "name") !== "string" && prop(role, "name") !== null) {
+      return false;
+    }
     if (
       typeof prop(role, "start_date") !== "string" &&
       prop(role, "start_date") !== null
@@ -81,10 +92,14 @@ function hasPath(source: unknown, path: string): boolean {
 
   const parts = path.split(".");
   let cursor: unknown = source;
-  for (const part of parts) {
+  for (const [index, part] of parts.entries()) {
     if (typeof cursor !== "object" || cursor === null) return false;
     if (!Object.hasOwn(cursor, part)) return false;
     cursor = Reflect.get(cursor, part);
+    if (cursor === null && index < parts.length - 1) {
+      // A nullable parent object still satisfies nested contract paths.
+      return true;
+    }
   }
   return true;
 }

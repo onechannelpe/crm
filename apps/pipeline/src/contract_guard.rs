@@ -3,8 +3,10 @@ use crate::config::manifest::verify_manifest;
 use crate::config::mapping::SourceMapping;
 use serde::Deserialize;
 use std::collections::{HashMap, HashSet};
-use std::fs;
-use std::path::Path;
+
+const CANONICAL_CONTRACT_JSON: &str = include_str!("../../../contracts/canonical-contract.json");
+const SOURCE_CONTRACT_JSON: &str = include_str!("../../../contracts/source-contract.json");
+const SEARCH_PROJECTION_JSON: &str = include_str!("../../../contracts/search-projection.json");
 
 #[derive(Debug, Deserialize)]
 struct CanonicalContract {
@@ -37,10 +39,12 @@ struct ProjectionField {
 }
 
 pub fn validate_contracts(manifest_path: &str) -> Result<(), PipelineError> {
-    let contracts_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../contracts");
-    let canonical: CanonicalContract = load_json(&contracts_dir.join("canonical-contract.json"))?;
-    let source_contract: SourceContract = load_json(&contracts_dir.join("source-contract.json"))?;
-    let projection: ProjectionContract = load_json(&contracts_dir.join("search-projection.json"))?;
+    let canonical: CanonicalContract =
+        load_json_embedded(CANONICAL_CONTRACT_JSON, "canonical-contract.json")?;
+    let source_contract: SourceContract =
+        load_json_embedded(SOURCE_CONTRACT_JSON, "source-contract.json")?;
+    let projection: ProjectionContract =
+        load_json_embedded(SEARCH_PROJECTION_JSON, "search-projection.json")?;
 
     if projection.projection.trim().is_empty() {
         return Err(PipelineError::Args(
@@ -157,7 +161,11 @@ pub fn validate_contracts(manifest_path: &str) -> Result<(), PipelineError> {
     Ok(())
 }
 
-fn load_json<T: for<'de> Deserialize<'de>>(path: &Path) -> Result<T, PipelineError> {
-    let raw = fs::read_to_string(path)?;
-    serde_json::from_str::<T>(&raw).map_err(PipelineError::from)
+fn load_json_embedded<T: for<'de> Deserialize<'de>>(
+    raw: &str,
+    label: &str,
+) -> Result<T, PipelineError> {
+    serde_json::from_str::<T>(raw).map_err(|error| {
+        PipelineError::Args(format!("failed to parse embedded contract {}: {error}", label))
+    })
 }

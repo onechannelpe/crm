@@ -3,10 +3,8 @@ import { createMemo, createSignal, For, Show, type JSX } from "solid-js";
 
 import Building2Icon from "~/components/icons/building-2";
 import CalendarDaysIcon from "~/components/icons/calendar-days";
-import MailIcon from "~/components/icons/mail";
 import PhoneIcon from "~/components/icons/phone";
 import UserIcon from "~/components/icons/user";
-import UsersIcon from "~/components/icons/users";
 import XIcon from "~/components/icons/x";
 
 import { toInitial } from "./display";
@@ -174,7 +172,7 @@ export function PersonDetailDrawer(props: PersonDetailDrawerProps) {
           <FieldRow
             icon={<UserIcon size={16} />}
             label="Full name"
-            value={person().name}
+            value={person().name ?? person().dni}
           />
           <FieldRow
             icon={<UserIcon size={16} />}
@@ -192,31 +190,6 @@ export function PersonDetailDrawer(props: PersonDetailDrawerProps) {
               </div>
             </div>
           </Show>
-          <FieldRow
-            icon={<CalendarDaysIcon size={16} />}
-            label="Birth date"
-            value={person().birth_date}
-          />
-          <FieldRow
-            icon={<CalendarDaysIcon size={16} />}
-            label="Birth place"
-            value={person().birth_place}
-          />
-          <FieldRow
-            icon={<UserIcon size={16} />}
-            label="Sex"
-            value={person().sex}
-          />
-          <FieldRow
-            icon={<UserIcon size={16} />}
-            label="Civil status"
-            value={person().marital_status}
-          />
-          <FieldRow
-            icon={<MailIcon size={16} />}
-            label="Email"
-            value={person().email}
-          />
         </DetailSection>
 
         <Show when={props.group.companies.length > 0}>
@@ -256,36 +229,6 @@ export function PersonDetailDrawer(props: PersonDetailDrawerProps) {
           </DetailSection>
         </Show>
 
-        <Show when={person().location_text || person().ubigeo_code}>
-          <DetailSection title="Location">
-            <FieldRow
-              icon={<Building2Icon size={16} />}
-              label="Address"
-              value={person().location_text}
-            />
-            <FieldRow
-              icon={<Building2Icon size={16} />}
-              label="Ubigeo"
-              value={person().ubigeo_code}
-            />
-          </DetailSection>
-        </Show>
-
-        <Show when={person().mother_name || person().father_name}>
-          <DetailSection title="Family">
-            <FieldRow
-              icon={<UsersIcon size={16} />}
-              label="Mother"
-              value={person().mother_name}
-            />
-            <FieldRow
-              icon={<UsersIcon size={16} />}
-              label="Father"
-              value={person().father_name}
-            />
-          </DetailSection>
-        </Show>
-
         <Show when={org()}>
           {(company) => (
             <DetailSection
@@ -300,11 +243,6 @@ export function PersonDetailDrawer(props: PersonDetailDrawerProps) {
                 icon={<Building2Icon size={16} />}
                 label="Name"
                 value={company().name}
-              />
-              <FieldRow
-                icon={<Building2Icon size={16} />}
-                label="Trade name"
-                value={company().trade_name}
               />
               <FieldRow
                 icon={<Building2Icon size={16} />}
@@ -378,7 +316,9 @@ export function CompanyDetailDrawer(props: CompanyDetailDrawerProps) {
     for (const searchRow of props.group.rows) {
       const role = searchRow.role;
       if (!role) continue;
-      const name = role.rep_name?.trim() || searchRow.person.name.trim();
+      const fallbackName =
+        searchRow.person.name?.trim() || searchRow.person.dni;
+      const name = role.rep_name?.trim() || fallbackName;
       const roleName = role.name?.trim() || null;
       const docType = role.rep_doc_type?.trim() || null;
       const docNumber = role.rep_doc_number?.trim() || null;
@@ -412,53 +352,8 @@ export function CompanyDetailDrawer(props: CompanyDetailDrawerProps) {
               />
               <FieldRow
                 icon={<Building2Icon size={16} />}
-                label="Trade name"
-                value={company().trade_name}
-              />
-              <FieldRow
-                icon={<Building2Icon size={16} />}
                 label="RUC"
                 value={company().ruc}
-              />
-              <FieldRow
-                icon={<Building2Icon size={16} />}
-                label="Type"
-                value={company().company_type}
-              />
-              <FieldRow
-                icon={<Building2Icon size={16} />}
-                label="Status"
-                value={company().status}
-              />
-              <FieldRow
-                icon={<Building2Icon size={16} />}
-                label="Condition"
-                value={company().condition}
-              />
-              <FieldRow
-                icon={<Building2Icon size={16} />}
-                label="Address"
-                value={company().fiscal_address}
-              />
-              <FieldRow
-                icon={<CalendarDaysIcon size={16} />}
-                label="Registered"
-                value={company().registration_date}
-              />
-              <FieldRow
-                icon={<CalendarDaysIcon size={16} />}
-                label="Active since"
-                value={company().activity_start_date}
-              />
-              <FieldRow
-                icon={<Building2Icon size={16} />}
-                label="Activity"
-                value={company().economic_activity}
-              />
-              <FieldRow
-                icon={<Building2Icon size={16} />}
-                label="Industry"
-                value={company().line_of_business}
               />
             </DetailSection>
           )}
