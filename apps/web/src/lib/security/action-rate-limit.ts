@@ -15,11 +15,11 @@ interface ActionRateLimitPolicy {
 }
 
 export const ACTION_RATE_LIMIT_POLICY = {
-  "leads.request":              { limit: 10, ipLimit: 50,  windowMs: 60_000 },
+  "leads.request": { limit: 10, ipLimit: 50, windowMs: 60_000 },
   "sales_records.create_draft": { limit: 20, ipLimit: 100, windowMs: 60_000 },
-  "sales_records.submit":       { limit: 30, ipLimit: 150, windowMs: 60_000 },
-  "quota.allocate":             { limit: 5,  ipLimit: 25,  windowMs: 60_000 },
-  "team.invite.create":         { limit: 10, ipLimit: 30,  windowMs: 60 * 60_000 },
+  "sales_records.submit": { limit: 30, ipLimit: 150, windowMs: 60_000 },
+  "quota.allocate": { limit: 5, ipLimit: 25, windowMs: 60_000 },
+  "team.invite.create": { limit: 10, ipLimit: 30, windowMs: 60 * 60_000 },
 } satisfies Record<string, ActionRateLimitPolicy>;
 
 export type RateLimitedAction = keyof typeof ACTION_RATE_LIMIT_POLICY;
@@ -49,6 +49,57 @@ function buildIpKey(actionName: string, ip: string): string {
   return hashAuthKey(`action:${actionName}:ip:${ip}`);
 }
 
+async function blockWithAudit(params: {
+  actionName: RateLimitedAction;
+  userId: number;
+  scope: "user" | "ip";
+  limit: number;
+  windowMs: number;
+  windowStartedAt: number;
+  now: number;
+  deps: RateLimitDeps;
+}): Promise<never> {
+  const {
+    actionName,
+    userId,
+    scope,
+    limit,
+    windowMs,
+    windowStartedAt,
+    now,
+    deps,
+  } = params;
+  const retryAfterMs = windowMs - (now - windowStartedAt);
+  const retryAfterSeconds = Math.max(1, Math.ceil(retryAfterMs / 1000));
+
+  // RFC 6585 §4: 429 responses must carry Retry-After when the reset time is known.
+  // event.response is the outgoing response headers for the current server request.
+  getRequestEvent()?.response.headers.set(
+    "Retry-After",
+    String(retryAfterSeconds),
+  );
+
+  await deps.auditLogs.create({
+    user_id: userId,
+    action: "rate_limit_exceeded",
+    entity_type: "user",
+    entity_id: userId,
+    changes: JSON.stringify({
+      actionName,
+      scope,
+      limit,
+      windowMs,
+      retryAfterMs,
+    }),
+    created_at: now,
+  });
+
+  throw rateLimitError(
+    `Too many requests for ${actionName}. Try again in ${retryAfterSeconds}s.`,
+    retryAfterSeconds,
+  );
+}
+
 export async function checkActionRateLimit(
   actionName: RateLimitedAction,
   userId: number,
@@ -58,39 +109,45 @@ export async function checkActionRateLimit(
   const policy = ACTION_RATE_LIMIT_POLICY[actionName];
   const now = Date.now();
 
-  const [userSnapshot, ipSnapshot] = await Promise.all([
-    deps.actionRateLimits.checkAndIncrement(buildUserKey(actionName, userId), now, policy.windowMs),
-    deps.actionRateLimits.checkAndIncrement(buildIpKey(actionName, ip), now, policy.windowMs),
-  ]);
+  // Check the per-user counter first. If the user is already over limit, skip
+  // the shared IP counter entirely — incrementing it for a blocked user would
+  // consume IP budget and could deny legitimate users on the same NAT/proxy.
+  const userSnapshot = await deps.actionRateLimits.checkAndIncrement(
+    buildUserKey(actionName, userId),
+    now,
+    policy.windowMs,
+  );
 
-  const scope: "user" | "ip" | null =
-    userSnapshot.request_count > policy.limit ? "user"
-    : ipSnapshot.request_count > policy.ipLimit ? "ip"
-    : null;
-
-  if (scope !== null) {
-    const snapshot = scope === "user" ? userSnapshot : ipSnapshot;
-    const retryAfterMs = policy.windowMs - (now - snapshot.window_started_at);
-    const retryAfterSeconds = Math.max(1, Math.ceil(retryAfterMs / 1000));
-
-    await deps.auditLogs.create({
-      user_id: userId,
-      action: "rate_limit_exceeded",
-      entity_type: "user",
-      entity_id: userId,
-      changes: JSON.stringify({
-        actionName,
-        scope,
-        limit: scope === "user" ? policy.limit : policy.ipLimit,
-        windowMs: policy.windowMs,
-        retryAfterMs,
-      }),
-      created_at: now,
+  if (userSnapshot.request_count > policy.limit) {
+    await blockWithAudit({
+      actionName,
+      userId,
+      scope: "user",
+      limit: policy.limit,
+      windowMs: policy.windowMs,
+      windowStartedAt: userSnapshot.window_started_at,
+      now,
+      deps,
     });
+  }
 
-    throw rateLimitError(
-      `Too many requests for ${actionName}. Try again in ${retryAfterSeconds}s.`,
-      retryAfterSeconds,
-    );
+  // User is within limit — now evaluate the shared IP counter.
+  const ipSnapshot = await deps.actionRateLimits.checkAndIncrement(
+    buildIpKey(actionName, ip),
+    now,
+    policy.windowMs,
+  );
+
+  if (ipSnapshot.request_count > policy.ipLimit) {
+    await blockWithAudit({
+      actionName,
+      userId,
+      scope: "ip",
+      limit: policy.ipLimit,
+      windowMs: policy.windowMs,
+      windowStartedAt: ipSnapshot.window_started_at,
+      now,
+      deps,
+    });
   }
 }

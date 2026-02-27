@@ -5,6 +5,7 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("action_rate_limit_counters")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    // varchar(64) = HMAC-SHA-256 hex output; update length if hashAuthKey algorithm changes
     .addColumn("key_hash", "varchar(64)", (col) => col.notNull())
     .addColumn("window_started_at", "integer", (col) => col.notNull())
     .addColumn("request_count", "integer", (col) => col.notNull())
