@@ -40,11 +40,12 @@ const COLUMNS = [
   { label: "Companies" },
   { label: "Phones" },
 ];
-const PILL_PAGE_SIZE = 5;
+const PILL_PAGE_SIZE = 3;
 
 interface CollapsedPillListProps<T> {
   items: readonly T[];
   maxVisible?: number;
+  class?: string;
   onMoreClick?: () => void;
   renderItem: (item: T) => JSX.Element;
 }
@@ -58,7 +59,7 @@ function CollapsedPillList<T>(props: CollapsedPillListProps<T>) {
   );
 
   return (
-    <div class={styles.pillWrap}>
+    <div class={`${styles.pillWrap}${props.class ? ` ${props.class}` : ""}`}>
       <Show
         when={props.items.length > 0}
         fallback={<span class={styles.pill}>—</span>}
@@ -166,6 +167,7 @@ export default function ClientSearchPeoplePage() {
                 <TableCell>
                   <CollapsedPillList
                     items={row.companies}
+                    class={styles.pillWrapTable}
                     onMoreClick={() => setSelectedDni(row.dni)}
                     renderItem={(company) => (
                       <A
@@ -182,6 +184,7 @@ export default function ClientSearchPeoplePage() {
                 <TableCell>
                   <CollapsedPillList
                     items={row.phones}
+                    class={styles.pillWrapTable}
                     onMoreClick={() => setSelectedDni(row.dni)}
                     renderItem={(phone) => (
                       <span class={styles.pill} title={phone}>

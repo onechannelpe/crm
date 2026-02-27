@@ -137,6 +137,12 @@
   max-width: 100%;
 }
 
+.pillWrapTable {
+  flex-wrap: nowrap;
+  align-items: center;
+  overflow: hidden;
+}
+
 .pill {
   display: inline-flex;
   align-items: center;
@@ -217,22 +223,33 @@ a.pill:hover {
 
 .resultsTableCompanies th:nth-child(1),
 .resultsTableCompanies td:nth-child(1) {
-  width: 34%;
+  width: 1%;
+  min-width: 20ch;
+  white-space: nowrap;
+}
+
+.resultsTableCompanies td:nth-child(1) .chipLabel {
+  display: inline-block;
+  max-width: min(36ch, 28vw);
 }
 
 .resultsTableCompanies th:nth-child(2),
 .resultsTableCompanies td:nth-child(2) {
-  width: 14%;
+  width: 13ch;
 }
 
 .resultsTableCompanies th:nth-child(3),
 .resultsTableCompanies td:nth-child(3) {
-  width: 34%;
+  width: auto;
 }
 
 .resultsTableCompanies th:nth-child(4),
 .resultsTableCompanies td:nth-child(4) {
-  width: 18%;
+  width: 22%;
+}
+
+.resultsTable.resultsTableCompanies {
+  table-layout: auto;
 }
 
 /* Active row highlight */
