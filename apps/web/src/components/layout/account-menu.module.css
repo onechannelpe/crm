@@ -29,14 +29,14 @@
   width: 16px;
   height: 16px;
   border-radius: 2px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   background: var(--avatar-bg);
   color: var(--avatar-fg);
+  flex-shrink: 0;
+}
+
+.avatarFallback {
   font-size: var(--font-10);
   font-weight: 600;
-  flex-shrink: 0;
 }
 
 .label {

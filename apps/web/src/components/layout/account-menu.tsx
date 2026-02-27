@@ -6,6 +6,7 @@ import LogOut from "~/components/icons/log-out";
 import Settings from "~/components/icons/settings";
 import UserRound from "~/components/icons/user-round";
 import { getUserInitials } from "~/components/layout/account-menu-utils";
+import { Avatar } from "~/components/ui/display/avatar";
 import {
   applyThemeMode,
   getThemeMode,
@@ -19,6 +20,7 @@ import styles from "./account-menu.module.css";
 
 interface AccountMenuProps {
   label: string;
+  avatarUrl?: string | null;
   collapsed?: boolean;
   onLogout: () => Promise<void>;
 }
@@ -58,7 +60,12 @@ export function AccountMenu(props: AccountMenuProps) {
         onClick={() => setOpen((prev) => !prev)}
         class={cn(styles.trigger, props.collapsed && styles.triggerCollapsed)}
       >
-        <span class={styles.avatar}>{getUserInitials(props.label)}</span>
+        <Avatar
+          imageUrl={props.avatarUrl ?? null}
+          fallback={getUserInitials(props.label)}
+          class={styles.avatar}
+          fallbackClass={styles.avatarFallback}
+        />
         <Show when={!props.collapsed}>
           <span class={styles.label}>{props.label}</span>
         </Show>

@@ -94,6 +94,7 @@ export function Sidebar() {
       <div class={cn(styles.sidebarTop, !expanded() && styles.collapsedTop)}>
         <AccountMenu
           label={firstName()}
+          avatarUrl={currentUser().avatarUrl}
           collapsed={!expanded()}
           onLogout={logout}
         />

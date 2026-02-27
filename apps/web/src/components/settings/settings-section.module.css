@@ -1,0 +1,45 @@
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.title {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+  color: var(--foreground);
+  margin: 0;
+}
+
+.sectionHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sectionInfo {
+  max-width: 440px;
+}
+
+.sectionActions {
+  display: flex;
+  gap: 12px;
+}
+
+.sectionContent {
+  padding-top: 0;
+}
+
+.sectionDescription {
+  margin: 0;
+  font-size: var(--font-size-body);
+  color: var(--foreground-secondary);
+}
+
+@media (min-width: 768px) {
+  .sectionHeader {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+}

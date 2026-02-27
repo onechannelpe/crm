@@ -1,4 +1,5 @@
-import { createSignal } from "solid-js";
+import { useAction, useSubmissions } from "@solidjs/router";
+import { createSignal, onCleanup } from "solid-js";
 
 import { updateUserProfile } from "~/actions/settings";
 import { useToast } from "~/components/feedback/toast-provider";
@@ -9,56 +10,19 @@ import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { getErrorMessage } from "~/lib/errors";
+import {
+  removeUserAvatarMutation,
+  uploadUserAvatarMutation,
+} from "~/lib/mutations/profile";
 
 import styles from "./settings-page.module.css";
 
-interface ProfilePictureMutationResponse {
-  success: boolean;
-  avatarVersion: number;
-  avatarUrl: string | null;
-}
-
-async function readPictureMutationResponse(
-  response: Response,
-): Promise<ProfilePictureMutationResponse> {
-  if (!response.ok) {
-    throw new Error(await response.text());
-  }
-
-  const data: unknown = await response.json();
-  if (
-    typeof data !== "object" ||
-    data === null ||
-    !("success" in data) ||
-    !("avatarVersion" in data) ||
-    !("avatarUrl" in data)
-  ) {
-    throw new Error("Unexpected profile picture response");
-  }
-
-  const typed = data as {
-    success: unknown;
-    avatarVersion: unknown;
-    avatarUrl: unknown;
-  };
-
-  if (
-    typeof typed.success !== "boolean" ||
-    typeof typed.avatarVersion !== "number" ||
-    !(typeof typed.avatarUrl === "string" || typed.avatarUrl === null)
-  ) {
-    throw new Error("Unexpected profile picture response");
-  }
-
-  return {
-    success: typed.success,
-    avatarVersion: typed.avatarVersion,
-    avatarUrl: typed.avatarUrl,
-  };
+function toMessage(error: unknown, fallback: string): string {
+  return getErrorMessage(error, fallback);
 }
 
 export default function ProfilePage() {
-  const { currentUser } = useSession();
+  const { currentUser, updateCurrentUser } = useSession();
   const { showToast } = useToast();
   const user = () => currentUser();
 
@@ -68,60 +32,105 @@ export default function ProfilePage() {
   const [avatarUrl, setAvatarUrl] = createSignal<string | null>(
     user().avatarUrl,
   );
-  const [uploadingAvatar, setUploadingAvatar] = createSignal(false);
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = createSignal<string | null>(
+    null,
+  );
+  const [avatarError, setAvatarError] = createSignal<string | null>(null);
+
+  const uploadAvatar = useAction(uploadUserAvatarMutation);
+  const removeAvatar = useAction(removeUserAvatarMutation);
+  const uploadSubmissions = useSubmissions(uploadUserAvatarMutation);
+  const removeSubmissions = useSubmissions(removeUserAvatarMutation);
+
+  const isUploadingAvatar = () =>
+    uploadSubmissions.some((submission) => submission.pending);
+  const isRemovingAvatar = () =>
+    removeSubmissions.some((submission) => submission.pending);
+  const avatarMutationPending = () => isUploadingAvatar() || isRemovingAvatar();
+
+  onCleanup(() => {
+    const preview = avatarPreviewUrl();
+    if (preview) {
+      URL.revokeObjectURL(preview);
+    }
+  });
 
   const saveProfile = async (e: Event) => {
     e.preventDefault();
     setSavingProfile(true);
     try {
       await updateUserProfile(profileName(), profilePhone());
+      updateCurrentUser((existing) => ({
+        ...existing,
+        fullName: profileName(),
+        phoneE164: profilePhone(),
+      }));
       showToast("success", "Profile updated");
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "Failed to update profile"));
+      showToast("error", toMessage(err, "Failed to update profile"));
     } finally {
       setSavingProfile(false);
     }
   };
 
   const uploadProfilePicture = async (file: File) => {
-    setUploadingAvatar(true);
+    setAvatarError(null);
+
+    const previousPreview = avatarPreviewUrl();
+    if (previousPreview) {
+      URL.revokeObjectURL(previousPreview);
+    }
+
+    const optimisticPreview = URL.createObjectURL(file);
+    setAvatarPreviewUrl(optimisticPreview);
+
     try {
       const formData = new FormData();
       formData.set("file", file);
+      const updated = await uploadAvatar(formData);
 
-      const response = await fetch("/api/settings/profile/picture", {
-        method: "POST",
-        body: formData,
-      });
-      const payload = await readPictureMutationResponse(response);
-      setAvatarUrl(payload.avatarUrl);
+      setAvatarUrl(updated.avatarUrl);
+      updateCurrentUser((existing) => ({
+        ...existing,
+        avatarUrl: updated.avatarUrl,
+        avatarVersion: updated.avatarVersion,
+      }));
       showToast("success", "Profile picture updated");
+
+      URL.revokeObjectURL(optimisticPreview);
+      setAvatarPreviewUrl(null);
     } catch (error: unknown) {
-      showToast(
-        "error",
-        getErrorMessage(error, "Failed to upload profile picture"),
-      );
-    } finally {
-      setUploadingAvatar(false);
+      URL.revokeObjectURL(optimisticPreview);
+      setAvatarPreviewUrl(null);
+
+      const message = toMessage(error, "Failed to upload profile picture");
+      setAvatarError(message);
+      showToast("error", message);
     }
   };
 
   const removeProfilePicture = async () => {
-    setUploadingAvatar(true);
+    setAvatarError(null);
+
+    const previousPreview = avatarPreviewUrl();
+    if (previousPreview) {
+      URL.revokeObjectURL(previousPreview);
+      setAvatarPreviewUrl(null);
+    }
+
     try {
-      const response = await fetch("/api/settings/profile/picture", {
-        method: "DELETE",
-      });
-      const payload = await readPictureMutationResponse(response);
-      setAvatarUrl(payload.avatarUrl);
+      const updated = await removeAvatar();
+      setAvatarUrl(updated.avatarUrl);
+      updateCurrentUser((existing) => ({
+        ...existing,
+        avatarUrl: null,
+        avatarVersion: updated.avatarVersion,
+      }));
       showToast("success", "Profile picture removed");
     } catch (error: unknown) {
-      showToast(
-        "error",
-        getErrorMessage(error, "Failed to remove profile picture"),
-      );
-    } finally {
-      setUploadingAvatar(false);
+      const message = toMessage(error, "Failed to remove profile picture");
+      setAvatarError(message);
+      showToast("error", message);
     }
   };
 
@@ -129,9 +138,10 @@ export default function ProfilePage() {
     <div class={styles.content}>
       <SettingsSection title="Picture">
         <ProfileImageInput
-          pictureUrl={avatarUrl()}
+          pictureUrl={avatarPreviewUrl() ?? avatarUrl()}
           initials={getUserInitials(profileName() || user().email)}
-          uploading={uploadingAvatar()}
+          uploading={avatarMutationPending()}
+          errorMessage={avatarError()}
           onUpload={uploadProfilePicture}
           onRemove={removeProfilePicture}
         />
