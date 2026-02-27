@@ -3,6 +3,7 @@ import {
   type SunatRucData,
   type SunatScraperClient,
 } from "~/server/client-search/enrichment/sunat";
+import { isRecord } from "~/server/client-search/enrichment/sunat/utils";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -37,9 +38,9 @@ export type SearchEnrichmentRequestError =
   | { reason: "invalid_document"; message: string }
   | { reason: "unexpected"; message: string };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
+type LeasedJob = Awaited<
+  ReturnType<Repositories["searchEnrichment"]["leaseJobs"]>
+>[number];
 
 function isSunatRucData(value: unknown): value is SunatRucData {
   return isRecord(value) && typeof value.ruc === "string" && "payload" in value;
@@ -94,6 +95,76 @@ function mapOverlay(row: {
     expiresAt: row.expires_at,
     payloadJson: row.payload_json,
   };
+}
+
+function extractFullName(
+  documentType: EnrichmentDocumentType,
+  payload: unknown,
+): string | null {
+  if (documentType !== "dni") return null;
+  if (!isRecord(payload)) return null;
+  const parts = [
+    payload.nombres,
+    payload.apellidoPaterno,
+    payload.apellidoMaterno,
+  ]
+    .filter(
+      (part): part is string =>
+        typeof part === "string" && part.trim().length > 0,
+    )
+    .map((part) => part.trim());
+  return parts.length > 0 ? parts.join(" ") : null;
+}
+
+function extractLegalName(
+  documentType: EnrichmentDocumentType,
+  payload: unknown,
+): string | null {
+  if (documentType !== "ruc") return null;
+  if (!isSunatRucData(payload)) return null;
+  return payload.razonSocial?.trim() || null;
+}
+
+async function processEnrichmentJob(
+  job: LeasedJob,
+  scraper: SunatScraperClient,
+  repo: Repositories["searchEnrichment"],
+  currentNow: number,
+  leaseOwner: string,
+): Promise<void> {
+  const payload =
+    job.document_type === "dni"
+      ? await scraper.fetchDni(job.document_value)
+      : await scraper.fetchRuc(job.document_value);
+
+  if (
+    !payload ||
+    (typeof payload === "object" && Object.keys(payload).length < 1)
+  ) {
+    await repo.markJobFailed(
+      job.id,
+      leaseOwner,
+      "No enrichment data returned",
+      currentNow,
+    );
+    return;
+  }
+
+  const fullName = extractFullName(job.document_type, payload);
+  const legalName = extractLegalName(job.document_type, payload);
+
+  await repo.upsertOverlay({
+    document_type: job.document_type,
+    document_value: job.document_value,
+    full_name: fullName,
+    legal_name: legalName,
+    source: "sunat",
+    confidence: 80,
+    fetched_at: currentNow,
+    expires_at: currentNow + OVERLAY_TTL_MS,
+    payload_json: JSON.stringify(payload.payload),
+  });
+  await repo.markJobCompleted(job.id, leaseOwner, currentNow);
 }
 
 export function createSearchEnrichmentService(
@@ -208,66 +279,12 @@ export function createSearchEnrichmentService(
         jobs.map(async (job) => {
           const currentNow = now();
           try {
-            const payload =
-              job.document_type === "dni"
-                ? await scraper.fetchDni(job.document_value)
-                : await scraper.fetchRuc(job.document_value);
-
-            if (
-              !payload ||
-              (typeof payload === "object" && Object.keys(payload).length < 1)
-            ) {
-              await repos.searchEnrichment.markJobFailed(
-                job.id,
-                leaseOwner,
-                "No enrichment data returned",
-                currentNow,
-              );
-              return;
-            }
-
-            const fullName =
-              job.document_type === "dni"
-                ? (() => {
-                    if (!isRecord(payload)) return null;
-                    const parts = [
-                      typeof payload.nombres === "string"
-                        ? payload.nombres.trim()
-                        : "",
-                      typeof payload.apellidoPaterno === "string"
-                        ? payload.apellidoPaterno.trim()
-                        : "",
-                      typeof payload.apellidoMaterno === "string"
-                        ? payload.apellidoMaterno.trim()
-                        : "",
-                    ].filter((part) => part.length > 0);
-                    return parts.length > 0 ? parts.join(" ") : null;
-                  })()
-                : null;
-
-            const legalName =
-              job.document_type === "ruc"
-                ? (() => {
-                    if (!isSunatRucData(payload)) return null;
-                    return payload.razonSocial?.trim() || null;
-                  })()
-                : null;
-
-            await repos.searchEnrichment.upsertOverlay({
-              document_type: job.document_type,
-              document_value: job.document_value,
-              full_name: fullName,
-              legal_name: legalName,
-              source: "sunat",
-              confidence: 80,
-              fetched_at: currentNow,
-              expires_at: currentNow + OVERLAY_TTL_MS,
-              payload_json: JSON.stringify(payload.payload),
-            });
-            await repos.searchEnrichment.markJobCompleted(
-              job.id,
-              leaseOwner,
+            await processEnrichmentJob(
+              job,
+              scraper,
+              repos.searchEnrichment,
               currentNow,
+              leaseOwner,
             );
           } catch (error: unknown) {
             const message =
