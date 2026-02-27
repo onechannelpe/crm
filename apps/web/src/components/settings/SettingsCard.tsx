@@ -1,5 +1,7 @@
-import { type JSX, Show } from "solid-js";
+import { A } from "@solidjs/router";
+import { type JSX, Match, Show, Switch } from "solid-js";
 
+import ChevronRight from "~/components/icons/chevron-right";
 import { cn } from "~/lib/utils";
 
 import styles from "../../routes/(app)/settings/settings-page.module.css";
@@ -38,8 +40,32 @@ export function SettingsCard(props: SettingsCardProps) {
           {props.status?.text}
         </span>
       </Show>
+      <Show when={props.href || props.onClick}>
+        <ChevronRight size={14} class={styles.cardIcon} />
+      </Show>
     </div>
   );
 
-  return <div class={styles.card}>{content}</div>;
+  return (
+    <Switch>
+      <Match when={props.href}>
+        <A href={props.href!} class={styles.card} aria-label={props.title}>
+          {content}
+        </A>
+      </Match>
+      <Match when={props.onClick}>
+        <button
+          type="button"
+          class={styles.card}
+          onClick={props.onClick}
+          aria-label={props.title}
+        >
+          {content}
+        </button>
+      </Match>
+      <Match when={true}>
+        <div class={styles.card}>{content}</div>
+      </Match>
+    </Switch>
+  );
 }

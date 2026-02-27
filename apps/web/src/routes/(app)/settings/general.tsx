@@ -63,8 +63,7 @@ export default function SettingsGeneralPage() {
                     event.preventDefault();
                     void save(product.id, price(), isActive());
                   }}
-                  class={styles.cardItem}
-                  style={{ "flex-wrap": "wrap", gap: "16px" }}
+                  class={`${styles.cardItem} ${styles.cardItemWrap}`}
                 >
                   <div class={styles.cardMain}>
                     <span class={styles.cardTitle}>{product.name}</span>
@@ -73,15 +72,8 @@ export default function SettingsGeneralPage() {
                     </span>
                   </div>
 
-                  <div
-                    style={{
-                      display: "flex",
-                      "align-items": "flex-end",
-                      gap: "16px",
-                      "flex-wrap": "wrap",
-                    }}
-                  >
-                    <div style={{ width: "120px" }}>
+                  <div class={styles.productEditorControls}>
+                    <div class={styles.productPriceField}>
                       <Input
                         type="number"
                         min="0.01"
@@ -91,14 +83,7 @@ export default function SettingsGeneralPage() {
                         onInput={(event) => setPrice(event.currentTarget.value)}
                       />
                     </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        "align-items": "center",
-                        gap: "12px",
-                        "padding-bottom": "8px",
-                      }}
-                    >
+                    <div class={styles.productActiveToggle}>
                       <Checkbox
                         label="Active"
                         checked={isActive()}
@@ -107,7 +92,7 @@ export default function SettingsGeneralPage() {
                         }
                       />
                     </div>
-                    <div style={{ "padding-bottom": "4px" }}>
+                    <div class={styles.productSubmit}>
                       <Button
                         type="submit"
                         disabled={isSaving(product.id)}
