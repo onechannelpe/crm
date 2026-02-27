@@ -35,58 +35,39 @@ use rusqlite::{Connection, Row};
 //            29  phone_secondary
 // enriched adds column 30: sibling_phones
 
-// The 26-column projection shared by all query variants. No SELECT keyword or FROM.
-// Keeping projection and FROM separate lets enriched.rs use a different driving
-// table (phone_index) without duplicating columns.
+// The 30-column projection shared by all query variants. No SELECT keyword or FROM.
+// search_projection already resolves profile/company/role joins during materialization.
 pub const SELECT_COLUMNS: &str = "
   c.dni,
   COALESCE(NULLIF(c.name, ''), 'Contacto ' || c.dni) AS name,
-  pp.birth_date,
-  pp.birth_place,
-  pp.sex,
-  pp.marital_status,
-  pp.location_text,
-  pp.ubigeo_code,
-  pp.mother_name,
-  pp.father_name,
-  pp.email,
-  NULLIF(pp.natural_ruc10, '') AS person_ruc,
+  c.birth_date,
+  c.birth_place,
+  c.sex,
+  c.marital_status,
+  c.location_text,
+  c.ubigeo_code,
+  c.mother_name,
+  c.father_name,
+  c.email,
+  NULLIF(c.person_ruc, '') AS person_ruc,
   NULLIF(c.org_ruc, '') AS org_ruc,
   NULLIF(c.org_name, '') AS org_name,
-  NULLIF(cp.trade_name, '') AS trade_name,
-  NULLIF(cp.company_type, '') AS company_type,
-  NULLIF(cp.status, '') AS org_status,
-  NULLIF(cp.condition, '') AS org_condition,
-  NULLIF(cp.fiscal_address, '') AS fiscal_address,
-  NULLIF(cp.registration_date, '') AS registration_date,
-  NULLIF(cp.activity_start_date, '') AS activity_start_date,
-  NULLIF(cp.line_of_business, '') AS line_of_business,
-  NULLIF(cp.economic_activity, '') AS economic_activity,
-  NULLIF(pcr.role_name, '') AS role_name,
-  NULLIF(pcr.role_start_date, '') AS role_start_date,
-  NULLIF(pcr.rep_doc_type, '') AS rep_doc_type,
-  NULLIF(pcr.rep_doc_number, '') AS rep_doc_number,
-  NULLIF(pcr.rep_name, '') AS rep_name,
+  NULLIF(c.trade_name, '') AS trade_name,
+  NULLIF(c.company_type, '') AS company_type,
+  NULLIF(c.org_status, '') AS org_status,
+  NULLIF(c.org_condition, '') AS org_condition,
+  NULLIF(c.fiscal_address, '') AS fiscal_address,
+  NULLIF(c.registration_date, '') AS registration_date,
+  NULLIF(c.activity_start_date, '') AS activity_start_date,
+  NULLIF(c.line_of_business, '') AS line_of_business,
+  NULLIF(c.economic_activity, '') AS economic_activity,
+  NULLIF(c.role_name, '') AS role_name,
+  NULLIF(c.role_start_date, '') AS role_start_date,
+  NULLIF(c.rep_doc_type, '') AS rep_doc_type,
+  NULLIF(c.rep_doc_number, '') AS rep_doc_number,
+  NULLIF(c.rep_name, '') AS rep_name,
   NULLIF(c.phone_primary, '') AS phone_primary,
   NULLIF(c.phone_secondary, '') AS phone_secondary";
-
-// The normalized-table JOIN chain. Assumes `c` aliases contacts_serving.
-// Shared by all query paths; enriched and exact-phone prepend their own driving join.
-pub const JOIN_CHAIN: &str = "
-LEFT JOIN person_profile pp ON pp.dni = c.dni
-LEFT JOIN company_profile cp ON cp.ruc = c.org_ruc
-LEFT JOIN person_company_role pcr
-  ON pcr.person_id = pp.person_id
-  AND pcr.company_id = cp.company_id
-  AND pcr.role_id = (
-    SELECT MIN(r2.role_id)
-    FROM person_company_role r2
-    WHERE r2.person_id = pp.person_id
-      AND r2.company_id = cp.company_id
-  )";
-
-// Standard base query is assembled in each query module via SELECT_COLUMNS + JOIN_CHAIN
-// using module-level LazyLock<String> statics.
 
 pub fn query_rows<P>(conn: &Connection, sql: &str, params: P) -> Result<Vec<SearchRow>, ApiError>
 where

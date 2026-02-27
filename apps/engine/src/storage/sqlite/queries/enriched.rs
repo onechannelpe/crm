@@ -1,4 +1,4 @@
-use super::common::{JOIN_CHAIN, SELECT_COLUMNS, db_err, map_row};
+use super::common::{SELECT_COLUMNS, db_err, map_row};
 use crate::errors::ApiError;
 use crate::storage::sqlite::models::SearchRow;
 use rusqlite::{Connection, Row, params};
@@ -14,7 +14,7 @@ static SQL_PHONE_ENRICHED: LazyLock<String> = LazyLock::new(|| {
     ELSE dpa.phones
   END AS sibling_phones
 FROM phone_index pi
-JOIN contacts_serving c ON c.id = pi.contact_id{JOIN_CHAIN}
+JOIN search_projection c ON c.id = pi.contact_id
 LEFT JOIN ruc_phone_agg rpa ON rpa.org_ruc = c.org_ruc
 LEFT JOIN dni_phone_agg dpa ON dpa.dni = c.dni
 WHERE pi.phone = ?1

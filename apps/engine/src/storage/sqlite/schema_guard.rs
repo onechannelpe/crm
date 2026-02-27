@@ -15,6 +15,7 @@ const REQUIRED_TABLES: &[&str] = &[
     "ruc_phone_agg",
     "dni_phone_agg",
 ];
+const REQUIRED_VIEWS: &[&str] = &["search_projection"];
 
 const SUPPORTED_PROJECTION_PATHS: &[&str] = &[
     "person.dni",
@@ -45,18 +46,16 @@ struct ProjectionField {
 
 pub fn validate(conn: &Connection) -> Result<(), StartupError> {
     for name in REQUIRED_TABLES {
-        let exists: Option<String> = conn
-            .query_row(
-                "SELECT name FROM sqlite_master WHERE type='table' AND name=?1",
-                [name],
-                |r| r.get(0),
-            )
-            .optional()
-            .map_err(|e| StartupError::Database(format!("schema check failed: {e}")))?;
-
-        if exists.is_none() {
+        if !sqlite_object_exists(conn, "table", name)? {
             return Err(StartupError::Database(format!(
                 "missing required table: {name}"
+            )));
+        }
+    }
+    for name in REQUIRED_VIEWS {
+        if !sqlite_object_exists(conn, "view", name)? {
+            return Err(StartupError::Database(format!(
+                "missing required view: {name}"
             )));
         }
     }
@@ -148,20 +147,36 @@ fn validate_required_columns(
 
 fn required_columns_for_path(path: &str) -> Option<&'static [(&'static str, &'static str)]> {
     match path {
-        "person.dni" => Some(&[("contacts_serving", "dni")]),
-        "person.name" => Some(&[("contacts_serving", "name")]),
-        "org.ruc" => Some(&[("contacts_serving", "org_ruc")]),
-        "org.name" => Some(&[("contacts_serving", "org_name")]),
-        "role.name" => Some(&[("person_company_role", "role_name")]),
-        "role.start_date" => Some(&[("person_company_role", "role_start_date")]),
-        "role.rep_doc_type" => Some(&[("person_company_role", "rep_doc_type")]),
-        "role.rep_doc_number" => Some(&[("person_company_role", "rep_doc_number")]),
-        "role.rep_name" => Some(&[("person_company_role", "rep_name")]),
-        "phones.primary" => Some(&[("contacts_serving", "phone_primary")]),
-        "phones.secondary" => Some(&[("contacts_serving", "phone_secondary")]),
+        "person.dni" => Some(&[("search_projection", "dni")]),
+        "person.name" => Some(&[("search_projection", "name")]),
+        "org.ruc" => Some(&[("search_projection", "org_ruc")]),
+        "org.name" => Some(&[("search_projection", "org_name")]),
+        "role.name" => Some(&[("search_projection", "role_name")]),
+        "role.start_date" => Some(&[("search_projection", "role_start_date")]),
+        "role.rep_doc_type" => Some(&[("search_projection", "rep_doc_type")]),
+        "role.rep_doc_number" => Some(&[("search_projection", "rep_doc_number")]),
+        "role.rep_name" => Some(&[("search_projection", "rep_name")]),
+        "phones.primary" => Some(&[("search_projection", "phone_primary")]),
+        "phones.secondary" => Some(&[("search_projection", "phone_secondary")]),
         "phones.siblings" => Some(&[("ruc_phone_agg", "phones"), ("dni_phone_agg", "phones")]),
         _ => None,
     }
+}
+
+fn sqlite_object_exists(
+    conn: &Connection,
+    object_type: &str,
+    name: &str,
+) -> Result<bool, StartupError> {
+    let exists: Option<String> = conn
+        .query_row(
+            "SELECT name FROM sqlite_master WHERE type=?1 AND name=?2",
+            (object_type, name),
+            |r| r.get(0),
+        )
+        .optional()
+        .map_err(|e| StartupError::Database(format!("schema check failed: {e}")))?;
+    Ok(exists.is_some())
 }
 
 fn table_has_column(conn: &Connection, table: &str, column: &str) -> Result<bool, StartupError> {

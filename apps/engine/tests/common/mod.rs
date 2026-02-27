@@ -94,6 +94,52 @@ pub fn create_test_db() -> tempfile::NamedTempFile {
 
         INSERT INTO contacts_fts(rowid, person_name, company_name)
         SELECT id, COALESCE(name,''), COALESCE(org_name,'') FROM contacts_serving;
+
+        CREATE VIEW search_projection AS
+        SELECT
+          cs.id AS id,
+          cs.dni AS dni,
+          cs.name AS name,
+          pp.birth_date AS birth_date,
+          pp.birth_place AS birth_place,
+          pp.sex AS sex,
+          pp.marital_status AS marital_status,
+          pp.location_text AS location_text,
+          pp.ubigeo_code AS ubigeo_code,
+          pp.mother_name AS mother_name,
+          pp.father_name AS father_name,
+          pp.email AS email,
+          pp.natural_ruc10 AS person_ruc,
+          cs.org_ruc AS org_ruc,
+          cs.org_name AS org_name,
+          cp.trade_name AS trade_name,
+          cp.company_type AS company_type,
+          cp.status AS org_status,
+          cp.condition AS org_condition,
+          cp.fiscal_address AS fiscal_address,
+          cp.registration_date AS registration_date,
+          cp.activity_start_date AS activity_start_date,
+          cp.line_of_business AS line_of_business,
+          cp.economic_activity AS economic_activity,
+          pcr.role_name AS role_name,
+          pcr.role_start_date AS role_start_date,
+          pcr.rep_doc_type AS rep_doc_type,
+          pcr.rep_doc_number AS rep_doc_number,
+          pcr.rep_name AS rep_name,
+          cs.phone_primary AS phone_primary,
+          cs.phone_secondary AS phone_secondary
+        FROM contacts_serving cs
+        LEFT JOIN person_profile pp ON pp.dni = cs.dni
+        LEFT JOIN company_profile cp ON cp.ruc = cs.org_ruc
+        LEFT JOIN person_company_role pcr
+          ON pcr.person_id = pp.person_id
+          AND pcr.company_id = cp.company_id
+          AND pcr.role_id = (
+            SELECT MIN(r2.role_id)
+            FROM person_company_role r2
+            WHERE r2.person_id = pp.person_id
+              AND r2.company_id = cp.company_id
+          );
         ",
     )
     .expect("seed db");

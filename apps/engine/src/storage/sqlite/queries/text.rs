@@ -1,4 +1,4 @@
-use super::common::{JOIN_CHAIN, SELECT_COLUMNS, query_rows};
+use super::common::{SELECT_COLUMNS, query_rows};
 use crate::errors::ApiError;
 use crate::storage::sqlite::models::SearchRow;
 use rusqlite::{Connection, params};
@@ -8,7 +8,7 @@ use std::sync::LazyLock;
 // selector (person_name: / company_name:) is part of the ?1 parameter.
 static SQL_FTS: LazyLock<String> = LazyLock::new(|| {
     format!(
-        "SELECT{SELECT_COLUMNS}\nFROM contacts_serving c{JOIN_CHAIN}\nJOIN contacts_fts f ON f.rowid = c.id WHERE contacts_fts MATCH ?1 LIMIT ?2"
+        "SELECT{SELECT_COLUMNS}\nFROM search_projection c\nJOIN contacts_fts f ON f.rowid = c.id WHERE contacts_fts MATCH ?1 LIMIT ?2"
     )
 });
 
