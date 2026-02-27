@@ -313,11 +313,33 @@ export function PersonDetailDrawer(props: PersonDetailDrawerProps) {
               />
               <Show when={role()}>
                 {(roleInfo) => (
-                  <FieldRow
-                    icon={<UserIcon size={16} />}
-                    label="Role"
-                    value={roleInfo().name}
-                  />
+                  <>
+                    <FieldRow
+                      icon={<UserIcon size={16} />}
+                      label="Role"
+                      value={roleInfo().name}
+                    />
+                    <FieldRow
+                      icon={<CalendarDaysIcon size={16} />}
+                      label="Role start"
+                      value={roleInfo().start_date}
+                    />
+                    <FieldRow
+                      icon={<UserIcon size={16} />}
+                      label="Representative"
+                      value={roleInfo().rep_name}
+                    />
+                    <FieldRow
+                      icon={<UserIcon size={16} />}
+                      label="Rep document type"
+                      value={roleInfo().rep_doc_type}
+                    />
+                    <FieldRow
+                      icon={<UserIcon size={16} />}
+                      label="Rep document number"
+                      value={roleInfo().rep_doc_number}
+                    />
+                  </>
                 )}
               </Show>
             </DetailSection>
@@ -344,6 +366,30 @@ export function CompanyDetailDrawer(props: CompanyDetailDrawerProps) {
   );
   const row = () => props.group.rows[0];
   const org = () => row().org;
+  const representatives = createMemo(() => {
+    const dedup = new Set<string>();
+    const items: Array<{
+      name: string;
+      roleName: string | null;
+      docType: string | null;
+      docNumber: string | null;
+    }> = [];
+
+    for (const searchRow of props.group.rows) {
+      const role = searchRow.role;
+      if (!role) continue;
+      const name = role.rep_name?.trim() || searchRow.person.name.trim();
+      const roleName = role.name?.trim() || null;
+      const docType = role.rep_doc_type?.trim() || null;
+      const docNumber = role.rep_doc_number?.trim() || null;
+      const key = `${name}|${roleName ?? ""}|${docType ?? ""}|${docNumber ?? ""}`;
+      if (!name || dedup.has(key)) continue;
+      dedup.add(key);
+      items.push({ name, roleName, docType, docNumber });
+    }
+
+    return items;
+  });
 
   return (
     <div class={styles.drawer}>
@@ -458,6 +504,30 @@ export function CompanyDetailDrawer(props: CompanyDetailDrawerProps) {
                 +{hiddenPeopleCount()} more
               </button>
             </Show>
+          </DetailSection>
+        </Show>
+
+        <Show when={representatives().length > 0}>
+          <DetailSection title="Representatives">
+            <For each={representatives()}>
+              {(representative) => (
+                <div class={styles.recordItem}>
+                  <span class={styles.recordItemMain}>
+                    {representative.name}
+                  </span>
+                  <span class={styles.recordItemMeta}>
+                    {[
+                      representative.roleName,
+                      representative.docType && representative.docNumber
+                        ? `${representative.docType} ${representative.docNumber}`
+                        : representative.docNumber,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </span>
+                </div>
+              )}
+            </For>
           </DetailSection>
         </Show>
 
