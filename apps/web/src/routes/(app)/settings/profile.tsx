@@ -34,7 +34,18 @@ export default function ProfilePage() {
 
   return (
     <div class={styles.content}>
-      <SettingsSection title="Name">
+      <SettingsSection title="Picture">
+        <div class={styles.pictureRow}>
+          <div class={styles.pictureAvatar}>
+            {user().fullName?.charAt(0) || user().email.charAt(0)}
+          </div>
+        </div>
+      </SettingsSection>
+
+      <SettingsSection
+        title="Name"
+        description="Your name as it will be displayed"
+      >
         <form
           onSubmit={(e) => {
             void saveProfile(e);
@@ -42,7 +53,7 @@ export default function ProfilePage() {
         >
           <div class={styles.formGrid}>
             <Input
-              label="Name"
+              label="Full name"
               value={profileName()}
               onInput={(e) => setProfileName(e.currentTarget.value)}
               required
@@ -63,8 +74,11 @@ export default function ProfilePage() {
         </form>
       </SettingsSection>
 
-      <SettingsSection title="Email">
-        <Input label="Email" value={user().email} disabled />
+      <SettingsSection
+        title="Email"
+        description="The email associated to your account"
+      >
+        <Input value={user().email} disabled />
       </SettingsSection>
     </div>
   );

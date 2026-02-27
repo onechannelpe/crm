@@ -23,6 +23,7 @@ import { getErrorMessage } from "~/lib/errors";
 import { totpStatusQuery } from "~/lib/queries/profile";
 import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
 
+import securityStyles from "./security-page.module.css";
 import styles from "./settings-page.module.css";
 
 export default function SecurityPage() {
@@ -177,7 +178,7 @@ export default function SecurityPage() {
           }
         >
           <div
-            class={`${styles.sectionActions} ${styles.sectionActionsSpaced}`}
+            class={`${styles.sectionActions} ${securityStyles.sectionActionsSpaced}`}
           >
             <Button
               variant="outline"
@@ -192,16 +193,19 @@ export default function SecurityPage() {
         </Show>
 
         <Show when={totpEnrollment()}>
-          <div class={styles.qrWrap}>
+          <div class={securityStyles.qrWrap}>
             <p class={styles.sectionDescription}>Scan the QR code.</p>
-            <div class={styles.qrContainer}>
+            <div class={securityStyles.qrContainer}>
               <img
                 src={totpEnrollment()?.qrCodeDataUrl}
-                class={styles.qr}
+                class={securityStyles.qr}
                 alt="QR Code"
               />
             </div>
-            <form onSubmit={(e) => void onVerifyTotp(e)} class={styles.qrInput}>
+            <form
+              onSubmit={(e) => void onVerifyTotp(e)}
+              class={securityStyles.qrInput}
+            >
               <Input
                 label="Verification code"
                 value={totpCode()}
@@ -215,17 +219,17 @@ export default function SecurityPage() {
         </Show>
 
         <Show when={recoveryCodes()}>
-          <div class={styles.recovery}>
-            <p class={styles.recoveryTitle}>Recovery codes</p>
+          <div class={securityStyles.recovery}>
+            <p class={securityStyles.recoveryTitle}>Recovery codes</p>
             <p class={styles.sectionDescription}>
               Save these codes in a safe place.
             </p>
-            <div class={styles.recoveryList}>
+            <div class={securityStyles.recoveryList}>
               <For each={recoveryCodes()}>
-                {(code) => <div class={styles.mono}>{code}</div>}
+                {(code) => <div class={securityStyles.mono}>{code}</div>}
               </For>
             </div>
-            <div class={styles.recoveryActions}>
+            <div class={securityStyles.recoveryActions}>
               <Button onClick={() => setRecoveryCodes(null)}>
                 I saved my codes
               </Button>
@@ -236,7 +240,9 @@ export default function SecurityPage() {
 
       <SettingsSection title="Passkeys">
         <SettingsCard title="Device passkey" icon={Phone} />
-        <div class={`${styles.sectionActions} ${styles.sectionActionsSpaced}`}>
+        <div
+          class={`${styles.sectionActions} ${securityStyles.sectionActionsSpaced}`}
+        >
           <Button
             variant="outline"
             disabled={!passkeySupported() || passkeyLoading()}

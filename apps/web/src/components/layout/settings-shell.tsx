@@ -31,8 +31,8 @@ export function SettingsShell(props: SettingsShellProps) {
   const { currentUser } = useSession();
   const [showAdvanced, setShowAdvanced] = createSignal(
     typeof window !== "undefined"
-      ? window.localStorage.getItem(ADVANCED_SETTINGS_STORAGE_KEY) === "true"
-      : false,
+      ? window.localStorage.getItem(ADVANCED_SETTINGS_STORAGE_KEY) !== "false"
+      : true,
   );
 
   const visibleItems = createMemo(() => {

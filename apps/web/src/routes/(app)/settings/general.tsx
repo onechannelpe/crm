@@ -11,6 +11,7 @@ import { updateProductPricingMutation } from "~/lib/mutations/settings";
 import { productCatalogQuery } from "~/lib/queries/settings";
 import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
 
+import generalStyles from "./general-page.module.css";
 import styles from "./settings-page.module.css";
 
 export default function SettingsGeneralPage() {
@@ -69,8 +70,8 @@ export default function SettingsGeneralPage() {
                     </span>
                   </div>
 
-                  <div class={styles.productEditorControls}>
-                    <div class={styles.productPriceField}>
+                  <div class={generalStyles.productEditorControls}>
+                    <div class={generalStyles.productPriceField}>
                       <Input
                         type="number"
                         min="0.01"
@@ -80,7 +81,7 @@ export default function SettingsGeneralPage() {
                         onInput={(event) => setPrice(event.currentTarget.value)}
                       />
                     </div>
-                    <div class={styles.productActiveToggle}>
+                    <div class={generalStyles.productActiveToggle}>
                       <Checkbox
                         label="Active"
                         checked={isActive()}
@@ -89,7 +90,7 @@ export default function SettingsGeneralPage() {
                         }
                       />
                     </div>
-                    <div class={styles.productSubmit}>
+                    <div class={generalStyles.productSubmit}>
                       <Button
                         type="submit"
                         disabled={isSaving(product.id)}
