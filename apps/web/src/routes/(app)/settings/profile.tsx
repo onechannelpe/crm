@@ -65,9 +65,9 @@ export default function ProfilePage() {
         fullName: profileName(),
         phoneE164: profilePhone(),
       }));
-      showToast("success", "Profile updated");
+      showToast("success", "Perfil actualizado");
     } catch (err: unknown) {
-      showToast("error", toMessage(err, "Failed to update profile"));
+      showToast("error", toMessage(err, "No se pudo actualizar el perfil"));
     } finally {
       setSavingProfile(false);
     }
@@ -95,7 +95,7 @@ export default function ProfilePage() {
         avatarUrl: updated.avatarUrl,
         avatarVersion: updated.avatarVersion,
       }));
-      showToast("success", "Profile picture updated");
+      showToast("success", "Foto de perfil actualizada");
 
       URL.revokeObjectURL(optimisticPreview);
       setAvatarPreviewUrl(null);
@@ -103,7 +103,7 @@ export default function ProfilePage() {
       URL.revokeObjectURL(optimisticPreview);
       setAvatarPreviewUrl(null);
 
-      const message = toMessage(error, "Failed to upload profile picture");
+      const message = toMessage(error, "No se pudo subir la foto de perfil");
       setAvatarError(message);
       showToast("error", message);
     }
@@ -126,9 +126,9 @@ export default function ProfilePage() {
         avatarUrl: null,
         avatarVersion: updated.avatarVersion,
       }));
-      showToast("success", "Profile picture removed");
+      showToast("success", "Foto de perfil eliminada");
     } catch (error: unknown) {
-      const message = toMessage(error, "Failed to remove profile picture");
+      const message = toMessage(error, "No se pudo eliminar la foto de perfil");
       setAvatarError(message);
       showToast("error", message);
     }
@@ -136,7 +136,7 @@ export default function ProfilePage() {
 
   return (
     <div class={styles.content}>
-      <SettingsSection title="Picture">
+      <SettingsSection title="Foto">
         <ProfileImageInput
           pictureUrl={avatarPreviewUrl() ?? avatarUrl()}
           initials={getUserInitials(profileName() || user().email)}
@@ -147,10 +147,7 @@ export default function ProfilePage() {
         />
       </SettingsSection>
 
-      <SettingsSection
-        title="Name"
-        description="Your name as it will be displayed"
-      >
+      <SettingsSection title="Nombre" description="Tu nombre, tal como se mostrará">
         <form
           onSubmit={(e) => {
             void saveProfile(e);
@@ -158,13 +155,13 @@ export default function ProfilePage() {
         >
           <div class={styles.formGrid}>
             <Input
-              label="Full name"
+              label="Nombre completo"
               value={profileName()}
               onInput={(e) => setProfileName(e.currentTarget.value)}
               required
             />
             <Input
-              label="Phone"
+              label="Teléfono"
               value={profilePhone()}
               onInput={(e) => setProfilePhone(e.currentTarget.value)}
               placeholder="+1 234 567 8900"
@@ -173,15 +170,15 @@ export default function ProfilePage() {
 
           <div class={styles.formActions}>
             <Button type="submit" disabled={savingProfile()}>
-              {savingProfile() ? "Saving..." : "Save"}
+              {savingProfile() ? "Guardando..." : "Guardar"}
             </Button>
           </div>
         </form>
       </SettingsSection>
 
       <SettingsSection
-        title="Email"
-        description="The email associated to your account"
+        title="Correo electrónico"
+        description="El correo asociado a tu cuenta"
       >
         <Input value={user().email} disabled />
       </SettingsSection>

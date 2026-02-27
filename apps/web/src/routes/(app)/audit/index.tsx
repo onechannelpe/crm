@@ -26,16 +26,16 @@ import styles from "./audit-page.module.css";
 
 const WINDOW_OPTIONS = [
   { value: 15, label: "15 min" },
-  { value: 60, label: "1 hour" },
-  { value: 240, label: "4 hours" },
-  { value: 1440, label: "24 hours" },
+  { value: 60, label: "1 hora" },
+  { value: 240, label: "4 horas" },
+  { value: 1440, label: "24 horas" },
 ] as const;
 
 const AUDIT_WINDOW_OPTIONS = [
-  { value: 240, label: "4 hours" },
-  { value: 1440, label: "24 hours" },
-  { value: 10080, label: "7 days" },
-  { value: 43200, label: "30 days" },
+  { value: 240, label: "4 horas" },
+  { value: 1440, label: "24 horas" },
+  { value: 10080, label: "7 días" },
+  { value: 43200, label: "30 días" },
 ] as const;
 
 function parseStatus(value: string): "all" | "ok" | "error" {
@@ -137,7 +137,7 @@ export default function AuditObservabilityPage() {
           <div class={styles.filterRow}>
             <div class={styles.fieldW44}>
               <Select
-                label="Window"
+                label="Ventana"
                 value={windowMinutes()}
                 onInput={(event) =>
                   setWindowMinutes(Number(event.currentTarget.value))
@@ -152,15 +152,15 @@ export default function AuditObservabilityPage() {
             </div>
             <div class={styles.fieldW40}>
               <Select
-                label="Status"
+                label="Estado"
                 value={status()}
                 onInput={(event) =>
                   setStatus(parseStatus(event.currentTarget.value))
                 }
               >
-                <option value="all">All</option>
+                <option value="all">Todos</option>
                 <option value="ok">OK</option>
-                <option value="error">Errors</option>
+                <option value="error">Errores</option>
               </Select>
             </div>
             <Button
@@ -168,7 +168,7 @@ export default function AuditObservabilityPage() {
                 void revalidate(observabilitySnapshotQuery.key);
               }}
             >
-              Refresh
+              Recargar
             </Button>
           </div>
         </div>
@@ -177,7 +177,7 @@ export default function AuditObservabilityPage() {
           <div class={styles.filterRow}>
             <div class={styles.fieldW44}>
               <Select
-                label="Audit window"
+                label="Ventana de auditoría"
                 value={auditWindowMinutes()}
                 onInput={(event) =>
                   setAuditWindowMinutes(Number(event.currentTarget.value))
@@ -192,7 +192,7 @@ export default function AuditObservabilityPage() {
             </div>
             <div class={styles.fieldW52}>
               <Input
-                label="Action"
+                label="Acción"
                 value={actionFilter()}
                 onInput={(event) => setActionFilter(event.currentTarget.value)}
                 placeholder="sales_record_confirmed"
@@ -200,7 +200,7 @@ export default function AuditObservabilityPage() {
             </div>
             <div class={styles.fieldW44}>
               <Input
-                label="Entity"
+                label="Entidad"
                 value={entityTypeFilter()}
                 onInput={(event) =>
                   setEntityTypeFilter(event.currentTarget.value)
@@ -219,7 +219,7 @@ export default function AuditObservabilityPage() {
               />
             </div>
             <Checkbox
-              label="High risk only"
+              label="Solo riesgo alto"
               checked={onlyHighRisk()}
               onInput={(event) => setOnlyHighRisk(event.currentTarget.checked)}
             />
@@ -228,21 +228,21 @@ export default function AuditObservabilityPage() {
                 void revalidate(auditReaderSnapshotQuery.key);
               }}
             >
-              Refresh audit
+              Recargar auditoría
             </Button>
           </div>
         </div>
 
         <section class={styles.section}>
-          <h2 class={styles.title}>Summary by action</h2>
+          <h2 class={styles.title}>Resumen por acción</h2>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Action</TableHead>
-                <TableHead>Executions</TableHead>
-                <TableHead>Errors</TableHead>
-                <TableHead>Average (ms)</TableHead>
-                <TableHead>Max (ms)</TableHead>
+                <TableHead>Acción</TableHead>
+                <TableHead>Ejecuciones</TableHead>
+                <TableHead>Errores</TableHead>
+                <TableHead>Promedio (ms)</TableHead>
+                <TableHead>Máximo (ms)</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -264,16 +264,16 @@ export default function AuditObservabilityPage() {
         </section>
 
         <section class={styles.section}>
-          <h2 class={styles.title}>Recent events</h2>
+          <h2 class={styles.title}>Eventos recientes</h2>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Time</TableHead>
-                <TableHead>Action</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Duration</TableHead>
+                <TableHead>Hora</TableHead>
+                <TableHead>Acción</TableHead>
+                <TableHead>Estado</TableHead>
+                <TableHead>Duración</TableHead>
                 <TableHead>Actor</TableHead>
-                <TableHead>Category</TableHead>
+                <TableHead>Categoría</TableHead>
                 <TableHead>Error</TableHead>
               </TableRow>
             </TableHeader>
@@ -304,15 +304,15 @@ export default function AuditObservabilityPage() {
         </section>
 
         <section class={styles.section}>
-          <h2 class={styles.title}>Audit transitions</h2>
+          <h2 class={styles.title}>Transiciones de auditoría</h2>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Time</TableHead>
-                <TableHead>Action</TableHead>
-                <TableHead>Entity</TableHead>
+                <TableHead>Hora</TableHead>
+                <TableHead>Acción</TableHead>
+                <TableHead>Entidad</TableHead>
                 <TableHead>Actor</TableHead>
-                <TableHead>Changes</TableHead>
+                <TableHead>Cambios</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -336,11 +336,11 @@ export default function AuditObservabilityPage() {
         </section>
 
         <section class={styles.section}>
-          <h2 class={styles.title}>Audit risk policies</h2>
+          <h2 class={styles.title}>Políticas de riesgo</h2>
           <div class={styles.filterRow}>
             <div class={styles.fieldW52}>
               <Input
-                label="Action"
+                label="Acción"
                 value={policyAction()}
                 onInput={(event) => setPolicyAction(event.currentTarget.value)}
                 placeholder="leads_requested"
@@ -348,19 +348,19 @@ export default function AuditObservabilityPage() {
             </div>
             <div class={styles.fieldW36}>
               <Select
-                label="Risk level"
+                label="Nivel de riesgo"
                 value={policyRiskLevel()}
                 onInput={(event) =>
                   setPolicyRiskLevel(parseRiskLevel(event.currentTarget.value))
                 }
               >
-                <option value="high">high</option>
-                <option value="medium">medium</option>
-                <option value="low">low</option>
+                <option value="high">alto</option>
+                <option value="medium">medio</option>
+                <option value="low">bajo</option>
               </Select>
             </div>
             <Checkbox
-              label="Active"
+              label="Activo"
               checked={policyIsActive()}
               onInput={(event) =>
                 setPolicyIsActive(event.currentTarget.checked)
@@ -372,7 +372,7 @@ export default function AuditObservabilityPage() {
                 void savePolicy();
               }}
             >
-              Save policy
+              Guardar política
             </Button>
           </div>
           <p class={styles.helperText}>

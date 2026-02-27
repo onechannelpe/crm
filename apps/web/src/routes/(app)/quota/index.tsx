@@ -50,7 +50,7 @@ export default function QuotaPage() {
           await allocateQuota(targetExecutiveId, safeAmount);
         },
       });
-      showToast("success", "Quota assigned");
+      showToast("success", "Cuota asignada");
       setExecId("");
       setAmount("10");
     } catch (err: unknown) {
@@ -66,7 +66,7 @@ export default function QuotaPage() {
             when={quotaValues()}
             fallback={
               <div>
-                <p class={styles.muted}>No quota assigned yet.</p>
+                <p class={styles.muted}>Sin cuota asignada aún.</p>
               </div>
             }
           >
@@ -79,7 +79,7 @@ export default function QuotaPage() {
         </div>
 
         <div>
-          <h3 class={`${styles.title} ${styles.titleSpaced}`}>Assign quota</h3>
+          <h3 class={`${styles.title} ${styles.titleSpaced}`}>Asignar cuota</h3>
           <form
             onSubmit={(e) => {
               void handleAllocate(e);
@@ -88,7 +88,7 @@ export default function QuotaPage() {
           >
             <Input
               type="number"
-              label="Executive ID"
+              label="ID de ejecutivo"
               value={execId()}
               onInput={(e) => setExecId(e.currentTarget.value)}
               required
@@ -96,7 +96,7 @@ export default function QuotaPage() {
 
             <Input
               type="number"
-              label="Lead amount"
+              label="Cantidad de clientes"
               value={amount()}
               onInput={(e) => setAmount(e.currentTarget.value)}
               min="1"
@@ -109,7 +109,7 @@ export default function QuotaPage() {
               disabled={allocating.pending}
               class={styles.full}
             >
-              {allocating.pending ? "Assigning..." : "Assign quota"}
+              {allocating.pending ? "Asignando..." : "Asignar cuota"}
             </Button>
           </form>
         </div>

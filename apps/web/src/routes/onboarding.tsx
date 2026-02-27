@@ -108,9 +108,9 @@ export default function OnboardingPage() {
         class={`${authStyles.panel} ${authStyles.panelXl} ${styles.panel}`}
       >
         <div>
-          <h1 class={authStyles.title}>Complete your profile</h1>
+          <h1 class={authStyles.title}>Completa tu perfil</h1>
           <p class={authStyles.muted}>
-            Confirm your profile details and primary phone number.
+            Confirma tus detalles de perfil y número de teléfono principal.
           </p>
         </div>
 
@@ -126,7 +126,7 @@ export default function OnboardingPage() {
                 <Input
                   id="onboarding-email"
                   type="email"
-                  label="Email"
+                  label="Correo electrónico"
                   value={currentUser().email}
                   disabled
                 />
@@ -136,7 +136,7 @@ export default function OnboardingPage() {
                 <Input
                   id="onboarding-name"
                   type="text"
-                  label="Full name"
+                  label="Nombre completo"
                   value={fullName()}
                   onInput={(e) => setFullName(e.currentTarget.value)}
                   required
@@ -147,7 +147,7 @@ export default function OnboardingPage() {
                 <Input
                   id="onboarding-phone"
                   type="tel"
-                  label="WhatsApp (E.164, ex: +51987654321)"
+                  label="WhatsApp (ej: +51987654321)"
                   value={phone()}
                   onInput={(e) => setPhone(e.currentTarget.value)}
                   required

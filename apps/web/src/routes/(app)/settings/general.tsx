@@ -39,7 +39,7 @@ export default function SettingsGeneralPage() {
           await saveProduct(productId, numericPrice, isActive);
         },
       });
-      showToast("success", "Product updated");
+      showToast("success", "Producto actualizado");
     } catch (err: unknown) {
       showToast("error", getErrorMessage(err, "Failed to update product"));
     }
@@ -47,7 +47,7 @@ export default function SettingsGeneralPage() {
 
   return (
     <div class={styles.content}>
-      <SettingsSection title="Product pricing">
+      <SettingsSection title="Precios de productos">
         <div class={styles.card}>
           <For each={currentProducts()}>
             {(product) => {
@@ -76,14 +76,14 @@ export default function SettingsGeneralPage() {
                         type="number"
                         min="0.01"
                         step="0.01"
-                        label="Unit price"
+                        label="Precio unitario"
                         value={price()}
                         onInput={(event) => setPrice(event.currentTarget.value)}
                       />
                     </div>
                     <div class={generalStyles.productActiveToggle}>
                       <Checkbox
-                        label="Active"
+                        label="Activo"
                         checked={isActive()}
                         onInput={(event) =>
                           setIsActive(event.currentTarget.checked)
@@ -96,7 +96,7 @@ export default function SettingsGeneralPage() {
                         disabled={isSaving(product.id)}
                         size="sm"
                       >
-                        {isSaving(product.id) ? "Saving..." : "Save"}
+                        {isSaving(product.id) ? "Guardando..." : "Guardar"}
                       </Button>
                     </div>
                   </div>

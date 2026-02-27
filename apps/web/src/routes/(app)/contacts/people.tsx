@@ -35,10 +35,10 @@ const PEOPLE_SEARCH_TYPES = [
 ] as const;
 
 const COLUMNS = [
-  { label: "Name" },
+  { label: "Nombre" },
   { label: "DNI" },
-  { label: "Companies" },
-  { label: "Phones" },
+  { label: "Empresas" },
+  { label: "Teléfonos" },
 ];
 const PILL_PAGE_SIZE = 3;
 
@@ -141,7 +141,7 @@ export default function ClientSearchPeoplePage() {
   return (
     <ContactsSearchLayout
       activeTab="people"
-      placeholder="Name, DNI, company, RUC or phone"
+      placeholder="Nombre, DNI, empresa, RUC o teléfono"
       controller={controller}
       inferType={inferPeopleSearchType}
       columns={COLUMNS}
@@ -200,7 +200,7 @@ export default function ClientSearchPeoplePage() {
       )}
       footerLeft={() => (
         <>
-          Unique DNIs{" "}
+          DNI únicos{" "}
           <span class={styles.footerStrong}>
             {new Set(rows().map((r) => r.dni)).size}
           </span>
@@ -208,7 +208,7 @@ export default function ClientSearchPeoplePage() {
       )}
       footerRight={() => (
         <>
-          People <span class={styles.footerStrong}>{rows().length}</span>
+          Personas <span class={styles.footerStrong}>{rows().length}</span>
         </>
       )}
     />

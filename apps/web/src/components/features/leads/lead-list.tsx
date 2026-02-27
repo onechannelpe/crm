@@ -76,16 +76,16 @@ export const LeadList: Component<LeadListProps> = (props) => {
       when={props.contacts.length > 0}
       fallback={
         <EmptyState
-          title="No active leads"
-          description="Request new leads to fill the queue."
+          title="Sin clientes activos"
+          description="Solicita nuevos clientes para llenar la cola."
         />
       }
     >
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Lead ({props.contacts.length})</TableHead>
-            <TableHead>Phone</TableHead>
+            <TableHead>Cliente ({props.contacts.length})</TableHead>
+            <TableHead>Teléfono</TableHead>
             <TableHead
               onClick={() => setSortAsc((prev) => !prev)}
               style={{ cursor: "pointer", "user-select": "none" }}
@@ -93,7 +93,7 @@ export const LeadList: Component<LeadListProps> = (props) => {
               <div
                 style={{ display: "flex", "align-items": "center", gap: "4px" }}
               >
-                Organization
+                Organización
                 {sortAsc() ? (
                   <ChevronUp size={14} />
                 ) : (
@@ -101,7 +101,7 @@ export const LeadList: Component<LeadListProps> = (props) => {
                 )}
               </div>
             </TableHead>
-            <TableHead>Actions</TableHead>
+            <TableHead>Acciones</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -122,7 +122,7 @@ export const LeadList: Component<LeadListProps> = (props) => {
                 <TableCell>
                   <div class={styles.inlineInfo}>
                     <Phone size={14} />
-                    <span>{lead.phone_primary || "No phone"}</span>
+                    <span>{lead.phone_primary || "Sin teléfono"}</span>
                   </div>
                 </TableCell>
                 <TableCell>
@@ -142,7 +142,7 @@ export const LeadList: Component<LeadListProps> = (props) => {
                           contactId: lead.contactId,
                         })
                       }
-                      aria-label="Register call"
+                      aria-label="Registrar llamada"
                     >
                       <Check size={16} />
                     </Button>

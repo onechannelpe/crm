@@ -17,9 +17,9 @@ import { inventoryItemsQuery } from "~/lib/queries/inventory";
 import styles from "./inventory-page.module.css";
 
 const statusLabels: Record<string, string> = {
-  available: "Available",
-  reserved: "Reserved",
-  sold: "Sold",
+  available: "Disponible",
+  reserved: "Reservado",
+  sold: "Vendido",
 };
 
 const statusVariant = (status: string) => {
@@ -44,17 +44,17 @@ export default function InventoryPage() {
         when={items().length > 0}
         fallback={
           <EmptyState
-            title="No inventory records"
-            description="Items will appear here when available."
+            title="Sin registros de inventario"
+            description="Los artículos aparecerán aquí cuando estén disponibles."
           />
         }
       >
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Product</TableHead>
-              <TableHead>Serial number</TableHead>
-              <TableHead>Category</TableHead>
+              <TableHead>Producto</TableHead>
+              <TableHead>Número de serie</TableHead>
+              <TableHead>Categoría</TableHead>
               <TableHead>Status</TableHead>
             </TableRow>
           </TableHeader>

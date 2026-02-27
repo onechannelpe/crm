@@ -30,11 +30,11 @@ import { formatDate } from "~/lib/utils";
 import styles from "./confirmations-page.module.css";
 
 const ATTEMPT_OUTCOMES = [
-  { value: "no_answer", label: "No answer" },
-  { value: "callback_scheduled", label: "Callback scheduled" },
-  { value: "validated", label: "Validated" },
-  { value: "invalid_data", label: "Invalid data" },
-  { value: "rejected", label: "Rejected" },
+  { value: "no_answer", label: "No respondió" },
+  { value: "callback_scheduled", label: "Llamada programada" },
+  { value: "validated", label: "Validado" },
+  { value: "invalid_data", label: "Datos inválidos" },
+  { value: "rejected", label: "Rechazado" },
 ] as const;
 
 function isAttemptOutcome(
@@ -71,9 +71,9 @@ export default function SalesConfirmationsPage() {
           await confirmRecord(noteId);
         },
       });
-      showToast("success", `Sale #${noteId} confirmed`);
+      showToast("success", `Venta #${noteId} confirmada`);
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "Approval failed"));
+      showToast("error", getErrorMessage(err, "No se pudo confirmar la venta"));
     }
   };
 
@@ -91,10 +91,10 @@ export default function SalesConfirmationsPage() {
           await rejectRecord(noteId, reason);
         },
       });
-      showToast("success", `Sale #${noteId} rejected`);
+      showToast("success", `Venta #${noteId} rechazada`);
       setRejectingNoteId(null);
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "Rejection failed"));
+      showToast("error", getErrorMessage(err, "No se pudo rechazar la venta"));
     }
   };
 
@@ -114,7 +114,7 @@ export default function SalesConfirmationsPage() {
         nextAttemptAtValue.length > 0 &&
         (Number.isNaN(parsedNextAttemptAt) || parsedNextAttemptAt === null)
       ) {
-        showToast("error", "Next attempt date is invalid");
+        showToast("error", "La fecha del próximo intento no es válida");
         return;
       }
 
@@ -124,10 +124,10 @@ export default function SalesConfirmationsPage() {
         attemptNotes().trim() || null,
         parsedNextAttemptAt,
       );
-      showToast("success", `Attempt logged for sale #${noteId}`);
+      showToast("success", `Intento registrado para la venta #${noteId}`);
       resetAttemptState();
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "Attempt logging failed"));
+      showToast("error", getErrorMessage(err, "No se pudo registrar el intento"));
     }
   };
 
@@ -137,15 +137,15 @@ export default function SalesConfirmationsPage() {
         when={currentNotes().length > 0}
         fallback={
           <EmptyState
-            title="No sales pending confirmation"
-            description="Submitted sales will appear here."
+            title="No hay ventas pendientes de confirmación"
+            description="Las ventas enviadas aparecerán aquí."
           />
         }
       >
         <Show when={rejectingNoteId()}>
           {(id) => (
             <section class={styles.rejectPanel}>
-              <h2 class={styles.rejectTitle}>Reject sale #{id()}</h2>
+              <h2 class={styles.rejectTitle}>Rechazar venta #{id()}</h2>
               <RejectionForm
                 onReject={(rejections) => handleReject(id(), rejections)}
                 onCancel={() => setRejectingNoteId(null)}
@@ -156,7 +156,9 @@ export default function SalesConfirmationsPage() {
         <Show when={attemptingNoteId()}>
           {(id) => (
             <section class={styles.attemptPanel}>
-              <h2 class={styles.attemptTitle}>Log attempt for sale #{id()}</h2>
+              <h2 class={styles.attemptTitle}>
+                Registrar intento para venta #{id()}
+              </h2>
               <div class={styles.attemptFields}>
                 <Select
                   value={attemptOutcome()}
@@ -173,12 +175,12 @@ export default function SalesConfirmationsPage() {
                 </Select>
                 <Input
                   type="datetime-local"
-                  label="Next attempt at (optional)"
+                  label="Próximo intento (opcional)"
                   value={nextAttemptAt()}
                   onInput={(e) => setNextAttemptAt(e.currentTarget.value)}
                 />
                 <Textarea
-                  label="Notes (optional)"
+                  label="Notas (opcional)"
                   value={attemptNotes()}
                   onInput={(e) => setAttemptNotes(e.currentTarget.value)}
                   rows={3}
@@ -189,7 +191,7 @@ export default function SalesConfirmationsPage() {
                     variant="secondary"
                     onClick={() => resetAttemptState()}
                   >
-                    Cancel
+                    Cancelar
                   </Button>
                   <Button
                     size="sm"
@@ -197,7 +199,7 @@ export default function SalesConfirmationsPage() {
                       void handleAttempt(id());
                     }}
                   >
-                    Save attempt
+                    Guardar intento
                   </Button>
                 </div>
               </div>
@@ -208,10 +210,10 @@ export default function SalesConfirmationsPage() {
           <TableHeader>
             <TableRow>
               <TableHead>ID</TableHead>
-              <TableHead>Contact</TableHead>
-              <TableHead>Owner</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead class={styles.actionsHead}>Actions</TableHead>
+              <TableHead>Contacto</TableHead>
+              <TableHead>Responsable</TableHead>
+              <TableHead>Fecha</TableHead>
+              <TableHead class={styles.actionsHead}>Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -238,14 +240,14 @@ export default function SalesConfirmationsPage() {
                           void handleApprove(note.id);
                         }}
                       >
-                        Confirm
+                        Confirmar
                       </Button>
                       <Button
                         size="sm"
                         variant="destructive"
                         onClick={() => setRejectingNoteId(note.id)}
                       >
-                        Reject
+                        Rechazar
                       </Button>
                       <Button
                         size="sm"
@@ -254,7 +256,7 @@ export default function SalesConfirmationsPage() {
                           setAttemptingNoteId(note.id);
                         }}
                       >
-                        Log attempt
+                        Registrar intento
                       </Button>
                     </div>
                   </TableCell>
