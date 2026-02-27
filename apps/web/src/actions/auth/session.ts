@@ -103,7 +103,7 @@ export async function getMe(): Promise<CurrentUser | null> {
     fullName: user.full_name,
     phoneE164: user.phone_e164,
     avatarUrl: user.avatar_storage_key
-      ? `/api/settings/profile/picture?v=${user.avatar_version}`
+      ? `/api/me/avatar?v=${user.avatar_version}`
       : null,
     avatarVersion: user.avatar_version,
     onboardingCompletedAt: user.onboarding_completed_at,

@@ -1,5 +1,6 @@
 import { Show } from "solid-js";
 
+import { Avatar } from "~/components/ui/display/avatar";
 import { Button } from "~/components/ui/input/button";
 
 import styles from "./profile-image-input.module.css";
@@ -8,6 +9,7 @@ interface ProfileImageInputProps {
   pictureUrl: string | null;
   initials: string;
   uploading: boolean;
+  errorMessage?: string | null;
   onUpload: (file: File) => Promise<void>;
   onRemove: () => Promise<void>;
 }
@@ -42,14 +44,13 @@ export function ProfileImageInput(props: ProfileImageInputProps) {
         onClick={openFilePicker}
         disabled={props.uploading}
       >
-        <Show
-          when={props.pictureUrl}
-          fallback={<span class={styles.initials}>{props.initials}</span>}
-        >
-          {(url) => (
-            <img src={url()} alt="profile" class={styles.previewImage} />
-          )}
-        </Show>
+        <Avatar
+          imageUrl={props.pictureUrl}
+          fallback={props.initials}
+          class={styles.previewAvatar}
+          imageClass={styles.previewImage}
+          fallbackClass={styles.initials}
+        />
       </button>
 
       <div class={styles.controls}>
@@ -89,6 +90,9 @@ export function ProfileImageInput(props: ProfileImageInputProps) {
         <p class={styles.helpText}>
           We support your square PNGs, JPEGs and GIFs under 10MB
         </p>
+        <Show when={props.errorMessage}>
+          {(message) => <p class={styles.errorText}>{message()}</p>}
+        </Show>
       </div>
     </div>
   );
