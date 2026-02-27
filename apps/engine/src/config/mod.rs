@@ -8,8 +8,8 @@ pub struct Config {
     pub port: u16,
     pub db_path: String,
     pub hmac_secret: String,
+    pub hmac_max_skew_secs: i64,
     pub rate_limit_per_ip: u32,
-    pub search_timeout_ms: u64,
     pub max_limit: usize,
 }
 
@@ -32,21 +32,27 @@ impl Config {
             port: env::var("ENGINE_PORT")
                 .unwrap_or_else(|_| "3001".into())
                 .parse()
-                .unwrap_or(3001),
+                .map_err(|_| {
+                    StartupError::Config("ENGINE_PORT must be a valid port number".into())
+                })?,
             db_path,
             hmac_secret,
+            hmac_max_skew_secs: env::var("ENGINE_HMAC_MAX_SKEW_SECS")
+                .unwrap_or_else(|_| "60".into())
+                .parse()
+                .map_err(|_| {
+                    StartupError::Config("ENGINE_HMAC_MAX_SKEW_SECS must be an integer".into())
+                })?,
             rate_limit_per_ip: env::var("ENGINE_RATE_LIMIT_PER_IP")
                 .unwrap_or_else(|_| "120".into())
                 .parse()
-                .unwrap_or(120),
-            search_timeout_ms: env::var("ENGINE_SEARCH_TIMEOUT_MS")
-                .unwrap_or_else(|_| "2000".into())
-                .parse()
-                .unwrap_or(2000),
+                .map_err(|_| {
+                    StartupError::Config("ENGINE_RATE_LIMIT_PER_IP must be an integer".into())
+                })?,
             max_limit: env::var("ENGINE_MAX_LIMIT")
                 .unwrap_or_else(|_| "100".into())
                 .parse()
-                .unwrap_or(100),
+                .map_err(|_| StartupError::Config("ENGINE_MAX_LIMIT must be an integer".into()))?,
         })
     }
 }

@@ -46,8 +46,14 @@ async fn search_phone_enriched_returns_siblings() {
     response.assert_status_ok();
     let payload = response.json::<serde_json::Value>();
     assert_eq!(payload["count"], 1);
-    assert_eq!(payload["results"][0]["org_name"], "ACME SAC");
-    assert!(payload["results"][0]["sibling_phones"].as_array().is_some());
+    assert_eq!(payload["results"][0]["person"]["dni"], "12345678");
+    assert_eq!(payload["results"][0]["org"]["name"], "ACME SAC");
+    assert_eq!(payload["results"][0]["role"]["name"], "GERENTE GENERAL");
+    assert!(
+        payload["results"][0]["phones"]["siblings"]
+            .as_array()
+            .is_some()
+    );
 }
 
 #[tokio::test]
