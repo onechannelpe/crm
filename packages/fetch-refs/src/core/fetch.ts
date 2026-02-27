@@ -80,7 +80,6 @@ function sparseCheckout(
   );
   if (!remoteResult.ok) return remoteResult;
 
-  // Write the sparse-checkout filter after git init creates .git/
   writeFileSync(`${tempDir}/.git/info/sparse-checkout`, paths.join("\n"));
 
   const pullResult = run(

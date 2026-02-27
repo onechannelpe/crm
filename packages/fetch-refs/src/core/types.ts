@@ -20,7 +20,7 @@ export interface IndexConfig {
   markerStart: string;
   markerEnd: string;
   /** Keep only the returned subset of files in the generated index. */
-  filter?: (files: SourceFile[]) => SourceFile[];
+  filter?: (files: SourceFileInfo[]) => SourceFileInfo[];
 }
 
 export interface SourceConfig {
@@ -34,17 +34,8 @@ export interface SourceConfig {
   index?: IndexConfig;
 }
 
-// ---------------------------------------------------------------------------
-// Internal types used by index-builder
-// ---------------------------------------------------------------------------
-
-export interface SourceFile {
+export interface SourceFileInfo {
   relativePath: string;
   category?: string;
   name: string;
-}
-
-export interface SourceSection {
-  directory: string;
-  files: string[];
 }

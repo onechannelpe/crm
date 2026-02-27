@@ -2,12 +2,17 @@ import { dirname, basename } from "node:path";
 
 import { Glob } from "bun";
 
-import type { SourceFile, SourceSection } from "./types.ts";
+import type { SourceFileInfo } from "./types.ts";
+
+interface SourceSection {
+  directory: string;
+  files: string[];
+}
 
 export async function buildCompactIndex(
   localPath: string,
   sourceName: string,
-  filter?: (files: SourceFile[]) => SourceFile[],
+  filter?: (files: SourceFileInfo[]) => SourceFileInfo[],
 ): Promise<string> {
   const files = await collectSourceFiles(localPath, filter);
   const sections = groupIntoSections(files);
@@ -16,10 +21,10 @@ export async function buildCompactIndex(
 
 async function collectSourceFiles(
   localPath: string,
-  filter?: (files: SourceFile[]) => SourceFile[],
-): Promise<SourceFile[]> {
+  filter?: (files: SourceFileInfo[]) => SourceFileInfo[],
+): Promise<SourceFileInfo[]> {
   const glob = new Glob("**/*.{md,mdx}");
-  const files: SourceFile[] = [];
+  const files: SourceFileInfo[] = [];
 
   for await (const file of glob.scan(localPath)) {
     const relativePath = file.replace(/\\/g, "/");
@@ -33,7 +38,7 @@ async function collectSourceFiles(
   return filter ? filter(files) : files;
 }
 
-function groupIntoSections(files: SourceFile[]): SourceSection[] {
+function groupIntoSections(files: SourceFileInfo[]): SourceSection[] {
   const tree = new Map<string, Set<string>>();
 
   for (const file of files) {
