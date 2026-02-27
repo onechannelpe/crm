@@ -1,4 +1,10 @@
-import { A, createAsync, revalidate, useAction } from "@solidjs/router";
+import {
+  A,
+  createAsync,
+  revalidate,
+  useAction,
+  useSubmission,
+} from "@solidjs/router";
 import {
   createEffect,
   createMemo,
@@ -28,131 +34,10 @@ import styles from "./contact-detail-drawer.module.css";
 const PANEL_PAGE_SIZE = 5;
 const ENRICHMENT_POLL_MS = 3_000;
 
-interface EnrichmentDocumentEntry {
-  documentType: "dni" | "ruc";
-  documentValue: string;
-  label: string;
-}
-
 export type OverlayChangeHandler = (
   key: string,
   overlay: SearchEnrichmentOverlay | null,
 ) => void;
-
-interface EnrichmentCardProps {
-  entry: EnrichmentDocumentEntry;
-  onOverlayChange?: OverlayChangeHandler;
-}
-
-function EnrichmentCard(props: EnrichmentCardProps) {
-  const key = () => `${props.entry.documentType}:${props.entry.documentValue}`;
-
-  const status = createAsync(
-    () =>
-      enrichmentStatusQuery(
-        props.entry.documentType,
-        props.entry.documentValue,
-      ),
-    { deferStream: true },
-  );
-
-  const requestEnrichment = useAction(requestEnrichmentMutation);
-  const [requesting, setRequesting] = createSignal(false);
-
-  createEffect(() => {
-    const overlay = status()?.overlay ?? null;
-    props.onOverlayChange?.(key(), overlay);
-  });
-
-  createEffect(() => {
-    const s = status()?.status;
-    if (s !== "queued" && s !== "running") return;
-    const timer = setInterval(() => {
-      void revalidate(
-        enrichmentStatusQuery.keyFor(
-          props.entry.documentType,
-          props.entry.documentValue,
-        ),
-      );
-    }, ENRICHMENT_POLL_MS);
-    onCleanup(() => clearInterval(timer));
-  });
-
-  const overlayDisplay = () =>
-    props.entry.documentType === "dni"
-      ? (status()?.overlay?.fullName ?? null)
-      : (status()?.overlay?.legalName ?? null);
-
-  const blocked = () => {
-    const s = status()?.status;
-    return requesting() || s === "queued" || s === "running";
-  };
-
-  const handleRequest = async () => {
-    setRequesting(true);
-    try {
-      await requestEnrichment(
-        props.entry.documentType,
-        props.entry.documentValue,
-      );
-    } finally {
-      setRequesting(false);
-    }
-  };
-
-  return (
-    <div class={styles.enrichmentCard}>
-      <div class={styles.enrichmentTop}>
-        <span class={styles.enrichmentDoc}>
-          {props.entry.label}: {props.entry.documentValue}
-        </span>
-        <span class={styles.enrichmentStatus}>
-          {status()?.status ?? "idle"}
-        </span>
-      </div>
-      <Show when={overlayDisplay()}>
-        {(value) => <div class={styles.enrichmentValue}>{value()}</div>}
-      </Show>
-      <Show when={status()?.lastError}>
-        {(error) => (
-          <div class={styles.enrichmentError} title={error()}>
-            {error()}
-          </div>
-        )}
-      </Show>
-      <div class={styles.enrichmentActions}>
-        <button
-          type="button"
-          class={styles.enrichmentButton}
-          disabled={blocked()}
-          onClick={() => void handleRequest()}
-        >
-          {requesting() ? "Queuing..." : "Request"}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-interface EnrichmentSectionProps {
-  entries: readonly EnrichmentDocumentEntry[];
-  onOverlayChange?: OverlayChangeHandler;
-}
-
-function EnrichmentSection(props: EnrichmentSectionProps) {
-  return (
-    <DetailSection title="Enrichment">
-      <For each={props.entries}>
-        {(entry) => (
-          <EnrichmentCard
-            entry={entry}
-            onOverlayChange={props.onOverlayChange}
-          />
-        )}
-      </For>
-    </DetailSection>
-  );
-}
 
 interface FieldRowProps {
   label: string;
@@ -252,16 +137,48 @@ interface DrawerHeaderProps {
   subtitle?: string | null;
   onClose: () => void;
   squareAvatar?: boolean;
+  enrichment?: {
+    status: string | null | undefined;
+    onRequest: () => void;
+  };
 }
 
 function DrawerHeader(props: DrawerHeaderProps) {
+  const squareClass = () =>
+    props.squareAvatar ? ` ${styles.headerAvatarSquare}` : "";
+  const enrichStatus = () => props.enrichment?.status;
+  const isProcessing = () =>
+    enrichStatus() === "queued" || enrichStatus() === "running";
+  // Clickable when enrichment is available and not already completed or in-flight
+  const clickableEnrichment = () =>
+    props.enrichment && !isProcessing() && enrichStatus() !== "completed"
+      ? props.enrichment
+      : null;
+
   return (
     <header class={styles.header}>
-      <span
-        class={`${styles.headerAvatar}${props.squareAvatar ? ` ${styles.headerAvatarSquare}` : ""}`}
+      <Show
+        when={clickableEnrichment()}
+        fallback={
+          <span
+            class={`${styles.headerAvatar}${squareClass()}${isProcessing() ? ` ${styles.headerAvatarPending}` : ""}`}
+          >
+            {props.initial}
+          </span>
+        }
       >
-        {props.initial}
-      </span>
+        {(enrich) => (
+          <button
+            type="button"
+            class={`${styles.headerAvatar}${squareClass()} ${styles.headerAvatarClickable}`}
+            onClick={enrich().onRequest}
+            title="Solicitar enriquecimiento"
+            aria-label="Solicitar enriquecimiento"
+          >
+            {props.initial}
+          </button>
+        )}
+      </Show>
       <div class={styles.headerInfo}>
         <div class={styles.headerName} title={props.title}>
           {props.title}
@@ -296,34 +213,88 @@ export function PersonDetailDrawer(props: PersonDetailDrawerProps) {
   const person = () => row().person;
   const org = () => row().org;
   const role = () => row().role;
-  const enrichmentEntries = createMemo<EnrichmentDocumentEntry[]>(() => {
-    const entries: EnrichmentDocumentEntry[] = [
-      {
-        documentType: "dni",
-        documentValue: person().dni,
-        label: "DNI",
-      },
-    ];
-    const ruc = org()?.ruc?.trim();
-    if (ruc) {
-      entries.push({
-        documentType: "ruc",
-        documentValue: ruc,
-        label: "RUC",
-      });
-    }
-    return entries;
+  const orgRuc = () => org()?.ruc?.trim() ?? null;
+
+  // DNI enrichment — drives the avatar and fixes '—' title
+  const dniStatus = createAsync(
+    () => enrichmentStatusQuery("dni", person().dni),
+    { deferStream: true },
+  );
+  // RUC enrichment — watched passively so onOverlayChange propagates to table
+  const rucStatus = createAsync(
+    () => {
+      const ruc = orgRuc();
+      return ruc ? enrichmentStatusQuery("ruc", ruc) : Promise.resolve(null);
+    },
+    { deferStream: true },
+  );
+
+  const requestEnrichment = useAction(requestEnrichmentMutation);
+  const dniSubmission = useSubmission(
+    requestEnrichmentMutation,
+    (input) => input[0] === "dni" && input[1] === person().dni,
+  );
+
+  createEffect(() => {
+    props.onOverlayChange?.(
+      `dni:${person().dni}`,
+      dniStatus()?.overlay ?? null,
+    );
   });
+  createEffect(() => {
+    const ruc = orgRuc();
+    if (!ruc) return;
+    props.onOverlayChange?.(`ruc:${ruc}`, rucStatus()?.overlay ?? null);
+  });
+
+  createEffect(() => {
+    const s = dniStatus()?.status;
+    if (s !== "queued" && s !== "running") return;
+    const dni = person().dni;
+    const timer = setInterval(
+      () => void revalidate(enrichmentStatusQuery.keyFor("dni", dni)),
+      ENRICHMENT_POLL_MS,
+    );
+    onCleanup(() => clearInterval(timer));
+  });
+  createEffect(() => {
+    const s = rucStatus()?.status;
+    if (s !== "queued" && s !== "running") return;
+    const ruc = orgRuc();
+    if (!ruc) return;
+    const timer = setInterval(
+      () => void revalidate(enrichmentStatusQuery.keyFor("ruc", ruc)),
+      ENRICHMENT_POLL_MS,
+    );
+    onCleanup(() => clearInterval(timer));
+  });
+
+  const dniEnrichStatus = () =>
+    dniSubmission.pending ? "running" : dniStatus()?.status;
+  const displayName = () =>
+    dniStatus()?.overlay?.fullName ?? props.group.displayName ?? null;
+  const handleRequestDniEnrichment = () => {
+    void requestEnrichment("dni", person().dni);
+  };
+
   const aliasValues = () =>
     props.group.aliases.filter((alias) => alias !== props.group.displayName);
 
   return (
     <div class={styles.drawer}>
       <DrawerHeader
-        initial={toInitial(props.group.displayName)}
-        title={props.group.displayName || "—"}
+        initial={toInitial(displayName() ?? "?")}
+        title={displayName() ?? "—"}
         subtitle={person().dni ? `DNI ${person().dni}` : null}
         onClose={props.onClose}
+        enrichment={
+          person().dni
+            ? {
+                status: dniEnrichStatus(),
+                onRequest: handleRequestDniEnrichment,
+              }
+            : undefined
+        }
       />
 
       <div class={styles.body}>
@@ -375,13 +346,6 @@ export function PersonDetailDrawer(props: PersonDetailDrawerProps) {
             value={person().email}
           />
         </DetailSection>
-
-        <Show when={enrichmentEntries().length > 0}>
-          <EnrichmentSection
-            entries={enrichmentEntries()}
-            onOverlayChange={props.onOverlayChange}
-          />
-        </Show>
 
         <Show when={props.group.companies.length > 0}>
           <DetailSection title="Empresas">
@@ -531,17 +495,47 @@ export function CompanyDetailDrawer(props: CompanyDetailDrawerProps) {
   );
   const row = () => props.group.rows[0];
   const org = () => row().org;
-  const enrichmentEntries = createMemo<EnrichmentDocumentEntry[]>(() => {
-    const ruc = props.group.ruc?.trim();
-    if (!ruc) return [];
-    return [
-      {
-        documentType: "ruc",
-        documentValue: ruc,
-        label: "RUC",
-      },
-    ];
+  const ruc = () => props.group.ruc?.trim() ?? null;
+
+  const rucStatus = createAsync(
+    () => {
+      const r = ruc();
+      return r ? enrichmentStatusQuery("ruc", r) : Promise.resolve(null);
+    },
+    { deferStream: true },
+  );
+  const requestEnrichment = useAction(requestEnrichmentMutation);
+  const rucSubmission = useSubmission(
+    requestEnrichmentMutation,
+    (input) => input[0] === "ruc" && input[1] === ruc(),
+  );
+
+  createEffect(() => {
+    const r = ruc();
+    if (!r) return;
+    props.onOverlayChange?.(`ruc:${r}`, rucStatus()?.overlay ?? null);
   });
+  createEffect(() => {
+    const s = rucStatus()?.status;
+    if (s !== "queued" && s !== "running") return;
+    const r = ruc();
+    if (!r) return;
+    const timer = setInterval(
+      () => void revalidate(enrichmentStatusQuery.keyFor("ruc", r)),
+      ENRICHMENT_POLL_MS,
+    );
+    onCleanup(() => clearInterval(timer));
+  });
+
+  const enrichStatus = () =>
+    rucSubmission.pending ? "running" : rucStatus()?.status;
+  const displayName = () =>
+    rucStatus()?.overlay?.legalName ?? props.group.name ?? null;
+  const handleRequestEnrichment = () => {
+    const r = ruc();
+    if (r) void requestEnrichment("ruc", r);
+  };
+
   const representatives = createMemo(() => {
     const dedup = new Set<string>();
     const items: Array<{
@@ -572,11 +566,16 @@ export function CompanyDetailDrawer(props: CompanyDetailDrawerProps) {
   return (
     <div class={styles.drawer}>
       <DrawerHeader
-        initial={toInitial(props.group.name ?? "?")}
-        title={props.group.name ?? "—"}
-        subtitle={props.group.ruc ? `RUC ${props.group.ruc}` : null}
+        initial={toInitial(displayName() ?? "?")}
+        title={displayName() ?? "—"}
+        subtitle={ruc() ? `RUC ${ruc()}` : null}
         onClose={props.onClose}
         squareAvatar
+        enrichment={
+          ruc()
+            ? { status: enrichStatus(), onRequest: handleRequestEnrichment }
+            : undefined
+        }
       />
 
       <div class={styles.body}>
@@ -640,13 +639,6 @@ export function CompanyDetailDrawer(props: CompanyDetailDrawerProps) {
               />
             </DetailSection>
           )}
-        </Show>
-
-        <Show when={enrichmentEntries().length > 0}>
-          <EnrichmentSection
-            entries={enrichmentEntries()}
-            onOverlayChange={props.onOverlayChange}
-          />
         </Show>
 
         <Show when={props.group.people.length > 0}>
