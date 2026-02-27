@@ -9,6 +9,7 @@ import {
 import { requirePermission } from "~/lib/auth/access/session";
 import type { ActionSuccess } from "~/lib/contracts/common";
 import { assertPositiveInt } from "~/lib/contracts/guards";
+import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
 import { appNotificationCenter } from "~/server/shared/context";
 import { quotaService } from "~/server/shared/context";
 import { repos } from "~/server/shared/context";
@@ -26,6 +27,7 @@ export async function allocateQuota(
   const safeExecutiveId = assertPositiveInt(executiveId, "executiveId");
   const safeAmount = assertPositiveInt(amount, "amount");
   const session = await requirePermission("quota:allocate");
+  await checkActionRateLimit("quota.allocate", session.userId, repos);
   const executive = await repos.users.findById(safeExecutiveId);
   if (!executive) throw notFoundError("Executive not found");
   if (executive.role !== "executive")
