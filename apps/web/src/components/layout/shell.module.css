@@ -127,7 +127,6 @@
 .body {
   flex: 1;
   overflow-y: auto;
-  padding: 8px 12px 12px;
   display: flex;
   flex-direction: column;
 }
