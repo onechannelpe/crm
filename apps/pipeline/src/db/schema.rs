@@ -174,7 +174,7 @@ pub fn open_rw(db_path: &str) -> Result<Connection, PipelineError> {
         PRAGMA temp_store=MEMORY;
         PRAGMA cache_size=-262144;
         PRAGMA mmap_size=1073741824;
-        PRAGMA wal_autocheckpoint=4000;
+        PRAGMA wal_autocheckpoint=200000;
         PRAGMA foreign_keys=ON;
         "#,
     )?;
