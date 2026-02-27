@@ -29,6 +29,13 @@ function MainPanelWithDetail(props: RouteSectionProps) {
       <div class={shellStyles.panelMain}>
         <Suspense fallback={<Loading />}>{props.children}</Suspense>
       </div>
+      <div
+        aria-hidden="true"
+        class={cn(
+          shellStyles.detailGap,
+          !panel() && shellStyles.detailGapClosed,
+        )}
+      />
       <Show when={panel()}>
         {(detail) => <aside class={shellStyles.detailPanel}>{detail()}</aside>}
       </Show>
