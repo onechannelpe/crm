@@ -26,4 +26,7 @@ export const config = {
   observability: {
     retentionMs: 90 * 24 * 60 * 60 * 1000,
   },
+  security: {
+    rateLimitRetentionMs: 24 * 60 * 60 * 1000,
+  },
 } as const;

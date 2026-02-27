@@ -424,6 +424,14 @@ export interface UserSessionsTable {
   expires_at: number;
 }
 
+export interface ActionRateLimitCountersTable {
+  id: Generated<number>;
+  key_hash: string;
+  window_started_at: number;
+  request_count: number;
+  updated_at: number;
+}
+
 export interface AuthThrottleCountersTable {
   id: Generated<number>;
   scope: "ip" | "account" | "ip_account";
@@ -493,6 +501,7 @@ export interface Database {
   app_notifications: AppNotificationsTable;
   client_search_views: ClientSearchViewsTable;
   user_sessions: UserSessionsTable;
+  action_rate_limit_counters: ActionRateLimitCountersTable;
   auth_throttle_counters: AuthThrottleCountersTable;
   auth_events: AuthEventsTable;
   user_totp_factors: UserTotpFactorsTable;
@@ -587,3 +596,6 @@ export type NewAuditActionPolicy = Insertable<AuditActionPoliciesTable>;
 export type NewActionObservation = Insertable<ActionObservationsTable>;
 export type NewReportExportJob = Insertable<ReportExportJobsTable>;
 export type NewReportExportDownload = Insertable<ReportExportDownloadsTable>;
+export type ActionRateLimitCounter = Selectable<ActionRateLimitCountersTable>;
+export type NewActionRateLimitCounter =
+  Insertable<ActionRateLimitCountersTable>;

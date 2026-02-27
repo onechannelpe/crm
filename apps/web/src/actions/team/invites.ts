@@ -21,6 +21,7 @@ import {
 } from "~/lib/contracts/guards";
 import { env } from "~/lib/env";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
+import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
 import { repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 import type {
@@ -182,6 +183,7 @@ export async function createTeamInvite(input: {
       const session = await requirePermission("hr:manage");
       actor.userId = session.userId;
       actor.role = session.role;
+      await checkActionRateLimit("team.invite.create", session.userId, repos);
       const result = await provisioning.createInvite({
         actorUserId: session.userId,
         actorRole: session.role,

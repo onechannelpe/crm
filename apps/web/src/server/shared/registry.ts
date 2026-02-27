@@ -21,6 +21,7 @@ import { createActionObservationsRepo } from "~/server/observability/repos-actio
 import { createQuotaAllocationsRepo } from "~/server/quota/repos";
 import { createReportExportRepo } from "~/server/sales/repos-report-exports";
 import { createSalesRecordsRepo } from "~/server/sales/repos-sales-records";
+import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
 import { createBranchesRepo } from "~/server/users/repos-branches";
 import { createPasskeysRepo } from "~/server/users/repos-passkeys";
@@ -41,6 +42,7 @@ export function createRepositories(db: Kysely<Database>) {
     sessions: createSessionRepository(db),
     authEvents: createAuthEventsRepo(db),
     authThrottle: createAuthThrottleRepo(db),
+    actionRateLimits: createActionRateLimitsRepo(db),
     userTotpFactors: createUserTotpFactorsRepo(db),
     userTotpRecoveryCodes: createUserTotpRecoveryCodesRepo(db),
     organizations: createOrganizationsRepo(db),

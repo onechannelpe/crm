@@ -120,11 +120,3 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     .columns(["sales_record_id", "created_at"])
     .execute();
 }
-
-export async function down<T>(db: Kysely<T>): Promise<void> {
-  await db.schema.dropTable("sales_record_attempts").execute();
-  await db.schema.dropTable("sales_record_products").execute();
-  await db.schema.dropTable("sales_record_addresses").execute();
-  await db.schema.dropTable("sales_record_client").execute();
-  await db.schema.dropTable("sales_records").execute();
-}
