@@ -96,7 +96,7 @@ export function SettingsShell(props: SettingsShellProps) {
             class={cn(styles.item, styles.exit)}
           >
             <X class={styles.icon} />
-            <span>Exit Settings</span>
+            <span>Salir de Configuración</span>
           </A>
         </div>
 
@@ -149,7 +149,7 @@ export function SettingsShell(props: SettingsShellProps) {
         <div class={styles.advancedRow}>
           <span class={styles.advancedDot} aria-hidden="true" />
           <div class={styles.advancedLabel}>
-            <span id="settings-advanced-label">Advanced:</span>
+            <span id="settings-advanced-label">Avanzado:</span>
             <button
               type="button"
               role="switch"

@@ -246,12 +246,12 @@ export default function NewSalePage() {
 
         <div class={styles.columns}>
           <section class={styles.column}>
-            <h2 class={styles.columnTitle}>Products</h2>
+            <h2 class={styles.columnTitle}>Productos</h2>
             <Select
               value={selectedProductId()}
               onInput={(e) => setSelectedProductId(e.currentTarget.value)}
             >
-              <option value="">Select product</option>
+              <option value="">Selecciona un producto</option>
               <For each={currentProducts()}>
                 {(product) => (
                   <option value={product.id}>
@@ -262,7 +262,7 @@ export default function NewSalePage() {
             </Select>
             <Input
               type="number"
-              label="Quantity"
+              label="Cantidad"
               value={selectedProductQty()}
               min="1"
               onInput={(e) => setSelectedProductQty(e.currentTarget.value)}
@@ -272,12 +272,12 @@ export default function NewSalePage() {
               onClick={handleAddProductLine}
               disabled={!selectedProductId()}
             >
-              Add product
+              Agregar producto
             </Button>
           </section>
 
           <section class={styles.column}>
-            <h2 class={styles.columnTitle}>Current lines</h2>
+            <h2 class={styles.columnTitle}>Líneas actuales</h2>
             <Show
               when={productLines().length > 0}
               fallback={<p class={styles.draftHint}>No products selected.</p>}
@@ -319,10 +319,10 @@ export default function NewSalePage() {
             onClick={() => navigate("/sales/leads")}
             disabled={loading()}
           >
-            Cancel
+            Cancelar
           </Button>
           <Button type="submit" disabled={loading()}>
-            {loading() ? "Submitting..." : "Submit for confirmation"}
+            {loading() ? "Enviando..." : "Enviar para confirmación"}
           </Button>
         </div>
       </form>
