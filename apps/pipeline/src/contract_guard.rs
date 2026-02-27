@@ -36,6 +36,8 @@ struct ProjectionContract {
 struct ProjectionField {
     path: String,
     canonical_fields: Vec<String>,
+    #[serde(default)]
+    derivation: Option<String>,
 }
 
 pub fn validate_contracts(manifest_path: &str) -> Result<(), PipelineError> {
@@ -197,7 +199,9 @@ fn validate_projection_fields(
                 ));
                 continue;
             }
-            if !mapped_by_enabled.contains(canonical) {
+            // Derived fields are populated by enrichment pipelines (RENIEC, SUNAT padron, phone
+            // aggregation). They are not expected to come from source CSV mappings.
+            if field.derivation.is_none() && !mapped_by_enabled.contains(canonical) {
                 errors.push(format!(
                     "projection field {} is not backed by enabled source mappings: {canonical}",
                     field.path
