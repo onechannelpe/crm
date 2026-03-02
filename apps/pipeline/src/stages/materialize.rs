@@ -39,7 +39,9 @@ pub fn materialize_serving(db_path: &str) -> Result<(), PipelineError> {
     )?;
 
     let dirty_count: i64 =
-        tx.query_row("SELECT COUNT(*) FROM tmp_dirty_person_ids", [], |row| row.get(0))?;
+        tx.query_row("SELECT COUNT(*) FROM tmp_dirty_person_ids", [], |row| {
+            row.get(0)
+        })?;
     if dirty_count == 0 {
         tx.commit()?;
         println!("materialized serving tables (no changes)");

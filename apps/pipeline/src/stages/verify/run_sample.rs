@@ -3,8 +3,8 @@ use crate::db::schema::init_schema;
 use crate::stages::bootstrap::{PhaseTiming, RunContext, SourceCheckpoint};
 use crate::stages::extract::sample_with_header;
 use crate::stages::verify::helpers::{
-    load_enabled_sources, mark_snapshots_materialized, materialize_and_quick_check,
-    push_ingest_timings, run_ingest_phase, IngestPhaseConfig,
+    IngestPhaseConfig, load_enabled_sources, mark_snapshots_materialized,
+    materialize_and_quick_check, push_ingest_timings, run_ingest_phase,
 };
 use std::collections::HashMap;
 use std::fs;

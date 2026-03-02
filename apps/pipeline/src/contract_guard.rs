@@ -218,6 +218,9 @@ fn load_json_embedded<T: for<'de> Deserialize<'de>>(
     label: &str,
 ) -> Result<T, PipelineError> {
     serde_json::from_str::<T>(raw).map_err(|error| {
-        PipelineError::Args(format!("failed to parse embedded contract {}: {error}", label))
+        PipelineError::Args(format!(
+            "failed to parse embedded contract {}: {error}",
+            label
+        ))
     })
 }
