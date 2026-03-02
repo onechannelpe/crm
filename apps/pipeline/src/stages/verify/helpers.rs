@@ -4,7 +4,7 @@ use crate::db::schema::open_rw;
 use crate::stages::bootstrap::PhaseTiming;
 use crate::stages::materialize::materialize_serving;
 use crate::stages::merge::{fail_snapshot, merge_ingest_session};
-use crate::stages::shard_ingest::ingest_to_shards;
+use crate::stages::shard_ingest::{ShardIngestConfig, ingest_to_shards};
 use crate::stages::validate::validate_snapshot;
 use std::path::Path;
 use std::time::Instant;
@@ -85,17 +85,17 @@ pub(super) fn run_ingest_phase(
     );
 
     let shard_ingest_started_at = Instant::now();
-    let session = ingest_to_shards(
-        config.db_path,
-        config.run_id,
-        &config.mapping_path.to_string_lossy(),
-        &config.input_path.to_string_lossy(),
-        config.snapshot_label,
-        config.snapshot_date,
-        config.reliability_rank,
-        config.batch_size,
-        config.workers,
-    )?;
+    let session = ingest_to_shards(ShardIngestConfig {
+        db_path: config.db_path,
+        run_id: config.run_id,
+        mapping_path: &config.mapping_path.to_string_lossy(),
+        input_path: &config.input_path.to_string_lossy(),
+        snapshot_label: config.snapshot_label,
+        snapshot_date: config.snapshot_date,
+        reliability_rank: config.reliability_rank,
+        batch_size: config.batch_size,
+        workers: config.workers,
+    })?;
     let shard_ingest_secs = shard_ingest_started_at.elapsed().as_secs_f64();
 
     let snapshot_id = session.snapshot_id;
