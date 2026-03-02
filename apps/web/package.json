@@ -9,8 +9,6 @@
     "worker:search-enrichment-jobs": "bun --env-file=../../.env src/workers/search-enrichment-job-runner.ts",
     "lint": "oxlint -c ../../.oxlintrc.json --type-aware --tsconfig tsconfig.json --deny-warnings src tests",
     "build:notifications": "bun run --filter='@crm/notifications' build:emails",
-    "prebuild": "bun run build:notifications",
-    "precheck": "bun run build:notifications",
     "check": "bun x tsc --noEmit && bun run lint",
     "test": "bun --env-file=../../.env.test vitest run --project default",
     "test:perf": "bun --env-file=../../.env.test vitest bench --config vitest.bench.config.ts",
