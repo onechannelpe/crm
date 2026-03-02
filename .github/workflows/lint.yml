@@ -46,6 +46,9 @@ jobs:
       - name: install dependencies
         run: bun install --frozen-lockfile
 
+      - name: generate artifacts
+        run: bun run generate
+
       - name: lint
         working-directory: apps/web
         run: bun run lint

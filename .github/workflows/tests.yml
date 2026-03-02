@@ -44,6 +44,9 @@ jobs:
       - name: install dependencies
         run: bun install --frozen-lockfile
 
+      - name: generate artifacts
+        run: bun run generate
+
       - name: build web app
         run: bun --filter='@crm/web' run build
 
@@ -64,6 +67,9 @@ jobs:
 
       - name: install dependencies
         run: bun install --frozen-lockfile
+
+      - name: generate artifacts
+        run: bun run generate
 
       - name: run checks
         run: bun run check:web
@@ -89,6 +95,9 @@ jobs:
 
       - name: install dependencies
         run: bun install --frozen-lockfile
+
+      - name: generate artifacts
+        run: bun run generate
 
       - name: run perf tests
         run: bun run --cwd apps/web test:perf
