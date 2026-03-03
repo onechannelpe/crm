@@ -1,7 +1,7 @@
-use super::common::{SELECT_COLUMNS, db_err, map_row};
+use super::common::{SELECT_COLUMNS, db_err, map_row_with_siblings};
 use crate::errors::ApiError;
 use crate::storage::sqlite::models::SearchRow;
-use rusqlite::{Connection, Row, params};
+use rusqlite::{Connection, params};
 use std::sync::LazyLock;
 
 // Same standard columns, plus sibling_phones at col 30.
@@ -32,10 +32,4 @@ pub fn search_phone_enriched(
         .query_map(params![phone, limit as i64], map_row_with_siblings)
         .map_err(db_err)?;
     rows.collect::<Result<Vec<_>, _>>().map_err(db_err)
-}
-
-fn map_row_with_siblings(row: &Row<'_>) -> rusqlite::Result<SearchRow> {
-    let base = map_row(row)?;
-    let siblings: Option<String> = row.get("sibling_phones")?;
-    Ok(base.with_siblings(siblings))
 }

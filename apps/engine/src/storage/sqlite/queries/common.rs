@@ -134,6 +134,12 @@ pub fn map_row(row: &Row<'_>) -> rusqlite::Result<SearchRow> {
     })
 }
 
+pub fn map_row_with_siblings(row: &Row<'_>) -> rusqlite::Result<SearchRow> {
+    let base = map_row(row)?;
+    let siblings: Option<String> = row.get("sibling_phones")?;
+    Ok(base.with_siblings(siblings))
+}
+
 pub fn db_err(e: rusqlite::Error) -> ApiError {
     ApiError::Service(format!("database query failed: {e}"))
 }
