@@ -3,10 +3,14 @@ use crate::cli::Command;
 use crate::config::manifest::verify_manifest;
 use crate::config::runtime::{PipelineRuntimeConfig, ProfileMode};
 use crate::contract_guard::validate_contracts;
+use crate::db::schema::open_rw;
+use crate::stages::gate;
 use crate::stages::normalize;
 use crate::stages::promote;
 use crate::stages::verify;
+use rusqlite::params;
 use std::path::Path;
+use std::time::SystemTime;
 
 pub fn run(command: Command) -> Result<(), PipelineError> {
     match command {
@@ -83,6 +87,49 @@ pub fn run(command: Command) -> Result<(), PipelineError> {
             let runtime = PipelineRuntimeConfig::from_path(&config)?;
             let from = from.unwrap_or(runtime.paths.staged_db);
             let to = to.unwrap_or(runtime.paths.engine_db);
+
+            let gate_result = gate::run_gate(&from)?;
+            println!(
+                "[pipeline] gate passed={} checks={}",
+                gate_result.passed,
+                gate_result.checks.len()
+            );
+            for check in &gate_result.checks {
+                if !check.passed {
+                    eprintln!(
+                        "[pipeline] gate FAIL check={} actual={:.4} threshold={:.4} {}",
+                        check.name, check.actual, check.threshold, check.message
+                    );
+                }
+            }
+            if !gate_result.passed {
+                return Err(PipelineError::Args(
+                    "quality gate failed — inspect checks above to resolve".into(),
+                ));
+            }
+
+            // Stamp build metadata into the staging DB before VACUUM INTO.
+            {
+                let conn = open_rw(&from)?;
+                let now_ms = SystemTime::now()
+                    .duration_since(SystemTime::UNIX_EPOCH)
+                    .map(|d| d.as_millis() as i64)
+                    .unwrap_or(0);
+                let rows: i64 =
+                    conn.query_row("SELECT COUNT(*) FROM search_projection", params![], |r| {
+                        r.get(0)
+                    })?;
+                conn.execute(
+                    "INSERT OR REPLACE INTO _pipeline_build(key, value) VALUES (?1, ?2)",
+                    params!["built_at", now_ms.to_string()],
+                )?;
+                conn.execute(
+                    "INSERT OR REPLACE INTO _pipeline_build(key, value) VALUES (?1, ?2)",
+                    params!["rows", rows.to_string()],
+                )?;
+                println!("[pipeline] build metadata: built_at={now_ms} rows={rows}");
+            }
+
             promote::promote_db(&from, &to)
         }
     }

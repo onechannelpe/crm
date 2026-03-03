@@ -15,7 +15,6 @@ pub(super) struct IngestPhaseStats {
     pub merge_prepare_secs: f64,
     pub merge_core_secs: f64,
     pub merge_phone_secs: f64,
-    pub merge_evidence_secs: f64,
     pub merge_cleanup_secs: f64,
     pub merge_attach_detach_secs: f64,
     pub validate_secs: f64,
@@ -59,7 +58,6 @@ pub(super) fn push_ingest_timings(
         ("merge_prepare", stats.merge_prepare_secs),
         ("merge_core", stats.merge_core_secs),
         ("merge_phone", stats.merge_phone_secs),
-        ("merge_evidence", stats.merge_evidence_secs),
         ("merge_cleanup", stats.merge_cleanup_secs),
         ("merge_attach_detach", stats.merge_attach_detach_secs),
         ("validate", stats.validate_secs),
@@ -106,7 +104,6 @@ pub(super) fn run_ingest_phase(
     let merge_prepare_secs = merge_phase_stats.prepare_secs;
     let merge_core_secs = merge_phase_stats.core_secs;
     let merge_phone_secs = merge_phase_stats.phone_secs;
-    let merge_evidence_secs = merge_phase_stats.evidence_secs;
     let merge_cleanup_secs = merge_phase_stats.cleanup_secs;
     let merge_attach_detach_secs = merge_phase_stats.attach_detach_secs;
 
@@ -123,11 +120,11 @@ pub(super) fn run_ingest_phase(
     let snapshot_label = config.snapshot_label;
     if let Some(source_key) = config.source_key {
         println!(
-            "[pipeline] ingest_timing source_key={source_key} snapshot_label={snapshot_label} total_secs={total_secs:.3} shard_ingest_secs={shard_ingest_secs:.3} merge_sql_secs={merge_sql_secs:.3} merge_prepare_secs={merge_prepare_secs:.3} merge_core_secs={merge_core_secs:.3} merge_phone_secs={merge_phone_secs:.3} merge_evidence_secs={merge_evidence_secs:.3} merge_cleanup_secs={merge_cleanup_secs:.3} merge_attach_detach_secs={merge_attach_detach_secs:.3} validate_secs={validate_secs:.3}",
+            "[pipeline] ingest_timing source_key={source_key} snapshot_label={snapshot_label} total_secs={total_secs:.3} shard_ingest_secs={shard_ingest_secs:.3} merge_sql_secs={merge_sql_secs:.3} merge_prepare_secs={merge_prepare_secs:.3} merge_core_secs={merge_core_secs:.3} merge_phone_secs={merge_phone_secs:.3} merge_cleanup_secs={merge_cleanup_secs:.3} merge_attach_detach_secs={merge_attach_detach_secs:.3} validate_secs={validate_secs:.3}",
         );
     } else {
         println!(
-            "[pipeline] ingest_timing snapshot_label={snapshot_label} total_secs={total_secs:.3} shard_ingest_secs={shard_ingest_secs:.3} merge_sql_secs={merge_sql_secs:.3} merge_prepare_secs={merge_prepare_secs:.3} merge_core_secs={merge_core_secs:.3} merge_phone_secs={merge_phone_secs:.3} merge_evidence_secs={merge_evidence_secs:.3} merge_cleanup_secs={merge_cleanup_secs:.3} merge_attach_detach_secs={merge_attach_detach_secs:.3} validate_secs={validate_secs:.3}"
+            "[pipeline] ingest_timing snapshot_label={snapshot_label} total_secs={total_secs:.3} shard_ingest_secs={shard_ingest_secs:.3} merge_sql_secs={merge_sql_secs:.3} merge_prepare_secs={merge_prepare_secs:.3} merge_core_secs={merge_core_secs:.3} merge_phone_secs={merge_phone_secs:.3} merge_cleanup_secs={merge_cleanup_secs:.3} merge_attach_detach_secs={merge_attach_detach_secs:.3} validate_secs={validate_secs:.3}"
         );
     }
 
@@ -137,7 +134,6 @@ pub(super) fn run_ingest_phase(
         merge_prepare_secs,
         merge_core_secs,
         merge_phone_secs,
-        merge_evidence_secs,
         merge_cleanup_secs,
         merge_attach_detach_secs,
         validate_secs,

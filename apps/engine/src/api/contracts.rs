@@ -34,4 +34,8 @@ pub struct SearchResponse {
 #[derive(Debug, Serialize)]
 pub struct HealthResponse {
     pub status: &'static str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub built_at: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rows: Option<i64>,
 }

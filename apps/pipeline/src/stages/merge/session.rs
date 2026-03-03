@@ -9,7 +9,6 @@ pub struct MergePhaseStats {
     pub prepare_secs: f64,
     pub core_secs: f64,
     pub phone_secs: f64,
-    pub evidence_secs: f64,
     pub cleanup_secs: f64,
     pub attach_detach_secs: f64,
 }
@@ -25,7 +24,6 @@ pub fn merge_ingest_session(
             merge_one_shard(&mut conn, &shard_result.shard_db_path, session.snapshot_id)?;
         merge_stats.core_secs += shard_timings.core_secs;
         merge_stats.phone_secs += shard_timings.phone_secs;
-        merge_stats.evidence_secs += shard_timings.evidence_secs;
         merge_stats.prepare_secs += shard_timings.prepare_secs;
         merge_stats.cleanup_secs += shard_timings.cleanup_secs;
         merge_stats.attach_detach_secs += shard_timings.attach_detach_secs;

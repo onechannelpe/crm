@@ -19,8 +19,9 @@ HMAC-authenticated. See [`src/security/hmac.rs`](src/security/hmac.rs) for imple
 
 Required headers:
 
+- `x-key-id`: key id configured in `ENGINE_HMAC_KEYS_JSON`
 - `x-timestamp`: unix seconds
-- `x-signature`: `hex(hmac_sha256(timestamp_be_u64 + raw_body, ENGINE_HMAC_SECRET))`
+- `x-signature`: `hex(hmac_sha256(timestamp_be_u64 + raw_body, secret_for_key_id))`
 
 Body:
 
@@ -38,11 +39,11 @@ Response: `{ results: SearchRow[], count: number }`
 
 Read from root [`.env`](../../.env):
 
-- `ENGINE_HMAC_SECRET` (required): HMAC signing key
+- `ENGINE_HMAC_KEYS_JSON` (required): JSON object of signing keys, e.g. `{"web":"secret"}`
 - `ENGINE_PORT` (default `3001`)
 - `ENGINE_HOST` (default `127.0.0.1`)
 - `ENGINE_DB_PATH` (default `apps/engine/data/contacts.sqlite`)
-- `ENGINE_RATE_LIMIT_PER_IP` (default `120`): requests per second per IP
+- `ENGINE_RATE_LIMIT_PER_KEY` (default `600`): token bucket refill per minute per key id
 - `ENGINE_MAX_LIMIT` (default `100`): max results per query
 
 ## Testing

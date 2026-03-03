@@ -28,5 +28,13 @@ pub fn validate_text(value: &str) -> Result<(), ApiError> {
             "text query must be 2-120 chars".into(),
         ));
     }
+    let has_meaningful_token = trimmed
+        .split_whitespace()
+        .any(|t| t.chars().filter(|c| c.is_alphanumeric()).count() >= 3);
+    if !has_meaningful_token {
+        return Err(ApiError::Validation(
+            "query must contain at least one term with 3 or more characters".into(),
+        ));
+    }
     Ok(())
 }

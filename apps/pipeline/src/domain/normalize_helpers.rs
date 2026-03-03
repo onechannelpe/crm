@@ -76,9 +76,7 @@ pub fn normalize_person_document_with_natural_ruc(value: &str) -> (Option<String
 }
 
 /// For columns that hold mixed DNI/RUC types. Person and company buckets are mutually exclusive.
-pub fn normalize_ambiguous_doc(
-    value: &str,
-) -> (Option<String>, Option<String>, Option<String>) {
+pub fn normalize_ambiguous_doc(value: &str) -> (Option<String>, Option<String>, Option<String>) {
     if let Some(dni) = normalize_dni(value) {
         return (Some(dni), None, None);
     }

@@ -19,7 +19,11 @@ pub fn promote_db(from: &str, to: &str) -> Result<(), PipelineError> {
     conn.execute("VACUUM INTO ?1", params![tmp.as_str()])?;
 
     if Path::new(to).exists() {
-        fs::remove_file(to)?;
+        let backup = format!("{to}.prev");
+        if Path::new(&backup).exists() {
+            fs::remove_file(&backup)?;
+        }
+        fs::rename(to, &backup)?;
     }
     let to_wal = format!("{to}-wal");
     let to_shm = format!("{to}-shm");

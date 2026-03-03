@@ -72,7 +72,11 @@ fn normalizes_ambiguous_doc() {
     // Natural-person RUC10 → derives DNI
     assert_eq!(
         normalize_ambiguous_doc("10441792498"),
-        (Some("44179249".to_owned()), Some("10441792498".to_owned()), None)
+        (
+            Some("44179249".to_owned()),
+            Some("10441792498".to_owned()),
+            None
+        )
     );
     // Company RUC20 → routes to company_ruc
     assert_eq!(
