@@ -1,6 +1,6 @@
 use crm_pipeline::domain::normalize_helpers::{
-    PhoneKind, derive_dni_from_natural_ruc, normalize_person_document_with_natural_ruc,
-    normalize_phone_with_kind,
+    PhoneKind, derive_dni_from_natural_ruc, normalize_ambiguous_doc,
+    normalize_person_document_with_natural_ruc, normalize_phone_with_kind,
 };
 
 #[test]
@@ -60,4 +60,26 @@ fn normalizes_person_document_with_natural_ruc() {
         normalize_person_document_with_natural_ruc("044179249"),
         (None, None)
     );
+}
+
+#[test]
+fn normalizes_ambiguous_doc() {
+    // 8-digit DNI
+    assert_eq!(
+        normalize_ambiguous_doc("12345678"),
+        (Some("12345678".to_owned()), None, None)
+    );
+    // Natural-person RUC10 → derives DNI
+    assert_eq!(
+        normalize_ambiguous_doc("10441792498"),
+        (Some("44179249".to_owned()), Some("10441792498".to_owned()), None)
+    );
+    // Company RUC20 → routes to company_ruc
+    assert_eq!(
+        normalize_ambiguous_doc("20601048061"),
+        (None, None, Some("20601048061".to_owned()))
+    );
+    // Unresolvable → all None
+    assert_eq!(normalize_ambiguous_doc("ABC123"), (None, None, None));
+    assert_eq!(normalize_ambiguous_doc(""), (None, None, None));
 }

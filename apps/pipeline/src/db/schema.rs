@@ -97,16 +97,6 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             FOREIGN KEY(company_id) REFERENCES company_profile(company_id)
         );
 
-        CREATE TABLE IF NOT EXISTS role_phone (
-            role_id INTEGER NOT NULL,
-            phone TEXT NOT NULL,
-            first_seen_snapshot_id INTEGER NOT NULL,
-            last_seen_snapshot_id INTEGER NOT NULL,
-            confidence INTEGER NOT NULL DEFAULT 70,
-            PRIMARY KEY(role_id, phone),
-            FOREIGN KEY(role_id) REFERENCES person_company_role(role_id)
-        );
-
         CREATE TABLE IF NOT EXISTS entity_evidence (
             evidence_id INTEGER PRIMARY KEY,
             entity_kind TEXT NOT NULL,
@@ -192,7 +182,8 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
 
         CREATE TABLE IF NOT EXISTS search_projection_phone_index (
             phone TEXT NOT NULL,
-            projection_id INTEGER NOT NULL
+            projection_id INTEGER NOT NULL,
+            UNIQUE(phone, projection_id)
         );
 
         CREATE VIRTUAL TABLE IF NOT EXISTS search_projection_fts USING fts5(
