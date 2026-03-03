@@ -185,14 +185,6 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             value TEXT NOT NULL
         );
 
-        CREATE TABLE IF NOT EXISTS build_artifact (
-            build_id TEXT PRIMARY KEY,
-            db_path TEXT NOT NULL,
-            gate_passed INTEGER NOT NULL,
-            built_at INTEGER NOT NULL,
-            rows INTEGER NOT NULL
-        );
-
         CREATE INDEX IF NOT EXISTS idx_source_row_hash_latest_source_hash
             ON source_row_hash_latest(source_id, raw_hash);
 

@@ -55,4 +55,8 @@ impl HmacVerifier {
         mac.verify_slice(&provided)
             .map_err(|_| ApiError::Unauthorized("invalid signature".into()))
     }
+
+    pub fn has_key_id(&self, key_id: &str) -> bool {
+        self.keys.contains_key(key_id)
+    }
 }

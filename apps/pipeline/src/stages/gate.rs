@@ -17,12 +17,19 @@ pub struct GateResult {
     pub checks: Vec<GateCheck>,
 }
 
+struct SourceSnapshotMetrics {
+    source_key: String,
+    accepted_rows: Option<i64>,
+    invalid_dni_rows: Option<i64>,
+    total_rows: Option<i64>,
+}
+
 pub fn run_gate(db_path: &str) -> Result<GateResult, PipelineError> {
     let conn = open_rw(db_path)?;
     let mut checks = Vec::new();
 
     // Per-source (latest snapshot): invalid_dni_ratio < 5% and accepted_rows > 0.
-    let snapshots: Vec<(String, i64, i64, i64)> = {
+    let snapshots: Vec<SourceSnapshotMetrics> = {
         let mut stmt = conn.prepare(
             r#"
             WITH latest_snapshot AS (
@@ -33,27 +40,46 @@ pub fn run_gate(db_path: &str) -> Result<GateResult, PipelineError> {
             SELECT sr.source_key, sm.accepted_rows, sm.invalid_dni_rows, sm.total_rows
             FROM latest_snapshot ls
             JOIN source_registry sr ON sr.source_id = ls.source_id
-            JOIN snapshot_metrics sm ON sm.snapshot_id = ls.snapshot_id
+            LEFT JOIN snapshot_metrics sm ON sm.snapshot_id = ls.snapshot_id
             "#,
         )?;
         stmt.query_map([], |row| {
-            Ok((
-                row.get::<_, String>(0)?,
-                row.get::<_, i64>(1)?,
-                row.get::<_, i64>(2)?,
-                row.get::<_, i64>(3)?,
-            ))
+            Ok(SourceSnapshotMetrics {
+                source_key: row.get::<_, String>(0)?,
+                accepted_rows: row.get::<_, Option<i64>>(1)?,
+                invalid_dni_rows: row.get::<_, Option<i64>>(2)?,
+                total_rows: row.get::<_, Option<i64>>(3)?,
+            })
         })?
         .collect::<Result<_, _>>()?
     };
 
-    for (source_key, accepted, invalid_dni, total) in snapshots {
+    for snapshot in snapshots {
+        if snapshot.accepted_rows.is_none()
+            || snapshot.invalid_dni_rows.is_none()
+            || snapshot.total_rows.is_none()
+        {
+            checks.push(GateCheck {
+                name: format!("{}.snapshot_metrics_present", snapshot.source_key),
+                passed: false,
+                actual: 0.0,
+                threshold: 1.0,
+                message: format!(
+                    "source {}: latest snapshot is missing snapshot_metrics row",
+                    snapshot.source_key
+                ),
+            });
+            continue;
+        }
+        let accepted = snapshot.accepted_rows.unwrap_or_default();
+        let invalid_dni = snapshot.invalid_dni_rows.unwrap_or_default();
+        let total = snapshot.total_rows.unwrap_or_default();
         let accepted_check = GateCheck {
-            name: format!("{source_key}.accepted_rows_gt_0"),
+            name: format!("{}.accepted_rows_gt_0", snapshot.source_key),
             passed: accepted > 0,
             actual: accepted as f64,
             threshold: 1.0,
-            message: format!("source {source_key}: accepted_rows={accepted}"),
+            message: format!("source {}: accepted_rows={accepted}", snapshot.source_key),
         };
         checks.push(accepted_check);
 
@@ -61,12 +87,13 @@ pub fn run_gate(db_path: &str) -> Result<GateResult, PipelineError> {
             let ratio = invalid_dni as f64 / total as f64;
             let threshold = 0.05;
             checks.push(GateCheck {
-                name: format!("{source_key}.invalid_dni_ratio"),
+                name: format!("{}.invalid_dni_ratio", snapshot.source_key),
                 passed: ratio < threshold,
                 actual: ratio,
                 threshold,
                 message: format!(
-                    "source {source_key}: invalid_dni={invalid_dni}/{total} ({:.1}%)",
+                    "source {}: invalid_dni={invalid_dni}/{total} ({:.1}%)",
+                    snapshot.source_key,
                     ratio * 100.0
                 ),
             });

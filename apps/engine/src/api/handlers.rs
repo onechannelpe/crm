@@ -10,7 +10,12 @@ pub async fn health(State(state): State<AppState>) -> impl IntoResponse {
     let pool = state.search.pool();
     let result = tokio::task::spawn_blocking(move || -> Option<(Option<String>, i64, i64)> {
         let conn = pool.get().ok()?;
-        conn.query_row("SELECT 1 FROM search_projection LIMIT 1", [], |_| Ok(()))
+        let _: i64 = conn
+            .query_row(
+                "SELECT EXISTS(SELECT 1 FROM search_projection LIMIT 1)",
+                [],
+                |r| r.get(0),
+            )
             .ok()?;
         let build_id: Option<String> = conn
             .query_row(
@@ -49,7 +54,7 @@ pub async fn health(State(state): State<AppState>) -> impl IntoResponse {
                 status: "ok",
                 build_id,
                 built_at: if built_at > 0 { Some(built_at) } else { None },
-                rows: if rows > 0 { Some(rows) } else { None },
+                rows: Some(rows),
             }),
         ),
         None => (
@@ -72,7 +77,18 @@ pub async fn search(
     let key_id = header_required(&headers, "x-key-id")?;
     let ts = header_required(&headers, "x-timestamp")?;
     let sig = header_required(&headers, "x-signature")?;
-    state.hmac.verify(key_id, ts, sig, &body)?;
+    if let Err(error) = state.hmac.verify(key_id, ts, sig, &body) {
+        let auth_limiter_key = if state.hmac.has_key_id(key_id) {
+            format!("auth_fail:{key_id}")
+        } else {
+            "auth_fail:unknown".to_owned()
+        };
+        if !state.limiter.allow(&auth_limiter_key, 1) {
+            tracing::warn!(key_id, "auth failure rate limit exceeded");
+            return Err(ApiError::RateLimit);
+        }
+        return Err(error);
+    }
 
     let request: SearchRequest = serde_json::from_slice(&body)
         .map_err(|_| ApiError::Validation("invalid JSON body".into()))?;

@@ -27,7 +27,10 @@ export function buildEngineClientConfig(input: {
       throw new Error("ENGINE_URL must use https in production");
     }
 
-    if (LOCAL_HOSTS.has(url.hostname)) {
+    const normalizedHostname = url.hostname
+      .replace(/^\[/, "")
+      .replace(/\]$/, "");
+    if (LOCAL_HOSTS.has(normalizedHostname)) {
       throw new Error(
         "ENGINE_URL must target a remote engine host in production",
       );

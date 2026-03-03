@@ -88,6 +88,12 @@ pub fn run(command: Command) -> Result<(), PipelineError> {
             let from = from.unwrap_or(runtime.paths.staged_db);
             let to = to.unwrap_or(runtime.paths.engine_db);
 
+            if !Path::new(&from).exists() {
+                return Err(PipelineError::Args(format!(
+                    "source db does not exist: {from}"
+                )));
+            }
+
             let gate_result = gate::run_gate(&from)?;
             let gate_passed = gate_result.passed;
             println!(
@@ -103,8 +109,7 @@ pub fn run(command: Command) -> Result<(), PipelineError> {
                     );
                 }
             }
-            // Create a concrete build artifact and stamp metadata into the
-            // staging database before VACUUM INTO.
+            // Stamp promoted-build metadata into the staging database before VACUUM INTO.
             {
                 let conn = open_rw(&from)?;
                 let now_duration = SystemTime::now()
@@ -119,18 +124,8 @@ pub fn run(command: Command) -> Result<(), PipelineError> {
                     conn.query_row("SELECT COUNT(*) FROM search_projection", params![], |r| {
                         r.get(0)
                     })?;
-                conn.execute(
-                    "INSERT INTO build_artifact(build_id, db_path, gate_passed, built_at, rows) VALUES (?1, ?2, ?3, ?4, ?5)",
-                    params![
-                        build_id,
-                        from,
-                        if gate_passed { 1_i64 } else { 0_i64 },
-                        now_millis,
-                        rows,
-                    ],
-                )?;
                 println!(
-                    "[pipeline] build artifact: build_id={} gate_passed={} built_at={} rows={}",
+                    "[pipeline] build metadata: build_id={} gate_passed={} built_at={} rows={}",
                     build_id, gate_passed, now_millis, rows
                 );
 
