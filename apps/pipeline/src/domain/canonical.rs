@@ -1,8 +1,8 @@
 use crate::PipelineError;
 use crate::config::mapping::SourceMapping;
 use crate::domain::normalize_helpers::{
-    normalize_dni, normalize_person_document_with_natural_ruc, normalize_phone_with_kind,
-    normalize_ruc, normalize_text,
+    normalize_ambiguous_doc, normalize_dni, normalize_person_document_with_natural_ruc,
+    normalize_phone_with_kind, normalize_ruc, normalize_text,
 };
 use csv::StringRecord;
 use std::collections::{HashMap, HashSet};
@@ -34,6 +34,7 @@ pub(crate) struct ResolvedMapping {
 
 pub(crate) fn map_record(resolved: &ResolvedMapping, record: &StringRecord) -> CanonicalRow {
     let person_dni_raw = mapped_value("person_dni", resolved, record);
+    let person_or_company_doc_raw = mapped_value("person_or_company_doc", resolved, record);
     let rep_doc_type = mapped_value("rep_doc_type", resolved, record);
     let rep_doc_number = mapped_value("rep_doc_number", resolved, record);
     let person_full_name = mapped_value("person_full_name", resolved, record);
@@ -41,26 +42,43 @@ pub(crate) fn map_record(resolved: &ResolvedMapping, record: &StringRecord) -> C
     let company_ruc_raw = mapped_value("company_ruc", resolved, record);
     let (phones, had_phone_input, invalid_phone_reasons) = collect_phones(resolved, record);
 
-    let (person_dni_from_person_doc, person_natural_ruc) =
+    let (person_dni_from_person_doc, person_natural_ruc_from_person_doc) =
         normalize_person_document_with_natural_ruc(&person_dni_raw);
 
-    CanonicalRow {
-        person_dni: person_dni_from_person_doc.or_else(|| {
+    let (doc_person_dni, doc_natural_ruc, doc_company_ruc) =
+        normalize_ambiguous_doc(&person_or_company_doc_raw);
+
+    let doc_resolved_to_person = doc_person_dni.is_some() || doc_natural_ruc.is_some();
+    let doc_resolved_to_company = doc_company_ruc.is_some();
+    let doc_unresolved = !person_or_company_doc_raw.is_empty()
+        && !doc_resolved_to_person
+        && !doc_resolved_to_company;
+
+    let person_dni = person_dni_from_person_doc
+        .or(doc_person_dni)
+        .or_else(|| {
             if rep_doc_type.eq_ignore_ascii_case("DNI") {
                 normalize_dni(&rep_doc_number)
             } else {
                 None
             }
-        }),
+        });
+
+    let person_natural_ruc = person_natural_ruc_from_person_doc.or(doc_natural_ruc);
+
+    let company_ruc = normalize_ruc(&company_ruc_raw).or(doc_company_ruc);
+
+    CanonicalRow {
+        person_dni,
         person_natural_ruc,
-        had_person_dni_input: !person_dni_raw.is_empty(),
+        had_person_dni_input: !person_dni_raw.is_empty() || doc_resolved_to_person || doc_unresolved,
         person_full_name: if !person_full_name.is_empty() {
             person_full_name
         } else {
             rep_name.clone()
         },
-        company_ruc: normalize_ruc(&company_ruc_raw),
-        had_company_ruc_input: !company_ruc_raw.is_empty(),
+        company_ruc,
+        had_company_ruc_input: !company_ruc_raw.is_empty() || doc_resolved_to_company,
         company_name: mapped_value("company_name", resolved, record),
         role_name: mapped_value("role_name", resolved, record),
         role_start_date: mapped_value("role_start_date", resolved, record),

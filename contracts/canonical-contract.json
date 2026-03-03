@@ -1,6 +1,7 @@
 {
   "fields": [
     "person_dni",
+    "person_or_company_doc",
     "person_natural_ruc",
     "person_full_name",
     "birth_date",
