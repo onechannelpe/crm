@@ -1,7 +1,6 @@
 use crate::PipelineError;
 use crate::stages::merge::sql::{
-    MERGE_CLEANUP_SQL, MERGE_CORE_SQL, MERGE_EVIDENCE_COMPANY_SQL, MERGE_EVIDENCE_PERSON_SQL,
-    MERGE_EVIDENCE_ROLE_SQL, MERGE_PHONE_SQL, MERGE_PREPARE_SQL,
+    MERGE_CLEANUP_SQL, MERGE_CORE_SQL, MERGE_PHONE_SQL, MERGE_PREPARE_SQL,
 };
 use rusqlite::params;
 use std::path::Path;
@@ -12,7 +11,6 @@ pub(super) struct MergeShardTimings {
     pub prepare_secs: f64,
     pub core_secs: f64,
     pub phone_secs: f64,
-    pub evidence_secs: f64,
     pub cleanup_secs: f64,
     pub attach_detach_secs: f64,
 }
@@ -64,10 +62,9 @@ pub(super) fn merge_one_shard(
     tx.execute_batch(&merge_phone_sql)?;
     timings.phone_secs = phone_started_at.elapsed().as_secs_f64();
 
-    let evidence_started_at = Instant::now();
-    tx.execute(MERGE_EVIDENCE_PERSON_SQL, [snapshot_id])?;
-    tx.execute(MERGE_EVIDENCE_COMPANY_SQL, [snapshot_id])?;
-    tx.execute(MERGE_EVIDENCE_ROLE_SQL, [snapshot_id])?;
+    // Mark dirty persons and update row hash tracking.
+    // entity_evidence table was removed — was write-only, ~25% of pipeline time with no readers.
+    let dirty_started_at = Instant::now();
     tx.execute_batch(
         r#"
         INSERT OR IGNORE INTO projection_dirty_person(person_id)
@@ -129,7 +126,7 @@ pub(super) fn merge_one_shard(
         "#,
         params![source_id, snapshot_id],
     )?;
-    timings.evidence_secs = evidence_started_at.elapsed().as_secs_f64();
+    timings.core_secs += dirty_started_at.elapsed().as_secs_f64();
 
     let cleanup_started_at = Instant::now();
     tx.execute_batch(MERGE_CLEANUP_SQL)?;

@@ -1,5 +1,6 @@
 pub mod bootstrap;
 pub mod extract;
+pub mod gate;
 pub mod materialize;
 pub mod merge;
 pub mod normalize;

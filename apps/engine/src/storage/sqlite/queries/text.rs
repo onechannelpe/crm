@@ -6,9 +6,10 @@ use std::sync::LazyLock;
 
 // Both person and company FTS searches share the same SQL template; the field
 // selector (person_name: / company_name:) is part of the ?1 parameter.
+// Results are ordered by BM25 relevance (lower rank = better match in SQLite FTS5).
 static SQL_FTS: LazyLock<String> = LazyLock::new(|| {
     format!(
-        "SELECT{SELECT_COLUMNS}\nFROM search_projection c\nJOIN search_projection_fts f ON f.rowid = c.id WHERE search_projection_fts MATCH ?1 LIMIT ?2"
+        "SELECT{SELECT_COLUMNS}\nFROM search_projection c\nJOIN search_projection_fts f ON f.rowid = c.id WHERE search_projection_fts MATCH ?1 ORDER BY rank LIMIT ?2"
     )
 });
 
@@ -36,31 +37,32 @@ pub fn search_company_name(
     )
 }
 
-// We require prefix terms (`token*`) so operators can type partial names.
+// Builds a FTS5 AND-prefix query from the validated text.
+// Tokens >= 2 chars are included; 2-char tokens are allowed alongside longer
+// ones to support partial second-word refinement (e.g. "garcia ro").
+// validate_text in validation/input.rs guarantees at least one token >= 3
+// chars before this is called, so the output is always non-empty.
 fn fts_query(field: &str, text: &str) -> String {
+    let tokens: Vec<String> = text
+        .split_whitespace()
+        .map(|t| {
+            t.chars()
+                .filter(|c| c.is_alphanumeric())
+                .flat_map(|c| c.to_lowercase())
+                .collect::<String>()
+        })
+        .filter(|t| t.len() >= 2)
+        .collect();
+
     let mut out = String::new();
-    let mut first = true;
-    for token in text.split_whitespace() {
-        let cleaned: String = token
-            .chars()
-            .filter(|c| c.is_alphanumeric())
-            .flat_map(|c| c.to_lowercase())
-            .collect();
-        if cleaned.len() >= 2 {
-            if !first {
-                out.push_str(" AND ");
-            }
-            out.push_str(field);
-            out.push(':');
-            out.push_str(&cleaned);
-            out.push('*');
-            first = false;
+    for token in &tokens {
+        if !out.is_empty() {
+            out.push_str(" AND ");
         }
+        out.push_str(field);
+        out.push(':');
+        out.push_str(token);
+        out.push('*');
     }
-    if first {
-        // no valid tokens — match anything in the field
-        format!("{field}:*")
-    } else {
-        out
-    }
+    out
 }

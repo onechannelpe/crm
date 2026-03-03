@@ -26,6 +26,7 @@ export function createEngineClient(config: EngineClientConfig): EngineClient {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
+        "X-Key-Id": config.keyId,
         "X-Signature": signature,
         "X-Timestamp": timestamp,
       },

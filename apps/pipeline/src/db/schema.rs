@@ -97,18 +97,6 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             FOREIGN KEY(company_id) REFERENCES company_profile(company_id)
         );
 
-        CREATE TABLE IF NOT EXISTS entity_evidence (
-            evidence_id INTEGER PRIMARY KEY,
-            entity_kind TEXT NOT NULL,
-            entity_pk INTEGER NOT NULL,
-            snapshot_id INTEGER NOT NULL,
-            source_row_number INTEGER NOT NULL,
-            raw_hash TEXT NOT NULL,
-            created_at TEXT NOT NULL DEFAULT (datetime('now')),
-            UNIQUE(entity_kind, entity_pk, snapshot_id, source_row_number),
-            FOREIGN KEY(snapshot_id) REFERENCES source_snapshot(snapshot_id)
-        );
-
         CREATE TABLE IF NOT EXISTS snapshot_metrics (
             snapshot_id INTEGER PRIMARY KEY,
             total_rows INTEGER NOT NULL DEFAULT 0,
@@ -188,7 +176,13 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
 
         CREATE VIRTUAL TABLE IF NOT EXISTS search_projection_fts USING fts5(
             person_name,
-            company_name
+            company_name,
+            tokenize="unicode61 remove_diacritics 1"
+        );
+
+        CREATE TABLE IF NOT EXISTS _pipeline_build (
+            key   TEXT PRIMARY KEY,
+            value TEXT NOT NULL
         );
 
         CREATE INDEX IF NOT EXISTS idx_source_row_hash_latest_source_hash

@@ -9,9 +9,12 @@ use crm_engine::state::AppState;
 use crm_engine::storage::sqlite::connection;
 use crm_engine::storage::sqlite::schema_guard;
 use serde_json::json;
+use std::collections::HashMap;
 use std::sync::Arc;
 
-fn make_server(rate_limit_per_ip: u32) -> (TestServer, String) {
+const TEST_KEY_ID: &str = "web";
+
+fn make_server(rate_limit_per_key: u32) -> (TestServer, String) {
     let secret = "test-secret".to_string();
     let db = common::create_test_db();
     let pool = connection::make_pool(db.path().to_str().expect("path")).expect("pool");
@@ -20,8 +23,11 @@ fn make_server(rate_limit_per_ip: u32) -> (TestServer, String) {
 
     let state = AppState {
         search: Arc::new(SearchService::new(pool, 100)),
-        hmac: Arc::new(HmacVerifier::new(secret.clone(), 60)),
-        limiter: Arc::new(RateLimiter::new(rate_limit_per_ip)),
+        hmac: Arc::new(HmacVerifier::new(
+            HashMap::from([(TEST_KEY_ID.to_string(), secret.clone())]),
+            60,
+        )),
+        limiter: Arc::new(RateLimiter::new(rate_limit_per_key)),
     };
     let app = router::build_router(state);
     // keep db alive by leaking it for test lifetime
@@ -38,6 +44,7 @@ async fn search_phone_enriched_returns_siblings() {
 
     let response = server
         .post("/v1/search")
+        .add_header("x-key-id", TEST_KEY_ID)
         .add_header("x-timestamp", ts)
         .add_header("x-signature", sig)
         .json(&body)
@@ -74,6 +81,7 @@ async fn rate_limit_is_enforced() {
     let (ts1, sig1) = common::sign(&secret, &bytes);
     let first = server
         .post("/v1/search")
+        .add_header("x-key-id", TEST_KEY_ID)
         .add_header("x-timestamp", ts1)
         .add_header("x-signature", sig1)
         .json(&body)
@@ -83,6 +91,71 @@ async fn rate_limit_is_enforced() {
     let (ts2, sig2) = common::sign(&secret, &bytes);
     let second = server
         .post("/v1/search")
+        .add_header("x-key-id", TEST_KEY_ID)
+        .add_header("x-timestamp", ts2)
+        .add_header("x-signature", sig2)
+        .json(&body)
+        .await;
+    second.assert_status_too_many_requests();
+}
+
+#[tokio::test]
+async fn rejects_short_token_name_query() {
+    let (server, secret) = make_server(100);
+    // "ro" has no token >= 3 chars — should be rejected with 422
+    let body = json!({"type":"person_name","value":"ro","limit":20});
+    let bytes = serde_json::to_vec(&body).expect("json");
+    let (ts, sig) = common::sign(&secret, &bytes);
+
+    let response = server
+        .post("/v1/search")
+        .add_header("x-key-id", TEST_KEY_ID)
+        .add_header("x-timestamp", ts)
+        .add_header("x-signature", sig)
+        .json(&body)
+        .await;
+
+    response.assert_status_bad_request();
+}
+
+#[tokio::test]
+async fn rejects_unknown_key_id() {
+    let (server, secret) = make_server(100);
+    let body = json!({"type":"dni","value":"12345678","limit":20});
+    let bytes = serde_json::to_vec(&body).expect("json");
+    let (ts, sig) = common::sign(&secret, &bytes);
+
+    let response = server
+        .post("/v1/search")
+        .add_header("x-key-id", "unknown")
+        .add_header("x-timestamp", ts)
+        .add_header("x-signature", sig)
+        .json(&body)
+        .await;
+
+    response.assert_status_unauthorized();
+}
+
+#[tokio::test]
+async fn applies_weighted_cost_to_name_queries() {
+    let (server, secret) = make_server(3);
+    let body = json!({"type":"person_name","value":"juan","limit":20});
+    let bytes = serde_json::to_vec(&body).expect("json");
+
+    let (ts1, sig1) = common::sign(&secret, &bytes);
+    let first = server
+        .post("/v1/search")
+        .add_header("x-key-id", TEST_KEY_ID)
+        .add_header("x-timestamp", ts1)
+        .add_header("x-signature", sig1)
+        .json(&body)
+        .await;
+    first.assert_status_ok();
+
+    let (ts2, sig2) = common::sign(&secret, &bytes);
+    let second = server
+        .post("/v1/search")
+        .add_header("x-key-id", TEST_KEY_ID)
         .add_header("x-timestamp", ts2)
         .add_header("x-signature", sig2)
         .json(&body)

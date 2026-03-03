@@ -6,6 +6,7 @@ export const engineClient = createEngineClient(
   buildEngineClientConfig({
     nodeEnv: env.nodeEnv,
     engineUrl: env.engineUrl,
+    engineHmacKeyId: env.engineHmacKeyId,
     engineHmacSecret: env.engineHmacSecret,
   }),
 );
