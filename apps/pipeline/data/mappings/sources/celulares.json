@@ -5,7 +5,7 @@
   "has_header": true,
   "flexible": true,
   "fields": {
-    "person_dni": "DOCUMENTO",
+    "person_or_company_doc": "DOCUMENTO",
     "phone": "CELULAR",
     "role_start_date": "FECHA"
   },

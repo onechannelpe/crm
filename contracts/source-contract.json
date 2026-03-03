@@ -2,7 +2,7 @@
   "sources": [
     {
       "source_key": "celulares",
-      "required_canonical_fields": ["person_dni"],
+      "required_canonical_fields": ["person_or_company_doc"],
       "requires_any_phone_input": true
     },
     {

@@ -14,7 +14,6 @@ pub fn materialize_serving(db_path: &str) -> Result<(), PipelineError> {
             ON projection_dirty_person(person_id);
         CREATE INDEX IF NOT EXISTS idx_person_phone_phone ON person_phone(phone);
         CREATE INDEX IF NOT EXISTS idx_company_phone_phone ON company_phone(phone);
-        CREATE INDEX IF NOT EXISTS idx_role_phone_phone ON role_phone(phone);
         CREATE INDEX IF NOT EXISTS idx_search_projection_dni ON search_projection(dni);
         CREATE INDEX IF NOT EXISTS idx_search_projection_ruc ON search_projection(org_ruc);
         CREATE INDEX IF NOT EXISTS idx_search_projection_phone_index_phone
@@ -170,10 +169,18 @@ pub fn materialize_serving(db_path: &str) -> Result<(), PipelineError> {
             )
         WHERE p.person_id IN (SELECT person_id FROM tmp_dirty_person_ids);
         
-        INSERT INTO search_projection_phone_index(phone, projection_id)
+        INSERT OR IGNORE INTO search_projection_phone_index(phone, projection_id)
         SELECT DISTINCT pp.phone, pp.person_id
         FROM person_phone pp
         WHERE pp.person_id IN (SELECT person_id FROM tmp_dirty_person_ids);
+
+        -- Company phones surface on all resolved reps of that company.
+        INSERT OR IGNORE INTO search_projection_phone_index(phone, projection_id)
+        SELECT DISTINCT cp.phone, pcr.person_id
+        FROM company_phone cp
+        JOIN person_company_role pcr ON pcr.company_id = cp.company_id
+        WHERE pcr.resolution_status = 'resolved'
+          AND pcr.person_id IN (SELECT person_id FROM tmp_dirty_person_ids);
 
         INSERT INTO search_projection_fts(rowid, person_name, company_name)
         SELECT id, COALESCE(name,''), COALESCE(org_name,'')

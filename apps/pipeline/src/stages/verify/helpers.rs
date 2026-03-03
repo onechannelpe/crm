@@ -155,7 +155,7 @@ pub(super) fn materialize_and_quick_check(db_path: &str) -> Result<(), PipelineE
         "person_profile",
         "company_profile",
         "person_company_role",
-        "role_phone",
+        "company_phone",
         "search_projection",
         "search_projection_phone_index",
     ] {

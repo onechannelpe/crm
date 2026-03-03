@@ -38,7 +38,8 @@ pub fn normalize_phone_with_kind(value: &str) -> Option<(String, PhoneKind)> {
         return Some((cleaned, PhoneKind::Mobile));
     }
 
-    // National fixed-line without country code (common source patterns: 7/8 digits).
+    // Fixed lines are 7 digits (pre-2016 Lima) or 8 digits (post-2016). First digit 1–8
+    // distinguishes them from mobiles (9) and operator/special codes (0).
     let first = cleaned.chars().next()?;
     if (cleaned.len() == 7 || cleaned.len() == 8) && ('1'..='8').contains(&first) {
         return Some((cleaned, PhoneKind::Fixed));
@@ -58,6 +59,7 @@ pub fn derive_dni_from_natural_ruc(ruc: &str) -> Option<String> {
     if !ruc.starts_with("10") {
         return None;
     }
+    // RUC10 structure: "10" prefix + 8-digit DNI + 1 check digit.
     Some(ruc[2..10].to_owned())
 }
 
@@ -71,4 +73,20 @@ pub fn normalize_person_document_with_natural_ruc(value: &str) -> (Option<String
         return (Some(dni), Some(ruc));
     }
     (None, None)
+}
+
+/// For columns that hold mixed DNI/RUC types. Person and company buckets are mutually exclusive.
+pub fn normalize_ambiguous_doc(
+    value: &str,
+) -> (Option<String>, Option<String>, Option<String>) {
+    if let Some(dni) = normalize_dni(value) {
+        return (Some(dni), None, None);
+    }
+    if let Some(ruc) = normalize_ruc(value) {
+        if let Some(dni) = derive_dni_from_natural_ruc(&ruc) {
+            return (Some(dni), Some(ruc), None);
+        }
+        return (None, None, Some(ruc));
+    }
+    (None, None, None)
 }
