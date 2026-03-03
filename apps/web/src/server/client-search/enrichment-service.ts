@@ -275,10 +275,14 @@ export function createSearchEnrichmentService(
       );
       if (jobs.length < 1) return 0;
 
-      await Promise.all(
-        jobs.map(async (job) => {
+      // Cap concurrent SUNAT scraper requests to avoid rate-limiting.
+      const CONCURRENCY = 3;
+      const iter = jobs[Symbol.iterator]();
+      const worker = async () => {
+        for (const job of iter) {
           const currentNow = now();
           try {
+            // eslint-disable-next-line no-await-in-loop
             await processEnrichmentJob(
               job,
               scraper,
@@ -291,6 +295,7 @@ export function createSearchEnrichmentService(
               error instanceof Error
                 ? error.message
                 : "Search enrichment worker failed";
+            // eslint-disable-next-line no-await-in-loop
             await repos.searchEnrichment.markJobFailed(
               job.id,
               leaseOwner,
@@ -298,7 +303,10 @@ export function createSearchEnrichmentService(
               currentNow,
             );
           }
-        }),
+        }
+      };
+      await Promise.all(
+        Array.from({ length: Math.min(CONCURRENCY, jobs.length) }, worker),
       );
       return jobs.length;
     },

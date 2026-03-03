@@ -34,10 +34,10 @@ async fn main() -> Result<(), StartupError> {
     let state = AppState {
         search: Arc::new(SearchService::new(pool.clone(), cfg.max_limit)),
         hmac: Arc::new(HmacVerifier::new(
-            cfg.hmac_secret.clone(),
+            cfg.hmac_keys.clone(),
             cfg.hmac_max_skew_secs,
         )),
-        limiter: Arc::new(RateLimiter::new(cfg.rate_limit_per_ip)),
+        limiter: Arc::new(RateLimiter::new(cfg.rate_limit_per_key)),
     };
 
     let app = router::build_router(state);

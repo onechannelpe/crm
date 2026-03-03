@@ -57,6 +57,7 @@ export const env = {
   nodeEnv: optional("NODE_ENV", "development"),
   sessionSecret: required("SESSION_SECRET", true),
   engineUrl: optional("ENGINE_URL", "http://localhost:3001"),
+  engineHmacKeyId: required("ENGINE_HMAC_KEY_ID"),
   engineHmacSecret: required("ENGINE_HMAC_SECRET", true),
   webauthnRpId: optional("WEBAUTHN_RP_ID", "localhost"),
   webauthnOrigin: optional("WEBAUTHN_ORIGIN", "http://localhost:3000"),

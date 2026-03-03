@@ -7,6 +7,7 @@ SolidStart application. See [root readme](../../readme.md) for project overview.
 Read from root [`.env`](../../.env):
 
 - `SESSION_SECRET` (required): must be high entropy (min 32 chars, min 10 unique chars)
+- `ENGINE_HMAC_KEY_ID` (required): key id used when signing requests to engine
 - `ENGINE_HMAC_SECRET` (required): authenticates requests to engine. Must be high entropy (min 32 chars, min 10 unique chars)
 - `ENGINE_URL` (default `http://localhost:3001`): must be `https` and non-localhost in production
 - `NODE_ENV` (default `development`)

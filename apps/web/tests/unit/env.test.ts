@@ -5,6 +5,7 @@ describe("validateSecret", () => {
 
   beforeAll(async () => {
     process.env.SESSION_SECRET = "temp_secret_for_initial_import_32_chars_long";
+    process.env.ENGINE_HMAC_KEY_ID = "web";
     process.env.ENGINE_HMAC_SECRET =
       "temp_secret_for_initial_import_32_chars_long";
 

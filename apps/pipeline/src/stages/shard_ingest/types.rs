@@ -1,4 +1,17 @@
 use std::path::PathBuf;
+use std::thread;
+
+pub struct ShardIngestConfig<'a> {
+    pub db_path: &'a str,
+    pub run_id: &'a str,
+    pub mapping_path: &'a str,
+    pub input_path: &'a str,
+    pub snapshot_label: &'a str,
+    pub snapshot_date: &'a str,
+    pub reliability_rank: i64,
+    pub batch_size: usize,
+    pub workers: usize,
+}
 
 #[derive(Default, Clone)]
 pub struct IngestCounters {
@@ -42,6 +55,8 @@ pub(super) struct ShardWorkerResult {
     pub shard_db_path: PathBuf,
     pub counters: IngestCounters,
 }
+
+pub(super) type WorkerHandle = thread::JoinHandle<Result<ShardWorkerResult, String>>;
 
 #[derive(Default)]
 pub(super) struct StageRow {

@@ -1,5 +1,6 @@
 export interface EngineClientConfig {
   baseUrl: string;
+  keyId: string;
   hmacSecret: string;
   timeoutMs: number;
 }
@@ -9,6 +10,7 @@ const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
 export function buildEngineClientConfig(input: {
   nodeEnv: string;
   engineUrl: string;
+  engineHmacKeyId: string;
   engineHmacSecret: string;
 }): EngineClientConfig {
   const url = new URL(input.engineUrl);
@@ -25,7 +27,10 @@ export function buildEngineClientConfig(input: {
       throw new Error("ENGINE_URL must use https in production");
     }
 
-    if (LOCAL_HOSTS.has(url.hostname)) {
+    const normalizedHostname = url.hostname
+      .replace(/^\[/, "")
+      .replace(/\]$/, "");
+    if (LOCAL_HOSTS.has(normalizedHostname)) {
       throw new Error(
         "ENGINE_URL must target a remote engine host in production",
       );
@@ -34,6 +39,7 @@ export function buildEngineClientConfig(input: {
 
   return {
     baseUrl: url.toString().replace(/\/$/, ""),
+    keyId: input.engineHmacKeyId,
     hmacSecret: input.engineHmacSecret,
     timeoutMs: 2000,
   };

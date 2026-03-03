@@ -54,15 +54,13 @@ pub(crate) fn map_record(resolved: &ResolvedMapping, record: &StringRecord) -> C
         && !doc_resolved_to_person
         && !doc_resolved_to_company;
 
-    let person_dni = person_dni_from_person_doc
-        .or(doc_person_dni)
-        .or_else(|| {
-            if rep_doc_type.eq_ignore_ascii_case("DNI") {
-                normalize_dni(&rep_doc_number)
-            } else {
-                None
-            }
-        });
+    let person_dni = person_dni_from_person_doc.or(doc_person_dni).or_else(|| {
+        if rep_doc_type.eq_ignore_ascii_case("DNI") {
+            normalize_dni(&rep_doc_number)
+        } else {
+            None
+        }
+    });
 
     let person_natural_ruc = person_natural_ruc_from_person_doc.or(doc_natural_ruc);
 
@@ -71,7 +69,9 @@ pub(crate) fn map_record(resolved: &ResolvedMapping, record: &StringRecord) -> C
     CanonicalRow {
         person_dni,
         person_natural_ruc,
-        had_person_dni_input: !person_dni_raw.is_empty() || doc_resolved_to_person || doc_unresolved,
+        had_person_dni_input: !person_dni_raw.is_empty()
+            || doc_resolved_to_person
+            || doc_unresolved,
         person_full_name: if !person_full_name.is_empty() {
             person_full_name
         } else {

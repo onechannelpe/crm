@@ -3,10 +3,14 @@ use crate::cli::Command;
 use crate::config::manifest::verify_manifest;
 use crate::config::runtime::{PipelineRuntimeConfig, ProfileMode};
 use crate::contract_guard::validate_contracts;
+use crate::db::schema::open_rw;
+use crate::stages::gate;
 use crate::stages::normalize;
 use crate::stages::promote;
 use crate::stages::verify;
+use rusqlite::params;
 use std::path::Path;
+use std::time::SystemTime;
 
 pub fn run(command: Command) -> Result<(), PipelineError> {
     match command {
@@ -83,6 +87,68 @@ pub fn run(command: Command) -> Result<(), PipelineError> {
             let runtime = PipelineRuntimeConfig::from_path(&config)?;
             let from = from.unwrap_or(runtime.paths.staged_db);
             let to = to.unwrap_or(runtime.paths.engine_db);
+
+            if !Path::new(&from).exists() {
+                return Err(PipelineError::Args(format!(
+                    "source db does not exist: {from}"
+                )));
+            }
+
+            let gate_result = gate::run_gate(&from)?;
+            let gate_passed = gate_result.passed;
+            println!(
+                "[pipeline] gate passed={} checks={}",
+                gate_passed,
+                gate_result.checks.len()
+            );
+            for check in &gate_result.checks {
+                if !check.passed {
+                    eprintln!(
+                        "[pipeline] gate FAIL check={} actual={:.4} threshold={:.4} {}",
+                        check.name, check.actual, check.threshold, check.message
+                    );
+                }
+            }
+            // Stamp promoted-build metadata into the staging database before VACUUM INTO.
+            {
+                let conn = open_rw(&from)?;
+                let now_duration = SystemTime::now()
+                    .duration_since(SystemTime::UNIX_EPOCH)
+                    .map_err(|error| {
+                        PipelineError::Args(format!("system time error during promote: {error}"))
+                    })?;
+                let now_millis = now_duration.as_millis() as i64;
+                let now_nanos = now_duration.as_nanos();
+                let build_id = format!("build-{now_nanos}");
+                let rows: i64 =
+                    conn.query_row("SELECT COUNT(*) FROM search_projection", params![], |r| {
+                        r.get(0)
+                    })?;
+                println!(
+                    "[pipeline] build metadata: build_id={} gate_passed={} built_at={} rows={}",
+                    build_id, gate_passed, now_millis, rows
+                );
+
+                if !gate_passed {
+                    return Err(PipelineError::Args(format!(
+                        "quality gate failed for build_id={build_id} — inspect gate failures above"
+                    )));
+                }
+
+                conn.execute(
+                    "INSERT OR REPLACE INTO _pipeline_build(key, value) VALUES (?1, ?2)",
+                    params!["build_id", build_id],
+                )?;
+                conn.execute(
+                    "INSERT OR REPLACE INTO _pipeline_build(key, value) VALUES (?1, ?2)",
+                    params!["built_at", now_millis.to_string()],
+                )?;
+                conn.execute(
+                    "INSERT OR REPLACE INTO _pipeline_build(key, value) VALUES (?1, ?2)",
+                    params!["rows", rows.to_string()],
+                )?;
+            }
+
             promote::promote_db(&from, &to)
         }
     }

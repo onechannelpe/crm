@@ -4,7 +4,8 @@ use crate::db::repo;
 use crate::db::schema::open_rw;
 use crate::domain::canonical;
 use crate::stages::shard_ingest::types::{
-    IngestCounters, IngestSession, ShardResult, ShardTask, sanitize_path_component,
+    IngestCounters, IngestSession, ShardIngestConfig, ShardResult, ShardTask, WorkerHandle,
+    sanitize_path_component,
 };
 use crate::stages::shard_ingest::worker::run_shard_worker;
 use csv::ReaderBuilder;
@@ -15,17 +16,19 @@ use std::thread;
 
 const MAX_SHARDED_WORKERS: usize = 64;
 
-pub fn ingest_to_shards(
-    db_path: &str,
-    run_id: &str,
-    mapping_path: &str,
-    input_path: &str,
-    snapshot_label: &str,
-    snapshot_date: &str,
-    reliability_rank: i64,
-    batch_size: usize,
-    workers: usize,
-) -> Result<IngestSession, PipelineError> {
+pub fn ingest_to_shards(config: ShardIngestConfig<'_>) -> Result<IngestSession, PipelineError> {
+    let ShardIngestConfig {
+        db_path,
+        run_id,
+        mapping_path,
+        input_path,
+        snapshot_label,
+        snapshot_date,
+        reliability_rank,
+        batch_size,
+        workers,
+    } = config;
+
     if !Path::new(input_path).exists() {
         return Err(PipelineError::Args(format!(
             "input path does not exist: {input_path}"
@@ -168,10 +171,7 @@ fn spawn_workers(
     mapping: SourceMapping,
     resolved_mapping: canonical::ResolvedMapping,
     batch_size: usize,
-) -> (
-    Vec<SyncSender<ShardTask>>,
-    Vec<thread::JoinHandle<Result<crate::stages::shard_ingest::types::ShardWorkerResult, String>>>,
-) {
+) -> (Vec<SyncSender<ShardTask>>, Vec<WorkerHandle>) {
     let mut task_senders: Vec<SyncSender<ShardTask>> = Vec::with_capacity(workers);
     let mut handles = Vec::with_capacity(workers);
 

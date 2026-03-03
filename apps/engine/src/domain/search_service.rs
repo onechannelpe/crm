@@ -15,6 +15,10 @@ impl SearchService {
         Self { pool, max_limit }
     }
 
+    pub fn pool(&self) -> SqlitePool {
+        self.pool.clone()
+    }
+
     pub fn search(&self, req: &SearchRequest) -> Result<SearchResponse, ApiError> {
         match req.search_type {
             SearchType::Dni => input::validate_dni(&req.value)?,
