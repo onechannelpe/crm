@@ -21,15 +21,19 @@ pub fn run_gate(db_path: &str) -> Result<GateResult, PipelineError> {
     let conn = open_rw(db_path)?;
     let mut checks = Vec::new();
 
-    // Per-source: invalid_dni_ratio < 5% and accepted_rows > 0.
+    // Per-source (latest snapshot): invalid_dni_ratio < 5% and accepted_rows > 0.
     let snapshots: Vec<(String, i64, i64, i64)> = {
         let mut stmt = conn.prepare(
             r#"
+            WITH latest_snapshot AS (
+                SELECT source_id, MAX(snapshot_id) AS snapshot_id
+                FROM source_snapshot
+                GROUP BY source_id
+            )
             SELECT sr.source_key, sm.accepted_rows, sm.invalid_dni_rows, sm.total_rows
-            FROM snapshot_metrics sm
-            JOIN source_snapshot ss ON ss.snapshot_id = sm.snapshot_id
-            JOIN source_registry sr ON sr.source_id = ss.source_id
-            WHERE ss.status IN ('validated', 'merged')
+            FROM latest_snapshot ls
+            JOIN source_registry sr ON sr.source_id = ls.source_id
+            JOIN snapshot_metrics sm ON sm.snapshot_id = ls.snapshot_id
             "#,
         )?;
         stmt.query_map([], |row| {

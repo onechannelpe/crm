@@ -8,10 +8,17 @@ use axum::response::IntoResponse;
 
 pub async fn health(State(state): State<AppState>) -> impl IntoResponse {
     let pool = state.search.pool();
-    let result = tokio::task::spawn_blocking(move || -> Option<(i64, i64)> {
+    let result = tokio::task::spawn_blocking(move || -> Option<(Option<String>, i64, i64)> {
         let conn = pool.get().ok()?;
         conn.query_row("SELECT 1 FROM search_projection LIMIT 1", [], |_| Ok(()))
             .ok()?;
+        let build_id: Option<String> = conn
+            .query_row(
+                "SELECT value FROM _pipeline_build WHERE key = 'build_id'",
+                [],
+                |r| r.get::<_, String>(0),
+            )
+            .ok();
         let built_at: i64 = conn
             .query_row(
                 "SELECT value FROM _pipeline_build WHERE key = 'built_at'",
@@ -30,16 +37,17 @@ pub async fn health(State(state): State<AppState>) -> impl IntoResponse {
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(0);
-        Some((built_at, rows))
+        Some((build_id, built_at, rows))
     })
     .await
     .unwrap_or(None);
 
     match result {
-        Some((built_at, rows)) => (
+        Some((build_id, built_at, rows)) => (
             StatusCode::OK,
             axum::Json(HealthResponse {
                 status: "ok",
+                build_id,
                 built_at: if built_at > 0 { Some(built_at) } else { None },
                 rows: if rows > 0 { Some(rows) } else { None },
             }),
@@ -48,6 +56,7 @@ pub async fn health(State(state): State<AppState>) -> impl IntoResponse {
             StatusCode::SERVICE_UNAVAILABLE,
             axum::Json(HealthResponse {
                 status: "degraded",
+                build_id: None,
                 built_at: None,
                 rows: None,
             }),

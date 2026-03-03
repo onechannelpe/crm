@@ -89,9 +89,10 @@ pub fn run(command: Command) -> Result<(), PipelineError> {
             let to = to.unwrap_or(runtime.paths.engine_db);
 
             let gate_result = gate::run_gate(&from)?;
+            let gate_passed = gate_result.passed;
             println!(
                 "[pipeline] gate passed={} checks={}",
-                gate_result.passed,
+                gate_passed,
                 gate_result.checks.len()
             );
             for check in &gate_result.checks {
@@ -102,32 +103,55 @@ pub fn run(command: Command) -> Result<(), PipelineError> {
                     );
                 }
             }
-            if !gate_result.passed {
-                return Err(PipelineError::Args(
-                    "quality gate failed — inspect checks above to resolve".into(),
-                ));
-            }
-
-            // Stamp build metadata into the staging DB before VACUUM INTO.
+            // Create a concrete build artifact and stamp metadata into the
+            // staging database before VACUUM INTO.
             {
                 let conn = open_rw(&from)?;
-                let now_ms = SystemTime::now()
+                let now_duration = SystemTime::now()
                     .duration_since(SystemTime::UNIX_EPOCH)
-                    .map(|d| d.as_millis() as i64)
-                    .unwrap_or(0);
+                    .map_err(|error| {
+                        PipelineError::Args(format!("system time error during promote: {error}"))
+                    })?;
+                let now_millis = now_duration.as_millis() as i64;
+                let now_nanos = now_duration.as_nanos();
+                let build_id = format!("build-{now_nanos}");
                 let rows: i64 =
                     conn.query_row("SELECT COUNT(*) FROM search_projection", params![], |r| {
                         r.get(0)
                     })?;
                 conn.execute(
+                    "INSERT INTO build_artifact(build_id, db_path, gate_passed, built_at, rows) VALUES (?1, ?2, ?3, ?4, ?5)",
+                    params![
+                        build_id,
+                        from,
+                        if gate_passed { 1_i64 } else { 0_i64 },
+                        now_millis,
+                        rows,
+                    ],
+                )?;
+                println!(
+                    "[pipeline] build artifact: build_id={} gate_passed={} built_at={} rows={}",
+                    build_id, gate_passed, now_millis, rows
+                );
+
+                if !gate_passed {
+                    return Err(PipelineError::Args(format!(
+                        "quality gate failed for build_id={build_id} — inspect gate failures above"
+                    )));
+                }
+
+                conn.execute(
                     "INSERT OR REPLACE INTO _pipeline_build(key, value) VALUES (?1, ?2)",
-                    params!["built_at", now_ms.to_string()],
+                    params!["build_id", build_id],
+                )?;
+                conn.execute(
+                    "INSERT OR REPLACE INTO _pipeline_build(key, value) VALUES (?1, ?2)",
+                    params!["built_at", now_millis.to_string()],
                 )?;
                 conn.execute(
                     "INSERT OR REPLACE INTO _pipeline_build(key, value) VALUES (?1, ?2)",
                     params!["rows", rows.to_string()],
                 )?;
-                println!("[pipeline] build metadata: built_at={now_ms} rows={rows}");
             }
 
             promote::promote_db(&from, &to)
