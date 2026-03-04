@@ -1,9 +1,8 @@
-INSERT INTO person_profile(dni, natural_ruc10, full_name, email)
+INSERT INTO person_profile(dni, natural_ruc10, full_name)
 SELECT
     person_dni,
     NULLIF(person_natural_ruc, ''),
-    person_full_name,
-    email
+    person_full_name
 FROM tmp_person_dedup
 WHERE 1 = 1
 ON CONFLICT(dni) DO UPDATE SET
@@ -14,15 +13,10 @@ ON CONFLICT(dni) DO UPDATE SET
     full_name = CASE
         WHEN excluded.full_name <> '' THEN excluded.full_name
         ELSE person_profile.full_name
-    END,
-    email = CASE
-        WHEN excluded.email IS NOT NULL AND person_profile.email IS NULL THEN excluded.email
-        ELSE person_profile.email
     END
 WHERE
     (excluded.natural_ruc10 IS NOT NULL AND excluded.natural_ruc10 <> '' AND excluded.natural_ruc10 <> person_profile.natural_ruc10)
-    OR (excluded.full_name <> '' AND excluded.full_name <> person_profile.full_name)
-    OR (excluded.email IS NOT NULL AND person_profile.email IS NULL);
+    OR (excluded.full_name <> '' AND excluded.full_name <> person_profile.full_name);
 
 INSERT INTO person_profile(dni, natural_ruc10, full_name)
 SELECT

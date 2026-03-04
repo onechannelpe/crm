@@ -14,6 +14,7 @@ function row(partial: {
   org_ruc?: string | null;
   org_name?: string | null;
   sibling_phones?: string[] | null;
+  email?: string | null;
 }): SearchResult {
   const {
     dni = "12345678",
@@ -23,6 +24,7 @@ function row(partial: {
     org_ruc = null,
     org_name = null,
     sibling_phones = null,
+    email = null,
   } = partial;
   return {
     person: {
@@ -37,7 +39,7 @@ function row(partial: {
       ubigeo_code: null,
       mother_name: null,
       father_name: null,
-      email: null,
+      email,
     },
     org:
       org_ruc != null
@@ -152,5 +154,28 @@ describe("client search grouping", () => {
     expect(groups).toHaveLength(2);
     expect(groups[0]?.ruc).toBeNull();
     expect(groups[1]?.ruc).toBeNull();
+  });
+
+  it("aggregates emails per company and deduplicates them", () => {
+    const groups = groupCompaniesByRuc([
+      row({
+        dni: "12345678",
+        org_ruc: "20100000001",
+        email: "juan@gmail.com",
+      }),
+      row({
+        dni: "87654321",
+        org_ruc: "20100000001",
+        email: "maria@hotmail.com",
+      }),
+      row({
+        dni: "12345678",
+        org_ruc: "20100000001",
+        email: "juan@gmail.com",
+      }),
+    ]);
+
+    expect(groups).toHaveLength(1);
+    expect(groups[0]?.emails).toEqual(["juan@gmail.com", "maria@hotmail.com"]);
   });
 });

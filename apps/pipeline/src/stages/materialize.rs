@@ -10,6 +10,8 @@ pub fn materialize_serving(db_path: &str) -> Result<(), PipelineError> {
             ON person_company_role(person_id, role_id);
         CREATE INDEX IF NOT EXISTS idx_person_phone_person_conf_phone
             ON person_phone(person_id, confidence DESC, phone);
+        CREATE INDEX IF NOT EXISTS idx_person_email_person_rel_email
+            ON person_email(person_id, reliability DESC, email);
         CREATE INDEX IF NOT EXISTS idx_projection_dirty_person_id
             ON projection_dirty_person(person_id);
         CREATE INDEX IF NOT EXISTS idx_person_phone_phone ON person_phone(phone);
@@ -88,6 +90,20 @@ pub fn materialize_serving(db_path: &str) -> Result<(), PipelineError> {
             FROM ranked_phone
             WHERE rank_position <= 2
             GROUP BY person_id
+        ),
+        top_best_email AS (
+            SELECT person_id, email
+            FROM (
+                SELECT
+                    pe.person_id,
+                    pe.email,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY pe.person_id
+                        ORDER BY pe.reliability DESC, pe.email
+                    ) AS rn
+                FROM person_email pe
+            )
+            WHERE rn = 1
         )
         INSERT INTO search_projection(
             id,
@@ -134,7 +150,7 @@ pub fn materialize_serving(db_path: &str) -> Result<(), PipelineError> {
             p.ubigeo_code AS ubigeo_code,
             p.mother_name AS mother_name,
             p.father_name AS father_name,
-            p.email AS email,
+            tbe.email AS email,
             p.natural_ruc10 AS person_ruc,
             cp.ruc AS org_ruc,
             cp.legal_name AS org_name,
@@ -158,6 +174,7 @@ pub fn materialize_serving(db_path: &str) -> Result<(), PipelineError> {
         LEFT JOIN first_role role ON role.person_id = p.person_id
         LEFT JOIN company_profile cp ON cp.company_id = role.company_id
         LEFT JOIN top_two_phones phones ON phones.person_id = p.person_id
+        LEFT JOIN top_best_email tbe ON tbe.person_id = p.person_id
         LEFT JOIN person_company_role pcr
             ON pcr.person_id = p.person_id
             AND pcr.company_id = cp.company_id
