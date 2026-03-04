@@ -6,6 +6,7 @@ use crate::domain::normalize_helpers::{
 };
 use csv::StringRecord;
 use std::collections::{HashMap, HashSet};
+use std::sync::OnceLock;
 
 #[derive(Default)]
 pub(crate) struct CanonicalRow {
@@ -83,10 +84,7 @@ pub(crate) fn map_record(resolved: &ResolvedMapping, record: &StringRecord) -> C
         company_name: mapped_value("company_name", resolved, record),
         role_name: mapped_value("role_name", resolved, record),
         role_start_date: mapped_value("role_start_date", resolved, record),
-        email: {
-            let v = mapped_value("email", resolved, record);
-            if v.is_empty() { None } else { Some(v) }
-        },
+        email: normalize_email(&mapped_value("email", resolved, record)),
         rep_doc_type,
         rep_doc_number,
         rep_name,
@@ -203,6 +201,45 @@ fn classify_phone_issue(value: &str) -> Option<&'static str> {
         7 | 8 => Some("invalid_fixed_prefix"),
         _ => Some("unsupported_length"),
     }
+}
+
+static BLOCKED_EMAIL_LOCALS: OnceLock<HashSet<&'static str>> = OnceLock::new();
+static BLOCKED_EMAIL_DOMAINS: OnceLock<HashSet<&'static str>> = OnceLock::new();
+
+fn normalize_email(value: &str) -> Option<String> {
+    let at_sign = value.find('@')?;
+    if at_sign == 0 {
+        return None; // empty local part (e.g. "@")
+    }
+    let local = &value[..at_sign];
+    let domain = &value[at_sign + 1..];
+    if domain.is_empty() || !domain.contains('.') {
+        return None;
+    }
+    let local_lower = local.to_ascii_lowercase();
+    let domain_lower = domain.to_ascii_lowercase();
+    let blocked_locals = BLOCKED_EMAIL_LOCALS.get_or_init(|| {
+        [
+            "notiene",
+            "notienecorreo",
+            "dummy",
+            "email",
+            "null",
+            "na",
+            "noemail",
+        ]
+        .into_iter()
+        .collect()
+    });
+    if blocked_locals.contains(local_lower.as_str()) {
+        return None;
+    }
+    let blocked_domains =
+        BLOCKED_EMAIL_DOMAINS.get_or_init(|| ["dummy.com", "email.com.pe"].into_iter().collect());
+    if blocked_domains.contains(domain_lower.as_str()) {
+        return None;
+    }
+    Some(format!("{local_lower}@{domain_lower}"))
 }
 
 fn mapped_value(canonical: &str, resolved: &ResolvedMapping, record: &StringRecord) -> String {
