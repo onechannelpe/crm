@@ -6,8 +6,5 @@
   "main": "./src/cli.ts",
   "scripts": {
     "fetch": "bun run src/cli.ts"
-  },
-  "devDependencies": {
-    "@types/node": "^25.3.3"
   }
 }

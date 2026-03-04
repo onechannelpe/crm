@@ -5,7 +5,8 @@
     "": {
       "name": "one-workspace",
       "devDependencies": {
-        "@types/bun": "^1.3.9",
+        "@types/bun": "^1.3.10",
+        "@types/node": "^25.3.3",
         "oxfmt": "^0.36.0",
         "oxlint": "^1.51.0",
         "oxlint-tsgolint": "^0.16.0",
@@ -43,17 +44,12 @@
     "packages/fetch-refs": {
       "name": "@crm/fetch-refs",
       "version": "0.0.1",
-      "devDependencies": {
-        "@types/bun": "^1.3.9",
-        "@types/node": "^25.3.3",
-      },
     },
     "packages/notifications": {
       "name": "@crm/notifications",
       "version": "0.0.1",
       "devDependencies": {
         "@types/mjml": "^4.7.4",
-        "@types/node": "^25.3.0",
         "mjml": "^4.18.0",
         "vitest": "^4.0.18",
       },
