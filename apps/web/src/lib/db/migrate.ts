@@ -1,6 +1,8 @@
 import type { MigrationProvider } from "kysely";
 import { Migrator } from "kysely";
 
+import { createLogger } from "~/lib/observability/logger";
+
 import { db } from "./db";
 import * as m001 from "./migrations/001-initial";
 import * as m002 from "./migrations/002-client-search-views";
@@ -10,6 +12,8 @@ import * as m005 from "./migrations/005-report-export-observability";
 import * as m006 from "./migrations/006-sales-records-core";
 import * as m007 from "./migrations/007-action-rate-limit";
 import * as m008 from "./migrations/008-search-enrichment";
+
+const logger = createLogger("db-migrate");
 
 /**
  * Static migration provider that avoids FileMigrationProvider's dynamic import(),
@@ -41,14 +45,14 @@ export async function migrateToLatest() {
 
   results?.forEach((it) => {
     if (it.status === "Success") {
-      console.log(`migration "${it.migrationName}" executed successfully`);
+      logger.info("migration_executed", { migrationName: it.migrationName });
     } else if (it.status === "Error") {
-      console.error(`migration "${it.migrationName}" failed`);
+      logger.error("migration_failed", { migrationName: it.migrationName });
     }
   });
 
   if (error) {
-    console.error("migration failed:", error);
+    logger.error("migrate_to_latest_failed", { error });
     throw error;
   }
 }

@@ -133,14 +133,22 @@ export function createSalesExportService(
           : await repos.salesRecords.findConfirmedWithClientByBranch(
               scope.branchId ?? job.branch_id,
             );
-      const exportRows: ExportRow[] = rows.map((row) => ({
-        recordId: row.id,
-        companyName: row.company_name,
-        contactName: row.contact_name,
-        contactDni: row.dni,
-        executiveName: row.executive_name,
-        confirmedAt: row.updated_at,
-      }));
+      const exportRows: ExportRow[] = [];
+      for (const row of rows) {
+        if (row.confirmed_at === null) {
+          throw new Error(
+            `Confirmed sales record ${row.id} is missing confirmed_at`,
+          );
+        }
+        exportRows.push({
+          recordId: row.id,
+          companyName: row.company_name,
+          contactName: row.contact_name,
+          contactDni: row.dni,
+          executiveName: row.executive_name,
+          confirmedAt: row.confirmed_at,
+        });
+      }
 
       const fileBytes = await buildExportBytes(job.format, exportRows);
       const timestamp = Date.now();

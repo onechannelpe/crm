@@ -179,4 +179,204 @@ describe("sales records workflow service", () => {
     expect(rejected.error.reason).toBe("invalid_data");
     expect(rejected.error.message).toBe("Rejection reason is required");
   });
+
+  it("does not persist a draft when product lookup fails", async () => {
+    const before = await ctx.repos.salesRecords.listByExecutive(1, 100);
+
+    const created = await ctx.salesRecords.createDraft({
+      source: "manual",
+      executiveUserId: 1,
+      branchId: 1,
+      leadAssignmentId: null,
+      client: {
+        ruc: null,
+        companyName: "Org Lima",
+        contactName: "Contacto Lima",
+        dni: "70000001",
+        phones: ["+51999999111"],
+        engineMatchId: null,
+        completenessScore: 60,
+      },
+      addresses: [
+        {
+          addressType: "installation",
+          fullText: "Av. Demo 123",
+          department: null,
+          province: null,
+          district: null,
+          ubigeo: null,
+          latitude: null,
+          longitude: null,
+          isPrimary: true,
+        },
+      ],
+      products: [{ productId: 999_999, quantity: 1 }],
+    });
+
+    expect(created.ok).toBe(false);
+    if (created.ok) throw new Error("Expected product validation failure");
+    expect(created.error.reason).toBe("not_found");
+
+    const after = await ctx.repos.salesRecords.listByExecutive(1, 100);
+    expect(after).toHaveLength(before.length);
+  });
+
+  it("updates rejected drafts and allows resubmission", async () => {
+    const created = await ctx.salesRecords.createDraft({
+      source: "manual",
+      executiveUserId: 1,
+      branchId: 1,
+      leadAssignmentId: null,
+      client: {
+        ruc: null,
+        companyName: "Org Lima",
+        contactName: "Contacto Lima",
+        dni: "70000001",
+        phones: ["+51999999111"],
+        engineMatchId: null,
+        completenessScore: 60,
+      },
+      addresses: [
+        {
+          addressType: "installation",
+          fullText: "Av. Demo 123",
+          department: null,
+          province: null,
+          district: null,
+          ubigeo: null,
+          latitude: null,
+          longitude: null,
+          isPrimary: true,
+        },
+      ],
+      products: [{ productId: 1, quantity: 1 }],
+    });
+    if (!created.ok) throw new Error("Expected draft creation success");
+
+    const submitted = await ctx.salesRecords.submit(created.value, 1);
+    expect(submitted.ok).toBe(true);
+
+    const rejected = await ctx.salesRecords.reject(
+      created.value,
+      2,
+      1,
+      false,
+      "Fix data",
+    );
+    expect(rejected.ok).toBe(true);
+
+    const updated = await ctx.salesRecords.updateDraft(created.value, 1, {
+      client: {
+        ruc: "20100000999",
+        companyName: "Org Lima Updated",
+        contactName: "Contacto Lima Updated",
+        dni: "70000009",
+        phones: ["+51999999119"],
+        engineMatchId: null,
+        completenessScore: 90,
+      },
+      addresses: [
+        {
+          addressType: "installation",
+          fullText: "Av. Updated 456",
+          department: null,
+          province: null,
+          district: null,
+          ubigeo: null,
+          latitude: null,
+          longitude: null,
+          isPrimary: true,
+        },
+      ],
+      products: [{ productId: 1, quantity: 3 }],
+    });
+    expect(updated.ok).toBe(true);
+
+    const client = await ctx.repos.salesRecords.findClientByRecord(
+      created.value,
+    );
+    const addresses = await ctx.repos.salesRecords.findAddressesByRecord(
+      created.value,
+    );
+    const products = await ctx.repos.salesRecords.findProductsByRecord(
+      created.value,
+    );
+    expect(client?.company_name).toBe("Org Lima Updated");
+    expect(addresses[0]?.full_text).toBe("Av. Updated 456");
+    expect(products[0]?.product_id).toBe(1);
+    expect(products[0]?.quantity).toBe(3);
+
+    const resubmitted = await ctx.salesRecords.submit(created.value, 1);
+    expect(resubmitted.ok).toBe(true);
+    const row = await ctx.repos.salesRecords.findById(created.value);
+    expect(row?.status).toBe("submitted_for_confirmation");
+  });
+
+  it("registers attempts only while pending confirmation", async () => {
+    const created = await ctx.salesRecords.createDraft({
+      source: "manual",
+      executiveUserId: 1,
+      branchId: 1,
+      leadAssignmentId: null,
+      client: {
+        ruc: null,
+        companyName: "Org Lima",
+        contactName: "Contacto Lima",
+        dni: "70000001",
+        phones: ["+51999999111"],
+        engineMatchId: null,
+        completenessScore: 60,
+      },
+      addresses: [
+        {
+          addressType: "installation",
+          fullText: "Av. Demo 123",
+          department: null,
+          province: null,
+          district: null,
+          ubigeo: null,
+          latitude: null,
+          longitude: null,
+          isPrimary: true,
+        },
+      ],
+      products: [{ productId: 1, quantity: 1 }],
+    });
+    if (!created.ok) throw new Error("Expected draft creation success");
+
+    const blockedInDraft = await ctx.salesRecords.registerAttempt(
+      created.value,
+      2,
+      1,
+      false,
+      "no_answer",
+      "Call pending",
+      Date.now() + 60_000,
+    );
+    expect(blockedInDraft.ok).toBe(false);
+    if (blockedInDraft.ok) {
+      throw new Error("Expected attempt to be blocked for draft state");
+    }
+    expect(blockedInDraft.error.reason).toBe("invalid_state");
+
+    const submitted = await ctx.salesRecords.submit(created.value, 1);
+    expect(submitted.ok).toBe(true);
+
+    const recorded = await ctx.salesRecords.registerAttempt(
+      created.value,
+      2,
+      1,
+      false,
+      "callback_scheduled",
+      "Try after lunch",
+      Date.now() + 60_000,
+    );
+    expect(recorded.ok).toBe(true);
+
+    const attempts = await ctx.repos.salesRecords.listAttemptsByRecord(
+      created.value,
+    );
+    expect(attempts).toHaveLength(1);
+    expect(attempts[0]?.outcome).toBe("callback_scheduled");
+  });
 });

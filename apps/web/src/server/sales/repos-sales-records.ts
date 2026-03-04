@@ -123,12 +123,14 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
           "sales_records.status",
           "sales_records.created_at",
           "sales_records.updated_at",
+          "sales_records.confirmed_at",
           "sales_record_client.company_name",
           "sales_record_client.contact_name",
           "sales_record_client.dni",
           "users.full_name as executive_name",
         ])
         .where("sales_records.status", "=", "confirmed")
+        .where("sales_records.confirmed_at", "is not", null)
         .orderBy("sales_records.updated_at", "desc")
         .execute();
     },
@@ -147,12 +149,14 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
           "sales_records.status",
           "sales_records.created_at",
           "sales_records.updated_at",
+          "sales_records.confirmed_at",
           "sales_record_client.company_name",
           "sales_record_client.contact_name",
           "sales_record_client.dni",
           "users.full_name as executive_name",
         ])
         .where("sales_records.status", "=", "confirmed")
+        .where("sales_records.confirmed_at", "is not", null)
         .where("sales_records.branch_id", "=", branchId)
         .orderBy("sales_records.updated_at", "desc")
         .execute();
@@ -172,12 +176,14 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
           "sales_records.status",
           "sales_records.created_at",
           "sales_records.updated_at",
+          "sales_records.confirmed_at",
           "sales_record_client.company_name",
           "sales_record_client.contact_name",
           "sales_record_client.dni",
           "users.full_name as executive_name",
         ])
         .where("sales_records.status", "=", "confirmed")
+        .where("sales_records.confirmed_at", "is not", null)
         .where("sales_records.executive_user_id", "=", executiveUserId)
         .orderBy("sales_records.updated_at", "desc")
         .execute();

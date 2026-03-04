@@ -1,9 +1,11 @@
+import { createLogger } from "~/lib/observability/logger";
 import {
   salesExportService,
   searchEnrichmentService,
 } from "~/server/shared/context";
 
 const WORKER_ID = `bg-${process.pid}`;
+const logger = createLogger("background-jobs", { workerId: WORKER_ID });
 
 interface JobLoopConfig {
   name: string;
@@ -26,7 +28,7 @@ function startLoop(config: JobLoopConfig) {
     try {
       await config.run();
     } catch (error) {
-      console.error(`[${config.name}] Batch failed`, error);
+      logger.error("batch_failed", { job: config.name, error });
     } finally {
       inFlight = false;
       if (!stopped) {
@@ -36,7 +38,10 @@ function startLoop(config: JobLoopConfig) {
   };
 
   void loop();
-  console.log(`[${config.name}] Running every ${config.intervalMs} ms`);
+  logger.info("loop_started", {
+    job: config.name,
+    intervalMs: config.intervalMs,
+  });
 
   return () => {
     stopped = true;
@@ -55,7 +60,7 @@ export function startBackgroundJobs() {
           WORKER_ID,
         );
         if (processed > 0) {
-          console.log(`[Search enrichment jobs] Processed ${processed} job(s)`);
+          logger.info("search_enrichment_jobs_processed", { processed });
         }
       },
     }),
@@ -68,10 +73,10 @@ export function startBackgroundJobs() {
           salesExportService.expireCompleted(25),
         ]);
         if (processed > 0) {
-          console.log(`[Sales export jobs] Processed ${processed} job(s)`);
+          logger.info("sales_export_jobs_processed", { processed });
         }
         if (expired > 0) {
-          console.log(`[Sales export jobs] Expired ${expired} job(s)`);
+          logger.info("sales_export_jobs_expired", { expired });
         }
       },
     }),
