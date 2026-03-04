@@ -199,7 +199,7 @@ export function CompanyDetailDrawer(props: CompanyDetailDrawerProps) {
         </Show>
 
         <Show when={representatives().length > 0}>
-          <DetailSection title="Representatives">
+          <DetailSection title="Representantes">
             <For each={representatives()}>
               {(representative) => (
                 <div class={styles.recordItem}>
