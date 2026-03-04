@@ -1,5 +1,8 @@
 import { hashPassword } from "../auth/password/password";
+import { createLogger } from "../observability/logger";
 import { db } from "./db";
+
+const logger = createLogger("db-seed");
 
 export async function seedIfEmpty() {
   const userCount = await db
@@ -8,11 +11,11 @@ export async function seedIfEmpty() {
     .executeTakeFirst();
 
   if (userCount && Number(userCount.count) > 0) {
-    console.log("Database already seeded, skipping...");
+    logger.info("seed_skipped_already_initialized");
     return;
   }
 
-  console.log("Seeding database with initial data...");
+  logger.info("seed_started");
   const now = Date.now();
 
   await db
@@ -1528,7 +1531,7 @@ export async function seedIfEmpty() {
     .onConflict((oc) => oc.doNothing())
     .execute();
 
-  console.log("Database seeding complete.");
+  logger.info("seed_completed");
 }
 
 async function seed() {
@@ -1536,7 +1539,7 @@ async function seed() {
     await seedIfEmpty();
     process.exit(0);
   } catch (err) {
-    console.error("Seed failed:", err);
+    logger.error("seed_failed", { error: err });
     process.exit(1);
   }
 }

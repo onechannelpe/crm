@@ -2,7 +2,11 @@ import { createClient } from "@libsql/client";
 import { Kysely } from "kysely";
 import { LibSQLDialect } from "kysely-turso/libsql";
 
+import { createLogger } from "~/lib/observability/logger";
+
 import type { Database as DatabaseSchema } from "./schema";
+
+const logger = createLogger("db-client");
 
 export function createDb(path: string): Kysely<DatabaseSchema> {
   const client = createClient({
@@ -12,7 +16,7 @@ export function createDb(path: string): Kysely<DatabaseSchema> {
 
   const applyPragma = (statement: string) => {
     void client.execute(statement).catch((error: unknown) => {
-      console.error(`Failed to apply PRAGMA: ${statement}`, error);
+      logger.error("pragma_apply_failed", { statement, error });
     });
   };
 

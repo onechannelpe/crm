@@ -17,11 +17,29 @@ fn load_root_env() {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), StartupError> {
+async fn main() {
+    if let Err(e) = run().await {
+        eprintln!("Error: {e}");
+        std::process::exit(1);
+    }
+}
+
+async fn run() -> Result<(), StartupError> {
     logging::init();
     load_root_env();
 
     let cfg = Config::load()?;
+
+    if !Path::new(&cfg.db_path).exists() {
+        return Err(StartupError::Database(format!(
+            "contacts database not found at {}\n  \
+            ⇢ Build it with a slice run:\n  \
+            ⇢   bun run pipeline:engine bench --profile quick\n  \
+            ⇢   cp apps/pipeline/data/build/bench/bench-quick.sqlite apps/engine/data/contacts.sqlite",
+            cfg.db_path
+        )));
+    }
+
     let pool = connection::make_pool(&cfg.db_path)?;
 
     {

@@ -107,9 +107,7 @@ export function AccountMenu(props: AccountMenuProps) {
               void props
                 .onLogout()
                 .then(() => navigate("/login", { replace: true }))
-                .catch((error: unknown) => {
-                  console.error("Logout failed", error);
-                });
+                .catch(() => undefined);
             }}
           >
             <LogOut size={16} />
