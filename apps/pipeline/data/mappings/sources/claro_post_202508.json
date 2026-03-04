@@ -8,6 +8,7 @@
     "rep_doc_type": "ID_CARD_TYPE_VALUE",
     "rep_doc_number": "ID_CARD_VALUE",
     "person_full_name": "CUSTOMER_FULL_NAME",
+    "email": "CUSTOMER_EMAIL",
     "phone": "SUBSCRIPTION_ACCESS_NUMBER",
     "role_start_date": "SUBSCRIPTION_START_DATE"
   },
