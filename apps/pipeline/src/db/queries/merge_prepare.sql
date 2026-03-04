@@ -4,6 +4,7 @@ SELECT
     NULLIF(person_dni, '') AS person_dni,
     NULLIF(person_natural_ruc, '') AS person_natural_ruc,
     person_full_name,
+    email,
     NULLIF(company_ruc, '') AS company_ruc,
     company_name,
     role_name,
@@ -25,7 +26,8 @@ CREATE TEMP TABLE tmp_person_dedup AS
 SELECT
     person_dni,
     MAX(CASE WHEN person_natural_ruc IS NOT NULL THEN person_natural_ruc ELSE '' END) AS person_natural_ruc,
-    MAX(CASE WHEN person_full_name <> '' THEN person_full_name ELSE '' END) AS person_full_name
+    MAX(CASE WHEN person_full_name <> '' THEN person_full_name ELSE '' END) AS person_full_name,
+    MAX(email) AS email
 FROM tmp_stage
 WHERE person_dni IS NOT NULL
 GROUP BY person_dni;

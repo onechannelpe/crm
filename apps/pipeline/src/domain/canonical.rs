@@ -13,6 +13,7 @@ pub(crate) struct CanonicalRow {
     pub(crate) person_natural_ruc: Option<String>,
     pub(crate) had_person_dni_input: bool,
     pub(crate) person_full_name: String,
+    pub(crate) email: Option<String>,
     pub(crate) company_ruc: Option<String>,
     pub(crate) had_company_ruc_input: bool,
     pub(crate) company_name: String,
@@ -82,6 +83,10 @@ pub(crate) fn map_record(resolved: &ResolvedMapping, record: &StringRecord) -> C
         company_name: mapped_value("company_name", resolved, record),
         role_name: mapped_value("role_name", resolved, record),
         role_start_date: mapped_value("role_start_date", resolved, record),
+        email: {
+            let v = mapped_value("email", resolved, record);
+            if v.is_empty() { None } else { Some(v) }
+        },
         rep_doc_type,
         rep_doc_number,
         rep_name,
