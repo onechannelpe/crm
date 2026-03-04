@@ -2,7 +2,7 @@
   "name": "@crm/web",
   "type": "module",
   "scripts": {
-    "dev": "bun --bun vite --config app.config.ts",
+    "dev": "bun run migrate && bun --bun vite --config app.config.ts",
     "build": "bun --bun vite build --config app.config.ts",
     "start": "bun --bun vite preview --config app.config.ts",
     "worker:maintenance": "bun --env-file=../../.env src/workers/maintenance-runner.ts",
