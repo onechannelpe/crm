@@ -1,6 +1,6 @@
 "use server";
 
-import { validationError } from "~/lib/app-errors";
+import { internalError, validationError } from "~/lib/app-errors";
 import { requirePermission } from "~/lib/auth/access/session";
 import { searchEnrichmentService } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
@@ -17,7 +17,7 @@ function mapEnrichmentError(error: {
   if (error.reason === "invalid_document") {
     throw validationError(error.message);
   }
-  throw new Error(error.message);
+  throw internalError(error.message);
 }
 
 export async function requestSearchEnrichment(

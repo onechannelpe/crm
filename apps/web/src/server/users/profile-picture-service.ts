@@ -1,3 +1,4 @@
+import { createLogger } from "~/lib/observability/logger";
 import type { Result } from "~/server/shared/result";
 import { Err, Ok } from "~/server/shared/result";
 
@@ -9,6 +10,7 @@ const MIME_TO_EXTENSION: Record<string, string> = {
   "image/png": "png",
   "image/gif": "gif",
 };
+const logger = createLogger("profile-picture-service");
 
 export type AvatarDomainErrorCode =
   | "invalid_file"
@@ -145,7 +147,7 @@ export function createProfilePictureService(
         try {
           await blobStore.delete(currentAvatar.avatar_storage_key);
         } catch (error) {
-          console.error("avatar_cleanup_failed", {
+          logger.error("avatar_cleanup_failed", {
             operation: "upload",
             userId,
             oldStorageKey: currentAvatar.avatar_storage_key,
@@ -186,7 +188,7 @@ export function createProfilePictureService(
         try {
           await blobStore.delete(currentAvatar.avatar_storage_key);
         } catch (error) {
-          console.error("avatar_cleanup_failed", {
+          logger.error("avatar_cleanup_failed", {
             operation: "remove",
             userId,
             oldStorageKey: currentAvatar.avatar_storage_key,

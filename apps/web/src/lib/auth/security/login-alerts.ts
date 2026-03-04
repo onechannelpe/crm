@@ -1,5 +1,6 @@
 import type { NotificationsConfig } from "@crm/notifications";
 
+import { createLogger } from "~/lib/observability/logger";
 import { createAppNotificationService } from "~/server/notifications/service";
 import type { Repositories } from "~/server/shared/registry";
 
@@ -13,6 +14,8 @@ type AlertRepos = Pick<
   Repositories,
   "notificationCampaigns" | "notificationContacts" | "notificationPreferences"
 >;
+
+const logger = createLogger("login-alerts");
 
 export function createPrivilegedLoginAlertSender(
   repos: AlertRepos,
@@ -54,7 +57,7 @@ export function createPrivilegedLoginAlertSender(
       await notifications.enqueueDueCampaigns(5);
       await notifications.processPendingJobs(20);
     } catch (error) {
-      console.error("Failed to send privileged login alert", error);
+      logger.error("privileged_login_alert_failed", { error });
     }
   };
 }

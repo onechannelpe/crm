@@ -1,7 +1,14 @@
 import type { MigrationProvider } from "kysely";
 import { Migrator } from "kysely";
 
+import { createLogger } from "~/lib/observability/logger";
+
 import { db } from "./db";
+import {
+  checkIntegrityHash,
+  computeMigrationsHash,
+  writeIntegrityHash,
+} from "./migration-hash";
 import * as m001 from "./migrations/001-initial";
 import * as m002 from "./migrations/002-client-search-views";
 import * as m003 from "./migrations/003-user-invites";
@@ -11,27 +18,34 @@ import * as m006 from "./migrations/006-sales-records-core";
 import * as m007 from "./migrations/007-action-rate-limit";
 import * as m008 from "./migrations/008-search-enrichment";
 
+const logger = createLogger("db-migrate");
+
 /**
- * Static migration provider that avoids FileMigrationProvider's dynamic import(),
- * which fails on Windows under Vite SSR due to bare drive-letter paths (f:\...)
- * not being valid file:// URLs for Node's ESM loader.
+ * Uses static imports instead of Kysely's FileMigrationProvider.
+ * FileMigrationProvider passes raw filesystem paths (e.g. C:\...) to dynamic
+ * import(), which Node's ESM loader rejects — it requires file:// URLs.
  */
+const migrations = {
+  "001-initial": m001,
+  "002-client-search-views": m002,
+  "003-user-invites": m003,
+  "004-action-observability": m004,
+  "005-report-export-observability": m005,
+  "006-sales-records-core": m006,
+  "007-action-rate-limit": m007,
+  "008-search-enrichment": m008,
+};
+
 const staticProvider: MigrationProvider = {
   async getMigrations() {
-    return {
-      "001-initial": m001,
-      "002-client-search-views": m002,
-      "003-user-invites": m003,
-      "004-action-observability": m004,
-      "005-report-export-observability": m005,
-      "006-sales-records-core": m006,
-      "007-action-rate-limit": m007,
-      "008-search-enrichment": m008,
-    };
+    return migrations;
   },
 };
 
 export async function migrateToLatest() {
+  const currentHash = await computeMigrationsHash(migrations);
+  await checkIntegrityHash(db, currentHash);
+
   const migrator = new Migrator({
     db,
     provider: staticProvider,
@@ -41,14 +55,16 @@ export async function migrateToLatest() {
 
   results?.forEach((it) => {
     if (it.status === "Success") {
-      console.log(`migration "${it.migrationName}" executed successfully`);
+      logger.info("migration_executed", { migrationName: it.migrationName });
     } else if (it.status === "Error") {
-      console.error(`migration "${it.migrationName}" failed`);
+      logger.error("migration_failed", { migrationName: it.migrationName });
     }
   });
 
   if (error) {
-    console.error("migration failed:", error);
+    logger.error("migrate_to_latest_failed", { error });
     throw error;
   }
+
+  await writeIntegrityHash(db, currentHash);
 }

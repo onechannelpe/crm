@@ -1,11 +1,15 @@
+import { createLogger } from "~/lib/observability/logger";
+
 import { migrateToLatest } from "./migrate";
+
+const logger = createLogger("db-migrate-cli");
 
 migrateToLatest()
   .then(() => {
-    console.log("Migration complete.");
+    logger.info("migration_complete");
     process.exit(0);
   })
   .catch((err) => {
-    console.error("Migration failed:", err);
+    logger.error("migration_failed", { error: err });
     process.exit(1);
   });

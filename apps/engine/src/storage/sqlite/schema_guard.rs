@@ -17,7 +17,11 @@ pub fn validate(conn: &Connection) -> Result<(), StartupError> {
     for name in REQUIRED_TABLES {
         if !sqlite_object_exists(conn, "table", name)? {
             return Err(StartupError::Database(format!(
-                "missing required table: {name}"
+                "missing required table: {name}\n  \
+                ⇢ contacts.sqlite is missing or was built by an older pipeline.\n  \
+                ⇢ Rebuild it with a slice run:\n  \
+                ⇢   bun run pipeline:engine bench --profile quick\n  \
+                ⇢   cp apps/pipeline/data/build/bench/bench-quick.sqlite apps/engine/data/contacts.sqlite"
             )));
         }
     }

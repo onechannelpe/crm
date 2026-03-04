@@ -1,4 +1,5 @@
 import type { NewUserSession } from "~/lib/db/schema";
+import { createLogger } from "~/lib/observability/logger";
 import { repos } from "~/server/shared/context";
 import type { Repositories } from "~/server/shared/registry";
 
@@ -15,6 +16,7 @@ const SESSION_DURATION = 30 * 24 * 60 * 60 * 1000;
 const ACTIVITY_UPDATE_THRESHOLD = 5 * 60 * 1000;
 const EXTENSION_THRESHOLD = 7 * 24 * 60 * 60 * 1000;
 const AUTH_METHODS = ["password", "password_totp", "passkey"] as const;
+const logger = createLogger("session-manager");
 
 export interface SessionValidationResult {
   session: AuthSession | null;
@@ -180,12 +182,16 @@ export async function validateSessionToken(
   const sessionUser = user;
 
   if (now - dbSession.last_activity > ACTIVITY_UPDATE_THRESHOLD) {
-    sessions.updateActivity(sessionId, now).catch(console.error);
+    sessions.updateActivity(sessionId, now).catch((error: unknown) => {
+      logger.error("update_activity_failed", { sessionId, error });
+    });
   }
 
   if (dbSession.expires_at - now < EXTENSION_THRESHOLD) {
     const newExpiry = now + SESSION_DURATION;
-    sessions.extendExpiry(sessionId, newExpiry).catch(console.error);
+    sessions.extendExpiry(sessionId, newExpiry).catch((error: unknown) => {
+      logger.error("extend_expiry_failed", { sessionId, error });
+    });
     dbSession.expires_at = newExpiry;
   }
 
