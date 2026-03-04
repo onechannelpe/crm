@@ -26,6 +26,14 @@ pub(crate) struct CanonicalRow {
     pub(crate) phones: Vec<String>,
     pub(crate) had_phone_input: bool,
     pub(crate) invalid_phone_reasons: Vec<String>,
+    pub(crate) company_status: String,
+    pub(crate) company_condition: String,
+    pub(crate) company_type: String,
+    pub(crate) economic_activity: String,
+    pub(crate) company_ubigeo: String,
+    pub(crate) company_department: String,
+    pub(crate) company_province: String,
+    pub(crate) company_district: String,
 }
 
 #[derive(Clone)]
@@ -91,6 +99,14 @@ pub(crate) fn map_record(resolved: &ResolvedMapping, record: &StringRecord) -> C
         phones,
         had_phone_input,
         invalid_phone_reasons,
+        company_status: mapped_value("company_status", resolved, record),
+        company_condition: mapped_value("company_condition", resolved, record),
+        company_type: mapped_value("company_type", resolved, record),
+        economic_activity: mapped_value("economic_activity", resolved, record),
+        company_ubigeo: mapped_value("company_ubigeo", resolved, record),
+        company_department: mapped_value("company_department", resolved, record),
+        company_province: mapped_value("company_province", resolved, record),
+        company_district: mapped_value("company_district", resolved, record),
     }
 }
 

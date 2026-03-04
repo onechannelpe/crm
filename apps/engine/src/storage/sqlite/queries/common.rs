@@ -28,6 +28,10 @@ pub const SELECT_COLUMNS: &str = "
   NULLIF(c.activity_start_date, '') AS activity_start_date,
   NULLIF(c.line_of_business, '') AS line_of_business,
   NULLIF(c.economic_activity, '') AS economic_activity,
+  NULLIF(c.org_ubigeo_code, '') AS org_ubigeo_code,
+  NULLIF(c.org_department, '') AS org_department,
+  NULLIF(c.org_province, '') AS org_province,
+  NULLIF(c.org_district, '') AS org_district,
   NULLIF(c.role_name, '') AS role_name,
   NULLIF(c.role_start_date, '') AS role_start_date,
   NULLIF(c.rep_doc_type, '') AS rep_doc_type,
@@ -57,6 +61,10 @@ pub fn map_row(row: &Row<'_>) -> rusqlite::Result<SearchRow> {
     let activity_start_date: Option<String> = row.get("activity_start_date")?;
     let line_of_business: Option<String> = row.get("line_of_business")?;
     let economic_activity: Option<String> = row.get("economic_activity")?;
+    let org_ubigeo_code: Option<String> = row.get("org_ubigeo_code")?;
+    let org_department: Option<String> = row.get("org_department")?;
+    let org_province: Option<String> = row.get("org_province")?;
+    let org_district: Option<String> = row.get("org_district")?;
 
     let org = if org_ruc.is_none()
         && org_name.is_none()
@@ -69,6 +77,10 @@ pub fn map_row(row: &Row<'_>) -> rusqlite::Result<SearchRow> {
         && activity_start_date.is_none()
         && line_of_business.is_none()
         && economic_activity.is_none()
+        && org_ubigeo_code.is_none()
+        && org_department.is_none()
+        && org_province.is_none()
+        && org_district.is_none()
     {
         None
     } else {
@@ -84,6 +96,10 @@ pub fn map_row(row: &Row<'_>) -> rusqlite::Result<SearchRow> {
             activity_start_date,
             line_of_business,
             economic_activity,
+            ubigeo_code: org_ubigeo_code,
+            department: org_department,
+            province: org_province,
+            district: org_district,
         })
     };
 

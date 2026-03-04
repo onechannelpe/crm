@@ -33,18 +33,40 @@ ON CONFLICT(natural_ruc10) DO UPDATE SET
     END
 WHERE excluded.full_name <> '' AND excluded.full_name <> person_profile.full_name;
 
-INSERT INTO company_profile(ruc, legal_name)
+INSERT INTO company_profile(ruc, legal_name, status, condition, company_type, economic_activity, ubigeo_code, department, province, district)
 SELECT
     company_ruc,
-    company_name
+    company_name,
+    NULLIF(company_status, ''),
+    NULLIF(company_condition, ''),
+    NULLIF(company_type, ''),
+    NULLIF(economic_activity, ''),
+    NULLIF(company_ubigeo, ''),
+    NULLIF(company_department, ''),
+    NULLIF(company_province, ''),
+    NULLIF(company_district, '')
 FROM tmp_company_dedup
 WHERE 1 = 1
 ON CONFLICT(ruc) DO UPDATE SET
     legal_name = CASE
         WHEN excluded.legal_name <> '' THEN excluded.legal_name
         ELSE company_profile.legal_name
-    END
-WHERE excluded.legal_name <> '' AND excluded.legal_name <> company_profile.legal_name;
+    END,
+    status = COALESCE(excluded.status, company_profile.status),
+    condition = COALESCE(excluded.condition, company_profile.condition),
+    company_type = COALESCE(excluded.company_type, company_profile.company_type),
+    economic_activity = COALESCE(excluded.economic_activity, company_profile.economic_activity),
+    ubigeo_code = COALESCE(excluded.ubigeo_code, company_profile.ubigeo_code),
+    department = COALESCE(excluded.department, company_profile.department),
+    province = COALESCE(excluded.province, company_profile.province),
+    district = COALESCE(excluded.district, company_profile.district)
+WHERE
+    (excluded.legal_name <> '' AND excluded.legal_name <> company_profile.legal_name)
+    OR excluded.status IS NOT NULL
+    OR excluded.condition IS NOT NULL
+    OR excluded.company_type IS NOT NULL
+    OR excluded.economic_activity IS NOT NULL
+    OR excluded.ubigeo_code IS NOT NULL;
 
 CREATE TEMP TABLE tmp_role_source AS
 SELECT DISTINCT
