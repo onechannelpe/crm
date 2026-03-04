@@ -43,7 +43,6 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             location_text TEXT,
             mother_name TEXT,
             father_name TEXT,
-            email TEXT,
             ubigeo_code TEXT
         );
 
@@ -85,6 +84,16 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             confidence INTEGER NOT NULL DEFAULT 100,
             PRIMARY KEY(person_id, phone),
             FOREIGN KEY(person_id) REFERENCES person_profile(person_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS person_email (
+            person_id INTEGER NOT NULL,
+            email TEXT NOT NULL,
+            source_id INTEGER NOT NULL,
+            reliability INTEGER NOT NULL,
+            PRIMARY KEY(person_id, email),
+            FOREIGN KEY(person_id) REFERENCES person_profile(person_id),
+            FOREIGN KEY(source_id) REFERENCES source_registry(source_id)
         );
 
         CREATE TABLE IF NOT EXISTS company_phone (

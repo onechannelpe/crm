@@ -1,6 +1,6 @@
 use crate::PipelineError;
 use crate::stages::merge::sql::{
-    MERGE_CLEANUP_SQL, MERGE_CORE_SQL, MERGE_PHONE_SQL, MERGE_PREPARE_SQL,
+    MERGE_CLEANUP_SQL, MERGE_CORE_SQL, MERGE_EMAIL_SQL, MERGE_PHONE_SQL, MERGE_PREPARE_SQL,
 };
 use rusqlite::params;
 use std::path::Path;
@@ -11,6 +11,7 @@ pub(super) struct MergeShardTimings {
     pub prepare_secs: f64,
     pub core_secs: f64,
     pub phone_secs: f64,
+    pub email_secs: f64,
     pub cleanup_secs: f64,
     pub attach_detach_secs: f64,
 }
@@ -23,6 +24,11 @@ pub(super) fn merge_one_shard(
     let source_id: i64 = main_conn.query_row(
         "SELECT source_id FROM source_snapshot WHERE snapshot_id = ?1",
         [snapshot_id],
+        |row| row.get(0),
+    )?;
+    let reliability_rank: i64 = main_conn.query_row(
+        "SELECT reliability_rank FROM source_registry WHERE source_id = ?1",
+        [source_id],
         |row| row.get(0),
     )?;
     let tx = main_conn.transaction()?;
@@ -57,10 +63,19 @@ pub(super) fn merge_one_shard(
     tx.execute_batch(MERGE_CORE_SQL)?;
     timings.core_secs = core_started_at.elapsed().as_secs_f64();
 
-    let merge_phone_sql = MERGE_PHONE_SQL.replace("{snapshot_id}", &snapshot_id.to_string());
+    let merge_phone_sql = MERGE_PHONE_SQL
+        .replace("{snapshot_id}", &snapshot_id.to_string())
+        .replace("{reliability_rank}", &reliability_rank.to_string());
     let phone_started_at = Instant::now();
     tx.execute_batch(&merge_phone_sql)?;
     timings.phone_secs = phone_started_at.elapsed().as_secs_f64();
+
+    let merge_email_sql = MERGE_EMAIL_SQL
+        .replace("{source_id}", &source_id.to_string())
+        .replace("{reliability_rank}", &reliability_rank.to_string());
+    let email_started_at = Instant::now();
+    tx.execute_batch(&merge_email_sql)?;
+    timings.email_secs = email_started_at.elapsed().as_secs_f64();
 
     // Mark dirty persons and update row hash tracking.
     // entity_evidence table was removed — was write-only, ~25% of pipeline time with no readers.
