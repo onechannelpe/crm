@@ -20,6 +20,7 @@ export interface CompanyGroup {
   name: string | null;
   people: Array<{ dni: string; name: string }>;
   phones: string[];
+  emails: string[];
   rows: SearchResult[];
 }
 
@@ -129,6 +130,8 @@ export function groupCompaniesByRuc(
       for (const siblingPhone of row.phones.siblings ?? []) {
         pushUnique(existing.phones, phoneSet, siblingPhone);
       }
+      const emailSet = new Set(existing.emails);
+      pushUnique(existing.emails, emailSet, row.person.email);
       const personDni = normalized(row.person.dni);
       const personName = normalized(row.person.name);
       const peopleDniSet = new Set(existing.people.map((person) => person.dni));
@@ -148,6 +151,9 @@ export function groupCompaniesByRuc(
     for (const siblingPhone of row.phones.siblings ?? []) {
       pushUnique(phones, phoneSet, siblingPhone);
     }
+    const emailSet = new Set<string>();
+    const emails: string[] = [];
+    pushUnique(emails, emailSet, row.person.email);
 
     const personDni = normalized(row.person.dni);
     const company: CompanyGroup = {
@@ -158,6 +164,7 @@ export function groupCompaniesByRuc(
         ? [{ dni: personDni, name: normalized(row.person.name) }]
         : [],
       phones,
+      emails,
       rows: [row],
     };
     groups.set(key, company);

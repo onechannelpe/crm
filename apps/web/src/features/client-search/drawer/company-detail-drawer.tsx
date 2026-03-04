@@ -3,6 +3,7 @@ import { createMemo, createSignal, For, Show } from "solid-js";
 
 import Building2Icon from "~/components/icons/building-2";
 import CalendarDaysIcon from "~/components/icons/calendar-days";
+import MailIcon from "~/components/icons/mail";
 import PhoneIcon from "~/components/icons/phone";
 
 import { toInitial } from "../display";
@@ -230,6 +231,20 @@ export function CompanyDetailDrawer(props: CompanyDetailDrawerProps) {
               <span class={styles.fieldLabel}>Números</span>
               <div class={styles.fieldValue}>
                 <ExpandablePillList items={props.group.phones} />
+              </div>
+            </div>
+          </DetailSection>
+        </Show>
+
+        <Show when={props.group.emails.length > 0}>
+          <DetailSection title="Correos">
+            <div class={styles.fieldRow}>
+              <span class={styles.fieldIcon}>
+                <MailIcon size={16} />
+              </span>
+              <span class={styles.fieldLabel}>Correos</span>
+              <div class={styles.fieldValue}>
+                <ExpandablePillList items={props.group.emails} />
               </div>
             </div>
           </DetailSection>

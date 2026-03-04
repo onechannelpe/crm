@@ -64,6 +64,7 @@ pub(super) struct StageRow {
     pub person_dni: Option<String>,
     pub person_natural_ruc: Option<String>,
     pub person_full_name: String,
+    pub email: Option<String>,
     pub company_ruc: Option<String>,
     pub company_name: String,
     pub role_name: String,

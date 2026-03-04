@@ -31,6 +31,7 @@ pub(super) fn run_shard_worker(
             person_dni TEXT,
             person_natural_ruc TEXT,
             person_full_name TEXT NOT NULL,
+            email TEXT,
             company_ruc TEXT,
             company_name TEXT NOT NULL,
             role_name TEXT NOT NULL,
@@ -54,6 +55,7 @@ pub(super) fn run_shard_worker(
             person_dni,
             person_natural_ruc,
             person_full_name,
+            email,
             company_ruc,
             company_name,
             role_name,
@@ -64,7 +66,7 @@ pub(super) fn run_shard_worker(
             phones_json,
             had_phone_input,
             raw_hash
-        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)
+        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)
         "#,
     )?;
 
@@ -78,6 +80,7 @@ pub(super) fn run_shard_worker(
             person_dni: canonical_row.person_dni,
             person_natural_ruc: canonical_row.person_natural_ruc,
             person_full_name: canonical_row.person_full_name,
+            email: canonical_row.email,
             company_ruc: canonical_row.company_ruc,
             company_name: canonical_row.company_name,
             role_name: canonical_row.role_name,
@@ -120,6 +123,7 @@ pub(super) fn run_shard_worker(
             stage_row.person_dni,
             stage_row.person_natural_ruc,
             stage_row.person_full_name,
+            stage_row.email,
             stage_row.company_ruc,
             stage_row.company_name,
             stage_row.role_name,
@@ -144,6 +148,7 @@ pub(super) fn run_shard_worker(
                     person_dni,
                     person_natural_ruc,
                     person_full_name,
+                    email,
                     company_ruc,
                     company_name,
                     role_name,
@@ -154,7 +159,7 @@ pub(super) fn run_shard_worker(
                     phones_json,
                     had_phone_input,
                     raw_hash
-                ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)
+                ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)
                 "#,
             )?;
             processed_in_batch = 0;
