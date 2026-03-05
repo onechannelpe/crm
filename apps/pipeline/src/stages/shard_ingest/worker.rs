@@ -41,7 +41,15 @@ pub(super) fn run_shard_worker(
             rep_name TEXT NOT NULL,
             phones_json TEXT NOT NULL,
             had_phone_input INTEGER NOT NULL,
-            raw_hash TEXT NOT NULL
+            raw_hash TEXT NOT NULL,
+            company_status TEXT NOT NULL,
+            company_condition TEXT NOT NULL,
+            company_type TEXT NOT NULL,
+            economic_activity TEXT NOT NULL,
+            company_ubigeo TEXT NOT NULL,
+            company_department TEXT NOT NULL,
+            company_province TEXT NOT NULL,
+            company_district TEXT NOT NULL
         );
         "#,
     )?;
@@ -65,8 +73,16 @@ pub(super) fn run_shard_worker(
             rep_name,
             phones_json,
             had_phone_input,
-            raw_hash
-        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)
+            raw_hash,
+            company_status,
+            company_condition,
+            company_type,
+            economic_activity,
+            company_ubigeo,
+            company_department,
+            company_province,
+            company_district
+        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23)
         "#,
     )?;
 
@@ -90,6 +106,14 @@ pub(super) fn run_shard_worker(
             rep_name: canonical_row.rep_name,
             phones: canonical_row.phones,
             had_phone_input: canonical_row.had_phone_input,
+            company_status: canonical_row.company_status,
+            company_condition: canonical_row.company_condition,
+            company_type: canonical_row.company_type,
+            economic_activity: canonical_row.economic_activity,
+            company_ubigeo: canonical_row.company_ubigeo,
+            company_department: canonical_row.company_department,
+            company_province: canonical_row.company_province,
+            company_district: canonical_row.company_district,
         };
 
         if !stage_row.rep_doc_number.is_empty()
@@ -134,6 +158,14 @@ pub(super) fn run_shard_worker(
             phones_json,
             if stage_row.had_phone_input { 1 } else { 0 },
             stage_row.raw_hash,
+            stage_row.company_status,
+            stage_row.company_condition,
+            stage_row.company_type,
+            stage_row.economic_activity,
+            stage_row.company_ubigeo,
+            stage_row.company_department,
+            stage_row.company_province,
+            stage_row.company_district,
         ])?;
 
         processed_in_batch += 1;
@@ -158,8 +190,16 @@ pub(super) fn run_shard_worker(
                     rep_name,
                     phones_json,
                     had_phone_input,
-                    raw_hash
-                ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)
+                    raw_hash,
+                    company_status,
+                    company_condition,
+                    company_type,
+                    economic_activity,
+                    company_ubigeo,
+                    company_department,
+                    company_province,
+                    company_district
+                ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23)
                 "#,
             )?;
             processed_in_batch = 0;

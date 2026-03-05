@@ -15,6 +15,7 @@ SELECT
     {source_id},
     {reliability_rank}
 FROM tmp_email_rows
+WHERE 1=1
 ON CONFLICT(person_id, email) DO UPDATE SET
     reliability = MAX(person_email.reliability, excluded.reliability),
     source_id = CASE

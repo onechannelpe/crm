@@ -26,6 +26,10 @@ export interface OrgInfo {
   activity_start_date: string | null;
   line_of_business: string | null;
   economic_activity: string | null;
+  ubigeo_code: string | null;
+  department: string | null;
+  province: string | null;
+  district: string | null;
 }
 
 export interface RoleInfo {

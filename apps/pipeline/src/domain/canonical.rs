@@ -26,6 +26,14 @@ pub(crate) struct CanonicalRow {
     pub(crate) phones: Vec<String>,
     pub(crate) had_phone_input: bool,
     pub(crate) invalid_phone_reasons: Vec<String>,
+    pub(crate) company_status: String,
+    pub(crate) company_condition: String,
+    pub(crate) company_type: String,
+    pub(crate) economic_activity: String,
+    pub(crate) company_ubigeo: String,
+    pub(crate) company_department: String,
+    pub(crate) company_province: String,
+    pub(crate) company_district: String,
 }
 
 #[derive(Clone)]
@@ -91,7 +99,35 @@ pub(crate) fn map_record(resolved: &ResolvedMapping, record: &StringRecord) -> C
         phones,
         had_phone_input,
         invalid_phone_reasons,
+        company_status: mapped_value("company_status", resolved, record),
+        company_condition: mapped_value("company_condition", resolved, record),
+        company_type: mapped_value("company_type", resolved, record),
+        economic_activity: mapped_value("economic_activity", resolved, record),
+        company_ubigeo: normalize_location_value(mapped_value("company_ubigeo", resolved, record)),
+        company_department: normalize_location_value(mapped_value(
+            "company_department",
+            resolved,
+            record,
+        )),
+        company_province: normalize_location_value(mapped_value(
+            "company_province",
+            resolved,
+            record,
+        )),
+        company_district: normalize_location_value(mapped_value(
+            "company_district",
+            resolved,
+            record,
+        )),
     }
+}
+
+fn normalize_location_value(value: String) -> String {
+    let normalized = value.trim().to_ascii_uppercase();
+    if normalized == "NO DISPONIBLE" {
+        return String::new();
+    }
+    value
 }
 
 pub(crate) fn resolve_mapping(
@@ -218,15 +254,23 @@ fn normalize_email(value: &str) -> Option<String> {
     }
     let local_lower = local.to_ascii_lowercase();
     let domain_lower = domain.to_ascii_lowercase();
+    // Prefix check catches variants like notiene.notiene@*, notiene74@*
+    if local_lower.starts_with("notiene") {
+        return None;
+    }
     let blocked_locals = BLOCKED_EMAIL_LOCALS.get_or_init(|| {
         [
-            "notiene",
             "notienecorreo",
             "dummy",
             "email",
             "null",
             "na",
             "noemail",
+            // Spanish placeholders observed in source data
+            "no",
+            "sn", // sin nombre
+            "sc", // sin correo
+            "sincorreo",
         ]
         .into_iter()
         .collect()
@@ -234,8 +278,17 @@ fn normalize_email(value: &str) -> Option<String> {
     if blocked_locals.contains(local_lower.as_str()) {
         return None;
     }
-    let blocked_domains =
-        BLOCKED_EMAIL_DOMAINS.get_or_init(|| ["dummy.com", "email.com.pe"].into_iter().collect());
+    let blocked_domains = BLOCKED_EMAIL_DOMAINS.get_or_init(|| {
+        [
+            "dummy.com",
+            "email.com.pe",
+            "notiene.com",
+            "sincorreo.com",
+            "sincorreo.com.pe",
+        ]
+        .into_iter()
+        .collect()
+    });
     if blocked_domains.contains(domain_lower.as_str()) {
         return None;
     }
@@ -280,4 +333,126 @@ fn build_header_index(headers: Option<&StringRecord>) -> Option<HashMap<String, 
             .map(|(idx, name)| (name.to_owned(), idx))
             .collect::<HashMap<_, _>>()
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{ResolvedMapping, map_record, normalize_email};
+    use csv::StringRecord;
+    use std::collections::HashMap;
+
+    // --- normalize_email ---
+
+    #[test]
+    fn email_valid_passes_through_normalized() {
+        assert_eq!(
+            normalize_email("Juan.Garcia@Gmail.COM"),
+            Some("juan.garcia@gmail.com".to_owned())
+        );
+    }
+
+    #[test]
+    fn email_empty_returns_none() {
+        assert_eq!(normalize_email(""), None);
+        assert_eq!(normalize_email("@gmail.com"), None);
+        assert_eq!(normalize_email("juan@"), None);
+        assert_eq!(normalize_email("juan@nodot"), None);
+    }
+
+    #[test]
+    fn email_blocked_locals_return_none() {
+        // exact blocked locals
+        for local in &[
+            "notiene",
+            "notienecorreo",
+            "dummy",
+            "null",
+            "na",
+            "noemail",
+            "no",
+            "sn",
+            "sc",
+            "sincorreo",
+        ] {
+            let addr = format!("{}@gmail.com", local);
+            assert_eq!(normalize_email(&addr), None, "expected None for {addr}");
+        }
+    }
+
+    #[test]
+    fn email_notiene_prefix_variants_return_none() {
+        // prefix check catches notiene.notiene@*, notiene74@*, etc.
+        assert_eq!(normalize_email("notiene.notiene@gmail.com"), None);
+        assert_eq!(normalize_email("notiene74@gmsil.com"), None);
+        assert_eq!(normalize_email("NOTIENE@hotmail.com"), None);
+    }
+
+    #[test]
+    fn email_blocked_domains_return_none() {
+        assert_eq!(normalize_email("user@dummy.com"), None);
+        assert_eq!(normalize_email("user@notiene.com"), None);
+        assert_eq!(normalize_email("user@sincorreo.com"), None);
+        assert_eq!(normalize_email("user@sincorreo.com.pe"), None);
+        assert_eq!(normalize_email("user@email.com.pe"), None);
+    }
+
+    #[test]
+    fn email_spanish_placeholders_return_none() {
+        // real patterns observed in source data
+        assert_eq!(normalize_email("no@gmail.com"), None);
+        assert_eq!(normalize_email("no@hotmail.com"), None);
+        assert_eq!(normalize_email("sn@claro.com"), None);
+        assert_eq!(normalize_email("sc@claro.com.pe"), None);
+        assert_eq!(normalize_email("sincorreo@sincorreo.com"), None);
+        assert_eq!(normalize_email("no@notiene.com"), None);
+    }
+
+    // --- location fields ---
+
+    #[test]
+    fn location_fields_treat_no_disponible_as_missing() {
+        let mut fields: HashMap<String, Option<usize>> = HashMap::new();
+        fields.insert("company_ubigeo".to_owned(), Some(0));
+        fields.insert("company_department".to_owned(), Some(1));
+        fields.insert("company_province".to_owned(), Some(2));
+        fields.insert("company_district".to_owned(), Some(3));
+
+        let resolved = ResolvedMapping {
+            fields,
+            phone_columns: Vec::new(),
+        };
+        let record = StringRecord::from(vec![
+            "NO DISPONIBLE",
+            " no disponible ",
+            "NO DISPONIBLE",
+            "NO DISPONIBLE",
+        ]);
+
+        let row = map_record(&resolved, &record);
+        assert_eq!(row.company_ubigeo, "");
+        assert_eq!(row.company_department, "");
+        assert_eq!(row.company_province, "");
+        assert_eq!(row.company_district, "");
+    }
+
+    #[test]
+    fn location_fields_keep_valid_values() {
+        let mut fields: HashMap<String, Option<usize>> = HashMap::new();
+        fields.insert("company_ubigeo".to_owned(), Some(0));
+        fields.insert("company_department".to_owned(), Some(1));
+        fields.insert("company_province".to_owned(), Some(2));
+        fields.insert("company_district".to_owned(), Some(3));
+
+        let resolved = ResolvedMapping {
+            fields,
+            phone_columns: Vec::new(),
+        };
+        let record = StringRecord::from(vec!["150101", "LIMA", "LIMA", "LIMA"]);
+
+        let row = map_record(&resolved, &record);
+        assert_eq!(row.company_ubigeo, "150101");
+        assert_eq!(row.company_department, "LIMA");
+        assert_eq!(row.company_province, "LIMA");
+        assert_eq!(row.company_district, "LIMA");
+    }
 }

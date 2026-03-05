@@ -41,6 +41,20 @@
       "requires_any_phone_input": true
     },
     {
+      "source_key": "padron_ruc_202601",
+      "required_canonical_fields": [
+        "company_ruc",
+        "company_status",
+        "company_condition",
+        "company_type",
+        "economic_activity",
+        "company_ubigeo",
+        "company_department",
+        "company_province",
+        "company_district"
+      ]
+    },
+    {
       "source_key": "osiptel",
       "required_canonical_fields": [
         "person_dni",
