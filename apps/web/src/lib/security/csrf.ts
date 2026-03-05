@@ -18,9 +18,10 @@ export async function generateCsrfToken(): Promise<string> {
 }
 
 export function setCsrfCookie(token: string): void {
+  const isProduction = process.env.NODE_ENV === "production";
   setCookie(CSRF_CONFIG.COOKIE_NAME, token, {
     httpOnly: false,
-    secure: true,
+    secure: isProduction,
     sameSite: "lax",
     path: "/",
     maxAge: ONE_DAY_SECONDS,
