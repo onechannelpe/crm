@@ -1,31 +1,49 @@
-# engine
+# Engine
 
-Rust/Axum contact search API backed by read-only SQLite. See [root readme](../../readme.md) for project overview.
+Rust/Axum read-only search API over SQLite (`contacts.sqlite`).
 
-## Data pipeline
+Use this README for runtime and API behavior. Data-generation workflows belong to [pipeline docs](../pipeline/readme.md).
 
-Engine reads from `apps/engine/data/contacts.sqlite`, a read-only SQLite snapshot built by the [processing pipeline](../pipeline/readme.md). Swapping the file requires an engine restart.
+## What it does
 
-For local development refreshes, run `bun run pipeline:refresh`.
+- Serves authenticated search queries against serving tables in SQLite.
+- Validates inputs and enforces per-key rate limits.
+- Exposes data-build metadata from `_pipeline_build` through health checks.
 
-## API
+Implementation entry points:
 
+- [apps/engine/src/main.rs](src/main.rs)
+- [apps/engine/src/api/handlers.rs](src/api/handlers.rs)
+- [apps/engine/src/domain/search_service.rs](src/domain/search_service.rs)
+- [apps/engine/src/storage/sqlite/schema_guard.rs](src/storage/sqlite/schema_guard.rs)
+- [apps/engine/src/storage/sqlite/queries/](src/storage/sqlite/queries/)
+
+## Local workflow
+
+Refresh DB snapshot first:
+
+```sh
+bun run pipeline:refresh
 ```
+
+Run engine:
+
+```sh
+bun run dev:engine
+```
+
+If `contacts.sqlite` changes on disk, restart engine so the process picks up the new snapshot.
+
+## API contract
+
+Endpoints:
+
+```http
 GET  /v1/health
 POST /v1/search
 ```
 
-### POST /v1/search
-
-HMAC-authenticated. See [`src/security/hmac.rs`](src/security/hmac.rs) for implementation.
-
-Required headers:
-
-- `x-key-id`: key id configured in `ENGINE_HMAC_KEYS_JSON`
-- `x-timestamp`: unix seconds
-- `x-signature`: `hex(hmac_sha256(timestamp_be_u64 + raw_body, secret_for_key_id))`
-
-Body:
+`POST /v1/search` request body ([contract](src/api/contracts.rs)):
 
 ```json
 {
@@ -35,23 +53,43 @@ Body:
 }
 ```
 
-Response: `{ results: SearchRow[], count: number }`
+`limit` behavior:
 
-## Config
+- default is `20`,
+- lower-bounded to `1`,
+- upper-bounded to `ENGINE_MAX_LIMIT`.
 
-Read from root [`.env`](../../.env):
+`GET /v1/health` includes build metadata when available (`build_id`, `built_at`, `rows`).
 
-- `ENGINE_HMAC_KEYS_JSON` (required): JSON object of signing keys, e.g. `{"web":"secret"}`
-- `ENGINE_PORT` (default `3001`)
-- `ENGINE_HOST` (default `127.0.0.1`)
+## Authentication and limits
+
+Required headers for `POST /v1/search`:
+
+- `x-key-id`
+- `x-timestamp` (unix seconds)
+- `x-signature`
+
+Signature:
+
+- `hex(hmac_sha256(timestamp_be_u64 + raw_body, secret_for_key_id))`
+
+Auth is validated before query execution. Failed auth/search attempts are rate-limited per key (see [HMAC verifier](src/security/hmac.rs) and [rate limiter](src/security/rate_limit.rs)).
+
+## Configuration
+
+Environment is read from root [.env.example](../../.env.example) keys via [config loader](src/config/mod.rs).
+
+- `ENGINE_HMAC_KEYS_JSON` (required)
 - `ENGINE_DB_PATH` (default `apps/engine/data/contacts.sqlite`)
-- `ENGINE_RATE_LIMIT_PER_KEY` (default `600`): token bucket refill per minute per key id
-- `ENGINE_MAX_LIMIT` (default `100`): max results per query
+- `ENGINE_HOST` (default `localhost`)
+- `ENGINE_PORT` (default `3001`)
+- `ENGINE_HMAC_MAX_SKEW_SECS` (default `60`)
+- `ENGINE_RATE_LIMIT_PER_KEY` (default `600`)
+- `ENGINE_MAX_LIMIT` (default `100`)
 
-## Testing
+## Verification
 
 ```sh
 bun run test:engine
+bun run check:engine
 ```
-
-See [`tests/perf_regression.rs`](tests/perf_regression.rs) for performance regression probes and [`tests/fixtures/perf_baseline_ci.json`](tests/fixtures/perf_baseline_ci.json) for baseline format.
