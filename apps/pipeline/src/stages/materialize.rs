@@ -20,6 +20,8 @@ pub fn materialize_serving(db_path: &str) -> Result<(), PipelineError> {
         CREATE INDEX IF NOT EXISTS idx_search_projection_ruc ON search_projection(org_ruc);
         CREATE INDEX IF NOT EXISTS idx_search_projection_phone_index_phone
             ON search_projection_phone_index(phone);
+        CREATE INDEX IF NOT EXISTS idx_search_projection_phone_index_projection_id_phone
+            ON search_projection_phone_index(projection_id, phone);
         "#,
     )?;
 
@@ -130,6 +132,10 @@ pub fn materialize_serving(db_path: &str) -> Result<(), PipelineError> {
             activity_start_date,
             line_of_business,
             economic_activity,
+            org_ubigeo_code,
+            org_department,
+            org_province,
+            org_district,
             role_name,
             role_start_date,
             rep_doc_type,
@@ -163,6 +169,10 @@ pub fn materialize_serving(db_path: &str) -> Result<(), PipelineError> {
             cp.activity_start_date AS activity_start_date,
             cp.line_of_business AS line_of_business,
             cp.economic_activity AS economic_activity,
+            cp.ubigeo_code AS org_ubigeo_code,
+            cp.department AS org_department,
+            cp.province AS org_province,
+            cp.district AS org_district,
             pcr.role_name AS role_name,
             pcr.role_start_date AS role_start_date,
             pcr.rep_doc_type AS rep_doc_type,

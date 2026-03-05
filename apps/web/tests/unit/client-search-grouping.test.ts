@@ -55,6 +55,10 @@ function row(partial: {
             activity_start_date: null,
             line_of_business: null,
             economic_activity: null,
+            ubigeo_code: null,
+            department: null,
+            province: null,
+            district: null,
           }
         : null,
     role: null,

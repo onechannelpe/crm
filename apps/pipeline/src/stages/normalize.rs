@@ -114,7 +114,8 @@ fn normalize_source_entry(
         .from_path(&source.raw_path)?;
 
     let headers = if mapping.has_header {
-        Some(reader.headers()?.clone())
+        let byte_headers = reader.byte_headers()?.clone();
+        Some(mapping.decode_byte_record(&byte_headers)?)
     } else {
         None
     };
@@ -128,13 +129,29 @@ fn normalize_source_entry(
         ..NormalizationSummary::default()
     };
 
-    for (row_idx, row_result) in reader.records().enumerate() {
+    for (row_idx, row_result) in reader.byte_records().enumerate() {
         if row_idx >= row_cap {
             break;
         }
         let source_row_number = row_idx + 1;
 
-        let record = match row_result {
+        let byte_record = match row_result {
+            Ok(record) => record,
+            Err(err) => {
+                summary.total_rows += 1;
+                summary.error_rows += 1;
+                error_writer.write_record([
+                    source.source_key.as_str(),
+                    source.snapshot_label.as_str(),
+                    &source_row_number.to_string(),
+                    "csv_parse_error",
+                    &err.to_string(),
+                    "",
+                ])?;
+                continue;
+            }
+        };
+        let record = match mapping.decode_byte_record(&byte_record) {
             Ok(record) => record,
             Err(err) => {
                 summary.total_rows += 1;

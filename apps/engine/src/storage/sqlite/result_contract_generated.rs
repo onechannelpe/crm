@@ -30,6 +30,10 @@ pub struct OrgInfo {
     pub activity_start_date: Option<String>,
     pub line_of_business: Option<String>,
     pub economic_activity: Option<String>,
+    pub ubigeo_code: Option<String>,
+    pub department: Option<String>,
+    pub province: Option<String>,
+    pub district: Option<String>,
 }
 
 #[derive(Debug, Serialize)]

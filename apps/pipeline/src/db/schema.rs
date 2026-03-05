@@ -58,6 +58,10 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             line_of_business TEXT,
             status TEXT,
             condition TEXT,
+            ubigeo_code TEXT,
+            department TEXT,
+            province TEXT,
+            district TEXT,
             economic_activity TEXT
         );
 
@@ -168,6 +172,10 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             activity_start_date TEXT,
             line_of_business TEXT,
             economic_activity TEXT,
+            org_ubigeo_code TEXT,
+            org_department TEXT,
+            org_province TEXT,
+            org_district TEXT,
             role_name TEXT,
             role_start_date TEXT,
             rep_doc_type TEXT,

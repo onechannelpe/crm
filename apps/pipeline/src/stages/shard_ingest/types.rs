@@ -75,6 +75,14 @@ pub(super) struct StageRow {
     pub phones: Vec<String>,
     pub had_phone_input: bool,
     pub raw_hash: String,
+    pub company_status: String,
+    pub company_condition: String,
+    pub company_type: String,
+    pub economic_activity: String,
+    pub company_ubigeo: String,
+    pub company_department: String,
+    pub company_province: String,
+    pub company_district: String,
 }
 
 pub(super) fn sanitize_path_component(value: &str) -> String {

@@ -134,7 +134,8 @@ fn resolve_mapping(
         .flexible(mapping.flexible)
         .from_path(input_path)?;
     let headers = if mapping.has_header {
-        Some(header_reader.headers()?.clone())
+        let byte_headers = header_reader.byte_headers()?.clone();
+        Some(mapping.decode_byte_record(&byte_headers)?)
     } else {
         None
     };
@@ -212,12 +213,13 @@ fn dispatch_records(
         .from_path(input_path)?;
 
     if mapping.has_header {
-        let _ = reader.headers()?;
+        let _ = reader.byte_headers()?;
     }
 
     let mut total_rows = 0i64;
-    for (i, result) in reader.records().enumerate() {
-        let record = result?;
+    for (i, result) in reader.byte_records().enumerate() {
+        let byte_record = result?;
+        let record = mapping.decode_byte_record(&byte_record)?;
         let source_row_number = (i + 1) as i64;
         let worker_index = i % workers;
         task_senders[worker_index]

@@ -19,15 +19,17 @@ pub fn map_snapshot_only(mapping_path: &str, input_path: &str) -> Result<usize, 
         .from_path(input_path)?;
 
     let headers = if mapping.has_header {
-        Some(reader.headers()?.clone())
+        let byte_headers = reader.byte_headers()?.clone();
+        Some(mapping.decode_byte_record(&byte_headers)?)
     } else {
         None
     };
     let resolved_mapping = canonical::resolve_mapping(&mapping, headers.as_ref())?;
 
     let mut total_rows = 0usize;
-    for result in reader.records() {
-        let record = result?;
+    for result in reader.byte_records() {
+        let byte_record = result?;
+        let record = mapping.decode_byte_record(&byte_record)?;
         let _row = canonical::map_record(&resolved_mapping, &record);
         total_rows += 1;
     }

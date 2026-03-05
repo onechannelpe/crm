@@ -9,6 +9,7 @@ use crate::stages::verify::helpers::{
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::thread;
 use std::time::Instant;
 
 #[allow(clippy::too_many_arguments)]
@@ -38,31 +39,56 @@ pub fn run_matrix(
     println!("[pipeline] init schema");
     init_schema(db_path)?;
 
+    let mut sources = Vec::new();
     for source in load_enabled_sources(manifest_path)? {
         if source.source_key == "osiptel" && !run_osiptel_sample {
             continue;
         }
-
         let sample_cap = source_row_caps
             .get(&source.source_key)
             .copied()
             .unwrap_or(row_cap);
         let sample_file = build_dir_path.join(format!("{}.sample.csv", source.source_key));
+        sources.push((source, sample_cap, sample_file));
+    }
 
-        println!(
-            "[pipeline] prepare sample for {} from {}",
-            source.source_key, source.raw_path
-        );
-        let extract_started = Instant::now();
-        sample_with_header(
-            PathBuf::from(&source.raw_path),
-            sample_file.clone(),
-            sample_cap,
-        )?;
+    let mut extract_durations = HashMap::new();
+    thread::scope(|scope| -> Result<(), PipelineError> {
+        let mut handles = Vec::with_capacity(sources.len());
+        for (source, sample_cap, sample_file) in &sources {
+            println!(
+                "[pipeline] prepare sample for {} from {}",
+                source.source_key, source.raw_path
+            );
+            let source_key = source.source_key.clone();
+            let src = PathBuf::from(&source.raw_path);
+            let out = sample_file.clone();
+            let cap = *sample_cap;
+            handles.push(scope.spawn(move || -> Result<(String, f64), String> {
+                let extract_started = Instant::now();
+                sample_with_header(src, out, cap).map_err(|err| err.to_string())?;
+                Ok((source_key, extract_started.elapsed().as_secs_f64()))
+            }));
+        }
+
+        for handle in handles {
+            let outcome = handle
+                .join()
+                .map_err(|_| PipelineError::Args("extract worker panicked".to_owned()))?;
+            let (source_key, seconds) = outcome.map_err(PipelineError::Args)?;
+            extract_durations.insert(source_key, seconds);
+        }
+        Ok(())
+    })?;
+
+    for (source, _sample_cap, sample_file) in sources {
         timings.push(PhaseTiming {
             phase: "extract".to_owned(),
             key: source.source_key.clone(),
-            seconds: extract_started.elapsed().as_secs_f64(),
+            seconds: extract_durations
+                .get(&source.source_key)
+                .copied()
+                .unwrap_or(0.0),
         });
 
         let snapshot_label = format!("{}-sample", source.source_key);

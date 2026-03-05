@@ -89,7 +89,7 @@
       "mapping_path": "apps/pipeline/data/mappings/sources/padron_ruc_202601.json",
       "reliability_rank": 88,
       "priority": 58,
-      "enabled": false
+      "enabled": true
     },
     {
       "source_key": "consolidado_ruc_representantes_bppo",

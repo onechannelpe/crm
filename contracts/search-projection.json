@@ -159,6 +159,34 @@
       "storage": [{"table": "search_projection", "column": "economic_activity"}]
     },
     {
+      "path": "org.ubigeo_code",
+      "canonical_fields": ["company_ubigeo"],
+      "nullable": true,
+      "derivation": "sunat_padron_ruc",
+      "storage": [{"table": "search_projection", "column": "org_ubigeo_code"}]
+    },
+    {
+      "path": "org.department",
+      "canonical_fields": ["company_department"],
+      "nullable": true,
+      "derivation": "sunat_padron_ruc",
+      "storage": [{"table": "search_projection", "column": "org_department"}]
+    },
+    {
+      "path": "org.province",
+      "canonical_fields": ["company_province"],
+      "nullable": true,
+      "derivation": "sunat_padron_ruc",
+      "storage": [{"table": "search_projection", "column": "org_province"}]
+    },
+    {
+      "path": "org.district",
+      "canonical_fields": ["company_district"],
+      "nullable": true,
+      "derivation": "sunat_padron_ruc",
+      "storage": [{"table": "search_projection", "column": "org_district"}]
+    },
+    {
       "path": "role.name",
       "canonical_fields": ["role_name"],
       "nullable": true,

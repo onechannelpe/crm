@@ -14,7 +14,15 @@ SELECT
     rep_name,
     phones_json,
     had_phone_input,
-    raw_hash
+    raw_hash,
+    company_status,
+    company_condition,
+    company_type,
+    economic_activity,
+    company_ubigeo,
+    company_department,
+    company_province,
+    company_district
 FROM shard.stage_rows;
 
 CREATE INDEX tmp_stage_person_dni_idx ON tmp_stage(person_dni);
@@ -34,7 +42,15 @@ GROUP BY person_dni;
 CREATE TEMP TABLE tmp_company_dedup AS
 SELECT
     company_ruc,
-    MAX(CASE WHEN company_name <> '' THEN company_name ELSE '' END) AS company_name
+    MAX(CASE WHEN company_name <> '' THEN company_name ELSE '' END) AS company_name,
+    MAX(CASE WHEN company_status <> '' THEN company_status ELSE '' END) AS company_status,
+    MAX(CASE WHEN company_condition <> '' THEN company_condition ELSE '' END) AS company_condition,
+    MAX(CASE WHEN company_type <> '' THEN company_type ELSE '' END) AS company_type,
+    MAX(CASE WHEN economic_activity <> '' THEN economic_activity ELSE '' END) AS economic_activity,
+    MAX(CASE WHEN company_ubigeo <> '' THEN company_ubigeo ELSE '' END) AS company_ubigeo,
+    MAX(CASE WHEN company_department <> '' THEN company_department ELSE '' END) AS company_department,
+    MAX(CASE WHEN company_province <> '' THEN company_province ELSE '' END) AS company_province,
+    MAX(CASE WHEN company_district <> '' THEN company_district ELSE '' END) AS company_district
 FROM tmp_stage
 WHERE company_ruc IS NOT NULL
 GROUP BY company_ruc;

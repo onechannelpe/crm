@@ -6,8 +6,14 @@
   "flexible": true,
   "fields": {
     "company_ruc": "RUC",
-    "role_name": "Tipo",
-    "company_name": "Actividad_Economica_CIIU_revision4_Principal"
+    "company_status": "Estado",
+    "company_condition": "Condicion",
+    "company_type": "Tipo",
+    "economic_activity": "Actividad_Economica_CIIU_revision4_Principal",
+    "company_ubigeo": "UBIGEO",
+    "company_department": "Departamento",
+    "company_province": "Provincia",
+    "company_district": "Distrito"
   },
   "phone_columns": [],
   "phone_prefixes": []
