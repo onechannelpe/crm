@@ -56,6 +56,8 @@ function optional(key: string, fallback: string): string {
 export const env = {
   nodeEnv: optional("NODE_ENV", "development"),
   sessionSecret: required("SESSION_SECRET", true),
+  totpEncryptionKey: required("TOTP_ENCRYPTION_KEY", true),
+  trustedProxy: optional("TRUSTED_PROXY", "false"),
   engineUrl: optional("ENGINE_URL", "http://localhost:3001"),
   engineHmacKeyId: required("ENGINE_HMAC_KEY_ID"),
   engineHmacSecret: required("ENGINE_HMAC_SECRET", true),
