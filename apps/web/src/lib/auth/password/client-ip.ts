@@ -1,4 +1,11 @@
-export function getClientIp(headers: Headers): string {
+import { env } from "~/lib/env";
+
+export function getClientIp(
+  headers: Headers,
+  trustedProxy = env.trustedProxy === "true",
+): string {
+  if (!trustedProxy) return "127.0.0.1";
+
   const cfIp = cleanIp(headers.get("cf-connecting-ip"));
   if (cfIp) return cfIp;
 

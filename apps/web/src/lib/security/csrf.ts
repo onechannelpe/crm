@@ -1,11 +1,11 @@
 import { getCookie, setCookie } from "@solidjs/start/http";
 
+import { env } from "~/lib/env";
+
 import { CSRF_CONFIG } from "./csrf-config";
 import { signHmac, verifyHmac } from "./hmac";
 
 const ONE_DAY_SECONDS = 60 * 60 * 24;
-const SESSION_SECRET =
-  process.env.SESSION_SECRET || "fallback_dont_use_in_prod";
 
 export async function generateCsrfToken(): Promise<string> {
   const bytes = new Uint8Array(32);
@@ -13,7 +13,7 @@ export async function generateCsrfToken(): Promise<string> {
   const value = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join(
     "",
   );
-  const signature = await signHmac(value, SESSION_SECRET);
+  const signature = await signHmac(value, env.sessionSecret);
   return `${value}.${signature}`;
 }
 
@@ -38,7 +38,7 @@ export async function verifyCsrf(request: Request): Promise<boolean> {
   const [value, signature] = cookieToken.split(".");
   if (!value || !signature) return false;
 
-  const valid = await verifyHmac(value, signature, SESSION_SECRET);
+  const valid = await verifyHmac(value, signature, env.sessionSecret);
   if (!valid) return false;
 
   const headerToken = request.headers.get(CSRF_CONFIG.HEADER_NAME);

@@ -6,7 +6,7 @@ const IV_BYTES = 12;
 const ALGORITHM = "AES-GCM";
 
 async function getKey() {
-  const digest = createHash("sha256").update(env.sessionSecret).digest();
+  const digest = createHash("sha256").update(env.totpEncryptionKey).digest();
   return webcrypto.subtle.importKey("raw", digest, ALGORITHM, false, [
     "encrypt",
     "decrypt",
