@@ -1,17 +1,31 @@
 "use server";
 
 import { internalError } from "~/lib/app-errors";
+import { getAssignableRoleOptions } from "~/lib/auth/access/role-display";
 import { requirePermission } from "~/lib/auth/access/session";
 import { repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
 import { provisioning } from "./provisioning";
-import type { TeamDirectory, TeamOption } from "./types";
+import type { InviteManagement, TeamMember } from "./types";
 
-export async function getTeamDirectory(): Promise<TeamDirectory> {
+export async function getTeamMembers(): Promise<TeamMember[]> {
   const session = await requirePermission("team:read");
-  const [users, pendingInvitesResult] = await Promise.all([
-    repos.users.findByBranch(session.branchId),
+  const users = await repos.users.findByBranch(session.branchId);
+  return users.map((u) => ({
+    id: u.id,
+    fullName: u.full_name,
+    email: u.email,
+    role: u.role,
+    teamId: u.team_id,
+    isActive: !!u.is_active,
+  }));
+}
+
+export async function getInviteManagement(): Promise<InviteManagement> {
+  const session = await requirePermission("hr:manage");
+  const [teams, pendingInvitesResult] = await Promise.all([
+    repos.teams.findByBranch(session.branchId),
     provisioning.listPendingInvites(session.branchId),
   ]);
   if (isErr(pendingInvitesResult)) {
@@ -26,26 +40,9 @@ export async function getTeamDirectory(): Promise<TeamDirectory> {
       }
     }
   }
-
   return {
-    members: users.map((u) => ({
-      id: u.id,
-      fullName: u.full_name,
-      email: u.email,
-      role: u.role,
-      teamId: u.team_id,
-      isActive: !!u.is_active,
-    })),
     pendingInvites: pendingInvitesResult.value,
-    canManageInvites:
-      session.role === "hr" ||
-      session.role === "admin" ||
-      session.role === "superuser",
+    teams: teams.map((team) => ({ id: team.id, name: team.name })),
+    assignableRoles: getAssignableRoleOptions(session.role),
   };
-}
-
-export async function getBranchTeamsForInvite(): Promise<TeamOption[]> {
-  const session = await requirePermission("hr:manage");
-  const teams = await repos.teams.findByBranch(session.branchId);
-  return teams.map((team) => ({ id: team.id, name: team.name }));
 }
