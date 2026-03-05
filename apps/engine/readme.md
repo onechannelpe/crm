@@ -1,8 +1,6 @@
 # Engine
 
-Rust/Axum read-only search API over SQLite (`contacts.sqlite`).
-
-Use this README for runtime and API behavior. Data-generation workflows belong to [pipeline docs](../pipeline/readme.md).
+Rust/Axum read-only search API over SQLite (`contacts.sqlite`). Use this README for runtime and API behavior. Data-generation workflows belong to [pipeline docs](../pipeline/).
 
 ## What it does
 
