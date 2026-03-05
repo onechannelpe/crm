@@ -1,8 +1,6 @@
-# Pipeline processing
+# pipeline
 
-Rust pipeline for transforming raw contact sources into SQLite datasets consumed by [engine](../engine/readme.md).
-
-This document is the operational reference for senior developers. Contract definitions and runtime behavior are linked to their source-of-truth files.
+A Rust pipeline that transforms raw contact sources into SQLite datasets consumed by [engine](../engine/readme.md).
 
 ## How it works
 
