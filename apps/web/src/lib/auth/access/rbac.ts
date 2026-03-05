@@ -132,3 +132,12 @@ export function getPermissions(role: string): Permission[] {
   if (!isRole(role)) return [];
   return ROLE_PERMISSIONS[role] ?? [];
 }
+
+export function canAssignRole(actorRole: Role, targetRole: Role): boolean {
+  if (actorRole === "superuser") return targetRole !== "superuser";
+  if (actorRole === "admin") return targetRole !== "superuser";
+  if (actorRole === "hr") {
+    return targetRole !== "admin" && targetRole !== "superuser";
+  }
+  return false;
+}

@@ -7,13 +7,11 @@ const {
   requirePermissionMock,
   usersFindByBranchMock,
   teamsFindByBranchMock,
-  branchesFindByIdMock,
   listPendingInvitesMock,
 } = vi.hoisted(() => ({
   requirePermissionMock: vi.fn(),
   usersFindByBranchMock: vi.fn(),
   teamsFindByBranchMock: vi.fn(),
-  branchesFindByIdMock: vi.fn(),
   listPendingInvitesMock: vi.fn(),
 }));
 
@@ -29,9 +27,6 @@ vi.mock("../../src/server/shared/context", () => ({
     teams: {
       findByBranch: teamsFindByBranchMock,
     },
-    branches: {
-      findById: branchesFindByIdMock,
-    },
   },
 }));
 
@@ -41,7 +36,10 @@ vi.mock("../../src/actions/team/provisioning", () => ({
   },
 }));
 
-import { getTeamDirectory } from "../../src/actions/team/read";
+import {
+  getInviteManagement,
+  getTeamMembers,
+} from "../../src/actions/team/read";
 
 function setSession(role: Role) {
   requirePermissionMock.mockResolvedValue({
@@ -51,10 +49,9 @@ function setSession(role: Role) {
   });
 }
 
-describe("team directory invite policy", () => {
+describe("team members query", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-
     usersFindByBranchMock.mockResolvedValue([
       {
         id: 41,
@@ -65,9 +62,22 @@ describe("team directory invite policy", () => {
         is_active: 1,
       },
     ]);
+  });
 
+  it("fetches only members — no invite queries touched", async () => {
+    setSession("sales_manager");
+    const members = await getTeamMembers();
+    expect(usersFindByBranchMock).toHaveBeenCalledWith(3);
+    expect(members).toHaveLength(1);
+    expect(listPendingInvitesMock).not.toHaveBeenCalled();
+    expect(teamsFindByBranchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("invite management query", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
     teamsFindByBranchMock.mockResolvedValue([{ id: 11, name: "Operaciones" }]);
-    branchesFindByIdMock.mockResolvedValue({ id: 3, name: "Lima" });
     listPendingInvitesMock.mockResolvedValue(
       Ok([
         {
@@ -86,25 +96,12 @@ describe("team directory invite policy", () => {
     );
   });
 
-  it("does not expose invite management to non-hr roles", async () => {
-    setSession("sales_manager");
-
-    const snapshot = await getTeamDirectory();
-
-    expect(snapshot.inviteManagement).toBeNull();
-    expect(listPendingInvitesMock).not.toHaveBeenCalled();
-    expect(teamsFindByBranchMock).not.toHaveBeenCalled();
-    expect(branchesFindByIdMock).not.toHaveBeenCalled();
-  });
-
-  it("returns pending invites for hr roles", async () => {
+  it("fetches invites and teams for hr", async () => {
     setSession("hr");
-
-    const snapshot = await getTeamDirectory();
-
+    const im = await getInviteManagement();
+    expect(teamsFindByBranchMock).toHaveBeenCalledWith(3);
     expect(listPendingInvitesMock).toHaveBeenCalledWith(3);
-    expect(snapshot.inviteManagement).not.toBeNull();
-    expect(snapshot.inviteManagement?.pendingInvites).toHaveLength(1);
-    expect(snapshot.inviteManagement?.inviteLink.status).toBe("unavailable");
+    expect(im.pendingInvites).toHaveLength(1);
+    expect(im.teams).toEqual([{ id: 11, name: "Operaciones" }]);
   });
 });

@@ -1,9 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  canAssignRole,
-  getAssignableRoleOptions,
-} from "../../src/lib/auth/access/role-display";
+import { canAssignRole } from "../../src/lib/auth/access/rbac";
+import { getAssignableRoleOptions } from "../../src/lib/auth/access/role-display";
 
 describe("team invite policy", () => {
   it("enforces assignable roles for hr", () => {

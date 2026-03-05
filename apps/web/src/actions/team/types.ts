@@ -22,25 +22,13 @@ export interface TeamInvite {
   sentAt: number | null;
 }
 
-export interface TeamDirectory {
-  members: TeamMember[];
-  inviteManagement: TeamInviteManagement | null;
-}
-
 export interface TeamOption {
   id: number;
   name: string;
 }
 
-export interface TeamInviteManagement {
+export interface InviteManagement {
   pendingInvites: TeamInvite[];
   teams: TeamOption[];
   assignableRoles: RoleOption[];
-  inviteLink: TeamInviteLinkState;
-}
-
-export interface TeamInviteLinkState {
-  status: "enabled" | "unavailable";
-  url: string | null;
-  reason: string | null;
 }

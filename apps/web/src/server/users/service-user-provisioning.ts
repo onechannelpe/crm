@@ -1,5 +1,5 @@
 import type { Role } from "~/lib/auth/access/rbac";
-import { canAssignRole } from "~/lib/auth/access/role-display";
+import { canAssignRole } from "~/lib/auth/access/rbac";
 import { generateInviteToken, hashInviteToken } from "~/lib/auth/invite/tokens";
 import { hashPassword } from "~/lib/auth/password/password";
 import { createAuditService } from "~/server/shared/audit";

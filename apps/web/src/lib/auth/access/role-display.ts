@@ -1,4 +1,5 @@
 import type { Role } from "./rbac";
+import { canAssignRole } from "./rbac";
 
 export const ROLE_LABELS: Record<Role, string> = {
   executive: "Ejecutivo",
@@ -37,15 +38,6 @@ export function getRoleBadgeVariant(
   if (role === "supervisor") return "warning";
   if (role === "admin" || role === "superuser") return "info";
   return "default";
-}
-
-export function canAssignRole(actorRole: Role, targetRole: Role): boolean {
-  if (actorRole === "superuser") return targetRole !== "superuser";
-  if (actorRole === "admin") return targetRole !== "superuser";
-  if (actorRole === "hr") {
-    return targetRole !== "admin" && targetRole !== "superuser";
-  }
-  return false;
 }
 
 export function getAssignableRoleOptions(actorRole: Role): RoleOption[] {
