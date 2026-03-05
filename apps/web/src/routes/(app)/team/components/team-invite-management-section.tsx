@@ -4,9 +4,10 @@ import {
   useAction,
   useSubmissions,
 } from "@solidjs/router";
-import { For, Show, createSignal } from "solid-js";
+import { For, Show, createEffect, createSignal, on } from "solid-js";
 
 import { createTeamInvite } from "~/actions/team";
+import type { InviteManagement } from "~/actions/team/types";
 import { EmptyState } from "~/components/feedback/empty-state";
 import { useToast } from "~/components/feedback/toast-provider";
 import Mail from "~/components/icons/mail";
@@ -45,10 +46,23 @@ export function TeamInviteManagementSection() {
   const revokeSubmissions = useSubmissions(revokeTeamInviteMutation);
   const [fullName, setFullName] = createSignal("");
   const [email, setEmail] = createSignal("");
-  const [role, setRole] = createSignal("executive");
+  const [role, setRole] = createSignal("");
   const [teamId, setTeamId] = createSignal("");
   const [savingInvite, setSavingInvite] = createSignal(false);
   const { showToast } = useToast();
+
+  createEffect(
+    on(inviteManagement, (im) => {
+      if (!im) return;
+      const currentRole = role();
+      const roleStillAssignable = im.assignableRoles.some(
+        (option) => option.value === currentRole,
+      );
+      if (!roleStillAssignable) {
+        setRole(getDefaultAssignableRole(im));
+      }
+    }),
+  );
 
   const isResendPending = (inviteId: number) =>
     resendSubmissions.some((s) => s.pending && s.input[0] === inviteId);
@@ -93,7 +107,7 @@ export function TeamInviteManagementSection() {
       });
       setFullName("");
       setEmail("");
-      setRole(im.assignableRoles[0]?.value ?? "");
+      setRole(getDefaultAssignableRole(im));
       setTeamId("");
       await revalidateQuery(inviteManagementQuery.key);
       showToast("success", "Invitación enviada");
@@ -157,7 +171,7 @@ export function TeamInviteManagementSection() {
                 </For>
               </Select>
               <div class={styles.inviteActions}>
-                <Button type="submit" disabled={savingInvite()}>
+                <Button type="submit" disabled={savingInvite() || !role()}>
                   {savingInvite() ? "Enviando..." : "Enviar invitación"}
                 </Button>
               </div>
@@ -259,4 +273,8 @@ function getExpiresAtText(expiresAt: number): string {
 
   const days = Math.floor(hours / 24);
   return `En ${days} d`;
+}
+
+function getDefaultAssignableRole(inviteManagement: InviteManagement): string {
+  return inviteManagement.assignableRoles[0]?.value ?? "";
 }

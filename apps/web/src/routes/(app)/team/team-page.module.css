@@ -21,23 +21,6 @@
   justify-content: flex-end;
 }
 
-.linkRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.linkRow > :first-child {
-  flex: 1;
-}
-
-.linkHint {
-  margin-top: 8px;
-  color: var(--muted-foreground);
-  font-size: var(--font-size-caption);
-}
-
 .memberName {
   font-weight: 500;
 }
