@@ -18,6 +18,7 @@ const ALL_PERMISSIONS: Permission[] = [
   "sales:submit",
   "sales:review",
   "sales:approve",
+  "client_search:read",
   "team:read",
   "team:manage",
   "inventory:read",
