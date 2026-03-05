@@ -3,7 +3,9 @@ SELECT
     ts.person_dni,
     ts.company_ruc,
     je.value AS phone
-FROM tmp_stage ts, json_each(ts.phones_json) je;
+FROM tmp_stage ts, json_each(ts.phones_json) je
+WHERE ts.had_phone_input = 1
+  AND ts.phones_json <> '[]';
 
 INSERT INTO person_phone(person_id, phone, first_seen_snapshot_id, last_seen_snapshot_id, confidence)
 SELECT DISTINCT

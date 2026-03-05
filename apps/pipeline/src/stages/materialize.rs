@@ -20,8 +20,8 @@ pub fn materialize_serving(db_path: &str) -> Result<(), PipelineError> {
         CREATE INDEX IF NOT EXISTS idx_search_projection_ruc ON search_projection(org_ruc);
         CREATE INDEX IF NOT EXISTS idx_search_projection_phone_index_phone
             ON search_projection_phone_index(phone);
-        CREATE INDEX IF NOT EXISTS idx_search_projection_phone_index_projection_id
-            ON search_projection_phone_index(projection_id);
+        CREATE INDEX IF NOT EXISTS idx_search_projection_phone_index_projection_id_phone
+            ON search_projection_phone_index(projection_id, phone);
         "#,
     )?;
 
