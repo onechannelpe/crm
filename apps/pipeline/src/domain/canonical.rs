@@ -268,8 +268,8 @@ fn normalize_email(value: &str) -> Option<String> {
             "noemail",
             // Spanish placeholders observed in source data
             "no",
-            "sn",   // sin nombre
-            "sc",   // sin correo
+            "sn", // sin nombre
+            "sc", // sin correo
             "sincorreo",
         ]
         .into_iter()
@@ -362,7 +362,18 @@ mod tests {
     #[test]
     fn email_blocked_locals_return_none() {
         // exact blocked locals
-        for local in &["notiene", "notienecorreo", "dummy", "null", "na", "noemail", "no", "sn", "sc", "sincorreo"] {
+        for local in &[
+            "notiene",
+            "notienecorreo",
+            "dummy",
+            "null",
+            "na",
+            "noemail",
+            "no",
+            "sn",
+            "sc",
+            "sincorreo",
+        ] {
             let addr = format!("{}@gmail.com", local);
             assert_eq!(normalize_email(&addr), None, "expected None for {addr}");
         }
