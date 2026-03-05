@@ -33,9 +33,8 @@ async fn run() -> Result<(), StartupError> {
     if !Path::new(&cfg.db_path).exists() {
         return Err(StartupError::Database(format!(
             "contacts database not found at {}\n  \
-            ⇢ Build it with a slice run:\n  \
-            ⇢   bun run pipeline:engine bench --profile quick\n  \
-            ⇢   cp apps/pipeline/data/build/bench/bench-quick.sqlite apps/engine/data/contacts.sqlite",
+            ⇢ Refresh it with:\n  \
+            ⇢   bun run pipeline:refresh",
             cfg.db_path
         )));
     }
