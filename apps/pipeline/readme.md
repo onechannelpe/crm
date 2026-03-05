@@ -36,7 +36,7 @@ Pipeline runtime behavior is defined in `apps/pipeline/pipeline.toml`.
 
 - `paths`: manifest/db/output locations
 - `profiles.quick`: small sample validation
-- `profiles.standard`: default benchmark profile
+- `profiles.standard`: default dev refresh profile (100k sample)
 - `profiles.heavy`: sample benchmark including osiptel
 - `profiles.full`: full ingest build profile
 
@@ -52,12 +52,12 @@ make -C apps/pipeline validate-quick
 make -C apps/pipeline validate-standard
 ```
 
-Benchmark (sample ingest + materialization):
+Refresh engine DB for local development:
 
 ```sh
-make -C apps/pipeline bench-standard
-# optional heavier sample including osiptel
-make -C apps/pipeline bench-heavy
+bun run pipeline:refresh
+# optional smaller slice
+bun run pipeline:refresh:10k
 ```
 
 Full build (enabled sources, full files):
@@ -66,7 +66,7 @@ Full build (enabled sources, full files):
 make -C apps/pipeline build-full
 ```
 
-Promote staged DB to engine:
+Promote staged DB to engine (advanced/manual):
 
 ```sh
 make -C apps/pipeline promote

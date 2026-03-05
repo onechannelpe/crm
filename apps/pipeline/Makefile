@@ -10,10 +10,16 @@ RUNS_DIR := data/pipeline/runs
 TRIAGE_DIR := data/pipeline/triage
 NORMALIZED_DIR := data/normalized
 
-.PHONY: verify validate-quick validate-standard bench-quick bench-standard bench-heavy build-full promote capture-run generate-triage compare-runs
+.PHONY: verify refresh-dev refresh-dev-10k validate-quick validate-standard bench-quick bench-standard bench-heavy build-full promote capture-run generate-triage compare-runs
 
 verify:
 	cd $(ROOT) && cargo run --release --manifest-path $(PIPELINE_MANIFEST) -- verify-manifest
+
+refresh-dev:
+	cd $(ROOT) && cargo run --release --manifest-path $(PIPELINE_MANIFEST) -- refresh --slice 100k
+
+refresh-dev-10k:
+	cd $(ROOT) && cargo run --release --manifest-path $(PIPELINE_MANIFEST) -- refresh --slice 10k
 
 validate-quick:
 	cd $(ROOT) && cargo run --release --manifest-path $(PIPELINE_MANIFEST) -- validate --profile quick

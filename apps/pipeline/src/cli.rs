@@ -28,6 +28,11 @@ pub enum Command {
         from: Option<String>,
         to: Option<String>,
     },
+    Refresh {
+        config: String,
+        slice: String,
+        to: Option<String>,
+    },
 }
 
 pub fn parse_args(args: &[String]) -> Result<Command, PipelineError> {
@@ -91,6 +96,17 @@ pub fn parse_args(args: &[String]) -> Result<Command, PipelineError> {
                 .cloned()
                 .unwrap_or_else(|| default_pipeline_config().to_string_lossy().to_string()),
             from: flags.get("--from").cloned(),
+            to: flags.get("--to").cloned(),
+        }),
+        "refresh" => Ok(Command::Refresh {
+            config: flags
+                .get("--config")
+                .cloned()
+                .unwrap_or_else(|| default_pipeline_config().to_string_lossy().to_string()),
+            slice: flags
+                .get("--slice")
+                .cloned()
+                .unwrap_or_else(|| "100k".to_owned()),
             to: flags.get("--to").cloned(),
         }),
         _ => Err(PipelineError::Args(format!("unknown command: {cmd}"))),

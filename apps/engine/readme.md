@@ -6,6 +6,8 @@ Rust/Axum contact search API backed by read-only SQLite. See [root readme](../..
 
 Engine reads from `apps/engine/data/contacts.sqlite`, a read-only SQLite snapshot built by the [processing pipeline](../pipeline/readme.md). Swapping the file requires an engine restart.
 
+For local development refreshes, run `bun run pipeline:refresh`.
+
 ## API
 
 ```
