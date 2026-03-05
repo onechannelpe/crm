@@ -1,5 +1,9 @@
 import { query } from "@solidjs/router";
 
-import { getTeamDirectory } from "~/actions/team";
+import { getInviteManagement, getTeamMembers } from "~/actions/team";
 
-export const teamDirectoryQuery = query(getTeamDirectory, "teamDirectory");
+export const teamMembersQuery = query(getTeamMembers, "teamMembers");
+export const inviteManagementQuery = query(
+  getInviteManagement,
+  "inviteManagement",
+);

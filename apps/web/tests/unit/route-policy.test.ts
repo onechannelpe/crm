@@ -13,7 +13,7 @@ import {
 
 describe("route permissions", () => {
   it("resolves static and dynamic route permissions", () => {
-    expect(getRoutePermission("/team/new")).toBe("hr:manage");
+    expect(getRoutePermission("/team")).toBe("team:read");
     expect(getRoutePermission("/sales/records/new")).toBe("sales:create");
     expect(getRoutePermission("/sales/records/123/edit")).toBe("sales:create");
     expect(getRoutePermission("/sales/reports/exports")).toBe("sales:review");
@@ -29,8 +29,8 @@ describe("route permissions", () => {
     expect(canAccessPath("executive", "/audit")).toBe(false);
     expect(canAccessPath("supervisor", "/audit")).toBe(true);
     expect(canAccessPath("executive", "/quota")).toBe(false);
-    expect(canAccessPath("executive", "/team/new")).toBe(false);
-    expect(canAccessPath("hr", "/team/new")).toBe(true);
+    expect(canAccessPath("executive", "/team")).toBe(false);
+    expect(canAccessPath("hr", "/team")).toBe(true);
     expect(canAccessPath("admin", "/settings/general")).toBe(true);
     expect(canAccessPath("sales_manager", "/sales/records/42/edit")).toBe(
       false,

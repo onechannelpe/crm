@@ -79,13 +79,6 @@ export const NAV_ROUTES: NavRoute[] = [
     sidebar: { section: "secondary", order: 4 },
   },
   {
-    id: "team-new",
-    href: "/team/new",
-    label: "Crear miembro del equipo",
-    icon: "team",
-    header: { label: "Team", icon: "team" },
-  },
-  {
     id: "inventory",
     href: "/inventory",
     label: "Inventario",

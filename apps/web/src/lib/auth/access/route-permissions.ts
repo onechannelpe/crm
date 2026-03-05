@@ -35,7 +35,6 @@ export const ROUTE_PERMISSIONS: RoutePermission[] = [
     permission: "admin:manage",
   },
   { id: "team", href: "/team", permission: "team:read", landingPriority: 6 },
-  { id: "team-new", href: "/team/new", permission: "hr:manage" },
   {
     id: "inventory",
     href: "/inventory",
