@@ -96,6 +96,20 @@ describe("password login service", () => {
     expect(events[0]?.reason).toBeNull();
   });
 
+  it("rejects unknown email with same error as wrong password (no enumeration)", async () => {
+    await expect(
+      authenticatePasswordLogin(
+        {
+          email: "nobody@test.local",
+          password: "Secret123!",
+          ipAddress,
+          userAgent,
+        },
+        { repos: ctx.repos, sendPrivilegedLoginAlert },
+      ),
+    ).rejects.toThrow("Invalid credentials");
+  });
+
   it("marks login as not onboarded when onboarding is incomplete", async () => {
     await ctx.db
       .updateTable("users")

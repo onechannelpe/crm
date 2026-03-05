@@ -8,7 +8,7 @@ import { sendAlertOnNewLoginSource } from "../security/login-source-alert";
 import { resolvePasswordStrongAuth } from "../security/password-strong-auth";
 import { type SendPrivilegedLoginAlert } from "../security/privileged-login-alert";
 import { createSession } from "../session/session-manager";
-import { verifyPassword } from "./password";
+import { hashPassword, verifyPassword } from "./password";
 import {
   checkLoginThrottle,
   clearLoginFailureState,
@@ -16,6 +16,8 @@ import {
 } from "./throttle";
 
 const INVALID_CREDENTIALS = "Invalid credentials";
+
+const DUMMY_HASH = hashPassword("dummy-constant-for-timing-parity");
 
 type Deps = Pick<
   Repositories,
@@ -78,6 +80,7 @@ export async function authenticatePasswordLogin(
   const user = await resolvedDeps.users.findByEmail(safeEmail);
 
   if (!user || !user.is_active) {
+    await verifyPassword(await DUMMY_HASH, safePassword);
     await recordLoginFailure(safeEmail, input.ipAddress, resolvedDeps);
     await recordAuthEvent(resolvedDeps, {
       userId: user?.id ?? null,
