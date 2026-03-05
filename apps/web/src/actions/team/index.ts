@@ -4,7 +4,7 @@ export {
   resendTeamInvite,
   revokeTeamInvite,
 } from "./invites";
-export { getBranchTeamsForInvite, getTeamDirectory } from "./read";
+export { getTeamDirectory } from "./read";
 
 export type {
   TeamDirectory,

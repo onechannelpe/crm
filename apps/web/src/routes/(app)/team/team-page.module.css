@@ -1,12 +1,41 @@
-.toolbar {
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tableCompact {
+  margin-top: 8px;
+}
+
+.inviteForm {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.inviteActions {
+  grid-column: 1 / -1;
   display: flex;
   justify-content: flex-end;
 }
 
-.section {
+.linkRow {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.linkRow > :first-child {
+  flex: 1;
+}
+
+.linkHint {
+  margin-top: 8px;
+  color: var(--muted-foreground);
+  font-size: var(--font-size-caption);
 }
 
 .memberName {
@@ -39,18 +68,35 @@
 .actions {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
 }
 
-.sectionTitle {
-  margin: 0;
-  padding: 0 4px;
-  font-size: var(--font-size-body);
-  font-weight: 500;
-  color: var(--foreground);
-}
-
-.noPermission {
-  font-size: var(--font-size-caption);
+.searchWrap {
+  display: block;
+  margin-top: 8px;
+  padding: 0;
   color: var(--muted-foreground);
+}
+
+.searchField {
+  position: relative;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
+
+.searchInput {
+  padding-left: 32px;
+}
+
+@media (max-width: 900px) {
+  .inviteForm {
+    grid-template-columns: 1fr;
+  }
 }

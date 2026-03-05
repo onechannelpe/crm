@@ -1,4 +1,5 @@
 import type { Role } from "~/lib/auth/access/rbac";
+import { canAssignRole } from "~/lib/auth/access/role-display";
 import { generateInviteToken, hashInviteToken } from "~/lib/auth/invite/tokens";
 import { hashPassword } from "~/lib/auth/password/password";
 import { createAuditService } from "~/server/shared/audit";
@@ -31,15 +32,6 @@ export interface UserProvisioningDeps {
   runInTransaction?: <T>(
     operation: (repos: ProvisioningRepos) => Promise<T>,
   ) => Promise<T>;
-}
-
-function canAssignRole(actorRole: Role, targetRole: Role): boolean {
-  if (actorRole === "superuser") return targetRole !== "superuser";
-  if (actorRole === "admin") return targetRole !== "superuser";
-  if (actorRole === "hr") {
-    return targetRole !== "admin" && targetRole !== "superuser";
-  }
-  return false;
 }
 
 function normalizeEmail(email: string): string {

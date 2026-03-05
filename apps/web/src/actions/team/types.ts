@@ -1,4 +1,5 @@
 import type { Role } from "~/lib/auth/access/rbac";
+import type { RoleOption } from "~/lib/auth/access/role-display";
 
 export interface TeamMember {
   id: number;
@@ -23,11 +24,23 @@ export interface TeamInvite {
 
 export interface TeamDirectory {
   members: TeamMember[];
-  pendingInvites: TeamInvite[];
-  canManageInvites: boolean;
+  inviteManagement: TeamInviteManagement | null;
 }
 
 export interface TeamOption {
   id: number;
   name: string;
+}
+
+export interface TeamInviteManagement {
+  pendingInvites: TeamInvite[];
+  teams: TeamOption[];
+  assignableRoles: RoleOption[];
+  inviteLink: TeamInviteLinkState;
+}
+
+export interface TeamInviteLinkState {
+  status: "enabled" | "unavailable";
+  url: string | null;
+  reason: string | null;
 }
