@@ -28,7 +28,11 @@ pub fn sample_with_header(src: PathBuf, out: PathBuf, cap: usize) -> Result<(), 
         count
     };
 
-    let stride = if data_lines <= cap { 1 } else { data_lines / cap };
+    let stride = if data_lines <= cap {
+        1
+    } else {
+        data_lines / cap
+    };
 
     // Pass 2: write header + every stride-th data row.
     let in_file = File::open(&src)?;
@@ -54,7 +58,7 @@ pub fn sample_with_header(src: PathBuf, out: PathBuf, cap: usize) -> Result<(), 
         if taken >= cap {
             break;
         }
-        if data_idx % stride == 0 {
+        if data_idx.is_multiple_of(stride) {
             writer.write_all(&buf)?;
             taken += 1;
         }

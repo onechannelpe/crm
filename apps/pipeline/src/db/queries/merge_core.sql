@@ -66,7 +66,10 @@ WHERE
     OR excluded.condition IS NOT NULL
     OR excluded.company_type IS NOT NULL
     OR excluded.economic_activity IS NOT NULL
-    OR excluded.ubigeo_code IS NOT NULL;
+    OR excluded.ubigeo_code IS NOT NULL
+    OR excluded.department IS NOT NULL
+    OR excluded.province IS NOT NULL
+    OR excluded.district IS NOT NULL;
 
 CREATE TEMP TABLE tmp_role_source AS
 SELECT DISTINCT

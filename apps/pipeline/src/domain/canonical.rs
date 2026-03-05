@@ -103,11 +103,31 @@ pub(crate) fn map_record(resolved: &ResolvedMapping, record: &StringRecord) -> C
         company_condition: mapped_value("company_condition", resolved, record),
         company_type: mapped_value("company_type", resolved, record),
         economic_activity: mapped_value("economic_activity", resolved, record),
-        company_ubigeo: mapped_value("company_ubigeo", resolved, record),
-        company_department: mapped_value("company_department", resolved, record),
-        company_province: mapped_value("company_province", resolved, record),
-        company_district: mapped_value("company_district", resolved, record),
+        company_ubigeo: normalize_location_value(mapped_value("company_ubigeo", resolved, record)),
+        company_department: normalize_location_value(mapped_value(
+            "company_department",
+            resolved,
+            record,
+        )),
+        company_province: normalize_location_value(mapped_value(
+            "company_province",
+            resolved,
+            record,
+        )),
+        company_district: normalize_location_value(mapped_value(
+            "company_district",
+            resolved,
+            record,
+        )),
     }
+}
+
+fn normalize_location_value(value: String) -> String {
+    let normalized = value.trim().to_ascii_uppercase();
+    if normalized == "NO DISPONIBLE" {
+        return String::new();
+    }
+    value
 }
 
 pub(crate) fn resolve_mapping(
@@ -296,4 +316,58 @@ fn build_header_index(headers: Option<&StringRecord>) -> Option<HashMap<String, 
             .map(|(idx, name)| (name.to_owned(), idx))
             .collect::<HashMap<_, _>>()
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{ResolvedMapping, map_record};
+    use csv::StringRecord;
+    use std::collections::HashMap;
+
+    #[test]
+    fn location_fields_treat_no_disponible_as_missing() {
+        let mut fields: HashMap<String, Option<usize>> = HashMap::new();
+        fields.insert("company_ubigeo".to_owned(), Some(0));
+        fields.insert("company_department".to_owned(), Some(1));
+        fields.insert("company_province".to_owned(), Some(2));
+        fields.insert("company_district".to_owned(), Some(3));
+
+        let resolved = ResolvedMapping {
+            fields,
+            phone_columns: Vec::new(),
+        };
+        let record = StringRecord::from(vec![
+            "NO DISPONIBLE",
+            " no disponible ",
+            "NO DISPONIBLE",
+            "NO DISPONIBLE",
+        ]);
+
+        let row = map_record(&resolved, &record);
+        assert_eq!(row.company_ubigeo, "");
+        assert_eq!(row.company_department, "");
+        assert_eq!(row.company_province, "");
+        assert_eq!(row.company_district, "");
+    }
+
+    #[test]
+    fn location_fields_keep_valid_values() {
+        let mut fields: HashMap<String, Option<usize>> = HashMap::new();
+        fields.insert("company_ubigeo".to_owned(), Some(0));
+        fields.insert("company_department".to_owned(), Some(1));
+        fields.insert("company_province".to_owned(), Some(2));
+        fields.insert("company_district".to_owned(), Some(3));
+
+        let resolved = ResolvedMapping {
+            fields,
+            phone_columns: Vec::new(),
+        };
+        let record = StringRecord::from(vec!["150101", "LIMA", "LIMA", "LIMA"]);
+
+        let row = map_record(&resolved, &record);
+        assert_eq!(row.company_ubigeo, "150101");
+        assert_eq!(row.company_department, "LIMA");
+        assert_eq!(row.company_province, "LIMA");
+        assert_eq!(row.company_district, "LIMA");
+    }
 }

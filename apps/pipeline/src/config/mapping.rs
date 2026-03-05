@@ -1,7 +1,25 @@
 use crate::PipelineError;
+use csv::{ByteRecord, StringRecord};
+use encoding_rs::{UTF_8, WINDOWS_1252};
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
+
+#[derive(Debug, Clone, Copy, Deserialize)]
+pub enum SourceEncoding {
+    #[serde(rename = "auto")]
+    Auto,
+    #[serde(rename = "utf-8", alias = "utf8")]
+    Utf8,
+    #[serde(
+        rename = "windows-1252",
+        alias = "cp1252",
+        alias = "iso-8859-1",
+        alias = "latin1",
+        alias = "latin-1"
+    )]
+    Windows1252,
+}
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct SourceMapping {
@@ -18,10 +36,16 @@ pub struct SourceMapping {
     pub phone_columns: Vec<String>,
     #[serde(default)]
     pub phone_prefixes: Vec<String>,
+    #[serde(default = "default_source_encoding")]
+    pub encoding: SourceEncoding,
 }
 
 fn default_true() -> bool {
     true
+}
+
+fn default_source_encoding() -> SourceEncoding {
+    SourceEncoding::Auto
 }
 
 impl SourceMapping {
@@ -38,5 +62,99 @@ impl SourceMapping {
 
     pub fn delimiter_byte(&self) -> u8 {
         self.delimiter.as_bytes()[0]
+    }
+
+    pub fn decode_byte_record(&self, record: &ByteRecord) -> Result<StringRecord, PipelineError> {
+        let mut fields = Vec::with_capacity(record.len());
+        for field in record.iter() {
+            fields.push(self.decode_field(field)?);
+        }
+        Ok(StringRecord::from(fields))
+    }
+
+    fn decode_field(&self, field: &[u8]) -> Result<String, PipelineError> {
+        match self.encoding {
+            SourceEncoding::Auto => {
+                if let Ok(value) = std::str::from_utf8(field) {
+                    return Ok(value.to_owned());
+                }
+                let (decoded, _, _) = WINDOWS_1252.decode(field);
+                Ok(decoded.into_owned())
+            }
+            SourceEncoding::Utf8 => {
+                let (decoded, _, had_errors) = UTF_8.decode(field);
+                if had_errors {
+                    return Err(PipelineError::Args(format!(
+                        "invalid utf-8 for source '{}' while encoding='utf-8'",
+                        self.source_key
+                    )));
+                }
+                Ok(decoded.into_owned())
+            }
+            SourceEncoding::Windows1252 => {
+                let (decoded, _, _) = WINDOWS_1252.decode(field);
+                Ok(decoded.into_owned())
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{SourceEncoding, SourceMapping};
+    use csv::ByteRecord;
+    use std::collections::HashMap;
+
+    fn mapping_with_encoding(encoding: SourceEncoding) -> SourceMapping {
+        SourceMapping {
+            source_key: "test_source".to_owned(),
+            source_name: "test_source".to_owned(),
+            delimiter: ",".to_owned(),
+            has_header: true,
+            flexible: true,
+            fields: HashMap::new(),
+            phone_columns: Vec::new(),
+            phone_prefixes: Vec::new(),
+            encoding,
+        }
+    }
+
+    fn single_field_record(bytes: &[u8]) -> ByteRecord {
+        let mut record = ByteRecord::new();
+        record.push_field(bytes);
+        record
+    }
+
+    #[test]
+    fn auto_decodes_windows_1252_when_utf8_is_invalid() {
+        let mapping = mapping_with_encoding(SourceEncoding::Auto);
+        let record = single_field_record(&[0x4E, 0x55, 0xD1, 0x4F, 0x41]); // NUÑOA in cp1252
+
+        let decoded = mapping
+            .decode_byte_record(&record)
+            .expect("auto decoder should decode cp1252 text");
+
+        assert_eq!(decoded.get(0), Some("NUÑOA"));
+    }
+
+    #[test]
+    fn utf8_mode_rejects_invalid_utf8_bytes() {
+        let mapping = mapping_with_encoding(SourceEncoding::Utf8);
+        let record = single_field_record(&[0xD1]);
+
+        let err = mapping.decode_byte_record(&record).expect_err("must fail");
+        assert!(err.to_string().contains("invalid utf-8"));
+    }
+
+    #[test]
+    fn windows_1252_mode_decodes_legacy_bytes() {
+        let mapping = mapping_with_encoding(SourceEncoding::Windows1252);
+        let record = single_field_record(&[0x43, 0x41, 0xD1, 0x45, 0x54, 0x45]); // CAÑETE
+
+        let decoded = mapping
+            .decode_byte_record(&record)
+            .expect("cp1252 decoder should decode");
+
+        assert_eq!(decoded.get(0), Some("CAÑETE"));
     }
 }

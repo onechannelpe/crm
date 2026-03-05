@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 csv = "1.4.0"
+encoding_rs = "0.8.35"
 hex = "0.4.3"
 rusqlite = { version = "0.37.0", features = ["bundled-full"] }
 serde = { version = "1.0.228", features = ["derive"] }
