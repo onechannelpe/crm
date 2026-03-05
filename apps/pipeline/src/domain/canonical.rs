@@ -254,15 +254,23 @@ fn normalize_email(value: &str) -> Option<String> {
     }
     let local_lower = local.to_ascii_lowercase();
     let domain_lower = domain.to_ascii_lowercase();
+    // Prefix check catches variants like notiene.notiene@*, notiene74@*
+    if local_lower.starts_with("notiene") {
+        return None;
+    }
     let blocked_locals = BLOCKED_EMAIL_LOCALS.get_or_init(|| {
         [
-            "notiene",
             "notienecorreo",
             "dummy",
             "email",
             "null",
             "na",
             "noemail",
+            // Spanish placeholders observed in source data
+            "no",
+            "sn",   // sin nombre
+            "sc",   // sin correo
+            "sincorreo",
         ]
         .into_iter()
         .collect()
@@ -270,8 +278,17 @@ fn normalize_email(value: &str) -> Option<String> {
     if blocked_locals.contains(local_lower.as_str()) {
         return None;
     }
-    let blocked_domains =
-        BLOCKED_EMAIL_DOMAINS.get_or_init(|| ["dummy.com", "email.com.pe"].into_iter().collect());
+    let blocked_domains = BLOCKED_EMAIL_DOMAINS.get_or_init(|| {
+        [
+            "dummy.com",
+            "email.com.pe",
+            "notiene.com",
+            "sincorreo.com",
+            "sincorreo.com.pe",
+        ]
+        .into_iter()
+        .collect()
+    });
     if blocked_domains.contains(domain_lower.as_str()) {
         return None;
     }
@@ -320,9 +337,66 @@ fn build_header_index(headers: Option<&StringRecord>) -> Option<HashMap<String, 
 
 #[cfg(test)]
 mod tests {
-    use super::{ResolvedMapping, map_record};
+    use super::{ResolvedMapping, map_record, normalize_email};
     use csv::StringRecord;
     use std::collections::HashMap;
+
+    // --- normalize_email ---
+
+    #[test]
+    fn email_valid_passes_through_normalized() {
+        assert_eq!(
+            normalize_email("Juan.Garcia@Gmail.COM"),
+            Some("juan.garcia@gmail.com".to_owned())
+        );
+    }
+
+    #[test]
+    fn email_empty_returns_none() {
+        assert_eq!(normalize_email(""), None);
+        assert_eq!(normalize_email("@gmail.com"), None);
+        assert_eq!(normalize_email("juan@"), None);
+        assert_eq!(normalize_email("juan@nodot"), None);
+    }
+
+    #[test]
+    fn email_blocked_locals_return_none() {
+        // exact blocked locals
+        for local in &["notiene", "notienecorreo", "dummy", "null", "na", "noemail", "no", "sn", "sc", "sincorreo"] {
+            let addr = format!("{}@gmail.com", local);
+            assert_eq!(normalize_email(&addr), None, "expected None for {addr}");
+        }
+    }
+
+    #[test]
+    fn email_notiene_prefix_variants_return_none() {
+        // prefix check catches notiene.notiene@*, notiene74@*, etc.
+        assert_eq!(normalize_email("notiene.notiene@gmail.com"), None);
+        assert_eq!(normalize_email("notiene74@gmsil.com"), None);
+        assert_eq!(normalize_email("NOTIENE@hotmail.com"), None);
+    }
+
+    #[test]
+    fn email_blocked_domains_return_none() {
+        assert_eq!(normalize_email("user@dummy.com"), None);
+        assert_eq!(normalize_email("user@notiene.com"), None);
+        assert_eq!(normalize_email("user@sincorreo.com"), None);
+        assert_eq!(normalize_email("user@sincorreo.com.pe"), None);
+        assert_eq!(normalize_email("user@email.com.pe"), None);
+    }
+
+    #[test]
+    fn email_spanish_placeholders_return_none() {
+        // real patterns observed in source data
+        assert_eq!(normalize_email("no@gmail.com"), None);
+        assert_eq!(normalize_email("no@hotmail.com"), None);
+        assert_eq!(normalize_email("sn@claro.com"), None);
+        assert_eq!(normalize_email("sc@claro.com.pe"), None);
+        assert_eq!(normalize_email("sincorreo@sincorreo.com"), None);
+        assert_eq!(normalize_email("no@notiene.com"), None);
+    }
+
+    // --- location fields ---
 
     #[test]
     fn location_fields_treat_no_disponible_as_missing() {

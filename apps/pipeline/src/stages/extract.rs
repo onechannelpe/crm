@@ -28,7 +28,7 @@ pub fn sample_with_header(src: PathBuf, out: PathBuf, cap: usize) -> Result<(), 
         count
     };
 
-    let stride = if data_lines <= cap {
+    let stride = if cap == 0 || data_lines <= cap {
         1
     } else {
         data_lines / cap
