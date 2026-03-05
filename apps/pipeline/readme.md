@@ -1,118 +1,89 @@
-# Pipeline processing
+# pipeline
 
-Rust pipeline for consolidating raw contact sources into a staged SQLite database and promoting it to engine.
+A Rust pipeline that transforms raw contact sources into SQLite datasets consumed by [engine](../engine/).
 
-## Tooling prerequisites
+## How it works
 
-- `bun`
-- `cargo`
-- `uv`
+Pipeline execution follows a fixed lifecycle:
 
-## Data setup after clone
+1. Verify manifest and contracts, then resolve runtime profile and output paths ([pipeline runner](src/pipeline.rs), [manifest verification](src/config/manifest.rs), [contract guard](src/contract_guard.rs)).
+2. Ingest enabled sources in priority order; each source goes through shard ingest, merge, and snapshot validation ([sample flow](src/stages/verify/run_sample.rs), [full flow](src/stages/verify/run_full.rs), [ingest helpers](src/stages/verify/helpers.rs)).
+3. Materialize serving tables and run quick existence checks for core tables and projection indexes ([verify helpers](src/stages/verify/helpers.rs), [materialization](src/stages/materialize.rs)).
+4. For publish paths, run quality gates and stamp `_pipeline_build` metadata (`build_id`, `built_at`, `rows`) ([gate](src/stages/gate.rs), [publish flow](src/pipeline.rs)).
+5. Promote atomically into engine DB using `VACUUM INTO`, backup old target as `.prev`, and swap files ([promotion](src/stages/promote.rs)).
 
-Raw files are not committed. Copy files from the shared folder into `apps/pipeline/data/raw/` with the exact names referenced by `apps/pipeline/data/mappings/source-manifest.json`.
+Operational artifacts for debugging are written under the run directory (`metadata.json`, phase timings, checkpoints) by [run context](src/stages/bootstrap.rs).
 
-Required raw files:
-- `celulares.txt`
-- `CLARO_POST_202508.txt`
-- `Consolidado_RUC20_Representantes_MERGED.tsv`
-- `Representantes_ENRIQUECIDO.txt`
-- `osiptel_2025.csv`
-- `BITEL_POST_MS.txt`
-- `MOVISTAR_POST_202508.txt`
-- `Mov_MeSal.txt`
-- `PadronRUC_202601.csv`
-- `Consolidado_RUC20_Representantes_BPPO.txt`
+## What it does
 
-Verify paths and mappings:
+- Verifies source manifest and contracts before processing. See [pipeline runner](src/pipeline.rs) and [contract guard](src/contract_guard.rs).
+- Produces sample/full datasets through stage orchestration. See [verify stages](src/stages/verify.rs) and [materialization](src/stages/materialize.rs).
+- Publishes an engine-ready DB with quality gate checks, build metadata, and atomic replacement. See [gate](src/stages/gate.rs), [promotion](src/stages/promote.rs), and [publish flow](src/pipeline.rs).
+
+## Primary workflows
+
+**Refresh engine DB for development (recommended)**
 
 ```sh
-make -C apps/pipeline verify
+bun run pipeline:refresh
 ```
 
-## Runtime configuration
-
-Pipeline runtime behavior is defined in `apps/pipeline/pipeline.toml`.
-
-- `paths`: manifest/db/output locations
-- `profiles.quick`: small sample validation
-- `profiles.standard`: default benchmark profile
-- `profiles.heavy`: sample benchmark including osiptel
-- `profiles.full`: full ingest build profile
-
-Use profiles instead of long CLI argument lists.
-
-## Main workflows
-
-Validation (normalization quality):
+Smaller/faster slice:
 
 ```sh
-make -C apps/pipeline validate-quick
+bun run pipeline:refresh:10k
+```
+
+**Validate normalization only (no publish)**
+
+```sh
+bun run pipeline:engine validate --profile quick
 # or
-make -C apps/pipeline validate-standard
+bun run pipeline:engine validate --profile standard
 ```
 
-Benchmark (sample ingest + materialization):
+**Full ingest and publish (production)**
 
 ```sh
-make -C apps/pipeline bench-standard
-# optional heavier sample including osiptel
-make -C apps/pipeline bench-heavy
+bun run pipeline:engine build --profile full
+bun run pipeline:engine promote
 ```
 
-Full build (enabled sources, full files):
+## Inputs, contracts, and runtime config
+
+- Source manifest and raw-file paths: [apps/pipeline/data/mappings/source-manifest.json](data/mappings/source-manifest.json)
+- Runtime profiles and output paths: [apps/pipeline/pipeline.toml](pipeline.toml)
+- Canonical contract: [contracts/canonical-contract.json](../../contracts/canonical-contract.json)
+- Source contract: [contracts/source-contract.json](../../contracts/source-contract.json)
+- Search projection contract: [contracts/search-projection.json](../../contracts/search-projection.json)
+
+Validate manifest + contracts before running heavy workflows:
 
 ```sh
-make -C apps/pipeline build-full
+bun run pipeline:verify-manifest
 ```
 
-Promote staged DB to engine:
+## Output artifacts and guarantees
 
-```sh
-make -C apps/pipeline promote
-```
+- Sample/benchmark outputs: [apps/pipeline/data/build/bench/](data/build/bench/)
+- Full staged output: [apps/pipeline/data/build/staged/](data/build/staged/)
+- Engine publish target: [apps/engine/data/contacts.sqlite](../engine/data/contacts.sqlite)
+- Normalized diagnostics: [apps/pipeline/data/normalized/](data/normalized/)
 
-## Quality gates
+`refresh`/`promote` guarantees when successful:
 
-Run before proposing changes:
+- quality gate passed,
+- `_pipeline_build` metadata stamped (`build_id`, `built_at`, `rows`),
+- atomic publish with previous DB backup (`.prev`) handled by promotion path.
 
-```sh
-bun run check
-cargo fmt --manifest-path apps/pipeline/Cargo.toml
-cargo test --manifest-path apps/pipeline/Cargo.toml
-cargo clippy --manifest-path apps/pipeline/Cargo.toml --all-targets -- -D warnings
-```
+## CLI command map
 
-## Validation artifacts
+Entrypoint: `bun run pipeline:engine -- <command>` ([CLI parser](src/cli.rs))
 
-Slice and triage artifacts:
-
-```sh
-make -C apps/pipeline capture-run RUN_ID=baseline
-make -C apps/pipeline generate-triage RUN_ID=baseline
-make -C apps/pipeline compare-runs BASE_RUN=baseline CANDIDATE_RUN=candidate
-```
-
-Output locations:
-- `apps/pipeline/data/normalized/`
-- `apps/pipeline/data/pipeline/runs/`
-- `apps/pipeline/data/pipeline/triage/`
-
-## Current baseline reference (2026-02-26)
-
-Profile `standard` (`bench-standard`):
-- 100k sample benchmark (no osiptel): approximately 46s to 61s depending on cache/warmness
-
-Profile `heavy` (`bench-heavy`):
-- 100k sample benchmark including osiptel: approximately 61s on warm runs
-
-## Layout
-
-- `src/cli.rs`: profile-oriented CLI commands
-- `src/config/runtime.rs`: `pipeline.toml` parsing and profile resolution
-- `src/stages/verify.rs`: sample/full orchestration
-- `src/stages/consolidate.rs`: streaming ingest into normalized core tables
-- `src/stages/materialize.rs`: serving-layer table build and indexes
-- `data/mappings/`: source manifest and source mappings
-- `data/raw/`: source files (not committed)
-- `data/build/`: staged and benchmark outputs
+- `refresh --slice 10k|100k|100k-osiptel [--to <path>]`
+- `verify-manifest`
+- `validate --profile quick|standard`
+- `bench --profile quick|standard|heavy`
+- `bench-map --profile quick|standard|heavy`
+- `build --profile full`
+- `promote [--from <path>] [--to <path>]`
