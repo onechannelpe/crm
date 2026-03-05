@@ -1,6 +1,6 @@
 # pipeline
 
-A Rust pipeline that transforms raw contact sources into SQLite datasets consumed by [engine](../engine/readme.md).
+A Rust pipeline that transforms raw contact sources into SQLite datasets consumed by [engine](../engine/).
 
 ## How it works
 
