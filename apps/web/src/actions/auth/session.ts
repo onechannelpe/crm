@@ -1,12 +1,15 @@
 "use server";
 
 import type { Role } from "~/lib/auth/access/rbac";
-import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
 import {
   resolveWorkspaceContext,
   type WorkspaceIdentity,
 } from "~/lib/auth/access/workspace-context";
 import { type WorkspaceScopeType } from "~/lib/auth/access/workspace-scope";
+import {
+  getStrongAuthStatus,
+  requiresStrongAuthRole,
+} from "~/lib/auth/security/strong-auth-status";
 import {
   deleteSessionCookie,
   getSessionCookie,
@@ -129,7 +132,7 @@ export async function getMe(): Promise<CurrentUser | null> {
     avatarVersion: user.avatar_version,
     onboardingCompletedAt: user.onboarding_completed_at,
     role: session.role,
-    strongAuthRequired: user.strong_auth_required === 1,
+    strongAuthRequired: requiresStrongAuthRole(user.role),
     strongAuthConfigured: strongAuthStatus.hasVerifiedStrongAuth,
     totpEnabled: strongAuthStatus.hasTotp,
     hasPasskey: strongAuthStatus.hasPasskey,

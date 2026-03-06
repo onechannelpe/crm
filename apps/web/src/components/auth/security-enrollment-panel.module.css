@@ -1,0 +1,232 @@
+.panel {
+  display: grid;
+  gap: 16px;
+}
+
+.banner {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid
+    color-mix(in oklab, var(--border) 70%, var(--foreground) 30%);
+  background: color-mix(in oklab, var(--tertiary) 72%, white 28%);
+}
+
+.bannerTitle {
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.bannerText {
+  color: var(--muted-foreground);
+  line-height: 1.5;
+}
+
+.methodGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.methodCard {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: color-mix(
+    in oklab,
+    var(--panel-bg, var(--background)) 95%,
+    white 5%
+  );
+}
+
+.methodHeader {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: start;
+}
+
+.methodIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  color: var(--foreground);
+  background: color-mix(in oklab, var(--tertiary) 80%, white 20%);
+}
+
+.methodCopy {
+  display: grid;
+  gap: 4px;
+}
+
+.methodTitle {
+  margin: 0;
+  font-size: var(--font-size-body);
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.methodDescription {
+  margin: 0;
+  color: var(--muted-foreground);
+  line-height: 1.5;
+}
+
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+}
+
+.statusPillSuccess {
+  color: var(--success, #12715b);
+  border-color: color-mix(
+    in oklab,
+    var(--success, #12715b) 45%,
+    var(--border) 55%
+  );
+  background: color-mix(in oklab, var(--success, #12715b) 10%, white 90%);
+}
+
+.methodActions {
+  display: grid;
+  gap: 10px;
+}
+
+.methodHint {
+  margin: 0;
+  color: var(--muted-foreground);
+  line-height: 1.5;
+}
+
+.totpSetup {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 16px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.qrPanel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 184px;
+  min-height: 184px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: white;
+}
+
+.qr {
+  width: 148px;
+  height: 148px;
+}
+
+.totpDetails {
+  display: grid;
+  gap: 12px;
+}
+
+.setupKeyBlock {
+  display: grid;
+  gap: 8px;
+}
+
+.setupKeyLabel {
+  font-size: var(--font-size-sm);
+  color: var(--muted-foreground);
+}
+
+.verifyRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.recovery {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid
+    color-mix(in oklab, var(--border) 65%, var(--foreground) 35%);
+  background: color-mix(
+    in oklab,
+    var(--panel-bg, var(--background)) 88%,
+    white 12%
+  );
+}
+
+.recoveryHeader {
+  display: grid;
+  gap: 4px;
+}
+
+.recoveryTitle {
+  margin: 0;
+  font-size: var(--font-size-body);
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.recoveryDescription {
+  margin: 0;
+  color: var(--muted-foreground);
+  line-height: 1.5;
+}
+
+.recoveryList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  color: var(--foreground);
+  background: color-mix(
+    in oklab,
+    var(--panel-bg, var(--background)) 90%,
+    white 10%
+  );
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 10px;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .methodGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .totpSetup {
+    grid-template-columns: 1fr;
+  }
+
+  .qrPanel {
+    width: 100%;
+  }
+
+  .verifyRow {
+    grid-template-columns: 1fr;
+  }
+}

@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { hashPassword } from "../../src/lib/auth/password/password";
 import { authenticatePasswordLogin } from "../../src/lib/auth/password/password-login";
 import type { SendPrivilegedLoginAlert } from "../../src/lib/auth/security/privileged-login-alert";
+import { requiresStrongAuthRole } from "../../src/lib/auth/security/strong-auth-status";
 import {
   decryptTotpSecret,
   encryptTotpSecret,
@@ -202,7 +203,9 @@ describe("privileged password login", () => {
     const downgradedUser = await ctx.repos.users.findById(5);
     const downgradedFactor = await ctx.repos.userTotpFactors.findByUserId(5);
     const downgradedPasskeys = await ctx.repos.passkeys.findByUser(5);
-    expect(downgradedUser?.strong_auth_required).toBe(0);
+    expect(downgradedUser && requiresStrongAuthRole(downgradedUser.role)).toBe(
+      false,
+    );
     expect(downgradedFactor?.is_enabled).toBe(1);
     expect(downgradedPasskeys).toHaveLength(1);
   });

@@ -16,8 +16,12 @@ export function deriveStrongAuthRequired(role: User["role"]): number {
 
 const STRONG_AUTH_ROLES = ["sales_manager", "admin", "superuser"] as const;
 
-export function requiresStrongAuth(user: Pick<User, "strong_auth_required">) {
-  return user.strong_auth_required === 1;
+export function requiresStrongAuthRole(role: User["role"]) {
+  return deriveStrongAuthRequired(role) === 1;
+}
+
+export function requiresStrongAuth(user: Pick<User, "role">) {
+  return requiresStrongAuthRole(user.role);
 }
 
 export async function getStrongAuthStatus(

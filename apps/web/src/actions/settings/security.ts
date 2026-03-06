@@ -2,6 +2,7 @@
 
 import { forbiddenError, notFoundError } from "~/lib/app-errors";
 import { requireSession } from "~/lib/auth/access/session";
+import { hashPassword, verifyPassword } from "~/lib/auth/password/password";
 import type { ActionSuccess } from "~/lib/contracts/common";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
 import { repos } from "~/server/shared/context";
@@ -17,11 +18,9 @@ export async function changePassword(
   const user = await repos.users.findById(session.userId);
   if (!user) throw notFoundError("User not found");
 
-  const { verifyPassword } = await import("~/lib/auth/password/password");
   const valid = await verifyPassword(user.password_hash, safeCurrent);
   if (!valid) throw forbiddenError("Current password is incorrect");
 
-  const { hashPassword } = await import("~/lib/auth/password/password");
   const newHash = await hashPassword(safeNew);
   await repos.users.updatePassword(session.userId, newHash);
 

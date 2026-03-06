@@ -1,9 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { getStrongAuthStatus } from "../../src/lib/auth/security/strong-auth-status";
-import {
-  encryptTotpSecret,
-} from "../../src/lib/auth/totp/secret-crypto";
+import { encryptTotpSecret } from "../../src/lib/auth/totp/secret-crypto";
 import { generateTotpSecret } from "../../src/lib/auth/totp/totp";
 import {
   cleanupTestDb,

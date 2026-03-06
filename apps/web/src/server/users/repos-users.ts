@@ -1,6 +1,5 @@
 import type { Kysely } from "kysely";
 
-import { deriveStrongAuthRequired } from "~/lib/auth/security/strong-auth-status";
 import type { Database, UsersTable } from "~/lib/db/schema";
 
 type UserRole = UsersTable["role"];
@@ -91,7 +90,6 @@ export function createUsersRepo(db: Kysely<Database>) {
       role: UserRole;
       is_active: number;
     }) {
-      const strongAuthRequired = deriveStrongAuthRequired(values.role);
       const result = await db
         .insertInto("users")
         .values({
@@ -100,11 +98,7 @@ export function createUsersRepo(db: Kysely<Database>) {
           expiry_notified_at: null,
           is_active: values.is_active,
           phone_e164: values.phone_e164 ?? null,
-          phone_verified_at: null,
-          profile_confirmed_at: null,
           onboarding_completed_at: null,
-          strong_auth_required: strongAuthRequired,
-          strong_auth_enrolled_at: null,
           created_at: Date.now(),
         })
         .executeTakeFirstOrThrow();
@@ -130,23 +124,6 @@ export function createUsersRepo(db: Kysely<Database>) {
         is_active: number;
       },
     ) {
-      const strongAuthRequired = deriveStrongAuthRequired(values.role);
-      if (strongAuthRequired === 1) {
-        return db
-          .updateTable("users")
-          .set({
-            team_id: values.team_id,
-            names: values.names,
-            first_surname: values.first_surname,
-            second_surname: values.second_surname,
-            role: values.role,
-            is_active: values.is_active,
-            strong_auth_required: 1,
-          })
-          .where("id", "=", id)
-          .execute();
-      }
-
       return db
         .updateTable("users")
         .set({
@@ -156,7 +133,6 @@ export function createUsersRepo(db: Kysely<Database>) {
           second_surname: values.second_surname,
           role: values.role,
           is_active: values.is_active,
-          strong_auth_required: 0,
         })
         .where("id", "=", id)
         .execute();
@@ -170,8 +146,6 @@ export function createUsersRepo(db: Kysely<Database>) {
         .updateTable("users")
         .set({
           phone_e164: values.phone_e164,
-          phone_verified_at: values.completedAt,
-          profile_confirmed_at: values.completedAt,
           onboarding_completed_at: values.completedAt,
         })
         .where("id", "=", id)

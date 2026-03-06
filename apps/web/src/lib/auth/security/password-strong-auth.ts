@@ -10,7 +10,10 @@ import type { User } from "~/lib/db/schema";
 import type { Repositories } from "~/server/shared/registry";
 
 import { recordAuthEvent } from "./auth-events";
-import { getStrongAuthStatus, requiresStrongAuth } from "./strong-auth-status";
+import {
+  getStrongAuthStatus,
+  requiresStrongAuthRole,
+} from "./strong-auth-status";
 
 type Deps = Pick<
   Repositories,
@@ -31,7 +34,7 @@ export async function resolvePasswordStrongAuth(params: {
   strongAuthAt: number | null;
 }> {
   const { user, ipAddress, totpCode, deps } = params;
-  if (!requiresStrongAuth(user)) {
+  if (!requiresStrongAuthRole(user.role)) {
     return { authMethod: "password", strongAuthAt: null };
   }
 

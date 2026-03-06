@@ -1,5 +1,5 @@
 import { useNavigate } from "@solidjs/router";
-import { createEffect, createResource, createSignal, For, Show } from "solid-js";
+import { createEffect, createResource, createSignal, Show } from "solid-js";
 
 import {
   beginPasskeyRegistration,
@@ -9,10 +9,9 @@ import {
   finishTotpEnrollment,
   getMe,
 } from "~/actions/auth";
+import { SecurityEnrollmentPanel } from "~/components/auth/security-enrollment-panel";
 import { useToast } from "~/components/feedback/toast-provider";
 import Lock from "~/components/icons/lock";
-import Phone from "~/components/icons/phone";
-import ShieldCheck from "~/components/icons/shield-check";
 import UserRound from "~/components/icons/user-round";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
@@ -27,14 +26,6 @@ import { getErrorMessage } from "~/lib/errors";
 
 import authStyles from "./auth/auth-shell.module.css";
 import styles from "./onboarding-page.module.css";
-
-function getTotpSetupKey(otpauthUri: string): string {
-  try {
-    return new URL(otpauthUri).searchParams.get("secret") ?? "";
-  } catch {
-    return "";
-  }
-}
 
 export default function OnboardingPage() {
   const navigate = useNavigate();
@@ -69,11 +60,6 @@ export default function OnboardingPage() {
   const totpEnabled = () => Boolean(user()?.totpEnabled);
   const hasPasskey = () => Boolean(user()?.hasPasskey);
   const passkeyCount = () => user()?.passkeyCount ?? 0;
-  const setupKey = () => {
-    const enrollment = totpEnrollment();
-    if (!enrollment) return "";
-    return getTotpSetupKey(enrollment.otpauthUri);
-  };
 
   async function handleSubmit(e: Event) {
     e.preventDefault();
@@ -88,7 +74,10 @@ export default function OnboardingPage() {
       showToast("success", "Perfil y seguridad listos");
       navigate(getDefaultAppPath(currentUser.role));
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "No se pudo completar el registro"));
+      showToast(
+        "error",
+        getErrorMessage(err, "No se pudo completar el registro"),
+      );
     } finally {
       setSubmitting(false);
     }
@@ -160,10 +149,14 @@ export default function OnboardingPage() {
 
   return (
     <div class={authStyles.shellGrid}>
-      <section class={`${authStyles.panel} ${authStyles.panelXl} ${styles.panel}`}>
+      <section
+        class={`${authStyles.panel} ${authStyles.panelXl} ${styles.panel}`}
+      >
         <div class={styles.hero}>
           <p class={authStyles.eyebrow}>One Channel</p>
-          <h1 class={authStyles.title}>Termina la configuración de tu cuenta</h1>
+          <h1 class={authStyles.title}>
+            Termina la configuración de tu cuenta
+          </h1>
           <p class={authStyles.muted}>
             Primero confirma tu perfil. Luego protege el acceso con una clave de
             acceso o una aplicación de autenticación.
@@ -206,8 +199,8 @@ export default function OnboardingPage() {
                     <span class={styles.cardStep}>Paso 1</span>
                     <h2 class={styles.cardTitle}>Perfil</h2>
                     <p class={styles.cardDescription}>
-                      Los datos de identidad y rol vienen desde la invitación. Solo
-                      necesitamos confirmar tu contacto principal.
+                      Los datos de identidad y rol vienen desde la invitación.
+                      Solo necesitamos confirmar tu contacto principal.
                     </p>
                   </div>
                   <div class={styles.cardIcon}>
@@ -263,171 +256,32 @@ export default function OnboardingPage() {
                   </div>
                 </div>
 
-                <div class={styles.securityBanner}>
-                  <span class={styles.bannerTitle}>
-                    {requiresStrongAuth()
-                      ? "Necesitas una clave de acceso o una aplicación de autenticación."
-                      : "Recomendado: configura al menos un método fuerte ahora."}
-                  </span>
-                  <span class={styles.bannerText}>
-                    La clave de acceso funciona mejor para inicio rápido en este
-                    dispositivo. La aplicación de autenticación sirve como opción
-                    portátil y de respaldo.
-                  </span>
-                </div>
-
-                <div class={styles.methodGrid}>
-                  <article class={styles.methodCard}>
-                    <div class={styles.methodHeader}>
-                      <div class={styles.methodIcon}>
-                        <Phone size={18} />
-                      </div>
-                      <div class={styles.methodCopy}>
-                        <h3 class={styles.methodTitle}>Clave de acceso</h3>
-                        <p class={styles.methodDescription}>
-                          Usa biometría o el desbloqueo del dispositivo para entrar
-                          sin escribir un código adicional.
-                        </p>
-                      </div>
-                      <span
-                        classList={{
-                          [styles.statusPill]: true,
-                          [styles.statusPillSuccess]: hasPasskey(),
-                        }}
-                      >
-                        {hasPasskey()
-                          ? `${passkeyCount()} configurada${passkeyCount() === 1 ? "" : "s"}`
-                          : passkeySupported()
-                            ? "Disponible"
-                            : "No compatible"}
-                      </span>
-                    </div>
-
-                    <div class={styles.methodActions}>
-                      <Button
-                        type="button"
-                        variant={hasPasskey() ? "outline" : "primary"}
-                        disabled={!passkeySupported() || passkeyLoading()}
-                        loading={passkeyLoading()}
-                        onClick={() => {
-                          void handlePasskeySetup();
-                        }}
-                      >
-                        {hasPasskey() ? "Añadir otra clave" : "Configurar clave"}
-                      </Button>
-                      <Show when={!passkeySupported()}>
-                        <p class={styles.methodHint}>
-                          Este navegador o dispositivo no admite claves de acceso.
-                        </p>
-                      </Show>
-                    </div>
-                  </article>
-
-                  <article class={styles.methodCard}>
-                    <div class={styles.methodHeader}>
-                      <div class={styles.methodIcon}>
-                        <ShieldCheck size={18} />
-                      </div>
-                      <div class={styles.methodCopy}>
-                        <h3 class={styles.methodTitle}>Aplicación de autenticación</h3>
-                        <p class={styles.methodDescription}>
-                          Genera códigos de 6 dígitos con Authy, 1Password,
-                          Microsoft Authenticator u otra aplicación compatible.
-                        </p>
-                      </div>
-                      <span
-                        classList={{
-                          [styles.statusPill]: true,
-                          [styles.statusPillSuccess]: totpEnabled(),
-                        }}
-                      >
-                        {totpEnabled() ? "Configurada" : "No configurada"}
-                      </span>
-                    </div>
-
-                    <div class={styles.methodActions}>
-                      <Button
-                        type="button"
-                        variant={totpEnabled() ? "outline" : "primary"}
-                        disabled={totpEnabled() || totpLoading()}
-                        loading={totpLoading()}
-                        onClick={() => {
-                          void handleBeginTotp();
-                        }}
-                      >
-                        {totpEnabled() ? "Ya configurada" : "Configurar aplicación"}
-                      </Button>
-                    </div>
-
-                    <Show when={totpEnrollment()}>
-                      {(enrollment) => (
-                        <div class={styles.totpSetup}>
-                          <div class={styles.qrPanel}>
-                            <img
-                              src={enrollment().qrCodeDataUrl}
-                              alt="Código QR para autenticación"
-                              class={styles.qr}
-                            />
-                          </div>
-                          <div class={styles.totpDetails}>
-                            <p class={styles.methodHint}>
-                              Escanea el código QR con tu aplicación.
-                            </p>
-                            <Show when={setupKey()}>
-                              <div class={styles.setupKeyBlock}>
-                                <span class={styles.setupKeyLabel}>No puedes escanear?</span>
-                                <Input
-                                  type="text"
-                                  label="Clave manual"
-                                  value={setupKey()}
-                                  disabled
-                                />
-                              </div>
-                            </Show>
-                            <div class={styles.verifyRow}>
-                              <Input
-                                id="onboarding-totp-code"
-                                type="text"
-                                label="Código de 6 dígitos"
-                                placeholder="123456"
-                                value={totpCode()}
-                                onInput={(event) =>
-                                  setTotpCode(event.currentTarget.value)
-                                }
-                              />
-                              <Button
-                                type="button"
-                                disabled={totpLoading()}
-                                onClick={() => {
-                                  void handleVerifyTotp();
-                                }}
-                              >
-                                Verificar
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </Show>
-                  </article>
-                </div>
-
-                <Show when={recoveryCodes().length > 0}>
-                  <div class={styles.recovery}>
-                    <div class={styles.recoveryHeader}>
-                      <h3 class={styles.recoveryTitle}>Códigos de recuperación</h3>
-                      <p class={styles.recoveryDescription}>
-                        Guárdalos ahora. Se muestran una sola vez y sirven como
-                        respaldo si pierdes acceso a tu aplicación.
-                      </p>
-                    </div>
-                    <div class={styles.recoveryList}>
-                      <For each={recoveryCodes()}>
-                        {(code) => <div class={styles.mono}>{code}</div>}
-                      </For>
-                    </div>
-                  </div>
-                </Show>
+                <SecurityEnrollmentPanel
+                  mode="onboarding"
+                  strongAuthRequired={requiresStrongAuth()}
+                  strongAuthConfigured={strongAuthConfigured()}
+                  passkeySupported={passkeySupported()}
+                  hasPasskey={hasPasskey()}
+                  passkeyCount={passkeyCount()}
+                  passkeyLoading={passkeyLoading()}
+                  totpEnabled={totpEnabled()}
+                  totpLoading={totpLoading()}
+                  totpCode={totpCode()}
+                  totpEnrollment={totpEnrollment()}
+                  recoveryCodes={recoveryCodes()}
+                  onTotpCodeInput={(event) =>
+                    setTotpCode(event.currentTarget.value)
+                  }
+                  onRegisterPasskey={() => {
+                    void handlePasskeySetup();
+                  }}
+                  onBeginTotp={() => {
+                    void handleBeginTotp();
+                  }}
+                  onVerifyTotp={() => {
+                    void handleVerifyTotp();
+                  }}
+                />
               </section>
 
               <div class={styles.footer}>
@@ -439,9 +293,14 @@ export default function OnboardingPage() {
                 <Button
                   type="submit"
                   class={authStyles.full}
-                  disabled={submitting() || (requiresStrongAuth() && !strongAuthConfigured())}
+                  disabled={
+                    submitting() ||
+                    (requiresStrongAuth() && !strongAuthConfigured())
+                  }
                 >
-                  {submitting() ? "Guardando..." : "Entrar al espacio de trabajo"}
+                  {submitting()
+                    ? "Guardando..."
+                    : "Entrar al espacio de trabajo"}
                 </Button>
               </div>
             </form>

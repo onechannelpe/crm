@@ -3,6 +3,10 @@ import { join } from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import {
+  getStrongAuthStatus,
+  requiresStrongAuthRole,
+} from "../../src/lib/auth/security/strong-auth-status";
 import { createDb } from "../../src/lib/db/client";
 import { up as up001 } from "../../src/lib/db/migrations/001-initial";
 import { up as up002 } from "../../src/lib/db/migrations/002-client-search-views";
@@ -13,7 +17,6 @@ import { up as up006 } from "../../src/lib/db/migrations/006-sales-records-core"
 import { up as up007 } from "../../src/lib/db/migrations/007-action-rate-limit";
 import { up as up008 } from "../../src/lib/db/migrations/008-search-enrichment";
 import { up as up009 } from "../../src/lib/db/migrations/009-extension-runtime";
-import { getStrongAuthStatus } from "../../src/lib/auth/security/strong-auth-status";
 import { createRepositories } from "../../src/server/shared/registry";
 
 describe("seed invariants", () => {
@@ -55,7 +58,7 @@ describe("seed invariants", () => {
       const manager = await repos.users.findById(12);
 
       expect(valeria?.onboarding_completed_at).toBeNull();
-      expect(valeria?.strong_auth_required).toBe(1);
+      expect(valeria && requiresStrongAuthRole(valeria.role)).toBe(true);
 
       const valeriaStatus = await getStrongAuthStatus(valeria!.id, repos);
       expect(valeriaStatus.hasVerifiedStrongAuth).toBe(false);
