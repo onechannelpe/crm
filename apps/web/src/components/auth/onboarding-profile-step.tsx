@@ -18,20 +18,20 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
       <div class={styles.formStack}>
         <Input
           type="text"
-          placeholder="Full name"
+          placeholder="Nombre completo"
           value={props.fullName}
           disabled
         />
         <Input
           id="onboarding-email"
           type="email"
-          placeholder="Work email"
+          placeholder="Correo corporativo"
           value={props.email}
           disabled
         />
         <Input
           type="text"
-          placeholder="Role"
+          placeholder="Rol"
           value={getRoleLabel(props.role)}
           disabled
         />
@@ -46,7 +46,7 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
       </div>
 
       <p class={styles.helperText}>
-        Use E.164 format, for example +51987654321.
+        Usa formato E.164, por ejemplo +51987654321.
       </p>
     </section>
   );

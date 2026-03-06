@@ -117,15 +117,17 @@ function OnboardingContent() {
           <AuthFlowShell
             title={
               step() === "profile"
-                ? "Profile"
+                ? "Perfil"
                 : step() === "security-choice"
-                  ? "Security"
+                  ? "Seguridad"
                   : step() === "passkey"
-                    ? "Passkey"
-                    : "Authenticator app"
+                    ? "Clave de acceso"
+                    : "Aplicación de autenticación"
             }
             description={
-              step() === "passkey" ? "Use your device to sign in." : undefined
+              step() === "passkey"
+                ? "Usa tu dispositivo para ingresar."
+                : undefined
             }
             footer={
               <>
@@ -141,7 +143,7 @@ function OnboardingContent() {
                         }
                       }}
                     >
-                      Back
+                      Atrás
                     </Button>
                   </Show>
                   <Show
@@ -157,7 +159,7 @@ function OnboardingContent() {
                         }}
                         disabled={step() === "security-choice"}
                       >
-                        Continue
+                        Continuar
                       </Button>
                     }
                   >
@@ -165,7 +167,7 @@ function OnboardingContent() {
                       type="submit"
                       disabled={submitting() || !onboardingState().canFinish}
                     >
-                      {submitting() ? "Saving..." : "Continue"}
+                      {submitting() ? "Guardando..." : "Continuar"}
                     </Button>
                   </Show>
                 </div>
@@ -187,7 +189,6 @@ function OnboardingContent() {
             <Show when={step() === "security-choice"}>
               <EnterTransition>
                 <OnboardingSecurityStep
-                  currentUser={currentUser}
                   onSelectMethod={(value) =>
                     setStep(value === "passkey" ? "passkey" : "totp")
                   }
@@ -198,15 +199,15 @@ function OnboardingContent() {
             <Show when={step() === "passkey"}>
               <EnterTransition>
                 <div class={styles.totpStack}>
-                  <p class={styles.choiceTitle}>Passkey</p>
+                  <p class={styles.choiceTitle}>Clave de acceso</p>
                   <p class={styles.choiceDescription}>
-                    Use your device to sign in.
+                    Usa tu dispositivo para ingresar.
                   </p>
                   <Show
                     when={passkeyEnrollment.supported()}
                     fallback={
                       <p class={styles.configuredDescription}>
-                        This device does not support passkeys.
+                        Este dispositivo no admite claves de acceso.
                       </p>
                     }
                   >
@@ -217,7 +218,9 @@ function OnboardingContent() {
                       }}
                       disabled={passkeyEnrollment.loading()}
                     >
-                      {currentUser.hasPasskey ? "Add passkey" : "Set up"}
+                      {currentUser.hasPasskey
+                        ? "Agregar clave de acceso"
+                        : "Configurar"}
                     </Button>
                   </Show>
                 </div>
@@ -228,15 +231,15 @@ function OnboardingContent() {
               <EnterTransition>
                 <div class={styles.totpStack}>
                   <TotpMethodCard
-                    title="Authenticator app"
-                    description="Generate a 6-digit verification code."
+                    title="Aplicación de autenticación"
+                    description="Genera un código de 6 dígitos."
                     statusLabel={
-                      currentUser.totpEnabled ? "Configured" : "Setup"
+                      currentUser.totpEnabled ? "Configurada" : "Configurar"
                     }
                     active={currentUser.totpEnabled}
                     loading={totpEnrollment.loading()}
                     actionLabel={
-                      currentUser.totpEnabled ? "Configured" : "Set up"
+                      currentUser.totpEnabled ? "Configurada" : "Configurar"
                     }
                     code={totpEnrollment.code()}
                     enrollment={totpEnrollment.enrollment()}
@@ -251,8 +254,8 @@ function OnboardingContent() {
 
                   <Show when={totpEnrollment.recoveryCodes().length > 0}>
                     <RecoveryCodesPanel
-                      title="Recovery codes"
-                      description="Save these codes now."
+                      title="Códigos de recuperación"
+                      description="Guárdalos ahora."
                       codes={totpEnrollment.recoveryCodes()}
                     />
                   </Show>

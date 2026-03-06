@@ -1,28 +1,21 @@
-import type { CurrentUser } from "~/actions/auth";
-
 import styles from "~/routes/onboarding-page.module.css";
 
 interface OnboardingSecurityStepProps {
-  currentUser: Pick<CurrentUser, "strongAuthRequired">;
   onSelectMethod: (value: "passkey" | "totp") => void;
 }
 
 export function OnboardingSecurityStep(props: OnboardingSecurityStepProps) {
   return (
     <section class={styles.stepStack}>
-      {props.currentUser.strongAuthRequired && (
-        <p class={styles.helperText}>Required to continue.</p>
-      )}
-
       <div class={styles.choiceGrid}>
         <button
           type="button"
           class={styles.choiceCard}
           onClick={() => props.onSelectMethod("passkey")}
         >
-          <span class={styles.choiceTitle}>Passkey</span>
+          <span class={styles.choiceTitle}>Clave de acceso</span>
           <span class={styles.choiceDescription}>
-            Sign in with your device.
+            Ingreso con tu dispositivo.
           </span>
         </button>
         <button
@@ -30,8 +23,10 @@ export function OnboardingSecurityStep(props: OnboardingSecurityStepProps) {
           class={styles.choiceCard}
           onClick={() => props.onSelectMethod("totp")}
         >
-          <span class={styles.choiceTitle}>Authenticator app</span>
-          <span class={styles.choiceDescription}>Use a 6-digit code.</span>
+          <span class={styles.choiceTitle}>Aplicación de autenticación</span>
+          <span class={styles.choiceDescription}>
+            Usa un código de 6 dígitos.
+          </span>
         </button>
       </div>
     </section>

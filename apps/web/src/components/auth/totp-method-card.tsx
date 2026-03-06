@@ -104,7 +104,7 @@ export function TotpMethodCard(props: TotpMethodCardProps) {
               </p>
               <Show when={setupKey()}>
                 <div class={styles.setupKeyBlock}>
-                  <span class={styles.setupKeyLabel}>No puedes escanear?</span>
+                  <span class={styles.setupKeyLabel}>¿No puedes escanear?</span>
                   <Input
                     type="text"
                     label="Clave manual"

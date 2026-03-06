@@ -3,9 +3,7 @@ import { createSignal, onMount, Show } from "solid-js";
 
 import { beginPasskeyLogin, finishPasskeyLogin, login } from "~/actions/auth";
 import { AuthFlowShell } from "~/components/auth/auth-flow-shell";
-import { AuthProviderButton } from "~/components/auth/auth-provider-button";
 import { useToast } from "~/components/feedback/toast-provider";
-import Google from "~/components/icons/google";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
@@ -21,7 +19,7 @@ import { getErrorMessage } from "~/lib/errors";
 import styles from "../auth/auth-shell.module.css";
 import pageStyles from "../auth/login-page.module.css";
 
-type LoginStep = "init" | "password" | "passkey";
+type LoginStep = "init" | "password" | "totp" | "passkey";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -42,14 +40,18 @@ export default function LoginPage() {
   });
 
   const title = () => {
-    if (step() === "password") return "Password";
-    if (step() === "passkey") return "Passkey";
-    return "Welcome back";
+    if (step() === "password") return "Contraseña";
+    if (step() === "totp") return "Verificación";
+    if (step() === "passkey") return "Clave de acceso";
+    return "Bienvenido";
   };
 
   const description = () => {
     if (step() === "passkey") {
-      return "Use a configured passkey.";
+      return "Usa una clave de acceso configurada.";
+    }
+    if (step() === "totp") {
+      return "Ingresa el código de 6 dígitos de tu aplicación.";
     }
     return undefined;
   };
@@ -60,11 +62,34 @@ export default function LoginPage() {
     return false;
   }
 
-  function handleGoogleClick() {
-    showToast("info", "Google sign-in will be available soon");
+  async function handlePasswordSubmit(e: Event) {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const result = await login(username(), password());
+      navigate(
+        result.onboardingCompleted
+          ? getDefaultAppPath(result.role)
+          : "/onboarding",
+      );
+    } catch (err: unknown) {
+      if (
+        err instanceof Error &&
+        err.message === "Strong authentication required"
+      ) {
+        setStep("totp");
+        showToast("info", "Ahora ingresa el código de tu aplicación.");
+        return;
+      }
+
+      showToast("error", getErrorMessage(err, "Credenciales inválidas"));
+    } finally {
+      setLoading(false);
+    }
   }
 
-  async function handleSubmit(e: Event) {
+  async function handleTotpSubmit(e: Event) {
     e.preventDefault();
     setLoading(true);
 
@@ -76,7 +101,10 @@ export default function LoginPage() {
           : "/onboarding",
       );
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "Credenciales inválidas"));
+      showToast(
+        "error",
+        getErrorMessage(err, "No se pudo verificar el código"),
+      );
     } finally {
       setLoading(false);
     }
@@ -87,7 +115,7 @@ export default function LoginPage() {
 
     try {
       if (!isPasskeySupported()) {
-        throw new Error("This browser does not support passkeys");
+        throw new Error("Este navegador no admite claves de acceso");
       }
 
       if (!username().trim()) {
@@ -100,7 +128,7 @@ export default function LoginPage() {
       });
 
       if (!(credential instanceof PublicKeyCredential)) {
-        throw new Error("Invalid credential response");
+        throw new Error("Respuesta de credencial inválida");
       }
 
       const payload = toAuthenticationPayload(credential);
@@ -130,7 +158,7 @@ export default function LoginPage() {
           id="auth-username"
           type="text"
           name="username"
-          placeholder="Username"
+          placeholder="Usuario"
           autocomplete={step() === "passkey" ? "username webauthn" : "username"}
           value={username()}
           onInput={(e) => setUsername(e.currentTarget.value)}
@@ -148,7 +176,7 @@ export default function LoginPage() {
                   setStep("password");
                 }}
               >
-                Continue with password
+                Continuar con contraseña
               </Button>
               <Button
                 type="button"
@@ -160,14 +188,8 @@ export default function LoginPage() {
                   setStep("passkey");
                 }}
               >
-                Continue with passkey
+                Continuar con clave de acceso
               </Button>
-              <AuthProviderButton
-                class={styles.full}
-                label="Continue with Google"
-                icon={<Google size={16} />}
-                onClick={handleGoogleClick}
-              />
             </div>
           </EnterTransition>
         </Show>
@@ -177,7 +199,7 @@ export default function LoginPage() {
             <form
               class={pageStyles.formStack}
               onSubmit={(e) => {
-                void handleSubmit(e);
+                void handlePasswordSubmit(e);
               }}
             >
               <div class={pageStyles.passwordFields}>
@@ -185,21 +207,11 @@ export default function LoginPage() {
                   id="password"
                   type="password"
                   name="password"
-                  placeholder="Password"
+                  placeholder="Contraseña"
                   autocomplete="current-password"
                   value={password()}
                   onInput={(e) => setPassword(e.currentTarget.value)}
                   required
-                />
-
-                <Input
-                  id="totp"
-                  type="text"
-                  name="totp"
-                  placeholder="If required"
-                  autocomplete="one-time-code"
-                  value={totpCode()}
-                  onInput={(e) => setTotpCode(e.currentTarget.value)}
                 />
               </div>
 
@@ -209,10 +221,45 @@ export default function LoginPage() {
                   variant="ghost"
                   onClick={() => setStep("init")}
                 >
-                  Back
+                  Atrás
                 </Button>
                 <Button type="submit" class={styles.full} loading={loading()}>
-                  Sign in
+                  Continuar
+                </Button>
+              </div>
+            </form>
+          </EnterTransition>
+        </Show>
+
+        <Show when={step() === "totp"}>
+          <EnterTransition>
+            <form
+              class={pageStyles.formStack}
+              onSubmit={(e) => {
+                void handleTotpSubmit(e);
+              }}
+            >
+              <Input
+                id="totp"
+                type="text"
+                name="totp"
+                placeholder="Código de 6 dígitos"
+                autocomplete="one-time-code"
+                value={totpCode()}
+                onInput={(e) => setTotpCode(e.currentTarget.value)}
+                required
+              />
+
+              <div class={pageStyles.actionRow}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setStep("password")}
+                >
+                  Atrás
+                </Button>
+                <Button type="submit" class={styles.full} loading={loading()}>
+                  Ingresar
                 </Button>
               </div>
             </form>
@@ -226,11 +273,13 @@ export default function LoginPage() {
                 when={passkeySupport() === "supported"}
                 fallback={
                   <p class={pageStyles.supportText}>
-                    Passkeys are not supported on this device or browser.
+                    Este dispositivo o navegador no admite claves de acceso.
                   </p>
                 }
               >
-                <p class={pageStyles.supportText}>Use a configured passkey.</p>
+                <p class={pageStyles.supportText}>
+                  Usa una clave de acceso configurada.
+                </p>
               </Show>
 
               <div class={pageStyles.actionRow}>
@@ -239,7 +288,7 @@ export default function LoginPage() {
                   variant="ghost"
                   onClick={() => setStep("init")}
                 >
-                  Back
+                  Atrás
                 </Button>
                 <Button
                   type="button"
@@ -251,7 +300,7 @@ export default function LoginPage() {
                     void handlePasskeyLogin();
                   }}
                 >
-                  Use passkey
+                  Usar clave de acceso
                 </Button>
               </div>
             </div>

@@ -80,7 +80,7 @@ export default function SecurityPage() {
 
   const handleCopySetupKey = async (setupKey: string) => {
     await navigator.clipboard.writeText(setupKey);
-    showToast("success", "Setup key copied");
+    showToast("success", "Clave de configuración copiada");
   };
 
   const handleConfirmPendingAction = async () => {
@@ -125,18 +125,16 @@ export default function SecurityPage() {
         isOpen={pendingAction() !== null}
         title={
           pendingAction() === "remove-passkeys"
-            ? "Eliminar todas las claves de acceso"
-            : "Desactivar aplicación de autenticación"
+            ? "Eliminar claves de acceso"
+            : "Desactivar aplicación"
         }
         description={
           pendingAction() === "remove-passkeys"
-            ? "Eliminarás todas las claves registradas en esta cuenta. Si tu rol exige seguridad reforzada, solo podrás hacerlo si otro método fuerte sigue activo."
-            : "Desactivarás el segundo paso del flujo con contraseña. Si tu rol exige seguridad reforzada, solo podrás hacerlo si aún mantienes otro método fuerte."
+            ? "Se eliminarán todas las claves registradas en esta cuenta."
+            : "Se desactivará el segundo paso con código para esta cuenta."
         }
         confirmLabel={
-          pendingAction() === "remove-passkeys"
-            ? "Eliminar claves"
-            : "Desactivar TOTP"
+          pendingAction() === "remove-passkeys" ? "Eliminar" : "Desactivar"
         }
         onConfirm={() => {
           void handleConfirmPendingAction();
@@ -177,19 +175,19 @@ export default function SecurityPage() {
         </form>
       </SettingsSection>
 
-      <SettingsSection title="Passkeys">
+      <SettingsSection title="Claves de acceso">
         <div class={styles.securityStack}>
           <div class={styles.configuredBlock}>
-            <p class={styles.configuredTitle}>Passkeys</p>
+            <p class={styles.configuredTitle}>Claves de acceso</p>
             <p class={styles.configuredDescription}>
-              Use your device to sign in.
+              Usa tu dispositivo para ingresar.
             </p>
           </div>
           <Show
             when={passkeyEnrollment.supported()}
             fallback={
               <p class={styles.configuredDescription}>
-                This device does not support passkeys.
+                Este dispositivo no admite claves de acceso.
               </p>
             }
           >
@@ -199,7 +197,9 @@ export default function SecurityPage() {
                 onClick={() => void passkeyEnrollment.registerPasskey()}
                 disabled={passkeyEnrollment.loading()}
               >
-                {currentUser().hasPasskey ? "Add passkey" : "Set up"}
+                {currentUser().hasPasskey
+                  ? "Agregar clave de acceso"
+                  : "Configurar"}
               </Button>
               <Show when={currentUser().hasPasskey}>
                 <Button
@@ -209,7 +209,7 @@ export default function SecurityPage() {
                     setPendingAction("remove-passkeys");
                   }}
                 >
-                  Delete all
+                  Eliminar todas
                 </Button>
               </Show>
             </div>
@@ -217,18 +217,15 @@ export default function SecurityPage() {
         </div>
       </SettingsSection>
 
-      <SettingsSection title="Two-Factor Authentication">
+      <SettingsSection title="Autenticación en dos pasos">
         <div class={styles.securityStack}>
           <Show
             when={!currentUser().totpEnabled}
             fallback={
               <div class={styles.block}>
-                <p class={styles.title}>
-                  Delete Two-Factor Authentication Method
-                </p>
+                <p class={styles.title}>Aplicación configurada</p>
                 <p class={styles.sectionDescription}>
-                  Deleting this method will remove it permanently from your
-                  account.
+                  Puedes restablecer este método cuando lo necesites.
                 </p>
                 <Button
                   type="button"
@@ -237,19 +234,16 @@ export default function SecurityPage() {
                     setPendingAction("disable-totp");
                   }}
                 >
-                  Reset 2FA
+                  Restablecer
                 </Button>
               </div>
             }
           >
             <div class={styles.totpSetupBlock}>
               <div class={styles.block}>
-                <p class={styles.title}>Authenticator app</p>
+                <p class={styles.title}>Aplicación de autenticación</p>
                 <p class={styles.sectionDescription}>
-                  Authenticator apps and browser extensions like 1Password,
-                  Authy, Microsoft Authenticator, etc. generate one-time
-                  passwords that are used as a second factor to verify your
-                  identity when prompted during sign-in.
+                  Genera un código de 6 dígitos para verificar tu ingreso.
                 </p>
               </div>
 
@@ -261,7 +255,7 @@ export default function SecurityPage() {
                     onClick={() => void totpEnrollment.beginEnrollment()}
                     disabled={totpEnrollment.loading()}
                   >
-                    Set up
+                    Configurar
                   </Button>
                 }
               >
@@ -278,7 +272,7 @@ export default function SecurityPage() {
                       <Show when={getSetupKey(enrollment().otpauthUri)}>
                         {(setupKey) => (
                           <p class={styles.qrCopy}>
-                            Can't scan? Copy the{" "}
+                            ¿No puedes escanear? Copia la{" "}
                             <button
                               type="button"
                               class={styles.inlineLink}
@@ -286,7 +280,7 @@ export default function SecurityPage() {
                                 void handleCopySetupKey(setupKey());
                               }}
                             >
-                              setup key
+                              clave manual
                             </button>
                           </p>
                         )}
@@ -296,10 +290,7 @@ export default function SecurityPage() {
                     <div class={styles.divider} />
 
                     <div class={styles.block}>
-                      <p class={styles.title}>Verify the code from the app</p>
-                      <p class={styles.sectionDescription}>
-                        Copy paste the code below
-                      </p>
+                      <p class={styles.title}>Verifica el código</p>
                     </div>
                     <div class={styles.verifyBlock}>
                       <OtpSlotInput
@@ -312,7 +303,7 @@ export default function SecurityPage() {
                         onClick={() => void totpEnrollment.verifyEnrollment()}
                         disabled={totpEnrollment.loading()}
                       >
-                        Save
+                        Guardar
                       </Button>
                     </div>
                   </>
@@ -323,8 +314,8 @@ export default function SecurityPage() {
 
           <Show when={totpEnrollment.recoveryCodes().length > 0}>
             <RecoveryCodesPanel
-              title="Recovery codes"
-              description="Save these codes now."
+              title="Códigos de recuperación"
+              description="Guárdalos ahora."
               codes={totpEnrollment.recoveryCodes()}
             />
           </Show>
