@@ -4,6 +4,8 @@ import { isExtensionRuntimeEventEnvelope } from "~/server/extension/contracts";
 import { extensionService } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
+import { readJsonBody } from "./json-body";
+
 function getBearerToken(request: Request): string | null {
   const header = request.headers.get("authorization");
   if (!header?.startsWith("Bearer ")) return null;
@@ -18,7 +20,11 @@ export async function POST(event: APIEvent): Promise<Response> {
       return new Response("Unauthorized", { status: 401 });
     }
 
-    const body: unknown = await event.request.json();
+    const parsed = await readJsonBody(event.request);
+    if (!parsed.ok) {
+      return parsed.response;
+    }
+    const body = parsed.body;
     if (!isExtensionRuntimeEventEnvelope(body)) {
       return Response.json(
         { error: "Invalid extension event payload" },

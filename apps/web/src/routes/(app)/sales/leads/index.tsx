@@ -183,7 +183,7 @@ export default function LeadsPage() {
     setExtensionLoadingAssignmentId(null);
 
     if (!response.ok) {
-      setExtensionState(null);
+      setExtensionState(response.executiveState ?? null);
       setExtensionError(response.error);
       showToast("error", response.error);
       return;

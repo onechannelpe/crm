@@ -68,6 +68,7 @@ export type RuntimeResponse =
       ok: false;
       error: string;
       state?: ExtensionState;
+      executiveState?: ExecutiveStateSnapshot;
     };
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -153,5 +154,11 @@ export function isRuntimeResponse(value: unknown): value is RuntimeResponse {
     );
   }
 
-  return typeof value.error === "string";
+  return (
+    typeof value.error === "string" &&
+    (value.executiveState === undefined ||
+      (isObject(value.executiveState) &&
+        typeof value.executiveState.presenceStatus === "string" &&
+        typeof value.executiveState.syncHealth === "string"))
+  );
 }
