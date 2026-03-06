@@ -44,7 +44,7 @@ export async function requestLeads(
     {
       type: "lead.more_requested",
       title: "Solicitud de mas leads",
-      bodyText: `${requester ? shortName(requester) : "Un ejecutivo"} solicito mas leads y recibio ${result.value}.`,
+      bodyText: `${requester ? shortName(requester) : "Un ejecutivo"} solicitó mas leads y recibió ${result.value}.`,
       actionUrl: "/sales/leads",
       priority: result.value === 0 ? "high" : "normal",
       dedupeKey: null,
