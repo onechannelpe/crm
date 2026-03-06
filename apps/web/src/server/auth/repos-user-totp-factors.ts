@@ -23,33 +23,26 @@ export function createUserTotpFactorsRepo(db: Kysely<Database>) {
       secretEncrypted: string,
     ): Promise<UserTotpFactor> {
       const now = Date.now();
-      await db.transaction().execute(async (trx) => {
-        await trx
-          .insertInto("user_totp_factors")
-          .values({
-            user_id: userId,
+      await db
+        .insertInto("user_totp_factors")
+        .values({
+          user_id: userId,
+          secret_encrypted: secretEncrypted,
+          is_enabled: 0,
+          created_at: now,
+          updated_at: now,
+          enabled_at: null,
+        } satisfies NewUserTotpFactor)
+        .onConflict((oc) =>
+          oc.column("user_id").doUpdateSet({
             secret_encrypted: secretEncrypted,
             is_enabled: 0,
-            created_at: now,
             updated_at: now,
             enabled_at: null,
-          } satisfies NewUserTotpFactor)
-          .onConflict((oc) =>
-            oc.column("user_id").doUpdateSet({
-              secret_encrypted: secretEncrypted,
-              is_enabled: 0,
-              updated_at: now,
-              enabled_at: null,
-            }),
-          )
-          .executeTakeFirstOrThrow();
+          }),
+        )
+        .executeTakeFirstOrThrow();
 
-        await trx
-          .updateTable("users")
-          .set({ strong_auth_enrolled_at: null })
-          .where("id", "=", userId)
-          .execute();
-      });
       return db
         .selectFrom("user_totp_factors")
         .selectAll()
@@ -59,23 +52,28 @@ export function createUserTotpFactorsRepo(db: Kysely<Database>) {
 
     async markEnabled(userId: number): Promise<void> {
       const now = Date.now();
-      await db.transaction().execute(async (trx) => {
-        await trx
-          .updateTable("user_totp_factors")
-          .set({
-            is_enabled: 1,
-            enabled_at: now,
-            updated_at: now,
-          })
-          .where("user_id", "=", userId)
-          .execute();
+      await db
+        .updateTable("user_totp_factors")
+        .set({
+          is_enabled: 1,
+          enabled_at: now,
+          updated_at: now,
+        })
+        .where("user_id", "=", userId)
+        .execute();
+    },
 
-        await trx
-          .updateTable("users")
-          .set({ strong_auth_enrolled_at: now })
-          .where("id", "=", userId)
-          .execute();
-      });
+    async disable(userId: number): Promise<void> {
+      const now = Date.now();
+      await db
+        .updateTable("user_totp_factors")
+        .set({
+          is_enabled: 0,
+          enabled_at: null,
+          updated_at: now,
+        })
+        .where("user_id", "=", userId)
+        .execute();
     },
   };
 }
@@ -127,6 +125,14 @@ export function createUserTotpRecoveryCodesRepo(db: Kysely<Database>) {
         .set({ used_at: Date.now() })
         .where("id", "=", id)
         .where("used_at", "is", null)
+        .execute()
+        .then(() => undefined);
+    },
+
+    deleteAllByUser(userId: number): Promise<void> {
+      return db
+        .deleteFrom("user_totp_recovery_codes")
+        .where("user_id", "=", userId)
         .execute()
         .then(() => undefined);
     },

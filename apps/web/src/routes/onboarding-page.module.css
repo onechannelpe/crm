@@ -1,66 +1,92 @@
-.panel {
-  display: grid;
-  gap: 20px;
-}
-
-.form {
-  display: grid;
-  gap: 16px;
-}
-
-.section {
-  display: grid;
-  gap: 8px;
-}
-
-.totpBox {
+.stepStack {
   display: grid;
   gap: 12px;
-  border: 1px solid var(--border);
-  padding: 12px;
 }
 
-.totpTitle {
-  margin: 0;
-  font-size: var(--font-size-body);
-  font-weight: 500;
+.formStack {
+  display: grid;
+  gap: 12px;
+}
+
+.helperHeader {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   color: var(--foreground);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
 }
 
-.qr {
-  width: 192px;
-  height: 192px;
-}
-
-.recovery {
+.helperCopy {
   display: grid;
   gap: 8px;
-  border: 1px solid var(--border);
-  padding: 8px 12px;
+  text-align: left;
 }
 
-.recoveryTitle {
+.helperText {
   margin: 0;
-  font-size: var(--font-size-body);
-  font-weight: 500;
+  font-size: var(--font-size-sm);
+  color: var(--muted-foreground);
+  line-height: 1.5;
+  text-align: left;
 }
 
-.recoveryList {
-  margin: 0;
-  padding: 0;
-  list-style: none;
+.choiceGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  gap: 12px;
+}
+
+.choiceCard {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--panel-bg);
+  border-radius: 12px;
+  min-height: 96px;
+  padding: 14px;
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  text-align: left;
+  font: inherit;
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+.choiceTitle {
   font-size: var(--font-size-body);
+  font-weight: 600;
 }
 
-.mono {
-  font-family: var(--font-mono);
+.choiceDescription {
+  font-size: var(--font-size-sm);
+  color: var(--muted-foreground);
 }
 
-.error {
+.configuredDescription {
   margin: 0;
-  font-size: var(--font-size-body);
-  color: var(--destructive);
+  font-size: var(--font-size-sm);
+  color: var(--muted-foreground);
+  line-height: 1.5;
+}
+
+.totpStack {
+  display: grid;
+  gap: 12px;
+}
+
+.footerActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+@media (max-width: 800px) {
+  .choiceGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .footerActions {
+    flex-direction: column-reverse;
+  }
 }

@@ -116,8 +116,6 @@ describe("password login service", () => {
       .set({
         onboarding_completed_at: null,
         phone_e164: null,
-        phone_verified_at: null,
-        profile_confirmed_at: null,
       })
       .where("id", "=", 1)
       .execute();

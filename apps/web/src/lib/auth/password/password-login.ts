@@ -28,6 +28,7 @@ type Deps = Pick<
   | "authEvents"
   | "userTotpFactors"
   | "userTotpRecoveryCodes"
+  | "passkeys"
 >;
 
 export interface PasswordLoginInput {

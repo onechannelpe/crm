@@ -1,228 +1,278 @@
 import { useNavigate } from "@solidjs/router";
-import { createEffect, createResource, createSignal, Show } from "solid-js";
+import { Show, createEffect, createMemo, createSignal } from "solid-js";
 
+import { completeOnboarding } from "~/actions/auth";
+import { AuthFlowShell } from "~/components/auth/auth-flow-shell";
+import { OnboardingProfileStep } from "~/components/auth/onboarding-profile-step";
+import { OnboardingSecurityStep } from "~/components/auth/onboarding-security-step";
+import { RecoveryCodesPanel } from "~/components/auth/recovery-codes-panel";
+import { TotpMethodCard } from "~/components/auth/totp-method-card";
+import { usePasskeyEnrollment } from "~/components/auth/use-passkey-enrollment";
+import { useTotpEnrollment } from "~/components/auth/use-totp-enrollment";
+import { useToast } from "~/components/feedback/toast-provider";
 import {
-  beginTotpEnrollment,
-  completeOnboarding,
-  finishTotpEnrollment,
-  getMe,
-} from "~/actions/auth";
+  SessionProvider,
+  useSession,
+} from "~/components/providers/session-provider";
+import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
-import { Input } from "~/components/ui/input/input";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
+import {
+  deriveOnboardingState,
+  isValidOnboardingPhone,
+  type OnboardingStep,
+} from "~/lib/auth/onboarding-flow";
 import { getErrorMessage } from "~/lib/errors";
 
-import authStyles from "./auth/auth-shell.module.css";
 import styles from "./onboarding-page.module.css";
 
-export default function OnboardingPage() {
+type OnboardingView = "profile" | "security-choice" | "passkey" | "totp";
+
+function OnboardingContent() {
   const navigate = useNavigate();
-  const [user, { refetch: refetchUser }] = createResource(getMe);
+  const { showToast } = useToast();
+  const { user, refreshCurrentUser } = useSession();
   const [phone, setPhone] = createSignal("");
-  const [totpCode, setTotpCode] = createSignal("");
-  const [totpQrCode, setTotpQrCode] = createSignal("");
-  const [recoveryCodes, setRecoveryCodes] = createSignal<string[]>([]);
-  const [totpMessage, setTotpMessage] = createSignal("");
-  const [totpLoading, setTotpLoading] = createSignal(false);
-  const [error, setError] = createSignal("");
   const [submitting, setSubmitting] = createSignal(false);
-
-  const requiresStrongAuth = () => {
-    const currentUser = user();
-    if (!currentUser) return false;
-    return currentUser.strongAuthRequired;
-  };
-
-  const strongAuthIsEnrolled = () => {
-    const currentUser = user();
-    if (!currentUser) return false;
-    return currentUser.strongAuthEnrolledAt !== null;
-  };
+  const [step, setStep] = createSignal<OnboardingView>("profile");
+  const passkeyEnrollment = usePasskeyEnrollment({
+    showToast,
+    refreshStatus: refreshCurrentUser,
+  });
+  const totpEnrollment = useTotpEnrollment({
+    showToast,
+    refreshStatus: refreshCurrentUser,
+    beginInfoMessage: "Escanea el QR y verifica el código de 6 dígitos",
+  });
 
   createEffect(() => {
     const currentUser = user();
     if (!currentUser) return;
-    if (!phone() && currentUser.phoneE164) setPhone(currentUser.phoneE164);
+    if (!phone() && currentUser.phoneE164) {
+      setPhone(currentUser.phoneE164);
+    }
   });
+
+  const onboardingState = createMemo(() => {
+    const currentUser = user();
+    if (!currentUser) {
+      return {
+        currentStep: "profile" as OnboardingStep,
+        profileReady: false,
+        securityReady: false,
+        canFinish: false,
+      };
+    }
+
+    return deriveOnboardingState({
+      requestedStep:
+        step() === "profile" ? "profile" : ("security" as OnboardingStep),
+      phoneE164: phone(),
+      user: currentUser,
+    });
+  });
+
+  function handleProfileContinue() {
+    if (!isValidOnboardingPhone(phone())) {
+      showToast(
+        "error",
+        "Ingresa un WhatsApp corporativo válido en formato E.164",
+      );
+      return;
+    }
+    setStep("security-choice");
+  }
 
   async function handleSubmit(e: Event) {
     e.preventDefault();
-    setError("");
     setSubmitting(true);
 
     try {
-      if (requiresStrongAuth() && !strongAuthIsEnrolled()) {
-        throw new Error(
-          "Debes configurar el 2FA (TOTP) antes de activar una cuenta administrativa",
-        );
-      }
       const currentUser = user();
       if (!currentUser) {
         throw new Error("No se encontró la sesión");
       }
       await completeOnboarding(phone());
+      showToast("success", "Tu cuenta ya quedó configurada");
+      await refreshCurrentUser();
       navigate(getDefaultAppPath(currentUser.role));
     } catch (err: unknown) {
-      setError(getErrorMessage(err, "No se pudo completar el registro."));
+      showToast(
+        "error",
+        getErrorMessage(err, "No se pudo completar el registro"),
+      );
     } finally {
       setSubmitting(false);
     }
   }
 
-  async function startTotpSetup() {
-    setTotpMessage("");
-    setTotpLoading(true);
-    try {
-      const enrollment = await beginTotpEnrollment();
-      setTotpQrCode(enrollment.qrCodeDataUrl);
-      setTotpMessage(
-        "Escena el código QR y confirma con tu código de verificación.",
-      );
-    } catch (err: unknown) {
-      setTotpMessage(getErrorMessage(err, "Código de verificación inválido"));
-    } finally {
-      setTotpLoading(false);
-    }
-  }
-
-  async function confirmTotpSetup() {
-    setTotpMessage("");
-    setTotpLoading(true);
-    try {
-      const codes = await finishTotpEnrollment(totpCode());
-      setRecoveryCodes(codes);
-      setTotpQrCode("");
-      setTotpCode("");
-      await refetchUser();
-      setTotpMessage("2FA (TOTP) activado. Guarda tus códigos de verificación");
-    } catch (err: unknown) {
-      setTotpMessage(getErrorMessage(err, "Código de verificación inválido"));
-    } finally {
-      setTotpLoading(false);
-    }
-  }
-
   return (
-    <div class={authStyles.shellGrid}>
-      <section
-        class={`${authStyles.panel} ${authStyles.panelXl} ${styles.panel}`}
-      >
-        <div>
-          <h1 class={authStyles.title}>Completa tu perfil</h1>
-          <p class={authStyles.muted}>
-            Confirma los detalles de perfil y tu número de teléfono corporativo.
-          </p>
-        </div>
-
-        <Show when={user()}>
-          {(currentUser) => (
-            <form
-              class={styles.form}
-              onSubmit={(e) => {
-                void handleSubmit(e);
-              }}
-            >
-              <div class={styles.section}>
-                <Input
-                  id="onboarding-email"
-                  type="email"
-                  label="Correo"
-                  value={currentUser().email}
-                  disabled
-                />
-              </div>
-
-              <div class={styles.section}>
-                <Input
-                  id="onboarding-phone"
-                  type="tel"
-                  label="WhatsApp (ej: +51987654321)"
-                  value={phone()}
-                  onInput={(e) => setPhone(e.currentTarget.value)}
-                  required
-                />
-              </div>
-
-              <Show when={requiresStrongAuth()}>
-                <div class={styles.totpBox}>
-                  <p class={styles.totpTitle}>
-                    Configuración de seguridad obligatoria (TOTP)
-                  </p>
-                  <Show when={strongAuthIsEnrolled()}>
-                    <p class={authStyles.muted}>2FA (TOTP) activado.</p>
-                  </Show>
-                  <Show when={!strongAuthIsEnrolled()}>
+    <Show when={user()} keyed>
+      {(currentUser) => (
+        <form
+          onSubmit={(event) => {
+            void handleSubmit(event);
+          }}
+        >
+          <AuthFlowShell
+            title={
+              step() === "profile"
+                ? "Perfil"
+                : step() === "security-choice"
+                  ? "Seguridad"
+                  : step() === "passkey"
+                    ? "Clave de acceso"
+                    : "Aplicación de autenticación"
+            }
+            description={
+              step() === "passkey"
+                ? "Registra una clave de acceso para entrar más rápido."
+                : undefined
+            }
+            footer={
+              <>
+                <div class={styles.footerActions}>
+                  <Show when={step() !== "profile"}>
                     <Button
                       type="button"
-                      variant="outline"
-                      disabled={totpLoading()}
+                      variant="ghost"
                       onClick={() => {
-                        void startTotpSetup();
+                        if (step() === "security-choice") setStep("profile");
+                        if (step() === "passkey" || step() === "totp") {
+                          setStep("security-choice");
+                        }
                       }}
                     >
-                      {totpLoading()
-                        ? "Preparando 2FA..."
-                        : "Configurar 2FA (TOTP)"}
+                      Atrás
                     </Button>
-                    <Show when={totpQrCode()}>
-                      <div class={styles.section}>
-                        <img
-                          src={totpQrCode()}
-                          alt="Código QR para 2FA (TOTP)"
-                          class={styles.qr}
-                        />
-                        <Input
-                          id="onboarding-totp-code"
-                          type="text"
-                          placeholder="Ingresa el código de verificación"
-                          value={totpCode()}
-                          onInput={(e) => setTotpCode(e.currentTarget.value)}
-                        />
-                        <Button
-                          type="button"
-                          disabled={totpLoading()}
-                          onClick={() => {
-                            void confirmTotpSetup();
-                          }}
-                        >
-                          Confirmar
-                        </Button>
-                      </div>
-                    </Show>
                   </Show>
-                  <Show when={totpMessage()}>
-                    <p class={authStyles.muted}>{totpMessage()}</p>
-                  </Show>
-                  <Show when={recoveryCodes().length > 0}>
-                    <div class={styles.recovery}>
-                      <p class={styles.recoveryTitle}>
-                        Códigos de recuperación (se muestran una sola vez)
-                      </p>
-                      <ul class={styles.recoveryList}>
-                        {recoveryCodes().map((code) => (
-                          <li class={styles.mono}>{code}</li>
-                        ))}
-                      </ul>
-                    </div>
+                  <Show
+                    when={step() !== "profile" && step() !== "security-choice"}
+                    fallback={
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          if (step() === "profile") {
+                            handleProfileContinue();
+                            return;
+                          }
+                        }}
+                        disabled={step() === "security-choice"}
+                      >
+                        Continuar
+                      </Button>
+                    }
+                  >
+                    <Button
+                      type="submit"
+                      disabled={submitting() || !onboardingState().canFinish}
+                    >
+                      {submitting() ? "Guardando..." : "Continuar"}
+                    </Button>
                   </Show>
                 </div>
-              </Show>
+              </>
+            }
+          >
+            <Show when={step() === "profile"}>
+              <EnterTransition>
+                <OnboardingProfileStep
+                  email={currentUser.email}
+                  fullName={`${currentUser.names} ${currentUser.firstSurname} ${currentUser.secondSurname}`}
+                  phone={phone()}
+                  role={currentUser.role}
+                  onPhoneInput={setPhone}
+                />
+              </EnterTransition>
+            </Show>
 
-              <Show when={error()}>
-                <p class={styles.error}>{error()}</p>
-              </Show>
+            <Show when={step() === "security-choice"}>
+              <EnterTransition>
+                <OnboardingSecurityStep
+                  onSelectMethod={(value) =>
+                    setStep(value === "passkey" ? "passkey" : "totp")
+                  }
+                />
+              </EnterTransition>
+            </Show>
 
-              <Button
-                type="submit"
-                class={authStyles.full}
-                disabled={submitting()}
-              >
-                {submitting() ? "Guardando..." : "Guardar y continuar"}
-              </Button>
-            </form>
-          )}
-        </Show>
-      </section>
-    </div>
+            <Show when={step() === "passkey"}>
+              <EnterTransition>
+                <div class={styles.totpStack}>
+                  <p class={styles.choiceTitle}>Clave de acceso</p>
+                  <p class={styles.choiceDescription}>
+                    Entra con tu dispositivo.
+                  </p>
+                  <Show
+                    when={passkeyEnrollment.supported()}
+                    fallback={
+                      <p class={styles.configuredDescription}>
+                        Este dispositivo no es compatible con claves de acceso.
+                      </p>
+                    }
+                  >
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        void passkeyEnrollment.registerPasskey();
+                      }}
+                      disabled={passkeyEnrollment.loading()}
+                    >
+                      {currentUser.hasPasskey
+                        ? "Agregar clave de acceso"
+                        : "Configurar"}
+                    </Button>
+                  </Show>
+                </div>
+              </EnterTransition>
+            </Show>
+
+            <Show when={step() === "totp"}>
+              <EnterTransition>
+                <div class={styles.totpStack}>
+                  <TotpMethodCard
+                    title="Aplicación de autenticación"
+                    description="Genera códigos temporales para confirmar tu acceso."
+                    statusLabel={
+                      currentUser.totpEnabled ? "Configurada" : "Configurar"
+                    }
+                    active={currentUser.totpEnabled}
+                    loading={totpEnrollment.loading()}
+                    actionLabel={
+                      currentUser.totpEnabled ? "Configurada" : "Configurar"
+                    }
+                    code={totpEnrollment.code()}
+                    enrollment={totpEnrollment.enrollment()}
+                    onCodeChange={totpEnrollment.setCode}
+                    onBegin={() => {
+                      void totpEnrollment.beginEnrollment();
+                    }}
+                    onVerify={() => {
+                      void totpEnrollment.verifyEnrollment();
+                    }}
+                  />
+
+                  <Show when={totpEnrollment.recoveryCodes().length > 0}>
+                    <RecoveryCodesPanel
+                      title="Códigos de recuperación"
+                      description="Guárdalos en un lugar seguro."
+                      codes={totpEnrollment.recoveryCodes()}
+                    />
+                  </Show>
+                </div>
+              </EnterTransition>
+            </Show>
+          </AuthFlowShell>
+        </form>
+      )}
+    </Show>
+  );
+}
+
+export default function OnboardingPage() {
+  return (
+    <SessionProvider>
+      <OnboardingContent />
+    </SessionProvider>
   );
 }

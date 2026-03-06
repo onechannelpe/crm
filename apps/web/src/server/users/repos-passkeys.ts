@@ -40,5 +40,9 @@ export function createPasskeysRepo(db: Kysely<Database>) {
         .where("id", "=", id)
         .execute();
     },
+
+    deleteAllByUser(userId: number) {
+      return db.deleteFrom("passkeys").where("user_id", "=", userId).execute();
+    },
   };
 }
