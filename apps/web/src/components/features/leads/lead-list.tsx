@@ -14,6 +14,7 @@ import ChevronDown from "~/components/icons/chevron-down";
 import ChevronUp from "~/components/icons/chevron-up";
 import Phone from "~/components/icons/phone";
 import User from "~/components/icons/user";
+import { Badge } from "~/components/ui/display/badge";
 import { Button } from "~/components/ui/input/button";
 import {
   Table,
@@ -25,6 +26,7 @@ import {
 } from "~/components/ui/layout/table";
 
 import { RegisterCallDialog } from "./register-call-dialog";
+import type { ExtensionExecutiveState } from "~/lib/extension/runtime";
 
 import styles from "./lead-list.module.css";
 
@@ -48,7 +50,55 @@ interface LeadListProps {
     outcome: string,
     notes: string,
   ) => Promise<void> | void;
+  onSendToExtension?: (lead: LeadContact) => Promise<void> | void;
+  extensionState?: ExtensionExecutiveState | null;
+  extensionLoadingAssignmentId?: number | null;
+  extensionEnabled?: boolean;
   emptyAction?: JSX.Element;
+}
+
+function badgeVariantForStatus(
+  status: ExtensionExecutiveState["status"] | "unavailable",
+) {
+  switch (status) {
+    case "active":
+      return "success";
+    case "dialing":
+      return "warning";
+    case "sync_error":
+      return "destructive";
+    case "sync_pending":
+      return "info";
+    case "ready":
+    case "wrap_up":
+      return "secondary";
+    case "idle":
+    case "unavailable":
+      return "outline";
+  }
+}
+
+function statusLabel(
+  status: ExtensionExecutiveState["status"] | "unavailable",
+): string {
+  switch (status) {
+    case "idle":
+      return "Sin handoff";
+    case "ready":
+      return "Listo";
+    case "dialing":
+      return "Marcando";
+    case "active":
+      return "En llamada";
+    case "wrap_up":
+      return "Cierre";
+    case "sync_pending":
+      return "Pendiente";
+    case "sync_error":
+      return "Error sync";
+    case "unavailable":
+      return "Sin extension";
+  }
 }
 
 export const LeadList: Component<LeadListProps> = (props) => {
@@ -133,6 +183,35 @@ export const LeadList: Component<LeadListProps> = (props) => {
                 </TableCell>
                 <TableCell>
                   <div class={styles.actions}>
+                    <Show when={props.onSendToExtension}>
+                      <Button
+                        size="icon"
+                        variant="primary"
+                        disabled={
+                          !props.extensionEnabled ||
+                          !lead.phone_primary ||
+                          props.extensionLoadingAssignmentId === lead.assignmentId
+                        }
+                        loading={
+                          props.extensionLoadingAssignmentId === lead.assignmentId
+                        }
+                        onClick={() => void props.onSendToExtension?.(lead)}
+                        aria-label="Enviar cliente a la extensión"
+                      >
+                        <Phone size={16} />
+                      </Button>
+                    </Show>
+                    <Show
+                      when={props.extensionState?.assignmentId === lead.assignmentId}
+                    >
+                      <Badge
+                        variant={badgeVariantForStatus(
+                          props.extensionState?.status ?? "unavailable",
+                        )}
+                      >
+                        {statusLabel(props.extensionState?.status ?? "unavailable")}
+                      </Badge>
+                    </Show>
                     <Button
                       size="icon"
                       variant="secondary"

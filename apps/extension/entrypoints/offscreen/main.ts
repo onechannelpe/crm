@@ -90,8 +90,8 @@ async function startRecorder(message: OffscreenStartMessage): Promise<void> {
 
   const recorder = new MediaRecorder(stream, { mimeType });
   const sessionId = message.sessionId;
-  let resolveFinished: (() => void) | null = null;
-  let rejectFinished: ((reason?: unknown) => void) | null = null;
+  let resolveFinished: () => void = () => undefined;
+  let rejectFinished: (reason?: unknown) => void = () => undefined;
   const finished = new Promise<void>((resolve, reject) => {
     resolveFinished = resolve;
     rejectFinished = reject;
@@ -148,7 +148,7 @@ async function startRecorder(message: OffscreenStartMessage): Promise<void> {
         cleanupRecording(current);
       }
       activeRecording = null;
-      resolveFinished?.();
+      resolveFinished();
     }
   };
 
@@ -160,7 +160,7 @@ async function startRecorder(message: OffscreenStartMessage): Promise<void> {
       cleanupRecording(current);
     }
     activeRecording = null;
-    rejectFinished?.(error);
+    rejectFinished(error);
     throw error;
   }
 }

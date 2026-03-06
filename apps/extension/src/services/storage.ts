@@ -34,6 +34,7 @@ function normalizeState(value: unknown): ExtensionState {
   }
 
   const currentCall = isObject(value.currentCall) ? value.currentCall : null;
+  const handoff = isObject(value.handoff) ? value.handoff : null;
   const recording = isObject(value.recording) ? value.recording : {};
   const syncConfig = isObject(value.syncConfig) ? value.syncConfig : {};
   const sync = isObject(value.sync) ? value.sync : {};
@@ -52,6 +53,16 @@ function normalizeState(value: unknown): ExtensionState {
 
   return {
     schemaVersion: 1,
+    handoff: handoff
+      ? {
+          assignmentId: asNumber(handoff.assignmentId, 0),
+          contactId: asNumber(handoff.contactId, 0),
+          phone: typeof handoff.phone === "string" ? handoff.phone : "",
+          clientName: asNullableString(handoff.clientName),
+          organizationLabel: asNullableString(handoff.organizationLabel),
+          receivedAt: asNumber(handoff.receivedAt, Date.now()),
+        }
+      : null,
     currentCall: currentCall
       ? {
           sessionId:

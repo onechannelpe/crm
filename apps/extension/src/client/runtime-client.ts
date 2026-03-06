@@ -3,7 +3,7 @@ import {
   type RuntimeMessage,
   type RuntimeResponse,
 } from "@/src/domain/messages";
-import type { ExtensionState } from "@/src/domain/model";
+import type { ExecutiveStateSnapshot, ExtensionState } from "@/src/domain/model";
 
 async function sendMessage(message: RuntimeMessage): Promise<RuntimeResponse> {
   try {
@@ -26,33 +26,16 @@ export async function getState(): Promise<RuntimeResponse> {
   return sendMessage({ type: "state.get" });
 }
 
-export async function startCall(input: {
-  assignmentId: number;
-  contactId: number;
-  phone: string;
-}): Promise<RuntimeResponse> {
-  if (input.assignmentId <= 0 || input.contactId <= 0 || input.phone.trim() === "") {
-    return { ok: false, error: "invalid call input" };
-  }
-
-  return sendMessage({
-    type: "call.start",
-    assignmentId: input.assignmentId,
-    contactId: input.contactId,
-    phone: input.phone,
-  });
+export function startCall(): Promise<RuntimeResponse> {
+  return sendMessage({ type: "call.start" });
 }
 
 export function connectCall(): Promise<RuntimeResponse> {
   return sendMessage({ type: "call.connected" });
 }
 
-export function endCall(outcome: string, notes: string): Promise<RuntimeResponse> {
-  if (outcome.trim() === "") {
-    return Promise.resolve({ ok: false, error: "outcome is required" });
-  }
-
-  return sendMessage({ type: "call.end", outcome, notes });
+export function endCall(): Promise<RuntimeResponse> {
+  return sendMessage({ type: "call.end" });
 }
 
 export function startRecording(tabId: number): Promise<RuntimeResponse> {
@@ -91,6 +74,10 @@ export function configureSync(input: {
 
 export function isSuccessfulResponse(
   response: RuntimeResponse,
-): response is { ok: true; state: ExtensionState } {
+): response is {
+  ok: true;
+  state: ExtensionState;
+  executiveState: ExecutiveStateSnapshot;
+} {
   return response.ok;
 }

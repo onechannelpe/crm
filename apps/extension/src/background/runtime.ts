@@ -1,9 +1,17 @@
 import {
   isRuntimeMessage,
+  isExternalRuntimeMessage,
+  type ExternalRuntimeMessage,
   type RuntimeMessage,
   type RuntimeResponse,
 } from "@/src/domain/messages";
-import type { CallSession, ExtensionState, QueueJob } from "@/src/domain/model";
+import {
+  getExecutiveState,
+  type AssignmentHandoff,
+  type CallSession,
+  type ExtensionState,
+  type QueueJob,
+} from "@/src/domain/model";
 import {
   deleteLargePayload,
   readLargePayload,
@@ -19,12 +27,24 @@ import { sendSyncJob } from "@/src/services/sync";
 
 const ALARM_SYNC = "crm.sync" as const;
 
-function createCallSession(message: Extract<RuntimeMessage, { type: "call.start" }>): CallSession {
+function toSuccessResponse(state: ExtensionState): RuntimeResponse {
+  return {
+    ok: true,
+    state,
+    executiveState: getExecutiveState(state),
+  };
+}
+
+function toErrorResponse(error: string, state?: ExtensionState): RuntimeResponse {
+  return { ok: false, error, state };
+}
+
+function createCallSession(handoff: AssignmentHandoff): CallSession {
   return {
     sessionId: crypto.randomUUID(),
-    assignmentId: message.assignmentId,
-    contactId: message.contactId,
-    phone: message.phone,
+    assignmentId: handoff.assignmentId,
+    contactId: handoff.contactId,
+    phone: handoff.phone,
     startedAt: Date.now(),
     connectedAt: null,
     endedAt: null,
@@ -32,6 +52,28 @@ function createCallSession(message: Extract<RuntimeMessage, { type: "call.start"
     outcome: null,
     notes: null,
   };
+}
+
+function resolveCallHandoff(
+  state: ExtensionState,
+  message: Extract<RuntimeMessage, { type: "call.start" }>,
+): AssignmentHandoff {
+  if (
+    typeof message.assignmentId === "number" &&
+    typeof message.contactId === "number" &&
+    typeof message.phone === "string"
+  ) {
+    return {
+      assignmentId: message.assignmentId,
+      contactId: message.contactId,
+      phone: message.phone,
+      clientName: state.handoff?.clientName ?? null,
+      organizationLabel: state.handoff?.organizationLabel ?? null,
+      receivedAt: state.handoff?.receivedAt ?? Date.now(),
+    };
+  }
+
+  return ensureHandoff(state);
 }
 
 function asErrorMessage(error: unknown): string {
@@ -53,6 +95,14 @@ function ensureRecordableCall(state: ExtensionState): CallSession {
     throw new Error("cannot record an ended call");
   }
   return call;
+}
+
+function ensureHandoff(state: ExtensionState): AssignmentHandoff {
+  if (!state.handoff) {
+    throw new Error("no assigned client handoff");
+  }
+
+  return state.handoff;
 }
 
 function isOffscreenControlResponse(
@@ -131,15 +181,16 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
 
   switch (message.type) {
     case "state.get": {
-      return { ok: true, state: current };
+      return toSuccessResponse(current);
     }
     case "call.start": {
       if (current.currentCall && current.currentCall.phase !== "ended") {
-        return { ok: false, error: "a call is already active", state: current };
+        return toErrorResponse("a call is already active", current);
       }
 
+      const handoff = resolveCallHandoff(current, message);
       const now = Date.now();
-      const session = createCallSession(message);
+      const session = createCallSession(handoff);
       let queue = enqueueJob(current.queue, "call.lifecycle", {
         event: "started",
         sessionId: session.sessionId,
@@ -167,13 +218,13 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
       };
 
       await writeState(next);
-      return { ok: true, state: next };
+      return toSuccessResponse(next);
     }
     case "call.connected": {
       try {
         const call = ensureCurrentCall(current);
         if (call.phase !== "dialing" || call.connectedAt) {
-          return { ok: false, error: "call cannot be connected from current state", state: current };
+          return toErrorResponse("call cannot be connected from current state", current);
         }
 
         const connectedAt = Date.now();
@@ -192,20 +243,16 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
         };
 
         await writeState(next);
-        return { ok: true, state: next };
+        return toSuccessResponse(next);
       } catch (error: unknown) {
-        return {
-          ok: false,
-          error: asErrorMessage(error),
-          state: current,
-        };
+        return toErrorResponse(asErrorMessage(error), current);
       }
     }
     case "call.end": {
       try {
         const call = ensureCurrentCall(current);
         if (call.phase !== "dialing" && call.phase !== "active") {
-          return { ok: false, error: "call cannot be ended from current state", state: current };
+          return toErrorResponse("call cannot be ended from current state", current);
         }
 
         const endedAt = Date.now();
@@ -217,7 +264,7 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
           ...call,
           phase: "ended",
           endedAt,
-          outcome: message.outcome,
+          outcome: message.outcome ?? null,
           notes: message.notes ?? null,
         };
 
@@ -245,19 +292,15 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
         };
 
         await writeState(next);
-        return { ok: true, state: next };
+        return toSuccessResponse(next);
       } catch (error: unknown) {
-        return { ok: false, error: asErrorMessage(error), state: current };
+        return toErrorResponse(asErrorMessage(error), current);
       }
     }
     case "recording.start": {
       try {
         if (current.recording.phase !== "idle" && current.recording.phase !== "error") {
-          return {
-            ok: false,
-            error: "recording cannot be started from current state",
-            state: current,
-          };
+          return toErrorResponse("recording cannot be started from current state", current);
         }
 
         const call = ensureRecordableCall(current);
@@ -301,7 +344,7 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
         };
 
         await writeState(next);
-        return { ok: true, state: next };
+        return toSuccessResponse(next);
       } catch (error: unknown) {
         const next: ExtensionState = {
           ...current,
@@ -312,20 +355,16 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
           },
         };
         await writeState(next);
-        return { ok: false, error: asErrorMessage(error), state: next };
+        return toErrorResponse(asErrorMessage(error), next);
       }
     }
     case "recording.stop": {
       if (current.recording.phase === "idle") {
-        return { ok: true, state: current };
+        return toSuccessResponse(current);
       }
 
       if (current.recording.phase !== "recording" && current.recording.phase !== "starting") {
-        return {
-          ok: false,
-          error: "recording cannot be stopped from current state",
-          state: current,
-        };
+        return toErrorResponse("recording cannot be stopped from current state", current);
       }
 
       try {
@@ -361,7 +400,7 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
         };
 
         await writeState(next);
-        return { ok: true, state: next };
+        return toSuccessResponse(next);
       } catch (error: unknown) {
         const next: ExtensionState = {
           ...current,
@@ -372,7 +411,7 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
           },
         };
         await writeState(next);
-        return { ok: false, error: asErrorMessage(error), state: next };
+        return toErrorResponse(asErrorMessage(error), next);
       }
     }
     case "recording.chunk": {
@@ -404,7 +443,7 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
       };
 
       await writeState(next);
-      return { ok: true, state: next };
+      return toSuccessResponse(next);
     }
     case "recording.completed": {
       const next: ExtensionState = {
@@ -415,11 +454,11 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
         }),
       };
       await writeState(next);
-      return { ok: true, state: next };
+      return toSuccessResponse(next);
     }
     case "sync.flush": {
       const next = await flushQueue(current);
-      return { ok: true, state: next };
+      return toSuccessResponse(next);
     }
     case "sync.configure": {
       const next: ExtensionState = {
@@ -431,11 +470,77 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
       };
 
       await writeState(next);
-      return { ok: true, state: next };
+      return toSuccessResponse(next);
     }
   }
 
   return assertNever(message);
+}
+
+async function handleExternalRuntimeMessage(
+  message: ExternalRuntimeMessage,
+): Promise<RuntimeResponse> {
+  const current = await readState();
+
+  switch (message.type) {
+    case "state.get":
+      return toSuccessResponse(current);
+    case "assignment.handoff": {
+      if (
+        current.currentCall &&
+        current.currentCall.phase !== "ended" &&
+        current.currentCall.assignmentId !== message.assignmentId
+      ) {
+        return toErrorResponse("cannot replace handoff during an active call", current);
+      }
+
+      const receivedAt = Date.now();
+      const next: ExtensionState = {
+        ...current,
+        handoff: {
+          assignmentId: message.assignmentId,
+          contactId: message.contactId,
+          phone: message.phone,
+          clientName: message.clientName ?? null,
+          organizationLabel: message.organizationLabel ?? null,
+          receivedAt,
+        },
+        syncConfig: message.sync
+          ? {
+              apiBaseUrl: message.sync.apiBaseUrl,
+              authToken: message.sync.authToken,
+            }
+          : current.syncConfig,
+      };
+      await writeState(next);
+      return toSuccessResponse(next);
+    }
+    case "assignment.clear": {
+      if (
+        message.assignmentId !== undefined &&
+        current.handoff &&
+        current.handoff.assignmentId !== message.assignmentId
+      ) {
+        return toSuccessResponse(current);
+      }
+
+      if (
+        current.currentCall &&
+        current.currentCall.phase !== "ended" &&
+        (message.assignmentId === undefined ||
+          current.currentCall.assignmentId === message.assignmentId)
+      ) {
+        return toErrorResponse("cannot clear handoff during an active call", current);
+      }
+
+      const next: ExtensionState = {
+        ...current,
+        handoff: null,
+      };
+      await writeState(next);
+      return toSuccessResponse(next);
+    }
+  }
 }
 
 async function withHydratedPayload(job: QueueJob): Promise<QueueJob> {
@@ -477,13 +582,18 @@ export function registerRuntime(): void {
 
   browser.runtime.onMessage.addListener((message: unknown) => {
     if (!isRuntimeMessage(message)) {
-      return Promise.resolve({
-        ok: false,
-        error: "invalid message payload",
-      } satisfies RuntimeResponse);
+      return Promise.resolve(toErrorResponse("invalid message payload"));
     }
 
     return handleMessage(message);
+  });
+
+  browser.runtime.onMessageExternal.addListener((message: unknown) => {
+    if (!isExternalRuntimeMessage(message)) {
+      return Promise.resolve(toErrorResponse("invalid external message payload"));
+    }
+
+    return handleExternalRuntimeMessage(message);
   });
 
   browser.alarms.onAlarm.addListener(async (alarm) => {

@@ -1,4 +1,4 @@
-import type { ExtensionState } from "./model";
+import type { ExecutiveStateSnapshot, ExtensionState } from "./model";
 
 export type RuntimeMessage =
   | {
@@ -6,16 +6,16 @@ export type RuntimeMessage =
     }
   | {
       type: "call.start";
-      assignmentId: number;
-      contactId: number;
-      phone: string;
+      assignmentId?: number;
+      contactId?: number;
+      phone?: string;
     }
   | {
       type: "call.connected";
     }
   | {
       type: "call.end";
-      outcome: string;
+      outcome?: string;
       notes?: string;
     }
   | {
@@ -48,10 +48,32 @@ export type RuntimeMessage =
       authToken: string;
     };
 
+export type ExternalRuntimeMessage =
+  | {
+      type: "state.get";
+    }
+  | {
+      type: "assignment.handoff";
+      assignmentId: number;
+      contactId: number;
+      phone: string;
+      clientName?: string;
+      organizationLabel?: string;
+      sync?: {
+        apiBaseUrl: string;
+        authToken: string;
+      };
+    }
+  | {
+      type: "assignment.clear";
+      assignmentId?: number;
+    };
+
 export type RuntimeResponse =
   | {
       ok: true;
       state: ExtensionState;
+      executiveState: ExecutiveStateSnapshot;
     }
   | {
       ok: false;
@@ -76,13 +98,13 @@ export function isRuntimeMessage(value: unknown): value is RuntimeMessage {
       return true;
     case "call.start":
       return (
-        typeof value.assignmentId === "number" &&
-        typeof value.contactId === "number" &&
-        typeof value.phone === "string"
+        (value.assignmentId === undefined || typeof value.assignmentId === "number") &&
+        (value.contactId === undefined || typeof value.contactId === "number") &&
+        (value.phone === undefined || typeof value.phone === "string")
       );
     case "call.end":
       return (
-        typeof value.outcome === "string" &&
+        (value.outcome === undefined || typeof value.outcome === "string") &&
         (value.notes === undefined || typeof value.notes === "string")
       );
     case "recording.start":
@@ -111,13 +133,47 @@ export function isRuntimeMessage(value: unknown): value is RuntimeMessage {
   }
 }
 
+export function isExternalRuntimeMessage(value: unknown): value is ExternalRuntimeMessage {
+  if (!isObject(value) || typeof value.type !== "string") {
+    return false;
+  }
+
+  switch (value.type) {
+    case "state.get":
+      return true;
+    case "assignment.handoff": {
+      const sync = value.sync;
+      return (
+        typeof value.assignmentId === "number" &&
+        typeof value.contactId === "number" &&
+        typeof value.phone === "string" &&
+        (value.clientName === undefined || typeof value.clientName === "string") &&
+        (value.organizationLabel === undefined || typeof value.organizationLabel === "string") &&
+        (sync === undefined ||
+          (isObject(sync) &&
+            typeof sync.apiBaseUrl === "string" &&
+            typeof sync.authToken === "string"))
+      );
+    }
+    case "assignment.clear":
+      return value.assignmentId === undefined || typeof value.assignmentId === "number";
+    default:
+      return false;
+  }
+}
+
 export function isRuntimeResponse(value: unknown): value is RuntimeResponse {
   if (!isObject(value) || typeof value.ok !== "boolean") {
     return false;
   }
 
   if (value.ok) {
-    return isObject(value.state) && value.state.schemaVersion === 1;
+    return (
+      isObject(value.state) &&
+      value.state.schemaVersion === 1 &&
+      isObject(value.executiveState) &&
+      typeof value.executiveState.status === "string"
+    );
   }
 
   return typeof value.error === "string";

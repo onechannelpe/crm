@@ -1,16 +1,13 @@
-import { createSignal, onCleanup, onMount, Show, type JSX } from "solid-js";
+import { createSignal, onCleanup, onMount, Show } from "solid-js";
 
 import type { ExtensionState } from "@/src/domain/model";
 import {
-  configureSync,
   connectCall,
   endCall,
   flushQueue,
   getState,
   isSuccessfulResponse,
   startCall,
-  startRecording,
-  stopRecording,
 } from "@/src/client/runtime-client";
 
 import "./dashboard.css";
@@ -38,17 +35,15 @@ function classForSurface(surface: DashboardProps["surface"]): string {
   return surface === "popup" ? "surface-popup" : "surface-sidepanel";
 }
 
+function statusLabel(state: ExtensionState | null): string {
+  return state?.handoff
+    ? `${state.currentCall?.phase ?? "ready"}`
+    : "waiting_for_assignment";
+}
+
 export function Dashboard(props: DashboardProps) {
   const [state, setState] = createSignal<ExtensionState | null>(null);
   const [error, setError] = createSignal<string | null>(null);
-  const [assignmentId, setAssignmentId] = createSignal("1001");
-  const [contactId, setContactId] = createSignal("2001");
-  const [phone, setPhone] = createSignal("+51999999999");
-  const [outcome, setOutcome] = createSignal("no_answer");
-  const [notes, setNotes] = createSignal("");
-  const [tabId, setTabId] = createSignal("1");
-  const [apiBaseUrl, setApiBaseUrl] = createSignal("");
-  const [authToken, setAuthToken] = createSignal("");
 
   let intervalId: number | undefined;
 
@@ -78,18 +73,6 @@ export function Dashboard(props: DashboardProps) {
     await refreshState();
   };
 
-  const createField = (
-    label: string,
-    value: string,
-    onInput: JSX.EventHandler<HTMLInputElement, InputEvent>,
-    type: "text" | "number" = "text",
-  ) => (
-    <label class="field">
-      <span>{label}</span>
-      <input type={type} value={value} onInput={onInput} />
-    </label>
-  );
-
   onMount(() => {
     void refreshState();
     intervalId = window.setInterval(() => {
@@ -107,8 +90,8 @@ export function Dashboard(props: DashboardProps) {
     <main class={`dashboard ${classForSurface(props.surface)}`}>
       <header class="header">
         <p class="eyebrow">CRM extension</p>
-        <h1>VoIP persistence worker</h1>
-        <p class="muted">Resilient session state, recording queue, and sync telemetry.</p>
+        <h1>Assigned call companion</h1>
+        <p class="muted">Web sends the assigned client. Extension keeps the runtime alive.</p>
       </header>
 
       <Show when={error()}>
@@ -116,19 +99,23 @@ export function Dashboard(props: DashboardProps) {
       </Show>
 
       <section class="card">
-        <h2>Current state</h2>
+        <h2>Executive state</h2>
         <div class="stats-grid">
           <p>
-            Call phase
-            <strong>{state()?.currentCall?.phase ?? "idle"}</strong>
-          </p>
-          <p>
-            Recording
-            <strong>{state()?.recording.phase ?? "idle"}</strong>
+            Status
+            <strong>{statusLabel(state())}</strong>
           </p>
           <p>
             Queue jobs
             <strong>{state()?.queue.length ?? 0}</strong>
+          </p>
+          <p>
+            Client
+            <strong>{state()?.handoff?.clientName ?? "No assigned client"}</strong>
+          </p>
+          <p>
+            Phone
+            <strong>{state()?.handoff?.phone ?? "-"}</strong>
           </p>
           <p>
             Last sync
@@ -139,97 +126,64 @@ export function Dashboard(props: DashboardProps) {
             <strong>{formatDurationSeconds(state())}</strong>
           </p>
           <p>
-            Recorded chunks
-            <strong>{state()?.recording.chunkCount ?? 0}</strong>
+            Organization
+            <strong>{state()?.handoff?.organizationLabel ?? "-"}</strong>
           </p>
         </div>
       </section>
 
       <section class="card">
-        <h2>Call controls</h2>
-        <div class="field-grid">
-          {createField("Assignment", assignmentId(), (event) => setAssignmentId(event.currentTarget.value), "number")}
-          {createField("Contact", contactId(), (event) => setContactId(event.currentTarget.value), "number")}
-          {createField("Phone", phone(), (event) => setPhone(event.currentTarget.value))}
-        </div>
+        <h2>Current handoff</h2>
+        <Show
+          when={state()?.handoff}
+          fallback={
+            <p class="empty-copy">
+              Select an assigned client in CRM to send the next number into the extension.
+            </p>
+          }
+        >
+          {(handoff) => (
+            <div class="assignment-summary">
+              <p>
+                Assignment
+                <strong>#{handoff().assignmentId}</strong>
+              </p>
+              <p>
+                Contact
+                <strong>#{handoff().contactId}</strong>
+              </p>
+              <p>
+                Client
+                <strong>{handoff().clientName ?? "Unnamed contact"}</strong>
+              </p>
+              <p>
+                Phone
+                <strong>{handoff().phone}</strong>
+              </p>
+            </div>
+          )}
+        </Show>
 
         <div class="button-row">
-          <button
-            onClick={() =>
-              void run(() =>
-                startCall({
-                  assignmentId: Number(assignmentId()),
-                  contactId: Number(contactId()),
-                  phone: phone(),
-                }),
-              )
-            }
-          >
+          <button onClick={() => void run(() => startCall())} disabled={!state()?.handoff}>
             Start call
           </button>
           <button class="secondary" onClick={() => void run(() => connectCall())}>
             Mark connected
           </button>
-        </div>
-
-        <div class="field-grid">
-          <label class="field">
-            <span>Outcome</span>
-            <select value={outcome()} onChange={(event) => setOutcome(event.currentTarget.value)}>
-              <option value="sale_made">Sale made</option>
-              <option value="no_answer">No answer</option>
-              <option value="not_interested">Not interested</option>
-              <option value="follow_up_later">Follow up later</option>
-            </select>
-          </label>
-          <label class="field field-grow">
-            <span>Notes</span>
-            <input value={notes()} onInput={(event) => setNotes(event.currentTarget.value)} />
-          </label>
-        </div>
-
-        <div class="button-row">
-          <button class="secondary" onClick={() => void run(() => endCall(outcome(), notes()))}>
+          <button class="secondary" onClick={() => void run(() => endCall())}>
             End call
           </button>
         </div>
       </section>
 
       <section class="card">
-        <h2>Recording controls</h2>
-        <div class="field-grid">
-          {createField("Tab ID", tabId(), (event) => setTabId(event.currentTarget.value), "number")}
-        </div>
+        <h2>Sync status</h2>
+        <p class="muted">
+          Sync configuration should come from the web handoff, not from manual entry in the
+          extension.
+        </p>
         <div class="button-row">
-          <button class="secondary" onClick={() => void run(() => startRecording(Number(tabId())))}>
-            Start recording
-          </button>
-          <button class="secondary" onClick={() => void run(() => stopRecording())}>
-            Stop recording
-          </button>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>Sync controls</h2>
-        <div class="field-grid">
-          {createField("API base URL", apiBaseUrl(), (event) => setApiBaseUrl(event.currentTarget.value))}
-          {createField("Auth token", authToken(), (event) => setAuthToken(event.currentTarget.value))}
-        </div>
-        <div class="button-row">
-          <button
-            class="secondary"
-            onClick={() =>
-              void run(() =>
-                configureSync({
-                  apiBaseUrl: apiBaseUrl(),
-                  authToken: authToken(),
-                }),
-              )
-            }
-          >
-            Save sync config
-          </button>
           <button class="secondary" onClick={() => void run(() => flushQueue())}>
             Flush queue
           </button>

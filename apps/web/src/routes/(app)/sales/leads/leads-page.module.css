@@ -1,3 +1,40 @@
+.extensionBanner {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 18px;
+  padding: 16px 18px;
+  border-radius: var(--panel-radius);
+  border: 1px solid var(--border);
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--warning) 22%, transparent), transparent 42%),
+    linear-gradient(135deg, color-mix(in srgb, var(--surface) 96%, white), color-mix(in srgb, var(--secondary) 28%, white));
+}
+
+.extensionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.extensionEyebrow {
+  margin: 0 0 4px;
+  font-size: var(--font-size-caption);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.extensionTitle {
+  margin: 0;
+  font-size: var(--font-size-heading-sm);
+}
+
+.extensionCopy {
+  margin: 0;
+  color: var(--muted-foreground);
+}
+
 .fabContainer {
   position: fixed;
   bottom: 32px;
