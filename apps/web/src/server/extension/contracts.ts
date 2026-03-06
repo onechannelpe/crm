@@ -3,22 +3,24 @@ export const EXTENSION_HANDOFF_TOKEN_AUDIENCE = "crm-extension" as const;
 export const EXTENSION_SESSION_TOKEN_AUDIENCE =
   "crm-extension-session" as const;
 
-export const EXTENSION_EXECUTIVE_STATUSES = [
+export const EXTENSION_EXECUTIVE_PRESENCE_STATUSES = [
   "idle",
   "ready",
   "dialing",
   "active",
   "wrap_up",
-  "sync_pending",
-  "sync_error",
   "offline",
 ] as const;
 
-export type ExtensionExecutiveStatus =
-  (typeof EXTENSION_EXECUTIVE_STATUSES)[number];
+export type ExtensionExecutivePresenceStatus =
+  (typeof EXTENSION_EXECUTIVE_PRESENCE_STATUSES)[number];
+
+export const EXTENSION_SYNC_HEALTHS = ["ok", "reauth_required"] as const;
+
+export type ExtensionSyncHealth = (typeof EXTENSION_SYNC_HEALTHS)[number];
 
 export const EXTENSION_RUNTIME_EVENT_TYPES = [
-  "executive.status",
+  "executive.presence",
   "call.lifecycle",
   "call.metric",
   "recording.completed",
@@ -89,8 +91,8 @@ export interface RefreshExtensionSessionResponse {
   expiresAt: number;
 }
 
-export interface ExecutiveStatusEventPayload {
-  status: ExtensionExecutiveStatus;
+export interface ExecutivePresenceEventPayload {
+  presenceStatus: Exclude<ExtensionExecutivePresenceStatus, "offline">;
   assignmentId: number | null;
   contactId: number | null;
   callSessionId: string | null;
@@ -146,7 +148,7 @@ export interface RecordingChunkPayload {
 }
 
 export type ExtensionRuntimeEventPayloadByType = {
-  "executive.status": ExecutiveStatusEventPayload;
+  "executive.presence": ExecutivePresenceEventPayload;
   "call.lifecycle": CallLifecyclePayload;
   "call.metric": CallMetricPayload;
   "recording.completed": RecordingCompletedPayload;
@@ -168,19 +170,30 @@ export interface TeamExecutiveStatusView {
   firstSurname: string;
   teamId: number | null;
   teamName: string | null;
-  status: ExtensionExecutiveStatus;
+  presenceStatus: ExtensionExecutivePresenceStatus | null;
+  syncHealth: ExtensionSyncHealth;
   assignmentId: number | null;
   contactId: number | null;
   callSessionId: string | null;
-  updatedAt: number;
+  presenceUpdatedAt: number | null;
+  syncUpdatedAt: number | null;
 }
 
-export function isExtensionExecutiveStatus(
+export function isExtensionExecutivePresenceStatus(
   value: unknown,
-): value is ExtensionExecutiveStatus {
+): value is ExtensionExecutivePresenceStatus {
   return (
     typeof value === "string" &&
-    EXTENSION_EXECUTIVE_STATUSES.some((status) => status === value)
+    EXTENSION_EXECUTIVE_PRESENCE_STATUSES.some((status) => status === value)
+  );
+}
+
+export function isExtensionSyncHealth(
+  value: unknown,
+): value is ExtensionSyncHealth {
+  return (
+    typeof value === "string" &&
+    EXTENSION_SYNC_HEALTHS.some((syncHealth) => syncHealth === value)
   );
 }
 
@@ -214,12 +227,13 @@ export function isRefreshExtensionSessionRequest(
   );
 }
 
-function isExecutiveStatusPayload(
+function isExecutivePresencePayload(
   value: unknown,
-): value is ExecutiveStatusEventPayload {
+): value is ExecutivePresenceEventPayload {
   return (
     isObject(value) &&
-    isExtensionExecutiveStatus(value.status) &&
+    isExtensionExecutivePresenceStatus(value.presenceStatus) &&
+    value.presenceStatus !== "offline" &&
     (value.assignmentId === null || typeof value.assignmentId === "number") &&
     (value.contactId === null || typeof value.contactId === "number") &&
     (value.callSessionId === null || typeof value.callSessionId === "string") &&
@@ -305,8 +319,8 @@ export function isExtensionRuntimeEventEnvelope(
   }
 
   switch (value.type) {
-    case "executive.status":
-      return isExecutiveStatusPayload(value.payload);
+    case "executive.presence":
+      return isExecutivePresencePayload(value.payload);
     case "call.lifecycle":
       return isCallLifecyclePayload(value.payload);
     case "call.metric":

@@ -1,19 +1,24 @@
-export type ExtensionExecutiveStatus =
+export type ExtensionExecutivePresenceStatus =
   | "idle"
   | "ready"
   | "dialing"
   | "active"
-  | "wrap_up"
-  | "sync_pending"
-  | "sync_error"
+  | "wrap_up";
+
+export type ExtensionSyncHealth =
+  | "ok"
+  | "pending"
+  | "error"
   | "reauth_required";
 
 export interface ExtensionExecutiveState {
-  status: ExtensionExecutiveStatus;
+  presenceStatus: ExtensionExecutivePresenceStatus;
+  syncHealth: ExtensionSyncHealth;
   assignmentId: number | null;
   contactId: number | null;
   phone: string | null;
-  updatedAt: number | null;
+  presenceUpdatedAt: number | null;
+  syncUpdatedAt: number | null;
 }
 
 interface AssignmentHandoffMessage {
@@ -57,11 +62,14 @@ function isObject(value: unknown): value is Record<string, unknown> {
 function isExecutiveState(value: unknown): value is ExtensionExecutiveState {
   return (
     isObject(value) &&
-    typeof value.status === "string" &&
+    typeof value.presenceStatus === "string" &&
+    typeof value.syncHealth === "string" &&
     (value.assignmentId === null || typeof value.assignmentId === "number") &&
     (value.contactId === null || typeof value.contactId === "number") &&
     (value.phone === null || typeof value.phone === "string") &&
-    (value.updatedAt === null || typeof value.updatedAt === "number")
+    (value.presenceUpdatedAt === null ||
+      typeof value.presenceUpdatedAt === "number") &&
+    (value.syncUpdatedAt === null || typeof value.syncUpdatedAt === "number")
   );
 }
 

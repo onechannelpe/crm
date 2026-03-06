@@ -1,7 +1,10 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/schema";
-import type { ExtensionExecutiveStatus } from "~/server/extension/contracts";
+import type {
+  ExtensionExecutivePresenceStatus,
+  ExtensionSyncHealth,
+} from "~/server/extension/contracts";
 
 export function createExtensionRuntimeRepo(db: Kysely<Database>) {
   return {
@@ -153,6 +156,15 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
+    revokeInstallationSessionsByUser(user_id: number, revoked_at: number) {
+      return db
+        .updateTable("extension_installation_sessions")
+        .set({ revoked_at })
+        .where("user_id", "=", user_id)
+        .where("revoked_at", "is", null)
+        .executeTakeFirst();
+    },
+
     insertRuntimeEvent(values: {
       id: string;
       user_id: number;
@@ -179,31 +191,80 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    upsertExecutiveStatus(values: {
+    upsertExecutivePresence(values: {
       user_id: number;
       branch_id: number;
       assignment_id: number | null;
       contact_id: number | null;
       call_session_id: string | null;
-      status: ExtensionExecutiveStatus;
-      updated_at: number;
+      presence_status: ExtensionExecutivePresenceStatus;
+      presence_updated_at: number;
       source_event_id: string | null;
     }) {
       return db
         .insertInto("extension_executive_statuses")
-        .values(values)
+        .values({
+          ...values,
+          sync_health: "ok",
+          sync_updated_at: values.presence_updated_at,
+        })
         .onConflict((oc) =>
           oc.column("user_id").doUpdateSet({
             branch_id: values.branch_id,
             assignment_id: values.assignment_id,
             contact_id: values.contact_id,
             call_session_id: values.call_session_id,
-            status: values.status,
-            updated_at: values.updated_at,
+            presence_status: values.presence_status,
+            presence_updated_at: values.presence_updated_at,
             source_event_id: values.source_event_id,
           }),
         )
         .executeTakeFirstOrThrow();
+    },
+
+    upsertExecutiveSyncHealth(values: {
+      user_id: number;
+      branch_id: number;
+      sync_health: ExtensionSyncHealth;
+      sync_updated_at: number;
+    }) {
+      return db
+        .insertInto("extension_executive_statuses")
+        .values({
+          user_id: values.user_id,
+          branch_id: values.branch_id,
+          assignment_id: null,
+          contact_id: null,
+          call_session_id: null,
+          presence_status: null,
+          presence_updated_at: null,
+          sync_health: values.sync_health,
+          sync_updated_at: values.sync_updated_at,
+          source_event_id: null,
+        })
+        .onConflict((oc) =>
+          oc.column("user_id").doUpdateSet({
+            branch_id: values.branch_id,
+            sync_health: values.sync_health,
+            sync_updated_at: values.sync_updated_at,
+          }),
+        )
+        .executeTakeFirstOrThrow();
+    },
+
+    updateExecutiveSyncHealthByUser(values: {
+      user_id: number;
+      sync_health: ExtensionSyncHealth;
+      sync_updated_at: number;
+    }) {
+      return db
+        .updateTable("extension_executive_statuses")
+        .set({
+          sync_health: values.sync_health,
+          sync_updated_at: values.sync_updated_at,
+        })
+        .where("user_id", "=", values.user_id)
+        .executeTakeFirst();
     },
 
     findCurrentStatusByUser(userId: number) {
@@ -225,11 +286,13 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
           "users.first_surname as firstSurname",
           "users.team_id as teamId",
           "teams.name as teamName",
-          "extension_executive_statuses.status",
+          "extension_executive_statuses.presence_status as presenceStatus",
+          "extension_executive_statuses.sync_health as syncHealth",
           "extension_executive_statuses.assignment_id as assignmentId",
           "extension_executive_statuses.contact_id as contactId",
           "extension_executive_statuses.call_session_id as callSessionId",
-          "extension_executive_statuses.updated_at as updatedAt",
+          "extension_executive_statuses.presence_updated_at as presenceUpdatedAt",
+          "extension_executive_statuses.sync_updated_at as syncUpdatedAt",
         ])
         .where("users.is_active", "=", 1)
         .where("users.role", "=", "executive")
@@ -249,11 +312,13 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
           "users.first_surname as firstSurname",
           "users.team_id as teamId",
           "teams.name as teamName",
-          "extension_executive_statuses.status",
+          "extension_executive_statuses.presence_status as presenceStatus",
+          "extension_executive_statuses.sync_health as syncHealth",
           "extension_executive_statuses.assignment_id as assignmentId",
           "extension_executive_statuses.contact_id as contactId",
           "extension_executive_statuses.call_session_id as callSessionId",
-          "extension_executive_statuses.updated_at as updatedAt",
+          "extension_executive_statuses.presence_updated_at as presenceUpdatedAt",
+          "extension_executive_statuses.sync_updated_at as syncUpdatedAt",
         ])
         .where("users.is_active", "=", 1)
         .where("users.role", "=", "executive")

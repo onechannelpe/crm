@@ -153,11 +153,11 @@ function assertNever(value: never): never {
 
 function enqueueExecutiveStatus(
   state: ExtensionState,
-  status: ReturnType<typeof getExecutiveState>["status"],
+  presenceStatus: ReturnType<typeof getExecutiveState>["presenceStatus"],
   updatedAt: number,
 ): QueueJob[] {
-  return enqueueJob(state.queue, "executive.status", {
-    status,
+  return enqueueJob(state.queue, "executive.presence", {
+    presenceStatus,
     assignmentId: state.handoff?.assignmentId ?? state.currentCall?.assignmentId ?? null,
     contactId: state.handoff?.contactId ?? state.currentCall?.contactId ?? null,
     callSessionId: state.currentCall?.sessionId ?? null,
@@ -267,8 +267,8 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
       });
       queue = appendJob(
         queue,
-        createJob("executive.status", {
-          status: "dialing",
+        createJob("executive.presence", {
+          presenceStatus: "dialing",
           assignmentId: session.assignmentId,
           contactId: session.contactId,
           callSessionId: session.sessionId,
@@ -320,8 +320,8 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
         };
         next.queue = appendJob(
           next.queue,
-          createJob("executive.status", {
-            status: "active",
+          createJob("executive.presence", {
+            presenceStatus: "active",
             assignmentId: call.assignmentId,
             contactId: call.contactId,
             callSessionId: call.sessionId,
@@ -380,8 +380,8 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
         };
         next.queue = appendJob(
           next.queue,
-          createJob("executive.status", {
-            status: "wrap_up",
+          createJob("executive.presence", {
+            presenceStatus: "wrap_up",
             assignmentId: call.assignmentId,
             contactId: call.contactId,
             callSessionId: call.sessionId,

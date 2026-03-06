@@ -148,7 +148,8 @@ export function isRuntimeResponse(value: unknown): value is RuntimeResponse {
       isObject(value.state) &&
       value.state.schemaVersion === 1 &&
       isObject(value.executiveState) &&
-      typeof value.executiveState.status === "string"
+      typeof value.executiveState.presenceStatus === "string" &&
+      typeof value.executiveState.syncHealth === "string"
     );
   }
 

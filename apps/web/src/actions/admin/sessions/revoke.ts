@@ -29,6 +29,11 @@ export async function revokeUserSession(
     safeSessionId,
     Date.now(),
   );
+  await repos.extensionRuntime.updateExecutiveSyncHealthByUser({
+    user_id: safeTargetUserId,
+    sync_health: "reauth_required",
+    sync_updated_at: Date.now(),
+  });
 
   await repos.auditLogs.create({
     user_id: session.userId,
@@ -52,6 +57,15 @@ export async function revokeAllUserSessions(
   assertRecentStrongAuth(session);
 
   await invalidateUserSessions(safeTargetUserId);
+  await repos.extensionRuntime.revokeInstallationSessionsByUser(
+    safeTargetUserId,
+    Date.now(),
+  );
+  await repos.extensionRuntime.updateExecutiveSyncHealthByUser({
+    user_id: safeTargetUserId,
+    sync_health: "reauth_required",
+    sync_updated_at: Date.now(),
+  });
 
   await repos.auditLogs.create({
     user_id: session.userId,

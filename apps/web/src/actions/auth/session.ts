@@ -29,6 +29,13 @@ export async function logout(): Promise<void> {
     sessionId,
     Date.now(),
   );
+  if (session) {
+    await repos.extensionRuntime.updateExecutiveSyncHealthByUser({
+      user_id: session.userId,
+      sync_health: "reauth_required",
+      sync_updated_at: Date.now(),
+    });
+  }
   deleteSessionCookie();
 
   if (session) {

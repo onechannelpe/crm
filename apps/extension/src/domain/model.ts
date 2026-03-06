@@ -4,18 +4,17 @@ export type CallPhase = "dialing" | "active" | "ended";
 
 export type RecordingPhase = "idle" | "starting" | "recording" | "stopping" | "error";
 
-export type ExecutiveStatus =
+export type ExecutivePresenceStatus =
   | "idle"
   | "ready"
   | "dialing"
   | "active"
-  | "wrap_up"
-  | "sync_pending"
-  | "sync_error"
-  | "reauth_required";
+  | "wrap_up";
+
+export type SyncHealth = "ok" | "pending" | "error" | "reauth_required";
 
 export type QueueJobType =
-  | "executive.status"
+  | "executive.presence"
   | "call.lifecycle"
   | "call.metric"
   | "recording.chunk"
@@ -69,11 +68,13 @@ export interface SyncConfig {
 }
 
 export interface ExecutiveStateSnapshot {
-  status: ExecutiveStatus;
+  presenceStatus: ExecutivePresenceStatus;
+  syncHealth: SyncHealth;
   assignmentId: number | null;
   contactId: number | null;
   phone: string | null;
-  updatedAt: number | null;
+  presenceUpdatedAt: number | null;
+  syncUpdatedAt: number | null;
 }
 
 export interface ExtensionState {
@@ -119,87 +120,77 @@ export function createInitialState(): ExtensionState {
   };
 }
 
-export function getExecutiveState(state: ExtensionState): ExecutiveStateSnapshot {
+function getPresenceStatus(state: ExtensionState): ExecutivePresenceStatus {
   const activeCall = state.currentCall;
   if (activeCall?.phase === "dialing") {
-    return {
-      status: "dialing",
-      assignmentId: activeCall.assignmentId,
-      contactId: activeCall.contactId,
-      phone: activeCall.phone,
-      updatedAt: activeCall.startedAt,
-    };
+    return "dialing";
   }
 
   if (activeCall?.phase === "active") {
-    return {
-      status: "active",
-      assignmentId: activeCall.assignmentId,
-      contactId: activeCall.contactId,
-      phone: activeCall.phone,
-      updatedAt: activeCall.connectedAt ?? activeCall.startedAt,
-    };
+    return "active";
   }
 
+  if (activeCall?.phase === "ended") {
+    return "wrap_up";
+  }
+
+  if (state.handoff) {
+    return "ready";
+  }
+
+  return "idle";
+}
+
+function getPresenceUpdatedAt(state: ExtensionState): number | null {
+  const activeCall = state.currentCall;
+  if (activeCall?.phase === "dialing") {
+    return activeCall.startedAt;
+  }
+
+  if (activeCall?.phase === "active") {
+    return activeCall.connectedAt ?? activeCall.startedAt;
+  }
+
+  if (activeCall?.phase === "ended") {
+    return activeCall.endedAt ?? activeCall.startedAt;
+  }
+
+  if (state.handoff) {
+    return state.handoff.receivedAt;
+  }
+
+  return null;
+}
+
+function getSyncHealth(state: ExtensionState): SyncHealth {
   if (
     state.queue.length > 0 &&
     state.syncConfig.sessionToken === null &&
     state.syncConfig.refreshToken === null
   ) {
-    return {
-      status: "reauth_required",
-      assignmentId: state.handoff?.assignmentId ?? activeCall?.assignmentId ?? null,
-      contactId: state.handoff?.contactId ?? activeCall?.contactId ?? null,
-      phone: state.handoff?.phone ?? activeCall?.phone ?? null,
-      updatedAt: state.sync.lastSyncAt,
-    };
+    return "reauth_required";
   }
 
   if (state.queue.length > 0 && state.sync.lastSyncError) {
-    return {
-      status: "sync_error",
-      assignmentId: state.handoff?.assignmentId ?? activeCall?.assignmentId ?? null,
-      contactId: state.handoff?.contactId ?? activeCall?.contactId ?? null,
-      phone: state.handoff?.phone ?? activeCall?.phone ?? null,
-      updatedAt: state.sync.lastSyncAt,
-    };
+    return "error";
   }
 
   if (state.queue.length > 0) {
-    return {
-      status: "sync_pending",
-      assignmentId: state.handoff?.assignmentId ?? activeCall?.assignmentId ?? null,
-      contactId: state.handoff?.contactId ?? activeCall?.contactId ?? null,
-      phone: state.handoff?.phone ?? activeCall?.phone ?? null,
-      updatedAt: state.sync.lastSyncAt,
-    };
+    return "pending";
   }
 
-  if (activeCall?.phase === "ended") {
-    return {
-      status: "wrap_up",
-      assignmentId: activeCall.assignmentId,
-      contactId: activeCall.contactId,
-      phone: activeCall.phone,
-      updatedAt: activeCall.endedAt ?? activeCall.startedAt,
-    };
-  }
+  return "ok";
+}
 
-  if (state.handoff) {
-    return {
-      status: "ready",
-      assignmentId: state.handoff.assignmentId,
-      contactId: state.handoff.contactId,
-      phone: state.handoff.phone,
-      updatedAt: state.handoff.receivedAt,
-    };
-  }
-
+export function getExecutiveState(state: ExtensionState): ExecutiveStateSnapshot {
+  const activeCall = state.currentCall;
   return {
-    status: "idle",
-    assignmentId: null,
-    contactId: null,
-    phone: null,
-    updatedAt: state.sync.lastSyncAt,
+    presenceStatus: getPresenceStatus(state),
+    syncHealth: getSyncHealth(state),
+    assignmentId: state.handoff?.assignmentId ?? activeCall?.assignmentId ?? null,
+    contactId: state.handoff?.contactId ?? activeCall?.contactId ?? null,
+    phone: state.handoff?.phone ?? activeCall?.phone ?? null,
+    presenceUpdatedAt: getPresenceUpdatedAt(state),
+    syncUpdatedAt: state.sync.lastSyncAt,
   };
 }

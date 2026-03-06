@@ -37,8 +37,12 @@ export async function getTeamMembers(): Promise<TeamMember[]> {
     teamId: u.team_id,
     isActive: !!u.is_active,
     expiresAt: u.expires_at,
-    extensionStatus: extensionStatuses.get(u.id)?.status ?? null,
-    extensionUpdatedAt: extensionStatuses.get(u.id)?.updatedAt ?? null,
+    extensionPresenceStatus:
+      extensionStatuses.get(u.id)?.presenceStatus ?? null,
+    extensionSyncHealth: extensionStatuses.get(u.id)?.syncHealth ?? null,
+    extensionPresenceUpdatedAt:
+      extensionStatuses.get(u.id)?.presenceUpdatedAt ?? null,
+    extensionSyncUpdatedAt: extensionStatuses.get(u.id)?.syncUpdatedAt ?? null,
   }));
 }
 

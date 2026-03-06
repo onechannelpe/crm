@@ -340,7 +340,7 @@ export interface ExtensionRuntimeEventsTable {
   contact_id: number | null;
   call_session_id: string | null;
   type:
-    | "executive.status"
+    | "executive.presence"
     | "call.lifecycle"
     | "call.metric"
     | "recording.completed"
@@ -356,16 +356,17 @@ export interface ExtensionExecutiveStatusesTable {
   assignment_id: number | null;
   contact_id: number | null;
   call_session_id: string | null;
-  status:
+  presence_status:
     | "idle"
     | "ready"
     | "dialing"
     | "active"
     | "wrap_up"
-    | "sync_pending"
-    | "sync_error"
-    | "offline";
-  updated_at: number;
+    | "offline"
+    | null;
+  presence_updated_at: number | null;
+  sync_health: "ok" | "reauth_required";
+  sync_updated_at: number | null;
   source_event_id: string | null;
 }
 

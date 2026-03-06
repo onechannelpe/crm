@@ -57,19 +57,14 @@ interface LeadListProps {
   emptyAction?: JSX.Element;
 }
 
-function badgeVariantForStatus(
-  status: ExtensionExecutiveState["status"] | "unavailable",
+function badgeVariantForPresence(
+  status: ExtensionExecutiveState["presenceStatus"] | "unavailable",
 ) {
   switch (status) {
     case "active":
       return "success";
     case "dialing":
       return "warning";
-    case "sync_error":
-    case "reauth_required":
-      return "destructive";
-    case "sync_pending":
-      return "info";
     case "ready":
     case "wrap_up":
       return "secondary";
@@ -79,8 +74,8 @@ function badgeVariantForStatus(
   }
 }
 
-function statusLabel(
-  status: ExtensionExecutiveState["status"] | "unavailable",
+function presenceLabel(
+  status: ExtensionExecutiveState["presenceStatus"] | "unavailable",
 ): string {
   switch (status) {
     case "idle":
@@ -93,9 +88,36 @@ function statusLabel(
       return "En llamada";
     case "wrap_up":
       return "Cierre";
-    case "sync_pending":
+    case "unavailable":
+      return "Sin extension";
+  }
+}
+
+function badgeVariantForSyncHealth(
+  syncHealth: ExtensionExecutiveState["syncHealth"] | "unavailable",
+) {
+  switch (syncHealth) {
+    case "ok":
+      return "outline";
+    case "pending":
+      return "info";
+    case "error":
+    case "reauth_required":
+      return "destructive";
+    case "unavailable":
+      return "outline";
+  }
+}
+
+function syncHealthLabel(
+  syncHealth: ExtensionExecutiveState["syncHealth"] | "unavailable",
+): string {
+  switch (syncHealth) {
+    case "ok":
+      return "Sync OK";
+    case "pending":
       return "Pendiente";
-    case "sync_error":
+    case "error":
       return "Error sync";
     case "reauth_required":
       return "Reconectar";
@@ -212,12 +234,21 @@ export const LeadList: Component<LeadListProps> = (props) => {
                       }
                     >
                       <Badge
-                        variant={badgeVariantForStatus(
-                          props.extensionState?.status ?? "unavailable",
+                        variant={badgeVariantForPresence(
+                          props.extensionState?.presenceStatus ?? "unavailable",
                         )}
                       >
-                        {statusLabel(
-                          props.extensionState?.status ?? "unavailable",
+                        {presenceLabel(
+                          props.extensionState?.presenceStatus ?? "unavailable",
+                        )}
+                      </Badge>
+                      <Badge
+                        variant={badgeVariantForSyncHealth(
+                          props.extensionState?.syncHealth ?? "unavailable",
+                        )}
+                      >
+                        {syncHealthLabel(
+                          props.extensionState?.syncHealth ?? "unavailable",
                         )}
                       </Badge>
                     </Show>

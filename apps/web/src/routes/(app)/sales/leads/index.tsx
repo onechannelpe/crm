@@ -43,6 +43,36 @@ function isHandoffTokenResponse(
   );
 }
 
+function extensionPresenceBadgeVariant(
+  presenceStatus: ExtensionExecutiveState["presenceStatus"] | undefined,
+) {
+  switch (presenceStatus) {
+    case "active":
+      return "success";
+    case "dialing":
+      return "warning";
+    case "ready":
+    case "wrap_up":
+      return "secondary";
+    default:
+      return "outline";
+  }
+}
+
+function extensionSyncHealthBadgeVariant(
+  syncHealth: ExtensionExecutiveState["syncHealth"] | undefined,
+) {
+  switch (syncHealth) {
+    case "pending":
+      return "info";
+    case "error":
+    case "reauth_required":
+      return "destructive";
+    default:
+      return "outline";
+  }
+}
+
 export default function LeadsPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -182,20 +212,18 @@ export default function LeadsPage() {
             <h2 class={styles.extensionTitle}>CRM call companion</h2>
           </div>
           <Badge
-            variant={
-              extensionState()?.status === "active"
-                ? "success"
-                : extensionState()?.status === "dialing"
-                  ? "warning"
-                  : extensionState()?.status === "sync_error" ||
-                      extensionState()?.status === "reauth_required"
-                    ? "destructive"
-                    : extensionState()?.status === "sync_pending"
-                      ? "info"
-                      : "outline"
-            }
+            variant={extensionPresenceBadgeVariant(
+              extensionState()?.presenceStatus,
+            )}
           >
-            {extensionState()?.status ?? "unavailable"}
+            {extensionState()?.presenceStatus ?? "unavailable"}
+          </Badge>
+          <Badge
+            variant={extensionSyncHealthBadgeVariant(
+              extensionState()?.syncHealth,
+            )}
+          >
+            {extensionState()?.syncHealth ?? "unavailable"}
           </Badge>
         </div>
         <p class={styles.extensionCopy}>
@@ -203,7 +231,7 @@ export default function LeadsPage() {
             when={!extensionError()}
             fallback={extensionError() ?? "La extensión no está disponible."}
           >
-            {extensionState()?.status === "reauth_required"
+            {extensionState()?.syncHealth === "reauth_required"
               ? "La extensión necesita reconectarse. Vuelve a enviar el cliente para renovar la sesión."
               : extensionState()?.assignmentId
                 ? `Lead activo en la extensión: #${extensionState()?.assignmentId}`

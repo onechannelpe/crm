@@ -30,8 +30,8 @@ interface TeamMembersSectionProps {
   onSearchFilterInput: (value: string) => void;
 }
 
-function getExtensionStatusVariant(
-  status: TeamMember["extensionStatus"],
+function getExtensionPresenceVariant(
+  status: TeamMember["extensionPresenceStatus"],
 ): "outline" | "secondary" | "warning" | "success" | "info" | "destructive" {
   switch (status) {
     case "ready":
@@ -41,10 +41,6 @@ function getExtensionStatusVariant(
       return "warning";
     case "active":
       return "success";
-    case "sync_pending":
-      return "info";
-    case "sync_error":
-      return "destructive";
     case "idle":
     case "offline":
     case null:
@@ -52,8 +48,8 @@ function getExtensionStatusVariant(
   }
 }
 
-function getExtensionStatusLabel(
-  status: TeamMember["extensionStatus"],
+function getExtensionPresenceLabel(
+  status: TeamMember["extensionPresenceStatus"],
 ): string {
   switch (status) {
     case "idle":
@@ -66,12 +62,33 @@ function getExtensionStatusLabel(
       return "En llamada";
     case "wrap_up":
       return "Cierre";
-    case "sync_pending":
-      return "Pendiente";
-    case "sync_error":
-      return "Error sync";
     case "offline":
       return "Offline";
+    case null:
+      return "Sin datos";
+  }
+}
+
+function getExtensionSyncHealthVariant(
+  syncHealth: TeamMember["extensionSyncHealth"],
+): "outline" | "destructive" {
+  switch (syncHealth) {
+    case "reauth_required":
+      return "destructive";
+    case "ok":
+    case null:
+      return "outline";
+  }
+}
+
+function getExtensionSyncHealthLabel(
+  syncHealth: TeamMember["extensionSyncHealth"],
+): string {
+  switch (syncHealth) {
+    case "ok":
+      return "Sync OK";
+    case "reauth_required":
+      return "Reconectar";
     case null:
       return "Sin datos";
   }
@@ -151,7 +168,8 @@ export function TeamMembersSection(props: TeamMembersSectionProps) {
               <TableHead>Correo</TableHead>
               <TableHead>Rol</TableHead>
               <TableHead>Estado</TableHead>
-              <TableHead>Extensión</TableHead>
+              <TableHead>Presencia</TableHead>
+              <TableHead>Sync</TableHead>
               <TableHead>Vencimiento</TableHead>
             </TableRow>
           </TableHeader>
@@ -185,11 +203,22 @@ export function TeamMembersSection(props: TeamMembersSectionProps) {
                   </TableCell>
                   <TableCell>
                     <Badge
-                      variant={getExtensionStatusVariant(
-                        member.extensionStatus,
+                      variant={getExtensionPresenceVariant(
+                        member.extensionPresenceStatus,
                       )}
                     >
-                      {getExtensionStatusLabel(member.extensionStatus)}
+                      {getExtensionPresenceLabel(
+                        member.extensionPresenceStatus,
+                      )}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={getExtensionSyncHealthVariant(
+                        member.extensionSyncHealth,
+                      )}
+                    >
+                      {getExtensionSyncHealthLabel(member.extensionSyncHealth)}
                     </Badge>
                   </TableCell>
                   <TableCell>

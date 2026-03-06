@@ -76,8 +76,10 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     )
     .addColumn("contact_id", "integer", (col) => col.references("contacts.id"))
     .addColumn("call_session_id", "varchar(255)")
-    .addColumn("status", "varchar(20)", (col) => col.notNull())
-    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .addColumn("presence_status", "varchar(20)")
+    .addColumn("presence_updated_at", "integer")
+    .addColumn("sync_health", "varchar(20)", (col) => col.notNull())
+    .addColumn("sync_updated_at", "integer")
     .addColumn("source_event_id", "varchar(96)")
     .execute();
 
@@ -108,6 +110,6 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createIndex("idx_extension_executive_statuses_branch_status")
     .on("extension_executive_statuses")
-    .columns(["branch_id", "status", "updated_at"])
+    .columns(["branch_id", "presence_status", "presence_updated_at"])
     .execute();
 }

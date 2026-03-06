@@ -10,10 +10,11 @@ import {
   EXTENSION_SESSION_TOKEN_AUDIENCE,
   type ClaimExtensionSessionResponse,
   type CreateExtensionHandoffTokenResponse,
-  type ExtensionExecutiveStatus,
+  type ExtensionExecutivePresenceStatus,
   type ExtensionHandoffClaims,
   type ExtensionInstallationSessionClaims,
   type ExtensionRuntimeEventEnvelope,
+  type ExtensionSyncHealth,
   type RefreshExtensionSessionResponse,
   type TeamExecutiveStatusView,
 } from "./contracts";
@@ -72,7 +73,7 @@ export type ExtensionServiceError =
 
 function mapLifecycleStatus(
   event: Extract<ExtensionRuntimeEventEnvelope, { type: "call.lifecycle" }>,
-): ExtensionExecutiveStatus {
+): Exclude<ExtensionExecutivePresenceStatus, "idle" | "ready" | "offline"> {
   switch (event.payload.event) {
     case "started":
       return "dialing";
@@ -90,14 +91,35 @@ function withDerivedOfflineStatus(
   now: number,
 ): TeamExecutiveStatusView[] {
   return statuses.map((status) => {
-    if (now - status.updatedAt < EXECUTIVE_STATUS_OFFLINE_AFTER_MS) {
+    if (
+      status.presenceStatus === null ||
+      status.presenceUpdatedAt === null ||
+      now - status.presenceUpdatedAt < EXECUTIVE_STATUS_OFFLINE_AFTER_MS
+    ) {
       return status;
     }
 
     return {
       ...status,
-      status: "offline",
+      presenceStatus: "offline",
     };
+  });
+}
+
+async function upsertSyncHealth(
+  repos: Repositories,
+  values: {
+    userId: number;
+    branchId: number;
+    syncHealth: ExtensionSyncHealth;
+    updatedAt: number;
+  },
+): Promise<void> {
+  await repos.extensionRuntime.upsertExecutiveSyncHealth({
+    user_id: values.userId,
+    branch_id: values.branchId,
+    sync_health: values.syncHealth,
+    sync_updated_at: values.updatedAt,
   });
 }
 
@@ -503,7 +525,18 @@ export function createExtensionService(
             }
           }
 
-          return issueSessionCredentials(txRepos, session, claimedAt);
+          const sessionCredentials = await issueSessionCredentials(
+            txRepos,
+            session,
+            claimedAt,
+          );
+          await upsertSyncHealth(txRepos, {
+            userId: session.user_id,
+            branchId: session.branch_id,
+            syncHealth: "ok",
+            updatedAt: claimedAt,
+          });
+          return sessionCredentials;
         });
 
         return Ok(credentials);
@@ -586,13 +619,29 @@ export function createExtensionService(
             session.jti,
             currentTime,
           );
+          await repos.extensionRuntime.updateExecutiveSyncHealthByUser({
+            user_id: session.user_id,
+            sync_health: "reauth_required",
+            sync_updated_at: currentTime,
+          });
           return Err({
             reason: "session_invalid",
             message: "Extension session refresh is invalid or expired",
           });
         }
 
-        return Ok(await issueSessionCredentials(repos, session, currentTime));
+        const credentials = await issueSessionCredentials(
+          repos,
+          session,
+          currentTime,
+        );
+        await upsertSyncHealth(repos, {
+          userId: session.user_id,
+          branchId: session.branch_id,
+          syncHealth: "ok",
+          updatedAt: currentTime,
+        });
+        return Ok(credentials);
       } catch (error: unknown) {
         if (isCryptoMisconfiguration(error)) {
           return Err({
@@ -658,6 +707,11 @@ export function createExtensionService(
             session.jti,
             currentTime,
           );
+          await repos.extensionRuntime.updateExecutiveSyncHealthByUser({
+            user_id: session.user_id,
+            sync_health: "reauth_required",
+            sync_updated_at: currentTime,
+          });
           return Err({
             reason: "session_invalid",
             message: "Extension session token is invalid or expired",
@@ -709,29 +763,36 @@ export function createExtensionService(
           received_at: currentTime,
         });
 
-        if (input.event.type === "executive.status") {
-          await repos.extensionRuntime.upsertExecutiveStatus({
+        await upsertSyncHealth(repos, {
+          userId: session.user_id,
+          branchId: session.branch_id,
+          syncHealth: "ok",
+          updatedAt: currentTime,
+        });
+
+        if (input.event.type === "executive.presence") {
+          await repos.extensionRuntime.upsertExecutivePresence({
             user_id: session.user_id,
             branch_id: session.branch_id,
             assignment_id: input.event.payload.assignmentId,
             contact_id: input.event.payload.contactId,
             call_session_id: input.event.payload.callSessionId,
-            status: input.event.payload.status,
-            updated_at: input.event.payload.updatedAt,
+            presence_status: input.event.payload.presenceStatus,
+            presence_updated_at: input.event.payload.updatedAt,
             source_event_id: input.event.id,
           });
           return Ok(undefined);
         }
 
         if (input.event.type === "call.lifecycle") {
-          await repos.extensionRuntime.upsertExecutiveStatus({
+          await repos.extensionRuntime.upsertExecutivePresence({
             user_id: session.user_id,
             branch_id: session.branch_id,
             assignment_id: eventAssignmentId,
             contact_id: eventContactId,
             call_session_id: eventSessionId,
-            status: mapLifecycleStatus(input.event),
-            updated_at: input.event.payload.at,
+            presence_status: mapLifecycleStatus(input.event),
+            presence_updated_at: input.event.payload.at,
             source_event_id: input.event.id,
           });
         }
