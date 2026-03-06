@@ -32,6 +32,7 @@ interface ExtensionServiceDeps {
 }
 
 const EXECUTIVE_STATUS_OFFLINE_AFTER_MS = 2 * 60_000;
+const EXECUTIVE_SYNC_STALE_AFTER_MS = 2 * 60_000;
 const EXTENSION_HANDOFF_TTL_MS = 120_000;
 const EXTENSION_INSTALLATION_SESSION_TTL_MS = 8 * 60 * 60_000;
 const EXTENSION_ACCESS_TOKEN_TTL_MS = 15 * 60_000;
@@ -86,22 +87,25 @@ function mapLifecycleStatus(
   throw new Error("Unsupported lifecycle event");
 }
 
-function withDerivedOfflineStatus(
+function withDerivedProjectionStatuses(
   statuses: TeamExecutiveStatusView[],
   now: number,
 ): TeamExecutiveStatusView[] {
   return statuses.map((status) => {
-    if (
-      status.presenceStatus === null ||
-      status.presenceUpdatedAt === null ||
-      now - status.presenceUpdatedAt < EXECUTIVE_STATUS_OFFLINE_AFTER_MS
-    ) {
-      return status;
-    }
-
     return {
       ...status,
-      presenceStatus: "offline",
+      presenceStatus:
+        status.presenceStatus === null ||
+        status.presenceUpdatedAt === null ||
+        now - status.presenceUpdatedAt < EXECUTIVE_STATUS_OFFLINE_AFTER_MS
+          ? status.presenceStatus
+          : "offline",
+      syncHealth:
+        status.syncHealth === "reauth_required" ||
+        (status.syncUpdatedAt !== null &&
+          now - status.syncUpdatedAt < EXECUTIVE_SYNC_STALE_AFTER_MS)
+          ? status.syncHealth
+          : "stale",
     };
   });
 }
@@ -752,6 +756,7 @@ export function createExtensionService(
 
         await repos.extensionRuntime.insertRuntimeEvent({
           id: input.event.id,
+          sequence: input.event.sequence,
           user_id: session.user_id,
           branch_id: session.branch_id,
           assignment_id: eventAssignmentId,
@@ -780,6 +785,7 @@ export function createExtensionService(
             presence_status: input.event.payload.presenceStatus,
             presence_updated_at: input.event.payload.updatedAt,
             source_event_id: input.event.id,
+            source_event_sequence: input.event.sequence,
           });
           return Ok(undefined);
         }
@@ -794,6 +800,7 @@ export function createExtensionService(
             presence_status: mapLifecycleStatus(input.event),
             presence_updated_at: input.event.payload.at,
             source_event_id: input.event.id,
+            source_event_sequence: input.event.sequence,
           });
         }
 
@@ -824,7 +831,7 @@ export function createExtensionService(
       try {
         if (input.role === "supervisor") {
           return Ok(
-            withDerivedOfflineStatus(
+            withDerivedProjectionStatuses(
               await repos.extensionRuntime.listTeamStatusesBySupervisor(
                 input.userId,
               ),
@@ -834,7 +841,7 @@ export function createExtensionService(
         }
 
         return Ok(
-          withDerivedOfflineStatus(
+          withDerivedProjectionStatuses(
             await repos.extensionRuntime.listBranchStatuses(input.branchId),
             now(),
           ),

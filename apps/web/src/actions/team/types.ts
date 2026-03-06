@@ -23,7 +23,7 @@ export interface TeamMember {
     | "wrap_up"
     | "offline"
     | null;
-  extensionSyncHealth: "ok" | "reauth_required" | null;
+  extensionSyncHealth: "ok" | "stale" | "reauth_required" | null;
   extensionPresenceUpdatedAt: number | null;
   extensionSyncUpdatedAt: number | null;
 }

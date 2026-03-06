@@ -71,8 +71,10 @@ function getExtensionPresenceLabel(
 
 function getExtensionSyncHealthVariant(
   syncHealth: TeamMember["extensionSyncHealth"],
-): "outline" | "destructive" {
+): "outline" | "warning" | "destructive" {
   switch (syncHealth) {
+    case "stale":
+      return "warning";
     case "reauth_required":
       return "destructive";
     case "ok":
@@ -87,6 +89,8 @@ function getExtensionSyncHealthLabel(
   switch (syncHealth) {
     case "ok":
       return "Sync OK";
+    case "stale":
+      return "Sin señal";
     case "reauth_required":
       return "Reconectar";
     case null:

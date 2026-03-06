@@ -15,6 +15,7 @@ export type SyncHealth = "ok" | "pending" | "error" | "reauth_required";
 
 export type QueueJobType =
   | "executive.presence"
+  | "executive.heartbeat"
   | "call.lifecycle"
   | "call.metric"
   | "recording.chunk"
@@ -53,6 +54,7 @@ export interface RecordingState {
 
 export interface QueueJob {
   id: string;
+  sequence: number;
   type: QueueJobType;
   payload: Record<string, unknown>;
   createdAt: number;
@@ -80,6 +82,7 @@ export interface ExecutiveStateSnapshot {
 export interface ExtensionState {
   schemaVersion: 1;
   installationId: string;
+  nextEventSequence: number;
   handoff: AssignmentHandoff | null;
   currentCall: CallSession | null;
   previousCallEndedAt: number | null;
@@ -96,6 +99,7 @@ export function createInitialState(): ExtensionState {
   return {
     schemaVersion: 1,
     installationId: crypto.randomUUID(),
+    nextEventSequence: 1,
     handoff: null,
     currentCall: null,
     previousCallEndedAt: null,
@@ -163,6 +167,10 @@ function getPresenceUpdatedAt(state: ExtensionState): number | null {
 }
 
 function getSyncHealth(state: ExtensionState): SyncHealth {
+  const hasQueuedBusinessWork = state.queue.some(
+    (job) => job.type !== "executive.heartbeat",
+  );
+
   if (
     state.queue.length > 0 &&
     state.syncConfig.sessionToken === null &&
@@ -175,7 +183,7 @@ function getSyncHealth(state: ExtensionState): SyncHealth {
     return "error";
   }
 
-  if (state.queue.length > 0) {
+  if (hasQueuedBusinessWork) {
     return "pending";
   }
 

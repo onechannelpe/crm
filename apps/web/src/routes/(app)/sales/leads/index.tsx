@@ -100,6 +100,7 @@ export default function LeadsPage() {
 
     const response = await getExtensionExecutiveState();
     if (!response.ok) {
+      setExtensionState(null);
       setExtensionError(response.error);
       return;
     }

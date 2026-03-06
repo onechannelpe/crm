@@ -334,6 +334,7 @@ export interface ExtensionInstallationSessionsTable {
 
 export interface ExtensionRuntimeEventsTable {
   id: string;
+  sequence: number;
   user_id: number;
   branch_id: number;
   assignment_id: number | null;
@@ -341,6 +342,7 @@ export interface ExtensionRuntimeEventsTable {
   call_session_id: string | null;
   type:
     | "executive.presence"
+    | "executive.heartbeat"
     | "call.lifecycle"
     | "call.metric"
     | "recording.completed"
@@ -365,9 +367,10 @@ export interface ExtensionExecutiveStatusesTable {
     | "offline"
     | null;
   presence_updated_at: number | null;
-  sync_health: "ok" | "reauth_required";
+  sync_health: "ok" | "stale" | "reauth_required";
   sync_updated_at: number | null;
   source_event_id: string | null;
+  source_event_sequence: number | null;
 }
 
 export interface AgentStatusLogsTable {

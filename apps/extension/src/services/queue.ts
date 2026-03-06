@@ -7,10 +7,12 @@ function createJobId(): string {
 export function createJob(
   type: QueueJobType,
   payload: Record<string, unknown>,
+  sequence: number,
 ): QueueJob {
   const now = Date.now();
   return {
     id: createJobId(),
+    sequence,
     type,
     payload,
     createdAt: now,
@@ -24,12 +26,8 @@ export function appendJob(queue: QueueJob[], job: QueueJob): QueueJob[] {
   return [...queue, job];
 }
 
-export function enqueueJob(
-  queue: QueueJob[],
-  type: QueueJobType,
-  payload: Record<string, unknown>,
-): QueueJob[] {
-  return appendJob(queue, createJob(type, payload));
+export function hasQueuedJobType(queue: QueueJob[], type: QueueJobType): boolean {
+  return queue.some((job) => job.type === type);
 }
 
 export function markFailed(job: QueueJob, error: string): QueueJob {

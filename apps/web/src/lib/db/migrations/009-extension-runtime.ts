@@ -46,6 +46,7 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("extension_runtime_events")
     .addColumn("id", "varchar(96)", (col) => col.primaryKey())
+    .addColumn("sequence", "integer", (col) => col.notNull())
     .addColumn("user_id", "integer", (col) =>
       col.notNull().references("users.id"),
     )
@@ -81,6 +82,7 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     .addColumn("sync_health", "varchar(20)", (col) => col.notNull())
     .addColumn("sync_updated_at", "integer")
     .addColumn("source_event_id", "varchar(96)")
+    .addColumn("source_event_sequence", "integer")
     .execute();
 
   await db.schema

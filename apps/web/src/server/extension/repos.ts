@@ -1,4 +1,4 @@
-import type { Kysely } from "kysely";
+import { sql, type Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/schema";
 import type {
@@ -167,6 +167,7 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
 
     insertRuntimeEvent(values: {
       id: string;
+      sequence: number;
       user_id: number;
       branch_id: number;
       assignment_id: number | null;
@@ -200,26 +201,52 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
       presence_status: ExtensionExecutivePresenceStatus;
       presence_updated_at: number;
       source_event_id: string | null;
+      source_event_sequence: number;
     }) {
-      return db
-        .insertInto("extension_executive_statuses")
-        .values({
-          ...values,
-          sync_health: "ok",
-          sync_updated_at: values.presence_updated_at,
-        })
-        .onConflict((oc) =>
-          oc.column("user_id").doUpdateSet({
-            branch_id: values.branch_id,
-            assignment_id: values.assignment_id,
-            contact_id: values.contact_id,
-            call_session_id: values.call_session_id,
-            presence_status: values.presence_status,
-            presence_updated_at: values.presence_updated_at,
-            source_event_id: values.source_event_id,
-          }),
+      return sql`
+        INSERT INTO extension_executive_statuses (
+          user_id,
+          branch_id,
+          assignment_id,
+          contact_id,
+          call_session_id,
+          presence_status,
+          presence_updated_at,
+          sync_health,
+          sync_updated_at,
+          source_event_id,
+          source_event_sequence
         )
-        .executeTakeFirstOrThrow();
+        VALUES (
+          ${values.user_id},
+          ${values.branch_id},
+          ${values.assignment_id},
+          ${values.contact_id},
+          ${values.call_session_id},
+          ${values.presence_status},
+          ${values.presence_updated_at},
+          ${"stale"},
+          ${null},
+          ${values.source_event_id},
+          ${values.source_event_sequence}
+        )
+        ON CONFLICT (user_id) DO UPDATE SET
+          branch_id = excluded.branch_id,
+          assignment_id = excluded.assignment_id,
+          contact_id = excluded.contact_id,
+          call_session_id = excluded.call_session_id,
+          presence_status = excluded.presence_status,
+          presence_updated_at = excluded.presence_updated_at,
+          source_event_id = excluded.source_event_id,
+          source_event_sequence = excluded.source_event_sequence
+        WHERE
+          extension_executive_statuses.presence_updated_at IS NULL
+          OR extension_executive_statuses.presence_updated_at < excluded.presence_updated_at
+          OR (
+            extension_executive_statuses.presence_updated_at = excluded.presence_updated_at
+            AND COALESCE(extension_executive_statuses.source_event_sequence, -1) < excluded.source_event_sequence
+          )
+      `.execute(db);
     },
 
     upsertExecutiveSyncHealth(values: {

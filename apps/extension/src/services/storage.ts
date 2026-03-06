@@ -21,6 +21,7 @@ function isQueueJobType(
 ): value is ExtensionState["queue"][number]["type"] {
   return (
     value === "executive.presence" ||
+    value === "executive.heartbeat" ||
     value === "call.lifecycle" ||
     value === "call.metric" ||
     value === "recording.chunk" ||
@@ -43,6 +44,7 @@ function normalizeState(value: unknown): ExtensionState {
   const normalizedQueue = Array.isArray(value.queue)
     ? value.queue.filter(isObject).map((job) => ({
         id: typeof job.id === "string" ? job.id : crypto.randomUUID(),
+        sequence: asNumber(job.sequence, 0),
         type: isQueueJobType(job.type) ? job.type : "call.metric",
         payload: isObject(job.payload) ? job.payload : {},
         createdAt: asNumber(job.createdAt, Date.now()),
@@ -58,6 +60,7 @@ function normalizeState(value: unknown): ExtensionState {
       typeof value.installationId === "string" && value.installationId.trim() !== ""
         ? value.installationId
         : initial.installationId,
+    nextEventSequence: Math.max(1, asNumber(value.nextEventSequence, 1)),
     handoff: handoff
       ? {
           assignmentId: asNumber(handoff.assignmentId, 0),

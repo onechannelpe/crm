@@ -8,11 +8,13 @@ const {
   usersFindByBranchMock,
   teamsFindByBranchMock,
   listPendingInvitesMock,
+  listTeamExecutiveStatusesMock,
 } = vi.hoisted(() => ({
   requirePermissionMock: vi.fn(),
   usersFindByBranchMock: vi.fn(),
   teamsFindByBranchMock: vi.fn(),
   listPendingInvitesMock: vi.fn(),
+  listTeamExecutiveStatusesMock: vi.fn(),
 }));
 
 vi.mock("../../src/lib/auth/access/session", () => ({
@@ -20,6 +22,9 @@ vi.mock("../../src/lib/auth/access/session", () => ({
 }));
 
 vi.mock("../../src/server/shared/context", () => ({
+  extensionService: {
+    listTeamExecutiveStatuses: listTeamExecutiveStatusesMock,
+  },
   repos: {
     users: {
       findByBranch: usersFindByBranchMock,
@@ -62,12 +67,18 @@ describe("team members query", () => {
         is_active: 1,
       },
     ]);
+    listTeamExecutiveStatusesMock.mockResolvedValue(Ok([]));
   });
 
   it("fetches only members — no invite queries touched", async () => {
     setSession("sales_manager");
     const members = await getTeamMembers();
     expect(usersFindByBranchMock).toHaveBeenCalledWith(3);
+    expect(listTeamExecutiveStatusesMock).toHaveBeenCalledWith({
+      role: "sales_manager",
+      userId: 7,
+      branchId: 3,
+    });
     expect(members).toHaveLength(1);
     expect(listPendingInvitesMock).not.toHaveBeenCalled();
     expect(teamsFindByBranchMock).not.toHaveBeenCalled();

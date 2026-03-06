@@ -37,6 +37,7 @@ export async function sendSyncJob(
       },
       body: JSON.stringify({
         id: job.id,
+        sequence: job.sequence,
         type: job.type,
         payload: job.payload,
         createdAt: job.createdAt,

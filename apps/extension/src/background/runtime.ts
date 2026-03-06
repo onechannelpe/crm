@@ -18,7 +18,13 @@ import {
   readLargePayload,
   saveLargePayload,
 } from "@/src/services/journal";
-import { appendJob, createJob, dueJobs, enqueueJob, markFailed } from "@/src/services/queue";
+import {
+  appendJob,
+  createJob,
+  dueJobs,
+  hasQueuedJobType,
+  markFailed,
+} from "@/src/services/queue";
 import {
   closeOffscreenDocument,
   ensureOffscreenDocument,
@@ -151,17 +157,60 @@ function assertNever(value: never): never {
   throw new Error(`unhandled message type: ${JSON.stringify(value)}`);
 }
 
+function reserveEventSequence(state: ExtensionState): {
+  nextState: ExtensionState;
+  sequence: number;
+} {
+  const sequence = state.nextEventSequence;
+  return {
+    sequence,
+    nextState: {
+      ...state,
+      nextEventSequence: sequence + 1,
+    },
+  };
+}
+
+function appendQueuedEvent(
+  state: ExtensionState,
+  type: QueueJob["type"],
+  payload: Record<string, unknown>,
+): ExtensionState {
+  const reserved = reserveEventSequence(state);
+  return {
+    ...reserved.nextState,
+    queue: appendJob(
+      reserved.nextState.queue,
+      createJob(type, payload, reserved.sequence),
+    ),
+  };
+}
+
 function enqueueExecutiveStatus(
   state: ExtensionState,
   presenceStatus: ReturnType<typeof getExecutiveState>["presenceStatus"],
   updatedAt: number,
-): QueueJob[] {
-  return enqueueJob(state.queue, "executive.presence", {
+): ExtensionState {
+  return appendQueuedEvent(state, "executive.presence", {
     presenceStatus,
     assignmentId: state.handoff?.assignmentId ?? state.currentCall?.assignmentId ?? null,
     contactId: state.handoff?.contactId ?? state.currentCall?.contactId ?? null,
     callSessionId: state.currentCall?.sessionId ?? null,
     updatedAt,
+  });
+}
+
+function enqueueHeartbeatIfNeeded(state: ExtensionState, occurredAt: number): ExtensionState {
+  if (
+    !state.syncConfig.apiBaseUrl ||
+    !state.syncConfig.sessionToken ||
+    hasQueuedJobType(state.queue, "executive.heartbeat")
+  ) {
+    return state;
+  }
+
+  return appendQueuedEvent(state, "executive.heartbeat", {
+    occurredAt,
   });
 }
 
@@ -257,7 +306,7 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
       const handoff = resolveCallHandoff(current, message);
       const now = Date.now();
       const session = createCallSession(handoff);
-      let queue = enqueueJob(current.queue, "call.lifecycle", {
+      let next = appendQueuedEvent(current, "call.lifecycle", {
         event: "started",
         sessionId: session.sessionId,
         assignmentId: session.assignmentId,
@@ -265,33 +314,22 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
         phone: session.phone,
         at: now,
       });
-      queue = appendJob(
-        queue,
-        createJob("executive.presence", {
-          presenceStatus: "dialing",
-          assignmentId: session.assignmentId,
-          contactId: session.contactId,
-          callSessionId: session.sessionId,
-          updatedAt: now,
-        }),
-      );
+      next = {
+        ...next,
+        currentCall: session,
+      };
+      next = enqueueExecutiveStatus(next, "dialing", now);
 
-      if (current.previousCallEndedAt) {
-        const idleSeconds = Math.round((now - current.previousCallEndedAt) / 1000);
-        queue = enqueueJob(queue, "call.metric", {
+      if (next.previousCallEndedAt) {
+        const idleSeconds = Math.round((now - next.previousCallEndedAt) / 1000);
+        next = appendQueuedEvent(next, "call.metric", {
           event: "between_calls",
           sessionId: session.sessionId,
           idleSeconds,
-          fromEndedAt: current.previousCallEndedAt,
+          fromEndedAt: next.previousCallEndedAt,
           startedAt: now,
         });
       }
-
-      const next: ExtensionState = {
-        ...current,
-        currentCall: session,
-        queue,
-      };
 
       await writeState(next);
       void flushQueue(next).catch(() => undefined);
@@ -305,29 +343,20 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
         }
 
         const connectedAt = Date.now();
-        const next: ExtensionState = {
+        let next: ExtensionState = {
           ...current,
           currentCall: {
             ...call,
             connectedAt,
             phase: "active",
           },
-          queue: enqueueJob(current.queue, "call.lifecycle", {
-            event: "connected",
-            sessionId: call.sessionId,
-            at: connectedAt,
-          }),
         };
-        next.queue = appendJob(
-          next.queue,
-          createJob("executive.presence", {
-            presenceStatus: "active",
-            assignmentId: call.assignmentId,
-            contactId: call.contactId,
-            callSessionId: call.sessionId,
-            updatedAt: connectedAt,
-          }),
-        );
+        next = appendQueuedEvent(next, "call.lifecycle", {
+          event: "connected",
+          sessionId: call.sessionId,
+          at: connectedAt,
+        });
+        next = enqueueExecutiveStatus(next, "active", connectedAt);
 
         await writeState(next);
         void flushQueue(next).catch(() => undefined);
@@ -356,38 +385,26 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
           notes: message.notes ?? null,
         };
 
-        const next: ExtensionState = {
+        let next: ExtensionState = {
           ...current,
           currentCall: completedCall,
           previousCallEndedAt: endedAt,
-          queue: enqueueJob(
-            enqueueJob(current.queue, "call.lifecycle", {
-              event: "ended",
-              sessionId: call.sessionId,
-              outcome: message.outcome,
-              notes: message.notes ?? null,
-              at: endedAt,
-            }),
-            "call.metric",
-            {
-              event: "duration",
-              sessionId: call.sessionId,
-              durationSeconds: callDurationSeconds,
-              connectedAt: call.connectedAt,
-              endedAt,
-            },
-          ),
         };
-        next.queue = appendJob(
-          next.queue,
-          createJob("executive.presence", {
-            presenceStatus: "wrap_up",
-            assignmentId: call.assignmentId,
-            contactId: call.contactId,
-            callSessionId: call.sessionId,
-            updatedAt: endedAt,
-          }),
-        );
+        next = appendQueuedEvent(next, "call.lifecycle", {
+          event: "ended",
+          sessionId: call.sessionId,
+          outcome: message.outcome,
+          notes: message.notes ?? null,
+          at: endedAt,
+        });
+        next = appendQueuedEvent(next, "call.metric", {
+          event: "duration",
+          sessionId: call.sessionId,
+          durationSeconds: callDurationSeconds,
+          connectedAt: call.connectedAt,
+          endedAt,
+        });
+        next = enqueueExecutiveStatus(next, "wrap_up", endedAt);
 
         await writeState(next);
         void flushQueue(next).catch(() => undefined);
@@ -522,36 +539,38 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
         durationMs: message.durationMs,
         createdAt: message.createdAt,
       } satisfies Record<string, unknown>;
-      const queueJob = createJob("recording.chunk", {
-        sessionId: message.sessionId,
-        chunkId: message.chunkId,
-        mimeType: message.mimeType,
-        durationMs: message.durationMs,
-        createdAt: message.createdAt,
-        payloadStorage: "indexeddb",
-      });
+      const reserved = reserveEventSequence(current);
+      const queueJob = createJob(
+        "recording.chunk",
+        {
+          sessionId: message.sessionId,
+          chunkId: message.chunkId,
+          mimeType: message.mimeType,
+          durationMs: message.durationMs,
+          createdAt: message.createdAt,
+          payloadStorage: "indexeddb",
+        },
+        reserved.sequence,
+      );
       await saveLargePayload(queueJob.id, chunkPayload);
 
       const next: ExtensionState = {
-        ...current,
+        ...reserved.nextState,
         recording: {
           ...current.recording,
           chunkCount: current.recording.chunkCount + 1,
         },
-        queue: appendJob(current.queue, queueJob),
+        queue: appendJob(reserved.nextState.queue, queueJob),
       };
 
       await writeState(next);
       return toSuccessResponse(next);
     }
     case "recording.completed": {
-      const next: ExtensionState = {
-        ...current,
-        queue: enqueueJob(current.queue, "recording.completed", {
-          sessionId: message.sessionId,
-          createdAt: message.createdAt,
-        }),
-      };
+      const next = appendQueuedEvent(current, "recording.completed", {
+        sessionId: message.sessionId,
+        createdAt: message.createdAt,
+      });
       await writeState(next);
       return toSuccessResponse(next);
     }
@@ -610,23 +629,11 @@ async function handleExternalRuntimeMessage(
           ...current.sync,
           lastSyncError: null,
         },
-        queue: enqueueExecutiveStatus(
-          {
-            ...current,
-            handoff: verified.handoff,
-            syncConfig: verified.syncConfig,
-            sync: {
-              ...current.sync,
-              lastSyncError: null,
-            },
-          },
-          "ready",
-          receivedAt,
-        ),
       };
-      await writeState(next);
-      void flushQueue(next).catch(() => undefined);
-      return toSuccessResponse(next);
+      const queued = enqueueExecutiveStatus(next, "ready", receivedAt);
+      await writeState(queued);
+      void flushQueue(queued).catch(() => undefined);
+      return toSuccessResponse(queued);
     }
   }
 }
@@ -687,7 +694,11 @@ export function registerRuntime(): void {
   browser.alarms.onAlarm.addListener(async (alarm) => {
     if (alarm.name === ALARM_SYNC) {
       const state = await readState();
-      await flushQueue(state);
+      const next = enqueueHeartbeatIfNeeded(state, Date.now());
+      if (next !== state) {
+        await writeState(next);
+      }
+      await flushQueue(next);
     }
   });
 

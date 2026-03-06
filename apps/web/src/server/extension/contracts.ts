@@ -15,12 +15,17 @@ export const EXTENSION_EXECUTIVE_PRESENCE_STATUSES = [
 export type ExtensionExecutivePresenceStatus =
   (typeof EXTENSION_EXECUTIVE_PRESENCE_STATUSES)[number];
 
-export const EXTENSION_SYNC_HEALTHS = ["ok", "reauth_required"] as const;
+export const EXTENSION_SYNC_HEALTHS = [
+  "ok",
+  "stale",
+  "reauth_required",
+] as const;
 
 export type ExtensionSyncHealth = (typeof EXTENSION_SYNC_HEALTHS)[number];
 
 export const EXTENSION_RUNTIME_EVENT_TYPES = [
   "executive.presence",
+  "executive.heartbeat",
   "call.lifecycle",
   "call.metric",
   "recording.completed",
@@ -99,6 +104,10 @@ export interface ExecutivePresenceEventPayload {
   updatedAt: number;
 }
 
+export interface ExecutiveHeartbeatPayload {
+  occurredAt: number;
+}
+
 export interface CallLifecycleStartedPayload {
   event: "started";
   sessionId: string;
@@ -149,6 +158,7 @@ export interface RecordingChunkPayload {
 
 export type ExtensionRuntimeEventPayloadByType = {
   "executive.presence": ExecutivePresenceEventPayload;
+  "executive.heartbeat": ExecutiveHeartbeatPayload;
   "call.lifecycle": CallLifecyclePayload;
   "call.metric": CallMetricPayload;
   "recording.completed": RecordingCompletedPayload;
@@ -158,6 +168,7 @@ export type ExtensionRuntimeEventPayloadByType = {
 export type ExtensionRuntimeEventEnvelope = {
   [K in ExtensionRuntimeEventType]: {
     id: string;
+    sequence: number;
     type: K;
     createdAt: number;
     payload: ExtensionRuntimeEventPayloadByType[K];
@@ -273,6 +284,12 @@ function isCallLifecyclePayload(value: unknown): value is CallLifecyclePayload {
   }
 }
 
+function isExecutiveHeartbeatPayload(
+  value: unknown,
+): value is ExecutiveHeartbeatPayload {
+  return isObject(value) && typeof value.occurredAt === "number";
+}
+
 function isCallMetricPayload(value: unknown): value is CallMetricPayload {
   return (
     isObject(value) &&
@@ -312,6 +329,7 @@ export function isExtensionRuntimeEventEnvelope(
   if (
     !isObject(value) ||
     typeof value.id !== "string" ||
+    typeof value.sequence !== "number" ||
     typeof value.type !== "string" ||
     typeof value.createdAt !== "number"
   ) {
@@ -321,6 +339,8 @@ export function isExtensionRuntimeEventEnvelope(
   switch (value.type) {
     case "executive.presence":
       return isExecutivePresencePayload(value.payload);
+    case "executive.heartbeat":
+      return isExecutiveHeartbeatPayload(value.payload);
     case "call.lifecycle":
       return isCallLifecyclePayload(value.payload);
     case "call.metric":
