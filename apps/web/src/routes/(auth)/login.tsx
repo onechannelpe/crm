@@ -1,180 +1,76 @@
-import { useNavigate } from "@solidjs/router";
-import { createSignal, onMount, Show } from "solid-js";
+import { Show } from "solid-js";
 
-import { beginPasskeyLogin, finishPasskeyLogin, login } from "~/actions/auth";
 import { AuthFlowShell } from "~/components/auth/auth-flow-shell";
-import { useToast } from "~/components/feedback/toast-provider";
+import { OtpSlotInput } from "~/components/auth/otp-slot-input";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
-import { initializeThemeMode } from "~/components/ui/theme/theme-mode";
-import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
-import {
-  isPasskeySupported,
-  toAuthenticationPayload,
-  toRequestOptions,
-} from "~/lib/auth/passkey/browser";
-import { getErrorMessage } from "~/lib/errors";
+import { useLoginFlow } from "~/lib/auth/use-login-flow";
 
 import styles from "../auth/auth-shell.module.css";
 import pageStyles from "../auth/login-page.module.css";
 
-type LoginStep = "init" | "password" | "totp" | "passkey";
-
 export default function LoginPage() {
-  const navigate = useNavigate();
-  const { showToast } = useToast();
-  const [username, setUsername] = createSignal("");
-  const [password, setPassword] = createSignal("");
-  const [totpCode, setTotpCode] = createSignal("");
-  const [loading, setLoading] = createSignal(false);
-  const [passkeyLoading, setPasskeyLoading] = createSignal(false);
-  const [passkeySupport, setPasskeySupport] = createSignal<
-    "unknown" | "supported" | "unsupported"
-  >("unknown");
-  const [step, setStep] = createSignal<LoginStep>("init");
-
-  onMount(() => {
-    initializeThemeMode();
-    setPasskeySupport(isPasskeySupported() ? "supported" : "unsupported");
-  });
+  const flow = useLoginFlow();
 
   const title = () => {
-    if (step() === "password") return "Contraseña";
-    if (step() === "totp") return "Código de verificación";
-    if (step() === "passkey") return "Clave de acceso";
+    if (flow.step() === "password") return "Contraseña";
+    if (flow.step() === "totp") return "Código de verificación";
+    if (flow.step() === "passkey") return "Clave de acceso";
     return "Iniciar sesión";
   };
 
-  const description = () => {
-    if (step() === "passkey") {
-      return "Usa una clave de acceso registrada.";
-    }
-    if (step() === "totp") {
-      return "Ingresa el código de 6 dígitos de tu app de autenticación.";
-    }
-    return undefined;
-  };
-
-  function requireUsername(): boolean {
-    if (username().trim()) return true;
-    showToast("error", "Ingresa tu usuario");
-    return false;
-  }
-
-  async function handlePasswordSubmit(e: Event) {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      const result = await login(username(), password());
-      navigate(
-        result.onboardingCompleted
-          ? getDefaultAppPath(result.role)
-          : "/onboarding",
-      );
-    } catch (err: unknown) {
-      if (
-        err instanceof Error &&
-        err.message === "Strong authentication required"
-      ) {
-        setStep("totp");
-        showToast("info", "Ingresa el código de verificación para continuar.");
-        return;
-      }
-
-      showToast("error", getErrorMessage(err, "Credenciales inválidas"));
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleTotpSubmit(e: Event) {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      const result = await login(username(), password(), totpCode());
-      navigate(
-        result.onboardingCompleted
-          ? getDefaultAppPath(result.role)
-          : "/onboarding",
-      );
-    } catch (err: unknown) {
-      showToast(
-        "error",
-        getErrorMessage(err, "No se pudo verificar el código"),
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handlePasskeyLogin() {
-    setPasskeyLoading(true);
-
-    try {
-      if (!isPasskeySupported()) {
-        throw new Error("Este navegador no admite claves de acceso");
-      }
-
-      if (!username().trim()) {
-        throw new Error("Ingresa tu usuario antes de usar la clave de acceso");
-      }
-
-      const challenge = await beginPasskeyLogin(username());
-      const credential = await navigator.credentials.get({
-        publicKey: toRequestOptions(challenge.options),
-      });
-
-      if (!(credential instanceof PublicKeyCredential)) {
-        throw new Error("Respuesta de credencial inválida");
-      }
-
-      const payload = toAuthenticationPayload(credential);
-      const result = await finishPasskeyLogin(challenge.challengeId, payload);
-      navigate(
-        result.onboardingCompleted
-          ? getDefaultAppPath(result.role)
-          : "/onboarding",
-      );
-    } catch (err: unknown) {
-      showToast(
-        "error",
-        getErrorMessage(
-          err,
-          "No se pudo iniciar sesión con la clave de acceso",
-        ),
-      );
-    } finally {
-      setPasskeyLoading(false);
-    }
-  }
-
   return (
-    <AuthFlowShell title={title()} description={description()}>
+    <AuthFlowShell
+      title={title()}
+      description={
+        flow.step() === "totp"
+          ? "Ingresa el código de 6 dígitos de tu app de autenticación."
+          : undefined
+      }
+      footerNote={
+        flow.step() === "password" ? (
+          <a href="/reset-password" class={pageStyles.forgotLink}>
+            ¿Olvidaste tu contraseña?
+          </a>
+        ) : undefined
+      }
+    >
       <div class={pageStyles.formStack}>
-        <Input
-          id="auth-username"
-          type="text"
-          name="username"
-          placeholder="Usuario"
-          autocomplete={step() === "passkey" ? "username webauthn" : "username"}
-          value={username()}
-          onInput={(e) => setUsername(e.currentTarget.value)}
-          required
-        />
+        <Show
+          when={flow.step() !== "init"}
+          fallback={
+            <Input
+              id="auth-username"
+              type="text"
+              name="username"
+              placeholder="Usuario"
+              autocomplete="username"
+              value={flow.username()}
+              onInput={(e) => flow.setUsername(e.currentTarget.value)}
+              required
+            />
+          }
+        >
+          <div class={pageStyles.lockedIdentifier}>
+            <span class={pageStyles.lockedUser}>{flow.username()}</span>
+            <button
+              type="button"
+              class={pageStyles.changeUser}
+              onClick={() => flow.setStep("init")}
+            >
+              Cambiar
+            </button>
+          </div>
+        </Show>
 
-        <Show when={step() === "init"}>
+        <Show when={flow.step() === "init"}>
           <EnterTransition>
             <div class={pageStyles.formStack}>
               <Button
                 type="button"
                 class={styles.full}
-                onClick={() => {
-                  if (!requireUsername()) return;
-                  setStep("password");
-                }}
+                onClick={flow.goToPassword}
               >
                 Continuar con contraseña
               </Button>
@@ -182,11 +78,8 @@ export default function LoginPage() {
                 type="button"
                 variant="outline"
                 class={styles.full}
-                disabled={passkeySupport() !== "supported"}
-                onClick={() => {
-                  if (!requireUsername()) return;
-                  setStep("passkey");
-                }}
+                disabled={flow.passkeySupport() !== "supported"}
+                onClick={flow.goToPasskey}
               >
                 Continuar con clave de acceso
               </Button>
@@ -194,71 +87,37 @@ export default function LoginPage() {
           </EnterTransition>
         </Show>
 
-        <Show when={step() === "password"}>
+        <Show when={flow.step() === "password"}>
           <EnterTransition>
             <form
               class={pageStyles.formStack}
               onSubmit={(e) => {
-                void handlePasswordSubmit(e);
-              }}
-            >
-              <div class={pageStyles.passwordFields}>
-                <Input
-                  id="password"
-                  type="password"
-                  name="password"
-                  placeholder="Contraseña"
-                  autocomplete="current-password"
-                  value={password()}
-                  onInput={(e) => setPassword(e.currentTarget.value)}
-                  required
-                />
-              </div>
-
-              <div class={pageStyles.actionRow}>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => setStep("init")}
-                >
-                  Atrás
-                </Button>
-                <Button type="submit" class={styles.full} loading={loading()}>
-                  Siguiente
-                </Button>
-              </div>
-            </form>
-          </EnterTransition>
-        </Show>
-
-        <Show when={step() === "totp"}>
-          <EnterTransition>
-            <form
-              class={pageStyles.formStack}
-              onSubmit={(e) => {
-                void handleTotpSubmit(e);
+                void flow.handlePasswordSubmit(e);
               }}
             >
               <Input
-                id="totp"
-                type="text"
-                name="totp"
-                placeholder="Código de 6 dígitos"
-                autocomplete="one-time-code"
-                value={totpCode()}
-                onInput={(e) => setTotpCode(e.currentTarget.value)}
+                id="password"
+                type="password"
+                name="password"
+                placeholder="Contraseña"
+                autocomplete="current-password"
+                value={flow.password()}
+                onInput={(e) => flow.setPassword(e.currentTarget.value)}
                 required
               />
-
               <div class={pageStyles.actionRow}>
                 <Button
                   type="button"
                   variant="ghost"
-                  onClick={() => setStep("password")}
+                  onClick={() => flow.setStep("init")}
                 >
                   Atrás
                 </Button>
-                <Button type="submit" class={styles.full} loading={loading()}>
+                <Button
+                  type="submit"
+                  class={styles.full}
+                  loading={flow.loading()}
+                >
                   Iniciar sesión
                 </Button>
               </div>
@@ -266,42 +125,73 @@ export default function LoginPage() {
           </EnterTransition>
         </Show>
 
-        <Show when={step() === "passkey"}>
+        <Show when={flow.step() === "totp"}>
           <EnterTransition>
-            <div class={pageStyles.formStack}>
-              <Show
-                when={passkeySupport() === "supported"}
-                fallback={
-                  <p class={pageStyles.supportText}>
-                    Este dispositivo no es compatible con claves de acceso.
-                  </p>
-                }
-              >
-                <p class={pageStyles.supportText}>
-                  Usa una clave de acceso registrada.
-                </p>
-              </Show>
-
+            <form
+              class={pageStyles.formStack}
+              onSubmit={(e) => {
+                void flow.handleTotpSubmit(e);
+              }}
+            >
+              <OtpSlotInput
+                value={flow.totpCode()}
+                onValueChange={flow.setTotpCode}
+              />
               <div class={pageStyles.actionRow}>
                 <Button
                   type="button"
                   variant="ghost"
-                  onClick={() => setStep("init")}
+                  onClick={() => flow.setStep("password")}
                 >
                   Atrás
                 </Button>
                 <Button
-                  type="button"
-                  variant="outline"
+                  type="submit"
                   class={styles.full}
-                  disabled={loading() || passkeySupport() !== "supported"}
-                  loading={passkeyLoading()}
-                  onClick={() => {
-                    void handlePasskeyLogin();
-                  }}
+                  loading={flow.loading()}
                 >
-                  Continuar
+                  Iniciar sesión
                 </Button>
+              </div>
+            </form>
+          </EnterTransition>
+        </Show>
+
+        <Show when={flow.step() === "passkey"}>
+          <EnterTransition>
+            <div class={pageStyles.formStack}>
+              <p class={pageStyles.supportText}>
+                {flow.passkeyLoading()
+                  ? "Esperando tu dispositivo..."
+                  : flow.passkeySupport() === "unsupported"
+                    ? "Este dispositivo no es compatible con claves de acceso."
+                    : "Usa una clave de acceso registrada."}
+              </p>
+              <div class={pageStyles.actionRow}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => flow.setStep("init")}
+                >
+                  Atrás
+                </Button>
+                <Show
+                  when={
+                    flow.passkeySupport() === "supported" &&
+                    !flow.passkeyLoading()
+                  }
+                >
+                  <Button
+                    type="button"
+                    variant="outline"
+                    class={styles.full}
+                    onClick={() => {
+                      void flow.triggerPasskeyLogin();
+                    }}
+                  >
+                    Reintentar
+                  </Button>
+                </Show>
               </div>
             </div>
           </EnterTransition>

@@ -81,6 +81,46 @@
   gap: 12px;
 }
 
+.progressTrack {
+  width: 100%;
+  height: 3px;
+  background: var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--foreground);
+  border-radius: 999px;
+  transition: width 300ms ease;
+}
+
+.choiceCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.configuredBadge {
+  font-size: var(--font-size-xs, 11px);
+  font-weight: 500;
+  color: var(--success-foreground, #16a34a);
+  background: var(--success-bg, #dcfce7);
+  padding: 2px 6px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.helperTextError {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--destructive, #dc2626);
+  line-height: 1.5;
+  text-align: left;
+}
+
 @media (max-width: 800px) {
   .choiceGrid {
     grid-template-columns: 1fr;

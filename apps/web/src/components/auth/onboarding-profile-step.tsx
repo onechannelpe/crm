@@ -1,6 +1,7 @@
 import { Input } from "~/components/ui/input/input";
 import type { Role } from "~/lib/auth/access/rbac";
 import { getRoleLabel } from "~/lib/auth/access/role-display";
+import { isValidOnboardingPhone } from "~/lib/auth/onboarding-flow";
 
 import styles from "~/routes/onboarding-page.module.css";
 
@@ -13,6 +14,9 @@ interface OnboardingProfileStepProps {
 }
 
 export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
+  const phoneError = () =>
+    props.phone.length > 0 && !isValidOnboardingPhone(props.phone);
+
   return (
     <section class={styles.stepStack}>
       <div class={styles.formStack}>
@@ -45,8 +49,10 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
         />
       </div>
 
-      <p class={styles.helperText}>
-        Usa el formato internacional, por ejemplo +51987654321.
+      <p class={phoneError() ? styles.helperTextError : styles.helperText}>
+        {phoneError()
+          ? "Formato inválido. Usa +código de país + número, ej. +51987654321."
+          : "Usa el formato internacional, por ejemplo +51987654321."}
       </p>
     </section>
   );
