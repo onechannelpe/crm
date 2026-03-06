@@ -1,8 +1,19 @@
 import { defineConfig } from "wxt";
 
-// See https://wxt.dev/api/config.html
-const externalMatches = [
-  process.env.CRM_WEB_ORIGIN?.trim(),
+function toOriginMatchPattern(value: string | undefined): string | null {
+  if (!value) return null;
+
+  try {
+    const url = new URL(value.trim());
+    return `${url.origin}/*`;
+  } catch {
+    return null;
+  }
+}
+
+const webOriginMatch = toOriginMatchPattern(process.env.CRM_WEB_ORIGIN);
+const extensionHostPermissions = [
+  webOriginMatch,
   "http://127.0.0.1/*",
   "http://localhost/*",
 ].filter((value): value is string => typeof value === "string" && value !== "");
@@ -14,9 +25,9 @@ export default defineConfig({
     description:
       "Persistent VoIP session state, recording queue, and offline-first sync.",
     permissions: ["storage", "alarms", "offscreen", "tabCapture", "activeTab", "sidePanel"],
-    host_permissions: ["http://127.0.0.1/*", "http://localhost/*"],
+    host_permissions: extensionHostPermissions,
     externally_connectable: {
-      matches: externalMatches,
+      matches: extensionHostPermissions,
     },
     side_panel: {
       default_path: "sidepanel.html",
