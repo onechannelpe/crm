@@ -129,7 +129,7 @@ describe("report export observability", () => {
     expect(jobs[0]?.id).toBe(jobId);
     expect(jobs[0]?.status).toBe("completed");
     expect(jobs[0]?.rows_count).toBe(9);
-    expect(jobs[0]?.requested_by_name).toBe("Back 1");
+    expect(jobs[0]?.requested_by_name).toBe("Back One");
 
     await ctx.repos.reportExportJobs.createDownload({
       export_job_id: jobId,
