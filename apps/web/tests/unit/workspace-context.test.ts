@@ -15,7 +15,8 @@ describe("workspace context resolver", () => {
         name: "Alpha",
         branch_id: 1,
         supervisor_id: 4,
-        supervisor_name: "Diego Ramirez",
+        supervisor_names: "Diego",
+        supervisor_first_surname: "Ramirez",
         supervisor_role: "supervisor",
         supervisor_branch_id: 1,
       },
@@ -24,7 +25,7 @@ describe("workspace context resolver", () => {
 
     expect(context.scopeType).toBe("team");
     expect(context.team?.name).toBe("Alpha");
-    expect(context.supervisor?.fullName).toBe("Diego Ramirez");
+    expect(context.supervisor?.names).toBe("Diego");
   });
 
   it("fails fast for executive without valid team hierarchy", () => {

@@ -1,4 +1,4 @@
-import type { Kysely } from "kysely";
+import { sql, type Kysely } from "kysely";
 
 import type {
   Database,
@@ -47,7 +47,9 @@ export function createReportExportRepo(db: Kysely<Database>) {
           "report_export_jobs.requested_at",
           "report_export_jobs.completed_at",
           "report_export_jobs.expires_at",
-          "users.full_name as requested_by_name",
+          sql<string>`users.names || ' ' || users.first_surname`.as(
+            "requested_by_name",
+          ),
         ])
         .orderBy("report_export_jobs.requested_at", "desc")
         .limit(limit)
@@ -132,7 +134,9 @@ export function createReportExportRepo(db: Kysely<Database>) {
           "report_export_jobs.requested_at",
           "report_export_jobs.completed_at",
           "report_export_jobs.expires_at",
-          "users.full_name as requested_by_name",
+          sql<string>`users.names || ' ' || users.first_surname`.as(
+            "requested_by_name",
+          ),
         ])
         .where("report_export_jobs.branch_id", "=", branchId)
         .orderBy("report_export_jobs.requested_at", "desc")
@@ -263,7 +267,9 @@ export function createReportExportRepo(db: Kysely<Database>) {
           "report_export_downloads.downloaded_at",
           "report_export_downloads.ip_hash",
           "report_export_downloads.user_agent_hash",
-          "users.full_name as downloaded_by_name",
+          sql<string>`users.names || ' ' || users.first_surname`.as(
+            "downloaded_by_name",
+          ),
         ])
         .where("report_export_downloads.export_job_id", "=", exportJobId)
         .orderBy("report_export_downloads.downloaded_at", "desc")

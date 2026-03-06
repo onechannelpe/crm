@@ -26,7 +26,8 @@ export function createTeamsRepo(db: Kysely<Database>) {
           "teams.name",
           "teams.branch_id",
           "teams.supervisor_id",
-          "supervisors.full_name as supervisor_name",
+          "supervisors.names as supervisor_names",
+          "supervisors.first_surname as supervisor_first_surname",
           "supervisors.role as supervisor_role",
           "supervisors.branch_id as supervisor_branch_id",
         ])

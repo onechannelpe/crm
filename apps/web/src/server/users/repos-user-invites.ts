@@ -22,7 +22,9 @@ export interface PendingInviteWithUser {
   user_role: UserRole;
   user_branch_id: number;
   user_team_id: number | null;
-  user_full_name: string;
+  user_names: string;
+  user_first_surname: string;
+  user_second_surname: string;
   user_is_active: number;
 }
 
@@ -55,7 +57,9 @@ export function createUserInvitesRepo(db: Kysely<Database>) {
           "users.role as user_role",
           "users.branch_id as user_branch_id",
           "users.team_id as user_team_id",
-          "users.full_name as user_full_name",
+          "users.names as user_names",
+          "users.first_surname as user_first_surname",
+          "users.second_surname as user_second_surname",
           "users.is_active as user_is_active",
         ])
         .where("user_invites.branch_id", "=", branchId)
@@ -89,7 +93,9 @@ export function createUserInvitesRepo(db: Kysely<Database>) {
           "users.role as user_role",
           "users.branch_id as user_branch_id",
           "users.team_id as user_team_id",
-          "users.full_name as user_full_name",
+          "users.names as user_names",
+          "users.first_surname as user_first_surname",
+          "users.second_surname as user_second_surname",
           "users.is_active as user_is_active",
         ])
         .where("user_invites.token_hash", "=", tokenHash)

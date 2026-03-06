@@ -53,7 +53,9 @@ describe("action input guards", () => {
   it("fails fast for invalid team invite params before auth", async () => {
     await expect(
       createTeamInvite({
-        fullName: "Test User",
+        names: "Test",
+        firstSurname: "User",
+        secondSurname: "Test",
         email: "invalid-email",
         role: "executive",
         teamId: null,
@@ -61,7 +63,9 @@ describe("action input guards", () => {
     ).rejects.toThrow("email must be valid");
     await expect(
       createTeamInvite({
-        fullName: "Test User",
+        names: "Test",
+        firstSurname: "User",
+        secondSurname: "Test",
         email: "test@example.com",
         role: "invalid-role",
         teamId: null,
@@ -76,7 +80,6 @@ describe("action input guards", () => {
     await expect(
       acceptTeamInvite({
         token: "invalid",
-        fullName: "Test User",
         password: "Password123",
       }),
     ).rejects.toThrow("token is invalid");

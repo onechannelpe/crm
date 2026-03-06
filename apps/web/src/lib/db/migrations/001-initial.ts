@@ -18,9 +18,12 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
       col.notNull().references("branches.id"),
     )
     .addColumn("team_id", "integer", (col) => col.references("teams.id"))
+    .addColumn("username", "varchar(255)", (col) => col.notNull().unique())
     .addColumn("email", "varchar(255)", (col) => col.notNull().unique())
     .addColumn("password_hash", "varchar(255)", (col) => col.notNull())
-    .addColumn("full_name", "varchar(255)", (col) => col.notNull())
+    .addColumn("names", "varchar(255)", (col) => col.notNull())
+    .addColumn("first_surname", "varchar(255)", (col) => col.notNull())
+    .addColumn("second_surname", "varchar(255)", (col) => col.notNull())
     .addColumn("phone_e164", "varchar(20)")
     .addColumn("avatar_storage_key", "varchar(255)")
     .addColumn("avatar_mime_type", "varchar(64)")
@@ -35,6 +38,8 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     .addColumn("strong_auth_enrolled_at", "integer")
     .addColumn("role", "varchar(50)", (col) => col.notNull())
     .addColumn("is_active", "integer", (col) => col.notNull().defaultTo(1))
+    .addColumn("expires_at", "integer")
+    .addColumn("expiry_notified_at", "integer")
     .addColumn("created_at", "integer", (col) => col.notNull())
     .execute();
 

@@ -6,6 +6,7 @@ import { AppPage } from "~/components/layout/page";
 import { isAppError } from "~/lib/app-errors";
 import { teamMembersQuery } from "~/lib/queries/team";
 
+import { BulkImportSection } from "./components/bulk-import-section";
 import { TeamInviteManagementSection } from "./components/team-invite-management-section";
 import { TeamMembersSection } from "./components/team-members-section";
 
@@ -25,6 +26,16 @@ export default function TeamPage() {
       >
         <Suspense>
           <TeamInviteManagementSection />
+        </Suspense>
+      </ErrorBoundary>
+      <ErrorBoundary
+        fallback={(err) => {
+          if (isAppError(err) && err.code === "forbidden") return null;
+          throw err;
+        }}
+      >
+        <Suspense>
+          <BulkImportSection />
         </Suspense>
       </ErrorBoundary>
       <Show when={members()} fallback={<Loading />} keyed>

@@ -1,4 +1,4 @@
-import type { Kysely } from "kysely";
+import { sql, type Kysely } from "kysely";
 
 import type {
   Database,
@@ -77,7 +77,9 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
           "sales_record_client.company_name",
           "sales_record_client.contact_name",
           "sales_record_client.dni",
-          "users.full_name as executive_name",
+          sql<string>`users.names || ' ' || users.first_surname`.as(
+            "executive_name",
+          ),
         ])
         .where("sales_records.status", "=", "submitted_for_confirmation")
         .orderBy("sales_records.created_at", "asc")
@@ -101,7 +103,9 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
           "sales_record_client.company_name",
           "sales_record_client.contact_name",
           "sales_record_client.dni",
-          "users.full_name as executive_name",
+          sql<string>`users.names || ' ' || users.first_surname`.as(
+            "executive_name",
+          ),
         ])
         .where("sales_records.status", "=", "submitted_for_confirmation")
         .where("sales_records.branch_id", "=", branchId)
@@ -127,7 +131,9 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
           "sales_record_client.company_name",
           "sales_record_client.contact_name",
           "sales_record_client.dni",
-          "users.full_name as executive_name",
+          sql<string>`users.names || ' ' || users.first_surname`.as(
+            "executive_name",
+          ),
         ])
         .where("sales_records.status", "=", "confirmed")
         .where("sales_records.confirmed_at", "is not", null)
@@ -153,7 +159,9 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
           "sales_record_client.company_name",
           "sales_record_client.contact_name",
           "sales_record_client.dni",
-          "users.full_name as executive_name",
+          sql<string>`users.names || ' ' || users.first_surname`.as(
+            "executive_name",
+          ),
         ])
         .where("sales_records.status", "=", "confirmed")
         .where("sales_records.confirmed_at", "is not", null)
@@ -180,7 +188,9 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
           "sales_record_client.company_name",
           "sales_record_client.contact_name",
           "sales_record_client.dni",
-          "users.full_name as executive_name",
+          sql<string>`users.names || ' ' || users.first_surname`.as(
+            "executive_name",
+          ),
         ])
         .where("sales_records.status", "=", "confirmed")
         .where("sales_records.confirmed_at", "is not", null)
@@ -314,7 +324,9 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
           "sales_record_attempts.notes",
           "sales_record_attempts.next_attempt_at",
           "sales_record_attempts.created_at",
-          "users.full_name as reviewer_name",
+          sql<string>`users.names || ' ' || users.first_surname`.as(
+            "reviewer_name",
+          ),
         ])
         .where("sales_record_attempts.sales_record_id", "=", salesRecordId)
         .orderBy("sales_record_attempts.created_at", "desc")

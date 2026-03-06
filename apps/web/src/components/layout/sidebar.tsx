@@ -31,10 +31,7 @@ export function Sidebar() {
   const [hovered, setHovered] = createSignal(false);
 
   const role = createMemo(() => currentUser().role);
-  const firstName = createMemo(
-    () =>
-      currentUser().fullName.trim().split(/\s+/)[0] || currentUser().fullName,
-  );
+  const firstName = createMemo(() => currentUser().names);
 
   const isRouteActive = (route: NavRoute) => {
     const prefixes = route.activePrefixes;

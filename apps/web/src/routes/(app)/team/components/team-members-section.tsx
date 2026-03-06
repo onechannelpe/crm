@@ -20,6 +20,7 @@ import {
   getRoleBadgeVariant,
   getRoleLabel,
 } from "~/lib/auth/access/role-display";
+import { longName } from "~/lib/users/display-name";
 
 import styles from "../team-page.module.css";
 
@@ -39,7 +40,7 @@ function filterMembers(
   }
 
   return members.filter((member) => {
-    const memberFullName = member.fullName.toLowerCase();
+    const memberFullName = longName(member).toLowerCase();
     const memberEmail = member.email.toLowerCase();
     return memberFullName.includes(value) || memberEmail.includes(value);
   });
@@ -89,6 +90,7 @@ export function TeamMembersSection(props: TeamMembersSectionProps) {
               <TableHead>Correo</TableHead>
               <TableHead>Rol</TableHead>
               <TableHead>Estado</TableHead>
+              <TableHead>Vencimiento</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -100,7 +102,7 @@ export function TeamMembersSection(props: TeamMembersSectionProps) {
                       <div class={styles.avatar}>
                         <User size={16} />
                       </div>
-                      <span>{member.fullName}</span>
+                      <span>{longName(member)}</span>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -119,6 +121,13 @@ export function TeamMembersSection(props: TeamMembersSectionProps) {
                       {member.isActive ? "Activo" : "Inactivo"}
                     </Badge>
                   </TableCell>
+                  <TableCell>
+                    <Show when={member.expiresAt !== null}>
+                      <Badge variant={getExpiryBadgeVariant(member.expiresAt!)}>
+                        {getExpiryText(member.expiresAt!)}
+                      </Badge>
+                    </Show>
+                  </TableCell>
                 </TableRow>
               )}
             </For>
@@ -127,4 +136,25 @@ export function TeamMembersSection(props: TeamMembersSectionProps) {
       </Show>
     </AppPageSection>
   );
+}
+
+function getExpiryBadgeVariant(
+  expiresAt: number,
+): "destructive" | "warning" | "default" {
+  const daysLeft = Math.ceil((expiresAt - Date.now()) / 86_400_000);
+  if (daysLeft <= 7) return "destructive";
+  if (daysLeft <= 30) return "warning";
+  return "default";
+}
+
+function getExpiryText(expiresAt: number): string {
+  const daysLeft = Math.ceil((expiresAt - Date.now()) / 86_400_000);
+  if (daysLeft <= 0) return "Vence hoy";
+  if (daysLeft === 1) return "Vence mañana";
+  if (daysLeft <= 30) return `Vence en ${daysLeft} d`;
+  return new Date(expiresAt).toLocaleDateString("es-MX", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 }

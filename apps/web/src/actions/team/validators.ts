@@ -29,6 +29,19 @@ export function assertOptionalTeamId(
   return assertPositiveInt(value, "teamId");
 }
 
+export function assertOptionalExpiresAt(
+  value: number | null | undefined,
+): number | null {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  const ts = assertPositiveInt(value, "expiresAt");
+  if (ts <= Date.now()) {
+    throw validationError("expiresAt must be a future timestamp");
+  }
+  return ts;
+}
+
 export function assertStrongPassword(value: string): string {
   const safe = assertNonEmptyString(value, "password");
   if (safe.length < 12) {

@@ -10,7 +10,8 @@ interface TeamRecord {
   name: string;
   branch_id: number;
   supervisor_id: number | null;
-  supervisor_name: string | null;
+  supervisor_names: string | null;
+  supervisor_first_surname: string | null;
   supervisor_role: Role | null;
   supervisor_branch_id: number | null;
 }
@@ -24,7 +25,7 @@ interface ManagedTeamRecord {
 export interface WorkspaceIdentity {
   scopeType: WorkspaceScopeType;
   team: { id: number; name: string } | null;
-  supervisor: { id: number; fullName: string } | null;
+  supervisor: { id: number; names: string } | null;
   branch: { id: number; name: string } | null;
 }
 
@@ -62,7 +63,7 @@ export function resolveWorkspaceContext(
       !input.assignedTeam.supervisor_id ||
       input.assignedTeam.supervisor_role !== "supervisor" ||
       input.assignedTeam.supervisor_branch_id !== input.branchId ||
-      !input.assignedTeam.supervisor_name
+      !input.assignedTeam.supervisor_names
     ) {
       throw new Error(
         "User hierarchy misconfigured: team supervisor is invalid",
@@ -74,7 +75,7 @@ export function resolveWorkspaceContext(
       team: createTeam(input.assignedTeam),
       supervisor: {
         id: input.assignedTeam.supervisor_id,
-        fullName: input.assignedTeam.supervisor_name,
+        names: input.assignedTeam.supervisor_names,
       },
       branch,
     };

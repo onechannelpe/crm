@@ -11,7 +11,6 @@ const QUERY_USER_ID_START = 120_000;
 
 export interface AcceptFixture {
   token: string;
-  fullName: string;
 }
 
 export interface TeamInviteFixtures {
@@ -35,9 +34,12 @@ export async function seedTeamInviteFixtures(
     id: ACCEPT_USER_ID_START + index,
     branch_id: 2,
     team_id: null,
+    username: `bench.accept${ACCEPT_USER_ID_START + index}`,
     email: `bench-team-accept-${index}@test.local`,
     password_hash: "bench-pending-hash",
-    full_name: `Bench Accept ${index}`,
+    names: `Bench Accept ${index}`,
+    first_surname: "User",
+    second_surname: "Bench",
     phone_e164: null,
     phone_verified_at: null,
     profile_confirmed_at: null,
@@ -52,9 +54,12 @@ export async function seedTeamInviteFixtures(
     id: QUERY_USER_ID_START + index,
     branch_id: 2,
     team_id: null,
+    username: `bench.query${QUERY_USER_ID_START + index}`,
     email: `bench-team-query-${index}@test.local`,
     password_hash: "bench-pending-hash",
-    full_name: `Bench Query ${index}`,
+    names: `Bench Query ${index}`,
+    first_surname: "User",
+    second_surname: "Bench",
     phone_e164: null,
     phone_verified_at: null,
     profile_confirmed_at: null,
@@ -73,7 +78,7 @@ export async function seedTeamInviteFixtures(
 
   const acceptInvites = acceptUsers.map((user, index) => {
     const token = `bench-team-token-${String(index).padStart(3, "0")}`;
-    acceptFixtures.push({ token, fullName: `Bench Accepted ${index}` });
+    acceptFixtures.push({ token });
     return {
       user_id: user.id,
       branch_id: 2,

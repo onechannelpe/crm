@@ -12,3 +12,5 @@ export { renderInviteEmail } from "./templates/compiled/invite.js";
 export type { InviteEmailParams } from "./templates/compiled/invite.js";
 export { renderCampaignEmail } from "./templates/compiled/campaign.js";
 export type { CampaignEmailParams } from "./templates/compiled/campaign.js";
+export { renderAccountExpiringEmail } from "./templates/compiled/account-expiring.js";
+export type { AccountExpiringEmailParams } from "./templates/compiled/account-expiring.js";

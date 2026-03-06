@@ -10,7 +10,6 @@ import {
   isStrongAuthEnrolled,
   requiresStrongAuth,
 } from "~/lib/auth/security/strong-auth-state";
-import { assertNonEmptyString } from "~/lib/contracts/guards";
 import { repos } from "~/server/shared/context";
 
 function assertE164Phone(value: string): string {
@@ -21,10 +20,7 @@ function assertE164Phone(value: string): string {
   return normalized;
 }
 
-export async function completeOnboarding(
-  fullName: string,
-  phoneE164: string,
-): Promise<void> {
+export async function completeOnboarding(phoneE164: string): Promise<void> {
   const session = await requireSession();
   const user = await repos.users.findById(session.userId);
 
@@ -41,11 +37,9 @@ export async function completeOnboarding(
   }
 
   const now = Date.now();
-  const safeName = assertNonEmptyString(fullName, "fullName");
   const safePhone = assertE164Phone(phoneE164);
 
   await repos.users.completeOnboarding(user.id, {
-    full_name: safeName,
     phone_e164: safePhone,
     completedAt: now,
   });

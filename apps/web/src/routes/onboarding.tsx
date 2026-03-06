@@ -18,7 +18,6 @@ import styles from "./onboarding-page.module.css";
 export default function OnboardingPage() {
   const navigate = useNavigate();
   const [user, { refetch: refetchUser }] = createResource(getMe);
-  const [fullName, setFullName] = createSignal("");
   const [phone, setPhone] = createSignal("");
   const [totpCode, setTotpCode] = createSignal("");
   const [totpQrCode, setTotpQrCode] = createSignal("");
@@ -43,7 +42,6 @@ export default function OnboardingPage() {
   createEffect(() => {
     const currentUser = user();
     if (!currentUser) return;
-    if (!fullName()) setFullName(currentUser.fullName);
     if (!phone() && currentUser.phoneE164) setPhone(currentUser.phoneE164);
   });
 
@@ -62,7 +60,7 @@ export default function OnboardingPage() {
       if (!currentUser) {
         throw new Error("No se encontró la sesión");
       }
-      await completeOnboarding(fullName(), phone());
+      await completeOnboarding(phone());
       navigate(getDefaultAppPath(currentUser.role));
     } catch (err: unknown) {
       setError(getErrorMessage(err, "No se pudo completar el registro."));
@@ -131,17 +129,6 @@ export default function OnboardingPage() {
                   label="Correo"
                   value={currentUser().email}
                   disabled
-                />
-              </div>
-
-              <div class={styles.section}>
-                <Input
-                  id="onboarding-name"
-                  type="text"
-                  label="Nombre completo"
-                  value={fullName()}
-                  onInput={(e) => setFullName(e.currentTarget.value)}
-                  required
                 />
               </div>
 

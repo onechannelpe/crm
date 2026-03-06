@@ -14,11 +14,14 @@ export async function getTeamMembers(): Promise<TeamMember[]> {
   const users = await repos.users.findByBranch(session.branchId);
   return users.map((u) => ({
     id: u.id,
-    fullName: u.full_name,
+    names: u.names,
+    firstSurname: u.first_surname,
+    secondSurname: u.second_surname,
     email: u.email,
     role: u.role,
     teamId: u.team_id,
     isActive: !!u.is_active,
+    expiresAt: u.expires_at,
   }));
 }
 

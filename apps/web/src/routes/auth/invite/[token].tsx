@@ -11,7 +11,6 @@ import styles from "../auth-shell.module.css";
 export default function AcceptInvitePage() {
   const navigate = useNavigate();
   const params = useParams<{ token: string }>();
-  const [fullName, setFullName] = createSignal("");
   const [password, setPassword] = createSignal("");
   const [confirmPassword, setConfirmPassword] = createSignal("");
   const [submitting, setSubmitting] = createSignal(false);
@@ -29,7 +28,6 @@ export default function AcceptInvitePage() {
     try {
       await acceptTeamInvite({
         token: params.token,
-        fullName: fullName(),
         password: password(),
       });
       navigate("/onboarding");
@@ -56,12 +54,6 @@ export default function AcceptInvitePage() {
             </p>
           </div>
 
-          <Input
-            label="Nombre completo"
-            value={fullName()}
-            onInput={(event) => setFullName(event.currentTarget.value)}
-            required
-          />
           <Input
             label="Contraseña"
             type="password"

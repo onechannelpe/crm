@@ -3,6 +3,7 @@
 import { requireRole } from "~/lib/auth/access/session";
 import { assertRecentStrongAuth } from "~/lib/auth/security/step-up";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
+import { longName } from "~/lib/users/display-name";
 import { repos } from "~/server/shared/context";
 
 type RetryEvent = Awaited<
@@ -42,7 +43,7 @@ export async function getUserLoginRetryReport(
     user: {
       id: user.id,
       email: user.email,
-      fullName: user.full_name,
+      fullName: longName(user),
       role: user.role,
       isActive: user.is_active === 1,
     },

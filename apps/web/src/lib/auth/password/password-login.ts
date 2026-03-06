@@ -31,7 +31,7 @@ type Deps = Pick<
 >;
 
 export interface PasswordLoginInput {
-  email: string;
+  username: string;
   password: string;
   totpCode?: string;
   ipAddress: string;
@@ -54,20 +54,20 @@ export async function authenticatePasswordLogin(
   input: PasswordLoginInput,
   deps: PasswordLoginDeps,
 ): Promise<PasswordLoginResult> {
-  const safeEmail = assertNonEmptyString(input.email, "email");
+  const safeUsername = assertNonEmptyString(input.username, "username");
   const safePassword = assertNonEmptyString(input.password, "password");
   const resolvedDeps = deps.repos ?? repos;
   const throttle = await checkLoginThrottle(
-    safeEmail,
+    safeUsername,
     input.ipAddress,
     resolvedDeps,
   );
 
   if (!throttle.allowed) {
-    const blockedUser = await resolvedDeps.users.findByEmail(safeEmail);
+    const blockedUser = await resolvedDeps.users.findByUsername(safeUsername);
     await recordAuthEvent(resolvedDeps, {
       userId: blockedUser?.id ?? null,
-      identifier: safeEmail,
+      identifier: safeUsername,
       ipAddress: input.ipAddress,
       method: "password",
       stage: "login",
@@ -77,14 +77,14 @@ export async function authenticatePasswordLogin(
     throw new Error(INVALID_CREDENTIALS);
   }
 
-  const user = await resolvedDeps.users.findByEmail(safeEmail);
+  const user = await resolvedDeps.users.findByUsername(safeUsername);
 
   if (!user || !user.is_active) {
     await verifyPassword(await DUMMY_HASH, safePassword);
-    await recordLoginFailure(safeEmail, input.ipAddress, resolvedDeps);
+    await recordLoginFailure(safeUsername, input.ipAddress, resolvedDeps);
     await recordAuthEvent(resolvedDeps, {
       userId: user?.id ?? null,
-      identifier: safeEmail,
+      identifier: safeUsername,
       ipAddress: input.ipAddress,
       method: "password",
       stage: "login",
@@ -95,10 +95,10 @@ export async function authenticatePasswordLogin(
   }
 
   if (!(await verifyPassword(user.password_hash, safePassword))) {
-    await recordLoginFailure(safeEmail, input.ipAddress, resolvedDeps);
+    await recordLoginFailure(safeUsername, input.ipAddress, resolvedDeps);
     await recordAuthEvent(resolvedDeps, {
       userId: user.id,
-      identifier: safeEmail,
+      identifier: safeUsername,
       ipAddress: input.ipAddress,
       method: "password",
       stage: "login",
@@ -108,7 +108,7 @@ export async function authenticatePasswordLogin(
     throw new Error(INVALID_CREDENTIALS);
   }
 
-  await clearLoginFailureState(safeEmail, input.ipAddress, resolvedDeps);
+  await clearLoginFailureState(safeUsername, input.ipAddress, resolvedDeps);
   const strongAuth = await resolvePasswordStrongAuth({
     user,
     ipAddress: input.ipAddress,
@@ -145,7 +145,7 @@ export async function authenticatePasswordLogin(
   });
   await recordAuthEvent(resolvedDeps, {
     userId: user.id,
-    identifier: safeEmail,
+    identifier: safeUsername,
     ipAddress: input.ipAddress,
     method: "password",
     stage: "login",

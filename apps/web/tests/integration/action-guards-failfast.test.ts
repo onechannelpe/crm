@@ -48,7 +48,9 @@ describe("action guards fail fast", () => {
     );
     await expect(
       createTeamInvite({
-        fullName: "Test User",
+        names: "Test",
+        firstSurname: "User",
+        secondSurname: "Test",
         email: "bad-email",
         role: "executive",
         teamId: null,
@@ -56,7 +58,9 @@ describe("action guards fail fast", () => {
     ).rejects.toThrow("email must be valid");
     await expect(
       createTeamInvite({
-        fullName: "Test User",
+        names: "Test",
+        firstSurname: "User",
+        secondSurname: "Test",
         email: "test@example.com",
         role: "bad-role",
         teamId: null,
@@ -65,7 +69,6 @@ describe("action guards fail fast", () => {
     await expect(
       acceptTeamInvite({
         token: "invalid",
-        fullName: "Test User",
         password: "Password123",
       }),
     ).rejects.toThrow("token is invalid");

@@ -22,6 +22,7 @@ import {
 import { env } from "~/lib/env";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
+import { shortName } from "~/lib/users/display-name";
 import { repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 import type {
@@ -32,7 +33,12 @@ import type {
 } from "~/server/users/service-user-provisioning";
 
 import { provisioning } from "./provisioning";
-import { assertEmail, assertOptionalTeamId, assertRole } from "./validators";
+import {
+  assertEmail,
+  assertOptionalExpiresAt,
+  assertOptionalTeamId,
+  assertRole,
+} from "./validators";
 
 const notificationSender = createNotificationService({
   resendApiKey: env.resendApiKey || undefined,
@@ -159,16 +165,22 @@ function throwMarkInviteDeliveredError(error: MarkInviteDeliveredError): never {
 }
 
 export async function createTeamInvite(input: {
-  fullName: string;
+  names: string;
+  firstSurname: string;
+  secondSurname: string;
   email: string;
   role: string;
   teamId?: number | null;
+  expiresAt?: number | null;
 }): Promise<{ inviteId: number }> {
   const safeInput = {
-    fullName: assertNonEmptyString(input.fullName, "fullName"),
+    names: assertNonEmptyString(input.names, "names"),
+    firstSurname: assertNonEmptyString(input.firstSurname, "firstSurname"),
+    secondSurname: assertNonEmptyString(input.secondSurname, "secondSurname"),
     email: assertEmail(input.email),
     role: assertRole(input.role),
     teamId: assertOptionalTeamId(input.teamId),
+    expiresAt: assertOptionalExpiresAt(input.expiresAt),
   };
 
   const actor = { userId: null as number | null, role: null as Role | null };
@@ -188,10 +200,13 @@ export async function createTeamInvite(input: {
         actorUserId: session.userId,
         actorRole: session.role,
         branchId: session.branchId,
-        fullName: safeInput.fullName,
+        names: safeInput.names,
+        firstSurname: safeInput.firstSurname,
+        secondSurname: safeInput.secondSurname,
         email: safeInput.email,
         role: safeInput.role,
         teamId: safeInput.teamId,
+        expiresAt: safeInput.expiresAt,
       });
       if (isErr(result)) {
         throwCreateInviteError(result.error);
@@ -199,7 +214,11 @@ export async function createTeamInvite(input: {
 
       await sendInviteEmail({
         email: safeInput.email,
-        fullName: safeInput.fullName,
+        fullName: shortName({
+          names: safeInput.names,
+          firstSurname: safeInput.firstSurname,
+          secondSurname: safeInput.secondSurname,
+        }),
         role: safeInput.role,
         inviteUrl: getInviteUrl(result.value.token),
         expiresAt: result.value.expiresAt,
@@ -246,7 +265,7 @@ export async function resendTeamInvite(inviteId: number): Promise<void> {
 
       await sendInviteEmail({
         email: user.email,
-        fullName: user.full_name,
+        fullName: shortName(user),
         role: user.role,
         inviteUrl: getInviteUrl(result.value.token),
         expiresAt: result.value.expiresAt,
