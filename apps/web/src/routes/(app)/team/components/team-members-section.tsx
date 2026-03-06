@@ -30,6 +30,74 @@ interface TeamMembersSectionProps {
   onSearchFilterInput: (value: string) => void;
 }
 
+function getExtensionPresenceVariant(
+  status: TeamMember["extensionPresenceStatus"],
+): "outline" | "secondary" | "warning" | "success" | "info" | "destructive" {
+  switch (status) {
+    case "ready":
+    case "wrap_up":
+      return "secondary";
+    case "dialing":
+      return "warning";
+    case "active":
+      return "success";
+    case "idle":
+    case "offline":
+    case null:
+      return "outline";
+  }
+}
+
+function getExtensionPresenceLabel(
+  status: TeamMember["extensionPresenceStatus"],
+): string {
+  switch (status) {
+    case "idle":
+      return "Sin handoff";
+    case "ready":
+      return "Listo";
+    case "dialing":
+      return "Marcando";
+    case "active":
+      return "En llamada";
+    case "wrap_up":
+      return "Cierre";
+    case "offline":
+      return "Offline";
+    case null:
+      return "Sin datos";
+  }
+}
+
+function getExtensionSyncHealthVariant(
+  syncHealth: TeamMember["extensionSyncHealth"],
+): "outline" | "warning" | "destructive" {
+  switch (syncHealth) {
+    case "stale":
+      return "warning";
+    case "reauth_required":
+      return "destructive";
+    case "ok":
+    case null:
+      return "outline";
+  }
+}
+
+function getExtensionSyncHealthLabel(
+  syncHealth: TeamMember["extensionSyncHealth"],
+): string {
+  switch (syncHealth) {
+    case "ok":
+      return "Sync OK";
+    case "stale":
+      return "Sin señal";
+    case "reauth_required":
+      return "Reconectar";
+    case null:
+      return "Sin datos";
+  }
+}
+
 function filterMembers(
   members: TeamMember[],
   searchFilter: string,
@@ -104,6 +172,8 @@ export function TeamMembersSection(props: TeamMembersSectionProps) {
               <TableHead>Correo</TableHead>
               <TableHead>Rol</TableHead>
               <TableHead>Estado</TableHead>
+              <TableHead>Presencia</TableHead>
+              <TableHead>Sync</TableHead>
               <TableHead>Vencimiento</TableHead>
             </TableRow>
           </TableHeader>
@@ -133,6 +203,26 @@ export function TeamMembersSection(props: TeamMembersSectionProps) {
                   <TableCell>
                     <Badge variant={member.isActive ? "success" : "default"}>
                       {member.isActive ? "Activo" : "Inactivo"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={getExtensionPresenceVariant(
+                        member.extensionPresenceStatus,
+                      )}
+                    >
+                      {getExtensionPresenceLabel(
+                        member.extensionPresenceStatus,
+                      )}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={getExtensionSyncHealthVariant(
+                        member.extensionSyncHealth,
+                      )}
+                    >
+                      {getExtensionSyncHealthLabel(member.extensionSyncHealth)}
                     </Badge>
                   </TableCell>
                   <TableCell>
