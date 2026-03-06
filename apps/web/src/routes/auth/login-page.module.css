@@ -1,52 +1,7 @@
-.methodGrid {
+.formStack {
+  width: 100%;
   display: grid;
-  gap: 16px;
-}
-
-.methodPanel {
-  display: grid;
-  gap: 16px;
-  padding: 20px;
-  border: 1px solid var(--border);
-  border-radius: 22px;
-  background: color-mix(in oklab, var(--panel-bg) 96%, white 4%);
-}
-
-.methodHeader {
-  display: grid;
-  gap: 8px;
-}
-
-.methodTitleRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   gap: 12px;
-}
-
-.methodTitle {
-  margin: 0;
-  font-size: var(--font-size-heading-sm);
-  color: var(--foreground);
-}
-
-.methodDescription {
-  margin: 0;
-  color: var(--muted-foreground);
-  line-height: 1.6;
-}
-
-.pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 28px;
-  padding: 0 10px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  font-size: var(--font-size-sm);
-  color: var(--muted-foreground);
-  background: color-mix(in oklab, var(--panel-bg) 92%, white 8%);
 }
 
 .supportText {
@@ -54,6 +9,7 @@
   color: var(--muted-foreground);
   font-size: var(--font-size-sm);
   line-height: 1.5;
+  text-align: center;
 }
 
 .passwordFields {
@@ -61,13 +17,9 @@
   gap: 12px;
 }
 
-.panelFooter {
-  display: flex;
-  justify-content: flex-end;
-}
-
-@media (min-width: 900px) {
-  .methodGrid {
-    grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.9fr);
-  }
+.actionRow {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: center;
 }

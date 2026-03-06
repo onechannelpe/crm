@@ -1,33 +1,16 @@
 .shell {
   min-height: 100vh;
   padding: 24px 16px;
-  display: grid;
+  display: flex;
   align-items: center;
   justify-content: center;
-  background:
-    radial-gradient(
-      circle at top left,
-      color-mix(in oklab, var(--accent) 14%, transparent) 0%,
-      transparent 34%
-    ),
-    radial-gradient(
-      circle at bottom right,
-      color-mix(in oklab, var(--success, #12715b) 12%, transparent) 0%,
-      transparent 30%
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in oklab, var(--tertiary) 80%, white 20%) 0%,
-      var(--tertiary) 100%
-    );
+  background: var(--tertiary);
 }
 
 .surface {
-  width: min(1040px, 100%);
-  display: grid;
-  grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+  width: min(560px, 100%);
   border: var(--panel-border);
-  border-radius: 28px;
+  border-radius: 24px;
   background: var(--panel-bg);
   box-shadow: var(
     --box-shadow-strong,
@@ -37,84 +20,81 @@
   overflow: hidden;
 }
 
-.rail {
-  padding: 32px 28px;
-  display: grid;
-  align-content: space-between;
-  gap: 28px;
-  background:
-    linear-gradient(
-      160deg,
-      color-mix(in oklab, var(--foreground) 2%, transparent) 0%,
-      transparent 40%
-    ),
-    color-mix(in oklab, var(--panel-bg) 90%, white 10%);
-  border-right: 1px solid color-mix(in oklab, var(--border) 82%, white 18%);
-}
-
-.brand {
-  display: grid;
-  gap: 12px;
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 32px 24px;
+  text-align: center;
 }
 
 .eyebrow {
   margin: 0;
   font-size: var(--font-size-label);
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: color-mix(in oklab, var(--muted-foreground) 82%, transparent);
+  color: var(--muted-foreground);
 }
 
 .title {
   margin: 0;
-  font-size: clamp(2rem, 3vw, 2.6rem);
-  line-height: 1.02;
-  letter-spacing: -0.04em;
+  font-size: var(--font-size-heading-md);
+  font-weight: var(--font-weight-semibold);
   color: var(--foreground);
 }
 
 .description {
   margin: 0;
-  font-size: var(--font-size-body);
-  line-height: 1.6;
+  max-width: 36ch;
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
   color: var(--muted-foreground);
 }
 
-.railNote {
-  padding: 14px 16px;
-  border-radius: 18px;
-  border: 1px solid color-mix(in oklab, var(--border) 80%, white 20%);
-  background: color-mix(in oklab, var(--panel-bg) 84%, white 16%);
-  color: var(--muted-foreground);
-  font-size: var(--font-size-sm);
-  line-height: 1.5;
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  color: var(--foreground);
+  background: color-mix(in oklab, var(--tertiary) 82%, white 18%);
 }
 
 .progress {
+  width: 100%;
   display: grid;
-  gap: 14px;
-}
-
-.progressItem {
-  display: grid;
-  grid-template-columns: 32px minmax(0, 1fr);
   gap: 12px;
-  align-items: start;
+  margin-bottom: 20px;
 }
 
 .progressMarker {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border: 1px solid var(--border);
-  background: color-mix(in oklab, var(--panel-bg) 80%, white 20%);
+  background: var(--panel-bg);
   color: var(--muted-foreground);
   font-size: var(--font-size-sm);
-  font-weight: 700;
+}
+
+.progressItem {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  text-align: left;
 }
 
 .progressCurrent {
@@ -132,12 +112,12 @@
 .progressCopy {
   display: grid;
   gap: 4px;
-  padding-top: 4px;
+  padding-top: 2px;
 }
 
 .progressLabel {
   margin: 0;
-  font-size: var(--font-size-body);
+  font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--foreground);
 }
@@ -149,77 +129,62 @@
   color: var(--muted-foreground);
 }
 
-.content {
-  padding: 32px 32px 28px;
-  display: grid;
-  gap: 24px;
-  min-width: 0;
+.railNote {
+  width: 100%;
+  margin: 0 0 20px;
+  color: var(--muted-foreground);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  text-align: left;
 }
 
 .contentHeader {
   display: grid;
-  gap: 10px;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 20px;
+  text-align: left;
 }
 
 .contentEyebrow {
   margin: 0;
   font-size: var(--font-size-label);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: var(--muted-foreground);
 }
 
 .contentTitle {
   margin: 0;
-  font-size: clamp(1.5rem, 2vw, 2rem);
-  letter-spacing: -0.02em;
+  font-size: var(--font-size-heading-sm);
   color: var(--foreground);
 }
 
 .contentDescription {
   margin: 0;
-  max-width: 60ch;
-  color: var(--muted-foreground);
-  line-height: 1.6;
-}
-
-.body {
-  display: grid;
-  gap: 20px;
-}
-
-.footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  padding-top: 8px;
-  border-top: 1px solid color-mix(in oklab, var(--border) 82%, white 18%);
-}
-
-.footerCopy {
-  margin: 0;
+  max-width: 48ch;
   color: var(--muted-foreground);
   line-height: 1.5;
 }
 
-.footerActions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 12px;
+.body {
+  display: grid;
+  gap: 16px;
+  width: 100%;
 }
 
-@media (max-width: 920px) {
-  .surface {
-    grid-template-columns: 1fr;
-  }
+.footer {
+  width: 100%;
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+}
 
-  .rail {
-    border-right: none;
-    border-bottom: 1px solid color-mix(in oklab, var(--border) 82%, white 18%);
-  }
+.footerNote {
+  margin-top: 20px;
+  max-width: 280px;
+  font-size: var(--font-size-sm);
+  color: var(--muted-foreground);
+  line-height: 1.5;
+  text-align: center;
 }
 
 @media (max-width: 640px) {
@@ -227,17 +192,7 @@
     padding: 16px 12px;
   }
 
-  .rail,
   .content {
-    padding: 24px 20px;
-  }
-
-  .footer {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .footerActions {
-    flex-direction: column-reverse;
+    padding: 24px 20px 20px;
   }
 }

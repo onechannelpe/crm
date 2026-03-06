@@ -1,5 +1,7 @@
 import { For, Show, type JSX } from "solid-js";
 
+import Building2 from "~/components/icons/building-2";
+
 import styles from "./auth-flow-shell.module.css";
 
 export interface AuthFlowProgressItem {
@@ -18,6 +20,7 @@ interface AuthFlowShellProps {
   contentTitle?: string;
   contentDescription?: string;
   footer?: JSX.Element;
+  footerNote?: JSX.Element;
   children: JSX.Element;
 }
 
@@ -25,43 +28,48 @@ export function AuthFlowShell(props: AuthFlowShellProps) {
   return (
     <div class={styles.shell}>
       <section class={styles.surface}>
-        <aside class={styles.rail}>
-          <div class={styles.brand}>
+        <div class={styles.content}>
+          <header class={styles.header}>
+            <div class={styles.logo}>
+              <Building2 size={28} />
+            </div>
             <Show when={props.eyebrow}>
               {(eyebrow) => <p class={styles.eyebrow}>{eyebrow()}</p>}
             </Show>
             <h1 class={styles.title}>{props.title}</h1>
             <p class={styles.description}>{props.description}</p>
-          </div>
+          </header>
 
-          <div class={styles.progress}>
-            <For each={props.progress ?? []}>
-              {(item, index) => (
-                <div class={styles.progressItem}>
-                  <div
-                    classList={{
-                      [styles.progressMarker]: true,
-                      [styles.progressCurrent]: item.state === "current",
-                      [styles.progressComplete]: item.state === "complete",
-                    }}
-                  >
-                    {item.state === "complete" ? "✓" : index() + 1}
+          <Show when={(props.progress?.length ?? 0) > 0}>
+            <div class={styles.progress}>
+              <For each={props.progress ?? []}>
+                {(item, index) => (
+                  <div class={styles.progressItem}>
+                    <div
+                      classList={{
+                        [styles.progressMarker]: true,
+                        [styles.progressCurrent]: item.state === "current",
+                        [styles.progressComplete]: item.state === "complete",
+                      }}
+                    >
+                      {item.state === "complete" ? "✓" : index() + 1}
+                    </div>
+                    <div class={styles.progressCopy}>
+                      <p class={styles.progressLabel}>{item.label}</p>
+                      <p class={styles.progressDescription}>
+                        {item.description}
+                      </p>
+                    </div>
                   </div>
-                  <div class={styles.progressCopy}>
-                    <p class={styles.progressLabel}>{item.label}</p>
-                    <p class={styles.progressDescription}>{item.description}</p>
-                  </div>
-                </div>
-              )}
-            </For>
-          </div>
+                )}
+              </For>
+            </div>
+          </Show>
 
           <Show when={props.railNote}>
             {(railNote) => <p class={styles.railNote}>{railNote()}</p>}
           </Show>
-        </aside>
 
-        <div class={styles.content}>
           <Show
             when={
               props.contentEyebrow ||
@@ -83,8 +91,13 @@ export function AuthFlowShell(props: AuthFlowShellProps) {
           </Show>
 
           <div class={styles.body}>{props.children}</div>
+
           <Show when={props.footer}>
             <footer class={styles.footer}>{props.footer}</footer>
+          </Show>
+
+          <Show when={props.footerNote}>
+            <div class={styles.footerNote}>{props.footerNote}</div>
           </Show>
         </div>
       </section>

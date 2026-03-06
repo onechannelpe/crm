@@ -5,6 +5,9 @@ import { completeOnboarding } from "~/actions/auth";
 import { AuthFlowShell } from "~/components/auth/auth-flow-shell";
 import { OnboardingProfileStep } from "~/components/auth/onboarding-profile-step";
 import { OnboardingSecurityStep } from "~/components/auth/onboarding-security-step";
+import { PasskeyMethodCard } from "~/components/auth/passkey-method-card";
+import { RecoveryCodesPanel } from "~/components/auth/recovery-codes-panel";
+import { TotpMethodCard } from "~/components/auth/totp-method-card";
 import { usePasskeyEnrollment } from "~/components/auth/use-passkey-enrollment";
 import { useTotpEnrollment } from "~/components/auth/use-totp-enrollment";
 import { useToast } from "~/components/feedback/toast-provider";
@@ -15,7 +18,6 @@ import {
 import { Button } from "~/components/ui/input/button";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import {
-  buildOnboardingProgress,
   deriveOnboardingState,
   isValidOnboardingPhone,
   type OnboardingStep,
@@ -24,13 +26,15 @@ import { getErrorMessage } from "~/lib/errors";
 
 import styles from "./onboarding-page.module.css";
 
+type OnboardingView = "profile" | "security-choice" | "passkey" | "totp";
+
 function OnboardingContent() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { user, refreshCurrentUser } = useSession();
   const [phone, setPhone] = createSignal("");
   const [submitting, setSubmitting] = createSignal(false);
-  const [step, setStep] = createSignal<OnboardingStep>("profile");
+  const [step, setStep] = createSignal<OnboardingView>("profile");
   const passkeyEnrollment = usePasskeyEnrollment({
     showToast,
     refreshStatus: refreshCurrentUser,
@@ -61,7 +65,8 @@ function OnboardingContent() {
     }
 
     return deriveOnboardingState({
-      requestedStep: step(),
+      requestedStep:
+        step() === "profile" ? "profile" : ("security" as OnboardingStep),
       phoneE164: phone(),
       user: currentUser,
     });
@@ -75,7 +80,7 @@ function OnboardingContent() {
       );
       return;
     }
-    setStep("security");
+    setStep("security-choice");
   }
 
   async function handleSubmit(e: Event) {
@@ -111,52 +116,57 @@ function OnboardingContent() {
         >
           <AuthFlowShell
             eyebrow="One Channel"
-            title="Configura tu acceso de una vez"
-            description="Usaremos este recorrido para dejar lista tu cuenta. Primero validas tu contacto y luego eliges cómo proteger tu ingreso al espacio de trabajo."
-            railNote={
-              currentUser.strongAuthRequired
-                ? "Tu rol exige al menos un método fuerte antes de terminar."
-                : "La seguridad es opcional en este rol, pero puedes dejarla configurada ahora."
-            }
-            progress={buildOnboardingProgress(onboardingState())}
-            contentEyebrow={
-              onboardingState().currentStep === "profile" ? "Paso 1" : "Paso 2"
-            }
+            title="Set up your account"
+            description="Finish your account setup."
             contentTitle={
-              onboardingState().currentStep === "profile"
-                ? "Confirma tu perfil"
-                : "Protege tu cuenta"
+              step() === "profile"
+                ? "Profile"
+                : step() === "security-choice"
+                  ? "Security"
+                  : step() === "passkey"
+                    ? "Passkey"
+                    : "Authenticator app"
             }
             contentDescription={
-              onboardingState().currentStep === "profile"
-                ? "Este paso solo confirma el canal principal que usaremos para alertas, soporte y notificaciones de seguridad."
-                : "Elige el método que usarás para entrar y completar el segundo paso cuando corresponda."
+              step() === "profile"
+                ? "Confirm your contact details."
+                : step() === "security-choice"
+                  ? "Choose a security method."
+                  : step() === "passkey"
+                    ? "Set up a passkey."
+                    : "Set up your verification code."
             }
             footer={
               <>
-                <p class={styles.footerCopy}>
-                  {onboardingState().currentStep === "profile"
-                    ? "Cuando el WhatsApp esté listo, pasarás al paso de seguridad."
-                    : currentUser.strongAuthRequired &&
-                        !currentUser.strongAuthConfigured
-                      ? "Completa al menos un método fuerte para terminar esta configuración."
-                      : "Después podrás gestionar estos métodos desde Configuración > Seguridad."}
-                </p>
                 <div class={styles.footerActions}>
-                  <Show when={onboardingState().currentStep === "security"}>
+                  <Show when={step() !== "profile"}>
                     <Button
                       type="button"
-                      variant="outline"
-                      onClick={() => setStep("profile")}
+                      variant="ghost"
+                      onClick={() => {
+                        if (step() === "security-choice") setStep("profile");
+                        if (step() === "passkey" || step() === "totp") {
+                          setStep("security-choice");
+                        }
+                      }}
                     >
-                      Volver
+                      Back
                     </Button>
                   </Show>
                   <Show
-                    when={onboardingState().currentStep === "security"}
+                    when={step() !== "profile" && step() !== "security-choice"}
                     fallback={
-                      <Button type="button" onClick={handleProfileContinue}>
-                        Continuar
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          if (step() === "profile") {
+                            handleProfileContinue();
+                            return;
+                          }
+                        }}
+                        disabled={step() === "security-choice"}
+                      >
+                        Continue
                       </Button>
                     }
                   >
@@ -164,16 +174,14 @@ function OnboardingContent() {
                       type="submit"
                       disabled={submitting() || !onboardingState().canFinish}
                     >
-                      {submitting()
-                        ? "Guardando..."
-                        : "Entrar al espacio de trabajo"}
+                      {submitting() ? "Saving..." : "Continue"}
                     </Button>
                   </Show>
                 </div>
               </>
             }
           >
-            <Show when={onboardingState().currentStep === "profile"}>
+            <Show when={step() === "profile"}>
               <OnboardingProfileStep
                 email={currentUser.email}
                 fullName={`${currentUser.names} ${currentUser.firstSurname} ${currentUser.secondSurname}`}
@@ -183,12 +191,69 @@ function OnboardingContent() {
               />
             </Show>
 
-            <Show when={onboardingState().currentStep === "security"}>
+            <Show when={step() === "security-choice"}>
               <OnboardingSecurityStep
                 currentUser={currentUser}
-                passkeyEnrollment={passkeyEnrollment}
-                totpEnrollment={totpEnrollment}
+                onSelectMethod={(value) =>
+                  setStep(value === "passkey" ? "passkey" : "totp")
+                }
               />
+            </Show>
+
+            <Show when={step() === "passkey"}>
+              <PasskeyMethodCard
+                title="Passkey"
+                description="Use your device to sign in."
+                statusLabel={
+                  currentUser.hasPasskey
+                    ? `${currentUser.passkeyCount} configured`
+                    : passkeyEnrollment.supported()
+                      ? "Available"
+                      : "Unsupported"
+                }
+                active={currentUser.hasPasskey}
+                supported={passkeyEnrollment.supported()}
+                loading={passkeyEnrollment.loading()}
+                actionLabel={currentUser.hasPasskey ? "Add passkey" : "Set up"}
+                unsupportedNote="This device does not support passkeys."
+                onAction={() => {
+                  void passkeyEnrollment.registerPasskey();
+                }}
+              />
+            </Show>
+
+            <Show when={step() === "totp"}>
+              <div class={styles.totpStack}>
+                <TotpMethodCard
+                  title="Authenticator app"
+                  description="Generate a 6-digit verification code."
+                  statusLabel={currentUser.totpEnabled ? "Configured" : "Setup"}
+                  active={currentUser.totpEnabled}
+                  loading={totpEnrollment.loading()}
+                  actionLabel={
+                    currentUser.totpEnabled ? "Configured" : "Set up"
+                  }
+                  code={totpEnrollment.code()}
+                  enrollment={totpEnrollment.enrollment()}
+                  onCodeInput={(event) =>
+                    totpEnrollment.setCode(event.currentTarget.value)
+                  }
+                  onBegin={() => {
+                    void totpEnrollment.beginEnrollment();
+                  }}
+                  onVerify={() => {
+                    void totpEnrollment.verifyEnrollment();
+                  }}
+                />
+
+                <Show when={totpEnrollment.recoveryCodes().length > 0}>
+                  <RecoveryCodesPanel
+                    title="Recovery codes"
+                    description="Save these codes now."
+                    codes={totpEnrollment.recoveryCodes()}
+                  />
+                </Show>
+              </div>
             </Show>
           </AuthFlowShell>
         </form>

@@ -1,5 +1,5 @@
 import { useNavigate } from "@solidjs/router";
-import { createSignal, onMount, Show } from "solid-js";
+import { createMemo, createSignal, onMount, Show } from "solid-js";
 
 import { beginPasskeyLogin, finishPasskeyLogin, login } from "~/actions/auth";
 import { AuthFlowShell } from "~/components/auth/auth-flow-shell";
@@ -18,6 +18,8 @@ import { getErrorMessage } from "~/lib/errors";
 import styles from "../auth/auth-shell.module.css";
 import pageStyles from "../auth/login-page.module.css";
 
+type LoginStep = "init" | "password" | "passkey";
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -29,11 +31,34 @@ export default function LoginPage() {
   const [passkeySupport, setPasskeySupport] = createSignal<
     "unknown" | "supported" | "unsupported"
   >("unknown");
+  const [step, setStep] = createSignal<LoginStep>("init");
 
   onMount(() => {
     initializeThemeMode();
     setPasskeySupport(isPasskeySupported() ? "supported" : "unsupported");
   });
+
+  const contentTitle = createMemo(() => {
+    if (step() === "password") return "Password";
+    if (step() === "passkey") return "Passkey";
+    return "Sign in";
+  });
+
+  const contentDescription = createMemo(() => {
+    if (step() === "password") {
+      return "Enter your password and verification code when prompted.";
+    }
+    if (step() === "passkey") {
+      return "Use a passkey already configured on this account.";
+    }
+    return "Use your username to continue.";
+  });
+
+  function requireUsername(): boolean {
+    if (username().trim()) return true;
+    showToast("error", "Ingresa tu usuario");
+    return false;
+  }
 
   async function handleSubmit(e: Event) {
     e.preventDefault();
@@ -97,147 +122,132 @@ export default function LoginPage() {
   return (
     <AuthFlowShell
       eyebrow="One Channel"
-      title="Inicia sesión según tu método"
-      description="Mantén un único flujo claro: contraseña para el acceso tradicional, o clave de acceso para entrar directo desde un dispositivo compatible."
-      railNote="Si tu rol está protegido y eliges contraseña, el segundo paso es un código TOTP o uno de recuperación."
-      progress={[
-        {
-          label: "Contraseña",
-          description: "Usuario, contraseña y, cuando aplique, código TOTP.",
-          state: "current",
-        },
-        {
-          label: "Clave de acceso",
-          description:
-            "Acceso directo con biometría o desbloqueo del dispositivo.",
-          state: "upcoming",
-        },
-      ]}
-      contentEyebrow="Acceso"
-      contentTitle="Elige cómo quieres entrar hoy"
-      contentDescription="Usa el mismo usuario para ambos caminos. Si tu cuenta solo tiene passkeys, omite la contraseña y entra desde el panel dedicado."
+      title="Welcome back"
+      description="Sign in to continue."
+      contentTitle={contentTitle()}
+      contentDescription={contentDescription()}
     >
-      <div class={pageStyles.methodGrid}>
-        <form
-          class={pageStyles.methodPanel}
-          onSubmit={(e) => {
-            void handleSubmit(e);
-          }}
-        >
-          <div class={pageStyles.methodHeader}>
-            <div class={pageStyles.methodTitleRow}>
-              <h2 class={pageStyles.methodTitle}>Entrar con contraseña</h2>
-              <span class={pageStyles.pill}>Flujo clásico</span>
-            </div>
-            <p class={pageStyles.methodDescription}>
-              Si tu rol requiere protección reforzada, deja listo aquí también
-              el código TOTP o uno de recuperación.
-            </p>
-          </div>
+      <div class={pageStyles.formStack}>
+        <Input
+          id="auth-username"
+          type="text"
+          name="username"
+          label="Username"
+          autocomplete={step() === "passkey" ? "username webauthn" : "username"}
+          value={username()}
+          onInput={(e) => setUsername(e.currentTarget.value)}
+          required
+        />
 
-          <div class={pageStyles.passwordFields}>
-            <Input
-              id="username"
-              type="text"
-              name="username"
-              label="Usuario"
-              autocomplete="username"
-              value={username()}
-              onInput={(e) => setUsername(e.currentTarget.value)}
-              required
-            />
-
-            <Input
-              id="password"
-              type="password"
-              name="password"
-              label="Contraseña"
-              autocomplete="current-password"
-              value={password()}
-              onInput={(e) => setPassword(e.currentTarget.value)}
-              required
-            />
-
-            <Input
-              id="totp"
-              type="text"
-              name="totp"
-              label="Código TOTP o de recuperación"
-              placeholder="Solo si tu cuenta lo pide"
-              autocomplete="one-time-code"
-              value={totpCode()}
-              onInput={(e) => setTotpCode(e.currentTarget.value)}
-            />
-          </div>
-
-          <p class={pageStyles.supportText}>
-            Si tu cuenta tiene solo clave de acceso, este flujo te redirigirá a
-            usar ese método.
-          </p>
-
-          <div class={pageStyles.panelFooter}>
-            <Button type="submit" class={styles.full} loading={loading()}>
-              Iniciar sesión
+        <Show when={step() === "init"}>
+          <div class={pageStyles.formStack}>
+            <Button
+              type="button"
+              class={styles.full}
+              onClick={() => {
+                if (!requireUsername()) return;
+                setStep("password");
+              }}
+            >
+              Continue with password
             </Button>
-          </div>
-        </form>
-
-        <section class={pageStyles.methodPanel}>
-          <div class={pageStyles.methodHeader}>
-            <div class={pageStyles.methodTitleRow}>
-              <h2 class={pageStyles.methodTitle}>Usar clave de acceso</h2>
-              <span class={pageStyles.pill}>
-                {passkeySupport() === "supported" ? "Compatible" : "Limitado"}
-              </span>
-            </div>
-            <p class={pageStyles.methodDescription}>
-              Este camino entra directo al espacio de trabajo sin contraseña.
-              Solo necesitas indicar tu usuario para localizar el desafío
-              correcto.
-            </p>
-          </div>
-
-          <Input
-            id="passkey-username"
-            type="text"
-            name="passkey-username"
-            label="Usuario"
-            autocomplete="username webauthn"
-            value={username()}
-            onInput={(e) => setUsername(e.currentTarget.value)}
-            required
-          />
-
-          <Show
-            when={passkeySupport() === "supported"}
-            fallback={
-              <p class={pageStyles.supportText}>
-                Las claves de acceso no son compatibles con este dispositivo o
-                navegador.
-              </p>
-            }
-          >
-            <p class={pageStyles.supportText}>
-              Si ya configuraste una clave en esta cuenta, este es el botón que
-              debes usar.
-            </p>
-          </Show>
-
-          <div class={pageStyles.panelFooter}>
             <Button
               type="button"
               variant="outline"
               class={styles.full}
-              disabled={loading() || passkeySupport() !== "supported"}
-              loading={passkeyLoading()}
+              disabled={passkeySupport() !== "supported"}
               onClick={() => {
-                void handlePasskeyLogin();
+                if (!requireUsername()) return;
+                setStep("passkey");
               }}
             >
-              Usar clave de acceso
+              Continue with passkey
             </Button>
           </div>
-        </section>
+        </Show>
+
+        <Show when={step() === "password"}>
+          <form
+            class={pageStyles.formStack}
+            onSubmit={(e) => {
+              void handleSubmit(e);
+            }}
+          >
+            <div class={pageStyles.passwordFields}>
+              <Input
+                id="password"
+                type="password"
+                name="password"
+                label="Password"
+                autocomplete="current-password"
+                value={password()}
+                onInput={(e) => setPassword(e.currentTarget.value)}
+                required
+              />
+
+              <Input
+                id="totp"
+                type="text"
+                name="totp"
+                label="Verification code"
+                placeholder="If required"
+                autocomplete="one-time-code"
+                value={totpCode()}
+                onInput={(e) => setTotpCode(e.currentTarget.value)}
+              />
+            </div>
+
+            <div class={pageStyles.actionRow}>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setStep("init")}
+              >
+                Back
+              </Button>
+              <Button type="submit" class={styles.full} loading={loading()}>
+                Sign in
+              </Button>
+            </div>
+          </form>
+        </Show>
+
+        <Show when={step() === "passkey"}>
+          <div class={pageStyles.formStack}>
+            <Show
+              when={passkeySupport() === "supported"}
+              fallback={
+                <p class={pageStyles.supportText}>
+                  Passkeys are not supported on this device or browser.
+                </p>
+              }
+            >
+              <p class={pageStyles.supportText}>Use a configured passkey.</p>
+            </Show>
+
+            <div class={pageStyles.actionRow}>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setStep("init")}
+              >
+                Back
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                class={styles.full}
+                disabled={loading() || passkeySupport() !== "supported"}
+                loading={passkeyLoading()}
+                onClick={() => {
+                  void handlePasskeyLogin();
+                }}
+              >
+                Use passkey
+              </Button>
+            </div>
+          </div>
+        </Show>
       </div>
     </AuthFlowShell>
   );

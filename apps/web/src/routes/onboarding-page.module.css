@@ -1,38 +1,29 @@
 .stepStack {
   display: grid;
-  gap: 20px;
+  gap: 16px;
 }
 
-.identityHero {
+.stepIntro {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: 16px;
+  gap: 12px;
   align-items: start;
-  padding: 20px;
-  border: 1px solid var(--border);
-  border-radius: 22px;
-  background: linear-gradient(
-    160deg,
-    color-mix(in oklab, var(--panel-bg) 92%, white 8%) 0%,
-    color-mix(in oklab, var(--panel-bg) 98%, var(--tertiary) 2%) 100%
-  );
 }
 
-.identityHeroIcon {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
+.stepIntroIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: var(--foreground);
-  background: color-mix(in oklab, var(--accent) 12%, white 88%);
-  border: 1px solid color-mix(in oklab, var(--accent) 26%, var(--border));
+  background: color-mix(in oklab, var(--tertiary) 82%, white 18%);
 }
 
-.identityHeroCopy {
+.stepIntroCopy {
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
 .kicker {
@@ -53,69 +44,77 @@
 .sectionDescription {
   margin: 0;
   color: var(--muted-foreground);
-  line-height: 1.6;
+  line-height: 1.5;
 }
 
-.infoGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.infoCard {
-  display: grid;
-  gap: 14px;
-  padding: 18px;
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  background: color-mix(in oklab, var(--panel-bg) 96%, white 4%);
-}
-
-.infoCardHeader {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--foreground);
-  font-size: var(--font-size-body);
-  font-weight: 600;
-}
-
-.infoCardFields {
+.formStack {
   display: grid;
   gap: 12px;
 }
 
-.highlightCard {
+.helperHeader {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--foreground);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.helperCopy {
   display: grid;
   gap: 8px;
-  padding: 18px;
-  border-radius: 18px;
-  border: 1px solid color-mix(in oklab, var(--border) 72%, white 28%);
-  background: color-mix(in oklab, var(--panel-bg) 88%, white 12%);
+  text-align: left;
 }
 
-.highlightTitle {
+.helperText {
   margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--muted-foreground);
+  line-height: 1.5;
+}
+
+.choiceGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.choiceCard {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--panel-bg);
+  border-radius: 14px;
+  min-height: 112px;
+  padding: 16px;
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  text-align: left;
+  font: inherit;
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+.choiceTitle {
   font-size: var(--font-size-body);
   font-weight: 600;
-  color: var(--foreground);
 }
 
-.highlightCopy {
-  margin: 0;
+.choiceDescription {
+  font-size: var(--font-size-sm);
   color: var(--muted-foreground);
-  line-height: 1.6;
 }
 
-.securityGrid {
+.totpStack {
   display: grid;
-  gap: 16px;
+  gap: 12px;
 }
 
 .footerCopy {
   margin: 0;
   color: var(--muted-foreground);
-  line-height: 1.6;
+  line-height: 1.5;
 }
 
 .footerActions {
@@ -125,7 +124,7 @@
 }
 
 @media (max-width: 800px) {
-  .infoGrid {
+  .choiceGrid {
     grid-template-columns: 1fr;
   }
 

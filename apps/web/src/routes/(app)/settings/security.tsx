@@ -165,46 +165,11 @@ export default function SecurityPage() {
         </form>
       </SettingsSection>
 
-      <SettingsSection
-        title="Protege tu cuenta"
-        description="Gestiona tus métodos con la misma lógica del inicio de sesión: la clave de acceso entra directo, y TOTP protege el flujo con contraseña."
-      >
+      <SettingsSection title="Passkeys">
         <div class={styles.securityStack}>
-          <div class={styles.securitySummary}>
-            <article class={styles.securitySummaryCard}>
-              <span class={styles.securitySummaryLabel}>Política actual</span>
-              <strong class={styles.securitySummaryValue}>
-                {currentUser().strongAuthRequired
-                  ? "Método fuerte obligatorio"
-                  : "Método fuerte opcional"}
-              </strong>
-              <p class={styles.sectionDescription}>
-                {currentUser().strongAuthRequired
-                  ? "Antes de quitar un método, mantén otro activo para no bloquear tu acceso."
-                  : "Puedes dejar uno o ambos métodos activos según prefieras."}
-              </p>
-            </article>
-            <article class={styles.securitySummaryCard}>
-              <span class={styles.securitySummaryLabel}>Estado actual</span>
-              <strong class={styles.securitySummaryValue}>
-                {currentUser().hasPasskey || currentUser().totpEnabled
-                  ? "Cuenta protegida"
-                  : "Sin métodos configurados"}
-              </strong>
-              <p class={styles.sectionDescription}>
-                {currentUser().hasPasskey
-                  ? `${currentUser().passkeyCount} clave${currentUser().passkeyCount === 1 ? "" : "s"} de acceso activa${currentUser().passkeyCount === 1 ? "" : "s"}`
-                  : "Ninguna clave de acceso configurada"}
-                {currentUser().totpEnabled
-                  ? " y aplicación de autenticación activa."
-                  : "."}
-              </p>
-            </article>
-          </div>
-
           <PasskeyMethodCard
-            title="Claves de acceso"
-            description="Añade o elimina las claves que usas para entrar sin contraseña desde dispositivos compatibles."
+            title="Passkeys"
+            description="Use your device to sign in."
             statusLabel={
               currentUser().hasPasskey
                 ? `${currentUser().passkeyCount} configurada${currentUser().passkeyCount === 1 ? "" : "s"}`
@@ -215,14 +180,11 @@ export default function SecurityPage() {
             active={currentUser().hasPasskey}
             supported={passkeyEnrollment.supported()}
             loading={passkeyEnrollment.loading()}
-            actionLabel={
-              currentUser().hasPasskey ? "Añadir otra clave" : "Añadir clave"
-            }
-            note="El acceso con clave de acceso entra directo al espacio de trabajo, sin contraseña."
-            unsupportedNote="Este navegador o dispositivo no admite claves de acceso."
+            actionLabel={currentUser().hasPasskey ? "Add passkey" : "Set up"}
+            unsupportedNote="This device does not support passkeys."
             onAction={() => void passkeyEnrollment.registerPasskey()}
             secondaryActionLabel={
-              currentUser().hasPasskey ? "Eliminar todas" : undefined
+              currentUser().hasPasskey ? "Delete all" : undefined
             }
             onSecondaryAction={
               currentUser().hasPasskey
@@ -232,44 +194,54 @@ export default function SecurityPage() {
                 : undefined
             }
           />
+        </div>
+      </SettingsSection>
 
-          <TotpMethodCard
-            title="Aplicación de autenticación"
-            description="Configura o desactiva los códigos TOTP del flujo de inicio de sesión con contraseña."
-            statusLabel={
-              currentUser().totpEnabled ? "Configurada" : "Sin configurar"
-            }
-            active={currentUser().totpEnabled}
-            loading={totpEnrollment.loading()}
-            actionLabel={
-              currentUser().totpEnabled
-                ? "Ya configurada"
-                : "Configurar aplicación"
-            }
-            note="Si entras con contraseña en un rol protegido, este será el segundo paso requerido."
-            code={totpEnrollment.code()}
-            enrollment={totpEnrollment.enrollment()}
-            onCodeInput={(event) =>
-              totpEnrollment.setCode(event.currentTarget.value)
-            }
-            onBegin={() => void totpEnrollment.beginEnrollment()}
-            onVerify={() => void totpEnrollment.verifyEnrollment()}
-            secondaryActionLabel={
-              currentUser().totpEnabled ? "Desactivar" : undefined
-            }
-            onSecondaryAction={
-              currentUser().totpEnabled
-                ? () => {
+      <SettingsSection title="Two-Factor Authentication">
+        <div class={styles.securityStack}>
+          <Show
+            when={!currentUser().totpEnabled}
+            fallback={
+              <div class={styles.configuredBlock}>
+                <p class={styles.configuredTitle}>
+                  Authenticator app configured
+                </p>
+                <p class={styles.configuredDescription}>
+                  Delete this method to reset it.
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
                     setPendingAction("disable-totp");
-                  }
-                : undefined
+                  }}
+                >
+                  Reset 2FA
+                </Button>
+              </div>
             }
-          />
+          >
+            <TotpMethodCard
+              title="Authenticator app"
+              description="Use a 6-digit code during sign in."
+              statusLabel="Setup"
+              active={false}
+              loading={totpEnrollment.loading()}
+              actionLabel="Set up"
+              code={totpEnrollment.code()}
+              enrollment={totpEnrollment.enrollment()}
+              onCodeInput={(event) =>
+                totpEnrollment.setCode(event.currentTarget.value)
+              }
+              onBegin={() => void totpEnrollment.beginEnrollment()}
+              onVerify={() => void totpEnrollment.verifyEnrollment()}
+            />
+          </Show>
 
           <Show when={totpEnrollment.recoveryCodes().length > 0}>
             <RecoveryCodesPanel
-              title="Códigos de recuperación"
-              description="Guárdalos ahora. Se muestran una sola vez y sirven como respaldo si pierdes acceso a tu aplicación."
+              title="Recovery codes"
+              description="Save these codes now."
               codes={totpEnrollment.recoveryCodes()}
             />
           </Show>

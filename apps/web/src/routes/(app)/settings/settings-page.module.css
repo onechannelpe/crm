@@ -67,32 +67,23 @@
   gap: 16px;
 }
 
-.securitySummary {
+.configuredBlock {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: 12px;
 }
 
-.securitySummaryCard {
-  display: grid;
-  gap: 8px;
-  padding: 18px;
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  background: color-mix(in oklab, var(--panel-bg) 95%, white 5%);
-}
-
-.securitySummaryLabel {
-  font-size: var(--font-size-label);
+.configuredTitle {
+  margin: 0;
+  font-size: var(--font-size-body);
   font-weight: var(--font-weight-semibold);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted-foreground);
+  color: var(--foreground);
 }
 
-.securitySummaryValue {
-  color: var(--foreground);
-  font-size: var(--font-size-heading-sm);
+.configuredDescription {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--muted-foreground);
+  line-height: 1.5;
 }
 
 .card {
@@ -168,10 +159,4 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-}
-
-@media (max-width: 767px) {
-  .securitySummary {
-    grid-template-columns: 1fr;
-  }
 }
