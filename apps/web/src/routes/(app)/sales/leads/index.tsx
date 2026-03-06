@@ -187,7 +187,8 @@ export default function LeadsPage() {
                 ? "success"
                 : extensionState()?.status === "dialing"
                   ? "warning"
-                  : extensionState()?.status === "sync_error"
+                  : extensionState()?.status === "sync_error" ||
+                      extensionState()?.status === "reauth_required"
                     ? "destructive"
                     : extensionState()?.status === "sync_pending"
                       ? "info"
@@ -202,9 +203,11 @@ export default function LeadsPage() {
             when={!extensionError()}
             fallback={extensionError() ?? "La extensión no está disponible."}
           >
-            {extensionState()?.assignmentId
-              ? `Lead activo en la extensión: #${extensionState()?.assignmentId}`
-              : "Envía un cliente asignado a la extensión para iniciar la llamada."}
+            {extensionState()?.status === "reauth_required"
+              ? "La extensión necesita reconectarse. Vuelve a enviar el cliente para renovar la sesión."
+              : extensionState()?.assignmentId
+                ? `Lead activo en la extensión: #${extensionState()?.assignmentId}`
+                : "Envía un cliente asignado a la extensión para iniciar la llamada."}
           </Show>
         </p>
       </div>

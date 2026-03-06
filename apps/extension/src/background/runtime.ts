@@ -137,6 +137,16 @@ function withoutSyncCredentials(state: ExtensionState): ExtensionState {
   };
 }
 
+function withClearedSyncError(state: ExtensionState): ExtensionState {
+  return {
+    ...state,
+    sync: {
+      ...state.sync,
+      lastSyncError: null,
+    },
+  };
+}
+
 function assertNever(value: never): never {
   throw new Error(`unhandled message type: ${JSON.stringify(value)}`);
 }
@@ -559,8 +569,9 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
         },
       };
 
-      await writeState(next);
-      return toSuccessResponse(next);
+      const cleared = withClearedSyncError(next);
+      await writeState(cleared);
+      return toSuccessResponse(cleared);
     }
   }
 
@@ -595,11 +606,19 @@ async function handleExternalRuntimeMessage(
         ...current,
         handoff: verified.handoff,
         syncConfig: verified.syncConfig,
+        sync: {
+          ...current.sync,
+          lastSyncError: null,
+        },
         queue: enqueueExecutiveStatus(
           {
             ...current,
             handoff: verified.handoff,
             syncConfig: verified.syncConfig,
+            sync: {
+              ...current.sync,
+              lastSyncError: null,
+            },
           },
           "ready",
           receivedAt,

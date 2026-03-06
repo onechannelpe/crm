@@ -39,8 +39,6 @@ function normalizeState(value: unknown): ExtensionState {
   const recording = isObject(value.recording) ? value.recording : {};
   const syncConfig = isObject(value.syncConfig) ? value.syncConfig : {};
   const sync = isObject(value.sync) ? value.sync : {};
-  const legacyAuthToken =
-    typeof syncConfig.authToken === "string" ? syncConfig.authToken : null;
 
   const normalizedQueue = Array.isArray(value.queue)
     ? value.queue.filter(isObject).map((job) => ({
@@ -111,7 +109,7 @@ function normalizeState(value: unknown): ExtensionState {
     queue: normalizedQueue,
     syncConfig: {
       apiBaseUrl: asNullableString(syncConfig.apiBaseUrl),
-      sessionToken: asNullableString(syncConfig.sessionToken) ?? legacyAuthToken,
+      sessionToken: asNullableString(syncConfig.sessionToken),
       refreshToken: asNullableString(syncConfig.refreshToken),
     },
     sync: {

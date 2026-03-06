@@ -11,7 +11,8 @@ export type ExecutiveStatus =
   | "active"
   | "wrap_up"
   | "sync_pending"
-  | "sync_error";
+  | "sync_error"
+  | "reauth_required";
 
 export type QueueJobType =
   | "executive.status"
@@ -137,6 +138,20 @@ export function getExecutiveState(state: ExtensionState): ExecutiveStateSnapshot
       contactId: activeCall.contactId,
       phone: activeCall.phone,
       updatedAt: activeCall.connectedAt ?? activeCall.startedAt,
+    };
+  }
+
+  if (
+    state.queue.length > 0 &&
+    state.syncConfig.sessionToken === null &&
+    state.syncConfig.refreshToken === null
+  ) {
+    return {
+      status: "reauth_required",
+      assignmentId: state.handoff?.assignmentId ?? activeCall?.assignmentId ?? null,
+      contactId: state.handoff?.contactId ?? activeCall?.contactId ?? null,
+      phone: state.handoff?.phone ?? activeCall?.phone ?? null,
+      updatedAt: state.sync.lastSyncAt,
     };
   }
 

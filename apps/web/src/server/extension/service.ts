@@ -180,6 +180,10 @@ function accessTokenExpiresAt(issuedAt: number): number {
   return issuedAt + EXTENSION_ACCESS_TOKEN_TTL_MS;
 }
 
+function installationSessionExpiresAt(issuedAt: number): number {
+  return issuedAt + EXTENSION_INSTALLATION_SESSION_TTL_MS;
+}
+
 function parseSubjectUserId(subject: string): number | null {
   if (!subject.startsWith("user:")) {
     return null;
@@ -220,6 +224,7 @@ async function issueSessionCredentials(
     jti: session.jti,
     refresh_token_hash: await hashExtensionSecretToken(refreshToken),
     refreshed_at: issuedAt,
+    expires_at: installationSessionExpiresAt(issuedAt),
   });
 
   return {
@@ -436,22 +441,13 @@ export function createExtensionService(
             }
             session = existingSession;
           } else {
-            const sessionJti = crypto.randomUUID();
-            const sessionIssuedAt = claimedAt;
-            const sessionExpiresAt =
-              sessionIssuedAt + EXTENSION_INSTALLATION_SESSION_TTL_MS;
-            const initialRefreshToken = generateRefreshToken();
-            await txRepos.extensionRuntime.createInstallationSession({
-              jti: sessionJti,
-              user_id: handoff.user_id,
-              branch_id: handoff.branch_id,
-              auth_session_id: handoff.auth_session_id,
-              installation_id: input.installationId,
-              refresh_token_hash:
-                await hashExtensionSecretToken(initialRefreshToken),
-              issued_at: sessionIssuedAt,
-              expires_at: sessionExpiresAt,
-            });
+            const reusableSession =
+              await txRepos.extensionRuntime.findActiveInstallationSession(
+                handoff.auth_session_id,
+                input.installationId,
+                claimedAt,
+              );
+            const sessionJti = reusableSession?.jti ?? crypto.randomUUID();
 
             const consumeResult = await txRepos.extensionRuntime.consumeHandoff(
               {
@@ -481,15 +477,29 @@ export function createExtensionService(
               }
               session = racedSession;
             } else {
-              const createdSession =
+              if (!reusableSession) {
+                await txRepos.extensionRuntime.createInstallationSession({
+                  jti: sessionJti,
+                  user_id: handoff.user_id,
+                  branch_id: handoff.branch_id,
+                  auth_session_id: handoff.auth_session_id,
+                  installation_id: input.installationId,
+                  refresh_token_hash: await hashExtensionSecretToken(
+                    generateRefreshToken(),
+                  ),
+                  issued_at: claimedAt,
+                  expires_at: installationSessionExpiresAt(claimedAt),
+                });
+              }
+              const activeSession =
                 await txRepos.extensionRuntime.findValidInstallationSession(
                   sessionJti,
                   claimedAt,
                 );
-              if (!createdSession) {
-                throw new Error("session missing after creation");
+              if (!activeSession) {
+                throw new Error("session missing after claim");
               }
-              session = createdSession;
+              session = activeSession;
             }
           }
 

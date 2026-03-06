@@ -25,6 +25,10 @@ export async function revokeUserSession(
   assertRecentStrongAuth(session);
 
   await repos.sessions.delete(safeSessionId);
+  await repos.extensionRuntime.revokeInstallationSessionsByAuthSession(
+    safeSessionId,
+    Date.now(),
+  );
 
   await repos.auditLogs.create({
     user_id: session.userId,

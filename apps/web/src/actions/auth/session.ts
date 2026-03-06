@@ -25,6 +25,10 @@ export async function logout(): Promise<void> {
   const { session } = await validateSessionToken(token);
 
   await invalidateSession(sessionId);
+  await repos.extensionRuntime.revokeInstallationSessionsByAuthSession(
+    sessionId,
+    Date.now(),
+  );
   deleteSessionCookie();
 
   if (session) {

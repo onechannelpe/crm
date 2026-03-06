@@ -66,6 +66,7 @@ function badgeVariantForStatus(
     case "dialing":
       return "warning";
     case "sync_error":
+    case "reauth_required":
       return "destructive";
     case "sync_pending":
       return "info";
@@ -96,6 +97,8 @@ function statusLabel(
       return "Pendiente";
     case "sync_error":
       return "Error sync";
+    case "reauth_required":
+      return "Reconectar";
     case "unavailable":
       return "Sin extension";
   }

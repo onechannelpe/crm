@@ -5,7 +5,8 @@ export type ExtensionExecutiveStatus =
   | "active"
   | "wrap_up"
   | "sync_pending"
-  | "sync_error";
+  | "sync_error"
+  | "reauth_required";
 
 export interface ExtensionExecutiveState {
   status: ExtensionExecutiveStatus;
