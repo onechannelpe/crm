@@ -1,12 +1,6 @@
 "use server";
 
 import {
-  createNotificationService,
-  renderInviteEmail,
-} from "@crm/notifications";
-import { getRequestEvent } from "solid-js/web";
-
-import {
   conflictError,
   forbiddenError,
   internalError,
@@ -20,7 +14,6 @@ import {
   assertNonEmptyString,
   assertPositiveInt,
 } from "~/lib/contracts/guards";
-import { env } from "~/lib/env";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
 import { shortName } from "~/lib/users/display-name";
@@ -34,57 +27,13 @@ import type {
 } from "~/server/users/service-user-provisioning";
 
 import { provisioning } from "./provisioning";
+import { getInviteUrl, sendInviteEmail } from "./utils";
 import {
   assertEmail,
   assertOptionalExpiresAt,
   assertOptionalTeamId,
   assertRole,
 } from "./validators";
-
-const notificationSender = createNotificationService({
-  resendApiKey: env.resendApiKey || undefined,
-  fromEmail: env.emailFrom || undefined,
-  whatsappAccessToken: env.whatsappAccessToken || undefined,
-  whatsappPhoneNumberId: env.whatsappPhoneNumberId || undefined,
-  whatsappApiVersion: env.whatsappApiVersion || undefined,
-});
-
-function getInviteUrl(token: string): string {
-  const event = getRequestEvent();
-  const requestUrl = event?.request.url;
-  if (!requestUrl) {
-    return `/auth/invite/${token}`;
-  }
-  const origin = new URL(requestUrl).origin;
-  return `${origin}/auth/invite/${token}`;
-}
-
-async function sendInviteEmail(params: {
-  email: string;
-  fullName: string;
-  role: Role;
-  inviteUrl: string;
-  expiresAt: number;
-}): Promise<void> {
-  const { html, text } = renderInviteEmail({
-    fullName: params.fullName,
-    role: params.role,
-    inviteUrl: params.inviteUrl,
-    expiresAt: new Date(params.expiresAt).toLocaleDateString("es-MX", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }),
-  });
-
-  await notificationSender.send({
-    channel: "email",
-    to: params.email,
-    subject: "Activa tu acceso al CRM",
-    html,
-    text,
-  });
-}
 
 function throwCreateInviteError(error: CreateInviteError): never {
   switch (error.reason) {

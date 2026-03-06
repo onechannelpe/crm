@@ -1,15 +1,8 @@
 "use server";
 
-import {
-  createNotificationService,
-  renderInviteEmail,
-} from "@crm/notifications";
-import { getRequestEvent } from "solid-js/web";
-
 import { internalError, validationError } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { requirePermission } from "~/lib/auth/access/session";
-import { env } from "~/lib/env";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
 import { shortName } from "~/lib/users/display-name";
 import { isErr } from "~/server/shared/result";
@@ -19,25 +12,8 @@ import {
 } from "~/server/users/service-bulk-import";
 
 import { provisioning } from "./provisioning";
+import { getInviteUrl, sendInviteEmail } from "./utils";
 import { assertRole } from "./validators";
-
-const notificationSender = createNotificationService({
-  resendApiKey: env.resendApiKey || undefined,
-  fromEmail: env.emailFrom || undefined,
-  whatsappAccessToken: env.whatsappAccessToken || undefined,
-  whatsappPhoneNumberId: env.whatsappPhoneNumberId || undefined,
-  whatsappApiVersion: env.whatsappApiVersion || undefined,
-});
-
-function getInviteUrl(token: string): string {
-  const event = getRequestEvent();
-  const requestUrl = event?.request.url;
-  if (!requestUrl) {
-    return `/auth/invite/${token}`;
-  }
-  const origin = new URL(requestUrl).origin;
-  return `${origin}/auth/invite/${token}`;
-}
 
 export interface BulkPreviewResult {
   parsed: BulkParseResult;
@@ -128,7 +104,9 @@ export async function applyBulkImport(
           continue;
         }
 
-        const { html, text } = renderInviteEmail({
+        // eslint-disable-next-line no-await-in-loop
+        await sendInviteEmail({
+          email: row.email,
           fullName: shortName({
             names: row.names,
             firstSurname: row.firstSurname,
@@ -136,18 +114,7 @@ export async function applyBulkImport(
           }),
           role: safeRole,
           inviteUrl: getInviteUrl(result.value.token),
-          expiresAt: new Date(result.value.expiresAt).toLocaleDateString(
-            "es-MX",
-            { year: "numeric", month: "long", day: "numeric" },
-          ),
-        });
-        // eslint-disable-next-line no-await-in-loop
-        await notificationSender.send({
-          channel: "email",
-          to: row.email,
-          subject: "Activa tu acceso al CRM",
-          html,
-          text,
+          expiresAt: result.value.expiresAt,
         });
         // eslint-disable-next-line no-await-in-loop
         await provisioning.markInviteDelivered(result.value.inviteId);

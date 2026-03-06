@@ -1,12 +1,9 @@
-import {
-  createNotificationService,
-  renderAccountExpiringEmail,
-} from "@crm/notifications";
+import { renderAccountExpiringEmail } from "@crm/notifications";
 
-import { env } from "~/lib/env";
 import { createLogger } from "~/lib/observability/logger";
 import { shortName } from "~/lib/users/display-name";
 import {
+  notificationSender,
   repos,
   salesExportService,
   searchEnrichmentService,
@@ -16,14 +13,6 @@ const WORKER_ID = `bg-${process.pid}`;
 const logger = createLogger("background-jobs", { workerId: WORKER_ID });
 
 const EXPIRY_NOTIFICATION_THRESHOLD_MS = 7 * 24 * 60 * 60 * 1000;
-
-const notificationSender = createNotificationService({
-  resendApiKey: env.resendApiKey || undefined,
-  fromEmail: env.emailFrom || undefined,
-  whatsappAccessToken: env.whatsappAccessToken || undefined,
-  whatsappPhoneNumberId: env.whatsappPhoneNumberId || undefined,
-  whatsappApiVersion: env.whatsappApiVersion || undefined,
-});
 
 interface JobLoopConfig {
   name: string;

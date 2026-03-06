@@ -241,20 +241,14 @@ export function createUsersRepo(db: Kysely<Database>) {
     },
 
     async expireActiveUsersBefore(now: number): Promise<number[]> {
-      const candidates = await db
-        .selectFrom("users")
-        .select("id")
-        .where("expires_at", "<=", now)
-        .where("is_active", "=", 1)
-        .execute();
-      if (candidates.length === 0) return [];
-      const ids = candidates.map((r) => r.id);
-      await db
+      const rows = await db
         .updateTable("users")
         .set({ is_active: 0 })
-        .where("id", "in", ids)
+        .where("expires_at", "<=", now)
+        .where("is_active", "=", 1)
+        .returning("id")
         .execute();
-      return ids;
+      return rows.map((r) => r.id);
     },
 
     findExpiringBefore(threshold: number) {
