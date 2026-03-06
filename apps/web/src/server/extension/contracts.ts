@@ -130,15 +130,14 @@ export type ExtensionRuntimeEventPayloadByType = {
   "recording.chunk": RecordingChunkPayload;
 };
 
-export type ExtensionRuntimeEventEnvelope =
-  {
-    [K in ExtensionRuntimeEventType]: {
-      id: string;
-      type: K;
-      createdAt: number;
-      payload: ExtensionRuntimeEventPayloadByType[K];
-    };
-  }[ExtensionRuntimeEventType];
+export type ExtensionRuntimeEventEnvelope = {
+  [K in ExtensionRuntimeEventType]: {
+    id: string;
+    type: K;
+    createdAt: number;
+    payload: ExtensionRuntimeEventPayloadByType[K];
+  };
+}[ExtensionRuntimeEventType];
 
 export interface TeamExecutiveStatusView {
   userId: number;
@@ -172,7 +171,9 @@ export function isCreateExtensionHandoffTokenRequest(
   return isObject(value) && typeof value.assignmentId === "number";
 }
 
-function isExecutiveStatusPayload(value: unknown): value is ExecutiveStatusEventPayload {
+function isExecutiveStatusPayload(
+  value: unknown,
+): value is ExecutiveStatusEventPayload {
   return (
     isObject(value) &&
     isExtensionExecutiveStatus(value.status) &&
@@ -198,13 +199,17 @@ function isCallLifecyclePayload(value: unknown): value is CallLifecyclePayload {
         typeof value.at === "number"
       );
     case "connected":
-      return typeof value.sessionId === "string" && typeof value.at === "number";
+      return (
+        typeof value.sessionId === "string" && typeof value.at === "number"
+      );
     case "ended":
       return (
         typeof value.sessionId === "string" &&
         typeof value.at === "number" &&
         (value.outcome === undefined || typeof value.outcome === "string") &&
-        (value.notes === undefined || value.notes === null || typeof value.notes === "string")
+        (value.notes === undefined ||
+          value.notes === null ||
+          typeof value.notes === "string")
       );
     default:
       return false;
@@ -229,7 +234,9 @@ function isRecordingCompletedPayload(
   );
 }
 
-function isRecordingChunkPayload(value: unknown): value is RecordingChunkPayload {
+function isRecordingChunkPayload(
+  value: unknown,
+): value is RecordingChunkPayload {
   return (
     isObject(value) &&
     typeof value.sessionId === "string" &&
@@ -237,7 +244,8 @@ function isRecordingChunkPayload(value: unknown): value is RecordingChunkPayload
     typeof value.createdAt === "number" &&
     (value.mimeType === undefined || typeof value.mimeType === "string") &&
     (value.durationMs === undefined || typeof value.durationMs === "number") &&
-    (value.payloadStorage === undefined || typeof value.payloadStorage === "string")
+    (value.payloadStorage === undefined ||
+      typeof value.payloadStorage === "string")
   );
 }
 

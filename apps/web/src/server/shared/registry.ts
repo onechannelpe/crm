@@ -11,9 +11,9 @@ import { createSearchEnrichmentRepo } from "~/server/client-search/repos-enrichm
 import { createClientSearchViewsRepo } from "~/server/client-search/repos-views";
 import { createContactsRepo } from "~/server/contacts/repos-contacts";
 import { createOrganizationsRepo } from "~/server/contacts/repos-organizations";
+import { createExtensionRuntimeRepo } from "~/server/extension/repos";
 import { createInventoryRepo } from "~/server/inventory/repos";
 import { createProductsRepo } from "~/server/inventory/repos-products";
-import { createExtensionRuntimeRepo } from "~/server/extension/repos";
 import { createLeadAssignmentsRepo } from "~/server/leads/repos";
 import { createAppNotificationsRepo } from "~/server/notifications/repos-app-notifications";
 import { createNotificationCampaignsRepo } from "~/server/notifications/repos-campaigns";

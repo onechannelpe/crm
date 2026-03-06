@@ -24,9 +24,9 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
+import type { ExtensionExecutiveState } from "~/lib/extension/runtime";
 
 import { RegisterCallDialog } from "./register-call-dialog";
-import type { ExtensionExecutiveState } from "~/lib/extension/runtime";
 
 import styles from "./lead-list.module.css";
 
@@ -190,10 +190,12 @@ export const LeadList: Component<LeadListProps> = (props) => {
                         disabled={
                           !props.extensionEnabled ||
                           !lead.phone_primary ||
-                          props.extensionLoadingAssignmentId === lead.assignmentId
+                          props.extensionLoadingAssignmentId ===
+                            lead.assignmentId
                         }
                         loading={
-                          props.extensionLoadingAssignmentId === lead.assignmentId
+                          props.extensionLoadingAssignmentId ===
+                          lead.assignmentId
                         }
                         onClick={() => void props.onSendToExtension?.(lead)}
                         aria-label="Enviar cliente a la extensión"
@@ -202,14 +204,18 @@ export const LeadList: Component<LeadListProps> = (props) => {
                       </Button>
                     </Show>
                     <Show
-                      when={props.extensionState?.assignmentId === lead.assignmentId}
+                      when={
+                        props.extensionState?.assignmentId === lead.assignmentId
+                      }
                     >
                       <Badge
                         variant={badgeVariantForStatus(
                           props.extensionState?.status ?? "unavailable",
                         )}
                       >
-                        {statusLabel(props.extensionState?.status ?? "unavailable")}
+                        {statusLabel(
+                          props.extensionState?.status ?? "unavailable",
+                        )}
                       </Badge>
                     </Show>
                     <Button

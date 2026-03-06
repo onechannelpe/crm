@@ -31,7 +31,10 @@ function encodeJson(value: unknown): string {
   return toBase64Url(new TextEncoder().encode(JSON.stringify(value)));
 }
 
-function encodeSigningInput(header: ExtensionTokenHeader, claims: ExtensionTokenClaims): Uint8Array {
+function encodeSigningInput(
+  header: ExtensionTokenHeader,
+  claims: ExtensionTokenClaims,
+): Uint8Array {
   return Buffer.from(`${encodeJson(header)}.${encodeJson(claims)}`, "utf8");
 }
 
@@ -59,7 +62,11 @@ export async function signExtensionToken(
   const signingInput = encodeSigningInput(header, claims);
   const privateKey = await importPrivateKey();
   const signature = new Uint8Array(
-    await crypto.subtle.sign("Ed25519", privateKey, toArrayBuffer(signingInput)),
+    await crypto.subtle.sign(
+      "Ed25519",
+      privateKey,
+      toArrayBuffer(signingInput),
+    ),
   );
   const [encodedHeader, encodedPayload] = new TextDecoder()
     .decode(signingInput)

@@ -1,9 +1,9 @@
 import { useAction, useNavigate } from "@solidjs/router";
 import { createSignal, onCleanup, onMount, Show } from "solid-js";
 
-import { useToast } from "~/components/feedback/toast-provider";
 import { LeadList } from "~/components/features/leads/lead-list";
 import { RequestLeadsButton } from "~/components/features/leads/request-leads-button";
+import { useToast } from "~/components/feedback/toast-provider";
 import { AppPage } from "~/components/layout/page";
 import { Badge } from "~/components/ui/display/badge";
 import {
@@ -62,7 +62,9 @@ export default function LeadsPage() {
   const refreshExtensionState = async () => {
     if (!isExtensionBridgeConfigured()) {
       setExtensionState(null);
-      setExtensionError("Configura VITE_CRM_EXTENSION_ID para conectar la extensión.");
+      setExtensionError(
+        "Configura VITE_CRM_EXTENSION_ID para conectar la extensión.",
+      );
       return;
     }
 
@@ -121,7 +123,9 @@ export default function LeadsPage() {
       body: JSON.stringify({ assignmentId: lead.assignmentId }),
     });
     if (!handoffTokenResponse.ok) {
-      const body = (await handoffTokenResponse.json().catch(() => null)) as unknown;
+      const body = (await handoffTokenResponse
+        .json()
+        .catch(() => null)) as unknown;
       setExtensionLoadingAssignmentId(null);
       const message =
         readErrorMessage(body) ??

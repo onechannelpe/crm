@@ -61,7 +61,10 @@ export const env = {
     "EXTENSION_HANDOFF_PRIVATE_KEY_PKCS8_BASE64",
     "",
   ),
-  extensionExpectedOrigin: optional("EXTENSION_EXPECTED_ORIGIN", "http://localhost:3000"),
+  extensionExpectedOrigin: optional(
+    "EXTENSION_EXPECTED_ORIGIN",
+    "http://localhost:3000",
+  ),
   trustedProxy: optional("TRUSTED_PROXY", "false"),
   engineUrl: optional("ENGINE_URL", "http://localhost:3001"),
   engineHmacKeyId: required("ENGINE_HMAC_KEY_ID"),

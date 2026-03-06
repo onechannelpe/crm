@@ -58,9 +58,14 @@ export function createExtensionService(
       branchId: number;
       assignmentId: number;
       origin: string;
-    }): Promise<Result<CreateExtensionHandoffTokenResponse, ExtensionServiceError>> {
+    }): Promise<
+      Result<CreateExtensionHandoffTokenResponse, ExtensionServiceError>
+    > {
       try {
-        const assignmentId = assertPositiveInt(input.assignmentId, "assignmentId");
+        const assignmentId = assertPositiveInt(
+          input.assignmentId,
+          "assignmentId",
+        );
         if (!input.origin) {
           return Err({
             reason: "invalid_origin",
@@ -154,7 +159,10 @@ export function createExtensionService(
 
         return Err({
           reason: "unexpected",
-          message: error instanceof Error ? error.message : "Unexpected extension handoff failure",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Unexpected extension handoff failure",
         });
       }
     },
@@ -247,7 +255,10 @@ export function createExtensionService(
       } catch (error: unknown) {
         return Err({
           reason: "unexpected",
-          message: error instanceof Error ? error.message : "Unexpected extension event ingest failure",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Unexpected extension event ingest failure",
         });
       }
     },
@@ -266,11 +277,16 @@ export function createExtensionService(
           );
         }
 
-        return Ok(await repos.extensionRuntime.listBranchStatuses(input.branchId));
+        return Ok(
+          await repos.extensionRuntime.listBranchStatuses(input.branchId),
+        );
       } catch (error: unknown) {
         return Err({
           reason: "unexpected",
-          message: error instanceof Error ? error.message : "Unexpected extension status read failure",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Unexpected extension status read failure",
         });
       }
     },

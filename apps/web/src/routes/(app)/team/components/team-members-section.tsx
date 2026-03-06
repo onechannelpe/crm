@@ -52,7 +52,9 @@ function getExtensionStatusVariant(
   }
 }
 
-function getExtensionStatusLabel(status: TeamMember["extensionStatus"]): string {
+function getExtensionStatusLabel(
+  status: TeamMember["extensionStatus"],
+): string {
   switch (status) {
     case "idle":
       return "Sin handoff";
@@ -182,7 +184,11 @@ export function TeamMembersSection(props: TeamMembersSectionProps) {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={getExtensionStatusVariant(member.extensionStatus)}>
+                    <Badge
+                      variant={getExtensionStatusVariant(
+                        member.extensionStatus,
+                      )}
+                    >
                       {getExtensionStatusLabel(member.extensionStatus)}
                     </Badge>
                   </TableCell>

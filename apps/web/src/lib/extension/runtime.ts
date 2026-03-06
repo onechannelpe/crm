@@ -117,7 +117,9 @@ async function sendMessage(
 
   const runtime = getChromeRuntime();
   if (!runtime) {
-    return bridgeUnavailable("CRM extension runtime is unavailable in this browser.");
+    return bridgeUnavailable(
+      "CRM extension runtime is unavailable in this browser.",
+    );
   }
 
   return new Promise((resolve) => {
@@ -129,7 +131,9 @@ async function sendMessage(
       }
 
       if (!isRuntimeResponse(response)) {
-        resolve(bridgeUnavailable("CRM extension returned an invalid response."));
+        resolve(
+          bridgeUnavailable("CRM extension returned an invalid response."),
+        );
         return;
       }
 

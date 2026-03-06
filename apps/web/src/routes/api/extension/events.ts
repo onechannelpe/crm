@@ -1,7 +1,7 @@
 import type { APIEvent } from "@solidjs/start/server";
 
-import { extensionService } from "~/server/shared/context";
 import { isExtensionRuntimeEventEnvelope } from "~/server/extension/contracts";
+import { extensionService } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
 function getBearerToken(request: Request): string | null {
