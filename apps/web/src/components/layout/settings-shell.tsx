@@ -96,7 +96,7 @@ export function SettingsShell(props: SettingsShellProps) {
             class={cn(styles.item, styles.exit)}
           >
             <X class={styles.icon} />
-            <span>Salir de Configuración</span>
+            <span>Salir</span>
           </A>
         </div>
 

@@ -1,0 +1,124 @@
+import os from "node:os";
+import path from "node:path";
+import { mkdtemp, rm } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+
+import { expect, test } from "@playwright/test";
+
+import {
+  closeExtensionSession,
+  launchExtensionSession,
+  openPopupPage,
+  sendRuntimeMessage,
+} from "./support/extension-fixture";
+import { createSyncSink } from "./support/sync-sink";
+
+const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
+const EXTENSION_OUTPUT_PATH = path.resolve(currentDirectory, "../../.output/chrome-mv3");
+
+test.describe("extension runtime integration", () => {
+  test("flushes queued call lifecycle events to a real HTTP endpoint", async () => {
+    const sink = await createSyncSink();
+    const session = await launchExtensionSession({
+      extensionOutputPath: EXTENSION_OUTPUT_PATH,
+    });
+
+    try {
+      const page = await openPopupPage(session.context, session.extensionId);
+
+      await expect.poll(async () => {
+        const response = await sendRuntimeMessage(page, { type: "state.get" });
+        return response.ok;
+      }).toBe(true);
+
+      await sendRuntimeMessage(page, {
+        type: "call.start",
+        assignmentId: 101,
+        contactId: 202,
+        phone: "+51911111111",
+      });
+      await sendRuntimeMessage(page, { type: "call.connected" });
+      await sendRuntimeMessage(page, {
+        type: "call.end",
+        outcome: "no_answer",
+        notes: "integration-test",
+      });
+
+      const configResponse = await sendRuntimeMessage(page, {
+        type: "sync.configure",
+        apiBaseUrl: sink.baseUrl,
+        authToken: "test-token",
+      });
+      expect(configResponse.ok).toBe(true);
+
+      const flushResponse = await sendRuntimeMessage(page, { type: "sync.flush" });
+      expect(flushResponse.ok).toBe(true);
+
+      await expect.poll(() => sink.events.length, { timeout: 20_000 }).toBeGreaterThanOrEqual(4);
+
+      const stateResponse = await sendRuntimeMessage(page, { type: "state.get" });
+      if (!stateResponse.ok) {
+        throw new Error(stateResponse.error);
+      }
+
+      expect(stateResponse.state.queue).toHaveLength(0);
+      expect(sink.events.every((event) => event.authorization === "Bearer test-token")).toBe(true);
+
+      const eventTypes = sink.events.map((event) => {
+        const body = event.body as Record<string, unknown>;
+        return String(body.type);
+      });
+      expect(eventTypes).toContain("call.lifecycle");
+      expect(eventTypes).toContain("call.metric");
+    } finally {
+      await closeExtensionSession(session);
+      await sink.close();
+    }
+  });
+
+  test("persists call state across browser restart and recreates alarms", async () => {
+    const userDataDir = await mkdtemp(path.join(os.tmpdir(), "crm-extension-restart-"));
+
+    const firstSession = await launchExtensionSession({
+      extensionOutputPath: EXTENSION_OUTPUT_PATH,
+      userDataDir,
+    });
+
+    try {
+      const firstPage = await openPopupPage(firstSession.context, firstSession.extensionId);
+      const startResponse = await sendRuntimeMessage(firstPage, {
+        type: "call.start",
+        assignmentId: 777,
+        contactId: 888,
+        phone: "+51922222222",
+      });
+      expect(startResponse.ok).toBe(true);
+    } finally {
+      await closeExtensionSession(firstSession, { cleanupUserDataDir: false });
+    }
+
+    const secondSession = await launchExtensionSession({
+      extensionOutputPath: EXTENSION_OUTPUT_PATH,
+      userDataDir,
+    });
+
+    try {
+      const secondPage = await openPopupPage(secondSession.context, secondSession.extensionId);
+      const stateResponse = await sendRuntimeMessage(secondPage, { type: "state.get" });
+      if (!stateResponse.ok) {
+        throw new Error(stateResponse.error);
+      }
+
+      expect(stateResponse.state.currentCall?.assignmentId).toBe(777);
+      expect(stateResponse.state.currentCall?.phase).toBe("dialing");
+
+      const alarm = await secondPage.evaluate(async () => {
+        return chrome.alarms.get("crm.sync");
+      });
+      expect(alarm).not.toBeNull();
+    } finally {
+      await closeExtensionSession(secondSession, { cleanupUserDataDir: false });
+      await rm(userDataDir, { recursive: true, force: true });
+    }
+  });
+});
