@@ -1,15 +1,9 @@
 import { useNavigate } from "@solidjs/router";
-import { createEffect, createResource, createSignal, Show } from "solid-js";
+import { Show, createEffect, createResource, createSignal } from "solid-js";
 
-import {
-  beginPasskeyRegistration,
-  beginTotpEnrollment,
-  completeOnboarding,
-  finishPasskeyRegistration,
-  finishTotpEnrollment,
-  getMe,
-} from "~/actions/auth";
+import { completeOnboarding, getMe } from "~/actions/auth";
 import { SecurityEnrollmentPanel } from "~/components/auth/security-enrollment-panel";
+import { useSecurityEnrollmentController } from "~/components/auth/use-security-enrollment-controller";
 import { useToast } from "~/components/feedback/toast-provider";
 import Lock from "~/components/icons/lock";
 import UserRound from "~/components/icons/user-round";
@@ -17,11 +11,6 @@ import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { getRoleLabel } from "~/lib/auth/access/role-display";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
-import {
-  isPasskeySupported,
-  toCreationOptions,
-  toRegistrationPayload,
-} from "~/lib/auth/passkey/browser";
 import { getErrorMessage } from "~/lib/errors";
 
 import authStyles from "./auth/auth-shell.module.css";
@@ -32,16 +21,16 @@ export default function OnboardingPage() {
   const { showToast } = useToast();
   const [user, { refetch: refetchUser }] = createResource(getMe);
   const [phone, setPhone] = createSignal("");
-  const [totpCode, setTotpCode] = createSignal("");
-  const [totpEnrollment, setTotpEnrollment] = createSignal<{
-    qrCodeDataUrl: string;
-    otpauthUri: string;
-  } | null>(null);
-  const [recoveryCodes, setRecoveryCodes] = createSignal<string[]>([]);
-  const [passkeySupported, setPasskeySupported] = createSignal(false);
-  const [passkeyLoading, setPasskeyLoading] = createSignal(false);
-  const [totpLoading, setTotpLoading] = createSignal(false);
   const [submitting, setSubmitting] = createSignal(false);
+  const enrollment = useSecurityEnrollmentController({
+    showToast,
+    refreshStatus: async () => {
+      await refetchUser();
+    },
+    messages: {
+      totpBeginInfo: "Escanea el QR y verifica el código de 6 dígitos",
+    },
+  });
 
   createEffect(() => {
     const currentUser = user();
@@ -49,10 +38,6 @@ export default function OnboardingPage() {
     if (!phone() && currentUser.phoneE164) {
       setPhone(currentUser.phoneE164);
     }
-  });
-
-  createEffect(() => {
-    setPasskeySupported(isPasskeySupported());
   });
 
   const requiresStrongAuth = () => Boolean(user()?.strongAuthRequired);
@@ -83,70 +68,6 @@ export default function OnboardingPage() {
     }
   }
 
-  async function handlePasskeySetup() {
-    setPasskeyLoading(true);
-    try {
-      const { challengeId, options } = await beginPasskeyRegistration();
-      const creationOptions = toCreationOptions(options);
-      const credential = await navigator.credentials.create({
-        publicKey: creationOptions,
-      });
-
-      if (!credential || !(credential instanceof PublicKeyCredential)) {
-        throw new Error("No se pudo crear la clave de acceso");
-      }
-
-      await finishPasskeyRegistration(
-        challengeId,
-        toRegistrationPayload(credential),
-      );
-      await refetchUser();
-      showToast("success", "Clave de acceso configurada");
-    } catch (err: unknown) {
-      showToast(
-        "error",
-        getErrorMessage(err, "No se pudo configurar la clave de acceso"),
-      );
-    } finally {
-      setPasskeyLoading(false);
-    }
-  }
-
-  async function handleBeginTotp() {
-    setTotpLoading(true);
-    try {
-      const enrollment = await beginTotpEnrollment();
-      setTotpEnrollment(enrollment);
-      showToast("info", "Escanea el QR y verifica el código de 6 dígitos");
-    } catch (err: unknown) {
-      showToast(
-        "error",
-        getErrorMessage(err, "No se pudo iniciar la configuración del 2FA"),
-      );
-    } finally {
-      setTotpLoading(false);
-    }
-  }
-
-  async function handleVerifyTotp() {
-    setTotpLoading(true);
-    try {
-      const codes = await finishTotpEnrollment(totpCode());
-      setRecoveryCodes(codes);
-      setTotpEnrollment(null);
-      setTotpCode("");
-      await refetchUser();
-      showToast("success", "Aplicación de autenticación configurada");
-    } catch (err: unknown) {
-      showToast(
-        "error",
-        getErrorMessage(err, "Código de verificación inválido"),
-      );
-    } finally {
-      setTotpLoading(false);
-    }
-  }
-
   return (
     <div class={authStyles.shellGrid}>
       <section
@@ -158,8 +79,9 @@ export default function OnboardingPage() {
             Termina la configuración de tu cuenta
           </h1>
           <p class={authStyles.muted}>
-            Primero confirma tu perfil. Luego protege el acceso con una clave de
-            acceso o una aplicación de autenticación.
+            Primero confirma tu perfil. Luego define cómo vas a proteger el
+            acceso: clave de acceso para entrar sin contraseña o aplicación de
+            autenticación para el flujo con contraseña.
           </p>
         </div>
 
@@ -247,7 +169,7 @@ export default function OnboardingPage() {
                     <h2 class={styles.cardTitle}>Protege tu cuenta</h2>
                     <p class={styles.cardDescription}>
                       {requiresStrongAuth()
-                        ? "Tu rol exige al menos un método de autenticación fuerte antes de continuar."
+                        ? "Tu rol exige al menos un método fuerte antes de continuar. Si luego usas contraseña, también necesitarás códigos TOTP."
                         : "Puedes configurarlo ahora o más tarde desde Configuración."}
                     </p>
                   </div>
@@ -260,26 +182,26 @@ export default function OnboardingPage() {
                   mode="onboarding"
                   strongAuthRequired={requiresStrongAuth()}
                   strongAuthConfigured={strongAuthConfigured()}
-                  passkeySupported={passkeySupported()}
+                  passkeySupported={enrollment.passkeySupported()}
                   hasPasskey={hasPasskey()}
                   passkeyCount={passkeyCount()}
-                  passkeyLoading={passkeyLoading()}
+                  passkeyLoading={enrollment.passkeyLoading()}
                   totpEnabled={totpEnabled()}
-                  totpLoading={totpLoading()}
-                  totpCode={totpCode()}
-                  totpEnrollment={totpEnrollment()}
-                  recoveryCodes={recoveryCodes()}
+                  totpLoading={enrollment.totpLoading()}
+                  totpCode={enrollment.totpCode()}
+                  totpEnrollment={enrollment.totpEnrollment()}
+                  recoveryCodes={enrollment.recoveryCodes()}
                   onTotpCodeInput={(event) =>
-                    setTotpCode(event.currentTarget.value)
+                    enrollment.setTotpCode(event.currentTarget.value)
                   }
                   onRegisterPasskey={() => {
-                    void handlePasskeySetup();
+                    void enrollment.registerPasskey();
                   }}
                   onBeginTotp={() => {
-                    void handleBeginTotp();
+                    void enrollment.beginTotp();
                   }}
                   onVerifyTotp={() => {
-                    void handleVerifyTotp();
+                    void enrollment.verifyTotp();
                   }}
                 />
               </section>

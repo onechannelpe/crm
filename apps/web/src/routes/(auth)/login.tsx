@@ -99,6 +99,11 @@ export default function LoginPage() {
         <div class={styles.stack1}>
           <p class={styles.eyebrow}>One Channel</p>
           <h1 class={styles.titleSm}>Iniciar sesión</h1>
+          <p class={styles.muted}>
+            Si tu rol exige protección reforzada, el acceso con contraseña usa
+            un código TOTP. Las claves de acceso se usan desde el botón
+            dedicado.
+          </p>
         </div>
 
         <form
@@ -137,7 +142,7 @@ export default function LoginPage() {
                 class={styles.textButton}
                 onClick={() => setShowTotp(true)}
               >
-                Tengo un código de verificación
+                Voy a entrar con contraseña y código
               </button>
             }
           >
@@ -147,7 +152,7 @@ export default function LoginPage() {
                 type="text"
                 name="totp"
                 label="Código TOTP o de recuperación"
-                placeholder="Opcional"
+                placeholder="Requerido para roles protegidos"
                 autocomplete="one-time-code"
                 value={totpCode()}
                 onInput={(e) => setTotpCode(e.currentTarget.value)}
@@ -176,6 +181,12 @@ export default function LoginPage() {
           <Show when={passkeySupport() === "unsupported"}>
             <p class={styles.muted}>
               Las claves de acceso no son compatibles con este dispositivo.
+            </p>
+          </Show>
+          <Show when={passkeySupport() === "supported"}>
+            <p class={styles.muted}>
+              Si solo configuraste una clave de acceso, usa ese botón para
+              entrar.
             </p>
           </Show>
         </form>

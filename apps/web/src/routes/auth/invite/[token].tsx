@@ -2,6 +2,7 @@ import { createAsync, useNavigate, useParams } from "@solidjs/router";
 import { Show, createSignal } from "solid-js";
 
 import { acceptTeamInvite, getInviteInfo } from "~/actions/team";
+import { useToast } from "~/components/feedback/toast-provider";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { getErrorMessage } from "~/lib/errors";
@@ -10,30 +11,30 @@ import styles from "../auth-shell.module.css";
 
 export default function AcceptInvitePage() {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const params = useParams<{ token: string }>();
   const inviteInfo = createAsync(() => getInviteInfo(params.token));
   const [password, setPassword] = createSignal("");
   const [confirmPassword, setConfirmPassword] = createSignal("");
   const [submitting, setSubmitting] = createSignal(false);
-  const [error, setError] = createSignal<string | null>(null);
 
   async function handleSubmit(event: Event): Promise<void> {
     event.preventDefault();
     if (password() !== confirmPassword()) {
-      setError("Las contraseñas no coinciden");
+      showToast("error", "Las contraseñas no coinciden");
       return;
     }
 
-    setError(null);
     setSubmitting(true);
     try {
       await acceptTeamInvite({
         token: params.token,
         password: password(),
       });
+      showToast("success", "Cuenta activada");
       navigate("/onboarding");
     } catch (err: unknown) {
-      setError(getErrorMessage(err, "No se pudo activar la cuenta"));
+      showToast("error", getErrorMessage(err, "No se pudo activar la cuenta"));
     } finally {
       setSubmitting(false);
     }
@@ -51,7 +52,8 @@ export default function AcceptInvitePage() {
           <div>
             <h1 class={styles.title}>Activar cuenta</h1>
             <p class={styles.muted}>
-              Completa tus datos para activar el acceso al espacio de trabajo
+              Define tu contraseña para activar la cuenta. Los datos del perfil
+              y la seguridad se completan en el siguiente paso.
             </p>
           </div>
 
@@ -94,9 +96,6 @@ export default function AcceptInvitePage() {
             onInput={(event) => setConfirmPassword(event.currentTarget.value)}
             required
           />
-
-          {error() ? <div class={styles.errorBox}>{error()}</div> : null}
-
           <Button type="submit" class={styles.full} disabled={submitting()}>
             {submitting() ? "Activando..." : "Activar cuenta"}
           </Button>

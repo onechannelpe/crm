@@ -54,7 +54,7 @@ export function SecurityEnrollmentPanel(props: SecurityEnrollmentPanelProps) {
   };
 
   const bannerText = () =>
-    "La clave de acceso sirve para entrar directamente desde dispositivos compatibles. Si también inicias con contraseña, añade una aplicación de autenticación como respaldo.";
+    "La clave de acceso y la aplicación de autenticación protegen la cuenta. Si vas a iniciar sesión con contraseña en un rol protegido, también necesitarás códigos TOTP.";
 
   return (
     <div class={styles.panel}>
@@ -73,7 +73,7 @@ export function SecurityEnrollmentPanel(props: SecurityEnrollmentPanelProps) {
               <h3 class={styles.methodTitle}>Clave de acceso</h3>
               <p class={styles.methodDescription}>
                 Usa biometría o el desbloqueo del dispositivo para entrar sin
-                escribir un código adicional.
+                contraseña desde dispositivos compatibles.
               </p>
             </div>
             <span
@@ -115,8 +115,9 @@ export function SecurityEnrollmentPanel(props: SecurityEnrollmentPanelProps) {
               }
             >
               <p class={styles.methodHint}>
-                Si vuelves a entrar con contraseña, necesitarás esta clave de
-                acceso o deberás añadir una aplicación de autenticación después.
+                Con una clave de acceso ya puedes terminar esta configuración.
+                Si luego eliges entrar con contraseña, añade también una
+                aplicación de autenticación.
               </p>
             </Show>
           </div>
@@ -131,7 +132,8 @@ export function SecurityEnrollmentPanel(props: SecurityEnrollmentPanelProps) {
               <h3 class={styles.methodTitle}>Aplicación de autenticación</h3>
               <p class={styles.methodDescription}>
                 Genera códigos de 6 dígitos con Authy, 1Password, Microsoft
-                Authenticator u otra aplicación compatible.
+                Authenticator u otra aplicación compatible para el acceso con
+                contraseña.
               </p>
             </div>
             <span

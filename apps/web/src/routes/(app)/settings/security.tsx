@@ -1,23 +1,13 @@
-import { createEffect, createSignal } from "solid-js";
+import { createSignal } from "solid-js";
 
-import {
-  beginPasskeyRegistration,
-  beginTotpEnrollment,
-  finishPasskeyRegistration,
-  finishTotpEnrollment,
-} from "~/actions/auth";
 import { changePassword } from "~/actions/settings";
 import { SecurityEnrollmentPanel } from "~/components/auth/security-enrollment-panel";
+import { useSecurityEnrollmentController } from "~/components/auth/use-security-enrollment-controller";
 import { useToast } from "~/components/feedback/toast-provider";
 import { useSession } from "~/components/providers/session-provider";
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
-import {
-  isPasskeySupported,
-  toCreationOptions,
-  toRegistrationPayload,
-} from "~/lib/auth/passkey/browser";
 import { getErrorMessage } from "~/lib/errors";
 
 import styles from "./settings-page.module.css";
@@ -30,20 +20,14 @@ export default function SecurityPage() {
   const [newPassword, setNewPassword] = createSignal("");
   const [confirmPassword, setConfirmPassword] = createSignal("");
   const [changingPassword, setChangingPassword] = createSignal(false);
-
-  const [passkeySupported, setPasskeySupported] = createSignal(false);
-  const [passkeyLoading, setPasskeyLoading] = createSignal(false);
-
-  const [totpEnrolling, setTotpEnrolling] = createSignal(false);
-  const [totpEnrollment, setTotpEnrollment] = createSignal<{
-    qrCodeDataUrl: string;
-    otpauthUri: string;
-  } | null>(null);
-  const [totpCode, setTotpCode] = createSignal("");
-  const [recoveryCodes, setRecoveryCodes] = createSignal<string[]>([]);
-
-  createEffect(() => {
-    setPasskeySupported(isPasskeySupported());
+  const enrollment = useSecurityEnrollmentController({
+    showToast,
+    refreshStatus: refreshCurrentUser,
+    messages: {
+      passkeySuccess: "Clave de acceso añadida",
+      passkeyFailure: "No se pudo añadir la clave de acceso",
+      totpVerifySuccess: "Autenticación en dos pasos activada",
+    },
   });
 
   const handleChangePassword = async (e: Event) => {
@@ -66,64 +50,6 @@ export default function SecurityPage() {
       );
     } finally {
       setChangingPassword(false);
-    }
-  };
-
-  const onRegisterPasskey = async () => {
-    setPasskeyLoading(true);
-    try {
-      const { challengeId, options } = await beginPasskeyRegistration();
-      const creationOptions = toCreationOptions(options);
-      const credential = await navigator.credentials.create({
-        publicKey: creationOptions,
-      });
-
-      if (!credential || !(credential instanceof PublicKeyCredential)) {
-        throw new Error("No se pudo crear la clave de acceso");
-      }
-
-      const response = toRegistrationPayload(credential);
-      await finishPasskeyRegistration(challengeId, response);
-      await refreshCurrentUser();
-      showToast("success", "Clave de acceso añadida");
-    } catch (err: unknown) {
-      showToast(
-        "error",
-        getErrorMessage(err, "No se pudo añadir la clave de acceso"),
-      );
-    } finally {
-      setPasskeyLoading(false);
-    }
-  };
-
-  const onBeginTotp = async () => {
-    setTotpEnrolling(true);
-    try {
-      const enrollment = await beginTotpEnrollment();
-      setTotpEnrollment(enrollment);
-    } catch (err: unknown) {
-      showToast(
-        "error",
-        getErrorMessage(err, "No se pudo iniciar la configuración del 2FA"),
-      );
-    } finally {
-      setTotpEnrolling(false);
-    }
-  };
-
-  const onVerifyTotp = async () => {
-    try {
-      const codes = await finishTotpEnrollment(totpCode());
-      setRecoveryCodes(codes);
-      setTotpEnrollment(null);
-      setTotpCode("");
-      await refreshCurrentUser();
-      showToast("success", "Autenticación en dos pasos activada");
-    } catch (err: unknown) {
-      showToast(
-        "error",
-        getErrorMessage(err, "Código de verificación inválido"),
-      );
     }
   };
 
@@ -167,19 +93,21 @@ export default function SecurityPage() {
           mode="settings"
           strongAuthRequired={currentUser().strongAuthRequired}
           strongAuthConfigured={currentUser().strongAuthConfigured}
-          passkeySupported={passkeySupported()}
+          passkeySupported={enrollment.passkeySupported()}
           hasPasskey={currentUser().hasPasskey}
           passkeyCount={currentUser().passkeyCount}
-          passkeyLoading={passkeyLoading()}
+          passkeyLoading={enrollment.passkeyLoading()}
           totpEnabled={currentUser().totpEnabled}
-          totpLoading={totpEnrolling()}
-          totpCode={totpCode()}
-          totpEnrollment={totpEnrollment()}
-          recoveryCodes={recoveryCodes()}
-          onTotpCodeInput={(event) => setTotpCode(event.currentTarget.value)}
-          onRegisterPasskey={() => void onRegisterPasskey()}
-          onBeginTotp={() => void onBeginTotp()}
-          onVerifyTotp={() => void onVerifyTotp()}
+          totpLoading={enrollment.totpLoading()}
+          totpCode={enrollment.totpCode()}
+          totpEnrollment={enrollment.totpEnrollment()}
+          recoveryCodes={enrollment.recoveryCodes()}
+          onTotpCodeInput={(event) =>
+            enrollment.setTotpCode(event.currentTarget.value)
+          }
+          onRegisterPasskey={() => void enrollment.registerPasskey()}
+          onBeginTotp={() => void enrollment.beginTotp()}
+          onVerifyTotp={() => void enrollment.verifyTotp()}
         />
       </SettingsSection>
     </div>
