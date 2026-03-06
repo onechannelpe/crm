@@ -152,9 +152,15 @@ export async function verifyExternalHandoff(input: {
     throw new Error(errorMessage);
   }
 
-  const claimBody = (await claimResponse.json()) as { sessionToken?: unknown };
+  const claimBody = (await claimResponse.json()) as {
+    sessionToken?: unknown;
+    refreshToken?: unknown;
+  };
   if (typeof claimBody.sessionToken !== "string" || claimBody.sessionToken === "") {
     throw new Error("session claim returned an invalid session token");
+  }
+  if (typeof claimBody.refreshToken !== "string" || claimBody.refreshToken === "") {
+    throw new Error("session claim returned an invalid refresh token");
   }
 
   return {
@@ -169,6 +175,7 @@ export async function verifyExternalHandoff(input: {
     syncConfig: {
       apiBaseUrl: `${origin}/api`,
       sessionToken: claimBody.sessionToken,
+      refreshToken: claimBody.refreshToken,
     },
   };
 }

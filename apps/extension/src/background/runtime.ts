@@ -24,7 +24,7 @@ import {
   ensureOffscreenDocument,
 } from "@/src/services/offscreen";
 import { readState, writeState } from "@/src/services/storage";
-import { sendSyncJob } from "@/src/services/sync";
+import { refreshSyncSession, sendSyncJob } from "@/src/services/sync";
 
 const ALARM_SYNC = "crm.sync" as const;
 
@@ -126,6 +126,17 @@ function withReplacedJob(queue: QueueJob[], next: QueueJob): QueueJob[] {
   return queue.map((job) => (job.id === next.id ? next : job));
 }
 
+function withoutSyncCredentials(state: ExtensionState): ExtensionState {
+  return {
+    ...state,
+    syncConfig: {
+      ...state.syncConfig,
+      sessionToken: null,
+      refreshToken: null,
+    },
+  };
+}
+
 function assertNever(value: never): never {
   throw new Error(`unhandled message type: ${JSON.stringify(value)}`);
 }
@@ -154,13 +165,40 @@ async function flushQueue(
   let next = state;
 
   for (const job of due) {
-      let result: Awaited<ReturnType<typeof sendSyncJob>>;
-      try {
-        const sendableJob = await withHydratedPayload(job);
-        result = await sendSyncJob(next.syncConfig, sendableJob);
-      } catch (error: unknown) {
-        result = {
-          ok: false,
+    let result: Awaited<ReturnType<typeof sendSyncJob>>;
+    try {
+      const sendableJob = await withHydratedPayload(job);
+      result = await sendSyncJob(next.syncConfig, sendableJob);
+      if (!result.ok && result.reason === "unauthorized") {
+        const refreshed = await refreshSyncSession(
+          next.syncConfig,
+          next.installationId,
+        );
+        if (!refreshed.ok) {
+          if (refreshed.reason === "unauthorized") {
+            next = withoutSyncCredentials(next);
+          }
+          result = {
+            ok: false,
+            reason: "failed",
+            error: refreshed.error,
+          };
+        } else {
+          next = {
+            ...next,
+            syncConfig: {
+              ...next.syncConfig,
+              sessionToken: refreshed.sessionToken,
+              refreshToken: refreshed.refreshToken,
+            },
+          };
+          result = await sendSyncJob(next.syncConfig, sendableJob);
+        }
+      }
+    } catch (error: unknown) {
+      result = {
+        ok: false,
+        reason: "failed",
         error: asErrorMessage(error),
       };
     }
@@ -517,6 +555,7 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
         syncConfig: {
           apiBaseUrl: message.apiBaseUrl,
           sessionToken: message.sessionToken,
+          refreshToken: message.refreshToken,
         },
       };
 

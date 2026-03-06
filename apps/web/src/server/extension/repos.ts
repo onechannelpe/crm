@@ -53,12 +53,18 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
       branch_id: number;
       auth_session_id: string;
       installation_id: string;
+      refresh_token_hash: string;
       issued_at: number;
       expires_at: number;
     }) {
       return db
         .insertInto("extension_installation_sessions")
-        .values({ ...values, revoked_at: null, last_seen_at: null })
+        .values({
+          ...values,
+          revoked_at: null,
+          last_seen_at: null,
+          refreshed_at: null,
+        })
         .executeTakeFirstOrThrow();
     },
 
@@ -72,10 +78,48 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
+    findRefreshableInstallationSession(
+      refresh_token_hash: string,
+      installation_id: string,
+      now: number,
+    ) {
+      return db
+        .selectFrom("extension_installation_sessions")
+        .selectAll()
+        .where("refresh_token_hash", "=", refresh_token_hash)
+        .where("installation_id", "=", installation_id)
+        .where("revoked_at", "is", null)
+        .where("expires_at", ">", now)
+        .executeTakeFirst();
+    },
+
     touchInstallationSession(jti: string, last_seen_at: number) {
       return db
         .updateTable("extension_installation_sessions")
         .set({ last_seen_at })
+        .where("jti", "=", jti)
+        .executeTakeFirst();
+    },
+
+    rotateInstallationSessionRefreshToken(values: {
+      jti: string;
+      refresh_token_hash: string;
+      refreshed_at: number;
+    }) {
+      return db
+        .updateTable("extension_installation_sessions")
+        .set({
+          refresh_token_hash: values.refresh_token_hash,
+          refreshed_at: values.refreshed_at,
+        })
+        .where("jti", "=", values.jti)
+        .executeTakeFirst();
+    },
+
+    revokeInstallationSession(jti: string, revoked_at: number) {
+      return db
+        .updateTable("extension_installation_sessions")
+        .set({ revoked_at })
         .where("jti", "=", jti)
         .executeTakeFirst();
     },

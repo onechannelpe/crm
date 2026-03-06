@@ -112,6 +112,7 @@ function normalizeState(value: unknown): ExtensionState {
     syncConfig: {
       apiBaseUrl: asNullableString(syncConfig.apiBaseUrl),
       sessionToken: asNullableString(syncConfig.sessionToken) ?? legacyAuthToken,
+      refreshToken: asNullableString(syncConfig.refreshToken),
     },
     sync: {
       lastSyncAt: asNullableNumber(sync.lastSyncAt),

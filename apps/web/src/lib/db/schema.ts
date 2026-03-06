@@ -324,10 +324,12 @@ export interface ExtensionInstallationSessionsTable {
   branch_id: number;
   auth_session_id: string;
   installation_id: string;
+  refresh_token_hash: string;
   issued_at: number;
   expires_at: number;
   revoked_at: number | null;
   last_seen_at: number | null;
+  refreshed_at: number | null;
 }
 
 export interface ExtensionRuntimeEventsTable {

@@ -156,3 +156,11 @@ export async function verifyExtensionToken<T extends ExtensionTokenClaims>(
 
   return payload;
 }
+
+export async function hashExtensionSecretToken(token: string): Promise<string> {
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(token),
+  );
+  return toBase64Url(new Uint8Array(digest));
+}

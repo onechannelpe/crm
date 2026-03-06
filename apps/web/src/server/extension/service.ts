@@ -8,37 +8,53 @@ import {
   EXTENSION_HANDOFF_TOKEN_AUDIENCE,
   EXTENSION_HANDOFF_TOKEN_ISSUER,
   EXTENSION_SESSION_TOKEN_AUDIENCE,
-  type CreateExtensionHandoffTokenResponse,
   type ClaimExtensionSessionResponse,
+  type CreateExtensionHandoffTokenResponse,
   type ExtensionExecutiveStatus,
   type ExtensionHandoffClaims,
   type ExtensionInstallationSessionClaims,
   type ExtensionRuntimeEventEnvelope,
+  type RefreshExtensionSessionResponse,
   type TeamExecutiveStatusView,
 } from "./contracts";
-import { signExtensionToken, verifyExtensionToken } from "./crypto";
+import {
+  hashExtensionSecretToken,
+  signExtensionToken,
+  verifyExtensionToken,
+} from "./crypto";
 
 interface ExtensionServiceDeps {
   now?: () => number;
-  runInTransaction?: (
-    operation: (transactionRepos: Repositories) => Promise<ClaimSessionRecord>,
-  ) => Promise<ClaimSessionRecord>;
+  runInTransaction?: <T>(
+    operation: (transactionRepos: Repositories) => Promise<T>,
+  ) => Promise<T>;
 }
 
 const EXECUTIVE_STATUS_OFFLINE_AFTER_MS = 2 * 60_000;
 const EXTENSION_HANDOFF_TTL_MS = 120_000;
-const EXTENSION_SESSION_TTL_MS = 8 * 60 * 60_000;
+const EXTENSION_INSTALLATION_SESSION_TTL_MS = 8 * 60 * 60_000;
+const EXTENSION_ACCESS_TOKEN_TTL_MS = 15 * 60_000;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-interface ClaimSessionRecord {
+interface InstallationSessionRecord {
   jti: string;
   user_id: number;
   branch_id: number;
   auth_session_id: string;
   installation_id: string;
+  refresh_token_hash: string;
   issued_at: number;
   expires_at: number;
+  revoked_at: number | null;
+  last_seen_at: number | null;
+  refreshed_at: number | null;
+}
+
+interface SessionCredentials {
+  refreshToken: string;
+  sessionToken: string;
+  expiresAt: number;
 }
 
 export type ExtensionServiceError =
@@ -160,8 +176,26 @@ function isTokenExpired(expSeconds: number, nowMs: number): boolean {
   return expSeconds <= Math.floor(nowMs / 1000);
 }
 
+function accessTokenExpiresAt(issuedAt: number): number {
+  return issuedAt + EXTENSION_ACCESS_TOKEN_TTL_MS;
+}
+
+function parseSubjectUserId(subject: string): number | null {
+  if (!subject.startsWith("user:")) {
+    return null;
+  }
+
+  const parsed = Number(subject.slice("user:".length));
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
+function generateRefreshToken(): string {
+  return crypto.randomUUID();
+}
+
 async function signInstallationSessionToken(
-  session: ClaimSessionRecord,
+  session: InstallationSessionRecord,
+  issuedAt: number,
 ): Promise<string> {
   return signExtensionToken({
     iss: EXTENSION_HANDOFF_TOKEN_ISSUER,
@@ -171,9 +205,41 @@ async function signInstallationSessionToken(
     branchId: session.branch_id,
     installationId: session.installation_id,
     jti: session.jti,
-    iat: session.issued_at,
-    exp: Math.floor(session.expires_at / 1000),
+    iat: issuedAt,
+    exp: Math.floor(accessTokenExpiresAt(issuedAt) / 1000),
   });
+}
+
+async function issueSessionCredentials(
+  repos: Repositories,
+  session: InstallationSessionRecord,
+  issuedAt: number,
+): Promise<SessionCredentials> {
+  const refreshToken = generateRefreshToken();
+  await repos.extensionRuntime.rotateInstallationSessionRefreshToken({
+    jti: session.jti,
+    refresh_token_hash: await hashExtensionSecretToken(refreshToken),
+    refreshed_at: issuedAt,
+  });
+
+  return {
+    refreshToken,
+    sessionToken: await signInstallationSessionToken(session, issuedAt),
+    expiresAt: accessTokenExpiresAt(issuedAt),
+  };
+}
+
+async function hasActiveAuthSession(
+  repos: Repositories,
+  authSessionId: string,
+  nowMs: number,
+): Promise<boolean> {
+  const authSession = await repos.sessions.findById(authSessionId);
+  return authSession !== null && authSession.expires_at > nowMs;
+}
+
+function isCryptoMisconfiguration(error: unknown): boolean {
+  return error instanceof Error && error.message.includes("private key");
 }
 
 export function createExtensionService(
@@ -236,16 +302,6 @@ export function createExtensionService(
         const issuedAt = now();
         const handoffExpiresAt = issuedAt + EXTENSION_HANDOFF_TTL_MS;
         const handoffJti = crypto.randomUUID();
-        await repos.extensionRuntime.createHandoff({
-          jti: handoffJti,
-          user_id: input.userId,
-          branch_id: input.branchId,
-          auth_session_id: input.authSessionId,
-          assignment_id: assignmentId,
-          issued_at: issuedAt,
-          expires_at: handoffExpiresAt,
-          origin: input.origin,
-        });
 
         const handoffToken = await signExtensionToken({
           iss: EXTENSION_HANDOFF_TOKEN_ISSUER,
@@ -265,12 +321,23 @@ export function createExtensionService(
           exp: Math.floor(handoffExpiresAt / 1000),
         });
 
+        await repos.extensionRuntime.createHandoff({
+          jti: handoffJti,
+          user_id: input.userId,
+          branch_id: input.branchId,
+          auth_session_id: input.authSessionId,
+          assignment_id: assignmentId,
+          issued_at: issuedAt,
+          expires_at: handoffExpiresAt,
+          origin: input.origin,
+        });
+
         return Ok({
           handoffToken,
           expiresAt: handoffExpiresAt,
         });
       } catch (error: unknown) {
-        if (error instanceof Error && error.message.includes("private key")) {
+        if (isCryptoMisconfiguration(error)) {
           return Err({
             reason: "misconfigured",
             message: "Extension signing keys are not configured",
@@ -298,6 +365,12 @@ export function createExtensionService(
             message: "Extension installation ID must be a UUID",
           });
         }
+        if (!runInTransaction) {
+          return Err({
+            reason: "unexpected",
+            message: "Extension transaction runner is not configured",
+          });
+        }
 
         const handoffClaims = await verifyExtensionToken(
           input.handoffToken,
@@ -310,14 +383,16 @@ export function createExtensionService(
             message: "Extension handoff token is invalid or expired",
           });
         }
-        if (!runInTransaction) {
+
+        const userId = parseSubjectUserId(handoffClaims.sub);
+        if (!userId) {
           return Err({
-            reason: "unexpected",
-            message: "Extension transaction runner is not configured",
+            reason: "handoff_invalid",
+            message: "Extension handoff token is invalid or expired",
           });
         }
 
-        const session = await runInTransaction(async (txRepos) => {
+        const credentials = await runInTransaction(async (txRepos) => {
           const handoff = await txRepos.extensionRuntime.findHandoffByJti(
             handoffClaims.jti,
           );
@@ -325,8 +400,7 @@ export function createExtensionService(
             !handoff ||
             handoff.expires_at <= claimedAt ||
             handoff.origin !== handoffClaims.origin ||
-            handoff.user_id.toString() !==
-              handoffClaims.sub.slice("user:".length) ||
+            handoff.user_id !== userId ||
             handoff.branch_id !== handoffClaims.branchId ||
             handoff.auth_session_id !== handoffClaims.authSessionId ||
             handoff.assignment_id !== handoffClaims.assignmentId
@@ -334,84 +408,102 @@ export function createExtensionService(
             throw new Error("invalid handoff");
           }
 
-          const existingSessionJti = handoff.installation_session_jti;
+          const authSessionActive = await hasActiveAuthSession(
+            txRepos,
+            handoff.auth_session_id,
+            claimedAt,
+          );
+          if (!authSessionActive) {
+            throw new Error("invalid handoff");
+          }
+
+          let session: InstallationSessionRecord;
           if (handoff.consumed_at !== null) {
             if (
               handoff.installation_id !== input.installationId ||
-              !existingSessionJti
+              !handoff.installation_session_jti
             ) {
               throw new Error("handoff claimed by another installation");
             }
 
             const existingSession =
               await txRepos.extensionRuntime.findValidInstallationSession(
-                existingSessionJti,
+                handoff.installation_session_jti,
                 claimedAt,
               );
             if (!existingSession) {
               throw new Error("handoff session expired");
             }
+            session = existingSession;
+          } else {
+            const sessionJti = crypto.randomUUID();
+            const sessionIssuedAt = claimedAt;
+            const sessionExpiresAt =
+              sessionIssuedAt + EXTENSION_INSTALLATION_SESSION_TTL_MS;
+            const initialRefreshToken = generateRefreshToken();
+            await txRepos.extensionRuntime.createInstallationSession({
+              jti: sessionJti,
+              user_id: handoff.user_id,
+              branch_id: handoff.branch_id,
+              auth_session_id: handoff.auth_session_id,
+              installation_id: input.installationId,
+              refresh_token_hash:
+                await hashExtensionSecretToken(initialRefreshToken),
+              issued_at: sessionIssuedAt,
+              expires_at: sessionExpiresAt,
+            });
 
-            return existingSession;
-          }
-
-          const sessionJti = crypto.randomUUID();
-          const sessionIssuedAt = claimedAt;
-          const sessionExpiresAt = sessionIssuedAt + EXTENSION_SESSION_TTL_MS;
-          await txRepos.extensionRuntime.createInstallationSession({
-            jti: sessionJti,
-            user_id: handoff.user_id,
-            branch_id: handoff.branch_id,
-            auth_session_id: handoff.auth_session_id,
-            installation_id: input.installationId,
-            issued_at: sessionIssuedAt,
-            expires_at: sessionExpiresAt,
-          });
-
-          const consumeResult = await txRepos.extensionRuntime.consumeHandoff({
-            jti: handoff.jti,
-            installation_id: input.installationId,
-            installation_session_jti: sessionJti,
-            consumed_at: claimedAt,
-          });
-          if (Number(consumeResult.numUpdatedRows ?? 0) === 0) {
-            const racedHandoff =
-              await txRepos.extensionRuntime.findHandoffByJti(handoff.jti);
-            if (
-              !racedHandoff ||
-              racedHandoff.installation_id !== input.installationId ||
-              !racedHandoff.installation_session_jti
-            ) {
-              throw new Error("handoff claimed by another installation");
-            }
-            const racedSession =
-              await txRepos.extensionRuntime.findValidInstallationSession(
-                racedHandoff.installation_session_jti,
-                claimedAt,
-              );
-            if (!racedSession) {
-              throw new Error("handoff session expired");
-            }
-            return racedSession;
-          }
-
-          const createdSession =
-            await txRepos.extensionRuntime.findValidInstallationSession(
-              sessionJti,
-              claimedAt,
+            const consumeResult = await txRepos.extensionRuntime.consumeHandoff(
+              {
+                jti: handoff.jti,
+                installation_id: input.installationId,
+                installation_session_jti: sessionJti,
+                consumed_at: claimedAt,
+              },
             );
-          if (!createdSession) {
-            throw new Error("session missing after creation");
+            if (Number(consumeResult.numUpdatedRows ?? 0) === 0) {
+              const racedHandoff =
+                await txRepos.extensionRuntime.findHandoffByJti(handoff.jti);
+              if (
+                !racedHandoff ||
+                racedHandoff.installation_id !== input.installationId ||
+                !racedHandoff.installation_session_jti
+              ) {
+                throw new Error("handoff claimed by another installation");
+              }
+              const racedSession =
+                await txRepos.extensionRuntime.findValidInstallationSession(
+                  racedHandoff.installation_session_jti,
+                  claimedAt,
+                );
+              if (!racedSession) {
+                throw new Error("handoff session expired");
+              }
+              session = racedSession;
+            } else {
+              const createdSession =
+                await txRepos.extensionRuntime.findValidInstallationSession(
+                  sessionJti,
+                  claimedAt,
+                );
+              if (!createdSession) {
+                throw new Error("session missing after creation");
+              }
+              session = createdSession;
+            }
           }
 
-          return createdSession;
+          return issueSessionCredentials(txRepos, session, claimedAt);
         });
 
-        return Ok({
-          sessionToken: await signInstallationSessionToken(session),
-          expiresAt: session.expires_at,
-        });
+        return Ok(credentials);
       } catch (error: unknown) {
+        if (isCryptoMisconfiguration(error)) {
+          return Err({
+            reason: "misconfigured",
+            message: "Extension signing keys are not configured",
+          });
+        }
         if (
           error instanceof Error &&
           (error.message === "invalid handoff" ||
@@ -422,7 +514,6 @@ export function createExtensionService(
             message: "Extension handoff token is invalid or expired",
           });
         }
-
         if (
           error instanceof Error &&
           error.message === "handoff claimed by another installation"
@@ -444,6 +535,72 @@ export function createExtensionService(
       }
     },
 
+    async refreshInstallationSession(input: {
+      refreshToken: string;
+      installationId: string;
+    }): Promise<
+      Result<RefreshExtensionSessionResponse, ExtensionServiceError>
+    > {
+      try {
+        if (!isUuid(input.installationId)) {
+          return Err({
+            reason: "installation_invalid",
+            message: "Extension installation ID must be a UUID",
+          });
+        }
+
+        const currentTime = now();
+        const refreshTokenHash = await hashExtensionSecretToken(
+          input.refreshToken,
+        );
+        const session =
+          await repos.extensionRuntime.findRefreshableInstallationSession(
+            refreshTokenHash,
+            input.installationId,
+            currentTime,
+          );
+        if (!session) {
+          return Err({
+            reason: "session_invalid",
+            message: "Extension session refresh is invalid or expired",
+          });
+        }
+
+        const authSessionActive = await hasActiveAuthSession(
+          repos,
+          session.auth_session_id,
+          currentTime,
+        );
+        if (!authSessionActive) {
+          await repos.extensionRuntime.revokeInstallationSession(
+            session.jti,
+            currentTime,
+          );
+          return Err({
+            reason: "session_invalid",
+            message: "Extension session refresh is invalid or expired",
+          });
+        }
+
+        return Ok(await issueSessionCredentials(repos, session, currentTime));
+      } catch (error: unknown) {
+        if (isCryptoMisconfiguration(error)) {
+          return Err({
+            reason: "misconfigured",
+            message: "Extension signing keys are not configured",
+          });
+        }
+
+        return Err({
+          reason: "unexpected",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Unexpected extension session refresh failure",
+        });
+      }
+    },
+
     async ingestRuntimeEvent(input: {
       sessionToken: string;
       event: ExtensionRuntimeEventEnvelope;
@@ -461,6 +618,7 @@ export function createExtensionService(
           });
         }
 
+        const subjectUserId = parseSubjectUserId(sessionClaims.sub);
         const session =
           await repos.extensionRuntime.findValidInstallationSession(
             sessionClaims.jti,
@@ -468,12 +626,28 @@ export function createExtensionService(
           );
         if (
           !session ||
-          session.user_id.toString() !==
-            sessionClaims.sub.slice("user:".length) ||
+          !subjectUserId ||
+          session.user_id !== subjectUserId ||
           session.branch_id !== sessionClaims.branchId ||
           session.auth_session_id !== sessionClaims.authSessionId ||
           session.installation_id !== sessionClaims.installationId
         ) {
+          return Err({
+            reason: "session_invalid",
+            message: "Extension session token is invalid or expired",
+          });
+        }
+
+        const authSessionActive = await hasActiveAuthSession(
+          repos,
+          session.auth_session_id,
+          currentTime,
+        );
+        if (!authSessionActive) {
+          await repos.extensionRuntime.revokeInstallationSession(
+            session.jti,
+            currentTime,
+          );
           return Err({
             reason: "session_invalid",
             message: "Extension session token is invalid or expired",
@@ -522,7 +696,7 @@ export function createExtensionService(
           type: input.event.type,
           payload_json: payloadText,
           created_at: input.event.createdAt,
-          received_at: now(),
+          received_at: currentTime,
         });
 
         if (input.event.type === "executive.status") {
@@ -554,6 +728,13 @@ export function createExtensionService(
 
         return Ok(undefined);
       } catch (error: unknown) {
+        if (isCryptoMisconfiguration(error)) {
+          return Err({
+            reason: "misconfigured",
+            message: "Extension signing keys are not configured",
+          });
+        }
+
         return Err({
           reason: "unexpected",
           message:

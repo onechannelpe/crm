@@ -74,6 +74,18 @@ export interface ClaimExtensionSessionRequest {
 
 export interface ClaimExtensionSessionResponse {
   sessionToken: string;
+  refreshToken: string;
+  expiresAt: number;
+}
+
+export interface RefreshExtensionSessionRequest {
+  refreshToken: string;
+  installationId: string;
+}
+
+export interface RefreshExtensionSessionResponse {
+  sessionToken: string;
+  refreshToken: string;
   expiresAt: number;
 }
 
@@ -188,6 +200,16 @@ export function isClaimExtensionSessionRequest(
   return (
     isObject(value) &&
     typeof value.handoffToken === "string" &&
+    typeof value.installationId === "string"
+  );
+}
+
+export function isRefreshExtensionSessionRequest(
+  value: unknown,
+): value is RefreshExtensionSessionRequest {
+  return (
+    isObject(value) &&
+    typeof value.refreshToken === "string" &&
     typeof value.installationId === "string"
   );
 }

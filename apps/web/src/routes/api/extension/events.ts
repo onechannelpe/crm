@@ -34,9 +34,11 @@ export async function POST(event: APIEvent): Promise<Response> {
       const status =
         result.error.reason === "session_invalid"
           ? 401
-          : result.error.reason === "event_duplicate"
-            ? 409
-            : 500;
+          : result.error.reason === "misconfigured"
+            ? 503
+            : result.error.reason === "event_duplicate"
+              ? 409
+              : 500;
       return Response.json({ error: result.error.message }, { status });
     }
 

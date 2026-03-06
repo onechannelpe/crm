@@ -33,10 +33,14 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     )
     .addColumn("auth_session_id", "varchar(255)", (col) => col.notNull())
     .addColumn("installation_id", "varchar(36)", (col) => col.notNull())
+    .addColumn("refresh_token_hash", "varchar(255)", (col) =>
+      col.notNull().unique(),
+    )
     .addColumn("issued_at", "integer", (col) => col.notNull())
     .addColumn("expires_at", "integer", (col) => col.notNull())
     .addColumn("revoked_at", "integer")
     .addColumn("last_seen_at", "integer")
+    .addColumn("refreshed_at", "integer")
     .execute();
 
   await db.schema

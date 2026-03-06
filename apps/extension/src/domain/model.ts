@@ -64,6 +64,7 @@ export interface QueueJob {
 export interface SyncConfig {
   apiBaseUrl: string | null;
   sessionToken: string | null;
+  refreshToken: string | null;
 }
 
 export interface ExecutiveStateSnapshot {
@@ -108,6 +109,7 @@ export function createInitialState(): ExtensionState {
     syncConfig: {
       apiBaseUrl: null,
       sessionToken: null,
+      refreshToken: null,
     },
     sync: {
       lastSyncAt: null,

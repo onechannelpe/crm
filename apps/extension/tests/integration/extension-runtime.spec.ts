@@ -86,6 +86,7 @@ test.describe("extension runtime integration", () => {
         type: "sync.configure",
         apiBaseUrl: sink.baseUrl,
         sessionToken: "test-token",
+        refreshToken: "refresh-token",
       });
       expect(configResponse.ok).toBe(true);
 

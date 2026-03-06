@@ -46,6 +46,7 @@ export type RuntimeMessage =
       type: "sync.configure";
       apiBaseUrl: string;
       sessionToken: string;
+      refreshToken: string;
     };
 
 export type ExternalRuntimeMessage =
@@ -114,7 +115,8 @@ export function isRuntimeMessage(value: unknown): value is RuntimeMessage {
     case "sync.configure":
       return (
         typeof value.apiBaseUrl === "string" &&
-        typeof value.sessionToken === "string"
+        typeof value.sessionToken === "string" &&
+        typeof value.refreshToken === "string"
       );
     default:
       return false;
