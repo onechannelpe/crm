@@ -6,7 +6,6 @@ import { RecoveryCodesPanel } from "~/components/auth/recovery-codes-panel";
 import { TotpMethodCard } from "~/components/auth/totp-method-card";
 import type { usePasskeyEnrollment } from "~/components/auth/use-passkey-enrollment";
 import type { useTotpEnrollment } from "~/components/auth/use-totp-enrollment";
-import Lock from "~/components/icons/lock";
 import { getSecurityStepDescription } from "~/lib/auth/onboarding-flow";
 
 import styles from "~/routes/onboarding-page.module.css";
@@ -22,18 +21,14 @@ interface OnboardingSecurityStepProps {
 
 export function OnboardingSecurityStep(props: OnboardingSecurityStepProps) {
   return (
-    <section class={styles.card}>
-      <div class={styles.cardHeader}>
-        <div class={styles.cardHeaderCopy}>
-          <span class={styles.cardStep}>Paso 2</span>
-          <h2 class={styles.cardTitle}>Protege tu cuenta</h2>
-          <p class={styles.cardDescription}>
-            {getSecurityStepDescription(props.currentUser.passwordLoginPolicy)}
-          </p>
-        </div>
-        <div class={styles.cardIcon}>
-          <Lock size={18} />
-        </div>
+    <section class={styles.stepStack}>
+      <div class={styles.highlightCard}>
+        <p class={styles.highlightTitle}>
+          Elige cómo quieres proteger el acceso
+        </p>
+        <p class={styles.highlightCopy}>
+          {getSecurityStepDescription(props.currentUser.passwordLoginPolicy)}
+        </p>
       </div>
 
       <div class={styles.securityGrid}>

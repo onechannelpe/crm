@@ -1,11 +1,45 @@
 "use server";
 
-import { forbiddenError, notFoundError } from "~/lib/app-errors";
+import { conflictError, forbiddenError, notFoundError } from "~/lib/app-errors";
 import { requireSession } from "~/lib/auth/access/session";
 import { hashPassword, verifyPassword } from "~/lib/auth/password/password";
+import { canRemoveStrongAuthFactor } from "~/lib/auth/security/factor-management-policy";
+import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
 import type { ActionSuccess } from "~/lib/contracts/common";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
 import { repos } from "~/server/shared/context";
+
+async function requireCurrentUserWithStrongAuthState(userId: number) {
+  const user = await repos.users.findById(userId);
+  if (!user) throw notFoundError("User not found");
+
+  const strongAuthStatus = await getStrongAuthStatus(user.id, repos);
+  return { user, strongAuthStatus };
+}
+
+function assertProtectedRoleKeepsStrongAuth(input: {
+  role: NonNullable<Awaited<ReturnType<typeof repos.users.findById>>>["role"];
+  removingTotp: boolean;
+  removingPasskeys: boolean;
+  hasTotp: boolean;
+  hasPasskey: boolean;
+}) {
+  if (
+    canRemoveStrongAuthFactor({
+      role: input.role,
+      removingTotp: input.removingTotp,
+      removingPasskeys: input.removingPasskeys,
+      hasTotp: input.hasTotp,
+      hasPasskey: input.hasPasskey,
+    })
+  ) {
+    return;
+  }
+
+  throw conflictError(
+    "Tu rol requiere mantener al menos un método fuerte configurado",
+  );
+}
 
 export async function changePassword(
   currentPassword: string,
@@ -38,6 +72,15 @@ export async function changePassword(
 
 export async function removeAllPasskeys(): Promise<ActionSuccess> {
   const session = await requireSession();
+  const { user, strongAuthStatus } =
+    await requireCurrentUserWithStrongAuthState(session.userId);
+  assertProtectedRoleKeepsStrongAuth({
+    role: user.role,
+    removingTotp: false,
+    removingPasskeys: true,
+    hasTotp: strongAuthStatus.hasTotp,
+    hasPasskey: strongAuthStatus.hasPasskey,
+  });
 
   await repos.passkeys.deleteAllByUser(session.userId);
   await repos.auditLogs.create({
@@ -54,6 +97,15 @@ export async function removeAllPasskeys(): Promise<ActionSuccess> {
 
 export async function disableTotp(): Promise<ActionSuccess> {
   const session = await requireSession();
+  const { user, strongAuthStatus } =
+    await requireCurrentUserWithStrongAuthState(session.userId);
+  assertProtectedRoleKeepsStrongAuth({
+    role: user.role,
+    removingTotp: true,
+    removingPasskeys: false,
+    hasTotp: strongAuthStatus.hasTotp,
+    hasPasskey: strongAuthStatus.hasPasskey,
+  });
 
   await repos.userTotpFactors.disable(session.userId);
   await repos.userTotpRecoveryCodes.deleteAllByUser(session.userId);

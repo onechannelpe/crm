@@ -13,6 +13,7 @@ import { useTotpEnrollment } from "~/components/auth/use-totp-enrollment";
 import { useToast } from "~/components/feedback/toast-provider";
 import { useSession } from "~/components/providers/session-provider";
 import { SettingsSection } from "~/components/settings/SettingsSection";
+import { ConfirmDialog } from "~/components/ui/confirm-dialog";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { getErrorMessage } from "~/lib/errors";
@@ -27,6 +28,9 @@ export default function SecurityPage() {
   const [newPassword, setNewPassword] = createSignal("");
   const [confirmPassword, setConfirmPassword] = createSignal("");
   const [changingPassword, setChangingPassword] = createSignal(false);
+  const [pendingAction, setPendingAction] = createSignal<
+    "remove-passkeys" | "disable-totp" | null
+  >(null);
   const passkeyEnrollment = usePasskeyEnrollment({
     showToast,
     refreshStatus: refreshCurrentUser,
@@ -40,10 +44,6 @@ export default function SecurityPage() {
   });
 
   const handleRemoveAllPasskeys = async () => {
-    if (!window.confirm("Esto eliminará todas tus claves de acceso.")) {
-      return;
-    }
-
     try {
       await removeAllPasskeys();
       passkeyEnrollment.reset();
@@ -58,10 +58,6 @@ export default function SecurityPage() {
   };
 
   const handleDisableTotp = async () => {
-    if (!window.confirm("Esto desactivará la autenticación con TOTP.")) {
-      return;
-    }
-
     try {
       await disableTotp();
       totpEnrollment.reset();
@@ -72,6 +68,19 @@ export default function SecurityPage() {
         "error",
         getErrorMessage(err, "No se pudo desactivar la autenticación TOTP"),
       );
+    }
+  };
+
+  const handleConfirmPendingAction = async () => {
+    const action = pendingAction();
+    setPendingAction(null);
+
+    if (action === "remove-passkeys") {
+      await handleRemoveAllPasskeys();
+      return;
+    }
+    if (action === "disable-totp") {
+      await handleDisableTotp();
     }
   };
 
@@ -100,6 +109,29 @@ export default function SecurityPage() {
 
   return (
     <div class={styles.content}>
+      <ConfirmDialog
+        isOpen={pendingAction() !== null}
+        title={
+          pendingAction() === "remove-passkeys"
+            ? "Eliminar todas las claves de acceso"
+            : "Desactivar aplicación de autenticación"
+        }
+        description={
+          pendingAction() === "remove-passkeys"
+            ? "Eliminarás todas las claves registradas en esta cuenta. Si tu rol exige seguridad reforzada, solo podrás hacerlo si otro método fuerte sigue activo."
+            : "Desactivarás el segundo paso del flujo con contraseña. Si tu rol exige seguridad reforzada, solo podrás hacerlo si aún mantienes otro método fuerte."
+        }
+        confirmLabel={
+          pendingAction() === "remove-passkeys"
+            ? "Eliminar claves"
+            : "Desactivar TOTP"
+        }
+        onConfirm={() => {
+          void handleConfirmPendingAction();
+        }}
+        onClose={() => setPendingAction(null)}
+      />
+
       <SettingsSection title="Cambiar contraseña">
         <form onSubmit={(e) => void handleChangePassword(e)}>
           <div class={styles.formGrid}>
@@ -135,9 +167,41 @@ export default function SecurityPage() {
 
       <SettingsSection
         title="Protege tu cuenta"
-        description="Gestiona por separado el acceso con clave de acceso y el segundo paso del flujo con contraseña."
+        description="Gestiona tus métodos con la misma lógica del inicio de sesión: la clave de acceso entra directo, y TOTP protege el flujo con contraseña."
       >
         <div class={styles.securityStack}>
+          <div class={styles.securitySummary}>
+            <article class={styles.securitySummaryCard}>
+              <span class={styles.securitySummaryLabel}>Política actual</span>
+              <strong class={styles.securitySummaryValue}>
+                {currentUser().strongAuthRequired
+                  ? "Método fuerte obligatorio"
+                  : "Método fuerte opcional"}
+              </strong>
+              <p class={styles.sectionDescription}>
+                {currentUser().strongAuthRequired
+                  ? "Antes de quitar un método, mantén otro activo para no bloquear tu acceso."
+                  : "Puedes dejar uno o ambos métodos activos según prefieras."}
+              </p>
+            </article>
+            <article class={styles.securitySummaryCard}>
+              <span class={styles.securitySummaryLabel}>Estado actual</span>
+              <strong class={styles.securitySummaryValue}>
+                {currentUser().hasPasskey || currentUser().totpEnabled
+                  ? "Cuenta protegida"
+                  : "Sin métodos configurados"}
+              </strong>
+              <p class={styles.sectionDescription}>
+                {currentUser().hasPasskey
+                  ? `${currentUser().passkeyCount} clave${currentUser().passkeyCount === 1 ? "" : "s"} de acceso activa${currentUser().passkeyCount === 1 ? "" : "s"}`
+                  : "Ninguna clave de acceso configurada"}
+                {currentUser().totpEnabled
+                  ? " y aplicación de autenticación activa."
+                  : "."}
+              </p>
+            </article>
+          </div>
+
           <PasskeyMethodCard
             title="Claves de acceso"
             description="Añade o elimina las claves que usas para entrar sin contraseña desde dispositivos compatibles."
@@ -163,7 +227,7 @@ export default function SecurityPage() {
             onSecondaryAction={
               currentUser().hasPasskey
                 ? () => {
-                    void handleRemoveAllPasskeys();
+                    setPendingAction("remove-passkeys");
                   }
                 : undefined
             }
@@ -196,7 +260,7 @@ export default function SecurityPage() {
             onSecondaryAction={
               currentUser().totpEnabled
                 ? () => {
-                    void handleDisableTotp();
+                    setPendingAction("disable-totp");
                   }
                 : undefined
             }

@@ -1,0 +1,243 @@
+.shell {
+  min-height: 100vh;
+  padding: 24px 16px;
+  display: grid;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(
+      circle at top left,
+      color-mix(in oklab, var(--accent) 14%, transparent) 0%,
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      color-mix(in oklab, var(--success, #12715b) 12%, transparent) 0%,
+      transparent 30%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--tertiary) 80%, white 20%) 0%,
+      var(--tertiary) 100%
+    );
+}
+
+.surface {
+  width: min(1040px, 100%);
+  display: grid;
+  grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+  border: var(--panel-border);
+  border-radius: 28px;
+  background: var(--panel-bg);
+  box-shadow: var(
+    --box-shadow-strong,
+    0 8px 32px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.04)
+  );
+  overflow: hidden;
+}
+
+.rail {
+  padding: 32px 28px;
+  display: grid;
+  align-content: space-between;
+  gap: 28px;
+  background:
+    linear-gradient(
+      160deg,
+      color-mix(in oklab, var(--foreground) 2%, transparent) 0%,
+      transparent 40%
+    ),
+    color-mix(in oklab, var(--panel-bg) 90%, white 10%);
+  border-right: 1px solid color-mix(in oklab, var(--border) 82%, white 18%);
+}
+
+.brand {
+  display: grid;
+  gap: 12px;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: var(--font-size-label);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--muted-foreground) 82%, transparent);
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(2rem, 3vw, 2.6rem);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  color: var(--foreground);
+}
+
+.description {
+  margin: 0;
+  font-size: var(--font-size-body);
+  line-height: 1.6;
+  color: var(--muted-foreground);
+}
+
+.railNote {
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid color-mix(in oklab, var(--border) 80%, white 20%);
+  background: color-mix(in oklab, var(--panel-bg) 84%, white 16%);
+  color: var(--muted-foreground);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+
+.progress {
+  display: grid;
+  gap: 14px;
+}
+
+.progressItem {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.progressMarker {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  background: color-mix(in oklab, var(--panel-bg) 80%, white 20%);
+  color: var(--muted-foreground);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
+.progressCurrent {
+  border-color: color-mix(in oklab, var(--accent) 40%, var(--border));
+  background: color-mix(in oklab, var(--accent) 12%, white 88%);
+  color: var(--foreground);
+}
+
+.progressComplete {
+  border-color: color-mix(in oklab, var(--success, #12715b) 45%, var(--border));
+  background: color-mix(in oklab, var(--success, #12715b) 14%, white 86%);
+  color: var(--success, #12715b);
+}
+
+.progressCopy {
+  display: grid;
+  gap: 4px;
+  padding-top: 4px;
+}
+
+.progressLabel {
+  margin: 0;
+  font-size: var(--font-size-body);
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.progressDescription {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
+.content {
+  padding: 32px 32px 28px;
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+}
+
+.contentHeader {
+  display: grid;
+  gap: 10px;
+}
+
+.contentEyebrow {
+  margin: 0;
+  font-size: var(--font-size-label);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.contentTitle {
+  margin: 0;
+  font-size: clamp(1.5rem, 2vw, 2rem);
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+}
+
+.contentDescription {
+  margin: 0;
+  max-width: 60ch;
+  color: var(--muted-foreground);
+  line-height: 1.6;
+}
+
+.body {
+  display: grid;
+  gap: 20px;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in oklab, var(--border) 82%, white 18%);
+}
+
+.footerCopy {
+  margin: 0;
+  color: var(--muted-foreground);
+  line-height: 1.5;
+}
+
+.footerActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+@media (max-width: 920px) {
+  .surface {
+    grid-template-columns: 1fr;
+  }
+
+  .rail {
+    border-right: none;
+    border-bottom: 1px solid color-mix(in oklab, var(--border) 82%, white 18%);
+  }
+}
+
+@media (max-width: 640px) {
+  .shell {
+    padding: 16px 12px;
+  }
+
+  .rail,
+  .content {
+    padding: 24px 20px;
+  }
+
+  .footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .footerActions {
+    flex-direction: column-reverse;
+  }
+}

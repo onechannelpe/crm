@@ -1,4 +1,5 @@
 import type { CurrentUser } from "~/actions/auth";
+import type { AuthFlowProgressItem } from "~/components/auth/auth-flow-shell";
 import type { PasswordLoginPolicy } from "~/lib/auth/security/auth-contract";
 
 export type OnboardingStep = "profile" | "security";
@@ -8,6 +9,12 @@ export interface OnboardingState {
   profileReady: boolean;
   securityReady: boolean;
   canFinish: boolean;
+}
+
+const E164_PATTERN = /^\+[1-9]\d{7,14}$/;
+
+export function isValidOnboardingPhone(value: string): boolean {
+  return E164_PATTERN.test(value.replace(/\s+/g, "").trim());
 }
 
 export function getSecurityStepDescription(
@@ -29,7 +36,7 @@ export function deriveOnboardingState(input: {
   phoneE164: string;
   user: Pick<CurrentUser, "strongAuthRequired" | "strongAuthConfigured">;
 }): OnboardingState {
-  const profileReady = input.phoneE164.trim().length > 0;
+  const profileReady = isValidOnboardingPhone(input.phoneE164);
   const securityReady =
     !input.user.strongAuthRequired || input.user.strongAuthConfigured;
 
@@ -42,4 +49,29 @@ export function deriveOnboardingState(input: {
     securityReady,
     canFinish: profileReady && securityReady,
   };
+}
+
+export function buildOnboardingProgress(input: {
+  currentStep: OnboardingStep;
+  profileReady: boolean;
+  securityReady: boolean;
+}): AuthFlowProgressItem[] {
+  return [
+    {
+      label: "Perfil",
+      description:
+        "Confirma el canal principal que usaremos para alertas y soporte.",
+      state: input.profileReady ? "complete" : "current",
+    },
+    {
+      label: "Seguridad",
+      description:
+        "Configura cómo vas a entrar y cómo responderás al segundo paso cuando aplique.",
+      state: input.securityReady
+        ? "complete"
+        : input.currentStep === "security"
+          ? "current"
+          : "upcoming",
+    },
+  ];
 }

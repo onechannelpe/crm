@@ -1,120 +1,110 @@
-.panel {
-  display: grid;
-  gap: 24px;
-  max-width: 920px;
-}
-
-.hero {
-  display: grid;
-  gap: 8px;
-}
-
-.form {
+.stepStack {
   display: grid;
   gap: 20px;
 }
 
-.summary {
+.identityHero {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.summaryItem {
-  display: grid;
-  gap: 4px;
-  padding: 14px 16px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: color-mix(in oklab, var(--panel-bg) 90%, white 10%);
-}
-
-.summaryLabel {
-  font-size: var(--font-size-sm);
-  color: var(--muted-foreground);
-}
-
-.summaryValue {
-  font-size: var(--font-size-body);
-  font-weight: 600;
-  color: var(--foreground);
-}
-
-.summaryValueSuccess {
-  color: var(--success, #12715b);
-}
-
-.card {
-  display: grid;
-  gap: 18px;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
   padding: 20px;
   border: 1px solid var(--border);
-  border-radius: 18px;
+  border-radius: 22px;
   background: linear-gradient(
-    180deg,
-    color-mix(in oklab, var(--panel-bg) 94%, white 6%) 0%,
-    var(--panel-bg) 100%
+    160deg,
+    color-mix(in oklab, var(--panel-bg) 92%, white 8%) 0%,
+    color-mix(in oklab, var(--panel-bg) 98%, var(--tertiary) 2%) 100%
   );
 }
 
-.cardHeader {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
+.identityHeroIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--foreground);
+  background: color-mix(in oklab, var(--accent) 12%, white 88%);
+  border: 1px solid color-mix(in oklab, var(--accent) 26%, var(--border));
 }
 
-.cardHeaderCopy {
+.identityHeroCopy {
   display: grid;
-  gap: 6px;
+  gap: 8px;
 }
 
-.cardStep {
+.kicker {
+  margin: 0;
   font-size: var(--font-size-label);
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--muted-foreground);
 }
 
-.cardTitle {
+.sectionTitle {
   margin: 0;
   font-size: var(--font-size-heading-sm);
   color: var(--foreground);
 }
 
-.cardDescription {
+.sectionDescription {
   margin: 0;
   color: var(--muted-foreground);
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
-.cardIcon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  color: var(--foreground);
-  background: color-mix(in oklab, var(--panel-bg) 86%, white 14%);
-}
-
-.identityGrid {
+.infoGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
 }
 
-.footer {
+.infoCard {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: color-mix(in oklab, var(--panel-bg) 96%, white 4%);
+}
+
+.infoCardHeader {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--foreground);
+  font-size: var(--font-size-body);
+  font-weight: 600;
+}
+
+.infoCardFields {
   display: grid;
   gap: 12px;
 }
 
-.footerActions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
+.highlightCard {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid color-mix(in oklab, var(--border) 72%, white 28%);
+  background: color-mix(in oklab, var(--panel-bg) 88%, white 12%);
+}
+
+.highlightTitle {
+  margin: 0;
+  font-size: var(--font-size-body);
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.highlightCopy {
+  margin: 0;
+  color: var(--muted-foreground);
+  line-height: 1.6;
 }
 
 .securityGrid {
@@ -125,12 +115,17 @@
 .footerCopy {
   margin: 0;
   color: var(--muted-foreground);
-  line-height: 1.5;
+  line-height: 1.6;
+}
+
+.footerActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
 }
 
 @media (max-width: 800px) {
-  .summary,
-  .identityGrid {
+  .infoGrid {
     grid-template-columns: 1fr;
   }
 
