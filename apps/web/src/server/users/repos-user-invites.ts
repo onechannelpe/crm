@@ -96,6 +96,7 @@ export function createUserInvitesRepo(db: Kysely<Database>) {
           "users.names as user_names",
           "users.first_surname as user_first_surname",
           "users.second_surname as user_second_surname",
+          "users.username as user_username",
           "users.is_active as user_is_active",
         ])
         .where("user_invites.token_hash", "=", tokenHash)

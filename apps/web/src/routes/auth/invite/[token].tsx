@@ -1,7 +1,7 @@
-import { useNavigate, useParams } from "@solidjs/router";
-import { createSignal } from "solid-js";
+import { createAsync, useNavigate, useParams } from "@solidjs/router";
+import { Show, createSignal } from "solid-js";
 
-import { acceptTeamInvite } from "~/actions/team";
+import { acceptTeamInvite, getInviteInfo } from "~/actions/team";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { getErrorMessage } from "~/lib/errors";
@@ -11,6 +11,7 @@ import styles from "../auth-shell.module.css";
 export default function AcceptInvitePage() {
   const navigate = useNavigate();
   const params = useParams<{ token: string }>();
+  const inviteInfo = createAsync(() => getInviteInfo(params.token));
   const [password, setPassword] = createSignal("");
   const [confirmPassword, setConfirmPassword] = createSignal("");
   const [submitting, setSubmitting] = createSignal(false);
@@ -53,6 +54,31 @@ export default function AcceptInvitePage() {
               Completa tus datos para activar el acceso al espacio de trabajo
             </p>
           </div>
+
+          <Show when={inviteInfo()}>
+            {(info) => (
+              <div class={styles.stack4}>
+                <Input
+                  label="Nombre completo"
+                  type="text"
+                  value={info().fullName}
+                  disabled
+                />
+                <Input
+                  label="Usuario"
+                  type="text"
+                  value={info().username}
+                  disabled
+                />
+                <Input
+                  label="Correo"
+                  type="email"
+                  value={info().email}
+                  disabled
+                />
+              </div>
+            )}
+          </Show>
 
           <Input
             label="Contraseña"

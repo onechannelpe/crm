@@ -15,6 +15,7 @@ import {
 } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { requirePermission } from "~/lib/auth/access/session";
+import { hashInviteToken } from "~/lib/auth/invite/tokens";
 import {
   assertNonEmptyString,
   assertPositiveInt,
@@ -162,6 +163,25 @@ function throwMarkInviteDeliveredError(error: MarkInviteDeliveredError): never {
       );
     }
   }
+}
+
+export interface InviteInfo {
+  fullName: string;
+  username: string;
+  email: string;
+}
+
+export async function getInviteInfo(token: string): Promise<InviteInfo | null> {
+  const invite = await repos.userInvites.findPendingByTokenHash(
+    hashInviteToken(token),
+    Date.now(),
+  );
+  if (!invite) return null;
+  return {
+    fullName: `${invite.user_names} ${invite.user_first_surname} ${invite.user_second_surname}`,
+    username: invite.user_username,
+    email: invite.user_email,
+  };
 }
 
 export async function createTeamInvite(input: {

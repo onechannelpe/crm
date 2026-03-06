@@ -50,11 +50,25 @@ export function TeamMembersSection(props: TeamMembersSectionProps) {
   const filteredMembers = () =>
     filterMembers(props.members, props.searchFilter);
 
+  const soonExpiringCount = () => {
+    const threshold = Date.now() + 30 * 86_400_000;
+    return props.members.filter(
+      (m) => m.isActive && m.expiresAt !== null && m.expiresAt <= threshold,
+    ).length;
+  };
+
   return (
     <AppPageSection>
       <AppPageSectionTitle
         title="Gestionar miembros"
         description="Busca y revisa los miembros activos de la sucursal."
+        actions={
+          <Show when={soonExpiringCount() > 0}>
+            <Badge variant="warning">
+              {soonExpiringCount()} vencen en 30 d
+            </Badge>
+          </Show>
+        }
       />
       <div class={styles.searchWrap}>
         <div class={styles.searchField}>
