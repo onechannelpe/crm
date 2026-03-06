@@ -110,7 +110,9 @@ export default function LoginPage() {
           <Input
             id="username"
             type="text"
+            name="username"
             label="Usuario"
+            autocomplete="username"
             value={username()}
             onInput={(e) => setUsername(e.currentTarget.value)}
             required
@@ -119,7 +121,9 @@ export default function LoginPage() {
           <Input
             id="password"
             type="password"
+            name="password"
             label="Contraseña"
+            autocomplete="current-password"
             value={password()}
             onInput={(e) => setPassword(e.currentTarget.value)}
             required
@@ -141,8 +145,10 @@ export default function LoginPage() {
               <Input
                 id="totp"
                 type="text"
+                name="totp"
                 label="Código TOTP o de recuperación"
                 placeholder="Opcional"
+                autocomplete="one-time-code"
                 value={totpCode()}
                 onInput={(e) => setTotpCode(e.currentTarget.value)}
               />

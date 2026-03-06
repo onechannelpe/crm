@@ -1,66 +1,331 @@
 .panel {
   display: grid;
-  gap: 20px;
+  gap: 24px;
+  max-width: 920px;
+}
+
+.hero {
+  display: grid;
+  gap: 8px;
 }
 
 .form {
   display: grid;
+  gap: 20px;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.summaryItem {
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: color-mix(in oklab, var(--panel-bg) 90%, white 10%);
+}
+
+.summaryLabel {
+  font-size: var(--font-size-sm);
+  color: var(--muted-foreground);
+}
+
+.summaryValue {
+  font-size: var(--font-size-body);
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.summaryValueSuccess {
+  color: var(--success, #12715b);
+}
+
+.card {
+  display: grid;
+  gap: 18px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--panel-bg) 94%, white 6%) 0%,
+      var(--panel-bg) 100%
+    );
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
   gap: 16px;
 }
 
-.section {
+.cardHeaderCopy {
+  display: grid;
+  gap: 6px;
+}
+
+.cardStep {
+  font-size: var(--font-size-label);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: var(--font-size-heading-sm);
+  color: var(--foreground);
+}
+
+.cardDescription {
+  margin: 0;
+  color: var(--muted-foreground);
+  line-height: 1.5;
+}
+
+.cardIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  background: color-mix(in oklab, var(--panel-bg) 86%, white 14%);
+}
+
+.identityGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.securityBanner {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in oklab, var(--border) 70%, var(--foreground) 30%);
+  background: color-mix(in oklab, var(--tertiary) 72%, white 28%);
+}
+
+.bannerTitle {
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.bannerText {
+  color: var(--muted-foreground);
+  line-height: 1.5;
+}
+
+.methodGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.methodCard {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: color-mix(in oklab, var(--panel-bg) 95%, white 5%);
+}
+
+.methodHeader {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: start;
+}
+
+.methodIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  color: var(--foreground);
+  background: color-mix(in oklab, var(--tertiary) 80%, white 20%);
+}
+
+.methodCopy {
+  display: grid;
+  gap: 4px;
+}
+
+.methodTitle {
+  margin: 0;
+  font-size: var(--font-size-body);
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.methodDescription {
+  margin: 0;
+  color: var(--muted-foreground);
+  line-height: 1.5;
+}
+
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+}
+
+.statusPillSuccess {
+  color: var(--success, #12715b);
+  border-color: color-mix(in oklab, var(--success, #12715b) 45%, var(--border) 55%);
+  background: color-mix(in oklab, var(--success, #12715b) 10%, white 90%);
+}
+
+.methodActions {
+  display: grid;
+  gap: 10px;
+}
+
+.methodHint {
+  margin: 0;
+  color: var(--muted-foreground);
+  line-height: 1.5;
+}
+
+.totpSetup {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 16px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.qrPanel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 184px;
+  min-height: 184px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: white;
+}
+
+.qr {
+  width: 148px;
+  height: 148px;
+}
+
+.totpDetails {
+  display: grid;
+  gap: 12px;
+}
+
+.setupKeyBlock {
   display: grid;
   gap: 8px;
 }
 
-.totpBox {
+.setupKeyLabel {
+  font-size: var(--font-size-sm);
+  color: var(--muted-foreground);
+}
+
+.verifyRow {
   display: grid;
+  grid-template-columns: 1fr auto;
   gap: 12px;
-  border: 1px solid var(--border);
-  padding: 12px;
-}
-
-.totpTitle {
-  margin: 0;
-  font-size: var(--font-size-body);
-  font-weight: 500;
-  color: var(--foreground);
-}
-
-.qr {
-  width: 192px;
-  height: 192px;
+  align-items: end;
 }
 
 .recovery {
   display: grid;
-  gap: 8px;
-  border: 1px solid var(--border);
-  padding: 8px 12px;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in oklab, var(--border) 65%, var(--foreground) 35%);
+  background: color-mix(in oklab, var(--panel-bg) 88%, white 12%);
+}
+
+.recoveryHeader {
+  display: grid;
+  gap: 4px;
 }
 
 .recoveryTitle {
   margin: 0;
   font-size: var(--font-size-body);
-  font-weight: 500;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.recoveryDescription {
+  margin: 0;
+  color: var(--muted-foreground);
+  line-height: 1.5;
 }
 
 .recoveryList {
-  margin: 0;
-  padding: 0;
-  list-style: none;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
-  font-size: var(--font-size-body);
 }
 
 .mono {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: color-mix(in oklab, var(--tertiary) 80%, white 20%);
   font-family: var(--font-mono);
+  color: var(--foreground);
 }
 
-.error {
+.footer {
+  display: grid;
+  gap: 12px;
+}
+
+.footerCopy {
   margin: 0;
-  font-size: var(--font-size-body);
-  color: var(--destructive);
+  color: var(--muted-foreground);
+  line-height: 1.5;
+}
+
+@media (max-width: 800px) {
+  .summary,
+  .identityGrid,
+  .methodGrid,
+  .totpSetup,
+  .verifyRow,
+  .recoveryList {
+    grid-template-columns: 1fr;
+  }
+
+  .methodHeader {
+    grid-template-columns: auto 1fr;
+  }
+
+  .statusPill {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .qrPanel {
+    width: 100%;
+  }
 }

@@ -7,9 +7,9 @@ import {
 } from "~/lib/app-errors";
 import { requireSession } from "~/lib/auth/access/session";
 import {
-  isStrongAuthEnrolled,
+  getStrongAuthStatus,
   requiresStrongAuth,
-} from "~/lib/auth/security/strong-auth-state";
+} from "~/lib/auth/security/strong-auth-status";
 import { repos } from "~/server/shared/context";
 
 function assertE164Phone(value: string): string {
@@ -32,7 +32,8 @@ export async function completeOnboarding(phoneE164: string): Promise<void> {
     return;
   }
 
-  if (requiresStrongAuth(user) && !isStrongAuthEnrolled(user)) {
+  const strongAuthStatus = await getStrongAuthStatus(user.id, repos);
+  if (requiresStrongAuth(user) && !strongAuthStatus.hasVerifiedStrongAuth) {
     throw conflictError("Strong authentication setup required");
   }
 

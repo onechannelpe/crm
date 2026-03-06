@@ -10,11 +10,15 @@ import type { User } from "~/lib/db/schema";
 import type { Repositories } from "~/server/shared/registry";
 
 import { recordAuthEvent } from "./auth-events";
-import { isStrongAuthEnrolled, requiresStrongAuth } from "./strong-auth-state";
+import { getStrongAuthStatus, requiresStrongAuth } from "./strong-auth-status";
 
 type Deps = Pick<
   Repositories,
-  "userTotpFactors" | "userTotpRecoveryCodes" | "authThrottle" | "authEvents"
+  | "userTotpFactors"
+  | "userTotpRecoveryCodes"
+  | "authThrottle"
+  | "authEvents"
+  | "passkeys"
 >;
 
 export async function resolvePasswordStrongAuth(params: {
@@ -32,11 +36,13 @@ export async function resolvePasswordStrongAuth(params: {
   }
 
   const identifier = `user:${user.id}`;
-  const factor = await deps.userTotpFactors.findByUserId(user.id);
-  const hasTotp = factor?.is_enabled === 1;
+  const [factor, strongAuthStatus] = await Promise.all([
+    deps.userTotpFactors.findByUserId(user.id),
+    getStrongAuthStatus(user.id, deps),
+  ]);
+  const hasTotp = strongAuthStatus.hasTotp;
   const safeCode = totpCode?.trim();
-  const isEnrolled = isStrongAuthEnrolled(user);
-  if (!isEnrolled) {
+  if (!strongAuthStatus.hasVerifiedStrongAuth) {
     if (user.onboarding_completed_at === null) {
       return { authMethod: "password", strongAuthAt: null };
     }
@@ -59,9 +65,15 @@ export async function resolvePasswordStrongAuth(params: {
       method: "totp",
       stage: "verify",
       outcome: "failure",
-      reason: "strong_auth_factor_missing",
+      reason: strongAuthStatus.hasPasskey
+        ? "strong_auth_passkey_required"
+        : "strong_auth_factor_missing",
     });
-    throw new Error("Strong authentication required");
+    throw new Error(
+      strongAuthStatus.hasPasskey
+        ? "Use a passkey or configure an authenticator app"
+        : "Strong authentication required",
+    );
   }
   if (!safeCode) {
     await recordAuthEvent(deps, {
@@ -72,6 +84,18 @@ export async function resolvePasswordStrongAuth(params: {
       stage: "verify",
       outcome: "failure",
       reason: "strong_auth_missing",
+    });
+    throw new Error("Strong authentication required");
+  }
+  if (!factor) {
+    await recordAuthEvent(deps, {
+      userId: user.id,
+      identifier,
+      ipAddress,
+      method: "totp",
+      stage: "verify",
+      outcome: "failure",
+      reason: "strong_auth_factor_missing",
     });
     throw new Error("Strong authentication required");
   }

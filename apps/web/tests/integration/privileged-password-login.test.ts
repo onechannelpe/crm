@@ -92,12 +92,14 @@ describe("privileged password login", () => {
     ).rejects.toThrow("Strong authentication required");
   });
 
-  it("rejects privileged login when enrolled marker exists but factor is missing", async () => {
-    await ctx.db
-      .updateTable("users")
-      .set({ strong_auth_enrolled_at: Date.now() })
-      .where("id", "=", 5)
-      .execute();
+  it("rejects privileged password login when passkey is the only strong factor", async () => {
+    await ctx.repos.passkeys.create({
+      id: "pk-only-super-user",
+      user_id: 5,
+      public_key: "base64-public-key",
+      counter: 0,
+      transports: JSON.stringify(["internal"]),
+    });
 
     await expect(
       authenticatePasswordLogin(
@@ -112,7 +114,7 @@ describe("privileged password login", () => {
           sendPrivilegedLoginAlert,
         },
       ),
-    ).rejects.toThrow("Strong authentication required");
+    ).rejects.toThrow("Use a passkey or configure an authenticator app");
   });
 
   it("marks session as strong-auth when privileged user logs in with valid totp", async () => {
@@ -168,16 +170,25 @@ describe("privileged password login", () => {
     ).rejects.toThrow("Invalid TOTP code");
   });
 
-  it("clears strong-auth enrollment marker when provisioning downgrades role", async () => {
+  it("keeps enrolled factors when provisioning downgrades role", async () => {
     const secret = generateTotpSecret();
     await ctx.repos.userTotpFactors.createOrRotate(
       5,
       await encryptTotpSecret(secret),
     );
     await ctx.repos.userTotpFactors.markEnabled(5);
+    await ctx.repos.passkeys.create({
+      id: "pk-downgrade-super-user",
+      user_id: 5,
+      public_key: "base64-public-key",
+      counter: 0,
+      transports: JSON.stringify(["internal"]),
+    });
 
-    const enrolledUser = await ctx.repos.users.findById(5);
-    expect(enrolledUser?.strong_auth_enrolled_at).not.toBeNull();
+    const enrolledFactor = await ctx.repos.userTotpFactors.findByUserId(5);
+    const enrolledPasskeys = await ctx.repos.passkeys.findByUser(5);
+    expect(enrolledFactor?.is_enabled).toBe(1);
+    expect(enrolledPasskeys).toHaveLength(1);
 
     await ctx.repos.users.updateInviteProvisioning(5, {
       team_id: null,
@@ -189,7 +200,10 @@ describe("privileged password login", () => {
     });
 
     const downgradedUser = await ctx.repos.users.findById(5);
+    const downgradedFactor = await ctx.repos.userTotpFactors.findByUserId(5);
+    const downgradedPasskeys = await ctx.repos.passkeys.findByUser(5);
     expect(downgradedUser?.strong_auth_required).toBe(0);
-    expect(downgradedUser?.strong_auth_enrolled_at).toBeNull();
+    expect(downgradedFactor?.is_enabled).toBe(1);
+    expect(downgradedPasskeys).toHaveLength(1);
   });
 });

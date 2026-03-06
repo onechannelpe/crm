@@ -1274,10 +1274,10 @@ export async function seedIfEmpty() {
       {
         user_id: 1,
         secret_encrypted: "seed_totp_secret_admin",
-        is_enabled: 1,
+        is_enabled: 0,
         created_at: now - oneDay * 10,
         updated_at: now - oneDay,
-        enabled_at: now - oneDay * 9,
+        enabled_at: null,
       },
       {
         user_id: 12,
@@ -1294,18 +1294,6 @@ export async function seedIfEmpty() {
   await db
     .insertInto("user_totp_recovery_codes")
     .values([
-      {
-        user_id: 1,
-        code_hash: "seed_code_hash_admin_1",
-        used_at: null,
-        created_at: now - oneDay * 9,
-      },
-      {
-        user_id: 1,
-        code_hash: "seed_code_hash_admin_2",
-        used_at: now - oneDay * 2,
-        created_at: now - oneDay * 9,
-      },
       {
         user_id: 12,
         code_hash: "seed_code_hash_manager_1",

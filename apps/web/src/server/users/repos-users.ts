@@ -1,6 +1,6 @@
 import type { Kysely } from "kysely";
 
-import { deriveStrongAuthRequired } from "~/lib/auth/security/strong-auth-state";
+import { deriveStrongAuthRequired } from "~/lib/auth/security/strong-auth-status";
 import type { Database, UsersTable } from "~/lib/db/schema";
 
 type UserRole = UsersTable["role"];
@@ -157,7 +157,6 @@ export function createUsersRepo(db: Kysely<Database>) {
           role: values.role,
           is_active: values.is_active,
           strong_auth_required: 0,
-          strong_auth_enrolled_at: null,
         })
         .where("id", "=", id)
         .execute();

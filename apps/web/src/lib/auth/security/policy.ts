@@ -1,5 +1,5 @@
 import type { Permission, Role } from "~/lib/auth/access/rbac";
-import { deriveStrongAuthRequired } from "~/lib/auth/security/strong-auth-state";
+import { deriveStrongAuthRequired } from "~/lib/auth/security/strong-auth-status";
 
 const STEP_UP_PERMISSIONS: ReadonlySet<Permission> = new Set(["admin:manage"]);
 
