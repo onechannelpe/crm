@@ -2,15 +2,13 @@
 
 import {
   conflictError,
-  notFoundError,
+  internalError,
   validationError,
 } from "~/lib/app-errors";
 import { requireSession } from "~/lib/auth/access/session";
-import {
-  isStrongAuthEnrolled,
-  requiresStrongAuth,
-} from "~/lib/auth/security/strong-auth-state";
-import { repos } from "~/server/shared/context";
+import { repos, runInRepositoryTransaction } from "~/server/shared/context";
+import { isErr } from "~/server/shared/result";
+import { createAccountOnboardingService } from "~/server/users/service-account-onboarding";
 
 function assertE164Phone(value: string): string {
   const normalized = value.replace(/\s+/g, "").trim();
@@ -22,83 +20,26 @@ function assertE164Phone(value: string): string {
 
 export async function completeOnboarding(phoneE164: string): Promise<void> {
   const session = await requireSession();
-  const user = await repos.users.findById(session.userId);
-
-  if (!user) {
-    throw notFoundError("User not found");
-  }
-
-  if (user.onboarding_completed_at) {
+  const safePhone = assertE164Phone(phoneE164);
+  const service = createAccountOnboardingService(repos, {
+    runInTransaction: runInRepositoryTransaction,
+  });
+  const result = await service.completeOnboarding({
+    userId: session.userId,
+    phoneE164: safePhone,
+  });
+  if (!isErr(result)) {
     return;
   }
-
-  if (requiresStrongAuth(user) && !isStrongAuthEnrolled(user)) {
-    throw conflictError("Strong authentication setup required");
+  switch (result.error.reason) {
+    case "user_not_found":
+    case "unexpected":
+      throw internalError(result.error.message);
+    case "strong_auth_required":
+      throw conflictError(result.error.message);
   }
 
-  const now = Date.now();
-  const safePhone = assertE164Phone(phoneE164);
-
-  await repos.users.completeOnboarding(user.id, {
-    phone_e164: safePhone,
-    completedAt: now,
-  });
-
-  await repos.notificationContacts.upsertPrimary({
-    user_id: user.id,
-    channel: "email",
-    address: user.email,
-    is_primary: 1,
-    is_verified: 1,
-    verified_at: now,
-    created_at: now,
-    updated_at: now,
-  });
-
-  await repos.notificationContacts.upsertPrimary({
-    user_id: user.id,
-    channel: "whatsapp",
-    address: safePhone,
-    is_primary: 1,
-    is_verified: 1,
-    verified_at: now,
-    created_at: now,
-    updated_at: now,
-  });
-
-  await repos.notificationPreferences.upsert({
-    user_id: user.id,
-    event_type: "security.privileged_login",
-    channel: "email",
-    is_enabled: 1,
-    created_at: now,
-    updated_at: now,
-  });
-
-  await repos.notificationPreferences.upsert({
-    user_id: user.id,
-    event_type: "security.privileged_login",
-    channel: "whatsapp",
-    is_enabled: 1,
-    created_at: now,
-    updated_at: now,
-  });
-
-  await repos.notificationPreferences.upsert({
-    user_id: user.id,
-    event_type: "broadcast.general",
-    channel: "email",
-    is_enabled: 1,
-    created_at: now,
-    updated_at: now,
-  });
-
-  await repos.notificationPreferences.upsert({
-    user_id: user.id,
-    event_type: "broadcast.general",
-    channel: "whatsapp",
-    is_enabled: 1,
-    created_at: now,
-    updated_at: now,
-  });
+  const exhaustive: never = result.error;
+  void exhaustive;
+  throw internalError("Unexpected onboarding completion failure");
 }

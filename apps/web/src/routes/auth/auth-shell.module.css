@@ -31,11 +31,6 @@
   overflow: hidden;
 }
 
-.panelSm {
-  max-width: 420px;
-  padding: 32px 24px;
-}
-
 .panelMd {
   max-width: 448px;
   padding: 32px 24px;
@@ -104,25 +99,6 @@
 
 .full {
   width: 100%;
-}
-
-.textButton {
-  background: none;
-  border: none;
-  padding: 0;
-  color: var(--muted-foreground);
-  font-size: var(--font-size-sm);
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 4px;
-  transition: color 0.2s ease;
-  text-align: right;
-  width: fit-content;
-  margin-left: auto;
-}
-
-.textButton:hover {
-  color: var(--foreground);
 }
 
 .reveal {

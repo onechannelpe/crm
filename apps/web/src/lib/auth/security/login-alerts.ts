@@ -4,11 +4,11 @@ import { createLogger } from "~/lib/observability/logger";
 import { createAppNotificationService } from "~/server/notifications/service";
 import type { Repositories } from "~/server/shared/registry";
 
-import { isPrivilegedRole } from "./policy";
 import type {
   PrivilegedLoginAlertPayload,
   SendPrivilegedLoginAlert,
 } from "./privileged-login-alert";
+import { requiresStrongAuthRole } from "./strong-auth-status";
 
 type AlertRepos = Pick<
   Repositories,
@@ -33,7 +33,7 @@ export function createPrivilegedLoginAlertSender(
   return async function sendPrivilegedLoginAlert(
     params: PrivilegedLoginAlertPayload,
   ): Promise<void> {
-    if (!isPrivilegedRole(params.role)) {
+    if (!requiresStrongAuthRole(params.role)) {
       return;
     }
 

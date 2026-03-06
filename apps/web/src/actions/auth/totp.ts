@@ -24,16 +24,6 @@ import {
 import { assertNonEmptyString } from "~/lib/contracts/guards";
 import { repos } from "~/server/shared/context";
 
-export interface TotpStatusResult {
-  enabled: boolean;
-}
-
-export async function getTotpStatus(): Promise<TotpStatusResult> {
-  const session = await requireSession();
-  const factor = await repos.userTotpFactors.findByUserId(session.userId);
-  return { enabled: factor?.is_enabled === 1 };
-}
-
 export async function beginTotpEnrollment(): Promise<{
   otpauthUri: string;
   qrCodeDataUrl: string;

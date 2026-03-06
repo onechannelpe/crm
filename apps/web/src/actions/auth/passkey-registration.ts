@@ -3,7 +3,7 @@
 import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 import { getRequestEvent } from "solid-js/web";
 
-import { requireAuth } from "~/lib/auth/access/session";
+import { requireSession } from "~/lib/auth/access/session";
 import { createPasskeyService } from "~/lib/auth/passkey/passkey";
 import {
   beginPasskeyRegistrationFlow,
@@ -22,7 +22,7 @@ export interface PasskeyRegistrationChallengeResult {
 }
 
 export async function beginPasskeyRegistration(): Promise<PasskeyRegistrationChallengeResult> {
-  const session = await requireAuth();
+  const session = await requireSession();
   const event = getRequestEvent();
   const ipAddress = getClientIp(event?.request.headers ?? new Headers());
   return beginPasskeyRegistrationFlow(
@@ -37,7 +37,7 @@ export async function finishPasskeyRegistration(
   challengeId: number,
   response: RegistrationResponseJSON,
 ): Promise<void> {
-  const session = await requireAuth();
+  const session = await requireSession();
   const event = getRequestEvent();
   const ipAddress = getClientIp(event?.request.headers ?? new Headers());
   await finishPasskeyRegistrationFlow(

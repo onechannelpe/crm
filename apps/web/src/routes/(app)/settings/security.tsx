@@ -1,58 +1,100 @@
-import { createSignal, onMount, Show, For } from "solid-js";
+import { Show, createSignal } from "solid-js";
 
 import {
-  beginPasskeyRegistration,
-  beginTotpEnrollment,
-  finishPasskeyRegistration,
-  finishTotpEnrollment,
-} from "~/actions/auth";
-import { changePassword } from "~/actions/settings";
+  changePassword,
+  disableTotp,
+  removeAllPasskeys,
+} from "~/actions/settings";
+import { OtpSlotInput } from "~/components/auth/otp-slot-input";
+import { RecoveryCodesPanel } from "~/components/auth/recovery-codes-panel";
+import { usePasskeyEnrollment } from "~/components/auth/use-passkey-enrollment";
+import { useTotpEnrollment } from "~/components/auth/use-totp-enrollment";
 import { useToast } from "~/components/feedback/toast-provider";
-import Phone from "~/components/icons/phone";
-import ShieldCheck from "~/components/icons/shield-check";
-import { SettingsCard } from "~/components/settings/SettingsCard";
+import { useSession } from "~/components/providers/session-provider";
 import { SettingsSection } from "~/components/settings/SettingsSection";
+import { ConfirmDialog } from "~/components/ui/confirm-dialog";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
-import {
-  isPasskeySupported,
-  toCreationOptions,
-  toRegistrationPayload,
-} from "~/lib/auth/passkey/browser";
 import { getErrorMessage } from "~/lib/errors";
-import { totpStatusQuery } from "~/lib/queries/profile";
-import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
 
-import securityStyles from "./security-page.module.css";
 import styles from "./settings-page.module.css";
+
+function getSetupKey(otpauthUri: string): string {
+  try {
+    return new URL(otpauthUri).searchParams.get("secret") ?? "";
+  } catch {
+    return "";
+  }
+}
 
 export default function SecurityPage() {
   const { showToast } = useToast();
+  const { currentUser, refreshCurrentUser } = useSession();
 
   const [currentPassword, setCurrentPassword] = createSignal("");
   const [newPassword, setNewPassword] = createSignal("");
   const [confirmPassword, setConfirmPassword] = createSignal("");
   const [changingPassword, setChangingPassword] = createSignal(false);
-
-  const [passkeySupported, setPasskeySupported] = createSignal(false);
-  const [passkeyLoading, setPasskeyLoading] = createSignal(false);
-
-  const [totpEnrolling, setTotpEnrolling] = createSignal(false);
-  const [totpEnrollment, setTotpEnrollment] = createSignal<{
-    qrCodeDataUrl: string;
-    otpauthUri: string;
-  } | null>(null);
-  const [totpCode, setTotpCode] = createSignal("");
-  const [recoveryCodes, setRecoveryCodes] = createSignal<string[] | null>(null);
-
-  const { data: currentTotpStatus, invalidate: invalidateTotp } =
-    createOptimisticQuery(totpStatusQuery, {
-      initialValue: { enabled: false },
-    });
-
-  onMount(() => {
-    setPasskeySupported(isPasskeySupported());
+  const [pendingAction, setPendingAction] = createSignal<
+    "remove-passkeys" | "disable-totp" | null
+  >(null);
+  const passkeyEnrollment = usePasskeyEnrollment({
+    showToast,
+    refreshStatus: refreshCurrentUser,
+    successMessage: "Clave de acceso añadida",
+    failureMessage: "No se pudo añadir la clave de acceso",
   });
+  const totpEnrollment = useTotpEnrollment({
+    showToast,
+    refreshStatus: refreshCurrentUser,
+    verifySuccessMessage: "Autenticación en dos pasos activada",
+  });
+
+  const handleRemoveAllPasskeys = async () => {
+    try {
+      await removeAllPasskeys();
+      passkeyEnrollment.reset();
+      await refreshCurrentUser();
+      showToast("success", "Claves de acceso eliminadas");
+    } catch (err: unknown) {
+      showToast(
+        "error",
+        getErrorMessage(err, "No se pudieron eliminar las claves de acceso"),
+      );
+    }
+  };
+
+  const handleDisableTotp = async () => {
+    try {
+      await disableTotp();
+      totpEnrollment.reset();
+      await refreshCurrentUser();
+      showToast("success", "Aplicación de autenticación desactivada");
+    } catch (err: unknown) {
+      showToast(
+        "error",
+        getErrorMessage(err, "No se pudo desactivar la autenticación TOTP"),
+      );
+    }
+  };
+
+  const handleCopySetupKey = async (setupKey: string) => {
+    await navigator.clipboard.writeText(setupKey);
+    showToast("success", "Clave de configuración copiada");
+  };
+
+  const handleConfirmPendingAction = async () => {
+    const action = pendingAction();
+    setPendingAction(null);
+
+    if (action === "remove-passkeys") {
+      await handleRemoveAllPasskeys();
+      return;
+    }
+    if (action === "disable-totp") {
+      await handleDisableTotp();
+    }
+  };
 
   const handleChangePassword = async (e: Event) => {
     e.preventDefault();
@@ -77,65 +119,29 @@ export default function SecurityPage() {
     }
   };
 
-  const onRegisterPasskey = async () => {
-    setPasskeyLoading(true);
-    try {
-      const { challengeId, options } = await beginPasskeyRegistration();
-      const creationOptions = toCreationOptions(options);
-      const credential = await navigator.credentials.create({
-        publicKey: creationOptions,
-      });
-
-      if (!credential || !(credential instanceof PublicKeyCredential)) {
-        throw new Error("No se pudo crear la clave de acceso");
-      }
-
-      const response = toRegistrationPayload(credential);
-      await finishPasskeyRegistration(challengeId, response);
-      showToast("success", "Clave de acceso añadida");
-    } catch (err: unknown) {
-      showToast(
-        "error",
-        getErrorMessage(err, "No se pudo añadir la clave de acceso"),
-      );
-    } finally {
-      setPasskeyLoading(false);
-    }
-  };
-
-  const onBeginTotp = async () => {
-    setTotpEnrolling(true);
-    try {
-      const enrollment = await beginTotpEnrollment();
-      setTotpEnrollment(enrollment);
-    } catch (err: unknown) {
-      showToast(
-        "error",
-        getErrorMessage(err, "No se pudo iniciar la configuración del 2FA"),
-      );
-    } finally {
-      setTotpEnrolling(false);
-    }
-  };
-
-  const onVerifyTotp = async (e: Event) => {
-    e.preventDefault();
-    try {
-      const codes = await finishTotpEnrollment(totpCode());
-      setRecoveryCodes(codes);
-      setTotpEnrollment(null);
-      await invalidateTotp();
-      showToast("success", "Autenticación en dos pasos activada");
-    } catch (err: unknown) {
-      showToast(
-        "error",
-        getErrorMessage(err, "Código de verificación inválido"),
-      );
-    }
-  };
-
   return (
     <div class={styles.content}>
+      <ConfirmDialog
+        isOpen={pendingAction() !== null}
+        title={
+          pendingAction() === "remove-passkeys"
+            ? "Eliminar claves de acceso"
+            : "Desactivar aplicación"
+        }
+        description={
+          pendingAction() === "remove-passkeys"
+            ? "Se eliminarán todas las claves registradas en esta cuenta."
+            : "Se desactivará el segundo paso con código para esta cuenta."
+        }
+        confirmLabel={
+          pendingAction() === "remove-passkeys" ? "Eliminar" : "Desactivar"
+        }
+        onConfirm={() => {
+          void handleConfirmPendingAction();
+        }}
+        onClose={() => setPendingAction(null)}
+      />
+
       <SettingsSection title="Cambiar contraseña">
         <form onSubmit={(e) => void handleChangePassword(e)}>
           <div class={styles.formGrid}>
@@ -169,98 +175,152 @@ export default function SecurityPage() {
         </form>
       </SettingsSection>
 
-      <SettingsSection title="Autenticación en dos pasos">
-        <SettingsCard
-          title="Aplicación de autenticación"
-          icon={ShieldCheck}
-          status={{
-            text: currentTotpStatus()?.enabled ? "Activa" : "Desactivada",
-            active: currentTotpStatus()?.enabled ?? false,
-          }}
-        />
-
-        <Show
-          when={
-            !currentTotpStatus()?.enabled &&
-            !totpEnrollment() &&
-            !recoveryCodes()
-          }
-        >
-          <div
-            class={`${styles.sectionActions} ${securityStyles.sectionActionsSpaced}`}
-          >
-            <Button
-              variant="outline"
-              onClick={() => void onBeginTotp()}
-              disabled={totpEnrolling()}
-            >
-              {totpEnrolling()
-                ? "Iniciando configuración..."
-                : "Configurar aplicación de autenticación"}
-            </Button>
-          </div>
-        </Show>
-
-        <Show when={totpEnrollment()}>
-          <div class={securityStyles.qrWrap}>
-            <p class={styles.sectionDescription}>Escanea el código QR.</p>
-            <div class={securityStyles.qrContainer}>
-              <img
-                src={totpEnrollment()?.qrCodeDataUrl}
-                class={securityStyles.qr}
-                alt="Código QR"
-              />
-            </div>
-            <form
-              onSubmit={(e) => void onVerifyTotp(e)}
-              class={securityStyles.qrInput}
-            >
-              <Input
-                label="Código de verificación"
-                value={totpCode()}
-                onInput={(e) => setTotpCode(e.currentTarget.value)}
-                placeholder="123456"
-                required
-              />
-              <Button type="submit">Verificar</Button>
-            </form>
-          </div>
-        </Show>
-
-        <Show when={recoveryCodes()}>
-          <div class={securityStyles.recovery}>
-            <p class={securityStyles.recoveryTitle}>Códigos de recuperación</p>
-            <p class={styles.sectionDescription}>
-              Guarda estos códigos en un lugar seguro.
+      <SettingsSection title="Claves de acceso">
+        <div class={styles.securityStack}>
+          <div class={styles.configuredBlock}>
+            <p class={styles.configuredTitle}>Claves de acceso</p>
+            <p class={styles.configuredDescription}>
+              Usa tu dispositivo para iniciar sesión.
             </p>
-            <div class={securityStyles.recoveryList}>
-              <For each={recoveryCodes()}>
-                {(code) => <div class={securityStyles.mono}>{code}</div>}
-              </For>
-            </div>
-            <div class={securityStyles.recoveryActions}>
-              <Button onClick={() => setRecoveryCodes(null)}>
-                Guardar mis códigos
-              </Button>
-            </div>
           </div>
-        </Show>
+          <Show
+            when={passkeyEnrollment.supported()}
+            fallback={
+              <p class={styles.configuredDescription}>
+                Este dispositivo no es compatible con claves de acceso.
+              </p>
+            }
+          >
+            <div class={styles.inlineActions}>
+              <Button
+                type="button"
+                onClick={() => void passkeyEnrollment.registerPasskey()}
+                disabled={passkeyEnrollment.loading()}
+              >
+                {currentUser().hasPasskey
+                  ? "Agregar clave de acceso"
+                  : "Configurar"}
+              </Button>
+              <Show when={currentUser().hasPasskey}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setPendingAction("remove-passkeys");
+                  }}
+                >
+                  Eliminar todas
+                </Button>
+              </Show>
+            </div>
+          </Show>
+        </div>
       </SettingsSection>
 
-      <SettingsSection title="Claves de acceso">
-        <SettingsCard title="Clave de acceso del dispositivo" icon={Phone} />
-        <div
-          class={`${styles.sectionActions} ${securityStyles.sectionActionsSpaced}`}
-        >
-          <Button
-            variant="outline"
-            disabled={!passkeySupported() || passkeyLoading()}
-            onClick={() => void onRegisterPasskey()}
+      <SettingsSection title="Autenticación en dos pasos">
+        <div class={styles.securityStack}>
+          <Show
+            when={!currentUser().totpEnabled}
+            fallback={
+              <div class={styles.block}>
+                <p class={styles.title}>Aplicación configurada</p>
+                <p class={styles.sectionDescription}>
+                  Puedes volver a configurarla cuando lo necesites.
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setPendingAction("disable-totp");
+                  }}
+                >
+                  Restablecer
+                </Button>
+              </div>
+            }
           >
-            {passkeyLoading()
-              ? "Añadiendo clave de acceso..."
-              : "Añadir clave de acceso"}
-          </Button>
+            <div class={styles.totpSetupBlock}>
+              <div class={styles.block}>
+                <p class={styles.title}>Aplicación de autenticación</p>
+                <p class={styles.sectionDescription}>
+                  Genera códigos temporales para confirmar tu acceso.
+                </p>
+              </div>
+
+              <Show
+                when={totpEnrollment.enrollment()}
+                fallback={
+                  <Button
+                    type="button"
+                    onClick={() => void totpEnrollment.beginEnrollment()}
+                    disabled={totpEnrollment.loading()}
+                  >
+                    Configurar
+                  </Button>
+                }
+              >
+                {(enrollment) => (
+                  <>
+                    <div class={styles.qrBlock}>
+                      <div class={styles.qrFrame}>
+                        <img
+                          src={enrollment().qrCodeDataUrl}
+                          alt="QR code for authenticator app"
+                          class={styles.qrImage}
+                        />
+                      </div>
+                      <Show when={getSetupKey(enrollment().otpauthUri)}>
+                        {(setupKey) => (
+                          <p class={styles.qrCopy}>
+                            ¿No puedes escanearlo? Copia la{" "}
+                            <button
+                              type="button"
+                              class={styles.inlineLink}
+                              onClick={() => {
+                                void handleCopySetupKey(setupKey());
+                              }}
+                            >
+                              clave manual
+                            </button>
+                          </p>
+                        )}
+                      </Show>
+                    </div>
+
+                    <div class={styles.divider} />
+
+                    <div class={styles.block}>
+                      <p class={styles.title}>
+                        Ingresa el código de verificación
+                      </p>
+                    </div>
+                    <div class={styles.verifyBlock}>
+                      <OtpSlotInput
+                        value={totpEnrollment.code()}
+                        disabled={totpEnrollment.loading()}
+                        onValueChange={totpEnrollment.setCode}
+                      />
+                      <Button
+                        type="button"
+                        onClick={() => void totpEnrollment.verifyEnrollment()}
+                        disabled={totpEnrollment.loading()}
+                      >
+                        Guardar
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </Show>
+            </div>
+          </Show>
+
+          <Show when={totpEnrollment.recoveryCodes().length > 0}>
+            <RecoveryCodesPanel
+              title="Códigos de recuperación"
+              description="Guárdalos en un lugar seguro."
+              codes={totpEnrollment.recoveryCodes()}
+            />
+          </Show>
         </div>
       </SettingsSection>
     </div>

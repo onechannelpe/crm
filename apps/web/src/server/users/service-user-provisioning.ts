@@ -121,10 +121,11 @@ export function createUserProvisioningService(
     userId: number;
     email: string;
     role: Role;
+    expiresAt?: number | null;
   }): Promise<{ inviteId: number; token: string; expiresAt: number }> {
     const inviteAudit = createAuditService(params.repos);
     const issuedAt = now();
-    const expiresAt = issuedAt + inviteTtlMs;
+    const expiresAt = params.expiresAt ?? issuedAt + inviteTtlMs;
     await params.repos.userInvites.revokePendingByUser(params.userId, issuedAt);
 
     const token = generateInviteToken();
@@ -322,6 +323,7 @@ export function createUserProvisioningService(
               userId: user.id,
               email,
               role: input.role,
+              expiresAt: input.expiresAt ?? null,
             }),
           );
         });
@@ -399,6 +401,7 @@ export function createUserProvisioningService(
               userId: user.id,
               email: user.email,
               role: user.role,
+              expiresAt: invite.expires_at,
             }),
           );
         });

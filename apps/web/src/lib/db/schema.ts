@@ -31,15 +31,7 @@ export interface UsersTable {
   avatar_mime_type: string | null;
   avatar_updated_at: number | null;
   avatar_version: ColumnType<number, number | undefined, number>;
-  phone_verified_at: number | null;
-  profile_confirmed_at: number | null;
   onboarding_completed_at: number | null;
-  strong_auth_required: ColumnType<number, number | undefined, number>;
-  strong_auth_enrolled_at: ColumnType<
-    number | null,
-    number | null | undefined,
-    number | null
-  >;
   role:
     | "executive"
     | "supervisor"

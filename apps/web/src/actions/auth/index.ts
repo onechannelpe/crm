@@ -5,10 +5,6 @@ export {
   beginPasskeyRegistration,
   finishPasskeyRegistration,
 } from "./passkey-registration";
-export {
-  beginTotpEnrollment,
-  finishTotpEnrollment,
-  getTotpStatus,
-} from "./totp";
+export { beginTotpEnrollment, finishTotpEnrollment } from "./totp";
 export { getMe, logout } from "./session";
 export type { CurrentUser } from "./session";

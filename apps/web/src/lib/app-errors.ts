@@ -40,8 +40,27 @@ export function isAppError(error: unknown): error is AppError {
   return error instanceof AppError;
 }
 
+function isSerializedAppError(error: unknown): error is AppErrorInit {
+  if (!error || typeof error !== "object") return false;
+
+  const code = Reflect.get(error, "code");
+  const publicMessage = Reflect.get(error, "publicMessage");
+  const internalMessage = Reflect.get(error, "internalMessage");
+  const retryAfterSeconds = Reflect.get(error, "retryAfterSeconds");
+
+  return (
+    APP_ERROR_CODES.some((value) => value === code) &&
+    typeof publicMessage === "string" &&
+    (internalMessage === undefined || typeof internalMessage === "string") &&
+    (retryAfterSeconds === undefined || typeof retryAfterSeconds === "number")
+  );
+}
+
 export function toAppError(error: unknown, fallback: string): AppError {
   if (isAppError(error)) return error;
+  if (isSerializedAppError(error)) {
+    return new AppError(error);
+  }
   if (error instanceof Error) {
     return new AppError({
       code: "internal",

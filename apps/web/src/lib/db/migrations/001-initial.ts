@@ -29,13 +29,7 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     .addColumn("avatar_mime_type", "varchar(64)")
     .addColumn("avatar_updated_at", "integer")
     .addColumn("avatar_version", "integer", (col) => col.notNull().defaultTo(0))
-    .addColumn("phone_verified_at", "integer")
-    .addColumn("profile_confirmed_at", "integer")
     .addColumn("onboarding_completed_at", "integer")
-    .addColumn("strong_auth_required", "integer", (col) =>
-      col.notNull().defaultTo(0),
-    )
-    .addColumn("strong_auth_enrolled_at", "integer")
     .addColumn("role", "varchar(50)", (col) => col.notNull())
     .addColumn("is_active", "integer", (col) => col.notNull().defaultTo(1))
     .addColumn("expires_at", "integer")

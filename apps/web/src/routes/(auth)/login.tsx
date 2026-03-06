@@ -2,7 +2,9 @@ import { useNavigate } from "@solidjs/router";
 import { createSignal, onMount, Show } from "solid-js";
 
 import { beginPasskeyLogin, finishPasskeyLogin, login } from "~/actions/auth";
+import { AuthFlowShell } from "~/components/auth/auth-flow-shell";
 import { useToast } from "~/components/feedback/toast-provider";
+import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { initializeThemeMode } from "~/components/ui/theme/theme-mode";
@@ -15,6 +17,9 @@ import {
 import { getErrorMessage } from "~/lib/errors";
 
 import styles from "../auth/auth-shell.module.css";
+import pageStyles from "../auth/login-page.module.css";
+
+type LoginStep = "init" | "password" | "totp" | "passkey";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -24,17 +29,67 @@ export default function LoginPage() {
   const [totpCode, setTotpCode] = createSignal("");
   const [loading, setLoading] = createSignal(false);
   const [passkeyLoading, setPasskeyLoading] = createSignal(false);
-  const [showTotp, setShowTotp] = createSignal(false);
   const [passkeySupport, setPasskeySupport] = createSignal<
     "unknown" | "supported" | "unsupported"
   >("unknown");
+  const [step, setStep] = createSignal<LoginStep>("init");
 
   onMount(() => {
     initializeThemeMode();
     setPasskeySupport(isPasskeySupported() ? "supported" : "unsupported");
   });
 
-  async function handleSubmit(e: Event) {
+  const title = () => {
+    if (step() === "password") return "Contraseña";
+    if (step() === "totp") return "Código de verificación";
+    if (step() === "passkey") return "Clave de acceso";
+    return "Iniciar sesión";
+  };
+
+  const description = () => {
+    if (step() === "passkey") {
+      return "Usa una clave de acceso registrada.";
+    }
+    if (step() === "totp") {
+      return "Ingresa el código de 6 dígitos de tu app de autenticación.";
+    }
+    return undefined;
+  };
+
+  function requireUsername(): boolean {
+    if (username().trim()) return true;
+    showToast("error", "Ingresa tu usuario");
+    return false;
+  }
+
+  async function handlePasswordSubmit(e: Event) {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const result = await login(username(), password());
+      navigate(
+        result.onboardingCompleted
+          ? getDefaultAppPath(result.role)
+          : "/onboarding",
+      );
+    } catch (err: unknown) {
+      if (
+        err instanceof Error &&
+        err.message === "Strong authentication required"
+      ) {
+        setStep("totp");
+        showToast("info", "Ingresa el código de verificación para continuar.");
+        return;
+      }
+
+      showToast("error", getErrorMessage(err, "Credenciales inválidas"));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleTotpSubmit(e: Event) {
     e.preventDefault();
     setLoading(true);
 
@@ -46,7 +101,10 @@ export default function LoginPage() {
           : "/onboarding",
       );
     } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "Credenciales inválidas"));
+      showToast(
+        "error",
+        getErrorMessage(err, "No se pudo verificar el código"),
+      );
     } finally {
       setLoading(false);
     }
@@ -57,7 +115,7 @@ export default function LoginPage() {
 
     try {
       if (!isPasskeySupported()) {
-        throw new Error("This browser does not support passkeys");
+        throw new Error("Este navegador no admite claves de acceso");
       }
 
       if (!username().trim()) {
@@ -70,7 +128,7 @@ export default function LoginPage() {
       });
 
       if (!(credential instanceof PublicKeyCredential)) {
-        throw new Error("Invalid credential response");
+        throw new Error("Respuesta de credencial inválida");
       }
 
       const payload = toAuthenticationPayload(credential);
@@ -94,86 +152,161 @@ export default function LoginPage() {
   }
 
   return (
-    <div class={styles.shell}>
-      <div class={`${styles.panel} ${styles.panelSm}`}>
-        <div class={styles.stack1}>
-          <p class={styles.eyebrow}>One Channel</p>
-          <h1 class={styles.titleSm}>Iniciar sesión</h1>
-        </div>
+    <AuthFlowShell title={title()} description={description()}>
+      <div class={pageStyles.formStack}>
+        <Input
+          id="auth-username"
+          type="text"
+          name="username"
+          placeholder="Usuario"
+          autocomplete={step() === "passkey" ? "username webauthn" : "username"}
+          value={username()}
+          onInput={(e) => setUsername(e.currentTarget.value)}
+          required
+        />
 
-        <form
-          onSubmit={(e) => {
-            void handleSubmit(e);
-          }}
-          class={styles.stack3}
-        >
-          <Input
-            id="username"
-            type="text"
-            label="Usuario"
-            value={username()}
-            onInput={(e) => setUsername(e.currentTarget.value)}
-            required
-          />
-
-          <Input
-            id="password"
-            type="password"
-            label="Contraseña"
-            value={password()}
-            onInput={(e) => setPassword(e.currentTarget.value)}
-            required
-          />
-
-          <Show
-            when={showTotp()}
-            fallback={
-              <button
+        <Show when={step() === "init"}>
+          <EnterTransition>
+            <div class={pageStyles.formStack}>
+              <Button
                 type="button"
-                class={styles.textButton}
-                onClick={() => setShowTotp(true)}
+                class={styles.full}
+                onClick={() => {
+                  if (!requireUsername()) return;
+                  setStep("password");
+                }}
               >
-                Tengo un código de verificación
-              </button>
-            }
-          >
-            <div class={styles.reveal}>
+                Continuar con contraseña
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                class={styles.full}
+                disabled={passkeySupport() !== "supported"}
+                onClick={() => {
+                  if (!requireUsername()) return;
+                  setStep("passkey");
+                }}
+              >
+                Continuar con clave de acceso
+              </Button>
+            </div>
+          </EnterTransition>
+        </Show>
+
+        <Show when={step() === "password"}>
+          <EnterTransition>
+            <form
+              class={pageStyles.formStack}
+              onSubmit={(e) => {
+                void handlePasswordSubmit(e);
+              }}
+            >
+              <div class={pageStyles.passwordFields}>
+                <Input
+                  id="password"
+                  type="password"
+                  name="password"
+                  placeholder="Contraseña"
+                  autocomplete="current-password"
+                  value={password()}
+                  onInput={(e) => setPassword(e.currentTarget.value)}
+                  required
+                />
+              </div>
+
+              <div class={pageStyles.actionRow}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setStep("init")}
+                >
+                  Atrás
+                </Button>
+                <Button type="submit" class={styles.full} loading={loading()}>
+                  Siguiente
+                </Button>
+              </div>
+            </form>
+          </EnterTransition>
+        </Show>
+
+        <Show when={step() === "totp"}>
+          <EnterTransition>
+            <form
+              class={pageStyles.formStack}
+              onSubmit={(e) => {
+                void handleTotpSubmit(e);
+              }}
+            >
               <Input
                 id="totp"
                 type="text"
-                label="Código TOTP o de recuperación"
-                placeholder="Opcional"
+                name="totp"
+                placeholder="Código de 6 dígitos"
+                autocomplete="one-time-code"
                 value={totpCode()}
                 onInput={(e) => setTotpCode(e.currentTarget.value)}
+                required
               />
+
+              <div class={pageStyles.actionRow}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setStep("password")}
+                >
+                  Atrás
+                </Button>
+                <Button type="submit" class={styles.full} loading={loading()}>
+                  Iniciar sesión
+                </Button>
+              </div>
+            </form>
+          </EnterTransition>
+        </Show>
+
+        <Show when={step() === "passkey"}>
+          <EnterTransition>
+            <div class={pageStyles.formStack}>
+              <Show
+                when={passkeySupport() === "supported"}
+                fallback={
+                  <p class={pageStyles.supportText}>
+                    Este dispositivo no es compatible con claves de acceso.
+                  </p>
+                }
+              >
+                <p class={pageStyles.supportText}>
+                  Usa una clave de acceso registrada.
+                </p>
+              </Show>
+
+              <div class={pageStyles.actionRow}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setStep("init")}
+                >
+                  Atrás
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  class={styles.full}
+                  disabled={loading() || passkeySupport() !== "supported"}
+                  loading={passkeyLoading()}
+                  onClick={() => {
+                    void handlePasskeyLogin();
+                  }}
+                >
+                  Continuar
+                </Button>
+              </div>
             </div>
-          </Show>
-
-          <div class={styles.stack2}>
-            <Button type="submit" class={styles.full} loading={loading()}>
-              Iniciar sesión
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              class={styles.full}
-              disabled={loading() || passkeySupport() !== "supported"}
-              loading={passkeyLoading()}
-              onClick={() => {
-                void handlePasskeyLogin();
-              }}
-            >
-              Usar clave de acceso
-            </Button>
-          </div>
-
-          <Show when={passkeySupport() === "unsupported"}>
-            <p class={styles.muted}>
-              Las claves de acceso no son compatibles con este dispositivo.
-            </p>
-          </Show>
-        </form>
+          </EnterTransition>
+        </Show>
       </div>
-    </div>
+    </AuthFlowShell>
   );
 }
