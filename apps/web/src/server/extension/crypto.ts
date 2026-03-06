@@ -16,6 +16,13 @@ interface ExtensionTokenHeader {
   typ: "JWT";
 }
 
+export class ExtensionTokenVerificationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ExtensionTokenVerificationError";
+  }
+}
+
 function toBase64Url(bytes: Uint8Array): string {
   return Buffer.from(bytes)
     .toString("base64")
@@ -113,7 +120,11 @@ export async function signExtensionToken(
 }
 
 function decodeJsonPart(value: string): unknown {
-  return JSON.parse(new TextDecoder().decode(fromBase64Url(value)));
+  try {
+    return JSON.parse(new TextDecoder().decode(fromBase64Url(value)));
+  } catch {
+    throw new ExtensionTokenVerificationError("invalid token encoding");
+  }
 }
 
 export async function verifyExtensionToken<T extends ExtensionTokenClaims>(
@@ -122,7 +133,7 @@ export async function verifyExtensionToken<T extends ExtensionTokenClaims>(
 ): Promise<T> {
   const parts = token.split(".");
   if (parts.length !== 3) {
-    throw new Error("invalid token format");
+    throw new ExtensionTokenVerificationError("invalid token format");
   }
 
   const [encodedHeader, encodedPayload, encodedSignature] = parts;
@@ -133,12 +144,12 @@ export async function verifyExtensionToken<T extends ExtensionTokenClaims>(
     !("alg" in header) ||
     header.alg !== "EdDSA"
   ) {
-    throw new Error("invalid token header");
+    throw new ExtensionTokenVerificationError("invalid token header");
   }
 
   const payload = decodeJsonPart(encodedPayload);
   if (!isClaims(payload)) {
-    throw new Error("invalid token claims");
+    throw new ExtensionTokenVerificationError("invalid token claims");
   }
 
   const publicKey = await importPublicKey();
@@ -151,7 +162,7 @@ export async function verifyExtensionToken<T extends ExtensionTokenClaims>(
     ),
   );
   if (!verified) {
-    throw new Error("invalid token signature");
+    throw new ExtensionTokenVerificationError("invalid token signature");
   }
 
   return payload;

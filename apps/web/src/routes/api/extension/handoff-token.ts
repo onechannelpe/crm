@@ -5,10 +5,16 @@ import { isCreateExtensionHandoffTokenRequest } from "~/server/extension/contrac
 import { extensionService } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
+import { readJsonBody } from "./json-body";
+
 export async function POST(event: APIEvent): Promise<Response> {
   try {
     const session = await requirePermission("leads:read");
-    const body: unknown = await event.request.json();
+    const parsed = await readJsonBody(event.request);
+    if (!parsed.ok) {
+      return parsed.response;
+    }
+    const body = parsed.body;
     if (!isCreateExtensionHandoffTokenRequest(body)) {
       return Response.json(
         { error: "Invalid handoff token request" },

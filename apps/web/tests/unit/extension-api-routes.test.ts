@@ -1,0 +1,112 @@
+import type { APIEvent } from "@solidjs/start/server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const mocks = vi.hoisted(() => ({
+  requirePermission: vi.fn(),
+  claimInstallationSession: vi.fn(),
+  refreshInstallationSession: vi.fn(),
+  ingestRuntimeEvent: vi.fn(),
+  createHandoffToken: vi.fn(),
+}));
+
+vi.mock("../../src/lib/auth/access/session", () => ({
+  requirePermission: mocks.requirePermission,
+}));
+
+vi.mock("../../src/server/shared/context", () => ({
+  extensionService: {
+    claimInstallationSession: mocks.claimInstallationSession,
+    refreshInstallationSession: mocks.refreshInstallationSession,
+    ingestRuntimeEvent: mocks.ingestRuntimeEvent,
+    createHandoffToken: mocks.createHandoffToken,
+  },
+}));
+
+import { POST as postEvents } from "../../src/routes/api/extension/events";
+import { POST as postHandoffToken } from "../../src/routes/api/extension/handoff-token";
+import { POST as postClaim } from "../../src/routes/api/extension/session/claim";
+import { POST as postRefresh } from "../../src/routes/api/extension/session/refresh";
+
+function invalidJsonRequest(url: string): Request {
+  return new Request(url, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      origin: "http://localhost:3000",
+      authorization: "Bearer token",
+    },
+    body: "{",
+  });
+}
+
+function createApiEvent(request: Request): APIEvent {
+  const event = {
+    request,
+    params: {},
+    response: {
+      headers: new Headers(),
+    },
+    locals: {},
+    nativeEvent: {},
+  };
+
+  // The route handlers under test only read `request`; the rest of the API
+  // event is a minimal test stub.
+  // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
+  return event as unknown as APIEvent;
+}
+
+describe("extension api routes", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.requirePermission.mockResolvedValue({
+      userId: 1,
+      sessionId: "session-1",
+      branchId: 1,
+    });
+  });
+
+  it("returns 400 for malformed JSON in the handoff token route", async () => {
+    const response = await postHandoffToken(
+      createApiEvent(
+        invalidJsonRequest("http://localhost/api/extension/handoff-token"),
+      ),
+    );
+
+    expect(response.status).toBe(400);
+    expect(mocks.createHandoffToken).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 for malformed JSON in the claim route", async () => {
+    const response = await postClaim(
+      createApiEvent(
+        invalidJsonRequest("http://localhost/api/extension/session/claim"),
+      ),
+    );
+
+    expect(response.status).toBe(400);
+    expect(mocks.claimInstallationSession).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 for malformed JSON in the refresh route", async () => {
+    const response = await postRefresh(
+      createApiEvent(
+        invalidJsonRequest("http://localhost/api/extension/session/refresh"),
+      ),
+    );
+
+    expect(response.status).toBe(400);
+    expect(mocks.refreshInstallationSession).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 for malformed JSON in the events route", async () => {
+    const response = await postEvents(
+      createApiEvent(
+        invalidJsonRequest("http://localhost/api/extension/events"),
+      ),
+    );
+
+    expect(response.status).toBe(400);
+    expect(mocks.ingestRuntimeEvent).not.toHaveBeenCalled();
+  });
+});

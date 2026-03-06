@@ -40,6 +40,7 @@ interface ExtensionRuntimeSuccess {
 interface ExtensionRuntimeFailure {
   ok: false;
   error: string;
+  executiveState?: ExtensionExecutiveState;
 }
 
 export type ExtensionRuntimeResponse =
@@ -82,7 +83,11 @@ function isRuntimeResponse(value: unknown): value is ExtensionRuntimeResponse {
     return isExecutiveState(value.executiveState);
   }
 
-  return typeof value.error === "string";
+  return (
+    typeof value.error === "string" &&
+    (value.executiveState === undefined ||
+      isExecutiveState(value.executiveState))
+  );
 }
 
 function isChromeRuntimeApi(value: unknown): value is ChromeRuntimeApi {

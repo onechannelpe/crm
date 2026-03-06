@@ -114,14 +114,15 @@ async function verifyTokenSignature(token: string): Promise<ExtensionHandoffClai
   return payload;
 }
 
+export interface VerifiedExternalHandoff {
+  handoff: AssignmentHandoff;
+  origin: string;
+}
+
 export async function verifyExternalHandoff(input: {
   token: string;
   sender: chrome.runtime.MessageSender;
-  installationId: string;
-}): Promise<{
-  handoff: AssignmentHandoff;
-  syncConfig: SyncConfig;
-}> {
+}): Promise<VerifiedExternalHandoff> {
   const origin = senderOrigin(input.sender);
   if (origin !== expectedWebOrigin()) {
     throw new Error("untrusted sender origin");
@@ -129,7 +130,26 @@ export async function verifyExternalHandoff(input: {
 
   const claims = await verifyTokenSignature(input.token);
   validateClaims(claims, origin);
-  const claimResponse = await fetch(`${origin}/api/extension/session/claim`, {
+
+  return {
+    handoff: {
+      assignmentId: claims.assignmentId,
+      contactId: claims.contactId,
+      phone: claims.phone,
+      clientName: claims.clientName,
+      organizationLabel: claims.organizationLabel,
+      receivedAt: Date.now(),
+    },
+    origin,
+  };
+}
+
+export async function claimExternalSession(input: {
+  token: string;
+  installationId: string;
+  origin: string;
+}): Promise<SyncConfig> {
+  const claimResponse = await fetch(`${input.origin}/api/extension/session/claim`, {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -164,18 +184,8 @@ export async function verifyExternalHandoff(input: {
   }
 
   return {
-    handoff: {
-      assignmentId: claims.assignmentId,
-      contactId: claims.contactId,
-      phone: claims.phone,
-      clientName: claims.clientName,
-      organizationLabel: claims.organizationLabel,
-      receivedAt: Date.now(),
-    },
-    syncConfig: {
-      apiBaseUrl: `${origin}/api`,
-      sessionToken: claimBody.sessionToken,
-      refreshToken: claimBody.refreshToken,
-    },
+    apiBaseUrl: `${input.origin}/api`,
+    sessionToken: claimBody.sessionToken,
+    refreshToken: claimBody.refreshToken,
   };
 }
