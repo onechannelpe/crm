@@ -79,6 +79,7 @@ export function createUsersRepo(db: Kysely<Database>) {
 
     async create(values: {
       branch_id: number;
+      team_id?: number | null;
       username: string;
       email: string;
       password_hash: string;
@@ -88,16 +89,16 @@ export function createUsersRepo(db: Kysely<Database>) {
       expires_at?: number | null;
       phone_e164?: string | null;
       role: UserRole;
+      is_active: number;
     }) {
       const strongAuthRequired = deriveStrongAuthRequired(values.role);
       const result = await db
         .insertInto("users")
         .values({
           ...values,
-          second_surname: values.second_surname,
           expires_at: values.expires_at ?? null,
           expiry_notified_at: null,
-          is_active: 1,
+          is_active: values.is_active,
           phone_e164: values.phone_e164 ?? null,
           phone_verified_at: null,
           profile_confirmed_at: null,

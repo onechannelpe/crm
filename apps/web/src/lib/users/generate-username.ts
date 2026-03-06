@@ -18,7 +18,7 @@ export async function generateUsername(
 
   const candidates = [
     `${first}.${fs}`,
-    `${first}.${fs}.${ss}`,
+    ...(ss ? [`${first}.${fs}.${ss}`] : []),
     ...Array.from({ length: 98 }, (_, i) => `${first}.${fs}${i + 2}`),
   ];
 

@@ -260,6 +260,7 @@ export function createUserProvisioningService(
               );
               const createdUserId = await transactionRepos.users.create({
                 branch_id: input.branchId,
+                team_id: input.teamId,
                 username,
                 email,
                 password_hash: await hashPassword(generateInviteToken()),
@@ -269,6 +270,7 @@ export function createUserProvisioningService(
                 expires_at: input.expiresAt ?? null,
                 phone_e164: null,
                 role: input.role,
+                is_active: 0,
               });
               user = await transactionRepos.users.findById(createdUserId);
             } catch {

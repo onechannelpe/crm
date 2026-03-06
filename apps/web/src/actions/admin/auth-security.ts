@@ -24,12 +24,12 @@ export interface UserLoginRetryReport {
 }
 
 export async function getUserLoginRetryReport(
-  email: string,
+  username: string,
 ): Promise<UserLoginRetryReport | null> {
-  const safeEmail = assertNonEmptyString(email, "email").toLowerCase();
+  const safeUsername = assertNonEmptyString(username, "username").toLowerCase();
   const session = await requireRole("admin");
   assertRecentStrongAuth(session);
-  const user = await repos.users.findByEmail(safeEmail);
+  const user = await repos.users.findByUsername(safeUsername);
   if (!user) return null;
 
   const now = Date.now();

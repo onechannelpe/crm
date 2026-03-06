@@ -1,4 +1,11 @@
+import type { Role } from "~/lib/auth/access/rbac";
+import type { createUserProvisioningService } from "~/server/users/service-user-provisioning";
 import { Err, Ok, type Result } from "~/server/shared/result";
+
+type ProvisioningInterface = Pick<
+  ReturnType<typeof createUserProvisioningService>,
+  "createInvite" | "markInviteDelivered"
+>;
 
 export interface BulkImportRow {
   firstSurname: string;
@@ -21,6 +28,75 @@ export type BulkRowError = {
 export interface BulkParseResult {
   valid: BulkImportRow[];
   errors: BulkRowError[];
+}
+
+export interface BulkApplyResult {
+  created: number;
+  skipped: number;
+  rowErrors: string[];
+}
+
+const MIN_EXPIRY_OFFSET_MS = 7 * 24 * 60 * 60 * 1000;
+
+export async function applyImport(
+  rows: BulkImportRow[],
+  actor: { userId: number; role: Role; branchId: number },
+  safeRole: Role,
+  provisioning: ProvisioningInterface,
+  onInviteCreated: (params: {
+    row: BulkImportRow;
+    inviteId: number;
+    token: string;
+    expiresAt: number;
+  }) => Promise<void>,
+): Promise<BulkApplyResult> {
+  let created = 0;
+  let skipped = 0;
+  const rowErrors: string[] = [];
+
+  for (const row of rows) {
+    try {
+      // eslint-disable-next-line no-await-in-loop
+      const result = await provisioning.createInvite({
+        actorUserId: actor.userId,
+        actorRole: actor.role,
+        branchId: actor.branchId,
+        names: row.names,
+        firstSurname: row.firstSurname,
+        secondSurname: row.secondSurname,
+        email: row.email,
+        role: safeRole,
+        teamId: null,
+        expiresAt: row.expiresAt,
+      });
+
+      if (!result.ok) {
+        if (
+          result.error.reason === "active_user_exists" ||
+          result.error.reason === "pending_user_other_branch"
+        ) {
+          skipped++;
+        } else {
+          rowErrors.push(`${row.email}: ${result.error.message}`);
+        }
+        continue;
+      }
+
+      // eslint-disable-next-line no-await-in-loop
+      await onInviteCreated({
+        row,
+        inviteId: result.value.inviteId,
+        token: result.value.token,
+        expiresAt: result.value.expiresAt,
+      });
+      created++;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      rowErrors.push(`${row.email}: ${message}`);
+    }
+  }
+
+  return { created, skipped, rowErrors };
 }
 
 const CSV_COLUMNS = [
@@ -113,10 +189,10 @@ export function parseAndValidateCsvRows(
         errors.push({ row: rowNum, message: `Fecha inválida: ${rawDate}` });
         continue;
       }
-      if (parsed <= Date.now()) {
+      if (parsed <= Date.now() + MIN_EXPIRY_OFFSET_MS) {
         errors.push({
           row: rowNum,
-          message: `La fecha de vencimiento debe ser futura: ${rawDate}`,
+          message: `La fecha de vencimiento debe ser al menos 7 días en el futuro: ${rawDate}`,
         });
         continue;
       }

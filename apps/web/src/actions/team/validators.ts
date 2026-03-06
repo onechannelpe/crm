@@ -29,6 +29,8 @@ export function assertOptionalTeamId(
   return assertPositiveInt(value, "teamId");
 }
 
+const MIN_EXPIRY_OFFSET_MS = 7 * 24 * 60 * 60 * 1000;
+
 export function assertOptionalExpiresAt(
   value: number | null | undefined,
 ): number | null {
@@ -36,8 +38,10 @@ export function assertOptionalExpiresAt(
     return null;
   }
   const ts = assertPositiveInt(value, "expiresAt");
-  if (ts <= Date.now()) {
-    throw validationError("expiresAt must be a future timestamp");
+  if (ts <= Date.now() + MIN_EXPIRY_OFFSET_MS) {
+    throw validationError(
+      "expiresAt must be at least 7 days in the future",
+    );
   }
   return ts;
 }

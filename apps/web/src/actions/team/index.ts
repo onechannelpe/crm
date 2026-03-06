@@ -8,9 +8,10 @@ export {
   revokeTeamInvite,
 } from "./invites";
 export type { InviteInfo } from "./invites";
-export { getInviteManagement, getTeamMembers } from "./read";
+export { getBulkImportSetup, getInviteManagement, getTeamMembers } from "./read";
 
 export type {
+  BulkImportSetup,
   InviteManagement,
   TeamInvite,
   TeamMember,

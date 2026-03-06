@@ -1,8 +1,7 @@
 import { useNavigate } from "@solidjs/router";
 import { createSignal, onMount, Show } from "solid-js";
 
-import { beginPasskeyLogin, finishPasskeyLogin } from "~/actions/auth";
-import { login } from "~/actions/auth";
+import { beginPasskeyLogin, finishPasskeyLogin, login } from "~/actions/auth";
 import { useToast } from "~/components/feedback/toast-provider";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";

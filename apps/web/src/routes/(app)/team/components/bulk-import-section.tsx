@@ -22,12 +22,12 @@ import {
   TableRow,
 } from "~/components/ui/layout/table";
 import { getErrorMessage } from "~/lib/errors";
-import { inviteManagementQuery } from "~/lib/queries/team";
+import { bulkImportSetupQuery } from "~/lib/queries/team";
 
 import styles from "../team-page.module.css";
 
 export function BulkImportSection() {
-  const inviteManagement = createAsync(() => inviteManagementQuery());
+  const bulkImportSetup = createAsync(() => bulkImportSetupQuery());
   const [role, setRole] = createSignal("");
   const [csvFile, setCsvFile] = createSignal<File | null>(null);
   const [preview, setPreview] = createSignal<BulkPreviewResult | null>(null);
@@ -37,7 +37,7 @@ export function BulkImportSection() {
   const { showToast } = useToast();
 
   createEffect(
-    on(inviteManagement, (im) => {
+    on(bulkImportSetup, (im) => {
       if (!im) return;
       if (!im.assignableRoles.some((o) => o.value === role())) {
         setRole(im.assignableRoles[0]?.value ?? "");
@@ -90,7 +90,7 @@ export function BulkImportSection() {
   }
 
   return (
-    <Show when={inviteManagement()} keyed>
+      <Show when={bulkImportSetup()} keyed>
       {(im) => (
         <AppPageSection>
           <AppPageSectionTitle

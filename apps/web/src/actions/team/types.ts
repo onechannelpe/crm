@@ -1,6 +1,10 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { RoleOption } from "~/lib/auth/access/role-display";
 
+export interface BulkImportSetup {
+  assignableRoles: RoleOption[];
+}
+
 export interface TeamMember {
   id: number;
   names: string;
