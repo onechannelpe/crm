@@ -46,7 +46,7 @@ describe("action input guards", () => {
       "sessionId is required",
     );
     await expect(getUserLoginRetryReport("   ")).rejects.toThrow(
-      "email is required",
+      "username is required",
     );
   });
 

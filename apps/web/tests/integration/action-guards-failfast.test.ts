@@ -44,7 +44,7 @@ describe("action guards fail fast", () => {
       "sessionId is required",
     );
     await expect(getUserLoginRetryReport("   ")).rejects.toThrow(
-      "email is required",
+      "username is required",
     );
     await expect(
       createTeamInvite({
