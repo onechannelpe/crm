@@ -69,7 +69,6 @@ export type ExtensionServiceError =
   | { reason: "handoff_invalid"; message: string }
   | { reason: "installation_invalid"; message: string }
   | { reason: "session_invalid"; message: string }
-  | { reason: "event_duplicate"; message: string }
   | { reason: "unexpected"; message: string };
 
 function mapLifecycleStatus(
@@ -529,6 +528,11 @@ export function createExtensionService(
             }
           }
 
+          await txRepos.extensionRuntime.revokeOtherInstallationSessionsByUser(
+            session.user_id,
+            session.jti,
+            claimedAt,
+          );
           const sessionCredentials = await issueSessionCredentials(
             txRepos,
             session,
@@ -681,62 +685,6 @@ export function createExtensionService(
           });
         }
 
-        const subjectUserId = parseSubjectUserId(sessionClaims.sub);
-        const session =
-          await repos.extensionRuntime.findValidInstallationSession(
-            sessionClaims.jti,
-            currentTime,
-          );
-        if (
-          !session ||
-          !subjectUserId ||
-          session.user_id !== subjectUserId ||
-          session.branch_id !== sessionClaims.branchId ||
-          session.auth_session_id !== sessionClaims.authSessionId ||
-          session.installation_id !== sessionClaims.installationId
-        ) {
-          return Err({
-            reason: "session_invalid",
-            message: "Extension session token is invalid or expired",
-          });
-        }
-
-        const authSessionActive = await hasActiveAuthSession(
-          repos,
-          session.auth_session_id,
-          currentTime,
-        );
-        if (!authSessionActive) {
-          await repos.extensionRuntime.revokeInstallationSession(
-            session.jti,
-            currentTime,
-          );
-          await repos.extensionRuntime.updateExecutiveSyncHealthByUser({
-            user_id: session.user_id,
-            sync_health: "reauth_required",
-            sync_updated_at: currentTime,
-          });
-          return Err({
-            reason: "session_invalid",
-            message: "Extension session token is invalid or expired",
-          });
-        }
-
-        await repos.extensionRuntime.touchInstallationSession(
-          session.jti,
-          currentTime,
-        );
-
-        const duplicate = await repos.extensionRuntime.hasRuntimeEvent(
-          input.event.id,
-        );
-        if (duplicate) {
-          return Err({
-            reason: "event_duplicate",
-            message: "Extension event already ingested",
-          });
-        }
-
         const payloadText = JSON.stringify(input.event.payload);
         const eventAssignmentId =
           "assignmentId" in input.event.payload &&
@@ -754,57 +702,116 @@ export function createExtensionService(
             ? input.event.payload.sessionId
             : null;
 
-        await repos.extensionRuntime.insertRuntimeEvent({
-          id: input.event.id,
-          sequence: input.event.sequence,
-          user_id: session.user_id,
-          branch_id: session.branch_id,
-          assignment_id: eventAssignmentId,
-          contact_id: eventContactId,
-          call_session_id: eventSessionId,
-          type: input.event.type,
-          payload_json: payloadText,
-          created_at: input.event.createdAt,
-          received_at: currentTime,
-        });
+        const run =
+          runInTransaction ??
+          (async <T>(
+            operation: (transactionRepos: Repositories) => Promise<T>,
+          ) => operation(repos));
 
-        await upsertSyncHealth(repos, {
-          userId: session.user_id,
-          branchId: session.branch_id,
-          syncHealth: "ok",
-          updatedAt: currentTime,
-        });
+        return await run(async (txRepos) => {
+          const subjectUserId = parseSubjectUserId(sessionClaims.sub);
+          const session =
+            await txRepos.extensionRuntime.findValidInstallationSession(
+              sessionClaims.jti,
+              currentTime,
+            );
+          if (
+            !session ||
+            !subjectUserId ||
+            session.user_id !== subjectUserId ||
+            session.branch_id !== sessionClaims.branchId ||
+            session.auth_session_id !== sessionClaims.authSessionId ||
+            session.installation_id !== sessionClaims.installationId
+          ) {
+            return Err({
+              reason: "session_invalid",
+              message: "Extension session token is invalid or expired",
+            });
+          }
 
-        if (input.event.type === "executive.presence") {
-          await repos.extensionRuntime.upsertExecutivePresence({
-            user_id: session.user_id,
-            branch_id: session.branch_id,
-            assignment_id: input.event.payload.assignmentId,
-            contact_id: input.event.payload.contactId,
-            call_session_id: input.event.payload.callSessionId,
-            presence_status: input.event.payload.presenceStatus,
-            presence_updated_at: input.event.payload.updatedAt,
-            source_event_id: input.event.id,
-            source_event_sequence: input.event.sequence,
+          const authSessionActive = await hasActiveAuthSession(
+            txRepos,
+            session.auth_session_id,
+            currentTime,
+          );
+          if (!authSessionActive) {
+            await txRepos.extensionRuntime.revokeInstallationSession(
+              session.jti,
+              currentTime,
+            );
+            await txRepos.extensionRuntime.updateExecutiveSyncHealthByUser({
+              user_id: session.user_id,
+              sync_health: "reauth_required",
+              sync_updated_at: currentTime,
+            });
+            return Err({
+              reason: "session_invalid",
+              message: "Extension session token is invalid or expired",
+            });
+          }
+
+          await txRepos.extensionRuntime.touchInstallationSession(
+            session.jti,
+            currentTime,
+          );
+
+          const inserted =
+            await txRepos.extensionRuntime.insertRuntimeEventIfAbsent({
+              id: input.event.id,
+              sequence: input.event.sequence,
+              user_id: session.user_id,
+              branch_id: session.branch_id,
+              assignment_id: eventAssignmentId,
+              contact_id: eventContactId,
+              call_session_id: eventSessionId,
+              type: input.event.type,
+              payload_json: payloadText,
+              created_at: input.event.createdAt,
+              received_at: currentTime,
+            });
+
+          await upsertSyncHealth(txRepos, {
+            userId: session.user_id,
+            branchId: session.branch_id,
+            syncHealth: "ok",
+            updatedAt: currentTime,
           });
+
+          if (!inserted) {
+            return Ok(undefined);
+          }
+
+          if (input.event.type === "executive.presence") {
+            await txRepos.extensionRuntime.upsertExecutivePresence({
+              user_id: session.user_id,
+              branch_id: session.branch_id,
+              assignment_id: input.event.payload.assignmentId,
+              contact_id: input.event.payload.contactId,
+              call_session_id: input.event.payload.callSessionId,
+              presence_status: input.event.payload.presenceStatus,
+              presence_updated_at: input.event.payload.updatedAt,
+              source_event_id: input.event.id,
+              source_event_sequence: input.event.sequence,
+            });
+            return Ok(undefined);
+          }
+
+          if (input.event.type === "call.lifecycle") {
+            await txRepos.extensionRuntime.upsertExecutivePresence({
+              user_id: session.user_id,
+              branch_id: session.branch_id,
+              assignment_id: eventAssignmentId,
+              contact_id: eventContactId,
+              call_session_id: eventSessionId,
+              presence_status: mapLifecycleStatus(input.event),
+              presence_updated_at: input.event.payload.at,
+              source_event_id: input.event.id,
+              source_event_sequence: input.event.sequence,
+            });
+          }
+
           return Ok(undefined);
-        }
-
-        if (input.event.type === "call.lifecycle") {
-          await repos.extensionRuntime.upsertExecutivePresence({
-            user_id: session.user_id,
-            branch_id: session.branch_id,
-            assignment_id: eventAssignmentId,
-            contact_id: eventContactId,
-            call_session_id: eventSessionId,
-            presence_status: mapLifecycleStatus(input.event),
-            presence_updated_at: input.event.payload.at,
-            source_event_id: input.event.id,
-            source_event_sequence: input.event.sequence,
-          });
-        }
-
-        return Ok(undefined);
+        });
       } catch (error: unknown) {
         if (isCryptoMisconfiguration(error)) {
           return Err({

@@ -1,22 +1,114 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { generateKeyPairSync } from "node:crypto";
 
-import { createExtensionService } from "../../src/server/extension/service";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { createRepositories } from "../../src/server/shared/registry";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
   type TestDbContext,
 } from "../support/test-db";
 
+function createTransactionRunner(ctx: TestDbContext) {
+  return <T>(
+    operation: (transactionRepos: TestDbContext["repos"]) => Promise<T>,
+  ) =>
+    ctx.db.transaction().execute((transactionDb) => {
+      return operation(createRepositories(transactionDb));
+    });
+}
+
 describe("extension runtime status invariants", () => {
   let ctx: TestDbContext;
+  let createExtensionService: typeof import("../../src/server/extension/service").createExtensionService;
 
   beforeEach(async () => {
+    const { privateKey } = generateKeyPairSync("ed25519");
+    process.env.EXTENSION_HANDOFF_PRIVATE_KEY_PKCS8_BASE64 = Buffer.from(
+      privateKey.export({
+        format: "der",
+        type: "pkcs8",
+      }),
+    ).toString("base64");
+    process.env.EXTENSION_EXPECTED_ORIGIN = "http://localhost:3000";
+    vi.resetModules();
+    ({ createExtensionService } =
+      await import("../../src/server/extension/service"));
     ctx = await createIsolatedTestDb("extension-runtime-status");
   });
 
   afterEach(async () => {
     await cleanupTestDb(ctx);
   });
+
+  async function createServiceSession(userId = 1, branchId = 1) {
+    const now = Date.now();
+    const authSessionId = crypto.randomUUID();
+    await ctx.repos.sessions.create({
+      id: authSessionId,
+      user_id: userId,
+      branch_id: branchId,
+      role: "executive",
+      auth_method: "password",
+      strong_auth_at: null,
+      ip_address: "127.0.0.1",
+      user_agent: "vitest",
+      created_at: now,
+      last_activity: now,
+      expires_at: now + 60 * 60_000,
+    });
+    return authSessionId;
+  }
+
+  async function createAssignment(userId = 1, contactId = 1) {
+    const now = Date.now();
+    const result = await ctx.db
+      .insertInto("lead_assignments")
+      .values({
+        user_id: userId,
+        contact_id: contactId,
+        assigned_at: now,
+        expires_at: now + 60 * 60_000,
+        status: "active",
+      })
+      .executeTakeFirstOrThrow();
+
+    return Number(result.insertId);
+  }
+
+  async function claimSession(installationId: string) {
+    const authSessionId = await createServiceSession();
+    const assignmentId = await createAssignment();
+    const service = createExtensionService(ctx.repos, {
+      runInTransaction: createTransactionRunner(ctx),
+    });
+
+    const handoffResult = await service.createHandoffToken({
+      userId: 1,
+      authSessionId,
+      branchId: 1,
+      assignmentId,
+      origin: "http://localhost:3000",
+    });
+    if (!handoffResult.ok) {
+      throw new Error(handoffResult.error.message);
+    }
+
+    const claimResult = await service.claimInstallationSession({
+      handoffToken: handoffResult.value.handoffToken,
+      installationId,
+    });
+    if (!claimResult.ok) {
+      throw new Error(claimResult.error.message);
+    }
+
+    return {
+      service,
+      authSessionId,
+      assignmentId,
+      sessionToken: claimResult.value.sessionToken,
+    };
+  }
 
   it("keeps the newest presence projection regardless of write order", async () => {
     await ctx.repos.extensionRuntime.upsertExecutivePresence({
@@ -153,5 +245,117 @@ describe("extension runtime status invariants", () => {
 
     expect(result.value[0]?.presenceStatus).toBe("ready");
     expect(result.value[0]?.syncHealth).toBe("stale");
+  });
+
+  it("accepts duplicate event delivery without creating a second runtime event", async () => {
+    const { service, sessionToken, assignmentId } = await claimSession(
+      "11111111-1111-4111-8111-111111111111",
+    );
+    const event = {
+      id: "evt-duplicate",
+      sequence: 1,
+      type: "executive.presence" as const,
+      createdAt: 10_000,
+      payload: {
+        presenceStatus: "ready" as const,
+        assignmentId,
+        contactId: 1,
+        callSessionId: null,
+        updatedAt: 10_000,
+      },
+    };
+
+    const first = await service.ingestRuntimeEvent({
+      sessionToken,
+      event,
+    });
+    const second = await service.ingestRuntimeEvent({
+      sessionToken,
+      event,
+    });
+
+    expect(first.ok).toBe(true);
+    expect(second.ok).toBe(true);
+
+    const events = await ctx.db
+      .selectFrom("extension_runtime_events")
+      .select(["id"])
+      .where("id", "=", event.id)
+      .execute();
+    expect(events).toHaveLength(1);
+  });
+
+  it("revokes older installations when a new installation claims the user session", async () => {
+    const authSessionId = await createServiceSession();
+    const assignmentId = await createAssignment();
+    const service = createExtensionService(ctx.repos, {
+      runInTransaction: createTransactionRunner(ctx),
+    });
+
+    const firstHandoff = await service.createHandoffToken({
+      userId: 1,
+      authSessionId,
+      branchId: 1,
+      assignmentId,
+      origin: "http://localhost:3000",
+    });
+    if (!firstHandoff.ok) {
+      throw new Error(firstHandoff.error.message);
+    }
+
+    const firstClaim = await service.claimInstallationSession({
+      handoffToken: firstHandoff.value.handoffToken,
+      installationId: "11111111-1111-4111-8111-111111111111",
+    });
+    if (!firstClaim.ok) {
+      throw new Error(firstClaim.error.message);
+    }
+
+    const secondHandoff = await service.createHandoffToken({
+      userId: 1,
+      authSessionId,
+      branchId: 1,
+      assignmentId,
+      origin: "http://localhost:3000",
+    });
+    if (!secondHandoff.ok) {
+      throw new Error(secondHandoff.error.message);
+    }
+
+    const secondClaim = await service.claimInstallationSession({
+      handoffToken: secondHandoff.value.handoffToken,
+      installationId: "22222222-2222-4222-8222-222222222222",
+    });
+    if (!secondClaim.ok) {
+      throw new Error(secondClaim.error.message);
+    }
+
+    const oldSessionResult = await service.ingestRuntimeEvent({
+      sessionToken: firstClaim.value.sessionToken,
+      event: {
+        id: "evt-old-installation",
+        sequence: 1,
+        type: "executive.heartbeat",
+        createdAt: 20_000,
+        payload: { occurredAt: 20_000 },
+      },
+    });
+    const newSessionResult = await service.ingestRuntimeEvent({
+      sessionToken: secondClaim.value.sessionToken,
+      event: {
+        id: "evt-new-installation",
+        sequence: 1,
+        type: "executive.heartbeat",
+        createdAt: 21_000,
+        payload: { occurredAt: 21_000 },
+      },
+    });
+
+    expect(oldSessionResult.ok).toBe(false);
+    if (oldSessionResult.ok) {
+      throw new Error("old installation should have been revoked");
+    }
+    expect(oldSessionResult.error.reason).toBe("session_invalid");
+    expect(newSessionResult.ok).toBe(true);
   });
 });

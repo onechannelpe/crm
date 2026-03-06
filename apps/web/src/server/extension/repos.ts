@@ -165,7 +165,21 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    insertRuntimeEvent(values: {
+    revokeOtherInstallationSessionsByUser(
+      user_id: number,
+      keep_jti: string,
+      revoked_at: number,
+    ) {
+      return db
+        .updateTable("extension_installation_sessions")
+        .set({ revoked_at })
+        .where("user_id", "=", user_id)
+        .where("jti", "!=", keep_jti)
+        .where("revoked_at", "is", null)
+        .executeTakeFirst();
+    },
+
+    async insertRuntimeEventIfAbsent(values: {
       id: string;
       sequence: number;
       user_id: number;
@@ -178,18 +192,12 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
       created_at: number;
       received_at: number;
     }) {
-      return db
+      const result = await db
         .insertInto("extension_runtime_events")
         .values(values)
-        .executeTakeFirstOrThrow();
-    },
-
-    hasRuntimeEvent(id: string) {
-      return db
-        .selectFrom("extension_runtime_events")
-        .select("id")
-        .where("id", "=", id)
+        .onConflict((oc) => oc.column("id").doNothing())
         .executeTakeFirst();
+      return Number(result.numInsertedOrUpdatedRows ?? 0) > 0;
     },
 
     upsertExecutivePresence(values: {

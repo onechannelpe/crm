@@ -36,9 +36,7 @@ export async function POST(event: APIEvent): Promise<Response> {
           ? 401
           : result.error.reason === "misconfigured"
             ? 503
-            : result.error.reason === "event_duplicate"
-              ? 409
-              : 500;
+            : 500;
       return Response.json({ error: result.error.message }, { status });
     }
 

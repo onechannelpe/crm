@@ -158,6 +158,7 @@ export default function LeadsPage() {
         .json()
         .catch(() => null)) as unknown;
       setExtensionLoadingAssignmentId(null);
+      setExtensionState(null);
       const message =
         readErrorMessage(body) ??
         "No se pudo autorizar el handoff a la extensión.";
@@ -169,6 +170,7 @@ export default function LeadsPage() {
     const handoffTokenBody = (await handoffTokenResponse.json()) as unknown;
     if (!isHandoffTokenResponse(handoffTokenBody)) {
       setExtensionLoadingAssignmentId(null);
+      setExtensionState(null);
       const message = "El servidor devolvió un handoff inválido.";
       setExtensionError(message);
       showToast("error", message);
@@ -181,6 +183,7 @@ export default function LeadsPage() {
     setExtensionLoadingAssignmentId(null);
 
     if (!response.ok) {
+      setExtensionState(null);
       setExtensionError(response.error);
       showToast("error", response.error);
       return;
