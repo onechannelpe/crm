@@ -3,6 +3,7 @@
 import { internalError } from "~/lib/app-errors";
 import { getAssignableRoleOptions } from "~/lib/auth/access/role-display";
 import { requirePermission } from "~/lib/auth/access/session";
+import { extensionService } from "~/server/shared/context";
 import { repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
@@ -11,7 +12,21 @@ import type { BulkImportSetup, InviteManagement, TeamMember } from "./types";
 
 export async function getTeamMembers(): Promise<TeamMember[]> {
   const session = await requirePermission("team:read");
-  const users = await repos.users.findByBranch(session.branchId);
+  const [users, extensionStatusesResult] = await Promise.all([
+    repos.users.findByBranch(session.branchId),
+    extensionService.listTeamExecutiveStatuses({
+      role: session.role,
+      userId: session.userId,
+      branchId: session.branchId,
+    }),
+  ]);
+  if (isErr(extensionStatusesResult)) {
+    throw internalError(extensionStatusesResult.error.message);
+  }
+
+  const extensionStatuses = new Map(
+    extensionStatusesResult.value.map((status) => [status.userId, status]),
+  );
   return users.map((u) => ({
     id: u.id,
     names: u.names,
@@ -22,6 +37,12 @@ export async function getTeamMembers(): Promise<TeamMember[]> {
     teamId: u.team_id,
     isActive: !!u.is_active,
     expiresAt: u.expires_at,
+    extensionPresenceStatus:
+      extensionStatuses.get(u.id)?.presenceStatus ?? null,
+    extensionSyncHealth: extensionStatuses.get(u.id)?.syncHealth ?? null,
+    extensionPresenceUpdatedAt:
+      extensionStatuses.get(u.id)?.presenceUpdatedAt ?? null,
+    extensionSyncUpdatedAt: extensionStatuses.get(u.id)?.syncUpdatedAt ?? null,
   }));
 }
 

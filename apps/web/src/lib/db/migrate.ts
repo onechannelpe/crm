@@ -17,6 +17,7 @@ import * as m005 from "./migrations/005-report-export-observability";
 import * as m006 from "./migrations/006-sales-records-core";
 import * as m007 from "./migrations/007-action-rate-limit";
 import * as m008 from "./migrations/008-search-enrichment";
+import * as m009 from "./migrations/009-extension-runtime";
 
 const logger = createLogger("db-migrate");
 
@@ -34,6 +35,7 @@ const migrations = {
   "006-sales-records-core": m006,
   "007-action-rate-limit": m007,
   "008-search-enrichment": m008,
+  "009-extension-runtime": m009,
 };
 
 const staticProvider: MigrationProvider = {

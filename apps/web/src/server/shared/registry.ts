@@ -11,6 +11,7 @@ import { createSearchEnrichmentRepo } from "~/server/client-search/repos-enrichm
 import { createClientSearchViewsRepo } from "~/server/client-search/repos-views";
 import { createContactsRepo } from "~/server/contacts/repos-contacts";
 import { createOrganizationsRepo } from "~/server/contacts/repos-organizations";
+import { createExtensionRuntimeRepo } from "~/server/extension/repos";
 import { createInventoryRepo } from "~/server/inventory/repos";
 import { createProductsRepo } from "~/server/inventory/repos-products";
 import { createLeadAssignmentsRepo } from "~/server/leads/repos";
@@ -62,6 +63,7 @@ export function createRepositories(db: Kysely<Database>) {
     appNotifications: createAppNotificationsRepo(db),
     actionObservations: createActionObservationsRepo(db),
     inventory: createInventoryRepo(db),
+    extensionRuntime: createExtensionRuntimeRepo(db),
     auditLogs: createAuditLogsRepo(db),
     auditActionPolicies: createAuditActionPoliciesRepo(db),
     agentStatus: createAgentStatusRepo(db),

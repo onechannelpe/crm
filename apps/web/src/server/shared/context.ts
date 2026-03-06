@@ -5,6 +5,7 @@ import { db } from "~/lib/db/db";
 import { env } from "~/lib/env";
 import { createSearchEnrichmentService } from "~/server/client-search/enrichment-service";
 import { createClientSearchService } from "~/server/client-search/service";
+import { createExtensionService } from "~/server/extension/service";
 import { createLeadAssignmentService } from "~/server/leads/service";
 import { createAppNotificationCenter } from "~/server/notifications/app-center-service";
 import { createObservabilityService } from "~/server/observability/service";
@@ -35,6 +36,9 @@ export const clientSearchService = createClientSearchService();
 export const searchEnrichmentService = createSearchEnrichmentService(repos);
 export const quotaService = createQuotaService(repos);
 export const leadService = createLeadAssignmentService(repos);
+export const extensionService = createExtensionService(repos, {
+  runInTransaction: runInRepositoryTransaction,
+});
 export const observabilityService = createObservabilityService({
   actionObservations: repos.actionObservations,
 });

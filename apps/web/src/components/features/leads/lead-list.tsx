@@ -14,6 +14,7 @@ import ChevronDown from "~/components/icons/chevron-down";
 import ChevronUp from "~/components/icons/chevron-up";
 import Phone from "~/components/icons/phone";
 import User from "~/components/icons/user";
+import { Badge } from "~/components/ui/display/badge";
 import { Button } from "~/components/ui/input/button";
 import {
   Table,
@@ -23,6 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
+import type { ExtensionExecutiveState } from "~/lib/extension/runtime";
 
 import { RegisterCallDialog } from "./register-call-dialog";
 
@@ -48,7 +50,80 @@ interface LeadListProps {
     outcome: string,
     notes: string,
   ) => Promise<void> | void;
+  onSendToExtension?: (lead: LeadContact) => Promise<void> | void;
+  extensionState?: ExtensionExecutiveState | null;
+  extensionLoadingAssignmentId?: number | null;
+  extensionEnabled?: boolean;
   emptyAction?: JSX.Element;
+}
+
+function badgeVariantForPresence(
+  status: ExtensionExecutiveState["presenceStatus"] | "unavailable",
+) {
+  switch (status) {
+    case "active":
+      return "success";
+    case "dialing":
+      return "warning";
+    case "ready":
+    case "wrap_up":
+      return "secondary";
+    case "idle":
+    case "unavailable":
+      return "outline";
+  }
+}
+
+function presenceLabel(
+  status: ExtensionExecutiveState["presenceStatus"] | "unavailable",
+): string {
+  switch (status) {
+    case "idle":
+      return "Sin handoff";
+    case "ready":
+      return "Listo";
+    case "dialing":
+      return "Marcando";
+    case "active":
+      return "En llamada";
+    case "wrap_up":
+      return "Cierre";
+    case "unavailable":
+      return "Sin extension";
+  }
+}
+
+function badgeVariantForSyncHealth(
+  syncHealth: ExtensionExecutiveState["syncHealth"] | "unavailable",
+) {
+  switch (syncHealth) {
+    case "ok":
+      return "outline";
+    case "pending":
+      return "info";
+    case "error":
+    case "reauth_required":
+      return "destructive";
+    case "unavailable":
+      return "outline";
+  }
+}
+
+function syncHealthLabel(
+  syncHealth: ExtensionExecutiveState["syncHealth"] | "unavailable",
+): string {
+  switch (syncHealth) {
+    case "ok":
+      return "Sync OK";
+    case "pending":
+      return "Pendiente";
+    case "error":
+      return "Error sync";
+    case "reauth_required":
+      return "Reconectar";
+    case "unavailable":
+      return "Sin extension";
+  }
 }
 
 export const LeadList: Component<LeadListProps> = (props) => {
@@ -133,6 +208,50 @@ export const LeadList: Component<LeadListProps> = (props) => {
                 </TableCell>
                 <TableCell>
                   <div class={styles.actions}>
+                    <Show when={props.onSendToExtension}>
+                      <Button
+                        size="icon"
+                        variant="primary"
+                        disabled={
+                          !props.extensionEnabled ||
+                          !lead.phone_primary ||
+                          props.extensionLoadingAssignmentId ===
+                            lead.assignmentId
+                        }
+                        loading={
+                          props.extensionLoadingAssignmentId ===
+                          lead.assignmentId
+                        }
+                        onClick={() => void props.onSendToExtension?.(lead)}
+                        aria-label="Enviar cliente a la extensión"
+                      >
+                        <Phone size={16} />
+                      </Button>
+                    </Show>
+                    <Show
+                      when={
+                        props.extensionState?.assignmentId === lead.assignmentId
+                      }
+                    >
+                      <Badge
+                        variant={badgeVariantForPresence(
+                          props.extensionState?.presenceStatus ?? "unavailable",
+                        )}
+                      >
+                        {presenceLabel(
+                          props.extensionState?.presenceStatus ?? "unavailable",
+                        )}
+                      </Badge>
+                      <Badge
+                        variant={badgeVariantForSyncHealth(
+                          props.extensionState?.syncHealth ?? "unavailable",
+                        )}
+                      >
+                        {syncHealthLabel(
+                          props.extensionState?.syncHealth ?? "unavailable",
+                        )}
+                      </Badge>
+                    </Show>
                     <Button
                       size="icon"
                       variant="secondary"
