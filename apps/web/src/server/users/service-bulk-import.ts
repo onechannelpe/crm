@@ -1,6 +1,6 @@
 import type { Role } from "~/lib/auth/access/rbac";
-import type { createUserProvisioningService } from "~/server/users/service-user-provisioning";
 import { Err, Ok, type Result } from "~/server/shared/result";
+import type { createUserProvisioningService } from "~/server/users/service-user-provisioning";
 
 type ProvisioningInterface = Pick<
   ReturnType<typeof createUserProvisioningService>,

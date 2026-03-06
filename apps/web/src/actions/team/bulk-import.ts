@@ -73,7 +73,11 @@ export async function applyBulkImport(
 
       return applyImport(
         valid,
-        { userId: session.userId, role: session.role, branchId: session.branchId },
+        {
+          userId: session.userId,
+          role: session.role,
+          branchId: session.branchId,
+        },
         safeRole,
         provisioning,
         async ({ row, inviteId, token, expiresAt }) => {

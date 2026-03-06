@@ -39,9 +39,7 @@ export function assertOptionalExpiresAt(
   }
   const ts = assertPositiveInt(value, "expiresAt");
   if (ts <= Date.now() + MIN_EXPIRY_OFFSET_MS) {
-    throw validationError(
-      "expiresAt must be at least 7 days in the future",
-    );
+    throw validationError("expiresAt must be at least 7 days in the future");
   }
   return ts;
 }
