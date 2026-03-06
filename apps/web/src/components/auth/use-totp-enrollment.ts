@@ -75,6 +75,13 @@ export function useTotpEnrollment(options: TotpEnrollmentOptions) {
     }
   }
 
+  function reset() {
+    setLoading(false);
+    setCode("");
+    setEnrollment(null);
+    setRecoveryCodes([]);
+  }
+
   return {
     loading,
     code,
@@ -83,5 +90,6 @@ export function useTotpEnrollment(options: TotpEnrollmentOptions) {
     setCode,
     beginEnrollment,
     verifyEnrollment,
+    reset,
   };
 }

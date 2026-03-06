@@ -35,3 +35,36 @@ export async function changePassword(
 
   return { success: true };
 }
+
+export async function removeAllPasskeys(): Promise<ActionSuccess> {
+  const session = await requireSession();
+
+  await repos.passkeys.deleteAllByUser(session.userId);
+  await repos.auditLogs.create({
+    user_id: session.userId,
+    action: "passkeys_removed",
+    entity_type: "user",
+    entity_id: session.userId,
+    changes: null,
+    created_at: Date.now(),
+  });
+
+  return { success: true };
+}
+
+export async function disableTotp(): Promise<ActionSuccess> {
+  const session = await requireSession();
+
+  await repos.userTotpFactors.disable(session.userId);
+  await repos.userTotpRecoveryCodes.deleteAllByUser(session.userId);
+  await repos.auditLogs.create({
+    user_id: session.userId,
+    action: "totp_disabled",
+    entity_type: "user",
+    entity_id: session.userId,
+    changes: null,
+    created_at: Date.now(),
+  });
+
+  return { success: true };
+}

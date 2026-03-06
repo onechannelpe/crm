@@ -21,6 +21,8 @@ interface TotpMethodCardProps {
   onCodeInput: JSX.EventHandler<HTMLInputElement, InputEvent>;
   onBegin: () => void;
   onVerify: () => void;
+  secondaryActionLabel?: string;
+  onSecondaryAction?: () => void;
 }
 
 function getSetupKey(otpauthUri: string): string {
@@ -59,15 +61,27 @@ export function TotpMethodCard(props: TotpMethodCardProps) {
       </div>
 
       <div class={styles.methodActions}>
-        <Button
-          type="button"
-          variant={props.active ? "outline" : "primary"}
-          disabled={props.active || props.loading}
-          loading={props.loading}
-          onClick={props.onBegin}
-        >
-          {props.actionLabel}
-        </Button>
+        <div class={styles.buttonRow}>
+          <Button
+            type="button"
+            variant={props.active ? "outline" : "primary"}
+            disabled={props.active || props.loading}
+            loading={props.loading}
+            onClick={props.onBegin}
+          >
+            {props.actionLabel}
+          </Button>
+          <Show when={props.secondaryActionLabel && props.onSecondaryAction}>
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={props.loading}
+              onClick={() => props.onSecondaryAction?.()}
+            >
+              {props.secondaryActionLabel}
+            </Button>
+          </Show>
+        </div>
         <Show when={props.note}>
           {(note) => <p class={styles.methodHint}>{note()}</p>}
         </Show>

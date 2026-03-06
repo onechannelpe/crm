@@ -63,9 +63,14 @@ export function usePasskeyEnrollment(options: PasskeyEnrollmentOptions) {
     }
   }
 
+  function reset() {
+    setLoading(false);
+  }
+
   return {
     supported,
     loading,
     registerPasskey,
+    reset,
   };
 }

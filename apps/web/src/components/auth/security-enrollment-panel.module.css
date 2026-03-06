@@ -75,6 +75,12 @@
   gap: 10px;
 }
 
+.buttonRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 .methodHint {
   margin: 0;
   color: var(--muted-foreground);

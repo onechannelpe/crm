@@ -16,6 +16,8 @@ interface PasskeyMethodCardProps {
   note?: string;
   unsupportedNote?: string;
   onAction: () => void;
+  secondaryActionLabel?: string;
+  onSecondaryAction?: () => void;
 }
 
 export function PasskeyMethodCard(props: PasskeyMethodCardProps) {
@@ -40,15 +42,27 @@ export function PasskeyMethodCard(props: PasskeyMethodCardProps) {
       </div>
 
       <div class={styles.methodActions}>
-        <Button
-          type="button"
-          variant={props.active ? "outline" : "primary"}
-          disabled={!props.supported || props.loading}
-          loading={props.loading}
-          onClick={props.onAction}
-        >
-          {props.actionLabel}
-        </Button>
+        <div class={styles.buttonRow}>
+          <Button
+            type="button"
+            variant={props.active ? "outline" : "primary"}
+            disabled={!props.supported || props.loading}
+            loading={props.loading}
+            onClick={props.onAction}
+          >
+            {props.actionLabel}
+          </Button>
+          <Show when={props.secondaryActionLabel && props.onSecondaryAction}>
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={props.loading}
+              onClick={() => props.onSecondaryAction?.()}
+            >
+              {props.secondaryActionLabel}
+            </Button>
+          </Show>
+        </div>
         <Show when={props.note}>
           {(note) => <p class={styles.methodHint}>{note()}</p>}
         </Show>

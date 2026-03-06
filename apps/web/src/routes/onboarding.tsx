@@ -1,40 +1,26 @@
 import { useNavigate } from "@solidjs/router";
-import { Show, createEffect, createSignal } from "solid-js";
+import { Show, createEffect, createMemo, createSignal } from "solid-js";
 
 import { completeOnboarding } from "~/actions/auth";
-import { PasskeyMethodCard } from "~/components/auth/passkey-method-card";
-import { RecoveryCodesPanel } from "~/components/auth/recovery-codes-panel";
-import { TotpMethodCard } from "~/components/auth/totp-method-card";
+import { OnboardingProfileStep } from "~/components/auth/onboarding-profile-step";
+import { OnboardingSecurityStep } from "~/components/auth/onboarding-security-step";
 import { usePasskeyEnrollment } from "~/components/auth/use-passkey-enrollment";
 import { useTotpEnrollment } from "~/components/auth/use-totp-enrollment";
 import { useToast } from "~/components/feedback/toast-provider";
-import Lock from "~/components/icons/lock";
-import UserRound from "~/components/icons/user-round";
 import {
   SessionProvider,
   useSession,
 } from "~/components/providers/session-provider";
 import { Button } from "~/components/ui/input/button";
-import { Input } from "~/components/ui/input/input";
-import { getRoleLabel } from "~/lib/auth/access/role-display";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
-import type { PasswordLoginPolicy } from "~/lib/auth/security/auth-contract";
+import {
+  deriveOnboardingState,
+  type OnboardingStep,
+} from "~/lib/auth/onboarding-flow";
 import { getErrorMessage } from "~/lib/errors";
 
 import authStyles from "./auth/auth-shell.module.css";
 import styles from "./onboarding-page.module.css";
-
-type OnboardingStep = "profile" | "security";
-
-function getSecurityTitle(passwordLoginPolicy: PasswordLoginPolicy) {
-  if (passwordLoginPolicy === "passkey_only") {
-    return "Ya tienes un método fuerte activo. Si luego quieres entrar con contraseña, añade también una aplicación de autenticación.";
-  }
-  if (passwordLoginPolicy === "password_or_totp") {
-    return "Tu rol requiere un método fuerte para continuar. Si eliges entrar con contraseña, el segundo paso será un código TOTP.";
-  }
-  return "Puedes configurar la seguridad ahora o administrarla más tarde desde Configuración.";
-}
 
 function OnboardingContent() {
   const navigate = useNavigate();
@@ -61,14 +47,26 @@ function OnboardingContent() {
     }
   });
 
-  const requiresStrongAuth = () => Boolean(user()?.strongAuthRequired);
-  const strongAuthConfigured = () => Boolean(user()?.strongAuthConfigured);
-  const profileReady = () => phone().trim().length > 0;
-  const securityReady = () => !requiresStrongAuth() || strongAuthConfigured();
-  const canFinish = () => profileReady() && securityReady();
+  const onboardingState = createMemo(() => {
+    const currentUser = user();
+    if (!currentUser) {
+      return {
+        currentStep: "profile" as OnboardingStep,
+        profileReady: false,
+        securityReady: false,
+        canFinish: false,
+      };
+    }
+
+    return deriveOnboardingState({
+      requestedStep: step(),
+      phoneE164: phone(),
+      user: currentUser,
+    });
+  });
 
   function handleProfileContinue() {
-    if (!profileReady()) {
+    if (!onboardingState().profileReady) {
       showToast("error", "Ingresa un WhatsApp corporativo válido");
       return;
     }
@@ -129,10 +127,11 @@ function OnboardingContent() {
                   <span
                     classList={{
                       [styles.summaryValue]: true,
-                      [styles.summaryValueSuccess]: profileReady(),
+                      [styles.summaryValueSuccess]:
+                        onboardingState().profileReady,
                     }}
                   >
-                    {profileReady() ? "Listo" : "Pendiente"}
+                    {onboardingState().profileReady ? "Listo" : "Pendiente"}
                   </span>
                 </div>
                 <div class={styles.summaryItem}>
@@ -140,178 +139,49 @@ function OnboardingContent() {
                   <span
                     classList={{
                       [styles.summaryValue]: true,
-                      [styles.summaryValueSuccess]: strongAuthConfigured(),
+                      [styles.summaryValueSuccess]:
+                        user()?.strongAuthConfigured ?? false,
                     }}
                   >
-                    {strongAuthConfigured()
+                    {user()?.strongAuthConfigured
                       ? "Lista"
-                      : requiresStrongAuth()
+                      : user()?.strongAuthRequired
                         ? "Obligatoria"
                         : "Opcional"}
                   </span>
                 </div>
               </div>
 
-              <Show when={step() === "profile"}>
-                <section class={styles.card}>
-                  <div class={styles.cardHeader}>
-                    <div class={styles.cardHeaderCopy}>
-                      <span class={styles.cardStep}>Paso 1</span>
-                      <h2 class={styles.cardTitle}>Perfil</h2>
-                      <p class={styles.cardDescription}>
-                        Los datos de identidad y rol vienen desde la invitación.
-                        Solo necesitamos confirmar tu contacto principal.
-                      </p>
-                    </div>
-                    <div class={styles.cardIcon}>
-                      <UserRound size={18} />
-                    </div>
-                  </div>
-
-                  <div class={styles.identityGrid}>
-                    <Input
-                      type="text"
-                      label="Nombre"
-                      value={`${currentUser.names} ${currentUser.firstSurname} ${currentUser.secondSurname}`}
-                      disabled
-                    />
-                    <Input
-                      type="text"
-                      label="Rol"
-                      value={getRoleLabel(currentUser.role)}
-                      disabled
-                    />
-                    <Input
-                      id="onboarding-email"
-                      type="email"
-                      label="Correo corporativo"
-                      value={currentUser.email}
-                      disabled
-                    />
-                    <Input
-                      id="onboarding-phone"
-                      type="tel"
-                      label="WhatsApp corporativo"
-                      placeholder="+51987654321"
-                      value={phone()}
-                      onInput={(event) => setPhone(event.currentTarget.value)}
-                      required
-                    />
-                  </div>
-
-                  <div class={styles.footer}>
-                    <p class={styles.footerCopy}>
-                      El siguiente paso define cómo vas a proteger el acceso a
-                      tu cuenta.
-                    </p>
-                    <div class={styles.footerActions}>
-                      <Button
-                        type="button"
-                        class={authStyles.full}
-                        onClick={handleProfileContinue}
-                      >
-                        Continuar a seguridad
-                      </Button>
-                    </div>
-                  </div>
-                </section>
+              <Show when={onboardingState().currentStep === "profile"}>
+                <OnboardingProfileStep
+                  email={currentUser.email}
+                  fullName={`${currentUser.names} ${currentUser.firstSurname} ${currentUser.secondSurname}`}
+                  phone={phone()}
+                  role={currentUser.role}
+                  onContinue={handleProfileContinue}
+                  onPhoneInput={setPhone}
+                />
               </Show>
 
-              <Show when={step() === "security"}>
-                <section class={styles.card}>
-                  <div class={styles.cardHeader}>
-                    <div class={styles.cardHeaderCopy}>
-                      <span class={styles.cardStep}>Paso 2</span>
-                      <h2 class={styles.cardTitle}>Protege tu cuenta</h2>
-                      <p class={styles.cardDescription}>
-                        {getSecurityTitle(currentUser.passwordLoginPolicy)}
-                      </p>
-                    </div>
-                    <div class={styles.cardIcon}>
-                      <Lock size={18} />
-                    </div>
-                  </div>
-
-                  <div class={styles.securityGrid}>
-                    <PasskeyMethodCard
-                      title="Clave de acceso"
-                      description="Usa biometría o el desbloqueo del dispositivo para entrar sin contraseña desde dispositivos compatibles."
-                      statusLabel={
-                        currentUser.hasPasskey
-                          ? `${currentUser.passkeyCount} configurada${currentUser.passkeyCount === 1 ? "" : "s"}`
-                          : passkeyEnrollment.supported()
-                            ? "Disponible"
-                            : "No compatible"
-                      }
-                      active={currentUser.hasPasskey}
-                      supported={passkeyEnrollment.supported()}
-                      loading={passkeyEnrollment.loading()}
-                      actionLabel={
-                        currentUser.hasPasskey
-                          ? "Añadir otra clave"
-                          : "Configurar clave"
-                      }
-                      note={
-                        currentUser.passwordLoginPolicy === "passkey_only"
-                          ? "Con tu clave de acceso ya puedes terminar esta configuración."
-                          : "Las claves de acceso son ideales para entrar sin contraseña."
-                      }
-                      unsupportedNote="Este navegador o dispositivo no admite claves de acceso."
-                      onAction={() => {
-                        void passkeyEnrollment.registerPasskey();
-                      }}
-                    />
-
-                    <TotpMethodCard
-                      title="Aplicación de autenticación"
-                      description="Genera códigos de 6 dígitos con Authy, 1Password, Microsoft Authenticator u otra aplicación compatible."
-                      statusLabel={
-                        currentUser.totpEnabled
-                          ? "Configurada"
-                          : "No configurada"
-                      }
-                      active={currentUser.totpEnabled}
-                      loading={totpEnrollment.loading()}
-                      actionLabel={
-                        currentUser.totpEnabled
-                          ? "Ya configurada"
-                          : "Configurar aplicación"
-                      }
-                      note="Si eliges entrar con contraseña en un rol protegido, este será el segundo paso."
-                      code={totpEnrollment.code()}
-                      enrollment={totpEnrollment.enrollment()}
-                      onCodeInput={(event) =>
-                        totpEnrollment.setCode(event.currentTarget.value)
-                      }
-                      onBegin={() => {
-                        void totpEnrollment.beginEnrollment();
-                      }}
-                      onVerify={() => {
-                        void totpEnrollment.verifyEnrollment();
-                      }}
-                    />
-                  </div>
-
-                  <Show when={totpEnrollment.recoveryCodes().length > 0}>
-                    <RecoveryCodesPanel
-                      title="Códigos de recuperación"
-                      description="Guárdalos ahora. Se muestran una sola vez y sirven como respaldo si pierdes acceso a tu aplicación."
-                      codes={totpEnrollment.recoveryCodes()}
-                    />
-                  </Show>
-                </section>
+              <Show when={onboardingState().currentStep === "security"}>
+                <OnboardingSecurityStep
+                  currentUser={currentUser}
+                  passkeyEnrollment={passkeyEnrollment}
+                  totpEnrollment={totpEnrollment}
+                />
               </Show>
 
               <div class={styles.footer}>
                 <p class={styles.footerCopy}>
-                  {step() === "profile"
+                  {onboardingState().currentStep === "profile"
                     ? "Confirma el contacto principal antes de pasar al paso de seguridad."
-                    : requiresStrongAuth() && !strongAuthConfigured()
+                    : user()?.strongAuthRequired &&
+                        !user()?.strongAuthConfigured
                       ? "Completa al menos un método fuerte para terminar la configuración."
                       : "Podrás administrar estos métodos más tarde desde Configuración > Seguridad."}
                 </p>
                 <div class={styles.footerActions}>
-                  <Show when={step() === "security"}>
+                  <Show when={onboardingState().currentStep === "security"}>
                     <Button
                       type="button"
                       variant="outline"
@@ -321,7 +191,7 @@ function OnboardingContent() {
                     </Button>
                   </Show>
                   <Show
-                    when={step() === "security"}
+                    when={onboardingState().currentStep === "security"}
                     fallback={
                       <Button
                         type="button"
@@ -335,7 +205,7 @@ function OnboardingContent() {
                     <Button
                       type="submit"
                       class={authStyles.full}
-                      disabled={submitting() || !canFinish()}
+                      disabled={submitting() || !onboardingState().canFinish}
                     >
                       {submitting()
                         ? "Guardando..."

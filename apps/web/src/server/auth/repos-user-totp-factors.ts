@@ -62,6 +62,19 @@ export function createUserTotpFactorsRepo(db: Kysely<Database>) {
         .where("user_id", "=", userId)
         .execute();
     },
+
+    async disable(userId: number): Promise<void> {
+      const now = Date.now();
+      await db
+        .updateTable("user_totp_factors")
+        .set({
+          is_enabled: 0,
+          enabled_at: null,
+          updated_at: now,
+        })
+        .where("user_id", "=", userId)
+        .execute();
+    },
   };
 }
 
@@ -112,6 +125,14 @@ export function createUserTotpRecoveryCodesRepo(db: Kysely<Database>) {
         .set({ used_at: Date.now() })
         .where("id", "=", id)
         .where("used_at", "is", null)
+        .execute()
+        .then(() => undefined);
+    },
+
+    deleteAllByUser(userId: number): Promise<void> {
+      return db
+        .deleteFrom("user_totp_recovery_codes")
+        .where("user_id", "=", userId)
         .execute()
         .then(() => undefined);
     },

@@ -1,6 +1,10 @@
 import { Show, createSignal } from "solid-js";
 
-import { changePassword } from "~/actions/settings";
+import {
+  changePassword,
+  disableTotp,
+  removeAllPasskeys,
+} from "~/actions/settings";
 import { PasskeyMethodCard } from "~/components/auth/passkey-method-card";
 import { RecoveryCodesPanel } from "~/components/auth/recovery-codes-panel";
 import { TotpMethodCard } from "~/components/auth/totp-method-card";
@@ -34,6 +38,42 @@ export default function SecurityPage() {
     refreshStatus: refreshCurrentUser,
     verifySuccessMessage: "Autenticación en dos pasos activada",
   });
+
+  const handleRemoveAllPasskeys = async () => {
+    if (!window.confirm("Esto eliminará todas tus claves de acceso.")) {
+      return;
+    }
+
+    try {
+      await removeAllPasskeys();
+      passkeyEnrollment.reset();
+      await refreshCurrentUser();
+      showToast("success", "Claves de acceso eliminadas");
+    } catch (err: unknown) {
+      showToast(
+        "error",
+        getErrorMessage(err, "No se pudieron eliminar las claves de acceso"),
+      );
+    }
+  };
+
+  const handleDisableTotp = async () => {
+    if (!window.confirm("Esto desactivará la autenticación con TOTP.")) {
+      return;
+    }
+
+    try {
+      await disableTotp();
+      totpEnrollment.reset();
+      await refreshCurrentUser();
+      showToast("success", "Aplicación de autenticación desactivada");
+    } catch (err: unknown) {
+      showToast(
+        "error",
+        getErrorMessage(err, "No se pudo desactivar la autenticación TOTP"),
+      );
+    }
+  };
 
   const handleChangePassword = async (e: Event) => {
     e.preventDefault();
@@ -95,12 +135,12 @@ export default function SecurityPage() {
 
       <SettingsSection
         title="Protege tu cuenta"
-        description="Administra por separado el acceso con clave de acceso y el segundo paso para el flujo con contraseña."
+        description="Gestiona por separado el acceso con clave de acceso y el segundo paso del flujo con contraseña."
       >
         <div class={styles.securityStack}>
           <PasskeyMethodCard
             title="Claves de acceso"
-            description="Administra cuántas claves tienes disponibles para entrar sin contraseña desde dispositivos compatibles."
+            description="Añade o elimina las claves que usas para entrar sin contraseña desde dispositivos compatibles."
             statusLabel={
               currentUser().hasPasskey
                 ? `${currentUser().passkeyCount} configurada${currentUser().passkeyCount === 1 ? "" : "s"}`
@@ -117,11 +157,21 @@ export default function SecurityPage() {
             note="El acceso con clave de acceso entra directo al espacio de trabajo, sin contraseña."
             unsupportedNote="Este navegador o dispositivo no admite claves de acceso."
             onAction={() => void passkeyEnrollment.registerPasskey()}
+            secondaryActionLabel={
+              currentUser().hasPasskey ? "Eliminar todas" : undefined
+            }
+            onSecondaryAction={
+              currentUser().hasPasskey
+                ? () => {
+                    void handleRemoveAllPasskeys();
+                  }
+                : undefined
+            }
           />
 
           <TotpMethodCard
             title="Aplicación de autenticación"
-            description="Configura códigos TOTP para el flujo de inicio de sesión con contraseña."
+            description="Configura o desactiva los códigos TOTP del flujo de inicio de sesión con contraseña."
             statusLabel={
               currentUser().totpEnabled ? "Configurada" : "Sin configurar"
             }
@@ -140,6 +190,16 @@ export default function SecurityPage() {
             }
             onBegin={() => void totpEnrollment.beginEnrollment()}
             onVerify={() => void totpEnrollment.verifyEnrollment()}
+            secondaryActionLabel={
+              currentUser().totpEnabled ? "Desactivar" : undefined
+            }
+            onSecondaryAction={
+              currentUser().totpEnabled
+                ? () => {
+                    void handleDisableTotp();
+                  }
+                : undefined
+            }
           />
 
           <Show when={totpEnrollment.recoveryCodes().length > 0}>
