@@ -1,0 +1,62 @@
+name: pipeline
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "master"
+    paths:
+      - "apps/pipeline/src/**"
+      - "apps/pipeline/tests/**"
+      - "apps/pipeline/Cargo.toml"
+      - ".github/workflows/pipeline.yml"
+  pull_request:
+    branches:
+      - "master"
+    paths:
+      - "apps/pipeline/src/**"
+      - "apps/pipeline/tests/**"
+      - "apps/pipeline/Cargo.toml"
+      - ".github/workflows/pipeline.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Format and lint
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: check format
+        run: cargo fmt --manifest-path apps/pipeline/Cargo.toml --check
+
+      - name: clippy
+        run: cargo clippy --manifest-path apps/pipeline/Cargo.toml --workspace --all-targets --all-features -- -D warnings
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: test
+        run: cargo test --manifest-path apps/pipeline/Cargo.toml

@@ -1,4 +1,4 @@
-name: engine quality
+name: engine
 
 on:
   workflow_dispatch:
@@ -25,12 +25,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  SESSION_SECRET: ci-session-secret
-  ENGINE_HMAC_SECRET: ci-engine-hmac-secret
-
 jobs:
-  engine-tests-and-perf-gate:
+  lint:
+    name: Format and lint
     runs-on: ubuntu-latest
 
     permissions:
@@ -43,11 +40,35 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
+      - name: check format
+        run: cargo fmt --manifest-path apps/engine/Cargo.toml --check
+
+      - name: clippy
+        run: cargo clippy --manifest-path apps/engine/Cargo.toml --workspace --all-targets --all-features -- -D warnings
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    env:
+      SESSION_SECRET: ci-session-secret
+      ENGINE_HMAC_SECRET: ci-engine-hmac-secret
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: dtolnay/rust-toolchain@stable
+
       - uses: actions/setup-python@v6
         with:
           python-version: "3.x"
 
-      - name: run engine tests
+      - name: test
         run: cargo test --manifest-path apps/engine/Cargo.toml
 
       - name: build perf fixture sqlite
@@ -67,3 +88,20 @@ jobs:
       #     cargo test --manifest-path apps/engine/Cargo.toml \
       #       --test perf_regression perf_regression_probe \
       #       -- --ignored --nocapture
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: build
+        run: cargo build --manifest-path apps/engine/Cargo.toml --locked
