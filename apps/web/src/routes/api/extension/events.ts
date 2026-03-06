@@ -1,0 +1,47 @@
+import type { APIEvent } from "@solidjs/start/server";
+
+import { extensionService } from "~/server/shared/context";
+import { isExtensionRuntimeEventEnvelope } from "~/server/extension/contracts";
+import { isErr } from "~/server/shared/result";
+
+function getBearerToken(request: Request): string | null {
+  const header = request.headers.get("authorization");
+  if (!header?.startsWith("Bearer ")) return null;
+  const token = header.slice("Bearer ".length).trim();
+  return token === "" ? null : token;
+}
+
+export async function POST(event: APIEvent): Promise<Response> {
+  try {
+    const syncToken = getBearerToken(event.request);
+    if (!syncToken) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    const body: unknown = await event.request.json();
+    if (!isExtensionRuntimeEventEnvelope(body)) {
+      return Response.json(
+        { error: "Invalid extension event payload" },
+        { status: 400 },
+      );
+    }
+
+    const result = await extensionService.ingestRuntimeEvent({
+      syncToken,
+      event: body,
+    });
+    if (isErr(result)) {
+      const status =
+        result.error.reason === "sync_token_invalid"
+          ? 401
+          : result.error.reason === "event_duplicate"
+            ? 409
+            : 500;
+      return Response.json({ error: result.error.message }, { status });
+    }
+
+    return Response.json({ ok: true }, { status: 200 });
+  } catch {
+    return new Response("Unexpected error", { status: 500 });
+  }
+}

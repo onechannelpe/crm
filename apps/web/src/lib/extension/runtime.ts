@@ -17,11 +17,7 @@ export interface ExtensionExecutiveState {
 
 interface AssignmentHandoffMessage {
   type: "assignment.handoff";
-  assignmentId: number;
-  contactId: number;
-  phone: string;
-  clientName?: string;
-  organizationLabel?: string;
+  token: string;
 }
 
 interface StateGetMessage {
@@ -143,24 +139,16 @@ async function sendMessage(
 }
 
 export async function handoffLeadToExtension(input: {
-  assignmentId: number;
-  contactId: number;
-  phone: string;
-  clientName: string;
-  organizationLabel: string;
+  token: string;
 }): Promise<ExtensionRuntimeResponse> {
-  const phone = input.phone.trim();
-  if (phone === "") {
-    return bridgeUnavailable("Selected client has no phone number.");
+  const token = input.token.trim();
+  if (token === "") {
+    return bridgeUnavailable("Missing extension handoff token.");
   }
 
   return sendMessage({
     type: "assignment.handoff",
-    assignmentId: input.assignmentId,
-    contactId: input.contactId,
-    phone,
-    clientName: input.clientName,
-    organizationLabel: input.organizationLabel,
+    token,
   });
 }
 

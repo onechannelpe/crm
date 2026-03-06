@@ -21,6 +21,28 @@ import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
 
 import styles from "./leads-page.module.css";
 
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function readErrorMessage(value: unknown): string | null {
+  if (!isObject(value) || typeof value.error !== "string") {
+    return null;
+  }
+
+  return value.error;
+}
+
+function isHandoffTokenResponse(
+  value: unknown,
+): value is { handoffToken: string; expiresAt: number } {
+  return (
+    isObject(value) &&
+    typeof value.handoffToken === "string" &&
+    typeof value.expiresAt === "number"
+  );
+}
+
 export default function LeadsPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -93,12 +115,33 @@ export default function LeadsPage() {
     }
 
     setExtensionLoadingAssignmentId(lead.assignmentId);
+    const handoffTokenResponse = await fetch("/api/extension/handoff-token", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ assignmentId: lead.assignmentId }),
+    });
+    if (!handoffTokenResponse.ok) {
+      const body = (await handoffTokenResponse.json().catch(() => null)) as unknown;
+      setExtensionLoadingAssignmentId(null);
+      const message =
+        readErrorMessage(body) ??
+        "No se pudo autorizar el handoff a la extensión.";
+      setExtensionError(message);
+      showToast("error", message);
+      return;
+    }
+
+    const handoffTokenBody = (await handoffTokenResponse.json()) as unknown;
+    if (!isHandoffTokenResponse(handoffTokenBody)) {
+      setExtensionLoadingAssignmentId(null);
+      const message = "El servidor devolvió un handoff inválido.";
+      setExtensionError(message);
+      showToast("error", message);
+      return;
+    }
+
     const response = await handoffLeadToExtension({
-      assignmentId: lead.assignmentId,
-      contactId: lead.contactId,
-      phone: lead.phone_primary,
-      clientName: lead.name,
-      organizationLabel: `Org #${lead.organization_id}`,
+      token: handoffTokenBody.handoffToken,
     });
     setExtensionLoadingAssignmentId(null);
 

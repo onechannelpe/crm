@@ -30,6 +30,51 @@ interface TeamMembersSectionProps {
   onSearchFilterInput: (value: string) => void;
 }
 
+function getExtensionStatusVariant(
+  status: TeamMember["extensionStatus"],
+): "outline" | "secondary" | "warning" | "success" | "info" | "destructive" {
+  switch (status) {
+    case "ready":
+    case "wrap_up":
+      return "secondary";
+    case "dialing":
+      return "warning";
+    case "active":
+      return "success";
+    case "sync_pending":
+      return "info";
+    case "sync_error":
+      return "destructive";
+    case "idle":
+    case "offline":
+    case null:
+      return "outline";
+  }
+}
+
+function getExtensionStatusLabel(status: TeamMember["extensionStatus"]): string {
+  switch (status) {
+    case "idle":
+      return "Sin handoff";
+    case "ready":
+      return "Listo";
+    case "dialing":
+      return "Marcando";
+    case "active":
+      return "En llamada";
+    case "wrap_up":
+      return "Cierre";
+    case "sync_pending":
+      return "Pendiente";
+    case "sync_error":
+      return "Error sync";
+    case "offline":
+      return "Offline";
+    case null:
+      return "Sin datos";
+  }
+}
+
 function filterMembers(
   members: TeamMember[],
   searchFilter: string,
@@ -104,6 +149,7 @@ export function TeamMembersSection(props: TeamMembersSectionProps) {
               <TableHead>Correo</TableHead>
               <TableHead>Rol</TableHead>
               <TableHead>Estado</TableHead>
+              <TableHead>Extensión</TableHead>
               <TableHead>Vencimiento</TableHead>
             </TableRow>
           </TableHeader>
@@ -133,6 +179,11 @@ export function TeamMembersSection(props: TeamMembersSectionProps) {
                   <TableCell>
                     <Badge variant={member.isActive ? "success" : "default"}>
                       {member.isActive ? "Activo" : "Inactivo"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={getExtensionStatusVariant(member.extensionStatus)}>
+                      {getExtensionStatusLabel(member.extensionStatus)}
                     </Badge>
                   </TableCell>
                   <TableCell>

@@ -304,6 +304,62 @@ export interface InventoryItemsTable {
   created_at: number;
 }
 
+export interface ExtensionHandoffJtisTable {
+  jti: string;
+  user_id: number;
+  assignment_id: number;
+  consumed_at: number;
+  expires_at: number;
+}
+
+export interface ExtensionSyncTokensTable {
+  id: Generated<number>;
+  user_id: number;
+  branch_id: number;
+  auth_session_id: string;
+  token_hash: string;
+  issued_at: number;
+  expires_at: number;
+  revoked_at: number | null;
+}
+
+export interface ExtensionRuntimeEventsTable {
+  id: string;
+  user_id: number;
+  branch_id: number;
+  assignment_id: number | null;
+  contact_id: number | null;
+  call_session_id: string | null;
+  type:
+    | "executive.status"
+    | "call.lifecycle"
+    | "call.metric"
+    | "recording.completed"
+    | "recording.chunk";
+  payload_json: string;
+  created_at: number;
+  received_at: number;
+}
+
+export interface ExtensionExecutiveStatusesTable {
+  user_id: number;
+  branch_id: number;
+  assignment_id: number | null;
+  contact_id: number | null;
+  call_session_id: string | null;
+  status:
+    | "idle"
+    | "ready"
+    | "dialing"
+    | "active"
+    | "wrap_up"
+    | "sync_pending"
+    | "sync_error"
+    | "offline";
+  updated_at: number;
+  source_event_id: string | null;
+}
+
 export interface AgentStatusLogsTable {
   id: Generated<number>;
   user_id: number;
@@ -551,6 +607,10 @@ export interface Database {
   products: ProductsTable;
   interaction_logs: InteractionLogsTable;
   inventory_items: InventoryItemsTable;
+  extension_handoff_jtis: ExtensionHandoffJtisTable;
+  extension_sync_tokens: ExtensionSyncTokensTable;
+  extension_runtime_events: ExtensionRuntimeEventsTable;
+  extension_executive_statuses: ExtensionExecutiveStatusesTable;
   agent_status_logs: AgentStatusLogsTable;
   audit_logs: AuditLogsTable;
   audit_action_policies: AuditActionPoliciesTable;

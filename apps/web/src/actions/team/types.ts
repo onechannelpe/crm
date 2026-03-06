@@ -15,6 +15,17 @@ export interface TeamMember {
   teamId: number | null;
   isActive: boolean;
   expiresAt: number | null;
+  extensionStatus:
+    | "idle"
+    | "ready"
+    | "dialing"
+    | "active"
+    | "wrap_up"
+    | "sync_pending"
+    | "sync_error"
+    | "offline"
+    | null;
+  extensionUpdatedAt: number | null;
 }
 
 export interface TeamInvite {

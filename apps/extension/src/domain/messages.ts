@@ -54,19 +54,7 @@ export type ExternalRuntimeMessage =
     }
   | {
       type: "assignment.handoff";
-      assignmentId: number;
-      contactId: number;
-      phone: string;
-      clientName?: string;
-      organizationLabel?: string;
-      sync?: {
-        apiBaseUrl: string;
-        authToken: string;
-      };
-    }
-  | {
-      type: "assignment.clear";
-      assignmentId?: number;
+      token: string;
     };
 
 export type RuntimeResponse =
@@ -141,22 +129,8 @@ export function isExternalRuntimeMessage(value: unknown): value is ExternalRunti
   switch (value.type) {
     case "state.get":
       return true;
-    case "assignment.handoff": {
-      const sync = value.sync;
-      return (
-        typeof value.assignmentId === "number" &&
-        typeof value.contactId === "number" &&
-        typeof value.phone === "string" &&
-        (value.clientName === undefined || typeof value.clientName === "string") &&
-        (value.organizationLabel === undefined || typeof value.organizationLabel === "string") &&
-        (sync === undefined ||
-          (isObject(sync) &&
-            typeof sync.apiBaseUrl === "string" &&
-            typeof sync.authToken === "string"))
-      );
-    }
-    case "assignment.clear":
-      return value.assignmentId === undefined || typeof value.assignmentId === "number";
+    case "assignment.handoff":
+      return typeof value.token === "string";
     default:
       return false;
   }

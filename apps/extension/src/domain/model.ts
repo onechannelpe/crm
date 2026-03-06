@@ -14,6 +14,7 @@ export type ExecutiveStatus =
   | "sync_error";
 
 export type QueueJobType =
+  | "executive.status"
   | "call.lifecycle"
   | "call.metric"
   | "recording.chunk"

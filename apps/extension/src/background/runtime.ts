@@ -12,6 +12,7 @@ import {
   type ExtensionState,
   type QueueJob,
 } from "@/src/domain/model";
+import { verifyExternalHandoff } from "@/src/services/external-auth";
 import {
   deleteLargePayload,
   readLargePayload,
@@ -129,8 +130,25 @@ function assertNever(value: never): never {
   throw new Error(`unhandled message type: ${JSON.stringify(value)}`);
 }
 
-async function flushQueue(state: ExtensionState): Promise<ExtensionState> {
-  const due = dueJobs(state.queue);
+function enqueueExecutiveStatus(
+  state: ExtensionState,
+  status: ReturnType<typeof getExecutiveState>["status"],
+  updatedAt: number,
+): QueueJob[] {
+  return enqueueJob(state.queue, "executive.status", {
+    status,
+    assignmentId: state.handoff?.assignmentId ?? state.currentCall?.assignmentId ?? null,
+    contactId: state.handoff?.contactId ?? state.currentCall?.contactId ?? null,
+    callSessionId: state.currentCall?.sessionId ?? null,
+    updatedAt,
+  });
+}
+
+async function flushQueue(
+  state: ExtensionState,
+  force = false,
+): Promise<ExtensionState> {
+  const due = force ? state.queue : dueJobs(state.queue);
   if (due.length === 0) return state;
 
   let next = state;
@@ -199,6 +217,16 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
         phone: session.phone,
         at: now,
       });
+      queue = appendJob(
+        queue,
+        createJob("executive.status", {
+          status: "dialing",
+          assignmentId: session.assignmentId,
+          contactId: session.contactId,
+          callSessionId: session.sessionId,
+          updatedAt: now,
+        }),
+      );
 
       if (current.previousCallEndedAt) {
         const idleSeconds = Math.round((now - current.previousCallEndedAt) / 1000);
@@ -218,6 +246,7 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
       };
 
       await writeState(next);
+      void flushQueue(next).catch(() => undefined);
       return toSuccessResponse(next);
     }
     case "call.connected": {
@@ -241,8 +270,19 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
             at: connectedAt,
           }),
         };
+        next.queue = appendJob(
+          next.queue,
+          createJob("executive.status", {
+            status: "active",
+            assignmentId: call.assignmentId,
+            contactId: call.contactId,
+            callSessionId: call.sessionId,
+            updatedAt: connectedAt,
+          }),
+        );
 
         await writeState(next);
+        void flushQueue(next).catch(() => undefined);
         return toSuccessResponse(next);
       } catch (error: unknown) {
         return toErrorResponse(asErrorMessage(error), current);
@@ -290,8 +330,19 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
             },
           ),
         };
+        next.queue = appendJob(
+          next.queue,
+          createJob("executive.status", {
+            status: "wrap_up",
+            assignmentId: call.assignmentId,
+            contactId: call.contactId,
+            callSessionId: call.sessionId,
+            updatedAt: endedAt,
+          }),
+        );
 
         await writeState(next);
+        void flushQueue(next).catch(() => undefined);
         return toSuccessResponse(next);
       } catch (error: unknown) {
         return toErrorResponse(asErrorMessage(error), current);
@@ -457,7 +508,7 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
       return toSuccessResponse(next);
     }
     case "sync.flush": {
-      const next = await flushQueue(current);
+      const next = await flushQueue(current, true);
       return toSuccessResponse(next);
     }
     case "sync.configure": {
@@ -479,6 +530,7 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
 
 async function handleExternalRuntimeMessage(
   message: ExternalRuntimeMessage,
+  sender: chrome.runtime.MessageSender,
 ): Promise<RuntimeResponse> {
   const current = await readState();
 
@@ -486,58 +538,35 @@ async function handleExternalRuntimeMessage(
     case "state.get":
       return toSuccessResponse(current);
     case "assignment.handoff": {
+      const verified = await verifyExternalHandoff({
+        token: message.token,
+        sender,
+      });
       if (
         current.currentCall &&
         current.currentCall.phase !== "ended" &&
-        current.currentCall.assignmentId !== message.assignmentId
+        current.currentCall.assignmentId !== verified.handoff.assignmentId
       ) {
         return toErrorResponse("cannot replace handoff during an active call", current);
       }
 
-      const receivedAt = Date.now();
+      const receivedAt = verified.handoff.receivedAt;
       const next: ExtensionState = {
         ...current,
-        handoff: {
-          assignmentId: message.assignmentId,
-          contactId: message.contactId,
-          phone: message.phone,
-          clientName: message.clientName ?? null,
-          organizationLabel: message.organizationLabel ?? null,
+        handoff: verified.handoff,
+        syncConfig: verified.syncConfig,
+        queue: enqueueExecutiveStatus(
+          {
+            ...current,
+            handoff: verified.handoff,
+            syncConfig: verified.syncConfig,
+          },
+          "ready",
           receivedAt,
-        },
-        syncConfig: message.sync
-          ? {
-              apiBaseUrl: message.sync.apiBaseUrl,
-              authToken: message.sync.authToken,
-            }
-          : current.syncConfig,
+        ),
       };
       await writeState(next);
-      return toSuccessResponse(next);
-    }
-    case "assignment.clear": {
-      if (
-        message.assignmentId !== undefined &&
-        current.handoff &&
-        current.handoff.assignmentId !== message.assignmentId
-      ) {
-        return toSuccessResponse(current);
-      }
-
-      if (
-        current.currentCall &&
-        current.currentCall.phase !== "ended" &&
-        (message.assignmentId === undefined ||
-          current.currentCall.assignmentId === message.assignmentId)
-      ) {
-        return toErrorResponse("cannot clear handoff during an active call", current);
-      }
-
-      const next: ExtensionState = {
-        ...current,
-        handoff: null,
-      };
-      await writeState(next);
+      void flushQueue(next).catch(() => undefined);
       return toSuccessResponse(next);
     }
   }
@@ -588,12 +617,12 @@ export function registerRuntime(): void {
     return handleMessage(message);
   });
 
-  browser.runtime.onMessageExternal.addListener((message: unknown) => {
+  browser.runtime.onMessageExternal.addListener((message: unknown, sender) => {
     if (!isExternalRuntimeMessage(message)) {
       return Promise.resolve(toErrorResponse("invalid external message payload"));
     }
 
-    return handleExternalRuntimeMessage(message);
+    return handleExternalRuntimeMessage(message, sender);
   });
 
   browser.alarms.onAlarm.addListener(async (alarm) => {

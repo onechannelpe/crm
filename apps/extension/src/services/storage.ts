@@ -20,6 +20,7 @@ function isQueueJobType(
   value: unknown,
 ): value is ExtensionState["queue"][number]["type"] {
   return (
+    value === "executive.status" ||
     value === "call.lifecycle" ||
     value === "call.metric" ||
     value === "recording.chunk" ||
