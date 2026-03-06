@@ -18,9 +18,14 @@ export interface UsersTable {
   id: Generated<number>;
   branch_id: number;
   team_id: number | null;
+  username: string;
   email: string;
   password_hash: string;
-  full_name: string;
+  names: string;
+  first_surname: string;
+  second_surname: string;
+  expires_at: number | null;
+  expiry_notified_at: number | null;
   phone_e164: string | null;
   avatar_storage_key: string | null;
   avatar_mime_type: string | null;

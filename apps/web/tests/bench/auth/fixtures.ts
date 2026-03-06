@@ -8,7 +8,7 @@ const LOGIN_USER_ID_START = 10_000;
 export const LOGIN_PASSWORD = "Secret123!";
 
 export interface LoginFixture {
-  email: string;
+  username: string;
   ipAddress: string;
 }
 
@@ -23,9 +23,12 @@ export async function seedAuthLoginFixtures(
       id,
       branch_id: 1,
       team_id: null,
+      username: `bench.auth${id}`,
       email: `bench-auth-${id}@test.local`,
       password_hash: passwordHash,
-      full_name: `Bench Auth ${id}`,
+      names: `Bench Auth ${id}`,
+      first_surname: "User",
+      second_surname: "Bench",
       phone_e164: `+5199001${String(index).padStart(4, "0")}`,
       phone_verified_at: BENCH_NOW,
       profile_confirmed_at: BENCH_NOW,
@@ -41,7 +44,7 @@ export async function seedAuthLoginFixtures(
   await ctx.db.insertInto("users").values(users).execute();
 
   return users.map((user, index) => ({
-    email: user.email,
+    username: user.username,
     ipAddress: `198.51.100.${(index % 200) + 1}`,
   }));
 }

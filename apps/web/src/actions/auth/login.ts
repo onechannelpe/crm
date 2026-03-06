@@ -28,7 +28,7 @@ export interface LoginResult {
 }
 
 export async function login(
-  email: string,
+  username: string,
   password: string,
   totpCode?: string,
 ): Promise<LoginResult> {
@@ -53,14 +53,19 @@ export async function login(
 
       const result = await authenticatePasswordLogin(
         {
-          email,
+          username,
           password,
           totpCode,
           ipAddress,
           userAgent,
         },
         { sendPrivilegedLoginAlert },
-      );
+      ).catch((error: unknown) => {
+        if (error instanceof Error && error.message === "Invalid credentials") {
+          throw new Response("Invalid credentials", { status: 403 });
+        }
+        throw error;
+      });
       setSessionCookie(result.token);
 
       return {

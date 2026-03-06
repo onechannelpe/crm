@@ -5,6 +5,7 @@ import { config } from "~/lib/config";
 import type { ActionSuccess } from "~/lib/contracts/common";
 import { assertPositiveInt } from "~/lib/contracts/guards";
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
+import { shortName } from "~/lib/users/display-name";
 import { SUPERVISOR_AUDIENCE_ROLES } from "~/server/notifications/app-events";
 import { appNotificationCenter } from "~/server/shared/context";
 import { leadService } from "~/server/shared/context";
@@ -43,7 +44,7 @@ export async function requestLeads(
     {
       type: "lead.more_requested",
       title: "Solicitud de mas leads",
-      bodyText: `${requester?.full_name ?? "Un ejecutivo"} solicito mas leads y recibio ${result.value}.`,
+      bodyText: `${requester ? shortName(requester) : "Un ejecutivo"} solicitó mas leads y recibió ${result.value}.`,
       actionUrl: "/sales/leads",
       priority: result.value === 0 ? "high" : "normal",
       dedupeKey: null,

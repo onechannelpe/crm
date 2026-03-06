@@ -7,18 +7,21 @@ import { repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
 import { provisioning } from "./provisioning";
-import type { InviteManagement, TeamMember } from "./types";
+import type { BulkImportSetup, InviteManagement, TeamMember } from "./types";
 
 export async function getTeamMembers(): Promise<TeamMember[]> {
   const session = await requirePermission("team:read");
   const users = await repos.users.findByBranch(session.branchId);
   return users.map((u) => ({
     id: u.id,
-    fullName: u.full_name,
+    names: u.names,
+    firstSurname: u.first_surname,
+    secondSurname: u.second_surname,
     email: u.email,
     role: u.role,
     teamId: u.team_id,
     isActive: !!u.is_active,
+    expiresAt: u.expires_at,
   }));
 }
 
@@ -45,4 +48,9 @@ export async function getInviteManagement(): Promise<InviteManagement> {
     teams: teams.map((team) => ({ id: team.id, name: team.name })),
     assignableRoles: getAssignableRoleOptions(session.role),
   };
+}
+
+export async function getBulkImportSetup(): Promise<BulkImportSetup> {
+  const session = await requirePermission("admin:manage");
+  return { assignableRoles: getAssignableRoleOptions(session.role) };
 }

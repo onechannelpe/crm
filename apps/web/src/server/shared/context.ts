@@ -1,5 +1,8 @@
+import { createNotificationService } from "@crm/notifications";
+
 import { config } from "~/lib/config";
 import { db } from "~/lib/db/db";
+import { env } from "~/lib/env";
 import { createSearchEnrichmentService } from "~/server/client-search/enrichment-service";
 import { createClientSearchService } from "~/server/client-search/service";
 import { createLeadAssignmentService } from "~/server/leads/service";
@@ -53,5 +56,13 @@ export const salesRecordsService = createSalesRecordsWorkflowService(
   repos,
   runInRepositoryTransaction,
 );
+
+export const notificationSender = createNotificationService({
+  resendApiKey: env.resendApiKey || undefined,
+  fromEmail: env.emailFrom || undefined,
+  whatsappAccessToken: env.whatsappAccessToken || undefined,
+  whatsappPhoneNumberId: env.whatsappPhoneNumberId || undefined,
+  whatsappApiVersion: env.whatsappApiVersion || undefined,
+});
 
 export { repos };

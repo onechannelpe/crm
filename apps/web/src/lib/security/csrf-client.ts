@@ -1,4 +1,4 @@
-import { CSRF_CONFIG } from "./csrf-config";
+import { CSRF_CONFIG, getCsrfCookieName } from "./csrf-config";
 
 const SAFE_METHODS = ["GET", "HEAD", "OPTIONS", "TRACE"];
 
@@ -22,7 +22,7 @@ export function setupCsrfInterceptor() {
     const method = init?.method?.toUpperCase() || "GET";
 
     if (!SAFE_METHODS.includes(method)) {
-      const token = getCookie(CSRF_CONFIG.COOKIE_NAME);
+      const token = getCookie(getCsrfCookieName());
 
       if (token) {
         init = init || {};

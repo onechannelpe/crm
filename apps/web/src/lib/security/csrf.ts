@@ -2,7 +2,7 @@ import { getCookie, setCookie } from "@solidjs/start/http";
 
 import { env } from "~/lib/env";
 
-import { CSRF_CONFIG } from "./csrf-config";
+import { CSRF_CONFIG, getCsrfCookieName } from "./csrf-config";
 import { signHmac, verifyHmac } from "./hmac";
 
 const ONE_DAY_SECONDS = 60 * 60 * 24;
@@ -19,7 +19,7 @@ export async function generateCsrfToken(): Promise<string> {
 
 export function setCsrfCookie(token: string): void {
   const isProduction = process.env.NODE_ENV === "production";
-  setCookie(CSRF_CONFIG.COOKIE_NAME, token, {
+  setCookie(getCsrfCookieName(), token, {
     httpOnly: false,
     secure: isProduction,
     sameSite: "lax",
@@ -29,11 +29,11 @@ export function setCsrfCookie(token: string): void {
 }
 
 export function getCsrfFromCookie(): string | undefined {
-  return getCookie(CSRF_CONFIG.COOKIE_NAME);
+  return getCookie(getCsrfCookieName());
 }
 
 export async function verifyCsrf(request: Request): Promise<boolean> {
-  const cookieToken = getCookie(CSRF_CONFIG.COOKIE_NAME);
+  const cookieToken = getCookie(getCsrfCookieName());
   if (!cookieToken) return false;
 
   const [value, signature] = cookieToken.split(".");

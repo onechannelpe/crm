@@ -39,7 +39,7 @@ describe("auth login action benchmark", () => {
           stage: "login" as const,
           outcome: "success" as const,
           reason: null,
-          identifier_hash: hashAuthKey(`id:${fixture.email}`),
+          identifier_hash: hashAuthKey(`id:${fixture.username}`),
           ip_hash: hashAuthKey(`ip:${fixture.ipAddress}`),
           created_at: BENCH_NOW,
         })),
@@ -64,7 +64,7 @@ describe("auth login action benchmark", () => {
 
       const result = await authenticatePasswordLogin(
         {
-          email: fixture.email,
+          username: fixture.username,
           password: LOGIN_PASSWORD,
           ipAddress: fixture.ipAddress,
           userAgent: "codspeed-bench",
