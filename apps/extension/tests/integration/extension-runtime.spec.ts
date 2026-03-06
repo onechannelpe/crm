@@ -85,7 +85,7 @@ test.describe("extension runtime integration", () => {
       const configResponse = await sendRuntimeMessage(page, {
         type: "sync.configure",
         apiBaseUrl: sink.baseUrl,
-        authToken: "test-token",
+        sessionToken: "test-token",
       });
       expect(configResponse.ok).toBe(true);
 

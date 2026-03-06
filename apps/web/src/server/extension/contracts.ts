@@ -1,6 +1,7 @@
 export const EXTENSION_HANDOFF_TOKEN_ISSUER = "crm-web" as const;
 export const EXTENSION_HANDOFF_TOKEN_AUDIENCE = "crm-extension" as const;
-export const EXTENSION_SYNC_TOKEN_AUDIENCE = "crm-extension-events" as const;
+export const EXTENSION_SESSION_TOKEN_AUDIENCE =
+  "crm-extension-session" as const;
 
 export const EXTENSION_EXECUTIVE_STATUSES = [
   "idle",
@@ -39,19 +40,19 @@ export interface ExtensionHandoffClaims {
   clientName: string | null;
   organizationLabel: string | null;
   action: "start_call";
-  syncToken: string;
   origin: string;
   jti: string;
   iat: number;
   exp: number;
 }
 
-export interface ExtensionSyncClaims {
+export interface ExtensionInstallationSessionClaims {
   iss: typeof EXTENSION_HANDOFF_TOKEN_ISSUER;
-  aud: typeof EXTENSION_SYNC_TOKEN_AUDIENCE;
+  aud: typeof EXTENSION_SESSION_TOKEN_AUDIENCE;
   sub: `user:${number}`;
   authSessionId: string;
   branchId: number;
+  installationId: string;
   jti: string;
   iat: number;
   exp: number;
@@ -63,6 +64,16 @@ export interface CreateExtensionHandoffTokenRequest {
 
 export interface CreateExtensionHandoffTokenResponse {
   handoffToken: string;
+  expiresAt: number;
+}
+
+export interface ClaimExtensionSessionRequest {
+  handoffToken: string;
+  installationId: string;
+}
+
+export interface ClaimExtensionSessionResponse {
+  sessionToken: string;
   expiresAt: number;
 }
 
@@ -169,6 +180,16 @@ export function isCreateExtensionHandoffTokenRequest(
   value: unknown,
 ): value is CreateExtensionHandoffTokenRequest {
   return isObject(value) && typeof value.assignmentId === "number";
+}
+
+export function isClaimExtensionSessionRequest(
+  value: unknown,
+): value is ClaimExtensionSessionRequest {
+  return (
+    isObject(value) &&
+    typeof value.handoffToken === "string" &&
+    typeof value.installationId === "string"
+  );
 }
 
 function isExecutiveStatusPayload(

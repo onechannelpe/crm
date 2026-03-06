@@ -1,8 +1,15 @@
+import { createPrivateKey, createPublicKey } from "node:crypto";
+
 import { env } from "~/lib/env";
 
-import type { ExtensionHandoffClaims, ExtensionSyncClaims } from "./contracts";
+import type {
+  ExtensionHandoffClaims,
+  ExtensionInstallationSessionClaims,
+} from "./contracts";
 
-type ExtensionTokenClaims = ExtensionHandoffClaims | ExtensionSyncClaims;
+type ExtensionTokenClaims =
+  | ExtensionHandoffClaims
+  | ExtensionInstallationSessionClaims;
 
 interface ExtensionTokenHeader {
   alg: "EdDSA";
@@ -19,6 +26,12 @@ function toBase64Url(bytes: Uint8Array): string {
 
 function fromBase64(value: string): Uint8Array {
   return Buffer.from(value, "base64");
+}
+
+function fromBase64Url(value: string): Uint8Array {
+  const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+  return Uint8Array.from(Buffer.from(padded, "base64"));
 }
 
 function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
@@ -52,6 +65,30 @@ async function importPrivateKey(): Promise<CryptoKey> {
   );
 }
 
+async function importPublicKey(): Promise<CryptoKey> {
+  if (!env.extensionHandoffPrivateKeyPkcs8Base64) {
+    throw new Error("Missing extension handoff private key");
+  }
+
+  const privateKey = createPrivateKey({
+    key: Buffer.from(env.extensionHandoffPrivateKeyPkcs8Base64, "base64"),
+    format: "der",
+    type: "pkcs8",
+  });
+  const publicKeyDer = createPublicKey(privateKey).export({
+    format: "der",
+    type: "spki",
+  });
+
+  return crypto.subtle.importKey(
+    "spki",
+    toArrayBuffer(new Uint8Array(publicKeyDer)),
+    { name: "Ed25519" },
+    false,
+    ["verify"],
+  );
+}
+
 export async function signExtensionToken(
   claims: ExtensionTokenClaims,
 ): Promise<string> {
@@ -75,10 +112,47 @@ export async function signExtensionToken(
   return `${encodedHeader}.${encodedPayload}.${toBase64Url(signature)}`;
 }
 
-export async function hashExtensionSyncToken(token: string): Promise<string> {
-  const digest = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(token),
+function decodeJsonPart(value: string): unknown {
+  return JSON.parse(new TextDecoder().decode(fromBase64Url(value)));
+}
+
+export async function verifyExtensionToken<T extends ExtensionTokenClaims>(
+  token: string,
+  isClaims: (value: unknown) => value is T,
+): Promise<T> {
+  const parts = token.split(".");
+  if (parts.length !== 3) {
+    throw new Error("invalid token format");
+  }
+
+  const [encodedHeader, encodedPayload, encodedSignature] = parts;
+  const header = decodeJsonPart(encodedHeader);
+  if (
+    typeof header !== "object" ||
+    header === null ||
+    !("alg" in header) ||
+    header.alg !== "EdDSA"
+  ) {
+    throw new Error("invalid token header");
+  }
+
+  const payload = decodeJsonPart(encodedPayload);
+  if (!isClaims(payload)) {
+    throw new Error("invalid token claims");
+  }
+
+  const publicKey = await importPublicKey();
+  const verified = await crypto.subtle.verify(
+    "Ed25519",
+    publicKey,
+    toArrayBuffer(fromBase64Url(encodedSignature)),
+    toArrayBuffer(
+      new TextEncoder().encode(`${encodedHeader}.${encodedPayload}`),
+    ),
   );
-  return toBase64Url(new Uint8Array(digest));
+  if (!verified) {
+    throw new Error("invalid token signature");
+  }
+
+  return payload;
 }

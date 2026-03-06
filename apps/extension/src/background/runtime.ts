@@ -154,13 +154,13 @@ async function flushQueue(
   let next = state;
 
   for (const job of due) {
-    let result: Awaited<ReturnType<typeof sendSyncJob>>;
-    try {
-      const sendableJob = await withHydratedPayload(job);
-      result = await sendSyncJob(next.syncConfig, sendableJob);
-    } catch (error: unknown) {
-      result = {
-        ok: false,
+      let result: Awaited<ReturnType<typeof sendSyncJob>>;
+      try {
+        const sendableJob = await withHydratedPayload(job);
+        result = await sendSyncJob(next.syncConfig, sendableJob);
+      } catch (error: unknown) {
+        result = {
+          ok: false,
         error: asErrorMessage(error),
       };
     }
@@ -516,7 +516,7 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
         ...current,
         syncConfig: {
           apiBaseUrl: message.apiBaseUrl,
-          authToken: message.authToken,
+          sessionToken: message.sessionToken,
         },
       };
 
@@ -541,6 +541,7 @@ async function handleExternalRuntimeMessage(
       const verified = await verifyExternalHandoff({
         token: message.token,
         sender,
+        installationId: current.installationId,
       });
       if (
         current.currentCall &&

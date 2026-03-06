@@ -56,10 +56,10 @@ export function flushQueue(): Promise<RuntimeResponse> {
 
 export function configureSync(input: {
   apiBaseUrl: string;
-  authToken: string;
+  sessionToken: string;
 }): Promise<RuntimeResponse> {
   const baseUrl = input.apiBaseUrl.trim();
-  const token = input.authToken.trim();
+  const token = input.sessionToken.trim();
 
   if (baseUrl === "" || token === "") {
     return Promise.resolve({ ok: false, error: "sync config is required" });
@@ -68,7 +68,7 @@ export function configureSync(input: {
   return sendMessage({
     type: "sync.configure",
     apiBaseUrl: baseUrl,
-    authToken: token,
+    sessionToken: token,
   });
 }
 

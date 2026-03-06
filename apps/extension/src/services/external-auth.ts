@@ -3,10 +3,6 @@ import {
   isExtensionHandoffClaims,
   type ExtensionHandoffClaims,
 } from "@/src/domain/handoff-token";
-import {
-  hasConsumedHandoffJti,
-  rememberConsumedHandoffJti,
-} from "@/src/services/replay-cache";
 
 function fromBase64Url(value: string): Uint8Array {
   const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
@@ -121,6 +117,7 @@ async function verifyTokenSignature(token: string): Promise<ExtensionHandoffClai
 export async function verifyExternalHandoff(input: {
   token: string;
   sender: chrome.runtime.MessageSender;
+  installationId: string;
 }): Promise<{
   handoff: AssignmentHandoff;
   syncConfig: SyncConfig;
@@ -132,13 +129,33 @@ export async function verifyExternalHandoff(input: {
 
   const claims = await verifyTokenSignature(input.token);
   validateClaims(claims, origin);
-
-  const alreadyConsumed = await hasConsumedHandoffJti(claims.jti);
-  if (alreadyConsumed) {
-    throw new Error("handoff token already consumed");
+  const claimResponse = await fetch(`${origin}/api/extension/session/claim`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      handoffToken: input.token,
+      installationId: input.installationId,
+    }),
+  });
+  if (!claimResponse.ok) {
+    let errorMessage = `session claim failed with status ${claimResponse.status}`;
+    try {
+      const body = (await claimResponse.json()) as { error?: unknown };
+      if (typeof body.error === "string" && body.error.trim() !== "") {
+        errorMessage = body.error;
+      }
+    } catch {
+      // Ignore JSON parsing failures and keep the status-based fallback.
+    }
+    throw new Error(errorMessage);
   }
 
-  await rememberConsumedHandoffJti(claims.jti, claims.exp * 1000);
+  const claimBody = (await claimResponse.json()) as { sessionToken?: unknown };
+  if (typeof claimBody.sessionToken !== "string" || claimBody.sessionToken === "") {
+    throw new Error("session claim returned an invalid session token");
+  }
 
   return {
     handoff: {
@@ -151,7 +168,7 @@ export async function verifyExternalHandoff(input: {
     },
     syncConfig: {
       apiBaseUrl: `${origin}/api`,
-      authToken: claims.syncToken,
+      sessionToken: claimBody.sessionToken,
     },
   };
 }

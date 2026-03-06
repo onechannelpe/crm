@@ -36,7 +36,9 @@ export const clientSearchService = createClientSearchService();
 export const searchEnrichmentService = createSearchEnrichmentService(repos);
 export const quotaService = createQuotaService(repos);
 export const leadService = createLeadAssignmentService(repos);
-export const extensionService = createExtensionService(repos);
+export const extensionService = createExtensionService(repos, {
+  runInTransaction: runInRepositoryTransaction,
+});
 export const observabilityService = createObservabilityService({
   actionObservations: repos.actionObservations,
 });

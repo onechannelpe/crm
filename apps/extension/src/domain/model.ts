@@ -63,7 +63,7 @@ export interface QueueJob {
 
 export interface SyncConfig {
   apiBaseUrl: string | null;
-  authToken: string | null;
+  sessionToken: string | null;
 }
 
 export interface ExecutiveStateSnapshot {
@@ -76,6 +76,7 @@ export interface ExecutiveStateSnapshot {
 
 export interface ExtensionState {
   schemaVersion: 1;
+  installationId: string;
   handoff: AssignmentHandoff | null;
   currentCall: CallSession | null;
   previousCallEndedAt: number | null;
@@ -91,6 +92,7 @@ export interface ExtensionState {
 export function createInitialState(): ExtensionState {
   return {
     schemaVersion: 1,
+    installationId: crypto.randomUUID(),
     handoff: null,
     currentCall: null,
     previousCallEndedAt: null,
@@ -105,7 +107,7 @@ export function createInitialState(): ExtensionState {
     queue: [],
     syncConfig: {
       apiBaseUrl: null,
-      authToken: null,
+      sessionToken: null,
     },
     sync: {
       lastSyncAt: null,

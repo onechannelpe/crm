@@ -5,51 +5,78 @@ import type { ExtensionExecutiveStatus } from "~/server/extension/contracts";
 
 export function createExtensionRuntimeRepo(db: Kysely<Database>) {
   return {
-    insertConsumedHandoffJti(values: {
+    createHandoff(values: {
       jti: string;
-      user_id: number;
-      assignment_id: number;
-      consumed_at: number;
-      expires_at: number;
-    }) {
-      return db
-        .insertInto("extension_handoff_jtis")
-        .values(values)
-        .executeTakeFirstOrThrow();
-    },
-
-    hasConsumedHandoffJti(jti: string) {
-      return db
-        .selectFrom("extension_handoff_jtis")
-        .select("jti")
-        .where("jti", "=", jti)
-        .executeTakeFirst();
-    },
-
-    createSyncToken(values: {
       user_id: number;
       branch_id: number;
       auth_session_id: string;
-      token_hash: string;
+      assignment_id: number;
+      origin: string;
       issued_at: number;
       expires_at: number;
     }) {
       return db
-        .insertInto("extension_sync_tokens")
-        .values({
-          ...values,
-          revoked_at: null,
-        })
+        .insertInto("extension_handoffs")
+        .values(values)
         .executeTakeFirstOrThrow();
     },
 
-    findValidSyncToken(token_hash: string, now: number) {
+    findHandoffByJti(jti: string) {
       return db
-        .selectFrom("extension_sync_tokens")
+        .selectFrom("extension_handoffs")
         .selectAll()
-        .where("token_hash", "=", token_hash)
+        .where("jti", "=", jti)
+        .executeTakeFirst();
+    },
+
+    consumeHandoff(values: {
+      jti: string;
+      installation_id: string;
+      installation_session_jti: string;
+      consumed_at: number;
+    }) {
+      return db
+        .updateTable("extension_handoffs")
+        .set({
+          installation_id: values.installation_id,
+          installation_session_jti: values.installation_session_jti,
+          consumed_at: values.consumed_at,
+        })
+        .where("jti", "=", values.jti)
+        .where("consumed_at", "is", null)
+        .executeTakeFirst();
+    },
+
+    createInstallationSession(values: {
+      jti: string;
+      user_id: number;
+      branch_id: number;
+      auth_session_id: string;
+      installation_id: string;
+      issued_at: number;
+      expires_at: number;
+    }) {
+      return db
+        .insertInto("extension_installation_sessions")
+        .values({ ...values, revoked_at: null, last_seen_at: null })
+        .executeTakeFirstOrThrow();
+    },
+
+    findValidInstallationSession(jti: string, now: number) {
+      return db
+        .selectFrom("extension_installation_sessions")
+        .selectAll()
+        .where("jti", "=", jti)
         .where("revoked_at", "is", null)
         .where("expires_at", ">", now)
+        .executeTakeFirst();
+    },
+
+    touchInstallationSession(jti: string, last_seen_at: number) {
+      return db
+        .updateTable("extension_installation_sessions")
+        .set({ last_seen_at })
+        .where("jti", "=", jti)
         .executeTakeFirst();
     },
 

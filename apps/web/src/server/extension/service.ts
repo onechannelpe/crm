@@ -7,16 +7,38 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 import {
   EXTENSION_HANDOFF_TOKEN_AUDIENCE,
   EXTENSION_HANDOFF_TOKEN_ISSUER,
-  EXTENSION_SYNC_TOKEN_AUDIENCE,
+  EXTENSION_SESSION_TOKEN_AUDIENCE,
   type CreateExtensionHandoffTokenResponse,
+  type ClaimExtensionSessionResponse,
   type ExtensionExecutiveStatus,
+  type ExtensionHandoffClaims,
+  type ExtensionInstallationSessionClaims,
   type ExtensionRuntimeEventEnvelope,
   type TeamExecutiveStatusView,
 } from "./contracts";
-import { hashExtensionSyncToken, signExtensionToken } from "./crypto";
+import { signExtensionToken, verifyExtensionToken } from "./crypto";
 
 interface ExtensionServiceDeps {
   now?: () => number;
+  runInTransaction?: (
+    operation: (transactionRepos: Repositories) => Promise<ClaimSessionRecord>,
+  ) => Promise<ClaimSessionRecord>;
+}
+
+const EXECUTIVE_STATUS_OFFLINE_AFTER_MS = 2 * 60_000;
+const EXTENSION_HANDOFF_TTL_MS = 120_000;
+const EXTENSION_SESSION_TTL_MS = 8 * 60 * 60_000;
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+interface ClaimSessionRecord {
+  jti: string;
+  user_id: number;
+  branch_id: number;
+  auth_session_id: string;
+  installation_id: string;
+  issued_at: number;
+  expires_at: number;
 }
 
 export type ExtensionServiceError =
@@ -26,7 +48,9 @@ export type ExtensionServiceError =
   | { reason: "assignment_not_found"; message: string }
   | { reason: "assignment_inactive"; message: string }
   | { reason: "invalid_origin"; message: string }
-  | { reason: "sync_token_invalid"; message: string }
+  | { reason: "handoff_invalid"; message: string }
+  | { reason: "installation_invalid"; message: string }
+  | { reason: "session_invalid"; message: string }
   | { reason: "event_duplicate"; message: string }
   | { reason: "unexpected"; message: string };
 
@@ -45,11 +69,119 @@ function mapLifecycleStatus(
   throw new Error("Unsupported lifecycle event");
 }
 
+function withDerivedOfflineStatus(
+  statuses: TeamExecutiveStatusView[],
+  now: number,
+): TeamExecutiveStatusView[] {
+  return statuses.map((status) => {
+    if (now - status.updatedAt < EXECUTIVE_STATUS_OFFLINE_AFTER_MS) {
+      return status;
+    }
+
+    return {
+      ...status,
+      status: "offline",
+    };
+  });
+}
+
+function isUuid(value: string): boolean {
+  return UUID_PATTERN.test(value);
+}
+
+function isExtensionHandoffClaims(
+  value: unknown,
+): value is ExtensionHandoffClaims {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "iss" in value &&
+    value.iss === EXTENSION_HANDOFF_TOKEN_ISSUER &&
+    "aud" in value &&
+    value.aud === EXTENSION_HANDOFF_TOKEN_AUDIENCE &&
+    "sub" in value &&
+    typeof value.sub === "string" &&
+    "authSessionId" in value &&
+    typeof value.authSessionId === "string" &&
+    "branchId" in value &&
+    typeof value.branchId === "number" &&
+    "assignmentId" in value &&
+    typeof value.assignmentId === "number" &&
+    "contactId" in value &&
+    typeof value.contactId === "number" &&
+    "phone" in value &&
+    typeof value.phone === "string" &&
+    "clientName" in value &&
+    (value.clientName === null || typeof value.clientName === "string") &&
+    "organizationLabel" in value &&
+    (value.organizationLabel === null ||
+      typeof value.organizationLabel === "string") &&
+    "action" in value &&
+    value.action === "start_call" &&
+    "origin" in value &&
+    typeof value.origin === "string" &&
+    "jti" in value &&
+    typeof value.jti === "string" &&
+    "iat" in value &&
+    typeof value.iat === "number" &&
+    "exp" in value &&
+    typeof value.exp === "number"
+  );
+}
+
+function isExtensionInstallationSessionClaims(
+  value: unknown,
+): value is ExtensionInstallationSessionClaims {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "iss" in value &&
+    value.iss === EXTENSION_HANDOFF_TOKEN_ISSUER &&
+    "aud" in value &&
+    value.aud === EXTENSION_SESSION_TOKEN_AUDIENCE &&
+    "sub" in value &&
+    typeof value.sub === "string" &&
+    "authSessionId" in value &&
+    typeof value.authSessionId === "string" &&
+    "branchId" in value &&
+    typeof value.branchId === "number" &&
+    "installationId" in value &&
+    typeof value.installationId === "string" &&
+    "jti" in value &&
+    typeof value.jti === "string" &&
+    "iat" in value &&
+    typeof value.iat === "number" &&
+    "exp" in value &&
+    typeof value.exp === "number"
+  );
+}
+
+function isTokenExpired(expSeconds: number, nowMs: number): boolean {
+  return expSeconds <= Math.floor(nowMs / 1000);
+}
+
+async function signInstallationSessionToken(
+  session: ClaimSessionRecord,
+): Promise<string> {
+  return signExtensionToken({
+    iss: EXTENSION_HANDOFF_TOKEN_ISSUER,
+    aud: EXTENSION_SESSION_TOKEN_AUDIENCE,
+    sub: `user:${session.user_id}`,
+    authSessionId: session.auth_session_id,
+    branchId: session.branch_id,
+    installationId: session.installation_id,
+    jti: session.jti,
+    iat: session.issued_at,
+    exp: Math.floor(session.expires_at / 1000),
+  });
+}
+
 export function createExtensionService(
   repos: Repositories,
   deps: ExtensionServiceDeps = {},
 ) {
   const now = deps.now ?? (() => Date.now());
+  const runInTransaction = deps.runInTransaction;
 
   return {
     async createHandoffToken(input: {
@@ -102,28 +234,17 @@ export function createExtensionService(
           contact.organization_id,
         );
         const issuedAt = now();
-        const handoffExpiresAt = issuedAt + 120_000;
-        const syncExpiresAt = issuedAt + 8 * 60 * 60_000;
-        const syncJti = crypto.randomUUID();
-        const syncToken = await signExtensionToken({
-          iss: EXTENSION_HANDOFF_TOKEN_ISSUER,
-          aud: EXTENSION_SYNC_TOKEN_AUDIENCE,
-          sub: `user:${input.userId}`,
-          authSessionId: input.authSessionId,
-          branchId: input.branchId,
-          jti: syncJti,
-          iat: issuedAt,
-          exp: Math.floor(syncExpiresAt / 1000),
-        });
-        const syncTokenHash = await hashExtensionSyncToken(syncToken);
-
-        await repos.extensionRuntime.createSyncToken({
+        const handoffExpiresAt = issuedAt + EXTENSION_HANDOFF_TTL_MS;
+        const handoffJti = crypto.randomUUID();
+        await repos.extensionRuntime.createHandoff({
+          jti: handoffJti,
           user_id: input.userId,
           branch_id: input.branchId,
           auth_session_id: input.authSessionId,
-          token_hash: syncTokenHash,
+          assignment_id: assignmentId,
           issued_at: issuedAt,
-          expires_at: syncExpiresAt,
+          expires_at: handoffExpiresAt,
+          origin: input.origin,
         });
 
         const handoffToken = await signExtensionToken({
@@ -138,9 +259,8 @@ export function createExtensionService(
           clientName: contact.name,
           organizationLabel: organization ? `Org #${organization.id}` : null,
           action: "start_call",
-          syncToken,
           origin: input.origin,
-          jti: crypto.randomUUID(),
+          jti: handoffJti,
           iat: issuedAt,
           exp: Math.floor(handoffExpiresAt / 1000),
         });
@@ -167,22 +287,203 @@ export function createExtensionService(
       }
     },
 
+    async claimInstallationSession(input: {
+      handoffToken: string;
+      installationId: string;
+    }): Promise<Result<ClaimExtensionSessionResponse, ExtensionServiceError>> {
+      try {
+        if (!isUuid(input.installationId)) {
+          return Err({
+            reason: "installation_invalid",
+            message: "Extension installation ID must be a UUID",
+          });
+        }
+
+        const handoffClaims = await verifyExtensionToken(
+          input.handoffToken,
+          isExtensionHandoffClaims,
+        );
+        const claimedAt = now();
+        if (isTokenExpired(handoffClaims.exp, claimedAt)) {
+          return Err({
+            reason: "handoff_invalid",
+            message: "Extension handoff token is invalid or expired",
+          });
+        }
+        if (!runInTransaction) {
+          return Err({
+            reason: "unexpected",
+            message: "Extension transaction runner is not configured",
+          });
+        }
+
+        const session = await runInTransaction(async (txRepos) => {
+          const handoff = await txRepos.extensionRuntime.findHandoffByJti(
+            handoffClaims.jti,
+          );
+          if (
+            !handoff ||
+            handoff.expires_at <= claimedAt ||
+            handoff.origin !== handoffClaims.origin ||
+            handoff.user_id.toString() !==
+              handoffClaims.sub.slice("user:".length) ||
+            handoff.branch_id !== handoffClaims.branchId ||
+            handoff.auth_session_id !== handoffClaims.authSessionId ||
+            handoff.assignment_id !== handoffClaims.assignmentId
+          ) {
+            throw new Error("invalid handoff");
+          }
+
+          const existingSessionJti = handoff.installation_session_jti;
+          if (handoff.consumed_at !== null) {
+            if (
+              handoff.installation_id !== input.installationId ||
+              !existingSessionJti
+            ) {
+              throw new Error("handoff claimed by another installation");
+            }
+
+            const existingSession =
+              await txRepos.extensionRuntime.findValidInstallationSession(
+                existingSessionJti,
+                claimedAt,
+              );
+            if (!existingSession) {
+              throw new Error("handoff session expired");
+            }
+
+            return existingSession;
+          }
+
+          const sessionJti = crypto.randomUUID();
+          const sessionIssuedAt = claimedAt;
+          const sessionExpiresAt = sessionIssuedAt + EXTENSION_SESSION_TTL_MS;
+          await txRepos.extensionRuntime.createInstallationSession({
+            jti: sessionJti,
+            user_id: handoff.user_id,
+            branch_id: handoff.branch_id,
+            auth_session_id: handoff.auth_session_id,
+            installation_id: input.installationId,
+            issued_at: sessionIssuedAt,
+            expires_at: sessionExpiresAt,
+          });
+
+          const consumeResult = await txRepos.extensionRuntime.consumeHandoff({
+            jti: handoff.jti,
+            installation_id: input.installationId,
+            installation_session_jti: sessionJti,
+            consumed_at: claimedAt,
+          });
+          if (Number(consumeResult.numUpdatedRows ?? 0) === 0) {
+            const racedHandoff =
+              await txRepos.extensionRuntime.findHandoffByJti(handoff.jti);
+            if (
+              !racedHandoff ||
+              racedHandoff.installation_id !== input.installationId ||
+              !racedHandoff.installation_session_jti
+            ) {
+              throw new Error("handoff claimed by another installation");
+            }
+            const racedSession =
+              await txRepos.extensionRuntime.findValidInstallationSession(
+                racedHandoff.installation_session_jti,
+                claimedAt,
+              );
+            if (!racedSession) {
+              throw new Error("handoff session expired");
+            }
+            return racedSession;
+          }
+
+          const createdSession =
+            await txRepos.extensionRuntime.findValidInstallationSession(
+              sessionJti,
+              claimedAt,
+            );
+          if (!createdSession) {
+            throw new Error("session missing after creation");
+          }
+
+          return createdSession;
+        });
+
+        return Ok({
+          sessionToken: await signInstallationSessionToken(session),
+          expiresAt: session.expires_at,
+        });
+      } catch (error: unknown) {
+        if (
+          error instanceof Error &&
+          (error.message === "invalid handoff" ||
+            error.message === "handoff session expired")
+        ) {
+          return Err({
+            reason: "handoff_invalid",
+            message: "Extension handoff token is invalid or expired",
+          });
+        }
+
+        if (
+          error instanceof Error &&
+          error.message === "handoff claimed by another installation"
+        ) {
+          return Err({
+            reason: "handoff_invalid",
+            message:
+              "Extension handoff token has already been claimed by another installation",
+          });
+        }
+
+        return Err({
+          reason: "unexpected",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Unexpected extension session claim failure",
+        });
+      }
+    },
+
     async ingestRuntimeEvent(input: {
-      syncToken: string;
+      sessionToken: string;
       event: ExtensionRuntimeEventEnvelope;
     }): Promise<Result<void, ExtensionServiceError>> {
       try {
-        const syncTokenHash = await hashExtensionSyncToken(input.syncToken);
-        const syncToken = await repos.extensionRuntime.findValidSyncToken(
-          syncTokenHash,
-          now(),
+        const sessionClaims = await verifyExtensionToken(
+          input.sessionToken,
+          isExtensionInstallationSessionClaims,
         );
-        if (!syncToken) {
+        const currentTime = now();
+        if (isTokenExpired(sessionClaims.exp, currentTime)) {
           return Err({
-            reason: "sync_token_invalid",
-            message: "Extension sync token is invalid or expired",
+            reason: "session_invalid",
+            message: "Extension session token is invalid or expired",
           });
         }
+
+        const session =
+          await repos.extensionRuntime.findValidInstallationSession(
+            sessionClaims.jti,
+            currentTime,
+          );
+        if (
+          !session ||
+          session.user_id.toString() !==
+            sessionClaims.sub.slice("user:".length) ||
+          session.branch_id !== sessionClaims.branchId ||
+          session.auth_session_id !== sessionClaims.authSessionId ||
+          session.installation_id !== sessionClaims.installationId
+        ) {
+          return Err({
+            reason: "session_invalid",
+            message: "Extension session token is invalid or expired",
+          });
+        }
+
+        await repos.extensionRuntime.touchInstallationSession(
+          session.jti,
+          currentTime,
+        );
 
         const duplicate = await repos.extensionRuntime.hasRuntimeEvent(
           input.event.id,
@@ -213,8 +514,8 @@ export function createExtensionService(
 
         await repos.extensionRuntime.insertRuntimeEvent({
           id: input.event.id,
-          user_id: syncToken.user_id,
-          branch_id: syncToken.branch_id,
+          user_id: session.user_id,
+          branch_id: session.branch_id,
           assignment_id: eventAssignmentId,
           contact_id: eventContactId,
           call_session_id: eventSessionId,
@@ -226,8 +527,8 @@ export function createExtensionService(
 
         if (input.event.type === "executive.status") {
           await repos.extensionRuntime.upsertExecutiveStatus({
-            user_id: syncToken.user_id,
-            branch_id: syncToken.branch_id,
+            user_id: session.user_id,
+            branch_id: session.branch_id,
             assignment_id: input.event.payload.assignmentId,
             contact_id: input.event.payload.contactId,
             call_session_id: input.event.payload.callSessionId,
@@ -240,8 +541,8 @@ export function createExtensionService(
 
         if (input.event.type === "call.lifecycle") {
           await repos.extensionRuntime.upsertExecutiveStatus({
-            user_id: syncToken.user_id,
-            branch_id: syncToken.branch_id,
+            user_id: session.user_id,
+            branch_id: session.branch_id,
             assignment_id: eventAssignmentId,
             contact_id: eventContactId,
             call_session_id: eventSessionId,
@@ -271,14 +572,20 @@ export function createExtensionService(
       try {
         if (input.role === "supervisor") {
           return Ok(
-            await repos.extensionRuntime.listTeamStatusesBySupervisor(
-              input.userId,
+            withDerivedOfflineStatus(
+              await repos.extensionRuntime.listTeamStatusesBySupervisor(
+                input.userId,
+              ),
+              now(),
             ),
           );
         }
 
         return Ok(
-          await repos.extensionRuntime.listBranchStatuses(input.branchId),
+          withDerivedOfflineStatus(
+            await repos.extensionRuntime.listBranchStatuses(input.branchId),
+            now(),
+          ),
         );
       } catch (error: unknown) {
         return Err({

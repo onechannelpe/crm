@@ -13,8 +13,8 @@ function getBearerToken(request: Request): string | null {
 
 export async function POST(event: APIEvent): Promise<Response> {
   try {
-    const syncToken = getBearerToken(event.request);
-    if (!syncToken) {
+    const sessionToken = getBearerToken(event.request);
+    if (!sessionToken) {
       return new Response("Unauthorized", { status: 401 });
     }
 
@@ -27,12 +27,12 @@ export async function POST(event: APIEvent): Promise<Response> {
     }
 
     const result = await extensionService.ingestRuntimeEvent({
-      syncToken,
+      sessionToken,
       event: body,
     });
     if (isErr(result)) {
       const status =
-        result.error.reason === "sync_token_invalid"
+        result.error.reason === "session_invalid"
           ? 401
           : result.error.reason === "event_duplicate"
             ? 409

@@ -2,21 +2,8 @@ import type { Kysely } from "kysely";
 
 export async function up<T>(db: Kysely<T>): Promise<void> {
   await db.schema
-    .createTable("extension_handoff_jtis")
+    .createTable("extension_handoffs")
     .addColumn("jti", "varchar(96)", (col) => col.primaryKey())
-    .addColumn("user_id", "integer", (col) =>
-      col.notNull().references("users.id"),
-    )
-    .addColumn("assignment_id", "integer", (col) =>
-      col.notNull().references("lead_assignments.id"),
-    )
-    .addColumn("consumed_at", "integer", (col) => col.notNull())
-    .addColumn("expires_at", "integer", (col) => col.notNull())
-    .execute();
-
-  await db.schema
-    .createTable("extension_sync_tokens")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("user_id", "integer", (col) =>
       col.notNull().references("users.id"),
     )
@@ -24,10 +11,32 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
       col.notNull().references("branches.id"),
     )
     .addColumn("auth_session_id", "varchar(255)", (col) => col.notNull())
-    .addColumn("token_hash", "varchar(255)", (col) => col.notNull().unique())
+    .addColumn("assignment_id", "integer", (col) =>
+      col.notNull().references("lead_assignments.id"),
+    )
+    .addColumn("origin", "varchar(255)", (col) => col.notNull())
+    .addColumn("installation_id", "varchar(36)")
+    .addColumn("installation_session_jti", "varchar(96)")
+    .addColumn("issued_at", "integer", (col) => col.notNull())
+    .addColumn("expires_at", "integer", (col) => col.notNull())
+    .addColumn("consumed_at", "integer")
+    .execute();
+
+  await db.schema
+    .createTable("extension_installation_sessions")
+    .addColumn("jti", "varchar(96)", (col) => col.primaryKey())
+    .addColumn("user_id", "integer", (col) =>
+      col.notNull().references("users.id"),
+    )
+    .addColumn("branch_id", "integer", (col) =>
+      col.notNull().references("branches.id"),
+    )
+    .addColumn("auth_session_id", "varchar(255)", (col) => col.notNull())
+    .addColumn("installation_id", "varchar(36)", (col) => col.notNull())
     .addColumn("issued_at", "integer", (col) => col.notNull())
     .addColumn("expires_at", "integer", (col) => col.notNull())
     .addColumn("revoked_at", "integer")
+    .addColumn("last_seen_at", "integer")
     .execute();
 
   await db.schema
@@ -69,14 +78,14 @@ export async function up<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createIndex("idx_extension_handoff_jtis_user_expires")
-    .on("extension_handoff_jtis")
+    .createIndex("idx_extension_handoffs_user_expires")
+    .on("extension_handoffs")
     .columns(["user_id", "expires_at"])
     .execute();
 
   await db.schema
-    .createIndex("idx_extension_sync_tokens_user_expires")
-    .on("extension_sync_tokens")
+    .createIndex("idx_extension_installation_sessions_user_expires")
+    .on("extension_installation_sessions")
     .columns(["user_id", "expires_at"])
     .execute();
 

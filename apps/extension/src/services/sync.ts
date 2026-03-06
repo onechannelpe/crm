@@ -11,7 +11,7 @@ export async function sendSyncJob(
   config: SyncConfig,
   job: QueueJob,
 ): Promise<SyncResult> {
-  if (!config.apiBaseUrl || !config.authToken) {
+  if (!config.apiBaseUrl || !config.sessionToken) {
     return { ok: false, error: "sync is not configured" };
   }
 
@@ -19,7 +19,7 @@ export async function sendSyncJob(
     const response = await fetch(`${config.apiBaseUrl}/extension/events`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${config.authToken}`,
+        Authorization: `Bearer ${config.sessionToken}`,
         "content-type": "application/json",
       },
       body: JSON.stringify({

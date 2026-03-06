@@ -39,6 +39,8 @@ function normalizeState(value: unknown): ExtensionState {
   const recording = isObject(value.recording) ? value.recording : {};
   const syncConfig = isObject(value.syncConfig) ? value.syncConfig : {};
   const sync = isObject(value.sync) ? value.sync : {};
+  const legacyAuthToken =
+    typeof syncConfig.authToken === "string" ? syncConfig.authToken : null;
 
   const normalizedQueue = Array.isArray(value.queue)
     ? value.queue.filter(isObject).map((job) => ({
@@ -54,6 +56,10 @@ function normalizeState(value: unknown): ExtensionState {
 
   return {
     schemaVersion: 1,
+    installationId:
+      typeof value.installationId === "string" && value.installationId.trim() !== ""
+        ? value.installationId
+        : initial.installationId,
     handoff: handoff
       ? {
           assignmentId: asNumber(handoff.assignmentId, 0),
@@ -105,7 +111,7 @@ function normalizeState(value: unknown): ExtensionState {
     queue: normalizedQueue,
     syncConfig: {
       apiBaseUrl: asNullableString(syncConfig.apiBaseUrl),
-      authToken: asNullableString(syncConfig.authToken),
+      sessionToken: asNullableString(syncConfig.sessionToken) ?? legacyAuthToken,
     },
     sync: {
       lastSyncAt: asNullableNumber(sync.lastSyncAt),

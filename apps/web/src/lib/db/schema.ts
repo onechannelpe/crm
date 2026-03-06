@@ -304,23 +304,30 @@ export interface InventoryItemsTable {
   created_at: number;
 }
 
-export interface ExtensionHandoffJtisTable {
+export interface ExtensionHandoffsTable {
   jti: string;
-  user_id: number;
-  assignment_id: number;
-  consumed_at: number;
-  expires_at: number;
-}
-
-export interface ExtensionSyncTokensTable {
-  id: Generated<number>;
   user_id: number;
   branch_id: number;
   auth_session_id: string;
-  token_hash: string;
+  assignment_id: number;
+  origin: string;
+  installation_id: string | null;
+  installation_session_jti: string | null;
+  issued_at: number;
+  expires_at: number;
+  consumed_at: number | null;
+}
+
+export interface ExtensionInstallationSessionsTable {
+  jti: string;
+  user_id: number;
+  branch_id: number;
+  auth_session_id: string;
+  installation_id: string;
   issued_at: number;
   expires_at: number;
   revoked_at: number | null;
+  last_seen_at: number | null;
 }
 
 export interface ExtensionRuntimeEventsTable {
@@ -607,8 +614,8 @@ export interface Database {
   products: ProductsTable;
   interaction_logs: InteractionLogsTable;
   inventory_items: InventoryItemsTable;
-  extension_handoff_jtis: ExtensionHandoffJtisTable;
-  extension_sync_tokens: ExtensionSyncTokensTable;
+  extension_handoffs: ExtensionHandoffsTable;
+  extension_installation_sessions: ExtensionInstallationSessionsTable;
   extension_runtime_events: ExtensionRuntimeEventsTable;
   extension_executive_statuses: ExtensionExecutiveStatusesTable;
   agent_status_logs: AgentStatusLogsTable;

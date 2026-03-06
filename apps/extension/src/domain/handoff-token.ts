@@ -10,7 +10,6 @@ export interface ExtensionHandoffClaims {
   clientName: string | null;
   organizationLabel: string | null;
   action: "start_call";
-  syncToken: string;
   origin: string;
   jti: string;
   iat: number;
@@ -38,7 +37,6 @@ export function isExtensionHandoffClaims(
     (value.organizationLabel === null ||
       typeof value.organizationLabel === "string") &&
     value.action === "start_call" &&
-    typeof value.syncToken === "string" &&
     typeof value.origin === "string" &&
     typeof value.jti === "string" &&
     typeof value.iat === "number" &&
