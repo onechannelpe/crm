@@ -60,7 +60,12 @@ export async function login(
           userAgent,
         },
         { sendPrivilegedLoginAlert },
-      );
+      ).catch((error: unknown) => {
+        if (error instanceof Error && error.message === "Invalid credentials") {
+          throw new Response("Invalid credentials", { status: 403 });
+        }
+        throw error;
+      });
       setSessionCookie(result.token);
 
       return {
