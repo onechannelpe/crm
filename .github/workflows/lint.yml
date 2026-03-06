@@ -6,9 +6,13 @@ on:
     branches:
       - "master"
     paths:
-      - "apps/web/**"
+      - "apps/web/src/**"
+      - "apps/web/tests/**"
+      - "apps/web/*.ts"
+      - "apps/web/*.json"
+      - "apps/web/*.css"
       - "packages/**"
-      - "scripts/**"
+      - "scripts/*.ts"
       - ".oxlintrc.json"
       - ".oxfmtrc.json"
       - "package.json"
@@ -18,9 +22,13 @@ on:
     branches:
       - "master"
     paths:
-      - "apps/web/**"
+      - "apps/web/src/**"
+      - "apps/web/tests/**"
+      - "apps/web/*.ts"
+      - "apps/web/*.json"
+      - "apps/web/*.css"
       - "packages/**"
-      - "scripts/**"
+      - "scripts/*.ts"
       - ".oxlintrc.json"
       - ".oxfmtrc.json"
       - "package.json"

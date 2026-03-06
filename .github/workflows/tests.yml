@@ -8,16 +8,20 @@ on:
     branches:
       - "master"
     paths:
-      - "apps/web/**"
-      - "apps/web/package.json"
+      - "apps/web/src/**"
+      - "apps/web/tests/**"
+      - "apps/web/*.ts"
+      - "apps/web/*.json"
       - "bun.lock"
       - ".github/workflows/tests.yml"
   pull_request:
     branches:
       - "master"
     paths:
-      - "apps/web/**"
-      - "apps/web/package.json"
+      - "apps/web/src/**"
+      - "apps/web/tests/**"
+      - "apps/web/*.ts"
+      - "apps/web/*.json"
       - "bun.lock"
       - ".github/workflows/tests.yml"
 

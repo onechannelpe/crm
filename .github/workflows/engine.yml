@@ -6,17 +6,19 @@ on:
     branches:
       - "master"
     paths:
-      - "apps/engine/**"
+      - "apps/engine/src/**"
+      - "apps/engine/tests/**"
+      - "apps/engine/Cargo.toml"
       - "scripts/build-engine-sqlite.py"
-      - "package.json"
       - ".github/workflows/engine.yml"
   pull_request:
     branches:
       - "master"
     paths:
-      - "apps/engine/**"
+      - "apps/engine/src/**"
+      - "apps/engine/tests/**"
+      - "apps/engine/Cargo.toml"
       - "scripts/build-engine-sqlite.py"
-      - "package.json"
       - ".github/workflows/engine.yml"
 
 concurrency:
