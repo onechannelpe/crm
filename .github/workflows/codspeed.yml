@@ -5,16 +5,26 @@ on:
     branches:
       - "master"
     paths:
-      - "apps/web/**"
-      - "packages/**"
+      - "apps/web/src/lib/**"
+      - "apps/web/src/server/**"
+      - "apps/web/tests/bench/**"
+      - "apps/web/vitest.bench.config.ts"
+      - "apps/web/package.json"
+      - "packages/notifications/src/**"
+      - "packages/notifications/package.json"
       - "bun.lock"
       - ".github/workflows/codspeed.yml"
   pull_request:
     branches:
       - "master"
     paths:
-      - "apps/web/**"
-      - "packages/**"
+      - "apps/web/src/lib/**"
+      - "apps/web/src/server/**"
+      - "apps/web/tests/bench/**"
+      - "apps/web/vitest.bench.config.ts"
+      - "apps/web/package.json"
+      - "packages/notifications/src/**"
+      - "packages/notifications/package.json"
       - "bun.lock"
       - ".github/workflows/codspeed.yml"
   workflow_dispatch:
