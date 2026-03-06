@@ -12,7 +12,10 @@ import {
   type ExtensionState,
   type QueueJob,
 } from "@/src/domain/model";
-import { verifyExternalHandoff } from "@/src/services/external-auth";
+import {
+  claimExternalSession,
+  verifyExternalHandoff,
+} from "@/src/services/external-auth";
 import {
   deleteLargePayload,
   readLargePayload,
@@ -607,33 +610,44 @@ async function handleExternalRuntimeMessage(
     case "state.get":
       return toSuccessResponse(current);
     case "assignment.handoff": {
-      const verified = await verifyExternalHandoff({
-        token: message.token,
-        sender,
-        installationId: current.installationId,
-      });
-      if (
-        current.currentCall &&
-        current.currentCall.phase !== "ended" &&
-        current.currentCall.assignmentId !== verified.handoff.assignmentId
-      ) {
-        return toErrorResponse("cannot replace handoff during an active call", current);
-      }
+      try {
+        const verified = await verifyExternalHandoff({
+          token: message.token,
+          sender,
+        });
+        if (
+          current.currentCall &&
+          current.currentCall.phase !== "ended" &&
+          current.currentCall.assignmentId !== verified.handoff.assignmentId
+        ) {
+          return toErrorResponse(
+            "cannot replace handoff during an active call",
+            current,
+          );
+        }
 
-      const receivedAt = verified.handoff.receivedAt;
-      const next: ExtensionState = {
-        ...current,
-        handoff: verified.handoff,
-        syncConfig: verified.syncConfig,
-        sync: {
-          ...current.sync,
-          lastSyncError: null,
-        },
-      };
-      const queued = enqueueExecutiveStatus(next, "ready", receivedAt);
-      await writeState(queued);
-      void flushQueue(queued).catch(() => undefined);
-      return toSuccessResponse(queued);
+        const syncConfig = await claimExternalSession({
+          token: message.token,
+          installationId: current.installationId,
+          origin: verified.origin,
+        });
+        const receivedAt = verified.handoff.receivedAt;
+        const next: ExtensionState = {
+          ...current,
+          handoff: verified.handoff,
+          syncConfig,
+          sync: {
+            ...current.sync,
+            lastSyncError: null,
+          },
+        };
+        const queued = enqueueExecutiveStatus(next, "ready", receivedAt);
+        await writeState(queued);
+        void flushQueue(queued).catch(() => undefined);
+        return toSuccessResponse(queued);
+      } catch (error: unknown) {
+        return toErrorResponse(asErrorMessage(error), current);
+      }
     }
   }
 }

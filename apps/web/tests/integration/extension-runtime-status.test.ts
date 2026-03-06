@@ -247,6 +247,46 @@ describe("extension runtime status invariants", () => {
     expect(result.value[0]?.syncHealth).toBe("stale");
   });
 
+  it("classifies malformed handoff tokens as handoff_invalid", async () => {
+    const service = createExtensionService(ctx.repos, {
+      runInTransaction: createTransactionRunner(ctx),
+    });
+
+    const result = await service.claimInstallationSession({
+      handoffToken: "not-a-jwt",
+      installationId: "11111111-1111-4111-8111-111111111111",
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error("malformed handoff token should be rejected");
+    }
+    expect(result.error.reason).toBe("handoff_invalid");
+  });
+
+  it("classifies malformed session tokens as session_invalid", async () => {
+    const service = createExtensionService(ctx.repos, {
+      runInTransaction: createTransactionRunner(ctx),
+    });
+
+    const result = await service.ingestRuntimeEvent({
+      sessionToken: "not-a-jwt",
+      event: {
+        id: "evt-invalid-session",
+        sequence: 1,
+        type: "executive.heartbeat",
+        createdAt: 10_000,
+        payload: { occurredAt: 10_000 },
+      },
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error("malformed session token should be rejected");
+    }
+    expect(result.error.reason).toBe("session_invalid");
+  });
+
   it("accepts duplicate event delivery without creating a second runtime event", async () => {
     const { service, sessionToken, assignmentId } = await claimSession(
       "11111111-1111-4111-8111-111111111111",
