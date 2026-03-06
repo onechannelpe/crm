@@ -15,7 +15,7 @@ export function OnboardingSecurityStep(props: OnboardingSecurityStepProps) {
         >
           <span class={styles.choiceTitle}>Clave de acceso</span>
           <span class={styles.choiceDescription}>
-            Ingreso con tu dispositivo.
+            Entra con tu dispositivo.
           </span>
         </button>
         <button
@@ -25,7 +25,7 @@ export function OnboardingSecurityStep(props: OnboardingSecurityStepProps) {
         >
           <span class={styles.choiceTitle}>Aplicación de autenticación</span>
           <span class={styles.choiceDescription}>
-            Usa un código de 6 dígitos.
+            Confirma tu acceso con un código.
           </span>
         </button>
       </div>

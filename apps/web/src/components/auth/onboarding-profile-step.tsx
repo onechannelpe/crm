@@ -46,7 +46,7 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
       </div>
 
       <p class={styles.helperText}>
-        Usa formato E.164, por ejemplo +51987654321.
+        Usa el formato internacional, por ejemplo +51987654321.
       </p>
     </section>
   );

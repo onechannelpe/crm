@@ -180,14 +180,14 @@ export default function SecurityPage() {
           <div class={styles.configuredBlock}>
             <p class={styles.configuredTitle}>Claves de acceso</p>
             <p class={styles.configuredDescription}>
-              Usa tu dispositivo para ingresar.
+              Usa tu dispositivo para iniciar sesión.
             </p>
           </div>
           <Show
             when={passkeyEnrollment.supported()}
             fallback={
               <p class={styles.configuredDescription}>
-                Este dispositivo no admite claves de acceso.
+                Este dispositivo no es compatible con claves de acceso.
               </p>
             }
           >
@@ -225,7 +225,7 @@ export default function SecurityPage() {
               <div class={styles.block}>
                 <p class={styles.title}>Aplicación configurada</p>
                 <p class={styles.sectionDescription}>
-                  Puedes restablecer este método cuando lo necesites.
+                  Puedes volver a configurarla cuando lo necesites.
                 </p>
                 <Button
                   type="button"
@@ -243,7 +243,7 @@ export default function SecurityPage() {
               <div class={styles.block}>
                 <p class={styles.title}>Aplicación de autenticación</p>
                 <p class={styles.sectionDescription}>
-                  Genera un código de 6 dígitos para verificar tu ingreso.
+                  Genera códigos temporales para confirmar tu acceso.
                 </p>
               </div>
 
@@ -272,7 +272,7 @@ export default function SecurityPage() {
                       <Show when={getSetupKey(enrollment().otpauthUri)}>
                         {(setupKey) => (
                           <p class={styles.qrCopy}>
-                            ¿No puedes escanear? Copia la{" "}
+                            ¿No puedes escanearlo? Copia la{" "}
                             <button
                               type="button"
                               class={styles.inlineLink}
@@ -290,7 +290,9 @@ export default function SecurityPage() {
                     <div class={styles.divider} />
 
                     <div class={styles.block}>
-                      <p class={styles.title}>Verifica el código</p>
+                      <p class={styles.title}>
+                        Ingresa el código de verificación
+                      </p>
                     </div>
                     <div class={styles.verifyBlock}>
                       <OtpSlotInput
@@ -315,7 +317,7 @@ export default function SecurityPage() {
           <Show when={totpEnrollment.recoveryCodes().length > 0}>
             <RecoveryCodesPanel
               title="Códigos de recuperación"
-              description="Guárdalos ahora."
+              description="Guárdalos en un lugar seguro."
               codes={totpEnrollment.recoveryCodes()}
             />
           </Show>

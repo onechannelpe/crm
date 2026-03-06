@@ -41,17 +41,17 @@ export default function LoginPage() {
 
   const title = () => {
     if (step() === "password") return "Contraseña";
-    if (step() === "totp") return "Verificación";
+    if (step() === "totp") return "Código de verificación";
     if (step() === "passkey") return "Clave de acceso";
-    return "Bienvenido";
+    return "Iniciar sesión";
   };
 
   const description = () => {
     if (step() === "passkey") {
-      return "Usa una clave de acceso configurada.";
+      return "Usa una clave de acceso registrada.";
     }
     if (step() === "totp") {
-      return "Ingresa el código de 6 dígitos de tu aplicación.";
+      return "Ingresa el código de 6 dígitos de tu app de autenticación.";
     }
     return undefined;
   };
@@ -79,7 +79,7 @@ export default function LoginPage() {
         err.message === "Strong authentication required"
       ) {
         setStep("totp");
-        showToast("info", "Ahora ingresa el código de tu aplicación.");
+        showToast("info", "Ingresa el código de verificación para continuar.");
         return;
       }
 
@@ -224,7 +224,7 @@ export default function LoginPage() {
                   Atrás
                 </Button>
                 <Button type="submit" class={styles.full} loading={loading()}>
-                  Continuar
+                  Siguiente
                 </Button>
               </div>
             </form>
@@ -259,7 +259,7 @@ export default function LoginPage() {
                   Atrás
                 </Button>
                 <Button type="submit" class={styles.full} loading={loading()}>
-                  Ingresar
+                  Iniciar sesión
                 </Button>
               </div>
             </form>
@@ -273,12 +273,12 @@ export default function LoginPage() {
                 when={passkeySupport() === "supported"}
                 fallback={
                   <p class={pageStyles.supportText}>
-                    Este dispositivo o navegador no admite claves de acceso.
+                    Este dispositivo no es compatible con claves de acceso.
                   </p>
                 }
               >
                 <p class={pageStyles.supportText}>
-                  Usa una clave de acceso configurada.
+                  Usa una clave de acceso registrada.
                 </p>
               </Show>
 
@@ -300,7 +300,7 @@ export default function LoginPage() {
                     void handlePasskeyLogin();
                   }}
                 >
-                  Usar clave de acceso
+                  Continuar
                 </Button>
               </div>
             </div>

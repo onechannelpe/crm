@@ -100,7 +100,7 @@ export function TotpMethodCard(props: TotpMethodCardProps) {
             </div>
             <div class={styles.totpDetails}>
               <p class={styles.methodHint}>
-                Escanea el código QR con tu aplicación.
+                Escanea el código QR con tu app de autenticación.
               </p>
               <Show when={setupKey()}>
                 <div class={styles.setupKeyBlock}>

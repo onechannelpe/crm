@@ -93,7 +93,7 @@ function OnboardingContent() {
         throw new Error("No se encontró la sesión");
       }
       await completeOnboarding(phone());
-      showToast("success", "Perfil y seguridad listos");
+      showToast("success", "Tu cuenta ya quedó configurada");
       await refreshCurrentUser();
       navigate(getDefaultAppPath(currentUser.role));
     } catch (err: unknown) {
@@ -126,7 +126,7 @@ function OnboardingContent() {
             }
             description={
               step() === "passkey"
-                ? "Usa tu dispositivo para ingresar."
+                ? "Registra una clave de acceso para entrar más rápido."
                 : undefined
             }
             footer={
@@ -201,13 +201,13 @@ function OnboardingContent() {
                 <div class={styles.totpStack}>
                   <p class={styles.choiceTitle}>Clave de acceso</p>
                   <p class={styles.choiceDescription}>
-                    Usa tu dispositivo para ingresar.
+                    Entra con tu dispositivo.
                   </p>
                   <Show
                     when={passkeyEnrollment.supported()}
                     fallback={
                       <p class={styles.configuredDescription}>
-                        Este dispositivo no admite claves de acceso.
+                        Este dispositivo no es compatible con claves de acceso.
                       </p>
                     }
                   >
@@ -232,7 +232,7 @@ function OnboardingContent() {
                 <div class={styles.totpStack}>
                   <TotpMethodCard
                     title="Aplicación de autenticación"
-                    description="Genera un código de 6 dígitos."
+                    description="Genera códigos temporales para confirmar tu acceso."
                     statusLabel={
                       currentUser.totpEnabled ? "Configurada" : "Configurar"
                     }
@@ -255,7 +255,7 @@ function OnboardingContent() {
                   <Show when={totpEnrollment.recoveryCodes().length > 0}>
                     <RecoveryCodesPanel
                       title="Códigos de recuperación"
-                      description="Guárdalos ahora."
+                      description="Guárdalos en un lugar seguro."
                       codes={totpEnrollment.recoveryCodes()}
                     />
                   </Show>
