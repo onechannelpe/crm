@@ -42,7 +42,9 @@ export async function logout(): Promise<void> {
 export interface CurrentUser extends WorkspaceIdentity {
   id: number;
   email: string;
-  fullName: string;
+  names: string;
+  firstSurname: string;
+  secondSurname: string;
   phoneE164: string | null;
   avatarUrl: string | null;
   avatarVersion: number;
@@ -83,7 +85,8 @@ export async function getMe(): Promise<CurrentUser | null> {
           name: assignedTeam.name,
           branch_id: assignedTeam.branch_id,
           supervisor_id: assignedTeam.supervisor_id,
-          supervisor_name: assignedTeam.supervisor_name,
+          supervisor_names: assignedTeam.supervisor_names,
+          supervisor_first_surname: assignedTeam.supervisor_first_surname,
           supervisor_role: assignedTeam.supervisor_role,
           supervisor_branch_id: assignedTeam.supervisor_branch_id,
         }
@@ -100,7 +103,9 @@ export async function getMe(): Promise<CurrentUser | null> {
   return {
     id: user.id,
     email: user.email,
-    fullName: user.full_name,
+    names: user.names,
+    firstSurname: user.first_surname,
+    secondSurname: user.second_surname,
     phoneE164: user.phone_e164,
     avatarUrl: user.avatar_storage_key
       ? `/api/me/avatar?v=${user.avatar_version}`

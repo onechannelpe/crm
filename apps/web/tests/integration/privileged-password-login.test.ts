@@ -22,7 +22,7 @@ describe("privileged password login", () => {
   let ctx: TestDbContext;
   const ipAddress = "198.51.100.88";
   const userAgent = "vitest-agent";
-  const email = "super@test.local";
+  const username = "super.user";
   const rightPassword = "SuperSecret123!";
 
   beforeEach(async () => {
@@ -41,7 +41,7 @@ describe("privileged password login", () => {
   it("rejects privileged login without strong auth after onboarding", async () => {
     await expect(
       authenticatePasswordLogin(
-        { email, password: rightPassword, ipAddress, userAgent },
+        { username, password: rightPassword, ipAddress, userAgent },
         {
           repos: ctx.repos,
           sendPrivilegedLoginAlert,
@@ -58,7 +58,7 @@ describe("privileged password login", () => {
       .execute();
 
     const result = await authenticatePasswordLogin(
-      { email, password: rightPassword, ipAddress, userAgent },
+      { username, password: rightPassword, ipAddress, userAgent },
       { repos: ctx.repos, sendPrivilegedLoginAlert },
     );
 
@@ -79,7 +79,7 @@ describe("privileged password login", () => {
     await expect(
       authenticatePasswordLogin(
         {
-          email,
+          username,
           password: rightPassword,
           ipAddress,
           userAgent,
@@ -102,7 +102,7 @@ describe("privileged password login", () => {
     await expect(
       authenticatePasswordLogin(
         {
-          email,
+          username,
           password: rightPassword,
           ipAddress,
           userAgent,
@@ -129,7 +129,13 @@ describe("privileged password login", () => {
     );
 
     await authenticatePasswordLogin(
-      { email, password: rightPassword, totpCode: code, ipAddress, userAgent },
+      {
+        username,
+        password: rightPassword,
+        totpCode: code,
+        ipAddress,
+        userAgent,
+      },
       { repos: ctx.repos, sendPrivilegedLoginAlert },
     );
 
@@ -148,7 +154,7 @@ describe("privileged password login", () => {
     await expect(
       authenticatePasswordLogin(
         {
-          email,
+          username,
           password: rightPassword,
           totpCode: "000000",
           ipAddress,
@@ -175,7 +181,9 @@ describe("privileged password login", () => {
 
     await ctx.repos.users.updateInviteProvisioning(5, {
       team_id: null,
-      full_name: "Super User",
+      names: "Super",
+      first_surname: "User",
+      second_surname: "Test",
       role: "executive",
       is_active: 1,
     });

@@ -1,12 +1,6 @@
 "use server";
 
 import {
-  createNotificationService,
-  renderInviteEmail,
-} from "@crm/notifications";
-import { getRequestEvent } from "solid-js/web";
-
-import {
   conflictError,
   forbiddenError,
   internalError,
@@ -15,13 +9,14 @@ import {
 } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { requirePermission } from "~/lib/auth/access/session";
+import { hashInviteToken } from "~/lib/auth/invite/tokens";
 import {
   assertNonEmptyString,
   assertPositiveInt,
 } from "~/lib/contracts/guards";
-import { env } from "~/lib/env";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
+import { shortName } from "~/lib/users/display-name";
 import { repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 import type {
@@ -32,52 +27,13 @@ import type {
 } from "~/server/users/service-user-provisioning";
 
 import { provisioning } from "./provisioning";
-import { assertEmail, assertOptionalTeamId, assertRole } from "./validators";
-
-const notificationSender = createNotificationService({
-  resendApiKey: env.resendApiKey || undefined,
-  fromEmail: env.emailFrom || undefined,
-  whatsappAccessToken: env.whatsappAccessToken || undefined,
-  whatsappPhoneNumberId: env.whatsappPhoneNumberId || undefined,
-  whatsappApiVersion: env.whatsappApiVersion || undefined,
-});
-
-function getInviteUrl(token: string): string {
-  const event = getRequestEvent();
-  const requestUrl = event?.request.url;
-  if (!requestUrl) {
-    return `/auth/invite/${token}`;
-  }
-  const origin = new URL(requestUrl).origin;
-  return `${origin}/auth/invite/${token}`;
-}
-
-async function sendInviteEmail(params: {
-  email: string;
-  fullName: string;
-  role: Role;
-  inviteUrl: string;
-  expiresAt: number;
-}): Promise<void> {
-  const { html, text } = renderInviteEmail({
-    fullName: params.fullName,
-    role: params.role,
-    inviteUrl: params.inviteUrl,
-    expiresAt: new Date(params.expiresAt).toLocaleDateString("es-MX", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }),
-  });
-
-  await notificationSender.send({
-    channel: "email",
-    to: params.email,
-    subject: "Activa tu acceso al CRM",
-    html,
-    text,
-  });
-}
+import { getInviteUrl, sendInviteEmail } from "./utils";
+import {
+  assertEmail,
+  assertOptionalExpiresAt,
+  assertOptionalTeamId,
+  assertRole,
+} from "./validators";
 
 function throwCreateInviteError(error: CreateInviteError): never {
   switch (error.reason) {
@@ -158,17 +114,42 @@ function throwMarkInviteDeliveredError(error: MarkInviteDeliveredError): never {
   }
 }
 
-export async function createTeamInvite(input: {
+export interface InviteInfo {
   fullName: string;
+  username: string;
+  email: string;
+}
+
+export async function getInviteInfo(token: string): Promise<InviteInfo | null> {
+  const invite = await repos.userInvites.findPendingByTokenHash(
+    hashInviteToken(token),
+    Date.now(),
+  );
+  if (!invite) return null;
+  return {
+    fullName: `${invite.user_names} ${invite.user_first_surname} ${invite.user_second_surname}`,
+    username: invite.user_username,
+    email: invite.user_email,
+  };
+}
+
+export async function createTeamInvite(input: {
+  names: string;
+  firstSurname: string;
+  secondSurname: string;
   email: string;
   role: string;
   teamId?: number | null;
+  expiresAt?: number | null;
 }): Promise<{ inviteId: number }> {
   const safeInput = {
-    fullName: assertNonEmptyString(input.fullName, "fullName"),
+    names: assertNonEmptyString(input.names, "names"),
+    firstSurname: assertNonEmptyString(input.firstSurname, "firstSurname"),
+    secondSurname: assertNonEmptyString(input.secondSurname, "secondSurname"),
     email: assertEmail(input.email),
     role: assertRole(input.role),
     teamId: assertOptionalTeamId(input.teamId),
+    expiresAt: assertOptionalExpiresAt(input.expiresAt),
   };
 
   const actor = { userId: null as number | null, role: null as Role | null };
@@ -188,10 +169,13 @@ export async function createTeamInvite(input: {
         actorUserId: session.userId,
         actorRole: session.role,
         branchId: session.branchId,
-        fullName: safeInput.fullName,
+        names: safeInput.names,
+        firstSurname: safeInput.firstSurname,
+        secondSurname: safeInput.secondSurname,
         email: safeInput.email,
         role: safeInput.role,
         teamId: safeInput.teamId,
+        expiresAt: safeInput.expiresAt,
       });
       if (isErr(result)) {
         throwCreateInviteError(result.error);
@@ -199,7 +183,11 @@ export async function createTeamInvite(input: {
 
       await sendInviteEmail({
         email: safeInput.email,
-        fullName: safeInput.fullName,
+        fullName: shortName({
+          names: safeInput.names,
+          firstSurname: safeInput.firstSurname,
+          secondSurname: safeInput.secondSurname,
+        }),
         role: safeInput.role,
         inviteUrl: getInviteUrl(result.value.token),
         expiresAt: result.value.expiresAt,
@@ -246,7 +234,7 @@ export async function resendTeamInvite(inviteId: number): Promise<void> {
 
       await sendInviteEmail({
         email: user.email,
-        fullName: user.full_name,
+        fullName: shortName(user),
         role: user.role,
         inviteUrl: getInviteUrl(result.value.token),
         expiresAt: result.value.expiresAt,

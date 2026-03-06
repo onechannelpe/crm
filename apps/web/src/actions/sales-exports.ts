@@ -5,6 +5,7 @@ import type { Role } from "~/lib/auth/access/rbac";
 import { requirePermission } from "~/lib/auth/access/session";
 import { assertPositiveInt } from "~/lib/contracts/guards";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
+import { shortName } from "~/lib/users/display-name";
 import { repos } from "~/server/shared/context";
 
 type SalesExportFormat = "csv" | "xlsx";
@@ -111,7 +112,7 @@ export async function getSalesExportJob(
   return {
     id: job.id,
     requestedByUserId: job.requested_by_user_id,
-    requestedByName: user?.full_name ?? "Unknown",
+    requestedByName: user ? shortName(user) : "Unknown",
     format: job.format,
     status: job.status,
     rowsCount: job.rows_count,
@@ -185,7 +186,7 @@ export async function requestSalesExport(
       return {
         id: newest.id,
         requestedByUserId: newest.requested_by_user_id,
-        requestedByName: user?.full_name ?? "Unknown",
+        requestedByName: user ? shortName(user) : "Unknown",
         format: newest.format,
         status: newest.status,
         rowsCount: newest.rows_count,

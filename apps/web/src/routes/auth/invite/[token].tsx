@@ -1,7 +1,7 @@
-import { useNavigate, useParams } from "@solidjs/router";
-import { createSignal } from "solid-js";
+import { createAsync, useNavigate, useParams } from "@solidjs/router";
+import { Show, createSignal } from "solid-js";
 
-import { acceptTeamInvite } from "~/actions/team";
+import { acceptTeamInvite, getInviteInfo } from "~/actions/team";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { getErrorMessage } from "~/lib/errors";
@@ -11,7 +11,7 @@ import styles from "../auth-shell.module.css";
 export default function AcceptInvitePage() {
   const navigate = useNavigate();
   const params = useParams<{ token: string }>();
-  const [fullName, setFullName] = createSignal("");
+  const inviteInfo = createAsync(() => getInviteInfo(params.token));
   const [password, setPassword] = createSignal("");
   const [confirmPassword, setConfirmPassword] = createSignal("");
   const [submitting, setSubmitting] = createSignal(false);
@@ -29,7 +29,6 @@ export default function AcceptInvitePage() {
     try {
       await acceptTeamInvite({
         token: params.token,
-        fullName: fullName(),
         password: password(),
       });
       navigate("/onboarding");
@@ -56,12 +55,31 @@ export default function AcceptInvitePage() {
             </p>
           </div>
 
-          <Input
-            label="Nombre completo"
-            value={fullName()}
-            onInput={(event) => setFullName(event.currentTarget.value)}
-            required
-          />
+          <Show when={inviteInfo()}>
+            {(info) => (
+              <div class={styles.stack4}>
+                <Input
+                  label="Nombre completo"
+                  type="text"
+                  value={info().fullName}
+                  disabled
+                />
+                <Input
+                  label="Usuario"
+                  type="text"
+                  value={info().username}
+                  disabled
+                />
+                <Input
+                  label="Correo"
+                  type="email"
+                  value={info().email}
+                  disabled
+                />
+              </div>
+            )}
+          </Show>
+
           <Input
             label="Contraseña"
             type="password"

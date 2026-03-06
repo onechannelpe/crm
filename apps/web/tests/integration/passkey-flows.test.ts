@@ -33,7 +33,7 @@ describe("passkey flows", () => {
   it("begin passkey login creates authentication challenge for active user", async () => {
     const passkeyService = createPasskeyService(ctx.repos);
     const result = await beginPasskeyLoginFlow(
-      "exec1@test.local",
+      "exec.one",
       ipAddress,
       ctx.repos,
       passkeyService,

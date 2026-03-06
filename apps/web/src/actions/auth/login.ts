@@ -28,7 +28,7 @@ export interface LoginResult {
 }
 
 export async function login(
-  email: string,
+  username: string,
   password: string,
   totpCode?: string,
 ): Promise<LoginResult> {
@@ -53,7 +53,7 @@ export async function login(
 
       const result = await authenticatePasswordLogin(
         {
-          email,
+          username,
           password,
           totpCode,
           ipAddress,

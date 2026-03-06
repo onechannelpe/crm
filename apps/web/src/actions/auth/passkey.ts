@@ -45,12 +45,12 @@ export interface PasskeyLoginResult {
 }
 
 export async function beginPasskeyLogin(
-  email: string,
+  username: string,
 ): Promise<PasskeyChallengeResult> {
   const event = getRequestEvent();
   const ipAddress = getClientIp(event?.request.headers ?? new Headers());
   return beginPasskeyLoginFlow(
-    email,
+    username,
     ipAddress,
     repos,
     createPasskeyService(repos),

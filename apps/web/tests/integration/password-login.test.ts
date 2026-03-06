@@ -14,7 +14,7 @@ describe("password login service", () => {
   let ctx: TestDbContext;
   const ipAddress = "198.51.100.44";
   const userAgent = "vitest-agent";
-  const email = "exec1@test.local";
+  const username = "exec.one";
   const rightPassword = "Secret123!";
 
   beforeEach(async () => {
@@ -47,7 +47,7 @@ describe("password login service", () => {
     await runSeries(6, async () => {
       try {
         await authenticatePasswordLogin(
-          { email, password: "wrong", ipAddress, userAgent },
+          { username, password: "wrong", ipAddress, userAgent },
           {
             repos: ctx.repos,
             sendPrivilegedLoginAlert,
@@ -58,7 +58,7 @@ describe("password login service", () => {
 
     await expect(
       authenticatePasswordLogin(
-        { email, password: rightPassword, ipAddress, userAgent },
+        { username, password: rightPassword, ipAddress, userAgent },
         {
           repos: ctx.repos,
           sendPrivilegedLoginAlert,
@@ -80,7 +80,7 @@ describe("password login service", () => {
 
   it("creates session with request metadata on successful auth", async () => {
     const result = await authenticatePasswordLogin(
-      { email, password: rightPassword, ipAddress, userAgent },
+      { username, password: rightPassword, ipAddress, userAgent },
       { repos: ctx.repos, sendPrivilegedLoginAlert },
     );
 
@@ -100,7 +100,7 @@ describe("password login service", () => {
     await expect(
       authenticatePasswordLogin(
         {
-          email: "nobody@test.local",
+          username: "nobody.test",
           password: "Secret123!",
           ipAddress,
           userAgent,
@@ -123,7 +123,7 @@ describe("password login service", () => {
       .execute();
 
     const result = await authenticatePasswordLogin(
-      { email, password: rightPassword, ipAddress, userAgent },
+      { username, password: rightPassword, ipAddress, userAgent },
       { repos: ctx.repos, sendPrivilegedLoginAlert },
     );
 

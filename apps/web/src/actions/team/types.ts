@@ -1,19 +1,28 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { RoleOption } from "~/lib/auth/access/role-display";
 
+export interface BulkImportSetup {
+  assignableRoles: RoleOption[];
+}
+
 export interface TeamMember {
   id: number;
-  fullName: string;
+  names: string;
+  firstSurname: string;
+  secondSurname: string;
   email: string;
   role: Role;
   teamId: number | null;
   isActive: boolean;
+  expiresAt: number | null;
 }
 
 export interface TeamInvite {
   inviteId: number;
   userId: number;
-  fullName: string;
+  names: string;
+  firstSurname: string;
+  secondSurname: string;
   email: string;
   role: Role;
   teamId: number | null;

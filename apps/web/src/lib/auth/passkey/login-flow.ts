@@ -38,7 +38,7 @@ type Deps = Pick<
 >;
 
 export async function beginPasskeyLoginFlow(
-  email: string,
+  username: string,
   ipAddress: string,
   deps: Deps,
   passkeyService: PasskeyService,
@@ -46,17 +46,17 @@ export async function beginPasskeyLoginFlow(
   challengeId: number;
   options: PublicKeyCredentialRequestOptionsJSON;
 }> {
-  const safeEmail = assertNonEmptyString(email, "email");
+  const safeUsername = assertNonEmptyString(username, "username");
   const throttle = await checkPasskeyChallengeThrottle(
-    safeEmail,
+    safeUsername,
     ipAddress,
     deps,
   );
   if (!throttle.allowed) {
-    const blockedUser = await deps.users.findByEmail(safeEmail);
+    const blockedUser = await deps.users.findByUsername(safeUsername);
     await recordAuthEvent(deps, {
       userId: blockedUser?.id ?? null,
-      identifier: safeEmail,
+      identifier: safeUsername,
       ipAddress,
       method: "passkey",
       stage: "challenge",
@@ -66,12 +66,12 @@ export async function beginPasskeyLoginFlow(
     throw new Error(INVALID_CREDENTIALS);
   }
 
-  const user = await deps.users.findByEmail(safeEmail);
+  const user = await deps.users.findByUsername(safeUsername);
   if (!user || !user.is_active) {
-    await recordPasskeyChallengeFailure(safeEmail, ipAddress, deps);
+    await recordPasskeyChallengeFailure(safeUsername, ipAddress, deps);
     await recordAuthEvent(deps, {
       userId: user?.id ?? null,
-      identifier: safeEmail,
+      identifier: safeUsername,
       ipAddress,
       method: "passkey",
       stage: "challenge",

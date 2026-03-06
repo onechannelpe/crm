@@ -23,6 +23,14 @@ export function createUsersRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
+    findByUsername(username: string) {
+      return db
+        .selectFrom("users")
+        .selectAll()
+        .where("username", "=", username)
+        .executeTakeFirst();
+    },
+
     findByBranchIncludingInactive(branchId: number) {
       return db
         .selectFrom("users")
@@ -71,18 +79,26 @@ export function createUsersRepo(db: Kysely<Database>) {
 
     async create(values: {
       branch_id: number;
+      team_id?: number | null;
+      username: string;
       email: string;
       password_hash: string;
-      full_name: string;
+      names: string;
+      first_surname: string;
+      second_surname: string;
+      expires_at?: number | null;
       phone_e164?: string | null;
       role: UserRole;
+      is_active: number;
     }) {
       const strongAuthRequired = deriveStrongAuthRequired(values.role);
       const result = await db
         .insertInto("users")
         .values({
           ...values,
-          is_active: 1,
+          expires_at: values.expires_at ?? null,
+          expiry_notified_at: null,
+          is_active: values.is_active,
           phone_e164: values.phone_e164 ?? null,
           phone_verified_at: null,
           profile_confirmed_at: null,
@@ -107,7 +123,9 @@ export function createUsersRepo(db: Kysely<Database>) {
       id: number,
       values: {
         team_id: number | null;
-        full_name: string;
+        names: string;
+        first_surname: string;
+        second_surname: string;
         role: UserRole;
         is_active: number;
       },
@@ -118,7 +136,9 @@ export function createUsersRepo(db: Kysely<Database>) {
           .updateTable("users")
           .set({
             team_id: values.team_id,
-            full_name: values.full_name,
+            names: values.names,
+            first_surname: values.first_surname,
+            second_surname: values.second_surname,
             role: values.role,
             is_active: values.is_active,
             strong_auth_required: 1,
@@ -131,7 +151,9 @@ export function createUsersRepo(db: Kysely<Database>) {
         .updateTable("users")
         .set({
           team_id: values.team_id,
-          full_name: values.full_name,
+          names: values.names,
+          first_surname: values.first_surname,
+          second_surname: values.second_surname,
           role: values.role,
           is_active: values.is_active,
           strong_auth_required: 0,
@@ -143,12 +165,11 @@ export function createUsersRepo(db: Kysely<Database>) {
 
     completeOnboarding(
       id: number,
-      values: { full_name: string; phone_e164: string; completedAt: number },
+      values: { phone_e164: string; completedAt: number },
     ) {
       return db
         .updateTable("users")
         .set({
-          full_name: values.full_name,
           phone_e164: values.phone_e164,
           phone_verified_at: values.completedAt,
           profile_confirmed_at: values.completedAt,
@@ -158,13 +179,10 @@ export function createUsersRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    updateProfile(id: number, values: { full_name: string; phone: string }) {
+    updatePhone(id: number, phone: string) {
       return db
         .updateTable("users")
-        .set({
-          full_name: values.full_name,
-          phone_e164: values.phone,
-        })
+        .set({ phone_e164: phone })
         .where("id", "=", id)
         .execute();
     },
@@ -220,6 +238,36 @@ export function createUsersRepo(db: Kysely<Database>) {
           avatar_version: values.version,
         })
         .where("id", "=", id)
+        .execute();
+    },
+
+    async expireActiveUsersBefore(now: number): Promise<number[]> {
+      const rows = await db
+        .updateTable("users")
+        .set({ is_active: 0 })
+        .where("expires_at", "<=", now)
+        .where("is_active", "=", 1)
+        .returning("id")
+        .execute();
+      return rows.map((r) => r.id);
+    },
+
+    findExpiringBefore(threshold: number) {
+      return db
+        .selectFrom("users")
+        .selectAll()
+        .where("expires_at", "<=", threshold)
+        .where("expires_at", "is not", null)
+        .where("expiry_notified_at", "is", null)
+        .where("is_active", "=", 1)
+        .execute();
+    },
+
+    markExpiryNotified(userId: number, notifiedAt: number) {
+      return db
+        .updateTable("users")
+        .set({ expiry_notified_at: notifiedAt })
+        .where("id", "=", userId)
         .execute();
     },
   };

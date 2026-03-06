@@ -1,8 +1,7 @@
 import { useNavigate } from "@solidjs/router";
 import { createSignal, onMount, Show } from "solid-js";
 
-import { beginPasskeyLogin, finishPasskeyLogin } from "~/actions/auth";
-import { login } from "~/actions/auth";
+import { beginPasskeyLogin, finishPasskeyLogin, login } from "~/actions/auth";
 import { useToast } from "~/components/feedback/toast-provider";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
@@ -20,7 +19,7 @@ import styles from "../auth/auth-shell.module.css";
 export default function LoginPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const [email, setEmail] = createSignal("");
+  const [username, setUsername] = createSignal("");
   const [password, setPassword] = createSignal("");
   const [totpCode, setTotpCode] = createSignal("");
   const [loading, setLoading] = createSignal(false);
@@ -40,7 +39,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const result = await login(email(), password(), totpCode());
+      const result = await login(username(), password(), totpCode());
       navigate(
         result.onboardingCompleted
           ? getDefaultAppPath(result.role)
@@ -61,11 +60,11 @@ export default function LoginPage() {
         throw new Error("This browser does not support passkeys");
       }
 
-      if (!email().trim()) {
-        throw new Error("Enter email before using passkey");
+      if (!username().trim()) {
+        throw new Error("Ingresa tu usuario antes de usar la clave de acceso");
       }
 
-      const challenge = await beginPasskeyLogin(email());
+      const challenge = await beginPasskeyLogin(username());
       const credential = await navigator.credentials.get({
         publicKey: toRequestOptions(challenge.options),
       });
@@ -109,11 +108,11 @@ export default function LoginPage() {
           class={styles.stack3}
         >
           <Input
-            id="email"
-            type="email"
-            label="Correo"
-            value={email()}
-            onInput={(e) => setEmail(e.currentTarget.value)}
+            id="username"
+            type="text"
+            label="Usuario"
+            value={username()}
+            onInput={(e) => setUsername(e.currentTarget.value)}
             required
           />
 

@@ -3,18 +3,13 @@ import type { WorkspaceIdentity } from "./workspace-context";
 
 interface LabelUser extends WorkspaceIdentity {
   role: Role;
-  fullName: string;
-}
-
-function firstName(fullName: string): string {
-  const [name] = fullName.trim().split(/\s+/);
-  return name || "usuario";
+  names: string;
 }
 
 export function getWorkspaceLabel(user: LabelUser): string {
   if (user.role === "executive") {
     if (!user.supervisor) return "Equipo sin supervisor";
-    return `Equipo de ${firstName(user.supervisor.fullName)}`;
+    return `Equipo de ${user.supervisor.names}`;
   }
 
   if (user.role === "supervisor") {
@@ -30,5 +25,5 @@ export function getWorkspaceLabel(user: LabelUser): string {
     return `Sucursal ${user.branch.name}`;
   }
 
-  return `Espacio de ${firstName(user.fullName)}`;
+  return `Espacio de ${user.names}`;
 }
