@@ -65,13 +65,11 @@ function normalizeState(value: unknown): ExtensionState {
           connectedAt: asNullableNumber(currentCall.connectedAt),
           endedAt: asNullableNumber(currentCall.endedAt),
           phase:
-            currentCall.phase === "idle" ||
             currentCall.phase === "dialing" ||
             currentCall.phase === "active" ||
-            currentCall.phase === "wrap_up" ||
             currentCall.phase === "ended"
               ? currentCall.phase
-              : "idle",
+              : "dialing",
           outcome: asNullableString(currentCall.outcome),
           notes: asNullableString(currentCall.notes),
         }

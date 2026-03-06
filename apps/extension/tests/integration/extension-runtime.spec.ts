@@ -17,6 +17,44 @@ const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 const EXTENSION_OUTPUT_PATH = path.resolve(currentDirectory, "../../.output/chrome-mv3");
 
 test.describe("extension runtime integration", () => {
+  test("rejects invalid call and recording transitions", async () => {
+    const session = await launchExtensionSession({
+      extensionOutputPath: EXTENSION_OUTPUT_PATH,
+    });
+
+    try {
+      const page = await openPopupPage(session.context, session.extensionId);
+
+      const connectBeforeStart = await sendRuntimeMessage(page, { type: "call.connected" });
+      expect(connectBeforeStart.ok).toBe(false);
+
+      const callStarted = await sendRuntimeMessage(page, {
+        type: "call.start",
+        assignmentId: 10,
+        contactId: 20,
+        phone: "+51933333333",
+      });
+      expect(callStarted.ok).toBe(true);
+
+      const callEnded = await sendRuntimeMessage(page, {
+        type: "call.end",
+        outcome: "no_answer",
+      });
+      expect(callEnded.ok).toBe(true);
+
+      const connectAfterEnd = await sendRuntimeMessage(page, { type: "call.connected" });
+      expect(connectAfterEnd.ok).toBe(false);
+
+      const startRecordingAfterEnd = await sendRuntimeMessage(page, {
+        type: "recording.start",
+        tabId: 1,
+      });
+      expect(startRecordingAfterEnd.ok).toBe(false);
+    } finally {
+      await closeExtensionSession(session);
+    }
+  });
+
   test("flushes queued call lifecycle events to a real HTTP endpoint", async () => {
     const sink = await createSyncSink();
     const session = await launchExtensionSession({

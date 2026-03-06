@@ -1,6 +1,6 @@
 export const STORAGE_KEY = "crm_extension_state_v1" as const;
 
-export type CallPhase = "idle" | "dialing" | "active" | "wrap_up" | "ended";
+export type CallPhase = "dialing" | "active" | "ended";
 
 export type RecordingPhase = "idle" | "starting" | "recording" | "stopping" | "error";
 

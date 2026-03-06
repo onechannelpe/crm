@@ -4,13 +4,12 @@ function createJobId(): string {
   return crypto.randomUUID();
 }
 
-export function enqueueJob(
-  queue: QueueJob[],
+export function createJob(
   type: QueueJobType,
   payload: Record<string, unknown>,
-): QueueJob[] {
+): QueueJob {
   const now = Date.now();
-  const next: QueueJob = {
+  return {
     id: createJobId(),
     type,
     payload,
@@ -19,8 +18,18 @@ export function enqueueJob(
     nextAttemptAt: now,
     lastError: null,
   };
+}
 
-  return [...queue, next];
+export function appendJob(queue: QueueJob[], job: QueueJob): QueueJob[] {
+  return [...queue, job];
+}
+
+export function enqueueJob(
+  queue: QueueJob[],
+  type: QueueJobType,
+  payload: Record<string, unknown>,
+): QueueJob[] {
+  return appendJob(queue, createJob(type, payload));
 }
 
 export function markFailed(job: QueueJob, error: string): QueueJob {

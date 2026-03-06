@@ -14,6 +14,7 @@ interface ActiveRecording {
   sessionId: string;
   stream: MediaStream;
   recorder: MediaRecorder;
+  finished: Promise<void>;
 }
 
 type TabCaptureAudioConstraints = MediaTrackConstraints & {
@@ -51,18 +52,21 @@ function toBase64(bytes: Uint8Array): string {
   return btoa(binary);
 }
 
-function stopActiveRecorder(): void {
-  if (activeRecording?.recorder.state !== "inactive") {
-    activeRecording?.recorder.stop();
+function cleanupRecording(recording: ActiveRecording): void {
+  for (const track of recording.stream.getTracks()) {
+    track.stop();
+  }
+}
+
+async function stopActiveRecorder(): Promise<void> {
+  const recording = activeRecording;
+  if (!recording) return;
+
+  if (recording.recorder.state !== "inactive") {
+    recording.recorder.stop();
   }
 
-  if (activeRecording?.stream) {
-    for (const track of activeRecording.stream.getTracks()) {
-      track.stop();
-    }
-  }
-
-  activeRecording = null;
+  await recording.finished;
 }
 
 async function createMediaStream(streamId: string): Promise<MediaStream> {
@@ -77,7 +81,7 @@ async function createMediaStream(streamId: string): Promise<MediaStream> {
 }
 
 async function startRecorder(message: OffscreenStartMessage): Promise<void> {
-  stopActiveRecorder();
+  await stopActiveRecorder();
 
   const stream = await createMediaStream(message.streamId);
   const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
@@ -86,11 +90,18 @@ async function startRecorder(message: OffscreenStartMessage): Promise<void> {
 
   const recorder = new MediaRecorder(stream, { mimeType });
   const sessionId = message.sessionId;
+  let resolveFinished: (() => void) | null = null;
+  let rejectFinished: ((reason?: unknown) => void) | null = null;
+  const finished = new Promise<void>((resolve, reject) => {
+    resolveFinished = resolve;
+    rejectFinished = reject;
+  });
 
   activeRecording = {
     sessionId,
     stream,
     recorder,
+    finished,
   };
   lastChunkAt = Date.now();
 
@@ -115,24 +126,63 @@ async function startRecorder(message: OffscreenStartMessage): Promise<void> {
     });
   };
 
-  recorder.onstop = async () => {
-    await browser.runtime.sendMessage({
-      type: "recording.completed",
-      sessionId,
-      createdAt: Date.now(),
-    });
+  recorder.onerror = () => {
+    const current = activeRecording;
+    if (current) {
+      cleanupRecording(current);
+    }
+    activeRecording = null;
+    rejectFinished?.(new Error("media recorder failed"));
   };
 
-  recorder.start(4000);
+  recorder.onstop = async () => {
+    try {
+      await browser.runtime.sendMessage({
+        type: "recording.completed",
+        sessionId,
+        createdAt: Date.now(),
+      });
+    } finally {
+      const current = activeRecording;
+      if (current) {
+        cleanupRecording(current);
+      }
+      activeRecording = null;
+      resolveFinished?.();
+    }
+  };
+
+  try {
+    recorder.start(4000);
+  } catch (error: unknown) {
+    const current = activeRecording;
+    if (current) {
+      cleanupRecording(current);
+    }
+    activeRecording = null;
+    rejectFinished?.(error);
+    throw error;
+  }
 }
 
 browser.runtime.onMessage.addListener((message: unknown) => {
   if (!isOffscreenMessage(message)) return;
 
   if (message.type === "offscreen.recording.stop") {
-    stopActiveRecorder();
-    return;
+    return stopActiveRecorder().then(
+      () => ({ ok: true } as const),
+      (error: unknown) => ({
+        ok: false,
+        error: error instanceof Error ? error.message : "failed to stop recorder",
+      }),
+    );
   }
 
-  void startRecorder(message);
+  return startRecorder(message).then(
+    () => ({ ok: true } as const),
+    (error: unknown) => ({
+      ok: false,
+      error: error instanceof Error ? error.message : "failed to start recorder",
+    }),
+  );
 });

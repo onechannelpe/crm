@@ -4,7 +4,12 @@ import {
   type RuntimeResponse,
 } from "@/src/domain/messages";
 import type { CallSession, ExtensionState, QueueJob } from "@/src/domain/model";
-import { enqueueJob, dueJobs, markFailed } from "@/src/services/queue";
+import {
+  deleteLargePayload,
+  readLargePayload,
+  saveLargePayload,
+} from "@/src/services/journal";
+import { appendJob, createJob, dueJobs, enqueueJob, markFailed } from "@/src/services/queue";
 import {
   closeOffscreenDocument,
   ensureOffscreenDocument,
@@ -42,6 +47,26 @@ function ensureCurrentCall(state: ExtensionState): CallSession {
   return state.currentCall;
 }
 
+function ensureRecordableCall(state: ExtensionState): CallSession {
+  const call = ensureCurrentCall(state);
+  if (call.phase === "ended") {
+    throw new Error("cannot record an ended call");
+  }
+  return call;
+}
+
+function isOffscreenControlResponse(
+  value: unknown,
+): value is { ok: boolean; error?: string } {
+  if (typeof value !== "object" || value === null) return false;
+  const maybeResponse = value as Record<string, unknown>;
+  if (typeof maybeResponse.ok !== "boolean") return false;
+  if (maybeResponse.error !== undefined && typeof maybeResponse.error !== "string") {
+    return false;
+  }
+  return true;
+}
+
 function withoutJob(queue: QueueJob[], id: string): QueueJob[] {
   return queue.filter((job) => job.id !== id);
 }
@@ -61,7 +86,16 @@ async function flushQueue(state: ExtensionState): Promise<ExtensionState> {
   let next = state;
 
   for (const job of due) {
-    const result = await sendSyncJob(next.syncConfig, job);
+    let result: Awaited<ReturnType<typeof sendSyncJob>>;
+    try {
+      const sendableJob = await withHydratedPayload(job);
+      result = await sendSyncJob(next.syncConfig, sendableJob);
+    } catch (error: unknown) {
+      result = {
+        ok: false,
+        error: asErrorMessage(error),
+      };
+    }
 
     if (result.ok) {
       next = {
@@ -72,6 +106,9 @@ async function flushQueue(state: ExtensionState): Promise<ExtensionState> {
           lastSyncError: null,
         },
       };
+      if (job.type === "recording.chunk") {
+        await deleteLargePayload(job.id).catch(() => undefined);
+      }
       continue;
     }
 
@@ -135,8 +172,8 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
     case "call.connected": {
       try {
         const call = ensureCurrentCall(current);
-        if (call.connectedAt) {
-          return { ok: false, error: "call already connected", state: current };
+        if (call.phase !== "dialing" || call.connectedAt) {
+          return { ok: false, error: "call cannot be connected from current state", state: current };
         }
 
         const connectedAt = Date.now();
@@ -167,8 +204,8 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
     case "call.end": {
       try {
         const call = ensureCurrentCall(current);
-        if (call.phase === "ended") {
-          return { ok: false, error: "call already ended", state: current };
+        if (call.phase !== "dialing" && call.phase !== "active") {
+          return { ok: false, error: "call cannot be ended from current state", state: current };
         }
 
         const endedAt = Date.now();
@@ -215,21 +252,44 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
     }
     case "recording.start": {
       try {
-        const call = ensureCurrentCall(current);
+        if (current.recording.phase !== "idle" && current.recording.phase !== "error") {
+          return {
+            ok: false,
+            error: "recording cannot be started from current state",
+            state: current,
+          };
+        }
+
+        const call = ensureRecordableCall(current);
+        const startingState: ExtensionState = {
+          ...current,
+          recording: {
+            ...current.recording,
+            phase: "starting",
+            error: null,
+            stoppedAt: null,
+          },
+        };
+        await writeState(startingState);
         await ensureOffscreenDocument();
 
         const streamId = await chrome.tabCapture.getMediaStreamId({
           targetTabId: message.tabId,
         });
 
-        await browser.runtime.sendMessage({
+        const response = await browser.runtime.sendMessage({
           type: "offscreen.recording.start",
           sessionId: call.sessionId,
           streamId,
         });
+        if (!isOffscreenControlResponse(response) || !response.ok) {
+          throw new Error(
+            isOffscreenControlResponse(response) ? response.error ?? "offscreen start failed" : "invalid offscreen response",
+          );
+        }
 
         const next: ExtensionState = {
-          ...current,
+          ...startingState,
           recording: {
             phase: "recording",
             streamId,
@@ -256,39 +316,91 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
       }
     }
     case "recording.stop": {
-      await browser.runtime.sendMessage({
-        type: "offscreen.recording.stop",
-      });
-      await closeOffscreenDocument();
+      if (current.recording.phase === "idle") {
+        return { ok: true, state: current };
+      }
 
-      const next: ExtensionState = {
-        ...current,
-        recording: {
-          ...current.recording,
-          phase: "idle",
-          stoppedAt: Date.now(),
-          streamId: null,
-        },
-      };
+      if (current.recording.phase !== "recording" && current.recording.phase !== "starting") {
+        return {
+          ok: false,
+          error: "recording cannot be stopped from current state",
+          state: current,
+        };
+      }
 
-      await writeState(next);
-      return { ok: true, state: next };
+      try {
+        const stoppingState: ExtensionState = {
+          ...current,
+          recording: {
+            ...current.recording,
+            phase: "stopping",
+            error: null,
+          },
+        };
+        await writeState(stoppingState);
+
+        const response = await browser.runtime.sendMessage({
+          type: "offscreen.recording.stop",
+        });
+        if (!isOffscreenControlResponse(response) || !response.ok) {
+          throw new Error(
+            isOffscreenControlResponse(response) ? response.error ?? "offscreen stop failed" : "invalid offscreen response",
+          );
+        }
+
+        await closeOffscreenDocument();
+
+        const next: ExtensionState = {
+          ...stoppingState,
+          recording: {
+            ...stoppingState.recording,
+            phase: "idle",
+            stoppedAt: Date.now(),
+            streamId: null,
+          },
+        };
+
+        await writeState(next);
+        return { ok: true, state: next };
+      } catch (error: unknown) {
+        const next: ExtensionState = {
+          ...current,
+          recording: {
+            ...current.recording,
+            phase: "error",
+            error: asErrorMessage(error),
+          },
+        };
+        await writeState(next);
+        return { ok: false, error: asErrorMessage(error), state: next };
+      }
     }
     case "recording.chunk": {
+      const chunkPayload = {
+        sessionId: message.sessionId,
+        chunkId: message.chunkId,
+        mimeType: message.mimeType,
+        dataBase64: message.dataBase64,
+        durationMs: message.durationMs,
+        createdAt: message.createdAt,
+      } satisfies Record<string, unknown>;
+      const queueJob = createJob("recording.chunk", {
+        sessionId: message.sessionId,
+        chunkId: message.chunkId,
+        mimeType: message.mimeType,
+        durationMs: message.durationMs,
+        createdAt: message.createdAt,
+        payloadStorage: "indexeddb",
+      });
+      await saveLargePayload(queueJob.id, chunkPayload);
+
       const next: ExtensionState = {
         ...current,
         recording: {
           ...current.recording,
           chunkCount: current.recording.chunkCount + 1,
         },
-        queue: enqueueJob(current.queue, "recording.chunk", {
-          sessionId: message.sessionId,
-          chunkId: message.chunkId,
-          mimeType: message.mimeType,
-          dataBase64: message.dataBase64,
-          durationMs: message.durationMs,
-          createdAt: message.createdAt,
-        }),
+        queue: appendJob(current.queue, queueJob),
       };
 
       await writeState(next);
@@ -324,6 +436,26 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
   }
 
   return assertNever(message);
+}
+
+async function withHydratedPayload(job: QueueJob): Promise<QueueJob> {
+  if (job.type !== "recording.chunk") {
+    return job;
+  }
+
+  if (job.payload.payloadStorage !== "indexeddb") {
+    return job;
+  }
+
+  const payload = await readLargePayload(job.id);
+  if (!payload) {
+    throw new Error(`missing payload for recording chunk job ${job.id}`);
+  }
+
+  return {
+    ...job,
+    payload,
+  };
 }
 
 async function ensureAlarms(): Promise<void> {
