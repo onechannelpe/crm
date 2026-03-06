@@ -62,6 +62,11 @@
   padding-top: 12px;
 }
 
+.securityStack {
+  display: grid;
+  gap: 16px;
+}
+
 .card {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);

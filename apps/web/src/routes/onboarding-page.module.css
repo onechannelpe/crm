@@ -111,6 +111,17 @@
   gap: 12px;
 }
 
+.footerActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.securityGrid {
+  display: grid;
+  gap: 16px;
+}
+
 .footerCopy {
   margin: 0;
   color: var(--muted-foreground);
@@ -121,5 +132,9 @@
   .summary,
   .identityGrid {
     grid-template-columns: 1fr;
+  }
+
+  .footerActions {
+    flex-direction: column-reverse;
   }
 }

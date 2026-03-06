@@ -7,6 +7,10 @@ import {
 } from "~/lib/auth/access/workspace-context";
 import { type WorkspaceScopeType } from "~/lib/auth/access/workspace-scope";
 import {
+  getPasswordLoginPolicy,
+  type PasswordLoginPolicy,
+} from "~/lib/auth/security/auth-contract";
+import {
   getStrongAuthStatus,
   requiresStrongAuthRole,
 } from "~/lib/auth/security/strong-auth-status";
@@ -70,6 +74,7 @@ export interface CurrentUser extends WorkspaceIdentity {
   totpEnabled: boolean;
   hasPasskey: boolean;
   passkeyCount: number;
+  passwordLoginPolicy: PasswordLoginPolicy;
   branchId: number;
   scopeType: WorkspaceScopeType;
 }
@@ -84,6 +89,11 @@ export async function getMe(): Promise<CurrentUser | null> {
   const user = await repos.users.findById(session.userId);
   if (!user) return null;
   const strongAuthStatus = await getStrongAuthStatus(user.id, repos);
+  const passwordLoginPolicy = getPasswordLoginPolicy({
+    role: user.role,
+    onboardingCompleted: user.onboarding_completed_at !== null,
+    strongAuthStatus,
+  });
 
   const [branch, assignedTeam, managedTeam] = await Promise.all([
     repos.branches.findById(user.branch_id),
@@ -137,6 +147,7 @@ export async function getMe(): Promise<CurrentUser | null> {
     totpEnabled: strongAuthStatus.hasTotp,
     hasPasskey: strongAuthStatus.hasPasskey,
     passkeyCount: strongAuthStatus.passkeyCount,
+    passwordLoginPolicy,
     branchId: user.branch_id,
     scopeType: workspace.scopeType,
     team: workspace.team,

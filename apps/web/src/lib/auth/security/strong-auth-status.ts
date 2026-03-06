@@ -10,18 +10,14 @@ export interface StrongAuthStatus {
   hasVerifiedStrongAuth: boolean;
 }
 
-export function deriveStrongAuthRequired(role: User["role"]): number {
-  return STRONG_AUTH_ROLES.some((item) => item === role) ? 1 : 0;
+export function deriveStrongAuthRequired(role: User["role"]): boolean {
+  return STRONG_AUTH_ROLES.some((item) => item === role);
 }
 
 const STRONG_AUTH_ROLES = ["sales_manager", "admin", "superuser"] as const;
 
 export function requiresStrongAuthRole(role: User["role"]) {
-  return deriveStrongAuthRequired(role) === 1;
-}
-
-export function requiresStrongAuth(user: Pick<User, "role">) {
-  return requiresStrongAuthRole(user.role);
+  return deriveStrongAuthRequired(role);
 }
 
 export async function getStrongAuthStatus(

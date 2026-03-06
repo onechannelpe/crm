@@ -1,8 +1,11 @@
-import { createSignal } from "solid-js";
+import { Show, createSignal } from "solid-js";
 
 import { changePassword } from "~/actions/settings";
-import { SecurityEnrollmentPanel } from "~/components/auth/security-enrollment-panel";
-import { useSecurityEnrollmentController } from "~/components/auth/use-security-enrollment-controller";
+import { PasskeyMethodCard } from "~/components/auth/passkey-method-card";
+import { RecoveryCodesPanel } from "~/components/auth/recovery-codes-panel";
+import { TotpMethodCard } from "~/components/auth/totp-method-card";
+import { usePasskeyEnrollment } from "~/components/auth/use-passkey-enrollment";
+import { useTotpEnrollment } from "~/components/auth/use-totp-enrollment";
 import { useToast } from "~/components/feedback/toast-provider";
 import { useSession } from "~/components/providers/session-provider";
 import { SettingsSection } from "~/components/settings/SettingsSection";
@@ -20,14 +23,16 @@ export default function SecurityPage() {
   const [newPassword, setNewPassword] = createSignal("");
   const [confirmPassword, setConfirmPassword] = createSignal("");
   const [changingPassword, setChangingPassword] = createSignal(false);
-  const enrollment = useSecurityEnrollmentController({
+  const passkeyEnrollment = usePasskeyEnrollment({
     showToast,
     refreshStatus: refreshCurrentUser,
-    messages: {
-      passkeySuccess: "Clave de acceso añadida",
-      passkeyFailure: "No se pudo añadir la clave de acceso",
-      totpVerifySuccess: "Autenticación en dos pasos activada",
-    },
+    successMessage: "Clave de acceso añadida",
+    failureMessage: "No se pudo añadir la clave de acceso",
+  });
+  const totpEnrollment = useTotpEnrollment({
+    showToast,
+    refreshStatus: refreshCurrentUser,
+    verifySuccessMessage: "Autenticación en dos pasos activada",
   });
 
   const handleChangePassword = async (e: Event) => {
@@ -88,27 +93,63 @@ export default function SecurityPage() {
         </form>
       </SettingsSection>
 
-      <SettingsSection title="Protege tu cuenta">
-        <SecurityEnrollmentPanel
-          mode="settings"
-          strongAuthRequired={currentUser().strongAuthRequired}
-          strongAuthConfigured={currentUser().strongAuthConfigured}
-          passkeySupported={enrollment.passkeySupported()}
-          hasPasskey={currentUser().hasPasskey}
-          passkeyCount={currentUser().passkeyCount}
-          passkeyLoading={enrollment.passkeyLoading()}
-          totpEnabled={currentUser().totpEnabled}
-          totpLoading={enrollment.totpLoading()}
-          totpCode={enrollment.totpCode()}
-          totpEnrollment={enrollment.totpEnrollment()}
-          recoveryCodes={enrollment.recoveryCodes()}
-          onTotpCodeInput={(event) =>
-            enrollment.setTotpCode(event.currentTarget.value)
-          }
-          onRegisterPasskey={() => void enrollment.registerPasskey()}
-          onBeginTotp={() => void enrollment.beginTotp()}
-          onVerifyTotp={() => void enrollment.verifyTotp()}
-        />
+      <SettingsSection
+        title="Protege tu cuenta"
+        description="Administra por separado el acceso con clave de acceso y el segundo paso para el flujo con contraseña."
+      >
+        <div class={styles.securityStack}>
+          <PasskeyMethodCard
+            title="Claves de acceso"
+            description="Administra cuántas claves tienes disponibles para entrar sin contraseña desde dispositivos compatibles."
+            statusLabel={
+              currentUser().hasPasskey
+                ? `${currentUser().passkeyCount} configurada${currentUser().passkeyCount === 1 ? "" : "s"}`
+                : passkeyEnrollment.supported()
+                  ? "Sin configurar"
+                  : "No compatible"
+            }
+            active={currentUser().hasPasskey}
+            supported={passkeyEnrollment.supported()}
+            loading={passkeyEnrollment.loading()}
+            actionLabel={
+              currentUser().hasPasskey ? "Añadir otra clave" : "Añadir clave"
+            }
+            note="El acceso con clave de acceso entra directo al espacio de trabajo, sin contraseña."
+            unsupportedNote="Este navegador o dispositivo no admite claves de acceso."
+            onAction={() => void passkeyEnrollment.registerPasskey()}
+          />
+
+          <TotpMethodCard
+            title="Aplicación de autenticación"
+            description="Configura códigos TOTP para el flujo de inicio de sesión con contraseña."
+            statusLabel={
+              currentUser().totpEnabled ? "Configurada" : "Sin configurar"
+            }
+            active={currentUser().totpEnabled}
+            loading={totpEnrollment.loading()}
+            actionLabel={
+              currentUser().totpEnabled
+                ? "Ya configurada"
+                : "Configurar aplicación"
+            }
+            note="Si entras con contraseña en un rol protegido, este será el segundo paso requerido."
+            code={totpEnrollment.code()}
+            enrollment={totpEnrollment.enrollment()}
+            onCodeInput={(event) =>
+              totpEnrollment.setCode(event.currentTarget.value)
+            }
+            onBegin={() => void totpEnrollment.beginEnrollment()}
+            onVerify={() => void totpEnrollment.verifyEnrollment()}
+          />
+
+          <Show when={totpEnrollment.recoveryCodes().length > 0}>
+            <RecoveryCodesPanel
+              title="Códigos de recuperación"
+              description="Guárdalos ahora. Se muestran una sola vez y sirven como respaldo si pierdes acceso a tu aplicación."
+              codes={totpEnrollment.recoveryCodes()}
+            />
+          </Show>
+        </div>
       </SettingsSection>
     </div>
   );

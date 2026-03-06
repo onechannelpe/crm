@@ -9,6 +9,7 @@ import { verifyTotpCode } from "~/lib/auth/totp/totp";
 import type { User } from "~/lib/db/schema";
 import type { Repositories } from "~/server/shared/registry";
 
+import { getPasswordLoginPolicy } from "./auth-contract";
 import { recordAuthEvent } from "./auth-events";
 import {
   getStrongAuthStatus,
@@ -43,24 +44,16 @@ export async function resolvePasswordStrongAuth(params: {
     deps.userTotpFactors.findByUserId(user.id),
     getStrongAuthStatus(user.id, deps),
   ]);
-  const hasTotp = strongAuthStatus.hasTotp;
+  const passwordLoginPolicy = getPasswordLoginPolicy({
+    role: user.role,
+    onboardingCompleted: user.onboarding_completed_at !== null,
+    strongAuthStatus,
+  });
   const safeCode = totpCode?.trim();
-  if (!strongAuthStatus.hasVerifiedStrongAuth) {
-    if (user.onboarding_completed_at === null) {
-      return { authMethod: "password", strongAuthAt: null };
-    }
-    await recordAuthEvent(deps, {
-      userId: user.id,
-      identifier,
-      ipAddress,
-      method: "totp",
-      stage: "verify",
-      outcome: "failure",
-      reason: "strong_auth_not_enrolled",
-    });
-    throw new Error("Strong authentication required");
+  if (passwordLoginPolicy === "password_bootstrap") {
+    return { authMethod: "password", strongAuthAt: null };
   }
-  if (!hasTotp) {
+  if (passwordLoginPolicy === "password_or_totp" && !strongAuthStatus.hasTotp) {
     await recordAuthEvent(deps, {
       userId: user.id,
       identifier,
@@ -77,6 +70,30 @@ export async function resolvePasswordStrongAuth(params: {
         ? "Use a passkey or configure an authenticator app"
         : "Strong authentication required",
     );
+  }
+  if (!strongAuthStatus.hasVerifiedStrongAuth) {
+    await recordAuthEvent(deps, {
+      userId: user.id,
+      identifier,
+      ipAddress,
+      method: "totp",
+      stage: "verify",
+      outcome: "failure",
+      reason: "strong_auth_not_enrolled",
+    });
+    throw new Error("Strong authentication required");
+  }
+  if (passwordLoginPolicy === "passkey_only") {
+    await recordAuthEvent(deps, {
+      userId: user.id,
+      identifier,
+      ipAddress,
+      method: "totp",
+      stage: "verify",
+      outcome: "failure",
+      reason: "strong_auth_passkey_required",
+    });
+    throw new Error("Use a passkey or configure an authenticator app");
   }
   if (!safeCode) {
     await recordAuthEvent(deps, {
