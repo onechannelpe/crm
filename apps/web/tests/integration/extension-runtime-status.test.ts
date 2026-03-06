@@ -76,6 +76,28 @@ describe("extension runtime status invariants", () => {
     return Number(result.insertId);
   }
 
+  async function createContactWithoutPhone() {
+    const now = Date.now();
+    const result = await ctx.db
+      .insertInto("contacts")
+      .values({
+        organization_id: 1,
+        dni: `7000${Math.floor(Math.random() * 100000)
+          .toString()
+          .padStart(5, "0")}`,
+        name: "Contacto sin telefono",
+        phone_primary: null,
+        phone_secondary: null,
+        last_contacted_at: null,
+        last_contacted_by_user_id: null,
+        cooldown_until: null,
+        created_at: now,
+      })
+      .executeTakeFirstOrThrow();
+
+    return Number(result.insertId);
+  }
+
   async function claimSession(installationId: string) {
     const authSessionId = await createServiceSession();
     const assignmentId = await createAssignment();
@@ -262,6 +284,36 @@ describe("extension runtime status invariants", () => {
       throw new Error("malformed handoff token should be rejected");
     }
     expect(result.error.reason).toBe("handoff_invalid");
+  });
+
+  it("rejects handoff creation when the assigned contact has no primary phone", async () => {
+    const authSessionId = await createServiceSession();
+    const contactId = await createContactWithoutPhone();
+    const assignmentId = await createAssignment(1, contactId);
+    const service = createExtensionService(ctx.repos, {
+      runInTransaction: createTransactionRunner(ctx),
+    });
+
+    const result = await service.createHandoffToken({
+      userId: 1,
+      authSessionId,
+      branchId: 1,
+      assignmentId,
+      origin: "http://localhost:3000",
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error("handoff should be rejected for contacts without phone");
+    }
+    expect(result.error.reason).toBe("assignment_inactive");
+
+    const handoffs = await ctx.db
+      .selectFrom("extension_handoffs")
+      .select(["jti"])
+      .where("assignment_id", "=", assignmentId)
+      .execute();
+    expect(handoffs).toHaveLength(0);
   });
 
   it("classifies malformed session tokens as session_invalid", async () => {

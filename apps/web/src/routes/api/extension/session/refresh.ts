@@ -4,9 +4,15 @@ import { isRefreshExtensionSessionRequest } from "~/server/extension/contracts";
 import { extensionService } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
+import { readJsonBody } from "../json-body";
+
 export async function POST(event: APIEvent): Promise<Response> {
   try {
-    const body: unknown = await event.request.json();
+    const parsed = await readJsonBody(event.request);
+    if (!parsed.ok) {
+      return parsed.response;
+    }
+    const body = parsed.body;
     if (!isRefreshExtensionSessionRequest(body)) {
       return Response.json(
         { error: "Invalid extension session refresh request" },

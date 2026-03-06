@@ -46,7 +46,12 @@ function toSuccessResponse(state: ExtensionState): RuntimeResponse {
 }
 
 function toErrorResponse(error: string, state?: ExtensionState): RuntimeResponse {
-  return { ok: false, error, state };
+  return {
+    ok: false,
+    error,
+    state,
+    executiveState: state ? getExecutiveState(state) : undefined,
+  };
 }
 
 function createCallSession(handoff: AssignmentHandoff): CallSession {

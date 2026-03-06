@@ -326,6 +326,12 @@ export function createExtensionService(
             message: "Assigned contact is unavailable",
           });
         }
+        if (!contact.phone_primary || contact.phone_primary.trim() === "") {
+          return Err({
+            reason: "assignment_inactive",
+            message: "Assigned contact does not have a callable primary phone",
+          });
+        }
 
         const organization = await repos.organizations.findById(
           contact.organization_id,
@@ -342,7 +348,7 @@ export function createExtensionService(
           branchId: input.branchId,
           assignmentId,
           contactId: contact.id,
-          phone: contact.phone_primary ?? "",
+          phone: contact.phone_primary,
           clientName: contact.name,
           organizationLabel: organization ? `Org #${organization.id}` : null,
           action: "start_call",
