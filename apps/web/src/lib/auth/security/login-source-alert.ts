@@ -1,5 +1,6 @@
 import { hashAuthKey } from "~/lib/auth/password/key-hash";
 import type { User } from "~/lib/db/schema";
+import { longName } from "~/lib/users/display-name";
 import type { Repositories } from "~/server/shared/registry";
 
 import type { SendPrivilegedLoginAlert } from "./privileged-login-alert";
@@ -28,7 +29,7 @@ export async function sendAlertOnNewLoginSource(params: {
   await params.sendPrivilegedLoginAlert({
     userId: params.user.id,
     email: params.user.email,
-    fullName: params.user.full_name,
+    fullName: longName(params.user),
     role: params.user.role,
     ipAddress: params.ipAddress,
     method: params.method,

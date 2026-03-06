@@ -1,5 +1,7 @@
 "use server";
 
+import { sql } from "kysely";
+
 import type { Role } from "~/lib/auth/access/rbac";
 import { requireRole } from "~/lib/auth/access/session";
 import { assertRecentStrongAuth } from "~/lib/auth/security/step-up";
@@ -46,7 +48,7 @@ export async function listAllActiveSessions(): Promise<SessionInfo[]> {
       "user_sessions.id",
       "user_sessions.user_id",
       "users.email as userEmail",
-      "users.full_name as userName",
+      sql<string>`users.names || ' ' || users.first_surname`.as("userName"),
       "user_sessions.role",
       "branches.name as branchName",
       "user_sessions.ip_address as ipAddress",

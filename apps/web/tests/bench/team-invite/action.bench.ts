@@ -57,7 +57,9 @@ describe("team invite action benchmark", () => {
         actorUserId: 5,
         actorRole: "superuser",
         branchId: 2,
-        fullName: `Bench Create ${createCursor.value}`,
+        names: `Bench Create ${createCursor.value}`,
+        firstSurname: "User",
+        secondSurname: "Bench",
         email,
         role: "executive",
         teamId: null,
@@ -83,7 +85,6 @@ describe("team invite action benchmark", () => {
 
       const result = await provisioning!.acceptInvite({
         token: fixture.token,
-        fullName: fixture.fullName,
         passwordHash: "bench-password-hash",
       });
 

@@ -40,14 +40,12 @@ function throwProvisioningError(error: AcceptInviteError): never {
 
 export async function acceptTeamInvite(input: {
   token: string;
-  fullName: string;
   password: string;
 }): Promise<void> {
   const safeToken = assertNonEmptyString(input.token, "token");
   if (!isValidInviteTokenFormat(safeToken)) {
     throw validationError("token is invalid");
   }
-  const safeFullName = assertNonEmptyString(input.fullName, "fullName");
   const safePassword = assertStrongPassword(input.password);
 
   const actor = { userId: null as number | null, role: null as Role | null };
@@ -58,7 +56,6 @@ export async function acceptTeamInvite(input: {
     run: async () => {
       const result = await provisioning.acceptInvite({
         token: safeToken,
-        fullName: safeFullName,
         passwordHash: await hashPassword(safePassword),
       });
       if (isErr(result)) {

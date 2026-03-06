@@ -1,0 +1,8 @@
+Hola {{fullName}},
+
+Tu cuenta en One Channel vencerá el {{expiresAt}}.
+Pasada esa fecha perderás el acceso.
+
+Tu usuario es {{username}}.
+
+Si crees que esto es un error, comunícate con tu administrador.

@@ -44,10 +44,13 @@ export function TeamInviteManagementSection() {
   const revokeInvite = useAction(revokeTeamInviteMutation);
   const resendSubmissions = useSubmissions(resendTeamInviteMutation);
   const revokeSubmissions = useSubmissions(revokeTeamInviteMutation);
-  const [fullName, setFullName] = createSignal("");
+  const [names, setNames] = createSignal("");
+  const [firstSurname, setFirstSurname] = createSignal("");
+  const [secondSurname, setSecondSurname] = createSignal("");
   const [email, setEmail] = createSignal("");
   const [role, setRole] = createSignal("");
   const [teamId, setTeamId] = createSignal("");
+  const [expiresAt, setExpiresAt] = createSignal("");
   const [savingInvite, setSavingInvite] = createSignal(false);
   const { showToast } = useToast();
 
@@ -100,15 +103,21 @@ export function TeamInviteManagementSection() {
     setSavingInvite(true);
     try {
       await createTeamInvite({
-        fullName: fullName(),
+        names: names(),
+        firstSurname: firstSurname(),
+        secondSurname: secondSurname(),
         email: email(),
         role: role(),
         teamId: teamId() ? Number(teamId()) : null,
+        expiresAt: expiresAt() ? new Date(expiresAt()).getTime() : null,
       });
-      setFullName("");
+      setNames("");
+      setFirstSurname("");
+      setSecondSurname("");
       setEmail("");
       setRole(getDefaultAssignableRole(im));
       setTeamId("");
+      setExpiresAt("");
       await revalidateQuery(inviteManagementQuery.key);
       showToast("success", "Invitación enviada");
     } catch (err: unknown) {
@@ -137,9 +146,21 @@ export function TeamInviteManagementSection() {
               }}
             >
               <Input
-                label="Nombre completo"
-                value={fullName()}
-                onInput={(event) => setFullName(event.currentTarget.value)}
+                label="Nombres"
+                value={names()}
+                onInput={(event) => setNames(event.currentTarget.value)}
+                required
+              />
+              <Input
+                label="Primer apellido"
+                value={firstSurname()}
+                onInput={(event) => setFirstSurname(event.currentTarget.value)}
+                required
+              />
+              <Input
+                label="Segundo apellido"
+                value={secondSurname()}
+                onInput={(event) => setSecondSurname(event.currentTarget.value)}
                 required
               />
               <Input
@@ -170,6 +191,12 @@ export function TeamInviteManagementSection() {
                   {(team) => <option value={team.id}>{team.name}</option>}
                 </For>
               </Select>
+              <Input
+                type="date"
+                label="Fecha de vencimiento (opcional)"
+                value={expiresAt()}
+                onInput={(event) => setExpiresAt(event.currentTarget.value)}
+              />
               <div class={styles.inviteActions}>
                 <Button type="submit" disabled={savingInvite() || !role()}>
                   {savingInvite() ? "Enviando..." : "Enviar invitación"}

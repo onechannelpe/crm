@@ -24,7 +24,9 @@ describe("user invite lifecycle", () => {
       actorUserId: 5,
       actorRole: "superuser",
       branchId: 2,
-      fullName: "Nueva Ejecutiva",
+      names: "Nueva",
+      firstSurname: "Ejecutiva",
+      secondSurname: "Garcia",
       email: "nueva-ejecutiva@test.local",
       role: "executive",
       teamId: null,
@@ -34,7 +36,6 @@ describe("user invite lifecycle", () => {
 
     const accepted = await service.acceptInvite({
       token: created.value.token,
-      fullName: "Nueva Ejecutiva",
       passwordHash: await hashPassword("StrongPass123"),
     });
     expect(accepted.ok).toBe(true);
@@ -57,7 +58,9 @@ describe("user invite lifecycle", () => {
       actorUserId: 5,
       actorRole: "superuser",
       branchId: 2,
-      fullName: "Nuevo Analista",
+      names: "Nuevo",
+      firstSurname: "Analista",
+      secondSurname: "Lopez",
       email: "nuevo-analista@test.local",
       role: "back_office",
       teamId: null,
@@ -95,7 +98,9 @@ describe("user invite lifecycle", () => {
           const racedUserId = await baseUsersRepo.create(values);
           await baseUsersRepo.updateInviteProvisioning(racedUserId, {
             team_id: null,
-            full_name: values.full_name,
+            names: values.names,
+            first_surname: values.first_surname,
+            second_surname: values.second_surname,
             role: values.role,
             is_active: 0,
           });
@@ -114,7 +119,9 @@ describe("user invite lifecycle", () => {
       actorUserId: 5,
       actorRole: "superuser",
       branchId: 2,
-      fullName: "Race User",
+      names: "Race",
+      firstSurname: "User",
+      secondSurname: "Test",
       email: "race-user@test.local",
       role: "executive",
       teamId: null,

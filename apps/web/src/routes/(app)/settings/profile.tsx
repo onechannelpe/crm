@@ -14,6 +14,7 @@ import {
   removeUserAvatarMutation,
   uploadUserAvatarMutation,
 } from "~/lib/mutations/profile";
+import { shortName } from "~/lib/users/display-name";
 
 import styles from "./settings-page.module.css";
 
@@ -26,7 +27,6 @@ export default function ProfilePage() {
   const { showToast } = useToast();
   const user = () => currentUser();
 
-  const [profileName, setProfileName] = createSignal(user().fullName || "");
   const [profilePhone, setProfilePhone] = createSignal(user().phoneE164 || "");
   const [savingProfile, setSavingProfile] = createSignal(false);
   const [avatarUrl, setAvatarUrl] = createSignal<string | null>(
@@ -59,10 +59,9 @@ export default function ProfilePage() {
     e.preventDefault();
     setSavingProfile(true);
     try {
-      await updateUserProfile(profileName(), profilePhone());
+      await updateUserProfile(profilePhone());
       updateCurrentUser((existing) => ({
         ...existing,
-        fullName: profileName(),
         phoneE164: profilePhone(),
       }));
       showToast("success", "Perfil actualizado");
@@ -139,7 +138,7 @@ export default function ProfilePage() {
       <SettingsSection title="Foto">
         <ProfileImageInput
           pictureUrl={avatarPreviewUrl() ?? avatarUrl()}
-          initials={getUserInitials(profileName() || user().email)}
+          initials={getUserInitials(shortName(user()))}
           uploading={avatarMutationPending()}
           errorMessage={avatarError()}
           onUpload={uploadProfilePicture}
@@ -148,8 +147,8 @@ export default function ProfilePage() {
       </SettingsSection>
 
       <SettingsSection
-        title="Nombre"
-        description="Tu nombre, tal como se mostrará"
+        title="Teléfono"
+        description="Tu número de teléfono corporativo"
       >
         <form
           onSubmit={(e) => {
@@ -157,12 +156,6 @@ export default function ProfilePage() {
           }}
         >
           <div class={styles.formGrid}>
-            <Input
-              label="Nombre completo"
-              value={profileName()}
-              onInput={(e) => setProfileName(e.currentTarget.value)}
-              required
-            />
             <Input
               label="Teléfono"
               value={profilePhone()}

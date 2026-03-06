@@ -2,6 +2,7 @@ import type { Role } from "~/lib/auth/access/rbac";
 import { canAssignRole } from "~/lib/auth/access/rbac";
 import { generateInviteToken, hashInviteToken } from "~/lib/auth/invite/tokens";
 import { hashPassword } from "~/lib/auth/password/password";
+import { generateUsername } from "~/lib/users/generate-username";
 import { createAuditService } from "~/server/shared/audit";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
@@ -17,7 +18,9 @@ export interface PendingBranchInvite {
   inviteId: number;
   userId: number;
   email: string;
-  fullName: string;
+  names: string;
+  firstSurname: string;
+  secondSurname: string;
   role: Role;
   teamId: number | null;
   expiresAt: number;
@@ -172,7 +175,9 @@ export function createUserProvisioningService(
             inviteId: row.invite_id,
             userId: row.user_id,
             email: row.user_email,
-            fullName: row.user_full_name,
+            names: row.user_names,
+            firstSurname: row.user_first_surname,
+            secondSurname: row.user_second_surname,
             role: row.user_role,
             teamId: row.user_team_id,
             expiresAt: row.invite_expires_at,
@@ -193,10 +198,13 @@ export function createUserProvisioningService(
       actorUserId: number;
       actorRole: Role;
       branchId: number;
-      fullName: string;
+      names: string;
+      firstSurname: string;
+      secondSurname: string;
       email: string;
       role: Role;
       teamId: number | null;
+      expiresAt?: number | null;
     }): Promise<
       Result<
         { inviteId: number; token: string; expiresAt: number },
@@ -242,13 +250,27 @@ export function createUserProvisioningService(
 
           if (!user) {
             try {
+              const username = await generateUsername(
+                input.names,
+                input.firstSurname,
+                input.secondSurname,
+                async (candidate) =>
+                  (await transactionRepos.users.findByUsername(candidate)) !==
+                  undefined,
+              );
               const createdUserId = await transactionRepos.users.create({
                 branch_id: input.branchId,
+                team_id: input.teamId,
+                username,
                 email,
                 password_hash: await hashPassword(generateInviteToken()),
-                full_name: input.fullName,
+                names: input.names,
+                first_surname: input.firstSurname,
+                second_surname: input.secondSurname,
+                expires_at: input.expiresAt ?? null,
                 phone_e164: null,
                 role: input.role,
+                is_active: 0,
               });
               user = await transactionRepos.users.findById(createdUserId);
             } catch {
@@ -285,7 +307,9 @@ export function createUserProvisioningService(
 
           await transactionRepos.users.updateInviteProvisioning(user.id, {
             team_id: input.teamId,
-            full_name: input.fullName,
+            names: input.names,
+            first_surname: input.firstSurname,
+            second_surname: input.secondSurname,
             role: input.role,
             is_active: 0,
           });
@@ -471,7 +495,6 @@ export function createUserProvisioningService(
 
     async acceptInvite(input: {
       token: string;
-      fullName: string;
       passwordHash: string;
     }): Promise<
       Result<
@@ -506,7 +529,9 @@ export function createUserProvisioningService(
             invite.user_id,
             {
               team_id: invite.user_team_id,
-              full_name: input.fullName,
+              names: invite.user_names,
+              first_surname: invite.user_first_surname,
+              second_surname: invite.user_second_surname,
               role: invite.user_role,
               is_active: 1,
             },

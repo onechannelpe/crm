@@ -75,11 +75,11 @@ export function createLoggerWithConfig(
     };
 
     if (jsonOutput) {
-      const output = JSON.stringify(payload);
+      const jsonLine = JSON.stringify(payload);
       if (level === "error" || level === "warn") {
-        console.error(output);
+        console.error(jsonLine);
       } else {
-        console.log(output);
+        console.log(jsonLine);
       }
       return;
     }

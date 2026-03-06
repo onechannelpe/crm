@@ -41,7 +41,10 @@ export function genTextExpr(chunks: TextChunk[], guarded = false): string {
 }
 
 function pascal(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
+  return s
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join("");
 }
 
 export function genInterface(

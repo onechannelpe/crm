@@ -6,10 +6,10 @@ describe("workspace label policy", () => {
   it("renders executive label with supervisor first name", () => {
     const label = getWorkspaceLabel({
       role: "executive",
-      fullName: "Ana Perez",
+      names: "Ana",
       scopeType: "team",
       team: { id: 1, name: "Alpha" },
-      supervisor: { id: 2, fullName: "Diego Ramirez" },
+      supervisor: { id: 2, names: "Diego" },
       branch: { id: 1, name: "Lima" },
     });
 
@@ -19,7 +19,7 @@ describe("workspace label policy", () => {
   it("renders supervisor label from team name", () => {
     const label = getWorkspaceLabel({
       role: "supervisor",
-      fullName: "Diego Ramirez",
+      names: "Diego",
       scopeType: "team",
       team: { id: 1, name: "Alpha" },
       supervisor: null,
@@ -32,7 +32,7 @@ describe("workspace label policy", () => {
   it("renders branch label for branch-scoped roles", () => {
     const label = getWorkspaceLabel({
       role: "admin",
-      fullName: "Maria Lopez",
+      names: "Maria",
       scopeType: "branch",
       team: null,
       supervisor: null,
@@ -45,7 +45,7 @@ describe("workspace label policy", () => {
   it("renders global label for superuser", () => {
     const label = getWorkspaceLabel({
       role: "superuser",
-      fullName: "Root User",
+      names: "Root",
       scopeType: "global",
       team: null,
       supervisor: null,
