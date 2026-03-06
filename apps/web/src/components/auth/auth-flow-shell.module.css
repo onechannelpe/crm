@@ -1,6 +1,6 @@
 .shell {
   min-height: 100vh;
-  padding: 24px 16px;
+  padding: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -8,9 +8,9 @@
 }
 
 .surface {
-  width: min(560px, 100%);
+  width: min(400px, 100%);
   border: var(--panel-border);
-  border-radius: 24px;
+  border-radius: 12px;
   background: var(--panel-bg);
   box-shadow: var(
     --box-shadow-strong,
@@ -24,14 +24,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 32px 32px 24px;
+  padding: 28px 24px 24px;
   text-align: center;
-}
-
-.eyebrow {
-  margin: 0;
-  font-size: var(--font-size-label);
-  color: var(--muted-foreground);
 }
 
 .title {
@@ -54,115 +48,25 @@
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .logo {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 8px;
-  color: var(--foreground);
-  background: color-mix(in oklab, var(--tertiary) 82%, white 18%);
+  margin-bottom: 4px;
+  overflow: hidden;
 }
 
-.progress {
-  width: 100%;
-  display: grid;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.progressMarker {
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--border);
-  background: var(--panel-bg);
-  color: var(--muted-foreground);
-  font-size: var(--font-size-sm);
-}
-
-.progressItem {
-  display: grid;
-  grid-template-columns: 28px minmax(0, 1fr);
-  gap: 12px;
-  align-items: start;
-  text-align: left;
-}
-
-.progressCurrent {
-  border-color: color-mix(in oklab, var(--accent) 40%, var(--border));
-  background: color-mix(in oklab, var(--accent) 12%, white 88%);
-  color: var(--foreground);
-}
-
-.progressComplete {
-  border-color: color-mix(in oklab, var(--success, #12715b) 45%, var(--border));
-  background: color-mix(in oklab, var(--success, #12715b) 14%, white 86%);
-  color: var(--success, #12715b);
-}
-
-.progressCopy {
-  display: grid;
-  gap: 4px;
-  padding-top: 2px;
-}
-
-.progressLabel {
-  margin: 0;
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  color: var(--foreground);
-}
-
-.progressDescription {
-  margin: 0;
-  font-size: var(--font-size-sm);
-  line-height: 1.5;
-  color: var(--muted-foreground);
-}
-
-.railNote {
-  width: 100%;
-  margin: 0 0 20px;
-  color: var(--muted-foreground);
-  font-size: var(--font-size-sm);
-  line-height: 1.5;
-  text-align: left;
-}
-
-.contentHeader {
-  display: grid;
-  gap: 8px;
-  width: 100%;
-  margin-bottom: 20px;
-  text-align: left;
-}
-
-.contentEyebrow {
-  margin: 0;
-  font-size: var(--font-size-label);
-  color: var(--muted-foreground);
-}
-
-.contentTitle {
-  margin: 0;
-  font-size: var(--font-size-heading-sm);
-  color: var(--foreground);
-}
-
-.contentDescription {
-  margin: 0;
-  max-width: 48ch;
-  color: var(--muted-foreground);
-  line-height: 1.5;
+.logoImage {
+  width: 40px;
+  height: 40px;
+  display: block;
+  border-radius: 12px;
 }
 
 .body {
@@ -175,7 +79,7 @@
   width: 100%;
   display: grid;
   gap: 12px;
-  margin-top: 24px;
+  margin-top: 16px;
 }
 
 .footerNote {
@@ -189,10 +93,10 @@
 
 @media (max-width: 640px) {
   .shell {
-    padding: 16px 12px;
+    padding: 12px;
   }
 
   .content {
-    padding: 24px 20px 20px;
+    padding: 24px 18px 20px;
   }
 }

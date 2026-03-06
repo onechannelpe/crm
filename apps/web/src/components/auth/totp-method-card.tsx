@@ -1,9 +1,10 @@
-import { Show, type JSX } from "solid-js";
+import { Show } from "solid-js";
 
 import ShieldCheck from "~/components/icons/shield-check";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 
+import { OtpSlotInput } from "./otp-slot-input";
 import type { TotpEnrollmentState } from "./use-totp-enrollment";
 
 import styles from "./security-enrollment-panel.module.css";
@@ -18,7 +19,7 @@ interface TotpMethodCardProps {
   note?: string;
   code: string;
   enrollment: TotpEnrollmentState | null;
-  onCodeInput: JSX.EventHandler<HTMLInputElement, InputEvent>;
+  onCodeChange: (value: string) => void;
   onBegin: () => void;
   onVerify: () => void;
   secondaryActionLabel?: string;
@@ -113,12 +114,10 @@ export function TotpMethodCard(props: TotpMethodCardProps) {
                 </div>
               </Show>
               <div class={styles.verifyRow}>
-                <Input
-                  type="text"
-                  label="Código de 6 dígitos"
-                  placeholder="123456"
+                <OtpSlotInput
                   value={props.code}
-                  onInput={props.onCodeInput}
+                  disabled={props.loading}
+                  onValueChange={props.onCodeChange}
                 />
                 <Button
                   type="button"

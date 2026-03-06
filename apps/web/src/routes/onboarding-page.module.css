@@ -1,50 +1,6 @@
 .stepStack {
   display: grid;
-  gap: 16px;
-}
-
-.stepIntro {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
   gap: 12px;
-  align-items: start;
-}
-
-.stepIntroIcon {
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--foreground);
-  background: color-mix(in oklab, var(--tertiary) 82%, white 18%);
-}
-
-.stepIntroCopy {
-  display: grid;
-  gap: 6px;
-}
-
-.kicker {
-  margin: 0;
-  font-size: var(--font-size-label);
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--muted-foreground);
-}
-
-.sectionTitle {
-  margin: 0;
-  font-size: var(--font-size-heading-sm);
-  color: var(--foreground);
-}
-
-.sectionDescription {
-  margin: 0;
-  color: var(--muted-foreground);
-  line-height: 1.5;
 }
 
 .formStack {
@@ -72,6 +28,7 @@
   font-size: var(--font-size-sm);
   color: var(--muted-foreground);
   line-height: 1.5;
+  text-align: left;
 }
 
 .choiceGrid {
@@ -84,12 +41,12 @@
   appearance: none;
   border: 1px solid var(--border);
   background: var(--panel-bg);
-  border-radius: 14px;
-  min-height: 112px;
-  padding: 16px;
+  border-radius: 12px;
+  min-height: 96px;
+  padding: 14px;
   display: grid;
   align-content: start;
-  gap: 6px;
+  gap: 4px;
   text-align: left;
   font: inherit;
   color: var(--foreground);
@@ -106,15 +63,16 @@
   color: var(--muted-foreground);
 }
 
+.configuredDescription {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--muted-foreground);
+  line-height: 1.5;
+}
+
 .totpStack {
   display: grid;
   gap: 12px;
-}
-
-.footerCopy {
-  margin: 0;
-  color: var(--muted-foreground);
-  line-height: 1.5;
 }
 
 .footerActions {

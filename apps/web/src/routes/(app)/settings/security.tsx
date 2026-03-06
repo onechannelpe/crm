@@ -5,9 +5,8 @@ import {
   disableTotp,
   removeAllPasskeys,
 } from "~/actions/settings";
-import { PasskeyMethodCard } from "~/components/auth/passkey-method-card";
+import { OtpSlotInput } from "~/components/auth/otp-slot-input";
 import { RecoveryCodesPanel } from "~/components/auth/recovery-codes-panel";
-import { TotpMethodCard } from "~/components/auth/totp-method-card";
 import { usePasskeyEnrollment } from "~/components/auth/use-passkey-enrollment";
 import { useTotpEnrollment } from "~/components/auth/use-totp-enrollment";
 import { useToast } from "~/components/feedback/toast-provider";
@@ -19,6 +18,14 @@ import { Input } from "~/components/ui/input/input";
 import { getErrorMessage } from "~/lib/errors";
 
 import styles from "./settings-page.module.css";
+
+function getSetupKey(otpauthUri: string): string {
+  try {
+    return new URL(otpauthUri).searchParams.get("secret") ?? "";
+  } catch {
+    return "";
+  }
+}
 
 export default function SecurityPage() {
   const { showToast } = useToast();
@@ -69,6 +76,11 @@ export default function SecurityPage() {
         getErrorMessage(err, "No se pudo desactivar la autenticación TOTP"),
       );
     }
+  };
+
+  const handleCopySetupKey = async (setupKey: string) => {
+    await navigator.clipboard.writeText(setupKey);
+    showToast("success", "Setup key copied");
   };
 
   const handleConfirmPendingAction = async () => {
@@ -167,33 +179,41 @@ export default function SecurityPage() {
 
       <SettingsSection title="Passkeys">
         <div class={styles.securityStack}>
-          <PasskeyMethodCard
-            title="Passkeys"
-            description="Use your device to sign in."
-            statusLabel={
-              currentUser().hasPasskey
-                ? `${currentUser().passkeyCount} configurada${currentUser().passkeyCount === 1 ? "" : "s"}`
-                : passkeyEnrollment.supported()
-                  ? "Sin configurar"
-                  : "No compatible"
+          <div class={styles.configuredBlock}>
+            <p class={styles.configuredTitle}>Passkeys</p>
+            <p class={styles.configuredDescription}>
+              Use your device to sign in.
+            </p>
+          </div>
+          <Show
+            when={passkeyEnrollment.supported()}
+            fallback={
+              <p class={styles.configuredDescription}>
+                This device does not support passkeys.
+              </p>
             }
-            active={currentUser().hasPasskey}
-            supported={passkeyEnrollment.supported()}
-            loading={passkeyEnrollment.loading()}
-            actionLabel={currentUser().hasPasskey ? "Add passkey" : "Set up"}
-            unsupportedNote="This device does not support passkeys."
-            onAction={() => void passkeyEnrollment.registerPasskey()}
-            secondaryActionLabel={
-              currentUser().hasPasskey ? "Delete all" : undefined
-            }
-            onSecondaryAction={
-              currentUser().hasPasskey
-                ? () => {
+          >
+            <div class={styles.inlineActions}>
+              <Button
+                type="button"
+                onClick={() => void passkeyEnrollment.registerPasskey()}
+                disabled={passkeyEnrollment.loading()}
+              >
+                {currentUser().hasPasskey ? "Add passkey" : "Set up"}
+              </Button>
+              <Show when={currentUser().hasPasskey}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
                     setPendingAction("remove-passkeys");
-                  }
-                : undefined
-            }
-          />
+                  }}
+                >
+                  Delete all
+                </Button>
+              </Show>
+            </div>
+          </Show>
         </div>
       </SettingsSection>
 
@@ -202,12 +222,13 @@ export default function SecurityPage() {
           <Show
             when={!currentUser().totpEnabled}
             fallback={
-              <div class={styles.configuredBlock}>
-                <p class={styles.configuredTitle}>
-                  Authenticator app configured
+              <div class={styles.block}>
+                <p class={styles.title}>
+                  Delete Two-Factor Authentication Method
                 </p>
-                <p class={styles.configuredDescription}>
-                  Delete this method to reset it.
+                <p class={styles.sectionDescription}>
+                  Deleting this method will remove it permanently from your
+                  account.
                 </p>
                 <Button
                   type="button"
@@ -221,21 +242,83 @@ export default function SecurityPage() {
               </div>
             }
           >
-            <TotpMethodCard
-              title="Authenticator app"
-              description="Use a 6-digit code during sign in."
-              statusLabel="Setup"
-              active={false}
-              loading={totpEnrollment.loading()}
-              actionLabel="Set up"
-              code={totpEnrollment.code()}
-              enrollment={totpEnrollment.enrollment()}
-              onCodeInput={(event) =>
-                totpEnrollment.setCode(event.currentTarget.value)
-              }
-              onBegin={() => void totpEnrollment.beginEnrollment()}
-              onVerify={() => void totpEnrollment.verifyEnrollment()}
-            />
+            <div class={styles.totpSetupBlock}>
+              <div class={styles.block}>
+                <p class={styles.title}>Authenticator app</p>
+                <p class={styles.sectionDescription}>
+                  Authenticator apps and browser extensions like 1Password,
+                  Authy, Microsoft Authenticator, etc. generate one-time
+                  passwords that are used as a second factor to verify your
+                  identity when prompted during sign-in.
+                </p>
+              </div>
+
+              <Show
+                when={totpEnrollment.enrollment()}
+                fallback={
+                  <Button
+                    type="button"
+                    onClick={() => void totpEnrollment.beginEnrollment()}
+                    disabled={totpEnrollment.loading()}
+                  >
+                    Set up
+                  </Button>
+                }
+              >
+                {(enrollment) => (
+                  <>
+                    <div class={styles.qrBlock}>
+                      <div class={styles.qrFrame}>
+                        <img
+                          src={enrollment().qrCodeDataUrl}
+                          alt="QR code for authenticator app"
+                          class={styles.qrImage}
+                        />
+                      </div>
+                      <Show when={getSetupKey(enrollment().otpauthUri)}>
+                        {(setupKey) => (
+                          <p class={styles.qrCopy}>
+                            Can't scan? Copy the{" "}
+                            <button
+                              type="button"
+                              class={styles.inlineLink}
+                              onClick={() => {
+                                void handleCopySetupKey(setupKey());
+                              }}
+                            >
+                              setup key
+                            </button>
+                          </p>
+                        )}
+                      </Show>
+                    </div>
+
+                    <div class={styles.divider} />
+
+                    <div class={styles.block}>
+                      <p class={styles.title}>Verify the code from the app</p>
+                      <p class={styles.sectionDescription}>
+                        Copy paste the code below
+                      </p>
+                    </div>
+                    <div class={styles.verifyBlock}>
+                      <OtpSlotInput
+                        value={totpEnrollment.code()}
+                        disabled={totpEnrollment.loading()}
+                        onValueChange={totpEnrollment.setCode}
+                      />
+                      <Button
+                        type="button"
+                        onClick={() => void totpEnrollment.verifyEnrollment()}
+                        disabled={totpEnrollment.loading()}
+                      >
+                        Save
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </Show>
+            </div>
           </Show>
 
           <Show when={totpEnrollment.recoveryCodes().length > 0}>

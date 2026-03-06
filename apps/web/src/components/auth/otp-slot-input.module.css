@@ -1,0 +1,53 @@
+.container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.slot {
+  position: relative;
+  width: 24px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: color-mix(in oklab, var(--surface) 94%, white 6%);
+  font-size: var(--font-size-body);
+  color: var(--foreground);
+}
+
+.slotActive {
+  outline: 1px solid var(--foreground);
+}
+
+.placeholder {
+  opacity: 0.2;
+}
+
+.input {
+  position: absolute;
+  inset: 0;
+  border: none;
+  background: transparent;
+  color: transparent;
+  caret-color: transparent;
+  text-align: center;
+}
+
+.input:focus {
+  outline: none;
+}
+
+.dash {
+  width: 8px;
+  display: inline-flex;
+  justify-content: center;
+}
+
+.dashLine {
+  width: 6px;
+  height: 1px;
+  background: var(--muted-foreground);
+}

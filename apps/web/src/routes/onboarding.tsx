@@ -5,7 +5,6 @@ import { completeOnboarding } from "~/actions/auth";
 import { AuthFlowShell } from "~/components/auth/auth-flow-shell";
 import { OnboardingProfileStep } from "~/components/auth/onboarding-profile-step";
 import { OnboardingSecurityStep } from "~/components/auth/onboarding-security-step";
-import { PasskeyMethodCard } from "~/components/auth/passkey-method-card";
 import { RecoveryCodesPanel } from "~/components/auth/recovery-codes-panel";
 import { TotpMethodCard } from "~/components/auth/totp-method-card";
 import { usePasskeyEnrollment } from "~/components/auth/use-passkey-enrollment";
@@ -15,6 +14,7 @@ import {
   SessionProvider,
   useSession,
 } from "~/components/providers/session-provider";
+import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import {
@@ -115,10 +115,7 @@ function OnboardingContent() {
           }}
         >
           <AuthFlowShell
-            eyebrow="One Channel"
-            title="Set up your account"
-            description="Finish your account setup."
-            contentTitle={
+            title={
               step() === "profile"
                 ? "Profile"
                 : step() === "security-choice"
@@ -127,14 +124,8 @@ function OnboardingContent() {
                     ? "Passkey"
                     : "Authenticator app"
             }
-            contentDescription={
-              step() === "profile"
-                ? "Confirm your contact details."
-                : step() === "security-choice"
-                  ? "Choose a security method."
-                  : step() === "passkey"
-                    ? "Set up a passkey."
-                    : "Set up your verification code."
+            description={
+              step() === "passkey" ? "Use your device to sign in." : undefined
             }
             footer={
               <>
@@ -182,78 +173,91 @@ function OnboardingContent() {
             }
           >
             <Show when={step() === "profile"}>
-              <OnboardingProfileStep
-                email={currentUser.email}
-                fullName={`${currentUser.names} ${currentUser.firstSurname} ${currentUser.secondSurname}`}
-                phone={phone()}
-                role={currentUser.role}
-                onPhoneInput={setPhone}
-              />
+              <EnterTransition>
+                <OnboardingProfileStep
+                  email={currentUser.email}
+                  fullName={`${currentUser.names} ${currentUser.firstSurname} ${currentUser.secondSurname}`}
+                  phone={phone()}
+                  role={currentUser.role}
+                  onPhoneInput={setPhone}
+                />
+              </EnterTransition>
             </Show>
 
             <Show when={step() === "security-choice"}>
-              <OnboardingSecurityStep
-                currentUser={currentUser}
-                onSelectMethod={(value) =>
-                  setStep(value === "passkey" ? "passkey" : "totp")
-                }
-              />
+              <EnterTransition>
+                <OnboardingSecurityStep
+                  currentUser={currentUser}
+                  onSelectMethod={(value) =>
+                    setStep(value === "passkey" ? "passkey" : "totp")
+                  }
+                />
+              </EnterTransition>
             </Show>
 
             <Show when={step() === "passkey"}>
-              <PasskeyMethodCard
-                title="Passkey"
-                description="Use your device to sign in."
-                statusLabel={
-                  currentUser.hasPasskey
-                    ? `${currentUser.passkeyCount} configured`
-                    : passkeyEnrollment.supported()
-                      ? "Available"
-                      : "Unsupported"
-                }
-                active={currentUser.hasPasskey}
-                supported={passkeyEnrollment.supported()}
-                loading={passkeyEnrollment.loading()}
-                actionLabel={currentUser.hasPasskey ? "Add passkey" : "Set up"}
-                unsupportedNote="This device does not support passkeys."
-                onAction={() => {
-                  void passkeyEnrollment.registerPasskey();
-                }}
-              />
+              <EnterTransition>
+                <div class={styles.totpStack}>
+                  <p class={styles.choiceTitle}>Passkey</p>
+                  <p class={styles.choiceDescription}>
+                    Use your device to sign in.
+                  </p>
+                  <Show
+                    when={passkeyEnrollment.supported()}
+                    fallback={
+                      <p class={styles.configuredDescription}>
+                        This device does not support passkeys.
+                      </p>
+                    }
+                  >
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        void passkeyEnrollment.registerPasskey();
+                      }}
+                      disabled={passkeyEnrollment.loading()}
+                    >
+                      {currentUser.hasPasskey ? "Add passkey" : "Set up"}
+                    </Button>
+                  </Show>
+                </div>
+              </EnterTransition>
             </Show>
 
             <Show when={step() === "totp"}>
-              <div class={styles.totpStack}>
-                <TotpMethodCard
-                  title="Authenticator app"
-                  description="Generate a 6-digit verification code."
-                  statusLabel={currentUser.totpEnabled ? "Configured" : "Setup"}
-                  active={currentUser.totpEnabled}
-                  loading={totpEnrollment.loading()}
-                  actionLabel={
-                    currentUser.totpEnabled ? "Configured" : "Set up"
-                  }
-                  code={totpEnrollment.code()}
-                  enrollment={totpEnrollment.enrollment()}
-                  onCodeInput={(event) =>
-                    totpEnrollment.setCode(event.currentTarget.value)
-                  }
-                  onBegin={() => {
-                    void totpEnrollment.beginEnrollment();
-                  }}
-                  onVerify={() => {
-                    void totpEnrollment.verifyEnrollment();
-                  }}
-                />
-
-                <Show when={totpEnrollment.recoveryCodes().length > 0}>
-                  <RecoveryCodesPanel
-                    title="Recovery codes"
-                    description="Save these codes now."
-                    codes={totpEnrollment.recoveryCodes()}
+              <EnterTransition>
+                <div class={styles.totpStack}>
+                  <TotpMethodCard
+                    title="Authenticator app"
+                    description="Generate a 6-digit verification code."
+                    statusLabel={
+                      currentUser.totpEnabled ? "Configured" : "Setup"
+                    }
+                    active={currentUser.totpEnabled}
+                    loading={totpEnrollment.loading()}
+                    actionLabel={
+                      currentUser.totpEnabled ? "Configured" : "Set up"
+                    }
+                    code={totpEnrollment.code()}
+                    enrollment={totpEnrollment.enrollment()}
+                    onCodeChange={totpEnrollment.setCode}
+                    onBegin={() => {
+                      void totpEnrollment.beginEnrollment();
+                    }}
+                    onVerify={() => {
+                      void totpEnrollment.verifyEnrollment();
+                    }}
                   />
-                </Show>
-              </div>
+
+                  <Show when={totpEnrollment.recoveryCodes().length > 0}>
+                    <RecoveryCodesPanel
+                      title="Recovery codes"
+                      description="Save these codes now."
+                      codes={totpEnrollment.recoveryCodes()}
+                    />
+                  </Show>
+                </div>
+              </EnterTransition>
             </Show>
           </AuthFlowShell>
         </form>
