@@ -7,20 +7,10 @@ import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
 import { submitPasskeyForLoginFlow } from "~/lib/auth/login-flow";
 import { getClientIp } from "~/lib/auth/password/client-ip";
-import { createPrivilegedLoginAlertSender } from "~/lib/auth/security/login-alerts";
 import { replaceCurrentSession } from "~/lib/auth/session/login-completion";
-import { env } from "~/lib/env";
 import { getActionRequestContext } from "~/lib/observability/context";
-import { repos } from "~/server/shared/context";
+import { privilegedLoginAlertSender, repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
-
-const sendPrivilegedLoginAlert = createPrivilegedLoginAlertSender(repos, {
-  resendApiKey: env.resendApiKey || undefined,
-  fromEmail: env.emailFrom || undefined,
-  whatsappAccessToken: env.whatsappAccessToken || undefined,
-  whatsappPhoneNumberId: env.whatsappPhoneNumberId || undefined,
-  whatsappApiVersion: env.whatsappApiVersion || undefined,
-});
 
 export async function finishPasskeyLogin(
   flowId: number,
@@ -35,7 +25,7 @@ export async function finishPasskeyLogin(
       userAgent: event?.request.headers.get("user-agent") ?? null,
     },
     repos,
-    sendPrivilegedLoginAlert,
+    privilegedLoginAlertSender,
   );
 
   if (isErr(result)) {
