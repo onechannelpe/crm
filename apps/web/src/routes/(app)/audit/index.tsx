@@ -16,6 +16,7 @@ import {
 } from "~/components/ui/layout/table";
 import { upsertAuditPolicyMutation } from "~/lib/mutations/audit";
 import {
+  authFunnelSnapshotQuery,
   auditPolicySnapshotQuery,
   auditReaderSnapshotQuery,
   canManageAuditPoliciesQuery,
@@ -111,6 +112,20 @@ export default function AuditObservabilityPage() {
       items: [],
     },
   });
+  const authFunnelSnapshot = createAsync(
+    () =>
+      authFunnelSnapshotQuery({
+        windowMinutes: windowMinutes(),
+        limit: 80,
+      }),
+    {
+      initialValue: {
+        windowMinutes: 60,
+        summary: [],
+        recent: [],
+      },
+    },
+  );
   const canManagePolicies = createAsync(() => canManageAuditPoliciesQuery(), {
     initialValue: false,
   });
@@ -298,6 +313,72 @@ export default function AuditObservabilityPage() {
                     <TableCell>
                       {row.publicError ?? row.errorCode ?? "-"}
                     </TableCell>
+                  </TableRow>
+                )}
+              </For>
+            </TableBody>
+          </Table>
+        </section>
+
+        <section class={styles.section}>
+          <h2 class={styles.title}>Embudo de autenticación</h2>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Evento</TableHead>
+                <TableHead>Pantalla</TableHead>
+                <TableHead>Método</TableHead>
+                <TableHead>Resultado</TableHead>
+                <TableHead>Fuente</TableHead>
+                <TableHead>Conteo</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <For each={authFunnelSnapshot().summary}>
+                {(row) => (
+                  <TableRow>
+                    <TableCell class={styles.strong}>{row.eventName}</TableCell>
+                    <TableCell>{row.screen ?? "N/A"}</TableCell>
+                    <TableCell>{row.method ?? "N/A"}</TableCell>
+                    <TableCell>{row.outcome}</TableCell>
+                    <TableCell>{row.source}</TableCell>
+                    <TableCell>{row.count}</TableCell>
+                  </TableRow>
+                )}
+              </For>
+            </TableBody>
+          </Table>
+        </section>
+
+        <section class={styles.section}>
+          <h2 class={styles.title}>Eventos recientes de autenticación</h2>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Hora</TableHead>
+                <TableHead>Evento</TableHead>
+                <TableHead>Pantalla</TableHead>
+                <TableHead>Método</TableHead>
+                <TableHead>Resultado</TableHead>
+                <TableHead>Fuente</TableHead>
+                <TableHead>Ruta</TableHead>
+                <TableHead>Código</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <For each={authFunnelSnapshot().recent}>
+                {(row) => (
+                  <TableRow>
+                    <TableCell>
+                      {new Date(row.createdAt).toLocaleTimeString("es-PE")}
+                    </TableCell>
+                    <TableCell class={styles.strong}>{row.eventName}</TableCell>
+                    <TableCell>{row.screen ?? "N/A"}</TableCell>
+                    <TableCell>{row.method ?? "N/A"}</TableCell>
+                    <TableCell>{row.outcome}</TableCell>
+                    <TableCell>{row.source}</TableCell>
+                    <TableCell>{row.routePath ?? "N/A"}</TableCell>
+                    <TableCell>{row.code ?? "-"}</TableCell>
                   </TableRow>
                 )}
               </For>

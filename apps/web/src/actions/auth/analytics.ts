@@ -32,7 +32,7 @@ export async function trackAuthClientEvent(
   input: AuthClientAnalyticsEvent,
 ): Promise<void> {
   const event = readClientAuthAnalyticsEvent(input);
-  recordAuthAnalyticsEvent(
+  await recordAuthAnalyticsEvent(
     {
       source: "client",
       ...event,

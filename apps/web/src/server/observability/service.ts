@@ -5,6 +5,7 @@ import type { Repositories } from "~/server/shared/registry";
 
 interface ObservabilityRepos {
   actionObservations: Repositories["actionObservations"];
+  authFunnelEvents: Repositories["authFunnelEvents"];
 }
 
 export interface RecordActionObservationInput {
@@ -20,6 +21,35 @@ export interface RecordActionObservationInput {
   errorCode: AppErrorCode | null;
   errorMessage: string | null;
   input: unknown;
+  createdAt: number;
+}
+
+export interface RecordAuthFunnelEventInput {
+  traceId: string;
+  requestId: string;
+  routePath: string | null;
+  source: "client" | "server";
+  eventName:
+    | "screen_viewed"
+    | "password_result"
+    | "passkey_start_result"
+    | "totp_result"
+    | "passkey_result";
+  screen:
+    | "login"
+    | "login_verify"
+    | "login_passkey_start"
+    | "login_passkey"
+    | null;
+  method: "password" | "password_totp" | "passkey" | "google" | null;
+  outcome:
+    | "viewed"
+    | "failed"
+    | "succeeded"
+    | "started"
+    | "totp_required"
+    | "passkey_required";
+  code: string | null;
   createdAt: number;
 }
 
@@ -141,6 +171,23 @@ export function createObservabilityService(repos: ObservabilityRepos) {
       });
     },
 
+    async recordAuthFunnelEvent(
+      input: RecordAuthFunnelEventInput,
+    ): Promise<void> {
+      await repos.authFunnelEvents.create({
+        trace_id: input.traceId,
+        request_id: input.requestId,
+        route_path: input.routePath,
+        source: input.source,
+        event_name: input.eventName,
+        screen: input.screen,
+        method: input.method,
+        outcome: input.outcome,
+        code: input.code,
+        created_at: input.createdAt,
+      });
+    },
+
     async listRecent(params: {
       fromInclusive: number;
       toInclusive: number;
@@ -160,6 +207,27 @@ export function createObservabilityService(repos: ObservabilityRepos) {
       actorUserId?: number;
     }) {
       return repos.actionObservations.summarizeByAction(params);
+    },
+
+    async listRecentAuthFunnel(params: {
+      fromInclusive: number;
+      toInclusive: number;
+      eventName?: RecordAuthFunnelEventInput["eventName"];
+      method?: Exclude<RecordAuthFunnelEventInput["method"], null>;
+      outcome?: RecordAuthFunnelEventInput["outcome"];
+      limit: number;
+    }) {
+      return repos.authFunnelEvents.findRecent(params);
+    },
+
+    async summarizeAuthFunnel(params: {
+      fromInclusive: number;
+      toInclusive: number;
+      eventName?: RecordAuthFunnelEventInput["eventName"];
+      method?: Exclude<RecordAuthFunnelEventInput["method"], null>;
+      outcome?: RecordAuthFunnelEventInput["outcome"];
+    }) {
+      return repos.authFunnelEvents.summarize(params);
     },
   };
 }

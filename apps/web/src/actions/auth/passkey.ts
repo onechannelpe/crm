@@ -39,7 +39,7 @@ export async function finishPasskeyLogin(
   );
 
   if (isErr(result)) {
-    recordAuthAnalyticsEvent(
+    await recordAuthAnalyticsEvent(
       {
         source: "server",
         kind: "passkey_result",
@@ -54,7 +54,7 @@ export async function finishPasskeyLogin(
     };
   }
 
-  recordAuthAnalyticsEvent(
+  await recordAuthAnalyticsEvent(
     {
       source: "server",
       kind: "passkey_result",

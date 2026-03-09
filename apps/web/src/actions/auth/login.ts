@@ -96,7 +96,7 @@ export async function passwordLogin(
     sendPrivilegedLoginAlert,
   );
   if (isErr(result)) {
-    recordAuthAnalyticsEvent(
+    await recordAuthAnalyticsEvent(
       {
         source: "server",
         kind: "password_result",
@@ -112,7 +112,7 @@ export async function passwordLogin(
   }
 
   if (result.value.kind === "totp_required") {
-    recordAuthAnalyticsEvent(
+    await recordAuthAnalyticsEvent(
       {
         source: "server",
         kind: "password_result",
@@ -123,7 +123,7 @@ export async function passwordLogin(
     throw redirect(`/login/verify?flow=${result.value.flow.id}`);
   }
   if (result.value.kind === "passkey_required") {
-    recordAuthAnalyticsEvent(
+    await recordAuthAnalyticsEvent(
       {
         source: "server",
         kind: "password_result",
@@ -134,7 +134,7 @@ export async function passwordLogin(
     throw redirect(`/login/passkey?flow=${result.value.flow.id}`);
   }
 
-  recordAuthAnalyticsEvent(
+  await recordAuthAnalyticsEvent(
     {
       source: "server",
       kind: "password_result",
@@ -159,7 +159,7 @@ export async function passkeyStart(
     repos,
   );
   if (isErr(result)) {
-    recordAuthAnalyticsEvent(
+    await recordAuthAnalyticsEvent(
       {
         source: "server",
         kind: "passkey_start_result",
@@ -174,7 +174,7 @@ export async function passkeyStart(
     };
   }
 
-  recordAuthAnalyticsEvent(
+  await recordAuthAnalyticsEvent(
     {
       source: "server",
       kind: "passkey_start_result",
@@ -206,7 +206,7 @@ export async function totpLogin(
   );
   if (isErr(result)) {
     if (result.error.kind === "flow_expired") {
-      recordAuthAnalyticsEvent(
+      await recordAuthAnalyticsEvent(
         {
           source: "server",
           kind: "totp_result",
@@ -218,7 +218,7 @@ export async function totpLogin(
       throw redirect("/login?error=flow_expired");
     }
 
-    recordAuthAnalyticsEvent(
+    await recordAuthAnalyticsEvent(
       {
         source: "server",
         kind: "totp_result",
@@ -233,7 +233,7 @@ export async function totpLogin(
     };
   }
 
-  recordAuthAnalyticsEvent(
+  await recordAuthAnalyticsEvent(
     {
       source: "server",
       kind: "totp_result",

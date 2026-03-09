@@ -439,6 +439,36 @@ export interface ActionObservationsTable {
   created_at: number;
 }
 
+export interface AuthFunnelEventsTable {
+  id: Generated<number>;
+  trace_id: string;
+  request_id: string;
+  route_path: string | null;
+  source: "client" | "server";
+  event_name:
+    | "screen_viewed"
+    | "password_result"
+    | "passkey_start_result"
+    | "totp_result"
+    | "passkey_result";
+  screen:
+    | "login"
+    | "login_verify"
+    | "login_passkey_start"
+    | "login_passkey"
+    | null;
+  method: "password" | "password_totp" | "passkey" | "google" | null;
+  outcome:
+    | "viewed"
+    | "failed"
+    | "succeeded"
+    | "started"
+    | "totp_required"
+    | "passkey_required";
+  code: string | null;
+  created_at: number;
+}
+
 export interface ReportExportJobsTable {
   id: Generated<number>;
   requested_by_user_id: number;
@@ -641,6 +671,7 @@ export interface Database {
   audit_logs: AuditLogsTable;
   audit_action_policies: AuditActionPoliciesTable;
   action_observations: ActionObservationsTable;
+  auth_funnel_events: AuthFunnelEventsTable;
   report_export_jobs: ReportExportJobsTable;
   report_export_downloads: ReportExportDownloadsTable;
   search_enrichment_jobs: SearchEnrichmentJobsTable;
@@ -677,6 +708,7 @@ export type AgentStatusLog = Selectable<AgentStatusLogsTable>;
 export type AuditLog = Selectable<AuditLogsTable>;
 export type AuditActionPolicy = Selectable<AuditActionPoliciesTable>;
 export type ActionObservation = Selectable<ActionObservationsTable>;
+export type AuthFunnelEvent = Selectable<AuthFunnelEventsTable>;
 export type ReportExportJob = Selectable<ReportExportJobsTable>;
 export type ReportExportDownload = Selectable<ReportExportDownloadsTable>;
 export type SearchEnrichmentJob = Selectable<SearchEnrichmentJobsTable>;
@@ -719,6 +751,7 @@ export type NewInteractionLog = Insertable<InteractionLogsTable>;
 export type NewAuditLog = Insertable<AuditLogsTable>;
 export type NewAuditActionPolicy = Insertable<AuditActionPoliciesTable>;
 export type NewActionObservation = Insertable<ActionObservationsTable>;
+export type NewAuthFunnelEvent = Insertable<AuthFunnelEventsTable>;
 export type NewReportExportJob = Insertable<ReportExportJobsTable>;
 export type NewReportExportDownload = Insertable<ReportExportDownloadsTable>;
 export type NewSearchEnrichmentJob = Insertable<SearchEnrichmentJobsTable>;

@@ -41,6 +41,7 @@ export const extensionService = createExtensionService(repos, {
 });
 export const observabilityService = createObservabilityService({
   actionObservations: repos.actionObservations,
+  authFunnelEvents: repos.authFunnelEvents,
 });
 export const salesExportBlobStore = createSalesExportBlobStore(
   config.uploads.storageRoot,
