@@ -1,0 +1,37 @@
+.container {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  position: relative;
+  min-height: 100px;
+}
+
+/* error404 / error500 use larger images (245px bg, 185px fg) */
+.bg {
+  max-height: 160px;
+  max-width: 160px;
+}
+
+.bg.error {
+  max-height: 245px;
+  max-width: 245px;
+}
+
+.fgWrapper {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+}
+
+.fg {
+  /* centered inside wrapper */
+  transform: translate(-50%, -50%);
+  max-width: 130px;
+  max-height: 130px;
+  z-index: 2;
+}
+
+.fg.error {
+  max-width: 185px;
+  max-height: 185px;
+}

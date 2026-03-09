@@ -1,0 +1,64 @@
+.backdrop {
+  align-items: center;
+  backdrop-filter: blur(6px) saturate(200%) contrast(50%) brightness(130%);
+  background: rgba(255, 255, 255, 0.4);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: center;
+  left: 0;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 40;
+}
+
+:global([data-theme="dark"]) .backdrop {
+  backdrop-filter: blur(6px) saturate(200%) contrast(100%) brightness(130%);
+  background: rgba(18, 18, 18, 0.4);
+}
+
+.container {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 32px; /* spacing[8] */
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+  height: 100%;
+}
+
+.textContainer {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+  max-width: 640px;
+}
+
+.title {
+  color: var(--foreground);
+  font-size: var(--font-size-heading-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-md);
+}
+
+.subtitle {
+  color: var(--foreground-tertiary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  max-height: 2.4em;
+  overflow: hidden;
+}
+
+.buttonWrap {
+  width: 200px;
+}
+
+.container img[src*="placeholders"] {
+  filter: grayscale(100%);
+}
