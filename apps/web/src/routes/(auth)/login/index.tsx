@@ -13,8 +13,8 @@ import {
   passwordLoginMutation,
 } from "~/lib/mutations/auth";
 
-import styles from "../auth/auth-shell.module.css";
-import pageStyles from "../auth/login-page.module.css";
+import styles from "../../auth/auth-shell.module.css";
+import pageStyles from "../../auth/login-page.module.css";
 
 export default function LoginPage() {
   const loginMethods = useLoginFlow();
@@ -101,13 +101,6 @@ export default function LoginPage() {
               </p>
             )}
           </Show>
-          <Show when={passkeyError()}>
-            {(message) => (
-              <p class={pageStyles.formError} role="alert">
-                {message()}
-              </p>
-            )}
-          </Show>
           <EnterTransition>
             <Input
               id="username"
@@ -147,27 +140,54 @@ export default function LoginPage() {
             Iniciar sesión
           </Button>
 
-          <Show when={loginMethods.passkeySupport() === "supported"}>
-            <button
-              type="submit"
-              formaction={passkeyStartMutation}
-              formmethod="post"
-              formnovalidate
-              class={pageStyles.passkeyLink}
-              disabled={passkeyStartSubmission.pending}
-            >
-              {passkeyStartSubmission.pending
-                ? "Preparando clave de acceso..."
-                : "Iniciar con clave de acceso"}
-            </button>
-          </Show>
-
           <Show when={loginMethods.lastUsedMethod() === "password"}>
             <div class={pageStyles.ssoButtonContainer}>
               <LastUsedPill />
             </div>
           </Show>
         </form>
+
+        <Show when={loginMethods.passkeySupport() === "supported"}>
+          <>
+            <div class={pageStyles.separator} role="separator" />
+            <form
+              class={pageStyles.formStack}
+              action={passkeyStartMutation}
+              method="post"
+            >
+              <Show when={passkeyError()}>
+                {(message) => (
+                  <p class={pageStyles.formError} role="alert">
+                    {message()}
+                  </p>
+                )}
+              </Show>
+              <EnterTransition>
+                <Input
+                  id="passkey-username"
+                  type="text"
+                  label="Usuario para clave de acceso"
+                  class={pageStyles.authControl}
+                  name="identifier"
+                  autocomplete="username webauthn"
+                  autocapitalize="none"
+                  autocorrect="off"
+                  spellcheck={false}
+                  required
+                />
+              </EnterTransition>
+
+              <Button
+                type="submit"
+                size="lg"
+                class={styles.full}
+                loading={passkeyStartSubmission.pending}
+              >
+                Continuar con clave de acceso
+              </Button>
+            </form>
+          </>
+        </Show>
       </div>
     </AuthFlowShell>
   );

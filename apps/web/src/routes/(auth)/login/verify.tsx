@@ -96,7 +96,7 @@ export default function LoginVerifyPage() {
                   name="totpCode"
                   autocomplete="one-time-code"
                   inputmode="numeric"
-                  pattern="[0-9]*"
+                  pattern="[0-9]{6}"
                   maxlength={6}
                   error={totpError()}
                   required

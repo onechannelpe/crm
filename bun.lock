@@ -53,6 +53,7 @@
       },
       "devDependencies": {
         "@codspeed/vitest-plugin": "^5.2.0",
+        "@playwright/test": "^1.58.2",
         "@types/mdx": "^2.0.13",
         "@types/mjml": "^4.7.4",
         "@types/qrcode": "^1.5.6",

@@ -125,24 +125,33 @@ export default function LoginPasskeyPage() {
                   Usuario: {flow().identifier}
                 </p>
                 <Show
-                  when={browserSupport() === "supported"}
+                  when={browserSupport() !== "unknown"}
                   fallback={
-                    <p class={pageStyles.formError} role="alert">
-                      Este navegador no admite claves de acceso.
+                    <p class={pageStyles.supportText} aria-live="polite">
+                      Comprobando compatibilidad del navegador…
                     </p>
                   }
                 >
-                  <Button
-                    type="button"
-                    size="lg"
-                    class={styles.full}
-                    loading={pending()}
-                    onClick={() => {
-                      void handlePasskeySubmit();
-                    }}
+                  <Show
+                    when={browserSupport() === "supported"}
+                    fallback={
+                      <p class={pageStyles.formError} role="alert">
+                        Este navegador no admite claves de acceso.
+                      </p>
+                    }
                   >
-                    Continuar con clave de acceso
-                  </Button>
+                    <Button
+                      type="button"
+                      size="lg"
+                      class={styles.full}
+                      loading={pending()}
+                      onClick={() => {
+                        void handlePasskeySubmit();
+                      }}
+                    >
+                      Continuar con clave de acceso
+                    </Button>
+                  </Show>
                 </Show>
               </div>
             </EnterTransition>

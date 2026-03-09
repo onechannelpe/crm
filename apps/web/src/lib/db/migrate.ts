@@ -20,6 +20,7 @@ import * as m008 from "./migrations/008-search-enrichment";
 import * as m009 from "./migrations/009-extension-runtime";
 import * as m010 from "./migrations/010-google-oauth";
 import * as m011 from "./migrations/011-login-flows";
+import * as m012 from "./migrations/012-login-flows-passkey";
 
 const logger = createLogger("db-migrate");
 
@@ -40,6 +41,7 @@ const migrations = {
   "009-extension-runtime": m009,
   "010-google-oauth": m010,
   "011-login-flows": m011,
+  "012-login-flows-passkey": m012,
 };
 
 const staticProvider: MigrationProvider = {

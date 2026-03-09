@@ -10,6 +10,10 @@
     "build:notifications": "bun run --filter='@crm/notifications' build:emails",
     "check": "bun x tsc --noEmit && bun run lint",
     "test": "bun --env-file=../../.env.test vitest run --project default",
+    "test:prepare": "bun --env-file=../../.env.test src/lib/db/migrate-cli.ts && bun --env-file=../../.env.test src/lib/db/seed.ts",
+    "serve:test": "bun --env-file=../../.env.test --bun vite --config app.config.ts",
+    "test:integration:browser": "bun --env-file=../../.env.test playwright test",
+    "test:integration:browser:headed": "bun --env-file=../../.env.test playwright test --headed",
     "test:perf": "bun --env-file=../../.env.test vitest bench --config vitest.bench.config.ts",
     "migrate": "bun --env-file=../../.env src/lib/db/migrate-cli.ts",
     "seed": "bun --env-file=../../.env src/lib/db/seed.ts"
@@ -38,6 +42,7 @@
   },
   "devDependencies": {
     "@codspeed/vitest-plugin": "^5.2.0",
+    "@playwright/test": "^1.58.2",
     "@types/mdx": "^2.0.13",
     "@types/mjml": "^4.7.4",
     "@types/qrcode": "^1.5.6",

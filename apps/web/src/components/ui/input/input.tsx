@@ -40,7 +40,11 @@ export function Input(props: InputProps) {
       {local.label && (
         <label for={inputId} class={styles.label}>
           {local.label}
-          {props.required && <span class={styles.required}>*</span>}
+          {props.required && (
+            <span aria-hidden="true" class={styles.required}>
+              *
+            </span>
+          )}
         </label>
       )}
       <div class={isPassword ? styles.inputWrap : undefined}>

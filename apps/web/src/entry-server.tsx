@@ -26,8 +26,10 @@ export default createHandler(
       />
     );
   },
-  (event) => ({
-    mode: "async",
-    nonce: event.locals.nonce,
-  }),
+  (event) => {
+    return {
+      mode: "async",
+      nonce: event.locals.nonce,
+    };
+  },
 );
