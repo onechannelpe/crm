@@ -27,7 +27,7 @@ export type AuthClientAnalyticsEvent =
   | {
       kind: "passkey_result";
       outcome: "failed";
-      code: "cancelled" | "unsupported";
+      code: "cancelled" | "unsupported" | "browser_error";
     };
 
 export type AuthServerAnalyticsEvent =
@@ -65,7 +65,8 @@ export type AuthServerAnalyticsEvent =
         | "invalid_credentials"
         | "flow_expired"
         | "cancelled"
-        | "unsupported";
+        | "unsupported"
+        | "browser_error";
     }
   | {
       kind: "passkey_result";

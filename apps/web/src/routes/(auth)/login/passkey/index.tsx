@@ -118,6 +118,11 @@ export default function LoginPasskeyPage() {
       }
     }
 
+    void trackAuthClientEvent({
+      kind: "passkey_result",
+      outcome: "failed",
+      code: "browser_error",
+    });
     return "No se pudo iniciar sesión con la clave de acceso.";
   }
 

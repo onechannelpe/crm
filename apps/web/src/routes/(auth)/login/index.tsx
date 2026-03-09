@@ -98,6 +98,9 @@ export default function LoginPage() {
           class={pageStyles.formStack}
           action={passwordLoginMutation}
           method="post"
+          onSubmit={() => {
+            loginMethods.markPasswordUsed();
+          }}
         >
           <Show when={passwordError()}>
             {(message) => (
@@ -138,9 +141,6 @@ export default function LoginPage() {
             size="lg"
             class={styles.full}
             loading={passwordSubmission.pending}
-            onClick={() => {
-              loginMethods.markPasswordUsed();
-            }}
           >
             Iniciar sesión
           </Button>

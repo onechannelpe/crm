@@ -20,7 +20,9 @@ function readClientAuthAnalyticsEvent(
   if (
     input.kind === "passkey_result" &&
     input.outcome === "failed" &&
-    (input.code === "cancelled" || input.code === "unsupported")
+    (input.code === "cancelled" ||
+      input.code === "unsupported" ||
+      input.code === "browser_error")
   ) {
     return input;
   }

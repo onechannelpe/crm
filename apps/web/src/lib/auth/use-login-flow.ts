@@ -1,7 +1,5 @@
 import { createSignal, onMount } from "solid-js";
 
-import { initializeThemeMode } from "~/components/ui/theme/theme-mode";
-
 export type LastUsedMethod = "google" | "password" | null;
 
 const LAST_USED_KEY = "last_auth_method";
@@ -29,7 +27,6 @@ export function useLoginFlow() {
     createSignal<LastUsedMethod>(null);
 
   onMount(() => {
-    initializeThemeMode();
     setLastUsedMethod(readLastUsed());
   });
 

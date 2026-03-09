@@ -1,4 +1,6 @@
-import { Show, type JSX } from "solid-js";
+import { onMount, Show, type JSX } from "solid-js";
+
+import { initializeThemeMode } from "~/components/ui/theme/theme-mode";
 
 import styles from "./auth-flow-shell.module.css";
 
@@ -12,6 +14,10 @@ interface AuthFlowShellProps {
 }
 
 export function AuthFlowShell(props: AuthFlowShellProps) {
+  onMount(() => {
+    initializeThemeMode();
+  });
+
   return (
     <div class={styles.shell}>
       <section class={styles.surface}>
