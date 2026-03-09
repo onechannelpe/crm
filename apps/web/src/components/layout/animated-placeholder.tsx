@@ -33,7 +33,6 @@ interface AnimatedPlaceholderProps {
 
 /**
  * Two-layer illustration: static background + spring-parallax foreground.
- * Style-parity with twenty's AnimatedPlaceholder component.
  *
  * Dark-mode images are swapped by observing the `data-theme` attribute on
  * `<html>` rather than `prefers-color-scheme`, since the app manages its own
