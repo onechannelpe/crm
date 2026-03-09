@@ -22,6 +22,7 @@ export default function LoginPasskeyPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [pending, setPending] = createSignal(false);
+  const [passkeyError, setPasskeyError] = createSignal<string>();
   const [browserSupport, setBrowserSupport] = createSignal<
     "unknown" | "supported" | "unsupported"
   >("unknown");
@@ -52,6 +53,7 @@ export default function LoginPasskeyPage() {
     const flow = passkeyFlow();
     if (!flow) return;
 
+    setPasskeyError(undefined);
     setPending(true);
 
     try {
@@ -67,22 +69,31 @@ export default function LoginPasskeyPage() {
         toAuthenticationPayload(credential),
       );
       if (!result.ok) {
-        showToast("error", result.message);
-        navigate(
-          result.code === "flow_expired"
-            ? "/login?error=flow_expired"
-            : "/login",
-        );
+        if (result.code === "flow_expired") {
+          navigate("/login?error=flow_expired");
+          return;
+        }
+
+        setPasskeyError(result.message);
         return;
       }
 
       navigate(result.redirectTo);
-    } catch {
-      showToast("error", "No se pudo iniciar sesión con la clave de acceso");
-      navigate("/login");
+    } catch (error: unknown) {
+      setPasskeyError(getPasskeyErrorMessage(error));
     } finally {
       setPending(false);
     }
+  }
+
+  function getPasskeyErrorMessage(error: unknown): string {
+    if (error instanceof DOMException) {
+      if (error.name === "NotAllowedError" || error.name === "AbortError") {
+        return "La verificación con clave de acceso se canceló. Intenta de nuevo.";
+      }
+    }
+
+    return "No se pudo iniciar sesión con la clave de acceso.";
   }
 
   return (
@@ -124,6 +135,13 @@ export default function LoginPasskeyPage() {
                 <p class={pageStyles.supportText}>
                   Usuario: {flow().identifier}
                 </p>
+                <Show when={passkeyError()}>
+                  {(message) => (
+                    <p class={pageStyles.formError} role="alert">
+                      {message()}
+                    </p>
+                  )}
+                </Show>
                 <Show
                   when={browserSupport() !== "unknown"}
                   fallback={
