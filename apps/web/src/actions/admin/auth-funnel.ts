@@ -3,26 +3,17 @@
 import { validationError } from "~/lib/app-errors";
 import { requirePermission } from "~/lib/auth/access/session";
 import {
+  isAuthAnalyticsScreen,
   type AuthAnalyticsMethod,
   type AuthAnalyticsScreen,
 } from "~/lib/auth/auth-analytics";
 import { assertPositiveInt } from "~/lib/contracts/guards";
+import type { AuthFunnelEventsTable } from "~/lib/db/schema";
 import { observabilityService } from "~/server/shared/context";
 
-type AuthFunnelEventName =
-  | "screen_viewed"
-  | "password_result"
-  | "passkey_start_result"
-  | "totp_result"
-  | "passkey_result";
-type AuthFunnelOutcome =
-  | "viewed"
-  | "failed"
-  | "succeeded"
-  | "started"
-  | "totp_required"
-  | "passkey_required";
-type AuthFunnelSource = "client" | "server";
+type AuthFunnelEventName = AuthFunnelEventsTable["event_name"];
+type AuthFunnelOutcome = AuthFunnelEventsTable["outcome"];
+type AuthFunnelSource = AuthFunnelEventsTable["source"];
 
 export interface AuthFunnelSummaryRow {
   eventName: AuthFunnelEventName;
@@ -118,15 +109,8 @@ function assertOutcome(
 
 function assertScreen(value: string | null): AuthAnalyticsScreen | null {
   if (value === null) return null;
-  if (
-    value === "login" ||
-    value === "login_verify" ||
-    value === "login_passkey_start" ||
-    value === "login_passkey"
-  ) {
-    return value;
-  }
-  throw validationError("screen is invalid");
+  if (!isAuthAnalyticsScreen(value)) throw validationError("screen is invalid");
+  return value;
 }
 
 export async function getAuthFunnelSnapshot(params?: {
