@@ -28,19 +28,16 @@ const sendPrivilegedLoginAlert = createPrivilegedLoginAlertSender(repos, {
 export type PasswordLoginSubmissionResult = {
   ok: false;
   code: "invalid_credentials" | "strong_auth_required";
-  message: string;
 };
 
 export type PasskeyStartSubmissionResult = {
   ok: false;
   code: "invalid_credentials";
-  message: string;
 };
 
 export type TotpLoginSubmissionResult = {
   ok: false;
   code: "invalid_totp";
-  message: string;
 };
 
 function readText(
@@ -97,14 +94,9 @@ export async function passwordLogin(
     sendPrivilegedLoginAlert,
   );
   if (isErr(result)) {
-    const message =
-      result.error.kind === "strong_auth_required"
-        ? "Tu cuenta requiere autenticacion reforzada para iniciar sesion."
-        : "Credenciales invalidas";
     return {
       ok: false,
       code: result.error.kind,
-      message,
     };
   }
 
@@ -135,7 +127,6 @@ export async function passkeyStart(
     return {
       ok: false,
       code: "invalid_credentials",
-      message: "No se pudo iniciar la clave de acceso",
     };
   }
 
@@ -169,7 +160,6 @@ export async function totpLogin(
     return {
       ok: false,
       code: "invalid_totp",
-      message: "No se pudo verificar el codigo",
     };
   }
 

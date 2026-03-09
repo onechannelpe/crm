@@ -7,6 +7,7 @@ import { useToast } from "~/components/feedback/toast-provider";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
 import { parseLoginFlowId } from "~/lib/auth/login-route-flow";
+import { passkeyFinishUiMessage } from "~/lib/auth/login-ui";
 import {
   isPasskeySupported,
   toAuthenticationPayload,
@@ -74,7 +75,7 @@ export default function LoginPasskeyPage() {
           return;
         }
 
-        setPasskeyError(result.message);
+        setPasskeyError(passkeyFinishUiMessage(result.code));
         return;
       }
 

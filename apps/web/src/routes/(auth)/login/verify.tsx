@@ -7,6 +7,7 @@ import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { parseLoginFlowId } from "~/lib/auth/login-route-flow";
+import { totpLoginUiMessage } from "~/lib/auth/login-ui";
 import { totpLoginMutation } from "~/lib/mutations/auth";
 import { loginFlowQuery } from "~/lib/queries/auth";
 
@@ -38,7 +39,7 @@ export default function LoginVerifyPage() {
 
   const totpError = () => {
     const result = totpSubmission.result;
-    return result && !result.ok ? result.message : undefined;
+    return result && !result.ok ? totpLoginUiMessage(result.code) : undefined;
   };
 
   return (

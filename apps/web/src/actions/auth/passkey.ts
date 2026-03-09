@@ -40,10 +40,6 @@ export async function finishPasskeyLogin(
     return {
       ok: false as const,
       code: result.error.kind,
-      message:
-        result.error.kind === "flow_expired"
-          ? "La sesión de clave de acceso expiró. Intenta de nuevo."
-          : "No se pudo iniciar sesión con la clave de acceso",
     };
   }
 

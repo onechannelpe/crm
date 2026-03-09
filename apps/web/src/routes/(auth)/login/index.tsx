@@ -7,6 +7,7 @@ import { useToast } from "~/components/feedback/toast-provider";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
+import { passwordLoginUiMessage } from "~/lib/auth/login-ui";
 import { useLoginFlow } from "~/lib/auth/use-login-flow";
 import { passwordLoginMutation } from "~/lib/mutations/auth";
 import { cn } from "~/lib/utils";
@@ -40,7 +41,9 @@ export default function LoginPage() {
 
   const passwordError = () => {
     const result = passwordSubmission.result;
-    return result && !result.ok ? result.message : undefined;
+    return result && !result.ok
+      ? passwordLoginUiMessage(result.code)
+      : undefined;
   };
   return (
     <AuthFlowShell title="Bienvenido." footerNote={footerNote()}>

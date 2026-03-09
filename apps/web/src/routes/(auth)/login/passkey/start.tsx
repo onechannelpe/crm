@@ -5,6 +5,7 @@ import { AuthFlowShell } from "~/components/auth/auth-flow-shell";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
+import { passkeyStartUiMessage } from "~/lib/auth/login-ui";
 import { passkeyStartMutation } from "~/lib/mutations/auth";
 
 import styles from "../../../auth/auth-shell.module.css";
@@ -15,7 +16,9 @@ export default function LoginPasskeyStartPage() {
 
   const passkeyError = () => {
     const result = passkeyStartSubmission.result;
-    return result && !result.ok ? result.message : undefined;
+    return result && !result.ok
+      ? passkeyStartUiMessage(result.code)
+      : undefined;
   };
 
   return (
