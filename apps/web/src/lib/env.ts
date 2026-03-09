@@ -70,7 +70,7 @@ export const env = {
   engineHmacKeyId: required("ENGINE_HMAC_KEY_ID"),
   engineHmacSecret: required("ENGINE_HMAC_SECRET", true),
   webauthnRpId: optional("WEBAUTHN_RP_ID", "localhost"),
-  webauthnOrigin: optional("WEBAUTHN_ORIGIN", "http://localhost:3000"),
+  webauthnOrigin: optional("WEBAUTHN_ORIGIN", "http://localhost:5173"),
   googleClientId: optional("GOOGLE_CLIENT_ID", ""),
   googleClientSecret: optional("GOOGLE_CLIENT_SECRET", ""),
   googleRedirectUri: optional(
