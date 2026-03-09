@@ -370,9 +370,7 @@ export async function submitTotpForLoginFlow(
   const flow = await deps.loginFlows.findById(safeFlowId);
 
   if (!flow || flow.state !== "totp" || flow.expires_at < Date.now()) {
-    if (flow?.expires_at && flow.expires_at < Date.now()) {
-      await deps.loginFlows.delete(flow.id);
-    }
+    await deleteLoginFlow(flow, deps);
     return Err({ kind: "flow_expired" });
   }
   if (!flow.user_id) {

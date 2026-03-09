@@ -3,8 +3,8 @@ import type {
   PublicKeyCredentialRequestOptionsJSON,
 } from "@simplewebauthn/server";
 
-import { checkPasskeyChallengeThrottle } from "~/lib/auth/password/throttle";
 import {
+  checkPasskeyChallengeThrottle,
   checkPasskeyVerifyThrottle,
   clearPasskeyVerifyFailureState,
   recordPasskeyChallengeFailure,

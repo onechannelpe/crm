@@ -1,6 +1,5 @@
 import { assertNonEmptyString } from "~/lib/contracts/guards";
 import type { User } from "~/lib/db/schema";
-import { repos } from "~/server/shared/context";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -68,11 +67,11 @@ export type PasswordLoginError =
 
 export async function verifyPasswordLoginCredentials(
   input: PasswordCredentialInput,
-  deps: { repos?: Deps },
+  deps: { repos: Deps },
 ): Promise<Result<User, InvalidCredentialsError>> {
   const safeUsername = assertNonEmptyString(input.username, "username");
   const safePassword = assertNonEmptyString(input.password, "password");
-  const resolvedDeps = deps.repos ?? repos;
+  const resolvedDeps = deps.repos;
   const throttle = await checkLoginThrottle(
     safeUsername,
     input.ipAddress,
