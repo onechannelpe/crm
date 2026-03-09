@@ -13,6 +13,8 @@ import { up as up006 } from "../../src/lib/db/migrations/006-sales-records-core"
 import { up as up007 } from "../../src/lib/db/migrations/007-action-rate-limit";
 import { up as up008 } from "../../src/lib/db/migrations/008-search-enrichment";
 import { up as up009 } from "../../src/lib/db/migrations/009-extension-runtime";
+import { up as up010 } from "../../src/lib/db/migrations/010-google-oauth";
+import { up as up011 } from "../../src/lib/db/migrations/011-login-flows";
 import type { Database } from "../../src/lib/db/schema";
 import { createSalesRecordsWorkflowService } from "../../src/server/sales/records-service";
 import { createRepositories } from "../../src/server/shared/registry";
@@ -214,6 +216,8 @@ export async function createIsolatedTestDb(
   await up007(db);
   await up008(db);
   await up009(db);
+  await up010(db);
+  await up011(db);
   await seedTemplate(db);
   const repos = createRepositories(db);
   const salesRecords = createSalesRecordsWorkflowService(repos, (operation) =>

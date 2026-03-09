@@ -45,6 +45,16 @@ export interface UsersTable {
   created_at: number;
 }
 
+export interface LoginFlowsTable {
+  id: Generated<number>;
+  identifier: string;
+  user_id: number | null;
+  state: "totp";
+  expires_at: number;
+  created_at: number;
+  updated_at: number;
+}
+
 export interface NotificationContactsTable {
   id: Generated<number>;
   user_id: number;
@@ -594,6 +604,7 @@ export interface Database {
   branches: BranchesTable;
   teams: TeamsTable;
   users: UsersTable;
+  login_flows: LoginFlowsTable;
   notification_contacts: NotificationContactsTable;
   notification_preferences: NotificationPreferencesTable;
   notification_campaigns: NotificationCampaignsTable;
@@ -640,6 +651,7 @@ export interface Database {
 
 export type Branch = Selectable<BranchesTable>;
 export type User = Selectable<UsersTable>;
+export type LoginFlow = Selectable<LoginFlowsTable>;
 export type NotificationContact = Selectable<NotificationContactsTable>;
 export type NotificationPreference = Selectable<NotificationPreferencesTable>;
 export type NotificationCampaign = Selectable<NotificationCampaignsTable>;
@@ -677,6 +689,7 @@ export type UserTotpRecoveryCode = Selectable<UserTotpRecoveryCodesTable>;
 export type UserInvite = Selectable<UserInvitesTable>;
 
 export type NewUser = Insertable<UsersTable>;
+export type NewLoginFlow = Insertable<LoginFlowsTable>;
 export type NewNotificationContact = Insertable<NotificationContactsTable>;
 export type NewNotificationPreference =
   Insertable<NotificationPreferencesTable>;

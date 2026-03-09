@@ -12,12 +12,10 @@ import {
 import { createPasskeyService } from "~/lib/auth/passkey/passkey";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { createPrivilegedLoginAlertSender } from "~/lib/auth/security/login-alerts";
-import { getSessionCookie, setSessionCookie } from "~/lib/auth/session/cookies";
 import {
-  createSession,
-  invalidateSession,
-} from "~/lib/auth/session/session-manager";
-import { hashSessionToken } from "~/lib/auth/session/tokens";
+  issueLoginSession,
+  replaceCurrentSession,
+} from "~/lib/auth/session/login-completion";
 import { env } from "~/lib/env";
 import { repos } from "~/server/shared/context";
 
@@ -42,6 +40,32 @@ export interface PasskeyLoginResult {
   userId: number;
   role: Role;
   onboardingCompleted: boolean;
+}
+
+export async function completePasskeyLoginSession(
+  userId: number,
+  ipAddress: string,
+  userAgent: string | null,
+): Promise<PasskeyLoginResult> {
+  const user = await repos.users.findById(userId);
+  if (!user) throw forbiddenError("Invalid credentials");
+
+  const session = await issueLoginSession({
+    user,
+    ipAddress,
+    userAgent,
+    authMethod: "passkey",
+    strongAuthAt: Date.now(),
+    auditAction: "login_passkey",
+    deps: repos,
+  });
+  await replaceCurrentSession(session.token);
+
+  return {
+    userId: session.userId,
+    role: session.role,
+    onboardingCompleted: session.onboardingCompleted,
+  };
 }
 
 export async function beginPasskeyLogin(
@@ -72,38 +96,5 @@ export async function finishPasskeyLogin(
     createPasskeyService(repos),
     sendPrivilegedLoginAlert,
   );
-  const user = await repos.users.findById(flowResult.userId);
-  if (!user) throw forbiddenError("Invalid credentials");
-
-  const oldToken = getSessionCookie();
-  if (oldToken) {
-    const oldSessionId = hashSessionToken(oldToken);
-    await invalidateSession(oldSessionId).catch(() => {});
-  }
-
-  const token = await createSession(
-    user.id,
-    user.branch_id,
-    user.role,
-    ipAddress,
-    userAgent,
-    "passkey",
-    Date.now(),
-  );
-  setSessionCookie(token);
-
-  await repos.auditLogs.create({
-    user_id: user.id,
-    action: "login_passkey",
-    entity_type: "user",
-    entity_id: user.id,
-    changes: null,
-    created_at: Date.now(),
-  });
-
-  return {
-    userId: user.id,
-    role: user.role,
-    onboardingCompleted: user.onboarding_completed_at !== null,
-  };
+  return completePasskeyLoginSession(flowResult.userId, ipAddress, userAgent);
 }

@@ -1,13 +1,16 @@
 import { assertNonEmptyString } from "~/lib/contracts/guards";
+import type { User } from "~/lib/db/schema";
 import { repos } from "~/server/shared/context";
 import type { Repositories } from "~/server/shared/registry";
 
 import type { Role } from "../access/rbac";
+import { getPasswordLoginPolicy } from "../security/auth-contract";
 import { recordAuthEvent } from "../security/auth-events";
 import { sendAlertOnNewLoginSource } from "../security/login-source-alert";
 import { resolvePasswordStrongAuth } from "../security/password-strong-auth";
 import { type SendPrivilegedLoginAlert } from "../security/privileged-login-alert";
-import { createSession } from "../session/session-manager";
+import { getStrongAuthStatus } from "../security/strong-auth-status";
+import { issueLoginSession } from "../session/login-completion";
 import { hashPassword, verifyPassword } from "./password";
 import {
   checkLoginThrottle,
@@ -39,6 +42,12 @@ export interface PasswordLoginInput {
   userAgent: string | null;
 }
 
+export interface PasswordCredentialInput {
+  username: string;
+  password: string;
+  ipAddress: string;
+}
+
 export interface PasswordLoginResult {
   userId: number;
   role: Role;
@@ -51,10 +60,10 @@ interface PasswordLoginDeps {
   sendPrivilegedLoginAlert: SendPrivilegedLoginAlert;
 }
 
-export async function authenticatePasswordLogin(
-  input: PasswordLoginInput,
-  deps: PasswordLoginDeps,
-): Promise<PasswordLoginResult> {
+export async function verifyPasswordLoginCredentials(
+  input: PasswordCredentialInput,
+  deps: { repos?: Deps },
+): Promise<User> {
   const safeUsername = assertNonEmptyString(input.username, "username");
   const safePassword = assertNonEmptyString(input.password, "password");
   const resolvedDeps = deps.repos ?? repos;
@@ -110,6 +119,97 @@ export async function authenticatePasswordLogin(
   }
 
   await clearLoginFailureState(safeUsername, input.ipAddress, resolvedDeps);
+  return user;
+}
+
+export async function getPasswordLoginNextStep(
+  user: User,
+  deps: Pick<Deps, "userTotpFactors" | "passkeys">,
+): Promise<"complete" | "totp"> {
+  const strongAuthStatus = await getStrongAuthStatus(user.id, deps);
+  const passwordLoginPolicy = getPasswordLoginPolicy({
+    role: user.role,
+    onboardingCompleted: user.onboarding_completed_at !== null,
+    strongAuthStatus,
+  });
+
+  if (
+    passwordLoginPolicy === "password_only" ||
+    passwordLoginPolicy === "password_bootstrap"
+  ) {
+    return "complete";
+  }
+
+  if (passwordLoginPolicy === "password_or_totp" && strongAuthStatus.hasTotp) {
+    return "totp";
+  }
+
+  throw new Error(
+    strongAuthStatus.hasPasskey
+      ? "Use a passkey or configure an authenticator app"
+      : "Strong authentication required",
+  );
+}
+
+export async function completePasswordLogin(params: {
+  user: User;
+  ipAddress: string;
+  userAgent: string | null;
+  authMethod: "password" | "password_totp";
+  strongAuthAt: number | null;
+  deps: Deps;
+  sendPrivilegedLoginAlert: SendPrivilegedLoginAlert;
+}): Promise<PasswordLoginResult> {
+  const { user, ipAddress, userAgent, authMethod, strongAuthAt } = params;
+
+  await sendAlertOnNewLoginSource({
+    user,
+    ipAddress,
+    method: authMethod,
+    deps: params.deps,
+    sendPrivilegedLoginAlert: params.sendPrivilegedLoginAlert,
+  });
+
+  const session = await issueLoginSession({
+    user,
+    ipAddress,
+    userAgent,
+    authMethod,
+    strongAuthAt,
+    auditAction: "login",
+    deps: params.deps,
+  });
+  await recordAuthEvent(params.deps, {
+    userId: user.id,
+    identifier: user.username,
+    ipAddress,
+    method: "password",
+    stage: "login",
+    outcome: "success",
+    reason: authMethod === "password_totp" ? "totp_verified" : null,
+  });
+
+  return {
+    userId: session.userId,
+    role: session.role,
+    onboardingCompleted: session.onboardingCompleted,
+    token: session.token,
+  };
+}
+
+export async function authenticatePasswordLogin(
+  input: PasswordLoginInput,
+  deps: PasswordLoginDeps,
+): Promise<PasswordLoginResult> {
+  const resolvedDeps = deps.repos ?? repos;
+  const user = await verifyPasswordLoginCredentials(
+    {
+      username: input.username,
+      password: input.password,
+      ipAddress: input.ipAddress,
+    },
+    { repos: resolvedDeps },
+  );
   const strongAuth = await resolvePasswordStrongAuth({
     user,
     ipAddress: input.ipAddress,
@@ -117,47 +217,13 @@ export async function authenticatePasswordLogin(
     deps: resolvedDeps,
   });
 
-  await sendAlertOnNewLoginSource({
+  return completePasswordLogin({
     user,
     ipAddress: input.ipAddress,
-    method: strongAuth.authMethod,
+    userAgent: input.userAgent,
+    authMethod: strongAuth.authMethod,
+    strongAuthAt: strongAuth.strongAuthAt,
     deps: resolvedDeps,
     sendPrivilegedLoginAlert: deps.sendPrivilegedLoginAlert,
   });
-
-  const token = await createSession(
-    user.id,
-    user.branch_id,
-    user.role,
-    input.ipAddress,
-    input.userAgent,
-    strongAuth.authMethod,
-    strongAuth.strongAuthAt,
-    resolvedDeps,
-  );
-
-  await resolvedDeps.auditLogs.create({
-    user_id: user.id,
-    action: "login",
-    entity_type: "user",
-    entity_id: user.id,
-    changes: null,
-    created_at: Date.now(),
-  });
-  await recordAuthEvent(resolvedDeps, {
-    userId: user.id,
-    identifier: safeUsername,
-    ipAddress: input.ipAddress,
-    method: "password",
-    stage: "login",
-    outcome: "success",
-    reason: strongAuth.authMethod === "password_totp" ? "totp_verified" : null,
-  });
-
-  return {
-    userId: user.id,
-    role: user.role,
-    onboardingCompleted: user.onboarding_completed_at !== null,
-    token,
-  };
 }

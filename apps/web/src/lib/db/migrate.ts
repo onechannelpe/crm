@@ -18,6 +18,8 @@ import * as m006 from "./migrations/006-sales-records-core";
 import * as m007 from "./migrations/007-action-rate-limit";
 import * as m008 from "./migrations/008-search-enrichment";
 import * as m009 from "./migrations/009-extension-runtime";
+import * as m010 from "./migrations/010-google-oauth";
+import * as m011 from "./migrations/011-login-flows";
 
 const logger = createLogger("db-migrate");
 
@@ -36,6 +38,8 @@ const migrations = {
   "007-action-rate-limit": m007,
   "008-search-enrichment": m008,
   "009-extension-runtime": m009,
+  "010-google-oauth": m010,
+  "011-login-flows": m011,
 };
 
 const staticProvider: MigrationProvider = {
