@@ -1,8 +1,8 @@
 .shell {
   min-height: 100vh;
-  padding: 16px;
+  padding: max(64px, min(12vh, 80px)) 16px 40px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   background: var(--tertiary);
 }
@@ -10,7 +10,7 @@
 .surface {
   width: min(400px, 100%);
   border: var(--panel-border);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: var(--panel-bg);
   box-shadow: var(
     --box-shadow-strong,
@@ -20,19 +20,44 @@
   overflow: hidden;
 }
 
+.topBar {
+  width: 100%;
+}
+
 .content {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 28px 24px 24px;
+  padding: 40px;
   text-align: center;
 }
 
+.logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 16px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  animation: fadeIn 0.3s linear forwards;
+}
+
+.logoImage {
+  width: 48px;
+  height: 48px;
+  display: block;
+  border-radius: 12px;
+}
+
 .title {
-  margin: 0;
+  margin: 16px 0 16px;
   font-size: var(--font-size-heading-md);
   font-weight: var(--font-weight-semibold);
   color: var(--foreground);
+  animation: fadeIn 0.3s linear forwards;
 }
 
 .description {
@@ -43,36 +68,11 @@
   color: var(--muted-foreground);
 }
 
-.header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-.logo {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 4px;
-  overflow: hidden;
-}
-
-.logoImage {
-  width: 40px;
-  height: 40px;
-  display: block;
-  border-radius: 12px;
-}
-
 .body {
   display: grid;
   gap: 16px;
   width: 100%;
+  margin-top: 16px;
 }
 
 .footer {
@@ -83,7 +83,7 @@
 }
 
 .footerNote {
-  margin-top: 20px;
+  margin-top: 32px;
   max-width: 280px;
   font-size: var(--font-size-sm);
   color: var(--muted-foreground);
@@ -91,12 +91,21 @@
   text-align: center;
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @media (max-width: 640px) {
   .shell {
-    padding: 12px;
+    padding: 32px 12px 32px;
   }
 
   .content {
-    padding: 24px 18px 20px;
+    padding: 28px 24px 24px;
   }
 }

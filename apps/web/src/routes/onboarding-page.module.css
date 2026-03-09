@@ -14,7 +14,7 @@
   gap: 10px;
   color: var(--foreground);
   font-size: var(--font-size-sm);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .helperCopy {
@@ -55,7 +55,7 @@
 
 .choiceTitle {
   font-size: var(--font-size-body);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .choiceDescription {
@@ -79,6 +79,261 @@
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+}
+
+.progressTrack {
+  width: 100%;
+  height: 3px;
+  background: var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--foreground);
+  border-radius: 999px;
+  transition: width 300ms ease;
+}
+
+.choiceCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.configuredBadge {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--success-foreground, #16a34a);
+  background: var(--success-bg, #dcfce7);
+  padding: 2px 6px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.helperTextError {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--destructive, #dc2626);
+  line-height: 1.5;
+  text-align: left;
+}
+
+/* Profile step (confirm info) */
+.confirmHint {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--muted-foreground);
+  line-height: 1.5;
+}
+
+.infoList {
+  display: flex;
+  flex-direction: column;
+}
+
+.infoRow {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.infoRow:first-child {
+  padding-top: 0;
+}
+
+.infoRow:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.infoRowMissing {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.infoRowMissing:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.infoKey {
+  flex-shrink: 0;
+  width: 64px;
+  font-size: var(--font-size-sm);
+  color: var(--muted-foreground);
+  font-weight: var(--font-weight-medium);
+}
+
+.infoValue {
+  font-size: var(--font-size-sm);
+  color: var(--foreground);
+  word-break: break-all;
+}
+
+.infoValueMissing {
+  font-size: var(--font-size-sm);
+  color: color-mix(in oklab, var(--destructive, #dc2626) 80%, transparent);
+  font-style: italic;
+}
+
+/* Phone field */
+.phoneField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.phoneLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.phoneLabelText {
+  font-size: var(--font-size-sm);
+  color: var(--muted-foreground);
+  font-weight: var(--font-weight-medium);
+}
+
+.phoneRow {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--input-bg, var(--panel-bg));
+  transition: outline 0.15s;
+}
+
+.phoneRow:focus-within {
+  outline: 2px solid var(--foreground);
+  outline-offset: 1px;
+}
+
+.phonePrefix {
+  padding: 10px 10px 10px 14px;
+  font-size: var(--font-size-body);
+  color: var(--muted-foreground);
+  font-weight: var(--font-weight-medium);
+  background: color-mix(in oklab, var(--border) 40%, transparent);
+  user-select: none;
+  white-space: nowrap;
+  border-right: 1px solid var(--border);
+}
+
+.phoneInput {
+  flex: 1;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: var(--font-size-body);
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--foreground);
+  min-width: 0;
+}
+
+.phoneInput::placeholder {
+  color: var(--muted-foreground);
+}
+
+/* TOTP inline enrollment */
+.totpInline {
+  display: grid;
+  gap: 12px;
+}
+
+.qrCenter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.qrCode {
+  width: 160px;
+  height: 160px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+/* Secret key disclosure */
+.secretDetails {
+  font-size: var(--font-size-sm);
+  color: var(--muted-foreground);
+}
+
+.secretDetails summary {
+  cursor: pointer;
+  list-style: none;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-align: center;
+}
+
+.secretDetails summary:hover {
+  color: var(--foreground);
+}
+
+.secretDetails[open] summary {
+  margin-bottom: 8px;
+}
+
+.secretKeyBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+}
+
+.secretKeyLabel {
+  font-size: var(--font-size-xs);
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.secretKeyText {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: var(--font-size-sm);
+  letter-spacing: 0.12em;
+  color: var(--foreground);
+  background: color-mix(in oklab, var(--border) 50%, transparent);
+  padding: 6px 10px;
+  border-radius: 6px;
+  user-select: all;
+  word-break: break-all;
+  text-align: center;
+}
+
+/* Passkey inline enrollment */
+.passkeyEnrollStep {
+  display: grid;
+  gap: 12px;
+  text-align: center;
+}
+
+.passkeyStatus {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--muted-foreground);
+  line-height: 1.5;
+}
+
+.passkeyStatusConfigured {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--success-foreground, #16a34a);
+  line-height: 1.5;
+  font-weight: var(--font-weight-medium);
 }
 
 @media (max-width: 800px) {

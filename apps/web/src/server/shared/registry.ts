@@ -3,6 +3,7 @@ import type { Kysely } from "kysely";
 import type { Database } from "~/lib/db/schema";
 import { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
+import { createOAuthAccountsRepo } from "~/server/auth/repos-oauth-accounts";
 import {
   createUserTotpFactorsRepo,
   createUserTotpRecoveryCodesRepo,
@@ -69,6 +70,7 @@ export function createRepositories(db: Kysely<Database>) {
     agentStatus: createAgentStatusRepo(db),
     passkeys: createPasskeysRepo(db),
     webauthnChallenges: createWebauthnChallengesRepo(db),
+    oauthAccounts: createOAuthAccountsRepo(db),
     branches: createBranchesRepo(db),
     teams: createTeamsRepo(db),
   };

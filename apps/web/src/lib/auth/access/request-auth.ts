@@ -33,6 +33,10 @@ export function isPublicPath(pathname: string): boolean {
     pathname.startsWith("/login") ||
     pathname.startsWith("/auth") ||
     pathname.startsWith("/_") ||
+    pathname.startsWith("/releases") ||
+    pathname.startsWith("/docs") ||
+    pathname === "/privacy" ||
+    pathname === "/terms" ||
     pathname.includes(".")
   );
 }
