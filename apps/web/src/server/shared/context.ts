@@ -1,9 +1,9 @@
 import { createNotificationService } from "@crm/notifications";
 
+import { createPrivilegedLoginAlertSender } from "~/lib/auth/security/login-alerts";
 import { config } from "~/lib/config";
 import { db } from "~/lib/db/db";
 import { env } from "~/lib/env";
-import { createPrivilegedLoginAlertSender } from "~/lib/auth/security/login-alerts";
 import { createSearchEnrichmentService } from "~/server/client-search/enrichment-service";
 import { createClientSearchService } from "~/server/client-search/service";
 import { createExtensionService } from "~/server/extension/service";
