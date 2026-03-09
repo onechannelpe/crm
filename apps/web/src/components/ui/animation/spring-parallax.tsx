@@ -13,16 +13,11 @@ interface SpringParallaxProps {
 }
 
 /**
- * Wraps children with the exact same parallax behavior as twenty's
- * AnimatedPlaceholder (which uses framer-motion):
+ * AnimatedPlaceholder:
  *
  *   - Tracking: direct linear remap of mouse → translate, no easing.
  *   - Leave: analytical underdamped spring ease-back to center.
- *
- * The spring formula is ported from motion's spring generator
- * (packages/motion-dom/src/animation/generators/spring.ts).
- * With stiffness=100, damping=10, mass=1 → dampingRatio=0.5 (underdamped).
- *
+ * 
  * Closed-form underdamped solution:
  *   x(t) = -e^(-ζω₀t) · [A·sin(ωd·t) + x₀·cos(ωd·t)]
  * where ωd = ω₀·√(1−ζ²), A = (v₀ + ζω₀x₀)/ωd
@@ -41,7 +36,7 @@ export function SpringParallax(props: SpringParallaxProps) {
     const mass = props.mass ?? 1;
     const el = containerRef;
 
-    // Pre-computed spring constants (same values motion hoists outside the loop)
+    // Pre-computed spring constants
     const omega0 = Math.sqrt(stiffness / mass); // undamped angular freq (rad/s)
     const zeta = damping / (2 * Math.sqrt(stiffness * mass)); // damping ratio
     const omegaD = omega0 * Math.sqrt(1 - zeta * zeta); // damped angular freq
@@ -75,7 +70,7 @@ export function SpringParallax(props: SpringParallaxProps) {
       const startMs = performance.now();
 
       const animate = (now: DOMHighResTimeStamp) => {
-        // t in seconds (spring.ts works in seconds internally)
+        // t in seconds
         const t = (now - startMs) / 1000;
         const envelope = Math.exp(-zeta * omega0 * t);
         const sin = Math.sin(omegaD * t);
@@ -85,7 +80,6 @@ export function SpringParallax(props: SpringParallaxProps) {
         const y = -envelope * (Ay * sin + y0 * cos);
         setTranslate(x, y);
 
-        // Rest threshold: motion uses ~0.01 for granular scale (< 5px delta)
         if (envelope < 0.001) {
           setTranslate(0, 0);
           return;
