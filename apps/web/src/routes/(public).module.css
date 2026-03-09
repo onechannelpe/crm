@@ -1,0 +1,41 @@
+:global(html) {
+  scroll-behavior: smooth;
+}
+
+.main {
+  min-height: 100dvh;
+}
+
+/* Utility bar */
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 40px;
+}
+
+.barBtn {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+  color: var(--foreground-tertiary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  margin: 0 -8px;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition:
+    color 100ms,
+    background 100ms;
+
+  &:hover {
+    color: var(--foreground);
+    background: var(--accent);
+  }
+}
