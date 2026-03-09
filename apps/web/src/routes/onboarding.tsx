@@ -1,10 +1,11 @@
-import { Show } from "solid-js";
+import { Show, Suspense } from "solid-js";
 
 import { AuthFlowShell } from "~/components/auth/auth-flow-shell";
 import { OnboardingProfileStep } from "~/components/auth/onboarding-profile-step";
 import { OnboardingSecurityStep } from "~/components/auth/onboarding-security-step";
 import { OtpSlotInput } from "~/components/auth/otp-slot-input";
 import { RecoveryCodesPanel } from "~/components/auth/recovery-codes-panel";
+import { Loading } from "~/components/feedback/loading";
 import { SessionProvider } from "~/components/providers/session-provider";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
@@ -247,7 +248,9 @@ function OnboardingContent() {
 export default function OnboardingPage() {
   return (
     <SessionProvider>
-      <OnboardingContent />
+      <Suspense fallback={<Loading />}>
+        <OnboardingContent />
+      </Suspense>
     </SessionProvider>
   );
 }
