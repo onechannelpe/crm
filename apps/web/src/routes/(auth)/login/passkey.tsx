@@ -6,6 +6,7 @@ import { AuthFlowShell } from "~/components/auth/auth-flow-shell";
 import { useToast } from "~/components/feedback/toast-provider";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
+import { parseLoginFlowId } from "~/lib/auth/login-route-flow";
 import {
   isPasskeySupported,
   toAuthenticationPayload,
@@ -16,12 +17,6 @@ import { loginFlowQuery } from "~/lib/queries/auth";
 import styles from "../../auth/auth-shell.module.css";
 import pageStyles from "../../auth/login-page.module.css";
 
-function parseFlowId(raw: string | string[] | undefined): number | null {
-  if (!raw || Array.isArray(raw)) return null;
-  const parsed = Number(raw);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
-}
-
 export default function LoginPasskeyPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -30,7 +25,7 @@ export default function LoginPasskeyPage() {
   const [browserSupport, setBrowserSupport] = createSignal<
     "unknown" | "supported" | "unsupported"
   >("unknown");
-  const flowId = () => parseFlowId(searchParams.flow);
+  const flowId = () => parseLoginFlowId(searchParams.flow);
   const loginFlow = createAsync(() => {
     const currentFlowId = flowId();
     return currentFlowId
@@ -39,6 +34,7 @@ export default function LoginPasskeyPage() {
   });
   const passkeyFlow = createMemo(() => {
     const flow = loginFlow();
+    if (flow === undefined && flowId()) return undefined;
     return flow?.state === "passkey" ? flow : null;
   });
 
@@ -100,45 +96,58 @@ export default function LoginPasskeyPage() {
       }
     >
       <Show
-        when={passkeyFlow()}
+        when={passkeyFlow() !== undefined}
         fallback={
           <div class={pageStyles.formStack}>
-            <p class={pageStyles.formError} role="alert">
-              La sesión de clave de acceso expiró. Intenta de nuevo.
+            <p class={pageStyles.supportText} aria-live="polite">
+              Cargando clave de acceso…
             </p>
-            <a href="/login" class={pageStyles.passkeyLink}>
-              Volver al inicio de sesión
-            </a>
           </div>
         }
       >
-        {(flow) => (
-          <EnterTransition>
+        <Show
+          when={passkeyFlow()}
+          fallback={
             <div class={pageStyles.formStack}>
-              <p class={pageStyles.supportText}>Usuario: {flow().identifier}</p>
-              <Show
-                when={browserSupport() === "supported"}
-                fallback={
-                  <p class={pageStyles.formError} role="alert">
-                    Este navegador no admite claves de acceso.
-                  </p>
-                }
-              >
-                <Button
-                  type="button"
-                  size="lg"
-                  class={styles.full}
-                  loading={pending()}
-                  onClick={() => {
-                    void handlePasskeySubmit();
-                  }}
-                >
-                  Continuar con clave de acceso
-                </Button>
-              </Show>
+              <p class={pageStyles.formError} role="alert">
+                La sesión de clave de acceso expiró. Intenta de nuevo.
+              </p>
+              <a href="/login" class={pageStyles.passkeyLink}>
+                Volver al inicio de sesión
+              </a>
             </div>
-          </EnterTransition>
-        )}
+          }
+        >
+          {(flow) => (
+            <EnterTransition>
+              <div class={pageStyles.formStack}>
+                <p class={pageStyles.supportText}>
+                  Usuario: {flow().identifier}
+                </p>
+                <Show
+                  when={browserSupport() === "supported"}
+                  fallback={
+                    <p class={pageStyles.formError} role="alert">
+                      Este navegador no admite claves de acceso.
+                    </p>
+                  }
+                >
+                  <Button
+                    type="button"
+                    size="lg"
+                    class={styles.full}
+                    loading={pending()}
+                    onClick={() => {
+                      void handlePasskeySubmit();
+                    }}
+                  >
+                    Continuar con clave de acceso
+                  </Button>
+                </Show>
+              </div>
+            </EnterTransition>
+          )}
+        </Show>
       </Show>
     </AuthFlowShell>
   );

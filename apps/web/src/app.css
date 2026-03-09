@@ -186,6 +186,16 @@
   --avatar-fg: color(display-p3 0.922 0.922 0.922);
 }
 
+@media (max-width: 640px) {
+  :root {
+    --font-size-caption: var(--font-13);
+    --font-size-sm: var(--font-14);
+    --font-size-body: var(--font-16);
+    --font-size-heading-sm: var(--font-20);
+    --font-size-heading-md: var(--font-24);
+  }
+}
+
 @layer reset {
   *,
   *::before,
