@@ -3,6 +3,7 @@ import { createNotificationService } from "@crm/notifications";
 import { config } from "~/lib/config";
 import { db } from "~/lib/db/db";
 import { env } from "~/lib/env";
+import { createPrivilegedLoginAlertSender } from "~/lib/auth/security/login-alerts";
 import { createSearchEnrichmentService } from "~/server/client-search/enrichment-service";
 import { createClientSearchService } from "~/server/client-search/service";
 import { createExtensionService } from "~/server/extension/service";
@@ -69,5 +70,16 @@ export const notificationSender = createNotificationService({
   whatsappPhoneNumberId: env.whatsappPhoneNumberId || undefined,
   whatsappApiVersion: env.whatsappApiVersion || undefined,
 });
+
+export const privilegedLoginAlertSender = createPrivilegedLoginAlertSender(
+  repos,
+  {
+    resendApiKey: env.resendApiKey || undefined,
+    fromEmail: env.emailFrom || undefined,
+    whatsappAccessToken: env.whatsappAccessToken || undefined,
+    whatsappPhoneNumberId: env.whatsappPhoneNumberId || undefined,
+    whatsappApiVersion: env.whatsappApiVersion || undefined,
+  },
+);
 
 export { repos };
