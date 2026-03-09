@@ -142,4 +142,38 @@ test.describe("auth browser flow", () => {
       "Este navegador no admite claves de acceso.",
     );
   });
+
+  test("keeps the user on the passkey route when the browser ceremony is cancelled", async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(browserName !== "chromium");
+
+    await page.goto("/login/passkey/start");
+    await page.getByLabel("Usuario").fill(PASSKEY_USERNAME);
+    await page
+      .getByRole("button", { name: "Continuar con clave de acceso" })
+      .click();
+    await expect(page).toHaveURL(/\/login\/passkey\?flow=\d+/);
+
+    await page.evaluate(() => {
+      Object.defineProperty(navigator, "credentials", {
+        value: {
+          get: async () => {
+            throw new DOMException("User cancelled", "NotAllowedError");
+          },
+        },
+        configurable: true,
+      });
+    });
+
+    await page
+      .getByRole("button", { name: "Continuar con clave de acceso" })
+      .click();
+
+    await expect(page).toHaveURL(/\/login\/passkey\?flow=\d+/);
+    await expect(page.getByRole("alert")).toContainText(
+      "La verificación con clave de acceso se canceló. Intenta de nuevo.",
+    );
+  });
 });
