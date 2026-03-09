@@ -12,20 +12,11 @@ import {
   submitTotpForLoginFlow,
 } from "~/lib/auth/login-flow";
 import { getClientIp } from "~/lib/auth/password/client-ip";
-import { createPrivilegedLoginAlertSender } from "~/lib/auth/security/login-alerts";
+import { parseLoginFlowId } from "~/lib/auth/login-route-flow";
 import { replaceCurrentSession } from "~/lib/auth/session/login-completion";
-import { env } from "~/lib/env";
 import { getActionRequestContext } from "~/lib/observability/context";
-import { repos } from "~/server/shared/context";
+import { privilegedLoginAlertSender, repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
-
-const sendPrivilegedLoginAlert = createPrivilegedLoginAlertSender(repos, {
-  resendApiKey: env.resendApiKey || undefined,
-  fromEmail: env.emailFrom || undefined,
-  whatsappAccessToken: env.whatsappAccessToken || undefined,
-  whatsappPhoneNumberId: env.whatsappPhoneNumberId || undefined,
-  whatsappApiVersion: env.whatsappApiVersion || undefined,
-});
 
 export type PasswordLoginSubmissionResult = {
   ok: false;
@@ -54,9 +45,7 @@ function readText(
 
 function readPositiveInt(formData: FormData, field: "flowId"): number | null {
   const value = formData.get(field);
-  if (typeof value !== "string") return null;
-  const parsed = Number(value);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+  return typeof value === "string" ? parseLoginFlowId(value) : null;
 }
 
 async function completeLoginAndRedirect(result: {
@@ -93,7 +82,7 @@ export async function passwordLogin(
       userAgent: request.userAgent,
     },
     repos,
-    sendPrivilegedLoginAlert,
+    privilegedLoginAlertSender,
   );
   if (isErr(result)) {
     await recordAuthAnalyticsEvent(
@@ -142,8 +131,7 @@ export async function passwordLogin(
     },
     getActionRequestContext(),
   );
-  await completeLoginAndRedirect(result.value.result);
-  throw new Error("unreachable");
+  return await completeLoginAndRedirect(result.value.result);
 }
 
 export async function passkeyStart(
@@ -202,7 +190,7 @@ export async function totpLogin(
       userAgent: request.userAgent,
     },
     repos,
-    sendPrivilegedLoginAlert,
+    privilegedLoginAlertSender,
   );
   if (isErr(result)) {
     if (result.error.kind === "flow_expired") {
@@ -241,6 +229,5 @@ export async function totpLogin(
     },
     getActionRequestContext(),
   );
-  await completeLoginAndRedirect(result.value.result);
-  throw new Error("unreachable");
+  return await completeLoginAndRedirect(result.value.result);
 }
