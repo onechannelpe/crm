@@ -11,15 +11,16 @@ export default function NotFound() {
       <div class={styles.container}>
         <AnimatedPlaceholder type="error404" />
         <div class={styles.textContainer}>
-          <p class={styles.title}>Fuera del camino</p>
+          <p class={styles.title}>Me parece que te has perdido</p>
           <p class={styles.subtitle}>
-            La página que buscas no existe o fue movida. Volvamos al inicio.
+            Esta página ya no existe o fue movida. Puedes contactar al equipo de
+            TI o volver al inicio.
           </p>
         </div>
         <div class={styles.buttonWrap}>
           <A href="/" style={{ "text-decoration": "none", display: "block" }}>
             <Button variant="primary" style={{ width: "100%" }}>
-              Volver al inicio
+              Regresar al inicio
             </Button>
           </A>
         </div>

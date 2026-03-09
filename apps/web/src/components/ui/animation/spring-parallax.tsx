@@ -17,7 +17,7 @@ interface SpringParallaxProps {
  *
  *   - Tracking: direct linear remap of mouse → translate, no easing.
  *   - Leave: analytical underdamped spring ease-back to center.
- * 
+ *
  * Closed-form underdamped solution:
  *   x(t) = -e^(-ζω₀t) · [A·sin(ωd·t) + x₀·cos(ωd·t)]
  * where ωd = ω₀·√(1−ζ²), A = (v₀ + ζω₀x₀)/ωd
