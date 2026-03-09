@@ -145,11 +145,19 @@ export default function LoginPage() {
                 loginMethods.markPasswordUsed();
               }}
             >
+              <Show when={passwordError()}>
+                {(message) => (
+                  <p class={pageStyles.formError} role="alert">
+                    {message()}
+                  </p>
+                )}
+              </Show>
               <EnterTransition>
                 <Input
                   id="username"
                   type="text"
                   label="Usuario"
+                  class={pageStyles.authControl}
                   name="identifier"
                   value={identifier()}
                   onInput={(event) => {
@@ -159,7 +167,6 @@ export default function LoginPage() {
                   autocapitalize="none"
                   autocorrect="off"
                   spellcheck={false}
-                  error={passwordError()}
                   required
                 />
               </EnterTransition>
@@ -169,15 +176,16 @@ export default function LoginPage() {
                   id="current-password"
                   type="password"
                   label="Contraseña"
+                  class={pageStyles.authControl}
                   name="password"
                   autocomplete="current-password"
-                  error={passwordError()}
                   required
                 />
               </EnterTransition>
 
               <Button
                 type="submit"
+                size="lg"
                 class={styles.full}
                 loading={passwordSubmission.pending}
               >
@@ -221,6 +229,7 @@ export default function LoginPage() {
                   id="totpCode"
                   type="text"
                   label="Codigo de verificacion"
+                  class={pageStyles.authControl}
                   name="totpCode"
                   autocomplete="one-time-code"
                   inputmode="numeric"
@@ -238,6 +247,7 @@ export default function LoginPage() {
                   </a>
                   <Button
                     type="submit"
+                    size="lg"
                     class={styles.full}
                     loading={totpSubmission.pending}
                   >

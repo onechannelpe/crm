@@ -13,6 +13,7 @@ import { replaceCurrentSession } from "~/lib/auth/session/login-completion";
 import { env } from "~/lib/env";
 import { getErrorMessage } from "~/lib/errors";
 import { repos } from "~/server/shared/context";
+import { isErr } from "~/server/shared/result";
 
 const sendPrivilegedLoginAlert = createPrivilegedLoginAlertSender(repos, {
   resendApiKey: env.resendApiKey || undefined,
@@ -92,12 +93,19 @@ export const passwordLoginMutation = action(
         repos,
         sendPrivilegedLoginAlert,
       );
-
-      if (result.kind === "totp_required") {
-        throw redirect(`/login?flow=${result.flow.id}`);
+      if (isErr(result)) {
+        return {
+          ok: false,
+          code: "invalid_credentials",
+          message: "Credenciales invalidas",
+        };
       }
 
-      await completeLoginAndRedirect(result.result);
+      if (result.value.kind === "totp_required") {
+        throw redirect(`/login?flow=${result.value.flow.id}`);
+      }
+
+      await completeLoginAndRedirect(result.value.result);
       throw new Error("unreachable");
     } catch (error: unknown) {
       rethrowRedirect(error);
@@ -131,12 +139,19 @@ export const totpLoginMutation = action(
         repos,
         sendPrivilegedLoginAlert,
       );
+      if (isErr(result)) {
+        if (result.error.kind === "flow_expired") {
+          throw redirect("/login?error=flow_expired");
+        }
 
-      if (result.kind === "flow_expired") {
-        throw redirect("/login?error=flow_expired");
+        return {
+          ok: false,
+          code: "invalid_totp",
+          message: "No se pudo verificar el codigo",
+        };
       }
 
-      await completeLoginAndRedirect(result.result);
+      await completeLoginAndRedirect(result.value.result);
       throw new Error("unreachable");
     } catch (error: unknown) {
       rethrowRedirect(error);

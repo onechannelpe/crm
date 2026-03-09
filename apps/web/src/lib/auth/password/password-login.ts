@@ -4,6 +4,7 @@ import { repos } from "~/server/shared/context";
 import type { Repositories } from "~/server/shared/registry";
 
 import type { Role } from "../access/rbac";
+import { AuthFlowError } from "../errors";
 import { getPasswordLoginPolicy } from "../security/auth-contract";
 import { recordAuthEvent } from "../security/auth-events";
 import { sendAlertOnNewLoginSource } from "../security/login-source-alert";
@@ -17,8 +18,6 @@ import {
   clearLoginFailureState,
   recordLoginFailure,
 } from "./throttle";
-
-const INVALID_CREDENTIALS = "Invalid credentials";
 
 const DUMMY_HASH = hashPassword("dummy-constant-for-timing-parity");
 
@@ -84,7 +83,7 @@ export async function verifyPasswordLoginCredentials(
       outcome: "throttled",
       reason: "threshold_exceeded",
     });
-    throw new Error(INVALID_CREDENTIALS);
+    throw new AuthFlowError("invalid_credentials");
   }
 
   const user = await resolvedDeps.users.findByUsername(safeUsername);
@@ -101,7 +100,7 @@ export async function verifyPasswordLoginCredentials(
       outcome: "failure",
       reason: user ? "inactive_user" : "user_not_found",
     });
-    throw new Error(INVALID_CREDENTIALS);
+    throw new AuthFlowError("invalid_credentials");
   }
 
   if (!(await verifyPassword(user.password_hash, safePassword))) {
@@ -115,7 +114,7 @@ export async function verifyPasswordLoginCredentials(
       outcome: "failure",
       reason: "invalid_password",
     });
-    throw new Error(INVALID_CREDENTIALS);
+    throw new AuthFlowError("invalid_credentials");
   }
 
   await clearLoginFailureState(safeUsername, input.ipAddress, resolvedDeps);
@@ -144,10 +143,8 @@ export async function getPasswordLoginNextStep(
     return "totp";
   }
 
-  throw new Error(
-    strongAuthStatus.hasPasskey
-      ? "Use a passkey or configure an authenticator app"
-      : "Strong authentication required",
+  throw new AuthFlowError(
+    strongAuthStatus.hasPasskey ? "passkey_required" : "strong_auth_required",
   );
 }
 

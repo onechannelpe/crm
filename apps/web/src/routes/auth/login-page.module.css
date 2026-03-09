@@ -31,9 +31,17 @@
   text-align: center;
 }
 
-.passwordFields {
-  display: grid;
-  gap: 12px;
+.formError {
+  margin: 0;
+  color: var(--destructive);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.4;
+}
+
+.authControl {
+  min-height: 44px;
+  padding-inline: 12px;
 }
 
 .actionRow {
@@ -81,4 +89,26 @@
 
 .passkeyLink:hover {
   color: var(--foreground);
+}
+
+@media (max-width: 640px) {
+  .formStack {
+    gap: 14px;
+  }
+
+  .authControl {
+    min-height: 48px;
+    font-size: var(--font-16);
+  }
+
+  .formError {
+    font-size: var(--font-size-body);
+  }
+
+  .supportText,
+  .forgotLink,
+  .helpLink,
+  .passkeyLink {
+    font-size: var(--font-size-body);
+  }
 }

@@ -7,7 +7,9 @@ import {
   assertPositiveInt,
 } from "~/lib/contracts/guards";
 import type { Repositories } from "~/server/shared/registry";
+import { Err, Ok, type Result } from "~/server/shared/result";
 
+import { isAuthFlowError } from "./errors";
 import {
   completePasswordLogin,
   getPasswordLoginNextStep,
@@ -38,6 +40,27 @@ export interface LoginFlowLoginResult {
   role: Role;
   onboardingCompleted: boolean;
   token: string;
+}
+
+export type SubmitPasswordLoginError = {
+  kind: "invalid_credentials";
+};
+
+export type SubmitTotpLoginError =
+  | { kind: "flow_expired" }
+  | { kind: "invalid_totp" };
+
+function isPasswordLoginFailure(error: unknown): boolean {
+  return (
+    isAuthFlowError(error) &&
+    (error.code === "invalid_credentials" ||
+      error.code === "strong_auth_required" ||
+      error.code === "passkey_required")
+  );
+}
+
+function isTotpLoginFailure(error: unknown): boolean {
+  return isAuthFlowError(error) && error.code === "invalid_totp";
 }
 
 async function readActiveLoginFlow(
@@ -101,42 +124,56 @@ export async function submitPasswordLogin(
   deps: LoginFlowDeps,
   sendPrivilegedLoginAlert: SendPrivilegedLoginAlert,
 ): Promise<
-  | { kind: "totp_required"; flow: LoginFlowState }
-  | { kind: "complete"; result: LoginFlowLoginResult }
+  Result<
+    | { kind: "totp_required"; flow: LoginFlowState }
+    | {
+        kind: "complete";
+        result: LoginFlowLoginResult;
+      },
+    SubmitPasswordLoginError
+  >
 > {
-  const safeIdentifier = assertNonEmptyString(
-    input.identifier,
-    "identifier",
-  ).trim();
+  try {
+    const safeIdentifier = assertNonEmptyString(
+      input.identifier,
+      "identifier",
+    ).trim();
 
-  const user = await verifyPasswordLoginCredentials(
-    {
-      username: safeIdentifier,
-      password: input.password,
+    const user = await verifyPasswordLoginCredentials(
+      {
+        username: safeIdentifier,
+        password: input.password,
+        ipAddress: input.ipAddress,
+      },
+      { repos: deps },
+    );
+    const nextStep = await getPasswordLoginNextStep(user, deps);
+
+    if (nextStep === "totp") {
+      return Ok({
+        kind: "totp_required",
+        flow: await createTotpLoginFlow(safeIdentifier, user.id, deps),
+      });
+    }
+
+    const result = await completePasswordLogin({
+      user,
       ipAddress: input.ipAddress,
-    },
-    { repos: deps },
-  );
-  const nextStep = await getPasswordLoginNextStep(user, deps);
+      userAgent: input.userAgent,
+      authMethod: "password",
+      strongAuthAt: null,
+      deps,
+      sendPrivilegedLoginAlert,
+    });
 
-  if (nextStep === "totp") {
-    return {
-      kind: "totp_required",
-      flow: await createTotpLoginFlow(safeIdentifier, user.id, deps),
-    };
+    return Ok({ kind: "complete", result });
+  } catch (error: unknown) {
+    if (isPasswordLoginFailure(error)) {
+      return Err({ kind: "invalid_credentials" });
+    }
+
+    throw error;
   }
-
-  const result = await completePasswordLogin({
-    user,
-    ipAddress: input.ipAddress,
-    userAgent: input.userAgent,
-    authMethod: "password",
-    strongAuthAt: null,
-    deps,
-    sendPrivilegedLoginAlert,
-  });
-
-  return { kind: "complete", result };
 }
 
 export async function submitTotpForLoginFlow(
@@ -149,7 +186,10 @@ export async function submitTotpForLoginFlow(
   deps: LoginFlowDeps,
   sendPrivilegedLoginAlert: SendPrivilegedLoginAlert,
 ): Promise<
-  { kind: "flow_expired" } | { kind: "complete"; result: LoginFlowLoginResult }
+  Result<
+    { kind: "complete"; result: LoginFlowLoginResult },
+    SubmitTotpLoginError
+  >
 > {
   const safeFlowId = assertPositiveInt(input.flowId, "flowId");
   const flow = await deps.loginFlows.findById(safeFlowId);
@@ -158,25 +198,34 @@ export async function submitTotpForLoginFlow(
     if (flow?.expires_at && flow.expires_at < Date.now()) {
       await deps.loginFlows.delete(flow.id);
     }
-    return { kind: "flow_expired" };
+    return Err({ kind: "flow_expired" });
   }
   if (!flow.user_id) {
     await deps.loginFlows.delete(flow.id);
-    return { kind: "flow_expired" };
+    return Err({ kind: "flow_expired" });
   }
 
   const user = await deps.users.findById(flow.user_id);
   if (!user || !user.is_active) {
     await deps.loginFlows.delete(flow.id);
-    return { kind: "flow_expired" };
+    return Err({ kind: "flow_expired" });
   }
 
-  const strongAuth = await resolvePasswordStrongAuth({
-    user,
-    ipAddress: input.ipAddress,
-    totpCode: input.totpCode,
-    deps,
-  });
+  let strongAuth;
+  try {
+    strongAuth = await resolvePasswordStrongAuth({
+      user,
+      ipAddress: input.ipAddress,
+      totpCode: input.totpCode,
+      deps,
+    });
+  } catch (error: unknown) {
+    if (isTotpLoginFailure(error)) {
+      return Err({ kind: "invalid_totp" });
+    }
+
+    throw error;
+  }
   const result = await completePasswordLogin({
     user,
     ipAddress: input.ipAddress,
@@ -188,5 +237,5 @@ export async function submitTotpForLoginFlow(
   });
   await deps.loginFlows.delete(flow.id);
 
-  return { kind: "complete", result };
+  return Ok({ kind: "complete", result });
 }

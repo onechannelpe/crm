@@ -9,6 +9,7 @@ import { verifyTotpCode } from "~/lib/auth/totp/totp";
 import type { User } from "~/lib/db/schema";
 import type { Repositories } from "~/server/shared/registry";
 
+import { AuthFlowError } from "../errors";
 import { getPasswordLoginPolicy } from "./auth-contract";
 import { recordAuthEvent } from "./auth-events";
 import {
@@ -65,10 +66,8 @@ export async function resolvePasswordStrongAuth(params: {
         ? "strong_auth_passkey_required"
         : "strong_auth_factor_missing",
     });
-    throw new Error(
-      strongAuthStatus.hasPasskey
-        ? "Use a passkey or configure an authenticator app"
-        : "Strong authentication required",
+    throw new AuthFlowError(
+      strongAuthStatus.hasPasskey ? "passkey_required" : "strong_auth_required",
     );
   }
   if (!strongAuthStatus.hasVerifiedStrongAuth) {
@@ -81,7 +80,7 @@ export async function resolvePasswordStrongAuth(params: {
       outcome: "failure",
       reason: "strong_auth_not_enrolled",
     });
-    throw new Error("Strong authentication required");
+    throw new AuthFlowError("strong_auth_required");
   }
   if (passwordLoginPolicy === "passkey_only") {
     await recordAuthEvent(deps, {
@@ -93,7 +92,7 @@ export async function resolvePasswordStrongAuth(params: {
       outcome: "failure",
       reason: "strong_auth_passkey_required",
     });
-    throw new Error("Use a passkey or configure an authenticator app");
+    throw new AuthFlowError("passkey_required");
   }
   if (!safeCode) {
     await recordAuthEvent(deps, {
@@ -105,7 +104,7 @@ export async function resolvePasswordStrongAuth(params: {
       outcome: "failure",
       reason: "strong_auth_missing",
     });
-    throw new Error("Strong authentication required");
+    throw new AuthFlowError("strong_auth_required");
   }
   if (!factor) {
     await recordAuthEvent(deps, {
@@ -117,7 +116,7 @@ export async function resolvePasswordStrongAuth(params: {
       outcome: "failure",
       reason: "strong_auth_factor_missing",
     });
-    throw new Error("Strong authentication required");
+    throw new AuthFlowError("strong_auth_required");
   }
 
   const throttle = await checkTotpVerifyThrottle(identifier, ipAddress, deps);
@@ -131,7 +130,7 @@ export async function resolvePasswordStrongAuth(params: {
       outcome: "throttled",
       reason: "threshold_exceeded",
     });
-    throw new Error("Invalid TOTP code");
+    throw new AuthFlowError("invalid_totp");
   }
 
   const secret = await decryptTotpSecret(factor.secret_encrypted);
@@ -183,5 +182,5 @@ export async function resolvePasswordStrongAuth(params: {
     outcome: "failure",
     reason: "invalid_token",
   });
-  throw new Error("Invalid TOTP code");
+  throw new AuthFlowError("invalid_totp");
 }

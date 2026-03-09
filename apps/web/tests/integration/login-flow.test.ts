@@ -14,6 +14,7 @@ import {
   generateCurrentTotpCode,
   generateTotpSecret,
 } from "../../src/lib/auth/totp/totp";
+import { isErr } from "../../src/server/shared/result";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -58,7 +59,11 @@ describe("login flow service", () => {
       sendPrivilegedLoginAlert,
     );
 
-    expect(result.kind).toBe("complete");
+    expect(isErr(result)).toBe(false);
+    if (isErr(result)) {
+      throw new Error("expected successful password login");
+    }
+    expect(result.value.kind).toBe("complete");
     const persisted = await ctx.db
       .selectFrom("login_flows")
       .select("id")
@@ -85,12 +90,17 @@ describe("login flow service", () => {
       sendPrivilegedLoginAlert,
     );
 
-    expect(passwordResult.kind).toBe("totp_required");
-    if (passwordResult.kind !== "totp_required") {
+    expect(isErr(passwordResult)).toBe(false);
+    if (
+      isErr(passwordResult) ||
+      passwordResult.value.kind !== "totp_required"
+    ) {
       throw new Error("expected totp_required");
     }
 
-    const stored = await ctx.repos.loginFlows.findById(passwordResult.flow.id);
+    const stored = await ctx.repos.loginFlows.findById(
+      passwordResult.value.flow.id,
+    );
     expect(stored?.state).toBe("totp");
     expect(stored?.user_id).toBe(5);
 
@@ -101,7 +111,7 @@ describe("login flow service", () => {
     );
     const totpResult = await submitTotpForLoginFlow(
       {
-        flowId: passwordResult.flow.id,
+        flowId: passwordResult.value.flow.id,
         totpCode: code,
         ipAddress: "198.51.100.88",
         userAgent: "vitest-agent",
@@ -110,9 +120,9 @@ describe("login flow service", () => {
       sendPrivilegedLoginAlert,
     );
 
-    expect(totpResult.kind).toBe("complete");
+    expect(isErr(totpResult)).toBe(false);
     const consumed = await ctx.repos.loginFlows.findById(
-      passwordResult.flow.id,
+      passwordResult.value.flow.id,
     );
     expect(consumed).toBeUndefined();
   });

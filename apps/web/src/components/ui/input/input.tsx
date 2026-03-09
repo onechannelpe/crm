@@ -65,7 +65,7 @@ export function Input(props: InputProps) {
             aria-label={
               showPassword()
                 ? "Ocultar contraseña"
-                : "Mostrar contraseña como texto visible"
+                : "Mostrar contraseña como texto visible. Advertencia: esto mostrará tu contraseña en la pantalla."
             }
             onClick={() => setShowPassword((v) => !v)}
           >
