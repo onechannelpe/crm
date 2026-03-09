@@ -1,4 +1,9 @@
-import { createAsync, useNavigate, useSearchParams } from "@solidjs/router";
+import {
+  createAsync,
+  useAction,
+  useNavigate,
+  useSearchParams,
+} from "@solidjs/router";
 import { createMemo, createSignal, onMount, Show } from "solid-js";
 
 import { finishPasskeyLogin } from "~/actions/auth";
@@ -13,14 +18,18 @@ import {
   toAuthenticationPayload,
   toRequestOptions,
 } from "~/lib/auth/passkey/browser";
+import { useAuthPageView } from "~/lib/auth/use-auth-analytics";
+import { trackAuthClientEventMutation } from "~/lib/mutations/auth-analytics";
 import { loginFlowQuery } from "~/lib/queries/auth";
 
 import styles from "../../../auth/auth-shell.module.css";
 import pageStyles from "../../../auth/login-page.module.css";
 
 export default function LoginPasskeyPage() {
+  useAuthPageView("login_passkey");
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const trackAuthClientEvent = useAction(trackAuthClientEventMutation);
   const { showToast } = useToast();
   const [pending, setPending] = createSignal(false);
   const [passkeyError, setPasskeyError] = createSignal<string>();
@@ -47,7 +56,17 @@ export default function LoginPasskeyPage() {
         "La sesión de clave de acceso expiró. Intenta de nuevo.",
       );
     }
-    setBrowserSupport(isPasskeySupported() ? "supported" : "unsupported");
+    if (isPasskeySupported()) {
+      setBrowserSupport("supported");
+      return;
+    }
+
+    setBrowserSupport("unsupported");
+    void trackAuthClientEvent({
+      kind: "passkey_result",
+      outcome: "failed",
+      code: "unsupported",
+    });
   });
 
   async function handlePasskeySubmit() {
@@ -90,6 +109,11 @@ export default function LoginPasskeyPage() {
   function getPasskeyErrorMessage(error: unknown): string {
     if (error instanceof DOMException) {
       if (error.name === "NotAllowedError" || error.name === "AbortError") {
+        void trackAuthClientEvent({
+          kind: "passkey_result",
+          outcome: "failed",
+          code: "cancelled",
+        });
         return "La verificación con clave de acceso se canceló. Intenta de nuevo.";
       }
     }

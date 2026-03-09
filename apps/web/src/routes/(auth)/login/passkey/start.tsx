@@ -6,12 +6,14 @@ import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { passkeyStartUiMessage } from "~/lib/auth/login-ui";
+import { useAuthPageView } from "~/lib/auth/use-auth-analytics";
 import { passkeyStartMutation } from "~/lib/mutations/auth";
 
 import styles from "../../../auth/auth-shell.module.css";
 import pageStyles from "../../../auth/login-page.module.css";
 
 export default function LoginPasskeyStartPage() {
+  useAuthPageView("login_passkey_start");
   const passkeyStartSubmission = useSubmission(passkeyStartMutation);
 
   const passkeyError = () => {

@@ -8,6 +8,7 @@ import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { passwordLoginUiMessage } from "~/lib/auth/login-ui";
+import { useAuthPageView } from "~/lib/auth/use-auth-analytics";
 import { useLoginFlow } from "~/lib/auth/use-login-flow";
 import { passwordLoginMutation } from "~/lib/mutations/auth";
 import { cn } from "~/lib/utils";
@@ -17,6 +18,7 @@ import pageStyles from "../../auth/login-page.module.css";
 import buttonStyles from "~/components/ui/input/button.module.css";
 
 export default function LoginPage() {
+  useAuthPageView("login");
   const loginMethods = useLoginFlow();
   const [searchParams] = useSearchParams();
   const { showToast } = useToast();

@@ -4,11 +4,13 @@ import type { AuthenticationResponseJSON } from "@simplewebauthn/server";
 import { getRequestEvent } from "solid-js/web";
 
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
+import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
 import { submitPasskeyForLoginFlow } from "~/lib/auth/login-flow";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { createPrivilegedLoginAlertSender } from "~/lib/auth/security/login-alerts";
 import { replaceCurrentSession } from "~/lib/auth/session/login-completion";
 import { env } from "~/lib/env";
+import { getActionRequestContext } from "~/lib/observability/context";
 import { repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
@@ -37,12 +39,29 @@ export async function finishPasskeyLogin(
   );
 
   if (isErr(result)) {
+    recordAuthAnalyticsEvent(
+      {
+        source: "server",
+        kind: "passkey_result",
+        outcome: "failed",
+        code: result.error.kind,
+      },
+      getActionRequestContext(),
+    );
     return {
       ok: false as const,
       code: result.error.kind,
     };
   }
 
+  recordAuthAnalyticsEvent(
+    {
+      source: "server",
+      kind: "passkey_result",
+      outcome: "succeeded",
+    },
+    getActionRequestContext(),
+  );
   await replaceCurrentSession(result.value.result.token);
   return {
     ok: true as const,

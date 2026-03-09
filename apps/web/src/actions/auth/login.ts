@@ -5,6 +5,7 @@ import { getRequestEvent } from "solid-js/web";
 
 import type { Role } from "~/lib/auth/access/rbac";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
+import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
 import {
   startPasskeyLogin,
   submitPasswordLogin,
@@ -14,6 +15,7 @@ import { getClientIp } from "~/lib/auth/password/client-ip";
 import { createPrivilegedLoginAlertSender } from "~/lib/auth/security/login-alerts";
 import { replaceCurrentSession } from "~/lib/auth/session/login-completion";
 import { env } from "~/lib/env";
+import { getActionRequestContext } from "~/lib/observability/context";
 import { repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
@@ -94,6 +96,15 @@ export async function passwordLogin(
     sendPrivilegedLoginAlert,
   );
   if (isErr(result)) {
+    recordAuthAnalyticsEvent(
+      {
+        source: "server",
+        kind: "password_result",
+        outcome: "failed",
+        code: result.error.kind,
+      },
+      getActionRequestContext(),
+    );
     return {
       ok: false,
       code: result.error.kind,
@@ -101,12 +112,36 @@ export async function passwordLogin(
   }
 
   if (result.value.kind === "totp_required") {
+    recordAuthAnalyticsEvent(
+      {
+        source: "server",
+        kind: "password_result",
+        outcome: "totp_required",
+      },
+      getActionRequestContext(),
+    );
     throw redirect(`/login/verify?flow=${result.value.flow.id}`);
   }
   if (result.value.kind === "passkey_required") {
+    recordAuthAnalyticsEvent(
+      {
+        source: "server",
+        kind: "password_result",
+        outcome: "passkey_required",
+      },
+      getActionRequestContext(),
+    );
     throw redirect(`/login/passkey?flow=${result.value.flow.id}`);
   }
 
+  recordAuthAnalyticsEvent(
+    {
+      source: "server",
+      kind: "password_result",
+      outcome: "succeeded",
+    },
+    getActionRequestContext(),
+  );
   await completeLoginAndRedirect(result.value.result);
   throw new Error("unreachable");
 }
@@ -124,12 +159,29 @@ export async function passkeyStart(
     repos,
   );
   if (isErr(result)) {
+    recordAuthAnalyticsEvent(
+      {
+        source: "server",
+        kind: "passkey_start_result",
+        outcome: "failed",
+        code: "invalid_credentials",
+      },
+      getActionRequestContext(),
+    );
     return {
       ok: false,
       code: "invalid_credentials",
     };
   }
 
+  recordAuthAnalyticsEvent(
+    {
+      source: "server",
+      kind: "passkey_start_result",
+      outcome: "started",
+    },
+    getActionRequestContext(),
+  );
   throw redirect(`/login/passkey?flow=${result.value.id}`);
 }
 
@@ -154,15 +206,41 @@ export async function totpLogin(
   );
   if (isErr(result)) {
     if (result.error.kind === "flow_expired") {
+      recordAuthAnalyticsEvent(
+        {
+          source: "server",
+          kind: "totp_result",
+          outcome: "failed",
+          code: "flow_expired",
+        },
+        getActionRequestContext(),
+      );
       throw redirect("/login?error=flow_expired");
     }
 
+    recordAuthAnalyticsEvent(
+      {
+        source: "server",
+        kind: "totp_result",
+        outcome: "failed",
+        code: "invalid_totp",
+      },
+      getActionRequestContext(),
+    );
     return {
       ok: false,
       code: "invalid_totp",
     };
   }
 
+  recordAuthAnalyticsEvent(
+    {
+      source: "server",
+      kind: "totp_result",
+      outcome: "succeeded",
+    },
+    getActionRequestContext(),
+  );
   await completeLoginAndRedirect(result.value.result);
   throw new Error("unreachable");
 }

@@ -8,6 +8,7 @@ import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { parseLoginFlowId } from "~/lib/auth/login-route-flow";
 import { totpLoginUiMessage } from "~/lib/auth/login-ui";
+import { useAuthPageView } from "~/lib/auth/use-auth-analytics";
 import { totpLoginMutation } from "~/lib/mutations/auth";
 import { loginFlowQuery } from "~/lib/queries/auth";
 
@@ -15,6 +16,7 @@ import styles from "../../auth/auth-shell.module.css";
 import pageStyles from "../../auth/login-page.module.css";
 
 export default function LoginVerifyPage() {
+  useAuthPageView("login_verify");
   const [searchParams] = useSearchParams();
   const { showToast } = useToast();
   const totpSubmission = useSubmission(totpLoginMutation);
