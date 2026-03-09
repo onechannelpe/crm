@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { submitPasswordLogin } from "../../src/lib/auth/login-flow";
 import { hashPassword } from "../../src/lib/auth/password/password";
-import { authenticatePasswordLogin } from "../../src/lib/auth/password/password-login";
 import type { SendPrivilegedLoginAlert } from "../../src/lib/auth/security/privileged-login-alert";
 import { isErr } from "../../src/server/shared/result";
 import {
@@ -46,21 +46,27 @@ describe("password login service", () => {
 
   it("blocks further attempts after repeated failures", async () => {
     await runSeries(6, async () => {
-      await authenticatePasswordLogin(
-        { username, password: "wrong", ipAddress, userAgent },
+      await submitPasswordLogin(
         {
-          repos: ctx.repos,
-          sendPrivilegedLoginAlert,
+          identifier: username,
+          password: "wrong",
+          ipAddress,
+          userAgent,
         },
+        ctx.repos,
+        sendPrivilegedLoginAlert,
       );
     });
 
-    const result = await authenticatePasswordLogin(
-      { username, password: rightPassword, ipAddress, userAgent },
+    const result = await submitPasswordLogin(
       {
-        repos: ctx.repos,
-        sendPrivilegedLoginAlert,
+        identifier: username,
+        password: rightPassword,
+        ipAddress,
+        userAgent,
       },
+      ctx.repos,
+      sendPrivilegedLoginAlert,
     );
     expect(isErr(result)).toBe(true);
     if (!isErr(result)) {
@@ -81,16 +87,26 @@ describe("password login service", () => {
   });
 
   it("creates session with request metadata on successful auth", async () => {
-    const result = await authenticatePasswordLogin(
-      { username, password: rightPassword, ipAddress, userAgent },
-      { repos: ctx.repos, sendPrivilegedLoginAlert },
+    const result = await submitPasswordLogin(
+      {
+        identifier: username,
+        password: rightPassword,
+        ipAddress,
+        userAgent,
+      },
+      ctx.repos,
+      sendPrivilegedLoginAlert,
     );
     expect(isErr(result)).toBe(false);
     if (isErr(result)) {
       throw new Error("expected successful password login");
     }
 
-    expect(result.value.userId).toBe(1);
+    expect(result.value.kind).toBe("complete");
+    if (result.value.kind !== "complete") {
+      throw new Error("expected completed password login");
+    }
+    expect(result.value.result.userId).toBe(1);
     const session = await ctx.repos.sessions.listForUser(1);
     expect(session[0]?.ip_address).toBe(ipAddress);
     expect(session[0]?.user_agent).toBe(userAgent);
@@ -103,14 +119,15 @@ describe("password login service", () => {
   });
 
   it("rejects unknown email with same error as wrong password (no enumeration)", async () => {
-    const result = await authenticatePasswordLogin(
+    const result = await submitPasswordLogin(
       {
-        username: "nobody.test",
+        identifier: "nobody.test",
         password: "Secret123!",
         ipAddress,
         userAgent,
       },
-      { repos: ctx.repos, sendPrivilegedLoginAlert },
+      ctx.repos,
+      sendPrivilegedLoginAlert,
     );
     expect(isErr(result)).toBe(true);
     if (!isErr(result)) {
@@ -129,15 +146,25 @@ describe("password login service", () => {
       .where("id", "=", 1)
       .execute();
 
-    const result = await authenticatePasswordLogin(
-      { username, password: rightPassword, ipAddress, userAgent },
-      { repos: ctx.repos, sendPrivilegedLoginAlert },
+    const result = await submitPasswordLogin(
+      {
+        identifier: username,
+        password: rightPassword,
+        ipAddress,
+        userAgent,
+      },
+      ctx.repos,
+      sendPrivilegedLoginAlert,
     );
     expect(isErr(result)).toBe(false);
     if (isErr(result)) {
       throw new Error("expected successful password login");
     }
 
-    expect(result.value.onboardingCompleted).toBe(false);
+    expect(result.value.kind).toBe("complete");
+    if (result.value.kind !== "complete") {
+      throw new Error("expected completed password login");
+    }
+    expect(result.value.result.onboardingCompleted).toBe(false);
   });
 });

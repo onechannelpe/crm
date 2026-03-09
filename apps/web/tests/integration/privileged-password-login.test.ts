@@ -1,7 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import {
+  getLoginFlowState,
+  submitPasswordLogin,
+  submitTotpForLoginFlow,
+} from "../../src/lib/auth/login-flow";
 import { hashPassword } from "../../src/lib/auth/password/password";
-import { authenticatePasswordLogin } from "../../src/lib/auth/password/password-login";
 import type { SendPrivilegedLoginAlert } from "../../src/lib/auth/security/privileged-login-alert";
 import { requiresStrongAuthRole } from "../../src/lib/auth/security/strong-auth-status";
 import {
@@ -41,12 +45,15 @@ describe("privileged password login", () => {
   });
 
   it("rejects privileged login without strong auth after onboarding", async () => {
-    const result = await authenticatePasswordLogin(
-      { username, password: rightPassword, ipAddress, userAgent },
+    const result = await submitPasswordLogin(
       {
-        repos: ctx.repos,
-        sendPrivilegedLoginAlert,
+        identifier: username,
+        password: rightPassword,
+        ipAddress,
+        userAgent,
       },
+      ctx.repos,
+      sendPrivilegedLoginAlert,
     );
     expect(isErr(result)).toBe(true);
     if (!isErr(result)) {
@@ -62,49 +69,57 @@ describe("privileged password login", () => {
       .where("id", "=", 5)
       .execute();
 
-    const result = await authenticatePasswordLogin(
-      { username, password: rightPassword, ipAddress, userAgent },
-      { repos: ctx.repos, sendPrivilegedLoginAlert },
+    const result = await submitPasswordLogin(
+      {
+        identifier: username,
+        password: rightPassword,
+        ipAddress,
+        userAgent,
+      },
+      ctx.repos,
+      sendPrivilegedLoginAlert,
     );
     expect(isErr(result)).toBe(false);
     if (isErr(result)) {
       throw new Error("expected bootstrap password login");
     }
 
-    expect(result.value.role).toBe("superuser");
-    expect(result.value.onboardingCompleted).toBe(false);
+    expect(result.value.kind).toBe("complete");
+    if (result.value.kind !== "complete") {
+      throw new Error("expected bootstrap password completion");
+    }
+
+    expect(result.value.result.role).toBe("superuser");
+    expect(result.value.result.onboardingCompleted).toBe(false);
     const sessions = await ctx.repos.sessions.listForUser(5);
     expect(sessions[0]?.auth_method).toBe("password");
     expect(sessions[0]?.strong_auth_at).toBeNull();
   });
 
-  it("rejects onboarded privileged login when totp code is missing", async () => {
+  it("moves onboarded privileged login to a totp verification step", async () => {
     await ctx.repos.userTotpFactors.createOrRotate(
       5,
       await encryptTotpSecret(generateTotpSecret()),
     );
     await ctx.repos.userTotpFactors.markEnabled(5);
 
-    const result = await authenticatePasswordLogin(
+    const result = await submitPasswordLogin(
       {
-        username,
+        identifier: username,
         password: rightPassword,
         ipAddress,
         userAgent,
       },
-      {
-        repos: ctx.repos,
-        sendPrivilegedLoginAlert,
-      },
+      ctx.repos,
+      sendPrivilegedLoginAlert,
     );
-    expect(isErr(result)).toBe(true);
-    if (!isErr(result)) {
-      throw new Error("expected strong auth requirement");
+    expect(isErr(result)).toBe(false);
+    if (isErr(result) || result.value.kind !== "totp_required") {
+      throw new Error("expected totp verification step");
     }
-    expect(result.error.kind).toBe("strong_auth_required");
   });
 
-  it("rejects privileged password login when passkey is the only strong factor", async () => {
+  it("moves privileged password login to a passkey verification step when passkey is the only strong factor", async () => {
     await ctx.repos.passkeys.create({
       id: "pk-only-super-user",
       user_id: 5,
@@ -113,23 +128,23 @@ describe("privileged password login", () => {
       transports: JSON.stringify(["internal"]),
     });
 
-    const result = await authenticatePasswordLogin(
+    const result = await submitPasswordLogin(
       {
-        username,
+        identifier: username,
         password: rightPassword,
         ipAddress,
         userAgent,
       },
-      {
-        repos: ctx.repos,
-        sendPrivilegedLoginAlert,
-      },
+      ctx.repos,
+      sendPrivilegedLoginAlert,
     );
-    expect(isErr(result)).toBe(true);
-    if (!isErr(result)) {
+    expect(isErr(result)).toBe(false);
+    if (isErr(result) || result.value.kind !== "passkey_required") {
       throw new Error("expected passkey requirement");
     }
-    expect(result.error.kind).toBe("passkey_required");
+
+    const flow = await getLoginFlowState(result.value.flow.id, ctx.repos);
+    expect(flow?.state).toBe("passkey");
   });
 
   it("marks session as strong-auth when privileged user logs in with valid totp", async () => {
@@ -145,15 +160,33 @@ describe("privileged password login", () => {
       await decryptTotpSecret(stored!.secret_encrypted),
     );
 
-    const result = await authenticatePasswordLogin(
+    const passwordResult = await submitPasswordLogin(
       {
-        username,
+        identifier: username,
         password: rightPassword,
+        ipAddress,
+        userAgent,
+      },
+      ctx.repos,
+      sendPrivilegedLoginAlert,
+    );
+    expect(isErr(passwordResult)).toBe(false);
+    if (
+      isErr(passwordResult) ||
+      passwordResult.value.kind !== "totp_required"
+    ) {
+      throw new Error("expected totp verification step");
+    }
+
+    const result = await submitTotpForLoginFlow(
+      {
+        flowId: passwordResult.value.flow.id,
         totpCode: code,
         ipAddress,
         userAgent,
       },
-      { repos: ctx.repos, sendPrivilegedLoginAlert },
+      ctx.repos,
+      sendPrivilegedLoginAlert,
     );
     expect(isErr(result)).toBe(false);
     if (isErr(result)) {
@@ -172,18 +205,33 @@ describe("privileged password login", () => {
     );
     await ctx.repos.userTotpFactors.markEnabled(5);
 
-    const result = await authenticatePasswordLogin(
+    const passwordResult = await submitPasswordLogin(
       {
-        username,
+        identifier: username,
         password: rightPassword,
+        ipAddress,
+        userAgent,
+      },
+      ctx.repos,
+      sendPrivilegedLoginAlert,
+    );
+    expect(isErr(passwordResult)).toBe(false);
+    if (
+      isErr(passwordResult) ||
+      passwordResult.value.kind !== "totp_required"
+    ) {
+      throw new Error("expected totp verification step");
+    }
+
+    const result = await submitTotpForLoginFlow(
+      {
+        flowId: passwordResult.value.flow.id,
         totpCode: "000000",
         ipAddress,
         userAgent,
       },
-      {
-        repos: ctx.repos,
-        sendPrivilegedLoginAlert,
-      },
+      ctx.repos,
+      sendPrivilegedLoginAlert,
     );
     expect(isErr(result)).toBe(true);
     if (!isErr(result)) {

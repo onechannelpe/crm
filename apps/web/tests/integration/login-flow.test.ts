@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
+  getLoginFlowState,
+  startPasskeyLogin,
   submitPasswordLogin,
   submitTotpForLoginFlow,
 } from "../../src/lib/auth/login-flow";
@@ -125,5 +127,36 @@ describe("login flow service", () => {
       passwordResult.value.flow.id,
     );
     expect(consumed).toBeUndefined();
+  });
+
+  it("creates a server-owned passkey flow with reusable request options", async () => {
+    await ctx.repos.passkeys.create({
+      id: "pk-login-flow",
+      user_id: 1,
+      public_key: "base64-public-key",
+      counter: 0,
+      transports: JSON.stringify(["internal"]),
+    });
+
+    const result = await startPasskeyLogin(
+      {
+        identifier: "exec.one",
+        ipAddress: "198.51.100.55",
+      },
+      ctx.repos,
+    );
+
+    expect(isErr(result)).toBe(false);
+    if (isErr(result)) {
+      throw new Error("expected passkey flow");
+    }
+
+    const flow = await getLoginFlowState(result.value.id, ctx.repos);
+    expect(flow?.state).toBe("passkey");
+    if (!flow || flow.state !== "passkey") {
+      throw new Error("expected passkey state");
+    }
+    expect(flow.requestOptions.allowCredentials).toHaveLength(1);
+    expect(flow.requestOptions.rpId).toBe(result.value.requestOptions.rpId);
   });
 });

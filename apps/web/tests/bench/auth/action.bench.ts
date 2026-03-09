@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
+import { submitPasswordLogin } from "~/lib/auth/login-flow";
 import { hashAuthKey } from "~/lib/auth/password/key-hash";
-import { authenticatePasswordLogin } from "~/lib/auth/password/password-login";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
 import { isErr } from "~/server/shared/result";
 
@@ -63,20 +63,22 @@ describe("auth login action benchmark", () => {
         "auth-login pool exhausted before iterations completed",
       );
 
-      const result = await authenticatePasswordLogin(
+      const result = await submitPasswordLogin(
         {
-          username: fixture.username,
+          identifier: fixture.username,
           password: LOGIN_PASSWORD,
           ipAddress: fixture.ipAddress,
           userAgent: "codspeed-bench",
         },
-        {
-          repos: ctx!.repos,
-          sendPrivilegedLoginAlert,
-        },
+        ctx!.repos,
+        sendPrivilegedLoginAlert,
       );
 
-      if (isErr(result) || !result.value.token) {
+      if (
+        isErr(result) ||
+        result.value.kind !== "complete" ||
+        !result.value.result.token
+      ) {
         throw new Error("expected non-empty session token");
       }
     },

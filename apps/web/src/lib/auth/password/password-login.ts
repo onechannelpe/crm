@@ -2,7 +2,7 @@ import { assertNonEmptyString } from "~/lib/contracts/guards";
 import type { User } from "~/lib/db/schema";
 import { repos } from "~/server/shared/context";
 import type { Repositories } from "~/server/shared/registry";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { Role } from "../access/rbac";
 import type {
@@ -13,7 +13,6 @@ import type {
 import { getPasswordLoginPolicy } from "../security/auth-contract";
 import { recordAuthEvent } from "../security/auth-events";
 import { sendAlertOnNewLoginSource } from "../security/login-source-alert";
-import { resolvePasswordStrongAuth } from "../security/password-strong-auth";
 import { type SendPrivilegedLoginAlert } from "../security/privileged-login-alert";
 import { getStrongAuthStatus } from "../security/strong-auth-status";
 import { issueLoginSession } from "../session/login-completion";
@@ -57,11 +56,6 @@ export interface PasswordLoginResult {
   role: Role;
   onboardingCompleted: boolean;
   token: string;
-}
-
-interface PasswordLoginDeps {
-  repos?: Deps;
-  sendPrivilegedLoginAlert: SendPrivilegedLoginAlert;
 }
 
 export type PasswordLoginNextStepError =
@@ -207,42 +201,4 @@ export async function completePasswordLogin(params: {
     onboardingCompleted: session.onboardingCompleted,
     token: session.token,
   };
-}
-
-export async function authenticatePasswordLogin(
-  input: PasswordLoginInput,
-  deps: PasswordLoginDeps,
-): Promise<
-  Result<PasswordLoginResult, PasswordLoginError | { kind: "invalid_totp" }>
-> {
-  const resolvedDeps = deps.repos ?? repos;
-  const user = await verifyPasswordLoginCredentials(
-    {
-      username: input.username,
-      password: input.password,
-      ipAddress: input.ipAddress,
-    },
-    { repos: resolvedDeps },
-  );
-  if (isErr(user)) return user;
-
-  const strongAuth = await resolvePasswordStrongAuth({
-    user: user.value,
-    ipAddress: input.ipAddress,
-    totpCode: input.totpCode,
-    deps: resolvedDeps,
-  });
-  if (isErr(strongAuth)) return strongAuth;
-
-  return Ok(
-    await completePasswordLogin({
-      user: user.value,
-      ipAddress: input.ipAddress,
-      userAgent: input.userAgent,
-      authMethod: strongAuth.value.authMethod,
-      strongAuthAt: strongAuth.value.strongAuthAt,
-      deps: resolvedDeps,
-      sendPrivilegedLoginAlert: deps.sendPrivilegedLoginAlert,
-    }),
-  );
 }

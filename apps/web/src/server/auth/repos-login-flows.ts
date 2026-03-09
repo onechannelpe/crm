@@ -7,7 +7,8 @@ export function createLoginFlowsRepo(db: Kysely<Database>) {
     async create(values: {
       identifier: string;
       user_id?: number | null;
-      state: "totp";
+      challenge_id?: number | null;
+      state: "totp" | "passkey";
       expires_at: number;
     }): Promise<number> {
       const now = Date.now();
@@ -16,6 +17,7 @@ export function createLoginFlowsRepo(db: Kysely<Database>) {
         .values({
           identifier: values.identifier,
           user_id: values.user_id ?? null,
+          challenge_id: values.challenge_id ?? null,
           state: values.state,
           expires_at: values.expires_at,
           created_at: now,

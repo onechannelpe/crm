@@ -49,7 +49,8 @@ export interface LoginFlowsTable {
   id: Generated<number>;
   identifier: string;
   user_id: number | null;
-  state: "totp";
+  challenge_id: number | null;
+  state: "totp" | "passkey";
   expires_at: number;
   created_at: number;
   updated_at: number;

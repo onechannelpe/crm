@@ -6,19 +6,9 @@ import {
 } from "~/lib/auth/session/session-manager";
 import { hashSessionToken } from "~/lib/auth/session/tokens";
 import type { User } from "~/lib/db/schema";
+import type { Repositories } from "~/server/shared/registry";
 
-type SessionAuditDeps = {
-  auditLogs: {
-    create(values: {
-      user_id: number;
-      action: "login" | "login_passkey";
-      entity_type: "user";
-      entity_id: number;
-      changes: null;
-      created_at: number;
-    }): Promise<unknown>;
-  };
-};
+type SessionAuditDeps = Pick<Repositories, "auditLogs" | "sessions" | "users">;
 
 type SessionUser = Pick<
   User,
@@ -62,6 +52,7 @@ export async function issueLoginSession(params: {
     params.userAgent,
     params.authMethod,
     params.strongAuthAt,
+    params.deps,
   );
 
   await params.deps.auditLogs.create({

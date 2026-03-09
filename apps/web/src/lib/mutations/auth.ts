@@ -4,7 +4,9 @@ import { getRequestEvent } from "solid-js/web";
 import type { Role } from "~/lib/auth/access/rbac";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import {
+  startPasskeyLogin,
   submitPasswordLogin,
+  submitPasskeyForLoginFlow,
   submitTotpForLoginFlow,
 } from "~/lib/auth/login-flow";
 import { getClientIp } from "~/lib/auth/password/client-ip";
@@ -24,6 +26,12 @@ const sendPrivilegedLoginAlert = createPrivilegedLoginAlertSender(repos, {
 });
 
 export type PasswordLoginSubmissionResult = {
+  ok: false;
+  code: "invalid_credentials" | "strong_auth_required";
+  message: string;
+};
+
+export type PasskeyStartSubmissionResult = {
   ok: false;
   code: "invalid_credentials";
   message: string;
@@ -94,15 +102,22 @@ export const passwordLoginMutation = action(
         sendPrivilegedLoginAlert,
       );
       if (isErr(result)) {
+        const message =
+          result.error.kind === "strong_auth_required"
+            ? "Tu cuenta requiere autenticacion reforzada para iniciar sesion."
+            : "Credenciales invalidas";
         return {
           ok: false,
-          code: "invalid_credentials",
-          message: "Credenciales invalidas",
+          code: result.error.kind,
+          message,
         };
       }
 
       if (result.value.kind === "totp_required") {
-        throw redirect(`/login?flow=${result.value.flow.id}`);
+        throw redirect(`/login/verify?flow=${result.value.flow.id}`);
+      }
+      if (result.value.kind === "passkey_required") {
+        throw redirect(`/login/passkey?flow=${result.value.flow.id}`);
       }
 
       await completeLoginAndRedirect(result.value.result);
@@ -117,6 +132,43 @@ export const passwordLoginMutation = action(
     }
   },
   "passwordLogin",
+);
+
+export const passkeyStartMutation = action(
+  async (formData: FormData): Promise<PasskeyStartSubmissionResult> => {
+    const identifier = readText(formData, "identifier");
+
+    try {
+      const request = getRequestContext();
+      const result = await startPasskeyLogin(
+        {
+          identifier,
+          ipAddress: request.ipAddress,
+        },
+        repos,
+      );
+      if (isErr(result)) {
+        return {
+          ok: false,
+          code: "invalid_credentials",
+          message: "No se pudo iniciar la clave de acceso",
+        };
+      }
+
+      throw redirect(`/login/passkey?flow=${result.value.id}`);
+    } catch (error: unknown) {
+      rethrowRedirect(error);
+      return {
+        ok: false,
+        code: "invalid_credentials",
+        message: getErrorMessage(
+          error,
+          "No se pudo iniciar la clave de acceso",
+        ),
+      };
+    }
+  },
+  "passkeyStart",
 );
 
 export const totpLoginMutation = action(
@@ -164,3 +216,49 @@ export const totpLoginMutation = action(
   },
   "totpLogin",
 );
+
+export async function finishPasskeyLoginAction(input: {
+  flowId: number;
+  response: import("@simplewebauthn/server").AuthenticationResponseJSON;
+}): Promise<
+  | {
+      ok: true;
+      redirectTo: string;
+    }
+  | {
+      ok: false;
+      code: "flow_expired" | "invalid_credentials";
+      message: string;
+    }
+> {
+  const request = getRequestContext();
+  const result = await submitPasskeyForLoginFlow(
+    {
+      flowId: input.flowId,
+      response: input.response,
+      ipAddress: request.ipAddress,
+      userAgent: request.userAgent,
+    },
+    repos,
+    sendPrivilegedLoginAlert,
+  );
+
+  if (isErr(result)) {
+    return {
+      ok: false,
+      code: result.error.kind,
+      message:
+        result.error.kind === "flow_expired"
+          ? "La sesión de clave de acceso expiró. Intenta de nuevo."
+          : "No se pudo iniciar sesión con la clave de acceso",
+    };
+  }
+
+  await replaceCurrentSession(result.value.result.token);
+  return {
+    ok: true,
+    redirectTo: result.value.result.onboardingCompleted
+      ? getDefaultAppPath(result.value.result.role)
+      : "/onboarding",
+  };
+}
