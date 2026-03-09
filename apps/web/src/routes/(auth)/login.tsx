@@ -1,5 +1,5 @@
 import { createAsync, useSearchParams, useSubmission } from "@solidjs/router";
-import { createMemo, createSignal, onMount, Show } from "solid-js";
+import { createMemo, onMount, Show } from "solid-js";
 
 import { AuthFlowShell } from "~/components/auth/auth-flow-shell";
 import { LastUsedPill } from "~/components/auth/last-used-pill";
@@ -26,7 +26,6 @@ export default function LoginPage() {
   const { showToast } = useToast();
   const passwordSubmission = useSubmission(passwordLoginMutation);
   const totpSubmission = useSubmission(totpLoginMutation);
-  const [identifier, setIdentifier] = createSignal("");
   const flowId = () => parseFlowId(searchParams.flow);
   const loginFlow = createAsync(() => {
     const currentFlowId = flowId();
@@ -159,10 +158,6 @@ export default function LoginPage() {
                   label="Usuario"
                   class={pageStyles.authControl}
                   name="identifier"
-                  value={identifier()}
-                  onInput={(event) => {
-                    setIdentifier(event.currentTarget.value);
-                  }}
                   autocomplete="username"
                   autocapitalize="none"
                   autocorrect="off"
@@ -197,8 +192,10 @@ export default function LoginPage() {
                   type="button"
                   class={pageStyles.passkeyLink}
                   disabled={loginMethods.passkeyLoading()}
-                  onClick={() => {
-                    void loginMethods.triggerPasskeyLogin(identifier());
+                  onClick={(event) => {
+                    const form = event.currentTarget.form;
+                    if (!form) return;
+                    void loginMethods.triggerPasskeyLogin(form);
                   }}
                 >
                   {loginMethods.passkeyLoading()

@@ -2,9 +2,14 @@ import { assertNonEmptyString } from "~/lib/contracts/guards";
 import type { User } from "~/lib/db/schema";
 import { repos } from "~/server/shared/context";
 import type { Repositories } from "~/server/shared/registry";
+import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import type { Role } from "../access/rbac";
-import { AuthFlowError } from "../errors";
+import type {
+  InvalidCredentialsError,
+  PasskeyRequiredError,
+  StrongAuthRequiredError,
+} from "../errors";
 import { getPasswordLoginPolicy } from "../security/auth-contract";
 import { recordAuthEvent } from "../security/auth-events";
 import { sendAlertOnNewLoginSource } from "../security/login-source-alert";
@@ -59,10 +64,18 @@ interface PasswordLoginDeps {
   sendPrivilegedLoginAlert: SendPrivilegedLoginAlert;
 }
 
+export type PasswordLoginNextStepError =
+  | StrongAuthRequiredError
+  | PasskeyRequiredError;
+
+export type PasswordLoginError =
+  | InvalidCredentialsError
+  | PasswordLoginNextStepError;
+
 export async function verifyPasswordLoginCredentials(
   input: PasswordCredentialInput,
   deps: { repos?: Deps },
-): Promise<User> {
+): Promise<Result<User, InvalidCredentialsError>> {
   const safeUsername = assertNonEmptyString(input.username, "username");
   const safePassword = assertNonEmptyString(input.password, "password");
   const resolvedDeps = deps.repos ?? repos;
@@ -83,7 +96,7 @@ export async function verifyPasswordLoginCredentials(
       outcome: "throttled",
       reason: "threshold_exceeded",
     });
-    throw new AuthFlowError("invalid_credentials");
+    return Err({ kind: "invalid_credentials" });
   }
 
   const user = await resolvedDeps.users.findByUsername(safeUsername);
@@ -100,7 +113,7 @@ export async function verifyPasswordLoginCredentials(
       outcome: "failure",
       reason: user ? "inactive_user" : "user_not_found",
     });
-    throw new AuthFlowError("invalid_credentials");
+    return Err({ kind: "invalid_credentials" });
   }
 
   if (!(await verifyPassword(user.password_hash, safePassword))) {
@@ -114,17 +127,17 @@ export async function verifyPasswordLoginCredentials(
       outcome: "failure",
       reason: "invalid_password",
     });
-    throw new AuthFlowError("invalid_credentials");
+    return Err({ kind: "invalid_credentials" });
   }
 
   await clearLoginFailureState(safeUsername, input.ipAddress, resolvedDeps);
-  return user;
+  return Ok(user);
 }
 
 export async function getPasswordLoginNextStep(
   user: User,
   deps: Pick<Deps, "userTotpFactors" | "passkeys">,
-): Promise<"complete" | "totp"> {
+): Promise<Result<"complete" | "totp", PasswordLoginNextStepError>> {
   const strongAuthStatus = await getStrongAuthStatus(user.id, deps);
   const passwordLoginPolicy = getPasswordLoginPolicy({
     role: user.role,
@@ -136,16 +149,18 @@ export async function getPasswordLoginNextStep(
     passwordLoginPolicy === "password_only" ||
     passwordLoginPolicy === "password_bootstrap"
   ) {
-    return "complete";
+    return Ok("complete");
   }
 
   if (passwordLoginPolicy === "password_or_totp" && strongAuthStatus.hasTotp) {
-    return "totp";
+    return Ok("totp");
   }
 
-  throw new AuthFlowError(
-    strongAuthStatus.hasPasskey ? "passkey_required" : "strong_auth_required",
-  );
+  return Err({
+    kind: strongAuthStatus.hasPasskey
+      ? "passkey_required"
+      : "strong_auth_required",
+  });
 }
 
 export async function completePasswordLogin(params: {
@@ -197,7 +212,9 @@ export async function completePasswordLogin(params: {
 export async function authenticatePasswordLogin(
   input: PasswordLoginInput,
   deps: PasswordLoginDeps,
-): Promise<PasswordLoginResult> {
+): Promise<
+  Result<PasswordLoginResult, PasswordLoginError | { kind: "invalid_totp" }>
+> {
   const resolvedDeps = deps.repos ?? repos;
   const user = await verifyPasswordLoginCredentials(
     {
@@ -207,20 +224,25 @@ export async function authenticatePasswordLogin(
     },
     { repos: resolvedDeps },
   );
+  if (isErr(user)) return user;
+
   const strongAuth = await resolvePasswordStrongAuth({
-    user,
+    user: user.value,
     ipAddress: input.ipAddress,
     totpCode: input.totpCode,
     deps: resolvedDeps,
   });
+  if (isErr(strongAuth)) return strongAuth;
 
-  return completePasswordLogin({
-    user,
-    ipAddress: input.ipAddress,
-    userAgent: input.userAgent,
-    authMethod: strongAuth.authMethod,
-    strongAuthAt: strongAuth.strongAuthAt,
-    deps: resolvedDeps,
-    sendPrivilegedLoginAlert: deps.sendPrivilegedLoginAlert,
-  });
+  return Ok(
+    await completePasswordLogin({
+      user: user.value,
+      ipAddress: input.ipAddress,
+      userAgent: input.userAgent,
+      authMethod: strongAuth.value.authMethod,
+      strongAuthAt: strongAuth.value.strongAuthAt,
+      deps: resolvedDeps,
+      sendPrivilegedLoginAlert: deps.sendPrivilegedLoginAlert,
+    }),
+  );
 }

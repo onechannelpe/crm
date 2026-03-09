@@ -3,6 +3,7 @@ import { afterAll, beforeAll, bench, describe } from "vitest";
 import { hashAuthKey } from "~/lib/auth/password/key-hash";
 import { authenticatePasswordLogin } from "~/lib/auth/password/password-login";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
+import { isErr } from "~/server/shared/result";
 
 import {
   cleanupTestDb,
@@ -75,7 +76,7 @@ describe("auth login action benchmark", () => {
         },
       );
 
-      if (!result.token) {
+      if (isErr(result) || !result.value.token) {
         throw new Error("expected non-empty session token");
       }
     },

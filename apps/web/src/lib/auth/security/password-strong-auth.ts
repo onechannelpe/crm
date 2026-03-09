@@ -8,8 +8,13 @@ import { decryptTotpSecret } from "~/lib/auth/totp/secret-crypto";
 import { verifyTotpCode } from "~/lib/auth/totp/totp";
 import type { User } from "~/lib/db/schema";
 import type { Repositories } from "~/server/shared/registry";
+import { Err, Ok, type Result } from "~/server/shared/result";
 
-import { AuthFlowError } from "../errors";
+import type {
+  InvalidTotpError,
+  PasskeyRequiredError,
+  StrongAuthRequiredError,
+} from "../errors";
 import { getPasswordLoginPolicy } from "./auth-contract";
 import { recordAuthEvent } from "./auth-events";
 import {
@@ -26,18 +31,28 @@ type Deps = Pick<
   | "passkeys"
 >;
 
+export type PasswordStrongAuthError =
+  | StrongAuthRequiredError
+  | PasskeyRequiredError
+  | InvalidTotpError;
+
 export async function resolvePasswordStrongAuth(params: {
   user: User;
   ipAddress: string;
   totpCode?: string;
   deps: Deps;
-}): Promise<{
-  authMethod: "password" | "password_totp";
-  strongAuthAt: number | null;
-}> {
+}): Promise<
+  Result<
+    {
+      authMethod: "password" | "password_totp";
+      strongAuthAt: number | null;
+    },
+    PasswordStrongAuthError
+  >
+> {
   const { user, ipAddress, totpCode, deps } = params;
   if (!requiresStrongAuthRole(user.role)) {
-    return { authMethod: "password", strongAuthAt: null };
+    return Ok({ authMethod: "password", strongAuthAt: null });
   }
 
   const identifier = `user:${user.id}`;
@@ -52,7 +67,7 @@ export async function resolvePasswordStrongAuth(params: {
   });
   const safeCode = totpCode?.trim();
   if (passwordLoginPolicy === "password_bootstrap") {
-    return { authMethod: "password", strongAuthAt: null };
+    return Ok({ authMethod: "password", strongAuthAt: null });
   }
   if (passwordLoginPolicy === "password_or_totp" && !strongAuthStatus.hasTotp) {
     await recordAuthEvent(deps, {
@@ -66,9 +81,11 @@ export async function resolvePasswordStrongAuth(params: {
         ? "strong_auth_passkey_required"
         : "strong_auth_factor_missing",
     });
-    throw new AuthFlowError(
-      strongAuthStatus.hasPasskey ? "passkey_required" : "strong_auth_required",
-    );
+    return Err({
+      kind: strongAuthStatus.hasPasskey
+        ? "passkey_required"
+        : "strong_auth_required",
+    });
   }
   if (!strongAuthStatus.hasVerifiedStrongAuth) {
     await recordAuthEvent(deps, {
@@ -80,7 +97,7 @@ export async function resolvePasswordStrongAuth(params: {
       outcome: "failure",
       reason: "strong_auth_not_enrolled",
     });
-    throw new AuthFlowError("strong_auth_required");
+    return Err({ kind: "strong_auth_required" });
   }
   if (passwordLoginPolicy === "passkey_only") {
     await recordAuthEvent(deps, {
@@ -92,7 +109,7 @@ export async function resolvePasswordStrongAuth(params: {
       outcome: "failure",
       reason: "strong_auth_passkey_required",
     });
-    throw new AuthFlowError("passkey_required");
+    return Err({ kind: "passkey_required" });
   }
   if (!safeCode) {
     await recordAuthEvent(deps, {
@@ -104,7 +121,7 @@ export async function resolvePasswordStrongAuth(params: {
       outcome: "failure",
       reason: "strong_auth_missing",
     });
-    throw new AuthFlowError("strong_auth_required");
+    return Err({ kind: "strong_auth_required" });
   }
   if (!factor) {
     await recordAuthEvent(deps, {
@@ -116,7 +133,7 @@ export async function resolvePasswordStrongAuth(params: {
       outcome: "failure",
       reason: "strong_auth_factor_missing",
     });
-    throw new AuthFlowError("strong_auth_required");
+    return Err({ kind: "strong_auth_required" });
   }
 
   const throttle = await checkTotpVerifyThrottle(identifier, ipAddress, deps);
@@ -130,7 +147,7 @@ export async function resolvePasswordStrongAuth(params: {
       outcome: "throttled",
       reason: "threshold_exceeded",
     });
-    throw new AuthFlowError("invalid_totp");
+    return Err({ kind: "invalid_totp" });
   }
 
   const secret = await decryptTotpSecret(factor.secret_encrypted);
@@ -144,7 +161,7 @@ export async function resolvePasswordStrongAuth(params: {
       stage: "verify",
       outcome: "success",
     });
-    return { authMethod: "password_totp", strongAuthAt: Date.now() };
+    return Ok({ authMethod: "password_totp", strongAuthAt: Date.now() });
   }
 
   const recoveryCodes = await deps.userTotpRecoveryCodes.listUnusedByUser(
@@ -169,7 +186,7 @@ export async function resolvePasswordStrongAuth(params: {
       stage: "recovery",
       outcome: "success",
     });
-    return { authMethod: "password_totp", strongAuthAt: Date.now() };
+    return Ok({ authMethod: "password_totp", strongAuthAt: Date.now() });
   }
 
   await recordTotpVerifyFailure(identifier, ipAddress, deps);
@@ -182,5 +199,5 @@ export async function resolvePasswordStrongAuth(params: {
     outcome: "failure",
     reason: "invalid_token",
   });
-  throw new AuthFlowError("invalid_totp");
+  return Err({ kind: "invalid_totp" });
 }

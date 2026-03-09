@@ -7,9 +7,8 @@ import {
   assertPositiveInt,
 } from "~/lib/contracts/guards";
 import type { Repositories } from "~/server/shared/registry";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
-import { isAuthFlowError } from "./errors";
 import {
   completePasswordLogin,
   getPasswordLoginNextStep,
@@ -49,19 +48,6 @@ export type SubmitPasswordLoginError = {
 export type SubmitTotpLoginError =
   | { kind: "flow_expired" }
   | { kind: "invalid_totp" };
-
-function isPasswordLoginFailure(error: unknown): boolean {
-  return (
-    isAuthFlowError(error) &&
-    (error.code === "invalid_credentials" ||
-      error.code === "strong_auth_required" ||
-      error.code === "passkey_required")
-  );
-}
-
-function isTotpLoginFailure(error: unknown): boolean {
-  return isAuthFlowError(error) && error.code === "invalid_totp";
-}
 
 async function readActiveLoginFlow(
   flowId: number,
@@ -133,47 +119,46 @@ export async function submitPasswordLogin(
     SubmitPasswordLoginError
   >
 > {
-  try {
-    const safeIdentifier = assertNonEmptyString(
-      input.identifier,
-      "identifier",
-    ).trim();
+  const safeIdentifier = assertNonEmptyString(
+    input.identifier,
+    "identifier",
+  ).trim();
 
-    const user = await verifyPasswordLoginCredentials(
-      {
-        username: safeIdentifier,
-        password: input.password,
-        ipAddress: input.ipAddress,
-      },
-      { repos: deps },
-    );
-    const nextStep = await getPasswordLoginNextStep(user, deps);
-
-    if (nextStep === "totp") {
-      return Ok({
-        kind: "totp_required",
-        flow: await createTotpLoginFlow(safeIdentifier, user.id, deps),
-      });
-    }
-
-    const result = await completePasswordLogin({
-      user,
+  const user = await verifyPasswordLoginCredentials(
+    {
+      username: safeIdentifier,
+      password: input.password,
       ipAddress: input.ipAddress,
-      userAgent: input.userAgent,
-      authMethod: "password",
-      strongAuthAt: null,
-      deps,
-      sendPrivilegedLoginAlert,
-    });
-
-    return Ok({ kind: "complete", result });
-  } catch (error: unknown) {
-    if (isPasswordLoginFailure(error)) {
-      return Err({ kind: "invalid_credentials" });
-    }
-
-    throw error;
+    },
+    { repos: deps },
+  );
+  if (isErr(user)) {
+    return Err({ kind: "invalid_credentials" });
   }
+
+  const nextStep = await getPasswordLoginNextStep(user.value, deps);
+  if (isErr(nextStep)) {
+    return Err({ kind: "invalid_credentials" });
+  }
+
+  if (nextStep.value === "totp") {
+    return Ok({
+      kind: "totp_required",
+      flow: await createTotpLoginFlow(safeIdentifier, user.value.id, deps),
+    });
+  }
+
+  const result = await completePasswordLogin({
+    user: user.value,
+    ipAddress: input.ipAddress,
+    userAgent: input.userAgent,
+    authMethod: "password",
+    strongAuthAt: null,
+    deps,
+    sendPrivilegedLoginAlert,
+  });
+
+  return Ok({ kind: "complete", result });
 }
 
 export async function submitTotpForLoginFlow(
@@ -211,27 +196,27 @@ export async function submitTotpForLoginFlow(
     return Err({ kind: "flow_expired" });
   }
 
-  let strongAuth;
-  try {
-    strongAuth = await resolvePasswordStrongAuth({
-      user,
-      ipAddress: input.ipAddress,
-      totpCode: input.totpCode,
-      deps,
+  const strongAuth = await resolvePasswordStrongAuth({
+    user,
+    ipAddress: input.ipAddress,
+    totpCode: input.totpCode,
+    deps,
+  });
+  if (isErr(strongAuth)) {
+    return Err({
+      kind:
+        strongAuth.error.kind === "invalid_totp"
+          ? "invalid_totp"
+          : "flow_expired",
     });
-  } catch (error: unknown) {
-    if (isTotpLoginFailure(error)) {
-      return Err({ kind: "invalid_totp" });
-    }
-
-    throw error;
   }
+
   const result = await completePasswordLogin({
     user,
     ipAddress: input.ipAddress,
     userAgent: input.userAgent,
-    authMethod: strongAuth.authMethod,
-    strongAuthAt: strongAuth.strongAuthAt,
+    authMethod: strongAuth.value.authMethod,
+    strongAuthAt: strongAuth.value.strongAuthAt,
     deps,
     sendPrivilegedLoginAlert,
   });

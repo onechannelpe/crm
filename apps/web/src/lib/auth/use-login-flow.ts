@@ -56,8 +56,10 @@ export function useLoginFlow() {
     setLastUsedMethod("password");
   }
 
-  async function triggerPasskeyLogin(identifier: string) {
-    const safeIdentifier = identifier.trim();
+  async function triggerPasskeyLogin(form: HTMLFormElement) {
+    const identifierValue = new FormData(form).get("identifier");
+    const safeIdentifier =
+      typeof identifierValue === "string" ? identifierValue.trim() : "";
     if (safeIdentifier.length === 0) {
       showToast("error", "Ingresa tu usuario para usar la clave de acceso.");
       return;
