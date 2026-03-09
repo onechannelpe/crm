@@ -12,7 +12,28 @@ import {
 } from "~/lib/auth/passkey/browser";
 import { getErrorMessage } from "~/lib/errors";
 
-export type LoginStep = "init" | "password" | "totp" | "passkey";
+export type LoginStep = "init" | "email" | "password" | "totp" | "passkey";
+export type LastUsedMethod = "google" | "password" | null;
+
+const LAST_USED_KEY = "last_auth_method";
+
+function readLastUsed(): LastUsedMethod {
+  try {
+    const v = localStorage.getItem(LAST_USED_KEY);
+    if (v === "google" || v === "password") return v;
+  } catch {
+    // localStorage unavailable (SSR / sandboxed)
+  }
+  return null;
+}
+
+function persistLastUsed(method: LastUsedMethod): void {
+  try {
+    if (method) localStorage.setItem(LAST_USED_KEY, method);
+  } catch {
+    // ignore
+  }
+}
 
 export function useLoginFlow() {
   const navigate = useNavigate();
@@ -27,10 +48,13 @@ export function useLoginFlow() {
   const [passkeySupport, setPasskeySupport] = createSignal<
     "unknown" | "supported" | "unsupported"
   >("unknown");
+  const [lastUsedMethod, setLastUsedMethod] =
+    createSignal<LastUsedMethod>(null);
 
   onMount(() => {
     initializeThemeMode();
     setPasskeySupport(isPasskeySupported() ? "supported" : "unsupported");
+    setLastUsedMethod(readLastUsed());
   });
 
   // Auto-trigger the WebAuthn prompt immediately on step entry
@@ -46,22 +70,12 @@ export function useLoginFlow() {
     return false;
   }
 
-  function goToPassword() {
-    if (!requireUsername()) return;
-    setStep("password");
-  }
-
-  function goToPasskey() {
-    if (!requireUsername()) return;
-    setStep("passkey");
-  }
-
-  async function handlePasswordSubmit(e: Event) {
-    e.preventDefault();
+  async function handlePasswordSubmit() {
     setLoading(true);
 
     try {
       const result = await login(username(), password());
+      persistLastUsed("password");
       navigate(
         result.onboardingCompleted
           ? getDefaultAppPath(result.role)
@@ -82,8 +96,7 @@ export function useLoginFlow() {
     }
   }
 
-  async function handleTotpSubmit(e: Event) {
-    e.preventDefault();
+  async function handleTotpSubmit() {
     setLoading(true);
 
     try {
@@ -136,6 +149,11 @@ export function useLoginFlow() {
     }
   }
 
+  function handleGoogleLogin() {
+    persistLastUsed("google");
+    window.location.href = "/api/auth/google";
+  }
+
   return {
     step,
     setStep,
@@ -148,8 +166,9 @@ export function useLoginFlow() {
     loading,
     passkeyLoading,
     passkeySupport,
-    goToPassword,
-    goToPasskey,
+    lastUsedMethod,
+    requireUsername,
+    handleGoogleLogin,
     handlePasswordSubmit,
     handleTotpSubmit,
     triggerPasskeyLogin,

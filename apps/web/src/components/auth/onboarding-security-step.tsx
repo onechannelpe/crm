@@ -5,7 +5,8 @@ import styles from "~/routes/onboarding-page.module.css";
 interface OnboardingSecurityStepProps {
   hasPasskey: boolean;
   totpEnabled: boolean;
-  onSelectMethod: (value: "passkey" | "totp") => void;
+  onSelectPasskey: () => void;
+  onSelectTotp: () => void;
 }
 
 export function OnboardingSecurityStep(props: OnboardingSecurityStepProps) {
@@ -19,7 +20,7 @@ export function OnboardingSecurityStep(props: OnboardingSecurityStepProps) {
           type="button"
           class={styles.choiceCard}
           aria-pressed={props.hasPasskey}
-          onClick={() => props.onSelectMethod("passkey")}
+          onClick={props.onSelectPasskey}
         >
           <div class={styles.choiceCardHeader}>
             <span class={styles.choiceTitle}>Clave de acceso</span>
@@ -28,14 +29,14 @@ export function OnboardingSecurityStep(props: OnboardingSecurityStepProps) {
             </Show>
           </div>
           <span class={styles.choiceDescription}>
-            Entra con tu dispositivo.
+            Huella dactilar, Face ID o clave de seguridad.
           </span>
         </button>
         <button
           type="button"
           class={styles.choiceCard}
           aria-pressed={props.totpEnabled}
-          onClick={() => props.onSelectMethod("totp")}
+          onClick={props.onSelectTotp}
         >
           <div class={styles.choiceCardHeader}>
             <span class={styles.choiceTitle}>App de autenticación</span>

@@ -1,4 +1,5 @@
-import { Input } from "~/components/ui/input/input";
+import { Show } from "solid-js";
+
 import type { Role } from "~/lib/auth/access/rbac";
 import { getRoleLabel } from "~/lib/auth/access/role-display";
 import { isValidOnboardingPhone } from "~/lib/auth/onboarding-flow";
@@ -19,41 +20,62 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
 
   return (
     <section class={styles.stepStack}>
-      <div class={styles.formStack}>
-        <Input
-          type="text"
-          placeholder="Nombre completo"
-          value={props.fullName}
-          disabled
-        />
-        <Input
-          id="onboarding-email"
-          type="email"
-          placeholder="Correo corporativo"
-          value={props.email}
-          disabled
-        />
-        <Input
-          type="text"
-          placeholder="Rol"
-          value={getRoleLabel(props.role)}
-          disabled
-        />
-        <Input
-          id="onboarding-phone"
-          type="tel"
-          placeholder="+51987654321"
-          value={props.phone}
-          onInput={(event) => props.onPhoneInput(event.currentTarget.value)}
-          required
-        />
+      <p class={styles.confirmHint}>
+        Verifica que tus datos sean correctos. Para cambios de nombre o correo,
+        contacta a RR.HH.
+      </p>
+
+      <div class={styles.infoList}>
+        <Show
+          when={props.fullName.trim()}
+          fallback={
+            <div class={styles.infoRowMissing}>
+              <span class={styles.infoKey}>Nombre</span>
+              <span class={styles.infoValueMissing}>
+                No registrado. Contacta a RR.HH.
+              </span>
+            </div>
+          }
+        >
+          <div class={styles.infoRow}>
+            <span class={styles.infoKey}>Nombre</span>
+            <span class={styles.infoValue}>{props.fullName}</span>
+          </div>
+        </Show>
+        <div class={styles.infoRow}>
+          <span class={styles.infoKey}>Correo</span>
+          <span class={styles.infoValue}>{props.email}</span>
+        </div>
+        <div class={styles.infoRow}>
+          <span class={styles.infoKey}>Rol</span>
+          <span class={styles.infoValue}>{getRoleLabel(props.role)}</span>
+        </div>
       </div>
 
-      <p class={phoneError() ? styles.helperTextError : styles.helperText}>
-        {phoneError()
-          ? "Formato inválido. Usa +código de país + número, ej. +51987654321."
-          : "Usa el formato internacional, por ejemplo +51987654321."}
-      </p>
+      {/* Phone is the only new field the user provides in this step */}
+      <div class={styles.phoneField}>
+        <label class={styles.phoneLabel}>
+          <span class={styles.phoneLabelText}>WhatsApp corporativo</span>
+          <div class={styles.phoneRow}>
+            <span class={styles.phonePrefix}>+51</span>
+            <input
+              id="onboarding-phone"
+              type="tel"
+              class={styles.phoneInput}
+              placeholder="987654321"
+              maxlength="9"
+              value={props.phone}
+              onInput={(e) => props.onPhoneInput(e.currentTarget.value)}
+              required
+            />
+          </div>
+        </label>
+        <Show when={phoneError()}>
+          <p class={styles.helperTextError}>
+            Ingresa los 9 dígitos del número.
+          </p>
+        </Show>
+      </div>
     </section>
   );
 }

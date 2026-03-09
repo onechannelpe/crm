@@ -10,12 +10,12 @@
 .rejectTitle {
   margin: 0;
   font-size: var(--font-size-body);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--destructive);
 }
 
 .idCell {
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .contactWrap {
@@ -25,7 +25,7 @@
 
 .contactName {
   margin: 0;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .contactMeta {
@@ -66,7 +66,7 @@
 .attemptTitle {
   margin: 0;
   font-size: var(--font-size-body);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .attemptFields {

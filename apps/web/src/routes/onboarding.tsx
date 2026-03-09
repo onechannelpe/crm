@@ -3,9 +3,8 @@ import { Show } from "solid-js";
 import { AuthFlowShell } from "~/components/auth/auth-flow-shell";
 import { OnboardingProfileStep } from "~/components/auth/onboarding-profile-step";
 import { OnboardingSecurityStep } from "~/components/auth/onboarding-security-step";
-import { PasskeyMethodCard } from "~/components/auth/passkey-method-card";
+import { OtpSlotInput } from "~/components/auth/otp-slot-input";
 import { RecoveryCodesPanel } from "~/components/auth/recovery-codes-panel";
-import { TotpMethodCard } from "~/components/auth/totp-method-card";
 import { SessionProvider } from "~/components/providers/session-provider";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
@@ -51,6 +50,7 @@ function OnboardingContent() {
           }}
         >
           <AuthFlowShell
+            topBar={<OnboardingProgress step={flow.step()} />}
             title={title()}
             footer={
               <div class={styles.footerActions}>
@@ -81,8 +81,6 @@ function OnboardingContent() {
               </div>
             }
           >
-            <OnboardingProgress step={flow.step()} />
-
             <Show when={flow.step() === "profile"}>
               <EnterTransition>
                 <OnboardingProfileStep
@@ -100,33 +98,63 @@ function OnboardingContent() {
                 <OnboardingSecurityStep
                   hasPasskey={currentUser.hasPasskey}
                   totpEnabled={currentUser.totpEnabled}
-                  onSelectMethod={(value) =>
-                    flow.setStep(value === "passkey" ? "passkey" : "totp")
-                  }
+                  onSelectPasskey={() => {
+                    flow.setStep("passkey");
+                    // registerPasskey must be in same event handler (WebAuthn user-gesture requirement)
+                    void flow.passkeyEnrollment.registerPasskey();
+                  }}
+                  onSelectTotp={() => flow.setStep("totp")}
                 />
               </EnterTransition>
             </Show>
 
             <Show when={flow.step() === "passkey"}>
               <EnterTransition>
-                <div class={styles.totpStack}>
-                  <PasskeyMethodCard
-                    title="Clave de acceso"
-                    description="Entra con tu dispositivo sin contraseña."
-                    statusLabel={
-                      currentUser.hasPasskey ? "Configurada" : "No configurada"
+                <div class={styles.passkeyEnrollStep}>
+                  <Show when={flow.passkeyEnrollment.loading()}>
+                    <p class={styles.passkeyStatus}>
+                      Esperando tu dispositivo...
+                    </p>
+                  </Show>
+
+                  <Show
+                    when={
+                      !flow.passkeyEnrollment.loading() &&
+                      currentUser.hasPasskey
                     }
-                    active={currentUser.hasPasskey}
-                    supported={flow.passkeyEnrollment.supported()}
-                    loading={flow.passkeyEnrollment.loading()}
-                    actionLabel={
-                      currentUser.hasPasskey ? "Agregar otra" : "Configurar"
+                  >
+                    <p class={styles.passkeyStatusConfigured}>
+                      Clave de acceso configurada.
+                    </p>
+                  </Show>
+
+                  <Show
+                    when={
+                      !flow.passkeyEnrollment.loading() &&
+                      !currentUser.hasPasskey &&
+                      flow.passkeyEnrollment.supported()
                     }
-                    unsupportedNote="Este dispositivo no es compatible con claves de acceso."
-                    onAction={() => {
-                      void flow.passkeyEnrollment.registerPasskey();
-                    }}
-                  />
+                  >
+                    <Button
+                      type="button"
+                      onClick={() =>
+                        void flow.passkeyEnrollment.registerPasskey()
+                      }
+                    >
+                      Reintentar
+                    </Button>
+                  </Show>
+
+                  <Show
+                    when={
+                      !flow.passkeyEnrollment.loading() &&
+                      !flow.passkeyEnrollment.supported()
+                    }
+                  >
+                    <p class={styles.passkeyStatus}>
+                      Este dispositivo no es compatible con claves de acceso.
+                    </p>
+                  </Show>
                 </div>
               </EnterTransition>
             </Show>
@@ -134,27 +162,70 @@ function OnboardingContent() {
             <Show when={flow.step() === "totp"}>
               <EnterTransition>
                 <div class={styles.totpStack}>
-                  <TotpMethodCard
-                    title="Aplicación de autenticación"
-                    description="Genera códigos temporales para confirmar tu acceso."
-                    statusLabel={
-                      currentUser.totpEnabled ? "Configurada" : "No configurada"
+                  <Show
+                    when={flow.totpEnrollment.enrollment()}
+                    fallback={
+                      <Show when={flow.totpEnrollment.loading()}>
+                        <p class={styles.passkeyStatus}>
+                          Generando código QR...
+                        </p>
+                      </Show>
                     }
-                    active={currentUser.totpEnabled}
-                    loading={flow.totpEnrollment.loading()}
-                    actionLabel={
-                      currentUser.totpEnabled ? "Reconfigurar" : "Configurar"
+                  >
+                    {(enrollment) => (
+                      <div class={styles.totpInline}>
+                        <div class={styles.qrCenter}>
+                          <img
+                            src={enrollment().qrCodeDataUrl}
+                            alt="Código QR para autenticación"
+                            class={styles.qrCode}
+                          />
+                        </div>
+                        <details class={styles.secretDetails}>
+                          <summary>¿No puedes escanear el código?</summary>
+                          <div class={styles.secretKeyBlock}>
+                            <span class={styles.secretKeyLabel}>
+                              Ingresa esta clave en tu app
+                            </span>
+                            <span class={styles.secretKeyText}>
+                              {new URL(
+                                enrollment().otpauthUri,
+                              ).searchParams.get("secret")}
+                            </span>
+                          </div>
+                        </details>
+                        <OtpSlotInput
+                          value={flow.totpEnrollment.code()}
+                          disabled={flow.totpEnrollment.loading()}
+                          onValueChange={flow.totpEnrollment.setCode}
+                        />
+                        <Button
+                          type="button"
+                          disabled={
+                            flow.totpEnrollment.loading() ||
+                            flow.totpEnrollment.code().length < 6
+                          }
+                          loading={flow.totpEnrollment.loading()}
+                          onClick={() =>
+                            void flow.totpEnrollment.verifyEnrollment()
+                          }
+                        >
+                          Verificar
+                        </Button>
+                      </div>
+                    )}
+                  </Show>
+
+                  <Show
+                    when={
+                      currentUser.totpEnabled &&
+                      !flow.totpEnrollment.enrollment()
                     }
-                    code={flow.totpEnrollment.code()}
-                    enrollment={flow.totpEnrollment.enrollment()}
-                    onCodeChange={flow.totpEnrollment.setCode}
-                    onBegin={() => {
-                      void flow.totpEnrollment.beginEnrollment();
-                    }}
-                    onVerify={() => {
-                      void flow.totpEnrollment.verifyEnrollment();
-                    }}
-                  />
+                  >
+                    <p class={styles.passkeyStatusConfigured}>
+                      App de autenticación configurada.
+                    </p>
+                  </Show>
 
                   <Show when={flow.totpEnrollment.recoveryCodes().length > 0}>
                     <RecoveryCodesPanel

@@ -33,14 +33,16 @@ export function useOnboardingFlow() {
   const totpEnrollment = useTotpEnrollment({
     showToast,
     refreshStatus: refreshCurrentUser,
-    beginInfoMessage: "Escanea el QR y verifica el código de 6 dígitos",
   });
 
-  // Sync phone from session on first load
+  // Sync phone from session on first load, strip +51 prefix for local display
   createEffect(() => {
     const u = user();
     if (u && !phone() && u.phoneE164) {
-      setPhone(u.phoneE164);
+      const local = u.phoneE164.startsWith("+51")
+        ? u.phoneE164.slice(3)
+        : u.phoneE164;
+      setPhone(local);
     }
   });
 
@@ -48,6 +50,20 @@ export function useOnboardingFlow() {
   createEffect(() => {
     if (user() === null) {
       navigate("/login");
+    }
+  });
+
+  // Auto-start TOTP enrollment immediately when entering the TOTP step
+  createEffect(() => {
+    const u = user();
+    if (
+      step() === "totp" &&
+      u != null &&
+      !u.totpEnabled &&
+      !totpEnrollment.enrollment() &&
+      !totpEnrollment.loading()
+    ) {
+      void totpEnrollment.beginEnrollment();
     }
   });
 
@@ -77,10 +93,7 @@ export function useOnboardingFlow() {
 
   function handleProfileContinue() {
     if (!isValidOnboardingPhone(phone())) {
-      showToast(
-        "error",
-        "Ingresa un WhatsApp corporativo válido en formato E.164",
-      );
+      showToast("error", "Ingresa los 9 dígitos de tu WhatsApp corporativo");
       return;
     }
     setStep("security-choice");

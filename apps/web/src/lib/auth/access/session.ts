@@ -9,7 +9,7 @@ export interface SessionData {
   role: Role;
   branchId: number;
   onboardingCompleted: boolean;
-  authMethod: "password" | "password_totp" | "passkey";
+  authMethod: "password" | "password_totp" | "passkey" | "google";
   strongAuthAt: number | null;
 }
 

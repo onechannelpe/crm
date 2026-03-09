@@ -40,7 +40,7 @@
 .statValue {
   margin: 0;
   font-size: var(--font-size-heading-lg);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--foreground);
 }
 

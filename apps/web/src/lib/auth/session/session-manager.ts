@@ -15,7 +15,12 @@ import {
 const SESSION_DURATION = 30 * 24 * 60 * 60 * 1000;
 const ACTIVITY_UPDATE_THRESHOLD = 5 * 60 * 1000;
 const EXTENSION_THRESHOLD = 7 * 24 * 60 * 60 * 1000;
-const AUTH_METHODS = ["password", "password_totp", "passkey"] as const;
+const AUTH_METHODS = [
+  "password",
+  "password_totp",
+  "passkey",
+  "google",
+] as const;
 const logger = createLogger("session-manager");
 
 export interface SessionValidationResult {
@@ -59,7 +64,7 @@ export async function createSession(
   role: Role,
   ipAddress: string | null,
   userAgent: string | null,
-  authMethod: "password" | "password_totp" | "passkey",
+  authMethod: "password" | "password_totp" | "passkey" | "google",
   strongAuthAt: number | null,
   deps?: SessionDeps,
 ): Promise<string> {
