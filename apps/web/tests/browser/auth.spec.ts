@@ -49,7 +49,7 @@ test.describe("auth browser flow", () => {
     const form = passwordForm(page);
 
     await expect(
-      page.getByRole("button", { name: "Continuar con Google" }),
+      page.getByRole("link", { name: "Continuar con Google" }),
     ).toBeVisible();
     await expect(form.getByRole("textbox", { name: /Usuario/ })).toBeVisible();
     await expect(
@@ -105,8 +105,12 @@ test.describe("auth browser flow", () => {
 
     await page.goto("/login");
 
-    await expect(page.locator("form")).toHaveCount(2);
-    await expect(page.getByLabel("Usuario para clave de acceso")).toBeVisible();
+    await expect(page.locator("form")).toHaveCount(1);
+    await page
+      .getByRole("link", { name: "Continuar con clave de acceso" })
+      .click();
+    await expect(page).toHaveURL("/login/passkey/start");
+    await expect(page.getByLabel("Usuario")).toBeVisible();
     await expect(
       page.getByRole("button", { name: "Continuar con clave de acceso" }),
     ).toHaveCount(1);
@@ -118,10 +122,8 @@ test.describe("auth browser flow", () => {
   }) => {
     test.skip(browserName !== "chromium");
 
-    await page.goto("/login");
-    await page
-      .getByLabel("Usuario para clave de acceso")
-      .fill(PASSKEY_USERNAME);
+    await page.goto("/login/passkey/start");
+    await page.getByLabel("Usuario").fill(PASSKEY_USERNAME);
     await page
       .getByRole("button", { name: "Continuar con clave de acceso" })
       .click();

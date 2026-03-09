@@ -14,8 +14,8 @@ import {
 } from "~/lib/auth/passkey/browser";
 import { loginFlowQuery } from "~/lib/queries/auth";
 
-import styles from "../../auth/auth-shell.module.css";
-import pageStyles from "../../auth/login-page.module.css";
+import styles from "../../../auth/auth-shell.module.css";
+import pageStyles from "../../../auth/login-page.module.css";
 
 export default function LoginPasskeyPage() {
   const [searchParams] = useSearchParams();

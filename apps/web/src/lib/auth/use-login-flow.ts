@@ -1,7 +1,6 @@
 import { createSignal, onMount } from "solid-js";
 
 import { initializeThemeMode } from "~/components/ui/theme/theme-mode";
-import { isPasskeySupported } from "~/lib/auth/passkey/browser";
 
 export type LastUsedMethod = "google" | "password" | null;
 
@@ -26,15 +25,11 @@ function persistLastUsed(method: LastUsedMethod): void {
 }
 
 export function useLoginFlow() {
-  const [passkeySupport, setPasskeySupport] = createSignal<
-    "unknown" | "supported" | "unsupported"
-  >("unknown");
   const [lastUsedMethod, setLastUsedMethod] =
     createSignal<LastUsedMethod>(null);
 
   onMount(() => {
     initializeThemeMode();
-    setPasskeySupport(isPasskeySupported() ? "supported" : "unsupported");
     setLastUsedMethod(readLastUsed());
   });
 
@@ -43,15 +38,14 @@ export function useLoginFlow() {
     setLastUsedMethod("password");
   }
 
-  function handleGoogleLogin() {
+  function markGoogleUsed(): void {
     persistLastUsed("google");
-    window.location.href = "/api/auth/google";
+    setLastUsedMethod("google");
   }
 
   return {
-    passkeySupport,
     lastUsedMethod,
     markPasswordUsed,
-    handleGoogleLogin,
+    markGoogleUsed,
   };
 }

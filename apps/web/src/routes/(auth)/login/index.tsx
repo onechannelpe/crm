@@ -8,20 +8,18 @@ import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { useLoginFlow } from "~/lib/auth/use-login-flow";
-import {
-  passkeyStartMutation,
-  passwordLoginMutation,
-} from "~/lib/mutations/auth";
+import { passwordLoginMutation } from "~/lib/mutations/auth";
+import { cn } from "~/lib/utils";
 
 import styles from "../../auth/auth-shell.module.css";
 import pageStyles from "../../auth/login-page.module.css";
+import buttonStyles from "~/components/ui/input/button.module.css";
 
 export default function LoginPage() {
   const loginMethods = useLoginFlow();
   const [searchParams] = useSearchParams();
   const { showToast } = useToast();
   const passwordSubmission = useSubmission(passwordLoginMutation);
-  const passkeyStartSubmission = useSubmission(passkeyStartMutation);
 
   onMount(() => {
     if (searchParams.error === "google_not_linked") {
@@ -44,19 +42,21 @@ export default function LoginPage() {
     const result = passwordSubmission.result;
     return result && !result.ok ? result.message : undefined;
   };
-  const passkeyError = () => {
-    const result = passkeyStartSubmission.result;
-    return result && !result.ok ? result.message : undefined;
-  };
-
   return (
     <AuthFlowShell title="Bienvenido." footerNote={footerNote()}>
       <div class={pageStyles.formStack}>
         <div class={pageStyles.ssoButtonContainer}>
-          <Button
-            variant="primary"
-            class={styles.full}
-            onClick={loginMethods.handleGoogleLogin}
+          <a
+            href="/api/auth/google"
+            class={cn(
+              buttonStyles.button,
+              buttonStyles.lg,
+              buttonStyles.primary,
+              styles.full,
+            )}
+            onClick={() => {
+              loginMethods.markGoogleUsed();
+            }}
           >
             <svg
               class={pageStyles.googleIcon}
@@ -82,7 +82,7 @@ export default function LoginPage() {
               />
             </svg>
             Continuar con Google
-          </Button>
+          </a>
           <Show when={loginMethods.lastUsedMethod() === "google"}>
             <LastUsedPill />
           </Show>
@@ -147,47 +147,18 @@ export default function LoginPage() {
           </Show>
         </form>
 
-        <Show when={loginMethods.passkeySupport() === "supported"}>
-          <>
-            <div class={pageStyles.separator} role="separator" />
-            <form
-              class={pageStyles.formStack}
-              action={passkeyStartMutation}
-              method="post"
-            >
-              <Show when={passkeyError()}>
-                {(message) => (
-                  <p class={pageStyles.formError} role="alert">
-                    {message()}
-                  </p>
-                )}
-              </Show>
-              <EnterTransition>
-                <Input
-                  id="passkey-username"
-                  type="text"
-                  label="Usuario para clave de acceso"
-                  class={pageStyles.authControl}
-                  name="identifier"
-                  autocomplete="username webauthn"
-                  autocapitalize="none"
-                  autocorrect="off"
-                  spellcheck={false}
-                  required
-                />
-              </EnterTransition>
-
-              <Button
-                type="submit"
-                size="lg"
-                class={styles.full}
-                loading={passkeyStartSubmission.pending}
-              >
-                Continuar con clave de acceso
-              </Button>
-            </form>
-          </>
-        </Show>
+        <div class={pageStyles.separator} role="separator" />
+        <a
+          href="/login/passkey/start"
+          class={cn(
+            buttonStyles.button,
+            buttonStyles.lg,
+            buttonStyles.primary,
+            styles.full,
+          )}
+        >
+          Continuar con clave de acceso
+        </a>
       </div>
     </AuthFlowShell>
   );
