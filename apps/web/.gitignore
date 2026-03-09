@@ -1,5 +1,6 @@
 # build artifacts
-.vinxi
+.nitro
+.solid-start
 .output
 dist
 app.config.timestamp_*.js
