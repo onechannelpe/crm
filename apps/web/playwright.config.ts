@@ -1,6 +1,37 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const AUTH_TEST_PORT = 4174;
+const includeWebkit = process.env.CI === "true";
+
+const projects = [
+  {
+    name: "chromium",
+    use: {
+      ...devices["Desktop Chrome"],
+    },
+  },
+  {
+    name: "firefox",
+    use: {
+      ...devices["Desktop Firefox"],
+    },
+  },
+  {
+    name: "mobile-chromium",
+    use: {
+      ...devices["Pixel 5"],
+    },
+  },
+];
+
+if (includeWebkit) {
+  projects.push({
+    name: "webkit",
+    use: {
+      ...devices["Desktop Safari"],
+    },
+  });
+}
 
 export default defineConfig({
   testDir: "./tests/browser",
@@ -21,18 +52,5 @@ export default defineConfig({
     reuseExistingServer: false,
     timeout: 120_000,
   },
-  projects: [
-    {
-      name: "chromium",
-      use: {
-        ...devices["Desktop Chrome"],
-      },
-    },
-    {
-      name: "mobile-chromium",
-      use: {
-        ...devices["Pixel 5"],
-      },
-    },
-  ],
+  projects,
 });
