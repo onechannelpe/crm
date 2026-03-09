@@ -503,12 +503,21 @@ export interface WebauthnChallengesTable {
   created_at: number;
 }
 
+export interface UserOAuthAccountsTable {
+  id: Generated<number>;
+  user_id: number;
+  provider: string;
+  provider_user_id: string;
+  email: string;
+  created_at: number;
+}
+
 export interface UserSessionsTable {
   id: string;
   user_id: number;
   branch_id: number;
   role: UsersTable["role"];
-  auth_method: "password" | "password_totp" | "passkey";
+  auth_method: "password" | "password_totp" | "passkey" | "google";
   strong_auth_at: number | null;
   ip_address: string | null;
   user_agent: string | null;
@@ -626,6 +635,7 @@ export interface Database {
   search_enrichment_overlays: SearchEnrichmentOverlaysTable;
   passkeys: PasskeysTable;
   webauthn_challenges: WebauthnChallengesTable;
+  user_oauth_accounts: UserOAuthAccountsTable;
 }
 
 export type Branch = Selectable<BranchesTable>;

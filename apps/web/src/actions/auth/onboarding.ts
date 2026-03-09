@@ -10,17 +10,16 @@ import { repos, runInRepositoryTransaction } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 import { createAccountOnboardingService } from "~/server/users/service-account-onboarding";
 
-function assertE164Phone(value: string): string {
-  const normalized = value.replace(/\s+/g, "").trim();
-  if (!/^\+[1-9]\d{7,14}$/.test(normalized)) {
-    throw validationError("phone must be a valid E.164 number");
-  }
-  return normalized;
+function normalizePeruvianPhone(value: string): string {
+  const v = value.replace(/\s+/g, "").trim();
+  if (/^\+51\d{9}$/.test(v)) return v;
+  if (/^\d{9}$/.test(v)) return `+51${v}`;
+  throw validationError("El número debe tener 9 dígitos");
 }
 
 export async function completeOnboarding(phoneE164: string): Promise<void> {
   const session = await requireSession();
-  const safePhone = assertE164Phone(phoneE164);
+  const safePhone = normalizePeruvianPhone(phoneE164);
   const service = createAccountOnboardingService(repos, {
     runInTransaction: runInRepositoryTransaction,
   });

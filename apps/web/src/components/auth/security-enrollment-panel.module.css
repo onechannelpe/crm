@@ -37,7 +37,7 @@
 .methodTitle {
   margin: 0;
   font-size: var(--font-size-body);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--foreground);
 }
 
@@ -155,7 +155,7 @@
 .recoveryTitle {
   margin: 0;
   font-size: var(--font-size-body);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--foreground);
 }
 

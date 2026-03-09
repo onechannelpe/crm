@@ -13,7 +13,7 @@
 .draftTitle {
   margin: 0;
   font-size: var(--font-size-body);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--foreground);
 }
 
@@ -38,7 +38,7 @@
 .columnTitle {
   margin: 0;
   font-size: var(--font-size-body);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--foreground);
 }
 
@@ -96,7 +96,7 @@
 .summaryTitle {
   margin: 0;
   font-size: var(--font-size-body);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .documentList {

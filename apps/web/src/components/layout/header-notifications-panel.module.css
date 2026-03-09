@@ -29,7 +29,7 @@
   border-radius: 999px;
   background: var(--destructive);
   color: var(--destructive-foreground);
-  font-size: var(--font-10);
+  font-size: var(--font-size-tiny);
   line-height: 16px;
   text-align: center;
   padding: 0 4px;
@@ -58,7 +58,7 @@
 
 .panelTitle {
   font-size: var(--font-size-body);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--foreground);
 }
 
@@ -113,7 +113,7 @@
 
 .title {
   font-size: var(--font-size-body);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--foreground);
 }
 

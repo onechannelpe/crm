@@ -9,10 +9,12 @@ export interface OnboardingState {
   canFinish: boolean;
 }
 
-const E164_PATTERN = /^\+[1-9]\d{7,14}$/;
+const LOCAL_PHONE = /^\d{9}$/;
+const E164_PE = /^\+51\d{9}$/;
 
 export function isValidOnboardingPhone(value: string): boolean {
-  return E164_PATTERN.test(value.replace(/\s+/g, "").trim());
+  const v = value.replace(/\s+/g, "").trim();
+  return LOCAL_PHONE.test(v) || E164_PE.test(v);
 }
 
 export function deriveOnboardingState(input: {

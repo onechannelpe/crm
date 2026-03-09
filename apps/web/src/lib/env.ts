@@ -71,6 +71,12 @@ export const env = {
   engineHmacSecret: required("ENGINE_HMAC_SECRET", true),
   webauthnRpId: optional("WEBAUTHN_RP_ID", "localhost"),
   webauthnOrigin: optional("WEBAUTHN_ORIGIN", "http://localhost:3000"),
+  googleClientId: optional("GOOGLE_CLIENT_ID", ""),
+  googleClientSecret: optional("GOOGLE_CLIENT_SECRET", ""),
+  googleRedirectUri: optional(
+    "GOOGLE_REDIRECT_URI",
+    "http://localhost:3000/api/auth/google/callback",
+  ),
   resendApiKey: optional("RESEND_API_KEY", ""),
   emailFrom: optional("EMAIL_FROM", ""),
   whatsappAccessToken: optional("WHATSAPP_ACCESS_TOKEN", ""),
