@@ -1,0 +1,86 @@
+import { createSignal, onMount } from "solid-js";
+
+import { SpringParallax } from "~/components/ui/animation/spring-parallax";
+import { cn } from "~/lib/utils";
+
+import styles from "./animated-placeholder.module.css";
+
+const BG_LIGHT: Record<string, string> = {
+  error404: "/images/placeholders/background/404_bg.png",
+  error500: "/images/placeholders/background/500_bg.png",
+};
+
+const BG_DARK: Record<string, string> = {
+  error404: "/images/placeholders/dark-background/404_bg.png",
+  error500: "/images/placeholders/dark-background/500_bg.png",
+};
+
+const FG_LIGHT: Record<string, string> = {
+  error404: "/images/placeholders/moving-image/404.png",
+  error500: "/images/placeholders/moving-image/500.png",
+};
+
+const FG_DARK: Record<string, string> = {
+  error404: "/images/placeholders/dark-moving-image/404.png",
+  error500: "/images/placeholders/dark-moving-image/500.png",
+};
+
+export type AnimatedPlaceholderType = keyof typeof BG_LIGHT;
+
+interface AnimatedPlaceholderProps {
+  type: AnimatedPlaceholderType;
+}
+
+/**
+ * Two-layer illustration: static background + spring-parallax foreground.
+ *
+ * Dark-mode images are swapped by observing the `data-theme` attribute on
+ * `<html>` rather than `prefers-color-scheme`, since the app manages its own
+ * theme via that attribute.
+ */
+export function AnimatedPlaceholder(props: AnimatedPlaceholderProps) {
+  const isError = () => props.type === "error404" || props.type === "error500";
+
+  const [isDark, setIsDark] = createSignal(false);
+
+  onMount(() => {
+    const root = document.documentElement;
+    const update = () => setIsDark(root.getAttribute("data-theme") === "dark");
+    update();
+
+    const observer = new MutationObserver(update);
+    observer.observe(root, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+
+    return () => observer.disconnect();
+  });
+
+  const bg = () => (isDark() ? BG_DARK : BG_LIGHT)[props.type];
+  const fg = () => (isDark() ? FG_DARK : FG_LIGHT)[props.type];
+
+  return (
+    <div class={styles.container}>
+      {/* Background layer (static) */}
+      <img
+        src={bg()}
+        alt=""
+        class={cn(styles.bg, isError() && styles.error)}
+        aria-hidden="true"
+      />
+
+      {/* Foreground layer (parallax) */}
+      <SpringParallax>
+        <div class={styles.fgWrapper}>
+          <img
+            src={fg()}
+            alt=""
+            class={cn(styles.fg, isError() && styles.error)}
+            aria-hidden="true"
+          />
+        </div>
+      </SpringParallax>
+    </div>
+  );
+}
