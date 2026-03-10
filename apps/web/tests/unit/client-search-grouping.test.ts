@@ -182,4 +182,41 @@ describe("client search grouping", () => {
     expect(groups).toHaveLength(1);
     expect(groups[0]?.emails).toEqual(["juan@gmail.com", "maria@hotmail.com"]);
   });
+
+  it("collects sibling phones alongside primary and secondary", () => {
+    const groups = groupPeopleByDni([
+      row({
+        dni: "12345678",
+        phone_primary: "999000001",
+        sibling_phones: ["999000002", "999000003"],
+      }),
+    ]);
+
+    expect(groups[0]?.phones).toEqual(["999000001", "999000002", "999000003"]);
+  });
+
+  it("skips rows with blank or missing dni in groupPeopleByDni", () => {
+    const groups = groupPeopleByDni([row({ dni: "", name: "GHOST" })]);
+
+    expect(groups).toHaveLength(0);
+  });
+
+  it("deduplicates the same phone appearing in different fields for the same person", () => {
+    const groups = groupPeopleByDni([
+      row({ dni: "12345678", phone_primary: "999000001" }),
+      row({ dni: "12345678", phone_secondary: "999000001" }),
+    ]);
+
+    expect(groups[0]?.phones).toEqual(["999000001"]);
+  });
+
+  it("recovers company name from a later row when the first row has none", () => {
+    const groups = groupCompaniesByRuc([
+      row({ org_ruc: "20100000001", org_name: null }),
+      row({ org_ruc: "20100000001", org_name: "ACME SAC" }),
+    ]);
+
+    expect(groups).toHaveLength(1);
+    expect(groups[0]?.name).toBe("ACME SAC");
+  });
 });
