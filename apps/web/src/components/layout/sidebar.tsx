@@ -13,6 +13,7 @@ import ChevronDown from "~/components/icons/chevron-down";
 import { AccountMenu } from "~/components/layout/account-menu";
 import { ICON_BY_ROUTE } from "~/components/layout/route-icons";
 import { useSession } from "~/components/providers/session-provider";
+import { AnimatedExpandableContainer } from "~/components/ui/animation/animated-expandable-container";
 import {
   getSidebarChildren,
   getSidebarGrouped,
@@ -24,6 +25,21 @@ import { cn } from "~/lib/utils";
 import styles from "./shell.module.css";
 
 const SIDEBAR_EXPANDED_STORAGE_KEY = "crm-sidebar-expanded";
+const CLOSED_SECTIONS_STORAGE_KEY = "crm-nav-closed-sections";
+
+function loadClosedSections(): Set<string> {
+  if (typeof window === "undefined") return new Set();
+  const stored = window.localStorage.getItem(CLOSED_SECTIONS_STORAGE_KEY) ?? "";
+  return new Set(stored.split(",").filter(Boolean));
+}
+
+function saveClosedSections(closed: Set<string>): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(
+    CLOSED_SECTIONS_STORAGE_KEY,
+    [...closed].join(","),
+  );
+}
 
 function NavItem(props: {
   item: NavRoute;
@@ -121,14 +137,35 @@ export function Sidebar() {
     getSidebarGrouped(role(), "secondary"),
   );
 
+  // Set of section labels the user has explicitly closed. Empty = all open.
+  const [closedSections, setClosedSections] = createSignal<Set<string>>(
+    new Set(),
+  );
+
+  const isSectionOpen = (label: string): boolean =>
+    !closedSections().has(label);
+
+  // In narrow (icon-only) mode all groups stay visible regardless of open state
+  const isGroupVisible = (label: string): boolean =>
+    !expanded() || isSectionOpen(label);
+
+  const toggleSection = (label: string) => {
+    const next = new Set(closedSections());
+    if (next.has(label)) {
+      next.delete(label);
+    } else {
+      next.add(label);
+    }
+    setClosedSections(next);
+    saveClosedSections(next);
+  };
+
   onMount(() => {
-    const stored =
-      typeof window !== "undefined"
-        ? window.localStorage.getItem(SIDEBAR_EXPANDED_STORAGE_KEY)
-        : null;
-    if (stored === "false") {
+    if (typeof window === "undefined") return;
+    if (window.localStorage.getItem(SIDEBAR_EXPANDED_STORAGE_KEY) === "false") {
       setExpanded(false);
     }
+    setClosedSections(loadClosedSections());
   });
 
   createEffect(() => {
@@ -220,31 +257,69 @@ export function Sidebar() {
           <For each={workspaceGroups()}>
             {(group) => (
               <>
-                <Show when={group.label}>
-                  <div
+                <Show
+                  when={group.label}
+                  fallback={
+                    <For each={group.items}>
+                      {(item) => {
+                        const children = createMemo(() =>
+                          getSidebarChildren(role(), item.id),
+                        );
+                        return (
+                          <NavItem
+                            item={item}
+                            expanded={expanded()}
+                            active={isRouteActive(item)}
+                            children={children()}
+                          />
+                        );
+                      }}
+                    </For>
+                  }
+                >
+                  <button
+                    type="button"
+                    onClick={() => toggleSection(group.label!)}
                     class={cn(
                       styles.sectionTitle,
                       !expanded() && styles.collapsedTitle,
                     )}
+                    aria-expanded={isSectionOpen(group.label!)}
                   >
-                    {group.label}
-                  </div>
+                    <span class={styles.sectionTitleLabel}>{group.label}</span>
+                    <span
+                      class={styles.sectionTitleChevron}
+                      aria-hidden="true"
+                      style={{
+                        transform: isSectionOpen(group.label!)
+                          ? "rotate(0deg)"
+                          : "rotate(-90deg)",
+                        transition: "transform 200ms var(--ease-standard)",
+                      }}
+                    >
+                      <ChevronDown size={12} />
+                    </span>
+                  </button>
+                  <AnimatedExpandableContainer
+                    isExpanded={isGroupVisible(group.label!)}
+                  >
+                    <For each={group.items}>
+                      {(item) => {
+                        const children = createMemo(() =>
+                          getSidebarChildren(role(), item.id),
+                        );
+                        return (
+                          <NavItem
+                            item={item}
+                            expanded={expanded()}
+                            active={isRouteActive(item)}
+                            children={children()}
+                          />
+                        );
+                      }}
+                    </For>
+                  </AnimatedExpandableContainer>
                 </Show>
-                <For each={group.items}>
-                  {(item) => {
-                    const children = createMemo(() =>
-                      getSidebarChildren(role(), item.id),
-                    );
-                    return (
-                      <NavItem
-                        item={item}
-                        expanded={expanded()}
-                        active={isRouteActive(item)}
-                        children={children()}
-                      />
-                    );
-                  }}
-                </For>
               </>
             )}
           </For>
