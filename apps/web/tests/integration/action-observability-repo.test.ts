@@ -17,6 +17,7 @@ describe("action observability repository", () => {
     ctx = await createIsolatedTestDb("observability-repo");
     const service = createObservabilityService({
       actionObservations: ctx.repos.actionObservations,
+      authFunnelEvents: ctx.repos.authFunnelEvents,
     });
     const baseTime = 1_700_000_000_000;
 
@@ -74,6 +75,7 @@ describe("action observability repository", () => {
     ctx = await createIsolatedTestDb("observability-retention");
     const service = createObservabilityService({
       actionObservations: ctx.repos.actionObservations,
+      authFunnelEvents: ctx.repos.authFunnelEvents,
     });
     const baseTime = 1_700_000_000_000;
 
@@ -135,6 +137,7 @@ describe("action observability repository", () => {
     ctx = await createIsolatedTestDb("observability-summary-filters");
     const service = createObservabilityService({
       actionObservations: ctx.repos.actionObservations,
+      authFunnelEvents: ctx.repos.authFunnelEvents,
     });
     const baseTime = 1_700_000_000_000;
 

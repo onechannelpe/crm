@@ -3,6 +3,7 @@ export {
   getAuditPolicySnapshot,
   upsertAuditPolicy,
 } from "./audit-policy";
+export { getAuthFunnelSnapshot } from "./auth-funnel";
 export { getAuditReaderSnapshot } from "./audit-reader";
 export { getUserLoginRetryReport } from "./auth-security";
 export { getObservabilitySnapshot } from "./observability";

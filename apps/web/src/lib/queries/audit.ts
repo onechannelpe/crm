@@ -4,6 +4,7 @@ import {
   canManageAuditPolicies,
   getAuditPolicySnapshot,
   getAuditReaderSnapshot,
+  getAuthFunnelSnapshot,
   getObservabilitySnapshot,
 } from "~/actions/admin";
 
@@ -25,4 +26,9 @@ export const auditPolicySnapshotQuery = query(
 export const canManageAuditPoliciesQuery = query(
   canManageAuditPolicies,
   "canManageAuditPolicies",
+);
+
+export const authFunnelSnapshotQuery = query(
+  getAuthFunnelSnapshot,
+  "authFunnelSnapshot",
 );

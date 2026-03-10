@@ -56,7 +56,28 @@ function parseStoredTransports(
   return undefined;
 }
 
-export function createPasskeyService(repos: Repositories) {
+type PasskeyServiceDeps = Pick<Repositories, "passkeys" | "auditLogs">;
+
+export function createPasskeyService(repos: PasskeyServiceDeps) {
+  async function buildAuthenticationOptions(
+    userId: number | undefined,
+    challenge?: string,
+  ) {
+    const allowCredentials = userId
+      ? (await repos.passkeys.findByUser(userId)).map((p) => ({
+          id: p.id,
+          transports: parseStoredTransports(p.transports),
+        }))
+      : [];
+
+    return generateAuthenticationOptions({
+      rpID,
+      allowCredentials,
+      challenge,
+      userVerification: "preferred",
+    });
+  }
+
   return {
     async getRegistrationOptions(userId: number) {
       const existingPasskeys = await repos.passkeys.findByUser(userId);
@@ -118,18 +139,14 @@ export function createPasskeyService(repos: Repositories) {
     },
 
     async getAuthenticationOptions(userId?: number) {
-      const allowCredentials = userId
-        ? (await repos.passkeys.findByUser(userId)).map((p) => ({
-            id: p.id,
-            transports: parseStoredTransports(p.transports),
-          }))
-        : [];
+      return buildAuthenticationOptions(userId);
+    },
 
-      return generateAuthenticationOptions({
-        rpID,
-        allowCredentials,
-        userVerification: "preferred",
-      });
+    async getAuthenticationOptionsForChallenge(
+      userId: number,
+      challenge: string,
+    ) {
+      return buildAuthenticationOptions(userId, challenge);
     },
 
     async verifyAuthentication(

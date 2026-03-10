@@ -1,21 +1,26 @@
 import { assertNonEmptyString } from "~/lib/contracts/guards";
-import { repos } from "~/server/shared/context";
+import type { User } from "~/lib/db/schema";
 import type { Repositories } from "~/server/shared/registry";
+import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { Role } from "../access/rbac";
+import type {
+  InvalidCredentialsError,
+  PasskeyRequiredError,
+  StrongAuthRequiredError,
+} from "../errors";
+import { getPasswordLoginPolicy } from "../security/auth-contract";
 import { recordAuthEvent } from "../security/auth-events";
 import { sendAlertOnNewLoginSource } from "../security/login-source-alert";
-import { resolvePasswordStrongAuth } from "../security/password-strong-auth";
 import { type SendPrivilegedLoginAlert } from "../security/privileged-login-alert";
-import { createSession } from "../session/session-manager";
+import { getStrongAuthStatus } from "../security/strong-auth-status";
+import { issueLoginSession } from "../session/login-completion";
 import { hashPassword, verifyPassword } from "./password";
 import {
   checkLoginThrottle,
   clearLoginFailureState,
   recordLoginFailure,
 } from "./throttle";
-
-const INVALID_CREDENTIALS = "Invalid credentials";
 
 const DUMMY_HASH = hashPassword("dummy-constant-for-timing-parity");
 
@@ -39,6 +44,12 @@ export interface PasswordLoginInput {
   userAgent: string | null;
 }
 
+export interface PasswordCredentialInput {
+  username: string;
+  password: string;
+  ipAddress: string;
+}
+
 export interface PasswordLoginResult {
   userId: number;
   role: Role;
@@ -46,18 +57,21 @@ export interface PasswordLoginResult {
   token: string;
 }
 
-interface PasswordLoginDeps {
-  repos?: Deps;
-  sendPrivilegedLoginAlert: SendPrivilegedLoginAlert;
-}
+export type PasswordLoginNextStepError =
+  | StrongAuthRequiredError
+  | PasskeyRequiredError;
 
-export async function authenticatePasswordLogin(
-  input: PasswordLoginInput,
-  deps: PasswordLoginDeps,
-): Promise<PasswordLoginResult> {
+export type PasswordLoginError =
+  | InvalidCredentialsError
+  | PasswordLoginNextStepError;
+
+export async function verifyPasswordLoginCredentials(
+  input: PasswordCredentialInput,
+  deps: { repos: Deps },
+): Promise<Result<User, InvalidCredentialsError>> {
   const safeUsername = assertNonEmptyString(input.username, "username");
   const safePassword = assertNonEmptyString(input.password, "password");
-  const resolvedDeps = deps.repos ?? repos;
+  const resolvedDeps = deps.repos;
   const throttle = await checkLoginThrottle(
     safeUsername,
     input.ipAddress,
@@ -75,7 +89,7 @@ export async function authenticatePasswordLogin(
       outcome: "throttled",
       reason: "threshold_exceeded",
     });
-    throw new Error(INVALID_CREDENTIALS);
+    return Err({ kind: "invalid_credentials" });
   }
 
   const user = await resolvedDeps.users.findByUsername(safeUsername);
@@ -92,7 +106,7 @@ export async function authenticatePasswordLogin(
       outcome: "failure",
       reason: user ? "inactive_user" : "user_not_found",
     });
-    throw new Error(INVALID_CREDENTIALS);
+    return Err({ kind: "invalid_credentials" });
   }
 
   if (!(await verifyPassword(user.password_hash, safePassword))) {
@@ -106,58 +120,84 @@ export async function authenticatePasswordLogin(
       outcome: "failure",
       reason: "invalid_password",
     });
-    throw new Error(INVALID_CREDENTIALS);
+    return Err({ kind: "invalid_credentials" });
   }
 
   await clearLoginFailureState(safeUsername, input.ipAddress, resolvedDeps);
-  const strongAuth = await resolvePasswordStrongAuth({
-    user,
-    ipAddress: input.ipAddress,
-    totpCode: input.totpCode,
-    deps: resolvedDeps,
+  return Ok(user);
+}
+
+export async function getPasswordLoginNextStep(
+  user: User,
+  deps: Pick<Deps, "userTotpFactors" | "passkeys">,
+): Promise<Result<"complete" | "totp", PasswordLoginNextStepError>> {
+  const strongAuthStatus = await getStrongAuthStatus(user.id, deps);
+  const passwordLoginPolicy = getPasswordLoginPolicy({
+    role: user.role,
+    onboardingCompleted: user.onboarding_completed_at !== null,
+    strongAuthStatus,
   });
+
+  if (
+    passwordLoginPolicy === "password_only" ||
+    passwordLoginPolicy === "password_bootstrap"
+  ) {
+    return Ok("complete");
+  }
+
+  if (passwordLoginPolicy === "password_or_totp" && strongAuthStatus.hasTotp) {
+    return Ok("totp");
+  }
+
+  return Err({
+    kind: strongAuthStatus.hasPasskey
+      ? "passkey_required"
+      : "strong_auth_required",
+  });
+}
+
+export async function completePasswordLogin(params: {
+  user: User;
+  ipAddress: string;
+  userAgent: string | null;
+  authMethod: "password" | "password_totp";
+  strongAuthAt: number | null;
+  deps: Deps;
+  sendPrivilegedLoginAlert: SendPrivilegedLoginAlert;
+}): Promise<PasswordLoginResult> {
+  const { user, ipAddress, userAgent, authMethod, strongAuthAt } = params;
 
   await sendAlertOnNewLoginSource({
     user,
-    ipAddress: input.ipAddress,
-    method: strongAuth.authMethod,
-    deps: resolvedDeps,
-    sendPrivilegedLoginAlert: deps.sendPrivilegedLoginAlert,
+    ipAddress,
+    method: authMethod,
+    deps: params.deps,
+    sendPrivilegedLoginAlert: params.sendPrivilegedLoginAlert,
   });
 
-  const token = await createSession(
-    user.id,
-    user.branch_id,
-    user.role,
-    input.ipAddress,
-    input.userAgent,
-    strongAuth.authMethod,
-    strongAuth.strongAuthAt,
-    resolvedDeps,
-  );
-
-  await resolvedDeps.auditLogs.create({
-    user_id: user.id,
-    action: "login",
-    entity_type: "user",
-    entity_id: user.id,
-    changes: null,
-    created_at: Date.now(),
+  const session = await issueLoginSession({
+    user,
+    ipAddress,
+    userAgent,
+    authMethod,
+    strongAuthAt,
+    auditAction: "login",
+    deps: params.deps,
   });
-  await recordAuthEvent(resolvedDeps, {
+  await recordAuthEvent(params.deps, {
     userId: user.id,
-    identifier: safeUsername,
-    ipAddress: input.ipAddress,
+    identifier: user.username,
+    ipAddress,
     method: "password",
     stage: "login",
     outcome: "success",
-    reason: strongAuth.authMethod === "password_totp" ? "totp_verified" : null,
+    reason: authMethod === "password_totp" ? "totp_verified" : null,
   });
 
   return {
-    userId: user.id,
-    role: user.role,
-    onboardingCompleted: user.onboarding_completed_at !== null,
-    token,
+    userId: session.userId,
+    role: session.role,
+    onboardingCompleted: session.onboardingCompleted,
+    token: session.token,
   };
 }

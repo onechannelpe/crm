@@ -1,78 +1,233 @@
 "use server";
 
+import { redirect } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
 
 import type { Role } from "~/lib/auth/access/rbac";
+import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
+import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
+import {
+  startPasskeyLogin,
+  submitPasswordLogin,
+  submitTotpForLoginFlow,
+} from "~/lib/auth/login-flow";
+import { parseLoginFlowId } from "~/lib/auth/login-route-flow";
 import { getClientIp } from "~/lib/auth/password/client-ip";
-import { authenticatePasswordLogin } from "~/lib/auth/password/password-login";
-import { createPrivilegedLoginAlertSender } from "~/lib/auth/security/login-alerts";
-import { getSessionCookie, setSessionCookie } from "~/lib/auth/session/cookies";
-import { invalidateSession } from "~/lib/auth/session/session-manager";
-import { hashSessionToken } from "~/lib/auth/session/tokens";
-import { env } from "~/lib/env";
-import { runObservedAction } from "~/lib/observability/run-observed-action";
-import { repos } from "~/server/shared/context";
+import { replaceCurrentSession } from "~/lib/auth/session/login-completion";
+import { getActionRequestContext } from "~/lib/observability/context";
+import { privilegedLoginAlertSender, repos } from "~/server/shared/context";
+import { isErr } from "~/server/shared/result";
 
-const sendPrivilegedLoginAlert = createPrivilegedLoginAlertSender(repos, {
-  resendApiKey: env.resendApiKey || undefined,
-  fromEmail: env.emailFrom || undefined,
-  whatsappAccessToken: env.whatsappAccessToken || undefined,
-  whatsappPhoneNumberId: env.whatsappPhoneNumberId || undefined,
-  whatsappApiVersion: env.whatsappApiVersion || undefined,
-});
+export type PasswordLoginSubmissionResult = {
+  ok: false;
+  code: "invalid_credentials" | "strong_auth_required";
+};
 
-export interface LoginResult {
-  userId: number;
-  role: Role;
-  onboardingCompleted: boolean;
+export type PasskeyStartSubmissionResult = {
+  ok: false;
+  code: "invalid_credentials";
+};
+
+export type TotpLoginSubmissionResult = {
+  ok: false;
+  code: "invalid_totp";
+};
+
+function readText(
+  formData: FormData,
+  field: "identifier" | "password" | "totpCode",
+  options?: { trim?: boolean },
+): string {
+  const value = formData.get(field);
+  if (typeof value !== "string") return "";
+  return options?.trim === false ? value : value.trim();
 }
 
-export async function login(
-  username: string,
-  password: string,
-  totpCode?: string,
-): Promise<LoginResult> {
-  return runObservedAction({
-    actionName: "auth.login",
-    actor: { userId: null, role: null },
-    input: { hasTotpCode: Boolean(totpCode) },
-    resolveActor: (result) => ({
-      userId: result.userId,
-      role: result.role,
-    }),
-    run: async () => {
-      const event = getRequestEvent();
-      const ipAddress = getClientIp(event?.request.headers ?? new Headers());
-      const userAgent = event?.request.headers.get("user-agent") ?? null;
+function readPositiveInt(formData: FormData, field: "flowId"): number | null {
+  const value = formData.get(field);
+  return typeof value === "string" ? parseLoginFlowId(value) : null;
+}
 
-      const oldToken = getSessionCookie();
-      if (oldToken) {
-        const oldSessionId = hashSessionToken(oldToken);
-        await invalidateSession(oldSessionId).catch(() => {});
-      }
+async function completeLoginAndRedirect(result: {
+  token: string;
+  role: Role;
+  onboardingCompleted: boolean;
+}): Promise<never> {
+  await replaceCurrentSession(result.token);
+  throw redirect(
+    result.onboardingCompleted ? getDefaultAppPath(result.role) : "/onboarding",
+  );
+}
 
-      const result = await authenticatePasswordLogin(
-        {
-          username,
-          password,
-          totpCode,
-          ipAddress,
-          userAgent,
-        },
-        { sendPrivilegedLoginAlert },
-      ).catch((error: unknown) => {
-        if (error instanceof Error && error.message === "Invalid credentials") {
-          throw new Response("Invalid credentials", { status: 403 });
-        }
-        throw error;
-      });
-      setSessionCookie(result.token);
+function getRequestContext() {
+  const event = getRequestEvent();
 
-      return {
-        userId: result.userId,
-        role: result.role,
-        onboardingCompleted: result.onboardingCompleted,
-      };
+  return {
+    ipAddress: getClientIp(event?.request.headers ?? new Headers()),
+    userAgent: event?.request.headers.get("user-agent") ?? null,
+  };
+}
+
+export async function passwordLogin(
+  formData: FormData,
+): Promise<PasswordLoginSubmissionResult> {
+  const identifier = readText(formData, "identifier");
+  const password = readText(formData, "password", { trim: false });
+  const request = getRequestContext();
+  const result = await submitPasswordLogin(
+    {
+      identifier,
+      password,
+      ipAddress: request.ipAddress,
+      userAgent: request.userAgent,
     },
-  });
+    repos,
+    privilegedLoginAlertSender,
+  );
+  if (isErr(result)) {
+    await recordAuthAnalyticsEvent(
+      {
+        source: "server",
+        kind: "password_result",
+        outcome: "failed",
+        code: result.error.kind,
+      },
+      getActionRequestContext(),
+    );
+    return {
+      ok: false,
+      code: result.error.kind,
+    };
+  }
+
+  if (result.value.kind === "totp_required") {
+    await recordAuthAnalyticsEvent(
+      {
+        source: "server",
+        kind: "password_result",
+        outcome: "totp_required",
+      },
+      getActionRequestContext(),
+    );
+    throw redirect(`/login/verify?flow=${result.value.flow.id}`);
+  }
+  if (result.value.kind === "passkey_required") {
+    await recordAuthAnalyticsEvent(
+      {
+        source: "server",
+        kind: "password_result",
+        outcome: "passkey_required",
+      },
+      getActionRequestContext(),
+    );
+    throw redirect(`/login/passkey?flow=${result.value.flow.id}`);
+  }
+
+  await recordAuthAnalyticsEvent(
+    {
+      source: "server",
+      kind: "password_result",
+      outcome: "succeeded",
+    },
+    getActionRequestContext(),
+  );
+  return await completeLoginAndRedirect(result.value.result);
+}
+
+export async function passkeyStart(
+  formData: FormData,
+): Promise<PasskeyStartSubmissionResult> {
+  const identifier = readText(formData, "identifier");
+  const request = getRequestContext();
+  const result = await startPasskeyLogin(
+    {
+      identifier,
+      ipAddress: request.ipAddress,
+    },
+    repos,
+  );
+  if (isErr(result)) {
+    await recordAuthAnalyticsEvent(
+      {
+        source: "server",
+        kind: "passkey_start_result",
+        outcome: "failed",
+        code: "invalid_credentials",
+      },
+      getActionRequestContext(),
+    );
+    return {
+      ok: false,
+      code: "invalid_credentials",
+    };
+  }
+
+  await recordAuthAnalyticsEvent(
+    {
+      source: "server",
+      kind: "passkey_start_result",
+      outcome: "started",
+    },
+    getActionRequestContext(),
+  );
+  throw redirect(`/login/passkey?flow=${result.value.id}`);
+}
+
+export async function totpLogin(
+  formData: FormData,
+): Promise<TotpLoginSubmissionResult> {
+  const flowId = readPositiveInt(formData, "flowId");
+  const totpCode = readText(formData, "totpCode");
+  if (!flowId) {
+    throw redirect("/login?error=flow_expired");
+  }
+  const request = getRequestContext();
+  const result = await submitTotpForLoginFlow(
+    {
+      flowId,
+      totpCode,
+      ipAddress: request.ipAddress,
+      userAgent: request.userAgent,
+    },
+    repos,
+    privilegedLoginAlertSender,
+  );
+  if (isErr(result)) {
+    if (result.error.kind === "flow_expired") {
+      await recordAuthAnalyticsEvent(
+        {
+          source: "server",
+          kind: "totp_result",
+          outcome: "failed",
+          code: "flow_expired",
+        },
+        getActionRequestContext(),
+      );
+      throw redirect("/login?error=flow_expired");
+    }
+
+    await recordAuthAnalyticsEvent(
+      {
+        source: "server",
+        kind: "totp_result",
+        outcome: "failed",
+        code: "invalid_totp",
+      },
+      getActionRequestContext(),
+    );
+    return {
+      ok: false,
+      code: "invalid_totp",
+    };
+  }
+
+  await recordAuthAnalyticsEvent(
+    {
+      source: "server",
+      kind: "totp_result",
+      outcome: "succeeded",
+    },
+    getActionRequestContext(),
+  );
+  return await completeLoginAndRedirect(result.value.result);
 }

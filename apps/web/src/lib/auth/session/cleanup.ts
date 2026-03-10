@@ -49,6 +49,15 @@ export async function cleanupStaleActionObservations(): Promise<void> {
   }
 }
 
+export async function cleanupStaleAuthFunnelEvents(): Promise<void> {
+  const deleted = await repos.authFunnelEvents.deleteCreatedBefore(
+    Date.now() - config.observability.retentionMs,
+  );
+  if (deleted > 0) {
+    logger.info("stale_auth_funnel_events_deleted", { deleted });
+  }
+}
+
 export async function cleanupStaleActionRateLimits(): Promise<void> {
   const deleted = await repos.actionRateLimits.deleteUpdatedBefore(
     Date.now() - config.security.rateLimitRetentionMs,
@@ -79,6 +88,9 @@ export function startSessionCleanupScheduler(intervalMs = 60 * 60 * 1000) {
     });
     cleanupStaleActionObservations().catch((error: unknown) => {
       logger.error("action_observations_cleanup_failed", { error });
+    });
+    cleanupStaleAuthFunnelEvents().catch((error: unknown) => {
+      logger.error("auth_funnel_events_cleanup_failed", { error });
     });
     cleanupStaleActionRateLimits().catch((error: unknown) => {
       logger.error("action_rate_limits_cleanup_failed", { error });

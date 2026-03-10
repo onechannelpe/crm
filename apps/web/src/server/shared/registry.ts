@@ -3,6 +3,7 @@ import type { Kysely } from "kysely";
 import type { Database } from "~/lib/db/schema";
 import { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
+import { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
 import { createOAuthAccountsRepo } from "~/server/auth/repos-oauth-accounts";
 import {
   createUserTotpFactorsRepo,
@@ -21,6 +22,7 @@ import { createNotificationCampaignsRepo } from "~/server/notifications/repos-ca
 import { createNotificationContactsRepo } from "~/server/notifications/repos-contacts";
 import { createNotificationPreferencesRepo } from "~/server/notifications/repos-preferences";
 import { createActionObservationsRepo } from "~/server/observability/repos-action-observations";
+import { createAuthFunnelEventsRepo } from "~/server/observability/repos-auth-funnel-events";
 import { createQuotaAllocationsRepo } from "~/server/quota/repos";
 import { createReportExportRepo } from "~/server/sales/repos-report-exports";
 import { createSalesRecordsRepo } from "~/server/sales/repos-sales-records";
@@ -44,6 +46,7 @@ export function createRepositories(db: Kysely<Database>) {
     userInvites: createUserInvitesRepo(db),
     sessions: createSessionRepository(db),
     authEvents: createAuthEventsRepo(db),
+    loginFlows: createLoginFlowsRepo(db),
     authThrottle: createAuthThrottleRepo(db),
     actionRateLimits: createActionRateLimitsRepo(db),
     userTotpFactors: createUserTotpFactorsRepo(db),
@@ -63,6 +66,7 @@ export function createRepositories(db: Kysely<Database>) {
     notificationPreferences: createNotificationPreferencesRepo(db),
     appNotifications: createAppNotificationsRepo(db),
     actionObservations: createActionObservationsRepo(db),
+    authFunnelEvents: createAuthFunnelEventsRepo(db),
     inventory: createInventoryRepo(db),
     extensionRuntime: createExtensionRuntimeRepo(db),
     auditLogs: createAuditLogsRepo(db),

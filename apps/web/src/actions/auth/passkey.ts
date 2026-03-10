@@ -3,107 +3,60 @@
 import type { AuthenticationResponseJSON } from "@simplewebauthn/server";
 import { getRequestEvent } from "solid-js/web";
 
-import { forbiddenError } from "~/lib/app-errors";
-import type { Role } from "~/lib/auth/access/rbac";
-import {
-  beginPasskeyLoginFlow,
-  finishPasskeyLoginFlow,
-} from "~/lib/auth/passkey/login-flow";
-import { createPasskeyService } from "~/lib/auth/passkey/passkey";
+import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
+import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
+import { submitPasskeyForLoginFlow } from "~/lib/auth/login-flow";
 import { getClientIp } from "~/lib/auth/password/client-ip";
-import { createPrivilegedLoginAlertSender } from "~/lib/auth/security/login-alerts";
-import { getSessionCookie, setSessionCookie } from "~/lib/auth/session/cookies";
-import {
-  createSession,
-  invalidateSession,
-} from "~/lib/auth/session/session-manager";
-import { hashSessionToken } from "~/lib/auth/session/tokens";
-import { env } from "~/lib/env";
-import { repos } from "~/server/shared/context";
-
-const sendPrivilegedLoginAlert = createPrivilegedLoginAlertSender(repos, {
-  resendApiKey: env.resendApiKey || undefined,
-  fromEmail: env.emailFrom || undefined,
-  whatsappAccessToken: env.whatsappAccessToken || undefined,
-  whatsappPhoneNumberId: env.whatsappPhoneNumberId || undefined,
-  whatsappApiVersion: env.whatsappApiVersion || undefined,
-});
-
-export interface PasskeyChallengeResult {
-  challengeId: number;
-  options: Awaited<
-    ReturnType<
-      ReturnType<typeof createPasskeyService>["getAuthenticationOptions"]
-    >
-  >;
-}
-
-export interface PasskeyLoginResult {
-  userId: number;
-  role: Role;
-  onboardingCompleted: boolean;
-}
-
-export async function beginPasskeyLogin(
-  username: string,
-): Promise<PasskeyChallengeResult> {
-  const event = getRequestEvent();
-  const ipAddress = getClientIp(event?.request.headers ?? new Headers());
-  return beginPasskeyLoginFlow(
-    username,
-    ipAddress,
-    repos,
-    createPasskeyService(repos),
-  );
-}
+import { replaceCurrentSession } from "~/lib/auth/session/login-completion";
+import { getActionRequestContext } from "~/lib/observability/context";
+import { privilegedLoginAlertSender, repos } from "~/server/shared/context";
+import { isErr } from "~/server/shared/result";
 
 export async function finishPasskeyLogin(
-  challengeId: number,
+  flowId: number,
   response: AuthenticationResponseJSON,
-): Promise<PasskeyLoginResult> {
+) {
   const event = getRequestEvent();
-  const ipAddress = getClientIp(event?.request.headers ?? new Headers());
-  const userAgent = event?.request.headers.get("user-agent") ?? null;
-  const flowResult = await finishPasskeyLoginFlow(
-    challengeId,
-    response,
-    ipAddress,
+  const result = await submitPasskeyForLoginFlow(
+    {
+      flowId,
+      response,
+      ipAddress: getClientIp(event?.request.headers ?? new Headers()),
+      userAgent: event?.request.headers.get("user-agent") ?? null,
+    },
     repos,
-    createPasskeyService(repos),
-    sendPrivilegedLoginAlert,
+    privilegedLoginAlertSender,
   );
-  const user = await repos.users.findById(flowResult.userId);
-  if (!user) throw forbiddenError("Invalid credentials");
 
-  const oldToken = getSessionCookie();
-  if (oldToken) {
-    const oldSessionId = hashSessionToken(oldToken);
-    await invalidateSession(oldSessionId).catch(() => {});
+  if (isErr(result)) {
+    await recordAuthAnalyticsEvent(
+      {
+        source: "server",
+        kind: "passkey_result",
+        outcome: "failed",
+        code: result.error.kind,
+      },
+      getActionRequestContext(),
+    );
+    return {
+      ok: false as const,
+      code: result.error.kind,
+    };
   }
 
-  const token = await createSession(
-    user.id,
-    user.branch_id,
-    user.role,
-    ipAddress,
-    userAgent,
-    "passkey",
-    Date.now(),
+  await recordAuthAnalyticsEvent(
+    {
+      source: "server",
+      kind: "passkey_result",
+      outcome: "succeeded",
+    },
+    getActionRequestContext(),
   );
-  setSessionCookie(token);
-
-  await repos.auditLogs.create({
-    user_id: user.id,
-    action: "login_passkey",
-    entity_type: "user",
-    entity_id: user.id,
-    changes: null,
-    created_at: Date.now(),
-  });
-
+  await replaceCurrentSession(result.value.result.token);
   return {
-    userId: user.id,
-    role: user.role,
-    onboardingCompleted: user.onboarding_completed_at !== null,
+    ok: true as const,
+    redirectTo: result.value.result.onboardingCompleted
+      ? getDefaultAppPath(result.value.result.role)
+      : "/onboarding",
   };
 }
