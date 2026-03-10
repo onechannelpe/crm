@@ -1,7 +1,8 @@
 import { createAsync, useSearchParams, useSubmission } from "@solidjs/router";
 import { createMemo, onMount, Show } from "solid-js";
 
-import { AuthFlowShell } from "~/components/auth/auth-flow-shell";
+import { AuthFlowShell } from "~/components/auth/flow/auth-flow-shell";
+import { LegalFooter } from "~/components/auth/flow/legal-footer";
 import { useToast } from "~/components/feedback/toast-provider";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
@@ -14,6 +15,7 @@ import { loginFlowQuery } from "~/lib/queries/auth";
 
 import styles from "../../auth/auth-shell.module.css";
 import pageStyles from "../../auth/login-page.module.css";
+import linkStyles from "~/components/auth/flow/auth-links.module.css";
 
 export default function LoginVerifyPage() {
   useAuthPageView("login_verify");
@@ -48,17 +50,7 @@ export default function LoginVerifyPage() {
     <AuthFlowShell
       title="Verificar código"
       description="Ingresa el código de 6 dígitos de tu app de autenticación."
-      footerNote={
-        <span>
-          <a href="/privacy" class={pageStyles.helpLink}>
-            Privacidad
-          </a>
-          {" · "}
-          <a href="/terms" class={pageStyles.helpLink}>
-            Términos
-          </a>
-        </span>
-      }
+      footerNote={<LegalFooter />}
     >
       <Show
         when={totpFlow() !== undefined}
@@ -77,7 +69,7 @@ export default function LoginVerifyPage() {
               <p class={pageStyles.formError} role="alert">
                 La sesión de verificación expiró. Intenta de nuevo.
               </p>
-              <a href="/login" class={pageStyles.passkeyLink}>
+              <a href="/login" class={linkStyles.passkeyLink}>
                 Volver al inicio de sesión
               </a>
             </div>
@@ -108,7 +100,7 @@ export default function LoginVerifyPage() {
                   Usuario: {flow().identifier}
                 </p>
                 <div class={pageStyles.actionRow}>
-                  <a href="/login" class={pageStyles.passkeyLink}>
+                  <a href="/login" class={linkStyles.passkeyLink}>
                     Usar otra cuenta
                   </a>
                   <Button

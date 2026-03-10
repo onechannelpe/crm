@@ -1,7 +1,7 @@
 import { useSubmission } from "@solidjs/router";
 import { Show } from "solid-js";
 
-import { AuthFlowShell } from "~/components/auth/auth-flow-shell";
+import { AuthFlowShell } from "~/components/auth/flow/auth-flow-shell";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
@@ -11,6 +11,7 @@ import { passkeyStartMutation } from "~/lib/mutations/auth";
 
 import styles from "../../../auth/auth-shell.module.css";
 import pageStyles from "../../../auth/login-page.module.css";
+import linkStyles from "~/components/auth/flow/auth-links.module.css";
 
 export default function LoginPasskeyStartPage() {
   useAuthPageView("login_passkey_start");
@@ -28,7 +29,7 @@ export default function LoginPasskeyStartPage() {
       title="Usar clave de acceso"
       description="Ingresa tu usuario para continuar con una clave de acceso."
       footerNote={
-        <a href="/login" class={pageStyles.helpLink}>
+        <a href="/login" class={linkStyles.helpLink}>
           Volver al inicio de sesión
         </a>
       }

@@ -51,46 +51,6 @@
   align-items: center;
 }
 
-.forgotLink {
-  font-size: var(--font-size-sm);
-  color: var(--muted-foreground);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.forgotLink:hover {
-  color: var(--foreground);
-}
-
-.helpLink {
-  font-size: var(--font-size-sm);
-  color: var(--muted-foreground);
-  text-decoration: none;
-}
-
-.helpLink:hover {
-  text-decoration: underline;
-}
-
-.passkeyLink {
-  appearance: none;
-  background: none;
-  border: none;
-  padding: 0;
-  width: 100%;
-  font: inherit;
-  font-size: var(--font-size-sm);
-  color: var(--muted-foreground);
-  text-align: center;
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.passkeyLink:hover {
-  color: var(--foreground);
-}
-
 @media (max-width: 640px) {
   .formStack {
     gap: 14px;
@@ -105,10 +65,7 @@
     font-size: var(--font-size-body);
   }
 
-  .supportText,
-  .forgotLink,
-  .helpLink,
-  .passkeyLink {
+  .supportText {
     font-size: var(--font-size-body);
   }
 }

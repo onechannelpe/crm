@@ -5,10 +5,10 @@ import {
   disableTotp,
   removeAllPasskeys,
 } from "~/actions/settings";
-import { OtpSlotInput } from "~/components/auth/otp-slot-input";
-import { RecoveryCodesPanel } from "~/components/auth/recovery-codes-panel";
-import { usePasskeyEnrollment } from "~/components/auth/use-passkey-enrollment";
-import { useTotpEnrollment } from "~/components/auth/use-totp-enrollment";
+import { OtpSlotInput } from "~/components/auth/flow/otp-slot-input";
+import { RecoveryCodesPanel } from "~/components/auth/security-enrollment/recovery-codes-panel";
+import { usePasskeyEnrollment } from "~/components/auth/security-enrollment/use-passkey-enrollment";
+import { useTotpEnrollment } from "~/components/auth/security-enrollment/use-totp-enrollment";
 import { useToast } from "~/components/feedback/toast-provider";
 import { useSession } from "~/components/providers/session-provider";
 import { SettingsSection } from "~/components/settings/SettingsSection";

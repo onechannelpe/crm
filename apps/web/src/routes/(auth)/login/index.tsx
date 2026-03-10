@@ -1,21 +1,24 @@
 import { useSearchParams, useSubmission } from "@solidjs/router";
-import { createMemo, onMount, Show } from "solid-js";
+import { createMemo, createSignal, onMount, Show } from "solid-js";
 
-import { AuthFlowShell } from "~/components/auth/auth-flow-shell";
-import { LastUsedPill } from "~/components/auth/last-used-pill";
+import { AuthFlowShell } from "~/components/auth/flow/auth-flow-shell";
+import { LastUsedPill } from "~/components/auth/flow/last-used-pill";
+import { LegalFooter } from "~/components/auth/flow/legal-footer";
 import { useToast } from "~/components/feedback/toast-provider";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { passwordLoginUiMessage } from "~/lib/auth/login-ui";
+import { isPasskeySupported } from "~/lib/auth/passkey/browser";
 import { useAuthPageView } from "~/lib/auth/use-auth-analytics";
 import { useLoginFlow } from "~/lib/auth/use-login-flow";
 import { passwordLoginMutation } from "~/lib/mutations/auth";
-import { cn } from "~/lib/utils";
 
 import styles from "../../auth/auth-shell.module.css";
 import pageStyles from "../../auth/login-page.module.css";
-import buttonStyles from "~/components/ui/input/button.module.css";
+import linkStyles from "~/components/auth/flow/auth-links.module.css";
+
+type LoginStep = "init" | "email" | "password";
 
 export default function LoginPage() {
   useAuthPageView("login");
@@ -23,6 +26,9 @@ export default function LoginPage() {
   const [searchParams] = useSearchParams();
   const { showToast } = useToast();
   const passwordSubmission = useSubmission(passwordLoginMutation);
+  const [step, setStep] = createSignal<LoginStep>("init");
+  const [username, setUsername] = createSignal("");
+  const [passkeySupported, setPasskeySupported] = createSignal(false);
 
   onMount(() => {
     if (searchParams.error === "google_not_linked") {
@@ -31,14 +37,20 @@ export default function LoginPage() {
     if (searchParams.error === "flow_expired") {
       showToast("error", "La sesión de inicio expiró. Intenta de nuevo.");
     }
+    setPasskeySupported(isPasskeySupported());
   });
 
+  // Mirrors twenty: "Forgot password?" only on the password step;
+  // Privacy/Terms on init and email (reference: SignInUpGlobalScopeForm).
   const footerNote = createMemo(() => {
-    return (
-      <a href="/reset-password" class={pageStyles.forgotLink}>
-        ¿Olvidaste tu contraseña?
-      </a>
-    );
+    if (step() === "password") {
+      return (
+        <a href="/reset-password" class={linkStyles.forgotLink}>
+          ¿Olvidaste tu contraseña?
+        </a>
+      );
+    }
+    return <LegalFooter />;
   });
 
   const passwordError = () => {
@@ -47,20 +59,23 @@ export default function LoginPage() {
       ? passwordLoginUiMessage(result.code)
       : undefined;
   };
+
   return (
     <AuthFlowShell title="Bienvenido." footerNote={footerNote()}>
       <div class={pageStyles.formStack}>
+        {/*
+         * Google SSO: primary on init (prominent call-to-action),
+         * secondary once a credential step is chosen. Mirrors twenty's
+         * SignInUpWithGoogle variant={step === Init ? undefined : "secondary"}.
+         */}
         <div class={pageStyles.ssoButtonContainer}>
-          <a
-            href="/api/auth/google"
-            class={cn(
-              buttonStyles.button,
-              buttonStyles.lg,
-              buttonStyles.primary,
-              styles.full,
-            )}
+          <Button
+            variant={step() === "init" ? "primary" : "secondary"}
+            size="lg"
+            class={styles.full}
             onClick={() => {
               loginMethods.markGoogleUsed();
+              window.location.href = "/api/auth/google";
             }}
           >
             <svg
@@ -87,31 +102,99 @@ export default function LoginPage() {
               />
             </svg>
             Continuar con Google
-          </a>
+          </Button>
           <Show when={loginMethods.lastUsedMethod() === "google"}>
             <LastUsedPill />
           </Show>
         </div>
 
         <div class={pageStyles.separator} role="separator" />
-        <form
-          class={pageStyles.formStack}
-          action={passwordLoginMutation}
-          method="post"
-          onSubmit={() => {
-            loginMethods.markPasswordUsed();
-          }}
-        >
-          <Show when={passwordError()}>
-            {(message) => (
-              <p class={pageStyles.formError} role="alert">
-                {message()}
-              </p>
-            )}
-          </Show>
+
+        {/*
+         * Init step: credentials entry point, secondary weight.
+         * Mirrors twenty's SignInUpWithCredentials secondary button on Init.
+         */}
+        <Show when={step() === "init"}>
+          <div class={pageStyles.ssoButtonContainer}>
+            <Button
+              variant="secondary"
+              size="lg"
+              class={styles.full}
+              onClick={() => setStep("email")}
+            >
+              Continuar con usuario
+            </Button>
+            <Show when={loginMethods.lastUsedMethod() === "password"}>
+              <LastUsedPill />
+            </Show>
+          </div>
+        </Show>
+
+        {/*
+         * Email step: username field + primary Continue + passkey text link.
+         * Passkey rendered as subtle tertiary-weight text link, shown only
+         * when WebAuthn is supported — mirrors original treatment.
+         */}
+        <Show when={step() === "email"}>
           <EnterTransition>
+            <div class={pageStyles.formStack}>
+              <Input
+                id="auth-username"
+                type="text"
+                label="Usuario"
+                class={pageStyles.authControl}
+                autocomplete="username"
+                autocapitalize="none"
+                autocorrect="off"
+                spellcheck={false}
+                value={username()}
+                onInput={(e) => setUsername(e.currentTarget.value)}
+                required
+              />
+              <Button
+                type="button"
+                size="lg"
+                class={styles.full}
+                onClick={() => {
+                  if (!username().trim()) return;
+                  setStep("password");
+                }}
+              >
+                Continuar
+              </Button>
+              <Show when={passkeySupported()}>
+                <a href="/login/passkey/start" class={linkStyles.passkeyLink}>
+                  Iniciar con clave de acceso
+                </a>
+              </Show>
+            </div>
+          </EnterTransition>
+        </Show>
+
+        {/*
+         * Password step: server-action form. Username field stays visible
+         * (editing it resets back to email step). Only the password input
+         * gets an enter-animation since the username position is stable.
+         * Mirrors twenty: "Forgot password?" link only when on Password step.
+         */}
+        <Show when={step() === "password"}>
+          <form
+            class={pageStyles.formStack}
+            action={passwordLoginMutation}
+            method="post"
+            onSubmit={() => {
+              loginMethods.markPasswordUsed();
+            }}
+          >
+            <Show when={passwordError()}>
+              {(message) => (
+                <p class={pageStyles.formError} role="alert">
+                  {message()}
+                </p>
+              )}
+            </Show>
             <Input
-              id="username"
+              id="auth-identifier"
               type="text"
               label="Usuario"
               class={pageStyles.authControl}
@@ -120,50 +203,40 @@ export default function LoginPage() {
               autocapitalize="none"
               autocorrect="off"
               spellcheck={false}
+              value={username()}
+              onInput={(e) => {
+                const next = e.currentTarget.value;
+                if (next !== username()) setStep("email");
+                setUsername(next);
+              }}
               required
             />
-          </EnterTransition>
-
-          <EnterTransition>
-            <Input
-              id="current-password"
-              type="password"
-              label="Contraseña"
-              class={pageStyles.authControl}
-              name="password"
-              autocomplete="current-password"
-              required
-            />
-          </EnterTransition>
-
-          <Button
-            type="submit"
-            size="lg"
-            class={styles.full}
-            loading={passwordSubmission.pending}
-          >
-            Iniciar sesión
-          </Button>
-
-          <Show when={loginMethods.lastUsedMethod() === "password"}>
-            <div class={pageStyles.ssoButtonContainer}>
-              <LastUsedPill />
-            </div>
-          </Show>
-        </form>
-
-        <div class={pageStyles.separator} role="separator" />
-        <a
-          href="/login/passkey/start"
-          class={cn(
-            buttonStyles.button,
-            buttonStyles.lg,
-            buttonStyles.primary,
-            styles.full,
-          )}
-        >
-          Continuar con clave de acceso
-        </a>
+            <EnterTransition>
+              <Input
+                id="current-password"
+                type="password"
+                label="Contraseña"
+                class={pageStyles.authControl}
+                name="password"
+                autocomplete="current-password"
+                required
+              />
+            </EnterTransition>
+            <Button
+              type="submit"
+              size="lg"
+              class={styles.full}
+              loading={passwordSubmission.pending}
+            >
+              Iniciar sesión
+            </Button>
+            <Show when={loginMethods.lastUsedMethod() === "password"}>
+              <div class={pageStyles.ssoButtonContainer}>
+                <LastUsedPill />
+              </div>
+            </Show>
+          </form>
+        </Show>
       </div>
     </AuthFlowShell>
   );

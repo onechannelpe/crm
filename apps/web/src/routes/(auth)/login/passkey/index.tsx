@@ -7,7 +7,7 @@ import {
 import { createMemo, createSignal, onMount, Show } from "solid-js";
 
 import { finishPasskeyLogin } from "~/actions/auth";
-import { AuthFlowShell } from "~/components/auth/auth-flow-shell";
+import { AuthFlowShell } from "~/components/auth/flow/auth-flow-shell";
 import { useToast } from "~/components/feedback/toast-provider";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
@@ -24,6 +24,7 @@ import { loginFlowQuery } from "~/lib/queries/auth";
 
 import styles from "../../../auth/auth-shell.module.css";
 import pageStyles from "../../../auth/login-page.module.css";
+import linkStyles from "~/components/auth/flow/auth-links.module.css";
 
 export default function LoginPasskeyPage() {
   useAuthPageView("login_passkey");
@@ -131,7 +132,7 @@ export default function LoginPasskeyPage() {
       title="Verificar clave de acceso"
       description="Continúa con la clave de acceso asociada a tu cuenta."
       footerNote={
-        <a href="/login" class={pageStyles.helpLink}>
+        <a href="/login" class={linkStyles.helpLink}>
           Volver al inicio de sesión
         </a>
       }
@@ -153,7 +154,7 @@ export default function LoginPasskeyPage() {
               <p class={pageStyles.formError} role="alert">
                 La sesión de clave de acceso expiró. Intenta de nuevo.
               </p>
-              <a href="/login" class={pageStyles.passkeyLink}>
+              <a href="/login" class={linkStyles.passkeyLink}>
                 Volver al inicio de sesión
               </a>
             </div>
