@@ -1,6 +1,7 @@
 import { createSignal, onMount } from "solid-js";
 
-export type LastUsedMethod = "google" | "password" | null;
+export type AuthMethod = "google" | "password";
+export type LastUsedMethod = AuthMethod | null;
 
 const LAST_USED_KEY = "last_auth_method";
 
@@ -14,11 +15,11 @@ function readLastUsed(): LastUsedMethod {
   return null;
 }
 
-function persistLastUsed(method: LastUsedMethod): void {
+function persistLastUsed(method: AuthMethod): void {
   try {
-    if (method) localStorage.setItem(LAST_USED_KEY, method);
+    localStorage.setItem(LAST_USED_KEY, method);
   } catch {
-    // ignore
+    // localStorage unavailable (SSR / sandboxed)
   }
 }
 
@@ -30,19 +31,13 @@ export function useLoginFlow() {
     setLastUsedMethod(readLastUsed());
   });
 
-  function markPasswordUsed(): void {
-    persistLastUsed("password");
-    setLastUsedMethod("password");
-  }
-
-  function markGoogleUsed(): void {
-    persistLastUsed("google");
-    setLastUsedMethod("google");
+  function markUsed(method: AuthMethod): void {
+    persistLastUsed(method);
+    setLastUsedMethod(method);
   }
 
   return {
     lastUsedMethod,
-    markPasswordUsed,
-    markGoogleUsed,
+    markUsed,
   };
 }

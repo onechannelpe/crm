@@ -52,9 +52,6 @@ export default function LoginPage() {
       showToast("error", "La sesión de inicio expiró. Intenta de nuevo.");
     }
     setPasskeySupported(isPasskeySupported());
-    // Skip the init screen for returning password users — lastUsedMethod is
-    // set by useLoginFlow's onMount which registers and runs before this one.
-    if (loginMethods.lastUsedMethod() === "password") setStep("email");
   });
 
   createEffect(() => {
@@ -93,7 +90,7 @@ export default function LoginPage() {
             variant={step() === "init" ? "primary" : "outline"}
             class={styles.full}
             onClick={() => {
-              loginMethods.markGoogleUsed();
+              loginMethods.markUsed("google");
               window.location.href = "/api/auth/google";
             }}
           >
@@ -188,7 +185,7 @@ export default function LoginPage() {
             action={passwordLoginMutation}
             method="post"
             onSubmit={() => {
-              loginMethods.markPasswordUsed();
+              loginMethods.markUsed("password");
             }}
             onKeyDown={(event) => {
               if (event.key === "Escape") setStep("email");
@@ -236,11 +233,6 @@ export default function LoginPage() {
             >
               Iniciar sesión
             </Button>
-            <Show when={loginMethods.lastUsedMethod() === "password"}>
-              <div class={pageStyles.ssoButtonContainer}>
-                <LastUsedPill />
-              </div>
-            </Show>
           </form>
         </Show>
       </div>
