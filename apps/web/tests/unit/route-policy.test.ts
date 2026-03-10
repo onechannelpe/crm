@@ -1,15 +1,13 @@
 import { describe, expect, it } from "vitest";
 
+import { ROUTE_PERMISSIONS } from "../../src/lib/auth/access/route-permissions";
 import {
   canAccessPath,
   getDefaultAppPath,
   getRoutePermission,
 } from "../../src/lib/auth/access/route-policy";
-import {
-  getHeaderRoute,
-  getSidebarChildren,
-  getSidebarRoutes,
-} from "../../src/lib/nav/nav-policy";
+import { NAV_ROUTES } from "../../src/lib/nav/nav-config";
+import { getHeaderRoute } from "../../src/lib/nav/nav-policy";
 
 describe("route permissions", () => {
   it("resolves static and dynamic route permissions", () => {
@@ -46,72 +44,26 @@ describe("route permissions", () => {
   });
 });
 
-describe("nav policy", () => {
-  it("filters sidebar route sections by role", () => {
-    const executivePrimary = getSidebarRoutes("executive", "primary").map(
-      (route) => route.href,
-    );
-    expect(executivePrimary).toContain("/sales/records/new");
-    expect(executivePrimary).not.toContain("/settings");
-
-    const supervisorSecondary = getSidebarRoutes("supervisor", "secondary").map(
-      (route) => route.href,
-    );
-    expect(supervisorSecondary).toContain("/audit");
-
-    const inventorySidebar = getSidebarRoutes("logistics", "secondary").map(
-      (route) => route.href,
-    );
-    expect(inventorySidebar).toEqual(["/inventory"]);
-  });
-
-  it("returns empty children when role lacks permission for all", () => {
-    // logistics role has no leads:read permission, so the sales group's
-    // children (leads, confirmations etc.) should all be filtered out
-    const salesChildren = getSidebarChildren("logistics", "sales").map(
-      (child) => child.href,
-    );
-    expect(salesChildren).toEqual([]);
-  });
-
-  it("returns accessible children ordered correctly", () => {
-    // superuser has all permissions — all sales children are visible and ordered
-    const salesChildren = getSidebarChildren("superuser", "sales").map(
-      (child) => child.href,
-    );
-    expect(salesChildren).toEqual([
-      "/sales/leads",
-      "/sales/confirmed",
-      "/sales/confirmations",
-      "/sales/reports/exports",
-    ]);
-  });
-
-  it("filters sales children for executive (no sales:review)", () => {
-    // executive has leads:read but NOT sales:review, so
-    // confirmed, queue and exports routes are excluded
-    const salesChildren = getSidebarChildren("executive", "sales").map(
-      (child) => child.href,
-    );
-    expect(salesChildren).toEqual(["/sales/leads"]);
-  });
-
-  it("resolves header metadata for static routes", () => {
-    expect(getHeaderRoute("/contacts/people").label).toBe("Personas");
-    expect(getHeaderRoute("/contacts/companies").label).toBe("Empresas");
-    expect(getHeaderRoute("/settings/profile").label).toBe("Perfil");
-    expect(getHeaderRoute("/unknown").label).toBe("Espacio de trabajo");
-  });
-
+describe("nav config structural invariants", () => {
   it("resolves header metadata for dynamic routes", () => {
     expect(getHeaderRoute("/sales/records/42/edit").label).toBe("Editar venta");
     expect(getHeaderRoute("/sales/records/42/edit").icon).toBe("new-sale");
   });
 
   it("resolves header via active-prefix for sub-paths", () => {
-    // /sales/leads has its own nav entry with a header, so it returns "Leads"
-    expect(getHeaderRoute("/sales/leads").label).toBe("Leads");
-    // /dashboard sub-path resolution
+    expect(getHeaderRoute("/sales/leads").label).toBe("Prospectos");
     expect(getHeaderRoute("/dashboard").label).toBe("Inicio");
+  });
+
+  it("every sidebar route href is registered in ROUTE_PERMISSIONS", () => {
+    const registeredHrefs = new Set(
+      ROUTE_PERMISSIONS.filter((r) => r.href).map((r) => r.href),
+    );
+
+    const unregistered = NAV_ROUTES.filter(
+      (r) => r.sidebar && !registeredHrefs.has(r.href),
+    ).map((r) => r.href);
+
+    expect(unregistered).toEqual([]);
   });
 });

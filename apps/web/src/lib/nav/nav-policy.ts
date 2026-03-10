@@ -24,6 +24,11 @@ export interface HeaderDescriptor {
   icon: RouteIcon;
 }
 
+export interface SidebarGroup {
+  label: string | undefined;
+  items: SidebarNavRoute[];
+}
+
 const HEADER_FALLBACK: HeaderDescriptor = {
   label: "Espacio de trabajo",
   icon: "dashboard",
@@ -60,6 +65,27 @@ export function getSidebarRoutes(
     if (route.sidebar.section !== section) return false;
     return canAccessPath(role, route.href);
   }).sort(sortBySidebarOrder);
+}
+
+export function getSidebarGrouped(
+  role: Role,
+  section: SidebarSection,
+): SidebarGroup[] {
+  const routes = getSidebarRoutes(role, section);
+  const groups: SidebarGroup[] = [];
+  const seen = new Map<string | undefined, SidebarNavRoute[]>();
+
+  for (const route of routes) {
+    const key = route.sidebar.group;
+    if (!seen.has(key)) {
+      const items: SidebarNavRoute[] = [];
+      seen.set(key, items);
+      groups.push({ label: key, items });
+    }
+    seen.get(key)!.push(route);
+  }
+
+  return groups;
 }
 
 export function getSidebarChildren(

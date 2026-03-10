@@ -3,6 +3,7 @@ export type RouteIcon =
   | "settings"
   | "team"
   | "inventory"
+  | "catalog"
   | "sales"
   | "leads"
   | "dashboard"
@@ -25,6 +26,7 @@ export interface NavChild {
 export interface SidebarConfig {
   section: SidebarSection;
   order: number;
+  group?: string;
   children?: NavChild[];
 }
 
@@ -45,55 +47,7 @@ export interface NavRoute {
 }
 
 export const NAV_ROUTES: NavRoute[] = [
-  {
-    id: "contacts-people",
-    href: "/contacts/people",
-    label: "Personas",
-    navLabel: "Contactos",
-    icon: "search",
-    header: { label: "Personas", icon: "search" },
-    sidebar: {
-      section: "secondary",
-      order: 1,
-      children: [
-        { href: "/contacts/people", label: "Personas", order: 1 },
-        { href: "/contacts/companies", label: "Empresas", order: 2 },
-      ],
-    },
-    activePrefixes: ["/contacts/people", "/contacts/companies"],
-  },
-  {
-    id: "contacts-companies",
-    href: "/contacts/companies",
-    label: "Empresas",
-    icon: "search",
-    header: { label: "Empresas", icon: "search" },
-  },
-  {
-    id: "team",
-    href: "/team",
-    label: "Equipo",
-    navLabel: "Equipo",
-    icon: "team",
-    header: { label: "Team", icon: "team" },
-    sidebar: { section: "secondary", order: 4 },
-  },
-  {
-    id: "inventory",
-    href: "/inventory",
-    label: "Inventario",
-    navLabel: "Inventario",
-    icon: "inventory",
-    header: { label: "Inventory", icon: "inventory" },
-    sidebar: { section: "secondary", order: 3 },
-  },
-  {
-    id: "leads",
-    href: "/sales/leads",
-    label: "Prospectos",
-    icon: "leads",
-    header: { label: "Leads", icon: "leads" },
-  },
+  // ── Primary ──────────────────────────────────────────────────────────────
   {
     id: "dashboard",
     href: "/dashboard",
@@ -119,6 +73,129 @@ export const NAV_ROUTES: NavRoute[] = [
     header: { label: "Agenda", icon: "schedule" },
     sidebar: { section: "primary", order: 3 },
   },
+
+  // ── Secondary › Comercial ─────────────────────────────────────────────────
+  {
+    id: "contacts-people",
+    href: "/contacts/people",
+    label: "Personas",
+    navLabel: "Contactos",
+    icon: "search",
+    header: { label: "Personas", icon: "search" },
+    sidebar: {
+      section: "secondary",
+      order: 1,
+      group: "Comercial",
+      children: [
+        { href: "/contacts/people", label: "Personas", order: 1 },
+        { href: "/contacts/companies", label: "Empresas", order: 2 },
+      ],
+    },
+    activePrefixes: ["/contacts/people", "/contacts/companies"],
+  },
+  {
+    id: "contacts-companies",
+    href: "/contacts/companies",
+    label: "Empresas",
+    icon: "search",
+    header: { label: "Empresas", icon: "search" },
+  },
+  {
+    id: "sales",
+    href: "/sales/records/new",
+    label: "Ventas",
+    navLabel: "Ventas",
+    icon: "sales",
+    sidebar: {
+      section: "secondary",
+      order: 2,
+      group: "Comercial",
+      children: [
+        { href: "/sales/leads", label: "Prospectos", order: 1 },
+        { href: "/sales/confirmed", label: "Confirmadas", order: 4 },
+        { href: "/sales/confirmations", label: "Cola", order: 5 },
+        { href: "/sales/reports/exports", label: "Exportar", order: 6 },
+      ],
+    },
+    activePrefixes: ["/sales", "/dashboard"],
+  },
+  {
+    id: "quota",
+    href: "/quota",
+    label: "Cuota",
+    navLabel: "Cuota",
+    icon: "quota",
+    header: { label: "Cuota", icon: "quota" },
+    sidebar: { section: "secondary", order: 3, group: "Comercial" },
+  },
+
+  // ── Secondary › Operaciones ───────────────────────────────────────────────
+  {
+    id: "inventory",
+    href: "/inventory",
+    label: "Inventario",
+    navLabel: "Inventario",
+    icon: "inventory",
+    header: { label: "Inventario", icon: "inventory" },
+    sidebar: { section: "secondary", order: 4, group: "Operaciones" },
+  },
+  {
+    id: "catalog",
+    href: "/catalog",
+    label: "Catálogo",
+    navLabel: "Catálogo",
+    icon: "catalog",
+    header: { label: "Catálogo de productos", icon: "catalog" },
+    sidebar: { section: "secondary", order: 5, group: "Operaciones" },
+  },
+  {
+    id: "team",
+    href: "/team",
+    label: "Equipo",
+    navLabel: "Equipo",
+    icon: "team",
+    header: { label: "Equipo", icon: "team" },
+    sidebar: {
+      section: "secondary",
+      order: 6,
+      group: "Operaciones",
+      children: [
+        { href: "/team", label: "Miembros", order: 1 },
+        { href: "/team/invite", label: "Invitaciones", order: 2 },
+      ],
+    },
+    activePrefixes: ["/team"],
+  },
+
+  // ── Secondary › Administración ────────────────────────────────────────────
+  {
+    id: "audit",
+    href: "/audit/observability",
+    label: "Auditoría",
+    navLabel: "Auditoría",
+    icon: "audit",
+    header: { label: "Auditoría", icon: "audit" },
+    sidebar: {
+      section: "secondary",
+      order: 7,
+      group: "Administración",
+      children: [
+        { href: "/audit/observability", label: "Observabilidad", order: 1 },
+        { href: "/audit/auth", label: "Autenticación", order: 2 },
+        { href: "/audit/log", label: "Registro", order: 3 },
+      ],
+    },
+    activePrefixes: ["/audit"],
+  },
+
+  // ── Header-only routes (no sidebar entry) ────────────────────────────────
+  {
+    id: "leads",
+    href: "/sales/leads",
+    label: "Prospectos",
+    icon: "leads",
+    header: { label: "Prospectos", icon: "leads" },
+  },
   {
     id: "sales-confirmed",
     href: "/sales/confirmed",
@@ -141,40 +218,32 @@ export const NAV_ROUTES: NavRoute[] = [
     header: { label: "Exportaciones", icon: "confirmed" },
   },
   {
-    id: "sales",
-    href: "/sales/records/new",
-    label: "Ventas",
-    navLabel: "Ventas",
-    icon: "sales",
-    sidebar: {
-      section: "secondary",
-      order: 2,
-      children: [
-        { href: "/sales/leads", label: "Prospectos", order: 1 },
-        { href: "/sales/confirmed", label: "Confirmadas", order: 4 },
-        { href: "/sales/confirmations", label: "Cola", order: 5 },
-        { href: "/sales/reports/exports", label: "Exportar", order: 6 },
-      ],
-    },
-    activePrefixes: ["/sales", "/dashboard"],
+    id: "team-invite",
+    href: "/team/invite",
+    label: "Invitaciones",
+    icon: "team",
+    header: { label: "Invitaciones", icon: "team" },
   },
   {
-    id: "audit",
-    href: "/audit",
-    label: "Auditoría",
-    navLabel: "Auditoría",
+    id: "audit-observability",
+    href: "/audit/observability",
+    label: "Observabilidad",
     icon: "audit",
-    header: { label: "Auditoría", icon: "audit" },
-    sidebar: { section: "secondary", order: 5 },
+    header: { label: "Observabilidad", icon: "audit" },
   },
   {
-    id: "quota",
-    href: "/quota",
-    label: "Cuota",
-    navLabel: "Cuota",
-    icon: "quota",
-    header: { label: "Cuota", icon: "quota" },
-    sidebar: { section: "secondary", order: 6 },
+    id: "audit-auth",
+    href: "/audit/auth",
+    label: "Autenticación",
+    icon: "audit",
+    header: { label: "Autenticación", icon: "audit" },
+  },
+  {
+    id: "audit-log",
+    href: "/audit/log",
+    label: "Registro de auditoría",
+    icon: "audit",
+    header: { label: "Registro de auditoría", icon: "audit" },
   },
   {
     id: "profile",
