@@ -1,15 +1,9 @@
 import { useNavigate } from "@solidjs/router";
-import {
-  createEffect,
-  createMemo,
-  createSignal,
-  For,
-  onCleanup,
-  Show,
-} from "solid-js";
+import { createEffect, createMemo, createSignal, For, Show } from "solid-js";
 
 import Search from "~/components/icons/search";
 import { useSession } from "~/components/providers/session-provider";
+import { useHotkey } from "~/lib/hotkey/use-hotkey";
 import { getNavigableRoutes } from "~/lib/nav/nav-policy";
 import { cn } from "~/lib/utils";
 
@@ -50,39 +44,36 @@ export function CommandPalette(props: CommandPaletteProps) {
     return commands().filter((cmd) => cmd.label.toLowerCase().includes(q));
   });
 
-  createEffect(() => {
-    if (!props.open) return;
+  const isOpen = () => props.open;
 
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        props.onClose();
-        return;
-      }
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        setSelectedIndex((i) =>
-          i < filteredCommands().length - 1 ? i + 1 : i,
-        );
-        return;
-      }
-      if (e.key === "ArrowUp") {
-        e.preventDefault();
-        setSelectedIndex((i) => (i > 0 ? i - 1 : 0));
-        return;
-      }
-      if (e.key === "Enter") {
-        e.preventDefault();
-        const cmd = filteredCommands()[selectedIndex()];
-        if (cmd) {
-          cmd.action();
-          props.onClose();
-        }
-      }
-    };
-
-    document.addEventListener("keydown", handler);
-    onCleanup(() => document.removeEventListener("keydown", handler));
+  useHotkey("Escape", () => props.onClose(), {
+    enabled: isOpen,
+    allowInInputs: true,
   });
+  useHotkey(
+    "ArrowDown",
+    () =>
+      setSelectedIndex((i) => (i < filteredCommands().length - 1 ? i + 1 : i)),
+    {
+      enabled: isOpen,
+      allowInInputs: true,
+    },
+  );
+  useHotkey("ArrowUp", () => setSelectedIndex((i) => (i > 0 ? i - 1 : 0)), {
+    enabled: isOpen,
+    allowInInputs: true,
+  });
+  useHotkey(
+    "Enter",
+    () => {
+      const cmd = filteredCommands()[selectedIndex()];
+      if (cmd) {
+        cmd.action();
+        props.onClose();
+      }
+    },
+    { enabled: isOpen, allowInInputs: true },
+  );
 
   createEffect(() => {
     if (props.open) {
