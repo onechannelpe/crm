@@ -1,5 +1,11 @@
 import { useSearchParams, useSubmission } from "@solidjs/router";
-import { createMemo, createSignal, onMount, Show } from "solid-js";
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  onMount,
+  Show,
+} from "solid-js";
 
 import { AuthFlowShell } from "~/components/auth/flow/auth-flow-shell";
 import { LastUsedPill } from "~/components/auth/flow/last-used-pill";
@@ -29,6 +35,14 @@ export default function LoginPage() {
   const [step, setStep] = createSignal<LoginStep>("init");
   const [username, setUsername] = createSignal("");
   const [passkeySupported, setPasskeySupported] = createSignal(false);
+  let usernameInputRef: HTMLInputElement | undefined;
+  const setUsernameInputRef = (element: HTMLInputElement) => {
+    usernameInputRef = element;
+  };
+  let passwordInputRef: HTMLInputElement | undefined;
+  const setPasswordInputRef = (element: HTMLInputElement) => {
+    passwordInputRef = element;
+  };
 
   onMount(() => {
     if (searchParams.error === "google_not_linked") {
@@ -38,6 +52,19 @@ export default function LoginPage() {
       showToast("error", "La sesión de inicio expiró. Intenta de nuevo.");
     }
     setPasskeySupported(isPasskeySupported());
+    // Skip the init screen for returning password users — lastUsedMethod is
+    // set by useLoginFlow's onMount which registers and runs before this one.
+    if (loginMethods.lastUsedMethod() === "password") setStep("email");
+  });
+
+  createEffect(() => {
+    if (step() !== "email") return;
+    usernameInputRef?.focus();
+  });
+
+  createEffect(() => {
+    if (step() !== "password") return;
+    passwordInputRef?.focus();
   });
 
   const footerNote = createMemo(() => {
@@ -119,7 +146,17 @@ export default function LoginPage() {
 
         <Show when={step() === "email"}>
           <EnterTransition>
-            <div class={pageStyles.formStack}>
+            <form
+              class={pageStyles.formStack}
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (!username().trim()) return;
+                setStep("password");
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") setStep("init");
+              }}
+            >
               <Input
                 id="auth-username"
                 type="text"
@@ -130,16 +167,10 @@ export default function LoginPage() {
                 spellcheck={false}
                 value={username()}
                 onInput={(e) => setUsername(e.currentTarget.value)}
+                ref={setUsernameInputRef}
                 required
               />
-              <Button
-                type="button"
-                class={styles.full}
-                onClick={() => {
-                  if (!username().trim()) return;
-                  setStep("password");
-                }}
-              >
+              <Button type="submit" class={styles.full}>
                 Continuar
               </Button>
               <Show when={passkeySupported()}>
@@ -147,7 +178,7 @@ export default function LoginPage() {
                   Iniciar con clave de acceso
                 </a>
               </Show>
-            </div>
+            </form>
           </EnterTransition>
         </Show>
 
@@ -158,6 +189,9 @@ export default function LoginPage() {
             method="post"
             onSubmit={() => {
               loginMethods.markPasswordUsed();
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") setStep("email");
             }}
           >
             <Show when={passwordError()}>
@@ -191,6 +225,7 @@ export default function LoginPage() {
                 placeholder="Contraseña"
                 name="password"
                 autocomplete="current-password"
+                ref={setPasswordInputRef}
                 required
               />
             </EnterTransition>

@@ -1,9 +1,10 @@
 import { useLocation } from "@solidjs/router";
-import { createEffect, createMemo, createSignal, onCleanup } from "solid-js";
+import { createMemo, createSignal } from "solid-js";
 
 import { CommandPalette } from "~/components/features/command-palette/command-palette";
 import { HeaderNotificationsPanel } from "~/components/layout/header-notifications-panel";
 import { ICON_BY_ROUTE } from "~/components/layout/route-icons";
+import { useHotkey } from "~/lib/hotkey/use-hotkey";
 import { getHeaderRoute } from "~/lib/nav/nav-policy";
 
 import styles from "./shell.module.css";
@@ -13,16 +14,7 @@ export function Header() {
   const currentRoute = createMemo(() => getHeaderRoute(location.pathname));
   const [paletteOpen, setPaletteOpen] = createSignal(false);
 
-  createEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        setPaletteOpen(true);
-      }
-    };
-    document.addEventListener("keydown", handler);
-    onCleanup(() => document.removeEventListener("keydown", handler));
-  });
+  useHotkey("Mod+K", () => setPaletteOpen(true));
 
   return (
     <>
