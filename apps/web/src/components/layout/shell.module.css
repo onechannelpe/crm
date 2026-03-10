@@ -239,17 +239,28 @@
   gap: 2px;
 }
 
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
 .sectionTitle {
   height: 20px;
   padding: 0 4px;
   margin-top: 8px;
+  width: 100%;
   display: flex;
   align-items: center;
+  gap: 4px;
   color: var(--foreground-tertiary);
   font-size: var(--font-size-label);
   font-weight: var(--font-weight-semibold);
   border-radius: 4px;
-  cursor: default;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
   transition:
     height 150ms var(--ease-standard),
     opacity 150ms var(--ease-standard),
@@ -260,6 +271,28 @@
 .sectionTitle:hover {
   background: var(--bg-translucent);
   color: var(--foreground-secondary);
+}
+
+.sectionTitleLabel {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Hidden by default, revealed on section title hover */
+.sectionTitleChevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-inline-start: auto;
+  color: var(--foreground-tertiary);
+  opacity: 0;
+  transition: opacity 150ms var(--ease-standard);
+}
+
+.sectionTitle:hover .sectionTitleChevron {
+  opacity: 1;
 }
 
 .link {
