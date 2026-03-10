@@ -4,7 +4,7 @@ import type {
   AuthFunnelEventsTable,
   Database,
   NewAuthFunnelEvent,
-} from "~/lib/db/schema";
+} from "~/lib/db/types";
 
 type AuthFunnelEventName = AuthFunnelEventsTable["event_name"];
 type AuthFunnelMethod = AuthFunnelEventsTable["method"];

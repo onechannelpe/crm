@@ -1,6 +1,6 @@
 import { sql, type Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/schema";
+import type { Database } from "~/lib/db/types";
 import type {
   ExtensionExecutivePresenceStatus,
   ExtensionSyncHealth,

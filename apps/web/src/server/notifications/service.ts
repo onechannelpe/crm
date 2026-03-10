@@ -4,7 +4,7 @@ import {
   renderCampaignEmail,
 } from "@crm/notifications";
 
-import type { UsersTable } from "~/lib/db/schema";
+import type { UsersTable } from "~/lib/db/types";
 import type { Repositories } from "~/server/shared/registry";
 
 const LEASE_MS = 30_000;

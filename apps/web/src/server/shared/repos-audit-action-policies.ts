@@ -1,6 +1,6 @@
 import type { Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/schema";
+import type { Database } from "~/lib/db/types";
 import type { AuditPolicyRiskLevel } from "~/server/audit-reader/contracts";
 
 export interface UpsertAuditActionPolicyInput {

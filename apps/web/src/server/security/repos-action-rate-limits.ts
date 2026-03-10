@@ -1,7 +1,7 @@
 import { sql, type Kysely } from "kysely";
 
 import { internalError } from "~/lib/app-errors";
-import type { Database } from "~/lib/db/schema";
+import type { Database } from "~/lib/db/types";
 
 interface CounterSnapshot {
   request_count: number;

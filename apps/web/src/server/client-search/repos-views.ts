@@ -1,6 +1,6 @@
 import type { Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/schema";
+import type { Database } from "~/lib/db/types";
 
 interface CreateViewInput {
   user_id: number;

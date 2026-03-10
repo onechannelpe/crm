@@ -1,6 +1,27 @@
 import type { Kysely } from "kysely";
 
-export async function up<T>(db: Kysely<T>): Promise<void> {
+export async function createTables<T>(db: Kysely<T>): Promise<void> {
+  await db.schema
+    .createTable("products")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("name", "varchar(255)", (col) => col.notNull())
+    .addColumn("category", "varchar(50)", (col) => col.notNull())
+    .addColumn("subtype", "varchar(50)")
+    .addColumn("price", "real", (col) => col.notNull())
+    .addColumn("is_active", "integer", (col) => col.notNull().defaultTo(1))
+    .execute();
+
+  await db.schema
+    .createTable("inventory_items")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("product_id", "integer", (col) =>
+      col.notNull().references("products.id"),
+    )
+    .addColumn("serial_number", "varchar(255)", (col) => col.notNull().unique())
+    .addColumn("status", "varchar(20)", (col) => col.notNull())
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .execute();
+
   await db.schema
     .createTable("sales_records")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())

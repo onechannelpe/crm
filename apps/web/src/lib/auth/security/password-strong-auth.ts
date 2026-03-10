@@ -6,7 +6,7 @@ import {
 import { matchesRecoveryCode } from "~/lib/auth/totp/recovery-codes";
 import { decryptTotpSecret } from "~/lib/auth/totp/secret-crypto";
 import { verifyTotpCode } from "~/lib/auth/totp/totp";
-import type { User } from "~/lib/db/schema";
+import type { User } from "~/lib/db/types";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 

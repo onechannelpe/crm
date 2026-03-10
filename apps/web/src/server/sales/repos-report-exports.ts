@@ -4,7 +4,7 @@ import type {
   Database,
   NewReportExportDownload,
   NewReportExportJob,
-} from "~/lib/db/schema";
+} from "~/lib/db/types";
 
 type ExportJobStatus = NewReportExportJob["status"];
 

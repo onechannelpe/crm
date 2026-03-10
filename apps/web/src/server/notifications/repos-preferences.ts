@@ -4,7 +4,7 @@ import type {
   Database,
   NewNotificationPreference,
   NotificationPreferencesTable,
-} from "~/lib/db/schema";
+} from "~/lib/db/types";
 
 type NotificationChannel = NotificationPreferencesTable["channel"];
 

@@ -1,4 +1,4 @@
-import type { User } from "~/lib/db/schema";
+import type { User } from "~/lib/db/types";
 import type { Repositories } from "~/server/shared/registry";
 
 type StrongAuthRepos = Pick<Repositories, "passkeys" | "userTotpFactors">;

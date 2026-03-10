@@ -4,7 +4,7 @@ import type {
   ActionObservationsTable,
   Database,
   NewActionObservation,
-} from "~/lib/db/schema";
+} from "~/lib/db/types";
 
 type ObservationStatus = ActionObservationsTable["status"];
 
