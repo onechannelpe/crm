@@ -1,6 +1,8 @@
+import type { Kysely } from "kysely";
+
 import { createLogger } from "~/lib/observability/logger";
 
-import { db } from "./db";
+import { db as globalDb } from "./db";
 import {
   checkIntegrityHash,
   computeMigrationsHash,
@@ -33,11 +35,15 @@ const seeds = {
   "00-audit-policies": seed00,
 };
 
-export async function migrateToLatest() {
+export async function migrateToLatest(db: Kysely<any> = globalDb) {
   // We still use the hash to allow dev wipe-and-rebuild workflows.
   // The hash input is now the declarative schema, but the developer experience remains the same.
   const currentHash = await computeMigrationsHash({ ...schemas, ...seeds });
-  await checkIntegrityHash(db, currentHash);
+  
+  const isMatch = await checkIntegrityHash(db, currentHash);
+  if (isMatch) {
+    return;
+  }
 
   try {
     // 1. Execute schema definitions

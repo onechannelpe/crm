@@ -67,15 +67,16 @@ async function writeHash<T>(db: Kysely<T>, hash: string): Promise<void> {
 export async function checkIntegrityHash<T>(
   db: Kysely<T>,
   currentHash: string,
-): Promise<void> {
+): Promise<boolean> {
   const stored = await readStoredHash(db);
-  if (stored === null) return; // for fresh dbs, it'll be written after migrations
+  if (stored === null) return false; // for fresh dbs, it'll be written after migrations
   if (stored !== currentHash) {
     throw new Error(
       `Migration files have changed since this database was built.\n` +
         `  ⇢ Delete crm.db and rerun: bun dev`,
     );
   }
+  return true;
 }
 
 export async function writeIntegrityHash<T>(

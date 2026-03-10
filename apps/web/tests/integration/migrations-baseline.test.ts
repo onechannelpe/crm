@@ -1,41 +1,13 @@
 import { mkdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 
-import { Migrator, type MigrationProvider, sql } from "kysely";
+import { sql } from "kysely";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { createDb } from "../../src/lib/db/client";
-import * as m001 from "../../src/lib/db/migrations/001-initial";
-import * as m002 from "../../src/lib/db/migrations/002-client-search-views";
-import * as m003 from "../../src/lib/db/migrations/003-user-invites";
-import * as m004 from "../../src/lib/db/migrations/004-action-observability";
-import * as m005 from "../../src/lib/db/migrations/005-report-export-observability";
-import * as m006 from "../../src/lib/db/migrations/006-sales-records-core";
-import * as m007 from "../../src/lib/db/migrations/007-action-rate-limit";
-import * as m008 from "../../src/lib/db/migrations/008-search-enrichment";
-import * as m009 from "../../src/lib/db/migrations/009-extension-runtime";
-import * as m010 from "../../src/lib/db/migrations/010-google-oauth";
-import * as m011 from "../../src/lib/db/migrations/011-login-flows";
+import { migrateToLatest } from "../../src/lib/db/migrate";
 
 const ARTIFACT_DIR = join(process.cwd(), ".vitest-db");
-
-const staticProvider: MigrationProvider = {
-  async getMigrations() {
-    return {
-      "001-initial": m001,
-      "002-client-search-views": m002,
-      "003-user-invites": m003,
-      "004-action-observability": m004,
-      "005-report-export-observability": m005,
-      "006-sales-records-core": m006,
-      "007-action-rate-limit": m007,
-      "008-search-enrichment": m008,
-      "009-extension-runtime": m009,
-      "010-google-oauth": m010,
-      "011-login-flows": m011,
-    };
-  },
-};
 
 const createdDbPaths: string[] = [];
 
@@ -49,18 +21,16 @@ async function createMigrationTestDb(prefix: string) {
   return createDb(dbPath);
 }
 
-describe("migration baseline", () => {
+describe("schema baseline", () => {
   afterEach(async () => {
     const paths = createdDbPaths.splice(0, createdDbPaths.length);
     await Promise.all(paths.map((dbPath) => rm(dbPath, { force: true })));
   });
 
   it("creates expected schema objects on a fresh database", async () => {
-    const db = await createMigrationTestDb("migration-baseline-fresh");
+    const db = await createMigrationTestDb("schema-baseline-fresh");
     try {
-      const migrator = new Migrator({ db, provider: staticProvider });
-      const { error } = await migrator.migrateToLatest();
-      expect(error).toBeUndefined();
+      await migrateToLatest(db);
 
       const tables = await sql<{ name: string }>`
         SELECT name
@@ -94,28 +64,24 @@ describe("migration baseline", () => {
       expect(indexNames.has("idx_audit_policy_risk_active")).toBe(true);
       expect(indexNames.has("idx_report_export_jobs_branch_time")).toBe(true);
       expect(indexNames.has("idx_sales_records_branch_status_time")).toBe(true);
-      expect(indexNames.has("idx_sales_record_attempts_record_time")).toBe(
-        true,
-      );
+      expect(indexNames.has("idx_sales_record_attempts_record_time")).toBe(true);
     } finally {
       await db.destroy();
     }
   });
 
-  it("is idempotent and does not reapply executed migrations", async () => {
-    const db = await createMigrationTestDb("migration-baseline-rerun");
+  it("is idempotent and maintains integrity hash", async () => {
+    const db = await createMigrationTestDb("schema-baseline-rerun");
     try {
-      const migrator = new Migrator({ db, provider: staticProvider });
-      const first = await migrator.migrateToLatest();
-      expect(first.error).toBeUndefined();
+      await migrateToLatest(db);
 
       await db
         .insertInto("branches")
         .values({ name: "Lima", created_at: Date.now() })
         .execute();
 
-      const second = await migrator.migrateToLatest();
-      expect(second.error).toBeUndefined();
+      // Should not throw and should be no-op because hash matches
+      await migrateToLatest(db);
 
       const branches = await db
         .selectFrom("branches")
@@ -123,33 +89,11 @@ describe("migration baseline", () => {
         .executeTakeFirstOrThrow();
       expect(Number(branches.count)).toBe(1);
 
-      const migrationTables = await sql<{ name: string }>`
-        SELECT name
-        FROM sqlite_master
-        WHERE type = 'table'
-          AND name IN ('kysely_migration', '__kysely_migration')
+      const integrity = await sql<{ migrations_hash: string }>`
+        SELECT migrations_hash FROM schema_integrity
       `.execute(db);
-      const migrationTableName = migrationTables.rows[0]?.name;
-      expect(migrationTableName).toBe("kysely_migration");
-
-      const migrations = await sql<{ name: string }>`
-        SELECT name
-        FROM kysely_migration
-        ORDER BY name ASC
-      `.execute(db);
-      expect(migrations.rows).toEqual([
-        { name: "001-initial" },
-        { name: "002-client-search-views" },
-        { name: "003-user-invites" },
-        { name: "004-action-observability" },
-        { name: "005-report-export-observability" },
-        { name: "006-sales-records-core" },
-        { name: "007-action-rate-limit" },
-        { name: "008-search-enrichment" },
-        { name: "009-extension-runtime" },
-        { name: "010-google-oauth" },
-        { name: "011-login-flows" },
-      ]);
+      expect(integrity.rows.length).toBe(1);
+      expect(integrity.rows[0].migrations_hash).toBeDefined();
     } finally {
       await db.destroy();
     }
