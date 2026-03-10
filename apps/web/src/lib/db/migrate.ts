@@ -39,7 +39,7 @@ export async function migrateToLatest(db: Kysely<any> = globalDb) {
   // We still use the hash to allow dev wipe-and-rebuild workflows.
   // The hash input is now the declarative schema, but the developer experience remains the same.
   const currentHash = await computeMigrationsHash({ ...schemas, ...seeds });
-  
+
   const isMatch = await checkIntegrityHash(db, currentHash);
   if (isMatch) {
     return;

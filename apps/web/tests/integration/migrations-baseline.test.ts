@@ -64,7 +64,9 @@ describe("schema baseline", () => {
       expect(indexNames.has("idx_audit_policy_risk_active")).toBe(true);
       expect(indexNames.has("idx_report_export_jobs_branch_time")).toBe(true);
       expect(indexNames.has("idx_sales_records_branch_status_time")).toBe(true);
-      expect(indexNames.has("idx_sales_record_attempts_record_time")).toBe(true);
+      expect(indexNames.has("idx_sales_record_attempts_record_time")).toBe(
+        true,
+      );
     } finally {
       await db.destroy();
     }

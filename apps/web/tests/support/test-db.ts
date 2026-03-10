@@ -4,7 +4,11 @@ import { join } from "node:path";
 import type { Kysely } from "kysely";
 
 import { createDb } from "../../src/lib/db/client";
-import { writeIntegrityHash, computeMigrationsHash } from "../../src/lib/db/migration-hash";
+import {
+  writeIntegrityHash,
+  computeMigrationsHash,
+} from "../../src/lib/db/migration-hash";
+import type { Database } from "../../src/lib/db/schema";
 import * as s00 from "../../src/lib/db/schema/00-core";
 import * as s01 from "../../src/lib/db/schema/01-users-auth";
 import * as s02 from "../../src/lib/db/schema/02-crm";
@@ -14,7 +18,6 @@ import * as s05 from "../../src/lib/db/schema/05-observability";
 import * as s06 from "../../src/lib/db/schema/06-extensions";
 import * as s07 from "../../src/lib/db/schema/07-features";
 import * as seed00 from "../../src/lib/db/seeds/00-audit-policies";
-import type { Database } from "../../src/lib/db/schema";
 import { createSalesRecordsWorkflowService } from "../../src/server/sales/records-service";
 import { createRepositories } from "../../src/server/shared/registry";
 
