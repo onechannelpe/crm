@@ -6,6 +6,7 @@ export const AUTH_ANALYTICS_SCREENS = [
   "login_verify",
   "login_passkey_start",
   "login_passkey",
+  "reset_password",
 ] as const;
 
 export type AuthAnalyticsScreen = (typeof AUTH_ANALYTICS_SCREENS)[number];

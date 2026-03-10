@@ -238,4 +238,23 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .on("login_flows")
     .column("expires_at")
     .execute();
+
+  // Password reset tokens
+  await db.schema
+    .createTable("password_reset_tokens")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("user_id", "integer", (col) =>
+      col.notNull().references("users.id").onDelete("cascade"),
+    )
+    .addColumn("token_hash", "varchar(64)", (col) => col.notNull().unique())
+    .addColumn("expires_at", "integer", (col) => col.notNull())
+    .addColumn("used_at", "integer")
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await db.schema
+    .createIndex("idx_password_reset_tokens_user_expires")
+    .on("password_reset_tokens")
+    .columns(["user_id", "expires_at"])
+    .execute();
 }

@@ -31,6 +31,7 @@ export type AuthRequestDecision =
 export function isPublicPath(pathname: string): boolean {
   return (
     pathname.startsWith("/login") ||
+    pathname.startsWith("/reset-password") ||
     pathname.startsWith("/auth") ||
     pathname.startsWith("/_") ||
     pathname.startsWith("/releases") ||
