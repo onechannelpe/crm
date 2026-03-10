@@ -110,7 +110,7 @@ describe("nav policy", () => {
 
   it("resolves header via active-prefix for sub-paths", () => {
     // /sales/leads has its own nav entry with a header, so it returns "Leads"
-    expect(getHeaderRoute("/sales/leads").label).toBe("Leads");
+    expect(getHeaderRoute("/sales/leads").label).toBe("Prospectos");
     // /dashboard sub-path resolution
     expect(getHeaderRoute("/dashboard").label).toBe("Inicio");
   });
