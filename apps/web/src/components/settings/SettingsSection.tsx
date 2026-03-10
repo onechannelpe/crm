@@ -18,7 +18,7 @@ export function SettingsSection(props: SettingsSectionProps) {
             <p class={styles.sectionDescription}>{props.description}</p>
           )}
         </div>
-        {"actions" in props && (
+        {props.actions && (
           <div class={styles.sectionActions}>{props.actions}</div>
         )}
       </div>

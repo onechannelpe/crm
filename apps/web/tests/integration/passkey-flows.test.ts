@@ -11,6 +11,7 @@ import {
 } from "../../src/lib/auth/passkey/registration-flow";
 import { hashAuthKey } from "../../src/lib/auth/password/key-hash";
 import type { SendPrivilegedLoginAlert } from "../../src/lib/auth/security/privileged-login-alert";
+import { isErr } from "../../src/server/shared/result";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -38,13 +39,17 @@ describe("passkey flows", () => {
       ctx.repos,
       passkeyService,
     );
+    expect(isErr(result)).toBe(false);
+    if (isErr(result)) {
+      throw new Error("expected successful passkey challenge");
+    }
 
     const challenge = await ctx.repos.webauthnChallenges.findById(
-      result.challengeId,
+      result.value.challengeId,
     );
     expect(challenge?.type).toBe("authentication");
     expect(challenge?.user_id).toBe(1);
-    expect(challenge?.challenge).toBe(result.options.challenge);
+    expect(challenge?.challenge).toBe(result.value.options.challenge);
   });
 
   it("finish passkey login consumes challenge and records failure on invalid assertion", async () => {
@@ -56,26 +61,29 @@ describe("passkey flows", () => {
       expires_at: Date.now() + 60_000,
     });
 
-    await expect(
-      finishPasskeyLoginFlow(
-        challengeId,
-        {
-          id: "missing-passkey",
-          rawId: "missing-passkey",
-          type: "public-key",
-          clientExtensionResults: {},
-          response: {
-            authenticatorData: "a",
-            clientDataJSON: "b",
-            signature: "c",
-          },
+    const result = await finishPasskeyLoginFlow(
+      challengeId,
+      {
+        id: "missing-passkey",
+        rawId: "missing-passkey",
+        type: "public-key",
+        clientExtensionResults: {},
+        response: {
+          authenticatorData: "a",
+          clientDataJSON: "b",
+          signature: "c",
         },
-        ipAddress,
-        ctx.repos,
-        passkeyService,
-        sendPrivilegedLoginAlert,
-      ),
-    ).rejects.toThrow("Invalid credentials");
+      },
+      ipAddress,
+      ctx.repos,
+      passkeyService,
+      sendPrivilegedLoginAlert,
+    );
+    expect(isErr(result)).toBe(true);
+    if (!isErr(result)) {
+      throw new Error("expected invalid passkey credentials");
+    }
+    expect(result.error.kind).toBe("invalid_credentials");
 
     const consumed = await ctx.repos.webauthnChallenges.findById(challengeId);
     expect(consumed).toBeUndefined();

@@ -120,8 +120,9 @@ export function OtpSlotInput(props: OtpSlotInputProps) {
                 }}
                 type="text"
                 inputmode="numeric"
-                autocomplete="one-time-code"
-                maxlength={SLOT_COUNT}
+                autocomplete={index() === 0 ? "one-time-code" : undefined}
+                aria-label={`Digito ${index() + 1} del codigo de verificacion`}
+                maxlength={1}
                 class={styles.input}
                 data-index={index()}
                 value={digit}

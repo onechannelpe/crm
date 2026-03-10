@@ -1,4 +1,6 @@
-import { Show, type JSX } from "solid-js";
+import { onMount, Show, type JSX } from "solid-js";
+
+import { initializeThemeMode } from "~/components/ui/theme/theme-mode";
 
 import styles from "./auth-flow-shell.module.css";
 
@@ -12,10 +14,14 @@ interface AuthFlowShellProps {
 }
 
 export function AuthFlowShell(props: AuthFlowShellProps) {
+  onMount(() => {
+    initializeThemeMode();
+  });
+
   return (
     <div class={styles.shell}>
       <section class={styles.surface}>
-        <Show when={"topBar" in props}>
+        <Show when={props.topBar !== undefined}>
           <div class={styles.topBar}>{props.topBar}</div>
         </Show>
         <div class={styles.content}>
@@ -35,11 +41,11 @@ export function AuthFlowShell(props: AuthFlowShellProps) {
 
           <div class={styles.body}>{props.children}</div>
 
-          <Show when={"footer" in props}>
+          <Show when={props.footer !== undefined}>
             <footer class={styles.footer}>{props.footer}</footer>
           </Show>
 
-          <Show when={"footerNote" in props}>
+          <Show when={props.footerNote !== undefined}>
             <div class={styles.footerNote}>{props.footerNote}</div>
           </Show>
         </div>

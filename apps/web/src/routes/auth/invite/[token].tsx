@@ -61,19 +61,19 @@ export default function AcceptInvitePage() {
             {(info) => (
               <div class={styles.stack4}>
                 <Input
-                  label="Nombre completo"
+                  placeholder="Nombre completo"
                   type="text"
                   value={info().fullName}
                   disabled
                 />
                 <Input
-                  label="Usuario"
+                  placeholder="Usuario"
                   type="text"
                   value={info().username}
                   disabled
                 />
                 <Input
-                  label="Correo"
+                  placeholder="Correo"
                   type="email"
                   value={info().email}
                   disabled
@@ -83,14 +83,14 @@ export default function AcceptInvitePage() {
           </Show>
 
           <Input
-            label="Contraseña"
+            placeholder="Contraseña"
             type="password"
             value={password()}
             onInput={(event) => setPassword(event.currentTarget.value)}
             required
           />
           <Input
-            label="Confirmar contraseña"
+            placeholder="Confirmar contraseña"
             type="password"
             value={confirmPassword()}
             onInput={(event) => setConfirmPassword(event.currentTarget.value)}

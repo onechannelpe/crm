@@ -24,6 +24,14 @@ export function Input(props: InputProps) {
     "type",
   ]);
   const inputId = local.id || createUniqueId();
+  const errorId = `${inputId}-error`;
+  const describedBy = () => {
+    const existing = others["aria-describedby"];
+    if (!local.error) return existing;
+    return typeof existing === "string" && existing.length > 0
+      ? `${existing} ${errorId}`
+      : errorId;
+  };
   const isPassword = local.type === "password";
   const [showPassword, setShowPassword] = createSignal(false);
 
@@ -32,12 +40,17 @@ export function Input(props: InputProps) {
       {local.label && (
         <label for={inputId} class={styles.label}>
           {local.label}
-          {props.required && <span class={styles.required}>*</span>}
+          {props.required && (
+            <span aria-hidden="true" class={styles.required}>
+              *
+            </span>
+          )}
         </label>
       )}
       <div class={isPassword ? styles.inputWrap : undefined}>
         <input
           id={inputId}
+          aria-describedby={describedBy()}
           type={
             isPassword ? (showPassword() ? "text" : "password") : local.type
           }
@@ -54,7 +67,9 @@ export function Input(props: InputProps) {
             type="button"
             class={styles.revealButton}
             aria-label={
-              showPassword() ? "Ocultar contraseña" : "Mostrar contraseña"
+              showPassword()
+                ? "Ocultar contraseña"
+                : "Mostrar contraseña como texto visible. Advertencia: esto mostrará tu contraseña en la pantalla."
             }
             onClick={() => setShowPassword((v) => !v)}
           >
@@ -97,7 +112,11 @@ export function Input(props: InputProps) {
           </button>
         </Show>
       </div>
-      {local.error && <p class={styles.errorText}>{local.error}</p>}
+      {local.error && (
+        <p id={errorId} class={styles.errorText}>
+          {local.error}
+        </p>
+      )}
     </div>
   );
 }

@@ -11,6 +11,11 @@ import * as m003 from "../../src/lib/db/migrations/003-user-invites";
 import * as m004 from "../../src/lib/db/migrations/004-action-observability";
 import * as m005 from "../../src/lib/db/migrations/005-report-export-observability";
 import * as m006 from "../../src/lib/db/migrations/006-sales-records-core";
+import * as m007 from "../../src/lib/db/migrations/007-action-rate-limit";
+import * as m008 from "../../src/lib/db/migrations/008-search-enrichment";
+import * as m009 from "../../src/lib/db/migrations/009-extension-runtime";
+import * as m010 from "../../src/lib/db/migrations/010-google-oauth";
+import * as m011 from "../../src/lib/db/migrations/011-login-flows";
 
 const ARTIFACT_DIR = join(process.cwd(), ".vitest-db");
 
@@ -23,6 +28,11 @@ const staticProvider: MigrationProvider = {
       "004-action-observability": m004,
       "005-report-export-observability": m005,
       "006-sales-records-core": m006,
+      "007-action-rate-limit": m007,
+      "008-search-enrichment": m008,
+      "009-extension-runtime": m009,
+      "010-google-oauth": m010,
+      "011-login-flows": m011,
     };
   },
 };
@@ -68,6 +78,7 @@ describe("migration baseline", () => {
       expect(tableNames.has("report_export_jobs")).toBe(true);
       expect(tableNames.has("sales_records")).toBe(true);
       expect(tableNames.has("sales_record_attempts")).toBe(true);
+      expect(tableNames.has("login_flows")).toBe(true);
 
       const indexes = await sql<{ name: string }>`
         SELECT name
@@ -133,6 +144,11 @@ describe("migration baseline", () => {
         { name: "004-action-observability" },
         { name: "005-report-export-observability" },
         { name: "006-sales-records-core" },
+        { name: "007-action-rate-limit" },
+        { name: "008-search-enrichment" },
+        { name: "009-extension-runtime" },
+        { name: "010-google-oauth" },
+        { name: "011-login-flows" },
       ]);
     } finally {
       await db.destroy();

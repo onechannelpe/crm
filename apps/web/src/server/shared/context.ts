@@ -1,5 +1,6 @@
 import { createNotificationService } from "@crm/notifications";
 
+import { createPrivilegedLoginAlertSender } from "~/lib/auth/security/login-alerts";
 import { config } from "~/lib/config";
 import { db } from "~/lib/db/db";
 import { env } from "~/lib/env";
@@ -41,6 +42,7 @@ export const extensionService = createExtensionService(repos, {
 });
 export const observabilityService = createObservabilityService({
   actionObservations: repos.actionObservations,
+  authFunnelEvents: repos.authFunnelEvents,
 });
 export const salesExportBlobStore = createSalesExportBlobStore(
   config.uploads.storageRoot,
@@ -68,5 +70,16 @@ export const notificationSender = createNotificationService({
   whatsappPhoneNumberId: env.whatsappPhoneNumberId || undefined,
   whatsappApiVersion: env.whatsappApiVersion || undefined,
 });
+
+export const privilegedLoginAlertSender = createPrivilegedLoginAlertSender(
+  repos,
+  {
+    resendApiKey: env.resendApiKey || undefined,
+    fromEmail: env.emailFrom || undefined,
+    whatsappAccessToken: env.whatsappAccessToken || undefined,
+    whatsappPhoneNumberId: env.whatsappPhoneNumberId || undefined,
+    whatsappApiVersion: env.whatsappApiVersion || undefined,
+  },
+);
 
 export { repos };

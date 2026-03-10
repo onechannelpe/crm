@@ -3,8 +3,8 @@ import type {
   PublicKeyCredentialRequestOptionsJSON,
 } from "@simplewebauthn/server";
 
-import { checkPasskeyChallengeThrottle } from "~/lib/auth/password/throttle";
 import {
+  checkPasskeyChallengeThrottle,
   checkPasskeyVerifyThrottle,
   clearPasskeyVerifyFailureState,
   recordPasskeyChallengeFailure,
@@ -19,8 +19,9 @@ import {
   assertPositiveInt,
 } from "~/lib/contracts/guards";
 import type { Repositories } from "~/server/shared/registry";
+import { Err, Ok, type Result } from "~/server/shared/result";
 
-const INVALID_CREDENTIALS = "Invalid credentials";
+import type { InvalidCredentialsError } from "../errors";
 
 type PasskeyService = {
   getAuthenticationOptions: (
@@ -42,10 +43,16 @@ export async function beginPasskeyLoginFlow(
   ipAddress: string,
   deps: Deps,
   passkeyService: PasskeyService,
-): Promise<{
-  challengeId: number;
-  options: PublicKeyCredentialRequestOptionsJSON;
-}> {
+): Promise<
+  Result<
+    {
+      challengeId: number;
+      userId: number;
+      options: PublicKeyCredentialRequestOptionsJSON;
+    },
+    InvalidCredentialsError
+  >
+> {
   const safeUsername = assertNonEmptyString(username, "username");
   const throttle = await checkPasskeyChallengeThrottle(
     safeUsername,
@@ -63,7 +70,7 @@ export async function beginPasskeyLoginFlow(
       outcome: "throttled",
       reason: "threshold_exceeded",
     });
-    throw new Error(INVALID_CREDENTIALS);
+    return Err({ kind: "invalid_credentials" });
   }
 
   const user = await deps.users.findByUsername(safeUsername);
@@ -78,7 +85,7 @@ export async function beginPasskeyLoginFlow(
       outcome: "failure",
       reason: user ? "inactive_user" : "user_not_found",
     });
-    throw new Error(INVALID_CREDENTIALS);
+    return Err({ kind: "invalid_credentials" });
   }
 
   const options = await passkeyService.getAuthenticationOptions(user.id);
@@ -89,7 +96,7 @@ export async function beginPasskeyLoginFlow(
     expires_at: Date.now() + config.auth.webauthnChallengeTtlMs,
   });
 
-  return { challengeId, options };
+  return Ok({ challengeId, userId: user.id, options });
 }
 
 export async function finishPasskeyLoginFlow(
@@ -99,7 +106,7 @@ export async function finishPasskeyLoginFlow(
   deps: Deps,
   passkeyService: PasskeyService,
   sendPrivilegedLoginAlert: SendPrivilegedLoginAlert,
-): Promise<{ userId: number }> {
+): Promise<Result<{ userId: number }, InvalidCredentialsError>> {
   const safeChallengeId = assertPositiveInt(challengeId, "challengeId");
   const challenge = await deps.webauthnChallenges.findById(safeChallengeId);
   const identifier = challenge?.user_id
@@ -120,7 +127,7 @@ export async function finishPasskeyLoginFlow(
       outcome: "throttled",
       reason: "threshold_exceeded",
     });
-    throw new Error(INVALID_CREDENTIALS);
+    return Err({ kind: "invalid_credentials" });
   }
   if (!challenge || challenge.type !== "authentication") {
     await recordPasskeyVerifyFailure(identifier, ipAddress, deps);
@@ -133,7 +140,7 @@ export async function finishPasskeyLoginFlow(
       outcome: "failure",
       reason: "invalid_challenge",
     });
-    throw new Error(INVALID_CREDENTIALS);
+    return Err({ kind: "invalid_credentials" });
   }
 
   await deps.webauthnChallenges.delete(challenge.id);
@@ -148,7 +155,7 @@ export async function finishPasskeyLoginFlow(
       outcome: "failure",
       reason: "challenge_expired",
     });
-    throw new Error(INVALID_CREDENTIALS);
+    return Err({ kind: "invalid_credentials" });
   }
 
   let verifiedUserId: number;
@@ -169,7 +176,7 @@ export async function finishPasskeyLoginFlow(
       outcome: "failure",
       reason: "assertion_invalid",
     });
-    throw new Error(INVALID_CREDENTIALS);
+    return Err({ kind: "invalid_credentials" });
   }
 
   const user = await deps.users.findById(verifiedUserId);
@@ -184,7 +191,7 @@ export async function finishPasskeyLoginFlow(
       outcome: "failure",
       reason: user ? "inactive_user" : "user_not_found",
     });
-    throw new Error(INVALID_CREDENTIALS);
+    return Err({ kind: "invalid_credentials" });
   }
 
   await sendAlertOnNewLoginSource({
@@ -203,5 +210,5 @@ export async function finishPasskeyLoginFlow(
     stage: "verify",
     outcome: "success",
   });
-  return { userId: user.id };
+  return Ok({ userId: user.id });
 }

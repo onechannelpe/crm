@@ -5,6 +5,9 @@
 dist
 app.config.timestamp_*.js
 
+# test artifacts
+test-results
+
 # rollup-plugin-visualizer artifacts
 stats.*
 
