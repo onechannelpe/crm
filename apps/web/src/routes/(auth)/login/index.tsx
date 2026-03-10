@@ -40,8 +40,6 @@ export default function LoginPage() {
     setPasskeySupported(isPasskeySupported());
   });
 
-  // Mirrors twenty: "Forgot password?" only on the password step;
-  // Privacy/Terms on init and email (reference: SignInUpGlobalScopeForm).
   const footerNote = createMemo(() => {
     if (step() === "password") {
       return (
@@ -63,11 +61,6 @@ export default function LoginPage() {
   return (
     <AuthFlowShell title="Bienvenido." footerNote={footerNote()}>
       <div class={pageStyles.formStack}>
-        {/*
-         * Google SSO: primary on init (prominent call-to-action),
-         * secondary once a credential step is chosen. Mirrors twenty's
-         * SignInUpWithGoogle variant={step === Init ? undefined : "secondary"}.
-         */}
         <div class={pageStyles.ssoButtonContainer}>
           <Button
             variant={step() === "init" ? "primary" : "outline"}
@@ -109,10 +102,6 @@ export default function LoginPage() {
 
         <div class={pageStyles.separator} role="separator" />
 
-        {/*
-         * Init step: credentials entry point, secondary weight.
-         * Mirrors twenty's SignInUpWithCredentials secondary button on Init.
-         */}
         <Show when={step() === "init"}>
           <div class={pageStyles.ssoButtonContainer}>
             <Button
@@ -167,12 +156,6 @@ export default function LoginPage() {
           </EnterTransition>
         </Show>
 
-        {/*
-         * Password step: server-action form. Username field stays visible
-         * (editing it resets back to email step). Only the password input
-         * gets an enter-animation since the username position is stable.
-         * Mirrors twenty: "Forgot password?" link only when on Password step.
-         */}
         <Show when={step() === "password"}>
           <form
             class={pageStyles.formStack}
