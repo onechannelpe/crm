@@ -117,11 +117,6 @@ export default function LoginPage() {
           </div>
         </Show>
 
-        {/*
-         * Email step: username field + primary Continue + passkey text link.
-         * Passkey rendered as subtle tertiary-weight text link, shown only
-         * when WebAuthn is supported — mirrors original treatment.
-         */}
         <Show when={step() === "email"}>
           <EnterTransition>
             <div class={pageStyles.formStack}>
