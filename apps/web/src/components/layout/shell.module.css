@@ -242,11 +242,24 @@
 .sectionTitle {
   height: 20px;
   padding: 0 4px;
+  margin-top: 8px;
   display: flex;
   align-items: center;
   color: var(--foreground-tertiary);
   font-size: var(--font-size-label);
   font-weight: var(--font-weight-semibold);
+  border-radius: 4px;
+  cursor: default;
+  transition:
+    height 150ms var(--ease-standard),
+    opacity 150ms var(--ease-standard),
+    margin 150ms var(--ease-standard),
+    padding 150ms var(--ease-standard);
+}
+
+.sectionTitle:hover {
+  background: var(--bg-translucent);
+  color: var(--foreground-secondary);
 }
 
 .link {
@@ -278,16 +291,35 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  max-height: 180px;
+  max-height: 400px;
   opacity: 1;
   overflow: hidden;
   transition:
-    max-height 150ms var(--ease-standard),
+    max-height 200ms var(--ease-standard),
     opacity 150ms var(--ease-standard);
 }
 
 .subItem {
   padding-left: 12px;
+}
+
+.itemGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.itemGroupCollapsed {
+  background: color-mix(in oklab, var(--foreground-tertiary) 7%, transparent);
+  border: 1px solid
+    color-mix(in oklab, var(--foreground-tertiary) 10%, transparent);
+  border-radius: 6px;
+  padding: 2px;
+  width: fit-content;
+  align-self: center;
+  transition:
+    background 150ms var(--ease-standard),
+    border-color 150ms var(--ease-standard);
 }
 
 .dot {
@@ -334,18 +366,36 @@
   margin-inline: auto;
 }
 
-.collapsedLabel {
-  display: none;
+/* Label base (always rendered, animated on collapse) */
+.linkLabel {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: clip;
+  max-width: 200px;
+  opacity: 1;
+  transition:
+    max-width 150ms var(--ease-standard),
+    opacity 100ms var(--ease-standard);
+}
+
+.linkLabelCollapsed {
+  max-width: 0;
+  opacity: 0;
 }
 
 .collapsedTitle {
   height: 0;
+  margin-top: 0;
   overflow: hidden;
   padding: 0;
+  opacity: 0;
 }
 
-.collapsedSubgroup {
-  display: none;
+.subgroupCollapsed {
+  max-height: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 
 @media (min-width: 768px) {

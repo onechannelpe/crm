@@ -34,7 +34,14 @@ export const ROUTE_PERMISSIONS: RoutePermission[] = [
     href: "/settings/login-protection",
     permission: "admin:manage",
   },
+  {
+    id: "settings-security-policies",
+    href: "/settings/security-policies",
+    permission: "admin:manage",
+  },
+  { id: "catalog", href: "/catalog", permission: "admin:manage" },
   { id: "team", href: "/team", permission: "team:read", landingPriority: 6 },
+  { id: "team-invite", href: "/team/invite", permission: "team:manage" },
   {
     id: "inventory",
     href: "/inventory",
@@ -86,10 +93,18 @@ export const ROUTE_PERMISSIONS: RoutePermission[] = [
   },
   { id: "audit", href: "/audit", permission: "audit:read", landingPriority: 8 },
   {
+    id: "audit-observability",
+    href: "/audit/observability",
+    permission: "audit:read",
+  },
+  { id: "audit-auth", href: "/audit/auth", permission: "audit:read" },
+  { id: "audit-log", href: "/audit/log", permission: "audit:read" },
+  {
     id: "quota",
     href: "/quota",
     permission: "quota:allocate",
     landingPriority: 7,
   },
+  { id: "schedule", href: "/schedule" },
   { id: "profile", href: "/settings/profile" },
 ];
