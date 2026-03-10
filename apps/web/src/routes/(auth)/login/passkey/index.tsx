@@ -191,7 +191,6 @@ export default function LoginPasskeyPage() {
                   >
                     <Button
                       type="button"
-                      size="lg"
                       class={styles.full}
                       loading={pending()}
                       onClick={() => {

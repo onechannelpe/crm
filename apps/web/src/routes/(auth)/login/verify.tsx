@@ -1,12 +1,12 @@
 import { createAsync, useSearchParams, useSubmission } from "@solidjs/router";
-import { createMemo, onMount, Show } from "solid-js";
+import { createMemo, createSignal, onMount, Show } from "solid-js";
 
 import { AuthFlowShell } from "~/components/auth/flow/auth-flow-shell";
 import { LegalFooter } from "~/components/auth/flow/legal-footer";
+import { OtpSlotInput } from "~/components/auth/flow/otp-slot-input";
 import { useToast } from "~/components/feedback/toast-provider";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
-import { Input } from "~/components/ui/input/input";
 import { parseLoginFlowId } from "~/lib/auth/login-route-flow";
 import { totpLoginUiMessage } from "~/lib/auth/login-ui";
 import { useAuthPageView } from "~/lib/auth/use-auth-analytics";
@@ -22,6 +22,7 @@ export default function LoginVerifyPage() {
   const [searchParams] = useSearchParams();
   const { showToast } = useToast();
   const totpSubmission = useSubmission(totpLoginMutation);
+  const [totpCode, setTotpCode] = createSignal("");
   const flowId = () => parseLoginFlowId(searchParams.flow);
   const loginFlow = createAsync(() => {
     const currentFlowId = flowId();
@@ -83,19 +84,15 @@ export default function LoginVerifyPage() {
                 method="post"
               >
                 <input type="hidden" name="flowId" value={String(flow().id)} />
-                <Input
-                  id="totpCode"
-                  type="text"
-                  label="Codigo de verificacion"
-                  class={pageStyles.authControl}
-                  name="totpCode"
-                  autocomplete="one-time-code"
-                  inputmode="numeric"
-                  pattern="[0-9]{6}"
-                  maxlength={6}
-                  error={totpError()}
-                  required
-                />
+                <input type="hidden" name="totpCode" value={totpCode()} />
+                <OtpSlotInput value={totpCode()} onValueChange={setTotpCode} />
+                <Show when={totpError()}>
+                  {(msg) => (
+                    <p class={pageStyles.formError} role="alert">
+                      {msg()}
+                    </p>
+                  )}
+                </Show>
                 <p class={pageStyles.supportText}>
                   Usuario: {flow().identifier}
                 </p>
@@ -105,7 +102,6 @@ export default function LoginVerifyPage() {
                   </a>
                   <Button
                     type="submit"
-                    size="lg"
                     class={styles.full}
                     loading={totpSubmission.pending}
                   >

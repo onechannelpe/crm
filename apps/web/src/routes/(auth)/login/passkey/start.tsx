@@ -51,7 +51,6 @@ export default function LoginPasskeyStartPage() {
             id="passkey-username"
             type="text"
             label="Usuario"
-            class={pageStyles.authControl}
             name="identifier"
             autocomplete="username webauthn"
             autocapitalize="none"
@@ -63,7 +62,6 @@ export default function LoginPasskeyStartPage() {
 
         <Button
           type="submit"
-          size="lg"
           class={styles.full}
           loading={passkeyStartSubmission.pending}
         >

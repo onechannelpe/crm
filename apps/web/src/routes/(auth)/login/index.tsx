@@ -70,8 +70,7 @@ export default function LoginPage() {
          */}
         <div class={pageStyles.ssoButtonContainer}>
           <Button
-            variant={step() === "init" ? "primary" : "secondary"}
-            size="lg"
+            variant={step() === "init" ? "primary" : "outline"}
             class={styles.full}
             onClick={() => {
               loginMethods.markGoogleUsed();
@@ -117,8 +116,7 @@ export default function LoginPage() {
         <Show when={step() === "init"}>
           <div class={pageStyles.ssoButtonContainer}>
             <Button
-              variant="secondary"
-              size="lg"
+              variant="outline"
               class={styles.full}
               onClick={() => setStep("email")}
             >
@@ -142,7 +140,6 @@ export default function LoginPage() {
                 id="auth-username"
                 type="text"
                 label="Usuario"
-                class={pageStyles.authControl}
                 autocomplete="username"
                 autocapitalize="none"
                 autocorrect="off"
@@ -153,7 +150,6 @@ export default function LoginPage() {
               />
               <Button
                 type="button"
-                size="lg"
                 class={styles.full}
                 onClick={() => {
                   if (!username().trim()) return;
@@ -197,7 +193,6 @@ export default function LoginPage() {
               id="auth-identifier"
               type="text"
               label="Usuario"
-              class={pageStyles.authControl}
               name="identifier"
               autocomplete="username"
               autocapitalize="none"
@@ -216,7 +211,6 @@ export default function LoginPage() {
                 id="current-password"
                 type="password"
                 label="Contraseña"
-                class={pageStyles.authControl}
                 name="password"
                 autocomplete="current-password"
                 required
@@ -224,7 +218,6 @@ export default function LoginPage() {
             </EnterTransition>
             <Button
               type="submit"
-              size="lg"
               class={styles.full}
               loading={passwordSubmission.pending}
             >
