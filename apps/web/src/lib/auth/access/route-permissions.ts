@@ -105,5 +105,6 @@ export const ROUTE_PERMISSIONS: RoutePermission[] = [
     permission: "quota:allocate",
     landingPriority: 7,
   },
+  { id: "schedule", href: "/schedule" },
   { id: "profile", href: "/settings/profile" },
 ];
