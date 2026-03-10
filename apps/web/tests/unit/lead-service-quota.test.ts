@@ -178,4 +178,65 @@ describe("lead service quota invariants", () => {
       remaining: 5,
     });
   });
+
+  it("returns quota_error when quota is exhausted before assignment", async () => {
+    const quota = createQuotaService(ctx.repos);
+    const service = createLeadAssignmentService(ctx.repos);
+    const day = today();
+
+    await quota.allocate(2, 1, 2, day);
+    await quota.consume(1, 2); // exhaust all 2
+
+    const result = await service.requestLeads(1, 1, 3); // needs 3, 0 remaining
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("Expected quota_error for exhausted quota");
+    expect(result.error.reason).toBe("quota_error");
+
+    // Nothing consumed or refunded beyond what we pre-consumed
+    const after = await quota.getStatus(1);
+    expect(after.ok).toBe(true);
+    if (!after.ok) throw new Error("Expected quota status read to succeed");
+    expect(after.value).toMatchObject({
+      allocated: true,
+      used: 2,
+      remaining: 0,
+    });
+  });
+
+  it("returns Ok(0) immediately without consuming quota when buffer is already full", async () => {
+    const quota = createQuotaService(ctx.repos);
+    const service = createLeadAssignmentService(ctx.repos);
+
+    await quota.allocate(2, 1, 5, today());
+    vi.spyOn(
+      ctx.repos.leadAssignments,
+      "countActiveByUser",
+    ).mockResolvedValueOnce(3);
+
+    const result = await service.requestLeads(1, 1, 3); // bufferSize=3, active=3 → needed=0
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error("Expected Ok(0) for full buffer");
+    expect(result.value).toBe(0);
+
+    // Early return must have fired before consume
+    const after = await quota.getStatus(1);
+    expect(after.ok).toBe(true);
+    if (!after.ok) throw new Error("Expected quota status read to succeed");
+    expect(after.value).toMatchObject({
+      allocated: true,
+      used: 0,
+      remaining: 5,
+    });
+  });
+
+  it("returns quota_error when no quota is allocated for the user", async () => {
+    const service = createLeadAssignmentService(ctx.repos);
+
+    // user 1 has no allocation for today
+    const result = await service.requestLeads(1, 1, 3);
+    expect(result.ok).toBe(false);
+    if (result.ok)
+      throw new Error("Expected quota_error for missing allocation");
+    expect(result.error.reason).toBe("quota_error");
+  });
 });

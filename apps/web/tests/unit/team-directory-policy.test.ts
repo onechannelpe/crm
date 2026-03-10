@@ -83,6 +83,16 @@ describe("team members query", () => {
     expect(listPendingInvitesMock).not.toHaveBeenCalled();
     expect(teamsFindByBranchMock).not.toHaveBeenCalled();
   });
+
+  it("throws when extension status service returns an error", async () => {
+    setSession("sales_manager");
+    listTeamExecutiveStatusesMock.mockResolvedValue({
+      ok: false,
+      error: { message: "extension unavailable" },
+    });
+
+    await expect(getTeamMembers()).rejects.toThrow();
+  });
 });
 
 describe("invite management query", () => {

@@ -113,4 +113,30 @@ describe("GET /api/me/avatar", () => {
     const body = new Uint8Array(await response.arrayBuffer());
     expect(Array.from(body)).toEqual([1, 2, 3]);
   });
+
+  it("returns 404 when user is not found", async () => {
+    getSessionMock.mockResolvedValue({ userId: 9 });
+    getMock.mockResolvedValue({ ok: false, error: { code: "user_not_found" } });
+
+    const response = await GET({
+      request: new Request("http://localhost/api/me/avatar"),
+    });
+
+    expect(response.status).toBe(404);
+    await expect(response.text()).resolves.toBe("User not found");
+  });
+
+  it("returns 503 when repository is unavailable", async () => {
+    getSessionMock.mockResolvedValue({ userId: 7 });
+    getMock.mockResolvedValue({
+      ok: false,
+      error: { code: "repository_unavailable" },
+    });
+
+    const response = await GET({
+      request: new Request("http://localhost/api/me/avatar"),
+    });
+
+    expect(response.status).toBe(503);
+  });
 });
