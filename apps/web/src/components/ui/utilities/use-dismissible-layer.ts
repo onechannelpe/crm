@@ -1,5 +1,7 @@
 import { onCleanup, onMount } from "solid-js";
 
+import { useHotkey } from "~/lib/hotkey/use-hotkey";
+
 interface UseDismissibleLayerOptions {
   enabled: () => boolean;
   onDismiss: () => void;
@@ -16,21 +18,17 @@ export function useDismissibleLayer(options: UseDismissibleLayerOptions) {
     }
   };
 
-  const handleEscape = (event: KeyboardEvent) => {
-    if (!options.enabled()) return;
-    if (event.key === "Escape") {
-      options.onDismiss();
-    }
-  };
+  // Dismiss on Escape even when focus is inside the layer (e.g. a search input).
+  useHotkey("Escape", () => options.onDismiss(), {
+    enabled: options.enabled,
+    allowInInputs: true,
+  });
 
   onMount(() => {
     if (typeof document === "undefined") return;
     document.addEventListener("pointerdown", handlePointerDown);
-    document.addEventListener("keydown", handleEscape);
-
     onCleanup(() => {
       document.removeEventListener("pointerdown", handlePointerDown);
-      document.removeEventListener("keydown", handleEscape);
     });
   });
 }
