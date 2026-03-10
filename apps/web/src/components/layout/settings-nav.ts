@@ -1,6 +1,5 @@
 import type { JSX } from "solid-js";
 
-import SettingsIcon from "~/components/icons/settings";
 import ShieldCheck from "~/components/icons/shield-check";
 import UserIcon from "~/components/icons/user";
 
@@ -24,13 +23,6 @@ export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
     section: "user",
   },
   {
-    id: "general",
-    label: "General",
-    href: "/settings/general",
-    icon: SettingsIcon,
-    section: "workspace",
-  },
-  {
     id: "security",
     label: "Seguridad",
     href: "/settings/security",
@@ -42,6 +34,14 @@ export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
     id: "login-protection",
     label: "Protección de inicio de sesión",
     href: "/settings/login-protection",
+    icon: ShieldCheck,
+    section: "workspace",
+    advanced: true,
+  },
+  {
+    id: "security-policies",
+    label: "Políticas de riesgo",
+    href: "/settings/security-policies",
     icon: ShieldCheck,
     section: "workspace",
     advanced: true,

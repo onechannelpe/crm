@@ -24,6 +24,7 @@ export const ICON_BY_ROUTE: Record<
   settings: Settings,
   team: Users,
   inventory: Package,
+  catalog: Package,
   sales: Inbox,
   leads: User,
   dashboard: House,
