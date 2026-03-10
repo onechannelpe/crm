@@ -8,19 +8,8 @@ import {
   requiresStrongAuthRole,
 } from "../../src/lib/auth/security/strong-auth-status";
 import { createDb } from "../../src/lib/db/client";
-import * as s00 from "../../src/lib/db/schema/00-core";
-import * as s01 from "../../src/lib/db/schema/01-users-auth";
-import * as s02 from "../../src/lib/db/schema/02-crm";
-import * as s03 from "../../src/lib/db/schema/03-notifications";
-import * as s04 from "../../src/lib/db/schema/04-products-sales";
-import * as s05 from "../../src/lib/db/schema/05-observability";
-import * as s06 from "../../src/lib/db/schema/06-extensions";
-import * as s07 from "../../src/lib/db/schema/07-features";
-import * as seed00 from "../../src/lib/db/seeds/00-audit-policies";
+import { SCHEMA_MODULES, SEED_MODULES } from "../../src/lib/db/schema";
 import { createRepositories } from "../../src/server/shared/registry";
-
-const schemas = [s00, s01, s02, s03, s04, s05, s06, s07];
-const seeds = [seed00];
 
 describe("seed invariants", () => {
   const artifactDir = join(process.cwd(), ".vitest-db");
@@ -43,10 +32,12 @@ describe("seed invariants", () => {
     const previousDbPath = process.env.WEB_DB_PATH;
 
     try {
-      for (const module of schemas) {
+      for (const module of SCHEMA_MODULES) {
+        // eslint-disable-next-line no-await-in-loop
         await module.createTables(db);
       }
-      for (const module of seeds) {
+      for (const module of SEED_MODULES) {
+        // eslint-disable-next-line no-await-in-loop
         await module.run(db);
       }
       process.env.WEB_DB_PATH = dbPath;

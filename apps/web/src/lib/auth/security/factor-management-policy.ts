@@ -1,4 +1,4 @@
-import type { User } from "~/lib/db/schema";
+import type { User } from "~/lib/db/types";
 
 import { requiresStrongAuthRole } from "./strong-auth-status";
 

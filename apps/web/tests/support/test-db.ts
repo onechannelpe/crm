@@ -4,37 +4,11 @@ import { join } from "node:path";
 import type { Kysely } from "kysely";
 
 import { createDb } from "../../src/lib/db/client";
-import {
-  writeIntegrityHash,
-  computeMigrationsHash,
-} from "../../src/lib/db/migration-hash";
-import type { Database } from "../../src/lib/db/schema";
-import * as s00 from "../../src/lib/db/schema/00-core";
-import * as s01 from "../../src/lib/db/schema/01-users-auth";
-import * as s02 from "../../src/lib/db/schema/02-crm";
-import * as s03 from "../../src/lib/db/schema/03-notifications";
-import * as s04 from "../../src/lib/db/schema/04-products-sales";
-import * as s05 from "../../src/lib/db/schema/05-observability";
-import * as s06 from "../../src/lib/db/schema/06-extensions";
-import * as s07 from "../../src/lib/db/schema/07-features";
-import * as seed00 from "../../src/lib/db/seeds/00-audit-policies";
+import { computeHash, writeStoredHash } from "../../src/lib/db/migration-hash";
+import { SCHEMA_MODULES, SEED_MODULES } from "../../src/lib/db/schema";
+import type { Database } from "../../src/lib/db/types";
 import { createSalesRecordsWorkflowService } from "../../src/server/sales/records-service";
 import { createRepositories } from "../../src/server/shared/registry";
-
-const schemas = {
-  "00-core": s00,
-  "01-users-auth": s01,
-  "02-crm": s02,
-  "03-notifications": s03,
-  "04-products-sales": s04,
-  "05-observability": s05,
-  "06-extensions": s06,
-  "07-features": s07,
-};
-
-const seeds = {
-  "00-audit-policies": seed00,
-};
 
 const ARTIFACT_DIR = join(process.cwd(), ".vitest-db");
 
@@ -225,17 +199,17 @@ export async function createIsolatedTestDb(
   );
   const db = createDb(dbPath);
 
-  for (const module of Object.values(schemas)) {
+  for (const module of SCHEMA_MODULES) {
     // eslint-disable-next-line no-await-in-loop
     await module.createTables(db);
   }
-  for (const module of Object.values(seeds)) {
+  for (const module of SEED_MODULES) {
     // eslint-disable-next-line no-await-in-loop
     await module.run(db);
   }
 
-  const currentHash = await computeMigrationsHash({ ...schemas, ...seeds });
-  await writeIntegrityHash(db, currentHash);
+  const hash = await computeHash(SCHEMA_MODULES, SEED_MODULES);
+  await writeStoredHash(db, hash);
 
   await seedTemplate(db);
   const repos = createRepositories(db);

@@ -5,7 +5,7 @@ export async function run<T>(db: Kysely<T>): Promise<void> {
   const epoch = 0;
 
   await sql`
-    INSERT INTO audit_action_policies (
+    INSERT OR IGNORE INTO audit_action_policies (
       action,
       risk_level,
       is_active,

@@ -5,7 +5,7 @@ import {
   invalidateSession,
 } from "~/lib/auth/session/session-manager";
 import { hashSessionToken } from "~/lib/auth/session/tokens";
-import type { User } from "~/lib/db/schema";
+import type { User } from "~/lib/db/types";
 import type { Repositories } from "~/server/shared/registry";
 
 type SessionAuditDeps = Pick<Repositories, "auditLogs" | "sessions" | "users">;

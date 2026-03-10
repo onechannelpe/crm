@@ -1,4 +1,4 @@
-import type { UsersTable } from "~/lib/db/schema";
+import type { UsersTable } from "~/lib/db/types";
 
 export type AppNotificationPriority = "high" | "normal" | "low";
 

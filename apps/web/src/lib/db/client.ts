@@ -4,7 +4,7 @@ import { LibSQLDialect } from "kysely-turso/libsql";
 
 import { createLogger } from "~/lib/observability/logger";
 
-import type { Database as DatabaseSchema } from "./schema";
+import type { Database as DatabaseSchema } from "./types";
 
 const logger = createLogger("db-client");
 
