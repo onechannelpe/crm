@@ -1,15 +1,25 @@
 import { sql } from "kysely";
 import type { Kysely } from "kysely";
 
-// Computes a SHA-256 hex digest over all up() function sources concatenated in
-// migration-name order. Any edit to a migration body changes this hash.
+// Computes a SHA-256 hex digest over all schema and seed function sources concatenated in
+// file-name order. Any edit to a schema or seed body changes this hash.
 export async function computeMigrationsHash(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  migrations: Record<string, { up: (...args: any[]) => unknown }>,
+  modules: Record<
+    string,
+    {
+      createTables?: (...args: any[]) => unknown;
+      run?: (...args: any[]) => unknown;
+    }
+  >,
 ): Promise<string> {
-  const input = Object.keys(migrations)
+  const input = Object.keys(modules)
     .sort()
-    .map((name) => `${name}:${migrations[name].up.toString()}`)
+    .map((name) => {
+      const mod = modules[name];
+      const fn = mod.createTables || mod.run;
+      return fn ? `${name}:${fn.toString()}` : name;
+    })
     .join("\n");
 
   const bytes = new TextEncoder().encode(input);
