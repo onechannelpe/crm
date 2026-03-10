@@ -1,4 +1,4 @@
-import { createSignal, onMount } from "solid-js";
+import { createSignal } from "solid-js";
 
 export type LastUsedMethod = "google" | "password" | null;
 
@@ -24,11 +24,8 @@ function persistLastUsed(method: LastUsedMethod): void {
 
 export function useLoginFlow() {
   const [lastUsedMethod, setLastUsedMethod] =
-    createSignal<LastUsedMethod>(null);
+    createSignal<LastUsedMethod>(readLastUsed());
 
-  onMount(() => {
-    setLastUsedMethod(readLastUsed());
-  });
 
   function markPasswordUsed(): void {
     persistLastUsed("password");

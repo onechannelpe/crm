@@ -52,9 +52,6 @@ export default function LoginPage() {
       showToast("error", "La sesión de inicio expiró. Intenta de nuevo.");
     }
     setPasskeySupported(isPasskeySupported());
-    // Skip the init screen for returning password users — lastUsedMethod is
-    // set by useLoginFlow's onMount which registers and runs before this one.
-    if (loginMethods.lastUsedMethod() === "password") setStep("email");
   });
 
   createEffect(() => {
@@ -236,11 +233,6 @@ export default function LoginPage() {
             >
               Iniciar sesión
             </Button>
-            <Show when={loginMethods.lastUsedMethod() === "password"}>
-              <div class={pageStyles.ssoButtonContainer}>
-                <LastUsedPill />
-              </div>
-            </Show>
           </form>
         </Show>
       </div>
