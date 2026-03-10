@@ -40,6 +40,7 @@ import {
   getSalesExportJob,
   listSalesExportDownloads,
   listSalesExportJobs,
+  requestSalesExport,
 } from "../../src/actions/sales-exports";
 
 interface SessionLike {
@@ -133,5 +134,41 @@ describe("sales export actions branch scope", () => {
     const allowed = await listSalesExportDownloads(11);
     expect(allowed).toHaveLength(1);
     expect(listDownloadsByJobMock).toHaveBeenCalledWith(11);
+  });
+
+  it("rejects requestSalesExport with an invalid format before checking auth", async () => {
+    // isSalesExportFormat fires before requirePermission — no session needed
+    await expect(requestSalesExport("pdf")).rejects.toThrow();
+    expect(requirePermissionMock).not.toHaveBeenCalled();
+  });
+
+  it("caps listSalesExportJobs limit at 100 regardless of input", async () => {
+    setSession({ userId: 2, role: "back_office", branchId: 1 });
+    listJobsByBranchMock.mockResolvedValue([]);
+
+    await listSalesExportJobs(200);
+
+    // If Math.min(..., 100) was removed, this would be called with (200, 1)
+    expect(listJobsByBranchMock).toHaveBeenCalledWith(100, 1);
+  });
+
+  it("getSalesExportJob returns null and skips user lookup when job is not found", async () => {
+    setSession({ userId: 2, role: "back_office", branchId: 1 });
+    findJobByIdMock.mockResolvedValue(null);
+
+    const result = await getSalesExportJob(99);
+
+    expect(result).toBeNull();
+    expect(findUserByIdMock).not.toHaveBeenCalled();
+  });
+
+  it("listSalesExportDownloads returns empty and skips query when job is not found", async () => {
+    setSession({ userId: 2, role: "back_office", branchId: 1 });
+    findJobByIdMock.mockResolvedValue(null);
+
+    const result = await listSalesExportDownloads(99);
+
+    expect(result).toEqual([]);
+    expect(listDownloadsByJobMock).not.toHaveBeenCalled();
   });
 });
