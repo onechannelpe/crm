@@ -226,9 +226,11 @@ export async function createIsolatedTestDb(
   const db = createDb(dbPath);
 
   for (const module of Object.values(schemas)) {
+    // eslint-disable-next-line no-await-in-loop
     await module.createTables(db);
   }
   for (const module of Object.values(seeds)) {
+    // eslint-disable-next-line no-await-in-loop
     await module.run(db);
   }
 

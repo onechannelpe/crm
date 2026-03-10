@@ -48,12 +48,14 @@ export async function migrateToLatest(db: Kysely<any> = globalDb) {
   try {
     // 1. Execute schema definitions
     for (const [name, module] of Object.entries(schemas)) {
+      // eslint-disable-next-line no-await-in-loop
       await module.createTables(db);
       logger.info("schema_applied", { schemaName: name });
     }
 
-    // 2. Execute seeds
+    // 2. Execute seed data
     for (const [name, module] of Object.entries(seeds)) {
+      // eslint-disable-next-line no-await-in-loop
       await module.run(db);
       logger.info("seed_applied", { seedName: name });
     }
