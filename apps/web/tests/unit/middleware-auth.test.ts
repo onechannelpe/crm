@@ -169,7 +169,10 @@ describe("auth middleware request guard", () => {
       {
         request: new Request("http://localhost:3000/onboarding"),
       },
-      createDeps({ token: "token", session: createSession("executive", false) }),
+      createDeps({
+        token: "token",
+        session: createSession("executive", false),
+      }),
     );
 
     // Without the `pathname !== "/onboarding"` exception they'd loop forever
