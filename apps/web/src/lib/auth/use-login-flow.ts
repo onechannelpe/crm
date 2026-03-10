@@ -26,7 +26,6 @@ export function useLoginFlow() {
   const [lastUsedMethod, setLastUsedMethod] =
     createSignal<LastUsedMethod>(readLastUsed());
 
-
   function markPasswordUsed(): void {
     persistLastUsed("password");
     setLastUsedMethod("password");
