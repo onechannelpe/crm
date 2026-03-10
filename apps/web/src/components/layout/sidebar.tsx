@@ -25,6 +25,73 @@ import styles from "./shell.module.css";
 
 const SIDEBAR_EXPANDED_STORAGE_KEY = "crm-sidebar-expanded";
 
+function NavItem(props: {
+  item: NavRoute;
+  expanded: boolean;
+  active: boolean;
+  children: ReturnType<typeof getSidebarChildren>;
+}) {
+  const location = useLocation();
+  const Icon = ICON_BY_ROUTE[props.item.icon];
+
+  return (
+    <div
+      class={cn(
+        props.children.length > 0 && styles.itemGroup,
+        props.children.length > 0 &&
+          !props.expanded &&
+          styles.itemGroupCollapsed,
+      )}
+    >
+      <A
+        href={props.item.href}
+        class={cn(
+          styles.link,
+          !props.expanded && styles.collapsedLink,
+          props.active ? styles.linkActive : undefined,
+        )}
+      >
+        <Icon size={16} />
+        <span
+          class={cn(
+            styles.linkLabel,
+            !props.expanded && styles.linkLabelCollapsed,
+          )}
+        >
+          {props.item.navLabel ?? props.item.label}
+        </span>
+      </A>
+      <Show when={props.children.length > 0}>
+        <div
+          class={cn(
+            styles.subgroup,
+            !props.expanded && styles.subgroupCollapsed,
+          )}
+        >
+          <For each={props.children}>
+            {(child) => (
+              <A
+                href={child.href}
+                class={cn(
+                  styles.link,
+                  styles.subItem,
+                  location.pathname === child.href ||
+                    location.pathname.startsWith(`${child.href}/`)
+                    ? styles.linkActive
+                    : undefined,
+                )}
+              >
+                <span class={styles.dot} />
+                <span>{child.label}</span>
+              </A>
+            )}
+          </For>
+        </div>
+      </Show>
+    </div>
+  );
+}
+
 export function Sidebar() {
   const location = useLocation();
   const { currentUser } = useSession();
@@ -124,58 +191,28 @@ export function Sidebar() {
       <nav
         class={cn(styles.sidebarScroll, !expanded() && styles.collapsedScroll)}
       >
+        {/* Primary items (Inicio, Crear venta, Agenda) */}
         <section
           class={cn(styles.section, !expanded() && styles.collapsedSection)}
         >
           <For each={quickItems()}>
             {(item) => {
-              const Icon = ICON_BY_ROUTE[item.icon];
               const children = createMemo(() =>
                 getSidebarChildren(role(), item.id),
               );
               return (
-                <>
-                  <A
-                    href={item.href}
-                    class={cn(
-                      styles.link,
-                      !expanded() && styles.collapsedLink,
-                      isRouteActive(item) ? styles.linkActive : undefined,
-                    )}
-                  >
-                    <Icon size={16} />
-                    <span class={cn(!expanded() && styles.collapsedLabel)}>
-                      {item.navLabel ?? item.label}
-                    </span>
-                  </A>
-                  <Show when={children().length > 0 && expanded()}>
-                    <div class={styles.subgroup}>
-                      <For each={children()}>
-                        {(child) => (
-                          <A
-                            href={child.href}
-                            class={cn(
-                              styles.link,
-                              styles.subItem,
-                              location.pathname === child.href ||
-                                location.pathname.startsWith(`${child.href}/`)
-                                ? styles.linkActive
-                                : undefined,
-                            )}
-                          >
-                            <span class={styles.dot} />
-                            <span>{child.label}</span>
-                          </A>
-                        )}
-                      </For>
-                    </div>
-                  </Show>
-                </>
+                <NavItem
+                  item={item}
+                  expanded={expanded()}
+                  active={isRouteActive(item)}
+                  children={children()}
+                />
               );
             }}
           </For>
         </section>
 
+        {/* Secondary items, split into labelled groups */}
         <section
           class={cn(styles.section, !expanded() && styles.collapsedSection)}
         >
@@ -183,7 +220,7 @@ export function Sidebar() {
           <For each={workspaceGroups()}>
             {(group) => (
               <>
-                <Show when={group.label && expanded()}>
+                <Show when={group.label}>
                   <div
                     class={cn(
                       styles.sectionTitle,
@@ -195,52 +232,16 @@ export function Sidebar() {
                 </Show>
                 <For each={group.items}>
                   {(item) => {
-                    const Icon = ICON_BY_ROUTE[item.icon];
                     const children = createMemo(() =>
                       getSidebarChildren(role(), item.id),
                     );
                     return (
-                      <>
-                        <A
-                          href={item.href}
-                          class={cn(
-                            styles.link,
-                            !expanded() && styles.collapsedLink,
-                            isRouteActive(item) ? styles.linkActive : undefined,
-                          )}
-                        >
-                          <Icon size={16} />
-                          <span
-                            class={cn(!expanded() && styles.collapsedLabel)}
-                          >
-                            {item.navLabel ?? item.label}
-                          </span>
-                        </A>
-                        <Show when={children().length > 0 && expanded()}>
-                          <div class={styles.subgroup}>
-                            <For each={children()}>
-                              {(child) => (
-                                <A
-                                  href={child.href}
-                                  class={cn(
-                                    styles.link,
-                                    styles.subItem,
-                                    location.pathname === child.href ||
-                                      location.pathname.startsWith(
-                                        `${child.href}/`,
-                                      )
-                                      ? styles.linkActive
-                                      : undefined,
-                                  )}
-                                >
-                                  <span class={styles.dot} />
-                                  <span>{child.label}</span>
-                                </A>
-                              )}
-                            </For>
-                          </div>
-                        </Show>
-                      </>
+                      <NavItem
+                        item={item}
+                        expanded={expanded()}
+                        active={isRouteActive(item)}
+                        children={children()}
+                      />
                     );
                   }}
                 </For>
