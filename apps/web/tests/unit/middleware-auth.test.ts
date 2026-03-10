@@ -163,4 +163,41 @@ describe("auth middleware request guard", () => {
 
     expect(decision.kind).toBe("allow");
   });
+
+  it("allows a not-onboarded user to reach /onboarding", async () => {
+    const decision = await enforceAuthRequest(
+      {
+        request: new Request("http://localhost:3000/onboarding"),
+      },
+      createDeps({ token: "token", session: createSession("executive", false) }),
+    );
+
+    // Without the `pathname !== "/onboarding"` exception they'd loop forever
+    expect(decision.kind).toBe("allow");
+  });
+
+  it("allows GET requests even when Origin does not match Host", async () => {
+    const decision = await enforceAuthRequest(
+      {
+        request: new Request("http://localhost:3000/login", {
+          method: "GET",
+          headers: {
+            Origin: "http://evil.local",
+            Host: "localhost:3000",
+          },
+        }),
+      },
+      createDeps({ token: null, session: null }),
+    );
+
+    // CSRF origin check must only fire on mutating methods, not GET
+    expect(decision.kind).not.toBe("reject");
+  });
+
+  it("classifies all explicit public path prefixes correctly", () => {
+    expect(isPublicPath("/releases/v1.0")).toBe(true);
+    expect(isPublicPath("/docs/api")).toBe(true);
+    expect(isPublicPath("/privacy")).toBe(true);
+    expect(isPublicPath("/terms")).toBe(true);
+  });
 });
