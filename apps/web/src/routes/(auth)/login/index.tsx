@@ -90,7 +90,7 @@ export default function LoginPage() {
             variant={step() === "init" ? "primary" : "outline"}
             class={styles.full}
             onClick={() => {
-              loginMethods.markGoogleUsed();
+              loginMethods.markUsed("google");
               window.location.href = "/api/auth/google";
             }}
           >
@@ -185,7 +185,7 @@ export default function LoginPage() {
             action={passwordLoginMutation}
             method="post"
             onSubmit={() => {
-              loginMethods.markPasswordUsed();
+              loginMethods.markUsed("password");
             }}
             onKeyDown={(event) => {
               if (event.key === "Escape") setStep("email");
