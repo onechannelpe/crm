@@ -110,9 +110,12 @@ describe("profile picture service", () => {
 
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.code).toBe("repository_unavailable");
-    // New blob must be cleaned up so storage does not leak
-    expect(remove).toHaveBeenCalledOnce();
-    expect(remove).not.toHaveBeenCalledWith("10/old.png");
+
+    // The exact key written to storage must be the one rolled back,
+    // not the old key, not some arbitrary key.
+    const newKey = put.mock.calls[0]?.[0];
+    expect(newKey).toBeDefined();
+    expect(remove).toHaveBeenCalledExactlyOnceWith(newKey);
   });
 
   it("returns user_not_found when user record is missing", async () => {
