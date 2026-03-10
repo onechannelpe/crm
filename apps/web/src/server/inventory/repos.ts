@@ -1,6 +1,6 @@
 import type { Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/schema";
+import type { Database } from "~/lib/db/types";
 
 export function createInventoryRepo(db: Kysely<Database>) {
   return {

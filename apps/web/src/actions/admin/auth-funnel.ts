@@ -8,7 +8,7 @@ import {
   type AuthAnalyticsScreen,
 } from "~/lib/auth/auth-analytics";
 import { assertPositiveInt } from "~/lib/contracts/guards";
-import type { AuthFunnelEventsTable } from "~/lib/db/schema";
+import type { AuthFunnelEventsTable } from "~/lib/db/types";
 import { observabilityService } from "~/server/shared/context";
 
 type AuthFunnelEventName = AuthFunnelEventsTable["event_name"];

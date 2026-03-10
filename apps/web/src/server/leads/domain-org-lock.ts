@@ -1,4 +1,4 @@
-import type { Organization } from "~/lib/db/schema";
+import type { Organization } from "~/lib/db/types";
 
 export function canLockOrganization(
   org: Organization | null,

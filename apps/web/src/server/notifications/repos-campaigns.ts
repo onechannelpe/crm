@@ -9,7 +9,7 @@ import type {
   NewNotificationRecipient,
   NotificationCampaignsTable,
   UsersTable,
-} from "~/lib/db/schema";
+} from "~/lib/db/types";
 
 export interface AudienceUser {
   id: number;

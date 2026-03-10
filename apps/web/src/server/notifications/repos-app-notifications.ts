@@ -1,6 +1,6 @@
 import type { Kysely } from "kysely";
 
-import type { Database, NewAppNotification } from "~/lib/db/schema";
+import type { Database, NewAppNotification } from "~/lib/db/types";
 
 export function createAppNotificationsRepo(db: Kysely<Database>) {
   return {

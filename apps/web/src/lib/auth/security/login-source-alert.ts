@@ -1,5 +1,5 @@
 import { hashAuthKey } from "~/lib/auth/password/key-hash";
-import type { User } from "~/lib/db/schema";
+import type { User } from "~/lib/db/types";
 import { longName } from "~/lib/users/display-name";
 import type { Repositories } from "~/server/shared/registry";
 

@@ -1,4 +1,4 @@
-import type { QuotaAllocation } from "~/lib/db/schema";
+import type { QuotaAllocation } from "~/lib/db/types";
 
 export function getAvailableQuota(allocation: QuotaAllocation): number {
   return Math.max(0, allocation.quota_amount - allocation.used_amount);

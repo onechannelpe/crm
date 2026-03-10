@@ -7,7 +7,7 @@ import type {
   NewSalesRecordAddress,
   NewSalesRecordClient,
   NewSalesRecordProduct,
-} from "~/lib/db/schema";
+} from "~/lib/db/types";
 
 export function createSalesRecordsRepo(db: Kysely<Database>) {
   return {

@@ -1,4 +1,4 @@
-import type { NewUserSession } from "~/lib/db/schema";
+import type { NewUserSession } from "~/lib/db/types";
 import { createLogger } from "~/lib/observability/logger";
 import { repos } from "~/server/shared/context";
 import type { Repositories } from "~/server/shared/registry";

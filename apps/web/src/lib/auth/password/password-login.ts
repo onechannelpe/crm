@@ -1,5 +1,5 @@
 import { assertNonEmptyString } from "~/lib/contracts/guards";
-import type { User } from "~/lib/db/schema";
+import type { User } from "~/lib/db/types";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 

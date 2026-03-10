@@ -3,7 +3,7 @@ import { getRequestEvent } from "solid-js/web";
 import { rateLimitError } from "~/lib/app-errors";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { hashAuthKey } from "~/lib/auth/password/key-hash";
-import type { NewAuditLog } from "~/lib/db/schema";
+import type { NewAuditLog } from "~/lib/db/types";
 import type { ActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 
 interface ActionRateLimitPolicy {

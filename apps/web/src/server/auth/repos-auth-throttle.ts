@@ -4,7 +4,7 @@ import type {
   AuthThrottleCounter,
   Database,
   NewAuthThrottleCounter,
-} from "~/lib/db/schema";
+} from "~/lib/db/types";
 
 export type AuthThrottleScope = AuthThrottleCounter["scope"];
 

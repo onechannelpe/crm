@@ -1,6 +1,6 @@
 import type { Kysely } from "kysely";
 
-import type { Database, NewInteractionLog } from "~/lib/db/schema";
+import type { Database, NewInteractionLog } from "~/lib/db/types";
 
 export function createInteractionLogsRepo(db: Kysely<Database>) {
   return {

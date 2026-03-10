@@ -1,6 +1,6 @@
 import type { Kysely } from "kysely";
 
-import type { Database, NewAuditLog } from "~/lib/db/schema";
+import type { Database, NewAuditLog } from "~/lib/db/types";
 import type { AuditReaderQueryFilter } from "~/server/audit-reader/contracts";
 
 export function createAuditLogsRepo(db: Kysely<Database>) {
