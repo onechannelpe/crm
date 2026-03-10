@@ -42,17 +42,23 @@ export function Button(props: ButtonProps) {
     "loading",
   ]);
 
-  const variantInput = local.variant;
-  const variant: ButtonVariant =
-    variantInput && isButtonVariant(variantInput) ? variantInput : "primary";
-
-  const sizeInput = local.size;
-  const size: ButtonSize =
-    sizeInput && isButtonSize(sizeInput) ? sizeInput : "md";
+  const resolvedVariant = () => {
+    const v = local.variant;
+    return v && isButtonVariant(v) ? v : "primary";
+  };
+  const resolvedSize = () => {
+    const s = local.size;
+    return s && isButtonSize(s) ? s : "md";
+  };
 
   return (
     <button
-      class={cn(styles.button, styles[size], styles[variant], local.class)}
+      class={cn(
+        styles.button,
+        styles[resolvedSize()],
+        styles[resolvedVariant()],
+        local.class,
+      )}
       disabled={others.disabled || local.loading}
       {...others}
     >

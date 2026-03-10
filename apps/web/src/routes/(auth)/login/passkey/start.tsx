@@ -50,7 +50,7 @@ export default function LoginPasskeyStartPage() {
           <Input
             id="passkey-username"
             type="text"
-            label="Usuario"
+            placeholder="Usuario"
             name="identifier"
             autocomplete="username webauthn"
             autocapitalize="none"

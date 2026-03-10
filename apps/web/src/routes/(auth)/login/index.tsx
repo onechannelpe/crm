@@ -139,7 +139,7 @@ export default function LoginPage() {
               <Input
                 id="auth-username"
                 type="text"
-                label="Usuario"
+                placeholder="Usuario"
                 autocomplete="username"
                 autocapitalize="none"
                 autocorrect="off"
@@ -192,7 +192,7 @@ export default function LoginPage() {
             <Input
               id="auth-identifier"
               type="text"
-              label="Usuario"
+              placeholder="Usuario"
               name="identifier"
               autocomplete="username"
               autocapitalize="none"
@@ -210,7 +210,7 @@ export default function LoginPage() {
               <Input
                 id="current-password"
                 type="password"
-                label="Contraseña"
+                placeholder="Contraseña"
                 name="password"
                 autocomplete="current-password"
                 required
