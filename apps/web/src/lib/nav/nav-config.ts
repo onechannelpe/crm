@@ -51,7 +51,7 @@ export interface PageHeaderRule {
 
 // Ordered: more specific rules (exact paths, longer prefixes) before broader patterns.
 export const PAGE_HEADERS: PageHeaderRule[] = [
-  // Dynamic patterns first — tested before exact matches
+  // Dynamic patterns first
   {
     match: /^\/sales\/records\/[^/]+\/edit$/,
     header: { label: "Editar venta", icon: "new-sale" },
