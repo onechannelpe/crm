@@ -38,7 +38,7 @@ export interface HeaderConfig {
 export interface NavRoute {
   id: string;
   href: string;
-  /** All URL prefixes that should mark this entry as active. Required and explicit — no implicit fallback to href. */
+  /** All URL prefixes that should mark this entry as active. Required and explicit */
   matchPrefixes: string[];
   label: string;
   navLabel?: string;
@@ -48,7 +48,7 @@ export interface NavRoute {
 }
 
 export const NAV_ROUTES: NavRoute[] = [
-  // ── Primary ──────────────────────────────────────────────────────────────
+  // Primary
   {
     id: "dashboard",
     href: "/dashboard",
@@ -78,7 +78,7 @@ export const NAV_ROUTES: NavRoute[] = [
     sidebar: { section: "primary", order: 3 },
   },
 
-  // ── Secondary › Comercial ─────────────────────────────────────────────────
+  // Secondary › Comercial
   {
     id: "contacts-people",
     href: "/contacts/people",
@@ -135,7 +135,7 @@ export const NAV_ROUTES: NavRoute[] = [
     sidebar: { section: "secondary", order: 3, group: "Comercial" },
   },
 
-  // ── Secondary › Operaciones ───────────────────────────────────────────────
+  // Secondary › Operaciones
   {
     id: "inventory",
     href: "/inventory",
@@ -175,7 +175,7 @@ export const NAV_ROUTES: NavRoute[] = [
     },
   },
 
-  // ── Secondary › Administración ────────────────────────────────────────────
+  // Secondary › Administración
   {
     id: "audit",
     href: "/audit/observability",
@@ -196,7 +196,7 @@ export const NAV_ROUTES: NavRoute[] = [
     },
   },
 
-  // ── Header-only routes (no sidebar entry) ────────────────────────────────
+  // Header-only routes (no sidebar entry)
   {
     id: "leads",
     href: "/sales/leads",
