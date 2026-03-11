@@ -1,0 +1,24 @@
+import type { JSX } from "solid-js";
+import { Show } from "solid-js";
+
+import { useSession } from "~/components/providers/session-provider";
+
+import { hasPermission, type Permission } from "./rbac";
+
+interface ProtectedSectionProps {
+  permission: Permission;
+  children: JSX.Element;
+  fallback?: JSX.Element;
+}
+
+export function ProtectedSection(props: ProtectedSectionProps) {
+  const { currentUser } = useSession();
+  return (
+    <Show
+      when={hasPermission(currentUser().role, props.permission)}
+      fallback={props.fallback}
+    >
+      {props.children}
+    </Show>
+  );
+}

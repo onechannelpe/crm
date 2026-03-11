@@ -26,12 +26,6 @@ interface AssignmentHandoffMessage {
   token: string;
 }
 
-interface StateGetMessage {
-  type: "state.get";
-}
-
-type ExternalRuntimeMessage = AssignmentHandoffMessage | StateGetMessage;
-
 interface ExtensionRuntimeSuccess {
   ok: true;
   executiveState: ExtensionExecutiveState;
@@ -51,7 +45,7 @@ interface ChromeRuntimeApi {
   lastError?: { message?: string };
   sendMessage: (
     extensionId: string,
-    message: ExternalRuntimeMessage,
+    message: AssignmentHandoffMessage,
     callback: (response?: unknown) => void,
   ) => void;
 }
@@ -74,7 +68,9 @@ function isExecutiveState(value: unknown): value is ExtensionExecutiveState {
   );
 }
 
-function isRuntimeResponse(value: unknown): value is ExtensionRuntimeResponse {
+export function isRuntimeResponse(
+  value: unknown,
+): value is ExtensionRuntimeResponse {
   if (!isObject(value) || typeof value.ok !== "boolean") {
     return false;
   }
@@ -122,7 +118,7 @@ function bridgeUnavailable(message: string): ExtensionRuntimeFailure {
 }
 
 async function sendMessage(
-  message: ExternalRuntimeMessage,
+  message: AssignmentHandoffMessage,
 ): Promise<ExtensionRuntimeResponse> {
   const extensionId = getExtensionId();
   if (!extensionId) {
@@ -168,8 +164,4 @@ export async function handoffLeadToExtension(input: {
     type: "assignment.handoff",
     token,
   });
-}
-
-export function getExtensionExecutiveState(): Promise<ExtensionRuntimeResponse> {
-  return sendMessage({ type: "state.get" });
 }

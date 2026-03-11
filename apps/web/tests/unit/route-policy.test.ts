@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { ROUTE_PERMISSIONS } from "../../src/lib/auth/access/route-permissions";
+import { ROUTE_MANIFEST } from "../../src/lib/auth/access/route-manifest";
 import {
   canAccessPath,
   getDefaultAppPath,
   getRoutePermission,
 } from "../../src/lib/auth/access/route-policy";
-import { NAV_ROUTES } from "../../src/lib/nav/nav-config";
+import { SIDEBAR_ENTRIES } from "../../src/lib/nav/nav-config";
 import { getHeaderRoute } from "../../src/lib/nav/nav-policy";
 
 describe("route permissions", () => {
@@ -23,13 +23,12 @@ describe("route permissions", () => {
   });
 
   it("enforces role access checks for restricted paths", () => {
-    expect(canAccessPath("executive", "/settings/general")).toBe(false);
     expect(canAccessPath("executive", "/audit")).toBe(false);
     expect(canAccessPath("supervisor", "/audit")).toBe(true);
     expect(canAccessPath("executive", "/quota")).toBe(false);
     expect(canAccessPath("executive", "/team")).toBe(false);
     expect(canAccessPath("hr", "/team")).toBe(true);
-    expect(canAccessPath("admin", "/settings/general")).toBe(true);
+    expect(canAccessPath("admin", "/catalog")).toBe(true);
     expect(canAccessPath("sales_manager", "/sales/records/42/edit")).toBe(
       false,
     );
@@ -55,13 +54,9 @@ describe("nav config structural invariants", () => {
     expect(getHeaderRoute("/dashboard").label).toBe("Inicio");
   });
 
-  it("every sidebar route href is registered in ROUTE_PERMISSIONS", () => {
-    const registeredHrefs = new Set(
-      ROUTE_PERMISSIONS.filter((r) => r.href).map((r) => r.href),
-    );
-
-    const unregistered = NAV_ROUTES.filter(
-      (r) => r.sidebar && !registeredHrefs.has(r.href),
+  it("every sidebar route href is registered in the route manifest", () => {
+    const unregistered = SIDEBAR_ENTRIES.filter(
+      (r) => !(r.href in ROUTE_MANIFEST),
     ).map((r) => r.href);
 
     expect(unregistered).toEqual([]);

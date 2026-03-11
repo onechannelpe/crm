@@ -128,7 +128,7 @@ describe("auth middleware request guard", () => {
   it("redirects users from routes they cannot access", async () => {
     const decision = await enforceAuthRequest(
       {
-        request: new Request("http://localhost:3000/settings/general"),
+        request: new Request("http://localhost:3000/audit"),
       },
       createDeps({ token: "token", session: createSession("executive") }),
     );
