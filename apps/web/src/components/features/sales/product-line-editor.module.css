@@ -1,0 +1,25 @@
+.root {
+  display: grid;
+  gap: 12px;
+}
+
+.picker {
+  display: grid;
+  gap: 8px;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: var(--font-size-body);
+}
