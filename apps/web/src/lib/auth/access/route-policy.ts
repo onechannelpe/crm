@@ -1,44 +1,51 @@
 import { hasPermission, type Permission, type Role } from "./rbac";
-import { ROUTE_PERMISSIONS, type RoutePermission } from "./route-permissions";
+import { DYNAMIC_ROUTES, ROUTE_MANIFEST, type AppPath } from "./route-manifest";
 
-export type { RoutePermission } from "./route-permissions";
 export type { Role, Permission } from "./rbac";
+export type { AppPath } from "./route-manifest";
 
-function hasHref(
-  route: RoutePermission,
-): route is RoutePermission & { href: string } {
-  return typeof route.href === "string" && route.href.length > 0;
+function isAppPath(p: string): p is AppPath {
+  return p in ROUTE_MANIFEST;
 }
 
-function findRoute(pathname: string): RoutePermission | undefined {
-  const exact = ROUTE_PERMISSIONS.find((r) => r.href === pathname);
-  if (exact) return exact;
+function resolvePermission(pathname: string): Permission | null {
+  const dynamic = DYNAMIC_ROUTES.find((r) => r.pattern.test(pathname));
+  if (dynamic) return dynamic.permission ?? null;
 
-  const dynamic = ROUTE_PERMISSIONS.find((r) => r.pattern?.test(pathname));
-  if (dynamic) return dynamic;
+  if (isAppPath(pathname)) return ROUTE_MANIFEST[pathname].permission ?? null;
 
-  return ROUTE_PERMISSIONS.find((r) =>
-    hasHref(r) ? pathname.startsWith(`${r.href}/`) : false,
-  );
+  // Prefix fallback: /team/invite/foo inherits /team/invite's permission.
+  const prefix = Object.keys(ROUTE_MANIFEST)
+    .filter(isAppPath)
+    .filter((p) => pathname.startsWith(`${p}/`))
+    .sort((a, b) => b.length - a.length)[0];
+
+  return prefix ? (ROUTE_MANIFEST[prefix].permission ?? null) : null;
 }
 
 export function getRoutePermission(pathname: string): Permission | null {
-  return findRoute(pathname)?.permission ?? null;
+  return resolvePermission(pathname);
 }
 
 export function canAccessPath(role: Role, pathname: string): boolean {
-  const permission = getRoutePermission(pathname);
+  const permission = resolvePermission(pathname);
   if (!permission) return true;
   return hasPermission(role, permission);
 }
 
 export function getDefaultAppPath(role: Role): string {
-  const candidate = ROUTE_PERMISSIONS.filter(
-    (r): r is RoutePermission & { href: string; landingPriority: number } =>
-      r.landingPriority !== undefined && hasHref(r),
-  )
-    .sort((a, b) => a.landingPriority - b.landingPriority)
-    .find((r) => !r.permission || hasPermission(role, r.permission));
+  const candidate = Object.keys(ROUTE_MANIFEST)
+    .filter(isAppPath)
+    .filter((key) => ROUTE_MANIFEST[key].landingPriority !== undefined)
+    .sort(
+      (a, b) =>
+        (ROUTE_MANIFEST[a].landingPriority ?? 0) -
+        (ROUTE_MANIFEST[b].landingPriority ?? 0),
+    )
+    .find((key) => {
+      const { permission } = ROUTE_MANIFEST[key];
+      return !permission || hasPermission(role, permission);
+    });
 
-  return candidate?.href ?? "/dashboard";
+  return candidate ?? "/dashboard";
 }
