@@ -22,7 +22,7 @@
     "generate": "bun run --parallel generate:engine-contract generate:search-projection-contract generate:templates",
     "generate:templates": "bun run --cwd packages/notifications build:emails",
     "check:rust": "cargo check --manifest-path apps/engine/Cargo.toml && cargo check --manifest-path apps/pipeline/Cargo.toml && cargo fmt --manifest-path apps/engine/Cargo.toml --check && cargo fmt --manifest-path apps/pipeline/Cargo.toml --check && cargo clippy --manifest-path apps/engine/Cargo.toml --workspace --all-targets --all-features -- -D warnings && cargo clippy --manifest-path apps/pipeline/Cargo.toml --workspace --all-targets --all-features -- -D warnings",
-    "check": "bun run generate && bun run check:rust && bun run --parallel check:contract check:projection-contract check:search-contract check:web check:lint check:format:ts",
+    "check": "bun run format && bun run generate && bun run check:rust && bun run --parallel check:contract check:projection-contract check:search-contract check:web check:lint check:format:ts",
     "check:contract": "bun run scripts/generate-engine-contract.ts --check",
     "check:web": "bun run --cwd apps/web check",
     "check:engine": "cargo check --manifest-path apps/engine/Cargo.toml && cargo check --manifest-path apps/pipeline/Cargo.toml",
