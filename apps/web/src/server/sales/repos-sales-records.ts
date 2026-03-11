@@ -60,8 +60,8 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    findPendingConfirmationWithClient() {
-      return db
+    listPendingWithClient(scope?: { branchId?: number }) {
+      let qb = db
         .selectFrom("sales_records")
         .innerJoin(
           "sales_record_client",
@@ -82,39 +82,18 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
           ),
         ])
         .where("sales_records.status", "=", "submitted_for_confirmation")
-        .orderBy("sales_records.created_at", "asc")
-        .execute();
+        .orderBy("sales_records.created_at", "asc");
+      if (scope?.branchId !== undefined) {
+        qb = qb.where("sales_records.branch_id", "=", scope.branchId);
+      }
+      return qb.execute();
     },
 
-    findPendingConfirmationWithClientByBranch(branchId: number) {
-      return db
-        .selectFrom("sales_records")
-        .innerJoin(
-          "sales_record_client",
-          "sales_record_client.sales_record_id",
-          "sales_records.id",
-        )
-        .innerJoin("users", "users.id", "sales_records.executive_user_id")
-        .select([
-          "sales_records.id",
-          "sales_records.status",
-          "sales_records.created_at",
-          "sales_records.updated_at",
-          "sales_record_client.company_name",
-          "sales_record_client.contact_name",
-          "sales_record_client.dni",
-          sql<string>`users.names || ' ' || users.first_surname`.as(
-            "executive_name",
-          ),
-        ])
-        .where("sales_records.status", "=", "submitted_for_confirmation")
-        .where("sales_records.branch_id", "=", branchId)
-        .orderBy("sales_records.created_at", "asc")
-        .execute();
-    },
-
-    findConfirmedWithClient() {
-      return db
+    listConfirmedWithClient(scope?: {
+      branchId?: number;
+      executiveUserId?: number;
+    }) {
+      let qb = db
         .selectFrom("sales_records")
         .innerJoin(
           "sales_record_client",
@@ -137,66 +116,18 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
         ])
         .where("sales_records.status", "=", "confirmed")
         .where("sales_records.confirmed_at", "is not", null)
-        .orderBy("sales_records.updated_at", "desc")
-        .execute();
-    },
-
-    findConfirmedWithClientByBranch(branchId: number) {
-      return db
-        .selectFrom("sales_records")
-        .innerJoin(
-          "sales_record_client",
-          "sales_record_client.sales_record_id",
-          "sales_records.id",
-        )
-        .innerJoin("users", "users.id", "sales_records.executive_user_id")
-        .select([
-          "sales_records.id",
-          "sales_records.status",
-          "sales_records.created_at",
-          "sales_records.updated_at",
-          "sales_records.confirmed_at",
-          "sales_record_client.company_name",
-          "sales_record_client.contact_name",
-          "sales_record_client.dni",
-          sql<string>`users.names || ' ' || users.first_surname`.as(
-            "executive_name",
-          ),
-        ])
-        .where("sales_records.status", "=", "confirmed")
-        .where("sales_records.confirmed_at", "is not", null)
-        .where("sales_records.branch_id", "=", branchId)
-        .orderBy("sales_records.updated_at", "desc")
-        .execute();
-    },
-
-    findConfirmedWithClientByExecutive(executiveUserId: number) {
-      return db
-        .selectFrom("sales_records")
-        .innerJoin(
-          "sales_record_client",
-          "sales_record_client.sales_record_id",
-          "sales_records.id",
-        )
-        .innerJoin("users", "users.id", "sales_records.executive_user_id")
-        .select([
-          "sales_records.id",
-          "sales_records.status",
-          "sales_records.created_at",
-          "sales_records.updated_at",
-          "sales_records.confirmed_at",
-          "sales_record_client.company_name",
-          "sales_record_client.contact_name",
-          "sales_record_client.dni",
-          sql<string>`users.names || ' ' || users.first_surname`.as(
-            "executive_name",
-          ),
-        ])
-        .where("sales_records.status", "=", "confirmed")
-        .where("sales_records.confirmed_at", "is not", null)
-        .where("sales_records.executive_user_id", "=", executiveUserId)
-        .orderBy("sales_records.updated_at", "desc")
-        .execute();
+        .orderBy("sales_records.updated_at", "desc");
+      if (scope?.branchId !== undefined) {
+        qb = qb.where("sales_records.branch_id", "=", scope.branchId);
+      }
+      if (scope?.executiveUserId !== undefined) {
+        qb = qb.where(
+          "sales_records.executive_user_id",
+          "=",
+          scope.executiveUserId,
+        );
+      }
+      return qb.execute();
     },
 
     updateStatus(

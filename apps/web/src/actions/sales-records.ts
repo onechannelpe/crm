@@ -137,7 +137,7 @@ export interface SalesRecordFixContext {
 
 function mapQueueItem(
   row: Awaited<
-    ReturnType<typeof repos.salesRecords.findPendingConfirmationWithClient>
+    ReturnType<typeof repos.salesRecords.listPendingWithClient>
   >[number],
 ): SalesRecordQueueItem {
   return {
@@ -420,12 +420,9 @@ export async function listPendingSalesRecords(): Promise<
   SalesRecordQueueItem[]
 > {
   const session = await requirePermission("sales:review");
-  const rows =
-    session.role === "superuser"
-      ? await repos.salesRecords.findPendingConfirmationWithClient()
-      : await repos.salesRecords.findPendingConfirmationWithClientByBranch(
-          session.branchId,
-        );
+  const rows = await repos.salesRecords.listPendingWithClient(
+    session.role === "superuser" ? undefined : { branchId: session.branchId },
+  );
   return rows.map(mapQueueItem);
 }
 
@@ -433,19 +430,13 @@ export async function listConfirmedSalesRecords(): Promise<
   SalesRecordQueueItem[]
 > {
   const session = await requirePermission("sales:review");
-  if (session.role === "executive") {
-    const rows = await repos.salesRecords.findConfirmedWithClientByExecutive(
-      session.userId,
-    );
-    return rows.map(mapQueueItem);
-  }
-
-  const rows =
-    session.role === "superuser"
-      ? await repos.salesRecords.findConfirmedWithClient()
-      : await repos.salesRecords.findConfirmedWithClientByBranch(
-          session.branchId,
-        );
+  const scope =
+    session.role === "executive"
+      ? { executiveUserId: session.userId }
+      : session.role === "superuser"
+        ? undefined
+        : { branchId: session.branchId };
+  const rows = await repos.salesRecords.listConfirmedWithClient(scope);
   return rows.map(mapQueueItem);
 }
 

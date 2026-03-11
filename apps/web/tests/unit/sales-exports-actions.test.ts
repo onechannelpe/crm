@@ -5,14 +5,12 @@ import type { Role } from "../../src/lib/auth/access/rbac";
 const {
   requirePermissionMock,
   listJobsMock,
-  listJobsByBranchMock,
   findJobByIdMock,
   listDownloadsByJobMock,
   findUserByIdMock,
 } = vi.hoisted(() => ({
   requirePermissionMock: vi.fn(),
   listJobsMock: vi.fn(),
-  listJobsByBranchMock: vi.fn(),
   findJobByIdMock: vi.fn(),
   listDownloadsByJobMock: vi.fn(),
   findUserByIdMock: vi.fn(),
@@ -26,7 +24,6 @@ vi.mock("../../src/server/shared/context", () => ({
   repos: {
     reportExportJobs: {
       listJobs: listJobsMock,
-      listJobsByBranch: listJobsByBranchMock,
       findJobById: findJobByIdMock,
       listDownloadsByJob: listDownloadsByJobMock,
     },
@@ -81,12 +78,11 @@ describe("sales export actions branch scope", () => {
 
   it("lists jobs by branch for non-superusers", async () => {
     setSession({ userId: 2, role: "back_office", branchId: 1 });
-    listJobsByBranchMock.mockResolvedValue([buildJob()]);
+    listJobsMock.mockResolvedValue([buildJob()]);
 
     const jobs = await listSalesExportJobs(20);
 
-    expect(listJobsByBranchMock).toHaveBeenCalledWith(20, 1);
-    expect(listJobsMock).not.toHaveBeenCalled();
+    expect(listJobsMock).toHaveBeenCalledWith(20, { branchId: 1 });
     expect(jobs).toHaveLength(1);
     expect(jobs[0]?.id).toBe(11);
   });
@@ -97,8 +93,7 @@ describe("sales export actions branch scope", () => {
 
     await listSalesExportJobs(20);
 
-    expect(listJobsMock).toHaveBeenCalledWith(20);
-    expect(listJobsByBranchMock).not.toHaveBeenCalled();
+    expect(listJobsMock).toHaveBeenCalledWith(20, undefined);
   });
 
   it("hides detail for cross-branch non-superuser", async () => {
@@ -144,12 +139,12 @@ describe("sales export actions branch scope", () => {
 
   it("caps listSalesExportJobs limit at 100 regardless of input", async () => {
     setSession({ userId: 2, role: "back_office", branchId: 1 });
-    listJobsByBranchMock.mockResolvedValue([]);
+    listJobsMock.mockResolvedValue([]);
 
     await listSalesExportJobs(200);
 
-    // If Math.min(..., 100) was removed, this would be called with (200, 1)
-    expect(listJobsByBranchMock).toHaveBeenCalledWith(100, 1);
+    // If Math.min(..., 100) was removed, this would be called with (200, ...)
+    expect(listJobsMock).toHaveBeenCalledWith(100, { branchId: 1 });
   });
 
   it("getSalesExportJob returns null and skips user lookup when job is not found", async () => {
