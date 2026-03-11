@@ -82,10 +82,12 @@ describe("report export observability", () => {
       ])
       .execute();
 
-    const branchOne =
-      await ctx.repos.salesRecords.findConfirmedWithClientByBranch(1);
-    const branchTwo =
-      await ctx.repos.salesRecords.findConfirmedWithClientByBranch(2);
+    const branchOne = await ctx.repos.salesRecords.listConfirmedWithClient({
+      branchId: 1,
+    });
+    const branchTwo = await ctx.repos.salesRecords.listConfirmedWithClient({
+      branchId: 2,
+    });
 
     expect(branchOne).toHaveLength(1);
     expect(branchOne[0]?.id).toBe(101);
