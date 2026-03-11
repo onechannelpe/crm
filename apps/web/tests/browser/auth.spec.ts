@@ -97,24 +97,35 @@ test.describe("auth browser flow", () => {
     ).toBeVisible();
   });
 
-  test("uses a dedicated passkey start form when passkeys are supported", async ({
+  test("shows the inline passkey step without leaving the login page", async ({
     page,
     browserName,
   }) => {
     test.skip(browserName !== "chromium");
 
     await page.goto("/login");
-
-    await expect(page.locator("form")).toHaveCount(1);
+    await page.getByRole("button", { name: "Continuar con usuario" }).click();
     await page
-      .getByRole("link", { name: "Continuar con clave de acceso" })
+      .getByRole("button", { name: "Iniciar con clave de acceso" })
       .click();
-    await expect(page).toHaveURL("/login/passkey/start");
-    await expect(page.getByLabel("Usuario")).toBeVisible();
+    await expect(page).toHaveURL("/login");
     await expect(
       page.getByRole("button", { name: "Continuar con clave de acceso" }),
     ).toHaveCount(1);
   });
+
+  async function startPasskeyFlow(page: import("@playwright/test").Page) {
+    await page.goto("/login");
+    await page.getByRole("button", { name: "Continuar con usuario" }).click();
+    await page.getByRole("textbox", { name: /Usuario/ }).fill(PASSKEY_USERNAME);
+    await page
+      .getByRole("button", { name: "Iniciar con clave de acceso" })
+      .click();
+    await page
+      .getByRole("button", { name: "Continuar con clave de acceso" })
+      .click();
+    await expect(page).toHaveURL(/\/login\/passkey\?flow=\d+/);
+  }
 
   test("shows the unsupported-browser state on the passkey route", async ({
     page,
@@ -122,12 +133,7 @@ test.describe("auth browser flow", () => {
   }) => {
     test.skip(browserName !== "chromium");
 
-    await page.goto("/login/passkey/start");
-    await page.getByLabel("Usuario").fill(PASSKEY_USERNAME);
-    await page
-      .getByRole("button", { name: "Continuar con clave de acceso" })
-      .click();
-    await expect(page).toHaveURL(/\/login\/passkey\?flow=\d+/);
+    await startPasskeyFlow(page);
 
     const flowUrl = page.url();
     await page.addInitScript(() => {
@@ -149,12 +155,7 @@ test.describe("auth browser flow", () => {
   }) => {
     test.skip(browserName !== "chromium");
 
-    await page.goto("/login/passkey/start");
-    await page.getByLabel("Usuario").fill(PASSKEY_USERNAME);
-    await page
-      .getByRole("button", { name: "Continuar con clave de acceso" })
-      .click();
-    await expect(page).toHaveURL(/\/login\/passkey\?flow=\d+/);
+    await startPasskeyFlow(page);
 
     await page.evaluate(() => {
       Object.defineProperty(navigator, "credentials", {

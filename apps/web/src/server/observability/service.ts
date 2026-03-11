@@ -35,13 +35,7 @@ export interface RecordAuthFunnelEventInput {
     | "passkey_start_result"
     | "totp_result"
     | "passkey_result";
-  screen:
-    | "login"
-    | "login_verify"
-    | "login_passkey_start"
-    | "login_passkey"
-    | "reset_password"
-    | null;
+  screen: "login" | "login_verify" | "login_passkey" | "reset_password" | null;
   method: "password" | "password_totp" | "passkey" | "google" | null;
   outcome:
     | "viewed"
