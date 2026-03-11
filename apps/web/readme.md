@@ -30,28 +30,28 @@ The web app is the server side of the extension protocol. It issues handoff toke
 
 Config is loaded from the repo-root `.env`. Definitions are in [`src/lib/env.ts`](src/lib/env.ts), [`src/lib/config.ts`](src/lib/config.ts), and [`app.config.ts`](app.config.ts).
 
-| Variable | Default | Notes |
-|---|---|---|
-| `SESSION_SECRET` | — | Required |
-| `TOTP_ENCRYPTION_KEY` | — | Required |
-| `ENGINE_HMAC_KEY_ID` | — | Required |
-| `ENGINE_HMAC_SECRET` | — | Required |
-| `ENGINE_URL` | `http://localhost:3001` | |
-| `WEBAUTHN_RP_ID` | `localhost` | |
-| `WEBAUTHN_ORIGIN` | `http://localhost:5173` | |
-| `WEB_DB_PATH` | — | SQLite database path |
-| `WEB_UPLOADS_ROOT` | — | File upload directory |
-| `TRUSTED_PROXY` | — | |
-| `EXTENSION_EXPECTED_ORIGIN` | — | Extension allowed origin |
-| `EXTENSION_HANDOFF_PRIVATE_KEY_PKCS8_BASE64` | — | Handoff token signing key |
-| `GOOGLE_CLIENT_ID` | — | OAuth |
-| `GOOGLE_CLIENT_SECRET` | — | OAuth |
-| `GOOGLE_REDIRECT_URI` | — | OAuth |
-| `RESEND_API_KEY` | — | Email |
-| `EMAIL_FROM` | — | Email sender address |
-| `WHATSAPP_ACCESS_TOKEN` | — | |
-| `WHATSAPP_PHONE_NUMBER_ID` | — | |
-| `WHATSAPP_GRAPH_API_VERSION` | — | |
+| Variable                                     | Default                 | Notes                     |
+| -------------------------------------------- | ----------------------- | ------------------------- |
+| `SESSION_SECRET`                             | —                       | Required                  |
+| `TOTP_ENCRYPTION_KEY`                        | —                       | Required                  |
+| `ENGINE_HMAC_KEY_ID`                         | —                       | Required                  |
+| `ENGINE_HMAC_SECRET`                         | —                       | Required                  |
+| `ENGINE_URL`                                 | `http://localhost:3001` |                           |
+| `WEBAUTHN_RP_ID`                             | `localhost`             |                           |
+| `WEBAUTHN_ORIGIN`                            | `http://localhost:5173` |                           |
+| `WEB_DB_PATH`                                | —                       | SQLite database path      |
+| `WEB_UPLOADS_ROOT`                           | —                       | File upload directory     |
+| `TRUSTED_PROXY`                              | —                       |                           |
+| `EXTENSION_EXPECTED_ORIGIN`                  | —                       | Extension allowed origin  |
+| `EXTENSION_HANDOFF_PRIVATE_KEY_PKCS8_BASE64` | —                       | Handoff token signing key |
+| `GOOGLE_CLIENT_ID`                           | —                       | OAuth                     |
+| `GOOGLE_CLIENT_SECRET`                       | —                       | OAuth                     |
+| `GOOGLE_REDIRECT_URI`                        | —                       | OAuth                     |
+| `RESEND_API_KEY`                             | —                       | Email                     |
+| `EMAIL_FROM`                                 | —                       | Email sender address      |
+| `WHATSAPP_ACCESS_TOKEN`                      | —                       |                           |
+| `WHATSAPP_PHONE_NUMBER_ID`                   | —                       |                           |
+| `WHATSAPP_GRAPH_API_VERSION`                 | —                       |                           |
 
 ## Running
 
