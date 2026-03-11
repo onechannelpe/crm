@@ -9,7 +9,9 @@
   ·
   <a href="apps/engine/">engine</a>
   ·
-  <a href="apps/pipeline/">processing</a>
+  <a href="apps/pipeline/">pipeline</a>
+  ·
+  <a href="apps/extension/">extension</a>
 </p>
 
 <p align="center">
@@ -25,19 +27,21 @@
 mise install
 bun install
 cp .env.example .env
-bun run generate:engine-contract
+bun run generate
 bun run dev
 ```
 
-`bun run dev:web` and `bun run dev:engine` to start individually.
+`bun run dev:web`, `bun run dev:engine`, and `bun run dev:worker` start the web app, engine, and maintenance worker individually.
 
 ## Checks
 
 ```sh
-bun run check            # all (contract, web, engine, lint, format, clippy)
-bun run check:web        # typecheck + lint
-bun run check:engine     # cargo check
-bun run check:contract   # verify bindings match contract
+bun run check              # generate + rust + contracts + web + lint + formatting
+bun run check:web          # web typecheck + lint
+bun run check:engine       # cargo check for engine and pipeline
+bun run check:contract     # verify engine bindings match contract
+bun run check:search-contract
+bun run check:projection-contract
 ```
 
 See [`package.json`](package.json) for all scripts.
