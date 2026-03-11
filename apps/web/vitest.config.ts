@@ -8,7 +8,7 @@ export default defineConfig({
   test: {
     reporters: process.env.GITHUB_ACTIONS
       ? ["dot", "github-actions"]
-      : ["default"],
+      : ["github-actions"],
     projects: [
       {
         test: {
