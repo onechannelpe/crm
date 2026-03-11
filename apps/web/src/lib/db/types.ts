@@ -456,6 +456,7 @@ export interface AuthFunnelEventsTable {
     | "login_verify"
     | "login_passkey_start"
     | "login_passkey"
+    | "reset_password"
     | null;
   method: "password" | "password_totp" | "passkey" | "google" | null;
   outcome:
@@ -550,6 +551,15 @@ export interface UserOAuthAccountsTable {
   provider: string;
   provider_user_id: string;
   email: string;
+  created_at: number;
+}
+
+export interface PasswordResetTokensTable {
+  id: Generated<number>;
+  user_id: number;
+  token_hash: string;
+  expires_at: number;
+  used_at: number | null;
   created_at: number;
 }
 
@@ -679,6 +689,7 @@ export interface Database {
   passkeys: PasskeysTable;
   webauthn_challenges: WebauthnChallengesTable;
   user_oauth_accounts: UserOAuthAccountsTable;
+  password_reset_tokens: PasswordResetTokensTable;
 }
 
 export type Branch = Selectable<BranchesTable>;
@@ -720,6 +731,7 @@ export type AuthEvent = Selectable<AuthEventsTable>;
 export type UserTotpFactor = Selectable<UserTotpFactorsTable>;
 export type UserTotpRecoveryCode = Selectable<UserTotpRecoveryCodesTable>;
 export type UserInvite = Selectable<UserInvitesTable>;
+export type PasswordResetToken = Selectable<PasswordResetTokensTable>;
 
 export type NewUser = Insertable<UsersTable>;
 export type NewLoginFlow = Insertable<LoginFlowsTable>;

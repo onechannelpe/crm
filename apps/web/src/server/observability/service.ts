@@ -40,6 +40,7 @@ export interface RecordAuthFunnelEventInput {
     | "login_verify"
     | "login_passkey_start"
     | "login_passkey"
+    | "reset_password"
     | null;
   method: "password" | "password_totp" | "passkey" | "google" | null;
   outcome:
