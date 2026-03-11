@@ -14,3 +14,5 @@ export { renderCampaignEmail } from "./templates/compiled/campaign.js";
 export type { CampaignEmailParams } from "./templates/compiled/campaign.js";
 export { renderAccountExpiringEmail } from "./templates/compiled/account-expiring.js";
 export type { AccountExpiringEmailParams } from "./templates/compiled/account-expiring.js";
+export { renderPasswordResetEmail } from "./templates/compiled/password-reset.js";
+export type { PasswordResetEmailParams } from "./templates/compiled/password-reset.js";
