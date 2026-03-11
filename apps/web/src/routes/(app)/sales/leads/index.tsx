@@ -6,11 +6,14 @@ import { RequestLeadsButton } from "~/components/features/leads/request-leads-bu
 import { useToast } from "~/components/feedback/toast-provider";
 import { AppPage } from "~/components/layout/page";
 import { Badge } from "~/components/ui/display/badge";
+import {
+  badgeVariantForPresence,
+  badgeVariantForSyncHealth,
+} from "~/lib/extension/display";
 import { createExtensionPortConnection } from "~/lib/extension/port";
 import {
   handoffLeadToExtension,
   isExtensionBridgeConfigured,
-  type ExtensionExecutiveState,
 } from "~/lib/extension/runtime";
 import {
   registerCallMutation,
@@ -41,36 +44,6 @@ function isHandoffTokenResponse(
     typeof value.handoffToken === "string" &&
     typeof value.expiresAt === "number"
   );
-}
-
-function extensionPresenceBadgeVariant(
-  presenceStatus: ExtensionExecutiveState["presenceStatus"] | undefined,
-) {
-  switch (presenceStatus) {
-    case "active":
-      return "success";
-    case "dialing":
-      return "warning";
-    case "ready":
-    case "wrap_up":
-      return "secondary";
-    default:
-      return "outline";
-  }
-}
-
-function extensionSyncHealthBadgeVariant(
-  syncHealth: ExtensionExecutiveState["syncHealth"] | undefined,
-) {
-  switch (syncHealth) {
-    case "pending":
-      return "info";
-    case "error":
-    case "reauth_required":
-      return "destructive";
-    default:
-      return "outline";
-  }
 }
 
 export default function LeadsPage() {
@@ -168,22 +141,18 @@ export default function LeadsPage() {
       <div class={styles.extensionBanner}>
         <div class={styles.extensionHeader}>
           <div>
-            <p class={styles.extensionEyebrow}>Extension status</p>
-            <h2 class={styles.extensionTitle}>CRM call companion</h2>
+            <p class={styles.extensionEyebrow}>Estado de la extensión</p>
+            <h2 class={styles.extensionTitle}>Compañero de llamada</h2>
           </div>
           <Badge
-            variant={extensionPresenceBadgeVariant(
-              extensionState()?.presenceStatus,
-            )}
+            variant={badgeVariantForPresence(extensionState()?.presenceStatus)}
           >
-            {extensionState()?.presenceStatus ?? "unavailable"}
+            {extensionState()?.presenceStatus ?? "no disponible"}
           </Badge>
           <Badge
-            variant={extensionSyncHealthBadgeVariant(
-              extensionState()?.syncHealth,
-            )}
+            variant={badgeVariantForSyncHealth(extensionState()?.syncHealth)}
           >
-            {extensionState()?.syncHealth ?? "unavailable"}
+            {extensionState()?.syncHealth ?? "no disponible"}
           </Badge>
         </div>
         <p class={styles.extensionCopy}>
