@@ -6,7 +6,7 @@ import {
   getDefaultAppPath,
   getRoutePermission,
 } from "../../src/lib/auth/access/route-policy";
-import { NAV_ROUTES } from "../../src/lib/nav/nav-config";
+import { SIDEBAR_ENTRIES } from "../../src/lib/nav/nav-config";
 import { getHeaderRoute } from "../../src/lib/nav/nav-policy";
 
 describe("route permissions", () => {
@@ -60,8 +60,8 @@ describe("nav config structural invariants", () => {
       ROUTE_PERMISSIONS.filter((r) => r.href).map((r) => r.href),
     );
 
-    const unregistered = NAV_ROUTES.filter(
-      (r) => r.sidebar && !registeredHrefs.has(r.href),
+    const unregistered = SIDEBAR_ENTRIES.filter(
+      (r) => !registeredHrefs.has(r.href),
     ).map((r) => r.href);
 
     expect(unregistered).toEqual([]);
