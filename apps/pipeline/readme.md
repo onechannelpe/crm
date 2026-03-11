@@ -1,6 +1,4 @@
-# pipeline
-
-## About
+# the pipeline
 
 The pipeline reads source files, validates them against shared contracts, writes normalized and staged artifacts, and publishes the SQLite dataset consumed by the engine.
 

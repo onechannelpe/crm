@@ -1,6 +1,4 @@
-# engine
-
-## About
+# the engine
 
 The engine serves authenticated search requests over the published SQLite dataset.
 

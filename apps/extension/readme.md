@@ -1,6 +1,4 @@
-# extension
-
-## About
+# the extension
 
 The extension runs in the browser during calls. It tracks call state, records audio, and syncs events back to the web application.
 

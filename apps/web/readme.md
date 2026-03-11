@@ -1,6 +1,4 @@
-# web
-
-## About
+# the web
 
 The web application serves the CRM UI, the CRM API routes, and the background maintenance worker.
 

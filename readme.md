@@ -1,14 +1,13 @@
 <h1 align="center">onechannel.pe</h1>
+
 <p align="center">
-  CRM for contact search, lead routing, and call logging.
-  <br />
-  <a href="apps/web/readme.md">Web</a>
+  <a href="apps/web/readme.md">web</a>
   ·
-  <a href="apps/engine/readme.md">Engine</a>
+  <a href="apps/engine/readme.md">engine</a>
   ·
-  <a href="apps/pipeline/readme.md">Pipeline</a>
+  <a href="apps/pipeline/readme.md">pipeline</a>
   ·
-  <a href="apps/extension/readme.md">Extension</a>
+  <a href="apps/extension/readme.md">extension</a>
 </p>
 
 <p align="center">
@@ -18,8 +17,6 @@
   <a href="https://github.com/onechannelpe/crm/actions/workflows/extension.yml"><img src="https://github.com/onechannelpe/crm/actions/workflows/extension.yml/badge.svg?branch=master" alt="extension"></a>
   <a href="https://github.com/onechannelpe/crm/actions/workflows/contracts.yml"><img src="https://github.com/onechannelpe/crm/actions/workflows/contracts.yml/badge.svg?branch=master" alt="contracts"></a>
 </p>
-
-## About
 
 This repository is built around a shared search dataset.
 
