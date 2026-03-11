@@ -1,32 +1,26 @@
 import { canAccessPath, type Role } from "~/lib/auth/access/route-policy";
 
 import {
-  NAV_ROUTES,
-  type NavRoute,
+  PAGE_HEADERS,
+  SIDEBAR_ENTRIES,
+  type HeaderDescriptor,
   type RouteIcon,
+  type SidebarChild,
+  type SidebarEntry,
   type SidebarSection,
 } from "./nav-config";
 
-export type { NavRoute, RouteIcon, SidebarSection } from "./nav-config";
-
-export interface SidebarNavRoute extends NavRoute {
-  sidebar: NonNullable<NavRoute["sidebar"]>;
-}
-
-export interface SidebarChildDescriptor {
-  href: string;
-  label: string;
-  order: number;
-}
-
-export interface HeaderDescriptor {
-  label: string;
-  icon: RouteIcon;
-}
+export type {
+  SidebarEntry,
+  SidebarChild,
+  HeaderDescriptor,
+  RouteIcon,
+  SidebarSection,
+} from "./nav-config";
 
 export interface SidebarGroup {
   label: string | undefined;
-  items: SidebarNavRoute[];
+  items: SidebarEntry[];
 }
 
 const HEADER_FALLBACK: HeaderDescriptor = {
@@ -34,55 +28,35 @@ const HEADER_FALLBACK: HeaderDescriptor = {
   icon: "dashboard",
 };
 
-const DYNAMIC_ROUTE_HEADERS: Array<{
-  pattern: RegExp;
-  header: HeaderDescriptor;
-}> = [
-  {
-    pattern: /^\/sales\/records\/[^/]+\/edit$/,
-    header: { label: "Editar venta", icon: "new-sale" },
-  },
-  {
-    pattern: /^\/sales\/reports\/exports\/[^/]+$/,
-    header: { label: "Detalle", icon: "confirmed" },
-  },
-];
-
-function isSidebarRoute(route: NavRoute): route is SidebarNavRoute {
-  return route.sidebar !== undefined;
+function sortByOrder(a: SidebarEntry, b: SidebarEntry): number {
+  return a.order - b.order;
 }
 
-function sortBySidebarOrder(a: SidebarNavRoute, b: SidebarNavRoute): number {
-  return a.sidebar.order - b.sidebar.order;
-}
-
-export function getSidebarRoutes(
+export function getSidebarEntries(
   role: Role,
   section: SidebarSection,
-): SidebarNavRoute[] {
-  return NAV_ROUTES.filter((route): route is SidebarNavRoute => {
-    if (!isSidebarRoute(route)) return false;
-    if (route.sidebar.section !== section) return false;
-    return canAccessPath(role, route.href);
-  }).sort(sortBySidebarOrder);
+): SidebarEntry[] {
+  return SIDEBAR_ENTRIES.filter(
+    (entry) => entry.section === section && canAccessPath(role, entry.href),
+  ).sort(sortByOrder);
 }
 
 export function getSidebarGrouped(
   role: Role,
   section: SidebarSection,
 ): SidebarGroup[] {
-  const routes = getSidebarRoutes(role, section);
+  const entries = getSidebarEntries(role, section);
   const groups: SidebarGroup[] = [];
-  const seen = new Map<string | undefined, SidebarNavRoute[]>();
+  const seen = new Map<string | undefined, SidebarEntry[]>();
 
-  for (const route of routes) {
-    const key = route.sidebar.group;
+  for (const entry of entries) {
+    const key = entry.group;
     if (!seen.has(key)) {
-      const items: SidebarNavRoute[] = [];
+      const items: SidebarEntry[] = [];
       seen.set(key, items);
       groups.push({ label: key, items });
     }
-    seen.get(key)!.push(route);
+    seen.get(key)!.push(entry);
   }
 
   return groups;
@@ -90,34 +64,27 @@ export function getSidebarGrouped(
 
 export function getSidebarChildren(
   role: Role,
-  parentId: string,
-): SidebarChildDescriptor[] {
-  const parent = NAV_ROUTES.find((r) => r.id === parentId);
-  if (!parent?.sidebar?.children) return [];
+  entryId: string,
+): SidebarChild[] {
+  const entry = SIDEBAR_ENTRIES.find((e) => e.id === entryId);
+  if (!entry?.children) return [];
 
-  return parent.sidebar.children
+  return entry.children
     .filter((child) => canAccessPath(role, child.href))
     .sort((a, b) => a.order - b.order);
 }
 
-export function getNavigableRoutes(role: Role): NavRoute[] {
-  return NAV_ROUTES.filter((route) => canAccessPath(role, route.href));
+export function getNavigableRoutes(role: Role): SidebarEntry[] {
+  return SIDEBAR_ENTRIES.filter((entry) => canAccessPath(role, entry.href));
 }
 
 export function getHeaderRoute(pathname: string): HeaderDescriptor {
-  for (const { pattern, header } of DYNAMIC_ROUTE_HEADERS) {
-    if (pattern.test(pathname)) return header;
+  for (const rule of PAGE_HEADERS) {
+    if (typeof rule.match === "string") {
+      if (pathname === rule.match) return rule.header;
+    } else {
+      if (rule.match.test(pathname)) return rule.header;
+    }
   }
-
-  const exact = NAV_ROUTES.find((r) => r.href === pathname);
-  if (exact?.header) return exact.header;
-
-  const match = NAV_ROUTES.find((r) =>
-    r.matchPrefixes.some(
-      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
-    ),
-  );
-  if (match?.header) return match.header;
-
   return HEADER_FALLBACK;
 }

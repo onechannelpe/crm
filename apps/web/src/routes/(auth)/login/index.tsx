@@ -14,17 +14,23 @@ import { useToast } from "~/components/feedback/toast-provider";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
-import { passwordLoginUiMessage } from "~/lib/auth/login-ui";
+import {
+  passkeyStartUiMessage,
+  passwordLoginUiMessage,
+} from "~/lib/auth/login-ui";
 import { isPasskeySupported } from "~/lib/auth/passkey/browser";
 import { useAuthPageView } from "~/lib/auth/use-auth-analytics";
 import { useLoginFlow } from "~/lib/auth/use-login-flow";
-import { passwordLoginMutation } from "~/lib/mutations/auth";
+import {
+  passkeyStartMutation,
+  passwordLoginMutation,
+} from "~/lib/mutations/auth";
 
 import styles from "../../auth/auth-shell.module.css";
 import pageStyles from "../../auth/login-page.module.css";
 import linkStyles from "~/components/auth/flow/auth-links.module.css";
 
-type LoginStep = "init" | "email" | "password";
+type LoginStep = "init" | "email" | "passkey" | "password";
 
 export default function LoginPage() {
   useAuthPageView("login");
@@ -32,6 +38,7 @@ export default function LoginPage() {
   const [searchParams] = useSearchParams();
   const { showToast } = useToast();
   const passwordSubmission = useSubmission(passwordLoginMutation);
+  const passkeyStartSubmission = useSubmission(passkeyStartMutation);
   const [step, setStep] = createSignal<LoginStep>("init");
   const [username, setUsername] = createSignal("");
   const [passkeySupported, setPasskeySupported] = createSignal(false);
@@ -65,7 +72,7 @@ export default function LoginPage() {
   });
 
   const footerNote = createMemo(() => {
-    if (step() === "password") {
+    if (step() === "passkey" || step() === "password") {
       return (
         <a href="/reset-password" class={linkStyles.forgotLink}>
           ¿Olvidaste tu contraseña?
@@ -171,10 +178,55 @@ export default function LoginPage() {
                 Continuar
               </Button>
               <Show when={passkeySupported()}>
-                <a href="/login/passkey/start" class={linkStyles.passkeyLink}>
+                <button
+                  type="button"
+                  class={linkStyles.passkeyLink}
+                  onClick={() => setStep("passkey")}
+                >
                   Iniciar con clave de acceso
-                </a>
+                </button>
               </Show>
+            </form>
+          </EnterTransition>
+        </Show>
+
+        <Show when={step() === "passkey"}>
+          <EnterTransition>
+            <form
+              class={pageStyles.formStack}
+              action={passkeyStartMutation}
+              method="post"
+              onKeyDown={(event) => {
+                if (event.key === "Escape") setStep("email");
+              }}
+            >
+              <Show
+                when={
+                  passkeyStartSubmission.result &&
+                  !passkeyStartSubmission.result.ok
+                }
+              >
+                {(_) => (
+                  <p class={pageStyles.formError} role="alert">
+                    {passkeyStartUiMessage(passkeyStartSubmission.result!.code)}
+                  </p>
+                )}
+              </Show>
+              <input type="hidden" name="identifier" value={username()} />
+              <Button
+                type="submit"
+                class={styles.full}
+                loading={passkeyStartSubmission.pending}
+              >
+                Continuar con clave de acceso
+              </Button>
+              <button
+                type="button"
+                class={linkStyles.helpLink}
+                onClick={() => setStep("email")}
+              >
+                Volver
+              </button>
             </form>
           </EnterTransition>
         </Show>

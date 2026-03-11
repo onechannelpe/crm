@@ -16,9 +16,9 @@ import { useSession } from "~/components/providers/session-provider";
 import { AnimatedExpandableContainer } from "~/components/ui/animation/animated-expandable-container";
 import {
   getSidebarChildren,
+  getSidebarEntries,
   getSidebarGrouped,
-  getSidebarRoutes,
-  type NavRoute,
+  type SidebarEntry,
 } from "~/lib/nav/nav-policy";
 import { cn } from "~/lib/utils";
 
@@ -42,7 +42,7 @@ function saveClosedSections(closed: Set<string>): void {
 }
 
 function NavItem(props: {
-  item: NavRoute;
+  item: SidebarEntry;
   expanded: boolean;
   active: boolean;
   children: ReturnType<typeof getSidebarChildren>;
@@ -117,14 +117,14 @@ export function Sidebar() {
   const role = createMemo(() => currentUser().role);
   const firstName = createMemo(() => currentUser().names);
 
-  const isRouteActive = (route: NavRoute) =>
-    route.matchPrefixes.some(
+  const isRouteActive = (entry: SidebarEntry) =>
+    entry.activePrefixes.some(
       (prefix) =>
         location.pathname === prefix ||
         location.pathname.startsWith(`${prefix}/`),
     );
 
-  const quickItems = createMemo(() => getSidebarRoutes(role(), "primary"));
+  const quickItems = createMemo(() => getSidebarEntries(role(), "primary"));
   const workspaceGroups = createMemo(() =>
     getSidebarGrouped(role(), "secondary"),
   );
