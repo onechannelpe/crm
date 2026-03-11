@@ -1,6 +1,6 @@
 <h1 align="center">onechannel.pe</h1>
 
-<p align="center">CRM monorepo with web, engine, pipeline, and extension applications.</p>
+<p align="center">A CRM built for managing contacts, routing leads, and logging calls.</p>
 
 <p align="center">
   <a href="https://github.com/onechannelpe/crm/actions/workflows/web.yml"><img src="https://github.com/onechannelpe/crm/actions/workflows/web.yml/badge.svg?branch=master" alt="web"></a>
@@ -10,26 +10,32 @@
   <a href="https://github.com/onechannelpe/crm/actions/workflows/contracts.yml"><img src="https://github.com/onechannelpe/crm/actions/workflows/contracts.yml/badge.svg?branch=master" alt="contracts"></a>
 </p>
 
-## Applications
+## How it's built
 
-- [`apps/web/`](apps/web/) serves the CRM UI and background maintenance worker.
-- [`apps/engine/`](apps/engine/) serves the `/v1/search` and `/v1/health` HTTP endpoints over SQLite.
-- [`apps/pipeline/`](apps/pipeline/) builds the SQLite dataset and publishes it to the engine DB path.
-- [`apps/extension/`](apps/extension/) runs the browser extension runtime, popup, and sidepanel.
+Search is the core of the CRM — agents look up contacts by DNI, RUC, phone, or name constantly, and it has to be fast. Rather than querying a live database on every keystroke, we pre-build a SQLite snapshot offline and serve it from a dedicated read-only Rust process. The web app never touches that data directly; it sends signed HTTP requests to the engine and gets rows back.
 
-## How it works
+That separation is the key architectural decision. The **pipeline** owns data quality: it ingests source files, normalizes them against shared contracts, runs a quality gate, and atomically promotes a new snapshot when it passes. The **engine** is intentionally dumb — it validates the request signature, checks the rate limit, and executes the query. The **web app** handles everything else: auth, lead assignment, CRM state, notifications. The **extension** runs in the browser during calls and syncs back to the web app over a signed handoff protocol.
 
-The pipeline reads source files and contracts, writes intermediate artifacts under `apps/pipeline/data`, and publishes `apps/engine/data/contacts.sqlite`. The engine opens that SQLite file in read-only mode and serves authenticated search requests. The web app serves the CRM UI, stores application data in the web database, and calls the engine through HMAC-signed HTTP. The extension exchanges handoff and sync traffic with the web app through the configured web origin.
+```mermaid
+flowchart LR
+    src[source DBs] -->|normalize| pipe[pipeline]
+    pipe -->|build| contacts[(contacts.sqlite)]
+    engine[engine] -->|read| contacts
+    web[web] -->|request contacts| engine
+    web <--> appdb[(crm.db)]
+    ext[extension] -->|get assignments| web
+```
 
-The main contract boundary between web and engine is [`contracts/engine-api.json`](contracts/engine-api.json). Contract changes are generated into web bindings by `bun run generate` and validated by `bun run check:contract`. Search projection contract validation is handled by `bun run check:projection-contract` and `bun run check:search-contract`.
+The contract between web and engine is [`contracts/engine-api.json`](contracts/engine-api.json). If you change it, run `bun run generate` to regenerate web bindings and `bun run check:contract` to validate them. Search projection and search contracts have their own checks: `bun run check:projection-contract` and `bun run check:search-contract`.
 
-Senior developer starting points:
+## Apps
 
-- Web request and auth flow: [`apps/web/src/middleware.ts`](apps/web/src/middleware.ts), [`apps/web/src/lib/auth/access/request-auth.ts`](apps/web/src/lib/auth/access/request-auth.ts)
-- Web service wiring: [`apps/web/src/server/shared/context.ts`](apps/web/src/server/shared/context.ts), [`apps/web/src/server/shared/registry.ts`](apps/web/src/server/shared/registry.ts)
-- Engine startup and request handling: [`apps/engine/src/main.rs`](apps/engine/src/main.rs), [`apps/engine/src/api/handlers.rs`](apps/engine/src/api/handlers.rs)
-- Pipeline orchestration: [`apps/pipeline/src/pipeline.rs`](apps/pipeline/src/pipeline.rs), [`apps/pipeline/src/cli.rs`](apps/pipeline/src/cli.rs)
-- Extension runtime and web handoff: [`apps/extension/src/background/runtime.ts`](apps/extension/src/background/runtime.ts), [`apps/extension/src/services/external-auth.ts`](apps/extension/src/services/external-auth.ts)
+| | |
+|---|---|
+| [`apps/web/`](apps/web/) | SolidStart app — CRM UI, auth, lead assignment, extension APIs, maintenance worker |
+| [`apps/engine/`](apps/engine/) | Rust/Axum search API over the published SQLite snapshot |
+| [`apps/pipeline/`](apps/pipeline/) | Rust pipeline that builds, validates, and promotes the SQLite dataset |
+| [`apps/extension/`](apps/extension/) | Browser extension for call state tracking and recording sync |
 
 ## Local setup
 
@@ -41,17 +47,4 @@ bun run generate
 bun run dev
 ```
 
-`bun run dev` starts the engine and web app. `bun run dev:web`, `bun run dev:engine`, and `bun run dev:worker` start a single process from the repo root.
-
-## Validation
-
-```sh
-bun run check
-bun run check:web
-bun run check:engine
-bun run check:contract
-bun run check:search-contract
-bun run check:projection-contract
-```
-
-Application-specific details are in [`apps/web/readme.md`](apps/web/readme.md), [`apps/engine/readme.md`](apps/engine/readme.md), [`apps/pipeline/readme.md`](apps/pipeline/readme.md), and [`apps/extension/readme.md`](apps/extension/readme.md).
+`bun run dev` starts the engine and web app together. The pipeline runs separately — see [`apps/pipeline/`](apps/pipeline/) when you need to refresh the search dataset.

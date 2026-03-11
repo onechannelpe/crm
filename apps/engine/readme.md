@@ -1,35 +1,25 @@
-# Engine
+# engine
 
-Rust/Axum search API over the published SQLite dataset. The process reads `contacts.sqlite`, validates authenticated requests, and serves `/v1/health` and `/v1/search`.
+The engine does one thing: take a signed search request and return rows from the contacts dataset. It doesn't write, it doesn't migrate, it doesn't own its data. That simplicity is intentional — keeping search isolated as a read-only Rust process means it can't become a bottleneck or a source of data corruption, and it's trivially restartable when the pipeline promotes a new snapshot.
 
-Startup begins in [`src/main.rs`](src/main.rs). The binary loads the repo-root `.env`, loads config from [`src/config/mod.rs`](src/config/mod.rs), checks that the SQLite file exists, builds the read-only connection pool, validates schema and projection-contract expectations in [`src/storage/sqlite/schema_guard.rs`](src/storage/sqlite/schema_guard.rs), constructs `AppState`, builds the router in [`src/api/router.rs`](src/api/router.rs), and starts the listener.
+## The request path
 
-Refresh the SQLite dataset before starting the server:
+A `POST /v1/search` comes in, gets authenticated via HMAC in [`src/security/hmac.rs`](src/security/hmac.rs), rate-limited per key in [`src/security/rate_limit.rs`](src/security/rate_limit.rs), then handed to [`src/domain/search_service.rs`](src/domain/search_service.rs). The service validates the search type and dispatches to the right query under [`src/storage/sqlite/queries/`](src/storage/sqlite/queries/) — exact lookups (DNI, RUC, phone), text search (names), and enriched phone search each have their own file. Results come back and go out. That's the whole path.
 
-```sh
-bun run pipeline:refresh
+On startup, before the server accepts any connections, [`src/storage/sqlite/schema_guard.rs`](src/storage/sqlite/schema_guard.rs) validates that the SQLite file matches the expected schema and projection contract. If it doesn't, the process exits. Read that file before touching any query code — it's the enforcement layer for the pipeline→engine contract and it will bite you if you skip it.
+
+The engine doesn't watch `contacts.sqlite` for changes. When the pipeline promotes a new snapshot, restart the process to pick it up.
+
+## HTTP surface
+
 ```
-
-Start the server:
-
-```sh
-bun run dev:engine
-```
-
-If `contacts.sqlite` changes on disk, restart engine so the process picks up the new snapshot.
-
-The request path for `POST /v1/search` starts in [`src/api/handlers.rs`](src/api/handlers.rs). The handler requires the auth headers, verifies HMAC signatures through [`src/security/hmac.rs`](src/security/hmac.rs), applies auth-failure rate limiting and search rate limiting through [`src/security/rate_limit.rs`](src/security/rate_limit.rs), parses the JSON body, and calls [`src/domain/search_service.rs`](src/domain/search_service.rs). `SearchService` validates input by search type and dispatches to the SQLite query layer under [`src/storage/sqlite/queries/`](src/storage/sqlite/queries/). The health handler reads build metadata directly from SQLite and returns `degraded` when the projection is unavailable.
-
-Configuration is loaded from the root `.env` through [`src/config/mod.rs`](src/config/mod.rs). `ENGINE_HMAC_KEYS_JSON` is required. Local defaults are `ENGINE_DB_PATH=apps/engine/data/contacts.sqlite`, `ENGINE_HOST=localhost`, and `ENGINE_PORT=3001`. Limit settings are `ENGINE_HMAC_MAX_SKEW_SECS`, `ENGINE_RATE_LIMIT_PER_KEY`, and `ENGINE_MAX_LIMIT`.
-
-HTTP surface:
-
-```http
 GET  /v1/health
 POST /v1/search
 ```
 
-`POST /v1/search` accepts this body shape from [`src/api/contracts.rs`](src/api/contracts.rs):
+`/v1/health` returns build metadata from SQLite (`build_id`, `built_at`, `rows`) and reports `degraded` when the projection is unavailable.
+
+`/v1/search` request body:
 
 ```json
 {
@@ -39,24 +29,49 @@ POST /v1/search
 }
 ```
 
-`limit` behavior:
+`limit` defaults to `20`, minimum `1`, maximum `ENGINE_MAX_LIMIT`.
 
-- default is `20`,
-- lower-bounded to `1`,
-- upper-bounded to `ENGINE_MAX_LIMIT`.
+Every `/v1/search` request requires three headers:
 
-`GET /v1/health` includes build metadata when available (`build_id`, `built_at`, `rows`).
+| Header | Value |
+|---|---|
+| `x-key-id` | Key identifier |
+| `x-timestamp` | Unix seconds |
+| `x-signature` | `hex(hmac_sha256(timestamp_be_u64 + raw_body, secret))` |
 
-`POST /v1/search` requires these headers:
+Auth is checked before any query runs. Both auth failures and search attempts count against the per-key rate limit.
 
-- `x-key-id`
-- `x-timestamp` (unix seconds)
-- `x-signature`
+## Configuration
 
-Signature:
+All config comes from the repo-root `.env`.
 
-- `hex(hmac_sha256(timestamp_be_u64 + raw_body, secret_for_key_id))`
+| Variable | Default | Notes |
+|---|---|---|
+| `ENGINE_HMAC_KEYS_JSON` | — | Required. JSON map of key ID → secret |
+| `ENGINE_DB_PATH` | `apps/engine/data/contacts.sqlite` | |
+| `ENGINE_HOST` | `localhost` | |
+| `ENGINE_PORT` | `3001` | |
+| `ENGINE_HMAC_MAX_SKEW_SECS` | — | Timestamp skew tolerance |
+| `ENGINE_RATE_LIMIT_PER_KEY` | — | Max requests per key per window |
+| `ENGINE_MAX_LIMIT` | — | Upper bound on `limit` in search requests |
 
-Auth is validated before query execution. Failed auth and search attempts are rate-limited per key. Error-to-HTTP mapping is in [`src/errors/mod.rs`](src/errors/mod.rs). Connection setup is in [`src/storage/sqlite/connection.rs`](src/storage/sqlite/connection.rs). Query entrypoints are split across exact, text, and enriched search files under [`src/storage/sqlite/queries/`](src/storage/sqlite/queries/).
+## Running
 
-Validation commands are `bun run test:engine` and `bun run check:engine`. A practical first read order is [`src/main.rs`](src/main.rs), [`src/api/handlers.rs`](src/api/handlers.rs), [`src/domain/search_service.rs`](src/domain/search_service.rs), [`src/storage/sqlite/schema_guard.rs`](src/storage/sqlite/schema_guard.rs), [`src/storage/sqlite/queries/common.rs`](src/storage/sqlite/queries/common.rs), [`src/security/hmac.rs`](src/security/hmac.rs), and [`tests/api_search.rs`](tests/api_search.rs).
+The SQLite file must exist before the engine starts. If you haven't run the pipeline yet:
+
+```sh
+bun run pipeline:refresh
+```
+
+Then start the engine:
+
+```sh
+bun run dev:engine
+```
+
+## Validation
+
+```sh
+bun run check:engine
+bun run test:engine
+```
