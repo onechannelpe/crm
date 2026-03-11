@@ -1,28 +1,25 @@
 import { createAsync, useNavigate, useParams } from "@solidjs/router";
-import { createEffect, createSignal, For, Show } from "solid-js";
+import { createEffect, createMemo, createSignal, For, Show } from "solid-js";
 
 import {
   submitSalesRecord,
   updateSalesRecordDraft,
 } from "~/actions/sales-records";
+import { AddressFields } from "~/components/features/sales/address-fields";
+import { ClientFields } from "~/components/features/sales/client-fields";
+import { ProductLineEditor } from "~/components/features/sales/product-line-editor";
 import { useToast } from "~/components/feedback/toast-provider";
 import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
-import { Input } from "~/components/ui/input/input";
-import { Select } from "~/components/ui/input/select";
 import { Textarea } from "~/components/ui/input/textarea";
 import { getErrorMessage } from "~/lib/errors";
 import {
   salesRecordFixContextQuery,
   salesRecordProductsQuery,
 } from "~/lib/queries/sales-records";
+import { useSalesRecordForm } from "~/lib/sales/use-sales-record-form";
 
 import styles from "../../edit-sale-page.module.css";
-
-interface ProductLine {
-  productId: number;
-  quantity: number;
-}
 
 export default function FixSalePage() {
   const params = useParams();
@@ -31,48 +28,38 @@ export default function FixSalePage() {
   const [loading, setLoading] = createSignal(false);
   const [fixNotes, setFixNotes] = createSignal("");
 
-  const [ruc, setRuc] = createSignal("");
-  const [companyName, setCompanyName] = createSignal("");
-  const [contactName, setContactName] = createSignal("");
-  const [dni, setDni] = createSignal("");
-  const [phone, setPhone] = createSignal("");
-  const [installationAddress, setInstallationAddress] = createSignal("");
-  const [billingAddress, setBillingAddress] = createSignal("");
-  const [referenceAddress, setReferenceAddress] = createSignal("");
-  const [selectedProductId, setSelectedProductId] = createSignal("");
-  const [selectedProductQty, setSelectedProductQty] = createSignal("1");
-  const [productLines, setProductLines] = createSignal<ProductLine[]>([]);
+  const form = useSalesRecordForm();
+  const { showToast } = useToast();
 
   const fixContext = createAsync(() => salesRecordFixContextQuery(noteId()));
   const currentProducts = createAsync(() => salesRecordProductsQuery(), {
     initialValue: [],
   });
-  const { showToast } = useToast();
 
   createEffect(() => {
     const context = fixContext();
     if (!context) return;
 
-    setRuc(context.client?.ruc ?? "");
-    setCompanyName(context.client?.companyName ?? "");
-    setContactName(context.client?.contactName ?? "");
-    setDni(context.client?.dni ?? "");
-    setPhone(context.client?.phones[0] ?? "");
+    form.setRuc(context.client?.ruc ?? "");
+    form.setCompanyName(context.client?.companyName ?? "");
+    form.setContactName(context.client?.contactName ?? "");
+    form.setDni(context.client?.dni ?? "");
+    form.setPhone(context.client?.phones[0] ?? "");
 
-    const installation = context.addresses.find(
-      (address) => address.addressType === "installation",
+    form.setInstallationAddress(
+      context.addresses.find((a) => a.addressType === "installation")
+        ?.fullText ?? "",
     );
-    const billing = context.addresses.find(
-      (address) => address.addressType === "billing",
+    form.setBillingAddress(
+      context.addresses.find((a) => a.addressType === "billing")?.fullText ??
+        "",
     );
-    const reference = context.addresses.find(
-      (address) => address.addressType === "reference",
+    form.setReferenceAddress(
+      context.addresses.find((a) => a.addressType === "reference")?.fullText ??
+        "",
     );
-    setInstallationAddress(installation?.fullText ?? "");
-    setBillingAddress(billing?.fullText ?? "");
-    setReferenceAddress(reference?.fullText ?? "");
 
-    setProductLines(
+    form.setProductLines(
       context.products.map((line) => ({
         productId: line.id,
         quantity: line.quantity,
@@ -80,36 +67,10 @@ export default function FixSalePage() {
     );
   });
 
-  const canResubmit = () => {
+  const canResubmit = createMemo(() => {
     const status = fixContext()?.status;
     return status === "rejected" || status === "draft";
-  };
-
-  function handleAddProductLine() {
-    const productId = Number(selectedProductId());
-    const quantity = Number(selectedProductQty());
-    if (!productId || Number.isNaN(productId)) {
-      showToast("error", "Selecciona un producto");
-      return;
-    }
-    if (!quantity || Number.isNaN(quantity) || quantity < 1) {
-      showToast("error", "La cantidad debe ser al menos 1");
-      return;
-    }
-    if (productLines().some((line) => line.productId === productId)) {
-      showToast("error", "Este producto ya está en la lista");
-      return;
-    }
-    setProductLines((prev) => [...prev, { productId, quantity }]);
-    setSelectedProductId("");
-    setSelectedProductQty("1");
-  }
-
-  function handleRemoveProductLine(productId: number) {
-    setProductLines((prev) =>
-      prev.filter((line) => line.productId !== productId),
-    );
-  }
+  });
 
   async function handleResubmit(e: Event) {
     e.preventDefault();
@@ -117,16 +78,9 @@ export default function FixSalePage() {
       showToast("error", "Describe las correcciones realizadas");
       return;
     }
-    if (!companyName().trim() || !contactName().trim() || !dni().trim()) {
-      showToast("error", "Empresa, contacto y DNI son obligatorios");
-      return;
-    }
-    if (!installationAddress().trim()) {
-      showToast("error", "La dirección de instalación es obligatoria");
-      return;
-    }
-    if (productLines().length < 1) {
-      showToast("error", "Se require al menos un producto");
+    const validationError = form.validateForSubmit();
+    if (validationError) {
+      showToast("error", validationError);
       return;
     }
 
@@ -135,62 +89,9 @@ export default function FixSalePage() {
       await updateSalesRecordDraft(
         noteId(),
         {
-          client: {
-            ruc: ruc().trim() || null,
-            companyName: companyName().trim(),
-            contactName: contactName().trim(),
-            dni: dni().trim(),
-            phones: phone().trim() ? [phone().trim()] : [],
-            engineMatchId: null,
-            completenessScore: 0,
-          },
-          addresses: [
-            {
-              addressType: "installation",
-              fullText: installationAddress().trim(),
-              department: null,
-              province: null,
-              district: null,
-              ubigeo: null,
-              latitude: null,
-              longitude: null,
-              isPrimary: true,
-            },
-            ...(billingAddress().trim()
-              ? [
-                  {
-                    addressType: "billing" as const,
-                    fullText: billingAddress().trim(),
-                    department: null,
-                    province: null,
-                    district: null,
-                    ubigeo: null,
-                    latitude: null,
-                    longitude: null,
-                    isPrimary: false,
-                  },
-                ]
-              : []),
-            ...(referenceAddress().trim()
-              ? [
-                  {
-                    addressType: "reference" as const,
-                    fullText: referenceAddress().trim(),
-                    department: null,
-                    province: null,
-                    district: null,
-                    ubigeo: null,
-                    latitude: null,
-                    longitude: null,
-                    isPrimary: false,
-                  },
-                ]
-              : []),
-          ],
-          products: productLines().map((line) => ({
-            productId: line.productId,
-            quantity: line.quantity,
-          })),
+          client: form.buildClientPayload(),
+          addresses: form.buildAddressPayload(),
+          products: form.buildProductPayload(),
         },
         fixNotes().trim(),
       );
@@ -207,168 +108,74 @@ export default function FixSalePage() {
   return (
     <AppPage width="medium">
       <Show when={fixContext()}>
-        <form
-          onSubmit={(e) => {
-            void handleResubmit(e);
-          }}
-        >
-          <div class={styles.panelPadded}>
-            <div class={styles.formBlock}>
-              <h2 class={styles.blockTitle}>Corrección del cliente</h2>
-              <Input
-                label="RUC"
-                value={ruc()}
-                onInput={(e) => setRuc(e.currentTarget.value)}
-              />
-              <Input
-                label="Empresa"
-                value={companyName()}
-                onInput={(e) => setCompanyName(e.currentTarget.value)}
-                required
-              />
-              <Input
-                label="Contacto"
-                value={contactName()}
-                onInput={(e) => setContactName(e.currentTarget.value)}
-                required
-              />
-              <Input
-                label="DNI"
-                value={dni()}
-                onInput={(e) => setDni(e.currentTarget.value)}
-                required
-              />
-              <Input
-                label="Teléfono"
-                value={phone()}
-                onInput={(e) => setPhone(e.currentTarget.value)}
-              />
-              <Input
-                label="Dirección de instalación"
-                value={installationAddress()}
-                onInput={(e) => setInstallationAddress(e.currentTarget.value)}
-                required
-              />
-              <Input
-                label="Dirección de facturación (opcional)"
-                value={billingAddress()}
-                onInput={(e) => setBillingAddress(e.currentTarget.value)}
-              />
-              <Input
-                label="Dirección de referencia (optional)"
-                value={referenceAddress()}
-                onInput={(e) => setReferenceAddress(e.currentTarget.value)}
-              />
-            </div>
+        {(context) => (
+          <form onSubmit={(e) => void handleResubmit(e)}>
+            <div class={styles.panelPadded}>
+              <div class={styles.formBlock}>
+                <h2 class={styles.blockTitle}>Corrección del cliente</h2>
+                <ClientFields form={form} />
+              </div>
 
-            <div class={styles.formBlock}>
-              <h2 class={styles.blockTitle}>Corrección de productos</h2>
-              <Select
-                value={selectedProductId()}
-                onInput={(e) => setSelectedProductId(e.currentTarget.value)}
-              >
-                <option value="">Selecciona un producto</option>
-                <For each={currentProducts()}>
-                  {(product) => (
-                    <option value={product.id}>
-                      {product.name} - {product.category}
-                    </option>
-                  )}
-                </For>
-              </Select>
-              <Input
-                type="number"
-                label="Cantidad"
-                value={selectedProductQty()}
-                min="1"
-                onInput={(e) => setSelectedProductQty(e.currentTarget.value)}
-              />
-              <Button
-                type="button"
-                onClick={handleAddProductLine}
-                disabled={!selectedProductId()}
-              >
-                Agregar producto
-              </Button>
-              <Show when={productLines().length > 0}>
-                <ul class={styles.rejectionList}>
-                  <For each={productLines()}>
-                    {(line) => {
-                      const product = () =>
-                        currentProducts().find(
-                          (it) => it.id === line.productId,
-                        );
-                      return (
+              <div class={styles.formBlock}>
+                <h2 class={styles.blockTitle}>Corrección de direcciones</h2>
+                <AddressFields form={form} />
+              </div>
+
+              <div class={styles.formBlock}>
+                <h2 class={styles.blockTitle}>Corrección de productos</h2>
+                <ProductLineEditor
+                  form={form}
+                  products={currentProducts() ?? []}
+                  onError={(msg) => showToast("error", msg)}
+                />
+              </div>
+
+              <Show when={context().attempts.length > 0}>
+                <div class={styles.rejectionBlock}>
+                  <h2 class={styles.blockTitle}>Intentos del back office</h2>
+                  <ul class={styles.rejectionList}>
+                    <For each={context().attempts}>
+                      {(attempt) => (
                         <li class={styles.rejectionItem}>
                           <p class={styles.rejectionField}>
-                            {product()?.name ?? `Product #${line.productId}`}
+                            {attempt.outcome} - {attempt.reviewerName}
                           </p>
                           <p class={styles.rejectionNote}>
-                            Cantidad: {line.quantity}
+                            {attempt.notes ?? "Sin notas"}
                           </p>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            onClick={() =>
-                              handleRemoveProductLine(line.productId)
-                            }
-                          >
-                            Quitar
-                          </Button>
                         </li>
-                      );
-                    }}
-                  </For>
-                </ul>
+                      )}
+                    </For>
+                  </ul>
+                </div>
               </Show>
-            </div>
 
-            <Show when={(fixContext()?.attempts.length ?? 0) > 0}>
-              <div class={styles.rejectionBlock}>
-                <h2 class={styles.blockTitle}>Intentos del back office</h2>
-                <ul class={styles.rejectionList}>
-                  <For each={fixContext()?.attempts ?? []}>
-                    {(attempt) => (
-                      <li class={styles.rejectionItem}>
-                        <p class={styles.rejectionField}>
-                          {attempt.outcome} - {attempt.reviewerName}
-                        </p>
-                        <p class={styles.rejectionNote}>
-                          {attempt.notes ?? "Sin notas"}
-                        </p>
-                      </li>
-                    )}
-                  </For>
-                </ul>
+              <div class={styles.formBlock}>
+                <h2 class={styles.blockTitle}>Correcciones realizadas</h2>
+                <Textarea
+                  label="Notas de corrección"
+                  value={fixNotes()}
+                  onInput={(e) => setFixNotes(e.currentTarget.value)}
+                  rows={4}
+                  required
+                />
               </div>
-            </Show>
 
-            <div class={styles.formBlock}>
-              <h2 class={styles.blockTitle}>Correcciones realizadas</h2>
-              <Textarea
-                label="Notas de corrección"
-                value={fixNotes()}
-                onInput={(e) => setFixNotes(e.currentTarget.value)}
-                rows={4}
-                required
-              />
+              <div class={styles.actions}>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => navigate("/sales/leads")}
+                >
+                  Volver a leads
+                </Button>
+                <Button type="submit" disabled={loading() || !canResubmit()}>
+                  {loading() ? "Enviando..." : "Reenviar para aprobación"}
+                </Button>
+              </div>
             </div>
-
-            <div class={styles.actions}>
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => navigate("/sales/leads")}
-              >
-                Volver a leads
-              </Button>
-              <Button type="submit" disabled={loading() || !canResubmit()}>
-                {loading() ? "Enviando..." : "Reenviar para aprobación"}
-              </Button>
-            </div>
-          </div>
-        </form>
+          </form>
+        )}
       </Show>
     </AppPage>
   );
