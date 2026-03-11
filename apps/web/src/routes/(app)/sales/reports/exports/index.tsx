@@ -36,31 +36,33 @@ export default function SalesExportsPage() {
             void handleRequestExport("csv");
           }}
         >
-          Request CSV
+          Solicitar CSV
         </Button>
         <Button
           onClick={() => {
             void handleRequestExport("xlsx");
           }}
         >
-          Request Excel
+          Solicitar Excel
         </Button>
       </div>
 
       <Show
         when={jobs().length > 0}
-        fallback={<p class={styles.empty}>No exports requested yet.</p>}
+        fallback={
+          <p class={styles.empty}>Aún no hay exportaciones solicitadas.</p>
+        }
       >
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>ID</TableHead>
-              <TableHead>Format</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Rows</TableHead>
-              <TableHead>Requested by</TableHead>
-              <TableHead>Requested at</TableHead>
-              <TableHead>Detail</TableHead>
+              <TableHead>Formato</TableHead>
+              <TableHead>Estado</TableHead>
+              <TableHead>Filas</TableHead>
+              <TableHead>Solicitado por</TableHead>
+              <TableHead>Fecha</TableHead>
+              <TableHead>Detalle</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -74,7 +76,7 @@ export default function SalesExportsPage() {
                   <TableCell>{job.requestedByName}</TableCell>
                   <TableCell>{formatDate(job.requestedAt)}</TableCell>
                   <TableCell>
-                    <A href={`/sales/reports/exports/${job.id}`}>Open</A>
+                    <A href={`/sales/reports/exports/${job.id}`}>Abrir</A>
                   </TableCell>
                 </TableRow>
               )}

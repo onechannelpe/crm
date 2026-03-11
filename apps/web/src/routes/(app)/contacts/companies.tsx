@@ -7,13 +7,12 @@ import {
   For,
   onCleanup,
   onMount,
-  Show,
-  type JSX,
 } from "solid-js";
 import { createStore } from "solid-js/store";
 
 import { useMainDetailPanel } from "~/components/providers/main-detail-panel-provider";
 import { TableCell, TableRow } from "~/components/ui/layout/table";
+import { CollapsedPillList } from "~/features/client-search/collapsed-pill-list";
 import { ContactsSearchLayout } from "~/features/client-search/contacts-search-layout";
 import { createClientSearchController } from "~/features/client-search/controller";
 import { inferCompanySearchType } from "~/features/client-search/display";
@@ -45,47 +44,6 @@ const COLUMNS = [
   { label: "Contactos" },
   { label: "Teléfonos" },
 ];
-const PILL_PAGE_SIZE = 3;
-
-interface CollapsedPillListProps<T> {
-  items: readonly T[];
-  maxVisible?: number;
-  class?: string;
-  onMoreClick?: () => void;
-  renderItem: (item: T) => JSX.Element;
-}
-
-function CollapsedPillList<T>(props: CollapsedPillListProps<T>) {
-  const visibleItems = createMemo(() =>
-    props.items.slice(0, props.maxVisible ?? PILL_PAGE_SIZE),
-  );
-  const hiddenCount = createMemo(() =>
-    Math.max(0, props.items.length - visibleItems().length),
-  );
-
-  return (
-    <div class={`${styles.pillWrap}${props.class ? ` ${props.class}` : ""}`}>
-      <Show
-        when={props.items.length > 0}
-        fallback={<span class={styles.pill}>—</span>}
-      >
-        <For each={visibleItems()}>{(item) => props.renderItem(item)}</For>
-      </Show>
-      <Show when={hiddenCount() > 0}>
-        <button
-          type="button"
-          class={`${styles.pill} ${styles.pillButton}`}
-          onClick={(event) => {
-            event.stopPropagation();
-            props.onMoreClick?.();
-          }}
-        >
-          +{hiddenCount()} more
-        </button>
-      </Show>
-    </div>
-  );
-}
 
 function buildDisplayRows(groups: CompanyGroup[]) {
   return groups.map((company, index) => ({
