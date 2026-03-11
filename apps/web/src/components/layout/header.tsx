@@ -1,5 +1,5 @@
 import { useLocation } from "@solidjs/router";
-import { createMemo, createSignal } from "solid-js";
+import { createMemo, createSignal, onMount } from "solid-js";
 
 import { CommandPalette } from "~/components/features/command-palette/command-palette";
 import { HeaderNotificationsPanel } from "~/components/layout/header-notifications-panel";
@@ -13,6 +13,11 @@ export function Header() {
   const location = useLocation();
   const currentRoute = createMemo(() => getHeaderRoute(location.pathname));
   const [paletteOpen, setPaletteOpen] = createSignal(false);
+  const [modKey, setModKey] = createSignal("Ctrl");
+
+  onMount(() => {
+    if (/Mac/i.test(navigator.platform)) setModKey("⌘");
+  });
 
   useHotkey("Mod+K", () => setPaletteOpen(true));
 
@@ -38,7 +43,7 @@ export function Header() {
               onClick={() => setPaletteOpen(true)}
               aria-label="Abrir lista de comandos"
             >
-              <span class={styles.topbarKbd}>Ctrl</span>
+              <span class={styles.topbarKbd}>{modKey()}</span>
               <span class={styles.topbarKbd}>K</span>
             </button>
             <HeaderNotificationsPanel />
