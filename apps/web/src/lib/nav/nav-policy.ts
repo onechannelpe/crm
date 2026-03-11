@@ -112,15 +112,12 @@ export function getHeaderRoute(pathname: string): HeaderDescriptor {
   const exact = NAV_ROUTES.find((r) => r.href === pathname);
   if (exact?.header) return exact.header;
 
-  const active = NAV_ROUTES.find((r) =>
-    r.activePrefixes?.some(
+  const match = NAV_ROUTES.find((r) =>
+    r.matchPrefixes.some(
       (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
     ),
   );
-  if (active?.header) return active.header;
-
-  const prefix = NAV_ROUTES.find((r) => pathname.startsWith(`${r.href}/`));
-  if (prefix?.header) return prefix.header;
+  if (match?.header) return match.header;
 
   return HEADER_FALLBACK;
 }

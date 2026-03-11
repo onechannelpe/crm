@@ -38,12 +38,13 @@ export interface HeaderConfig {
 export interface NavRoute {
   id: string;
   href: string;
+  /** All URL prefixes that should mark this entry as active. Required and explicit — no implicit fallback to href. */
+  matchPrefixes: string[];
   label: string;
   navLabel?: string;
   icon: RouteIcon;
   header?: HeaderConfig;
   sidebar?: SidebarConfig;
-  activePrefixes?: string[];
 }
 
 export const NAV_ROUTES: NavRoute[] = [
@@ -51,6 +52,7 @@ export const NAV_ROUTES: NavRoute[] = [
   {
     id: "dashboard",
     href: "/dashboard",
+    matchPrefixes: ["/dashboard"],
     label: "Inicio",
     icon: "dashboard",
     header: { label: "Inicio", icon: "dashboard" },
@@ -59,6 +61,7 @@ export const NAV_ROUTES: NavRoute[] = [
   {
     id: "sales-records-new",
     href: "/sales/records/new",
+    matchPrefixes: ["/sales/records/new"],
     label: "Crear venta",
     icon: "new-sale",
     header: { label: "Crear venta", icon: "new-sale" },
@@ -67,6 +70,7 @@ export const NAV_ROUTES: NavRoute[] = [
   {
     id: "schedule",
     href: "/schedule",
+    matchPrefixes: ["/schedule"],
     label: "Agenda",
     navLabel: "Agenda",
     icon: "schedule",
@@ -78,6 +82,7 @@ export const NAV_ROUTES: NavRoute[] = [
   {
     id: "contacts-people",
     href: "/contacts/people",
+    matchPrefixes: ["/contacts/people", "/contacts/companies"],
     label: "Personas",
     navLabel: "Contactos",
     icon: "search",
@@ -91,18 +96,19 @@ export const NAV_ROUTES: NavRoute[] = [
         { href: "/contacts/companies", label: "Empresas", order: 2 },
       ],
     },
-    activePrefixes: ["/contacts/people", "/contacts/companies"],
   },
   {
     id: "contacts-companies",
     href: "/contacts/companies",
+    matchPrefixes: ["/contacts/companies"],
     label: "Empresas",
     icon: "search",
     header: { label: "Empresas", icon: "search" },
   },
   {
     id: "sales",
-    href: "/sales/records/new",
+    href: "/sales/leads",
+    matchPrefixes: ["/sales"],
     label: "Ventas",
     navLabel: "Ventas",
     icon: "sales",
@@ -117,11 +123,11 @@ export const NAV_ROUTES: NavRoute[] = [
         { href: "/sales/reports/exports", label: "Exportar", order: 6 },
       ],
     },
-    activePrefixes: ["/sales", "/dashboard"],
   },
   {
     id: "quota",
     href: "/quota",
+    matchPrefixes: ["/quota"],
     label: "Cuota",
     navLabel: "Cuota",
     icon: "quota",
@@ -133,6 +139,7 @@ export const NAV_ROUTES: NavRoute[] = [
   {
     id: "inventory",
     href: "/inventory",
+    matchPrefixes: ["/inventory"],
     label: "Inventario",
     navLabel: "Inventario",
     icon: "inventory",
@@ -142,6 +149,7 @@ export const NAV_ROUTES: NavRoute[] = [
   {
     id: "catalog",
     href: "/catalog",
+    matchPrefixes: ["/catalog"],
     label: "Catálogo",
     navLabel: "Catálogo",
     icon: "catalog",
@@ -151,6 +159,7 @@ export const NAV_ROUTES: NavRoute[] = [
   {
     id: "team",
     href: "/team",
+    matchPrefixes: ["/team"],
     label: "Equipo",
     navLabel: "Equipo",
     icon: "team",
@@ -164,13 +173,13 @@ export const NAV_ROUTES: NavRoute[] = [
         { href: "/team/invite", label: "Invitaciones", order: 2 },
       ],
     },
-    activePrefixes: ["/team"],
   },
 
   // ── Secondary › Administración ────────────────────────────────────────────
   {
     id: "audit",
     href: "/audit/observability",
+    matchPrefixes: ["/audit"],
     label: "Auditoría",
     navLabel: "Auditoría",
     icon: "audit",
@@ -185,13 +194,13 @@ export const NAV_ROUTES: NavRoute[] = [
         { href: "/audit/log", label: "Registro", order: 3 },
       ],
     },
-    activePrefixes: ["/audit"],
   },
 
   // ── Header-only routes (no sidebar entry) ────────────────────────────────
   {
     id: "leads",
     href: "/sales/leads",
+    matchPrefixes: ["/sales/leads"],
     label: "Prospectos",
     icon: "leads",
     header: { label: "Prospectos", icon: "leads" },
@@ -199,6 +208,7 @@ export const NAV_ROUTES: NavRoute[] = [
   {
     id: "sales-confirmed",
     href: "/sales/confirmed",
+    matchPrefixes: ["/sales/confirmed"],
     label: "Ventas confirmadas",
     icon: "confirmed",
     header: { label: "Ventas confirmadas", icon: "confirmed" },
@@ -206,6 +216,7 @@ export const NAV_ROUTES: NavRoute[] = [
   {
     id: "sales-confirmations",
     href: "/sales/confirmations",
+    matchPrefixes: ["/sales/confirmations"],
     label: "Cola de confirmaciones",
     icon: "review",
     header: { label: "Cola de confirmaciones", icon: "review" },
@@ -213,6 +224,7 @@ export const NAV_ROUTES: NavRoute[] = [
   {
     id: "sales-exports",
     href: "/sales/reports/exports",
+    matchPrefixes: ["/sales/reports/exports"],
     label: "Exportaciones",
     icon: "confirmed",
     header: { label: "Exportaciones", icon: "confirmed" },
@@ -220,6 +232,7 @@ export const NAV_ROUTES: NavRoute[] = [
   {
     id: "team-invite",
     href: "/team/invite",
+    matchPrefixes: ["/team/invite"],
     label: "Invitaciones",
     icon: "team",
     header: { label: "Invitaciones", icon: "team" },
@@ -227,6 +240,7 @@ export const NAV_ROUTES: NavRoute[] = [
   {
     id: "audit-observability",
     href: "/audit/observability",
+    matchPrefixes: ["/audit/observability"],
     label: "Observabilidad",
     icon: "audit",
     header: { label: "Observabilidad", icon: "audit" },
@@ -234,6 +248,7 @@ export const NAV_ROUTES: NavRoute[] = [
   {
     id: "audit-auth",
     href: "/audit/auth",
+    matchPrefixes: ["/audit/auth"],
     label: "Autenticación",
     icon: "audit",
     header: { label: "Autenticación", icon: "audit" },
@@ -241,6 +256,7 @@ export const NAV_ROUTES: NavRoute[] = [
   {
     id: "audit-log",
     href: "/audit/log",
+    matchPrefixes: ["/audit/log"],
     label: "Registro de auditoría",
     icon: "audit",
     header: { label: "Registro de auditoría", icon: "audit" },
@@ -248,6 +264,7 @@ export const NAV_ROUTES: NavRoute[] = [
   {
     id: "profile",
     href: "/settings/profile",
+    matchPrefixes: ["/settings/profile"],
     label: "Perfil",
     icon: "profile",
     header: { label: "Perfil", icon: "profile" },

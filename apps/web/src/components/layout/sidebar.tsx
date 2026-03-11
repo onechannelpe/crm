@@ -117,20 +117,12 @@ export function Sidebar() {
   const role = createMemo(() => currentUser().role);
   const firstName = createMemo(() => currentUser().names);
 
-  const isRouteActive = (route: NavRoute) => {
-    const prefixes = route.activePrefixes;
-    if (prefixes && prefixes.length > 0) {
-      return prefixes.some(
-        (prefix) =>
-          location.pathname === prefix ||
-          location.pathname.startsWith(`${prefix}/`),
-      );
-    }
-    return (
-      location.pathname === route.href ||
-      location.pathname.startsWith(`${route.href}/`)
+  const isRouteActive = (route: NavRoute) =>
+    route.matchPrefixes.some(
+      (prefix) =>
+        location.pathname === prefix ||
+        location.pathname.startsWith(`${prefix}/`),
     );
-  };
 
   const quickItems = createMemo(() => getSidebarRoutes(role(), "primary"));
   const workspaceGroups = createMemo(() =>
