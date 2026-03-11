@@ -1,30 +1,16 @@
 # Engine
 
-Rust/Axum read-only search API over SQLite (`contacts.sqlite`). Use this README for runtime and API behavior. Data-generation workflows belong to [pipeline docs](../pipeline/).
+Rust/Axum search API over the published SQLite dataset. The process reads `contacts.sqlite`, validates authenticated requests, and serves `/v1/health` and `/v1/search`.
 
-## What it does
+Startup begins in [`src/main.rs`](src/main.rs). The binary loads the repo-root `.env`, loads config from [`src/config/mod.rs`](src/config/mod.rs), checks that the SQLite file exists, builds the read-only connection pool, validates schema and projection-contract expectations in [`src/storage/sqlite/schema_guard.rs`](src/storage/sqlite/schema_guard.rs), constructs `AppState`, builds the router in [`src/api/router.rs`](src/api/router.rs), and starts the listener.
 
-- Serves authenticated search queries against serving tables in SQLite.
-- Validates inputs and enforces per-key rate limits.
-- Exposes data-build metadata from `_pipeline_build` through health checks.
-
-Implementation entry points:
-
-- [apps/engine/src/main.rs](src/main.rs)
-- [apps/engine/src/api/handlers.rs](src/api/handlers.rs)
-- [apps/engine/src/domain/search_service.rs](src/domain/search_service.rs)
-- [apps/engine/src/storage/sqlite/schema_guard.rs](src/storage/sqlite/schema_guard.rs)
-- [apps/engine/src/storage/sqlite/queries/](src/storage/sqlite/queries/)
-
-## Local workflow
-
-Refresh DB snapshot first:
+Refresh the SQLite dataset before starting the server:
 
 ```sh
 bun run pipeline:refresh
 ```
 
-Run engine:
+Start the server:
 
 ```sh
 bun run dev:engine
@@ -32,16 +18,18 @@ bun run dev:engine
 
 If `contacts.sqlite` changes on disk, restart engine so the process picks up the new snapshot.
 
-## API contract
+The request path for `POST /v1/search` starts in [`src/api/handlers.rs`](src/api/handlers.rs). The handler requires the auth headers, verifies HMAC signatures through [`src/security/hmac.rs`](src/security/hmac.rs), applies auth-failure rate limiting and search rate limiting through [`src/security/rate_limit.rs`](src/security/rate_limit.rs), parses the JSON body, and calls [`src/domain/search_service.rs`](src/domain/search_service.rs). `SearchService` validates input by search type and dispatches to the SQLite query layer under [`src/storage/sqlite/queries/`](src/storage/sqlite/queries/). The health handler reads build metadata directly from SQLite and returns `degraded` when the projection is unavailable.
 
-Endpoints:
+Configuration is loaded from the root `.env` through [`src/config/mod.rs`](src/config/mod.rs). `ENGINE_HMAC_KEYS_JSON` is required. Local defaults are `ENGINE_DB_PATH=apps/engine/data/contacts.sqlite`, `ENGINE_HOST=localhost`, and `ENGINE_PORT=3001`. Limit settings are `ENGINE_HMAC_MAX_SKEW_SECS`, `ENGINE_RATE_LIMIT_PER_KEY`, and `ENGINE_MAX_LIMIT`.
+
+HTTP surface:
 
 ```http
 GET  /v1/health
 POST /v1/search
 ```
 
-`POST /v1/search` request body ([contract](src/api/contracts.rs)):
+`POST /v1/search` accepts this body shape from [`src/api/contracts.rs`](src/api/contracts.rs):
 
 ```json
 {
@@ -59,9 +47,7 @@ POST /v1/search
 
 `GET /v1/health` includes build metadata when available (`build_id`, `built_at`, `rows`).
 
-## Authentication and limits
-
-Required headers for `POST /v1/search`:
+`POST /v1/search` requires these headers:
 
 - `x-key-id`
 - `x-timestamp` (unix seconds)
@@ -71,23 +57,6 @@ Signature:
 
 - `hex(hmac_sha256(timestamp_be_u64 + raw_body, secret_for_key_id))`
 
-Auth is validated before query execution. Failed auth/search attempts are rate-limited per key (see [HMAC verifier](src/security/hmac.rs) and [rate limiter](src/security/rate_limit.rs)).
+Auth is validated before query execution. Failed auth and search attempts are rate-limited per key. Error-to-HTTP mapping is in [`src/errors/mod.rs`](src/errors/mod.rs). Connection setup is in [`src/storage/sqlite/connection.rs`](src/storage/sqlite/connection.rs). Query entrypoints are split across exact, text, and enriched search files under [`src/storage/sqlite/queries/`](src/storage/sqlite/queries/).
 
-## Configuration
-
-Environment is read from root [.env.example](../../.env.example) keys via [config loader](src/config/mod.rs).
-
-- `ENGINE_HMAC_KEYS_JSON` (required)
-- `ENGINE_DB_PATH` (default `apps/engine/data/contacts.sqlite`)
-- `ENGINE_HOST` (default `localhost`)
-- `ENGINE_PORT` (default `3001`)
-- `ENGINE_HMAC_MAX_SKEW_SECS` (default `60`)
-- `ENGINE_RATE_LIMIT_PER_KEY` (default `600`)
-- `ENGINE_MAX_LIMIT` (default `100`)
-
-## Verification
-
-```sh
-bun run test:engine
-bun run check:engine
-```
+Validation commands are `bun run test:engine` and `bun run check:engine`. A practical first read order is [`src/main.rs`](src/main.rs), [`src/api/handlers.rs`](src/api/handlers.rs), [`src/domain/search_service.rs`](src/domain/search_service.rs), [`src/storage/sqlite/schema_guard.rs`](src/storage/sqlite/schema_guard.rs), [`src/storage/sqlite/queries/common.rs`](src/storage/sqlite/queries/common.rs), [`src/security/hmac.rs`](src/security/hmac.rs), and [`tests/api_search.rs`](tests/api_search.rs).

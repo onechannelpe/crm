@@ -1,84 +1,48 @@
 # pipeline
 
-A Rust pipeline that transforms raw contact sources into SQLite datasets consumed by [engine](../engine/).
+A Rust pipeline that reads source files, writes normalized and staged artifacts, and publishes the SQLite dataset consumed by [../engine/](../engine/).
 
-## How it works
+Command parsing starts in [`src/cli.rs`](src/cli.rs). The binary entrypoint is [`src/main.rs`](src/main.rs). Orchestration is in [`src/pipeline.rs`](src/pipeline.rs). Runtime paths and profile resolution are in [`src/config/runtime.rs`](src/config/runtime.rs) and [`pipeline.toml`](pipeline.toml).
 
-Pipeline execution follows a fixed lifecycle:
-
-1. Verify manifest and contracts, then resolve runtime profile and output paths ([pipeline runner](src/pipeline.rs), [manifest verification](src/config/manifest.rs), [contract guard](src/contract_guard.rs)).
-2. Ingest enabled sources in priority order; each source goes through shard ingest, merge, and snapshot validation ([sample flow](src/stages/verify/run_sample.rs), [full flow](src/stages/verify/run_full.rs), [ingest helpers](src/stages/verify/helpers.rs)).
-3. Materialize serving tables and run quick existence checks for core tables and projection indexes ([verify helpers](src/stages/verify/helpers.rs), [materialization](src/stages/materialize.rs)).
-4. For publish paths, run quality gates and stamp `_pipeline_build` metadata (`build_id`, `built_at`, `rows`) ([gate](src/stages/gate.rs), [publish flow](src/pipeline.rs)).
-5. Promote atomically into engine DB using `VACUUM INTO`, backup old target as `.prev`, and swap files ([promotion](src/stages/promote.rs)).
-
-Operational artifacts for debugging are written under the run directory (`metadata.json`, phase timings, checkpoints) by [run context](src/stages/bootstrap.rs).
-
-## What it does
-
-- Verifies source manifest and contracts before processing. See [pipeline runner](src/pipeline.rs) and [contract guard](src/contract_guard.rs).
-- Produces sample/full datasets through stage orchestration. See [verify stages](src/stages/verify.rs) and [materialization](src/stages/materialize.rs).
-- Publishes an engine-ready DB with quality gate checks, build metadata, and atomic replacement. See [gate](src/stages/gate.rs), [promotion](src/stages/promote.rs), and [publish flow](src/pipeline.rs).
-
-## Primary workflows
-
-**Refresh engine DB for development (recommended)**
+Refresh the engine dataset for local development:
 
 ```sh
 bun run pipeline:refresh
 ```
 
-Smaller/faster slice:
+Use a smaller sample dataset:
 
 ```sh
 bun run pipeline:refresh:10k
 ```
 
-**Validate normalization only (no publish)**
+Validate normalization without publishing:
 
 ```sh
 bun run pipeline:engine validate --profile quick
-# or
 bun run pipeline:engine validate --profile standard
 ```
 
-**Full ingest and publish (production)**
+Build and promote the full dataset:
 
 ```sh
 bun run pipeline:engine build --profile full
 bun run pipeline:engine promote
 ```
 
-## Inputs, contracts, and runtime config
+The main execution path in [`src/pipeline.rs`](src/pipeline.rs) loads the runtime config, validates the source manifest and contracts, resolves a profile, and dispatches to one of the stage runners. Sample and full verification flows live in [`src/stages/verify/run_sample.rs`](src/stages/verify/run_sample.rs) and [`src/stages/verify/run_full.rs`](src/stages/verify/run_full.rs). The stage helper layer in [`src/stages/verify/helpers.rs`](src/stages/verify/helpers.rs) runs enabled sources through shard ingest, merge, snapshot validation, serving-table materialization, quick checks, and checkpoint/timing writes.
 
-- Source manifest and raw-file paths: [apps/pipeline/data/mappings/source-manifest.json](data/mappings/source-manifest.json)
-- Runtime profiles and output paths: [apps/pipeline/pipeline.toml](pipeline.toml)
-- Canonical contract: [contracts/canonical-contract.json](../../contracts/canonical-contract.json)
-- Source contract: [contracts/source-contract.json](../../contracts/source-contract.json)
-- Search projection contract: [contracts/search-projection.json](../../contracts/search-projection.json)
+Configuration and input definitions are in [`pipeline.toml`](pipeline.toml), [`data/mappings/source-manifest.json`](data/mappings/source-manifest.json), [`../../contracts/canonical-contract.json`](../../contracts/canonical-contract.json), [`../../contracts/source-contract.json`](../../contracts/source-contract.json), and [`../../contracts/search-projection.json`](../../contracts/search-projection.json).
 
-Validate manifest + contracts before running heavy workflows:
+Check manifests and contracts before longer runs:
 
 ```sh
 bun run pipeline:verify-manifest
 ```
 
-## Output artifacts and guarantees
+`refresh` is a sample build followed by publish. `promote` runs the quality gate in [`src/stages/gate.rs`](src/stages/gate.rs), stamps `_pipeline_build` metadata into the staged database, and atomically replaces the target database through [`src/stages/promote.rs`](src/stages/promote.rs). Output paths are `data/build/bench/` for sample and benchmark outputs, `data/build/staged/` for staged SQLite files, `data/normalized/` for normalized diagnostics, and [`../engine/data/contacts.sqlite`](../engine/data/contacts.sqlite) for the published engine dataset. The previous published DB is kept as `.prev`.
 
-- Sample/benchmark outputs: [apps/pipeline/data/build/bench/](data/build/bench/)
-- Full staged output: [apps/pipeline/data/build/staged/](data/build/staged/)
-- Engine publish target: [apps/engine/data/contacts.sqlite](../engine/data/contacts.sqlite)
-- Normalized diagnostics: [apps/pipeline/data/normalized/](data/normalized/)
-
-`refresh`/`promote` guarantees when successful:
-
-- quality gate passed,
-- `_pipeline_build` metadata stamped (`build_id`, `built_at`, `rows`),
-- atomic publish with previous DB backup (`.prev`) handled by promotion path.
-
-## CLI command map
-
-Entrypoint: `bun run pipeline:engine -- <command>` ([CLI parser](src/cli.rs))
+CLI command map for `bun run pipeline:engine -- <command>`:
 
 - `refresh --slice 10k|100k|100k-osiptel [--to <path>]`
 - `verify-manifest`
@@ -87,3 +51,5 @@ Entrypoint: `bun run pipeline:engine -- <command>` ([CLI parser](src/cli.rs))
 - `bench-map --profile quick|standard|heavy`
 - `build --profile full`
 - `promote [--from <path>] [--to <path>]`
+
+A practical first read order is [`src/pipeline.rs`](src/pipeline.rs), [`src/cli.rs`](src/cli.rs), [`src/stages/verify/helpers.rs`](src/stages/verify/helpers.rs), [`src/stages/shard_ingest/run.rs`](src/stages/shard_ingest/run.rs), [`src/stages/merge/session.rs`](src/stages/merge/session.rs), [`src/stages/materialize.rs`](src/stages/materialize.rs), and [`src/db/schema.rs`](src/db/schema.rs).

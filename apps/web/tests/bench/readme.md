@@ -1,3 +1,7 @@
+# Benchmarks
+
+Benchmark suites for `apps/web`. Run them with `bun run --cwd apps/web test:perf`. Each row maps a benchmark domain to its action bench files and component bench files.
+
 | Domain                     | Actions                           | Components                                                 |
 | -------------------------- | --------------------------------- | ---------------------------------------------------------- |
 | `auth/`                    | `authenticatePasswordLogin`       | `buildThrottleKeys`, `hashAuthKey`                         |
