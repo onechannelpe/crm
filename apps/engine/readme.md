@@ -1,25 +1,23 @@
 # engine
 
-The engine does one thing: take a signed search request and return rows from the contacts dataset. It doesn't write, it doesn't migrate, it doesn't own its data. That simplicity is intentional — keeping search isolated as a read-only Rust process means it can't become a bottleneck or a source of data corruption, and it's trivially restartable when the pipeline promotes a new snapshot.
+## About
 
-## The request path
+The engine serves authenticated search requests over the published SQLite dataset.
 
-A `POST /v1/search` comes in, gets authenticated via HMAC in [`src/security/hmac.rs`](src/security/hmac.rs), rate-limited per key in [`src/security/rate_limit.rs`](src/security/rate_limit.rs), then handed to [`src/domain/search_service.rs`](src/domain/search_service.rs). The service validates the search type and dispatches to the right query under [`src/storage/sqlite/queries/`](src/storage/sqlite/queries/) — exact lookups (DNI, RUC, phone), text search (names), and enriched phone search each have their own file. Results come back and go out. That's the whole path.
+Startup begins in [`src/main.rs`](src/main.rs). The binary loads the repo root `.env`, loads config from [`src/config/mod.rs`](src/config/mod.rs), checks that the SQLite file exists, builds the read-only connection pool, validates schema and projection-contract expectations in [`src/storage/sqlite/schema_guard.rs`](src/storage/sqlite/schema_guard.rs), constructs `AppState`, builds the router in [`src/api/router.rs`](src/api/router.rs), and starts the listener.
 
-On startup, before the server accepts any connections, [`src/storage/sqlite/schema_guard.rs`](src/storage/sqlite/schema_guard.rs) validates that the SQLite file matches the expected schema and projection contract. If it doesn't, the process exits. Read that file before touching any query code — it's the enforcement layer for the pipeline→engine contract and it will bite you if you skip it.
+The request path for `POST /v1/search` starts in [`src/api/handlers.rs`](src/api/handlers.rs). The handler requires the auth headers, verifies HMAC signatures through [`src/security/hmac.rs`](src/security/hmac.rs), applies auth-failure and search rate limiting through [`src/security/rate_limit.rs`](src/security/rate_limit.rs), parses the JSON body, and calls [`src/domain/search_service.rs`](src/domain/search_service.rs). `SearchService` validates input by search type and dispatches to the SQLite query layer under `src/storage/sqlite/queries/`. The health handler reads build metadata directly from SQLite and returns `degraded` when the projection is unavailable.
 
-The engine doesn't watch `contacts.sqlite` for changes. When the pipeline promotes a new snapshot, restart the process to pick it up.
+The engine reads the SQLite dataset in place. When the pipeline promotes a new snapshot, restart the process to load it.
 
-## HTTP surface
+HTTP surface:
 
-```
+```http
 GET  /v1/health
 POST /v1/search
 ```
 
-`/v1/health` returns build metadata from SQLite (`build_id`, `built_at`, `rows`) and reports `degraded` when the projection is unavailable.
-
-`/v1/search` request body:
+`POST /v1/search` accepts this body:
 
 ```json
 {
@@ -29,41 +27,21 @@ POST /v1/search
 }
 ```
 
-`limit` defaults to `20`, minimum `1`, maximum `ENGINE_MAX_LIMIT`.
+`limit` defaults to `20`, is clamped to a minimum of `1`, and is capped by `ENGINE_MAX_LIMIT`.
 
-Every `/v1/search` request requires three headers:
+Every `POST /v1/search` request requires `x-key-id`, `x-timestamp`, and `x-signature`. The signature format is `hex(hmac_sha256(timestamp_be_u64 + raw_body, secret))`.
 
-| Header | Value |
-|---|---|
-| `x-key-id` | Key identifier |
-| `x-timestamp` | Unix seconds |
-| `x-signature` | `hex(hmac_sha256(timestamp_be_u64 + raw_body, secret))` |
-
-Auth is checked before any query runs. Both auth failures and search attempts count against the per-key rate limit.
-
-## Configuration
-
-All config comes from the repo-root `.env`.
-
-| Variable | Default | Notes |
-|---|---|---|
-| `ENGINE_HMAC_KEYS_JSON` | — | Required. JSON map of key ID → secret |
-| `ENGINE_DB_PATH` | `apps/engine/data/contacts.sqlite` | |
-| `ENGINE_HOST` | `localhost` | |
-| `ENGINE_PORT` | `3001` | |
-| `ENGINE_HMAC_MAX_SKEW_SECS` | — | Timestamp skew tolerance |
-| `ENGINE_RATE_LIMIT_PER_KEY` | — | Max requests per key per window |
-| `ENGINE_MAX_LIMIT` | — | Upper bound on `limit` in search requests |
+Configuration is loaded from the repo root `.env`. `ENGINE_HMAC_KEYS_JSON` is required. Local defaults are `ENGINE_DB_PATH=apps/engine/data/contacts.sqlite`, `ENGINE_HOST=localhost`, and `ENGINE_PORT=3001`. Limit settings are `ENGINE_HMAC_MAX_SKEW_SECS`, `ENGINE_RATE_LIMIT_PER_KEY`, and `ENGINE_MAX_LIMIT`.
 
 ## Running
 
-The SQLite file must exist before the engine starts. If you haven't run the pipeline yet:
+Refresh the SQLite dataset before starting the server:
 
 ```sh
 bun run pipeline:refresh
 ```
 
-Then start the engine:
+Start the engine:
 
 ```sh
 bun run dev:engine
@@ -71,7 +49,13 @@ bun run dev:engine
 
 ## Validation
 
+Validation commands:
+
 ```sh
 bun run check:engine
 bun run test:engine
 ```
+
+## First reads
+
+Start with [`src/main.rs`](src/main.rs), [`src/api/handlers.rs`](src/api/handlers.rs), and [`src/domain/search_service.rs`](src/domain/search_service.rs). Then read [`src/storage/sqlite/schema_guard.rs`](src/storage/sqlite/schema_guard.rs), [`src/storage/sqlite/queries/common.rs`](src/storage/sqlite/queries/common.rs), [`src/security/hmac.rs`](src/security/hmac.rs), and [`tests/api_search.rs`](tests/api_search.rs).
