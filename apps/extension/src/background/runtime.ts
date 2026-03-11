@@ -37,6 +37,29 @@ import { refreshSyncSession, sendSyncJob } from "@/src/services/sync";
 
 const ALARM_SYNC = "crm.sync" as const;
 
+interface BroadcastPort {
+  postMessage(message: RuntimeResponse): void;
+  onDisconnect: { addListener(callback: () => void): void };
+}
+
+const connectedPorts = new Set<BroadcastPort>();
+
+function broadcast(state: ExtensionState): void {
+  const response = toSuccessResponse(state);
+  for (const port of connectedPorts) {
+    try {
+      port.postMessage(response);
+    } catch {
+      connectedPorts.delete(port);
+    }
+  }
+}
+
+async function writeAndBroadcast(state: ExtensionState): Promise<void> {
+  await writeState(state);
+  broadcast(state);
+}
+
 function toSuccessResponse(state: ExtensionState): RuntimeResponse {
   return {
     ok: true,
@@ -295,7 +318,7 @@ async function flushQueue(
     };
   }
 
-  await writeState(next);
+  await writeAndBroadcast(next);
   return next;
 }
 
@@ -339,7 +362,7 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
         });
       }
 
-      await writeState(next);
+      await writeAndBroadcast(next);
       void flushQueue(next).catch(() => undefined);
       return toSuccessResponse(next);
     }
@@ -366,7 +389,7 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
         });
         next = enqueueExecutiveStatus(next, "active", connectedAt);
 
-        await writeState(next);
+        await writeAndBroadcast(next);
         void flushQueue(next).catch(() => undefined);
         return toSuccessResponse(next);
       } catch (error: unknown) {
@@ -414,7 +437,7 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
         });
         next = enqueueExecutiveStatus(next, "wrap_up", endedAt);
 
-        await writeState(next);
+        await writeAndBroadcast(next);
         void flushQueue(next).catch(() => undefined);
         return toSuccessResponse(next);
       } catch (error: unknown) {
@@ -437,7 +460,7 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
             stoppedAt: null,
           },
         };
-        await writeState(startingState);
+        await writeAndBroadcast(startingState);
         await ensureOffscreenDocument();
 
         const streamId = await chrome.tabCapture.getMediaStreamId({
@@ -467,7 +490,7 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
           },
         };
 
-        await writeState(next);
+        await writeAndBroadcast(next);
         return toSuccessResponse(next);
       } catch (error: unknown) {
         const next: ExtensionState = {
@@ -478,7 +501,7 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
             error: asErrorMessage(error),
           },
         };
-        await writeState(next);
+        await writeAndBroadcast(next);
         return toErrorResponse(asErrorMessage(error), next);
       }
     }
@@ -500,7 +523,7 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
             error: null,
           },
         };
-        await writeState(stoppingState);
+        await writeAndBroadcast(stoppingState);
 
         const response = await browser.runtime.sendMessage({
           type: "offscreen.recording.stop",
@@ -523,7 +546,7 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
           },
         };
 
-        await writeState(next);
+        await writeAndBroadcast(next);
         return toSuccessResponse(next);
       } catch (error: unknown) {
         const next: ExtensionState = {
@@ -534,7 +557,7 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
             error: asErrorMessage(error),
           },
         };
-        await writeState(next);
+        await writeAndBroadcast(next);
         return toErrorResponse(asErrorMessage(error), next);
       }
     }
@@ -571,7 +594,7 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
         queue: appendJob(reserved.nextState.queue, queueJob),
       };
 
-      await writeState(next);
+      await writeAndBroadcast(next);
       return toSuccessResponse(next);
     }
     case "recording.completed": {
@@ -579,7 +602,7 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
         sessionId: message.sessionId,
         createdAt: message.createdAt,
       });
-      await writeState(next);
+      await writeAndBroadcast(next);
       return toSuccessResponse(next);
     }
     case "sync.flush": {
@@ -597,7 +620,7 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
       };
 
       const cleared = withClearedSyncError(next);
-      await writeState(cleared);
+      await writeAndBroadcast(cleared);
       return toSuccessResponse(cleared);
     }
   }
@@ -647,7 +670,7 @@ async function handleExternalRuntimeMessage(
           },
         };
         const queued = enqueueExecutiveStatus(next, "ready", receivedAt);
-        await writeState(queued);
+        await writeAndBroadcast(queued);
         void flushQueue(queued).catch(() => undefined);
         return toSuccessResponse(queued);
       } catch (error: unknown) {
@@ -715,10 +738,17 @@ export function registerRuntime(): void {
       const state = await readState();
       const next = enqueueHeartbeatIfNeeded(state, Date.now());
       if (next !== state) {
-        await writeState(next);
+        await writeAndBroadcast(next);
       }
       await flushQueue(next);
     }
+  });
+
+  browser.runtime.onConnectExternal.addListener((port) => {
+    const connected = port as unknown as BroadcastPort;
+    connectedPorts.add(connected);
+    connected.onDisconnect.addListener(() => connectedPorts.delete(connected));
+    void readState().then((state) => connected.postMessage(toSuccessResponse(state)));
   });
 
   if (chrome.sidePanel?.setPanelBehavior) {

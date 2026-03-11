@@ -1,13 +1,13 @@
 import { useAction, useNavigate } from "@solidjs/router";
-import { createSignal, onCleanup, onMount, Show } from "solid-js";
+import { createSignal, Show } from "solid-js";
 
 import { LeadList } from "~/components/features/leads/lead-list";
 import { RequestLeadsButton } from "~/components/features/leads/request-leads-button";
 import { useToast } from "~/components/feedback/toast-provider";
 import { AppPage } from "~/components/layout/page";
 import { Badge } from "~/components/ui/display/badge";
+import { createExtensionPortConnection } from "~/lib/extension/port";
 import {
-  getExtensionExecutiveState,
   handoffLeadToExtension,
   isExtensionBridgeConfigured,
   type ExtensionExecutiveState,
@@ -82,32 +82,10 @@ export default function LeadsPage() {
   );
   const requestLeadsAction = useAction(requestLeadsMutation);
   const registerCallAction = useAction(registerCallMutation);
-  const [extensionState, setExtensionState] =
-    createSignal<ExtensionExecutiveState | null>(null);
+  const { state: extensionState, error: extensionError } =
+    createExtensionPortConnection();
   const [extensionLoadingAssignmentId, setExtensionLoadingAssignmentId] =
     createSignal<number | null>(null);
-  const [extensionError, setExtensionError] = createSignal<string | null>(null);
-  let pollIntervalId: number | undefined;
-
-  const refreshExtensionState = async () => {
-    if (!isExtensionBridgeConfigured()) {
-      setExtensionState(null);
-      setExtensionError(
-        "Configura VITE_CRM_EXTENSION_ID para conectar la extensión.",
-      );
-      return;
-    }
-
-    const response = await getExtensionExecutiveState();
-    if (!response.ok) {
-      setExtensionState(null);
-      setExtensionError(response.error);
-      return;
-    }
-
-    setExtensionState(response.executiveState);
-    setExtensionError(null);
-  };
 
   const handleRequestLeads = async () => {
     const result = await requestLeadsAction();
@@ -158,11 +136,9 @@ export default function LeadsPage() {
         .json()
         .catch(() => null)) as unknown;
       setExtensionLoadingAssignmentId(null);
-      setExtensionState(null);
       const message =
         readErrorMessage(body) ??
         "No se pudo autorizar el handoff a la extensión.";
-      setExtensionError(message);
       showToast("error", message);
       return;
     }
@@ -170,10 +146,7 @@ export default function LeadsPage() {
     const handoffTokenBody = (await handoffTokenResponse.json()) as unknown;
     if (!isHandoffTokenResponse(handoffTokenBody)) {
       setExtensionLoadingAssignmentId(null);
-      setExtensionState(null);
-      const message = "El servidor devolvió un handoff inválido.";
-      setExtensionError(message);
-      showToast("error", message);
+      showToast("error", "El servidor devolvió un handoff inválido.");
       return;
     }
 
@@ -183,29 +156,12 @@ export default function LeadsPage() {
     setExtensionLoadingAssignmentId(null);
 
     if (!response.ok) {
-      setExtensionState(response.executiveState ?? null);
-      setExtensionError(response.error);
       showToast("error", response.error);
       return;
     }
 
-    setExtensionState(response.executiveState);
-    setExtensionError(null);
     showToast("success", "Cliente enviado a la extensión.");
   };
-
-  onMount(() => {
-    void refreshExtensionState();
-    pollIntervalId = window.setInterval(() => {
-      void refreshExtensionState();
-    }, 4000);
-  });
-
-  onCleanup(() => {
-    if (pollIntervalId) {
-      window.clearInterval(pollIntervalId);
-    }
-  });
 
   return (
     <AppPage>
