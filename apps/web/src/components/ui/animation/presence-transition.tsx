@@ -6,14 +6,14 @@ import {
   type JSX,
 } from "solid-js";
 
-const DURATION_MS = 150;
+const DURATION_MS = 300;
 
 interface PresenceTransitionProps {
   show: boolean;
   children: JSX.Element;
 }
 
-//Fades children in on mount and out before unmounting
+// Fades children in on mount and out before unmounting.
 export function PresenceTransition(props: PresenceTransitionProps) {
   const [mounted, setMounted] = createSignal(props.show);
   let el: HTMLDivElement | undefined;

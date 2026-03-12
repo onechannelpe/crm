@@ -2,7 +2,7 @@
   position: fixed;
   inset: 0;
   z-index: calc(var(--z-index-dialog, 50) + 10);
-  background: color-mix(in oklab, black 36%, transparent);
+  background: color-mix(in oklab, black 72%, transparent);
   display: grid;
   place-items: center;
   padding: 16px;

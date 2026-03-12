@@ -34,6 +34,7 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
       <PresenceTransition show={props.isOpen}>
         <div
           class={styles.overlay}
+          role="presentation"
           onClick={(e) => {
             if (e.target === e.currentTarget && !props.loading) props.onClose();
           }}
