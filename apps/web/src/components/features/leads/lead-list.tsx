@@ -127,7 +127,28 @@ export const LeadList: Component<LeadListProps> = (props) => {
                       <User size={14} />
                     </span>
                     <div class={styles.leadInfo}>
-                      <p class={styles.leadName}>{lead.name}</p>
+                      <div style={{ display: "flex", "align-items": "center", gap: "6px" }}>
+                        <p class={styles.leadName}>{lead.name}</p>
+                        <Show when={props.extensionState?.assignmentId === lead.assignmentId}>
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              "align-items": "center",
+                              "justify-content": "center",
+                              width: "16px",
+                              height: "16px",
+                              "border-radius": "50%",
+                              "background-color": "hsl(210, 100%, 50%)",
+                              color: "white",
+                              "font-size": "10px",
+                              "font-weight": "600",
+                            }}
+                            title="Active in extension"
+                          >
+                            ◉
+                          </span>
+                        </Show>
+                      </div>
                       <p class={styles.leadMeta}>DNI {lead.dni}</p>
                     </div>
                   </div>

@@ -2,8 +2,11 @@ import { useLocation } from "@solidjs/router";
 import { createMemo, createSignal, onMount } from "solid-js";
 
 import { CommandPalette } from "~/components/features/command-palette/command-palette";
+import { ExtensionStatusIndicator } from "~/components/features/extension/extension-status-indicator";
 import { HeaderNotificationsPanel } from "~/components/layout/header-notifications-panel";
 import { ICON_BY_ROUTE } from "~/components/layout/route-icons";
+import { createExtensionPortConnection } from "~/lib/extension/port";
+import { useExtensionUI } from "~/lib/extension/extension-ui-context";
 import { useHotkey } from "~/lib/hotkey/use-hotkey";
 import { getHeaderRoute } from "~/lib/nav/nav-policy";
 
@@ -14,6 +17,9 @@ export function Header() {
   const currentRoute = createMemo(() => getHeaderRoute(location.pathname));
   const [paletteOpen, setPaletteOpen] = createSignal(false);
   const [modKey, setModKey] = createSignal("Ctrl");
+  const { state: extensionState, error: extensionError } =
+    createExtensionPortConnection();
+  const { setSidebarOpen } = useExtensionUI();
 
   onMount(() => {
     if (/Mac/i.test(navigator.platform)) setModKey("⌘");
@@ -46,6 +52,11 @@ export function Header() {
               <span class={styles.topbarKbd}>{modKey()}</span>
               <span class={styles.topbarKbd}>K</span>
             </button>
+            <ExtensionStatusIndicator
+              extensionState={extensionState}
+              extensionError={extensionError}
+              onOpen={() => setSidebarOpen(true)}
+            />
             <HeaderNotificationsPanel />
           </div>
         </div>
