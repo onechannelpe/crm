@@ -4,10 +4,11 @@
 
 - Prefer retrieval-led reasoning over pre-training for libraries/frameworks. Use MCP context7 for current docs before writing code.
 - Follow framework conventions—do not invent workarounds.
-- Implement ONLY what requested (no extra features, no improvements). If request conflicts with architecture or standards, state concern and suggest alternatives.
+- Implement ONLY what requested. If the request adds coupling, duplication, special cases, or workaround-driven design, state the concern and propose the cleaner design first.
 - If ambiguous, ask up to 2 clarifying questions OR choose simplest valid interpretation.
 - Keep responses brief: 3-6 sentences for typical answers. For multi-step work: short overview + ≤5 bullets (what changed, where, next steps).
 - State what you verified vs what you're inferring. If uncertain about line numbers or API details, say so.
+- Do not use em dashes in comments, logs, docs, commit messages, or user-facing strings.
 
 ## WHEN implementing
 
@@ -20,17 +21,24 @@
   - Check "not OK" first to avoid nesting
   - Early return or throw immediately for invalid states
   - Keep happy path as straight-line code at the end
-- TypeScript: Result<T,E> for service-layer errors. Check isErr() before throw/return
-- Rust: Result<T,E> with ?. Validate early in handlers
+- For TypeScript services: return `Result<T,E>` and check `isErr()` before throw or return.
+- For Rust handlers and services: validate early and propagate failures with `?`.
+- Implement the intended design fully. Do not stop at scaffolding, placeholder phases, or partial rewrites.
+- After implementation, reread the touched files and confirm the work is complete, coherent, and free of temporary compatibility code, duplicate paths, and partial renames.
 
 ## WHEN debugging
 
 1. Reproduce: confirm current behavior
-2. Isolate: add logging/breakpoints, narrow failing component
+2. Isolate: narrow the failing component and list the possible causes
 3. Read involved code paths
-4. Fix only after understanding root cause
+4. Add logs or checks where they can confirm or reject each possible cause
+5. Fix only after understanding root cause
+6. After finding the cause, read beyond the local file and decide whether the problem is local, at a boundary, or architectural
+7. If the problem is architectural, fix the design instead of patching the symptom
 
 Do not assume bug from error messages alone.
+Do not choose the quickest patch before checking whether the surrounding design caused the issue.
+For browser-specific issues the agent cannot observe directly, do not guess. Add the needed logs, tell the user what to run, and wait for the resulting console or server logs before fixing.
 
 ## WHEN adding dependencies
 
@@ -40,12 +48,39 @@ Do not assume bug from error messages alone.
 
 ## WHEN writing TypeScript
 
-- Extract types from repo/service returns: `Awaited<ReturnType<typeof repos.foo.bar>>`
-- Use utility types: `Pick<T, K>`, `Omit<T, K>`, `Partial<T>` over manual type redefinition
-- Use `unknown` for external/untrusted data (errors, JSON parsing, API responses); narrow with type predicates `(value: unknown): value is Type`
-- Use `as const` for literal values to enable discriminated unions: `{ status: "ok" as const }`
-- Use `satisfies` for validation without widening: configs, `Record<K, V>` dictionaries, template literals
-- End union/enum `switch` with `satisfies never` for exhaustiveness checks
+1. Read the touched code path and extract types from existing repo or service returns before introducing new types.
+2. Validate external or untrusted data at the boundary. Use `unknown` first, then narrow with type predicates.
+3. Keep service-layer failures in `Result<T,E>`. Check `isErr()` before throw or return.
+4. Use `Pick<T, K>`, `Omit<T, K>`, `Partial<T>`, `as const`, and `satisfies` to preserve inference instead of rebuilding shapes manually.
+5. End union or enum `switch` statements with `satisfies never`.
+
+Failure points:
+
+- Duplicating a type that can be inferred from an existing function.
+- Treating parsed JSON, form data, or caught errors as trusted data.
+- Throwing a service-layer failure that should stay in `Result<T,E>`.
+
+## WHEN writing Rust
+
+1. Read the full handler or service path before changing code.
+2. Validate inputs and auth first. Keep the happy path straight.
+3. Propagate fallible operations with `?` instead of `.unwrap()`.
+4. Keep changes in existing modules unless a new logical boundary is required.
+5. Run `bun run check:engine` after each change.
+
+Failure points:
+
+- Nested validation that hides the happy path.
+- Silent error drops with `let _ =` on fallible operations.
+- Unchecked indexing where `.get()` or iterators fit.
+
+## WHEN writing security-sensitive code
+
+Use retrieval-led reasoning for auth, session, cookie, CSP, OAuth, file upload, SSRF, input validation, logging, and extension security changes. Read the relevant OWASP cheat sheet before changing code in these areas.
+
+<!-- OWASP-DOCS-START -->
+[OWASP Docs]|root:.refs/owasp-cheatsheets|root:{Authentication_Cheat_Sheet,Authorization_Cheat_Sheet,Browser_Extension_Vulnerabilities_Cheat_Sheet,Clickjacking_Defense_Cheat_Sheet,Content_Security_Policy_Cheat_Sheet,Cookie_Theft_Mitigation_Cheat_Sheet,Cross-Site_Request_Forgery_Prevention_Cheat_Sheet,Cross_Site_Scripting_Prevention_Cheat_Sheet,File_Upload_Cheat_Sheet,Forgot_Password_Cheat_Sheet,Input_Validation_Cheat_Sheet,Logging_Cheat_Sheet,OAuth2_Cheat_Sheet,Password_Storage_Cheat_Sheet,Secrets_Management_Cheat_Sheet,Server_Side_Request_Forgery_Prevention_Cheat_Sheet,Session_Management_Cheat_Sheet,Transport_Layer_Security_Cheat_Sheet}
+<!-- OWASP-DOCS-END -->
 
 ## WHEN writing documentation
 
