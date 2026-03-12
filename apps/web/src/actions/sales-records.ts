@@ -6,6 +6,7 @@ import {
   notFoundError,
   validationError,
 } from "~/lib/app-errors";
+import { assertOwnedRecord } from "~/lib/auth/access/ownership";
 import type { Role } from "~/lib/auth/access/rbac";
 import { requirePermission } from "~/lib/auth/access/session";
 import type { ActionSuccess } from "~/lib/contracts/common";
@@ -445,11 +446,12 @@ export async function getSalesRecordFixContext(
 ): Promise<SalesRecordFixContext> {
   const safeRecordId = assertPositiveInt(recordId, "recordId");
   const session = await requirePermission("sales:create");
-  const record = await repos.salesRecords.findById(safeRecordId);
-  if (!record) throw notFoundError("Sales record not found");
-  if (record.executive_user_id !== session.userId) {
-    throw forbiddenError("Not your sales record");
-  }
+  const record = assertOwnedRecord(
+    await repos.salesRecords.findById(safeRecordId),
+    (r) => r.executive_user_id,
+    session,
+    { resourceName: "Sales record" },
+  );
 
   const [client, addresses, products, attempts] = await Promise.all([
     repos.salesRecords.findClientByRecord(safeRecordId),
