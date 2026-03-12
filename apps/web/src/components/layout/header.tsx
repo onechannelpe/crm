@@ -11,6 +11,10 @@ import { getHeaderRoute } from "~/lib/nav/nav-policy";
 
 import styles from "./shell.module.css";
 
+interface ChromeRuntime {
+  sendMessage: (message: unknown, callback?: () => void) => void;
+}
+
 export function Header() {
   const location = useLocation();
   const currentRoute = createMemo(() => getHeaderRoute(location.pathname));
@@ -27,7 +31,7 @@ export function Header() {
 
   const handleExtensionIndicatorClick = () => {
     // Focus extension window if available
-    const runtime = (globalThis as any).chrome?.runtime;
+    const runtime = (globalThis as unknown as { chrome?: { runtime: ChromeRuntime } }).chrome?.runtime;
     if (runtime?.sendMessage) {
       runtime.sendMessage({ action: "focusWindow" }, () => {
         // Callback (ignore errors if extension not ready)

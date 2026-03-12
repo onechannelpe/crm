@@ -1,4 +1,4 @@
-import { createSignal, Show } from "solid-js";
+import { Show } from "solid-js";
 import type { Accessor } from "solid-js";
 
 import type { ExtensionExecutiveState } from "~/lib/extension/runtime";
