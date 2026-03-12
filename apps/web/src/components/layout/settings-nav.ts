@@ -1,5 +1,6 @@
 import type { JSX } from "solid-js";
 
+import Package from "~/components/icons/package";
 import ShieldCheck from "~/components/icons/shield-check";
 import UserIcon from "~/components/icons/user";
 
@@ -43,6 +44,14 @@ export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
     label: "Políticas de riesgo",
     href: "/settings/security-policies",
     icon: ShieldCheck,
+    section: "workspace",
+    advanced: true,
+  },
+  {
+    id: "catalog",
+    label: "Catálogo",
+    href: "/settings/catalog",
+    icon: Package,
     section: "workspace",
     advanced: true,
   },

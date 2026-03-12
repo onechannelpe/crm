@@ -6,6 +6,7 @@ import { Button } from "~/components/ui/input/button";
 import { Checkbox } from "~/components/ui/input/checkbox";
 import { Input } from "~/components/ui/input/input";
 import { Select } from "~/components/ui/input/select";
+import { FilterBar } from "~/components/ui/layout/filter-bar";
 import {
   Table,
   TableBody,
@@ -20,7 +21,6 @@ import {
   canManageAuditPoliciesQuery,
 } from "~/lib/queries/audit";
 
-import auditStyles from "../audit/audit-page.module.css";
 import styles from "./settings-page.module.css";
 
 function parseRiskLevel(value: string): "high" | "medium" | "low" {
@@ -63,8 +63,8 @@ export default function SecurityPoliciesPage() {
   return (
     <div class={styles.content}>
       <SettingsSection title="Políticas de riesgo de auditoría">
-        <div class={auditStyles.filterRow}>
-          <div class={auditStyles.fieldW52}>
+        <FilterBar>
+          <div style={{ width: "13rem" }}>
             <Input
               label="Acción"
               value={policyAction()}
@@ -72,7 +72,7 @@ export default function SecurityPoliciesPage() {
               placeholder="leads_requested"
             />
           </div>
-          <div class={auditStyles.fieldW36}>
+          <div style={{ width: "9rem" }}>
             <Select
               label="Nivel de riesgo"
               value={policyRiskLevel()}
@@ -98,15 +98,15 @@ export default function SecurityPoliciesPage() {
           >
             Guardar política
           </Button>
-        </div>
-        <p class={auditStyles.helperText}>
+        </FilterBar>
+        <p class={styles.helperText}>
           Las acciones sin política explícita se tratan como de alto riesgo para
           evitar ocultar eventos críticos.
         </p>
-        <p class={auditStyles.helperText}>
+        <p class={styles.helperText}>
           Solo admin y superuser pueden editar políticas.
         </p>
-        <p class={auditStyles.errorText}>{policyError() ?? ""}</p>
+        <p class={styles.errorText}>{policyError() ?? ""}</p>
         <Table>
           <TableHeader>
             <TableRow>
@@ -121,9 +121,7 @@ export default function SecurityPoliciesPage() {
             <For each={policySnapshot().items}>
               {(item) => (
                 <TableRow>
-                  <TableCell class={auditStyles.strong}>
-                    {item.action}
-                  </TableCell>
+                  <TableCell class={styles.strong}>{item.action}</TableCell>
                   <TableCell>{item.riskLevel}</TableCell>
                   <TableCell>{item.isActive ? "sí" : "no"}</TableCell>
                   <TableCell>{item.isProtected ? "sí" : "no"}</TableCell>
