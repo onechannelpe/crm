@@ -27,13 +27,13 @@ The contract between web and engine is [`contracts/engine-api.json`](contracts/e
 ## Applications
 
 - [`apps/web/`](apps/web/)
-  The main application. It serves the UI, runs server functions and API routes, and includes the maintenance worker used by local and deployed environments.
+  The CRM application. It serves the UI, API routes, and the maintenance worker.
 - [`apps/engine/`](apps/engine/)
-  The search service. It verifies signed requests from the web application and runs queries against the published SQLite dataset.
+  The search service. It verifies signed requests and queries the published SQLite dataset.
 - [`apps/pipeline/`](apps/pipeline/)
-  The dataset build pipeline. It validates source files, builds staged artifacts, and promotes the SQLite snapshot consumed by the engine.
+  The dataset pipeline. It validates source files, builds the staged dataset, and promotes the SQLite snapshot used by the engine.
 - [`apps/extension/`](apps/extension/)
-  The browser extension used during calls. It receives assignment handoff from the web application and syncs call state back through extension API routes.
+  The browser extension for call handling. It receives assignment handoff and syncs call state back to the web application.
 
 ## Get started
 
