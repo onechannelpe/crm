@@ -30,10 +30,10 @@ export function Header() {
   useHotkey("Mod+K", () => setPaletteOpen(true));
 
   const handleExtensionIndicatorClick = () => {
-    // Focus extension window if available
-    const globalAny = globalThis as Record<string, unknown>;
-    const runtime = (globalAny.chrome as Record<string, unknown> | undefined)
-      ?.runtime as ChromeRuntime | undefined;
+    // Focus extension window if available.
+    // eslint-disable-next-line typescript-eslint/no-unsafe-type-assertion
+    const runtime = (globalThis as unknown as { chrome?: { runtime: ChromeRuntime } })
+      .chrome?.runtime;
 
     if (runtime?.sendMessage) {
       runtime.sendMessage({ action: "focusWindow" }, () => {
