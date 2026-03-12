@@ -1,6 +1,6 @@
-# the web
+# The web
 
-The web application serves the CRM UI, the CRM API routes, and the background maintenance worker.
+Serves the CRM UI, the CRM API routes, and the background maintenance worker.
 
 The request path starts in [`src/entry-server.tsx`](src/entry-server.tsx) and mounts the router in [`src/app.tsx`](src/app.tsx). Every request passes through [`src/middleware.ts`](src/middleware.ts). Middleware sets the CSP nonce, request tracing fields, and CSRF cookie, then delegates access control to [`src/lib/auth/access/request-auth.ts`](src/lib/auth/access/request-auth.ts). That auth layer handles public paths separately, validates the session cookie, redirects for login or onboarding, and stores the session on `event.locals`.
 

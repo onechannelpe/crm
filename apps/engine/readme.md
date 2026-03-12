@@ -1,6 +1,6 @@
-# the engine
+# The engine
 
-The engine serves authenticated search requests over the published SQLite dataset.
+Serves authenticated search requests over the published SQLite dataset.
 
 Startup begins in [`src/main.rs`](src/main.rs). The binary loads the repo root `.env`, loads config from [`src/config/mod.rs`](src/config/mod.rs), checks that the SQLite file exists, builds the read-only connection pool, validates schema and projection-contract expectations in [`src/storage/sqlite/schema_guard.rs`](src/storage/sqlite/schema_guard.rs), constructs `AppState`, builds the router in [`src/api/router.rs`](src/api/router.rs), and starts the listener.
 

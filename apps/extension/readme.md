@@ -1,6 +1,6 @@
-# the extension
+# The extension
 
-The extension runs in the browser during calls. It tracks call state, records audio, and syncs events back to the web application.
+Runs in the browser during calls. It tracks call state, records audio, and syncs events back to the web application.
 
 The service worker entrypoint is [`entrypoints/background.ts`](entrypoints/background.ts). Runtime orchestration is in [`src/background/runtime.ts`](src/background/runtime.ts). That runtime hydrates persisted state on startup, ensures the sync alarm exists, accepts internal and external messages, mutates state, appends queue jobs, and flushes jobs when transitions require sync. Popup and sidepanel entrypoints are under `entrypoints/popup/` and `entrypoints/sidepanel/`. Message contracts are in [`src/domain/messages.ts`](src/domain/messages.ts). State shape is in [`src/domain/model.ts`](src/domain/model.ts).
 

@@ -1,6 +1,6 @@
-# the pipeline
+# The pipeline
 
-The pipeline reads source files, validates them against shared contracts, writes normalized and staged artifacts, and publishes the SQLite dataset consumed by the engine.
+Reads source files, validates them against shared contracts, writes normalized and staged artifacts, and publishes the SQLite dataset consumed by the engine.
 
 Command parsing starts in [`src/cli.rs`](src/cli.rs). The binary entrypoint is [`src/main.rs`](src/main.rs). Orchestration is in [`src/pipeline.rs`](src/pipeline.rs). Runtime paths and profile resolution are in [`src/config/runtime.rs`](src/config/runtime.rs) and [`pipeline.toml`](pipeline.toml).
 
