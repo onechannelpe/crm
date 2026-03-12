@@ -2,19 +2,22 @@ import { dirname, basename } from "node:path";
 
 import { Glob } from "bun";
 
-import type { SourceFileInfo } from "./types.ts";
+import type { IndexConfig, SourceFileInfo } from "./types.ts";
 
 interface SourceSection {
   directory: string;
   files: string[];
 }
 
-export async function buildCompactIndex(
+export async function buildIndex(
   localPath: string,
   sourceName: string,
-  filter?: (files: SourceFileInfo[]) => SourceFileInfo[],
+  index: IndexConfig,
 ): Promise<string> {
-  const files = await collectSourceFiles(localPath, filter);
+  const files = await collectSourceFiles(localPath, index.filter);
+  if (index.compile) {
+    return await index.compile({ localPath, sourceName, files });
+  }
   const sections = groupIntoSections(files);
   return formatCompactIndex(localPath, sourceName, sections);
 }
