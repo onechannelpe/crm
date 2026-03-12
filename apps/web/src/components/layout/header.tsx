@@ -6,7 +6,6 @@ import { ExtensionStatusIndicator } from "~/components/features/extension/extens
 import { HeaderNotificationsPanel } from "~/components/layout/header-notifications-panel";
 import { ICON_BY_ROUTE } from "~/components/layout/route-icons";
 import { createExtensionPortConnection } from "~/lib/extension/port";
-import { useExtensionUI } from "~/lib/extension/extension-ui-context";
 import { useHotkey } from "~/lib/hotkey/use-hotkey";
 import { getHeaderRoute } from "~/lib/nav/nav-policy";
 
@@ -19,13 +18,22 @@ export function Header() {
   const [modKey, setModKey] = createSignal("Ctrl");
   const { state: extensionState, error: extensionError } =
     createExtensionPortConnection();
-  const { setSidebarOpen } = useExtensionUI();
 
   onMount(() => {
     if (/Mac/i.test(navigator.platform)) setModKey("⌘");
   });
 
   useHotkey("Mod+K", () => setPaletteOpen(true));
+
+  const handleExtensionIndicatorClick = () => {
+    // Focus extension window if available
+    const runtime = (globalThis as any).chrome?.runtime;
+    if (runtime?.sendMessage) {
+      runtime.sendMessage({ action: "focusWindow" }, () => {
+        // Callback (ignore errors if extension not ready)
+      });
+    }
+  };
 
   return (
     <>
@@ -55,7 +63,7 @@ export function Header() {
             <ExtensionStatusIndicator
               extensionState={extensionState}
               extensionError={extensionError}
-              onOpen={() => setSidebarOpen(true)}
+              onOpen={handleExtensionIndicatorClick}
             />
             <HeaderNotificationsPanel />
           </div>

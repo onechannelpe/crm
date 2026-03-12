@@ -1,14 +1,11 @@
 import { useAction, useNavigate } from "@solidjs/router";
-import { createSignal } from "solid-js";
 
 import { LeadList } from "~/components/features/leads/lead-list";
 import { RequestLeadsButton } from "~/components/features/leads/request-leads-button";
-import { ExtensionDetailsSidebar } from "~/components/features/extension/extension-details-sidebar";
 import { useToast } from "~/components/feedback/toast-provider";
 import { AppPage } from "~/components/layout/page";
 import { createExtensionPortConnection } from "~/lib/extension/port";
 import { useExtensionStateObserver } from "~/lib/extension/use-extension-state-observer";
-import { useExtensionUI } from "~/lib/extension/extension-ui-context";
 import {
   handoffLeadToExtension,
   isExtensionBridgeConfigured,
@@ -19,6 +16,7 @@ import {
 } from "~/lib/mutations/leads";
 import { activeLeadsQuery } from "~/lib/queries/leads";
 import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
+import { createSignal } from "solid-js";
 
 import styles from "./leads-page.module.css";
 
@@ -57,7 +55,6 @@ export default function LeadsPage() {
     createExtensionPortConnection();
   const [extensionLoadingAssignmentId, setExtensionLoadingAssignmentId] =
     createSignal<number | null>(null);
-  const { sidebarOpen, setSidebarOpen } = useExtensionUI();
 
   // Observe extension state changes and emit toasts
   useExtensionStateObserver({
@@ -65,7 +62,6 @@ export default function LeadsPage() {
     extensionError,
     onReauthRequired: () => {
       showToast("error", "La extensión necesita reconectarse.");
-      setSidebarOpen(true);
     },
     onSyncError: () => {
       showToast("error", "Error de sincronización con la extensión.");
@@ -160,12 +156,6 @@ export default function LeadsPage() {
 
   return (
     <AppPage>
-      <ExtensionDetailsSidebar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        extensionState={extensionState}
-        extensionError={extensionError}
-      />
       <LeadList
         contacts={currentLeads()}
         onRegisterCall={handleRegisterCall}
