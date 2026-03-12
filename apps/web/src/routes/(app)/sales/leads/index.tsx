@@ -1,20 +1,16 @@
 import { useAction, useNavigate } from "@solidjs/router";
-import { createSignal, Show } from "solid-js";
+import { createSignal } from "solid-js";
 
 import { LeadList } from "~/components/features/leads/lead-list";
 import { RequestLeadsButton } from "~/components/features/leads/request-leads-button";
 import { useToast } from "~/components/feedback/toast-provider";
 import { AppPage } from "~/components/layout/page";
-import { Badge } from "~/components/ui/display/badge";
-import {
-  badgeVariantForPresence,
-  badgeVariantForSyncHealth,
-} from "~/lib/extension/display";
 import { createExtensionPortConnection } from "~/lib/extension/port";
 import {
   handoffLeadToExtension,
   isExtensionBridgeConfigured,
 } from "~/lib/extension/runtime";
+import { useExtensionStateObserver } from "~/lib/extension/use-extension-state-observer";
 import {
   registerCallMutation,
   requestLeadsMutation,
@@ -59,6 +55,28 @@ export default function LeadsPage() {
     createExtensionPortConnection();
   const [extensionLoadingAssignmentId, setExtensionLoadingAssignmentId] =
     createSignal<number | null>(null);
+
+  // Observe extension state changes and emit toasts
+  useExtensionStateObserver({
+    extensionState,
+    extensionError,
+    onReauthRequired: () => {
+      showToast("error", "La extensión necesita reconectarse.");
+    },
+    onSyncError: () => {
+      showToast("error", "Error de sincronización con la extensión.");
+    },
+    onActiveAssignmentChange: (assignmentId) => {
+      if (assignmentId) {
+        showToast("info", `Lead #${assignmentId} activo en la extensión.`);
+      }
+    },
+    onErrorChange: (error) => {
+      if (error) {
+        showToast("error", error);
+      }
+    },
+  });
 
   const handleRequestLeads = async () => {
     const result = await requestLeadsAction();
@@ -138,36 +156,6 @@ export default function LeadsPage() {
 
   return (
     <AppPage>
-      <div class={styles.extensionBanner}>
-        <div class={styles.extensionHeader}>
-          <div>
-            <p class={styles.extensionEyebrow}>Estado de la extensión</p>
-            <h2 class={styles.extensionTitle}>Compañero de llamada</h2>
-          </div>
-          <Badge
-            variant={badgeVariantForPresence(extensionState()?.presenceStatus)}
-          >
-            {extensionState()?.presenceStatus ?? "no disponible"}
-          </Badge>
-          <Badge
-            variant={badgeVariantForSyncHealth(extensionState()?.syncHealth)}
-          >
-            {extensionState()?.syncHealth ?? "no disponible"}
-          </Badge>
-        </div>
-        <p class={styles.extensionCopy}>
-          <Show
-            when={!extensionError()}
-            fallback={extensionError() ?? "La extensión no está disponible."}
-          >
-            {extensionState()?.syncHealth === "reauth_required"
-              ? "La extensión necesita reconectarse. Vuelve a enviar el cliente para renovar la sesión."
-              : extensionState()?.assignmentId
-                ? `Lead activo en la extensión: #${extensionState()?.assignmentId}`
-                : "Envía un cliente asignado a la extensión para iniciar la llamada."}
-          </Show>
-        </p>
-      </div>
       <LeadList
         contacts={currentLeads()}
         onRegisterCall={handleRegisterCall}

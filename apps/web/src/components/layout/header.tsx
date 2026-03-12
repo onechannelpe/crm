@@ -2,24 +2,46 @@ import { useLocation } from "@solidjs/router";
 import { createMemo, createSignal, onMount } from "solid-js";
 
 import { CommandPalette } from "~/components/features/command-palette/command-palette";
+import { ExtensionStatusIndicator } from "~/components/features/extension/extension-status-indicator";
 import { HeaderNotificationsPanel } from "~/components/layout/header-notifications-panel";
 import { ICON_BY_ROUTE } from "~/components/layout/route-icons";
+import { createExtensionPortConnection } from "~/lib/extension/port";
 import { useHotkey } from "~/lib/hotkey/use-hotkey";
 import { getHeaderRoute } from "~/lib/nav/nav-policy";
 
 import styles from "./shell.module.css";
+
+interface ChromeRuntime {
+  sendMessage: (message: unknown, callback?: () => void) => void;
+}
 
 export function Header() {
   const location = useLocation();
   const currentRoute = createMemo(() => getHeaderRoute(location.pathname));
   const [paletteOpen, setPaletteOpen] = createSignal(false);
   const [modKey, setModKey] = createSignal("Ctrl");
+  const { state: extensionState, error: extensionError } =
+    createExtensionPortConnection();
 
   onMount(() => {
     if (/Mac/i.test(navigator.platform)) setModKey("⌘");
   });
 
   useHotkey("Mod+K", () => setPaletteOpen(true));
+
+  const handleExtensionIndicatorClick = () => {
+    // Focus extension window if available.
+    const runtime =
+      // eslint-disable-next-line typescript-eslint/no-unsafe-type-assertion
+      (globalThis as unknown as { chrome?: { runtime: ChromeRuntime } }).chrome
+        ?.runtime;
+
+    if (runtime?.sendMessage) {
+      runtime.sendMessage({ action: "focusWindow" }, () => {
+        // Callback (ignore errors if extension not ready)
+      });
+    }
+  };
 
   return (
     <>
@@ -46,6 +68,11 @@ export function Header() {
               <span class={styles.topbarKbd}>{modKey()}</span>
               <span class={styles.topbarKbd}>K</span>
             </button>
+            <ExtensionStatusIndicator
+              extensionState={extensionState}
+              extensionError={extensionError}
+              onOpen={handleExtensionIndicatorClick}
+            />
             <HeaderNotificationsPanel />
           </div>
         </div>
