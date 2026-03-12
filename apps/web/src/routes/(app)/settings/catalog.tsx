@@ -2,7 +2,7 @@ import { useAction, useSubmissions } from "@solidjs/router";
 import { createSignal, For } from "solid-js";
 
 import { useToast } from "~/components/feedback/toast-provider";
-import { AppPage } from "~/components/layout/page";
+import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Button } from "~/components/ui/input/button";
 import { Checkbox } from "~/components/ui/input/checkbox";
 import { Input } from "~/components/ui/input/input";
@@ -11,7 +11,8 @@ import { updateProductPricingMutation } from "~/lib/mutations/settings";
 import { productCatalogQuery } from "~/lib/queries/settings";
 import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
 
-import styles from "./catalog-page.module.css";
+import styles from "./catalog.module.css";
+import base from "./settings-page.module.css";
 
 export default function CatalogPage() {
   const { showToast } = useToast();
@@ -45,9 +46,12 @@ export default function CatalogPage() {
   };
 
   return (
-    <AppPage>
-      <div class={styles.catalog}>
-        <div class={styles.card}>
+    <div class={base.content}>
+      <SettingsSection
+        title="Precios y disponibilidad"
+        description="Ajusta el precio unitario y activa o desactiva cada producto."
+      >
+        <div class={styles.catalogList}>
           <For each={currentProducts()}>
             {(product) => {
               const [price, setPrice] = createSignal(String(product.price));
@@ -60,16 +64,16 @@ export default function CatalogPage() {
                     e.preventDefault();
                     void save(product.id, price(), isActive());
                   }}
-                  class={styles.cardItem}
+                  class={styles.catalogItem}
                 >
-                  <div class={styles.cardMain}>
-                    <span class={styles.cardTitle}>{product.name}</span>
-                    <span class={styles.cardDescription}>
+                  <div class={styles.catalogItemMeta}>
+                    <span class={styles.catalogItemName}>{product.name}</span>
+                    <span class={styles.catalogItemCategory}>
                       {product.category}
                     </span>
                   </div>
-                  <div class={styles.controls}>
-                    <div class={styles.priceField}>
+                  <div class={styles.catalogItemControls}>
+                    <div style={{ width: "9rem" }}>
                       <Input
                         type="number"
                         min="0.01"
@@ -79,29 +83,25 @@ export default function CatalogPage() {
                         onInput={(e) => setPrice(e.currentTarget.value)}
                       />
                     </div>
-                    <div class={styles.activeToggle}>
-                      <Checkbox
-                        label="Activo"
-                        checked={isActive()}
-                        onInput={(e) => setIsActive(e.currentTarget.checked)}
-                      />
-                    </div>
-                    <div class={styles.submit}>
-                      <Button
-                        type="submit"
-                        disabled={isSaving(product.id)}
-                        size="sm"
-                      >
-                        {isSaving(product.id) ? "Guardando..." : "Guardar"}
-                      </Button>
-                    </div>
+                    <Checkbox
+                      label="Activo"
+                      checked={isActive()}
+                      onInput={(e) => setIsActive(e.currentTarget.checked)}
+                    />
+                    <Button
+                      type="submit"
+                      disabled={isSaving(product.id)}
+                      size="sm"
+                    >
+                      {isSaving(product.id) ? "Guardando..." : "Guardar"}
+                    </Button>
                   </div>
                 </form>
               );
             }}
           </For>
         </div>
-      </div>
-    </AppPage>
+      </SettingsSection>
+    </div>
   );
 }

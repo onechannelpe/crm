@@ -19,7 +19,8 @@ import { useAsyncAction } from "~/hooks/use-async-action";
 import { useConfirmDialog } from "~/hooks/use-confirm-dialog";
 import { getErrorMessage } from "~/lib/errors";
 
-import styles from "./settings-page.module.css";
+import styles from "./security.module.css";
+import base from "./settings-page.module.css";
 
 function getSetupKey(otpauthUri: string): string {
   try {
@@ -108,7 +109,7 @@ export default function SecurityPage() {
   );
 
   return (
-    <div class={styles.content}>
+    <div class={base.content}>
       <ConfirmDialog
         isOpen={removePasskeysDialog.isOpen()}
         title="Eliminar claves de acceso"
@@ -130,7 +131,7 @@ export default function SecurityPage() {
 
       <SettingsSection title="Cambiar contraseña">
         <form onSubmit={(e) => void handleChangePassword(e)}>
-          <div class={styles.formGrid}>
+          <div class={base.formGrid}>
             <Input
               type="password"
               label="Contraseña actual"
@@ -153,7 +154,7 @@ export default function SecurityPage() {
               required
             />
           </div>
-          <div class={styles.formActions}>
+          <div class={base.formActions}>
             <Button type="submit" disabled={isChangingPassword()}>
               {isChangingPassword()
                 ? "Actualizando..."
