@@ -21,6 +21,8 @@ export interface IndexConfig {
   markerEnd: string;
   /** Keep only the returned subset of files in the generated index. */
   filter?: (files: SourceFileInfo[]) => SourceFileInfo[];
+  /** Optional source-specific formatter for the injected AGENTS.md block. */
+  compile?: (input: IndexBuildInput) => string | Promise<string>;
 }
 
 export interface SourceConfig {
@@ -38,4 +40,10 @@ export interface SourceFileInfo {
   relativePath: string;
   category?: string;
   name: string;
+}
+
+export interface IndexBuildInput {
+  localPath: string;
+  sourceName: string;
+  files: SourceFileInfo[];
 }

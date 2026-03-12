@@ -5,7 +5,7 @@ import {
 } from "./config/index.ts";
 import { injectIndex } from "./core/agents-injector.ts";
 import { fetchSource } from "./core/fetch.ts";
-import { buildCompactIndex } from "./core/index-builder.ts";
+import { buildIndex } from "./core/index-builder.ts";
 import type { IndexConfig, SourceConfig } from "./core/types.ts";
 import { ensureRefsGitignored } from "./utils/gitignore.ts";
 import { isErr } from "./utils/result.ts";
@@ -81,7 +81,7 @@ async function processIndex(
   index: IndexConfig,
 ): Promise<void> {
   console.log(`  Building index from ${localPath}...`);
-  const indexContent = await buildCompactIndex(localPath, name, index.filter);
+  const indexContent = await buildIndex(localPath, name, index);
 
   console.log(`  Injecting index into AGENTS.md...`);
   const injectResult = await injectIndex(
