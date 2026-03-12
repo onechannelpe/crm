@@ -6,9 +6,11 @@ export type AppPath =
   | "/settings/security"
   | "/settings/login-protection"
   | "/settings/security-policies"
-  | "/catalog"
+  | "/monitoring"
+  | "/settings/catalog"
   | "/team"
   | "/team/invite"
+  | "/team/import"
   | "/inventory"
   | "/sales/leads"
   | "/dashboard"
@@ -17,7 +19,6 @@ export type AppPath =
   | "/sales/confirmations"
   | "/sales/reports/exports"
   | "/audit"
-  | "/audit/observability"
   | "/audit/auth"
   | "/audit/log"
   | "/quota"
@@ -40,9 +41,11 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
   "/settings/security": {},
   "/settings/login-protection": { permission: "admin:manage" },
   "/settings/security-policies": { permission: "admin:manage" },
-  "/catalog": { permission: "admin:manage" },
+  "/monitoring": { permission: "admin:read" },
+  "/settings/catalog": { permission: "admin:manage" },
   "/team": { permission: "team:read", landingPriority: 6 },
   "/team/invite": { permission: "team:manage" },
+  "/team/import": { permission: "team:manage" },
   "/inventory": { permission: "inventory:read", landingPriority: 5 },
   "/sales/leads": { permission: "leads:read", landingPriority: 2 },
   "/dashboard": { permission: "sales:review", landingPriority: 1 },
@@ -51,7 +54,6 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
   "/sales/confirmations": { permission: "sales:review", landingPriority: 4 },
   "/sales/reports/exports": { permission: "sales:review" },
   "/audit": { permission: "audit:read", landingPriority: 8 },
-  "/audit/observability": { permission: "audit:read" },
   "/audit/auth": { permission: "audit:read" },
   "/audit/log": { permission: "audit:read" },
   "/quota": { permission: "quota:allocate", landingPriority: 7 },

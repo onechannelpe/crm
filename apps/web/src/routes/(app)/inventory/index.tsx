@@ -55,7 +55,7 @@ export default function InventoryPage() {
               <TableHead>Producto</TableHead>
               <TableHead>Número de serie</TableHead>
               <TableHead>Categoría</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>Estado</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

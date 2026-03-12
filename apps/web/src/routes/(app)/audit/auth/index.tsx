@@ -1,9 +1,11 @@
 import { createAsync, revalidate } from "@solidjs/router";
 import { createSignal, For } from "solid-js";
 
+import { WindowSelect } from "~/components/features/audit/window-select";
 import { AppPage } from "~/components/layout/page";
+import { Badge } from "~/components/ui/display/badge";
 import { Button } from "~/components/ui/input/button";
-import { Select } from "~/components/ui/input/select";
+import { FilterBar } from "~/components/ui/layout/filter-bar";
 import {
   Table,
   TableBody,
@@ -13,15 +15,16 @@ import {
   TableRow,
 } from "~/components/ui/layout/table";
 import { authFunnelSnapshotQuery } from "~/lib/queries/audit";
+import { formatDateTime } from "~/lib/utils";
 
-import styles from "../audit-page.module.css";
+type BadgeVariant = "success" | "destructive" | "outline";
 
-const WINDOW_OPTIONS = [
-  { value: 15, label: "15 min" },
-  { value: 60, label: "1 hora" },
-  { value: 240, label: "4 horas" },
-  { value: 1440, label: "24 horas" },
-] as const;
+function outcomeBadgeVariant(outcome: string): BadgeVariant {
+  const o = outcome.toLowerCase();
+  if (o.includes("success") || o.includes("ok")) return "success";
+  if (o.includes("fail") || o.includes("error")) return "destructive";
+  return "outline";
+}
 
 export default function AuditAuthPage() {
   const [windowMinutes, setWindowMinutes] = createSignal(60);
@@ -37,94 +40,51 @@ export default function AuditAuthPage() {
 
   return (
     <AppPage>
-      <div class={styles.auditGrid}>
-        <div class={styles.filterRow}>
-          <div class={styles.fieldW44}>
-            <Select
-              label="Ventana"
-              value={windowMinutes()}
-              onInput={(e) => setWindowMinutes(Number(e.currentTarget.value))}
-            >
-              <For each={WINDOW_OPTIONS}>
-                {(opt) => <option value={opt.value}>{opt.label}</option>}
-              </For>
-            </Select>
-          </div>
-          <Button
-            onClick={() => {
-              void revalidate(authFunnelSnapshotQuery.key);
-            }}
-          >
-            Recargar
-          </Button>
-        </div>
+      <FilterBar>
+        <WindowSelect value={windowMinutes()} onInput={setWindowMinutes} />
+        <Button
+          onClick={() => {
+            void revalidate(authFunnelSnapshotQuery.key);
+          }}
+        >
+          Recargar
+        </Button>
+      </FilterBar>
 
-        <section class={styles.section}>
-          <h2 class={styles.title}>Embudo de autenticación</h2>
-          <Table>
-            <TableHeader>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Hora</TableHead>
+            <TableHead>Evento</TableHead>
+            <TableHead>Pantalla</TableHead>
+            <TableHead>Método</TableHead>
+            <TableHead>Resultado</TableHead>
+            <TableHead>Fuente</TableHead>
+            <TableHead>Ruta</TableHead>
+            <TableHead>Código</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <For each={snapshot().recent}>
+            {(row) => (
               <TableRow>
-                <TableHead>Evento</TableHead>
-                <TableHead>Pantalla</TableHead>
-                <TableHead>Método</TableHead>
-                <TableHead>Resultado</TableHead>
-                <TableHead>Fuente</TableHead>
-                <TableHead>Conteo</TableHead>
+                <TableCell>{formatDateTime(row.createdAt)}</TableCell>
+                <TableCell>{row.eventName}</TableCell>
+                <TableCell>{row.screen ?? "—"}</TableCell>
+                <TableCell>{row.method ?? "—"}</TableCell>
+                <TableCell>
+                  <Badge variant={outcomeBadgeVariant(row.outcome)}>
+                    {row.outcome}
+                  </Badge>
+                </TableCell>
+                <TableCell>{row.source}</TableCell>
+                <TableCell>{row.routePath ?? "—"}</TableCell>
+                <TableCell>{row.code ?? "—"}</TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              <For each={snapshot().summary}>
-                {(row) => (
-                  <TableRow>
-                    <TableCell class={styles.strong}>{row.eventName}</TableCell>
-                    <TableCell>{row.screen ?? "N/A"}</TableCell>
-                    <TableCell>{row.method ?? "N/A"}</TableCell>
-                    <TableCell>{row.outcome}</TableCell>
-                    <TableCell>{row.source}</TableCell>
-                    <TableCell>{row.count}</TableCell>
-                  </TableRow>
-                )}
-              </For>
-            </TableBody>
-          </Table>
-        </section>
-
-        <section class={styles.section}>
-          <h2 class={styles.title}>Eventos recientes de autenticación</h2>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Hora</TableHead>
-                <TableHead>Evento</TableHead>
-                <TableHead>Pantalla</TableHead>
-                <TableHead>Método</TableHead>
-                <TableHead>Resultado</TableHead>
-                <TableHead>Fuente</TableHead>
-                <TableHead>Ruta</TableHead>
-                <TableHead>Código</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <For each={snapshot().recent}>
-                {(row) => (
-                  <TableRow>
-                    <TableCell>
-                      {new Date(row.createdAt).toLocaleTimeString("es-PE")}
-                    </TableCell>
-                    <TableCell class={styles.strong}>{row.eventName}</TableCell>
-                    <TableCell>{row.screen ?? "N/A"}</TableCell>
-                    <TableCell>{row.method ?? "N/A"}</TableCell>
-                    <TableCell>{row.outcome}</TableCell>
-                    <TableCell>{row.source}</TableCell>
-                    <TableCell>{row.routePath ?? "N/A"}</TableCell>
-                    <TableCell>{row.code ?? "-"}</TableCell>
-                  </TableRow>
-                )}
-              </For>
-            </TableBody>
-          </Table>
-        </section>
-      </div>
+            )}
+          </For>
+        </TableBody>
+      </Table>
     </AppPage>
   );
 }

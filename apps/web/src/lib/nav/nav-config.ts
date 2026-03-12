@@ -3,7 +3,6 @@ export type RouteIcon =
   | "settings"
   | "team"
   | "inventory"
-  | "catalog"
   | "sales"
   | "leads"
   | "dashboard"
@@ -13,7 +12,8 @@ export type RouteIcon =
   | "audit"
   | "quota"
   | "profile"
-  | "schedule";
+  | "schedule"
+  | "monitoring";
 
 export type SidebarSection = "primary" | "secondary";
 
@@ -88,21 +88,18 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
   },
   { match: "/quota", header: { label: "Cuota", icon: "quota" } },
   { match: "/inventory", header: { label: "Inventario", icon: "inventory" } },
-  {
-    match: "/catalog",
-    header: { label: "Catálogo de productos", icon: "catalog" },
-  },
   { match: "/team", header: { label: "Equipo", icon: "team" } },
   { match: "/team/invite", header: { label: "Invitaciones", icon: "team" } },
   {
-    match: "/audit/observability",
-    header: { label: "Observabilidad", icon: "audit" },
+    match: "/team/import",
+    header: { label: "Importar miembros", icon: "team" },
   },
   { match: "/audit/auth", header: { label: "Autenticación", icon: "audit" } },
   {
     match: "/audit/log",
     header: { label: "Registro de auditoría", icon: "audit" },
   },
+  { match: "/monitoring", header: { label: "Monitoreo", icon: "monitoring" } },
   { match: "/settings/profile", header: { label: "Perfil", icon: "profile" } },
 ];
 
@@ -195,17 +192,6 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     group: "Operaciones",
   },
   {
-    id: "catalog",
-    href: "/catalog",
-    activePrefixes: ["/catalog"],
-    label: "Catálogo",
-    navLabel: "Catálogo",
-    icon: "catalog",
-    section: "secondary",
-    order: 5,
-    group: "Operaciones",
-  },
-  {
     id: "team",
     href: "/team",
     activePrefixes: ["/team"],
@@ -213,29 +199,40 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     navLabel: "Equipo",
     icon: "team",
     section: "secondary",
-    order: 6,
+    order: 5,
     group: "Operaciones",
     children: [
       { href: "/team", label: "Miembros", order: 1 },
       { href: "/team/invite", label: "Invitaciones", order: 2 },
+      { href: "/team/import", label: "Importar", order: 3 },
     ],
   },
 
   // Secondary › Administración
   {
     id: "audit",
-    href: "/audit/observability",
+    href: "/audit/log",
     activePrefixes: ["/audit"],
     label: "Auditoría",
     navLabel: "Auditoría",
     icon: "audit",
     section: "secondary",
-    order: 7,
+    order: 6,
     group: "Administración",
     children: [
-      { href: "/audit/observability", label: "Observabilidad", order: 1 },
+      { href: "/audit/log", label: "Registro", order: 1 },
       { href: "/audit/auth", label: "Autenticación", order: 2 },
-      { href: "/audit/log", label: "Registro", order: 3 },
     ],
+  },
+  {
+    id: "monitoring",
+    href: "/monitoring",
+    activePrefixes: ["/monitoring"],
+    label: "Monitoreo",
+    navLabel: "Monitoreo",
+    icon: "monitoring",
+    section: "secondary",
+    order: 7,
+    group: "Administración",
   },
 ];

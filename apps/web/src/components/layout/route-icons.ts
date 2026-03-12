@@ -1,5 +1,6 @@
 import type { Component } from "solid-js";
 
+import Activity from "~/components/icons/activity";
 import Building2 from "~/components/icons/building-2";
 import CalendarDays from "~/components/icons/calendar-days";
 import CircleCheckBig from "~/components/icons/circle-check-big";
@@ -24,7 +25,6 @@ export const ICON_BY_ROUTE: Record<
   settings: Settings,
   team: Users,
   inventory: Package,
-  catalog: Package,
   sales: Inbox,
   leads: User,
   dashboard: House,
@@ -35,4 +35,5 @@ export const ICON_BY_ROUTE: Record<
   quota: Building2,
   profile: UserRound,
   schedule: CalendarDays,
+  monitoring: Activity,
 };
