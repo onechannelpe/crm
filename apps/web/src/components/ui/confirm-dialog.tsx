@@ -1,4 +1,4 @@
-import { Show, createSignal, type JSX } from "solid-js";
+import { Show, type JSX } from "solid-js";
 import { Portal } from "solid-js/web";
 
 import LoaderCircle from "~/components/icons/loader-circle";
@@ -13,26 +13,13 @@ interface ConfirmDialogProps {
   confirmLabel: string;
   cancelLabel?: string;
   variant?: "primary" | "outline" | "ghost";
-  onConfirm: () => void | Promise<void>;
+  loading?: boolean;
+  onConfirm: () => void;
   onClose: () => void;
   children?: JSX.Element;
 }
 
 export function ConfirmDialog(props: ConfirmDialogProps) {
-  const [running, setRunning] = createSignal(false);
-
-  const handleConfirm = async () => {
-    const result = props.onConfirm();
-    if (result instanceof Promise) {
-      setRunning(true);
-      try {
-        await result;
-      } finally {
-        setRunning(false);
-      }
-    }
-  };
-
   return (
     <Show when={props.isOpen}>
       <Portal>
@@ -47,7 +34,7 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
               <Button
                 type="button"
                 variant="outline"
-                disabled={running()}
+                disabled={props.loading}
                 onClick={props.onClose}
               >
                 {props.cancelLabel ?? "Cancelar"}
@@ -55,12 +42,10 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
               <Button
                 type="button"
                 variant={props.variant ?? "primary"}
-                disabled={running()}
-                onClick={() => {
-                  void handleConfirm();
-                }}
+                disabled={props.loading}
+                onClick={props.onConfirm}
               >
-                <Show when={running()} fallback={props.confirmLabel}>
+                <Show when={props.loading} fallback={props.confirmLabel}>
                   <LoaderCircle size={16} class="animate-spin" />
                 </Show>
               </Button>

@@ -56,6 +56,13 @@ export function TeamInviteManagementSection() {
   const [pendingRevokeId, setPendingRevokeId] = createSignal<number | null>(
     null,
   );
+  const [doRevoke, isRevoking] = useAsyncAction(async () => {
+    const id = pendingRevokeId();
+    if (id !== null) {
+      await handleRevoke(id);
+      setPendingRevokeId(null);
+    }
+  });
   const { showToast } = useToast();
 
   createEffect(
@@ -142,11 +149,8 @@ export function TeamInviteManagementSection() {
             title="Revocar invitación"
             description="La persona no podrá usar este enlace para unirse al equipo."
             confirmLabel="Revocar"
-            onConfirm={async () => {
-              const id = pendingRevokeId();
-              if (id !== null) await handleRevoke(id);
-              setPendingRevokeId(null);
-            }}
+            loading={isRevoking()}
+            onConfirm={() => void doRevoke()}
             onClose={() => setPendingRevokeId(null)}
           />
           <AppPageSection>

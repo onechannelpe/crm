@@ -50,7 +50,7 @@ export default function SecurityPage() {
     verifySuccessMessage: "Autenticación en dos pasos activada",
   });
 
-  const handleRemoveAllPasskeys = async () => {
+  const [doRemovePasskeys, isRemovingPasskeys] = useAsyncAction(async () => {
     try {
       await removeAllPasskeys();
       passkeyEnrollment.reset();
@@ -62,9 +62,10 @@ export default function SecurityPage() {
         getErrorMessage(err, "No se pudieron eliminar las claves de acceso"),
       );
     }
-  };
+    removePasskeysDialog.close();
+  });
 
-  const handleDisableTotp = async () => {
+  const [doDisableTotp, isDisablingTotp] = useAsyncAction(async () => {
     try {
       await disableTotp();
       totpEnrollment.reset();
@@ -76,7 +77,8 @@ export default function SecurityPage() {
         getErrorMessage(err, "No se pudo desactivar la autenticación TOTP"),
       );
     }
-  };
+    disableTotpDialog.close();
+  });
 
   const handleCopySetupKey = async (setupKey: string) => {
     await navigator.clipboard.writeText(setupKey);
@@ -112,10 +114,8 @@ export default function SecurityPage() {
         title="Eliminar claves de acceso"
         description="Se eliminarán todas las claves registradas en esta cuenta."
         confirmLabel="Eliminar"
-        onConfirm={async () => {
-          await handleRemoveAllPasskeys();
-          removePasskeysDialog.close();
-        }}
+        loading={isRemovingPasskeys()}
+        onConfirm={() => void doRemovePasskeys()}
         onClose={removePasskeysDialog.close}
       />
       <ConfirmDialog
@@ -123,10 +123,8 @@ export default function SecurityPage() {
         title="Desactivar aplicación"
         description="Se desactivará el segundo paso con código para esta cuenta."
         confirmLabel="Desactivar"
-        onConfirm={async () => {
-          await handleDisableTotp();
-          disableTotpDialog.close();
-        }}
+        loading={isDisablingTotp()}
+        onConfirm={() => void doDisableTotp()}
         onClose={disableTotpDialog.close}
       />
 
