@@ -8,7 +8,7 @@ The main execution path in [`src/pipeline.rs`](src/pipeline.rs) loads the runtim
 
 `refresh` is a sample build followed by publish. `promote` runs the quality gate in [`src/stages/gate.rs`](src/stages/gate.rs), stamps `_pipeline_build` metadata into the staged database, and atomically replaces the target database through [`src/stages/promote.rs`](src/stages/promote.rs). The previous published database is kept as `.prev`.
 
-Configuration and input definitions are in [`pipeline.toml`](pipeline.toml), [`data/mappings/source-manifest.json`](data/mappings/source-manifest.json), [`../../contracts/canonical-contract.json`](../../contracts/canonical-contract.json), [`../../contracts/source-contract.json`](../../contracts/source-contract.json), and [`../../contracts/search-projection.json`](../../contracts/search-projection.json).
+Configuration and input definitions are in [`pipeline.toml`](pipeline.toml), [`data/mappings/source-manifest.json`](data/mappings/source-manifest.json), [`canonical-contract.json (contracts)`](../../contracts/canonical-contract.json), [`source-contract.json (contracts)`](../../contracts/source-contract.json), and [`search-projection.json (contracts)`](../../contracts/search-projection.json).
 
 ## Commands
 
@@ -36,7 +36,7 @@ Command reference for `bun run pipeline:engine -- <command>`:
 
 ## Outputs
 
-Output paths are `data/normalized/` for normalized diagnostics, `data/build/bench/` for sample and benchmark outputs, `data/build/staged/` for staged SQLite files, and [`../engine/data/contacts.sqlite`](../engine/data/contacts.sqlite) for the published engine dataset.
+Output paths are `data/normalized/` for normalized diagnostics, `data/build/bench/` for sample and benchmark outputs, `data/build/staged/` for staged SQLite files, and [`contacts.sqlite (engine)`](../engine/data/contacts.sqlite) for the published engine dataset.
 
 ## First reads
 
