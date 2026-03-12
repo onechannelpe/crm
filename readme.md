@@ -27,7 +27,7 @@ The contract between web and engine is [`contracts/engine-api.json`](contracts/e
 ## Applications
 
 - [`apps/web/`](apps/web/)
-  The CRM application. It serves the UI, API routes, and the maintenance worker.
+  The main application. It serves the UI, API routes, and the maintenance worker.
 - [`apps/engine/`](apps/engine/)
   The search service. It verifies signed requests and queries the published SQLite dataset.
 - [`apps/pipeline/`](apps/pipeline/)
@@ -40,15 +40,14 @@ The contract between web and engine is [`contracts/engine-api.json`](contracts/e
 Install the toolchain, install dependencies, create `.env`, generate contract bindings, and start the web application and engine:
 
 ```sh
-# install mise first if needed: curl https://mise.run | sh
-mise install
+mise install # install mise if you don't have it yet: curl https://mise.run | sh
 bun install
 cp .env.example .env
 bun run generate
 bun run dev
 ```
 
-`bun run dev` starts the engine and web application. `bun run dev:web`, `bun run dev:engine`, and `bun run dev:worker` start a single process from the repo root.
+`bun run dev` starts the engine and web application. Alternatively, you can start a single process from the repo root with `bun run dev:web`, `bun run dev:engine`, or `bun run dev:worker`.
 
 ## Read this first
 
