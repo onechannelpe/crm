@@ -12,6 +12,7 @@ import { ProductLineEditor } from "~/components/features/sales/product-line-edit
 import { useToast } from "~/components/feedback/toast-provider";
 import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
+import { useAsyncAction } from "~/hooks/use-async-action";
 import { getErrorMessage } from "~/lib/errors";
 import { salesRecordProductsQuery } from "~/lib/queries/sales-records";
 import { useSalesRecordForm } from "~/lib/sales/use-sales-record-form";
@@ -23,7 +24,6 @@ export default function NewSalePage() {
   const [searchParams] = useSearchParams();
   const { showToast } = useToast();
 
-  const [loading, setLoading] = createSignal(false);
   const [source, setSource] = createSignal<"lead_assignment" | "manual">(
     "manual",
   );
@@ -57,15 +57,13 @@ export default function NewSalePage() {
     })();
   });
 
-  async function handleSubmit(e: Event) {
+  const [handleSubmit, isSubmitting] = useAsyncAction(async (e: Event) => {
     e.preventDefault();
     const validationError = form.validateForSubmit();
     if (validationError) {
       showToast("error", validationError);
       return;
     }
-
-    setLoading(true);
     try {
       const created = await createSalesRecordDraft({
         source: source(),
@@ -79,10 +77,8 @@ export default function NewSalePage() {
       navigate("/sales/leads");
     } catch (err: unknown) {
       showToast("error", getErrorMessage(err, "No se pudo enviar el registro"));
-    } finally {
-      setLoading(false);
     }
-  }
+  });
 
   return (
     <AppPage width="medium">
@@ -108,12 +104,12 @@ export default function NewSalePage() {
             type="button"
             variant="secondary"
             onClick={() => navigate("/sales/leads")}
-            disabled={loading()}
+            disabled={isSubmitting()}
           >
             Cancelar
           </Button>
-          <Button type="submit" disabled={loading()}>
-            {loading() ? "Enviando..." : "Enviar para confirmación"}
+          <Button type="submit" disabled={isSubmitting()}>
+            {isSubmitting() ? "Enviando..." : "Enviar para confirmación"}
           </Button>
         </div>
       </form>
