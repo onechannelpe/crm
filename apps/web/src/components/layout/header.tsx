@@ -31,7 +31,10 @@ export function Header() {
 
   const handleExtensionIndicatorClick = () => {
     // Focus extension window if available
-    const runtime = (globalThis as unknown as { chrome?: { runtime: ChromeRuntime } }).chrome?.runtime;
+    const globalAny = globalThis as Record<string, unknown>;
+    const runtime = (globalAny.chrome as Record<string, unknown> | undefined)
+      ?.runtime as ChromeRuntime | undefined;
+
     if (runtime?.sendMessage) {
       runtime.sendMessage({ action: "focusWindow" }, () => {
         // Callback (ignore errors if extension not ready)
