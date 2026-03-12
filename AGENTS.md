@@ -3,7 +3,7 @@
 ## ALWAYS
 
 - Prefer retrieval-led reasoning over pre-training for libraries/frameworks. Use MCP context7 for current docs before writing code.
-- Follow framework conventions—do not invent workarounds.
+- Follow framework conventions. Do not invent workarounds.
 - Implement ONLY what requested. If the request adds coupling, duplication, special cases, or workaround-driven design, state the concern and propose the cleaner design first.
 - If ambiguous, ask up to 2 clarifying questions OR choose simplest valid interpretation.
 - Keep responses brief: 3-6 sentences for typical answers. For multi-step work: short overview + ≤5 bullets (what changed, where, next steps).
@@ -12,7 +12,7 @@
 
 ## WHEN implementing
 
-- Make one change at a time. Run `bun run check` after each change.
+- Make one change at a time.
 - After edits: briefly state what changed, where (file/lines), and validation performed.
 - Parallelize independent tool calls (file reads, searches) when possible.
 - Provide brief updates (1-2 sentences) only when starting major work phases or plan changes.
@@ -25,6 +25,11 @@
 - For Rust handlers and services: validate early and propagate failures with `?`.
 - Implement the intended design fully. Do not stop at scaffolding, placeholder phases, or partial rewrites.
 - After implementation, reread the touched files and confirm the work is complete, coherent, and free of temporary compatibility code, duplicate paths, and partial renames.
+- Validate by scope:
+  - Docs or instruction changes: reread links, file references, commands, and generated indexes. Do not run full repo checks unless behavior changed.
+  - Narrow code changes: run the smallest relevant check while working.
+  - Broad refactors or redesigns: finish the design first, then run the relevant checks at the end.
+  - Run `bun run check` only for cross-subsystem changes, generation or contract changes, or repo-wide tooling changes.
 
 ## WHEN debugging
 
@@ -66,7 +71,7 @@ Failure points:
 2. Validate inputs and auth first. Keep the happy path straight.
 3. Propagate fallible operations with `?` instead of `.unwrap()`.
 4. Keep changes in existing modules unless a new logical boundary is required.
-5. Run `bun run check:engine` after each change.
+5. Use `bun run check:engine` for engine or pipeline changes.
 
 Failure points:
 
@@ -86,7 +91,6 @@ Use retrieval-led reasoning for auth, session, cookie, CSP, OAuth, file upload, 
 
 Prefer sentence case for headings. Avoid emojis.
 
-
 ## WHEN writing SolidJS
 
 <!-- SOLIDJS-DOCS-START -->
@@ -95,24 +99,14 @@ Prefer sentence case for headings. Avoid emojis.
 
 Anti-patterns (check docs before implementing):
 
-- Props destructuring breaks reactivity—use `props.value`, not `const { value } = props`
-- Components run once, not on every update—signals drive updates
-- Signals are functions—access with `count()`, not `count`
+- Props destructuring breaks reactivity. Use `props.value`, not `const { value } = props`
+- Components run once, not on every update. Signals drive updates
+- Signals are functions. Access with `count()`, not `count`
 - Use `<For>` (reference-keyed) for objects, `<Index>` (index-keyed) for primitives
 - Side effects belong in `createEffect`/`onMount`, never during render
 
-## STANDARDS—Files
+## standards - files
 
-Naming: kebab-case.ts, camelCase vars, PascalCase types, UPPER_SNAKE_CASE constants
-
-Organization: 70-line guideline (not hard rule). Single responsibility—if "and also" in description, split. Code as documentation. Comments only for non-obvious decisions or JSDoc.
-
-## STANDARDS—Project
-
-Monorepo: web (TS/Bun, apps/web/), engine (Rust, apps/engine/), contracts (JSON source, contracts/engine-api.json)
-
-Contract workflow: Changes to contracts/engine-api.json are source of truth. Run `bun run generate:engine-contract` for bindings. Never edit generated files.
-
-Tests: tests/integration/, tests/unit/. Use vitest. Descriptive: `it("blocks further attempts after repeated failures")`
-
-Checks: `bun run check` before proposing. Use `check:web` or `check:engine` for specific subsystems.
+- Naming: kebab-case.ts, camelCase vars, PascalCase types, UPPER_SNAKE_CASE constants
+- Organization: 70-line guideline (not hard rule). Single responsibility. If "and also" appears in the description, split. Code as documentation. Comments only for non-obvious decisions or JSDoc.
+- Use descriptive test names such as `it("blocks further attempts after repeated failures")`. Use "bun run test" (vitest), not "bun test".
