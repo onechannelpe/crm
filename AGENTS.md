@@ -15,7 +15,7 @@
 - Make one change at a time.
 - After edits: briefly state what changed, where (file/lines), and validation performed.
 - Parallelize independent tool calls (file reads, searches) when possible.
-- Provide brief updates (1-2 sentences) only when starting major work phases or plan changes.
+- Provide brief progress updates only when starting major work phases or plan changes.
 - For complex architectural decisions: propose multiple options, evaluate with a rubric (pros/cons/tradeoffs), choose best or suggest hybrid. For straightforward implementations, proceed directly.
 - Apply fail-fast: validate inputs → auth checks → business logic
   - Check "not OK" first to avoid nesting
@@ -30,6 +30,7 @@
   - Narrow code changes: run the smallest relevant check while working.
   - Broad refactors or redesigns: finish the design first, then run the relevant checks at the end.
   - Run `bun run check` only for cross-subsystem changes, generation or contract changes, or repo-wide tooling changes.
+- Use `bun run test` for Vitest-based tests. Do not use `bun test`.
 
 ## WHEN debugging
 
@@ -109,4 +110,4 @@ Anti-patterns (check docs before implementing):
 
 - Naming: kebab-case.ts, camelCase vars, PascalCase types, UPPER_SNAKE_CASE constants
 - Organization: 70-line guideline (not hard rule). Single responsibility. If "and also" appears in the description, split. Code as documentation. Comments only for non-obvious decisions or JSDoc.
-- Use descriptive test names such as `it("blocks further attempts after repeated failures")`. Use "bun run test" (vitest), not "bun test".
+- Use descriptive test names such as `it("blocks further attempts after repeated failures")`.
