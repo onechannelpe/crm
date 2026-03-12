@@ -127,9 +127,20 @@ export const LeadList: Component<LeadListProps> = (props) => {
                       <User size={14} />
                     </span>
                     <div class={styles.leadInfo}>
-                      <div style={{ display: "flex", "align-items": "center", gap: "4px" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          "align-items": "center",
+                          gap: "4px",
+                        }}
+                      >
                         <p class={styles.leadName}>{lead.name}</p>
-                        <Show when={props.extensionState?.assignmentId === lead.assignmentId}>
+                        <Show
+                          when={
+                            props.extensionState?.assignmentId ===
+                            lead.assignmentId
+                          }
+                        >
                           <span
                             style={{
                               display: "inline-block",

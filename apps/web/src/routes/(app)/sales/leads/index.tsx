@@ -1,22 +1,22 @@
 import { useAction, useNavigate } from "@solidjs/router";
+import { createSignal } from "solid-js";
 
 import { LeadList } from "~/components/features/leads/lead-list";
 import { RequestLeadsButton } from "~/components/features/leads/request-leads-button";
 import { useToast } from "~/components/feedback/toast-provider";
 import { AppPage } from "~/components/layout/page";
 import { createExtensionPortConnection } from "~/lib/extension/port";
-import { useExtensionStateObserver } from "~/lib/extension/use-extension-state-observer";
 import {
   handoffLeadToExtension,
   isExtensionBridgeConfigured,
 } from "~/lib/extension/runtime";
+import { useExtensionStateObserver } from "~/lib/extension/use-extension-state-observer";
 import {
   registerCallMutation,
   requestLeadsMutation,
 } from "~/lib/mutations/leads";
 import { activeLeadsQuery } from "~/lib/queries/leads";
 import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
-import { createSignal } from "solid-js";
 
 import styles from "./leads-page.module.css";
 
