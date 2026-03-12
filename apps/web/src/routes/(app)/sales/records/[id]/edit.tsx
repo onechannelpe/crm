@@ -12,6 +12,7 @@ import { useToast } from "~/components/feedback/toast-provider";
 import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { Textarea } from "~/components/ui/input/textarea";
+import { useAsyncAction } from "~/hooks/use-async-action";
 import { getErrorMessage } from "~/lib/errors";
 import {
   salesRecordFixContextQuery,
@@ -25,7 +26,6 @@ export default function FixSalePage() {
   const params = useParams();
   const navigate = useNavigate();
   const noteId = () => Number(params.id);
-  const [loading, setLoading] = createSignal(false);
   const [fixNotes, setFixNotes] = createSignal("");
 
   const form = useSalesRecordForm();
@@ -72,7 +72,7 @@ export default function FixSalePage() {
     return status === "rejected" || status === "draft";
   });
 
-  async function handleResubmit(e: Event) {
+  const [handleResubmit, isSubmitting] = useAsyncAction(async (e: Event) => {
     e.preventDefault();
     if (!fixNotes().trim()) {
       showToast("error", "Describe las correcciones realizadas");
@@ -83,8 +83,6 @@ export default function FixSalePage() {
       showToast("error", validationError);
       return;
     }
-
-    setLoading(true);
     try {
       await updateSalesRecordDraft(
         noteId(),
@@ -100,10 +98,8 @@ export default function FixSalePage() {
       navigate("/sales/confirmations");
     } catch (err: unknown) {
       showToast("error", getErrorMessage(err, "No se pudo reenviar"));
-    } finally {
-      setLoading(false);
     }
-  }
+  });
 
   return (
     <AppPage width="medium">
@@ -169,8 +165,11 @@ export default function FixSalePage() {
                 >
                   Volver a leads
                 </Button>
-                <Button type="submit" disabled={loading() || !canResubmit()}>
-                  {loading() ? "Enviando..." : "Reenviar para aprobación"}
+                <Button
+                  type="submit"
+                  disabled={isSubmitting() || !canResubmit()}
+                >
+                  {isSubmitting() ? "Enviando..." : "Reenviar para aprobación"}
                 </Button>
               </div>
             </div>

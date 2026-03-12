@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
+import { useAsyncAction } from "~/hooks/use-async-action";
 import { getErrorMessage } from "~/lib/errors";
 
 import styles from "./login-retries-card.module.css";
@@ -28,23 +29,19 @@ function labelFor(stage: string): string {
 
 export function LoginRetriesCard() {
   const [email, setEmail] = createSignal("");
-  const [loading, setLoading] = createSignal(false);
   const [report, setReport] =
     createSignal<Awaited<ReturnType<typeof getUserLoginRetryReport>>>(null);
   const { showToast } = useToast();
 
-  const lookup = async () => {
-    setLoading(true);
+  const [lookup, isLookingUp] = useAsyncAction(async () => {
     try {
       const next = await getUserLoginRetryReport(email());
       setReport(next);
       if (!next) showToast("info", "Usuario no encontrado");
     } catch (err: unknown) {
       showToast("error", getErrorMessage(err, "No se pudo cargar el reporte"));
-    } finally {
-      setLoading(false);
     }
-  };
+  });
 
   return (
     <section class={styles.root}>
@@ -62,8 +59,8 @@ export function LoginRetriesCard() {
           onInput={(e) => setEmail(e.currentTarget.value)}
           required
         />
-        <Button type="submit" disabled={loading()}>
-          {loading() ? "Cargando reporte..." : "Ver reporte"}
+        <Button type="submit" disabled={isLookingUp()}>
+          {isLookingUp() ? "Cargando reporte..." : "Ver reporte"}
         </Button>
       </form>
 

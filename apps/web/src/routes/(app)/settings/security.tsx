@@ -15,6 +15,8 @@ import { SettingsSection } from "~/components/settings/SettingsSection";
 import { ConfirmDialog } from "~/components/ui/confirm-dialog";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
+import { useAsyncAction } from "~/hooks/use-async-action";
+import { useConfirmDialog } from "~/hooks/use-confirm-dialog";
 import { getErrorMessage } from "~/lib/errors";
 
 import styles from "./settings-page.module.css";
@@ -34,10 +36,8 @@ export default function SecurityPage() {
   const [currentPassword, setCurrentPassword] = createSignal("");
   const [newPassword, setNewPassword] = createSignal("");
   const [confirmPassword, setConfirmPassword] = createSignal("");
-  const [changingPassword, setChangingPassword] = createSignal(false);
-  const [pendingAction, setPendingAction] = createSignal<
-    "remove-passkeys" | "disable-totp" | null
-  >(null);
+  const removePasskeysDialog = useConfirmDialog();
+  const disableTotpDialog = useConfirmDialog();
   const passkeyEnrollment = usePasskeyEnrollment({
     showToast,
     refreshStatus: refreshCurrentUser,
@@ -83,63 +83,51 @@ export default function SecurityPage() {
     showToast("success", "Clave de configuración copiada");
   };
 
-  const handleConfirmPendingAction = async () => {
-    const action = pendingAction();
-    setPendingAction(null);
-
-    if (action === "remove-passkeys") {
-      await handleRemoveAllPasskeys();
-      return;
-    }
-    if (action === "disable-totp") {
-      await handleDisableTotp();
-    }
-  };
-
-  const handleChangePassword = async (e: Event) => {
-    e.preventDefault();
-    if (newPassword() !== confirmPassword()) {
-      showToast("error", "Las contraseñas no coinciden");
-      return;
-    }
-    setChangingPassword(true);
-    try {
-      await changePassword(currentPassword(), newPassword());
-      showToast("success", "Contraseña actualizada");
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-    } catch (err: unknown) {
-      showToast(
-        "error",
-        getErrorMessage(err, "No se pudo cambiar la contraseña"),
-      );
-    } finally {
-      setChangingPassword(false);
-    }
-  };
+  const [handleChangePassword, isChangingPassword] = useAsyncAction(
+    async (e: Event) => {
+      e.preventDefault();
+      if (newPassword() !== confirmPassword()) {
+        showToast("error", "Las contraseñas no coinciden");
+        return;
+      }
+      try {
+        await changePassword(currentPassword(), newPassword());
+        showToast("success", "Contraseña actualizada");
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+      } catch (err: unknown) {
+        showToast(
+          "error",
+          getErrorMessage(err, "No se pudo cambiar la contraseña"),
+        );
+      }
+    },
+  );
 
   return (
     <div class={styles.content}>
       <ConfirmDialog
-        isOpen={pendingAction() !== null}
-        title={
-          pendingAction() === "remove-passkeys"
-            ? "Eliminar claves de acceso"
-            : "Desactivar aplicación"
-        }
-        description={
-          pendingAction() === "remove-passkeys"
-            ? "Se eliminarán todas las claves registradas en esta cuenta."
-            : "Se desactivará el segundo paso con código para esta cuenta."
-        }
-        confirmLabel={
-          pendingAction() === "remove-passkeys" ? "Eliminar" : "Desactivar"
-        }
-        onConfirm={() => {
-          void handleConfirmPendingAction();
+        isOpen={removePasskeysDialog.isOpen()}
+        title="Eliminar claves de acceso"
+        description="Se eliminarán todas las claves registradas en esta cuenta."
+        confirmLabel="Eliminar"
+        onConfirm={async () => {
+          await handleRemoveAllPasskeys();
+          removePasskeysDialog.close();
         }}
-        onClose={() => setPendingAction(null)}
+        onClose={removePasskeysDialog.close}
+      />
+      <ConfirmDialog
+        isOpen={disableTotpDialog.isOpen()}
+        title="Desactivar aplicación"
+        description="Se desactivará el segundo paso con código para esta cuenta."
+        confirmLabel="Desactivar"
+        onConfirm={async () => {
+          await handleDisableTotp();
+          disableTotpDialog.close();
+        }}
+        onClose={disableTotpDialog.close}
       />
 
       <SettingsSection title="Cambiar contraseña">
@@ -168,8 +156,10 @@ export default function SecurityPage() {
             />
           </div>
           <div class={styles.formActions}>
-            <Button type="submit" disabled={changingPassword()}>
-              {changingPassword() ? "Actualizando..." : "Actualizar contraseña"}
+            <Button type="submit" disabled={isChangingPassword()}>
+              {isChangingPassword()
+                ? "Actualizando..."
+                : "Actualizar contraseña"}
             </Button>
           </div>
         </form>
@@ -205,9 +195,7 @@ export default function SecurityPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => {
-                    setPendingAction("remove-passkeys");
-                  }}
+                  onClick={removePasskeysDialog.open}
                 >
                   Eliminar todas
                 </Button>
@@ -230,9 +218,7 @@ export default function SecurityPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => {
-                    setPendingAction("disable-totp");
-                  }}
+                  onClick={disableTotpDialog.open}
                 >
                   Restablecer
                 </Button>

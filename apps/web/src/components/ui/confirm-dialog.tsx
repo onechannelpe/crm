@@ -1,6 +1,7 @@
-import { Show, type JSX } from "solid-js";
+import { Show, createSignal, type JSX } from "solid-js";
 import { Portal } from "solid-js/web";
 
+import LoaderCircle from "~/components/icons/loader-circle";
 import { Button } from "~/components/ui/input/button";
 
 import styles from "./confirm-dialog.module.css";
@@ -12,12 +13,26 @@ interface ConfirmDialogProps {
   confirmLabel: string;
   cancelLabel?: string;
   variant?: "primary" | "outline" | "ghost";
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
   onClose: () => void;
   children?: JSX.Element;
 }
 
 export function ConfirmDialog(props: ConfirmDialogProps) {
+  const [running, setRunning] = createSignal(false);
+
+  const handleConfirm = async () => {
+    const result = props.onConfirm();
+    if (result instanceof Promise) {
+      setRunning(true);
+      try {
+        await result;
+      } finally {
+        setRunning(false);
+      }
+    }
+  };
+
   return (
     <Show when={props.isOpen}>
       <Portal>
@@ -29,15 +44,25 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
             </div>
             {props.children}
             <div class={styles.actions}>
-              <Button type="button" variant="outline" onClick={props.onClose}>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={running()}
+                onClick={props.onClose}
+              >
                 {props.cancelLabel ?? "Cancelar"}
               </Button>
               <Button
                 type="button"
                 variant={props.variant ?? "primary"}
-                onClick={props.onConfirm}
+                disabled={running()}
+                onClick={() => {
+                  void handleConfirm();
+                }}
               >
-                {props.confirmLabel}
+                <Show when={running()} fallback={props.confirmLabel}>
+                  <LoaderCircle size={16} class="animate-spin" />
+                </Show>
               </Button>
             </div>
           </div>
