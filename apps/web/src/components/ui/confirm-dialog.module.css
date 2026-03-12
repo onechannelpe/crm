@@ -22,6 +22,7 @@
 .header {
   display: grid;
   gap: 8px;
+  text-align: center;
 }
 
 .title {
@@ -38,16 +39,16 @@
 
 .actions {
   display: flex;
-  justify-content: flex-end;
-  gap: 12px;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.actions > button {
+  width: 100%;
 }
 
 @media (max-width: 640px) {
   .dialog {
     padding: 20px;
-  }
-
-  .actions {
-    flex-direction: column-reverse;
   }
 }

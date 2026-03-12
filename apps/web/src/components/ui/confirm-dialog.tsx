@@ -1,7 +1,7 @@
-import { Show, type JSX } from "solid-js";
+import { createEffect, onCleanup, type JSX } from "solid-js";
 import { Portal } from "solid-js/web";
 
-import LoaderCircle from "~/components/icons/loader-circle";
+import { PresenceTransition } from "~/components/ui/animation/presence-transition";
 import { Button } from "~/components/ui/input/button";
 
 import styles from "./confirm-dialog.module.css";
@@ -12,7 +12,7 @@ interface ConfirmDialogProps {
   description: string;
   confirmLabel: string;
   cancelLabel?: string;
-  variant?: "primary" | "outline" | "ghost";
+  variant?: "primary" | "outline" | "ghost" | "destructive";
   loading?: boolean;
   onConfirm: () => void;
   onClose: () => void;
@@ -20,10 +20,24 @@ interface ConfirmDialogProps {
 }
 
 export function ConfirmDialog(props: ConfirmDialogProps) {
+  createEffect(() => {
+    if (!props.isOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !props.loading) props.onClose();
+    };
+    document.addEventListener("keydown", handler);
+    onCleanup(() => document.removeEventListener("keydown", handler));
+  });
+
   return (
-    <Show when={props.isOpen}>
-      <Portal>
-        <div class={styles.overlay}>
+    <Portal>
+      <PresenceTransition show={props.isOpen}>
+        <div
+          class={styles.overlay}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !props.loading) props.onClose();
+          }}
+        >
           <div class={styles.dialog} role="dialog" aria-modal="true">
             <div class={styles.header}>
               <h3 class={styles.title}>{props.title}</h3>
@@ -34,6 +48,7 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
               <Button
                 type="button"
                 variant="outline"
+                size="lg"
                 disabled={props.loading}
                 onClick={props.onClose}
               >
@@ -42,17 +57,16 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
               <Button
                 type="button"
                 variant={props.variant ?? "primary"}
-                disabled={props.loading}
+                size="lg"
+                loading={props.loading}
                 onClick={props.onConfirm}
               >
-                <Show when={props.loading} fallback={props.confirmLabel}>
-                  <LoaderCircle size={16} class="animate-spin" />
-                </Show>
+                {props.confirmLabel}
               </Button>
             </div>
           </div>
         </div>
-      </Portal>
-    </Show>
+      </PresenceTransition>
+    </Portal>
   );
 }
