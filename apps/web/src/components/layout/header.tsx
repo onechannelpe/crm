@@ -31,9 +31,10 @@ export function Header() {
 
   const handleExtensionIndicatorClick = () => {
     // Focus extension window if available.
-    // eslint-disable-next-line typescript-eslint/no-unsafe-type-assertion
-    const runtime = (globalThis as unknown as { chrome?: { runtime: ChromeRuntime } })
-      .chrome?.runtime;
+    const runtime =
+      // eslint-disable-next-line typescript-eslint/no-unsafe-type-assertion
+      (globalThis as unknown as { chrome?: { runtime: ChromeRuntime } }).chrome
+        ?.runtime;
 
     if (runtime?.sendMessage) {
       runtime.sendMessage({ action: "focusWindow" }, () => {
