@@ -6,6 +6,7 @@ import {
   notFoundError,
   validationError,
 } from "~/lib/app-errors";
+import { assertOwnedRecord } from "~/lib/auth/access/ownership";
 import type { Role } from "~/lib/auth/access/rbac";
 import { requirePermission } from "~/lib/auth/access/session";
 import type { ActionSuccess } from "~/lib/contracts/common";
@@ -137,7 +138,7 @@ export interface SalesRecordFixContext {
 
 function mapQueueItem(
   row: Awaited<
-    ReturnType<typeof repos.salesRecords.findPendingConfirmationWithClient>
+    ReturnType<typeof repos.salesRecords.listPendingWithClient>
   >[number],
 ): SalesRecordQueueItem {
   return {
@@ -420,12 +421,9 @@ export async function listPendingSalesRecords(): Promise<
   SalesRecordQueueItem[]
 > {
   const session = await requirePermission("sales:review");
-  const rows =
-    session.role === "superuser"
-      ? await repos.salesRecords.findPendingConfirmationWithClient()
-      : await repos.salesRecords.findPendingConfirmationWithClientByBranch(
-          session.branchId,
-        );
+  const rows = await repos.salesRecords.listPendingWithClient(
+    session.role === "superuser" ? undefined : { branchId: session.branchId },
+  );
   return rows.map(mapQueueItem);
 }
 
@@ -433,19 +431,13 @@ export async function listConfirmedSalesRecords(): Promise<
   SalesRecordQueueItem[]
 > {
   const session = await requirePermission("sales:review");
-  if (session.role === "executive") {
-    const rows = await repos.salesRecords.findConfirmedWithClientByExecutive(
-      session.userId,
-    );
-    return rows.map(mapQueueItem);
-  }
-
-  const rows =
-    session.role === "superuser"
-      ? await repos.salesRecords.findConfirmedWithClient()
-      : await repos.salesRecords.findConfirmedWithClientByBranch(
-          session.branchId,
-        );
+  const scope =
+    session.role === "executive"
+      ? { executiveUserId: session.userId }
+      : session.role === "superuser"
+        ? undefined
+        : { branchId: session.branchId };
+  const rows = await repos.salesRecords.listConfirmedWithClient(scope);
   return rows.map(mapQueueItem);
 }
 
@@ -454,11 +446,12 @@ export async function getSalesRecordFixContext(
 ): Promise<SalesRecordFixContext> {
   const safeRecordId = assertPositiveInt(recordId, "recordId");
   const session = await requirePermission("sales:create");
-  const record = await repos.salesRecords.findById(safeRecordId);
-  if (!record) throw notFoundError("Sales record not found");
-  if (record.executive_user_id !== session.userId) {
-    throw forbiddenError("Not your sales record");
-  }
+  const record = assertOwnedRecord(
+    await repos.salesRecords.findById(safeRecordId),
+    (r) => r.executive_user_id,
+    session,
+    { resourceName: "Sales record" },
+  );
 
   const [client, addresses, products, attempts] = await Promise.all([
     repos.salesRecords.findClientByRecord(safeRecordId),

@@ -87,13 +87,10 @@ export async function listSalesExportJobs(
 ): Promise<SalesExportJob[]> {
   const safeLimit = Math.min(assertPositiveInt(limit, "limit"), 100);
   const session = await requirePermission("sales:review");
-  const rows =
-    session.role === "superuser"
-      ? await repos.reportExportJobs.listJobs(safeLimit)
-      : await repos.reportExportJobs.listJobsByBranch(
-          safeLimit,
-          session.branchId,
-        );
+  const rows = await repos.reportExportJobs.listJobs(
+    safeLimit,
+    session.role === "superuser" ? undefined : { branchId: session.branchId },
+  );
   return rows.map(mapJob);
 }
 
