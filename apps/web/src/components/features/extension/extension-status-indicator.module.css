@@ -1,15 +1,16 @@
 .trigger {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   padding: 4px 8px;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: var(--radius-sm, 4px);
   background: transparent;
   cursor: pointer;
-  font-size: 12px;
-  font-weight: 500;
-  transition: background-color 200ms ease, border-color 200ms ease;
+  font-size: var(--font-size-caption, 12px);
+  font-weight: var(--font-weight-medium, 500);
+  transition: background-color var(--motion-fast, 150ms) var(--ease-standard, ease),
+              border-color var(--motion-fast, 150ms) var(--ease-standard, ease);
 }
 
 .trigger:hover {
@@ -19,32 +20,32 @@
 
 .dot {
   display: inline-block;
-  width: 8px;
-  height: 8px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
-  transition: background-color 200ms ease;
+  transition: background-color var(--motion-fast, 150ms) var(--ease-standard, ease);
 }
 
 .dot.ok {
-  background-color: hsl(120, 100%, 40%); /* Green */
+  background-color: hsl(120, 71%, 54%); /* Success green */
 }
 
 .dot.pending {
-  background-color: hsl(45, 100%, 48%); /* Orange */
-  animation: pulse 2s infinite;
+  background-color: hsl(33, 100%, 50%); /* Warning orange */
+  animation: pulse var(--motion-fast, 150ms) infinite;
 }
 
 .dot.warning {
-  background-color: hsl(45, 100%, 48%); /* Orange */
+  background-color: hsl(33, 100%, 50%); /* Warning orange */
 }
 
 .dot.error {
-  background-color: hsl(0, 100%, 45%); /* Red */
-  animation: pulse 1.5s infinite;
+  background-color: hsl(0, 80%, 50%); /* Error red */
+  animation: pulse var(--motion-fast, 150ms) infinite;
 }
 
 .dot.offline {
-  background-color: hsl(0, 0%, 70%); /* Gray */
+  background-color: hsl(0, 0%, 85%); /* Neutral gray */
 }
 
 @keyframes pulse {
@@ -63,9 +64,9 @@
   min-width: 16px;
   height: 16px;
   padding: 0 4px;
-  border-radius: 3px;
-  background-color: hsl(210, 100%, 50%); /* Blue */
+  border-radius: var(--radius-sm, 4px);
+  background-color: hsl(210, 100%, 50%); /* Info blue */
   color: white;
-  font-size: 10px;
-  font-weight: 600;
+  font-size: var(--font-size-tiny, 10px);
+  font-weight: var(--font-weight-semibold, 600);
 }
