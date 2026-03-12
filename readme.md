@@ -22,20 +22,25 @@ This monorepo is built around a shared search dataset.
 
 The pipeline builds a SQLite snapshot from source files and shared contracts. The engine serves that snapshot through `/v1/search` and `/v1/health`. The web application serves the CRM UI, keeps application state in its own SQLite database, and calls the engine through HMAC-signed HTTP. The browser extension receives signed handoff messages from the web application and syncs call state through extension API routes.
 
-The contract between web and engine is [`contracts/engine-api.json`](contracts/engine-api.json). Regenerate bindings with `bun run generate` after changing that file. Validate generated artifacts with `bun run check:contract`. Validate projection and search compatibility with `bun run check:projection-contract` and `bun run check:search-contract`.
+The contract between web and engine is [`contracts/engine-api.json`](contracts/engine-api.json). The generated bindings in the web application and the engine request and response checks are derived from that file. If this file changes, regenerate bindings with `bun run generate`. Validate generated artifacts with `bun run check:contract`. Validate projection and search compatibility with `bun run check:projection-contract` and `bun run check:search-contract`.
 
 ## Applications
 
-- [`apps/web/`](apps/web/) SolidStart application, CRM API routes, background maintenance worker
-- [`apps/engine/`](apps/engine/) Rust search API and SQLite query layer
-- [`apps/pipeline/`](apps/pipeline/) Rust batch pipeline for building and promoting the search dataset
-- [`apps/extension/`](apps/extension/) browser extension runtime, popup, sidepanel, sync client
+- [`apps/web/`](apps/web/)
+  The main application. It serves the UI, runs server functions and API routes, and includes the maintenance worker used by local and deployed environments.
+- [`apps/engine/`](apps/engine/)
+  The search service. It verifies signed requests from the web application and runs queries against the published SQLite dataset.
+- [`apps/pipeline/`](apps/pipeline/)
+  The dataset build pipeline. It validates source files, builds staged artifacts, and promotes the SQLite snapshot consumed by the engine.
+- [`apps/extension/`](apps/extension/)
+  The browser extension used during calls. It receives assignment handoff from the web application and syncs call state back through extension API routes.
 
 ## Get started
 
 Install the toolchain, install dependencies, create `.env`, generate contract bindings, and start the web application and engine:
 
 ```sh
+# install mise first if needed: curl https://mise.run | sh
 mise install
 bun install
 cp .env.example .env
