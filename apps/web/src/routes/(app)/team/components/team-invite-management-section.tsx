@@ -13,6 +13,7 @@ import { useToast } from "~/components/feedback/toast-provider";
 import Mail from "~/components/icons/mail";
 import X from "~/components/icons/x";
 import { AppPageSection, AppPageSectionTitle } from "~/components/layout/page";
+import { ConfirmDialog } from "~/components/ui/confirm-dialog";
 import { Badge } from "~/components/ui/display/badge";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
@@ -25,6 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
+import { useAsyncAction } from "~/hooks/use-async-action";
 import {
   getRoleBadgeVariant,
   getRoleLabel,
@@ -51,7 +53,16 @@ export function TeamInviteManagementSection() {
   const [role, setRole] = createSignal("");
   const [teamId, setTeamId] = createSignal("");
   const [expiresAt, setExpiresAt] = createSignal("");
-  const [savingInvite, setSavingInvite] = createSignal(false);
+  const [pendingRevokeId, setPendingRevokeId] = createSignal<number | null>(
+    null,
+  );
+  const [doRevoke, isRevoking] = useAsyncAction(async () => {
+    const id = pendingRevokeId();
+    if (id !== null) {
+      await handleRevoke(id);
+      setPendingRevokeId(null);
+    }
+  });
   const { showToast } = useToast();
 
   createEffect(
@@ -96,44 +107,52 @@ export function TeamInviteManagementSection() {
     }
   }
 
-  async function handleCreateInvite(event: Event): Promise<void> {
-    event.preventDefault();
-    const im = inviteManagement();
-    if (!im) return;
-    setSavingInvite(true);
-    try {
-      await createTeamInvite({
-        names: names(),
-        firstSurname: firstSurname(),
-        secondSurname: secondSurname(),
-        email: email(),
-        role: role(),
-        teamId: teamId() ? Number(teamId()) : null,
-        expiresAt: expiresAt() ? new Date(expiresAt()).getTime() : null,
-      });
-      setNames("");
-      setFirstSurname("");
-      setSecondSurname("");
-      setEmail("");
-      setRole(getDefaultAssignableRole(im));
-      setTeamId("");
-      setExpiresAt("");
-      await revalidateQuery(inviteManagementQuery.key);
-      showToast("success", "Invitación enviada");
-    } catch (err: unknown) {
-      showToast(
-        "error",
-        getErrorMessage(err, "No se pudo crear la invitación"),
-      );
-    } finally {
-      setSavingInvite(false);
-    }
-  }
+  const [handleCreateInvite, isSavingInvite] = useAsyncAction(
+    async (event: Event) => {
+      event.preventDefault();
+      const im = inviteManagement();
+      if (!im) return;
+      try {
+        await createTeamInvite({
+          names: names(),
+          firstSurname: firstSurname(),
+          secondSurname: secondSurname(),
+          email: email(),
+          role: role(),
+          teamId: teamId() ? Number(teamId()) : null,
+          expiresAt: expiresAt() ? new Date(expiresAt()).getTime() : null,
+        });
+        setNames("");
+        setFirstSurname("");
+        setSecondSurname("");
+        setEmail("");
+        setRole(getDefaultAssignableRole(im));
+        setTeamId("");
+        setExpiresAt("");
+        await revalidateQuery(inviteManagementQuery.key);
+        showToast("success", "Invitación enviada");
+      } catch (err: unknown) {
+        showToast(
+          "error",
+          getErrorMessage(err, "No se pudo crear la invitación"),
+        );
+      }
+    },
+  );
 
   return (
     <Show when={inviteManagement()} keyed>
       {(im) => (
         <>
+          <ConfirmDialog
+            isOpen={pendingRevokeId() !== null}
+            title="Revocar invitación"
+            description="La persona no podrá usar este enlace para unirse al equipo."
+            confirmLabel="Revocar"
+            loading={isRevoking()}
+            onConfirm={() => void doRevoke()}
+            onClose={() => setPendingRevokeId(null)}
+          />
           <AppPageSection>
             <AppPageSectionTitle
               title="Invitar por correo"
@@ -198,8 +217,8 @@ export function TeamInviteManagementSection() {
                 onInput={(event) => setExpiresAt(event.currentTarget.value)}
               />
               <div class={styles.inviteActions}>
-                <Button type="submit" disabled={savingInvite() || !role()}>
-                  {savingInvite() ? "Enviando..." : "Enviar invitación"}
+                <Button type="submit" disabled={isSavingInvite() || !role()}>
+                  {isSavingInvite() ? "Enviando..." : "Enviar invitación"}
                 </Button>
               </div>
             </form>
@@ -262,7 +281,7 @@ export function TeamInviteManagementSection() {
                               disabled={isRevokePending(invite.inviteId)}
                               title="Revocar invitación"
                               onClick={() => {
-                                void handleRevoke(invite.inviteId);
+                                setPendingRevokeId(invite.inviteId);
                               }}
                             >
                               <X size={14} />
