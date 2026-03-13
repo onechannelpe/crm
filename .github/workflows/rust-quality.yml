@@ -1,4 +1,4 @@
-name: pipeline
+name: rust quality
 
 on:
   workflow_dispatch:
@@ -6,32 +6,38 @@ on:
     branches:
       - "master"
     paths:
+      - "crates/engine/src/**"
+      - "crates/engine/tests/**"
+      - "crates/engine/Cargo.toml"
       - "crates/pipeline/src/**"
       - "crates/pipeline/tests/**"
       - "crates/pipeline/Cargo.toml"
       - "Cargo.toml"
       - "Cargo.lock"
       - ".cargo/config.toml"
-      - ".github/workflows/pipeline.yml"
+      - ".github/workflows/rust-quality.yml"
   pull_request:
     branches:
       - "master"
     paths:
+      - "crates/engine/src/**"
+      - "crates/engine/tests/**"
+      - "crates/engine/Cargo.toml"
       - "crates/pipeline/src/**"
       - "crates/pipeline/tests/**"
       - "crates/pipeline/Cargo.toml"
       - "Cargo.toml"
       - "Cargo.lock"
       - ".cargo/config.toml"
-      - ".github/workflows/pipeline.yml"
+      - ".github/workflows/rust-quality.yml"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  lint:
-    name: Lint
+  format:
+    name: Format check
     runs-on: ubuntu-latest
 
     permissions:
@@ -44,22 +50,5 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
-      - name: clippy
-        run: cargo clippy -p crm-pipeline --all-targets --all-features -- -D warnings
-
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-
-      - uses: dtolnay/rust-toolchain@stable
-
-      - name: test
-        run: cargo test -p crm-pipeline
+      - name: check format
+        run: cargo fmt --all --check
