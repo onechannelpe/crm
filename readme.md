@@ -67,27 +67,34 @@ bun run dev
 
 ## Production deployment
 
-The production target for the web app is Node.
-Bun remains the workspace installer and dev tool, but the built web server and worker run under Node.
+The production target for the web app is Bun.
+`apps/web` owns the web lifecycle commands. Callers pass the env file explicitly.
 
 From a fresh clone on the server:
 
 ```sh
-cp .env.example .env
-./scripts/prod/web-build.sh
-./scripts/prod/web-migrate.sh
-./scripts/prod/web-start.sh
+cp .env.example .env.production
+bun install --frozen-lockfile
+bun run --cwd packages/notifications build:emails
+cd apps/web
+bun --env-file=../../.env.production run build
+bun --env-file=../../.env.production run migrate
+bun --env-file=../../.env.production run start
 ```
 
 Run the maintenance worker separately:
 
 ```sh
-./scripts/prod/web-worker.sh
+cd apps/web
+bun --env-file=../../.env.production run worker:maintenance
 ```
 
-Production scripts load env from the repo root `.env` by default.
-Set `WEB_ENV_FILE=/path/to/.env` if the server stores it elsewhere.
-For a real server, prefer a path outside the repo such as `/etc/web/web.env`.
+If the server stores secrets outside the repo, call Bun directly with an explicit env file:
+
+```sh
+cd /srv/web/apps/web
+bun --env-file=/etc/web/web.env run start
+```
 
 Systemd unit examples live in [`ops/systemd/web.service`](ops/systemd/web.service) and [`ops/systemd/web-worker.service`](ops/systemd/web-worker.service).
 

@@ -154,7 +154,7 @@ jobs:
 
       - name: type check
         working-directory: apps/web
-        run: bun x tsc --noEmit
+        run: bun run check:types
 
   build:
     name: Build
@@ -183,7 +183,8 @@ jobs:
           path: .
 
       - name: build
-        run: bun --filter='@crm/web' run build
+        working-directory: apps/web
+        run: bun run build
 
   test:
     name: Test
@@ -212,7 +213,8 @@ jobs:
           path: .
 
       - name: test
-        run: bun run --cwd apps/web test
+        working-directory: apps/web
+        run: bun run test
 
   perf-test:
     name: Perf test
@@ -242,4 +244,5 @@ jobs:
           path: .
 
       - name: perf test
-        run: bun run --cwd apps/web test:perf
+        working-directory: apps/web
+        run: bun run test:perf
