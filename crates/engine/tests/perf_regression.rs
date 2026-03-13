@@ -21,7 +21,7 @@ struct Workload {
 fn perf_regression_probe() {
     let db_path = std::env::var("ENGINE_DB_PATH").expect("ENGINE_DB_PATH required");
     let workload_path = std::env::var("ENGINE_WORKLOAD_PATH")
-        .unwrap_or_else(|_| "apps/engine/data/sqlite_workload.json".into());
+        .unwrap_or_else(|_| "crates/engine/data/sqlite_workload.json".into());
     let iterations: usize = std::env::var("ENGINE_WORKLOAD_ITERATIONS")
         .ok()
         .and_then(|v| v.parse().ok())

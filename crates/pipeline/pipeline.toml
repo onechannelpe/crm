@@ -1,9 +1,9 @@
 [paths]
-manifest = "apps/pipeline/data/mappings/source-manifest.json"
-normalized_dir = "apps/pipeline/data/normalized"
-staged_db = "apps/pipeline/data/build/staged/contacts.pipeline.staged.sqlite"
-bench_dir = "apps/pipeline/data/build/bench"
-engine_db = "apps/engine/data/contacts.sqlite"
+manifest = "crates/pipeline/data/mappings/source-manifest.json"
+normalized_dir = "crates/pipeline/data/normalized"
+staged_db = "crates/pipeline/data/build/staged/contacts.pipeline.staged.sqlite"
+bench_dir = "crates/pipeline/data/build/bench"
+engine_db = "crates/engine/data/contacts.sqlite"
 
 [profiles.quick]
 mode = "sample"

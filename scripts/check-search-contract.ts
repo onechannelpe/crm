@@ -45,7 +45,7 @@ interface ProjectionContract {
   fields: ProjectionField[];
 }
 
-const MANIFEST_PATH = "apps/pipeline/data/mappings/source-manifest.json";
+const MANIFEST_PATH = "crates/pipeline/data/mappings/source-manifest.json";
 const CANONICAL_CONTRACT_PATH = "contracts/canonical-contract.json";
 const SOURCE_CONTRACT_PATH = "contracts/source-contract.json";
 const PROJECTION_CONTRACT_PATH = "contracts/search-projection.json";

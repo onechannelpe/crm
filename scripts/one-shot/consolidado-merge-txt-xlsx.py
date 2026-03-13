@@ -273,19 +273,19 @@ def main() -> None:
     )
     parser.add_argument(
         "--txt",
-        default="apps/pipeline/data/raw/Consolidado_RUC20_Representantes_OK.txt",
+        default="crates/pipeline/data/raw/Consolidado_RUC20_Representantes_OK.txt",
     )
     parser.add_argument(
         "--xlsx",
-        default="apps/pipeline/data/raw/Consolidado_RUC20_Representantes_OK.xlsx",
+        default="crates/pipeline/data/raw/Consolidado_RUC20_Representantes_OK.xlsx",
     )
     parser.add_argument(
         "--out-tsv",
-        default="apps/pipeline/data/build/staged/Consolidado_RUC20_Representantes_MERGED.tsv",
+        default="crates/pipeline/data/build/staged/Consolidado_RUC20_Representantes_MERGED.tsv",
     )
     parser.add_argument(
         "--out-report",
-        default="apps/pipeline/data/build/staged/consolidado.merge-report.json",
+        default="crates/pipeline/data/build/staged/consolidado.merge-report.json",
     )
     parser.add_argument("--txt-row-cap", type=int, default=None)
     parser.add_argument("--xlsx-row-cap", type=int, default=None)
