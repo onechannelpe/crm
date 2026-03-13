@@ -9,8 +9,8 @@
   "scripts": {
     "dev": "bun run --parallel dev:engine dev:web",
     "dev:engine": "cargo run -p crm-engine",
-    "dev:web": "bun --no-env-file --env-file=../../.env run --cwd apps/web dev",
-    "dev:worker": "bun --no-env-file --env-file=../../.env run --cwd apps/web worker:maintenance",
+    "dev:web": "bun run --cwd apps/web dev",
+    "dev:worker": "bun run --cwd apps/web worker:maintenance",
     "pipeline:engine": "cargo run -p crm-pipeline --",
     "pipeline:refresh": "bun run pipeline:engine refresh --slice 100k",
     "pipeline:refresh:10k": "bun run pipeline:engine refresh --slice 10k",

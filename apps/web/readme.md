@@ -10,7 +10,7 @@ Most feature work follows the same path. A route calls a server function in [`sr
 
 Search is the main cross-service dependency. Engine integration is configured in [`src/server/shared/engine/index.ts`](src/server/shared/engine/index.ts) and implemented in [`src/server/shared/engine/client.ts`](src/server/shared/engine/client.ts). Client search flows through [`src/server/client-search/service.ts`](src/server/client-search/service.ts). Lead assignment also depends on engine health and search state through [`src/server/leads/service.ts`](src/server/leads/service.ts). Extension session and event APIs live under [`src/routes/api/extension/`](src/routes/api/extension/).
 
-Configuration is loaded from env passed by the caller.
+Configuration is loaded from env files selected by the script or passed by the caller.
 
 | Setting group       | Variables                                                                                                                                    |
 | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -38,34 +38,44 @@ bun run dev:worker
 Run from `apps/web/`:
 
 ```sh
-bun --env-file=../../.env run dev
-bun --env-file=../../.env run worker:maintenance
-bun --env-file=../../.env.production run build
+bun run dev
+bun run migrate
+bun run seed
+bun run build
+bun run test
+bun run test:prepare
+bun run test:server
+bun run worker:maintenance
 bun --env-file=../../.env.production run start
-bun --env-file=../../.env.production run migrate
-bun --env-file=../../.env.test run test
-bun --env-file=../../.env.test run test:prepare
-bun --env-file=../../.env.test run test:server
+bun --env-file=../../.env.production run migrate:prod
+bun --env-file=../../.env.production run seed:prod
+bun --env-file=../../.env.production run worker:maintenance:prod
 ```
 
-`bun run start` serves the built Nitro Bun server.
+Local scripts choose their default env file automatically. Production entrypoints stay explicit through `start`, `migrate:prod`, `seed:prod`, and `worker:maintenance:prod`.
 
 ## Production
 
 Production is Bun-first.
-Callers choose `.env.production` and invoke the app-local Bun commands directly.
+Use the app-local Bun commands directly.
 For a real server, prefer keeping secrets outside the repo and pass an explicit env file path.
 
 Build from `apps/web/`:
 
 ```sh
-bun --env-file=../../.env.production run build
+bun run build
 ```
 
 Run migrations:
 
 ```sh
-bun --env-file=../../.env.production run migrate
+bun --env-file=../../.env.production run migrate:prod
+```
+
+Run seeds if needed:
+
+```sh
+bun --env-file=../../.env.production run seed:prod
 ```
 
 Start the web server:
@@ -88,10 +98,10 @@ Validation commands:
 
 ```sh
 bun run check:web
-bun --env-file=../../.env.test run test
-bun --env-file=../../.env.test run test:prepare
-bun --env-file=../../.env.test run test:integration:browser
-bun --env-file=../../.env.test run test:perf
+bun run test
+bun run test:prepare
+bun run test:integration:browser
+bun run test:perf
 ```
 
 ## First reads
