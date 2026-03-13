@@ -91,23 +91,20 @@ export default function LeadsPage() {
     outcome: string,
     notes: string,
   ) => {
-    let draftRecordId: number | null = null;
-    await updateLeads({
+    const result = await updateLeads({
       optimistic: (prev) =>
         prev.filter((lead) => lead.assignmentId !== assignmentId),
-      commit: async () => {
-        const result = await registerCallAction(
+      commit: () =>
+        registerCallAction(
           assignmentId,
           contactId,
           outcome,
           notes,
-        );
-        draftRecordId = result.draftRecordId;
-      },
+        ),
     });
 
-    if (draftRecordId) {
-      navigate(`/sales/records/${draftRecordId}/edit`);
+    if (result.draftRecordId) {
+      navigate(`/sales/records/${result.draftRecordId}/edit`);
     }
   };
 
