@@ -11,7 +11,7 @@ export async function migrateToLatest(db: Kysely<any> = globalDb) {
   if (stored === hash) return;
   if (stored !== null) {
     throw new Error(
-      "Schema changed since DB was built.\n  ⇢ Delete crm.db and rerun: bun dev",
+      "Schema changed since DB was built.\n  ⇢ Delete crm.db and rebuild the application",
     );
   }
 

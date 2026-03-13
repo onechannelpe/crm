@@ -54,7 +54,7 @@ function senderOrigin(sender: chrome.runtime.MessageSender): string {
 
 function validateClaims(claims: ExtensionHandoffClaims, origin: string): void {
   const nowSeconds = Math.floor(Date.now() / 1000);
-  if (claims.iss !== "crm-web") {
+  if (claims.iss !== "web") {
     throw new Error("invalid token issuer");
   }
   if (claims.aud !== "crm-extension") {

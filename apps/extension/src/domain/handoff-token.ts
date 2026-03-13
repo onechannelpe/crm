@@ -1,5 +1,5 @@
 export interface ExtensionHandoffClaims {
-  iss: "crm-web";
+  iss: "web";
   aud: "crm-extension";
   sub: `user:${number}`;
   authSessionId: string;
@@ -25,7 +25,7 @@ export function isExtensionHandoffClaims(
 ): value is ExtensionHandoffClaims {
   return (
     isObject(value) &&
-    value.iss === "crm-web" &&
+    value.iss === "web" &&
     value.aud === "crm-extension" &&
     typeof value.sub === "string" &&
     typeof value.authSessionId === "string" &&

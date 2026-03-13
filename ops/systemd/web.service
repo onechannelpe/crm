@@ -1,0 +1,17 @@
+[Unit]
+Description=Web server
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/srv/web
+# Optional: keep secrets outside the repo.
+# Environment=WEB_ENV_FILE=/etc/web/web.env
+ExecStart=/srv/web/scripts/prod/web-start.sh
+Restart=always
+RestartSec=5
+User=web
+Group=web
+
+[Install]
+WantedBy=multi-user.target

@@ -54,7 +54,7 @@ export function createExtensionPortConnection(): ExtensionPortConnection {
     return { state, error };
   }
 
-  const port = runtime.connect(extensionId, { name: "crm-web" });
+  const port = runtime.connect(extensionId, { name: "web" });
 
   port.onMessage.addListener((message: unknown) => {
     if (!isRuntimeResponse(message)) return;
