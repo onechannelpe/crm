@@ -9,7 +9,7 @@ import {
   createSalesRecordsWorkflowService,
   type SalesRecordsWorkflowError,
 } from "~/server/sales/records-service";
-import { repos, runInRepositoryTransaction } from "~/server/shared/context";
+import { runInRepositoryTransaction } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
 import { throwLeadError } from "./error-mapping";
