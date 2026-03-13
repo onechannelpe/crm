@@ -19,10 +19,9 @@ type DocModule = {
   default: Component;
 };
 
-const docModules = import.meta.glob<DocModule>(
-  "../../../content/docs/*.mdx",
-  { eager: true },
-);
+const docModules = import.meta.glob<DocModule>("../../../content/docs/*.mdx", {
+  eager: true,
+});
 
 export type DocSlug = (typeof docMetadata)[number]["slug"];
 

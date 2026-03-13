@@ -30,7 +30,7 @@ export default defineConfig({
           "/docs/getting-started",
         ],
       },
-      preset: "bun"
+      preset: "bun",
     }),
     visualizer(),
   ],

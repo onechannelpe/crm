@@ -1,9 +1,10 @@
 import { useParams } from "@solidjs/router";
 import { Show } from "solid-js";
 
+import { docsBySlug, isDocSlug } from "~/features/docs/registry";
+
 import styles from "./docs.module.css";
 import proseStyles from "~/components/layout/prose.module.css";
-import { docsBySlug, isDocSlug } from "~/features/docs/registry";
 
 export default function DocSlugPage() {
   const params = useParams();
