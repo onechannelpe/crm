@@ -233,15 +233,15 @@ def main() -> None:
     )
     parser.add_argument(
         "--txt",
-        default="apps/pipeline/data/raw/Consolidado_RUC20_Representantes_OK.txt",
+        default="crates/pipeline/data/raw/Consolidado_RUC20_Representantes_OK.txt",
     )
     parser.add_argument(
         "--xlsx",
-        default="apps/pipeline/data/raw/Consolidado_RUC20_Representantes_OK.xlsx",
+        default="crates/pipeline/data/raw/Consolidado_RUC20_Representantes_OK.xlsx",
     )
     parser.add_argument(
         "--out",
-        default="apps/pipeline/data/build/staged/consolidado.diff-report.json",
+        default="crates/pipeline/data/build/staged/consolidado.diff-report.json",
     )
     parser.add_argument(
         "--sample-limit",

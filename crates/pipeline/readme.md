@@ -24,7 +24,7 @@ bun run pipeline:engine build --profile full
 bun run pipeline:engine promote
 ```
 
-Command reference for `bun run pipeline:engine -- <command>`:
+Command reference for `bun run pipeline:engine <command>`:
 
 - `refresh --slice 10k|100k|100k-osiptel [--to <path>]`
 - `verify-manifest`

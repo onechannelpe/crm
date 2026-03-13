@@ -1,5 +1,5 @@
 ROOT := ../..
-PIPELINE_MANIFEST := apps/pipeline/Cargo.toml
+PIPELINE_MANIFEST := crates/pipeline/Cargo.toml
 
 RUN_ID ?=
 BASE_RUN ?=
@@ -51,14 +51,14 @@ generate-triage:
 	@if [ -z "$(RUN_ID)" ]; then echo "RUN_ID is required"; exit 1; fi
 	mkdir -p $(TRIAGE_DIR)
 	cd $(ROOT) && UV_CACHE_DIR=.uv-cache uv run python scripts/one-shot/pipeline-generate-triage-template.py \
-		--run-dir apps/pipeline/$(RUNS_DIR)/$(RUN_ID) \
-		--out apps/pipeline/$(TRIAGE_DIR)/triage-$(RUN_ID).json
+		--run-dir crates/pipeline/$(RUNS_DIR)/$(RUN_ID) \
+		--out crates/pipeline/$(TRIAGE_DIR)/triage-$(RUN_ID).json
 
 compare-runs:
 	@if [ -z "$(BASE_RUN)" ]; then echo "BASE_RUN is required"; exit 1; fi
 	@if [ -z "$(CANDIDATE_RUN)" ]; then echo "CANDIDATE_RUN is required"; exit 1; fi
 	mkdir -p $(TRIAGE_DIR)
 	cd $(ROOT) && UV_CACHE_DIR=.uv-cache uv run python scripts/one-shot/pipeline-compare-slice-runs.py \
-		--base apps/pipeline/$(RUNS_DIR)/$(BASE_RUN) \
-		--candidate apps/pipeline/$(RUNS_DIR)/$(CANDIDATE_RUN) \
-		--out apps/pipeline/$(TRIAGE_DIR)/run-diff-$(BASE_RUN)-vs-$(CANDIDATE_RUN).json
+		--base crates/pipeline/$(RUNS_DIR)/$(BASE_RUN) \
+		--candidate crates/pipeline/$(RUNS_DIR)/$(CANDIDATE_RUN) \
+		--out crates/pipeline/$(TRIAGE_DIR)/run-diff-$(BASE_RUN)-vs-$(CANDIDATE_RUN).json

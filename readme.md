@@ -3,9 +3,9 @@
 <p align="center">
   <a href="apps/web/readme.md">web</a>
   ·
-  <a href="apps/engine/readme.md">engine</a>
+  <a href="crates/engine/readme.md">engine</a>
   ·
-  <a href="apps/pipeline/readme.md">pipeline</a>
+  <a href="crates/pipeline/readme.md">pipeline</a>
   ·
   <a href="apps/extension/readme.md">extension</a>
 </p>
@@ -29,8 +29,8 @@ flowchart LR
     web <--> appdb[(crm.db)]
     ext[extension] -->|get assignments| web
 
-    click pipe "https://github.com/onechannelpe/crm/tree/master/apps/pipeline"
-    click engine "https://github.com/onechannelpe/crm/tree/master/apps/engine"
+    click pipe "https://github.com/onechannelpe/crm/tree/master/crates/pipeline"
+    click engine "https://github.com/onechannelpe/crm/tree/master/crates/engine"
     click web "https://github.com/onechannelpe/crm/tree/master/apps/web"
     click ext "https://github.com/onechannelpe/crm/tree/master/apps/extension"
     click contacts "https://github.com/onechannelpe/crm"
@@ -44,9 +44,9 @@ The contract between web and engine is [`contracts/engine-api.json`](contracts/e
 
 - [`apps/web/`](apps/web/)
   The main application. It serves the UI, API routes, and the maintenance worker.
-- [`apps/engine/`](apps/engine/)
+- [`crates/engine/`](crates/engine/)
   The search service. It verifies signed requests and queries the published SQLite dataset.
-- [`apps/pipeline/`](apps/pipeline/)
+- [`crates/pipeline/`](crates/pipeline/)
   The dataset pipeline. It validates source files, builds the staged dataset, and promotes the SQLite snapshot used by the engine.
 - [`apps/extension/`](apps/extension/)
   The browser extension for call handling. It receives assignment handoff and syncs call state back to the web application.
@@ -95,8 +95,8 @@ Systemd unit examples live in [`ops/systemd/web.service`](ops/systemd/web.servic
 
 - Web request and auth flow: [`apps/web/src/middleware.ts`](apps/web/src/middleware.ts), [`apps/web/src/lib/auth/access/request-auth.ts`](apps/web/src/lib/auth/access/request-auth.ts)
 - Web service wiring: [`apps/web/src/server/shared/context.ts`](apps/web/src/server/shared/context.ts), [`apps/web/src/server/shared/registry.ts`](apps/web/src/server/shared/registry.ts)
-- Engine startup and request handling: [`apps/engine/src/main.rs`](apps/engine/src/main.rs), [`apps/engine/src/api/handlers.rs`](apps/engine/src/api/handlers.rs)
-- Pipeline orchestration: [`apps/pipeline/src/pipeline.rs`](apps/pipeline/src/pipeline.rs), [`apps/pipeline/src/cli.rs`](apps/pipeline/src/cli.rs)
+- Engine startup and request handling: [`crates/engine/src/main.rs`](crates/engine/src/main.rs), [`crates/engine/src/api/handlers.rs`](crates/engine/src/api/handlers.rs)
+- Pipeline orchestration: [`crates/pipeline/src/pipeline.rs`](crates/pipeline/src/pipeline.rs), [`crates/pipeline/src/cli.rs`](crates/pipeline/src/cli.rs)
 - Extension runtime and handoff flow: [`apps/extension/src/background/runtime.ts`](apps/extension/src/background/runtime.ts), [`apps/extension/src/services/external-auth.ts`](apps/extension/src/services/external-auth.ts)
 
 ## Validation

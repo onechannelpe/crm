@@ -201,8 +201,8 @@ def flush_batch(conn: sqlite3.Connection, batch: list[tuple[tuple[str, str, str,
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="Build engine sqlite snapshot from contacts csv")
-    ap.add_argument("--input", default="apps/engine/data/contacts.csv")
-    ap.add_argument("--output", default="apps/engine/data/contacts.sqlite")
+    ap.add_argument("--input", default="crates/engine/data/contacts.csv")
+    ap.add_argument("--output", default="crates/engine/data/contacts.sqlite")
     args = ap.parse_args()
 
     start = time.time()
