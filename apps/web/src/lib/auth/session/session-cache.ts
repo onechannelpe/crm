@@ -95,5 +95,6 @@ class SessionCache {
 export const sessionCache = new SessionCache();
 
 if (typeof setInterval !== "undefined") {
-  setInterval(() => sessionCache.cleanup(), 10 * 60 * 1000);
+  const cleanupTimer = setInterval(() => sessionCache.cleanup(), 10 * 60 * 1000);
+  cleanupTimer.unref?.();
 }

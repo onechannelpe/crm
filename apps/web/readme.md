@@ -44,7 +44,41 @@ bun run build
 bun run start
 ```
 
-`bun run start` serves the built application through Vite preview.
+`bun run start` serves the built Nitro node server.
+
+## Production
+
+Production is Node-first.
+Use Bun for dependency installation in the monorepo, then build and run the web app through Node entrypoints.
+The production env file lives at the repo root as `.env` by default.
+Set `WEB_ENV_FILE=/path/to/.env` to use a different file.
+For a real server, prefer keeping secrets outside the repo and point `WEB_ENV_FILE` at that path.
+
+Build from the repo root:
+
+```sh
+./scripts/prod/web-build.sh
+```
+
+Run migrations:
+
+```sh
+./scripts/prod/web-migrate.sh
+```
+
+Start the web server:
+
+```sh
+./scripts/prod/web-start.sh
+```
+
+Start the maintenance worker:
+
+```sh
+./scripts/prod/web-worker.sh
+```
+
+Systemd unit examples live in [`../../ops/systemd/web.service`](../../ops/systemd/web.service) and [`../../ops/systemd/web-worker.service`](../../ops/systemd/web-worker.service).
 
 ## Validation
 
