@@ -94,13 +94,7 @@ export default function LeadsPage() {
     const result = await updateLeads({
       optimistic: (prev) =>
         prev.filter((lead) => lead.assignmentId !== assignmentId),
-      commit: () =>
-        registerCallAction(
-          assignmentId,
-          contactId,
-          outcome,
-          notes,
-        ),
+      commit: () => registerCallAction(assignmentId, contactId, outcome, notes),
     });
 
     if (result.draftRecordId) {
