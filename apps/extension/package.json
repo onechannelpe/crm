@@ -11,8 +11,7 @@
     "build:firefox": "wxt build -b firefox",
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
-    "compile": "tsc --noEmit",
-    "check": "bun run compile",
+    "check": "tsc --noEmit",
     "test:integration": "bun run build && playwright test",
     "test:integration:headed": "bun run build && playwright test --headed",
     "postinstall": "wxt prepare"
