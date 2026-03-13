@@ -23,7 +23,11 @@ async function ensureSymlink(sourcePath, targetPath) {
   try {
     await symlink(sourcePath, targetPath, type);
   } catch (error) {
-    if (!(error instanceof Error) || !("code" in error) || error.code !== "EEXIST") {
+    if (
+      !(error instanceof Error) ||
+      !("code" in error) ||
+      error.code !== "EEXIST"
+    ) {
       throw error;
     }
   }
@@ -37,7 +41,9 @@ async function ensureFile(filePath, contents) {
 }
 
 async function linkUnscopedPackages() {
-  const entries = await readdir(bunCacheNodeModulesDir, { withFileTypes: true });
+  const entries = await readdir(bunCacheNodeModulesDir, {
+    withFileTypes: true,
+  });
   for (const entry of entries) {
     if (
       (!entry.isDirectory() && !entry.isSymbolicLink()) ||
@@ -88,11 +94,6 @@ if (existsSync(bunCacheNodeModulesDir)) {
 }
 
 await ensureFile(
-  join(
-    outputNodeModulesDir,
-    "solid-refresh",
-    "dist",
-    "solid-refresh.mjs",
-  ),
+  join(outputNodeModulesDir, "solid-refresh", "dist", "solid-refresh.mjs"),
   "export default {};\n",
 );

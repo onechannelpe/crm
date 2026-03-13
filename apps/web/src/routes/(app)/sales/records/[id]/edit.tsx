@@ -71,10 +71,11 @@ export default function FixSalePage() {
     const status = fixContext()?.status;
     return status === "rejected" || status === "draft";
   });
+  const isDraft = createMemo(() => fixContext()?.status === "draft");
 
   const [handleResubmit, isSubmitting] = useAsyncAction(async (e: Event) => {
     e.preventDefault();
-    if (!fixNotes().trim()) {
+    if (!isDraft() && !fixNotes().trim()) {
       showToast("error", "Describe las correcciones realizadas");
       return;
     }
@@ -94,7 +95,10 @@ export default function FixSalePage() {
         fixNotes().trim(),
       );
       await submitSalesRecord(noteId());
-      showToast("success", "Registro de venta reenviado");
+      showToast(
+        "success",
+        isDraft() ? "Registro de venta enviado" : "Registro de venta reenviado",
+      );
       navigate("/sales/confirmations");
     } catch (err: unknown) {
       showToast("error", getErrorMessage(err, "No se pudo reenviar"));
@@ -108,17 +112,23 @@ export default function FixSalePage() {
           <form onSubmit={(e) => void handleResubmit(e)}>
             <div class={styles.panelPadded}>
               <div class={styles.formBlock}>
-                <h2 class={styles.blockTitle}>Corrección del cliente</h2>
+                <h2 class={styles.blockTitle}>
+                  {isDraft() ? "Cliente" : "Corrección del cliente"}
+                </h2>
                 <ClientFields form={form} />
               </div>
 
               <div class={styles.formBlock}>
-                <h2 class={styles.blockTitle}>Corrección de direcciones</h2>
+                <h2 class={styles.blockTitle}>
+                  {isDraft() ? "Direcciones" : "Corrección de direcciones"}
+                </h2>
                 <AddressFields form={form} />
               </div>
 
               <div class={styles.formBlock}>
-                <h2 class={styles.blockTitle}>Corrección de productos</h2>
+                <h2 class={styles.blockTitle}>
+                  {isDraft() ? "Productos" : "Corrección de productos"}
+                </h2>
                 <ProductLineEditor
                   form={form}
                   products={currentProducts() ?? []}
@@ -147,13 +157,15 @@ export default function FixSalePage() {
               </Show>
 
               <div class={styles.formBlock}>
-                <h2 class={styles.blockTitle}>Correcciones realizadas</h2>
+                <h2 class={styles.blockTitle}>
+                  {isDraft() ? "Notas del registro" : "Correcciones realizadas"}
+                </h2>
                 <Textarea
-                  label="Notas de corrección"
+                  label={isDraft() ? "Notas" : "Notas de corrección"}
                   value={fixNotes()}
                   onInput={(e) => setFixNotes(e.currentTarget.value)}
                   rows={4}
-                  required
+                  required={!isDraft()}
                 />
               </div>
 
@@ -169,7 +181,11 @@ export default function FixSalePage() {
                   type="submit"
                   disabled={isSubmitting() || !canResubmit()}
                 >
-                  {isSubmitting() ? "Enviando..." : "Reenviar para aprobación"}
+                  {isSubmitting()
+                    ? "Enviando..."
+                    : isDraft()
+                      ? "Enviar para aprobación"
+                      : "Reenviar para aprobación"}
                 </Button>
               </div>
             </div>

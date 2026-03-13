@@ -1,5 +1,5 @@
-import { readdir, rm } from "node:fs/promises";
 import { existsSync } from "node:fs";
+import { readdir, rm } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -11,11 +11,16 @@ const outputDir = join(appDir, ".output", "ops");
 async function resolveEsbuildModuleUrl() {
   const entries = await readdir(bunCacheDir, { withFileTypes: true });
   const candidates = entries
-    .filter(
-      (entry) => entry.isDirectory() && entry.name.startsWith("esbuild@"),
-    )
+    .filter((entry) => entry.isDirectory() && entry.name.startsWith("esbuild@"))
     .map((entry) =>
-      join(bunCacheDir, entry.name, "node_modules", "esbuild", "lib", "main.js"),
+      join(
+        bunCacheDir,
+        entry.name,
+        "node_modules",
+        "esbuild",
+        "lib",
+        "main.js",
+      ),
     )
     .filter((path) => existsSync(path))
     .sort()
