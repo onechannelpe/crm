@@ -319,16 +319,7 @@ async function main(): Promise<void> {
   }
 
   console.log(
-    JSON.stringify(
-      {
-        checked_enabled_sources: enabledSources.length,
-        mapped_canonical_fields: [...mappedByEnabledSources].sort(),
-        projection: projectionContract.projection,
-        projection_fields: projectionContract.fields.length,
-      },
-      null,
-      2,
-    ),
+    `search contract OK: ${enabledSources.length} sources, ${mappedByEnabledSources.size} mapped fields, ${projectionContract.fields.length} projection fields`,
   );
 }
 

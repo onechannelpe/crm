@@ -118,15 +118,11 @@ export function createSalesRecordsWorkflowService(
     addresses: DraftAddressInput[];
     products: DraftProductInput[];
   }): Result<void, SalesRecordsWorkflowError> {
-    if (input.addresses.length < 1) {
-      return fail("invalid_data", "At least one address is required");
-    }
-    const primaryCount = input.addresses.filter((it) => it.isPrimary).length;
-    if (primaryCount !== 1) {
-      return fail("invalid_data", "Exactly one primary address is required");
-    }
-    if (input.products.length < 1) {
-      return fail("invalid_data", "At least one product is required");
+    if (input.addresses.length > 0) {
+      const primaryCount = input.addresses.filter((it) => it.isPrimary).length;
+      if (primaryCount !== 1) {
+        return fail("invalid_data", "Exactly one primary address is required");
+      }
     }
     if (input.products.some((it) => it.quantity < 1)) {
       return fail("invalid_data", "All product quantities must be positive");

@@ -15,8 +15,8 @@ export const registerCallMutation = action(
     outcome: string,
     notes?: string,
   ) => {
-    await registerCall(assignmentId, contactId, outcome, notes);
-    return json({}, { revalidate: activeLeadsQuery.key });
+    const result = await registerCall(assignmentId, contactId, outcome, notes);
+    return json(result, { revalidate: activeLeadsQuery.key });
   },
   "registerCall",
 );

@@ -83,5 +83,6 @@ for (const file of mjmlFiles) {
   const output = genModule(name, file, htmlExpr, textExpr, allParams, optional);
 
   writeFileSync(join(outDir, `${name}.ts`), output, "utf-8");
-  console.log(`compiled ${file} → compiled/${name}.ts`);
 }
+
+console.log(`email templates OK: ${mjmlFiles.length} compiled`);
