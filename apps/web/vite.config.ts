@@ -2,6 +2,7 @@ import mdx from "@mdx-js/rollup";
 import { solidStart } from "@solidjs/start/config";
 import { nitroV2Plugin } from "@solidjs/vite-plugin-nitro-2";
 import remarkFrontmatter from "remark-frontmatter";
+import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import { visualizer } from "rollup-plugin-visualizer";
 import { defineConfig } from "vite";
 
@@ -13,7 +14,7 @@ export default defineConfig({
         jsx: true,
         jsxImportSource: "solid-js",
         providerImportSource: "solid-mdx",
-        remarkPlugins: [remarkFrontmatter],
+        remarkPlugins: [remarkFrontmatter, remarkMdxFrontmatter],
       }),
     },
     solidStart({

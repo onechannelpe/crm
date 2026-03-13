@@ -1,56 +1,71 @@
 import type { Component } from "solid-js";
 
-type DocMetadata = {
-  slug: string;
+type DocFrontmatter = {
   title: string;
   description: string;
+  order: number;
 };
-
-const docMetadata = [
-  {
-    slug: "getting-started",
-    title: "Primeros pasos",
-    description:
-      "Cómo acceder al sistema y navegar por las secciones principales.",
-  },
-] as const satisfies readonly DocMetadata[];
 
 type DocModule = {
   default: Component;
+  frontmatter: unknown;
+};
+
+export type DocEntry = DocFrontmatter & {
+  slug: string;
+  content: Component;
 };
 
 const docModules = import.meta.glob<DocModule>("../../../content/docs/*.mdx", {
   eager: true,
 });
 
-export type DocSlug = (typeof docMetadata)[number]["slug"];
-
-export type DocEntry = DocMetadata & {
-  content: Component;
-};
-
-function getDocContent(slug: DocSlug): Component {
-  const key = Object.keys(docModules).find((candidate) =>
-    candidate.endsWith(`/${slug}.mdx`),
-  );
-
-  const content = key ? docModules[key]?.default : undefined;
-  if (!content) {
-    throw new Error(`Missing doc content for slug: ${slug}`);
+function getDocSlug(path: string): string {
+  const match = path.match(/\/([^/]+)\.mdx$/);
+  if (!match) {
+    throw new Error(`Invalid docs content path: ${path}`);
   }
 
-  return content;
+  return match[1];
 }
 
-export const docs: DocEntry[] = docMetadata.map((entry) => ({
-  ...entry,
-  content: getDocContent(entry.slug),
-}));
+function isDocFrontmatter(value: unknown): value is DocFrontmatter {
+  if (!value || typeof value !== "object") return false;
+  if (!("title" in value) || typeof value.title !== "string") return false;
+  if (!("description" in value) || typeof value.description !== "string") {
+    return false;
+  }
+  if (!("order" in value) || typeof value.order !== "number") return false;
+  return true;
+}
 
-export const docsBySlug: Record<DocSlug, DocEntry> = Object.fromEntries(
+function getDocEntry(path: string, module: DocModule): DocEntry {
+  if (!isDocFrontmatter(module.frontmatter)) {
+    throw new Error(`Invalid doc frontmatter for: ${path}`);
+  }
+
+  return {
+    slug: getDocSlug(path),
+    ...module.frontmatter,
+    content: module.default,
+  };
+}
+
+export const docs = Object.entries(docModules)
+  .map(([path, module]) => getDocEntry(path, module))
+  .sort((left, right) => left.order - right.order);
+
+export type DocSlug = (typeof docs)[number]["slug"];
+
+export const docsBySlug = Object.fromEntries(
   docs.map((entry) => [entry.slug, entry]),
 ) as Record<DocSlug, DocEntry>;
 
 export function isDocSlug(slug: string): slug is DocSlug {
-  return slug in docsBySlug;
+  return Object.hasOwn(docsBySlug, slug);
+}
+
+export function getDocBySlug(slug: string | undefined): DocEntry | undefined {
+  if (!slug || !isDocSlug(slug)) return undefined;
+  return docsBySlug[slug];
 }
