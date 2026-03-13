@@ -88,11 +88,18 @@ describe("security invariant manifest", () => {
       addresses: [],
       products: [{ productId: 1, quantity: 1 }],
     });
-    expect(rA.ok).toBe(false);
-    if (rA.ok) {
-      throw new Error("Expected missing-addresses draft contract to fail");
+    expect(rA.ok).toBe(true);
+    if (!rA.ok) {
+      throw new Error("Expected incomplete draft creation to succeed");
     }
-    expect(rA.error.message).toBe(SALES_ERROR_MANIFEST.missingAddresses);
+    const missingAddressesSubmit = await ctx.salesRecords.submit(rA.value, 1);
+    expect(missingAddressesSubmit.ok).toBe(false);
+    if (missingAddressesSubmit.ok) {
+      throw new Error("Expected missing-addresses submit contract to fail");
+    }
+    expect(missingAddressesSubmit.error.message).toBe(
+      SALES_ERROR_MANIFEST.submitMissingAddresses,
+    );
 
     const rB = await ctx.salesRecords.createDraft({
       source: "manual",
@@ -123,11 +130,18 @@ describe("security invariant manifest", () => {
       ],
       products: [],
     });
-    expect(rB.ok).toBe(false);
-    if (rB.ok) {
-      throw new Error("Expected missing-products draft contract to fail");
+    expect(rB.ok).toBe(true);
+    if (!rB.ok) {
+      throw new Error("Expected incomplete draft creation to succeed");
     }
-    expect(rB.error.message).toBe(SALES_ERROR_MANIFEST.missingProducts);
+    const missingProductsSubmit = await ctx.salesRecords.submit(rB.value, 1);
+    expect(missingProductsSubmit.ok).toBe(false);
+    if (missingProductsSubmit.ok) {
+      throw new Error("Expected missing-products submit contract to fail");
+    }
+    expect(missingProductsSubmit.error.message).toBe(
+      SALES_ERROR_MANIFEST.submitMissingProducts,
+    );
 
     const recordId = await createSubmittableRecord(ctx);
     const submitted = await ctx.salesRecords.submit(recordId, 1);
