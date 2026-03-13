@@ -9,8 +9,8 @@
   "scripts": {
     "dev": "bun run --parallel dev:engine dev:web",
     "dev:engine": "cargo run -p crm-engine",
-    "dev:web": "bun --no-env-file --env-file=../../.env run --cwd apps/web dev",
-    "dev:worker": "bun --no-env-file --env-file=.env run --cwd apps/web worker:maintenance",
+    "dev:web": "bun run --cwd apps/web dev",
+    "dev:worker": "bun run --cwd apps/web worker:maintenance",
     "pipeline:engine": "cargo run -p crm-pipeline --",
     "pipeline:refresh": "bun run pipeline:engine refresh --slice 100k",
     "pipeline:refresh:10k": "bun run pipeline:engine refresh --slice 10k",
@@ -18,7 +18,6 @@
     "pipeline:verify-manifest": "bun run pipeline:engine verify-manifest",
     "pipeline:normalize-sample": "bun run pipeline:engine validate --profile quick",
     "test:engine": "cargo test -p crm-engine",
-    "build:notifications": "bun run --cwd packages/notifications build:emails",
     "generate": "bun run --parallel generate:engine-contract generate:search-projection-contract generate:templates",
     "generate:templates": "bun run --cwd packages/notifications build:emails",
     "check:rust": "cargo xtask-check && cargo xtask-fmt && cargo xtask-clippy",

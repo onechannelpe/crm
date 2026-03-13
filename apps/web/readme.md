@@ -10,7 +10,7 @@ Most feature work follows the same path. A route calls a server function in [`sr
 
 Search is the main cross-service dependency. Engine integration is configured in [`src/server/shared/engine/index.ts`](src/server/shared/engine/index.ts) and implemented in [`src/server/shared/engine/client.ts`](src/server/shared/engine/client.ts). Client search flows through [`src/server/client-search/service.ts`](src/server/client-search/service.ts). Lead assignment also depends on engine health and search state through [`src/server/leads/service.ts`](src/server/leads/service.ts). Extension session and event APIs live under [`src/routes/api/extension/`](src/routes/api/extension/).
 
-Configuration is loaded from the repo root `.env`.
+Configuration is loaded from env files selected by the script or passed by the caller.
 
 | Setting group       | Variables                                                                                                                                    |
 | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -21,7 +21,7 @@ Configuration is loaded from the repo root `.env`.
 | Extension and OAuth | `EXTENSION_EXPECTED_ORIGIN`, `EXTENSION_HANDOFF_PRIVATE_KEY_PKCS8_BASE64`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` |
 | Notifications       | `RESEND_API_KEY`, `EMAIL_FROM`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_GRAPH_API_VERSION`                            |
 
-The engine client defaults to `ENGINE_URL=http://localhost:3001`. WebAuthn defaults are `WEBAUTHN_RP_ID=localhost` and `WEBAUTHN_ORIGIN=http://localhost:5173`. Definitions live in [`src/lib/env.ts`](src/lib/env.ts), [`src/lib/config.ts`](src/lib/config.ts), and [`app.config.ts`](app.config.ts).
+The engine client defaults to `ENGINE_URL=http://localhost:3001`. WebAuthn defaults are `WEBAUTHN_RP_ID=localhost` and `WEBAUTHN_ORIGIN=http://localhost:5173`. Definitions live in [`src/lib/env.ts`](src/lib/env.ts), [`src/lib/config.ts`](src/lib/config.ts), and [`vite.config.ts`](vite.config.ts).
 
 ## Running
 
@@ -39,43 +39,55 @@ Run from `apps/web/`:
 
 ```sh
 bun run dev
-bun run worker:maintenance
+bun run migrate
+bun run seed
 bun run build
-bun run start
+bun run test
+bun run test:prepare
+bun run test:server
+bun run worker:maintenance
+bun --env-file=../../.env.production run start
+bun --env-file=../../.env.production run migrate:prod
+bun --env-file=../../.env.production run seed:prod
+bun --env-file=../../.env.production run worker:maintenance:prod
 ```
 
-`bun run start` serves the built Nitro node server.
+Local scripts choose their default env file automatically. Production entrypoints stay explicit through `start`, `migrate:prod`, `seed:prod`, and `worker:maintenance:prod`.
 
 ## Production
 
-Production is Node-first.
-Use Bun for dependency installation in the monorepo, then build and run the web app through Node entrypoints.
-The production env file lives at the repo root as `.env` by default.
-Set `WEB_ENV_FILE=/path/to/.env` to use a different file.
-For a real server, prefer keeping secrets outside the repo and point `WEB_ENV_FILE` at that path.
+Production is Bun-first.
+Use the app-local Bun commands directly.
+For a real server, prefer keeping secrets outside the repo and pass an explicit env file path.
 
-Build from the repo root:
+Build from `apps/web/`:
 
 ```sh
-./scripts/prod/web-build.sh
+bun run build
 ```
 
 Run migrations:
 
 ```sh
-./scripts/prod/web-migrate.sh
+bun --env-file=../../.env.production run migrate:prod
+```
+
+Run seeds if needed:
+
+```sh
+bun --env-file=../../.env.production run seed:prod
 ```
 
 Start the web server:
 
 ```sh
-./scripts/prod/web-start.sh
+bun --env-file=../../.env.production run start
 ```
 
 Start the maintenance worker:
 
 ```sh
-./scripts/prod/web-worker.sh
+bun --env-file=../../.env.production run worker:maintenance
 ```
 
 Systemd unit examples live in [`../../ops/systemd/web.service`](../../ops/systemd/web.service) and [`../../ops/systemd/web-worker.service`](../../ops/systemd/web-worker.service).
@@ -85,7 +97,6 @@ Systemd unit examples live in [`../../ops/systemd/web.service`](../../ops/system
 Validation commands:
 
 ```sh
-bun run check
 bun run check:web
 bun run test
 bun run test:prepare

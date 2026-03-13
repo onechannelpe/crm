@@ -26,7 +26,6 @@ Validation commands:
 ```sh
 bun run check
 bun run test:integration
-bun run test:extension:integration
 ```
 
 ## First reads

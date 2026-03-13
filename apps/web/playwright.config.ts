@@ -46,7 +46,7 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: {
-    command: `bun run test:prepare && bun run serve:test -- --host 127.0.0.1 --port ${AUTH_TEST_PORT}`,
+    command: `bun run test:prepare && bun run test:server -- --host 127.0.0.1 --port ${AUTH_TEST_PORT}`,
     url: `http://127.0.0.1:${AUTH_TEST_PORT}/login`,
     cwd: ".",
     reuseExistingServer: false,
