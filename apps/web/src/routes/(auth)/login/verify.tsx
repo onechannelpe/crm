@@ -1,7 +1,8 @@
 import { createAsync, useSearchParams, useSubmission } from "@solidjs/router";
-import { createMemo, createSignal, onMount, Show } from "solid-js";
+import { createMemo, createSignal, onMount, Show, Suspense } from "solid-js";
 
 import { AuthFlowShell } from "~/components/auth/flow/auth-flow-shell";
+import { AuthLoadingBlock } from "~/components/auth/flow/auth-loading-block";
 import { LegalFooter } from "~/components/auth/flow/legal-footer";
 import { OtpSlotInput } from "~/components/auth/flow/otp-slot-input";
 import { useToast } from "~/components/feedback/toast-provider";
@@ -15,6 +16,7 @@ import { loginFlowQuery } from "~/lib/queries/auth";
 
 import styles from "../../auth/auth-shell.module.css";
 import pageStyles from "../../auth/login-page.module.css";
+import shellStyles from "~/components/auth/flow/auth-flow-shell.module.css";
 import linkStyles from "~/components/auth/flow/auth-links.module.css";
 
 export default function LoginVerifyPage() {
@@ -51,68 +53,73 @@ export default function LoginVerifyPage() {
     <AuthFlowShell
       title="Verificar código"
       description="Ingresa el código de 6 dígitos de tu app de autenticación."
-      footerNote={<LegalFooter />}
     >
-      <Show
-        when={totpFlow() !== undefined}
-        fallback={
-          <div class={pageStyles.formStack}>
-            <p class={pageStyles.supportText} aria-live="polite">
-              Cargando verificación…
-            </p>
-          </div>
-        }
-      >
-        <Show
-          when={totpFlow()}
-          fallback={
-            <div class={pageStyles.formStack}>
-              <p class={pageStyles.formError} role="alert">
-                La sesión de verificación expiró. Intenta de nuevo.
-              </p>
-              <a href="/login" class={linkStyles.passkeyLink}>
-                Volver al inicio de sesión
-              </a>
-            </div>
-          }
-        >
-          {(flow) => (
-            <EnterTransition>
+      <div class={pageStyles.formStack}>
+        <Suspense fallback={<AuthLoadingBlock label="Cargando verificación" />}>
+          <Show
+            when={totpFlow()}
+            fallback={
               <form
                 class={pageStyles.formStack}
-                action={totpLoginMutation}
-                method="post"
+                aria-label="expired-login-flow"
               >
-                <input type="hidden" name="flowId" value={String(flow().id)} />
-                <input type="hidden" name="totpCode" value={totpCode()} />
-                <OtpSlotInput value={totpCode()} onValueChange={setTotpCode} />
-                <Show when={totpError()}>
-                  {(msg) => (
-                    <p class={pageStyles.formError} role="alert">
-                      {msg()}
-                    </p>
-                  )}
-                </Show>
-                <p class={pageStyles.supportText}>
-                  Usuario: {flow().identifier}
+                <p class={pageStyles.formError} role="alert">
+                  La sesión de verificación expiró. Intenta de nuevo.
                 </p>
-                <div class={pageStyles.actionRow}>
-                  <a href="/login" class={linkStyles.passkeyLink}>
-                    Usar otra cuenta
-                  </a>
-                  <Button
-                    type="submit"
-                    class={styles.full}
-                    loading={totpSubmission.pending}
-                  >
-                    Iniciar sesión
-                  </Button>
-                </div>
+                <a href="/login" class={linkStyles.passkeyLink}>
+                  Volver al inicio de sesión
+                </a>
               </form>
-            </EnterTransition>
-          )}
-        </Show>
-      </Show>
+            }
+          >
+            {(flow) => (
+              <EnterTransition>
+                <form
+                  class={pageStyles.formStack}
+                  action={totpLoginMutation}
+                  method="post"
+                >
+                  <input
+                    type="hidden"
+                    name="flowId"
+                    value={String(flow().id)}
+                  />
+                  <input type="hidden" name="totpCode" value={totpCode()} />
+                  <OtpSlotInput
+                    value={totpCode()}
+                    onValueChange={setTotpCode}
+                  />
+                  <Show when={totpError()}>
+                    {(msg) => (
+                      <p class={pageStyles.formError} role="alert">
+                        {msg()}
+                      </p>
+                    )}
+                  </Show>
+                  <p class={pageStyles.supportText}>
+                    Usuario: {flow().identifier}
+                  </p>
+                  <div class={pageStyles.actionRow}>
+                    <a href="/login" class={linkStyles.passkeyLink}>
+                      Usar otra cuenta
+                    </a>
+                    <Button
+                      type="submit"
+                      class={styles.full}
+                      loading={totpSubmission.pending}
+                    >
+                      Iniciar sesión
+                    </Button>
+                  </div>
+                </form>
+              </EnterTransition>
+            )}
+          </Show>
+        </Suspense>
+        <div class={shellStyles.footerNote}>
+          <LegalFooter />
+        </div>
+      </div>
     </AuthFlowShell>
   );
 }

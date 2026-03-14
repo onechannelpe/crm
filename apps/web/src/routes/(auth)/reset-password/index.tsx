@@ -14,6 +14,7 @@ import {
 
 import styles from "../../auth/auth-shell.module.css";
 import pageStyles from "../../auth/login-page.module.css";
+import shellStyles from "~/components/auth/flow/auth-flow-shell.module.css";
 import linkStyles from "~/components/auth/flow/auth-links.module.css";
 
 export default function ResetPasswordPage() {
@@ -68,7 +69,6 @@ export default function ResetPasswordPage() {
         <AuthFlowShell
           title="¿Olvidaste tu contraseña?"
           description="Ingresa tu correo y te enviaremos un enlace para restablecerla."
-          footerNote={<LegalFooter />}
         >
           <Show
             when={!requestSent()}
@@ -87,38 +87,43 @@ export default function ResetPasswordPage() {
             }
           >
             <EnterTransition>
-              <form
-                action={requestPasswordResetMutation}
-                method="post"
-                class={pageStyles.formStack}
-              >
-                <Input
-                  name="email"
-                  type="email"
-                  placeholder="Correo electrónico"
-                  autocomplete="email"
-                  value={email()}
-                  onInput={(e) => setEmail(e.currentTarget.value)}
-                  required
-                />
-                <Show when={requestError()}>
-                  {(msg) => (
-                    <p class={pageStyles.formError} role="alert">
-                      {msg()}
-                    </p>
-                  )}
-                </Show>
-                <Button
-                  type="submit"
-                  class={styles.full}
-                  loading={requestSubmission.pending}
+              <div class={pageStyles.formStack}>
+                <form
+                  action={requestPasswordResetMutation}
+                  method="post"
+                  class={pageStyles.formStack}
                 >
-                  Enviar enlace
-                </Button>
-                <a href="/login" class={linkStyles.passkeyLink}>
-                  Volver al inicio de sesión
-                </a>
-              </form>
+                  <Input
+                    name="email"
+                    type="email"
+                    placeholder="Correo electrónico"
+                    autocomplete="email"
+                    value={email()}
+                    onInput={(e) => setEmail(e.currentTarget.value)}
+                    required
+                  />
+                  <Show when={requestError()}>
+                    {(msg) => (
+                      <p class={pageStyles.formError} role="alert">
+                        {msg()}
+                      </p>
+                    )}
+                  </Show>
+                  <Button
+                    type="submit"
+                    class={styles.full}
+                    loading={requestSubmission.pending}
+                  >
+                    Enviar enlace
+                  </Button>
+                  <a href="/login" class={linkStyles.passkeyLink}>
+                    Volver al inicio de sesión
+                  </a>
+                </form>
+                <div class={shellStyles.footerNote}>
+                  <LegalFooter />
+                </div>
+              </div>
             </EnterTransition>
           </Show>
         </AuthFlowShell>
@@ -127,7 +132,6 @@ export default function ResetPasswordPage() {
       <AuthFlowShell
         title="Nueva contraseña"
         description="Elige una contraseña segura para tu cuenta."
-        footerNote={<LegalFooter />}
       >
         <Show
           when={!resetSucceeded()}
@@ -146,48 +150,53 @@ export default function ResetPasswordPage() {
           }
         >
           <EnterTransition>
-            <form
-              action={resetPasswordMutation}
-              method="post"
-              class={pageStyles.formStack}
-            >
-              <input type="hidden" name="token" value={token()} />
-              <Input
-                name="password"
-                type="password"
-                placeholder="Nueva contraseña"
-                autocomplete="new-password"
-                value={password()}
-                onInput={(e) => setPassword(e.currentTarget.value)}
-                required
-              />
-              <Input
-                name="confirmPassword"
-                type="password"
-                placeholder="Confirmar contraseña"
-                autocomplete="new-password"
-                value={confirmPassword()}
-                onInput={(e) => setConfirmPassword(e.currentTarget.value)}
-                required
-              />
-              <Show when={resetError()}>
-                {(msg) => (
-                  <p class={pageStyles.formError} role="alert">
-                    {msg()}
-                  </p>
-                )}
-              </Show>
-              <Button
-                type="submit"
-                class={styles.full}
-                loading={resetSubmission.pending}
+            <div class={pageStyles.formStack}>
+              <form
+                action={resetPasswordMutation}
+                method="post"
+                class={pageStyles.formStack}
               >
-                Cambiar contraseña
-              </Button>
-              <a href="/login" class={linkStyles.passkeyLink}>
-                Volver al inicio de sesión
-              </a>
-            </form>
+                <input type="hidden" name="token" value={token()} />
+                <Input
+                  name="password"
+                  type="password"
+                  placeholder="Nueva contraseña"
+                  autocomplete="new-password"
+                  value={password()}
+                  onInput={(e) => setPassword(e.currentTarget.value)}
+                  required
+                />
+                <Input
+                  name="confirmPassword"
+                  type="password"
+                  placeholder="Confirmar contraseña"
+                  autocomplete="new-password"
+                  value={confirmPassword()}
+                  onInput={(e) => setConfirmPassword(e.currentTarget.value)}
+                  required
+                />
+                <Show when={resetError()}>
+                  {(msg) => (
+                    <p class={pageStyles.formError} role="alert">
+                      {msg()}
+                    </p>
+                  )}
+                </Show>
+                <Button
+                  type="submit"
+                  class={styles.full}
+                  loading={resetSubmission.pending}
+                >
+                  Cambiar contraseña
+                </Button>
+                <a href="/login" class={linkStyles.passkeyLink}>
+                  Volver al inicio de sesión
+                </a>
+              </form>
+              <div class={shellStyles.footerNote}>
+                <LegalFooter />
+              </div>
+            </div>
           </EnterTransition>
         </Show>
       </AuthFlowShell>

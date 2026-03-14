@@ -1,4 +1,4 @@
-import { onMount, Show, type JSX } from "solid-js";
+import { onMount, type JSX } from "solid-js";
 
 import { initializeThemeMode } from "~/components/ui/theme/theme-mode";
 
@@ -9,7 +9,6 @@ interface AuthFlowShellProps {
   description?: string;
   topBar?: JSX.Element;
   footer?: JSX.Element;
-  footerNote?: JSX.Element;
   children: JSX.Element;
 }
 
@@ -21,9 +20,9 @@ export function AuthFlowShell(props: AuthFlowShellProps) {
   return (
     <div class={styles.shell}>
       <section class={styles.surface}>
-        <Show when={props.topBar !== undefined}>
+        {props.topBar !== undefined ? (
           <div class={styles.topBar}>{props.topBar}</div>
-        </Show>
+        ) : null}
         <div class={styles.content}>
           <div class={styles.logo}>
             <img
@@ -35,19 +34,15 @@ export function AuthFlowShell(props: AuthFlowShellProps) {
             />
           </div>
           <h1 class={styles.title}>{props.title}</h1>
-          <Show when={props.description}>
+          {props.description ? (
             <p class={styles.description}>{props.description}</p>
-          </Show>
+          ) : null}
 
           <div class={styles.body}>{props.children}</div>
 
-          <Show when={props.footer !== undefined}>
+          {props.footer !== undefined ? (
             <footer class={styles.footer}>{props.footer}</footer>
-          </Show>
-
-          <Show when={props.footerNote !== undefined}>
-            <div class={styles.footerNote}>{props.footerNote}</div>
-          </Show>
+          ) : null}
         </div>
       </section>
     </div>

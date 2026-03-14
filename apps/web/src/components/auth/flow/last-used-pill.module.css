@@ -3,3 +3,10 @@
   right: -20px;
   top: -8px;
 }
+
+.pill {
+  background: color-mix(in oklab, var(--info) 18%, var(--surface));
+  border: 1px solid color-mix(in oklab, var(--info) 40%, var(--border));
+  color: var(--info);
+  font-weight: var(--font-weight-semibold);
+}

@@ -18,7 +18,6 @@ test.describe("login entry", () => {
 
     await loginPage.goto();
     await loginPage.openUsernameLogin();
-    await loginPage.continueWithUsername("demo.user");
     await loginPage.expectPasswordStep();
   });
 });
