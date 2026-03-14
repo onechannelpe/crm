@@ -155,6 +155,9 @@ describe("login flow service", () => {
     }
     expect(flow.requestOptions.allowCredentials).toHaveLength(1);
     expect(flow.requestOptions.rpId).toBe(result.value.requestOptions.rpId);
+    expect(flow.requestOptions.challenge).toBe(
+      result.value.requestOptions.challenge,
+    );
   });
 
   it("returns unexpected when password login cannot create the required passkey flow", async () => {

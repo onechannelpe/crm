@@ -16,7 +16,7 @@ import { passkeyFinishUiMessage } from "~/lib/auth/login-ui";
 import {
   createAuthenticationResponse,
   isPasskeyAuthenticationSupported,
-} from "~/lib/auth/passkey/client";
+} from "~/lib/auth/passkey/authentication-client";
 import { useAuthPageView } from "~/lib/auth/use-auth-analytics";
 import { trackAuthClientEventMutation } from "~/lib/mutations/auth-analytics";
 import { loginFlowQuery } from "~/lib/queries/auth";

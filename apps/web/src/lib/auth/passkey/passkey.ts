@@ -3,6 +3,7 @@ import {
   verifyRegistrationResponse,
   generateAuthenticationOptions,
   verifyAuthenticationResponse,
+  type PublicKeyCredentialRequestOptionsJSON,
   type RegistrationResponseJSON,
   type AuthenticationResponseJSON,
 } from "@simplewebauthn/server";
@@ -75,18 +76,29 @@ export function createPasskeyService(repos: PasskeyServiceDeps) {
   async function buildAuthenticationOptions(
     userId: number | undefined,
     challenge?: string,
-  ) {
+  ): Promise<PublicKeyCredentialRequestOptionsJSON> {
     const allowCredentials = userId
       ? (await repos.passkeys.findByUser(userId)).map((p) => ({
           id: p.id,
+          type: "public-key" as const,
           transports: parseStoredTransports(p.transports),
         }))
       : [];
 
+    if (challenge) {
+      return {
+        rpId: rpID,
+        challenge,
+        allowCredentials,
+        timeout: 60000,
+        userVerification: "preferred",
+        extensions: undefined,
+      };
+    }
+
     return generateAuthenticationOptions({
       rpID,
       allowCredentials,
-      challenge,
       userVerification: "preferred",
     });
   }
