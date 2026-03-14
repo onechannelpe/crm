@@ -21,6 +21,7 @@ import {
 import { getErrorMessage } from "~/lib/errors";
 
 export type OnboardingView = "profile" | "security-choice" | "passkey" | "totp";
+export type PasskeyOnboardingPhase = "idle" | "device" | "server";
 
 export function useOnboardingFlow() {
   const navigate = useNavigate();
@@ -29,8 +30,27 @@ export function useOnboardingFlow() {
 
   const [step, setStep] = createSignal<OnboardingView>("profile");
   const [phone, setPhone] = createSignal("");
-  const [submitting, setSubmitting] = createSignal(false);
+  const [onboardingSubmitting, setOnboardingSubmitting] = createSignal(false);
+  const [passkeyPhase, setPasskeyPhase] =
+    createSignal<PasskeyOnboardingPhase>("idle");
   const [passkeySupported, setPasskeySupported] = createSignal(false);
+
+  const submitting = createMemo(
+    () => onboardingSubmitting() || passkeyPhase() === "server",
+  );
+
+  async function completeOnboardingAction(
+    action: () => Promise<{ redirectTo: string }>,
+    failureMessage: string,
+  ) {
+    try {
+      const result = await action();
+      showToast("success", "Tu cuenta ya quedó configurada");
+      navigate(result.redirectTo);
+    } catch (error: unknown) {
+      showToast("error", getErrorMessage(error, failureMessage));
+    }
+  }
 
   async function submitOnboarding(
     action: () => Promise<{ redirectTo: string }>,
@@ -40,15 +60,11 @@ export function useOnboardingFlow() {
       return;
     }
 
-    setSubmitting(true);
+    setOnboardingSubmitting(true);
     try {
-      const result = await action();
-      showToast("success", "Tu cuenta ya quedó configurada");
-      navigate(result.redirectTo);
-    } catch (error: unknown) {
-      showToast("error", getErrorMessage(error, failureMessage));
+      await completeOnboardingAction(action, failureMessage);
     } finally {
-      setSubmitting(false);
+      setOnboardingSubmitting(false);
     }
   }
 
@@ -145,20 +161,26 @@ export function useOnboardingFlow() {
   }
 
   async function registerPasskeyAndFinishOnboarding() {
+    if (passkeyPhase() !== "idle") {
+      return;
+    }
+
+    setPasskeyPhase("device");
     try {
       const { challengeId, options } = await beginPasskeyRegistration();
-      await submitOnboarding(async () => {
-        return completePasskeyOnboarding(
-          phone(),
-          challengeId,
-          await createRegistrationResponse(options),
-        );
-      }, "No se pudo configurar la clave de acceso");
+      const response = await createRegistrationResponse(options);
+      setPasskeyPhase("server");
+      await completeOnboardingAction(
+        () => completePasskeyOnboarding(phone(), challengeId, response),
+        "No se pudo configurar la clave de acceso",
+      );
     } catch (error: unknown) {
       showToast(
         "error",
         getErrorMessage(error, "No se pudo configurar la clave de acceso"),
       );
+    } finally {
+      setPasskeyPhase("idle");
     }
   }
 
@@ -177,6 +199,7 @@ export function useOnboardingFlow() {
     phone,
     setPhone,
     submitting,
+    passkeyPhase,
     onboardingState,
     passkeySupported,
     totpEnrollment,

@@ -3,14 +3,32 @@
 import type { AuthenticationResponseJSON } from "@simplewebauthn/server";
 import { getRequestEvent } from "solid-js/web";
 
+import { internalError } from "~/lib/app-errors";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
-import { createPasskeyLoginWorkflowService } from "~/lib/auth/passkey/workflows";
+import {
+  createPasskeyLoginWorkflowService,
+  type SubmitPasskeyLoginError,
+} from "~/lib/auth/passkey/workflows";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { replaceCurrentSession } from "~/lib/auth/session/login-completion";
 import { getActionRequestContext } from "~/lib/observability/context";
 import { privilegedLoginAlertSender, repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
+
+function normalizePasskeyLoginError(error: SubmitPasskeyLoginError): {
+  ok: false;
+  code: "flow_expired" | "invalid_credentials";
+} {
+  if (error.kind === "unexpected") {
+    throw internalError(error.message);
+  }
+
+  return {
+    ok: false,
+    code: error.kind,
+  };
+}
 
 export async function finishPasskeyLogin(
   flowId: number,
@@ -27,19 +45,20 @@ export async function finishPasskeyLogin(
   });
 
   if (isErr(result)) {
+    const analyticsCode =
+      result.error.kind === "unexpected"
+        ? "invalid_credentials"
+        : result.error.kind;
     await recordAuthAnalyticsEvent(
       {
         source: "server",
         kind: "passkey_result",
         outcome: "failed",
-        code: result.error.kind,
+        code: analyticsCode,
       },
       getActionRequestContext(),
     );
-    return {
-      ok: false as const,
-      code: result.error.kind,
-    };
+    return normalizePasskeyLoginError(result.error);
   }
 
   await recordAuthAnalyticsEvent(

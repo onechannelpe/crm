@@ -1,5 +1,3 @@
-import type { PublicKeyCredentialRequestOptionsJSON } from "@simplewebauthn/server";
-
 import type { Role } from "~/lib/auth/access/rbac";
 import { resolvePasswordStrongAuth } from "~/lib/auth/security/password-strong-auth";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
@@ -12,7 +10,10 @@ import type { Repositories } from "~/server/shared/registry";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import { createPasskeyService } from "./passkey/passkey";
-import { createPasskeyLoginWorkflowService } from "./passkey/workflows";
+import {
+  createPasskeyLoginWorkflowService,
+  type PasskeyLoginFlowState,
+} from "./passkey/workflows";
 import {
   completePasswordLogin,
   getPasswordLoginNextStep,
@@ -37,13 +38,6 @@ interface TotpLoginFlowState {
   id: number;
   identifier: string;
   state: "totp";
-}
-
-interface PasskeyLoginFlowState {
-  id: number;
-  identifier: string;
-  state: "passkey";
-  requestOptions: PublicKeyCredentialRequestOptionsJSON;
 }
 
 export type LoginFlowState = TotpLoginFlowState | PasskeyLoginFlowState;

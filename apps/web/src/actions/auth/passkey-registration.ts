@@ -10,19 +10,11 @@ import { createPasskeyEnrollmentWorkflowService } from "~/lib/auth/passkey/workf
 import type {
   BeginPasskeyEnrollmentError,
   FinishPasskeyEnrollmentError,
+  PasskeyEnrollmentChallenge,
 } from "~/lib/auth/passkey/workflows";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { repos } from "~/server/shared/context";
 import { isErr, type Result } from "~/server/shared/result";
-
-export interface PasskeyRegistrationChallengeResult {
-  challengeId: number;
-  options: Awaited<
-    ReturnType<
-      ReturnType<typeof createPasskeyService>["getRegistrationOptions"]
-    >
-  >;
-}
 
 function unwrapFinishPasskeyEnrollmentResult(
   result: Result<void, FinishPasskeyEnrollmentError>,
@@ -44,11 +36,8 @@ function unwrapFinishPasskeyEnrollmentResult(
 }
 
 function unwrapBeginPasskeyEnrollmentResult(
-  result: Result<
-    PasskeyRegistrationChallengeResult,
-    BeginPasskeyEnrollmentError
-  >,
-): PasskeyRegistrationChallengeResult {
+  result: Result<PasskeyEnrollmentChallenge, BeginPasskeyEnrollmentError>,
+): PasskeyEnrollmentChallenge {
   if (!isErr(result)) {
     return result.value;
   }
@@ -65,7 +54,7 @@ function unwrapBeginPasskeyEnrollmentResult(
   throw internalError("Unexpected passkey registration failure");
 }
 
-export async function beginPasskeyRegistration(): Promise<PasskeyRegistrationChallengeResult> {
+export async function beginPasskeyRegistration(): Promise<PasskeyEnrollmentChallenge> {
   const session = await requireSession();
   const event = getRequestEvent();
   const ipAddress = getClientIp(event?.request.headers ?? new Headers());

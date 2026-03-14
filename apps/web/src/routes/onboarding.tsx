@@ -108,15 +108,19 @@ function OnboardingContent() {
             <Show when={flow.step() === "passkey"}>
               <EnterTransition>
                 <div class={styles.passkeyEnrollStep}>
-                  <Show when={flow.submitting()}>
+                  <Show when={flow.passkeyPhase() === "device"}>
                     <p class={styles.passkeyStatus}>
                       Esperando tu dispositivo...
                     </p>
                   </Show>
 
+                  <Show when={flow.passkeyPhase() === "server"}>
+                    <p class={styles.passkeyStatus}>Guardando tu registro...</p>
+                  </Show>
+
                   <Show
                     when={
-                      !flow.submitting() &&
+                      flow.passkeyPhase() === "idle" &&
                       !currentUser.hasPasskey &&
                       flow.passkeySupported()
                     }
@@ -131,7 +135,11 @@ function OnboardingContent() {
                     </Button>
                   </Show>
 
-                  <Show when={!flow.submitting() && !flow.passkeySupported()}>
+                  <Show
+                    when={
+                      flow.passkeyPhase() === "idle" && !flow.passkeySupported()
+                    }
+                  >
                     <p class={styles.passkeyStatus}>
                       Este dispositivo no es compatible con claves de acceso.
                     </p>

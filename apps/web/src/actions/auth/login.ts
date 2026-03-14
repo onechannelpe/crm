@@ -3,6 +3,7 @@
 import { redirect } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
 
+import { internalError } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
@@ -11,7 +12,10 @@ import {
   submitTotpForLoginFlow,
 } from "~/lib/auth/login-flow";
 import { parseLoginFlowId } from "~/lib/auth/login-route-flow";
-import { createPasskeyLoginWorkflowService } from "~/lib/auth/passkey/workflows";
+import {
+  createPasskeyLoginWorkflowService,
+  type BeginPasskeyLoginError,
+} from "~/lib/auth/passkey/workflows";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { replaceCurrentSession } from "~/lib/auth/session/login-completion";
 import { getActionRequestContext } from "~/lib/observability/context";
@@ -65,6 +69,18 @@ function getRequestContext() {
   return {
     ipAddress: getClientIp(event?.request.headers ?? new Headers()),
     userAgent: event?.request.headers.get("user-agent") ?? null,
+  };
+}
+
+function normalizePasskeyStartError(
+  error: BeginPasskeyLoginError,
+): PasskeyStartSubmissionResult {
+  if (error.kind === "unexpected") {
+    throw internalError(error.message);
+  }
+  return {
+    ok: false,
+    code: "invalid_credentials",
   };
 }
 
@@ -154,10 +170,7 @@ export async function passkeyStart(
       },
       getActionRequestContext(),
     );
-    return {
-      ok: false,
-      code: "invalid_credentials",
-    };
+    return normalizePasskeyStartError(result.error);
   }
 
   await recordAuthAnalyticsEvent(

@@ -301,6 +301,36 @@ describe("passkey flows", () => {
     expect(result.error.kind).toBe("invalid_credentials");
   });
 
+  it("returns unexpected when passkey login flow persistence fails", async () => {
+    await ctx.repos.passkeys.create({
+      id: "pk-login-failure",
+      user_id: 1,
+      public_key: "base64-public-key",
+      counter: 0,
+      transports: JSON.stringify(["internal"]),
+    });
+
+    const workflow = createPasskeyLoginWorkflowService({
+      ...ctx.repos,
+      loginFlows: {
+        ...ctx.repos.loginFlows,
+        async create() {
+          throw new Error("boom");
+        },
+      },
+    });
+    const result = await workflow.beginLogin({
+      identifier: "exec.one",
+      ipAddress,
+    });
+
+    expect(isErr(result)).toBe(true);
+    if (!isErr(result)) {
+      throw new Error("expected unexpected passkey login start failure");
+    }
+    expect(result.error.kind).toBe("unexpected");
+  });
+
   it("returns flow_expired for an invalid passkey login flow id", async () => {
     const workflow = createPasskeyLoginWorkflowService(ctx.repos);
     const result = await workflow.finishLogin({
@@ -326,5 +356,68 @@ describe("passkey flows", () => {
       throw new Error("expected expired passkey flow");
     }
     expect(result.error.kind).toBe("flow_expired");
+  });
+
+  it("returns unexpected when passkey session issuance fails", async () => {
+    const challengeId = await ctx.repos.webauthnChallenges.create({
+      user_id: 1,
+      type: "authentication",
+      challenge: "challenge-workflow-2",
+      expires_at: Date.now() + 60_000,
+    });
+    const flowId = await ctx.repos.loginFlows.create({
+      identifier: "exec.one",
+      user_id: 1,
+      challenge_id: challengeId,
+      state: "passkey",
+      expires_at: Date.now() + 60_000,
+    });
+
+    const workflow = createPasskeyLoginWorkflowService(ctx.repos, {
+      createPasskeyService: () => ({
+        async getRegistrationOptions() {
+          throw new Error("not used in this test");
+        },
+        async verifyRegistration() {
+          throw new Error("not used in this test");
+        },
+        async getAuthenticationOptions() {
+          throw new Error("not used in this test");
+        },
+        async getAuthenticationOptionsForChallenge() {
+          throw new Error("not used in this test");
+        },
+        async verifyAuthentication() {
+          return { verified: true, userId: 1 };
+        },
+      }),
+      async issueLoginSession() {
+        throw new Error("boom");
+      },
+    });
+
+    const result = await workflow.finishLogin({
+      flowId,
+      response: {
+        id: "passkey-1",
+        rawId: "passkey-1",
+        type: "public-key",
+        clientExtensionResults: {},
+        response: {
+          authenticatorData: "a",
+          clientDataJSON: "b",
+          signature: "c",
+        },
+      },
+      ipAddress,
+      userAgent: "vitest-agent",
+      sendPrivilegedLoginAlert,
+    });
+
+    expect(isErr(result)).toBe(true);
+    if (!isErr(result)) {
+      throw new Error("expected unexpected passkey login completion failure");
+    }
+    expect(result.error.kind).toBe("unexpected");
   });
 });

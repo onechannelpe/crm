@@ -5,7 +5,6 @@ import type {
   RegistrationResponseJSON,
 } from "@simplewebauthn/server";
 
-import type { Role } from "~/lib/auth/access/rbac";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
 import { config } from "~/lib/config";
 import {
@@ -20,7 +19,10 @@ import {
 } from "~/server/users/service-account-onboarding";
 
 import type { InvalidCredentialsError } from "../errors";
-import { issueLoginSession } from "../session/login-completion";
+import {
+  issueLoginSession,
+  type LoginCompletionResult,
+} from "../session/login-completion";
 import { beginPasskeyLoginFlow, finishPasskeyLoginFlow } from "./login-flow";
 import { createPasskeyService } from "./passkey";
 import {
@@ -63,6 +65,11 @@ export type CompletePasskeyOnboardingError =
   | PasskeyRegistrationFlowError
   | CompleteOnboardingError;
 
+export interface PasskeyEnrollmentChallenge {
+  challengeId: number;
+  options: PublicKeyCredentialCreationOptionsJSON;
+}
+
 export interface PasskeyLoginFlowState {
   id: number;
   identifier: string;
@@ -70,23 +77,23 @@ export interface PasskeyLoginFlowState {
   requestOptions: PublicKeyCredentialRequestOptionsJSON;
 }
 
-export interface PasskeyLoginResult {
-  userId: number;
-  role: Role;
-  onboardingCompleted: boolean;
-  token: string;
-}
+export type PasskeyLoginResult = LoginCompletionResult;
 
 export type BeginPasskeyEnrollmentError = BeginPasskeyRegistrationFlowError;
 export type FinishPasskeyEnrollmentError = PasskeyRegistrationFlowError;
+export type BeginPasskeyLoginError =
+  | InvalidCredentialsError
+  | { kind: "unexpected"; message: string };
 export type SubmitPasskeyLoginError =
   | { kind: "flow_expired" }
-  | InvalidCredentialsError;
+  | InvalidCredentialsError
+  | { kind: "unexpected"; message: string };
 
 interface PasskeyWorkflowSharedDeps {
   createPasskeyService?: (
     repos: Pick<Repositories, "passkeys" | "auditLogs">,
   ) => ReturnType<typeof createPasskeyService>;
+  issueLoginSession?: typeof issueLoginSession;
 }
 
 interface PasskeyOnboardingWorkflowDeps extends PasskeyWorkflowSharedDeps {
@@ -98,11 +105,6 @@ interface PasskeyOnboardingWorkflowDeps extends PasskeyWorkflowSharedDeps {
 interface BeginPasskeyEnrollmentInput {
   userId: number;
   ipAddress: string;
-}
-
-interface PasskeyEnrollmentChallenge {
-  challengeId: number;
-  options: PublicKeyCredentialCreationOptionsJSON;
 }
 
 interface FinishPasskeyEnrollmentInput extends BeginPasskeyEnrollmentInput {
@@ -125,6 +127,38 @@ interface FinishPasskeyLoginInput {
   ipAddress: string;
   userAgent: string | null;
   sendPrivilegedLoginAlert: SendPrivilegedLoginAlert;
+}
+
+const UNEXPECTED_PASSKEY_LOGIN_FAILURE = "Unexpected passkey login failure";
+
+function unexpectedPasskeyLoginError(): {
+  kind: "unexpected";
+  message: string;
+} {
+  return {
+    kind: "unexpected",
+    message: UNEXPECTED_PASSKEY_LOGIN_FAILURE,
+  };
+}
+
+function normalizePasskeyIdentifier(
+  identifier: string,
+): string | InvalidCredentialsError {
+  try {
+    return assertNonEmptyString(identifier, "identifier").trim();
+  } catch {
+    return { kind: "invalid_credentials" };
+  }
+}
+
+function normalizePasskeyFlowId(
+  flowId: number,
+): number | { kind: "flow_expired" } {
+  try {
+    return assertPositiveInt(flowId, "flowId");
+  } catch {
+    return { kind: "flow_expired" };
+  }
 }
 
 async function deleteLoginFlow(
@@ -184,45 +218,46 @@ export function createPasskeyLoginWorkflowService(
 ) {
   const createPasskeyServiceForRepos =
     deps.createPasskeyService ?? createPasskeyService;
+  const issueLoginSessionForRepos = deps.issueLoginSession ?? issueLoginSession;
 
   return {
     async beginLogin(
       input: BeginPasskeyLoginInput,
-    ): Promise<Result<PasskeyLoginFlowState, InvalidCredentialsError>> {
-      let identifier: string;
+    ): Promise<Result<PasskeyLoginFlowState, BeginPasskeyLoginError>> {
+      const identifier = normalizePasskeyIdentifier(input.identifier);
+      if (typeof identifier !== "string") {
+        return Err(identifier);
+      }
+
       try {
-        identifier = assertNonEmptyString(
-          input.identifier,
-          "identifier",
-        ).trim();
+        const passkeyService = createPasskeyServiceForRepos(repos);
+        const challenge = await beginPasskeyLoginFlow(
+          identifier,
+          input.ipAddress,
+          repos,
+          passkeyService,
+        );
+        if (isErr(challenge)) {
+          return Err(challenge.error);
+        }
+
+        const flowId = await repos.loginFlows.create({
+          identifier,
+          user_id: challenge.value.userId,
+          challenge_id: challenge.value.challengeId,
+          state: "passkey",
+          expires_at: Date.now() + config.auth.loginFlowTtlMs,
+        });
+
+        return Ok({
+          id: flowId,
+          identifier,
+          state: "passkey",
+          requestOptions: challenge.value.options,
+        });
       } catch {
-        return Err({ kind: "invalid_credentials" });
+        return Err(unexpectedPasskeyLoginError());
       }
-      const passkeyService = createPasskeyServiceForRepos(repos);
-      const challenge = await beginPasskeyLoginFlow(
-        identifier,
-        input.ipAddress,
-        repos,
-        passkeyService,
-      );
-      if (isErr(challenge)) {
-        return Err(challenge.error);
-      }
-
-      const flowId = await repos.loginFlows.create({
-        identifier,
-        user_id: challenge.value.userId,
-        challenge_id: challenge.value.challengeId,
-        state: "passkey",
-        expires_at: Date.now() + config.auth.loginFlowTtlMs,
-      });
-
-      return Ok({
-        id: flowId,
-        identifier,
-        state: "passkey",
-        requestOptions: challenge.value.options,
-      });
     },
 
     async finishLogin(
@@ -233,53 +268,56 @@ export function createPasskeyLoginWorkflowService(
         SubmitPasskeyLoginError
       >
     > {
-      let safeFlowId: number;
+      const safeFlowId = normalizePasskeyFlowId(input.flowId);
+      if (typeof safeFlowId !== "number") {
+        return Err(safeFlowId);
+      }
+
       try {
-        safeFlowId = assertPositiveInt(input.flowId, "flowId");
+        const flow = await repos.loginFlows.findById(safeFlowId);
+        if (
+          !flow ||
+          flow.state !== "passkey" ||
+          flow.expires_at < Date.now() ||
+          !flow.challenge_id
+        ) {
+          await deleteLoginFlow(flow, repos);
+          return Err({ kind: "flow_expired" });
+        }
+
+        const passkeyService = createPasskeyServiceForRepos(repos);
+        const verified = await finishPasskeyLoginFlow(
+          flow.challenge_id,
+          input.response,
+          input.ipAddress,
+          repos,
+          passkeyService,
+          input.sendPrivilegedLoginAlert,
+        );
+        await repos.loginFlows.delete(flow.id);
+        if (isErr(verified)) {
+          return Err(verified.error);
+        }
+
+        const user = await repos.users.findById(verified.value.userId);
+        if (!user || !user.is_active) {
+          return Err({ kind: "invalid_credentials" });
+        }
+
+        const session = await issueLoginSessionForRepos({
+          user,
+          ipAddress: input.ipAddress,
+          userAgent: input.userAgent,
+          authMethod: "passkey",
+          strongAuthAt: Date.now(),
+          auditAction: "login_passkey",
+          deps: repos,
+        });
+
+        return Ok({ kind: "complete", result: session });
       } catch {
-        return Err({ kind: "flow_expired" });
+        return Err(unexpectedPasskeyLoginError());
       }
-      const flow = await repos.loginFlows.findById(safeFlowId);
-      if (
-        !flow ||
-        flow.state !== "passkey" ||
-        flow.expires_at < Date.now() ||
-        !flow.challenge_id
-      ) {
-        await deleteLoginFlow(flow, repos);
-        return Err({ kind: "flow_expired" });
-      }
-
-      const passkeyService = createPasskeyServiceForRepos(repos);
-      const verified = await finishPasskeyLoginFlow(
-        flow.challenge_id,
-        input.response,
-        input.ipAddress,
-        repos,
-        passkeyService,
-        input.sendPrivilegedLoginAlert,
-      );
-      await repos.loginFlows.delete(flow.id);
-      if (isErr(verified)) {
-        return Err(verified.error);
-      }
-
-      const user = await repos.users.findById(verified.value.userId);
-      if (!user || !user.is_active) {
-        return Err({ kind: "invalid_credentials" });
-      }
-
-      const session = await issueLoginSession({
-        user,
-        ipAddress: input.ipAddress,
-        userAgent: input.userAgent,
-        authMethod: "passkey",
-        strongAuthAt: Date.now(),
-        auditAction: "login_passkey",
-        deps: repos,
-      });
-
-      return Ok({ kind: "complete", result: session });
     },
   };
 }
