@@ -30,6 +30,12 @@ function normalizePasskeyLoginError(error: FinishPasskeyLoginError): {
   };
 }
 
+function resolvePasskeyAnalyticsCode(
+  error: FinishPasskeyLoginError,
+): "flow_expired" | "invalid_credentials" | "internal" {
+  return error.kind === "unexpected" ? "internal" : error.kind;
+}
+
 export async function finishPasskeyLogin(
   flowId: number,
   response: AuthenticationResponseJSON,
@@ -45,16 +51,12 @@ export async function finishPasskeyLogin(
   });
 
   if (isErr(result)) {
-    const analyticsCode =
-      result.error.kind === "unexpected"
-        ? "invalid_credentials"
-        : result.error.kind;
     await recordAuthAnalyticsEvent(
       {
         source: "server",
         kind: "passkey_result",
         outcome: "failed",
-        code: analyticsCode,
+        code: resolvePasskeyAnalyticsCode(result.error),
       },
       getActionRequestContext(),
     );

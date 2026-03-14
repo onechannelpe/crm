@@ -1,5 +1,5 @@
 import type { PasskeyAuthRepos } from "./shared";
-import { deleteLoginFlow, normalizePasskeyFlowId } from "./shared";
+import { deleteLoginFlow } from "./shared";
 import type { PasskeyLoginFlowState } from "./types";
 
 type PasskeyFlowRecord = Awaited<
@@ -64,16 +64,5 @@ export function createPasskeyLoginStateService(
 
   return {
     hydrateLoginFlow,
-    async getLoginFlowState(
-      flowId: number,
-    ): Promise<PasskeyLoginFlowState | null> {
-      const safeFlowId = normalizePasskeyFlowId(flowId);
-      if (typeof safeFlowId !== "number") {
-        return null;
-      }
-
-      const flow = await repos.loginFlows.findById(safeFlowId);
-      return hydrateLoginFlow(flow);
-    },
   };
 }

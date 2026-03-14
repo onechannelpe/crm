@@ -36,31 +36,31 @@ function resolveRedirect(
 }
 
 function mapCompleteOnboardingError(error: CompleteOnboardingError): never {
-  switch (error.reason) {
-    case "user_not_found":
-    case "unexpected":
-      throw internalError(error.message);
-    case "strong_auth_required":
-      throw conflictError(error.message);
-  }
-
-  const exhaustive: never = error;
-  void exhaustive;
-  throw internalError("Unexpected onboarding completion failure");
+  return mapOnboardingFailure(error, {
+    strongAuthRequiredMessage: error.message,
+  });
 }
 
-function mapCompletePasskeyOnboardingError(
+function mapOnboardingFailure(
   error: PasskeyEnrollmentError | CompleteOnboardingError,
+  options: {
+    strongAuthRequiredMessage?: string;
+    userNotFoundMessage?: string;
+  } = {},
 ): never {
   switch (error.reason) {
     case "invalid_request":
       throw internalError("No se pudo configurar la clave de acceso");
+    case "user_not_found":
+      throw internalError(
+        options.userNotFoundMessage ?? "No se pudo completar el registro",
+      );
     case "unexpected":
       throw internalError(error.message);
     case "strong_auth_required":
-      throw conflictError("No se pudo completar el registro");
-    case "user_not_found":
-      throw internalError("No se pudo completar el registro");
+      throw conflictError(
+        options.strongAuthRequiredMessage ?? "No se pudo completar el registro",
+      );
   }
 
   const exhaustive: never = error;
@@ -120,7 +120,9 @@ export async function completePasskeyOnboarding(
       },
     );
   if (isErr(result)) {
-    mapCompletePasskeyOnboardingError(result.error);
+    mapOnboardingFailure(result.error, {
+      userNotFoundMessage: "No se pudo completar el registro",
+    });
   }
   return resolveRedirect(session.role);
 }

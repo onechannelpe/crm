@@ -104,6 +104,12 @@ function normalizePasswordLoginError(error: {
   };
 }
 
+function resolvePasswordAnalyticsCode(error: {
+  kind: "invalid_credentials" | "strong_auth_required" | "unexpected";
+}): "invalid_credentials" | "strong_auth_required" | "internal" {
+  return error.kind === "unexpected" ? "internal" : error.kind;
+}
+
 export async function passwordLogin(
   formData: FormData,
 ): Promise<PasswordLoginSubmissionResult> {
@@ -121,16 +127,12 @@ export async function passwordLogin(
     privilegedLoginAlertSender,
   );
   if (isErr(result)) {
-    const analyticsCode =
-      result.error.kind === "unexpected"
-        ? "invalid_credentials"
-        : result.error.kind;
     await recordAuthAnalyticsEvent(
       {
         source: "server",
         kind: "password_result",
         outcome: "failed",
-        code: analyticsCode,
+        code: resolvePasswordAnalyticsCode(result.error),
       },
       getActionRequestContext(),
     );

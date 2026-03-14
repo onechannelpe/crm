@@ -34,7 +34,7 @@ export type AuthServerAnalyticsEvent =
   | {
       kind: "password_result";
       outcome: "failed";
-      code: "invalid_credentials" | "strong_auth_required";
+      code: "invalid_credentials" | "strong_auth_required" | "internal";
     }
   | {
       kind: "password_result";
@@ -64,6 +64,7 @@ export type AuthServerAnalyticsEvent =
       code:
         | "invalid_credentials"
         | "flow_expired"
+        | "internal"
         | "cancelled"
         | "unsupported"
         | "browser_error";

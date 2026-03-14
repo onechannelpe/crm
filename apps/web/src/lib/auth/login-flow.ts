@@ -13,6 +13,7 @@ import {
   createPasskeyAuthService,
   type PasskeyLoginFlowState,
 } from "./passkey/service";
+import { deleteLoginFlow } from "./passkey/service/shared";
 import {
   completePasswordLogin,
   getPasswordLoginNextStep,
@@ -60,17 +61,6 @@ export type SubmitPasswordLoginError =
 export type SubmitTotpLoginError =
   | { kind: "flow_expired" }
   | { kind: "invalid_totp" };
-
-async function deleteLoginFlow(
-  flow: Awaited<ReturnType<LoginFlowDeps["loginFlows"]["findById"]>>,
-  deps: LoginFlowDeps,
-): Promise<void> {
-  if (!flow) return;
-  if (flow.challenge_id) {
-    await deps.webauthnChallenges.delete(flow.challenge_id);
-  }
-  await deps.loginFlows.delete(flow.id);
-}
 
 async function readActiveLoginFlow(
   flowId: number,
