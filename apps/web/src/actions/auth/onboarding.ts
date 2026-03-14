@@ -10,13 +10,15 @@ import {
 } from "~/lib/app-errors";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { requireSession } from "~/lib/auth/access/session";
-import { createPasskeyOnboardingWorkflowService } from "~/lib/auth/passkey/workflows";
-import type { CompletePasskeyOnboardingError } from "~/lib/auth/passkey/workflows";
-import { getClientIp } from "~/lib/auth/password/client-ip";
-import { repos, runInRepositoryTransaction } from "~/server/shared/context";
-import { isErr, type Result } from "~/server/shared/result";
 import {
-  createAccountOnboardingService,
+  createPasskeyAuthService,
+  type PasskeyEnrollmentError,
+} from "~/lib/auth/passkey/service";
+import { getClientIp } from "~/lib/auth/password/client-ip";
+import { runInRepositoryTransaction } from "~/server/shared/context";
+import { Err, isErr, type Result } from "~/server/shared/result";
+import {
+  completeAccountOnboardingWithRepos,
   type CompleteOnboardingError,
 } from "~/server/users/service-account-onboarding";
 
@@ -31,18 +33,6 @@ function resolveRedirect(
   role: Awaited<ReturnType<typeof requireSession>>["role"],
 ) {
   return { redirectTo: getDefaultAppPath(role) };
-}
-
-function unwrapOnboardingActionResult<E>(
-  result: Result<void, E>,
-  role: Awaited<ReturnType<typeof requireSession>>["role"],
-  mapError: (error: E) => never,
-): { redirectTo: string } {
-  if (!isErr(result)) {
-    return resolveRedirect(role);
-  }
-
-  return mapError(result.error);
 }
 
 function mapCompleteOnboardingError(error: CompleteOnboardingError): never {
@@ -60,7 +50,7 @@ function mapCompleteOnboardingError(error: CompleteOnboardingError): never {
 }
 
 function mapCompletePasskeyOnboardingError(
-  error: CompletePasskeyOnboardingError,
+  error: PasskeyEnrollmentError | CompleteOnboardingError,
 ): never {
   switch (error.reason) {
     case "invalid_request":
@@ -78,37 +68,26 @@ function mapCompletePasskeyOnboardingError(
   throw internalError("Unexpected onboarding completion failure");
 }
 
-function unwrapOnboardingResult(
-  result: Result<void, CompleteOnboardingError>,
-  role: Awaited<ReturnType<typeof requireSession>>["role"],
-): { redirectTo: string } {
-  return unwrapOnboardingActionResult(result, role, mapCompleteOnboardingError);
-}
-
-function unwrapPasskeyOnboardingResult(
-  result: Result<void, CompletePasskeyOnboardingError>,
-  role: Awaited<ReturnType<typeof requireSession>>["role"],
-): { redirectTo: string } {
-  return unwrapOnboardingActionResult(
-    result,
-    role,
-    mapCompletePasskeyOnboardingError,
-  );
-}
+type CompletePasskeyOnboardingResult = Result<
+  void,
+  PasskeyEnrollmentError | CompleteOnboardingError
+>;
 
 export async function completeOnboarding(
   phoneE164: string,
 ): Promise<{ redirectTo: string }> {
   const session = await requireSession();
   const safePhone = normalizePeruvianPhone(phoneE164);
-  const service = createAccountOnboardingService(repos, {
-    runInTransaction: runInRepositoryTransaction,
-  });
-  const result = await service.completeOnboarding({
-    userId: session.userId,
-    phoneE164: safePhone,
-  });
-  return unwrapOnboardingResult(result, session.role);
+  const result = await runInRepositoryTransaction((transactionRepos) =>
+    completeAccountOnboardingWithRepos(transactionRepos, {
+      userId: session.userId,
+      phoneE164: safePhone,
+    }),
+  );
+  if (isErr(result)) {
+    mapCompleteOnboardingError(result.error);
+  }
+  return resolveRedirect(session.role);
 }
 
 export async function completePasskeyOnboarding(
@@ -120,15 +99,27 @@ export async function completePasskeyOnboarding(
   const safePhone = normalizePeruvianPhone(phoneE164);
   const event = getRequestEvent();
   const ipAddress = getClientIp(event?.request.headers ?? new Headers());
-  const workflow = createPasskeyOnboardingWorkflowService(repos, {
-    runInTransaction: runInRepositoryTransaction,
+  const result = await runInRepositoryTransaction<
+    CompletePasskeyOnboardingResult
+  >(async (transactionRepos) => {
+    const passkeyService = createPasskeyAuthService(transactionRepos);
+    const passkeyResult = await passkeyService.finishEnrollment({
+      userId: session.userId,
+      challengeId,
+      response,
+      ipAddress,
+    });
+    if (isErr(passkeyResult)) {
+      return Err(passkeyResult.error);
+    }
+
+    return completeAccountOnboardingWithRepos(transactionRepos, {
+      userId: session.userId,
+      phoneE164: safePhone,
+    });
   });
-  const result = await workflow.completeOnboarding({
-    userId: session.userId,
-    challengeId,
-    response,
-    ipAddress,
-    phoneE164: safePhone,
-  });
-  return unwrapPasskeyOnboardingResult(result, session.role);
+  if (isErr(result)) {
+    mapCompletePasskeyOnboardingError(result.error);
+  }
+  return resolveRedirect(session.role);
 }

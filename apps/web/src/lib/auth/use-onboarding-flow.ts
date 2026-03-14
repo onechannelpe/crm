@@ -42,17 +42,12 @@ export function useOnboardingFlow() {
     () => !onboardingSubmitting() && passkeyPhase() === "idle",
   );
 
-  async function completeOnboardingAction(
+  async function completeOnboardingAndRedirect(
     action: () => Promise<{ redirectTo: string }>,
-    failureMessage: string,
   ) {
-    try {
-      const result = await action();
-      showToast("success", "Tu cuenta ya quedó configurada");
-      navigate(result.redirectTo);
-    } catch (error: unknown) {
-      showToast("error", getErrorMessage(error, failureMessage));
-    }
+    const result = await action();
+    showToast("success", "Tu cuenta ya quedó configurada");
+    navigate(result.redirectTo);
   }
 
   async function submitOnboarding(
@@ -65,7 +60,9 @@ export function useOnboardingFlow() {
 
     setOnboardingSubmitting(true);
     try {
-      await completeOnboardingAction(action, failureMessage);
+      await completeOnboardingAndRedirect(action);
+    } catch (error: unknown) {
+      showToast("error", getErrorMessage(error, failureMessage));
     } finally {
       setOnboardingSubmitting(false);
     }
@@ -177,9 +174,8 @@ export function useOnboardingFlow() {
       const { challengeId, options } = await beginPasskeyRegistration();
       const response = await createRegistrationResponse(options);
       setPasskeyPhase("server");
-      await completeOnboardingAction(
+      await completeOnboardingAndRedirect(
         () => completePasskeyOnboarding(phone(), challengeId, response),
-        "No se pudo configurar la clave de acceso",
       );
     } catch (error: unknown) {
       showToast(

@@ -29,9 +29,6 @@ export interface CompleteOnboardingInput {
 
 export interface AccountOnboardingDeps {
   now?: () => number;
-  runInTransaction?: <T>(
-    operation: (repos: OnboardingRepos) => Promise<T>,
-  ) => Promise<T>;
 }
 
 export async function completeAccountOnboardingWithRepos(
@@ -86,25 +83,4 @@ export async function completeAccountOnboardingWithRepos(
       message: "Unexpected onboarding completion failure",
     });
   }
-}
-
-export function createAccountOnboardingService(
-  repos: OnboardingRepos,
-  deps: AccountOnboardingDeps = {},
-) {
-  const now = deps.now ?? Date.now;
-  const runInTransaction =
-    deps.runInTransaction ??
-    (async <T>(operation: (transactionRepos: OnboardingRepos) => Promise<T>) =>
-      operation(repos));
-
-  return {
-    async completeOnboarding(
-      input: CompleteOnboardingInput,
-    ): Promise<Result<void, CompleteOnboardingError>> {
-      return runInTransaction((transactionRepos) =>
-        completeAccountOnboardingWithRepos(transactionRepos, input, { now }),
-      );
-    },
-  };
 }

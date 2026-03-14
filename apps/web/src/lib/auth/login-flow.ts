@@ -11,9 +11,9 @@ import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import { createPasskeyService } from "./passkey/passkey";
 import {
-  createPasskeyLoginWorkflowService,
+  createPasskeyAuthService,
   type PasskeyLoginFlowState,
-} from "./passkey/workflows";
+} from "./passkey/service";
 import {
   completePasswordLogin,
   getPasswordLoginNextStep,
@@ -194,8 +194,7 @@ export async function submitPasswordLogin(
   const nextStep = await getPasswordLoginNextStep(user.value, deps);
   if (isErr(nextStep)) {
     if (nextStep.error.kind === "passkey_required") {
-      const workflow = createPasskeyLoginWorkflowService(deps);
-      const flow = await workflow.beginLogin({
+      const flow = await createPasskeyAuthService(deps).beginLogin({
         identifier: safeIdentifier,
         ipAddress: input.ipAddress,
       });

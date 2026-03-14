@@ -5,51 +5,26 @@ import { getRequestEvent } from "solid-js/web";
 
 import { internalError } from "~/lib/app-errors";
 import { requireSession } from "~/lib/auth/access/session";
-import { createPasskeyService } from "~/lib/auth/passkey/passkey";
-import { createPasskeyEnrollmentWorkflowService } from "~/lib/auth/passkey/workflows";
 import type {
-  BeginPasskeyEnrollmentError,
-  FinishPasskeyEnrollmentError,
+  PasskeyEnrollmentError,
   PasskeyEnrollmentChallenge,
-} from "~/lib/auth/passkey/workflows";
+} from "~/lib/auth/passkey/service";
+import { createPasskeyAuthService } from "~/lib/auth/passkey/service";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { repos } from "~/server/shared/context";
-import { isErr, type Result } from "~/server/shared/result";
+import { isErr } from "~/server/shared/result";
 
-function unwrapFinishPasskeyEnrollmentResult(
-  result: Result<void, FinishPasskeyEnrollmentError>,
-): void {
-  if (!isErr(result)) {
-    return;
-  }
-
-  switch (result.error.reason) {
+function throwPasskeyEnrollmentError(
+  error: PasskeyEnrollmentError,
+): never {
+  switch (error.reason) {
     case "invalid_request":
       throw internalError("No se pudo configurar la clave de acceso");
     case "unexpected":
-      throw internalError(result.error.message);
+      throw internalError(error.message);
   }
 
-  const exhaustive: never = result.error;
-  void exhaustive;
-  throw internalError("Unexpected passkey registration failure");
-}
-
-function unwrapBeginPasskeyEnrollmentResult(
-  result: Result<PasskeyEnrollmentChallenge, BeginPasskeyEnrollmentError>,
-): PasskeyEnrollmentChallenge {
-  if (!isErr(result)) {
-    return result.value;
-  }
-
-  switch (result.error.reason) {
-    case "invalid_request":
-      throw internalError("No se pudo configurar la clave de acceso");
-    case "unexpected":
-      throw internalError(result.error.message);
-  }
-
-  const exhaustive: never = result.error;
+  const exhaustive: never = error;
   void exhaustive;
   throw internalError("Unexpected passkey registration failure");
 }
@@ -58,14 +33,15 @@ export async function beginPasskeyRegistration(): Promise<PasskeyEnrollmentChall
   const session = await requireSession();
   const event = getRequestEvent();
   const ipAddress = getClientIp(event?.request.headers ?? new Headers());
-  const workflow = createPasskeyEnrollmentWorkflowService(repos, {
-    createPasskeyService,
-  });
-  const result = await workflow.beginEnrollment({
+  const service = createPasskeyAuthService(repos);
+  const result = await service.beginEnrollment({
     userId: session.userId,
     ipAddress,
   });
-  return unwrapBeginPasskeyEnrollmentResult(result);
+  if (isErr(result)) {
+    throwPasskeyEnrollmentError(result.error);
+  }
+  return result.value;
 }
 
 export async function finishPasskeyRegistration(
@@ -75,14 +51,14 @@ export async function finishPasskeyRegistration(
   const session = await requireSession();
   const event = getRequestEvent();
   const ipAddress = getClientIp(event?.request.headers ?? new Headers());
-  const workflow = createPasskeyEnrollmentWorkflowService(repos, {
-    createPasskeyService,
-  });
-  const result = await workflow.finishEnrollment({
+  const service = createPasskeyAuthService(repos);
+  const result = await service.finishEnrollment({
     userId: session.userId,
     challengeId,
     response,
     ipAddress,
   });
-  unwrapFinishPasskeyEnrollmentResult(result);
+  if (isErr(result)) {
+    throwPasskeyEnrollmentError(result.error);
+  }
 }

@@ -7,16 +7,16 @@ import { internalError } from "~/lib/app-errors";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
 import {
-  createPasskeyLoginWorkflowService,
-  type SubmitPasskeyLoginError,
-} from "~/lib/auth/passkey/workflows";
+  createPasskeyAuthService,
+  type FinishPasskeyLoginError,
+} from "~/lib/auth/passkey/service";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { replaceCurrentSession } from "~/lib/auth/session/login-completion";
 import { getActionRequestContext } from "~/lib/observability/context";
 import { privilegedLoginAlertSender, repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
-function normalizePasskeyLoginError(error: SubmitPasskeyLoginError): {
+function normalizePasskeyLoginError(error: FinishPasskeyLoginError): {
   ok: false;
   code: "flow_expired" | "invalid_credentials";
 } {
@@ -35,8 +35,8 @@ export async function finishPasskeyLogin(
   response: AuthenticationResponseJSON,
 ) {
   const event = getRequestEvent();
-  const workflow = createPasskeyLoginWorkflowService(repos);
-  const result = await workflow.finishLogin({
+  const service = createPasskeyAuthService(repos);
+  const result = await service.finishLogin({
     flowId,
     response,
     ipAddress: getClientIp(event?.request.headers ?? new Headers()),
@@ -69,11 +69,11 @@ export async function finishPasskeyLogin(
     },
     getActionRequestContext(),
   );
-  await replaceCurrentSession(result.value.result.token);
+  await replaceCurrentSession(result.value.token);
   return {
     ok: true as const,
-    redirectTo: result.value.result.onboardingCompleted
-      ? getDefaultAppPath(result.value.result.role)
+    redirectTo: result.value.onboardingCompleted
+      ? getDefaultAppPath(result.value.role)
       : "/onboarding",
   };
 }

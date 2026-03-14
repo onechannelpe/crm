@@ -1,21 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { PasskeyRequestError } from "../../src/lib/auth/passkey/passkey";
 import {
-  beginPasskeyLoginFlow,
-  finishPasskeyLoginFlow,
-} from "../../src/lib/auth/passkey/login-flow";
-import {
-  createPasskeyService,
-  PasskeyRequestError,
-} from "../../src/lib/auth/passkey/passkey";
-import {
-  beginPasskeyRegistrationFlow,
-  finishPasskeyRegistrationFlow,
-} from "../../src/lib/auth/passkey/registration-flow";
-import {
-  createPasskeyEnrollmentWorkflowService,
-  createPasskeyLoginWorkflowService,
-} from "../../src/lib/auth/passkey/workflows";
+  createPasskeyAuthService,
+} from "../../src/lib/auth/passkey/service";
 import { hashAuthKey } from "../../src/lib/auth/password/key-hash";
 import { recordPasskeyChallengeFailure } from "../../src/lib/auth/password/throttle";
 import type { SendPrivilegedLoginAlert } from "../../src/lib/auth/security/privileged-login-alert";
@@ -40,38 +28,42 @@ describe("passkey flows", () => {
   });
 
   it("begin passkey login creates authentication challenge for active user", async () => {
-    const passkeyService = createPasskeyService(ctx.repos);
-    const result = await beginPasskeyLoginFlow(
-      "exec.one",
+    const result = await createPasskeyAuthService(ctx.repos).beginLogin({
+      identifier: "exec.one",
       ipAddress,
-      ctx.repos,
-      passkeyService,
-    );
+    });
     expect(isErr(result)).toBe(false);
     if (isErr(result)) {
       throw new Error("expected successful passkey challenge");
     }
 
-    const challenge = await ctx.repos.webauthnChallenges.findById(
-      result.value.challengeId,
-    );
+    const flow = await ctx.repos.loginFlows.findById(result.value.id);
+    const challenge = flow?.challenge_id
+      ? await ctx.repos.webauthnChallenges.findById(flow.challenge_id)
+      : undefined;
     expect(challenge?.type).toBe("authentication");
     expect(challenge?.user_id).toBe(1);
-    expect(challenge?.challenge).toBe(result.value.options.challenge);
+    expect(challenge?.challenge).toBe(result.value.requestOptions.challenge);
   });
 
   it("finish passkey login consumes challenge and records failure on invalid assertion", async () => {
-    const passkeyService = createPasskeyService(ctx.repos);
     const challengeId = await ctx.repos.webauthnChallenges.create({
       user_id: 1,
       type: "authentication",
       challenge: "challenge-1",
       expires_at: Date.now() + 60_000,
     });
+    const flowId = await ctx.repos.loginFlows.create({
+      identifier: "exec.one",
+      user_id: 1,
+      challenge_id: challengeId,
+      state: "passkey",
+      expires_at: Date.now() + 60_000,
+    });
 
-    const result = await finishPasskeyLoginFlow(
-      challengeId,
-      {
+    const result = await createPasskeyAuthService(ctx.repos).finishLogin({
+      flowId,
+      response: {
         id: "missing-passkey",
         rawId: "missing-passkey",
         type: "public-key",
@@ -83,10 +75,9 @@ describe("passkey flows", () => {
         },
       },
       ipAddress,
-      ctx.repos,
-      passkeyService,
+      userAgent: "vitest-agent",
       sendPrivilegedLoginAlert,
-    );
+    });
     expect(isErr(result)).toBe(true);
     if (!isErr(result)) {
       throw new Error("expected invalid passkey credentials");
@@ -114,13 +105,10 @@ describe("passkey flows", () => {
   });
 
   it("begin passkey registration creates registration challenge", async () => {
-    const passkeyService = createPasskeyService(ctx.repos);
-    const result = await beginPasskeyRegistrationFlow(
-      1,
+    const result = await createPasskeyAuthService(ctx.repos).beginEnrollment({
+      userId: 1,
       ipAddress,
-      ctx.repos,
-      passkeyService,
-    );
+    });
 
     expect(isErr(result)).toBe(false);
     if (isErr(result)) {
@@ -140,8 +128,7 @@ describe("passkey flows", () => {
       await recordPasskeyChallengeFailure("user:1", ipAddress, ctx.repos);
     }
 
-    const workflow = createPasskeyEnrollmentWorkflowService(ctx.repos);
-    const result = await workflow.beginEnrollment({
+    const result = await createPasskeyAuthService(ctx.repos).beginEnrollment({
       userId: 1,
       ipAddress,
     });
@@ -154,8 +141,8 @@ describe("passkey flows", () => {
   });
 
   it("returns unexpected when passkey enrollment options fail", async () => {
-    const workflow = createPasskeyEnrollmentWorkflowService(ctx.repos, {
-      createPasskeyService: () => ({
+    const result = await createPasskeyAuthService(ctx.repos, {
+      createWebauthnService: () => ({
         async getRegistrationOptions() {
           throw new Error("boom");
         },
@@ -172,8 +159,7 @@ describe("passkey flows", () => {
           throw new Error("not used in this test");
         },
       }),
-    });
-    const result = await workflow.beginEnrollment({
+    }).beginEnrollment({
       userId: 1,
       ipAddress,
     });
@@ -186,7 +172,6 @@ describe("passkey flows", () => {
   });
 
   it("finish passkey registration rejects challenge ownership mismatch", async () => {
-    const passkeyService = createPasskeyService(ctx.repos);
     const challengeId = await ctx.repos.webauthnChallenges.create({
       user_id: 1,
       type: "registration",
@@ -194,10 +179,10 @@ describe("passkey flows", () => {
       expires_at: Date.now() + 60_000,
     });
 
-    const result = await finishPasskeyRegistrationFlow(
-      2,
+    const result = await createPasskeyAuthService(ctx.repos).finishEnrollment({
+      userId: 2,
       challengeId,
-      {
+      response: {
         id: "cred-r1",
         rawId: "cred-r1",
         type: "public-key",
@@ -208,9 +193,7 @@ describe("passkey flows", () => {
         clientExtensionResults: {},
       },
       ipAddress,
-      ctx.repos,
-      passkeyService,
-    );
+    });
 
     expect(isErr(result)).toBe(true);
     if (!isErr(result)) {
@@ -234,8 +217,8 @@ describe("passkey flows", () => {
       expires_at: Date.now() + 60_000,
     });
 
-    const workflow = createPasskeyEnrollmentWorkflowService(ctx.repos, {
-      createPasskeyService: () => ({
+    const result = await createPasskeyAuthService(ctx.repos, {
+      createWebauthnService: () => ({
         async getRegistrationOptions() {
           throw new Error("not used in this test");
         },
@@ -252,8 +235,7 @@ describe("passkey flows", () => {
           throw new Error("not used in this test");
         },
       }),
-    });
-    const result = await workflow.finishEnrollment({
+    }).finishEnrollment({
       userId: 1,
       challengeId,
       response: {
@@ -284,8 +266,8 @@ describe("passkey flows", () => {
       expires_at: Date.now() + 60_000,
     });
 
-    const workflow = createPasskeyEnrollmentWorkflowService(ctx.repos, {
-      createPasskeyService: () => ({
+    const result = await createPasskeyAuthService(ctx.repos, {
+      createWebauthnService: () => ({
         async getRegistrationOptions() {
           throw new Error("not used in this test");
         },
@@ -302,8 +284,7 @@ describe("passkey flows", () => {
           throw new Error("not used in this test");
         },
       }),
-    });
-    const result = await workflow.finishEnrollment({
+    }).finishEnrollment({
       userId: 1,
       challengeId,
       response: {
@@ -341,8 +322,8 @@ describe("passkey flows", () => {
       expires_at: Date.now() + 60_000,
     });
 
-    const workflow = createPasskeyLoginWorkflowService(ctx.repos, {
-      createPasskeyService: () => ({
+    const result = await createPasskeyAuthService(ctx.repos, {
+      createWebauthnService: () => ({
         async getRegistrationOptions() {
           throw new Error("not used in this test");
         },
@@ -359,9 +340,7 @@ describe("passkey flows", () => {
           return { verified: true, userId: 1 };
         },
       }),
-    });
-
-    const result = await workflow.finishLogin({
+    }).finishLogin({
       flowId,
       response: {
         id: "passkey-1",
@@ -386,13 +365,12 @@ describe("passkey flows", () => {
 
     const persisted = await ctx.repos.loginFlows.findById(flowId);
     expect(persisted).toBeUndefined();
-    expect(result.value.result.token).toBeTruthy();
-    expect(result.value.result.role).toBe("executive");
+    expect(result.value.token).toBeTruthy();
+    expect(result.value.role).toBe("executive");
   });
 
   it("returns invalid_credentials for an empty passkey login identifier", async () => {
-    const workflow = createPasskeyLoginWorkflowService(ctx.repos);
-    const result = await workflow.beginLogin({
+    const result = await createPasskeyAuthService(ctx.repos).beginLogin({
       identifier: "   ",
       ipAddress,
     });
@@ -413,7 +391,7 @@ describe("passkey flows", () => {
       transports: JSON.stringify(["internal"]),
     });
 
-    const workflow = createPasskeyLoginWorkflowService({
+    const result = await createPasskeyAuthService({
       ...ctx.repos,
       loginFlows: {
         ...ctx.repos.loginFlows,
@@ -421,8 +399,7 @@ describe("passkey flows", () => {
           throw new Error("boom");
         },
       },
-    });
-    const result = await workflow.beginLogin({
+    }).beginLogin({
       identifier: "exec.one",
       ipAddress,
     });
@@ -435,8 +412,7 @@ describe("passkey flows", () => {
   });
 
   it("returns flow_expired for an invalid passkey login flow id", async () => {
-    const workflow = createPasskeyLoginWorkflowService(ctx.repos);
-    const result = await workflow.finishLogin({
+    const result = await createPasskeyAuthService(ctx.repos).finishLogin({
       flowId: 0,
       response: {
         id: "passkey-1",
@@ -476,8 +452,8 @@ describe("passkey flows", () => {
       expires_at: Date.now() + 60_000,
     });
 
-    const workflow = createPasskeyLoginWorkflowService(ctx.repos, {
-      createPasskeyService: () => ({
+    const result = await createPasskeyAuthService(ctx.repos, {
+      createWebauthnService: () => ({
         async getRegistrationOptions() {
           throw new Error("not used in this test");
         },
@@ -497,9 +473,7 @@ describe("passkey flows", () => {
       async issueLoginSession() {
         throw new Error("boom");
       },
-    });
-
-    const result = await workflow.finishLogin({
+    }).finishLogin({
       flowId,
       response: {
         id: "passkey-1",

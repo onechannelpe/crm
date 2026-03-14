@@ -5,7 +5,7 @@ import {
   submitPasswordLogin,
   submitTotpForLoginFlow,
 } from "../../src/lib/auth/login-flow";
-import { createPasskeyLoginWorkflowService } from "../../src/lib/auth/passkey/workflows";
+import { createPasskeyAuthService } from "../../src/lib/auth/passkey/service";
 import { hashPassword } from "../../src/lib/auth/password/password";
 import type { SendPrivilegedLoginAlert } from "../../src/lib/auth/security/privileged-login-alert";
 import {
@@ -138,8 +138,7 @@ describe("login flow service", () => {
       transports: JSON.stringify(["internal"]),
     });
 
-    const workflow = createPasskeyLoginWorkflowService(ctx.repos);
-    const result = await workflow.beginLogin({
+    const result = await createPasskeyAuthService(ctx.repos).beginLogin({
       identifier: "exec.one",
       ipAddress: "198.51.100.55",
     });
