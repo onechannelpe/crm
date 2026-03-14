@@ -14,6 +14,7 @@ import {
 import { parseLoginFlowId } from "~/lib/auth/login-route-flow";
 import {
   createPasskeyAuthService,
+  type PasskeyLoginFlowState,
   type BeginPasskeyLoginError,
 } from "~/lib/auth/passkey/service";
 import { getClientIp } from "~/lib/auth/password/client-ip";
@@ -22,15 +23,26 @@ import { getActionRequestContext } from "~/lib/observability/context";
 import { privilegedLoginAlertSender, repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
-export type PasswordLoginSubmissionResult = {
-  ok: false;
-  code: "invalid_credentials" | "strong_auth_required";
-};
+export type PasswordLoginSubmissionResult =
+  | {
+      ok: false;
+      code: "invalid_credentials" | "strong_auth_required";
+    }
+  | {
+      ok: true;
+      nextStep: "passkey";
+      flow: PasskeyLoginFlowState;
+    };
 
-export type PasskeyStartSubmissionResult = {
-  ok: false;
-  code: "invalid_credentials";
-};
+export type PasskeyStartSubmissionResult =
+  | {
+      ok: false;
+      code: "invalid_credentials";
+    }
+  | {
+      ok: true;
+      flow: PasskeyLoginFlowState;
+    };
 
 export type TotpLoginSubmissionResult = {
   ok: false;
@@ -159,7 +171,11 @@ export async function passwordLogin(
       },
       getActionRequestContext(),
     );
-    throw redirect(`/login/passkey?flow=${result.value.flow.id}`);
+    return {
+      ok: true,
+      nextStep: "passkey",
+      flow: result.value.flow,
+    };
   }
 
   await recordAuthAnalyticsEvent(
@@ -204,7 +220,10 @@ export async function passkeyStart(
     },
     getActionRequestContext(),
   );
-  throw redirect(`/login/passkey?flow=${result.value.id}`);
+  return {
+    ok: true,
+    flow: result.value,
+  };
 }
 
 export async function totpLogin(

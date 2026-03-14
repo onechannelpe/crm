@@ -14,23 +14,17 @@ import { useToast } from "~/components/feedback/toast-provider";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
-import {
-  passkeyStartUiMessage,
-  passwordLoginUiMessage,
-} from "~/lib/auth/login-ui";
-import { isPasskeyAuthenticationSupported } from "~/lib/auth/passkey/authentication-client";
+import { passwordLoginUiMessage } from "~/lib/auth/login-ui";
 import { useAuthPageView } from "~/lib/auth/use-auth-analytics";
 import { useLoginFlow } from "~/lib/auth/use-login-flow";
-import {
-  passkeyStartMutation,
-  passwordLoginMutation,
-} from "~/lib/mutations/auth";
+import { usePasskeyLogin } from "~/lib/auth/use-passkey-login";
+import { passwordLoginMutation } from "~/lib/mutations/auth";
 
 import styles from "../../auth/auth-shell.module.css";
 import pageStyles from "../../auth/login-page.module.css";
 import linkStyles from "~/components/auth/flow/auth-links.module.css";
 
-type LoginStep = "init" | "email" | "passkey" | "password";
+type LoginStep = "init" | "email" | "password";
 
 export default function LoginPage() {
   useAuthPageView("login");
@@ -38,10 +32,12 @@ export default function LoginPage() {
   const [searchParams] = useSearchParams();
   const { showToast } = useToast();
   const passwordSubmission = useSubmission(passwordLoginMutation);
-  const passkeyStartSubmission = useSubmission(passkeyStartMutation);
+  const passkeyLogin = usePasskeyLogin();
   const [step, setStep] = createSignal<LoginStep>("init");
   const [username, setUsername] = createSignal("");
-  const [passkeySupported, setPasskeySupported] = createSignal(false);
+  const [handledPasskeyFlowId, setHandledPasskeyFlowId] = createSignal<
+    number | null
+  >(null);
   let usernameInputRef: HTMLInputElement | undefined;
   const setUsernameInputRef = (element: HTMLInputElement) => {
     usernameInputRef = element;
@@ -58,7 +54,6 @@ export default function LoginPage() {
     if (searchParams.error === "flow_expired") {
       showToast("error", "La sesión de inicio expiró. Intenta de nuevo.");
     }
-    setPasskeySupported(isPasskeyAuthenticationSupported());
   });
 
   createEffect(() => {
@@ -72,7 +67,7 @@ export default function LoginPage() {
   });
 
   const footerNote = createMemo(() => {
-    if (step() === "passkey" || step() === "password") {
+    if (step() === "password") {
       return (
         <a href="/reset-password" class={linkStyles.forgotLink}>
           ¿Olvidaste tu contraseña?
@@ -88,6 +83,19 @@ export default function LoginPage() {
       ? passwordLoginUiMessage(result.code)
       : undefined;
   };
+
+  createEffect(() => {
+    const result = passwordSubmission.result;
+    if (!result?.ok || result.nextStep !== "passkey") {
+      return;
+    }
+    if (handledPasskeyFlowId() === result.flow.id) {
+      return;
+    }
+
+    setHandledPasskeyFlowId(result.flow.id);
+    void passkeyLogin.runFlow(result.flow);
+  });
 
   return (
     <AuthFlowShell title="Bienvenido." footerNote={footerNote()}>
@@ -170,63 +178,57 @@ export default function LoginPage() {
                 autocorrect="off"
                 spellcheck={false}
                 value={username()}
-                onInput={(e) => setUsername(e.currentTarget.value)}
+                onInput={(e) => {
+                  setUsername(e.currentTarget.value);
+                  passkeyLogin.clear();
+                  setHandledPasskeyFlowId(null);
+                }}
                 ref={setUsernameInputRef}
                 required
               />
               <Button type="submit" class={styles.full}>
                 Continuar
               </Button>
-              <Show when={passkeySupported()}>
-                <button
-                  type="button"
-                  class={linkStyles.passkeyLink}
-                  onClick={() => setStep("passkey")}
-                >
-                  Iniciar con clave de acceso
-                </button>
-              </Show>
-            </form>
-          </EnterTransition>
-        </Show>
-
-        <Show when={step() === "passkey"}>
-          <EnterTransition>
-            <form
-              class={pageStyles.formStack}
-              action={passkeyStartMutation}
-              method="post"
-              onKeyDown={(event) => {
-                if (event.key === "Escape") setStep("email");
-              }}
-            >
-              <Show
-                when={
-                  passkeyStartSubmission.result &&
-                  !passkeyStartSubmission.result.ok
-                }
-              >
-                {(_) => (
+              <Show when={passkeyLogin.error()}>
+                {(message) => (
                   <p class={pageStyles.formError} role="alert">
-                    {passkeyStartUiMessage(passkeyStartSubmission.result!.code)}
+                    {message()}
                   </p>
                 )}
               </Show>
-              <input type="hidden" name="identifier" value={username()} />
-              <Button
-                type="submit"
-                class={styles.full}
-                loading={passkeyStartSubmission.pending}
+              <Show when={passkeyLogin.busy()}>
+                <p class={pageStyles.supportText} aria-live="polite">
+                  Esperando tu clave de acceso…
+                </p>
+              </Show>
+              <Show
+                when={
+                  passkeyLogin.activeFlow() &&
+                  !passkeyLogin.busy() &&
+                  passkeyLogin.supported()
+                }
               >
-                Continuar con clave de acceso
-              </Button>
-              <button
-                type="button"
-                class={linkStyles.helpLink}
-                onClick={() => setStep("email")}
-              >
-                Volver
-              </button>
+                <button
+                  type="button"
+                  class={linkStyles.helpLink}
+                  onClick={() => {
+                    void passkeyLogin.retry();
+                  }}
+                >
+                  Reintentar con clave de acceso
+                </button>
+              </Show>
+              <Show when={passkeyLogin.supported()}>
+                <button
+                  type="button"
+                  class={linkStyles.passkeyLink}
+                  onClick={() => {
+                    void passkeyLogin.start(username());
+                  }}
+                >
+                  Usar clave de acceso
+                </button>
+              </Show>
             </form>
           </EnterTransition>
         </Show>
@@ -264,6 +266,8 @@ export default function LoginPage() {
                 const next = e.currentTarget.value;
                 if (next !== username()) setStep("email");
                 setUsername(next);
+                passkeyLogin.clear();
+                setHandledPasskeyFlowId(null);
               }}
               required
             />
@@ -285,6 +289,35 @@ export default function LoginPage() {
             >
               Iniciar sesión
             </Button>
+            <Show when={passkeyLogin.busy()}>
+              <p class={pageStyles.supportText} aria-live="polite">
+                Esperando tu clave de acceso…
+              </p>
+            </Show>
+            <Show when={passkeyLogin.error()}>
+              {(message) => (
+                <p class={pageStyles.formError} role="alert">
+                  {message()}
+                </p>
+              )}
+            </Show>
+            <Show
+              when={
+                passkeyLogin.activeFlow() &&
+                !passkeyLogin.busy() &&
+                passkeyLogin.supported()
+              }
+            >
+              <button
+                type="button"
+                class={linkStyles.helpLink}
+                onClick={() => {
+                  void passkeyLogin.retry();
+                }}
+              >
+                Reintentar con clave de acceso
+              </button>
+            </Show>
           </form>
         </Show>
       </div>
