@@ -94,7 +94,7 @@ async function readActiveLoginFlow(
   }
 
   if (flow.state === "passkey") {
-    return createPasskeyAuthService(deps).getLoginFlowState(flow.id);
+    return createPasskeyAuthService(deps).hydrateLoginFlow(flow);
   }
 
   await deleteLoginFlow(flow, deps);

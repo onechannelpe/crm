@@ -4,6 +4,7 @@ import { issueLoginSession } from "../../session/login-completion";
 import { createPasskeyService } from "../passkey";
 import { createPasskeyEnrollmentService } from "./enrollment";
 import { createPasskeyLoginService } from "./login";
+import { createPasskeyLoginStateService } from "./login-state";
 import type { PasskeyAuthRepos } from "./shared";
 
 export type {
@@ -32,6 +33,7 @@ export function createPasskeyAuthService(
 
   return {
     ...createPasskeyEnrollmentService(repos, { webauthnService }),
+    ...createPasskeyLoginStateService(repos, { webauthnService }),
     ...createPasskeyLoginService(repos, {
       webauthnService,
       issueLoginSession: issueLoginSessionForRepos,

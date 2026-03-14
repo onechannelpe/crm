@@ -84,6 +84,12 @@ function normalizePasskeyStartError(
   };
 }
 
+function resolvePasskeyStartAnalyticsCode(
+  error: BeginPasskeyLoginError,
+): "invalid_credentials" | "internal" {
+  return error.kind === "unexpected" ? "internal" : "invalid_credentials";
+}
+
 function normalizePasswordLoginError(error: {
   kind: "invalid_credentials" | "strong_auth_required" | "unexpected";
   message?: string;
@@ -181,7 +187,7 @@ export async function passkeyStart(
         source: "server",
         kind: "passkey_start_result",
         outcome: "failed",
-        code: "invalid_credentials",
+        code: resolvePasskeyStartAnalyticsCode(result.error),
       },
       getActionRequestContext(),
     );
