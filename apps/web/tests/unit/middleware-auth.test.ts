@@ -36,6 +36,7 @@ describe("auth middleware request guard", () => {
   it("detects public routes", () => {
     expect(isPublicPath("/login")).toBe(true);
     expect(isPublicPath("/auth/callback")).toBe(true);
+    expect(isPublicPath("/api/auth/google")).toBe(true);
     expect(isPublicPath("/_build/assets.js")).toBe(true);
     expect(isPublicPath("/robots.txt")).toBe(true);
     expect(isPublicPath("/dashboard")).toBe(false);
