@@ -1,9 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { PasskeyRequestError } from "../../src/lib/auth/passkey/passkey";
-import {
-  createPasskeyAuthService,
-} from "../../src/lib/auth/passkey/service";
+import { createPasskeyAuthService } from "../../src/lib/auth/passkey/service";
 import { hashAuthKey } from "../../src/lib/auth/password/key-hash";
 import { recordPasskeyChallengeFailure } from "../../src/lib/auth/password/throttle";
 import type { SendPrivilegedLoginAlert } from "../../src/lib/auth/security/privileged-login-alert";

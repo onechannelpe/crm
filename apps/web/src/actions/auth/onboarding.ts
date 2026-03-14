@@ -99,25 +99,26 @@ export async function completePasskeyOnboarding(
   const safePhone = normalizePeruvianPhone(phoneE164);
   const event = getRequestEvent();
   const ipAddress = getClientIp(event?.request.headers ?? new Headers());
-  const result = await runInRepositoryTransaction<
-    CompletePasskeyOnboardingResult
-  >(async (transactionRepos) => {
-    const passkeyService = createPasskeyAuthService(transactionRepos);
-    const passkeyResult = await passkeyService.finishEnrollment({
-      userId: session.userId,
-      challengeId,
-      response,
-      ipAddress,
-    });
-    if (isErr(passkeyResult)) {
-      return Err(passkeyResult.error);
-    }
+  const result =
+    await runInRepositoryTransaction<CompletePasskeyOnboardingResult>(
+      async (transactionRepos) => {
+        const passkeyService = createPasskeyAuthService(transactionRepos);
+        const passkeyResult = await passkeyService.finishEnrollment({
+          userId: session.userId,
+          challengeId,
+          response,
+          ipAddress,
+        });
+        if (isErr(passkeyResult)) {
+          return Err(passkeyResult.error);
+        }
 
-    return completeAccountOnboardingWithRepos(transactionRepos, {
-      userId: session.userId,
-      phoneE164: safePhone,
-    });
-  });
+        return completeAccountOnboardingWithRepos(transactionRepos, {
+          userId: session.userId,
+          phoneE164: safePhone,
+        });
+      },
+    );
   if (isErr(result)) {
     mapCompletePasskeyOnboardingError(result.error);
   }

@@ -174,8 +174,8 @@ export function useOnboardingFlow() {
       const { challengeId, options } = await beginPasskeyRegistration();
       const response = await createRegistrationResponse(options);
       setPasskeyPhase("server");
-      await completeOnboardingAndRedirect(
-        () => completePasskeyOnboarding(phone(), challengeId, response),
+      await completeOnboardingAndRedirect(() =>
+        completePasskeyOnboarding(phone(), challengeId, response),
       );
     } catch (error: unknown) {
       showToast(

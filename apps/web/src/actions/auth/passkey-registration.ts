@@ -14,9 +14,7 @@ import { getClientIp } from "~/lib/auth/password/client-ip";
 import { repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
-function throwPasskeyEnrollmentError(
-  error: PasskeyEnrollmentError,
-): never {
+function throwPasskeyEnrollmentError(error: PasskeyEnrollmentError): never {
   switch (error.reason) {
     case "invalid_request":
       throw internalError("No se pudo configurar la clave de acceso");

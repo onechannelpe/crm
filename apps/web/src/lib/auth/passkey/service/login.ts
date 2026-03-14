@@ -1,9 +1,4 @@
-import type {
-  AuthenticationResponseJSON,
-  PublicKeyCredentialCreationOptionsJSON,
-  PublicKeyCredentialRequestOptionsJSON,
-  RegistrationResponseJSON,
-} from "@simplewebauthn/server";
+import type { AuthenticationResponseJSON } from "@simplewebauthn/server";
 
 import {
   checkPasskeyChallengeThrottle,
@@ -16,77 +11,39 @@ import { recordAuthEvent } from "~/lib/auth/security/auth-events";
 import { sendAlertOnNewLoginSource } from "~/lib/auth/security/login-source-alert";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
 import { config } from "~/lib/config";
-import {
-  assertNonEmptyString,
-  assertPositiveInt,
-} from "~/lib/contracts/guards";
-import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import type { InvalidCredentialsError } from "../errors";
+import type { issueLoginSession } from "../../session/login-completion";
+import { isPasskeyRequestError } from "../passkey";
+import type { PasskeyAuthRepos } from "./shared";
 import {
-  issueLoginSession,
-  type LoginCompletionResult,
-} from "../session/login-completion";
-import {
-  createPasskeyService,
-  isPasskeyRequestError,
-} from "./passkey";
+  deleteLoginFlow,
+  normalizePasskeyFlowId,
+  normalizePasskeyIdentifier,
+  unexpectedPasskeyLoginError,
+} from "./shared";
+import type {
+  BeginPasskeyLoginError,
+  FinishPasskeyLoginError,
+  PasskeyLoginFlowState,
+  PasskeyLoginResult,
+} from "./types";
 
-type PasskeyAuthRepos = Pick<
-  Repositories,
-  | "users"
-  | "sessions"
-  | "loginFlows"
-  | "passkeys"
-  | "webauthnChallenges"
-  | "auditLogs"
-  | "authThrottle"
-  | "authEvents"
->;
-
-export interface PasskeyEnrollmentChallenge {
-  challengeId: number;
-  options: PublicKeyCredentialCreationOptionsJSON;
-}
-
-export interface PasskeyLoginFlowState {
-  id: number;
-  identifier: string;
-  state: "passkey";
-  requestOptions: PublicKeyCredentialRequestOptionsJSON;
-}
-
-export type PasskeyLoginResult = LoginCompletionResult;
-
-export type PasskeyEnrollmentError =
-  | { reason: "invalid_request"; message: string }
-  | { reason: "unexpected"; message: string };
-
-export type BeginPasskeyLoginError =
-  | InvalidCredentialsError
-  | { kind: "unexpected"; message: string };
-
-export type FinishPasskeyLoginError =
-  | { kind: "flow_expired" }
-  | InvalidCredentialsError
-  | { kind: "unexpected"; message: string };
-
-interface PasskeyServiceDeps {
-  createWebauthnService?: (
-    repos: Pick<Repositories, "passkeys" | "auditLogs">,
-  ) => ReturnType<typeof createPasskeyService>;
-  issueLoginSession?: typeof issueLoginSession;
-}
-
-interface BeginPasskeyEnrollmentInput {
-  userId: number;
-  ipAddress: string;
-}
-
-interface FinishPasskeyEnrollmentInput extends BeginPasskeyEnrollmentInput {
-  challengeId: number;
-  response: RegistrationResponseJSON;
+interface PasskeyLoginServiceDeps {
+  webauthnService: {
+    getAuthenticationOptions(
+      userId?: number,
+    ): Promise<PasskeyLoginFlowState["requestOptions"]>;
+    getAuthenticationOptionsForChallenge(
+      userId: number,
+      challenge: string,
+    ): Promise<PasskeyLoginFlowState["requestOptions"]>;
+    verifyAuthentication(
+      response: AuthenticationResponseJSON,
+      challenge: string,
+    ): Promise<{ verified: boolean; userId: number }>;
+  };
+  issueLoginSession: typeof issueLoginSession;
 }
 
 interface BeginPasskeyLoginInput {
@@ -102,199 +59,58 @@ interface FinishPasskeyLoginInput {
   sendPrivilegedLoginAlert: SendPrivilegedLoginAlert;
 }
 
-const INVALID_PASSKEY_REQUEST = "Invalid passkey request";
-const UNEXPECTED_PASSKEY_ENROLLMENT_FAILURE =
-  "Unexpected passkey registration failure";
-const UNEXPECTED_PASSKEY_LOGIN_FAILURE = "Unexpected passkey login failure";
-
-function unexpectedPasskeyLoginError(): {
-  kind: "unexpected";
-  message: string;
-} {
-  return {
-    kind: "unexpected",
-    message: UNEXPECTED_PASSKEY_LOGIN_FAILURE,
-  };
-}
-
-function normalizePasskeyIdentifier(
-  identifier: string,
-): string | InvalidCredentialsError {
-  try {
-    return assertNonEmptyString(identifier, "identifier").trim();
-  } catch {
-    return { kind: "invalid_credentials" };
-  }
-}
-
-function normalizePasskeyFlowId(
-  flowId: number,
-): number | { kind: "flow_expired" } {
-  try {
-    return assertPositiveInt(flowId, "flowId");
-  } catch {
-    return { kind: "flow_expired" };
-  }
-}
-
-async function deleteLoginFlow(
-  flow: Awaited<ReturnType<PasskeyAuthRepos["loginFlows"]["findById"]>>,
+export function createPasskeyLoginService(
   repos: PasskeyAuthRepos,
-): Promise<void> {
-  if (!flow) {
-    return;
-  }
-
-  if (flow.challenge_id) {
-    await repos.webauthnChallenges.delete(flow.challenge_id);
-  }
-
-  await repos.loginFlows.delete(flow.id);
-}
-
-export function createPasskeyAuthService(
-  repos: PasskeyAuthRepos,
-  deps: PasskeyServiceDeps = {},
+  deps: PasskeyLoginServiceDeps,
 ) {
-  const createWebauthnService =
-    deps.createWebauthnService ?? createPasskeyService;
-  const issueLoginSessionForRepos = deps.issueLoginSession ?? issueLoginSession;
-
   return {
-    async beginEnrollment(
-      input: BeginPasskeyEnrollmentInput,
-    ): Promise<Result<PasskeyEnrollmentChallenge, PasskeyEnrollmentError>> {
-      const identifier = `user:${input.userId}`;
-      const throttle = await checkPasskeyChallengeThrottle(
-        identifier,
-        input.ipAddress,
-        repos,
+    async getLoginFlowState(
+      flowId: number,
+    ): Promise<PasskeyLoginFlowState | null> {
+      const safeFlowId = normalizePasskeyFlowId(flowId);
+      if (typeof safeFlowId !== "number") {
+        return null;
+      }
+
+      const flow = await repos.loginFlows.findById(safeFlowId);
+      if (
+        !flow ||
+        flow.state !== "passkey" ||
+        !flow.user_id ||
+        !flow.challenge_id
+      ) {
+        await deleteLoginFlow(flow, repos);
+        return null;
+      }
+
+      if (flow.expires_at < Date.now()) {
+        await deleteLoginFlow(flow, repos);
+        return null;
+      }
+
+      const challenge = await repos.webauthnChallenges.findById(
+        flow.challenge_id,
       );
-      if (!throttle.allowed) {
-        return Err({
-          reason: "invalid_request",
-          message: INVALID_PASSKEY_REQUEST,
-        });
+      if (
+        !challenge ||
+        challenge.type !== "authentication" ||
+        challenge.user_id !== flow.user_id ||
+        challenge.expires_at < Date.now()
+      ) {
+        await deleteLoginFlow(flow, repos);
+        return null;
       }
 
-      let options: PublicKeyCredentialCreationOptionsJSON;
-      try {
-        options = await createWebauthnService(repos).getRegistrationOptions(
-          input.userId,
-        );
-      } catch {
-        return Err({
-          reason: "unexpected",
-          message: UNEXPECTED_PASSKEY_ENROLLMENT_FAILURE,
-        });
-      }
-
-      try {
-        const challengeId = await repos.webauthnChallenges.create({
-          user_id: input.userId,
-          type: "registration",
-          challenge: options.challenge,
-          expires_at: Date.now() + config.auth.webauthnChallengeTtlMs,
-        });
-
-        return Ok({ challengeId, options });
-      } catch {
-        return Err({
-          reason: "unexpected",
-          message: UNEXPECTED_PASSKEY_ENROLLMENT_FAILURE,
-        });
-      }
-    },
-
-    async finishEnrollment(
-      input: FinishPasskeyEnrollmentInput,
-    ): Promise<Result<void, PasskeyEnrollmentError>> {
-      const identifier = `user:${input.userId}`;
-
-      let safeChallengeId: number;
-      try {
-        safeChallengeId = assertPositiveInt(input.challengeId, "challengeId");
-      } catch {
-        return Err({
-          reason: "invalid_request",
-          message: INVALID_PASSKEY_REQUEST,
-        });
-      }
-
-      try {
-        const throttle = await checkPasskeyVerifyThrottle(
-          identifier,
-          input.ipAddress,
-          repos,
-        );
-        if (!throttle.allowed) {
-          return Err({
-            reason: "invalid_request",
-            message: INVALID_PASSKEY_REQUEST,
-          });
-        }
-
-        const challenge = await repos.webauthnChallenges.findById(
-          safeChallengeId,
-        );
-        if (
-          !challenge ||
-          challenge.type !== "registration" ||
-          challenge.user_id !== input.userId
-        ) {
-          await recordPasskeyVerifyFailure(identifier, input.ipAddress, repos);
-          return Err({
-            reason: "invalid_request",
-            message: INVALID_PASSKEY_REQUEST,
-          });
-        }
-
-        await repos.webauthnChallenges.delete(challenge.id);
-        if (challenge.expires_at < Date.now()) {
-          await recordPasskeyVerifyFailure(identifier, input.ipAddress, repos);
-          return Err({
-            reason: "invalid_request",
-            message: INVALID_PASSKEY_REQUEST,
-          });
-        }
-
-        try {
-          await createWebauthnService(repos).verifyRegistration(
-            input.userId,
-            input.response,
+      return {
+        id: flow.id,
+        identifier: flow.identifier,
+        state: "passkey",
+        requestOptions:
+          await deps.webauthnService.getAuthenticationOptionsForChallenge(
+            flow.user_id,
             challenge.challenge,
-          );
-        } catch (error: unknown) {
-          if (!isPasskeyRequestError(error)) {
-            return Err({
-              reason: "unexpected",
-              message: UNEXPECTED_PASSKEY_ENROLLMENT_FAILURE,
-            });
-          }
-
-          await recordPasskeyVerifyFailure(identifier, input.ipAddress, repos);
-          return Err({
-            reason: "invalid_request",
-            message: INVALID_PASSKEY_REQUEST,
-          });
-        }
-
-        await clearPasskeyVerifyFailureState(identifier, input.ipAddress, repos);
-        await repos.auditLogs.create({
-          user_id: input.userId,
-          action: "passkey_registered",
-          entity_type: "passkey",
-          entity_id: input.userId,
-          changes: null,
-          created_at: Date.now(),
-        });
-        return Ok(undefined);
-      } catch {
-        return Err({
-          reason: "unexpected",
-          message: UNEXPECTED_PASSKEY_ENROLLMENT_FAILURE,
-        });
-      }
+          ),
+      };
     },
 
     async beginLogin(
@@ -327,7 +143,11 @@ export function createPasskeyAuthService(
 
         const user = await repos.users.findByUsername(identifier);
         if (!user || !user.is_active) {
-          await recordPasskeyChallengeFailure(identifier, input.ipAddress, repos);
+          await recordPasskeyChallengeFailure(
+            identifier,
+            input.ipAddress,
+            repos,
+          );
           await recordAuthEvent(repos, {
             userId: user?.id ?? null,
             identifier,
@@ -340,7 +160,7 @@ export function createPasskeyAuthService(
           return Err({ kind: "invalid_credentials" });
         }
 
-        const options = await createWebauthnService(repos).getAuthenticationOptions(
+        const options = await deps.webauthnService.getAuthenticationOptions(
           user.id,
         );
         const challengeId = await repos.webauthnChallenges.create({
@@ -444,9 +264,10 @@ export function createPasskeyAuthService(
 
         let verifiedUserId: number;
         try {
-          const verification = await createWebauthnService(
-            repos,
-          ).verifyAuthentication(input.response, challenge.challenge);
+          const verification = await deps.webauthnService.verifyAuthentication(
+            input.response,
+            challenge.challenge,
+          );
           verifiedUserId = verification.userId;
         } catch (error: unknown) {
           if (!isPasskeyRequestError(error)) {
@@ -504,7 +325,7 @@ export function createPasskeyAuthService(
           outcome: "success",
         });
 
-        const session = await issueLoginSessionForRepos({
+        const session = await deps.issueLoginSession({
           user,
           ipAddress: input.ipAddress,
           userAgent: input.userAgent,

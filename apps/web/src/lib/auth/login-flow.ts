@@ -9,7 +9,6 @@ import {
 import type { Repositories } from "~/server/shared/registry";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
-import { createPasskeyService } from "./passkey/passkey";
 import {
   createPasskeyAuthService,
   type PasskeyLoginFlowState,
@@ -95,32 +94,7 @@ async function readActiveLoginFlow(
   }
 
   if (flow.state === "passkey") {
-    if (!flow.user_id || !flow.challenge_id) {
-      await deleteLoginFlow(flow, deps);
-      return null;
-    }
-
-    const challenge = await deps.webauthnChallenges.findById(flow.challenge_id);
-    if (
-      !challenge ||
-      challenge.type !== "authentication" ||
-      challenge.user_id !== flow.user_id ||
-      challenge.expires_at < Date.now()
-    ) {
-      await deleteLoginFlow(flow, deps);
-      return null;
-    }
-
-    const passkeyService = createPasskeyService(deps);
-    return {
-      id: flow.id,
-      identifier: flow.identifier,
-      state: "passkey",
-      requestOptions: await passkeyService.getAuthenticationOptionsForChallenge(
-        flow.user_id,
-        challenge.challenge,
-      ),
-    };
+    return createPasskeyAuthService(deps).getLoginFlowState(flow.id);
   }
 
   await deleteLoginFlow(flow, deps);

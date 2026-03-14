@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { createPasskeyAuthService } from "../../src/lib/auth/passkey/service";
-import { completeAccountOnboardingWithRepos } from "../../src/server/users/service-account-onboarding";
 import { createRepositories } from "../../src/server/shared/registry";
 import { Err, isErr, type Result } from "../../src/server/shared/result";
+import { completeAccountOnboardingWithRepos } from "../../src/server/users/service-account-onboarding";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -38,59 +38,65 @@ describe("passkey onboarding flow", () => {
       expires_at: Date.now() + 60_000,
     });
 
-    const result = await ctx.db.transaction().execute<
-      Result<void, { reason: string; message: string }>
-    >(async (transactionDb) => {
-      const transactionRepos = createRepositories(transactionDb);
-      const passkeyResult = await createPasskeyAuthService(transactionRepos, {
-        createWebauthnService: (repos) => ({
-          async getRegistrationOptions() {
-            throw new Error("not used in this test");
-          },
-          async verifyRegistration(userId) {
-            await repos.passkeys.create({
+    const result = await ctx.db
+      .transaction()
+      .execute<Result<void, { reason: string; message: string }>>(
+        async (transactionDb) => {
+          const transactionRepos = createRepositories(transactionDb);
+          const passkeyResult = await createPasskeyAuthService(
+            transactionRepos,
+            {
+              createWebauthnService: (repos) => ({
+                async getRegistrationOptions() {
+                  throw new Error("not used in this test");
+                },
+                async verifyRegistration(userId) {
+                  await repos.passkeys.create({
+                    id: "passkey-1",
+                    user_id: userId,
+                    public_key:
+                      Buffer.from("test-public-key").toString("base64"),
+                    counter: 0,
+                    transports: JSON.stringify(["internal"]),
+                  });
+                  return { verified: true };
+                },
+                async getAuthenticationOptions() {
+                  throw new Error("not used in this test");
+                },
+                async getAuthenticationOptionsForChallenge() {
+                  throw new Error("not used in this test");
+                },
+                async verifyAuthentication() {
+                  throw new Error("not used in this test");
+                },
+              }),
+            },
+          ).finishEnrollment({
+            userId: 5,
+            challengeId,
+            response: {
               id: "passkey-1",
-              user_id: userId,
-              public_key: Buffer.from("test-public-key").toString("base64"),
-              counter: 0,
-              transports: JSON.stringify(["internal"]),
-            });
-            return { verified: true };
-          },
-          async getAuthenticationOptions() {
-            throw new Error("not used in this test");
-          },
-          async getAuthenticationOptionsForChallenge() {
-            throw new Error("not used in this test");
-          },
-          async verifyAuthentication() {
-            throw new Error("not used in this test");
-          },
-        }),
-      }).finishEnrollment({
-        userId: 5,
-        challengeId,
-        response: {
-          id: "passkey-1",
-          rawId: "passkey-1",
-          type: "public-key",
-          response: {
-            clientDataJSON: "a",
-            attestationObject: "b",
-          },
-          clientExtensionResults: {},
-        },
-        ipAddress: "198.51.100.10",
-      });
-      if (isErr(passkeyResult)) {
-        return Err(passkeyResult.error);
-      }
+              rawId: "passkey-1",
+              type: "public-key",
+              response: {
+                clientDataJSON: "a",
+                attestationObject: "b",
+              },
+              clientExtensionResults: {},
+            },
+            ipAddress: "198.51.100.10",
+          });
+          if (isErr(passkeyResult)) {
+            return Err(passkeyResult.error);
+          }
 
-      return completeAccountOnboardingWithRepos(transactionRepos, {
-        userId: 5,
-        phoneE164: "+51999888777",
-      });
-    });
+          return completeAccountOnboardingWithRepos(transactionRepos, {
+            userId: 5,
+            phoneE164: "+51999888777",
+          });
+        },
+      );
 
     expect(isErr(result)).toBe(false);
     if (isErr(result)) {
