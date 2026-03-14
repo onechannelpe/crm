@@ -11,6 +11,7 @@ import {
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { requireSession } from "~/lib/auth/access/session";
 import { createPasskeyWorkflowService } from "~/lib/auth/passkey/workflows";
+import type { CompletePasskeyOnboardingError } from "~/lib/auth/passkey/workflows";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { repos, runInRepositoryTransaction } from "~/server/shared/context";
 import { isErr, type Result } from "~/server/shared/result";
@@ -54,10 +55,7 @@ function unwrapOnboardingResult(
 }
 
 function unwrapPasskeyOnboardingResult(
-  result: Result<
-    void,
-    { reason: "invalid_request"; message: string } | CompleteOnboardingError
-  >,
+  result: Result<void, CompletePasskeyOnboardingError>,
   role: Awaited<ReturnType<typeof requireSession>>["role"],
 ): { redirectTo: string } {
   if (!isErr(result)) {
@@ -67,10 +65,11 @@ function unwrapPasskeyOnboardingResult(
   switch (result.error.reason) {
     case "invalid_request":
       throw internalError("No se pudo configurar la clave de acceso");
+    case "unexpected":
+      throw internalError(result.error.message);
     case "strong_auth_required":
       throw conflictError("No se pudo completar el registro");
     case "user_not_found":
-    case "unexpected":
       throw internalError("No se pudo completar el registro");
   }
 

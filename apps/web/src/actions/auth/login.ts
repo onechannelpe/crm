@@ -7,11 +7,11 @@ import type { Role } from "~/lib/auth/access/rbac";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
 import {
-  startPasskeyLogin,
   submitPasswordLogin,
   submitTotpForLoginFlow,
 } from "~/lib/auth/login-flow";
 import { parseLoginFlowId } from "~/lib/auth/login-route-flow";
+import { createPasskeyWorkflowService } from "~/lib/auth/passkey/workflows";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { replaceCurrentSession } from "~/lib/auth/session/login-completion";
 import { getActionRequestContext } from "~/lib/observability/context";
@@ -139,13 +139,11 @@ export async function passkeyStart(
 ): Promise<PasskeyStartSubmissionResult> {
   const identifier = readText(formData, "identifier");
   const request = getRequestContext();
-  const result = await startPasskeyLogin(
-    {
-      identifier,
-      ipAddress: request.ipAddress,
-    },
-    repos,
-  );
+  const workflow = createPasskeyWorkflowService(repos);
+  const result = await workflow.beginLogin({
+    identifier,
+    ipAddress: request.ipAddress,
+  });
   if (isErr(result)) {
     await recordAuthAnalyticsEvent(
       {

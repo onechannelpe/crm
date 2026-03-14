@@ -15,7 +15,7 @@ import { parseLoginFlowId } from "~/lib/auth/login-route-flow";
 import { passkeyFinishUiMessage } from "~/lib/auth/login-ui";
 import {
   createAuthenticationResponse,
-  isPasskeySupported,
+  isPasskeyAuthenticationSupported,
 } from "~/lib/auth/passkey/client";
 import { useAuthPageView } from "~/lib/auth/use-auth-analytics";
 import { trackAuthClientEventMutation } from "~/lib/mutations/auth-analytics";
@@ -56,7 +56,7 @@ export default function LoginPasskeyPage() {
         "La sesión de clave de acceso expiró. Intenta de nuevo.",
       );
     }
-    if (isPasskeySupported()) {
+    if (isPasskeyAuthenticationSupported()) {
       setBrowserSupport("supported");
       return;
     }

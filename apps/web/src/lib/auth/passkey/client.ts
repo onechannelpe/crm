@@ -6,11 +6,19 @@ import type {
   RegistrationResponseJSON,
 } from "@simplewebauthn/server";
 
-export function isPasskeySupported(): boolean {
+export function isPasskeyAuthenticationSupported(): boolean {
   return (
     typeof window !== "undefined" &&
     typeof PublicKeyCredential !== "undefined" &&
     typeof navigator.credentials?.get === "function"
+  );
+}
+
+export function isPasskeyRegistrationSupported(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    typeof PublicKeyCredential !== "undefined" &&
+    typeof navigator.credentials?.create === "function"
   );
 }
 

@@ -2,10 +2,10 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
   getLoginFlowState,
-  startPasskeyLogin,
   submitPasswordLogin,
   submitTotpForLoginFlow,
 } from "../../src/lib/auth/login-flow";
+import { createPasskeyWorkflowService } from "../../src/lib/auth/passkey/workflows";
 import { hashPassword } from "../../src/lib/auth/password/password";
 import type { SendPrivilegedLoginAlert } from "../../src/lib/auth/security/privileged-login-alert";
 import {
@@ -138,13 +138,11 @@ describe("login flow service", () => {
       transports: JSON.stringify(["internal"]),
     });
 
-    const result = await startPasskeyLogin(
-      {
-        identifier: "exec.one",
-        ipAddress: "198.51.100.55",
-      },
-      ctx.repos,
-    );
+    const workflow = createPasskeyWorkflowService(ctx.repos);
+    const result = await workflow.beginLogin({
+      identifier: "exec.one",
+      ipAddress: "198.51.100.55",
+    });
 
     expect(isErr(result)).toBe(false);
     if (isErr(result)) {

@@ -6,7 +6,7 @@ import {
 } from "~/actions/auth";
 import {
   createRegistrationResponse,
-  isPasskeySupported,
+  isPasskeyRegistrationSupported,
 } from "~/lib/auth/passkey/client";
 import { getErrorMessage } from "~/lib/errors";
 
@@ -24,7 +24,7 @@ export function usePasskeyEnrollment(options: PasskeyEnrollmentOptions) {
   const [loading, setLoading] = createSignal(false);
 
   createEffect(() => {
-    setSupported(isPasskeySupported());
+    setSupported(isPasskeyRegistrationSupported());
   });
 
   async function registerPasskey() {

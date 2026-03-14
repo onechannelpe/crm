@@ -7,12 +7,12 @@ const {
   beginPasskeyRegistration,
   finishPasskeyRegistration,
   createRegistrationResponse,
-  isPasskeySupported,
+  isPasskeyRegistrationSupported,
 } = vi.hoisted(() => ({
   beginPasskeyRegistration: vi.fn(),
   finishPasskeyRegistration: vi.fn(),
   createRegistrationResponse: vi.fn(),
-  isPasskeySupported: vi.fn(),
+  isPasskeyRegistrationSupported: vi.fn(),
 }));
 
 vi.mock("../../src/actions/auth", () => ({
@@ -22,7 +22,7 @@ vi.mock("../../src/actions/auth", () => ({
 
 vi.mock("../../src/lib/auth/passkey/client", () => ({
   createRegistrationResponse,
-  isPasskeySupported,
+  isPasskeyRegistrationSupported,
 }));
 
 describe("usePasskeyEnrollment", () => {
@@ -33,7 +33,7 @@ describe("usePasskeyEnrollment", () => {
     });
     finishPasskeyRegistration.mockResolvedValue(undefined);
     createRegistrationResponse.mockResolvedValue({ id: "credential-1" });
-    isPasskeySupported.mockReturnValue(true);
+    isPasskeyRegistrationSupported.mockReturnValue(true);
   });
 
   afterEach(() => {

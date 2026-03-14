@@ -16,7 +16,7 @@ import {
 } from "~/lib/auth/onboarding-flow";
 import {
   createRegistrationResponse,
-  isPasskeySupported,
+  isPasskeyRegistrationSupported,
 } from "~/lib/auth/passkey/client";
 import { getErrorMessage } from "~/lib/errors";
 
@@ -58,7 +58,7 @@ export function useOnboardingFlow() {
   });
 
   createEffect(() => {
-    setPasskeySupported(isPasskeySupported());
+    setPasskeySupported(isPasskeyRegistrationSupported());
   });
 
   // Sync phone from session on first load, strip +51 prefix for local display

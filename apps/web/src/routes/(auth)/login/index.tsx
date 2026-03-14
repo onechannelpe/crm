@@ -18,7 +18,7 @@ import {
   passkeyStartUiMessage,
   passwordLoginUiMessage,
 } from "~/lib/auth/login-ui";
-import { isPasskeySupported } from "~/lib/auth/passkey/client";
+import { isPasskeyAuthenticationSupported } from "~/lib/auth/passkey/client";
 import { useAuthPageView } from "~/lib/auth/use-auth-analytics";
 import { useLoginFlow } from "~/lib/auth/use-login-flow";
 import {
@@ -58,7 +58,7 @@ export default function LoginPage() {
     if (searchParams.error === "flow_expired") {
       showToast("error", "La sesión de inicio expiró. Intenta de nuevo.");
     }
-    setPasskeySupported(isPasskeySupported());
+    setPasskeySupported(isPasskeyAuthenticationSupported());
   });
 
   createEffect(() => {

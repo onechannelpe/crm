@@ -1,7 +1,4 @@
-import type {
-  AuthenticationResponseJSON,
-  PublicKeyCredentialRequestOptionsJSON,
-} from "@simplewebauthn/server";
+import type { PublicKeyCredentialRequestOptionsJSON } from "@simplewebauthn/server";
 
 import type { Role } from "~/lib/auth/access/rbac";
 import { resolvePasswordStrongAuth } from "~/lib/auth/security/password-strong-auth";
@@ -14,17 +11,13 @@ import {
 import type { Repositories } from "~/server/shared/registry";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
-import {
-  beginPasskeyLoginFlow,
-  finishPasskeyLoginFlow,
-} from "./passkey/login-flow";
 import { createPasskeyService } from "./passkey/passkey";
+import { createPasskeyWorkflowService } from "./passkey/workflows";
 import {
   completePasswordLogin,
   getPasswordLoginNextStep,
   verifyPasswordLoginCredentials,
 } from "./password/password-login";
-import { issueLoginSession } from "./session/login-completion";
 
 type LoginFlowDeps = Pick<
   Repositories,
@@ -69,10 +62,6 @@ export type SubmitPasswordLoginError = {
 export type SubmitTotpLoginError =
   | { kind: "flow_expired" }
   | { kind: "invalid_totp" };
-
-export type SubmitPasskeyLoginError =
-  | { kind: "flow_expired" }
-  | { kind: "invalid_credentials" };
 
 async function deleteLoginFlow(
   flow: Awaited<ReturnType<LoginFlowDeps["loginFlows"]["findById"]>>,
@@ -166,52 +155,6 @@ async function createTotpLoginFlow(
   };
 }
 
-async function createPasskeyLoginFlow(
-  identifier: string,
-  ipAddress: string,
-  deps: LoginFlowDeps,
-): Promise<Result<PasskeyLoginFlowState, { kind: "invalid_credentials" }>> {
-  const passkeyService = createPasskeyService(deps);
-  const challenge = await beginPasskeyLoginFlow(
-    identifier,
-    ipAddress,
-    deps,
-    passkeyService,
-  );
-  if (isErr(challenge)) {
-    return Err(challenge.error);
-  }
-
-  const flowId = await deps.loginFlows.create({
-    identifier,
-    user_id: challenge.value.userId,
-    challenge_id: challenge.value.challengeId,
-    state: "passkey",
-    expires_at: Date.now() + config.auth.loginFlowTtlMs,
-  });
-
-  return Ok({
-    id: flowId,
-    identifier,
-    state: "passkey",
-    requestOptions: challenge.value.options,
-  });
-}
-
-export async function startPasskeyLogin(
-  input: {
-    identifier: string;
-    ipAddress: string;
-  },
-  deps: LoginFlowDeps,
-): Promise<Result<PasskeyLoginFlowState, { kind: "invalid_credentials" }>> {
-  const safeIdentifier = assertNonEmptyString(
-    input.identifier,
-    "identifier",
-  ).trim();
-  return createPasskeyLoginFlow(safeIdentifier, input.ipAddress, deps);
-}
-
 export async function submitPasswordLogin(
   input: {
     identifier: string;
@@ -252,11 +195,11 @@ export async function submitPasswordLogin(
   const nextStep = await getPasswordLoginNextStep(user.value, deps);
   if (isErr(nextStep)) {
     if (nextStep.error.kind === "passkey_required") {
-      const flow = await createPasskeyLoginFlow(
-        safeIdentifier,
-        input.ipAddress,
-        deps,
-      );
+      const workflow = createPasskeyWorkflowService(deps);
+      const flow = await workflow.beginLogin({
+        identifier: safeIdentifier,
+        ipAddress: input.ipAddress,
+      });
       if (isErr(flow)) {
         return Err({ kind: "invalid_credentials" });
       }
@@ -288,67 +231,6 @@ export async function submitPasswordLogin(
   });
 
   return Ok({ kind: "complete", result });
-}
-
-export async function submitPasskeyForLoginFlow(
-  input: {
-    flowId: number;
-    response: AuthenticationResponseJSON;
-    ipAddress: string;
-    userAgent: string | null;
-  },
-  deps: LoginFlowDeps,
-  sendPrivilegedLoginAlert: SendPrivilegedLoginAlert,
-): Promise<
-  Result<
-    { kind: "complete"; result: LoginFlowLoginResult },
-    SubmitPasskeyLoginError
-  >
-> {
-  const safeFlowId = assertPositiveInt(input.flowId, "flowId");
-  const flow = await deps.loginFlows.findById(safeFlowId);
-
-  if (
-    !flow ||
-    flow.state !== "passkey" ||
-    flow.expires_at < Date.now() ||
-    !flow.challenge_id
-  ) {
-    await deleteLoginFlow(flow, deps);
-    return Err({ kind: "flow_expired" });
-  }
-
-  const passkeyService = createPasskeyService(deps);
-  const verified = await finishPasskeyLoginFlow(
-    flow.challenge_id,
-    input.response,
-    input.ipAddress,
-    deps,
-    passkeyService,
-    sendPrivilegedLoginAlert,
-  );
-  await deps.loginFlows.delete(flow.id);
-
-  if (isErr(verified)) {
-    return Err(verified.error);
-  }
-
-  const user = await deps.users.findById(verified.value.userId);
-  if (!user || !user.is_active) {
-    return Err({ kind: "invalid_credentials" });
-  }
-
-  const session = await issueLoginSession({
-    user,
-    ipAddress: input.ipAddress,
-    userAgent: input.userAgent,
-    authMethod: "passkey",
-    strongAuthAt: Date.now(),
-    auditAction: "login_passkey",
-    deps,
-  });
-
-  return Ok({ kind: "complete", result: session });
 }
 
 export async function submitTotpForLoginFlow(

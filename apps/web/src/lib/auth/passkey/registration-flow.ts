@@ -13,8 +13,10 @@ import {
 import { config } from "~/lib/config";
 import { assertPositiveInt } from "~/lib/contracts/guards";
 import type { Repositories } from "~/server/shared/registry";
+import { Err, Ok, type Result } from "~/server/shared/result";
 
 const INVALID_REQUEST = "Invalid passkey request";
+const UNEXPECTED_FAILURE = "Unexpected passkey registration failure";
 
 type PasskeyService = {
   getRegistrationOptions: (
@@ -31,6 +33,10 @@ type Deps = Pick<
   Repositories,
   "webauthnChallenges" | "auditLogs" | "authThrottle"
 >;
+
+export type PasskeyRegistrationFlowError =
+  | { reason: "invalid_request"; message: string }
+  | { reason: "unexpected"; message: string };
 
 export async function beginPasskeyRegistrationFlow(
   userId: number,
@@ -74,50 +80,82 @@ export async function finishPasskeyRegistrationFlow(
   ipAddress: string,
   deps: Deps,
   passkeyService: PasskeyService,
-): Promise<void> {
-  const safeChallengeId = assertPositiveInt(challengeId, "challengeId");
+): Promise<Result<void, PasskeyRegistrationFlowError>> {
   const identifier = `user:${userId}`;
-  const throttle = await checkPasskeyVerifyThrottle(
-    identifier,
-    ipAddress,
-    deps,
-  );
-  if (!throttle.allowed) throw new Error(INVALID_REQUEST);
 
-  const challenge = await deps.webauthnChallenges.findById(safeChallengeId);
-  if (
-    !challenge ||
-    challenge.type !== "registration" ||
-    challenge.user_id !== userId
-  ) {
-    await recordPasskeyVerifyFailure(identifier, ipAddress, deps);
-    throw new Error(INVALID_REQUEST);
-  }
-
-  await deps.webauthnChallenges.delete(challenge.id);
-  if (challenge.expires_at < Date.now()) {
-    await recordPasskeyVerifyFailure(identifier, ipAddress, deps);
-    throw new Error(INVALID_REQUEST);
+  let safeChallengeId: number;
+  try {
+    safeChallengeId = assertPositiveInt(challengeId, "challengeId");
+  } catch {
+    return Err({
+      reason: "invalid_request",
+      message: INVALID_REQUEST,
+    });
   }
 
   try {
-    await passkeyService.verifyRegistration(
-      userId,
-      response,
-      challenge.challenge,
+    const throttle = await checkPasskeyVerifyThrottle(
+      identifier,
+      ipAddress,
+      deps,
     );
-  } catch {
-    await recordPasskeyVerifyFailure(identifier, ipAddress, deps);
-    throw new Error(INVALID_REQUEST);
-  }
+    if (!throttle.allowed) {
+      return Err({
+        reason: "invalid_request",
+        message: INVALID_REQUEST,
+      });
+    }
 
-  await clearPasskeyVerifyFailureState(identifier, ipAddress, deps);
-  await deps.auditLogs.create({
-    user_id: userId,
-    action: "passkey_registered",
-    entity_type: "passkey",
-    entity_id: userId,
-    changes: null,
-    created_at: Date.now(),
-  });
+    const challenge = await deps.webauthnChallenges.findById(safeChallengeId);
+    if (
+      !challenge ||
+      challenge.type !== "registration" ||
+      challenge.user_id !== userId
+    ) {
+      await recordPasskeyVerifyFailure(identifier, ipAddress, deps);
+      return Err({
+        reason: "invalid_request",
+        message: INVALID_REQUEST,
+      });
+    }
+
+    await deps.webauthnChallenges.delete(challenge.id);
+    if (challenge.expires_at < Date.now()) {
+      await recordPasskeyVerifyFailure(identifier, ipAddress, deps);
+      return Err({
+        reason: "invalid_request",
+        message: INVALID_REQUEST,
+      });
+    }
+
+    try {
+      await passkeyService.verifyRegistration(
+        userId,
+        response,
+        challenge.challenge,
+      );
+    } catch {
+      await recordPasskeyVerifyFailure(identifier, ipAddress, deps);
+      return Err({
+        reason: "invalid_request",
+        message: INVALID_REQUEST,
+      });
+    }
+
+    await clearPasskeyVerifyFailureState(identifier, ipAddress, deps);
+    await deps.auditLogs.create({
+      user_id: userId,
+      action: "passkey_registered",
+      entity_type: "passkey",
+      entity_id: userId,
+      changes: null,
+      created_at: Date.now(),
+    });
+    return Ok(undefined);
+  } catch {
+    return Err({
+      reason: "unexpected",
+      message: UNEXPECTED_FAILURE,
+    });
+  }
 }
