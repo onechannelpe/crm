@@ -20,7 +20,7 @@ vi.mock("../../src/actions/auth", () => ({
   finishPasskeyRegistration,
 }));
 
-vi.mock("../../src/lib/auth/passkey/browser", () => ({
+vi.mock("../../src/lib/auth/passkey/client", () => ({
   createRegistrationResponse,
   isPasskeySupported,
 }));
@@ -61,7 +61,10 @@ describe("usePasskeyEnrollment", () => {
     expect(createRegistrationResponse).toHaveBeenCalledOnce();
     expect(finishPasskeyRegistration).toHaveBeenCalledOnce();
     expect(refreshStatus).toHaveBeenCalledOnce();
-    expect(showToast).toHaveBeenCalledWith("success", "Clave de acceso añadida");
+    expect(showToast).toHaveBeenCalledWith(
+      "success",
+      "Clave de acceso añadida",
+    );
   });
 
   it("shows the registration failure message when setup fails", async () => {

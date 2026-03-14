@@ -7,12 +7,13 @@ import {
   type CompleteOnboardingError,
 } from "~/server/users/service-account-onboarding";
 
+import { createPasskeyService } from "./passkey";
 import {
+  beginPasskeyRegistrationFlow,
   finishPasskeyRegistrationFlow,
 } from "./registration-flow";
-import { createPasskeyService } from "./passkey";
 
-type PasskeyOnboardingRepos = Pick<
+type PasskeyWorkflowRepos = Pick<
   Repositories,
   | "users"
   | "passkeys"
@@ -28,36 +29,63 @@ export type CompletePasskeyOnboardingError =
   | { reason: "invalid_request"; message: string }
   | CompleteOnboardingError;
 
-interface CompletePasskeyOnboardingInput {
-  userId: number;
-  challengeId: number;
-  response: RegistrationResponseJSON;
-  ipAddress: string;
-  phoneE164: string;
-}
-
-interface PasskeyOnboardingDeps {
+interface PasskeyWorkflowDeps {
   runInTransaction?: <T>(
-    operation: (repos: PasskeyOnboardingRepos) => Promise<T>,
+    operation: (repos: PasskeyWorkflowRepos) => Promise<T>,
   ) => Promise<T>;
   createPasskeyService?: (
     repos: Pick<Repositories, "passkeys" | "auditLogs">,
   ) => ReturnType<typeof createPasskeyService>;
 }
 
-export function createPasskeyOnboardingService(
-  repos: PasskeyOnboardingRepos,
-  deps: PasskeyOnboardingDeps = {},
+interface BeginPasskeyEnrollmentInput {
+  userId: number;
+  ipAddress: string;
+}
+
+interface FinishPasskeyEnrollmentInput extends BeginPasskeyEnrollmentInput {
+  challengeId: number;
+  response: RegistrationResponseJSON;
+}
+
+interface CompletePasskeyOnboardingInput extends FinishPasskeyEnrollmentInput {
+  phoneE164: string;
+}
+
+export function createPasskeyWorkflowService(
+  repos: PasskeyWorkflowRepos,
+  deps: PasskeyWorkflowDeps = {},
 ) {
   const runInTransaction =
     deps.runInTransaction ??
-    (async <T>(operation: (transactionRepos: PasskeyOnboardingRepos) => Promise<T>) =>
-      operation(repos));
+    (async <T>(
+      operation: (transactionRepos: PasskeyWorkflowRepos) => Promise<T>,
+    ) => operation(repos));
   const createPasskeyServiceForRepos =
     deps.createPasskeyService ?? createPasskeyService;
 
   return {
-    async complete(
+    async beginEnrollment(input: BeginPasskeyEnrollmentInput) {
+      return beginPasskeyRegistrationFlow(
+        input.userId,
+        input.ipAddress,
+        repos,
+        createPasskeyServiceForRepos(repos),
+      );
+    },
+
+    async finishEnrollment(input: FinishPasskeyEnrollmentInput): Promise<void> {
+      await finishPasskeyRegistrationFlow(
+        input.userId,
+        input.challengeId,
+        input.response,
+        input.ipAddress,
+        repos,
+        createPasskeyServiceForRepos(repos),
+      );
+    },
+
+    async completeOnboarding(
       input: CompletePasskeyOnboardingInput,
     ): Promise<Result<void, CompletePasskeyOnboardingError>> {
       try {

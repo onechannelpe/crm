@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { createPasskeyOnboardingService } from "../../src/lib/auth/passkey/onboarding-flow";
+import { createPasskeyWorkflowService } from "../../src/lib/auth/passkey/workflows";
 import { createRepositories } from "../../src/server/shared/registry";
 import { isErr } from "../../src/server/shared/result";
 import {
@@ -37,11 +37,13 @@ describe("passkey onboarding flow", () => {
       expires_at: Date.now() + 60_000,
     });
 
-    const service = createPasskeyOnboardingService(ctx.repos, {
+    const service = createPasskeyWorkflowService(ctx.repos, {
       runInTransaction: (operation) =>
         ctx.db
           .transaction()
-          .execute((transactionDb) => operation(createRepositories(transactionDb))),
+          .execute((transactionDb) =>
+            operation(createRepositories(transactionDb)),
+          ),
       createPasskeyService: (repos) => ({
         async getRegistrationOptions() {
           throw new Error("not used in this test");
@@ -68,7 +70,7 @@ describe("passkey onboarding flow", () => {
       }),
     });
 
-    const result = await service.complete({
+    const result = await service.completeOnboarding({
       userId: 5,
       challengeId,
       response: {

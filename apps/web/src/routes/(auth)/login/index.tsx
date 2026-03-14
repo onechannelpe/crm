@@ -18,7 +18,7 @@ import {
   passkeyStartUiMessage,
   passwordLoginUiMessage,
 } from "~/lib/auth/login-ui";
-import { isPasskeySupported } from "~/lib/auth/passkey/browser";
+import { isPasskeySupported } from "~/lib/auth/passkey/client";
 import { useAuthPageView } from "~/lib/auth/use-auth-analytics";
 import { useLoginFlow } from "~/lib/auth/use-login-flow";
 import {

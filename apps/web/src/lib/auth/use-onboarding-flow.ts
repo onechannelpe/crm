@@ -17,7 +17,7 @@ import {
 import {
   createRegistrationResponse,
   isPasskeySupported,
-} from "~/lib/auth/passkey/browser";
+} from "~/lib/auth/passkey/client";
 import { getErrorMessage } from "~/lib/errors";
 
 export type OnboardingView = "profile" | "security-choice" | "passkey" | "totp";

@@ -123,18 +123,15 @@ function OnboardingContent() {
                   >
                     <Button
                       type="button"
-                      onClick={() => void flow.registerPasskeyAndFinishOnboarding()}
+                      onClick={() =>
+                        void flow.registerPasskeyAndFinishOnboarding()
+                      }
                     >
                       Reintentar
                     </Button>
                   </Show>
 
-                  <Show
-                    when={
-                      !flow.submitting() &&
-                      !flow.passkeySupported()
-                    }
-                  >
+                  <Show when={!flow.submitting() && !flow.passkeySupported()}>
                     <p class={styles.passkeyStatus}>
                       Este dispositivo no es compatible con claves de acceso.
                     </p>

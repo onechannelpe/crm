@@ -10,7 +10,7 @@ import {
 } from "~/lib/app-errors";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { requireSession } from "~/lib/auth/access/session";
-import { createPasskeyOnboardingService } from "~/lib/auth/passkey/onboarding-flow";
+import { createPasskeyWorkflowService } from "~/lib/auth/passkey/workflows";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { repos, runInRepositoryTransaction } from "~/server/shared/context";
 import { isErr, type Result } from "~/server/shared/result";
@@ -26,7 +26,9 @@ function normalizePeruvianPhone(value: string): string {
   throw validationError("El número debe tener 9 dígitos");
 }
 
-function resolveRedirect(role: Awaited<ReturnType<typeof requireSession>>["role"]) {
+function resolveRedirect(
+  role: Awaited<ReturnType<typeof requireSession>>["role"],
+) {
   return { redirectTo: getDefaultAppPath(role) };
 }
 
@@ -54,8 +56,7 @@ function unwrapOnboardingResult(
 function unwrapPasskeyOnboardingResult(
   result: Result<
     void,
-    | { reason: "invalid_request"; message: string }
-    | CompleteOnboardingError
+    { reason: "invalid_request"; message: string } | CompleteOnboardingError
   >,
   role: Awaited<ReturnType<typeof requireSession>>["role"],
 ): { redirectTo: string } {
@@ -102,10 +103,10 @@ export async function completePasskeyOnboarding(
   const safePhone = normalizePeruvianPhone(phoneE164);
   const event = getRequestEvent();
   const ipAddress = getClientIp(event?.request.headers ?? new Headers());
-  const service = createPasskeyOnboardingService(repos, {
+  const workflow = createPasskeyWorkflowService(repos, {
     runInTransaction: runInRepositoryTransaction,
   });
-  const result = await service.complete({
+  const result = await workflow.completeOnboarding({
     userId: session.userId,
     challengeId,
     response,
