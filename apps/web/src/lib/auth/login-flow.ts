@@ -49,9 +49,14 @@ export interface LoginFlowLoginResult {
   token: string;
 }
 
-export type SubmitPasswordLoginError = {
-  kind: "invalid_credentials" | "strong_auth_required";
-};
+export type SubmitPasswordLoginError =
+  | {
+      kind: "invalid_credentials" | "strong_auth_required";
+    }
+  | {
+      kind: "unexpected";
+      message: string;
+    };
 
 export type SubmitTotpLoginError =
   | { kind: "flow_expired" }
@@ -195,6 +200,10 @@ export async function submitPasswordLogin(
         ipAddress: input.ipAddress,
       });
       if (isErr(flow)) {
+        if (flow.error.kind === "unexpected") {
+          return Err(flow.error);
+        }
+
         return Err({ kind: "invalid_credentials" });
       }
 

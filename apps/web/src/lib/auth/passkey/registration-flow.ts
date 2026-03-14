@@ -7,13 +7,14 @@ import {
   checkPasskeyChallengeThrottle,
   checkPasskeyVerifyThrottle,
   clearPasskeyVerifyFailureState,
-  recordPasskeyChallengeFailure,
   recordPasskeyVerifyFailure,
 } from "~/lib/auth/password/throttle";
 import { config } from "~/lib/config";
 import { assertPositiveInt } from "~/lib/contracts/guards";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
+
+import { isPasskeyRequestError } from "./passkey";
 
 const INVALID_REQUEST = "Invalid passkey request";
 const UNEXPECTED_FAILURE = "Unexpected passkey registration failure";
@@ -71,10 +72,9 @@ export async function beginPasskeyRegistrationFlow(
   try {
     options = await passkeyService.getRegistrationOptions(userId);
   } catch {
-    await recordPasskeyChallengeFailure(identifier, ipAddress, deps);
     return Err({
-      reason: "invalid_request",
-      message: INVALID_REQUEST,
+      reason: "unexpected",
+      message: UNEXPECTED_FAILURE,
     });
   }
 
@@ -156,7 +156,14 @@ export async function finishPasskeyRegistrationFlow(
         response,
         challenge.challenge,
       );
-    } catch {
+    } catch (error: unknown) {
+      if (!isPasskeyRequestError(error)) {
+        return Err({
+          reason: "unexpected",
+          message: UNEXPECTED_FAILURE,
+        });
+      }
+
       await recordPasskeyVerifyFailure(identifier, ipAddress, deps);
       return Err({
         reason: "invalid_request",

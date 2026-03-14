@@ -4,7 +4,10 @@ import {
   beginPasskeyLoginFlow,
   finishPasskeyLoginFlow,
 } from "../../src/lib/auth/passkey/login-flow";
-import { createPasskeyService } from "../../src/lib/auth/passkey/passkey";
+import {
+  createPasskeyService,
+  PasskeyRequestError,
+} from "../../src/lib/auth/passkey/passkey";
 import {
   beginPasskeyRegistrationFlow,
   finishPasskeyRegistrationFlow,
@@ -150,7 +153,7 @@ describe("passkey flows", () => {
     expect(result.error.reason).toBe("invalid_request");
   });
 
-  it("returns invalid_request when passkey enrollment options fail", async () => {
+  it("returns unexpected when passkey enrollment options fail", async () => {
     const workflow = createPasskeyEnrollmentWorkflowService(ctx.repos, {
       createPasskeyService: () => ({
         async getRegistrationOptions() {
@@ -179,7 +182,7 @@ describe("passkey flows", () => {
     if (!isErr(result)) {
       throw new Error("expected failed passkey enrollment start");
     }
-    expect(result.error.reason).toBe("invalid_request");
+    expect(result.error.reason).toBe("unexpected");
   });
 
   it("finish passkey registration rejects challenge ownership mismatch", async () => {
@@ -221,6 +224,106 @@ describe("passkey flows", () => {
       key,
     );
     expect(counter?.failure_count).toBe(1);
+  });
+
+  it("returns invalid_request when passkey enrollment verification fails", async () => {
+    const challengeId = await ctx.repos.webauthnChallenges.create({
+      user_id: 1,
+      type: "registration",
+      challenge: "challenge-r2",
+      expires_at: Date.now() + 60_000,
+    });
+
+    const workflow = createPasskeyEnrollmentWorkflowService(ctx.repos, {
+      createPasskeyService: () => ({
+        async getRegistrationOptions() {
+          throw new Error("not used in this test");
+        },
+        async verifyRegistration() {
+          throw new PasskeyRequestError("invalid registration");
+        },
+        async getAuthenticationOptions() {
+          throw new Error("not used in this test");
+        },
+        async getAuthenticationOptionsForChallenge() {
+          throw new Error("not used in this test");
+        },
+        async verifyAuthentication() {
+          throw new Error("not used in this test");
+        },
+      }),
+    });
+    const result = await workflow.finishEnrollment({
+      userId: 1,
+      challengeId,
+      response: {
+        id: "cred-r2",
+        rawId: "cred-r2",
+        type: "public-key",
+        response: {
+          clientDataJSON: "a",
+          attestationObject: "b",
+        },
+        clientExtensionResults: {},
+      },
+      ipAddress,
+    });
+
+    expect(isErr(result)).toBe(true);
+    if (!isErr(result)) {
+      throw new Error("expected invalid passkey verification result");
+    }
+    expect(result.error.reason).toBe("invalid_request");
+  });
+
+  it("returns unexpected when passkey enrollment persistence fails after verification", async () => {
+    const challengeId = await ctx.repos.webauthnChallenges.create({
+      user_id: 1,
+      type: "registration",
+      challenge: "challenge-r3",
+      expires_at: Date.now() + 60_000,
+    });
+
+    const workflow = createPasskeyEnrollmentWorkflowService(ctx.repos, {
+      createPasskeyService: () => ({
+        async getRegistrationOptions() {
+          throw new Error("not used in this test");
+        },
+        async verifyRegistration() {
+          throw new Error("boom");
+        },
+        async getAuthenticationOptions() {
+          throw new Error("not used in this test");
+        },
+        async getAuthenticationOptionsForChallenge() {
+          throw new Error("not used in this test");
+        },
+        async verifyAuthentication() {
+          throw new Error("not used in this test");
+        },
+      }),
+    });
+    const result = await workflow.finishEnrollment({
+      userId: 1,
+      challengeId,
+      response: {
+        id: "cred-r3",
+        rawId: "cred-r3",
+        type: "public-key",
+        response: {
+          clientDataJSON: "a",
+          attestationObject: "b",
+        },
+        clientExtensionResults: {},
+      },
+      ipAddress,
+    });
+
+    expect(isErr(result)).toBe(true);
+    if (!isErr(result)) {
+      throw new Error("expected unexpected passkey verification failure");
+    }
+    expect(result.error.reason).toBe("unexpected");
   });
 
   it("finish passkey login issues a session through the workflow service", async () => {

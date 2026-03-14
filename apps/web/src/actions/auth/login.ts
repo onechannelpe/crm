@@ -84,6 +84,20 @@ function normalizePasskeyStartError(
   };
 }
 
+function normalizePasswordLoginError(error: {
+  kind: "invalid_credentials" | "strong_auth_required" | "unexpected";
+  message?: string;
+}): PasswordLoginSubmissionResult {
+  if (error.kind === "unexpected") {
+    throw internalError(error.message ?? "Unexpected password login failure");
+  }
+
+  return {
+    ok: false,
+    code: error.kind,
+  };
+}
+
 export async function passwordLogin(
   formData: FormData,
 ): Promise<PasswordLoginSubmissionResult> {
@@ -101,19 +115,20 @@ export async function passwordLogin(
     privilegedLoginAlertSender,
   );
   if (isErr(result)) {
+    const analyticsCode =
+      result.error.kind === "unexpected"
+        ? "invalid_credentials"
+        : result.error.kind;
     await recordAuthAnalyticsEvent(
       {
         source: "server",
         kind: "password_result",
         outcome: "failed",
-        code: result.error.kind,
+        code: analyticsCode,
       },
       getActionRequestContext(),
     );
-    return {
-      ok: false,
-      code: result.error.kind,
-    };
+    return normalizePasswordLoginError(result.error);
   }
 
   if (result.value.kind === "totp_required") {

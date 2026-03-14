@@ -38,6 +38,9 @@ export function useOnboardingFlow() {
   const submitting = createMemo(
     () => onboardingSubmitting() || passkeyPhase() === "server",
   );
+  const canGoBack = createMemo(
+    () => !onboardingSubmitting() && passkeyPhase() === "idle",
+  );
 
   async function completeOnboardingAction(
     action: () => Promise<{ redirectTo: string }>,
@@ -128,6 +131,10 @@ export function useOnboardingFlow() {
   });
 
   function goBack() {
+    if (!canGoBack()) {
+      return;
+    }
+
     if (step() === "security-choice") setStep("profile");
     else if (step() === "passkey" || step() === "totp")
       setStep("security-choice");
@@ -199,6 +206,7 @@ export function useOnboardingFlow() {
     phone,
     setPhone,
     submitting,
+    canGoBack,
     passkeyPhase,
     onboardingState,
     passkeySupported,

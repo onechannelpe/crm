@@ -56,7 +56,12 @@ function OnboardingContent() {
             footer={
               <div class={styles.footerActions}>
                 <Show when={flow.step() !== "profile"}>
-                  <Button type="button" variant="ghost" onClick={flow.goBack}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={flow.goBack}
+                    disabled={!flow.canGoBack()}
+                  >
                     Atrás
                   </Button>
                 </Show>
