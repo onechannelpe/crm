@@ -75,6 +75,7 @@ export interface PasskeyLoginResult {
   token: string;
 }
 
+export type FinishPasskeyEnrollmentError = PasskeyRegistrationFlowError;
 export type SubmitPasskeyLoginError =
   | { kind: "flow_expired" }
   | InvalidCredentialsError;
@@ -150,8 +151,10 @@ export function createPasskeyEnrollmentWorkflowService(
       );
     },
 
-    async finishEnrollment(input: FinishPasskeyEnrollmentInput): Promise<void> {
-      const result = await finishPasskeyRegistrationFlow(
+    async finishEnrollment(
+      input: FinishPasskeyEnrollmentInput,
+    ): Promise<Result<void, FinishPasskeyEnrollmentError>> {
+      return finishPasskeyRegistrationFlow(
         input.userId,
         input.challengeId,
         input.response,
@@ -159,9 +162,6 @@ export function createPasskeyEnrollmentWorkflowService(
         repos,
         createPasskeyServiceForRepos(repos),
       );
-      if (isErr(result)) {
-        throw new Error(result.error.message);
-      }
     },
   };
 }

@@ -3,11 +3,14 @@
 import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 import { getRequestEvent } from "solid-js/web";
 
+import { internalError } from "~/lib/app-errors";
 import { requireSession } from "~/lib/auth/access/session";
 import { createPasskeyService } from "~/lib/auth/passkey/passkey";
 import { createPasskeyEnrollmentWorkflowService } from "~/lib/auth/passkey/workflows";
+import type { FinishPasskeyEnrollmentError } from "~/lib/auth/passkey/workflows";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { repos } from "~/server/shared/context";
+import { isErr, type Result } from "~/server/shared/result";
 
 export interface PasskeyRegistrationChallengeResult {
   challengeId: number;
@@ -16,6 +19,25 @@ export interface PasskeyRegistrationChallengeResult {
       ReturnType<typeof createPasskeyService>["getRegistrationOptions"]
     >
   >;
+}
+
+function unwrapFinishPasskeyEnrollmentResult(
+  result: Result<void, FinishPasskeyEnrollmentError>,
+): void {
+  if (!isErr(result)) {
+    return;
+  }
+
+  switch (result.error.reason) {
+    case "invalid_request":
+      throw internalError("No se pudo configurar la clave de acceso");
+    case "unexpected":
+      throw internalError(result.error.message);
+  }
+
+  const exhaustive: never = result.error;
+  void exhaustive;
+  throw internalError("Unexpected passkey registration failure");
 }
 
 export async function beginPasskeyRegistration(): Promise<PasskeyRegistrationChallengeResult> {
@@ -41,10 +63,11 @@ export async function finishPasskeyRegistration(
   const workflow = createPasskeyEnrollmentWorkflowService(repos, {
     createPasskeyService,
   });
-  await workflow.finishEnrollment({
+  const result = await workflow.finishEnrollment({
     userId: session.userId,
     challengeId,
     response,
     ipAddress,
   });
+  unwrapFinishPasskeyEnrollmentResult(result);
 }
