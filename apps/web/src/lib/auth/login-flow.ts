@@ -130,7 +130,7 @@ export async function submitPasswordLogin(
 ): Promise<
   Result<
     | { kind: "totp_required"; flow: LoginFlowState }
-    | { kind: "passkey_required"; flow: LoginFlowState }
+    | { kind: "passkey_required"; flow: PasskeyLoginFlowState }
     | {
         kind: "complete";
         result: LoginFlowLoginResult;
