@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { submitPasswordLogin } from "../../src/lib/auth/login-flow";
-import { hashPassword } from "../../src/lib/auth/password/password";
 import type { SendPrivilegedLoginAlert } from "../../src/lib/auth/security/privileged-login-alert";
 import { isErr } from "../../src/server/shared/result";
 import {
@@ -9,24 +8,26 @@ import {
   createIsolatedTestDb,
   type TestDbContext,
 } from "../support/test-db";
+import {
+  getSeededIdentity,
+  setIdentityOnboarding,
+  setIdentityPassword,
+} from "../support/test-identities";
 
 describe("password login service", () => {
   const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
   let ctx: TestDbContext;
   const ipAddress = "198.51.100.44";
   const userAgent = "vitest-agent";
-  const username = "exec.one";
+  const identity = getSeededIdentity("execOne");
+  const username = identity.username;
   const rightPassword = "Secret123!";
 
   beforeEach(async () => {
     vi.useFakeTimers();
     vi.setSystemTime(1_700_000_000_000);
     ctx = await createIsolatedTestDb("password-login");
-    await ctx.db
-      .updateTable("users")
-      .set({ password_hash: await hashPassword(rightPassword) })
-      .where("id", "=", 1)
-      .execute();
+    await setIdentityPassword(ctx, identity, rightPassword);
   });
 
   afterEach(async () => {
@@ -137,14 +138,7 @@ describe("password login service", () => {
   });
 
   it("marks login as not onboarded when onboarding is incomplete", async () => {
-    await ctx.db
-      .updateTable("users")
-      .set({
-        onboarding_completed_at: null,
-        phone_e164: null,
-      })
-      .where("id", "=", 1)
-      .execute();
+    await setIdentityOnboarding(ctx, identity, false);
 
     const result = await submitPasswordLogin(
       {

@@ -1,37 +1,77 @@
+import { mkdirSync } from "node:fs";
+import { resolve } from "node:path";
+import { loadEnvFile } from "node:process";
+
 import { defineConfig, devices } from "@playwright/test";
 
-const AUTH_TEST_PORT = 4174;
-const includeWebkit = process.env.CI === "true";
+import { resolveBrowserDbPathForProject } from "./tests/support/db/browser-runtime";
 
-const projects = [
-  {
-    name: "chromium",
+const includeWebkit = process.env.CI === "true";
+loadEnvFile(resolve(process.cwd(), "../../.env.test"));
+
+const TEST_DB_DIR = resolve(process.cwd(), ".playwright-db");
+mkdirSync(TEST_DB_DIR, { recursive: true });
+
+interface BrowserProjectDefinition {
+  name: string;
+  port: number;
+  deviceName: keyof typeof devices;
+}
+
+function buildProjectConfig(
+  name: string,
+  port: number,
+  deviceName: keyof typeof devices,
+) {
+  return {
+    name,
     use: {
-      ...devices["Desktop Chrome"],
+      ...devices[deviceName],
+      baseURL: `http://127.0.0.1:${port}`,
     },
-  },
-  {
-    name: "firefox",
-    use: {
-      ...devices["Desktop Firefox"],
-    },
-  },
-  {
-    name: "mobile-chromium",
-    use: {
-      ...devices["Pixel 5"],
-    },
-  },
+  };
+}
+
+const projectDefinitions: BrowserProjectDefinition[] = [
+  { name: "chromium", port: 4174, deviceName: "Desktop Chrome" },
+  { name: "firefox", port: 4175, deviceName: "Desktop Firefox" },
+  { name: "mobile-chromium", port: 4176, deviceName: "Pixel 5" },
 ];
 
 if (includeWebkit) {
-  projects.push({
+  projectDefinitions.push({
     name: "webkit",
-    use: {
-      ...devices["Desktop Safari"],
-    },
+    port: 4177,
+    deviceName: "Desktop Safari",
   });
 }
+
+function buildWebServer(name: string, port: number, browserDbPath: string) {
+  return {
+    name,
+    command: `bun run test:prepare && bun run test:server -- --host 127.0.0.1 --port ${port}`,
+    url: `http://127.0.0.1:${port}/login`,
+    cwd: ".",
+    env: {
+      ...process.env,
+      WEB_DB_PATH: browserDbPath,
+    },
+    reuseExistingServer: false,
+    timeout: 120_000,
+  };
+}
+
+const projects = projectDefinitions.map((project) =>
+  buildProjectConfig(project.name, project.port, project.deviceName),
+);
+
+const webServers = projectDefinitions.map((project) =>
+  buildWebServer(
+    project.name,
+    project.port,
+    resolveBrowserDbPathForProject(project.name),
+  ),
+);
 
 export default defineConfig({
   testDir: "./tests/browser",
@@ -42,15 +82,8 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   use: {
-    baseURL: `http://127.0.0.1:${AUTH_TEST_PORT}`,
     trace: "retain-on-failure",
   },
-  webServer: {
-    command: `bun run test:prepare && bun run test:server -- --host 127.0.0.1 --port ${AUTH_TEST_PORT}`,
-    url: `http://127.0.0.1:${AUTH_TEST_PORT}/login`,
-    cwd: ".",
-    reuseExistingServer: false,
-    timeout: 120_000,
-  },
+  webServer: webServers,
   projects,
 });
