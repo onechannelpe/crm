@@ -9,7 +9,7 @@ import {
   beginPasskeyRegistrationFlow,
   finishPasskeyRegistrationFlow,
 } from "../../src/lib/auth/passkey/registration-flow";
-import { createPasskeyWorkflowService } from "../../src/lib/auth/passkey/workflows";
+import { createPasskeyLoginWorkflowService } from "../../src/lib/auth/passkey/workflows";
 import { hashAuthKey } from "../../src/lib/auth/password/key-hash";
 import type { SendPrivilegedLoginAlert } from "../../src/lib/auth/security/privileged-login-alert";
 import { isErr } from "../../src/server/shared/result";
@@ -179,7 +179,7 @@ describe("passkey flows", () => {
       expires_at: Date.now() + 60_000,
     });
 
-    const workflow = createPasskeyWorkflowService(ctx.repos, {
+    const workflow = createPasskeyLoginWorkflowService(ctx.repos, {
       createPasskeyService: () => ({
         async getRegistrationOptions() {
           throw new Error("not used in this test");

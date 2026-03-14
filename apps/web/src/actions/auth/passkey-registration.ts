@@ -5,7 +5,7 @@ import { getRequestEvent } from "solid-js/web";
 
 import { requireSession } from "~/lib/auth/access/session";
 import { createPasskeyService } from "~/lib/auth/passkey/passkey";
-import { createPasskeyWorkflowService } from "~/lib/auth/passkey/workflows";
+import { createPasskeyEnrollmentWorkflowService } from "~/lib/auth/passkey/workflows";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { repos } from "~/server/shared/context";
 
@@ -22,7 +22,7 @@ export async function beginPasskeyRegistration(): Promise<PasskeyRegistrationCha
   const session = await requireSession();
   const event = getRequestEvent();
   const ipAddress = getClientIp(event?.request.headers ?? new Headers());
-  const workflow = createPasskeyWorkflowService(repos, {
+  const workflow = createPasskeyEnrollmentWorkflowService(repos, {
     createPasskeyService,
   });
   return workflow.beginEnrollment({
@@ -38,7 +38,7 @@ export async function finishPasskeyRegistration(
   const session = await requireSession();
   const event = getRequestEvent();
   const ipAddress = getClientIp(event?.request.headers ?? new Headers());
-  const workflow = createPasskeyWorkflowService(repos, {
+  const workflow = createPasskeyEnrollmentWorkflowService(repos, {
     createPasskeyService,
   });
   await workflow.finishEnrollment({

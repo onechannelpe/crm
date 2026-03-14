@@ -12,7 +12,7 @@ import type { Repositories } from "~/server/shared/registry";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import { createPasskeyService } from "./passkey/passkey";
-import { createPasskeyWorkflowService } from "./passkey/workflows";
+import { createPasskeyLoginWorkflowService } from "./passkey/workflows";
 import {
   completePasswordLogin,
   getPasswordLoginNextStep,
@@ -195,7 +195,7 @@ export async function submitPasswordLogin(
   const nextStep = await getPasswordLoginNextStep(user.value, deps);
   if (isErr(nextStep)) {
     if (nextStep.error.kind === "passkey_required") {
-      const workflow = createPasskeyWorkflowService(deps);
+      const workflow = createPasskeyLoginWorkflowService(deps);
       const flow = await workflow.beginLogin({
         identifier: safeIdentifier,
         ipAddress: input.ipAddress,

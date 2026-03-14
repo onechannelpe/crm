@@ -11,7 +11,7 @@ import {
   submitTotpForLoginFlow,
 } from "~/lib/auth/login-flow";
 import { parseLoginFlowId } from "~/lib/auth/login-route-flow";
-import { createPasskeyWorkflowService } from "~/lib/auth/passkey/workflows";
+import { createPasskeyLoginWorkflowService } from "~/lib/auth/passkey/workflows";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { replaceCurrentSession } from "~/lib/auth/session/login-completion";
 import { getActionRequestContext } from "~/lib/observability/context";
@@ -139,7 +139,7 @@ export async function passkeyStart(
 ): Promise<PasskeyStartSubmissionResult> {
   const identifier = readText(formData, "identifier");
   const request = getRequestContext();
-  const workflow = createPasskeyWorkflowService(repos);
+  const workflow = createPasskeyLoginWorkflowService(repos);
   const result = await workflow.beginLogin({
     identifier,
     ipAddress: request.ipAddress,

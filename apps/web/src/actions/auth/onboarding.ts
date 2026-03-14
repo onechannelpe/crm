@@ -10,7 +10,7 @@ import {
 } from "~/lib/app-errors";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { requireSession } from "~/lib/auth/access/session";
-import { createPasskeyWorkflowService } from "~/lib/auth/passkey/workflows";
+import { createPasskeyOnboardingWorkflowService } from "~/lib/auth/passkey/workflows";
 import type { CompletePasskeyOnboardingError } from "~/lib/auth/passkey/workflows";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { repos, runInRepositoryTransaction } from "~/server/shared/context";
@@ -102,7 +102,7 @@ export async function completePasskeyOnboarding(
   const safePhone = normalizePeruvianPhone(phoneE164);
   const event = getRequestEvent();
   const ipAddress = getClientIp(event?.request.headers ?? new Headers());
-  const workflow = createPasskeyWorkflowService(repos, {
+  const workflow = createPasskeyOnboardingWorkflowService(repos, {
     runInTransaction: runInRepositoryTransaction,
   });
   const result = await workflow.completeOnboarding({

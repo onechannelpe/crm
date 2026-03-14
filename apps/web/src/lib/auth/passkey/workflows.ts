@@ -79,13 +79,16 @@ export type SubmitPasskeyLoginError =
   | { kind: "flow_expired" }
   | InvalidCredentialsError;
 
-interface PasskeyWorkflowDeps {
-  runInTransaction?: <T>(
-    operation: (repos: PasskeyOnboardingRepos) => Promise<T>,
-  ) => Promise<T>;
+interface PasskeyWorkflowSharedDeps {
   createPasskeyService?: (
     repos: Pick<Repositories, "passkeys" | "auditLogs">,
   ) => ReturnType<typeof createPasskeyService>;
+}
+
+interface PasskeyOnboardingWorkflowDeps extends PasskeyWorkflowSharedDeps {
+  runInTransaction?: <T>(
+    operation: (repos: PasskeyOnboardingRepos) => Promise<T>,
+  ) => Promise<T>;
 }
 
 interface BeginPasskeyEnrollmentInput {
@@ -130,15 +133,10 @@ async function deleteLoginFlow(
   await repos.loginFlows.delete(flow.id);
 }
 
-export function createPasskeyWorkflowService(
+export function createPasskeyEnrollmentWorkflowService(
   repos: PasskeyEnrollmentRepos,
-  deps: PasskeyWorkflowDeps = {},
+  deps: PasskeyWorkflowSharedDeps = {},
 ) {
-  const runInTransaction =
-    deps.runInTransaction ??
-    (async <T>(
-      operation: (transactionRepos: PasskeyOnboardingRepos) => Promise<T>,
-    ) => operation(repos as PasskeyOnboardingRepos));
   const createPasskeyServiceForRepos =
     deps.createPasskeyService ?? createPasskeyService;
 
@@ -165,27 +163,36 @@ export function createPasskeyWorkflowService(
         throw new Error(result.error.message);
       }
     },
+  };
+}
 
+export function createPasskeyLoginWorkflowService(
+  repos: PasskeyLoginRepos,
+  deps: PasskeyWorkflowSharedDeps = {},
+) {
+  const createPasskeyServiceForRepos =
+    deps.createPasskeyService ?? createPasskeyService;
+
+  return {
     async beginLogin(
       input: BeginPasskeyLoginInput,
     ): Promise<Result<PasskeyLoginFlowState, InvalidCredentialsError>> {
-      const loginRepos = repos as PasskeyLoginRepos;
       const identifier = assertNonEmptyString(
         input.identifier,
         "identifier",
       ).trim();
-      const passkeyService = createPasskeyServiceForRepos(loginRepos);
+      const passkeyService = createPasskeyServiceForRepos(repos);
       const challenge = await beginPasskeyLoginFlow(
         identifier,
         input.ipAddress,
-        loginRepos,
+        repos,
         passkeyService,
       );
       if (isErr(challenge)) {
         return Err(challenge.error);
       }
 
-      const flowId = await loginRepos.loginFlows.create({
+      const flowId = await repos.loginFlows.create({
         identifier,
         user_id: challenge.value.userId,
         challenge_id: challenge.value.challengeId,
@@ -209,34 +216,33 @@ export function createPasskeyWorkflowService(
         SubmitPasskeyLoginError
       >
     > {
-      const loginRepos = repos as PasskeyLoginRepos;
       const safeFlowId = assertPositiveInt(input.flowId, "flowId");
-      const flow = await loginRepos.loginFlows.findById(safeFlowId);
+      const flow = await repos.loginFlows.findById(safeFlowId);
       if (
         !flow ||
         flow.state !== "passkey" ||
         flow.expires_at < Date.now() ||
         !flow.challenge_id
       ) {
-        await deleteLoginFlow(flow, loginRepos);
+        await deleteLoginFlow(flow, repos);
         return Err({ kind: "flow_expired" });
       }
 
-      const passkeyService = createPasskeyServiceForRepos(loginRepos);
+      const passkeyService = createPasskeyServiceForRepos(repos);
       const verified = await finishPasskeyLoginFlow(
         flow.challenge_id,
         input.response,
         input.ipAddress,
-        loginRepos,
+        repos,
         passkeyService,
         input.sendPrivilegedLoginAlert,
       );
-      await loginRepos.loginFlows.delete(flow.id);
+      await repos.loginFlows.delete(flow.id);
       if (isErr(verified)) {
         return Err(verified.error);
       }
 
-      const user = await loginRepos.users.findById(verified.value.userId);
+      const user = await repos.users.findById(verified.value.userId);
       if (!user || !user.is_active) {
         return Err({ kind: "invalid_credentials" });
       }
@@ -248,12 +254,27 @@ export function createPasskeyWorkflowService(
         authMethod: "passkey",
         strongAuthAt: Date.now(),
         auditAction: "login_passkey",
-        deps: loginRepos,
+        deps: repos,
       });
 
       return Ok({ kind: "complete", result: session });
     },
+  };
+}
 
+export function createPasskeyOnboardingWorkflowService(
+  repos: PasskeyOnboardingRepos,
+  deps: PasskeyOnboardingWorkflowDeps = {},
+) {
+  const runInTransaction =
+    deps.runInTransaction ??
+    (async <T>(
+      operation: (transactionRepos: PasskeyOnboardingRepos) => Promise<T>,
+    ) => operation(repos));
+  const createPasskeyServiceForRepos =
+    deps.createPasskeyService ?? createPasskeyService;
+
+  return {
     async completeOnboarding(
       input: CompletePasskeyOnboardingInput,
     ): Promise<Result<void, CompletePasskeyOnboardingError>> {
