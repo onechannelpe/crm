@@ -20,7 +20,7 @@ vi.mock("../../src/actions/auth", () => ({
   finishPasskeyRegistration,
 }));
 
-vi.mock("../../src/lib/auth/passkey/client", () => ({
+vi.mock("../../src/lib/auth/passkey/registration-client", () => ({
   createRegistrationResponse,
   isPasskeyRegistrationSupported,
 }));

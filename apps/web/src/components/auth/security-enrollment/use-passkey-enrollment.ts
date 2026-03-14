@@ -7,7 +7,7 @@ import {
 import {
   createRegistrationResponse,
   isPasskeyRegistrationSupported,
-} from "~/lib/auth/passkey/client";
+} from "~/lib/auth/passkey/registration-client";
 import { getErrorMessage } from "~/lib/errors";
 
 type ShowToast = (type: "success" | "error" | "info", message: string) => void;
