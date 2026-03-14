@@ -1,16 +1,24 @@
-import { describe, it, expect, beforeAll } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
-describe("validateSecret", () => {
+describe("env validation", () => {
   let validateSecret: (key: string, value: string) => void;
+  let parseEnv: typeof import("../../src/lib/env").parseEnv;
+  const baseEnv = {
+    SESSION_SECRET: "temp_secret_for_initial_import_32_chars_long",
+    TOTP_ENCRYPTION_KEY: "temp_secret_for_initial_import_32_chars_long",
+    ENGINE_HMAC_KEY_ID: "web",
+    ENGINE_HMAC_SECRET: "temp_secret_for_initial_import_32_chars_long",
+  } satisfies Record<string, string>;
 
   beforeAll(async () => {
-    process.env.SESSION_SECRET = "temp_secret_for_initial_import_32_chars_long";
-    process.env.ENGINE_HMAC_KEY_ID = "web";
-    process.env.ENGINE_HMAC_SECRET =
-      "temp_secret_for_initial_import_32_chars_long";
+    process.env.SESSION_SECRET = baseEnv.SESSION_SECRET;
+    process.env.TOTP_ENCRYPTION_KEY = baseEnv.TOTP_ENCRYPTION_KEY;
+    process.env.ENGINE_HMAC_KEY_ID = baseEnv.ENGINE_HMAC_KEY_ID;
+    process.env.ENGINE_HMAC_SECRET = baseEnv.ENGINE_HMAC_SECRET;
 
     const mod = await import("../../src/lib/env");
     validateSecret = mod.validateSecret;
+    parseEnv = mod.parseEnv;
   });
 
   it("throws if secret is too short", () => {
@@ -43,5 +51,18 @@ describe("validateSecret", () => {
   it("passes for a strong secret", () => {
     const strong = "k7vB9pL2mN5qR4xT1yZ8wS3uJ6hA0gC9";
     expect(() => validateSecret("TEST_SECRET", strong)).not.toThrow();
+  });
+
+  it("defaults engine connect mode to local", async () => {
+    expect(parseEnv(baseEnv).engineConnectMode).toBe("local");
+  });
+
+  it("rejects invalid engine connect mode values", () => {
+    expect(() =>
+      parseEnv({
+        ...baseEnv,
+        ENGINE_CONNECT_MODE: "invalid",
+      }),
+    ).toThrow("ENGINE_CONNECT_MODE must be one of: local, remote");
   });
 });

@@ -29,7 +29,7 @@ POST /v1/search
 
 Every `POST /v1/search` request requires `x-key-id`, `x-timestamp`, and `x-signature`. The signature format is `hex(hmac_sha256(timestamp_be_u64 + raw_body, secret))`.
 
-Configuration is loaded from the repo root `.env`. `ENGINE_HMAC_KEYS_JSON` is required. Local defaults are `ENGINE_DB_PATH=crates/engine/data/contacts.sqlite`, `ENGINE_HOST=localhost`, and `ENGINE_PORT=3001`. Limit settings are `ENGINE_HMAC_MAX_SKEW_SECS`, `ENGINE_RATE_LIMIT_PER_KEY`, and `ENGINE_MAX_LIMIT`.
+Configuration is loaded from the repo root `.env`. `ENGINE_HMAC_KEYS_JSON` is required. Defaults are `ENGINE_CONNECT_MODE=local`, `ENGINE_DB_PATH=crates/engine/data/contacts.sqlite`, `ENGINE_HOST=127.0.0.1`, and `ENGINE_PORT=3001`. In local mode, the engine refuses non-loopback bind hosts. Limit settings are `ENGINE_HMAC_MAX_SKEW_SECS`, `ENGINE_RATE_LIMIT_PER_KEY`, and `ENGINE_MAX_LIMIT`.
 
 ## Running
 
