@@ -1,5 +1,5 @@
 export { getLoginFlow } from "./login-flow";
-export { completeOnboarding } from "./onboarding";
+export { completeOnboarding, completePasskeyOnboarding } from "./onboarding";
 export { finishPasskeyLogin } from "./passkey";
 export {
   beginPasskeyRegistration,

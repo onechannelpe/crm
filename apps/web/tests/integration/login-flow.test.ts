@@ -2,10 +2,10 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
   getLoginFlowState,
-  startPasskeyLogin,
   submitPasswordLogin,
   submitTotpForLoginFlow,
 } from "../../src/lib/auth/login-flow";
+import { createPasskeyAuthService } from "../../src/lib/auth/passkey/service";
 import { hashPassword } from "../../src/lib/auth/password/password";
 import type { SendPrivilegedLoginAlert } from "../../src/lib/auth/security/privileged-login-alert";
 import {
@@ -138,13 +138,10 @@ describe("login flow service", () => {
       transports: JSON.stringify(["internal"]),
     });
 
-    const result = await startPasskeyLogin(
-      {
-        identifier: "exec.one",
-        ipAddress: "198.51.100.55",
-      },
-      ctx.repos,
-    );
+    const result = await createPasskeyAuthService(ctx.repos).beginLogin({
+      identifier: "exec.one",
+      ipAddress: "198.51.100.55",
+    });
 
     expect(isErr(result)).toBe(false);
     if (isErr(result)) {
@@ -158,5 +155,40 @@ describe("login flow service", () => {
     }
     expect(flow.requestOptions.allowCredentials).toHaveLength(1);
     expect(flow.requestOptions.rpId).toBe(result.value.requestOptions.rpId);
+  });
+
+  it("returns unexpected when password login cannot create the required passkey flow", async () => {
+    await ctx.repos.passkeys.create({
+      id: "pk-login-required-failure",
+      user_id: 5,
+      public_key: "base64-public-key",
+      counter: 0,
+      transports: JSON.stringify(["internal"]),
+    });
+
+    const result = await submitPasswordLogin(
+      {
+        identifier: "super.user",
+        password: "SuperSecret123!",
+        ipAddress: "198.51.100.77",
+        userAgent: "vitest-agent",
+      },
+      {
+        ...ctx.repos,
+        loginFlows: {
+          ...ctx.repos.loginFlows,
+          async create() {
+            throw new Error("boom");
+          },
+        },
+      },
+      sendPrivilegedLoginAlert,
+    );
+
+    expect(isErr(result)).toBe(true);
+    if (!isErr(result)) {
+      throw new Error("expected unexpected password login failure");
+    }
+    expect(result.error.kind).toBe("unexpected");
   });
 });

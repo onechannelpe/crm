@@ -3,15 +3,19 @@
 import { redirect } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
 
+import { internalError } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
 import {
-  startPasskeyLogin,
   submitPasswordLogin,
   submitTotpForLoginFlow,
 } from "~/lib/auth/login-flow";
 import { parseLoginFlowId } from "~/lib/auth/login-route-flow";
+import {
+  createPasskeyAuthService,
+  type BeginPasskeyLoginError,
+} from "~/lib/auth/passkey/service";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { replaceCurrentSession } from "~/lib/auth/session/login-completion";
 import { getActionRequestContext } from "~/lib/observability/context";
@@ -68,6 +72,44 @@ function getRequestContext() {
   };
 }
 
+function normalizePasskeyStartError(
+  error: BeginPasskeyLoginError,
+): PasskeyStartSubmissionResult {
+  if (error.kind === "unexpected") {
+    throw internalError(error.message);
+  }
+  return {
+    ok: false,
+    code: "invalid_credentials",
+  };
+}
+
+function resolvePasskeyStartAnalyticsCode(
+  error: BeginPasskeyLoginError,
+): "invalid_credentials" | "internal" {
+  return error.kind === "unexpected" ? "internal" : "invalid_credentials";
+}
+
+function normalizePasswordLoginError(error: {
+  kind: "invalid_credentials" | "strong_auth_required" | "unexpected";
+  message?: string;
+}): PasswordLoginSubmissionResult {
+  if (error.kind === "unexpected") {
+    throw internalError(error.message ?? "Unexpected password login failure");
+  }
+
+  return {
+    ok: false,
+    code: error.kind,
+  };
+}
+
+function resolvePasswordAnalyticsCode(error: {
+  kind: "invalid_credentials" | "strong_auth_required" | "unexpected";
+}): "invalid_credentials" | "strong_auth_required" | "internal" {
+  return error.kind === "unexpected" ? "internal" : error.kind;
+}
+
 export async function passwordLogin(
   formData: FormData,
 ): Promise<PasswordLoginSubmissionResult> {
@@ -90,14 +132,11 @@ export async function passwordLogin(
         source: "server",
         kind: "password_result",
         outcome: "failed",
-        code: result.error.kind,
+        code: resolvePasswordAnalyticsCode(result.error),
       },
       getActionRequestContext(),
     );
-    return {
-      ok: false,
-      code: result.error.kind,
-    };
+    return normalizePasswordLoginError(result.error);
   }
 
   if (result.value.kind === "totp_required") {
@@ -139,27 +178,22 @@ export async function passkeyStart(
 ): Promise<PasskeyStartSubmissionResult> {
   const identifier = readText(formData, "identifier");
   const request = getRequestContext();
-  const result = await startPasskeyLogin(
-    {
-      identifier,
-      ipAddress: request.ipAddress,
-    },
-    repos,
-  );
+  const service = createPasskeyAuthService(repos);
+  const result = await service.beginLogin({
+    identifier,
+    ipAddress: request.ipAddress,
+  });
   if (isErr(result)) {
     await recordAuthAnalyticsEvent(
       {
         source: "server",
         kind: "passkey_start_result",
         outcome: "failed",
-        code: "invalid_credentials",
+        code: resolvePasskeyStartAnalyticsCode(result.error),
       },
       getActionRequestContext(),
     );
-    return {
-      ok: false,
-      code: "invalid_credentials",
-    };
+    return normalizePasskeyStartError(result.error);
   }
 
   await recordAuthAnalyticsEvent(

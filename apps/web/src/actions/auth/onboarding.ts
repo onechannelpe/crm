@@ -1,14 +1,26 @@
 "use server";
 
+import type { RegistrationResponseJSON } from "@simplewebauthn/server";
+import { getRequestEvent } from "solid-js/web";
+
 import {
   conflictError,
   internalError,
   validationError,
 } from "~/lib/app-errors";
+import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { requireSession } from "~/lib/auth/access/session";
-import { repos, runInRepositoryTransaction } from "~/server/shared/context";
-import { isErr } from "~/server/shared/result";
-import { createAccountOnboardingService } from "~/server/users/service-account-onboarding";
+import {
+  createPasskeyAuthService,
+  type PasskeyEnrollmentError,
+} from "~/lib/auth/passkey/service";
+import { getClientIp } from "~/lib/auth/password/client-ip";
+import { runInRepositoryTransaction } from "~/server/shared/context";
+import { Err, isErr, type Result } from "~/server/shared/result";
+import {
+  completeAccountOnboardingWithRepos,
+  type CompleteOnboardingError,
+} from "~/server/users/service-account-onboarding";
 
 function normalizePeruvianPhone(value: string): string {
   const v = value.replace(/\s+/g, "").trim();
@@ -17,28 +29,100 @@ function normalizePeruvianPhone(value: string): string {
   throw validationError("El número debe tener 9 dígitos");
 }
 
-export async function completeOnboarding(phoneE164: string): Promise<void> {
-  const session = await requireSession();
-  const safePhone = normalizePeruvianPhone(phoneE164);
-  const service = createAccountOnboardingService(repos, {
-    runInTransaction: runInRepositoryTransaction,
+function resolveRedirect(
+  role: Awaited<ReturnType<typeof requireSession>>["role"],
+) {
+  return { redirectTo: getDefaultAppPath(role) };
+}
+
+function mapCompleteOnboardingError(error: CompleteOnboardingError): never {
+  return mapOnboardingFailure(error, {
+    strongAuthRequiredMessage: error.message,
   });
-  const result = await service.completeOnboarding({
-    userId: session.userId,
-    phoneE164: safePhone,
-  });
-  if (!isErr(result)) {
-    return;
-  }
-  switch (result.error.reason) {
+}
+
+function mapOnboardingFailure(
+  error: PasskeyEnrollmentError | CompleteOnboardingError,
+  options: {
+    strongAuthRequiredMessage?: string;
+    userNotFoundMessage?: string;
+  } = {},
+): never {
+  switch (error.reason) {
+    case "invalid_request":
+      throw internalError("No se pudo configurar la clave de acceso");
     case "user_not_found":
+      throw internalError(
+        options.userNotFoundMessage ?? "No se pudo completar el registro",
+      );
     case "unexpected":
-      throw internalError(result.error.message);
+      throw internalError(error.message);
     case "strong_auth_required":
-      throw conflictError(result.error.message);
+      throw conflictError(
+        options.strongAuthRequiredMessage ?? "No se pudo completar el registro",
+      );
   }
 
-  const exhaustive: never = result.error;
+  const exhaustive: never = error;
   void exhaustive;
   throw internalError("Unexpected onboarding completion failure");
+}
+
+type CompletePasskeyOnboardingResult = Result<
+  void,
+  PasskeyEnrollmentError | CompleteOnboardingError
+>;
+
+export async function completeOnboarding(
+  phoneE164: string,
+): Promise<{ redirectTo: string }> {
+  const session = await requireSession();
+  const safePhone = normalizePeruvianPhone(phoneE164);
+  const result = await runInRepositoryTransaction((transactionRepos) =>
+    completeAccountOnboardingWithRepos(transactionRepos, {
+      userId: session.userId,
+      phoneE164: safePhone,
+    }),
+  );
+  if (isErr(result)) {
+    mapCompleteOnboardingError(result.error);
+  }
+  return resolveRedirect(session.role);
+}
+
+export async function completePasskeyOnboarding(
+  phoneE164: string,
+  challengeId: number,
+  response: RegistrationResponseJSON,
+): Promise<{ redirectTo: string }> {
+  const session = await requireSession();
+  const safePhone = normalizePeruvianPhone(phoneE164);
+  const event = getRequestEvent();
+  const ipAddress = getClientIp(event?.request.headers ?? new Headers());
+  const result =
+    await runInRepositoryTransaction<CompletePasskeyOnboardingResult>(
+      async (transactionRepos) => {
+        const passkeyService = createPasskeyAuthService(transactionRepos);
+        const passkeyResult = await passkeyService.finishEnrollment({
+          userId: session.userId,
+          challengeId,
+          response,
+          ipAddress,
+        });
+        if (isErr(passkeyResult)) {
+          return Err(passkeyResult.error);
+        }
+
+        return completeAccountOnboardingWithRepos(transactionRepos, {
+          userId: session.userId,
+          phoneE164: safePhone,
+        });
+      },
+    );
+  if (isErr(result)) {
+    mapOnboardingFailure(result.error, {
+      userNotFoundMessage: "No se pudo completar el registro",
+    });
+  }
+  return resolveRedirect(session.role);
 }
