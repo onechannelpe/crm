@@ -1,17 +1,23 @@
 import { useNavigate } from "@solidjs/router";
 import { createEffect, createMemo, createSignal } from "solid-js";
 
-import { completeOnboarding } from "~/actions/auth";
-import { usePasskeyEnrollment } from "~/components/auth/security-enrollment/use-passkey-enrollment";
+import {
+  beginPasskeyRegistration,
+  completeOnboarding,
+  completePasskeyOnboarding,
+} from "~/actions/auth";
 import { useTotpEnrollment } from "~/components/auth/security-enrollment/use-totp-enrollment";
 import { useToast } from "~/components/feedback/toast-provider";
 import { useSession } from "~/components/providers/session-provider";
-import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import {
   deriveOnboardingState,
   isValidOnboardingPhone,
   type OnboardingStep,
 } from "~/lib/auth/onboarding-flow";
+import {
+  createRegistrationResponse,
+  isPasskeySupported,
+} from "~/lib/auth/passkey/browser";
 import { getErrorMessage } from "~/lib/errors";
 
 export type OnboardingView = "profile" | "security-choice" | "passkey" | "totp";
@@ -24,15 +30,35 @@ export function useOnboardingFlow() {
   const [step, setStep] = createSignal<OnboardingView>("profile");
   const [phone, setPhone] = createSignal("");
   const [submitting, setSubmitting] = createSignal(false);
+  const [passkeySupported, setPasskeySupported] = createSignal(false);
 
-  const passkeyEnrollment = usePasskeyEnrollment({
-    showToast,
-    refreshStatus: refreshCurrentUser,
-  });
+  async function submitOnboarding(
+    action: () => Promise<{ redirectTo: string }>,
+    failureMessage: string,
+  ) {
+    if (submitting()) {
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const result = await action();
+      showToast("success", "Tu cuenta ya quedó configurada");
+      navigate(result.redirectTo);
+    } catch (error: unknown) {
+      showToast("error", getErrorMessage(error, failureMessage));
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   const totpEnrollment = useTotpEnrollment({
     showToast,
     refreshStatus: refreshCurrentUser,
+  });
+
+  createEffect(() => {
+    setPasskeySupported(isPasskeySupported());
   });
 
   // Sync phone from session on first load, strip +51 prefix for local display
@@ -99,25 +125,49 @@ export function useOnboardingFlow() {
     setStep("security-choice");
   }
 
-  async function handleSubmit(e: Event) {
-    e.preventDefault();
-    setSubmitting(true);
+  function handlePasskeySelection() {
+    if (user()?.hasPasskey) {
+      void submitOnboarding(
+        () => completeOnboarding(phone()),
+        "No se pudo completar el registro",
+      );
+      return;
+    }
 
+    setStep("passkey");
+
+    if (!passkeySupported()) {
+      return;
+    }
+
+    // Browser WebAuthn must stay in the original click handler.
+    void registerPasskeyAndFinishOnboarding();
+  }
+
+  async function registerPasskeyAndFinishOnboarding() {
     try {
-      const u = user();
-      if (!u) throw new Error("No se encontró la sesión");
-      await completeOnboarding(phone());
-      showToast("success", "Tu cuenta ya quedó configurada");
-      await refreshCurrentUser();
-      navigate(getDefaultAppPath(u.role));
-    } catch (err: unknown) {
+      const { challengeId, options } = await beginPasskeyRegistration();
+      await submitOnboarding(async () => {
+        return completePasskeyOnboarding(
+          phone(),
+          challengeId,
+          await createRegistrationResponse(options),
+        );
+      }, "No se pudo configurar la clave de acceso");
+    } catch (error: unknown) {
       showToast(
         "error",
-        getErrorMessage(err, "No se pudo completar el registro"),
+        getErrorMessage(error, "No se pudo configurar la clave de acceso"),
       );
-    } finally {
-      setSubmitting(false);
     }
+  }
+
+  async function handleSubmit(e: Event) {
+    e.preventDefault();
+    await submitOnboarding(
+      () => completeOnboarding(phone()),
+      "No se pudo completar el registro",
+    );
   }
 
   return {
@@ -128,10 +178,12 @@ export function useOnboardingFlow() {
     setPhone,
     submitting,
     onboardingState,
-    passkeyEnrollment,
+    passkeySupported,
     totpEnrollment,
     goBack,
     handleProfileContinue,
+    handlePasskeySelection,
+    registerPasskeyAndFinishOnboarding,
     handleSubmit,
   };
 }

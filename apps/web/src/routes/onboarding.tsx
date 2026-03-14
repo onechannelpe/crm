@@ -63,7 +63,7 @@ function OnboardingContent() {
                 <Show
                   when={flow.step() === "profile"}
                   fallback={
-                    <Show when={flow.step() !== "security-choice"}>
+                    <Show when={flow.step() === "totp"}>
                       <Button
                         type="submit"
                         disabled={
@@ -99,11 +99,7 @@ function OnboardingContent() {
                 <OnboardingSecurityStep
                   hasPasskey={currentUser.hasPasskey}
                   totpEnabled={currentUser.totpEnabled}
-                  onSelectPasskey={() => {
-                    flow.setStep("passkey");
-                    // registerPasskey must be in same event handler (WebAuthn user-gesture requirement)
-                    void flow.passkeyEnrollment.registerPasskey();
-                  }}
+                  onSelectPasskey={flow.handlePasskeySelection}
                   onSelectTotp={() => flow.setStep("totp")}
                 />
               </EnterTransition>
@@ -112,7 +108,7 @@ function OnboardingContent() {
             <Show when={flow.step() === "passkey"}>
               <EnterTransition>
                 <div class={styles.passkeyEnrollStep}>
-                  <Show when={flow.passkeyEnrollment.loading()}>
+                  <Show when={flow.submitting()}>
                     <p class={styles.passkeyStatus}>
                       Esperando tu dispositivo...
                     </p>
@@ -120,27 +116,14 @@ function OnboardingContent() {
 
                   <Show
                     when={
-                      !flow.passkeyEnrollment.loading() &&
-                      currentUser.hasPasskey
-                    }
-                  >
-                    <p class={styles.passkeyStatusConfigured}>
-                      Clave de acceso configurada.
-                    </p>
-                  </Show>
-
-                  <Show
-                    when={
-                      !flow.passkeyEnrollment.loading() &&
+                      !flow.submitting() &&
                       !currentUser.hasPasskey &&
-                      flow.passkeyEnrollment.supported()
+                      flow.passkeySupported()
                     }
                   >
                     <Button
                       type="button"
-                      onClick={() =>
-                        void flow.passkeyEnrollment.registerPasskey()
-                      }
+                      onClick={() => void flow.registerPasskeyAndFinishOnboarding()}
                     >
                       Reintentar
                     </Button>
@@ -148,8 +131,8 @@ function OnboardingContent() {
 
                   <Show
                     when={
-                      !flow.passkeyEnrollment.loading() &&
-                      !flow.passkeyEnrollment.supported()
+                      !flow.submitting() &&
+                      !flow.passkeySupported()
                     }
                   >
                     <p class={styles.passkeyStatus}>

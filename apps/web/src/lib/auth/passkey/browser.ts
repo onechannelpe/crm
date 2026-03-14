@@ -75,6 +75,20 @@ export function toCreationOptions(
   };
 }
 
+export async function createRegistrationResponse(
+  options: PublicKeyCredentialCreationOptionsJSON,
+): Promise<RegistrationResponseJSON> {
+  const credential = await navigator.credentials.create({
+    publicKey: toCreationOptions(options),
+  });
+
+  if (!(credential instanceof PublicKeyCredential)) {
+    throw new Error("No se pudo crear la clave de acceso");
+  }
+
+  return toRegistrationPayload(credential);
+}
+
 export function toRegistrationPayload(
   credential: PublicKeyCredential,
 ): RegistrationResponseJSON {
