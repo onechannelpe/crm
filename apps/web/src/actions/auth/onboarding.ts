@@ -33,49 +33,67 @@ function resolveRedirect(
   return { redirectTo: getDefaultAppPath(role) };
 }
 
-function unwrapOnboardingResult(
-  result: Result<void, CompleteOnboardingError>,
+function unwrapOnboardingActionResult<E>(
+  result: Result<void, E>,
   role: Awaited<ReturnType<typeof requireSession>>["role"],
+  mapError: (error: E) => never,
 ): { redirectTo: string } {
   if (!isErr(result)) {
     return resolveRedirect(role);
   }
 
-  switch (result.error.reason) {
+  return mapError(result.error);
+}
+
+function mapCompleteOnboardingError(error: CompleteOnboardingError): never {
+  switch (error.reason) {
     case "user_not_found":
     case "unexpected":
-      throw internalError(result.error.message);
+      throw internalError(error.message);
     case "strong_auth_required":
-      throw conflictError(result.error.message);
+      throw conflictError(error.message);
   }
 
-  const exhaustive: never = result.error;
+  const exhaustive: never = error;
   void exhaustive;
   throw internalError("Unexpected onboarding completion failure");
 }
 
-function unwrapPasskeyOnboardingResult(
-  result: Result<void, CompletePasskeyOnboardingError>,
-  role: Awaited<ReturnType<typeof requireSession>>["role"],
-): { redirectTo: string } {
-  if (!isErr(result)) {
-    return resolveRedirect(role);
-  }
-
-  switch (result.error.reason) {
+function mapCompletePasskeyOnboardingError(
+  error: CompletePasskeyOnboardingError,
+): never {
+  switch (error.reason) {
     case "invalid_request":
       throw internalError("No se pudo configurar la clave de acceso");
     case "unexpected":
-      throw internalError(result.error.message);
+      throw internalError(error.message);
     case "strong_auth_required":
       throw conflictError("No se pudo completar el registro");
     case "user_not_found":
       throw internalError("No se pudo completar el registro");
   }
 
-  const exhaustive: never = result.error;
+  const exhaustive: never = error;
   void exhaustive;
   throw internalError("Unexpected onboarding completion failure");
+}
+
+function unwrapOnboardingResult(
+  result: Result<void, CompleteOnboardingError>,
+  role: Awaited<ReturnType<typeof requireSession>>["role"],
+): { redirectTo: string } {
+  return unwrapOnboardingActionResult(result, role, mapCompleteOnboardingError);
+}
+
+function unwrapPasskeyOnboardingResult(
+  result: Result<void, CompletePasskeyOnboardingError>,
+  role: Awaited<ReturnType<typeof requireSession>>["role"],
+): { redirectTo: string } {
+  return unwrapOnboardingActionResult(
+    result,
+    role,
+    mapCompletePasskeyOnboardingError,
+  );
 }
 
 export async function completeOnboarding(

@@ -38,39 +38,61 @@ export type PasskeyRegistrationFlowError =
   | { reason: "invalid_request"; message: string }
   | { reason: "unexpected"; message: string };
 
+export type BeginPasskeyRegistrationFlowError = PasskeyRegistrationFlowError;
+
 export async function beginPasskeyRegistrationFlow(
   userId: number,
   ipAddress: string,
   deps: Deps,
   passkeyService: PasskeyService,
-): Promise<{
-  challengeId: number;
-  options: PublicKeyCredentialCreationOptionsJSON;
-}> {
+): Promise<
+  Result<
+    {
+      challengeId: number;
+      options: PublicKeyCredentialCreationOptionsJSON;
+    },
+    BeginPasskeyRegistrationFlowError
+  >
+> {
   const identifier = `user:${userId}`;
   const throttle = await checkPasskeyChallengeThrottle(
     identifier,
     ipAddress,
     deps,
   );
-  if (!throttle.allowed) throw new Error(INVALID_REQUEST);
+  if (!throttle.allowed) {
+    return Err({
+      reason: "invalid_request",
+      message: INVALID_REQUEST,
+    });
+  }
 
   let options: PublicKeyCredentialCreationOptionsJSON;
   try {
     options = await passkeyService.getRegistrationOptions(userId);
   } catch {
     await recordPasskeyChallengeFailure(identifier, ipAddress, deps);
-    throw new Error(INVALID_REQUEST);
+    return Err({
+      reason: "invalid_request",
+      message: INVALID_REQUEST,
+    });
   }
 
-  const challengeId = await deps.webauthnChallenges.create({
-    user_id: userId,
-    type: "registration",
-    challenge: options.challenge,
-    expires_at: Date.now() + config.auth.webauthnChallengeTtlMs,
-  });
+  try {
+    const challengeId = await deps.webauthnChallenges.create({
+      user_id: userId,
+      type: "registration",
+      challenge: options.challenge,
+      expires_at: Date.now() + config.auth.webauthnChallengeTtlMs,
+    });
 
-  return { challengeId, options };
+    return Ok({ challengeId, options });
+  } catch {
+    return Err({
+      reason: "unexpected",
+      message: UNEXPECTED_FAILURE,
+    });
+  }
 }
 
 export async function finishPasskeyRegistrationFlow(

@@ -9,8 +9,12 @@ import {
   beginPasskeyRegistrationFlow,
   finishPasskeyRegistrationFlow,
 } from "../../src/lib/auth/passkey/registration-flow";
-import { createPasskeyLoginWorkflowService } from "../../src/lib/auth/passkey/workflows";
+import {
+  createPasskeyEnrollmentWorkflowService,
+  createPasskeyLoginWorkflowService,
+} from "../../src/lib/auth/passkey/workflows";
 import { hashAuthKey } from "../../src/lib/auth/password/key-hash";
+import { recordPasskeyChallengeFailure } from "../../src/lib/auth/password/throttle";
 import type { SendPrivilegedLoginAlert } from "../../src/lib/auth/security/privileged-login-alert";
 import { isErr } from "../../src/server/shared/result";
 import {
@@ -115,12 +119,67 @@ describe("passkey flows", () => {
       passkeyService,
     );
 
+    expect(isErr(result)).toBe(false);
+    if (isErr(result)) {
+      throw new Error("expected successful passkey registration challenge");
+    }
+
     const challenge = await ctx.repos.webauthnChallenges.findById(
-      result.challengeId,
+      result.value.challengeId,
     );
     expect(challenge?.type).toBe("registration");
     expect(challenge?.user_id).toBe(1);
-    expect(challenge?.challenge).toBe(result.options.challenge);
+    expect(challenge?.challenge).toBe(result.value.options.challenge);
+  });
+
+  it("returns invalid_request when passkey enrollment start is throttled", async () => {
+    for (let attempt = 0; attempt < 9; attempt += 1) {
+      await recordPasskeyChallengeFailure("user:1", ipAddress, ctx.repos);
+    }
+
+    const workflow = createPasskeyEnrollmentWorkflowService(ctx.repos);
+    const result = await workflow.beginEnrollment({
+      userId: 1,
+      ipAddress,
+    });
+
+    expect(isErr(result)).toBe(true);
+    if (!isErr(result)) {
+      throw new Error("expected throttled passkey enrollment");
+    }
+    expect(result.error.reason).toBe("invalid_request");
+  });
+
+  it("returns invalid_request when passkey enrollment options fail", async () => {
+    const workflow = createPasskeyEnrollmentWorkflowService(ctx.repos, {
+      createPasskeyService: () => ({
+        async getRegistrationOptions() {
+          throw new Error("boom");
+        },
+        async verifyRegistration() {
+          throw new Error("not used in this test");
+        },
+        async getAuthenticationOptions() {
+          throw new Error("not used in this test");
+        },
+        async getAuthenticationOptionsForChallenge() {
+          throw new Error("not used in this test");
+        },
+        async verifyAuthentication() {
+          throw new Error("not used in this test");
+        },
+      }),
+    });
+    const result = await workflow.beginEnrollment({
+      userId: 1,
+      ipAddress,
+    });
+
+    expect(isErr(result)).toBe(true);
+    if (!isErr(result)) {
+      throw new Error("expected failed passkey enrollment start");
+    }
+    expect(result.error.reason).toBe("invalid_request");
   });
 
   it("finish passkey registration rejects challenge ownership mismatch", async () => {
@@ -226,5 +285,46 @@ describe("passkey flows", () => {
     expect(persisted).toBeUndefined();
     expect(result.value.result.token).toBeTruthy();
     expect(result.value.result.role).toBe("executive");
+  });
+
+  it("returns invalid_credentials for an empty passkey login identifier", async () => {
+    const workflow = createPasskeyLoginWorkflowService(ctx.repos);
+    const result = await workflow.beginLogin({
+      identifier: "   ",
+      ipAddress,
+    });
+
+    expect(isErr(result)).toBe(true);
+    if (!isErr(result)) {
+      throw new Error("expected invalid passkey identifier");
+    }
+    expect(result.error.kind).toBe("invalid_credentials");
+  });
+
+  it("returns flow_expired for an invalid passkey login flow id", async () => {
+    const workflow = createPasskeyLoginWorkflowService(ctx.repos);
+    const result = await workflow.finishLogin({
+      flowId: 0,
+      response: {
+        id: "passkey-1",
+        rawId: "passkey-1",
+        type: "public-key",
+        clientExtensionResults: {},
+        response: {
+          authenticatorData: "a",
+          clientDataJSON: "b",
+          signature: "c",
+        },
+      },
+      ipAddress,
+      userAgent: "vitest-agent",
+      sendPrivilegedLoginAlert,
+    });
+
+    expect(isErr(result)).toBe(true);
+    if (!isErr(result)) {
+      throw new Error("expected expired passkey flow");
+    }
+    expect(result.error.kind).toBe("flow_expired");
   });
 });

@@ -1,5 +1,6 @@
 import type {
   AuthenticationResponseJSON,
+  PublicKeyCredentialCreationOptionsJSON,
   PublicKeyCredentialRequestOptionsJSON,
   RegistrationResponseJSON,
 } from "@simplewebauthn/server";
@@ -25,6 +26,7 @@ import { createPasskeyService } from "./passkey";
 import {
   beginPasskeyRegistrationFlow,
   finishPasskeyRegistrationFlow,
+  type BeginPasskeyRegistrationFlowError,
   type PasskeyRegistrationFlowError,
 } from "./registration-flow";
 
@@ -75,6 +77,7 @@ export interface PasskeyLoginResult {
   token: string;
 }
 
+export type BeginPasskeyEnrollmentError = BeginPasskeyRegistrationFlowError;
 export type FinishPasskeyEnrollmentError = PasskeyRegistrationFlowError;
 export type SubmitPasskeyLoginError =
   | { kind: "flow_expired" }
@@ -95,6 +98,11 @@ interface PasskeyOnboardingWorkflowDeps extends PasskeyWorkflowSharedDeps {
 interface BeginPasskeyEnrollmentInput {
   userId: number;
   ipAddress: string;
+}
+
+interface PasskeyEnrollmentChallenge {
+  challengeId: number;
+  options: PublicKeyCredentialCreationOptionsJSON;
 }
 
 interface FinishPasskeyEnrollmentInput extends BeginPasskeyEnrollmentInput {
@@ -142,7 +150,11 @@ export function createPasskeyEnrollmentWorkflowService(
     deps.createPasskeyService ?? createPasskeyService;
 
   return {
-    async beginEnrollment(input: BeginPasskeyEnrollmentInput) {
+    async beginEnrollment(
+      input: BeginPasskeyEnrollmentInput,
+    ): Promise<
+      Result<PasskeyEnrollmentChallenge, BeginPasskeyEnrollmentError>
+    > {
       return beginPasskeyRegistrationFlow(
         input.userId,
         input.ipAddress,
@@ -177,10 +189,15 @@ export function createPasskeyLoginWorkflowService(
     async beginLogin(
       input: BeginPasskeyLoginInput,
     ): Promise<Result<PasskeyLoginFlowState, InvalidCredentialsError>> {
-      const identifier = assertNonEmptyString(
-        input.identifier,
-        "identifier",
-      ).trim();
+      let identifier: string;
+      try {
+        identifier = assertNonEmptyString(
+          input.identifier,
+          "identifier",
+        ).trim();
+      } catch {
+        return Err({ kind: "invalid_credentials" });
+      }
       const passkeyService = createPasskeyServiceForRepos(repos);
       const challenge = await beginPasskeyLoginFlow(
         identifier,
@@ -216,7 +233,12 @@ export function createPasskeyLoginWorkflowService(
         SubmitPasskeyLoginError
       >
     > {
-      const safeFlowId = assertPositiveInt(input.flowId, "flowId");
+      let safeFlowId: number;
+      try {
+        safeFlowId = assertPositiveInt(input.flowId, "flowId");
+      } catch {
+        return Err({ kind: "flow_expired" });
+      }
       const flow = await repos.loginFlows.findById(safeFlowId);
       if (
         !flow ||
