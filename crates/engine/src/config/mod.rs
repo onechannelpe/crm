@@ -1,10 +1,18 @@
 use crate::errors::StartupError;
 use std::collections::HashMap;
 use std::env;
+use std::net::IpAddr;
 use std::path::PathBuf;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ConnectMode {
+    Local,
+    Remote,
+}
 
 #[derive(Debug, Clone)]
 pub struct Config {
+    pub connect_mode: ConnectMode,
     pub host: String,
     pub port: u16,
     pub db_path: String,
@@ -24,6 +32,18 @@ impl Config {
     }
 
     pub fn load() -> Result<Self, StartupError> {
+        let connect_mode = match env::var("ENGINE_CONNECT_MODE")
+            .unwrap_or_else(|_| "local".into())
+            .as_str()
+        {
+            "local" => ConnectMode::Local,
+            "remote" => ConnectMode::Remote,
+            _ => {
+                return Err(StartupError::Config(
+                    "ENGINE_CONNECT_MODE must be one of: local, remote".into(),
+                ));
+            }
+        };
         let hmac_keys_raw = env::var("ENGINE_HMAC_KEYS_JSON")
             .map_err(|_| StartupError::Config("ENGINE_HMAC_KEYS_JSON is required".into()))?;
         let hmac_keys: HashMap<String, String> =
@@ -46,9 +66,17 @@ impl Config {
             ));
         }
         let db_path = env::var("ENGINE_DB_PATH").unwrap_or_else(|_| Self::default_db_path());
+        let host = env::var("ENGINE_HOST").unwrap_or_else(|_| "127.0.0.1".into());
+
+        if connect_mode == ConnectMode::Local && !is_loopback_host(&host) {
+            return Err(StartupError::Config(
+                "ENGINE_HOST must bind to loopback in local mode".into(),
+            ));
+        }
 
         Ok(Self {
-            host: env::var("ENGINE_HOST").unwrap_or_else(|_| "localhost".into()),
+            connect_mode,
+            host,
             port: env::var("ENGINE_PORT")
                 .unwrap_or_else(|_| "3001".into())
                 .parse()
@@ -75,4 +103,12 @@ impl Config {
                 .map_err(|_| StartupError::Config("ENGINE_MAX_LIMIT must be an integer".into()))?,
         })
     }
+}
+
+fn is_loopback_host(host: &str) -> bool {
+    if host == "localhost" {
+        return true;
+    }
+
+    host.parse::<IpAddr>().is_ok_and(|addr| addr.is_loopback())
 }
