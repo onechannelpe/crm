@@ -8,6 +8,9 @@ describe("env validation", () => {
     TOTP_ENCRYPTION_KEY: "temp_secret_for_initial_import_32_chars_long",
     ENGINE_HMAC_KEY_ID: "web",
     ENGINE_HMAC_SECRET: "temp_secret_for_initial_import_32_chars_long",
+    GOOGLE_CLIENT_ID: "google-client-id",
+    GOOGLE_CLIENT_SECRET: "google-client-secret",
+    GOOGLE_REDIRECT_URI: "http://localhost:3000/api/auth/google/callback",
   } satisfies Record<string, string>;
 
   beforeAll(async () => {
@@ -15,6 +18,9 @@ describe("env validation", () => {
     process.env.TOTP_ENCRYPTION_KEY = baseEnv.TOTP_ENCRYPTION_KEY;
     process.env.ENGINE_HMAC_KEY_ID = baseEnv.ENGINE_HMAC_KEY_ID;
     process.env.ENGINE_HMAC_SECRET = baseEnv.ENGINE_HMAC_SECRET;
+    process.env.GOOGLE_CLIENT_ID = baseEnv.GOOGLE_CLIENT_ID;
+    process.env.GOOGLE_CLIENT_SECRET = baseEnv.GOOGLE_CLIENT_SECRET;
+    process.env.GOOGLE_REDIRECT_URI = baseEnv.GOOGLE_REDIRECT_URI;
 
     const mod = await import("../../src/lib/env");
     validateSecret = mod.validateSecret;
@@ -53,7 +59,7 @@ describe("env validation", () => {
     expect(() => validateSecret("TEST_SECRET", strong)).not.toThrow();
   });
 
-  it("defaults engine connect mode to local", async () => {
+  it("defaults engine connect mode to local", () => {
     expect(parseEnv(baseEnv).engineConnectMode).toBe("local");
   });
 
