@@ -11,7 +11,7 @@
     "lint": "oxlint -c ../../.oxlintrc.json --type-aware --tsconfig tsconfig.json --deny-warnings src tests",
     "check:types": "bun x tsc --noEmit",
     "check": "bun run check:types && bun run lint",
-    "test": "bun --env-file=../../.env.test ./node_modules/vitest/vitest.mjs run --project default",
+    "test": "bun --env-file=../../.env.test vitest run --project default",
     "test:prepare": "bun run migrate:test && bun run seed:test",
     "test:server": "bun --env-file=../../.env.test --bun vite --config vite.config.ts",
     "test:integration:browser": "playwright test",
