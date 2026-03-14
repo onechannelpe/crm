@@ -14,6 +14,19 @@ const rpName = "CRM OneChannel";
 const rpID = env.webauthnRpId;
 const origin = env.webauthnOrigin;
 
+export class PasskeyRequestError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "PasskeyRequestError";
+  }
+}
+
+export function isPasskeyRequestError(
+  error: unknown,
+): error is PasskeyRequestError {
+  return error instanceof PasskeyRequestError;
+}
+
 type PasskeyTransport = NonNullable<
   RegistrationResponseJSON["response"]["transports"]
 >[number];
@@ -113,15 +126,20 @@ export function createPasskeyService(repos: PasskeyServiceDeps) {
       response: RegistrationResponseJSON,
       challenge: string,
     ) {
-      const verification = await verifyRegistrationResponse({
-        response,
-        expectedChallenge: challenge,
-        expectedOrigin: origin,
-        expectedRPID: rpID,
-      });
+      let verification: Awaited<ReturnType<typeof verifyRegistrationResponse>>;
+      try {
+        verification = await verifyRegistrationResponse({
+          response,
+          expectedChallenge: challenge,
+          expectedOrigin: origin,
+          expectedRPID: rpID,
+        });
+      } catch {
+        throw new PasskeyRequestError("Registration verification failed");
+      }
 
       if (!verification.verified || !verification.registrationInfo) {
-        throw new Error("Registration verification failed");
+        throw new PasskeyRequestError("Registration verification failed");
       }
 
       const { credential } = verification.registrationInfo;
@@ -154,23 +172,30 @@ export function createPasskeyService(repos: PasskeyServiceDeps) {
       challenge: string,
     ) {
       const passkey = await repos.passkeys.findById(response.id);
-      if (!passkey) throw new Error("Passkey not found");
+      if (!passkey) throw new PasskeyRequestError("Passkey not found");
 
-      const verification = await verifyAuthenticationResponse({
-        response,
-        expectedChallenge: challenge,
-        expectedOrigin: origin,
-        expectedRPID: rpID,
-        credential: {
-          id: passkey.id,
-          publicKey: Buffer.from(passkey.public_key, "base64"),
-          counter: passkey.counter,
-          transports: parseStoredTransports(passkey.transports),
-        },
-      });
+      let verification: Awaited<
+        ReturnType<typeof verifyAuthenticationResponse>
+      >;
+      try {
+        verification = await verifyAuthenticationResponse({
+          response,
+          expectedChallenge: challenge,
+          expectedOrigin: origin,
+          expectedRPID: rpID,
+          credential: {
+            id: passkey.id,
+            publicKey: Buffer.from(passkey.public_key, "base64"),
+            counter: passkey.counter,
+            transports: parseStoredTransports(passkey.transports),
+          },
+        });
+      } catch {
+        throw new PasskeyRequestError("Authentication verification failed");
+      }
 
       if (!verification.verified) {
-        throw new Error("Authentication verification failed");
+        throw new PasskeyRequestError("Authentication verification failed");
       }
 
       await repos.passkeys.updateCounter(

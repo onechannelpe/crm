@@ -6,7 +6,7 @@ import type {
   RegistrationResponseJSON,
 } from "@simplewebauthn/server";
 
-export function isPasskeySupported(): boolean {
+export function isPasskeyAuthenticationSupported(): boolean {
   return (
     typeof window !== "undefined" &&
     typeof PublicKeyCredential !== "undefined" &&
@@ -14,7 +14,43 @@ export function isPasskeySupported(): boolean {
   );
 }
 
-export function toRequestOptions(
+export function isPasskeyRegistrationSupported(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    typeof PublicKeyCredential !== "undefined" &&
+    typeof navigator.credentials?.create === "function"
+  );
+}
+
+export async function createAuthenticationResponse(
+  options: PublicKeyCredentialRequestOptionsJSON,
+): Promise<AuthenticationResponseJSON> {
+  const credential = await navigator.credentials.get({
+    publicKey: toRequestOptions(options),
+  });
+
+  if (!(credential instanceof PublicKeyCredential)) {
+    throw new Error("Respuesta de credencial invalida");
+  }
+
+  return toAuthenticationPayload(credential);
+}
+
+export async function createRegistrationResponse(
+  options: PublicKeyCredentialCreationOptionsJSON,
+): Promise<RegistrationResponseJSON> {
+  const credential = await navigator.credentials.create({
+    publicKey: toCreationOptions(options),
+  });
+
+  if (!(credential instanceof PublicKeyCredential)) {
+    throw new Error("No se pudo crear la clave de acceso");
+  }
+
+  return toRegistrationPayload(credential);
+}
+
+function toRequestOptions(
   options: PublicKeyCredentialRequestOptionsJSON,
 ): PublicKeyCredentialRequestOptions {
   return {
@@ -29,7 +65,7 @@ export function toRequestOptions(
   };
 }
 
-export function toAuthenticationPayload(
+function toAuthenticationPayload(
   credential: PublicKeyCredential,
 ): AuthenticationResponseJSON {
   if (!(credential.response instanceof AuthenticatorAssertionResponse)) {
@@ -54,7 +90,7 @@ export function toAuthenticationPayload(
   };
 }
 
-export function toCreationOptions(
+function toCreationOptions(
   options: PublicKeyCredentialCreationOptionsJSON,
 ): PublicKeyCredentialCreationOptions {
   return {
@@ -75,7 +111,7 @@ export function toCreationOptions(
   };
 }
 
-export function toRegistrationPayload(
+function toRegistrationPayload(
   credential: PublicKeyCredential,
 ): RegistrationResponseJSON {
   if (!(credential.response instanceof AuthenticatorAttestationResponse)) {

@@ -14,10 +14,9 @@ import { Button } from "~/components/ui/input/button";
 import { parseLoginFlowId } from "~/lib/auth/login-route-flow";
 import { passkeyFinishUiMessage } from "~/lib/auth/login-ui";
 import {
-  isPasskeySupported,
-  toAuthenticationPayload,
-  toRequestOptions,
-} from "~/lib/auth/passkey/browser";
+  createAuthenticationResponse,
+  isPasskeyAuthenticationSupported,
+} from "~/lib/auth/passkey/client";
 import { useAuthPageView } from "~/lib/auth/use-auth-analytics";
 import { trackAuthClientEventMutation } from "~/lib/mutations/auth-analytics";
 import { loginFlowQuery } from "~/lib/queries/auth";
@@ -57,7 +56,7 @@ export default function LoginPasskeyPage() {
         "La sesión de clave de acceso expiró. Intenta de nuevo.",
       );
     }
-    if (isPasskeySupported()) {
+    if (isPasskeyAuthenticationSupported()) {
       setBrowserSupport("supported");
       return;
     }
@@ -78,16 +77,9 @@ export default function LoginPasskeyPage() {
     setPending(true);
 
     try {
-      const credential = await navigator.credentials.get({
-        publicKey: toRequestOptions(flow.requestOptions),
-      });
-      if (!(credential instanceof PublicKeyCredential)) {
-        throw new Error("Respuesta de credencial invalida");
-      }
-
       const result = await finishPasskeyLogin(
         flow.id,
-        toAuthenticationPayload(credential),
+        await createAuthenticationResponse(flow.requestOptions),
       );
       if (!result.ok) {
         if (result.code === "flow_expired") {
