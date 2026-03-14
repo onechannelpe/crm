@@ -13,7 +13,7 @@ test.describe("password login", () => {
 
     await loginPage.goto();
     await loginPage.openUsernameLogin();
-    await loginPage.continueWithUsername(strongAuthUser.username);
+    await loginPage.fillUsername(strongAuthUser.username);
     await loginPage.submitPassword(strongAuthUser.password);
 
     await verifyPage.expectTotpStep();

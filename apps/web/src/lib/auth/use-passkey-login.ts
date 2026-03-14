@@ -1,5 +1,5 @@
 import { useAction, useNavigate } from "@solidjs/router";
-import { createMemo, createSignal } from "solid-js";
+import { createMemo, createSignal, onMount } from "solid-js";
 
 import { finishPasskeyLogin } from "~/actions/auth";
 import { passkeyStartMutation } from "~/lib/mutations/auth";
@@ -13,6 +13,7 @@ import {
 import type { PasskeyLoginFlowState } from "./passkey/service";
 
 export type PasskeyLoginPhase = "idle" | "starting" | "device" | "verifying";
+export type PasskeySupportStatus = "unknown" | "supported" | "unsupported";
 
 function buildIdentifierFormData(identifier: string): FormData {
   const formData = new FormData();
@@ -28,9 +29,18 @@ export function usePasskeyLogin() {
   const [phase, setPhase] = createSignal<PasskeyLoginPhase>("idle");
   const [error, setError] = createSignal<string>();
   const [activeFlow, setActiveFlow] = createSignal<PasskeyLoginFlowState>();
+  const [supportStatus, setSupportStatus] =
+    createSignal<PasskeySupportStatus>("unknown");
 
-  const supported = createMemo(() => isPasskeyAuthenticationSupported());
+  const supported = createMemo(() => supportStatus() === "supported");
+  const supportKnown = createMemo(() => supportStatus() !== "unknown");
   const busy = createMemo(() => phase() !== "idle");
+
+  onMount(() => {
+    setSupportStatus(
+      isPasskeyAuthenticationSupported() ? "supported" : "unsupported",
+    );
+  });
 
   function resetError() {
     setError(undefined);
@@ -144,6 +154,8 @@ export function usePasskeyLogin() {
   return {
     phase,
     error,
+    supportStatus,
+    supportKnown,
     supported,
     busy,
     activeFlow,

@@ -1,7 +1,8 @@
 import { createAsync, useSearchParams } from "@solidjs/router";
-import { createMemo, Show } from "solid-js";
+import { createMemo, Show, Suspense } from "solid-js";
 
 import { AuthFlowShell } from "~/components/auth/flow/auth-flow-shell";
+import { AuthLoadingBlock } from "~/components/auth/flow/auth-loading-block";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
 import { parseLoginFlowId } from "~/lib/auth/login-route-flow";
@@ -34,21 +35,9 @@ export default function LoginPasskeyPage() {
     <AuthFlowShell
       title="Verificar clave de acceso"
       description="Retoma el acceso con la clave asociada a tu cuenta."
-      footerNote={
-        <a href="/login" class={linkStyles.helpLink}>
-          Volver al inicio de sesión
-        </a>
-      }
     >
-      <Show
-        when={passkeyFlow() !== undefined}
-        fallback={
-          <div class={pageStyles.formStack}>
-            <p class={pageStyles.supportText} aria-live="polite">
-              Cargando clave de acceso…
-            </p>
-          </div>
-        }
+      <Suspense
+        fallback={<AuthLoadingBlock label="Cargando clave de acceso" />}
       >
         <Show
           when={passkeyFlow()}
@@ -77,16 +66,19 @@ export default function LoginPasskeyPage() {
                   )}
                 </Show>
                 <Show when={passkeyLogin.busy()}>
-                  <p class={pageStyles.supportText} aria-live="polite">
-                    Esperando tu clave de acceso…
-                  </p>
+                  <AuthLoadingBlock label="Esperando tu clave de acceso" />
+                </Show>
+                <Show when={!passkeyLogin.supportKnown()}>
+                  <AuthLoadingBlock label="Comprobando compatibilidad del navegador" />
                 </Show>
                 <Show
-                  when={passkeyLogin.supported()}
+                  when={passkeyLogin.supportKnown() && passkeyLogin.supported()}
                   fallback={
-                    <p class={pageStyles.formError} role="alert">
-                      Este navegador no admite claves de acceso.
-                    </p>
+                    <Show when={passkeyLogin.supportKnown()}>
+                      <p class={pageStyles.formError} role="alert">
+                        Este navegador no admite claves de acceso.
+                      </p>
+                    </Show>
                   }
                 >
                   <Button
@@ -104,7 +96,10 @@ export default function LoginPasskeyPage() {
             </EnterTransition>
           )}
         </Show>
-      </Show>
+      </Suspense>
+      <a href="/login" class={linkStyles.helpLink}>
+        Volver al inicio de sesión
+      </a>
     </AuthFlowShell>
   );
 }

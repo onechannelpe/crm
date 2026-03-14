@@ -8,6 +8,7 @@ import {
 } from "solid-js";
 
 import { AuthFlowShell } from "~/components/auth/flow/auth-flow-shell";
+import { AuthLoadingBlock } from "~/components/auth/flow/auth-loading-block";
 import { LastUsedPill } from "~/components/auth/flow/last-used-pill";
 import { LegalFooter } from "~/components/auth/flow/legal-footer";
 import { useToast } from "~/components/feedback/toast-provider";
@@ -22,9 +23,8 @@ import { passwordLoginMutation } from "~/lib/mutations/auth";
 
 import styles from "../../auth/auth-shell.module.css";
 import pageStyles from "../../auth/login-page.module.css";
+import shellStyles from "~/components/auth/flow/auth-flow-shell.module.css";
 import linkStyles from "~/components/auth/flow/auth-links.module.css";
-
-type LoginStep = "init" | "email" | "password";
 
 export default function LoginPage() {
   useAuthPageView("login");
@@ -33,7 +33,6 @@ export default function LoginPage() {
   const { showToast } = useToast();
   const passwordSubmission = useSubmission(passwordLoginMutation);
   const passkeyLogin = usePasskeyLogin();
-  const [step, setStep] = createSignal<LoginStep>("init");
   const [username, setUsername] = createSignal("");
   const [handledPasskeyFlowId, setHandledPasskeyFlowId] = createSignal<
     number | null
@@ -42,10 +41,7 @@ export default function LoginPage() {
   const setUsernameInputRef = (element: HTMLInputElement) => {
     usernameInputRef = element;
   };
-  let passwordInputRef: HTMLInputElement | undefined;
-  const setPasswordInputRef = (element: HTMLInputElement) => {
-    passwordInputRef = element;
-  };
+  const userMethodSelected = createMemo(() => searchParams.method === "user");
 
   onMount(() => {
     if (searchParams.error === "google_not_linked") {
@@ -57,17 +53,12 @@ export default function LoginPage() {
   });
 
   createEffect(() => {
-    if (step() !== "email") return;
+    if (!userMethodSelected()) return;
     usernameInputRef?.focus();
   });
 
-  createEffect(() => {
-    if (step() !== "password") return;
-    passwordInputRef?.focus();
-  });
-
   const footerNote = createMemo(() => {
-    if (step() === "password") {
+    if (userMethodSelected()) {
       return (
         <a href="/reset-password" class={linkStyles.forgotLink}>
           ¿Olvidaste tu contraseña?
@@ -98,11 +89,11 @@ export default function LoginPage() {
   });
 
   return (
-    <AuthFlowShell title="Bienvenido." footerNote={footerNote()}>
+    <AuthFlowShell title="Bienvenido.">
       <div class={pageStyles.formStack}>
         <div class={pageStyles.ssoButtonContainer}>
           <Button
-            variant={step() === "init" ? "primary" : "outline"}
+            variant={userMethodSelected() ? "outline" : "primary"}
             class={styles.full}
             onClick={() => {
               loginMethods.markUsed("google");
@@ -141,38 +132,42 @@ export default function LoginPage() {
 
         <div class={pageStyles.separator} role="separator" />
 
-        <Show when={step() === "init"}>
+        <Show when={!userMethodSelected()}>
           <div class={pageStyles.ssoButtonContainer}>
-            <Button
-              variant="outline"
-              class={styles.full}
-              onClick={() => setStep("email")}
-            >
-              Continuar con usuario
-            </Button>
+            <form action="/login" method="get" class={styles.full}>
+              <input type="hidden" name="method" value="user" />
+              <Button variant="outline" type="submit" class={styles.full}>
+                Continuar con usuario
+              </Button>
+            </form>
             <Show when={loginMethods.lastUsedMethod() === "password"}>
               <LastUsedPill />
             </Show>
           </div>
         </Show>
 
-        <Show when={step() === "email"}>
+        <Show when={userMethodSelected()}>
           <EnterTransition>
             <form
               class={pageStyles.formStack}
-              onSubmit={(event) => {
-                event.preventDefault();
-                if (!username().trim()) return;
-                setStep("password");
-              }}
-              onKeyDown={(event) => {
-                if (event.key === "Escape") setStep("init");
+              action={passwordLoginMutation}
+              method="post"
+              onSubmit={() => {
+                loginMethods.markUsed("password");
               }}
             >
+              <Show when={passwordError()}>
+                {(message) => (
+                  <p class={pageStyles.formError} role="alert">
+                    {message()}
+                  </p>
+                )}
+              </Show>
               <Input
                 id="auth-username"
                 type="text"
                 placeholder="Usuario"
+                name="identifier"
                 autocomplete="username"
                 autocapitalize="none"
                 autocorrect="off"
@@ -186,8 +181,20 @@ export default function LoginPage() {
                 ref={setUsernameInputRef}
                 required
               />
-              <Button type="submit" class={styles.full}>
-                Continuar
+              <Input
+                id="current-password"
+                type="password"
+                placeholder="Contraseña"
+                name="password"
+                autocomplete="current-password"
+                required
+              />
+              <Button
+                type="submit"
+                class={styles.full}
+                loading={passwordSubmission.pending}
+              >
+                Iniciar sesión
               </Button>
               <Show when={passkeyLogin.error()}>
                 {(message) => (
@@ -197,9 +204,7 @@ export default function LoginPage() {
                 )}
               </Show>
               <Show when={passkeyLogin.busy()}>
-                <p class={pageStyles.supportText} aria-live="polite">
-                  Esperando tu clave de acceso…
-                </p>
+                <AuthLoadingBlock label="Esperando tu clave de acceso" />
               </Show>
               <Show
                 when={
@@ -232,94 +237,7 @@ export default function LoginPage() {
             </form>
           </EnterTransition>
         </Show>
-
-        <Show when={step() === "password"}>
-          <form
-            class={pageStyles.formStack}
-            action={passwordLoginMutation}
-            method="post"
-            onSubmit={() => {
-              loginMethods.markUsed("password");
-            }}
-            onKeyDown={(event) => {
-              if (event.key === "Escape") setStep("email");
-            }}
-          >
-            <Show when={passwordError()}>
-              {(message) => (
-                <p class={pageStyles.formError} role="alert">
-                  {message()}
-                </p>
-              )}
-            </Show>
-            <Input
-              id="auth-identifier"
-              type="text"
-              placeholder="Usuario"
-              name="identifier"
-              autocomplete="username"
-              autocapitalize="none"
-              autocorrect="off"
-              spellcheck={false}
-              value={username()}
-              onInput={(e) => {
-                const next = e.currentTarget.value;
-                if (next !== username()) setStep("email");
-                setUsername(next);
-                passkeyLogin.clear();
-                setHandledPasskeyFlowId(null);
-              }}
-              required
-            />
-            <EnterTransition>
-              <Input
-                id="current-password"
-                type="password"
-                placeholder="Contraseña"
-                name="password"
-                autocomplete="current-password"
-                ref={setPasswordInputRef}
-                required
-              />
-            </EnterTransition>
-            <Button
-              type="submit"
-              class={styles.full}
-              loading={passwordSubmission.pending}
-            >
-              Iniciar sesión
-            </Button>
-            <Show when={passkeyLogin.busy()}>
-              <p class={pageStyles.supportText} aria-live="polite">
-                Esperando tu clave de acceso…
-              </p>
-            </Show>
-            <Show when={passkeyLogin.error()}>
-              {(message) => (
-                <p class={pageStyles.formError} role="alert">
-                  {message()}
-                </p>
-              )}
-            </Show>
-            <Show
-              when={
-                passkeyLogin.activeFlow() &&
-                !passkeyLogin.busy() &&
-                passkeyLogin.supported()
-              }
-            >
-              <button
-                type="button"
-                class={linkStyles.helpLink}
-                onClick={() => {
-                  void passkeyLogin.retry();
-                }}
-              >
-                Reintentar con clave de acceso
-              </button>
-            </Show>
-          </form>
-        </Show>
+        <div class={shellStyles.footerNote}>{footerNote()}</div>
       </div>
     </AuthFlowShell>
   );

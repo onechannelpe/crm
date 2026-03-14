@@ -1,17 +1,16 @@
 .forgotLink {
   font-size: var(--font-size-sm);
-  color: var(--muted-foreground);
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  color: var(--foreground-tertiary);
+  text-decoration: none;
 }
 
 .forgotLink:hover {
-  color: var(--foreground);
+  text-decoration: underline;
 }
 
 .helpLink {
   font-size: var(--font-size-sm);
-  color: var(--muted-foreground);
+  color: var(--foreground-tertiary);
   text-decoration: none;
 }
 
@@ -27,15 +26,14 @@
   width: 100%;
   font: inherit;
   font-size: var(--font-size-sm);
-  color: var(--muted-foreground);
+  color: var(--foreground-tertiary);
   text-align: center;
   cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  text-decoration: none;
 }
 
 .passkeyLink:hover {
-  color: var(--foreground);
+  text-decoration: underline;
 }
 
 @media (max-width: 640px) {
