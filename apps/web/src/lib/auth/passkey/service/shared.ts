@@ -53,18 +53,3 @@ export function normalizePasskeyFlowId(
     return { kind: "flow_expired" };
   }
 }
-
-export async function deleteLoginFlow(
-  flow: Awaited<ReturnType<PasskeyAuthRepos["loginFlows"]["findById"]>>,
-  repos: PasskeyAuthRepos,
-): Promise<void> {
-  if (!flow) {
-    return;
-  }
-
-  if (flow.challenge_id) {
-    await repos.webauthnChallenges.delete(flow.challenge_id);
-  }
-
-  await repos.loginFlows.delete(flow.id);
-}

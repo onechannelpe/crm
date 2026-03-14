@@ -9,11 +9,11 @@ import {
 import type { Repositories } from "~/server/shared/registry";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
+import { deleteLoginFlow } from "./login-flow/shared";
 import {
   createPasskeyAuthService,
   type PasskeyLoginFlowState,
 } from "./passkey/service";
-import { deleteLoginFlow } from "./passkey/service/shared";
 import {
   completePasswordLogin,
   getPasswordLoginNextStep,

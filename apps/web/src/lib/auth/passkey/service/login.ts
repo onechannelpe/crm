@@ -13,11 +13,11 @@ import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-lo
 import { config } from "~/lib/config";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
+import { deleteLoginFlow } from "../../login-flow/shared";
 import type { issueLoginSession } from "../../session/login-completion";
 import { isPasskeyRequestError } from "../passkey";
 import type { PasskeyAuthRepos } from "./shared";
 import {
-  deleteLoginFlow,
   normalizePasskeyFlowId,
   normalizePasskeyIdentifier,
   unexpectedPasskeyLoginError,
