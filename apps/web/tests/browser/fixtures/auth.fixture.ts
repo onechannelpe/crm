@@ -16,6 +16,7 @@ import {
   loginAs,
   seedBrowserSession,
 } from "../../support/auth/browser-sessions";
+import { ensureTotp } from "../../support/auth/browser-totp";
 import type {
   BrowserIdentity,
   BrowserUserOptions,
@@ -37,6 +38,7 @@ interface BrowserAuthFixture {
     options?: Parameters<typeof seedBrowserSession>[2],
   ): Promise<void>;
   ensurePasskey(identity: BrowserIdentity): Promise<void>;
+  ensureTotp(identity: BrowserIdentity): Promise<void>;
   createPasskeyFlow(
     identity: BrowserIdentity,
   ): ReturnType<typeof createPasskeyFlow>;
@@ -72,6 +74,7 @@ export const test = base.extend<
         await loginAs(page, resolvedBaseURL, browserDb, identity, options),
       ensurePasskey: async (identity) =>
         await ensurePasskey(browserDb, identity),
+      ensureTotp: async (identity) => await ensureTotp(browserDb, identity),
       createPasskeyFlow: async (identity) =>
         await createPasskeyFlow(browserDb, identity),
       mockUnsupportedPasskey,
