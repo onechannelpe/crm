@@ -1,15 +1,21 @@
 export const config = {
   leadAssignment: {
     ttlHours: 24,
-    defaultBufferSize: 10,
-    maxBufferSize: 50,
+    defaultBufferTarget: 10,
+    defaultDailyRefillLimit: 25,
+    maxBufferTarget: 50,
+  },
+  searchAccess: {
+    defaultMonthlyLimit: 250,
+    maxMonthlyLimit: 5_000,
+  },
+  allowanceRequests: {
+    defaultSearchRequestAmount: 25,
+    defaultLeadRefillRequestAmount: 10,
+    maxRequestAmount: 500,
   },
   contactCooldown: {
     defaultHours: 24,
-  },
-  quota: {
-    minAmount: 1,
-    maxAmount: 100,
   },
   uploads: {
     storageRoot: process.env.WEB_UPLOADS_ROOT ?? ".local-storage/documents",

@@ -35,7 +35,7 @@ export function ContactsSearchLayout(props: ContactsSearchLayoutProps) {
       <div class={styles.searchPanel}>
         <div class={styles.tabBar}>
           <A
-            href="/contacts/people"
+            href="/contacts/search"
             class={cn(
               styles.tab,
               props.activeTab === "people" && styles.tabActive,
@@ -44,7 +44,7 @@ export function ContactsSearchLayout(props: ContactsSearchLayoutProps) {
             Personas
           </A>
           <A
-            href="/contacts/companies"
+            href="/contacts/search"
             class={cn(
               styles.tab,
               props.activeTab === "companies" && styles.tabActive,

@@ -46,24 +46,144 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createTable("quota_allocations")
+    .createTable("search_policy_defaults")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("scope_type", "varchar(20)", (col) => col.notNull())
+    .addColumn("scope_id", "integer", (col) => col.notNull())
+    .addColumn("period_type", "varchar(20)", (col) => col.notNull())
+    .addColumn("search_limit", "integer", (col) => col.notNull())
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await db.schema
+    .createIndex("idx_search_policy_scope")
+    .on("search_policy_defaults")
+    .columns(["scope_type", "scope_id"])
+    .execute();
+
+  await db.schema
+    .createTable("search_policy_overrides")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("user_id", "integer", (col) =>
       col.notNull().references("users.id"),
     )
-    .addColumn("allocated_by_user_id", "integer", (col) =>
+    .addColumn("search_limit", "integer", (col) => col.notNull())
+    .addColumn("effective_from", "integer", (col) => col.notNull())
+    .addColumn("expires_at", "integer")
+    .addColumn("set_by_user_id", "integer", (col) =>
       col.notNull().references("users.id"),
     )
-    .addColumn("date", "varchar(10)", (col) => col.notNull())
-    .addColumn("quota_amount", "integer", (col) => col.notNull())
-    .addColumn("used_amount", "integer", (col) => col.notNull().defaultTo(0))
     .addColumn("created_at", "integer", (col) => col.notNull())
     .execute();
 
   await db.schema
-    .createIndex("idx_quota_user_date")
-    .on("quota_allocations")
+    .createIndex("idx_search_policy_override_user")
+    .on("search_policy_overrides")
+    .column("user_id")
+    .execute();
+
+  await db.schema
+    .createTable("search_allowance_ledger")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("user_id", "integer", (col) =>
+      col.notNull().references("users.id"),
+    )
+    .addColumn("period_start", "varchar(10)", (col) => col.notNull())
+    .addColumn("period_end", "varchar(10)", (col) => col.notNull())
+    .addColumn("base_limit", "integer", (col) => col.notNull())
+    .addColumn("extra_granted", "integer", (col) => col.notNull().defaultTo(0))
+    .addColumn("used_amount", "integer", (col) => col.notNull().defaultTo(0))
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await db.schema
+    .createIndex("idx_search_allowance_user_period")
+    .on("search_allowance_ledger")
+    .columns(["user_id", "period_start"])
+    .execute();
+
+  await db.schema
+    .createTable("lead_policy_defaults")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("scope_type", "varchar(20)", (col) => col.notNull())
+    .addColumn("scope_id", "integer", (col) => col.notNull())
+    .addColumn("active_buffer_target", "integer", (col) => col.notNull())
+    .addColumn("daily_refill_limit", "integer", (col) => col.notNull())
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await db.schema
+    .createIndex("idx_lead_policy_scope")
+    .on("lead_policy_defaults")
+    .columns(["scope_type", "scope_id"])
+    .execute();
+
+  await db.schema
+    .createTable("lead_policy_overrides")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("user_id", "integer", (col) =>
+      col.notNull().references("users.id"),
+    )
+    .addColumn("active_buffer_target", "integer", (col) => col.notNull())
+    .addColumn("daily_refill_limit", "integer", (col) => col.notNull())
+    .addColumn("effective_from", "integer", (col) => col.notNull())
+    .addColumn("expires_at", "integer")
+    .addColumn("set_by_user_id", "integer", (col) =>
+      col.notNull().references("users.id"),
+    )
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await db.schema
+    .createIndex("idx_lead_policy_override_user")
+    .on("lead_policy_overrides")
+    .column("user_id")
+    .execute();
+
+  await db.schema
+    .createTable("lead_refill_ledger")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("user_id", "integer", (col) =>
+      col.notNull().references("users.id"),
+    )
+    .addColumn("date", "varchar(10)", (col) => col.notNull())
+    .addColumn("base_limit", "integer", (col) => col.notNull())
+    .addColumn("extra_granted", "integer", (col) => col.notNull().defaultTo(0))
+    .addColumn("used_amount", "integer", (col) => col.notNull().defaultTo(0))
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await db.schema
+    .createIndex("idx_lead_refill_user_date")
+    .on("lead_refill_ledger")
     .columns(["user_id", "date"])
+    .execute();
+
+  await db.schema
+    .createTable("allowance_requests")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("user_id", "integer", (col) =>
+      col.notNull().references("users.id"),
+    )
+    .addColumn("kind", "varchar(40)", (col) => col.notNull())
+    .addColumn("status", "varchar(20)", (col) => col.notNull())
+    .addColumn("requested_amount", "integer", (col) => col.notNull())
+    .addColumn("reason", "text", (col) => col.notNull())
+    .addColumn("decision_note", "text")
+    .addColumn("reviewer_user_id", "integer", (col) => col.references("users.id"))
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .addColumn("decided_at", "integer")
+    .execute();
+
+  await db.schema
+    .createIndex("idx_allowance_requests_user_status")
+    .on("allowance_requests")
+    .columns(["user_id", "status"])
     .execute();
 
   await db.schema

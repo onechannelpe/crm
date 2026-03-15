@@ -6,7 +6,8 @@ export interface AppNotificationEvent {
   type:
     | "lead.more_requested"
     | "lead.request_resolved"
-    | "quota.assigned"
+    | "search.allowance_granted"
+    | "lead.refill_granted"
     | "sale.submitted"
     | "sale.rejected"
     | "sale.confirmed"

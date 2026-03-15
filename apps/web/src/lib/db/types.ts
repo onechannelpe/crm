@@ -171,6 +171,38 @@ export interface ClientSearchViewsTable {
   updated_at: number;
 }
 
+export interface SearchPolicyDefaultsTable {
+  id: Generated<number>;
+  scope_type: "branch" | "team";
+  scope_id: number;
+  period_type: "month";
+  search_limit: number;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface SearchPolicyOverridesTable {
+  id: Generated<number>;
+  user_id: number;
+  search_limit: number;
+  effective_from: number;
+  expires_at: number | null;
+  set_by_user_id: number;
+  created_at: number;
+}
+
+export interface SearchAllowanceLedgerTable {
+  id: Generated<number>;
+  user_id: number;
+  period_start: string;
+  period_end: string;
+  base_limit: number;
+  extra_granted: number;
+  used_amount: number;
+  created_at: number;
+  updated_at: number;
+}
+
 export interface OrganizationsTable {
   id: Generated<number>;
   ruc: string;
@@ -279,14 +311,50 @@ export interface SalesRecordAttemptsTable {
   created_at: number;
 }
 
-export interface QuotaAllocationsTable {
+export interface LeadPolicyDefaultsTable {
+  id: Generated<number>;
+  scope_type: "branch" | "team";
+  scope_id: number;
+  active_buffer_target: number;
+  daily_refill_limit: number;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface LeadPolicyOverridesTable {
   id: Generated<number>;
   user_id: number;
-  allocated_by_user_id: number;
+  active_buffer_target: number;
+  daily_refill_limit: number;
+  effective_from: number;
+  expires_at: number | null;
+  set_by_user_id: number;
+  created_at: number;
+}
+
+export interface LeadRefillLedgerTable {
+  id: Generated<number>;
+  user_id: number;
   date: string;
-  quota_amount: number;
+  base_limit: number;
+  extra_granted: number;
   used_amount: number;
   created_at: number;
+  updated_at: number;
+}
+
+export interface AllowanceRequestsTable {
+  id: Generated<number>;
+  user_id: number;
+  kind: "search_extra" | "lead_refill_extra";
+  status: "pending" | "approved" | "rejected";
+  requested_amount: number;
+  reason: string;
+  decision_note: string | null;
+  reviewer_user_id: number | null;
+  created_at: number;
+  updated_at: number;
+  decided_at: number | null;
 }
 
 export interface ProductsTable {
@@ -648,6 +716,9 @@ export interface Database {
   notification_deliveries: NotificationDeliveriesTable;
   app_notifications: AppNotificationsTable;
   client_search_views: ClientSearchViewsTable;
+  search_policy_defaults: SearchPolicyDefaultsTable;
+  search_policy_overrides: SearchPolicyOverridesTable;
+  search_allowance_ledger: SearchAllowanceLedgerTable;
   user_sessions: UserSessionsTable;
   action_rate_limit_counters: ActionRateLimitCountersTable;
   auth_throttle_counters: AuthThrottleCountersTable;
@@ -663,7 +734,10 @@ export interface Database {
   sales_record_addresses: SalesRecordAddressesTable;
   sales_record_products: SalesRecordProductsTable;
   sales_record_attempts: SalesRecordAttemptsTable;
-  quota_allocations: QuotaAllocationsTable;
+  lead_policy_defaults: LeadPolicyDefaultsTable;
+  lead_policy_overrides: LeadPolicyOverridesTable;
+  lead_refill_ledger: LeadRefillLedgerTable;
+  allowance_requests: AllowanceRequestsTable;
   products: ProductsTable;
   interaction_logs: InteractionLogsTable;
   inventory_items: InventoryItemsTable;
@@ -697,6 +771,9 @@ export type NotificationJob = Selectable<NotificationJobsTable>;
 export type NotificationDelivery = Selectable<NotificationDeliveriesTable>;
 export type AppNotification = Selectable<AppNotificationsTable>;
 export type ClientSearchView = Selectable<ClientSearchViewsTable>;
+export type SearchPolicyDefault = Selectable<SearchPolicyDefaultsTable>;
+export type SearchPolicyOverride = Selectable<SearchPolicyOverridesTable>;
+export type SearchAllowanceLedger = Selectable<SearchAllowanceLedgerTable>;
 export type Organization = Selectable<OrganizationsTable>;
 export type Contact = Selectable<ContactsTable>;
 export type LeadAssignment = Selectable<LeadAssignmentsTable>;
@@ -705,7 +782,10 @@ export type SalesRecordClient = Selectable<SalesRecordClientTable>;
 export type SalesRecordAddress = Selectable<SalesRecordAddressesTable>;
 export type SalesRecordProduct = Selectable<SalesRecordProductsTable>;
 export type SalesRecordAttempt = Selectable<SalesRecordAttemptsTable>;
-export type QuotaAllocation = Selectable<QuotaAllocationsTable>;
+export type LeadPolicyDefault = Selectable<LeadPolicyDefaultsTable>;
+export type LeadPolicyOverride = Selectable<LeadPolicyOverridesTable>;
+export type LeadRefillLedger = Selectable<LeadRefillLedgerTable>;
+export type AllowanceRequest = Selectable<AllowanceRequestsTable>;
 export type Product = Selectable<ProductsTable>;
 export type InteractionLog = Selectable<InteractionLogsTable>;
 export type InventoryItem = Selectable<InventoryItemsTable>;
@@ -738,6 +818,9 @@ export type NewNotificationJob = Insertable<NotificationJobsTable>;
 export type NewNotificationDelivery = Insertable<NotificationDeliveriesTable>;
 export type NewAppNotification = Insertable<AppNotificationsTable>;
 export type NewClientSearchView = Insertable<ClientSearchViewsTable>;
+export type NewSearchPolicyDefault = Insertable<SearchPolicyDefaultsTable>;
+export type NewSearchPolicyOverride = Insertable<SearchPolicyOverridesTable>;
+export type NewSearchAllowanceLedger = Insertable<SearchAllowanceLedgerTable>;
 export type NewUserSession = Insertable<UserSessionsTable>;
 export type NewAuthThrottleCounter = Insertable<AuthThrottleCountersTable>;
 export type NewAuthEvent = Insertable<AuthEventsTable>;
@@ -752,7 +835,10 @@ export type NewSalesRecordClient = Insertable<SalesRecordClientTable>;
 export type NewSalesRecordAddress = Insertable<SalesRecordAddressesTable>;
 export type NewSalesRecordProduct = Insertable<SalesRecordProductsTable>;
 export type NewSalesRecordAttempt = Insertable<SalesRecordAttemptsTable>;
-export type NewQuotaAllocation = Insertable<QuotaAllocationsTable>;
+export type NewLeadPolicyDefault = Insertable<LeadPolicyDefaultsTable>;
+export type NewLeadPolicyOverride = Insertable<LeadPolicyOverridesTable>;
+export type NewLeadRefillLedger = Insertable<LeadRefillLedgerTable>;
+export type NewAllowanceRequest = Insertable<AllowanceRequestsTable>;
 export type NewInteractionLog = Insertable<InteractionLogsTable>;
 export type NewAuditLog = Insertable<AuditLogsTable>;
 export type NewAuditActionPolicy = Insertable<AuditActionPoliciesTable>;

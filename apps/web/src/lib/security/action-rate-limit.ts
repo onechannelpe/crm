@@ -18,7 +18,6 @@ export const ACTION_RATE_LIMIT_POLICY = {
   "leads.request": { limit: 10, ipLimit: 50, windowMs: 60_000 },
   "sales_records.create_draft": { limit: 20, ipLimit: 100, windowMs: 60_000 },
   "sales_records.submit": { limit: 30, ipLimit: 150, windowMs: 60_000 },
-  "quota.allocate": { limit: 5, ipLimit: 25, windowMs: 60_000 },
   "team.invite.create": { limit: 10, ipLimit: 30, windowMs: 60 * 60_000 },
 } satisfies Record<string, ActionRateLimitPolicy>;
 

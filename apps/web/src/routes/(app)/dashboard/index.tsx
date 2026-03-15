@@ -3,7 +3,7 @@ import { createMemo, For } from "solid-js";
 
 import { AppPage } from "~/components/layout/page";
 import { dashboardStatsQuery } from "~/lib/queries/dashboard";
-import { quotaStatusQuery } from "~/lib/queries/quota";
+import { myLeadCapacityQuery } from "~/lib/queries/lead-ops";
 
 import styles from "./dashboard-page.module.css";
 
@@ -18,8 +18,16 @@ type DashboardColumn = {
 };
 
 export default function DashboardPage() {
-  const quota = createAsync(() => quotaStatusQuery(), {
-    initialValue: { allocated: false },
+  const leadCapacity = createAsync(() => myLeadCapacityQuery(), {
+    initialValue: {
+      policySource: "system" as const,
+      activeBufferTarget: 0,
+      activeAssignments: 0,
+      dailyRefillLimit: 0,
+      extraGranted: 0,
+      usedAmount: 0,
+      remaining: 0,
+    },
   });
   const stats = createAsync(() => dashboardStatsQuery(), {
     initialValue: {
@@ -31,24 +39,24 @@ export default function DashboardPage() {
   });
 
   const columns = createMemo<DashboardColumn[]>(() => {
-    const q = quota();
+    const capacity = leadCapacity();
     const s = stats();
     return [
       {
-        key: "quota",
-        label: "Cuota",
+        key: "capacity",
+        label: "Capacidad",
         tone: styles.tagQuota,
-        amount: q.allocated ? q.total : 0,
+        amount: capacity.activeBufferTarget,
         cards: [
           {
-            title: "Capacidad diaria",
-            value: q.allocated ? `${q.used}/${q.total}` : "0",
-            detail: q.allocated ? "Usado / total" : "Sin asignar",
-            href: "/quota",
+            title: "Buffer de leads",
+            value: `${capacity.activeAssignments}/${capacity.activeBufferTarget}`,
+            detail: `${capacity.remaining} refills hoy`,
+            href: "/me/capacity",
           },
         ],
-        actionLabel: "Ver cuota",
-        actionHref: "/quota",
+        actionLabel: "Ver capacidad",
+        actionHref: "/me/capacity",
       },
       {
         key: "new",

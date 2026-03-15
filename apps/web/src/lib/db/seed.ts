@@ -157,16 +157,68 @@ export async function seedIfEmpty() {
     .execute();
 
   const today = new Date().toISOString().split("T")[0];
+  const monthPrefix = today.slice(0, 7);
+  const periodStart = `${monthPrefix}-01`;
+  const periodEnd = `${monthPrefix}-31`;
   await db
-    .insertInto("quota_allocations")
-    .values({
-      user_id: 3,
-      allocated_by_user_id: 2,
-      date: today,
-      quota_amount: 50,
-      used_amount: 0,
-      created_at: now,
-    })
+    .insertInto("search_policy_defaults")
+    .values([
+      {
+        scope_type: "branch",
+        scope_id: 1,
+        period_type: "month",
+        search_limit: 250,
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        scope_type: "branch",
+        scope_id: 2,
+        period_type: "month",
+        search_limit: 220,
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        scope_type: "team",
+        scope_id: 1,
+        period_type: "month",
+        search_limit: 300,
+        created_at: now,
+        updated_at: now,
+      },
+    ])
+    .onConflict((oc) => oc.doNothing())
+    .execute();
+
+  await db
+    .insertInto("lead_policy_defaults")
+    .values([
+      {
+        scope_type: "branch",
+        scope_id: 1,
+        active_buffer_target: 10,
+        daily_refill_limit: 25,
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        scope_type: "branch",
+        scope_id: 2,
+        active_buffer_target: 8,
+        daily_refill_limit: 20,
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        scope_type: "team",
+        scope_id: 1,
+        active_buffer_target: 12,
+        daily_refill_limit: 30,
+        created_at: now,
+        updated_at: now,
+      },
+    ])
     .onConflict((oc) => oc.doNothing())
     .execute();
 
@@ -219,7 +271,7 @@ export async function seedIfEmpty() {
         updated_at: now,
       },
       {
-        action: "quota_allocated",
+        action: "search_allowance_granted",
         risk_level: "high",
         is_active: 1,
         is_protected: 1,
@@ -227,157 +279,14 @@ export async function seedIfEmpty() {
         created_at: now,
         updated_at: now,
       },
-    ])
-    .onConflict((oc) => oc.doNothing())
-    .execute();
-
-  // Organizations
-  await db
-    .insertInto("organizations")
-    .values([
       {
-        ruc: "20100047218",
-        name: "Telefónica del Perú S.A.A.",
+        action: "lead_refill_granted",
+        risk_level: "high",
+        is_active: 1,
+        is_protected: 1,
+        updated_by_user_id: null,
         created_at: now,
-      },
-      { ruc: "20505677853", name: "Grupo AJE S.A.", created_at: now },
-      { ruc: "20100128056", name: "Alicorp S.A.A.", created_at: now },
-      { ruc: "20100055237", name: "Credicorp Ltd.", created_at: now },
-      {
-        ruc: "20100130204",
-        name: "Minera Buenaventura S.A.A.",
-        created_at: now,
-      },
-      {
-        ruc: "20384577831",
-        name: "Constructora Sur del Perú S.A.C.",
-        created_at: now,
-      },
-      { ruc: "20600188214", name: "Retail Andino S.R.L.", created_at: now },
-      {
-        ruc: "20566100911",
-        name: "Servicios Financieros del Norte S.A.",
-        created_at: now,
-      },
-    ])
-    .onConflict((oc) => oc.doNothing())
-    .execute();
-
-  // Contacts
-  await db
-    .insertInto("contacts")
-    .values([
-      {
-        organization_id: 1,
-        dni: "45821736",
-        name: "Carlos Mendoza Ríos",
-        phone_primary: "+51 987 654 321",
-        created_at: now,
-      },
-      {
-        organization_id: 1,
-        dni: "71234567",
-        name: "María Fernández López",
-        phone_primary: "+51 912 345 678",
-        created_at: now,
-      },
-      {
-        organization_id: 2,
-        dni: "43567890",
-        name: "Jorge Castillo Vega",
-        phone_primary: "+51 998 765 432",
-        created_at: now,
-      },
-      {
-        organization_id: 2,
-        dni: "40123456",
-        name: "Ana Lucía Torres",
-        phone_primary: "+51 945 678 901",
-        created_at: now,
-      },
-      {
-        organization_id: 3,
-        dni: "46789012",
-        name: "Pedro Quispe Huamán",
-        phone_primary: "+51 934 567 890",
-        created_at: now,
-      },
-      {
-        organization_id: 3,
-        dni: "48901234",
-        name: "Rosa Vilca Mamani",
-        phone_primary: null,
-        created_at: now,
-      },
-      {
-        organization_id: 4,
-        dni: "72345678",
-        name: "Diego Salazar Paredes",
-        phone_primary: "+51 976 543 210",
-        created_at: now,
-      },
-      {
-        organization_id: 4,
-        dni: "44567891",
-        name: "Lucía Ramírez García",
-        phone_primary: "+51 923 456 789",
-        created_at: now,
-      },
-      {
-        organization_id: 5,
-        dni: "47890123",
-        name: "Fernando Huanca Condori",
-        phone_primary: "+51 965 432 109",
-        created_at: now,
-      },
-      {
-        organization_id: 5,
-        dni: "41234568",
-        name: "Sofía Espinoza Cruz",
-        phone_primary: "+51 954 321 098",
-        created_at: now,
-      },
-      {
-        organization_id: 1,
-        dni: "73456789",
-        name: "Miguel Ángel Rojas",
-        phone_primary: "+51 943 210 987",
-        created_at: now,
-      },
-      {
-        organization_id: 3,
-        dni: "42345679",
-        name: "Carmen Flores Díaz",
-        phone_primary: "+51 932 109 876",
-        created_at: now,
-      },
-      {
-        organization_id: 6,
-        dni: "41900452",
-        name: "Alberto Yauri Flores",
-        phone_primary: "+51 988 000 111",
-        created_at: now,
-      },
-      {
-        organization_id: 6,
-        dni: "42234009",
-        name: "Diana Cáceres Lazo",
-        phone_primary: "+51 988 000 112",
-        created_at: now,
-      },
-      {
-        organization_id: 7,
-        dni: "70654312",
-        name: "José Luis Huamán",
-        phone_primary: "+51 988 000 113",
-        created_at: now,
-      },
-      {
-        organization_id: 8,
-        dni: "49123407",
-        name: "Luisa Acurio Pérez",
-        phone_primary: "+51 988 000 114",
-        created_at: now,
+        updated_at: now,
       },
     ])
     .onConflict((oc) => oc.doNothing())
@@ -647,135 +556,7 @@ export async function seedIfEmpty() {
     .where("id", "in", [17, 18])
     .execute();
 
-  // Lead assignments for executive user (id=3)
   const oneDay = 86400000;
-  const sevenDays = oneDay * 7;
-  await db
-    .insertInto("lead_assignments")
-    .values([
-      {
-        user_id: 3,
-        contact_id: 1,
-        assigned_at: now - oneDay * 2,
-        expires_at: now + sevenDays,
-        status: "active",
-      },
-      {
-        user_id: 3,
-        contact_id: 3,
-        assigned_at: now - oneDay,
-        expires_at: now + sevenDays,
-        status: "active",
-      },
-      {
-        user_id: 3,
-        contact_id: 5,
-        assigned_at: now,
-        expires_at: now + sevenDays,
-        status: "active",
-      },
-      {
-        user_id: 3,
-        contact_id: 7,
-        assigned_at: now,
-        expires_at: now + sevenDays,
-        status: "active",
-      },
-      {
-        user_id: 3,
-        contact_id: 9,
-        assigned_at: now - oneDay * 3,
-        expires_at: now + sevenDays,
-        status: "active",
-      },
-      {
-        user_id: 5,
-        contact_id: 2,
-        assigned_at: now,
-        expires_at: now + sevenDays,
-        status: "active",
-      },
-      {
-        user_id: 5,
-        contact_id: 4,
-        assigned_at: now - oneDay,
-        expires_at: now + sevenDays,
-        status: "active",
-      },
-      {
-        user_id: 3,
-        contact_id: 11,
-        assigned_at: now - oneDay * 10,
-        expires_at: now - oneDay,
-        status: "completed",
-      },
-      {
-        user_id: 9,
-        contact_id: 13,
-        assigned_at: now,
-        expires_at: now + sevenDays,
-        status: "active",
-      },
-      {
-        user_id: 9,
-        contact_id: 14,
-        assigned_at: now - oneDay,
-        expires_at: now + sevenDays,
-        status: "active",
-      },
-      {
-        user_id: 9,
-        contact_id: 15,
-        assigned_at: now - oneDay * 2,
-        expires_at: now + sevenDays,
-        status: "active",
-      },
-      {
-        user_id: 15,
-        contact_id: 6,
-        assigned_at: now - oneDay,
-        expires_at: now + sevenDays,
-        status: "active",
-      },
-      {
-        user_id: 15,
-        contact_id: 8,
-        assigned_at: now - oneDay * 2,
-        expires_at: now + sevenDays,
-        status: "active",
-      },
-      {
-        user_id: 16,
-        contact_id: 10,
-        assigned_at: now - oneDay * 3,
-        expires_at: now + sevenDays,
-        status: "active",
-      },
-      {
-        user_id: 16,
-        contact_id: 12,
-        assigned_at: now - oneDay * 2,
-        expires_at: now - oneDay,
-        status: "expired",
-      },
-      {
-        user_id: 17,
-        contact_id: 16,
-        assigned_at: now - oneDay,
-        expires_at: now + sevenDays,
-        status: "active",
-      },
-      {
-        user_id: 18,
-        contact_id: 4,
-        assigned_at: now - oneDay * 2,
-        expires_at: now + sevenDays,
-        status: "active",
-      },
-    ])
-    .onConflict((oc) => oc.doNothing())
-    .execute();
-
   // Inventory items
   await db
     .insertInto("inventory_items")
@@ -850,155 +631,129 @@ export async function seedIfEmpty() {
     .onConflict((oc) => oc.doNothing())
     .execute();
 
-  // Interaction logs
   await db
-    .insertInto("interaction_logs")
+    .insertInto("search_allowance_ledger")
     .values([
       {
-        contact_id: 1,
         user_id: 3,
-        outcome: "Interested in Duo plan",
-        notes: "Client requested callback",
-        duration_seconds: 180,
-        created_at: now - oneDay * 2,
-      },
-      {
-        contact_id: 3,
-        user_id: 3,
-        outcome: "No answer",
-        notes: null,
-        duration_seconds: null,
-        created_at: now - oneDay,
-      },
-      {
-        contact_id: 5,
-        user_id: 3,
-        outcome: "Scheduled meeting",
-        notes: "Meeting at office next Monday 10am",
-        duration_seconds: 240,
+        period_start: periodStart,
+        period_end: periodEnd,
+        base_limit: 300,
+        extra_granted: 0,
+        used_amount: 12,
         created_at: now,
+        updated_at: now,
       },
       {
-        contact_id: 13,
         user_id: 9,
-        outcome: "Pending confirmation",
-        notes: "Requested technical fact sheet",
-        duration_seconds: 210,
-        created_at: now - oneDay,
+        period_start: periodStart,
+        period_end: periodEnd,
+        base_limit: 220,
+        extra_granted: 10,
+        used_amount: 18,
+        created_at: now,
+        updated_at: now,
       },
       {
-        contact_id: 14,
-        user_id: 9,
-        outcome: "Rejected by back office",
-        notes: "Need clearer DNI image",
-        duration_seconds: 180,
-        created_at: now - oneDay * 2,
-      },
-      {
-        contact_id: 6,
         user_id: 15,
-        outcome: "Cliente solicita upgrade",
-        notes: "Interesado en plan de 120GB",
-        duration_seconds: 260,
-        created_at: now - oneDay,
+        period_start: periodStart,
+        period_end: periodEnd,
+        base_limit: 250,
+        extra_granted: 0,
+        used_amount: 9,
+        created_at: now,
+        updated_at: now,
       },
       {
-        contact_id: 10,
         user_id: 16,
-        outcome: "No answer",
-        notes: "Reprogramar llamada a las 16:00",
-        duration_seconds: 95,
-        created_at: now - oneDay / 2,
+        period_start: periodStart,
+        period_end: periodEnd,
+        base_limit: 250,
+        extra_granted: 0,
+        used_amount: 4,
+        created_at: now,
+        updated_at: now,
       },
       {
-        contact_id: 16,
         user_id: 17,
-        outcome: "Sale closed",
-        notes: "Contrato validado en primera revisión",
-        duration_seconds: 310,
-        created_at: now - oneDay * 2,
+        period_start: periodStart,
+        period_end: periodEnd,
+        base_limit: 220,
+        extra_granted: 15,
+        used_amount: 21,
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        user_id: 18,
+        period_start: periodStart,
+        period_end: periodEnd,
+        base_limit: 220,
+        extra_granted: 0,
+        used_amount: 11,
+        created_at: now,
+        updated_at: now,
       },
     ])
     .onConflict((oc) => oc.doNothing())
     .execute();
 
   await db
-    .updateTable("contacts")
-    .set({
-      last_contacted_at: now - oneDay,
-      last_contacted_by_user_id: 3,
-      cooldown_until: now + oneDay,
-    })
-    .where("id", "=", 1)
-    .execute();
-  await db
-    .updateTable("contacts")
-    .set({
-      last_contacted_at: now - oneDay * 2,
-      last_contacted_by_user_id: 9,
-      cooldown_until: now - oneDay,
-    })
-    .where("id", "=", 14)
-    .execute();
-
-  // Lock some orgs to branch
-  await db
-    .updateTable("organizations")
-    .set({ locked_branch_id: 1, locked_at: now, locked_by_user_id: 3 })
-    .where("id", "in", [1, 2, 3])
-    .execute();
-  await db
-    .updateTable("organizations")
-    .set({ locked_branch_id: 2, locked_at: now, locked_by_user_id: 9 })
-    .where("id", "in", [6, 8])
-    .execute();
-
-  await db
-    .insertInto("quota_allocations")
-    .values({
-      user_id: 9,
-      allocated_by_user_id: 8,
-      date: today,
-      quota_amount: 40,
-      used_amount: 3,
-      created_at: now,
-    })
-    .onConflict((oc) => oc.doNothing())
-    .execute();
-  await db
-    .insertInto("quota_allocations")
+    .insertInto("lead_refill_ledger")
     .values([
       {
-        user_id: 15,
-        allocated_by_user_id: 2,
+        user_id: 3,
         date: today,
-        quota_amount: 35,
-        used_amount: 2,
+        base_limit: 30,
+        extra_granted: 0,
+        used_amount: 6,
         created_at: now,
+        updated_at: now,
+      },
+      {
+        user_id: 9,
+        date: today,
+        base_limit: 20,
+        extra_granted: 4,
+        used_amount: 5,
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        user_id: 15,
+        date: today,
+        base_limit: 25,
+        extra_granted: 0,
+        used_amount: 5,
+        created_at: now,
+        updated_at: now,
       },
       {
         user_id: 16,
-        allocated_by_user_id: 2,
         date: today,
-        quota_amount: 30,
-        used_amount: 1,
+        base_limit: 25,
+        extra_granted: 0,
+        used_amount: 3,
         created_at: now,
+        updated_at: now,
       },
       {
         user_id: 17,
-        allocated_by_user_id: 19,
         date: today,
-        quota_amount: 45,
-        used_amount: 6,
+        base_limit: 20,
+        extra_granted: 8,
+        used_amount: 7,
         created_at: now,
+        updated_at: now,
       },
       {
         user_id: 18,
-        allocated_by_user_id: 19,
         date: today,
-        quota_amount: 40,
+        base_limit: 20,
+        extra_granted: 0,
         used_amount: 4,
         created_at: now,
+        updated_at: now,
       },
     ])
     .onConflict((oc) => oc.doNothing())
@@ -1114,28 +869,6 @@ export async function seedIfEmpty() {
           next: { price: 72.9, is_active: 1 },
         }),
         created_at: now - oneDay * 2,
-      },
-      {
-        user_id: 10,
-        action: "sales_record_rejected",
-        entity_type: "sales_record",
-        entity_id: 6,
-        changes: JSON.stringify({
-          reason: "validation_failed",
-          flaggedFields: ["client.phone", "address.installation"],
-        }),
-        created_at: now - oneDay,
-      },
-      {
-        user_id: 3,
-        action: "sales_record_submitted",
-        entity_type: "sales_record",
-        entity_id: 6,
-        changes: JSON.stringify({
-          previousStatus: "rejected",
-          nextStatus: "submitted_for_confirmation",
-        }),
-        created_at: now - oneDay / 2,
       },
     ])
     .onConflict((oc) => oc.doNothing())

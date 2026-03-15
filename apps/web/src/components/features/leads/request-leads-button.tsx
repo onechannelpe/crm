@@ -29,10 +29,12 @@ export const RequestLeadsButton: Component<RequestLeadsButtonProps> = (
       if (assigned > 0) {
         showToast(
           "success",
-          assigned === 1 ? "1 lead asignado" : `${assigned} leads asignados`,
+          assigned === 1
+            ? "1 lead agregado a tu cola"
+            : `${assigned} leads agregados a tu cola`,
         );
       } else {
-        showToast("error", "No hay más leads disponibles");
+        showToast("error", "No se agregaron leads. Revisa tu capacidad.");
       }
     } catch (error) {
       const message =

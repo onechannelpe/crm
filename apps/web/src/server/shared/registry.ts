@@ -24,11 +24,21 @@ import { createNotificationContactsRepo } from "~/server/notifications/repos-con
 import { createNotificationPreferencesRepo } from "~/server/notifications/repos-preferences";
 import { createActionObservationsRepo } from "~/server/observability/repos-action-observations";
 import { createAuthFunnelEventsRepo } from "~/server/observability/repos-auth-funnel-events";
-import { createQuotaAllocationsRepo } from "~/server/quota/repos";
+import {
+  createLeadPolicyDefaultsRepo,
+  createLeadPolicyOverridesRepo,
+  createLeadRefillLedgerRepo,
+} from "~/server/lead-ops/repos";
 import { createReportExportRepo } from "~/server/sales/repos-report-exports";
 import { createSalesRecordsRepo } from "~/server/sales/repos-sales-records";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
+import {
+  createSearchAllowanceLedgerRepo,
+  createSearchPolicyDefaultsRepo,
+  createSearchPolicyOverridesRepo,
+} from "~/server/search-access/repos";
+import { createAllowanceRequestsRepo } from "~/server/team-admin/repos";
 import { createBranchesRepo } from "~/server/users/repos-branches";
 import { createPasskeysRepo } from "~/server/users/repos-passkeys";
 import { createTeamsRepo } from "~/server/users/repos-teams";
@@ -57,7 +67,13 @@ export function createRepositories(db: Kysely<Database>) {
     searchEnrichment: createSearchEnrichmentRepo(db),
     contacts: createContactsRepo(db),
     leadAssignments: createLeadAssignmentsRepo(db),
-    quotaAllocations: createQuotaAllocationsRepo(db),
+    searchPolicyDefaults: createSearchPolicyDefaultsRepo(db),
+    searchPolicyOverrides: createSearchPolicyOverridesRepo(db),
+    searchAllowanceLedger: createSearchAllowanceLedgerRepo(db),
+    leadPolicyDefaults: createLeadPolicyDefaultsRepo(db),
+    leadPolicyOverrides: createLeadPolicyOverridesRepo(db),
+    leadRefillLedger: createLeadRefillLedgerRepo(db),
+    allowanceRequests: createAllowanceRequestsRepo(db),
     reportExportJobs: createReportExportRepo(db),
     salesRecords: createSalesRecordsRepo(db),
     interactionLogs: createInteractionLogsRepo(db),

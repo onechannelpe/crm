@@ -11,8 +11,6 @@ export type Role =
 export type Permission =
   | "leads:read"
   | "leads:request"
-  | "quota:read"
-  | "quota:allocate"
   | "sales:create"
   | "sales:submit"
   | "sales:review"
@@ -43,7 +41,6 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   executive: [
     "leads:read",
     "leads:request",
-    "quota:read",
     "sales:create",
     "sales:submit",
     "client_search:read",
@@ -51,8 +48,6 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   supervisor: [
     "leads:read",
     "leads:request",
-    "quota:read",
-    "quota:allocate",
     "sales:create",
     "sales:submit",
     "sales:review",
@@ -65,8 +60,6 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   back_office: ["sales:review", "sales:approve", "audit:read"],
   sales_manager: [
     "leads:read",
-    "quota:read",
-    "quota:allocate",
     "sales:review",
     "sales:approve",
     "team:read",
@@ -81,8 +74,6 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   hr: ["hr:read", "hr:manage", "team:read"],
   admin: [
     "leads:read",
-    "quota:read",
-    "quota:allocate",
     "sales:review",
     "team:read",
     "team:manage",
@@ -98,8 +89,6 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   superuser: [
     "leads:read",
     "leads:request",
-    "quota:read",
-    "quota:allocate",
     "sales:create",
     "sales:submit",
     "sales:review",

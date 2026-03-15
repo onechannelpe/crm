@@ -7,14 +7,15 @@ import { env } from "~/lib/env";
 import { createSearchEnrichmentService } from "~/server/client-search/enrichment-service";
 import { createClientSearchService } from "~/server/client-search/service";
 import { createExtensionService } from "~/server/extension/service";
-import { createLeadAssignmentService } from "~/server/leads/service";
+import { createLeadOpsService } from "~/server/lead-ops/service";
 import { createAppNotificationCenter } from "~/server/notifications/app-center-service";
 import { createObservabilityService } from "~/server/observability/service";
-import { createQuotaService } from "~/server/quota/service";
 import { createSalesExportBlobStore } from "~/server/sales/export-blob-store";
 import { createSalesExportService } from "~/server/sales/export-service";
 import { createSalesRecordsWorkflowService } from "~/server/sales/records-service";
+import { createSearchAccessService } from "~/server/search-access/service";
 import { createRepositories } from "~/server/shared/registry";
+import { createTeamAdminService } from "~/server/team-admin/service";
 import { createProfilePictureBlobStore } from "~/server/users/profile-picture-blob-store";
 import { createProfilePictureService } from "~/server/users/profile-picture-service";
 
@@ -35,8 +36,9 @@ export const appNotificationCenter = createAppNotificationCenter({
 });
 export const clientSearchService = createClientSearchService();
 export const searchEnrichmentService = createSearchEnrichmentService(repos);
-export const quotaService = createQuotaService(repos);
-export const leadService = createLeadAssignmentService(repos);
+export const searchAccessService = createSearchAccessService(repos);
+export const leadOpsService = createLeadOpsService(repos);
+export const teamAdminService = createTeamAdminService(repos);
 export const extensionService = createExtensionService(repos, {
   runInTransaction: runInRepositoryTransaction,
 });

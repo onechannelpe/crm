@@ -1,4 +1,4 @@
-import { useAction, useNavigate } from "@solidjs/router";
+import { A, useAction, useNavigate } from "@solidjs/router";
 import { createSignal } from "solid-js";
 
 import { LeadList } from "~/components/features/leads/lead-list";
@@ -11,10 +11,9 @@ import {
   isExtensionBridgeConfigured,
 } from "~/lib/extension/runtime";
 import { useExtensionStateObserver } from "~/lib/extension/use-extension-state-observer";
-import {
-  registerCallMutation,
-  requestLeadsMutation,
-} from "~/lib/mutations/leads";
+import { requestLeadRefillNowMutation } from "~/lib/mutations/lead-ops";
+import { registerCallMutation } from "~/lib/mutations/leads";
+import { myLeadCapacityQuery } from "~/lib/queries/lead-ops";
 import { activeLeadsQuery } from "~/lib/queries/leads";
 import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
 
@@ -49,7 +48,18 @@ export default function LeadsPage() {
     activeLeadsQuery,
     { initialValue: [] },
   );
-  const requestLeadsAction = useAction(requestLeadsMutation);
+  const { data: leadCapacity } = createOptimisticQuery(myLeadCapacityQuery, {
+    initialValue: {
+      policySource: "system" as const,
+      activeBufferTarget: 0,
+      activeAssignments: 0,
+      dailyRefillLimit: 0,
+      extraGranted: 0,
+      usedAmount: 0,
+      remaining: 0,
+    },
+  });
+  const requestLeadsAction = useAction(requestLeadRefillNowMutation);
   const registerCallAction = useAction(registerCallMutation);
   const { state: extensionState, error: extensionError } =
     createExtensionPortConnection();
@@ -154,6 +164,14 @@ export default function LeadsPage() {
 
   return (
     <AppPage>
+      <div class={styles.capacityBanner}>
+        <p>
+          Leads activos: {leadCapacity().activeAssignments}/
+          {leadCapacity().activeBufferTarget}. Refills restantes hoy:{" "}
+          {leadCapacity().remaining}.
+        </p>
+        <A href="/me/capacity">Ver mi capacidad</A>
+      </div>
       <LeadList
         contacts={currentLeads()}
         onRegisterCall={handleRegisterCall}

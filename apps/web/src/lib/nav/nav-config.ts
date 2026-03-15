@@ -10,7 +10,7 @@ export type RouteIcon =
   | "confirmed"
   | "review"
   | "audit"
-  | "quota"
+  | "capacity"
   | "profile"
   | "schedule"
   | "monitoring";
@@ -60,6 +60,10 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
     match: /^\/sales\/reports\/exports\/[^/]+$/,
     header: { label: "Detalle", icon: "confirmed" },
   },
+  {
+    match: /^\/team\/members\/[^/]+$/,
+    header: { label: "Capacidad del ejecutivo", icon: "team" },
+  },
 
   // Exact paths
   { match: "/dashboard", header: { label: "Inicio", icon: "dashboard" } },
@@ -68,12 +72,9 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
     header: { label: "Crear venta", icon: "new-sale" },
   },
   { match: "/schedule", header: { label: "Agenda", icon: "schedule" } },
-  { match: "/contacts/people", header: { label: "Personas", icon: "search" } },
-  {
-    match: "/contacts/companies",
-    header: { label: "Empresas", icon: "search" },
-  },
+  { match: "/contacts/search", header: { label: "Buscar contactos", icon: "search" } },
   { match: "/sales/leads", header: { label: "Prospectos", icon: "leads" } },
+  { match: "/me/capacity", header: { label: "Mi capacidad", icon: "capacity" } },
   {
     match: "/sales/confirmed",
     header: { label: "Ventas confirmadas", icon: "confirmed" },
@@ -86,9 +87,12 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
     match: "/sales/reports/exports",
     header: { label: "Exportaciones", icon: "confirmed" },
   },
-  { match: "/quota", header: { label: "Cuota", icon: "quota" } },
   { match: "/inventory", header: { label: "Inventario", icon: "inventory" } },
   { match: "/team", header: { label: "Equipo", icon: "team" } },
+  {
+    match: "/team/requests",
+    header: { label: "Solicitudes", icon: "team" },
+  },
   { match: "/team/invite", header: { label: "Invitaciones", icon: "team" } },
   {
     match: "/team/import",
@@ -101,6 +105,10 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
   },
   { match: "/monitoring", header: { label: "Monitoreo", icon: "monitoring" } },
   { match: "/settings/profile", header: { label: "Perfil", icon: "profile" } },
+  {
+    match: "/settings/sales-policies",
+    header: { label: "Políticas comerciales", icon: "settings" },
+  },
 ];
 
 export const SIDEBAR_ENTRIES: SidebarEntry[] = [
@@ -136,19 +144,16 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
 
   // Secondary › Comercial
   {
-    id: "contacts-people",
-    href: "/contacts/people",
-    activePrefixes: ["/contacts/people", "/contacts/companies"],
-    label: "Personas",
+    id: "contacts-search",
+    href: "/contacts/search",
+    activePrefixes: ["/contacts/search"],
+    label: "Buscar contactos",
     navLabel: "Contactos",
     icon: "search",
     section: "secondary",
     order: 1,
     group: "Comercial",
-    children: [
-      { href: "/contacts/people", label: "Personas", order: 1 },
-      { href: "/contacts/companies", label: "Empresas", order: 2 },
-    ],
+    children: [{ href: "/contacts/search", label: "Buscar", order: 1 }],
   },
   {
     id: "sales",
@@ -168,12 +173,12 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     ],
   },
   {
-    id: "quota",
-    href: "/quota",
-    activePrefixes: ["/quota"],
-    label: "Cuota",
-    navLabel: "Cuota",
-    icon: "quota",
+    id: "my-capacity",
+    href: "/me/capacity",
+    activePrefixes: ["/me/capacity"],
+    label: "Mi capacidad",
+    navLabel: "Mi capacidad",
+    icon: "capacity",
     section: "secondary",
     order: 3,
     group: "Comercial",
@@ -203,8 +208,9 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     group: "Operaciones",
     children: [
       { href: "/team", label: "Miembros", order: 1 },
-      { href: "/team/invite", label: "Invitaciones", order: 2 },
-      { href: "/team/import", label: "Importar", order: 3 },
+      { href: "/team/requests", label: "Solicitudes", order: 2 },
+      { href: "/team/invite", label: "Invitaciones", order: 3 },
+      { href: "/team/import", label: "Importar", order: 4 },
     ],
   },
 
