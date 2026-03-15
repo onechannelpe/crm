@@ -140,7 +140,6 @@ async function completePrimaryLogin(params: {
   if (!user) {
     return Err({ kind: "invalid_credentials" });
   }
-
   const strongAuthStatus = await getStrongAuthStatus(user.id, params.deps);
   const decision = evaluateLoginPolicy({
     user,
