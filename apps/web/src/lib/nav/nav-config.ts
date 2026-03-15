@@ -72,9 +72,15 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
     header: { label: "Crear venta", icon: "new-sale" },
   },
   { match: "/schedule", header: { label: "Agenda", icon: "schedule" } },
-  { match: "/contacts/search", header: { label: "Buscar contactos", icon: "search" } },
+  {
+    match: "/contacts/search",
+    header: { label: "Buscar contactos", icon: "search" },
+  },
   { match: "/sales/leads", header: { label: "Prospectos", icon: "leads" } },
-  { match: "/me/capacity", header: { label: "Mi capacidad", icon: "capacity" } },
+  {
+    match: "/me/capacity",
+    header: { label: "Mi capacidad", icon: "capacity" },
+  },
   {
     match: "/sales/confirmed",
     header: { label: "Ventas confirmadas", icon: "confirmed" },

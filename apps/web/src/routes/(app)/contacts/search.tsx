@@ -1,5 +1,7 @@
+import { createAsync } from "@solidjs/router";
 import { createMemo, createSignal, For, Show } from "solid-js";
 
+import { searchClients } from "~/actions/client-search";
 import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
@@ -11,9 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
-import { searchClients } from "~/actions/client-search";
 import { mySearchAllowanceQuery } from "~/lib/queries/search-access";
-import { createAsync } from "@solidjs/router";
 import type { SearchResult, SearchType } from "~/server/shared/engine/types";
 
 const SEARCH_OPTIONS: Array<{ label: string; value: SearchType }> = [
@@ -72,7 +72,11 @@ export default function ContactsSearchPage() {
                 (searchAllowance()?.extraGranted ?? 0)}
             </div>
             <div class="text-muted-foreground">
-              {Math.max(0, (searchAllowance()?.remaining ?? 0) - localSearchConsumes())} restantes
+              {Math.max(
+                0,
+                (searchAllowance()?.remaining ?? 0) - localSearchConsumes(),
+              )}{" "}
+              restantes
             </div>
           </div>
         </div>

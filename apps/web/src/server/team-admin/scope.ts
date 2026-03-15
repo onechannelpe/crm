@@ -16,10 +16,7 @@ export async function canManageExecutive(
   if (target.branch_id !== actor.branchId) {
     return { ok: false as const, target };
   }
-  if (
-    actor.role === "admin" ||
-    actor.role === "sales_manager"
-  ) {
+  if (actor.role === "admin" || actor.role === "sales_manager") {
     return { ok: true as const, target };
   }
   if (actor.role !== "supervisor") {

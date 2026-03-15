@@ -56,7 +56,11 @@ export default function TeamPage() {
 
         <Show
           when={filtered().length > 0}
-          fallback={<p class="text-sm text-muted-foreground">No hay ejecutivos visibles.</p>}
+          fallback={
+            <p class="text-sm text-muted-foreground">
+              No hay ejecutivos visibles.
+            </p>
+          }
         >
           <Table>
             <TableHeader>

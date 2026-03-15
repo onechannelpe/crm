@@ -70,7 +70,11 @@ export function createAllowanceRequestsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    markApproved(id: number, reviewerUserId: number, decisionNote: string | null) {
+    markApproved(
+      id: number,
+      reviewerUserId: number,
+      decisionNote: string | null,
+    ) {
       const now = Date.now();
       return db
         .updateTable("allowance_requests")
@@ -85,7 +89,11 @@ export function createAllowanceRequestsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    markRejected(id: number, reviewerUserId: number, decisionNote: string | null) {
+    markRejected(
+      id: number,
+      reviewerUserId: number,
+      decisionNote: string | null,
+    ) {
       const now = Date.now();
       return db
         .updateTable("allowance_requests")

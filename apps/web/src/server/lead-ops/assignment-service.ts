@@ -28,7 +28,8 @@ export function createLeadAssignmentService(
         if (!engineHealthy) {
           return Err({
             reason: "engine_unavailable",
-            message: "Lead engine unavailable. Verify engine service and dataset.",
+            message:
+              "Lead engine unavailable. Verify engine service and dataset.",
           });
         }
 

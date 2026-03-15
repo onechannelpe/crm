@@ -4,8 +4,14 @@ import { createEffect, createSignal, Show } from "solid-js";
 import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
-import { grantMoreLeadRefillMutation, updateLeadPolicyOverrideMutation } from "~/lib/mutations/lead-ops";
-import { grantMoreSearchesMutation, updateSearchPolicyOverrideMutation } from "~/lib/mutations/search-access";
+import {
+  grantMoreLeadRefillMutation,
+  updateLeadPolicyOverrideMutation,
+} from "~/lib/mutations/lead-ops";
+import {
+  grantMoreSearchesMutation,
+  updateSearchPolicyOverrideMutation,
+} from "~/lib/mutations/search-access";
 import { executiveCapacityDetailQuery } from "~/lib/queries/team-admin";
 
 export default function TeamMemberCapacityPage() {
@@ -38,8 +44,12 @@ export default function TeamMemberCapacityPage() {
         {(snapshot) => (
           <div class="space-y-8">
             <div>
-              <h2 class="text-2xl font-semibold">{snapshot.executive.fullName}</h2>
-              <p class="text-sm text-muted-foreground">{snapshot.executive.email}</p>
+              <h2 class="text-2xl font-semibold">
+                {snapshot.executive.fullName}
+              </h2>
+              <p class="text-sm text-muted-foreground">
+                {snapshot.executive.email}
+              </p>
             </div>
 
             <section class="space-y-3">
@@ -155,7 +165,9 @@ export default function TeamMemberCapacityPage() {
                   type="number"
                   label="Buffer activo"
                   value={bufferTarget()}
-                  onInput={(event) => setBufferTarget(event.currentTarget.value)}
+                  onInput={(event) =>
+                    setBufferTarget(event.currentTarget.value)
+                  }
                   required
                 />
                 <Input

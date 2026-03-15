@@ -6,13 +6,20 @@ import {
   updateSearchPolicyOverride,
   updateSearchScopeDefault,
 } from "~/actions/search-access/mutations";
-import { managedExecutivesQuery, executiveCapacityDetailQuery, salesPolicyDefaultsQuery, allowanceRequestsQuery } from "~/lib/queries/team-admin";
 import { mySearchAllowanceQuery } from "~/lib/queries/search-access";
+import {
+  managedExecutivesQuery,
+  executiveCapacityDetailQuery,
+  salesPolicyDefaultsQuery,
+  allowanceRequestsQuery,
+} from "~/lib/queries/team-admin";
 
 export const requestMoreSearchesMutation = action(
   async (amount: number, reason: string) => {
     const result = await requestMoreSearches(amount, reason);
-    return json(result, { revalidate: [mySearchAllowanceQuery.key, allowanceRequestsQuery.key] });
+    return json(result, {
+      revalidate: [mySearchAllowanceQuery.key, allowanceRequestsQuery.key],
+    });
   },
   "requestMoreSearches",
 );
@@ -32,10 +39,17 @@ export const grantMoreSearchesMutation = action(
 );
 
 export const updateSearchPolicyOverrideMutation = action(
-  async (input: { userId: number; monthlySearchLimit: number; expiresAt: number | null }) => {
+  async (input: {
+    userId: number;
+    monthlySearchLimit: number;
+    expiresAt: number | null;
+  }) => {
     const result = await updateSearchPolicyOverride(input);
     return json(result, {
-      revalidate: [managedExecutivesQuery.key, executiveCapacityDetailQuery.key],
+      revalidate: [
+        managedExecutivesQuery.key,
+        executiveCapacityDetailQuery.key,
+      ],
     });
   },
   "updateSearchPolicyOverride",

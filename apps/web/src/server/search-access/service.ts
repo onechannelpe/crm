@@ -83,7 +83,8 @@ export function createSearchAccessService(repos: Repositories) {
         if (remaining < amount) {
           return Err({
             reason: "search_exhausted",
-            message: "Monthly search allowance exhausted. Request more searches.",
+            message:
+              "Monthly search allowance exhausted. Request more searches.",
           });
         }
         await repos.searchAllowanceLedger.incrementUsage(ledger.id, amount);
@@ -116,10 +117,16 @@ export function createSearchAccessService(repos: Repositories) {
     ) {
       const { ledger } = await ensureLedger(targetUserId);
       await repos.searchAllowanceLedger.incrementExtra(ledger.id, amount);
-      await audit.log(actorUserId, "search_allowance_granted", "user", targetUserId, {
-        amount,
-        reason,
-      });
+      await audit.log(
+        actorUserId,
+        "search_allowance_granted",
+        "user",
+        targetUserId,
+        {
+          amount,
+          reason,
+        },
+      );
       return this.getStatus(targetUserId);
     },
   };

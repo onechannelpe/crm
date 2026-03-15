@@ -13,7 +13,9 @@ export async function searchClients(
   limit?: number,
 ): Promise<SearchResponse> {
   const session = await requirePermission("client_search:read");
-  const allowanceResult = await searchAccessService.consumeSearch(session.userId);
+  const allowanceResult = await searchAccessService.consumeSearch(
+    session.userId,
+  );
   if (isErr(allowanceResult)) {
     throw internalError(allowanceResult.error.message);
   }

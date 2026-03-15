@@ -174,7 +174,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("requested_amount", "integer", (col) => col.notNull())
     .addColumn("reason", "text", (col) => col.notNull())
     .addColumn("decision_note", "text")
-    .addColumn("reviewer_user_id", "integer", (col) => col.references("users.id"))
+    .addColumn("reviewer_user_id", "integer", (col) =>
+      col.references("users.id"),
+    )
     .addColumn("created_at", "integer", (col) => col.notNull())
     .addColumn("updated_at", "integer", (col) => col.notNull())
     .addColumn("decided_at", "integer")

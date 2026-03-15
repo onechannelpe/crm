@@ -1,7 +1,14 @@
 import { action, json } from "@solidjs/router";
 
-import { approveAllowanceRequest, rejectAllowanceRequest } from "~/actions/team-admin/mutations";
-import { allowanceRequestsQuery, executiveCapacityDetailQuery, managedExecutivesQuery } from "~/lib/queries/team-admin";
+import {
+  approveAllowanceRequest,
+  rejectAllowanceRequest,
+} from "~/actions/team-admin/mutations";
+import {
+  allowanceRequestsQuery,
+  executiveCapacityDetailQuery,
+  managedExecutivesQuery,
+} from "~/lib/queries/team-admin";
 
 export const approveAllowanceRequestMutation = action(
   async (requestId: number, note?: string) => {

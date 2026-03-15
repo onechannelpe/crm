@@ -2,10 +2,10 @@ import type { SessionData } from "~/lib/auth/access/session";
 import { longName } from "~/lib/users/display-name";
 import type { Repositories } from "~/server/shared/registry";
 
-import { createLeadOpsService } from "../lead-ops/service";
 import { createLeadPolicyService } from "../lead-ops/policy-service";
-import { createSearchAccessService } from "../search-access/service";
+import { createLeadOpsService } from "../lead-ops/service";
 import { createSearchPolicyService } from "../search-access/policy-service";
+import { createSearchAccessService } from "../search-access/service";
 import { canManageExecutive } from "./scope";
 
 export function createTeamAdminService(repos: Repositories) {
@@ -44,7 +44,9 @@ export function createTeamAdminService(repos: Repositories) {
       });
     }
 
-    return executives.sort((left, right) => left.fullName.localeCompare(right.fullName));
+    return executives.sort((left, right) =>
+      left.fullName.localeCompare(right.fullName),
+    );
   }
 
   return {
@@ -55,14 +57,19 @@ export function createTeamAdminService(repos: Repositories) {
       if (!managed.ok || !managed.target) {
         throw new Error("Forbidden");
       }
-      const [searchStatus, leadStatus, searchPolicyStatus, leadPolicyStatus, requests] =
-        await Promise.all([
-          searchAccess.getStatus(targetUserId),
-          leadOps.getStatus(targetUserId),
-          searchPolicy.getEffectivePolicy(targetUserId),
-          leadPolicy.getEffectivePolicy(targetUserId),
-          repos.allowanceRequests.listByUser(targetUserId),
-        ]);
+      const [
+        searchStatus,
+        leadStatus,
+        searchPolicyStatus,
+        leadPolicyStatus,
+        requests,
+      ] = await Promise.all([
+        searchAccess.getStatus(targetUserId),
+        leadOps.getStatus(targetUserId),
+        searchPolicy.getEffectivePolicy(targetUserId),
+        leadPolicy.getEffectivePolicy(targetUserId),
+        repos.allowanceRequests.listByUser(targetUserId),
+      ]);
       return {
         executive: {
           id: managed.target.id,
@@ -83,11 +90,15 @@ export function createTeamAdminService(repos: Repositories) {
     },
 
     async listPendingRequests(session: SessionData) {
-      const pending = await repos.allowanceRequests.listPendingByBranch(session.branchId);
+      const pending = await repos.allowanceRequests.listPendingByBranch(
+        session.branchId,
+      );
       if (session.role !== "supervisor") {
         return pending;
       }
-      const supervisedTeam = await repos.teams.findBySupervisorId(session.userId);
+      const supervisedTeam = await repos.teams.findBySupervisorId(
+        session.userId,
+      );
       if (!supervisedTeam) {
         return [];
       }

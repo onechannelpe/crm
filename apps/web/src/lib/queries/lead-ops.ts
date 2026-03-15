@@ -1,6 +1,9 @@
 import { query } from "@solidjs/router";
 
-import { getManagedExecutiveLeadCapacity, getMyLeadCapacity } from "~/actions/lead-ops/read";
+import {
+  getManagedExecutiveLeadCapacity,
+  getMyLeadCapacity,
+} from "~/actions/lead-ops/read";
 
 export const myLeadCapacityQuery = query(getMyLeadCapacity, "myLeadCapacity");
 

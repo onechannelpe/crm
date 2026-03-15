@@ -19,7 +19,10 @@ export function createSearchPolicyDefaultsRepo(db: Kysely<Database>) {
       period_type: "month";
       search_limit: number;
     }) {
-      const existing = await this.findForScope(values.scope_type, values.scope_id);
+      const existing = await this.findForScope(
+        values.scope_type,
+        values.scope_id,
+      );
       const now = Date.now();
       if (existing) {
         return db

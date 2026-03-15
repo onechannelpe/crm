@@ -33,7 +33,11 @@ export default function TeamRequestsPage() {
         </div>
         <Show
           when={requests().length > 0}
-          fallback={<p class="text-sm text-muted-foreground">No hay solicitudes pendientes.</p>}
+          fallback={
+            <p class="text-sm text-muted-foreground">
+              No hay solicitudes pendientes.
+            </p>
+          }
         >
           <Table>
             <TableHeader>
@@ -50,7 +54,8 @@ export default function TeamRequestsPage() {
                 {(request) => (
                   <TableRow>
                     <TableCell>
-                      {request.names} {request.first_surname} {request.second_surname}
+                      {request.names} {request.first_surname}{" "}
+                      {request.second_surname}
                     </TableCell>
                     <TableCell>
                       {request.kind === "search_extra"

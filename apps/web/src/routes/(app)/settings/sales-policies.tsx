@@ -112,9 +112,10 @@ export default function SalesPoliciesPage() {
                     <div>
                       <div class="font-medium">{team.teamName}</div>
                       <div class="text-sm text-muted-foreground">
-                        Búsquedas: {team.searchLimit ?? "usa default de sucursal"} | Buffer:{" "}
-                        {team.activeBufferTarget ?? "usa default"} | Refill:{" "}
-                        {team.dailyRefillLimit ?? "usa default"}
+                        Búsquedas:{" "}
+                        {team.searchLimit ?? "usa default de sucursal"} |
+                        Buffer: {team.activeBufferTarget ?? "usa default"} |
+                        Refill: {team.dailyRefillLimit ?? "usa default"}
                       </div>
                     </div>
                     <div class="grid gap-4 md:grid-cols-2">
@@ -138,7 +139,11 @@ export default function SalesPoliciesPage() {
                           type="number"
                           name="monthlySearchLimit"
                           label="Límite mensual"
-                          defaultValue={String(team.searchLimit ?? snapshot.branchSearchLimit ?? 250)}
+                          defaultValue={String(
+                            team.searchLimit ??
+                              snapshot.branchSearchLimit ??
+                              250,
+                          )}
                           required
                         />
                         <Button type="submit" variant="outline">
@@ -168,14 +173,22 @@ export default function SalesPoliciesPage() {
                           type="number"
                           name="activeBufferTarget"
                           label="Buffer activo"
-                          defaultValue={String(team.activeBufferTarget ?? snapshot.branchActiveBufferTarget ?? 10)}
+                          defaultValue={String(
+                            team.activeBufferTarget ??
+                              snapshot.branchActiveBufferTarget ??
+                              10,
+                          )}
                           required
                         />
                         <Input
                           type="number"
                           name="dailyRefillLimit"
                           label="Refill diario"
-                          defaultValue={String(team.dailyRefillLimit ?? snapshot.branchDailyRefillLimit ?? 25)}
+                          defaultValue={String(
+                            team.dailyRefillLimit ??
+                              snapshot.branchDailyRefillLimit ??
+                              25,
+                          )}
                           required
                         />
                         <Button type="submit" variant="outline">

@@ -8,20 +8,31 @@ import {
   updateLeadScopeDefault,
 } from "~/actions/lead-ops/mutations";
 import { myLeadCapacityQuery } from "~/lib/queries/lead-ops";
-import { allowanceRequestsQuery, executiveCapacityDetailQuery, managedExecutivesQuery, salesPolicyDefaultsQuery } from "~/lib/queries/team-admin";
 import { activeLeadsQuery } from "~/lib/queries/leads";
+import {
+  allowanceRequestsQuery,
+  executiveCapacityDetailQuery,
+  managedExecutivesQuery,
+  salesPolicyDefaultsQuery,
+} from "~/lib/queries/team-admin";
 
 export const requestLeadRefillNowMutation = action(async () => {
   const result = await requestLeadRefillNow();
   return json(result, {
-    revalidate: [activeLeadsQuery.key, myLeadCapacityQuery.key, managedExecutivesQuery.key],
+    revalidate: [
+      activeLeadsQuery.key,
+      myLeadCapacityQuery.key,
+      managedExecutivesQuery.key,
+    ],
   });
 }, "requestLeadRefillNow");
 
 export const requestMoreLeadRefillMutation = action(
   async (amount: number, reason: string) => {
     const result = await requestMoreLeadRefill(amount, reason);
-    return json(result, { revalidate: [allowanceRequestsQuery.key, myLeadCapacityQuery.key] });
+    return json(result, {
+      revalidate: [allowanceRequestsQuery.key, myLeadCapacityQuery.key],
+    });
   },
   "requestMoreLeadRefill",
 );
@@ -49,7 +60,10 @@ export const updateLeadPolicyOverrideMutation = action(
   }) => {
     const result = await updateLeadPolicyOverride(input);
     return json(result, {
-      revalidate: [managedExecutivesQuery.key, executiveCapacityDetailQuery.key],
+      revalidate: [
+        managedExecutivesQuery.key,
+        executiveCapacityDetailQuery.key,
+      ],
     });
   },
   "updateLeadPolicyOverride",

@@ -2,8 +2,11 @@ import { createAuditService } from "~/server/shared/audit";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, isErr, type Result } from "~/server/shared/result";
 
+import {
+  createLeadAssignmentService,
+  type LeadAssignmentError,
+} from "./assignment-service";
 import { availableLeadRefill, todayDateString } from "./domain";
-import { createLeadAssignmentService, type LeadAssignmentError } from "./assignment-service";
 import { createLeadPolicyService } from "./policy-service";
 
 export type LeadOpsError =
@@ -32,7 +35,10 @@ export function createLeadOpsService(repos: Repositories) {
       throw new Error("Lead refill ledger was not created");
     }
     if (ledger.base_limit !== policy.dailyRefillLimit) {
-      await repos.leadRefillLedger.syncBaseLimit(ledger.id, policy.dailyRefillLimit);
+      await repos.leadRefillLedger.syncBaseLimit(
+        ledger.id,
+        policy.dailyRefillLimit,
+      );
       ledger = await repos.leadRefillLedger.findByUserAndDate(userId, today);
     }
     if (!ledger) {
@@ -44,7 +50,8 @@ export function createLeadOpsService(repos: Repositories) {
   return {
     async getStatus(userId: number) {
       const { policy, ledger } = await ensureLedger(userId);
-      const activeAssignments = await repos.leadAssignments.countActiveByUser(userId);
+      const activeAssignments =
+        await repos.leadAssignments.countActiveByUser(userId);
       return {
         policySource: policy.source,
         activeBufferTarget: policy.activeBufferTarget,
@@ -66,8 +73,12 @@ export function createLeadOpsService(repos: Repositories) {
     ): Promise<Result<{ assigned: number; requested: number }, LeadOpsError>> {
       try {
         const { policy, ledger } = await ensureLedger(userId);
-        const activeAssignments = await repos.leadAssignments.countActiveByUser(userId);
-        const needed = Math.max(0, policy.activeBufferTarget - activeAssignments);
+        const activeAssignments =
+          await repos.leadAssignments.countActiveByUser(userId);
+        const needed = Math.max(
+          0,
+          policy.activeBufferTarget - activeAssignments,
+        );
         if (needed === 0) {
           return Ok({ assigned: 0, requested: 0 });
         }
@@ -84,11 +95,12 @@ export function createLeadOpsService(repos: Repositories) {
           });
         }
         await repos.leadRefillLedger.incrementUsage(ledger.id, allowed);
-        const assignmentResult = await assignmentService.assignLeadsForExecutive(
-          userId,
-          branchId,
-          allowed,
-        );
+        const assignmentResult =
+          await assignmentService.assignLeadsForExecutive(
+            userId,
+            branchId,
+            allowed,
+          );
         if (isErr(assignmentResult)) {
           await repos.leadRefillLedger.decrementUsage(ledger.id, allowed);
           return Err(assignmentResult.error);
@@ -118,10 +130,16 @@ export function createLeadOpsService(repos: Repositories) {
     ) {
       const { ledger } = await ensureLedger(targetUserId);
       await repos.leadRefillLedger.incrementExtra(ledger.id, amount);
-      await audit.log(actorUserId, "lead_refill_granted", "user", targetUserId, {
-        amount,
-        reason,
-      });
+      await audit.log(
+        actorUserId,
+        "lead_refill_granted",
+        "user",
+        targetUserId,
+        {
+          amount,
+          reason,
+        },
+      );
       return this.getStatus(targetUserId);
     },
   };

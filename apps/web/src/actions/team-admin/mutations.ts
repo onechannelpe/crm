@@ -2,13 +2,19 @@
 
 import { forbiddenError, notFoundError } from "~/lib/app-errors";
 import { requirePermission } from "~/lib/auth/access/session";
-import { assertNonEmptyString, assertPositiveInt } from "~/lib/contracts/guards";
+import {
+  assertNonEmptyString,
+  assertPositiveInt,
+} from "~/lib/contracts/guards";
 import { leadOpsService } from "~/server/shared/context";
 import { repos } from "~/server/shared/context";
 import { searchAccessService } from "~/server/shared/context";
 import { canManageExecutive } from "~/server/team-admin/scope";
 
-export async function approveAllowanceRequest(requestId: number, note?: string) {
+export async function approveAllowanceRequest(
+  requestId: number,
+  note?: string,
+) {
   const safeRequestId = assertPositiveInt(requestId, "requestId");
   const session = await requirePermission("team:manage");
   const request = await repos.allowanceRequests.findById(safeRequestId);
