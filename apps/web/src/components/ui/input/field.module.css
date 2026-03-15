@@ -41,24 +41,41 @@
 
 /* Extra right padding so text doesn't slide under the eye button */
 .controlWithReveal {
-  padding-right: 32px;
+  padding-right: 36px;
 }
 
 .revealButton {
   position: absolute;
-  right: 6px;
+  right: 4px;
+  width: 24px;
+  height: 24px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0;
-  background: none;
+  background: transparent;
   border: none;
   color: var(--muted-foreground);
   cursor: pointer;
   line-height: 0;
+  border-radius: var(--radius-sm);
+  transition:
+    color var(--motion-fast) linear,
+    background-color var(--motion-fast) linear,
+    box-shadow var(--motion-fast) linear;
 }
 
 .revealButton:hover {
+  color: var(--foreground);
+  background: color-mix(in oklab, var(--surface) 76%, var(--accent) 24%);
+}
+
+.revealButton:focus-visible {
+  color: var(--foreground);
+  box-shadow: var(--focus-ring-shadow);
+}
+
+.revealButton[aria-pressed="true"] {
   color: var(--foreground);
 }
 

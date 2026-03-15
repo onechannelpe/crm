@@ -4,6 +4,11 @@
   gap: 12px;
 }
 
+.credentialForm {
+  animation: credential-enter var(--motion-normal) linear;
+  will-change: opacity;
+}
+
 /* position: relative so LastUsedPill can bleed outside */
 .ssoButtonContainer {
   position: relative;
@@ -57,5 +62,21 @@
 
   .supportText {
     font-size: var(--font-size-body);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .credentialForm {
+    animation: none;
+  }
+}
+
+@keyframes credential-enter {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
   }
 }
