@@ -2,11 +2,11 @@ import { type JSX, mergeProps, splitProps } from "solid-js";
 
 import { cn } from "~/lib/utils";
 
-import buttonStyles from "./button.module.css";
 import type { ButtonSize, ButtonVariant } from "./button";
 
-export interface ButtonLinkProps
-  extends JSX.AnchorHTMLAttributes<HTMLAnchorElement> {
+import buttonStyles from "./button.module.css";
+
+export interface ButtonLinkProps extends JSX.AnchorHTMLAttributes<HTMLAnchorElement> {
   href: string;
   variant?: ButtonVariant;
   size?: ButtonSize;

@@ -1,24 +1,20 @@
 import type { ActionRequestContext } from "~/lib/observability/context";
+import {
+  AUTH_FUNNEL_METHODS,
+  AUTH_FUNNEL_SCREENS,
+  isAuthFunnelScreen,
+  type AuthFunnelMethod,
+  type AuthFunnelScreen,
+} from "~/lib/observability/auth-funnel";
 import { observabilityService } from "~/server/shared/context";
 
-export const AUTH_ANALYTICS_SCREENS = [
-  "login",
-  "login_user",
-  "login_verify",
-  "login_passkey",
-  "reset_password",
-] as const;
+export const AUTH_ANALYTICS_SCREENS = AUTH_FUNNEL_SCREENS;
 
-export type AuthAnalyticsScreen = (typeof AUTH_ANALYTICS_SCREENS)[number];
+export type AuthAnalyticsScreen = AuthFunnelScreen;
 
-export const AUTH_ANALYTICS_METHODS = [
-  "password",
-  "password_totp",
-  "passkey",
-  "google",
-] as const;
+export const AUTH_ANALYTICS_METHODS = AUTH_FUNNEL_METHODS;
 
-export type AuthAnalyticsMethod = (typeof AUTH_ANALYTICS_METHODS)[number];
+export type AuthAnalyticsMethod = AuthFunnelMethod;
 
 export type AuthClientAnalyticsEvent =
   | {
@@ -82,10 +78,7 @@ export type AuthAnalyticsEvent =
 export function isAuthAnalyticsScreen(
   value: unknown,
 ): value is AuthAnalyticsScreen {
-  return (
-    typeof value === "string" &&
-    AUTH_ANALYTICS_SCREENS.some((screen) => screen === value)
-  );
+  return isAuthFunnelScreen(value);
 }
 
 export function recordAuthAnalyticsEvent(
