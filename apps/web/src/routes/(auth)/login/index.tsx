@@ -85,11 +85,15 @@ export default function LoginPage() {
             class={styles.full}
             loading={passkeyLogin.busy()}
             onClick={() => {
+              loginMethods.markUsed("passkey");
               void passkeyLogin.startDiscoverable();
             }}
           >
             Entrar con llave de acceso
           </Button>
+          <Show when={loginMethods.lastUsedMethod() === "passkey"}>
+            <LastUsedPill />
+          </Show>
           <Show when={passkeyLogin.error()}>
             {(message) => (
               <p class={pageStyles.formError} role="alert">

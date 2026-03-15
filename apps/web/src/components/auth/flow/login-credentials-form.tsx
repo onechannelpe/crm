@@ -109,6 +109,7 @@ export function LoginCredentialsForm() {
             void passkeyLogin.retry();
           }}
           onStart={() => {
+            loginMethods.markUsed("passkey");
             void passkeyLogin.start(username());
           }}
         />
