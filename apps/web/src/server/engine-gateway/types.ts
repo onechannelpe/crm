@@ -10,12 +10,4 @@ export interface DirectSearchInput {
   limit?: number;
 }
 
-export interface LeadCandidate {
-  organizationId: number;
-  organizationName: string;
-  ruc: string;
-  dni: string;
-  name: string;
-  phonePrimary: string | null;
-  requiresBranchLock: boolean;
-}
+export type { LeadCandidate } from "~/server/shared/engine/types";

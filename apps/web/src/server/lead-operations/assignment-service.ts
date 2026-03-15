@@ -14,27 +14,23 @@ export function createLeadAssignmentService(repos: Repositories) {
   return {
     async assignCandidatesToExecutive(
       userId: number,
-      branchId: number,
       candidates: LeadCandidate[],
     ): Promise<Result<number, LeadAssignmentError>> {
       try {
         const assignments = [];
 
         for (const candidate of candidates) {
+          const organization = await repos.organizations.findOrCreate(
+            candidate.ruc,
+            candidate.organization_name,
+          );
           const contact = await repos.contacts.findOrCreate(
-            candidate.organizationId,
+            organization.id,
             candidate.dni,
-            candidate.name,
-            candidate.phonePrimary,
+            candidate.person_name,
+            candidate.phone_primary,
           );
           if (!canContactNow(contact)) continue;
-          if (candidate.requiresBranchLock) {
-            await repos.organizations.lockToBranch(
-              candidate.organizationId,
-              branchId,
-              userId,
-            );
-          }
           assignments.push(createAssignment(userId, contact.id));
         }
 

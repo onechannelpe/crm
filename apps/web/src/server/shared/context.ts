@@ -4,7 +4,6 @@ import { createPrivilegedLoginAlertSender } from "~/lib/auth/security/login-aler
 import { config } from "~/lib/config";
 import { db } from "~/lib/db/db";
 import { env } from "~/lib/env";
-import { createCapacityApprovalService } from "~/server/capacity/approval-service";
 import { createCapacityReadService } from "~/server/capacity/read-service";
 import { createCapacityRequestService } from "~/server/capacity/request-service";
 import { createSearchEnrichmentService } from "~/server/client-search/enrichment-service";
@@ -45,7 +44,6 @@ export const searchReadService = createSearchReadService(repos);
 export const leadRefillService = createLeadRefillService(repos);
 export const leadReadService = createLeadReadService(repos);
 export const capacityRequestService = createCapacityRequestService(repos);
-export const capacityApprovalService = createCapacityApprovalService(repos);
 export const capacityReadService = createCapacityReadService(repos);
 export const extensionService = createExtensionService(repos, {
   runInTransaction: runInRepositoryTransaction,

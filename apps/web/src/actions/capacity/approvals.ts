@@ -8,12 +8,13 @@ import {
   assertPositiveInt,
 } from "~/lib/contracts/guards";
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
+import { createCapacityApprovalService } from "~/server/capacity/approval-service";
 import { canManageExecutive } from "~/server/capacity/scope";
 import {
   searchAllowanceService,
   leadRefillService,
-  capacityApprovalService,
   repos,
+  runInRepositoryTransaction,
 } from "~/server/shared/context";
 
 export async function approveCapacityRequest(requestId: number, note?: string) {
@@ -25,11 +26,14 @@ export async function approveCapacityRequest(requestId: number, note?: string) {
   const managed = await canManageExecutive(session, request.user_id, repos);
   if (!managed.ok) throw forbiddenError("Cannot approve this request");
   try {
-    return await capacityApprovalService.approveCapacityRequest(
-      session.userId,
-      request.id,
-      note?.trim() || null,
-    );
+    return await runInRepositoryTransaction(async (transactionRepos) => {
+      const approvalService = createCapacityApprovalService(transactionRepos);
+      return approvalService.approveCapacityRequest(
+        session.userId,
+        request.id,
+        note?.trim() || null,
+      );
+    });
   } catch (error) {
     throw internalError(
       error instanceof Error ? error.message : "Approval failed",
@@ -47,11 +51,14 @@ export async function rejectCapacityRequest(requestId: number, note: string) {
   const managed = await canManageExecutive(session, request.user_id, repos);
   if (!managed.ok) throw forbiddenError("Cannot reject this request");
   try {
-    return await capacityApprovalService.rejectCapacityRequest(
-      session.userId,
-      request.id,
-      safeNote,
-    );
+    return await runInRepositoryTransaction(async (transactionRepos) => {
+      const approvalService = createCapacityApprovalService(transactionRepos);
+      return approvalService.rejectCapacityRequest(
+        session.userId,
+        request.id,
+        safeNote,
+      );
+    });
   } catch (error) {
     throw internalError(
       error instanceof Error ? error.message : "Rejection failed",

@@ -26,7 +26,7 @@ export type LeadRefillError =
 export function createLeadRefillService(repos: Repositories) {
   const policyService = createLeadPolicyService(repos);
   const assignmentService = createLeadAssignmentService(repos);
-  const candidateService = createLeadCandidateService(repos);
+  const candidateService = createLeadCandidateService();
   const audit = createAuditService(repos);
 
   async function ensureLedger(userId: number) {
@@ -124,7 +124,6 @@ export function createLeadRefillService(repos: Repositories) {
         const assignmentResult =
           await assignmentService.assignCandidatesToExecutive(
             userId,
-            branchId,
             candidateResult.value,
           );
         if (isErr(assignmentResult)) {

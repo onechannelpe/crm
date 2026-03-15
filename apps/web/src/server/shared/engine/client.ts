@@ -5,8 +5,15 @@ import {
 } from "~/server/shared/engine/contract";
 import { validateSearchInput } from "~/server/shared/engine/input";
 import { signRequest } from "~/server/shared/engine/signature";
-import type { SearchResponse, SearchType } from "~/server/shared/engine/types";
-import { assertSearchResponse } from "~/server/shared/engine/validation";
+import type {
+  LeadCandidatesResponse,
+  SearchResponse,
+  SearchType,
+} from "~/server/shared/engine/types";
+import {
+  assertLeadCandidatesResponse,
+  assertSearchResponse,
+} from "~/server/shared/engine/validation";
 
 export interface EngineClient {
   search(
@@ -14,6 +21,11 @@ export interface EngineClient {
     value: string,
     limit?: number,
   ): Promise<SearchResponse>;
+  leadCandidates(input: {
+    branchId: number;
+    userId: number;
+    amount: number;
+  }): Promise<LeadCandidatesResponse>;
   health(): Promise<boolean>;
 }
 
@@ -46,6 +58,25 @@ export function createEngineClient(config: EngineClientConfig): EngineClient {
 
       const payload = (await response.json()) as unknown;
       return assertSearchResponse(payload);
+    },
+
+    async leadCandidates(input) {
+      const body = JSON.stringify({
+        branch_id: input.branchId,
+        user_id: input.userId,
+        amount: input.amount,
+      });
+      const response = await post(
+        engineApiPath(ENGINE_ENDPOINTS.leadCandidates),
+        body,
+      );
+
+      if (!response.ok) {
+        throw new Error(`Engine request failed with status ${response.status}`);
+      }
+
+      const payload = (await response.json()) as unknown;
+      return assertLeadCandidatesResponse(payload);
     },
 
     async health() {

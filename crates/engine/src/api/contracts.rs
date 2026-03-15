@@ -31,6 +31,29 @@ pub struct SearchResponse {
     pub count: usize,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct LeadCandidateRequest {
+    pub branch_id: i64,
+    pub user_id: i64,
+    #[serde(default = "default_limit")]
+    pub amount: usize,
+}
+
+#[derive(Debug, Serialize)]
+pub struct LeadCandidate {
+    pub ruc: String,
+    pub organization_name: String,
+    pub dni: String,
+    pub person_name: String,
+    pub phone_primary: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct LeadCandidateResponse {
+    pub candidates: Vec<LeadCandidate>,
+    pub count: usize,
+}
+
 #[derive(Debug, Serialize)]
 pub struct HealthResponse {
     pub status: &'static str,
