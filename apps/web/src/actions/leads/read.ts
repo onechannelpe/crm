@@ -8,6 +8,6 @@ type ActiveLead = Awaited<
 >[number];
 
 export async function getActiveLeads(): Promise<ActiveLead[]> {
-  const session = await requirePermission("leads:read");
+  const session = await requirePermission("lead:work");
   return repos.leadAssignments.findActiveByUserWithContacts(session.userId);
 }

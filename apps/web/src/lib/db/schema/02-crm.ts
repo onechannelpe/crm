@@ -164,7 +164,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createTable("allowance_requests")
+    .createTable("capacity_requests")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("user_id", "integer", (col) =>
       col.notNull().references("users.id"),
@@ -183,8 +183,8 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createIndex("idx_allowance_requests_user_status")
-    .on("allowance_requests")
+    .createIndex("idx_capacity_requests_user_status")
+    .on("capacity_requests")
     .columns(["user_id", "status"])
     .execute();
 

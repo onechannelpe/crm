@@ -1,5 +1,5 @@
 import { internalError } from "~/lib/app-errors";
-import type { LeadAssignmentError } from "~/server/lead-ops/assignment-service";
+import type { LeadAssignmentError } from "~/server/lead-operations/assignment-service";
 
 export function throwLeadError(error: LeadAssignmentError): never {
   switch (error.reason) {

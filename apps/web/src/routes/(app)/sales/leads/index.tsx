@@ -11,9 +11,9 @@ import {
   isExtensionBridgeConfigured,
 } from "~/lib/extension/runtime";
 import { useExtensionStateObserver } from "~/lib/extension/use-extension-state-observer";
-import { requestLeadRefillNowMutation } from "~/lib/mutations/lead-ops";
+import { requestLeadRefillNowMutation } from "~/lib/mutations/lead-operations";
 import { registerCallMutation } from "~/lib/mutations/leads";
-import { myLeadCapacityQuery } from "~/lib/queries/lead-ops";
+import { myLeadCapacityQuery } from "~/lib/queries/lead-operations";
 import { activeLeadsQuery } from "~/lib/queries/leads";
 import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
 

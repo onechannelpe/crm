@@ -43,7 +43,7 @@ export async function registerCall(
 ): Promise<RegisterCallResult> {
   const safeAssignmentId = assertPositiveInt(assignmentId, "assignmentId");
   const safeContactId = assertPositiveInt(contactId, "contactId");
-  const session = await requirePermission("leads:read");
+  const session = await requirePermission("lead:work");
   if (outcome === "sale_made") {
     await requirePermission("sales:create");
   }

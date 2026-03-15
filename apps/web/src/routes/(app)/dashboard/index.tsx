@@ -3,7 +3,7 @@ import { createMemo, For } from "solid-js";
 
 import { AppPage } from "~/components/layout/page";
 import { dashboardStatsQuery } from "~/lib/queries/dashboard";
-import { myLeadCapacityQuery } from "~/lib/queries/lead-ops";
+import { myLeadCapacityQuery } from "~/lib/queries/lead-operations";
 
 import styles from "./dashboard-page.module.css";
 

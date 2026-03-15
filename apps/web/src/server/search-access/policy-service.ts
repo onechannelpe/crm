@@ -8,7 +8,9 @@ export interface EffectiveSearchPolicy {
 
 export function createSearchPolicyService(repos: Repositories) {
   return {
-    async getEffectivePolicy(userId: number): Promise<EffectiveSearchPolicy> {
+    async getEffectiveSearchPolicy(
+      userId: number,
+    ): Promise<EffectiveSearchPolicy> {
       const now = Date.now();
       const user = await repos.users.findById(userId);
       if (!user) {
@@ -82,6 +84,10 @@ export function createSearchPolicyService(repos: Repositories) {
         expires_at: input.expiresAt,
         set_by_user_id: input.setByUserId,
       });
+    },
+
+    getEffectivePolicy(userId: number) {
+      return this.getEffectiveSearchPolicy(userId);
     },
   };
 }

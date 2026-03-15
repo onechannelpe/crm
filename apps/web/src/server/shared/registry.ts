@@ -10,6 +10,7 @@ import {
   createUserTotpFactorsRepo,
   createUserTotpRecoveryCodesRepo,
 } from "~/server/auth/repos-user-totp-factors";
+import { createCapacityRequestsRepo } from "~/server/capacity/repos";
 import { createSearchEnrichmentRepo } from "~/server/client-search/repos-enrichment";
 import { createClientSearchViewsRepo } from "~/server/client-search/repos-views";
 import { createContactsRepo } from "~/server/contacts/repos-contacts";
@@ -21,7 +22,7 @@ import {
   createLeadPolicyDefaultsRepo,
   createLeadPolicyOverridesRepo,
   createLeadRefillLedgerRepo,
-} from "~/server/lead-ops/repos";
+} from "~/server/lead-operations/repos";
 import { createLeadAssignmentsRepo } from "~/server/leads/repos";
 import { createAppNotificationsRepo } from "~/server/notifications/repos-app-notifications";
 import { createNotificationCampaignsRepo } from "~/server/notifications/repos-campaigns";
@@ -38,7 +39,6 @@ import {
 } from "~/server/search-access/repos";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
-import { createAllowanceRequestsRepo } from "~/server/team-admin/repos";
 import { createBranchesRepo } from "~/server/users/repos-branches";
 import { createPasskeysRepo } from "~/server/users/repos-passkeys";
 import { createTeamsRepo } from "~/server/users/repos-teams";
@@ -73,7 +73,7 @@ export function createRepositories(db: Kysely<Database>) {
     leadPolicyDefaults: createLeadPolicyDefaultsRepo(db),
     leadPolicyOverrides: createLeadPolicyOverridesRepo(db),
     leadRefillLedger: createLeadRefillLedgerRepo(db),
-    allowanceRequests: createAllowanceRequestsRepo(db),
+    capacityRequests: createCapacityRequestsRepo(db),
     reportExportJobs: createReportExportRepo(db),
     salesRecords: createSalesRecordsRepo(db),
     interactionLogs: createInteractionLogsRepo(db),

@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
-import { managedExecutivesQuery } from "~/lib/queries/team-admin";
+import { managedExecutivesQuery } from "~/lib/queries/capacity";
 
 export default function TeamPage() {
   const executives = createAsync(() => managedExecutivesQuery(), {
@@ -41,7 +41,7 @@ export default function TeamPage() {
             <A href="/team/requests" class="underline">
               Solicitudes pendientes
             </A>
-            <A href="/settings/sales-policies" class="underline">
+            <A href="/admin/capacity-policies" class="underline">
               Políticas
             </A>
           </div>
@@ -108,7 +108,7 @@ export default function TeamPage() {
                     </TableCell>
                     <TableCell>
                       <A
-                        href={`/team/members/${executive.id}`}
+                        href={`/team/members/${executive.id}/capacity`}
                         class="underline"
                       >
                         Abrir

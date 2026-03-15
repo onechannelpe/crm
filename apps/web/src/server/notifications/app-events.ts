@@ -4,8 +4,9 @@ export type AppNotificationPriority = "high" | "normal" | "low";
 
 export interface AppNotificationEvent {
   type:
-    | "lead.more_requested"
-    | "lead.request_resolved"
+    | "capacity.request_submitted"
+    | "capacity.request_approved"
+    | "capacity.request_rejected"
     | "search.allowance_granted"
     | "lead.refill_granted"
     | "sale.submitted"

@@ -47,7 +47,7 @@ function mapView(
 }
 
 export async function listClientSearchViews(): Promise<ClientSearchView[]> {
-  const session = await requirePermission("client_search:read");
+  const session = await requirePermission("search:use");
   const views = await repos.clientSearchViews.listByUser(session.userId);
   return views.map(mapView);
 }
@@ -66,7 +66,7 @@ export async function createClientSearchView(
     throw validationError("searchType is invalid");
   }
 
-  const session = await requirePermission("client_search:read");
+  const session = await requirePermission("search:use");
   const existingViews = await repos.clientSearchViews.listByUser(
     session.userId,
   );
@@ -107,7 +107,7 @@ export async function updateClientSearchView(
     throw validationError("searchType is invalid");
   }
 
-  const session = await requirePermission("client_search:read");
+  const session = await requirePermission("search:use");
 
   const updated = await repos.clientSearchViews.update(safeId, session.userId, {
     name: safeName,
@@ -121,14 +121,14 @@ export async function updateClientSearchView(
 
 export async function deleteClientSearchView(id: number): Promise<void> {
   const safeId = assertPositiveInt(id, "id");
-  const session = await requirePermission("client_search:read");
+  const session = await requirePermission("search:use");
 
   await repos.clientSearchViews.delete(safeId, session.userId);
 }
 
 export async function setDefaultClientSearchView(id: number): Promise<void> {
   const safeId = assertPositiveInt(id, "id");
-  const session = await requirePermission("client_search:read");
+  const session = await requirePermission("search:use");
 
   const existing = await repos.clientSearchViews.findByIdForUser(
     safeId,

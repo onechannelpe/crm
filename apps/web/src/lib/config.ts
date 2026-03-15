@@ -9,7 +9,7 @@ export const config = {
     defaultMonthlyLimit: 250,
     maxMonthlyLimit: 5_000,
   },
-  allowanceRequests: {
+  capacityRequests: {
     defaultSearchRequestAmount: 25,
     defaultLeadRefillRequestAmount: 10,
     maxRequestAmount: 500,

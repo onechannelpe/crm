@@ -343,11 +343,11 @@ export interface LeadRefillLedgerTable {
   updated_at: number;
 }
 
-export interface AllowanceRequestsTable {
+export interface CapacityRequestsTable {
   id: Generated<number>;
   user_id: number;
   kind: "search_extra" | "lead_refill_extra";
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "rejected" | "canceled";
   requested_amount: number;
   reason: string;
   decision_note: string | null;
@@ -737,7 +737,7 @@ export interface Database {
   lead_policy_defaults: LeadPolicyDefaultsTable;
   lead_policy_overrides: LeadPolicyOverridesTable;
   lead_refill_ledger: LeadRefillLedgerTable;
-  allowance_requests: AllowanceRequestsTable;
+  capacity_requests: CapacityRequestsTable;
   products: ProductsTable;
   interaction_logs: InteractionLogsTable;
   inventory_items: InventoryItemsTable;
@@ -785,7 +785,7 @@ export type SalesRecordAttempt = Selectable<SalesRecordAttemptsTable>;
 export type LeadPolicyDefault = Selectable<LeadPolicyDefaultsTable>;
 export type LeadPolicyOverride = Selectable<LeadPolicyOverridesTable>;
 export type LeadRefillLedger = Selectable<LeadRefillLedgerTable>;
-export type AllowanceRequest = Selectable<AllowanceRequestsTable>;
+export type CapacityRequest = Selectable<CapacityRequestsTable>;
 export type Product = Selectable<ProductsTable>;
 export type InteractionLog = Selectable<InteractionLogsTable>;
 export type InventoryItem = Selectable<InventoryItemsTable>;
@@ -838,7 +838,7 @@ export type NewSalesRecordAttempt = Insertable<SalesRecordAttemptsTable>;
 export type NewLeadPolicyDefault = Insertable<LeadPolicyDefaultsTable>;
 export type NewLeadPolicyOverride = Insertable<LeadPolicyOverridesTable>;
 export type NewLeadRefillLedger = Insertable<LeadRefillLedgerTable>;
-export type NewAllowanceRequest = Insertable<AllowanceRequestsTable>;
+export type NewCapacityRequest = Insertable<CapacityRequestsTable>;
 export type NewInteractionLog = Insertable<InteractionLogsTable>;
 export type NewAuditLog = Insertable<AuditLogsTable>;
 export type NewAuditActionPolicy = Insertable<AuditActionPoliciesTable>;

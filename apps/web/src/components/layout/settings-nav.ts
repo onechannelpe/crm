@@ -51,7 +51,7 @@ export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
   {
     id: "sales-policies",
     label: "Políticas comerciales",
-    href: "/settings/sales-policies",
+    href: "/admin/capacity-policies",
     icon: Settings,
     section: "workspace",
     advanced: true,

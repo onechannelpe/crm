@@ -4,10 +4,12 @@ import { createSignal } from "solid-js";
 import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
-import { requestMoreLeadRefillMutation } from "~/lib/mutations/lead-ops";
-import { requestMoreSearchesMutation } from "~/lib/mutations/search-access";
-import { myLeadCapacityQuery } from "~/lib/queries/lead-ops";
-import { mySearchAllowanceQuery } from "~/lib/queries/search-access";
+import {
+  requestMoreLeadRefillMutation,
+  requestMoreSearchesMutation,
+} from "~/lib/mutations/capacity";
+import { myLeadCapacityQuery } from "~/lib/queries/lead-operations";
+import { mySearchAllowanceQuery } from "~/lib/queries/search";
 
 export default function MyCapacityPage() {
   const searchStatus = createAsync(() => mySearchAllowanceQuery());

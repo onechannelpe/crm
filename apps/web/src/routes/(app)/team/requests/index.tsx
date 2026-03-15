@@ -11,16 +11,18 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
-import { approveAllowanceRequestMutation } from "~/lib/mutations/team-admin";
-import { rejectAllowanceRequestMutation } from "~/lib/mutations/team-admin";
-import { allowanceRequestsQuery } from "~/lib/queries/team-admin";
+import {
+  approveCapacityRequestMutation,
+  rejectCapacityRequestMutation,
+} from "~/lib/mutations/capacity";
+import { pendingCapacityRequestsQuery } from "~/lib/queries/capacity";
 
 export default function TeamRequestsPage() {
-  const requests = createAsync(() => allowanceRequestsQuery(), {
+  const requests = createAsync(() => pendingCapacityRequestsQuery(), {
     initialValue: [],
   });
-  const approve = useAction(approveAllowanceRequestMutation);
-  const reject = useAction(rejectAllowanceRequestMutation);
+  const approve = useAction(approveCapacityRequestMutation);
+  const reject = useAction(rejectCapacityRequestMutation);
 
   return (
     <AppPage width="full">

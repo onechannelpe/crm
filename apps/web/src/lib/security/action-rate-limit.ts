@@ -16,6 +16,9 @@ interface ActionRateLimitPolicy {
 
 export const ACTION_RATE_LIMIT_POLICY = {
   "leads.request": { limit: 10, ipLimit: 50, windowMs: 60_000 },
+  "search.use": { limit: 120, ipLimit: 300, windowMs: 60_000 },
+  "capacity.request": { limit: 20, ipLimit: 60, windowMs: 60_000 },
+  "capacity.approve": { limit: 60, ipLimit: 180, windowMs: 60_000 },
   "sales_records.create_draft": { limit: 20, ipLimit: 100, windowMs: 60_000 },
   "sales_records.submit": { limit: 30, ipLimit: 150, windowMs: 60_000 },
   "team.invite.create": { limit: 10, ipLimit: 30, windowMs: 60 * 60_000 },

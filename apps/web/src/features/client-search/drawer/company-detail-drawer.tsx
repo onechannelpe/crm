@@ -158,7 +158,7 @@ export function CompanyDetailDrawer(props: CompanyDetailDrawerProps) {
             title="Contactos"
             linkHref={
               props.group.ruc
-                ? `/contacts/search?type=ruc&query=${encodeURIComponent(props.group.ruc)}&limit=20`
+                ? `/search?type=ruc&query=${encodeURIComponent(props.group.ruc)}&limit=20`
                 : undefined
             }
             linkLabel={

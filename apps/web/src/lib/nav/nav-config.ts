@@ -61,7 +61,7 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
     header: { label: "Detalle", icon: "confirmed" },
   },
   {
-    match: /^\/team\/members\/[^/]+$/,
+    match: /^\/team\/members\/[^/]+\/capacity$/,
     header: { label: "Capacidad del ejecutivo", icon: "team" },
   },
 
@@ -73,7 +73,7 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
   },
   { match: "/schedule", header: { label: "Agenda", icon: "schedule" } },
   {
-    match: "/contacts/search",
+    match: "/search",
     header: { label: "Buscar contactos", icon: "search" },
   },
   { match: "/sales/leads", header: { label: "Prospectos", icon: "leads" } },
@@ -112,7 +112,7 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
   { match: "/monitoring", header: { label: "Monitoreo", icon: "monitoring" } },
   { match: "/settings/profile", header: { label: "Perfil", icon: "profile" } },
   {
-    match: "/settings/sales-policies",
+    match: "/admin/capacity-policies",
     header: { label: "Políticas comerciales", icon: "settings" },
   },
 ];
@@ -151,15 +151,15 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
   // Secondary › Comercial
   {
     id: "contacts-search",
-    href: "/contacts/search",
-    activePrefixes: ["/contacts/search"],
+    href: "/search",
+    activePrefixes: ["/search"],
     label: "Buscar contactos",
     navLabel: "Contactos",
     icon: "search",
     section: "secondary",
     order: 1,
     group: "Comercial",
-    children: [{ href: "/contacts/search", label: "Buscar", order: 1 }],
+    children: [{ href: "/search", label: "Buscar", order: 1 }],
   },
   {
     id: "sales",

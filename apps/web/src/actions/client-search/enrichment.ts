@@ -24,7 +24,7 @@ export async function requestSearchEnrichment(
   documentType: string,
   documentValue: string,
 ) {
-  const session = await requirePermission("client_search:read");
+  const session = await requirePermission("search:use");
   const result = await searchEnrichmentService.request(
     assertDocumentType(documentType),
     documentValue,
@@ -38,7 +38,7 @@ export async function getSearchEnrichmentStatus(
   documentType: string,
   documentValue: string,
 ) {
-  await requirePermission("client_search:read");
+  await requirePermission("search:use");
   const result = await searchEnrichmentService.status(
     assertDocumentType(documentType),
     documentValue,

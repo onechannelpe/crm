@@ -9,13 +9,19 @@ export type Role =
   | "superuser";
 
 export type Permission =
-  | "leads:read"
-  | "leads:request"
+  | "lead:work"
   | "sales:create"
   | "sales:submit"
   | "sales:review"
   | "sales:approve"
-  | "client_search:read"
+  | "search:use"
+  | "capacity:read:self"
+  | "capacity:request:self"
+  | "capacity:read:team"
+  | "capacity:manage"
+  | "capacity:approve"
+  | "capacity:policy:manage"
+  | "capacity:audit:read"
   | "team:read"
   | "team:manage"
   | "inventory:read"
@@ -39,33 +45,45 @@ export const ROLES = [
 
 const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   executive: [
-    "leads:read",
-    "leads:request",
+    "lead:work",
     "sales:create",
     "sales:submit",
-    "client_search:read",
+    "search:use",
+    "capacity:read:self",
+    "capacity:request:self",
   ],
   supervisor: [
-    "leads:read",
-    "leads:request",
+    "lead:work",
     "sales:create",
     "sales:submit",
     "sales:review",
     "sales:approve",
-    "client_search:read",
+    "search:use",
+    "capacity:read:self",
+    "capacity:request:self",
+    "capacity:read:team",
+    "capacity:manage",
+    "capacity:approve",
     "team:read",
     "team:manage",
     "audit:read",
   ],
   back_office: ["sales:review", "sales:approve", "audit:read"],
   sales_manager: [
-    "leads:read",
+    "lead:work",
     "sales:review",
     "sales:approve",
+    "search:use",
+    "capacity:read:self",
+    "capacity:request:self",
+    "capacity:read:team",
+    "capacity:manage",
+    "capacity:approve",
+    "capacity:policy:manage",
+    "capacity:audit:read",
     "team:read",
     "team:manage",
     "inventory:read",
-    "client_search:read",
     "audit:read",
     "admin:read",
     "admin:manage",
@@ -73,13 +91,20 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   logistics: ["inventory:read", "inventory:manage"],
   hr: ["hr:read", "hr:manage", "team:read"],
   admin: [
-    "leads:read",
+    "lead:work",
     "sales:review",
+    "search:use",
+    "capacity:read:self",
+    "capacity:request:self",
+    "capacity:read:team",
+    "capacity:manage",
+    "capacity:approve",
+    "capacity:policy:manage",
+    "capacity:audit:read",
     "team:read",
     "team:manage",
     "inventory:read",
     "inventory:manage",
-    "client_search:read",
     "hr:read",
     "hr:manage",
     "admin:read",
@@ -87,13 +112,19 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "audit:read",
   ],
   superuser: [
-    "leads:read",
-    "leads:request",
+    "lead:work",
     "sales:create",
     "sales:submit",
     "sales:review",
     "sales:approve",
-    "client_search:read",
+    "search:use",
+    "capacity:read:self",
+    "capacity:request:self",
+    "capacity:read:team",
+    "capacity:manage",
+    "capacity:approve",
+    "capacity:policy:manage",
+    "capacity:audit:read",
     "team:read",
     "team:manage",
     "inventory:read",

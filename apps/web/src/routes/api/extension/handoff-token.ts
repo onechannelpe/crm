@@ -9,7 +9,7 @@ import { readJsonBody } from "./json-body";
 
 export async function POST(event: APIEvent): Promise<Response> {
   try {
-    const session = await requirePermission("leads:read");
+    const session = await requirePermission("lead:work");
     const parsed = await readJsonBody(event.request);
     if (!parsed.ok) {
       return parsed.response;
