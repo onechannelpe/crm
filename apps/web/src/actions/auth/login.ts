@@ -9,8 +9,9 @@ import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
 import {
   submitPasswordLogin,
-  submitTotpForLoginFlow,
-} from "~/lib/auth/login-flow";
+  type SubmitPrimaryLoginError,
+} from "~/lib/auth/flows/primary-login-service";
+import { submitTotpForLoginFlow } from "~/lib/auth/flows/totp-step-up-service";
 import { parseLoginFlowId } from "~/lib/auth/login-route-flow";
 import {
   createPasskeyAuthService,
@@ -18,7 +19,7 @@ import {
   type BeginPasskeyLoginError,
 } from "~/lib/auth/passkey/service";
 import { getClientIp } from "~/lib/auth/password/client-ip";
-import { replaceCurrentSession } from "~/lib/auth/session/session-issuer";
+import { replaceCurrentSession } from "~/lib/auth/session/session-transition";
 import { getActionRequestContext } from "~/lib/observability/context";
 import { privilegedLoginAlertSender, repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
@@ -102,10 +103,9 @@ function resolvePasskeyStartAnalyticsCode(
   return error.kind === "unexpected" ? "internal" : "invalid_credentials";
 }
 
-function normalizePasswordLoginError(error: {
-  kind: "invalid_credentials" | "strong_auth_required" | "unexpected";
-  message?: string;
-}): PasswordLoginSubmissionResult {
+function normalizePasswordLoginError(
+  error: SubmitPrimaryLoginError,
+): PasswordLoginSubmissionResult {
   if (error.kind === "unexpected") {
     throw internalError(error.message ?? "Unexpected password login failure");
   }
@@ -116,9 +116,9 @@ function normalizePasswordLoginError(error: {
   };
 }
 
-function resolvePasswordAnalyticsCode(error: {
-  kind: "invalid_credentials" | "strong_auth_required" | "unexpected";
-}): "invalid_credentials" | "strong_auth_required" | "internal" {
+function resolvePasswordAnalyticsCode(
+  error: SubmitPrimaryLoginError,
+): "invalid_credentials" | "strong_auth_required" | "internal" {
   return error.kind === "unexpected" ? "internal" : error.kind;
 }
 

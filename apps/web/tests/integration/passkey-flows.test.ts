@@ -471,10 +471,7 @@ describe("passkey flows", () => {
           return { verified: true, userId: 1 };
         },
       }),
-      async issueAppSession() {
-        throw new Error("boom");
-      },
-      async issuePreAuthSession() {
+      async issueLoginSession() {
         throw new Error("boom");
       },
     }).finishLogin({

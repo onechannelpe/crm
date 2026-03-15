@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { submitPasswordLogin } from "../../src/lib/auth/login-flow";
+import { submitPasswordLogin } from "../../src/lib/auth/flows/primary-login-service";
 import type { SendPrivilegedLoginAlert } from "../../src/lib/auth/security/privileged-login-alert";
 import { isErr } from "../../src/server/shared/result";
 import {

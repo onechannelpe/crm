@@ -11,7 +11,7 @@ import {
   type FinishPasskeyLoginError,
 } from "~/lib/auth/passkey/service";
 import { getClientIp } from "~/lib/auth/password/client-ip";
-import { replaceCurrentSession } from "~/lib/auth/session/session-issuer";
+import { replaceCurrentSession } from "~/lib/auth/session/session-transition";
 import { getActionRequestContext } from "~/lib/observability/context";
 import { privilegedLoginAlertSender, repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
@@ -39,7 +39,16 @@ function resolvePasskeyAnalyticsCode(
 export async function finishPasskeyLogin(
   flowId: number,
   response: AuthenticationResponseJSON,
-) {
+): Promise<
+  | {
+      ok: false;
+      code: "flow_expired" | "invalid_credentials";
+    }
+  | {
+      ok: true;
+      redirectTo: string;
+    }
+> {
   const event = getRequestEvent();
   const service = createPasskeyAuthService(repos);
   const result = await service.finishLogin({
