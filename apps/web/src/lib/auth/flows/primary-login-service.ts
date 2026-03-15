@@ -79,6 +79,7 @@ async function completePrimaryAuthProof(params: {
     const flow = await createPasskeyAuthService(params.deps).beginLogin({
       identifier: params.identifier,
       ipAddress: params.request.ipAddress,
+      mode: "identified",
       primaryAuthMethod: params.proof.kind,
     });
     if (isErr(flow)) {

@@ -9,14 +9,17 @@ import { Button } from "~/components/ui/input/button";
 import { ButtonLink } from "~/components/ui/input/button-link";
 import { useAuthPageView } from "~/lib/auth/use-auth-analytics";
 import { useLoginFlow } from "~/lib/auth/use-login-flow";
+import { usePasskeyLogin } from "~/lib/auth/use-passkey-login";
 
 import styles from "../../auth/auth-shell.module.css";
 import pageStyles from "../../auth/login-page.module.css";
 import shellStyles from "~/components/auth/flow/auth-flow-shell.module.css";
+import linkStyles from "~/components/auth/flow/auth-links.module.css";
 
 export default function LoginPage() {
   useAuthPageView("login");
   const loginMethods = useLoginFlow();
+  const passkeyLogin = usePasskeyLogin();
   const [searchParams] = useSearchParams();
   const { showToast } = useToast();
 
@@ -75,6 +78,43 @@ export default function LoginPage() {
         </div>
 
         <div class={pageStyles.separator} role="separator" />
+
+        <div class={pageStyles.ssoButtonContainer}>
+          <Button
+            variant="outline"
+            class={styles.full}
+            loading={passkeyLogin.busy()}
+            onClick={() => {
+              void passkeyLogin.startDiscoverable();
+            }}
+          >
+            Entrar con llave de acceso
+          </Button>
+          <Show when={passkeyLogin.error()}>
+            {(message) => (
+              <p class={pageStyles.formError} role="alert">
+                {message()}
+              </p>
+            )}
+          </Show>
+          <Show
+            when={
+              passkeyLogin.activeFlow() !== undefined &&
+              !passkeyLogin.busy() &&
+              passkeyLogin.supported()
+            }
+          >
+            <button
+              type="button"
+              class={linkStyles.passkeyLink}
+              onClick={() => {
+                void passkeyLogin.retry();
+              }}
+            >
+              Reintentar con clave de acceso
+            </button>
+          </Show>
+        </div>
 
         <div class={pageStyles.ssoButtonContainer}>
           <ButtonLink href="/login/user" variant="outline" class={styles.full}>

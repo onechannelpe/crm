@@ -29,18 +29,42 @@ describe("passkey flows", () => {
     const result = await createPasskeyAuthService(ctx.repos).beginLogin({
       identifier: "exec.one",
       ipAddress,
+      mode: "identified",
     });
     expect(isErr(result)).toBe(false);
     if (isErr(result)) {
       throw new Error("expected successful passkey challenge");
     }
 
+    expect(result.value.mode).toBe("identified");
     const flow = await ctx.repos.loginFlows.findById(result.value.id);
     const challenge = flow?.challenge_id
       ? await ctx.repos.webauthnChallenges.findById(flow.challenge_id)
       : undefined;
     expect(challenge?.type).toBe("authentication");
     expect(challenge?.user_id).toBe(1);
+    expect(challenge?.challenge).toBe(result.value.requestOptions.challenge);
+  });
+
+  it("begin discoverable passkey login creates an unscoped authentication challenge", async () => {
+    const result = await createPasskeyAuthService(ctx.repos).beginLogin({
+      ipAddress,
+      mode: "discoverable",
+    });
+    expect(isErr(result)).toBe(false);
+    if (isErr(result)) {
+      throw new Error("expected successful discoverable passkey challenge");
+    }
+
+    expect(result.value.mode).toBe("discoverable");
+    expect(result.value.requestOptions.userVerification).toBe("required");
+
+    const flow = await ctx.repos.loginFlows.findById(result.value.id);
+    const challenge = flow?.challenge_id
+      ? await ctx.repos.webauthnChallenges.findById(flow.challenge_id)
+      : undefined;
+    expect(flow?.user_id).toBeNull();
+    expect(challenge?.user_id).toBeNull();
     expect(challenge?.challenge).toBe(result.value.requestOptions.challenge);
   });
 
@@ -373,6 +397,7 @@ describe("passkey flows", () => {
     const result = await createPasskeyAuthService(ctx.repos).beginLogin({
       identifier: "   ",
       ipAddress,
+      mode: "identified",
     });
 
     expect(isErr(result)).toBe(true);
@@ -402,6 +427,7 @@ describe("passkey flows", () => {
     }).beginLogin({
       identifier: "exec.one",
       ipAddress,
+      mode: "identified",
     });
 
     expect(isErr(result)).toBe(true);
@@ -435,6 +461,65 @@ describe("passkey flows", () => {
       throw new Error("expected expired passkey flow");
     }
     expect(result.error.kind).toBe("flow_expired");
+  });
+
+  it("returns invalid_credentials when an identified passkey flow verifies a different user", async () => {
+    const challengeId = await ctx.repos.webauthnChallenges.create({
+      user_id: 1,
+      type: "authentication",
+      challenge: "challenge-mismatch-1",
+      expires_at: Date.now() + 60_000,
+    });
+    const flowId = await ctx.repos.loginFlows.create({
+      identifier: "exec.one",
+      primary_auth_method: "passkey",
+      user_id: 1,
+      challenge_id: challengeId,
+      state: "passkey",
+      expires_at: Date.now() + 60_000,
+    });
+
+    const result = await createPasskeyAuthService(ctx.repos, {
+      createWebauthnService: () => ({
+        async getRegistrationOptions() {
+          throw new Error("not used in this test");
+        },
+        async verifyRegistration() {
+          throw new Error("not used in this test");
+        },
+        async getAuthenticationOptions() {
+          throw new Error("not used in this test");
+        },
+        async getAuthenticationOptionsForChallenge() {
+          throw new Error("not used in this test");
+        },
+        async verifyAuthentication() {
+          return { verified: true, userId: 2 };
+        },
+      }),
+    }).finishLogin({
+      flowId,
+      response: {
+        id: "passkey-1",
+        rawId: "passkey-1",
+        type: "public-key",
+        clientExtensionResults: {},
+        response: {
+          authenticatorData: "a",
+          clientDataJSON: "b",
+          signature: "c",
+        },
+      },
+      ipAddress,
+      userAgent: "vitest-agent",
+      sendPrivilegedLoginAlert,
+    });
+
+    expect(isErr(result)).toBe(true);
+    if (!isErr(result)) {
+      throw new Error("expected rejected mismatched passkey assertion");
+    }
+    expect(result.error.kind).toBe("invalid_credentials");
   });
 
   it("returns unexpected when passkey session issuance fails", async () => {

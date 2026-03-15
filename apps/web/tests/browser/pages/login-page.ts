@@ -13,8 +13,25 @@ export class LoginPage {
       this.page.getByRole("button", { name: "Continuar con Google" }),
     ).toBeVisible();
     await expect(
+      this.page.getByRole("button", { name: "Entrar con llave de acceso" }),
+    ).toBeVisible();
+    await expect(
       this.page.getByRole("link", { name: "Continuar con usuario" }),
     ).toBeVisible();
+  }
+
+  async startDiscoverablePasskeyLogin() {
+    await this.page
+      .getByRole("button", { name: "Entrar con llave de acceso" })
+      .click();
+  }
+
+  async expectStayedOnLoginEntryAfterPasskeyAttempt() {
+    await expect(this.page).toHaveURL(/\/login$/);
+    await expect(
+      this.page.getByRole("button", { name: "Entrar con llave de acceso" }),
+    ).toHaveCount(1);
+    await expect(this.page.getByRole("alert")).toBeVisible();
   }
 
   async openUsernameLogin() {
