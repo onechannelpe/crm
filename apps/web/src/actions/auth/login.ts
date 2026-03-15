@@ -14,7 +14,7 @@ import {
 import { submitTotpForLoginFlow } from "~/lib/auth/flows/totp-step-up-service";
 import { parseLoginFlowId } from "~/lib/auth/login-route-flow";
 import {
-  createPasskeyAuthService,
+  createPasskeyLoginStartAuthService,
   type PasskeyLoginFlowState,
   type BeginPasskeyLoginError,
 } from "~/lib/auth/passkey/service";
@@ -205,7 +205,7 @@ export async function passkeyStart(
   }
 
   const request = getRequestContext();
-  const service = createPasskeyAuthService(repos);
+  const service = createPasskeyLoginStartAuthService(repos);
   const result =
     mode === "identified"
       ? await service.beginLogin({

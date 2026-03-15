@@ -1,9 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { PasskeyRequestError } from "../../src/lib/auth/passkey/passkey";
-import { createPasskeyAuthService } from "../../src/lib/auth/passkey/service";
+import {
+  createPasskeyEnrollmentAuthService,
+  createPasskeyLoginFinishAuthService,
+  createPasskeyLoginStartAuthService,
+} from "../../src/lib/auth/passkey/service";
 import { hashAuthKey } from "../../src/lib/auth/password/key-hash";
 import { recordPasskeyChallengeFailure } from "../../src/lib/auth/password/throttle";
+import { PasskeyRequestError } from "../../src/lib/auth/providers/passkey-provider";
 import type { SendPrivilegedLoginAlert } from "../../src/lib/auth/security/privileged-login-alert";
 import { isErr } from "../../src/server/shared/result";
 import {
@@ -26,7 +30,9 @@ describe("passkey flows", () => {
   });
 
   it("begin passkey login creates authentication challenge for active user", async () => {
-    const result = await createPasskeyAuthService(ctx.repos).beginLogin({
+    const result = await createPasskeyLoginStartAuthService(
+      ctx.repos,
+    ).beginLogin({
       identifier: "exec.one",
       ipAddress,
       mode: "identified",
@@ -47,7 +53,9 @@ describe("passkey flows", () => {
   });
 
   it("begin discoverable passkey login creates an unscoped authentication challenge", async () => {
-    const result = await createPasskeyAuthService(ctx.repos).beginLogin({
+    const result = await createPasskeyLoginStartAuthService(
+      ctx.repos,
+    ).beginLogin({
       ipAddress,
       mode: "discoverable",
     });
@@ -84,7 +92,9 @@ describe("passkey flows", () => {
       expires_at: Date.now() + 60_000,
     });
 
-    const result = await createPasskeyAuthService(ctx.repos).finishLogin({
+    const result = await createPasskeyLoginFinishAuthService(
+      ctx.repos,
+    ).finishLogin({
       flowId,
       response: {
         id: "missing-passkey",
@@ -128,7 +138,9 @@ describe("passkey flows", () => {
   });
 
   it("begin passkey registration creates registration challenge", async () => {
-    const result = await createPasskeyAuthService(ctx.repos).beginEnrollment({
+    const result = await createPasskeyEnrollmentAuthService(
+      ctx.repos,
+    ).beginEnrollment({
       userId: 1,
       ipAddress,
     });
@@ -151,7 +163,9 @@ describe("passkey flows", () => {
       await recordPasskeyChallengeFailure("user:1", ipAddress, ctx.repos);
     }
 
-    const result = await createPasskeyAuthService(ctx.repos).beginEnrollment({
+    const result = await createPasskeyEnrollmentAuthService(
+      ctx.repos,
+    ).beginEnrollment({
       userId: 1,
       ipAddress,
     });
@@ -164,8 +178,8 @@ describe("passkey flows", () => {
   });
 
   it("returns unexpected when passkey enrollment options fail", async () => {
-    const result = await createPasskeyAuthService(ctx.repos, {
-      createWebauthnService: () => ({
+    const result = await createPasskeyEnrollmentAuthService(ctx.repos, {
+      createWebauthnProvider: () => ({
         async getRegistrationOptions() {
           throw new Error("boom");
         },
@@ -202,7 +216,9 @@ describe("passkey flows", () => {
       expires_at: Date.now() + 60_000,
     });
 
-    const result = await createPasskeyAuthService(ctx.repos).finishEnrollment({
+    const result = await createPasskeyEnrollmentAuthService(
+      ctx.repos,
+    ).finishEnrollment({
       userId: 2,
       challengeId,
       response: {
@@ -240,8 +256,8 @@ describe("passkey flows", () => {
       expires_at: Date.now() + 60_000,
     });
 
-    const result = await createPasskeyAuthService(ctx.repos, {
-      createWebauthnService: () => ({
+    const result = await createPasskeyEnrollmentAuthService(ctx.repos, {
+      createWebauthnProvider: () => ({
         async getRegistrationOptions() {
           throw new Error("not used in this test");
         },
@@ -289,8 +305,8 @@ describe("passkey flows", () => {
       expires_at: Date.now() + 60_000,
     });
 
-    const result = await createPasskeyAuthService(ctx.repos, {
-      createWebauthnService: () => ({
+    const result = await createPasskeyEnrollmentAuthService(ctx.repos, {
+      createWebauthnProvider: () => ({
         async getRegistrationOptions() {
           throw new Error("not used in this test");
         },
@@ -346,8 +362,8 @@ describe("passkey flows", () => {
       expires_at: Date.now() + 60_000,
     });
 
-    const result = await createPasskeyAuthService(ctx.repos, {
-      createWebauthnService: () => ({
+    const result = await createPasskeyLoginFinishAuthService(ctx.repos, {
+      createWebauthnProvider: () => ({
         async getRegistrationOptions() {
           throw new Error("not used in this test");
         },
@@ -394,7 +410,9 @@ describe("passkey flows", () => {
   });
 
   it("returns invalid_credentials for an empty passkey login identifier", async () => {
-    const result = await createPasskeyAuthService(ctx.repos).beginLogin({
+    const result = await createPasskeyLoginStartAuthService(
+      ctx.repos,
+    ).beginLogin({
       identifier: "   ",
       ipAddress,
       mode: "identified",
@@ -416,7 +434,7 @@ describe("passkey flows", () => {
       transports: JSON.stringify(["internal"]),
     });
 
-    const result = await createPasskeyAuthService({
+    const result = await createPasskeyLoginStartAuthService({
       ...ctx.repos,
       loginFlows: {
         ...ctx.repos.loginFlows,
@@ -438,7 +456,9 @@ describe("passkey flows", () => {
   });
 
   it("returns flow_expired for an invalid passkey login flow id", async () => {
-    const result = await createPasskeyAuthService(ctx.repos).finishLogin({
+    const result = await createPasskeyLoginFinishAuthService(
+      ctx.repos,
+    ).finishLogin({
       flowId: 0,
       response: {
         id: "passkey-1",
@@ -479,8 +499,8 @@ describe("passkey flows", () => {
       expires_at: Date.now() + 60_000,
     });
 
-    const result = await createPasskeyAuthService(ctx.repos, {
-      createWebauthnService: () => ({
+    const result = await createPasskeyLoginFinishAuthService(ctx.repos, {
+      createWebauthnProvider: () => ({
         async getRegistrationOptions() {
           throw new Error("not used in this test");
         },
@@ -538,8 +558,8 @@ describe("passkey flows", () => {
       expires_at: Date.now() + 60_000,
     });
 
-    const result = await createPasskeyAuthService(ctx.repos, {
-      createWebauthnService: () => ({
+    const result = await createPasskeyLoginFinishAuthService(ctx.repos, {
+      createWebauthnProvider: () => ({
         async getRegistrationOptions() {
           throw new Error("not used in this test");
         },

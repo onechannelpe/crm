@@ -1,4 +1,4 @@
-import { createPasskeyAuthService } from "../../../src/lib/auth/passkey/service";
+import { createPasskeyLoginStartAuthService } from "../../../src/lib/auth/passkey/service";
 import type { PasskeyLoginFlowState } from "../../../src/lib/auth/passkey/service";
 import { isErr } from "../../../src/server/shared/result";
 import type { BrowserDbRuntime } from "../db/browser-runtime";
@@ -29,7 +29,9 @@ export async function createPasskeyFlow(
   identity: BrowserIdentity,
 ): Promise<PasskeyLoginFlowState> {
   await ensurePasskey(runtime, identity);
-  const result = await createPasskeyAuthService(runtime.repos).beginLogin({
+  const result = await createPasskeyLoginStartAuthService(
+    runtime.repos,
+  ).beginLogin({
     identifier: identity.username,
     ipAddress: "127.0.0.1",
     mode: "identified",

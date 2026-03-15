@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { createPasskeyAuthService } from "../../src/lib/auth/passkey/service";
+import { createPasskeyEnrollmentAuthService } from "../../src/lib/auth/passkey/service";
 import { createRepositories } from "../../src/server/shared/registry";
 import { Err, isErr, type Result } from "../../src/server/shared/result";
 import { completeAccountOnboardingWithRepos } from "../../src/server/users/service-account-onboarding";
@@ -43,10 +43,10 @@ describe("passkey onboarding flow", () => {
       .execute<Result<void, { reason: string; message: string }>>(
         async (transactionDb) => {
           const transactionRepos = createRepositories(transactionDb);
-          const passkeyResult = await createPasskeyAuthService(
+          const passkeyResult = await createPasskeyEnrollmentAuthService(
             transactionRepos,
             {
-              createWebauthnService: (repos) => ({
+              createWebauthnProvider: (repos) => ({
                 async getRegistrationOptions() {
                   throw new Error("not used in this test");
                 },

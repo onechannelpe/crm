@@ -6,11 +6,11 @@ import {
   clearPasskeyVerifyFailureState,
   recordPasskeyVerifyFailure,
 } from "~/lib/auth/password/throttle";
+import { isPasskeyRequestError } from "~/lib/auth/providers/passkey-provider";
 import { config } from "~/lib/config";
 import { assertPositiveInt } from "~/lib/contracts/guards";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import { isPasskeyRequestError } from "../passkey";
 import type { PasskeyAuthRepos } from "./shared";
 import {
   INVALID_PASSKEY_REQUEST,

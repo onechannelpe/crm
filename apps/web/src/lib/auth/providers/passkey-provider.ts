@@ -70,9 +70,9 @@ function parseStoredTransports(
   return undefined;
 }
 
-type PasskeyServiceDeps = Pick<Repositories, "passkeys" | "auditLogs">;
+type PasskeyProviderDeps = Pick<Repositories, "passkeys" | "auditLogs">;
 
-export function createPasskeyService(repos: PasskeyServiceDeps) {
+export function createPasskeyProvider(repos: PasskeyProviderDeps) {
   async function buildAuthenticationOptions(
     input: {
       userId?: number;
@@ -81,10 +81,10 @@ export function createPasskeyService(repos: PasskeyServiceDeps) {
     challenge?: string,
   ): Promise<PublicKeyCredentialRequestOptionsJSON> {
     const allowCredentials = input.userId
-      ? (await repos.passkeys.findByUser(input.userId)).map((p) => ({
-          id: p.id,
+      ? (await repos.passkeys.findByUser(input.userId)).map((passkey) => ({
+          id: passkey.id,
           type: "public-key" as const,
-          transports: parseStoredTransports(p.transports),
+          transports: parseStoredTransports(passkey.transports),
         }))
       : [];
 
@@ -114,9 +114,9 @@ export function createPasskeyService(repos: PasskeyServiceDeps) {
         rpName,
         rpID,
         userName: `user-${userId}`,
-        excludeCredentials: existingPasskeys.map((p) => ({
-          id: p.id,
-          transports: parseStoredTransports(p.transports),
+        excludeCredentials: existingPasskeys.map((passkey) => ({
+          id: passkey.id,
+          transports: parseStoredTransports(passkey.transports),
         })),
         authenticatorSelection: {
           residentKey: "preferred",

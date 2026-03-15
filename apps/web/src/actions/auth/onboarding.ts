@@ -11,7 +11,7 @@ import {
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { requireSession } from "~/lib/auth/access/session";
 import {
-  createPasskeyAuthService,
+  createPasskeyEnrollmentAuthService,
   type PasskeyEnrollmentError,
 } from "~/lib/auth/passkey/service";
 import { getClientIp } from "~/lib/auth/password/client-ip";
@@ -148,7 +148,8 @@ export async function completePasskeyOnboarding(
   const result =
     await runInRepositoryTransaction<CompletePasskeyOnboardingResult>(
       async (transactionRepos) => {
-        const passkeyService = createPasskeyAuthService(transactionRepos);
+        const passkeyService =
+          createPasskeyEnrollmentAuthService(transactionRepos);
         const passkeyResult = await passkeyService.finishEnrollment({
           userId: session.userId,
           challengeId,

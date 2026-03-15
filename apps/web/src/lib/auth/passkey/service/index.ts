@@ -1,10 +1,10 @@
 import type { Repositories } from "~/server/shared/registry";
 
+import { createPasskeyProvider } from "../../providers/passkey-provider";
 import { issueLoginSession } from "../../session/session-transition";
-import { createPasskeyService } from "../passkey";
 import { createPasskeyEnrollmentService } from "./enrollment";
-import { createPasskeyLoginService } from "./login";
-import { createPasskeyLoginStateService } from "./login-state";
+import { createPasskeyLoginFinishService } from "./login-finish";
+import { createPasskeyLoginStartService } from "./login-start";
 import type { PasskeyAuthRepos } from "./shared";
 
 export type {
@@ -13,30 +13,49 @@ export type {
   PasskeyEnrollmentChallenge,
   PasskeyEnrollmentError,
   PasskeyLoginFlowState,
+  PasskeyLoginMode,
   PasskeyLoginResult,
 } from "./types";
 
 interface PasskeyServiceDeps {
-  createWebauthnService?: (
+  createWebauthnProvider?: (
     repos: Pick<Repositories, "passkeys" | "auditLogs">,
-  ) => ReturnType<typeof createPasskeyService>;
+  ) => ReturnType<typeof createPasskeyProvider>;
   issueLoginSession?: typeof issueLoginSession;
 }
 
-export function createPasskeyAuthService(
+export function createPasskeyEnrollmentAuthService(
+  repos: PasskeyAuthRepos,
+  deps: Omit<PasskeyServiceDeps, "issueLoginSession"> = {},
+) {
+  const webauthnProvider =
+    deps.createWebauthnProvider?.(repos) ?? createPasskeyProvider(repos);
+
+  return createPasskeyEnrollmentService(repos, {
+    webauthnService: webauthnProvider,
+  });
+}
+
+export function createPasskeyLoginStartAuthService(
+  repos: PasskeyAuthRepos,
+  deps: Omit<PasskeyServiceDeps, "issueLoginSession"> = {},
+) {
+  const webauthnProvider =
+    deps.createWebauthnProvider?.(repos) ?? createPasskeyProvider(repos);
+
+  return createPasskeyLoginStartService(repos, { webauthnProvider });
+}
+
+export function createPasskeyLoginFinishAuthService(
   repos: PasskeyAuthRepos,
   deps: PasskeyServiceDeps = {},
 ) {
-  const webauthnService =
-    deps.createWebauthnService?.(repos) ?? createPasskeyService(repos);
+  const webauthnProvider =
+    deps.createWebauthnProvider?.(repos) ?? createPasskeyProvider(repos);
   const issueLoginSessionForRepos = deps.issueLoginSession ?? issueLoginSession;
 
-  return {
-    ...createPasskeyEnrollmentService(repos, { webauthnService }),
-    ...createPasskeyLoginStateService(repos, { webauthnService }),
-    ...createPasskeyLoginService(repos, {
-      webauthnService,
-      issueLoginSession: issueLoginSessionForRepos,
-    }),
-  };
+  return createPasskeyLoginFinishService(repos, {
+    webauthnProvider,
+    issueLoginSession: issueLoginSessionForRepos,
+  });
 }
