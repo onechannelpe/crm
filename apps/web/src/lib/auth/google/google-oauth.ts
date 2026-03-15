@@ -1,6 +1,7 @@
-import { Google } from "arctic";
+import { decodeIdToken, Google } from "arctic";
 
 import { env } from "~/lib/env";
+import { Err, Ok, type Result } from "~/server/shared/result";
 
 export const googleOAuth = new Google(
   env.googleClientId,
@@ -36,4 +37,27 @@ export function parseGoogleClaims(claims: unknown): GoogleIdTokenClaims {
     name: typeof name === "string" ? name : email,
     picture: typeof picture === "string" ? picture : undefined,
   };
+}
+
+export async function authenticateGoogleAuthorizationCode(input: {
+  code: string;
+  codeVerifier: string;
+}): Promise<
+  Result<
+    GoogleIdTokenClaims,
+    {
+      kind: "invalid_google_callback";
+    }
+  >
+> {
+  try {
+    const tokens = await googleOAuth.validateAuthorizationCode(
+      input.code,
+      input.codeVerifier,
+    );
+    const claims = parseGoogleClaims(decodeIdToken(tokens.idToken()));
+    return Ok(claims);
+  } catch {
+    return Err({ kind: "invalid_google_callback" });
+  }
 }
