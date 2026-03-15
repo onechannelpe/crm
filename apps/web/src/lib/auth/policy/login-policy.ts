@@ -71,16 +71,6 @@ export function evaluateLoginPolicy(input: LoginPolicyInput): LoginDecision {
     };
   }
 
-  if (
-    !context.strongAuthStatus.hasTotp &&
-    !context.strongAuthStatus.hasPasskey
-  ) {
-    return {
-      kind: "deny",
-      reason: "strong_auth_required",
-    };
-  }
-
   if (context.strongAuthStatus.hasTotp) {
     return { kind: "require_totp" };
   }
