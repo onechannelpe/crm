@@ -3,7 +3,7 @@ import { createStore } from "solid-js/store";
 
 interface Toast {
   id: string;
-  type: "success" | "error" | "info";
+  type: "success" | "error" | "info" | "warning";
   message: string;
   duration: number;
   remaining: number;

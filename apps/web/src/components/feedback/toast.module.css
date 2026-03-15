@@ -1,59 +1,60 @@
 .container {
   position: fixed;
-  top: 24px;
-  right: 24px;
-  max-width: 400px;
+  bottom: 12px;
+  right: 12px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   pointer-events: none;
+  z-index: 1000;
 }
 
 .toast {
   pointer-events: auto;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: color-mix(in oklab, var(--overlay) 80%, transparent);
+  width: 296px;
+  border-radius: 8px;
+  background-color: color-mix(in oklab, var(--background) 70%, transparent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  box-shadow: var(
-    --box-shadow-strong,
-    0 8px 32px rgba(0, 0, 0, 0.12),
-    0 2px 8px rgba(0, 0, 0, 0.04)
-  );
-  padding: 14px 16px;
+  box-shadow: var(--shadow-elevation-2);
+  padding: 8px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+  animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes slideIn {
   from {
     opacity: 0;
-    transform: translateX(30px) scale(0.95);
+    transform: translateY(20px);
   }
-
   to {
     opacity: 1;
-    transform: translateX(0) scale(1);
+    transform: translateY(0);
   }
 }
 
 .success {
-  border-color: color-mix(in oklab, var(--success) 30%, transparent);
-  color: var(--success);
+  --toast-icon-color: #00cfc1;
+  --toast-bar-color: color-mix(in oklab, var(--success) 15%, transparent); /* Twenty uses GreenA3 bar with Turquoise icon */
 }
 
 .error {
-  border-color: color-mix(in oklab, var(--destructive) 30%, transparent);
-  color: var(--destructive);
+  --toast-icon-color: var(--destructive);
+  --toast-bar-color: color-mix(in oklab, var(--destructive) 15%, transparent); /* redA3 */
 }
 
 .info {
-  border-color: color-mix(in oklab, var(--info) 30%, transparent);
-  color: var(--info);
+  --toast-icon-color: var(--info);
+  --toast-bar-color: color-mix(in oklab, var(--info) 15%, transparent); /* blueA3/indigoA3 */
+}
+
+.warning {
+  --toast-icon-color: var(--warning);
+  --toast-bar-color: color-mix(in oklab, var(--warning) 15%, transparent); /* orangeA3 */
 }
 
 .message {
@@ -61,33 +62,48 @@
   flex: 1;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  color: var(--foreground);
+  color: var(--foreground-secondary);
   line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.icon {
+  color: var(--toast-icon-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .dismiss {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   color: var(--muted-foreground);
   opacity: 0.6;
-  transition: opacity 0.2s;
+  transition:
+    opacity 0.2s,
+    background-color 0.2s;
   flex-shrink: 0;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .dismiss:hover {
   opacity: 1;
-  background: none;
+  background-color: var(--tertiary);
 }
 
 .progressBar {
   position: absolute;
-  bottom: 0;
+  top: 0;
   left: 0;
-  height: 2px;
-  background: currentColor;
-  opacity: 0.3;
-  transition: width 0.1s linear;
-  border-bottom-left-radius: 12px;
-  border-bottom-right-radius: 12px;
+  height: 4px;
+  background-color: var(--toast-bar-color);
   pointer-events: none;
+  transition: width 0.1s linear;
+  border-top-left-radius: 8px;
 }
