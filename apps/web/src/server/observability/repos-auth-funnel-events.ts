@@ -1,9 +1,6 @@
 import type { Kysely } from "kysely";
 
-import type {
-  Database,
-  NewAuthFunnelEvent,
-} from "~/lib/db/types";
+import type { Database, NewAuthFunnelEvent } from "~/lib/db/types";
 import type {
   AuthFunnelEventName,
   AuthFunnelMethod,

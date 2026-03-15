@@ -1,4 +1,5 @@
 import type { ColumnType, Generated, Insertable, Selectable } from "kysely";
+
 import type {
   AuthFunnelEventName,
   AuthFunnelMethod,

@@ -42,6 +42,71 @@ export const AUTH_FUNNEL_OUTCOMES = [
 
 export type AuthFunnelOutcome = (typeof AUTH_FUNNEL_OUTCOMES)[number];
 
+export type AuthFunnelClientEventPayload =
+  | {
+      kind: "screen_viewed";
+      screen: AuthFunnelScreen;
+    }
+  | {
+      kind: "passkey_result";
+      outcome: "failed";
+      code: "cancelled" | "unsupported" | "browser_error";
+    };
+
+export type AuthFunnelServerEventPayload =
+  | {
+      kind: "password_result";
+      outcome: "failed";
+      code: "invalid_credentials" | "strong_auth_required" | "internal";
+    }
+  | {
+      kind: "password_result";
+      outcome: "totp_required" | "passkey_required" | "succeeded";
+    }
+  | {
+      kind: "passkey_start_result";
+      outcome: "failed";
+      code: "invalid_credentials" | "internal";
+    }
+  | {
+      kind: "passkey_start_result";
+      outcome: "started";
+    }
+  | {
+      kind: "totp_result";
+      outcome: "failed";
+      code: "invalid_totp" | "flow_expired";
+    }
+  | {
+      kind: "totp_result";
+      outcome: "succeeded";
+    }
+  | {
+      kind: "passkey_result";
+      outcome: "failed";
+      code:
+        | "invalid_credentials"
+        | "flow_expired"
+        | "internal"
+        | "cancelled"
+        | "unsupported"
+        | "browser_error";
+    }
+  | {
+      kind: "passkey_result";
+      outcome: "succeeded";
+    };
+
+export type AuthFunnelClientEvent = {
+  source: "client";
+} & AuthFunnelClientEventPayload;
+
+export type AuthFunnelServerEvent = {
+  source: "server";
+} & AuthFunnelServerEventPayload;
+
+export type AuthFunnelEvent = AuthFunnelClientEvent | AuthFunnelServerEvent;
+
 export function isAuthFunnelScreen(value: unknown): value is AuthFunnelScreen {
   return (
     typeof value === "string" &&
