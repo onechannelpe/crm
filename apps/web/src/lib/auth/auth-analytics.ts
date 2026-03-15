@@ -1,11 +1,14 @@
-import type { ActionRequestContext } from "~/lib/observability/context";
 import {
   AUTH_FUNNEL_METHODS,
   AUTH_FUNNEL_SCREENS,
   isAuthFunnelScreen,
+  type AuthFunnelClientEventPayload,
+  type AuthFunnelEvent,
   type AuthFunnelMethod,
   type AuthFunnelScreen,
+  type AuthFunnelServerEventPayload,
 } from "~/lib/observability/auth-funnel";
+import type { ActionRequestContext } from "~/lib/observability/context";
 import { observabilityService } from "~/server/shared/context";
 
 export const AUTH_ANALYTICS_SCREENS = AUTH_FUNNEL_SCREENS;
@@ -16,64 +19,11 @@ export const AUTH_ANALYTICS_METHODS = AUTH_FUNNEL_METHODS;
 
 export type AuthAnalyticsMethod = AuthFunnelMethod;
 
-export type AuthClientAnalyticsEvent =
-  | {
-      kind: "screen_viewed";
-      screen: AuthAnalyticsScreen;
-    }
-  | {
-      kind: "passkey_result";
-      outcome: "failed";
-      code: "cancelled" | "unsupported" | "browser_error";
-    };
+export type AuthClientAnalyticsEvent = AuthFunnelClientEventPayload;
 
-export type AuthServerAnalyticsEvent =
-  | {
-      kind: "password_result";
-      outcome: "failed";
-      code: "invalid_credentials" | "strong_auth_required" | "internal";
-    }
-  | {
-      kind: "password_result";
-      outcome: "totp_required" | "passkey_required" | "succeeded";
-    }
-  | {
-      kind: "passkey_start_result";
-      outcome: "failed";
-      code: "invalid_credentials" | "internal";
-    }
-  | {
-      kind: "passkey_start_result";
-      outcome: "started";
-    }
-  | {
-      kind: "totp_result";
-      outcome: "failed";
-      code: "invalid_totp" | "flow_expired";
-    }
-  | {
-      kind: "totp_result";
-      outcome: "succeeded";
-    }
-  | {
-      kind: "passkey_result";
-      outcome: "failed";
-      code:
-        | "invalid_credentials"
-        | "flow_expired"
-        | "internal"
-        | "cancelled"
-        | "unsupported"
-        | "browser_error";
-    }
-  | {
-      kind: "passkey_result";
-      outcome: "succeeded";
-    };
+export type AuthServerAnalyticsEvent = AuthFunnelServerEventPayload;
 
-export type AuthAnalyticsEvent =
-  | ({ source: "client" } & AuthClientAnalyticsEvent)
-  | ({ source: "server" } & AuthServerAnalyticsEvent);
+export type AuthAnalyticsEvent = AuthFunnelEvent;
 
 export function isAuthAnalyticsScreen(
   value: unknown,
