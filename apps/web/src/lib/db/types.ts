@@ -1,4 +1,11 @@
 import type { ColumnType, Generated, Insertable, Selectable } from "kysely";
+import type {
+  AuthFunnelEventName,
+  AuthFunnelMethod,
+  AuthFunnelOutcome,
+  AuthFunnelScreen,
+  AuthFunnelSource,
+} from "~/lib/observability/auth-funnel";
 
 export interface BranchesTable {
   id: Generated<number>;
@@ -444,28 +451,11 @@ export interface AuthFunnelEventsTable {
   trace_id: string;
   request_id: string;
   route_path: string | null;
-  source: "client" | "server";
-  event_name:
-    | "screen_viewed"
-    | "password_result"
-    | "passkey_start_result"
-    | "totp_result"
-    | "passkey_result";
-  screen:
-    | "login"
-    | "login_user"
-    | "login_verify"
-    | "login_passkey"
-    | "reset_password"
-    | null;
-  method: "password" | "password_totp" | "passkey" | "google" | null;
-  outcome:
-    | "viewed"
-    | "failed"
-    | "succeeded"
-    | "started"
-    | "totp_required"
-    | "passkey_required";
+  source: AuthFunnelSource;
+  event_name: AuthFunnelEventName;
+  screen: AuthFunnelScreen | null;
+  method: AuthFunnelMethod | null;
+  outcome: AuthFunnelOutcome;
   code: string | null;
   created_at: number;
 }

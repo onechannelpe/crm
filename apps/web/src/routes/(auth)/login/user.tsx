@@ -1,10 +1,5 @@
 import { useSubmission, useSearchParams } from "@solidjs/router";
-import {
-  createEffect,
-  createSignal,
-  onMount,
-  Show,
-} from "solid-js";
+import { createEffect, createSignal, onMount, Show } from "solid-js";
 
 import { AuthFlowShell } from "~/components/auth/flow/auth-flow-shell";
 import { AuthLoadingBlock } from "~/components/auth/flow/auth-loading-block";

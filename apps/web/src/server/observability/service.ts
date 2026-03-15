@@ -1,6 +1,13 @@
 import type { AppErrorCode } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { serializeAuditChanges } from "~/lib/contracts/audit";
+import type {
+  AuthFunnelEventName,
+  AuthFunnelMethod,
+  AuthFunnelOutcome,
+  AuthFunnelScreen,
+  AuthFunnelSource,
+} from "~/lib/observability/auth-funnel";
 import type { Repositories } from "~/server/shared/registry";
 
 interface ObservabilityRepos {
@@ -28,28 +35,11 @@ export interface RecordAuthFunnelEventInput {
   traceId: string;
   requestId: string;
   routePath: string | null;
-  source: "client" | "server";
-  eventName:
-    | "screen_viewed"
-    | "password_result"
-    | "passkey_start_result"
-    | "totp_result"
-    | "passkey_result";
-  screen:
-    | "login"
-    | "login_user"
-    | "login_verify"
-    | "login_passkey"
-    | "reset_password"
-    | null;
-  method: "password" | "password_totp" | "passkey" | "google" | null;
-  outcome:
-    | "viewed"
-    | "failed"
-    | "succeeded"
-    | "started"
-    | "totp_required"
-    | "passkey_required";
+  source: AuthFunnelSource;
+  eventName: AuthFunnelEventName;
+  screen: AuthFunnelScreen | null;
+  method: AuthFunnelMethod | null;
+  outcome: AuthFunnelOutcome;
   code: string | null;
   createdAt: number;
 }

@@ -1,0 +1,75 @@
+export const AUTH_FUNNEL_SOURCES = ["client", "server"] as const;
+
+export type AuthFunnelSource = (typeof AUTH_FUNNEL_SOURCES)[number];
+
+export const AUTH_FUNNEL_EVENT_NAMES = [
+  "screen_viewed",
+  "password_result",
+  "passkey_start_result",
+  "totp_result",
+  "passkey_result",
+] as const;
+
+export type AuthFunnelEventName = (typeof AUTH_FUNNEL_EVENT_NAMES)[number];
+
+export const AUTH_FUNNEL_SCREENS = [
+  "login",
+  "login_user",
+  "login_verify",
+  "login_passkey",
+  "reset_password",
+] as const;
+
+export type AuthFunnelScreen = (typeof AUTH_FUNNEL_SCREENS)[number];
+
+export const AUTH_FUNNEL_METHODS = [
+  "password",
+  "password_totp",
+  "passkey",
+  "google",
+] as const;
+
+export type AuthFunnelMethod = (typeof AUTH_FUNNEL_METHODS)[number];
+
+export const AUTH_FUNNEL_OUTCOMES = [
+  "viewed",
+  "failed",
+  "succeeded",
+  "started",
+  "totp_required",
+  "passkey_required",
+] as const;
+
+export type AuthFunnelOutcome = (typeof AUTH_FUNNEL_OUTCOMES)[number];
+
+export function isAuthFunnelScreen(value: unknown): value is AuthFunnelScreen {
+  return (
+    typeof value === "string" &&
+    AUTH_FUNNEL_SCREENS.some((screen) => screen === value)
+  );
+}
+
+export function isAuthFunnelEventName(
+  value: unknown,
+): value is AuthFunnelEventName {
+  return (
+    typeof value === "string" &&
+    AUTH_FUNNEL_EVENT_NAMES.some((eventName) => eventName === value)
+  );
+}
+
+export function isAuthFunnelMethod(value: unknown): value is AuthFunnelMethod {
+  return (
+    typeof value === "string" &&
+    AUTH_FUNNEL_METHODS.some((method) => method === value)
+  );
+}
+
+export function isAuthFunnelOutcome(
+  value: unknown,
+): value is AuthFunnelOutcome {
+  return (
+    typeof value === "string" &&
+    AUTH_FUNNEL_OUTCOMES.some((outcome) => outcome === value)
+  );
+}
