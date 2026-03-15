@@ -11,6 +11,10 @@ import type {
 } from "~/lib/auth/passkey/service";
 import { createPasskeyAuthService } from "~/lib/auth/passkey/service";
 import { getClientIp } from "~/lib/auth/password/client-ip";
+import {
+  issueSessionTransition,
+  replaceCurrentSession,
+} from "~/lib/auth/session/session-transition";
 import { repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
@@ -59,4 +63,22 @@ export async function finishPasskeyRegistration(
   if (isErr(result)) {
     throwPasskeyEnrollmentError(result.error);
   }
+
+  const user = await repos.users.findById(session.userId);
+  if (!user) {
+    throw internalError("No se pudo configurar la clave de acceso");
+  }
+  const issued = await issueSessionTransition({
+    user,
+    sessionClass: session.sessionClass,
+    request: {
+      ipAddress,
+      userAgent: event?.request.headers.get("user-agent") ?? null,
+    },
+    primaryAuthMethod: session.primaryAuthMethod,
+    strongAuthMethod: "passkey",
+    strongAuthAt: Date.now(),
+    deps: repos,
+  });
+  await replaceCurrentSession(issued.token);
 }

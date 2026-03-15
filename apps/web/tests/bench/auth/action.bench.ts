@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
-import { submitPasswordLogin } from "~/lib/auth/login-flow";
+import { submitPasswordLogin } from "~/lib/auth/flows/primary-login-service";
 import { hashAuthKey } from "~/lib/auth/password/key-hash";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
 import { isErr } from "~/server/shared/result";

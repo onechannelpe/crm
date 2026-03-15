@@ -1,9 +1,6 @@
 import type { Repositories } from "~/server/shared/registry";
 
-import {
-  issueAppSession,
-  issuePreAuthSession,
-} from "../../session/session-issuer";
+import { issueLoginSession } from "../../session/session-transition";
 import { createPasskeyService } from "../passkey";
 import { createPasskeyEnrollmentService } from "./enrollment";
 import { createPasskeyLoginService } from "./login";
@@ -23,8 +20,7 @@ interface PasskeyServiceDeps {
   createWebauthnService?: (
     repos: Pick<Repositories, "passkeys" | "auditLogs">,
   ) => ReturnType<typeof createPasskeyService>;
-  issueAppSession?: typeof issueAppSession;
-  issuePreAuthSession?: typeof issuePreAuthSession;
+  issueLoginSession?: typeof issueLoginSession;
 }
 
 export function createPasskeyAuthService(
@@ -33,17 +29,14 @@ export function createPasskeyAuthService(
 ) {
   const webauthnService =
     deps.createWebauthnService?.(repos) ?? createPasskeyService(repos);
-  const issueAppSessionForRepos = deps.issueAppSession ?? issueAppSession;
-  const issuePreAuthSessionForRepos =
-    deps.issuePreAuthSession ?? issuePreAuthSession;
+  const issueLoginSessionForRepos = deps.issueLoginSession ?? issueLoginSession;
 
   return {
     ...createPasskeyEnrollmentService(repos, { webauthnService }),
     ...createPasskeyLoginStateService(repos, { webauthnService }),
     ...createPasskeyLoginService(repos, {
       webauthnService,
-      issueAppSession: issueAppSessionForRepos,
-      issuePreAuthSession: issuePreAuthSessionForRepos,
+      issueLoginSession: issueLoginSessionForRepos,
     }),
   };
 }

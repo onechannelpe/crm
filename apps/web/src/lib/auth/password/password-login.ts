@@ -81,5 +81,13 @@ export async function verifyPasswordLoginCredentials(
   }
 
   await clearLoginFailureState(safeUsername, input.ipAddress, resolvedDeps);
+  await recordAuthEvent(resolvedDeps, {
+    userId: user.id,
+    identifier: safeUsername,
+    ipAddress: input.ipAddress,
+    method: "password",
+    stage: "login",
+    outcome: "success",
+  });
   return Ok(user);
 }

@@ -15,11 +15,11 @@ import {
   type PasskeyEnrollmentError,
 } from "~/lib/auth/passkey/service";
 import { getClientIp } from "~/lib/auth/password/client-ip";
-import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
+import { requiresStrongAuthRole } from "~/lib/auth/security/strong-auth-status";
 import {
-  issueAppSession,
+  issueSessionTransition,
   replaceCurrentSession,
-} from "~/lib/auth/session/session-issuer";
+} from "~/lib/auth/session/session-transition";
 import { repos, runInRepositoryTransaction } from "~/server/shared/context";
 import { Err, isErr, type Result } from "~/server/shared/result";
 import {
@@ -42,6 +42,10 @@ function resolveRedirect(
 
 async function promoteCompletedOnboardingSession(
   session: Awaited<ReturnType<typeof requireSession>>,
+  proof?: {
+    strongAuthMethod: "totp" | "passkey" | "federated";
+    strongAuthAt: number;
+  },
 ): Promise<void> {
   const user = await repos.users.findById(session.userId);
   if (!user) {
@@ -51,21 +55,23 @@ async function promoteCompletedOnboardingSession(
   const event = getRequestEvent();
   const ipAddress = getClientIp(event?.request.headers ?? new Headers());
   const userAgent = event?.request.headers.get("user-agent") ?? null;
-  const strongAuthStatus = await getStrongAuthStatus(user.id, repos);
-  const strongAuthMethod =
-    session.strongAuthMethod ??
-    (strongAuthStatus.hasPasskey
-      ? "passkey"
-      : strongAuthStatus.hasTotp
-        ? "totp"
-        : null);
+  const strongAuthMethod = proof?.strongAuthMethod ?? session.strongAuthMethod;
   const strongAuthAt =
-    strongAuthMethod === null ? null : (session.strongAuthAt ?? Date.now());
+    strongAuthMethod === null
+      ? null
+      : (proof?.strongAuthAt ?? session.strongAuthAt ?? Date.now());
 
-  const issued = await issueAppSession({
+  if (requiresStrongAuthRole(user.role) && strongAuthMethod === null) {
+    throw conflictError("No se pudo completar el registro");
+  }
+
+  const issued = await issueSessionTransition({
     user,
-    ipAddress,
-    userAgent,
+    sessionClass: "app",
+    request: {
+      ipAddress,
+      userAgent,
+    },
     primaryAuthMethod: session.primaryAuthMethod,
     strongAuthMethod,
     strongAuthAt,
@@ -164,6 +170,9 @@ export async function completePasskeyOnboarding(
       userNotFoundMessage: "No se pudo completar el registro",
     });
   }
-  await promoteCompletedOnboardingSession(session);
+  await promoteCompletedOnboardingSession(session, {
+    strongAuthMethod: "passkey",
+    strongAuthAt: Date.now(),
+  });
   return resolveRedirect(session.role);
 }

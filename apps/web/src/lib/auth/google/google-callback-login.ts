@@ -2,7 +2,7 @@ import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-lo
 import type { Repositories } from "~/server/shared/registry";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
-import { submitGoogleLogin } from "../login-flow";
+import { submitGoogleLogin } from "../flows/primary-login-service";
 import { authenticateGoogleAuthorizationCode } from "./google-oauth";
 
 type GoogleCallbackDeps = Pick<

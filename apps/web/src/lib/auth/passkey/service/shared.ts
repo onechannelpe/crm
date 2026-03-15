@@ -16,6 +16,7 @@ export type PasskeyAuthRepos = Pick<
   | "auditLogs"
   | "authThrottle"
   | "authEvents"
+  | "userTotpFactors"
 >;
 
 export const INVALID_PASSKEY_REQUEST = "Invalid passkey request";

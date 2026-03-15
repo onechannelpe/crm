@@ -13,12 +13,19 @@ import { hashSessionToken } from "~/lib/auth/session/tokens";
 import type { User } from "~/lib/db/types";
 import type { Repositories } from "~/server/shared/registry";
 
+import type { LoginDecision } from "../policy/policy-types";
+
 type SessionAuditDeps = Pick<Repositories, "auditLogs" | "sessions" | "users">;
 
 type SessionUser = Pick<
   User,
   "id" | "branch_id" | "role" | "onboarding_completed_at"
 >;
+
+export interface SessionRequestMetadata {
+  ipAddress: string;
+  userAgent: string | null;
+}
 
 export interface IssuedSessionResult {
   userId: number;
@@ -31,19 +38,24 @@ export interface IssuedSessionResult {
   token: string;
 }
 
-async function issueSession(params: {
+interface TransitionSessionParams {
   user: SessionUser | null;
   sessionClass: SessionClass;
-  ipAddress: string;
-  userAgent: string | null;
+  request: SessionRequestMetadata;
   primaryAuthMethod: PrimaryAuthMethod;
   strongAuthMethod: StrongAuthMethod | null;
   strongAuthAt: number | null;
   auditAction?: "login" | "login_passkey";
   deps: SessionAuditDeps;
-}): Promise<IssuedSessionResult> {
+}
+
+async function transitionSession(
+  params: TransitionSessionParams,
+): Promise<IssuedSessionResult> {
   const { user } = params;
-  if (!user) throw forbiddenError("Invalid credentials");
+  if (!user) {
+    throw forbiddenError("Invalid credentials");
+  }
 
   const token = await createSession(
     {
@@ -51,8 +63,8 @@ async function issueSession(params: {
       branchId: user.branch_id,
       role: user.role,
       sessionClass: params.sessionClass,
-      ipAddress: params.ipAddress,
-      userAgent: params.userAgent,
+      ipAddress: params.request.ipAddress,
+      userAgent: params.request.userAgent,
       primaryAuthMethod: params.primaryAuthMethod,
       strongAuthMethod: params.strongAuthMethod,
       strongAuthAt: params.strongAuthAt,
@@ -93,34 +105,35 @@ export async function replaceCurrentSession(token: string): Promise<void> {
   setSessionCookie(token);
 }
 
-export async function issuePreAuthSession(params: {
+export async function issueLoginSession(params: {
   user: SessionUser | null;
-  ipAddress: string;
-  userAgent: string | null;
+  decision: Extract<LoginDecision, { kind: "issue_session" }>;
+  request: SessionRequestMetadata;
   primaryAuthMethod: PrimaryAuthMethod;
-  strongAuthMethod: StrongAuthMethod | null;
-  strongAuthAt: number | null;
   auditAction?: "login" | "login_passkey";
   deps: SessionAuditDeps;
 }): Promise<IssuedSessionResult> {
-  return issueSession({
-    ...params,
-    sessionClass: "pre_auth",
+  return transitionSession({
+    user: params.user,
+    sessionClass: params.decision.sessionClass,
+    request: params.request,
+    primaryAuthMethod: params.primaryAuthMethod,
+    strongAuthMethod: params.decision.strongAuthMethod,
+    strongAuthAt: params.decision.strongAuthAt,
+    auditAction: params.auditAction,
+    deps: params.deps,
   });
 }
 
-export async function issueAppSession(params: {
+export async function issueSessionTransition(params: {
   user: SessionUser | null;
-  ipAddress: string;
-  userAgent: string | null;
+  sessionClass: SessionClass;
+  request: SessionRequestMetadata;
   primaryAuthMethod: PrimaryAuthMethod;
   strongAuthMethod: StrongAuthMethod | null;
   strongAuthAt: number | null;
   auditAction?: "login" | "login_passkey";
   deps: SessionAuditDeps;
 }): Promise<IssuedSessionResult> {
-  return issueSession({
-    ...params,
-    sessionClass: "app",
-  });
+  return transitionSession(params);
 }

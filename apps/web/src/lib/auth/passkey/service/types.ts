@@ -4,7 +4,7 @@ import type {
 } from "@simplewebauthn/server";
 
 import type { InvalidCredentialsError } from "~/lib/auth/errors";
-import type { IssuedSessionResult } from "~/lib/auth/session/session-issuer";
+import type { IssuedSessionResult } from "~/lib/auth/session/session-transition";
 
 export interface PasskeyEnrollmentChallenge {
   challengeId: number;

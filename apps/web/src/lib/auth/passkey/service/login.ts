@@ -1,6 +1,6 @@
 import type { AuthenticationResponseJSON } from "@simplewebauthn/server";
 
-import type { PrimaryAuthMethod } from "~/lib/auth/core/session-contract";
+import { loadActiveAuthContext } from "~/lib/auth/context/auth-context";
 import {
   checkPasskeyChallengeThrottle,
   checkPasskeyVerifyThrottle,
@@ -8,6 +8,7 @@ import {
   recordPasskeyChallengeFailure,
   recordPasskeyVerifyFailure,
 } from "~/lib/auth/password/throttle";
+import { evaluateLoginPolicy } from "~/lib/auth/policy/login-policy";
 import { recordAuthEvent } from "~/lib/auth/security/auth-events";
 import { sendAlertOnNewLoginSource } from "~/lib/auth/security/login-source-alert";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
@@ -15,10 +16,7 @@ import { config } from "~/lib/config";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { deleteLoginFlow } from "../../login-flow/shared";
-import type {
-  issueAppSession,
-  issuePreAuthSession,
-} from "../../session/session-issuer";
+import type { issueLoginSession } from "../../session/session-transition";
 import { isPasskeyRequestError } from "../passkey";
 import type { PasskeyAuthRepos } from "./shared";
 import {
@@ -43,14 +41,13 @@ interface PasskeyLoginServiceDeps {
       challenge: string,
     ): Promise<{ verified: boolean; userId: number }>;
   };
-  issueAppSession: typeof issueAppSession;
-  issuePreAuthSession: typeof issuePreAuthSession;
+  issueLoginSession: typeof issueLoginSession;
 }
 
 interface BeginPasskeyLoginInput {
   identifier: string;
   ipAddress: string;
-  primaryAuthMethod?: PrimaryAuthMethod;
+  primaryAuthMethod?: "password" | "google" | "passkey";
 }
 
 interface FinishPasskeyLoginInput {
@@ -279,28 +276,32 @@ export function createPasskeyLoginService(
           outcome: "success",
         });
 
-        const session =
-          user.onboarding_completed_at !== null
-            ? await deps.issueAppSession({
-                user,
-                ipAddress: input.ipAddress,
-                userAgent: input.userAgent,
-                primaryAuthMethod: flow.primary_auth_method,
-                strongAuthMethod: "passkey",
-                strongAuthAt: Date.now(),
-                auditAction: "login_passkey",
-                deps: repos,
-              })
-            : await deps.issuePreAuthSession({
-                user,
-                ipAddress: input.ipAddress,
-                userAgent: input.userAgent,
-                primaryAuthMethod: flow.primary_auth_method,
-                strongAuthMethod: "passkey",
-                strongAuthAt: Date.now(),
-                auditAction: "login_passkey",
-                deps: repos,
-              });
+        const context = await loadActiveAuthContext(user.id, repos);
+        if (!context) {
+          return Err({ kind: "invalid_credentials" });
+        }
+        const decision = evaluateLoginPolicy({
+          proof: {
+            kind: "passkey",
+            userId: user.id,
+          },
+          context,
+        });
+        if (decision.kind !== "issue_session") {
+          return Err(unexpectedPasskeyLoginError());
+        }
+
+        const session = await deps.issueLoginSession({
+          user,
+          decision,
+          request: {
+            ipAddress: input.ipAddress,
+            userAgent: input.userAgent,
+          },
+          primaryAuthMethod: flow.primary_auth_method,
+          auditAction: "login_passkey",
+          deps: repos,
+        });
 
         return Ok(session);
       } catch {

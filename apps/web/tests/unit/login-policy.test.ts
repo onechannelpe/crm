@@ -1,21 +1,27 @@
 import { describe, expect, it } from "vitest";
 
-import { evaluateLoginPolicy } from "../../src/lib/auth/core/login-policy";
+import { evaluateLoginPolicy } from "../../src/lib/auth/policy/login-policy";
 
 describe("login policy", () => {
   it("denies onboarded privileged google login when no strong factor is enrolled", () => {
     const decision = evaluateLoginPolicy({
-      user: {
-        role: "admin",
-        onboarding_completed_at: 1_710_000_000_000,
+      proof: {
+        kind: "google",
+        userId: 1,
+        trustedFederatedMfa: false,
       },
-      strongAuthStatus: {
-        hasTotp: false,
-        hasPasskey: false,
-        passkeyCount: 0,
-        hasVerifiedStrongAuth: false,
+      context: {
+        user: {
+          role: "admin",
+          onboarding_completed_at: 1_710_000_000_000,
+        },
+        strongAuthStatus: {
+          hasTotp: false,
+          hasPasskey: false,
+          passkeyCount: 0,
+          hasVerifiedStrongAuth: false,
+        },
       },
-      primaryAuthMethod: "google",
     });
 
     expect(decision).toEqual({
@@ -26,17 +32,23 @@ describe("login policy", () => {
 
   it("requires totp step-up for onboarded privileged google login when totp is enrolled", () => {
     const decision = evaluateLoginPolicy({
-      user: {
-        role: "admin",
-        onboarding_completed_at: 1_710_000_000_000,
+      proof: {
+        kind: "google",
+        userId: 1,
+        trustedFederatedMfa: false,
       },
-      strongAuthStatus: {
-        hasTotp: true,
-        hasPasskey: false,
-        passkeyCount: 0,
-        hasVerifiedStrongAuth: true,
+      context: {
+        user: {
+          role: "admin",
+          onboarding_completed_at: 1_710_000_000_000,
+        },
+        strongAuthStatus: {
+          hasTotp: true,
+          hasPasskey: false,
+          passkeyCount: 0,
+          hasVerifiedStrongAuth: true,
+        },
       },
-      primaryAuthMethod: "google",
     });
 
     expect(decision).toEqual({
@@ -46,21 +58,27 @@ describe("login policy", () => {
 
   it("issues only a pre-auth session for privileged onboarding bootstrap login", () => {
     const decision = evaluateLoginPolicy({
-      user: {
-        role: "admin",
-        onboarding_completed_at: null,
+      proof: {
+        kind: "password",
+        userId: 1,
       },
-      strongAuthStatus: {
-        hasTotp: false,
-        hasPasskey: false,
-        passkeyCount: 0,
-        hasVerifiedStrongAuth: false,
+      context: {
+        user: {
+          role: "admin",
+          onboarding_completed_at: null,
+        },
+        strongAuthStatus: {
+          hasTotp: false,
+          hasPasskey: false,
+          passkeyCount: 0,
+          hasVerifiedStrongAuth: false,
+        },
       },
-      primaryAuthMethod: "password",
     });
 
     expect(decision).toEqual({
-      kind: "issue_preauth_session",
+      kind: "issue_session",
+      sessionClass: "pre_auth",
       strongAuthMethod: null,
       strongAuthAt: null,
     });

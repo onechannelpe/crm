@@ -1,9 +1,15 @@
+import type { Repositories } from "~/server/shared/registry";
+
 import { deleteLoginFlow } from "../../login-flow/shared";
-import type { PasskeyAuthRepos } from "./shared";
 import type { PasskeyLoginFlowState } from "./types";
 
+type PasskeyLoginStateRepos = Pick<
+  Repositories,
+  "loginFlows" | "webauthnChallenges" | "passkeys" | "auditLogs"
+>;
+
 type PasskeyFlowRecord = Awaited<
-  ReturnType<PasskeyAuthRepos["loginFlows"]["findById"]>
+  ReturnType<PasskeyLoginStateRepos["loginFlows"]["findById"]>
 >;
 
 interface PasskeyLoginStateServiceDeps {
@@ -16,7 +22,7 @@ interface PasskeyLoginStateServiceDeps {
 }
 
 export function createPasskeyLoginStateService(
-  repos: PasskeyAuthRepos,
+  repos: PasskeyLoginStateRepos,
   deps: PasskeyLoginStateServiceDeps,
 ) {
   async function hydrateLoginFlow(
