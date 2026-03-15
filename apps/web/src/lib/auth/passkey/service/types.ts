@@ -11,12 +11,22 @@ export interface PasskeyEnrollmentChallenge {
   options: PublicKeyCredentialCreationOptionsJSON;
 }
 
-export interface PasskeyLoginFlowState {
-  id: number;
-  identifier: string;
-  state: "passkey";
-  requestOptions: PublicKeyCredentialRequestOptionsJSON;
-}
+export type PasskeyLoginMode = "identified" | "discoverable";
+
+export type PasskeyLoginFlowState =
+  | {
+      id: number;
+      identifier: string;
+      mode: "identified";
+      state: "passkey";
+      requestOptions: PublicKeyCredentialRequestOptionsJSON;
+    }
+  | {
+      id: number;
+      mode: "discoverable";
+      state: "passkey";
+      requestOptions: PublicKeyCredentialRequestOptionsJSON;
+    };
 
 export type PasskeyLoginResult = IssuedSessionResult;
 

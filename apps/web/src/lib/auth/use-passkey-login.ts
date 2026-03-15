@@ -15,9 +15,21 @@ import type { PasskeyLoginFlowState } from "./passkey/service";
 export type PasskeyLoginPhase = "idle" | "starting" | "device" | "verifying";
 export type PasskeySupportStatus = "unknown" | "supported" | "unsupported";
 
-function buildIdentifierFormData(identifier: string): FormData {
+function buildPasskeyStartFormData(
+  input:
+    | {
+        mode: "identified";
+        identifier: string;
+      }
+    | {
+        mode: "discoverable";
+      },
+): FormData {
   const formData = new FormData();
-  formData.set("identifier", identifier);
+  formData.set("mode", input.mode);
+  if (input.mode === "identified") {
+    formData.set("identifier", input.identifier);
+  }
   return formData;
 }
 
@@ -127,7 +139,35 @@ export function usePasskeyLogin() {
 
     try {
       const result = await beginPasskeyLogin(
-        buildIdentifierFormData(safeIdentifier),
+        buildPasskeyStartFormData({
+          mode: "identified",
+          identifier: safeIdentifier,
+        }),
+      );
+      if (!result.ok) {
+        setError(passkeyStartUiMessage(result.code));
+        return false;
+      }
+
+      return await runFlow(result.flow);
+    } finally {
+      if (phase() === "starting") {
+        setPhase("idle");
+      }
+    }
+  }
+
+  async function startDiscoverable(): Promise<boolean> {
+    if (busy()) {
+      return false;
+    }
+
+    resetError();
+    setPhase("starting");
+
+    try {
+      const result = await beginPasskeyLogin(
+        buildPasskeyStartFormData({ mode: "discoverable" }),
       );
       if (!result.ok) {
         setError(passkeyStartUiMessage(result.code));
@@ -160,6 +200,7 @@ export function usePasskeyLogin() {
     busy,
     activeFlow,
     start,
+    startDiscoverable,
     retry,
     runFlow,
     resetError,

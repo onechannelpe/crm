@@ -74,11 +74,14 @@ type PasskeyServiceDeps = Pick<Repositories, "passkeys" | "auditLogs">;
 
 export function createPasskeyService(repos: PasskeyServiceDeps) {
   async function buildAuthenticationOptions(
-    userId: number | undefined,
+    input: {
+      userId?: number;
+      userVerification: "preferred" | "required";
+    },
     challenge?: string,
   ): Promise<PublicKeyCredentialRequestOptionsJSON> {
-    const allowCredentials = userId
-      ? (await repos.passkeys.findByUser(userId)).map((p) => ({
+    const allowCredentials = input.userId
+      ? (await repos.passkeys.findByUser(input.userId)).map((p) => ({
           id: p.id,
           type: "public-key" as const,
           transports: parseStoredTransports(p.transports),
@@ -91,7 +94,7 @@ export function createPasskeyService(repos: PasskeyServiceDeps) {
         challenge,
         allowCredentials,
         timeout: 60000,
-        userVerification: "preferred",
+        userVerification: input.userVerification,
         extensions: undefined,
       };
     }
@@ -99,7 +102,7 @@ export function createPasskeyService(repos: PasskeyServiceDeps) {
     return generateAuthenticationOptions({
       rpID,
       allowCredentials,
-      userVerification: "preferred",
+      userVerification: input.userVerification,
     });
   }
 
@@ -168,15 +171,19 @@ export function createPasskeyService(repos: PasskeyServiceDeps) {
       return { verified: true };
     },
 
-    async getAuthenticationOptions(userId?: number) {
-      return buildAuthenticationOptions(userId);
+    async getAuthenticationOptions(input: {
+      userId?: number;
+      userVerification: "preferred" | "required";
+    }) {
+      return buildAuthenticationOptions(input);
     },
 
-    async getAuthenticationOptionsForChallenge(
-      userId: number,
-      challenge: string,
-    ) {
-      return buildAuthenticationOptions(userId, challenge);
+    async getAuthenticationOptionsForChallenge(input: {
+      userId: number;
+      challenge: string;
+      userVerification: "preferred" | "required";
+    }) {
+      return buildAuthenticationOptions(input, input.challenge);
     },
 
     async verifyAuthentication(

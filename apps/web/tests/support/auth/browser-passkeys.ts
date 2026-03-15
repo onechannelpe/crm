@@ -32,6 +32,7 @@ export async function createPasskeyFlow(
   const result = await createPasskeyAuthService(runtime.repos).beginLogin({
     identifier: identity.username,
     ipAddress: "127.0.0.1",
+    mode: "identified",
   });
 
   if (isErr(result)) {

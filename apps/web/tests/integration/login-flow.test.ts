@@ -119,6 +119,7 @@ describe("login flow service", () => {
     const result = await createPasskeyAuthService(ctx.repos).beginLogin({
       identifier: "exec.one",
       ipAddress: "198.51.100.55",
+      mode: "identified",
     });
 
     expect(isErr(result)).toBe(false);

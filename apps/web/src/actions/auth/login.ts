@@ -50,6 +50,13 @@ export type TotpLoginSubmissionResult = {
   code: "invalid_totp";
 };
 
+function readPasskeyStartMode(
+  formData: FormData,
+): "identified" | "discoverable" | null {
+  const value = formData.get("mode");
+  return value === "identified" || value === "discoverable" ? value : null;
+}
+
 function readText(
   formData: FormData,
   field: "identifier" | "password" | "totpCode",
@@ -192,13 +199,24 @@ export async function passwordLogin(
 export async function passkeyStart(
   formData: FormData,
 ): Promise<PasskeyStartSubmissionResult> {
-  const identifier = readText(formData, "identifier");
+  const mode = readPasskeyStartMode(formData);
+  if (!mode) {
+    throw internalError("Invalid passkey login mode");
+  }
+
   const request = getRequestContext();
   const service = createPasskeyAuthService(repos);
-  const result = await service.beginLogin({
-    identifier,
-    ipAddress: request.ipAddress,
-  });
+  const result =
+    mode === "identified"
+      ? await service.beginLogin({
+          identifier: readText(formData, "identifier"),
+          ipAddress: request.ipAddress,
+          mode,
+        })
+      : await service.beginLogin({
+          ipAddress: request.ipAddress,
+          mode,
+        });
   if (isErr(result)) {
     await recordAuthAnalyticsEvent(
       {

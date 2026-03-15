@@ -17,7 +17,7 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { deleteLoginFlow } from "../../login-flow/shared";
 import type { issueLoginSession } from "../../session/session-transition";
-import { isPasskeyRequestError } from "../passkey";
+import { isPasskeyRequestError, PasskeyRequestError } from "../passkey";
 import type { PasskeyAuthRepos } from "./shared";
 import {
   normalizePasskeyFlowId,
@@ -26,16 +26,20 @@ import {
 } from "./shared";
 import type {
   BeginPasskeyLoginError,
+  PasskeyLoginMode,
   FinishPasskeyLoginError,
   PasskeyLoginFlowState,
   PasskeyLoginResult,
 } from "./types";
 
+const DISCOVERABLE_PASSKEY_IDENTIFIER = "discoverable";
+
 interface PasskeyLoginServiceDeps {
   webauthnService: {
-    getAuthenticationOptions(
-      userId?: number,
-    ): Promise<PasskeyLoginFlowState["requestOptions"]>;
+    getAuthenticationOptions(input: {
+      userId?: number;
+      userVerification: "preferred" | "required";
+    }): Promise<PasskeyLoginFlowState["requestOptions"]>;
     verifyAuthentication(
       response: AuthenticationResponseJSON,
       challenge: string,
@@ -44,11 +48,18 @@ interface PasskeyLoginServiceDeps {
   issueLoginSession: typeof issueLoginSession;
 }
 
-interface BeginPasskeyLoginInput {
-  identifier: string;
-  ipAddress: string;
-  primaryAuthMethod?: "password" | "google" | "passkey";
-}
+type BeginPasskeyLoginInput =
+  | {
+      identifier: string;
+      ipAddress: string;
+      mode: "identified";
+      primaryAuthMethod?: "password" | "google" | "passkey";
+    }
+  | {
+      ipAddress: string;
+      mode: "discoverable";
+      primaryAuthMethod?: "passkey";
+    };
 
 interface FinishPasskeyLoginInput {
   flowId: number;
@@ -62,16 +73,92 @@ export function createPasskeyLoginService(
   repos: PasskeyAuthRepos,
   deps: PasskeyLoginServiceDeps,
 ) {
+  async function createAuthenticationFlow(input: {
+    challengeUserId: number | null;
+    flowUserId: number | null;
+    identifier: string;
+    mode: PasskeyLoginMode;
+    primaryAuthMethod: "password" | "google" | "passkey";
+    userVerification: "preferred" | "required";
+  }): Promise<PasskeyLoginFlowState> {
+    const options = await deps.webauthnService.getAuthenticationOptions({
+      userId: input.challengeUserId ?? undefined,
+      userVerification: input.userVerification,
+    });
+    const challengeId = await repos.webauthnChallenges.create({
+      user_id: input.challengeUserId,
+      type: "authentication",
+      challenge: options.challenge,
+      expires_at: Date.now() + config.auth.webauthnChallengeTtlMs,
+    });
+    const flowId = await repos.loginFlows.create({
+      identifier: input.identifier,
+      primary_auth_method: input.primaryAuthMethod,
+      user_id: input.flowUserId,
+      challenge_id: challengeId,
+      state: "passkey",
+      expires_at: Date.now() + config.auth.loginFlowTtlMs,
+    });
+
+    if (input.mode === "identified") {
+      return {
+        id: flowId,
+        identifier: input.identifier,
+        mode: "identified",
+        state: "passkey",
+        requestOptions: options,
+      };
+    }
+
+    return {
+      id: flowId,
+      mode: "discoverable",
+      state: "passkey",
+      requestOptions: options,
+    };
+  }
+
   return {
     async beginLogin(
       input: BeginPasskeyLoginInput,
     ): Promise<Result<PasskeyLoginFlowState, BeginPasskeyLoginError>> {
-      const identifier = normalizePasskeyIdentifier(input.identifier);
-      if (typeof identifier !== "string") {
-        return Err(identifier);
-      }
-
       try {
+        if (input.mode === "discoverable") {
+          const throttle = await checkPasskeyChallengeThrottle(
+            DISCOVERABLE_PASSKEY_IDENTIFIER,
+            input.ipAddress,
+            repos,
+          );
+          if (!throttle.allowed) {
+            await recordAuthEvent(repos, {
+              userId: null,
+              identifier: DISCOVERABLE_PASSKEY_IDENTIFIER,
+              ipAddress: input.ipAddress,
+              method: "passkey",
+              stage: "challenge",
+              outcome: "throttled",
+              reason: "threshold_exceeded",
+            });
+            return Err({ kind: "invalid_credentials" });
+          }
+
+          return Ok(
+            await createAuthenticationFlow({
+              challengeUserId: null,
+              flowUserId: null,
+              identifier: DISCOVERABLE_PASSKEY_IDENTIFIER,
+              mode: "discoverable",
+              primaryAuthMethod: "passkey",
+              userVerification: "required",
+            }),
+          );
+        }
+
+        const identifier = normalizePasskeyIdentifier(input.identifier);
+        if (typeof identifier !== "string") {
+          return Err(identifier);
+        }
+
         const throttle = await checkPasskeyChallengeThrottle(
           identifier,
           input.ipAddress,
@@ -110,30 +197,16 @@ export function createPasskeyLoginService(
           return Err({ kind: "invalid_credentials" });
         }
 
-        const options = await deps.webauthnService.getAuthenticationOptions(
-          user.id,
+        return Ok(
+          await createAuthenticationFlow({
+            challengeUserId: user.id,
+            flowUserId: user.id,
+            identifier,
+            mode: "identified",
+            primaryAuthMethod: input.primaryAuthMethod ?? "passkey",
+            userVerification: "preferred",
+          }),
         );
-        const challengeId = await repos.webauthnChallenges.create({
-          user_id: user.id,
-          type: "authentication",
-          challenge: options.challenge,
-          expires_at: Date.now() + config.auth.webauthnChallengeTtlMs,
-        });
-        const flowId = await repos.loginFlows.create({
-          identifier,
-          primary_auth_method: input.primaryAuthMethod ?? "passkey",
-          user_id: user.id,
-          challenge_id: challengeId,
-          state: "passkey",
-          expires_at: Date.now() + config.auth.loginFlowTtlMs,
-        });
-
-        return Ok({
-          id: flowId,
-          identifier,
-          state: "passkey",
-          requestOptions: options,
-        });
       } catch {
         return Err(unexpectedPasskeyLoginError());
       }
@@ -219,7 +292,11 @@ export function createPasskeyLoginService(
             input.response,
             challenge.challenge,
           );
+
           verifiedUserId = verification.userId;
+          if (challenge.user_id && verification.userId !== challenge.user_id) {
+            throw new PasskeyRequestError("Credential user mismatch");
+          }
         } catch (error: unknown) {
           if (!isPasskeyRequestError(error)) {
             return Err(unexpectedPasskeyLoginError());

@@ -14,10 +14,11 @@ type PasskeyFlowRecord = Awaited<
 
 interface PasskeyLoginStateServiceDeps {
   webauthnService: {
-    getAuthenticationOptionsForChallenge(
-      userId: number,
-      challenge: string,
-    ): Promise<PasskeyLoginFlowState["requestOptions"]>;
+    getAuthenticationOptionsForChallenge(input: {
+      userId: number;
+      challenge: string;
+      userVerification: "preferred" | "required";
+    }): Promise<PasskeyLoginFlowState["requestOptions"]>;
   };
 }
 
@@ -59,12 +60,14 @@ export function createPasskeyLoginStateService(
     return {
       id: flow.id,
       identifier: flow.identifier,
+      mode: "identified",
       state: "passkey",
       requestOptions:
-        await deps.webauthnService.getAuthenticationOptionsForChallenge(
-          flow.user_id,
-          challenge.challenge,
-        ),
+        await deps.webauthnService.getAuthenticationOptionsForChallenge({
+          userId: flow.user_id,
+          challenge: challenge.challenge,
+          userVerification: "preferred",
+        }),
     };
   }
 
