@@ -3,6 +3,7 @@ import { observabilityService } from "~/server/shared/context";
 
 export const AUTH_ANALYTICS_SCREENS = [
   "login",
+  "login_user",
   "login_verify",
   "login_passkey",
   "reset_password",
@@ -120,6 +121,7 @@ function resolveEventMethod(
   switch (event.kind) {
     case "screen_viewed":
       if (event.screen === "login_verify") return "password_totp";
+      if (event.screen === "login_user") return "password";
       if (event.screen === "login_passkey") {
         return "passkey";
       }

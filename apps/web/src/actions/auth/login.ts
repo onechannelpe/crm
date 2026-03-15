@@ -232,7 +232,7 @@ export async function totpLogin(
   const flowId = readPositiveInt(formData, "flowId");
   const totpCode = readText(formData, "totpCode");
   if (!flowId) {
-    throw redirect("/login?error=flow_expired");
+    throw redirect("/login/user?error=flow_expired");
   }
   const request = getRequestContext();
   const result = await submitTotpForLoginFlow(
@@ -256,7 +256,7 @@ export async function totpLogin(
         },
         getActionRequestContext(),
       );
-      throw redirect("/login?error=flow_expired");
+      throw redirect("/login/user?error=flow_expired");
     }
 
     await recordAuthAnalyticsEvent(

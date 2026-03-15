@@ -13,12 +13,12 @@ export class LoginPage {
       this.page.getByRole("button", { name: "Continuar con Google" }),
     ).toBeVisible();
     await expect(
-      this.page.getByRole("button", { name: "Continuar con usuario" }),
+      this.page.getByRole("link", { name: "Continuar con usuario" }),
     ).toBeVisible();
   }
 
   async openUsernameLogin() {
-    const usernameButton = this.page.getByRole("button", {
+    const usernameButton = this.page.getByRole("link", {
       name: "Continuar con usuario",
     });
     const passwordInput = this.page.getByRole("textbox", {
@@ -27,7 +27,7 @@ export class LoginPage {
 
     await expect(usernameButton).toBeVisible();
     await Promise.all([
-      this.page.waitForURL(/\/login\?method=user$/),
+      this.page.waitForURL(/\/login\/user$/),
       usernameButton.click(),
     ]);
     await expect(passwordInput).toBeVisible();
@@ -62,7 +62,7 @@ export class LoginPage {
   }
 
   async expectStayedOnLoginAfterPasskeyStart() {
-    await expect(this.page).toHaveURL(/\/login\?method=user$/);
+    await expect(this.page).toHaveURL(/\/login\/user$/);
     await expect(
       this.page.getByRole("button", { name: "Usar clave de acceso" }),
     ).toHaveCount(1);
