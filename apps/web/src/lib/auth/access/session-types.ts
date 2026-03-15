@@ -1,3 +1,8 @@
+import type {
+  PrimaryAuthMethod,
+  SessionClass,
+  StrongAuthMethod,
+} from "../core/session-contract";
 import type { Role } from "./rbac";
 
 export interface AuthSession {
@@ -6,6 +11,8 @@ export interface AuthSession {
   branchId: number;
   role: Role;
   onboardingCompleted: boolean;
-  authMethod: "password" | "password_totp" | "passkey" | "google";
+  sessionClass: SessionClass;
+  primaryAuthMethod: PrimaryAuthMethod;
+  strongAuthMethod: StrongAuthMethod | null;
   strongAuthAt: number | null;
 }

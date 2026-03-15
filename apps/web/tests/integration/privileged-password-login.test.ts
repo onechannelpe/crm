@@ -85,7 +85,9 @@ describe("privileged password login", () => {
     expect(result.value.result.role).toBe("superuser");
     expect(result.value.result.onboardingCompleted).toBe(false);
     const sessions = await ctx.repos.sessions.listForUser(identity.userId);
-    expect(sessions[0]?.auth_method).toBe("password");
+    expect(sessions[0]?.session_class).toBe("pre_auth");
+    expect(sessions[0]?.primary_auth_method).toBe("password");
+    expect(sessions[0]?.strong_auth_method).toBeNull();
     expect(sessions[0]?.strong_auth_at).toBeNull();
   });
 
@@ -174,7 +176,9 @@ describe("privileged password login", () => {
     }
 
     const sessions = await ctx.repos.sessions.listForUser(identity.userId);
-    expect(sessions[0]?.auth_method).toBe("password_totp");
+    expect(sessions[0]?.session_class).toBe("app");
+    expect(sessions[0]?.primary_auth_method).toBe("password");
+    expect(sessions[0]?.strong_auth_method).toBe("totp");
     expect(typeof sessions[0]?.strong_auth_at).toBe("number");
   });
 

@@ -1,3 +1,8 @@
+import type {
+  PrimaryAuthMethod,
+  SessionClass,
+  StrongAuthMethod,
+} from "../core/session-contract";
 import { getSessionCookie } from "../session/cookies";
 import { validateSessionToken } from "../session/session-manager";
 import { hasPermission, type Permission, type Role } from "./rbac";
@@ -9,7 +14,9 @@ export interface SessionData {
   role: Role;
   branchId: number;
   onboardingCompleted: boolean;
-  authMethod: "password" | "password_totp" | "passkey" | "google";
+  sessionClass: SessionClass;
+  primaryAuthMethod: PrimaryAuthMethod;
+  strongAuthMethod: StrongAuthMethod | null;
   strongAuthAt: number | null;
 }
 
@@ -26,7 +33,9 @@ export async function getSession(): Promise<SessionData | null> {
     role: session.role,
     branchId: session.branchId,
     onboardingCompleted: session.onboardingCompleted,
-    authMethod: session.authMethod,
+    sessionClass: session.sessionClass,
+    primaryAuthMethod: session.primaryAuthMethod,
+    strongAuthMethod: session.strongAuthMethod,
     strongAuthAt: session.strongAuthAt,
   };
 }
@@ -38,7 +47,7 @@ export async function requireAuth(): Promise<SessionData> {
     throw new Error("Unauthorized");
   }
 
-  if (!session.onboardingCompleted) {
+  if (session.sessionClass !== "app" || !session.onboardingCompleted) {
     throw new Error("Onboarding required");
   }
 

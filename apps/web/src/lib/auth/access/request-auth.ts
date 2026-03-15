@@ -84,11 +84,15 @@ export async function enforceAuthRequest(
     return { kind: "redirect_login" };
   }
 
-  if (!session.onboardingCompleted && url.pathname !== "/onboarding") {
+  if (session.sessionClass === "pre_auth" && url.pathname !== "/onboarding") {
     return { kind: "redirect_onboarding" };
   }
 
-  if (session.onboardingCompleted && url.pathname === "/onboarding") {
+  if (
+    session.sessionClass === "app" &&
+    session.onboardingCompleted &&
+    url.pathname === "/onboarding"
+  ) {
     return { kind: "redirect_home", to: getDefaultAppPath(session.role) };
   }
 

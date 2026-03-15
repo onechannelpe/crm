@@ -15,7 +15,12 @@ import {
   type PasskeyEnrollmentError,
 } from "~/lib/auth/passkey/service";
 import { getClientIp } from "~/lib/auth/password/client-ip";
-import { runInRepositoryTransaction } from "~/server/shared/context";
+import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
+import {
+  issueAppSession,
+  replaceCurrentSession,
+} from "~/lib/auth/session/session-issuer";
+import { repos, runInRepositoryTransaction } from "~/server/shared/context";
 import { Err, isErr, type Result } from "~/server/shared/result";
 import {
   completeAccountOnboardingWithRepos,
@@ -33,6 +38,40 @@ function resolveRedirect(
   role: Awaited<ReturnType<typeof requireSession>>["role"],
 ) {
   return { redirectTo: getDefaultAppPath(role) };
+}
+
+async function promoteCompletedOnboardingSession(
+  session: Awaited<ReturnType<typeof requireSession>>,
+): Promise<void> {
+  const user = await repos.users.findById(session.userId);
+  if (!user) {
+    throw internalError("No se pudo completar el registro");
+  }
+
+  const event = getRequestEvent();
+  const ipAddress = getClientIp(event?.request.headers ?? new Headers());
+  const userAgent = event?.request.headers.get("user-agent") ?? null;
+  const strongAuthStatus = await getStrongAuthStatus(user.id, repos);
+  const strongAuthMethod =
+    session.strongAuthMethod ??
+    (strongAuthStatus.hasPasskey
+      ? "passkey"
+      : strongAuthStatus.hasTotp
+        ? "totp"
+        : null);
+  const strongAuthAt =
+    strongAuthMethod === null ? null : (session.strongAuthAt ?? Date.now());
+
+  const issued = await issueAppSession({
+    user,
+    ipAddress,
+    userAgent,
+    primaryAuthMethod: session.primaryAuthMethod,
+    strongAuthMethod,
+    strongAuthAt,
+    deps: repos,
+  });
+  await replaceCurrentSession(issued.token);
 }
 
 function mapCompleteOnboardingError(error: CompleteOnboardingError): never {
@@ -87,6 +126,7 @@ export async function completeOnboarding(
   if (isErr(result)) {
     mapCompleteOnboardingError(result.error);
   }
+  await promoteCompletedOnboardingSession(session);
   return resolveRedirect(session.role);
 }
 
@@ -124,5 +164,6 @@ export async function completePasskeyOnboarding(
       userNotFoundMessage: "No se pudo completar el registro",
     });
   }
+  await promoteCompletedOnboardingSession(session);
   return resolveRedirect(session.role);
 }

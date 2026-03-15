@@ -12,9 +12,10 @@ import { isValidInviteTokenFormat } from "~/lib/auth/invite/tokens";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { hashPassword } from "~/lib/auth/password/password";
 import { setSessionCookie } from "~/lib/auth/session/cookies";
-import { createSession } from "~/lib/auth/session/session-manager";
+import { issuePreAuthSession } from "~/lib/auth/session/session-issuer";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
+import { repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 import type { AcceptInviteError } from "~/server/users/service-user-provisioning";
 
@@ -67,16 +68,21 @@ export async function acceptTeamInvite(input: {
       const event = getRequestEvent();
       const ipAddress = getClientIp(event?.request.headers ?? new Headers());
       const userAgent = event?.request.headers.get("user-agent") ?? null;
-      const token = await createSession(
-        result.value.userId,
-        result.value.branchId,
-        result.value.role,
+      const issued = await issuePreAuthSession({
+        user: {
+          id: result.value.userId,
+          branch_id: result.value.branchId,
+          role: result.value.role,
+          onboarding_completed_at: null,
+        },
         ipAddress,
         userAgent,
-        "password",
-        null,
-      );
-      setSessionCookie(token);
+        primaryAuthMethod: "password",
+        strongAuthMethod: null,
+        strongAuthAt: null,
+        deps: repos,
+      });
+      setSessionCookie(issued.token);
     },
   });
 }

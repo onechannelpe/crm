@@ -1,11 +1,10 @@
 import type { APIEvent } from "@solidjs/start/server";
 import { decodeIdToken } from "arctic";
 
-import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { googleOAuth, parseGoogleClaims } from "~/lib/auth/google/google-oauth";
+import { submitGoogleLogin } from "~/lib/auth/login-flow";
 import { getClientIp } from "~/lib/auth/password/client-ip";
-import { createSession } from "~/lib/auth/session/session-manager";
-import { repos } from "~/server/shared/context";
+import { privilegedLoginAlertSender, repos } from "~/server/shared/context";
 
 const SESSION_MAX_AGE = 30 * 24 * 60 * 60;
 
@@ -34,6 +33,16 @@ function clearOAuthCookies(): string[] {
 
 function badRequest(): Response {
   return new Response("Bad request", { status: 400 });
+}
+
+function redirectToLogin(url: URL, error: string): Response {
+  const loginUrl = new URL("/login", url.origin);
+  loginUrl.searchParams.set("error", error);
+  const clearHeaders = new Headers([
+    ["Location", loginUrl.toString()],
+    ...clearOAuthCookies().map((v) => ["Set-Cookie", v] as [string, string]),
+  ]);
+  return new Response(null, { status: 302, headers: clearHeaders });
 }
 
 export async function GET(event: APIEvent): Promise<Response> {
@@ -73,56 +82,49 @@ export async function GET(event: APIEvent): Promise<Response> {
   );
 
   if (!oauthAccount) {
-    const loginUrl = new URL("/login", url.origin);
-    loginUrl.searchParams.set("error", "google_not_linked");
-    const clearHeaders = new Headers([
-      ["Location", loginUrl.toString()],
-      ...clearOAuthCookies().map((v) => ["Set-Cookie", v] as [string, string]),
-    ]);
-    return new Response(null, { status: 302, headers: clearHeaders });
+    return redirectToLogin(url, "google_not_linked");
   }
 
   const user = await repos.users.findById(oauthAccount.user_id);
   if (!user || !user.is_active) {
-    const loginUrl = new URL("/login", url.origin);
-    loginUrl.searchParams.set("error", "google_not_linked");
-    const clearHeaders = new Headers([
-      ["Location", loginUrl.toString()],
-      ...clearOAuthCookies().map((v) => ["Set-Cookie", v] as [string, string]),
-    ]);
-    return new Response(null, { status: 302, headers: clearHeaders });
+    return redirectToLogin(url, "google_not_linked");
   }
 
   const ipAddress = getClientIp(event.request.headers);
   const userAgent = event.request.headers.get("user-agent") ?? null;
-
-  const token = await createSession(
-    user.id,
-    user.branch_id,
-    user.role,
-    ipAddress,
-    userAgent,
-    "google",
-    Date.now(),
+  const result = await submitGoogleLogin(
+    {
+      userId: user.id,
+      ipAddress,
+      userAgent,
+      trustedFederatedMfa: false,
+    },
+    repos,
+    privilegedLoginAlertSender,
   );
-
-  await repos.auditLogs.create({
-    user_id: user.id,
-    action: "login",
-    entity_type: "user",
-    entity_id: user.id,
-    changes: null,
-    created_at: Date.now(),
-  });
+  if (result.ok === false) {
+    return redirectToLogin(
+      url,
+      result.error.kind === "strong_auth_required"
+        ? "strong_auth_required"
+        : "google_not_linked",
+    );
+  }
 
   const destination =
-    user.onboarding_completed_at !== null
-      ? getDefaultAppPath(user.role)
-      : "/onboarding";
+    result.value.kind === "totp_required"
+      ? `/login/verify?flow=${result.value.flow.id}`
+      : result.value.kind === "passkey_required"
+        ? `/login/passkey?flow=${result.value.flow.id}`
+        : result.value.result.onboardingCompleted
+          ? "/"
+          : "/onboarding";
 
   const responseHeaders = new Headers([
     ["Location", destination],
-    ["Set-Cookie", buildSessionCookie(token)],
+    ...(result.value.kind === "complete"
+      ? [["Set-Cookie", buildSessionCookie(result.value.result.token)]]
+      : []),
     ...clearOAuthCookies().map((v) => ["Set-Cookie", v] as [string, string]),
   ]);
 

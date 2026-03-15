@@ -3,18 +3,8 @@ import type { User } from "~/lib/db/types";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import type { Role } from "../access/rbac";
-import type {
-  InvalidCredentialsError,
-  PasskeyRequiredError,
-  StrongAuthRequiredError,
-} from "../errors";
-import { getPasswordLoginPolicy } from "../security/auth-contract";
+import type { InvalidCredentialsError } from "../errors";
 import { recordAuthEvent } from "../security/auth-events";
-import { sendAlertOnNewLoginSource } from "../security/login-source-alert";
-import { type SendPrivilegedLoginAlert } from "../security/privileged-login-alert";
-import { getStrongAuthStatus } from "../security/strong-auth-status";
-import { issueLoginSession } from "../session/login-completion";
 import { hashPassword, verifyPassword } from "./password";
 import {
   checkLoginThrottle,
@@ -24,46 +14,13 @@ import {
 
 const DUMMY_HASH = hashPassword("dummy-constant-for-timing-parity");
 
-type Deps = Pick<
-  Repositories,
-  | "users"
-  | "sessions"
-  | "auditLogs"
-  | "authThrottle"
-  | "authEvents"
-  | "userTotpFactors"
-  | "userTotpRecoveryCodes"
-  | "passkeys"
->;
-
-export interface PasswordLoginInput {
-  username: string;
-  password: string;
-  totpCode?: string;
-  ipAddress: string;
-  userAgent: string | null;
-}
+type Deps = Pick<Repositories, "users" | "authThrottle" | "authEvents">;
 
 export interface PasswordCredentialInput {
   username: string;
   password: string;
   ipAddress: string;
 }
-
-export interface PasswordLoginResult {
-  userId: number;
-  role: Role;
-  onboardingCompleted: boolean;
-  token: string;
-}
-
-export type PasswordLoginNextStepError =
-  | StrongAuthRequiredError
-  | PasskeyRequiredError;
-
-export type PasswordLoginError =
-  | InvalidCredentialsError
-  | PasswordLoginNextStepError;
 
 export async function verifyPasswordLoginCredentials(
   input: PasswordCredentialInput,
@@ -125,79 +82,4 @@ export async function verifyPasswordLoginCredentials(
 
   await clearLoginFailureState(safeUsername, input.ipAddress, resolvedDeps);
   return Ok(user);
-}
-
-export async function getPasswordLoginNextStep(
-  user: User,
-  deps: Pick<Deps, "userTotpFactors" | "passkeys">,
-): Promise<Result<"complete" | "totp", PasswordLoginNextStepError>> {
-  const strongAuthStatus = await getStrongAuthStatus(user.id, deps);
-  const passwordLoginPolicy = getPasswordLoginPolicy({
-    role: user.role,
-    onboardingCompleted: user.onboarding_completed_at !== null,
-    strongAuthStatus,
-  });
-
-  if (
-    passwordLoginPolicy === "password_only" ||
-    passwordLoginPolicy === "password_bootstrap"
-  ) {
-    return Ok("complete");
-  }
-
-  if (passwordLoginPolicy === "password_or_totp" && strongAuthStatus.hasTotp) {
-    return Ok("totp");
-  }
-
-  return Err({
-    kind: strongAuthStatus.hasPasskey
-      ? "passkey_required"
-      : "strong_auth_required",
-  });
-}
-
-export async function completePasswordLogin(params: {
-  user: User;
-  ipAddress: string;
-  userAgent: string | null;
-  authMethod: "password" | "password_totp";
-  strongAuthAt: number | null;
-  deps: Deps;
-  sendPrivilegedLoginAlert: SendPrivilegedLoginAlert;
-}): Promise<PasswordLoginResult> {
-  const { user, ipAddress, userAgent, authMethod, strongAuthAt } = params;
-
-  await sendAlertOnNewLoginSource({
-    user,
-    ipAddress,
-    method: authMethod,
-    deps: params.deps,
-    sendPrivilegedLoginAlert: params.sendPrivilegedLoginAlert,
-  });
-
-  const session = await issueLoginSession({
-    user,
-    ipAddress,
-    userAgent,
-    authMethod,
-    strongAuthAt,
-    auditAction: "login",
-    deps: params.deps,
-  });
-  await recordAuthEvent(params.deps, {
-    userId: user.id,
-    identifier: user.username,
-    ipAddress,
-    method: "password",
-    stage: "login",
-    outcome: "success",
-    reason: authMethod === "password_totp" ? "totp_verified" : null,
-  });
-
-  return {
-    userId: session.userId,
-    role: session.role,
-    onboardingCompleted: session.onboardingCompleted,
-    token: session.token,
-  };
 }

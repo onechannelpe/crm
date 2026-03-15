@@ -5,6 +5,14 @@ import type { Repositories } from "~/server/shared/registry";
 
 import { isRole, type Role } from "../access/rbac";
 import type { AuthSession } from "../access/session-types";
+import {
+  isPrimaryAuthMethod,
+  isSessionClass,
+  isStrongAuthMethod,
+  type PrimaryAuthMethod,
+  type SessionClass,
+  type StrongAuthMethod,
+} from "../core/session-contract";
 import { sessionCache } from "./session-cache";
 import {
   generateSessionToken,
@@ -15,12 +23,6 @@ import {
 const SESSION_DURATION = 30 * 24 * 60 * 60 * 1000;
 const ACTIVITY_UPDATE_THRESHOLD = 5 * 60 * 1000;
 const EXTENSION_THRESHOLD = 7 * 24 * 60 * 60 * 1000;
-const AUTH_METHODS = [
-  "password",
-  "password_totp",
-  "passkey",
-  "google",
-] as const;
 const logger = createLogger("session-manager");
 
 export interface SessionValidationResult {
@@ -52,20 +54,18 @@ function isSessionConsistent(params: {
   return true;
 }
 
-function isValidAuthMethod(
-  value: string,
-): value is (typeof AUTH_METHODS)[number] {
-  return AUTH_METHODS.some((method) => method === value);
-}
-
 export async function createSession(
-  userId: number,
-  branchId: number,
-  role: Role,
-  ipAddress: string | null,
-  userAgent: string | null,
-  authMethod: "password" | "password_totp" | "passkey" | "google",
-  strongAuthAt: number | null,
+  params: {
+    userId: number;
+    branchId: number;
+    role: Role;
+    sessionClass: SessionClass;
+    ipAddress: string | null;
+    userAgent: string | null;
+    primaryAuthMethod: PrimaryAuthMethod;
+    strongAuthMethod: StrongAuthMethod | null;
+    strongAuthAt: number | null;
+  },
   deps?: SessionDeps,
 ): Promise<string> {
   const { sessions } = getSessionDeps(deps);
@@ -75,13 +75,15 @@ export async function createSession(
 
   const newSession: NewUserSession = {
     id: sessionId,
-    user_id: userId,
-    branch_id: branchId,
-    role,
-    auth_method: authMethod,
-    strong_auth_at: strongAuthAt,
-    ip_address: ipAddress,
-    user_agent: userAgent,
+    user_id: params.userId,
+    branch_id: params.branchId,
+    role: params.role,
+    session_class: params.sessionClass,
+    primary_auth_method: params.primaryAuthMethod,
+    strong_auth_method: params.strongAuthMethod,
+    strong_auth_at: params.strongAuthAt,
+    ip_address: params.ipAddress,
+    user_agent: params.userAgent,
     created_at: now,
     last_activity: now,
     expires_at: now + SESSION_DURATION,
@@ -125,13 +127,23 @@ export async function validateSessionToken(
       return { session: null };
     }
     const onboardingCompleted = user.onboarding_completed_at !== null;
+    if (
+      (cached.sessionClass === "app" && !onboardingCompleted) ||
+      (cached.sessionClass === "pre_auth" && onboardingCompleted)
+    ) {
+      await sessions.delete(sessionId);
+      sessionCache.delete(sessionId);
+      return { session: null };
+    }
     if (cached.onboardingCompleted !== onboardingCompleted) {
       sessionCache.set(sessionId, {
         userId: cached.userId,
         branchId: cached.branchId,
         role: cached.role,
         onboardingCompleted,
-        authMethod: cached.authMethod,
+        sessionClass: cached.sessionClass,
+        primaryAuthMethod: cached.primaryAuthMethod,
+        strongAuthMethod: cached.strongAuthMethod,
         strongAuthAt: cached.strongAuthAt,
         expiresAt: cached.expiresAt,
       });
@@ -143,7 +155,9 @@ export async function validateSessionToken(
         branchId: cached.branchId,
         role: cached.role,
         onboardingCompleted,
-        authMethod: cached.authMethod,
+        sessionClass: cached.sessionClass,
+        primaryAuthMethod: cached.primaryAuthMethod,
+        strongAuthMethod: cached.strongAuthMethod,
         strongAuthAt: cached.strongAuthAt,
       },
     };
@@ -159,7 +173,18 @@ export async function validateSessionToken(
     await sessions.delete(sessionId);
     return { session: null };
   }
-  if (!isValidAuthMethod(dbSession.auth_method)) {
+  if (!isSessionClass(dbSession.session_class)) {
+    await sessions.delete(sessionId);
+    return { session: null };
+  }
+  if (!isPrimaryAuthMethod(dbSession.primary_auth_method)) {
+    await sessions.delete(sessionId);
+    return { session: null };
+  }
+  if (
+    dbSession.strong_auth_method !== null &&
+    !isStrongAuthMethod(dbSession.strong_auth_method)
+  ) {
     await sessions.delete(sessionId);
     return { session: null };
   }
@@ -185,6 +210,15 @@ export async function validateSessionToken(
     return { session: null };
   }
   const sessionUser = user;
+  const onboardingCompleted = sessionUser.onboarding_completed_at !== null;
+
+  if (
+    (dbSession.session_class === "app" && !onboardingCompleted) ||
+    (dbSession.session_class === "pre_auth" && onboardingCompleted)
+  ) {
+    await sessions.delete(sessionId);
+    return { session: null };
+  }
 
   if (now - dbSession.last_activity > ACTIVITY_UPDATE_THRESHOLD) {
     sessions.updateActivity(sessionId, now).catch((error: unknown) => {
@@ -204,8 +238,10 @@ export async function validateSessionToken(
     userId: dbSession.user_id,
     branchId: dbSession.branch_id,
     role: dbSession.role,
-    onboardingCompleted: sessionUser.onboarding_completed_at !== null,
-    authMethod: dbSession.auth_method,
+    onboardingCompleted,
+    sessionClass: dbSession.session_class,
+    primaryAuthMethod: dbSession.primary_auth_method,
+    strongAuthMethod: dbSession.strong_auth_method,
     strongAuthAt: dbSession.strong_auth_at,
     expiresAt: dbSession.expires_at,
   });
@@ -216,8 +252,10 @@ export async function validateSessionToken(
       userId: dbSession.user_id,
       branchId: dbSession.branch_id,
       role: dbSession.role,
-      onboardingCompleted: sessionUser.onboarding_completed_at !== null,
-      authMethod: dbSession.auth_method,
+      onboardingCompleted,
+      sessionClass: dbSession.session_class,
+      primaryAuthMethod: dbSession.primary_auth_method,
+      strongAuthMethod: dbSession.strong_auth_method,
       strongAuthAt: dbSession.strong_auth_at,
     },
   };

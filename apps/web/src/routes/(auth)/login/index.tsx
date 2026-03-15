@@ -24,6 +24,12 @@ export default function LoginPage() {
     if (searchParams.error === "google_not_linked") {
       showToast("error", "Tu cuenta no tiene Google vinculado.");
     }
+    if (searchParams.error === "strong_auth_required") {
+      showToast(
+        "error",
+        "Tu cuenta requiere un factor adicional para completar el acceso.",
+      );
+    }
   });
 
   return (

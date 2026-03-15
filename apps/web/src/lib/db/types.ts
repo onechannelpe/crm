@@ -56,6 +56,7 @@ export interface UsersTable {
 export interface LoginFlowsTable {
   id: Generated<number>;
   identifier: string;
+  primary_auth_method: "password" | "google" | "passkey";
   user_id: number | null;
   challenge_id: number | null;
   state: "totp" | "passkey";
@@ -559,7 +560,9 @@ export interface UserSessionsTable {
   user_id: number;
   branch_id: number;
   role: UsersTable["role"];
-  auth_method: "password" | "password_totp" | "passkey" | "google";
+  session_class: "pre_auth" | "app";
+  primary_auth_method: "password" | "google" | "passkey";
+  strong_auth_method: "totp" | "passkey" | "federated" | null;
   strong_auth_at: number | null;
   ip_address: string | null;
   user_agent: string | null;

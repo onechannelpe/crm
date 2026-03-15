@@ -59,7 +59,9 @@ describe("admin sessions audit contracts", () => {
       branchId: 1,
       role: "admin",
       onboardingCompleted: true,
-      authMethod: "passkey",
+      sessionClass: "app",
+      primaryAuthMethod: "passkey",
+      strongAuthMethod: "passkey",
       strongAuthAt: Date.now(),
     });
     mocks.sessionsDelete.mockResolvedValue(undefined);
@@ -134,7 +136,9 @@ describe("admin sessions audit contracts", () => {
       branchId: 1,
       role: "admin",
       onboardingCompleted: true,
-      authMethod: "password",
+      sessionClass: "app",
+      primaryAuthMethod: "password",
+      strongAuthMethod: null,
       strongAuthAt: null, // no step-up completed
     });
 
@@ -153,7 +157,9 @@ describe("admin sessions audit contracts", () => {
       branchId: 1,
       role: "admin",
       onboardingCompleted: true,
-      authMethod: "password",
+      sessionClass: "app",
+      primaryAuthMethod: "password",
+      strongAuthMethod: null,
       strongAuthAt: null,
     });
 

@@ -17,7 +17,9 @@ function createSession(
     branchId: 1,
     role,
     onboardingCompleted,
-    authMethod: "password",
+    sessionClass: onboardingCompleted ? "app" : "pre_auth",
+    primaryAuthMethod: "password",
+    strongAuthMethod: null,
     strongAuthAt: null,
   };
 }
