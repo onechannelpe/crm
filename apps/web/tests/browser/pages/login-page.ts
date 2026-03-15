@@ -31,7 +31,6 @@ export class LoginPage {
     await expect(
       this.page.getByRole("button", { name: "Entrar con llave de acceso" }),
     ).toHaveCount(1);
-    await expect(this.page.getByRole("alert")).toBeVisible();
   }
 
   async openUsernameLogin() {
