@@ -20,6 +20,7 @@ import {
   getSidebarGrouped,
   type SidebarEntry,
 } from "~/lib/nav/nav-policy";
+import { shortName } from "~/lib/users/display-name";
 import { cn } from "~/lib/utils";
 
 import styles from "./shell.module.css";
@@ -115,7 +116,7 @@ export function Sidebar() {
   const [hovered, setHovered] = createSignal(false);
 
   const role = createMemo(() => currentUser().role);
-  const firstName = createMemo(() => currentUser().names);
+  const userLabel = createMemo(() => shortName(currentUser()));
 
   const isRouteActive = (entry: SidebarEntry) =>
     entry.activePrefixes.some(
@@ -187,7 +188,7 @@ export function Sidebar() {
     >
       <div class={cn(styles.sidebarTop, !expanded() && styles.collapsedTop)}>
         <AccountMenu
-          label={firstName()}
+          label={userLabel()}
           avatarUrl={currentUser().avatarUrl}
           collapsed={!expanded()}
           onLogout={logout}
