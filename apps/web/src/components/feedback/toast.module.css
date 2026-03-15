@@ -39,22 +39,34 @@
 
 .success {
   --toast-icon-color: #00cfc1;
-  --toast-bar-color: color-mix(in oklab, var(--success) 15%, transparent); /* Twenty uses GreenA3 bar with Turquoise icon */
+  --toast-bar-color: color-mix(in oklab, var(--success) 15%, transparent);
 }
 
 .error {
   --toast-icon-color: var(--destructive);
-  --toast-bar-color: color-mix(in oklab, var(--destructive) 15%, transparent); /* redA3 */
+  --toast-bar-color: color-mix(
+    in oklab,
+    var(--destructive) 15%,
+    transparent
+  ); /* redA3 */
 }
 
 .info {
   --toast-icon-color: var(--info);
-  --toast-bar-color: color-mix(in oklab, var(--info) 15%, transparent); /* blueA3/indigoA3 */
+  --toast-bar-color: color-mix(
+    in oklab,
+    var(--info) 15%,
+    transparent
+  ); /* blueA3/indigoA3 */
 }
 
 .warning {
   --toast-icon-color: var(--warning);
-  --toast-bar-color: color-mix(in oklab, var(--warning) 15%, transparent); /* orangeA3 */
+  --toast-bar-color: color-mix(
+    in oklab,
+    var(--warning) 15%,
+    transparent
+  ); /* orangeA3 */
 }
 
 .message {
