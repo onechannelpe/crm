@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { getLoginFlowState } from "../../src/lib/auth/flows/login-state-service";
 import { submitPasswordLogin } from "../../src/lib/auth/flows/primary-login-service";
 import { submitTotpForLoginFlow } from "../../src/lib/auth/flows/totp-step-up-service";
-import { createPasskeyAuthService } from "../../src/lib/auth/passkey/service";
+import { createPasskeyLoginStartAuthService } from "../../src/lib/auth/passkey/service";
 import type { SendPrivilegedLoginAlert } from "../../src/lib/auth/security/privileged-login-alert";
 import { decryptTotpSecret } from "../../src/lib/auth/totp/secret-crypto";
 import { generateCurrentTotpCode } from "../../src/lib/auth/totp/totp";
@@ -116,7 +116,9 @@ describe("login flow service", () => {
   it("creates a server-owned passkey flow with reusable request options", async () => {
     await enableIdentityPasskey(ctx, execIdentity, "pk-login-flow");
 
-    const result = await createPasskeyAuthService(ctx.repos).beginLogin({
+    const result = await createPasskeyLoginStartAuthService(
+      ctx.repos,
+    ).beginLogin({
       identifier: "exec.one",
       ipAddress: "198.51.100.55",
       mode: "identified",

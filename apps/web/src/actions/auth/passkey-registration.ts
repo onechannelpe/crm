@@ -9,7 +9,7 @@ import type {
   PasskeyEnrollmentError,
   PasskeyEnrollmentChallenge,
 } from "~/lib/auth/passkey/service";
-import { createPasskeyAuthService } from "~/lib/auth/passkey/service";
+import { createPasskeyEnrollmentAuthService } from "~/lib/auth/passkey/service";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import {
   issueSessionTransition,
@@ -35,7 +35,7 @@ export async function beginPasskeyRegistration(): Promise<PasskeyEnrollmentChall
   const session = await requireSession();
   const event = getRequestEvent();
   const ipAddress = getClientIp(event?.request.headers ?? new Headers());
-  const service = createPasskeyAuthService(repos);
+  const service = createPasskeyEnrollmentAuthService(repos);
   const result = await service.beginEnrollment({
     userId: session.userId,
     ipAddress,
@@ -53,7 +53,7 @@ export async function finishPasskeyRegistration(
   const session = await requireSession();
   const event = getRequestEvent();
   const ipAddress = getClientIp(event?.request.headers ?? new Headers());
-  const service = createPasskeyAuthService(repos);
+  const service = createPasskeyEnrollmentAuthService(repos);
   const result = await service.finishEnrollment({
     userId: session.userId,
     challengeId,

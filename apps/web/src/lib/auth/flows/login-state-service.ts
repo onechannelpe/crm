@@ -3,8 +3,8 @@ import { assertPositiveInt } from "~/lib/contracts/guards";
 import type { Repositories } from "~/server/shared/registry";
 
 import { deleteLoginFlow } from "../login-flow/shared";
-import { createPasskeyService } from "../passkey/passkey";
 import { createPasskeyLoginStateService } from "../passkey/service/login-state";
+import { createPasskeyProvider } from "../providers/passkey-provider";
 import type { LoginFlowState, TotpLoginFlowState } from "./login-types";
 
 type LoginStateDeps = Pick<
@@ -35,7 +35,7 @@ async function readActiveLoginFlow(
 
   if (flow.state === "passkey") {
     return createPasskeyLoginStateService(deps, {
-      webauthnService: createPasskeyService(deps),
+      webauthnService: createPasskeyProvider(deps),
     }).hydrateLoginFlow(flow);
   }
 

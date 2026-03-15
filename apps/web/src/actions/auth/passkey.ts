@@ -7,7 +7,7 @@ import { internalError } from "~/lib/app-errors";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
 import {
-  createPasskeyAuthService,
+  createPasskeyLoginFinishAuthService,
   type FinishPasskeyLoginError,
 } from "~/lib/auth/passkey/service";
 import { getClientIp } from "~/lib/auth/password/client-ip";
@@ -50,7 +50,7 @@ export async function finishPasskeyLogin(
     }
 > {
   const event = getRequestEvent();
-  const service = createPasskeyAuthService(repos);
+  const service = createPasskeyLoginFinishAuthService(repos);
   const result = await service.finishLogin({
     flowId,
     response,

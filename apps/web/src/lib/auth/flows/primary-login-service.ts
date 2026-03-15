@@ -8,7 +8,7 @@ import { assertNonEmptyString } from "~/lib/contracts/guards";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
-import { createPasskeyAuthService } from "../passkey/service";
+import { createPasskeyLoginStartAuthService } from "../passkey/service";
 import {
   issueLoginSession,
   type SessionRequestMetadata,
@@ -76,7 +76,9 @@ async function completePrimaryAuthProof(params: {
   }
 
   if (decision.kind === "require_passkey") {
-    const flow = await createPasskeyAuthService(params.deps).beginLogin({
+    const flow = await createPasskeyLoginStartAuthService(
+      params.deps,
+    ).beginLogin({
       identifier: params.identifier,
       ipAddress: params.request.ipAddress,
       mode: "identified",
