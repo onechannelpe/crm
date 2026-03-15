@@ -53,6 +53,7 @@ describe("passkey flows", () => {
     });
     const flowId = await ctx.repos.loginFlows.create({
       identifier: "exec.one",
+      primary_auth_method: "passkey",
       user_id: 1,
       challenge_id: challengeId,
       state: "passkey",
@@ -314,6 +315,7 @@ describe("passkey flows", () => {
     });
     const flowId = await ctx.repos.loginFlows.create({
       identifier: "exec.one",
+      primary_auth_method: "passkey",
       user_id: 1,
       challenge_id: challengeId,
       state: "passkey",
@@ -444,6 +446,7 @@ describe("passkey flows", () => {
     });
     const flowId = await ctx.repos.loginFlows.create({
       identifier: "exec.one",
+      primary_auth_method: "passkey",
       user_id: 1,
       challenge_id: challengeId,
       state: "passkey",
@@ -468,7 +471,10 @@ describe("passkey flows", () => {
           return { verified: true, userId: 1 };
         },
       }),
-      async issueLoginSession() {
+      async issueAppSession() {
+        throw new Error("boom");
+      },
+      async issuePreAuthSession() {
         throw new Error("boom");
       },
     }).finishLogin({

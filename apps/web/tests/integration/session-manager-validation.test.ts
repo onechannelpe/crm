@@ -33,15 +33,17 @@ describe("session manager validation", () => {
     const token = generateSessionToken();
     const sessionId = hashSessionToken(token);
     const now = Date.now();
-    const authMethod = "password" as const;
+    const sessionClass = "app" as const;
+    const primaryAuthMethod = "password" as const;
+    const strongAuthMethod = null;
     const strongAuthAt: number | null = null;
     const ipAddress: string | null = null;
     const userAgent: string | null = null;
 
     await sql`
       insert into user_sessions
-      (id, user_id, branch_id, role, auth_method, strong_auth_at, ip_address, user_agent, created_at, last_activity, expires_at)
-      values (${sessionId}, ${1}, ${1}, ${"invalid_role"}, ${authMethod}, ${strongAuthAt}, ${ipAddress}, ${userAgent}, ${now}, ${now}, ${now + 60_000})
+      (id, user_id, branch_id, role, session_class, primary_auth_method, strong_auth_method, strong_auth_at, ip_address, user_agent, created_at, last_activity, expires_at)
+      values (${sessionId}, ${1}, ${1}, ${"invalid_role"}, ${sessionClass}, ${primaryAuthMethod}, ${strongAuthMethod}, ${strongAuthAt}, ${ipAddress}, ${userAgent}, ${now}, ${now}, ${now + 60_000})
     `.execute(ctx.db);
 
     const result = await validateSessionToken(token, ctx.repos);
@@ -51,13 +53,17 @@ describe("session manager validation", () => {
 
   it("invalidates cached session immediately after user deactivation", async () => {
     const token = await createSession(
-      1,
-      1,
-      "executive",
-      null,
-      null,
-      "password",
-      null,
+      {
+        userId: 1,
+        branchId: 1,
+        role: "executive",
+        sessionClass: "app",
+        ipAddress: null,
+        userAgent: null,
+        primaryAuthMethod: "password",
+        strongAuthMethod: null,
+        strongAuthAt: null,
+      },
       ctx.repos,
     );
     const sessionId = hashSessionToken(token);
@@ -78,13 +84,17 @@ describe("session manager validation", () => {
 
   it("invalidates cached session when user role changes", async () => {
     const token = await createSession(
-      1,
-      1,
-      "executive",
-      null,
-      null,
-      "password",
-      null,
+      {
+        userId: 1,
+        branchId: 1,
+        role: "executive",
+        sessionClass: "app",
+        ipAddress: null,
+        userAgent: null,
+        primaryAuthMethod: "password",
+        strongAuthMethod: null,
+        strongAuthAt: null,
+      },
       ctx.repos,
     );
     const sessionId = hashSessionToken(token);
@@ -105,13 +115,17 @@ describe("session manager validation", () => {
 
   it("invalidates cached session when user branch changes", async () => {
     const token = await createSession(
-      1,
-      1,
-      "executive",
-      null,
-      null,
-      "password",
-      null,
+      {
+        userId: 1,
+        branchId: 1,
+        role: "executive",
+        sessionClass: "app",
+        ipAddress: null,
+        userAgent: null,
+        primaryAuthMethod: "password",
+        strongAuthMethod: null,
+        strongAuthAt: null,
+      },
       ctx.repos,
     );
     const sessionId = hashSessionToken(token);

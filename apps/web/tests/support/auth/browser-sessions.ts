@@ -11,7 +11,9 @@ export async function seedBrowserSession(
   runtime: BrowserDbRuntime,
   identity: BrowserIdentity,
   options?: {
-    authMethod?: "password" | "password_totp" | "passkey" | "google";
+    sessionClass?: "pre_auth" | "app";
+    primaryAuthMethod?: "password" | "google" | "passkey";
+    strongAuthMethod?: "totp" | "passkey" | "federated" | null;
     strongAuthAt?: number | null;
   },
 ): Promise<string> {
@@ -23,7 +25,9 @@ export async function seedBrowserSession(
     user_id: identity.userId,
     branch_id: identity.branchId,
     role: identity.role,
-    auth_method: options?.authMethod ?? "password",
+    session_class: options?.sessionClass ?? "app",
+    primary_auth_method: options?.primaryAuthMethod ?? "password",
+    strong_auth_method: options?.strongAuthMethod ?? null,
     strong_auth_at: options?.strongAuthAt ?? null,
     ip_address: "127.0.0.1",
     user_agent: "playwright",

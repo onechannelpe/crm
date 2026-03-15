@@ -1,5 +1,6 @@
 import type { AuthenticationResponseJSON } from "@simplewebauthn/server";
 
+import type { PrimaryAuthMethod } from "~/lib/auth/core/session-contract";
 import {
   checkPasskeyChallengeThrottle,
   checkPasskeyVerifyThrottle,
@@ -14,7 +15,10 @@ import { config } from "~/lib/config";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { deleteLoginFlow } from "../../login-flow/shared";
-import type { issueLoginSession } from "../../session/login-completion";
+import type {
+  issueAppSession,
+  issuePreAuthSession,
+} from "../../session/session-issuer";
 import { isPasskeyRequestError } from "../passkey";
 import type { PasskeyAuthRepos } from "./shared";
 import {
@@ -39,12 +43,14 @@ interface PasskeyLoginServiceDeps {
       challenge: string,
     ): Promise<{ verified: boolean; userId: number }>;
   };
-  issueLoginSession: typeof issueLoginSession;
+  issueAppSession: typeof issueAppSession;
+  issuePreAuthSession: typeof issuePreAuthSession;
 }
 
 interface BeginPasskeyLoginInput {
   identifier: string;
   ipAddress: string;
+  primaryAuthMethod?: PrimaryAuthMethod;
 }
 
 interface FinishPasskeyLoginInput {
@@ -118,6 +124,7 @@ export function createPasskeyLoginService(
         });
         const flowId = await repos.loginFlows.create({
           identifier,
+          primary_auth_method: input.primaryAuthMethod ?? "passkey",
           user_id: user.id,
           challenge_id: challengeId,
           state: "passkey",
@@ -272,15 +279,28 @@ export function createPasskeyLoginService(
           outcome: "success",
         });
 
-        const session = await deps.issueLoginSession({
-          user,
-          ipAddress: input.ipAddress,
-          userAgent: input.userAgent,
-          authMethod: "passkey",
-          strongAuthAt: Date.now(),
-          auditAction: "login_passkey",
-          deps: repos,
-        });
+        const session =
+          user.onboarding_completed_at !== null
+            ? await deps.issueAppSession({
+                user,
+                ipAddress: input.ipAddress,
+                userAgent: input.userAgent,
+                primaryAuthMethod: flow.primary_auth_method,
+                strongAuthMethod: "passkey",
+                strongAuthAt: Date.now(),
+                auditAction: "login_passkey",
+                deps: repos,
+              })
+            : await deps.issuePreAuthSession({
+                user,
+                ipAddress: input.ipAddress,
+                userAgent: input.userAgent,
+                primaryAuthMethod: flow.primary_auth_method,
+                strongAuthMethod: "passkey",
+                strongAuthAt: Date.now(),
+                auditAction: "login_passkey",
+                deps: repos,
+              });
 
         return Ok(session);
       } catch {

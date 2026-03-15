@@ -50,7 +50,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
       col.notNull().references("branches.id"),
     )
     .addColumn("role", "text", (col) => col.notNull())
-    .addColumn("auth_method", "varchar(32)", (col) => col.notNull())
+    .addColumn("session_class", "varchar(32)", (col) => col.notNull())
+    .addColumn("primary_auth_method", "varchar(32)", (col) => col.notNull())
+    .addColumn("strong_auth_method", "varchar(32)")
     .addColumn("strong_auth_at", "integer")
     .addColumn("ip_address", "text")
     .addColumn("user_agent", "text")
@@ -221,6 +223,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .createTable("login_flows")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("identifier", "varchar(255)", (col) => col.notNull())
+    .addColumn("primary_auth_method", "varchar(32)", (col) => col.notNull())
     .addColumn("user_id", "integer", (col) =>
       col.references("users.id").onDelete("cascade"),
     )

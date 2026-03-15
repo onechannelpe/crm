@@ -11,7 +11,7 @@ import {
   type FinishPasskeyLoginError,
 } from "~/lib/auth/passkey/service";
 import { getClientIp } from "~/lib/auth/password/client-ip";
-import { replaceCurrentSession } from "~/lib/auth/session/login-completion";
+import { replaceCurrentSession } from "~/lib/auth/session/session-issuer";
 import { getActionRequestContext } from "~/lib/observability/context";
 import { privilegedLoginAlertSender, repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";

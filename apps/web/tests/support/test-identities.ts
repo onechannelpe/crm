@@ -68,20 +68,26 @@ export async function createIdentitySession(
   ctx: TestDbContext,
   identity: TestIdentity,
   options?: {
-    authMethod?: "password" | "password_totp" | "passkey" | "google";
+    sessionClass?: "pre_auth" | "app";
+    primaryAuthMethod?: "password" | "google" | "passkey";
+    strongAuthMethod?: "totp" | "passkey" | "federated" | null;
     strongAuthAt?: number | null;
     ipAddress?: string | null;
     userAgent?: string | null;
   },
 ): Promise<string> {
   return await createSession(
-    identity.userId,
-    identity.branchId,
-    identity.role,
-    options?.ipAddress ?? "127.0.0.1",
-    options?.userAgent ?? "vitest-agent",
-    options?.authMethod ?? "password",
-    options?.strongAuthAt ?? null,
+    {
+      userId: identity.userId,
+      branchId: identity.branchId,
+      role: identity.role,
+      sessionClass: options?.sessionClass ?? "app",
+      ipAddress: options?.ipAddress ?? "127.0.0.1",
+      userAgent: options?.userAgent ?? "vitest-agent",
+      primaryAuthMethod: options?.primaryAuthMethod ?? "password",
+      strongAuthMethod: options?.strongAuthMethod ?? null,
+      strongAuthAt: options?.strongAuthAt ?? null,
+    },
     ctx.repos,
   );
 }

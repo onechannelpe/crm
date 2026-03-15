@@ -4,7 +4,7 @@ import type {
 } from "@simplewebauthn/server";
 
 import type { InvalidCredentialsError } from "~/lib/auth/errors";
-import type { LoginCompletionResult } from "~/lib/auth/session/login-completion";
+import type { IssuedSessionResult } from "~/lib/auth/session/session-issuer";
 
 export interface PasskeyEnrollmentChallenge {
   challengeId: number;
@@ -18,7 +18,7 @@ export interface PasskeyLoginFlowState {
   requestOptions: PublicKeyCredentialRequestOptionsJSON;
 }
 
-export type PasskeyLoginResult = LoginCompletionResult;
+export type PasskeyLoginResult = IssuedSessionResult;
 
 export type PasskeyEnrollmentError =
   | { reason: "invalid_request"; message: string }

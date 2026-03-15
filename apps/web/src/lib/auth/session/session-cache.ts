@@ -1,11 +1,18 @@
 import type { Role } from "../access/rbac";
+import type {
+  PrimaryAuthMethod,
+  SessionClass,
+  StrongAuthMethod,
+} from "../core/session-contract";
 
 interface CachedSession {
   userId: number;
   branchId: number;
   role: Role;
   onboardingCompleted: boolean;
-  authMethod: "password" | "password_totp" | "passkey" | "google";
+  sessionClass: SessionClass;
+  primaryAuthMethod: PrimaryAuthMethod;
+  strongAuthMethod: StrongAuthMethod | null;
   strongAuthAt: number | null;
   expiresAt: number;
   cachedUntil: number;
