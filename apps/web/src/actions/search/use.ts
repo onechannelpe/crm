@@ -10,7 +10,6 @@ import {
 } from "~/server/shared/context";
 import { validateSearchInput } from "~/server/shared/engine/input";
 import type { SearchResponse } from "~/server/shared/engine/types";
-import { asUserId } from "~/server/shared/ids";
 import type { SearchType } from "~/server/shared/pipeline-types";
 import { isErr } from "~/server/shared/result";
 
@@ -45,10 +44,9 @@ export async function runDirectSearch(
 
   const session = await requirePermission("search:use");
   await checkActionRateLimit("search.use", session.userId, rateLimitDeps);
-  const userId = asUserId(session.userId);
 
   const allowanceResult =
-    await searchAllowanceService.reserveSearchUsage(userId);
+    await searchAllowanceService.reserveSearchUsage(session.userId);
   if (isErr(allowanceResult)) {
     throwSearchActionError(fromSearchAllowanceError(allowanceResult.error));
   }
@@ -59,7 +57,7 @@ export async function runDirectSearch(
     limit: safeLimit,
   });
   if (isErr(result)) {
-    await searchAllowanceService.rollbackSearchUsage(userId);
+    await searchAllowanceService.rollbackSearchUsage(session.userId);
     throwSearchActionError(fromDirectSearchError(result.error));
   }
 

@@ -5,14 +5,16 @@ import type {
 } from "../core/session-contract";
 import { getSessionCookie } from "../session/cookies";
 import { validateSessionToken } from "../session/session-manager";
+import { asBranchId, asUserId } from "~/server/shared/ids";
+import type { BranchId, UserId } from "~/server/shared/ids";
 import { hasPermission, type Permission, type Role } from "./rbac";
 
 export interface SessionData {
   sessionId: string;
-  userId: number;
+  userId: UserId;
   email?: string;
   role: Role;
-  branchId: number;
+  branchId: BranchId;
   onboardingCompleted: boolean;
   sessionClass: SessionClass;
   primaryAuthMethod: PrimaryAuthMethod;
@@ -29,9 +31,9 @@ export async function getSession(): Promise<SessionData | null> {
 
   return {
     sessionId: session.id,
-    userId: session.userId,
+    userId: asUserId(session.userId),
     role: session.role,
-    branchId: session.branchId,
+    branchId: asBranchId(session.branchId),
     onboardingCompleted: session.onboardingCompleted,
     sessionClass: session.sessionClass,
     primaryAuthMethod: session.primaryAuthMethod,
