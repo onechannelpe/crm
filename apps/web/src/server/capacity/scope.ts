@@ -1,4 +1,5 @@
 import type { SessionData } from "~/lib/auth/access/session";
+import type { TeamId, UserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
 
 type ExecutiveUser = NonNullable<
@@ -35,7 +36,7 @@ export function canManageExecutiveRecord(
 
 export async function canManageExecutive(
   actor: SessionData,
-  targetUserId: number,
+  targetUserId: UserId,
   repos: Repositories,
 ) {
   const target = await repos.users.findById(targetUserId);
@@ -57,7 +58,7 @@ export async function canManageExecutive(
 
 export async function assertCanManageTeam(
   actor: SessionData,
-  teamId: number,
+  teamId: TeamId,
   repos: Repositories,
 ) {
   const team = await repos.teams.findByIdWithSupervisor(teamId);

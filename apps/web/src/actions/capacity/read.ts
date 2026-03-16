@@ -3,6 +3,7 @@
 import { requirePermission } from "~/lib/auth/access/session";
 import { assertPositiveInt } from "~/lib/contracts/guards";
 import { capacityReadService } from "~/server/shared/context";
+import { asUserId } from "~/server/shared/ids";
 import { isErr } from "~/server/shared/result";
 
 import { fromCapacityReadError, throwCapacityActionError } from "./errors";
@@ -17,7 +18,7 @@ export async function getManagedExecutives() {
 }
 
 export async function getExecutiveCapacityDetail(userId: number) {
-  const safeUserId = assertPositiveInt(userId, "userId");
+  const safeUserId = asUserId(assertPositiveInt(userId, "userId"));
   const session = await requirePermission("capacity:read:team");
   const result = await capacityReadService.getExecutiveCapacityDetail(
     session,

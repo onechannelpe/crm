@@ -6,6 +6,8 @@ import { createLeadRefillGrantService } from "~/server/lead-operations/refill-se
 import { createSearchAllowanceService } from "~/server/search-access/allowance-service";
 import { createSearchPolicyService } from "~/server/search-access/policy-service";
 import { createAuditService } from "~/server/shared/audit";
+import { asCapacityRequestId, asUserId } from "~/server/shared/ids";
+import type { CapacityRequestId, UserId } from "~/server/shared/ids";
 import {
   createRepositories,
   type Repositories,
@@ -73,7 +75,7 @@ export function createCapacityApprovalService(
 ) {
   async function assertApprovalAccess(
     actor: SessionData,
-    requestId: number,
+    requestId: CapacityRequestId,
     deniedMessage: string,
   ): Promise<Result<CapacityRequestRecord, CapacityApprovalError>> {
     const request = await deps.repos.capacityRequests.findById(requestId);
@@ -83,7 +85,7 @@ export function createCapacityApprovalService(
 
     const managed = await canManageExecutive(
       actor,
-      request.user_id,
+      asUserId(request.user_id),
       deps.repos,
     );
     if (!managed.ok) {
@@ -94,8 +96,8 @@ export function createCapacityApprovalService(
   }
 
   async function approveInTransaction(input: {
-    actorUserId: number;
-    requestId: number;
+    actorUserId: UserId;
+    requestId: CapacityRequestId;
     note: string | null;
     transactionRepos: ReturnType<typeof createRepositories>;
   }): Promise<Result<{ success: true }, CapacityApprovalError>> {
@@ -131,7 +133,7 @@ export function createCapacityApprovalService(
       const grantResult =
         await grants.searchAllowanceService.grantExtraSearchAllowance(
           input.actorUserId,
-          request.user_id,
+          asUserId(request.user_id),
           request.requested_amount,
           input.note ?? request.reason,
         );
@@ -154,7 +156,7 @@ export function createCapacityApprovalService(
     const grantResult =
       await grants.leadRefillGrantService.grantExtraLeadRefill(
         input.actorUserId,
-        request.user_id,
+        asUserId(request.user_id),
         request.requested_amount,
         input.note ?? request.reason,
       );
@@ -174,7 +176,7 @@ export function createCapacityApprovalService(
   return {
     async approveCapacityRequest(
       actor: SessionData,
-      requestId: number,
+      requestId: CapacityRequestId,
       note?: string,
     ): Promise<Result<{ success: true }, CapacityApprovalError>> {
       try {
@@ -190,8 +192,8 @@ export function createCapacityApprovalService(
         const result = await deps.runInRepositoryTransaction(
           async (transactionRepos) => {
             const approval = await approveInTransaction({
-              actorUserId: actor.userId,
-              requestId: access.value.id,
+              actorUserId: asUserId(actor.userId),
+              requestId: asCapacityRequestId(access.value.id),
               note: normalizeDecisionNote(note),
               transactionRepos,
             });
@@ -213,7 +215,7 @@ export function createCapacityApprovalService(
 
     async rejectCapacityRequest(
       actor: SessionData,
-      requestId: number,
+      requestId: CapacityRequestId,
       note: string,
     ): Promise<Result<{ success: true }, CapacityApprovalError>> {
       try {

@@ -6,9 +6,14 @@ import {
   assertPositiveInt,
 } from "~/lib/contracts/guards";
 import { capacityManageService } from "~/server/shared/context";
+import { asBranchId, asTeamId, asUserId } from "~/server/shared/ids";
 import { isErr } from "~/server/shared/result";
 
 import { fromCapacityManageError, throwCapacityActionError } from "./errors";
+
+function toScopeId(scopeType: "branch" | "team", scopeId: number) {
+  return scopeType === "branch" ? asBranchId(scopeId) : asTeamId(scopeId);
+}
 
 export async function updateSearchPolicyOverride(input: {
   userId: number;
@@ -16,7 +21,7 @@ export async function updateSearchPolicyOverride(input: {
   expiresAt: number | null;
 }) {
   const session = await requirePermission("capacity:policy:manage");
-  const safeUserId = assertPositiveInt(input.userId, "userId");
+  const safeUserId = asUserId(assertPositiveInt(input.userId, "userId"));
   const safeLimit = assertFinitePositive(
     input.monthlySearchLimit,
     "monthlySearchLimit",
@@ -42,7 +47,7 @@ export async function updateLeadPolicyOverride(input: {
   expiresAt: number | null;
 }) {
   const session = await requirePermission("capacity:policy:manage");
-  const safeUserId = assertPositiveInt(input.userId, "userId");
+  const safeUserId = asUserId(assertPositiveInt(input.userId, "userId"));
   const safeBuffer = assertFinitePositive(
     input.activeBufferTarget,
     "activeBufferTarget",
@@ -76,7 +81,7 @@ export async function updateSearchScopeDefault(input: {
   );
   const result = await capacityManageService.updateSearchScopeDefault(session, {
     scopeType: input.scopeType,
-    scopeId: safeScopeId,
+    scopeId: toScopeId(input.scopeType, safeScopeId),
     monthlySearchLimit: safeLimit,
   });
   if (isErr(result)) {
@@ -103,7 +108,7 @@ export async function updateLeadScopeDefault(input: {
   );
   const result = await capacityManageService.updateLeadScopeDefault(session, {
     scopeType: input.scopeType,
-    scopeId: safeScopeId,
+    scopeId: toScopeId(input.scopeType, safeScopeId),
     activeBufferTarget: safeBuffer,
     dailyRefillLimit: safeRefill,
   });

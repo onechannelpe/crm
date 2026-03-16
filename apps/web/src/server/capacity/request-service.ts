@@ -1,11 +1,12 @@
 import type { CapacityRequestError } from "~/server/capacity/errors";
+import type { UserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 export type { CapacityRequestError } from "~/server/capacity/errors";
 
 export interface CreateCapacityRequestInput {
-  userId: number;
+  userId: UserId;
   amount: number;
   reason: string;
 }

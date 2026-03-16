@@ -6,6 +6,7 @@ import type {
   SetSearchUserOverrideCommand,
 } from "~/server/search-access/contracts";
 import type { SearchPolicyError } from "~/server/search-access/errors";
+import type { UserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -45,7 +46,7 @@ export function resolveEffectiveSearchPolicy(
 export function createSearchPolicyService(repos: Repositories) {
   return {
     async getEffectiveSearchPolicy(
-      userId: number,
+      userId: UserId,
     ): Promise<Result<EffectiveSearchPolicy, SearchPolicyError>> {
       try {
         const now = Date.now();

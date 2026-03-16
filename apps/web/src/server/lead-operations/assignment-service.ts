@@ -2,6 +2,7 @@ import type { LeadAssignmentCommand } from "~/server/lead-operations/contracts";
 import type { LeadAssignmentError } from "~/server/lead-operations/errors";
 import { createAssignment } from "~/server/leads/domain-assignment";
 import { canContactNow } from "~/server/leads/domain-cooldown";
+import type { UserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -10,7 +11,7 @@ export type { LeadAssignmentError } from "~/server/lead-operations/errors";
 export function createLeadAssignmentService(repos: Repositories) {
   return {
     async assignCandidatesToExecutive(
-      userId: number,
+      userId: UserId,
       candidates: LeadAssignmentCommand["candidates"],
     ): Promise<Result<number, LeadAssignmentError>> {
       try {

@@ -9,6 +9,7 @@ import type {
   SearchAllowanceSnapshotError,
 } from "~/server/search-access/errors";
 import type { createAuditService } from "~/server/shared/audit";
+import type { UserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
@@ -35,7 +36,7 @@ export function createSearchAllowanceService(deps: SearchAllowanceServiceDeps) {
   >;
 
   async function logRollbackFailureBestEffort(input: {
-    userId: number;
+    userId: UserId;
     amount: number;
     periodStart: string;
     message: string;
@@ -57,7 +58,7 @@ export function createSearchAllowanceService(deps: SearchAllowanceServiceDeps) {
     }
   }
 
-  async function ensureLedger(userId: number): Promise<
+  async function ensureLedger(userId: UserId): Promise<
     Result<
       {
         ledger: SearchAllowanceLedger;
@@ -131,7 +132,7 @@ export function createSearchAllowanceService(deps: SearchAllowanceServiceDeps) {
   }
 
   async function getCurrentSearchAllowance(
-    userId: number,
+    userId: UserId,
   ): Promise<Result<SearchAllowanceSnapshot, SearchAllowanceSnapshotError>> {
     const ledgerResult = await ensureLedger(userId);
     if (isErr(ledgerResult)) {
@@ -164,8 +165,8 @@ export function createSearchAllowanceService(deps: SearchAllowanceServiceDeps) {
   }
 
   async function grantExtraSearchAllowance(
-    actorUserId: number,
-    targetUserId: number,
+    actorUserId: UserId,
+    targetUserId: UserId,
     amount: number,
     reason: string,
   ): Promise<Result<SearchAllowanceSnapshot, SearchAllowanceGrantError>> {
@@ -221,7 +222,7 @@ export function createSearchAllowanceService(deps: SearchAllowanceServiceDeps) {
     getCurrentSearchAllowance,
 
     async reserveSearchUsage(
-      userId: number,
+      userId: UserId,
       amount: number = 1,
     ): Promise<Result<void, SearchAllowanceError>> {
       const ledgerResult = await ensureLedger(userId);
@@ -255,7 +256,7 @@ export function createSearchAllowanceService(deps: SearchAllowanceServiceDeps) {
       }
     },
 
-    async rollbackSearchUsage(userId: number, amount: number = 1) {
+    async rollbackSearchUsage(userId: UserId, amount: number = 1) {
       const { periodStart } = currentMonthPeriod();
       const ledger = await repos.searchAllowanceLedger.findByUserAndPeriod(
         userId,

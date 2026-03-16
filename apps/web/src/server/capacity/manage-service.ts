@@ -10,6 +10,8 @@ import {
   type SearchAllowanceSnapshot,
 } from "~/server/search-access/allowance-service";
 import type { createSearchPolicyService } from "~/server/search-access/policy-service";
+import { asTeamId, asUserId } from "~/server/shared/ids";
+import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 import type { ScopeType } from "~/server/shared/pipeline-types";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
@@ -56,7 +58,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
 
   async function assertManagedExecutive(
     actor: SessionData,
-    targetUserId: number,
+    targetUserId: UserId,
   ): Promise<Result<void, CapacityManageError>> {
     const managed = await canManageExecutive(actor, targetUserId, deps.repos);
     if (!managed.ok) {
@@ -72,7 +74,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
   async function assertScopeDefaultAccess(
     actor: SessionData,
     scopeType: ScopeType,
-    scopeId: number,
+    scopeId: BranchId | TeamId,
   ): Promise<Result<void, CapacityManageError>> {
     if (scopeType === "branch" && scopeId !== actor.branchId) {
       return Err({
@@ -82,7 +84,11 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
     }
 
     if (scopeType === "team") {
-      const access = await assertCanManageTeam(actor, scopeId, deps.repos);
+      const access = await assertCanManageTeam(
+        actor,
+        asTeamId(scopeId),
+        deps.repos,
+      );
       if (!access.ok) {
         return Err({
           reason: "forbidden",
@@ -97,11 +103,12 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
   return {
     async grantMoreSearches(
       actor: SessionData,
-      targetUserId: number,
+      targetUserId: UserId,
       amount: number,
       reason: string,
     ): Promise<Result<SearchAllowanceSnapshot, CapacityManageError>> {
       try {
+        const actorUserId = asUserId(actor.userId);
         const managedResult = await assertManagedExecutive(actor, targetUserId);
         if (isErr(managedResult)) {
           return Err(managedResult.error);
@@ -109,7 +116,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
 
         const snapshotResult =
           await deps.searchAllowanceService.grantExtraSearchAllowance(
-            actor.userId,
+            actorUserId,
             targetUserId,
             amount,
             reason,
@@ -126,11 +133,12 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
 
     async grantMoreLeadRefill(
       actor: SessionData,
-      targetUserId: number,
+      targetUserId: UserId,
       amount: number,
       reason: string,
     ): Promise<Result<LeadCapacitySnapshot, CapacityManageError>> {
       try {
+        const actorUserId = asUserId(actor.userId);
         const managedResult = await assertManagedExecutive(actor, targetUserId);
         if (isErr(managedResult)) {
           return Err(managedResult.error);
@@ -138,7 +146,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
 
         const snapshotResult =
           await deps.leadRefillGrantService.grantExtraLeadRefill(
-            actor.userId,
+            actorUserId,
             targetUserId,
             amount,
             reason,
@@ -156,12 +164,13 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
     async updateSearchPolicyOverride(
       actor: SessionData,
       input: {
-        userId: number;
+        userId: UserId;
         monthlySearchLimit: number;
         expiresAt: number | null;
       },
     ): Promise<Result<{ success: true }, CapacityManageError>> {
       try {
+        const actorUserId = asUserId(actor.userId);
         const managedResult = await assertManagedExecutive(actor, input.userId);
         if (isErr(managedResult)) {
           return Err(managedResult.error);
@@ -170,7 +179,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
         const result = await deps.searchPolicyService.setUserOverride({
           targetUserId: input.userId,
           monthlySearchLimit: input.monthlySearchLimit,
-          setByUserId: actor.userId,
+          setByUserId: actorUserId,
           expiresAt: input.expiresAt,
         });
         if (isErr(result)) {
@@ -186,13 +195,14 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
     async updateLeadPolicyOverride(
       actor: SessionData,
       input: {
-        userId: number;
+        userId: UserId;
         activeBufferTarget: number;
         dailyRefillLimit: number;
         expiresAt: number | null;
       },
     ): Promise<Result<{ success: true }, CapacityManageError>> {
       try {
+        const actorUserId = asUserId(actor.userId);
         const managedResult = await assertManagedExecutive(actor, input.userId);
         if (isErr(managedResult)) {
           return Err(managedResult.error);
@@ -202,7 +212,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
           targetUserId: input.userId,
           activeBufferTarget: input.activeBufferTarget,
           dailyRefillLimit: input.dailyRefillLimit,
-          setByUserId: actor.userId,
+          setByUserId: actorUserId,
           expiresAt: input.expiresAt,
         });
         if (isErr(result)) {
@@ -219,7 +229,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
       actor: SessionData,
       input: {
         scopeType: ScopeType;
-        scopeId: number;
+        scopeId: BranchId | TeamId;
         monthlySearchLimit: number;
       },
     ): Promise<Result<{ success: true }, CapacityManageError>> {
@@ -254,7 +264,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
       actor: SessionData,
       input: {
         scopeType: ScopeType;
-        scopeId: number;
+        scopeId: BranchId | TeamId;
         activeBufferTarget: number;
         dailyRefillLimit: number;
       },

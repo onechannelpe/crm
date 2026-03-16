@@ -6,6 +6,7 @@ import type {
   SetLeadUserOverrideCommand,
 } from "~/server/lead-operations/contracts";
 import type { LeadPolicyError } from "~/server/lead-operations/errors";
+import type { UserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -49,7 +50,7 @@ export function resolveEffectiveLeadPolicy(
 export function createLeadPolicyService(repos: Repositories) {
   return {
     async getEffectiveLeadPolicy(
-      userId: number,
+      userId: UserId,
     ): Promise<Result<EffectiveLeadPolicy, LeadPolicyError>> {
       try {
         const now = Date.now();

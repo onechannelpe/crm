@@ -1,5 +1,8 @@
 import type { LeadCandidate } from "~/server/engine-gateway/contracts";
+import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 import type { PolicySource, ScopeType } from "~/server/shared/pipeline-types";
+
+type PolicyScopeId = BranchId | TeamId;
 
 export interface EffectiveLeadPolicy {
   source: PolicySource;
@@ -24,16 +27,16 @@ export interface ResolveEffectiveLeadPolicyInput {
 
 export interface SetLeadScopeDefaultCommand {
   scopeType: ScopeType;
-  scopeId: number;
+  scopeId: PolicyScopeId;
   activeBufferTarget: number;
   dailyRefillLimit: number;
 }
 
 export interface SetLeadUserOverrideCommand {
-  targetUserId: number;
+  targetUserId: UserId;
   activeBufferTarget: number;
   dailyRefillLimit: number;
-  setByUserId: number;
+  setByUserId: UserId;
   expiresAt: number | null;
 }
 
@@ -53,6 +56,6 @@ export interface LeadRefillResult {
 }
 
 export interface LeadAssignmentCommand {
-  userId: number;
+  userId: UserId;
   candidates: LeadCandidate[];
 }

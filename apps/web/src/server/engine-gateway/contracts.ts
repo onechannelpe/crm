@@ -1,3 +1,4 @@
+import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 import type {
   CandidateStrategy,
   SearchType,
@@ -10,10 +11,10 @@ export interface DirectSearchInput {
 }
 
 export interface LeadCandidateRequestInput {
-  userId: number;
-  branchId: number;
+  userId: UserId;
+  branchId: BranchId;
   amount: number;
-  teamId?: number;
+  teamId?: TeamId;
   productId?: number;
   strategy?: CandidateStrategy;
 }

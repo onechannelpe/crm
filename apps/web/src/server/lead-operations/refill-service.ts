@@ -9,6 +9,7 @@ import type {
   LeadRefillGrantError,
 } from "~/server/lead-operations/errors";
 import type { createAuditService } from "~/server/shared/audit";
+import type { BranchId, UserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, isErr, type Result } from "~/server/shared/result";
 
@@ -52,7 +53,7 @@ export function createLeadRefillGrantService(deps: LeadRefillGrantServiceDeps) {
     Awaited<ReturnType<typeof repos.leadRefillLedger.findByUserAndDate>>
   >;
 
-  async function ensureLedger(userId: number): Promise<
+  async function ensureLedger(userId: UserId): Promise<
     Result<
       {
         ledger: LeadRefillLedger;
@@ -124,7 +125,7 @@ export function createLeadRefillGrantService(deps: LeadRefillGrantServiceDeps) {
   }
 
   async function getCurrentLeadCapacity(
-    userId: number,
+    userId: UserId,
   ): Promise<Result<LeadCapacitySnapshot, LeadCapacitySnapshotError>> {
     const ledgerResult = await ensureLedger(userId);
     if (isErr(ledgerResult)) {
@@ -171,8 +172,8 @@ export function createLeadRefillGrantService(deps: LeadRefillGrantServiceDeps) {
   }
 
   async function grantExtraLeadRefill(
-    actorUserId: number,
-    targetUserId: number,
+    actorUserId: UserId,
+    targetUserId: UserId,
     amount: number,
     reason: string,
   ): Promise<Result<LeadCapacitySnapshot, LeadRefillGrantError>> {
@@ -245,7 +246,7 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
   >;
 
   async function logRefillRequestBestEffort(input: {
-    userId: number;
+    userId: UserId;
     requested: number;
     assigned: number;
   }) {
@@ -266,7 +267,7 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
   }
 
   async function compensateUsageBestEffort(input: {
-    actorUserId: number;
+    actorUserId: UserId;
     ledgerId: number;
     amount: number;
     reason: string;
@@ -307,7 +308,7 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
     grantService;
 
   async function reserveAllowedRefill(input: {
-    userId: number;
+    userId: UserId;
     ledger: LeadRefillLedger;
     needed: number;
   }): Promise<
@@ -359,8 +360,8 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
     getCurrentLeadCapacity,
 
     async refillQueueForExecutive(
-      userId: number,
-      branchId: number,
+      userId: UserId,
+      branchId: BranchId,
     ): Promise<Result<LeadRefillResult, LeadRefillError>> {
       const ledgerResult = await ensureLedger(userId);
       if (isErr(ledgerResult)) {

@@ -11,6 +11,7 @@ import {
   capacityManageService,
   rateLimitDeps,
 } from "~/server/shared/context";
+import { asCapacityRequestId, asUserId } from "~/server/shared/ids";
 import { isErr } from "~/server/shared/result";
 
 import {
@@ -20,7 +21,9 @@ import {
 } from "./errors";
 
 export async function approveCapacityRequest(requestId: number, note?: string) {
-  const safeRequestId = assertPositiveInt(requestId, "requestId");
+  const safeRequestId = asCapacityRequestId(
+    assertPositiveInt(requestId, "requestId"),
+  );
   const session = await requirePermission("capacity:approve");
   await checkActionRateLimit("capacity.approve", session.userId, rateLimitDeps);
   const result = await capacityApprovalService.approveCapacityRequest(
@@ -35,7 +38,9 @@ export async function approveCapacityRequest(requestId: number, note?: string) {
 }
 
 export async function rejectCapacityRequest(requestId: number, note: string) {
-  const safeRequestId = assertPositiveInt(requestId, "requestId");
+  const safeRequestId = asCapacityRequestId(
+    assertPositiveInt(requestId, "requestId"),
+  );
   const safeNote = assertNonEmptyString(note, "note");
   const session = await requirePermission("capacity:approve");
   await checkActionRateLimit("capacity.approve", session.userId, rateLimitDeps);
@@ -55,7 +60,7 @@ export async function grantMoreSearches(
   amount: number,
   reason: string,
 ) {
-  const safeUserId = assertPositiveInt(userId, "userId");
+  const safeUserId = asUserId(assertPositiveInt(userId, "userId"));
   const safeAmount = assertPositiveInt(amount, "amount");
   const safeReason = assertNonEmptyString(reason, "reason");
   const session = await requirePermission("capacity:manage");
@@ -76,7 +81,7 @@ export async function grantMoreLeadRefill(
   amount: number,
   reason: string,
 ) {
-  const safeUserId = assertPositiveInt(userId, "userId");
+  const safeUserId = asUserId(assertPositiveInt(userId, "userId"));
   const safeAmount = assertPositiveInt(amount, "amount");
   const safeReason = assertNonEmptyString(reason, "reason");
   const session = await requirePermission("capacity:manage");

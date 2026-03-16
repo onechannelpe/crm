@@ -9,6 +9,7 @@ import {
 } from "~/lib/contracts/guards";
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
 import { capacityRequestService, rateLimitDeps } from "~/server/shared/context";
+import { asUserId } from "~/server/shared/ids";
 import { isErr } from "~/server/shared/result";
 
 import { fromCapacityRequestError, throwCapacityActionError } from "./errors";
@@ -29,8 +30,9 @@ export async function requestMoreSearches(amount: number, reason: string) {
   const validated = validateCapacityRequestInput(amount, reason);
   const session = await requirePermission("capacity:request:self");
   await checkActionRateLimit("capacity.request", session.userId, rateLimitDeps);
+  const userId = asUserId(session.userId);
   const result = await capacityRequestService.createSearchExtraRequest({
-    userId: session.userId,
+    userId,
     amount: validated.amount,
     reason: validated.reason,
   });
@@ -44,8 +46,9 @@ export async function requestMoreLeadRefill(amount: number, reason: string) {
   const validated = validateCapacityRequestInput(amount, reason);
   const session = await requirePermission("capacity:request:self");
   await checkActionRateLimit("capacity.request", session.userId, rateLimitDeps);
+  const userId = asUserId(session.userId);
   const result = await capacityRequestService.createLeadRefillExtraRequest({
-    userId: session.userId,
+    userId,
     amount: validated.amount,
     reason: validated.reason,
   });

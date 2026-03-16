@@ -1,4 +1,7 @@
+import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 import type { PolicySource, ScopeType } from "~/server/shared/pipeline-types";
+
+type PolicyScopeId = BranchId | TeamId;
 
 export interface EffectiveSearchPolicy {
   source: PolicySource;
@@ -13,14 +16,14 @@ export interface ResolveEffectiveSearchPolicyInput {
 
 export interface SetSearchScopeDefaultCommand {
   scopeType: ScopeType;
-  scopeId: number;
+  scopeId: PolicyScopeId;
   monthlySearchLimit: number;
 }
 
 export interface SetSearchUserOverrideCommand {
-  targetUserId: number;
+  targetUserId: UserId;
   monthlySearchLimit: number;
-  setByUserId: number;
+  setByUserId: UserId;
   expiresAt: number | null;
 }
 

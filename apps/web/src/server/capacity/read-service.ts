@@ -27,6 +27,7 @@ import {
   resolveEffectiveSearchPolicy,
   type createSearchPolicyService,
 } from "~/server/search-access/policy-service";
+import type { UserId } from "~/server/shared/ids";
 import type { PolicySource } from "~/server/shared/pipeline-types";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
@@ -347,7 +348,7 @@ export function createCapacityReadService(deps: CapacityReadServiceDeps) {
 
   async function getExecutiveCapacityDetail(
     session: SessionData,
-    targetUserId: number,
+    targetUserId: UserId,
   ): Promise<Result<ExecutiveCapacityDetail, CapacityReadError>> {
     try {
       const managed = await canManageExecutive(session, targetUserId, repos);
