@@ -6,6 +6,7 @@ import {
 import { validateSearchInput } from "~/server/shared/engine/input";
 import { signRequest } from "~/server/shared/engine/signature";
 import type {
+  CandidateStrategy,
   LeadCandidatesResponse,
   SearchResponse,
   SearchType,
@@ -27,7 +28,7 @@ export interface EngineClient {
     amount: number;
     teamId?: number;
     productId?: number;
-    strategy?: "balanced" | "freshness" | "conversion";
+    strategy?: CandidateStrategy;
   }): Promise<LeadCandidatesResponse>;
   health(): Promise<boolean>;
 }

@@ -62,6 +62,10 @@ type CapacityApprovalExecutorError =
   | { reason: "validation"; message: string }
   | { reason: "unexpected"; message: string };
 
+type CapacityRequestRecord = NonNullable<
+  Awaited<ReturnType<Repositories["capacityRequests"]["findById"]>>
+>;
+
 class TransactionRollbackError extends Error {
   constructor(readonly error: CapacityApprovalError) {
     super(error.message);
@@ -74,6 +78,22 @@ function toUnexpected(error: unknown, fallback: string): CapacityApprovalError {
     reason: "unexpected",
     message: error instanceof Error ? error.message : fallback,
   };
+}
+
+function mapExecutorError(
+  error: CapacityApprovalExecutorError,
+): CapacityApprovalError {
+  if (
+    error.reason === "request_not_found" ||
+    error.reason === "request_not_pending"
+  ) {
+    return { reason: "conflict", message: error.message };
+  }
+  if (error.reason === "validation") {
+    return { reason: "validation", message: error.message };
+  }
+
+  return { reason: "unexpected", message: error.message };
 }
 
 function createCapacityApprovalExecutor(deps: CapacityApprovalExecutorDeps) {
@@ -224,30 +244,48 @@ function throwRollback(error: CapacityApprovalError): never {
 export function createCapacityApprovalService(
   deps: CapacityApprovalServiceDeps,
 ) {
+  async function assertApprovalAccess(
+    actor: SessionData,
+    requestId: number,
+    deniedMessage: string,
+  ): Promise<Result<CapacityRequestRecord, CapacityApprovalError>> {
+    const request = await deps.repos.capacityRequests.findById(requestId);
+    if (!request) {
+      return Err({ reason: "not_found", message: "Request not found" });
+    }
+
+    const managed = await canManageExecutive(
+      actor,
+      request.user_id,
+      deps.repos,
+    );
+    if (!managed.ok) {
+      return Err({
+        reason: "forbidden",
+        message: deniedMessage,
+      });
+    }
+
+    return Ok(request);
+  }
+
   return {
     async approveCapacityRequest(
       actor: SessionData,
       requestId: number,
       note?: string,
     ): Promise<Result<{ success: true }, CapacityApprovalError>> {
-      const request = await deps.repos.capacityRequests.findById(requestId);
-      if (!request) {
-        return Err({ reason: "not_found", message: "Request not found" });
-      }
-
-      const managed = await canManageExecutive(
-        actor,
-        request.user_id,
-        deps.repos,
-      );
-      if (!managed.ok) {
-        return Err({
-          reason: "forbidden",
-          message: "Cannot approve this request",
-        });
-      }
-
       try {
+        const accessResult = await assertApprovalAccess(
+          actor,
+          requestId,
+          "Cannot approve this request",
+        );
+        if (isErr(accessResult)) {
+          return Err(accessResult.error);
+        }
+        const request = accessResult.value;
+
         const result = await deps.runInRepositoryTransaction(
           async (transactionRepos) => {
             const executor =
@@ -258,25 +296,7 @@ export function createCapacityApprovalService(
               note?.trim() || null,
             );
             if (isErr(approvalResult)) {
-              if (
-                approvalResult.error.reason === "request_not_found" ||
-                approvalResult.error.reason === "request_not_pending"
-              ) {
-                throwRollback({
-                  reason: "conflict",
-                  message: approvalResult.error.message,
-                });
-              }
-              if (approvalResult.error.reason === "validation") {
-                throwRollback({
-                  reason: "validation",
-                  message: approvalResult.error.message,
-                });
-              }
-              throwRollback({
-                reason: "unexpected",
-                message: approvalResult.error.message,
-              });
+              throwRollback(mapExecutorError(approvalResult.error));
             }
             return approvalResult.value;
           },
@@ -296,24 +316,17 @@ export function createCapacityApprovalService(
       requestId: number,
       note: string,
     ): Promise<Result<{ success: true }, CapacityApprovalError>> {
-      const request = await deps.repos.capacityRequests.findById(requestId);
-      if (!request) {
-        return Err({ reason: "not_found", message: "Request not found" });
-      }
-
-      const managed = await canManageExecutive(
-        actor,
-        request.user_id,
-        deps.repos,
-      );
-      if (!managed.ok) {
-        return Err({
-          reason: "forbidden",
-          message: "Cannot reject this request",
-        });
-      }
-
       try {
+        const accessResult = await assertApprovalAccess(
+          actor,
+          requestId,
+          "Cannot reject this request",
+        );
+        if (isErr(accessResult)) {
+          return Err(accessResult.error);
+        }
+        const request = accessResult.value;
+
         const result = await deps.runInRepositoryTransaction(
           async (transactionRepos) => {
             const executor =
@@ -324,25 +337,7 @@ export function createCapacityApprovalService(
               note,
             );
             if (isErr(rejectionResult)) {
-              if (
-                rejectionResult.error.reason === "request_not_found" ||
-                rejectionResult.error.reason === "request_not_pending"
-              ) {
-                throwRollback({
-                  reason: "conflict",
-                  message: rejectionResult.error.message,
-                });
-              }
-              if (rejectionResult.error.reason === "validation") {
-                throwRollback({
-                  reason: "validation",
-                  message: rejectionResult.error.message,
-                });
-              }
-              throwRollback({
-                reason: "unexpected",
-                message: rejectionResult.error.message,
-              });
+              throwRollback(mapExecutorError(rejectionResult.error));
             }
             return rejectionResult.value;
           },

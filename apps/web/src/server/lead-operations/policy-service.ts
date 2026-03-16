@@ -1,9 +1,10 @@
 import { config } from "~/lib/config";
+import type { PolicySource, ScopeType } from "~/server/shared/pipeline-types";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 export interface EffectiveLeadPolicy {
-  source: "user" | "team" | "branch" | "system";
+  source: PolicySource;
   activeBufferTarget: number;
   dailyRefillLimit: number;
 }
@@ -97,7 +98,7 @@ export function createLeadPolicyService(repos: Repositories) {
     },
 
     async setScopeDefault(input: {
-      scopeType: "branch" | "team";
+      scopeType: ScopeType;
       scopeId: number;
       activeBufferTarget: number;
       dailyRefillLimit: number;

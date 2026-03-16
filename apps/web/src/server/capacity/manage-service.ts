@@ -9,6 +9,7 @@ import {
   type SearchAllowanceSnapshot,
 } from "~/server/search-access/allowance-service";
 import type { createSearchPolicyService } from "~/server/search-access/policy-service";
+import type { ScopeType } from "~/server/shared/pipeline-types";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
@@ -37,6 +38,21 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
     };
   }
 
+  async function assertManagedExecutive(
+    actor: SessionData,
+    targetUserId: number,
+  ): Promise<Result<void, CapacityManageError>> {
+    const managed = await canManageExecutive(actor, targetUserId, deps.repos);
+    if (!managed.ok) {
+      return Err({
+        reason: "forbidden",
+        message: "Cannot manage this executive",
+      });
+    }
+
+    return Ok(undefined);
+  }
+
   return {
     async grantMoreSearches(
       actor: SessionData,
@@ -44,15 +60,12 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
       amount: number,
       reason: string,
     ): Promise<Result<SearchAllowanceSnapshot, CapacityManageError>> {
-      const managed = await canManageExecutive(actor, targetUserId, deps.repos);
-      if (!managed.ok) {
-        return Err({
-          reason: "forbidden",
-          message: "Cannot manage this executive",
-        });
-      }
-
       try {
+        const managedResult = await assertManagedExecutive(actor, targetUserId);
+        if (isErr(managedResult)) {
+          return Err(managedResult.error);
+        }
+
         const snapshotResult =
           await deps.searchAllowanceService.grantExtraSearchAllowance(
             actor.userId,
@@ -78,6 +91,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
             message: snapshotResult.error.message,
           });
         }
+
         return Ok(snapshotResult.value);
       } catch (error) {
         return Err(toUnexpected(error, "Failed to grant extra searches"));
@@ -90,15 +104,12 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
       amount: number,
       reason: string,
     ): Promise<Result<LeadCapacitySnapshot, CapacityManageError>> {
-      const managed = await canManageExecutive(actor, targetUserId, deps.repos);
-      if (!managed.ok) {
-        return Err({
-          reason: "forbidden",
-          message: "Cannot manage this executive",
-        });
-      }
-
       try {
+        const managedResult = await assertManagedExecutive(actor, targetUserId);
+        if (isErr(managedResult)) {
+          return Err(managedResult.error);
+        }
+
         const snapshotResult =
           await deps.leadRefillService.grantExtraLeadRefill(
             actor.userId,
@@ -124,6 +135,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
             message: snapshotResult.error.message,
           });
         }
+
         return Ok(snapshotResult.value);
       } catch (error) {
         return Err(toUnexpected(error, "Failed to grant extra lead refill"));
@@ -138,15 +150,12 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
         expiresAt: number | null;
       },
     ): Promise<Result<{ success: true }, CapacityManageError>> {
-      const managed = await canManageExecutive(actor, input.userId, deps.repos);
-      if (!managed.ok) {
-        return Err({
-          reason: "forbidden",
-          message: "Cannot manage this executive",
-        });
-      }
-
       try {
+        const managedResult = await assertManagedExecutive(actor, input.userId);
+        if (isErr(managedResult)) {
+          return Err(managedResult.error);
+        }
+
         const result = await deps.searchPolicyService.setUserOverride({
           targetUserId: input.userId,
           monthlySearchLimit: input.monthlySearchLimit,
@@ -158,10 +167,14 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
             return Err({ reason: "not_found", message: result.error.message });
           }
           if (result.error.reason === "validation") {
-            return Err({ reason: "validation", message: result.error.message });
+            return Err({
+              reason: "validation",
+              message: result.error.message,
+            });
           }
           return Err({ reason: "unexpected", message: result.error.message });
         }
+
         return Ok({ success: true as const });
       } catch (error) {
         return Err(toUnexpected(error, "Failed to update search policy"));
@@ -177,15 +190,12 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
         expiresAt: number | null;
       },
     ): Promise<Result<{ success: true }, CapacityManageError>> {
-      const managed = await canManageExecutive(actor, input.userId, deps.repos);
-      if (!managed.ok) {
-        return Err({
-          reason: "forbidden",
-          message: "Cannot manage this executive",
-        });
-      }
-
       try {
+        const managedResult = await assertManagedExecutive(actor, input.userId);
+        if (isErr(managedResult)) {
+          return Err(managedResult.error);
+        }
+
         const result = await deps.leadPolicyService.setUserOverride({
           targetUserId: input.userId,
           activeBufferTarget: input.activeBufferTarget,
@@ -198,10 +208,14 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
             return Err({ reason: "not_found", message: result.error.message });
           }
           if (result.error.reason === "validation") {
-            return Err({ reason: "validation", message: result.error.message });
+            return Err({
+              reason: "validation",
+              message: result.error.message,
+            });
           }
           return Err({ reason: "unexpected", message: result.error.message });
         }
+
         return Ok({ success: true as const });
       } catch (error) {
         return Err(toUnexpected(error, "Failed to update lead policy"));
@@ -211,33 +225,33 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
     async updateSearchScopeDefault(
       actor: SessionData,
       input: {
-        scopeType: "branch" | "team";
+        scopeType: ScopeType;
         scopeId: number;
         monthlySearchLimit: number;
       },
     ): Promise<Result<{ success: true }, CapacityManageError>> {
-      if (input.scopeType === "branch" && input.scopeId !== actor.branchId) {
-        return Err({
-          reason: "conflict",
-          message: "Cannot modify defaults outside your branch",
-        });
-      }
-
-      if (input.scopeType === "team") {
-        const access = await assertCanManageTeam(
-          actor,
-          input.scopeId,
-          deps.repos,
-        );
-        if (!access.ok) {
+      try {
+        if (input.scopeType === "branch" && input.scopeId !== actor.branchId) {
           return Err({
-            reason: "forbidden",
-            message: "Cannot modify defaults for this team",
+            reason: "conflict",
+            message: "Cannot modify defaults outside your branch",
           });
         }
-      }
 
-      try {
+        if (input.scopeType === "team") {
+          const access = await assertCanManageTeam(
+            actor,
+            input.scopeId,
+            deps.repos,
+          );
+          if (!access.ok) {
+            return Err({
+              reason: "forbidden",
+              message: "Cannot modify defaults for this team",
+            });
+          }
+        }
+
         const result = await deps.searchPolicyService.setScopeDefault({
           scopeType: input.scopeType,
           scopeId: input.scopeId,
@@ -245,10 +259,14 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
         });
         if (isErr(result)) {
           if (result.error.reason === "validation") {
-            return Err({ reason: "validation", message: result.error.message });
+            return Err({
+              reason: "validation",
+              message: result.error.message,
+            });
           }
           return Err({ reason: "unexpected", message: result.error.message });
         }
+
         return Ok({ success: true as const });
       } catch (error) {
         return Err(
@@ -260,34 +278,34 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
     async updateLeadScopeDefault(
       actor: SessionData,
       input: {
-        scopeType: "branch" | "team";
+        scopeType: ScopeType;
         scopeId: number;
         activeBufferTarget: number;
         dailyRefillLimit: number;
       },
     ): Promise<Result<{ success: true }, CapacityManageError>> {
-      if (input.scopeType === "branch" && input.scopeId !== actor.branchId) {
-        return Err({
-          reason: "conflict",
-          message: "Cannot modify defaults outside your branch",
-        });
-      }
-
-      if (input.scopeType === "team") {
-        const access = await assertCanManageTeam(
-          actor,
-          input.scopeId,
-          deps.repos,
-        );
-        if (!access.ok) {
+      try {
+        if (input.scopeType === "branch" && input.scopeId !== actor.branchId) {
           return Err({
-            reason: "forbidden",
-            message: "Cannot modify defaults for this team",
+            reason: "conflict",
+            message: "Cannot modify defaults outside your branch",
           });
         }
-      }
 
-      try {
+        if (input.scopeType === "team") {
+          const access = await assertCanManageTeam(
+            actor,
+            input.scopeId,
+            deps.repos,
+          );
+          if (!access.ok) {
+            return Err({
+              reason: "forbidden",
+              message: "Cannot modify defaults for this team",
+            });
+          }
+        }
+
         const result = await deps.leadPolicyService.setScopeDefault({
           scopeType: input.scopeType,
           scopeId: input.scopeId,
@@ -296,10 +314,14 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
         });
         if (isErr(result)) {
           if (result.error.reason === "validation") {
-            return Err({ reason: "validation", message: result.error.message });
+            return Err({
+              reason: "validation",
+              message: result.error.message,
+            });
           }
           return Err({ reason: "unexpected", message: result.error.message });
         }
+
         return Ok({ success: true as const });
       } catch (error) {
         return Err(toUnexpected(error, "Failed to update lead scope default"));

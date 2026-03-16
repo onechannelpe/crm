@@ -1,5 +1,6 @@
 import { config } from "~/lib/config";
 import type { createAuditService } from "~/server/shared/audit";
+import type { PolicySource } from "~/server/shared/pipeline-types";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
@@ -27,7 +28,7 @@ export type SearchAllowanceGrantError =
 export type SearchAllowanceSnapshot = {
   periodStart: string;
   periodEnd: string;
-  policySource: "user" | "team" | "branch" | "system";
+  policySource: PolicySource;
   monthlySearchLimit: number;
   extraGranted: number;
   usedAmount: number;

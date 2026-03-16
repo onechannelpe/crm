@@ -11,7 +11,7 @@ import {
   assertPositiveInt,
 } from "~/lib/contracts/guards";
 import { repos } from "~/server/shared/context";
-import { SEARCH_TYPES, type SearchType } from "~/server/shared/engine/types";
+import { isSearchType, type SearchType } from "~/server/shared/engine/types";
 
 export interface ClientSearchView {
   id: number;
@@ -20,10 +20,6 @@ export interface ClientSearchView {
   queryValue: string;
   limitValue: number;
   isDefault: boolean;
-}
-
-function isSearchType(value: string): value is SearchType {
-  return SEARCH_TYPES.some((type) => type === value);
 }
 
 function validateLimit(limitValue: number): number {

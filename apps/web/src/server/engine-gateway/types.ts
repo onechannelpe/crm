@@ -1,11 +1,10 @@
+import type {
+  CandidateStrategy,
+  SearchType,
+} from "~/server/shared/engine/types";
+
 export interface DirectSearchInput {
-  type:
-    | "dni"
-    | "ruc"
-    | "phone"
-    | "person_name"
-    | "company_name"
-    | "phone_enriched";
+  type: SearchType;
   value: string;
   limit?: number;
 }
@@ -16,7 +15,7 @@ export interface LeadCandidateRequestInput {
   amount: number;
   teamId?: number;
   productId?: number;
-  strategy?: "balanced" | "freshness" | "conversion";
+  strategy?: CandidateStrategy;
 }
 
 export type { LeadCandidate } from "~/server/shared/engine/types";

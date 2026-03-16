@@ -6,7 +6,15 @@ type LeadActionError =
   | { reason: "unexpected"; message: string };
 
 export function throwLeadActionError(error: LeadActionError): never {
-  if (error.reason === "not_found") throw notFoundError(error.message);
-  if (error.reason === "conflict") throw conflictError(error.message);
-  throw internalError(error.message);
+  switch (error.reason) {
+    case "not_found":
+      throw notFoundError(error.message);
+    case "conflict":
+      throw conflictError(error.message);
+    case "unexpected":
+      throw internalError(error.message);
+  }
+
+  const unreachable: never = error;
+  throw internalError(String(unreachable));
 }

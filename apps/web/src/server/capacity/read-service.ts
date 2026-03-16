@@ -25,6 +25,7 @@ import {
   resolveEffectiveSearchPolicy,
   type createSearchPolicyService,
 } from "~/server/search-access/policy-service";
+import type { PolicySource } from "~/server/shared/pipeline-types";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
@@ -62,11 +63,11 @@ type ExecutiveCapacityDetail = {
   searchStatus: SearchAllowanceSnapshot;
   leadStatus: LeadCapacitySnapshot;
   searchPolicy: {
-    source: "user" | "team" | "branch" | "system";
+    source: PolicySource;
     monthlySearchLimit: number;
   };
   leadPolicy: {
-    source: "user" | "team" | "branch" | "system";
+    source: PolicySource;
     activeBufferTarget: number;
     dailyRefillLimit: number;
   };
@@ -346,12 +347,12 @@ export function createCapacityReadService(deps: CapacityReadServiceDeps) {
     session: SessionData,
     targetUserId: number,
   ): Promise<Result<ExecutiveCapacityDetail, CapacityReadError>> {
-    const managed = await canManageExecutive(session, targetUserId, repos);
-    if (!managed.ok || !managed.target) {
-      return Err({ reason: "forbidden", message: "Forbidden" });
-    }
-
     try {
+      const managed = await canManageExecutive(session, targetUserId, repos);
+      if (!managed.ok || !managed.target) {
+        return Err({ reason: "forbidden", message: "Forbidden" });
+      }
+
       const [
         searchStatus,
         leadStatus,

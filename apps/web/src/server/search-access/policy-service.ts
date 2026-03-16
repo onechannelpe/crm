@@ -1,9 +1,10 @@
 import { config } from "~/lib/config";
+import type { PolicySource, ScopeType } from "~/server/shared/pipeline-types";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 export interface EffectiveSearchPolicy {
-  source: "user" | "team" | "branch" | "system";
+  source: PolicySource;
   monthlySearchLimit: number;
 }
 
@@ -89,7 +90,7 @@ export function createSearchPolicyService(repos: Repositories) {
     },
 
     async setScopeDefault(input: {
-      scopeType: "branch" | "team";
+      scopeType: ScopeType;
       scopeId: number;
       monthlySearchLimit: number;
     }): Promise<Result<void, SearchPolicyError>> {

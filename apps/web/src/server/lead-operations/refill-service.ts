@@ -1,5 +1,6 @@
 import { config } from "~/lib/config";
 import type { createAuditService } from "~/server/shared/audit";
+import type { PolicySource } from "~/server/shared/pipeline-types";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, isErr, type Result } from "~/server/shared/result";
 
@@ -39,7 +40,7 @@ export type LeadRefillGrantError =
   | { reason: "unexpected"; message: string };
 
 export type LeadCapacitySnapshot = {
-  policySource: "user" | "team" | "branch" | "system";
+  policySource: PolicySource;
   activeBufferTarget: number;
   activeAssignments: number;
   dailyRefillLimit: number;

@@ -1,3 +1,5 @@
+import type { CandidateStrategy } from "~/server/shared/pipeline-types";
+
 export type {
   OrgInfo,
   PersonInfo,
@@ -36,3 +38,9 @@ export const SEARCH_TYPES = [
   "company_name",
   "phone_enriched",
 ] as const satisfies ReadonlyArray<SearchType>;
+
+export function isSearchType(value: string): value is SearchType {
+  return SEARCH_TYPES.some((type) => type === value);
+}
+
+export type { CandidateStrategy };

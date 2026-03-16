@@ -6,15 +6,27 @@ import {
   validationError,
 } from "~/lib/app-errors";
 
-type CapacityActionError = {
-  reason: "not_found" | "forbidden" | "conflict" | "validation" | "unexpected";
-  message: string;
-};
+export type CapacityActionError =
+  | { reason: "forbidden"; message: string }
+  | { reason: "not_found"; message: string }
+  | { reason: "conflict"; message: string }
+  | { reason: "validation"; message: string }
+  | { reason: "unexpected"; message: string };
 
 export function throwCapacityActionError(error: CapacityActionError): never {
-  if (error.reason === "not_found") throw notFoundError(error.message);
-  if (error.reason === "forbidden") throw forbiddenError(error.message);
-  if (error.reason === "conflict") throw conflictError(error.message);
-  if (error.reason === "validation") throw validationError(error.message);
-  throw internalError(error.message);
+  switch (error.reason) {
+    case "not_found":
+      throw notFoundError(error.message);
+    case "forbidden":
+      throw forbiddenError(error.message);
+    case "conflict":
+      throw conflictError(error.message);
+    case "validation":
+      throw validationError(error.message);
+    case "unexpected":
+      throw internalError(error.message);
+  }
+
+  const unreachable: never = error;
+  throw internalError(unreachable);
 }
