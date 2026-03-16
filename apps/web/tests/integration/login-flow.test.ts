@@ -1,48 +1,35 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import {
-  getLoginFlowState,
-  startPasskeyLogin,
-  submitPasswordLogin,
-  submitTotpForLoginFlow,
-} from "../../src/lib/auth/login-flow";
-import { hashPassword } from "../../src/lib/auth/password/password";
+import { getLoginFlowState } from "../../src/lib/auth/flows/login-state-service";
+import { submitPasswordLogin } from "../../src/lib/auth/flows/primary-login-service";
+import { submitTotpForLoginFlow } from "../../src/lib/auth/flows/totp-step-up-service";
+import { createPasskeyLoginStartAuthService } from "../../src/lib/auth/passkey/service";
 import type { SendPrivilegedLoginAlert } from "../../src/lib/auth/security/privileged-login-alert";
-import {
-  decryptTotpSecret,
-  encryptTotpSecret,
-} from "../../src/lib/auth/totp/secret-crypto";
-import {
-  generateCurrentTotpCode,
-  generateTotpSecret,
-} from "../../src/lib/auth/totp/totp";
+import { decryptTotpSecret } from "../../src/lib/auth/totp/secret-crypto";
+import { generateCurrentTotpCode } from "../../src/lib/auth/totp/totp";
 import { isErr } from "../../src/server/shared/result";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
   type TestDbContext,
 } from "../support/test-db";
+import {
+  enableIdentityPasskey,
+  enableIdentityTotp,
+  getSeededIdentity,
+  setIdentityPassword,
+} from "../support/test-identities";
 
 describe("login flow service", () => {
   const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
   let ctx: TestDbContext;
+  const execIdentity = getSeededIdentity("execOne");
+  const superuserIdentity = getSeededIdentity("superuser");
 
   beforeEach(async () => {
     ctx = await createIsolatedTestDb("login-flow");
-    await ctx.db
-      .updateTable("users")
-      .set({
-        password_hash: await hashPassword("Secret123!"),
-      })
-      .where("id", "=", 1)
-      .execute();
-    await ctx.db
-      .updateTable("users")
-      .set({
-        password_hash: await hashPassword("SuperSecret123!"),
-      })
-      .where("id", "=", 5)
-      .execute();
+    await setIdentityPassword(ctx, execIdentity, "Secret123!");
+    await setIdentityPassword(ctx, superuserIdentity, "SuperSecret123!");
   });
 
   afterEach(async () => {
@@ -74,12 +61,7 @@ describe("login flow service", () => {
   });
 
   it("creates a server-owned totp flow only when password login needs strong auth", async () => {
-    const secret = generateTotpSecret();
-    await ctx.repos.userTotpFactors.createOrRotate(
-      5,
-      await encryptTotpSecret(secret),
-    );
-    await ctx.repos.userTotpFactors.markEnabled(5);
+    await enableIdentityTotp(ctx, superuserIdentity);
 
     const passwordResult = await submitPasswordLogin(
       {
@@ -104,9 +86,11 @@ describe("login flow service", () => {
       passwordResult.value.flow.id,
     );
     expect(stored?.state).toBe("totp");
-    expect(stored?.user_id).toBe(5);
+    expect(stored?.user_id).toBe(superuserIdentity.userId);
 
-    const factor = await ctx.repos.userTotpFactors.findByUserId(5);
+    const factor = await ctx.repos.userTotpFactors.findByUserId(
+      superuserIdentity.userId,
+    );
     expect(factor).toBeDefined();
     const code = generateCurrentTotpCode(
       await decryptTotpSecret(factor!.secret_encrypted),
@@ -130,21 +114,15 @@ describe("login flow service", () => {
   });
 
   it("creates a server-owned passkey flow with reusable request options", async () => {
-    await ctx.repos.passkeys.create({
-      id: "pk-login-flow",
-      user_id: 1,
-      public_key: "base64-public-key",
-      counter: 0,
-      transports: JSON.stringify(["internal"]),
-    });
+    await enableIdentityPasskey(ctx, execIdentity, "pk-login-flow");
 
-    const result = await startPasskeyLogin(
-      {
-        identifier: "exec.one",
-        ipAddress: "198.51.100.55",
-      },
+    const result = await createPasskeyLoginStartAuthService(
       ctx.repos,
-    );
+    ).beginLogin({
+      identifier: "exec.one",
+      ipAddress: "198.51.100.55",
+      mode: "identified",
+    });
 
     expect(isErr(result)).toBe(false);
     if (isErr(result)) {
@@ -158,5 +136,41 @@ describe("login flow service", () => {
     }
     expect(flow.requestOptions.allowCredentials).toHaveLength(1);
     expect(flow.requestOptions.rpId).toBe(result.value.requestOptions.rpId);
+    expect(flow.requestOptions.challenge).toBe(
+      result.value.requestOptions.challenge,
+    );
+  });
+
+  it("returns unexpected when password login cannot create the required passkey flow", async () => {
+    await enableIdentityPasskey(
+      ctx,
+      superuserIdentity,
+      "pk-login-required-failure",
+    );
+
+    const result = await submitPasswordLogin(
+      {
+        identifier: "super.user",
+        password: "SuperSecret123!",
+        ipAddress: "198.51.100.77",
+        userAgent: "vitest-agent",
+      },
+      {
+        ...ctx.repos,
+        loginFlows: {
+          ...ctx.repos.loginFlows,
+          async create() {
+            throw new Error("boom");
+          },
+        },
+      },
+      sendPrivilegedLoginAlert,
+    );
+
+    expect(isErr(result)).toBe(true);
+    if (!isErr(result)) {
+      throw new Error("expected unexpected password login failure");
+    }
+    expect(result.error.kind).toBe("unexpected");
   });
 });

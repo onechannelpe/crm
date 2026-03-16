@@ -28,7 +28,9 @@ export function ToastContainer() {
                   ? styles.success
                   : toast.type === "error"
                     ? styles.error
-                    : styles.info,
+                    : toast.type === "info"
+                      ? styles.info
+                      : styles.warning,
               )}
               onMouseEnter={() => pauseToast(toast.id)}
               onMouseLeave={() => resumeToast(toast.id)}
@@ -39,15 +41,12 @@ export function ToastContainer() {
                   width: `${(toast.remaining / toast.duration) * 100}%`,
                 }}
               />
-              {toast.type === "success" && (
-                <CircleCheckBig size={18} class="flex-shrink-0" />
-              )}
-              {toast.type === "error" && (
-                <CircleAlert size={18} class="flex-shrink-0" />
-              )}
-              {toast.type === "info" && (
-                <Info size={18} class="flex-shrink-0" />
-              )}
+              <div class={styles.icon}>
+                {toast.type === "success" && <CircleCheckBig size={16} />}
+                {toast.type === "error" && <CircleAlert size={16} />}
+                {toast.type === "info" && <Info size={16} />}
+                {toast.type === "warning" && <CircleAlert size={16} />}
+              </div>
 
               <p class={styles.message}>{toast.message}</p>
 

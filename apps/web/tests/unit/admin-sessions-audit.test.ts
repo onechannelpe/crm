@@ -59,7 +59,9 @@ describe("admin sessions audit contracts", () => {
       branchId: 1,
       role: "admin",
       onboardingCompleted: true,
-      authMethod: "passkey",
+      sessionClass: "app",
+      primaryAuthMethod: "passkey",
+      strongAuthMethod: "passkey",
       strongAuthAt: Date.now(),
     });
     mocks.sessionsDelete.mockResolvedValue(undefined);
@@ -125,5 +127,45 @@ describe("admin sessions audit contracts", () => {
         ? JSON.parse(changesRaw)
         : { revokedBy: null };
     expect(changes.revokedBy).toBe(9001);
+  });
+
+  it("revokeUserSession throws before any repo call when strong auth is missing", async () => {
+    mocks.requireRole.mockResolvedValue({
+      sessionId: "sid-admin",
+      userId: 9001,
+      branchId: 1,
+      role: "admin",
+      onboardingCompleted: true,
+      sessionClass: "app",
+      primaryAuthMethod: "password",
+      strongAuthMethod: null,
+      strongAuthAt: null, // no step-up completed
+    });
+
+    await expect(revokeUserSession("session-abc", 42)).rejects.toThrow();
+
+    // Nothing must have been touched! Removing assertRecentStrongAuth would
+    // allow an unauthorized admin to revoke sessions
+    expect(mocks.sessionsDelete).not.toHaveBeenCalled();
+    expect(mocks.auditCreate).not.toHaveBeenCalled();
+  });
+
+  it("revokeAllUserSessions throws before any repo call when strong auth is missing", async () => {
+    mocks.requireRole.mockResolvedValue({
+      sessionId: "sid-admin",
+      userId: 9001,
+      branchId: 1,
+      role: "admin",
+      onboardingCompleted: true,
+      sessionClass: "app",
+      primaryAuthMethod: "password",
+      strongAuthMethod: null,
+      strongAuthAt: null,
+    });
+
+    await expect(revokeAllUserSessions(77)).rejects.toThrow();
+
+    expect(mocks.invalidateUserSessions).not.toHaveBeenCalled();
+    expect(mocks.auditCreate).not.toHaveBeenCalled();
   });
 });

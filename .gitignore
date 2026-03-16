@@ -6,6 +6,9 @@
 # deps
 node_modules/
 
+# build
+target/
+
 # noise
 *.log
 *.ps1

@@ -3,6 +3,7 @@ import { type Component, For, createSignal } from "solid-js";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { Select } from "~/components/ui/input/select";
+import { useAsyncAction } from "~/hooks/use-async-action";
 
 import styles from "./rejection-form.module.css";
 
@@ -25,7 +26,6 @@ const REJECTABLE_FIELDS = [
 
 export const RejectionForm: Component<RejectionFormProps> = (props) => {
   const [rejections, setRejections] = createSignal<RejectionItem[]>([]);
-  const [loading, setLoading] = createSignal(false);
 
   const addRejection = (fieldId: string) => {
     setRejections([...rejections(), { fieldId, note: "" }]);
@@ -41,17 +41,11 @@ export const RejectionForm: Component<RejectionFormProps> = (props) => {
     setRejections(rejections().filter((_, i) => i !== index));
   };
 
-  const handleSubmit = async () => {
+  const [handleSubmit, isSubmitting] = useAsyncAction(async () => {
     const valid = rejections().every((r) => r.note.trim());
     if (!valid) return;
-
-    setLoading(true);
-    try {
-      await props.onReject(rejections());
-    } finally {
-      setLoading(false);
-    }
-  };
+    await props.onReject(rejections());
+  });
 
   const availableFields = () =>
     REJECTABLE_FIELDS.filter(
@@ -110,9 +104,11 @@ export const RejectionForm: Component<RejectionFormProps> = (props) => {
           onClick={() => {
             void handleSubmit();
           }}
-          disabled={rejections().length === 0 || loading()}
+          disabled={rejections().length === 0 || isSubmitting()}
         >
-          {loading() ? "Rechazando..." : `Rechazar (${rejections().length})`}
+          {isSubmitting()
+            ? "Rechazando..."
+            : `Rechazar (${rejections().length})`}
         </Button>
         <Button variant="secondary" onClick={props.onCancel}>
           Cancelar

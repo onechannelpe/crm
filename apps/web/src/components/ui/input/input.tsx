@@ -67,10 +67,9 @@ export function Input(props: InputProps) {
             type="button"
             class={styles.revealButton}
             aria-label={
-              showPassword()
-                ? "Ocultar contraseña"
-                : "Mostrar contraseña como texto visible. Advertencia: esto mostrará tu contraseña en la pantalla."
+              showPassword() ? "Ocultar contraseña" : "Mostrar contraseña"
             }
+            aria-pressed={showPassword()}
             onClick={() => setShowPassword((v) => !v)}
           >
             {showPassword() ? (

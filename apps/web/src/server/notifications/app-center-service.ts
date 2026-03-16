@@ -1,4 +1,4 @@
-import type { NewAppNotification, UsersTable } from "~/lib/db/schema";
+import type { NewAppNotification, UsersTable } from "~/lib/db/types";
 import type { Repositories } from "~/server/shared/registry";
 
 import type { AppNotificationEvent } from "./app-events";

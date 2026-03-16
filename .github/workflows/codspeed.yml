@@ -55,7 +55,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: build email templates
-        run: bun run build:notifications
+        run: bun run --cwd packages/notifications build:emails
 
       - name: run benchmarks
         uses: CodSpeedHQ/action@v4

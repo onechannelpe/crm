@@ -1,7 +1,7 @@
 import { createAsync, revalidate as revalidateQuery } from "@solidjs/router";
 import { createEffect, createSignal, on } from "solid-js";
 
-interface UpdateOptions<T> {
+interface UpdateOptions<T, TResult> {
   optimistic: (current: T) => T;
   /**
    * Action to call to persist the change. Use `useAction(mutation)` from
@@ -9,12 +9,12 @@ interface UpdateOptions<T> {
    * the action's `json({ revalidate })` return value. When the query data
    * updates, the overlay is cleared and the UI shows confirmed server state.
    */
-  commit: () => Promise<void>;
+  commit: () => Promise<TResult>;
 }
 
 interface OptimisticQueryResult<T> {
   data: () => T;
-  update: (options: UpdateOptions<T>) => Promise<void>;
+  update: <TResult>(options: UpdateOptions<T, TResult>) => Promise<TResult>;
   /** Explicitly revalidate without an optimistic overlay (e.g. after a
    *  mutation whose result cannot be predicted client-side). */
   invalidate: () => Promise<void>;
@@ -49,13 +49,17 @@ export function createOptimisticQuery<T>(
     setOverlay(undefined);
   };
 
-  const update = async ({ optimistic, commit }: UpdateOptions<T>) => {
+  const update = async <TResult>({
+    optimistic,
+    commit,
+  }: UpdateOptions<T, TResult>) => {
     const previous = data();
     setOverlay(() => optimistic(previous));
     try {
-      await commit();
+      const result = await commit();
       // The action's json({ revalidate }) triggers query revalidation.
       // When asyncData() updates, the effect above clears the overlay.
+      return result;
     } catch (error) {
       setOverlay(() => previous);
       throw error;

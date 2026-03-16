@@ -79,8 +79,8 @@ export const PERMISSION_MANIFEST: Record<Role, Permission[]> = {
 };
 
 export const SALES_ERROR_MANIFEST = {
-  missingAddresses: "At least one address is required",
-  missingProducts: "At least one product is required",
+  submitMissingAddresses: "At least one address is required before submit",
+  submitMissingProducts: "At least one product is required before submit",
   crossBranchConfirm: "Cannot confirm a sales record from another branch",
   emptyRejectionReason: "Rejection reason is required",
 } as const;

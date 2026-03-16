@@ -29,8 +29,10 @@ export function validateSecret(key: string, value: string): void {
   }
 }
 
-function required(key: string, secret = false): string {
-  const value = process.env[key];
+type EnvSource = Record<string, string | undefined>;
+
+function required(env: EnvSource, key: string, secret = false): string {
+  const value = env[key];
   if (!value) {
     let msg = `Missing required env: ${key}`;
     if (secret) {
@@ -49,37 +51,70 @@ function required(key: string, secret = false): string {
   return value;
 }
 
-function optional(key: string, fallback: string): string {
-  return process.env[key] ?? fallback;
+function optional(env: EnvSource, key: string, fallback: string): string {
+  return env[key] ?? fallback;
 }
 
-export const env = {
-  nodeEnv: optional("NODE_ENV", "development"),
-  sessionSecret: required("SESSION_SECRET", true),
-  totpEncryptionKey: required("TOTP_ENCRYPTION_KEY", true),
-  extensionHandoffPrivateKeyPkcs8Base64: optional(
-    "EXTENSION_HANDOFF_PRIVATE_KEY_PKCS8_BASE64",
-    "",
-  ),
-  extensionExpectedOrigin: optional(
-    "EXTENSION_EXPECTED_ORIGIN",
-    "http://localhost:3000",
-  ),
-  trustedProxy: optional("TRUSTED_PROXY", "false"),
-  engineUrl: optional("ENGINE_URL", "http://localhost:3001"),
-  engineHmacKeyId: required("ENGINE_HMAC_KEY_ID"),
-  engineHmacSecret: required("ENGINE_HMAC_SECRET", true),
-  webauthnRpId: optional("WEBAUTHN_RP_ID", "localhost"),
-  webauthnOrigin: optional("WEBAUTHN_ORIGIN", "http://localhost:5173"),
-  googleClientId: optional("GOOGLE_CLIENT_ID", ""),
-  googleClientSecret: optional("GOOGLE_CLIENT_SECRET", ""),
-  googleRedirectUri: optional(
-    "GOOGLE_REDIRECT_URI",
-    "http://localhost:3000/api/auth/google/callback",
-  ),
-  resendApiKey: optional("RESEND_API_KEY", ""),
-  emailFrom: optional("EMAIL_FROM", ""),
-  whatsappAccessToken: optional("WHATSAPP_ACCESS_TOKEN", ""),
-  whatsappPhoneNumberId: optional("WHATSAPP_PHONE_NUMBER_ID", ""),
-  whatsappApiVersion: optional("WHATSAPP_GRAPH_API_VERSION", "v23.0"),
-} as const;
+function optionalEnum<const T extends readonly string[]>(
+  env: EnvSource,
+  key: string,
+  values: T,
+  fallback: T[number],
+): T[number] {
+  const value = env[key];
+  if (!value) {
+    return fallback;
+  }
+
+  if ((values as readonly string[]).includes(value)) {
+    return value as T[number];
+  }
+
+  throw new Error(`${key} must be one of: ${values.join(", ")}`);
+}
+
+export function parseEnv(source: EnvSource) {
+  return {
+    nodeEnv: optional(source, "NODE_ENV", "development"),
+    sessionSecret: required(source, "SESSION_SECRET", true),
+    totpEncryptionKey: required(source, "TOTP_ENCRYPTION_KEY", true),
+    extensionHandoffPrivateKeyPkcs8Base64: optional(
+      source,
+      "EXTENSION_HANDOFF_PRIVATE_KEY_PKCS8_BASE64",
+      "",
+    ),
+    extensionExpectedOrigin: optional(
+      source,
+      "EXTENSION_EXPECTED_ORIGIN",
+      "http://localhost:3000",
+    ),
+    trustedProxy: optional(source, "TRUSTED_PROXY", "false"),
+    engineConnectMode: optionalEnum(
+      source,
+      "ENGINE_CONNECT_MODE",
+      ["local", "remote"] as const,
+      "local",
+    ),
+    engineUrl: optional(source, "ENGINE_URL", "http://127.0.0.1:3001"),
+    engineHmacKeyId: required(source, "ENGINE_HMAC_KEY_ID"),
+    engineHmacSecret: required(source, "ENGINE_HMAC_SECRET", true),
+    webauthnRpId: optional(source, "WEBAUTHN_RP_ID", "localhost"),
+    webauthnOrigin: optional(
+      source,
+      "WEBAUTHN_ORIGIN",
+      "http://localhost:5173",
+    ),
+    googleClientId: required(source, "GOOGLE_CLIENT_ID"),
+    googleClientSecret: required(source, "GOOGLE_CLIENT_SECRET"),
+    googleRedirectUri: required(source, "GOOGLE_REDIRECT_URI"),
+    resendApiKey: optional(source, "RESEND_API_KEY", ""),
+    emailFrom: optional(source, "EMAIL_FROM", ""),
+    whatsappAccessToken: optional(source, "WHATSAPP_ACCESS_TOKEN", ""),
+    whatsappPhoneNumberId: optional(source, "WHATSAPP_PHONE_NUMBER_ID", ""),
+    whatsappApiVersion: optional(source, "WHATSAPP_GRAPH_API_VERSION", "v23.0"),
+  } as const;
+}
+
+export type AppEnv = ReturnType<typeof parseEnv>;
+
+export const env = parseEnv(process.env);

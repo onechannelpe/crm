@@ -3,34 +3,47 @@
 import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 import { getRequestEvent } from "solid-js/web";
 
+import { internalError } from "~/lib/app-errors";
 import { requireSession } from "~/lib/auth/access/session";
-import { createPasskeyService } from "~/lib/auth/passkey/passkey";
-import {
-  beginPasskeyRegistrationFlow,
-  finishPasskeyRegistrationFlow,
-} from "~/lib/auth/passkey/registration-flow";
+import type {
+  PasskeyEnrollmentError,
+  PasskeyEnrollmentChallenge,
+} from "~/lib/auth/passkey/service";
+import { createPasskeyEnrollmentAuthService } from "~/lib/auth/passkey/service";
 import { getClientIp } from "~/lib/auth/password/client-ip";
+import {
+  issueSessionTransition,
+  replaceCurrentSession,
+} from "~/lib/auth/session/session-transition";
 import { repos } from "~/server/shared/context";
+import { isErr } from "~/server/shared/result";
 
-export interface PasskeyRegistrationChallengeResult {
-  challengeId: number;
-  options: Awaited<
-    ReturnType<
-      ReturnType<typeof createPasskeyService>["getRegistrationOptions"]
-    >
-  >;
+function throwPasskeyEnrollmentError(error: PasskeyEnrollmentError): never {
+  switch (error.reason) {
+    case "invalid_request":
+      throw internalError("No se pudo configurar la clave de acceso");
+    case "unexpected":
+      throw internalError(error.message);
+  }
+
+  const exhaustive: never = error;
+  void exhaustive;
+  throw internalError("Unexpected passkey registration failure");
 }
 
-export async function beginPasskeyRegistration(): Promise<PasskeyRegistrationChallengeResult> {
+export async function beginPasskeyRegistration(): Promise<PasskeyEnrollmentChallenge> {
   const session = await requireSession();
   const event = getRequestEvent();
   const ipAddress = getClientIp(event?.request.headers ?? new Headers());
-  return beginPasskeyRegistrationFlow(
-    session.userId,
+  const service = createPasskeyEnrollmentAuthService(repos);
+  const result = await service.beginEnrollment({
+    userId: session.userId,
     ipAddress,
-    repos,
-    createPasskeyService(repos),
-  );
+  });
+  if (isErr(result)) {
+    throwPasskeyEnrollmentError(result.error);
+  }
+  return result.value;
 }
 
 export async function finishPasskeyRegistration(
@@ -40,12 +53,32 @@ export async function finishPasskeyRegistration(
   const session = await requireSession();
   const event = getRequestEvent();
   const ipAddress = getClientIp(event?.request.headers ?? new Headers());
-  await finishPasskeyRegistrationFlow(
-    session.userId,
+  const service = createPasskeyEnrollmentAuthService(repos);
+  const result = await service.finishEnrollment({
+    userId: session.userId,
     challengeId,
     response,
     ipAddress,
-    repos,
-    createPasskeyService(repos),
-  );
+  });
+  if (isErr(result)) {
+    throwPasskeyEnrollmentError(result.error);
+  }
+
+  const user = await repos.users.findById(session.userId);
+  if (!user) {
+    throw internalError("No se pudo configurar la clave de acceso");
+  }
+  const issued = await issueSessionTransition({
+    user,
+    sessionClass: session.sessionClass,
+    request: {
+      ipAddress,
+      userAgent: event?.request.headers.get("user-agent") ?? null,
+    },
+    primaryAuthMethod: session.primaryAuthMethod,
+    strongAuthMethod: "passkey",
+    strongAuthAt: Date.now(),
+    deps: repos,
+  });
+  await replaceCurrentSession(issued.token);
 }

@@ -6,17 +6,23 @@ on:
     branches:
       - "master"
     paths:
-      - "apps/pipeline/src/**"
-      - "apps/pipeline/tests/**"
-      - "apps/pipeline/Cargo.toml"
+      - "crates/pipeline/src/**"
+      - "crates/pipeline/tests/**"
+      - "crates/pipeline/Cargo.toml"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".cargo/config.toml"
       - ".github/workflows/pipeline.yml"
   pull_request:
     branches:
       - "master"
     paths:
-      - "apps/pipeline/src/**"
-      - "apps/pipeline/tests/**"
-      - "apps/pipeline/Cargo.toml"
+      - "crates/pipeline/src/**"
+      - "crates/pipeline/tests/**"
+      - "crates/pipeline/Cargo.toml"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".cargo/config.toml"
       - ".github/workflows/pipeline.yml"
 
 concurrency:
@@ -25,7 +31,7 @@ concurrency:
 
 jobs:
   lint:
-    name: Format and lint
+    name: Lint
     runs-on: ubuntu-latest
 
     permissions:
@@ -38,11 +44,8 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
-      - name: check format
-        run: cargo fmt --manifest-path apps/pipeline/Cargo.toml --check
-
       - name: clippy
-        run: cargo clippy --manifest-path apps/pipeline/Cargo.toml --workspace --all-targets --all-features -- -D warnings
+        run: cargo clippy -p crm-pipeline --all-targets --all-features -- -D warnings
 
   test:
     name: Test
@@ -59,4 +62,4 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
 
       - name: test
-        run: cargo test --manifest-path apps/pipeline/Cargo.toml
+        run: cargo test -p crm-pipeline

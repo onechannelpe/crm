@@ -17,83 +17,70 @@ type OnboardingRepos = Pick<
   | "notificationPreferences"
 >;
 
-type CompleteOnboardingError =
+export type CompleteOnboardingError =
   | { reason: "user_not_found"; message: string }
   | { reason: "strong_auth_required"; message: string }
   | { reason: "unexpected"; message: string };
 
-export interface AccountOnboardingDeps {
-  now?: () => number;
-  runInTransaction?: <T>(
-    operation: (repos: OnboardingRepos) => Promise<T>,
-  ) => Promise<T>;
+export interface CompleteOnboardingInput {
+  userId: number;
+  phoneE164: string;
 }
 
-export function createAccountOnboardingService(
+export interface AccountOnboardingDeps {
+  now?: () => number;
+}
+
+export async function completeAccountOnboardingWithRepos(
   repos: OnboardingRepos,
-  deps: AccountOnboardingDeps = {},
-) {
+  input: CompleteOnboardingInput,
+  deps: Pick<AccountOnboardingDeps, "now"> = {},
+): Promise<Result<void, CompleteOnboardingError>> {
   const now = deps.now ?? Date.now;
-  const runInTransaction =
-    deps.runInTransaction ??
-    (async <T>(operation: (transactionRepos: OnboardingRepos) => Promise<T>) =>
-      operation(repos));
 
-  return {
-    async completeOnboarding(input: {
-      userId: number;
-      phoneE164: string;
-    }): Promise<Result<void, CompleteOnboardingError>> {
-      try {
-        return await runInTransaction(async (transactionRepos) => {
-          const user = await transactionRepos.users.findById(input.userId);
-          if (!user) {
-            return Err({
-              reason: "user_not_found",
-              message: "User not found",
-            });
-          }
+  try {
+    const user = await repos.users.findById(input.userId);
+    if (!user) {
+      return Err({
+        reason: "user_not_found",
+        message: "User not found",
+      });
+    }
 
-          if (user.onboarding_completed_at !== null) {
-            return Ok(undefined);
-          }
+    if (user.onboarding_completed_at !== null) {
+      return Ok(undefined);
+    }
 
-          const strongAuthStatus = await getStrongAuthStatus(
-            user.id,
-            transactionRepos,
-          );
-          if (
-            requiresStrongAuthRole(user.role as Role) &&
-            !strongAuthStatus.hasVerifiedStrongAuth
-          ) {
-            return Err({
-              reason: "strong_auth_required",
-              message: "Strong authentication setup required",
-            });
-          }
+    const strongAuthStatus = await getStrongAuthStatus(user.id, repos);
+    if (
+      requiresStrongAuthRole(user.role as Role) &&
+      !strongAuthStatus.hasVerifiedStrongAuth
+    ) {
+      return Err({
+        reason: "strong_auth_required",
+        message: "Strong authentication setup required",
+      });
+    }
 
-          const completedAt = now();
-          await transactionRepos.users.completeOnboarding(user.id, {
-            phone_e164: input.phoneE164,
-            completedAt,
-          });
-          await bootstrapUserNotifications(
-            {
-              userId: user.id,
-              email: user.email,
-              phoneE164: input.phoneE164,
-              now: completedAt,
-            },
-            transactionRepos,
-          );
-          return Ok(undefined);
-        });
-      } catch {
-        return Err({
-          reason: "unexpected",
-          message: "Unexpected onboarding completion failure",
-        });
-      }
-    },
-  };
+    const completedAt = now();
+    await repos.users.completeOnboarding(user.id, {
+      phone_e164: input.phoneE164,
+      completedAt,
+    });
+    await bootstrapUserNotifications(
+      {
+        userId: user.id,
+        email: user.email,
+        phoneE164: input.phoneE164,
+        now: completedAt,
+      },
+      repos,
+    );
+    return Ok(undefined);
+  } catch {
+    return Err({
+      reason: "unexpected",
+      message: "Unexpected onboarding completion failure",
+    });
+  }
 }

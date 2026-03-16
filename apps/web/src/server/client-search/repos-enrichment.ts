@@ -4,7 +4,7 @@ import type {
   Database,
   NewSearchEnrichmentJob,
   NewSearchEnrichmentOverlay,
-} from "~/lib/db/schema";
+} from "~/lib/db/types";
 
 type DocumentType = NewSearchEnrichmentJob["document_type"];
 type JobStatus = NewSearchEnrichmentJob["status"];

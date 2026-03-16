@@ -8,6 +8,12 @@ import {
   type PasswordLoginSubmissionResult,
   type TotpLoginSubmissionResult,
 } from "~/actions/auth/login";
+import {
+  requestPasswordReset,
+  resetPassword,
+  type RequestPasswordResetResult,
+  type ResetPasswordResult,
+} from "~/actions/auth/reset-password";
 
 export const passwordLoginMutation = action(
   async (formData: FormData): Promise<PasswordLoginSubmissionResult> =>
@@ -25,4 +31,16 @@ export const totpLoginMutation = action(
   async (formData: FormData): Promise<TotpLoginSubmissionResult> =>
     totpLogin(formData),
   "totpLogin",
+);
+
+export const requestPasswordResetMutation = action(
+  async (formData: FormData): Promise<RequestPasswordResetResult> =>
+    requestPasswordReset(formData),
+  "requestPasswordReset",
+);
+
+export const resetPasswordMutation = action(
+  async (formData: FormData): Promise<ResetPasswordResult> =>
+    resetPassword(formData),
+  "resetPassword",
 );

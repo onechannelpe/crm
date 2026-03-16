@@ -1,10 +1,11 @@
 import type { Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/schema";
+import type { Database } from "~/lib/db/types";
 import { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
 import { createOAuthAccountsRepo } from "~/server/auth/repos-oauth-accounts";
+import { createPasswordResetTokensRepo } from "~/server/auth/repos-password-reset";
 import {
   createUserTotpFactorsRepo,
   createUserTotpRecoveryCodesRepo,
@@ -75,6 +76,7 @@ export function createRepositories(db: Kysely<Database>) {
     passkeys: createPasskeysRepo(db),
     webauthnChallenges: createWebauthnChallengesRepo(db),
     oauthAccounts: createOAuthAccountsRepo(db),
+    passwordResetTokens: createPasswordResetTokensRepo(db),
     branches: createBranchesRepo(db),
     teams: createTeamsRepo(db),
   };

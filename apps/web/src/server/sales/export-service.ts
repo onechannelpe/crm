@@ -127,12 +127,11 @@ export function createSalesExportService(
   ): Promise<void> => {
     try {
       const scope = parseScope(job.filters_json);
-      const rows =
+      const rows = await repos.salesRecords.listConfirmedWithClient(
         scope.scope === "global"
-          ? await repos.salesRecords.findConfirmedWithClient()
-          : await repos.salesRecords.findConfirmedWithClientByBranch(
-              scope.branchId ?? job.branch_id,
-            );
+          ? undefined
+          : { branchId: scope.branchId ?? job.branch_id },
+      );
       const exportRows: ExportRow[] = [];
       for (const row of rows) {
         if (row.confirmed_at === null) {

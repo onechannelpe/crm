@@ -1,4 +1,4 @@
-import { type Component, createSignal, Show } from "solid-js";
+import { type Component, Show } from "solid-js";
 
 import { useToast } from "~/components/feedback/toast-provider";
 import LoaderCircle from "~/components/icons/loader-circle";
@@ -8,6 +8,7 @@ import {
   type ButtonSize,
   type ButtonVariant,
 } from "~/components/ui/input/button";
+import { useAsyncAction } from "~/hooks/use-async-action";
 
 interface RequestLeadsButtonProps {
   onRequest: () => Promise<number>;
@@ -20,11 +21,9 @@ interface RequestLeadsButtonProps {
 export const RequestLeadsButton: Component<RequestLeadsButtonProps> = (
   props,
 ) => {
-  const [loading, setLoading] = createSignal(false);
   const { showToast } = useToast();
 
-  const handleClick = async () => {
-    setLoading(true);
+  const [requestLeads, isRequesting] = useAsyncAction(async () => {
     try {
       const assigned = await props.onRequest();
       if (assigned > 0) {
@@ -43,10 +42,8 @@ export const RequestLeadsButton: Component<RequestLeadsButtonProps> = (
             ? error.message
             : "No se pudieron solicitar los leads";
       showToast("error", message);
-    } finally {
-      setLoading(false);
     }
-  };
+  });
 
   return (
     <Button
@@ -54,11 +51,11 @@ export const RequestLeadsButton: Component<RequestLeadsButtonProps> = (
       size={props.size || "md"}
       class={props.class}
       onClick={() => {
-        void handleClick();
+        void requestLeads();
       }}
-      disabled={loading() || props.disabled}
+      disabled={isRequesting() || props.disabled}
     >
-      <Show when={loading()} fallback={<Plus size={16} />}>
+      <Show when={isRequesting()} fallback={<Plus size={16} />}>
         <LoaderCircle size={16} class="animate-spin" />
       </Show>
     </Button>

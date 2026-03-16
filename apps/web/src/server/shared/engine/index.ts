@@ -4,7 +4,7 @@ import { buildEngineClientConfig } from "~/server/shared/engine/config";
 
 export const engineClient = createEngineClient(
   buildEngineClientConfig({
-    nodeEnv: env.nodeEnv,
+    engineConnectMode: env.engineConnectMode,
     engineUrl: env.engineUrl,
     engineHmacKeyId: env.engineHmacKeyId,
     engineHmacSecret: env.engineHmacSecret,

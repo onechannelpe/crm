@@ -1,43 +1,38 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import {
-  getLoginFlowState,
-  submitPasswordLogin,
-  submitTotpForLoginFlow,
-} from "../../src/lib/auth/login-flow";
-import { hashPassword } from "../../src/lib/auth/password/password";
+import { getLoginFlowState } from "../../src/lib/auth/flows/login-state-service";
+import { submitPasswordLogin } from "../../src/lib/auth/flows/primary-login-service";
+import { submitTotpForLoginFlow } from "../../src/lib/auth/flows/totp-step-up-service";
 import type { SendPrivilegedLoginAlert } from "../../src/lib/auth/security/privileged-login-alert";
 import { requiresStrongAuthRole } from "../../src/lib/auth/security/strong-auth-status";
-import {
-  decryptTotpSecret,
-  encryptTotpSecret,
-} from "../../src/lib/auth/totp/secret-crypto";
-import {
-  generateCurrentTotpCode,
-  generateTotpSecret,
-} from "../../src/lib/auth/totp/totp";
+import { decryptTotpSecret } from "../../src/lib/auth/totp/secret-crypto";
+import { generateCurrentTotpCode } from "../../src/lib/auth/totp/totp";
 import { isErr } from "../../src/server/shared/result";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
   type TestDbContext,
 } from "../support/test-db";
+import {
+  enableIdentityPasskey,
+  enableIdentityTotp,
+  getSeededIdentity,
+  setIdentityOnboarding,
+  setIdentityPassword,
+} from "../support/test-identities";
 
 describe("privileged password login", () => {
   const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
   let ctx: TestDbContext;
   const ipAddress = "198.51.100.88";
   const userAgent = "vitest-agent";
-  const username = "super.user";
+  const identity = getSeededIdentity("superuser");
+  const username = identity.username;
   const rightPassword = "SuperSecret123!";
 
   beforeEach(async () => {
     ctx = await createIsolatedTestDb("privileged-password-login");
-    await ctx.db
-      .updateTable("users")
-      .set({ password_hash: await hashPassword(rightPassword) })
-      .where("id", "=", 5)
-      .execute();
+    await setIdentityPassword(ctx, identity, rightPassword);
   });
 
   afterEach(async () => {
@@ -63,11 +58,7 @@ describe("privileged password login", () => {
   });
 
   it("allows privileged bootstrap login without strong marker before onboarding", async () => {
-    await ctx.db
-      .updateTable("users")
-      .set({ onboarding_completed_at: null })
-      .where("id", "=", 5)
-      .execute();
+    await setIdentityOnboarding(ctx, identity, false);
 
     const result = await submitPasswordLogin(
       {
@@ -91,17 +82,15 @@ describe("privileged password login", () => {
 
     expect(result.value.result.role).toBe("superuser");
     expect(result.value.result.onboardingCompleted).toBe(false);
-    const sessions = await ctx.repos.sessions.listForUser(5);
-    expect(sessions[0]?.auth_method).toBe("password");
+    const sessions = await ctx.repos.sessions.listForUser(identity.userId);
+    expect(sessions[0]?.session_class).toBe("pre_auth");
+    expect(sessions[0]?.primary_auth_method).toBe("password");
+    expect(sessions[0]?.strong_auth_method).toBeNull();
     expect(sessions[0]?.strong_auth_at).toBeNull();
   });
 
   it("moves onboarded privileged login to a totp verification step", async () => {
-    await ctx.repos.userTotpFactors.createOrRotate(
-      5,
-      await encryptTotpSecret(generateTotpSecret()),
-    );
-    await ctx.repos.userTotpFactors.markEnabled(5);
+    await enableIdentityTotp(ctx, identity);
 
     const result = await submitPasswordLogin(
       {
@@ -120,13 +109,7 @@ describe("privileged password login", () => {
   });
 
   it("moves privileged password login to a passkey verification step when passkey is the only strong factor", async () => {
-    await ctx.repos.passkeys.create({
-      id: "pk-only-super-user",
-      user_id: 5,
-      public_key: "base64-public-key",
-      counter: 0,
-      transports: JSON.stringify(["internal"]),
-    });
+    await enableIdentityPasskey(ctx, identity, "pk-only-super-user");
 
     const result = await submitPasswordLogin(
       {
@@ -148,13 +131,10 @@ describe("privileged password login", () => {
   });
 
   it("marks session as strong-auth when privileged user logs in with valid totp", async () => {
-    const secret = generateTotpSecret();
-    await ctx.repos.userTotpFactors.createOrRotate(
-      5,
-      await encryptTotpSecret(secret),
+    await enableIdentityTotp(ctx, identity);
+    const stored = await ctx.repos.userTotpFactors.findByUserId(
+      identity.userId,
     );
-    await ctx.repos.userTotpFactors.markEnabled(5);
-    const stored = await ctx.repos.userTotpFactors.findByUserId(5);
     expect(stored).toBeDefined();
     const code = generateCurrentTotpCode(
       await decryptTotpSecret(stored!.secret_encrypted),
@@ -193,17 +173,15 @@ describe("privileged password login", () => {
       throw new Error("expected successful totp login");
     }
 
-    const sessions = await ctx.repos.sessions.listForUser(5);
-    expect(sessions[0]?.auth_method).toBe("password_totp");
+    const sessions = await ctx.repos.sessions.listForUser(identity.userId);
+    expect(sessions[0]?.session_class).toBe("app");
+    expect(sessions[0]?.primary_auth_method).toBe("password");
+    expect(sessions[0]?.strong_auth_method).toBe("totp");
     expect(typeof sessions[0]?.strong_auth_at).toBe("number");
   });
 
   it("rejects invalid totp code for privileged user", async () => {
-    await ctx.repos.userTotpFactors.createOrRotate(
-      5,
-      await encryptTotpSecret(generateTotpSecret()),
-    );
-    await ctx.repos.userTotpFactors.markEnabled(5);
+    await enableIdentityTotp(ctx, identity);
 
     const passwordResult = await submitPasswordLogin(
       {
@@ -241,26 +219,19 @@ describe("privileged password login", () => {
   });
 
   it("keeps enrolled factors when provisioning downgrades role", async () => {
-    const secret = generateTotpSecret();
-    await ctx.repos.userTotpFactors.createOrRotate(
-      5,
-      await encryptTotpSecret(secret),
-    );
-    await ctx.repos.userTotpFactors.markEnabled(5);
-    await ctx.repos.passkeys.create({
-      id: "pk-downgrade-super-user",
-      user_id: 5,
-      public_key: "base64-public-key",
-      counter: 0,
-      transports: JSON.stringify(["internal"]),
-    });
+    await enableIdentityTotp(ctx, identity);
+    await enableIdentityPasskey(ctx, identity, "pk-downgrade-super-user");
 
-    const enrolledFactor = await ctx.repos.userTotpFactors.findByUserId(5);
-    const enrolledPasskeys = await ctx.repos.passkeys.findByUser(5);
+    const enrolledFactor = await ctx.repos.userTotpFactors.findByUserId(
+      identity.userId,
+    );
+    const enrolledPasskeys = await ctx.repos.passkeys.findByUser(
+      identity.userId,
+    );
     expect(enrolledFactor?.is_enabled).toBe(1);
     expect(enrolledPasskeys).toHaveLength(1);
 
-    await ctx.repos.users.updateInviteProvisioning(5, {
+    await ctx.repos.users.updateInviteProvisioning(identity.userId, {
       team_id: null,
       names: "Super",
       first_surname: "User",
@@ -269,9 +240,13 @@ describe("privileged password login", () => {
       is_active: 1,
     });
 
-    const downgradedUser = await ctx.repos.users.findById(5);
-    const downgradedFactor = await ctx.repos.userTotpFactors.findByUserId(5);
-    const downgradedPasskeys = await ctx.repos.passkeys.findByUser(5);
+    const downgradedUser = await ctx.repos.users.findById(identity.userId);
+    const downgradedFactor = await ctx.repos.userTotpFactors.findByUserId(
+      identity.userId,
+    );
+    const downgradedPasskeys = await ctx.repos.passkeys.findByUser(
+      identity.userId,
+    );
     expect(downgradedUser && requiresStrongAuthRole(downgradedUser.role)).toBe(
       false,
     );

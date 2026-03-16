@@ -13,7 +13,7 @@ on:
       - "apps/web/*.ts"
       - "apps/web/*.json"
       - "apps/web/*.css"
-      - "packages/**"
+      - "packages/notifications/**"
       - "scripts/*.ts"
       - ".oxlintrc.json"
       - ".oxfmtrc.json"
@@ -29,7 +29,7 @@ on:
       - "apps/web/*.ts"
       - "apps/web/*.json"
       - "apps/web/*.css"
-      - "packages/**"
+      - "packages/notifications/**"
       - "scripts/*.ts"
       - ".oxlintrc.json"
       - ".oxfmtrc.json"
@@ -42,6 +42,39 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  prepare:
+    name: Prepare generated artifacts
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: oven-sh/setup-bun@ecf28ddc73e819eb6fa29df6b34ef8921c743461 # v2.1.3
+        with:
+          bun-version: "1.3.10"
+
+      - name: install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: generate artifacts
+        run: bun run generate
+
+      - name: upload generated artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-generated-artifacts
+          if-no-files-found: error
+          path: |
+            apps/web/src/server/shared/engine/contract.ts
+            apps/web/src/server/shared/engine/projection-contract.ts
+            apps/web/src/server/shared/engine/result-contract.ts
+            packages/notifications/src/templates/compiled/**
+
   format:
     name: Format check
     runs-on: ubuntu-latest
@@ -67,6 +100,7 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    needs: prepare
 
     permissions:
       contents: read
@@ -83,8 +117,11 @@ jobs:
       - name: install dependencies
         run: bun install --frozen-lockfile
 
-      - name: generate artifacts
-        run: bun run generate
+      - name: download generated artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: web-generated-artifacts
+          path: .
 
       - name: lint
         run: bun run check:lint
@@ -92,6 +129,7 @@ jobs:
   type-check:
     name: Type check
     runs-on: ubuntu-latest
+    needs: prepare
 
     permissions:
       contents: read
@@ -108,16 +146,20 @@ jobs:
       - name: install dependencies
         run: bun install --frozen-lockfile
 
-      - name: generate artifacts
-        run: bun run generate
+      - name: download generated artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: web-generated-artifacts
+          path: .
 
       - name: type check
         working-directory: apps/web
-        run: bun x tsc --noEmit
+        run: bun run check:types
 
   build:
     name: Build
     runs-on: ubuntu-latest
+    needs: prepare
 
     permissions:
       contents: read
@@ -134,15 +176,20 @@ jobs:
       - name: install dependencies
         run: bun install --frozen-lockfile
 
-      - name: generate artifacts
-        run: bun run generate
+      - name: download generated artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: web-generated-artifacts
+          path: .
 
       - name: build
-        run: bun --filter='@crm/web' run build
+        working-directory: apps/web
+        run: bun run build
 
   test:
     name: Test
     runs-on: ubuntu-latest
+    needs: prepare
 
     permissions:
       contents: read
@@ -159,16 +206,21 @@ jobs:
       - name: install dependencies
         run: bun install --frozen-lockfile
 
-      - name: generate artifacts
-        run: bun run generate
+      - name: download generated artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: web-generated-artifacts
+          path: .
 
       - name: test
-        run: bun run --cwd apps/web test
+        working-directory: apps/web
+        run: bun run test
 
   perf-test:
     name: Perf test
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    needs: prepare
 
     permissions:
       contents: read
@@ -185,8 +237,12 @@ jobs:
       - name: install dependencies
         run: bun install --frozen-lockfile
 
-      - name: generate artifacts
-        run: bun run generate
+      - name: download generated artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: web-generated-artifacts
+          path: .
 
       - name: perf test
-        run: bun run --cwd apps/web test:perf
+        working-directory: apps/web
+        run: bun run test:perf

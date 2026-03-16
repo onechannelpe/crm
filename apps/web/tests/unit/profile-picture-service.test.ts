@@ -13,190 +13,189 @@ type PutBlob = ProfilePictureBlobStore["put"];
 type GetBlob = ProfilePictureBlobStore["get"];
 type DeleteBlob = ProfilePictureBlobStore["delete"];
 
-function createUsersRepoMock() {
+function setup() {
   const findAvatarMetaById = vi.fn<FindAvatarMetaById>();
   const updateAvatar = vi.fn<UpdateAvatar>();
   const clearAvatar = vi.fn<ClearAvatar>();
+  const put = vi.fn<PutBlob>();
+  const get = vi.fn<GetBlob>();
+  const remove = vi.fn<DeleteBlob>();
 
   const users: AvatarUsersRepository = {
     findAvatarMetaById,
     updateAvatar,
     clearAvatar,
   };
+  const blobStore: ProfilePictureBlobStore = { put, get, delete: remove };
+  const service = createProfilePictureService({ users }, blobStore);
 
-  return { users, findAvatarMetaById, updateAvatar, clearAvatar };
-}
-
-function createBlobStoreMock() {
-  const put = vi.fn<PutBlob>();
-  const get = vi.fn<GetBlob>();
-  const remove = vi.fn<DeleteBlob>();
-
-  const blobStore: ProfilePictureBlobStore = {
+  return {
+    service,
+    findAvatarMetaById,
+    updateAvatar,
+    clearAvatar,
     put,
     get,
-    delete: remove,
+    remove,
   };
+}
 
-  return { blobStore, put, get, remove };
+function makeAvatar(
+  overrides: Partial<{
+    id: number;
+    avatar_storage_key: string | null;
+    avatar_mime_type: string | null;
+    avatar_updated_at: number | null;
+    avatar_version: number;
+  }> = {},
+) {
+  return {
+    id: 10,
+    avatar_storage_key: "10/old.png",
+    avatar_mime_type: "image/png",
+    avatar_updated_at: Date.now(),
+    avatar_version: 2,
+    ...overrides,
+  };
 }
 
 describe("profile picture service", () => {
   it("keeps upload successful when old file cleanup fails", async () => {
-    const usersRepo = createUsersRepoMock();
-    const blobStore = createBlobStoreMock();
+    const { service, findAvatarMetaById, updateAvatar, put, remove } = setup();
 
-    usersRepo.findAvatarMetaById.mockResolvedValue({
-      id: 10,
-      avatar_storage_key: "10/old.png",
-      avatar_mime_type: "image/png",
-      avatar_updated_at: Date.now(),
-      avatar_version: 2,
+    findAvatarMetaById.mockResolvedValue(makeAvatar({ avatar_version: 2 }));
+    updateAvatar.mockResolvedValue(undefined);
+    put.mockResolvedValue(undefined);
+    remove.mockImplementation(async (key) => {
+      if (key === "10/old.png") throw new Error("delete failed");
     });
-    usersRepo.updateAvatar.mockResolvedValue(undefined);
-
-    blobStore.put.mockResolvedValue(undefined);
-    blobStore.remove.mockImplementation(async (storageKey: string) => {
-      if (storageKey === "10/old.png") {
-        throw new Error("delete failed");
-      }
-    });
-
-    const service = createProfilePictureService(
-      { users: usersRepo.users },
-      blobStore.blobStore,
-    );
 
     const file = new File([new Uint8Array([1, 2, 3])], "avatar.png", {
       type: "image/png",
     });
-
     const result = await service.upload(10, file);
 
     expect(result.ok).toBe(true);
-    if (result.ok) {
-      expect(result.value.avatarVersion).toBe(3);
-    }
-    expect(usersRepo.updateAvatar).toHaveBeenCalledOnce();
-    expect(blobStore.remove).toHaveBeenCalledWith("10/old.png");
+    if (result.ok) expect(result.value.avatarVersion).toBe(3);
+    expect(updateAvatar).toHaveBeenCalledOnce();
+    expect(remove).toHaveBeenCalledWith("10/old.png");
   });
 
   it("keeps remove successful when old file cleanup fails", async () => {
-    const usersRepo = createUsersRepoMock();
-    const blobStore = createBlobStoreMock();
+    const { service, findAvatarMetaById, clearAvatar, remove } = setup();
 
-    usersRepo.findAvatarMetaById.mockResolvedValue({
-      id: 10,
-      avatar_storage_key: "10/old.png",
-      avatar_mime_type: "image/png",
-      avatar_updated_at: Date.now(),
-      avatar_version: 9,
-    });
-    usersRepo.clearAvatar.mockResolvedValue(undefined);
-
-    blobStore.remove.mockRejectedValue(new Error("delete failed"));
-
-    const service = createProfilePictureService(
-      { users: usersRepo.users },
-      blobStore.blobStore,
-    );
+    findAvatarMetaById.mockResolvedValue(makeAvatar({ avatar_version: 9 }));
+    clearAvatar.mockResolvedValue(undefined);
+    remove.mockRejectedValue(new Error("delete failed"));
 
     const result = await service.remove(10);
 
     expect(result.ok).toBe(true);
-    if (result.ok) {
-      expect(result.value.avatarVersion).toBe(10);
-    }
-    expect(usersRepo.clearAvatar).toHaveBeenCalledOnce();
+    if (result.ok) expect(result.value.avatarVersion).toBe(10);
+    expect(clearAvatar).toHaveBeenCalledOnce();
+  });
+
+  it("rolls back new blob when db write fails during upload", async () => {
+    const { service, findAvatarMetaById, updateAvatar, put, remove } = setup();
+
+    findAvatarMetaById.mockResolvedValue(makeAvatar());
+    put.mockResolvedValue(undefined);
+    updateAvatar.mockRejectedValue(new Error("db error"));
+    remove.mockResolvedValue(undefined);
+
+    const file = new File([new Uint8Array([1])], "avatar.png", {
+      type: "image/png",
+    });
+    const result = await service.upload(10, file);
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe("repository_unavailable");
+
+    // The exact key written to storage must be the one rolled back,
+    // not the old key, not some arbitrary key.
+    const newKey = put.mock.calls[0]?.[0];
+    expect(newKey).toBeDefined();
+    expect(remove).toHaveBeenCalledExactlyOnceWith(newKey);
+  });
+
+  it("returns user_not_found when user record is missing", async () => {
+    const { service, findAvatarMetaById } = setup();
+    findAvatarMetaById.mockResolvedValue(undefined);
+
+    const file = new File([new Uint8Array([1])], "avatar.png", {
+      type: "image/png",
+    });
+    const [uploadResult, removeResult] = await Promise.all([
+      service.upload(99, file),
+      service.remove(99),
+    ]);
+
+    expect(uploadResult.ok).toBe(false);
+    if (!uploadResult.ok)
+      expect(uploadResult.error.code).toBe("user_not_found");
+
+    expect(removeResult.ok).toBe(false);
+    if (!removeResult.ok)
+      expect(removeResult.error.code).toBe("user_not_found");
   });
 
   it("rejects unsupported mime type", async () => {
-    const usersRepo = createUsersRepoMock();
-    const blobStore = createBlobStoreMock();
-    const service = createProfilePictureService(
-      { users: usersRepo.users },
-      blobStore.blobStore,
-    );
-
+    const { service } = setup();
     const file = new File([new Uint8Array([1])], "avatar.webp", {
       type: "image/webp",
     });
-
     const result = await service.upload(1, file);
-
     expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.error.code).toBe("unsupported_mime");
-    }
+    if (!result.ok) expect(result.error.code).toBe("unsupported_mime");
+  });
+
+  it("rejects empty file", async () => {
+    const { service } = setup();
+    const file = new File([], "avatar.png", { type: "image/png" });
+    const result = await service.upload(1, file);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe("invalid_file");
   });
 
   it("rejects files larger than 10MB", async () => {
-    const usersRepo = createUsersRepoMock();
-    const blobStore = createBlobStoreMock();
-    const service = createProfilePictureService(
-      { users: usersRepo.users },
-      blobStore.blobStore,
+    const { service } = setup();
+    const file = new File(
+      [new Uint8Array(10 * 1024 * 1024 + 1)],
+      "avatar.png",
+      { type: "image/png" },
     );
-
-    const bytes = new Uint8Array(10 * 1024 * 1024 + 1);
-    const file = new File([bytes], "avatar.png", { type: "image/png" });
-
     const result = await service.upload(1, file);
-
     expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.error.code).toBe("too_large");
-    }
+    if (!result.ok) expect(result.error.code).toBe("too_large");
   });
 
   it("returns avatar_not_found when no avatar exists for read", async () => {
-    const usersRepo = createUsersRepoMock();
-    const blobStore = createBlobStoreMock();
-
-    usersRepo.findAvatarMetaById.mockResolvedValue({
-      id: 2,
-      avatar_storage_key: null,
-      avatar_mime_type: null,
-      avatar_updated_at: null,
-      avatar_version: 0,
-    });
-
-    const service = createProfilePictureService(
-      { users: usersRepo.users },
-      blobStore.blobStore,
+    const { service, findAvatarMetaById } = setup();
+    findAvatarMetaById.mockResolvedValue(
+      makeAvatar({
+        avatar_storage_key: null,
+        avatar_mime_type: null,
+        avatar_updated_at: null,
+        avatar_version: 0,
+      }),
     );
-
     const result = await service.get(2);
-
     expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.error.code).toBe("avatar_not_found");
-    }
+    if (!result.ok) expect(result.error.code).toBe("avatar_not_found");
   });
 
   it("returns storage_unavailable when avatar bytes cannot be read", async () => {
-    const usersRepo = createUsersRepoMock();
-    const blobStore = createBlobStoreMock();
-
-    usersRepo.findAvatarMetaById.mockResolvedValue({
-      id: 2,
-      avatar_storage_key: "2/avatar.png",
-      avatar_mime_type: "image/png",
-      avatar_updated_at: Date.now(),
-      avatar_version: 6,
-    });
-    blobStore.get.mockRejectedValue(new Error("blob read failed"));
-
-    const service = createProfilePictureService(
-      { users: usersRepo.users },
-      blobStore.blobStore,
+    const { service, findAvatarMetaById, get } = setup();
+    findAvatarMetaById.mockResolvedValue(
+      makeAvatar({
+        id: 2,
+        avatar_storage_key: "2/avatar.png",
+        avatar_version: 6,
+      }),
     );
-
+    get.mockRejectedValue(new Error("blob read failed"));
     const result = await service.get(2);
-
     expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.error.code).toBe("storage_unavailable");
-    }
+    if (!result.ok) expect(result.error.code).toBe("storage_unavailable");
   });
 });

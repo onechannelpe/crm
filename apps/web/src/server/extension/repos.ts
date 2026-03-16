@@ -1,6 +1,30 @@
-import { sql, type Kysely } from "kysely";
+import { sql, type Kysely, type SelectQueryBuilder } from "kysely";
 
-import type { Database } from "~/lib/db/schema";
+import type { Database } from "~/lib/db/types";
+
+function withExecutiveStatusJoinsAndSelect(
+  qb: SelectQueryBuilder<Database, "extension_executive_statuses", object>,
+) {
+  return qb
+    .innerJoin("users", "users.id", "extension_executive_statuses.user_id")
+    .leftJoin("teams", "teams.id", "users.team_id")
+    .select([
+      "users.id as userId",
+      "users.names",
+      "users.first_surname as firstSurname",
+      "users.team_id as teamId",
+      "teams.name as teamName",
+      "extension_executive_statuses.presence_status as presenceStatus",
+      "extension_executive_statuses.sync_health as syncHealth",
+      "extension_executive_statuses.assignment_id as assignmentId",
+      "extension_executive_statuses.contact_id as contactId",
+      "extension_executive_statuses.call_session_id as callSessionId",
+      "extension_executive_statuses.presence_updated_at as presenceUpdatedAt",
+      "extension_executive_statuses.sync_updated_at as syncUpdatedAt",
+    ])
+    .where("users.is_active", "=", 1)
+    .where("users.role", "=", "executive");
+}
 import type {
   ExtensionExecutivePresenceStatus,
   ExtensionSyncHealth,
@@ -313,24 +337,7 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
     listTeamStatusesBySupervisor(supervisorUserId: number) {
       return db
         .selectFrom("extension_executive_statuses")
-        .innerJoin("users", "users.id", "extension_executive_statuses.user_id")
-        .leftJoin("teams", "teams.id", "users.team_id")
-        .select([
-          "users.id as userId",
-          "users.names",
-          "users.first_surname as firstSurname",
-          "users.team_id as teamId",
-          "teams.name as teamName",
-          "extension_executive_statuses.presence_status as presenceStatus",
-          "extension_executive_statuses.sync_health as syncHealth",
-          "extension_executive_statuses.assignment_id as assignmentId",
-          "extension_executive_statuses.contact_id as contactId",
-          "extension_executive_statuses.call_session_id as callSessionId",
-          "extension_executive_statuses.presence_updated_at as presenceUpdatedAt",
-          "extension_executive_statuses.sync_updated_at as syncUpdatedAt",
-        ])
-        .where("users.is_active", "=", 1)
-        .where("users.role", "=", "executive")
+        .$call(withExecutiveStatusJoinsAndSelect)
         .where("teams.supervisor_id", "=", supervisorUserId)
         .orderBy("users.names", "asc")
         .execute();
@@ -339,24 +346,7 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
     listBranchStatuses(branchId: number) {
       return db
         .selectFrom("extension_executive_statuses")
-        .innerJoin("users", "users.id", "extension_executive_statuses.user_id")
-        .leftJoin("teams", "teams.id", "users.team_id")
-        .select([
-          "users.id as userId",
-          "users.names",
-          "users.first_surname as firstSurname",
-          "users.team_id as teamId",
-          "teams.name as teamName",
-          "extension_executive_statuses.presence_status as presenceStatus",
-          "extension_executive_statuses.sync_health as syncHealth",
-          "extension_executive_statuses.assignment_id as assignmentId",
-          "extension_executive_statuses.contact_id as contactId",
-          "extension_executive_statuses.call_session_id as callSessionId",
-          "extension_executive_statuses.presence_updated_at as presenceUpdatedAt",
-          "extension_executive_statuses.sync_updated_at as syncUpdatedAt",
-        ])
-        .where("users.is_active", "=", 1)
-        .where("users.role", "=", "executive")
+        .$call(withExecutiveStatusJoinsAndSelect)
         .where("extension_executive_statuses.branch_id", "=", branchId)
         .orderBy("users.names", "asc")
         .execute();

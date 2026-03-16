@@ -4,6 +4,11 @@ import {
   type Logger,
 } from "./logger-shared";
 
+function readImportMetaEnv(): Record<string, unknown> | undefined {
+  const metaEnv = (import.meta as { env?: Record<string, unknown> }).env;
+  return metaEnv && typeof metaEnv === "object" ? metaEnv : undefined;
+}
+
 function readServerEnv(key: string): string | undefined {
   if (typeof process === "undefined" || typeof process.env === "undefined") {
     return undefined;
@@ -13,7 +18,7 @@ function readServerEnv(key: string): string | undefined {
 }
 
 function readClientEnv(key: string): string | undefined {
-  const value = (import.meta.env as Record<string, unknown>)[`VITE_${key}`];
+  const value = readImportMetaEnv()?.[`VITE_${key}`];
   return typeof value === "string" ? value : undefined;
 }
 
@@ -22,7 +27,7 @@ function readRuntimeEnv(key: string): string | undefined {
 }
 
 function isProductionMode(): boolean {
-  const mode = readRuntimeEnv("NODE_ENV") ?? import.meta.env.MODE;
+  const mode = readRuntimeEnv("NODE_ENV") ?? readImportMetaEnv()?.MODE;
   return mode === "production";
 }
 

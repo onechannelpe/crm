@@ -1,0 +1,75 @@
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 4px);
+  background: transparent;
+  cursor: pointer;
+  font-size: var(--font-size-caption, 12px);
+  font-weight: var(--font-weight-medium, 500);
+  transition:
+    background-color var(--motion-fast, 150ms) var(--ease-standard, ease),
+    border-color var(--motion-fast, 150ms) var(--ease-standard, ease);
+}
+
+.trigger:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.dot {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  transition: background-color var(--motion-fast, 150ms)
+    var(--ease-standard, ease);
+}
+
+.dot.ok {
+  background-color: hsl(120, 71%, 54%); /* Success green */
+}
+
+.dot.pending {
+  background-color: hsl(33, 100%, 50%); /* Warning orange */
+  animation: pulse var(--motion-fast, 150ms) infinite;
+}
+
+.dot.warning {
+  background-color: hsl(33, 100%, 50%); /* Warning orange */
+}
+
+.dot.error {
+  background-color: hsl(0, 80%, 50%); /* Error red */
+  animation: pulse var(--motion-fast, 150ms) infinite;
+}
+
+.dot.offline {
+  background-color: hsl(0, 0%, 85%); /* Neutral gray */
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: var(--radius-sm, 4px);
+  background-color: hsl(210, 100%, 50%); /* Info blue */
+  color: white;
+  font-size: var(--font-size-tiny, 10px);
+  font-weight: var(--font-weight-semibold, 600);
+}

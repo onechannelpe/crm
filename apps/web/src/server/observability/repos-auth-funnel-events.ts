@@ -1,14 +1,11 @@
 import type { Kysely } from "kysely";
 
+import type { Database, NewAuthFunnelEvent } from "~/lib/db/types";
 import type {
-  AuthFunnelEventsTable,
-  Database,
-  NewAuthFunnelEvent,
-} from "~/lib/db/schema";
-
-type AuthFunnelEventName = AuthFunnelEventsTable["event_name"];
-type AuthFunnelMethod = AuthFunnelEventsTable["method"];
-type AuthFunnelOutcome = AuthFunnelEventsTable["outcome"];
+  AuthFunnelEventName,
+  AuthFunnelMethod,
+  AuthFunnelOutcome,
+} from "~/lib/observability/auth-funnel";
 
 export interface AuthFunnelEventFilter {
   fromInclusive: number;

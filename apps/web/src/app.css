@@ -13,6 +13,7 @@
   /* motion */
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --motion-fast: 150ms;
+  --motion-normal: 300ms;
 
   /* focus ring */
   --focus-ring-shadow:

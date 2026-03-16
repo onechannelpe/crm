@@ -4,7 +4,7 @@ import type {
   Database,
   NewReportExportDownload,
   NewReportExportJob,
-} from "~/lib/db/schema";
+} from "~/lib/db/types";
 
 type ExportJobStatus = NewReportExportJob["status"];
 
@@ -26,8 +26,8 @@ export function createReportExportRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    listJobs(limit: number) {
-      return db
+    listJobs(limit: number, scope?: { branchId?: number }) {
+      let qb = db
         .selectFrom("report_export_jobs")
         .innerJoin(
           "users",
@@ -52,8 +52,11 @@ export function createReportExportRepo(db: Kysely<Database>) {
           ),
         ])
         .orderBy("report_export_jobs.requested_at", "desc")
-        .limit(limit)
-        .execute();
+        .limit(limit);
+      if (scope?.branchId !== undefined) {
+        qb = qb.where("report_export_jobs.branch_id", "=", scope.branchId);
+      }
+      return qb.execute();
     },
 
     async leaseQueuedJobs(limit: number, leaseMs: number, leaseOwner: string) {
@@ -110,38 +113,6 @@ export function createReportExportRepo(db: Kysely<Database>) {
       return leased.filter(
         (job): job is NonNullable<(typeof leased)[number]> => job !== null,
       );
-    },
-
-    listJobsByBranch(limit: number, branchId: number) {
-      return db
-        .selectFrom("report_export_jobs")
-        .innerJoin(
-          "users",
-          "users.id",
-          "report_export_jobs.requested_by_user_id",
-        )
-        .select([
-          "report_export_jobs.id",
-          "report_export_jobs.requested_by_user_id",
-          "report_export_jobs.branch_id",
-          "report_export_jobs.format",
-          "report_export_jobs.filters_json",
-          "report_export_jobs.status",
-          "report_export_jobs.rows_count",
-          "report_export_jobs.file_storage_key",
-          "report_export_jobs.file_sha256",
-          "report_export_jobs.error_message",
-          "report_export_jobs.requested_at",
-          "report_export_jobs.completed_at",
-          "report_export_jobs.expires_at",
-          sql<string>`users.names || ' ' || users.first_surname`.as(
-            "requested_by_name",
-          ),
-        ])
-        .where("report_export_jobs.branch_id", "=", branchId)
-        .orderBy("report_export_jobs.requested_at", "desc")
-        .limit(limit)
-        .execute();
     },
 
     updateJobStatus(

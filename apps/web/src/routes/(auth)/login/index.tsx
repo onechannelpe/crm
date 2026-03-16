@@ -1,72 +1,49 @@
-import { useSearchParams, useSubmission } from "@solidjs/router";
-import { createMemo, createSignal, onMount, Show } from "solid-js";
+import { useSearchParams } from "@solidjs/router";
+import { onMount, Show } from "solid-js";
 
 import { AuthFlowShell } from "~/components/auth/flow/auth-flow-shell";
 import { LastUsedPill } from "~/components/auth/flow/last-used-pill";
 import { LegalFooter } from "~/components/auth/flow/legal-footer";
 import { useToast } from "~/components/feedback/toast-provider";
-import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
-import { Input } from "~/components/ui/input/input";
-import { passwordLoginUiMessage } from "~/lib/auth/login-ui";
-import { isPasskeySupported } from "~/lib/auth/passkey/browser";
+import { ButtonLink } from "~/components/ui/input/button-link";
 import { useAuthPageView } from "~/lib/auth/use-auth-analytics";
 import { useLoginFlow } from "~/lib/auth/use-login-flow";
-import { passwordLoginMutation } from "~/lib/mutations/auth";
+import { usePasskeyLogin } from "~/lib/auth/use-passkey-login";
 
 import styles from "../../auth/auth-shell.module.css";
 import pageStyles from "../../auth/login-page.module.css";
+import shellStyles from "~/components/auth/flow/auth-flow-shell.module.css";
 import linkStyles from "~/components/auth/flow/auth-links.module.css";
-
-type LoginStep = "init" | "email" | "password";
 
 export default function LoginPage() {
   useAuthPageView("login");
   const loginMethods = useLoginFlow();
+  const passkeyLogin = usePasskeyLogin();
   const [searchParams] = useSearchParams();
   const { showToast } = useToast();
-  const passwordSubmission = useSubmission(passwordLoginMutation);
-  const [step, setStep] = createSignal<LoginStep>("init");
-  const [username, setUsername] = createSignal("");
-  const [passkeySupported, setPasskeySupported] = createSignal(false);
 
   onMount(() => {
     if (searchParams.error === "google_not_linked") {
       showToast("error", "Tu cuenta no tiene Google vinculado.");
     }
-    if (searchParams.error === "flow_expired") {
-      showToast("error", "La sesión de inicio expiró. Intenta de nuevo.");
-    }
-    setPasskeySupported(isPasskeySupported());
-  });
-
-  const footerNote = createMemo(() => {
-    if (step() === "password") {
-      return (
-        <a href="/reset-password" class={linkStyles.forgotLink}>
-          ¿Olvidaste tu contraseña?
-        </a>
+    if (searchParams.error === "strong_auth_required") {
+      showToast(
+        "error",
+        "Tu cuenta requiere un factor adicional para completar el acceso.",
       );
     }
-    return <LegalFooter />;
   });
 
-  const passwordError = () => {
-    const result = passwordSubmission.result;
-    return result && !result.ok
-      ? passwordLoginUiMessage(result.code)
-      : undefined;
-  };
-
   return (
-    <AuthFlowShell title="Bienvenido." footerNote={footerNote()}>
+    <AuthFlowShell title="Bienvenido.">
       <div class={pageStyles.formStack}>
         <div class={pageStyles.ssoButtonContainer}>
           <Button
-            variant={step() === "init" ? "primary" : "outline"}
+            variant="primary"
             class={styles.full}
             onClick={() => {
-              loginMethods.markGoogleUsed();
+              loginMethods.markUsed("google");
               window.location.href = "/api/auth/google";
             }}
           >
@@ -102,112 +79,59 @@ export default function LoginPage() {
 
         <div class={pageStyles.separator} role="separator" />
 
-        <Show when={step() === "init"}>
-          <div class={pageStyles.ssoButtonContainer}>
-            <Button
-              variant="outline"
-              class={styles.full}
-              onClick={() => setStep("email")}
-            >
-              Continuar con usuario
-            </Button>
-            <Show when={loginMethods.lastUsedMethod() === "password"}>
-              <LastUsedPill />
-            </Show>
-          </div>
-        </Show>
-
-        <Show when={step() === "email"}>
-          <EnterTransition>
-            <div class={pageStyles.formStack}>
-              <Input
-                id="auth-username"
-                type="text"
-                placeholder="Usuario"
-                autocomplete="username"
-                autocapitalize="none"
-                autocorrect="off"
-                spellcheck={false}
-                value={username()}
-                onInput={(e) => setUsername(e.currentTarget.value)}
-                required
-              />
-              <Button
-                type="button"
-                class={styles.full}
-                onClick={() => {
-                  if (!username().trim()) return;
-                  setStep("password");
-                }}
-              >
-                Continuar
-              </Button>
-              <Show when={passkeySupported()}>
-                <a href="/login/passkey/start" class={linkStyles.passkeyLink}>
-                  Iniciar con clave de acceso
-                </a>
-              </Show>
-            </div>
-          </EnterTransition>
-        </Show>
-
-        <Show when={step() === "password"}>
-          <form
-            class={pageStyles.formStack}
-            action={passwordLoginMutation}
-            method="post"
-            onSubmit={() => {
-              loginMethods.markPasswordUsed();
+        <div class={pageStyles.ssoButtonContainer}>
+          <Button
+            variant="outline"
+            class={styles.full}
+            loading={passkeyLogin.busy()}
+            onClick={() => {
+              loginMethods.markUsed("passkey");
+              void passkeyLogin.startDiscoverable();
             }}
           >
-            <Show when={passwordError()}>
-              {(message) => (
-                <p class={pageStyles.formError} role="alert">
-                  {message()}
-                </p>
-              )}
-            </Show>
-            <Input
-              id="auth-identifier"
-              type="text"
-              placeholder="Usuario"
-              name="identifier"
-              autocomplete="username"
-              autocapitalize="none"
-              autocorrect="off"
-              spellcheck={false}
-              value={username()}
-              onInput={(e) => {
-                const next = e.currentTarget.value;
-                if (next !== username()) setStep("email");
-                setUsername(next);
+            Entrar con llave de acceso
+          </Button>
+          <Show when={loginMethods.lastUsedMethod() === "passkey"}>
+            <LastUsedPill />
+          </Show>
+          <Show when={passkeyLogin.error()}>
+            {(message) => (
+              <p class={pageStyles.formError} role="alert">
+                {message()}
+              </p>
+            )}
+          </Show>
+          <Show
+            when={
+              passkeyLogin.activeFlow() !== undefined &&
+              !passkeyLogin.busy() &&
+              passkeyLogin.supported()
+            }
+          >
+            <button
+              type="button"
+              class={linkStyles.passkeyLink}
+              onClick={() => {
+                void passkeyLogin.retry();
               }}
-              required
-            />
-            <EnterTransition>
-              <Input
-                id="current-password"
-                type="password"
-                placeholder="Contraseña"
-                name="password"
-                autocomplete="current-password"
-                required
-              />
-            </EnterTransition>
-            <Button
-              type="submit"
-              class={styles.full}
-              loading={passwordSubmission.pending}
             >
-              Iniciar sesión
-            </Button>
-            <Show when={loginMethods.lastUsedMethod() === "password"}>
-              <div class={pageStyles.ssoButtonContainer}>
-                <LastUsedPill />
-              </div>
-            </Show>
-          </form>
-        </Show>
+              Reintentar con clave de acceso
+            </button>
+          </Show>
+        </div>
+
+        <div class={pageStyles.ssoButtonContainer}>
+          <ButtonLink href="/login/user" variant="outline" class={styles.full}>
+            Continuar con usuario
+          </ButtonLink>
+          <Show when={loginMethods.lastUsedMethod() === "password"}>
+            <LastUsedPill />
+          </Show>
+        </div>
+
+        <div class={shellStyles.footerNote}>
+          <LegalFooter />
+        </div>
       </div>
     </AuthFlowShell>
   );

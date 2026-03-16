@@ -3,35 +3,59 @@
 import { redirect } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
 
+import { internalError } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
 import {
-  startPasskeyLogin,
   submitPasswordLogin,
-  submitTotpForLoginFlow,
-} from "~/lib/auth/login-flow";
+  type SubmitPrimaryLoginError,
+} from "~/lib/auth/flows/primary-login-service";
+import { submitTotpForLoginFlow } from "~/lib/auth/flows/totp-step-up-service";
 import { parseLoginFlowId } from "~/lib/auth/login-route-flow";
+import {
+  createPasskeyLoginStartAuthService,
+  type PasskeyLoginFlowState,
+  type BeginPasskeyLoginError,
+} from "~/lib/auth/passkey/service";
 import { getClientIp } from "~/lib/auth/password/client-ip";
-import { replaceCurrentSession } from "~/lib/auth/session/login-completion";
+import { replaceCurrentSession } from "~/lib/auth/session/session-transition";
 import { getActionRequestContext } from "~/lib/observability/context";
 import { privilegedLoginAlertSender, repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
-export type PasswordLoginSubmissionResult = {
-  ok: false;
-  code: "invalid_credentials" | "strong_auth_required";
-};
+export type PasswordLoginSubmissionResult =
+  | {
+      ok: false;
+      code: "invalid_credentials" | "strong_auth_required";
+    }
+  | {
+      ok: true;
+      nextStep: "passkey";
+      flow: PasskeyLoginFlowState;
+    };
 
-export type PasskeyStartSubmissionResult = {
-  ok: false;
-  code: "invalid_credentials";
-};
+export type PasskeyStartSubmissionResult =
+  | {
+      ok: false;
+      code: "invalid_credentials";
+    }
+  | {
+      ok: true;
+      flow: PasskeyLoginFlowState;
+    };
 
 export type TotpLoginSubmissionResult = {
   ok: false;
   code: "invalid_totp";
 };
+
+function readPasskeyStartMode(
+  formData: FormData,
+): "identified" | "discoverable" | null {
+  const value = formData.get("mode");
+  return value === "identified" || value === "discoverable" ? value : null;
+}
 
 function readText(
   formData: FormData,
@@ -68,6 +92,43 @@ function getRequestContext() {
   };
 }
 
+function normalizePasskeyStartError(
+  error: BeginPasskeyLoginError,
+): PasskeyStartSubmissionResult {
+  if (error.kind === "unexpected") {
+    throw internalError(error.message);
+  }
+  return {
+    ok: false,
+    code: "invalid_credentials",
+  };
+}
+
+function resolvePasskeyStartAnalyticsCode(
+  error: BeginPasskeyLoginError,
+): "invalid_credentials" | "internal" {
+  return error.kind === "unexpected" ? "internal" : "invalid_credentials";
+}
+
+function normalizePasswordLoginError(
+  error: SubmitPrimaryLoginError,
+): PasswordLoginSubmissionResult {
+  if (error.kind === "unexpected") {
+    throw internalError(error.message ?? "Unexpected password login failure");
+  }
+
+  return {
+    ok: false,
+    code: error.kind,
+  };
+}
+
+function resolvePasswordAnalyticsCode(
+  error: SubmitPrimaryLoginError,
+): "invalid_credentials" | "strong_auth_required" | "internal" {
+  return error.kind === "unexpected" ? "internal" : error.kind;
+}
+
 export async function passwordLogin(
   formData: FormData,
 ): Promise<PasswordLoginSubmissionResult> {
@@ -90,14 +151,11 @@ export async function passwordLogin(
         source: "server",
         kind: "password_result",
         outcome: "failed",
-        code: result.error.kind,
+        code: resolvePasswordAnalyticsCode(result.error),
       },
       getActionRequestContext(),
     );
-    return {
-      ok: false,
-      code: result.error.kind,
-    };
+    return normalizePasswordLoginError(result.error);
   }
 
   if (result.value.kind === "totp_required") {
@@ -120,7 +178,11 @@ export async function passwordLogin(
       },
       getActionRequestContext(),
     );
-    throw redirect(`/login/passkey?flow=${result.value.flow.id}`);
+    return {
+      ok: true,
+      nextStep: "passkey",
+      flow: result.value.flow,
+    };
   }
 
   await recordAuthAnalyticsEvent(
@@ -137,29 +199,35 @@ export async function passwordLogin(
 export async function passkeyStart(
   formData: FormData,
 ): Promise<PasskeyStartSubmissionResult> {
-  const identifier = readText(formData, "identifier");
+  const mode = readPasskeyStartMode(formData);
+  if (!mode) {
+    throw internalError("Invalid passkey login mode");
+  }
+
   const request = getRequestContext();
-  const result = await startPasskeyLogin(
-    {
-      identifier,
-      ipAddress: request.ipAddress,
-    },
-    repos,
-  );
+  const service = createPasskeyLoginStartAuthService(repos);
+  const result =
+    mode === "identified"
+      ? await service.beginLogin({
+          identifier: readText(formData, "identifier"),
+          ipAddress: request.ipAddress,
+          mode,
+        })
+      : await service.beginLogin({
+          ipAddress: request.ipAddress,
+          mode,
+        });
   if (isErr(result)) {
     await recordAuthAnalyticsEvent(
       {
         source: "server",
         kind: "passkey_start_result",
         outcome: "failed",
-        code: "invalid_credentials",
+        code: resolvePasskeyStartAnalyticsCode(result.error),
       },
       getActionRequestContext(),
     );
-    return {
-      ok: false,
-      code: "invalid_credentials",
-    };
+    return normalizePasskeyStartError(result.error);
   }
 
   await recordAuthAnalyticsEvent(
@@ -170,7 +238,10 @@ export async function passkeyStart(
     },
     getActionRequestContext(),
   );
-  throw redirect(`/login/passkey?flow=${result.value.id}`);
+  return {
+    ok: true,
+    flow: result.value,
+  };
 }
 
 export async function totpLogin(
@@ -179,7 +250,7 @@ export async function totpLogin(
   const flowId = readPositiveInt(formData, "flowId");
   const totpCode = readText(formData, "totpCode");
   if (!flowId) {
-    throw redirect("/login?error=flow_expired");
+    throw redirect("/login/user?error=flow_expired");
   }
   const request = getRequestContext();
   const result = await submitTotpForLoginFlow(
@@ -203,7 +274,7 @@ export async function totpLogin(
         },
         getActionRequestContext(),
       );
-      throw redirect("/login?error=flow_expired");
+      throw redirect("/login/user?error=flow_expired");
     }
 
     await recordAuthAnalyticsEvent(

@@ -1,5 +1,5 @@
 import { config } from "~/lib/config";
-import type { NewLeadAssignment } from "~/lib/db/schema";
+import type { NewLeadAssignment } from "~/lib/db/types";
 
 export function createAssignment(
   userId: number,

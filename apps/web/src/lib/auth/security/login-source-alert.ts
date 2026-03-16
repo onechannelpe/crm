@@ -1,5 +1,5 @@
 import { hashAuthKey } from "~/lib/auth/password/key-hash";
-import type { User } from "~/lib/db/schema";
+import type { User } from "~/lib/db/types";
 import { longName } from "~/lib/users/display-name";
 import type { Repositories } from "~/server/shared/registry";
 
@@ -10,7 +10,10 @@ type Deps = Pick<Repositories, "authEvents">;
 const LOOKBACK_MS = 90 * 24 * 60 * 60 * 1000;
 
 export async function sendAlertOnNewLoginSource(params: {
-  user: User;
+  user: Pick<
+    User,
+    "id" | "email" | "names" | "first_surname" | "second_surname" | "role"
+  >;
   ipAddress: string;
   method: string;
   deps: Deps;

@@ -1,17 +1,16 @@
 import { useAction, useNavigate } from "@solidjs/router";
-import { createSignal, onCleanup, onMount, Show } from "solid-js";
+import { createSignal } from "solid-js";
 
 import { LeadList } from "~/components/features/leads/lead-list";
 import { RequestLeadsButton } from "~/components/features/leads/request-leads-button";
 import { useToast } from "~/components/feedback/toast-provider";
 import { AppPage } from "~/components/layout/page";
-import { Badge } from "~/components/ui/display/badge";
+import { createExtensionPortConnection } from "~/lib/extension/port";
 import {
-  getExtensionExecutiveState,
   handoffLeadToExtension,
   isExtensionBridgeConfigured,
-  type ExtensionExecutiveState,
 } from "~/lib/extension/runtime";
+import { useExtensionStateObserver } from "~/lib/extension/use-extension-state-observer";
 import {
   registerCallMutation,
   requestLeadsMutation,
@@ -43,36 +42,6 @@ function isHandoffTokenResponse(
   );
 }
 
-function extensionPresenceBadgeVariant(
-  presenceStatus: ExtensionExecutiveState["presenceStatus"] | undefined,
-) {
-  switch (presenceStatus) {
-    case "active":
-      return "success";
-    case "dialing":
-      return "warning";
-    case "ready":
-    case "wrap_up":
-      return "secondary";
-    default:
-      return "outline";
-  }
-}
-
-function extensionSyncHealthBadgeVariant(
-  syncHealth: ExtensionExecutiveState["syncHealth"] | undefined,
-) {
-  switch (syncHealth) {
-    case "pending":
-      return "info";
-    case "error":
-    case "reauth_required":
-      return "destructive";
-    default:
-      return "outline";
-  }
-}
-
 export default function LeadsPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -82,32 +51,32 @@ export default function LeadsPage() {
   );
   const requestLeadsAction = useAction(requestLeadsMutation);
   const registerCallAction = useAction(registerCallMutation);
-  const [extensionState, setExtensionState] =
-    createSignal<ExtensionExecutiveState | null>(null);
+  const { state: extensionState, error: extensionError } =
+    createExtensionPortConnection();
   const [extensionLoadingAssignmentId, setExtensionLoadingAssignmentId] =
     createSignal<number | null>(null);
-  const [extensionError, setExtensionError] = createSignal<string | null>(null);
-  let pollIntervalId: number | undefined;
 
-  const refreshExtensionState = async () => {
-    if (!isExtensionBridgeConfigured()) {
-      setExtensionState(null);
-      setExtensionError(
-        "Configura VITE_CRM_EXTENSION_ID para conectar la extensión.",
-      );
-      return;
-    }
-
-    const response = await getExtensionExecutiveState();
-    if (!response.ok) {
-      setExtensionState(null);
-      setExtensionError(response.error);
-      return;
-    }
-
-    setExtensionState(response.executiveState);
-    setExtensionError(null);
-  };
+  // Observe extension state changes and emit toasts
+  useExtensionStateObserver({
+    extensionState,
+    extensionError,
+    onReauthRequired: () => {
+      showToast("error", "La extensión necesita reconectarse.");
+    },
+    onSyncError: () => {
+      showToast("error", "Error de sincronización con la extensión.");
+    },
+    onActiveAssignmentChange: (assignmentId) => {
+      if (assignmentId) {
+        showToast("info", `Lead #${assignmentId} activo en la extensión.`);
+      }
+    },
+    onErrorChange: (error) => {
+      if (error) {
+        showToast("error", error);
+      }
+    },
+  });
 
   const handleRequestLeads = async () => {
     const result = await requestLeadsAction();
@@ -122,16 +91,14 @@ export default function LeadsPage() {
     outcome: string,
     notes: string,
   ) => {
-    await updateLeads({
+    const result = await updateLeads({
       optimistic: (prev) =>
         prev.filter((lead) => lead.assignmentId !== assignmentId),
-      commit: async () => {
-        await registerCallAction(assignmentId, contactId, outcome, notes);
-      },
+      commit: () => registerCallAction(assignmentId, contactId, outcome, notes),
     });
 
-    if (outcome === "sale_made") {
-      navigate(`/sales/records/new?contactId=${contactId}`);
+    if (result.draftRecordId) {
+      navigate(`/sales/records/${result.draftRecordId}/edit`);
     }
   };
 
@@ -158,11 +125,9 @@ export default function LeadsPage() {
         .json()
         .catch(() => null)) as unknown;
       setExtensionLoadingAssignmentId(null);
-      setExtensionState(null);
       const message =
         readErrorMessage(body) ??
         "No se pudo autorizar el handoff a la extensión.";
-      setExtensionError(message);
       showToast("error", message);
       return;
     }
@@ -170,10 +135,7 @@ export default function LeadsPage() {
     const handoffTokenBody = (await handoffTokenResponse.json()) as unknown;
     if (!isHandoffTokenResponse(handoffTokenBody)) {
       setExtensionLoadingAssignmentId(null);
-      setExtensionState(null);
-      const message = "El servidor devolvió un handoff inválido.";
-      setExtensionError(message);
-      showToast("error", message);
+      showToast("error", "El servidor devolvió un handoff inválido.");
       return;
     }
 
@@ -183,66 +145,15 @@ export default function LeadsPage() {
     setExtensionLoadingAssignmentId(null);
 
     if (!response.ok) {
-      setExtensionState(response.executiveState ?? null);
-      setExtensionError(response.error);
       showToast("error", response.error);
       return;
     }
 
-    setExtensionState(response.executiveState);
-    setExtensionError(null);
     showToast("success", "Cliente enviado a la extensión.");
   };
 
-  onMount(() => {
-    void refreshExtensionState();
-    pollIntervalId = window.setInterval(() => {
-      void refreshExtensionState();
-    }, 4000);
-  });
-
-  onCleanup(() => {
-    if (pollIntervalId) {
-      window.clearInterval(pollIntervalId);
-    }
-  });
-
   return (
     <AppPage>
-      <div class={styles.extensionBanner}>
-        <div class={styles.extensionHeader}>
-          <div>
-            <p class={styles.extensionEyebrow}>Extension status</p>
-            <h2 class={styles.extensionTitle}>CRM call companion</h2>
-          </div>
-          <Badge
-            variant={extensionPresenceBadgeVariant(
-              extensionState()?.presenceStatus,
-            )}
-          >
-            {extensionState()?.presenceStatus ?? "unavailable"}
-          </Badge>
-          <Badge
-            variant={extensionSyncHealthBadgeVariant(
-              extensionState()?.syncHealth,
-            )}
-          >
-            {extensionState()?.syncHealth ?? "unavailable"}
-          </Badge>
-        </div>
-        <p class={styles.extensionCopy}>
-          <Show
-            when={!extensionError()}
-            fallback={extensionError() ?? "La extensión no está disponible."}
-          >
-            {extensionState()?.syncHealth === "reauth_required"
-              ? "La extensión necesita reconectarse. Vuelve a enviar el cliente para renovar la sesión."
-              : extensionState()?.assignmentId
-                ? `Lead activo en la extensión: #${extensionState()?.assignmentId}`
-                : "Envía un cliente asignado a la extensión para iniciar la llamada."}
-          </Show>
-        </p>
-      </div>
       <LeadList
         contacts={currentLeads()}
         onRegisterCall={handleRegisterCall}

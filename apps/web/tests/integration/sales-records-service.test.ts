@@ -66,6 +66,48 @@ describe("sales records workflow service", () => {
     expect(products).toHaveLength(1);
   });
 
+  it("allows incomplete drafts but blocks submission until completed", async () => {
+    const result = await ctx.salesRecords.createDraft({
+      source: "manual",
+      executiveUserId: 1,
+      branchId: 1,
+      leadAssignmentId: null,
+      client: {
+        ruc: "20100000001",
+        companyName: "Org Lima",
+        contactName: "Contacto Lima",
+        dni: "70000001",
+        phones: ["+51999999111"],
+        engineMatchId: null,
+        completenessScore: 60,
+      },
+      addresses: [],
+      products: [],
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error("Expected draft creation success");
+
+    const row = await ctx.repos.salesRecords.findById(result.value);
+    const addresses = await ctx.repos.salesRecords.findAddressesByRecord(
+      result.value,
+    );
+    const products = await ctx.repos.salesRecords.findProductsByRecord(
+      result.value,
+    );
+    expect(row?.status).toBe("draft");
+    expect(addresses).toHaveLength(0);
+    expect(products).toHaveLength(0);
+
+    const submitted = await ctx.salesRecords.submit(result.value, 1);
+    expect(submitted.ok).toBe(false);
+    if (submitted.ok) throw new Error("Expected submit validation failure");
+    expect(submitted.error.reason).toBe("invalid_data");
+    expect(submitted.error.message).toBe(
+      "At least one address is required before submit",
+    );
+  });
+
   it("submits and confirms transitions with branch scope", async () => {
     const created = await ctx.salesRecords.createDraft({
       source: "manual",

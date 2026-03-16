@@ -1,37 +1,12 @@
-import { defineConfig, devices } from "@playwright/test";
+import { defineConfig } from "@playwright/test";
 
-const AUTH_TEST_PORT = 4174;
-const includeWebkit = process.env.CI === "true";
+import { prepareBrowserTestEnv } from "./tests/browser/config/test-env";
+import {
+  buildPlaywrightProjects,
+  buildPlaywrightWebServers,
+} from "./tests/browser/config/topology";
 
-const projects = [
-  {
-    name: "chromium",
-    use: {
-      ...devices["Desktop Chrome"],
-    },
-  },
-  {
-    name: "firefox",
-    use: {
-      ...devices["Desktop Firefox"],
-    },
-  },
-  {
-    name: "mobile-chromium",
-    use: {
-      ...devices["Pixel 5"],
-    },
-  },
-];
-
-if (includeWebkit) {
-  projects.push({
-    name: "webkit",
-    use: {
-      ...devices["Desktop Safari"],
-    },
-  });
-}
+prepareBrowserTestEnv();
 
 export default defineConfig({
   testDir: "./tests/browser",
@@ -39,18 +14,10 @@ export default defineConfig({
   expect: {
     timeout: 10_000,
   },
-  fullyParallel: false,
-  workers: 1,
+  fullyParallel: true,
   use: {
-    baseURL: `http://127.0.0.1:${AUTH_TEST_PORT}`,
     trace: "retain-on-failure",
   },
-  webServer: {
-    command: `bun run test:prepare && bun run serve:test -- --host 127.0.0.1 --port ${AUTH_TEST_PORT}`,
-    url: `http://127.0.0.1:${AUTH_TEST_PORT}/login`,
-    cwd: ".",
-    reuseExistingServer: false,
-    timeout: 120_000,
-  },
-  projects,
+  webServer: buildPlaywrightWebServers(),
+  projects: buildPlaywrightProjects(),
 });

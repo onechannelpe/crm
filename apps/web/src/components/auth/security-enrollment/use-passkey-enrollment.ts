@@ -5,10 +5,9 @@ import {
   finishPasskeyRegistration,
 } from "~/actions/auth";
 import {
-  isPasskeySupported,
-  toCreationOptions,
-  toRegistrationPayload,
-} from "~/lib/auth/passkey/browser";
+  createRegistrationResponse,
+  isPasskeyRegistrationSupported,
+} from "~/lib/auth/passkey/registration-client";
 import { getErrorMessage } from "~/lib/errors";
 
 type ShowToast = (type: "success" | "error" | "info", message: string) => void;
@@ -25,7 +24,7 @@ export function usePasskeyEnrollment(options: PasskeyEnrollmentOptions) {
   const [loading, setLoading] = createSignal(false);
 
   createEffect(() => {
-    setSupported(isPasskeySupported());
+    setSupported(isPasskeyRegistrationSupported());
   });
 
   async function registerPasskey() {
@@ -33,17 +32,9 @@ export function usePasskeyEnrollment(options: PasskeyEnrollmentOptions) {
     try {
       const { challengeId, options: registrationOptions } =
         await beginPasskeyRegistration();
-      const credential = await navigator.credentials.create({
-        publicKey: toCreationOptions(registrationOptions),
-      });
-
-      if (!credential || !(credential instanceof PublicKeyCredential)) {
-        throw new Error("No se pudo crear la clave de acceso");
-      }
-
       await finishPasskeyRegistration(
         challengeId,
-        toRegistrationPayload(credential),
+        await createRegistrationResponse(registrationOptions),
       );
       await options.refreshStatus();
       options.showToast(

@@ -1,6 +1,6 @@
 import type { Kysely } from "kysely";
 
-import type { AuthEvent, Database, NewAuthEvent } from "~/lib/db/schema";
+import type { AuthEvent, Database, NewAuthEvent } from "~/lib/db/types";
 
 export function createAuthEventsRepo(db: Kysely<Database>) {
   return {

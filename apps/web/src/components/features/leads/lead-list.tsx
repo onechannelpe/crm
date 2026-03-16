@@ -24,6 +24,12 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
+import {
+  badgeVariantForPresence,
+  badgeVariantForSyncHealth,
+  presenceLabel,
+  syncHealthLabel,
+} from "~/lib/extension/display";
 import type { ExtensionExecutiveState } from "~/lib/extension/runtime";
 
 import { RegisterCallDialog } from "./register-call-dialog";
@@ -57,75 +63,6 @@ interface LeadListProps {
   emptyAction?: JSX.Element;
 }
 
-function badgeVariantForPresence(
-  status: ExtensionExecutiveState["presenceStatus"] | "unavailable",
-) {
-  switch (status) {
-    case "active":
-      return "success";
-    case "dialing":
-      return "warning";
-    case "ready":
-    case "wrap_up":
-      return "secondary";
-    case "idle":
-    case "unavailable":
-      return "outline";
-  }
-}
-
-function presenceLabel(
-  status: ExtensionExecutiveState["presenceStatus"] | "unavailable",
-): string {
-  switch (status) {
-    case "idle":
-      return "Sin handoff";
-    case "ready":
-      return "Listo";
-    case "dialing":
-      return "Marcando";
-    case "active":
-      return "En llamada";
-    case "wrap_up":
-      return "Cierre";
-    case "unavailable":
-      return "Sin extension";
-  }
-}
-
-function badgeVariantForSyncHealth(
-  syncHealth: ExtensionExecutiveState["syncHealth"] | "unavailable",
-) {
-  switch (syncHealth) {
-    case "ok":
-      return "outline";
-    case "pending":
-      return "info";
-    case "error":
-    case "reauth_required":
-      return "destructive";
-    case "unavailable":
-      return "outline";
-  }
-}
-
-function syncHealthLabel(
-  syncHealth: ExtensionExecutiveState["syncHealth"] | "unavailable",
-): string {
-  switch (syncHealth) {
-    case "ok":
-      return "Sync OK";
-    case "pending":
-      return "Pendiente";
-    case "error":
-      return "Error sync";
-    case "reauth_required":
-      return "Reconectar";
-    case "unavailable":
-      return "Sin extension";
-  }
-}
-
 export const LeadList: Component<LeadListProps> = (props) => {
   const [registerActive, setRegisterActive] = createSignal<{
     assignmentId: number;
@@ -153,6 +90,7 @@ export const LeadList: Component<LeadListProps> = (props) => {
         <EmptyState
           title="Sin clientes activos"
           description="Solicita nuevos clientes para llenar la cola."
+          action={props.emptyAction}
         />
       }
     >
@@ -189,7 +127,33 @@ export const LeadList: Component<LeadListProps> = (props) => {
                       <User size={14} />
                     </span>
                     <div class={styles.leadInfo}>
-                      <p class={styles.leadName}>{lead.name}</p>
+                      <div
+                        style={{
+                          display: "flex",
+                          "align-items": "center",
+                          gap: "4px",
+                        }}
+                      >
+                        <p class={styles.leadName}>{lead.name}</p>
+                        <Show
+                          when={
+                            props.extensionState?.assignmentId ===
+                            lead.assignmentId
+                          }
+                        >
+                          <span
+                            style={{
+                              display: "inline-block",
+                              width: "4px",
+                              height: "4px",
+                              "border-radius": "50%",
+                              "background-color": "hsl(210, 100%, 50%)",
+                            }}
+                            title="Active in extension"
+                            aria-label="Active assignment in extension"
+                          />
+                        </Show>
+                      </div>
                       <p class={styles.leadMeta}>DNI {lead.dni}</p>
                     </div>
                   </div>

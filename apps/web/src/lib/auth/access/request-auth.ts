@@ -31,6 +31,8 @@ export type AuthRequestDecision =
 export function isPublicPath(pathname: string): boolean {
   return (
     pathname.startsWith("/login") ||
+    pathname.startsWith("/reset-password") ||
+    pathname.startsWith("/api/auth") ||
     pathname.startsWith("/auth") ||
     pathname.startsWith("/_") ||
     pathname.startsWith("/releases") ||
@@ -82,11 +84,15 @@ export async function enforceAuthRequest(
     return { kind: "redirect_login" };
   }
 
-  if (!session.onboardingCompleted && url.pathname !== "/onboarding") {
+  if (session.sessionClass === "pre_auth" && url.pathname !== "/onboarding") {
     return { kind: "redirect_onboarding" };
   }
 
-  if (session.onboardingCompleted && url.pathname === "/onboarding") {
+  if (
+    session.sessionClass === "app" &&
+    session.onboardingCompleted &&
+    url.pathname === "/onboarding"
+  ) {
     return { kind: "redirect_home", to: getDefaultAppPath(session.role) };
   }
 

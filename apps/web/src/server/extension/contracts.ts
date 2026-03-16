@@ -1,4 +1,4 @@
-export const EXTENSION_HANDOFF_TOKEN_ISSUER = "crm-web" as const;
+export const EXTENSION_HANDOFF_TOKEN_ISSUER = "web" as const;
 export const EXTENSION_HANDOFF_TOKEN_AUDIENCE = "crm-extension" as const;
 export const EXTENSION_SESSION_TOKEN_AUDIENCE =
   "crm-extension-session" as const;

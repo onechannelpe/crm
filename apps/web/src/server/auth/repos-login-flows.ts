@@ -1,11 +1,12 @@
 import type { Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/schema";
+import type { Database } from "~/lib/db/types";
 
 export function createLoginFlowsRepo(db: Kysely<Database>) {
   return {
     async create(values: {
       identifier: string;
+      primary_auth_method: "password" | "google" | "passkey";
       user_id?: number | null;
       challenge_id?: number | null;
       state: "totp" | "passkey";
@@ -16,6 +17,7 @@ export function createLoginFlowsRepo(db: Kysely<Database>) {
         .insertInto("login_flows")
         .values({
           identifier: values.identifier,
+          primary_auth_method: values.primary_auth_method,
           user_id: values.user_id ?? null,
           challenge_id: values.challenge_id ?? null,
           state: values.state,

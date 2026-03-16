@@ -6,7 +6,7 @@ import type { Role } from "~/lib/auth/access/rbac";
 import { requireRole } from "~/lib/auth/access/session";
 import { assertRecentStrongAuth } from "~/lib/auth/security/step-up";
 import { assertPositiveInt } from "~/lib/contracts/guards";
-import type { UserSession } from "~/lib/db/schema";
+import type { UserSession } from "~/lib/db/types";
 import { repos } from "~/server/shared/context";
 
 export async function listUserSessions(userId: number): Promise<UserSession[]> {

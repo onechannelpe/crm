@@ -44,6 +44,13 @@ export const RegisterCallDialog: Component<RegisterCallDialogProps> = (
               <option value="wrong_number">Número incorrecto</option>
             </Select>
 
+            <Show when={outcome() === "sale_made"}>
+              <p>
+                Se registrará la llamada y se abrirá un borrador de venta para
+                completar la información.
+              </p>
+            </Show>
+
             <Show when={outcome() !== "sale_made"}>
               <Textarea
                 label="Notas"
@@ -59,7 +66,9 @@ export const RegisterCallDialog: Component<RegisterCallDialogProps> = (
                 Cancelar
               </Button>
               <Button type="submit" variant="primary">
-                {outcome() === "sale_made" ? "Crear venta" : "Completar"}
+                {outcome() === "sale_made"
+                  ? "Continuar con venta"
+                  : "Completar"}
               </Button>
             </div>
           </form>

@@ -1,0 +1,92 @@
+import type {
+  AuthenticatorTransportFuture,
+  PublicKeyCredentialCreationOptionsJSON,
+  RegistrationResponseJSON,
+} from "@simplewebauthn/server";
+
+import { decodeBase64Url, encodeBase64Url } from "./client-shared";
+
+export function isPasskeyRegistrationSupported(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    typeof PublicKeyCredential !== "undefined" &&
+    typeof navigator.credentials?.create === "function"
+  );
+}
+
+export async function createRegistrationResponse(
+  options: PublicKeyCredentialCreationOptionsJSON,
+): Promise<RegistrationResponseJSON> {
+  const credential = await navigator.credentials.create({
+    publicKey: {
+      challenge: decodeBase64Url(options.challenge),
+      rp: options.rp,
+      user: {
+        ...options.user,
+        id: decodeBase64Url(options.user.id),
+      },
+      pubKeyCredParams: options.pubKeyCredParams,
+      timeout: options.timeout,
+      attestation: options.attestation,
+      authenticatorSelection: options.authenticatorSelection,
+      excludeCredentials: options.excludeCredentials?.map((descriptor) => ({
+        id: decodeBase64Url(descriptor.id),
+        type: descriptor.type,
+      })),
+    },
+  });
+
+  if (!(credential instanceof PublicKeyCredential)) {
+    throw new Error("No se pudo crear la clave de acceso");
+  }
+
+  if (!(credential.response instanceof AuthenticatorAttestationResponse)) {
+    throw new Error("Invalid passkey registration response");
+  }
+
+  const transports =
+    typeof credential.response.getTransports === "function"
+      ? normalizeRegistrationTransports(credential.response.getTransports())
+      : undefined;
+
+  return {
+    id: credential.id,
+    rawId: encodeBase64Url(credential.rawId),
+    type: "public-key",
+    response: transports
+      ? {
+          clientDataJSON: encodeBase64Url(credential.response.clientDataJSON),
+          attestationObject: encodeBase64Url(
+            credential.response.attestationObject,
+          ),
+          transports,
+        }
+      : {
+          clientDataJSON: encodeBase64Url(credential.response.clientDataJSON),
+          attestationObject: encodeBase64Url(
+            credential.response.attestationObject,
+          ),
+        },
+    clientExtensionResults: credential.getClientExtensionResults(),
+  };
+}
+
+function normalizeRegistrationTransports(
+  transports: string[],
+): AuthenticatorTransportFuture[] {
+  return transports.filter(isAuthenticatorTransportFuture);
+}
+
+function isAuthenticatorTransportFuture(
+  value: string,
+): value is AuthenticatorTransportFuture {
+  return [
+    "ble",
+    "cable",
+    "hybrid",
+    "internal",
+    "nfc",
+    "smart-card",
+    "usb",
+  ].includes(value);
+}

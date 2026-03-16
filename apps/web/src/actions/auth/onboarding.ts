@@ -1,14 +1,31 @@
 "use server";
 
+import type { RegistrationResponseJSON } from "@simplewebauthn/server";
+import { getRequestEvent } from "solid-js/web";
+
 import {
   conflictError,
   internalError,
   validationError,
 } from "~/lib/app-errors";
+import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { requireSession } from "~/lib/auth/access/session";
+import {
+  createPasskeyEnrollmentAuthService,
+  type PasskeyEnrollmentError,
+} from "~/lib/auth/passkey/service";
+import { getClientIp } from "~/lib/auth/password/client-ip";
+import { requiresStrongAuthRole } from "~/lib/auth/security/strong-auth-status";
+import {
+  issueSessionTransition,
+  replaceCurrentSession,
+} from "~/lib/auth/session/session-transition";
 import { repos, runInRepositoryTransaction } from "~/server/shared/context";
-import { isErr } from "~/server/shared/result";
-import { createAccountOnboardingService } from "~/server/users/service-account-onboarding";
+import { Err, isErr, type Result } from "~/server/shared/result";
+import {
+  completeAccountOnboardingWithRepos,
+  type CompleteOnboardingError,
+} from "~/server/users/service-account-onboarding";
 
 function normalizePeruvianPhone(value: string): string {
   const v = value.replace(/\s+/g, "").trim();
@@ -17,28 +34,146 @@ function normalizePeruvianPhone(value: string): string {
   throw validationError("El número debe tener 9 dígitos");
 }
 
-export async function completeOnboarding(phoneE164: string): Promise<void> {
-  const session = await requireSession();
-  const safePhone = normalizePeruvianPhone(phoneE164);
-  const service = createAccountOnboardingService(repos, {
-    runInTransaction: runInRepositoryTransaction,
-  });
-  const result = await service.completeOnboarding({
-    userId: session.userId,
-    phoneE164: safePhone,
-  });
-  if (!isErr(result)) {
-    return;
-  }
-  switch (result.error.reason) {
-    case "user_not_found":
-    case "unexpected":
-      throw internalError(result.error.message);
-    case "strong_auth_required":
-      throw conflictError(result.error.message);
+function resolveRedirect(
+  role: Awaited<ReturnType<typeof requireSession>>["role"],
+) {
+  return { redirectTo: getDefaultAppPath(role) };
+}
+
+async function promoteCompletedOnboardingSession(
+  session: Awaited<ReturnType<typeof requireSession>>,
+  proof?: {
+    strongAuthMethod: "totp" | "passkey" | "federated";
+    strongAuthAt: number;
+  },
+): Promise<void> {
+  const user = await repos.users.findById(session.userId);
+  if (!user) {
+    throw internalError("No se pudo completar el registro");
   }
 
-  const exhaustive: never = result.error;
+  const event = getRequestEvent();
+  const ipAddress = getClientIp(event?.request.headers ?? new Headers());
+  const userAgent = event?.request.headers.get("user-agent") ?? null;
+  const strongAuthMethod = proof?.strongAuthMethod ?? session.strongAuthMethod;
+  const strongAuthAt =
+    strongAuthMethod === null
+      ? null
+      : (proof?.strongAuthAt ?? session.strongAuthAt ?? Date.now());
+
+  if (requiresStrongAuthRole(user.role) && strongAuthMethod === null) {
+    throw conflictError("No se pudo completar el registro");
+  }
+
+  const issued = await issueSessionTransition({
+    user,
+    sessionClass: "app",
+    request: {
+      ipAddress,
+      userAgent,
+    },
+    primaryAuthMethod: session.primaryAuthMethod,
+    strongAuthMethod,
+    strongAuthAt,
+    deps: repos,
+  });
+  await replaceCurrentSession(issued.token);
+}
+
+function mapCompleteOnboardingError(error: CompleteOnboardingError): never {
+  return mapOnboardingFailure(error, {
+    strongAuthRequiredMessage: error.message,
+  });
+}
+
+function mapOnboardingFailure(
+  error: PasskeyEnrollmentError | CompleteOnboardingError,
+  options: {
+    strongAuthRequiredMessage?: string;
+    userNotFoundMessage?: string;
+  } = {},
+): never {
+  switch (error.reason) {
+    case "invalid_request":
+      throw internalError("No se pudo configurar la clave de acceso");
+    case "user_not_found":
+      throw internalError(
+        options.userNotFoundMessage ?? "No se pudo completar el registro",
+      );
+    case "unexpected":
+      throw internalError(error.message);
+    case "strong_auth_required":
+      throw conflictError(
+        options.strongAuthRequiredMessage ?? "No se pudo completar el registro",
+      );
+  }
+
+  const exhaustive: never = error;
   void exhaustive;
   throw internalError("Unexpected onboarding completion failure");
+}
+
+type CompletePasskeyOnboardingResult = Result<
+  void,
+  PasskeyEnrollmentError | CompleteOnboardingError
+>;
+
+export async function completeOnboarding(
+  phoneE164: string,
+): Promise<{ redirectTo: string }> {
+  const session = await requireSession();
+  const safePhone = normalizePeruvianPhone(phoneE164);
+  const result = await runInRepositoryTransaction((transactionRepos) =>
+    completeAccountOnboardingWithRepos(transactionRepos, {
+      userId: session.userId,
+      phoneE164: safePhone,
+    }),
+  );
+  if (isErr(result)) {
+    mapCompleteOnboardingError(result.error);
+  }
+  await promoteCompletedOnboardingSession(session);
+  return resolveRedirect(session.role);
+}
+
+export async function completePasskeyOnboarding(
+  phoneE164: string,
+  challengeId: number,
+  response: RegistrationResponseJSON,
+): Promise<{ redirectTo: string }> {
+  const session = await requireSession();
+  const safePhone = normalizePeruvianPhone(phoneE164);
+  const event = getRequestEvent();
+  const ipAddress = getClientIp(event?.request.headers ?? new Headers());
+  const result =
+    await runInRepositoryTransaction<CompletePasskeyOnboardingResult>(
+      async (transactionRepos) => {
+        const passkeyService =
+          createPasskeyEnrollmentAuthService(transactionRepos);
+        const passkeyResult = await passkeyService.finishEnrollment({
+          userId: session.userId,
+          challengeId,
+          response,
+          ipAddress,
+        });
+        if (isErr(passkeyResult)) {
+          return Err(passkeyResult.error);
+        }
+
+        return completeAccountOnboardingWithRepos(transactionRepos, {
+          userId: session.userId,
+          phoneE164: safePhone,
+        });
+      },
+    );
+  if (isErr(result)) {
+    mapOnboardingFailure(result.error, {
+      userNotFoundMessage: "No se pudo completar el registro",
+    });
+  }
+  await promoteCompletedOnboardingSession(session, {
+    strongAuthMethod: "passkey",
+    strongAuthAt: Date.now(),
+  });
+  return resolveRedirect(session.role);
 }

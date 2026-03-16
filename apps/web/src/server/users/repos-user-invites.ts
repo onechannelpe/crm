@@ -5,7 +5,7 @@ import type {
   NewUserInvite,
   UserInvitesTable,
   UsersTable,
-} from "~/lib/db/schema";
+} from "~/lib/db/types";
 
 type InviteStatus = UserInvitesTable["status"];
 type UserRole = UsersTable["role"];

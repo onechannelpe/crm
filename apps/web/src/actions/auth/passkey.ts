@@ -3,30 +3,61 @@
 import type { AuthenticationResponseJSON } from "@simplewebauthn/server";
 import { getRequestEvent } from "solid-js/web";
 
+import { internalError } from "~/lib/app-errors";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
-import { submitPasskeyForLoginFlow } from "~/lib/auth/login-flow";
+import {
+  createPasskeyLoginFinishAuthService,
+  type FinishPasskeyLoginError,
+} from "~/lib/auth/passkey/service";
 import { getClientIp } from "~/lib/auth/password/client-ip";
-import { replaceCurrentSession } from "~/lib/auth/session/login-completion";
+import { replaceCurrentSession } from "~/lib/auth/session/session-transition";
 import { getActionRequestContext } from "~/lib/observability/context";
 import { privilegedLoginAlertSender, repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
+function normalizePasskeyLoginError(error: FinishPasskeyLoginError): {
+  ok: false;
+  code: "flow_expired" | "invalid_credentials";
+} {
+  if (error.kind === "unexpected") {
+    throw internalError(error.message);
+  }
+
+  return {
+    ok: false,
+    code: error.kind,
+  };
+}
+
+function resolvePasskeyAnalyticsCode(
+  error: FinishPasskeyLoginError,
+): "flow_expired" | "invalid_credentials" | "internal" {
+  return error.kind === "unexpected" ? "internal" : error.kind;
+}
+
 export async function finishPasskeyLogin(
   flowId: number,
   response: AuthenticationResponseJSON,
-) {
+): Promise<
+  | {
+      ok: false;
+      code: "flow_expired" | "invalid_credentials";
+    }
+  | {
+      ok: true;
+      redirectTo: string;
+    }
+> {
   const event = getRequestEvent();
-  const result = await submitPasskeyForLoginFlow(
-    {
-      flowId,
-      response,
-      ipAddress: getClientIp(event?.request.headers ?? new Headers()),
-      userAgent: event?.request.headers.get("user-agent") ?? null,
-    },
-    repos,
-    privilegedLoginAlertSender,
-  );
+  const service = createPasskeyLoginFinishAuthService(repos);
+  const result = await service.finishLogin({
+    flowId,
+    response,
+    ipAddress: getClientIp(event?.request.headers ?? new Headers()),
+    userAgent: event?.request.headers.get("user-agent") ?? null,
+    sendPrivilegedLoginAlert: privilegedLoginAlertSender,
+  });
 
   if (isErr(result)) {
     await recordAuthAnalyticsEvent(
@@ -34,14 +65,11 @@ export async function finishPasskeyLogin(
         source: "server",
         kind: "passkey_result",
         outcome: "failed",
-        code: result.error.kind,
+        code: resolvePasskeyAnalyticsCode(result.error),
       },
       getActionRequestContext(),
     );
-    return {
-      ok: false as const,
-      code: result.error.kind,
-    };
+    return normalizePasskeyLoginError(result.error);
   }
 
   await recordAuthAnalyticsEvent(
@@ -52,11 +80,11 @@ export async function finishPasskeyLogin(
     },
     getActionRequestContext(),
   );
-  await replaceCurrentSession(result.value.result.token);
+  await replaceCurrentSession(result.value.token);
   return {
     ok: true as const,
-    redirectTo: result.value.result.onboardingCompleted
-      ? getDefaultAppPath(result.value.result.role)
+    redirectTo: result.value.onboardingCompleted
+      ? getDefaultAppPath(result.value.role)
       : "/onboarding",
   };
 }

@@ -8,12 +8,15 @@ import {
   type AuthAnalyticsScreen,
 } from "~/lib/auth/auth-analytics";
 import { assertPositiveInt } from "~/lib/contracts/guards";
-import type { AuthFunnelEventsTable } from "~/lib/db/schema";
+import {
+  isAuthFunnelEventName,
+  isAuthFunnelMethod,
+  isAuthFunnelOutcome,
+  type AuthFunnelEventName,
+  type AuthFunnelOutcome,
+  type AuthFunnelSource,
+} from "~/lib/observability/auth-funnel";
 import { observabilityService } from "~/server/shared/context";
-
-type AuthFunnelEventName = AuthFunnelEventsTable["event_name"];
-type AuthFunnelOutcome = AuthFunnelEventsTable["outcome"];
-type AuthFunnelSource = AuthFunnelEventsTable["source"];
 
 export interface AuthFunnelSummaryRow {
   eventName: AuthFunnelEventName;
@@ -63,13 +66,7 @@ function assertEventName(
   value: string | undefined,
 ): AuthFunnelEventName | undefined {
   if (!value) return undefined;
-  if (
-    value === "screen_viewed" ||
-    value === "password_result" ||
-    value === "passkey_start_result" ||
-    value === "totp_result" ||
-    value === "passkey_result"
-  ) {
+  if (isAuthFunnelEventName(value)) {
     return value;
   }
   throw validationError("eventName is invalid");
@@ -79,12 +76,7 @@ function assertMethod(
   value: string | undefined,
 ): Exclude<AuthAnalyticsMethod, null> | undefined {
   if (!value) return undefined;
-  if (
-    value === "password" ||
-    value === "password_totp" ||
-    value === "passkey" ||
-    value === "google"
-  ) {
+  if (isAuthFunnelMethod(value)) {
     return value;
   }
   throw validationError("method is invalid");
@@ -94,14 +86,7 @@ function assertOutcome(
   value: string | undefined,
 ): AuthFunnelOutcome | undefined {
   if (!value) return undefined;
-  if (
-    value === "viewed" ||
-    value === "failed" ||
-    value === "succeeded" ||
-    value === "started" ||
-    value === "totp_required" ||
-    value === "passkey_required"
-  ) {
+  if (isAuthFunnelOutcome(value)) {
     return value;
   }
   throw validationError("outcome is invalid");

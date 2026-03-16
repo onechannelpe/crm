@@ -6,7 +6,7 @@ import type {
   NewUserTotpRecoveryCode,
   UserTotpFactor,
   UserTotpRecoveryCode,
-} from "~/lib/db/schema";
+} from "~/lib/db/types";
 
 export function createUserTotpFactorsRepo(db: Kysely<Database>) {
   return {

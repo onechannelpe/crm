@@ -1,4 +1,4 @@
-import type { Contact } from "~/lib/db/schema";
+import type { Contact } from "~/lib/db/types";
 
 export function isInCooldown(
   contact: Contact,
