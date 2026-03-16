@@ -91,7 +91,7 @@ export async function getMe(): Promise<CurrentUser | null> {
 
   const user = await repos.users.findById(session.userId);
   if (!user) return null;
-  const strongAuthStatus = await getStrongAuthStatus(user.id, repos);
+  const strongAuthStatus = await getStrongAuthStatus(session.userId, repos);
 
   const [branch, assignedTeam, managedTeam] = await Promise.all([
     repos.branches.findById(user.branch_id),

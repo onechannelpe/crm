@@ -4,6 +4,8 @@ import { generateInviteToken, hashInviteToken } from "~/lib/auth/invite/tokens";
 import { hashPassword } from "~/lib/auth/password/password";
 import { generateUsername } from "~/lib/users/generate-username";
 import { createAuditService } from "~/server/shared/audit";
+import { asBranchId, asUserId } from "~/server/shared/ids";
+import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -162,7 +164,7 @@ export function createUserProvisioningService(
 
   return {
     async listPendingInvites(
-      branchId: number,
+      branchId: BranchId,
     ): Promise<Result<PendingBranchInvite[], ListPendingInvitesError>> {
       try {
         const currentTime = now();
@@ -196,15 +198,15 @@ export function createUserProvisioningService(
     },
 
     async createInvite(input: {
-      actorUserId: number;
+      actorUserId: UserId;
       actorRole: Role;
-      branchId: number;
+      branchId: BranchId;
       names: string;
       firstSurname: string;
       secondSurname: string;
       email: string;
       role: Role;
-      teamId: number | null;
+      teamId: TeamId | null;
       expiresAt?: number | null;
     }): Promise<
       Result<
@@ -336,9 +338,9 @@ export function createUserProvisioningService(
     },
 
     async resendInvite(input: {
-      actorUserId: number;
+      actorUserId: UserId;
       actorRole: Role;
-      branchId: number;
+      branchId: BranchId;
       inviteId: number;
     }): Promise<
       Result<
@@ -414,9 +416,9 @@ export function createUserProvisioningService(
     },
 
     async revokeInvite(input: {
-      actorUserId: number;
+      actorUserId: UserId;
       actorRole: Role;
-      branchId: number;
+      branchId: BranchId;
       inviteId: number;
     }): Promise<Result<void, RevokeInviteError>> {
       try {
@@ -501,7 +503,7 @@ export function createUserProvisioningService(
       passwordHash: string;
     }): Promise<
       Result<
-        { userId: number; branchId: number; role: Role },
+        { userId: UserId; branchId: BranchId; role: Role },
         AcceptInviteError
       >
     > {
@@ -557,8 +559,8 @@ export function createUserProvisioningService(
             },
           );
           return Ok({
-            userId: invite.user_id,
-            branchId: invite.user_branch_id,
+            userId: asUserId(invite.user_id),
+            branchId: asBranchId(invite.user_branch_id),
             role: invite.user_role,
           });
         });

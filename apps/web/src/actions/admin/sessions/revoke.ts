@@ -14,13 +14,16 @@ import {
   assertPositiveInt,
 } from "~/lib/contracts/guards";
 import { repos } from "~/server/shared/context";
+import { asUserId } from "~/server/shared/ids";
 
 export async function revokeUserSession(
   sessionId: string,
   targetUserId: number,
 ): Promise<ActionSuccess> {
   const safeSessionId = assertNonEmptyString(sessionId, "sessionId");
-  const safeTargetUserId = assertPositiveInt(targetUserId, "targetUserId");
+  const safeTargetUserId = asUserId(
+    assertPositiveInt(targetUserId, "targetUserId"),
+  );
   const session = await requireRole("admin");
   assertRecentStrongAuth(session);
 
@@ -52,7 +55,9 @@ export async function revokeUserSession(
 export async function revokeAllUserSessions(
   targetUserId: number,
 ): Promise<ActionSuccess> {
-  const safeTargetUserId = assertPositiveInt(targetUserId, "targetUserId");
+  const safeTargetUserId = asUserId(
+    assertPositiveInt(targetUserId, "targetUserId"),
+  );
   const session = await requireRole("admin");
   assertRecentStrongAuth(session);
 

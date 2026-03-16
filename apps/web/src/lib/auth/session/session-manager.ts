@@ -1,6 +1,8 @@
 import type { NewUserSession } from "~/lib/db/types";
 import { createLogger } from "~/lib/observability/logger";
 import { repos } from "~/server/shared/context";
+import { asBranchId, asUserId } from "~/server/shared/ids";
+import type { BranchId, UserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
 
 import { isRole, type Role } from "../access/rbac";
@@ -36,7 +38,7 @@ function getSessionDeps(deps?: SessionDeps): SessionDeps {
 }
 
 async function getSessionUser(
-  userId: number,
+  userId: UserId,
   deps: SessionDeps,
 ): ReturnType<SessionDeps["users"]["findById"]> {
   return deps.users.findById(userId);
@@ -44,7 +46,7 @@ async function getSessionUser(
 
 function isSessionConsistent(params: {
   user: Awaited<ReturnType<SessionDeps["users"]["findById"]>>;
-  branchId: number;
+  branchId: BranchId;
   role: Role;
 }): boolean {
   const { user, branchId, role } = params;
@@ -194,11 +196,11 @@ export async function validateSessionToken(
     return { session: null };
   }
 
-  const user = await getSessionUser(dbSession.user_id, resolvedDeps);
+  const user = await getSessionUser(asUserId(dbSession.user_id), resolvedDeps);
   if (
     !isSessionConsistent({
       user,
-      branchId: dbSession.branch_id,
+      branchId: asBranchId(dbSession.branch_id),
       role: dbSession.role,
     })
   ) {
@@ -235,8 +237,8 @@ export async function validateSessionToken(
   }
 
   sessionCache.set(sessionId, {
-    userId: dbSession.user_id,
-    branchId: dbSession.branch_id,
+    userId: asUserId(dbSession.user_id),
+    branchId: asBranchId(dbSession.branch_id),
     role: dbSession.role,
     onboardingCompleted,
     sessionClass: dbSession.session_class,
@@ -249,8 +251,8 @@ export async function validateSessionToken(
   return {
     session: {
       id: sessionId,
-      userId: dbSession.user_id,
-      branchId: dbSession.branch_id,
+      userId: asUserId(dbSession.user_id),
+      branchId: asBranchId(dbSession.branch_id),
       role: dbSession.role,
       onboardingCompleted,
       sessionClass: dbSession.session_class,
@@ -270,7 +272,7 @@ export async function invalidateSession(
 }
 
 export async function invalidateUserSessions(
-  userId: number,
+  userId: UserId,
   deps?: SessionDeps,
 ): Promise<void> {
   await getSessionDeps(deps).sessions.deleteAllForUser(userId);

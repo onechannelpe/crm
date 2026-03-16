@@ -1,4 +1,3 @@
-import { asBranchId, asUserId } from "~/server/shared/ids";
 import type { BranchId, UserId } from "~/server/shared/ids";
 
 import type {
@@ -32,9 +31,9 @@ export async function getSession(): Promise<SessionData | null> {
 
   return {
     sessionId: session.id,
-    userId: asUserId(session.userId),
+    userId: session.userId,
     role: session.role,
-    branchId: asBranchId(session.branchId),
+    branchId: session.branchId,
     onboardingCompleted: session.onboardingCompleted,
     sessionClass: session.sessionClass,
     primaryAuthMethod: session.primaryAuthMethod,

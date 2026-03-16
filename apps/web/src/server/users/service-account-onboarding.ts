@@ -3,6 +3,7 @@ import {
   getStrongAuthStatus,
   requiresStrongAuthRole,
 } from "~/lib/auth/security/strong-auth-status";
+import type { UserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -23,7 +24,7 @@ export type CompleteOnboardingError =
   | { reason: "unexpected"; message: string };
 
 export interface CompleteOnboardingInput {
-  userId: number;
+  userId: UserId;
   phoneE164: string;
 }
 
@@ -51,7 +52,7 @@ export async function completeAccountOnboardingWithRepos(
       return Ok(undefined);
     }
 
-    const strongAuthStatus = await getStrongAuthStatus(user.id, repos);
+    const strongAuthStatus = await getStrongAuthStatus(input.userId, repos);
     if (
       requiresStrongAuthRole(user.role as Role) &&
       !strongAuthStatus.hasVerifiedStrongAuth

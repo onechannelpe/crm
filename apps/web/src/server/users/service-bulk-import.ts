@@ -1,4 +1,5 @@
 import type { Role } from "~/lib/auth/access/rbac";
+import type { BranchId, UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { createUserProvisioningService } from "~/server/users/service-user-provisioning";
 
@@ -40,7 +41,7 @@ const MIN_EXPIRY_OFFSET_MS = 7 * 24 * 60 * 60 * 1000;
 
 export async function applyImport(
   rows: BulkImportRow[],
-  actor: { userId: number; role: Role; branchId: number },
+  actor: { userId: UserId; role: Role; branchId: BranchId },
   safeRole: Role,
   provisioning: ProvisioningInterface,
   onInviteCreated: (params: {
