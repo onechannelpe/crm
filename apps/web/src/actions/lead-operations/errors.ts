@@ -34,6 +34,8 @@ export function fromLeadRefillError(error: LeadRefillError): LeadActionError {
   switch (error.reason) {
     case "refill_exhausted":
       return { reason: "conflict", message: error.message };
+    case "compensation_failed":
+      return { reason: "unexpected", message: error.message };
     case "user_not_found":
       return { reason: "not_found", message: error.message };
     case "engine_unavailable":

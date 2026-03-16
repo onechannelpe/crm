@@ -3,7 +3,6 @@ import {
   ENGINE_ENDPOINTS,
   engineApiPath,
 } from "~/server/shared/engine/contract";
-import { validateSearchInput } from "~/server/shared/engine/input";
 import { signRequest } from "~/server/shared/engine/signature";
 import type {
   LeadCandidatesResponse,
@@ -54,7 +53,6 @@ export function createEngineClient(config: EngineClientConfig): EngineClient {
 
   return {
     async search(type, value, limit = 20) {
-      validateSearchInput(type, value, limit);
       const body = JSON.stringify({ type, value, limit });
       const response = await post(engineApiPath(ENGINE_ENDPOINTS.search), body);
 

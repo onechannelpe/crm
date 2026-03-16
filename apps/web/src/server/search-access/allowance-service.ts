@@ -6,6 +6,7 @@ import type {
 import type {
   SearchAllowanceError,
   SearchAllowanceGrantError,
+  SearchRollbackError,
   SearchAllowanceSnapshotError,
 } from "~/server/search-access/errors";
 import type { createAuditService } from "~/server/shared/audit";
@@ -20,6 +21,7 @@ export type { SearchAllowanceSnapshot } from "~/server/search-access/contracts";
 export type {
   SearchAllowanceError,
   SearchAllowanceGrantError,
+  SearchRollbackError,
   SearchAllowanceSnapshotError,
 } from "~/server/search-access/errors";
 
@@ -40,7 +42,7 @@ export function createSearchAllowanceService(deps: SearchAllowanceServiceDeps) {
     amount: number;
     periodStart: string;
     message: string;
-  }) {
+  }): Promise<void> {
     try {
       await auditService.log(
         input.userId,
@@ -53,8 +55,8 @@ export function createSearchAllowanceService(deps: SearchAllowanceServiceDeps) {
           message: input.message,
         },
       );
-    } catch (error) {
-      console.error("Failed to log search usage rollback failure", error);
+    } catch {
+      // Keep rollback paths non-throwing so callers receive typed results.
     }
   }
 
@@ -256,7 +258,10 @@ export function createSearchAllowanceService(deps: SearchAllowanceServiceDeps) {
       }
     },
 
-    async rollbackSearchUsage(userId: UserId, amount: number = 1) {
+    async rollbackSearchUsage(
+      userId: UserId,
+      amount: number = 1,
+    ): Promise<Result<void, SearchRollbackError>> {
       const { periodStart } = currentMonthPeriod();
       const ledger = await repos.searchAllowanceLedger.findByUserAndPeriod(
         userId,
@@ -270,10 +275,14 @@ export function createSearchAllowanceService(deps: SearchAllowanceServiceDeps) {
           message:
             "Rollback skipped because ledger was missing or insufficient",
         });
-        return;
+        return Err({
+          reason: "unexpected",
+          message: "Failed to rollback search usage",
+        });
       }
       try {
         await repos.searchAllowanceLedger.decrementUsage(ledger.id, amount);
+        return Ok(undefined);
       } catch (error) {
         await logRollbackFailureBestEffort({
           userId,
@@ -283,6 +292,13 @@ export function createSearchAllowanceService(deps: SearchAllowanceServiceDeps) {
             error instanceof Error
               ? error.message
               : "Unknown rollback decrement failure",
+        });
+        return Err({
+          reason: "unexpected",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to rollback search usage",
         });
       }
     },

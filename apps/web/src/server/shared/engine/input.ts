@@ -4,6 +4,12 @@ function isAsciiDigits(value: string): boolean {
   return /^\d+$/.test(value);
 }
 
+function hasMeaningfulToken(value: string): boolean {
+  return value
+    .split(/\s+/)
+    .some((token) => token.replace(/[^\p{L}\p{N}]/gu, "").length >= 3);
+}
+
 export function validateSearchInput(
   type: SearchType,
   value: string,
@@ -39,6 +45,11 @@ export function validateSearchInput(
     case "company_name":
       if (query.length < 2 || query.length > 120) {
         throw new Error("Name query must contain 2 to 120 characters");
+      }
+      if (!hasMeaningfulToken(query)) {
+        throw new Error(
+          "Query must contain at least one term with 3 or more characters",
+        );
       }
       return;
   }

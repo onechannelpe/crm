@@ -17,3 +17,5 @@ export type SearchAllowanceGrantError =
   | { reason: "user_not_found"; message: string }
   | { reason: "validation"; message: string }
   | { reason: "unexpected"; message: string };
+
+export type SearchRollbackError = { reason: "unexpected"; message: string };

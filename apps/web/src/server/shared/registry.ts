@@ -12,7 +12,6 @@ import {
 } from "~/server/auth/repos-user-totp-factors";
 import { createCapacityRequestsRepo } from "~/server/capacity/repos";
 import { createSearchEnrichmentRepo } from "~/server/client-search/repos-enrichment";
-import { createClientSearchViewsRepo } from "~/server/client-search/repos-views";
 import { createContactsRepo } from "~/server/contacts/repos-contacts";
 import { createOrganizationsRepo } from "~/server/contacts/repos-organizations";
 import { createExtensionRuntimeRepo } from "~/server/extension/repos";
@@ -63,7 +62,6 @@ export function createRepositories(db: Kysely<Database>) {
     userTotpFactors: createUserTotpFactorsRepo(db),
     userTotpRecoveryCodes: createUserTotpRecoveryCodesRepo(db),
     organizations: createOrganizationsRepo(db),
-    clientSearchViews: createClientSearchViewsRepo(db),
     searchEnrichment: createSearchEnrichmentRepo(db),
     contacts: createContactsRepo(db),
     leadAssignments: createLeadAssignmentsRepo(db),

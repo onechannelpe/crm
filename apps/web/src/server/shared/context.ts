@@ -5,6 +5,7 @@ import { config } from "~/lib/config";
 import { db } from "~/lib/db/db";
 import { env } from "~/lib/env";
 import { createCapacityApprovalService } from "~/server/capacity/approval-service";
+import { createCapacityAuditService } from "~/server/capacity/audit-service";
 import { createCapacityManageService } from "~/server/capacity/manage-service";
 import { createCapacityReadService } from "~/server/capacity/read-service";
 import { createCapacityRequestService } from "~/server/capacity/request-service";
@@ -74,12 +75,10 @@ export const leadRefillGrantService = createLeadRefillGrantService({
   auditService,
 });
 export const capacityRequestService = createCapacityRequestService(repos);
+export const capacityAuditService = createCapacityAuditService(repos);
 export const capacityReadService = createCapacityReadService({
   repos,
-  searchAllowanceService,
-  leadRefillService,
-  searchPolicyService,
-  leadPolicyService,
+  capacityAuditService,
 });
 export const capacityManageService = createCapacityManageService({
   repos,

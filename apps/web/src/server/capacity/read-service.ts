@@ -1,32 +1,20 @@
 import type { SessionData } from "~/lib/auth/access/session";
 import { longName } from "~/lib/users/display-name";
 import { AUDIT_READER_DEFAULT_LIMIT } from "~/server/audit-reader/contracts";
-import { createCapacityAuditService } from "~/server/capacity/audit-service";
+import type { createCapacityAuditService } from "~/server/capacity/audit-service";
 import type { CapacityReadError } from "~/server/capacity/errors";
 import {
   availableLeadRefill,
   todayDateString,
 } from "~/server/lead-operations/domain";
-import {
-  resolveEffectiveLeadPolicy,
-  type createLeadPolicyService,
-} from "~/server/lead-operations/policy-service";
-import type {
-  createLeadRefillService,
-  LeadCapacitySnapshot,
-} from "~/server/lead-operations/refill-service";
-import type {
-  createSearchAllowanceService,
-  SearchAllowanceSnapshot,
-} from "~/server/search-access/allowance-service";
+import { resolveEffectiveLeadPolicy } from "~/server/lead-operations/policy-service";
+import type { LeadCapacitySnapshot } from "~/server/lead-operations/refill-service";
+import type { SearchAllowanceSnapshot } from "~/server/search-access/allowance-service";
 import {
   availableAllowance,
   currentMonthPeriod,
 } from "~/server/search-access/domain";
-import {
-  resolveEffectiveSearchPolicy,
-  type createSearchPolicyService,
-} from "~/server/search-access/policy-service";
+import { resolveEffectiveSearchPolicy } from "~/server/search-access/policy-service";
 import type { UserId } from "~/server/shared/ids";
 import type { PolicySource } from "~/server/shared/pipeline-types";
 import type { Repositories } from "~/server/shared/registry";
@@ -36,10 +24,7 @@ import { canManageExecutive, canManageExecutiveRecord } from "./scope";
 
 interface CapacityReadServiceDeps {
   repos: Repositories;
-  searchAllowanceService: ReturnType<typeof createSearchAllowanceService>;
-  leadRefillService: ReturnType<typeof createLeadRefillService>;
-  searchPolicyService: ReturnType<typeof createSearchPolicyService>;
-  leadPolicyService: ReturnType<typeof createLeadPolicyService>;
+  capacityAuditService: ReturnType<typeof createCapacityAuditService>;
 }
 
 export type { CapacityReadError } from "~/server/capacity/errors";
@@ -164,7 +149,6 @@ function canViewCapacityAuditEvent(
 
 export function createCapacityReadService(deps: CapacityReadServiceDeps) {
   const { repos } = deps;
-  const capacityAuditService = createCapacityAuditService(repos);
 
   async function buildManagedExecutivesList(
     session: SessionData,
@@ -356,65 +340,72 @@ export function createCapacityReadService(deps: CapacityReadServiceDeps) {
         return Err({ reason: "forbidden", message: "Forbidden" });
       }
 
+      const now = Date.now();
+      const { periodStart, periodEnd } = currentMonthPeriod();
+      const today = todayDateString();
       const [
-        searchStatus,
-        leadStatus,
-        searchPolicyStatus,
-        leadPolicyStatus,
+        searchLedger,
+        leadLedger,
+        activeAssignments,
+        searchBranchDefault,
+        searchTeamDefault,
+        searchOverride,
+        leadBranchDefault,
+        leadTeamDefault,
+        leadOverride,
         requests,
       ] = await Promise.all([
-        deps.searchAllowanceService.getCurrentSearchAllowance(targetUserId),
-        deps.leadRefillService.getCurrentLeadCapacity(targetUserId),
-        deps.searchPolicyService.getEffectiveSearchPolicy(targetUserId),
-        deps.leadPolicyService.getEffectiveLeadPolicy(targetUserId),
+        repos.searchAllowanceLedger.findByUserAndPeriod(
+          targetUserId,
+          periodStart,
+        ),
+        repos.leadRefillLedger.findByUserAndDate(targetUserId, today),
+        repos.leadAssignments.countActiveByUser(targetUserId),
+        repos.searchPolicyDefaults.findForScope(
+          "branch",
+          managed.target.branch_id,
+        ),
+        managed.target.team_id == null
+          ? Promise.resolve(null)
+          : repos.searchPolicyDefaults.findForScope(
+              "team",
+              managed.target.team_id,
+            ),
+        repos.searchPolicyOverrides.findActiveForUser(targetUserId, now),
+        repos.leadPolicyDefaults.findForScope(
+          "branch",
+          managed.target.branch_id,
+        ),
+        managed.target.team_id == null
+          ? Promise.resolve(null)
+          : repos.leadPolicyDefaults.findForScope(
+              "team",
+              managed.target.team_id,
+            ),
+        repos.leadPolicyOverrides.findActiveForUser(targetUserId, now),
         repos.capacityRequests.listByUser(targetUserId),
       ]);
 
-      if (isErr(searchStatus)) {
-        if (searchStatus.error.reason === "user_not_found") {
-          return Err({
-            reason: "not_found",
-            message: searchStatus.error.message,
-          });
-        }
-        return Err({
-          reason: "unexpected",
-          message: searchStatus.error.message,
-        });
-      }
-      if (isErr(leadStatus)) {
-        if (leadStatus.error.reason === "user_not_found") {
-          return Err({
-            reason: "not_found",
-            message: leadStatus.error.message,
-          });
-        }
-        return Err({ reason: "unexpected", message: leadStatus.error.message });
-      }
-      if (isErr(searchPolicyStatus)) {
-        if (searchPolicyStatus.error.reason === "user_not_found") {
-          return Err({
-            reason: "not_found",
-            message: searchPolicyStatus.error.message,
-          });
-        }
-        return Err({
-          reason: "unexpected",
-          message: searchPolicyStatus.error.message,
-        });
-      }
-      if (isErr(leadPolicyStatus)) {
-        if (leadPolicyStatus.error.reason === "user_not_found") {
-          return Err({
-            reason: "not_found",
-            message: leadPolicyStatus.error.message,
-          });
-        }
-        return Err({
-          reason: "unexpected",
-          message: leadPolicyStatus.error.message,
-        });
-      }
+      const effectiveSearchPolicy = resolveEffectiveSearchPolicy({
+        userOverride: searchOverride,
+        teamDefault: searchTeamDefault,
+        branchDefault: searchBranchDefault,
+      });
+      const effectiveLeadPolicy = resolveEffectiveLeadPolicy({
+        userOverride: leadOverride,
+        teamDefault: leadTeamDefault,
+        branchDefault: leadBranchDefault,
+      });
+
+      const searchBaseLimit =
+        searchLedger?.base_limit ?? effectiveSearchPolicy.monthlySearchLimit;
+      const searchExtraGranted = searchLedger?.extra_granted ?? 0;
+      const searchUsedAmount = searchLedger?.used_amount ?? 0;
+
+      const leadBaseLimit =
+        leadLedger?.base_limit ?? effectiveLeadPolicy.dailyRefillLimit;
+      const leadExtraGranted = leadLedger?.extra_granted ?? 0;
+      const leadUsedAmount = leadLedger?.used_amount ?? 0;
 
       return Ok({
         executive: {
@@ -427,10 +418,34 @@ export function createCapacityReadService(deps: CapacityReadServiceDeps) {
           email: managed.target.email,
           teamId: managed.target.team_id,
         },
-        searchStatus: searchStatus.value,
-        leadStatus: leadStatus.value,
-        searchPolicy: searchPolicyStatus.value,
-        leadPolicy: leadPolicyStatus.value,
+        searchStatus: {
+          periodStart,
+          periodEnd: searchLedger?.period_end ?? periodEnd,
+          policySource: effectiveSearchPolicy.source,
+          monthlySearchLimit: searchBaseLimit,
+          extraGranted: searchExtraGranted,
+          usedAmount: searchUsedAmount,
+          remaining: availableAllowance({
+            baseLimit: searchBaseLimit,
+            extraGranted: searchExtraGranted,
+            usedAmount: searchUsedAmount,
+          }),
+        },
+        leadStatus: {
+          policySource: effectiveLeadPolicy.source,
+          activeBufferTarget: effectiveLeadPolicy.activeBufferTarget,
+          activeAssignments,
+          dailyRefillLimit: leadBaseLimit,
+          extraGranted: leadExtraGranted,
+          usedAmount: leadUsedAmount,
+          remaining: availableLeadRefill({
+            baseLimit: leadBaseLimit,
+            extraGranted: leadExtraGranted,
+            usedAmount: leadUsedAmount,
+          }),
+        },
+        searchPolicy: effectiveSearchPolicy,
+        leadPolicy: effectiveLeadPolicy,
         requests,
       });
     } catch (error) {
@@ -535,7 +550,9 @@ export function createCapacityReadService(deps: CapacityReadServiceDeps) {
     try {
       const effectiveLimit = Math.max(1, limit ?? AUDIT_READER_DEFAULT_LIMIT);
       const recentResult =
-        await capacityAuditService.listRecentCapacityEvents(effectiveLimit);
+        await deps.capacityAuditService.listRecentCapacityEvents(
+          effectiveLimit,
+        );
       if (isErr(recentResult)) {
         return Err({
           reason: "unexpected",

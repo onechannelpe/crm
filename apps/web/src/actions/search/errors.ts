@@ -7,6 +7,7 @@ import {
 import type { DirectSearchError } from "~/server/engine-gateway/errors";
 import type {
   SearchAllowanceError,
+  SearchRollbackError,
   SearchAllowanceSnapshotError,
 } from "~/server/search-access/allowance-service";
 
@@ -63,6 +64,12 @@ export function fromDirectSearchError(
   const unreachable: never = error;
   void unreachable;
   return { reason: "unexpected", message: "Unhandled direct search error" };
+}
+
+export function fromSearchRollbackError(
+  error: SearchRollbackError,
+): SearchActionError {
+  return { reason: "unexpected", message: error.message };
 }
 
 export function throwSearchActionError(error: SearchActionError): never {

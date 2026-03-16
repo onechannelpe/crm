@@ -261,20 +261,23 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
           assigned: input.assigned,
         },
       );
-    } catch (error) {
-      console.error("Failed to log lead refill request", error);
+    } catch {
+      // Keep audit failures from changing request outcomes.
     }
   }
 
-  async function compensateUsageBestEffort(input: {
+  async function compensateUsage(input: {
     actorUserId: UserId;
     ledgerId: number;
     amount: number;
     reason: string;
-  }) {
+  }): Promise<Result<void, LeadRefillError>> {
     try {
       await repos.leadRefillLedger.decrementUsage(input.ledgerId, input.amount);
+      return Ok(undefined);
     } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Unknown decrement failure";
       try {
         await auditService.log(
           input.actorUserId,
@@ -284,18 +287,16 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
           {
             amount: input.amount,
             reason: input.reason,
-            message:
-              error instanceof Error
-                ? error.message
-                : "Unknown decrement failure",
+            message,
           },
         );
-      } catch (auditError) {
-        console.error(
-          "Failed to log lead refill compensation failure",
-          auditError,
-        );
+      } catch {
+        // Preserve typed failure response when observability write fails.
       }
+      return Err({
+        reason: "compensation_failed",
+        message: `Failed to compensate lead refill usage: ${message}`,
+      });
     }
   }
 
@@ -399,12 +400,15 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
             strategy: "balanced",
           });
         if (isErr(candidateResult)) {
-          await compensateUsageBestEffort({
+          const compensationResult = await compensateUsage({
             actorUserId: userId,
             ledgerId: reservedLedger.id,
             amount: allowed,
             reason: "candidate_fetch_failed",
           });
+          if (isErr(compensationResult)) {
+            return Err(compensationResult.error);
+          }
           return Err(candidateResult.error);
         }
 
@@ -414,23 +418,29 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
             candidateResult.value,
           );
         if (isErr(assignmentResult)) {
-          await compensateUsageBestEffort({
+          const compensationResult = await compensateUsage({
             actorUserId: userId,
             ledgerId: reservedLedger.id,
             amount: allowed,
             reason: "assignment_failed",
           });
+          if (isErr(compensationResult)) {
+            return Err(compensationResult.error);
+          }
           return Err(assignmentResult.error);
         }
 
         const unused = allowed - assignmentResult.value;
         if (unused > 0) {
-          await compensateUsageBestEffort({
+          const compensationResult = await compensateUsage({
             actorUserId: userId,
             ledgerId: reservedLedger.id,
             amount: unused,
             reason: "partial_assignment",
           });
+          if (isErr(compensationResult)) {
+            return Err(compensationResult.error);
+          }
         }
 
         await logRefillRequestBestEffort({

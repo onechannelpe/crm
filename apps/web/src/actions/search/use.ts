@@ -16,6 +16,7 @@ import { isErr } from "~/server/shared/result";
 import {
   fromDirectSearchError,
   fromSearchAllowanceError,
+  fromSearchRollbackError,
   throwSearchActionError,
 } from "./errors";
 
@@ -58,7 +59,12 @@ export async function runDirectSearch(
     limit: safeLimit,
   });
   if (isErr(result)) {
-    await searchAllowanceService.rollbackSearchUsage(session.userId);
+    const rollbackResult = await searchAllowanceService.rollbackSearchUsage(
+      session.userId,
+    );
+    if (isErr(rollbackResult)) {
+      throwSearchActionError(fromSearchRollbackError(rollbackResult.error));
+    }
     throwSearchActionError(fromDirectSearchError(result.error));
   }
 
