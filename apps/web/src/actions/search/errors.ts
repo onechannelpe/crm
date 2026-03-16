@@ -4,12 +4,66 @@ import {
   notFoundError,
   validationError,
 } from "~/lib/app-errors";
+import type { DirectSearchError } from "~/server/engine-gateway/search-service";
+import type {
+  SearchAllowanceError,
+  SearchAllowanceSnapshotError,
+} from "~/server/search-access/allowance-service";
 
 type SearchActionError =
   | { reason: "not_found"; message: string }
   | { reason: "conflict"; message: string }
   | { reason: "validation"; message: string }
   | { reason: "unexpected"; message: string };
+
+export function fromSearchAllowanceSnapshotError(
+  error: SearchAllowanceSnapshotError,
+): SearchActionError {
+  switch (error.reason) {
+    case "user_not_found":
+      return { reason: "not_found", message: error.message };
+    case "unexpected":
+      return { reason: "unexpected", message: error.message };
+  }
+
+  const unreachable: never = error;
+  void unreachable;
+  return { reason: "unexpected", message: "Unhandled search snapshot error" };
+}
+
+export function fromSearchAllowanceError(
+  error: SearchAllowanceError,
+): SearchActionError {
+  switch (error.reason) {
+    case "search_exhausted":
+      return { reason: "conflict", message: error.message };
+    case "validation":
+      return { reason: "validation", message: error.message };
+    case "user_not_found":
+      return { reason: "not_found", message: error.message };
+    case "unexpected":
+      return { reason: "unexpected", message: error.message };
+  }
+
+  const unreachable: never = error;
+  void unreachable;
+  return { reason: "unexpected", message: "Unhandled search allowance error" };
+}
+
+export function fromDirectSearchError(
+  error: DirectSearchError,
+): SearchActionError {
+  switch (error.reason) {
+    case "engine_request_failed":
+      return { reason: "unexpected", message: error.message };
+    case "unexpected":
+      return { reason: "unexpected", message: error.message };
+  }
+
+  const unreachable: never = error;
+  void unreachable;
+  return { reason: "unexpected", message: "Unhandled direct search error" };
+}
 
 export function throwSearchActionError(error: SearchActionError): never {
   switch (error.reason) {

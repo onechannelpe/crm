@@ -65,8 +65,8 @@ export function createSearchAllowanceService(deps: SearchAllowanceServiceDeps) {
           message: input.message,
         },
       );
-    } catch {
-      // Preserve current behavior if audit logging itself fails.
+    } catch (error) {
+      console.error("Failed to log search usage rollback failure", error);
     }
   }
 

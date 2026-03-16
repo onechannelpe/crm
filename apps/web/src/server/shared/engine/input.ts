@@ -1,4 +1,4 @@
-import type { SearchType } from "~/server/shared/engine/types";
+import type { SearchType } from "~/server/shared/pipeline-types";
 
 function isAsciiDigits(value: string): boolean {
   return /^\d+$/.test(value);

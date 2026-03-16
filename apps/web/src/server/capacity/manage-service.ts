@@ -38,6 +38,43 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
     };
   }
 
+  type ManageDomainMappedError =
+    | { reason: "user_not_found"; message: string }
+    | { reason: "validation"; message: string }
+    | { reason: "unexpected"; message: string };
+
+  function mapGrantError(error: ManageDomainMappedError): CapacityManageError {
+    switch (error.reason) {
+      case "user_not_found":
+        return { reason: "not_found", message: error.message };
+      case "validation":
+        return { reason: "validation", message: error.message };
+      case "unexpected":
+        return { reason: "unexpected", message: error.message };
+    }
+
+    const unreachable: never = error;
+    void unreachable;
+    return { reason: "unexpected", message: "Unhandled capacity grant error" };
+  }
+
+  function mapPolicyMutationError(
+    error: ManageDomainMappedError,
+  ): CapacityManageError {
+    switch (error.reason) {
+      case "user_not_found":
+        return { reason: "not_found", message: error.message };
+      case "validation":
+        return { reason: "validation", message: error.message };
+      case "unexpected":
+        return { reason: "unexpected", message: error.message };
+    }
+
+    const unreachable: never = error;
+    void unreachable;
+    return { reason: "unexpected", message: "Unhandled policy mutation error" };
+  }
+
   async function assertManagedExecutive(
     actor: SessionData,
     targetUserId: number,
@@ -48,6 +85,31 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
         reason: "forbidden",
         message: "Cannot manage this executive",
       });
+    }
+
+    return Ok(undefined);
+  }
+
+  async function assertScopeDefaultAccess(
+    actor: SessionData,
+    scopeType: ScopeType,
+    scopeId: number,
+  ): Promise<Result<void, CapacityManageError>> {
+    if (scopeType === "branch" && scopeId !== actor.branchId) {
+      return Err({
+        reason: "conflict",
+        message: "Cannot modify defaults outside your branch",
+      });
+    }
+
+    if (scopeType === "team") {
+      const access = await assertCanManageTeam(actor, scopeId, deps.repos);
+      if (!access.ok) {
+        return Err({
+          reason: "forbidden",
+          message: "Cannot modify defaults for this team",
+        });
+      }
     }
 
     return Ok(undefined);
@@ -74,22 +136,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
             reason,
           );
         if (isErr(snapshotResult)) {
-          if (snapshotResult.error.reason === "user_not_found") {
-            return Err({
-              reason: "not_found",
-              message: snapshotResult.error.message,
-            });
-          }
-          if (snapshotResult.error.reason === "validation") {
-            return Err({
-              reason: "validation",
-              message: snapshotResult.error.message,
-            });
-          }
-          return Err({
-            reason: "unexpected",
-            message: snapshotResult.error.message,
-          });
+          return Err(mapGrantError(snapshotResult.error));
         }
 
         return Ok(snapshotResult.value);
@@ -118,22 +165,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
             reason,
           );
         if (isErr(snapshotResult)) {
-          if (snapshotResult.error.reason === "user_not_found") {
-            return Err({
-              reason: "not_found",
-              message: snapshotResult.error.message,
-            });
-          }
-          if (snapshotResult.error.reason === "validation") {
-            return Err({
-              reason: "validation",
-              message: snapshotResult.error.message,
-            });
-          }
-          return Err({
-            reason: "unexpected",
-            message: snapshotResult.error.message,
-          });
+          return Err(mapGrantError(snapshotResult.error));
         }
 
         return Ok(snapshotResult.value);
@@ -163,16 +195,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
           expiresAt: input.expiresAt,
         });
         if (isErr(result)) {
-          if (result.error.reason === "user_not_found") {
-            return Err({ reason: "not_found", message: result.error.message });
-          }
-          if (result.error.reason === "validation") {
-            return Err({
-              reason: "validation",
-              message: result.error.message,
-            });
-          }
-          return Err({ reason: "unexpected", message: result.error.message });
+          return Err(mapPolicyMutationError(result.error));
         }
 
         return Ok({ success: true as const });
@@ -204,16 +227,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
           expiresAt: input.expiresAt,
         });
         if (isErr(result)) {
-          if (result.error.reason === "user_not_found") {
-            return Err({ reason: "not_found", message: result.error.message });
-          }
-          if (result.error.reason === "validation") {
-            return Err({
-              reason: "validation",
-              message: result.error.message,
-            });
-          }
-          return Err({ reason: "unexpected", message: result.error.message });
+          return Err(mapPolicyMutationError(result.error));
         }
 
         return Ok({ success: true as const });
@@ -231,25 +245,13 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
       },
     ): Promise<Result<{ success: true }, CapacityManageError>> {
       try {
-        if (input.scopeType === "branch" && input.scopeId !== actor.branchId) {
-          return Err({
-            reason: "conflict",
-            message: "Cannot modify defaults outside your branch",
-          });
-        }
-
-        if (input.scopeType === "team") {
-          const access = await assertCanManageTeam(
-            actor,
-            input.scopeId,
-            deps.repos,
-          );
-          if (!access.ok) {
-            return Err({
-              reason: "forbidden",
-              message: "Cannot modify defaults for this team",
-            });
-          }
+        const accessResult = await assertScopeDefaultAccess(
+          actor,
+          input.scopeType,
+          input.scopeId,
+        );
+        if (isErr(accessResult)) {
+          return Err(accessResult.error);
         }
 
         const result = await deps.searchPolicyService.setScopeDefault({
@@ -258,13 +260,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
           monthlySearchLimit: input.monthlySearchLimit,
         });
         if (isErr(result)) {
-          if (result.error.reason === "validation") {
-            return Err({
-              reason: "validation",
-              message: result.error.message,
-            });
-          }
-          return Err({ reason: "unexpected", message: result.error.message });
+          return Err(mapPolicyMutationError(result.error));
         }
 
         return Ok({ success: true as const });
@@ -285,25 +281,13 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
       },
     ): Promise<Result<{ success: true }, CapacityManageError>> {
       try {
-        if (input.scopeType === "branch" && input.scopeId !== actor.branchId) {
-          return Err({
-            reason: "conflict",
-            message: "Cannot modify defaults outside your branch",
-          });
-        }
-
-        if (input.scopeType === "team") {
-          const access = await assertCanManageTeam(
-            actor,
-            input.scopeId,
-            deps.repos,
-          );
-          if (!access.ok) {
-            return Err({
-              reason: "forbidden",
-              message: "Cannot modify defaults for this team",
-            });
-          }
+        const accessResult = await assertScopeDefaultAccess(
+          actor,
+          input.scopeType,
+          input.scopeId,
+        );
+        if (isErr(accessResult)) {
+          return Err(accessResult.error);
         }
 
         const result = await deps.leadPolicyService.setScopeDefault({
@@ -313,13 +297,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
           dailyRefillLimit: input.dailyRefillLimit,
         });
         if (isErr(result)) {
-          if (result.error.reason === "validation") {
-            return Err({
-              reason: "validation",
-              message: result.error.message,
-            });
-          }
-          return Err({ reason: "unexpected", message: result.error.message });
+          return Err(mapPolicyMutationError(result.error));
         }
 
         return Ok({ success: true as const });

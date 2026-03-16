@@ -43,6 +43,10 @@ export const appNotificationCenter = createAppNotificationCenter({
   repos: { appNotifications: repos.appNotifications, users: repos.users },
 });
 export const auditService = createAuditService(repos);
+export const rateLimitDeps = {
+  actionRateLimits: repos.actionRateLimits,
+  auditLogs: repos.auditLogs,
+};
 export const searchEnrichmentService = createSearchEnrichmentService(repos);
 export const engineSearchService = createEngineSearchService();
 export const searchPolicyService = createSearchPolicyService(repos);

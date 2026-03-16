@@ -6,22 +6,29 @@ export type BranchId = Brand<number, "BranchId">;
 export type AssignmentId = Brand<number, "AssignmentId">;
 export type CapacityRequestId = Brand<number, "CapacityRequestId">;
 
+function assertPositiveIntId(value: number, name: string): number {
+  if (!Number.isInteger(value) || value <= 0) {
+    throw new Error(`${name} must be a positive integer`);
+  }
+  return value;
+}
+
 export function asUserId(value: number): UserId {
-  return value as UserId;
+  return assertPositiveIntId(value, "UserId") as UserId;
 }
 
 export function asTeamId(value: number): TeamId {
-  return value as TeamId;
+  return assertPositiveIntId(value, "TeamId") as TeamId;
 }
 
 export function asBranchId(value: number): BranchId {
-  return value as BranchId;
+  return assertPositiveIntId(value, "BranchId") as BranchId;
 }
 
 export function asAssignmentId(value: number): AssignmentId {
-  return value as AssignmentId;
+  return assertPositiveIntId(value, "AssignmentId") as AssignmentId;
 }
 
 export function asCapacityRequestId(value: number): CapacityRequestId {
-  return value as CapacityRequestId;
+  return assertPositiveIntId(value, "CapacityRequestId") as CapacityRequestId;
 }

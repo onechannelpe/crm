@@ -11,7 +11,7 @@ import {
   assertPositiveInt,
 } from "~/lib/contracts/guards";
 import { repos } from "~/server/shared/context";
-import { isSearchType, type SearchType } from "~/server/shared/engine/types";
+import { isSearchType, type SearchType } from "~/server/shared/pipeline-types";
 
 export interface ClientSearchView {
   id: number;

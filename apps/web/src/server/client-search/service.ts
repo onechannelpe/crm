@@ -1,6 +1,7 @@
 import type { EngineClient } from "~/server/shared/engine/client";
 import { engineClient } from "~/server/shared/engine/index";
-import type { SearchResponse, SearchType } from "~/server/shared/engine/types";
+import type { SearchResponse } from "~/server/shared/engine/types";
+import type { SearchType } from "~/server/shared/pipeline-types";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 interface SearchParams {

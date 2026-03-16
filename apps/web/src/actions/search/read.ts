@@ -4,7 +4,10 @@ import { requirePermission } from "~/lib/auth/access/session";
 import { searchAllowanceService } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
-import { throwSearchActionError } from "./errors";
+import {
+  fromSearchAllowanceSnapshotError,
+  throwSearchActionError,
+} from "./errors";
 
 export async function getMySearchAllowance() {
   const session = await requirePermission("capacity:read:self");
@@ -12,16 +15,7 @@ export async function getMySearchAllowance() {
     session.userId,
   );
   if (isErr(result)) {
-    if (result.error.reason === "user_not_found") {
-      throwSearchActionError({
-        reason: "not_found",
-        message: result.error.message,
-      });
-    }
-    throwSearchActionError({
-      reason: "unexpected",
-      message: result.error.message,
-    });
+    throwSearchActionError(fromSearchAllowanceSnapshotError(result.error));
   }
   return result.value;
 }

@@ -6,15 +6,17 @@ import {
 import { validateSearchInput } from "~/server/shared/engine/input";
 import { signRequest } from "~/server/shared/engine/signature";
 import type {
-  CandidateStrategy,
   LeadCandidatesResponse,
   SearchResponse,
-  SearchType,
 } from "~/server/shared/engine/types";
 import {
   assertLeadCandidatesResponse,
   assertSearchResponse,
 } from "~/server/shared/engine/validation";
+import type {
+  CandidateStrategy,
+  SearchType,
+} from "~/server/shared/pipeline-types";
 
 export interface EngineClient {
   search(

@@ -1,7 +1,7 @@
 import { createAssignment } from "~/server/leads/domain-assignment";
 import { canContactNow } from "~/server/leads/domain-cooldown";
 import type { Repositories } from "~/server/shared/registry";
-import { Ok, type Result } from "~/server/shared/result";
+import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { LeadCandidate } from "../engine-gateway/types";
 
@@ -35,14 +35,14 @@ export function createLeadAssignmentService(repos: Repositories) {
           await repos.leadAssignments.createMany(assignments);
         }
         return Ok(assignments.length);
-      } catch {
-        return {
-          ok: false,
-          error: {
-            reason: "unexpected",
-            message: "Unexpected lead assignment failure",
-          },
-        };
+      } catch (error) {
+        return Err({
+          reason: "unexpected",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Unexpected lead assignment failure",
+        });
       }
     },
   };

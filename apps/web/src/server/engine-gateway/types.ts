@@ -1,7 +1,7 @@
 import type {
   CandidateStrategy,
   SearchType,
-} from "~/server/shared/engine/types";
+} from "~/server/shared/pipeline-types";
 
 export interface DirectSearchInput {
   type: SearchType;

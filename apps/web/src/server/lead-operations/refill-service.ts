@@ -85,8 +85,8 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
           assigned: input.assigned,
         },
       );
-    } catch {
-      // Keep refill success semantics stable even when audit logging fails.
+    } catch (error) {
+      console.error("Failed to log lead refill request", error);
     }
   }
 
@@ -114,8 +114,11 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
                 : "Unknown decrement failure",
           },
         );
-      } catch {
-        // Keep refill failure handling stable if audit logging fails.
+      } catch (auditError) {
+        console.error(
+          "Failed to log lead refill compensation failure",
+          auditError,
+        );
       }
     }
   }

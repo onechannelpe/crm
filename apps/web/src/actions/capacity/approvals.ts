@@ -9,23 +9,27 @@ import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
 import {
   capacityApprovalService,
   capacityManageService,
-  repos,
+  rateLimitDeps,
 } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
-import { throwCapacityActionError } from "./errors";
+import {
+  fromCapacityApprovalError,
+  fromCapacityManageError,
+  throwCapacityActionError,
+} from "./errors";
 
 export async function approveCapacityRequest(requestId: number, note?: string) {
   const safeRequestId = assertPositiveInt(requestId, "requestId");
   const session = await requirePermission("capacity:approve");
-  await checkActionRateLimit("capacity.approve", session.userId, repos);
+  await checkActionRateLimit("capacity.approve", session.userId, rateLimitDeps);
   const result = await capacityApprovalService.approveCapacityRequest(
     session,
     safeRequestId,
     note,
   );
   if (isErr(result)) {
-    throwCapacityActionError(result.error);
+    throwCapacityActionError(fromCapacityApprovalError(result.error));
   }
   return result.value;
 }
@@ -34,14 +38,14 @@ export async function rejectCapacityRequest(requestId: number, note: string) {
   const safeRequestId = assertPositiveInt(requestId, "requestId");
   const safeNote = assertNonEmptyString(note, "note");
   const session = await requirePermission("capacity:approve");
-  await checkActionRateLimit("capacity.approve", session.userId, repos);
+  await checkActionRateLimit("capacity.approve", session.userId, rateLimitDeps);
   const result = await capacityApprovalService.rejectCapacityRequest(
     session,
     safeRequestId,
     safeNote,
   );
   if (isErr(result)) {
-    throwCapacityActionError(result.error);
+    throwCapacityActionError(fromCapacityApprovalError(result.error));
   }
   return result.value;
 }
@@ -62,7 +66,7 @@ export async function grantMoreSearches(
     safeReason,
   );
   if (isErr(result)) {
-    throwCapacityActionError(result.error);
+    throwCapacityActionError(fromCapacityManageError(result.error));
   }
   return result.value;
 }
@@ -83,7 +87,7 @@ export async function grantMoreLeadRefill(
     safeReason,
   );
   if (isErr(result)) {
-    throwCapacityActionError(result.error);
+    throwCapacityActionError(fromCapacityManageError(result.error));
   }
   return result.value;
 }

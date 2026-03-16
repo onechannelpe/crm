@@ -1,4 +1,4 @@
-import type { SearchType } from "~/server/shared/engine/types";
+import type { SearchType } from "~/server/shared/pipeline-types";
 
 export type SearchTab = "people" | "companies";
 

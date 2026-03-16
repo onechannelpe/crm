@@ -8,7 +8,7 @@ import {
 import { capacityManageService } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
-import { throwCapacityActionError } from "./errors";
+import { fromCapacityManageError, throwCapacityActionError } from "./errors";
 
 export async function updateSearchPolicyOverride(input: {
   userId: number;
@@ -30,7 +30,7 @@ export async function updateSearchPolicyOverride(input: {
     },
   );
   if (isErr(result)) {
-    throwCapacityActionError(result.error);
+    throwCapacityActionError(fromCapacityManageError(result.error));
   }
   return result.value;
 }
@@ -58,7 +58,7 @@ export async function updateLeadPolicyOverride(input: {
     expiresAt: input.expiresAt,
   });
   if (isErr(result)) {
-    throwCapacityActionError(result.error);
+    throwCapacityActionError(fromCapacityManageError(result.error));
   }
   return result.value;
 }
@@ -80,7 +80,7 @@ export async function updateSearchScopeDefault(input: {
     monthlySearchLimit: safeLimit,
   });
   if (isErr(result)) {
-    throwCapacityActionError(result.error);
+    throwCapacityActionError(fromCapacityManageError(result.error));
   }
   return result.value;
 }
@@ -108,7 +108,7 @@ export async function updateLeadScopeDefault(input: {
     dailyRefillLimit: safeRefill,
   });
   if (isErr(result)) {
-    throwCapacityActionError(result.error);
+    throwCapacityActionError(fromCapacityManageError(result.error));
   }
   return result.value;
 }
