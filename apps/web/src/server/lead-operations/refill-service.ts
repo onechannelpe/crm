@@ -1,17 +1,19 @@
 import { config } from "~/lib/config";
+import type {
+  LeadCapacitySnapshot,
+  LeadRefillResult,
+} from "~/server/lead-operations/contracts";
+import type {
+  LeadCapacitySnapshotError,
+  LeadRefillError,
+  LeadRefillGrantError,
+} from "~/server/lead-operations/errors";
 import type { createAuditService } from "~/server/shared/audit";
-import type { PolicySource } from "~/server/shared/pipeline-types";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, isErr, type Result } from "~/server/shared/result";
 
-import {
-  type createLeadCandidateService,
-  type LeadCandidateError,
-} from "../engine-gateway/lead-candidate-service";
-import {
-  type createLeadAssignmentService,
-  type LeadAssignmentError,
-} from "./assignment-service";
+import { type createLeadCandidateService } from "../engine-gateway/lead-candidate-service";
+import { type createLeadAssignmentService } from "./assignment-service";
 import {
   availableLeadRefill,
   computeNeededAssignments,
@@ -22,38 +24,18 @@ import {
   type EffectiveLeadPolicy,
 } from "./policy-service";
 
-export type LeadRefillError =
-  | { reason: "user_not_found"; message: string }
-  | { reason: "refill_exhausted"; message: string }
-  | { reason: "validation"; message: string }
-  | LeadCandidateError
-  | LeadAssignmentError
-  | { reason: "unexpected"; message: string };
-
-export type LeadCapacitySnapshotError =
-  | { reason: "user_not_found"; message: string }
-  | { reason: "unexpected"; message: string };
-
-export type LeadRefillGrantError =
-  | { reason: "user_not_found"; message: string }
-  | { reason: "validation"; message: string }
-  | { reason: "unexpected"; message: string };
-
-export type LeadCapacitySnapshot = {
-  policySource: PolicySource;
-  activeBufferTarget: number;
-  activeAssignments: number;
-  dailyRefillLimit: number;
-  extraGranted: number;
-  usedAmount: number;
-  remaining: number;
-};
+export type { LeadCapacitySnapshot } from "~/server/lead-operations/contracts";
+export type {
+  LeadCapacitySnapshotError,
+  LeadRefillError,
+  LeadRefillGrantError,
+} from "~/server/lead-operations/errors";
 
 interface LeadRefillServiceDeps {
   repos: Repositories;
   policyService: ReturnType<typeof createLeadPolicyService>;
-  assignmentService: ReturnType<typeof createLeadAssignmentService>;
-  candidateService: ReturnType<typeof createLeadCandidateService>;
+  assignmentService?: ReturnType<typeof createLeadAssignmentService>;
+  candidateService?: ReturnType<typeof createLeadCandidateService>;
   auditService: ReturnType<typeof createAuditService>;
 }
 
@@ -241,9 +223,7 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
     async refillQueueForExecutive(
       userId: number,
       branchId: number,
-    ): Promise<
-      Result<{ assigned: number; requested: number }, LeadRefillError>
-    > {
+    ): Promise<Result<LeadRefillResult, LeadRefillError>> {
       const ledgerResult = await ensureLedger(userId);
       if (isErr(ledgerResult)) {
         return Err(ledgerResult.error);
@@ -298,12 +278,24 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
         }
 
         const candidateResult =
-          await candidateService.requestCandidatesForExecutive({
+          await candidateService?.requestCandidatesForExecutive({
             userId,
             branchId,
             amount: allowed,
             strategy: "balanced",
           });
+        if (!candidateResult) {
+          await compensateUsageBestEffort({
+            actorUserId: userId,
+            ledgerId: workingLedger.id,
+            amount: allowed,
+            reason: "candidate_service_missing",
+          });
+          return Err({
+            reason: "unexpected",
+            message: "Lead candidate service is not configured",
+          });
+        }
         if (isErr(candidateResult)) {
           await compensateUsageBestEffort({
             actorUserId: userId,
@@ -315,10 +307,22 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
         }
 
         const assignmentResult =
-          await assignmentService.assignCandidatesToExecutive(
+          await assignmentService?.assignCandidatesToExecutive(
             userId,
             candidateResult.value,
           );
+        if (!assignmentResult) {
+          await compensateUsageBestEffort({
+            actorUserId: userId,
+            ledgerId: workingLedger.id,
+            amount: allowed,
+            reason: "assignment_service_missing",
+          });
+          return Err({
+            reason: "unexpected",
+            message: "Lead assignment service is not configured",
+          });
+        }
         if (isErr(assignmentResult)) {
           await compensateUsageBestEffort({
             actorUserId: userId,

@@ -14,6 +14,7 @@ import { createEngineSearchService } from "~/server/engine-gateway/search-servic
 import { createExtensionService } from "~/server/extension/service";
 import { createLeadAssignmentService } from "~/server/lead-operations/assignment-service";
 import { createLeadPolicyService } from "~/server/lead-operations/policy-service";
+import { createLeadOperationsReadService } from "~/server/lead-operations/read-service";
 import { createLeadRefillService } from "~/server/lead-operations/refill-service";
 import { createAppNotificationCenter } from "~/server/notifications/app-center-service";
 import { createObservabilityService } from "~/server/observability/service";
@@ -22,6 +23,7 @@ import { createSalesExportService } from "~/server/sales/export-service";
 import { createSalesRecordsWorkflowService } from "~/server/sales/records-service";
 import { createSearchAllowanceService } from "~/server/search-access/allowance-service";
 import { createSearchPolicyService } from "~/server/search-access/policy-service";
+import { createSearchAccessReadService } from "~/server/search-access/read-service";
 import { createAuditService } from "~/server/shared/audit";
 import { createRepositories } from "~/server/shared/registry";
 import { createProfilePictureBlobStore } from "~/server/users/profile-picture-blob-store";
@@ -55,6 +57,11 @@ export const searchAllowanceService = createSearchAllowanceService({
   policyService: searchPolicyService,
   auditService,
 });
+export const searchAccessReadService = createSearchAccessReadService({
+  repos,
+  searchAllowanceService,
+  searchPolicyService,
+});
 export const leadPolicyService = createLeadPolicyService(repos);
 export const leadAssignmentService = createLeadAssignmentService(repos);
 export const leadCandidateService = createLeadCandidateService();
@@ -64,6 +71,11 @@ export const leadRefillService = createLeadRefillService({
   assignmentService: leadAssignmentService,
   candidateService: leadCandidateService,
   auditService,
+});
+export const leadOperationsReadService = createLeadOperationsReadService({
+  repos,
+  leadRefillService,
+  leadPolicyService,
 });
 export const capacityRequestService = createCapacityRequestService(repos);
 export const capacityReadService = createCapacityReadService({

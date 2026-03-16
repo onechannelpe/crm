@@ -16,6 +16,7 @@ import { isErr } from "~/server/shared/result";
 import {
   fromDirectSearchError,
   fromSearchAllowanceError,
+  fromSearchRollbackError,
   throwSearchActionError,
 } from "./errors";
 
@@ -58,7 +59,19 @@ export async function runDirectSearch(
     limit: safeLimit,
   });
   if (isErr(result)) {
-    await searchAllowanceService.rollbackSearchUsage(session.userId);
+    try {
+      await searchAllowanceService.rollbackSearchUsage(session.userId);
+    } catch (rollbackError) {
+      throwSearchActionError(
+        fromSearchRollbackError({
+          reason: "unexpected",
+          message:
+            rollbackError instanceof Error
+              ? rollbackError.message
+              : "Rollback failed unexpectedly",
+        }),
+      );
+    }
     throwSearchActionError(fromDirectSearchError(result.error));
   }
 

@@ -1,22 +1,20 @@
 import { config } from "~/lib/config";
-import type { PolicySource, ScopeType } from "~/server/shared/pipeline-types";
+import type {
+  EffectiveSearchPolicy,
+  ResolveEffectiveSearchPolicyInput,
+  SetSearchScopeDefaultCommand,
+  SetSearchUserOverrideCommand,
+} from "~/server/search-access/contracts";
+import type { SearchPolicyError } from "~/server/search-access/errors";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-export interface EffectiveSearchPolicy {
-  source: PolicySource;
-  monthlySearchLimit: number;
-}
+export type { EffectiveSearchPolicy } from "~/server/search-access/contracts";
+export type { SearchPolicyError } from "~/server/search-access/errors";
 
-type SearchPolicyValue = {
-  search_limit: number;
-};
-
-export function resolveEffectiveSearchPolicy(input: {
-  userOverride?: SearchPolicyValue | null;
-  teamDefault?: SearchPolicyValue | null;
-  branchDefault?: SearchPolicyValue | null;
-}): EffectiveSearchPolicy {
+export function resolveEffectiveSearchPolicy(
+  input: ResolveEffectiveSearchPolicyInput,
+): EffectiveSearchPolicy {
   if (input.userOverride) {
     return {
       source: "user",
@@ -43,11 +41,6 @@ export function resolveEffectiveSearchPolicy(input: {
     monthlySearchLimit: config.searchAccess.defaultMonthlyLimit,
   };
 }
-
-export type SearchPolicyError =
-  | { reason: "user_not_found"; message: string }
-  | { reason: "validation"; message: string }
-  | { reason: "unexpected"; message: string };
 
 export function createSearchPolicyService(repos: Repositories) {
   return {
@@ -89,11 +82,9 @@ export function createSearchPolicyService(repos: Repositories) {
       }
     },
 
-    async setScopeDefault(input: {
-      scopeType: ScopeType;
-      scopeId: number;
-      monthlySearchLimit: number;
-    }): Promise<Result<void, SearchPolicyError>> {
+    async setScopeDefault(
+      input: SetSearchScopeDefaultCommand,
+    ): Promise<Result<void, SearchPolicyError>> {
       if (input.monthlySearchLimit > config.searchAccess.maxMonthlyLimit) {
         return Err({
           reason: "validation",
@@ -120,12 +111,9 @@ export function createSearchPolicyService(repos: Repositories) {
       }
     },
 
-    async setUserOverride(input: {
-      targetUserId: number;
-      monthlySearchLimit: number;
-      setByUserId: number;
-      expiresAt: number | null;
-    }): Promise<Result<void, SearchPolicyError>> {
+    async setUserOverride(
+      input: SetSearchUserOverrideCommand,
+    ): Promise<Result<void, SearchPolicyError>> {
       if (input.monthlySearchLimit > config.searchAccess.maxMonthlyLimit) {
         return Err({
           reason: "validation",

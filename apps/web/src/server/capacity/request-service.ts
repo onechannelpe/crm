@@ -1,10 +1,13 @@
 import { config } from "~/lib/config";
+import {
+  isPositiveAmount,
+  normalizeCapacityReason,
+} from "~/server/capacity/domain";
+import type { CapacityRequestError } from "~/server/capacity/errors";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-export type CapacityRequestError =
-  | { reason: "validation"; message: string }
-  | { reason: "unexpected"; message: string };
+export type { CapacityRequestError } from "~/server/capacity/errors";
 
 export function createCapacityRequestService(repos: Repositories) {
   return {
@@ -13,10 +16,23 @@ export function createCapacityRequestService(repos: Repositories) {
       amount: number,
       reason: string,
     ): Promise<Result<void, CapacityRequestError>> {
+      if (!isPositiveAmount(amount)) {
+        return Err({
+          reason: "validation",
+          message: "Search request amount must be a positive integer",
+        });
+      }
       if (amount > config.capacityRequests.maxRequestAmount) {
         return Err({
           reason: "validation",
           message: "Search request exceeds configured maximum",
+        });
+      }
+      const normalizedReason = normalizeCapacityReason(reason);
+      if (normalizedReason.length === 0) {
+        return Err({
+          reason: "validation",
+          message: "Search request reason is required",
         });
       }
 
@@ -26,7 +42,7 @@ export function createCapacityRequestService(repos: Repositories) {
           kind: "search_extra",
           status: "pending",
           requested_amount: amount,
-          reason,
+          reason: normalizedReason,
         });
         return Ok(undefined);
       } catch (error) {
@@ -43,10 +59,23 @@ export function createCapacityRequestService(repos: Repositories) {
       amount: number,
       reason: string,
     ): Promise<Result<void, CapacityRequestError>> {
+      if (!isPositiveAmount(amount)) {
+        return Err({
+          reason: "validation",
+          message: "Lead refill request amount must be a positive integer",
+        });
+      }
       if (amount > config.capacityRequests.maxRequestAmount) {
         return Err({
           reason: "validation",
           message: "Lead refill request exceeds configured maximum",
+        });
+      }
+      const normalizedReason = normalizeCapacityReason(reason);
+      if (normalizedReason.length === 0) {
+        return Err({
+          reason: "validation",
+          message: "Lead refill request reason is required",
         });
       }
 
@@ -56,7 +85,7 @@ export function createCapacityRequestService(repos: Repositories) {
           kind: "lead_refill_extra",
           status: "pending",
           requested_amount: amount,
-          reason,
+          reason: normalizedReason,
         });
         return Ok(undefined);
       } catch (error) {

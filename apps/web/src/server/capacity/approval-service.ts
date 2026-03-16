@@ -1,17 +1,9 @@
 import type { SessionData } from "~/lib/auth/access/session";
-import { createLeadCandidateService } from "~/server/engine-gateway/lead-candidate-service";
-import { createLeadAssignmentService } from "~/server/lead-operations/assignment-service";
+import { normalizeDecisionNote } from "~/server/capacity/domain";
+import type { CapacityApprovalError } from "~/server/capacity/errors";
 import { createLeadPolicyService } from "~/server/lead-operations/policy-service";
-import {
-  createLeadRefillService,
-  type LeadCapacitySnapshot,
-  type LeadRefillGrantError,
-} from "~/server/lead-operations/refill-service";
-import {
-  createSearchAllowanceService,
-  type SearchAllowanceGrantError,
-  type SearchAllowanceSnapshot,
-} from "~/server/search-access/allowance-service";
+import { createLeadRefillService } from "~/server/lead-operations/refill-service";
+import { createSearchAllowanceService } from "~/server/search-access/allowance-service";
 import { createSearchPolicyService } from "~/server/search-access/policy-service";
 import { createAuditService } from "~/server/shared/audit";
 import {
@@ -19,48 +11,16 @@ import {
   type Repositories,
 } from "~/server/shared/registry";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import type { RepositoryTransactionRunner } from "~/server/shared/transaction";
 
 import { canManageExecutive } from "./scope";
 
-type TransactionRunner = <T>(
-  operation: (
-    transactionRepos: ReturnType<typeof createRepositories>,
-  ) => Promise<T>,
-) => Promise<T>;
-
-export type CapacityApprovalError =
-  | { reason: "not_found"; message: string }
-  | { reason: "forbidden"; message: string }
-  | { reason: "conflict"; message: string }
-  | { reason: "validation"; message: string }
-  | { reason: "unexpected"; message: string };
+export type { CapacityApprovalError } from "~/server/capacity/errors";
 
 interface CapacityApprovalServiceDeps {
   repos: Repositories;
-  runInRepositoryTransaction: TransactionRunner;
+  runInRepositoryTransaction: RepositoryTransactionRunner;
 }
-
-interface CapacityApprovalExecutorDeps {
-  repos: Repositories;
-  grantExtraSearchAllowance: (
-    actorUserId: number,
-    targetUserId: number,
-    amount: number,
-    reason: string,
-  ) => Promise<Result<SearchAllowanceSnapshot, SearchAllowanceGrantError>>;
-  grantExtraLeadRefill: (
-    actorUserId: number,
-    targetUserId: number,
-    amount: number,
-    reason: string,
-  ) => Promise<Result<LeadCapacitySnapshot, LeadRefillGrantError>>;
-}
-
-type CapacityApprovalExecutorError =
-  | { reason: "request_not_found"; message: string }
-  | { reason: "request_not_pending"; message: string }
-  | { reason: "validation"; message: string }
-  | { reason: "unexpected"; message: string };
 
 type CapacityRequestRecord = NonNullable<
   Awaited<ReturnType<Repositories["capacityRequests"]["findById"]>>
@@ -80,142 +40,17 @@ function toUnexpected(error: unknown, fallback: string): CapacityApprovalError {
   };
 }
 
-function mapExecutorError(
-  error: CapacityApprovalExecutorError,
-): CapacityApprovalError {
-  if (
-    error.reason === "request_not_found" ||
-    error.reason === "request_not_pending"
-  ) {
-    return { reason: "conflict", message: error.message };
-  }
-  if (error.reason === "validation") {
-    return { reason: "validation", message: error.message };
-  }
-
-  return { reason: "unexpected", message: error.message };
+function throwRollback(error: CapacityApprovalError): never {
+  throw new TransactionRollbackError(error);
 }
 
-function createCapacityApprovalExecutor(deps: CapacityApprovalExecutorDeps) {
-  return {
-    async approveCapacityRequest(
-      actorUserId: number,
-      requestId: number,
-      note: string | null,
-    ): Promise<Result<{ success: true }, CapacityApprovalExecutorError>> {
-      const request = await deps.repos.capacityRequests.findById(requestId);
-      if (!request) {
-        return Err({
-          reason: "request_not_found",
-          message: "Request not found",
-        });
-      }
-      if (request.status !== "pending") {
-        return Err({
-          reason: "request_not_pending",
-          message: "Request is no longer pending",
-        });
-      }
-
-      const statusUpdate = await deps.repos.capacityRequests.markApproved(
-        request.id,
-        actorUserId,
-        note,
-      );
-      if (!statusUpdate.numUpdatedRows) {
-        return Err({
-          reason: "unexpected",
-          message: "Request approval did not update any rows",
-        });
-      }
-
-      if (request.kind === "search_extra") {
-        const grantResult = await deps.grantExtraSearchAllowance(
-          actorUserId,
-          request.user_id,
-          request.requested_amount,
-          note ?? request.reason,
-        );
-        if (isErr(grantResult)) {
-          if (grantResult.error.reason === "validation") {
-            return Err({
-              reason: "validation",
-              message: grantResult.error.message,
-            });
-          }
-          return Err({
-            reason: "unexpected",
-            message: grantResult.error.message,
-          });
-        }
-      } else {
-        const grantResult = await deps.grantExtraLeadRefill(
-          actorUserId,
-          request.user_id,
-          request.requested_amount,
-          note ?? request.reason,
-        );
-        if (isErr(grantResult)) {
-          if (grantResult.error.reason === "validation") {
-            return Err({
-              reason: "validation",
-              message: grantResult.error.message,
-            });
-          }
-          return Err({
-            reason: "unexpected",
-            message: grantResult.error.message,
-          });
-        }
-      }
-
-      return Ok({ success: true as const });
-    },
-
-    async rejectCapacityRequest(
-      actorUserId: number,
-      requestId: number,
-      note: string,
-    ): Promise<Result<{ success: true }, CapacityApprovalExecutorError>> {
-      const request = await deps.repos.capacityRequests.findById(requestId);
-      if (!request) {
-        return Err({
-          reason: "request_not_found",
-          message: "Request not found",
-        });
-      }
-      if (request.status !== "pending") {
-        return Err({
-          reason: "request_not_pending",
-          message: "Request is no longer pending",
-        });
-      }
-
-      const statusUpdate = await deps.repos.capacityRequests.markRejected(
-        request.id,
-        actorUserId,
-        note,
-      );
-      if (!statusUpdate.numUpdatedRows) {
-        return Err({
-          reason: "unexpected",
-          message: "Request rejection did not update any rows",
-        });
-      }
-
-      return Ok({ success: true as const });
-    },
-  };
-}
-
-function createTransactionalApprovalExecutor(
+function createGrantServices(
   transactionRepos: ReturnType<typeof createRepositories>,
 ) {
   const txAuditService = createAuditService(transactionRepos);
   const txSearchPolicyService = createSearchPolicyService(transactionRepos);
   const txLeadPolicyService = createLeadPolicyService(transactionRepos);
-  const txLeadAssignmentService = createLeadAssignmentService(transactionRepos);
-  const txLeadCandidateService = createLeadCandidateService();
+
   const txSearchAllowanceService = createSearchAllowanceService({
     repos: transactionRepos,
     policyService: txSearchPolicyService,
@@ -224,21 +59,13 @@ function createTransactionalApprovalExecutor(
   const txLeadRefillService = createLeadRefillService({
     repos: transactionRepos,
     policyService: txLeadPolicyService,
-    assignmentService: txLeadAssignmentService,
-    candidateService: txLeadCandidateService,
     auditService: txAuditService,
   });
 
-  return createCapacityApprovalExecutor({
-    repos: transactionRepos,
-    grantExtraSearchAllowance:
-      txSearchAllowanceService.grantExtraSearchAllowance,
-    grantExtraLeadRefill: txLeadRefillService.grantExtraLeadRefill,
-  });
-}
-
-function throwRollback(error: CapacityApprovalError): never {
-  throw new TransactionRollbackError(error);
+  return {
+    searchAllowanceService: txSearchAllowanceService,
+    leadRefillService: txLeadRefillService,
+  };
 }
 
 export function createCapacityApprovalService(
@@ -260,13 +87,87 @@ export function createCapacityApprovalService(
       deps.repos,
     );
     if (!managed.ok) {
-      return Err({
-        reason: "forbidden",
-        message: deniedMessage,
-      });
+      return Err({ reason: "forbidden", message: deniedMessage });
     }
 
     return Ok(request);
+  }
+
+  async function approveInTransaction(input: {
+    actorUserId: number;
+    requestId: number;
+    note: string | null;
+    transactionRepos: ReturnType<typeof createRepositories>;
+  }): Promise<Result<{ success: true }, CapacityApprovalError>> {
+    const request = await input.transactionRepos.capacityRequests.findById(
+      input.requestId,
+    );
+    if (!request) {
+      return Err({ reason: "conflict", message: "Request not found" });
+    }
+    if (request.status !== "pending") {
+      return Err({
+        reason: "conflict",
+        message: "Request is no longer pending",
+      });
+    }
+
+    const updateResult =
+      await input.transactionRepos.capacityRequests.markApproved(
+        request.id,
+        input.actorUserId,
+        input.note,
+      );
+    if (!updateResult.numUpdatedRows) {
+      return Err({
+        reason: "conflict",
+        message: "Request is no longer pending",
+      });
+    }
+
+    const grants = createGrantServices(input.transactionRepos);
+
+    if (request.kind === "search_extra") {
+      const grantResult =
+        await grants.searchAllowanceService.grantExtraSearchAllowance(
+          input.actorUserId,
+          request.user_id,
+          request.requested_amount,
+          input.note ?? request.reason,
+        );
+      if (isErr(grantResult)) {
+        if (grantResult.error.reason === "validation") {
+          return Err({
+            reason: "validation",
+            message: grantResult.error.message,
+          });
+        }
+        return Err({
+          reason: "unexpected",
+          message: grantResult.error.message,
+        });
+      }
+
+      return Ok({ success: true as const });
+    }
+
+    const grantResult = await grants.leadRefillService.grantExtraLeadRefill(
+      input.actorUserId,
+      request.user_id,
+      request.requested_amount,
+      input.note ?? request.reason,
+    );
+    if (isErr(grantResult)) {
+      if (grantResult.error.reason === "validation") {
+        return Err({
+          reason: "validation",
+          message: grantResult.error.message,
+        });
+      }
+      return Err({ reason: "unexpected", message: grantResult.error.message });
+    }
+
+    return Ok({ success: true as const });
   }
 
   return {
@@ -276,29 +177,27 @@ export function createCapacityApprovalService(
       note?: string,
     ): Promise<Result<{ success: true }, CapacityApprovalError>> {
       try {
-        const accessResult = await assertApprovalAccess(
+        const access = await assertApprovalAccess(
           actor,
           requestId,
           "Cannot approve this request",
         );
-        if (isErr(accessResult)) {
-          return Err(accessResult.error);
+        if (isErr(access)) {
+          return Err(access.error);
         }
-        const request = accessResult.value;
 
         const result = await deps.runInRepositoryTransaction(
           async (transactionRepos) => {
-            const executor =
-              createTransactionalApprovalExecutor(transactionRepos);
-            const approvalResult = await executor.approveCapacityRequest(
-              actor.userId,
-              request.id,
-              note?.trim() || null,
-            );
-            if (isErr(approvalResult)) {
-              throwRollback(mapExecutorError(approvalResult.error));
+            const approval = await approveInTransaction({
+              actorUserId: actor.userId,
+              requestId: access.value.id,
+              note: normalizeDecisionNote(note),
+              transactionRepos,
+            });
+            if (isErr(approval)) {
+              throwRollback(approval.error);
             }
-            return approvalResult.value;
+            return approval.value;
           },
         );
 
@@ -317,29 +216,49 @@ export function createCapacityApprovalService(
       note: string,
     ): Promise<Result<{ success: true }, CapacityApprovalError>> {
       try {
-        const accessResult = await assertApprovalAccess(
+        const access = await assertApprovalAccess(
           actor,
           requestId,
           "Cannot reject this request",
         );
-        if (isErr(accessResult)) {
-          return Err(accessResult.error);
+        if (isErr(access)) {
+          return Err(access.error);
         }
-        const request = accessResult.value;
+
+        const decisionNote = normalizeDecisionNote(note);
+        if (!decisionNote) {
+          return Err({
+            reason: "validation",
+            message: "Decision note is required",
+          });
+        }
 
         const result = await deps.runInRepositoryTransaction(
           async (transactionRepos) => {
-            const executor =
-              createTransactionalApprovalExecutor(transactionRepos);
-            const rejectionResult = await executor.rejectCapacityRequest(
-              actor.userId,
-              request.id,
-              note,
+            const request = await transactionRepos.capacityRequests.findById(
+              access.value.id,
             );
-            if (isErr(rejectionResult)) {
-              throwRollback(mapExecutorError(rejectionResult.error));
+            if (!request || request.status !== "pending") {
+              throwRollback({
+                reason: "conflict",
+                message: "Request is no longer pending",
+              });
             }
-            return rejectionResult.value;
+
+            const updateResult =
+              await transactionRepos.capacityRequests.markRejected(
+                request.id,
+                actor.userId,
+                decisionNote,
+              );
+            if (!updateResult.numUpdatedRows) {
+              throwRollback({
+                reason: "conflict",
+                message: "Request is no longer pending",
+              });
+            }
+
+            return { success: true as const };
           },
         );
 

@@ -1,4 +1,9 @@
-import { conflictError, internalError, notFoundError } from "~/lib/app-errors";
+import {
+  conflictError,
+  internalError,
+  notFoundError,
+  validationError,
+} from "~/lib/app-errors";
 import type {
   LeadCapacitySnapshotError,
   LeadRefillError,
@@ -7,6 +12,7 @@ import type {
 type LeadActionError =
   | { reason: "not_found"; message: string }
   | { reason: "conflict"; message: string }
+  | { reason: "validation"; message: string }
   | { reason: "unexpected"; message: string };
 
 export function fromLeadCapacitySnapshotError(
@@ -33,7 +39,7 @@ export function fromLeadRefillError(error: LeadRefillError): LeadActionError {
     case "engine_unavailable":
       return { reason: "unexpected", message: error.message };
     case "validation":
-      return { reason: "conflict", message: error.message };
+      return { reason: "validation", message: error.message };
     case "unexpected":
       return { reason: "unexpected", message: error.message };
   }
@@ -49,6 +55,8 @@ export function throwLeadActionError(error: LeadActionError): never {
       throw notFoundError(error.message);
     case "conflict":
       throw conflictError(error.message);
+    case "validation":
+      throw validationError(error.message);
     case "unexpected":
       throw internalError(error.message);
   }

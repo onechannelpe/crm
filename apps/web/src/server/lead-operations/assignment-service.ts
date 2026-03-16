@@ -1,17 +1,17 @@
+import type { LeadAssignmentCommand } from "~/server/lead-operations/contracts";
+import type { LeadAssignmentError } from "~/server/lead-operations/errors";
 import { createAssignment } from "~/server/leads/domain-assignment";
 import { canContactNow } from "~/server/leads/domain-cooldown";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import type { LeadCandidate } from "../engine-gateway/types";
-
-export type LeadAssignmentError = { reason: "unexpected"; message: string };
+export type { LeadAssignmentError } from "~/server/lead-operations/errors";
 
 export function createLeadAssignmentService(repos: Repositories) {
   return {
     async assignCandidatesToExecutive(
       userId: number,
-      candidates: LeadCandidate[],
+      candidates: LeadAssignmentCommand["candidates"],
     ): Promise<Result<number, LeadAssignmentError>> {
       try {
         const assignments = [];

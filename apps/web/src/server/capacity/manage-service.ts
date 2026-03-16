@@ -1,4 +1,5 @@
 import type { SessionData } from "~/lib/auth/access/session";
+import type { CapacityManageError } from "~/server/capacity/errors";
 import type { createLeadPolicyService } from "~/server/lead-operations/policy-service";
 import {
   createLeadRefillService,
@@ -23,12 +24,7 @@ interface CapacityManageServiceDeps {
   leadPolicyService: ReturnType<typeof createLeadPolicyService>;
 }
 
-export type CapacityManageError =
-  | { reason: "not_found"; message: string }
-  | { reason: "forbidden"; message: string }
-  | { reason: "conflict"; message: string }
-  | { reason: "validation"; message: string }
-  | { reason: "unexpected"; message: string };
+export type { CapacityManageError } from "~/server/capacity/errors";
 
 export function createCapacityManageService(deps: CapacityManageServiceDeps) {
   function toUnexpected(error: unknown, fallback: string): CapacityManageError {

@@ -16,7 +16,7 @@ export async function canManageExecutive(
   if (target.branch_id !== actor.branchId) {
     return { ok: false as const, target };
   }
-  if (actor.role === "admin" || actor.role === "sales_manager") {
+  if (actor.role === "admin") {
     return { ok: true as const, target };
   }
   if (actor.role !== "supervisor") {
@@ -38,11 +38,7 @@ export async function assertCanManageTeam(
   if (!team || team.branch_id !== actor.branchId) {
     return { ok: false as const, team: null };
   }
-  if (
-    actor.role === "superuser" ||
-    actor.role === "admin" ||
-    actor.role === "sales_manager"
-  ) {
+  if (actor.role === "superuser" || actor.role === "admin") {
     return { ok: true as const, team };
   }
   if (actor.role !== "supervisor") {

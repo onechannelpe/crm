@@ -1,10 +1,11 @@
 import { sql, type Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type { ScopeType } from "~/server/shared/pipeline-types";
 
 export function createSearchPolicyDefaultsRepo(db: Kysely<Database>) {
   return {
-    findForScope(scopeType: "branch" | "team", scopeId: number) {
+    findForScope(scopeType: ScopeType, scopeId: number) {
       return db
         .selectFrom("search_policy_defaults")
         .selectAll()
@@ -13,7 +14,7 @@ export function createSearchPolicyDefaultsRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    listForScope(scopeType: "branch" | "team", scopeIds: number[]) {
+    listForScope(scopeType: ScopeType, scopeIds: number[]) {
       if (scopeIds.length === 0) {
         return Promise.resolve([]);
       }
@@ -26,7 +27,7 @@ export function createSearchPolicyDefaultsRepo(db: Kysely<Database>) {
     },
 
     async upsert(values: {
-      scope_type: "branch" | "team";
+      scope_type: ScopeType;
       scope_id: number;
       period_type: "month";
       search_limit: number;

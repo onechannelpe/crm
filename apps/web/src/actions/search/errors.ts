@@ -4,11 +4,13 @@ import {
   notFoundError,
   validationError,
 } from "~/lib/app-errors";
-import type { DirectSearchError } from "~/server/engine-gateway/search-service";
+import type { DirectSearchError } from "~/server/engine-gateway/errors";
 import type {
   SearchAllowanceError,
   SearchAllowanceSnapshotError,
 } from "~/server/search-access/allowance-service";
+
+export type SearchRollbackError = { reason: "unexpected"; message: string };
 
 type SearchActionError =
   | { reason: "not_found"; message: string }
@@ -63,6 +65,19 @@ export function fromDirectSearchError(
   const unreachable: never = error;
   void unreachable;
   return { reason: "unexpected", message: "Unhandled direct search error" };
+}
+
+export function fromSearchRollbackError(
+  error: SearchRollbackError,
+): SearchActionError {
+  switch (error.reason) {
+    case "unexpected":
+      return { reason: "unexpected", message: error.message };
+  }
+
+  const unreachable: never = error;
+  void unreachable;
+  return { reason: "unexpected", message: "Unhandled search rollback error" };
 }
 
 export function throwSearchActionError(error: SearchActionError): never {

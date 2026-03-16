@@ -2,11 +2,8 @@ import { engineClient } from "~/server/shared/engine";
 import type { EngineClient } from "~/server/shared/engine/client";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import type { LeadCandidate, LeadCandidateRequestInput } from "./types";
-
-export type LeadCandidateError =
-  | { reason: "engine_unavailable"; message: string }
-  | { reason: "unexpected"; message: string };
+import type { LeadCandidate, LeadCandidateRequestInput } from "./contracts";
+import type { LeadCandidateError } from "./errors";
 
 export function createLeadCandidateService(
   engine: EngineClient = engineClient,

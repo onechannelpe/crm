@@ -1,24 +1,20 @@
 import { config } from "~/lib/config";
-import type { PolicySource, ScopeType } from "~/server/shared/pipeline-types";
+import type {
+  EffectiveLeadPolicy,
+  ResolveEffectiveLeadPolicyInput,
+  SetLeadScopeDefaultCommand,
+  SetLeadUserOverrideCommand,
+} from "~/server/lead-operations/contracts";
+import type { LeadPolicyError } from "~/server/lead-operations/errors";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-export interface EffectiveLeadPolicy {
-  source: PolicySource;
-  activeBufferTarget: number;
-  dailyRefillLimit: number;
-}
+export type { EffectiveLeadPolicy } from "~/server/lead-operations/contracts";
+export type { LeadPolicyError } from "~/server/lead-operations/errors";
 
-type LeadPolicyValue = {
-  active_buffer_target: number;
-  daily_refill_limit: number;
-};
-
-export function resolveEffectiveLeadPolicy(input: {
-  userOverride?: LeadPolicyValue | null;
-  teamDefault?: LeadPolicyValue | null;
-  branchDefault?: LeadPolicyValue | null;
-}): EffectiveLeadPolicy {
+export function resolveEffectiveLeadPolicy(
+  input: ResolveEffectiveLeadPolicyInput,
+): EffectiveLeadPolicy {
   if (input.userOverride) {
     return {
       source: "user",
@@ -49,11 +45,6 @@ export function resolveEffectiveLeadPolicy(input: {
     dailyRefillLimit: config.leadAssignment.defaultDailyRefillLimit,
   };
 }
-
-export type LeadPolicyError =
-  | { reason: "user_not_found"; message: string }
-  | { reason: "validation"; message: string }
-  | { reason: "unexpected"; message: string };
 
 export function createLeadPolicyService(repos: Repositories) {
   return {
@@ -97,12 +88,9 @@ export function createLeadPolicyService(repos: Repositories) {
       }
     },
 
-    async setScopeDefault(input: {
-      scopeType: ScopeType;
-      scopeId: number;
-      activeBufferTarget: number;
-      dailyRefillLimit: number;
-    }): Promise<Result<void, LeadPolicyError>> {
+    async setScopeDefault(
+      input: SetLeadScopeDefaultCommand,
+    ): Promise<Result<void, LeadPolicyError>> {
       if (input.activeBufferTarget > config.leadAssignment.maxBufferTarget) {
         return Err({
           reason: "validation",
@@ -135,13 +123,9 @@ export function createLeadPolicyService(repos: Repositories) {
       }
     },
 
-    async setUserOverride(input: {
-      targetUserId: number;
-      activeBufferTarget: number;
-      dailyRefillLimit: number;
-      setByUserId: number;
-      expiresAt: number | null;
-    }): Promise<Result<void, LeadPolicyError>> {
+    async setUserOverride(
+      input: SetLeadUserOverrideCommand,
+    ): Promise<Result<void, LeadPolicyError>> {
       if (input.activeBufferTarget > config.leadAssignment.maxBufferTarget) {
         return Err({
           reason: "validation",

@@ -1,6 +1,8 @@
 import type { SessionData } from "~/lib/auth/access/session";
 import { longName } from "~/lib/users/display-name";
 import { AUDIT_READER_DEFAULT_LIMIT } from "~/server/audit-reader/contracts";
+import { createCapacityAuditService } from "~/server/capacity/audit-service";
+import type { CapacityReadError } from "~/server/capacity/errors";
 import {
   availableLeadRefill,
   todayDateString,
@@ -39,10 +41,7 @@ interface CapacityReadServiceDeps {
   leadPolicyService: ReturnType<typeof createLeadPolicyService>;
 }
 
-export type CapacityReadError =
-  | { reason: "forbidden"; message: string }
-  | { reason: "not_found"; message: string }
-  | { reason: "unexpected"; message: string };
+export type { CapacityReadError } from "~/server/capacity/errors";
 
 export type ManagedExecutiveSummary = {
   id: number;
@@ -141,16 +140,14 @@ function parseAuditChanges(rawChanges: string | null): AuditChangeValue {
 
 function canViewCapacityAuditEvent(
   session: SessionData,
-  event: { entity_type: string; entity_id: number | null },
+  event: { entityType: string; entityId: number | null },
 ) {
   if (session.role === "superuser") {
     return true;
   }
 
-  if (session.role === "admin" || session.role === "sales_manager") {
-    return (
-      event.entity_type !== "branch" || event.entity_id === session.branchId
-    );
+  if (session.role === "admin") {
+    return event.entityType !== "branch" || event.entityId === session.branchId;
   }
 
   return false;
@@ -158,11 +155,15 @@ function canViewCapacityAuditEvent(
 
 export function createCapacityReadService(deps: CapacityReadServiceDeps) {
   const { repos } = deps;
+  const capacityAuditService = createCapacityAuditService(repos);
 
   async function buildManagedExecutivesList(
     session: SessionData,
   ): Promise<ManagedExecutiveSummary[]> {
-    const users = await repos.users.findByBranch(session.branchId);
+    const users =
+      session.role === "superuser"
+        ? await repos.users.findAllActive()
+        : await repos.users.findByBranch(session.branchId);
     const supervisedTeam =
       session.role === "supervisor"
         ? await repos.teams.findBySupervisorId(session.userId)
@@ -170,11 +171,7 @@ export function createCapacityReadService(deps: CapacityReadServiceDeps) {
 
     const managedExecutives = users.filter((user) => {
       if (user.role !== "executive") return false;
-      if (
-        session.role === "superuser" ||
-        session.role === "admin" ||
-        session.role === "sales_manager"
-      ) {
+      if (session.role === "superuser" || session.role === "admin") {
         return true;
       }
       if (session.role !== "supervisor" || !supervisedTeam) {
@@ -530,31 +527,25 @@ export function createCapacityReadService(deps: CapacityReadServiceDeps) {
     limit?: number,
   ): Promise<Result<CapacityAuditEvent[], CapacityReadError>> {
     try {
-      const now = Date.now();
       const effectiveLimit = Math.max(1, limit ?? AUDIT_READER_DEFAULT_LIMIT);
-      const recent = await repos.auditLogs.listRecent({
-        fromInclusive: now - 1000 * 60 * 60 * 24 * 30,
-        toInclusive: now,
-        limit: effectiveLimit,
-      });
+      const recentResult =
+        await capacityAuditService.listRecentCapacityEvents(effectiveLimit);
+      if (isErr(recentResult)) {
+        return Err({
+          reason: "unexpected",
+          message: recentResult.error.message,
+        });
+      }
 
-      const filtered = recent
-        .filter((event) => {
-          const action = event.action;
-          return (
-            action.startsWith("search_") ||
-            action.startsWith("lead_") ||
-            action.startsWith("capacity_")
-          );
-        })
+      const filtered = recentResult.value
         .filter((event) => canViewCapacityAuditEvent(session, event))
         .map((event) => ({
           id: event.id,
-          createdAt: event.created_at,
-          userId: event.user_id,
+          createdAt: event.createdAt,
+          userId: event.userId,
           action: event.action,
-          entityType: event.entity_type,
-          entityId: event.entity_id,
+          entityType: event.entityType,
+          entityId: event.entityId,
           changes: parseAuditChanges(event.changes),
         }));
 

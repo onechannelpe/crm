@@ -1,39 +1,26 @@
 import { config } from "~/lib/config";
+import type {
+  EffectiveSearchPolicy,
+  SearchAllowanceSnapshot,
+} from "~/server/search-access/contracts";
+import type {
+  SearchAllowanceError,
+  SearchAllowanceGrantError,
+  SearchAllowanceSnapshotError,
+} from "~/server/search-access/errors";
 import type { createAuditService } from "~/server/shared/audit";
-import type { PolicySource } from "~/server/shared/pipeline-types";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import { availableAllowance, currentMonthPeriod } from "./domain";
-import {
-  type createSearchPolicyService,
-  type EffectiveSearchPolicy,
-} from "./policy-service";
+import type { createSearchPolicyService } from "./policy-service";
 
-export type SearchAllowanceError =
-  | { reason: "user_not_found"; message: string }
-  | { reason: "search_exhausted"; message: string }
-  | { reason: "validation"; message: string }
-  | { reason: "unexpected"; message: string };
-
-export type SearchAllowanceSnapshotError =
-  | { reason: "user_not_found"; message: string }
-  | { reason: "unexpected"; message: string };
-
-export type SearchAllowanceGrantError =
-  | { reason: "user_not_found"; message: string }
-  | { reason: "validation"; message: string }
-  | { reason: "unexpected"; message: string };
-
-export type SearchAllowanceSnapshot = {
-  periodStart: string;
-  periodEnd: string;
-  policySource: PolicySource;
-  monthlySearchLimit: number;
-  extraGranted: number;
-  usedAmount: number;
-  remaining: number;
-};
+export type { SearchAllowanceSnapshot } from "~/server/search-access/contracts";
+export type {
+  SearchAllowanceError,
+  SearchAllowanceGrantError,
+  SearchAllowanceSnapshotError,
+} from "~/server/search-access/errors";
 
 interface SearchAllowanceServiceDeps {
   repos: Repositories;

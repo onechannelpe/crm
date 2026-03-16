@@ -5,10 +5,12 @@ import {
   notFoundError,
   validationError,
 } from "~/lib/app-errors";
-import type { CapacityApprovalError } from "~/server/capacity/approval-service";
-import type { CapacityManageError } from "~/server/capacity/manage-service";
-import type { CapacityReadError } from "~/server/capacity/read-service";
-import type { CapacityRequestError } from "~/server/capacity/request-service";
+import type {
+  CapacityApprovalError,
+  CapacityManageError,
+  CapacityReadError,
+  CapacityRequestError,
+} from "~/server/capacity/errors";
 
 export type CapacityActionError =
   | { reason: "forbidden"; message: string }
