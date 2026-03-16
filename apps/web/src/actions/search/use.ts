@@ -45,8 +45,9 @@ export async function runDirectSearch(
   const session = await requirePermission("search:use");
   await checkActionRateLimit("search.use", session.userId, rateLimitDeps);
 
-  const allowanceResult =
-    await searchAllowanceService.reserveSearchUsage(session.userId);
+  const allowanceResult = await searchAllowanceService.reserveSearchUsage(
+    session.userId,
+  );
   if (isErr(allowanceResult)) {
     throwSearchActionError(fromSearchAllowanceError(allowanceResult.error));
   }

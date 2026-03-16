@@ -10,7 +10,7 @@ import {
   type SearchAllowanceSnapshot,
 } from "~/server/search-access/allowance-service";
 import type { createSearchPolicyService } from "~/server/search-access/policy-service";
-import { asTeamId, asUserId } from "~/server/shared/ids";
+import { asTeamId } from "~/server/shared/ids";
 import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 import type { ScopeType } from "~/server/shared/pipeline-types";
 import type { Repositories } from "~/server/shared/registry";
@@ -108,7 +108,6 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
       reason: string,
     ): Promise<Result<SearchAllowanceSnapshot, CapacityManageError>> {
       try {
-        const actorUserId = asUserId(actor.userId);
         const managedResult = await assertManagedExecutive(actor, targetUserId);
         if (isErr(managedResult)) {
           return Err(managedResult.error);
@@ -116,7 +115,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
 
         const snapshotResult =
           await deps.searchAllowanceService.grantExtraSearchAllowance(
-            actorUserId,
+            actor.userId,
             targetUserId,
             amount,
             reason,
@@ -138,7 +137,6 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
       reason: string,
     ): Promise<Result<LeadCapacitySnapshot, CapacityManageError>> {
       try {
-        const actorUserId = asUserId(actor.userId);
         const managedResult = await assertManagedExecutive(actor, targetUserId);
         if (isErr(managedResult)) {
           return Err(managedResult.error);
@@ -146,7 +144,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
 
         const snapshotResult =
           await deps.leadRefillGrantService.grantExtraLeadRefill(
-            actorUserId,
+            actor.userId,
             targetUserId,
             amount,
             reason,
@@ -170,7 +168,6 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
       },
     ): Promise<Result<{ success: true }, CapacityManageError>> {
       try {
-        const actorUserId = asUserId(actor.userId);
         const managedResult = await assertManagedExecutive(actor, input.userId);
         if (isErr(managedResult)) {
           return Err(managedResult.error);
@@ -179,7 +176,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
         const result = await deps.searchPolicyService.setUserOverride({
           targetUserId: input.userId,
           monthlySearchLimit: input.monthlySearchLimit,
-          setByUserId: actorUserId,
+          setByUserId: actor.userId,
           expiresAt: input.expiresAt,
         });
         if (isErr(result)) {
@@ -202,7 +199,6 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
       },
     ): Promise<Result<{ success: true }, CapacityManageError>> {
       try {
-        const actorUserId = asUserId(actor.userId);
         const managedResult = await assertManagedExecutive(actor, input.userId);
         if (isErr(managedResult)) {
           return Err(managedResult.error);
@@ -212,7 +208,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
           targetUserId: input.userId,
           activeBufferTarget: input.activeBufferTarget,
           dailyRefillLimit: input.dailyRefillLimit,
-          setByUserId: actorUserId,
+          setByUserId: actor.userId,
           expiresAt: input.expiresAt,
         });
         if (isErr(result)) {

@@ -1,3 +1,6 @@
+import { asBranchId, asUserId } from "~/server/shared/ids";
+import type { BranchId, UserId } from "~/server/shared/ids";
+
 import type {
   PrimaryAuthMethod,
   SessionClass,
@@ -5,8 +8,6 @@ import type {
 } from "../core/session-contract";
 import { getSessionCookie } from "../session/cookies";
 import { validateSessionToken } from "../session/session-manager";
-import { asBranchId, asUserId } from "~/server/shared/ids";
-import type { BranchId, UserId } from "~/server/shared/ids";
 import { hasPermission, type Permission, type Role } from "./rbac";
 
 export interface SessionData {

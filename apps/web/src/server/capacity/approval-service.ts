@@ -192,7 +192,7 @@ export function createCapacityApprovalService(
         const result = await deps.runInRepositoryTransaction(
           async (transactionRepos) => {
             const approval = await approveInTransaction({
-              actorUserId: asUserId(actor.userId),
+              actorUserId: actor.userId,
               requestId: asCapacityRequestId(access.value.id),
               note: normalizeDecisionNote(note),
               transactionRepos,
