@@ -34,8 +34,8 @@ export type {
 interface LeadRefillServiceDeps {
   repos: Repositories;
   policyService: ReturnType<typeof createLeadPolicyService>;
-  assignmentService?: ReturnType<typeof createLeadAssignmentService>;
-  candidateService?: ReturnType<typeof createLeadCandidateService>;
+  assignmentService: ReturnType<typeof createLeadAssignmentService>;
+  candidateService: ReturnType<typeof createLeadCandidateService>;
   auditService: ReturnType<typeof createAuditService>;
 }
 
@@ -47,6 +47,7 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
     candidateService,
     auditService,
   } = deps;
+
   type LeadRefillLedger = NonNullable<
     Awaited<ReturnType<typeof repos.leadRefillLedger.findByUserAndDate>>
   >;
@@ -128,10 +129,8 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
     try {
       const policy = policyResult.value;
       const today = todayDateString();
-      let ledger = await repos.leadRefillLedger.findByUserAndDate(
-        userId,
-        today,
-      );
+      let ledger = await repos.leadRefillLedger.findByUserAndDate(userId, today);
+
       if (!ledger) {
         await repos.leadRefillLedger.create({
           user_id: userId,
@@ -140,25 +139,26 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
         });
         ledger = await repos.leadRefillLedger.findByUserAndDate(userId, today);
       }
+
       if (!ledger) {
         return Err({
           reason: "unexpected",
           message: "Lead refill ledger was not created",
         });
       }
+
       if (ledger.base_limit !== policy.dailyRefillLimit) {
-        await repos.leadRefillLedger.syncBaseLimit(
-          ledger.id,
-          policy.dailyRefillLimit,
-        );
+        await repos.leadRefillLedger.syncBaseLimit(ledger.id, policy.dailyRefillLimit);
         ledger = await repos.leadRefillLedger.findByUserAndDate(userId, today);
       }
+
       if (!ledger) {
         return Err({
           reason: "unexpected",
           message: "Lead refill ledger was not reloaded",
         });
       }
+
       return Ok({ ledger, policy });
     } catch (error) {
       return Err({
@@ -169,6 +169,52 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
             : "Failed to ensure lead refill ledger",
       });
     }
+  }
+
+  async function reserveAllowedRefill(input: {
+    userId: number;
+    ledger: LeadRefillLedger;
+    needed: number;
+  }): Promise<Result<{ ledger: LeadRefillLedger; allowed: number }, LeadRefillError>> {
+    let workingLedger = input.ledger;
+
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const remaining = availableLeadRefill({
+        baseLimit: workingLedger.base_limit,
+        extraGranted: workingLedger.extra_granted,
+        usedAmount: workingLedger.used_amount,
+      });
+      const allowed = Math.min(input.needed, remaining);
+      if (allowed <= 0) {
+        return Err({
+          reason: "refill_exhausted",
+          message: "Daily lead refill exhausted. Request more lead capacity.",
+        });
+      }
+
+      const reserved = await repos.leadRefillLedger.reserveUsageIfAvailable(
+        workingLedger.id,
+        allowed,
+      );
+      if (reserved) {
+        return Ok({ ledger: workingLedger, allowed });
+      }
+
+      const reloaded = await repos.leadRefillLedger.findByUserAndDate(
+        input.userId,
+        todayDateString(),
+      );
+      if (!reloaded) {
+        break;
+      }
+
+      workingLedger = reloaded;
+    }
+
+    return Err({
+      reason: "refill_exhausted",
+      message: "Daily lead refill exhausted. Request more lead capacity.",
+    });
   }
 
   return {
@@ -196,6 +242,7 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
         const { policy, ledger } = ledgerResult.value;
         const activeAssignments =
           await repos.leadAssignments.countActiveByUser(userId);
+
         return Ok({
           policySource: policy.source,
           activeBufferTarget: policy.activeBufferTarget,
@@ -241,92 +288,41 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
           return Ok({ assigned: 0, requested: 0 });
         }
 
-        let workingLedger = ledger;
-        let allowed = 0;
-        let reserved = false;
-
-        for (let attempt = 0; attempt < 2; attempt += 1) {
-          const remaining = availableLeadRefill({
-            baseLimit: workingLedger.base_limit,
-            extraGranted: workingLedger.extra_granted,
-            usedAmount: workingLedger.used_amount,
-          });
-          allowed = Math.min(needed, remaining);
-          if (allowed <= 0) break;
-
-          reserved = await repos.leadRefillLedger.reserveUsageIfAvailable(
-            workingLedger.id,
-            allowed,
-          );
-          if (reserved) break;
-
-          const reloaded = await repos.leadRefillLedger.findByUserAndDate(
-            userId,
-            todayDateString(),
-          );
-          if (!reloaded) {
-            break;
-          }
-          workingLedger = reloaded;
+        const reservationResult = await reserveAllowedRefill({
+          userId,
+          ledger,
+          needed,
+        });
+        if (isErr(reservationResult)) {
+          return Err(reservationResult.error);
         }
 
-        if (!reserved || allowed <= 0) {
-          return Err({
-            reason: "refill_exhausted",
-            message: "Daily lead refill exhausted. Request more lead capacity.",
-          });
-        }
+        const { ledger: reservedLedger, allowed } = reservationResult.value;
 
-        const candidateResult =
-          await candidateService?.requestCandidatesForExecutive({
-            userId,
-            branchId,
-            amount: allowed,
-            strategy: "balanced",
-          });
-        if (!candidateResult) {
-          await compensateUsageBestEffort({
-            actorUserId: userId,
-            ledgerId: workingLedger.id,
-            amount: allowed,
-            reason: "candidate_service_missing",
-          });
-          return Err({
-            reason: "unexpected",
-            message: "Lead candidate service is not configured",
-          });
-        }
+        const candidateResult = await candidateService.requestCandidatesForExecutive({
+          userId,
+          branchId,
+          amount: allowed,
+          strategy: "balanced",
+        });
         if (isErr(candidateResult)) {
           await compensateUsageBestEffort({
             actorUserId: userId,
-            ledgerId: workingLedger.id,
+            ledgerId: reservedLedger.id,
             amount: allowed,
             reason: "candidate_fetch_failed",
           });
           return Err(candidateResult.error);
         }
 
-        const assignmentResult =
-          await assignmentService?.assignCandidatesToExecutive(
-            userId,
-            candidateResult.value,
-          );
-        if (!assignmentResult) {
-          await compensateUsageBestEffort({
-            actorUserId: userId,
-            ledgerId: workingLedger.id,
-            amount: allowed,
-            reason: "assignment_service_missing",
-          });
-          return Err({
-            reason: "unexpected",
-            message: "Lead assignment service is not configured",
-          });
-        }
+        const assignmentResult = await assignmentService.assignCandidatesToExecutive(
+          userId,
+          candidateResult.value,
+        );
         if (isErr(assignmentResult)) {
           await compensateUsageBestEffort({
             actorUserId: userId,
-            ledgerId: workingLedger.id,
+            ledgerId: reservedLedger.id,
             amount: allowed,
             reason: "assignment_failed",
           });
@@ -337,7 +333,7 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
         if (unused > 0) {
           await compensateUsageBestEffort({
             actorUserId: userId,
-            ledgerId: workingLedger.id,
+            ledgerId: reservedLedger.id,
             amount: unused,
             reason: "partial_assignment",
           });
@@ -348,6 +344,7 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
           requested: allowed,
           assigned: assignmentResult.value,
         });
+
         return Ok({ assigned: assignmentResult.value, requested: allowed });
       } catch (error) {
         return Err({
@@ -401,6 +398,7 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
             reason,
           },
         );
+
         return this.getCurrentLeadCapacity(targetUserId);
       } catch (error) {
         return Err({

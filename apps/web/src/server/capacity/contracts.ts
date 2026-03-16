@@ -35,6 +35,20 @@ export interface CapacityReadManagedExecutive {
   leadStatus: LeadCapacitySnapshot;
 }
 
+export interface CapacityRequestRecord {
+  id: number;
+  user_id: number;
+  kind: "search_extra" | "lead_refill_extra";
+  status: "pending" | "approved" | "rejected";
+  requested_amount: number;
+  reason: string;
+  decision_note: string | null;
+  reviewer_user_id: number | null;
+  created_at: number;
+  updated_at: number;
+  decided_at: number | null;
+}
+
 export interface CapacityReadExecutiveDetail {
   executive: {
     id: number;
@@ -53,7 +67,7 @@ export interface CapacityReadExecutiveDetail {
     activeBufferTarget: number;
     dailyRefillLimit: number;
   };
-  requests: unknown[];
+  requests: CapacityRequestRecord[];
 }
 
 export interface CapacityActorScopeInput {

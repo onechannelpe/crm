@@ -1,31 +1,57 @@
 import type { SessionData } from "~/lib/auth/access/session";
 import type { Repositories } from "~/server/shared/registry";
 
+type ExecutiveUser = NonNullable<
+  Awaited<ReturnType<Repositories["users"]["findById"]>>
+>;
+
+export function canManageExecutiveRecord(
+  actor: SessionData,
+  target: ExecutiveUser,
+  supervisedTeamId: number | null,
+) {
+  if (target.role !== "executive") {
+    return false;
+  }
+
+  if (actor.role === "superuser") {
+    return true;
+  }
+
+  if (target.branch_id !== actor.branchId) {
+    return false;
+  }
+
+  if (actor.role === "admin") {
+    return true;
+  }
+
+  if (actor.role !== "supervisor" || supervisedTeamId == null) {
+    return false;
+  }
+
+  return target.team_id === supervisedTeamId;
+}
+
 export async function canManageExecutive(
   actor: SessionData,
   targetUserId: number,
   repos: Repositories,
 ) {
   const target = await repos.users.findById(targetUserId);
-  if (!target || target.role !== "executive") {
+  if (!target) {
     return { ok: false as const, target: null };
   }
-  if (actor.role === "superuser") {
-    return { ok: true as const, target };
-  }
-  if (target.branch_id !== actor.branchId) {
+
+  const supervisedTeamId =
+    actor.role === "supervisor"
+      ? (await repos.teams.findBySupervisorId(actor.userId))?.id ?? null
+      : null;
+
+  if (!canManageExecutiveRecord(actor, target, supervisedTeamId)) {
     return { ok: false as const, target };
   }
-  if (actor.role === "admin") {
-    return { ok: true as const, target };
-  }
-  if (actor.role !== "supervisor") {
-    return { ok: false as const, target };
-  }
-  const supervisedTeam = await repos.teams.findBySupervisorId(actor.userId);
-  if (!supervisedTeam || target.team_id !== supervisedTeam.id) {
-    return { ok: false as const, target };
-  }
+
   return { ok: true as const, target };
 }
 

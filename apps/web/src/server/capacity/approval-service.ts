@@ -1,6 +1,8 @@
 import type { SessionData } from "~/lib/auth/access/session";
 import { normalizeDecisionNote } from "~/server/capacity/domain";
 import type { CapacityApprovalError } from "~/server/capacity/errors";
+import { createLeadCandidateService } from "~/server/engine-gateway/lead-candidate-service";
+import { createLeadAssignmentService } from "~/server/lead-operations/assignment-service";
 import { createLeadPolicyService } from "~/server/lead-operations/policy-service";
 import { createLeadRefillService } from "~/server/lead-operations/refill-service";
 import { createSearchAllowanceService } from "~/server/search-access/allowance-service";
@@ -50,6 +52,8 @@ function createGrantServices(
   const txAuditService = createAuditService(transactionRepos);
   const txSearchPolicyService = createSearchPolicyService(transactionRepos);
   const txLeadPolicyService = createLeadPolicyService(transactionRepos);
+  const txLeadAssignmentService = createLeadAssignmentService(transactionRepos);
+  const txLeadCandidateService = createLeadCandidateService();
 
   const txSearchAllowanceService = createSearchAllowanceService({
     repos: transactionRepos,
@@ -59,6 +63,8 @@ function createGrantServices(
   const txLeadRefillService = createLeadRefillService({
     repos: transactionRepos,
     policyService: txLeadPolicyService,
+    assignmentService: txLeadAssignmentService,
+    candidateService: txLeadCandidateService,
     auditService: txAuditService,
   });
 

@@ -10,8 +10,6 @@ import type {
   SearchAllowanceSnapshotError,
 } from "~/server/search-access/allowance-service";
 
-export type SearchRollbackError = { reason: "unexpected"; message: string };
-
 type SearchActionError =
   | { reason: "not_found"; message: string }
   | { reason: "conflict"; message: string }
@@ -65,19 +63,6 @@ export function fromDirectSearchError(
   const unreachable: never = error;
   void unreachable;
   return { reason: "unexpected", message: "Unhandled direct search error" };
-}
-
-export function fromSearchRollbackError(
-  error: SearchRollbackError,
-): SearchActionError {
-  switch (error.reason) {
-    case "unexpected":
-      return { reason: "unexpected", message: error.message };
-  }
-
-  const unreachable: never = error;
-  void unreachable;
-  return { reason: "unexpected", message: "Unhandled search rollback error" };
 }
 
 export function throwSearchActionError(error: SearchActionError): never {

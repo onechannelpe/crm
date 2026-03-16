@@ -31,7 +31,7 @@ import type { PolicySource } from "~/server/shared/pipeline-types";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
-import { canManageExecutive } from "./scope";
+import { canManageExecutive, canManageExecutiveRecord } from "./scope";
 
 interface CapacityReadServiceDeps {
   repos: Repositories;
@@ -125,9 +125,17 @@ function isAuditChangeValue(value: unknown): value is AuditChangeValue {
   return Object.values(value).every((entry) => isAuditChangeValue(entry));
 }
 
-function parseAuditChanges(rawChanges: string | null): AuditChangeValue {
+function parseAuditChanges(rawChanges: unknown): AuditChangeValue {
   if (rawChanges == null) {
     return null;
+  }
+
+  if (isAuditChangeValue(rawChanges)) {
+    return rawChanges;
+  }
+
+  if (typeof rawChanges !== "string") {
+    return String(rawChanges);
   }
 
   try {
@@ -170,14 +178,11 @@ export function createCapacityReadService(deps: CapacityReadServiceDeps) {
         : null;
 
     const managedExecutives = users.filter((user) => {
-      if (user.role !== "executive") return false;
-      if (session.role === "superuser" || session.role === "admin") {
-        return true;
-      }
-      if (session.role !== "supervisor" || !supervisedTeam) {
-        return false;
-      }
-      return user.team_id === supervisedTeam.id;
+      return canManageExecutiveRecord(
+        session,
+        user,
+        supervisedTeam?.id ?? null,
+      );
     });
 
     const userIds = managedExecutives.map((user) => user.id);
