@@ -2,7 +2,7 @@ import type { SessionData } from "~/lib/auth/access/session";
 import type { CapacityManageError } from "~/server/capacity/errors";
 import type { createLeadPolicyService } from "~/server/lead-operations/policy-service";
 import {
-  createLeadRefillService,
+  createLeadRefillGrantService,
   type LeadCapacitySnapshot,
 } from "~/server/lead-operations/refill-service";
 import {
@@ -19,7 +19,7 @@ import { assertCanManageTeam, canManageExecutive } from "./scope";
 interface CapacityManageServiceDeps {
   repos: Repositories;
   searchAllowanceService: ReturnType<typeof createSearchAllowanceService>;
-  leadRefillService: ReturnType<typeof createLeadRefillService>;
+  leadRefillGrantService: ReturnType<typeof createLeadRefillGrantService>;
   searchPolicyService: ReturnType<typeof createSearchPolicyService>;
   leadPolicyService: ReturnType<typeof createLeadPolicyService>;
 }
@@ -39,7 +39,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
     | { reason: "validation"; message: string }
     | { reason: "unexpected"; message: string };
 
-  function mapGrantError(error: ManageDomainMappedError): CapacityManageError {
+  function mapDomainError(error: ManageDomainMappedError): CapacityManageError {
     switch (error.reason) {
       case "user_not_found":
         return { reason: "not_found", message: error.message };
@@ -51,24 +51,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
 
     const unreachable: never = error;
     void unreachable;
-    return { reason: "unexpected", message: "Unhandled capacity grant error" };
-  }
-
-  function mapPolicyMutationError(
-    error: ManageDomainMappedError,
-  ): CapacityManageError {
-    switch (error.reason) {
-      case "user_not_found":
-        return { reason: "not_found", message: error.message };
-      case "validation":
-        return { reason: "validation", message: error.message };
-      case "unexpected":
-        return { reason: "unexpected", message: error.message };
-    }
-
-    const unreachable: never = error;
-    void unreachable;
-    return { reason: "unexpected", message: "Unhandled policy mutation error" };
+    return { reason: "unexpected", message: "Unhandled capacity domain error" };
   }
 
   async function assertManagedExecutive(
@@ -132,7 +115,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
             reason,
           );
         if (isErr(snapshotResult)) {
-          return Err(mapGrantError(snapshotResult.error));
+          return Err(mapDomainError(snapshotResult.error));
         }
 
         return Ok(snapshotResult.value);
@@ -154,14 +137,14 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
         }
 
         const snapshotResult =
-          await deps.leadRefillService.grantExtraLeadRefill(
+          await deps.leadRefillGrantService.grantExtraLeadRefill(
             actor.userId,
             targetUserId,
             amount,
             reason,
           );
         if (isErr(snapshotResult)) {
-          return Err(mapGrantError(snapshotResult.error));
+          return Err(mapDomainError(snapshotResult.error));
         }
 
         return Ok(snapshotResult.value);
@@ -191,7 +174,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
           expiresAt: input.expiresAt,
         });
         if (isErr(result)) {
-          return Err(mapPolicyMutationError(result.error));
+          return Err(mapDomainError(result.error));
         }
 
         return Ok({ success: true as const });
@@ -223,7 +206,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
           expiresAt: input.expiresAt,
         });
         if (isErr(result)) {
-          return Err(mapPolicyMutationError(result.error));
+          return Err(mapDomainError(result.error));
         }
 
         return Ok({ success: true as const });
@@ -256,7 +239,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
           monthlySearchLimit: input.monthlySearchLimit,
         });
         if (isErr(result)) {
-          return Err(mapPolicyMutationError(result.error));
+          return Err(mapDomainError(result.error));
         }
 
         return Ok({ success: true as const });
@@ -293,7 +276,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
           dailyRefillLimit: input.dailyRefillLimit,
         });
         if (isErr(result)) {
-          return Err(mapPolicyMutationError(result.error));
+          return Err(mapDomainError(result.error));
         }
 
         return Ok({ success: true as const });

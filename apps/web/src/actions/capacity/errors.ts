@@ -40,8 +40,6 @@ export function fromCapacityRequestError(
   error: CapacityRequestError,
 ): CapacityActionError {
   switch (error.reason) {
-    case "validation":
-      return { reason: "validation", message: error.message };
     case "unexpected":
       return { reason: "unexpected", message: error.message };
   }

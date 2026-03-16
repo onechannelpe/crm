@@ -45,7 +45,7 @@ export async function canManageExecutive(
 
   const supervisedTeamId =
     actor.role === "supervisor"
-      ? (await repos.teams.findBySupervisorId(actor.userId))?.id ?? null
+      ? ((await repos.teams.findBySupervisorId(actor.userId))?.id ?? null)
       : null;
 
   if (!canManageExecutiveRecord(actor, target, supervisedTeamId)) {

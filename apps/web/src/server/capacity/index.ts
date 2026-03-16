@@ -1,6 +1,5 @@
 export * from "~/server/capacity/approval-service";
 export * from "~/server/capacity/audit-service";
-export * from "~/server/capacity/contracts";
 export * from "~/server/capacity/domain";
 export * from "~/server/capacity/errors";
 export * from "~/server/capacity/manage-service";

@@ -39,6 +39,198 @@ interface LeadRefillServiceDeps {
   auditService: ReturnType<typeof createAuditService>;
 }
 
+interface LeadRefillGrantServiceDeps {
+  repos: Repositories;
+  policyService: ReturnType<typeof createLeadPolicyService>;
+  auditService: ReturnType<typeof createAuditService>;
+}
+
+export function createLeadRefillGrantService(deps: LeadRefillGrantServiceDeps) {
+  const { repos, policyService, auditService } = deps;
+
+  type LeadRefillLedger = NonNullable<
+    Awaited<ReturnType<typeof repos.leadRefillLedger.findByUserAndDate>>
+  >;
+
+  async function ensureLedger(userId: number): Promise<
+    Result<
+      {
+        ledger: LeadRefillLedger;
+        policy: EffectiveLeadPolicy;
+      },
+      LeadRefillError
+    >
+  > {
+    const policyResult = await policyService.getEffectiveLeadPolicy(userId);
+    if (isErr(policyResult)) {
+      if (policyResult.error.reason === "user_not_found") {
+        return Err({
+          reason: "user_not_found",
+          message: policyResult.error.message,
+        });
+      }
+      return Err({ reason: "unexpected", message: policyResult.error.message });
+    }
+
+    try {
+      const policy = policyResult.value;
+      const today = todayDateString();
+      let ledger = await repos.leadRefillLedger.findByUserAndDate(
+        userId,
+        today,
+      );
+
+      if (!ledger) {
+        await repos.leadRefillLedger.create({
+          user_id: userId,
+          date: today,
+          base_limit: policy.dailyRefillLimit,
+        });
+        ledger = await repos.leadRefillLedger.findByUserAndDate(userId, today);
+      }
+
+      if (!ledger) {
+        return Err({
+          reason: "unexpected",
+          message: "Lead refill ledger was not created",
+        });
+      }
+
+      if (ledger.base_limit !== policy.dailyRefillLimit) {
+        await repos.leadRefillLedger.syncBaseLimit(
+          ledger.id,
+          policy.dailyRefillLimit,
+        );
+        ledger = await repos.leadRefillLedger.findByUserAndDate(userId, today);
+      }
+
+      if (!ledger) {
+        return Err({
+          reason: "unexpected",
+          message: "Lead refill ledger was not reloaded",
+        });
+      }
+
+      return Ok({ ledger, policy });
+    } catch (error) {
+      return Err({
+        reason: "unexpected",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to ensure lead refill ledger",
+      });
+    }
+  }
+
+  async function getCurrentLeadCapacity(
+    userId: number,
+  ): Promise<Result<LeadCapacitySnapshot, LeadCapacitySnapshotError>> {
+    const ledgerResult = await ensureLedger(userId);
+    if (isErr(ledgerResult)) {
+      if (ledgerResult.error.reason === "user_not_found") {
+        return Err({
+          reason: "user_not_found",
+          message: ledgerResult.error.message,
+        });
+      }
+
+      return Err({
+        reason: "unexpected",
+        message: ledgerResult.error.message,
+      });
+    }
+
+    try {
+      const { policy, ledger } = ledgerResult.value;
+      const activeAssignments =
+        await repos.leadAssignments.countActiveByUser(userId);
+
+      return Ok({
+        policySource: policy.source,
+        activeBufferTarget: policy.activeBufferTarget,
+        activeAssignments,
+        dailyRefillLimit: ledger.base_limit,
+        extraGranted: ledger.extra_granted,
+        usedAmount: ledger.used_amount,
+        remaining: availableLeadRefill({
+          baseLimit: ledger.base_limit,
+          extraGranted: ledger.extra_granted,
+          usedAmount: ledger.used_amount,
+        }),
+      });
+    } catch (error) {
+      return Err({
+        reason: "unexpected",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to get current lead capacity",
+      });
+    }
+  }
+
+  async function grantExtraLeadRefill(
+    actorUserId: number,
+    targetUserId: number,
+    amount: number,
+    reason: string,
+  ): Promise<Result<LeadCapacitySnapshot, LeadRefillGrantError>> {
+    if (amount > config.capacityRequests.maxRequestAmount) {
+      return Err({
+        reason: "validation",
+        message: "Grant exceeds configured maximum",
+      });
+    }
+
+    const ledgerResult = await ensureLedger(targetUserId);
+    if (isErr(ledgerResult)) {
+      if (ledgerResult.error.reason === "user_not_found") {
+        return Err({
+          reason: "user_not_found",
+          message: ledgerResult.error.message,
+        });
+      }
+
+      return Err({
+        reason: "unexpected",
+        message: ledgerResult.error.message,
+      });
+    }
+
+    try {
+      const { ledger } = ledgerResult.value;
+      await repos.leadRefillLedger.incrementExtra(ledger.id, amount);
+      await auditService.log(
+        actorUserId,
+        "lead_refill_granted",
+        "user",
+        targetUserId,
+        {
+          amount,
+          reason,
+        },
+      );
+
+      return getCurrentLeadCapacity(targetUserId);
+    } catch (error) {
+      return Err({
+        reason: "unexpected",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to grant extra lead refill",
+      });
+    }
+  }
+
+  return {
+    ensureLedger,
+    getCurrentLeadCapacity,
+    grantExtraLeadRefill,
+  };
+}
+
 export function createLeadRefillService(deps: LeadRefillServiceDeps) {
   const {
     repos,
@@ -106,76 +298,21 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
     }
   }
 
-  async function ensureLedger(userId: number): Promise<
-    Result<
-      {
-        ledger: LeadRefillLedger;
-        policy: EffectiveLeadPolicy;
-      },
-      LeadRefillError
-    >
-  > {
-    const policyResult = await policyService.getEffectiveLeadPolicy(userId);
-    if (isErr(policyResult)) {
-      if (policyResult.error.reason === "user_not_found") {
-        return Err({
-          reason: "user_not_found",
-          message: policyResult.error.message,
-        });
-      }
-      return Err({ reason: "unexpected", message: policyResult.error.message });
-    }
-
-    try {
-      const policy = policyResult.value;
-      const today = todayDateString();
-      let ledger = await repos.leadRefillLedger.findByUserAndDate(userId, today);
-
-      if (!ledger) {
-        await repos.leadRefillLedger.create({
-          user_id: userId,
-          date: today,
-          base_limit: policy.dailyRefillLimit,
-        });
-        ledger = await repos.leadRefillLedger.findByUserAndDate(userId, today);
-      }
-
-      if (!ledger) {
-        return Err({
-          reason: "unexpected",
-          message: "Lead refill ledger was not created",
-        });
-      }
-
-      if (ledger.base_limit !== policy.dailyRefillLimit) {
-        await repos.leadRefillLedger.syncBaseLimit(ledger.id, policy.dailyRefillLimit);
-        ledger = await repos.leadRefillLedger.findByUserAndDate(userId, today);
-      }
-
-      if (!ledger) {
-        return Err({
-          reason: "unexpected",
-          message: "Lead refill ledger was not reloaded",
-        });
-      }
-
-      return Ok({ ledger, policy });
-    } catch (error) {
-      return Err({
-        reason: "unexpected",
-        message:
-          error instanceof Error
-            ? error.message
-            : "Failed to ensure lead refill ledger",
-      });
-    }
-  }
+  const grantService = createLeadRefillGrantService({
+    repos,
+    policyService,
+    auditService,
+  });
+  const { ensureLedger, getCurrentLeadCapacity, grantExtraLeadRefill } =
+    grantService;
 
   async function reserveAllowedRefill(input: {
     userId: number;
     ledger: LeadRefillLedger;
     needed: number;
-  }): Promise<Result<{ ledger: LeadRefillLedger; allowed: number }, LeadRefillError>> {
+  }): Promise<
+    Result<{ ledger: LeadRefillLedger; allowed: number }, LeadRefillError>
+  > {
     let workingLedger = input.ledger;
 
     for (let attempt = 0; attempt < 2; attempt += 1) {
@@ -219,53 +356,7 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
 
   return {
     ensureLedger,
-
-    async getCurrentLeadCapacity(
-      userId: number,
-    ): Promise<Result<LeadCapacitySnapshot, LeadCapacitySnapshotError>> {
-      const ledgerResult = await ensureLedger(userId);
-      if (isErr(ledgerResult)) {
-        if (ledgerResult.error.reason === "user_not_found") {
-          return Err({
-            reason: "user_not_found",
-            message: ledgerResult.error.message,
-          });
-        }
-
-        return Err({
-          reason: "unexpected",
-          message: ledgerResult.error.message,
-        });
-      }
-
-      try {
-        const { policy, ledger } = ledgerResult.value;
-        const activeAssignments =
-          await repos.leadAssignments.countActiveByUser(userId);
-
-        return Ok({
-          policySource: policy.source,
-          activeBufferTarget: policy.activeBufferTarget,
-          activeAssignments,
-          dailyRefillLimit: ledger.base_limit,
-          extraGranted: ledger.extra_granted,
-          usedAmount: ledger.used_amount,
-          remaining: availableLeadRefill({
-            baseLimit: ledger.base_limit,
-            extraGranted: ledger.extra_granted,
-            usedAmount: ledger.used_amount,
-          }),
-        });
-      } catch (error) {
-        return Err({
-          reason: "unexpected",
-          message:
-            error instanceof Error
-              ? error.message
-              : "Failed to get current lead capacity",
-        });
-      }
-    },
+    getCurrentLeadCapacity,
 
     async refillQueueForExecutive(
       userId: number,
@@ -299,12 +390,13 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
 
         const { ledger: reservedLedger, allowed } = reservationResult.value;
 
-        const candidateResult = await candidateService.requestCandidatesForExecutive({
-          userId,
-          branchId,
-          amount: allowed,
-          strategy: "balanced",
-        });
+        const candidateResult =
+          await candidateService.requestCandidatesForExecutive({
+            userId,
+            branchId,
+            amount: allowed,
+            strategy: "balanced",
+          });
         if (isErr(candidateResult)) {
           await compensateUsageBestEffort({
             actorUserId: userId,
@@ -315,10 +407,11 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
           return Err(candidateResult.error);
         }
 
-        const assignmentResult = await assignmentService.assignCandidatesToExecutive(
-          userId,
-          candidateResult.value,
-        );
+        const assignmentResult =
+          await assignmentService.assignCandidatesToExecutive(
+            userId,
+            candidateResult.value,
+          );
         if (isErr(assignmentResult)) {
           await compensateUsageBestEffort({
             actorUserId: userId,
@@ -357,58 +450,6 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
       }
     },
 
-    async grantExtraLeadRefill(
-      actorUserId: number,
-      targetUserId: number,
-      amount: number,
-      reason: string,
-    ): Promise<Result<LeadCapacitySnapshot, LeadRefillGrantError>> {
-      if (amount > config.capacityRequests.maxRequestAmount) {
-        return Err({
-          reason: "validation",
-          message: "Grant exceeds configured maximum",
-        });
-      }
-
-      const ledgerResult = await ensureLedger(targetUserId);
-      if (isErr(ledgerResult)) {
-        if (ledgerResult.error.reason === "user_not_found") {
-          return Err({
-            reason: "user_not_found",
-            message: ledgerResult.error.message,
-          });
-        }
-
-        return Err({
-          reason: "unexpected",
-          message: ledgerResult.error.message,
-        });
-      }
-
-      try {
-        const { ledger } = ledgerResult.value;
-        await repos.leadRefillLedger.incrementExtra(ledger.id, amount);
-        await auditService.log(
-          actorUserId,
-          "lead_refill_granted",
-          "user",
-          targetUserId,
-          {
-            amount,
-            reason,
-          },
-        );
-
-        return this.getCurrentLeadCapacity(targetUserId);
-      } catch (error) {
-        return Err({
-          reason: "unexpected",
-          message:
-            error instanceof Error
-              ? error.message
-              : "Failed to grant extra lead refill",
-        });
-      }
-    },
+    grantExtraLeadRefill,
   };
 }

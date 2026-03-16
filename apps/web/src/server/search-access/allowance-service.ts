@@ -130,41 +130,95 @@ export function createSearchAllowanceService(deps: SearchAllowanceServiceDeps) {
     }
   }
 
-  return {
-    ensureLedger,
-
-    async getCurrentSearchAllowance(
-      userId: number,
-    ): Promise<Result<SearchAllowanceSnapshot, SearchAllowanceSnapshotError>> {
-      const ledgerResult = await ensureLedger(userId);
-      if (isErr(ledgerResult)) {
-        if (ledgerResult.error.reason === "user_not_found") {
-          return Err({
-            reason: "user_not_found",
-            message: ledgerResult.error.message,
-          });
-        }
-
+  async function getCurrentSearchAllowance(
+    userId: number,
+  ): Promise<Result<SearchAllowanceSnapshot, SearchAllowanceSnapshotError>> {
+    const ledgerResult = await ensureLedger(userId);
+    if (isErr(ledgerResult)) {
+      if (ledgerResult.error.reason === "user_not_found") {
         return Err({
-          reason: "unexpected",
+          reason: "user_not_found",
           message: ledgerResult.error.message,
         });
       }
-      const { ledger, policy } = ledgerResult.value;
-      return Ok({
-        periodStart: ledger.period_start,
-        periodEnd: ledger.period_end,
-        policySource: policy.source,
-        monthlySearchLimit: ledger.base_limit,
+
+      return Err({
+        reason: "unexpected",
+        message: ledgerResult.error.message,
+      });
+    }
+    const { ledger, policy } = ledgerResult.value;
+    return Ok({
+      periodStart: ledger.period_start,
+      periodEnd: ledger.period_end,
+      policySource: policy.source,
+      monthlySearchLimit: ledger.base_limit,
+      extraGranted: ledger.extra_granted,
+      usedAmount: ledger.used_amount,
+      remaining: availableAllowance({
+        baseLimit: ledger.base_limit,
         extraGranted: ledger.extra_granted,
         usedAmount: ledger.used_amount,
-        remaining: availableAllowance({
-          baseLimit: ledger.base_limit,
-          extraGranted: ledger.extra_granted,
-          usedAmount: ledger.used_amount,
-        }),
+      }),
+    });
+  }
+
+  async function grantExtraSearchAllowance(
+    actorUserId: number,
+    targetUserId: number,
+    amount: number,
+    reason: string,
+  ): Promise<Result<SearchAllowanceSnapshot, SearchAllowanceGrantError>> {
+    if (amount > config.capacityRequests.maxRequestAmount) {
+      return Err({
+        reason: "validation",
+        message: "Grant exceeds configured maximum",
       });
-    },
+    }
+
+    const ledgerResult = await ensureLedger(targetUserId);
+    if (isErr(ledgerResult)) {
+      if (ledgerResult.error.reason === "user_not_found") {
+        return Err({
+          reason: "user_not_found",
+          message: ledgerResult.error.message,
+        });
+      }
+
+      return Err({
+        reason: "unexpected",
+        message: ledgerResult.error.message,
+      });
+    }
+    try {
+      const { ledger } = ledgerResult.value;
+      await repos.searchAllowanceLedger.incrementExtra(ledger.id, amount);
+      await auditService.log(
+        actorUserId,
+        "search_allowance_granted",
+        "user",
+        targetUserId,
+        {
+          amount,
+          reason,
+        },
+      );
+      return getCurrentSearchAllowance(targetUserId);
+    } catch (error) {
+      return Err({
+        reason: "unexpected",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to grant extra search allowance",
+      });
+    }
+  }
+
+  return {
+    ensureLedger,
+
+    getCurrentSearchAllowance,
 
     async reserveSearchUsage(
       userId: number,
@@ -232,56 +286,6 @@ export function createSearchAllowanceService(deps: SearchAllowanceServiceDeps) {
       }
     },
 
-    async grantExtraSearchAllowance(
-      actorUserId: number,
-      targetUserId: number,
-      amount: number,
-      reason: string,
-    ): Promise<Result<SearchAllowanceSnapshot, SearchAllowanceGrantError>> {
-      if (amount > config.capacityRequests.maxRequestAmount) {
-        return Err({
-          reason: "validation",
-          message: "Grant exceeds configured maximum",
-        });
-      }
-
-      const ledgerResult = await ensureLedger(targetUserId);
-      if (isErr(ledgerResult)) {
-        if (ledgerResult.error.reason === "user_not_found") {
-          return Err({
-            reason: "user_not_found",
-            message: ledgerResult.error.message,
-          });
-        }
-
-        return Err({
-          reason: "unexpected",
-          message: ledgerResult.error.message,
-        });
-      }
-      try {
-        const { ledger } = ledgerResult.value;
-        await repos.searchAllowanceLedger.incrementExtra(ledger.id, amount);
-        await auditService.log(
-          actorUserId,
-          "search_allowance_granted",
-          "user",
-          targetUserId,
-          {
-            amount,
-            reason,
-          },
-        );
-        return this.getCurrentSearchAllowance(targetUserId);
-      } catch (error) {
-        return Err({
-          reason: "unexpected",
-          message:
-            error instanceof Error
-              ? error.message
-              : "Failed to grant extra search allowance",
-        });
-      }
-    },
+    grantExtraSearchAllowance,
   };
 }

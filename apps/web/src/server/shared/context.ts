@@ -14,7 +14,10 @@ import { createEngineSearchService } from "~/server/engine-gateway/search-servic
 import { createExtensionService } from "~/server/extension/service";
 import { createLeadAssignmentService } from "~/server/lead-operations/assignment-service";
 import { createLeadPolicyService } from "~/server/lead-operations/policy-service";
-import { createLeadRefillService } from "~/server/lead-operations/refill-service";
+import {
+  createLeadRefillGrantService,
+  createLeadRefillService,
+} from "~/server/lead-operations/refill-service";
 import { createAppNotificationCenter } from "~/server/notifications/app-center-service";
 import { createObservabilityService } from "~/server/observability/service";
 import { createSalesExportBlobStore } from "~/server/sales/export-blob-store";
@@ -65,6 +68,11 @@ export const leadRefillService = createLeadRefillService({
   candidateService: leadCandidateService,
   auditService,
 });
+export const leadRefillGrantService = createLeadRefillGrantService({
+  repos,
+  policyService: leadPolicyService,
+  auditService,
+});
 export const capacityRequestService = createCapacityRequestService(repos);
 export const capacityReadService = createCapacityReadService({
   repos,
@@ -76,7 +84,7 @@ export const capacityReadService = createCapacityReadService({
 export const capacityManageService = createCapacityManageService({
   repos,
   searchAllowanceService,
-  leadRefillService,
+  leadRefillGrantService,
   searchPolicyService,
   leadPolicyService,
 });

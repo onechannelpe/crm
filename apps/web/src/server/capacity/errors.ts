@@ -1,6 +1,4 @@
-export type CapacityRequestError =
-  | { reason: "validation"; message: string }
-  | { reason: "unexpected"; message: string };
+export type CapacityRequestError = { reason: "unexpected"; message: string };
 
 export type CapacityApprovalError =
   | { reason: "not_found"; message: string }
