@@ -1,6 +1,7 @@
 "use server";
 
 import { requirePermission } from "~/lib/auth/access/session";
+import { config } from "~/lib/config";
 import {
   assertNonEmptyString,
   assertPositiveInt,
@@ -19,6 +20,17 @@ import {
   fromCapacityManageError,
   throwCapacityActionError,
 } from "./errors";
+
+function validateGrantAmount(amount: number): number {
+  const safeAmount = assertPositiveInt(amount, "amount");
+  if (safeAmount > config.capacityRequests.maxRequestAmount) {
+    throwCapacityActionError({
+      reason: "validation",
+      message: "amount exceeds configured maximum",
+    });
+  }
+  return safeAmount;
+}
 
 export async function approveCapacityRequest(requestId: number, note?: string) {
   const safeRequestId = asCapacityRequestId(
@@ -61,7 +73,7 @@ export async function grantMoreSearches(
   reason: string,
 ) {
   const safeUserId = asUserId(assertPositiveInt(userId, "userId"));
-  const safeAmount = assertPositiveInt(amount, "amount");
+  const safeAmount = validateGrantAmount(amount);
   const safeReason = assertNonEmptyString(reason, "reason");
   const session = await requirePermission("capacity:manage");
   const result = await capacityManageService.grantMoreSearches(
@@ -82,7 +94,7 @@ export async function grantMoreLeadRefill(
   reason: string,
 ) {
   const safeUserId = asUserId(assertPositiveInt(userId, "userId"));
-  const safeAmount = assertPositiveInt(amount, "amount");
+  const safeAmount = validateGrantAmount(amount);
   const safeReason = assertNonEmptyString(reason, "reason");
   const session = await requirePermission("capacity:manage");
   const result = await capacityManageService.grantMoreLeadRefill(

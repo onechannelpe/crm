@@ -147,6 +147,76 @@ function canViewCapacityAuditEvent(
   return false;
 }
 
+function buildSearchStatus(input: {
+  periodStart: string;
+  periodEnd: string;
+  ledger:
+    | {
+        period_end: string;
+        base_limit: number;
+        extra_granted: number;
+        used_amount: number;
+      }
+    | null
+    | undefined;
+  policy: { source: PolicySource; monthlySearchLimit: number };
+}): SearchAllowanceSnapshot {
+  const monthlySearchLimit =
+    input.ledger?.base_limit ?? input.policy.monthlySearchLimit;
+  const extraGranted = input.ledger?.extra_granted ?? 0;
+  const usedAmount = input.ledger?.used_amount ?? 0;
+
+  return {
+    periodStart: input.periodStart,
+    periodEnd: input.ledger?.period_end ?? input.periodEnd,
+    policySource: input.policy.source,
+    monthlySearchLimit,
+    extraGranted,
+    usedAmount,
+    remaining: availableAllowance({
+      baseLimit: monthlySearchLimit,
+      extraGranted,
+      usedAmount,
+    }),
+  };
+}
+
+function buildLeadStatus(input: {
+  activeAssignments: number;
+  ledger:
+    | {
+        base_limit: number;
+        extra_granted: number;
+        used_amount: number;
+      }
+    | null
+    | undefined;
+  policy: {
+    source: PolicySource;
+    activeBufferTarget: number;
+    dailyRefillLimit: number;
+  };
+}): LeadCapacitySnapshot {
+  const dailyRefillLimit =
+    input.ledger?.base_limit ?? input.policy.dailyRefillLimit;
+  const extraGranted = input.ledger?.extra_granted ?? 0;
+  const usedAmount = input.ledger?.used_amount ?? 0;
+
+  return {
+    policySource: input.policy.source,
+    activeBufferTarget: input.policy.activeBufferTarget,
+    activeAssignments: input.activeAssignments,
+    dailyRefillLimit,
+    extraGranted,
+    usedAmount,
+    remaining: availableLeadRefill({
+      baseLimit: dailyRefillLimit,
+      extraGranted,
+      usedAmount,
+    }),
+  };
+}
+
 export function createCapacityReadService(deps: CapacityReadServiceDeps) {
   const { repos } = deps;
 
@@ -264,16 +334,6 @@ export function createCapacityReadService(deps: CapacityReadServiceDeps) {
           branchDefault: leadBranchDefault,
         });
 
-        const searchBaseLimit =
-          searchLedger?.base_limit ?? effectiveSearchPolicy.monthlySearchLimit;
-        const searchExtraGranted = searchLedger?.extra_granted ?? 0;
-        const searchUsedAmount = searchLedger?.used_amount ?? 0;
-
-        const leadBaseLimit =
-          leadLedger?.base_limit ?? effectiveLeadPolicy.dailyRefillLimit;
-        const leadExtraGranted = leadLedger?.extra_granted ?? 0;
-        const leadUsedAmount = leadLedger?.used_amount ?? 0;
-
         return {
           id: user.id,
           fullName: longName({
@@ -283,32 +343,17 @@ export function createCapacityReadService(deps: CapacityReadServiceDeps) {
           }),
           email: user.email,
           teamId: user.team_id,
-          searchStatus: {
+          searchStatus: buildSearchStatus({
             periodStart,
-            periodEnd: searchLedger?.period_end ?? periodEnd,
-            policySource: effectiveSearchPolicy.source,
-            monthlySearchLimit: searchBaseLimit,
-            extraGranted: searchExtraGranted,
-            usedAmount: searchUsedAmount,
-            remaining: availableAllowance({
-              baseLimit: searchBaseLimit,
-              extraGranted: searchExtraGranted,
-              usedAmount: searchUsedAmount,
-            }),
-          },
-          leadStatus: {
-            policySource: effectiveLeadPolicy.source,
-            activeBufferTarget: effectiveLeadPolicy.activeBufferTarget,
+            periodEnd,
+            ledger: searchLedger,
+            policy: effectiveSearchPolicy,
+          }),
+          leadStatus: buildLeadStatus({
             activeAssignments,
-            dailyRefillLimit: leadBaseLimit,
-            extraGranted: leadExtraGranted,
-            usedAmount: leadUsedAmount,
-            remaining: availableLeadRefill({
-              baseLimit: leadBaseLimit,
-              extraGranted: leadExtraGranted,
-              usedAmount: leadUsedAmount,
-            }),
-          },
+            ledger: leadLedger,
+            policy: effectiveLeadPolicy,
+          }),
         };
       })
       .sort((left, right) => left.fullName.localeCompare(right.fullName));
@@ -336,7 +381,10 @@ export function createCapacityReadService(deps: CapacityReadServiceDeps) {
   ): Promise<Result<ExecutiveCapacityDetail, CapacityReadError>> {
     try {
       const managed = await canManageExecutive(session, targetUserId, repos);
-      if (!managed.ok || !managed.target) {
+      if (!managed.target) {
+        return Err({ reason: "not_found", message: "Executive not found" });
+      }
+      if (!managed.ok) {
         return Err({ reason: "forbidden", message: "Forbidden" });
       }
 
@@ -397,16 +445,6 @@ export function createCapacityReadService(deps: CapacityReadServiceDeps) {
         branchDefault: leadBranchDefault,
       });
 
-      const searchBaseLimit =
-        searchLedger?.base_limit ?? effectiveSearchPolicy.monthlySearchLimit;
-      const searchExtraGranted = searchLedger?.extra_granted ?? 0;
-      const searchUsedAmount = searchLedger?.used_amount ?? 0;
-
-      const leadBaseLimit =
-        leadLedger?.base_limit ?? effectiveLeadPolicy.dailyRefillLimit;
-      const leadExtraGranted = leadLedger?.extra_granted ?? 0;
-      const leadUsedAmount = leadLedger?.used_amount ?? 0;
-
       return Ok({
         executive: {
           id: managed.target.id,
@@ -418,32 +456,17 @@ export function createCapacityReadService(deps: CapacityReadServiceDeps) {
           email: managed.target.email,
           teamId: managed.target.team_id,
         },
-        searchStatus: {
+        searchStatus: buildSearchStatus({
           periodStart,
-          periodEnd: searchLedger?.period_end ?? periodEnd,
-          policySource: effectiveSearchPolicy.source,
-          monthlySearchLimit: searchBaseLimit,
-          extraGranted: searchExtraGranted,
-          usedAmount: searchUsedAmount,
-          remaining: availableAllowance({
-            baseLimit: searchBaseLimit,
-            extraGranted: searchExtraGranted,
-            usedAmount: searchUsedAmount,
-          }),
-        },
-        leadStatus: {
-          policySource: effectiveLeadPolicy.source,
-          activeBufferTarget: effectiveLeadPolicy.activeBufferTarget,
+          periodEnd,
+          ledger: searchLedger,
+          policy: effectiveSearchPolicy,
+        }),
+        leadStatus: buildLeadStatus({
           activeAssignments,
-          dailyRefillLimit: leadBaseLimit,
-          extraGranted: leadExtraGranted,
-          usedAmount: leadUsedAmount,
-          remaining: availableLeadRefill({
-            baseLimit: leadBaseLimit,
-            extraGranted: leadExtraGranted,
-            usedAmount: leadUsedAmount,
-          }),
-        },
+          ledger: leadLedger,
+          policy: effectiveLeadPolicy,
+        }),
         searchPolicy: effectiveSearchPolicy,
         leadPolicy: effectiveLeadPolicy,
         requests,

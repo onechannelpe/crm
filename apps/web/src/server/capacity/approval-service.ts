@@ -1,4 +1,5 @@
 import type { SessionData } from "~/lib/auth/access/session";
+import { config } from "~/lib/config";
 import { normalizeDecisionNote } from "~/server/capacity/domain";
 import type { CapacityApprovalError } from "~/server/capacity/errors";
 import { createLeadPolicyService } from "~/server/lead-operations/policy-service";
@@ -44,6 +45,14 @@ function toUnexpected(error: unknown, fallback: string): CapacityApprovalError {
 
 function throwRollback(error: CapacityApprovalError): never {
   throw new TransactionRollbackError(error);
+}
+
+function isGrantAmountInvalid(amount: number): boolean {
+  return (
+    !Number.isInteger(amount) ||
+    amount <= 0 ||
+    amount > config.capacityRequests.maxRequestAmount
+  );
 }
 
 function createGrantServices(
@@ -113,6 +122,12 @@ export function createCapacityApprovalService(
         message: "Request is no longer pending",
       });
     }
+    if (isGrantAmountInvalid(request.requested_amount)) {
+      return Err({
+        reason: "validation",
+        message: "Request amount is invalid",
+      });
+    }
 
     const updateResult =
       await input.transactionRepos.capacityRequests.markApproved(
@@ -138,12 +153,6 @@ export function createCapacityApprovalService(
           input.note ?? request.reason,
         );
       if (isErr(grantResult)) {
-        if (grantResult.error.reason === "validation") {
-          return Err({
-            reason: "validation",
-            message: grantResult.error.message,
-          });
-        }
         return Err({
           reason: "unexpected",
           message: grantResult.error.message,
@@ -161,12 +170,6 @@ export function createCapacityApprovalService(
         input.note ?? request.reason,
       );
     if (isErr(grantResult)) {
-      if (grantResult.error.reason === "validation") {
-        return Err({
-          reason: "validation",
-          message: grantResult.error.message,
-        });
-      }
       return Err({ reason: "unexpected", message: grantResult.error.message });
     }
 

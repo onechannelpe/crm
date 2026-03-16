@@ -12,47 +12,39 @@ export interface CreateCapacityRequestInput {
 }
 
 export function createCapacityRequestService(repos: Repositories) {
+  async function createRequest(
+    input: CreateCapacityRequestInput,
+    kind: "search_extra" | "lead_refill_extra",
+  ): Promise<Result<void, CapacityRequestError>> {
+    try {
+      await repos.capacityRequests.create({
+        user_id: input.userId,
+        kind,
+        status: "pending",
+        requested_amount: input.amount,
+        reason: input.reason,
+      });
+      return Ok(undefined);
+    } catch (error) {
+      return Err({
+        reason: "unexpected",
+        message:
+          error instanceof Error ? error.message : "Request creation failed",
+      });
+    }
+  }
+
   return {
     async createSearchExtraRequest(
       input: CreateCapacityRequestInput,
     ): Promise<Result<void, CapacityRequestError>> {
-      try {
-        await repos.capacityRequests.create({
-          user_id: input.userId,
-          kind: "search_extra",
-          status: "pending",
-          requested_amount: input.amount,
-          reason: input.reason,
-        });
-        return Ok(undefined);
-      } catch (error) {
-        return Err({
-          reason: "unexpected",
-          message:
-            error instanceof Error ? error.message : "Request creation failed",
-        });
-      }
+      return createRequest(input, "search_extra");
     },
 
     async createLeadRefillExtraRequest(
       input: CreateCapacityRequestInput,
     ): Promise<Result<void, CapacityRequestError>> {
-      try {
-        await repos.capacityRequests.create({
-          user_id: input.userId,
-          kind: "lead_refill_extra",
-          status: "pending",
-          requested_amount: input.amount,
-          reason: input.reason,
-        });
-        return Ok(undefined);
-      } catch (error) {
-        return Err({
-          reason: "unexpected",
-          message:
-            error instanceof Error ? error.message : "Request creation failed",
-        });
-      }
+      return createRequest(input, "lead_refill_extra");
     },
   };
 }

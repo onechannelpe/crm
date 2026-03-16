@@ -1,4 +1,3 @@
-import { config } from "~/lib/config";
 import type {
   EffectiveSearchPolicy,
   SearchAllowanceSnapshot,
@@ -172,13 +171,6 @@ export function createSearchAllowanceService(deps: SearchAllowanceServiceDeps) {
     amount: number,
     reason: string,
   ): Promise<Result<SearchAllowanceSnapshot, SearchAllowanceGrantError>> {
-    if (amount > config.capacityRequests.maxRequestAmount) {
-      return Err({
-        reason: "validation",
-        message: "Grant exceeds configured maximum",
-      });
-    }
-
     const ledgerResult = await ensureLedger(targetUserId);
     if (isErr(ledgerResult)) {
       if (ledgerResult.error.reason === "user_not_found") {

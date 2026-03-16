@@ -1,4 +1,3 @@
-import { config } from "~/lib/config";
 import type {
   LeadCapacitySnapshot,
   LeadRefillResult,
@@ -177,13 +176,6 @@ export function createLeadRefillGrantService(deps: LeadRefillGrantServiceDeps) {
     amount: number,
     reason: string,
   ): Promise<Result<LeadCapacitySnapshot, LeadRefillGrantError>> {
-    if (amount > config.capacityRequests.maxRequestAmount) {
-      return Err({
-        reason: "validation",
-        message: "Grant exceeds configured maximum",
-      });
-    }
-
     const ledgerResult = await ensureLedger(targetUserId);
     if (isErr(ledgerResult)) {
       if (ledgerResult.error.reason === "user_not_found") {

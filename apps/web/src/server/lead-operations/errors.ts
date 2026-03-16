@@ -22,5 +22,4 @@ export type LeadCapacitySnapshotError =
 
 export type LeadRefillGrantError =
   | { reason: "user_not_found"; message: string }
-  | { reason: "validation"; message: string }
   | { reason: "unexpected"; message: string };
