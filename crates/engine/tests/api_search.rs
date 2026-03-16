@@ -2,6 +2,7 @@ mod common;
 
 use axum_test::TestServer;
 use crm_engine::api::router;
+use crm_engine::domain::candidate_service::CandidateService;
 use crm_engine::domain::search_service::SearchService;
 use crm_engine::security::hmac::HmacVerifier;
 use crm_engine::security::rate_limit::RateLimiter;
@@ -22,6 +23,7 @@ fn make_server(rate_limit_per_key: u32) -> (TestServer, String) {
     schema_guard::validate(&conn).expect("schema");
 
     let state = AppState {
+        candidates: Arc::new(CandidateService::new(pool.clone(), 100)),
         search: Arc::new(SearchService::new(pool, 100)),
         hmac: Arc::new(HmacVerifier::new(
             HashMap::from([(TEST_KEY_ID.to_string(), secret.clone())]),

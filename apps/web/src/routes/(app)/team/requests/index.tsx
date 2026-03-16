@@ -25,7 +25,7 @@ export default function TeamRequestsPage() {
   const reject = useAction(rejectCapacityRequestMutation);
 
   return (
-    <AppPage width="full">
+    <AppPage width="wide">
       <div class="space-y-6">
         <div>
           <h2 class="text-2xl font-semibold">Solicitudes pendientes</h2>

@@ -1,44 +1,33 @@
 "use server";
 
-import { forbiddenError, internalError, notFoundError } from "~/lib/app-errors";
 import { requirePermission } from "~/lib/auth/access/session";
-import { config } from "~/lib/config";
 import {
   assertNonEmptyString,
   assertPositiveInt,
 } from "~/lib/contracts/guards";
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
-import { createCapacityApprovalService } from "~/server/capacity/approval-service";
-import { canManageExecutive } from "~/server/capacity/scope";
 import {
-  searchAllowanceService,
-  leadRefillService,
+  capacityApprovalService,
+  capacityManageService,
   repos,
-  runInRepositoryTransaction,
 } from "~/server/shared/context";
+import { isErr } from "~/server/shared/result";
+
+import { throwCapacityActionError } from "./errors";
 
 export async function approveCapacityRequest(requestId: number, note?: string) {
   const safeRequestId = assertPositiveInt(requestId, "requestId");
   const session = await requirePermission("capacity:approve");
   await checkActionRateLimit("capacity.approve", session.userId, repos);
-  const request = await repos.capacityRequests.findById(safeRequestId);
-  if (!request) throw notFoundError("Request not found");
-  const managed = await canManageExecutive(session, request.user_id, repos);
-  if (!managed.ok) throw forbiddenError("Cannot approve this request");
-  try {
-    return await runInRepositoryTransaction(async (transactionRepos) => {
-      const approvalService = createCapacityApprovalService(transactionRepos);
-      return approvalService.approveCapacityRequest(
-        session.userId,
-        request.id,
-        note?.trim() || null,
-      );
-    });
-  } catch (error) {
-    throw internalError(
-      error instanceof Error ? error.message : "Approval failed",
-    );
+  const result = await capacityApprovalService.approveCapacityRequest(
+    session,
+    safeRequestId,
+    note,
+  );
+  if (isErr(result)) {
+    throwCapacityActionError(result.error);
   }
+  return result.value;
 }
 
 export async function rejectCapacityRequest(requestId: number, note: string) {
@@ -46,24 +35,15 @@ export async function rejectCapacityRequest(requestId: number, note: string) {
   const safeNote = assertNonEmptyString(note, "note");
   const session = await requirePermission("capacity:approve");
   await checkActionRateLimit("capacity.approve", session.userId, repos);
-  const request = await repos.capacityRequests.findById(safeRequestId);
-  if (!request) throw notFoundError("Request not found");
-  const managed = await canManageExecutive(session, request.user_id, repos);
-  if (!managed.ok) throw forbiddenError("Cannot reject this request");
-  try {
-    return await runInRepositoryTransaction(async (transactionRepos) => {
-      const approvalService = createCapacityApprovalService(transactionRepos);
-      return approvalService.rejectCapacityRequest(
-        session.userId,
-        request.id,
-        safeNote,
-      );
-    });
-  } catch (error) {
-    throw internalError(
-      error instanceof Error ? error.message : "Rejection failed",
-    );
+  const result = await capacityApprovalService.rejectCapacityRequest(
+    session,
+    safeRequestId,
+    safeNote,
+  );
+  if (isErr(result)) {
+    throwCapacityActionError(result.error);
   }
+  return result.value;
 }
 
 export async function grantMoreSearches(
@@ -74,18 +54,17 @@ export async function grantMoreSearches(
   const safeUserId = assertPositiveInt(userId, "userId");
   const safeAmount = assertPositiveInt(amount, "amount");
   const safeReason = assertNonEmptyString(reason, "reason");
-  if (safeAmount > config.capacityRequests.maxRequestAmount) {
-    throw internalError("Grant exceeds configured maximum");
-  }
   const session = await requirePermission("capacity:manage");
-  const managed = await canManageExecutive(session, safeUserId, repos);
-  if (!managed.ok) throw forbiddenError("Cannot manage this executive");
-  return searchAllowanceService.grantExtraSearchAllowance(
-    session.userId,
+  const result = await capacityManageService.grantMoreSearches(
+    session,
     safeUserId,
     safeAmount,
     safeReason,
   );
+  if (isErr(result)) {
+    throwCapacityActionError(result.error);
+  }
+  return result.value;
 }
 
 export async function grantMoreLeadRefill(
@@ -96,16 +75,15 @@ export async function grantMoreLeadRefill(
   const safeUserId = assertPositiveInt(userId, "userId");
   const safeAmount = assertPositiveInt(amount, "amount");
   const safeReason = assertNonEmptyString(reason, "reason");
-  if (safeAmount > config.capacityRequests.maxRequestAmount) {
-    throw internalError("Grant exceeds configured maximum");
-  }
   const session = await requirePermission("capacity:manage");
-  const managed = await canManageExecutive(session, safeUserId, repos);
-  if (!managed.ok) throw forbiddenError("Cannot manage this executive");
-  return leadRefillService.grantExtraLeadRefill(
-    session.userId,
+  const result = await capacityManageService.grantMoreLeadRefill(
+    session,
     safeUserId,
     safeAmount,
     safeReason,
   );
+  if (isErr(result)) {
+    throwCapacityActionError(result.error);
+  }
+  return result.value;
 }

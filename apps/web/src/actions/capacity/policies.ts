@@ -1,49 +1,38 @@
 "use server";
 
-import {
-  conflictError,
-  forbiddenError,
-  internalError,
-  validationError,
-} from "~/lib/app-errors";
 import { requirePermission } from "~/lib/auth/access/session";
-import { config } from "~/lib/config";
 import {
   assertFinitePositive,
   assertPositiveInt,
 } from "~/lib/contracts/guards";
-import {
-  assertCanManageTeam,
-  canManageExecutive,
-} from "~/server/capacity/scope";
-import { createLeadPolicyService } from "~/server/lead-operations/policy-service";
-import { createSearchPolicyService } from "~/server/search-access/policy-service";
-import { repos } from "~/server/shared/context";
+import { capacityManageService } from "~/server/shared/context";
+import { isErr } from "~/server/shared/result";
+
+import { throwCapacityActionError } from "./errors";
 
 export async function updateSearchPolicyOverride(input: {
   userId: number;
   monthlySearchLimit: number;
   expiresAt: number | null;
 }) {
-  const session = await requirePermission("capacity:manage");
+  const session = await requirePermission("capacity:policy:manage");
   const safeUserId = assertPositiveInt(input.userId, "userId");
   const safeLimit = assertFinitePositive(
     input.monthlySearchLimit,
     "monthlySearchLimit",
   );
-  if (safeLimit > config.searchAccess.maxMonthlyLimit) {
-    throw internalError("Monthly search limit exceeds configured maximum");
+  const result = await capacityManageService.updateSearchPolicyOverride(
+    session,
+    {
+      userId: safeUserId,
+      monthlySearchLimit: safeLimit,
+      expiresAt: input.expiresAt,
+    },
+  );
+  if (isErr(result)) {
+    throwCapacityActionError(result.error);
   }
-  const managed = await canManageExecutive(session, safeUserId, repos);
-  if (!managed.ok) throw forbiddenError("Cannot manage this executive");
-  const policyService = createSearchPolicyService(repos);
-  await policyService.setUserOverride({
-    targetUserId: safeUserId,
-    monthlySearchLimit: safeLimit,
-    setByUserId: session.userId,
-    expiresAt: input.expiresAt,
-  });
-  return { success: true };
+  return result.value;
 }
 
 export async function updateLeadPolicyOverride(input: {
@@ -52,7 +41,7 @@ export async function updateLeadPolicyOverride(input: {
   dailyRefillLimit: number;
   expiresAt: number | null;
 }) {
-  const session = await requirePermission("capacity:manage");
+  const session = await requirePermission("capacity:policy:manage");
   const safeUserId = assertPositiveInt(input.userId, "userId");
   const safeBuffer = assertFinitePositive(
     input.activeBufferTarget,
@@ -62,23 +51,16 @@ export async function updateLeadPolicyOverride(input: {
     input.dailyRefillLimit,
     "dailyRefillLimit",
   );
-  if (safeBuffer > config.leadAssignment.maxBufferTarget) {
-    throw internalError("Buffer target exceeds configured maximum");
-  }
-  if (safeRefill > config.capacityRequests.maxRequestAmount) {
-    throw internalError("Daily refill limit exceeds configured maximum");
-  }
-  const managed = await canManageExecutive(session, safeUserId, repos);
-  if (!managed.ok) throw forbiddenError("Cannot manage this executive");
-  const policyService = createLeadPolicyService(repos);
-  await policyService.setUserOverride({
-    targetUserId: safeUserId,
+  const result = await capacityManageService.updateLeadPolicyOverride(session, {
+    userId: safeUserId,
     activeBufferTarget: safeBuffer,
     dailyRefillLimit: safeRefill,
-    setByUserId: session.userId,
     expiresAt: input.expiresAt,
   });
-  return { success: true };
+  if (isErr(result)) {
+    throwCapacityActionError(result.error);
+  }
+  return result.value;
 }
 
 export async function updateSearchScopeDefault(input: {
@@ -92,27 +74,15 @@ export async function updateSearchScopeDefault(input: {
     input.monthlySearchLimit,
     "monthlySearchLimit",
   );
-  if (safeLimit > config.searchAccess.maxMonthlyLimit) {
-    throw internalError("Monthly search limit exceeds configured maximum");
-  }
-  if (input.scopeType === "branch" && safeScopeId !== session.branchId) {
-    throw conflictError("Cannot modify defaults outside your branch");
-  }
-  if (input.scopeType === "team") {
-    const access = await assertCanManageTeam(session, safeScopeId, repos);
-    if (!access.ok)
-      throw forbiddenError("Cannot modify defaults for this team");
-  }
-  if (input.scopeType !== "branch" && input.scopeType !== "team") {
-    throw validationError("Invalid scope type");
-  }
-  const policyService = createSearchPolicyService(repos);
-  await policyService.setScopeDefault({
+  const result = await capacityManageService.updateSearchScopeDefault(session, {
     scopeType: input.scopeType,
     scopeId: safeScopeId,
     monthlySearchLimit: safeLimit,
   });
-  return { success: true };
+  if (isErr(result)) {
+    throwCapacityActionError(result.error);
+  }
+  return result.value;
 }
 
 export async function updateLeadScopeDefault(input: {
@@ -131,29 +101,14 @@ export async function updateLeadScopeDefault(input: {
     input.dailyRefillLimit,
     "dailyRefillLimit",
   );
-  if (safeBuffer > config.leadAssignment.maxBufferTarget) {
-    throw internalError("Buffer target exceeds configured maximum");
-  }
-  if (safeRefill > config.capacityRequests.maxRequestAmount) {
-    throw internalError("Daily refill limit exceeds configured maximum");
-  }
-  if (input.scopeType === "branch" && safeScopeId !== session.branchId) {
-    throw conflictError("Cannot modify defaults outside your branch");
-  }
-  if (input.scopeType === "team") {
-    const access = await assertCanManageTeam(session, safeScopeId, repos);
-    if (!access.ok)
-      throw forbiddenError("Cannot modify defaults for this team");
-  }
-  if (input.scopeType !== "branch" && input.scopeType !== "team") {
-    throw validationError("Invalid scope type");
-  }
-  const policyService = createLeadPolicyService(repos);
-  await policyService.setScopeDefault({
+  const result = await capacityManageService.updateLeadScopeDefault(session, {
     scopeType: input.scopeType,
     scopeId: safeScopeId,
     activeBufferTarget: safeBuffer,
     dailyRefillLimit: safeRefill,
   });
-  return { success: true };
+  if (isErr(result)) {
+    throwCapacityActionError(result.error);
+  }
+  return result.value;
 }

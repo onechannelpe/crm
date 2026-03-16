@@ -10,6 +10,146 @@ import {
 } from "~/lib/mutations/capacity";
 import { capacityPolicyDefaultsQuery } from "~/lib/queries/capacity";
 
+type CapacityPolicyDefaults = Awaited<
+  ReturnType<typeof capacityPolicyDefaultsQuery>
+>;
+
+type TeamPolicy = CapacityPolicyDefaults["teams"][number];
+
+interface TeamPolicyRowProps {
+  team: TeamPolicy;
+  branchSearchLimit: number | null;
+  branchActiveBufferTarget: number | null;
+  branchDailyRefillLimit: number | null;
+  onUpdateSearchDefault: (input: {
+    scopeType: "team";
+    scopeId: number;
+    monthlySearchLimit: number;
+  }) => Promise<unknown>;
+  onUpdateLeadDefault: (input: {
+    scopeType: "team";
+    scopeId: number;
+    activeBufferTarget: number;
+    dailyRefillLimit: number;
+  }) => Promise<unknown>;
+}
+
+function TeamPolicyRow(props: TeamPolicyRowProps) {
+  const [teamSearchLimit, setTeamSearchLimit] = createSignal(
+    String(props.team.searchLimit ?? props.branchSearchLimit ?? 250),
+  );
+  const [teamBufferTarget, setTeamBufferTarget] = createSignal(
+    String(
+      props.team.activeBufferTarget ?? props.branchActiveBufferTarget ?? 10,
+    ),
+  );
+  const [teamDailyRefill, setTeamDailyRefill] = createSignal(
+    String(props.team.dailyRefillLimit ?? props.branchDailyRefillLimit ?? 25),
+  );
+
+  const [isSearchDirty, setIsSearchDirty] = createSignal(false);
+  const [isLeadDirty, setIsLeadDirty] = createSignal(false);
+
+  createEffect(() => {
+    if (isSearchDirty()) return;
+    setTeamSearchLimit(
+      String(props.team.searchLimit ?? props.branchSearchLimit ?? 250),
+    );
+  });
+
+  createEffect(() => {
+    if (isLeadDirty()) return;
+    setTeamBufferTarget(
+      String(
+        props.team.activeBufferTarget ?? props.branchActiveBufferTarget ?? 10,
+      ),
+    );
+    setTeamDailyRefill(
+      String(props.team.dailyRefillLimit ?? props.branchDailyRefillLimit ?? 25),
+    );
+  });
+
+  return (
+    <div class="rounded border p-4 space-y-4">
+      <div>
+        <div class="font-medium">{props.team.teamName}</div>
+        <div class="text-sm text-muted-foreground">
+          Búsquedas: {props.team.searchLimit ?? "usa default de sucursal"} |
+          Buffer: {props.team.activeBufferTarget ?? "usa default"} | Refill:{" "}
+          {props.team.dailyRefillLimit ?? "usa default"}
+        </div>
+      </div>
+
+      <div class="grid gap-4 md:grid-cols-2">
+        <form
+          class="space-y-3"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void props.onUpdateSearchDefault({
+              scopeType: "team",
+              scopeId: props.team.teamId,
+              monthlySearchLimit: Number(teamSearchLimit()),
+            });
+            setIsSearchDirty(false);
+          }}
+        >
+          <Input
+            type="number"
+            label="Límite mensual"
+            value={teamSearchLimit()}
+            onInput={(event) => {
+              setIsSearchDirty(true);
+              setTeamSearchLimit(event.currentTarget.value);
+            }}
+            required
+          />
+          <Button type="submit" variant="outline">
+            Guardar búsquedas
+          </Button>
+        </form>
+
+        <form
+          class="space-y-3"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void props.onUpdateLeadDefault({
+              scopeType: "team",
+              scopeId: props.team.teamId,
+              activeBufferTarget: Number(teamBufferTarget()),
+              dailyRefillLimit: Number(teamDailyRefill()),
+            });
+            setIsLeadDirty(false);
+          }}
+        >
+          <Input
+            type="number"
+            label="Buffer activo"
+            value={teamBufferTarget()}
+            onInput={(event) => {
+              setIsLeadDirty(true);
+              setTeamBufferTarget(event.currentTarget.value);
+            }}
+            required
+          />
+          <Input
+            type="number"
+            label="Refill diario"
+            value={teamDailyRefill()}
+            onInput={(event) => {
+              setIsLeadDirty(true);
+              setTeamDailyRefill(event.currentTarget.value);
+            }}
+            required
+          />
+          <Button type="submit" variant="outline">
+            Guardar leads
+          </Button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function CapacityPoliciesPage() {
   const defaults = createAsync(() => capacityPolicyDefaultsQuery(), {
     initialValue: null,
@@ -35,7 +175,7 @@ export default function CapacityPoliciesPage() {
   });
 
   return (
-    <AppPage width="full">
+    <AppPage width="wide">
       <Show when={defaults()} keyed>
         {(snapshot) => (
           <div class="space-y-8">
@@ -110,95 +250,14 @@ export default function CapacityPoliciesPage() {
               <h3 class="text-lg font-medium">Equipos</h3>
               <For each={snapshot.teams}>
                 {(team) => (
-                  <div class="rounded border p-4 space-y-4">
-                    <div>
-                      <div class="font-medium">{team.teamName}</div>
-                      <div class="text-sm text-muted-foreground">
-                        Búsquedas:{" "}
-                        {team.searchLimit ?? "usa default de sucursal"} |
-                        Buffer: {team.activeBufferTarget ?? "usa default"} |
-                        Refill: {team.dailyRefillLimit ?? "usa default"}
-                      </div>
-                    </div>
-                    <div class="grid gap-4 md:grid-cols-2">
-                      <form
-                        class="space-y-3"
-                        onSubmit={(event) => {
-                          event.preventDefault();
-                          const formData = new FormData(
-                            event.currentTarget as HTMLFormElement,
-                          );
-                          void updateSearchDefault({
-                            scopeType: "team",
-                            scopeId: team.teamId,
-                            monthlySearchLimit: Number(
-                              formData.get("monthlySearchLimit"),
-                            ),
-                          });
-                        }}
-                      >
-                        <Input
-                          type="number"
-                          name="monthlySearchLimit"
-                          label="Límite mensual"
-                          defaultValue={String(
-                            team.searchLimit ??
-                              snapshot.branchSearchLimit ??
-                              250,
-                          )}
-                          required
-                        />
-                        <Button type="submit" variant="outline">
-                          Guardar búsquedas
-                        </Button>
-                      </form>
-                      <form
-                        class="space-y-3"
-                        onSubmit={(event) => {
-                          event.preventDefault();
-                          const formData = new FormData(
-                            event.currentTarget as HTMLFormElement,
-                          );
-                          void updateLeadDefault({
-                            scopeType: "team",
-                            scopeId: team.teamId,
-                            activeBufferTarget: Number(
-                              formData.get("activeBufferTarget"),
-                            ),
-                            dailyRefillLimit: Number(
-                              formData.get("dailyRefillLimit"),
-                            ),
-                          });
-                        }}
-                      >
-                        <Input
-                          type="number"
-                          name="activeBufferTarget"
-                          label="Buffer activo"
-                          defaultValue={String(
-                            team.activeBufferTarget ??
-                              snapshot.branchActiveBufferTarget ??
-                              10,
-                          )}
-                          required
-                        />
-                        <Input
-                          type="number"
-                          name="dailyRefillLimit"
-                          label="Refill diario"
-                          defaultValue={String(
-                            team.dailyRefillLimit ??
-                              snapshot.branchDailyRefillLimit ??
-                              25,
-                          )}
-                          required
-                        />
-                        <Button type="submit" variant="outline">
-                          Guardar leads
-                        </Button>
-                      </form>
-                    </div>
-                  </div>
+                  <TeamPolicyRow
+                    team={team}
+                    branchSearchLimit={snapshot.branchSearchLimit}
+                    branchActiveBufferTarget={snapshot.branchActiveBufferTarget}
+                    branchDailyRefillLimit={snapshot.branchDailyRefillLimit}
+                    onUpdateSearchDefault={updateSearchDefault}
+                    onUpdateLeadDefault={updateLeadDefault}
+                  />
                 )}
               </For>
             </section>

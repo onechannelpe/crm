@@ -37,7 +37,7 @@ export default function TeamMemberCapacityPage() {
   });
 
   return (
-    <AppPage width="full">
+    <AppPage width="wide">
       <Show when={detail()} keyed>
         {(snapshot) => (
           <div class="space-y-8">

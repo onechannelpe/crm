@@ -2,8 +2,24 @@
 
 import { requirePermission } from "~/lib/auth/access/session";
 import { leadReadService } from "~/server/shared/context";
+import { isErr } from "~/server/shared/result";
+
+import { throwLeadActionError } from "./errors";
 
 export async function getMyLeadCapacity() {
   const session = await requirePermission("capacity:read:self");
-  return leadReadService.getMyLeadSnapshot(session.userId);
+  const result = await leadReadService.getMyLeadSnapshot(session.userId);
+  if (isErr(result)) {
+    if (result.error.reason === "user_not_found") {
+      throwLeadActionError({
+        reason: "not_found",
+        message: result.error.message,
+      });
+    }
+    throwLeadActionError({
+      reason: "unexpected",
+      message: result.error.message,
+    });
+  }
+  return result.value;
 }

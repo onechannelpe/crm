@@ -1,51 +1,69 @@
 "use server";
 
 import { requirePermission } from "~/lib/auth/access/session";
-import { repos, capacityReadService } from "~/server/shared/context";
+import type { CapacityReadError } from "~/server/capacity/read-service";
+import { capacityReadService } from "~/server/shared/context";
+import { isErr } from "~/server/shared/result";
+
+import { throwCapacityActionError } from "./errors";
+
+function toCapacityActionError(error: CapacityReadError) {
+  if (error.reason === "forbidden") {
+    return { reason: "forbidden" as const, message: error.message };
+  }
+  if (error.reason === "not_found") {
+    return { reason: "not_found" as const, message: error.message };
+  }
+  return { reason: "unexpected" as const, message: error.message };
+}
 
 export async function getManagedExecutives() {
   const session = await requirePermission("capacity:read:team");
-  return capacityReadService.listManagedExecutives(session);
+  const result = await capacityReadService.listManagedExecutives(session);
+  if (isErr(result)) {
+    throwCapacityActionError(toCapacityActionError(result.error));
+  }
+  return result.value;
 }
 
 export async function getExecutiveCapacityDetail(userId: number) {
-  const session = await requirePermission("capacity:manage");
-  return capacityReadService.getExecutiveCapacityDetail(session, userId);
+  const session = await requirePermission("capacity:read:team");
+  const result = await capacityReadService.getExecutiveCapacityDetail(
+    session,
+    userId,
+  );
+  if (isErr(result)) {
+    throwCapacityActionError(toCapacityActionError(result.error));
+  }
+  return result.value;
 }
 
 export async function getPendingCapacityRequests() {
-  const session = await requirePermission("capacity:approve");
-  return capacityReadService.listPendingCapacityRequests(session);
+  const session = await requirePermission("capacity:read:team");
+  const result = await capacityReadService.listPendingCapacityRequests(session);
+  if (isErr(result)) {
+    throwCapacityActionError(toCapacityActionError(result.error));
+  }
+  return result.value;
 }
 
 export async function getCapacityPolicyDefaults() {
   const session = await requirePermission("capacity:policy:manage");
-  const [teams, branchSearch, branchLead] = await Promise.all([
-    repos.teams.findByBranch(session.branchId),
-    repos.searchPolicyDefaults.findForScope("branch", session.branchId),
-    repos.leadPolicyDefaults.findForScope("branch", session.branchId),
-  ]);
-
-  const teamDefaults = [];
-  for (const team of teams) {
-    const [searchDefault, leadDefault] = await Promise.all([
-      repos.searchPolicyDefaults.findForScope("team", team.id),
-      repos.leadPolicyDefaults.findForScope("team", team.id),
-    ]);
-    teamDefaults.push({
-      teamId: team.id,
-      teamName: team.name,
-      searchLimit: searchDefault?.search_limit ?? null,
-      activeBufferTarget: leadDefault?.active_buffer_target ?? null,
-      dailyRefillLimit: leadDefault?.daily_refill_limit ?? null,
-    });
+  const result = await capacityReadService.getCapacityPolicyDefaults(session);
+  if (isErr(result)) {
+    throwCapacityActionError(toCapacityActionError(result.error));
   }
+  return result.value;
+}
 
-  return {
-    branchId: session.branchId,
-    branchSearchLimit: branchSearch?.search_limit ?? null,
-    branchActiveBufferTarget: branchLead?.active_buffer_target ?? null,
-    branchDailyRefillLimit: branchLead?.daily_refill_limit ?? null,
-    teams: teamDefaults,
-  };
+export async function getCapacityAuditEvents(limit?: number) {
+  const session = await requirePermission("capacity:audit:read");
+  const result = await capacityReadService.listCapacityAuditEvents(
+    session,
+    limit,
+  );
+  if (isErr(result)) {
+    throwCapacityActionError(toCapacityActionError(result.error));
+  }
+  return result.value;
 }

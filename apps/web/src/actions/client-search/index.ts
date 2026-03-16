@@ -1,4 +1,3 @@
-export { searchClients } from "./search";
 export {
   getSearchEnrichmentStatus,
   requestSearchEnrichment,

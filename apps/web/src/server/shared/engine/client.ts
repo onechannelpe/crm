@@ -25,6 +25,9 @@ export interface EngineClient {
     branchId: number;
     userId: number;
     amount: number;
+    teamId?: number;
+    productId?: number;
+    strategy?: "balanced" | "freshness" | "conversion";
   }): Promise<LeadCandidatesResponse>;
   health(): Promise<boolean>;
 }
@@ -65,6 +68,9 @@ export function createEngineClient(config: EngineClientConfig): EngineClient {
         branch_id: input.branchId,
         user_id: input.userId,
         amount: input.amount,
+        team_id: input.teamId,
+        product_id: input.productId,
+        strategy: input.strategy,
       });
       const response = await post(
         engineApiPath(ENGINE_ENDPOINTS.leadCandidates),

@@ -1,14 +1,15 @@
 import { internalError } from "~/lib/app-errors";
 import type { LeadAssignmentError } from "~/server/lead-operations/assignment-service";
 
+const leadErrorThrowers: Record<
+  LeadAssignmentError["reason"],
+  (message: string) => never
+> = {
+  unexpected: (message) => {
+    throw internalError(message);
+  },
+};
+
 export function throwLeadError(error: LeadAssignmentError): never {
-  switch (error.reason) {
-    case "engine_unavailable":
-    case "unexpected":
-      throw internalError(error.message);
-    default: {
-      const exhausted: never = error;
-      throw internalError(`Unhandled lead error: ${String(exhausted)}`);
-    }
-  }
+  return leadErrorThrowers[error.reason](error.message);
 }

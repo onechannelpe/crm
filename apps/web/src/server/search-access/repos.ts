@@ -1,4 +1,4 @@
-import type { Kysely } from "kysely";
+import { sql, type Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 
@@ -11,6 +11,18 @@ export function createSearchPolicyDefaultsRepo(db: Kysely<Database>) {
         .where("scope_type", "=", scopeType)
         .where("scope_id", "=", scopeId)
         .executeTakeFirst();
+    },
+
+    listForScope(scopeType: "branch" | "team", scopeIds: number[]) {
+      if (scopeIds.length === 0) {
+        return Promise.resolve([]);
+      }
+      return db
+        .selectFrom("search_policy_defaults")
+        .selectAll()
+        .where("scope_type", "=", scopeType)
+        .where("scope_id", "in", scopeIds)
+        .execute();
     },
 
     async upsert(values: {
@@ -54,6 +66,23 @@ export function createSearchPolicyOverridesRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
+    listActiveForUsers(userIds: number[], now: number) {
+      if (userIds.length === 0) {
+        return Promise.resolve([]);
+      }
+      return db
+        .selectFrom("search_policy_overrides")
+        .selectAll()
+        .where("user_id", "in", userIds)
+        .where("effective_from", "<=", now)
+        .where((eb) =>
+          eb.or([eb("expires_at", "is", null), eb("expires_at", ">", now)]),
+        )
+        .orderBy("user_id", "asc")
+        .orderBy("created_at", "desc")
+        .execute();
+    },
+
     async replaceForUser(values: {
       user_id: number;
       search_limit: number;
@@ -84,6 +113,18 @@ export function createSearchAllowanceLedgerRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
+    listByUsersAndPeriod(userIds: number[], periodStart: string) {
+      if (userIds.length === 0) {
+        return Promise.resolve([]);
+      }
+      return db
+        .selectFrom("search_allowance_ledger")
+        .selectAll()
+        .where("period_start", "=", periodStart)
+        .where("user_id", "in", userIds)
+        .execute();
+    },
+
     create(values: {
       user_id: number;
       period_start: string;
@@ -111,15 +152,19 @@ export function createSearchAllowanceLedgerRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    incrementUsage(id: number, amount: number) {
-      return db
+    async reserveUsageIfAvailable(id: number, amount: number) {
+      const result = await db
         .updateTable("search_allowance_ledger")
         .set((eb) => ({
           used_amount: eb("used_amount", "+", amount),
           updated_at: Date.now(),
         }))
         .where("id", "=", id)
-        .execute();
+        .where(
+          sql<boolean>`(used_amount + ${amount}) <= (base_limit + extra_granted)`,
+        )
+        .executeTakeFirst();
+      return Number(result.numUpdatedRows) > 0;
     },
 
     decrementUsage(id: number, amount: number) {

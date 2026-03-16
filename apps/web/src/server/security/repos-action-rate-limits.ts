@@ -1,6 +1,5 @@
 import { sql, type Kysely } from "kysely";
 
-import { internalError } from "~/lib/app-errors";
 import type { Database } from "~/lib/db/types";
 
 interface CounterSnapshot {
@@ -27,7 +26,7 @@ export function createActionRateLimitsRepo(db: Kysely<Database>) {
         RETURNING request_count, window_started_at
       `.execute(db);
       const row = rows.rows[0];
-      if (!row) throw internalError("Rate limit counter write returned no row");
+      if (!row) throw new Error("Rate limit counter write returned no row");
       return row;
     },
 

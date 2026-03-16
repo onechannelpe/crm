@@ -10,4 +10,13 @@ export interface DirectSearchInput {
   limit?: number;
 }
 
+export interface LeadCandidateRequestInput {
+  userId: number;
+  branchId: number;
+  amount: number;
+  teamId?: number;
+  productId?: number;
+  strategy?: "balanced" | "freshness" | "conversion";
+}
+
 export type { LeadCandidate } from "~/server/shared/engine/types";

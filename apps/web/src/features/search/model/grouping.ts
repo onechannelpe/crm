@@ -6,12 +6,12 @@ export interface CompanyRef {
 }
 
 export interface PersonGroup {
+  key: string;
   dni: string;
   displayName: string;
   aliases: string[];
   companies: CompanyRef[];
   phones: string[];
-  rows: SearchResult[];
 }
 
 export interface CompanyGroup {
@@ -21,7 +21,6 @@ export interface CompanyGroup {
   people: Array<{ dni: string; name: string }>;
   phones: string[];
   emails: string[];
-  rows: SearchResult[];
 }
 
 function normalized(value: string | null | undefined): string {
@@ -34,20 +33,13 @@ function pushUnique(
   value: string | null | undefined,
 ): void {
   const safe = normalized(value);
-  if (!safe) return;
-  if (seen.has(safe)) return;
+  if (!safe || seen.has(safe)) return;
   seen.add(safe);
   values.push(safe);
 }
 
-function firstNonEmpty(values: readonly string[]): string {
-  return values.find((value) => value.trim().length > 0) ?? "";
-}
-
 function companyKey(ruc: string | null, name: string | null): string {
-  const safeRuc = normalized(ruc);
-  const safeName = normalized(name);
-  return `${safeRuc}|${safeName}`;
+  return `${normalized(ruc)}|${normalized(name)}`;
 }
 
 export function groupPeopleByDni(
@@ -91,83 +83,70 @@ export function groupPeopleByDni(
       }
     }
 
-    return {
-      dni,
-      displayName: firstNonEmpty(aliases),
-      aliases,
-      companies,
-      phones,
-      rows,
-    };
+    const displayName = aliases.find((alias) => alias.length > 0) ?? dni;
+    return { key: dni, dni, displayName, aliases, companies, phones };
   });
-}
-
-function mergeCompanyName(
-  base: string | null,
-  next: string | null,
-): string | null {
-  if (base) return base;
-  return next;
 }
 
 export function groupCompaniesByRuc(
   results: readonly SearchResult[],
 ): CompanyGroup[] {
   const groups = new Map<string, CompanyGroup>();
+
   for (const [index, row] of results.entries()) {
     const ruc = normalized(row.org?.ruc ?? null);
     const key = ruc ? `ruc:${ruc}` : `row:${index}`;
     const existing = groups.get(key);
+
     if (existing) {
-      existing.rows.push(row);
-      existing.name = mergeCompanyName(
-        existing.name,
-        normalized(row.org?.name ?? null) || null,
-      );
+      if (!existing.name) {
+        existing.name = normalized(row.org?.name ?? null) || null;
+      }
+
       const phoneSet = new Set(existing.phones);
       pushUnique(existing.phones, phoneSet, row.phones.primary);
       pushUnique(existing.phones, phoneSet, row.phones.secondary);
       for (const siblingPhone of row.phones.siblings ?? []) {
         pushUnique(existing.phones, phoneSet, siblingPhone);
       }
+
       const emailSet = new Set(existing.emails);
       pushUnique(existing.emails, emailSet, row.person.email);
+
       const personDni = normalized(row.person.dni);
       const personName = normalized(row.person.name);
-      const peopleDniSet = new Set(existing.people.map((person) => person.dni));
-      if (personDni && !peopleDniSet.has(personDni)) {
-        existing.people.push({
-          dni: personDni,
-          name: personName,
-        });
+      const existingPeople = new Set(
+        existing.people.map((person) => person.dni),
+      );
+      if (personDni && !existingPeople.has(personDni)) {
+        existing.people.push({ dni: personDni, name: personName || personDni });
       }
       continue;
     }
 
-    const phoneSet = new Set<string>();
     const phones: string[] = [];
+    const phoneSet = new Set<string>();
     pushUnique(phones, phoneSet, row.phones.primary);
     pushUnique(phones, phoneSet, row.phones.secondary);
     for (const siblingPhone of row.phones.siblings ?? []) {
       pushUnique(phones, phoneSet, siblingPhone);
     }
-    const emailSet = new Set<string>();
+
     const emails: string[] = [];
+    const emailSet = new Set<string>();
     pushUnique(emails, emailSet, row.person.email);
 
     const personDni = normalized(row.person.dni);
-    const company: CompanyGroup = {
+    groups.set(key, {
       key,
       ruc: ruc || null,
       name: normalized(row.org?.name ?? null) || null,
       people: personDni
-        ? [{ dni: personDni, name: normalized(row.person.name) }]
+        ? [{ dni: personDni, name: normalized(row.person.name) || personDni }]
         : [],
       phones,
       emails,
-      rows: [row],
-    };
-    groups.set(key, company);
+    });
   }
 
   return [...groups.values()];

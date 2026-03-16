@@ -4,11 +4,16 @@ import { createPrivilegedLoginAlertSender } from "~/lib/auth/security/login-aler
 import { config } from "~/lib/config";
 import { db } from "~/lib/db/db";
 import { env } from "~/lib/env";
+import { createCapacityApprovalService } from "~/server/capacity/approval-service";
+import { createCapacityManageService } from "~/server/capacity/manage-service";
 import { createCapacityReadService } from "~/server/capacity/read-service";
 import { createCapacityRequestService } from "~/server/capacity/request-service";
 import { createSearchEnrichmentService } from "~/server/client-search/enrichment-service";
+import { createLeadCandidateService } from "~/server/engine-gateway/lead-candidate-service";
 import { createEngineSearchService } from "~/server/engine-gateway/search-service";
 import { createExtensionService } from "~/server/extension/service";
+import { createLeadAssignmentService } from "~/server/lead-operations/assignment-service";
+import { createLeadPolicyService } from "~/server/lead-operations/policy-service";
 import { createLeadReadService } from "~/server/lead-operations/read-service";
 import { createLeadRefillService } from "~/server/lead-operations/refill-service";
 import { createAppNotificationCenter } from "~/server/notifications/app-center-service";
@@ -17,7 +22,9 @@ import { createSalesExportBlobStore } from "~/server/sales/export-blob-store";
 import { createSalesExportService } from "~/server/sales/export-service";
 import { createSalesRecordsWorkflowService } from "~/server/sales/records-service";
 import { createSearchAllowanceService } from "~/server/search-access/allowance-service";
+import { createSearchPolicyService } from "~/server/search-access/policy-service";
 import { createSearchReadService } from "~/server/search-access/read-service";
+import { createAuditService } from "~/server/shared/audit";
 import { createRepositories } from "~/server/shared/registry";
 import { createProfilePictureBlobStore } from "~/server/users/profile-picture-blob-store";
 import { createProfilePictureService } from "~/server/users/profile-picture-service";
@@ -37,14 +44,50 @@ export function runInRepositoryTransaction<T>(
 export const appNotificationCenter = createAppNotificationCenter({
   repos: { appNotifications: repos.appNotifications, users: repos.users },
 });
+export const auditService = createAuditService(repos);
 export const searchEnrichmentService = createSearchEnrichmentService(repos);
 export const engineSearchService = createEngineSearchService();
-export const searchAllowanceService = createSearchAllowanceService(repos);
-export const searchReadService = createSearchReadService(repos);
-export const leadRefillService = createLeadRefillService(repos);
-export const leadReadService = createLeadReadService(repos);
+export const searchPolicyService = createSearchPolicyService(repos);
+export const searchAllowanceService = createSearchAllowanceService({
+  repos,
+  policyService: searchPolicyService,
+  auditService,
+});
+export const searchReadService = createSearchReadService({
+  allowanceService: searchAllowanceService,
+});
+export const leadPolicyService = createLeadPolicyService(repos);
+export const leadAssignmentService = createLeadAssignmentService(repos);
+export const leadCandidateService = createLeadCandidateService();
+export const leadRefillService = createLeadRefillService({
+  repos,
+  policyService: leadPolicyService,
+  assignmentService: leadAssignmentService,
+  candidateService: leadCandidateService,
+  auditService,
+});
+export const leadReadService = createLeadReadService({
+  refillService: leadRefillService,
+});
 export const capacityRequestService = createCapacityRequestService(repos);
-export const capacityReadService = createCapacityReadService(repos);
+export const capacityReadService = createCapacityReadService({
+  repos,
+  searchAllowanceService,
+  leadRefillService,
+  searchPolicyService,
+  leadPolicyService,
+});
+export const capacityManageService = createCapacityManageService({
+  repos,
+  searchAllowanceService,
+  leadRefillService,
+  searchPolicyService,
+  leadPolicyService,
+});
+export const capacityApprovalService = createCapacityApprovalService({
+  repos,
+  runInRepositoryTransaction,
+});
 export const extensionService = createExtensionService(repos, {
   runInTransaction: runInRepositoryTransaction,
 });

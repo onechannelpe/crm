@@ -28,7 +28,7 @@ export default function TeamPage() {
   });
 
   return (
-    <AppPage width="full">
+    <AppPage width="wide">
       <div class="space-y-6">
         <div class="flex items-end justify-between gap-4">
           <div>
@@ -43,6 +43,9 @@ export default function TeamPage() {
             </A>
             <A href="/admin/capacity-policies" class="underline">
               Políticas
+            </A>
+            <A href="/admin/capacity-audit" class="underline">
+              Audit
             </A>
           </div>
         </div>
