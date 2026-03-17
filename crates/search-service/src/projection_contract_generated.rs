@@ -43,7 +43,6 @@ pub const SEARCH_PROJECTION_PATHS: &[&str] = &[
     "phones.secondary",
     "phones.siblings",
 ];
-#[allow(dead_code)]
 pub const SEARCH_PROJECTION_NULLABLE_PATHS: &[&str] = &[
     "person.name",
     "person.ruc",
