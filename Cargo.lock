@@ -212,18 +212,13 @@ version = "0.1.0"
 dependencies = [
  "axum",
  "axum-test",
- "dashmap",
  "dotenvy",
- "hex",
- "hmac",
- "r2d2",
- "r2d2_sqlite",
- "rusqlite",
+ "engine-infra",
+ "lead-service",
+ "search-service",
  "serde",
  "serde_json",
- "sha2",
  "tempfile",
- "thiserror",
  "tokio",
  "tracing",
  "tracing-subscriber",
@@ -355,6 +350,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "75030f3c4f45dafd7586dd6780965a8c7e8e285a5ecb86713e63a79c5b2766f3"
 dependencies = [
  "cfg-if",
+]
+
+[[package]]
+name = "engine-infra"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "dashmap",
+ "hex",
+ "hmac",
+ "r2d2",
+ "r2d2_sqlite",
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror",
 ]
 
 [[package]]
@@ -842,6 +854,14 @@ checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
 [[package]]
 name = "lead-service"
 version = "0.1.0"
+dependencies = [
+ "axum",
+ "engine-infra",
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "tokio",
+]
 
 [[package]]
 name = "libc"
@@ -1316,6 +1336,14 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 [[package]]
 name = "search-service"
 version = "0.1.0"
+dependencies = [
+ "axum",
+ "engine-infra",
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "tokio",
+]
 
 [[package]]
 name = "serde"

@@ -78,11 +78,19 @@ static SQL_FTS: LazyLock<String> = LazyLock::new(|| {
     )
 });
 
-pub fn search_dni(conn: &Connection, value: &str, limit: usize) -> Result<Vec<SearchRow>, ApiError> {
+pub fn search_dni(
+    conn: &Connection,
+    value: &str,
+    limit: usize,
+) -> Result<Vec<SearchRow>, ApiError> {
     query_rows(conn, &SQL_DNI, params![value, limit as i64])
 }
 
-pub fn search_ruc(conn: &Connection, value: &str, limit: usize) -> Result<Vec<SearchRow>, ApiError> {
+pub fn search_ruc(
+    conn: &Connection,
+    value: &str,
+    limit: usize,
+) -> Result<Vec<SearchRow>, ApiError> {
     let mut stmt = conn.prepare_cached(&SQL_RUC).map_err(db_err)?;
     let rows = stmt
         .query_map(params![value, limit as i64], map_row_with_siblings)
@@ -90,11 +98,19 @@ pub fn search_ruc(conn: &Connection, value: &str, limit: usize) -> Result<Vec<Se
     rows.collect::<Result<Vec<_>, _>>().map_err(db_err)
 }
 
-pub fn search_phone(conn: &Connection, value: &str, limit: usize) -> Result<Vec<SearchRow>, ApiError> {
+pub fn search_phone(
+    conn: &Connection,
+    value: &str,
+    limit: usize,
+) -> Result<Vec<SearchRow>, ApiError> {
     query_rows(conn, &SQL_PHONE, params![value, limit as i64])
 }
 
-pub fn search_phone_enriched(conn: &Connection, value: &str, limit: usize) -> Result<Vec<SearchRow>, ApiError> {
+pub fn search_phone_enriched(
+    conn: &Connection,
+    value: &str,
+    limit: usize,
+) -> Result<Vec<SearchRow>, ApiError> {
     let mut stmt = conn.prepare_cached(&SQL_PHONE_ENRICHED).map_err(db_err)?;
     let rows = stmt
         .query_map(params![value, limit as i64], map_row_with_siblings)
@@ -102,12 +118,28 @@ pub fn search_phone_enriched(conn: &Connection, value: &str, limit: usize) -> Re
     rows.collect::<Result<Vec<_>, _>>().map_err(db_err)
 }
 
-pub fn search_person_name(conn: &Connection, text: &str, limit: usize) -> Result<Vec<SearchRow>, ApiError> {
-    query_rows(conn, &SQL_FTS, params![fts_query("person_name", text), limit as i64])
+pub fn search_person_name(
+    conn: &Connection,
+    text: &str,
+    limit: usize,
+) -> Result<Vec<SearchRow>, ApiError> {
+    query_rows(
+        conn,
+        &SQL_FTS,
+        params![fts_query("person_name", text), limit as i64],
+    )
 }
 
-pub fn search_company_name(conn: &Connection, text: &str, limit: usize) -> Result<Vec<SearchRow>, ApiError> {
-    query_rows(conn, &SQL_FTS, params![fts_query("company_name", text), limit as i64])
+pub fn search_company_name(
+    conn: &Connection,
+    text: &str,
+    limit: usize,
+) -> Result<Vec<SearchRow>, ApiError> {
+    query_rows(
+        conn,
+        &SQL_FTS,
+        params![fts_query("company_name", text), limit as i64],
+    )
 }
 
 fn query_rows<P>(conn: &Connection, sql: &str, params: P) -> Result<Vec<SearchRow>, ApiError>

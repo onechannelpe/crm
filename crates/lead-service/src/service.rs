@@ -17,7 +17,10 @@ impl CandidateService {
         Self { pool, max_limit }
     }
 
-    pub fn candidates(&self, req: &LeadCandidateRequest) -> Result<LeadCandidatesResponse, ApiError> {
+    pub fn candidates(
+        &self,
+        req: &LeadCandidateRequest,
+    ) -> Result<LeadCandidatesResponse, ApiError> {
         if req.branch_id <= 0 {
             return Err(ApiError::Validation("branch_id must be positive".into()));
         }
@@ -42,7 +45,10 @@ impl CandidateService {
         let ranked = domain::rank_candidates(candidates, req.strategy);
         let deduped = domain::dedupe_candidates(ranked);
         let count = deduped.len();
-        Ok(LeadCandidatesResponse { candidates: deduped, count })
+        Ok(LeadCandidatesResponse {
+            candidates: deduped,
+            count,
+        })
     }
 }
 
@@ -58,11 +64,7 @@ impl ImportService {
 
     pub fn import_leads(&self, req: &LeadImportRequest) -> Result<LeadImportResponse, ApiError> {
         let total = req.rows.len();
-        let valid: Vec<_> = req
-            .rows
-            .iter()
-            .filter(|r| is_valid_import_row(r))
-            .collect();
+        let valid: Vec<_> = req.rows.iter().filter(|r| is_valid_import_row(r)).collect();
         let skipped = total - valid.len();
 
         let conn = self
@@ -78,15 +80,19 @@ impl ImportService {
         let owned: Vec<_> = valid.into_iter().cloned().collect();
         let (inserted, updated) = repos::upsert_batch(&conn, &owned, &req.source, now)?;
 
-        Ok(LeadImportResponse { inserted, updated, skipped, total })
+        Ok(LeadImportResponse {
+            inserted,
+            updated,
+            skipped,
+            total,
+        })
     }
 }
 
 fn is_valid_import_row(row: &crate::contracts::LeadImportRow) -> bool {
     let ruc_ok = row.ruc.len() == 11 && row.ruc.chars().all(|c| c.is_ascii_digit());
-    let dni_ok = row.dni.len() >= 8
-        && row.dni.len() <= 12
-        && row.dni.chars().all(|c| c.is_ascii_digit());
+    let dni_ok =
+        row.dni.len() >= 8 && row.dni.len() <= 12 && row.dni.chars().all(|c| c.is_ascii_digit());
     let phone_ok = !row.phone_primary.trim().is_empty();
     let name_ok = !row.person_name.trim().is_empty();
     ruc_ok && dni_ok && phone_ok && name_ok

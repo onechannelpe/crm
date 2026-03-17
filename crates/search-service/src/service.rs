@@ -43,6 +43,9 @@ impl SearchService {
         };
 
         let count = rows.len();
-        Ok(SearchResponse { results: rows, count })
+        Ok(SearchResponse {
+            results: rows,
+            count,
+        })
     }
 }

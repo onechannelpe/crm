@@ -63,7 +63,11 @@ fn validate_required_columns(conn: &Connection) -> Result<(), StartupError> {
     Ok(())
 }
 
-fn sqlite_object_exists(conn: &Connection, object_type: &str, name: &str) -> Result<bool, StartupError> {
+fn sqlite_object_exists(
+    conn: &Connection,
+    object_type: &str,
+    name: &str,
+) -> Result<bool, StartupError> {
     let exists: Option<String> = conn
         .query_row(
             "SELECT name FROM sqlite_master WHERE type=?1 AND name=?2",
