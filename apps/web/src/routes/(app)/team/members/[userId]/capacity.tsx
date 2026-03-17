@@ -31,9 +31,9 @@ export default function TeamMemberCapacityPage() {
   createEffect(() => {
     const snapshot = detail();
     if (!snapshot) return;
-    setSearchLimit(String(snapshot.searchPolicy.monthlySearchLimit));
-    setBufferTarget(String(snapshot.leadPolicy.activeBufferTarget));
-    setDailyRefillLimit(String(snapshot.leadPolicy.dailyRefillLimit));
+    setSearchLimit(String(snapshot.searchStatus.policy.monthlyLimit));
+    setBufferTarget(String(snapshot.leadStatus.policy.bufferTarget));
+    setDailyRefillLimit(String(snapshot.leadStatus.policy.dailyLimit));
   });
 
   return (
@@ -55,19 +55,19 @@ export default function TeamMemberCapacityPage() {
               <div class="grid gap-4 md:grid-cols-2">
                 <div class="rounded border p-4">
                   <p class="font-medium">Búsquedas</p>
-                  <p>{snapshot.searchPolicy.monthlySearchLimit} por mes</p>
+                  <p>{snapshot.searchStatus.policy.monthlyLimit} por mes</p>
                   <p class="text-sm text-muted-foreground">
-                    Fuente: {snapshot.searchPolicy.source}
+                    Fuente: {snapshot.searchStatus.policy.source}
                   </p>
                 </div>
                 <div class="rounded border p-4">
                   <p class="font-medium">Leads</p>
                   <p>
-                    Buffer {snapshot.leadPolicy.activeBufferTarget} · Refill
-                    diario {snapshot.leadPolicy.dailyRefillLimit}
+                    Buffer {snapshot.leadStatus.policy.bufferTarget} · Refill
+                    diario {snapshot.leadStatus.policy.dailyLimit}
                   </p>
                   <p class="text-sm text-muted-foreground">
-                    Fuente: {snapshot.leadPolicy.source}
+                    Fuente: {snapshot.leadStatus.policy.source}
                   </p>
                 </div>
               </div>
@@ -79,9 +79,9 @@ export default function TeamMemberCapacityPage() {
                 <div class="rounded border p-4">
                   <p class="font-medium">Búsquedas del mes</p>
                   <p>
-                    {snapshot.searchStatus.usedAmount}/
-                    {snapshot.searchStatus.monthlySearchLimit +
-                      snapshot.searchStatus.extraGranted}
+                    {snapshot.searchStatus.committed}/
+                    {snapshot.searchStatus.policy.monthlyLimit +
+                      snapshot.searchStatus.granted}
                   </p>
                   <p class="text-sm text-muted-foreground">
                     {snapshot.searchStatus.remaining} restantes
@@ -91,7 +91,7 @@ export default function TeamMemberCapacityPage() {
                   <p class="font-medium">Capacidad de leads</p>
                   <p>
                     {snapshot.leadStatus.activeAssignments}/
-                    {snapshot.leadStatus.activeBufferTarget} activos
+                    {snapshot.leadStatus.policy.bufferTarget} activos
                   </p>
                   <p class="text-sm text-muted-foreground">
                     {snapshot.leadStatus.remaining} refills disponibles hoy

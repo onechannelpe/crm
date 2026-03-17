@@ -89,9 +89,9 @@ export default function TeamPage() {
                     <TableCell>
                       <div class="space-y-1">
                         <div>
-                          {executive.searchStatus.usedAmount}/
-                          {executive.searchStatus.monthlySearchLimit +
-                            executive.searchStatus.extraGranted}
+                          {executive.searchStatus.committed}/
+                          {executive.searchStatus.policy.monthlyLimit +
+                            executive.searchStatus.granted}
                         </div>
                         <Badge variant="outline">
                           {executive.searchStatus.remaining} restantes
@@ -102,7 +102,7 @@ export default function TeamPage() {
                       <div class="space-y-1">
                         <div>
                           {executive.leadStatus.activeAssignments}/
-                          {executive.leadStatus.activeBufferTarget} activos
+                          {executive.leadStatus.policy.bufferTarget} activos
                         </div>
                         <Badge variant="outline">
                           {executive.leadStatus.remaining} refills restantes
