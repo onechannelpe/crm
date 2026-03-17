@@ -76,6 +76,10 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
     scopeType: ScopeType,
     scopeId: BranchId | TeamId,
   ): Promise<Result<void, CapacityManageError>> {
+    if (actor.role === "superuser") {
+      return Ok(undefined);
+    }
+
     if (scopeType === "branch" && scopeId !== actor.branchId) {
       return Err({
         reason: "conflict",

@@ -3,8 +3,8 @@ import type { EngineClient } from "~/server/shared/engine/client";
 import type { SearchResponse } from "~/server/shared/engine/types";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import type { DirectSearchInput } from "./contracts";
 import type { DirectSearchError } from "./errors";
+import type { DirectSearchInput } from "./types";
 
 export function createEngineSearchService(engine: EngineClient = engineClient) {
   return {

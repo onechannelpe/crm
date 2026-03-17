@@ -91,14 +91,16 @@ export function createSearchPolicyOverridesRepo(db: Kysely<Database>) {
       expires_at: number | null;
       set_by_user_id: number;
     }) {
-      await db
-        .deleteFrom("search_policy_overrides")
-        .where("user_id", "=", values.user_id)
-        .execute();
-      return db
-        .insertInto("search_policy_overrides")
-        .values({ ...values, created_at: Date.now() })
-        .executeTakeFirstOrThrow();
+      return db.transaction().execute(async (trx) => {
+        await trx
+          .deleteFrom("search_policy_overrides")
+          .where("user_id", "=", values.user_id)
+          .execute();
+        return trx
+          .insertInto("search_policy_overrides")
+          .values({ ...values, created_at: Date.now() })
+          .executeTakeFirstOrThrow();
+      });
     },
   };
 }
@@ -168,15 +170,17 @@ export function createSearchAllowanceLedgerRepo(db: Kysely<Database>) {
       return Number(result.numUpdatedRows) > 0;
     },
 
-    decrementUsage(id: number, amount: number) {
-      return db
+    async decrementUsageIfAvailable(id: number, amount: number) {
+      const result = await db
         .updateTable("search_allowance_ledger")
         .set((eb) => ({
           used_amount: eb("used_amount", "-", amount),
           updated_at: Date.now(),
         }))
         .where("id", "=", id)
-        .execute();
+        .where("used_amount", ">=", amount)
+        .executeTakeFirst();
+      return Number(result.numUpdatedRows) > 0;
     },
 
     incrementExtra(id: number, amount: number) {

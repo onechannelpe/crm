@@ -1,4 +1,4 @@
-import type { LeadCandidate } from "~/server/engine-gateway/contracts";
+import type { LeadCandidate } from "~/server/engine-gateway/types";
 import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 import type { PolicySource, ScopeType } from "~/server/shared/pipeline-types";
 

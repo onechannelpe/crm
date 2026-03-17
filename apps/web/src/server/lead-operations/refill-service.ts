@@ -265,7 +265,33 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
     reason: string;
   }): Promise<Result<void, LeadRefillError>> {
     try {
-      await repos.leadRefillLedger.decrementUsage(input.ledgerId, input.amount);
+      const decremented =
+        await repos.leadRefillLedger.decrementUsageIfAvailable(
+          input.ledgerId,
+          input.amount,
+        );
+      if (!decremented) {
+        const message = "Insufficient usage to compensate lead refill";
+        try {
+          await auditService.log(
+            input.actorUserId,
+            "lead_refill_compensation_failed",
+            "user",
+            input.actorUserId,
+            {
+              amount: input.amount,
+              reason: input.reason,
+              message,
+            },
+          );
+        } catch {
+          // Preserve typed failure response when observability write fails.
+        }
+        return Err({
+          reason: "compensation_failed",
+          message: `Failed to compensate lead refill usage: ${message}`,
+        });
+      }
       return Ok(undefined);
     } catch (error) {
       const message =

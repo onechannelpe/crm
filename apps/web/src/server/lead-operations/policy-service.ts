@@ -92,19 +92,6 @@ export function createLeadPolicyService(repos: Repositories) {
     async setScopeDefault(
       input: SetLeadScopeDefaultCommand,
     ): Promise<Result<void, LeadPolicyError>> {
-      if (input.activeBufferTarget > config.leadAssignment.maxBufferTarget) {
-        return Err({
-          reason: "validation",
-          message: "Buffer target exceeds configured maximum",
-        });
-      }
-      if (input.dailyRefillLimit > config.capacityRequests.maxRequestAmount) {
-        return Err({
-          reason: "validation",
-          message: "Daily refill limit exceeds configured maximum",
-        });
-      }
-
       try {
         await repos.leadPolicyDefaults.upsert({
           scope_type: input.scopeType,
@@ -127,19 +114,6 @@ export function createLeadPolicyService(repos: Repositories) {
     async setUserOverride(
       input: SetLeadUserOverrideCommand,
     ): Promise<Result<void, LeadPolicyError>> {
-      if (input.activeBufferTarget > config.leadAssignment.maxBufferTarget) {
-        return Err({
-          reason: "validation",
-          message: "Buffer target exceeds configured maximum",
-        });
-      }
-      if (input.dailyRefillLimit > config.capacityRequests.maxRequestAmount) {
-        return Err({
-          reason: "validation",
-          message: "Daily refill limit exceeds configured maximum",
-        });
-      }
-
       try {
         const user = await repos.users.findById(input.targetUserId);
         if (!user) {

@@ -140,7 +140,7 @@ function canViewCapacityAuditEvent(
 
   if (session.role === "admin") {
     return (
-      event.entity_type !== "branch" || event.entity_id === session.branchId
+      event.entity_type === "branch" && event.entity_id === session.branchId
     );
   }
 

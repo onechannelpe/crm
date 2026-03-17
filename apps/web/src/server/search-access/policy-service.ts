@@ -86,13 +86,6 @@ export function createSearchPolicyService(repos: Repositories) {
     async setScopeDefault(
       input: SetSearchScopeDefaultCommand,
     ): Promise<Result<void, SearchPolicyError>> {
-      if (input.monthlySearchLimit > config.searchAccess.maxMonthlyLimit) {
-        return Err({
-          reason: "validation",
-          message: "Monthly search limit exceeds configured maximum",
-        });
-      }
-
       try {
         await repos.searchPolicyDefaults.upsert({
           scope_type: input.scopeType,
@@ -115,13 +108,6 @@ export function createSearchPolicyService(repos: Repositories) {
     async setUserOverride(
       input: SetSearchUserOverrideCommand,
     ): Promise<Result<void, SearchPolicyError>> {
-      if (input.monthlySearchLimit > config.searchAccess.maxMonthlyLimit) {
-        return Err({
-          reason: "validation",
-          message: "Monthly search limit exceeds configured maximum",
-        });
-      }
-
       try {
         const user = await repos.users.findById(input.targetUserId);
         if (!user) {

@@ -273,7 +273,23 @@ export function createSearchAllowanceService(deps: SearchAllowanceServiceDeps) {
         });
       }
       try {
-        await repos.searchAllowanceLedger.decrementUsage(ledger.id, amount);
+        const decremented =
+          await repos.searchAllowanceLedger.decrementUsageIfAvailable(
+            ledger.id,
+            amount,
+          );
+        if (!decremented) {
+          await logRollbackFailureBestEffort({
+            userId,
+            amount,
+            periodStart,
+            message: "Rollback decrement skipped due to insufficient usage",
+          });
+          return Err({
+            reason: "unexpected",
+            message: "Failed to rollback search usage",
+          });
+        }
         return Ok(undefined);
       } catch (error) {
         await logRollbackFailureBestEffort({
