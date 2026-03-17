@@ -11,7 +11,6 @@ export type {
   BeginPasskeyLoginError,
   FinishPasskeyLoginError,
   PasskeyEnrollmentChallenge,
-  PasskeyEnrollmentError,
   PasskeyLoginFlowState,
   PasskeyLoginMode,
   PasskeyLoginResult,

@@ -1,6 +1,6 @@
 "use server";
 
-import { internalError } from "~/lib/app-errors";
+import { throwDomainError } from "~/actions/throw-domain-error";
 import { getAssignableRoleOptions } from "~/lib/auth/access/role-display";
 import { requirePermission } from "~/lib/auth/access/session";
 import { repos } from "~/server/shared/context";
@@ -16,16 +16,7 @@ export async function getInviteManagement(): Promise<InviteManagement> {
     provisioning.listPendingInvites(session.branchId),
   ]);
   if (isErr(pendingInvitesResult)) {
-    switch (pendingInvitesResult.error.reason) {
-      case "unexpected":
-        throw internalError(pendingInvitesResult.error.message);
-      default: {
-        const exhausted: never = pendingInvitesResult.error.reason;
-        throw internalError(
-          `Unhandled pending invites read error: ${String(exhausted)}`,
-        );
-      }
-    }
+    throwDomainError(pendingInvitesResult.error);
   }
   return {
     pendingInvites: pendingInvitesResult.value,

@@ -10,10 +10,7 @@ import {
 } from "~/lib/app-errors";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { requireSession } from "~/lib/auth/access/session";
-import {
-  createPasskeyEnrollmentAuthService,
-  type PasskeyEnrollmentError,
-} from "~/lib/auth/passkey/service";
+import { createPasskeyEnrollmentAuthService } from "~/lib/auth/passkey/service";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { requiresStrongAuthRole } from "~/lib/auth/security/strong-auth-status";
 import {
@@ -21,6 +18,7 @@ import {
   replaceCurrentSession,
 } from "~/lib/auth/session/session-transition";
 import { repos, runInRepositoryTransaction } from "~/server/shared/context";
+import type { DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, type Result } from "~/server/shared/result";
 import {
   completeAccountOnboardingWithRepos,
@@ -87,15 +85,24 @@ function mapCompleteOnboardingError(error: CompleteOnboardingError): never {
 }
 
 function mapOnboardingFailure(
-  error: PasskeyEnrollmentError | CompleteOnboardingError,
+  error: DomainError | CompleteOnboardingError,
   options: {
     strongAuthRequiredMessage?: string;
     userNotFoundMessage?: string;
   } = {},
 ): never {
+  if ("code" in error) {
+    switch (error.code) {
+      case "invalid_request":
+        throw internalError("No se pudo configurar la clave de acceso");
+      case "unexpected":
+        throw internalError(error.message);
+      default:
+        throw internalError(error.message);
+    }
+  }
+
   switch (error.reason) {
-    case "invalid_request":
-      throw internalError("No se pudo configurar la clave de acceso");
     case "user_not_found":
       throw internalError(
         options.userNotFoundMessage ?? "No se pudo completar el registro",
@@ -115,7 +122,7 @@ function mapOnboardingFailure(
 
 type CompletePasskeyOnboardingResult = Result<
   void,
-  PasskeyEnrollmentError | CompleteOnboardingError
+  DomainError | CompleteOnboardingError
 >;
 
 export async function completeOnboarding(

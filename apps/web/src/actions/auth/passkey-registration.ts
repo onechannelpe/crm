@@ -3,12 +3,10 @@
 import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 import { getRequestEvent } from "solid-js/web";
 
+import { throwDomainError } from "~/actions/throw-domain-error";
 import { internalError } from "~/lib/app-errors";
 import { requireSession } from "~/lib/auth/access/session";
-import type {
-  PasskeyEnrollmentError,
-  PasskeyEnrollmentChallenge,
-} from "~/lib/auth/passkey/service";
+import type { PasskeyEnrollmentChallenge } from "~/lib/auth/passkey/service";
 import { createPasskeyEnrollmentAuthService } from "~/lib/auth/passkey/service";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import {
@@ -17,19 +15,6 @@ import {
 } from "~/lib/auth/session/session-transition";
 import { repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
-
-function throwPasskeyEnrollmentError(error: PasskeyEnrollmentError): never {
-  switch (error.reason) {
-    case "invalid_request":
-      throw internalError("No se pudo configurar la clave de acceso");
-    case "unexpected":
-      throw internalError(error.message);
-  }
-
-  const exhaustive: never = error;
-  void exhaustive;
-  throw internalError("Unexpected passkey registration failure");
-}
 
 export async function beginPasskeyRegistration(): Promise<PasskeyEnrollmentChallenge> {
   const session = await requireSession();
@@ -41,7 +26,7 @@ export async function beginPasskeyRegistration(): Promise<PasskeyEnrollmentChall
     ipAddress,
   });
   if (isErr(result)) {
-    throwPasskeyEnrollmentError(result.error);
+    throwDomainError(result.error);
   }
   return result.value;
 }
@@ -61,7 +46,7 @@ export async function finishPasskeyRegistration(
     ipAddress,
   });
   if (isErr(result)) {
-    throwPasskeyEnrollmentError(result.error);
+    throwDomainError(result.error);
   }
 
   const user = await repos.users.findById(session.userId);

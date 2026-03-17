@@ -73,8 +73,8 @@ export async function applyImport(
 
       if (!result.ok) {
         if (
-          result.error.reason === "active_user_exists" ||
-          result.error.reason === "pending_user_other_branch"
+          result.error.code === "active_user_exists" ||
+          result.error.code === "pending_user_other_branch"
         ) {
           skipped++;
         } else {

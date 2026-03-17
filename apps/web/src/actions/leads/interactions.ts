@@ -1,38 +1,17 @@
 "use server";
 
 import { throwDomainError } from "~/actions/throw-domain-error";
-import { forbiddenError, internalError, notFoundError } from "~/lib/app-errors";
 import { requirePermission } from "~/lib/auth/access/session";
 import type { ActionSuccess } from "~/lib/contracts/common";
 import { assertPositiveInt } from "~/lib/contracts/guards";
 import { computeClientCompletenessScore } from "~/server/sales/completeness";
-import {
-  createSalesRecordsWorkflowService,
-  type SalesRecordsWorkflowError,
-} from "~/server/sales/records-service";
+import { createSalesRecordsWorkflowService } from "~/server/sales/records-service";
 import { runInRepositoryTransaction } from "~/server/shared/context";
 import { domainError } from "~/server/shared/domain-error";
 import { isErr } from "~/server/shared/result";
 
 interface RegisterCallResult extends ActionSuccess {
   draftRecordId: number | null;
-}
-
-function throwSalesDraftError(error: SalesRecordsWorkflowError): never {
-  switch (error.reason) {
-    case "forbidden":
-      throw forbiddenError(error.message);
-    case "not_found":
-      throw notFoundError(error.message);
-    case "invalid_data":
-    case "invalid_state":
-    case "unexpected":
-      throw internalError(error.message);
-    default: {
-      const exhausted: never = error;
-      throw internalError(`Unhandled sales draft error: ${String(exhausted)}`);
-    }
-  }
 }
 
 export async function registerCall(
@@ -106,7 +85,7 @@ export async function registerCall(
           products: [],
         });
         if (isErr(draftResult)) {
-          throwSalesDraftError(draftResult.error);
+          throwDomainError(draftResult.error);
         }
         nextDraftRecordId = draftResult.value;
       }
