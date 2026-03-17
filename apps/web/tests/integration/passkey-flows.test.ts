@@ -174,7 +174,7 @@ describe("passkey flows", () => {
     if (!isErr(result)) {
       throw new Error("expected throttled passkey enrollment");
     }
-    expect(result.error.reason).toBe("invalid_request");
+    expect(result.error.code).toBe("invalid_request");
   });
 
   it("returns unexpected when passkey enrollment options fail", async () => {
@@ -205,7 +205,7 @@ describe("passkey flows", () => {
     if (!isErr(result)) {
       throw new Error("expected failed passkey enrollment start");
     }
-    expect(result.error.reason).toBe("unexpected");
+    expect(result.error.code).toBe("unexpected");
   });
 
   it("finish passkey registration rejects challenge ownership mismatch", async () => {
@@ -238,7 +238,7 @@ describe("passkey flows", () => {
     if (!isErr(result)) {
       throw new Error("expected invalid passkey registration result");
     }
-    expect(result.error.reason).toBe("invalid_request");
+    expect(result.error.code).toBe("invalid_request");
 
     const key = hashAuthKey("account:passkey_verify:user:2");
     const counter = await ctx.repos.authThrottle.findByScopeAndKey(
@@ -294,7 +294,7 @@ describe("passkey flows", () => {
     if (!isErr(result)) {
       throw new Error("expected invalid passkey verification result");
     }
-    expect(result.error.reason).toBe("invalid_request");
+    expect(result.error.code).toBe("invalid_request");
   });
 
   it("returns unexpected when passkey enrollment persistence fails after verification", async () => {
@@ -343,7 +343,7 @@ describe("passkey flows", () => {
     if (!isErr(result)) {
       throw new Error("expected unexpected passkey verification failure");
     }
-    expect(result.error.reason).toBe("unexpected");
+    expect(result.error.code).toBe("unexpected");
   });
 
   it("finish passkey login issues a session through the workflow service", async () => {
