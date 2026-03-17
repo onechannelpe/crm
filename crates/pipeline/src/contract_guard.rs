@@ -6,7 +6,8 @@ use std::collections::{HashMap, HashSet};
 
 const CANONICAL_CONTRACT_JSON: &str =
     include_str!("../../../contracts/pipeline/canonical-contract.json");
-const SOURCE_CONTRACT_JSON: &str = include_str!("../../../contracts/pipeline/source-contract.json");
+const SOURCE_CONTRACT_JSON: &str =
+    include_str!("../../../contracts/pipeline/source-contract.json");
 const SEARCH_PROJECTION_JSON: &str =
     include_str!("../../../contracts/engine/search-projection.json");
 
