@@ -5,7 +5,6 @@ import { config } from "~/lib/config";
 import { db } from "~/lib/db/db";
 import { env } from "~/lib/env";
 import { createCapacityApprovalService } from "~/server/capacity/approval-service";
-import { createCapacityAuditService } from "~/server/capacity/audit-service";
 import { createCapacityManageService } from "~/server/capacity/manage-service";
 import { createCapacityReadService } from "~/server/capacity/read-service";
 import { createCapacityRequestService } from "~/server/capacity/request-service";
@@ -62,23 +61,21 @@ export const searchAllowanceService = createSearchAllowanceService({
 export const leadPolicyService = createLeadPolicyService(repos);
 export const leadAssignmentService = createLeadAssignmentService(repos);
 export const leadCandidateService = createLeadCandidateService();
-export const leadRefillService = createLeadRefillService({
-  repos,
-  policyService: leadPolicyService,
-  assignmentService: leadAssignmentService,
-  candidateService: leadCandidateService,
-  auditService,
-});
 export const leadRefillGrantService = createLeadRefillGrantService({
   repos,
   policyService: leadPolicyService,
   auditService,
 });
+export const leadRefillService = createLeadRefillService({
+  repos,
+  assignmentService: leadAssignmentService,
+  candidateService: leadCandidateService,
+  auditService,
+  grantService: leadRefillGrantService,
+});
 export const capacityRequestService = createCapacityRequestService(repos);
-export const capacityAuditService = createCapacityAuditService(repos);
 export const capacityReadService = createCapacityReadService({
   repos,
-  capacityAuditService,
 });
 export const capacityManageService = createCapacityManageService({
   repos,

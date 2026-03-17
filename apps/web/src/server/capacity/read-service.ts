@@ -1,7 +1,6 @@
 import type { SessionData } from "~/lib/auth/access/session";
 import { longName } from "~/lib/users/display-name";
 import { AUDIT_READER_DEFAULT_LIMIT } from "~/server/audit-reader/contracts";
-import type { createCapacityAuditService } from "~/server/capacity/audit-service";
 import type { CapacityReadError } from "~/server/capacity/errors";
 import {
   availableLeadRefill,
@@ -18,13 +17,12 @@ import { resolveEffectiveSearchPolicy } from "~/server/search-access/policy-serv
 import type { UserId } from "~/server/shared/ids";
 import type { PolicySource } from "~/server/shared/pipeline-types";
 import type { Repositories } from "~/server/shared/registry";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { canManageExecutive, canManageExecutiveRecord } from "./scope";
 
 interface CapacityReadServiceDeps {
   repos: Repositories;
-  capacityAuditService: ReturnType<typeof createCapacityAuditService>;
 }
 
 export type { CapacityReadError } from "~/server/capacity/errors";
@@ -134,14 +132,16 @@ function parseAuditChanges(rawChanges: unknown): AuditChangeValue {
 
 function canViewCapacityAuditEvent(
   session: SessionData,
-  event: { entityType: string; entityId: number | null },
+  event: { entity_type: string; entity_id: number | null },
 ) {
   if (session.role === "superuser") {
     return true;
   }
 
   if (session.role === "admin") {
-    return event.entityType !== "branch" || event.entityId === session.branchId;
+    return (
+      event.entity_type !== "branch" || event.entity_id === session.branchId
+    );
   }
 
   return false;
@@ -572,26 +572,30 @@ export function createCapacityReadService(deps: CapacityReadServiceDeps) {
   ): Promise<Result<CapacityAuditEvent[], CapacityReadError>> {
     try {
       const effectiveLimit = Math.max(1, limit ?? AUDIT_READER_DEFAULT_LIMIT);
-      const recentResult =
-        await deps.capacityAuditService.listRecentCapacityEvents(
-          effectiveLimit,
-        );
-      if (isErr(recentResult)) {
-        return Err({
-          reason: "unexpected",
-          message: recentResult.error.message,
-        });
-      }
+      const now = Date.now();
+      const recent = await repos.auditLogs.listRecent({
+        fromInclusive: now - 1000 * 60 * 60 * 24 * 30,
+        toInclusive: now,
+        limit: effectiveLimit,
+      });
 
-      const filtered = recentResult.value
+      const filtered = recent
+        .filter((event) => {
+          const action = event.action;
+          return (
+            action.startsWith("search_") ||
+            action.startsWith("lead_") ||
+            action.startsWith("capacity_")
+          );
+        })
         .filter((event) => canViewCapacityAuditEvent(session, event))
         .map((event) => ({
           id: event.id,
-          createdAt: event.createdAt,
-          userId: event.userId,
+          createdAt: event.created_at,
+          userId: event.user_id,
           action: event.action,
-          entityType: event.entityType,
-          entityId: event.entityId,
+          entityType: event.entity_type,
+          entityId: event.entity_id,
           changes: parseAuditChanges(event.changes),
         }));
 

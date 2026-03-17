@@ -1,5 +1,6 @@
 "use server";
 
+import { validationError } from "~/lib/app-errors";
 import { requirePermission } from "~/lib/auth/access/session";
 import { config } from "~/lib/config";
 import {
@@ -24,10 +25,7 @@ import {
 function validateGrantAmount(amount: number): number {
   const safeAmount = assertPositiveInt(amount, "amount");
   if (safeAmount > config.capacityRequests.maxRequestAmount) {
-    throwCapacityActionError({
-      reason: "validation",
-      message: "amount exceeds configured maximum",
-    });
+    throw validationError("amount exceeds configured maximum");
   }
   return safeAmount;
 }

@@ -33,10 +33,10 @@ export type {
 
 interface LeadRefillServiceDeps {
   repos: Repositories;
-  policyService: ReturnType<typeof createLeadPolicyService>;
   assignmentService: ReturnType<typeof createLeadAssignmentService>;
   candidateService: ReturnType<typeof createLeadCandidateService>;
   auditService: ReturnType<typeof createAuditService>;
+  grantService: ReturnType<typeof createLeadRefillGrantService>;
 }
 
 interface LeadRefillGrantServiceDeps {
@@ -227,10 +227,10 @@ export function createLeadRefillGrantService(deps: LeadRefillGrantServiceDeps) {
 export function createLeadRefillService(deps: LeadRefillServiceDeps) {
   const {
     repos,
-    policyService,
     assignmentService,
     candidateService,
     auditService,
+    grantService,
   } = deps;
 
   type LeadRefillLedger = NonNullable<
@@ -292,11 +292,6 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
     }
   }
 
-  const grantService = createLeadRefillGrantService({
-    repos,
-    policyService,
-    auditService,
-  });
   const { ensureLedger, getCurrentLeadCapacity, grantExtraLeadRefill } =
     grantService;
 
