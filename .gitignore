@@ -13,3 +13,4 @@ target/
 *.log
 *.ps1
 *.sh
+*.md
