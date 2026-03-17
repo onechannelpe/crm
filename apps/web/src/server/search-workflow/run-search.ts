@@ -9,9 +9,9 @@ import type {
   SearchUsageReservationsRepo,
 } from "~/server/capacity-usage/repos";
 import type { SearchPolicyDefaultsRepo, SearchPolicyOverridesRepo } from "~/server/capacity-policy/repos";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { type DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { isErr, Ok, type Result } from "~/server/shared/result";
 import type { SearchType } from "~/server/shared/pipeline-types";
 
 import { mapToSearchResult, type SearchResult_ } from "./domain";

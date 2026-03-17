@@ -1,9 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { runDirectSearch } from "~/server/search-workflow/run-search";
-import { domainError } from "~/server/shared/domain-error";
 import { asBranchId, asUserId } from "~/server/shared/ids";
-import { Err, Ok } from "~/server/shared/result";
 import {
   makeNullSearchPolicyRepos,
   makeSearchCapacityGrantsRepo,

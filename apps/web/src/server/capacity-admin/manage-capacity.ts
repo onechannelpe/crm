@@ -25,9 +25,8 @@ import type {
 } from "~/server/capacity-policy/repos";
 import { canManageExecutive, canManageScopeDefault } from "~/server/capacity-policy/scope-access";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
-import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
+import type { TeamId, UserId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
-import type { ScopeType } from "~/server/shared/scope";
 
 interface ManageRepos {
   users: { findById(id: UserId): Promise<{ role: string; branch_id: number; team_id: number | null } | undefined> };

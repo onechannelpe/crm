@@ -12,9 +12,9 @@ import { getEffectiveLeadPolicy } from "~/server/capacity-policy/lead-policy";
 import type { LeadPolicyDefaultsRepo, LeadPolicyOverridesRepo } from "~/server/capacity-policy/repos";
 import { createAssignment } from "~/server/leads/domain-assignment";
 import { canContactNow } from "~/server/leads/domain-cooldown";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { type DomainError } from "~/server/shared/domain-error";
 import type { BranchId, UserId } from "~/server/shared/ids";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { isErr, Ok, type Result } from "~/server/shared/result";
 import type { RepositoryTransactionRunner } from "~/server/shared/transaction";
 
 import { computeNeededAssignments } from "./domain";

@@ -12,7 +12,7 @@ import {
 import { hashSessionToken } from "~/lib/auth/session/tokens";
 import type { User } from "~/lib/db/types";
 import { asBranchId, asUserId } from "~/server/shared/ids";
-import type { BranchId, UserId } from "~/server/shared/ids";
+import type { UserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
 
 import type { LoginDecision } from "../policy/policy-types";

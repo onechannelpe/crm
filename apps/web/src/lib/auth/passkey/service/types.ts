@@ -5,7 +5,6 @@ import type {
 
 import type { InvalidCredentialsError } from "~/lib/auth/errors";
 import type { IssuedSessionResult } from "~/lib/auth/session/session-transition";
-import type { DomainError } from "~/server/shared/domain-error";
 
 export interface PasskeyEnrollmentChallenge {
   challengeId: number;
