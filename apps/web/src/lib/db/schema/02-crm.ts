@@ -84,27 +84,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createTable("search_allowance_ledger")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
-      col.notNull().references("users.id"),
-    )
-    .addColumn("period_start", "varchar(10)", (col) => col.notNull())
-    .addColumn("period_end", "varchar(10)", (col) => col.notNull())
-    .addColumn("base_limit", "integer", (col) => col.notNull())
-    .addColumn("extra_granted", "integer", (col) => col.notNull().defaultTo(0))
-    .addColumn("used_amount", "integer", (col) => col.notNull().defaultTo(0))
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("updated_at", "integer", (col) => col.notNull())
-    .execute();
-
-  await db.schema
-    .createIndex("idx_search_allowance_user_period")
-    .on("search_allowance_ledger")
-    .columns(["user_id", "period_start"])
-    .execute();
-
-  await db.schema
     .createTable("lead_policy_defaults")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("scope_type", "varchar(20)", (col) => col.notNull())
@@ -141,26 +120,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .createIndex("idx_lead_policy_override_user")
     .on("lead_policy_overrides")
     .column("user_id")
-    .execute();
-
-  await db.schema
-    .createTable("lead_refill_ledger")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
-      col.notNull().references("users.id"),
-    )
-    .addColumn("date", "varchar(10)", (col) => col.notNull())
-    .addColumn("base_limit", "integer", (col) => col.notNull())
-    .addColumn("extra_granted", "integer", (col) => col.notNull().defaultTo(0))
-    .addColumn("used_amount", "integer", (col) => col.notNull().defaultTo(0))
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("updated_at", "integer", (col) => col.notNull())
-    .execute();
-
-  await db.schema
-    .createIndex("idx_lead_refill_user_date")
-    .on("lead_refill_ledger")
-    .columns(["user_id", "date"])
     .execute();
 
   await db.schema

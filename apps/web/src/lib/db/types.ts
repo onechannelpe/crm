@@ -191,18 +191,6 @@ export interface SearchPolicyOverridesTable {
   created_at: number;
 }
 
-export interface SearchAllowanceLedgerTable {
-  id: Generated<number>;
-  user_id: number;
-  period_start: string;
-  period_end: string;
-  base_limit: number;
-  extra_granted: number;
-  used_amount: number;
-  created_at: number;
-  updated_at: number;
-}
-
 export interface OrganizationsTable {
   id: Generated<number>;
   ruc: string;
@@ -330,17 +318,6 @@ export interface LeadPolicyOverridesTable {
   expires_at: number | null;
   set_by_user_id: number;
   created_at: number;
-}
-
-export interface LeadRefillLedgerTable {
-  id: Generated<number>;
-  user_id: number;
-  date: string;
-  base_limit: number;
-  extra_granted: number;
-  used_amount: number;
-  created_at: number;
-  updated_at: number;
 }
 
 export interface SearchCapacityGrantsTable {
@@ -770,7 +747,6 @@ export interface Database {
   client_search_views: ClientSearchViewsTable;
   search_policy_defaults: SearchPolicyDefaultsTable;
   search_policy_overrides: SearchPolicyOverridesTable;
-  search_allowance_ledger: SearchAllowanceLedgerTable;
   user_sessions: UserSessionsTable;
   action_rate_limit_counters: ActionRateLimitCountersTable;
   auth_throttle_counters: AuthThrottleCountersTable;
@@ -788,7 +764,6 @@ export interface Database {
   sales_record_attempts: SalesRecordAttemptsTable;
   lead_policy_defaults: LeadPolicyDefaultsTable;
   lead_policy_overrides: LeadPolicyOverridesTable;
-  lead_refill_ledger: LeadRefillLedgerTable;
   search_capacity_grants: SearchCapacityGrantsTable;
   search_usage_reservations: SearchUsageReservationsTable;
   search_usage_commits: SearchUsageCommitsTable;
@@ -831,7 +806,6 @@ export type AppNotification = Selectable<AppNotificationsTable>;
 export type ClientSearchView = Selectable<ClientSearchViewsTable>;
 export type SearchPolicyDefault = Selectable<SearchPolicyDefaultsTable>;
 export type SearchPolicyOverride = Selectable<SearchPolicyOverridesTable>;
-export type SearchAllowanceLedger = Selectable<SearchAllowanceLedgerTable>;
 export type Organization = Selectable<OrganizationsTable>;
 export type Contact = Selectable<ContactsTable>;
 export type LeadAssignment = Selectable<LeadAssignmentsTable>;
@@ -842,7 +816,6 @@ export type SalesRecordProduct = Selectable<SalesRecordProductsTable>;
 export type SalesRecordAttempt = Selectable<SalesRecordAttemptsTable>;
 export type LeadPolicyDefault = Selectable<LeadPolicyDefaultsTable>;
 export type LeadPolicyOverride = Selectable<LeadPolicyOverridesTable>;
-export type LeadRefillLedger = Selectable<LeadRefillLedgerTable>;
 export type SearchCapacityGrant = Selectable<SearchCapacityGrantsTable>;
 export type SearchUsageReservation = Selectable<SearchUsageReservationsTable>;
 export type SearchUsageCommit = Selectable<SearchUsageCommitsTable>;
@@ -884,7 +857,6 @@ export type NewAppNotification = Insertable<AppNotificationsTable>;
 export type NewClientSearchView = Insertable<ClientSearchViewsTable>;
 export type NewSearchPolicyDefault = Insertable<SearchPolicyDefaultsTable>;
 export type NewSearchPolicyOverride = Insertable<SearchPolicyOverridesTable>;
-export type NewSearchAllowanceLedger = Insertable<SearchAllowanceLedgerTable>;
 export type NewUserSession = Insertable<UserSessionsTable>;
 export type NewAuthThrottleCounter = Insertable<AuthThrottleCountersTable>;
 export type NewAuthEvent = Insertable<AuthEventsTable>;
@@ -901,7 +873,6 @@ export type NewSalesRecordProduct = Insertable<SalesRecordProductsTable>;
 export type NewSalesRecordAttempt = Insertable<SalesRecordAttemptsTable>;
 export type NewLeadPolicyDefault = Insertable<LeadPolicyDefaultsTable>;
 export type NewLeadPolicyOverride = Insertable<LeadPolicyOverridesTable>;
-export type NewLeadRefillLedger = Insertable<LeadRefillLedgerTable>;
 export type NewCapacityRequest = Insertable<CapacityRequestsTable>;
 export type NewInteractionLog = Insertable<InteractionLogsTable>;
 export type NewAuditLog = Insertable<AuditLogsTable>;
