@@ -37,9 +37,7 @@ export interface RejectCapacityRequestCommand {
 
 export interface ApproveRepos {
   capacityRequests: {
-    findById(
-      id: number,
-    ): Promise<
+    findById(id: number): Promise<
       | {
           id: number;
           user_id: number;

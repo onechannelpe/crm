@@ -91,9 +91,7 @@ export type CapacityAuditEvent = {
 
 interface ReadRepos {
   users: {
-    findById(
-      id: UserId,
-    ): Promise<
+    findById(id: UserId): Promise<
       | {
           id: number;
           role: string;
@@ -106,9 +104,7 @@ interface ReadRepos {
         }
       | undefined
     >;
-    findByBranch(
-      branchId: number,
-    ): Promise<
+    findByBranch(branchId: number): Promise<
       Array<{
         id: number;
         role: string;
