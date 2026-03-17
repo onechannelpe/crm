@@ -1,5 +1,4 @@
 // GENERATED FILE. DO NOT EDIT.
-// This file will be replaced by `bun run generate:lead-contract` in task 7.
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Clone)]

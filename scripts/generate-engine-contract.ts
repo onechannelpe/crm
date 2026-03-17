@@ -5,7 +5,7 @@ type Spec = {
   endpoints: EndpointMap;
 };
 
-const SPEC_PATH = "contracts/engine-api.json";
+const SPEC_PATH = "contracts/engine/api.json";
 const TS_OUT = "apps/web/src/server/shared/engine/contract.ts";
 const VERSION_PATTERN = /^v\d+$/;
 const ENDPOINT_KEY_PATTERN = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/;

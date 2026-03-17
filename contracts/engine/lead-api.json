@@ -1,0 +1,27 @@
+{
+  "response": {
+    "candidate": {
+      "fields": [
+        { "name": "ruc",               "type": "string" },
+        { "name": "organization_name", "type": "string" },
+        { "name": "dni",               "type": "string" },
+        { "name": "person_name",       "type": "string" },
+        { "name": "phone_primary",     "type": "string" }
+      ]
+    }
+  },
+  "request": {
+    "import_row": {
+      "fields": [
+        { "name": "ruc",               "type": "string" },
+        { "name": "organization_name", "type": "string" },
+        { "name": "dni",               "type": "string" },
+        { "name": "person_name",       "type": "string" },
+        { "name": "phone_primary",     "type": "string" },
+        { "name": "quality_tier",      "type": "i32",    "optional": true },
+        { "name": "product_tag",       "type": "string", "optional": true },
+        { "name": "branch_tag",        "type": "i64",    "optional": true }
+      ]
+    }
+  }
+}
