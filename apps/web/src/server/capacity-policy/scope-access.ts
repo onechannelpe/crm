@@ -16,9 +16,9 @@ type TeamRow = {
   supervisor_id: number | null;
 };
 
-interface ScopeRepos {
+interface ScopeRepos<T extends UserRow = UserRow> {
   users: {
-    findById(id: UserId): Promise<UserRow | undefined>;
+    findById(id: UserId): Promise<T | undefined>;
   };
   teams: {
     findBySupervisorId(supervisorId: UserId): Promise<{ id: number } | undefined>;
@@ -39,11 +39,11 @@ function canManageExecutiveRecord(
   return target.team_id === supervisedTeamId;
 }
 
-export async function canManageExecutive(
+export async function canManageExecutive<T extends UserRow>(
   actor: SessionData,
   targetUserId: UserId,
-  repos: ScopeRepos,
-): Promise<{ ok: boolean; target: UserRow | null }> {
+  repos: ScopeRepos<T>,
+): Promise<{ ok: boolean; target: T | null }> {
   const target = await repos.users.findById(targetUserId);
   if (!target) return { ok: false, target: null };
 
@@ -75,7 +75,7 @@ export async function canManageScopeDefault(
   }
 
   if (scopeType === "team") {
-    const team = await repos.teams.findByIdWithSupervisor(scopeId as TeamId);
+    const team = await repos.teams.findByIdWithSupervisor((scopeId as number) as TeamId);
     if (!team || team.branch_id !== actor.branchId) {
       return Err(domainError("not_found", "team_not_found", "Team not found"));
     }

@@ -27,7 +27,7 @@ function formatChanges(value: CapacityAuditChange): string {
   try {
     return JSON.stringify(value);
   } catch {
-    return String(value);
+    return JSON.stringify(value);
   }
 }
 

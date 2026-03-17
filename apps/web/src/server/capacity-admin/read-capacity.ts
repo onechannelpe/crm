@@ -157,7 +157,7 @@ export async function getExecutiveCapacityDetail(
     if (!managed.target) return Err(domainError("not_found", "executive_not_found", "Executive not found"));
     if (!managed.ok) return Err(domainError("forbidden", "forbidden", "Forbidden"));
 
-    const target = managed.target as typeof managed.target & { names: string; first_surname: string; second_surname: string; email: string };
+    const target = managed.target;
 
     const [searchStatus, leadStatus, requests] = await Promise.all([
       getSearchCapacitySnapshot(targetUserId, repos),
@@ -230,12 +230,29 @@ export async function getCapacityPolicyDefaults(
   }
 }
 
+function isAuditChangeValue(v: unknown): v is AuditChangeValue {
+  if (v === null || typeof v === "string" || typeof v === "number" || typeof v === "boolean") return true;
+  if (Array.isArray(v)) return v.every(isAuditChangeValue);
+  if (typeof v === "object") return Object.values(v as Record<string, unknown>).every(isAuditChangeValue);
+  return false;
+}
+
 function parseAuditChanges(raw: unknown): AuditChangeValue {
   if (raw == null || typeof raw === "string" || typeof raw === "number" || typeof raw === "boolean") return raw ?? null;
   if (typeof raw !== "string") {
-    try { return JSON.parse(JSON.stringify(raw)) as AuditChangeValue; } catch { return String(raw); }
+    try {
+      const parsed: unknown = JSON.parse(JSON.stringify(raw));
+      return isAuditChangeValue(parsed) ? parsed : JSON.stringify(raw);
+    } catch {
+      return JSON.stringify(raw);
+    }
   }
-  try { return JSON.parse(raw) as AuditChangeValue; } catch { return raw; }
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return isAuditChangeValue(parsed) ? parsed : raw;
+  } catch {
+    return raw;
+  }
 }
 
 export async function getCapacityAuditEvents(
