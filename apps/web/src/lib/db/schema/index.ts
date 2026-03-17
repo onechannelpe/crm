@@ -17,6 +17,7 @@ import * as s04 from "./04-products-sales";
 import * as s05 from "./05-observability";
 import * as s06 from "./06-extensions";
 import * as s07 from "./07-platform";
+import * as s08 from "./08-capacity";
 
 export const SCHEMA_MODULES: SchemaModule[] = [
   s00,
@@ -27,6 +28,7 @@ export const SCHEMA_MODULES: SchemaModule[] = [
   s05,
   s06,
   s07,
+  s08,
 ];
 
 export const SEED_MODULES: SeedModule[] = [seed00];
