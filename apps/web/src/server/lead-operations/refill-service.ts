@@ -1,14 +1,9 @@
-import type { LeadCandidateError } from "~/server/engine-gateway/errors";
 import type {
   LeadCapacitySnapshot,
   LeadRefillResult,
 } from "~/server/lead-operations/contracts";
-import type {
-  LeadCapacitySnapshotError,
-  LeadRefillError,
-  LeadRefillGrantError,
-} from "~/server/lead-operations/errors";
 import type { createAuditService } from "~/server/shared/audit";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { BranchId, UserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, isErr, type Result } from "~/server/shared/result";
@@ -26,11 +21,6 @@ import {
 } from "./policy-service";
 
 export type { LeadCapacitySnapshot } from "~/server/lead-operations/contracts";
-export type {
-  LeadCapacitySnapshotError,
-  LeadRefillError,
-  LeadRefillGrantError,
-} from "~/server/lead-operations/errors";
 
 interface LeadRefillServiceDeps {
   repos: Repositories;
@@ -59,18 +49,12 @@ export function createLeadRefillGrantService(deps: LeadRefillGrantServiceDeps) {
         ledger: LeadRefillLedger;
         policy: EffectiveLeadPolicy;
       },
-      LeadRefillError
+      DomainError
     >
   > {
     const policyResult = await policyService.getEffectiveLeadPolicy(userId);
     if (isErr(policyResult)) {
-      if (policyResult.error.reason === "user_not_found") {
-        return Err({
-          reason: "user_not_found",
-          message: policyResult.error.message,
-        });
-      }
-      return Err({ reason: "unexpected", message: policyResult.error.message });
+      return Err(policyResult.error);
     }
 
     try {
@@ -91,10 +75,13 @@ export function createLeadRefillGrantService(deps: LeadRefillGrantServiceDeps) {
       }
 
       if (!ledger) {
-        return Err({
-          reason: "unexpected",
-          message: "Lead refill ledger was not created",
-        });
+        return Err(
+          domainError(
+            "unexpected",
+            "ledger_create_failed",
+            "Lead refill ledger was not created",
+          ),
+        );
       }
 
       if (ledger.base_limit !== policy.dailyRefillLimit) {
@@ -110,32 +97,24 @@ export function createLeadRefillGrantService(deps: LeadRefillGrantServiceDeps) {
 
       return Ok({ ledger, policy });
     } catch (error) {
-      return Err({
-        reason: "unexpected",
-        message:
+      return Err(
+        domainError(
+          "unexpected",
+          "unexpected",
           error instanceof Error
             ? error.message
             : "Failed to ensure lead refill ledger",
-      });
+        ),
+      );
     }
   }
 
   async function getCurrentLeadCapacity(
     userId: UserId,
-  ): Promise<Result<LeadCapacitySnapshot, LeadCapacitySnapshotError>> {
+  ): Promise<Result<LeadCapacitySnapshot, DomainError>> {
     const ledgerResult = await ensureLedger(userId);
     if (isErr(ledgerResult)) {
-      if (ledgerResult.error.reason === "user_not_found") {
-        return Err({
-          reason: "user_not_found",
-          message: ledgerResult.error.message,
-        });
-      }
-
-      return Err({
-        reason: "unexpected",
-        message: ledgerResult.error.message,
-      });
+      return Err(ledgerResult.error);
     }
 
     try {
@@ -157,13 +136,15 @@ export function createLeadRefillGrantService(deps: LeadRefillGrantServiceDeps) {
         }),
       });
     } catch (error) {
-      return Err({
-        reason: "unexpected",
-        message:
+      return Err(
+        domainError(
+          "unexpected",
+          "unexpected",
           error instanceof Error
             ? error.message
             : "Failed to get current lead capacity",
-      });
+        ),
+      );
     }
   }
 
@@ -172,20 +153,10 @@ export function createLeadRefillGrantService(deps: LeadRefillGrantServiceDeps) {
     targetUserId: UserId,
     amount: number,
     reason: string,
-  ): Promise<Result<LeadCapacitySnapshot, LeadRefillGrantError>> {
+  ): Promise<Result<LeadCapacitySnapshot, DomainError>> {
     const ledgerResult = await ensureLedger(targetUserId);
     if (isErr(ledgerResult)) {
-      if (ledgerResult.error.reason === "user_not_found") {
-        return Err({
-          reason: "user_not_found",
-          message: ledgerResult.error.message,
-        });
-      }
-
-      return Err({
-        reason: "unexpected",
-        message: ledgerResult.error.message,
-      });
+      return Err(ledgerResult.error);
     }
 
     try {
@@ -204,13 +175,15 @@ export function createLeadRefillGrantService(deps: LeadRefillGrantServiceDeps) {
 
       return getCurrentLeadCapacity(targetUserId);
     } catch (error) {
-      return Err({
-        reason: "unexpected",
-        message:
+      return Err(
+        domainError(
+          "unexpected",
+          "unexpected",
           error instanceof Error
             ? error.message
             : "Failed to grant extra lead refill",
-      });
+        ),
+      );
     }
   }
 
@@ -260,9 +233,7 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
     ledgerId: number;
     amount: number;
     reason: string;
-  }): Promise<
-    Result<void, { reason: "compensation_failed"; message: string }>
-  > {
+  }): Promise<Result<void, DomainError>> {
     try {
       const decremented =
         await repos.leadRefillLedger.decrementUsageIfAvailable(
@@ -286,10 +257,13 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
         } catch {
           // Preserve typed failure response when observability write fails.
         }
-        return Err({
-          reason: "compensation_failed",
-          message: `Failed to compensate lead refill usage: ${message}`,
-        });
+        return Err(
+          domainError(
+            "unexpected",
+            "compensation_failed",
+            `Failed to compensate lead refill usage: ${message}`,
+          ),
+        );
       }
       return Ok(undefined);
     } catch (error) {
@@ -310,23 +284,29 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
       } catch {
         // Preserve typed failure response when observability write fails.
       }
-      return Err({
-        reason: "compensation_failed",
-        message: `Failed to compensate lead refill usage: ${message}`,
-      });
+      return Err(
+        domainError(
+          "unexpected",
+          "compensation_failed",
+          `Failed to compensate lead refill usage: ${message}`,
+        ),
+      );
     }
   }
 
   function toCompensationFailure(input: {
-    rootError: LeadCandidateError | { reason: "unexpected"; message: string };
-    compensationError: { reason: "compensation_failed"; message: string };
-  }): LeadRefillError {
-    return {
-      reason: "compensation_failed",
-      message: `${input.rootError.message}; compensation rollback failed: ${input.compensationError.message}`,
-      rootReason: input.rootError.reason,
-      rootMessage: input.rootError.message,
-    };
+    rootError: DomainError;
+    compensationError: DomainError;
+  }): DomainError {
+    return domainError(
+      "unexpected",
+      "compensation_failed",
+      `${input.rootError.message}; compensation rollback failed: ${input.compensationError.message}`,
+      {
+        rootCode: input.rootError.code,
+        rootMessage: input.rootError.message,
+      },
+    );
   }
 
   const { ensureLedger, getCurrentLeadCapacity, grantExtraLeadRefill } =
@@ -337,7 +317,7 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
     ledger: LeadRefillLedger;
     needed: number;
   }): Promise<
-    Result<{ ledger: LeadRefillLedger; allowed: number }, LeadRefillError>
+    Result<{ ledger: LeadRefillLedger; allowed: number }, DomainError>
   > {
     let workingLedger = input.ledger;
 
@@ -349,10 +329,13 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
       });
       const allowed = Math.min(input.needed, remaining);
       if (allowed <= 0) {
-        return Err({
-          reason: "refill_exhausted",
-          message: "Daily lead refill exhausted. Request more lead capacity.",
-        });
+        return Err(
+          domainError(
+            "conflict",
+            "refill_exhausted",
+            "Daily lead refill exhausted. Request more lead capacity.",
+          ),
+        );
       }
 
       const reserved = await repos.leadRefillLedger.reserveUsageIfAvailable(
@@ -374,10 +357,13 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
       workingLedger = reloaded;
     }
 
-    return Err({
-      reason: "refill_exhausted",
-      message: "Daily lead refill exhausted. Request more lead capacity.",
-    });
+    return Err(
+      domainError(
+        "conflict",
+        "refill_exhausted",
+        "Daily lead refill exhausted. Request more lead capacity.",
+      ),
+    );
   }
 
   return {
@@ -386,7 +372,7 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
     async refillQueueForExecutive(
       userId: UserId,
       branchId: BranchId,
-    ): Promise<Result<LeadRefillResult, LeadRefillError>> {
+    ): Promise<Result<LeadRefillResult, DomainError>> {
       const ledgerResult = await ensureLedger(userId);
       if (isErr(ledgerResult)) {
         return Err(ledgerResult.error);
@@ -484,13 +470,15 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
 
         return Ok({ assigned: assignmentResult.value, requested: allowed });
       } catch (error) {
-        return Err({
-          reason: "unexpected",
-          message:
+        return Err(
+          domainError(
+            "unexpected",
+            "unexpected",
             error instanceof Error
               ? error.message
               : "Unexpected lead refill failure",
-        });
+          ),
+        );
       }
     },
 

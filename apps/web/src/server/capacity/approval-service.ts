@@ -1,7 +1,7 @@
 import type { SessionData } from "~/lib/auth/access/session";
 import { normalizeDecisionNote } from "~/server/capacity/domain";
-import type { CapacityApprovalError } from "~/server/capacity/errors";
 import { createTransactionCapacityGrantServices } from "~/server/capacity/grant-services";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { asUserId } from "~/server/shared/ids";
 import type { CapacityRequestId, UserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
@@ -9,8 +9,6 @@ import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 import type { RepositoryTransactionRunner } from "~/server/shared/transaction";
 
 import { canManageExecutive } from "./scope";
-
-export type { CapacityApprovalError } from "~/server/capacity/errors";
 
 interface CapacityApprovalServiceDeps {
   runInRepositoryTransaction: RepositoryTransactionRunner;
@@ -22,31 +20,22 @@ type CapacityRequestRecord = NonNullable<
 >;
 
 class TransactionRollbackError extends Error {
-  constructor(readonly error: CapacityApprovalError) {
+  constructor(readonly error: DomainError) {
     super(error.message);
     this.name = "TransactionRollbackError";
   }
 }
 
-function toUnexpected(error: unknown, fallback: string): CapacityApprovalError {
-  return {
-    reason: "unexpected",
-    message: error instanceof Error ? error.message : fallback,
-  };
+function toUnexpected(error: unknown, fallback: string): DomainError {
+  return domainError(
+    "unexpected",
+    "unexpected",
+    error instanceof Error ? error.message : fallback,
+  );
 }
 
-function throwRollback(error: CapacityApprovalError): never {
+function throwRollback(error: DomainError): never {
   throw new TransactionRollbackError(error);
-}
-
-function mapGrantError(error: {
-  reason: "user_not_found" | "unexpected";
-  message: string;
-}): CapacityApprovalError {
-  if (error.reason === "user_not_found") {
-    return { reason: "not_found", message: error.message };
-  }
-  return { reason: "unexpected", message: error.message };
 }
 
 export function createCapacityApprovalService(
@@ -60,10 +49,12 @@ export function createCapacityApprovalService(
     requestId: CapacityRequestId,
     transactionRepos: Repositories,
     deniedMessage: string,
-  ): Promise<Result<CapacityRequestRecord, CapacityApprovalError>> {
+  ): Promise<Result<CapacityRequestRecord, DomainError>> {
     const request = await transactionRepos.capacityRequests.findById(requestId);
     if (!request) {
-      return Err({ reason: "not_found", message: "Request not found" });
+      return Err(
+        domainError("not_found", "request_not_found", "Request not found"),
+      );
     }
 
     const managed = await canManageExecutive(
@@ -72,10 +63,16 @@ export function createCapacityApprovalService(
       transactionRepos,
     );
     if (!managed.target) {
-      return Err({ reason: "not_found", message: "Request target not found" });
+      return Err(
+        domainError(
+          "not_found",
+          "request_target_not_found",
+          "Request target not found",
+        ),
+      );
     }
     if (!managed.ok) {
-      return Err({ reason: "forbidden", message: deniedMessage });
+      return Err(domainError("forbidden", "forbidden", deniedMessage));
     }
 
     return Ok(request);
@@ -86,13 +83,16 @@ export function createCapacityApprovalService(
     request: CapacityRequestRecord;
     note: string | null;
     transactionRepos: Repositories;
-  }): Promise<Result<{ success: true }, CapacityApprovalError>> {
+  }): Promise<Result<{ success: true }, DomainError>> {
     const request = input.request;
     if (request.status !== "pending") {
-      return Err({
-        reason: "conflict",
-        message: "Request is no longer pending",
-      });
+      return Err(
+        domainError(
+          "conflict",
+          "request_not_pending",
+          "Request is no longer pending",
+        ),
+      );
     }
 
     const updateResult =
@@ -102,10 +102,13 @@ export function createCapacityApprovalService(
         input.note,
       );
     if (!updateResult.numUpdatedRows) {
-      return Err({
-        reason: "conflict",
-        message: "Request is no longer pending",
-      });
+      return Err(
+        domainError(
+          "conflict",
+          "request_not_pending",
+          "Request is no longer pending",
+        ),
+      );
     }
 
     const grants = createGrantServices(input.transactionRepos);
@@ -119,7 +122,7 @@ export function createCapacityApprovalService(
           input.note ?? request.reason,
         );
       if (isErr(grantResult)) {
-        return Err(mapGrantError(grantResult.error));
+        return Err(grantResult.error);
       }
 
       return Ok({ success: true as const });
@@ -133,7 +136,7 @@ export function createCapacityApprovalService(
         input.note ?? request.reason,
       );
     if (isErr(grantResult)) {
-      return Err(mapGrantError(grantResult.error));
+      return Err(grantResult.error);
     }
 
     return Ok({ success: true as const });
@@ -144,7 +147,7 @@ export function createCapacityApprovalService(
       actor: SessionData,
       requestId: CapacityRequestId,
       note?: string,
-    ): Promise<Result<{ success: true }, CapacityApprovalError>> {
+    ): Promise<Result<{ success: true }, DomainError>> {
       try {
         const result = await deps.runInRepositoryTransaction(
           async (transactionRepos) => {
@@ -184,14 +187,17 @@ export function createCapacityApprovalService(
       actor: SessionData,
       requestId: CapacityRequestId,
       note: string,
-    ): Promise<Result<{ success: true }, CapacityApprovalError>> {
+    ): Promise<Result<{ success: true }, DomainError>> {
       try {
         const decisionNote = normalizeDecisionNote(note);
         if (!decisionNote) {
-          return Err({
-            reason: "validation",
-            message: "Decision note is required",
-          });
+          return Err(
+            domainError(
+              "validation",
+              "decision_note_required",
+              "Decision note is required",
+            ),
+          );
         }
 
         const result = await deps.runInRepositoryTransaction(
@@ -207,10 +213,13 @@ export function createCapacityApprovalService(
             }
 
             if (access.value.status !== "pending") {
-              throwRollback({
-                reason: "conflict",
-                message: "Request is no longer pending",
-              });
+              throwRollback(
+                domainError(
+                  "conflict",
+                  "request_not_pending",
+                  "Request is no longer pending",
+                ),
+              );
             }
 
             const updateResult =
@@ -220,10 +229,13 @@ export function createCapacityApprovalService(
                 decisionNote,
               );
             if (!updateResult.numUpdatedRows) {
-              throwRollback({
-                reason: "conflict",
-                message: "Request is no longer pending",
-              });
+              throwRollback(
+                domainError(
+                  "conflict",
+                  "request_not_pending",
+                  "Request is no longer pending",
+                ),
+              );
             }
 
             return { success: true as const };

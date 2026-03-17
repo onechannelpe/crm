@@ -1,14 +1,14 @@
 import type { SessionData } from "~/lib/auth/access/session";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import type { CapacityReadError } from "../errors";
 import type { CapacityPolicyDefaults } from "./contracts";
 
 export async function getCapacityPolicyDefaults(
   repos: Repositories,
   session: SessionData,
-): Promise<Result<CapacityPolicyDefaults, CapacityReadError>> {
+): Promise<Result<CapacityPolicyDefaults, DomainError>> {
   try {
     const [teams, branchSearch, branchLead] = await Promise.all([
       repos.teams.findByBranch(session.branchId),
@@ -47,12 +47,14 @@ export async function getCapacityPolicyDefaults(
       teams: teamDefaults,
     });
   } catch (error) {
-    return Err({
-      reason: "unexpected",
-      message:
+    return Err(
+      domainError(
+        "unexpected",
+        "unexpected",
         error instanceof Error
           ? error.message
           : "Failed to get capacity policy defaults",
-    });
+      ),
+    );
   }
 }

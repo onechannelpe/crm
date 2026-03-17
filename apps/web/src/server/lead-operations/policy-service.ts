@@ -5,13 +5,12 @@ import type {
   SetLeadScopeDefaultCommand,
   SetLeadUserOverrideCommand,
 } from "~/server/lead-operations/contracts";
-import type { LeadPolicyError } from "~/server/lead-operations/errors";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 export type { EffectiveLeadPolicy } from "~/server/lead-operations/contracts";
-export type { LeadPolicyError } from "~/server/lead-operations/errors";
 
 export function resolveEffectiveLeadPolicy(
   input: ResolveEffectiveLeadPolicyInput,
@@ -51,12 +50,14 @@ export function createLeadPolicyService(repos: Repositories) {
   return {
     async getEffectiveLeadPolicy(
       userId: UserId,
-    ): Promise<Result<EffectiveLeadPolicy, LeadPolicyError>> {
+    ): Promise<Result<EffectiveLeadPolicy, DomainError>> {
       try {
         const now = Date.now();
         const user = await repos.users.findById(userId);
         if (!user) {
-          return Err({ reason: "user_not_found", message: "User not found" });
+          return Err(
+            domainError("not_found", "user_not_found", "User not found"),
+          );
         }
 
         const userOverride = await repos.leadPolicyOverrides.findActiveForUser(
@@ -79,19 +80,21 @@ export function createLeadPolicyService(repos: Repositories) {
           }),
         );
       } catch (error) {
-        return Err({
-          reason: "unexpected",
-          message:
+        return Err(
+          domainError(
+            "unexpected",
+            "unexpected",
             error instanceof Error
               ? error.message
               : "Failed to resolve lead policy",
-        });
+          ),
+        );
       }
     },
 
     async setScopeDefault(
       input: SetLeadScopeDefaultCommand,
-    ): Promise<Result<void, LeadPolicyError>> {
+    ): Promise<Result<void, DomainError>> {
       try {
         await repos.leadPolicyDefaults.upsert({
           scope_type: input.scopeType,
@@ -101,19 +104,21 @@ export function createLeadPolicyService(repos: Repositories) {
         });
         return Ok(undefined);
       } catch (error) {
-        return Err({
-          reason: "unexpected",
-          message:
+        return Err(
+          domainError(
+            "unexpected",
+            "unexpected",
             error instanceof Error
               ? error.message
               : "Failed to set lead scope default",
-        });
+          ),
+        );
       }
     },
 
     async setUserOverride(
       input: SetLeadUserOverrideCommand,
-    ): Promise<Result<void, LeadPolicyError>> {
+    ): Promise<Result<void, DomainError>> {
       try {
         await repos.leadPolicyOverrides.replaceForUser({
           user_id: input.targetUserId,
@@ -125,13 +130,15 @@ export function createLeadPolicyService(repos: Repositories) {
         });
         return Ok(undefined);
       } catch (error) {
-        return Err({
-          reason: "unexpected",
-          message:
+        return Err(
+          domainError(
+            "unexpected",
+            "unexpected",
             error instanceof Error
               ? error.message
               : "Failed to set lead user override",
-        });
+          ),
+        );
       }
     },
   };

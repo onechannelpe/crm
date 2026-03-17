@@ -1,8 +1,7 @@
 import type { SessionData } from "~/lib/auth/access/session";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
-
-import type { CapacityReadError } from "../errors";
 
 export async function listPendingCapacityRequests(
   repos: Repositories,
@@ -12,7 +11,7 @@ export async function listPendingCapacityRequests(
     Awaited<
       ReturnType<Repositories["capacityRequests"]["listPendingByBranch"]>
     >,
-    CapacityReadError
+    DomainError
   >
 > {
   try {
@@ -30,12 +29,14 @@ export async function listPendingCapacityRequests(
       pending.filter((request) => request.team_id === supervisedTeam.id),
     );
   } catch (error) {
-    return Err({
-      reason: "unexpected",
-      message:
+    return Err(
+      domainError(
+        "unexpected",
+        "unexpected",
         error instanceof Error
           ? error.message
           : "Failed to list pending capacity requests",
-    });
+      ),
+    );
   }
 }

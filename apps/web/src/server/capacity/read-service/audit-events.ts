@@ -1,9 +1,9 @@
 import type { SessionData } from "~/lib/auth/access/session";
 import { AUDIT_READER_DEFAULT_LIMIT } from "~/server/audit-reader/contracts";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import type { CapacityReadError } from "../errors";
 import type { AuditChangeValue, CapacityAuditEvent } from "./contracts";
 
 function isAuditChangeValue(value: unknown): value is AuditChangeValue {
@@ -86,7 +86,7 @@ export async function listCapacityAuditEvents(
   repos: Repositories,
   session: SessionData,
   limit?: number,
-): Promise<Result<CapacityAuditEvent[], CapacityReadError>> {
+): Promise<Result<CapacityAuditEvent[], DomainError>> {
   try {
     const effectiveLimit = Math.max(1, limit ?? AUDIT_READER_DEFAULT_LIMIT);
     const now = Date.now();
@@ -142,12 +142,14 @@ export async function listCapacityAuditEvents(
 
     return Ok(filtered);
   } catch (error) {
-    return Err({
-      reason: "unexpected",
-      message:
+    return Err(
+      domainError(
+        "unexpected",
+        "unexpected",
         error instanceof Error
           ? error.message
           : "Failed to list capacity audit events",
-    });
+      ),
+    );
   }
 }

@@ -6,11 +6,9 @@ import {
   rateLimitError,
   validationError,
 } from "~/lib/app-errors";
-import { toDomainError } from "~/server/shared/domain-error";
+import type { DomainError } from "~/server/shared/domain-error";
 
-export function throwDomainError(error: unknown): never {
-  const domainError = toDomainError(error);
-
+export function throwDomainError(domainError: DomainError): never {
   switch (domainError.kind) {
     case "validation":
       throw validationError(domainError.message);

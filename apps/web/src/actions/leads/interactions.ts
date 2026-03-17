@@ -1,5 +1,6 @@
 "use server";
 
+import { throwDomainError } from "~/actions/throw-domain-error";
 import { forbiddenError, internalError, notFoundError } from "~/lib/app-errors";
 import { requirePermission } from "~/lib/auth/access/session";
 import type { ActionSuccess } from "~/lib/contracts/common";
@@ -10,9 +11,8 @@ import {
   type SalesRecordsWorkflowError,
 } from "~/server/sales/records-service";
 import { runInRepositoryTransaction } from "~/server/shared/context";
+import { domainError } from "~/server/shared/domain-error";
 import { isErr } from "~/server/shared/result";
-
-import { throwLeadError } from "./error-mapping";
 
 interface RegisterCallResult extends ActionSuccess {
   draftRecordId: number | null;
@@ -56,11 +56,13 @@ export async function registerCall(
           session.userId,
         );
       if (!assignment || assignment.contact_id !== safeContactId) {
-        throwLeadError({
-          reason: "unexpected",
-          message:
+        throwDomainError(
+          domainError(
+            "unexpected",
+            "unexpected",
             "Lead assignment is not active or does not match the contact",
-        });
+          ),
+        );
       }
 
       let nextDraftRecordId: number | null = null;

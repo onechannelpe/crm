@@ -1,13 +1,11 @@
 import type { LeadAssignmentCommand } from "~/server/lead-operations/contracts";
-import type { LeadAssignmentError } from "~/server/lead-operations/errors";
 import { createAssignment } from "~/server/leads/domain-assignment";
 import { canContactNow } from "~/server/leads/domain-cooldown";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { RepositoryTransactionRunner } from "~/server/shared/transaction";
-
-export type { LeadAssignmentError } from "~/server/lead-operations/errors";
 
 interface LeadAssignmentServiceDeps {
   runInRepositoryTransaction: RepositoryTransactionRunner;
@@ -20,7 +18,7 @@ export function createLeadAssignmentService(deps: LeadAssignmentServiceDeps) {
     async assignCandidatesToExecutive(
       userId: UserId,
       candidates: LeadAssignmentCommand["candidates"],
-    ): Promise<Result<number, LeadAssignmentError>> {
+    ): Promise<Result<number, DomainError>> {
       try {
         const assignedCount = await runInRepositoryTransaction(
           async (transactionRepos) => {
@@ -79,13 +77,15 @@ export function createLeadAssignmentService(deps: LeadAssignmentServiceDeps) {
 
         return Ok(assignedCount);
       } catch (error) {
-        return Err({
-          reason: "unexpected",
-          message:
+        return Err(
+          domainError(
+            "unexpected",
+            "unexpected",
             error instanceof Error
               ? error.message
               : "Unexpected lead assignment failure",
-        });
+          ),
+        );
       }
     },
   };

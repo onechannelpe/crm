@@ -4,10 +4,10 @@ import { todayDateString } from "~/server/lead-operations/domain";
 import { resolveEffectiveLeadPolicy } from "~/server/lead-operations/policy-service";
 import { currentMonthPeriod } from "~/server/search-access/domain";
 import { resolveEffectiveSearchPolicy } from "~/server/search-access/policy-service";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import type { CapacityReadError } from "../errors";
 import { canManageExecutiveRecord } from "../scope";
 import type { ManagedExecutiveSummary } from "./contracts";
 import { buildLeadStatus, buildSearchStatus } from "./snapshot-builders";
@@ -15,7 +15,7 @@ import { buildLeadStatus, buildSearchStatus } from "./snapshot-builders";
 export async function listManagedExecutives(
   repos: Repositories,
   session: SessionData,
-): Promise<Result<ManagedExecutiveSummary[], CapacityReadError>> {
+): Promise<Result<ManagedExecutiveSummary[], DomainError>> {
   try {
     const users =
       session.role === "superuser"
@@ -169,12 +169,14 @@ export async function listManagedExecutives(
         .sort((left, right) => left.fullName.localeCompare(right.fullName)),
     );
   } catch (error) {
-    return Err({
-      reason: "unexpected",
-      message:
+    return Err(
+      domainError(
+        "unexpected",
+        "unexpected",
         error instanceof Error
           ? error.message
           : "Failed to list managed executives",
-    });
+      ),
+    );
   }
 }

@@ -1,9 +1,7 @@
-import type { CapacityRequestError } from "~/server/capacity/errors";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
-
-export type { CapacityRequestError } from "~/server/capacity/errors";
 
 export interface CreateCapacityRequestInput {
   userId: UserId;
@@ -15,7 +13,7 @@ export function createCapacityRequestService(repos: Repositories) {
   async function createRequest(
     input: CreateCapacityRequestInput,
     kind: "search_extra" | "lead_refill_extra",
-  ): Promise<Result<void, CapacityRequestError>> {
+  ): Promise<Result<void, DomainError>> {
     try {
       await repos.capacityRequests.create({
         user_id: input.userId,
@@ -26,24 +24,26 @@ export function createCapacityRequestService(repos: Repositories) {
       });
       return Ok(undefined);
     } catch (error) {
-      return Err({
-        reason: "unexpected",
-        message:
+      return Err(
+        domainError(
+          "unexpected",
+          "unexpected",
           error instanceof Error ? error.message : "Request creation failed",
-      });
+        ),
+      );
     }
   }
 
   return {
     async createSearchExtraRequest(
       input: CreateCapacityRequestInput,
-    ): Promise<Result<void, CapacityRequestError>> {
+    ): Promise<Result<void, DomainError>> {
       return createRequest(input, "search_extra");
     },
 
     async createLeadRefillExtraRequest(
       input: CreateCapacityRequestInput,
-    ): Promise<Result<void, CapacityRequestError>> {
+    ): Promise<Result<void, DomainError>> {
       return createRequest(input, "lead_refill_extra");
     },
   };

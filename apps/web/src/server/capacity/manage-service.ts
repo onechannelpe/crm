@@ -1,5 +1,4 @@
 import type { SessionData } from "~/lib/auth/access/session";
-import type { CapacityManageError } from "~/server/capacity/errors";
 import type { createLeadPolicyService } from "~/server/lead-operations/policy-service";
 import {
   createLeadRefillGrantService,
@@ -10,6 +9,7 @@ import {
   type SearchAllowanceSnapshot,
 } from "~/server/search-access/allowance-service";
 import type { createSearchPolicyService } from "~/server/search-access/policy-service";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { asTeamId } from "~/server/shared/ids";
 import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 import type { ScopeType } from "~/server/shared/pipeline-types";
@@ -26,53 +26,34 @@ interface CapacityManageServiceDeps {
   leadPolicyService: ReturnType<typeof createLeadPolicyService>;
 }
 
-export type { CapacityManageError } from "~/server/capacity/errors";
-
 export function createCapacityManageService(deps: CapacityManageServiceDeps) {
-  function toUnexpected(error: unknown, fallback: string): CapacityManageError {
-    return {
-      reason: "unexpected",
-      message: error instanceof Error ? error.message : fallback,
-    };
-  }
-
-  type ManageDomainMappedError =
-    | { reason: "user_not_found"; message: string }
-    | { reason: "validation"; message: string }
-    | { reason: "unexpected"; message: string };
-
-  function mapDomainError(error: ManageDomainMappedError): CapacityManageError {
-    switch (error.reason) {
-      case "user_not_found":
-        return { reason: "not_found", message: error.message };
-      case "validation":
-        return { reason: "validation", message: error.message };
-      case "unexpected":
-        return { reason: "unexpected", message: error.message };
-    }
-
-    const unreachable: never = error;
-    void unreachable;
-    return { reason: "unexpected", message: "Unhandled capacity domain error" };
+  function toUnexpected(error: unknown, fallback: string): DomainError {
+    return domainError(
+      "unexpected",
+      "unexpected",
+      error instanceof Error ? error.message : fallback,
+    );
   }
 
   async function assertManagedExecutive(
     actor: SessionData,
     targetUserId: UserId,
-  ): Promise<Result<void, CapacityManageError>> {
+  ): Promise<Result<void, DomainError>> {
     const managed = await canManageExecutive(actor, targetUserId, deps.repos);
     if (!managed.target) {
-      return Err({
-        reason: "not_found",
-        message: "Executive not found",
-      });
+      return Err(
+        domainError("not_found", "executive_not_found", "Executive not found"),
+      );
     }
 
     if (!managed.ok) {
-      return Err({
-        reason: "forbidden",
-        message: "Cannot manage this executive",
-      });
+      return Err(
+        domainError(
+          "forbidden",
+          "cannot_manage_executive",
+          "Cannot manage this executive",
+        ),
+      );
     }
 
     return Ok(undefined);
@@ -82,16 +63,19 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
     actor: SessionData,
     scopeType: ScopeType,
     scopeId: BranchId | TeamId,
-  ): Promise<Result<void, CapacityManageError>> {
+  ): Promise<Result<void, DomainError>> {
     if (actor.role === "superuser") {
       return Ok(undefined);
     }
 
     if (scopeType === "branch" && scopeId !== actor.branchId) {
-      return Err({
-        reason: "conflict",
-        message: "Cannot modify defaults outside your branch",
-      });
+      return Err(
+        domainError(
+          "conflict",
+          "scope_conflict",
+          "Cannot modify defaults outside your branch",
+        ),
+      );
     }
 
     if (scopeType === "team") {
@@ -101,10 +85,13 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
         deps.repos,
       );
       if (!access.ok) {
-        return Err({
-          reason: "forbidden",
-          message: "Cannot modify defaults for this team",
-        });
+        return Err(
+          domainError(
+            "forbidden",
+            "cannot_manage_team_defaults",
+            "Cannot modify defaults for this team",
+          ),
+        );
       }
     }
 
@@ -117,7 +104,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
       targetUserId: UserId,
       amount: number,
       reason: string,
-    ): Promise<Result<SearchAllowanceSnapshot, CapacityManageError>> {
+    ): Promise<Result<SearchAllowanceSnapshot, DomainError>> {
       try {
         const managedResult = await assertManagedExecutive(actor, targetUserId);
         if (isErr(managedResult)) {
@@ -132,7 +119,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
             reason,
           );
         if (isErr(snapshotResult)) {
-          return Err(mapDomainError(snapshotResult.error));
+          return Err(snapshotResult.error);
         }
 
         return Ok(snapshotResult.value);
@@ -146,7 +133,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
       targetUserId: UserId,
       amount: number,
       reason: string,
-    ): Promise<Result<LeadCapacitySnapshot, CapacityManageError>> {
+    ): Promise<Result<LeadCapacitySnapshot, DomainError>> {
       try {
         const managedResult = await assertManagedExecutive(actor, targetUserId);
         if (isErr(managedResult)) {
@@ -161,7 +148,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
             reason,
           );
         if (isErr(snapshotResult)) {
-          return Err(mapDomainError(snapshotResult.error));
+          return Err(snapshotResult.error);
         }
 
         return Ok(snapshotResult.value);
@@ -177,7 +164,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
         monthlySearchLimit: number;
         expiresAt: number | null;
       },
-    ): Promise<Result<{ success: true }, CapacityManageError>> {
+    ): Promise<Result<{ success: true }, DomainError>> {
       try {
         const managedResult = await assertManagedExecutive(actor, input.userId);
         if (isErr(managedResult)) {
@@ -191,7 +178,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
           expiresAt: input.expiresAt,
         });
         if (isErr(result)) {
-          return Err(mapDomainError(result.error));
+          return Err(result.error);
         }
 
         return Ok({ success: true as const });
@@ -208,7 +195,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
         dailyRefillLimit: number;
         expiresAt: number | null;
       },
-    ): Promise<Result<{ success: true }, CapacityManageError>> {
+    ): Promise<Result<{ success: true }, DomainError>> {
       try {
         const managedResult = await assertManagedExecutive(actor, input.userId);
         if (isErr(managedResult)) {
@@ -223,7 +210,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
           expiresAt: input.expiresAt,
         });
         if (isErr(result)) {
-          return Err(mapDomainError(result.error));
+          return Err(result.error);
         }
 
         return Ok({ success: true as const });
@@ -239,7 +226,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
         scopeId: BranchId | TeamId;
         monthlySearchLimit: number;
       },
-    ): Promise<Result<{ success: true }, CapacityManageError>> {
+    ): Promise<Result<{ success: true }, DomainError>> {
       try {
         const accessResult = await assertScopeDefaultAccess(
           actor,
@@ -256,7 +243,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
           monthlySearchLimit: input.monthlySearchLimit,
         });
         if (isErr(result)) {
-          return Err(mapDomainError(result.error));
+          return Err(result.error);
         }
 
         return Ok({ success: true as const });
@@ -275,7 +262,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
         activeBufferTarget: number;
         dailyRefillLimit: number;
       },
-    ): Promise<Result<{ success: true }, CapacityManageError>> {
+    ): Promise<Result<{ success: true }, DomainError>> {
       try {
         const accessResult = await assertScopeDefaultAccess(
           actor,
@@ -293,7 +280,7 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
           dailyRefillLimit: input.dailyRefillLimit,
         });
         if (isErr(result)) {
-          return Err(mapDomainError(result.error));
+          return Err(result.error);
         }
 
         return Ok({ success: true as const });

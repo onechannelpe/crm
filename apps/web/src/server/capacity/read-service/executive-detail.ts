@@ -4,11 +4,11 @@ import { todayDateString } from "~/server/lead-operations/domain";
 import { resolveEffectiveLeadPolicy } from "~/server/lead-operations/policy-service";
 import { currentMonthPeriod } from "~/server/search-access/domain";
 import { resolveEffectiveSearchPolicy } from "~/server/search-access/policy-service";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import type { CapacityReadError } from "../errors";
 import { canManageExecutive } from "../scope";
 import type { ExecutiveCapacityDetail } from "./contracts";
 import { buildLeadStatus, buildSearchStatus } from "./snapshot-builders";
@@ -17,14 +17,16 @@ export async function getExecutiveCapacityDetail(
   repos: Repositories,
   session: SessionData,
   targetUserId: UserId,
-): Promise<Result<ExecutiveCapacityDetail, CapacityReadError>> {
+): Promise<Result<ExecutiveCapacityDetail, DomainError>> {
   try {
     const managed = await canManageExecutive(session, targetUserId, repos);
     if (!managed.target) {
-      return Err({ reason: "not_found", message: "Executive not found" });
+      return Err(
+        domainError("not_found", "executive_not_found", "Executive not found"),
+      );
     }
     if (!managed.ok) {
-      return Err({ reason: "forbidden", message: "Forbidden" });
+      return Err(domainError("forbidden", "forbidden", "Forbidden"));
     }
 
     const now = Date.now();
@@ -105,12 +107,14 @@ export async function getExecutiveCapacityDetail(
       requests,
     });
   } catch (error) {
-    return Err({
-      reason: "unexpected",
-      message:
+    return Err(
+      domainError(
+        "unexpected",
+        "unexpected",
         error instanceof Error
           ? error.message
           : "Failed to get executive capacity detail",
-    });
+      ),
+    );
   }
 }

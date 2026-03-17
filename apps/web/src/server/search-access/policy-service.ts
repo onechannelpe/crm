@@ -5,13 +5,12 @@ import type {
   SetSearchScopeDefaultCommand,
   SetSearchUserOverrideCommand,
 } from "~/server/search-access/contracts";
-import type { SearchPolicyError } from "~/server/search-access/errors";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 export type { EffectiveSearchPolicy } from "~/server/search-access/contracts";
-export type { SearchPolicyError } from "~/server/search-access/errors";
 
 export function resolveEffectiveSearchPolicy(
   input: ResolveEffectiveSearchPolicyInput,
@@ -47,12 +46,14 @@ export function createSearchPolicyService(repos: Repositories) {
   return {
     async getEffectiveSearchPolicy(
       userId: UserId,
-    ): Promise<Result<EffectiveSearchPolicy, SearchPolicyError>> {
+    ): Promise<Result<EffectiveSearchPolicy, DomainError>> {
       try {
         const now = Date.now();
         const user = await repos.users.findById(userId);
         if (!user) {
-          return Err({ reason: "user_not_found", message: "User not found" });
+          return Err(
+            domainError("not_found", "user_not_found", "User not found"),
+          );
         }
 
         const userOverride =
@@ -73,19 +74,21 @@ export function createSearchPolicyService(repos: Repositories) {
           }),
         );
       } catch (error) {
-        return Err({
-          reason: "unexpected",
-          message:
+        return Err(
+          domainError(
+            "unexpected",
+            "unexpected",
             error instanceof Error
               ? error.message
               : "Failed to resolve search policy",
-        });
+          ),
+        );
       }
     },
 
     async setScopeDefault(
       input: SetSearchScopeDefaultCommand,
-    ): Promise<Result<void, SearchPolicyError>> {
+    ): Promise<Result<void, DomainError>> {
       try {
         await repos.searchPolicyDefaults.upsert({
           scope_type: input.scopeType,
@@ -95,19 +98,21 @@ export function createSearchPolicyService(repos: Repositories) {
         });
         return Ok(undefined);
       } catch (error) {
-        return Err({
-          reason: "unexpected",
-          message:
+        return Err(
+          domainError(
+            "unexpected",
+            "unexpected",
             error instanceof Error
               ? error.message
               : "Failed to set search scope default",
-        });
+          ),
+        );
       }
     },
 
     async setUserOverride(
       input: SetSearchUserOverrideCommand,
-    ): Promise<Result<void, SearchPolicyError>> {
+    ): Promise<Result<void, DomainError>> {
       try {
         await repos.searchPolicyOverrides.replaceForUser({
           user_id: input.targetUserId,
@@ -118,13 +123,15 @@ export function createSearchPolicyService(repos: Repositories) {
         });
         return Ok(undefined);
       } catch (error) {
-        return Err({
-          reason: "unexpected",
-          message:
+        return Err(
+          domainError(
+            "unexpected",
+            "unexpected",
             error instanceof Error
               ? error.message
               : "Failed to set search user override",
-        });
+          ),
+        );
       }
     },
   };

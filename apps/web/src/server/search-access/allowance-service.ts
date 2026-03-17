@@ -2,13 +2,8 @@ import type {
   EffectiveSearchPolicy,
   SearchAllowanceSnapshot,
 } from "~/server/search-access/contracts";
-import type {
-  SearchAllowanceError,
-  SearchAllowanceGrantError,
-  SearchRollbackError,
-  SearchAllowanceSnapshotError,
-} from "~/server/search-access/errors";
 import type { createAuditService } from "~/server/shared/audit";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
@@ -17,12 +12,6 @@ import { availableAllowance, currentMonthPeriod } from "./domain";
 import type { createSearchPolicyService } from "./policy-service";
 
 export type { SearchAllowanceSnapshot } from "~/server/search-access/contracts";
-export type {
-  SearchAllowanceError,
-  SearchAllowanceGrantError,
-  SearchRollbackError,
-  SearchAllowanceSnapshotError,
-} from "~/server/search-access/errors";
 
 interface SearchAllowanceServiceDeps {
   repos: Repositories;
@@ -65,18 +54,12 @@ export function createSearchAllowanceService(deps: SearchAllowanceServiceDeps) {
         ledger: SearchAllowanceLedger;
         policy: EffectiveSearchPolicy;
       },
-      SearchAllowanceError
+      DomainError
     >
   > {
     const policyResult = await policyService.getEffectiveSearchPolicy(userId);
     if (isErr(policyResult)) {
-      if (policyResult.error.reason === "user_not_found") {
-        return Err({
-          reason: "user_not_found",
-          message: policyResult.error.message,
-        });
-      }
-      return Err({ reason: "unexpected", message: policyResult.error.message });
+      return Err(policyResult.error);
     }
 
     try {
@@ -99,10 +82,13 @@ export function createSearchAllowanceService(deps: SearchAllowanceServiceDeps) {
         );
       }
       if (!ledger) {
-        return Err({
-          reason: "unexpected",
-          message: "Search allowance ledger was not created",
-        });
+        return Err(
+          domainError(
+            "unexpected",
+            "ledger_create_failed",
+            "Search allowance ledger was not created",
+          ),
+        );
       }
       if (ledger.base_limit !== policy.monthlySearchLimit) {
         await repos.searchAllowanceLedger.syncBaseLimit(
@@ -116,32 +102,24 @@ export function createSearchAllowanceService(deps: SearchAllowanceServiceDeps) {
       }
       return Ok({ ledger, policy });
     } catch (error) {
-      return Err({
-        reason: "unexpected",
-        message:
+      return Err(
+        domainError(
+          "unexpected",
+          "unexpected",
           error instanceof Error
             ? error.message
             : "Failed to ensure search allowance ledger",
-      });
+        ),
+      );
     }
   }
 
   async function getCurrentSearchAllowance(
     userId: UserId,
-  ): Promise<Result<SearchAllowanceSnapshot, SearchAllowanceSnapshotError>> {
+  ): Promise<Result<SearchAllowanceSnapshot, DomainError>> {
     const ledgerResult = await ensureLedger(userId);
     if (isErr(ledgerResult)) {
-      if (ledgerResult.error.reason === "user_not_found") {
-        return Err({
-          reason: "user_not_found",
-          message: ledgerResult.error.message,
-        });
-      }
-
-      return Err({
-        reason: "unexpected",
-        message: ledgerResult.error.message,
-      });
+      return Err(ledgerResult.error);
     }
     const { ledger, policy } = ledgerResult.value;
     return Ok({
@@ -164,20 +142,10 @@ export function createSearchAllowanceService(deps: SearchAllowanceServiceDeps) {
     targetUserId: UserId,
     amount: number,
     reason: string,
-  ): Promise<Result<SearchAllowanceSnapshot, SearchAllowanceGrantError>> {
+  ): Promise<Result<SearchAllowanceSnapshot, DomainError>> {
     const ledgerResult = await ensureLedger(targetUserId);
     if (isErr(ledgerResult)) {
-      if (ledgerResult.error.reason === "user_not_found") {
-        return Err({
-          reason: "user_not_found",
-          message: ledgerResult.error.message,
-        });
-      }
-
-      return Err({
-        reason: "unexpected",
-        message: ledgerResult.error.message,
-      });
+      return Err(ledgerResult.error);
     }
     try {
       const { ledger } = ledgerResult.value;
@@ -194,13 +162,15 @@ export function createSearchAllowanceService(deps: SearchAllowanceServiceDeps) {
       );
       return getCurrentSearchAllowance(targetUserId);
     } catch (error) {
-      return Err({
-        reason: "unexpected",
-        message:
+      return Err(
+        domainError(
+          "unexpected",
+          "unexpected",
           error instanceof Error
             ? error.message
             : "Failed to grant extra search allowance",
-      });
+        ),
+      );
     }
   }
 
@@ -210,7 +180,7 @@ export function createSearchAllowanceService(deps: SearchAllowanceServiceDeps) {
     async reserveSearchUsage(
       userId: UserId,
       amount: number = 1,
-    ): Promise<Result<void, SearchAllowanceError>> {
+    ): Promise<Result<void, DomainError>> {
       const ledgerResult = await ensureLedger(userId);
       if (isErr(ledgerResult)) {
         return Err(ledgerResult.error);
@@ -224,28 +194,32 @@ export function createSearchAllowanceService(deps: SearchAllowanceServiceDeps) {
             amount,
           );
         if (!reserved) {
-          return Err({
-            reason: "search_exhausted",
-            message:
+          return Err(
+            domainError(
+              "conflict",
+              "search_exhausted",
               "Monthly search allowance exhausted. Request more searches.",
-          });
+            ),
+          );
         }
         return Ok(undefined);
       } catch (error) {
-        return Err({
-          reason: "unexpected",
-          message:
+        return Err(
+          domainError(
+            "unexpected",
+            "unexpected",
             error instanceof Error
               ? error.message
               : "Unexpected search allowance failure",
-        });
+          ),
+        );
       }
     },
 
     async rollbackSearchUsage(
       userId: UserId,
       amount: number = 1,
-    ): Promise<Result<void, SearchRollbackError>> {
+    ): Promise<Result<void, DomainError>> {
       const { periodStart } = currentMonthPeriod();
       let ledger: Awaited<
         ReturnType<typeof repos.searchAllowanceLedger.findByUserAndPeriod>
@@ -265,13 +239,15 @@ export function createSearchAllowanceService(deps: SearchAllowanceServiceDeps) {
               ? error.message
               : "Unknown rollback ledger lookup failure",
         });
-        return Err({
-          reason: "unexpected",
-          message:
+        return Err(
+          domainError(
+            "unexpected",
+            "unexpected",
             error instanceof Error
               ? error.message
               : "Failed to rollback search usage",
-        });
+          ),
+        );
       }
       if (!ledger || ledger.used_amount < amount) {
         await logRollbackFailureBestEffort({
@@ -282,15 +258,21 @@ export function createSearchAllowanceService(deps: SearchAllowanceServiceDeps) {
             "Rollback skipped because ledger was missing or insufficient",
         });
         if (!ledger) {
-          return Err({
-            reason: "ledger_not_found",
-            message: "Search usage rollback ledger was not found",
-          });
+          return Err(
+            domainError(
+              "not_found",
+              "ledger_not_found",
+              "Search usage rollback ledger was not found",
+            ),
+          );
         }
-        return Err({
-          reason: "insufficient_usage",
-          message: "Search usage rollback had insufficient reserved usage",
-        });
+        return Err(
+          domainError(
+            "conflict",
+            "insufficient_usage",
+            "Search usage rollback had insufficient reserved usage",
+          ),
+        );
       }
       try {
         const decremented =
@@ -305,10 +287,13 @@ export function createSearchAllowanceService(deps: SearchAllowanceServiceDeps) {
             periodStart,
             message: "Rollback decrement skipped due to insufficient usage",
           });
-          return Err({
-            reason: "insufficient_usage",
-            message: "Search usage rollback had insufficient reserved usage",
-          });
+          return Err(
+            domainError(
+              "conflict",
+              "insufficient_usage",
+              "Search usage rollback had insufficient reserved usage",
+            ),
+          );
         }
         return Ok(undefined);
       } catch (error) {
@@ -321,13 +306,15 @@ export function createSearchAllowanceService(deps: SearchAllowanceServiceDeps) {
               ? error.message
               : "Unknown rollback decrement failure",
         });
-        return Err({
-          reason: "unexpected",
-          message:
+        return Err(
+          domainError(
+            "unexpected",
+            "unexpected",
             error instanceof Error
               ? error.message
               : "Failed to rollback search usage",
-        });
+          ),
+        );
       }
     },
 

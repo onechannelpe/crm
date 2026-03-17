@@ -8,7 +8,6 @@ import { listManagedExecutives } from "./managed-executives";
 import { listPendingCapacityRequests } from "./pending-requests";
 import { getCapacityPolicyDefaults } from "./policy-defaults";
 
-export type { CapacityReadError } from "../errors";
 export type {
   CapacityAuditEvent,
   CapacityPolicyDefaults,
