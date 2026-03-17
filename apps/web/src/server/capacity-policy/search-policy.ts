@@ -60,6 +60,9 @@ export async function setSearchScopeDefault(
   command: SetSearchScopeDefaultCommand,
   repos: Pick<PolicyRepos, "searchPolicyDefaults">,
 ): Promise<Result<void, DomainError>> {
+  if (command.scopeType === "user") {
+    return Err(domainError("conflict", "invalid_scope_type", "User scope is not valid for scope defaults"));
+  }
   try {
     await repos.searchPolicyDefaults.upsert({
       scope_type: command.scopeType,

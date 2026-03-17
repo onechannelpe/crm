@@ -59,6 +59,9 @@ export async function setLeadScopeDefault(
   command: SetLeadScopeDefaultCommand,
   repos: Pick<PolicyRepos, "leadPolicyDefaults">,
 ): Promise<Result<void, DomainError>> {
+  if (command.scopeType === "user") {
+    return Err(domainError("conflict", "invalid_scope_type", "User scope is not valid for scope defaults"));
+  }
   try {
     await repos.leadPolicyDefaults.upsert({
       scope_type: command.scopeType,
