@@ -2,7 +2,7 @@ import type { SessionData } from "~/lib/auth/access/session";
 import { normalizeDecisionNote } from "~/server/capacity/domain";
 import type { CapacityApprovalError } from "~/server/capacity/errors";
 import { createTransactionCapacityGrantServices } from "~/server/capacity/grant-services";
-import { asCapacityRequestId, asUserId } from "~/server/shared/ids";
+import { asUserId } from "~/server/shared/ids";
 import type { CapacityRequestId, UserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
