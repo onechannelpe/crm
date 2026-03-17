@@ -13,16 +13,13 @@ import type {
   LeadUsageCommitsRepo,
   LeadUsageReservationsRepo,
 } from "./repos";
-import {
-  buildLeadCapacitySnapshot,
-  type LeadCapacitySnapshot,
-} from "./snapshot";
-
-export type { LeadCapacitySnapshot };
+import { buildLeadCapacitySnapshot } from "./snapshot";
+export type { LeadCapacitySnapshot } from "./snapshot";
 
 export interface ReserveLeadUsageCommand {
   actorUserId: UserId;
   amount: number;
+  remainingCapacity: number;
   reason: "lead_refill" | "admin_grant_adjustment";
 }
 
@@ -63,21 +60,14 @@ interface UsageRepos {
 
 export async function reserveLeadUsage(
   command: ReserveLeadUsageCommand,
-  repos: UsageRepos,
+  repos: Pick<UsageRepos, "leadUsageReservations">,
 ): Promise<Result<LeadReservationId, DomainError>> {
-  try {
-    const snapshotResult = await getLeadCapacitySnapshot(
-      command.actorUserId,
-      repos,
+  if (command.remainingCapacity < command.amount) {
+    return Err(
+      domainError("conflict", "lead_exhausted", "Lead capacity exhausted"),
     );
-    if (!snapshotResult.ok) return snapshotResult;
-
-    if (snapshotResult.value.remaining < command.amount) {
-      return Err(
-        domainError("conflict", "lead_exhausted", "Lead capacity exhausted"),
-      );
-    }
-
+  }
+  try {
     const row = await repos.leadUsageReservations.insert({
       user_id: command.actorUserId,
       amount: command.amount,
@@ -194,7 +184,7 @@ export async function grantLeadCapacity(
 export async function getLeadCapacitySnapshot(
   userId: UserId,
   repos: UsageRepos,
-): Promise<Result<LeadCapacitySnapshot, DomainError>> {
+): Promise<Result<import("./snapshot").LeadCapacitySnapshot, DomainError>> {
   try {
     const policyResult = await getEffectiveLeadPolicy(userId, repos);
     if (!policyResult.ok) return policyResult;

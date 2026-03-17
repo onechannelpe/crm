@@ -13,16 +13,13 @@ import type {
   SearchUsageCommitsRepo,
   SearchUsageReservationsRepo,
 } from "./repos";
-import {
-  buildSearchCapacitySnapshot,
-  type SearchCapacitySnapshot,
-} from "./snapshot";
-
-export type { SearchCapacitySnapshot };
+import { buildSearchCapacitySnapshot } from "./snapshot";
+export type { SearchCapacitySnapshot } from "./snapshot";
 
 export interface ReserveSearchUsageCommand {
   actorUserId: UserId;
   amount: number;
+  remainingCapacity: number;
   reason: "direct_search" | "admin_grant_adjustment";
 }
 
@@ -62,25 +59,14 @@ interface UsageRepos {
 
 export async function reserveSearchUsage(
   command: ReserveSearchUsageCommand,
-  repos: UsageRepos,
+  repos: Pick<UsageRepos, "searchUsageReservations">,
 ): Promise<Result<SearchReservationId, DomainError>> {
-  try {
-    const snapshotResult = await getSearchCapacitySnapshot(
-      command.actorUserId,
-      repos,
+  if (command.remainingCapacity < command.amount) {
+    return Err(
+      domainError("conflict", "search_exhausted", "Search capacity exhausted"),
     );
-    if (!snapshotResult.ok) return snapshotResult;
-
-    if (snapshotResult.value.remaining < command.amount) {
-      return Err(
-        domainError(
-          "conflict",
-          "search_exhausted",
-          "Search capacity exhausted",
-        ),
-      );
-    }
-
+  }
+  try {
     const row = await repos.searchUsageReservations.insert({
       user_id: command.actorUserId,
       amount: command.amount,
@@ -202,7 +188,7 @@ export async function grantSearchCapacity(
 export async function getSearchCapacitySnapshot(
   userId: UserId,
   repos: UsageRepos,
-): Promise<Result<SearchCapacitySnapshot, DomainError>> {
+): Promise<Result<import("./snapshot").SearchCapacitySnapshot, DomainError>> {
   try {
     const policyResult = await getEffectiveSearchPolicy(userId, repos);
     if (!policyResult.ok) return policyResult;

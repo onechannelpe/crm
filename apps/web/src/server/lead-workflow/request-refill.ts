@@ -1,4 +1,3 @@
-import { getEffectiveLeadPolicy } from "~/server/capacity-policy/lead-policy";
 import type {
   LeadPolicyDefaultsRepo,
   LeadPolicyOverridesRepo,
@@ -6,6 +5,7 @@ import type {
 import {
   cancelLeadUsage,
   commitLeadUsage,
+  getLeadCapacitySnapshot,
   reserveLeadUsage,
 } from "~/server/capacity-usage/lead-usage";
 import type {
@@ -94,21 +94,27 @@ export async function requestLeadRefill(
 ): Promise<Result<LeadRefillResult, DomainError>> {
   const { repos, runInTransaction, engine = engineClient } = deps;
 
-  const policyResult = await getEffectiveLeadPolicy(command.actorUserId, repos);
-  if (isErr(policyResult)) return policyResult;
-
-  const activeAssignments = await repos.leadAssignments.countActiveByUser(
+  const snapshotResult = await getLeadCapacitySnapshot(
     command.actorUserId,
+    repos,
   );
+  if (isErr(snapshotResult)) return snapshotResult;
+
+  const activeAssignments = snapshotResult.value.activeAssignments;
   const needed = computeNeededAssignments(
     activeAssignments,
-    policyResult.value.bufferTarget,
+    snapshotResult.value.policy.bufferTarget,
   );
 
   if (needed === 0) return Ok({ requested: 0, assigned: 0 });
 
   const reservationResult = await reserveLeadUsage(
-    { actorUserId: command.actorUserId, amount: needed, reason: "lead_refill" },
+    {
+      actorUserId: command.actorUserId,
+      amount: needed,
+      remainingCapacity: snapshotResult.value.remaining,
+      reason: "lead_refill",
+    },
     repos,
   );
   if (isErr(reservationResult)) return reservationResult;

@@ -1,12 +1,7 @@
 import type { LeadPolicy, SearchPolicy } from "~/server/capacity-policy/domain";
 import type { ReservationStatus } from "~/server/shared/scope";
 
-import {
-  remainingCapacity,
-  sumCommitted,
-  sumGranted,
-  sumPending,
-} from "./domain";
+import { remainingCapacity, sumAmount, sumPending } from "./domain";
 
 type GrantRow = { amount: number };
 type CommitRow = { amount: number };
@@ -39,8 +34,8 @@ export function buildSearchCapacitySnapshot(input: {
   periodStart: string;
   periodEnd: string;
 }): SearchCapacitySnapshot {
-  const granted = sumGranted(input.grants);
-  const committed = sumCommitted(input.commits);
+  const granted = sumAmount(input.grants);
+  const committed = sumAmount(input.commits);
   const pending = sumPending(input.reservations);
   const remaining = remainingCapacity({
     limit: input.policy.monthlyLimit,
@@ -66,8 +61,8 @@ export function buildLeadCapacitySnapshot(input: {
   reservations: ReservationRow[];
   activeAssignments: number;
 }): LeadCapacitySnapshot {
-  const granted = sumGranted(input.grants);
-  const committed = sumCommitted(input.commits);
+  const granted = sumAmount(input.grants);
+  const committed = sumAmount(input.commits);
   const pending = sumPending(input.reservations);
   const remaining = remainingCapacity({
     limit: input.policy.dailyLimit,

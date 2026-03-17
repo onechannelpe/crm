@@ -10,6 +10,7 @@ import type {
 import {
   cancelSearchUsage,
   commitSearchUsage,
+  getSearchCapacitySnapshot,
   reserveSearchUsage,
 } from "~/server/capacity-usage/search-usage";
 import { type DomainError } from "~/server/shared/domain-error";
@@ -47,8 +48,19 @@ export async function runDirectSearch(
   repos: SearchRepos,
   engine: Pick<EngineClient, "search"> = engineClient,
 ): Promise<Result<SearchResult_, DomainError>> {
+  const snapshotResult = await getSearchCapacitySnapshot(
+    command.actorUserId,
+    repos,
+  );
+  if (isErr(snapshotResult)) return snapshotResult;
+
   const reservationResult = await reserveSearchUsage(
-    { actorUserId: command.actorUserId, amount: 1, reason: "direct_search" },
+    {
+      actorUserId: command.actorUserId,
+      amount: 1,
+      remainingCapacity: snapshotResult.value.remaining,
+      reason: "direct_search",
+    },
     repos,
   );
   if (isErr(reservationResult)) return reservationResult;
@@ -68,6 +80,11 @@ export async function runDirectSearch(
     return searchResult;
   }
 
-  await commitSearchUsage({ reservationId, amount: 1 }, repos);
+  const commitResult = await commitSearchUsage(
+    { reservationId, amount: 1 },
+    repos,
+  );
+  if (isErr(commitResult)) return commitResult;
+
   return Ok(mapToSearchResult(searchResult.value));
 }

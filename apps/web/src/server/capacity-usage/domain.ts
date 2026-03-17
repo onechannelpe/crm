@@ -1,10 +1,6 @@
 import type { ReservationStatus } from "~/server/shared/scope";
 
-export function sumGranted(rows: { amount: number }[]): number {
-  return rows.reduce((acc, r) => acc + r.amount, 0);
-}
-
-export function sumCommitted(rows: { amount: number }[]): number {
+export function sumAmount(rows: { amount: number }[]): number {
   return rows.reduce((acc, r) => acc + r.amount, 0);
 }
 

@@ -9,12 +9,7 @@ import type {
 } from "~/server/capacity-policy/repos";
 import {
   canManageExecutive,
-  canManageExecutive as _canManageExecutive,
 } from "~/server/capacity-policy/scope-access";
-import {
-  getLeadCapacitySnapshot,
-  type LeadCapacitySnapshot,
-} from "~/server/capacity-usage/lead-usage";
 import type {
   LeadCapacityGrantsRepo,
   LeadUsageCommitsRepo,
@@ -23,14 +18,18 @@ import type {
   SearchUsageCommitsRepo,
   SearchUsageReservationsRepo,
 } from "~/server/capacity-usage/repos";
-import {
-  getSearchCapacitySnapshot,
-  type SearchCapacitySnapshot,
-} from "~/server/capacity-usage/search-usage";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { TeamId, UserId } from "~/server/shared/ids";
 import { asUserId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import {
+  getSearchCapacityForUser,
+  type SearchCapacitySnapshot,
+} from "~/server/search-workflow/read-search-capacity";
+import {
+  getLeadCapacityForUser,
+  type LeadCapacitySnapshot,
+} from "~/server/lead-workflow/read-lead-capacity";
 
 import type { CapacityRequestsRepo } from "./repos";
 
@@ -175,19 +174,6 @@ interface ReadRepos {
   };
 }
 
-function canManageExecutiveRecord(
-  actor: SessionData,
-  user: { role: string; branch_id: number; team_id: number | null },
-  supervisedTeamId: number | null,
-): boolean {
-  if (user.role !== "executive") return false;
-  if (actor.role === "superuser") return true;
-  if (user.branch_id !== actor.branchId) return false;
-  if (actor.role === "admin") return true;
-  if (actor.role !== "supervisor" || supervisedTeamId == null) return false;
-  return user.team_id === supervisedTeamId;
-}
-
 export async function getManagedExecutives(
   actor: SessionData,
   repos: ReadRepos,
@@ -198,48 +184,39 @@ export async function getManagedExecutives(
         ? await repos.users.findAllActive()
         : await repos.users.findByBranch(actor.branchId);
 
-    const supervisedTeam =
-      actor.role === "supervisor"
-        ? await repos.teams.findBySupervisorId(actor.userId)
-        : null;
-
-    const managed = users.filter((u) =>
-      canManageExecutiveRecord(actor, u, supervisedTeam?.id ?? null),
-    );
-
     const summaries = await Promise.all(
-      managed.map(async (user) => {
+      users.map(async (user) => {
+        const managed = await canManageExecutive(actor, asUserId(user.id), repos);
+        if (!managed.ok) return null;
+
         const [searchStatus, leadStatus] = await Promise.all([
-          getSearchCapacitySnapshot(asUserId(user.id), repos),
-          getLeadCapacitySnapshot(asUserId(user.id), repos),
+          getSearchCapacityForUser(asUserId(user.id), repos),
+          getLeadCapacityForUser(asUserId(user.id), repos),
         ]);
+        if (isErr(searchStatus) || isErr(leadStatus)) return null;
+
         return {
           id: user.id,
           fullName: longName(user),
           email: user.email,
           teamId: user.team_id,
-          searchStatus: isErr(searchStatus) ? null : searchStatus.value,
-          leadStatus: isErr(leadStatus) ? null : leadStatus.value,
+          searchStatus: searchStatus.value,
+          leadStatus: leadStatus.value,
         };
       }),
     );
 
     return Ok(
-      summaries
-        .filter(
-          (s): s is ManagedExecutiveSummary =>
-            s.searchStatus !== null && s.leadStatus !== null,
-        )
-        .sort((a, b) => a.fullName.localeCompare(b.fullName)),
+      (summaries.filter(Boolean) as ManagedExecutiveSummary[]).sort((a, b) =>
+        a.fullName.localeCompare(b.fullName),
+      ),
     );
   } catch (error) {
     return Err(
       domainError(
         "unexpected",
         "unexpected",
-        error instanceof Error
-          ? error.message
-          : "Failed to list managed executives",
+        error instanceof Error ? error.message : "Failed to list managed executives",
       ),
     );
   }
@@ -259,11 +236,9 @@ export async function getExecutiveCapacityDetail(
     if (!managed.ok)
       return Err(domainError("forbidden", "forbidden", "Forbidden"));
 
-    const target = managed.target;
-
     const [searchStatus, leadStatus, requests] = await Promise.all([
-      getSearchCapacitySnapshot(targetUserId, repos),
-      getLeadCapacitySnapshot(targetUserId, repos),
+      getSearchCapacityForUser(targetUserId, repos),
+      getLeadCapacityForUser(targetUserId, repos),
       repos.capacityRequests.listByUser(targetUserId),
     ]);
 
@@ -273,8 +248,8 @@ export async function getExecutiveCapacityDetail(
     return Ok({
       executive: {
         id: targetUserId,
-        fullName: longName(target),
-        email: target.email,
+        fullName: longName(managed.target),
+        email: managed.target.email,
         teamId: managed.target.team_id,
       },
       searchStatus: searchStatus.value,
@@ -286,9 +261,7 @@ export async function getExecutiveCapacityDetail(
       domainError(
         "unexpected",
         "unexpected",
-        error instanceof Error
-          ? error.message
-          : "Failed to get executive capacity detail",
+        error instanceof Error ? error.message : "Failed to get executive capacity detail",
       ),
     );
   }
@@ -316,9 +289,7 @@ export async function getPendingCapacityRequests(
       domainError(
         "unexpected",
         "unexpected",
-        error instanceof Error
-          ? error.message
-          : "Failed to list pending requests",
+        error instanceof Error ? error.message : "Failed to list pending requests",
       ),
     );
   }
@@ -363,9 +334,7 @@ export async function getCapacityPolicyDefaults(
       domainError(
         "unexpected",
         "unexpected",
-        error instanceof Error
-          ? error.message
-          : "Failed to get policy defaults",
+        error instanceof Error ? error.message : "Failed to get policy defaults",
       ),
     );
   }
