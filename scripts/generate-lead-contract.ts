@@ -162,28 +162,52 @@ function renderRust(spec: LeadApiSpec): string {
   return lines.join("\n");
 }
 
+function renderInterface(name: string, fields: string[]): string {
+  return [
+    `export interface ${name} {`,
+    ...fields.map((f) => `  ${f}`),
+    "}",
+  ].join("\n");
+}
+
 function renderTs(spec: LeadApiSpec): string {
   const candidateFields = spec.response.candidate.fields;
   const importRowFields = spec.request.import_row.fields;
 
-  const candidateProps = candidateFields
-    .map((f) => `  ${f.name}: ${tsType(f)};`)
-    .join(" ");
-  const importRowProps = importRowFields
-    .map((f) => {
+  const candidateInterface = renderInterface(
+    "LeadCandidate",
+    candidateFields.map((f) => `${f.name}: ${tsType(f)};`),
+  );
+  const responsInterface = renderInterface("LeadCandidatesResponse", [
+    "candidates: LeadCandidate[];",
+    "count: number;",
+  ]);
+  const importRowInterface = renderInterface(
+    "LeadImportRow",
+    importRowFields.map((f) => {
       const key = f.optional ? `${f.name}?` : f.name;
       const base = f.type === "string" ? "string" : "number";
-      return `  ${key}: ${base};`;
-    })
-    .join(" ");
+      return `${key}: ${base};`;
+    }),
+  );
+  const importRequestInterface = renderInterface("LeadImportRequest", [
+    "rows: LeadImportRow[];",
+    "source: string;",
+  ]);
+  const importResponseInterface = renderInterface("LeadImportResponse", [
+    "inserted: number;",
+    "updated: number;",
+    "skipped: number;",
+    "total: number;",
+  ]);
 
   return [
     "// GENERATED FILE. DO NOT EDIT.",
-    `export interface LeadCandidate { ${candidateProps} }`,
-    "export interface LeadCandidatesResponse { candidates: LeadCandidate[]; count: number; }",
-    `export interface LeadImportRow { ${importRowProps} }`,
-    "export interface LeadImportRequest { rows: LeadImportRow[]; source: string; }",
-    "export interface LeadImportResponse { inserted: number; updated: number; skipped: number; total: number; }",
+    candidateInterface,
+    responsInterface,
+    importRowInterface,
+    importRequestInterface,
+    importResponseInterface,
     "",
   ].join("\n");
 }

@@ -46,9 +46,9 @@ interface ProjectionContract {
 }
 
 const MANIFEST_PATH = "crates/pipeline/data/mappings/source-manifest.json";
-const CANONICAL_CONTRACT_PATH = "contracts/canonical-contract.json";
-const SOURCE_CONTRACT_PATH = "contracts/source-contract.json";
-const PROJECTION_CONTRACT_PATH = "contracts/search-projection.json";
+const CANONICAL_CONTRACT_PATH = "contracts/pipeline/canonical-contract.json";
+const SOURCE_CONTRACT_PATH = "contracts/pipeline/source-contract.json";
+const PROJECTION_CONTRACT_PATH = "contracts/engine/search-projection.json";
 
 function asObject(value: unknown, label: string): Record<string, unknown> {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {

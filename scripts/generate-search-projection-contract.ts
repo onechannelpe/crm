@@ -162,6 +162,7 @@ function renderRust(spec: ProjectionContract): string {
 
   return [
     "// GENERATED FILE. DO NOT EDIT.",
+    "#![allow(dead_code)]",
     "pub struct ProjectionStorageMapping {",
     "    pub path: &'static str,",
     "    pub table: &'static str,",
