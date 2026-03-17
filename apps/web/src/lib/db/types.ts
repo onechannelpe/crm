@@ -343,6 +343,58 @@ export interface LeadRefillLedgerTable {
   updated_at: number;
 }
 
+export interface SearchCapacityGrantsTable {
+  id: string;
+  user_id: number;
+  amount: number;
+  reason: string;
+  actor_user_id: number;
+  created_at: number;
+}
+
+export interface SearchUsageReservationsTable {
+  id: string;
+  user_id: number;
+  amount: number;
+  status: "pending" | "committed" | "cancelled" | "expired";
+  reason: string;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface SearchUsageCommitsTable {
+  id: string;
+  reservation_id: string;
+  amount: number;
+  created_at: number;
+}
+
+export interface LeadCapacityGrantsTable {
+  id: string;
+  user_id: number;
+  amount: number;
+  reason: string;
+  actor_user_id: number;
+  created_at: number;
+}
+
+export interface LeadUsageReservationsTable {
+  id: string;
+  user_id: number;
+  amount: number;
+  status: "pending" | "committed" | "cancelled" | "expired";
+  reason: string;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface LeadUsageCommitsTable {
+  id: string;
+  reservation_id: string;
+  amount: number;
+  created_at: number;
+}
+
 export interface CapacityRequestsTable {
   id: Generated<number>;
   user_id: number;
@@ -737,6 +789,12 @@ export interface Database {
   lead_policy_defaults: LeadPolicyDefaultsTable;
   lead_policy_overrides: LeadPolicyOverridesTable;
   lead_refill_ledger: LeadRefillLedgerTable;
+  search_capacity_grants: SearchCapacityGrantsTable;
+  search_usage_reservations: SearchUsageReservationsTable;
+  search_usage_commits: SearchUsageCommitsTable;
+  lead_capacity_grants: LeadCapacityGrantsTable;
+  lead_usage_reservations: LeadUsageReservationsTable;
+  lead_usage_commits: LeadUsageCommitsTable;
   capacity_requests: CapacityRequestsTable;
   products: ProductsTable;
   interaction_logs: InteractionLogsTable;
@@ -785,6 +843,12 @@ export type SalesRecordAttempt = Selectable<SalesRecordAttemptsTable>;
 export type LeadPolicyDefault = Selectable<LeadPolicyDefaultsTable>;
 export type LeadPolicyOverride = Selectable<LeadPolicyOverridesTable>;
 export type LeadRefillLedger = Selectable<LeadRefillLedgerTable>;
+export type SearchCapacityGrant = Selectable<SearchCapacityGrantsTable>;
+export type SearchUsageReservation = Selectable<SearchUsageReservationsTable>;
+export type SearchUsageCommit = Selectable<SearchUsageCommitsTable>;
+export type LeadCapacityGrant = Selectable<LeadCapacityGrantsTable>;
+export type LeadUsageReservation = Selectable<LeadUsageReservationsTable>;
+export type LeadUsageCommit = Selectable<LeadUsageCommitsTable>;
 export type CapacityRequest = Selectable<CapacityRequestsTable>;
 export type Product = Selectable<ProductsTable>;
 export type InteractionLog = Selectable<InteractionLogsTable>;
