@@ -1,4 +1,5 @@
 import type { User } from "~/lib/db/types";
+import type { UserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
 
 type StrongAuthRepos = Pick<Repositories, "passkeys" | "userTotpFactors">;
@@ -21,7 +22,7 @@ export function requiresStrongAuthRole(role: User["role"]) {
 }
 
 export async function getStrongAuthStatus(
-  userId: number,
+  userId: UserId,
   repos: StrongAuthRepos,
 ): Promise<StrongAuthStatus> {
   const [totpFactor, passkeys] = await Promise.all([

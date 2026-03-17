@@ -39,7 +39,6 @@ describe("schema baseline", () => {
       `.execute(db);
       const tableNames = new Set(tables.rows.map((row) => row.name));
       expect(tableNames.has("users")).toBe(true);
-      expect(tableNames.has("quota_allocations")).toBe(true);
       expect(tableNames.has("inventory_items")).toBe(true);
       expect(tableNames.has("audit_logs")).toBe(true);
       expect(tableNames.has("audit_action_policies")).toBe(true);
@@ -56,7 +55,6 @@ describe("schema baseline", () => {
         WHERE type = 'index'
       `.execute(db);
       const indexNames = new Set(indexes.rows.map((row) => row.name));
-      expect(indexNames.has("idx_quota_user_date")).toBe(true);
       expect(indexNames.has("idx_app_notifications_dedupe")).toBe(true);
       expect(indexNames.has("idx_audit_created_at")).toBe(true);
       expect(indexNames.has("idx_audit_action_created")).toBe(true);

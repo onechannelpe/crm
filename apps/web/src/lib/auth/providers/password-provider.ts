@@ -1,3 +1,4 @@
+import { asUserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -36,6 +37,6 @@ export async function authenticatePassword(
 
   return Ok({
     kind: "password",
-    userId: user.value.id,
+    userId: asUserId(user.value.id),
   });
 }

@@ -5,29 +5,6 @@ export interface BulkImportSetup {
   assignableRoles: RoleOption[];
 }
 
-export interface TeamMember {
-  id: number;
-  names: string;
-  firstSurname: string;
-  secondSurname: string;
-  email: string;
-  role: Role;
-  teamId: number | null;
-  isActive: boolean;
-  expiresAt: number | null;
-  extensionPresenceStatus:
-    | "idle"
-    | "ready"
-    | "dialing"
-    | "active"
-    | "wrap_up"
-    | "offline"
-    | null;
-  extensionSyncHealth: "ok" | "stale" | "reauth_required" | null;
-  extensionPresenceUpdatedAt: number | null;
-  extensionSyncUpdatedAt: number | null;
-}
-
 export interface TeamInvite {
   inviteId: number;
   userId: number;

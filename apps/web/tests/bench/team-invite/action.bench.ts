@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
+import { asBranchId, asUserId } from "~/server/shared/ids";
 import { createUserProvisioningService } from "~/server/users/service-user-provisioning";
 
 import {
@@ -54,9 +55,9 @@ describe("team invite action benchmark", () => {
       );
 
       const result = await provisioning!.createInvite({
-        actorUserId: 5,
+        actorUserId: asUserId(5),
         actorRole: "superuser",
-        branchId: 2,
+        branchId: asBranchId(2),
         names: `Bench Create ${createCursor.value}`,
         firstSurname: "User",
         secondSurname: "Bench",

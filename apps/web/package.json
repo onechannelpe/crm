@@ -38,6 +38,7 @@
     "@solidjs/vite-plugin-nitro-2": "^0.2.0",
     "arctic": "^3.7.0",
     "clsx": "^2.1.1",
+    "fast-check": "^4.6.0",
     "kysely": "^0.28.11",
     "kysely-turso": "0.1.1",
     "qrcode": "^1.5.4",

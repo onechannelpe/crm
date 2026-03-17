@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   groupCompaniesByRuc,
   groupPeopleByDni,
-} from "~/features/client-search/grouping";
+} from "~/features/search/model/grouping";
 import type { SearchResult } from "~/server/shared/engine/types";
 
 function row(partial: {

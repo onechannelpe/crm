@@ -1,5 +1,6 @@
 use axum_test::TestServer;
 use crm_engine::api::router;
+use crm_engine::domain::candidate_service::CandidateService;
 use crm_engine::domain::search_service::SearchService;
 use crm_engine::security::hmac::HmacVerifier;
 use crm_engine::security::rate_limit::RateLimiter;
@@ -19,6 +20,7 @@ async fn health_ok() {
     schema_guard::validate(&conn).expect("schema");
 
     let app = router::build_router(AppState {
+        candidates: Arc::new(CandidateService::new(pool.clone(), 100)),
         search: Arc::new(SearchService::new(pool, 100)),
         hmac: Arc::new(HmacVerifier::new(
             HashMap::from([("web".to_string(), "x".to_string())]),

@@ -19,7 +19,8 @@ export async function run<T>(db: Kysely<T>): Promise<void> {
       ('product_updated', 'high', 1, 1, NULL, ${epoch}, ${epoch}),
       ('sales_record_confirmed', 'high', 1, 1, NULL, ${epoch}, ${epoch}),
       ('sales_record_rejected', 'high', 1, 1, NULL, ${epoch}, ${epoch}),
-      ('quota_allocated', 'high', 1, 1, NULL, ${epoch}, ${epoch}),
+      ('search_allowance_granted', 'high', 1, 1, NULL, ${epoch}, ${epoch}),
+      ('lead_refill_granted', 'high', 1, 1, NULL, ${epoch}, ${epoch}),
       ('rate_limit_exceeded', 'high', 1, 1, NULL, ${epoch}, ${epoch})
   `.execute(db);
 }

@@ -9,6 +9,8 @@ import {
 import { isPasskeyRequestError } from "~/lib/auth/providers/passkey-provider";
 import { config } from "~/lib/config";
 import { assertPositiveInt } from "~/lib/contracts/guards";
+import { domainError } from "~/server/shared/domain-error";
+import type { DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { PasskeyAuthRepos } from "./shared";
@@ -16,10 +18,7 @@ import {
   INVALID_PASSKEY_REQUEST,
   UNEXPECTED_PASSKEY_ENROLLMENT_FAILURE,
 } from "./shared";
-import type {
-  PasskeyEnrollmentChallenge,
-  PasskeyEnrollmentError,
-} from "./types";
+import type { PasskeyEnrollmentChallenge } from "./types";
 
 interface PasskeyEnrollmentServiceDeps {
   webauthnService: {
@@ -51,7 +50,7 @@ export function createPasskeyEnrollmentService(
   return {
     async beginEnrollment(
       input: BeginPasskeyEnrollmentInput,
-    ): Promise<Result<PasskeyEnrollmentChallenge, PasskeyEnrollmentError>> {
+    ): Promise<Result<PasskeyEnrollmentChallenge, DomainError>> {
       const identifier = `user:${input.userId}`;
       const throttle = await checkPasskeyChallengeThrottle(
         identifier,
@@ -59,10 +58,9 @@ export function createPasskeyEnrollmentService(
         repos,
       );
       if (!throttle.allowed) {
-        return Err({
-          reason: "invalid_request",
-          message: INVALID_PASSKEY_REQUEST,
-        });
+        return Err(
+          domainError("validation", "invalid_request", INVALID_PASSKEY_REQUEST),
+        );
       }
 
       let options: PasskeyEnrollmentChallenge["options"];
@@ -71,10 +69,13 @@ export function createPasskeyEnrollmentService(
           input.userId,
         );
       } catch {
-        return Err({
-          reason: "unexpected",
-          message: UNEXPECTED_PASSKEY_ENROLLMENT_FAILURE,
-        });
+        return Err(
+          domainError(
+            "unexpected",
+            "unexpected",
+            UNEXPECTED_PASSKEY_ENROLLMENT_FAILURE,
+          ),
+        );
       }
 
       try {
@@ -87,26 +88,28 @@ export function createPasskeyEnrollmentService(
 
         return Ok({ challengeId, options });
       } catch {
-        return Err({
-          reason: "unexpected",
-          message: UNEXPECTED_PASSKEY_ENROLLMENT_FAILURE,
-        });
+        return Err(
+          domainError(
+            "unexpected",
+            "unexpected",
+            UNEXPECTED_PASSKEY_ENROLLMENT_FAILURE,
+          ),
+        );
       }
     },
 
     async finishEnrollment(
       input: FinishPasskeyEnrollmentInput,
-    ): Promise<Result<void, PasskeyEnrollmentError>> {
+    ): Promise<Result<void, DomainError>> {
       const identifier = `user:${input.userId}`;
 
       let safeChallengeId: number;
       try {
         safeChallengeId = assertPositiveInt(input.challengeId, "challengeId");
       } catch {
-        return Err({
-          reason: "invalid_request",
-          message: INVALID_PASSKEY_REQUEST,
-        });
+        return Err(
+          domainError("validation", "invalid_request", INVALID_PASSKEY_REQUEST),
+        );
       }
 
       try {
@@ -116,10 +119,13 @@ export function createPasskeyEnrollmentService(
           repos,
         );
         if (!throttle.allowed) {
-          return Err({
-            reason: "invalid_request",
-            message: INVALID_PASSKEY_REQUEST,
-          });
+          return Err(
+            domainError(
+              "validation",
+              "invalid_request",
+              INVALID_PASSKEY_REQUEST,
+            ),
+          );
         }
 
         const challenge =
@@ -130,19 +136,25 @@ export function createPasskeyEnrollmentService(
           challenge.user_id !== input.userId
         ) {
           await recordPasskeyVerifyFailure(identifier, input.ipAddress, repos);
-          return Err({
-            reason: "invalid_request",
-            message: INVALID_PASSKEY_REQUEST,
-          });
+          return Err(
+            domainError(
+              "validation",
+              "invalid_request",
+              INVALID_PASSKEY_REQUEST,
+            ),
+          );
         }
 
         await repos.webauthnChallenges.delete(challenge.id);
         if (challenge.expires_at < Date.now()) {
           await recordPasskeyVerifyFailure(identifier, input.ipAddress, repos);
-          return Err({
-            reason: "invalid_request",
-            message: INVALID_PASSKEY_REQUEST,
-          });
+          return Err(
+            domainError(
+              "validation",
+              "invalid_request",
+              INVALID_PASSKEY_REQUEST,
+            ),
+          );
         }
 
         try {
@@ -153,17 +165,23 @@ export function createPasskeyEnrollmentService(
           );
         } catch (error: unknown) {
           if (!isPasskeyRequestError(error)) {
-            return Err({
-              reason: "unexpected",
-              message: UNEXPECTED_PASSKEY_ENROLLMENT_FAILURE,
-            });
+            return Err(
+              domainError(
+                "unexpected",
+                "unexpected",
+                UNEXPECTED_PASSKEY_ENROLLMENT_FAILURE,
+              ),
+            );
           }
 
           await recordPasskeyVerifyFailure(identifier, input.ipAddress, repos);
-          return Err({
-            reason: "invalid_request",
-            message: INVALID_PASSKEY_REQUEST,
-          });
+          return Err(
+            domainError(
+              "validation",
+              "invalid_request",
+              INVALID_PASSKEY_REQUEST,
+            ),
+          );
         }
 
         await clearPasskeyVerifyFailureState(
@@ -181,10 +199,13 @@ export function createPasskeyEnrollmentService(
         });
         return Ok(undefined);
       } catch {
-        return Err({
-          reason: "unexpected",
-          message: UNEXPECTED_PASSKEY_ENROLLMENT_FAILURE,
-        });
+        return Err(
+          domainError(
+            "unexpected",
+            "unexpected",
+            UNEXPECTED_PASSKEY_ENROLLMENT_FAILURE,
+          ),
+        );
       }
     },
   };

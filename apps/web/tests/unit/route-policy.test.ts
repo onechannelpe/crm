@@ -25,7 +25,7 @@ describe("route permissions", () => {
   it("enforces role access checks for restricted paths", () => {
     expect(canAccessPath("executive", "/audit")).toBe(false);
     expect(canAccessPath("supervisor", "/audit")).toBe(true);
-    expect(canAccessPath("executive", "/quota")).toBe(false);
+    expect(canAccessPath("executive", "/admin/capacity-policies")).toBe(false);
     expect(canAccessPath("executive", "/team")).toBe(false);
     expect(canAccessPath("hr", "/team")).toBe(true);
     expect(canAccessPath("admin", "/catalog")).toBe(true);

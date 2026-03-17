@@ -3,10 +3,19 @@ import {
   ENGINE_ENDPOINTS,
   engineApiPath,
 } from "~/server/shared/engine/contract";
-import { validateSearchInput } from "~/server/shared/engine/input";
 import { signRequest } from "~/server/shared/engine/signature";
-import type { SearchResponse, SearchType } from "~/server/shared/engine/types";
-import { assertSearchResponse } from "~/server/shared/engine/validation";
+import type {
+  LeadCandidatesResponse,
+  SearchResponse,
+} from "~/server/shared/engine/types";
+import {
+  assertLeadCandidatesResponse,
+  assertSearchResponse,
+} from "~/server/shared/engine/validation";
+import type {
+  CandidateStrategy,
+  SearchType,
+} from "~/server/shared/pipeline-types";
 
 export interface EngineClient {
   search(
@@ -14,6 +23,14 @@ export interface EngineClient {
     value: string,
     limit?: number,
   ): Promise<SearchResponse>;
+  leadCandidates(input: {
+    branchId: number;
+    userId: number;
+    amount: number;
+    teamId?: number;
+    productId?: number;
+    strategy?: CandidateStrategy;
+  }): Promise<LeadCandidatesResponse>;
   health(): Promise<boolean>;
 }
 
@@ -36,7 +53,6 @@ export function createEngineClient(config: EngineClientConfig): EngineClient {
 
   return {
     async search(type, value, limit = 20) {
-      validateSearchInput(type, value, limit);
       const body = JSON.stringify({ type, value, limit });
       const response = await post(engineApiPath(ENGINE_ENDPOINTS.search), body);
 
@@ -46,6 +62,28 @@ export function createEngineClient(config: EngineClientConfig): EngineClient {
 
       const payload = (await response.json()) as unknown;
       return assertSearchResponse(payload);
+    },
+
+    async leadCandidates(input) {
+      const body = JSON.stringify({
+        branch_id: input.branchId,
+        user_id: input.userId,
+        amount: input.amount,
+        team_id: input.teamId,
+        product_id: input.productId,
+        strategy: input.strategy,
+      });
+      const response = await post(
+        engineApiPath(ENGINE_ENDPOINTS.leadCandidates),
+        body,
+      );
+
+      if (!response.ok) {
+        throw new Error(`Engine request failed with status ${response.status}`);
+      }
+
+      const payload = (await response.json()) as unknown;
+      return assertLeadCandidatesResponse(payload);
     },
 
     async health() {

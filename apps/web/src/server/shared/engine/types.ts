@@ -7,19 +7,15 @@ export type {
   SearchResult,
 } from "~/server/shared/engine/result-contract";
 
-export type SearchType =
-  | "dni"
-  | "ruc"
-  | "phone"
-  | "person_name"
-  | "company_name"
-  | "phone_enriched";
+export interface LeadCandidate {
+  ruc: string;
+  organization_name: string;
+  dni: string;
+  person_name: string;
+  phone_primary: string;
+}
 
-export const SEARCH_TYPES = [
-  "dni",
-  "ruc",
-  "phone",
-  "person_name",
-  "company_name",
-  "phone_enriched",
-] as const satisfies ReadonlyArray<SearchType>;
+export interface LeadCandidatesResponse {
+  candidates: LeadCandidate[];
+  count: number;
+}

@@ -14,6 +14,7 @@ import {
 import { recordAuthEvent } from "~/lib/auth/security/auth-events";
 import { sendAlertOnNewLoginSource } from "~/lib/auth/security/login-source-alert";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
+import type { UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { deleteLoginFlow } from "../../login-flow/shared";
@@ -27,7 +28,7 @@ interface PasskeyLoginFinishServiceDeps {
     verifyAuthentication(
       response: AuthenticationResponseJSON,
       challenge: string,
-    ): Promise<{ verified: boolean; userId: number }>;
+    ): Promise<{ verified: boolean; userId: UserId }>;
   };
   issueLoginSession: typeof issueLoginSession;
 }
@@ -119,7 +120,7 @@ export function createPasskeyLoginFinishService(
           return Err({ kind: "invalid_credentials" });
         }
 
-        let verifiedUserId: number;
+        let verifiedUserId: UserId;
         try {
           const verification = await deps.webauthnProvider.verifyAuthentication(
             input.response,
@@ -158,7 +159,7 @@ export function createPasskeyLoginFinishService(
         const decision = evaluateLoginPolicy({
           proof: {
             kind: "passkey",
-            userId: context.user.id,
+            userId: verifiedUserId,
           },
           context,
         });

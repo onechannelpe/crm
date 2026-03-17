@@ -1,3 +1,5 @@
+import type { BranchId, UserId } from "~/server/shared/ids";
+
 import type { Role } from "../access/rbac";
 import type {
   PrimaryAuthMethod,
@@ -6,8 +8,8 @@ import type {
 } from "../core/session-contract";
 
 interface CachedSession {
-  userId: number;
-  branchId: number;
+  userId: UserId;
+  branchId: BranchId;
   role: Role;
   onboardingCompleted: boolean;
   sessionClass: SessionClass;
@@ -57,7 +59,7 @@ class SessionCache {
     this.cache.delete(sessionId);
   }
 
-  deleteByUserId(userId: number): void {
+  deleteByUserId(userId: UserId): void {
     for (const [key, value] of this.cache.entries()) {
       if (value.userId === userId) {
         this.cache.delete(key);

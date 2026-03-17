@@ -10,10 +10,7 @@ import {
 } from "~/lib/app-errors";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { requireSession } from "~/lib/auth/access/session";
-import {
-  createPasskeyEnrollmentAuthService,
-  type PasskeyEnrollmentError,
-} from "~/lib/auth/passkey/service";
+import { createPasskeyEnrollmentAuthService } from "~/lib/auth/passkey/service";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { requiresStrongAuthRole } from "~/lib/auth/security/strong-auth-status";
 import {
@@ -21,6 +18,7 @@ import {
   replaceCurrentSession,
 } from "~/lib/auth/session/session-transition";
 import { repos, runInRepositoryTransaction } from "~/server/shared/context";
+import type { DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, type Result } from "~/server/shared/result";
 import {
   completeAccountOnboardingWithRepos,
@@ -81,41 +79,39 @@ async function promoteCompletedOnboardingSession(
 }
 
 function mapCompleteOnboardingError(error: CompleteOnboardingError): never {
-  return mapOnboardingFailure(error, {
-    strongAuthRequiredMessage: error.message,
-  });
+  switch (error.code) {
+    case "user_not_found":
+      throw internalError("No se pudo completar el registro");
+    case "strong_auth_required":
+      throw conflictError(error.message);
+    case "unexpected":
+      throw internalError(error.message);
+  }
 }
 
 function mapOnboardingFailure(
-  error: PasskeyEnrollmentError | CompleteOnboardingError,
+  error: DomainError | CompleteOnboardingError,
   options: {
-    strongAuthRequiredMessage?: string;
     userNotFoundMessage?: string;
   } = {},
 ): never {
-  switch (error.reason) {
-    case "invalid_request":
-      throw internalError("No se pudo configurar la clave de acceso");
+  switch (error.code) {
     case "user_not_found":
       throw internalError(
         options.userNotFoundMessage ?? "No se pudo completar el registro",
       );
-    case "unexpected":
-      throw internalError(error.message);
     case "strong_auth_required":
-      throw conflictError(
-        options.strongAuthRequiredMessage ?? "No se pudo completar el registro",
-      );
+      throw conflictError(error.message);
+    case "invalid_request":
+      throw internalError("No se pudo configurar la clave de acceso");
+    default:
+      throw internalError(error.message);
   }
-
-  const exhaustive: never = error;
-  void exhaustive;
-  throw internalError("Unexpected onboarding completion failure");
 }
 
 type CompletePasskeyOnboardingResult = Result<
   void,
-  PasskeyEnrollmentError | CompleteOnboardingError
+  DomainError | CompleteOnboardingError
 >;
 
 export async function completeOnboarding(

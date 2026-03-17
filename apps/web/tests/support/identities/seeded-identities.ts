@@ -1,9 +1,11 @@
 import type { Role } from "../../../src/lib/auth/access/rbac";
+import { asBranchId, asUserId } from "../../../src/server/shared/ids";
+import type { BranchId, UserId } from "../../../src/server/shared/ids";
 
 export interface TestIdentity {
-  userId: number;
+  userId: UserId;
   username: string;
-  branchId: number;
+  branchId: BranchId;
   role: Role;
 }
 
@@ -13,33 +15,33 @@ export interface BrowserSeededIdentity extends TestIdentity {
 
 export const ISOLATED_DB_IDENTITIES = {
   execOne: {
-    userId: 1,
+    userId: asUserId(1),
     username: "exec.one",
-    branchId: 1,
+    branchId: asBranchId(1),
     role: "executive",
   },
   backOne: {
-    userId: 2,
+    userId: asUserId(2),
     username: "back.one",
-    branchId: 1,
+    branchId: asBranchId(1),
     role: "back_office",
   },
   execTwo: {
-    userId: 3,
+    userId: asUserId(3),
     username: "exec.two",
-    branchId: 2,
+    branchId: asBranchId(2),
     role: "executive",
   },
   backTwo: {
-    userId: 4,
+    userId: asUserId(4),
     username: "back.two",
-    branchId: 2,
+    branchId: asBranchId(2),
     role: "back_office",
   },
   superuser: {
-    userId: 5,
+    userId: asUserId(5),
     username: "super.user",
-    branchId: 2,
+    branchId: asBranchId(2),
     role: "superuser",
   },
 } as const satisfies Record<string, TestIdentity>;
@@ -48,16 +50,16 @@ export const BROWSER_TEST_PASSWORD = "placeholder";
 
 export const BROWSER_DB_IDENTITIES = {
   passkeyUser: {
-    userId: 1,
+    userId: asUserId(1),
     username: "valeria.paredes",
-    branchId: 1,
+    branchId: asBranchId(1),
     role: "admin",
     password: BROWSER_TEST_PASSWORD,
   },
   strongAuthUser: {
-    userId: 12,
+    userId: asUserId(12),
     username: "mario.aguirre",
-    branchId: 1,
+    branchId: asBranchId(1),
     role: "sales_manager",
     password: BROWSER_TEST_PASSWORD,
   },

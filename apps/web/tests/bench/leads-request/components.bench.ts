@@ -44,21 +44,19 @@ describe("lead assignment component benchmark", () => {
   bench(
     "component path: evaluate contact cooldown rule",
     () => {
-      const canContact = canContactNow(
-        {
-          id: 1,
-          organization_id: 1,
-          dni: "70000001",
-          name: "Bench",
-          phone_primary: "+51911111111",
-          phone_secondary: null,
-          last_contacted_at: null,
-          last_contacted_by_user_id: null,
-          cooldown_until: BENCH_NOW - 1,
-          created_at: BENCH_NOW,
-        },
-        BENCH_NOW,
-      );
+      const contact = {
+        id: 1,
+        organization_id: 1,
+        dni: "70000001",
+        name: "Bench",
+        phone_primary: "+51911111111",
+        phone_secondary: null,
+        last_contacted_at: null,
+        last_contacted_by_user_id: null,
+        cooldown_until: BENCH_NOW - 1,
+        created_at: BENCH_NOW,
+      };
+      const canContact = canContactNow(contact, BENCH_NOW);
       if (!canContact) {
         throw new Error("expected contact to be outside cooldown window");
       }

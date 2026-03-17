@@ -171,6 +171,26 @@ export interface ClientSearchViewsTable {
   updated_at: number;
 }
 
+export interface SearchPolicyDefaultsTable {
+  id: Generated<number>;
+  scope_type: "branch" | "team";
+  scope_id: number;
+  period_type: "month";
+  search_limit: number;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface SearchPolicyOverridesTable {
+  id: Generated<number>;
+  user_id: number;
+  search_limit: number;
+  effective_from: number;
+  expires_at: number | null;
+  set_by_user_id: number;
+  created_at: number;
+}
+
 export interface OrganizationsTable {
   id: Generated<number>;
   ruc: string;
@@ -279,14 +299,91 @@ export interface SalesRecordAttemptsTable {
   created_at: number;
 }
 
-export interface QuotaAllocationsTable {
+export interface LeadPolicyDefaultsTable {
+  id: Generated<number>;
+  scope_type: "branch" | "team";
+  scope_id: number;
+  active_buffer_target: number;
+  daily_refill_limit: number;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface LeadPolicyOverridesTable {
   id: Generated<number>;
   user_id: number;
-  allocated_by_user_id: number;
-  date: string;
-  quota_amount: number;
-  used_amount: number;
+  active_buffer_target: number;
+  daily_refill_limit: number;
+  effective_from: number;
+  expires_at: number | null;
+  set_by_user_id: number;
   created_at: number;
+}
+
+export interface SearchCapacityGrantsTable {
+  id: string;
+  user_id: number;
+  amount: number;
+  reason: string;
+  actor_user_id: number;
+  created_at: number;
+}
+
+export interface SearchUsageReservationsTable {
+  id: string;
+  user_id: number;
+  amount: number;
+  status: "pending" | "committed" | "cancelled" | "expired";
+  reason: string;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface SearchUsageCommitsTable {
+  id: string;
+  reservation_id: string;
+  amount: number;
+  created_at: number;
+}
+
+export interface LeadCapacityGrantsTable {
+  id: string;
+  user_id: number;
+  amount: number;
+  reason: string;
+  actor_user_id: number;
+  created_at: number;
+}
+
+export interface LeadUsageReservationsTable {
+  id: string;
+  user_id: number;
+  amount: number;
+  status: "pending" | "committed" | "cancelled" | "expired";
+  reason: string;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface LeadUsageCommitsTable {
+  id: string;
+  reservation_id: string;
+  amount: number;
+  created_at: number;
+}
+
+export interface CapacityRequestsTable {
+  id: Generated<number>;
+  user_id: number;
+  kind: "search_extra" | "lead_refill_extra";
+  status: "pending" | "approved" | "rejected" | "canceled";
+  requested_amount: number;
+  reason: string;
+  decision_note: string | null;
+  reviewer_user_id: number | null;
+  created_at: number;
+  updated_at: number;
+  decided_at: number | null;
 }
 
 export interface ProductsTable {
@@ -648,6 +745,8 @@ export interface Database {
   notification_deliveries: NotificationDeliveriesTable;
   app_notifications: AppNotificationsTable;
   client_search_views: ClientSearchViewsTable;
+  search_policy_defaults: SearchPolicyDefaultsTable;
+  search_policy_overrides: SearchPolicyOverridesTable;
   user_sessions: UserSessionsTable;
   action_rate_limit_counters: ActionRateLimitCountersTable;
   auth_throttle_counters: AuthThrottleCountersTable;
@@ -663,7 +762,15 @@ export interface Database {
   sales_record_addresses: SalesRecordAddressesTable;
   sales_record_products: SalesRecordProductsTable;
   sales_record_attempts: SalesRecordAttemptsTable;
-  quota_allocations: QuotaAllocationsTable;
+  lead_policy_defaults: LeadPolicyDefaultsTable;
+  lead_policy_overrides: LeadPolicyOverridesTable;
+  search_capacity_grants: SearchCapacityGrantsTable;
+  search_usage_reservations: SearchUsageReservationsTable;
+  search_usage_commits: SearchUsageCommitsTable;
+  lead_capacity_grants: LeadCapacityGrantsTable;
+  lead_usage_reservations: LeadUsageReservationsTable;
+  lead_usage_commits: LeadUsageCommitsTable;
+  capacity_requests: CapacityRequestsTable;
   products: ProductsTable;
   interaction_logs: InteractionLogsTable;
   inventory_items: InventoryItemsTable;
@@ -697,6 +804,8 @@ export type NotificationJob = Selectable<NotificationJobsTable>;
 export type NotificationDelivery = Selectable<NotificationDeliveriesTable>;
 export type AppNotification = Selectable<AppNotificationsTable>;
 export type ClientSearchView = Selectable<ClientSearchViewsTable>;
+export type SearchPolicyDefault = Selectable<SearchPolicyDefaultsTable>;
+export type SearchPolicyOverride = Selectable<SearchPolicyOverridesTable>;
 export type Organization = Selectable<OrganizationsTable>;
 export type Contact = Selectable<ContactsTable>;
 export type LeadAssignment = Selectable<LeadAssignmentsTable>;
@@ -705,7 +814,15 @@ export type SalesRecordClient = Selectable<SalesRecordClientTable>;
 export type SalesRecordAddress = Selectable<SalesRecordAddressesTable>;
 export type SalesRecordProduct = Selectable<SalesRecordProductsTable>;
 export type SalesRecordAttempt = Selectable<SalesRecordAttemptsTable>;
-export type QuotaAllocation = Selectable<QuotaAllocationsTable>;
+export type LeadPolicyDefault = Selectable<LeadPolicyDefaultsTable>;
+export type LeadPolicyOverride = Selectable<LeadPolicyOverridesTable>;
+export type SearchCapacityGrant = Selectable<SearchCapacityGrantsTable>;
+export type SearchUsageReservation = Selectable<SearchUsageReservationsTable>;
+export type SearchUsageCommit = Selectable<SearchUsageCommitsTable>;
+export type LeadCapacityGrant = Selectable<LeadCapacityGrantsTable>;
+export type LeadUsageReservation = Selectable<LeadUsageReservationsTable>;
+export type LeadUsageCommit = Selectable<LeadUsageCommitsTable>;
+export type CapacityRequest = Selectable<CapacityRequestsTable>;
 export type Product = Selectable<ProductsTable>;
 export type InteractionLog = Selectable<InteractionLogsTable>;
 export type InventoryItem = Selectable<InventoryItemsTable>;
@@ -738,6 +855,8 @@ export type NewNotificationJob = Insertable<NotificationJobsTable>;
 export type NewNotificationDelivery = Insertable<NotificationDeliveriesTable>;
 export type NewAppNotification = Insertable<AppNotificationsTable>;
 export type NewClientSearchView = Insertable<ClientSearchViewsTable>;
+export type NewSearchPolicyDefault = Insertable<SearchPolicyDefaultsTable>;
+export type NewSearchPolicyOverride = Insertable<SearchPolicyOverridesTable>;
 export type NewUserSession = Insertable<UserSessionsTable>;
 export type NewAuthThrottleCounter = Insertable<AuthThrottleCountersTable>;
 export type NewAuthEvent = Insertable<AuthEventsTable>;
@@ -752,7 +871,9 @@ export type NewSalesRecordClient = Insertable<SalesRecordClientTable>;
 export type NewSalesRecordAddress = Insertable<SalesRecordAddressesTable>;
 export type NewSalesRecordProduct = Insertable<SalesRecordProductsTable>;
 export type NewSalesRecordAttempt = Insertable<SalesRecordAttemptsTable>;
-export type NewQuotaAllocation = Insertable<QuotaAllocationsTable>;
+export type NewLeadPolicyDefault = Insertable<LeadPolicyDefaultsTable>;
+export type NewLeadPolicyOverride = Insertable<LeadPolicyOverridesTable>;
+export type NewCapacityRequest = Insertable<CapacityRequestsTable>;
 export type NewInteractionLog = Insertable<InteractionLogsTable>;
 export type NewAuditLog = Insertable<AuditLogsTable>;
 export type NewAuditActionPolicy = Insertable<AuditActionPoliciesTable>;

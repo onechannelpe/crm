@@ -3,32 +3,19 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Role } from "../../src/lib/auth/access/rbac";
 import { Ok } from "../../src/server/shared/result";
 
-const {
-  requirePermissionMock,
-  usersFindByBranchMock,
-  teamsFindByBranchMock,
-  listPendingInvitesMock,
-  listTeamExecutiveStatusesMock,
-} = vi.hoisted(() => ({
-  requirePermissionMock: vi.fn(),
-  usersFindByBranchMock: vi.fn(),
-  teamsFindByBranchMock: vi.fn(),
-  listPendingInvitesMock: vi.fn(),
-  listTeamExecutiveStatusesMock: vi.fn(),
-}));
+const { requirePermissionMock, teamsFindByBranchMock, listPendingInvitesMock } =
+  vi.hoisted(() => ({
+    requirePermissionMock: vi.fn(),
+    teamsFindByBranchMock: vi.fn(),
+    listPendingInvitesMock: vi.fn(),
+  }));
 
 vi.mock("../../src/lib/auth/access/session", () => ({
   requirePermission: requirePermissionMock,
 }));
 
 vi.mock("../../src/server/shared/context", () => ({
-  extensionService: {
-    listTeamExecutiveStatuses: listTeamExecutiveStatusesMock,
-  },
   repos: {
-    users: {
-      findByBranch: usersFindByBranchMock,
-    },
     teams: {
       findByBranch: teamsFindByBranchMock,
     },
@@ -41,10 +28,7 @@ vi.mock("../../src/actions/team/provisioning", () => ({
   },
 }));
 
-import {
-  getInviteManagement,
-  getTeamMembers,
-} from "../../src/actions/team/read";
+import { getInviteManagement } from "../../src/actions/team/read";
 
 function setSession(role: Role) {
   requirePermissionMock.mockResolvedValue({
@@ -53,47 +37,6 @@ function setSession(role: Role) {
     branchId: 3,
   });
 }
-
-describe("team members query", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    usersFindByBranchMock.mockResolvedValue([
-      {
-        id: 41,
-        full_name: "HR User",
-        email: "hr@crm.local",
-        role: "hr",
-        team_id: 11,
-        is_active: 1,
-      },
-    ]);
-    listTeamExecutiveStatusesMock.mockResolvedValue(Ok([]));
-  });
-
-  it("fetches only members — no invite queries touched", async () => {
-    setSession("sales_manager");
-    const members = await getTeamMembers();
-    expect(usersFindByBranchMock).toHaveBeenCalledWith(3);
-    expect(listTeamExecutiveStatusesMock).toHaveBeenCalledWith({
-      role: "sales_manager",
-      userId: 7,
-      branchId: 3,
-    });
-    expect(members).toHaveLength(1);
-    expect(listPendingInvitesMock).not.toHaveBeenCalled();
-    expect(teamsFindByBranchMock).not.toHaveBeenCalled();
-  });
-
-  it("throws when extension status service returns an error", async () => {
-    setSession("sales_manager");
-    listTeamExecutiveStatusesMock.mockResolvedValue({
-      ok: false,
-      error: { message: "extension unavailable" },
-    });
-
-    await expect(getTeamMembers()).rejects.toThrow();
-  });
-});
 
 describe("invite management query", () => {
   beforeEach(() => {

@@ -1,4 +1,5 @@
 import { createAuditService } from "~/server/shared/audit";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -79,13 +80,6 @@ type SalesProductRow = NonNullable<
   Awaited<ReturnType<Repositories["products"]["findById"]>>
 >;
 
-export type SalesRecordsWorkflowError =
-  | { reason: "not_found"; message: string }
-  | { reason: "forbidden"; message: string }
-  | { reason: "invalid_data"; message: string }
-  | { reason: "invalid_state"; message: string }
-  | { reason: "unexpected"; message: string };
-
 export type RepositoryTransactionRunner = <T>(
   operation: (transactionRepos: Repositories) => Promise<T>,
 ) => Promise<T>;
@@ -97,16 +91,24 @@ export function createSalesRecordsWorkflowService(
   const withTransaction: RepositoryTransactionRunner =
     runInTransaction ?? (async (operation) => operation(repos));
 
-  function fail(
-    reason: SalesRecordsWorkflowError["reason"],
-    message: string,
-  ): Result<never, SalesRecordsWorkflowError> {
-    return Err({ reason, message });
+  function fail(code: string, message: string): Result<never, DomainError> {
+    switch (code) {
+      case "not_found":
+        return Err(domainError("not_found", code, message));
+      case "forbidden":
+        return Err(domainError("forbidden", code, message));
+      case "invalid_data":
+        return Err(domainError("validation", code, message));
+      case "invalid_state":
+        return Err(domainError("conflict", code, message));
+      default:
+        return Err(domainError("unexpected", "unexpected", message));
+    }
   }
 
   async function runSafely<T>(
-    operation: () => Promise<Result<T, SalesRecordsWorkflowError>>,
-  ): Promise<Result<T, SalesRecordsWorkflowError>> {
+    operation: () => Promise<Result<T, DomainError>>,
+  ): Promise<Result<T, DomainError>> {
     try {
       return await operation();
     } catch {
@@ -117,7 +119,7 @@ export function createSalesRecordsWorkflowService(
   function validateDraftPayload(input: {
     addresses: DraftAddressInput[];
     products: DraftProductInput[];
-  }): Result<void, SalesRecordsWorkflowError> {
+  }): Result<void, DomainError> {
     if (input.addresses.length > 0) {
       const primaryCount = input.addresses.filter((it) => it.isPrimary).length;
       if (primaryCount !== 1) {
@@ -133,7 +135,7 @@ export function createSalesRecordsWorkflowService(
   async function loadProducts(
     activeRepos: Repositories,
     lines: DraftProductInput[],
-  ): Promise<Result<SalesProductRow[], SalesRecordsWorkflowError>> {
+  ): Promise<Result<SalesProductRow[], DomainError>> {
     const products = await Promise.all(
       lines.map((item) => activeRepos.products.findById(item.productId)),
     );
@@ -201,7 +203,7 @@ export function createSalesRecordsWorkflowService(
   return {
     async createDraft(
       input: CreateSalesRecordDraftInput,
-    ): Promise<Result<number, SalesRecordsWorkflowError>> {
+    ): Promise<Result<number, DomainError>> {
       return runSafely(() =>
         withTransaction(async (activeRepos) => {
           const audit = createAuditService(activeRepos);
@@ -289,7 +291,7 @@ export function createSalesRecordsWorkflowService(
     async submit(
       recordId: number,
       executiveUserId: number,
-    ): Promise<Result<void, SalesRecordsWorkflowError>> {
+    ): Promise<Result<void, DomainError>> {
       return runSafely(() =>
         withTransaction(async (activeRepos) => {
           const audit = createAuditService(activeRepos);
@@ -360,7 +362,7 @@ export function createSalesRecordsWorkflowService(
       executiveUserId: number,
       input: UpdateSalesRecordDraftInput,
       correctionNotes: string | null = null,
-    ): Promise<Result<void, SalesRecordsWorkflowError>> {
+    ): Promise<Result<void, DomainError>> {
       return runSafely(() =>
         withTransaction(async (activeRepos) => {
           const audit = createAuditService(activeRepos);
@@ -419,7 +421,7 @@ export function createSalesRecordsWorkflowService(
       reviewerUserId: number,
       reviewerBranchId: number,
       bypassBranchScope: boolean,
-    ): Promise<Result<void, SalesRecordsWorkflowError>> {
+    ): Promise<Result<void, DomainError>> {
       return runSafely(() =>
         withTransaction(async (activeRepos) => {
           const audit = createAuditService(activeRepos);
@@ -460,7 +462,7 @@ export function createSalesRecordsWorkflowService(
       reviewerBranchId: number,
       bypassBranchScope: boolean,
       reason: string,
-    ): Promise<Result<void, SalesRecordsWorkflowError>> {
+    ): Promise<Result<void, DomainError>> {
       return runSafely(() =>
         withTransaction(async (activeRepos) => {
           const audit = createAuditService(activeRepos);
@@ -501,7 +503,7 @@ export function createSalesRecordsWorkflowService(
     async cancel(
       recordId: number,
       executiveUserId: number,
-    ): Promise<Result<void, SalesRecordsWorkflowError>> {
+    ): Promise<Result<void, DomainError>> {
       return runSafely(() =>
         withTransaction(async (activeRepos) => {
           const audit = createAuditService(activeRepos);
@@ -541,7 +543,7 @@ export function createSalesRecordsWorkflowService(
       outcome: SalesRecordAttemptOutcome,
       notes: string | null,
       nextAttemptAt: number | null,
-    ): Promise<Result<void, SalesRecordsWorkflowError>> {
+    ): Promise<Result<void, DomainError>> {
       return runSafely(() =>
         withTransaction(async (activeRepos) => {
           const audit = createAuditService(activeRepos);
