@@ -10,18 +10,27 @@ import {
   createUserTotpFactorsRepo,
   createUserTotpRecoveryCodesRepo,
 } from "~/server/auth/repos-user-totp-factors";
-import { createCapacityRequestsRepo } from "~/server/capacity/repos";
+import { createCapacityRequestsRepo } from "~/server/capacity-admin/repos";
+import {
+  createLeadPolicyDefaultsRepo,
+  createLeadPolicyOverridesRepo,
+  createSearchPolicyDefaultsRepo,
+  createSearchPolicyOverridesRepo,
+} from "~/server/capacity-policy/repos";
+import {
+  createLeadCapacityGrantsRepo,
+  createLeadUsageCommitsRepo,
+  createLeadUsageReservationsRepo,
+  createSearchCapacityGrantsRepo,
+  createSearchUsageCommitsRepo,
+  createSearchUsageReservationsRepo,
+} from "~/server/capacity-usage/repos";
 import { createSearchEnrichmentRepo } from "~/server/client-search/repos-enrichment";
 import { createContactsRepo } from "~/server/contacts/repos-contacts";
 import { createOrganizationsRepo } from "~/server/contacts/repos-organizations";
 import { createExtensionRuntimeRepo } from "~/server/extension/repos";
 import { createInventoryRepo } from "~/server/inventory/repos";
 import { createProductsRepo } from "~/server/inventory/repos-products";
-import {
-  createLeadPolicyDefaultsRepo,
-  createLeadPolicyOverridesRepo,
-  createLeadRefillLedgerRepo,
-} from "~/server/lead-operations/repos";
 import { createLeadAssignmentsRepo } from "~/server/leads/repos";
 import { createAppNotificationsRepo } from "~/server/notifications/repos-app-notifications";
 import { createNotificationCampaignsRepo } from "~/server/notifications/repos-campaigns";
@@ -31,11 +40,6 @@ import { createActionObservationsRepo } from "~/server/observability/repos-actio
 import { createAuthFunnelEventsRepo } from "~/server/observability/repos-auth-funnel-events";
 import { createReportExportRepo } from "~/server/sales/repos-report-exports";
 import { createSalesRecordsRepo } from "~/server/sales/repos-sales-records";
-import {
-  createSearchAllowanceLedgerRepo,
-  createSearchPolicyDefaultsRepo,
-  createSearchPolicyOverridesRepo,
-} from "~/server/search-access/repos";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
 import { createBranchesRepo } from "~/server/users/repos-branches";
@@ -67,10 +71,14 @@ export function createRepositories(db: Kysely<Database>) {
     leadAssignments: createLeadAssignmentsRepo(db),
     searchPolicyDefaults: createSearchPolicyDefaultsRepo(db),
     searchPolicyOverrides: createSearchPolicyOverridesRepo(db),
-    searchAllowanceLedger: createSearchAllowanceLedgerRepo(db),
     leadPolicyDefaults: createLeadPolicyDefaultsRepo(db),
     leadPolicyOverrides: createLeadPolicyOverridesRepo(db),
-    leadRefillLedger: createLeadRefillLedgerRepo(db),
+    searchCapacityGrants: createSearchCapacityGrantsRepo(db),
+    searchUsageReservations: createSearchUsageReservationsRepo(db),
+    searchUsageCommits: createSearchUsageCommitsRepo(db),
+    leadCapacityGrants: createLeadCapacityGrantsRepo(db),
+    leadUsageReservations: createLeadUsageReservationsRepo(db),
+    leadUsageCommits: createLeadUsageCommitsRepo(db),
     capacityRequests: createCapacityRequestsRepo(db),
     reportExportJobs: createReportExportRepo(db),
     salesRecords: createSalesRecordsRepo(db),

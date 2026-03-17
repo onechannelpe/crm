@@ -4,28 +4,13 @@ import { createPrivilegedLoginAlertSender } from "~/lib/auth/security/login-aler
 import { config } from "~/lib/config";
 import { db } from "~/lib/db/db";
 import { env } from "~/lib/env";
-import { createCapacityApprovalService } from "~/server/capacity/approval-service";
-import { createTransactionCapacityGrantServices } from "~/server/capacity/grant-services";
-import { createCapacityManageService } from "~/server/capacity/manage-service";
-import { createCapacityReadService } from "~/server/capacity/read-service";
-import { createCapacityRequestService } from "~/server/capacity/request-service";
 import { createSearchEnrichmentService } from "~/server/client-search/enrichment-service";
-import { createLeadCandidateService } from "~/server/engine-gateway/lead-candidate-service";
-import { createEngineSearchService } from "~/server/engine-gateway/search-service";
 import { createExtensionService } from "~/server/extension/service";
-import { createLeadAssignmentService } from "~/server/lead-operations/assignment-service";
-import { createLeadPolicyService } from "~/server/lead-operations/policy-service";
-import {
-  createLeadRefillGrantService,
-  createLeadRefillService,
-} from "~/server/lead-operations/refill-service";
 import { createAppNotificationCenter } from "~/server/notifications/app-center-service";
 import { createObservabilityService } from "~/server/observability/service";
 import { createSalesExportBlobStore } from "~/server/sales/export-blob-store";
 import { createSalesExportService } from "~/server/sales/export-service";
 import { createSalesRecordsWorkflowService } from "~/server/sales/records-service";
-import { createSearchAllowanceService } from "~/server/search-access/allowance-service";
-import { createSearchPolicyService } from "~/server/search-access/policy-service";
 import { createAuditService } from "~/server/shared/audit";
 import { createRepositories } from "~/server/shared/registry";
 import { createProfilePictureBlobStore } from "~/server/users/profile-picture-blob-store";
@@ -52,45 +37,6 @@ export const rateLimitDeps = {
   auditLogs: repos.auditLogs,
 };
 export const searchEnrichmentService = createSearchEnrichmentService(repos);
-export const engineSearchService = createEngineSearchService();
-export const searchPolicyService = createSearchPolicyService(repos);
-export const searchAllowanceService = createSearchAllowanceService({
-  repos,
-  policyService: searchPolicyService,
-  auditService,
-});
-export const leadPolicyService = createLeadPolicyService(repos);
-export const leadAssignmentService = createLeadAssignmentService({
-  runInRepositoryTransaction,
-});
-export const leadCandidateService = createLeadCandidateService();
-export const leadRefillGrantService = createLeadRefillGrantService({
-  repos,
-  policyService: leadPolicyService,
-  auditService,
-});
-export const leadRefillService = createLeadRefillService({
-  repos,
-  assignmentService: leadAssignmentService,
-  candidateService: leadCandidateService,
-  auditService,
-  grantService: leadRefillGrantService,
-});
-export const capacityRequestService = createCapacityRequestService(repos);
-export const capacityReadService = createCapacityReadService({
-  repos,
-});
-export const capacityManageService = createCapacityManageService({
-  repos,
-  searchAllowanceService,
-  leadRefillGrantService,
-  searchPolicyService,
-  leadPolicyService,
-});
-export const capacityApprovalService = createCapacityApprovalService({
-  runInRepositoryTransaction,
-  createGrantServices: createTransactionCapacityGrantServices,
-});
 export const extensionService = createExtensionService(repos, {
   runInTransaction: runInRepositoryTransaction,
 });
