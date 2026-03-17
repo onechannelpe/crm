@@ -2,7 +2,10 @@ import * as fc from "fast-check";
 import { describe, it } from "vitest";
 
 import { remainingCapacity } from "~/server/capacity-usage/domain";
-import { buildLeadCapacitySnapshot, buildSearchCapacitySnapshot } from "~/server/capacity-usage/snapshot";
+import {
+  buildLeadCapacitySnapshot,
+  buildSearchCapacitySnapshot,
+} from "~/server/capacity-usage/snapshot";
 
 // Arbitraries
 
@@ -37,7 +40,12 @@ describe("remainingCapacity", () => {
         fc.nat(),
         fc.nat(),
         (limit, granted, committed, pending) => {
-          const result = remainingCapacity({ limit, granted, committed, pending });
+          const result = remainingCapacity({
+            limit,
+            granted,
+            committed,
+            pending,
+          });
           return result >= 0;
         },
       ),
@@ -52,7 +60,12 @@ describe("remainingCapacity", () => {
         fc.nat(500),
         fc.nat(500),
         (limit, granted, committed, pending) => {
-          const result = remainingCapacity({ limit, granted, committed, pending });
+          const result = remainingCapacity({
+            limit,
+            granted,
+            committed,
+            pending,
+          });
           const expected = Math.max(0, limit + granted - committed - pending);
           return result === expected;
         },
@@ -64,38 +77,50 @@ describe("remainingCapacity", () => {
 describe("buildSearchCapacitySnapshot", () => {
   it("remaining is always >= 0", () => {
     fc.assert(
-      fc.property(searchPolicy, natRows, natRows, reservationRows, (policy, grants, commits, reservations) => {
-        const snapshot = buildSearchCapacitySnapshot({
-          policy,
-          grants,
-          commits,
-          reservations,
-          periodStart: "2026-03-01",
-          periodEnd: "2026-03-31",
-        });
-        return snapshot.remaining >= 0;
-      }),
+      fc.property(
+        searchPolicy,
+        natRows,
+        natRows,
+        reservationRows,
+        (policy, grants, commits, reservations) => {
+          const snapshot = buildSearchCapacitySnapshot({
+            policy,
+            grants,
+            commits,
+            reservations,
+            periodStart: "2026-03-01",
+            periodEnd: "2026-03-31",
+          });
+          return snapshot.remaining >= 0;
+        },
+      ),
     );
   });
 
   it("snapshot fields are consistent with inputs", () => {
     fc.assert(
-      fc.property(searchPolicy, natRows, natRows, reservationRows, (policy, grants, commits, reservations) => {
-        const snapshot = buildSearchCapacitySnapshot({
-          policy,
-          grants,
-          commits,
-          reservations,
-          periodStart: "2026-03-01",
-          periodEnd: "2026-03-31",
-        });
-        return (
-          snapshot.granted >= 0 &&
-          snapshot.committed >= 0 &&
-          snapshot.pending >= 0 &&
-          snapshot.policy === policy
-        );
-      }),
+      fc.property(
+        searchPolicy,
+        natRows,
+        natRows,
+        reservationRows,
+        (policy, grants, commits, reservations) => {
+          const snapshot = buildSearchCapacitySnapshot({
+            policy,
+            grants,
+            commits,
+            reservations,
+            periodStart: "2026-03-01",
+            periodEnd: "2026-03-31",
+          });
+          return (
+            snapshot.granted >= 0 &&
+            snapshot.committed >= 0 &&
+            snapshot.pending >= 0 &&
+            snapshot.policy === policy
+          );
+        },
+      ),
     );
   });
 });
@@ -103,25 +128,51 @@ describe("buildSearchCapacitySnapshot", () => {
 describe("buildLeadCapacitySnapshot", () => {
   it("remaining is always >= 0", () => {
     fc.assert(
-      fc.property(leadPolicy, natRows, natRows, reservationRows, fc.nat(), (policy, grants, commits, reservations, activeAssignments) => {
-        const snapshot = buildLeadCapacitySnapshot({ policy, grants, commits, reservations, activeAssignments });
-        return snapshot.remaining >= 0;
-      }),
+      fc.property(
+        leadPolicy,
+        natRows,
+        natRows,
+        reservationRows,
+        fc.nat(),
+        (policy, grants, commits, reservations, activeAssignments) => {
+          const snapshot = buildLeadCapacitySnapshot({
+            policy,
+            grants,
+            commits,
+            reservations,
+            activeAssignments,
+          });
+          return snapshot.remaining >= 0;
+        },
+      ),
     );
   });
 
   it("snapshot fields are consistent with inputs", () => {
     fc.assert(
-      fc.property(leadPolicy, natRows, natRows, reservationRows, fc.nat(), (policy, grants, commits, reservations, activeAssignments) => {
-        const snapshot = buildLeadCapacitySnapshot({ policy, grants, commits, reservations, activeAssignments });
-        return (
-          snapshot.granted >= 0 &&
-          snapshot.committed >= 0 &&
-          snapshot.pending >= 0 &&
-          snapshot.activeAssignments === activeAssignments &&
-          snapshot.policy === policy
-        );
-      }),
+      fc.property(
+        leadPolicy,
+        natRows,
+        natRows,
+        reservationRows,
+        fc.nat(),
+        (policy, grants, commits, reservations, activeAssignments) => {
+          const snapshot = buildLeadCapacitySnapshot({
+            policy,
+            grants,
+            commits,
+            reservations,
+            activeAssignments,
+          });
+          return (
+            snapshot.granted >= 0 &&
+            snapshot.committed >= 0 &&
+            snapshot.pending >= 0 &&
+            snapshot.activeAssignments === activeAssignments &&
+            snapshot.policy === policy
+          );
+        },
+      ),
     );
   });
 });

@@ -6,7 +6,13 @@ import { canManageExecutive } from "~/server/capacity-policy/scope-access";
 import { asBranchId, asUserId } from "~/server/shared/ids";
 
 // Roles that must never be able to manage an executive
-const NON_MANAGER_ROLES = ["executive", "back_office", "sales_manager", "logistics", "hr"] as const;
+const NON_MANAGER_ROLES = [
+  "executive",
+  "back_office",
+  "sales_manager",
+  "logistics",
+  "hr",
+] as const;
 
 function makeActor(role: Role = "admin", branchId = 1) {
   return {
@@ -22,7 +28,11 @@ function makeActor(role: Role = "admin", branchId = 1) {
   };
 }
 
-function makeRepos(target: { role: string; branch_id: number; team_id: number | null } | undefined) {
+function makeRepos(
+  target:
+    | { role: string; branch_id: number; team_id: number | null }
+    | undefined,
+) {
   return {
     users: {
       findById: async () => target,
@@ -42,7 +52,11 @@ describe("canManageExecutive", () => {
         fc.nat({ max: 10 }).map((n) => n + 1),
         async (role, branchId) => {
           const actor = makeActor(role, branchId);
-          const target = { role: "executive", branch_id: branchId, team_id: null };
+          const target = {
+            role: "executive",
+            branch_id: branchId,
+            team_id: null,
+          };
           const repos = makeRepos(target);
           const result = await canManageExecutive(actor, asUserId(1), repos);
           return !result.ok;

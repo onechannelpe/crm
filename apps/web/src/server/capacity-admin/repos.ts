@@ -14,16 +14,32 @@ export function createCapacityRequestsRepo(db: Kysely<Database>) {
       const now = Date.now();
       return db
         .insertInto("capacity_requests")
-        .values({ ...values, decision_note: null, reviewer_user_id: null, created_at: now, updated_at: now, decided_at: null })
+        .values({
+          ...values,
+          decision_note: null,
+          reviewer_user_id: null,
+          created_at: now,
+          updated_at: now,
+          decided_at: null,
+        })
         .executeTakeFirstOrThrow();
     },
 
     findById(id: number) {
-      return db.selectFrom("capacity_requests").selectAll().where("id", "=", id).executeTakeFirst();
+      return db
+        .selectFrom("capacity_requests")
+        .selectAll()
+        .where("id", "=", id)
+        .executeTakeFirst();
     },
 
     listByUser(userId: number) {
-      return db.selectFrom("capacity_requests").selectAll().where("user_id", "=", userId).orderBy("created_at", "desc").execute();
+      return db
+        .selectFrom("capacity_requests")
+        .selectAll()
+        .where("user_id", "=", userId)
+        .orderBy("created_at", "desc")
+        .execute();
     },
 
     listPendingByBranch(branchId: number) {
@@ -54,21 +70,41 @@ export function createCapacityRequestsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    markApproved(id: number, reviewerUserId: number, decisionNote: string | null) {
+    markApproved(
+      id: number,
+      reviewerUserId: number,
+      decisionNote: string | null,
+    ) {
       const now = Date.now();
       return db
         .updateTable("capacity_requests")
-        .set({ status: "approved", reviewer_user_id: reviewerUserId, decision_note: decisionNote, decided_at: now, updated_at: now })
+        .set({
+          status: "approved",
+          reviewer_user_id: reviewerUserId,
+          decision_note: decisionNote,
+          decided_at: now,
+          updated_at: now,
+        })
         .where("id", "=", id)
         .where("status", "=", "pending")
         .executeTakeFirst();
     },
 
-    markRejected(id: number, reviewerUserId: number, decisionNote: string | null) {
+    markRejected(
+      id: number,
+      reviewerUserId: number,
+      decisionNote: string | null,
+    ) {
       const now = Date.now();
       return db
         .updateTable("capacity_requests")
-        .set({ status: "rejected", reviewer_user_id: reviewerUserId, decision_note: decisionNote, decided_at: now, updated_at: now })
+        .set({
+          status: "rejected",
+          reviewer_user_id: reviewerUserId,
+          decision_note: decisionNote,
+          decided_at: now,
+          updated_at: now,
+        })
         .where("id", "=", id)
         .where("status", "=", "pending")
         .executeTakeFirst();
@@ -76,4 +112,6 @@ export function createCapacityRequestsRepo(db: Kysely<Database>) {
   };
 }
 
-export type CapacityRequestsRepo = ReturnType<typeof createCapacityRequestsRepo>;
+export type CapacityRequestsRepo = ReturnType<
+  typeof createCapacityRequestsRepo
+>;

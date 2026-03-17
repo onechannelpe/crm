@@ -12,7 +12,9 @@ export interface SearchResult_ {
   raw: SearchResult[];
 }
 
-export function mapToSearchResult(response: SearchGatewayResponse): SearchResult_ {
+export function mapToSearchResult(
+  response: SearchGatewayResponse,
+): SearchResult_ {
   return {
     items: response.results.map((r) => ({
       id: r.person.dni,

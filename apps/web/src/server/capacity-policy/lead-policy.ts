@@ -8,8 +8,20 @@ import type { LeadPolicyDefaultsRepo, LeadPolicyOverridesRepo } from "./repos";
 export type { LeadPolicy };
 
 export type SetLeadScopeDefaultCommand =
-  | { actorUserId: UserId; scopeType: "branch"; scopeId: BranchId; bufferTarget: number; dailyLimit: number }
-  | { actorUserId: UserId; scopeType: "team"; scopeId: TeamId; bufferTarget: number; dailyLimit: number };
+  | {
+      actorUserId: UserId;
+      scopeType: "branch";
+      scopeId: BranchId;
+      bufferTarget: number;
+      dailyLimit: number;
+    }
+  | {
+      actorUserId: UserId;
+      scopeType: "team";
+      scopeId: TeamId;
+      bufferTarget: number;
+      dailyLimit: number;
+    };
 
 export interface SetLeadUserOverrideCommand {
   actorUserId: UserId;
@@ -20,7 +32,11 @@ export interface SetLeadUserOverrideCommand {
 }
 
 interface PolicyRepos {
-  users: { findById(id: UserId): Promise<{ team_id: number | null; branch_id: number } | undefined> };
+  users: {
+    findById(
+      id: UserId,
+    ): Promise<{ team_id: number | null; branch_id: number } | undefined>;
+  };
   leadPolicyDefaults: LeadPolicyDefaultsRepo;
   leadPolicyOverrides: LeadPolicyOverridesRepo;
 }
@@ -36,16 +52,28 @@ export async function getEffectiveLeadPolicy(
     }
 
     const now = Date.now();
-    const userOverride = await repos.leadPolicyOverrides.findActiveForUser(userId, now);
+    const userOverride = await repos.leadPolicyOverrides.findActiveForUser(
+      userId,
+      now,
+    );
     const teamDefault = user.team_id
       ? await repos.leadPolicyDefaults.findForScope("team", user.team_id)
       : null;
-    const branchDefault = await repos.leadPolicyDefaults.findForScope("branch", user.branch_id);
+    const branchDefault = await repos.leadPolicyDefaults.findForScope(
+      "branch",
+      user.branch_id,
+    );
 
     return Ok(resolveLeadPolicy({ userOverride, teamDefault, branchDefault }));
   } catch (error) {
     return Err(
-      domainError("unexpected", "unexpected", error instanceof Error ? error.message : "Failed to resolve lead policy"),
+      domainError(
+        "unexpected",
+        "unexpected",
+        error instanceof Error
+          ? error.message
+          : "Failed to resolve lead policy",
+      ),
     );
   }
 }
@@ -64,7 +92,13 @@ export async function setLeadScopeDefault(
     return Ok(undefined);
   } catch (error) {
     return Err(
-      domainError("unexpected", "unexpected", error instanceof Error ? error.message : "Failed to set lead scope default"),
+      domainError(
+        "unexpected",
+        "unexpected",
+        error instanceof Error
+          ? error.message
+          : "Failed to set lead scope default",
+      ),
     );
   }
 }
@@ -85,7 +119,13 @@ export async function setLeadUserOverride(
     return Ok(undefined);
   } catch (error) {
     return Err(
-      domainError("unexpected", "unexpected", error instanceof Error ? error.message : "Failed to set lead user override"),
+      domainError(
+        "unexpected",
+        "unexpected",
+        error instanceof Error
+          ? error.message
+          : "Failed to set lead user override",
+      ),
     );
   }
 }

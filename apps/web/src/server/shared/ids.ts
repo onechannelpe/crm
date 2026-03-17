@@ -2,9 +2,15 @@ export type UserId = number & { readonly __brand: "UserId" };
 export type TeamId = number & { readonly __brand: "TeamId" };
 export type BranchId = number & { readonly __brand: "BranchId" };
 export type AssignmentId = number & { readonly __brand: "AssignmentId" };
-export type CapacityRequestId = number & { readonly __brand: "CapacityRequestId" };
-export type SearchReservationId = string & { readonly __brand: "SearchReservationId" };
-export type LeadReservationId = string & { readonly __brand: "LeadReservationId" };
+export type CapacityRequestId = number & {
+  readonly __brand: "CapacityRequestId";
+};
+export type SearchReservationId = string & {
+  readonly __brand: "SearchReservationId";
+};
+export type LeadReservationId = string & {
+  readonly __brand: "LeadReservationId";
+};
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
 const brandInt = <T>(v: number): T => v as unknown as T;
@@ -46,7 +52,10 @@ export function asCapacityRequestId(value: number): CapacityRequestId {
 }
 
 export function asSearchReservationId(value: string): SearchReservationId {
-  return assertNonEmptyStringId<SearchReservationId>(value, "SearchReservationId");
+  return assertNonEmptyStringId<SearchReservationId>(
+    value,
+    "SearchReservationId",
+  );
 }
 
 export function asLeadReservationId(value: string): LeadReservationId {

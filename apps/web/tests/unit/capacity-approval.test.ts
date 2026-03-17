@@ -8,6 +8,7 @@ import {
   type ApproveTransactionRunner,
 } from "~/server/capacity-admin/approve-capacity";
 import { asBranchId, asCapacityRequestId, asUserId } from "~/server/shared/ids";
+
 import {
   makeLeadCapacityGrantsRepo,
   makeSearchCapacityGrantsRepo,
@@ -151,7 +152,13 @@ describe("approveCapacityRequest", () => {
     const txRepos: ApproveRepos = {
       capacityRequests,
       // Target is in a different branch
-      users: { findById: async () => ({ role: "executive", branch_id: 2, team_id: null }) },
+      users: {
+        findById: async () => ({
+          role: "executive",
+          branch_id: 2,
+          team_id: null,
+        }),
+      },
       teams: makeTeamsRepo(),
       searchCapacityGrants: searchGrants,
       leadCapacityGrants: makeLeadCapacityGrantsRepo(),
@@ -183,7 +190,9 @@ describe("approveCapacityRequest", () => {
     });
 
     // Simulate a transaction that throws after markApproved but before grant
-    const failingTransaction: ApproveTransactionRunner = async <T>(op: (r: ApproveRepos) => Promise<T>): Promise<T> => {
+    const failingTransaction: ApproveTransactionRunner = async <T>(
+      op: (r: ApproveRepos) => Promise<T>,
+    ): Promise<T> => {
       const txRepos: ApproveRepos = {
         capacityRequests: {
           ...capacityRequests,
@@ -232,7 +241,11 @@ describe("rejectCapacityRequest", () => {
     };
 
     const result = await rejectCapacityRequest(
-      { actorUserId: ACTOR_USER_ID, requestId: REQUEST_ID, note: "not justified" },
+      {
+        actorUserId: ACTOR_USER_ID,
+        requestId: REQUEST_ID,
+        note: "not justified",
+      },
       makeActor(),
       makeTransaction(txRepos),
     );

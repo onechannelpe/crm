@@ -1,8 +1,20 @@
 import type { SessionData } from "~/lib/auth/access/session";
 import { longName } from "~/lib/users/display-name";
 import { AUDIT_READER_DEFAULT_LIMIT } from "~/server/audit-reader/contracts";
-import { getLeadCapacitySnapshot, type LeadCapacitySnapshot } from "~/server/capacity-usage/lead-usage";
-import { getSearchCapacitySnapshot, type SearchCapacitySnapshot } from "~/server/capacity-usage/search-usage";
+import type {
+  LeadPolicyDefaultsRepo,
+  LeadPolicyOverridesRepo,
+  SearchPolicyDefaultsRepo,
+  SearchPolicyOverridesRepo,
+} from "~/server/capacity-policy/repos";
+import {
+  canManageExecutive,
+  canManageExecutive as _canManageExecutive,
+} from "~/server/capacity-policy/scope-access";
+import {
+  getLeadCapacitySnapshot,
+  type LeadCapacitySnapshot,
+} from "~/server/capacity-usage/lead-usage";
 import type {
   LeadCapacityGrantsRepo,
   LeadUsageCommitsRepo,
@@ -11,13 +23,10 @@ import type {
   SearchUsageCommitsRepo,
   SearchUsageReservationsRepo,
 } from "~/server/capacity-usage/repos";
-import type {
-  LeadPolicyDefaultsRepo,
-  LeadPolicyOverridesRepo,
-  SearchPolicyDefaultsRepo,
-  SearchPolicyOverridesRepo,
-} from "~/server/capacity-policy/repos";
-import { canManageExecutive, canManageExecutive as _canManageExecutive } from "~/server/capacity-policy/scope-access";
+import {
+  getSearchCapacitySnapshot,
+  type SearchCapacitySnapshot,
+} from "~/server/capacity-usage/search-usage";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { TeamId, UserId } from "~/server/shared/ids";
 import { asUserId } from "~/server/shared/ids";
@@ -37,7 +46,12 @@ export type ManagedExecutiveSummary = {
 };
 
 export type ExecutiveCapacityDetail = {
-  executive: { id: number; fullName: string; email: string; teamId: number | null };
+  executive: {
+    id: number;
+    fullName: string;
+    email: string;
+    teamId: number | null;
+  };
   searchStatus: SearchCapacitySnapshot;
   leadStatus: LeadCapacitySnapshot;
   requests: Awaited<ReturnType<CapacityRequestsRepo["listByUser"]>>;
@@ -57,7 +71,13 @@ export type CapacityPolicyDefaults = {
   }>;
 };
 
-export type AuditChangeValue = string | number | boolean | null | AuditChangeValue[] | { [k: string]: AuditChangeValue };
+export type AuditChangeValue =
+  | string
+  | number
+  | boolean
+  | null
+  | AuditChangeValue[]
+  | { [k: string]: AuditChangeValue };
 
 export type CapacityAuditEvent = {
   id: number;
@@ -71,15 +91,62 @@ export type CapacityAuditEvent = {
 
 interface ReadRepos {
   users: {
-    findById(id: UserId): Promise<{ id: number; role: string; branch_id: number; team_id: number | null; names: string; first_surname: string; second_surname: string; email: string } | undefined>;
-    findByBranch(branchId: number): Promise<Array<{ id: number; role: string; branch_id: number; team_id: number | null; names: string; first_surname: string; second_surname: string; email: string }>>;
-    findAllActive(): Promise<Array<{ id: number; role: string; branch_id: number; team_id: number | null; names: string; first_surname: string; second_surname: string; email: string }>>;
-    findByBranchIncludingInactive(branchId: number): Promise<Array<{ id: number }>>;
+    findById(
+      id: UserId,
+    ): Promise<
+      | {
+          id: number;
+          role: string;
+          branch_id: number;
+          team_id: number | null;
+          names: string;
+          first_surname: string;
+          second_surname: string;
+          email: string;
+        }
+      | undefined
+    >;
+    findByBranch(
+      branchId: number,
+    ): Promise<
+      Array<{
+        id: number;
+        role: string;
+        branch_id: number;
+        team_id: number | null;
+        names: string;
+        first_surname: string;
+        second_surname: string;
+        email: string;
+      }>
+    >;
+    findAllActive(): Promise<
+      Array<{
+        id: number;
+        role: string;
+        branch_id: number;
+        team_id: number | null;
+        names: string;
+        first_surname: string;
+        second_surname: string;
+        email: string;
+      }>
+    >;
+    findByBranchIncludingInactive(
+      branchId: number,
+    ): Promise<Array<{ id: number }>>;
   };
   teams: {
     findBySupervisorId(id: UserId): Promise<{ id: number } | undefined>;
-    findByIdWithSupervisor(id: TeamId): Promise<{ id: number; branch_id: number; supervisor_id: number | null } | undefined>;
-    findByBranch(branchId: number): Promise<Array<{ id: number; name: string }>>;
+    findByIdWithSupervisor(
+      id: TeamId,
+    ): Promise<
+      | { id: number; branch_id: number; supervisor_id: number | null }
+      | undefined
+    >;
+    findByBranch(
+      branchId: number,
+    ): Promise<Array<{ id: number; name: string }>>;
   };
   capacityRequests: CapacityRequestsRepo;
   searchPolicyDefaults: SearchPolicyDefaultsRepo;
@@ -93,10 +160,30 @@ interface ReadRepos {
   leadUsageReservations: LeadUsageReservationsRepo;
   leadUsageCommits: LeadUsageCommitsRepo;
   leadAssignments: { countActiveByUser(id: number): Promise<number> };
-  auditLogs: { listRecent(params: { fromInclusive: number; toInclusive: number; limit: number }): Promise<Array<{ id: number; created_at: number; user_id: number; action: string; entity_type: string; entity_id: number | null; changes: unknown }>> };
+  auditLogs: {
+    listRecent(params: {
+      fromInclusive: number;
+      toInclusive: number;
+      limit: number;
+    }): Promise<
+      Array<{
+        id: number;
+        created_at: number;
+        user_id: number;
+        action: string;
+        entity_type: string;
+        entity_id: number | null;
+        changes: unknown;
+      }>
+    >;
+  };
 }
 
-function canManageExecutiveRecord(actor: SessionData, user: { role: string; branch_id: number; team_id: number | null }, supervisedTeamId: number | null): boolean {
+function canManageExecutiveRecord(
+  actor: SessionData,
+  user: { role: string; branch_id: number; team_id: number | null },
+  supervisedTeamId: number | null,
+): boolean {
   if (user.role !== "executive") return false;
   if (actor.role === "superuser") return true;
   if (user.branch_id !== actor.branchId) return false;
@@ -110,15 +197,19 @@ export async function getManagedExecutives(
   repos: ReadRepos,
 ): Promise<Result<ManagedExecutiveSummary[], DomainError>> {
   try {
-    const users = actor.role === "superuser"
-      ? await repos.users.findAllActive()
-      : await repos.users.findByBranch(actor.branchId);
+    const users =
+      actor.role === "superuser"
+        ? await repos.users.findAllActive()
+        : await repos.users.findByBranch(actor.branchId);
 
-    const supervisedTeam = actor.role === "supervisor"
-      ? await repos.teams.findBySupervisorId(actor.userId)
-      : null;
+    const supervisedTeam =
+      actor.role === "supervisor"
+        ? await repos.teams.findBySupervisorId(actor.userId)
+        : null;
 
-    const managed = users.filter((u) => canManageExecutiveRecord(actor, u, supervisedTeam?.id ?? null));
+    const managed = users.filter((u) =>
+      canManageExecutiveRecord(actor, u, supervisedTeam?.id ?? null),
+    );
 
     const summaries = await Promise.all(
       managed.map(async (user) => {
@@ -139,11 +230,22 @@ export async function getManagedExecutives(
 
     return Ok(
       summaries
-        .filter((s): s is ManagedExecutiveSummary => s.searchStatus !== null && s.leadStatus !== null)
+        .filter(
+          (s): s is ManagedExecutiveSummary =>
+            s.searchStatus !== null && s.leadStatus !== null,
+        )
         .sort((a, b) => a.fullName.localeCompare(b.fullName)),
     );
   } catch (error) {
-    return Err(domainError("unexpected", "unexpected", error instanceof Error ? error.message : "Failed to list managed executives"));
+    return Err(
+      domainError(
+        "unexpected",
+        "unexpected",
+        error instanceof Error
+          ? error.message
+          : "Failed to list managed executives",
+      ),
+    );
   }
 }
 
@@ -154,8 +256,12 @@ export async function getExecutiveCapacityDetail(
 ): Promise<Result<ExecutiveCapacityDetail, DomainError>> {
   try {
     const managed = await canManageExecutive(actor, targetUserId, repos);
-    if (!managed.target) return Err(domainError("not_found", "executive_not_found", "Executive not found"));
-    if (!managed.ok) return Err(domainError("forbidden", "forbidden", "Forbidden"));
+    if (!managed.target)
+      return Err(
+        domainError("not_found", "executive_not_found", "Executive not found"),
+      );
+    if (!managed.ok)
+      return Err(domainError("forbidden", "forbidden", "Forbidden"));
 
     const target = managed.target;
 
@@ -169,28 +275,56 @@ export async function getExecutiveCapacityDetail(
     if (isErr(leadStatus)) return leadStatus;
 
     return Ok({
-      executive: { id: targetUserId, fullName: longName(target), email: target.email, teamId: managed.target.team_id },
+      executive: {
+        id: targetUserId,
+        fullName: longName(target),
+        email: target.email,
+        teamId: managed.target.team_id,
+      },
       searchStatus: searchStatus.value,
       leadStatus: leadStatus.value,
       requests,
     });
   } catch (error) {
-    return Err(domainError("unexpected", "unexpected", error instanceof Error ? error.message : "Failed to get executive capacity detail"));
+    return Err(
+      domainError(
+        "unexpected",
+        "unexpected",
+        error instanceof Error
+          ? error.message
+          : "Failed to get executive capacity detail",
+      ),
+    );
   }
 }
 
 export async function getPendingCapacityRequests(
   actor: SessionData,
   repos: ReadRepos,
-): Promise<Result<Awaited<ReturnType<CapacityRequestsRepo["listPendingByBranch"]>>, DomainError>> {
+): Promise<
+  Result<
+    Awaited<ReturnType<CapacityRequestsRepo["listPendingByBranch"]>>,
+    DomainError
+  >
+> {
   try {
-    const pending = await repos.capacityRequests.listPendingByBranch(actor.branchId);
+    const pending = await repos.capacityRequests.listPendingByBranch(
+      actor.branchId,
+    );
     if (actor.role !== "supervisor") return Ok(pending);
     const supervisedTeam = await repos.teams.findBySupervisorId(actor.userId);
     if (!supervisedTeam) return Ok([]);
     return Ok(pending.filter((r) => r.team_id === supervisedTeam.id));
   } catch (error) {
-    return Err(domainError("unexpected", "unexpected", error instanceof Error ? error.message : "Failed to list pending requests"));
+    return Err(
+      domainError(
+        "unexpected",
+        "unexpected",
+        error instanceof Error
+          ? error.message
+          : "Failed to list pending requests",
+      ),
+    );
   }
 }
 
@@ -209,7 +343,9 @@ export async function getCapacityPolicyDefaults(
       repos.searchPolicyDefaults.listForScope("team", teamIds),
       repos.leadPolicyDefaults.listForScope("team", teamIds),
     ]);
-    const searchTeamById = new Map(searchTeamDefaults.map((r) => [r.scope_id, r]));
+    const searchTeamById = new Map(
+      searchTeamDefaults.map((r) => [r.scope_id, r]),
+    );
     const leadTeamById = new Map(leadTeamDefaults.map((r) => [r.scope_id, r]));
 
     return Ok({
@@ -221,24 +357,45 @@ export async function getCapacityPolicyDefaults(
         teamId: team.id,
         teamName: team.name,
         searchLimit: searchTeamById.get(team.id)?.search_limit ?? null,
-        activeBufferTarget: leadTeamById.get(team.id)?.active_buffer_target ?? null,
+        activeBufferTarget:
+          leadTeamById.get(team.id)?.active_buffer_target ?? null,
         dailyRefillLimit: leadTeamById.get(team.id)?.daily_refill_limit ?? null,
       })),
     });
   } catch (error) {
-    return Err(domainError("unexpected", "unexpected", error instanceof Error ? error.message : "Failed to get policy defaults"));
+    return Err(
+      domainError(
+        "unexpected",
+        "unexpected",
+        error instanceof Error
+          ? error.message
+          : "Failed to get policy defaults",
+      ),
+    );
   }
 }
 
 function isAuditChangeValue(v: unknown): v is AuditChangeValue {
-  if (v === null || typeof v === "string" || typeof v === "number" || typeof v === "boolean") return true;
+  if (
+    v === null ||
+    typeof v === "string" ||
+    typeof v === "number" ||
+    typeof v === "boolean"
+  )
+    return true;
   if (Array.isArray(v)) return v.every(isAuditChangeValue);
   if (typeof v === "object") return Object.values(v).every(isAuditChangeValue);
   return false;
 }
 
 function parseAuditChanges(raw: unknown): AuditChangeValue {
-  if (raw == null || typeof raw === "string" || typeof raw === "number" || typeof raw === "boolean") return raw ?? null;
+  if (
+    raw == null ||
+    typeof raw === "string" ||
+    typeof raw === "number" ||
+    typeof raw === "boolean"
+  )
+    return raw ?? null;
   if (typeof raw !== "string") {
     try {
       const parsed: unknown = JSON.parse(JSON.stringify(raw));
@@ -264,27 +421,56 @@ export async function getCapacityAuditEvents(
     const effectiveLimit = Math.max(1, limit ?? AUDIT_READER_DEFAULT_LIMIT);
     const now = Date.now();
     const [recent, branchUsers, branchTeams] = await Promise.all([
-      repos.auditLogs.listRecent({ fromInclusive: now - 1000 * 60 * 60 * 24 * 30, toInclusive: now, limit: effectiveLimit }),
-      actor.role === "admin" ? repos.users.findByBranchIncludingInactive(actor.branchId) : Promise.resolve([]),
-      actor.role === "admin" ? repos.teams.findByBranch(actor.branchId) : Promise.resolve([]),
+      repos.auditLogs.listRecent({
+        fromInclusive: now - 1000 * 60 * 60 * 24 * 30,
+        toInclusive: now,
+        limit: effectiveLimit,
+      }),
+      actor.role === "admin"
+        ? repos.users.findByBranchIncludingInactive(actor.branchId)
+        : Promise.resolve([]),
+      actor.role === "admin"
+        ? repos.teams.findByBranch(actor.branchId)
+        : Promise.resolve([]),
     ]);
     const branchUserIds = new Set(branchUsers.map((u) => u.id));
     const branchTeamIds = new Set(branchTeams.map((t) => t.id));
 
     const filtered = recent
-      .filter((e) => e.action.startsWith("search_") || e.action.startsWith("lead_") || e.action.startsWith("capacity_"))
+      .filter(
+        (e) =>
+          e.action.startsWith("search_") ||
+          e.action.startsWith("lead_") ||
+          e.action.startsWith("capacity_"),
+      )
       .filter((e) => {
         if (actor.role === "superuser") return true;
         if (actor.role !== "admin") return false;
         if (e.entity_type === "branch") return e.entity_id === actor.branchId;
-        if (e.entity_type === "team") return e.entity_id != null && branchTeamIds.has(e.entity_id);
-        if (e.entity_type === "user") return e.entity_id != null && branchUserIds.has(e.entity_id);
+        if (e.entity_type === "team")
+          return e.entity_id != null && branchTeamIds.has(e.entity_id);
+        if (e.entity_type === "user")
+          return e.entity_id != null && branchUserIds.has(e.entity_id);
         return false;
       })
-      .map((e) => ({ id: e.id, createdAt: e.created_at, userId: e.user_id, action: e.action, entityType: e.entity_type, entityId: e.entity_id, changes: parseAuditChanges(e.changes) }));
+      .map((e) => ({
+        id: e.id,
+        createdAt: e.created_at,
+        userId: e.user_id,
+        action: e.action,
+        entityType: e.entity_type,
+        entityId: e.entity_id,
+        changes: parseAuditChanges(e.changes),
+      }));
 
     return Ok(filtered);
   } catch (error) {
-    return Err(domainError("unexpected", "unexpected", error instanceof Error ? error.message : "Failed to list audit events"));
+    return Err(
+      domainError(
+        "unexpected",
+        "unexpected",
+        error instanceof Error ? error.message : "Failed to list audit events",
+      ),
+    );
   }
 }

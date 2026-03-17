@@ -2,9 +2,9 @@
 
 import { throwDomainError } from "~/actions/throw-domain-error";
 import { requirePermission } from "~/lib/auth/access/session";
+import { getLeadCapacityForUser } from "~/server/lead-workflow/read-lead-capacity";
 import { repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
-import { getLeadCapacityForUser } from "~/server/lead-workflow/read-lead-capacity";
 
 type ActiveLead = Awaited<
   ReturnType<typeof repos.leadAssignments.findActiveByUserWithContacts>

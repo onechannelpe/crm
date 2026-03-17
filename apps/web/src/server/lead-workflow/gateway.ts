@@ -1,7 +1,7 @@
+import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { engineClient } from "~/server/shared/engine";
 import type { EngineClient } from "~/server/shared/engine/client";
 import type { LeadCandidate } from "~/server/shared/engine/types";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { BranchId, UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -29,7 +29,9 @@ export async function requestCandidates(
       domainError(
         "external",
         "engine_request_failed",
-        error instanceof Error ? error.message : "Lead candidate request failed",
+        error instanceof Error
+          ? error.message
+          : "Lead candidate request failed",
       ),
     );
   }

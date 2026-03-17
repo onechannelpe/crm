@@ -31,7 +31,10 @@ export function createSearchPolicyDefaultsRepo(db: Kysely<Database>) {
       period_type: "month";
       search_limit: number;
     }): Promise<void> {
-      const existing = await this.findForScope(values.scope_type, values.scope_id);
+      const existing = await this.findForScope(
+        values.scope_type,
+        values.scope_id,
+      );
       const now = Date.now();
       if (existing) {
         await db
@@ -127,7 +130,10 @@ export function createLeadPolicyDefaultsRepo(db: Kysely<Database>) {
       active_buffer_target: number;
       daily_refill_limit: number;
     }): Promise<void> {
-      const existing = await this.findForScope(values.scope_type, values.scope_id);
+      const existing = await this.findForScope(
+        values.scope_type,
+        values.scope_id,
+      );
       const now = Date.now();
       if (existing) {
         await db
@@ -197,7 +203,15 @@ export function createLeadPolicyOverridesRepo(db: Kysely<Database>) {
   };
 }
 
-export type SearchPolicyDefaultsRepo = ReturnType<typeof createSearchPolicyDefaultsRepo>;
-export type SearchPolicyOverridesRepo = ReturnType<typeof createSearchPolicyOverridesRepo>;
-export type LeadPolicyDefaultsRepo = ReturnType<typeof createLeadPolicyDefaultsRepo>;
-export type LeadPolicyOverridesRepo = ReturnType<typeof createLeadPolicyOverridesRepo>;
+export type SearchPolicyDefaultsRepo = ReturnType<
+  typeof createSearchPolicyDefaultsRepo
+>;
+export type SearchPolicyOverridesRepo = ReturnType<
+  typeof createSearchPolicyOverridesRepo
+>;
+export type LeadPolicyDefaultsRepo = ReturnType<
+  typeof createLeadPolicyDefaultsRepo
+>;
+export type LeadPolicyOverridesRepo = ReturnType<
+  typeof createLeadPolicyOverridesRepo
+>;

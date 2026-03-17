@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { requestLeadRefill, type RefillTransactionRunner, type RefillTxRepos } from "~/server/lead-workflow/request-refill";
+import {
+  requestLeadRefill,
+  type RefillTransactionRunner,
+  type RefillTxRepos,
+} from "~/server/lead-workflow/request-refill";
 import type { EngineClient } from "~/server/shared/engine/client";
 import { asBranchId, asUserId } from "~/server/shared/ids";
+
 import {
   makeLeadCapacityGrantsRepo,
   makeLeadUsageCommitsRepo,
@@ -48,7 +53,12 @@ function makeRepos(activeAssignments = 0) {
       findOrCreate: async (_ruc: string, _name: string) => ({ id: 1 }),
     },
     contacts: {
-      findOrCreate: async (_orgId: number, _dni: string, _name: string, _phone: string): Promise<{ id: number; cooldown_until: number | null }> => ({
+      findOrCreate: async (
+        _orgId: number,
+        _dni: string,
+        _name: string,
+        _phone: string,
+      ): Promise<{ id: number; cooldown_until: number | null }> => ({
         id: Math.floor(Math.random() * 10000),
         cooldown_until: null,
       }),
@@ -83,7 +93,10 @@ describe("requestLeadRefill", () => {
 
     // Gateway returns 2 candidates but contacts will all have cooldowns after first
     let contactCallCount = 0;
-    repos.contacts.findOrCreate = async (): Promise<{ id: number; cooldown_until: number | null }> => {
+    repos.contacts.findOrCreate = async (): Promise<{
+      id: number;
+      cooldown_until: number | null;
+    }> => {
       contactCallCount++;
       // First contact is contactable, rest are on cooldown
       const cooldown_until = contactCallCount === 1 ? null : Date.now() + 99999;
@@ -111,7 +124,9 @@ describe("requestLeadRefill", () => {
 
     const commits = repos.leadUsageCommits.rows;
     const committed = commits.reduce((s, r) => s + r.amount, 0);
-    const cancelled = reservations.filter((r) => r.status === "cancelled").reduce((s, r) => s + r.amount, 0);
+    const cancelled = reservations
+      .filter((r) => r.status === "cancelled")
+      .reduce((s, r) => s + r.amount, 0);
 
     // committed + cancelled must equal the original reservation amount
     expect(committed + cancelled).toBe(reservations[0].amount);
@@ -133,7 +148,9 @@ describe("requestLeadRefill", () => {
     const reservations = repos.leadUsageReservations.rows;
     expect(reservations[0].status).toBe("committed");
     // No cancelled reservations
-    expect(reservations.filter((r) => r.status === "cancelled")).toHaveLength(0);
+    expect(reservations.filter((r) => r.status === "cancelled")).toHaveLength(
+      0,
+    );
   });
 
   it("cancels reservation when gateway fails", async () => {

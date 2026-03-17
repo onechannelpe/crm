@@ -11,8 +11,18 @@ import type {
 export type { SearchPolicy };
 
 export type SetSearchScopeDefaultCommand =
-  | { actorUserId: UserId; scopeType: "branch"; scopeId: BranchId; monthlyLimit: number }
-  | { actorUserId: UserId; scopeType: "team"; scopeId: TeamId; monthlyLimit: number };
+  | {
+      actorUserId: UserId;
+      scopeType: "branch";
+      scopeId: BranchId;
+      monthlyLimit: number;
+    }
+  | {
+      actorUserId: UserId;
+      scopeType: "team";
+      scopeId: TeamId;
+      monthlyLimit: number;
+    };
 
 export interface SetSearchUserOverrideCommand {
   actorUserId: UserId;
@@ -22,7 +32,11 @@ export interface SetSearchUserOverrideCommand {
 }
 
 interface PolicyRepos {
-  users: { findById(id: UserId): Promise<{ team_id: number | null; branch_id: number } | undefined> };
+  users: {
+    findById(
+      id: UserId,
+    ): Promise<{ team_id: number | null; branch_id: number } | undefined>;
+  };
   searchPolicyDefaults: SearchPolicyDefaultsRepo;
   searchPolicyOverrides: SearchPolicyOverridesRepo;
 }
@@ -38,16 +52,30 @@ export async function getEffectiveSearchPolicy(
     }
 
     const now = Date.now();
-    const userOverride = await repos.searchPolicyOverrides.findActiveForUser(userId, now);
+    const userOverride = await repos.searchPolicyOverrides.findActiveForUser(
+      userId,
+      now,
+    );
     const teamDefault = user.team_id
       ? await repos.searchPolicyDefaults.findForScope("team", user.team_id)
       : null;
-    const branchDefault = await repos.searchPolicyDefaults.findForScope("branch", user.branch_id);
+    const branchDefault = await repos.searchPolicyDefaults.findForScope(
+      "branch",
+      user.branch_id,
+    );
 
-    return Ok(resolveSearchPolicy({ userOverride, teamDefault, branchDefault }));
+    return Ok(
+      resolveSearchPolicy({ userOverride, teamDefault, branchDefault }),
+    );
   } catch (error) {
     return Err(
-      domainError("unexpected", "unexpected", error instanceof Error ? error.message : "Failed to resolve search policy"),
+      domainError(
+        "unexpected",
+        "unexpected",
+        error instanceof Error
+          ? error.message
+          : "Failed to resolve search policy",
+      ),
     );
   }
 }
@@ -66,7 +94,13 @@ export async function setSearchScopeDefault(
     return Ok(undefined);
   } catch (error) {
     return Err(
-      domainError("unexpected", "unexpected", error instanceof Error ? error.message : "Failed to set search scope default"),
+      domainError(
+        "unexpected",
+        "unexpected",
+        error instanceof Error
+          ? error.message
+          : "Failed to set search scope default",
+      ),
     );
   }
 }
@@ -86,7 +120,13 @@ export async function setSearchUserOverride(
     return Ok(undefined);
   } catch (error) {
     return Err(
-      domainError("unexpected", "unexpected", error instanceof Error ? error.message : "Failed to set search user override"),
+      domainError(
+        "unexpected",
+        "unexpected",
+        error instanceof Error
+          ? error.message
+          : "Failed to set search user override",
+      ),
     );
   }
 }

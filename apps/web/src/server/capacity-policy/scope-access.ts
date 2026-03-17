@@ -20,7 +20,9 @@ interface ScopeRepos<T extends UserRow = UserRow> {
     findById(id: UserId): Promise<T | undefined>;
   };
   teams: {
-    findBySupervisorId(supervisorId: UserId): Promise<{ id: number } | undefined>;
+    findBySupervisorId(
+      supervisorId: UserId,
+    ): Promise<{ id: number } | undefined>;
     findByIdWithSupervisor(id: TeamId): Promise<TeamRow | undefined>;
   };
 }
@@ -59,15 +61,29 @@ export async function canManageExecutive<T extends UserRow>(
 
 export async function canManageScopeDefault(
   actor: SessionData,
-  scope: { scopeType: "branch"; scopeId: BranchId } | { scopeType: "team"; scopeId: TeamId },
+  scope:
+    | { scopeType: "branch"; scopeId: BranchId }
+    | { scopeType: "team"; scopeId: TeamId },
   repos: ScopeRepos,
 ): Promise<Result<void, DomainError>> {
   if (scope.scopeType === "branch") {
     if (actor.role !== "superuser" && actor.role !== "admin") {
-      return Err(domainError("forbidden", "forbidden", "Insufficient role to manage branch default"));
+      return Err(
+        domainError(
+          "forbidden",
+          "forbidden",
+          "Insufficient role to manage branch default",
+        ),
+      );
     }
     if (actor.branchId !== scope.scopeId) {
-      return Err(domainError("forbidden", "forbidden", "Cannot manage defaults for another branch"));
+      return Err(
+        domainError(
+          "forbidden",
+          "forbidden",
+          "Cannot manage defaults for another branch",
+        ),
+      );
     }
     return Ok(undefined);
   }
@@ -80,7 +96,13 @@ export async function canManageScopeDefault(
     return Ok(undefined);
   }
   if (actor.role !== "supervisor" || team.supervisor_id !== actor.userId) {
-    return Err(domainError("forbidden", "forbidden", "Cannot manage defaults for this team"));
+    return Err(
+      domainError(
+        "forbidden",
+        "forbidden",
+        "Cannot manage defaults for this team",
+      ),
+    );
   }
   return Ok(undefined);
 }

@@ -2,14 +2,18 @@
 
 import { requirePermission } from "~/lib/auth/access/session";
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
+import { runDirectSearch } from "~/server/search-workflow/run-search";
 import { rateLimitDeps, repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
-import { runDirectSearch } from "~/server/search-workflow/run-search";
 
 import { mapSearchError } from "./errors";
 import { parseSearchCommand } from "./input";
 
-export async function searchDirect(type: unknown, value: unknown, limit?: unknown) {
+export async function searchDirect(
+  type: unknown,
+  value: unknown,
+  limit?: unknown,
+) {
   const session = await requirePermission("search:use");
   await checkActionRateLimit("search.use", session.userId, rateLimitDeps);
 

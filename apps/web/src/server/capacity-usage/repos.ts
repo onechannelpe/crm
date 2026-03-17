@@ -4,7 +4,12 @@ import type { Database } from "~/lib/db/types";
 
 export function createSearchCapacityGrantsRepo(db: Kysely<Database>) {
   return {
-    insert(values: { user_id: number; amount: number; reason: string; actor_user_id: number }): Promise<void> {
+    insert(values: {
+      user_id: number;
+      amount: number;
+      reason: string;
+      actor_user_id: number;
+    }): Promise<void> {
       return db
         .insertInto("search_capacity_grants")
         .values({ id: crypto.randomUUID(), ...values, created_at: Date.now() })
@@ -12,13 +17,21 @@ export function createSearchCapacityGrantsRepo(db: Kysely<Database>) {
         .then(() => undefined);
     },
 
-    findByUserAndPeriod(userId: number, periodStart: string, periodEnd: string) {
+    findByUserAndPeriod(
+      userId: number,
+      periodStart: string,
+      periodEnd: string,
+    ) {
       return db
         .selectFrom("search_capacity_grants")
         .selectAll()
         .where("user_id", "=", userId)
         .where("created_at", ">=", new Date(periodStart).getTime())
-        .where("created_at", "<=", new Date(periodEnd + "T23:59:59.999Z").getTime())
+        .where(
+          "created_at",
+          "<=",
+          new Date(periodEnd + "T23:59:59.999Z").getTime(),
+        )
         .execute();
     },
   };
@@ -31,7 +44,13 @@ export function createSearchUsageReservationsRepo(db: Kysely<Database>) {
       const now = Date.now();
       return db
         .insertInto("search_usage_reservations")
-        .values({ id, ...values, status: "pending", created_at: now, updated_at: now })
+        .values({
+          id,
+          ...values,
+          status: "pending",
+          created_at: now,
+          updated_at: now,
+        })
         .returning("id")
         .executeTakeFirstOrThrow();
     },
@@ -44,7 +63,10 @@ export function createSearchUsageReservationsRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    updateStatus(id: string, status: "committed" | "cancelled" | "expired"): Promise<void> {
+    updateStatus(
+      id: string,
+      status: "committed" | "cancelled" | "expired",
+    ): Promise<void> {
       return db
         .updateTable("search_usage_reservations")
         .set({ status, updated_at: Date.now() })
@@ -53,13 +75,21 @@ export function createSearchUsageReservationsRepo(db: Kysely<Database>) {
         .then(() => undefined);
     },
 
-    findByUserAndPeriod(userId: number, periodStart: string, periodEnd: string) {
+    findByUserAndPeriod(
+      userId: number,
+      periodStart: string,
+      periodEnd: string,
+    ) {
       return db
         .selectFrom("search_usage_reservations")
         .selectAll()
         .where("user_id", "=", userId)
         .where("created_at", ">=", new Date(periodStart).getTime())
-        .where("created_at", "<=", new Date(periodEnd + "T23:59:59.999Z").getTime())
+        .where(
+          "created_at",
+          "<=",
+          new Date(periodEnd + "T23:59:59.999Z").getTime(),
+        )
         .execute();
     },
   };
@@ -83,14 +113,22 @@ export function createSearchUsageCommitsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    findByUserAndPeriod(userId: number, periodStart: string, periodEnd: string) {
+    findByUserAndPeriod(
+      userId: number,
+      periodStart: string,
+      periodEnd: string,
+    ) {
       return db
         .selectFrom("search_usage_commits as c")
         .innerJoin("search_usage_reservations as r", "r.id", "c.reservation_id")
         .select(["c.id", "c.reservation_id", "c.amount", "c.created_at"])
         .where("r.user_id", "=", userId)
         .where("c.created_at", ">=", new Date(periodStart).getTime())
-        .where("c.created_at", "<=", new Date(periodEnd + "T23:59:59.999Z").getTime())
+        .where(
+          "c.created_at",
+          "<=",
+          new Date(periodEnd + "T23:59:59.999Z").getTime(),
+        )
         .execute();
     },
   };
@@ -98,7 +136,12 @@ export function createSearchUsageCommitsRepo(db: Kysely<Database>) {
 
 export function createLeadCapacityGrantsRepo(db: Kysely<Database>) {
   return {
-    insert(values: { user_id: number; amount: number; reason: string; actor_user_id: number }): Promise<void> {
+    insert(values: {
+      user_id: number;
+      amount: number;
+      reason: string;
+      actor_user_id: number;
+    }): Promise<void> {
       return db
         .insertInto("lead_capacity_grants")
         .values({ id: crypto.randomUUID(), ...values, created_at: Date.now() })
@@ -125,7 +168,13 @@ export function createLeadUsageReservationsRepo(db: Kysely<Database>) {
       const now = Date.now();
       return db
         .insertInto("lead_usage_reservations")
-        .values({ id, ...values, status: "pending", created_at: now, updated_at: now })
+        .values({
+          id,
+          ...values,
+          status: "pending",
+          created_at: now,
+          updated_at: now,
+        })
         .returning("id")
         .executeTakeFirstOrThrow();
     },
@@ -138,7 +187,10 @@ export function createLeadUsageReservationsRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    updateStatus(id: string, status: "committed" | "cancelled" | "expired"): Promise<void> {
+    updateStatus(
+      id: string,
+      status: "committed" | "cancelled" | "expired",
+    ): Promise<void> {
       return db
         .updateTable("lead_usage_reservations")
         .set({ status, updated_at: Date.now() })
@@ -184,15 +236,31 @@ export function createLeadUsageCommitsRepo(db: Kysely<Database>) {
         .select(["c.id", "c.reservation_id", "c.amount", "c.created_at"])
         .where("r.user_id", "=", userId)
         .where("c.created_at", ">=", new Date(date).getTime())
-        .where("c.created_at", "<=", new Date(date + "T23:59:59.999Z").getTime())
+        .where(
+          "c.created_at",
+          "<=",
+          new Date(date + "T23:59:59.999Z").getTime(),
+        )
         .execute();
     },
   };
 }
 
-export type SearchCapacityGrantsRepo = ReturnType<typeof createSearchCapacityGrantsRepo>;
-export type SearchUsageReservationsRepo = ReturnType<typeof createSearchUsageReservationsRepo>;
-export type SearchUsageCommitsRepo = ReturnType<typeof createSearchUsageCommitsRepo>;
-export type LeadCapacityGrantsRepo = ReturnType<typeof createLeadCapacityGrantsRepo>;
-export type LeadUsageReservationsRepo = ReturnType<typeof createLeadUsageReservationsRepo>;
-export type LeadUsageCommitsRepo = ReturnType<typeof createLeadUsageCommitsRepo>;
+export type SearchCapacityGrantsRepo = ReturnType<
+  typeof createSearchCapacityGrantsRepo
+>;
+export type SearchUsageReservationsRepo = ReturnType<
+  typeof createSearchUsageReservationsRepo
+>;
+export type SearchUsageCommitsRepo = ReturnType<
+  typeof createSearchUsageCommitsRepo
+>;
+export type LeadCapacityGrantsRepo = ReturnType<
+  typeof createLeadCapacityGrantsRepo
+>;
+export type LeadUsageReservationsRepo = ReturnType<
+  typeof createLeadUsageReservationsRepo
+>;
+export type LeadUsageCommitsRepo = ReturnType<
+  typeof createLeadUsageCommitsRepo
+>;

@@ -12,9 +12,9 @@ export function createLeadAssignmentsRepo(db: Kysely<Database>) {
         .executeTakeFirstOrThrow();
     },
 
-    createMany(assignments: NewLeadAssignment[]) {
-      if (assignments.length === 0) return Promise.resolve();
-      return db.insertInto("lead_assignments").values(assignments).execute();
+    async createMany(assignments: NewLeadAssignment[]): Promise<void> {
+      if (assignments.length === 0) return;
+      await db.insertInto("lead_assignments").values(assignments).execute();
     },
 
     findActiveByUser(userId: number) {

@@ -1,23 +1,26 @@
-import {
-  cancelSearchUsage,
-  commitSearchUsage,
-  reserveSearchUsage,
-} from "~/server/capacity-usage/search-usage";
+import type {
+  SearchPolicyDefaultsRepo,
+  SearchPolicyOverridesRepo,
+} from "~/server/capacity-policy/repos";
 import type {
   SearchCapacityGrantsRepo,
   SearchUsageCommitsRepo,
   SearchUsageReservationsRepo,
 } from "~/server/capacity-usage/repos";
-import type { SearchPolicyDefaultsRepo, SearchPolicyOverridesRepo } from "~/server/capacity-policy/repos";
+import {
+  cancelSearchUsage,
+  commitSearchUsage,
+  reserveSearchUsage,
+} from "~/server/capacity-usage/search-usage";
 import { type DomainError } from "~/server/shared/domain-error";
+import { engineClient } from "~/server/shared/engine";
+import type { EngineClient } from "~/server/shared/engine/client";
 import type { UserId } from "~/server/shared/ids";
-import { isErr, Ok, type Result } from "~/server/shared/result";
 import type { SearchType } from "~/server/shared/pipeline-types";
+import { isErr, Ok, type Result } from "~/server/shared/result";
 
 import { mapToSearchResult, type SearchResult_ } from "./domain";
 import { search } from "./gateway";
-import type { EngineClient } from "~/server/shared/engine/client";
-import { engineClient } from "~/server/shared/engine";
 
 export interface RunDirectSearchCommand {
   actorUserId: UserId;
@@ -27,7 +30,11 @@ export interface RunDirectSearchCommand {
 }
 
 interface SearchRepos {
-  users: { findById(id: UserId): Promise<{ team_id: number | null; branch_id: number } | undefined> };
+  users: {
+    findById(
+      id: UserId,
+    ): Promise<{ team_id: number | null; branch_id: number } | undefined>;
+  };
   searchPolicyDefaults: SearchPolicyDefaultsRepo;
   searchPolicyOverrides: SearchPolicyOverridesRepo;
   searchCapacityGrants: SearchCapacityGrantsRepo;
@@ -48,10 +55,16 @@ export async function runDirectSearch(
 
   const reservationId = reservationResult.value;
 
-  const searchResult = await search({ type: command.type, value: command.value, limit: command.limit }, engine);
+  const searchResult = await search(
+    { type: command.type, value: command.value, limit: command.limit },
+    engine,
+  );
 
   if (isErr(searchResult)) {
-    await cancelSearchUsage({ reservationId, reason: "external_failure" }, repos);
+    await cancelSearchUsage(
+      { reservationId, reason: "external_failure" },
+      repos,
+    );
     return searchResult;
   }
 

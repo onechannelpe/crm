@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { runDirectSearch } from "~/server/search-workflow/run-search";
 import type { EngineClient } from "~/server/shared/engine/client";
 import { asBranchId, asUserId } from "~/server/shared/ids";
+
 import {
   makeNullSearchPolicyRepos,
   makeSearchCapacityGrantsRepo,
@@ -31,7 +32,20 @@ const successEngine = {
   search: async () => ({
     results: [
       {
-        person: { dni: "12345678", name: "Test Person", ruc: null, birth_date: null, birth_place: null, sex: null, marital_status: null, location_text: null, ubigeo_code: null, mother_name: null, father_name: null, email: null },
+        person: {
+          dni: "12345678",
+          name: "Test Person",
+          ruc: null,
+          birth_date: null,
+          birth_place: null,
+          sex: null,
+          marital_status: null,
+          location_text: null,
+          ubigeo_code: null,
+          mother_name: null,
+          father_name: null,
+          email: null,
+        },
         org: null,
         role: null,
         phones: { primary: null, secondary: null, siblings: null },

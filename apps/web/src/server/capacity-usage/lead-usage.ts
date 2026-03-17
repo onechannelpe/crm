@@ -1,6 +1,10 @@
 import { getEffectiveLeadPolicy } from "~/server/capacity-policy/lead-policy";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { asLeadReservationId, type LeadReservationId, type UserId } from "~/server/shared/ids";
+import {
+  asLeadReservationId,
+  type LeadReservationId,
+  type UserId,
+} from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import { currentDailyPeriod } from "~/server/shared/time";
 
@@ -9,7 +13,10 @@ import type {
   LeadUsageCommitsRepo,
   LeadUsageReservationsRepo,
 } from "./repos";
-import { buildLeadCapacitySnapshot, type LeadCapacitySnapshot } from "./snapshot";
+import {
+  buildLeadCapacitySnapshot,
+  type LeadCapacitySnapshot,
+} from "./snapshot";
 
 export type { LeadCapacitySnapshot };
 
@@ -37,9 +44,17 @@ export interface GrantLeadCapacityCommand {
 }
 
 interface UsageRepos {
-  users: { findById(id: UserId): Promise<{ team_id: number | null; branch_id: number } | undefined> };
-  leadPolicyDefaults: Parameters<typeof getEffectiveLeadPolicy>[1]["leadPolicyDefaults"];
-  leadPolicyOverrides: Parameters<typeof getEffectiveLeadPolicy>[1]["leadPolicyOverrides"];
+  users: {
+    findById(
+      id: UserId,
+    ): Promise<{ team_id: number | null; branch_id: number } | undefined>;
+  };
+  leadPolicyDefaults: Parameters<
+    typeof getEffectiveLeadPolicy
+  >[1]["leadPolicyDefaults"];
+  leadPolicyOverrides: Parameters<
+    typeof getEffectiveLeadPolicy
+  >[1]["leadPolicyOverrides"];
   leadCapacityGrants: LeadCapacityGrantsRepo;
   leadUsageReservations: LeadUsageReservationsRepo;
   leadUsageCommits: LeadUsageCommitsRepo;
@@ -51,11 +66,16 @@ export async function reserveLeadUsage(
   repos: UsageRepos,
 ): Promise<Result<LeadReservationId, DomainError>> {
   try {
-    const snapshotResult = await getLeadCapacitySnapshot(command.actorUserId, repos);
+    const snapshotResult = await getLeadCapacitySnapshot(
+      command.actorUserId,
+      repos,
+    );
     if (!snapshotResult.ok) return snapshotResult;
 
     if (snapshotResult.value.remaining < command.amount) {
-      return Err(domainError("conflict", "lead_exhausted", "Lead capacity exhausted"));
+      return Err(
+        domainError("conflict", "lead_exhausted", "Lead capacity exhausted"),
+      );
     }
 
     const row = await repos.leadUsageReservations.insert({
@@ -65,7 +85,13 @@ export async function reserveLeadUsage(
     });
     return Ok(asLeadReservationId(row.id));
   } catch (error) {
-    return Err(domainError("unexpected", "unexpected", error instanceof Error ? error.message : "Failed to reserve lead usage"));
+    return Err(
+      domainError(
+        "unexpected",
+        "unexpected",
+        error instanceof Error ? error.message : "Failed to reserve lead usage",
+      ),
+    );
   }
 }
 
@@ -74,15 +100,35 @@ export async function commitLeadUsage(
   repos: Pick<UsageRepos, "leadUsageReservations" | "leadUsageCommits">,
 ): Promise<Result<void, DomainError>> {
   try {
-    const reservation = await repos.leadUsageReservations.findById(command.reservationId);
+    const reservation = await repos.leadUsageReservations.findById(
+      command.reservationId,
+    );
     if (!reservation) {
-      return Err(domainError("not_found", "reservation_not_found", "Reservation not found"));
+      return Err(
+        domainError(
+          "not_found",
+          "reservation_not_found",
+          "Reservation not found",
+        ),
+      );
     }
-    await repos.leadUsageCommits.insert({ reservation_id: command.reservationId, amount: command.amount });
-    await repos.leadUsageReservations.updateStatus(command.reservationId, "committed");
+    await repos.leadUsageCommits.insert({
+      reservation_id: command.reservationId,
+      amount: command.amount,
+    });
+    await repos.leadUsageReservations.updateStatus(
+      command.reservationId,
+      "committed",
+    );
     return Ok(undefined);
   } catch (error) {
-    return Err(domainError("unexpected", "unexpected", error instanceof Error ? error.message : "Failed to commit lead usage"));
+    return Err(
+      domainError(
+        "unexpected",
+        "unexpected",
+        error instanceof Error ? error.message : "Failed to commit lead usage",
+      ),
+    );
   }
 }
 
@@ -91,14 +137,31 @@ export async function cancelLeadUsage(
   repos: Pick<UsageRepos, "leadUsageReservations">,
 ): Promise<Result<void, DomainError>> {
   try {
-    const reservation = await repos.leadUsageReservations.findById(command.reservationId);
+    const reservation = await repos.leadUsageReservations.findById(
+      command.reservationId,
+    );
     if (!reservation) {
-      return Err(domainError("not_found", "reservation_not_found", "Reservation not found"));
+      return Err(
+        domainError(
+          "not_found",
+          "reservation_not_found",
+          "Reservation not found",
+        ),
+      );
     }
-    await repos.leadUsageReservations.updateStatus(command.reservationId, "cancelled");
+    await repos.leadUsageReservations.updateStatus(
+      command.reservationId,
+      "cancelled",
+    );
     return Ok(undefined);
   } catch (error) {
-    return Err(domainError("unexpected", "unexpected", error instanceof Error ? error.message : "Failed to cancel lead usage"));
+    return Err(
+      domainError(
+        "unexpected",
+        "unexpected",
+        error instanceof Error ? error.message : "Failed to cancel lead usage",
+      ),
+    );
   }
 }
 
@@ -115,7 +178,15 @@ export async function grantLeadCapacity(
     });
     return Ok(undefined);
   } catch (error) {
-    return Err(domainError("unexpected", "unexpected", error instanceof Error ? error.message : "Failed to grant lead capacity"));
+    return Err(
+      domainError(
+        "unexpected",
+        "unexpected",
+        error instanceof Error
+          ? error.message
+          : "Failed to grant lead capacity",
+      ),
+    );
   }
 }
 
@@ -128,15 +199,32 @@ export async function getLeadCapacitySnapshot(
     if (!policyResult.ok) return policyResult;
 
     const { date } = currentDailyPeriod(new Date());
-    const [grants, reservations, commits, activeAssignments] = await Promise.all([
-      repos.leadCapacityGrants.findByUserAndDate(userId, date),
-      repos.leadUsageReservations.findByUserAndDate(userId, date),
-      repos.leadUsageCommits.findByUserAndDate(userId, date),
-      repos.leadAssignments.countActiveByUser(userId),
-    ]);
+    const [grants, reservations, commits, activeAssignments] =
+      await Promise.all([
+        repos.leadCapacityGrants.findByUserAndDate(userId, date),
+        repos.leadUsageReservations.findByUserAndDate(userId, date),
+        repos.leadUsageCommits.findByUserAndDate(userId, date),
+        repos.leadAssignments.countActiveByUser(userId),
+      ]);
 
-    return Ok(buildLeadCapacitySnapshot({ policy: policyResult.value, grants, reservations, commits, activeAssignments }));
+    return Ok(
+      buildLeadCapacitySnapshot({
+        policy: policyResult.value,
+        grants,
+        reservations,
+        commits,
+        activeAssignments,
+      }),
+    );
   } catch (error) {
-    return Err(domainError("unexpected", "unexpected", error instanceof Error ? error.message : "Failed to get lead capacity snapshot"));
+    return Err(
+      domainError(
+        "unexpected",
+        "unexpected",
+        error instanceof Error
+          ? error.message
+          : "Failed to get lead capacity snapshot",
+      ),
+    );
   }
 }

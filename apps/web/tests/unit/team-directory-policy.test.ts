@@ -3,15 +3,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Role } from "../../src/lib/auth/access/rbac";
 import { Ok } from "../../src/server/shared/result";
 
-const {
-  requirePermissionMock,
-  teamsFindByBranchMock,
-  listPendingInvitesMock,
-} = vi.hoisted(() => ({
-  requirePermissionMock: vi.fn(),
-  teamsFindByBranchMock: vi.fn(),
-  listPendingInvitesMock: vi.fn(),
-}));
+const { requirePermissionMock, teamsFindByBranchMock, listPendingInvitesMock } =
+  vi.hoisted(() => ({
+    requirePermissionMock: vi.fn(),
+    teamsFindByBranchMock: vi.fn(),
+    listPendingInvitesMock: vi.fn(),
+  }));
 
 vi.mock("../../src/lib/auth/access/session", () => ({
   requirePermission: requirePermissionMock,
@@ -31,9 +28,7 @@ vi.mock("../../src/actions/team/provisioning", () => ({
   },
 }));
 
-import {
-  getInviteManagement,
-} from "../../src/actions/team/read";
+import { getInviteManagement } from "../../src/actions/team/read";
 
 function setSession(role: Role) {
   requirePermissionMock.mockResolvedValue({
@@ -42,7 +37,6 @@ function setSession(role: Role) {
     branchId: 3,
   });
 }
-
 
 describe("invite management query", () => {
   beforeEach(() => {

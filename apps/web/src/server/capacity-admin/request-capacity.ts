@@ -30,7 +30,11 @@ export async function createCapacityRequest(
     return Ok({ success: true });
   } catch (error) {
     return Err(
-      domainError("unexpected", "unexpected", error instanceof Error ? error.message : "Request creation failed"),
+      domainError(
+        "unexpected",
+        "unexpected",
+        error instanceof Error ? error.message : "Request creation failed",
+      ),
     );
   }
 }

@@ -1,3 +1,8 @@
+import { getEffectiveLeadPolicy } from "~/server/capacity-policy/lead-policy";
+import type {
+  LeadPolicyDefaultsRepo,
+  LeadPolicyOverridesRepo,
+} from "~/server/capacity-policy/repos";
 import {
   cancelLeadUsage,
   commitLeadUsage,
@@ -8,18 +13,16 @@ import type {
   LeadUsageCommitsRepo,
   LeadUsageReservationsRepo,
 } from "~/server/capacity-usage/repos";
-import { getEffectiveLeadPolicy } from "~/server/capacity-policy/lead-policy";
-import type { LeadPolicyDefaultsRepo, LeadPolicyOverridesRepo } from "~/server/capacity-policy/repos";
 import { createAssignment } from "~/server/leads/domain-assignment";
 import { canContactNow } from "~/server/leads/domain-cooldown";
 import { type DomainError } from "~/server/shared/domain-error";
+import { engineClient } from "~/server/shared/engine";
+import type { EngineClient } from "~/server/shared/engine/client";
 import type { BranchId, UserId } from "~/server/shared/ids";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 
 import { computeNeededAssignments } from "./domain";
 import { requestCandidates } from "./gateway";
-import type { EngineClient } from "~/server/shared/engine/client";
-import { engineClient } from "~/server/shared/engine";
 
 export interface RequestLeadRefillCommand {
   actorUserId: UserId;
@@ -32,14 +35,20 @@ export interface LeadRefillResult {
 }
 
 interface RefillRepos {
-  users: { findById(id: UserId): Promise<{ team_id: number | null; branch_id: number } | undefined> };
+  users: {
+    findById(
+      id: UserId,
+    ): Promise<{ team_id: number | null; branch_id: number } | undefined>;
+  };
   leadPolicyDefaults: LeadPolicyDefaultsRepo;
   leadPolicyOverrides: LeadPolicyOverridesRepo;
   leadCapacityGrants: LeadCapacityGrantsRepo;
   leadUsageReservations: LeadUsageReservationsRepo;
   leadUsageCommits: LeadUsageCommitsRepo;
   leadAssignments: { countActiveByUser(userId: number): Promise<number> };
-  organizations: { findOrCreate(ruc: string, name: string): Promise<{ id: number }> };
+  organizations: {
+    findOrCreate(ruc: string, name: string): Promise<{ id: number }>;
+  };
   contacts: {
     findOrCreate(
       organizationId: number,
@@ -51,7 +60,9 @@ interface RefillRepos {
 }
 
 export interface RefillTxRepos {
-  organizations: { findOrCreate(ruc: string, name: string): Promise<{ id: number }> };
+  organizations: {
+    findOrCreate(ruc: string, name: string): Promise<{ id: number }>;
+  };
   contacts: {
     findOrCreate(
       organizationId: number,
@@ -60,10 +71,16 @@ export interface RefillTxRepos {
       phone: string,
     ): Promise<{ id: number; cooldown_until: number | null }>;
   };
-  leadAssignments: { createMany(assignments: ReturnType<typeof createAssignment>[]): Promise<void> };
+  leadAssignments: {
+    createMany(
+      assignments: ReturnType<typeof createAssignment>[],
+    ): Promise<void>;
+  };
 }
 
-export type RefillTransactionRunner = <T>(operation: (repos: RefillTxRepos) => Promise<T>) => Promise<T>;
+export type RefillTransactionRunner = <T>(
+  operation: (repos: RefillTxRepos) => Promise<T>,
+) => Promise<T>;
 
 interface RefillDeps {
   repos: RefillRepos;
@@ -80,8 +97,13 @@ export async function requestLeadRefill(
   const policyResult = await getEffectiveLeadPolicy(command.actorUserId, repos);
   if (isErr(policyResult)) return policyResult;
 
-  const activeAssignments = await repos.leadAssignments.countActiveByUser(command.actorUserId);
-  const needed = computeNeededAssignments(activeAssignments, policyResult.value.bufferTarget);
+  const activeAssignments = await repos.leadAssignments.countActiveByUser(
+    command.actorUserId,
+  );
+  const needed = computeNeededAssignments(
+    activeAssignments,
+    policyResult.value.bufferTarget,
+  );
 
   if (needed === 0) return Ok({ requested: 0, assigned: 0 });
 
@@ -107,7 +129,10 @@ export async function requestLeadRefill(
     const orgEntries = await Promise.all(
       uniqueRucs.map(async (ruc) => {
         const candidate = candidatesResult.value.find((c) => c.ruc === ruc)!;
-        const org = await txRepos.organizations.findOrCreate(ruc, candidate.organization_name);
+        const org = await txRepos.organizations.findOrCreate(
+          ruc,
+          candidate.organization_name,
+        );
         return [ruc, org] as const;
       }),
     );
@@ -124,11 +149,19 @@ export async function requestLeadRefill(
     ];
     const contactEntries = await Promise.all(
       uniqueContactKeys.map(async ([key, { org, candidate }]) => {
-        const contact = await txRepos.contacts.findOrCreate(org.id, candidate.dni, candidate.person_name, candidate.phone_primary);
+        const contact = await txRepos.contacts.findOrCreate(
+          org.id,
+          candidate.dni,
+          candidate.person_name,
+          candidate.phone_primary,
+        );
         return [key, contact] as const;
       }),
     );
-    const contactsByKey = new Map<string, { id: number; cooldown_until: number | null }>(contactEntries);
+    const contactsByKey = new Map<
+      string,
+      { id: number; cooldown_until: number | null }
+    >(contactEntries);
 
     const assignments = [];
     for (const candidate of candidatesResult.value) {

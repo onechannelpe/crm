@@ -46,7 +46,8 @@ export async function getPolicyDefaults() {
 
 export async function getAuditEvents(limit?: number) {
   const session = await requirePermission("capacity:audit:read");
-  const safeLimit = limit == null ? undefined : assertPositiveInt(limit, "limit");
+  const safeLimit =
+    limit == null ? undefined : assertPositiveInt(limit, "limit");
   const result = await getCapacityAuditEvents(session, repos, safeLimit);
   if (isErr(result)) mapCapacityError(result.error);
   return result.value;

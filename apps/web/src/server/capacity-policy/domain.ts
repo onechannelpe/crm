@@ -19,12 +19,23 @@ export interface ResolveSearchPolicyInput {
 }
 
 export interface ResolveLeadPolicyInput {
-  userOverride?: { active_buffer_target: number; daily_refill_limit: number } | null;
-  teamDefault?: { active_buffer_target: number; daily_refill_limit: number } | null;
-  branchDefault?: { active_buffer_target: number; daily_refill_limit: number } | null;
+  userOverride?: {
+    active_buffer_target: number;
+    daily_refill_limit: number;
+  } | null;
+  teamDefault?: {
+    active_buffer_target: number;
+    daily_refill_limit: number;
+  } | null;
+  branchDefault?: {
+    active_buffer_target: number;
+    daily_refill_limit: number;
+  } | null;
 }
 
-export function resolveSearchPolicy(input: ResolveSearchPolicyInput): SearchPolicy {
+export function resolveSearchPolicy(
+  input: ResolveSearchPolicyInput,
+): SearchPolicy {
   if (input.userOverride) {
     return { source: "user", monthlyLimit: input.userOverride.search_limit };
   }
@@ -34,7 +45,10 @@ export function resolveSearchPolicy(input: ResolveSearchPolicyInput): SearchPoli
   if (input.branchDefault) {
     return { source: "branch", monthlyLimit: input.branchDefault.search_limit };
   }
-  return { source: "system", monthlyLimit: config.searchAccess.defaultMonthlyLimit };
+  return {
+    source: "system",
+    monthlyLimit: config.searchAccess.defaultMonthlyLimit,
+  };
 }
 
 export function resolveLeadPolicy(input: ResolveLeadPolicyInput): LeadPolicy {
