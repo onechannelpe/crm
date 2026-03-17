@@ -6,6 +6,7 @@ import {
   type AuthRequestDeps,
 } from "../../src/lib/auth/access/request-auth";
 import type { AuthSession } from "../../src/lib/auth/access/session-types";
+import { asBranchId, asUserId } from "../../src/server/shared/ids";
 
 function createSession(
   role: AuthSession["role"],
@@ -13,8 +14,8 @@ function createSession(
 ): AuthSession {
   return {
     id: "session-id",
-    userId: 1,
-    branchId: 1,
+    userId: asUserId(1),
+    branchId: asBranchId(1),
     role,
     onboardingCompleted,
     sessionClass: onboardingCompleted ? "app" : "pre_auth",

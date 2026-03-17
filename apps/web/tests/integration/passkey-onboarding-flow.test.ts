@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { createPasskeyEnrollmentAuthService } from "../../src/lib/auth/passkey/service";
+import { asUserId } from "../../src/server/shared/ids";
 import { createRepositories } from "../../src/server/shared/registry";
-import { Err, isErr, type Result } from "../../src/server/shared/result";
+import { Err, isErr } from "../../src/server/shared/result";
 import { completeAccountOnboardingWithRepos } from "../../src/server/users/service-account-onboarding";
 import {
   cleanupTestDb,
@@ -40,8 +41,7 @@ describe("passkey onboarding flow", () => {
 
     const result = await ctx.db
       .transaction()
-      .execute<Result<void, { reason: string; message: string }>>(
-        async (transactionDb) => {
+      .execute(async (transactionDb) => {
           const transactionRepos = createRepositories(transactionDb);
           const passkeyResult = await createPasskeyEnrollmentAuthService(
             transactionRepos,
@@ -92,7 +92,7 @@ describe("passkey onboarding flow", () => {
           }
 
           return completeAccountOnboardingWithRepos(transactionRepos, {
-            userId: 5,
+            userId: asUserId(5),
             phoneE164: "+51999888777",
           });
         },

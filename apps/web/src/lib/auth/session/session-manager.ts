@@ -58,8 +58,8 @@ function isSessionConsistent(params: {
 
 export async function createSession(
   params: {
-    userId: number;
-    branchId: number;
+    userId: UserId;
+    branchId: BranchId;
     role: Role;
     sessionClass: SessionClass;
     ipAddress: string | null;
