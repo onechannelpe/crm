@@ -8,6 +8,10 @@ pub const API_PREFIX: &str = "/v1";
 pub fn build_router(state: AppState) -> Router {
     Router::new()
         .route(&format!("{API_PREFIX}/health"), get(handlers::health))
+        .route(
+            &format!("{API_PREFIX}/lead-candidates"),
+            post(handlers::lead_candidates),
+        )
         .route(&format!("{API_PREFIX}/search"), post(handlers::search))
         .with_state(state)
 }

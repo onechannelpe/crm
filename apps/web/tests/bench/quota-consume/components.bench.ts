@@ -1,16 +1,17 @@
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
+import { currentMonthlyPeriod } from "~/server/shared/time";
+
 import {
   cleanupTestDb,
   createIsolatedTestDb,
   type TestDbContext,
 } from "../../support/test-db";
-import { BENCH_DATE } from "../_shared/constants";
 import { fixedIterations } from "../_shared/options";
 import { takeFromPool } from "../_shared/pool";
 import { seedQuotaUsers, USER_POOL_SIZE } from "./fixtures";
 
-describe("quota consume component benchmark", () => {
+describe("search capacity grant component benchmark", () => {
   let ctx: TestDbContext | null = null;
   let userIds: number[] = [];
   const cursor = { value: 0 };
@@ -20,11 +21,11 @@ describe("quota consume component benchmark", () => {
     userIds = await seedQuotaUsers(ctx);
 
     for (const userId of userIds) {
-      await ctx.repos.quotaAllocations.create({
+      await ctx.repos.searchCapacityGrants.insert({
         user_id: userId,
-        allocated_by_user_id: 2,
-        date: BENCH_DATE,
-        quota_amount: 2,
+        actor_user_id: 2,
+        amount: 2,
+        reason: "bench_seed",
       });
     }
   });
@@ -36,7 +37,7 @@ describe("quota consume component benchmark", () => {
   });
 
   bench(
-    "component path: load quota allocation by user and date",
+    "component path: load search capacity grants by user and period",
     async () => {
       const userId = takeFromPool(
         userIds,
@@ -44,12 +45,14 @@ describe("quota consume component benchmark", () => {
         "quota-consume query pool exhausted before iterations completed",
       );
 
-      const allocation = await ctx!.repos.quotaAllocations.findByUserAndDate(
+      const { periodStart, periodEnd } = currentMonthlyPeriod(new Date());
+      const grants = await ctx!.repos.searchCapacityGrants.findByUserAndPeriod(
         userId,
-        BENCH_DATE,
+        periodStart,
+        periodEnd,
       );
-      if (!allocation) {
-        throw new Error("expected quota allocation row");
+      if (grants.length === 0) {
+        throw new Error("expected at least one search capacity grant row");
       }
     },
     fixedIterations(USER_POOL_SIZE),

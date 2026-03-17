@@ -1,5 +1,7 @@
 import { SEARCH_PROJECTION_PATHS } from "~/server/shared/engine/projection-contract";
 import type {
+  LeadCandidate,
+  LeadCandidatesResponse,
   SearchResponse,
   SearchResult,
 } from "~/server/shared/engine/types";
@@ -84,6 +86,17 @@ function isSearchResult(value: unknown): value is SearchResult {
   );
 }
 
+function isLeadCandidate(value: unknown): value is LeadCandidate {
+  if (typeof value !== "object" || value === null) return false;
+  return (
+    typeof prop(value, "ruc") === "string" &&
+    typeof prop(value, "organization_name") === "string" &&
+    typeof prop(value, "dni") === "string" &&
+    typeof prop(value, "person_name") === "string" &&
+    typeof prop(value, "phone_primary") === "string"
+  );
+}
+
 function hasPath(source: unknown, path: string): boolean {
   if (typeof source !== "object" || source === null) return false;
 
@@ -125,4 +138,23 @@ export function assertSearchResponse(value: unknown): SearchResponse {
   }
 
   return { results, count };
+}
+
+export function assertLeadCandidatesResponse(
+  value: unknown,
+): LeadCandidatesResponse {
+  if (typeof value !== "object" || value === null) {
+    throw new Error("Engine returned invalid candidate response shape");
+  }
+
+  const candidates = prop(value, "candidates");
+  const count = prop(value, "count");
+  if (!Array.isArray(candidates) || typeof count !== "number") {
+    throw new Error("Engine returned invalid candidate response shape");
+  }
+  if (!candidates.every(isLeadCandidate)) {
+    throw new Error("Engine returned invalid candidate response shape");
+  }
+
+  return { candidates, count };
 }

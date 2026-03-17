@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import { hashPassword } from "../../src/lib/auth/password/password";
+import { asBranchId, asUserId } from "../../src/server/shared/ids";
 import { createUserProvisioningService } from "../../src/server/users/service-user-provisioning";
 import { cleanupTestDb, createIsolatedTestDb } from "../support/test-db";
 
@@ -21,9 +22,9 @@ describe("user invite lifecycle", () => {
     });
 
     const created = await service.createInvite({
-      actorUserId: 5,
+      actorUserId: asUserId(5),
       actorRole: "superuser",
-      branchId: 2,
+      branchId: asBranchId(2),
       names: "Nueva",
       firstSurname: "Ejecutiva",
       secondSurname: "Garcia",
@@ -55,9 +56,9 @@ describe("user invite lifecycle", () => {
     });
 
     const created = await service.createInvite({
-      actorUserId: 5,
+      actorUserId: asUserId(5),
       actorRole: "superuser",
-      branchId: 2,
+      branchId: asBranchId(2),
       names: "Nuevo",
       firstSurname: "Analista",
       secondSurname: "Lopez",
@@ -69,9 +70,9 @@ describe("user invite lifecycle", () => {
     if (!created.ok) return;
 
     const revoked = await service.revokeInvite({
-      actorUserId: 5,
+      actorUserId: asUserId(5),
       actorRole: "superuser",
-      branchId: 2,
+      branchId: asBranchId(2),
       inviteId: created.value.inviteId,
     });
     expect(revoked.ok).toBe(true);
@@ -116,9 +117,9 @@ describe("user invite lifecycle", () => {
     });
 
     const created = await service.createInvite({
-      actorUserId: 5,
+      actorUserId: asUserId(5),
       actorRole: "superuser",
-      branchId: 2,
+      branchId: asBranchId(2),
       names: "Race",
       firstSurname: "User",
       secondSurname: "Test",

@@ -4,6 +4,9 @@ import { generateInviteToken, hashInviteToken } from "~/lib/auth/invite/tokens";
 import { hashPassword } from "~/lib/auth/password/password";
 import { generateUsername } from "~/lib/users/generate-username";
 import { createAuditService } from "~/server/shared/audit";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { asBranchId, asUserId } from "~/server/shared/ids";
+import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -41,66 +44,26 @@ function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
-export type UserProvisioningError =
-  | { reason: "role_not_assignable"; message: string }
-  | { reason: "invalid_team"; message: string }
-  | { reason: "active_user_exists"; message: string }
-  | { reason: "pending_user_other_branch"; message: string }
-  | { reason: "invite_target_missing"; message: string }
-  | { reason: "invite_not_found"; message: string }
-  | { reason: "cross_branch_forbidden"; message: string }
-  | { reason: "invite_not_pending"; message: string }
-  | { reason: "invite_target_active"; message: string }
-  | { reason: "invite_invalid_or_expired"; message: string }
-  | { reason: "unexpected"; message: string };
-
-export type ListPendingInvitesError = Pick<
-  Extract<UserProvisioningError, { reason: "unexpected" }>,
-  "reason" | "message"
->;
-
-export type CreateInviteError = Extract<
-  UserProvisioningError,
-  | { reason: "role_not_assignable" }
-  | { reason: "invalid_team" }
-  | { reason: "active_user_exists" }
-  | { reason: "pending_user_other_branch" }
-  | { reason: "invite_target_missing" }
-  | { reason: "unexpected" }
->;
-
-export type ResendInviteError = Extract<
-  UserProvisioningError,
-  | { reason: "invite_not_found" }
-  | { reason: "cross_branch_forbidden" }
-  | { reason: "invite_not_pending" }
-  | { reason: "invite_target_missing" }
-  | { reason: "invite_target_active" }
-  | { reason: "role_not_assignable" }
-  | { reason: "unexpected" }
->;
-
-export type RevokeInviteError = Extract<
-  UserProvisioningError,
-  | { reason: "invite_not_found" }
-  | { reason: "cross_branch_forbidden" }
-  | { reason: "invite_not_pending" }
-  | { reason: "invite_target_missing" }
-  | { reason: "role_not_assignable" }
-  | { reason: "unexpected" }
->;
-
-export type MarkInviteDeliveredError = Pick<
-  Extract<UserProvisioningError, { reason: "unexpected" }>,
-  "reason" | "message"
->;
-
-export type AcceptInviteError = Extract<
-  UserProvisioningError,
-  | { reason: "invite_invalid_or_expired" }
-  | { reason: "invite_target_active" }
-  | { reason: "unexpected" }
->;
+function provisioningError(code: string, message: string): DomainError {
+  switch (code) {
+    case "role_not_assignable":
+    case "pending_user_other_branch":
+    case "cross_branch_forbidden":
+      return domainError("forbidden", code, message);
+    case "invalid_team":
+    case "invite_invalid_or_expired":
+      return domainError("validation", code, message);
+    case "active_user_exists":
+    case "invite_not_pending":
+    case "invite_target_active":
+      return domainError("conflict", code, message);
+    case "invite_target_missing":
+    case "invite_not_found":
+      return domainError("not_found", code, message);
+    default:
+      return domainError("unexpected", "unexpected", message);
+  }
+}
 
 export function createUserProvisioningService(
   repos: ProvisioningRepos,
@@ -162,8 +125,8 @@ export function createUserProvisioningService(
 
   return {
     async listPendingInvites(
-      branchId: number,
-    ): Promise<Result<PendingBranchInvite[], ListPendingInvitesError>> {
+      branchId: BranchId,
+    ): Promise<Result<PendingBranchInvite[], DomainError>> {
       try {
         const currentTime = now();
         await repos.userInvites.expirePendingBefore(currentTime);
@@ -188,35 +151,39 @@ export function createUserProvisioningService(
           })),
         );
       } catch {
-        return Err({
-          reason: "unexpected",
-          message: "Unexpected pending invites read failure",
-        });
+        return Err(
+          provisioningError(
+            "unexpected",
+            "Unexpected pending invites read failure",
+          ),
+        );
       }
     },
 
     async createInvite(input: {
-      actorUserId: number;
+      actorUserId: UserId;
       actorRole: Role;
-      branchId: number;
+      branchId: BranchId;
       names: string;
       firstSurname: string;
       secondSurname: string;
       email: string;
       role: Role;
-      teamId: number | null;
+      teamId: TeamId | null;
       expiresAt?: number | null;
     }): Promise<
       Result<
         { inviteId: number; token: string; expiresAt: number },
-        CreateInviteError
+        DomainError
       >
     > {
       if (!canAssignRole(input.actorRole, input.role)) {
-        return Err({
-          reason: "role_not_assignable",
-          message: "You cannot assign the selected role",
-        });
+        return Err(
+          provisioningError(
+            "role_not_assignable",
+            "You cannot assign the selected role",
+          ),
+        );
       }
       const email = normalizeEmail(input.email);
       try {
@@ -227,8 +194,10 @@ export function createUserProvisioningService(
             );
             if (!team || team.branch_id !== input.branchId) {
               return Err({
-                reason: "invalid_team",
-                message: "Invalid team for the selected branch",
+                ...provisioningError(
+                  "invalid_team",
+                  "Invalid team for the selected branch",
+                ),
               });
             }
           }
@@ -236,17 +205,20 @@ export function createUserProvisioningService(
           let user = await transactionRepos.users.findByEmail(email);
 
           if (user?.is_active === 1) {
-            return Err({
-              reason: "active_user_exists",
-              message: "A user with this email already exists",
-            });
+            return Err(
+              provisioningError(
+                "active_user_exists",
+                "A user with this email already exists",
+              ),
+            );
           }
           if (user && user.branch_id !== input.branchId) {
-            return Err({
-              reason: "pending_user_other_branch",
-              message:
+            return Err(
+              provisioningError(
+                "pending_user_other_branch",
                 "A pending user with this email belongs to another branch",
-            });
+              ),
+            );
           }
 
           if (!user) {
@@ -277,33 +249,40 @@ export function createUserProvisioningService(
             } catch {
               const racedUser = await transactionRepos.users.findByEmail(email);
               if (!racedUser) {
-                return Err({
-                  reason: "unexpected",
-                  message: "Unexpected invite target creation failure",
-                });
+                return Err(
+                  provisioningError(
+                    "unexpected",
+                    "Unexpected invite target creation failure",
+                  ),
+                );
               }
               if (racedUser.is_active === 1) {
-                return Err({
-                  reason: "active_user_exists",
-                  message: "A user with this email already exists",
-                });
+                return Err(
+                  provisioningError(
+                    "active_user_exists",
+                    "A user with this email already exists",
+                  ),
+                );
               }
               if (racedUser.branch_id !== input.branchId) {
-                return Err({
-                  reason: "pending_user_other_branch",
-                  message:
+                return Err(
+                  provisioningError(
+                    "pending_user_other_branch",
                     "A pending user with this email belongs to another branch",
-                });
+                  ),
+                );
               }
               user = racedUser;
             }
           }
 
           if (!user) {
-            return Err({
-              reason: "invite_target_missing",
-              message: "Could not provision invite target user",
-            });
+            return Err(
+              provisioningError(
+                "invite_target_missing",
+                "Could not provision invite target user",
+              ),
+            );
           }
 
           await transactionRepos.users.updateInviteProvisioning(user.id, {
@@ -328,22 +307,24 @@ export function createUserProvisioningService(
           );
         });
       } catch {
-        return Err({
-          reason: "unexpected",
-          message: "Unexpected invite provisioning failure",
-        });
+        return Err(
+          provisioningError(
+            "unexpected",
+            "Unexpected invite provisioning failure",
+          ),
+        );
       }
     },
 
     async resendInvite(input: {
-      actorUserId: number;
+      actorUserId: UserId;
       actorRole: Role;
-      branchId: number;
+      branchId: BranchId;
       inviteId: number;
     }): Promise<
       Result<
         { inviteId: number; token: string; expiresAt: number },
-        ResendInviteError
+        DomainError
       >
     > {
       try {
@@ -355,42 +336,51 @@ export function createUserProvisioningService(
             input.inviteId,
           );
           if (!invite) {
-            return Err({
-              reason: "invite_not_found",
-              message: "Invite not found",
-            });
+            return Err(
+              provisioningError("invite_not_found", "Invite not found"),
+            );
           }
           if (invite.branch_id !== input.branchId) {
-            return Err({
-              reason: "cross_branch_forbidden",
-              message: "Cannot manage invites from another branch",
-            });
+            return Err(
+              provisioningError(
+                "cross_branch_forbidden",
+                "Cannot manage invites from another branch",
+              ),
+            );
           }
           if (invite.status !== "pending") {
-            return Err({
-              reason: "invite_not_pending",
-              message: "Only pending invites can be resent",
-            });
+            return Err(
+              provisioningError(
+                "invite_not_pending",
+                "Only pending invites can be resent",
+              ),
+            );
           }
 
           const user = await transactionRepos.users.findById(invite.user_id);
           if (!user || user.branch_id !== input.branchId) {
-            return Err({
-              reason: "invite_target_missing",
-              message: "Invite target user was not found",
-            });
+            return Err(
+              provisioningError(
+                "invite_target_missing",
+                "Invite target user was not found",
+              ),
+            );
           }
           if (user.is_active === 1) {
-            return Err({
-              reason: "invite_target_active",
-              message: "Invite target user is already active",
-            });
+            return Err(
+              provisioningError(
+                "invite_target_active",
+                "Invite target user is already active",
+              ),
+            );
           }
           if (!canAssignRole(input.actorRole, user.role)) {
-            return Err({
-              reason: "role_not_assignable",
-              message: "You cannot manage invites for this role",
-            });
+            return Err(
+              provisioningError(
+                "role_not_assignable",
+                "You cannot manage invites for this role",
+              ),
+            );
           }
 
           return Ok(
@@ -406,55 +396,61 @@ export function createUserProvisioningService(
           );
         });
       } catch {
-        return Err({
-          reason: "unexpected",
-          message: "Unexpected invite resend failure",
-        });
+        return Err(
+          provisioningError("unexpected", "Unexpected invite resend failure"),
+        );
       }
     },
 
     async revokeInvite(input: {
-      actorUserId: number;
+      actorUserId: UserId;
       actorRole: Role;
-      branchId: number;
+      branchId: BranchId;
       inviteId: number;
-    }): Promise<Result<void, RevokeInviteError>> {
+    }): Promise<Result<void, DomainError>> {
       try {
         return await runInTransaction(async (transactionRepos) => {
           const invite = await transactionRepos.userInvites.findById(
             input.inviteId,
           );
           if (!invite) {
-            return Err({
-              reason: "invite_not_found",
-              message: "Invite not found",
-            });
+            return Err(
+              provisioningError("invite_not_found", "Invite not found"),
+            );
           }
           if (invite.branch_id !== input.branchId) {
-            return Err({
-              reason: "cross_branch_forbidden",
-              message: "Cannot manage invites from another branch",
-            });
+            return Err(
+              provisioningError(
+                "cross_branch_forbidden",
+                "Cannot manage invites from another branch",
+              ),
+            );
           }
           if (invite.status !== "pending") {
-            return Err({
-              reason: "invite_not_pending",
-              message: "Only pending invites can be revoked",
-            });
+            return Err(
+              provisioningError(
+                "invite_not_pending",
+                "Only pending invites can be revoked",
+              ),
+            );
           }
 
           const user = await transactionRepos.users.findById(invite.user_id);
           if (!user) {
-            return Err({
-              reason: "invite_target_missing",
-              message: "Invite target user was not found",
-            });
+            return Err(
+              provisioningError(
+                "invite_target_missing",
+                "Invite target user was not found",
+              ),
+            );
           }
           if (!canAssignRole(input.actorRole, user.role)) {
-            return Err({
-              reason: "role_not_assignable",
-              message: "You cannot manage invites for this role",
-            });
+            return Err(
+              provisioningError(
+                "role_not_assignable",
+                "You cannot manage invites for this role",
+              ),
+            );
           }
 
           await transactionRepos.userInvites.revokePendingByUser(
@@ -473,26 +469,27 @@ export function createUserProvisioningService(
           return Ok(undefined);
         });
       } catch {
-        return Err({
-          reason: "unexpected",
-          message: "Unexpected invite revoke failure",
-        });
+        return Err(
+          provisioningError("unexpected", "Unexpected invite revoke failure"),
+        );
       }
     },
 
     async markInviteDelivered(
       inviteId: number,
-    ): Promise<Result<void, MarkInviteDeliveredError>> {
+    ): Promise<Result<void, DomainError>> {
       try {
         await runInTransaction(async (transactionRepos) => {
           await transactionRepos.userInvites.markSent(inviteId, now());
         });
         return Ok(undefined);
       } catch {
-        return Err({
-          reason: "unexpected",
-          message: "Unexpected invite delivery mark failure",
-        });
+        return Err(
+          provisioningError(
+            "unexpected",
+            "Unexpected invite delivery mark failure",
+          ),
+        );
       }
     },
 
@@ -500,10 +497,7 @@ export function createUserProvisioningService(
       token: string;
       passwordHash: string;
     }): Promise<
-      Result<
-        { userId: number; branchId: number; role: Role },
-        AcceptInviteError
-      >
+      Result<{ userId: UserId; branchId: BranchId; role: Role }, DomainError>
     > {
       try {
         return await runInTransaction(async (transactionRepos) => {
@@ -516,16 +510,20 @@ export function createUserProvisioningService(
               currentTime,
             );
           if (!invite) {
-            return Err({
-              reason: "invite_invalid_or_expired",
-              message: "Invite is invalid or expired",
-            });
+            return Err(
+              provisioningError(
+                "invite_invalid_or_expired",
+                "Invite is invalid or expired",
+              ),
+            );
           }
           if (invite.user_is_active === 1) {
-            return Err({
-              reason: "invite_target_active",
-              message: "Invite target user is already active",
-            });
+            return Err(
+              provisioningError(
+                "invite_target_active",
+                "Invite target user is already active",
+              ),
+            );
           }
 
           await transactionRepos.users.updateInviteProvisioning(
@@ -557,16 +555,18 @@ export function createUserProvisioningService(
             },
           );
           return Ok({
-            userId: invite.user_id,
-            branchId: invite.user_branch_id,
+            userId: asUserId(invite.user_id),
+            branchId: asBranchId(invite.user_branch_id),
             role: invite.user_role,
           });
         });
       } catch {
-        return Err({
-          reason: "unexpected",
-          message: "Unexpected invite acceptance failure",
-        });
+        return Err(
+          provisioningError(
+            "unexpected",
+            "Unexpected invite acceptance failure",
+          ),
+        );
       }
     },
   };

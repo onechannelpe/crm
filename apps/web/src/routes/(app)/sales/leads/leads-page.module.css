@@ -43,6 +43,18 @@
   color: var(--muted-foreground);
 }
 
+.capacityBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding: 12px 16px;
+  border-radius: var(--panel-radius);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 92%, white);
+}
+
 .fabContainer {
   position: fixed;
   bottom: 32px;

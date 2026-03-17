@@ -8,12 +8,13 @@ import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
 import type { ActionSuccess } from "~/lib/contracts/common";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
 import { repos } from "~/server/shared/context";
+import type { UserId } from "~/server/shared/ids";
 
-async function requireCurrentUserWithStrongAuthState(userId: number) {
+async function requireCurrentUserWithStrongAuthState(userId: UserId) {
   const user = await repos.users.findById(userId);
   if (!user) throw notFoundError("User not found");
 
-  const strongAuthStatus = await getStrongAuthStatus(user.id, repos);
+  const strongAuthStatus = await getStrongAuthStatus(userId, repos);
   return { user, strongAuthStatus };
 }
 

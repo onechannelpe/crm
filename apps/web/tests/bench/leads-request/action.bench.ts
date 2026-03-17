@@ -1,6 +1,9 @@
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
-import { createLeadAssignmentService } from "~/server/leads/service";
+import { requestLeadRefill } from "~/server/lead-workflow/request-refill";
+import type { EngineClient } from "~/server/shared/engine/client";
+import { asBranchId, asUserId } from "~/server/shared/ids";
+import { createRepositories } from "~/server/shared/registry";
 
 import {
   cleanupTestDb,
@@ -11,9 +14,9 @@ import { fixedIterations } from "../_shared/options";
 import { takeFromPool } from "../_shared/pool";
 import { seedLeadsRequestFixtures, USER_POOL_SIZE } from "./fixtures";
 
-describe("lead assignment action benchmark", () => {
+describe("lead refill action benchmark", () => {
   let ctx: TestDbContext | null = null;
-  let leadService: ReturnType<typeof createLeadAssignmentService> | null = null;
+  let engine: EngineClient | null = null;
   let userIds: number[] = [];
   const cursor = { value: 0 };
 
@@ -21,22 +24,18 @@ describe("lead assignment action benchmark", () => {
     ctx = await createIsolatedTestDb("bench-leads-request-action");
     const fixtures = await seedLeadsRequestFixtures(ctx);
     userIds = fixtures.userIds;
-
-    leadService = createLeadAssignmentService(ctx.repos, {
-      quotaService: fixtures.quotaService,
-      engineClient: fixtures.engineClient,
-    });
+    engine = fixtures.engineClient;
   });
 
   afterAll(async () => {
     if (!ctx) return;
     await cleanupTestDb(ctx);
     ctx = null;
-    leadService = null;
+    engine = null;
   });
 
   bench(
-    "action path: request leads for one user",
+    "action path: request lead refill for one user",
     async () => {
       const userId = takeFromPool(
         userIds,
@@ -44,14 +43,25 @@ describe("lead assignment action benchmark", () => {
         "leads-request pool exhausted before iterations completed",
       );
 
-      const result = await leadService!.requestLeads(userId, 1, 1);
+      const result = await requestLeadRefill(
+        {
+          actorUserId: asUserId(userId),
+          branchId: asBranchId(1),
+        },
+        {
+          repos: ctx!.repos,
+          runInTransaction: (operation) =>
+            ctx!.db
+              .transaction()
+              .execute((txDb) => operation(createRepositories(txDb))),
+          engine: engine!,
+        },
+      );
+
       if (!result.ok) {
         throw new Error(
-          `expected lead request success, got ${result.error.message}`,
+          `expected lead refill success, got ${result.error.code}`,
         );
-      }
-      if (result.value !== 1) {
-        throw new Error(`expected one assigned lead, got ${result.value}`);
       }
     },
     fixedIterations(USER_POOL_SIZE),

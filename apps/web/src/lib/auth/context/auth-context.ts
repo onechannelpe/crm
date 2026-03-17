@@ -1,4 +1,5 @@
 import type { User } from "~/lib/db/types";
+import type { UserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
 
 import {
@@ -31,7 +32,7 @@ type AuthContextDeps = Pick<
 >;
 
 export async function loadActiveAuthContext(
-  userId: number,
+  userId: UserId,
   deps: AuthContextDeps,
 ): Promise<AuthContext | null> {
   const user = await deps.users.findById(userId);
@@ -41,6 +42,6 @@ export async function loadActiveAuthContext(
 
   return {
     user,
-    strongAuthStatus: await getStrongAuthStatus(user.id, deps),
+    strongAuthStatus: await getStrongAuthStatus(userId, deps),
   };
 }

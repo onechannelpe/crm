@@ -1,8 +1,8 @@
-import { createQuotaService } from "~/server/quota/service";
 import type { EngineClient } from "~/server/shared/engine/client";
+import type { LeadCandidatesResponse } from "~/server/shared/engine/types";
 
 import type { TestDbContext } from "../../support/test-db";
-import { BENCH_DATE, BENCH_NOW } from "../_shared/constants";
+import { BENCH_NOW } from "../_shared/constants";
 
 export const USER_POOL_SIZE = 80;
 const USER_ID_START = 90_000;
@@ -10,7 +10,6 @@ const ORG_ID_START = 80_000;
 
 export interface LeadsRequestSeed {
   userIds: number[];
-  quotaService: ReturnType<typeof createQuotaService>;
   engineClient: EngineClient;
 }
 
@@ -49,17 +48,15 @@ export async function seedLeadsRequestFixtures(
 
   await ctx.db.insertInto("organizations").values(organizations).execute();
 
-  const quotaService = createQuotaService(ctx.repos, {
-    todayDateString: () => BENCH_DATE,
-  });
-
+  // Seed lead capacity grants so each user can complete one refill.
+  // bufferTarget defaults to system default; grant 5 units per user to cover it.
   for (const userId of userIds) {
-    const result = await quotaService.allocate(2, userId, 1, BENCH_DATE);
-    if (!result.ok) {
-      throw new Error(
-        `expected quota allocation success, got ${result.error.message}`,
-      );
-    }
+    await ctx.repos.leadCapacityGrants.insert({
+      user_id: userId,
+      amount: 5,
+      reason: "bench_seed",
+      actor_user_id: 2,
+    });
   }
 
   const engineClient: EngineClient = {
@@ -112,7 +109,22 @@ export async function seedLeadsRequestFixtures(
         ],
       };
     },
+    async leadCandidates(input): Promise<LeadCandidatesResponse> {
+      const index = input.userId - USER_ID_START;
+      return {
+        candidates: [
+          {
+            ruc: `2099${String(index).padStart(8, "0")}`,
+            organization_name: `Bench Org ${index}`,
+            dni: `7000${String(index).padStart(4, "0")}`,
+            person_name: `Bench Person ${index}`,
+            phone_primary: `+5199033${String(index).padStart(4, "0")}`,
+          },
+        ],
+        count: 1,
+      };
+    },
   };
 
-  return { userIds, quotaService, engineClient };
+  return { userIds, engineClient };
 }

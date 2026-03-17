@@ -102,7 +102,7 @@ describe("sales records workflow service", () => {
     const submitted = await ctx.salesRecords.submit(result.value, 1);
     expect(submitted.ok).toBe(false);
     if (submitted.ok) throw new Error("Expected submit validation failure");
-    expect(submitted.error.reason).toBe("invalid_data");
+    expect(submitted.error.code).toBe("invalid_data");
     expect(submitted.error.message).toBe(
       "At least one address is required before submit",
     );
@@ -146,7 +146,7 @@ describe("sales records workflow service", () => {
     const blocked = await ctx.salesRecords.confirm(created.value, 4, 2, false);
     expect(blocked.ok).toBe(false);
     if (blocked.ok) throw new Error("Expected branch scope block");
-    expect(blocked.error.reason).toBe("forbidden");
+    expect(blocked.error.code).toBe("forbidden");
     expect(blocked.error.message).toBe(
       "Cannot confirm a sales record from another branch",
     );
@@ -218,7 +218,7 @@ describe("sales records workflow service", () => {
     );
     expect(rejected.ok).toBe(false);
     if (rejected.ok) throw new Error("Expected reject validation failure");
-    expect(rejected.error.reason).toBe("invalid_data");
+    expect(rejected.error.code).toBe("invalid_data");
     expect(rejected.error.message).toBe("Rejection reason is required");
   });
 
@@ -257,7 +257,7 @@ describe("sales records workflow service", () => {
 
     expect(created.ok).toBe(false);
     if (created.ok) throw new Error("Expected product validation failure");
-    expect(created.error.reason).toBe("not_found");
+    expect(created.error.code).toBe("not_found");
 
     const after = await ctx.repos.salesRecords.listByExecutive(1, 100);
     expect(after).toHaveLength(before.length);
@@ -399,7 +399,7 @@ describe("sales records workflow service", () => {
     if (blockedInDraft.ok) {
       throw new Error("Expected attempt to be blocked for draft state");
     }
-    expect(blockedInDraft.error.reason).toBe("invalid_state");
+    expect(blockedInDraft.error.code).toBe("invalid_state");
 
     const submitted = await ctx.salesRecords.submit(created.value, 1);
     expect(submitted.ok).toBe(true);

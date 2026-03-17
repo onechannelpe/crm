@@ -10,8 +10,22 @@ import {
   createUserTotpFactorsRepo,
   createUserTotpRecoveryCodesRepo,
 } from "~/server/auth/repos-user-totp-factors";
+import { createCapacityRequestsRepo } from "~/server/capacity-admin/repos";
+import {
+  createLeadPolicyDefaultsRepo,
+  createLeadPolicyOverridesRepo,
+  createSearchPolicyDefaultsRepo,
+  createSearchPolicyOverridesRepo,
+} from "~/server/capacity-policy/repos";
+import {
+  createLeadCapacityGrantsRepo,
+  createLeadUsageCommitsRepo,
+  createLeadUsageReservationsRepo,
+  createSearchCapacityGrantsRepo,
+  createSearchUsageCommitsRepo,
+  createSearchUsageReservationsRepo,
+} from "~/server/capacity-usage/repos";
 import { createSearchEnrichmentRepo } from "~/server/client-search/repos-enrichment";
-import { createClientSearchViewsRepo } from "~/server/client-search/repos-views";
 import { createContactsRepo } from "~/server/contacts/repos-contacts";
 import { createOrganizationsRepo } from "~/server/contacts/repos-organizations";
 import { createExtensionRuntimeRepo } from "~/server/extension/repos";
@@ -24,7 +38,6 @@ import { createNotificationContactsRepo } from "~/server/notifications/repos-con
 import { createNotificationPreferencesRepo } from "~/server/notifications/repos-preferences";
 import { createActionObservationsRepo } from "~/server/observability/repos-action-observations";
 import { createAuthFunnelEventsRepo } from "~/server/observability/repos-auth-funnel-events";
-import { createQuotaAllocationsRepo } from "~/server/quota/repos";
 import { createReportExportRepo } from "~/server/sales/repos-report-exports";
 import { createSalesRecordsRepo } from "~/server/sales/repos-sales-records";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
@@ -53,11 +66,20 @@ export function createRepositories(db: Kysely<Database>) {
     userTotpFactors: createUserTotpFactorsRepo(db),
     userTotpRecoveryCodes: createUserTotpRecoveryCodesRepo(db),
     organizations: createOrganizationsRepo(db),
-    clientSearchViews: createClientSearchViewsRepo(db),
     searchEnrichment: createSearchEnrichmentRepo(db),
     contacts: createContactsRepo(db),
     leadAssignments: createLeadAssignmentsRepo(db),
-    quotaAllocations: createQuotaAllocationsRepo(db),
+    searchPolicyDefaults: createSearchPolicyDefaultsRepo(db),
+    searchPolicyOverrides: createSearchPolicyOverridesRepo(db),
+    leadPolicyDefaults: createLeadPolicyDefaultsRepo(db),
+    leadPolicyOverrides: createLeadPolicyOverridesRepo(db),
+    searchCapacityGrants: createSearchCapacityGrantsRepo(db),
+    searchUsageReservations: createSearchUsageReservationsRepo(db),
+    searchUsageCommits: createSearchUsageCommitsRepo(db),
+    leadCapacityGrants: createLeadCapacityGrantsRepo(db),
+    leadUsageReservations: createLeadUsageReservationsRepo(db),
+    leadUsageCommits: createLeadUsageCommitsRepo(db),
+    capacityRequests: createCapacityRequestsRepo(db),
     reportExportJobs: createReportExportRepo(db),
     salesRecords: createSalesRecordsRepo(db),
     interactionLogs: createInteractionLogsRepo(db),

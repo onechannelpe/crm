@@ -1,5 +1,6 @@
 use crm_engine::api::router;
 use crm_engine::config::Config;
+use crm_engine::domain::candidate_service::CandidateService;
 use crm_engine::domain::search_service::SearchService;
 use crm_engine::errors::StartupError;
 use crm_engine::observability::logging;
@@ -49,6 +50,7 @@ async fn run() -> Result<(), StartupError> {
     }
 
     let state = AppState {
+        candidates: Arc::new(CandidateService::new(pool.clone(), cfg.max_limit)),
         search: Arc::new(SearchService::new(pool.clone(), cfg.max_limit)),
         hmac: Arc::new(HmacVerifier::new(
             cfg.hmac_keys.clone(),

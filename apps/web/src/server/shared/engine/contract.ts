@@ -3,6 +3,7 @@ export const ENGINE_API_VERSION = "v1";
 export const ENGINE_API_PREFIX = `/${ENGINE_API_VERSION}`;
 export const ENGINE_ENDPOINTS = {
   search: "/search",
+  leadCandidates: "/lead-candidates",
   health: "/health",
 } as const;
 export function engineApiPath(endpoint: (typeof ENGINE_ENDPOINTS)[keyof typeof ENGINE_ENDPOINTS]): string {
