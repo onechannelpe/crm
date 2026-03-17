@@ -7,9 +7,7 @@ import type {
   SearchPolicyDefaultsRepo,
   SearchPolicyOverridesRepo,
 } from "~/server/capacity-policy/repos";
-import {
-  canManageExecutive,
-} from "~/server/capacity-policy/scope-access";
+import { canManageExecutive } from "~/server/capacity-policy/scope-access";
 import type {
   LeadCapacityGrantsRepo,
   LeadUsageCommitsRepo,
@@ -18,18 +16,18 @@ import type {
   SearchUsageCommitsRepo,
   SearchUsageReservationsRepo,
 } from "~/server/capacity-usage/repos";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
-import type { TeamId, UserId } from "~/server/shared/ids";
-import { asUserId } from "~/server/shared/ids";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
-import {
-  getSearchCapacityForUser,
-  type SearchCapacitySnapshot,
-} from "~/server/search-workflow/read-search-capacity";
 import {
   getLeadCapacityForUser,
   type LeadCapacitySnapshot,
 } from "~/server/lead-workflow/read-lead-capacity";
+import {
+  getSearchCapacityForUser,
+  type SearchCapacitySnapshot,
+} from "~/server/search-workflow/read-search-capacity";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
+import type { TeamId, UserId } from "~/server/shared/ids";
+import { asUserId } from "~/server/shared/ids";
+import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import type { CapacityRequestsRepo } from "./repos";
 
@@ -186,7 +184,11 @@ export async function getManagedExecutives(
 
     const summaries = await Promise.all(
       users.map(async (user) => {
-        const managed = await canManageExecutive(actor, asUserId(user.id), repos);
+        const managed = await canManageExecutive(
+          actor,
+          asUserId(user.id),
+          repos,
+        );
         if (!managed.ok) return null;
 
         const [searchStatus, leadStatus] = await Promise.all([
@@ -207,16 +209,18 @@ export async function getManagedExecutives(
     );
 
     return Ok(
-      (summaries.filter(Boolean) as ManagedExecutiveSummary[]).sort((a, b) =>
-        a.fullName.localeCompare(b.fullName),
-      ),
+      summaries
+        .filter((s): s is ManagedExecutiveSummary => s !== null)
+        .sort((a, b) => a.fullName.localeCompare(b.fullName)),
     );
   } catch (error) {
     return Err(
       domainError(
         "unexpected",
         "unexpected",
-        error instanceof Error ? error.message : "Failed to list managed executives",
+        error instanceof Error
+          ? error.message
+          : "Failed to list managed executives",
       ),
     );
   }
@@ -261,7 +265,9 @@ export async function getExecutiveCapacityDetail(
       domainError(
         "unexpected",
         "unexpected",
-        error instanceof Error ? error.message : "Failed to get executive capacity detail",
+        error instanceof Error
+          ? error.message
+          : "Failed to get executive capacity detail",
       ),
     );
   }
@@ -289,7 +295,9 @@ export async function getPendingCapacityRequests(
       domainError(
         "unexpected",
         "unexpected",
-        error instanceof Error ? error.message : "Failed to list pending requests",
+        error instanceof Error
+          ? error.message
+          : "Failed to list pending requests",
       ),
     );
   }
@@ -334,7 +342,9 @@ export async function getCapacityPolicyDefaults(
       domainError(
         "unexpected",
         "unexpected",
-        error instanceof Error ? error.message : "Failed to get policy defaults",
+        error instanceof Error
+          ? error.message
+          : "Failed to get policy defaults",
       ),
     );
   }
