@@ -82,12 +82,13 @@ function createGrantServices(
 export function createCapacityApprovalService(
   deps: CapacityApprovalServiceDeps,
 ) {
-  async function assertApprovalAccess(
+  async function assertApprovalAccessInTransaction(
     actor: SessionData,
     requestId: CapacityRequestId,
+    transactionRepos: ReturnType<typeof createRepositories>,
     deniedMessage: string,
   ): Promise<Result<CapacityRequestRecord, CapacityApprovalError>> {
-    const request = await deps.repos.capacityRequests.findById(requestId);
+    const request = await transactionRepos.capacityRequests.findById(requestId);
     if (!request) {
       return Err({ reason: "not_found", message: "Request not found" });
     }
@@ -95,7 +96,7 @@ export function createCapacityApprovalService(
     const managed = await canManageExecutive(
       actor,
       asUserId(request.user_id),
-      deps.repos,
+      transactionRepos,
     );
     if (!managed.ok) {
       return Err({ reason: "forbidden", message: deniedMessage });
@@ -106,16 +107,11 @@ export function createCapacityApprovalService(
 
   async function approveInTransaction(input: {
     actorUserId: UserId;
-    requestId: CapacityRequestId;
+    request: CapacityRequestRecord;
     note: string | null;
     transactionRepos: ReturnType<typeof createRepositories>;
   }): Promise<Result<{ success: true }, CapacityApprovalError>> {
-    const request = await input.transactionRepos.capacityRequests.findById(
-      input.requestId,
-    );
-    if (!request) {
-      return Err({ reason: "conflict", message: "Request not found" });
-    }
+    const request = input.request;
     if (request.status !== "pending") {
       return Err({
         reason: "conflict",
@@ -183,20 +179,21 @@ export function createCapacityApprovalService(
       note?: string,
     ): Promise<Result<{ success: true }, CapacityApprovalError>> {
       try {
-        const access = await assertApprovalAccess(
-          actor,
-          requestId,
-          "Cannot approve this request",
-        );
-        if (isErr(access)) {
-          return Err(access.error);
-        }
-
         const result = await deps.runInRepositoryTransaction(
           async (transactionRepos) => {
+            const access = await assertApprovalAccessInTransaction(
+              actor,
+              requestId,
+              transactionRepos,
+              "Cannot approve this request",
+            );
+            if (isErr(access)) {
+              throwRollback(access.error);
+            }
+
             const approval = await approveInTransaction({
               actorUserId: actor.userId,
-              requestId: asCapacityRequestId(access.value.id),
+              request: access.value,
               note: normalizeDecisionNote(note),
               transactionRepos,
             });
@@ -222,15 +219,6 @@ export function createCapacityApprovalService(
       note: string,
     ): Promise<Result<{ success: true }, CapacityApprovalError>> {
       try {
-        const access = await assertApprovalAccess(
-          actor,
-          requestId,
-          "Cannot reject this request",
-        );
-        if (isErr(access)) {
-          return Err(access.error);
-        }
-
         const decisionNote = normalizeDecisionNote(note);
         if (!decisionNote) {
           return Err({
@@ -241,10 +229,17 @@ export function createCapacityApprovalService(
 
         const result = await deps.runInRepositoryTransaction(
           async (transactionRepos) => {
-            const request = await transactionRepos.capacityRequests.findById(
-              access.value.id,
+            const access = await assertApprovalAccessInTransaction(
+              actor,
+              requestId,
+              transactionRepos,
+              "Cannot reject this request",
             );
-            if (!request || request.status !== "pending") {
+            if (isErr(access)) {
+              throwRollback(access.error);
+            }
+
+            if (access.value.status !== "pending") {
               throwRollback({
                 reason: "conflict",
                 message: "Request is no longer pending",
@@ -253,7 +248,7 @@ export function createCapacityApprovalService(
 
             const updateResult =
               await transactionRepos.capacityRequests.markRejected(
-                request.id,
+                access.value.id,
                 actor.userId,
                 decisionNote,
               );

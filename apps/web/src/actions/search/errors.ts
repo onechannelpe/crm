@@ -1,9 +1,4 @@
-import {
-  conflictError,
-  internalError,
-  notFoundError,
-  validationError,
-} from "~/lib/app-errors";
+import { conflictError, internalError, notFoundError } from "~/lib/app-errors";
 import type { DirectSearchError } from "~/server/engine-gateway/errors";
 import type {
   SearchAllowanceError,
@@ -14,7 +9,6 @@ import type {
 type SearchActionError =
   | { reason: "not_found"; message: string }
   | { reason: "conflict"; message: string }
-  | { reason: "validation"; message: string }
   | { reason: "unexpected"; message: string };
 
 export function fromSearchAllowanceSnapshotError(
@@ -38,8 +32,6 @@ export function fromSearchAllowanceError(
   switch (error.reason) {
     case "search_exhausted":
       return { reason: "conflict", message: error.message };
-    case "validation":
-      return { reason: "validation", message: error.message };
     case "user_not_found":
       return { reason: "not_found", message: error.message };
     case "unexpected":
@@ -78,8 +70,6 @@ export function throwSearchActionError(error: SearchActionError): never {
       throw notFoundError(error.message);
     case "conflict":
       throw conflictError(error.message);
-    case "validation":
-      throw validationError(error.message);
     case "unexpected":
       throw internalError(error.message);
   }

@@ -39,7 +39,16 @@ export function fromCapacityReadError(
 export function fromCapacityRequestError(
   error: CapacityRequestError,
 ): CapacityActionError {
-  return { reason: "unexpected", message: error.message };
+  switch (error.reason) {
+    case "validation":
+      return { reason: "validation", message: error.message };
+    case "unexpected":
+      return { reason: "unexpected", message: error.message };
+  }
+
+  const unreachable: never = error;
+  void unreachable;
+  return { reason: "unexpected", message: "Unhandled capacity request error" };
 }
 
 export function fromCapacityManageError(

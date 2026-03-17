@@ -2,7 +2,6 @@ import type { LeadCandidateError } from "~/server/engine-gateway/errors";
 
 export type LeadPolicyError =
   | { reason: "user_not_found"; message: string }
-  | { reason: "validation"; message: string }
   | { reason: "unexpected"; message: string };
 
 export type LeadAssignmentError = { reason: "unexpected"; message: string };
@@ -11,7 +10,6 @@ export type LeadRefillError =
   | { reason: "user_not_found"; message: string }
   | { reason: "refill_exhausted"; message: string }
   | { reason: "compensation_failed"; message: string }
-  | { reason: "validation"; message: string }
   | LeadCandidateError
   | LeadAssignmentError
   | { reason: "unexpected"; message: string };

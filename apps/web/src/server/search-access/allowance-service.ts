@@ -255,10 +255,32 @@ export function createSearchAllowanceService(deps: SearchAllowanceServiceDeps) {
       amount: number = 1,
     ): Promise<Result<void, SearchRollbackError>> {
       const { periodStart } = currentMonthPeriod();
-      const ledger = await repos.searchAllowanceLedger.findByUserAndPeriod(
-        userId,
-        periodStart,
-      );
+      let ledger: Awaited<
+        ReturnType<typeof repos.searchAllowanceLedger.findByUserAndPeriod>
+      >;
+      try {
+        ledger = await repos.searchAllowanceLedger.findByUserAndPeriod(
+          userId,
+          periodStart,
+        );
+      } catch (error) {
+        await logRollbackFailureBestEffort({
+          userId,
+          amount,
+          periodStart,
+          message:
+            error instanceof Error
+              ? error.message
+              : "Unknown rollback ledger lookup failure",
+        });
+        return Err({
+          reason: "unexpected",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to rollback search usage",
+        });
+      }
       if (!ledger || ledger.used_amount < amount) {
         await logRollbackFailureBestEffort({
           userId,
