@@ -253,9 +253,12 @@ fn map_row(row: &Row<'_>) -> rusqlite::Result<SearchRow> {
 }
 
 fn map_row_with_siblings(row: &Row<'_>) -> rusqlite::Result<SearchRow> {
-    let base = map_row(row)?;
+    let mut base = map_row(row)?;
     let siblings: Option<String> = row.get("sibling_phones")?;
-    Ok(base.with_siblings(siblings))
+    base.phones.siblings = siblings
+        .as_deref()
+        .map(|s| s.split(';').map(str::to_owned).collect());
+    Ok(base)
 }
 
 fn db_err(e: rusqlite::Error) -> ApiError {

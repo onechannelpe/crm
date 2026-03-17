@@ -18,8 +18,7 @@ type ProjectionContract = {
 
 const SPEC_PATH = "contracts/search-projection.json";
 const TS_OUT = "apps/web/src/server/shared/engine/projection-contract.ts";
-const RUST_OUT =
-  "crates/search-service/src/projection_contract_generated.rs";
+const RUST_OUT = "crates/search-service/src/projection_contract_generated.rs";
 const TS_RESULT_OUT = "apps/web/src/server/shared/engine/result-contract.ts";
 const RUST_RESULT_OUT =
   "crates/search-service/src/result_contract_generated.rs";
