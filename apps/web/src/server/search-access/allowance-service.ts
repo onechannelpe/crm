@@ -205,8 +205,6 @@ export function createSearchAllowanceService(deps: SearchAllowanceServiceDeps) {
   }
 
   return {
-    ensureLedger,
-
     getCurrentSearchAllowance,
 
     async reserveSearchUsage(

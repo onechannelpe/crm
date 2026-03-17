@@ -1,11 +1,10 @@
 "use server";
 
+import { throwDomainError } from "~/actions/throw-domain-error";
 import { requirePermission } from "~/lib/auth/access/session";
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
 import { leadRefillService, rateLimitDeps } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
-
-import { fromLeadRefillError, throwLeadActionError } from "./errors";
 
 export async function requestLeadRefillNow() {
   const session = await requirePermission("lead:work");
@@ -15,7 +14,7 @@ export async function requestLeadRefillNow() {
     session.branchId,
   );
   if (isErr(result)) {
-    throwLeadActionError(fromLeadRefillError(result.error));
+    throwDomainError(result.error);
   }
   return result.value;
 }

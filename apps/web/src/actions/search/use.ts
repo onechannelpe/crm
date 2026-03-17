@@ -1,5 +1,6 @@
 "use server";
 
+import { throwDomainError } from "~/actions/throw-domain-error";
 import { validationError } from "~/lib/app-errors";
 import { requirePermission } from "~/lib/auth/access/session";
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
@@ -12,13 +13,6 @@ import { validateSearchInput } from "~/server/shared/engine/input";
 import type { SearchResponse } from "~/server/shared/engine/types";
 import type { SearchType } from "~/server/shared/pipeline-types";
 import { isErr } from "~/server/shared/result";
-
-import {
-  fromDirectSearchError,
-  fromSearchAllowanceError,
-  fromSearchRollbackError,
-  throwSearchActionError,
-} from "./errors";
 
 function validateSearchCommand(
   type: SearchType,
@@ -50,7 +44,7 @@ export async function runDirectSearch(
     session.userId,
   );
   if (isErr(allowanceResult)) {
-    throwSearchActionError(fromSearchAllowanceError(allowanceResult.error));
+    throwDomainError(allowanceResult.error);
   }
 
   const result = await engineSearchService.searchDirect({
@@ -63,9 +57,9 @@ export async function runDirectSearch(
       session.userId,
     );
     if (isErr(rollbackResult)) {
-      throwSearchActionError(fromSearchRollbackError(rollbackResult.error));
+      throwDomainError(rollbackResult.error);
     }
-    throwSearchActionError(fromDirectSearchError(result.error));
+    throwDomainError(result.error);
   }
 
   return result.value;

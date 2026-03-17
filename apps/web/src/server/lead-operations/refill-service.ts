@@ -381,7 +381,6 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
   }
 
   return {
-    ensureLedger,
     getCurrentLeadCapacity,
 
     async refillQueueForExecutive(

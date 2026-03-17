@@ -1,5 +1,6 @@
 "use server";
 
+import { throwDomainError } from "~/actions/throw-domain-error";
 import { requirePermission } from "~/lib/auth/access/session";
 import {
   assertNonEmptyString,
@@ -14,12 +15,7 @@ import {
 import { asCapacityRequestId, asUserId } from "~/server/shared/ids";
 import { isErr } from "~/server/shared/result";
 
-import {
-  fromCapacityApprovalError,
-  fromCapacityManageError,
-  throwCapacityActionError,
-} from "./errors";
-import { validateCapacityAmount, validateCapacityReason } from "./validators";
+import { parseCapacityAmount, parseCapacityReason } from "./capacity-input";
 
 export async function approveCapacityRequest(requestId: number, note?: string) {
   const safeRequestId = asCapacityRequestId(
@@ -33,7 +29,7 @@ export async function approveCapacityRequest(requestId: number, note?: string) {
     note,
   );
   if (isErr(result)) {
-    throwCapacityActionError(fromCapacityApprovalError(result.error));
+    throwDomainError(result.error);
   }
   return result.value;
 }
@@ -51,7 +47,7 @@ export async function rejectCapacityRequest(requestId: number, note: string) {
     safeNote,
   );
   if (isErr(result)) {
-    throwCapacityActionError(fromCapacityApprovalError(result.error));
+    throwDomainError(result.error);
   }
   return result.value;
 }
@@ -62,17 +58,23 @@ export async function grantMoreSearches(
   reason: string,
 ) {
   const safeUserId = asUserId(assertPositiveInt(userId, "userId"));
-  const safeAmount = validateCapacityAmount(amount);
-  const safeReason = validateCapacityReason(reason);
+  const amountResult = parseCapacityAmount(amount);
+  if (isErr(amountResult)) {
+    throwDomainError(amountResult.error);
+  }
+  const reasonResult = parseCapacityReason(reason);
+  if (isErr(reasonResult)) {
+    throwDomainError(reasonResult.error);
+  }
   const session = await requirePermission("capacity:manage");
   const result = await capacityManageService.grantMoreSearches(
     session,
     safeUserId,
-    safeAmount,
-    safeReason,
+    amountResult.value,
+    reasonResult.value,
   );
   if (isErr(result)) {
-    throwCapacityActionError(fromCapacityManageError(result.error));
+    throwDomainError(result.error);
   }
   return result.value;
 }
@@ -83,17 +85,23 @@ export async function grantMoreLeadRefill(
   reason: string,
 ) {
   const safeUserId = asUserId(assertPositiveInt(userId, "userId"));
-  const safeAmount = validateCapacityAmount(amount);
-  const safeReason = validateCapacityReason(reason);
+  const amountResult = parseCapacityAmount(amount);
+  if (isErr(amountResult)) {
+    throwDomainError(amountResult.error);
+  }
+  const reasonResult = parseCapacityReason(reason);
+  if (isErr(reasonResult)) {
+    throwDomainError(reasonResult.error);
+  }
   const session = await requirePermission("capacity:manage");
   const result = await capacityManageService.grantMoreLeadRefill(
     session,
     safeUserId,
-    safeAmount,
-    safeReason,
+    amountResult.value,
+    reasonResult.value,
   );
   if (isErr(result)) {
-    throwCapacityActionError(fromCapacityManageError(result.error));
+    throwDomainError(result.error);
   }
   return result.value;
 }
