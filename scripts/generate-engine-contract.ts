@@ -94,9 +94,7 @@ async function run(check: boolean): Promise<void> {
     throw new Error(`${TS_OUT} is out of date`);
   }
 
-  console.log(
-    check ? "engine contract is up to date" : "engine contract generated",
-  );
+  console.log("engine contract is up to date");
 }
 
 void run(Bun.argv.includes("--check")).catch((error: unknown) => {
