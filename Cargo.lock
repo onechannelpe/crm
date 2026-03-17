@@ -215,6 +215,7 @@ dependencies = [
  "dotenvy",
  "engine-infra",
  "lead-service",
+ "rusqlite",
  "search-service",
  "serde",
  "serde_json",
@@ -1338,10 +1339,15 @@ name = "search-service"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "axum-test",
  "engine-infra",
+ "hex",
+ "hmac",
  "rusqlite",
  "serde",
  "serde_json",
+ "sha2",
+ "tempfile",
  "tokio",
 ]
 
