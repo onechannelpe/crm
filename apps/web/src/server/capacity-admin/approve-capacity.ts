@@ -1,11 +1,12 @@
 import type { SessionData } from "~/lib/auth/access/session";
 import { grantLeadCapacity, type GrantLeadCapacityCommand } from "~/server/capacity-usage/lead-usage";
 import { grantSearchCapacity, type GrantSearchCapacityCommand } from "~/server/capacity-usage/search-usage";
+import type { LeadCapacityGrantsRepo, SearchCapacityGrantsRepo } from "~/server/capacity-usage/repos";
 import { canManageExecutive } from "~/server/capacity-policy/scope-access";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { asUserId, type CapacityRequestId } from "~/server/shared/ids";
+import { asUserId, type CapacityRequestId, type UserId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
-import type { RepositoryTransactionRunner } from "~/server/shared/transaction";
+import type { TeamId } from "~/server/shared/ids";
 
 import { normalizeDecisionNote } from "./domain";
 
@@ -21,8 +22,22 @@ export interface RejectCapacityRequestCommand {
   note: string;
 }
 
-// ApproveRepos is unused directly; approve-capacity delegates to runInTransaction
-// which provides the full Repositories shape. Kept for documentation purposes.
+interface ApproveRepos {
+  capacityRequests: {
+    findById(id: number): Promise<{ id: number; user_id: number; kind: string; status: string; requested_amount: number; reason: string } | undefined>;
+    markApproved(id: number, actorUserId: UserId, note: string | null): Promise<{ numUpdatedRows?: bigint } | undefined>;
+    markRejected(id: number, actorUserId: UserId, note: string): Promise<{ numUpdatedRows?: bigint } | undefined>;
+  };
+  users: { findById(id: UserId): Promise<{ role: string; branch_id: number; team_id: number | null } | undefined> };
+  teams: {
+    findBySupervisorId(id: UserId): Promise<{ id: number } | undefined>;
+    findByIdWithSupervisor(id: TeamId): Promise<{ id: number; branch_id: number; supervisor_id: number | null } | undefined>;
+  };
+  searchCapacityGrants: SearchCapacityGrantsRepo;
+  leadCapacityGrants: LeadCapacityGrantsRepo;
+}
+
+type ApproveTransactionRunner = <T>(operation: (repos: ApproveRepos) => Promise<T>) => Promise<T>;
 
 class RollbackError extends Error {
   constructor(readonly domainErr: DomainError) {
@@ -37,7 +52,7 @@ function rollback(err: DomainError): never {
 export async function approveCapacityRequest(
   command: ApproveCapacityRequestCommand,
   actor: SessionData,
-  runInTransaction: RepositoryTransactionRunner,
+  runInTransaction: ApproveTransactionRunner,
 ): Promise<Result<{ success: true }, DomainError>> {
   try {
     const result = await runInTransaction(async (txRepos) => {
@@ -82,7 +97,7 @@ export async function approveCapacityRequest(
 export async function rejectCapacityRequest(
   command: RejectCapacityRequestCommand,
   actor: SessionData,
-  runInTransaction: RepositoryTransactionRunner,
+  runInTransaction: ApproveTransactionRunner,
 ): Promise<Result<{ success: true }, DomainError>> {
   const note = normalizeDecisionNote(command.note);
   if (!note) {

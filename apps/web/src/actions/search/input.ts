@@ -23,5 +23,5 @@ export function parseSearchCommand(
     return Err(domainError("validation", "search.limit.out_of_range", "limit must be an integer in [1, 100]"));
   }
 
-  return Ok({ actorUserId, type: type as SearchType, value: value.trim(), limit: safeLimit });
+  return Ok({ actorUserId, type, value: value.trim(), limit: safeLimit });
 }

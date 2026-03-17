@@ -1,20 +1,15 @@
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type { ScopeType } from "~/server/shared/scope";
 
 import { resolveLeadPolicy, type LeadPolicy } from "./domain";
 import type { LeadPolicyDefaultsRepo, LeadPolicyOverridesRepo } from "./repos";
 
 export type { LeadPolicy };
 
-export interface SetLeadScopeDefaultCommand {
-  actorUserId: UserId;
-  scopeType: ScopeType;
-  scopeId: BranchId | TeamId;
-  bufferTarget: number;
-  dailyLimit: number;
-}
+export type SetLeadScopeDefaultCommand =
+  | { actorUserId: UserId; scopeType: "branch"; scopeId: BranchId; bufferTarget: number; dailyLimit: number }
+  | { actorUserId: UserId; scopeType: "team"; scopeId: TeamId; bufferTarget: number; dailyLimit: number };
 
 export interface SetLeadUserOverrideCommand {
   actorUserId: UserId;
@@ -59,9 +54,6 @@ export async function setLeadScopeDefault(
   command: SetLeadScopeDefaultCommand,
   repos: Pick<PolicyRepos, "leadPolicyDefaults">,
 ): Promise<Result<void, DomainError>> {
-  if (command.scopeType === "user") {
-    return Err(domainError("conflict", "invalid_scope_type", "User scope is not valid for scope defaults"));
-  }
   try {
     await repos.leadPolicyDefaults.upsert({
       scope_type: command.scopeType,

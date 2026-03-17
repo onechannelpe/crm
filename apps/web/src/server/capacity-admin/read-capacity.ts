@@ -233,7 +233,7 @@ export async function getCapacityPolicyDefaults(
 function isAuditChangeValue(v: unknown): v is AuditChangeValue {
   if (v === null || typeof v === "string" || typeof v === "number" || typeof v === "boolean") return true;
   if (Array.isArray(v)) return v.every(isAuditChangeValue);
-  if (typeof v === "object") return Object.values(v as Record<string, unknown>).every(isAuditChangeValue);
+  if (typeof v === "object") return Object.values(v).every(isAuditChangeValue);
   return false;
 }
 

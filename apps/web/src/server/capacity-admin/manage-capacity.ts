@@ -82,7 +82,7 @@ export async function updateSearchScopeDefault(
   actor: SessionData,
   repos: ManageRepos,
 ): Promise<Result<{ success: true }, DomainError>> {
-  const check = await canManageScopeDefault(actor, command.scopeType, command.scopeId, repos);
+  const check = await canManageScopeDefault(actor, command, repos);
   if (isErr(check)) return check;
   const result = await setSearchScopeDefault(command, repos);
   if (isErr(result)) return result;
@@ -94,7 +94,7 @@ export async function updateLeadScopeDefault(
   actor: SessionData,
   repos: ManageRepos,
 ): Promise<Result<{ success: true }, DomainError>> {
-  const check = await canManageScopeDefault(actor, command.scopeType, command.scopeId, repos);
+  const check = await canManageScopeDefault(actor, command, repos);
   if (isErr(check)) return check;
   const result = await setLeadScopeDefault(command, repos);
   if (isErr(result)) return result;

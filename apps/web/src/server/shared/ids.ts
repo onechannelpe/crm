@@ -13,26 +13,6 @@ function assertPositiveIntId(value: number, name: string): number {
   return value;
 }
 
-export function asUserId(value: number): UserId {
-  return assertPositiveIntId(value, "UserId") as number & { readonly __brand: "UserId" };
-}
-
-export function asTeamId(value: number): TeamId {
-  return assertPositiveIntId(value, "TeamId") as number & { readonly __brand: "TeamId" };
-}
-
-export function asBranchId(value: number): BranchId {
-  return assertPositiveIntId(value, "BranchId") as number & { readonly __brand: "BranchId" };
-}
-
-export function asAssignmentId(value: number): AssignmentId {
-  return assertPositiveIntId(value, "AssignmentId") as number & { readonly __brand: "AssignmentId" };
-}
-
-export function asCapacityRequestId(value: number): CapacityRequestId {
-  return assertPositiveIntId(value, "CapacityRequestId") as number & { readonly __brand: "CapacityRequestId" };
-}
-
 function assertNonEmptyStringId(value: string, name: string): string {
   if (typeof value !== "string" || value.trim().length === 0) {
     throw new Error(`${name} must be a non-empty string`);
@@ -40,10 +20,30 @@ function assertNonEmptyStringId(value: string, name: string): string {
   return value;
 }
 
+export function asUserId(value: number): UserId {
+  return assertPositiveIntId(value, "UserId") as UserId;
+}
+
+export function asTeamId(value: number): TeamId {
+  return assertPositiveIntId(value, "TeamId") as TeamId;
+}
+
+export function asBranchId(value: number): BranchId {
+  return assertPositiveIntId(value, "BranchId") as BranchId;
+}
+
+export function asAssignmentId(value: number): AssignmentId {
+  return assertPositiveIntId(value, "AssignmentId") as AssignmentId;
+}
+
+export function asCapacityRequestId(value: number): CapacityRequestId {
+  return assertPositiveIntId(value, "CapacityRequestId") as CapacityRequestId;
+}
+
 export function asSearchReservationId(value: string): SearchReservationId {
-  return assertNonEmptyStringId(value, "SearchReservationId") as string & { readonly __brand: "SearchReservationId" };
+  return assertNonEmptyStringId(value, "SearchReservationId") as SearchReservationId;
 }
 
 export function asLeadReservationId(value: string): LeadReservationId {
-  return assertNonEmptyStringId(value, "LeadReservationId") as string & { readonly __brand: "LeadReservationId" };
+  return assertNonEmptyStringId(value, "LeadReservationId") as LeadReservationId;
 }

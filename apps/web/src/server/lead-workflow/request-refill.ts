@@ -15,7 +15,6 @@ import { canContactNow } from "~/server/leads/domain-cooldown";
 import { type DomainError } from "~/server/shared/domain-error";
 import type { BranchId, UserId } from "~/server/shared/ids";
 import { isErr, Ok, type Result } from "~/server/shared/result";
-import type { RepositoryTransactionRunner } from "~/server/shared/transaction";
 
 import { computeNeededAssignments } from "./domain";
 import { requestCandidates } from "./gateway";
@@ -51,9 +50,24 @@ interface RefillRepos {
   };
 }
 
+interface RefillTxRepos {
+  organizations: { findOrCreate(ruc: string, name: string): Promise<{ id: number }> };
+  contacts: {
+    findOrCreate(
+      organizationId: number,
+      dni: string,
+      name: string,
+      phone: string,
+    ): Promise<{ id: number; cooldown_until: number | null }>;
+  };
+  leadAssignments: { createMany(assignments: ReturnType<typeof createAssignment>[]): Promise<void> };
+}
+
+type RefillTransactionRunner = <T>(operation: (repos: RefillTxRepos) => Promise<T>) => Promise<T>;
+
 interface RefillDeps {
   repos: RefillRepos;
-  runInTransaction: RepositoryTransactionRunner;
+  runInTransaction: RefillTransactionRunner;
   engine?: EngineClient;
 }
 
@@ -89,25 +103,39 @@ export async function requestLeadRefill(
   }
 
   const assigned = await runInTransaction(async (txRepos) => {
+    const uniqueRucs = [...new Set(candidatesResult.value.map((c) => c.ruc))];
+    const orgEntries = await Promise.all(
+      uniqueRucs.map(async (ruc) => {
+        const candidate = candidatesResult.value.find((c) => c.ruc === ruc)!;
+        const org = await txRepos.organizations.findOrCreate(ruc, candidate.organization_name);
+        return [ruc, org] as const;
+      }),
+    );
+    const orgsByRuc = new Map(orgEntries);
+
+    const uniqueContactKeys = [
+      ...new Map(
+        candidatesResult.value.map((c) => {
+          const org = orgsByRuc.get(c.ruc)!;
+          const key = `${org.id}:${c.dni}:${c.phone_primary}` as string;
+          return [key, { org, candidate: c }] as const;
+        }),
+      ).entries(),
+    ];
+    const contactEntries = await Promise.all(
+      uniqueContactKeys.map(async ([key, { org, candidate }]) => {
+        const contact = await txRepos.contacts.findOrCreate(org.id, candidate.dni, candidate.person_name, candidate.phone_primary);
+        return [key, contact] as const;
+      }),
+    );
+    const contactsByKey = new Map<string, { id: number; cooldown_until: number | null }>(contactEntries);
+
     const assignments = [];
-    const orgsByRuc = new Map<string, { id: number }>();
-    const contactsByKey = new Map<string, { id: number; cooldown_until: number | null }>();
-
     for (const candidate of candidatesResult.value) {
-      let org = orgsByRuc.get(candidate.ruc);
-      if (!org) {
-        org = await txRepos.organizations.findOrCreate(candidate.ruc, candidate.organization_name);
-        orgsByRuc.set(candidate.ruc, org);
-      }
-
-      const key = `${org.id}:${candidate.dni}:${candidate.phone_primary}`;
-      let contact = contactsByKey.get(key);
-      if (!contact) {
-        contact = await txRepos.contacts.findOrCreate(org.id, candidate.dni, candidate.person_name, candidate.phone_primary);
-        contactsByKey.set(key, contact);
-      }
-
-      if (!canContactNow(contact as Parameters<typeof canContactNow>[0])) continue;
+      const org = orgsByRuc.get(candidate.ruc)!;
+      const key = `${org.id}:${candidate.dni}:${candidate.phone_primary}` as string;
+      const contact = contactsByKey.get(key)!;
+      if (!canContactNow(contact)) continue;
       assignments.push(createAssignment(command.actorUserId, contact.id));
     }
 

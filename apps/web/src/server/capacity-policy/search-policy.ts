@@ -1,7 +1,6 @@
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type { ScopeType } from "~/server/shared/scope";
 
 import { resolveSearchPolicy, type SearchPolicy } from "./domain";
 import type {
@@ -11,12 +10,9 @@ import type {
 
 export type { SearchPolicy };
 
-export interface SetSearchScopeDefaultCommand {
-  actorUserId: UserId;
-  scopeType: ScopeType;
-  scopeId: BranchId | TeamId;
-  monthlyLimit: number;
-}
+export type SetSearchScopeDefaultCommand =
+  | { actorUserId: UserId; scopeType: "branch"; scopeId: BranchId; monthlyLimit: number }
+  | { actorUserId: UserId; scopeType: "team"; scopeId: TeamId; monthlyLimit: number };
 
 export interface SetSearchUserOverrideCommand {
   actorUserId: UserId;
@@ -60,9 +56,6 @@ export async function setSearchScopeDefault(
   command: SetSearchScopeDefaultCommand,
   repos: Pick<PolicyRepos, "searchPolicyDefaults">,
 ): Promise<Result<void, DomainError>> {
-  if (command.scopeType === "user") {
-    return Err(domainError("conflict", "invalid_scope_type", "User scope is not valid for scope defaults"));
-  }
   try {
     await repos.searchPolicyDefaults.upsert({
       scope_type: command.scopeType,

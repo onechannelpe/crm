@@ -2,7 +2,6 @@ import type { SessionData } from "~/lib/auth/access/session";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type { ScopeType } from "~/server/shared/scope";
 
 type UserRow = {
   role: string;
@@ -60,33 +59,28 @@ export async function canManageExecutive<T extends UserRow>(
 
 export async function canManageScopeDefault(
   actor: SessionData,
-  scopeType: ScopeType,
-  scopeId: BranchId | TeamId,
+  scope: { scopeType: "branch"; scopeId: BranchId } | { scopeType: "team"; scopeId: TeamId },
   repos: ScopeRepos,
 ): Promise<Result<void, DomainError>> {
-  if (scopeType === "branch") {
+  if (scope.scopeType === "branch") {
     if (actor.role !== "superuser" && actor.role !== "admin") {
       return Err(domainError("forbidden", "forbidden", "Insufficient role to manage branch default"));
     }
-    if (actor.branchId !== scopeId) {
+    if (actor.branchId !== scope.scopeId) {
       return Err(domainError("forbidden", "forbidden", "Cannot manage defaults for another branch"));
     }
     return Ok(undefined);
   }
 
-  if (scopeType === "team") {
-    const team = await repos.teams.findByIdWithSupervisor((scopeId as number) as TeamId);
-    if (!team || team.branch_id !== actor.branchId) {
-      return Err(domainError("not_found", "team_not_found", "Team not found"));
-    }
-    if (actor.role === "superuser" || actor.role === "admin") {
-      return Ok(undefined);
-    }
-    if (actor.role !== "supervisor" || team.supervisor_id !== actor.userId) {
-      return Err(domainError("forbidden", "forbidden", "Cannot manage defaults for this team"));
-    }
+  const team = await repos.teams.findByIdWithSupervisor(scope.scopeId);
+  if (!team || team.branch_id !== actor.branchId) {
+    return Err(domainError("not_found", "team_not_found", "Team not found"));
+  }
+  if (actor.role === "superuser" || actor.role === "admin") {
     return Ok(undefined);
   }
-
-  return Err(domainError("validation", "invalid_scope_type", `Scope type '${scopeType}' is not valid for scope defaults`));
+  if (actor.role !== "supervisor" || team.supervisor_id !== actor.userId) {
+    return Err(domainError("forbidden", "forbidden", "Cannot manage defaults for this team"));
+  }
+  return Ok(undefined);
 }
