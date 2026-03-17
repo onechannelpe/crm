@@ -50,7 +50,12 @@ describe("search capacity consume action benchmark", () => {
       );
 
       const reserveResult = await reserveSearchUsage(
-        { actorUserId: asUserId(userId), amount: 1, reason: "direct_search" },
+        {
+          actorUserId: asUserId(userId),
+          amount: 1,
+          remainingCapacity: 2,
+          reason: "direct_search",
+        },
         ctx!.repos,
       );
       if (!reserveResult.ok) {
