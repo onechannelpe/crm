@@ -26,7 +26,7 @@ export function createSearchPolicyDefaultsRepo(db: Kysely<Database>) {
     },
 
     async upsert(values: {
-      scope_type: ScopeType;
+      scope_type: DefaultScopeType;
       scope_id: number;
       period_type: "month";
       search_limit: number;
@@ -121,7 +121,7 @@ export function createLeadPolicyDefaultsRepo(db: Kysely<Database>) {
     },
 
     async upsert(values: {
-      scope_type: ScopeType;
+      scope_type: DefaultScopeType;
       scope_id: number;
       active_buffer_target: number;
       daily_refill_limit: number;
