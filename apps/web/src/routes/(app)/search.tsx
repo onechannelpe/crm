@@ -21,7 +21,7 @@ export default function SearchPage() {
   const [searchType, setSearchType] = createSignal<SearchType>("person_name");
   const [tab, setTab] = createSignal<SearchTab>("people");
   const [model, setModel] = createSignal(
-    createSearchViewModel({ results: [], count: 0 }),
+    createSearchViewModel({ items: [], raw: [] }),
   );
   const [selectedKey, setSelectedKey] = createSignal<string | null>(null);
   const [searching, setSearching] = createSignal(false);
@@ -77,7 +77,7 @@ export default function SearchPage() {
       }
       await revalidate(mySearchAllowanceQuery.key);
     } catch (searchError) {
-      setModel(createSearchViewModel({ results: [], count: 0 }));
+      setModel(createSearchViewModel({ items: [], raw: [] }));
       setSelectedKey(null);
       setError(
         searchError instanceof Error ? searchError.message : "Search failed",

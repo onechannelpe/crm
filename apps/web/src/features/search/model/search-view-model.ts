@@ -1,4 +1,4 @@
-import type { SearchResponse } from "~/server/shared/engine/types";
+import type { SearchResult_ } from "~/server/search-workflow/domain";
 
 import {
   groupCompaniesByRuc,
@@ -14,14 +14,14 @@ export interface SearchViewModel {
 }
 
 export function createSearchViewModel(
-  response: SearchResponse,
+  response: SearchResult_,
 ): SearchViewModel {
-  const people = groupPeopleByDni(response.results);
-  const companies = groupCompaniesByRuc(response.results);
+  const people = groupPeopleByDni(response.raw);
+  const companies = groupCompaniesByRuc(response.raw);
 
   return {
     people,
     companies,
-    total: response.count,
+    total: response.raw.length,
   };
 }
