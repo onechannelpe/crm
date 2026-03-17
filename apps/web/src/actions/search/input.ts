@@ -1,7 +1,7 @@
 import { domainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import { isPolicySearchType, type SearchType } from "~/server/shared/scope";
+import { isSearchType, type SearchType } from "~/server/shared/pipeline-types";
 import type { RunDirectSearchCommand } from "~/server/search-workflow/run-search";
 
 export function parseSearchCommand(
@@ -10,8 +10,8 @@ export function parseSearchCommand(
   value: unknown,
   limit: unknown,
 ): Result<RunDirectSearchCommand, ReturnType<typeof domainError>> {
-  if (typeof type !== "string" || !isPolicySearchType(type)) {
-    return Err(domainError("validation", "search.type.invalid", "type must be one of: dni, ruc, name"));
+  if (typeof type !== "string" || !isSearchType(type)) {
+    return Err(domainError("validation", "search.type.invalid", "type must be a valid search type"));
   }
 
   if (typeof value !== "string" || value.trim().length === 0) {

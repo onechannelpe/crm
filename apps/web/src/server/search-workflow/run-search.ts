@@ -12,7 +12,7 @@ import type { SearchPolicyDefaultsRepo, SearchPolicyOverridesRepo } from "~/serv
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
-import type { SearchType } from "~/server/shared/scope";
+import type { SearchType } from "~/server/shared/pipeline-types";
 
 import { mapToSearchResult, type SearchResult_ } from "./domain";
 import { search } from "./gateway";

@@ -1,7 +1,7 @@
 import { createAsync, revalidate, useSearchParams } from "@solidjs/router";
 import { createEffect, createMemo, createSignal, Show } from "solid-js";
 
-import { runDirectSearch } from "~/actions/search/use";
+import { searchDirect } from "~/actions/search/run";
 import { AppPage } from "~/components/layout/page";
 import {
   inferSearchType,
@@ -66,7 +66,7 @@ export default function SearchPage() {
     setSearching(true);
     setError(null);
     try {
-      const response = await runDirectSearch(searchType(), query(), 20);
+      const response = await searchDirect(searchType(), query(), 20);
       setSearchParams({ type: searchType(), query: query(), limit: "20" });
       const nextModel = createSearchViewModel(response);
       setModel(nextModel);
@@ -108,9 +108,9 @@ export default function SearchPage() {
           <div class="rounded border px-4 py-3 text-sm">
             <div class="font-medium">Allowance</div>
             <div>
-              {searchAllowance()?.usedAmount ?? 0}/
-              {(searchAllowance()?.monthlySearchLimit ?? 0) +
-                (searchAllowance()?.extraGranted ?? 0)}
+              {searchAllowance()?.committed ?? 0}/
+              {(searchAllowance()?.policy.monthlyLimit ?? 0) +
+                (searchAllowance()?.granted ?? 0)}
             </div>
             <div class="text-muted-foreground">
               {searchAllowance()?.remaining ?? 0} restantes

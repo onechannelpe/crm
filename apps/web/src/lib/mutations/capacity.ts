@@ -1,16 +1,16 @@
 import { action, json } from "@solidjs/router";
 
 import {
-  approveCapacityRequest,
+  approveCapacity,
   grantMoreLeadRefill,
   grantMoreSearches,
-  rejectCapacityRequest,
+  rejectCapacity,
 } from "~/actions/capacity/approvals";
 import {
   updateLeadPolicyOverride,
-  updateLeadScopeDefault,
+  updateLeadScopeDefault_,
   updateSearchPolicyOverride,
-  updateSearchScopeDefault,
+  updateSearchScopeDefault_,
 } from "~/actions/capacity/policies";
 import {
   requestMoreLeadRefill,
@@ -51,7 +51,7 @@ export const requestMoreLeadRefillMutation = action(
 
 export const approveCapacityRequestMutation = action(
   async (requestId: number, note?: string) => {
-    const result = await approveCapacityRequest(requestId, note);
+    const result = await approveCapacity(requestId, note);
     return json(result, {
       revalidate: [
         pendingCapacityRequestsQuery.key,
@@ -68,7 +68,7 @@ export const approveCapacityRequestMutation = action(
 
 export const rejectCapacityRequestMutation = action(
   async (requestId: number, note: string) => {
-    const result = await rejectCapacityRequest(requestId, note);
+    const result = await rejectCapacity(requestId, note);
     return json(result, {
       revalidate: [
         pendingCapacityRequestsQuery.key,
@@ -149,7 +149,7 @@ export const updateSearchScopeDefaultMutation = action(
     scopeId: number;
     monthlySearchLimit: number;
   }) => {
-    const result = await updateSearchScopeDefault(input);
+    const result = await updateSearchScopeDefault_(input);
     return json(result, {
       revalidate: [capacityPolicyDefaultsQuery.key, managedExecutivesQuery.key],
     });
@@ -164,7 +164,7 @@ export const updateLeadScopeDefaultMutation = action(
     activeBufferTarget: number;
     dailyRefillLimit: number;
   }) => {
-    const result = await updateLeadScopeDefault(input);
+    const result = await updateLeadScopeDefault_(input);
     return json(result, {
       revalidate: [capacityPolicyDefaultsQuery.key, managedExecutivesQuery.key],
     });

@@ -8,10 +8,10 @@ import { requestLeadRefill } from "~/server/lead-workflow/request-refill";
 import { mapLeadError } from "./errors";
 import { parseLeadRefillCommand } from "./input";
 
-export async function refillLeads(branchId: unknown) {
+export async function refillLeads() {
   const session = await requirePermission("lead:work");
 
-  const cmdResult = parseLeadRefillCommand(session.userId, branchId);
+  const cmdResult = parseLeadRefillCommand(session.userId, session.branchId);
   if (isErr(cmdResult)) mapLeadError(cmdResult.error);
 
   const result = await requestLeadRefill(cmdResult.value, {

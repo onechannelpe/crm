@@ -3,7 +3,7 @@ import type { EngineClient } from "~/server/shared/engine/client";
 import type { SearchResult } from "~/server/shared/engine/result-contract";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type { SearchType } from "~/server/shared/scope";
+import type { SearchType } from "~/server/shared/pipeline-types";
 
 export interface SearchGatewayRequest {
   type: SearchType;

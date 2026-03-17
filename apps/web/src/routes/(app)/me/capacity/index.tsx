@@ -35,9 +35,9 @@ export default function MyCapacityPage() {
           <div class="rounded border p-4">
             <p class="font-medium">Búsquedas del mes</p>
             <p>
-              {searchStatus()?.usedAmount ?? 0}/
-              {(searchStatus()?.monthlySearchLimit ?? 0) +
-                (searchStatus()?.extraGranted ?? 0)}
+              {searchStatus()?.committed ?? 0}/
+              {(searchStatus()?.policy.monthlyLimit ?? 0) +
+                (searchStatus()?.granted ?? 0)}
             </p>
             <p class="text-sm text-muted-foreground">
               {searchStatus()?.remaining ?? 0} restantes
@@ -47,7 +47,7 @@ export default function MyCapacityPage() {
             <p class="font-medium">Capacidad de leads</p>
             <p>
               {leadStatus()?.activeAssignments ?? 0}/
-              {leadStatus()?.activeBufferTarget ?? 0} activos
+              {leadStatus()?.policy.bufferTarget ?? 0} activos
             </p>
             <p class="text-sm text-muted-foreground">
               {leadStatus()?.remaining ?? 0} refills hoy

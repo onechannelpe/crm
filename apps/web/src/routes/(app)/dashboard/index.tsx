@@ -20,13 +20,12 @@ type DashboardColumn = {
 export default function DashboardPage() {
   const leadCapacity = createAsync(() => myLeadCapacityQuery(), {
     initialValue: {
-      policySource: "system" as const,
-      activeBufferTarget: 0,
-      activeAssignments: 0,
-      dailyRefillLimit: 0,
-      extraGranted: 0,
-      usedAmount: 0,
+      policy: { source: "system" as const, bufferTarget: 0, dailyLimit: 0 },
+      granted: 0,
+      committed: 0,
+      pending: 0,
       remaining: 0,
+      activeAssignments: 0,
     },
   });
   const stats = createAsync(() => dashboardStatsQuery(), {
@@ -46,11 +45,11 @@ export default function DashboardPage() {
         key: "capacity",
         label: "Capacidad",
         tone: styles.tagQuota,
-        amount: capacity.activeBufferTarget,
+        amount: capacity.policy.bufferTarget,
         cards: [
           {
             title: "Buffer de leads",
-            value: `${capacity.activeAssignments}/${capacity.activeBufferTarget}`,
+            value: `${capacity.activeAssignments}/${capacity.policy.bufferTarget}`,
             detail: `${capacity.remaining} refills hoy`,
             href: "/me/capacity",
           },

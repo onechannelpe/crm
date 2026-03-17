@@ -19,7 +19,7 @@ import type {
 } from "~/server/capacity-policy/repos";
 import { canManageExecutive, canManageExecutive as _canManageExecutive } from "~/server/capacity-policy/scope-access";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
-import type { UserId } from "~/server/shared/ids";
+import type { TeamId, UserId } from "~/server/shared/ids";
 import { asUserId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
@@ -78,7 +78,7 @@ interface ReadRepos {
   };
   teams: {
     findBySupervisorId(id: UserId): Promise<{ id: number } | undefined>;
-    findByIdWithSupervisor(id: UserId): Promise<{ id: number; branch_id: number; supervisor_id: number | null } | undefined>;
+    findByIdWithSupervisor(id: TeamId): Promise<{ id: number; branch_id: number; supervisor_id: number | null } | undefined>;
     findByBranch(branchId: number): Promise<Array<{ id: number; name: string }>>;
   };
   capacityRequests: CapacityRequestsRepo;
@@ -169,7 +169,7 @@ export async function getExecutiveCapacityDetail(
     if (isErr(leadStatus)) return leadStatus;
 
     return Ok({
-      executive: { id: managed.target.id, fullName: longName(target), email: target.email, teamId: managed.target.team_id },
+      executive: { id: targetUserId, fullName: longName(target), email: target.email, teamId: managed.target.team_id },
       searchStatus: searchStatus.value,
       leadStatus: leadStatus.value,
       requests,

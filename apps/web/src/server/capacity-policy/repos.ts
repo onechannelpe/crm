@@ -1,11 +1,12 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
-import type { ScopeType } from "~/server/shared/scope";
+
+type DefaultScopeType = "branch" | "team";
 
 export function createSearchPolicyDefaultsRepo(db: Kysely<Database>) {
   return {
-    findForScope(scopeType: ScopeType, scopeId: number) {
+    findForScope(scopeType: DefaultScopeType, scopeId: number) {
       return db
         .selectFrom("search_policy_defaults")
         .selectAll()
@@ -14,7 +15,7 @@ export function createSearchPolicyDefaultsRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    listForScope(scopeType: ScopeType, scopeIds: number[]) {
+    listForScope(scopeType: DefaultScopeType, scopeIds: number[]) {
       if (scopeIds.length === 0) return Promise.resolve([]);
       return db
         .selectFrom("search_policy_defaults")
@@ -100,7 +101,7 @@ export function createSearchPolicyOverridesRepo(db: Kysely<Database>) {
 
 export function createLeadPolicyDefaultsRepo(db: Kysely<Database>) {
   return {
-    findForScope(scopeType: ScopeType, scopeId: number) {
+    findForScope(scopeType: DefaultScopeType, scopeId: number) {
       return db
         .selectFrom("lead_policy_defaults")
         .selectAll()
@@ -109,7 +110,7 @@ export function createLeadPolicyDefaultsRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    listForScope(scopeType: ScopeType, scopeIds: number[]) {
+    listForScope(scopeType: DefaultScopeType, scopeIds: number[]) {
       if (scopeIds.length === 0) return Promise.resolve([]);
       return db
         .selectFrom("lead_policy_defaults")

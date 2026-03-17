@@ -1,30 +1,30 @@
 import { query } from "@solidjs/router";
 
 import {
-  getCapacityAuditEvents,
-  getCapacityPolicyDefaults,
-  getExecutiveCapacityDetail,
-  getManagedExecutives,
-  getPendingCapacityRequests,
+  getAuditEvents,
+  getExecutiveDetail,
+  getManagedExecutivesList,
+  getPendingRequests,
+  getPolicyDefaults,
 } from "~/actions/capacity/read";
 
 export const managedExecutivesQuery = query(
-  getManagedExecutives,
+  getManagedExecutivesList,
   "managedExecutives",
 );
 export const executiveCapacityDetailQuery = query(
-  getExecutiveCapacityDetail,
+  getExecutiveDetail,
   "executiveCapacityDetail",
 );
 export const pendingCapacityRequestsQuery = query(
-  getPendingCapacityRequests,
+  getPendingRequests,
   "pendingCapacityRequests",
 );
 export const capacityPolicyDefaultsQuery = query(
-  getCapacityPolicyDefaults,
+  getPolicyDefaults,
   "capacityPolicyDefaults",
 );
 export const capacityAuditEventsQuery = query(
-  getCapacityAuditEvents,
+  getAuditEvents,
   "capacityAuditEvents",
 );

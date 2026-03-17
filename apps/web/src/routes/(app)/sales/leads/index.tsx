@@ -50,13 +50,12 @@ export default function LeadsPage() {
   );
   const { data: leadCapacity } = createOptimisticQuery(myLeadCapacityQuery, {
     initialValue: {
-      policySource: "system" as const,
-      activeBufferTarget: 0,
-      activeAssignments: 0,
-      dailyRefillLimit: 0,
-      extraGranted: 0,
-      usedAmount: 0,
+      policy: { source: "system" as const, bufferTarget: 0, dailyLimit: 0 },
+      granted: 0,
+      committed: 0,
+      pending: 0,
       remaining: 0,
+      activeAssignments: 0,
     },
   });
   const requestLeadsAction = useAction(requestLeadRefillNowMutation);
@@ -167,7 +166,7 @@ export default function LeadsPage() {
       <div class={styles.capacityBanner}>
         <p>
           Leads activos: {leadCapacity().activeAssignments}/
-          {leadCapacity().activeBufferTarget}. Refills restantes hoy:{" "}
+          {leadCapacity().policy.bufferTarget}. Refills restantes hoy:{" "}
           {leadCapacity().remaining}.
         </p>
         <A href="/me/capacity">Ver mi capacidad</A>
