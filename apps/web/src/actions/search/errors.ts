@@ -61,7 +61,18 @@ export function fromDirectSearchError(
 export function fromSearchRollbackError(
   error: SearchRollbackError,
 ): SearchActionError {
-  return { reason: "unexpected", message: error.message };
+  switch (error.reason) {
+    case "ledger_not_found":
+      return { reason: "conflict", message: error.message };
+    case "insufficient_usage":
+      return { reason: "conflict", message: error.message };
+    case "unexpected":
+      return { reason: "unexpected", message: error.message };
+  }
+
+  const unreachable: never = error;
+  void unreachable;
+  return { reason: "unexpected", message: "Unhandled rollback error" };
 }
 
 export function throwSearchActionError(error: SearchActionError): never {

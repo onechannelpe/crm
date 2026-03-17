@@ -1,3 +1,4 @@
+import type { LeadCandidateError } from "~/server/engine-gateway/errors";
 import type {
   LeadCapacitySnapshot,
   LeadRefillResult,
@@ -101,14 +102,10 @@ export function createLeadRefillGrantService(deps: LeadRefillGrantServiceDeps) {
           ledger.id,
           policy.dailyRefillLimit,
         );
-        ledger = await repos.leadRefillLedger.findByUserAndDate(userId, today);
-      }
-
-      if (!ledger) {
-        return Err({
-          reason: "unexpected",
-          message: "Lead refill ledger was not reloaded",
-        });
+        ledger = {
+          ...ledger,
+          base_limit: policy.dailyRefillLimit,
+        };
       }
 
       return Ok({ ledger, policy });
@@ -263,7 +260,9 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
     ledgerId: number;
     amount: number;
     reason: string;
-  }): Promise<Result<void, LeadRefillError>> {
+  }): Promise<
+    Result<void, { reason: "compensation_failed"; message: string }>
+  > {
     try {
       const decremented =
         await repos.leadRefillLedger.decrementUsageIfAvailable(
@@ -316,6 +315,18 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
         message: `Failed to compensate lead refill usage: ${message}`,
       });
     }
+  }
+
+  function toCompensationFailure(input: {
+    rootError: LeadCandidateError | { reason: "unexpected"; message: string };
+    compensationError: { reason: "compensation_failed"; message: string };
+  }): LeadRefillError {
+    return {
+      reason: "compensation_failed",
+      message: `${input.rootError.message}; compensation rollback failed: ${input.compensationError.message}`,
+      rootReason: input.rootError.reason,
+      rootMessage: input.rootError.message,
+    };
   }
 
   const { ensureLedger, getCurrentLeadCapacity, grantExtraLeadRefill } =
@@ -420,7 +431,12 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
             reason: "candidate_fetch_failed",
           });
           if (isErr(compensationResult)) {
-            return Err(compensationResult.error);
+            return Err(
+              toCompensationFailure({
+                rootError: candidateResult.error,
+                compensationError: compensationResult.error,
+              }),
+            );
           }
           return Err(candidateResult.error);
         }
@@ -438,7 +454,12 @@ export function createLeadRefillService(deps: LeadRefillServiceDeps) {
             reason: "assignment_failed",
           });
           if (isErr(compensationResult)) {
-            return Err(compensationResult.error);
+            return Err(
+              toCompensationFailure({
+                rootError: assignmentResult.error,
+                compensationError: compensationResult.error,
+              }),
+            );
           }
           return Err(assignmentResult.error);
         }

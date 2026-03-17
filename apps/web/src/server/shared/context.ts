@@ -5,6 +5,7 @@ import { config } from "~/lib/config";
 import { db } from "~/lib/db/db";
 import { env } from "~/lib/env";
 import { createCapacityApprovalService } from "~/server/capacity/approval-service";
+import { createTransactionCapacityGrantServices } from "~/server/capacity/grant-services";
 import { createCapacityManageService } from "~/server/capacity/manage-service";
 import { createCapacityReadService } from "~/server/capacity/read-service";
 import { createCapacityRequestService } from "~/server/capacity/request-service";
@@ -59,7 +60,9 @@ export const searchAllowanceService = createSearchAllowanceService({
   auditService,
 });
 export const leadPolicyService = createLeadPolicyService(repos);
-export const leadAssignmentService = createLeadAssignmentService(repos);
+export const leadAssignmentService = createLeadAssignmentService({
+  runInRepositoryTransaction,
+});
 export const leadCandidateService = createLeadCandidateService();
 export const leadRefillGrantService = createLeadRefillGrantService({
   repos,
@@ -85,8 +88,8 @@ export const capacityManageService = createCapacityManageService({
   leadPolicyService,
 });
 export const capacityApprovalService = createCapacityApprovalService({
-  repos,
   runInRepositoryTransaction,
+  createGrantServices: createTransactionCapacityGrantServices,
 });
 export const extensionService = createExtensionService(repos, {
   runInTransaction: runInRepositoryTransaction,

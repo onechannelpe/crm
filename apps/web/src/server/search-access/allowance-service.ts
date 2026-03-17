@@ -109,16 +109,10 @@ export function createSearchAllowanceService(deps: SearchAllowanceServiceDeps) {
           ledger.id,
           policy.monthlySearchLimit,
         );
-        ledger = await repos.searchAllowanceLedger.findByUserAndPeriod(
-          userId,
-          periodStart,
-        );
-      }
-      if (!ledger) {
-        return Err({
-          reason: "unexpected",
-          message: "Search allowance ledger was not reloaded",
-        });
+        ledger = {
+          ...ledger,
+          base_limit: policy.monthlySearchLimit,
+        };
       }
       return Ok({ ledger, policy });
     } catch (error) {
@@ -289,9 +283,15 @@ export function createSearchAllowanceService(deps: SearchAllowanceServiceDeps) {
           message:
             "Rollback skipped because ledger was missing or insufficient",
         });
+        if (!ledger) {
+          return Err({
+            reason: "ledger_not_found",
+            message: "Search usage rollback ledger was not found",
+          });
+        }
         return Err({
-          reason: "unexpected",
-          message: "Failed to rollback search usage",
+          reason: "insufficient_usage",
+          message: "Search usage rollback had insufficient reserved usage",
         });
       }
       try {
@@ -308,8 +308,8 @@ export function createSearchAllowanceService(deps: SearchAllowanceServiceDeps) {
             message: "Rollback decrement skipped due to insufficient usage",
           });
           return Err({
-            reason: "unexpected",
-            message: "Failed to rollback search usage",
+            reason: "insufficient_usage",
+            message: "Search usage rollback had insufficient reserved usage",
           });
         }
         return Ok(undefined);

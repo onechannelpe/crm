@@ -1,18 +1,10 @@
 import type { SessionData } from "~/lib/auth/access/session";
-import { config } from "~/lib/config";
 import { normalizeDecisionNote } from "~/server/capacity/domain";
 import type { CapacityApprovalError } from "~/server/capacity/errors";
-import { createLeadPolicyService } from "~/server/lead-operations/policy-service";
-import { createLeadRefillGrantService } from "~/server/lead-operations/refill-service";
-import { createSearchAllowanceService } from "~/server/search-access/allowance-service";
-import { createSearchPolicyService } from "~/server/search-access/policy-service";
-import { createAuditService } from "~/server/shared/audit";
+import { createTransactionCapacityGrantServices } from "~/server/capacity/grant-services";
 import { asCapacityRequestId, asUserId } from "~/server/shared/ids";
 import type { CapacityRequestId, UserId } from "~/server/shared/ids";
-import {
-  createRepositories,
-  type Repositories,
-} from "~/server/shared/registry";
+import type { Repositories } from "~/server/shared/registry";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 import type { RepositoryTransactionRunner } from "~/server/shared/transaction";
 
@@ -21,8 +13,8 @@ import { canManageExecutive } from "./scope";
 export type { CapacityApprovalError } from "~/server/capacity/errors";
 
 interface CapacityApprovalServiceDeps {
-  repos: Repositories;
   runInRepositoryTransaction: RepositoryTransactionRunner;
+  createGrantServices?: typeof createTransactionCapacityGrantServices;
 }
 
 type CapacityRequestRecord = NonNullable<
@@ -47,45 +39,26 @@ function throwRollback(error: CapacityApprovalError): never {
   throw new TransactionRollbackError(error);
 }
 
-function isGrantAmountInvalid(amount: number): boolean {
-  return (
-    !Number.isInteger(amount) ||
-    amount <= 0 ||
-    amount > config.capacityRequests.maxRequestAmount
-  );
-}
-
-function createGrantServices(
-  transactionRepos: ReturnType<typeof createRepositories>,
-) {
-  const txAuditService = createAuditService(transactionRepos);
-  const txSearchPolicyService = createSearchPolicyService(transactionRepos);
-  const txLeadPolicyService = createLeadPolicyService(transactionRepos);
-
-  const txSearchAllowanceService = createSearchAllowanceService({
-    repos: transactionRepos,
-    policyService: txSearchPolicyService,
-    auditService: txAuditService,
-  });
-  const txLeadRefillGrantService = createLeadRefillGrantService({
-    repos: transactionRepos,
-    policyService: txLeadPolicyService,
-    auditService: txAuditService,
-  });
-
-  return {
-    searchAllowanceService: txSearchAllowanceService,
-    leadRefillGrantService: txLeadRefillGrantService,
-  };
+function mapGrantError(error: {
+  reason: "user_not_found" | "unexpected";
+  message: string;
+}): CapacityApprovalError {
+  if (error.reason === "user_not_found") {
+    return { reason: "not_found", message: error.message };
+  }
+  return { reason: "unexpected", message: error.message };
 }
 
 export function createCapacityApprovalService(
   deps: CapacityApprovalServiceDeps,
 ) {
+  const createGrantServices =
+    deps.createGrantServices ?? createTransactionCapacityGrantServices;
+
   async function assertApprovalAccessInTransaction(
     actor: SessionData,
     requestId: CapacityRequestId,
-    transactionRepos: ReturnType<typeof createRepositories>,
+    transactionRepos: Repositories,
     deniedMessage: string,
   ): Promise<Result<CapacityRequestRecord, CapacityApprovalError>> {
     const request = await transactionRepos.capacityRequests.findById(requestId);
@@ -98,6 +71,9 @@ export function createCapacityApprovalService(
       asUserId(request.user_id),
       transactionRepos,
     );
+    if (!managed.target) {
+      return Err({ reason: "not_found", message: "Request target not found" });
+    }
     if (!managed.ok) {
       return Err({ reason: "forbidden", message: deniedMessage });
     }
@@ -109,19 +85,13 @@ export function createCapacityApprovalService(
     actorUserId: UserId;
     request: CapacityRequestRecord;
     note: string | null;
-    transactionRepos: ReturnType<typeof createRepositories>;
+    transactionRepos: Repositories;
   }): Promise<Result<{ success: true }, CapacityApprovalError>> {
     const request = input.request;
     if (request.status !== "pending") {
       return Err({
         reason: "conflict",
         message: "Request is no longer pending",
-      });
-    }
-    if (isGrantAmountInvalid(request.requested_amount)) {
-      return Err({
-        reason: "validation",
-        message: "Request amount is invalid",
       });
     }
 
@@ -149,10 +119,7 @@ export function createCapacityApprovalService(
           input.note ?? request.reason,
         );
       if (isErr(grantResult)) {
-        return Err({
-          reason: "unexpected",
-          message: grantResult.error.message,
-        });
+        return Err(mapGrantError(grantResult.error));
       }
 
       return Ok({ success: true as const });
@@ -166,7 +133,7 @@ export function createCapacityApprovalService(
         input.note ?? request.reason,
       );
     if (isErr(grantResult)) {
-      return Err({ reason: "unexpected", message: grantResult.error.message });
+      return Err(mapGrantError(grantResult.error));
     }
 
     return Ok({ success: true as const });
