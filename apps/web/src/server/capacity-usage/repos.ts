@@ -199,6 +199,19 @@ export function createLeadUsageReservationsRepo(db: Kysely<Database>) {
         .then(() => undefined);
     },
 
+    updateAmountAndStatus(
+      id: string,
+      amount: number,
+      status: "committed" | "cancelled" | "expired",
+    ): Promise<void> {
+      return db
+        .updateTable("lead_usage_reservations")
+        .set({ amount, status, updated_at: Date.now() })
+        .where("id", "=", id)
+        .executeTakeFirst()
+        .then(() => undefined);
+    },
+
     findByUserAndDate(userId: number, date: string) {
       return db
         .selectFrom("lead_usage_reservations")

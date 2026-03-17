@@ -44,7 +44,7 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
   "/admin/capacity-policies": { permission: "capacity:policy:manage" },
   "/monitoring": { permission: "admin:read" },
   "/settings/catalog": { permission: "admin:manage" },
-  "/team": { permission: "capacity:read:team", landingPriority: 6 },
+  "/team": { permission: "team:read", landingPriority: 6 },
   "/team/requests": { permission: "capacity:approve", landingPriority: 7 },
   "/team/invite": { permission: "team:manage" },
   "/team/import": { permission: "team:manage" },

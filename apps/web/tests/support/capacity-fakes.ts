@@ -158,6 +158,18 @@ export function makeLeadUsageReservationsRepo() {
       if (row) row.status = status;
       return Promise.resolve();
     },
+    updateAmountAndStatus(
+      id: string,
+      amount: number,
+      status: "committed" | "cancelled" | "expired",
+    ): Promise<void> {
+      const row = rows.find((r) => r.id === id);
+      if (row) {
+        row.amount = amount;
+        row.status = status;
+      }
+      return Promise.resolve();
+    },
     findByUserAndDate(userId: number): Promise<ReservationRow[]> {
       return Promise.resolve(rows.filter((r) => r.user_id === userId));
     },

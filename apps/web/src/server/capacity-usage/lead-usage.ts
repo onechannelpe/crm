@@ -116,8 +116,9 @@ export async function commitLeadUsage(
       reservation_id: command.reservationId,
       amount: command.amount,
     });
-    await repos.leadUsageReservations.updateStatus(
+    await repos.leadUsageReservations.updateAmountAndStatus(
       command.reservationId,
+      command.amount,
       "committed",
     );
     return Ok(undefined);

@@ -178,10 +178,10 @@ export async function requestLeadRefill(
     return assignments.length;
   });
 
-  const unused = needed - assigned;
-  await commitLeadUsage({ reservationId, amount: assigned }, repos);
-  if (unused > 0) {
+  if (assigned === 0) {
     await cancelLeadUsage({ reservationId, reason: "partial_use" }, repos);
+  } else {
+    await commitLeadUsage({ reservationId, amount: assigned }, repos);
   }
 
   return Ok({ requested: needed, assigned });
