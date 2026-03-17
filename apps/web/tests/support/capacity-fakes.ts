@@ -17,7 +17,7 @@ export function makeSearchCapacityGrantsRepo() {
       rows.push({ id: crypto.randomUUID(), ...values, created_at: Date.now() });
       return Promise.resolve();
     },
-    findByUserAndPeriod(userId: number): Promise<GrantRow[]> {
+    findByUserAndPeriod(userId: number, _periodStart?: string, _periodEnd?: string): Promise<GrantRow[]> {
       return Promise.resolve(rows.filter((r) => r.user_id === userId));
     },
   };
@@ -72,7 +72,7 @@ export function makeLeadCapacityGrantsRepo() {
       rows.push({ id: crypto.randomUUID(), ...values, created_at: Date.now() });
       return Promise.resolve();
     },
-    findByUserAndDate(userId: number): Promise<GrantRow[]> {
+    findByUserAndDate(userId: number, _date?: string): Promise<GrantRow[]> {
       return Promise.resolve(rows.filter((r) => r.user_id === userId));
     },
   };

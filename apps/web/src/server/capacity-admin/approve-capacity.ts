@@ -22,7 +22,7 @@ export interface RejectCapacityRequestCommand {
   note: string;
 }
 
-interface ApproveRepos {
+export interface ApproveRepos {
   capacityRequests: {
     findById(id: number): Promise<{ id: number; user_id: number; kind: string; status: string; requested_amount: number; reason: string } | undefined>;
     markApproved(id: number, actorUserId: UserId, note: string | null): Promise<{ numUpdatedRows?: bigint } | undefined>;
@@ -37,7 +37,7 @@ interface ApproveRepos {
   leadCapacityGrants: LeadCapacityGrantsRepo;
 }
 
-type ApproveTransactionRunner = <T>(operation: (repos: ApproveRepos) => Promise<T>) => Promise<T>;
+export type ApproveTransactionRunner = <T>(operation: (repos: ApproveRepos) => Promise<T>) => Promise<T>;
 
 class RollbackError extends Error {
   constructor(readonly domainErr: DomainError) {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { requestLeadRefill } from "~/server/lead-workflow/request-refill";
+import { requestLeadRefill, type RefillTransactionRunner, type RefillTxRepos } from "~/server/lead-workflow/request-refill";
+import type { EngineClient } from "~/server/shared/engine/client";
 import { asBranchId, asUserId } from "~/server/shared/ids";
 import {
   makeLeadCapacityGrantsRepo,
@@ -33,7 +34,7 @@ function makeCandidate(n: number): LeadCandidate {
 function makeRepos(activeAssignments = 0) {
   return {
     users: {
-      findById: async () => ({ team_id: null, branch_id: BRANCH_ID as unknown as number }),
+      findById: async () => ({ team_id: null, branch_id: BRANCH_ID }),
     },
     ...makeNullLeadPolicyRepos(),
     leadCapacityGrants: makeLeadCapacityGrantsRepo(),
@@ -44,10 +45,10 @@ function makeRepos(activeAssignments = 0) {
       createMany: async () => undefined,
     },
     organizations: {
-      findOrCreate: async (_ruc: string, name: string) => ({ id: 1 }),
+      findOrCreate: async (_ruc: string, _name: string) => ({ id: 1 }),
     },
     contacts: {
-      findOrCreate: async (_orgId: number, _dni: string, _name: string, _phone: string): Promise<{ id: number; cooldown_until: null }> => ({
+      findOrCreate: async (_orgId: number, _dni: string, _name: string, _phone: string): Promise<{ id: number; cooldown_until: number | null }> => ({
         id: Math.floor(Math.random() * 10000),
         cooldown_until: null,
       }),
@@ -55,8 +56,8 @@ function makeRepos(activeAssignments = 0) {
   };
 }
 
-function makeTransaction(repos: ReturnType<typeof makeRepos>) {
-  return async <T>(op: (r: typeof repos) => Promise<T>) => op(repos);
+function makeTransaction(repos: RefillTxRepos): RefillTransactionRunner {
+  return async <T>(op: (r: RefillTxRepos) => Promise<T>) => op(repos);
 }
 
 describe("requestLeadRefill", () => {
@@ -66,7 +67,7 @@ describe("requestLeadRefill", () => {
     const repos = makeRepos(9999);
     const result = await requestLeadRefill(
       { actorUserId: USER_ID, branchId: BRANCH_ID },
-      { repos, runInTransaction: makeTransaction(repos) as never },
+      { repos, runInTransaction: makeTransaction(repos) },
     );
 
     expect(result.ok).toBe(true);
@@ -82,21 +83,21 @@ describe("requestLeadRefill", () => {
 
     // Gateway returns 2 candidates but contacts will all have cooldowns after first
     let contactCallCount = 0;
-    repos.contacts.findOrCreate = async (): Promise<{ id: number; cooldown_until: null }> => {
+    repos.contacts.findOrCreate = async (): Promise<{ id: number; cooldown_until: number | null }> => {
       contactCallCount++;
       // First contact is contactable, rest are on cooldown
-      const cooldown = contactCallCount === 1 ? null : Date.now() + 99999;
-      return { id: contactCallCount, cooldown_until: cooldown as null };
+      const cooldown_until = contactCallCount === 1 ? null : Date.now() + 99999;
+      return { id: contactCallCount, cooldown_until };
     };
 
     const candidates = [makeCandidate(1), makeCandidate(2), makeCandidate(3)];
     const engine = {
-      leadCandidates: async () => ({ candidates }),
-    } as never;
+      leadCandidates: async () => ({ candidates, count: candidates.length }),
+    } satisfies Pick<EngineClient, "leadCandidates">;
 
     const result = await requestLeadRefill(
       { actorUserId: USER_ID, branchId: BRANCH_ID },
-      { repos, runInTransaction: makeTransaction(repos) as never, engine },
+      { repos, runInTransaction: makeTransaction(repos), engine },
     );
 
     expect(result.ok).toBe(true);
@@ -113,24 +114,24 @@ describe("requestLeadRefill", () => {
     const cancelled = reservations.filter((r) => r.status === "cancelled").reduce((s, r) => s + r.amount, 0);
 
     // committed + cancelled must equal the original reservation amount
-    expect(committed + cancelled).toBe(reservations[0]!.amount);
+    expect(committed + cancelled).toBe(reservations[0].amount);
   });
 
   it("commits full amount when all candidates are assigned", async () => {
     const repos = makeRepos(0);
     const candidates = [makeCandidate(1)];
     const engine = {
-      leadCandidates: async () => ({ candidates }),
-    } as never;
+      leadCandidates: async () => ({ candidates, count: candidates.length }),
+    } satisfies Pick<EngineClient, "leadCandidates">;
 
     const result = await requestLeadRefill(
       { actorUserId: USER_ID, branchId: BRANCH_ID },
-      { repos, runInTransaction: makeTransaction(repos) as never, engine },
+      { repos, runInTransaction: makeTransaction(repos), engine },
     );
 
     expect(result.ok).toBe(true);
     const reservations = repos.leadUsageReservations.rows;
-    expect(reservations[0]!.status).toBe("committed");
+    expect(reservations[0].status).toBe("committed");
     // No cancelled reservations
     expect(reservations.filter((r) => r.status === "cancelled")).toHaveLength(0);
   });
@@ -138,19 +139,19 @@ describe("requestLeadRefill", () => {
   it("cancels reservation when gateway fails", async () => {
     const repos = makeRepos(0);
     const engine = {
-      leadCandidates: async () => {
+      leadCandidates: async (): Promise<never> => {
         throw new Error("engine down");
       },
-    } as never;
+    } satisfies Pick<EngineClient, "leadCandidates">;
 
     const result = await requestLeadRefill(
       { actorUserId: USER_ID, branchId: BRANCH_ID },
-      { repos, runInTransaction: makeTransaction(repos) as never, engine },
+      { repos, runInTransaction: makeTransaction(repos), engine },
     );
 
     expect(result.ok).toBe(false);
     const reservations = repos.leadUsageReservations.rows;
     expect(reservations).toHaveLength(1);
-    expect(reservations[0]!.status).toBe("cancelled");
+    expect(reservations[0].status).toBe("cancelled");
   });
 });

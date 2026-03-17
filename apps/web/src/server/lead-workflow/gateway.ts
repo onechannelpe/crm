@@ -15,7 +15,7 @@ export interface RequestCandidatesRequest {
 
 export async function requestCandidates(
   request: RequestCandidatesRequest,
-  engine: EngineClient = engineClient,
+  engine: Pick<EngineClient, "leadCandidates"> = engineClient,
 ): Promise<Result<LeadCandidate[], DomainError>> {
   try {
     const response = await engine.leadCandidates({

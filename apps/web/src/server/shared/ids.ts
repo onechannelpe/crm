@@ -6,44 +6,49 @@ export type CapacityRequestId = number & { readonly __brand: "CapacityRequestId"
 export type SearchReservationId = string & { readonly __brand: "SearchReservationId" };
 export type LeadReservationId = string & { readonly __brand: "LeadReservationId" };
 
-function assertPositiveIntId(value: number, name: string): number {
+// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+const brandInt = <T>(v: number): T => v as unknown as T;
+// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+const brandStr = <T>(v: string): T => v as unknown as T;
+
+function assertPositiveIntId<T>(value: number, name: string): T {
   if (!Number.isInteger(value) || value <= 0) {
     throw new Error(`${name} must be a positive integer`);
   }
-  return value;
+  return brandInt<T>(value);
 }
 
-function assertNonEmptyStringId(value: string, name: string): string {
+function assertNonEmptyStringId<T>(value: string, name: string): T {
   if (typeof value !== "string" || value.trim().length === 0) {
     throw new Error(`${name} must be a non-empty string`);
   }
-  return value;
+  return brandStr<T>(value);
 }
 
 export function asUserId(value: number): UserId {
-  return assertPositiveIntId(value, "UserId") as UserId;
+  return assertPositiveIntId<UserId>(value, "UserId");
 }
 
 export function asTeamId(value: number): TeamId {
-  return assertPositiveIntId(value, "TeamId") as TeamId;
+  return assertPositiveIntId<TeamId>(value, "TeamId");
 }
 
 export function asBranchId(value: number): BranchId {
-  return assertPositiveIntId(value, "BranchId") as BranchId;
+  return assertPositiveIntId<BranchId>(value, "BranchId");
 }
 
 export function asAssignmentId(value: number): AssignmentId {
-  return assertPositiveIntId(value, "AssignmentId") as AssignmentId;
+  return assertPositiveIntId<AssignmentId>(value, "AssignmentId");
 }
 
 export function asCapacityRequestId(value: number): CapacityRequestId {
-  return assertPositiveIntId(value, "CapacityRequestId") as CapacityRequestId;
+  return assertPositiveIntId<CapacityRequestId>(value, "CapacityRequestId");
 }
 
 export function asSearchReservationId(value: string): SearchReservationId {
-  return assertNonEmptyStringId(value, "SearchReservationId") as SearchReservationId;
+  return assertNonEmptyStringId<SearchReservationId>(value, "SearchReservationId");
 }
 
 export function asLeadReservationId(value: string): LeadReservationId {
-  return assertNonEmptyStringId(value, "LeadReservationId") as LeadReservationId;
+  return assertNonEmptyStringId<LeadReservationId>(value, "LeadReservationId");
 }

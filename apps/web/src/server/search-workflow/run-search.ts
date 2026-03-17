@@ -38,7 +38,7 @@ interface SearchRepos {
 export async function runDirectSearch(
   command: RunDirectSearchCommand,
   repos: SearchRepos,
-  engine: EngineClient = engineClient,
+  engine: Pick<EngineClient, "search"> = engineClient,
 ): Promise<Result<SearchResult_, DomainError>> {
   const reservationResult = await reserveSearchUsage(
     { actorUserId: command.actorUserId, amount: 1, reason: "direct_search" },

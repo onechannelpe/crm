@@ -1,7 +1,7 @@
 import { domainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import { isSearchType, type SearchType } from "~/server/shared/pipeline-types";
+import { isSearchType } from "~/server/shared/pipeline-types";
 import type { RunDirectSearchCommand } from "~/server/search-workflow/run-search";
 
 export function parseSearchCommand(

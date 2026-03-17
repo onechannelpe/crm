@@ -50,7 +50,7 @@ interface RefillRepos {
   };
 }
 
-interface RefillTxRepos {
+export interface RefillTxRepos {
   organizations: { findOrCreate(ruc: string, name: string): Promise<{ id: number }> };
   contacts: {
     findOrCreate(
@@ -63,12 +63,12 @@ interface RefillTxRepos {
   leadAssignments: { createMany(assignments: ReturnType<typeof createAssignment>[]): Promise<void> };
 }
 
-type RefillTransactionRunner = <T>(operation: (repos: RefillTxRepos) => Promise<T>) => Promise<T>;
+export type RefillTransactionRunner = <T>(operation: (repos: RefillTxRepos) => Promise<T>) => Promise<T>;
 
 interface RefillDeps {
   repos: RefillRepos;
   runInTransaction: RefillTransactionRunner;
-  engine?: EngineClient;
+  engine?: Pick<EngineClient, "leadCandidates">;
 }
 
 export async function requestLeadRefill(
@@ -117,7 +117,7 @@ export async function requestLeadRefill(
       ...new Map(
         candidatesResult.value.map((c) => {
           const org = orgsByRuc.get(c.ruc)!;
-          const key = `${org.id}:${c.dni}:${c.phone_primary}` as string;
+          const key = `${org.id}:${c.dni}:${c.phone_primary}`;
           return [key, { org, candidate: c }] as const;
         }),
       ).entries(),
@@ -133,7 +133,7 @@ export async function requestLeadRefill(
     const assignments = [];
     for (const candidate of candidatesResult.value) {
       const org = orgsByRuc.get(candidate.ruc)!;
-      const key = `${org.id}:${candidate.dni}:${candidate.phone_primary}` as string;
+      const key = `${org.id}:${candidate.dni}:${candidate.phone_primary}`;
       const contact = contactsByKey.get(key)!;
       if (!canContactNow(contact)) continue;
       assignments.push(createAssignment(command.actorUserId, contact.id));

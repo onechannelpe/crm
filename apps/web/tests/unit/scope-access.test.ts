@@ -45,7 +45,7 @@ describe("canManageExecutive", () => {
           const target = { role: "executive", branch_id: branchId, team_id: null };
           const repos = makeRepos(target);
           const result = await canManageExecutive(actor, asUserId(1), repos);
-          return result.ok === false;
+          return !result.ok;
         },
       ),
       { numRuns: 50 },

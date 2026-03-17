@@ -11,23 +11,17 @@ const natRows = fc.array(fc.record({ amount: fc.nat() }));
 const reservationRows = fc.array(
   fc.record({
     amount: fc.nat(),
-    status: fc.constantFrom("pending", "committed", "cancelled", "expired") as fc.Arbitrary<
-      "pending" | "committed" | "cancelled" | "expired"
-    >,
+    status: fc.constantFrom("pending", "committed", "cancelled", "expired"),
   }),
 );
 
 const searchPolicy = fc.record({
-  source: fc.constantFrom("system", "branch", "team", "user") as fc.Arbitrary<
-    "system" | "branch" | "team" | "user"
-  >,
+  source: fc.constantFrom("system", "branch", "team", "user"),
   monthlyLimit: fc.nat(),
 });
 
 const leadPolicy = fc.record({
-  source: fc.constantFrom("system", "branch", "team", "user") as fc.Arbitrary<
-    "system" | "branch" | "team" | "user"
-  >,
+  source: fc.constantFrom("system", "branch", "team", "user"),
   bufferTarget: fc.nat(),
   dailyLimit: fc.nat(),
 });

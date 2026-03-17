@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { runDirectSearch } from "~/server/search-workflow/run-search";
+import type { EngineClient } from "~/server/shared/engine/client";
 import { asBranchId, asUserId } from "~/server/shared/ids";
 import {
   makeNullSearchPolicyRepos,
@@ -17,7 +18,7 @@ function makeRepos() {
   const searchUsageCommits = makeSearchUsageCommitsRepo();
   return {
     users: {
-      findById: async () => ({ team_id: null, branch_id: asBranchId(1) as unknown as number }),
+      findById: async () => ({ team_id: null, branch_id: asBranchId(1) }),
     },
     ...makeNullSearchPolicyRepos(),
     searchCapacityGrants,
@@ -28,16 +29,23 @@ function makeRepos() {
 
 const successEngine = {
   search: async () => ({
-    results: [{ type: "dni" as const, value: "12345678", label: "Test Person", score: 1 }],
+    results: [
+      {
+        person: { dni: "12345678", name: "Test Person", ruc: null, birth_date: null, birth_place: null, sex: null, marital_status: null, location_text: null, ubigeo_code: null, mother_name: null, father_name: null, email: null },
+        org: null,
+        role: null,
+        phones: { primary: null, secondary: null, siblings: null },
+      },
+    ],
     count: 1,
   }),
-} as never;
+} satisfies Pick<EngineClient, "search">;
 
 const failEngine = {
-  search: async () => {
+  search: async (): Promise<never> => {
     throw new Error("engine unavailable");
   },
-} as never;
+} satisfies Pick<EngineClient, "search">;
 
 describe("runDirectSearch", () => {
   it("commits reservation when gateway succeeds", async () => {
@@ -50,7 +58,7 @@ describe("runDirectSearch", () => {
 
     expect(result.ok).toBe(true);
     expect(repos.searchUsageReservations.rows).toHaveLength(1);
-    expect(repos.searchUsageReservations.rows[0]!.status).toBe("committed");
+    expect(repos.searchUsageReservations.rows[0].status).toBe("committed");
     expect(repos.searchUsageCommits.rows).toHaveLength(1);
   });
 
@@ -64,7 +72,7 @@ describe("runDirectSearch", () => {
 
     expect(result.ok).toBe(false);
     expect(repos.searchUsageReservations.rows).toHaveLength(1);
-    expect(repos.searchUsageReservations.rows[0]!.status).toBe("cancelled");
+    expect(repos.searchUsageReservations.rows[0].status).toBe("cancelled");
     expect(repos.searchUsageCommits.rows).toHaveLength(0);
   });
 
@@ -96,7 +104,7 @@ describe("runDirectSearch", () => {
         engineCalled = true;
         return { results: [], count: 0 };
       },
-    } as never;
+    } satisfies Pick<EngineClient, "search">;
 
     const result = await runDirectSearch(
       { actorUserId: USER_ID, type: "dni", value: "12345678", limit: 10 },

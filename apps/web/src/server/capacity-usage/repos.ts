@@ -4,11 +4,12 @@ import type { Database } from "~/lib/db/types";
 
 export function createSearchCapacityGrantsRepo(db: Kysely<Database>) {
   return {
-    insert(values: { user_id: number; amount: number; reason: string; actor_user_id: number }) {
+    insert(values: { user_id: number; amount: number; reason: string; actor_user_id: number }): Promise<void> {
       return db
         .insertInto("search_capacity_grants")
         .values({ id: crypto.randomUUID(), ...values, created_at: Date.now() })
-        .executeTakeFirstOrThrow();
+        .executeTakeFirstOrThrow()
+        .then(() => undefined);
     },
 
     findByUserAndPeriod(userId: number, periodStart: string, periodEnd: string) {
@@ -43,12 +44,13 @@ export function createSearchUsageReservationsRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    updateStatus(id: string, status: "committed" | "cancelled" | "expired") {
+    updateStatus(id: string, status: "committed" | "cancelled" | "expired"): Promise<void> {
       return db
         .updateTable("search_usage_reservations")
         .set({ status, updated_at: Date.now() })
         .where("id", "=", id)
-        .executeTakeFirst();
+        .executeTakeFirst()
+        .then(() => undefined);
     },
 
     findByUserAndPeriod(userId: number, periodStart: string, periodEnd: string) {
@@ -65,11 +67,12 @@ export function createSearchUsageReservationsRepo(db: Kysely<Database>) {
 
 export function createSearchUsageCommitsRepo(db: Kysely<Database>) {
   return {
-    insert(values: { reservation_id: string; amount: number }) {
+    insert(values: { reservation_id: string; amount: number }): Promise<void> {
       return db
         .insertInto("search_usage_commits")
         .values({ id: crypto.randomUUID(), ...values, created_at: Date.now() })
-        .executeTakeFirstOrThrow();
+        .executeTakeFirstOrThrow()
+        .then(() => undefined);
     },
 
     findByReservation(reservationId: string) {
@@ -95,11 +98,12 @@ export function createSearchUsageCommitsRepo(db: Kysely<Database>) {
 
 export function createLeadCapacityGrantsRepo(db: Kysely<Database>) {
   return {
-    insert(values: { user_id: number; amount: number; reason: string; actor_user_id: number }) {
+    insert(values: { user_id: number; amount: number; reason: string; actor_user_id: number }): Promise<void> {
       return db
         .insertInto("lead_capacity_grants")
         .values({ id: crypto.randomUUID(), ...values, created_at: Date.now() })
-        .executeTakeFirstOrThrow();
+        .executeTakeFirstOrThrow()
+        .then(() => undefined);
     },
 
     findByUserAndDate(userId: number, date: string) {
@@ -134,12 +138,13 @@ export function createLeadUsageReservationsRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    updateStatus(id: string, status: "committed" | "cancelled" | "expired") {
+    updateStatus(id: string, status: "committed" | "cancelled" | "expired"): Promise<void> {
       return db
         .updateTable("lead_usage_reservations")
         .set({ status, updated_at: Date.now() })
         .where("id", "=", id)
-        .executeTakeFirst();
+        .executeTakeFirst()
+        .then(() => undefined);
     },
 
     findByUserAndDate(userId: number, date: string) {
@@ -156,11 +161,12 @@ export function createLeadUsageReservationsRepo(db: Kysely<Database>) {
 
 export function createLeadUsageCommitsRepo(db: Kysely<Database>) {
   return {
-    insert(values: { reservation_id: string; amount: number }) {
+    insert(values: { reservation_id: string; amount: number }): Promise<void> {
       return db
         .insertInto("lead_usage_commits")
         .values({ id: crypto.randomUUID(), ...values, created_at: Date.now() })
-        .executeTakeFirstOrThrow();
+        .executeTakeFirstOrThrow()
+        .then(() => undefined);
     },
 
     findByReservation(reservationId: string) {

@@ -23,7 +23,7 @@ describe("computeNeededAssignments", () => {
   it("returns 0 when active assignments meet or exceed buffer target", () => {
     fc.assert(
       fc.property(fc.nat(100), (bufferTarget) => {
-        const active = bufferTarget + fc.sample(fc.nat(50), 1)[0]!;
+        const active = bufferTarget + fc.sample(fc.nat(50), 1)[0];
         return computeNeededAssignments(active, bufferTarget) === 0;
       }),
     );

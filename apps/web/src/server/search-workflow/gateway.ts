@@ -18,7 +18,7 @@ export interface SearchGatewayResponse {
 
 export async function search(
   request: SearchGatewayRequest,
-  engine: EngineClient = engineClient,
+  engine: Pick<EngineClient, "search"> = engineClient,
 ): Promise<Result<SearchGatewayResponse, DomainError>> {
   try {
     const response = await engine.search(request.type, request.value, request.limit);

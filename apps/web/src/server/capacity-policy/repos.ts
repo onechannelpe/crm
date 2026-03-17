@@ -30,20 +30,21 @@ export function createSearchPolicyDefaultsRepo(db: Kysely<Database>) {
       scope_id: number;
       period_type: "month";
       search_limit: number;
-    }) {
+    }): Promise<void> {
       const existing = await this.findForScope(values.scope_type, values.scope_id);
       const now = Date.now();
       if (existing) {
-        return db
+        await db
           .updateTable("search_policy_defaults")
           .set({ ...values, updated_at: now })
           .where("id", "=", existing.id)
           .executeTakeFirst();
+      } else {
+        await db
+          .insertInto("search_policy_defaults")
+          .values({ ...values, created_at: now, updated_at: now })
+          .executeTakeFirstOrThrow();
       }
-      return db
-        .insertInto("search_policy_defaults")
-        .values({ ...values, created_at: now, updated_at: now })
-        .executeTakeFirstOrThrow();
     },
   };
 }
@@ -84,13 +85,13 @@ export function createSearchPolicyOverridesRepo(db: Kysely<Database>) {
       effective_from: number;
       expires_at: number | null;
       set_by_user_id: number;
-    }) {
-      return db.transaction().execute(async (trx) => {
+    }): Promise<void> {
+      await db.transaction().execute(async (trx) => {
         await trx
           .deleteFrom("search_policy_overrides")
           .where("user_id", "=", values.user_id)
           .execute();
-        return trx
+        await trx
           .insertInto("search_policy_overrides")
           .values({ ...values, created_at: Date.now() })
           .executeTakeFirstOrThrow();
@@ -125,20 +126,21 @@ export function createLeadPolicyDefaultsRepo(db: Kysely<Database>) {
       scope_id: number;
       active_buffer_target: number;
       daily_refill_limit: number;
-    }) {
+    }): Promise<void> {
       const existing = await this.findForScope(values.scope_type, values.scope_id);
       const now = Date.now();
       if (existing) {
-        return db
+        await db
           .updateTable("lead_policy_defaults")
           .set({ ...values, updated_at: now })
           .where("id", "=", existing.id)
           .executeTakeFirst();
+      } else {
+        await db
+          .insertInto("lead_policy_defaults")
+          .values({ ...values, created_at: now, updated_at: now })
+          .executeTakeFirstOrThrow();
       }
-      return db
-        .insertInto("lead_policy_defaults")
-        .values({ ...values, created_at: now, updated_at: now })
-        .executeTakeFirstOrThrow();
     },
   };
 }
@@ -180,13 +182,13 @@ export function createLeadPolicyOverridesRepo(db: Kysely<Database>) {
       effective_from: number;
       expires_at: number | null;
       set_by_user_id: number;
-    }) {
-      return db.transaction().execute(async (trx) => {
+    }): Promise<void> {
+      await db.transaction().execute(async (trx) => {
         await trx
           .deleteFrom("lead_policy_overrides")
           .where("user_id", "=", values.user_id)
           .execute();
-        return trx
+        await trx
           .insertInto("lead_policy_overrides")
           .values({ ...values, created_at: Date.now() })
           .executeTakeFirstOrThrow();

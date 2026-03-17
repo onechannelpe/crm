@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import type { Role } from "~/lib/auth/access/rbac";
-import { approveCapacityRequest, rejectCapacityRequest } from "~/server/capacity-admin/approve-capacity";
+import {
+  approveCapacityRequest,
+  rejectCapacityRequest,
+  type ApproveRepos,
+  type ApproveTransactionRunner,
+} from "~/server/capacity-admin/approve-capacity";
 import { asBranchId, asCapacityRequestId, asUserId } from "~/server/shared/ids";
 import {
   makeLeadCapacityGrantsRepo,
@@ -66,8 +71,8 @@ function makeTeamsRepo() {
   };
 }
 
-function makeTransaction(txRepos: object) {
-  return async <T>(op: (r: typeof txRepos) => Promise<T>) => op(txRepos);
+function makeTransaction(txRepos: ApproveRepos): ApproveTransactionRunner {
+  return async <T>(op: (r: ApproveRepos) => Promise<T>) => op(txRepos);
 }
 
 describe("approveCapacityRequest", () => {
@@ -93,13 +98,13 @@ describe("approveCapacityRequest", () => {
     const result = await approveCapacityRequest(
       { actorUserId: ACTOR_USER_ID, requestId: REQUEST_ID, note: null },
       makeActor(),
-      makeTransaction(txRepos) as never,
+      makeTransaction(txRepos),
     );
 
     expect(result.ok).toBe(true);
-    expect(capacityRequests.rows[0]!.status).toBe("approved");
+    expect(capacityRequests.rows[0].status).toBe("approved");
     expect(searchGrants.rows).toHaveLength(1);
-    expect(searchGrants.rows[0]!.amount).toBe(10);
+    expect(searchGrants.rows[0].amount).toBe(10);
   });
 
   it("returns conflict error when request is not pending", async () => {
@@ -123,7 +128,7 @@ describe("approveCapacityRequest", () => {
     const result = await approveCapacityRequest(
       { actorUserId: ACTOR_USER_ID, requestId: REQUEST_ID, note: null },
       makeActor(),
-      makeTransaction(txRepos) as never,
+      makeTransaction(txRepos),
     );
 
     expect(result.ok).toBe(false);
@@ -142,19 +147,20 @@ describe("approveCapacityRequest", () => {
       reason: "test",
     });
 
-    const txRepos = {
+    const searchGrants = makeSearchCapacityGrantsRepo();
+    const txRepos: ApproveRepos = {
       capacityRequests,
       // Target is in a different branch
       users: { findById: async () => ({ role: "executive", branch_id: 2, team_id: null }) },
       teams: makeTeamsRepo(),
-      searchCapacityGrants: makeSearchCapacityGrantsRepo(),
+      searchCapacityGrants: searchGrants,
       leadCapacityGrants: makeLeadCapacityGrantsRepo(),
     };
 
     const result = await approveCapacityRequest(
       { actorUserId: ACTOR_USER_ID, requestId: REQUEST_ID, note: null },
       makeActor("admin"), // admin in branch 1
-      makeTransaction(txRepos) as never,
+      makeTransaction(txRepos),
     );
 
     expect(result.ok).toBe(false);
@@ -162,7 +168,7 @@ describe("approveCapacityRequest", () => {
       expect(result.error.code).toBe("forbidden");
     }
     // Grant must not have been inserted
-    expect((txRepos.searchCapacityGrants as ReturnType<typeof makeSearchCapacityGrantsRepo>).rows).toHaveLength(0);
+    expect(searchGrants.rows).toHaveLength(0);
   });
 
   it("does not commit any write when transaction throws mid-way", async () => {
@@ -177,8 +183,8 @@ describe("approveCapacityRequest", () => {
     });
 
     // Simulate a transaction that throws after markApproved but before grant
-    const failingTransaction = async <T>(op: (r: object) => Promise<T>): Promise<T> => {
-      const txRepos = {
+    const failingTransaction: ApproveTransactionRunner = async <T>(op: (r: ApproveRepos) => Promise<T>): Promise<T> => {
+      const txRepos: ApproveRepos = {
         capacityRequests: {
           ...capacityRequests,
           markApproved: async () => {
@@ -196,12 +202,12 @@ describe("approveCapacityRequest", () => {
     const result = await approveCapacityRequest(
       { actorUserId: ACTOR_USER_ID, requestId: REQUEST_ID, note: null },
       makeActor(),
-      failingTransaction as never,
+      failingTransaction,
     );
 
     expect(result.ok).toBe(false);
     // Original request row is unchanged (transaction never committed)
-    expect(capacityRequests.rows[0]!.status).toBe("pending");
+    expect(capacityRequests.rows[0].status).toBe("pending");
     expect(searchGrants.rows).toHaveLength(0);
   });
 });
@@ -228,18 +234,21 @@ describe("rejectCapacityRequest", () => {
     const result = await rejectCapacityRequest(
       { actorUserId: ACTOR_USER_ID, requestId: REQUEST_ID, note: "not justified" },
       makeActor(),
-      makeTransaction(txRepos) as never,
+      makeTransaction(txRepos),
     );
 
     expect(result.ok).toBe(true);
-    expect(capacityRequests.rows[0]!.status).toBe("rejected");
+    expect(capacityRequests.rows[0].status).toBe("rejected");
   });
 
   it("returns validation error when note is empty", async () => {
+    const noopTransaction: ApproveTransactionRunner = async () => {
+      throw new Error("transaction should not be called");
+    };
     const result = await rejectCapacityRequest(
       { actorUserId: ACTOR_USER_ID, requestId: REQUEST_ID, note: "   " },
       makeActor(),
-      async () => ({ success: true as const }) as never,
+      noopTransaction,
     );
 
     expect(result.ok).toBe(false);
