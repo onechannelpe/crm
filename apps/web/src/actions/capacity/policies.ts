@@ -1,16 +1,19 @@
 "use server";
 
-import { throwDomainError } from "~/actions/throw-domain-error";
 import { requirePermission } from "~/lib/auth/access/session";
 import { assertPositiveInt } from "~/lib/contracts/guards";
-import { capacityManageService } from "~/server/shared/context";
+import {
+  updateLeadScopeDefault,
+  updateLeadUserOverride,
+  updateSearchScopeDefault,
+  updateSearchUserOverride,
+} from "~/server/capacity-admin/manage-capacity";
+import { repos } from "~/server/shared/context";
 import { asBranchId, asTeamId, asUserId } from "~/server/shared/ids";
 import { isErr } from "~/server/shared/result";
 
-import {
-  parseLeadPolicyValues,
-  parseSearchPolicyLimit,
-} from "./capacity-input";
+import { mapCapacityError } from "./errors";
+import { parseLeadPolicyValues, parseSearchPolicyLimit } from "./input";
 
 function toScopeId(scopeType: "branch" | "team", scopeId: number) {
   return scopeType === "branch" ? asBranchId(scopeId) : asTeamId(scopeId);
@@ -21,23 +24,18 @@ export async function updateSearchPolicyOverride(input: {
   monthlySearchLimit: number;
   expiresAt: number | null;
 }) {
-  const session = await requirePermission("capacity:policy:manage");
   const safeUserId = asUserId(assertPositiveInt(input.userId, "userId"));
   const limitResult = parseSearchPolicyLimit(input.monthlySearchLimit);
-  if (isErr(limitResult)) {
-    throwDomainError(limitResult.error);
-  }
-  const result = await capacityManageService.updateSearchPolicyOverride(
+  if (isErr(limitResult)) mapCapacityError(limitResult.error);
+
+  const session = await requirePermission("capacity:policy:manage");
+
+  const result = await updateSearchUserOverride(
+    { actorUserId: session.userId, targetUserId: safeUserId, monthlyLimit: limitResult.value, expiresAt: input.expiresAt },
     session,
-    {
-      userId: safeUserId,
-      monthlySearchLimit: limitResult.value,
-      expiresAt: input.expiresAt,
-    },
+    repos,
   );
-  if (isErr(result)) {
-    throwDomainError(result.error);
-  }
+  if (isErr(result)) mapCapacityError(result.error);
   return result.value;
 }
 
@@ -47,72 +45,64 @@ export async function updateLeadPolicyOverride(input: {
   dailyRefillLimit: number;
   expiresAt: number | null;
 }) {
-  const session = await requirePermission("capacity:policy:manage");
   const safeUserId = asUserId(assertPositiveInt(input.userId, "userId"));
   const policyResult = parseLeadPolicyValues({
     activeBufferTarget: input.activeBufferTarget,
     dailyRefillLimit: input.dailyRefillLimit,
   });
-  if (isErr(policyResult)) {
-    throwDomainError(policyResult.error);
-  }
-  const result = await capacityManageService.updateLeadPolicyOverride(session, {
-    userId: safeUserId,
-    activeBufferTarget: policyResult.value.activeBufferTarget,
-    dailyRefillLimit: policyResult.value.dailyRefillLimit,
-    expiresAt: input.expiresAt,
-  });
-  if (isErr(result)) {
-    throwDomainError(result.error);
-  }
+  if (isErr(policyResult)) mapCapacityError(policyResult.error);
+
+  const session = await requirePermission("capacity:policy:manage");
+
+  const result = await updateLeadUserOverride(
+    { actorUserId: session.userId, targetUserId: safeUserId, bufferTarget: policyResult.value.activeBufferTarget, dailyLimit: policyResult.value.dailyRefillLimit, expiresAt: input.expiresAt },
+    session,
+    repos,
+  );
+  if (isErr(result)) mapCapacityError(result.error);
   return result.value;
 }
 
-export async function updateSearchScopeDefault(input: {
+export async function updateSearchScopeDefault_(input: {
   scopeType: "branch" | "team";
   scopeId: number;
   monthlySearchLimit: number;
 }) {
-  const session = await requirePermission("capacity:policy:manage");
   const safeScopeId = assertPositiveInt(input.scopeId, "scopeId");
   const limitResult = parseSearchPolicyLimit(input.monthlySearchLimit);
-  if (isErr(limitResult)) {
-    throwDomainError(limitResult.error);
-  }
-  const result = await capacityManageService.updateSearchScopeDefault(session, {
-    scopeType: input.scopeType,
-    scopeId: toScopeId(input.scopeType, safeScopeId),
-    monthlySearchLimit: limitResult.value,
-  });
-  if (isErr(result)) {
-    throwDomainError(result.error);
-  }
+  if (isErr(limitResult)) mapCapacityError(limitResult.error);
+
+  const session = await requirePermission("capacity:policy:manage");
+
+  const result = await updateSearchScopeDefault(
+    { actorUserId: session.userId, scopeType: input.scopeType, scopeId: toScopeId(input.scopeType, safeScopeId), monthlyLimit: limitResult.value },
+    session,
+    repos,
+  );
+  if (isErr(result)) mapCapacityError(result.error);
   return result.value;
 }
 
-export async function updateLeadScopeDefault(input: {
+export async function updateLeadScopeDefault_(input: {
   scopeType: "branch" | "team";
   scopeId: number;
   activeBufferTarget: number;
   dailyRefillLimit: number;
 }) {
-  const session = await requirePermission("capacity:policy:manage");
   const safeScopeId = assertPositiveInt(input.scopeId, "scopeId");
   const policyResult = parseLeadPolicyValues({
     activeBufferTarget: input.activeBufferTarget,
     dailyRefillLimit: input.dailyRefillLimit,
   });
-  if (isErr(policyResult)) {
-    throwDomainError(policyResult.error);
-  }
-  const result = await capacityManageService.updateLeadScopeDefault(session, {
-    scopeType: input.scopeType,
-    scopeId: toScopeId(input.scopeType, safeScopeId),
-    activeBufferTarget: policyResult.value.activeBufferTarget,
-    dailyRefillLimit: policyResult.value.dailyRefillLimit,
-  });
-  if (isErr(result)) {
-    throwDomainError(result.error);
-  }
+  if (isErr(policyResult)) mapCapacityError(policyResult.error);
+
+  const session = await requirePermission("capacity:policy:manage");
+
+  const result = await updateLeadScopeDefault(
+    { actorUserId: session.userId, scopeType: input.scopeType, scopeId: toScopeId(input.scopeType, safeScopeId), bufferTarget: policyResult.value.activeBufferTarget, dailyLimit: policyResult.value.dailyRefillLimit },
+    session,
+    repos,
+  );
+  if (isErr(result)) mapCapacityError(result.error);
   return result.value;
 }

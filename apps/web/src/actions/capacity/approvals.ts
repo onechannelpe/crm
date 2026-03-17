@@ -1,107 +1,78 @@
 "use server";
 
-import { throwDomainError } from "~/actions/throw-domain-error";
 import { requirePermission } from "~/lib/auth/access/session";
-import {
-  assertNonEmptyString,
-  assertPositiveInt,
-} from "~/lib/contracts/guards";
+import { assertNonEmptyString, assertPositiveInt } from "~/lib/contracts/guards";
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
-import {
-  capacityApprovalService,
-  capacityManageService,
-  rateLimitDeps,
-} from "~/server/shared/context";
+import { approveCapacityRequest, rejectCapacityRequest } from "~/server/capacity-admin/approve-capacity";
+import { grantLeadCapacityDirect, grantSearchCapacityDirect } from "~/server/capacity-admin/manage-capacity";
+import { repos, rateLimitDeps, runInRepositoryTransaction } from "~/server/shared/context";
 import { asCapacityRequestId, asUserId } from "~/server/shared/ids";
 import { isErr } from "~/server/shared/result";
 
-import { parseCapacityAmount, parseCapacityReason } from "./capacity-input";
+import { mapCapacityError } from "./errors";
+import { parseCapacityAmount, parseCapacityReason } from "./input";
 
-export async function approveCapacityRequest(requestId: number, note?: string) {
-  const safeRequestId = asCapacityRequestId(
-    assertPositiveInt(requestId, "requestId"),
-  );
+export async function approveCapacity(requestId: number, note?: string) {
+  const safeRequestId = asCapacityRequestId(assertPositiveInt(requestId, "requestId"));
   const session = await requirePermission("capacity:approve");
   await checkActionRateLimit("capacity.approve", session.userId, rateLimitDeps);
-  const result = await capacityApprovalService.approveCapacityRequest(
+
+  const result = await approveCapacityRequest(
+    { actorUserId: session.userId, requestId: safeRequestId, note: note ?? null },
     session,
-    safeRequestId,
-    note,
+    runInRepositoryTransaction,
   );
-  if (isErr(result)) {
-    throwDomainError(result.error);
-  }
+  if (isErr(result)) mapCapacityError(result.error);
   return result.value;
 }
 
-export async function rejectCapacityRequest(requestId: number, note: string) {
-  const safeRequestId = asCapacityRequestId(
-    assertPositiveInt(requestId, "requestId"),
-  );
+export async function rejectCapacity(requestId: number, note: string) {
+  const safeRequestId = asCapacityRequestId(assertPositiveInt(requestId, "requestId"));
   const safeNote = assertNonEmptyString(note, "note");
   const session = await requirePermission("capacity:approve");
   await checkActionRateLimit("capacity.approve", session.userId, rateLimitDeps);
-  const result = await capacityApprovalService.rejectCapacityRequest(
+
+  const result = await rejectCapacityRequest(
+    { actorUserId: session.userId, requestId: safeRequestId, note: safeNote },
     session,
-    safeRequestId,
-    safeNote,
+    runInRepositoryTransaction,
   );
-  if (isErr(result)) {
-    throwDomainError(result.error);
-  }
+  if (isErr(result)) mapCapacityError(result.error);
   return result.value;
 }
 
-export async function grantMoreSearches(
-  userId: number,
-  amount: number,
-  reason: string,
-) {
+export async function grantMoreSearches(userId: number, amount: number, reason: string) {
   const safeUserId = asUserId(assertPositiveInt(userId, "userId"));
   const amountResult = parseCapacityAmount(amount);
-  if (isErr(amountResult)) {
-    throwDomainError(amountResult.error);
-  }
+  if (isErr(amountResult)) mapCapacityError(amountResult.error);
   const reasonResult = parseCapacityReason(reason);
-  if (isErr(reasonResult)) {
-    throwDomainError(reasonResult.error);
-  }
+  if (isErr(reasonResult)) mapCapacityError(reasonResult.error);
+
   const session = await requirePermission("capacity:manage");
-  const result = await capacityManageService.grantMoreSearches(
+
+  const result = await grantSearchCapacityDirect(
+    { actorUserId: session.userId, targetUserId: safeUserId, amount: amountResult.value, reason: reasonResult.value },
     session,
-    safeUserId,
-    amountResult.value,
-    reasonResult.value,
+    repos,
   );
-  if (isErr(result)) {
-    throwDomainError(result.error);
-  }
+  if (isErr(result)) mapCapacityError(result.error);
   return result.value;
 }
 
-export async function grantMoreLeadRefill(
-  userId: number,
-  amount: number,
-  reason: string,
-) {
+export async function grantMoreLeadRefill(userId: number, amount: number, reason: string) {
   const safeUserId = asUserId(assertPositiveInt(userId, "userId"));
   const amountResult = parseCapacityAmount(amount);
-  if (isErr(amountResult)) {
-    throwDomainError(amountResult.error);
-  }
+  if (isErr(amountResult)) mapCapacityError(amountResult.error);
   const reasonResult = parseCapacityReason(reason);
-  if (isErr(reasonResult)) {
-    throwDomainError(reasonResult.error);
-  }
+  if (isErr(reasonResult)) mapCapacityError(reasonResult.error);
+
   const session = await requirePermission("capacity:manage");
-  const result = await capacityManageService.grantMoreLeadRefill(
+
+  const result = await grantLeadCapacityDirect(
+    { actorUserId: session.userId, targetUserId: safeUserId, amount: amountResult.value, reason: reasonResult.value },
     session,
-    safeUserId,
-    amountResult.value,
-    reasonResult.value,
+    repos,
   );
-  if (isErr(result)) {
-    throwDomainError(result.error);
-  }
+  if (isErr(result)) mapCapacityError(result.error);
   return result.value;
 }
