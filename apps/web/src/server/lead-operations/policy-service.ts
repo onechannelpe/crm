@@ -115,11 +115,6 @@ export function createLeadPolicyService(repos: Repositories) {
       input: SetLeadUserOverrideCommand,
     ): Promise<Result<void, LeadPolicyError>> {
       try {
-        const user = await repos.users.findById(input.targetUserId);
-        if (!user) {
-          return Err({ reason: "user_not_found", message: "User not found" });
-        }
-
         await repos.leadPolicyOverrides.replaceForUser({
           user_id: input.targetUserId,
           active_buffer_target: input.activeBufferTarget,

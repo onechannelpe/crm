@@ -1,6 +1,8 @@
 "use server";
 
+import { validationError } from "~/lib/app-errors";
 import { requirePermission } from "~/lib/auth/access/session";
+import { config } from "~/lib/config";
 import {
   assertFinitePositive,
   assertPositiveInt,
@@ -15,6 +17,40 @@ function toScopeId(scopeType: "branch" | "team", scopeId: number) {
   return scopeType === "branch" ? asBranchId(scopeId) : asTeamId(scopeId);
 }
 
+function validateSearchPolicyLimit(monthlySearchLimit: number): number {
+  const safeLimit = assertFinitePositive(
+    monthlySearchLimit,
+    "monthlySearchLimit",
+  );
+  if (safeLimit > config.searchAccess.maxMonthlyLimit) {
+    throw validationError("monthlySearchLimit exceeds configured maximum");
+  }
+  return safeLimit;
+}
+
+function validateLeadPolicyValues(input: {
+  activeBufferTarget: number;
+  dailyRefillLimit: number;
+}) {
+  const safeBuffer = assertFinitePositive(
+    input.activeBufferTarget,
+    "activeBufferTarget",
+  );
+  if (safeBuffer > config.leadAssignment.maxBufferTarget) {
+    throw validationError("activeBufferTarget exceeds configured maximum");
+  }
+
+  const safeRefill = assertFinitePositive(
+    input.dailyRefillLimit,
+    "dailyRefillLimit",
+  );
+  if (safeRefill > config.capacityRequests.maxRequestAmount) {
+    throw validationError("dailyRefillLimit exceeds configured maximum");
+  }
+
+  return { safeBuffer, safeRefill };
+}
+
 export async function updateSearchPolicyOverride(input: {
   userId: number;
   monthlySearchLimit: number;
@@ -22,10 +58,7 @@ export async function updateSearchPolicyOverride(input: {
 }) {
   const session = await requirePermission("capacity:policy:manage");
   const safeUserId = asUserId(assertPositiveInt(input.userId, "userId"));
-  const safeLimit = assertFinitePositive(
-    input.monthlySearchLimit,
-    "monthlySearchLimit",
-  );
+  const safeLimit = validateSearchPolicyLimit(input.monthlySearchLimit);
   const result = await capacityManageService.updateSearchPolicyOverride(
     session,
     {
@@ -48,14 +81,10 @@ export async function updateLeadPolicyOverride(input: {
 }) {
   const session = await requirePermission("capacity:policy:manage");
   const safeUserId = asUserId(assertPositiveInt(input.userId, "userId"));
-  const safeBuffer = assertFinitePositive(
-    input.activeBufferTarget,
-    "activeBufferTarget",
-  );
-  const safeRefill = assertFinitePositive(
-    input.dailyRefillLimit,
-    "dailyRefillLimit",
-  );
+  const { safeBuffer, safeRefill } = validateLeadPolicyValues({
+    activeBufferTarget: input.activeBufferTarget,
+    dailyRefillLimit: input.dailyRefillLimit,
+  });
   const result = await capacityManageService.updateLeadPolicyOverride(session, {
     userId: safeUserId,
     activeBufferTarget: safeBuffer,
@@ -75,10 +104,7 @@ export async function updateSearchScopeDefault(input: {
 }) {
   const session = await requirePermission("capacity:policy:manage");
   const safeScopeId = assertPositiveInt(input.scopeId, "scopeId");
-  const safeLimit = assertFinitePositive(
-    input.monthlySearchLimit,
-    "monthlySearchLimit",
-  );
+  const safeLimit = validateSearchPolicyLimit(input.monthlySearchLimit);
   const result = await capacityManageService.updateSearchScopeDefault(session, {
     scopeType: input.scopeType,
     scopeId: toScopeId(input.scopeType, safeScopeId),
@@ -98,14 +124,10 @@ export async function updateLeadScopeDefault(input: {
 }) {
   const session = await requirePermission("capacity:policy:manage");
   const safeScopeId = assertPositiveInt(input.scopeId, "scopeId");
-  const safeBuffer = assertFinitePositive(
-    input.activeBufferTarget,
-    "activeBufferTarget",
-  );
-  const safeRefill = assertFinitePositive(
-    input.dailyRefillLimit,
-    "dailyRefillLimit",
-  );
+  const { safeBuffer, safeRefill } = validateLeadPolicyValues({
+    activeBufferTarget: input.activeBufferTarget,
+    dailyRefillLimit: input.dailyRefillLimit,
+  });
   const result = await capacityManageService.updateLeadScopeDefault(session, {
     scopeType: input.scopeType,
     scopeId: toScopeId(input.scopeType, safeScopeId),

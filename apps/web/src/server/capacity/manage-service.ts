@@ -61,6 +61,13 @@ export function createCapacityManageService(deps: CapacityManageServiceDeps) {
     targetUserId: UserId,
   ): Promise<Result<void, CapacityManageError>> {
     const managed = await canManageExecutive(actor, targetUserId, deps.repos);
+    if (!managed.target) {
+      return Err({
+        reason: "not_found",
+        message: "Executive not found",
+      });
+    }
+
     if (!managed.ok) {
       return Err({
         reason: "forbidden",

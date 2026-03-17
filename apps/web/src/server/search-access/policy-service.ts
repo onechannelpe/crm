@@ -109,11 +109,6 @@ export function createSearchPolicyService(repos: Repositories) {
       input: SetSearchUserOverrideCommand,
     ): Promise<Result<void, SearchPolicyError>> {
       try {
-        const user = await repos.users.findById(input.targetUserId);
-        if (!user) {
-          return Err({ reason: "user_not_found", message: "User not found" });
-        }
-
         await repos.searchPolicyOverrides.replaceForUser({
           user_id: input.targetUserId,
           search_limit: input.monthlySearchLimit,

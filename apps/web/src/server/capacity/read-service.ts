@@ -130,18 +130,35 @@ function parseAuditChanges(rawChanges: unknown): AuditChangeValue {
   }
 }
 
-function canViewCapacityAuditEvent(
-  session: SessionData,
-  event: { entity_type: string; entity_id: number | null },
-) {
+function canViewCapacityAuditEvent(input: {
+  session: SessionData;
+  event: { entity_type: string; entity_id: number | null };
+  branchUserIds?: ReadonlySet<number>;
+  branchTeamIds?: ReadonlySet<number>;
+}) {
+  const { session, event, branchUserIds, branchTeamIds } = input;
+
   if (session.role === "superuser") {
     return true;
   }
 
   if (session.role === "admin") {
-    return (
-      event.entity_type === "branch" && event.entity_id === session.branchId
-    );
+    switch (event.entity_type) {
+      case "branch":
+        return event.entity_id === session.branchId;
+      case "team":
+        return (
+          event.entity_id != null &&
+          branchTeamIds?.has(event.entity_id) === true
+        );
+      case "user":
+        return (
+          event.entity_id != null &&
+          branchUserIds?.has(event.entity_id) === true
+        );
+      default:
+        return false;
+    }
   }
 
   return false;
@@ -241,6 +258,9 @@ export function createCapacityReadService(deps: CapacityReadServiceDeps) {
     });
 
     const userIds = managedExecutives.map((user) => user.id);
+    const branchIds = Array.from(
+      new Set(managedExecutives.map((user) => user.branch_id)),
+    );
     const teamIds = Array.from(
       new Set(
         managedExecutives
@@ -256,20 +276,20 @@ export function createCapacityReadService(deps: CapacityReadServiceDeps) {
       searchLedgers,
       leadLedgers,
       activeAssignmentCounts,
-      searchBranchDefault,
+      searchBranchDefaults,
       searchTeamDefaults,
       searchOverrides,
-      leadBranchDefault,
+      leadBranchDefaults,
       leadTeamDefaults,
       leadOverrides,
     ] = await Promise.all([
       repos.searchAllowanceLedger.listByUsersAndPeriod(userIds, periodStart),
       repos.leadRefillLedger.listByUsersAndDate(userIds, today),
       repos.leadAssignments.countActiveByUsers(userIds),
-      repos.searchPolicyDefaults.findForScope("branch", session.branchId),
+      repos.searchPolicyDefaults.listForScope("branch", branchIds),
       repos.searchPolicyDefaults.listForScope("team", teamIds),
       repos.searchPolicyOverrides.listActiveForUsers(userIds, now),
-      repos.leadPolicyDefaults.findForScope("branch", session.branchId),
+      repos.leadPolicyDefaults.listForScope("branch", branchIds),
       repos.leadPolicyDefaults.listForScope("team", teamIds),
       repos.leadPolicyOverrides.listActiveForUsers(userIds, now),
     ]);
@@ -283,8 +303,14 @@ export function createCapacityReadService(deps: CapacityReadServiceDeps) {
     const activeCountByUserId = new Map(
       activeAssignmentCounts.map((row) => [row.userId, row.activeCount]),
     );
+    const searchBranchDefaultById = new Map(
+      searchBranchDefaults.map((row) => [row.scope_id, row]),
+    );
     const searchTeamDefaultById = new Map(
       searchTeamDefaults.map((row) => [row.scope_id, row]),
+    );
+    const leadBranchDefaultById = new Map(
+      leadBranchDefaults.map((row) => [row.scope_id, row]),
     );
     const leadTeamDefaultById = new Map(
       leadTeamDefaults.map((row) => [row.scope_id, row]),
@@ -317,8 +343,10 @@ export function createCapacityReadService(deps: CapacityReadServiceDeps) {
         const activeAssignments = activeCountByUserId.get(user.id) ?? 0;
         const searchOverride = searchOverrideByUserId.get(user.id);
         const leadOverride = leadOverrideByUserId.get(user.id);
+        const searchBranchDefault = searchBranchDefaultById.get(user.branch_id);
         const searchTeamDefault =
           user.team_id != null ? searchTeamDefaultById.get(user.team_id) : null;
+        const leadBranchDefault = leadBranchDefaultById.get(user.branch_id);
         const leadTeamDefault =
           user.team_id != null ? leadTeamDefaultById.get(user.team_id) : null;
 
@@ -573,11 +601,27 @@ export function createCapacityReadService(deps: CapacityReadServiceDeps) {
     try {
       const effectiveLimit = Math.max(1, limit ?? AUDIT_READER_DEFAULT_LIMIT);
       const now = Date.now();
-      const recent = await repos.auditLogs.listRecent({
-        fromInclusive: now - 1000 * 60 * 60 * 24 * 30,
-        toInclusive: now,
-        limit: effectiveLimit,
-      });
+      const emptyBranchUsers: Awaited<
+        ReturnType<typeof repos.users.findByBranchIncludingInactive>
+      > = [];
+      const emptyBranchTeams: Awaited<
+        ReturnType<typeof repos.teams.findByBranch>
+      > = [];
+      const [recent, branchUsers, branchTeams] = await Promise.all([
+        repos.auditLogs.listRecent({
+          fromInclusive: now - 1000 * 60 * 60 * 24 * 30,
+          toInclusive: now,
+          limit: effectiveLimit,
+        }),
+        session.role === "admin"
+          ? repos.users.findByBranchIncludingInactive(session.branchId)
+          : Promise.resolve(emptyBranchUsers),
+        session.role === "admin"
+          ? repos.teams.findByBranch(session.branchId)
+          : Promise.resolve(emptyBranchTeams),
+      ]);
+      const branchUserIds = new Set(branchUsers.map((user) => user.id));
+      const branchTeamIds = new Set(branchTeams.map((team) => team.id));
 
       const filtered = recent
         .filter((event) => {
@@ -588,7 +632,14 @@ export function createCapacityReadService(deps: CapacityReadServiceDeps) {
             action.startsWith("capacity_")
           );
         })
-        .filter((event) => canViewCapacityAuditEvent(session, event))
+        .filter((event) =>
+          canViewCapacityAuditEvent({
+            session,
+            event,
+            branchUserIds,
+            branchTeamIds,
+          }),
+        )
         .map((event) => ({
           id: event.id,
           createdAt: event.created_at,
