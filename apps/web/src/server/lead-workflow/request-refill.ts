@@ -15,9 +15,8 @@ import type {
 } from "~/server/capacity-usage/repos";
 import { createAssignment } from "~/server/leads/domain-assignment";
 import { canContactNow } from "~/server/leads/domain-cooldown";
+import { engineClient } from "~/server/shared/composition-root";
 import { type DomainError } from "~/server/shared/domain-error";
-import { engineClient } from "~/server/shared/engine";
-import type { EngineClient } from "~/server/shared/engine/client";
 import type { BranchId, UserId } from "~/server/shared/ids";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 
@@ -85,7 +84,7 @@ export type RefillTransactionRunner = <T>(
 interface RefillDeps {
   repos: RefillRepos;
   runInTransaction: RefillTransactionRunner;
-  engine?: Pick<EngineClient, "leadCandidates">;
+  engine?: { requestCandidates: typeof engineClient.requestCandidates };
 }
 
 export async function requestLeadRefill(

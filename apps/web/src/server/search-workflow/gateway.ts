@@ -1,9 +1,8 @@
-import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { engineClient } from "~/server/shared/engine";
-import type { EngineClient } from "~/server/shared/engine/client";
-import type { SearchResult } from "~/server/shared/engine/result-contract";
+import { engineClient } from "~/server/shared/composition-root";
+import type { DomainError } from "~/server/shared/domain-error";
+import type { SearchResult } from "~/server/shared/engine/types";
 import type { SearchType } from "~/server/shared/pipeline-types";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import type { Result } from "~/server/shared/result";
 
 export interface SearchGatewayRequest {
   type: SearchType;
@@ -11,29 +10,11 @@ export interface SearchGatewayRequest {
   limit: number;
 }
 
-export interface SearchGatewayResponse {
-  results: SearchResult[];
-  count: number;
-}
+export type SearchGatewayResponse = SearchResult;
 
 export async function search(
   request: SearchGatewayRequest,
-  engine: Pick<EngineClient, "search"> = engineClient,
-): Promise<Result<SearchGatewayResponse, DomainError>> {
-  try {
-    const response = await engine.search(
-      request.type,
-      request.value,
-      request.limit,
-    );
-    return Ok(response);
-  } catch (error) {
-    return Err(
-      domainError(
-        "external",
-        "engine_request_failed",
-        error instanceof Error ? error.message : "Search request failed",
-      ),
-    );
-  }
+  engine: { search: typeof engineClient.search } = engineClient,
+): Promise<Result<SearchGatewayResponse[], DomainError>> {
+  return engine.search(request.type, request.value, request.limit);
 }

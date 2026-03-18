@@ -1,11 +1,9 @@
-import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { engineClient } from "~/server/shared/engine";
-import type { EngineClient } from "~/server/shared/engine/client";
+import { engineClient } from "~/server/shared/composition-root";
+import type { DomainError } from "~/server/shared/domain-error";
 import type { LeadCandidate } from "~/server/shared/engine/types";
 import type { BranchId, UserId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
-
-export type { LeadCandidate };
+import type { Result } from "~/server/shared/result";
+import { Ok, isErr } from "~/server/shared/result";
 
 export interface RequestCandidatesRequest {
   userId: UserId;
@@ -15,24 +13,19 @@ export interface RequestCandidatesRequest {
 
 export async function requestCandidates(
   request: RequestCandidatesRequest,
-  engine: Pick<EngineClient, "leadCandidates"> = engineClient,
+  engine: {
+    requestCandidates: typeof engineClient.requestCandidates;
+  } = engineClient,
 ): Promise<Result<LeadCandidate[], DomainError>> {
-  try {
-    const response = await engine.leadCandidates({
-      userId: request.userId,
-      branchId: request.branchId,
-      amount: request.amount,
-    });
-    return Ok(response.candidates);
-  } catch (error) {
-    return Err(
-      domainError(
-        "external",
-        "engine_request_failed",
-        error instanceof Error
-          ? error.message
-          : "Lead candidate request failed",
-      ),
-    );
+  const result = await engine.requestCandidates({
+    branchId: request.branchId,
+    userId: request.userId,
+    amount: request.amount,
+  });
+
+  if (isErr(result)) {
+    return result;
   }
+
+  return Ok(result.value);
 }

@@ -1,7 +1,6 @@
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
 import { requestLeadRefill } from "~/server/lead-workflow/request-refill";
-import type { EngineClient } from "~/server/shared/engine/client";
 import { asBranchId, asUserId } from "~/server/shared/ids";
 import { createRepositories } from "~/server/shared/registry";
 
@@ -16,7 +15,9 @@ import { seedLeadsRequestFixtures, USER_POOL_SIZE } from "./fixtures";
 
 describe("lead refill action benchmark", () => {
   let ctx: TestDbContext | null = null;
-  let engine: EngineClient | null = null;
+  let engine:
+    | Awaited<ReturnType<typeof seedLeadsRequestFixtures>>["engineClient"]
+    | null = null;
   let userIds: number[] = [];
   const cursor = { value: 0 };
 

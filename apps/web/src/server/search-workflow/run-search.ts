@@ -13,9 +13,8 @@ import {
   getSearchCapacitySnapshot,
   reserveSearchUsage,
 } from "~/server/capacity-usage/search-usage";
+import { engineClient } from "~/server/shared/composition-root";
 import { type DomainError } from "~/server/shared/domain-error";
-import { engineClient } from "~/server/shared/engine";
-import type { EngineClient } from "~/server/shared/engine/client";
 import type { UserId } from "~/server/shared/ids";
 import type { SearchType } from "~/server/shared/pipeline-types";
 import { isErr, Ok, type Result } from "~/server/shared/result";
@@ -46,7 +45,7 @@ interface SearchRepos {
 export async function runDirectSearch(
   command: RunDirectSearchCommand,
   repos: SearchRepos,
-  engine: Pick<EngineClient, "search"> = engineClient,
+  engine: { search: typeof engineClient.search } = engineClient,
 ): Promise<Result<SearchResult_, DomainError>> {
   const snapshotResult = await getSearchCapacitySnapshot(
     command.actorUserId,
