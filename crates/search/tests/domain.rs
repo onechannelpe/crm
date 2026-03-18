@@ -2,7 +2,7 @@ use proptest::prelude::*;
 use search::domain::{validate_dni, validate_phone, validate_ruc, validate_text};
 
 proptest! {
-    // ── DNI ──────────────────────────────────────────────────────────────────
+    // DNI
 
     #[test]
     fn dni_accepts_8_to_12_digits(s in "[0-9]{8,12}") {
@@ -24,7 +24,7 @@ proptest! {
         prop_assert!(validate_dni(&s).is_err());
     }
 
-    // ── RUC ──────────────────────────────────────────────────────────────────
+    // RUC
 
     #[test]
     fn ruc_accepts_exactly_11_digits(s in "[0-9]{11}") {
@@ -41,7 +41,7 @@ proptest! {
         prop_assert!(validate_ruc(&s).is_err());
     }
 
-    // ── Phone ─────────────────────────────────────────────────────────────────
+    // Phone
 
     #[test]
     fn phone_accepts_7_to_15_digits(s in "[0-9]{7,15}") {
@@ -58,7 +58,7 @@ proptest! {
         prop_assert!(validate_phone(&s).is_err());
     }
 
-    // ── Text ──────────────────────────────────────────────────────────────────
+    // Text
 
     #[test]
     fn text_accepts_query_with_long_enough_token(word in "[a-z]{3,20}") {

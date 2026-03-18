@@ -59,7 +59,7 @@ impl EngineConfig {
     }
 }
 
-// ── private helpers ───────────────────────────────────────────────────────────
+// private helpers
 
 fn parse_connect_mode(raw: &str) -> Result<ConnectMode, StartupError> {
     match raw {

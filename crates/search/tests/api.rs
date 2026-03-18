@@ -55,7 +55,7 @@ async fn signed_request(body: &serde_json::Value, server: &TestServer) -> axum_t
         .await
 }
 
-// ── happy paths ───────────────────────────────────────────────────────────────
+// happy paths
 
 #[tokio::test]
 async fn search_by_dni_returns_matching_row() {
@@ -89,7 +89,7 @@ async fn search_by_phone_enriched_returns_siblings() {
         .is_some());
 }
 
-// ── auth / validation ─────────────────────────────────────────────────────────
+// auth / validation
 
 #[tokio::test]
 async fn missing_signature_headers_returns_401() {
@@ -138,7 +138,7 @@ async fn short_text_query_returns_400() {
     response.assert_status_bad_request();
 }
 
-// ── rate limiting ─────────────────────────────────────────────────────────────
+// rate limiting
 
 #[tokio::test]
 async fn rate_limit_is_enforced_after_capacity_exhausted() {

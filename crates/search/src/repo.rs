@@ -3,8 +3,6 @@ use rusqlite::{params, Connection, Row};
 use shared::error::ApiError;
 use std::sync::LazyLock;
 
-// ── shared column list ────────────────────────────────────────────────────────
-
 const SELECT_COLUMNS: &str = "
   c.dni,
   NULLIF(c.name, '')                AS name,
@@ -40,8 +38,6 @@ const SELECT_COLUMNS: &str = "
   NULLIF(c.rep_name, '')            AS rep_name,
   NULLIF(c.phone_primary, '')       AS phone_primary,
   NULLIF(c.phone_secondary, '')     AS phone_secondary";
-
-// ── prepared SQL (initialised once) ──────────────────────────────────────────
 
 static SQL_DNI: LazyLock<String> = LazyLock::new(|| {
     format!("SELECT{SELECT_COLUMNS}\nFROM search_projection c\nWHERE c.dni = ?1 LIMIT ?2")
@@ -91,7 +87,7 @@ static SQL_FTS: LazyLock<String> = LazyLock::new(|| {
     )
 });
 
-// ── public query functions ────────────────────────────────────────────────────
+// public query functions
 
 pub fn search_by_dni(
     conn: &Connection,
@@ -161,7 +157,7 @@ pub fn search_by_company_name(
     )
 }
 
-// ── internals ─────────────────────────────────────────────────────────────────
+// internals
 
 fn query_rows<P>(conn: &Connection, sql: &str, params: P) -> Result<Vec<SearchRow>, ApiError>
 where

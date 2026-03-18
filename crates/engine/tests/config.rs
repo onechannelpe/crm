@@ -22,7 +22,7 @@ fn set_required_env() {
     }
 }
 
-// ── connect mode ──────────────────────────────────────────────────────────────
+// connect mode
 
 #[test]
 fn local_mode_is_the_default() {
@@ -87,7 +87,7 @@ fn invalid_connect_mode_is_rejected() {
     );
 }
 
-// ── HMAC keys ─────────────────────────────────────────────────────────────────
+// HMAC keys
 
 #[test]
 fn empty_hmac_keys_object_is_rejected() {
@@ -125,7 +125,7 @@ fn hmac_key_with_empty_secret_is_rejected() {
     assert!(err.to_string().contains("non-empty"));
 }
 
-// ── numeric env vars ──────────────────────────────────────────────────────────
+// numeric env vars
 
 #[test]
 fn non_numeric_port_is_rejected() {

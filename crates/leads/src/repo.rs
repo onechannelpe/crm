@@ -3,7 +3,7 @@ use rusqlite::{params, Connection, Row};
 use shared::error::ApiError;
 use std::sync::LazyLock;
 
-// ── candidate queries ─────────────────────────────────────────────────────────
+// candidate queries
 
 const SELECT_ACTIVE: &str = "
     SELECT
@@ -64,8 +64,6 @@ pub fn list_candidates(
         }
     }
 }
-
-// ── import upsert ─────────────────────────────────────────────────────────────
 
 /// Upserts a batch of validated rows. Returns `(inserted, updated)`.
 /// Validation is the caller's responsibility — this function has no business logic.
@@ -133,7 +131,7 @@ pub fn upsert_batch(
     Ok((inserted, updated))
 }
 
-// ── helpers ───────────────────────────────────────────────────────────────────
+// helpers
 
 fn map_candidate_row(row: &Row<'_>) -> rusqlite::Result<LeadCandidate> {
     Ok(LeadCandidate {

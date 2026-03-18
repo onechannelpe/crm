@@ -75,7 +75,7 @@ impl ImportService {
     }
 }
 
-// ── private helpers ───────────────────────────────────────────────────────────
+// private helpers
 
 fn validate_candidate_request(req: &LeadCandidateRequest) -> Result<(), ApiError> {
     if req.branch_id <= 0 {
