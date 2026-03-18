@@ -16,7 +16,7 @@ import {
   renderResultContractTs,
 } from "../src/search-projection/render-ts.ts";
 
-// ── fixture ───────────────────────────────────────────────────────────────────
+// fixture
 
 const MINIMAL_SPEC = {
   projection: "search_projection",
@@ -52,8 +52,6 @@ const MINIMAL_SPEC = {
     },
   ],
 };
-
-// ── parseProjectionSpec ───────────────────────────────────────────────────────
 
 describe("parseProjectionSpec", () => {
   test("accepts a valid spec", () => {
@@ -126,8 +124,6 @@ describe("parseProjectionSpec", () => {
   });
 });
 
-// ── groupByObject ─────────────────────────────────────────────────────────────
-
 describe("groupByObject", () => {
   test("groups fields by object prefix", () => {
     const spec = parseProjectionSpec(MINIMAL_SPEC);
@@ -161,8 +157,6 @@ describe("groupByObject", () => {
   });
 });
 
-// ── fieldProp ─────────────────────────────────────────────────────────────────
-
 describe("fieldProp", () => {
   test("returns the property portion of a path", () => {
     const spec = parseProjectionSpec(MINIMAL_SPEC);
@@ -170,8 +164,6 @@ describe("fieldProp", () => {
     expect(fieldProp(spec.fields[2]!)).toBe("ruc");
   });
 });
-
-// ── infoTypeName ──────────────────────────────────────────────────────────────
 
 describe("infoTypeName", () => {
   test("org maps to OrgInfo", () =>
@@ -184,8 +176,6 @@ describe("infoTypeName", () => {
     expect(infoTypeName("role")).toBe("RoleInfo"));
 });
 
-// ── NULLABLE_OBJECTS ──────────────────────────────────────────────────────────
-
 describe("NULLABLE_OBJECTS", () => {
   test("org is nullable", () => expect(NULLABLE_OBJECTS.has("org")).toBe(true));
   test("role is nullable", () =>
@@ -193,8 +183,6 @@ describe("NULLABLE_OBJECTS", () => {
   test("person is not nullable", () =>
     expect(NULLABLE_OBJECTS.has("person")).toBe(false));
 });
-
-// ── renderProjectionContractRust ──────────────────────────────────────────────
 
 describe("renderProjectionContractRust", () => {
   test("output is marked as generated", () => {
@@ -225,8 +213,6 @@ describe("renderProjectionContractRust", () => {
     expect(output).toContain('"dni_phone_agg"');
   });
 });
-
-// ── renderResultContractRust ──────────────────────────────────────────────────
 
 describe("renderResultContractRust", () => {
   test("PersonInfo struct is present", () => {
@@ -260,8 +246,6 @@ describe("renderResultContractRust", () => {
   });
 });
 
-// ── renderProjectionContractTs ────────────────────────────────────────────────
-
 describe("renderProjectionContractTs", () => {
   test("SEARCH_PROJECTION_NAME constant is present", () => {
     const spec = parseProjectionSpec(MINIMAL_SPEC);
@@ -285,8 +269,6 @@ describe("renderProjectionContractTs", () => {
     expect(nullableSection).not.toContain('"person.dni"');
   });
 });
-
-// ── renderResultContractTs ────────────────────────────────────────────────────
 
 describe("renderResultContractTs", () => {
   test("PersonInfo interface is present", () => {

@@ -10,7 +10,7 @@ import {
 } from "../src/search-contract/parse.ts";
 import { parseProjectionSpec } from "../src/search-projection/parse.ts";
 
-// ── fixtures ──────────────────────────────────────────────────────────────────
+// fixtures
 
 const CANONICAL = parseCanonicalContract({
   fields: ["person_dni", "company_ruc", "company_name", "phone"],
@@ -91,7 +91,7 @@ function makeLoaded(
   ];
 }
 
-// ── happy path ────────────────────────────────────────────────────────────────
+// happy path
 
 describe("checkSearchContract — valid", () => {
   test("returns ok:true with a summary string", () => {
@@ -108,7 +108,7 @@ describe("checkSearchContract — valid", () => {
   });
 });
 
-// ── source contract violations ────────────────────────────────────────────────
+// source contract violations
 
 describe("checkSearchContract — source contract errors", () => {
   test("errors when enabled source has no contract entry", () => {
@@ -187,7 +187,7 @@ describe("checkSearchContract — source contract errors", () => {
   });
 });
 
-// ── projection violations ─────────────────────────────────────────────────────
+// projection violations
 
 describe("checkSearchContract — projection errors", () => {
   test("errors when projection field references unknown canonical field", () => {
@@ -304,8 +304,6 @@ describe("checkSearchContract — projection errors", () => {
   });
 });
 
-// ── parseSourceManifest ───────────────────────────────────────────────────────
-
 describe("parseSourceManifest", () => {
   test("parses enabled and disabled sources", () => {
     const manifest = parseSourceManifest({
@@ -327,8 +325,6 @@ describe("parseSourceManifest", () => {
     ).toThrow("boolean");
   });
 });
-
-// ── parseSourceMapping ────────────────────────────────────────────────────────
 
 describe("parseSourceMapping", () => {
   test("tolerates fully missing sections", () => {

@@ -42,7 +42,7 @@ fn signed_headers(key_id: &str, secret: &str, body: &[u8]) -> HeaderMap {
     h
 }
 
-// ── happy path ────────────────────────────────────────────────────────────────
+// happy path
 
 #[test]
 fn valid_request_returns_key_id() {
@@ -55,7 +55,7 @@ fn valid_request_returns_key_id() {
     assert_eq!(result.unwrap(), "web");
 }
 
-// ── missing headers ───────────────────────────────────────────────────────────
+// missing headers
 
 #[test]
 fn missing_key_id_returns_unauthorized() {
@@ -99,7 +99,7 @@ fn missing_signature_returns_unauthorized() {
     ));
 }
 
-// ── bad credentials ───────────────────────────────────────────────────────────
+// bad credentials
 
 #[test]
 fn wrong_signature_returns_unauthorized() {
@@ -128,7 +128,7 @@ fn unknown_key_id_returns_unauthorized() {
     ));
 }
 
-// ── rate limiting of auth failures ───────────────────────────────────────────
+// rate limiting of auth failures
 
 #[test]
 fn repeated_auth_failures_trigger_rate_limit() {

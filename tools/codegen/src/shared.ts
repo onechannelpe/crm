@@ -1,4 +1,4 @@
-// ── primitive guards ──────────────────────────────────────────────────────────
+// primitive guards
 
 export function asObject(
   value: unknown,
@@ -34,7 +34,7 @@ export function asBoolean(value: unknown, label: string): boolean {
   return value;
 }
 
-// ── file I/O ──────────────────────────────────────────────────────────────────
+// file I/O
 
 export async function loadJson(path: string): Promise<unknown> {
   return Bun.file(path).json() as Promise<unknown>;
@@ -63,7 +63,7 @@ export async function writeOrCheck(
 
   if (existing.trimEnd() !== content.trimEnd()) {
     throw new Error(
-      `${path} is out of date — run codegen:generate to regenerate`,
+      `${path} is out of date. run codegen:generate to regenerate`,
     );
   }
 }

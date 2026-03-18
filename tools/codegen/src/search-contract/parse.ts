@@ -30,7 +30,7 @@ export type SourceMapping = {
   phone_prefixes: string[];
 };
 
-// ── parsers ───────────────────────────────────────────────────────────────────
+// parsers
 
 export function parseCanonicalContract(raw: unknown): CanonicalContract {
   const root = asObject(raw, "canonical contract");

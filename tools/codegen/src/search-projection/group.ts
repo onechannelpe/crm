@@ -52,7 +52,7 @@ export function infoTypeName(objectName: string): string {
   return `${pascalCase(objectName)}Info`;
 }
 
-// ── private ───────────────────────────────────────────────────────────────────
+// private
 
 function orderedKeys(map: Map<string, unknown>): string[] {
   const discovered = Array.from(map.keys()).sort((a, b) => a.localeCompare(b));

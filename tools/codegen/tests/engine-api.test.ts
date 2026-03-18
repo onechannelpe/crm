@@ -3,8 +3,6 @@ import { describe, expect, test } from "bun:test";
 import { parseEngineApiSpec } from "../src/engine-api/parse.ts";
 import { renderEngineApiContract } from "../src/engine-api/render.ts";
 
-// ── parseEngineApiSpec ────────────────────────────────────────────────────────
-
 describe("parseEngineApiSpec", () => {
   const minimal = {
     version: "v1",
@@ -62,8 +60,6 @@ describe("parseEngineApiSpec", () => {
     ).toThrow("invalid endpoint key");
   });
 });
-
-// ── renderEngineApiContract ───────────────────────────────────────────────────
 
 describe("renderEngineApiContract", () => {
   test("output is marked as generated", () => {

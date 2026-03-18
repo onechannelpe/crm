@@ -37,7 +37,7 @@ import { loadJson, writeOrCheck } from "../src/shared.ts";
 
 const check = Bun.argv.includes("--check");
 
-// ── engine API ────────────────────────────────────────────────────────────────
+// engine API
 const engineSpec = parseEngineApiSpec(
   await loadJson("contracts/engine/api.json"),
 );
@@ -47,7 +47,7 @@ await writeOrCheck(
   check,
 );
 
-// ── lead API ──────────────────────────────────────────────────────────────────
+// lead API
 const leadSpec = parseLeadApiSpec(
   await loadJson("contracts/engine/lead-api.json"),
 );
@@ -62,7 +62,7 @@ await writeOrCheck(
   check,
 );
 
-// ── search projection ─────────────────────────────────────────────────────────
+// search projection
 const projSpec = parseProjectionSpec(
   await loadJson("contracts/engine/search-projection.json"),
 );

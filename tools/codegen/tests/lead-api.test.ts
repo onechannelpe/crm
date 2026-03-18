@@ -4,7 +4,7 @@ import { parseLeadApiSpec } from "../src/lead-api/parse.ts";
 import { renderLeadContractRust } from "../src/lead-api/render-rust.ts";
 import { renderLeadContractTs } from "../src/lead-api/render-ts.ts";
 
-// ── fixture ───────────────────────────────────────────────────────────────────
+// fixture
 
 const VALID_SPEC = {
   response: {
@@ -27,8 +27,6 @@ const VALID_SPEC = {
     },
   },
 };
-
-// ── parseLeadApiSpec ──────────────────────────────────────────────────────────
 
 describe("parseLeadApiSpec", () => {
   test("accepts a valid spec", () => {
@@ -91,8 +89,6 @@ describe("parseLeadApiSpec", () => {
   });
 });
 
-// ── renderLeadContractRust ────────────────────────────────────────────────────
-
 describe("renderLeadContractRust", () => {
   test("output is marked as generated", () => {
     const output = renderLeadContractRust(parseLeadApiSpec(VALID_SPEC));
@@ -125,8 +121,6 @@ describe("renderLeadContractRust", () => {
     expect(output.endsWith("\n")).toBe(true);
   });
 });
-
-// ── renderLeadContractTs ──────────────────────────────────────────────────────
 
 describe("renderLeadContractTs", () => {
   test("output is marked as generated", () => {
