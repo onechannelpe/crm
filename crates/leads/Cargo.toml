@@ -1,0 +1,24 @@
+[package]
+name    = "leads"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+shared     = { path = "../shared" }
+axum       = { workspace = true }
+serde      = { workspace = true }
+serde_json = { workspace = true }
+rusqlite   = { workspace = true }
+r2d2       = { workspace = true }
+tokio      = { workspace = true }
+tracing    = { workspace = true }
+
+[dev-dependencies]
+proptest   = { workspace = true }
+tempfile   = { workspace = true }
+axum-test  = { workspace = true }
+hmac       = { workspace = true }
+sha2       = { workspace = true }
+hex        = { workspace = true }
+serde_json = { workspace = true }
+r2d2_sqlite = { workspace = true }

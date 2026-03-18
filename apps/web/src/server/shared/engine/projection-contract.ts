@@ -1,4 +1,7 @@
 // GENERATED FILE. DO NOT EDIT.
+// Source: contracts/engine/search-projection.json
+// Generator: tools/codegen/bin/generate-search-projection-contract.ts
+
 export const SEARCH_PROJECTION_NAME = "search_projection" as const;
 export const SEARCH_PROJECTION_PATHS = [
   "person.dni",
@@ -38,6 +41,7 @@ export const SEARCH_PROJECTION_PATHS = [
   "phones.siblings",
 ] as const;
 export type SearchProjectionPath = (typeof SEARCH_PROJECTION_PATHS)[number];
+
 export const SEARCH_PROJECTION_NULLABLE_PATHS = [
   "person.name",
   "person.ruc",

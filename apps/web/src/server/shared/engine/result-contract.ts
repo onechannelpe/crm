@@ -1,4 +1,7 @@
 // GENERATED FILE. DO NOT EDIT.
+// Source: contracts/engine/search-projection.json
+// Generator: tools/codegen/bin/generate-search-projection-contract.ts
+
 export interface PersonInfo {
   dni: string;
   name: string | null;
