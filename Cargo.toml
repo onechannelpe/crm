@@ -4,6 +4,7 @@ members = [
     "crates/search",
     "crates/leads",
     "crates/engine",
+    "crates/pipeline",
 ]
 resolver = "3"
 
@@ -27,6 +28,9 @@ uuid               = { version = "=1.22.0", features = ["v4"] }
 proptest           = "=1.10.0"
 tempfile           = "=3.27.0"
 axum-test          = "=19.1.1"
+csv                = "=1.4.0"
+encoding_rs        = "=0.8.35"
+toml               = "=1.0.3"
 
 [profile.release]
 opt-level = 3
