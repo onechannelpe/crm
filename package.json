@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "dev": "bun run --parallel dev:engine dev:web",
-    "dev:engine": "cargo run -p crm-engine",
+    "dev:engine": "cargo run -p engine",
     "dev:web": "bun run --cwd apps/web dev",
     "dev:worker": "bun run --cwd apps/web worker:maintenance",
     "pipeline:engine": "cargo run -p crm-pipeline --",
@@ -18,7 +18,7 @@
     "pipeline:refresh:100k": "bun run pipeline:engine refresh --slice 100k",
     "pipeline:verify-manifest": "bun run pipeline:engine verify-manifest",
     "pipeline:normalize-sample": "bun run pipeline:engine validate --profile quick",
-    "test:engine": "cargo test -p crm-engine",
+    "test:engine": "cargo test -p engine",
     "generate": "bun run --parallel generate:contracts generate:templates",
     "generate:templates": "bun run --cwd packages/notifications build:emails",
     "generate:contracts": "bun run tools/codegen/bin/generate.ts",
