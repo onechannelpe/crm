@@ -28,11 +28,39 @@ pub enum ApiError {
 #[derive(Serialize)]
 struct ErrorBody {
     error: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    request_id: Option<String>,
 }
 
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
-        let (status, msg) = match self {
+        let (status, msg) = self.status_and_message();
+        (
+            status,
+            axum::Json(ErrorBody {
+                error: msg,
+                request_id: None,
+            }),
+        )
+            .into_response()
+    }
+}
+
+pub struct RequestError {
+    request_id: String,
+    error: ApiError,
+}
+
+impl ApiError {
+    pub fn with_request_id(self, request_id: impl Into<String>) -> RequestError {
+        RequestError {
+            request_id: request_id.into(),
+            error: self,
+        }
+    }
+
+    fn status_and_message(self) -> (StatusCode, String) {
+        match self {
             Self::Unauthorized(m) => (StatusCode::UNAUTHORIZED, m),
             Self::Validation(m) => (StatusCode::BAD_REQUEST, m),
             Self::RateLimit => (StatusCode::TOO_MANY_REQUESTS, "rate limit exceeded".into()),
@@ -41,7 +69,27 @@ impl IntoResponse for ApiError {
                 "service unavailable".into(),
             ),
             Self::Internal => (StatusCode::INTERNAL_SERVER_ERROR, "internal error".into()),
-        };
-        (status, axum::Json(ErrorBody { error: msg })).into_response()
+        }
+    }
+}
+
+impl IntoResponse for RequestError {
+    fn into_response(self) -> Response {
+        let request_id = self.request_id;
+        let (status, msg) = self.error.status_and_message();
+        let mut response = (
+            status,
+            axum::Json(ErrorBody {
+                error: msg,
+                request_id: Some(request_id.clone()),
+            }),
+        )
+            .into_response();
+
+        if let Ok(value) = axum::http::HeaderValue::from_str(&request_id) {
+            response.headers_mut().insert("x-request-id", value);
+        }
+
+        response
     }
 }

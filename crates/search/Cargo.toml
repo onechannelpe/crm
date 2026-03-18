@@ -11,6 +11,7 @@ serde_json = { workspace = true }
 rusqlite   = { workspace = true }
 r2d2       = { workspace = true }
 tokio      = { workspace = true }
+uuid = { version = "1.22.0", features = ["v4"] }
 
 [dev-dependencies]
 proptest  = { workspace = true }
