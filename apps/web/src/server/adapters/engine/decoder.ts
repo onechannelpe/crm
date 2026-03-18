@@ -1,4 +1,5 @@
 import type {
+  LeadCandidate,
   LeadCandidatesResponse,
   SearchResponse,
 } from "~/server/shared/engine/types";
@@ -11,32 +12,44 @@ function isArray(value: unknown): value is unknown[] {
   return Array.isArray(value);
 }
 
+function isLeadCandidate(value: unknown): value is LeadCandidate {
+  if (!isObject(value)) return false;
+  return (
+    typeof value.ruc === "string" &&
+    typeof value.organization_name === "string" &&
+    typeof value.dni === "string" &&
+    typeof value.person_name === "string" &&
+    typeof value.phone_primary === "string"
+  );
+}
+
+function isSearchResponse(value: unknown): value is SearchResponse {
+  return (
+    isObject(value) && isArray(value.results) && typeof value.count === "number"
+  );
+}
+
 export function decodeSearchResponse(value: unknown): SearchResponse {
-  if (
-    !isObject(value) ||
-    !isArray(value.results) ||
-    typeof value.count !== "number"
-  ) {
+  if (!isSearchResponse(value)) {
     throw new Error("Invalid SearchResponse structure");
   }
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-  return value as unknown as SearchResponse;
+  return value;
 }
 
 export function decodeLeadCandidatesResponse(
   value: unknown,
 ): LeadCandidatesResponse {
-  if (!isObject(value) || !isArray(value.candidates)) {
+  if (
+    !isObject(value) ||
+    !isArray(value.candidates) ||
+    !value.candidates.every(isLeadCandidate)
+  ) {
     throw new Error("Invalid LeadCandidatesResponse structure");
   }
 
   return {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-    candidates:
-      value.candidates as unknown as LeadCandidatesResponse["candidates"],
+    candidates: value.candidates,
     count:
-      isObject(value) && typeof value.count === "number"
-        ? value.count
-        : value.candidates.length,
+      typeof value.count === "number" ? value.count : value.candidates.length,
   };
 }
