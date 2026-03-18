@@ -1,4 +1,4 @@
-use engine_infra::error::StartupError;
+use shared::error::StartupError;
 use std::collections::HashMap;
 use std::env;
 use std::net::IpAddr;
@@ -24,40 +24,14 @@ pub struct EngineConfig {
 
 impl EngineConfig {
     pub fn load() -> Result<Self, StartupError> {
-        let connect_mode = match env::var("ENGINE_CONNECT_MODE")
-            .unwrap_or_else(|_| "local".into())
-            .as_str()
-        {
-            "local" => ConnectMode::Local,
-            "remote" => ConnectMode::Remote,
-            _ => {
-                return Err(StartupError::Config(
-                    "ENGINE_CONNECT_MODE must be one of: local, remote".into(),
-                ));
-            }
-        };
+        let connect_mode = parse_connect_mode(
+            &env::var("ENGINE_CONNECT_MODE").unwrap_or_else(|_| "local".into()),
+        )?;
 
-        let hmac_keys_raw = env::var("ENGINE_HMAC_KEYS_JSON")
-            .map_err(|_| StartupError::Config("ENGINE_HMAC_KEYS_JSON is required".into()))?;
-        let hmac_keys: HashMap<String, String> =
-            serde_json::from_str(&hmac_keys_raw).map_err(|_| {
-                StartupError::Config(
-                    "ENGINE_HMAC_KEYS_JSON must be a JSON object: {\"key_id\":\"secret\"}".into(),
-                )
-            })?;
-        if hmac_keys.is_empty() {
-            return Err(StartupError::Config(
-                "ENGINE_HMAC_KEYS_JSON must include at least one key".into(),
-            ));
-        }
-        if hmac_keys
-            .iter()
-            .any(|(k, v)| k.trim().is_empty() || v.trim().is_empty())
-        {
-            return Err(StartupError::Config(
-                "ENGINE_HMAC_KEYS_JSON keys and secrets must be non-empty".into(),
-            ));
-        }
+        let hmac_keys = parse_hmac_keys(
+            &env::var("ENGINE_HMAC_KEYS_JSON")
+                .map_err(|_| StartupError::Config("ENGINE_HMAC_KEYS_JSON is required".into()))?,
+        )?;
 
         let contacts_db_path = env::var("ENGINE_CONTACTS_DB_PATH")
             .map_err(|_| StartupError::Config("ENGINE_CONTACTS_DB_PATH is required".into()))?;
@@ -65,7 +39,7 @@ impl EngineConfig {
             .map_err(|_| StartupError::Config("ENGINE_LEADS_DB_PATH is required".into()))?;
 
         let host = env::var("ENGINE_HOST").unwrap_or_else(|_| "127.0.0.1".into());
-        if connect_mode == ConnectMode::Local && !is_loopback_host(&host) {
+        if connect_mode == ConnectMode::Local && !is_loopback(&host) {
             return Err(StartupError::Config(
                 "ENGINE_HOST must bind to loopback in local mode".into(),
             ));
@@ -74,38 +48,67 @@ impl EngineConfig {
         Ok(Self {
             connect_mode,
             host,
-            port: env::var("ENGINE_PORT")
-                .unwrap_or_else(|_| "3001".into())
-                .parse()
-                .map_err(|_| {
-                    StartupError::Config("ENGINE_PORT must be a valid port number".into())
-                })?,
+            port: parse_env_int("ENGINE_PORT", 3001)?,
             contacts_db_path,
             leads_db_path,
             hmac_keys,
-            hmac_max_skew_secs: env::var("ENGINE_HMAC_MAX_SKEW_SECS")
-                .unwrap_or_else(|_| "60".into())
-                .parse()
-                .map_err(|_| {
-                    StartupError::Config("ENGINE_HMAC_MAX_SKEW_SECS must be an integer".into())
-                })?,
-            rate_limit_per_key: env::var("ENGINE_RATE_LIMIT_PER_KEY")
-                .unwrap_or_else(|_| "600".into())
-                .parse()
-                .map_err(|_| {
-                    StartupError::Config("ENGINE_RATE_LIMIT_PER_KEY must be an integer".into())
-                })?,
-            max_limit: env::var("ENGINE_MAX_LIMIT")
-                .unwrap_or_else(|_| "100".into())
-                .parse()
-                .map_err(|_| StartupError::Config("ENGINE_MAX_LIMIT must be an integer".into()))?,
+            hmac_max_skew_secs: parse_env_int("ENGINE_HMAC_MAX_SKEW_SECS", 60)?,
+            rate_limit_per_key: parse_env_int("ENGINE_RATE_LIMIT_PER_KEY", 600)?,
+            max_limit: parse_env_int("ENGINE_MAX_LIMIT", 100)?,
         })
     }
 }
 
-fn is_loopback_host(host: &str) -> bool {
+// private helpers
+
+fn parse_connect_mode(raw: &str) -> Result<ConnectMode, StartupError> {
+    match raw {
+        "local" => Ok(ConnectMode::Local),
+        "remote" => Ok(ConnectMode::Remote),
+        _ => Err(StartupError::Config(
+            "ENGINE_CONNECT_MODE must be one of: local, remote".into(),
+        )),
+    }
+}
+
+fn parse_hmac_keys(raw: &str) -> Result<HashMap<String, String>, StartupError> {
+    let keys: HashMap<String, String> = serde_json::from_str(raw).map_err(|_| {
+        StartupError::Config(
+            r#"ENGINE_HMAC_KEYS_JSON must be a JSON object: {"key_id":"secret"}"#.into(),
+        )
+    })?;
+    if keys.is_empty() {
+        return Err(StartupError::Config(
+            "ENGINE_HMAC_KEYS_JSON must include at least one key".into(),
+        ));
+    }
+    if keys
+        .iter()
+        .any(|(k, v)| k.trim().is_empty() || v.trim().is_empty())
+    {
+        return Err(StartupError::Config(
+            "ENGINE_HMAC_KEYS_JSON keys and secrets must be non-empty".into(),
+        ));
+    }
+    Ok(keys)
+}
+
+/// Reads an env var and parses it as `T`, falling back to `default` if unset.
+fn parse_env_int<T>(name: &str, default: T) -> Result<T, StartupError>
+where
+    T: std::str::FromStr + ToString,
+{
+    match env::var(name) {
+        Err(_) => Ok(default),
+        Ok(v) => v
+            .parse()
+            .map_err(|_| StartupError::Config(format!("{name} must be a valid number, got: {v}"))),
+    }
+}
+
+fn is_loopback(host: &str) -> bool {
     if host == "localhost" {
         return true;
     }
-    host.parse::<IpAddr>().is_ok_and(|addr| addr.is_loopback())
+    host.parse::<IpAddr>().is_ok_and(|a| a.is_loopback())
 }

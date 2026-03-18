@@ -1,6 +1,1 @@
-# generated (build artifacts)
-target
-
-# data
-*.sql*
-*.csv
+*.sqlite
