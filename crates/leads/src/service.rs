@@ -24,11 +24,7 @@ impl CandidateService {
         }
     }
 
-    pub fn with_repo(
-        pool: SqlitePool,
-        max_limit: usize,
-        repo: Arc<dyn LeadsRepository>,
-    ) -> Self {
+    pub fn with_repo(pool: SqlitePool, max_limit: usize, repo: Arc<dyn LeadsRepository>) -> Self {
         Self {
             repo,
             pool,
@@ -94,7 +90,9 @@ impl ImportService {
 
         let now = current_unix_secs()?;
         let owned: Vec<LeadImportRow> = valid.into_iter().cloned().collect();
-    let (inserted, updated) = self.repo.upsert_batch(&mut conn, &owned, &req.source, now)?;
+        let (inserted, updated) = self
+            .repo
+            .upsert_batch(&mut conn, &owned, &req.source, now)?;
 
         Ok(LeadImportResponse {
             inserted,

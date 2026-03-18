@@ -21,11 +21,7 @@ impl SearchService {
         }
     }
 
-    pub fn with_repo(
-        pool: SqlitePool,
-        max_limit: usize,
-        repo: Arc<dyn SearchRepository>,
-    ) -> Self {
+    pub fn with_repo(pool: SqlitePool, max_limit: usize, repo: Arc<dyn SearchRepository>) -> Self {
         Self {
             repo,
             pool,
@@ -52,11 +48,13 @@ impl SearchService {
             SearchType::Dni => self.repo.search_by_dni(&conn, &req.value, limit)?,
             SearchType::Ruc => self.repo.search_by_ruc(&conn, &req.value, limit)?,
             SearchType::Phone => self.repo.search_by_phone(&conn, &req.value, limit)?,
-            SearchType::PhoneEnriched => {
-                self.repo.search_by_phone_enriched(&conn, &req.value, limit)?
-            }
+            SearchType::PhoneEnriched => self
+                .repo
+                .search_by_phone_enriched(&conn, &req.value, limit)?,
             SearchType::PersonName => self.repo.search_by_person_name(&conn, &req.value, limit)?,
-            SearchType::CompanyName => self.repo.search_by_company_name(&conn, &req.value, limit)?,
+            SearchType::CompanyName => {
+                self.repo.search_by_company_name(&conn, &req.value, limit)?
+            }
         };
 
         let count = rows.len();

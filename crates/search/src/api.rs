@@ -43,12 +43,12 @@ async fn handle_search_with_request_id(
     body: Bytes,
     request_id: String,
 ) -> Result<Response, RequestError> {
-
     let key_id = auth::verify_signed_request(&headers, &body, &state.hmac, &state.limiter)
         .map_err(|e| e.with_request_id(request_id.clone()))?;
 
-    let request: SearchRequest = serde_json::from_slice(&body)
-        .map_err(|_| ApiError::Validation("invalid JSON body".into()).with_request_id(request_id.clone()))?;
+    let request: SearchRequest = serde_json::from_slice(&body).map_err(|_| {
+        ApiError::Validation("invalid JSON body".into()).with_request_id(request_id.clone())
+    })?;
 
     let cost = domain::search_cost(request.search_type);
     let limiter_key = format!("search:{key_id}");
@@ -58,12 +58,11 @@ async fn handle_search_with_request_id(
 
     let service = state.service.clone();
     let current_span = tracing::Span::current();
-    let response = tokio::task::spawn_blocking(move || {
-        current_span.in_scope(|| service.search(&request))
-    })
-        .await
-        .map_err(|_| ApiError::Internal.with_request_id(request_id.clone()))?
-        .map_err(|e| e.with_request_id(request_id.clone()))?;
+    let response =
+        tokio::task::spawn_blocking(move || current_span.in_scope(|| service.search(&request)))
+            .await
+            .map_err(|_| ApiError::Internal.with_request_id(request_id.clone()))?
+            .map_err(|e| e.with_request_id(request_id.clone()))?;
 
     Ok(attach_request_id(
         (StatusCode::OK, axum::Json(response)).into_response(),

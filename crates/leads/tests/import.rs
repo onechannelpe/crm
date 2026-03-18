@@ -122,10 +122,7 @@ fn fixed_valid_row() -> LeadImportRow {
 fn concurrent_identical_imports_are_idempotent() {
     let db = NamedTempFile::new().expect("temp file");
     let manager = SqliteConnectionManager::file(db.path());
-    let pool = Pool::builder()
-        .max_size(4)
-        .build(manager)
-        .expect("pool");
+    let pool = Pool::builder().max_size(4).build(manager).expect("pool");
     let conn = pool.get().expect("conn");
     leads::validate_schema(&conn).expect("schema");
 
@@ -145,8 +142,14 @@ fn concurrent_identical_imports_are_idempotent() {
         })
     });
 
-    let r1 = t1.join().expect("thread 1 panicked").expect("thread 1 result");
-    let r2 = t2.join().expect("thread 2 panicked").expect("thread 2 result");
+    let r1 = t1
+        .join()
+        .expect("thread 1 panicked")
+        .expect("thread 1 result");
+    let r2 = t2
+        .join()
+        .expect("thread 2 panicked")
+        .expect("thread 2 result");
 
     assert_eq!(r1.inserted + r2.inserted, 1);
     assert_eq!(r1.updated + r2.updated, 1);

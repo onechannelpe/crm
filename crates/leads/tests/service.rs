@@ -52,7 +52,9 @@ fn import_service_supports_repo_injection_for_failure_paths() {
         source: "test".into(),
     };
 
-    let err = service.import_leads(&req).expect_err("expected repo failure");
+    let err = service
+        .import_leads(&req)
+        .expect_err("expected repo failure");
     match err {
         ApiError::Service(message) => assert!(message.contains("fake upsert failure")),
         other => panic!("unexpected error type: {other}"),

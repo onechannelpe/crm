@@ -46,12 +46,12 @@ async fn handle_lead_candidates_with_request_id(
     body: Bytes,
     request_id: String,
 ) -> Result<Response, RequestError> {
-
     let key_id = auth::verify_signed_request(&headers, &body, &state.hmac, &state.limiter)
         .map_err(|e| e.with_request_id(request_id.clone()))?;
 
-    let req: LeadCandidateRequest = serde_json::from_slice(&body)
-        .map_err(|_| ApiError::Validation("invalid JSON body".into()).with_request_id(request_id.clone()))?;
+    let req: LeadCandidateRequest = serde_json::from_slice(&body).map_err(|_| {
+        ApiError::Validation("invalid JSON body".into()).with_request_id(request_id.clone())
+    })?;
 
     let limiter_key = format!("lead_candidates:{key_id}");
     if !state
@@ -63,10 +63,11 @@ async fn handle_lead_candidates_with_request_id(
 
     let svc = state.service.clone();
     let current_span = tracing::Span::current();
-    let response = tokio::task::spawn_blocking(move || current_span.in_scope(|| svc.candidates(&req)))
-        .await
-        .map_err(|_| ApiError::Internal.with_request_id(request_id.clone()))?
-        .map_err(|e| e.with_request_id(request_id.clone()))?;
+    let response =
+        tokio::task::spawn_blocking(move || current_span.in_scope(|| svc.candidates(&req)))
+            .await
+            .map_err(|_| ApiError::Internal.with_request_id(request_id.clone()))?
+            .map_err(|e| e.with_request_id(request_id.clone()))?;
 
     Ok(attach_request_id(
         (StatusCode::OK, axum::Json(response)).into_response(),
@@ -90,17 +91,20 @@ async fn handle_import_with_request_id(
     request: Request,
     request_id: String,
 ) -> Result<Response, RequestError> {
-
     // Collect body with size cap before HMAC verification.
     let body = axum::body::to_bytes(request.into_body(), IMPORT_BODY_LIMIT)
         .await
-        .map_err(|_| ApiError::Validation("request body too large".into()).with_request_id(request_id.clone()))?;
+        .map_err(|_| {
+            ApiError::Validation("request body too large".into())
+                .with_request_id(request_id.clone())
+        })?;
 
     let key_id = auth::verify_signed_request(&headers, &body, &state.hmac, &state.limiter)
         .map_err(|e| e.with_request_id(request_id.clone()))?;
 
-    let req: LeadImportRequest = serde_json::from_slice(&body)
-        .map_err(|_| ApiError::Validation("invalid JSON body".into()).with_request_id(request_id.clone()))?;
+    let req: LeadImportRequest = serde_json::from_slice(&body).map_err(|_| {
+        ApiError::Validation("invalid JSON body".into()).with_request_id(request_id.clone())
+    })?;
 
     let limiter_key = format!("leads_import:{key_id}");
     if !state
@@ -112,10 +116,11 @@ async fn handle_import_with_request_id(
 
     let svc = state.import_service.clone();
     let current_span = tracing::Span::current();
-    let response = tokio::task::spawn_blocking(move || current_span.in_scope(|| svc.import_leads(&req)))
-        .await
-        .map_err(|_| ApiError::Internal.with_request_id(request_id.clone()))?
-        .map_err(|e| e.with_request_id(request_id.clone()))?;
+    let response =
+        tokio::task::spawn_blocking(move || current_span.in_scope(|| svc.import_leads(&req)))
+            .await
+            .map_err(|_| ApiError::Internal.with_request_id(request_id.clone()))?
+            .map_err(|e| e.with_request_id(request_id.clone()))?;
 
     Ok(attach_request_id(
         (StatusCode::OK, axum::Json(response)).into_response(),
