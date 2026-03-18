@@ -47,7 +47,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
 
       - name: clippy
-        run: cargo clippy -p crm-engine --all-targets --all-features -- -D warnings
+        run: cargo clippy -p engine --all-targets --all-features -- -D warnings
 
   test:
     name: Test
@@ -72,7 +72,7 @@ jobs:
           python-version: "3.x"
 
       - name: test
-        run: cargo test -p crm-engine
+        run: cargo test -p engine
 
       - name: build perf fixture sqlite
         run: |
@@ -88,6 +88,6 @@ jobs:
       #     ENGINE_PERF_BASELINE_JSON: crates/engine/tests/fixtures/perf_baseline_ci.json
       #     ENGINE_PERF_REGRESSION_FACTOR: "2.0"
       #   run: |
-      #     cargo test -p crm-engine \
+      #     cargo test -p engine \
       #       --test perf_regression perf_regression_probe \
       #       -- --ignored --nocapture
