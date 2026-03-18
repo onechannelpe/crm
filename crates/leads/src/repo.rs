@@ -3,6 +3,51 @@ use rusqlite::{params, Connection, Row};
 use shared::error::ApiError;
 use std::sync::LazyLock;
 
+pub trait LeadsRepository: Send + Sync {
+    fn list_candidates(
+        &self,
+        conn: &Connection,
+        limit: usize,
+        branch_id: i64,
+        user_id: i64,
+        strategy: CandidateStrategy,
+    ) -> Result<Vec<LeadCandidate>, ApiError>;
+
+    fn upsert_batch(
+        &self,
+        conn: &mut Connection,
+        rows: &[LeadImportRow],
+        source: &str,
+        now: i64,
+    ) -> Result<(usize, usize), ApiError>;
+}
+
+#[derive(Default)]
+pub struct SqliteLeadsRepository;
+
+impl LeadsRepository for SqliteLeadsRepository {
+    fn list_candidates(
+        &self,
+        conn: &Connection,
+        limit: usize,
+        branch_id: i64,
+        user_id: i64,
+        strategy: CandidateStrategy,
+    ) -> Result<Vec<LeadCandidate>, ApiError> {
+        list_candidates(conn, limit, branch_id, user_id, strategy)
+    }
+
+    fn upsert_batch(
+        &self,
+        conn: &mut Connection,
+        rows: &[LeadImportRow],
+        source: &str,
+        now: i64,
+    ) -> Result<(usize, usize), ApiError> {
+        upsert_batch(conn, rows, source, now)
+    }
+}
+
 // candidate queries
 
 const SELECT_ACTIVE: &str = "

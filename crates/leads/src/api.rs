@@ -36,6 +36,16 @@ async fn handle_lead_candidates(
     body: Bytes,
 ) -> Result<Response, RequestError> {
     let request_id = Uuid::new_v4().to_string();
+    handle_lead_candidates_with_request_id(state, headers, body, request_id).await
+}
+
+#[tracing::instrument(skip(state, headers, body), fields(request_id = %request_id))]
+async fn handle_lead_candidates_with_request_id(
+    state: Arc<LeadState>,
+    headers: HeaderMap,
+    body: Bytes,
+    request_id: String,
+) -> Result<Response, RequestError> {
 
     let key_id = auth::verify_signed_request(&headers, &body, &state.hmac, &state.limiter)
         .map_err(|e| e.with_request_id(request_id.clone()))?;
@@ -52,7 +62,8 @@ async fn handle_lead_candidates(
     }
 
     let svc = state.service.clone();
-    let response = tokio::task::spawn_blocking(move || svc.candidates(&req))
+    let current_span = tracing::Span::current();
+    let response = tokio::task::spawn_blocking(move || current_span.in_scope(|| svc.candidates(&req)))
         .await
         .map_err(|_| ApiError::Internal.with_request_id(request_id.clone()))?
         .map_err(|e| e.with_request_id(request_id.clone()))?;
@@ -69,6 +80,16 @@ async fn handle_import(
     request: Request,
 ) -> Result<Response, RequestError> {
     let request_id = Uuid::new_v4().to_string();
+    handle_import_with_request_id(state, headers, request, request_id).await
+}
+
+#[tracing::instrument(skip(state, headers, request), fields(request_id = %request_id))]
+async fn handle_import_with_request_id(
+    state: Arc<LeadState>,
+    headers: HeaderMap,
+    request: Request,
+    request_id: String,
+) -> Result<Response, RequestError> {
 
     // Collect body with size cap before HMAC verification.
     let body = axum::body::to_bytes(request.into_body(), IMPORT_BODY_LIMIT)
@@ -90,7 +111,8 @@ async fn handle_import(
     }
 
     let svc = state.import_service.clone();
-    let response = tokio::task::spawn_blocking(move || svc.import_leads(&req))
+    let current_span = tracing::Span::current();
+    let response = tokio::task::spawn_blocking(move || current_span.in_scope(|| svc.import_leads(&req)))
         .await
         .map_err(|_| ApiError::Internal.with_request_id(request_id.clone()))?
         .map_err(|e| e.with_request_id(request_id.clone()))?;

@@ -3,21 +3,40 @@ use crate::contracts::{
     LeadImportRow,
 };
 use crate::domain;
-use crate::repo;
+use crate::repo::{LeadsRepository, SqliteLeadsRepository};
 use shared::error::ApiError;
 use shared::sqlite::SqlitePool;
+use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct CandidateService {
+    repo: Arc<dyn LeadsRepository>,
     pool: SqlitePool,
     max_limit: usize,
 }
 
 impl CandidateService {
     pub fn new(pool: SqlitePool, max_limit: usize) -> Self {
-        Self { pool, max_limit }
+        Self {
+            repo: Arc::new(SqliteLeadsRepository),
+            pool,
+            max_limit,
+        }
     }
 
+    pub fn with_repo(
+        pool: SqlitePool,
+        max_limit: usize,
+        repo: Arc<dyn LeadsRepository>,
+    ) -> Self {
+        Self {
+            repo,
+            pool,
+            max_limit,
+        }
+    }
+
+    #[tracing::instrument(skip(self, req), fields(branch_id = req.branch_id, user_id = req.user_id, amount = req.amount))]
     pub fn candidates(
         &self,
         req: &LeadCandidateRequest,
@@ -30,7 +49,9 @@ impl CandidateService {
             .get()
             .map_err(|e| ApiError::Service(format!("pool get failed: {e}")))?;
 
-        let raw = repo::list_candidates(&conn, limit, req.branch_id, req.user_id, req.strategy)?;
+        let raw =
+            self.repo
+                .list_candidates(&conn, limit, req.branch_id, req.user_id, req.strategy)?;
         let ranked = domain::rank_candidates(raw, req.strategy);
         let deduped = domain::dedupe_candidates(ranked);
         let count = deduped.len();
@@ -44,14 +65,23 @@ impl CandidateService {
 
 #[derive(Clone)]
 pub struct ImportService {
+    repo: Arc<dyn LeadsRepository>,
     pool: SqlitePool,
 }
 
 impl ImportService {
     pub fn new(pool: SqlitePool) -> Self {
-        Self { pool }
+        Self {
+            repo: Arc::new(SqliteLeadsRepository),
+            pool,
+        }
     }
 
+    pub fn with_repo(pool: SqlitePool, repo: Arc<dyn LeadsRepository>) -> Self {
+        Self { repo, pool }
+    }
+
+    #[tracing::instrument(skip(self, req), fields(rows = req.rows.len(), source = %req.source))]
     pub fn import_leads(&self, req: &LeadImportRequest) -> Result<LeadImportResponse, ApiError> {
         let total = req.rows.len();
         let valid: Vec<&LeadImportRow> = req.rows.iter().filter(|r| is_valid_row(r)).collect();
@@ -64,7 +94,7 @@ impl ImportService {
 
         let now = current_unix_secs()?;
         let owned: Vec<LeadImportRow> = valid.into_iter().cloned().collect();
-        let (inserted, updated) = repo::upsert_batch(&mut conn, &owned, &req.source, now)?;
+    let (inserted, updated) = self.repo.upsert_batch(&mut conn, &owned, &req.source, now)?;
 
         Ok(LeadImportResponse {
             inserted,

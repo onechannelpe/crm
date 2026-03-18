@@ -5,11 +5,14 @@ use r2d2::Pool;
 use r2d2_sqlite::SqliteConnectionManager;
 use shared::sqlite::SqlitePool;
 use std::collections::HashSet;
+use std::thread;
+use tempfile::NamedTempFile;
 
 fn make_test_pool() -> SqlitePool {
     let pool = Pool::new(SqliteConnectionManager::memory()).expect("pool");
     let conn = pool.get().expect("conn");
     leads::validate_schema(&conn).expect("schema");
+    drop(conn);
     pool
 }
 
@@ -100,4 +103,53 @@ proptest! {
         prop_assert_eq!(result.skipped, invalid_count);
         prop_assert_eq!(result.inserted + result.updated, valid_count);
     }
+}
+
+fn fixed_valid_row() -> LeadImportRow {
+    LeadImportRow {
+        ruc: "20100000001".into(),
+        organization_name: "Org".into(),
+        dni: "12345678".into(),
+        person_name: "Alice".into(),
+        phone_primary: "999111222".into(),
+        quality_tier: Some(2),
+        product_tag: Some("internet".into()),
+        branch_tag: Some(1),
+    }
+}
+
+#[test]
+fn concurrent_identical_imports_are_idempotent() {
+    let db = NamedTempFile::new().expect("temp file");
+    let manager = SqliteConnectionManager::file(db.path());
+    let pool = Pool::builder()
+        .max_size(4)
+        .build(manager)
+        .expect("pool");
+    let conn = pool.get().expect("conn");
+    leads::validate_schema(&conn).expect("schema");
+
+    let service_a = ImportService::new(pool.clone());
+    let service_b = ImportService::new(pool.clone());
+    let t1 = thread::spawn(move || {
+        service_a.import_leads(&LeadImportRequest {
+            rows: vec![fixed_valid_row()],
+            source: "concurrency".into(),
+        })
+    });
+
+    let t2 = thread::spawn(move || {
+        service_b.import_leads(&LeadImportRequest {
+            rows: vec![fixed_valid_row()],
+            source: "concurrency".into(),
+        })
+    });
+
+    let r1 = t1.join().expect("thread 1 panicked").expect("thread 1 result");
+    let r2 = t2.join().expect("thread 2 panicked").expect("thread 2 result");
+
+    assert_eq!(r1.inserted + r2.inserted, 1);
+    assert_eq!(r1.updated + r2.updated, 1);
+    assert_eq!(r1.skipped + r2.skipped, 0);
+    assert_eq!(r1.total + r2.total, 2);
 }

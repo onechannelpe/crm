@@ -33,6 +33,16 @@ async fn handle_search(
     body: Bytes,
 ) -> Result<Response, RequestError> {
     let request_id = Uuid::new_v4().to_string();
+    handle_search_with_request_id(state, headers, body, request_id).await
+}
+
+#[tracing::instrument(skip(state, headers, body), fields(request_id = %request_id))]
+async fn handle_search_with_request_id(
+    state: Arc<SearchState>,
+    headers: HeaderMap,
+    body: Bytes,
+    request_id: String,
+) -> Result<Response, RequestError> {
 
     let key_id = auth::verify_signed_request(&headers, &body, &state.hmac, &state.limiter)
         .map_err(|e| e.with_request_id(request_id.clone()))?;
@@ -47,7 +57,10 @@ async fn handle_search(
     }
 
     let service = state.service.clone();
-    let response = tokio::task::spawn_blocking(move || service.search(&request))
+    let current_span = tracing::Span::current();
+    let response = tokio::task::spawn_blocking(move || {
+        current_span.in_scope(|| service.search(&request))
+    })
         .await
         .map_err(|_| ApiError::Internal.with_request_id(request_id.clone()))?
         .map_err(|e| e.with_request_id(request_id.clone()))?;

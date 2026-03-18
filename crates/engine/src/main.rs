@@ -4,8 +4,10 @@ use engine::config::EngineConfig;
 use engine::health::health_handler;
 use engine::logging;
 use leads::api::{router as lead_router, LeadState};
+use leads::repo::SqliteLeadsRepository;
 use leads::service::{CandidateService, ImportService};
 use search::api::{router as search_router, SearchState};
+use search::repo::SqliteSearchRepository;
 use search::service::SearchService;
 use shared::error::StartupError;
 use shared::hmac::HmacVerifier;
@@ -67,13 +69,24 @@ async fn run() -> Result<(), StartupError> {
     let limiter = Arc::new(RateLimiter::new(cfg.rate_limit_per_key));
 
     let search_state = Arc::new(SearchState {
-        service: Arc::new(SearchService::new(contacts_pool.clone(), cfg.max_limit)),
+        service: Arc::new(SearchService::with_repo(
+            contacts_pool.clone(),
+            cfg.max_limit,
+            Arc::new(SqliteSearchRepository),
+        )),
         hmac: hmac.clone(),
         limiter: limiter.clone(),
     });
     let lead_state = Arc::new(LeadState {
-        service: Arc::new(CandidateService::new(leads_pool.clone(), cfg.max_limit)),
-        import_service: Arc::new(ImportService::new(leads_pool.clone())),
+        service: Arc::new(CandidateService::with_repo(
+            leads_pool.clone(),
+            cfg.max_limit,
+            Arc::new(SqliteLeadsRepository),
+        )),
+        import_service: Arc::new(ImportService::with_repo(
+            leads_pool.clone(),
+            Arc::new(SqliteLeadsRepository),
+        )),
         hmac: hmac.clone(),
         limiter: limiter.clone(),
     });

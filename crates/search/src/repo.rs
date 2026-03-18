@@ -3,6 +3,104 @@ use rusqlite::{params, Connection, Row};
 use shared::error::ApiError;
 use std::sync::LazyLock;
 
+pub trait SearchRepository: Send + Sync {
+    fn search_by_dni(
+        &self,
+        conn: &Connection,
+        value: &str,
+        limit: usize,
+    ) -> Result<Vec<SearchRow>, ApiError>;
+    fn search_by_ruc(
+        &self,
+        conn: &Connection,
+        value: &str,
+        limit: usize,
+    ) -> Result<Vec<SearchRow>, ApiError>;
+    fn search_by_phone(
+        &self,
+        conn: &Connection,
+        value: &str,
+        limit: usize,
+    ) -> Result<Vec<SearchRow>, ApiError>;
+    fn search_by_phone_enriched(
+        &self,
+        conn: &Connection,
+        value: &str,
+        limit: usize,
+    ) -> Result<Vec<SearchRow>, ApiError>;
+    fn search_by_person_name(
+        &self,
+        conn: &Connection,
+        value: &str,
+        limit: usize,
+    ) -> Result<Vec<SearchRow>, ApiError>;
+    fn search_by_company_name(
+        &self,
+        conn: &Connection,
+        value: &str,
+        limit: usize,
+    ) -> Result<Vec<SearchRow>, ApiError>;
+}
+
+#[derive(Default)]
+pub struct SqliteSearchRepository;
+
+impl SearchRepository for SqliteSearchRepository {
+    fn search_by_dni(
+        &self,
+        conn: &Connection,
+        value: &str,
+        limit: usize,
+    ) -> Result<Vec<SearchRow>, ApiError> {
+        search_by_dni(conn, value, limit)
+    }
+
+    fn search_by_ruc(
+        &self,
+        conn: &Connection,
+        value: &str,
+        limit: usize,
+    ) -> Result<Vec<SearchRow>, ApiError> {
+        search_by_ruc(conn, value, limit)
+    }
+
+    fn search_by_phone(
+        &self,
+        conn: &Connection,
+        value: &str,
+        limit: usize,
+    ) -> Result<Vec<SearchRow>, ApiError> {
+        search_by_phone(conn, value, limit)
+    }
+
+    fn search_by_phone_enriched(
+        &self,
+        conn: &Connection,
+        value: &str,
+        limit: usize,
+    ) -> Result<Vec<SearchRow>, ApiError> {
+        search_by_phone_enriched(conn, value, limit)
+    }
+
+    fn search_by_person_name(
+        &self,
+        conn: &Connection,
+        value: &str,
+        limit: usize,
+    ) -> Result<Vec<SearchRow>, ApiError> {
+        search_by_person_name(conn, value, limit)
+    }
+
+    fn search_by_company_name(
+        &self,
+        conn: &Connection,
+        value: &str,
+        limit: usize,
+    ) -> Result<Vec<SearchRow>, ApiError> {
+        search_by_company_name(conn, value, limit)
+    }
+}
+
 const SELECT_COLUMNS: &str = "
   c.dni,
   NULLIF(c.name, '')                AS name,
