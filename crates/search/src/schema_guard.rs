@@ -1,5 +1,6 @@
 use crate::projection_contract_generated::{
-    SEARCH_PROJECTION_NAME, SEARCH_PROJECTION_PATHS, SEARCH_PROJECTION_STORAGE_MAPPINGS,
+    SEARCH_PROJECTION_NAME, SEARCH_PROJECTION_NULLABLE_PATHS, SEARCH_PROJECTION_PATHS,
+    SEARCH_PROJECTION_STORAGE_MAPPINGS,
 };
 use rusqlite::{Connection, OptionalExtension};
 use shared::error::StartupError;
@@ -39,6 +40,14 @@ fn validate_projection_paths() -> Result<(), StartupError> {
         if !seen.insert(*path) {
             return Err(StartupError::Config(format!(
                 "duplicate projection path in contract: {path}"
+            )));
+        }
+    }
+
+    for nullable_path in SEARCH_PROJECTION_NULLABLE_PATHS {
+        if !seen.contains(nullable_path) {
+            return Err(StartupError::Config(format!(
+                "nullable projection path not present in full path set: {nullable_path}"
             )));
         }
     }

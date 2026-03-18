@@ -1,6 +1,6 @@
 // GENERATED FILE. DO NOT EDIT.
 // Source: contracts/engine/lead-api.json
-// Generator: tools/codegen/bin/generate-lead-contract.ts
+// Generator: tools/codegen/bin/generate.ts
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Clone)]

@@ -68,18 +68,22 @@ pub fn list_candidates(
 /// Upserts a batch of validated rows. Returns `(inserted, updated)`.
 /// Validation is the caller's responsibility — this function has no business logic.
 pub fn upsert_batch(
-    conn: &Connection,
+    conn: &mut Connection,
     rows: &[LeadImportRow],
     source: &str,
     now: i64,
 ) -> Result<(usize, usize), ApiError> {
+    let tx = conn
+        .transaction()
+        .map_err(|e| ApiError::Service(format!("transaction begin failed: {e}")))?;
+
     let mut inserted = 0usize;
     let mut updated = 0usize;
 
     for row in rows {
         let quality_tier = row.quality_tier.unwrap_or(1);
 
-        let n = conn
+        let n = tx
             .execute(
                 "INSERT OR IGNORE INTO leads
                     (ruc, dni, organization_name, person_name, phone_primary,
@@ -103,7 +107,7 @@ pub fn upsert_batch(
         if n == 1 {
             inserted += 1;
         } else {
-            conn.execute(
+            tx.execute(
                 "UPDATE leads SET
                     organization_name = ?3,
                     person_name       = ?4,
@@ -127,6 +131,9 @@ pub fn upsert_batch(
             updated += 1;
         }
     }
+
+    tx.commit()
+        .map_err(|e| ApiError::Service(format!("transaction commit failed: {e}")))?;
 
     Ok((inserted, updated))
 }

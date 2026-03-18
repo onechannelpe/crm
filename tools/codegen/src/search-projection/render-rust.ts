@@ -18,8 +18,7 @@ export function renderProjectionContractRust(spec: ProjectionSpec): string {
   return [
     "// GENERATED FILE. DO NOT EDIT.",
     "// Source: contracts/engine/search-projection.json",
-    "// Generator: tools/codegen/bin/generate-search-projection-contract.ts",
-    "#![allow(dead_code)]",
+    "// Generator: tools/codegen/bin/generate.ts",
     "",
     "pub struct ProjectionStorageMapping {",
     "    pub path: &'static str,",
@@ -58,7 +57,7 @@ export function renderResultContractRust(spec: ProjectionSpec): string {
   const lines = [
     "// GENERATED FILE. DO NOT EDIT.",
     "// Source: contracts/engine/search-projection.json",
-    "// Generator: tools/codegen/bin/generate-search-projection-contract.ts",
+    "// Generator: tools/codegen/bin/generate.ts",
     "use serde::Serialize;",
     "",
   ];

@@ -86,9 +86,11 @@ async fn handle_import(
 }
 
 fn candidate_cost(amount: usize) -> u32 {
-    ((amount.max(1) as u32) / 10).max(1)
+    let requested = u32::try_from(amount).unwrap_or(u32::MAX).max(1);
+    requested.div_ceil(10)
 }
 
 fn import_cost(row_count: usize) -> u32 {
-    ((row_count as u32) / 100).max(1)
+    let rows = u32::try_from(row_count).unwrap_or(u32::MAX).max(1);
+    rows.div_ceil(100)
 }

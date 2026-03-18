@@ -36,7 +36,10 @@ impl IntoResponse for ApiError {
             Self::Unauthorized(m) => (StatusCode::UNAUTHORIZED, m),
             Self::Validation(m) => (StatusCode::BAD_REQUEST, m),
             Self::RateLimit => (StatusCode::TOO_MANY_REQUESTS, "rate limit exceeded".into()),
-            Self::Service(m) => (StatusCode::SERVICE_UNAVAILABLE, m),
+            Self::Service(_) => (
+                StatusCode::SERVICE_UNAVAILABLE,
+                "service unavailable".into(),
+            ),
             Self::Internal => (StatusCode::INTERNAL_SERVER_ERROR, "internal error".into()),
         };
         (status, axum::Json(ErrorBody { error: msg })).into_response()

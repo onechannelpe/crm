@@ -18,7 +18,7 @@ export function renderProjectionContractTs(spec: ProjectionSpec): string {
   return [
     "// GENERATED FILE. DO NOT EDIT.",
     "// Source: contracts/engine/search-projection.json",
-    "// Generator: tools/codegen/bin/generate-search-projection-contract.ts",
+    "// Generator: tools/codegen/bin/generate.ts",
     "",
     `export const SEARCH_PROJECTION_NAME = ${JSON.stringify(spec.projection)} as const;`,
     `export const SEARCH_PROJECTION_PATHS = ${renderArray(allPaths)} as const;`,
@@ -36,7 +36,7 @@ export function renderResultContractTs(spec: ProjectionSpec): string {
   const lines = [
     "// GENERATED FILE. DO NOT EDIT.",
     "// Source: contracts/engine/search-projection.json",
-    "// Generator: tools/codegen/bin/generate-search-projection-contract.ts",
+    "// Generator: tools/codegen/bin/generate.ts",
     "",
   ];
 

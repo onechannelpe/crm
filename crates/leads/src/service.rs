@@ -57,14 +57,14 @@ impl ImportService {
         let valid: Vec<&LeadImportRow> = req.rows.iter().filter(|r| is_valid_row(r)).collect();
         let skipped = total - valid.len();
 
-        let conn = self
+        let mut conn = self
             .pool
             .get()
             .map_err(|e| ApiError::Service(format!("pool get failed: {e}")))?;
 
         let now = current_unix_secs()?;
         let owned: Vec<LeadImportRow> = valid.into_iter().cloned().collect();
-        let (inserted, updated) = repo::upsert_batch(&conn, &owned, &req.source, now)?;
+        let (inserted, updated) = repo::upsert_batch(&mut conn, &owned, &req.source, now)?;
 
         Ok(LeadImportResponse {
             inserted,
