@@ -20,7 +20,6 @@ import type { SearchType } from "~/server/shared/pipeline-types";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 
 import { mapToSearchResult, type SearchResult_ } from "./domain";
-import { search } from "./gateway";
 
 export interface RunDirectSearchCommand {
   actorUserId: UserId;
@@ -66,9 +65,10 @@ export async function runDirectSearch(
 
   const reservationId = reservationResult.value;
 
-  const searchResult = await search(
-    { type: command.type, value: command.value, limit: command.limit },
-    engine,
+  const searchResult = await engine.search(
+    command.type,
+    command.value,
+    command.limit,
   );
 
   if (isErr(searchResult)) {

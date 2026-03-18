@@ -5,6 +5,7 @@ import {
   type RefillTransactionRunner,
   type RefillTxRepos,
 } from "~/server/lead-workflow/request-refill";
+import { type LeadCandidate } from "~/server/shared/engine/lead-contract";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { asBranchId, asUserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
@@ -18,14 +19,6 @@ import {
 
 const USER_ID = asUserId(1);
 const BRANCH_ID = asBranchId(1);
-
-type LeadCandidate = {
-  ruc: string;
-  organization_name: string;
-  dni: string;
-  person_name: string;
-  phone_primary: string;
-};
 
 function makeCandidate(n: number): LeadCandidate {
   return {
@@ -110,9 +103,11 @@ describe("requestLeadRefill", () => {
       makeCandidate(3),
     ];
     const engine = {
-      requestCandidates: async (): Promise<
-        Result<LeadCandidate[], DomainError>
-      > => Ok(candidates),
+      requestCandidates: async (_input: {
+        branchId: number;
+        userId: number;
+        amount: number;
+      }): Promise<Result<LeadCandidate[], DomainError>> => Ok(candidates),
     };
 
     const result = await requestLeadRefill(
@@ -143,9 +138,11 @@ describe("requestLeadRefill", () => {
     const repos = makeRepos(0);
     const candidates: LeadCandidate[] = [makeCandidate(1)];
     const engine = {
-      requestCandidates: async (): Promise<
-        Result<LeadCandidate[], DomainError>
-      > => Ok(candidates),
+      requestCandidates: async (_input: {
+        branchId: number;
+        userId: number;
+        amount: number;
+      }): Promise<Result<LeadCandidate[], DomainError>> => Ok(candidates),
     };
 
     const result = await requestLeadRefill(
@@ -165,9 +162,11 @@ describe("requestLeadRefill", () => {
   it("cancels reservation when gateway fails", async () => {
     const repos = makeRepos(0);
     const engine = {
-      requestCandidates: async (): Promise<
-        Result<LeadCandidate[], DomainError>
-      > =>
+      requestCandidates: async (_input: {
+        branchId: number;
+        userId: number;
+        amount: number;
+      }): Promise<Result<LeadCandidate[], DomainError>> =>
         Err(
           domainError(
             "external",

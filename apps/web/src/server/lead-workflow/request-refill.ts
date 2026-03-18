@@ -21,7 +21,6 @@ import type { BranchId, UserId } from "~/server/shared/ids";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 
 import { computeNeededAssignments } from "./domain";
-import { requestCandidates } from "./gateway";
 
 export interface RequestLeadRefillCommand {
   actorUserId: UserId;
@@ -120,10 +119,11 @@ export async function requestLeadRefill(
 
   const reservationId = reservationResult.value;
 
-  const candidatesResult = await requestCandidates(
-    { userId: command.actorUserId, branchId: command.branchId, amount: needed },
-    engine,
-  );
+  const candidatesResult = await engine.requestCandidates({
+    branchId: command.branchId,
+    userId: command.actorUserId,
+    amount: needed,
+  });
   if (isErr(candidatesResult)) {
     await cancelLeadUsage({ reservationId, reason: "external_failure" }, repos);
     return candidatesResult;
