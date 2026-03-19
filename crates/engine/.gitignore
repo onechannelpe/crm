@@ -1,1 +1,2 @@
-*.sqlite
+# covers: .sqlite, .sqlite-shm, .sqlite-wal
+*.sqlite*
