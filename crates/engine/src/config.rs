@@ -3,6 +3,14 @@ use std::collections::HashMap;
 use std::env;
 use std::net::IpAddr;
 
+const DEFAULT_ENGINE_HOST: &str = "127.0.0.1";
+const DEFAULT_ENGINE_PORT: u16 = 3001;
+const DEFAULT_CONTACTS_DB_PATH: &str = "crates/engine/data/contacts.sqlite";
+const DEFAULT_LEADS_DB_PATH: &str = "crates/engine/data/leads.sqlite";
+const DEFAULT_HMAC_MAX_SKEW_SECS: i64 = 60;
+const DEFAULT_RATE_LIMIT_PER_KEY: u32 = 600;
+const DEFAULT_MAX_LIMIT: usize = 100;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ConnectMode {
     Local,
@@ -24,21 +32,15 @@ pub struct EngineConfig {
 
 impl EngineConfig {
     pub fn load() -> Result<Self, StartupError> {
-        let connect_mode = parse_connect_mode(
-            &env::var("ENGINE_CONNECT_MODE").unwrap_or_else(|_| "local".into()),
-        )?;
+        let env = Env;
+        let connect_mode = parse_connect_mode(&env.string("ENGINE_CONNECT_MODE", "local"))?;
 
-        let hmac_keys = parse_hmac_keys(
-            &env::var("ENGINE_HMAC_KEYS_JSON")
-                .map_err(|_| StartupError::Config("ENGINE_HMAC_KEYS_JSON is required".into()))?,
-        )?;
+        let hmac_keys = parse_hmac_keys(&env.require("ENGINE_HMAC_KEYS_JSON")?)?;
 
-        let contacts_db_path = env::var("ENGINE_CONTACTS_DB_PATH")
-            .map_err(|_| StartupError::Config("ENGINE_CONTACTS_DB_PATH is required".into()))?;
-        let leads_db_path = env::var("ENGINE_LEADS_DB_PATH")
-            .map_err(|_| StartupError::Config("ENGINE_LEADS_DB_PATH is required".into()))?;
+        let contacts_db_path = env.string("ENGINE_CONTACTS_DB_PATH", DEFAULT_CONTACTS_DB_PATH);
+        let leads_db_path = env.string("ENGINE_LEADS_DB_PATH", DEFAULT_LEADS_DB_PATH);
 
-        let host = env::var("ENGINE_HOST").unwrap_or_else(|_| "127.0.0.1".into());
+        let host = env.string("ENGINE_HOST", DEFAULT_ENGINE_HOST);
         if connect_mode == ConnectMode::Local && !is_loopback(&host) {
             return Err(StartupError::Config(
                 "ENGINE_HOST must bind to loopback in local mode".into(),
@@ -48,18 +50,43 @@ impl EngineConfig {
         Ok(Self {
             connect_mode,
             host,
-            port: parse_env_int("ENGINE_PORT", 3001)?,
+            port: env.int("ENGINE_PORT", DEFAULT_ENGINE_PORT)?,
             contacts_db_path,
             leads_db_path,
             hmac_keys,
-            hmac_max_skew_secs: parse_env_int("ENGINE_HMAC_MAX_SKEW_SECS", 60)?,
-            rate_limit_per_key: parse_env_int("ENGINE_RATE_LIMIT_PER_KEY", 600)?,
-            max_limit: parse_env_int("ENGINE_MAX_LIMIT", 100)?,
+            hmac_max_skew_secs: env.int("ENGINE_HMAC_MAX_SKEW_SECS", DEFAULT_HMAC_MAX_SKEW_SECS)?,
+            rate_limit_per_key: env.int("ENGINE_RATE_LIMIT_PER_KEY", DEFAULT_RATE_LIMIT_PER_KEY)?,
+            max_limit: env.int("ENGINE_MAX_LIMIT", DEFAULT_MAX_LIMIT)?,
         })
     }
 }
 
 // private helpers
+
+#[derive(Debug, Default, Clone, Copy)]
+struct Env;
+
+impl Env {
+    fn require(&self, name: &str) -> Result<String, StartupError> {
+        env::var(name).map_err(|_| StartupError::Config(format!("{name} is required")))
+    }
+
+    fn string(&self, name: &str, default: &str) -> String {
+        env::var(name).unwrap_or_else(|_| default.into())
+    }
+
+    fn int<T>(&self, name: &str, default: T) -> Result<T, StartupError>
+    where
+        T: std::str::FromStr + ToString,
+    {
+        match env::var(name) {
+            Err(_) => Ok(default),
+            Ok(v) => v.parse().map_err(|_| {
+                StartupError::Config(format!("{name} must be a valid number, got: {v}"))
+            }),
+        }
+    }
+}
 
 fn parse_connect_mode(raw: &str) -> Result<ConnectMode, StartupError> {
     match raw {
@@ -91,19 +118,6 @@ fn parse_hmac_keys(raw: &str) -> Result<HashMap<String, String>, StartupError> {
         ));
     }
     Ok(keys)
-}
-
-/// Reads an env var and parses it as `T`, falling back to `default` if unset.
-fn parse_env_int<T>(name: &str, default: T) -> Result<T, StartupError>
-where
-    T: std::str::FromStr + ToString,
-{
-    match env::var(name) {
-        Err(_) => Ok(default),
-        Ok(v) => v
-            .parse()
-            .map_err(|_| StartupError::Config(format!("{name} must be a valid number, got: {v}"))),
-    }
 }
 
 fn is_loopback(host: &str) -> bool {

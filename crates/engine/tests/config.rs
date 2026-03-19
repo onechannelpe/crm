@@ -8,18 +8,55 @@ fn env_lock() -> &'static Mutex<()> {
     LOCK.get_or_init(|| Mutex::new(()))
 }
 
-fn set_required_env() {
+fn set_env(name: &str, value: &str) {
     unsafe {
-        std::env::set_var("ENGINE_HMAC_KEYS_JSON", r#"{"web":"secret"}"#);
-        std::env::set_var("ENGINE_CONTACTS_DB_PATH", "/tmp/contacts.sqlite");
-        std::env::set_var("ENGINE_LEADS_DB_PATH", "/tmp/leads.sqlite");
-        std::env::remove_var("ENGINE_CONNECT_MODE");
-        std::env::remove_var("ENGINE_HOST");
-        std::env::remove_var("ENGINE_PORT");
-        std::env::remove_var("ENGINE_HMAC_MAX_SKEW_SECS");
-        std::env::remove_var("ENGINE_RATE_LIMIT_PER_KEY");
-        std::env::remove_var("ENGINE_MAX_LIMIT");
+        std::env::set_var(name, value);
     }
+}
+
+fn remove_env(name: &str) {
+    unsafe {
+        std::env::remove_var(name);
+    }
+}
+
+fn set_base_env() {
+    set_env("ENGINE_HMAC_KEYS_JSON", r#"{"web":"secret"}"#);
+
+    for name in [
+        "ENGINE_CONTACTS_DB_PATH",
+        "ENGINE_LEADS_DB_PATH",
+        "ENGINE_CONNECT_MODE",
+        "ENGINE_HOST",
+        "ENGINE_PORT",
+        "ENGINE_HMAC_MAX_SKEW_SECS",
+        "ENGINE_RATE_LIMIT_PER_KEY",
+        "ENGINE_MAX_LIMIT",
+    ] {
+        remove_env(name);
+    }
+}
+
+// base load and db paths
+
+#[test]
+fn config_loads_with_minimal_required_env() {
+    let _g = env_lock().lock().unwrap();
+    set_base_env();
+
+    let _cfg = EngineConfig::load().expect("config should load with minimal required env");
+}
+
+#[test]
+fn explicit_db_paths_override_defaults() {
+    let _g = env_lock().lock().unwrap();
+    set_base_env();
+    set_env("ENGINE_CONTACTS_DB_PATH", "/tmp/override-contacts.sqlite");
+    set_env("ENGINE_LEADS_DB_PATH", "/tmp/override-leads.sqlite");
+
+    let cfg = EngineConfig::load().expect("config");
+    assert_eq!(cfg.contacts_db_path, "/tmp/override-contacts.sqlite");
+    assert_eq!(cfg.leads_db_path, "/tmp/override-leads.sqlite");
 }
 
 // connect mode
@@ -27,7 +64,7 @@ fn set_required_env() {
 #[test]
 fn local_mode_is_the_default() {
     let _g = env_lock().lock().unwrap();
-    set_required_env();
+    set_base_env();
 
     let cfg = EngineConfig::load().expect("config");
     assert_eq!(cfg.connect_mode, ConnectMode::Local);
@@ -36,7 +73,7 @@ fn local_mode_is_the_default() {
 #[test]
 fn local_mode_defaults_to_loopback_host_and_port_3001() {
     let _g = env_lock().lock().unwrap();
-    set_required_env();
+    set_base_env();
 
     let cfg = EngineConfig::load().expect("config");
     assert_eq!(cfg.host, "127.0.0.1");
@@ -46,10 +83,8 @@ fn local_mode_defaults_to_loopback_host_and_port_3001() {
 #[test]
 fn local_mode_rejects_public_bind_host() {
     let _g = env_lock().lock().unwrap();
-    set_required_env();
-    unsafe {
-        std::env::set_var("ENGINE_HOST", "0.0.0.0");
-    }
+    set_base_env();
+    set_env("ENGINE_HOST", "0.0.0.0");
 
     let err = EngineConfig::load().expect_err("should fail");
     assert_eq!(
@@ -61,11 +96,9 @@ fn local_mode_rejects_public_bind_host() {
 #[test]
 fn remote_mode_allows_non_loopback_host() {
     let _g = env_lock().lock().unwrap();
-    set_required_env();
-    unsafe {
-        std::env::set_var("ENGINE_CONNECT_MODE", "remote");
-        std::env::set_var("ENGINE_HOST", "0.0.0.0");
-    }
+    set_base_env();
+    set_env("ENGINE_CONNECT_MODE", "remote");
+    set_env("ENGINE_HOST", "0.0.0.0");
 
     let cfg = EngineConfig::load().expect("config");
     assert_eq!(cfg.connect_mode, ConnectMode::Remote);
@@ -75,10 +108,8 @@ fn remote_mode_allows_non_loopback_host() {
 #[test]
 fn invalid_connect_mode_is_rejected() {
     let _g = env_lock().lock().unwrap();
-    set_required_env();
-    unsafe {
-        std::env::set_var("ENGINE_CONNECT_MODE", "invalid");
-    }
+    set_base_env();
+    set_env("ENGINE_CONNECT_MODE", "invalid");
 
     let err = EngineConfig::load().expect_err("should fail");
     assert_eq!(
@@ -87,15 +118,13 @@ fn invalid_connect_mode_is_rejected() {
     );
 }
 
-// HMAC keys
+// hmac keys
 
 #[test]
 fn empty_hmac_keys_object_is_rejected() {
     let _g = env_lock().lock().unwrap();
-    set_required_env();
-    unsafe {
-        std::env::set_var("ENGINE_HMAC_KEYS_JSON", "{}");
-    }
+    set_base_env();
+    set_env("ENGINE_HMAC_KEYS_JSON", "{}");
 
     let err = EngineConfig::load().expect_err("should fail");
     assert!(err.to_string().contains("at least one key"));
@@ -104,10 +133,8 @@ fn empty_hmac_keys_object_is_rejected() {
 #[test]
 fn malformed_hmac_keys_json_is_rejected() {
     let _g = env_lock().lock().unwrap();
-    set_required_env();
-    unsafe {
-        std::env::set_var("ENGINE_HMAC_KEYS_JSON", "not-json");
-    }
+    set_base_env();
+    set_env("ENGINE_HMAC_KEYS_JSON", "not-json");
 
     let err = EngineConfig::load().expect_err("should fail");
     assert!(err.to_string().contains("JSON object"));
@@ -116,10 +143,8 @@ fn malformed_hmac_keys_json_is_rejected() {
 #[test]
 fn hmac_key_with_empty_secret_is_rejected() {
     let _g = env_lock().lock().unwrap();
-    set_required_env();
-    unsafe {
-        std::env::set_var("ENGINE_HMAC_KEYS_JSON", r#"{"web":""}"#);
-    }
+    set_base_env();
+    set_env("ENGINE_HMAC_KEYS_JSON", r#"{"web":""}"#);
 
     let err = EngineConfig::load().expect_err("should fail");
     assert!(err.to_string().contains("non-empty"));
@@ -130,10 +155,8 @@ fn hmac_key_with_empty_secret_is_rejected() {
 #[test]
 fn non_numeric_port_is_rejected() {
     let _g = env_lock().lock().unwrap();
-    set_required_env();
-    unsafe {
-        std::env::set_var("ENGINE_PORT", "abc");
-    }
+    set_base_env();
+    set_env("ENGINE_PORT", "abc");
 
     let err = EngineConfig::load().expect_err("should fail");
     assert!(err.to_string().contains("ENGINE_PORT"));
@@ -142,10 +165,8 @@ fn non_numeric_port_is_rejected() {
 #[test]
 fn custom_port_is_respected() {
     let _g = env_lock().lock().unwrap();
-    set_required_env();
-    unsafe {
-        std::env::set_var("ENGINE_PORT", "8080");
-    }
+    set_base_env();
+    set_env("ENGINE_PORT", "8080");
 
     let cfg = EngineConfig::load().expect("config");
     assert_eq!(cfg.port, 8080);
