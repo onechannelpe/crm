@@ -3,7 +3,6 @@ import { Show, Suspense } from "solid-js";
 
 import { Loading } from "~/components/feedback/loading";
 import { Header } from "~/components/layout/header";
-import { SettingsTopbar } from "~/components/layout/settings-topbar";
 import { AppNavigationDrawer } from "~/components/navigation-drawer/app-navigation-drawer";
 import { NavigationDrawerStateProvider } from "~/components/navigation-drawer/navigation-drawer-state";
 import {
@@ -48,7 +47,8 @@ function AuthenticatedAppShell(props: RouteSectionProps) {
   const location = useLocation();
   const isSettingsRoute = () =>
     location.pathname === "/settings" ||
-    location.pathname.startsWith("/settings/");
+    location.pathname.startsWith("/settings/") ||
+    location.pathname.startsWith("/admin/");
 
   return (
     <Show when={user()} fallback={<Loading />}>
@@ -68,8 +68,7 @@ function AuthenticatedAppShell(props: RouteSectionProps) {
               </MainDetailPanelProvider>
             }
           >
-            <div class={cn(shellStyles.main, shellStyles.settingsMain)}>
-              <SettingsTopbar />
+            <div class={cn(shellStyles.main, shellStyles.settingsLayout)}>
               <main class={cn(shellStyles.body, shellStyles.settingsBody)}>
                 <div class={cn(shellStyles.panel, shellStyles.settingsPanel)}>
                   <Suspense fallback={<Loading />}>{props.children}</Suspense>

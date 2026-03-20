@@ -1,7 +1,7 @@
 import { type RouteSectionProps, useLocation } from "@solidjs/router";
 import { createMemo } from "solid-js";
 
-import { getCurrentSettingsItem } from "~/components/layout/settings-nav";
+import { getCurrentSettingsItem } from "~/components/navigation-drawer/settings-navigation-config";
 
 import styles from "./settings/settings-layout.module.css";
 

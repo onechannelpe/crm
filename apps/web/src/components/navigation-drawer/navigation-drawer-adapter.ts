@@ -1,5 +1,4 @@
 import { ICON_BY_ROUTE } from "~/components/layout/route-icons";
-import { SETTINGS_NAV_ITEMS } from "~/components/layout/settings-nav";
 import type { Role } from "~/lib/auth/access/route-policy";
 import {
   getSidebarChildren,
@@ -57,29 +56,6 @@ export function getMainSecondaryGroups(role: Role): DrawerNavGroup[] {
       activePrefixes: entry.activePrefixes,
     })),
   }));
-}
-
-export function getSettingsGroups() {
-  const bySection = new Map<string, typeof SETTINGS_NAV_ITEMS>();
-
-  for (const item of SETTINGS_NAV_ITEMS) {
-    const list = bySection.get(item.section) ?? [];
-    list.push(item);
-    bySection.set(item.section, list);
-  }
-
-  return [
-    {
-      id: "user",
-      label: "Usuario",
-      items: bySection.get("user") ?? [],
-    },
-    {
-      id: "workspace",
-      label: "Espacio de trabajo",
-      items: bySection.get("workspace") ?? [],
-    },
-  ] as const;
 }
 
 export function isEntryActive(pathname: string, entry: DrawerNavEntry) {

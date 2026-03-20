@@ -34,7 +34,7 @@ export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
   },
   {
     id: "login-protection",
-    label: "Protección de inicio de sesión",
+    label: "Proteccion de inicio de sesion",
     href: "/settings/login-protection",
     icon: ShieldCheck,
     section: "workspace",
@@ -42,7 +42,7 @@ export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
   },
   {
     id: "security-policies",
-    label: "Políticas de riesgo",
+    label: "Politicas de riesgo",
     href: "/settings/security-policies",
     icon: ShieldCheck,
     section: "workspace",
@@ -50,7 +50,7 @@ export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
   },
   {
     id: "sales-policies",
-    label: "Políticas comerciales",
+    label: "Politicas comerciales",
     href: "/admin/capacity-policies",
     icon: Settings,
     section: "workspace",
@@ -58,7 +58,7 @@ export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
   },
   {
     id: "catalog",
-    label: "Catálogo",
+    label: "Catalogo",
     href: "/settings/catalog",
     icon: Package,
     section: "workspace",
@@ -68,19 +68,12 @@ export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
 
 export function getCurrentSettingsItem(pathname: string): SettingsNavItem {
   return (
-    SETTINGS_NAV_ITEMS.find((item) => pathname.startsWith(item.href)) ??
-    SETTINGS_NAV_ITEMS[0]
+    SETTINGS_NAV_ITEMS.find(
+      (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
+    ) ?? SETTINGS_NAV_ITEMS[0]
   );
 }
 
 export function getSettingsSectionLabel(section: SettingsNavSectionId): string {
   return section === "user" ? "Usuario" : "Espacio de trabajo";
-}
-
-export function getSettingsSectionHref(section: SettingsNavSectionId): string {
-  const defaultItem = SETTINGS_NAV_ITEMS.find(
-    (item) => item.section === section && !item.advanced,
-  );
-
-  return defaultItem?.href ?? "/settings/profile";
 }

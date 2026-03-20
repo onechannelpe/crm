@@ -1,12 +1,15 @@
+import { useLocation, useNavigate } from "@solidjs/router";
 import { Show, createSignal, type JSX } from "solid-js";
 
 import { logout } from "~/actions/auth";
 import ChevronLeft from "~/components/icons/chevron-left";
 import ChevronRight from "~/components/icons/chevron-right";
 import Search from "~/components/icons/search";
+import X from "~/components/icons/x";
 import { AccountMenu } from "~/components/layout/account-menu";
 import { useSession } from "~/components/providers/session-provider";
 import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
+import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { shortName } from "~/lib/users/display-name";
 import { cn } from "~/lib/utils";
 
@@ -16,20 +19,34 @@ import styles from "./navigation-drawer.module.css";
 
 interface NavigationDrawerShellProps {
   isSettings: boolean;
-  onSearch: () => void;
+  title?: string;
+  onSearch?: () => void;
   children: JSX.Element;
+  fixedContent?: JSX.Element;
 }
 
 const MIN_WIDTH = 180;
-const MAX_WIDTH = 320;
+const MAX_WIDTH = 350;
 
 export function NavigationDrawerShell(props: NavigationDrawerShellProps) {
+  const navigate = useNavigate();
+  const location = useLocation();
   const { currentUser } = useSession();
-  const { expanded, setExpanded, width, setWidth, isMobile } =
-    useNavigationDrawerState();
+  const {
+    expanded,
+    setExpanded,
+    width,
+    setWidth,
+    isMobile,
+    memorizedExpanded,
+    memorizedPath,
+    setMemorizedExpanded,
+    setMemorizedPath,
+  } = useNavigationDrawerState();
 
   const [hovered, setHovered] = createSignal(false);
   const [resizing, setResizing] = createSignal(false);
+
   let drawerPanelRef: HTMLDivElement | undefined;
 
   useDismissibleLayer({
@@ -39,7 +56,9 @@ export function NavigationDrawerShell(props: NavigationDrawerShellProps) {
   });
 
   const handleResizeStart = (event: MouseEvent) => {
-    if (!expanded() || isMobile()) return;
+    if (!expanded() || isMobile() || props.isSettings) {
+      return;
+    }
 
     event.preventDefault();
     setResizing(true);
@@ -48,11 +67,12 @@ export function NavigationDrawerShell(props: NavigationDrawerShellProps) {
     const startWidth = width();
 
     const handleMove = (moveEvent: MouseEvent) => {
-      const next = Math.min(
+      const nextWidth = Math.min(
         MAX_WIDTH,
         Math.max(MIN_WIDTH, startWidth + moveEvent.clientX - startX),
       );
-      setWidth(next);
+
+      setWidth(nextWidth);
     };
 
     const handleEnd = () => {
@@ -65,96 +85,122 @@ export function NavigationDrawerShell(props: NavigationDrawerShellProps) {
     window.addEventListener("mouseup", handleEnd);
   };
 
-  const toggleExpanded = () => {
-    setExpanded((current) => !current);
+  const memorizeNavigationState = () => {
+    setMemorizedExpanded(expanded());
+    setMemorizedPath(location.pathname + location.search);
+  };
+
+  const closeSettings = () => {
+    const nextPath = memorizedPath();
+    const fallbackPath = getDefaultAppPath(currentUser().role);
+    const targetPath =
+      nextPath && !nextPath.startsWith("/settings") && !nextPath.startsWith("/admin")
+        ? nextPath
+        : fallbackPath;
+
+    navigate(targetPath);
+    setExpanded(memorizedExpanded());
   };
 
   return (
-    <>
-      <aside class={styles.drawerHost}>
+    <aside class={styles.drawerHost}>
+      <div
+        class={cn(
+          styles.drawer,
+          !expanded() && styles.drawerCollapsed,
+          isMobile() && expanded() && styles.drawerOpenMobile,
+          isMobile() && !expanded() && styles.drawerClosedMobile,
+        )}
+        style={{
+          width: isMobile() ? undefined : expanded() ? `${width()}px` : "40px",
+        }}
+      >
         <div
-          class={cn(
-            styles.drawer,
-            !expanded() && styles.drawerCollapsed,
-            isMobile() && expanded() && styles.drawerOpenMobile,
-            isMobile() && !expanded() && styles.drawerClosedMobile,
-          )}
+          ref={(element) => {
+            drawerPanelRef = element;
+          }}
+          class={cn(styles.drawerInner, !expanded() && styles.drawerCollapsed)}
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
-          style={{
-            width: isMobile()
-              ? undefined
-              : expanded()
-                ? `${width()}px`
-                : "40px",
-          }}
         >
-          <div
-            ref={(element) => {
-              drawerPanelRef = element;
-            }}
-            class={cn(
-              styles.drawerInner,
-              !expanded() && styles.drawerCollapsed,
-            )}
+          <Show
+            when={props.isSettings}
+            fallback={
+              <header
+                class={cn(styles.header, !expanded() && styles.headerCollapsed)}
+              >
+                <AccountMenu
+                  label={shortName(currentUser())}
+                  avatarUrl={currentUser().avatarUrl}
+                  collapsed={!expanded() && !isMobile()}
+                  onOpenSettings={memorizeNavigationState}
+                  onLogout={logout}
+                />
+
+                <Show when={!isMobile()}>
+                  <div class={styles.headerActions}>
+                    <button
+                      type="button"
+                      class={styles.searchButton}
+                      onClick={props.onSearch}
+                      aria-label="Buscar"
+                    >
+                      <Search size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      class={styles.collapseButton}
+                      onClick={() => setExpanded((value) => !value)}
+                      aria-label={
+                        expanded()
+                          ? "Contraer barra lateral"
+                          : "Expandir barra lateral"
+                      }
+                      style={{
+                        opacity: expanded() ? (hovered() ? "1" : "0") : "1",
+                      }}
+                    >
+                      {expanded() ? (
+                        <ChevronLeft size={16} />
+                      ) : (
+                        <ChevronRight size={16} />
+                      )}
+                    </button>
+                  </div>
+                </Show>
+              </header>
+            }
           >
-            <div
-              class={cn(styles.header, !expanded() && styles.headerCollapsed)}
-            >
-              <AccountMenu
-                label={shortName(currentUser())}
-                avatarUrl={currentUser().avatarUrl}
-                collapsed={!expanded() && !isMobile()}
-                onLogout={logout}
-              />
-
-              <Show when={!isMobile()}>
-                <div class={styles.headerActions}>
-                  <button
-                    type="button"
-                    class={styles.searchButton}
-                    onClick={props.onSearch}
-                    aria-label="Buscar"
-                  >
-                    <Search size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    class={styles.collapseButton}
-                    onClick={toggleExpanded}
-                    aria-label={
-                      expanded()
-                        ? "Contraer barra lateral"
-                        : "Expandir barra lateral"
-                    }
-                    style={{
-                      opacity: expanded() ? (hovered() ? "1" : "0") : "1",
-                      transition: "opacity 150ms var(--ease-standard)",
-                    }}
-                  >
-                    {expanded() ? (
-                      <ChevronLeft size={16} />
-                    ) : (
-                      <ChevronRight size={16} />
-                    )}
-                  </button>
-                </div>
-              </Show>
-            </div>
-
-            {props.children}
-
-            <Show when={!isMobile() && !props.isSettings && expanded()}>
-              <button
-                type="button"
-                class={cn(styles.resizeHandle, resizing() && styles.resizing)}
-                onMouseDown={handleResizeStart}
-                aria-label="Redimensionar barra lateral"
-              />
+            <Show when={!isMobile()}>
+              <header class={styles.settingsBackHeader}>
+                <button
+                  type="button"
+                  class={styles.settingsBackButton}
+                  onClick={closeSettings}
+                >
+                  <X size={16} />
+                  <span>{props.title ?? "Salir"}</span>
+                </button>
+              </header>
             </Show>
-          </div>
+          </Show>
+
+          <div class={styles.scrollable}>{props.children}</div>
+
+          {props.fixedContent ? (
+            <div class={styles.fixedContent}>{props.fixedContent}</div>
+          ) : null}
+
+          <Show when={!isMobile() && !props.isSettings && expanded()}>
+            <button
+              type="button"
+              class={cn(styles.resizeHandle, resizing() && styles.resizing)}
+              onMouseDown={handleResizeStart}
+              aria-label="Redimensionar barra lateral"
+            />
+          </Show>
         </div>
-      </aside>
-    </>
+      </div>
+    </aside>
   );
 }

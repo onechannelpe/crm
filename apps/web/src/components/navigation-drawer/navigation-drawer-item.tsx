@@ -14,6 +14,13 @@ import {
 
 import styles from "./navigation-drawer.module.css";
 
+export type NavigationDrawerSubItemState =
+  | "intermediate-before-selected"
+  | "intermediate-selected"
+  | "intermediate-after-selected"
+  | "last-selected"
+  | "last-not-selected";
+
 interface NavigationDrawerItemProps {
   item: DrawerNavEntry;
   expanded: boolean;
@@ -23,14 +30,7 @@ interface NavigationDrawerItemProps {
   closeOnNavigate?: () => void;
 }
 
-type SubItemAdornmentState =
-  | "intermediate-before-selected"
-  | "intermediate-selected"
-  | "intermediate-after-selected"
-  | "last-selected"
-  | "last-not-selected";
-
-function getSubItemAdornmentState({
+export function getSubItemAdornmentState({
   index,
   arrayLength,
   selectedIndex,
@@ -38,7 +38,7 @@ function getSubItemAdornmentState({
   index: number;
   arrayLength: number;
   selectedIndex: number;
-}): SubItemAdornmentState {
+}): NavigationDrawerSubItemState {
   const thereIsOnlyOneItem = arrayLength === 1;
   const isLast = index === arrayLength - 1;
   const isSelected = index === selectedIndex;
@@ -59,7 +59,9 @@ function getSubItemAdornmentState({
   return "intermediate-after-selected";
 }
 
-function SubItemBreadcrumb(props: { state: SubItemAdornmentState }) {
+export function NavigationDrawerItemBreadcrumb(props: {
+  state: NavigationDrawerSubItemState;
+}) {
   const showVerticalBar =
     props.state !== "last-not-selected" && props.state !== "last-selected";
   const verticalBarDarker = props.state === "intermediate-before-selected";
@@ -74,16 +76,16 @@ function SubItemBreadcrumb(props: { state: SubItemAdornmentState }) {
     <span class={styles.subItemBreadcrumb}>
       <span
         class={styles.subItemBreadcrumbGap}
-        data-darker={gapDarker ? "true" : "false"}
+        data-darker={gapDarker ? "true" : undefined}
       />
       <span
         class={styles.subItemBreadcrumbElbow}
-        data-darker={protrusionDarker ? "true" : "false"}
+        data-darker={protrusionDarker ? "true" : undefined}
       />
       <Show when={showVerticalBar}>
         <span
           class={styles.subItemBreadcrumbVertical}
-          data-darker={verticalBarDarker ? "true" : "false"}
+          data-darker={verticalBarDarker ? "true" : undefined}
         />
       </Show>
     </span>
@@ -184,7 +186,7 @@ export function NavigationDrawerItem(props: NavigationDrawerItemProps) {
                       styles.itemActive,
                   )}
                 >
-                  <SubItemBreadcrumb
+                  <NavigationDrawerItemBreadcrumb
                     state={getSubItemAdornmentState({
                       index: index(),
                       arrayLength: props.item.children.length,
@@ -208,9 +210,12 @@ interface DrawerSectionProps {
   open: boolean;
   onToggle: () => void;
   children: JSX.Element;
+  collapsible?: boolean;
 }
 
 export function DrawerSection(props: DrawerSectionProps) {
+  const collapsible = props.collapsible ?? true;
+
   return (
     <section class={styles.section}>
       <button
@@ -223,20 +228,24 @@ export function DrawerSection(props: DrawerSectionProps) {
         aria-expanded={props.open}
       >
         <span class={styles.sectionTitleLabel}>{props.label}</span>
-        <span
-          class={cn(
-            styles.sectionTitleChevron,
-            styles.sectionTitleChevronVisible,
-          )}
-          style={{ transform: props.open ? "rotate(0deg)" : "rotate(-90deg)" }}
-        >
-          <ChevronDown size={12} />
-        </span>
+        <Show when={collapsible}>
+          <span
+            class={styles.sectionTitleChevron}
+            style={{ transform: props.open ? "rotate(0deg)" : "rotate(-90deg)" }}
+          >
+            <ChevronDown size={12} />
+          </span>
+        </Show>
       </button>
 
-      <AnimatedExpandableContainer isExpanded={props.open} duration={300}>
-        <div class={styles.collapseWrapper}>{props.children}</div>
-      </AnimatedExpandableContainer>
+      <Show
+        when={collapsible}
+        fallback={<div class={styles.collapseWrapper}>{props.children}</div>}
+      >
+        <AnimatedExpandableContainer isExpanded={props.open} duration={300}>
+          <div class={styles.collapseWrapper}>{props.children}</div>
+        </AnimatedExpandableContainer>
+      </Show>
     </section>
   );
 }

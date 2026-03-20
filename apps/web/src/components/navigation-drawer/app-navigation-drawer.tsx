@@ -8,7 +8,7 @@ import { SettingsNavigationDrawer } from "./settings-navigation-drawer";
 
 export function AppNavigationDrawer() {
   const location = useLocation();
-  const { isMobile, currentMobileDrawer, setCurrentMobileDrawer } =
+  const { isMobile, expanded, setExpanded, currentMobileDrawer, setCurrentMobileDrawer } =
     useNavigationDrawerState();
 
   const isSettingsRoute = createMemo(
@@ -19,30 +19,25 @@ export function AppNavigationDrawer() {
   );
 
   createEffect(() => {
-    if (!isMobile()) return;
-
-    if (isSettingsRoute()) {
-      setCurrentMobileDrawer("settings");
+    if (isMobile()) {
+      if (isSettingsRoute()) {
+        setCurrentMobileDrawer("settings");
+      }
       return;
     }
 
-    if (currentMobileDrawer() !== "main") {
-      setCurrentMobileDrawer("main");
+    if (isSettingsRoute() && !expanded()) {
+      setExpanded(true);
     }
   });
 
-  const renderSettings = createMemo(
-    () =>
-      isSettingsRoute() || (isMobile() && currentMobileDrawer() === "settings"),
+  const renderSettings = createMemo(() =>
+    isMobile() ? currentMobileDrawer() === "settings" : isSettingsRoute(),
   );
 
   return (
     <>
-      {renderSettings() ? (
-        <SettingsNavigationDrawer />
-      ) : (
-        <MainNavigationDrawer />
-      )}
+      {renderSettings() ? <SettingsNavigationDrawer /> : <MainNavigationDrawer />}
       <MobileNavigationBar />
     </>
   );

@@ -1,11 +1,9 @@
 import { A, useLocation, useNavigate } from "@solidjs/router";
-import { For, Show, createMemo, createSignal, onMount } from "solid-js";
+import { For, Show, createMemo } from "solid-js";
 
-import X from "~/components/icons/x";
-import {
-  getSettingsSectionLabel,
-  SETTINGS_NAV_ITEMS,
-} from "~/components/layout/settings-nav";
+import { logout } from "~/actions/auth";
+import CircleQuestionMark from "~/components/icons/circle-question-mark";
+import LogOut from "~/components/icons/log-out";
 import { useSession } from "~/components/providers/session-provider";
 import {
   canAccessPath,
@@ -13,32 +11,31 @@ import {
 } from "~/lib/auth/access/route-policy";
 import { cn } from "~/lib/utils";
 
+import {
+  SETTINGS_NAV_ITEMS,
+  getSettingsSectionLabel,
+} from "./settings-navigation-config";
 import { DrawerSection } from "./navigation-drawer-item";
 import { NavigationDrawerShell } from "./navigation-drawer-shell";
 import { useNavigationDrawerState } from "./navigation-drawer-state";
 
 import styles from "./navigation-drawer.module.css";
 
-const ADVANCED_SETTINGS_STORAGE_KEY = "crm-settings-advanced-enabled";
-
 export function SettingsNavigationDrawer() {
-  const { currentUser } = useSession();
-  const navigate = useNavigate();
   const location = useLocation();
-  const { expanded, isMobile, setExpanded } = useNavigationDrawerState();
-
-  const [showAdvanced, setShowAdvanced] = createSignal(true);
-
-  onMount(() => {
-    if (typeof window === "undefined") return;
-
-    setShowAdvanced(
-      window.localStorage.getItem(ADVANCED_SETTINGS_STORAGE_KEY) !== "false",
-    );
-  });
+  const navigate = useNavigate();
+  const { currentUser } = useSession();
+  const {
+    expanded,
+    isMobile,
+    setExpanded,
+    advancedModeEnabled,
+    setAdvancedModeEnabled,
+  } = useNavigationDrawerState();
 
   const visibleItems = createMemo(() => {
     const role = currentUser().role;
+
     return SETTINGS_NAV_ITEMS.filter((item) => canAccessPath(role, item.href));
   });
 
@@ -51,116 +48,135 @@ export function SettingsNavigationDrawer() {
     };
   });
 
-  const toggleAdvanced = () => {
-    const next = !showAdvanced();
-    setShowAdvanced(next);
-
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(ADVANCED_SETTINGS_STORAGE_KEY, String(next));
-    }
-  };
-
   const closeOnNavigate = () => {
     if (isMobile()) {
       setExpanded(false);
     }
   };
 
+  const expandedOrMobile = createMemo(() => expanded() || isMobile());
+
   return (
     <NavigationDrawerShell
       isSettings={true}
+      title="Salir de ajustes"
       onSearch={() => {
         navigate("/search");
         closeOnNavigate();
       }}
-    >
-      <div class={styles.scrollable}>
-        <section class={styles.section}>
-          <A
-            href={getDefaultAppPath(currentUser().role)}
-            class={styles.item}
-            onClick={closeOnNavigate}
-          >
-            <X size={16} />
-            <span
-              class={cn(
-                styles.itemLabel,
-                !expanded() && !isMobile() && styles.itemLabelCollapsed,
-              )}
-            >
-              Salir
-            </span>
-          </A>
-        </section>
-
-        <For each={["user", "workspace"] as const}>
-          {(sectionId) => {
-            const sectionItems = createMemo(() => groupedItems()[sectionId]);
-
-            return (
-              <Show when={sectionItems().length > 0}>
-                <DrawerSection
-                  label={getSettingsSectionLabel(sectionId)}
-                  expanded={expanded() || isMobile()}
-                  open={true}
-                  onToggle={() => undefined}
-                >
-                  <For each={sectionItems()}>
-                    {(item) => {
-                      const Icon = item.icon;
-                      const isAdvancedHidden =
-                        Boolean(item.advanced) && !showAdvanced();
-                      const active =
-                        location.pathname === item.href ||
-                        location.pathname.startsWith(`${item.href}/`);
-
-                      return (
-                        <Show when={!isAdvancedHidden}>
-                          <A
-                            href={item.href}
-                            onClick={closeOnNavigate}
-                            class={cn(styles.item, active && styles.itemActive)}
-                          >
-                            <Icon size={16} />
-                            <span
-                              class={cn(
-                                styles.itemLabel,
-                                !expanded() &&
-                                  !isMobile() &&
-                                  styles.itemLabelCollapsed,
-                              )}
-                            >
-                              {item.label}
-                            </span>
-                          </A>
-                        </Show>
-                      );
-                    }}
-                  </For>
-                </DrawerSection>
-              </Show>
-            );
-          }}
-        </For>
-
+      fixedContent={
         <div class={styles.settingsFooter}>
           <div class={styles.settingsSwitchRow}>
             <span>Avanzado:</span>
             <button
               type="button"
               role="switch"
-              aria-checked={showAdvanced()}
+              aria-checked={advancedModeEnabled()}
               class={cn(
                 styles.settingsSwitch,
-                showAdvanced() && styles.settingsSwitchChecked,
+                advancedModeEnabled() && styles.settingsSwitchChecked,
               )}
-              onClick={toggleAdvanced}
+              onClick={() => setAdvancedModeEnabled((value) => !value)}
             >
               <span class={styles.settingsSwitchThumb} />
             </button>
           </div>
         </div>
-      </div>
+      }
+    >
+      <For each={(["user", "workspace"] as const)}>
+        {(sectionId) => {
+          const sectionItems = createMemo(() => groupedItems()[sectionId]);
+
+          return (
+            <Show when={sectionItems().length > 0}>
+              <DrawerSection
+                label={getSettingsSectionLabel(sectionId)}
+                expanded={expandedOrMobile()}
+                open={true}
+                onToggle={() => undefined}
+                collapsible={false}
+              >
+                <For each={sectionItems()}>
+                  {(item) => {
+                    const Icon = item.icon;
+                    const active =
+                      location.pathname === item.href ||
+                      location.pathname.startsWith(`${item.href}/`);
+                    const hidden = item.advanced && !advancedModeEnabled();
+
+                    return (
+                      <Show when={!hidden}>
+                        <A
+                          href={item.href}
+                          onClick={closeOnNavigate}
+                          class={cn(styles.item, active && styles.itemActive)}
+                        >
+                          <Icon size={16} />
+                          <span
+                            class={cn(
+                              styles.itemLabel,
+                              !expandedOrMobile() && styles.itemLabelCollapsed,
+                            )}
+                          >
+                            {item.label}
+                          </span>
+                        </A>
+                      </Show>
+                    );
+                  }}
+                </For>
+              </DrawerSection>
+            </Show>
+          );
+        }}
+      </For>
+
+      <DrawerSection
+        label="Otros"
+        expanded={expandedOrMobile()}
+        open={true}
+        onToggle={() => undefined}
+        collapsible={false}
+      >
+        <a
+          href="/docs"
+          target="_blank"
+          rel="noopener noreferrer"
+          class={styles.item}
+          onClick={closeOnNavigate}
+        >
+          <CircleQuestionMark size={16} />
+          <span
+            class={cn(
+              styles.itemLabel,
+              !expandedOrMobile() && styles.itemLabelCollapsed,
+            )}
+          >
+            Documentacion
+          </span>
+        </a>
+
+        <button
+          type="button"
+          class={cn(styles.item, styles.itemButton)}
+          onClick={() => {
+            logout();
+            closeOnNavigate();
+            navigate(getDefaultAppPath(currentUser().role));
+          }}
+        >
+          <LogOut size={16} />
+          <span
+            class={cn(
+              styles.itemLabel,
+              !expandedOrMobile() && styles.itemLabelCollapsed,
+            )}
+          >
+            Cerrar sesion
+          </span>
+        </button>
+      </DrawerSection>
     </NavigationDrawerShell>
   );
 }
