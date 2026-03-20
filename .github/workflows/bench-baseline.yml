@@ -1,0 +1,51 @@
+name: bench baseline
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Baseline mode"
+        required: true
+        default: "smoke"
+        type: choice
+        options:
+          - smoke
+          - full
+      report_path:
+        description: "Runner-local report path to promote"
+        required: true
+        type: string
+
+jobs:
+  promote:
+    name: promote benchmark baseline
+    runs-on: [self-hosted, linux, search-bench]
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: choose baseline target
+        id: target
+        shell: bash
+        run: |
+          if [[ "${{ inputs.mode }}" == "full" ]]; then
+            echo "baseline=ops/bench/baselines/full.json" >> "$GITHUB_OUTPUT"
+          else
+            echo "baseline=ops/bench/baselines/smoke.json" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: promote baseline file
+        shell: bash
+        run: |
+          bash ops/bench/promote_baseline.sh "${{ inputs.report_path }}" "${{ steps.target.outputs.baseline }}"
+
+      - name: upload promoted baseline
+        uses: actions/upload-artifact@v4
+        with:
+          name: promoted-baseline-${{ inputs.mode }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ steps.target.outputs.baseline }}
+          if-no-files-found: error

@@ -12,4 +12,3 @@ target/
 # noise
 *.log
 *.ps1
-*.sh
