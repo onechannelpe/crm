@@ -16,11 +16,6 @@ on:
         required: true
         default: "manual"
         type: string
-      sync_raw:
-        description: "Sync raw files into pipeline raw directory"
-        required: false
-        default: false
-        type: boolean
 
 permissions:
   contents: read
@@ -45,13 +40,8 @@ jobs:
         if: ${{ inputs.target == 'smoke' }}
         shell: bash
         run: |
-          sync=0
-          if [[ "${{ inputs.sync_raw }}" == "true" ]]; then
-            sync=1
-          fi
           DATASET_VERSION="${{ inputs.dataset_version }}" \
           BENCH_ROOT="$BENCH_ROOT" \
-          SYNC_RAW="$sync" \
           bash ops/bench/build_smoke_dataset.sh
 
       - name: refresh full manifest
