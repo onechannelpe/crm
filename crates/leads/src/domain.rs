@@ -29,7 +29,7 @@ pub fn dedupe_candidates(input: Vec<LeadCandidate>) -> Vec<LeadCandidate> {
 }
 
 /// FNV-1a 64-bit (ref: https://ssojet.com/hashing/fnv-1-in-rust)
-// fast, stable across runs, no external dependency.
+/// Fast, stable across runs, no external dependency.
 fn stable_hash(bytes: &[u8]) -> u64 {
     let mut hash: u64 = 14695981039346656037;
     for &b in bytes {
