@@ -144,7 +144,7 @@ async fn short_text_query_returns_400() {
 
 #[tokio::test]
 async fn rate_limit_is_enforced_after_capacity_exhausted() {
-    // 1 token — DNI costs 1, so the second call must be rejected.
+    // 1 token available, DNI costs 1, second call is rejected.
     let server = make_server(1);
     let body = json!({"type":"dni","value":"12345678","limit":5});
 
@@ -156,7 +156,7 @@ async fn rate_limit_is_enforced_after_capacity_exhausted() {
 
 #[tokio::test]
 async fn name_search_costs_more_tokens_than_dni() {
-    // 3 tokens — person_name costs 3, so the second call must be rejected.
+    // 3 tokens available, person_name costs 3, second call is rejected.
     let server = make_server(3);
     let body = json!({"type":"person_name","value":"juan","limit":20});
 
