@@ -13,6 +13,7 @@ PROJECTION_CONTRACT_PATH="${PROJECTION_CONTRACT_PATH:-$ROOT_DIR/contracts/engine
 PIPELINE_MANIFEST_OUTPUT="${PIPELINE_MANIFEST_OUTPUT:-$BENCH_ROOT/pipeline/source-manifest.json}"
 PIPELINE_CONFIG_OUTPUT="${PIPELINE_CONFIG_OUTPUT:-$BENCH_ROOT/pipeline/pipeline.toml}"
 ENGINE_DB_PATH="${ENGINE_DB_PATH:-/srv/crm/full/contacts.sqlite}"
+PIPELINE_BIN="${PIPELINE_BIN:-}"
 
 if [[ ! -d "$RAW_SOURCE_DIR" ]]; then
   echo "raw source dir not found: $RAW_SOURCE_DIR" >&2
@@ -32,7 +33,15 @@ python3 "$ROOT_DIR/ops/bench/prepare_pipeline_runtime.py" \
 echo "[bench] building smoke dataset at $SMOKE_DB_PATH"
 mkdir -p "$(dirname "$SMOKE_DB_PATH")"
 cd "$ROOT_DIR"
-cargo run -p crm-pipeline --release -- refresh --config "$PIPELINE_CONFIG_OUTPUT" --slice 100k --to "$SMOKE_DB_PATH"
+if [[ -n "$PIPELINE_BIN" ]]; then
+  if [[ ! -x "$PIPELINE_BIN" ]]; then
+    echo "pipeline binary is not executable: $PIPELINE_BIN" >&2
+    exit 1
+  fi
+  "$PIPELINE_BIN" refresh --config "$PIPELINE_CONFIG_OUTPUT" --slice 100k --to "$SMOKE_DB_PATH"
+else
+  cargo run -p crm-pipeline --release -- refresh --config "$PIPELINE_CONFIG_OUTPUT" --slice 100k --to "$SMOKE_DB_PATH"
+fi
 
 echo "[bench] generating smoke workload at $WORKLOAD_PATH"
 python3 "$ROOT_DIR/ops/bench/generate_workload_from_db.py" \

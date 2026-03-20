@@ -23,6 +23,7 @@ fi
 
 OUTPUT_PATH="${OUTPUT_PATH:-$BENCH_ROOT/runs/${MODE}-${RUN_ID}.json}"
 STRICT_BASELINE="${STRICT_BASELINE:-0}"
+BENCH_SEARCH_BIN="${BENCH_SEARCH_BIN:-}"
 
 if [[ ! -f "$MANIFEST_PATH" ]]; then
   echo "manifest path not found: $MANIFEST_PATH" >&2
@@ -36,14 +37,29 @@ fi
 mkdir -p "$(dirname "$OUTPUT_PATH")"
 cd "$ROOT_DIR"
 
-cmd=(
-  cargo run -p engine --bin bench-search --release --
-  --mode "$MODE"
-  --dataset-manifest-json "$MANIFEST_PATH"
-  --workload-json "$WORKLOAD_PATH"
-  --baseline-json "$BASELINE_PATH"
-  --output-json "$OUTPUT_PATH"
-)
+if [[ -n "$BENCH_SEARCH_BIN" ]]; then
+  if [[ ! -x "$BENCH_SEARCH_BIN" ]]; then
+    echo "bench binary is not executable: $BENCH_SEARCH_BIN" >&2
+    exit 1
+  fi
+  cmd=(
+    "$BENCH_SEARCH_BIN"
+    --mode "$MODE"
+    --dataset-manifest-json "$MANIFEST_PATH"
+    --workload-json "$WORKLOAD_PATH"
+    --baseline-json "$BASELINE_PATH"
+    --output-json "$OUTPUT_PATH"
+  )
+else
+  cmd=(
+    cargo run -p engine --bin bench-search --release --
+    --mode "$MODE"
+    --dataset-manifest-json "$MANIFEST_PATH"
+    --workload-json "$WORKLOAD_PATH"
+    --baseline-json "$BASELINE_PATH"
+    --output-json "$OUTPUT_PATH"
+  )
+fi
 
 if [[ "$STRICT_BASELINE" == "1" ]]; then
   cmd+=(--strict-baseline)

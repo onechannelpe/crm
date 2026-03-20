@@ -24,6 +24,13 @@ This folder contains system benchmark operations for the engine search path.
 1. Trigger one workflow in GitHub Actions: `bench search`.
 
 Use these inputs for typical cases:
-- Bootstrap smoke baseline: `mode=smoke`, `refresh_dataset=true`, `promote_baseline=true`, `run_strict_gate=true`.
-- Smoke gate only: `mode=smoke`, `refresh_dataset=true`, `promote_baseline=false`, `run_strict_gate=true`.
-- Full gate only: `mode=full`, `refresh_dataset=true`, `promote_baseline=false`, `run_strict_gate=true`.
+- Bootstrap smoke baseline: `mode=smoke`, `operation=bootstrap`, `refresh_dataset=true`.
+- Smoke gate only: `mode=smoke`, `operation=gate`, `refresh_dataset=true`.
+- Bootstrap full baseline: `mode=full`, `operation=bootstrap`, `refresh_dataset=true`.
+- Full gate only: `mode=full`, `operation=gate`, `refresh_dataset=true`.
+
+`bench search` is linear by design:
+- Build binaries once.
+- Optionally refresh dataset state.
+- Run one benchmark phase (`bootstrap` or `gate`).
+- Optionally promote baseline (`bootstrap` only).
