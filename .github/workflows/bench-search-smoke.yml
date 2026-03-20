@@ -1,0 +1,64 @@
+name: bench search smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      strict_baseline:
+        description: "Fail if baseline is missing"
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: smoke benchmark gate
+    runs-on: [self-hosted, linux, bench-selfhosted]
+    timeout-minutes: 30
+
+    env:
+      BENCH_ROOT: /srv/crm/bench
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: ensure manifest exists
+        shell: bash
+        run: |
+          test -f "$BENCH_ROOT/manifests/smoke.json"
+
+      - name: run smoke benchmark
+        shell: bash
+        run: |
+          strict=0
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.strict_baseline }}" == "true" ]]; then
+            strict=1
+          fi
+          MODE=smoke \
+          STRICT_BASELINE="$strict" \
+          RUN_ID="${{ github.run_id }}-${{ github.run_attempt }}" \
+          OUTPUT_PATH="$BENCH_ROOT/runs/smoke-${{ github.run_id }}-${{ github.run_attempt }}.json" \
+          bash ops/bench/run_benchmark.sh
+
+      - name: copy report for artifact
+        shell: bash
+        run: |
+          cp "$BENCH_ROOT/runs/smoke-${{ github.run_id }}-${{ github.run_attempt }}.json" target/bench-search-report-smoke.json
+
+      - name: upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-search-smoke-${{ github.run_id }}-${{ github.run_attempt }}
+          path: target/bench-search-report-smoke.json
+          if-no-files-found: error
+          retention-days: 30
