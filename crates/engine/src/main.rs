@@ -48,7 +48,7 @@ async fn run() -> Result<(), StartupError> {
     let contacts_pool = make_readonly_pool(&cfg.contacts_db_path)?;
     let leads_pool = make_pool(&cfg.leads_db_path)?;
 
-    // Validate schemas eagerly — better to crash at startup than at first request.
+    // Validate schemas eagerly, better to crash at startup than at first request.
     {
         let conn = contacts_pool
             .get()
