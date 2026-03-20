@@ -54,44 +54,6 @@ bun --env-file=../../.env.production run worker:maintenance:prod
 
 Local scripts choose their default env file automatically. Production entrypoints stay explicit through `start`, `migrate:prod`, `seed:prod`, and `worker:maintenance:prod`.
 
-## Production
-
-Production is Bun-first.
-Use the app-local Bun commands directly.
-For a real server, prefer keeping secrets outside the repo and pass an explicit env file path.
-
-Build from `apps/web/`:
-
-```sh
-bun run build
-```
-
-Run migrations:
-
-```sh
-bun --env-file=../../.env.production run migrate:prod
-```
-
-Run seeds if needed:
-
-```sh
-bun --env-file=../../.env.production run seed:prod
-```
-
-Start the web server:
-
-```sh
-bun --env-file=../../.env.production run start
-```
-
-Start the maintenance worker:
-
-```sh
-bun --env-file=../../.env.production run worker:maintenance
-```
-
-Systemd unit examples live in [`../../ops/systemd/web.service`](../../ops/systemd/web.service) and [`../../ops/systemd/web-worker.service`](../../ops/systemd/web-worker.service).
-
 ## Validation
 
 Validation commands:

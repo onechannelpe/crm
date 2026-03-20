@@ -64,39 +64,6 @@ bun run dev
 
 `bun run dev` starts the engine and web application. Alternatively, you can start a single process from the repo root with `bun run dev:web`, `bun run dev:engine`, or `bun run dev:worker`.
 
-## Production deployment
-
-The production target for the web app is Bun.
-`apps/web` owns the web lifecycle commands. Callers pass the env file explicitly.
-
-From a fresh clone on the server:
-
-```sh
-cp .env.example .env.production
-bun install --frozen-lockfile
-bun run --cwd packages/notifications build:emails
-cd apps/web
-bun --env-file=../../.env.production run build
-bun --env-file=../../.env.production run migrate
-bun --env-file=../../.env.production run start
-```
-
-Run the maintenance worker separately:
-
-```sh
-cd apps/web
-bun --env-file=../../.env.production run worker:maintenance
-```
-
-If the server stores secrets outside the repo, call Bun directly with an explicit env file:
-
-```sh
-cd /srv/web/apps/web
-bun --env-file=/etc/web/web.env run start
-```
-
-Systemd unit examples live in [`ops/systemd/web.service`](ops/systemd/web.service) and [`ops/systemd/web-worker.service`](ops/systemd/web-worker.service).
-
 ## Read this first
 
 - Web request and auth flow: [`apps/web/src/middleware.ts`](apps/web/src/middleware.ts), [`apps/web/src/lib/auth/access/request-auth.ts`](apps/web/src/lib/auth/access/request-auth.ts)
