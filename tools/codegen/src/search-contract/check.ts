@@ -23,7 +23,7 @@ export type CheckResult =
  *  4. Every projection field references only known canonical fields.
  *  5. Every non-derived projection field is backed by at least one enabled source.
  *
- * Pure function — all I/O happens in the bin entry point.
+ * All I/O happens in the bin entry point.
  */
 export function checkSearchContract(
   canonical: CanonicalContract,
