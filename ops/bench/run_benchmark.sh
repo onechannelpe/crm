@@ -14,9 +14,11 @@ fi
 if [[ "$MODE" == "smoke" ]]; then
   MANIFEST_PATH="${MANIFEST_PATH:-$BENCH_ROOT/manifests/smoke.json}"
   BASELINE_PATH="${BASELINE_PATH:-$ROOT_DIR/ops/bench/baselines/smoke.json}"
+  WORKLOAD_PATH="${WORKLOAD_PATH:-$BENCH_ROOT/workloads/smoke.json}"
 else
   MANIFEST_PATH="${MANIFEST_PATH:-$BENCH_ROOT/manifests/full.json}"
   BASELINE_PATH="${BASELINE_PATH:-$ROOT_DIR/ops/bench/baselines/full.json}"
+  WORKLOAD_PATH="${WORKLOAD_PATH:-$BENCH_ROOT/workloads/full.json}"
 fi
 
 OUTPUT_PATH="${OUTPUT_PATH:-$BENCH_ROOT/runs/${MODE}-${RUN_ID}.json}"
@@ -24,6 +26,10 @@ STRICT_BASELINE="${STRICT_BASELINE:-0}"
 
 if [[ ! -f "$MANIFEST_PATH" ]]; then
   echo "manifest path not found: $MANIFEST_PATH" >&2
+  exit 1
+fi
+if [[ ! -f "$WORKLOAD_PATH" ]]; then
+  echo "workload path not found: $WORKLOAD_PATH" >&2
   exit 1
 fi
 
@@ -34,6 +40,7 @@ cmd=(
   cargo run -p engine --bin bench-search --release --
   --mode "$MODE"
   --dataset-manifest-json "$MANIFEST_PATH"
+  --workload-json "$WORKLOAD_PATH"
   --baseline-json "$BASELINE_PATH"
   --output-json "$OUTPUT_PATH"
 )

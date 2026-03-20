@@ -12,6 +12,8 @@ This folder contains system benchmark operations for the engine search path.
 ## Scripts
 
 - `build_smoke_dataset.sh`: rebuild smoke dataset using pipeline `refresh --slice 100k`.
+- `prepare_pipeline_runtime.py`: generate server-native pipeline config and manifest pointing to `/srv/crm/raw` and fail fast on missing raw files.
+- `generate_workload_from_db.py`: derive workload inputs from the built dataset.
 - `update_full_manifest.sh`: refresh manifest metadata for full dataset.
 - `run_benchmark.sh`: run `bench-search` for smoke or full mode.
 - `promote_baseline.sh`: atomically replace baseline JSON.
