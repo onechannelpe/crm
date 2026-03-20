@@ -1,20 +1,32 @@
-name: bench search full
+name: bench search
 
 on:
   workflow_dispatch:
     inputs:
+      mode:
+        description: "Benchmark mode"
+        required: true
+        default: "smoke"
+        type: choice
+        options:
+          - smoke
+          - full
       strict_baseline:
         description: "Fail if baseline is missing"
         required: false
         default: false
         type: boolean
 
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.mode }}-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
 jobs:
-  full:
-    name: full benchmark
+  benchmark:
+    name: search benchmark
     runs-on: [self-hosted, linux, bench-selfhosted]
     timeout-minutes: 120
 
@@ -28,33 +40,29 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
-      - name: ensure manifest exists
-        shell: bash
-        run: |
-          test -f "$BENCH_ROOT/manifests/full.json"
-
-      - name: run full benchmark
+      - name: run benchmark
         shell: bash
         run: |
           strict=0
           if [[ "${{ inputs.strict_baseline }}" == "true" ]]; then
             strict=1
           fi
-          MODE=full \
+          MODE="${{ inputs.mode }}" \
           STRICT_BASELINE="$strict" \
           RUN_ID="${{ github.run_id }}-${{ github.run_attempt }}" \
-          OUTPUT_PATH="$BENCH_ROOT/runs/full-${{ github.run_id }}-${{ github.run_attempt }}.json" \
+          OUTPUT_PATH="$BENCH_ROOT/runs/${{ inputs.mode }}-${{ github.run_id }}-${{ github.run_attempt }}.json" \
           bash ops/bench/run_benchmark.sh
 
       - name: copy report for artifact
         shell: bash
         run: |
-          cp "$BENCH_ROOT/runs/full-${{ github.run_id }}-${{ github.run_attempt }}.json" target/bench-search-report-full.json
+          cp "$BENCH_ROOT/runs/${{ inputs.mode }}-${{ github.run_id }}-${{ github.run_attempt }}.json" \
+            "target/bench-search-report-${{ inputs.mode }}.json"
 
       - name: upload report
         uses: actions/upload-artifact@v4
         with:
-          name: bench-search-full-${{ github.run_id }}-${{ github.run_attempt }}
-          path: target/bench-search-report-full.json
+          name: bench-search-${{ inputs.mode }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: target/bench-search-report-${{ inputs.mode }}.json
           if-no-files-found: error
           retention-days: 30

@@ -4,27 +4,40 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 BENCH_ROOT="${BENCH_ROOT:-/srv/crm/bench}"
 RAW_SOURCE_DIR="${RAW_SOURCE_DIR:-/srv/crm/raw}"
-RAW_TARGET_DIR="${RAW_TARGET_DIR:-$ROOT_DIR/crates/pipeline/data/raw}"
 DATASET_VERSION="${DATASET_VERSION:-$(date +%Y%m%d-%H%M%S)}"
 
 SMOKE_DB_PATH="${SMOKE_DB_PATH:-$BENCH_ROOT/datasets/smoke/contacts.sqlite}"
 SMOKE_MANIFEST_PATH="${SMOKE_MANIFEST_PATH:-$BENCH_ROOT/manifests/smoke.json}"
-WORKLOAD_PATH="${WORKLOAD_PATH:-$ROOT_DIR/crates/engine/bench/workloads/default.json}"
+WORKLOAD_PATH="${WORKLOAD_PATH:-$BENCH_ROOT/workloads/smoke.json}"
 PROJECTION_CONTRACT_PATH="${PROJECTION_CONTRACT_PATH:-$ROOT_DIR/contracts/engine/search-projection.json}"
+PIPELINE_MANIFEST_OUTPUT="${PIPELINE_MANIFEST_OUTPUT:-$BENCH_ROOT/pipeline/source-manifest.json}"
+PIPELINE_CONFIG_OUTPUT="${PIPELINE_CONFIG_OUTPUT:-$BENCH_ROOT/pipeline/pipeline.toml}"
+ENGINE_DB_PATH="${ENGINE_DB_PATH:-/srv/crm/full/contacts.sqlite}"
 
 if [[ ! -d "$RAW_SOURCE_DIR" ]]; then
   echo "raw source dir not found: $RAW_SOURCE_DIR" >&2
   exit 1
 fi
 
-echo "[bench] syncing raw data from $RAW_SOURCE_DIR to $RAW_TARGET_DIR"
-mkdir -p "$RAW_TARGET_DIR"
-rsync -a --delete "$RAW_SOURCE_DIR"/ "$RAW_TARGET_DIR"/
+echo "[bench] preparing pipeline runtime files under $BENCH_ROOT/pipeline"
+python3 "$ROOT_DIR/ops/bench/prepare_pipeline_runtime.py" \
+  --bench-root "$BENCH_ROOT" \
+  --raw-root "$RAW_SOURCE_DIR" \
+  --manifest-template "$ROOT_DIR/crates/pipeline/data/mappings/source-manifest.json" \
+  --pipeline-config-template "$ROOT_DIR/crates/pipeline/pipeline.toml" \
+  --manifest-output "$PIPELINE_MANIFEST_OUTPUT" \
+  --pipeline-config-output "$PIPELINE_CONFIG_OUTPUT" \
+  --engine-db-path "$ENGINE_DB_PATH"
 
 echo "[bench] building smoke dataset at $SMOKE_DB_PATH"
 mkdir -p "$(dirname "$SMOKE_DB_PATH")"
 cd "$ROOT_DIR"
-cargo run -p crm-pipeline --release -- refresh --slice 100k --to "$SMOKE_DB_PATH"
+cargo run -p crm-pipeline --release -- refresh --config "$PIPELINE_CONFIG_OUTPUT" --slice 100k --to "$SMOKE_DB_PATH"
+
+echo "[bench] generating smoke workload at $WORKLOAD_PATH"
+python3 "$ROOT_DIR/ops/bench/generate_workload_from_db.py" \
+  --db-path "$SMOKE_DB_PATH" \
+  --output "$WORKLOAD_PATH"
 
 echo "[bench] writing smoke dataset manifest"
 python3 "$ROOT_DIR/ops/bench/update_manifest.py" \
