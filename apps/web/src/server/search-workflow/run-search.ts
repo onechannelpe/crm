@@ -1,3 +1,4 @@
+import type { EngineClient } from "~/server/adapters/engine/client";
 import type {
   SearchPolicyDefaultsRepo,
   SearchPolicyOverridesRepo,
@@ -44,7 +45,7 @@ interface SearchRepos {
 export async function runDirectSearch(
   command: RunDirectSearchCommand,
   repos: SearchRepos,
-  engine: { search: typeof engineClient.search } = engineClient,
+  engine: Pick<EngineClient, "search"> = engineClient,
 ): Promise<Result<SearchResult_, DomainError>> {
   const snapshotResult = await getSearchCapacitySnapshot(
     command.actorUserId,

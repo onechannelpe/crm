@@ -1,3 +1,4 @@
+import type { EngineClient } from "~/server/adapters/engine/client";
 import type {
   LeadPolicyDefaultsRepo,
   LeadPolicyOverridesRepo,
@@ -83,7 +84,7 @@ export type RefillTransactionRunner = <T>(
 interface RefillDeps {
   repos: RefillRepos;
   runInTransaction: RefillTransactionRunner;
-  engine?: { requestCandidates: typeof engineClient.requestCandidates };
+  engine?: Pick<EngineClient, "requestCandidates">;
 }
 
 export async function requestLeadRefill(
