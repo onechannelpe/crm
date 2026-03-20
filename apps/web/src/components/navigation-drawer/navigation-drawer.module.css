@@ -1,0 +1,425 @@
+.drawerHost {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.mobileScrim {
+  position: fixed;
+  inset: 0;
+  z-index: 19;
+  background: var(--scrim);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-fast) var(--ease-standard);
+}
+
+.mobileScrimVisible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.drawer {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 12px 0 16px 8px;
+  gap: 12px;
+  width: var(--nav-drawer-current-width);
+  background: transparent;
+  transition: width var(--motion-fast) var(--ease-standard);
+}
+
+.drawerInner {
+  width: calc(100% - 8px);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: 12px;
+}
+
+.drawerCollapsed .drawerInner {
+  align-items: center;
+}
+
+.header {
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-right: 8px;
+}
+
+.headerCollapsed {
+  justify-content: center;
+}
+
+.searchButton,
+.collapseButton,
+.topbarButton {
+  width: 28px;
+  height: 28px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--foreground-secondary);
+  background: transparent;
+}
+
+.searchButton:hover,
+.collapseButton:hover,
+.topbarButton:hover {
+  background: var(--bg-translucent);
+  color: var(--foreground);
+}
+
+.headerActions {
+  margin-inline-start: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.scrollable {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-right: 8px;
+}
+
+.section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+.sectionTitle {
+  width: 100%;
+  height: 20px;
+  padding: 0 4px;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--foreground-tertiary);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-semibold);
+  text-align: left;
+}
+
+.sectionTitle:hover {
+  background: var(--bg-translucent);
+  color: var(--foreground-secondary);
+}
+
+.sectionTitleLabel {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sectionTitleChevron {
+  opacity: 0;
+  transition:
+    opacity var(--motion-fast) var(--ease-standard),
+    transform var(--motion-fast) var(--ease-standard);
+}
+
+.sectionTitle:hover .sectionTitleChevron,
+.sectionTitleChevronVisible {
+  opacity: 1;
+}
+
+.sectionTitleCollapsed {
+  height: 0;
+  margin-top: 0;
+  padding: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.collapseWrapper {
+  overflow: hidden;
+  transition:
+    opacity var(--motion-fast) var(--ease-standard),
+    max-height var(--motion-fast) var(--ease-standard);
+}
+
+.collapseOpen {
+  opacity: 1;
+  max-height: 400px;
+}
+
+.collapseClosed {
+  opacity: 0;
+  max-height: 0;
+  pointer-events: none;
+}
+
+.itemGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.itemGroupCollapsed {
+  background: color-mix(in oklab, var(--foreground-tertiary) 7%, transparent);
+  border: 1px solid
+    color-mix(in oklab, var(--foreground-tertiary) 10%, transparent);
+  border-radius: 6px;
+  padding: 2px;
+  width: fit-content;
+  align-self: center;
+}
+
+.item {
+  width: 100%;
+  min-height: 28px;
+  padding: 4px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--foreground-secondary);
+  text-decoration: none;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+}
+
+.item:hover {
+  background: var(--bg-translucent);
+  color: var(--foreground);
+}
+
+.itemActive {
+  background: var(--bg-translucent);
+  color: var(--foreground);
+}
+
+.itemCollapsed {
+  width: 24px;
+  justify-content: center;
+  margin-inline: auto;
+}
+
+.itemLabel {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: clip;
+  max-width: 220px;
+  opacity: 1;
+  transition:
+    max-width var(--motion-fast) var(--ease-standard),
+    opacity 100ms var(--ease-standard);
+}
+
+.itemLabelCollapsed {
+  max-width: 0;
+  opacity: 0;
+}
+
+.subgroup {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 420px;
+  opacity: 1;
+  overflow: hidden;
+  transition:
+    max-height var(--motion-normal) var(--ease-standard),
+    opacity var(--motion-fast) var(--ease-standard);
+}
+
+.subgroupClosed {
+  max-height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.subItem {
+  padding-left: 12px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--foreground-tertiary) 70%, transparent);
+}
+
+.resizeHandle {
+  position: absolute;
+  top: 0;
+  right: -4px;
+  width: 8px;
+  height: 100vh;
+  cursor: col-resize;
+}
+
+.resizeHandle::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 3px;
+  width: 1px;
+  height: 100%;
+  background: transparent;
+  transition: background var(--motion-fast) var(--ease-standard);
+}
+
+.resizeHandle:hover::before,
+.resizing::before {
+  background: var(--border);
+}
+
+.mobileBar {
+  position: fixed;
+  inset: auto 12px 12px 12px;
+  z-index: 25;
+  height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--overlay);
+  box-shadow: var(--shadow-elevation-2);
+  padding: 4px;
+  display: none;
+  align-items: center;
+  gap: 4px;
+}
+
+.mobileBarItem {
+  flex: 1;
+  height: 100%;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  color: var(--foreground-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+}
+
+.mobileBarItemActive {
+  background: var(--bg-translucent);
+  color: var(--foreground);
+}
+
+.settingsFooter {
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.settingsSwitchRow {
+  min-height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--foreground-tertiary);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+}
+
+.settingsSwitch {
+  width: 28px;
+  height: 16px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--muted);
+  padding: 1px;
+  display: inline-flex;
+  align-items: center;
+  transition: background var(--motion-fast) var(--ease-standard);
+}
+
+.settingsSwitchThumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--foreground-tertiary);
+  transform: translateX(0);
+  transition:
+    transform var(--motion-fast) var(--ease-standard),
+    background var(--motion-fast) var(--ease-standard);
+}
+
+.settingsSwitchChecked {
+  background: color-mix(in oklab, var(--warning) 35%, var(--muted));
+  border-color: color-mix(in oklab, var(--warning) 70%, var(--border));
+}
+
+.settingsSwitchChecked .settingsSwitchThumb {
+  transform: translateX(12px);
+  background: color-mix(in oklab, var(--warning) 85%, white);
+}
+
+@media (max-width: 768px) {
+  .drawerHost {
+    right: 0;
+  }
+
+  .drawer {
+    width: 100vw;
+    max-width: 340px;
+    transform: translateX(-100%);
+    transition: transform var(--motion-fast) var(--ease-standard);
+    background: var(--overlay);
+    border-right: 1px solid var(--border);
+    box-shadow: var(--shadow-elevation-2);
+  }
+
+  .drawerOpenMobile {
+    transform: translateX(0);
+  }
+
+  .drawerClosedMobile {
+    pointer-events: none;
+  }
+
+  .drawerCollapsed .drawerInner {
+    align-items: stretch;
+  }
+
+  .itemCollapsed {
+    width: 100%;
+    justify-content: flex-start;
+    margin-inline: 0;
+  }
+
+  .itemLabelCollapsed {
+    max-width: 220px;
+    opacity: 1;
+  }
+
+  .sectionTitleCollapsed {
+    height: 20px;
+    margin-top: 8px;
+    padding: 0 4px;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .mobileBar {
+    display: flex;
+  }
+}
