@@ -11,10 +11,20 @@ on:
         options:
           - smoke
           - full
-      strict_baseline:
-        description: "Fail if baseline is missing"
+      refresh_dataset:
+        description: "Refresh dataset state before benchmarking"
+        required: false
+        default: true
+        type: boolean
+      promote_baseline:
+        description: "Promote run output to baseline before strict gate"
         required: false
         default: false
+        type: boolean
+      run_strict_gate:
+        description: "Run strict baseline gate after benchmark"
+        required: false
+        default: true
         type: boolean
 
 concurrency:
@@ -32,6 +42,9 @@ jobs:
 
     env:
       BENCH_ROOT: /srv/crm/bench
+      MODE: ${{ inputs.mode }}
+      RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+      BASELINE_PATH: /srv/crm/bench/baselines/${{ inputs.mode }}.json
 
     steps:
       - uses: actions/checkout@v6
@@ -40,29 +53,73 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
-      - name: run benchmark
+      - name: refresh smoke dataset
+        if: ${{ inputs.refresh_dataset && inputs.mode == 'smoke' }}
         shell: bash
         run: |
-          strict=0
-          if [[ "${{ inputs.strict_baseline }}" == "true" ]]; then
-            strict=1
-          fi
-          MODE="${{ inputs.mode }}" \
-          STRICT_BASELINE="$strict" \
-          RUN_ID="${{ github.run_id }}-${{ github.run_attempt }}" \
-          OUTPUT_PATH="$BENCH_ROOT/runs/${{ inputs.mode }}-${{ github.run_id }}-${{ github.run_attempt }}.json" \
+          DATASET_VERSION="${{ github.run_id }}-${{ github.run_attempt }}-smoke" \
+          BENCH_ROOT="$BENCH_ROOT" \
+          bash ops/bench/build_smoke_dataset.sh
+
+      - name: refresh full manifest
+        if: ${{ inputs.refresh_dataset && inputs.mode == 'full' }}
+        shell: bash
+        run: |
+          DATASET_VERSION="${{ github.run_id }}-${{ github.run_attempt }}-full" \
+          BENCH_ROOT="$BENCH_ROOT" \
+          bash ops/bench/update_full_manifest.sh
+
+      - name: run benchmark (non-strict)
+        shell: bash
+        run: |
+          MODE="$MODE" \
+          STRICT_BASELINE=0 \
+          BASELINE_PATH="$BASELINE_PATH" \
+          RUN_ID="$RUN_ID" \
+          OUTPUT_PATH="$BENCH_ROOT/runs/${MODE}-${RUN_ID}.json" \
           bash ops/bench/run_benchmark.sh
 
-      - name: copy report for artifact
+      - name: copy benchmark report for artifact
         shell: bash
         run: |
-          cp "$BENCH_ROOT/runs/${{ inputs.mode }}-${{ github.run_id }}-${{ github.run_attempt }}.json" \
-            "target/bench-search-report-${{ inputs.mode }}.json"
+          cp "$BENCH_ROOT/runs/${MODE}-${RUN_ID}.json" "target/bench-search-report-${MODE}.json"
 
-      - name: upload report
+      - name: upload benchmark report
         uses: actions/upload-artifact@v4
         with:
           name: bench-search-${{ inputs.mode }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: target/bench-search-report-${{ inputs.mode }}.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: promote baseline
+        if: ${{ inputs.promote_baseline }}
+        shell: bash
+        run: |
+          bash ops/bench/promote_baseline.sh "$BENCH_ROOT/runs/${MODE}-${RUN_ID}.json" "$BASELINE_PATH"
+
+      - name: run strict gate
+        if: ${{ inputs.run_strict_gate }}
+        shell: bash
+        run: |
+          MODE="$MODE" \
+          STRICT_BASELINE=1 \
+          BASELINE_PATH="$BASELINE_PATH" \
+          RUN_ID="${RUN_ID}-strict" \
+          OUTPUT_PATH="$BENCH_ROOT/runs/${MODE}-${RUN_ID}-strict.json" \
+          bash ops/bench/run_benchmark.sh
+
+      - name: copy strict report for artifact
+        if: ${{ inputs.run_strict_gate }}
+        shell: bash
+        run: |
+          cp "$BENCH_ROOT/runs/${MODE}-${RUN_ID}-strict.json" "target/bench-search-strict-report-${MODE}.json"
+
+      - name: upload strict report
+        if: ${{ inputs.run_strict_gate }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-search-strict-${{ inputs.mode }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: target/bench-search-strict-report-${{ inputs.mode }}.json
           if-no-files-found: error
           retention-days: 30
