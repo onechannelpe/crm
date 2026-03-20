@@ -1,10 +1,10 @@
-use axum::routing::get;
 use axum::Router;
+use axum::routing::get;
 use axum_test::TestServer;
-use leads::api::{router as lead_router, LeadState};
+use leads::api::{LeadState, router as lead_router};
 use leads::service::{CandidateService, ImportService};
 use rusqlite::Connection;
-use search::api::{router as search_router, SearchState};
+use search::api::{SearchState, router as search_router};
 use search::service::SearchService;
 use shared::hmac::HmacVerifier;
 use shared::rate_limit::RateLimiter;

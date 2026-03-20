@@ -1,7 +1,7 @@
 use hmac::{Hmac, Mac};
 use rusqlite::Connection;
 use sha2::Sha256;
-use shared::sqlite::{make_readonly_pool, SqlitePool};
+use shared::sqlite::{SqlitePool, make_readonly_pool};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 type HmacSha256 = Hmac<Sha256>;

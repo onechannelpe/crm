@@ -2,7 +2,7 @@ mod common;
 
 use axum::http::{HeaderName, HeaderValue};
 use axum_test::TestServer;
-use search::api::{router, SearchState};
+use search::api::{SearchState, router};
 use search::service::SearchService;
 use serde_json::json;
 use shared::hmac::HmacVerifier;
@@ -84,9 +84,11 @@ async fn search_by_phone_enriched_returns_siblings() {
     assert_eq!(payload["results"][0]["person"]["dni"], "12345678");
     assert_eq!(payload["results"][0]["org"]["name"], "ACME SAC");
     assert_eq!(payload["results"][0]["role"]["name"], "GERENTE GENERAL");
-    assert!(payload["results"][0]["phones"]["siblings"]
-        .as_array()
-        .is_some());
+    assert!(
+        payload["results"][0]["phones"]["siblings"]
+            .as_array()
+            .is_some()
+    );
 }
 
 // auth / validation

@@ -1,5 +1,5 @@
 use crate::contracts::{CandidateStrategy, LeadCandidate, LeadImportRow};
-use rusqlite::{params, Connection, Row};
+use rusqlite::{Connection, Row, params};
 use shared::error::ApiError;
 use std::sync::LazyLock;
 

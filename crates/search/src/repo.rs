@@ -1,5 +1,5 @@
 use crate::result_contract_generated::{OrgInfo, PersonInfo, PhoneInfo, RoleInfo, SearchRow};
-use rusqlite::{params, Connection, Row};
+use rusqlite::{Connection, Row, params};
 use shared::error::ApiError;
 use std::sync::LazyLock;
 
