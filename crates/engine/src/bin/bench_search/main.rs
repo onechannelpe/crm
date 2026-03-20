@@ -35,26 +35,25 @@ fn run_main() -> Result<(), String> {
     }
 
     let contract_sha = sha256_file(&cfg.projection_contract_path)?;
-    if let Some(m) = &manifest {
-        if m.contract_sha256 != contract_sha {
-            return Err(format!(
-                "contract hash mismatch expected={} actual={}",
-                m.contract_sha256, contract_sha
-            ));
-        }
+    if let Some(m) = &manifest
+        && m.contract_sha256 != contract_sha
+    {
+        return Err(format!(
+            "contract hash mismatch expected={} actual={}",
+            m.contract_sha256, contract_sha
+        ));
     }
 
     let workload = read_workload(&cfg.workload_json)?;
     let workload_sha = sha256_file(&cfg.workload_json)?;
-    if let Some(m) = &manifest {
-        if let Some(expected_workload_sha) = &m.workload_sha256 {
-            if expected_workload_sha != &workload_sha {
-                return Err(format!(
-                    "workload hash mismatch expected={} actual={}",
-                    expected_workload_sha, workload_sha
-                ));
-            }
-        }
+    if let Some(m) = &manifest
+        && let Some(expected_workload_sha) = &m.workload_sha256
+        && expected_workload_sha != &workload_sha
+    {
+        return Err(format!(
+            "workload hash mismatch expected={} actual={}",
+            expected_workload_sha, workload_sha
+        ));
     }
 
     let dataset_id = manifest
@@ -66,36 +65,36 @@ fn run_main() -> Result<(), String> {
         .map(|m| m.dataset_version.clone())
         .unwrap_or_else(|| cfg.dataset_version.clone());
 
-    let summary = run::run_summary(
-        &db_path,
-        cfg.mode,
-        cfg.git_sha,
+    let summary = run::run_summary(run::RunSummaryInput {
+        db_path: &db_path,
+        mode: cfg.mode,
+        git_sha: cfg.git_sha,
         dataset_id,
         dataset_version,
-        workload_sha,
-        cfg.threshold_factor,
-        cfg.iterations,
-        cfg.max_limit,
-        &workload,
-    )?;
+        workload_sha256: workload_sha,
+        threshold_factor: cfg.threshold_factor,
+        iterations: cfg.iterations,
+        max_limit: cfg.max_limit,
+        workload: &workload,
+    })?;
 
-    if let Some(m) = &manifest {
-        if let Some(rows) = m.projection_rows {
-            if rows <= 0 {
-                return Err("manifest projection_rows must be greater than zero".to_string());
-            }
-            for key in run::REQUIRED_METRICS {
-                let hits = summary
-                    .metrics
-                    .get(key)
-                    .map(|metric| metric.hits)
-                    .unwrap_or_default();
-                if hits == 0 {
-                    return Err(format!(
-                        "zero hits for required metric '{}' against projection_rows={rows}",
-                        key
-                    ));
-                }
+    if let Some(m) = &manifest
+        && let Some(rows) = m.projection_rows
+    {
+        if rows <= 0 {
+            return Err("manifest projection_rows must be greater than zero".to_string());
+        }
+        for key in run::REQUIRED_METRICS {
+            let hits = summary
+                .metrics
+                .get(key)
+                .map(|metric| metric.hits)
+                .unwrap_or_default();
+            if hits == 0 {
+                return Err(format!(
+                    "zero hits for required metric '{}' against projection_rows={rows}",
+                    key
+                ));
             }
         }
     }

@@ -14,18 +14,33 @@ pub const REQUIRED_METRICS: [&str; 6] = [
     "company_name",
 ];
 
-pub fn run_summary(
-    db_path: &Path,
-    mode: BenchmarkMode,
-    git_sha: String,
-    dataset_id: String,
-    dataset_version: String,
-    workload_sha256: String,
-    threshold_factor: f64,
-    iterations: usize,
-    max_limit: usize,
-    workload: &Workload,
-) -> Result<BenchmarkSummary, String> {
+pub struct RunSummaryInput<'a> {
+    pub db_path: &'a Path,
+    pub mode: BenchmarkMode,
+    pub git_sha: String,
+    pub dataset_id: String,
+    pub dataset_version: String,
+    pub workload_sha256: String,
+    pub threshold_factor: f64,
+    pub iterations: usize,
+    pub max_limit: usize,
+    pub workload: &'a Workload,
+}
+
+pub fn run_summary(input: RunSummaryInput<'_>) -> Result<BenchmarkSummary, String> {
+    let RunSummaryInput {
+        db_path,
+        mode,
+        git_sha,
+        dataset_id,
+        dataset_version,
+        workload_sha256,
+        threshold_factor,
+        iterations,
+        max_limit,
+        workload,
+    } = input;
+
     let pool = shared::sqlite::make_readonly_pool(
         db_path
             .to_str()

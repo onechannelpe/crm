@@ -75,15 +75,15 @@ pub fn parse_args() -> Result<Config, String> {
             usage()
         ));
     }
-    if let Some(path) = &db_path {
-        if !path.exists() {
-            return Err(format!("db path does not exist: {}", path.display()));
-        }
+    if let Some(path) = &db_path
+        && !path.exists()
+    {
+        return Err(format!("db path does not exist: {}", path.display()));
     }
-    if let Some(path) = &dataset_manifest_json {
-        if !path.exists() {
-            return Err(format!("manifest path does not exist: {}", path.display()));
-        }
+    if let Some(path) = &dataset_manifest_json
+        && !path.exists()
+    {
+        return Err(format!("manifest path does not exist: {}", path.display()));
     }
     if !workload_json.exists() {
         return Err(format!(
