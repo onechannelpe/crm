@@ -20,6 +20,12 @@
   pointer-events: auto;
 }
 
+@media (min-width: 769px) {
+  .mobileScrim {
+    display: none;
+  }
+}
+
 .drawer {
   pointer-events: auto;
   display: flex;

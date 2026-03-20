@@ -21,7 +21,7 @@ interface NavigationDrawerItemProps {
 
 export function NavigationDrawerItem(props: NavigationDrawerItemProps) {
   const location = useLocation();
-  const Icon = () => getEntryIcon(props.item.icon);
+  const Icon = getEntryIcon(props.item.icon);
 
   return (
     <div
@@ -41,7 +41,7 @@ export function NavigationDrawerItem(props: NavigationDrawerItemProps) {
           isEntryActive(location.pathname, props.item) && styles.itemActive,
         )}
       >
-        <Icon() size={16} />
+        <Icon size={16} />
         <span
           class={cn(styles.itemLabel, !props.expanded && styles.itemLabelCollapsed)}
         >

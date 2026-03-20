@@ -3,9 +3,9 @@ import { Show, Suspense } from "solid-js";
 
 import { Loading } from "~/components/feedback/loading";
 import { Header } from "~/components/layout/header";
-import { SettingsShell } from "~/components/layout/settings-shell";
 import { SettingsTopbar } from "~/components/layout/settings-topbar";
-import { Sidebar } from "~/components/layout/sidebar";
+import { AppNavigationDrawer } from "~/components/navigation-drawer/app-navigation-drawer";
+import { NavigationDrawerStateProvider } from "~/components/navigation-drawer/navigation-drawer-state";
 import {
   MainDetailPanelProvider,
   useMainDetailPanel,
@@ -52,12 +52,12 @@ function AuthenticatedAppShell(props: RouteSectionProps) {
 
   return (
     <Show when={user()} fallback={<Loading />}>
-      <div class={shellStyles.root}>
-        <Show
-          when={isSettingsRoute()}
-          fallback={
-            <>
-              <Sidebar />
+      <NavigationDrawerStateProvider>
+        <div class={shellStyles.root}>
+          <AppNavigationDrawer />
+          <Show
+            when={isSettingsRoute()}
+            fallback={
               <MainDetailPanelProvider>
                 <div class={shellStyles.main}>
                   <Header />
@@ -66,11 +66,8 @@ function AuthenticatedAppShell(props: RouteSectionProps) {
                   </main>
                 </div>
               </MainDetailPanelProvider>
-            </>
-          }
-        >
-          <div class={shellStyles.settingsLayout}>
-            <SettingsShell />
+            }
+          >
             <div class={cn(shellStyles.main, shellStyles.settingsMain)}>
               <SettingsTopbar />
               <main class={cn(shellStyles.body, shellStyles.settingsBody)}>
@@ -79,9 +76,9 @@ function AuthenticatedAppShell(props: RouteSectionProps) {
                 </div>
               </main>
             </div>
-          </div>
-        </Show>
-      </div>
+          </Show>
+        </div>
+      </NavigationDrawerStateProvider>
     </Show>
   );
 }

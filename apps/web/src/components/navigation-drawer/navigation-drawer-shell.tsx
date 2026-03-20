@@ -1,10 +1,12 @@
-import { Show, createSignal, onCleanup } from "solid-js";
+import { Show, createSignal, type JSX } from "solid-js";
 
 import ChevronLeft from "~/components/icons/chevron-left";
 import ChevronRight from "~/components/icons/chevron-right";
 import Search from "~/components/icons/search";
+import { logout } from "~/actions/auth";
 import { AccountMenu } from "~/components/layout/account-menu";
 import { useSession } from "~/components/providers/session-provider";
+import { shortName } from "~/lib/users/display-name";
 import { cn } from "~/lib/utils";
 
 import { useNavigationDrawerState } from "./navigation-drawer-state";
@@ -59,11 +61,6 @@ export function NavigationDrawerShell(props: NavigationDrawerShellProps) {
 
     window.addEventListener("mousemove", handleMove);
     window.addEventListener("mouseup", handleEnd);
-
-    onCleanup(() => {
-      window.removeEventListener("mousemove", handleMove);
-      window.removeEventListener("mouseup", handleEnd);
-    });
   };
 
   const closeMobileDrawer = () => {
@@ -76,12 +73,13 @@ export function NavigationDrawerShell(props: NavigationDrawerShellProps) {
     setExpanded((current) => !current);
   };
 
-  const isDrawerVisible = () => (isMobile() ? expanded() : true);
+  const isDrawerVisible = () => expanded();
+  const showMobileScrim = () => isMobile() && expanded();
 
   return (
     <>
       <div
-        class={cn(styles.mobileScrim, isDrawerVisible() && styles.mobileScrimVisible)}
+        class={cn(styles.mobileScrim, showMobileScrim() && styles.mobileScrimVisible)}
         onClick={closeMobileDrawer}
       />
 
@@ -100,13 +98,10 @@ export function NavigationDrawerShell(props: NavigationDrawerShellProps) {
           <div class={cn(styles.drawerInner, !expanded() && styles.drawerCollapsed)}>
             <div class={cn(styles.header, !expanded() && styles.headerCollapsed)}>
               <AccountMenu
-                label={currentUser().name}
+                label={shortName(currentUser())}
                 avatarUrl={currentUser().avatarUrl}
                 collapsed={!expanded() && !isMobile()}
-                onLogout={async () => {
-                  const { logout } = await import("~/actions/auth");
-                  await logout();
-                }}
+                onLogout={logout}
               />
 
               <Show when={!isMobile()}>
