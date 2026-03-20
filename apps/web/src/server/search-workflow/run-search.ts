@@ -1,4 +1,3 @@
-import type { EngineClient } from "~/server/adapters/engine/client";
 import type {
   SearchPolicyDefaultsRepo,
   SearchPolicyOverridesRepo,
@@ -16,6 +15,7 @@ import {
 } from "~/server/capacity-usage/search-usage";
 import { engineClient } from "~/server/shared/composition-root";
 import { type DomainError } from "~/server/shared/domain-error";
+import type { EngineClient } from "~/server/shared/engine/client";
 import type { UserId } from "~/server/shared/ids";
 import type { SearchType } from "~/server/shared/pipeline-types";
 import { isErr, Ok, type Result } from "~/server/shared/result";

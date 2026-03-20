@@ -1,41 +1,18 @@
-import type { DomainError } from "~/server/shared/domain-error";
 import { domainError } from "~/server/shared/domain-error";
+import type {
+  EngineClient,
+  LeadCandidatesRequest,
+} from "~/server/shared/engine/client";
+import type { EngineClientConfig } from "~/server/shared/engine/config";
 import {
   ENGINE_ENDPOINTS,
   engineApiPath,
 } from "~/server/shared/engine/contract";
 import { signRequest } from "~/server/shared/engine/signature";
-import type { LeadCandidate, SearchResult } from "~/server/shared/engine/types";
-import type { SearchType } from "~/server/shared/pipeline-types";
-import type { Result } from "~/server/shared/result";
 import { Err, Ok } from "~/server/shared/result";
 
 import { decodeSearchResponse, decodeLeadCandidatesResponse } from "./decoder";
 import { mapEngineErrorResponse, mapEngineNetworkError } from "./mapper";
-
-interface EngineClientConfig {
-  baseUrl: string;
-  keyId: string;
-  hmacSecret: string;
-  timeoutMs: number;
-}
-
-export interface EngineClient {
-  search(
-    type: SearchType,
-    value: string,
-    limit?: number,
-  ): Promise<Result<SearchResult[], DomainError>>;
-
-  requestCandidates(input: {
-    branchId: number;
-    userId: number;
-    amount: number;
-    teamId?: number;
-    productId?: number;
-    strategy?: string;
-  }): Promise<Result<LeadCandidate[], DomainError>>;
-}
 
 export function createEngineAdapter(config: EngineClientConfig): EngineClient {
   async function post(
@@ -120,7 +97,7 @@ export function createEngineAdapter(config: EngineClientConfig): EngineClient {
       }
     },
 
-    async requestCandidates(input) {
+    async requestCandidates(input: LeadCandidatesRequest) {
       const requestId = crypto.randomUUID();
       const body = JSON.stringify({
         branch_id: input.branchId,

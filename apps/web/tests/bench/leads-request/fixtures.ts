@@ -1,5 +1,7 @@
 import type { DomainError } from "~/server/shared/domain-error";
+import type { EngineClient } from "~/server/shared/engine/client";
 import type { LeadCandidate, SearchResult } from "~/server/shared/engine/types";
+import type { SearchType } from "~/server/shared/pipeline-types";
 import { Ok, type Result } from "~/server/shared/result";
 
 import type { TestDbContext } from "../../support/test-db";
@@ -9,20 +11,9 @@ export const USER_POOL_SIZE = 80;
 const USER_ID_START = 90_000;
 const ORG_ID_START = 80_000;
 
-export interface LeadsRequestSeed {
+interface LeadsRequestSeed {
   userIds: number[];
-  engineClient: {
-    search(
-      type: string,
-      value: string,
-      limit?: number,
-    ): Promise<Result<SearchResult[], DomainError>>;
-    requestCandidates(input: {
-      branchId: number;
-      userId: number;
-      amount: number;
-    }): Promise<Result<LeadCandidate[], DomainError>>;
-  };
+  engineClient: EngineClient;
 }
 
 export async function seedLeadsRequestFixtures(
@@ -73,7 +64,7 @@ export async function seedLeadsRequestFixtures(
 
   const engineClient = {
     async search(
-      _type: string,
+      _type: SearchType,
       value: string,
     ): Promise<Result<SearchResult[], DomainError>> {
       return Ok([

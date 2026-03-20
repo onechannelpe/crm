@@ -1,4 +1,3 @@
-import type { EngineClient } from "~/server/adapters/engine/client";
 import type {
   LeadPolicyDefaultsRepo,
   LeadPolicyOverridesRepo,
@@ -18,6 +17,7 @@ import { createAssignment } from "~/server/leads/domain-assignment";
 import { canContactNow } from "~/server/leads/domain-cooldown";
 import { engineClient } from "~/server/shared/composition-root";
 import { type DomainError } from "~/server/shared/domain-error";
+import type { EngineClient } from "~/server/shared/engine/client";
 import type { BranchId, UserId } from "~/server/shared/ids";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 
