@@ -1,12 +1,12 @@
-import { SETTINGS_NAV_ITEMS } from "~/components/layout/settings-nav";
 import { ICON_BY_ROUTE } from "~/components/layout/route-icons";
+import { SETTINGS_NAV_ITEMS } from "~/components/layout/settings-nav";
+import type { Role } from "~/lib/auth/access/route-policy";
 import {
   getSidebarChildren,
   getSidebarEntries,
   getSidebarGrouped,
   type SidebarEntry,
 } from "~/lib/nav/nav-policy";
-import type { Role } from "~/lib/auth/access/route-policy";
 
 export interface DrawerNavChild {
   href: string;

@@ -1,10 +1,5 @@
 import { useNavigate } from "@solidjs/router";
-import {
-  For,
-  createMemo,
-  createSignal,
-  onMount,
-} from "solid-js";
+import { For, createMemo, createSignal, onMount } from "solid-js";
 
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import Settings from "~/components/icons/settings";
@@ -18,6 +13,7 @@ import {
 import { DrawerSection, NavigationDrawerItem } from "./navigation-drawer-item";
 import { NavigationDrawerShell } from "./navigation-drawer-shell";
 import { useNavigationDrawerState } from "./navigation-drawer-state";
+
 import styles from "./navigation-drawer.module.css";
 
 const CLOSED_SECTIONS_STORAGE_KEY = "crm-nav-closed-sections";
@@ -30,7 +26,10 @@ function loadClosedSections(): Set<string> {
 
 function saveClosedSections(closed: Set<string>): void {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(CLOSED_SECTIONS_STORAGE_KEY, [...closed].join(","));
+  window.localStorage.setItem(
+    CLOSED_SECTIONS_STORAGE_KEY,
+    [...closed].join(","),
+  );
 }
 
 export function MainNavigationDrawer() {
@@ -38,12 +37,16 @@ export function MainNavigationDrawer() {
   const navigate = useNavigate();
   const { expanded, isMobile, setExpanded } = useNavigationDrawerState();
 
-  const primaryEntries = createMemo(() => getMainPrimaryEntries(currentUser().role));
+  const primaryEntries = createMemo(() =>
+    getMainPrimaryEntries(currentUser().role),
+  );
   const secondaryGroups = createMemo(() =>
     getMainSecondaryGroups(currentUser().role),
   );
 
-  const [closedSections, setClosedSections] = createSignal<Set<string>>(new Set());
+  const [closedSections, setClosedSections] = createSignal<Set<string>>(
+    new Set(),
+  );
 
   onMount(() => setClosedSections(loadClosedSections()));
 
@@ -128,7 +131,12 @@ export function MainNavigationDrawer() {
               onClick={closeOnNavigate}
             >
               <Settings size={16} />
-              <span class={cn(styles.itemLabel, !expanded() && !isMobile() && styles.itemLabelCollapsed)}>
+              <span
+                class={cn(
+                  styles.itemLabel,
+                  !expanded() && !isMobile() && styles.itemLabelCollapsed,
+                )}
+              >
                 Ajustes
               </span>
             </a>
@@ -140,7 +148,12 @@ export function MainNavigationDrawer() {
               onClick={closeOnNavigate}
             >
               <CircleQuestionMark size={16} />
-              <span class={cn(styles.itemLabel, !expanded() && !isMobile() && styles.itemLabelCollapsed)}>
+              <span
+                class={cn(
+                  styles.itemLabel,
+                  !expanded() && !isMobile() && styles.itemLabelCollapsed,
+                )}
+              >
                 Documentación
               </span>
             </a>

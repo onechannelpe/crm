@@ -16,6 +16,7 @@ import { cn } from "~/lib/utils";
 import { DrawerSection } from "./navigation-drawer-item";
 import { NavigationDrawerShell } from "./navigation-drawer-shell";
 import { useNavigationDrawerState } from "./navigation-drawer-state";
+
 import styles from "./navigation-drawer.module.css";
 
 const ADVANCED_SETTINGS_STORAGE_KEY = "crm-settings-advanced-enabled";
@@ -81,7 +82,12 @@ export function SettingsNavigationDrawer() {
             onClick={closeOnNavigate}
           >
             <X size={16} />
-            <span class={cn(styles.itemLabel, !expanded() && !isMobile() && styles.itemLabelCollapsed)}>
+            <span
+              class={cn(
+                styles.itemLabel,
+                !expanded() && !isMobile() && styles.itemLabelCollapsed,
+              )}
+            >
               Salir
             </span>
           </A>
@@ -119,7 +125,9 @@ export function SettingsNavigationDrawer() {
                             <span
                               class={cn(
                                 styles.itemLabel,
-                                !expanded() && !isMobile() && styles.itemLabelCollapsed,
+                                !expanded() &&
+                                  !isMobile() &&
+                                  styles.itemLabelCollapsed,
                               )}
                             >
                               {item.label}

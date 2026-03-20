@@ -28,7 +28,8 @@ interface NavigationDrawerStateValue {
   ) => void;
 }
 
-const NavigationDrawerStateContext = createContext<NavigationDrawerStateValue>();
+const NavigationDrawerStateContext =
+  createContext<NavigationDrawerStateValue>();
 
 export function NavigationDrawerStateProvider(props: ParentProps) {
   const [expanded, setExpanded] = createSignal(true);
@@ -57,7 +58,11 @@ export function NavigationDrawerStateProvider(props: ParentProps) {
       window.localStorage.getItem(SIDEBAR_WIDTH_STORAGE_KEY),
     );
 
-    if (Number.isFinite(storedWidth) && storedWidth >= 180 && storedWidth <= 320) {
+    if (
+      Number.isFinite(storedWidth) &&
+      storedWidth >= 180 &&
+      storedWidth <= 320
+    ) {
       setWidth(Math.round(storedWidth));
     }
 

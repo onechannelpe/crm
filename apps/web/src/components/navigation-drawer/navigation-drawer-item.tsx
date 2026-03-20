@@ -10,6 +10,7 @@ import {
   isEntryActive,
   type DrawerNavEntry,
 } from "./navigation-drawer-adapter";
+
 import styles from "./navigation-drawer.module.css";
 
 interface NavigationDrawerItemProps {
@@ -43,7 +44,10 @@ export function NavigationDrawerItem(props: NavigationDrawerItemProps) {
       >
         <Icon size={16} />
         <span
-          class={cn(styles.itemLabel, !props.expanded && styles.itemLabelCollapsed)}
+          class={cn(
+            styles.itemLabel,
+            !props.expanded && styles.itemLabelCollapsed,
+          )}
         >
           {props.item.label}
         </span>
@@ -64,7 +68,8 @@ export function NavigationDrawerItem(props: NavigationDrawerItemProps) {
                 class={cn(
                   styles.item,
                   styles.subItem,
-                  isChildActive(location.pathname, child.href) && styles.itemActive,
+                  isChildActive(location.pathname, child.href) &&
+                    styles.itemActive,
                 )}
               >
                 <span class={styles.dot} />
@@ -92,12 +97,18 @@ export function DrawerSection(props: DrawerSectionProps) {
       <button
         type="button"
         onClick={props.onToggle}
-        class={cn(styles.sectionTitle, !props.expanded && styles.sectionTitleCollapsed)}
+        class={cn(
+          styles.sectionTitle,
+          !props.expanded && styles.sectionTitleCollapsed,
+        )}
         aria-expanded={props.open}
       >
         <span class={styles.sectionTitleLabel}>{props.label}</span>
         <span
-          class={cn(styles.sectionTitleChevron, styles.sectionTitleChevronVisible)}
+          class={cn(
+            styles.sectionTitleChevron,
+            styles.sectionTitleChevronVisible,
+          )}
           style={{ transform: props.open ? "rotate(0deg)" : "rotate(-90deg)" }}
         >
           <ChevronDown size={12} />
