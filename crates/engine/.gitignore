@@ -1,6 +1,2 @@
-# generated (build artifacts)
-target
-
-# data
-*.sql*
-*.csv
+# covers: .sqlite, .sqlite-shm, .sqlite-wal
+*.sqlite*

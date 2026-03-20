@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import { runDirectSearch } from "~/server/search-workflow/run-search";
-import type { EngineClient } from "~/server/shared/engine/client";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
+import type { SearchResult } from "~/server/shared/engine/types";
 import { asBranchId, asUserId } from "~/server/shared/ids";
+import { Err, Ok, type Result } from "~/server/shared/result";
 
 import {
   makeNullSearchPolicyRepos,
@@ -29,8 +31,8 @@ function makeRepos() {
 }
 
 const successEngine = {
-  search: async () => ({
-    results: [
+  search: async (): Promise<Result<SearchResult[], DomainError>> =>
+    Ok([
       {
         person: {
           dni: "12345678",
@@ -50,16 +52,19 @@ const successEngine = {
         role: null,
         phones: { primary: null, secondary: null, siblings: null },
       },
-    ],
-    count: 1,
-  }),
-} satisfies Pick<EngineClient, "search">;
+    ]),
+};
 
 const failEngine = {
-  search: async (): Promise<never> => {
-    throw new Error("engine unavailable");
-  },
-} satisfies Pick<EngineClient, "search">;
+  search: async (): Promise<Result<SearchResult[], DomainError>> =>
+    Err(
+      domainError("external", "engine_request_failed", "service unavailable", {
+        status: 503,
+        request_id: "req-search-1",
+        engine_error: "service unavailable",
+      }),
+    ),
+};
 
 describe("runDirectSearch", () => {
   it("commits reservation when gateway succeeds", async () => {
@@ -85,6 +90,13 @@ describe("runDirectSearch", () => {
     );
 
     expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.details).toMatchObject({
+        status: 503,
+        request_id: "req-search-1",
+        engine_error: "service unavailable",
+      });
+    }
     expect(repos.searchUsageReservations.rows).toHaveLength(1);
     expect(repos.searchUsageReservations.rows[0].status).toBe("cancelled");
     expect(repos.searchUsageCommits.rows).toHaveLength(0);
@@ -116,9 +128,9 @@ describe("runDirectSearch", () => {
     const trackingEngine = {
       search: async () => {
         engineCalled = true;
-        return { results: [], count: 0 };
+        return Ok([] as SearchResult[]);
       },
-    } satisfies Pick<EngineClient, "search">;
+    };
 
     const result = await runDirectSearch(
       { actorUserId: USER_ID, type: "dni", value: "12345678", limit: 10 },

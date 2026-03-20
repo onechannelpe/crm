@@ -5,8 +5,10 @@ import {
   type RefillTransactionRunner,
   type RefillTxRepos,
 } from "~/server/lead-workflow/request-refill";
-import type { EngineClient } from "~/server/shared/engine/client";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { type LeadCandidate } from "~/server/shared/engine/lead-contract";
 import { asBranchId, asUserId } from "~/server/shared/ids";
+import { Err, Ok, type Result } from "~/server/shared/result";
 
 import {
   makeLeadCapacityGrantsRepo,
@@ -17,14 +19,6 @@ import {
 
 const USER_ID = asUserId(1);
 const BRANCH_ID = asBranchId(1);
-
-type LeadCandidate = {
-  ruc: string;
-  organization_name: string;
-  dni: string;
-  person_name: string;
-  phone_primary: string;
-};
 
 function makeCandidate(n: number): LeadCandidate {
   return {
@@ -103,10 +97,18 @@ describe("requestLeadRefill", () => {
       return { id: contactCallCount, cooldown_until };
     };
 
-    const candidates = [makeCandidate(1), makeCandidate(2), makeCandidate(3)];
+    const candidates: LeadCandidate[] = [
+      makeCandidate(1),
+      makeCandidate(2),
+      makeCandidate(3),
+    ];
     const engine = {
-      leadCandidates: async () => ({ candidates, count: candidates.length }),
-    } satisfies Pick<EngineClient, "leadCandidates">;
+      requestCandidates: async (_input: {
+        branchId: number;
+        userId: number;
+        amount: number;
+      }): Promise<Result<LeadCandidate[], DomainError>> => Ok(candidates),
+    };
 
     const result = await requestLeadRefill(
       { actorUserId: USER_ID, branchId: BRANCH_ID },
@@ -134,10 +136,14 @@ describe("requestLeadRefill", () => {
 
   it("commits full amount when all candidates are assigned", async () => {
     const repos = makeRepos(0);
-    const candidates = [makeCandidate(1)];
+    const candidates: LeadCandidate[] = [makeCandidate(1)];
     const engine = {
-      leadCandidates: async () => ({ candidates, count: candidates.length }),
-    } satisfies Pick<EngineClient, "leadCandidates">;
+      requestCandidates: async (_input: {
+        branchId: number;
+        userId: number;
+        amount: number;
+      }): Promise<Result<LeadCandidate[], DomainError>> => Ok(candidates),
+    };
 
     const result = await requestLeadRefill(
       { actorUserId: USER_ID, branchId: BRANCH_ID },
@@ -156,10 +162,24 @@ describe("requestLeadRefill", () => {
   it("cancels reservation when gateway fails", async () => {
     const repos = makeRepos(0);
     const engine = {
-      leadCandidates: async (): Promise<never> => {
-        throw new Error("engine down");
-      },
-    } satisfies Pick<EngineClient, "leadCandidates">;
+      requestCandidates: async (_input: {
+        branchId: number;
+        userId: number;
+        amount: number;
+      }): Promise<Result<LeadCandidate[], DomainError>> =>
+        Err(
+          domainError(
+            "external",
+            "engine_request_failed",
+            "service unavailable",
+            {
+              status: 503,
+              request_id: "req-leads-1",
+              engine_error: "service unavailable",
+            },
+          ),
+        ),
+    };
 
     const result = await requestLeadRefill(
       { actorUserId: USER_ID, branchId: BRANCH_ID },
@@ -167,6 +187,13 @@ describe("requestLeadRefill", () => {
     );
 
     expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.details).toMatchObject({
+        status: 503,
+        request_id: "req-leads-1",
+        engine_error: "service unavailable",
+      });
+    }
     const reservations = repos.leadUsageReservations.rows;
     expect(reservations).toHaveLength(1);
     expect(reservations[0].status).toBe("cancelled");

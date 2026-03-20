@@ -78,7 +78,6 @@ pub(super) fn merge_one_shard(
     timings.email_secs = email_started_at.elapsed().as_secs_f64();
 
     // Mark dirty persons and update row hash tracking.
-    // entity_evidence table was removed — was write-only, ~25% of pipeline time with no readers.
     let dirty_started_at = Instant::now();
     tx.execute_batch(
         r#"

@@ -112,7 +112,7 @@ export async function checkActionRateLimit(
   const now = Date.now();
 
   // Check the per-user counter first. If the user is already over limit, skip
-  // the shared IP counter entirely — incrementing it for a blocked user would
+  // the shared IP counter entirely. Incrementing it for a blocked user would
   // consume IP budget and could deny legitimate users on the same NAT/proxy.
   const userSnapshot = await deps.actionRateLimits.checkAndIncrement(
     buildUserKey(actionName, userId),
@@ -133,7 +133,7 @@ export async function checkActionRateLimit(
     });
   }
 
-  // User is within limit — now evaluate the shared IP counter.
+  // User is within the limit, now check the shared IP counter.
   const ipSnapshot = await deps.actionRateLimits.checkAndIncrement(
     buildIpKey(actionName, ip),
     now,

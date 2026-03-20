@@ -1,6 +1,4 @@
-import type { SearchResult } from "~/server/shared/engine/result-contract";
-
-import type { SearchGatewayResponse } from "./gateway";
+import type { SearchResult } from "~/server/shared/engine/types";
 
 export interface SearchResultItem {
   id: string;
@@ -12,14 +10,12 @@ export interface SearchResult_ {
   raw: SearchResult[];
 }
 
-export function mapToSearchResult(
-  response: SearchGatewayResponse,
-): SearchResult_ {
+export function mapToSearchResult(response: SearchResult[]): SearchResult_ {
   return {
-    items: response.results.map((r) => ({
+    items: response.map((r) => ({
       id: r.person.dni,
       label: r.person.name ?? r.person.dni,
     })),
-    raw: response.results,
+    raw: response,
   };
 }
