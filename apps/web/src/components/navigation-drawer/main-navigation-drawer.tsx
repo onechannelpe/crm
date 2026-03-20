@@ -17,6 +17,7 @@ import { useNavigationDrawerState } from "./navigation-drawer-state";
 import styles from "./navigation-drawer.module.css";
 
 const CLOSED_SECTIONS_STORAGE_KEY = "crm-nav-closed-sections";
+const OPEN_CHILD_GROUPS_STORAGE_KEY = "crm-nav-open-child-groups";
 
 function loadClosedSections(): Set<string> {
   if (typeof window === "undefined") return new Set();
@@ -29,6 +30,21 @@ function saveClosedSections(closed: Set<string>): void {
   window.localStorage.setItem(
     CLOSED_SECTIONS_STORAGE_KEY,
     [...closed].join(","),
+  );
+}
+
+function loadOpenChildGroups(): Set<string> {
+  if (typeof window === "undefined") return new Set();
+  const stored =
+    window.localStorage.getItem(OPEN_CHILD_GROUPS_STORAGE_KEY) ?? "";
+  return new Set(stored.split(",").filter(Boolean));
+}
+
+function saveOpenChildGroups(open: Set<string>): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(
+    OPEN_CHILD_GROUPS_STORAGE_KEY,
+    [...open].join(","),
   );
 }
 
@@ -47,8 +63,14 @@ export function MainNavigationDrawer() {
   const [closedSections, setClosedSections] = createSignal<Set<string>>(
     new Set(),
   );
+  const [openChildGroups, setOpenChildGroups] = createSignal<Set<string>>(
+    new Set(),
+  );
 
-  onMount(() => setClosedSections(loadClosedSections()));
+  onMount(() => {
+    setClosedSections(loadClosedSections());
+    setOpenChildGroups(loadOpenChildGroups());
+  });
 
   const isSectionOpen = (label: string) => !closedSections().has(label);
 
@@ -69,6 +91,24 @@ export function MainNavigationDrawer() {
     if (isMobile()) {
       setExpanded(false);
     }
+  };
+
+  const toggleChildGroup = (entryId: string, childrenHref: string[]) => {
+    const next = new Set(openChildGroups());
+    const isOpen = next.has(entryId);
+
+    if (isOpen) {
+      next.delete(entryId);
+    } else {
+      next.add(entryId);
+      const firstChildHref = childrenHref[0];
+      if (firstChildHref) {
+        navigate(firstChildHref);
+      }
+    }
+
+    setOpenChildGroups(next);
+    saveOpenChildGroups(next);
   };
 
   return (
@@ -109,6 +149,16 @@ export function MainNavigationDrawer() {
                       item={item}
                       expanded={expanded() || isMobile()}
                       sectionOpen={isMobile() || isSectionOpen(group.label)}
+                      childGroupOpen={openChildGroups().has(item.id)}
+                      onToggleChildGroup={
+                        item.children.length > 0
+                          ? () =>
+                              toggleChildGroup(
+                                item.id,
+                                item.children.map((child) => child.href),
+                              )
+                          : undefined
+                      }
                       closeOnNavigate={closeOnNavigate}
                     />
                   )}
@@ -141,7 +191,7 @@ export function MainNavigationDrawer() {
               </span>
             </a>
             <a
-              href="https://github.com/twentyhq/twenty"
+              href="/docs"
               target="_blank"
               rel="noopener noreferrer"
               class={styles.item}

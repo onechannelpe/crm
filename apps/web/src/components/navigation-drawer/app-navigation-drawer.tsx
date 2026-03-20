@@ -2,6 +2,7 @@ import { useLocation } from "@solidjs/router";
 import { createEffect, createMemo } from "solid-js";
 
 import { MainNavigationDrawer } from "./main-navigation-drawer";
+import { MobileNavigationBar } from "./mobile-navigation-bar";
 import { useNavigationDrawerState } from "./navigation-drawer-state";
 import { SettingsNavigationDrawer } from "./settings-navigation-drawer";
 
@@ -35,9 +36,14 @@ export function AppNavigationDrawer() {
       isSettingsRoute() || (isMobile() && currentMobileDrawer() === "settings"),
   );
 
-  return renderSettings() ? (
-    <SettingsNavigationDrawer />
-  ) : (
-    <MainNavigationDrawer />
+  return (
+    <>
+      {renderSettings() ? (
+        <SettingsNavigationDrawer />
+      ) : (
+        <MainNavigationDrawer />
+      )}
+      <MobileNavigationBar />
+    </>
   );
 }

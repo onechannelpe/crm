@@ -6,6 +6,7 @@ import ChevronRight from "~/components/icons/chevron-right";
 import Search from "~/components/icons/search";
 import { AccountMenu } from "~/components/layout/account-menu";
 import { useSession } from "~/components/providers/session-provider";
+import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
 import { shortName } from "~/lib/users/display-name";
 import { cn } from "~/lib/utils";
 
@@ -24,18 +25,18 @@ const MAX_WIDTH = 320;
 
 export function NavigationDrawerShell(props: NavigationDrawerShellProps) {
   const { currentUser } = useSession();
-  const {
-    expanded,
-    setExpanded,
-    width,
-    setWidth,
-    isMobile,
-    currentMobileDrawer,
-    setCurrentMobileDrawer,
-  } = useNavigationDrawerState();
+  const { expanded, setExpanded, width, setWidth, isMobile } =
+    useNavigationDrawerState();
 
   const [hovered, setHovered] = createSignal(false);
   const [resizing, setResizing] = createSignal(false);
+  let drawerPanelRef: HTMLDivElement | undefined;
+
+  useDismissibleLayer({
+    enabled: () => isMobile() && expanded(),
+    onDismiss: () => setExpanded(false),
+    getContainer: () => drawerPanelRef,
+  });
 
   const handleResizeStart = (event: MouseEvent) => {
     if (!expanded() || isMobile()) return;
@@ -64,36 +65,19 @@ export function NavigationDrawerShell(props: NavigationDrawerShellProps) {
     window.addEventListener("mouseup", handleEnd);
   };
 
-  const closeMobileDrawer = () => {
-    if (isMobile()) {
-      setExpanded(false);
-    }
-  };
-
   const toggleExpanded = () => {
     setExpanded((current) => !current);
   };
 
-  const isDrawerVisible = () => expanded();
-  const showMobileScrim = () => isMobile() && expanded();
-
   return (
     <>
-      <div
-        class={cn(
-          styles.mobileScrim,
-          showMobileScrim() && styles.mobileScrimVisible,
-        )}
-        onClick={closeMobileDrawer}
-      />
-
       <aside class={styles.drawerHost}>
         <div
           class={cn(
             styles.drawer,
             !expanded() && styles.drawerCollapsed,
-            isMobile() && isDrawerVisible() && styles.drawerOpenMobile,
-            isMobile() && !isDrawerVisible() && styles.drawerClosedMobile,
+            isMobile() && expanded() && styles.drawerOpenMobile,
+            isMobile() && !expanded() && styles.drawerClosedMobile,
           )}
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
@@ -106,6 +90,9 @@ export function NavigationDrawerShell(props: NavigationDrawerShellProps) {
           }}
         >
           <div
+            ref={(element) => {
+              drawerPanelRef = element;
+            }}
             class={cn(
               styles.drawerInner,
               !expanded() && styles.drawerCollapsed,
@@ -168,53 +155,6 @@ export function NavigationDrawerShell(props: NavigationDrawerShellProps) {
           </div>
         </div>
       </aside>
-
-      <Show when={isMobile()}>
-        <nav class={styles.mobileBar}>
-          <button
-            type="button"
-            class={cn(
-              styles.mobileBarItem,
-              currentMobileDrawer() === "main" &&
-                expanded() &&
-                styles.mobileBarItemActive,
-            )}
-            onClick={() => {
-              setCurrentMobileDrawer("main");
-              setExpanded(
-                (current) => !current || currentMobileDrawer() !== "main",
-              );
-            }}
-            aria-label="Abrir navegación"
-          >
-            <ChevronRight size={16} style={{ transform: "rotate(180deg)" }} />
-          </button>
-          <button
-            type="button"
-            class={styles.mobileBarItem}
-            onClick={props.onSearch}
-            aria-label="Buscar"
-          >
-            <Search size={16} />
-          </button>
-          <button
-            type="button"
-            class={cn(
-              styles.mobileBarItem,
-              currentMobileDrawer() === "settings" &&
-                expanded() &&
-                styles.mobileBarItemActive,
-            )}
-            onClick={() => {
-              setCurrentMobileDrawer("settings");
-              setExpanded(true);
-            }}
-            aria-label="Abrir ajustes"
-          >
-            <ChevronRight size={16} />
-          </button>
-        </nav>
-      </Show>
     </>
   );
 }

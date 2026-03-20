@@ -5,27 +5,6 @@
   pointer-events: none;
 }
 
-.mobileScrim {
-  position: fixed;
-  inset: 0;
-  z-index: 19;
-  background: var(--scrim);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--motion-fast) var(--ease-standard);
-}
-
-.mobileScrimVisible {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-@media (min-width: 769px) {
-  .mobileScrim {
-    display: none;
-  }
-}
-
 .drawer {
   pointer-events: auto;
   display: flex;
@@ -164,20 +143,6 @@
 
 .collapseWrapper {
   overflow: hidden;
-  transition:
-    opacity var(--motion-fast) var(--ease-standard),
-    max-height var(--motion-fast) var(--ease-standard);
-}
-
-.collapseOpen {
-  opacity: 1;
-  max-height: 400px;
-}
-
-.collapseClosed {
-  opacity: 0;
-  max-height: 0;
-  pointer-events: none;
 }
 
 .itemGroup {
@@ -198,7 +163,7 @@
 
 .item {
   width: 100%;
-  min-height: 28px;
+  height: 28px;
   padding: 4px;
   border: 1px solid transparent;
   border-radius: 4px;
@@ -209,6 +174,12 @@
   text-decoration: none;
   font-size: var(--font-size-body);
   font-weight: var(--font-weight-medium);
+}
+
+.itemButton {
+  border: 1px solid transparent;
+  background: transparent;
+  text-align: left;
 }
 
 .item:hover {
@@ -243,33 +214,87 @@
   opacity: 0;
 }
 
+.itemChevron {
+  margin-inline-start: auto;
+  color: var(--foreground-tertiary);
+  transition: transform var(--motion-fast) var(--ease-standard);
+}
+
 .subgroup {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  max-height: 420px;
-  opacity: 1;
   overflow: hidden;
-  transition:
-    max-height var(--motion-normal) var(--ease-standard),
-    opacity var(--motion-fast) var(--ease-standard);
-}
-
-.subgroupClosed {
-  max-height: 0;
-  opacity: 0;
-  pointer-events: none;
 }
 
 .subItem {
-  padding-left: 12px;
+  padding-left: 4px;
+  gap: 0;
 }
 
-.dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: color-mix(in oklab, var(--foreground-tertiary) 70%, transparent);
+.subItemBreadcrumb {
+  display: inline-block;
+  width: 9px;
+  height: 28px;
+  margin-left: 7.5px;
+  margin-right: 8px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.subItemBreadcrumbGap {
+  display: block;
+  box-sizing: border-box;
+  width: 1px;
+  height: 2px;
+  position: relative;
+  top: -2px;
+  background: color-mix(in oklab, var(--foreground-tertiary) 55%, transparent);
+}
+
+.subItemBreadcrumbGap[data-darker="true"] {
+  background: var(--foreground-secondary);
+}
+
+.subItemBreadcrumbElbow {
+  display: block;
+  box-sizing: border-box;
+  width: 8px;
+  height: 14px;
+  position: relative;
+  top: -2px;
+  border-left: 1px solid var(--border);
+  border-bottom: 1px solid
+    color-mix(in oklab, var(--foreground-tertiary) 55%, transparent);
+  border-left-color: color-mix(
+    in oklab,
+    var(--foreground-tertiary) 55%,
+    transparent
+  );
+  border-bottom-left-radius: 4px;
+  border-right: none;
+  border-top: none;
+  z-index: auto;
+}
+
+.subItemBreadcrumbElbow[data-darker="true"] {
+  border-left-color: var(--foreground-secondary);
+  border-bottom-color: var(--foreground-secondary);
+  z-index: 1;
+}
+
+.subItemBreadcrumbVertical {
+  display: block;
+  box-sizing: border-box;
+  width: 1px;
+  height: 28px;
+  position: relative;
+  top: -17px;
+  background: color-mix(in oklab, var(--foreground-tertiary) 55%, transparent);
+}
+
+.subItemBreadcrumbVertical[data-darker="true"] {
+  background: var(--foreground-secondary);
 }
 
 .resizeHandle {
@@ -385,21 +410,28 @@
   }
 
   .drawer {
-    width: 100vw;
-    max-width: 340px;
-    transform: translateX(-100%);
-    transition: transform var(--motion-fast) var(--ease-standard);
-    background: var(--overlay);
-    border-right: 1px solid var(--border);
-    box-shadow: var(--shadow-elevation-2);
+    width: 0;
+    overflow: hidden;
+    padding-left: 0;
+    transition: width var(--motion-fast) var(--ease-standard);
   }
 
   .drawerOpenMobile {
-    transform: translateX(0);
+    width: 100%;
+    pointer-events: auto;
   }
 
   .drawerClosedMobile {
     pointer-events: none;
+  }
+
+  .drawerInner {
+    height: 100%;
+    width: min(340px, 100%);
+    background: var(--overlay);
+    border-right: 1px solid var(--border);
+    box-shadow: var(--shadow-elevation-2);
+    padding-left: 8px;
   }
 
   .drawerCollapsed .drawerInner {
