@@ -82,30 +82,24 @@ pub fn list_candidates(
     match strategy {
         CandidateStrategy::Balanced => {
             let mut stmt = conn.prepare_cached(&SQL_BALANCED).map_err(db_err)?;
-            let rows = stmt
-                .query_map(params![limit as i64, branch_id, user_id], map_candidate_row)
+            stmt.query_map(params![limit as i64, branch_id, user_id], map_candidate_row)
                 .map_err(db_err)?
                 .collect::<Result<Vec<_>, _>>()
-                .map_err(db_err);
-            rows
+                .map_err(db_err)
         }
         CandidateStrategy::Freshness => {
             let mut stmt = conn.prepare_cached(&SQL_FRESHNESS).map_err(db_err)?;
-            let rows = stmt
-                .query_map(params![limit as i64], map_candidate_row)
+            stmt.query_map(params![limit as i64], map_candidate_row)
                 .map_err(db_err)?
                 .collect::<Result<Vec<_>, _>>()
-                .map_err(db_err);
-            rows
+                .map_err(db_err)
         }
         CandidateStrategy::Conversion => {
             let mut stmt = conn.prepare_cached(&SQL_CONVERSION).map_err(db_err)?;
-            let rows = stmt
-                .query_map(params![limit as i64], map_candidate_row)
+            stmt.query_map(params![limit as i64], map_candidate_row)
                 .map_err(db_err)?
                 .collect::<Result<Vec<_>, _>>()
-                .map_err(db_err);
-            rows
+                .map_err(db_err)
         }
     }
 }

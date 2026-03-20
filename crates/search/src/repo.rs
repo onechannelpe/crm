@@ -201,12 +201,10 @@ pub fn search_by_ruc(
     limit: usize,
 ) -> Result<Vec<SearchRow>, ApiError> {
     let mut stmt = conn.prepare_cached(&SQL_RUC).map_err(db_err)?;
-    let rows = stmt
-        .query_map(params![value, limit as i64], map_row_with_siblings)
+    stmt.query_map(params![value, limit as i64], map_row_with_siblings)
         .map_err(db_err)?
         .collect::<Result<Vec<_>, _>>()
-        .map_err(db_err);
-    rows
+        .map_err(db_err)
 }
 
 pub fn search_by_phone(
@@ -223,12 +221,10 @@ pub fn search_by_phone_enriched(
     limit: usize,
 ) -> Result<Vec<SearchRow>, ApiError> {
     let mut stmt = conn.prepare_cached(&SQL_PHONE_ENRICHED).map_err(db_err)?;
-    let rows = stmt
-        .query_map(params![value, limit as i64], map_row_with_siblings)
+    stmt.query_map(params![value, limit as i64], map_row_with_siblings)
         .map_err(db_err)?
         .collect::<Result<Vec<_>, _>>()
-        .map_err(db_err);
-    rows
+        .map_err(db_err)
 }
 
 pub fn search_by_person_name(
@@ -262,12 +258,10 @@ where
     P: rusqlite::Params,
 {
     let mut stmt = conn.prepare_cached(sql).map_err(db_err)?;
-    let rows = stmt
-        .query_map(params, map_row)
+    stmt.query_map(params, map_row)
         .map_err(db_err)?
         .collect::<Result<Vec<_>, _>>()
-        .map_err(db_err);
-    rows
+        .map_err(db_err)
 }
 
 fn map_row(row: &Row<'_>) -> rusqlite::Result<SearchRow> {
