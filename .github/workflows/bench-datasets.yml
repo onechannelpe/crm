@@ -1,0 +1,63 @@
+name: bench datasets
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Dataset target to refresh"
+        required: true
+        default: "smoke"
+        type: choice
+        options:
+          - smoke
+          - full_manifest
+      dataset_version:
+        description: "Dataset version label"
+        required: true
+        default: "manual"
+        type: string
+      sync_raw:
+        description: "Sync raw files into pipeline raw directory"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  refresh:
+    name: refresh benchmark datasets
+    runs-on: [self-hosted, linux, bench-selfhosted]
+    timeout-minutes: 240
+
+    env:
+      BENCH_ROOT: /srv/crm/bench
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: refresh smoke dataset
+        if: ${{ inputs.target == 'smoke' }}
+        shell: bash
+        run: |
+          sync=0
+          if [[ "${{ inputs.sync_raw }}" == "true" ]]; then
+            sync=1
+          fi
+          DATASET_VERSION="${{ inputs.dataset_version }}" \
+          BENCH_ROOT="$BENCH_ROOT" \
+          SYNC_RAW="$sync" \
+          bash ops/bench/build_smoke_dataset.sh
+
+      - name: refresh full manifest
+        if: ${{ inputs.target == 'full_manifest' }}
+        shell: bash
+        run: |
+          DATASET_VERSION="${{ inputs.dataset_version }}" \
+          BENCH_ROOT="$BENCH_ROOT" \
+          bash ops/bench/update_full_manifest.sh

@@ -1,0 +1,60 @@
+name: bench search full
+
+on:
+  workflow_dispatch:
+    inputs:
+      strict_baseline:
+        description: "Fail if baseline is missing"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  full:
+    name: full benchmark
+    runs-on: [self-hosted, linux, bench-selfhosted]
+    timeout-minutes: 120
+
+    env:
+      BENCH_ROOT: /srv/crm/bench
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: ensure manifest exists
+        shell: bash
+        run: |
+          test -f "$BENCH_ROOT/manifests/full.json"
+
+      - name: run full benchmark
+        shell: bash
+        run: |
+          strict=0
+          if [[ "${{ inputs.strict_baseline }}" == "true" ]]; then
+            strict=1
+          fi
+          MODE=full \
+          STRICT_BASELINE="$strict" \
+          RUN_ID="${{ github.run_id }}-${{ github.run_attempt }}" \
+          OUTPUT_PATH="$BENCH_ROOT/runs/full-${{ github.run_id }}-${{ github.run_attempt }}.json" \
+          bash ops/bench/run_benchmark.sh
+
+      - name: copy report for artifact
+        shell: bash
+        run: |
+          cp "$BENCH_ROOT/runs/full-${{ github.run_id }}-${{ github.run_attempt }}.json" target/bench-search-report-full.json
+
+      - name: upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-search-full-${{ github.run_id }}-${{ github.run_attempt }}
+          path: target/bench-search-report-full.json
+          if-no-files-found: error
+          retention-days: 30
