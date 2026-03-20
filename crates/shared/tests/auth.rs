@@ -1,27 +1,16 @@
 use axum::http::HeaderMap;
-use hmac::{Hmac, Mac};
-use sha2::Sha256;
 use shared::auth::verify_signed_request;
 use shared::error::ApiError;
-use shared::hmac::HmacVerifier;
+use shared::hmac::{HmacVerifier, sign};
 use shared::rate_limit::RateLimiter;
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
-
-type HmacSha256 = Hmac<Sha256>;
 
 fn now_secs() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_secs()
-}
-
-fn sign(body: &[u8], secret: &str, ts: u64) -> String {
-    let mut mac = HmacSha256::new_from_slice(secret.as_bytes()).unwrap();
-    mac.update(&ts.to_be_bytes());
-    mac.update(body);
-    hex::encode(mac.finalize().into_bytes())
 }
 
 fn make_hmac(key_id: &str, secret: &str) -> HmacVerifier {
@@ -34,7 +23,7 @@ fn make_hmac(key_id: &str, secret: &str) -> HmacVerifier {
 /// Returns a valid HeaderMap + the timestamp used to sign.
 fn signed_headers(key_id: &str, secret: &str, body: &[u8]) -> HeaderMap {
     let ts = now_secs();
-    let sig = sign(body, secret, ts);
+    let sig = sign(secret, ts, body).expect("hmac sign");
     let mut h = HeaderMap::new();
     h.insert("x-key-id", key_id.parse().unwrap());
     h.insert("x-timestamp", ts.to_string().parse().unwrap());

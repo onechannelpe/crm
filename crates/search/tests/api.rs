@@ -5,13 +5,23 @@ use axum_test::TestServer;
 use search::api::{SearchState, router};
 use search::service::SearchService;
 use serde_json::json;
-use shared::hmac::HmacVerifier;
+use shared::hmac::{HmacVerifier, sign};
 use shared::rate_limit::RateLimiter;
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 const KEY_ID: &str = "web";
 const SECRET: &str = "test-secret";
+
+fn sign_body(secret: &str, body: &[u8]) -> (String, String) {
+    let ts = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("time")
+        .as_secs();
+    let sig = sign(secret, ts, body).expect("hmac sign");
+    (ts.to_string(), sig)
+}
 
 fn make_server(tokens_per_minute: u32) -> TestServer {
     let db = common::create_test_db();
@@ -35,7 +45,7 @@ fn make_server(tokens_per_minute: u32) -> TestServer {
 /// Signs `body`, sends POST /v1/search, and returns the response.
 async fn signed_request(body: &serde_json::Value, server: &TestServer) -> axum_test::TestResponse {
     let bytes = serde_json::to_vec(body).expect("json");
-    let (ts, sig) = common::sign(SECRET, &bytes);
+    let (ts, sig) = sign_body(SECRET, &bytes);
 
     server
         .post("/v1/search")
@@ -108,7 +118,7 @@ async fn unknown_key_id_returns_401() {
     let server = make_server(100);
     let body = json!({"type":"dni","value":"12345678","limit":5});
     let bytes = serde_json::to_vec(&body).expect("json");
-    let (ts, sig) = common::sign(SECRET, &bytes);
+    let (ts, sig) = sign_body(SECRET, &bytes);
 
     server
         .post("/v1/search")

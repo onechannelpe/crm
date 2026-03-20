@@ -6,6 +6,18 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 type HmacSha256 = Hmac<Sha256>;
 
+fn build_mac(secret: &[u8], timestamp: u64, body: &[u8]) -> Result<HmacSha256, ApiError> {
+    let mut mac = HmacSha256::new_from_slice(secret).map_err(|_| ApiError::Internal)?;
+    mac.update(&timestamp.to_be_bytes());
+    mac.update(body);
+    Ok(mac)
+}
+
+pub fn sign(secret: &str, timestamp: u64, body: &[u8]) -> Result<String, ApiError> {
+    let mac = build_mac(secret.as_bytes(), timestamp, body)?;
+    Ok(hex::encode(mac.finalize().into_bytes()))
+}
+
 #[derive(Debug)]
 pub struct HmacVerifier {
     keys: HashMap<String, Vec<u8>>,
@@ -49,9 +61,7 @@ impl HmacVerifier {
             return Err(ApiError::Unauthorized("timestamp out of range".into()));
         }
 
-        let mut mac = HmacSha256::new_from_slice(secret).map_err(|_| ApiError::Internal)?;
-        mac.update(&(ts as u64).to_be_bytes());
-        mac.update(body);
+        let mac = build_mac(secret, ts as u64, body)?;
 
         let provided = hex::decode(signature_hex)
             .map_err(|_| ApiError::Unauthorized("invalid signature encoding".into()))?;

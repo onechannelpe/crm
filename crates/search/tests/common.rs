@@ -1,13 +1,7 @@
-use hmac::{Hmac, Mac};
 use rusqlite::Connection;
-use sha2::Sha256;
 use shared::sqlite::{SqlitePool, make_readonly_pool};
-use std::time::{SystemTime, UNIX_EPOCH};
-
-type HmacSha256 = Hmac<Sha256>;
 
 /// Creates a temp SQLite file seeded with the full search schema and sample rows.
-#[allow(dead_code)]
 pub fn create_test_db() -> tempfile::NamedTempFile {
     let file = tempfile::NamedTempFile::new().expect("temp file");
     let conn = Connection::open(file.path()).expect("open");
@@ -97,20 +91,6 @@ pub fn create_test_db() -> tempfile::NamedTempFile {
 }
 
 /// Opens a read-only pool over a temp file.
-#[allow(dead_code)]
 pub fn test_pool(file: &tempfile::NamedTempFile) -> SqlitePool {
     make_readonly_pool(file.path().to_str().expect("path")).expect("pool")
-}
-
-/// Signs a body with the given secret. Returns `(timestamp_string, hex_signature)`.
-#[allow(dead_code)]
-pub fn sign(secret: &str, body: &[u8]) -> (String, String) {
-    let ts = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("time")
-        .as_secs();
-    let mut mac = HmacSha256::new_from_slice(secret.as_bytes()).expect("hmac key");
-    mac.update(&ts.to_be_bytes());
-    mac.update(body);
-    (ts.to_string(), hex::encode(mac.finalize().into_bytes()))
 }

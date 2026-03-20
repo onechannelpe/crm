@@ -1,24 +1,13 @@
-use hmac::{Hmac, Mac};
 use proptest::prelude::*;
-use sha2::Sha256;
-use shared::hmac::HmacVerifier;
+use shared::hmac::{HmacVerifier, sign};
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
-
-type HmacSha256 = Hmac<Sha256>;
 
 fn now_secs() -> i64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_secs() as i64
-}
-
-fn sign(body: &[u8], secret: &str, ts: i64) -> String {
-    let mut mac = HmacSha256::new_from_slice(secret.as_bytes()).unwrap();
-    mac.update(&(ts as u64).to_be_bytes());
-    mac.update(body);
-    hex::encode(mac.finalize().into_bytes())
 }
 
 fn verifier(key_id: &str, secret: &str) -> HmacVerifier {
@@ -38,7 +27,7 @@ proptest! {
     ) {
         prop_assume!(body != tampered);
         let ts  = now_secs();
-        let sig = sign(&body, &secret, ts);
+        let sig = sign(&secret, ts as u64, &body).expect("hmac sign");
         let v   = verifier(&key_id, &secret);
         prop_assert!(v.verify(&key_id, &ts.to_string(), &sig, &tampered).is_err());
     }
@@ -52,7 +41,7 @@ proptest! {
     ) {
         prop_assume!(key_id != unknown_id);
         let ts  = now_secs();
-        let sig = sign(&body, &secret, ts);
+        let sig = sign(&secret, ts as u64, &body).expect("hmac sign");
         let v   = verifier(&key_id, &secret);
         prop_assert!(v.verify(&unknown_id, &ts.to_string(), &sig, &body).is_err());
     }
@@ -65,7 +54,7 @@ proptest! {
         extra_skew in 1i64..=3600i64,
     ) {
         let stale_ts = now_secs() - 300 - extra_skew;
-        let sig = sign(&body, &secret, stale_ts);
+        let sig = sign(&secret, stale_ts as u64, &body).expect("hmac sign");
         let v   = verifier(&key_id, &secret);
         prop_assert!(v.verify(&key_id, &stale_ts.to_string(), &sig, &body).is_err());
     }
