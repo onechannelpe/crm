@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "dev": "bun run --parallel dev:engine dev:web",
-    "dev:engine": "cargo run -p engine",
+    "dev:engine": "cargo run -p engine --bin engine",
     "dev:web": "bun run --cwd apps/web dev",
     "dev:worker": "bun run --cwd apps/web worker:maintenance",
     "pipeline:engine": "cargo run -p crm-pipeline --",
