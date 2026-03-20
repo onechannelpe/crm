@@ -94,7 +94,9 @@ export function NavigationDrawerShell(props: NavigationDrawerShellProps) {
     const nextPath = memorizedPath();
     const fallbackPath = getDefaultAppPath(currentUser().role);
     const targetPath =
-      nextPath && !nextPath.startsWith("/settings") && !nextPath.startsWith("/admin")
+      nextPath &&
+      !nextPath.startsWith("/settings") &&
+      !nextPath.startsWith("/admin")
         ? nextPath
         : fallbackPath;
 

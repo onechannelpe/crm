@@ -105,7 +105,9 @@ export function MainNavigationDrawer() {
                   <NavigationDrawerItem
                     item={item}
                     expanded={expandedOrMobile()}
-                    sectionOpen={isMobile() || isSectionOpen(`section:${group.id}`)}
+                    sectionOpen={
+                      isMobile() || isSectionOpen(`section:${group.id}`)
+                    }
                     childGroupOpen={isSectionOpen(`child:${item.id}`)}
                     onToggleChildGroup={
                       item.children.length > 0
@@ -132,7 +134,11 @@ export function MainNavigationDrawer() {
           open={isMobile() || isSectionOpen("section:other")}
           onToggle={() => toggleSectionOpen("section:other")}
         >
-          <button type="button" class={cn(styles.item, styles.itemButton)} onClick={handleSettingsClick}>
+          <button
+            type="button"
+            class={cn(styles.item, styles.itemButton)}
+            onClick={handleSettingsClick}
+          >
             <Settings size={16} />
             <span
               class={cn(

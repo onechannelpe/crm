@@ -46,7 +46,8 @@ interface NavigationDrawerStateValue {
   toggleSectionOpen: (id: string) => void;
 }
 
-const NavigationDrawerStateContext = createContext<NavigationDrawerStateValue>();
+const NavigationDrawerStateContext =
+  createContext<NavigationDrawerStateValue>();
 
 function clampWidth(value: number) {
   return Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, Math.round(value)));
@@ -118,7 +119,9 @@ export function NavigationDrawerStateProvider(props: ParentProps) {
       setWidth(clampWidth(parsedWidth));
     }
 
-    const storedAdvanced = window.localStorage.getItem(ADVANCED_MODE_STORAGE_KEY);
+    const storedAdvanced = window.localStorage.getItem(
+      ADVANCED_MODE_STORAGE_KEY,
+    );
 
     if (storedAdvanced === "true") {
       setAdvancedModeEnabled(true);
@@ -127,7 +130,9 @@ export function NavigationDrawerStateProvider(props: ParentProps) {
     }
 
     setOpenSections(
-      parseSectionStorage(window.localStorage.getItem(DRAWER_SECTION_STORAGE_KEY)),
+      parseSectionStorage(
+        window.localStorage.getItem(DRAWER_SECTION_STORAGE_KEY),
+      ),
     );
 
     const handleResize = () => {
@@ -143,7 +148,10 @@ export function NavigationDrawerStateProvider(props: ParentProps) {
       return;
     }
 
-    window.localStorage.setItem(DRAWER_EXPANDED_STORAGE_KEY, String(expanded()));
+    window.localStorage.setItem(
+      DRAWER_EXPANDED_STORAGE_KEY,
+      String(expanded()),
+    );
   });
 
   createEffect(() => {
@@ -151,7 +159,10 @@ export function NavigationDrawerStateProvider(props: ParentProps) {
       return;
     }
 
-    window.localStorage.setItem(DRAWER_WIDTH_STORAGE_KEY, String(clampWidth(width())));
+    window.localStorage.setItem(
+      DRAWER_WIDTH_STORAGE_KEY,
+      String(clampWidth(width())),
+    );
   });
 
   createEffect(() => {
@@ -201,7 +212,10 @@ export function NavigationDrawerStateProvider(props: ParentProps) {
   };
 
   const toggleSectionOpen = (id: string) => {
-    setOpenSections((current) => ({ ...current, [id]: !(current[id] ?? true) }));
+    setOpenSections((current) => ({
+      ...current,
+      [id]: !(current[id] ?? true),
+    }));
   };
 
   return (

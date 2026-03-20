@@ -11,13 +11,13 @@ import {
 } from "~/lib/auth/access/route-policy";
 import { cn } from "~/lib/utils";
 
+import { DrawerSection } from "./navigation-drawer-item";
+import { NavigationDrawerShell } from "./navigation-drawer-shell";
+import { useNavigationDrawerState } from "./navigation-drawer-state";
 import {
   SETTINGS_NAV_ITEMS,
   getSettingsSectionLabel,
 } from "./settings-navigation-config";
-import { DrawerSection } from "./navigation-drawer-item";
-import { NavigationDrawerShell } from "./navigation-drawer-shell";
-import { useNavigationDrawerState } from "./navigation-drawer-state";
 
 import styles from "./navigation-drawer.module.css";
 
@@ -84,7 +84,7 @@ export function SettingsNavigationDrawer() {
         </div>
       }
     >
-      <For each={(["user", "workspace"] as const)}>
+      <For each={["user", "workspace"] as const}>
         {(sectionId) => {
           const sectionItems = createMemo(() => groupedItems()[sectionId]);
 

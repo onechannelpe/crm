@@ -231,7 +231,9 @@ export function DrawerSection(props: DrawerSectionProps) {
         <Show when={collapsible}>
           <span
             class={styles.sectionTitleChevron}
-            style={{ transform: props.open ? "rotate(0deg)" : "rotate(-90deg)" }}
+            style={{
+              transform: props.open ? "rotate(0deg)" : "rotate(-90deg)",
+            }}
           >
             <ChevronDown size={12} />
           </span>

@@ -43,11 +43,15 @@ export function MobileNavigationBar() {
         type="button"
         class={cn(
           styles.mobileBarItem,
-          currentMobileDrawer() === "main" && expanded() && styles.mobileBarItemActive,
+          currentMobileDrawer() === "main" &&
+            expanded() &&
+            styles.mobileBarItemActive,
         )}
         onClick={() => {
           setCurrentMobileDrawer("main");
-          setExpanded((current) => currentMobileDrawer() !== "main" || !current);
+          setExpanded(
+            (current) => currentMobileDrawer() !== "main" || !current,
+          );
 
           if (isSettingsRoute()) {
             navigate(getDefaultAppPath(currentUser().role));
