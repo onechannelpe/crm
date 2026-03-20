@@ -33,8 +33,7 @@ flowchart LR
     click engine "https://github.com/onechannelpe/crm/tree/master/crates/engine"
     click web "https://github.com/onechannelpe/crm/tree/master/apps/web"
     click ext "https://github.com/onechannelpe/crm/tree/master/apps/extension"
-    click contacts "https://github.com/onechannelpe/crm"
-````
+```
 
 The pipeline builds a SQLite snapshot from source files and shared contracts. The engine serves that snapshot through `/v1/search` and `/v1/health`. The web application serves the CRM UI, keeps application state in its own SQLite database, and calls the engine through HMAC-signed HTTP. The browser extension receives signed handoff messages from the web application and syncs call state through extension API routes.
 
