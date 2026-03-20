@@ -37,7 +37,7 @@ fn arb_valid_row() -> impl Strategy<Value = LeadImportRow> {
 }
 
 fn arb_invalid_row() -> impl Strategy<Value = LeadImportRow> {
-    // RUC shorter than 11 digits — always fails validation.
+    // RUC shorter than 11 digits always fails validation.
     "[0-9]{1,10}".prop_map(|ruc| LeadImportRow {
         ruc,
         organization_name: "org".into(),

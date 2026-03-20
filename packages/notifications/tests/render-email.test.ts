@@ -40,7 +40,7 @@ describe("renderInviteEmail", () => {
       fullName: "O'Brien & Associates",
     });
 
-    // Text part should be raw — it's not HTML
+    // Text part should be raw, it's not HTML
     expect(text).toContain("O'Brien & Associates");
   });
 });

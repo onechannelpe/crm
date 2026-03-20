@@ -105,7 +105,7 @@ pub fn list_candidates(
 }
 
 /// Upserts a batch of validated rows. Returns `(inserted, updated)`.
-/// Validation is the caller's responsibility — this function has no business logic.
+/// Validation is the caller's responsibility.
 pub fn upsert_batch(
     conn: &mut Connection,
     rows: &[LeadImportRow],

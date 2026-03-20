@@ -5,7 +5,7 @@ use rusqlite::OpenFlags;
 
 pub type SqlitePool = Pool<SqliteConnectionManager>;
 
-/// Read-only pool — for databases owned by another process (e.g. contacts.sqlite).
+/// Read-only pool for databases owned by another process (e.g. contacts.sqlite).
 pub fn make_readonly_pool(db_path: &str) -> Result<SqlitePool, StartupError> {
     let flags = OpenFlags::SQLITE_OPEN_READ_ONLY
         | OpenFlags::SQLITE_OPEN_URI
@@ -28,7 +28,7 @@ pub fn make_readonly_pool(db_path: &str) -> Result<SqlitePool, StartupError> {
         .map_err(|e| StartupError::Database(format!("pool init failed: {e}")))
 }
 
-/// Read-write pool — for databases owned by this process (e.g. leads.sqlite).
+/// Read-write pool for databases owned by this process (e.g. leads.sqlite).
 pub fn make_pool(db_path: &str) -> Result<SqlitePool, StartupError> {
     let flags = OpenFlags::SQLITE_OPEN_READ_WRITE
         | OpenFlags::SQLITE_OPEN_CREATE
