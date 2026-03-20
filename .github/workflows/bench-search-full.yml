@@ -9,12 +9,14 @@ on:
         default: false
         type: boolean
 
+permissions:
+  contents: read
+
 jobs:
   full:
     name: full benchmark
-    runs-on: [self-hosted, linux, search-bench]
-    permissions:
-      contents: read
+    runs-on: [self-hosted, linux, bench-selfhosted]
+    timeout-minutes: 120
 
     env:
       BENCH_ROOT: /srv/crm/bench

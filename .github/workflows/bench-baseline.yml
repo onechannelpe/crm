@@ -16,12 +16,14 @@ on:
         required: true
         type: string
 
+permissions:
+  contents: write
+
 jobs:
   promote:
     name: promote benchmark baseline
-    runs-on: [self-hosted, linux, search-bench]
-    permissions:
-      contents: write
+    runs-on: [self-hosted, linux, bench-selfhosted]
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v6

@@ -1,30 +1,6 @@
 name: bench search smoke
 
 on:
-  pull_request:
-    branches: ["master"]
-    paths:
-      - "crates/engine/**"
-      - "crates/search/**"
-      - "crates/pipeline/**"
-      - "crates/shared/**"
-      - "contracts/engine/**"
-      - "ops/bench/**"
-      - ".github/workflows/bench-search-smoke.yml"
-      - "Cargo.toml"
-      - "Cargo.lock"
-  push:
-    branches: ["master"]
-    paths:
-      - "crates/engine/**"
-      - "crates/search/**"
-      - "crates/pipeline/**"
-      - "crates/shared/**"
-      - "contracts/engine/**"
-      - "ops/bench/**"
-      - ".github/workflows/bench-search-smoke.yml"
-      - "Cargo.toml"
-      - "Cargo.lock"
   workflow_dispatch:
     inputs:
       strict_baseline:
@@ -37,12 +13,14 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   smoke:
     name: smoke benchmark gate
-    runs-on: [self-hosted, linux, search-bench]
-    permissions:
-      contents: read
+    runs-on: [self-hosted, linux, bench-selfhosted]
+    timeout-minutes: 30
 
     env:
       BENCH_ROOT: /srv/crm/bench
