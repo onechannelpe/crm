@@ -132,7 +132,7 @@ describe("sales export actions branch scope", () => {
   });
 
   it("rejects requestSalesExport with an invalid format before checking auth", async () => {
-    // isSalesExportFormat fires before requirePermission — no session needed
+    // isSalesExportFormat runs before requirePermission, no session needed.
     await expect(requestSalesExport("pdf")).rejects.toThrow();
     expect(requirePermissionMock).not.toHaveBeenCalled();
   });

@@ -6,6 +6,8 @@ export const ENGINE_ENDPOINTS = {
   leadCandidates: "/lead-candidates",
   health: "/health",
 } as const;
-export function engineApiPath(endpoint: (typeof ENGINE_ENDPOINTS)[keyof typeof ENGINE_ENDPOINTS]): string {
+export function engineApiPath(
+  endpoint: (typeof ENGINE_ENDPOINTS)[keyof typeof ENGINE_ENDPOINTS],
+): string {
   return `${ENGINE_API_PREFIX}${endpoint}`;
 }

@@ -1,37 +1,62 @@
-use axum_test::TestServer;
-use crm_engine::api::router;
-use crm_engine::domain::candidate_service::CandidateService;
-use crm_engine::domain::search_service::SearchService;
-use crm_engine::security::hmac::HmacVerifier;
-use crm_engine::security::rate_limit::RateLimiter;
-use crm_engine::state::AppState;
-use crm_engine::storage::sqlite::connection;
-use crm_engine::storage::sqlite::schema_guard;
-use std::collections::HashMap;
-use std::sync::Arc;
-
 mod common;
 
 #[tokio::test]
-async fn health_ok() {
-    let db = common::create_test_db();
-    let pool = connection::make_pool(db.path().to_str().expect("path")).expect("pool");
-    let conn = pool.get().expect("conn");
-    schema_guard::validate(&conn).expect("schema");
-
-    let app = router::build_router(AppState {
-        candidates: Arc::new(CandidateService::new(pool.clone(), 100)),
-        search: Arc::new(SearchService::new(pool, 100)),
-        hmac: Arc::new(HmacVerifier::new(
-            HashMap::from([("web".to_string(), "x".to_string())]),
-            60,
-        )),
-        limiter: Arc::new(RateLimiter::new(100)),
-    });
-
-    let server = TestServer::new(app).expect("server");
+async fn health_returns_ok_with_minimal_schema() {
+    let (server, _db) = common::make_test_server();
     let response = server.get("/v1/health").await;
     response.assert_status_ok();
     let payload = response.json::<serde_json::Value>();
     assert_eq!(payload["status"], "ok");
+}
+
+#[tokio::test]
+async fn search_endpoint_exists_and_requires_auth() {
+    let (server, _db) = common::make_test_server();
+    // No auth headers, should return 401 not 404, confirms the route is wired.
+    let response = server
+        .post("/v1/search")
+        .json(&serde_json::json!({"type":"dni","value":"12345678"}))
+        .await;
+    response.assert_status_unauthorized();
+}
+
+#[tokio::test]
+async fn unauthorized_errors_include_request_id_header_and_body() {
+    let (server, _db) = common::make_test_server();
+    let response = server
+        .post("/v1/search")
+        .json(&serde_json::json!({"type":"dni","value":"12345678"}))
+        .await;
+
+    response.assert_status_unauthorized();
+    assert!(response.contains_header("x-request-id"));
+
+    let header_value = response
+        .header("x-request-id")
+        .to_str()
+        .expect("x-request-id must be valid header string")
+        .to_string();
+
+    let payload = response.json::<serde_json::Value>();
+    assert_eq!(payload["request_id"], header_value);
+}
+
+#[tokio::test]
+async fn lead_candidates_endpoint_exists_and_requires_auth() {
+    let (server, _db) = common::make_test_server();
+    let response = server
+        .post("/v1/lead-candidates")
+        .json(&serde_json::json!({"branch_id":1,"user_id":1}))
+        .await;
+    response.assert_status_unauthorized();
+}
+
+#[tokio::test]
+async fn import_endpoint_exists_and_requires_auth() {
+    let (server, _db) = common::make_test_server();
+    let response = server
+        .post("/v1/leads/import")
+        .json(&serde_json::json!({"rows":[],"source":"test"}))
+        .await;
+    response.assert_status_unauthorized();
 }

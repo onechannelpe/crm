@@ -12,7 +12,6 @@ on:
       - "Cargo.toml"
       - "Cargo.lock"
       - ".cargo/config.toml"
-      - "scripts/build-engine-sqlite.py"
       - ".github/workflows/engine.yml"
   pull_request:
     branches:
@@ -24,7 +23,6 @@ on:
       - "Cargo.toml"
       - "Cargo.lock"
       - ".cargo/config.toml"
-      - "scripts/build-engine-sqlite.py"
       - ".github/workflows/engine.yml"
 
 concurrency:
@@ -47,7 +45,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
 
       - name: clippy
-        run: cargo clippy -p crm-engine --all-targets --all-features -- -D warnings
+        run: cargo clippy -p engine --all-targets --all-features -- -D warnings
 
   test:
     name: Test
@@ -67,27 +65,5 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.x"
-
       - name: test
-        run: cargo test -p crm-engine
-
-      - name: build perf fixture sqlite
-        run: |
-          python3 scripts/build-engine-sqlite.py \
-            --input crates/engine/tests/fixtures/contacts_perf_ci.csv \
-            --output /tmp/engine_perf_ci.sqlite
-
-      # - name: run perf regression gate
-      #   env:
-      #     ENGINE_DB_PATH: /tmp/engine_perf_ci.sqlite
-      #     ENGINE_WORKLOAD_PATH: crates/engine/tests/fixtures/sqlite_workload_ci.json
-      #     ENGINE_WORKLOAD_ITERATIONS: "3000"
-      #     ENGINE_PERF_BASELINE_JSON: crates/engine/tests/fixtures/perf_baseline_ci.json
-      #     ENGINE_PERF_REGRESSION_FACTOR: "2.0"
-      #   run: |
-      #     cargo test -p crm-engine \
-      #       --test perf_regression perf_regression_probe \
-      #       -- --ignored --nocapture
+        run: cargo test -p engine

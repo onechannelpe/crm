@@ -1,5 +1,8 @@
+import type { DomainError } from "~/server/shared/domain-error";
 import type { EngineClient } from "~/server/shared/engine/client";
-import type { LeadCandidatesResponse } from "~/server/shared/engine/types";
+import type { LeadCandidate, SearchResult } from "~/server/shared/engine/types";
+import type { SearchType } from "~/server/shared/pipeline-types";
+import { Ok, type Result } from "~/server/shared/result";
 
 import type { TestDbContext } from "../../support/test-db";
 import { BENCH_NOW } from "../_shared/constants";
@@ -8,7 +11,7 @@ export const USER_POOL_SIZE = 80;
 const USER_ID_START = 90_000;
 const ORG_ID_START = 80_000;
 
-export interface LeadsRequestSeed {
+interface LeadsRequestSeed {
   userIds: number[];
   engineClient: EngineClient;
 }
@@ -59,70 +62,68 @@ export async function seedLeadsRequestFixtures(
     });
   }
 
-  const engineClient: EngineClient = {
-    async health() {
-      return true;
-    },
-    async search(_type, value) {
-      return {
-        count: 1,
-        results: [
-          {
-            person: {
-              dni: `bench-${value}`,
-              name: `Bench Contact ${value}`,
-              ruc: null,
-              birth_date: null,
-              birth_place: null,
-              sex: null,
-              marital_status: null,
-              location_text: null,
-              ubigeo_code: null,
-              mother_name: null,
-              father_name: null,
-              email: null,
-            },
-            org: {
-              ruc: value,
-              name: `Bench Org ${value}`,
-              trade_name: null,
-              company_type: null,
-              status: null,
-              condition: null,
-              fiscal_address: null,
-              registration_date: null,
-              activity_start_date: null,
-              line_of_business: null,
-              economic_activity: null,
-              ubigeo_code: null,
-              department: null,
-              province: null,
-              district: null,
-            },
-            role: null,
-            phones: {
-              primary: "+51911111111",
-              secondary: null,
-              siblings: null,
-            },
+  const engineClient = {
+    async search(
+      _type: SearchType,
+      value: string,
+    ): Promise<Result<SearchResult[], DomainError>> {
+      return Ok([
+        {
+          person: {
+            dni: `bench-${value}`,
+            name: `Bench Contact ${value}`,
+            ruc: null,
+            birth_date: null,
+            birth_place: null,
+            sex: null,
+            marital_status: null,
+            location_text: null,
+            ubigeo_code: null,
+            mother_name: null,
+            father_name: null,
+            email: null,
           },
-        ],
-      };
+          org: {
+            ruc: value,
+            name: `Bench Org ${value}`,
+            trade_name: null,
+            company_type: null,
+            status: null,
+            condition: null,
+            fiscal_address: null,
+            registration_date: null,
+            activity_start_date: null,
+            line_of_business: null,
+            economic_activity: null,
+            ubigeo_code: null,
+            department: null,
+            province: null,
+            district: null,
+          },
+          role: null,
+          phones: {
+            primary: "+51911111111",
+            secondary: null,
+            siblings: null,
+          },
+        },
+      ]);
     },
-    async leadCandidates(input): Promise<LeadCandidatesResponse> {
+    async requestCandidates(input: {
+      branchId: number;
+      userId: number;
+      amount: number;
+    }): Promise<Result<LeadCandidate[], DomainError>> {
       const index = input.userId - USER_ID_START;
-      return {
-        candidates: [
-          {
-            ruc: `2099${String(index).padStart(8, "0")}`,
-            organization_name: `Bench Org ${index}`,
-            dni: `7000${String(index).padStart(4, "0")}`,
-            person_name: `Bench Person ${index}`,
-            phone_primary: `+5199033${String(index).padStart(4, "0")}`,
-          },
-        ],
-        count: 1,
-      };
+      return Ok([
+        {
+          ruc: `2099${String(index).padStart(8, "0")}`,
+          organization_name: `Bench Org ${index}`,
+          dni: `7000${String(index).padStart(4, "0")}`,
+          person_name: `Bench Person ${index}`,
+          phone_primary: `+5199033${String(index).padStart(4, "0")}`,
+        },
+      ]);
     },
   };
 

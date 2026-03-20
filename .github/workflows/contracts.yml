@@ -7,7 +7,7 @@ on:
       - "master"
     paths:
       - "contracts/**"
-      - "scripts/*-contract.ts"
+      - "tools/codegen/bin/**"
       - "apps/web/src/server/shared/engine/*contract.ts"
       - "package.json"
       - "bun.lock"
@@ -17,7 +17,7 @@ on:
       - "master"
     paths:
       - "contracts/**"
-      - "scripts/*-contract.ts"
+      - "tools/codegen/bin/**"
       - "apps/web/src/server/shared/engine/*contract.ts"
       - "package.json"
       - "bun.lock"
@@ -47,11 +47,8 @@ jobs:
       - name: install dependencies
         run: bun install --frozen-lockfile
 
-      - name: check engine contract
-        run: bun run check:contract
-
-      - name: check search projection contract
-        run: bun run check:projection-contract
+      - name: check generated contracts
+        run: bun run check:contracts
 
       - name: check search contract
         run: bun run check:search-contract
