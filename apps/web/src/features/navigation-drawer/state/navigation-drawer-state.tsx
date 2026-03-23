@@ -9,10 +9,11 @@ import {
   useContext,
 } from "solid-js";
 
+import { isSettingsRoutePath } from "~/lib/navigation/route-classification";
+
 const DRAWER_EXPANDED_STORAGE_KEY = "crm-navigation-drawer-expanded";
 const DRAWER_WIDTH_STORAGE_KEY = "crm-navigation-drawer-width";
 const ADVANCED_MODE_STORAGE_KEY = "crm-navigation-drawer-advanced-mode";
-const DRAWER_SECTION_STORAGE_KEY = "crm-navigation-drawer-open-sections";
 
 const MOBILE_BREAKPOINT = 768;
 const MIN_WIDTH = 180;
@@ -41,9 +42,16 @@ interface NavigationDrawerStateValue {
   ) => void;
   memorizedPath: () => string;
   setMemorizedPath: (value: string | ((current: string) => string)) => void;
+  hasMemorizedNavigation: () => boolean;
+  setHasMemorizedNavigation: (
+    value: boolean | ((current: boolean) => boolean),
+  ) => void;
+  memorizeNavigationState: (path: string, drawerExpanded: boolean) => void;
   isSectionOpen: (id: string) => boolean;
   setSectionOpen: (id: string, open: boolean) => void;
   toggleSectionOpen: (id: string) => void;
+  isFolderOpen: (id: string) => boolean;
+  toggleFolderOpen: (id: string) => void;
 }
 
 const NavigationDrawerStateContext =
@@ -53,42 +61,62 @@ function clampWidth(value: number) {
   return Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, Math.round(value)));
 }
 
-function parseSectionStorage(raw: string | null): Record<string, boolean> {
-  if (!raw) return {};
-
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-
-    if (!parsed || typeof parsed !== "object") {
-      return {};
-    }
-
-    const result: Record<string, boolean> = {};
-
-    for (const [key, value] of Object.entries(parsed)) {
-      if (typeof value === "boolean") {
-        result[key] = value;
-      }
-    }
-
-    return result;
-  } catch {
-    return {};
-  }
+function isSettingsLikePath(path: string) {
+  return isSettingsRoutePath(path);
 }
 
 export function NavigationDrawerStateProvider(props: ParentProps) {
-  const [expanded, setExpanded] = createSignal(true);
-  const [width, setWidth] = createSignal(DEFAULT_WIDTH);
-  const [viewportWidth, setViewportWidth] = createSignal(1280);
+  const initialViewportWidth = 1280;
+  const initialExpanded = true;
+  const initialWidth = DEFAULT_WIDTH;
+  const initialAdvancedMode = false;
+
+  const [expanded, setExpandedSignal] = createSignal(initialExpanded);
+  const [width, setWidthSignal] = createSignal(initialWidth);
+  const [viewportWidth, setViewportWidth] = createSignal(initialViewportWidth);
   const [currentMobileDrawer, setCurrentMobileDrawer] =
     createSignal<MobileDrawerType>("main");
-  const [advancedModeEnabled, setAdvancedModeEnabled] = createSignal(true);
+  const [advancedModeEnabled, setAdvancedModeEnabledSignal] =
+    createSignal(initialAdvancedMode);
   const [memorizedExpanded, setMemorizedExpanded] = createSignal(true);
   const [memorizedPath, setMemorizedPath] = createSignal("/");
+  const [hasMemorizedNavigation, setHasMemorizedNavigation] =
+    createSignal(false);
   const [openSections, setOpenSections] = createSignal<Record<string, boolean>>(
     {},
   );
+  const [openFolders, setOpenFolders] = createSignal<Record<string, boolean>>(
+    {},
+  );
+  const [hasPersistableInteraction, setHasPersistableInteraction] =
+    createSignal(false);
+
+  const setExpanded: NavigationDrawerStateValue["setExpanded"] = (value) => {
+    const previous = expanded();
+    const next =
+      typeof value === "function"
+        ? (value as (current: boolean) => boolean)(previous)
+        : value;
+
+    if (previous !== next) {
+      setHasPersistableInteraction(true);
+    }
+
+    setExpandedSignal(next);
+  };
+
+  const setAdvancedModeEnabled: NavigationDrawerStateValue["setAdvancedModeEnabled"] =
+    (value) => {
+      const previous = advancedModeEnabled();
+      const next =
+        typeof value === "function"
+          ? (value as (current: boolean) => boolean)(previous)
+          : value;
+      if (previous !== next) {
+        setHasPersistableInteraction(true);
+      }
+      setAdvancedModeEnabledSignal(next);
+    };
 
   const isMobile = createMemo(() => viewportWidth() <= MOBILE_BREAKPOINT);
 
@@ -99,42 +127,6 @@ export function NavigationDrawerStateProvider(props: ParentProps) {
 
     setViewportWidth(window.innerWidth);
 
-    const storedExpanded = window.localStorage.getItem(
-      DRAWER_EXPANDED_STORAGE_KEY,
-    );
-
-    if (storedExpanded === "true") {
-      setExpanded(true);
-    } else if (storedExpanded === "false") {
-      setExpanded(false);
-    } else {
-      setExpanded(window.innerWidth > MOBILE_BREAKPOINT);
-    }
-
-    const parsedWidth = Number(
-      window.localStorage.getItem(DRAWER_WIDTH_STORAGE_KEY),
-    );
-
-    if (Number.isFinite(parsedWidth)) {
-      setWidth(clampWidth(parsedWidth));
-    }
-
-    const storedAdvanced = window.localStorage.getItem(
-      ADVANCED_MODE_STORAGE_KEY,
-    );
-
-    if (storedAdvanced === "true") {
-      setAdvancedModeEnabled(true);
-    } else if (storedAdvanced === "false") {
-      setAdvancedModeEnabled(false);
-    }
-
-    setOpenSections(
-      parseSectionStorage(
-        window.localStorage.getItem(DRAWER_SECTION_STORAGE_KEY),
-      ),
-    );
-
     const handleResize = () => {
       setViewportWidth(window.innerWidth);
     };
@@ -144,7 +136,7 @@ export function NavigationDrawerStateProvider(props: ParentProps) {
   });
 
   createEffect(() => {
-    if (typeof window === "undefined") {
+    if (typeof window === "undefined" || !hasPersistableInteraction()) {
       return;
     }
 
@@ -155,7 +147,7 @@ export function NavigationDrawerStateProvider(props: ParentProps) {
   });
 
   createEffect(() => {
-    if (typeof window === "undefined") {
+    if (typeof window === "undefined" || !hasPersistableInteraction()) {
       return;
     }
 
@@ -166,24 +158,13 @@ export function NavigationDrawerStateProvider(props: ParentProps) {
   });
 
   createEffect(() => {
-    if (typeof window === "undefined") {
+    if (typeof window === "undefined" || !hasPersistableInteraction()) {
       return;
     }
 
     window.localStorage.setItem(
       ADVANCED_MODE_STORAGE_KEY,
       String(advancedModeEnabled()),
-    );
-  });
-
-  createEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    window.localStorage.setItem(
-      DRAWER_SECTION_STORAGE_KEY,
-      JSON.stringify(openSections()),
     );
   });
 
@@ -218,13 +199,43 @@ export function NavigationDrawerStateProvider(props: ParentProps) {
     }));
   };
 
+  const isFolderOpen = (id: string) => {
+    const state = openFolders();
+    const value = state[id];
+
+    return value ?? true;
+  };
+
+  const toggleFolderOpen = (id: string) => {
+    setOpenFolders((current) => ({
+      ...current,
+      [id]: !(current[id] ?? true),
+    }));
+  };
+
+  const memorizeNavigationState = (path: string, drawerExpanded: boolean) => {
+    if (isSettingsLikePath(path)) {
+      return;
+    }
+
+    setMemorizedExpanded(drawerExpanded);
+    setMemorizedPath(path);
+    setHasMemorizedNavigation(true);
+  };
+
   return (
     <NavigationDrawerStateContext.Provider
       value={{
         expanded,
         setExpanded,
         width,
-        setWidth: (next) => setWidth(clampWidth(next)),
+        setWidth: (next) => {
+          const nextClamped = clampWidth(next);
+          if (width() !== nextClamped) {
+            setHasPersistableInteraction(true);
+          }
+          setWidthSignal(nextClamped);
+        },
         isMobile,
         currentMobileDrawer,
         setCurrentMobileDrawer,
@@ -234,9 +245,14 @@ export function NavigationDrawerStateProvider(props: ParentProps) {
         setMemorizedExpanded,
         memorizedPath,
         setMemorizedPath,
+        hasMemorizedNavigation,
+        setHasMemorizedNavigation,
+        memorizeNavigationState,
         isSectionOpen,
         setSectionOpen,
         toggleSectionOpen,
+        isFolderOpen,
+        toggleFolderOpen,
       }}
     >
       {props.children}

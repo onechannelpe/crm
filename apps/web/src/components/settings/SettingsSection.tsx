@@ -9,18 +9,24 @@ interface SettingsSectionProps extends ParentProps {
 }
 
 export function SettingsSection(props: SettingsSectionProps) {
+  const description = props.description;
+  const actions = props.actions;
+
   return (
     <section class={styles.block}>
       <div class={styles.sectionHeader}>
         <div class={styles.sectionInfo}>
           <h2 class={styles.title}>{props.title}</h2>
-          {props.description && (
-            <p class={styles.sectionDescription}>{props.description}</p>
-          )}
+          {description ? (
+            <p class={styles.sectionDescription}>{description}</p>
+          ) : null}
         </div>
-        {props.actions && (
-          <div class={styles.sectionActions}>{props.actions}</div>
-        )}
+        <div
+          class={styles.sectionActions}
+          data-empty={actions ? undefined : "true"}
+        >
+          {actions ?? null}
+        </div>
       </div>
       <div class={styles.sectionContent}>{props.children}</div>
     </section>

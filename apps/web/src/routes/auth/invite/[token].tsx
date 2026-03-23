@@ -96,8 +96,13 @@ export default function AcceptInvitePage() {
             onInput={(event) => setConfirmPassword(event.currentTarget.value)}
             required
           />
-          <Button type="submit" class={styles.full} disabled={submitting()}>
-            {submitting() ? "Activando..." : "Activar cuenta"}
+          <Button
+            type="submit"
+            class={styles.full}
+            loading={submitting()}
+            disabled={submitting()}
+          >
+            Activar cuenta
           </Button>
         </form>
       </section>

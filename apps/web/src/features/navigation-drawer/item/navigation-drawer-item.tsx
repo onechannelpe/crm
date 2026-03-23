@@ -1,0 +1,208 @@
+import { A, useNavigate } from "@solidjs/router";
+import { Show, type JSX } from "solid-js";
+
+import ChevronRight from "~/components/icons/chevron-right";
+import { useIsSettingsPage } from "../hooks/use-is-settings-page";
+import { NavigationDrawerAnimatedCollapseWrapper } from "./navigation-drawer-animated-collapse-wrapper";
+import { NavigationDrawerItemBreadcrumb } from "./navigation-drawer-item-breadcrumb";
+import { useNavigationDrawerState } from "../state/navigation-drawer-state";
+import { cn } from "~/lib/utils";
+
+import styles from "../navigation-drawer.module.css";
+
+export type NavigationDrawerSubItemState =
+  | "intermediate-before-selected"
+  | "intermediate-selected"
+  | "intermediate-after-selected"
+  | "last-selected"
+  | "last-not-selected";
+
+export type NavigationDrawerItemModifier = "new" | "soon";
+
+export interface NavigationDrawerItemProps {
+  className?: string;
+  label: string;
+  secondaryLabel?: string;
+  indentationLevel?: 1 | 2;
+  subItemState?: NavigationDrawerSubItemState;
+  to?: string;
+  onClick?: () => void;
+  Icon?: (props: {
+    class?: string;
+    size?: number;
+    strokeWidth?: number;
+  }) => JSX.Element;
+  active?: boolean;
+  modifier?: NavigationDrawerItemModifier;
+  rightOptions?: JSX.Element;
+  alwaysShowRightOptions?: boolean;
+  closeOnNavigate?: () => void;
+  showChevron?: boolean;
+  chevronExpanded?: boolean;
+  preventCollapseOnMobile?: boolean;
+  variant?: "default" | "tertiary";
+}
+
+const DEFAULT_INDENTATION_LEVEL = 1;
+
+export function NavigationDrawerItem(props: NavigationDrawerItemProps) {
+  const navigate = useNavigate();
+  const { isMobile, setExpanded, expanded } = useNavigationDrawerState();
+  const isSettingsPage = useIsSettingsPage();
+
+  const indentationLevel = () =>
+    props.indentationLevel ?? DEFAULT_INDENTATION_LEVEL;
+  const isSoon = () => props.modifier === "soon";
+  const isNew = () => props.modifier === "new";
+  const showBreadcrumb = () => indentationLevel() === 2;
+  const isExternalLink = () =>
+    Boolean(
+      props.to?.startsWith("http://") || props.to?.startsWith("https://"),
+    );
+  const isInternalLink = () => Boolean(props.to) && !isExternalLink();
+  const collapsedMain = () => !expanded() && !isSettingsPage();
+  const hasRightOptions = () =>
+    Boolean(props.rightOptions) || Boolean(props.showChevron);
+  const shouldShowRightOptions = () =>
+    isMobile() || Boolean(props.alwaysShowRightOptions);
+
+  const handleMobileNavigation = () => {
+    if (isMobile() && !props.preventCollapseOnMobile) {
+      setExpanded(false);
+    }
+  };
+
+  const handleItemClick = () => {
+    if (isSoon()) {
+      return;
+    }
+
+    handleMobileNavigation();
+
+    if (props.to && isExternalLink()) {
+      window.open(props.to, "_blank", "noopener,noreferrer");
+    } else if (props.to && isInternalLink()) {
+      navigate(props.to);
+    }
+
+    props.onClick?.();
+    props.closeOnNavigate?.();
+  };
+
+  const className = () =>
+    cn(
+      "navigation-drawer-item",
+      styles.item,
+      props.className,
+      props.active && styles.itemActive,
+      indentationLevel() === 2 && styles.itemIndented,
+      props.variant === "tertiary" && styles.itemTertiary,
+    );
+
+  const content = (
+    <div class={styles.itemElements}>
+      {showBreadcrumb() ? (
+        <NavigationDrawerAnimatedCollapseWrapper>
+          <NavigationDrawerItemBreadcrumb state={props.subItemState} />
+        </NavigationDrawerAnimatedCollapseWrapper>
+      ) : null}
+
+      {props.Icon ? (
+        <span class={styles.iconWrap}>
+          <props.Icon size={16} />
+        </span>
+      ) : null}
+
+      <span
+        class={cn(
+          styles.itemLabel,
+          collapsedMain() && styles.itemLabelCollapsed,
+        )}
+      >
+        {props.label}
+        {props.secondaryLabel ? ` · ${props.secondaryLabel}` : ""}
+      </span>
+
+      {isSoon() ? (
+        <NavigationDrawerAnimatedCollapseWrapper>
+          <span class={styles.itemPill}>Soon</span>
+        </NavigationDrawerAnimatedCollapseWrapper>
+      ) : null}
+
+      {isNew() ? (
+        <NavigationDrawerAnimatedCollapseWrapper>
+          <span class={styles.itemPill}>New</span>
+        </NavigationDrawerAnimatedCollapseWrapper>
+      ) : null}
+
+      {hasRightOptions() ? (
+        <NavigationDrawerAnimatedCollapseWrapper>
+          <span class={styles.itemRight}>
+            <span
+              class={styles.itemRightVisibility}
+              data-visible={shouldShowRightOptions() ? "true" : undefined}
+            >
+              {props.showChevron ? (
+                <span class={styles.itemChevron}>
+                  <ChevronRight
+                    size={12}
+                    style={{
+                      transform: props.chevronExpanded
+                        ? "rotate(90deg)"
+                        : "rotate(0deg)",
+                    }}
+                  />
+                </span>
+              ) : (
+                (props.rightOptions ?? null)
+              )}
+            </span>
+          </span>
+        </NavigationDrawerAnimatedCollapseWrapper>
+      ) : null}
+    </div>
+  );
+
+  return (
+    <Show
+      when={isInternalLink()}
+      fallback={
+        <button
+          type="button"
+          class={className()}
+          onClick={handleItemClick}
+          aria-selected={props.active}
+          title={collapsedMain() ? props.label : undefined}
+          style={{
+            "--item-width-base": collapsedMain() ? "40px" : "100%",
+            "--item-padding-right": hasRightOptions() ? "2px" : "4px",
+            cursor: isSoon() ? "default" : "pointer",
+            "pointer-events": isSoon() ? "none" : "auto",
+          }}
+        >
+          {content}
+        </button>
+      }
+    >
+      <A
+        href={props.to as string}
+        class={className()}
+        onClick={(event) => {
+          event.preventDefault();
+          handleItemClick();
+        }}
+        draggable={false}
+        aria-selected={props.active}
+        title={collapsedMain() ? props.label : undefined}
+        style={{
+          "--item-width-base": collapsedMain() ? "40px" : "100%",
+          "--item-padding-right": hasRightOptions() ? "2px" : "4px",
+          cursor: isSoon() ? "default" : "pointer",
+          "pointer-events": isSoon() ? "none" : "auto",
+        }}
+      >
+        {content}
+      </A>
+    </Show>
+  );
+}

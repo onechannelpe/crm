@@ -112,8 +112,12 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
   { match: "/monitoring", header: { label: "Monitoreo", icon: "monitoring" } },
   { match: "/settings/profile", header: { label: "Perfil", icon: "profile" } },
   {
-    match: "/admin/capacity-policies",
+    match: "/settings/capacity-policies",
     header: { label: "Políticas comerciales", icon: "settings" },
+  },
+  {
+    match: "/settings/capacity-audit",
+    header: { label: "Auditoría de capacidad", icon: "settings" },
   },
 ];
 

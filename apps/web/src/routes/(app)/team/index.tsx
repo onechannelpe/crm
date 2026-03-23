@@ -41,10 +41,10 @@ export default function TeamPage() {
             <A href="/team/requests" class="underline">
               Solicitudes pendientes
             </A>
-            <A href="/admin/capacity-policies" class="underline">
+            <A href="/settings/capacity-policies" class="underline">
               Políticas
             </A>
-            <A href="/admin/capacity-audit" class="underline">
+            <A href="/settings/capacity-audit" class="underline">
               Audit
             </A>
           </div>

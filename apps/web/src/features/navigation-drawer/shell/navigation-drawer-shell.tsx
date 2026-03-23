@@ -2,33 +2,29 @@ import { useLocation, useNavigate } from "@solidjs/router";
 import { Show, createSignal, type JSX } from "solid-js";
 
 import { logout } from "~/actions/auth";
-import ChevronLeft from "~/components/icons/chevron-left";
-import ChevronRight from "~/components/icons/chevron-right";
+import LayoutSidebarLeftCollapse from "~/components/icons/layout-sidebar-left-collapse";
 import Search from "~/components/icons/search";
 import X from "~/components/icons/x";
 import { AccountMenu } from "~/components/layout/account-menu";
 import { useSession } from "~/components/providers/session-provider";
 import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
-import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
+import { useIsSettingsDrawer } from "../hooks/use-is-settings-drawer";
+import { useNavigationDrawerState } from "../state/navigation-drawer-state";
 import { shortName } from "~/lib/users/display-name";
 import { cn } from "~/lib/utils";
 
-import { useNavigationDrawerState } from "./navigation-drawer-state";
-
-import styles from "./navigation-drawer.module.css";
-
-interface NavigationDrawerShellProps {
-  isSettings: boolean;
-  title?: string;
-  onSearch?: () => void;
-  children: JSX.Element;
-  fixedContent?: JSX.Element;
-}
+import styles from "../navigation-drawer.module.css";
 
 const MIN_WIDTH = 180;
 const MAX_WIDTH = 350;
 
-export function NavigationDrawerShell(props: NavigationDrawerShellProps) {
+interface NavigationDrawerProps {
+  title: string;
+  className?: string;
+  children: JSX.Element;
+}
+
+export function NavigationDrawer(props: NavigationDrawerProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { currentUser } = useSession();
@@ -40,11 +36,11 @@ export function NavigationDrawerShell(props: NavigationDrawerShellProps) {
     isMobile,
     memorizedExpanded,
     memorizedPath,
-    setMemorizedExpanded,
-    setMemorizedPath,
+    setHasMemorizedNavigation,
+    memorizeNavigationState,
   } = useNavigationDrawerState();
+  const isSettingsDrawer = useIsSettingsDrawer();
 
-  const [hovered, setHovered] = createSignal(false);
   const [resizing, setResizing] = createSignal(false);
 
   let drawerPanelRef: HTMLDivElement | undefined;
@@ -56,7 +52,7 @@ export function NavigationDrawerShell(props: NavigationDrawerShellProps) {
   });
 
   const handleResizeStart = (event: MouseEvent) => {
-    if (!expanded() || isMobile() || props.isSettings) {
+    if (!expanded() || isMobile() || isSettingsDrawer()) {
       return;
     }
 
@@ -85,23 +81,13 @@ export function NavigationDrawerShell(props: NavigationDrawerShellProps) {
     window.addEventListener("mouseup", handleEnd);
   };
 
-  const memorizeNavigationState = () => {
-    setMemorizedExpanded(expanded());
-    setMemorizedPath(location.pathname + location.search);
-  };
+  const memorizeNavigation = () =>
+    memorizeNavigationState(location.pathname + location.search, expanded());
 
   const closeSettings = () => {
-    const nextPath = memorizedPath();
-    const fallbackPath = getDefaultAppPath(currentUser().role);
-    const targetPath =
-      nextPath &&
-      !nextPath.startsWith("/settings") &&
-      !nextPath.startsWith("/admin")
-        ? nextPath
-        : fallbackPath;
-
-    navigate(targetPath);
+    navigate(memorizedPath(), { replace: true });
     setExpanded(memorizedExpanded());
+    setHasMemorizedNavigation(false);
   };
 
   return (
@@ -109,6 +95,8 @@ export function NavigationDrawerShell(props: NavigationDrawerShellProps) {
       <div
         class={cn(
           styles.drawer,
+          props.className,
+          isSettingsDrawer() && styles.drawerSettings,
           !expanded() && styles.drawerCollapsed,
           isMobile() && expanded() && styles.drawerOpenMobile,
           isMobile() && !expanded() && styles.drawerClosedMobile,
@@ -122,11 +110,9 @@ export function NavigationDrawerShell(props: NavigationDrawerShellProps) {
             drawerPanelRef = element;
           }}
           class={cn(styles.drawerInner, !expanded() && styles.drawerCollapsed)}
-          onMouseEnter={() => setHovered(true)}
-          onMouseLeave={() => setHovered(false)}
         >
           <Show
-            when={props.isSettings}
+            when={isSettingsDrawer()}
             fallback={
               <header
                 class={cn(styles.header, !expanded() && styles.headerCollapsed)}
@@ -135,7 +121,7 @@ export function NavigationDrawerShell(props: NavigationDrawerShellProps) {
                   label={shortName(currentUser())}
                   avatarUrl={currentUser().avatarUrl}
                   collapsed={!expanded() && !isMobile()}
-                  onOpenSettings={memorizeNavigationState}
+                  onOpenSettings={memorizeNavigation}
                   onLogout={logout}
                 />
 
@@ -144,30 +130,21 @@ export function NavigationDrawerShell(props: NavigationDrawerShellProps) {
                     <button
                       type="button"
                       class={styles.searchButton}
-                      onClick={props.onSearch}
+                      onClick={() => navigate("/search")}
                       aria-label="Buscar"
                     >
                       <Search size={16} />
                     </button>
-                    <button
-                      type="button"
-                      class={styles.collapseButton}
-                      onClick={() => setExpanded((value) => !value)}
-                      aria-label={
-                        expanded()
-                          ? "Contraer barra lateral"
-                          : "Expandir barra lateral"
-                      }
-                      style={{
-                        opacity: expanded() ? (hovered() ? "1" : "0") : "1",
-                      }}
-                    >
-                      {expanded() ? (
-                        <ChevronLeft size={16} />
-                      ) : (
-                        <ChevronRight size={16} />
-                      )}
-                    </button>
+                    <Show when={expanded()}>
+                      <button
+                        type="button"
+                        class={styles.collapseButton}
+                        onClick={() => setExpanded((value) => !value)}
+                        aria-label="Contraer barra lateral"
+                      >
+                        <LayoutSidebarLeftCollapse size={14} />
+                      </button>
+                    </Show>
                   </div>
                 </Show>
               </header>
@@ -181,19 +158,15 @@ export function NavigationDrawerShell(props: NavigationDrawerShellProps) {
                   onClick={closeSettings}
                 >
                   <X size={16} />
-                  <span>{props.title ?? "Salir"}</span>
+                  <span>{props.title}</span>
                 </button>
               </header>
             </Show>
           </Show>
 
-          <div class={styles.scrollable}>{props.children}</div>
+          {props.children}
 
-          {props.fixedContent ? (
-            <div class={styles.fixedContent}>{props.fixedContent}</div>
-          ) : null}
-
-          <Show when={!isMobile() && !props.isSettings && expanded()}>
+          <Show when={!isMobile() && !isSettingsDrawer() && expanded()}>
             <button
               type="button"
               class={cn(styles.resizeHandle, resizing() && styles.resizing)}
@@ -206,3 +179,5 @@ export function NavigationDrawerShell(props: NavigationDrawerShellProps) {
     </aside>
   );
 }
+
+export { NavigationDrawer as NavigationDrawerShell };

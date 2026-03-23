@@ -1,25 +1,29 @@
 .root {
   align-items: center;
-  color: var(--muted-foreground);
+  color: var(--foreground-tertiary);
   display: grid;
   font-size: var(--font-size-body);
   grid-auto-flow: column;
   column-gap: 4px;
+  height: 32px;
   max-width: 100%;
   min-width: 0;
-  height: var(--topbar-height);
 }
 
-.link {
+.linkContainer > a {
   color: inherit;
-  text-decoration: none;
   overflow: hidden;
+  text-decoration: none;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.link:hover {
-  color: var(--foreground-secondary);
+.link {
+  color: inherit;
+  overflow: hidden;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .text {
@@ -31,7 +35,11 @@
 
 .divider {
   width: 8px;
-  text-align: center;
-  opacity: 0.6;
-  user-select: none;
+}
+
+.mobileBack {
+  color: inherit;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

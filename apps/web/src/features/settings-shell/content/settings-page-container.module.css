@@ -1,0 +1,20 @@
+.scrollWrapper {
+  min-height: 0;
+  height: 100%;
+  overflow: auto;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 24px 32px 80px;
+  width: 512px;
+}
+
+@media (max-width: 768px) {
+  .container {
+    width: unset;
+    padding: 24px 20px 80px;
+  }
+}

@@ -1,11 +1,11 @@
 .block {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0;
 }
 
 .title {
-  font-size: var(--font-size-heading-sm);
+  font-size: var(--font-size-body);
   font-weight: var(--font-weight-semibold);
   color: var(--foreground);
   margin: 0;
@@ -14,7 +14,8 @@
 .sectionHeader {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0;
+  margin-bottom: 16px;
 }
 
 .sectionInfo {
@@ -26,20 +27,26 @@
   gap: 12px;
 }
 
+.sectionActions[data-empty="true"] {
+  display: none;
+}
+
 .sectionContent {
   padding-top: 0;
 }
 
 .sectionDescription {
   margin: 0;
-  font-size: var(--font-size-sm);
-  color: var(--muted-foreground);
+  margin-top: 8px;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+  color: var(--foreground-tertiary);
 }
 
 @media (min-width: 768px) {
   .sectionHeader {
     flex-direction: row;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
   }
 }

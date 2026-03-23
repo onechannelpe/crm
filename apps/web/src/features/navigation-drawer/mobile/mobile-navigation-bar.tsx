@@ -5,12 +5,13 @@ import ChevronRight from "~/components/icons/chevron-right";
 import Search from "~/components/icons/search";
 import Settings from "~/components/icons/settings";
 import { useSession } from "~/components/providers/session-provider";
+import { useIsSettingsPage } from "../hooks/use-is-settings-page";
+import { useOpenSettingsMenu } from "../hooks/use-open-settings-menu";
+import { useNavigationDrawerState } from "../state/navigation-drawer-state";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { cn } from "~/lib/utils";
 
-import { useNavigationDrawerState } from "./navigation-drawer-state";
-
-import styles from "./navigation-drawer.module.css";
+import styles from "../navigation-drawer.module.css";
 
 export function MobileNavigationBar() {
   const location = useLocation();
@@ -22,16 +23,18 @@ export function MobileNavigationBar() {
     currentMobileDrawer,
     setCurrentMobileDrawer,
     isMobile,
-    setMemorizedExpanded,
-    setMemorizedPath,
+    memorizeNavigationState,
   } = useNavigationDrawerState();
+  const isSettingsPage = useIsSettingsPage();
+  const { openSettingsMenu } = useOpenSettingsMenu();
 
-  const isSettingsRoute = createMemo(
-    () =>
-      location.pathname === "/settings" ||
-      location.pathname.startsWith("/settings/") ||
-      location.pathname.startsWith("/admin/"),
-  );
+  const activeItemName = createMemo(() => {
+    if (!expanded()) {
+      return "main";
+    }
+
+    return currentMobileDrawer();
+  });
 
   if (!isMobile()) {
     return null;
@@ -43,17 +46,13 @@ export function MobileNavigationBar() {
         type="button"
         class={cn(
           styles.mobileBarItem,
-          currentMobileDrawer() === "main" &&
-            expanded() &&
-            styles.mobileBarItemActive,
+          activeItemName() === "main" && styles.mobileBarItemActive,
         )}
         onClick={() => {
           setCurrentMobileDrawer("main");
-          setExpanded(
-            (current) => currentMobileDrawer() !== "main" || !current,
-          );
+          setExpanded((previous) => activeItemName() !== "main" || !previous);
 
-          if (isSettingsRoute()) {
+          if (isSettingsPage()) {
             navigate(getDefaultAppPath(currentUser().role));
           }
         }}
@@ -78,17 +77,16 @@ export function MobileNavigationBar() {
         type="button"
         class={cn(
           styles.mobileBarItem,
-          currentMobileDrawer() === "settings" &&
-            expanded() &&
-            styles.mobileBarItemActive,
+          activeItemName() === "settings" && styles.mobileBarItemActive,
         )}
         onClick={() => {
-          setMemorizedExpanded(expanded());
-          setMemorizedPath(location.pathname + location.search);
-          setCurrentMobileDrawer("settings");
-          setExpanded(true);
+          memorizeNavigationState(
+            location.pathname + location.search,
+            expanded(),
+          );
+          openSettingsMenu();
 
-          if (!isSettingsRoute()) {
+          if (!isSettingsPage()) {
             navigate("/settings/profile");
           }
         }}

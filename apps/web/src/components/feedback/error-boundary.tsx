@@ -23,9 +23,19 @@ export function reportBoundaryError(
   sink: { error: (message: string, meta?: Record<string, unknown>) => void },
   error: unknown,
 ) {
+  const browserMeta =
+    typeof window === "undefined"
+      ? undefined
+      : {
+          path: window.location.pathname,
+          search: window.location.search,
+          hash: window.location.hash,
+        };
+
   sink.error("ui_boundary_error", {
     boundary: "app-root",
     error,
+    browser: browserMeta,
   });
 }
 
