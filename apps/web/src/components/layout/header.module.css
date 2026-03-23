@@ -1,3 +1,19 @@
+.iconContainer {
+  align-items: center;
+  color: var(--foreground-secondary);
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.routeLabel {
+  color: var(--foreground);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .commandButton {
   align-items: center;
   background: transparent;

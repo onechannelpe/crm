@@ -10,6 +10,11 @@
   min-width: 0;
 }
 
+.segment {
+  align-items: center;
+  display: contents;
+}
+
 .linkContainer > a {
   color: inherit;
   overflow: hidden;

@@ -54,8 +54,17 @@ export function Header() {
       />
       <PageHeader
         isMobile={isMobile()}
-        title={currentRoute().label}
-        Icon={ICON_BY_ROUTE[currentRoute().icon]}
+        left={
+          <>
+            <div class={styles.iconContainer}>
+              {(() => {
+                const Icon = ICON_BY_ROUTE[currentRoute().icon];
+                return <Icon size={16} />;
+              })()}
+            </div>
+            <span class={styles.routeLabel}>{currentRoute().label}</span>
+          </>
+        }
       >
         <button
           class={styles.commandButton}
