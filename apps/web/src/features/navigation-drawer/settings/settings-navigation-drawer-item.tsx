@@ -2,10 +2,10 @@ import { useLocation } from "@solidjs/router";
 import { Show } from "solid-js";
 
 import { AdvancedSettingsWrapper } from "../advanced/advanced-settings-wrapper";
-import type { NavigationDrawerSubItemState } from "../item/navigation-drawer-item";
 import { NavigationDrawerItem } from "../item/navigation-drawer-item";
-import type { SettingsNavItem } from "./settings-navigation-config";
+import type { NavigationDrawerSubItemState } from "../item/navigation-drawer-item.types";
 import { settingsItemMatchesPath } from "./settings-navigation-path-match";
+import type { SettingsNavItem } from "./settings-navigation.types";
 
 interface SettingsNavigationDrawerItemProps {
   item: SettingsNavItem;

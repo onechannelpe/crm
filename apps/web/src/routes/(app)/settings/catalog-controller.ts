@@ -10,9 +10,11 @@ import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
 import {
   collectPendingCatalogChanges,
   summarizeCatalogSaveResults,
-  type CatalogProductDraft,
-  type CatalogProductRecord,
 } from "./catalog-save";
+import type {
+  CatalogProductDraft,
+  CatalogProductRecord,
+} from "./catalog.types";
 
 export function createCatalogPageController() {
   const { showToast } = useToast();

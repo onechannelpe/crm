@@ -1,4 +1,4 @@
-import type { NavigationDrawerSubItemState } from "./navigation-drawer-item";
+import type { NavigationDrawerSubItemState } from "./navigation-drawer-item.types";
 
 import styles from "./navigation-drawer-item.module.css";
 

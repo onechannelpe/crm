@@ -4,40 +4,8 @@ import { useIsSettingsPage } from "../hooks/use-is-settings-page";
 import { useNavigationDrawerState } from "../state/navigation-drawer-state";
 import { NavigationDrawerActionItem } from "./navigation-drawer-action-item";
 import { NavigationDrawerExternalItem } from "./navigation-drawer-external-item";
+import type { NavigationDrawerItemProps } from "./navigation-drawer-item.types";
 import { NavigationDrawerRouteItem } from "./navigation-drawer-route-item";
-
-export type NavigationDrawerSubItemState =
-  | "intermediate-before-selected"
-  | "intermediate-selected"
-  | "intermediate-after-selected"
-  | "last-selected"
-  | "last-not-selected";
-
-export type NavigationDrawerItemModifier = "new" | "soon";
-
-export interface NavigationDrawerItemProps {
-  className?: string;
-  label: string;
-  secondaryLabel?: string;
-  indentationLevel?: 1 | 2;
-  subItemState?: NavigationDrawerSubItemState;
-  to?: string;
-  onClick?: () => void;
-  Icon?: (props: {
-    class?: string;
-    size?: number;
-    strokeWidth?: number;
-  }) => JSX.Element;
-  active?: boolean;
-  modifier?: NavigationDrawerItemModifier;
-  rightOptions?: JSX.Element;
-  alwaysShowRightOptions?: boolean;
-  closeOnNavigate?: () => void;
-  showChevron?: boolean;
-  chevronExpanded?: boolean;
-  preventCollapseOnMobile?: boolean;
-  variant?: "default" | "tertiary";
-}
 
 const DEFAULT_INDENTATION_LEVEL = 1;
 

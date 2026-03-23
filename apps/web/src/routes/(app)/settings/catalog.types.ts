@@ -1,0 +1,26 @@
+import type { getProductCatalog } from "~/actions/settings";
+
+export interface CatalogProductDraft {
+  price: string;
+  isActive: boolean;
+}
+
+export type CatalogProductRecord = Awaited<
+  ReturnType<typeof getProductCatalog>
+>[number];
+
+export interface PendingCatalogChange {
+  id: number;
+  price: number;
+  isActive: boolean;
+}
+
+export type PendingCatalogChangesResult =
+  | { ok: true; changes: PendingCatalogChange[] }
+  | { ok: false; reason: "invalid-price" };
+
+export interface CatalogSaveSummary {
+  successfulIds: number[];
+  firstError?: unknown;
+  status: "all-success" | "partial-failure" | "all-failure";
+}

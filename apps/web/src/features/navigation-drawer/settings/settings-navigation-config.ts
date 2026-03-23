@@ -1,5 +1,3 @@
-import type { JSX } from "solid-js";
-
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import LogOut from "~/components/icons/log-out";
 import Package from "~/components/icons/package";
@@ -7,29 +5,7 @@ import Settings from "~/components/icons/settings";
 import ShieldCheck from "~/components/icons/shield-check";
 import UserIcon from "~/components/icons/user";
 
-import { settingsItemMatchesPath } from "./settings-navigation-path-match";
-
-export type SettingsNavSectionId = "user" | "workspace" | "other";
-
-export interface SettingsNavItem {
-  id: string;
-  label: string;
-  href?: string;
-  icon: (props: { class?: string; size?: number }) => JSX.Element;
-  section: SettingsNavSectionId;
-  advanced?: boolean;
-  indentationLevel?: 1 | 2;
-  matchSubPages?: boolean;
-  subItems?: SettingsNavItem[];
-  action?: "logout";
-  modifier?: "new" | "soon";
-}
-
-export interface SettingsNavSection {
-  id: SettingsNavSectionId;
-  label: string;
-  items: SettingsNavItem[];
-}
+import type { SettingsNavSection } from "./settings-navigation.types";
 
 export const SETTINGS_NAV_SECTIONS: SettingsNavSection[] = [
   {
@@ -121,60 +97,3 @@ export const SETTINGS_NAV_SECTIONS: SettingsNavSection[] = [
     ],
   },
 ];
-
-function flattenItems(items: SettingsNavItem[]): SettingsNavItem[] {
-  const result: SettingsNavItem[] = [];
-
-  for (const item of items) {
-    result.push(item);
-
-    if (item.subItems && item.subItems.length > 0) {
-      result.push(...flattenItems(item.subItems));
-    }
-  }
-
-  return result;
-}
-
-export const SETTINGS_NAV_ITEMS = SETTINGS_NAV_SECTIONS.flatMap((section) =>
-  flattenItems(section.items),
-);
-
-export function getCurrentSettingsItem(pathname: string): SettingsNavItem {
-  const firstWithHref = SETTINGS_NAV_ITEMS.find((item) => Boolean(item.href));
-
-  return (
-    SETTINGS_NAV_ITEMS.find((item) => {
-      return settingsItemMatchesPath(pathname, item.href, item.matchSubPages);
-    }) ??
-    firstWithHref ?? {
-      id: "profile",
-      label: "Perfil",
-      href: "/settings/profile",
-      icon: UserIcon,
-      section: "user",
-    }
-  );
-}
-
-export function getSettingsSectionLabel(section: SettingsNavSectionId): string {
-  const matchedSection = SETTINGS_NAV_SECTIONS.find(
-    (item) => item.id === section,
-  );
-
-  return matchedSection?.label ?? "Ajustes";
-}
-
-export function getSettingsSectionHref(
-  section: SettingsNavSectionId,
-): string | undefined {
-  const matchedSection = SETTINGS_NAV_SECTIONS.find(
-    (item) => item.id === section,
-  );
-  if (!matchedSection) {
-    return undefined;
-  }
-
-  return flattenItems(matchedSection.items).find((item) => Boolean(item.href))
-    ?.href;
-}

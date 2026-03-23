@@ -4,11 +4,13 @@ import ChevronRight from "~/components/icons/chevron-right";
 import { cn } from "~/lib/utils";
 
 import { NavigationDrawerAnimatedCollapseWrapper } from "./navigation-drawer-animated-collapse-wrapper";
-import type {
-  NavigationDrawerItemModifier,
-  NavigationDrawerItemProps,
-} from "./navigation-drawer-item";
 import { NavigationDrawerItemBreadcrumb } from "./navigation-drawer-item-breadcrumb";
+import type {
+  NavigationDrawerIcon,
+  NavigationDrawerItemModifier,
+  NavigationDrawerItemVariant,
+  NavigationDrawerSubItemState,
+} from "./navigation-drawer-item.types";
 
 import styles from "./navigation-drawer-item.module.css";
 
@@ -24,15 +26,15 @@ interface NavigationDrawerItemFrameProps {
   label: string;
   secondaryLabel?: string;
   indentationLevel: 1 | 2;
-  subItemState?: NavigationDrawerItemProps["subItemState"];
-  Icon?: NavigationDrawerItemProps["Icon"];
+  subItemState?: NavigationDrawerSubItemState;
+  Icon?: NavigationDrawerIcon;
   active?: boolean;
   modifier?: NavigationDrawerItemModifier;
   rightOptions?: JSX.Element;
   alwaysShowRightOptions?: boolean;
   showChevron?: boolean;
   chevronExpanded?: boolean;
-  variant?: NavigationDrawerItemProps["variant"];
+  variant?: NavigationDrawerItemVariant;
   collapsedMain: boolean;
   isMobile: boolean;
   render: (props: NavigationDrawerItemFrameRenderProps) => JSX.Element;
