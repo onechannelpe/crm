@@ -18,37 +18,58 @@ export function createSettingsNavigationSections(
 ): SettingsNavSection[] {
   return [
     {
-      id: "user",
-      label: "Usuario",
+      id: "account",
+      label: "Cuenta",
       items: [
         {
           id: "profile",
           label: "Perfil",
           href: "/settings/profile",
           icon: UserIcon,
-          section: "user",
+          section: "account",
         },
-      ],
-    },
-    {
-      id: "workspace",
-      label: "Espacio de trabajo",
-      items: [
         {
           id: "security",
           label: "Seguridad",
           href: "/settings/security",
           icon: ShieldCheck,
-          section: "workspace",
+          section: "account",
           isHidden: !canAccessPath(options.role, "/settings/security"),
-          isAdvanced: true,
         },
+      ],
+    },
+    {
+      id: "operations",
+      label: "Operación",
+      items: [
+        {
+          id: "sales-policies",
+          label: "Politicas comerciales",
+          href: "/settings/capacity-policies",
+          icon: Settings,
+          section: "operations",
+          isHidden: !canAccessPath(options.role, "/settings/capacity-policies"),
+        },
+        {
+          id: "capacity-audit",
+          label: "Auditoria de capacidad",
+          href: "/settings/capacity-audit",
+          icon: Settings,
+          section: "operations",
+          isHidden: !canAccessPath(options.role, "/settings/capacity-audit"),
+        },
+      ],
+    },
+    {
+      id: "administration",
+      label: "Administración",
+      items: [
         {
           id: "login-protection",
           label: "Proteccion de inicio de sesion",
           href: "/settings/login-protection",
           icon: ShieldCheck,
-          section: "workspace",
+          section: "administration",
           isHidden: !canAccessPath(options.role, "/settings/login-protection"),
           isAdvanced: true,
         },
@@ -57,26 +78,8 @@ export function createSettingsNavigationSections(
           label: "Politicas de riesgo",
           href: "/settings/security-policies",
           icon: ShieldCheck,
-          section: "workspace",
+          section: "administration",
           isHidden: !canAccessPath(options.role, "/settings/security-policies"),
-          isAdvanced: true,
-        },
-        {
-          id: "sales-policies",
-          label: "Politicas comerciales",
-          href: "/settings/capacity-policies",
-          icon: Settings,
-          section: "workspace",
-          isHidden: !canAccessPath(options.role, "/settings/capacity-policies"),
-          isAdvanced: true,
-        },
-        {
-          id: "capacity-audit",
-          label: "Auditoria de capacidad",
-          href: "/settings/capacity-audit",
-          icon: Settings,
-          section: "workspace",
-          isHidden: !canAccessPath(options.role, "/settings/capacity-audit"),
           isAdvanced: true,
         },
         {
@@ -84,7 +87,7 @@ export function createSettingsNavigationSections(
           label: "Catalogo",
           href: "/settings/catalog",
           icon: Package,
-          section: "workspace",
+          section: "administration",
           isHidden: !canAccessPath(options.role, "/settings/catalog"),
           isAdvanced: true,
           modifier: "new",

@@ -1,6 +1,10 @@
 import type { JSX } from "solid-js";
 
-export type SettingsNavSectionId = "user" | "workspace" | "other";
+export type SettingsNavSectionId =
+  | "account"
+  | "operations"
+  | "administration"
+  | "other";
 
 export interface SettingsNavItem {
   id: string;

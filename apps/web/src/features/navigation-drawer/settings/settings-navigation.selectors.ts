@@ -55,7 +55,7 @@ export function getCurrentSettingsItem(
       label: "Perfil",
       href: "/settings/profile",
       icon: UserIcon,
-      section: "user",
+      section: "account",
     }
   );
 }
