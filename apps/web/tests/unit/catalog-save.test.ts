@@ -9,8 +9,22 @@ describe("catalog save helpers", () => {
   it("blocks submission when any dirty draft has an invalid price", () => {
     const result = collectPendingCatalogChanges({
       products: [
-        { id: 1, price: 10, is_active: 1 },
-        { id: 2, price: 20, is_active: 1 },
+        {
+          id: 1,
+          name: "Producto 1",
+          category: "General",
+          subtype: null,
+          price: 10,
+          is_active: 1,
+        },
+        {
+          id: 2,
+          name: "Producto 2",
+          category: "General",
+          subtype: null,
+          price: 20,
+          is_active: 1,
+        },
       ],
       drafts: {
         1: { price: "11.50", isActive: true },
@@ -25,8 +39,22 @@ describe("catalog save helpers", () => {
   it("keeps failed draft ids out of the success list during partial saves", () => {
     const changesResult = collectPendingCatalogChanges({
       products: [
-        { id: 1, price: 10, is_active: 1 },
-        { id: 2, price: 20, is_active: 1 },
+        {
+          id: 1,
+          name: "Producto 1",
+          category: "General",
+          subtype: null,
+          price: 10,
+          is_active: 1,
+        },
+        {
+          id: 2,
+          name: "Producto 2",
+          category: "General",
+          subtype: null,
+          price: 20,
+          is_active: 1,
+        },
       ],
       drafts: {
         1: { price: "11.50", isActive: true },

@@ -5,7 +5,7 @@ import { cn } from "~/lib/utils";
 import { useIsSettingsDrawer } from "../hooks/use-is-settings-drawer";
 import { NavigationDrawerSection } from "../section/navigation-drawer-section";
 
-import styles from "../navigation-drawer.module.css";
+import styles from "./navigation-drawer-shell.module.css";
 
 export function NavigationDrawerFixedContent(props: ParentProps) {
   const isSettingsDrawer = useIsSettingsDrawer();

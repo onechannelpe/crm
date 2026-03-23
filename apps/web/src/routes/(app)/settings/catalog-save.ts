@@ -1,29 +1,10 @@
-export interface CatalogProductDraft {
-  price: string;
-  isActive: boolean;
-}
-
-export interface CatalogProductRecord {
-  id: number;
-  price: number;
-  is_active: number;
-}
-
-export interface PendingCatalogChange {
-  id: number;
-  price: number;
-  isActive: boolean;
-}
-
-export type PendingCatalogChangesResult =
-  | { ok: true; changes: PendingCatalogChange[] }
-  | { ok: false; reason: "invalid-price" };
-
-export interface CatalogSaveSummary {
-  successfulIds: number[];
-  firstError?: unknown;
-  status: "all-success" | "partial-failure" | "all-failure";
-}
+import type {
+  CatalogProductDraft,
+  CatalogProductRecord,
+  CatalogSaveSummary,
+  PendingCatalogChange,
+  PendingCatalogChangesResult,
+} from "./catalog.types";
 
 export function collectPendingCatalogChanges(args: {
   products: CatalogProductRecord[];

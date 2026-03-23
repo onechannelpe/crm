@@ -12,7 +12,7 @@ import { useIsSettingsPage } from "../hooks/use-is-settings-page";
 import { useOpenSettingsMenu } from "../hooks/use-open-settings-menu";
 import { useNavigationDrawerState } from "../state/navigation-drawer-state";
 
-import styles from "../navigation-drawer.module.css";
+import styles from "./mobile-navigation-bar.module.css";
 
 export function MobileNavigationBar() {
   const location = useLocation();

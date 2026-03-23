@@ -1,4 +1,4 @@
-import type { NavigationDrawerSubItemState } from "./navigation-drawer-item";
+import type { NavigationDrawerSubItemState } from "./navigation-drawer-item.types";
 
 export function getNavigationSubItemLeftAdornment({
   index,

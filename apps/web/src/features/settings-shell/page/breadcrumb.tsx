@@ -1,46 +1,43 @@
 import { A } from "@solidjs/router";
-import { For, Show, type JSX } from "solid-js";
+import { For, Show } from "solid-js";
 
-import { MobileBreadcrumb } from "./mobile-breadcrumb";
+import type { BreadcrumbItem, MobileBackAction } from "./breadcrumb-model";
+import { MobileBackControl } from "./mobile-breadcrumb";
 
 import styles from "./breadcrumb.module.css";
 
-export interface BreadcrumbLink {
-  children: string | JSX.Element;
-  href?: string;
-}
-
 interface BreadcrumbProps {
-  links: BreadcrumbLink[];
+  items: BreadcrumbItem[];
+  mobileBackAction: MobileBackAction;
   class?: string;
   isMobile?: boolean;
 }
 
 export function Breadcrumb(props: BreadcrumbProps) {
-  if (props.isMobile && props.links.length > 0) {
-    return <MobileBreadcrumb links={props.links} class={props.class} />;
+  if (props.isMobile) {
+    return (
+      <MobileBackControl action={props.mobileBackAction} class={props.class} />
+    );
   }
 
   return (
     <nav class={`${styles.root} ${props.class ?? ""}`} aria-label="Breadcrumb">
-      <For each={props.links}>
-        {(link, index) => {
-          const text = typeof link.children === "string" ? link.children : "";
-
+      <For each={props.items}>
+        {(item, index) => {
           return (
             <>
-              {link.href ? (
+              {item.href ? (
                 <span class={styles.linkContainer}>
-                  <A href={link.href} class={styles.link} title={text}>
-                    {link.children}
+                  <A href={item.href} class={styles.link} title={item.label}>
+                    {item.label}
                   </A>
                 </span>
               ) : (
-                <span class={styles.text} title={text}>
-                  {link.children}
+                <span class={styles.text} title={item.label}>
+                  {item.label}
                 </span>
               )}
-              <Show when={index() < props.links.length - 1}>
+              <Show when={index() < props.items.length - 1}>
                 <span class={styles.divider}>/</span>
               </Show>
             </>
