@@ -5,11 +5,12 @@ import ChevronRight from "~/components/icons/chevron-right";
 import Search from "~/components/icons/search";
 import Settings from "~/components/icons/settings";
 import { useSession } from "~/components/providers/session-provider";
+import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
+import { cn } from "~/lib/utils";
+
 import { useIsSettingsPage } from "../hooks/use-is-settings-page";
 import { useOpenSettingsMenu } from "../hooks/use-open-settings-menu";
 import { useNavigationDrawerState } from "../state/navigation-drawer-state";
-import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
-import { cn } from "~/lib/utils";
 
 import styles from "../navigation-drawer.module.css";
 

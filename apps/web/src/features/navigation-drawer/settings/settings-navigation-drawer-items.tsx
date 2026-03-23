@@ -3,18 +3,19 @@ import { For, Show, createMemo } from "solid-js";
 
 import { logout } from "~/actions/auth";
 import { useSession } from "~/components/providers/session-provider";
+import { canAccessPath } from "~/lib/auth/access/route-policy";
+
 import { getNavigationSubItemLeftAdornment } from "../item/get-navigation-sub-item-left-adornment";
 import { NavigationDrawerItemGroup } from "../item/navigation-drawer-item-group";
 import { NavigationDrawerSection } from "../section/navigation-drawer-section";
 import { NavigationDrawerSectionTitle } from "../section/navigation-drawer-section-title";
+import { useNavigationDrawerState } from "../state/navigation-drawer-state";
 import {
   SETTINGS_NAV_SECTIONS,
   type SettingsNavItem,
 } from "./settings-navigation-config";
 import { SettingsNavigationDrawerItem } from "./settings-navigation-drawer-item";
 import { settingsItemMatchesPath } from "./settings-navigation-path-match";
-import { useNavigationDrawerState } from "../state/navigation-drawer-state";
-import { canAccessPath } from "~/lib/auth/access/route-policy";
 
 export function SettingsNavigationDrawerItems() {
   const location = useLocation();

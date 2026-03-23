@@ -1,7 +1,7 @@
 import { createMemo } from "solid-js";
 
-import { useIsSettingsPage } from "./use-is-settings-page";
 import { useNavigationDrawerState } from "../state/navigation-drawer-state";
+import { useIsSettingsPage } from "./use-is-settings-page";
 
 export function useIsSettingsDrawer() {
   const { isMobile, currentMobileDrawer } = useNavigationDrawerState();

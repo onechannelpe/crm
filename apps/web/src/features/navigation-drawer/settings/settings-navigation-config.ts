@@ -6,6 +6,7 @@ import Package from "~/components/icons/package";
 import Settings from "~/components/icons/settings";
 import ShieldCheck from "~/components/icons/shield-check";
 import UserIcon from "~/components/icons/user";
+
 import { settingsItemMatchesPath } from "./settings-navigation-path-match";
 
 export type SettingsNavSectionId = "user" | "workspace" | "other";

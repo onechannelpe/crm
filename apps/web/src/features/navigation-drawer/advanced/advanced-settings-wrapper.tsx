@@ -1,9 +1,10 @@
 import type { ParentProps } from "solid-js";
 
 import { AnimatedExpandableContainer } from "~/components/ui/animation/animated-expandable-container";
+
+import { useNavigationDrawerState } from "../state/navigation-drawer-state";
 import { ADVANCED_SETTINGS_ANIMATION_DURATION } from "./advanced-settings-animation-durations";
 import { AdvancedSettingsContentWrapperWithDot } from "./advanced-settings-content-wrapper-with-dot";
-import { useNavigationDrawerState } from "../state/navigation-drawer-state";
 
 import styles from "./advanced-settings-wrapper.module.css";
 

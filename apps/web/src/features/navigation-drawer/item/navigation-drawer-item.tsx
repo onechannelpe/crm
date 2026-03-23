@@ -2,11 +2,12 @@ import { A, useNavigate } from "@solidjs/router";
 import { Show, type JSX } from "solid-js";
 
 import ChevronRight from "~/components/icons/chevron-right";
+import { cn } from "~/lib/utils";
+
 import { useIsSettingsPage } from "../hooks/use-is-settings-page";
+import { useNavigationDrawerState } from "../state/navigation-drawer-state";
 import { NavigationDrawerAnimatedCollapseWrapper } from "./navigation-drawer-animated-collapse-wrapper";
 import { NavigationDrawerItemBreadcrumb } from "./navigation-drawer-item-breadcrumb";
-import { useNavigationDrawerState } from "../state/navigation-drawer-state";
-import { cn } from "~/lib/utils";
 
 import styles from "../navigation-drawer.module.css";
 

@@ -8,10 +8,11 @@ import X from "~/components/icons/x";
 import { AccountMenu } from "~/components/layout/account-menu";
 import { useSession } from "~/components/providers/session-provider";
 import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
-import { useIsSettingsDrawer } from "../hooks/use-is-settings-drawer";
-import { useNavigationDrawerState } from "../state/navigation-drawer-state";
 import { shortName } from "~/lib/users/display-name";
 import { cn } from "~/lib/utils";
+
+import { useIsSettingsDrawer } from "../hooks/use-is-settings-drawer";
+import { useNavigationDrawerState } from "../state/navigation-drawer-state";
 
 import styles from "../navigation-drawer.module.css";
 

@@ -5,6 +5,7 @@ import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import Settings from "~/components/icons/settings";
 import { useSession } from "~/components/providers/session-provider";
 import { AnimatedExpandableContainer } from "~/components/ui/animation/animated-expandable-container";
+
 import {
   getEntryIcon,
   getMainPrimaryEntries,
@@ -19,9 +20,9 @@ import { NavigationDrawerItemsCollapsableContainer } from "../item/navigation-dr
 import { NavigationDrawerSubItem } from "../item/navigation-drawer-sub-item";
 import { NavigationDrawerSection } from "../section/navigation-drawer-section";
 import { NavigationDrawerSectionTitle } from "../section/navigation-drawer-section-title";
+import { useNavigationDrawerState } from "../state/navigation-drawer-state";
 import { NavigationDrawerScrollableContent } from "./navigation-drawer-scrollable-content";
 import { NavigationDrawer } from "./navigation-drawer-shell";
-import { useNavigationDrawerState } from "../state/navigation-drawer-state";
 
 import styles from "../navigation-drawer.module.css";
 
