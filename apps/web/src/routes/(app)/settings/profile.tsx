@@ -47,6 +47,7 @@ export default function ProfilePage() {
   const isRemovingAvatar = () =>
     removeSubmissions.some((submission) => submission.pending);
   const avatarMutationPending = () => isUploadingAvatar() || isRemovingAvatar();
+  const phoneFormId = "settings-profile-phone-form";
 
   onCleanup(() => {
     const preview = avatarPreviewUrl();
@@ -134,7 +135,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div class={styles.content}>
+    <>
       <SettingsSection title="Foto">
         <ProfileImageInput
           pictureUrl={avatarPreviewUrl() ?? avatarUrl()}
@@ -149,8 +150,20 @@ export default function ProfilePage() {
       <SettingsSection
         title="Teléfono"
         description="Tu número de teléfono corporativo"
+        actions={
+          <Button
+            type="submit"
+            form={phoneFormId}
+            size="sm"
+            variant="secondary"
+            loading={savingProfile()}
+          >
+            Guardar
+          </Button>
+        }
       >
         <form
+          id={phoneFormId}
           onSubmit={(e) => {
             void saveProfile(e);
           }}
@@ -163,12 +176,6 @@ export default function ProfilePage() {
               placeholder="+1 234 567 8900"
             />
           </div>
-
-          <div class={styles.formActions}>
-            <Button type="submit" disabled={savingProfile()}>
-              {savingProfile() ? "Guardando..." : "Guardar"}
-            </Button>
-          </div>
         </form>
       </SettingsSection>
 
@@ -178,6 +185,6 @@ export default function ProfilePage() {
       >
         <Input value={user().email} disabled />
       </SettingsSection>
-    </div>
+    </>
   );
 }

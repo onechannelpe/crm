@@ -1,5 +1,5 @@
 import { createAsync, useAction } from "@solidjs/router";
-import { createSignal, For } from "solid-js";
+import { For, createMemo, createSignal } from "solid-js";
 
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Button } from "~/components/ui/input/button";
@@ -44,6 +44,9 @@ export default function SecurityPoliciesPage() {
   });
 
   const saveAuditPolicy = useAction(upsertAuditPolicyMutation);
+  const canSubmit = createMemo(
+    () => canManagePolicies() && policyAction().trim().length > 0,
+  );
 
   async function savePolicy(): Promise<void> {
     setPolicyError(null);
@@ -61,7 +64,7 @@ export default function SecurityPoliciesPage() {
   }
 
   return (
-    <div class={styles.content}>
+    <>
       <SettingsSection title="Políticas de riesgo de auditoría">
         <FilterBar>
           <div style={{ width: "13rem" }}>
@@ -90,14 +93,6 @@ export default function SecurityPoliciesPage() {
             checked={policyIsActive()}
             onInput={(e) => setPolicyIsActive(e.currentTarget.checked)}
           />
-          <Button
-            disabled={!canManagePolicies()}
-            onClick={() => {
-              void savePolicy();
-            }}
-          >
-            Guardar política
-          </Button>
         </FilterBar>
         <p class={styles.helperText}>
           Las acciones sin política explícita se tratan como de alto riesgo para
@@ -133,7 +128,20 @@ export default function SecurityPoliciesPage() {
             </For>
           </TableBody>
         </Table>
+        <div class={styles.formActions}>
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            disabled={!canSubmit()}
+            onClick={() => {
+              void savePolicy();
+            }}
+          >
+            Guardar política
+          </Button>
+        </div>
       </SettingsSection>
-    </div>
+    </>
   );
 }

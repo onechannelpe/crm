@@ -71,11 +71,12 @@ function OnboardingContent() {
                     <Show when={flow.step() === "totp"}>
                       <Button
                         type="submit"
+                        loading={flow.submitting()}
                         disabled={
                           flow.submitting() || !flow.onboardingState().canFinish
                         }
                       >
-                        {flow.submitting() ? "Guardando..." : "Finalizar"}
+                        Finalizar
                       </Button>
                     </Show>
                   }

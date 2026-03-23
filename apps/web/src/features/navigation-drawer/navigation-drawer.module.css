@@ -1,0 +1,485 @@
+.drawerHost {
+  position: relative;
+  inset: auto;
+  flex-shrink: 0;
+  height: 100%;
+  z-index: 20;
+  pointer-events: auto;
+}
+
+.drawer {
+  display: flex;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  position: relative;
+  width: var(--nav-drawer-current-width);
+  transition: width var(--motion-normal) var(--ease-standard);
+}
+
+.drawerInner {
+  box-sizing: border-box;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 0 16px 8px;
+}
+
+.drawerSettings .drawerInner {
+  padding: 12px 0 16px 0;
+}
+
+.header {
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-right: 8px;
+}
+
+.headerCollapsed {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.headerCollapsed .headerActions {
+  align-self: flex-end;
+  flex-direction: column;
+  gap: 4px;
+  margin-left: 0;
+}
+
+.headerActions {
+  margin-inline-start: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.searchButton,
+.collapseButton {
+  width: 28px;
+  height: 28px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--foreground-secondary);
+  background: transparent;
+  transition: opacity var(--motion-fast) var(--ease-standard);
+}
+
+.searchButton:hover,
+.collapseButton:hover {
+  background: var(--bg-translucent);
+  color: var(--foreground);
+}
+
+.settingsBackHeader {
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  padding-left: 20px;
+  padding-right: 8px;
+}
+
+.settingsBackButton {
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--foreground-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 4px;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  text-align: left;
+}
+
+.settingsBackButton:hover {
+  background: var(--bg-translucent);
+  color: var(--foreground);
+}
+
+.scrollable {
+  min-height: 0;
+  flex: 1;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-right: 8px;
+}
+
+.scrollableSettings {
+  padding-left: 20px;
+  padding-right: 32px;
+}
+
+.fixedContent {
+  padding-right: 8px;
+}
+
+.fixedContentSettings {
+  padding-left: 20px;
+  padding-right: 32px;
+}
+
+.section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.sectionSettings {
+  margin-bottom: 12px;
+}
+
+.sectionInner {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.scrollableSettings .section {
+  margin-bottom: 0;
+}
+
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+.sectionTitle {
+  width: 100%;
+  height: 20px;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--foreground-tertiary);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-semibold);
+  text-align: left;
+}
+
+.sectionTitleClickable:hover {
+  background: var(--bg-translucent);
+  cursor: pointer;
+}
+
+.sectionTitleLabel {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sectionTitleChevron {
+  opacity: 0;
+  transition: opacity var(--motion-fast) var(--ease-standard);
+}
+
+.sectionTitle:hover .sectionTitleChevron {
+  opacity: 1;
+}
+
+.sectionTitleCollapsed {
+  height: 0;
+  padding: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.collapseWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.itemGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.item {
+  width: calc(
+    var(--item-width-base, 100%) - 6px + 4px + var(--item-padding-right, 4px)
+  );
+  height: 28px;
+  padding-bottom: 4px;
+  padding-left: 4px;
+  padding-right: var(--item-padding-right, 4px);
+  padding-top: 4px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  background: transparent;
+  text-decoration: none;
+  color: var(--foreground-secondary);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.itemIndented {
+  margin-top: 2px;
+}
+
+.itemElements {
+  align-items: center;
+  display: flex;
+  width: 100%;
+}
+
+.iconWrap {
+  align-items: center;
+  display: flex;
+  margin-right: 8px;
+}
+
+.item:hover {
+  background: var(--bg-translucent);
+  color: var(--foreground);
+}
+
+.itemActive {
+  background: var(--bg-translucent);
+  color: var(--foreground);
+}
+
+.itemTertiary {
+  color: var(--foreground-tertiary);
+}
+
+.itemLabel {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: clip;
+}
+
+.itemLabelCollapsed {
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.itemPill {
+  margin-inline-start: auto;
+  font-size: var(--font-size-label);
+  color: var(--foreground-tertiary);
+}
+
+.itemRight {
+  margin-inline-start: auto;
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  justify-content: center;
+}
+
+.itemRightVisibility {
+  clip-path: inset(1px);
+  display: block;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+  padding-left: 8px;
+  position: absolute;
+  transition: opacity var(--motion-fast) var(--ease-standard);
+  white-space: nowrap;
+  width: 1px;
+}
+
+.itemRightVisibility[data-visible="true"],
+.item:hover .itemRightVisibility {
+  clip-path: unset;
+  display: inline-flex;
+  height: unset;
+  opacity: 1;
+  overflow: unset;
+  position: unset;
+  width: unset;
+}
+
+.itemChevron {
+  color: var(--foreground-tertiary);
+  transition:
+    transform var(--motion-fast) var(--ease-standard),
+    opacity var(--motion-fast) var(--ease-standard);
+}
+
+.subItemBreadcrumb {
+  display: inline-block;
+  width: 9px;
+  height: 28px;
+  margin-left: 7.5px;
+  margin-right: 8px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.subItemBreadcrumbGap {
+  display: block;
+  width: 1px;
+  height: 2px;
+  position: relative;
+  top: -2px;
+  background: color-mix(in oklab, var(--foreground-tertiary) 55%, transparent);
+}
+
+.subItemBreadcrumbGap[data-darker="true"] {
+  background: var(--foreground-secondary);
+}
+
+.subItemBreadcrumbElbow {
+  display: block;
+  width: 8px;
+  height: 14px;
+  position: relative;
+  top: -2px;
+  border-left: 1px solid
+    color-mix(in oklab, var(--foreground-tertiary) 55%, transparent);
+  border-bottom: 1px solid
+    color-mix(in oklab, var(--foreground-tertiary) 55%, transparent);
+  border-bottom-left-radius: 4px;
+}
+
+.subItemBreadcrumbElbow[data-darker="true"] {
+  border-left-color: var(--foreground-secondary);
+  border-bottom-color: var(--foreground-secondary);
+}
+
+.subItemBreadcrumbVertical {
+  display: block;
+  width: 1px;
+  height: 28px;
+  position: relative;
+  top: -17px;
+  background: color-mix(in oklab, var(--foreground-tertiary) 55%, transparent);
+}
+
+.subItemBreadcrumbVertical[data-darker="true"] {
+  background: var(--foreground-secondary);
+}
+
+.resizeHandle {
+  position: absolute;
+  top: 0;
+  right: -4px;
+  width: 8px;
+  height: 100vh;
+  cursor: col-resize;
+}
+
+.resizeHandle::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 3px;
+  width: 1px;
+  height: 100%;
+  background: transparent;
+  transition: background var(--motion-fast) var(--ease-standard);
+}
+
+.resizeHandle:hover::before,
+.resizing::before {
+  background: var(--border);
+}
+
+.mobileBar {
+  position: fixed;
+  inset: auto 12px 12px 12px;
+  z-index: 25;
+  height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--overlay);
+  box-shadow: var(--shadow-elevation-2);
+  padding: 4px;
+  display: none;
+  align-items: center;
+  gap: 4px;
+}
+
+.mobileBarItem {
+  flex: 1;
+  height: 100%;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  color: var(--foreground-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+}
+
+.mobileBarItemActive {
+  background: var(--bg-translucent);
+  color: var(--foreground);
+}
+
+@media (max-width: 768px) {
+  .drawerHost {
+    width: 0;
+    z-index: 25;
+  }
+
+  .drawer {
+    width: 0;
+  }
+
+  .drawerOpenMobile {
+    width: 100%;
+  }
+
+  .drawerClosedMobile {
+    pointer-events: none;
+  }
+
+  .drawerInner {
+    height: 100%;
+    width: 100%;
+    background: var(--overlay);
+    border-right: 1px solid var(--border);
+    box-shadow: var(--shadow-elevation-2);
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .scrollableSettings,
+  .fixedContentSettings {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .itemLabelCollapsed {
+    max-width: 220px;
+    opacity: 1;
+  }
+
+  .mobileBar {
+    display: flex;
+  }
+}

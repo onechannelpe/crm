@@ -50,6 +50,7 @@ export default function SecurityPage() {
     refreshStatus: refreshCurrentUser,
     verifySuccessMessage: "Autenticación en dos pasos activada",
   });
+  const changePasswordFormId = "settings-security-change-password-form";
 
   const [doRemovePasskeys, isRemovingPasskeys] = useAsyncAction(async () => {
     try {
@@ -109,7 +110,7 @@ export default function SecurityPage() {
   );
 
   return (
-    <div class={base.content}>
+    <>
       <ConfirmDialog
         isOpen={removePasskeysDialog.isOpen()}
         title="Eliminar claves de acceso"
@@ -129,8 +130,24 @@ export default function SecurityPage() {
         onClose={disableTotpDialog.close}
       />
 
-      <SettingsSection title="Cambiar contraseña">
-        <form onSubmit={(e) => void handleChangePassword(e)}>
+      <SettingsSection
+        title="Cambiar contraseña"
+        actions={
+          <Button
+            type="submit"
+            form={changePasswordFormId}
+            size="sm"
+            variant="secondary"
+            loading={isChangingPassword()}
+          >
+            Guardar
+          </Button>
+        }
+      >
+        <form
+          id={changePasswordFormId}
+          onSubmit={(e) => void handleChangePassword(e)}
+        >
           <div class={base.formGrid}>
             <Input
               type="password"
@@ -154,13 +171,6 @@ export default function SecurityPage() {
               required
             />
           </div>
-          <div class={base.formActions}>
-            <Button type="submit" disabled={isChangingPassword()}>
-              {isChangingPassword()
-                ? "Actualizando..."
-                : "Actualizar contraseña"}
-            </Button>
-          </div>
         </form>
       </SettingsSection>
 
@@ -183,6 +193,8 @@ export default function SecurityPage() {
             <div class={styles.inlineActions}>
               <Button
                 type="button"
+                size="sm"
+                variant="secondary"
                 onClick={() => void passkeyEnrollment.registerPasskey()}
                 disabled={passkeyEnrollment.loading()}
               >
@@ -191,13 +203,14 @@ export default function SecurityPage() {
                   : "Configurar"}
               </Button>
               <Show when={currentUser().hasPasskey}>
-                <Button
+                <button
                   type="button"
-                  variant="outline"
+                  class={styles.inlineLink}
                   onClick={removePasskeysDialog.open}
+                  disabled={passkeyEnrollment.loading()}
                 >
                   Eliminar todas
-                </Button>
+                </button>
               </Show>
             </div>
           </Show>
@@ -216,7 +229,8 @@ export default function SecurityPage() {
                 </p>
                 <Button
                   type="button"
-                  variant="outline"
+                  size="sm"
+                  variant="secondary"
                   onClick={disableTotpDialog.open}
                 >
                   Restablecer
@@ -237,6 +251,8 @@ export default function SecurityPage() {
                 fallback={
                   <Button
                     type="button"
+                    size="sm"
+                    variant="secondary"
                     onClick={() => void totpEnrollment.beginEnrollment()}
                     disabled={totpEnrollment.loading()}
                   >
@@ -287,6 +303,8 @@ export default function SecurityPage() {
                       />
                       <Button
                         type="button"
+                        size="sm"
+                        variant="secondary"
                         onClick={() => void totpEnrollment.verifyEnrollment()}
                         disabled={totpEnrollment.loading()}
                       >
@@ -308,6 +326,6 @@ export default function SecurityPage() {
           </Show>
         </div>
       </SettingsSection>
-    </div>
+    </>
   );
 }
