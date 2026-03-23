@@ -23,26 +23,29 @@ export function Breadcrumb(props: BreadcrumbProps) {
   return (
     <nav class={`${styles.root} ${props.class ?? ""}`} aria-label="Breadcrumb">
       <For each={props.items}>
-        {(item, index) => {
-          return (
-            <>
-              {item.href ? (
-                <span class={styles.linkContainer}>
-                  <A href={item.href} class={styles.link} title={item.label}>
-                    {item.label}
-                  </A>
-                </span>
-              ) : (
+        {(item, index) => (
+          <span class={styles.segment}>
+            <Show
+              when={item.href}
+              fallback={
                 <span class={styles.text} title={item.label}>
                   {item.label}
                 </span>
+              }
+            >
+              {(href) => (
+                <span class={styles.linkContainer}>
+                  <A href={href()} class={styles.link} title={item.label}>
+                    {item.label}
+                  </A>
+                </span>
               )}
-              <Show when={index() < props.items.length - 1}>
-                <span class={styles.divider}>/</span>
-              </Show>
-            </>
-          );
-        }}
+            </Show>
+            <Show when={index() < props.items.length - 1}>
+              <span class={styles.divider}>/</span>
+            </Show>
+          </span>
+        )}
       </For>
     </nav>
   );
