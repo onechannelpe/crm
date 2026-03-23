@@ -1,4 +1,5 @@
 /// <reference types="@solidjs/start/env" />
+/// <reference types="mdx" />
 
 import type { AuthSession } from "~/lib/auth/access/session-types";
 
