@@ -43,8 +43,12 @@ export function SearchLayout(props: SearchLayoutProps) {
           onInput={(event) => props.onQueryInput(event.currentTarget.value)}
           required
         />
-        <Button type="submit" disabled={props.searching}>
-          {props.searching ? "Searching..." : "Search"}
+        <Button
+          type="submit"
+          loading={props.searching}
+          disabled={props.searching}
+        >
+          Search
         </Button>
       </form>
 

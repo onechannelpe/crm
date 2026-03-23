@@ -217,8 +217,12 @@ export function TeamInviteManagementSection() {
                 onInput={(event) => setExpiresAt(event.currentTarget.value)}
               />
               <div class={styles.inviteActions}>
-                <Button type="submit" disabled={isSavingInvite() || !role()}>
-                  {isSavingInvite() ? "Enviando..." : "Enviar invitación"}
+                <Button
+                  type="submit"
+                  loading={isSavingInvite()}
+                  disabled={isSavingInvite() || !role()}
+                >
+                  Enviar invitación
                 </Button>
               </div>
             </form>

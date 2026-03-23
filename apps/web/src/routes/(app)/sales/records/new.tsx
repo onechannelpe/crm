@@ -108,8 +108,12 @@ export default function NewSalePage() {
           >
             Cancelar
           </Button>
-          <Button type="submit" disabled={isSubmitting()}>
-            {isSubmitting() ? "Enviando..." : "Enviar para confirmación"}
+          <Button
+            type="submit"
+            loading={isSubmitting()}
+            disabled={isSubmitting()}
+          >
+            Enviar para confirmación
           </Button>
         </div>
       </form>

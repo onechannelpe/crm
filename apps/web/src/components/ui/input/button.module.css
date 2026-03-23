@@ -8,6 +8,7 @@
   white-space: nowrap;
   font-size: var(--font-size-body);
   font-weight: var(--font-weight-semibold);
+  font-family: var(--font-sans);
   line-height: 1;
   box-shadow: var(--shadow-elevation-1);
   transition:
@@ -15,6 +16,21 @@
     border-color var(--motion-fast) linear,
     color var(--motion-fast) linear,
     box-shadow var(--motion-fast) linear;
+}
+
+.loaderSlot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loaderSlotHidden {
+  display: none;
+}
+
+.content {
+  display: inline-flex;
+  align-items: center;
 }
 
 .button:disabled {
@@ -56,7 +72,7 @@
 }
 
 .primary {
-  border-color: var(--border);
+  border-color: color-mix(in oklab, var(--foreground) 12%, transparent);
   background: var(--primary);
   color: var(--primary-foreground);
 }
@@ -67,8 +83,8 @@
 
 .secondary {
   border-color: var(--border);
-  background: var(--secondary);
-  color: var(--secondary-foreground);
+  background: var(--background);
+  color: var(--foreground);
 }
 
 .secondary:hover {
@@ -77,8 +93,8 @@
 
 .outline {
   border-color: var(--border);
-  background: color-mix(in oklab, var(--surface) 84%, var(--accent) 16%);
-  color: var(--foreground-secondary);
+  background: var(--background);
+  color: var(--foreground);
 }
 
 .outline:hover {
@@ -104,6 +120,16 @@
 
 .destructive:hover {
   background: color-mix(in oklab, var(--destructive) 92%, white 8%);
+}
+
+.primary:disabled,
+.secondary:disabled,
+.outline:disabled,
+.ghost:disabled,
+.destructive:disabled {
+  background: var(--secondary);
+  border-color: var(--bg-translucent-subtle);
+  color: var(--foreground-tertiary);
 }
 
 .link {

@@ -179,13 +179,12 @@ export default function FixSalePage() {
                 </Button>
                 <Button
                   type="submit"
+                  loading={isSubmitting()}
                   disabled={isSubmitting() || !canResubmit()}
                 >
-                  {isSubmitting()
-                    ? "Enviando..."
-                    : isDraft()
-                      ? "Enviar para aprobación"
-                      : "Reenviar para aprobación"}
+                  {isDraft()
+                    ? "Enviar para aprobación"
+                    : "Reenviar para aprobación"}
                 </Button>
               </div>
             </div>

@@ -1,0 +1,23 @@
+.wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.dotContainer {
+  align-items: center;
+  display: flex;
+  height: 100%;
+  left: -20px;
+  position: absolute;
+  top: 0;
+}
+
+.dotContainerTop {
+  align-items: stretch;
+}
+
+.iconPointContainer {
+  align-items: center;
+  display: flex;
+  margin-right: 0;
+}

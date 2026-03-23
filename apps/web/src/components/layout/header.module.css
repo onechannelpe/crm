@@ -1,0 +1,35 @@
+.commandButton {
+  align-items: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--foreground-secondary);
+  display: inline-flex;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  gap: 8px;
+  height: 28px;
+  justify-content: center;
+  min-width: 28px;
+  padding: 0 8px;
+}
+
+.commandButton:hover {
+  background: var(--bg-translucent);
+  color: var(--foreground);
+}
+
+.kbd {
+  align-items: center;
+  background: var(--secondary);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--foreground-secondary);
+  display: inline-flex;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-label);
+  height: 18px;
+  justify-content: center;
+  min-width: 18px;
+  padding: 0 3px;
+}

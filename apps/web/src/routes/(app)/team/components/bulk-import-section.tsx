@@ -123,11 +123,12 @@ export function BulkImportSection() {
                 type="button"
                 variant="outline"
                 disabled={!csvFile() || !role() || isPreviewing()}
+                loading={isPreviewing()}
                 onClick={() => {
                   void handlePreview();
                 }}
               >
-                {isPreviewing() ? "Procesando..." : "Previsualizar"}
+                Previsualizar
               </Button>
             </div>
           </div>

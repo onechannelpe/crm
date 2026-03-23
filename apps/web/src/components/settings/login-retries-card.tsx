@@ -59,8 +59,8 @@ export function LoginRetriesCard() {
           onInput={(e) => setEmail(e.currentTarget.value)}
           required
         />
-        <Button type="submit" disabled={isLookingUp()}>
-          {isLookingUp() ? "Cargando reporte..." : "Ver reporte"}
+        <Button type="submit" loading={isLookingUp()} disabled={isLookingUp()}>
+          Ver reporte
         </Button>
       </form>
 

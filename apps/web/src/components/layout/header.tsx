@@ -5,11 +5,13 @@ import { CommandPalette } from "~/components/features/command-palette/command-pa
 import { ExtensionStatusIndicator } from "~/components/features/extension/extension-status-indicator";
 import { HeaderNotificationsPanel } from "~/components/layout/header-notifications-panel";
 import { ICON_BY_ROUTE } from "~/components/layout/route-icons";
+import { useNavigationDrawerState } from "~/features/navigation-drawer";
+import { PageHeader } from "~/features/settings-shell";
 import { createExtensionPortConnection } from "~/lib/extension/port";
 import { useHotkey } from "~/lib/hotkey/use-hotkey";
 import { getHeaderRoute } from "~/lib/nav/nav-policy";
 
-import styles from "./shell.module.css";
+import styles from "./header.module.css";
 
 interface ChromeRuntime {
   sendMessage: (message: unknown, callback?: () => void) => void;
@@ -20,6 +22,7 @@ export function Header() {
   const currentRoute = createMemo(() => getHeaderRoute(location.pathname));
   const [paletteOpen, setPaletteOpen] = createSignal(false);
   const [modKey, setModKey] = createSignal("Ctrl");
+  const { isMobile } = useNavigationDrawerState();
   const { state: extensionState, error: extensionError } =
     createExtensionPortConnection();
 
@@ -49,34 +52,27 @@ export function Header() {
         open={paletteOpen()}
         onClose={() => setPaletteOpen(false)}
       />
-      <header class={styles.topbar}>
-        <div class={styles.topbarInner}>
-          <div class={styles.topbarTitle}>
-            {(() => {
-              const Icon = ICON_BY_ROUTE[currentRoute().icon];
-              return <Icon size={16} />;
-            })()}
-            <span>{currentRoute().label}</span>
-          </div>
-          <div class={styles.topbarActions}>
-            <button
-              class={styles.topbarGhost}
-              type="button"
-              onClick={() => setPaletteOpen(true)}
-              aria-label="Abrir lista de comandos"
-            >
-              <span class={styles.topbarKbd}>{modKey()}</span>
-              <span class={styles.topbarKbd}>K</span>
-            </button>
-            <ExtensionStatusIndicator
-              extensionState={extensionState}
-              extensionError={extensionError}
-              onOpen={handleExtensionIndicatorClick}
-            />
-            <HeaderNotificationsPanel />
-          </div>
-        </div>
-      </header>
+      <PageHeader
+        isMobile={isMobile()}
+        title={currentRoute().label}
+        Icon={ICON_BY_ROUTE[currentRoute().icon]}
+      >
+        <button
+          class={styles.commandButton}
+          type="button"
+          onClick={() => setPaletteOpen(true)}
+          aria-label="Abrir lista de comandos"
+        >
+          <span class={styles.kbd}>{modKey()}</span>
+          <span class={styles.kbd}>K</span>
+        </button>
+        <ExtensionStatusIndicator
+          extensionState={extensionState}
+          extensionError={extensionError}
+          onOpen={handleExtensionIndicatorClick}
+        />
+        <HeaderNotificationsPanel />
+      </PageHeader>
     </>
   );
 }
