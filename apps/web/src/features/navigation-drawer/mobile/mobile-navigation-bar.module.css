@@ -1,0 +1,37 @@
+.mobileBar {
+  position: fixed;
+  inset: auto 12px 12px 12px;
+  z-index: 25;
+  height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--overlay);
+  box-shadow: var(--shadow-elevation-2);
+  padding: 4px;
+  display: none;
+  align-items: center;
+  gap: 4px;
+}
+
+.mobileBarItem {
+  flex: 1;
+  height: 100%;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  color: var(--foreground-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+}
+
+.mobileBarItemActive {
+  background: var(--bg-translucent);
+  color: var(--foreground);
+}
+
+@media (max-width: 768px) {
+  .mobileBar {
+    display: flex;
+  }
+}

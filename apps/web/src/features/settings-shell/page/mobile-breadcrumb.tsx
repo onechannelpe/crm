@@ -4,59 +4,46 @@ import { Show } from "solid-js";
 import ChevronLeft from "~/components/icons/chevron-left";
 import { useNavigationDrawerState } from "~/features/navigation-drawer";
 
-import type { BreadcrumbLink } from "./breadcrumb";
+import type { MobileBackAction } from "./breadcrumb-model";
 
 import styles from "./breadcrumb.module.css";
 
-interface MobileBreadcrumbProps {
-  links: BreadcrumbLink[];
+interface MobileBackControlProps {
+  action: MobileBackAction;
   class?: string;
 }
 
-export function MobileBreadcrumb(props: MobileBreadcrumbProps) {
+export function MobileBackControl(props: MobileBackControlProps) {
   const { setExpanded, setCurrentMobileDrawer } = useNavigationDrawerState();
 
-  const previousLink = () => props.links[props.links.length - 2];
-  const previousHref = () => {
-    const link = previousLink();
-    return link?.href;
-  };
-  const shouldOpenSettingsDrawer = () =>
-    props.links.length === 2 && Boolean(previousHref());
-
-  const text = () => {
-    const prev = previousLink();
-    return typeof prev?.children === "string" ? prev.children : "";
-  };
   const openSettingsDrawer = () => {
     setExpanded(true);
     setCurrentMobileDrawer("settings");
   };
 
+  if (props.action.kind === "none") {
+    return null;
+  }
+
   return (
     <nav class={`${styles.root} ${props.class ?? ""}`} aria-label="Breadcrumb">
       <ChevronLeft size={16} />
-      {shouldOpenSettingsDrawer() ? (
+      {props.action.kind === "open-settings-drawer" ? (
         <button
           type="button"
           class={styles.mobileBack}
           onClick={openSettingsDrawer}
         >
-          Volver a ajustes
+          {props.action.label}
         </button>
       ) : (
         <Show
-          when={previousHref()}
+          when={props.action.kind === "link" ? props.action : undefined}
           keyed
-          fallback={
-            <span class={styles.text} title={text()}>
-              {previousLink()?.children}
-            </span>
-          }
         >
-          {(href) => (
-            <A class={styles.link} href={href} title={text()}>
-              Volver a {previousLink()?.children}
+          {(action) => (
+            <A class={styles.link} href={action.href} title={action.label}>
+              {action.label}
             </A>
           )}
         </Show>

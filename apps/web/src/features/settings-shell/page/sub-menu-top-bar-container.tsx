@@ -3,14 +3,16 @@ import { Show } from "solid-js";
 
 import { useNavigationDrawerState } from "~/features/navigation-drawer";
 
-import { Breadcrumb, type BreadcrumbLink } from "./breadcrumb";
+import { Breadcrumb } from "./breadcrumb";
+import type { BreadcrumbItem, MobileBackAction } from "./breadcrumb-model";
 import { PageBody } from "./page-body";
 import { PageHeader } from "./page-header";
 
 import styles from "./sub-menu-top-bar-container.module.css";
 
 interface SubMenuTopBarContainerProps extends ParentProps {
-  links: BreadcrumbLink[];
+  breadcrumbItems: BreadcrumbItem[];
+  mobileBackAction: MobileBackAction;
   title?: string | JSX.Element;
   reserveTitleSpace?: boolean;
   actionButton?: JSX.Element;
@@ -23,7 +25,13 @@ export function SubMenuTopBarContainer(props: SubMenuTopBarContainerProps) {
   return (
     <div class={`${styles.root} ${props.class ?? ""}`}>
       <PageHeader
-        title={<Breadcrumb links={props.links} isMobile={isMobile()} />}
+        title={
+          <Breadcrumb
+            items={props.breadcrumbItems}
+            mobileBackAction={props.mobileBackAction}
+            isMobile={isMobile()}
+          />
+        }
         isMobile={isMobile()}
       >
         {props.actionButton}

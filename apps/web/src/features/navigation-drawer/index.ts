@@ -7,4 +7,4 @@ export {
   getCurrentSettingsItem,
   getSettingsSectionHref,
   getSettingsSectionLabel,
-} from "./settings/settings-navigation-config";
+} from "./settings/settings-navigation.selectors";
