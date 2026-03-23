@@ -1,6 +1,7 @@
 import { useLocation, type RouteSectionProps } from "@solidjs/router";
 import { createMemo } from "solid-js";
 
+import { useSession } from "~/components/providers/session-provider";
 import {
   getCurrentSettingsItem,
   getSettingsSectionHref,
@@ -15,15 +16,16 @@ import {
 
 export default function SettingsLayout(props: RouteSectionProps) {
   const location = useLocation();
+  const { currentUser } = useSession();
 
   const currentItem = createMemo(() =>
-    getCurrentSettingsItem(location.pathname),
+    getCurrentSettingsItem(location.pathname, currentUser().role),
   );
   const sectionLabel = createMemo(() =>
-    getSettingsSectionLabel(currentItem().section),
+    getSettingsSectionLabel(currentItem().section, currentUser().role),
   );
   const sectionHref = createMemo(() =>
-    getSettingsSectionHref(currentItem().section),
+    getSettingsSectionHref(currentItem().section, currentUser().role),
   );
   const breadcrumbItems = createMemo<BreadcrumbItem[]>(() => [
     {

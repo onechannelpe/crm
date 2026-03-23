@@ -1,15 +1,15 @@
 import UserIcon from "~/components/icons/user";
+import type { Role } from "~/lib/auth/access/route-policy";
 
-import { SETTINGS_NAV_SECTIONS } from "./settings-navigation-config";
+import { createSettingsNavigationSections } from "./settings-navigation-config";
 import { settingsItemMatchesPath } from "./settings-navigation-path-match";
 import type {
   SettingsNavItem,
+  SettingsNavSection,
   SettingsNavSectionId,
 } from "./settings-navigation.types";
 
-export function flattenSettingsItems(
-  items: SettingsNavItem[],
-): SettingsNavItem[] {
+function flattenSettingsItems(items: SettingsNavItem[]): SettingsNavItem[] {
   const result: SettingsNavItem[] = [];
 
   for (const item of items) {
@@ -23,15 +23,31 @@ export function flattenSettingsItems(
   return result;
 }
 
-export const SETTINGS_NAV_ITEMS = SETTINGS_NAV_SECTIONS.flatMap((section) =>
-  flattenSettingsItems(section.items),
-);
+function getSettingsNavigationSections(role: Role): SettingsNavSection[] {
+  return createSettingsNavigationSections({
+    role,
+    onLogout: () => undefined,
+  });
+}
 
-export function getCurrentSettingsItem(pathname: string): SettingsNavItem {
-  const firstWithHref = SETTINGS_NAV_ITEMS.find((item) => Boolean(item.href));
+function getVisibleSettingsItems(
+  sections: SettingsNavSection[],
+): SettingsNavItem[] {
+  return sections.flatMap((section) =>
+    flattenSettingsItems(section.items).filter((item) => !item.isHidden),
+  );
+}
+
+export function getCurrentSettingsItem(
+  pathname: string,
+  role: Role,
+): SettingsNavItem {
+  const sections = getSettingsNavigationSections(role);
+  const items = getVisibleSettingsItems(sections);
+  const firstWithHref = items.find((item) => Boolean(item.href));
 
   return (
-    SETTINGS_NAV_ITEMS.find((item) =>
+    items.find((item) =>
       settingsItemMatchesPath(pathname, item.href, item.matchSubPages),
     ) ??
     firstWithHref ?? {
@@ -44,25 +60,30 @@ export function getCurrentSettingsItem(pathname: string): SettingsNavItem {
   );
 }
 
-export function getSettingsSectionLabel(section: SettingsNavSectionId): string {
-  const matchedSection = SETTINGS_NAV_SECTIONS.find(
-    (currentSection) => currentSection.id === section,
+export function getSettingsSectionLabel(
+  sectionId: SettingsNavSectionId,
+  role: Role,
+): string {
+  return (
+    getSettingsNavigationSections(role).find(
+      (section) => section.id === sectionId,
+    )?.label ?? "Ajustes"
   );
-
-  return matchedSection?.label ?? "Ajustes";
 }
 
 export function getSettingsSectionHref(
-  section: SettingsNavSectionId,
+  sectionId: SettingsNavSectionId,
+  role: Role,
 ): string | undefined {
-  const matchedSection = SETTINGS_NAV_SECTIONS.find(
-    (currentSection) => currentSection.id === section,
+  const section = getSettingsNavigationSections(role).find(
+    (currentSection) => currentSection.id === sectionId,
   );
-  if (!matchedSection) {
+
+  if (!section) {
     return undefined;
   }
 
-  return flattenSettingsItems(matchedSection.items).find((item) =>
-    Boolean(item.href),
+  return flattenSettingsItems(section.items).find(
+    (item) => Boolean(item.href) && !item.isHidden,
   )?.href;
 }

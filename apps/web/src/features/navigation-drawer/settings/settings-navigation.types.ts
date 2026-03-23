@@ -8,11 +8,12 @@ export interface SettingsNavItem {
   href?: string;
   icon: (props: { class?: string; size?: number }) => JSX.Element;
   section: SettingsNavSectionId;
-  advanced?: boolean;
+  onClick?: () => void | Promise<void>;
   indentationLevel?: 1 | 2;
   matchSubPages?: boolean;
+  isHidden?: boolean;
   subItems?: SettingsNavItem[];
-  action?: "logout";
+  isAdvanced?: boolean;
   modifier?: "new" | "soon";
 }
 
@@ -20,4 +21,5 @@ export interface SettingsNavSection {
   id: SettingsNavSectionId;
   label: string;
   items: SettingsNavItem[];
+  isAdvanced?: boolean;
 }

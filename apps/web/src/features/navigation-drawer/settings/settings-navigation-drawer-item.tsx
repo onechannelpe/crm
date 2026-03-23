@@ -12,13 +12,17 @@ interface SettingsNavigationDrawerItemProps {
   subItemState?: NavigationDrawerSubItemState;
   hasActiveSubItem?: boolean;
   closeOnNavigate?: () => void;
-  onAction?: (item: SettingsNavItem) => void | Promise<void>;
 }
 
 export function SettingsNavigationDrawerItem(
   props: SettingsNavigationDrawerItemProps,
 ) {
   const location = useLocation();
+
+  if (props.item.isHidden) {
+    return null;
+  }
+
   const active =
     settingsItemMatchesPath(
       location.pathname,
@@ -34,7 +38,7 @@ export function SettingsNavigationDrawerItem(
       active={active}
       modifier={props.item.modifier}
       onClick={() => {
-        void props.onAction?.(props.item);
+        void props.item.onClick?.();
       }}
       closeOnNavigate={props.closeOnNavigate}
       indentationLevel={props.item.indentationLevel}
@@ -43,7 +47,7 @@ export function SettingsNavigationDrawerItem(
   );
 
   return (
-    <Show when={props.item.advanced} fallback={content}>
+    <Show when={props.item.isAdvanced} fallback={content}>
       <AdvancedSettingsWrapper>{content}</AdvancedSettingsWrapper>
     </Show>
   );
