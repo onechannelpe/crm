@@ -1,5 +1,5 @@
 import type { JSX, ParentProps } from "solid-js";
-import { Show } from "solid-js";
+import { Show, children } from "solid-js";
 
 import LayoutSidebarRightCollapse from "~/components/icons/layout-sidebar-right-collapse";
 import { useNavigationDrawerState } from "~/features/navigation-drawer";
@@ -7,14 +7,15 @@ import { useNavigationDrawerState } from "~/features/navigation-drawer";
 import styles from "./page-header.module.css";
 
 interface PageHeaderProps extends ParentProps {
-  title?: string | JSX.Element;
+  left: JSX.Element;
   class?: string;
   isMobile?: boolean;
-  Icon?: (props: { size?: number; class?: string }) => JSX.Element;
 }
 
 export function PageHeader(props: PageHeaderProps) {
   const { expanded, setExpanded } = useNavigationDrawerState();
+  const left = children(() => props.left);
+  const actions = children(() => props.children);
 
   return (
     <header class={`${styles.topBar} ${props.class ?? ""}`}>
@@ -31,20 +32,13 @@ export function PageHeader(props: PageHeaderProps) {
         </Show>
 
         <div class={styles.iconAndTitle}>
-          {props.Icon ? (
-            <div class={styles.iconContainer}>
-              <props.Icon size={16} />
-            </div>
-          ) : null}
-          {props.title ? (
-            <div class={styles.title} data-testid="top-bar-title">
-              {props.title}
-            </div>
-          ) : null}
+          <div class={styles.title} data-testid="top-bar-title">
+            {left()}
+          </div>
         </div>
       </div>
 
-      <div class={styles.actions}>{props.children}</div>
+      <div class={styles.actions}>{actions()}</div>
     </header>
   );
 }
