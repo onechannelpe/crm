@@ -40,3 +40,21 @@ export interface NavigationDrawerItemProps {
   preventCollapseOnMobile?: boolean;
   variant?: NavigationDrawerItemVariant;
 }
+
+export interface NavigationDrawerItemFrameBaseProps {
+  className?: string;
+  label: string;
+  secondaryLabel?: string;
+  indentationLevel: 1 | 2;
+  subItemState?: NavigationDrawerSubItemState;
+  Icon?: NavigationDrawerIcon;
+  active?: boolean;
+  modifier?: NavigationDrawerItemModifier;
+  rightOptions?: JSX.Element;
+  alwaysShowRightOptions?: boolean;
+  showChevron?: boolean;
+  chevronExpanded?: boolean;
+  variant?: NavigationDrawerItemVariant;
+  collapsedMain: boolean;
+  isMobile: boolean;
+}

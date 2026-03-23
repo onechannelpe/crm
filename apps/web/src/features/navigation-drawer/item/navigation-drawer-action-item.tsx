@@ -1,9 +1,14 @@
 import type { JSX } from "solid-js";
 
-import { NavigationDrawerItemFrame } from "./navigation-drawer-item-frame";
+import {
+  NavigationDrawerItemFrame,
+  type NavigationDrawerItemFrameProps,
+} from "./navigation-drawer-item-frame";
 
-interface NavigationDrawerActionItemProps {
-  frameProps: Omit<Parameters<typeof NavigationDrawerItemFrame>[0], "render">;
+interface NavigationDrawerActionItemProps extends Omit<
+  NavigationDrawerItemFrameProps,
+  "render"
+> {
   unavailable: boolean;
   onClick: JSX.EventHandlerUnion<HTMLButtonElement, MouseEvent>;
 }
@@ -13,20 +18,30 @@ export function NavigationDrawerActionItem(
 ) {
   return (
     <NavigationDrawerItemFrame
-      {...props.frameProps}
+      className={props.className}
+      label={props.label}
+      secondaryLabel={props.secondaryLabel}
+      indentationLevel={props.indentationLevel}
+      subItemState={props.subItemState}
+      Icon={props.Icon}
+      active={props.active}
+      modifier={props.modifier}
+      rightOptions={props.rightOptions}
+      alwaysShowRightOptions={props.alwaysShowRightOptions}
+      showChevron={props.showChevron}
+      chevronExpanded={props.chevronExpanded}
+      variant={props.variant}
+      collapsedMain={props.collapsedMain}
+      isMobile={props.isMobile}
       render={(frame) => (
         <button
           type="button"
-          class={frame.className}
+          class={frame.className()}
           onClick={props.onClick}
           disabled={props.unavailable}
-          aria-expanded={
-            props.frameProps.showChevron
-              ? props.frameProps.chevronExpanded
-              : undefined
-          }
-          title={frame.title}
-          style={frame.style}
+          aria-expanded={props.showChevron ? props.chevronExpanded : undefined}
+          title={frame.title()}
+          style={frame.style()}
         >
           {frame.content}
         </button>
