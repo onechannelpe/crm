@@ -1,13 +1,13 @@
+import type { getProductCatalog } from "~/actions/settings";
+
 export interface CatalogProductDraft {
   price: string;
   isActive: boolean;
 }
 
-export interface CatalogProductRecord {
-  id: number;
-  price: number;
-  is_active: number;
-}
+export type CatalogProductRecord = Awaited<
+  ReturnType<typeof getProductCatalog>
+>[number];
 
 export interface PendingCatalogChange {
   id: number;

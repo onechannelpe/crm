@@ -24,7 +24,7 @@ import { useNavigationDrawerState } from "../state/navigation-drawer-state";
 import { NavigationDrawerScrollableContent } from "./navigation-drawer-scrollable-content";
 import { NavigationDrawer } from "./navigation-drawer-shell";
 
-import styles from "../navigation-drawer.module.css";
+import styles from "./main-navigation-drawer.module.css";
 
 export function MainNavigationDrawer() {
   const location = useLocation();

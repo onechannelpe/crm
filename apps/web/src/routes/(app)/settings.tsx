@@ -7,7 +7,8 @@ import {
   getSettingsSectionLabel,
 } from "~/features/navigation-drawer";
 import {
-  type BreadcrumbLink,
+  type BreadcrumbItem,
+  type MobileBackAction,
   SettingsPageContainer,
   SubMenuTopBarContainer,
 } from "~/features/settings-shell";
@@ -24,18 +25,32 @@ export default function SettingsLayout(props: RouteSectionProps) {
   const sectionHref = createMemo(() =>
     getSettingsSectionHref(currentItem().section),
   );
-  const links = createMemo<BreadcrumbLink[]>(() => [
+  const breadcrumbItems = createMemo<BreadcrumbItem[]>(() => [
     {
-      children: sectionLabel(),
+      label: sectionLabel(),
       href: sectionHref(),
     },
     {
-      children: currentItem().label,
+      label: currentItem().label,
     },
   ]);
+  const mobileBackAction = createMemo<MobileBackAction>(() => {
+    if (!sectionHref()) {
+      return { kind: "none" };
+    }
+
+    return {
+      kind: "open-settings-drawer",
+      label: "Volver a ajustes",
+    };
+  });
 
   return (
-    <SubMenuTopBarContainer links={links()} title={currentItem().label}>
+    <SubMenuTopBarContainer
+      breadcrumbItems={breadcrumbItems()}
+      mobileBackAction={mobileBackAction()}
+      title={currentItem().label}
+    >
       <SettingsPageContainer>{props.children}</SettingsPageContainer>
     </SubMenuTopBarContainer>
   );

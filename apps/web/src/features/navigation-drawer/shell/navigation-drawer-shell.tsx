@@ -14,7 +14,7 @@ import { cn } from "~/lib/utils";
 import { useIsSettingsDrawer } from "../hooks/use-is-settings-drawer";
 import { useNavigationDrawerState } from "../state/navigation-drawer-state";
 
-import styles from "../navigation-drawer.module.css";
+import styles from "./navigation-drawer-shell.module.css";
 
 const MIN_WIDTH = 180;
 const MAX_WIDTH = 350;
