@@ -1,4 +1,4 @@
-import { A, useNavigate } from "@solidjs/router";
+import { A } from "@solidjs/router";
 import { Show, type JSX } from "solid-js";
 
 import ChevronRight from "~/components/icons/chevron-right";
@@ -47,7 +47,6 @@ export interface NavigationDrawerItemProps {
 const DEFAULT_INDENTATION_LEVEL = 1;
 
 export function NavigationDrawerItem(props: NavigationDrawerItemProps) {
-  const navigate = useNavigate();
   const { isMobile, setExpanded, expanded } = useNavigationDrawerState();
   const isSettingsPage = useIsSettingsPage();
 
@@ -60,7 +59,9 @@ export function NavigationDrawerItem(props: NavigationDrawerItemProps) {
     Boolean(
       props.to?.startsWith("http://") || props.to?.startsWith("https://"),
     );
-  const isInternalLink = () => Boolean(props.to) && !isExternalLink();
+  const internalHref = () =>
+    props.to && !isExternalLink() ? props.to : undefined;
+  const externalHref = () => (isExternalLink() ? props.to : undefined);
   const collapsedMain = () => !expanded() && !isSettingsPage();
   const hasRightOptions = () =>
     Boolean(props.rightOptions) || Boolean(props.showChevron);
@@ -73,21 +74,36 @@ export function NavigationDrawerItem(props: NavigationDrawerItemProps) {
     }
   };
 
-  const handleItemClick = () => {
+  const handleItemAction = () => {
     if (isSoon()) {
       return;
     }
 
     handleMobileNavigation();
-
-    if (props.to && isExternalLink()) {
-      window.open(props.to, "_blank", "noopener,noreferrer");
-    } else if (props.to && isInternalLink()) {
-      navigate(props.to);
-    }
-
     props.onClick?.();
     props.closeOnNavigate?.();
+  };
+  const handleButtonClick = () => {
+    handleItemAction();
+  };
+  const itemTitle = () => (collapsedMain() ? props.label : undefined);
+  const itemStyle = (): JSX.CSSProperties => ({
+    "--item-width-base": collapsedMain() ? "40px" : "100%",
+    "--item-padding-right": hasRightOptions() ? "2px" : "4px",
+    cursor: isSoon() ? "default" : "pointer",
+    "pointer-events": isSoon() ? "none" : "auto",
+  });
+  const isUnavailable = () => isSoon();
+  const handleLinkClick: JSX.EventHandlerUnion<
+    HTMLAnchorElement,
+    MouseEvent
+  > = (event) => {
+    if (isUnavailable()) {
+      event.preventDefault();
+      return;
+    }
+
+    handleItemAction();
   };
 
   const className = () =>
@@ -166,44 +182,62 @@ export function NavigationDrawerItem(props: NavigationDrawerItemProps) {
 
   return (
     <Show
-      when={isInternalLink()}
+      when={internalHref()}
+      keyed
       fallback={
-        <button
-          type="button"
-          class={className()}
-          onClick={handleItemClick}
-          aria-selected={props.active}
-          title={collapsedMain() ? props.label : undefined}
-          style={{
-            "--item-width-base": collapsedMain() ? "40px" : "100%",
-            "--item-padding-right": hasRightOptions() ? "2px" : "4px",
-            cursor: isSoon() ? "default" : "pointer",
-            "pointer-events": isSoon() ? "none" : "auto",
-          }}
+        <Show
+          when={externalHref()}
+          keyed
+          fallback={
+            <button
+              type="button"
+              class={className()}
+              onClick={handleButtonClick}
+              disabled={isUnavailable()}
+              aria-expanded={
+                props.showChevron ? props.chevronExpanded : undefined
+              }
+              title={itemTitle()}
+              style={itemStyle()}
+            >
+              {content}
+            </button>
+          }
         >
-          {content}
-        </button>
+          {(href) => (
+            <a
+              href={href}
+              class={className()}
+              onClick={handleLinkClick}
+              draggable={false}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-disabled={isUnavailable() ? "true" : undefined}
+              tabindex={isUnavailable() ? "-1" : undefined}
+              title={itemTitle()}
+              style={itemStyle()}
+            >
+              {content}
+            </a>
+          )}
+        </Show>
       }
     >
-      <A
-        href={props.to as string}
-        class={className()}
-        onClick={(event) => {
-          event.preventDefault();
-          handleItemClick();
-        }}
-        draggable={false}
-        aria-selected={props.active}
-        title={collapsedMain() ? props.label : undefined}
-        style={{
-          "--item-width-base": collapsedMain() ? "40px" : "100%",
-          "--item-padding-right": hasRightOptions() ? "2px" : "4px",
-          cursor: isSoon() ? "default" : "pointer",
-          "pointer-events": isSoon() ? "none" : "auto",
-        }}
-      >
-        {content}
-      </A>
+      {(href) => (
+        <A
+          href={href}
+          class={className()}
+          onClick={handleLinkClick}
+          draggable={false}
+          aria-disabled={isUnavailable() ? "true" : undefined}
+          aria-current={props.active ? "page" : undefined}
+          tabindex={isUnavailable() ? "-1" : undefined}
+          title={itemTitle()}
+          style={itemStyle()}
+        >
+          {content}
+        </A>
+      )}
     </Show>
   );
 }

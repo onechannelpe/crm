@@ -167,13 +167,16 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  border: none;
   border-radius: 4px;
+  background: transparent;
   color: var(--foreground-tertiary);
   font-size: var(--font-size-label);
   font-weight: var(--font-weight-semibold);
+  text-align: left;
 }
 
-.sectionTitle:hover {
+.sectionTitleClickable:hover {
   background: var(--bg-translucent);
   cursor: pointer;
 }

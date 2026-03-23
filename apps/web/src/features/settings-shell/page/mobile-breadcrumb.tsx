@@ -1,4 +1,5 @@
 import { A } from "@solidjs/router";
+import { Show } from "solid-js";
 
 import ChevronLeft from "~/components/icons/chevron-left";
 import { useNavigationDrawerState } from "~/features/navigation-drawer";
@@ -16,35 +17,49 @@ export function MobileBreadcrumb(props: MobileBreadcrumbProps) {
   const { setExpanded, setCurrentMobileDrawer } = useNavigationDrawerState();
 
   const previousLink = () => props.links[props.links.length - 2];
-  const shouldRedirectToSettings = () => props.links.length === 2;
-  const previousHref = () => previousLink()?.href;
+  const previousHref = () => {
+    const link = previousLink();
+    return link?.href;
+  };
+  const shouldOpenSettingsDrawer = () =>
+    props.links.length === 2 && Boolean(previousHref());
 
   const text = () => {
     const prev = previousLink();
     return typeof prev?.children === "string" ? prev.children : "";
   };
+  const openSettingsDrawer = () => {
+    setExpanded(true);
+    setCurrentMobileDrawer("settings");
+  };
 
   return (
     <nav class={`${styles.root} ${props.class ?? ""}`} aria-label="Breadcrumb">
       <ChevronLeft size={16} />
-      {shouldRedirectToSettings() ? (
-        <span
+      {shouldOpenSettingsDrawer() ? (
+        <button
+          type="button"
           class={styles.mobileBack}
-          onClick={() => {
-            setExpanded(true);
-            setCurrentMobileDrawer("settings");
-          }}
+          onClick={openSettingsDrawer}
         >
           Volver a ajustes
-        </span>
-      ) : previousHref() ? (
-        <A class={styles.link} href={previousHref() as string} title={text()}>
-          Volver a {previousLink()!.children}
-        </A>
+        </button>
       ) : (
-        <span class={styles.text} title={text()}>
-          {previousLink()?.children}
-        </span>
+        <Show
+          when={previousHref()}
+          keyed
+          fallback={
+            <span class={styles.text} title={text()}>
+              {previousLink()?.children}
+            </span>
+          }
+        >
+          {(href) => (
+            <A class={styles.link} href={href} title={text()}>
+              Volver a {previousLink()?.children}
+            </A>
+          )}
+        </Show>
       )}
     </nav>
   );

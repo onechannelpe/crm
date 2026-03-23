@@ -38,6 +38,9 @@
 }
 
 .mobileBack {
+  border: none;
+  background: transparent;
+  padding: 0;
   color: inherit;
   overflow: hidden;
   text-overflow: ellipsis;

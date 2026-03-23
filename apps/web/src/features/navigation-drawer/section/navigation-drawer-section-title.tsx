@@ -18,24 +18,16 @@ export function NavigationDrawerSectionTitle(
   const { expanded } = useNavigationDrawerState();
   const isSettingsPage = useIsSettingsPage();
   const collapsedMain = () => !expanded() && !isSettingsPage();
-
-  return (
-    <div
-      class={cn(
-        styles.sectionTitle,
-        collapsedMain() && styles.sectionTitleCollapsed,
-      )}
-    >
-      <span
-        class={styles.sectionTitleLabel}
-        onClick={() => {
-          if (props.onClick && !collapsedMain()) {
-            props.onClick();
-          }
-        }}
-      >
-        {props.label}
-      </span>
+  const isInteractive = () => Boolean(props.onClick) && !collapsedMain();
+  const rootClass = () =>
+    cn(
+      styles.sectionTitle,
+      isInteractive() && styles.sectionTitleClickable,
+      collapsedMain() && styles.sectionTitleCollapsed,
+    );
+  const content = (
+    <>
+      <span class={styles.sectionTitleLabel}>{props.label}</span>
       {props.isOpen !== undefined ? (
         <span class={styles.sectionTitleChevron}>
           <ChevronRight
@@ -46,6 +38,25 @@ export function NavigationDrawerSectionTitle(
           />
         </span>
       ) : null}
-    </div>
+    </>
+  );
+
+  return (
+    <>
+      {props.onClick ? (
+        <button
+          type="button"
+          class={rootClass()}
+          onClick={() => {
+            props.onClick?.();
+          }}
+          aria-expanded={props.isOpen}
+        >
+          {content}
+        </button>
+      ) : (
+        <div class={rootClass()}>{content}</div>
+      )}
+    </>
   );
 }

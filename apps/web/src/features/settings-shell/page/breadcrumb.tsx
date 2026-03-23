@@ -29,20 +29,17 @@ export function Breadcrumb(props: BreadcrumbProps) {
 
           return (
             <>
-              <Show
-                when={link.href}
-                fallback={
-                  <span class={styles.text} title={text}>
-                    {link.children}
-                  </span>
-                }
-              >
+              {link.href ? (
                 <span class={styles.linkContainer}>
-                  <A href={link.href!} class={styles.link} title={text}>
+                  <A href={link.href} class={styles.link} title={text}>
                     {link.children}
                   </A>
                 </span>
-              </Show>
+              ) : (
+                <span class={styles.text} title={text}>
+                  {link.children}
+                </span>
+              )}
               <Show when={index() < props.links.length - 1}>
                 <span class={styles.divider}>/</span>
               </Show>

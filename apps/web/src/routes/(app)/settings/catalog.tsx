@@ -11,42 +11,43 @@ import { updateProductPricingMutation } from "~/lib/mutations/settings";
 import { productCatalogQuery } from "~/lib/queries/settings";
 import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
 
+import {
+  collectPendingCatalogChanges,
+  summarizeCatalogSaveResults,
+  type CatalogProductDraft,
+  type CatalogProductRecord,
+} from "./catalog-save";
+
 import styles from "./catalog.module.css";
 import base from "./settings-page.module.css";
 
 export default function CatalogPage() {
   const { showToast } = useToast();
 
-  const { data: currentProducts, update: updateProducts } =
+  const { data: currentProducts, invalidate: invalidateProducts } =
     createOptimisticQuery(productCatalogQuery, { initialValue: [] });
   const saveProduct = useAction(updateProductPricingMutation);
   const saveSubmissions = useSubmissions(updateProductPricingMutation);
-  const [drafts, setDrafts] = createSignal<
-    Record<number, { price: string; isActive: boolean }>
-  >({});
+  const [drafts, setDrafts] = createSignal<Record<number, CatalogProductDraft>>(
+    {},
+  );
 
   const anySaving = () => saveSubmissions.some((s) => s.pending);
 
-  const getDraft = (product: {
-    id: number;
-    price: number;
-    is_active: number;
-  }) =>
+  const getDraft = (product: CatalogProductRecord) =>
     drafts()[product.id] ?? {
       price: String(product.price),
       isActive: product.is_active === 1,
     };
 
   const setDraft = (
-    product: { id: number; price: number; is_active: number },
-    next: { price: string; isActive: boolean },
+    product: CatalogProductRecord,
+    next: CatalogProductDraft,
   ) => {
-    setDrafts(
-      (current: Record<number, { price: string; isActive: boolean }>) => ({
-        ...current,
-        [product.id]: next,
-      }),
-    );
+    setDrafts((current: Record<number, CatalogProductDraft>) => ({
+      ...current,
+      [product.id]: next,
+    }));
   };
 
   const dirtyProductIds = createMemo(() =>
@@ -70,69 +71,62 @@ export default function CatalogPage() {
       .map((product) => product.id),
   );
 
-  const save = async (productId: number, price: string, isActive: boolean) => {
-    try {
-      const numericPrice = Number(price);
-      await updateProducts({
-        optimistic: (prev) =>
-          prev.map((product) =>
-            product.id === productId
-              ? { ...product, price: numericPrice, is_active: isActive ? 1 : 0 }
-              : product,
-          ),
-        commit: async () => {
-          await saveProduct(productId, numericPrice, isActive);
-        },
-      });
-      showToast("success", "Producto actualizado");
-    } catch (err: unknown) {
-      showToast("error", getErrorMessage(err, "Failed to update product"));
-    }
-  };
-
   const saveAll = async () => {
-    const pendingIds = dirtyProductIds();
-    if (pendingIds.length === 0) {
+    const pendingChanges = collectPendingCatalogChanges({
+      products: currentProducts(),
+      drafts: drafts(),
+      dirtyIds: dirtyProductIds(),
+    });
+
+    if (!pendingChanges.ok) {
+      showToast("error", "Hay precios inválidos. Revisa antes de guardar.");
       return;
     }
 
-    const snapshot = drafts();
-    const products = currentProducts();
-
-    for (const id of pendingIds) {
-      const product = products.find((item) => item.id === id);
-      const draft = snapshot[id];
-
-      if (!product || !draft) {
-        continue;
-      }
-
-      const parsed = Number(draft.price);
-      if (!Number.isFinite(parsed) || parsed <= 0) {
-        showToast("error", "Hay precios inválidos. Revisa antes de guardar.");
-        return;
-      }
+    if (pendingChanges.changes.length === 0) {
+      return;
     }
 
-    for (const id of pendingIds) {
-      const product = products.find((item) => item.id === id);
-      const draft = snapshot[id];
+    const results = await Promise.allSettled(
+      pendingChanges.changes.map((change) =>
+        saveProduct(change.id, change.price, change.isActive),
+      ),
+    );
+    const summary = summarizeCatalogSaveResults(
+      pendingChanges.changes,
+      results,
+    );
 
-      if (!product || !draft) {
-        continue;
-      }
-
-      await save(id, draft.price, draft.isActive);
-    }
-
-    setDrafts(
-      (current: Record<number, { price: string; isActive: boolean }>) => {
+    if (summary.successfulIds.length > 0) {
+      await invalidateProducts();
+      setDrafts((current: Record<number, CatalogProductDraft>) => {
         const next = { ...current };
-        for (const id of pendingIds) {
+        for (const id of summary.successfulIds) {
           delete next[id];
         }
         return next;
-      },
+      });
+    }
+
+    if (summary.status === "all-success") {
+      showToast("success", "Productos actualizados");
+      return;
+    }
+
+    if (summary.status === "all-failure") {
+      showToast(
+        "error",
+        getErrorMessage(summary.firstError, "Failed to update products"),
+      );
+      return;
+    }
+
+    showToast(
+      "error",
+      getErrorMessage(
+        summary.firstError,
+        "Algunos productos no se pudieron actualizar",
+      ),
     );
   };
 
