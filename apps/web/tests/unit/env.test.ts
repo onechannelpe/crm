@@ -11,6 +11,8 @@ describe("env validation", () => {
     GOOGLE_CLIENT_ID: "google-client-id",
     GOOGLE_CLIENT_SECRET: "google-client-secret",
     GOOGLE_REDIRECT_URI: "http://localhost:3000/api/auth/google/callback",
+    RESEND_API_KEY: "re_test_key",
+    EMAIL_FROM: "support@example.com",
   } satisfies Record<string, string>;
 
   beforeAll(async () => {
@@ -21,6 +23,8 @@ describe("env validation", () => {
     process.env.GOOGLE_CLIENT_ID = baseEnv.GOOGLE_CLIENT_ID;
     process.env.GOOGLE_CLIENT_SECRET = baseEnv.GOOGLE_CLIENT_SECRET;
     process.env.GOOGLE_REDIRECT_URI = baseEnv.GOOGLE_REDIRECT_URI;
+    process.env.RESEND_API_KEY = baseEnv.RESEND_API_KEY;
+    process.env.EMAIL_FROM = baseEnv.EMAIL_FROM;
 
     const mod = await import("../../src/lib/env");
     validateSecret = mod.validateSecret;
