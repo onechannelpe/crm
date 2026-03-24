@@ -5,7 +5,6 @@ import { Input } from "~/components/ui/input/input";
 import type { SearchTab } from "~/features/search/model/display";
 
 import type { CompanyGroup, PersonGroup } from "../model/grouping";
-import { DetailDrawer } from "./detail-drawer";
 import { ResultTable } from "./result-table";
 
 import styles from "./search-layout.module.css";
@@ -22,9 +21,8 @@ interface SearchLayoutProps {
   people: PersonGroup[];
   companies: CompanyGroup[];
   selectedKey: string | null;
-  onSelect: (key: string) => void;
-  selectedPerson: PersonGroup | null;
-  selectedCompany: CompanyGroup | null;
+  onOpenPerson: (person: PersonGroup) => void;
+  onOpenCompany: (company: CompanyGroup) => void;
 }
 
 export function SearchLayout(props: SearchLayoutProps) {
@@ -78,15 +76,11 @@ export function SearchLayout(props: SearchLayoutProps) {
               people={props.people}
               companies={props.companies}
               selectedKey={props.selectedKey}
-              onSelect={props.onSelect}
+              onOpenPerson={props.onOpenPerson}
+              onOpenCompany={props.onOpenCompany}
             />
           </div>
         </div>
-        <DetailDrawer
-          tab={props.tab}
-          person={props.selectedPerson}
-          company={props.selectedCompany}
-        />
       </div>
     </div>
   );

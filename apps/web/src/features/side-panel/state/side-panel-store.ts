@@ -1,6 +1,10 @@
 import { createStore } from "solid-js/store";
 
-import type { SidePanelPage } from "../types/side-panel-page";
+import type {
+  SidePanelNavigationEntry,
+  SidePanelPageDefinition,
+  SidePanelPageState,
+} from "../types/side-panel-page";
 import type { SidePanelState } from "../types/side-panel-state";
 
 // Constants
@@ -40,20 +44,41 @@ if (typeof document !== "undefined") {
 
 // Store factory
 
+function retainPageStateByNavigationStack(
+  pageStateById: Record<string, SidePanelPageState>,
+  navigationStack: SidePanelNavigationEntry[],
+) {
+  const retainedState: Record<string, SidePanelPageState> = {};
+
+  for (const entry of navigationStack) {
+    const state = pageStateById[entry.pageId];
+
+    if (!state) continue;
+
+    retainedState[entry.pageId] = state;
+  }
+
+  return retainedState;
+}
+
 export function createSidePanelStore() {
   const [state, setState] = createStore<SidePanelState>({
     isOpen: false,
     isClosing: false,
     navigationStack: [],
+    pageStateById: {},
     searchText: "",
     panelWidth: initialWidth,
   });
 
-  const openPanel = (page: SidePanelPage) => {
+  const openPanel = (page: SidePanelPageDefinition) => {
     setState({
       isOpen: true,
       isClosing: false,
-      navigationStack: [page],
+      navigationStack: [page.entry],
+      pageStateById: {
+        [page.entry.pageId]: page.state,
+      },
       searchText: "",
     });
   };
@@ -67,22 +92,37 @@ export function createSidePanelStore() {
     setState({
       isClosing: false,
       navigationStack: [],
+      pageStateById: {},
       searchText: "",
     });
   };
 
-  const navigateTo = (page: SidePanelPage, opts?: { resetStack?: boolean }) => {
+  const navigateTo = (
+    page: SidePanelPageDefinition,
+    opts?: { resetStack?: boolean },
+  ) => {
     if (opts?.resetStack) {
       setState({
         isOpen: true,
         isClosing: false,
-        navigationStack: [page],
+        navigationStack: [page.entry],
+        pageStateById: {
+          [page.entry.pageId]: page.state,
+        },
       });
+
+      return;
     } else {
+      const nextNavigationStack = [...state.navigationStack, page.entry];
+
       setState({
         isOpen: true,
         isClosing: false,
-        navigationStack: [...state.navigationStack, page],
+        navigationStack: nextNavigationStack,
+        pageStateById: {
+          ...state.pageStateById,
+          [page.entry.pageId]: page.state,
+        },
       });
     }
   };
@@ -96,6 +136,7 @@ export function createSidePanelStore() {
     const newStack = stack.slice(0, -1);
     setState({
       navigationStack: newStack,
+      pageStateById: retainPageStateByNavigationStack(state.pageStateById, newStack),
     });
   };
 
@@ -107,6 +148,7 @@ export function createSidePanelStore() {
     const newStack = state.navigationStack.slice(0, boundedIndex + 1);
     setState({
       navigationStack: newStack,
+      pageStateById: retainPageStateByNavigationStack(state.pageStateById, newStack),
     });
   };
 

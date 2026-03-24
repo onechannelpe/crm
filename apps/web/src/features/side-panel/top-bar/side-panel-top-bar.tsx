@@ -1,11 +1,9 @@
-import { For, Show, createSignal, onCleanup, onMount } from "solid-js";
-import { Dynamic } from "solid-js/web";
+import { Show, createSignal, onCleanup, onMount } from "solid-js";
 
 import X from "~/components/icons/x";
 import { cn } from "~/lib/utils";
 
-import { useSidePanelContextChips } from "../hooks/use-side-panel-context-chips";
-import { SIDE_PANEL_PAGE_METADATA } from "../state/side-panel-page-metadata";
+import { SIDE_PANEL_PAGES_CONFIG } from "../state/side-panel-pages-config";
 import { useSidePanel } from "../state/use-side-panel";
 import { SidePanelBackButton } from "./side-panel-back-button";
 import { SidePanelPageInfo } from "./side-panel-page-info";
@@ -15,12 +13,11 @@ import styles from "./side-panel-top-bar.module.css";
 export function SidePanelTopBar() {
   const {
     navigationStack,
-    currentPage,
+    currentEntry,
     closePanel,
     searchText,
     setSearchText,
   } = useSidePanel();
-  const chips = useSidePanelContextChips();
 
   const [isMobile, setIsMobile] = createSignal(false);
 
@@ -35,9 +32,10 @@ export function SidePanelTopBar() {
   const showBackButton = () => navigationStack().length > 1;
   const showCloseButton = () => navigationStack().length === 1 && !isMobile();
   const showSearch = () => {
-    const page = currentPage();
-    if (!page) return false;
-    return SIDE_PANEL_PAGE_METADATA[page.type].showsSearch;
+    const entry = currentEntry();
+    if (!entry) return false;
+
+    return SIDE_PANEL_PAGES_CONFIG[entry.page].showsSearch;
   };
 
   return (
@@ -66,24 +64,6 @@ export function SidePanelTopBar() {
             onInput={(e) => setSearchText(e.currentTarget.value)}
           />
         </Show>
-        <For each={chips()}>
-          {(chip) => (
-            <Show
-              when={chip.onClick}
-              fallback={
-                <span class={cn(styles.chip, styles.chipStatic)}>
-                  <Dynamic component={chip.page.icon} size={12} />
-                  {chip.page.title}
-                </span>
-              }
-            >
-              <button type="button" class={styles.chip} onClick={chip.onClick}>
-                <Dynamic component={chip.page.icon} size={12} />
-                {chip.page.title}
-              </button>
-            </Show>
-          )}
-        </For>
       </div>
     </div>
   );

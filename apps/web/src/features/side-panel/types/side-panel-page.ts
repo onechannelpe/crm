@@ -1,6 +1,12 @@
 import type { Component } from "solid-js";
 
+import User from "~/components/icons/user";
+import Users from "~/components/icons/users";
 import Search from "~/components/icons/search";
+import type {
+  CompanyGroup,
+  PersonGroup,
+} from "~/features/search/model/grouping";
 
 export type SidePanelIcon = Component<{
   class?: string;
@@ -8,84 +14,109 @@ export type SidePanelIcon = Component<{
   color?: string;
 }>;
 
-export type RootSidePanelPage = {
-  type: "root";
-  instanceId: string;
-  title: string;
-  icon: SidePanelIcon;
+export type SidePanelPageKey =
+  | "root"
+  | "search-person-detail"
+  | "search-company-detail";
+
+export type SidePanelNavigationEntry = {
+  page: SidePanelPageKey;
+  pageId: string;
+  pageTitle: string;
+  pageIcon: SidePanelIcon;
 };
 
-export type SearchResultsSidePanelPage = {
-  type: "search-results";
-  instanceId: string;
-  title: string;
-  icon: SidePanelIcon;
+export type RootSidePanelPageState = {
+  page: "root";
+};
+
+export type SearchPersonDetailSidePanelPageState = {
+  page: "search-person-detail";
+  person: PersonGroup;
   query: string;
 };
 
-export type SidePanelRecordObjectName =
-  | "person"
-  | "company"
-  | "sale"
-  | "lead"
-  | "inventory";
-
-export type RecordSidePanelPage = {
-  type: "record";
-  instanceId: string;
-  title: string;
-  icon: SidePanelIcon;
-  objectName: SidePanelRecordObjectName;
-  recordId: string;
-  label?: string;
+export type SearchCompanyDetailSidePanelPageState = {
+  page: "search-company-detail";
+  company: CompanyGroup;
+  query: string;
 };
 
-export type SidePanelPage =
-  | RootSidePanelPage
-  | SearchResultsSidePanelPage
-  | RecordSidePanelPage;
+export type SidePanelPageState =
+  | RootSidePanelPageState
+  | SearchPersonDetailSidePanelPageState
+  | SearchCompanyDetailSidePanelPageState;
 
-export type SidePanelPageType = SidePanelPage["type"];
+export type SidePanelPageDefinition = {
+  entry: SidePanelNavigationEntry;
+  state: SidePanelPageState;
+};
 
-export function createRootSidePanelPage(): RootSidePanelPage {
+function createSidePanelPageId() {
+  return crypto.randomUUID();
+}
+
+export function createRootSidePanelPage(): SidePanelPageDefinition {
+  const pageId = createSidePanelPageId();
   return {
-    type: "root",
-    instanceId: crypto.randomUUID(),
-    title: "Menú de comandos",
-    icon: Search,
+    entry: {
+      page: "root",
+      pageId,
+      pageTitle: "Menú de comandos",
+      pageIcon: Search,
+    },
+    state: {
+      page: "root",
+    },
   };
 }
 
-export function createSearchResultsSidePanelPage(
-  query: string,
-): SearchResultsSidePanelPage {
+type CreateSearchPersonDetailSidePanelPageInput = {
+  person: PersonGroup;
+  query: string;
+};
+
+export function createSearchPersonDetailSidePanelPage(
+  input: CreateSearchPersonDetailSidePanelPageInput,
+): SidePanelPageDefinition {
+  const pageId = createSidePanelPageId();
+
   return {
-    type: "search-results",
-    instanceId: crypto.randomUUID(),
-    title: "Resultados de búsqueda",
-    icon: Search,
-    query,
+    entry: {
+      page: "search-person-detail",
+      pageId,
+      pageTitle: input.person.displayName,
+      pageIcon: User,
+    },
+    state: {
+      page: "search-person-detail",
+      person: input.person,
+      query: input.query,
+    },
   };
 }
 
-type CreateRecordSidePanelPageInput = {
-  objectName: SidePanelRecordObjectName;
-  recordId: string;
-  title: string;
-  icon: SidePanelIcon;
-  label?: string;
+type CreateSearchCompanyDetailSidePanelPageInput = {
+  company: CompanyGroup;
+  query: string;
 };
 
-export function createRecordSidePanelPage(
-  input: CreateRecordSidePanelPageInput,
-): RecordSidePanelPage {
+export function createSearchCompanyDetailSidePanelPage(
+  input: CreateSearchCompanyDetailSidePanelPageInput,
+): SidePanelPageDefinition {
+  const pageId = createSidePanelPageId();
+
   return {
-    type: "record",
-    instanceId: crypto.randomUUID(),
-    objectName: input.objectName,
-    recordId: input.recordId,
-    title: input.title,
-    icon: input.icon,
-    label: input.label,
+    entry: {
+      page: "search-company-detail",
+      pageId,
+      pageTitle: input.company.name ?? input.company.ruc ?? "Company",
+      pageIcon: Users,
+    },
+    state: {
+      page: "search-company-detail",
+      company: input.company,
+      query: input.query,
+    },
   };
 }
