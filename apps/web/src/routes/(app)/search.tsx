@@ -2,6 +2,7 @@ import { createAsync, revalidate, useSearchParams } from "@solidjs/router";
 import { createEffect, createMemo, createSignal, Show } from "solid-js";
 
 import { searchDirect } from "~/actions/search/run";
+import Search from "~/components/icons/search";
 import { AppPage } from "~/components/layout/page";
 import {
   inferSearchType,
@@ -9,6 +10,7 @@ import {
 } from "~/features/search/model/display";
 import { createSearchViewModel } from "~/features/search/model/search-view-model";
 import { SearchLayout } from "~/features/search/ui/search-layout";
+import { PageHeader } from "~/features/settings-shell";
 import { useSidePanel } from "~/features/side-panel/state/use-side-panel";
 import {
   createSearchCompanyDetailSidePanelPage,
@@ -16,6 +18,8 @@ import {
 } from "~/features/side-panel/types/side-panel-page";
 import { mySearchAllowanceQuery } from "~/lib/queries/search";
 import { isSearchType, type SearchType } from "~/server/shared/pipeline-types";
+
+import pageStyles from "~/features/search/ui/search-page-shell.module.css";
 
 export default function SearchPage() {
   const searchAllowance = createAsync(() => mySearchAllowanceQuery(), {
@@ -83,28 +87,36 @@ export default function SearchPage() {
   });
 
   return (
-    <AppPage width="wide">
-      <div class="space-y-6">
-        <div class="flex items-end justify-between gap-4">
-          <div>
-            <h2 class="text-2xl font-semibold">Buscar contactos</h2>
-            <p class="text-sm text-muted-foreground">
-              El consumo se descuenta de tu allowance mensual.
-            </p>
+    <AppPage width="wide" class={pageStyles.page}>
+      <PageHeader
+        class={pageStyles.header}
+        icon={
+          <div class={pageStyles.headerIcon}>
+            <Search size={16} />
           </div>
-          <div class="rounded border px-4 py-3 text-sm">
-            <div class="font-medium">Allowance</div>
-            <div>
-              {searchAllowance()?.committed ?? 0}/
-              {(searchAllowance()?.policy.monthlyLimit ?? 0) +
-                (searchAllowance()?.granted ?? 0)}
-            </div>
-            <div class="text-muted-foreground">
-              {searchAllowance()?.remaining ?? 0} restantes
-            </div>
+        }
+        title={<span class={pageStyles.headerTitle}>Search</span>}
+      >
+        <div class={pageStyles.allowanceCard}>
+          <div class={pageStyles.allowanceLabel}>Allowance</div>
+          <div class={pageStyles.allowanceValue}>
+            {searchAllowance()?.remaining ?? 0}
+          </div>
+          <div class={pageStyles.allowanceMeta}>
+            {searchAllowance()?.committed ?? 0}/
+            {(searchAllowance()?.policy.monthlyLimit ?? 0) +
+              (searchAllowance()?.granted ?? 0)}{" "}
+            used
           </div>
         </div>
+      </PageHeader>
 
+      <p class={pageStyles.intro}>
+        Search results are grouped into reusable entity rows. Open a person or
+        company to inspect the aggregated context in the side panel.
+      </p>
+
+      <div class="space-y-6">
         <SearchLayout
           tab={tab()}
           tabs={["people", "companies"]}

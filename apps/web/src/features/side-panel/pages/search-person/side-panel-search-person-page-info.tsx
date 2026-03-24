@@ -1,5 +1,7 @@
 import { createMemo } from "solid-js";
 
+import User from "~/components/icons/user";
+
 import { useSidePanelPageInstanceId } from "../../state/side-panel-page-instance";
 import { useSidePanel } from "../../state/use-side-panel";
 import { SidePanelPageInfoLayout } from "../../top-bar/side-panel-page-info-layout";
@@ -22,6 +24,7 @@ export function SidePanelSearchPersonPageInfo() {
 
   return (
     <SidePanelPageInfoLayout
+      icon={<User size={14} />}
       title={pageState().person.displayName}
       label={`Resultado de "${pageState().query}"`}
     />

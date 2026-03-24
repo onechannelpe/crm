@@ -1,0 +1,73 @@
+.page {
+  gap: 16px;
+}
+
+.header {
+  padding-right: 0;
+}
+
+.headerIcon {
+  align-items: center;
+  color: var(--foreground-secondary);
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.headerTitle {
+  color: var(--foreground);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.allowanceCard {
+  align-items: flex-start;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.88), rgb(255 255 255 / 0.96)),
+    var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 168px;
+  padding: 10px 12px;
+}
+
+.allowanceLabel {
+  color: var(--foreground-secondary);
+  font-size: var(--font-size-caption);
+  text-transform: uppercase;
+}
+
+.allowanceValue {
+  color: var(--foreground);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.allowanceMeta {
+  color: var(--foreground-secondary);
+  font-size: var(--font-size-caption);
+}
+
+.intro {
+  color: var(--foreground-secondary);
+  font-size: var(--font-size-caption);
+  margin-top: -4px;
+  max-width: 640px;
+}
+
+@media (max-width: 768px) {
+  .allowanceCard {
+    min-width: 132px;
+    padding: 8px 10px;
+  }
+
+  .allowanceValue {
+    font-size: 16px;
+  }
+}
