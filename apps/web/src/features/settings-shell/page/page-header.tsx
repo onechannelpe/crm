@@ -1,20 +1,17 @@
 import type { JSX, ParentProps } from "solid-js";
 import { Show, children } from "solid-js";
 
-import LayoutSidebarRightCollapse from "~/components/icons/layout-sidebar-right-collapse";
-import { useNavigationDrawerState } from "~/features/navigation-drawer";
-
 import styles from "./page-header.module.css";
 
 interface PageHeaderProps extends ParentProps {
+  leading?: JSX.Element;
   title?: JSX.Element;
   icon?: JSX.Element;
   class?: string;
-  isMobile?: boolean;
 }
 
 export function PageHeader(props: PageHeaderProps) {
-  const { expanded, setExpanded } = useNavigationDrawerState();
+  const leading = children(() => props.leading);
   const title = children(() => props.title);
   const icon = children(() => props.icon);
   const actions = children(() => props.children);
@@ -22,22 +19,13 @@ export function PageHeader(props: PageHeaderProps) {
   return (
     <header class={`${styles.topBar} ${props.class ?? ""}`}>
       <div class={styles.left}>
-        <Show when={!props.isMobile && !expanded()}>
-          <button
-            type="button"
-            class={styles.drawerExpandButton}
-            onClick={() => setExpanded(true)}
-            aria-label="Expandir barra lateral"
-          >
-            <LayoutSidebarRightCollapse size={14} />
-          </button>
-        </Show>
+        <Show when={leading()}>{leading()}</Show>
 
         <div class={styles.iconAndTitle}>
-          <Show when={props.icon}>
+          <Show when={icon()}>
             <div class={styles.icon}>{icon()}</div>
           </Show>
-          <Show when={props.title}>
+          <Show when={title()}>
             <div class={styles.title} data-testid="top-bar-title">
               {title()}
             </div>
