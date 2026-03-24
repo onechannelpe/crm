@@ -76,6 +76,13 @@ export function formatIsoDate(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
+export function addDays(date: Date, dayDelta: number): Date {
+  const next = new Date(date);
+  next.setDate(next.getDate() + dayDelta);
+  next.setHours(0, 0, 0, 0);
+  return next;
+}
+
 export function todayLocalDate(): Date {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -96,9 +103,7 @@ export function getMonthOptions(visibleMonth: VisibleMonth): Array<{
   const formatter = new Intl.DateTimeFormat("es-PE", { month: "long" });
 
   return Array.from({ length: 12 }, (_, monthIndex) => {
-    const label = formatter.format(
-      new Date(visibleMonth.year, monthIndex, 1),
-    );
+    const label = formatter.format(new Date(visibleMonth.year, monthIndex, 1));
 
     return {
       label: label.charAt(0).toUpperCase() + label.slice(1),
@@ -113,6 +118,16 @@ export function shiftVisibleMonth(
 ): VisibleMonth {
   const next = new Date(visibleMonth.year, visibleMonth.month + monthDelta, 1);
   return getVisibleMonth(next);
+}
+
+export function startOfMonth(visibleMonth: VisibleMonth): Date {
+  return toMonthDate(visibleMonth);
+}
+
+export function endOfMonth(visibleMonth: VisibleMonth): Date {
+  const end = new Date(visibleMonth.year, visibleMonth.month + 1, 0);
+  end.setHours(0, 0, 0, 0);
+  return end;
 }
 
 export function withVisibleMonthMonth(

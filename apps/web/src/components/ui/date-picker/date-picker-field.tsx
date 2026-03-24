@@ -11,16 +11,21 @@ import { useHotkey } from "~/lib/hotkey/use-hotkey";
 import { cn } from "~/lib/utils";
 
 import {
+  addDays,
   clampVisibleMonth,
+  endOfMonth,
+  formatIsoDate,
   getVisibleMonth,
   parseIsoDate,
   shiftVisibleMonth,
+  startOfMonth,
   todayLocalDate,
   withVisibleMonthMonth,
   withVisibleMonthYear,
   type VisibleMonth,
 } from "./date-picker-model";
 import { DatePickerPopover } from "./date-picker-popover";
+
 import styles from "./date-picker.module.css";
 
 export interface DatePickerProps {
@@ -48,6 +53,9 @@ export function DatePicker(props: DatePickerProps) {
   const [visibleMonth, setVisibleMonth] = createSignal<VisibleMonth>(
     preferredVisibleMonth(),
   );
+  const [focusedIso, setFocusedIso] = createSignal(
+    formatIsoDate(selectedDate() ?? minDate() ?? todayLocalDate()),
+  );
   let fieldRef: HTMLDivElement | undefined;
   let controlRef: HTMLDivElement | undefined;
   let popoverRef: HTMLDivElement | undefined;
@@ -55,6 +63,9 @@ export function DatePicker(props: DatePickerProps) {
   createEffect(() => {
     if (!isOpen()) {
       setVisibleMonth(preferredVisibleMonth());
+      setFocusedIso(
+        formatIsoDate(selectedDate() ?? minDate() ?? todayLocalDate()),
+      );
     }
   });
 
@@ -89,7 +100,17 @@ export function DatePicker(props: DatePickerProps) {
   const updateVisibleMonth = (
     updater: (current: VisibleMonth) => VisibleMonth,
   ) => {
-    setVisibleMonth((current) => clampVisibleMonth(updater(current), minDate()));
+    setVisibleMonth((current) =>
+      clampVisibleMonth(updater(current), minDate()),
+    );
+  };
+
+  const updateFocusedDate = (nextDate: Date) => {
+    const min = minDate();
+    const clampedDate =
+      min && nextDate.getTime() < min.getTime() ? min : nextDate;
+    setFocusedIso(formatIsoDate(clampedDate));
+    setVisibleMonth(getVisibleMonth(clampedDate));
   };
 
   return (
@@ -176,6 +197,23 @@ export function DatePicker(props: DatePickerProps) {
         onNextMonth={() =>
           updateVisibleMonth((current) => shiftVisibleMonth(current, 1))
         }
+        focusedIso={focusedIso()}
+        onFocusedIsoChange={setFocusedIso}
+        onFocusMoveByDays={(dayDelta) => {
+          const current =
+            parseIsoDate(focusedIso()) ??
+            selectedDate() ??
+            minDate() ??
+            todayLocalDate();
+          updateFocusedDate(addDays(current, dayDelta));
+        }}
+        onFocusMonthBoundary={(kind) => {
+          const boundary =
+            kind === "start"
+              ? startOfMonth(visibleMonth())
+              : endOfMonth(visibleMonth());
+          updateFocusedDate(boundary);
+        }}
         onSelect={(iso) => {
           props.onInput(iso);
           setIsOpen(false);
