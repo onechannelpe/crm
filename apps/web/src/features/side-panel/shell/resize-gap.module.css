@@ -1,0 +1,11 @@
+.gap {
+  cursor: col-resize;
+  flex-shrink: 0;
+  height: 100%;
+  transition: width 0.15s ease;
+  width: 8px;
+}
+
+.gapClosed {
+  width: 0;
+}
