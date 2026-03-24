@@ -2,9 +2,8 @@ import { Show, onMount } from "solid-js";
 
 import { cn } from "~/lib/utils";
 
-import { SidePanelRecordPage } from "../pages/record/side-panel-record-page";
-import { SidePanelRootPage } from "../pages/root/side-panel-root-page";
-import { SidePanelSearchResultsPage } from "../pages/search-results/side-panel-search-results-page";
+import { SidePanelPageInstanceProvider } from "../state/side-panel-page-instance";
+import { SIDE_PANEL_PAGES_CONFIG } from "../state/side-panel-pages-config";
 import { useSidePanel } from "../state/use-side-panel";
 import { SidePanelTopBar } from "../top-bar/side-panel-top-bar";
 import { SidePanelContainer } from "./side-panel-container";
@@ -12,7 +11,7 @@ import { SidePanelContainer } from "./side-panel-container";
 import styles from "./side-panel-router.module.css";
 
 export function SidePanelRouter() {
-  const { currentPage } = useSidePanel();
+  const { currentEntry } = useSidePanel();
 
   let topBarRef: HTMLDivElement | undefined;
 
@@ -34,19 +33,16 @@ export function SidePanelRouter() {
           <SidePanelTopBar />
         </div>
         <div class={styles.pageBody}>
-          <Show when={currentPage()} keyed>
-            {(page) => {
-              switch (page.type) {
-                case "root":
-                  return <SidePanelRootPage page={page} />;
-                case "search-results":
-                  return <SidePanelSearchResultsPage page={page} />;
-                case "record":
-                  return <SidePanelRecordPage page={page} />;
-              }
+          <Show when={currentEntry()} keyed>
+            {(entry) => {
+              const PageComponent =
+                SIDE_PANEL_PAGES_CONFIG[entry.page].component;
 
-              page satisfies never;
-              throw new Error("Unsupported side panel page type");
+              return (
+                <SidePanelPageInstanceProvider pageId={entry.pageId}>
+                  <PageComponent />
+                </SidePanelPageInstanceProvider>
+              );
             }}
           </Show>
         </div>

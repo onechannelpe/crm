@@ -72,8 +72,8 @@ export function SidePanelBackButton(props: SidePanelBackButtonProps) {
                     setShowDropdown(false);
                   }}
                 >
-                  <Dynamic component={page.icon} size={14} />
-                  {page.title}
+                  <Dynamic component={page.pageIcon} size={14} />
+                  {page.pageTitle}
                 </button>
               )}
             </For>

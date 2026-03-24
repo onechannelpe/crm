@@ -1,14 +1,6 @@
 .layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
-  gap: 16px;
+  display: block;
   min-height: 0;
-}
-
-@media (max-width: 1024px) {
-  .layout {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 
 .panel {
@@ -16,15 +8,6 @@
   border-radius: 10px;
   background: var(--background);
   min-height: 0;
-}
-
-.panelHeader {
-  border-bottom: 1px solid var(--border);
-  padding: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
 }
 
 .panelBody {
@@ -79,36 +62,4 @@
 .moreButton {
   border: 0;
   cursor: pointer;
-}
-
-.detailTitle {
-  font-weight: 600;
-  font-size: 14px;
-}
-
-.detailSubtitle {
-  font-size: 12px;
-  color: var(--foreground-secondary);
-}
-
-.detailSection {
-  padding-top: 10px;
-  border-top: 1px solid var(--border);
-  margin-top: 10px;
-}
-
-.detailList {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 6px;
-}
-
-.detailRowMain {
-  font-size: 13px;
-}
-
-.detailRowMeta {
-  font-size: 12px;
-  color: var(--foreground-secondary);
 }

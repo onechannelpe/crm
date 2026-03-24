@@ -6,19 +6,27 @@ import {
   useContext,
 } from "solid-js";
 
-import type { SidePanelPage } from "../types/side-panel-page";
+import type {
+  SidePanelNavigationEntry,
+  SidePanelPageDefinition,
+  SidePanelPageState,
+} from "../types/side-panel-page";
 import { createSidePanelStore } from "./side-panel-store";
 
 export type SidePanelContextValue = {
   isOpen: Accessor<boolean>;
   isClosing: Accessor<boolean>;
-  currentPage: Accessor<SidePanelPage | null>;
-  navigationStack: Accessor<SidePanelPage[]>;
+  currentEntry: Accessor<SidePanelNavigationEntry | null>;
+  navigationStack: Accessor<SidePanelNavigationEntry[]>;
   searchText: Accessor<string>;
   panelWidth: Accessor<number>;
-  openPanel: (page: SidePanelPage) => void;
+  getPageState: (pageId: string) => SidePanelPageState | undefined;
+  openPanel: (page: SidePanelPageDefinition) => void;
   closePanel: () => void;
-  navigateTo: (page: SidePanelPage, opts?: { resetStack?: boolean }) => void;
+  navigateTo: (
+    page: SidePanelPageDefinition,
+    opts?: { resetStack?: boolean },
+  ) => void;
   goBack: () => void;
   navigateToStackIndex: (index: number) => void;
   onCloseAnimationComplete: () => void;
@@ -31,17 +39,18 @@ const SidePanelContext = createContext<SidePanelContextValue>();
 export function SidePanelProvider(props: ParentProps) {
   const store = createSidePanelStore();
   const { state } = store;
-  const currentPage = createMemo<SidePanelPage | null>(
+  const currentEntry = createMemo<SidePanelNavigationEntry | null>(
     () => state.navigationStack.at(-1) ?? null,
   );
 
   const value: SidePanelContextValue = {
     isOpen: () => state.isOpen,
     isClosing: () => state.isClosing,
-    currentPage,
+    currentEntry,
     navigationStack: () => state.navigationStack,
     searchText: () => state.searchText,
     panelWidth: () => state.panelWidth,
+    getPageState: (pageId) => state.pageStateById[pageId],
     openPanel: store.openPanel,
     closePanel: store.closePanel,
     navigateTo: store.navigateTo,
