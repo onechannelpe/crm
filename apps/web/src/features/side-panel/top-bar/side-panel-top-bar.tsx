@@ -59,7 +59,7 @@ export function SidePanelTopBar() {
           <input
             type="text"
             class={styles.searchInput}
-            placeholder="Search or type a command..."
+            placeholder="Buscar o escribir un comando..."
             value={searchText()}
             onInput={(e) => setSearchText(e.currentTarget.value)}
           />
