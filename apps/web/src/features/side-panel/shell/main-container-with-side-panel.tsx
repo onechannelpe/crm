@@ -10,7 +10,7 @@ import {
 import { Loading } from "~/components/feedback/loading";
 import { cn } from "~/lib/utils";
 
-import { useCommandMenuHotKeys } from "../hooks/use-command-menu-hot-keys";
+import { SidePanelRouter } from "../router/side-panel-router";
 import { ResizeGap } from "./resize-gap";
 import { SidePanelMobileShell } from "./side-panel-mobile-shell";
 import { SidePanelShell } from "./side-panel-shell";
@@ -19,12 +19,11 @@ import { SidePanelWidthEffect } from "./side-panel-width-effect";
 import shellStyles from "~/components/layout/shell.module.css";
 
 export function MainContainerWithSidePanel(props: ParentProps) {
-  useCommandMenuHotKeys();
-
-  const mq = window.matchMedia("(max-width: 768px)");
-  const [isMobile, setIsMobile] = createSignal(mq.matches);
+  const [isMobile, setIsMobile] = createSignal(false);
 
   onMount(() => {
+    const mq = window.matchMedia("(max-width: 768px)");
+    setIsMobile(mq.matches);
     const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
     mq.addEventListener("change", handler);
     onCleanup(() => mq.removeEventListener("change", handler));
@@ -41,7 +40,7 @@ export function MainContainerWithSidePanel(props: ParentProps) {
         when={!isMobile()}
         fallback={
           <SidePanelMobileShell targetVariant="fullScreen">
-            {/* SidePanelRouter wired in task 16 */}
+            <SidePanelRouter />
           </SidePanelMobileShell>
         }
       >
@@ -51,7 +50,7 @@ export function MainContainerWithSidePanel(props: ParentProps) {
           onResizeEnd={() => setIsResizing(false)}
         />
         <SidePanelShell isResizing={isResizing()}>
-          {/* SidePanelRouter wired in task 16 */}
+          <SidePanelRouter />
         </SidePanelShell>
       </Show>
     </div>

@@ -19,6 +19,12 @@
   width: var(--side-panel-width);
 }
 
+.variantClosedFullScreen {
+  transform: translateX(100%);
+  transition: transform var(--motion-normal) var(--ease-standard);
+  width: 100%;
+}
+
 .variantNormal {
   transform: translateX(0);
   transition: transform var(--motion-normal) var(--ease-standard);

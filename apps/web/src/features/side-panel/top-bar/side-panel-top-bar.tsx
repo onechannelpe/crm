@@ -1,4 +1,5 @@
-import { Dynamic, For, Show, createSignal, onCleanup, onMount } from "solid-js";
+import { For, Show, createSignal, onCleanup, onMount } from "solid-js";
+import { Dynamic } from "solid-js/web";
 
 import X from "~/components/icons/x";
 import { cn } from "~/lib/utils";
@@ -20,10 +21,11 @@ export function SidePanelTopBar() {
   } = useSidePanel();
   const chips = useSidePanelContextChips();
 
-  const mq = window.matchMedia("(max-width: 768px)");
-  const [isMobile, setIsMobile] = createSignal(mq.matches);
+  const [isMobile, setIsMobile] = createSignal(false);
 
   onMount(() => {
+    const mq = window.matchMedia("(max-width: 768px)");
+    setIsMobile(mq.matches);
     const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
     mq.addEventListener("change", handler);
     onCleanup(() => mq.removeEventListener("change", handler));
@@ -38,19 +40,19 @@ export function SidePanelTopBar() {
 
   return (
     <div class={cn(styles.topBar, isMobile() && styles.topBarMobile)}>
-      <Show when={showBackButton()}>
+      <div class={styles.leftControls}>
         <SidePanelBackButton visible={showBackButton()} />
-      </Show>
-      <Show when={showCloseButton()}>
-        <button
-          type="button"
-          class={styles.closeButton}
-          onClick={closePanel}
-          aria-label="Close panel"
-        >
-          <X size={16} />
-        </button>
-      </Show>
+        <Show when={showCloseButton()}>
+          <button
+            type="button"
+            class={styles.closeButton}
+            onClick={closePanel}
+            aria-label="Close panel"
+          >
+            <X size={16} />
+          </button>
+        </Show>
+      </div>
 
       <div class={styles.rightSlot}>
         <Show when={showSearch()} fallback={<SidePanelPageInfo />}>
@@ -62,41 +64,18 @@ export function SidePanelTopBar() {
             onInput={(e) => setSearchText(e.currentTarget.value)}
           />
         </Show>
-        {/* context chips: wired in task 10 */}
         <For each={chips()}>
           {(chip) => (
             <Show
               when={chip.onClick}
               fallback={
-                <span
-                  style={{
-                    display: "flex",
-                    "align-items": "center",
-                    gap: "4px",
-                    "font-size": "var(--font-size-caption)",
-                    color: "var(--foreground-secondary)",
-                  }}
-                >
+                <span class={cn(styles.chip, styles.chipStatic)}>
                   <Dynamic component={chip.page.icon} size={12} />
                   {chip.page.title}
                 </span>
               }
             >
-              <button
-                type="button"
-                onClick={chip.onClick}
-                style={{
-                  display: "flex",
-                  "align-items": "center",
-                  gap: "4px",
-                  background: "transparent",
-                  border: "none",
-                  cursor: "pointer",
-                  "font-size": "var(--font-size-caption)",
-                  color: "var(--foreground-tertiary)",
-                  padding: "0 2px",
-                }}
-              >
+              <button type="button" class={styles.chip} onClick={chip.onClick}>
                 <Dynamic component={chip.page.icon} size={12} />
                 {chip.page.title}
               </button>

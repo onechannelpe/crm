@@ -1,4 +1,10 @@
-import { type Accessor, type ParentProps, createContext, useContext } from "solid-js";
+import {
+  type Accessor,
+  type ParentProps,
+  createContext,
+  useContext,
+} from "solid-js";
+
 import {
   type SidePanelPage,
   type SidePanelPageInfo,
@@ -6,7 +12,6 @@ import {
 } from "./side-panel-store";
 
 export type SidePanelContextValue = {
-  // state accessors
   isOpen: Accessor<boolean>;
   isClosing: Accessor<boolean>;
   currentPage: Accessor<SidePanelPage | null>;
@@ -14,8 +19,6 @@ export type SidePanelContextValue = {
   pageInfo: Accessor<SidePanelPageInfo | null>;
   searchText: Accessor<string>;
   panelWidth: Accessor<number>;
-
-  // actions
   openPanel: (page: SidePanelPage) => void;
   closePanel: () => void;
   navigateTo: (page: SidePanelPage, opts?: { resetStack?: boolean }) => void;
@@ -40,7 +43,6 @@ export function SidePanelProvider(props: ParentProps) {
     pageInfo: () => state.pageInfo,
     searchText: () => state.searchText,
     panelWidth: () => state.panelWidth,
-
     openPanel: store.openPanel,
     closePanel: store.closePanel,
     navigateTo: store.navigateTo,

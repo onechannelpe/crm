@@ -18,8 +18,8 @@ export function SidePanelShell(props: SidePanelShellProps) {
 
   const shouldRenderContent = () => isOpen() || isClosing();
 
-  function handleTransitionEnd() {
-    if (!isOpen()) {
+  function handleTransitionEnd(event: TransitionEvent) {
+    if (event.propertyName === "width" && !isOpen() && isClosing()) {
       onCloseAnimationComplete();
     }
   }
@@ -53,15 +53,11 @@ export function SidePanelShell(props: SidePanelShellProps) {
         isOpen() && styles.wrapperOpen,
         props.isResizing && styles.wrapperResizing,
       )}
+      data-click-outside-id={SIDE_PANEL_CLICK_OUTSIDE_ID}
       onTransitionEnd={handleTransitionEnd}
     >
       <Show when={shouldRenderContent()}>
-        <aside
-          class={styles.aside}
-          data-click-outside-id={SIDE_PANEL_CLICK_OUTSIDE_ID}
-        >
-          {props.children}
-        </aside>
+        <aside class={styles.aside}>{props.children}</aside>
       </Show>
     </div>
   );

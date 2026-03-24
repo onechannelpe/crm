@@ -3,6 +3,7 @@ import { Portal } from "solid-js/web";
 
 import { cn } from "~/lib/utils";
 
+import { SIDE_PANEL_CLICK_OUTSIDE_ID } from "../constants/side-panel-click-outside-id";
 import { useSidePanel } from "../state/use-side-panel";
 
 import styles from "./side-panel-mobile-shell.module.css";
@@ -12,20 +13,35 @@ type SidePanelMobileShellProps = ParentProps<{
 }>;
 
 export function SidePanelMobileShell(props: SidePanelMobileShellProps) {
-  const { isOpen, isClosing, closePanel } = useSidePanel();
+  const { isOpen, isClosing, closePanel, onCloseAnimationComplete } =
+    useSidePanel();
 
   let containerRef: HTMLDivElement | undefined;
 
   const variantClass = () => {
-    if (!isOpen() && !isClosing()) return styles.variantClosed;
+    if (!isOpen()) {
+      return props.targetVariant === "fullScreen"
+        ? styles.variantClosedFullScreen
+        : styles.variantClosed;
+    }
     if (props.targetVariant === "fullScreen") return styles.variantFullScreen;
     return styles.variantNormal;
   };
 
+  function handleTransitionEnd(event: TransitionEvent) {
+    if (event.propertyName === "transform" && !isOpen() && isClosing()) {
+      onCloseAnimationComplete();
+    }
+  }
+
   onMount(() => {
     function handlePointerDown(e: PointerEvent) {
       if (!isOpen()) return;
-      if (containerRef && !containerRef.contains(e.target as Node)) {
+      if (
+        containerRef &&
+        e.target instanceof Node &&
+        !containerRef.contains(e.target)
+      ) {
         closePanel();
       }
     }
@@ -43,11 +59,13 @@ export function SidePanelMobileShell(props: SidePanelMobileShellProps) {
           ref={(el) => {
             containerRef = el;
           }}
+          data-click-outside-id={SIDE_PANEL_CLICK_OUTSIDE_ID}
           class={cn(
             styles.container,
             variantClass(),
             props.targetVariant === "fullScreen" && styles.mobileMaxHeight,
           )}
+          onTransitionEnd={handleTransitionEnd}
         >
           {props.children}
         </div>

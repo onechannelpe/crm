@@ -1,11 +1,6 @@
-import {
-  type ParentProps,
-  Show,
-  Dynamic,
-  createContext,
-  useContext,
-} from "solid-js";
+import { type ParentProps, Show, createContext, useContext } from "solid-js";
 import { createStore } from "solid-js/store";
+import { Dynamic } from "solid-js/web";
 
 import type { SidePanelSubPageKey } from "../config/side-panel-sub-pages-config";
 import { SIDE_PANEL_SUB_PAGES_CONFIG } from "../config/side-panel-sub-pages-config";
@@ -63,9 +58,13 @@ export function SidePanelSubPageRouter(props: SidePanelSubPageRouterProps) {
 
   const SubPageComponent = () => {
     const entry = topEntry();
-    if (!entry) return null;
+    if (!entry) {
+      throw new Error(
+        "SidePanelSubPageRouter: subpage component requested with empty stack",
+      );
+    }
     const component = SIDE_PANEL_SUB_PAGES_CONFIG.get(entry.key);
-    if (!component) {
+    if (component === undefined) {
       throw new Error(
         `SidePanelSubPageRouter: unregistered subpage key "${entry.key}"`,
       );

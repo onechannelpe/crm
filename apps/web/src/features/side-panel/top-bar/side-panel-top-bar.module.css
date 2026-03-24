@@ -7,6 +7,7 @@
   flex-shrink: 0;
   gap: 8px;
   height: var(--side-panel-top-bar-height);
+  justify-content: space-between;
   padding: 0 12px;
   width: 100%;
 }
@@ -42,6 +43,13 @@
   width: 28px;
 }
 
+.leftControls {
+  align-items: center;
+  display: flex;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
 .closeButton:hover {
   background: var(--bg-translucent);
   color: var(--foreground);
@@ -51,5 +59,26 @@
   align-items: center;
   display: flex;
   flex: 1;
+  gap: 4px;
   min-width: 0;
+  overflow: hidden;
+}
+
+.chip {
+  align-items: center;
+  background: transparent;
+  border: none;
+  color: var(--foreground-tertiary);
+  cursor: pointer;
+  display: inline-flex;
+  flex-shrink: 0;
+  font-size: var(--font-size-caption);
+  gap: 4px;
+  min-width: 0;
+  padding: 0 2px;
+}
+
+.chipStatic {
+  color: var(--foreground-secondary);
+  cursor: default;
 }

@@ -1,10 +1,11 @@
 import { type ParentProps, createSignal, onCleanup, onMount } from "solid-js";
 
 export function SidePanelContainer(props: ParentProps) {
-  const mq = window.matchMedia("(max-width: 768px)");
-  const [isMobile, setIsMobile] = createSignal(mq.matches);
+  const [isMobile, setIsMobile] = createSignal(false);
 
   onMount(() => {
+    const mq = window.matchMedia("(max-width: 768px)");
+    setIsMobile(mq.matches);
     const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
     mq.addEventListener("change", handler);
     onCleanup(() => mq.removeEventListener("change", handler));

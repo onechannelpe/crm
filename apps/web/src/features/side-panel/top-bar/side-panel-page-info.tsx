@@ -1,4 +1,4 @@
-import { Dynamic, Show } from "solid-js";
+import { Dynamic, Show } from "solid-js/web";
 
 import { useSidePanel } from "../state/use-side-panel";
 import { SidePanelPageInfoLayout } from "./side-panel-page-info-layout";

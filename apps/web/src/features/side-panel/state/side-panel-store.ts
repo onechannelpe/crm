@@ -1,6 +1,8 @@
 import type { Component } from "solid-js";
 import { createStore } from "solid-js/store";
 
+import Search from "~/components/icons/search";
+
 // Types
 
 export type SidePanelPageKey = string;
@@ -35,6 +37,15 @@ export const SIDE_PANEL_WIDTH_DEFAULT = 400;
 export const SIDE_PANEL_WIDTH_MIN = 320;
 export const SIDE_PANEL_WIDTH_MAX = 600;
 
+export function createRootSidePanelPage(): SidePanelPage {
+  return {
+    key: "root",
+    instanceId: crypto.randomUUID(),
+    title: "Command menu",
+    icon: Search,
+  };
+}
+
 // Read and validate width from localStorage synchronously at module evaluation time.
 // This runs before any component mounts so the CSS var is set before first render (Req 17.1, 17.2).
 function readInitialWidth(): number {
@@ -58,10 +69,12 @@ function readInitialWidth(): number {
 const initialWidth = readInitialWidth();
 
 // Set CSS variable synchronously before first render (Req 17.1)
-document.documentElement.style.setProperty(
-  "--side-panel-width",
-  `${initialWidth}px`,
-);
+if (typeof document !== "undefined") {
+  document.documentElement.style.setProperty(
+    "--side-panel-width",
+    `${initialWidth}px`,
+  );
+}
 
 // Store factory
 
@@ -80,26 +93,44 @@ export function createSidePanelStore() {
     setState({
       isOpen: true,
       isClosing: false,
-      navigationStack: [...state.navigationStack, page],
+      navigationStack: [page],
       currentPage: page,
+      pageInfo: { instanceId: page.instanceId },
+      searchText: "",
     });
   };
 
   const closePanel = () => {
+    if (!state.isOpen && !state.isClosing) return;
     setState({ isOpen: false, isClosing: true });
   };
 
   const onCloseAnimationComplete = () => {
-    setState({ isClosing: false, currentPage: null });
+    setState({
+      isClosing: false,
+      currentPage: null,
+      navigationStack: [],
+      pageInfo: null,
+      searchText: "",
+    });
   };
 
   const navigateTo = (page: SidePanelPage, opts?: { resetStack?: boolean }) => {
     if (opts?.resetStack) {
-      setState({ navigationStack: [page], currentPage: page });
+      setState({
+        isOpen: true,
+        isClosing: false,
+        navigationStack: [page],
+        currentPage: page,
+        pageInfo: { instanceId: page.instanceId },
+      });
     } else {
       setState({
+        isOpen: true,
+        isClosing: false,
         navigationStack: [...state.navigationStack, page],
         currentPage: page,
+        pageInfo: { instanceId: page.instanceId },
       });
     }
   };
@@ -111,17 +142,21 @@ export function createSidePanelStore() {
       return;
     }
     const newStack = stack.slice(0, -1);
+    const previousPage = newStack[newStack.length - 1] ?? null;
     setState({
       navigationStack: newStack,
-      currentPage: newStack[newStack.length - 1],
+      currentPage: previousPage,
+      pageInfo: previousPage ? { instanceId: previousPage.instanceId } : null,
     });
   };
 
   const navigateToStackIndex = (index: number) => {
     const newStack = state.navigationStack.slice(0, index + 1);
+    const nextPage = newStack[index] ?? null;
     setState({
       navigationStack: newStack,
-      currentPage: newStack[index] ?? null,
+      currentPage: nextPage,
+      pageInfo: nextPage ? { instanceId: nextPage.instanceId } : null,
     });
   };
 

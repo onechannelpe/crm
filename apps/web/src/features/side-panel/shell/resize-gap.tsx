@@ -26,7 +26,6 @@ export function ResizeGap(props: ResizeGapProps) {
       closePanel();
     },
     onResizeStart: () => props.onResizeStart?.(),
-    isOpen: true,
   });
 
   return (

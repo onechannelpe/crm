@@ -10,7 +10,6 @@ type UseResizablePanelProps = {
   onWidthChange: (width: number) => void;
   onCollapse: () => void;
   onResizeStart: () => void;
-  isOpen: boolean;
 };
 
 type UseResizablePanelReturn = {
@@ -33,17 +32,16 @@ export function useResizablePanel(
     // Panel is on the right: dragging left (negative delta) increases width
     const delta = startX - e.clientX;
     const raw = startWidth + delta;
-    const clamped = Math.min(
-      SIDE_PANEL_WIDTH_MAX,
-      Math.max(SIDE_PANEL_WIDTH_MIN, raw),
-    );
+    const clamped = Math.min(SIDE_PANEL_WIDTH_MAX, Math.max(0, raw));
 
     currentComputedWidth = clamped;
 
-    document.documentElement.style.setProperty(
-      "--side-panel-width",
-      `${clamped}px`,
-    );
+    if (typeof document !== "undefined") {
+      document.documentElement.style.setProperty(
+        "--side-panel-width",
+        `${Math.max(SIDE_PANEL_WIDTH_MIN, clamped)}px`,
+      );
+    }
 
     if (!resizeStarted && Math.abs(delta) > 4) {
       resizeStarted = true;
@@ -60,7 +58,7 @@ export function useResizablePanel(
     document.removeEventListener("pointermove", handlePointerMove);
     document.removeEventListener("pointerup", handlePointerUp);
 
-    if (currentComputedWidth < SIDE_PANEL_WIDTH_MIN) {
+    if (currentComputedWidth <= SIDE_PANEL_WIDTH_MIN) {
       props.onCollapse();
     } else {
       props.onWidthChange(currentComputedWidth);
@@ -68,13 +66,16 @@ export function useResizablePanel(
   }
 
   function onPointerDown(e: PointerEvent): void {
+    e.preventDefault();
     startX = e.clientX;
     startWidth = props.currentWidth;
     currentComputedWidth = props.currentWidth;
     isResizing = true;
     resizeStarted = false;
 
-    (e.currentTarget as Element).setPointerCapture(e.pointerId);
+    if (e.currentTarget instanceof Element) {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    }
 
     document.addEventListener("pointermove", handlePointerMove);
     document.addEventListener("pointerup", handlePointerUp);

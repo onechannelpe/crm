@@ -7,6 +7,7 @@ import { SIDE_PANEL_PAGES_CONFIG } from "../config/side-panel-pages-config";
 import { SidePanelRootPage } from "../pages/root/side-panel-root-page";
 import { useSidePanel } from "../state/use-side-panel";
 import { SidePanelTopBar } from "../top-bar/side-panel-top-bar";
+import { SidePanelContainer } from "./side-panel-container";
 import { SidePanelSubPageRouter } from "./side-panel-sub-page-router";
 
 import styles from "./side-panel-router.module.css";
@@ -38,24 +39,26 @@ export function SidePanelRouter() {
   };
 
   return (
-    <div class={styles.router}>
-      <div
-        ref={(el) => {
-          topBarRef = el;
-        }}
-        class={cn(styles.topBar)}
-      >
-        <SidePanelTopBar />
+    <SidePanelContainer>
+      <div class={styles.router}>
+        <div
+          ref={(el) => {
+            topBarRef = el;
+          }}
+          class={cn(styles.topBar)}
+        >
+          <SidePanelTopBar />
+        </div>
+        <div class={styles.pageBody}>
+          <Show when={currentPage()} keyed>
+            {(page) => (
+              <SidePanelSubPageRouter pageInstanceId={page.instanceId}>
+                <Dynamic component={PageComponent()} />
+              </SidePanelSubPageRouter>
+            )}
+          </Show>
+        </div>
       </div>
-      <div class={styles.pageBody}>
-        <Show when={currentPage()}>
-          {(page) => (
-            <SidePanelSubPageRouter pageInstanceId={page().instanceId}>
-              <Dynamic component={PageComponent()} />
-            </SidePanelSubPageRouter>
-          )}
-        </Show>
-      </div>
-    </div>
+    </SidePanelContainer>
   );
 }
