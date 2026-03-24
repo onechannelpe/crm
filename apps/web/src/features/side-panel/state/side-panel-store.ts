@@ -93,10 +93,7 @@ export function createSidePanelStore() {
     setState({ isClosing: false, currentPage: null });
   };
 
-  const navigateTo = (
-    page: SidePanelPage,
-    opts?: { resetStack?: boolean },
-  ) => {
+  const navigateTo = (page: SidePanelPage, opts?: { resetStack?: boolean }) => {
     if (opts?.resetStack) {
       setState({ navigationStack: [page], currentPage: page });
     } else {

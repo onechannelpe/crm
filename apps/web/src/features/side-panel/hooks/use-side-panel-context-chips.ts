@@ -1,5 +1,6 @@
 import type { Accessor } from "solid-js";
 import { createMemo } from "solid-js";
+
 import type { SidePanelPage } from "../state/side-panel-store";
 import { useSidePanel } from "../state/use-side-panel";
 

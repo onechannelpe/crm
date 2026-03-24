@@ -1,4 +1,5 @@
 import { Dynamic, Show } from "solid-js";
+
 import { useSidePanel } from "../state/use-side-panel";
 import { SidePanelPageInfoLayout } from "./side-panel-page-info-layout";
 

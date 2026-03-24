@@ -1,14 +1,23 @@
 import { Dynamic, For, Show, createSignal, onCleanup, onMount } from "solid-js";
+
 import X from "~/components/icons/x";
 import { cn } from "~/lib/utils";
+
 import { useSidePanelContextChips } from "../hooks/use-side-panel-context-chips";
 import { useSidePanel } from "../state/use-side-panel";
 import { SidePanelBackButton } from "./side-panel-back-button";
 import { SidePanelPageInfo } from "./side-panel-page-info";
+
 import styles from "./side-panel-top-bar.module.css";
 
 export function SidePanelTopBar() {
-  const { navigationStack, currentPage, closePanel, searchText, setSearchText } = useSidePanel();
+  const {
+    navigationStack,
+    currentPage,
+    closePanel,
+    searchText,
+    setSearchText,
+  } = useSidePanel();
   const chips = useSidePanelContextChips();
 
   const mq = window.matchMedia("(max-width: 768px)");
@@ -59,7 +68,15 @@ export function SidePanelTopBar() {
             <Show
               when={chip.onClick}
               fallback={
-                <span style={{ display: "flex", "align-items": "center", gap: "4px", "font-size": "var(--font-size-caption)", color: "var(--foreground-secondary)" }}>
+                <span
+                  style={{
+                    display: "flex",
+                    "align-items": "center",
+                    gap: "4px",
+                    "font-size": "var(--font-size-caption)",
+                    color: "var(--foreground-secondary)",
+                  }}
+                >
                   <Dynamic component={chip.page.icon} size={12} />
                   {chip.page.title}
                 </span>
@@ -68,7 +85,17 @@ export function SidePanelTopBar() {
               <button
                 type="button"
                 onClick={chip.onClick}
-                style={{ display: "flex", "align-items": "center", gap: "4px", background: "transparent", border: "none", cursor: "pointer", "font-size": "var(--font-size-caption)", color: "var(--foreground-tertiary)", padding: "0 2px" }}
+                style={{
+                  display: "flex",
+                  "align-items": "center",
+                  gap: "4px",
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  "font-size": "var(--font-size-caption)",
+                  color: "var(--foreground-tertiary)",
+                  padding: "0 2px",
+                }}
               >
                 <Dynamic component={chip.page.icon} size={12} />
                 {chip.page.title}

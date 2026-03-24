@@ -1,4 +1,5 @@
 import { onCleanup } from "solid-js";
+
 import {
   SIDE_PANEL_WIDTH_MAX,
   SIDE_PANEL_WIDTH_MIN,
@@ -32,7 +33,10 @@ export function useResizablePanel(
     // Panel is on the right: dragging left (negative delta) increases width
     const delta = startX - e.clientX;
     const raw = startWidth + delta;
-    const clamped = Math.min(SIDE_PANEL_WIDTH_MAX, Math.max(SIDE_PANEL_WIDTH_MIN, raw));
+    const clamped = Math.min(
+      SIDE_PANEL_WIDTH_MAX,
+      Math.max(SIDE_PANEL_WIDTH_MIN, raw),
+    );
 
     currentComputedWidth = clamped;
 

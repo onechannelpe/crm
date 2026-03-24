@@ -1,12 +1,22 @@
-import { type ParentProps, Show, Suspense, createSignal, onCleanup, onMount } from "solid-js";
+import {
+  type ParentProps,
+  Show,
+  Suspense,
+  createSignal,
+  onCleanup,
+  onMount,
+} from "solid-js";
+
 import { Loading } from "~/components/feedback/loading";
-import shellStyles from "~/components/layout/shell.module.css";
 import { cn } from "~/lib/utils";
+
 import { useCommandMenuHotKeys } from "../hooks/use-command-menu-hot-keys";
 import { ResizeGap } from "./resize-gap";
 import { SidePanelMobileShell } from "./side-panel-mobile-shell";
 import { SidePanelShell } from "./side-panel-shell";
 import { SidePanelWidthEffect } from "./side-panel-width-effect";
+
+import shellStyles from "~/components/layout/shell.module.css";
 
 export function MainContainerWithSidePanel(props: ParentProps) {
   useCommandMenuHotKeys();

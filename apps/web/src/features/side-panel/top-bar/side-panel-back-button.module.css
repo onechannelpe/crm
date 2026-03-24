@@ -1,7 +1,9 @@
 .buttonWrapper {
   opacity: 0;
   overflow: hidden;
-  transition: opacity var(--motion-fast), width var(--motion-fast);
+  transition:
+    opacity var(--motion-fast),
+    width var(--motion-fast);
   width: 0;
 }
 

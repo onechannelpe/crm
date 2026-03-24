@@ -1,7 +1,10 @@
 import { Dynamic, For, Portal, Show, createSignal } from "solid-js";
+
 import ChevronLeft from "~/components/icons/chevron-left";
 import { cn } from "~/lib/utils";
+
 import { useSidePanel } from "../state/use-side-panel";
+
 import styles from "./side-panel-back-button.module.css";
 
 type SidePanelBackButtonProps = {
@@ -28,9 +31,16 @@ export function SidePanelBackButton(props: SidePanelBackButtonProps) {
   const dropdownItems = () => navigationStack().slice(0, -1);
 
   return (
-    <div class={cn(styles.buttonWrapper, props.visible && styles.buttonWrapperVisible)}>
+    <div
+      class={cn(
+        styles.buttonWrapper,
+        props.visible && styles.buttonWrapperVisible,
+      )}
+    >
       <button
-        ref={(el) => { buttonRef = el; }}
+        ref={(el) => {
+          buttonRef = el;
+        }}
         type="button"
         class={styles.button}
         onClick={goBack}

@@ -1,6 +1,8 @@
 import { cn } from "~/lib/utils";
+
 import { useResizablePanel } from "../hooks/use-resizable-panel";
 import { useSidePanel } from "../state/use-side-panel";
+
 import styles from "./resize-gap.module.css";
 
 type ResizeGapProps = {
