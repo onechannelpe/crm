@@ -1,6 +1,7 @@
 import { createMemo } from "solid-js";
 
 import User from "~/components/icons/user";
+
 import { useSidePanelPageInstanceId } from "../../state/side-panel-page-instance";
 import { useSidePanel } from "../../state/use-side-panel";
 import { SidePanelPageInfoLayout } from "../../top-bar/side-panel-page-info-layout";

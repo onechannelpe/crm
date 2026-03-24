@@ -152,8 +152,13 @@
 
 .codeCell {
   color: var(--foreground-secondary);
-  font-family:
-    var(--font-family-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-family: var(
+    --font-family-mono,
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace
+  );
   font-size: 12px;
 }
 

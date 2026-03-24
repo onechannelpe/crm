@@ -2,16 +2,15 @@ import { createAsync, revalidate, useSearchParams } from "@solidjs/router";
 import { createEffect, createMemo, createSignal, Show } from "solid-js";
 
 import { searchDirect } from "~/actions/search/run";
-import { AppPage } from "~/components/layout/page";
 import Search from "~/components/icons/search";
+import { AppPage } from "~/components/layout/page";
 import {
   inferSearchType,
   type SearchTab,
 } from "~/features/search/model/display";
-import { PageHeader } from "~/features/settings-shell";
 import { createSearchViewModel } from "~/features/search/model/search-view-model";
 import { SearchLayout } from "~/features/search/ui/search-layout";
-import pageStyles from "~/features/search/ui/search-page-shell.module.css";
+import { PageHeader } from "~/features/settings-shell";
 import { useSidePanel } from "~/features/side-panel/state/use-side-panel";
 import {
   createSearchCompanyDetailSidePanelPage,
@@ -19,6 +18,8 @@ import {
 } from "~/features/side-panel/types/side-panel-page";
 import { mySearchAllowanceQuery } from "~/lib/queries/search";
 import { isSearchType, type SearchType } from "~/server/shared/pipeline-types";
+
+import pageStyles from "~/features/search/ui/search-page-shell.module.css";
 
 export default function SearchPage() {
   const searchAllowance = createAsync(() => mySearchAllowanceQuery(), {

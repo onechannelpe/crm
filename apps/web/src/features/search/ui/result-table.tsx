@@ -15,6 +15,7 @@ import type {
 } from "~/features/search/model/grouping";
 
 import { ResultPills } from "./result-pills";
+
 import styles from "./search-layout.module.css";
 
 interface ResultTableProps {
@@ -50,9 +51,7 @@ export function ResultTable(props: ResultTableProps) {
                 {(group) => (
                   <TableRow
                     tabIndex={0}
-                    class={
-                      `${styles.resultRow}${props.selectedKey === group.key ? ` ${styles.resultRowSelected}` : ""}`
-                    }
+                    class={`${styles.resultRow}${props.selectedKey === group.key ? ` ${styles.resultRowSelected}` : ""}`}
                     onClick={() => props.onOpenPerson(group)}
                     onKeyDown={(event) => {
                       if (event.key === "Enter" || event.key === " ") {
@@ -108,9 +107,7 @@ export function ResultTable(props: ResultTableProps) {
                 {(group) => (
                   <TableRow
                     tabIndex={0}
-                    class={
-                      `${styles.resultRow}${props.selectedKey === group.key ? ` ${styles.resultRowSelected}` : ""}`
-                    }
+                    class={`${styles.resultRow}${props.selectedKey === group.key ? ` ${styles.resultRowSelected}` : ""}`}
                     onClick={() => props.onOpenCompany(group)}
                     onKeyDown={(event) => {
                       if (event.key === "Enter" || event.key === " ") {
@@ -127,7 +124,9 @@ export function ResultTable(props: ResultTableProps) {
                         {group.people.length} linked people
                       </div>
                     </TableCell>
-                    <TableCell class={styles.codeCell}>{group.ruc ?? "-"}</TableCell>
+                    <TableCell class={styles.codeCell}>
+                      {group.ruc ?? "-"}
+                    </TableCell>
                     <TableCell class={styles.dataCell}>
                       <ResultPills
                         items={group.people
