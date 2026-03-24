@@ -1,42 +1,22 @@
-import type { JSX } from "solid-js";
+import type { Accessor, JSX } from "solid-js";
 
 import ChevronRight from "~/components/icons/chevron-right";
 import { cn } from "~/lib/utils";
 
 import { NavigationDrawerAnimatedCollapseWrapper } from "./navigation-drawer-animated-collapse-wrapper";
 import { NavigationDrawerItemBreadcrumb } from "./navigation-drawer-item-breadcrumb";
-import type {
-  NavigationDrawerIcon,
-  NavigationDrawerItemModifier,
-  NavigationDrawerItemVariant,
-  NavigationDrawerSubItemState,
-} from "./navigation-drawer-item.types";
+import type { NavigationDrawerItemFrameBaseProps } from "./navigation-drawer-item.types";
 
 import styles from "./navigation-drawer-item.module.css";
 
 export interface NavigationDrawerItemFrameRenderProps {
-  className: string;
+  className: Accessor<string>;
   content: JSX.Element;
-  style: JSX.CSSProperties;
-  title?: string;
+  style: Accessor<JSX.CSSProperties>;
+  title: Accessor<string | undefined>;
 }
 
-interface NavigationDrawerItemFrameProps {
-  className?: string;
-  label: string;
-  secondaryLabel?: string;
-  indentationLevel: 1 | 2;
-  subItemState?: NavigationDrawerSubItemState;
-  Icon?: NavigationDrawerIcon;
-  active?: boolean;
-  modifier?: NavigationDrawerItemModifier;
-  rightOptions?: JSX.Element;
-  alwaysShowRightOptions?: boolean;
-  showChevron?: boolean;
-  chevronExpanded?: boolean;
-  variant?: NavigationDrawerItemVariant;
-  collapsedMain: boolean;
-  isMobile: boolean;
+export interface NavigationDrawerItemFrameProps extends NavigationDrawerItemFrameBaseProps {
   render: (props: NavigationDrawerItemFrameRenderProps) => JSX.Element;
 }
 
@@ -125,15 +105,19 @@ export function NavigationDrawerItemFrame(
     </div>
   );
 
-  return props.render({
-    className: className(),
-    content,
-    style: {
+  const style = () =>
+    ({
       "--item-width-base": props.collapsedMain ? "40px" : "100%",
       "--item-padding-right": hasRightOptions() ? "2px" : "4px",
       cursor: isSoon() ? "default" : "pointer",
       "pointer-events": isSoon() ? "none" : "auto",
-    },
-    title: props.collapsedMain ? props.label : undefined,
+    }) satisfies JSX.CSSProperties;
+  const title = () => (props.collapsedMain ? props.label : undefined);
+
+  return props.render({
+    className,
+    content,
+    style,
+    title,
   });
 }

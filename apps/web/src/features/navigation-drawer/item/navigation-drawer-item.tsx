@@ -55,24 +55,6 @@ export function NavigationDrawerItem(props: NavigationDrawerItemProps) {
 
     handleItemAction();
   };
-  const frameProps = () => ({
-    className: props.className,
-    label: props.label,
-    secondaryLabel: props.secondaryLabel,
-    indentationLevel: indentationLevel(),
-    subItemState: props.subItemState,
-    Icon: props.Icon,
-    active: props.active,
-    modifier: props.modifier,
-    rightOptions: props.rightOptions,
-    alwaysShowRightOptions: props.alwaysShowRightOptions,
-    showChevron: props.showChevron,
-    chevronExpanded: props.chevronExpanded,
-    variant: props.variant,
-    collapsedMain: collapsedMain(),
-    isMobile: isMobile(),
-  });
-
   return (
     <Show
       when={internalHref()}
@@ -83,7 +65,21 @@ export function NavigationDrawerItem(props: NavigationDrawerItemProps) {
           keyed
           fallback={
             <NavigationDrawerActionItem
-              frameProps={frameProps()}
+              className={props.className}
+              label={props.label}
+              secondaryLabel={props.secondaryLabel}
+              indentationLevel={indentationLevel()}
+              subItemState={props.subItemState}
+              Icon={props.Icon}
+              active={props.active}
+              modifier={props.modifier}
+              rightOptions={props.rightOptions}
+              alwaysShowRightOptions={props.alwaysShowRightOptions}
+              showChevron={props.showChevron}
+              chevronExpanded={props.chevronExpanded}
+              variant={props.variant}
+              collapsedMain={collapsedMain()}
+              isMobile={isMobile()}
               unavailable={isUnavailable()}
               onClick={handleButtonClick}
             />
@@ -92,7 +88,21 @@ export function NavigationDrawerItem(props: NavigationDrawerItemProps) {
           {(href) => (
             <NavigationDrawerExternalItem
               href={href}
-              frameProps={frameProps()}
+              className={props.className}
+              label={props.label}
+              secondaryLabel={props.secondaryLabel}
+              indentationLevel={indentationLevel()}
+              subItemState={props.subItemState}
+              Icon={props.Icon}
+              active={props.active}
+              modifier={props.modifier}
+              rightOptions={props.rightOptions}
+              alwaysShowRightOptions={props.alwaysShowRightOptions}
+              showChevron={props.showChevron}
+              chevronExpanded={props.chevronExpanded}
+              variant={props.variant}
+              collapsedMain={collapsedMain()}
+              isMobile={isMobile()}
               unavailable={isUnavailable()}
               onClick={handleLinkClick}
             />
@@ -103,7 +113,21 @@ export function NavigationDrawerItem(props: NavigationDrawerItemProps) {
       {(href) => (
         <NavigationDrawerRouteItem
           href={href}
-          frameProps={frameProps()}
+          className={props.className}
+          label={props.label}
+          secondaryLabel={props.secondaryLabel}
+          indentationLevel={indentationLevel()}
+          subItemState={props.subItemState}
+          Icon={props.Icon}
+          active={props.active}
+          modifier={props.modifier}
+          rightOptions={props.rightOptions}
+          alwaysShowRightOptions={props.alwaysShowRightOptions}
+          showChevron={props.showChevron}
+          chevronExpanded={props.chevronExpanded}
+          variant={props.variant}
+          collapsedMain={collapsedMain()}
+          isMobile={isMobile()}
           unavailable={isUnavailable()}
           onClick={handleLinkClick}
         />
