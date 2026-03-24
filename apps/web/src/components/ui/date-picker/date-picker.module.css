@@ -1,0 +1,216 @@
+.field {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.label {
+  color: var(--muted-foreground);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: 4px;
+}
+
+.required {
+  margin-inline-start: 4px;
+}
+
+.controlShell {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--surface) 84%, var(--accent) 16%);
+  transition:
+    border-color var(--motion-fast) linear,
+    box-shadow var(--motion-fast) linear,
+    background-color var(--motion-fast) linear;
+}
+
+.controlShell:focus-within,
+.openShell {
+  border-color: var(--info);
+  box-shadow: var(--focus-ring-shadow);
+}
+
+.errorShell {
+  border-color: var(--destructive);
+}
+
+.control {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: none;
+  background: transparent;
+  color: var(--foreground);
+  font-size: var(--font-size-body);
+  padding: 0 8px;
+  outline: none;
+}
+
+.control::placeholder {
+  color: var(--muted-foreground);
+  font-weight: var(--font-weight-medium);
+}
+
+.iconButton {
+  width: 28px;
+  height: 28px;
+  margin-right: 2px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted-foreground);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    color var(--motion-fast) linear,
+    background-color var(--motion-fast) linear;
+}
+
+.iconButton:hover {
+  color: var(--foreground);
+  background: color-mix(in oklab, var(--surface) 76%, var(--accent) 24%);
+}
+
+.iconButton:disabled,
+.control:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.descriptionText,
+.errorText {
+  min-height: calc(var(--font-size-caption) * 1.4);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+}
+
+.descriptionText {
+  color: var(--muted-foreground);
+}
+
+.errorText {
+  color: var(--destructive);
+}
+
+.popover {
+  position: fixed;
+  z-index: calc(var(--z-index-dialog, 50) + 1);
+  width: 280px;
+  padding: 8px;
+  border: 1px solid color-mix(in oklab, var(--border) 90%, transparent);
+  border-radius: var(--radius-md);
+  background: var(--background);
+  box-shadow: var(--shadow-elevation-2);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.select {
+  height: 32px;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--surface) 88%, var(--accent) 12%);
+  color: var(--foreground);
+  font-size: var(--font-size-body);
+  padding: 0 8px;
+}
+
+.select:first-child {
+  flex: 1.2;
+}
+
+.select:nth-child(2) {
+  flex: 0.9;
+}
+
+.navButton {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted-foreground);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.navButton:hover {
+  background: var(--bg-translucent);
+  color: var(--foreground);
+}
+
+.dayNames {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  margin-bottom: 4px;
+}
+
+.dayName {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  color: var(--muted-foreground);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+}
+
+.daysGrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.dayButton {
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--foreground);
+  font-size: var(--font-size-body);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  justify-self: center;
+}
+
+.dayButton:hover:not(:disabled) {
+  background: var(--bg-translucent);
+}
+
+.dayButton:disabled {
+  color: var(--foreground-tertiary);
+  cursor: not-allowed;
+}
+
+.dayOutsideMonth {
+  color: var(--foreground-tertiary);
+}
+
+.daySelected {
+  background: var(--info);
+  color: var(--primary-foreground);
+}
+
+.daySelected:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--info) 90%, white 10%);
+}
