@@ -2,6 +2,8 @@ import { useAction } from "@solidjs/router";
 import { createSignal, For, Show } from "solid-js";
 
 import Bell from "~/components/icons/bell";
+import { TopBarActionButton } from "~/components/layout/top-bar-action-button";
+import { TopBarTooltip } from "~/components/layout/top-bar-tooltip";
 import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
 import {
   markAllNotificationsReadMutation,
@@ -90,17 +92,26 @@ export function HeaderNotificationsPanel() {
       }}
       class={styles.root}
     >
-      <button
-        type="button"
-        class={styles.trigger}
-        aria-label="Notificaciones"
-        onClick={() => setOpen((value) => !value)}
-      >
-        <Bell size={16} />
-        <Show when={feed().unreadCount > 0}>
-          <span class={styles.badge}>{Math.min(feed().unreadCount, 99)}</span>
-        </Show>
-      </button>
+      <TopBarTooltip content="Notificaciones">
+        <TopBarActionButton
+          ariaLabel="Notificaciones"
+          iconOnly
+          onClick={() => setOpen((value) => !value)}
+          class={styles.triggerRoot}
+          buttonClass={styles.trigger}
+        >
+          <>
+            <span class={styles.icon}>
+              <Bell size={14} />
+            </span>
+            <Show when={feed().unreadCount > 0}>
+              <span class={styles.badge}>
+                {Math.min(feed().unreadCount, 99)}
+              </span>
+            </Show>
+          </>
+        </TopBarActionButton>
+      </TopBarTooltip>
 
       <Show when={open()}>
         <div class={styles.panel}>
