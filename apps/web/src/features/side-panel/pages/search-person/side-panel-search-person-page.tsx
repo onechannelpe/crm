@@ -1,5 +1,6 @@
 import { createMemo, For } from "solid-js";
 
+import User from "~/components/icons/user";
 import { ResultPills } from "~/features/search/ui/result-pills";
 
 import { SidePanelList } from "../../components/side-panel-list";
@@ -26,8 +27,13 @@ export function SidePanelSearchPersonPage() {
     <SidePanelList>
       <div class={styles.content}>
         <section class={styles.hero}>
-          <div class={styles.title}>{pageState().person.displayName}</div>
-          <div class={styles.subtitle}>DNI {pageState().person.dni}</div>
+          <div class={styles.heroIcon}>
+            <User size={16} />
+          </div>
+          <div class={styles.heroText}>
+            <div class={styles.title}>{pageState().person.displayName}</div>
+            <div class={styles.subtitle}>DNI {pageState().person.dni}</div>
+          </div>
         </section>
 
         <section class={styles.section}>
