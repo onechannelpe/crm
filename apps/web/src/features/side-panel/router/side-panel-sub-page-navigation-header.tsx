@@ -1,4 +1,5 @@
 import ChevronLeft from "~/components/icons/chevron-left";
+
 import styles from "./side-panel-sub-page-navigation-header.module.css";
 
 type SidePanelSubPageNavigationHeaderProps = {

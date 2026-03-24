@@ -1,4 +1,5 @@
 import { type ParentProps, Show, children } from "solid-js";
+
 import styles from "./side-panel-group.module.css";
 
 type SidePanelGroupProps = ParentProps<{ label: string }>;

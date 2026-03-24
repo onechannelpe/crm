@@ -1,4 +1,5 @@
 import { type ParentProps, createSignal, onCleanup, onMount } from "solid-js";
+
 import styles from "./side-panel-list.module.css";
 
 export function SidePanelList(props: ParentProps) {
@@ -41,7 +42,12 @@ export function SidePanelList(props: ParentProps) {
   });
 
   return (
-    <div ref={(el) => { listRef = el; }} class={styles.list}>
+    <div
+      ref={(el) => {
+        listRef = el;
+      }}
+      class={styles.list}
+    >
       {props.children}
     </div>
   );

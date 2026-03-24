@@ -2,11 +2,13 @@ import { Show, onMount } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
 import { cn } from "~/lib/utils";
+
 import { SIDE_PANEL_PAGES_CONFIG } from "../config/side-panel-pages-config";
 import { SidePanelRootPage } from "../pages/root/side-panel-root-page";
 import { useSidePanel } from "../state/use-side-panel";
 import { SidePanelTopBar } from "../top-bar/side-panel-top-bar";
 import { SidePanelSubPageRouter } from "./side-panel-sub-page-router";
+
 import styles from "./side-panel-router.module.css";
 
 export function SidePanelRouter() {
@@ -37,7 +39,12 @@ export function SidePanelRouter() {
 
   return (
     <div class={styles.router}>
-      <div ref={(el) => { topBarRef = el; }} class={cn(styles.topBar)}>
+      <div
+        ref={(el) => {
+          topBarRef = el;
+        }}
+        class={cn(styles.topBar)}
+      >
         <SidePanelTopBar />
       </div>
       <div class={styles.pageBody}>

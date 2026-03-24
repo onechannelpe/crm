@@ -6,6 +6,7 @@ import {
   useContext,
 } from "solid-js";
 import { createStore } from "solid-js/store";
+
 import type { SidePanelSubPageKey } from "../config/side-panel-sub-pages-config";
 import { SIDE_PANEL_SUB_PAGES_CONFIG } from "../config/side-panel-sub-pages-config";
 import { SidePanelSubPageNavigationHeader } from "./side-panel-sub-page-navigation-header";
@@ -24,8 +25,7 @@ type SidePanelSubPageContextValue = {
   getStack: (pageInstanceId: string) => SubPageEntry[];
 };
 
-const SidePanelSubPageContext =
-  createContext<SidePanelSubPageContextValue>();
+const SidePanelSubPageContext = createContext<SidePanelSubPageContextValue>();
 
 export function useSidePanelSubPage(): SidePanelSubPageContextValue {
   const ctx = useContext(SidePanelSubPageContext);
@@ -52,7 +52,11 @@ export function SidePanelSubPageRouter(props: SidePanelSubPageRouterProps) {
     setState(id, (prev) => (prev ?? []).slice(0, -1));
   };
 
-  const ctx: SidePanelSubPageContextValue = { pushSubPage, popSubPage, getStack };
+  const ctx: SidePanelSubPageContextValue = {
+    pushSubPage,
+    popSubPage,
+    getStack,
+  };
 
   const currentStack = () => getStack(props.pageInstanceId);
   const topEntry = () => currentStack().at(-1);
