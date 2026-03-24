@@ -9,6 +9,7 @@ import { SidePanelGroup } from "../../components/side-panel-group";
 import { SidePanelList } from "../../components/side-panel-list";
 import { useSidePanel } from "../../state/use-side-panel";
 import type { RootSidePanelPage } from "../../types/side-panel-page";
+import { SidePanelEmptyState } from "../common/side-panel-empty-state";
 
 import styles from "./side-panel-root-page.module.css";
 
@@ -82,7 +83,9 @@ export function SidePanelRootPage(_props: SidePanelRootPageProps) {
       <Show
         when={hasResults()}
         fallback={
-          <div class={styles.emptyState}>No se encontraron resultados</div>
+          <SidePanelEmptyState>
+            No se encontraron resultados
+          </SidePanelEmptyState>
         }
       >
         <For each={filteredGroups()}>

@@ -1,6 +1,6 @@
 import { Show } from "solid-js/web";
 
-import { SidePanelRecordPageInfo } from "../pages/record/side-panel-record-page";
+import { SidePanelRecordPageInfo } from "../pages/record/side-panel-record-page-info";
 import { useSidePanel } from "../state/use-side-panel";
 
 export function SidePanelPageInfo() {
