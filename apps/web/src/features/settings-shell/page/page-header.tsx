@@ -7,14 +7,16 @@ import { useNavigationDrawerState } from "~/features/navigation-drawer";
 import styles from "./page-header.module.css";
 
 interface PageHeaderProps extends ParentProps {
-  left: JSX.Element;
+  title?: JSX.Element;
+  icon?: JSX.Element;
   class?: string;
   isMobile?: boolean;
 }
 
 export function PageHeader(props: PageHeaderProps) {
   const { expanded, setExpanded } = useNavigationDrawerState();
-  const left = children(() => props.left);
+  const title = children(() => props.title);
+  const icon = children(() => props.icon);
   const actions = children(() => props.children);
 
   return (
@@ -32,9 +34,14 @@ export function PageHeader(props: PageHeaderProps) {
         </Show>
 
         <div class={styles.iconAndTitle}>
-          <div class={styles.title} data-testid="top-bar-title">
-            {left()}
-          </div>
+          <Show when={props.icon}>
+            <div class={styles.icon}>{icon()}</div>
+          </Show>
+          <Show when={props.title}>
+            <div class={styles.title} data-testid="top-bar-title">
+              {title()}
+            </div>
+          </Show>
         </div>
       </div>
 

@@ -25,7 +25,7 @@ export function SubMenuTopBarContainer(props: SubMenuTopBarContainerProps) {
   return (
     <div class={`${styles.root} ${props.class ?? ""}`}>
       <PageHeader
-        left={
+        title={
           <Breadcrumb
             items={props.breadcrumbItems}
             mobileBackAction={props.mobileBackAction}
