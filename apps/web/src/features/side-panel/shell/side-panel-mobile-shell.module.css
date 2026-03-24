@@ -1,0 +1,36 @@
+.container {
+  background: var(--background);
+  border-left: 1px solid var(--border);
+  box-shadow: var(--shadow-elevation-3);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  position: fixed;
+  right: 0;
+  top: 0;
+  z-index: 200;
+}
+
+.variantClosed {
+  transform: translateX(100%);
+  transition: transform var(--motion-normal) var(--ease-standard);
+  width: var(--side-panel-width);
+}
+
+.variantNormal {
+  transform: translateX(0);
+  transition: transform var(--motion-normal) var(--ease-standard);
+  width: var(--side-panel-width);
+}
+
+.variantFullScreen {
+  transform: translateX(0);
+  transition: transform var(--motion-normal) var(--ease-standard);
+  width: 100%;
+}
+
+.mobileMaxHeight {
+  max-height: calc(100% - 64px);
+}
