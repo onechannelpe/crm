@@ -2,8 +2,7 @@ import { Show } from "solid-js";
 
 import { SidePanelList } from "../../components/side-panel-list";
 import type { SearchResultsSidePanelPage } from "../../types/side-panel-page";
-
-import styles from "../root/side-panel-root-page.module.css";
+import { SidePanelEmptyState } from "../common/side-panel-empty-state";
 
 type SidePanelSearchResultsPageProps = {
   page: SearchResultsSidePanelPage;
@@ -14,14 +13,14 @@ export function SidePanelSearchResultsPage(
 ) {
   return (
     <SidePanelList>
-      <div class={styles.emptyState}>
+      <SidePanelEmptyState>
         <Show
           when={props.page.query.trim()}
           fallback={"Todavía no hay una búsqueda activa"}
         >
           {`Los resultados para "${props.page.query}" se renderizarán aquí en un próximo PR.`}
         </Show>
-      </div>
+      </SidePanelEmptyState>
     </SidePanelList>
   );
 }

@@ -5,7 +5,7 @@ import X from "~/components/icons/x";
 import { cn } from "~/lib/utils";
 
 import { useSidePanelContextChips } from "../hooks/use-side-panel-context-chips";
-import { SIDE_PANEL_PAGE_METADATA } from "../state/side-panel-page-registry";
+import { SIDE_PANEL_PAGE_METADATA } from "../state/side-panel-page-metadata";
 import { useSidePanel } from "../state/use-side-panel";
 import { SidePanelBackButton } from "./side-panel-back-button";
 import { SidePanelPageInfo } from "./side-panel-page-info";
