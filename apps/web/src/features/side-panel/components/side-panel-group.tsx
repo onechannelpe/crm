@@ -7,7 +7,6 @@ type SidePanelGroupProps = ParentProps<{ label: string }>;
 export function SidePanelGroup(props: SidePanelGroupProps) {
   const resolved = children(() => props.children);
 
-  // Return null when there are no children (Req 12.2)
   const hasChildren = () => {
     const c = resolved();
     if (Array.isArray(c)) return c.filter(Boolean).length > 0;

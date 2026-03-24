@@ -11,7 +11,6 @@ export const SIDE_PANEL_WIDTH_MIN = 320;
 export const SIDE_PANEL_WIDTH_MAX = 600;
 
 // Read and validate width from localStorage synchronously at module evaluation time.
-// This runs before any component mounts so the CSS var is set before first render (Req 17.1, 17.2).
 function readInitialWidth(): number {
   try {
     const raw = localStorage.getItem(SIDE_PANEL_WIDTH_KEY);
@@ -32,7 +31,6 @@ function readInitialWidth(): number {
 
 const initialWidth = readInitialWidth();
 
-// Set CSS variable synchronously before first render (Req 17.1)
 if (typeof document !== "undefined") {
   document.documentElement.style.setProperty(
     "--side-panel-width",
