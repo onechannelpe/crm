@@ -65,7 +65,7 @@ export function getMinInviteExpiryDate(now = new Date()): string {
   return `${minDate.getFullYear()}-${String(minDate.getMonth() + 1).padStart(2, "0")}-${String(minDate.getDate()).padStart(2, "0")}`;
 }
 
-export function getInviteExpiryOffsetMs(): number {
+function getInviteExpiryOffsetMs(): number {
   return MIN_INVITE_EXPIRY_DAYS * 24 * 60 * 60 * 1000;
 }
 
@@ -73,5 +73,4 @@ export {
   INVALID_INVITE_EXPIRY_ERROR_TEXT,
   INVITE_EXPIRY_ERROR_TEXT,
   INVITE_EXPIRY_HELPER_TEXT,
-  MIN_INVITE_EXPIRY_DAYS,
 };
