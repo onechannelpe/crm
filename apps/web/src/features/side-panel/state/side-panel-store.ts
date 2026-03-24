@@ -1,34 +1,7 @@
-import type { Component } from "solid-js";
 import { createStore } from "solid-js/store";
 
-import Search from "~/components/icons/search";
-
-// Types
-
-export type SidePanelPageKey = string;
-
-export type SidePanelPage = {
-  key: SidePanelPageKey;
-  instanceId: string;
-  title: string;
-  icon: Component<{ size?: number; color?: string }>;
-  iconColor?: string;
-};
-
-export type SidePanelPageInfo = {
-  instanceId: string;
-  label?: string;
-};
-
-export type SidePanelState = {
-  isOpen: boolean;
-  isClosing: boolean;
-  currentPage: SidePanelPage | null;
-  navigationStack: SidePanelPage[];
-  pageInfo: SidePanelPageInfo | null;
-  searchText: string;
-  panelWidth: number;
-};
+import type { SidePanelState } from "../types/side-panel-state";
+import type { SidePanelPage } from "../types/side-panel-page";
 
 // Constants
 
@@ -36,15 +9,6 @@ export const SIDE_PANEL_WIDTH_KEY = "side-panel-width";
 export const SIDE_PANEL_WIDTH_DEFAULT = 400;
 export const SIDE_PANEL_WIDTH_MIN = 320;
 export const SIDE_PANEL_WIDTH_MAX = 600;
-
-export function createRootSidePanelPage(): SidePanelPage {
-  return {
-    key: "root",
-    instanceId: crypto.randomUUID(),
-    title: "Command menu",
-    icon: Search,
-  };
-}
 
 // Read and validate width from localStorage synchronously at module evaluation time.
 // This runs before any component mounts so the CSS var is set before first render (Req 17.1, 17.2).
@@ -82,9 +46,7 @@ export function createSidePanelStore() {
   const [state, setState] = createStore<SidePanelState>({
     isOpen: false,
     isClosing: false,
-    currentPage: null,
     navigationStack: [],
-    pageInfo: null,
     searchText: "",
     panelWidth: initialWidth,
   });
@@ -94,8 +56,6 @@ export function createSidePanelStore() {
       isOpen: true,
       isClosing: false,
       navigationStack: [page],
-      currentPage: page,
-      pageInfo: { instanceId: page.instanceId },
       searchText: "",
     });
   };
@@ -108,9 +68,7 @@ export function createSidePanelStore() {
   const onCloseAnimationComplete = () => {
     setState({
       isClosing: false,
-      currentPage: null,
       navigationStack: [],
-      pageInfo: null,
       searchText: "",
     });
   };
@@ -121,16 +79,12 @@ export function createSidePanelStore() {
         isOpen: true,
         isClosing: false,
         navigationStack: [page],
-        currentPage: page,
-        pageInfo: { instanceId: page.instanceId },
       });
     } else {
       setState({
         isOpen: true,
         isClosing: false,
         navigationStack: [...state.navigationStack, page],
-        currentPage: page,
-        pageInfo: { instanceId: page.instanceId },
       });
     }
   };
@@ -142,21 +96,19 @@ export function createSidePanelStore() {
       return;
     }
     const newStack = stack.slice(0, -1);
-    const previousPage = newStack[newStack.length - 1] ?? null;
     setState({
       navigationStack: newStack,
-      currentPage: previousPage,
-      pageInfo: previousPage ? { instanceId: previousPage.instanceId } : null,
     });
   };
 
   const navigateToStackIndex = (index: number) => {
-    const newStack = state.navigationStack.slice(0, index + 1);
-    const nextPage = newStack[index] ?? null;
+    const boundedIndex = Math.max(
+      0,
+      Math.min(index, state.navigationStack.length - 1),
+    );
+    const newStack = state.navigationStack.slice(0, boundedIndex + 1);
     setState({
       navigationStack: newStack,
-      currentPage: nextPage,
-      pageInfo: nextPage ? { instanceId: nextPage.instanceId } : null,
     });
   };
 

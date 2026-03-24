@@ -1,20 +1,27 @@
-import { Dynamic, Show } from "solid-js/web";
+import { Show } from "solid-js/web";
 
+import { SidePanelRecordPageInfo } from "../pages/record/side-panel-record-page";
 import { useSidePanel } from "../state/use-side-panel";
-import { SidePanelPageInfoLayout } from "./side-panel-page-info-layout";
 
 export function SidePanelPageInfo() {
-  const { currentPage, pageInfo } = useSidePanel();
+  const { currentPage } = useSidePanel();
 
   return (
     <Show when={currentPage()}>
-      {(page) => (
-        <SidePanelPageInfoLayout
-          icon={<Dynamic component={page().icon} size={14} />}
-          title={page().title}
-          label={pageInfo()?.label}
-        />
-      )}
+      {(currentPageValue) => {
+        const page = currentPageValue();
+
+        switch (page.type) {
+          case "root":
+          case "search-results":
+            return null;
+          case "record":
+            return <SidePanelRecordPageInfo page={page} />;
+        }
+
+        page satisfies never;
+        return null;
+      }}
     </Show>
   );
 }

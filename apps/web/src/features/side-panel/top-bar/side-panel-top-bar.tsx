@@ -5,6 +5,7 @@ import X from "~/components/icons/x";
 import { cn } from "~/lib/utils";
 
 import { useSidePanelContextChips } from "../hooks/use-side-panel-context-chips";
+import { SIDE_PANEL_PAGE_METADATA } from "../state/side-panel-page-registry";
 import { useSidePanel } from "../state/use-side-panel";
 import { SidePanelBackButton } from "./side-panel-back-button";
 import { SidePanelPageInfo } from "./side-panel-page-info";
@@ -34,8 +35,9 @@ export function SidePanelTopBar() {
   const showBackButton = () => navigationStack().length > 1;
   const showCloseButton = () => navigationStack().length === 1 && !isMobile();
   const showSearch = () => {
-    const key = currentPage()?.key;
-    return key === "root" || key === "search";
+    const page = currentPage();
+    if (!page) return false;
+    return SIDE_PANEL_PAGE_METADATA[page.type].showsSearch;
   };
 
   return (

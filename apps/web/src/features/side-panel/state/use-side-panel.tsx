@@ -1,22 +1,21 @@
 import {
   type Accessor,
+  createMemo,
   type ParentProps,
   createContext,
   useContext,
 } from "solid-js";
 
 import {
-  type SidePanelPage,
-  type SidePanelPageInfo,
   createSidePanelStore,
 } from "./side-panel-store";
+import type { SidePanelPage } from "../types/side-panel-page";
 
 export type SidePanelContextValue = {
   isOpen: Accessor<boolean>;
   isClosing: Accessor<boolean>;
   currentPage: Accessor<SidePanelPage | null>;
   navigationStack: Accessor<SidePanelPage[]>;
-  pageInfo: Accessor<SidePanelPageInfo | null>;
   searchText: Accessor<string>;
   panelWidth: Accessor<number>;
   openPanel: (page: SidePanelPage) => void;
@@ -34,13 +33,15 @@ const SidePanelContext = createContext<SidePanelContextValue>();
 export function SidePanelProvider(props: ParentProps) {
   const store = createSidePanelStore();
   const { state } = store;
+  const currentPage = createMemo<SidePanelPage | null>(
+    () => state.navigationStack.at(-1) ?? null,
+  );
 
   const value: SidePanelContextValue = {
     isOpen: () => state.isOpen,
     isClosing: () => state.isClosing,
-    currentPage: () => state.currentPage,
+    currentPage,
     navigationStack: () => state.navigationStack,
-    pageInfo: () => state.pageInfo,
     searchText: () => state.searchText,
     panelWidth: () => state.panelWidth,
     openPanel: store.openPanel,

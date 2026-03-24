@@ -8,6 +8,7 @@ import { getNavigableRoutes } from "~/lib/nav/nav-policy";
 import { SidePanelGroup } from "../../components/side-panel-group";
 import { SidePanelList } from "../../components/side-panel-list";
 import { useSidePanel } from "../../state/use-side-panel";
+import type { RootSidePanelPage } from "../../types/side-panel-page";
 
 import styles from "./side-panel-root-page.module.css";
 
@@ -22,7 +23,11 @@ type CommandGroup = {
   items: ActionItem[];
 };
 
-export function SidePanelRootPage() {
+type SidePanelRootPageProps = {
+  page: RootSidePanelPage;
+};
+
+export function SidePanelRootPage(_props: SidePanelRootPageProps) {
   const navigate = useNavigate();
   const { currentUser } = useSession();
   const { searchText, closePanel } = useSidePanel();
@@ -76,7 +81,7 @@ export function SidePanelRootPage() {
     <SidePanelList>
       <Show
         when={hasResults()}
-        fallback={<div class={styles.emptyState}>No results found</div>}
+        fallback={<div class={styles.emptyState}>No se encontraron resultados</div>}
       >
         <For each={filteredGroups()}>
           {(group) => (

@@ -8,12 +8,10 @@ import { ICON_BY_ROUTE } from "~/components/layout/route-icons";
 import { TopBarCommandButton } from "~/components/layout/top-bar-command-button";
 import { useNavigationDrawerState } from "~/features/navigation-drawer";
 import { PageHeader } from "~/features/settings-shell";
-import {
-  PAGE_HEADER_SIDE_PANEL_BUTTON_CLICK_OUTSIDE_ID,
-  SIDE_PANEL_HOTKEY,
-  createRootSidePanelPage,
-  useSidePanel,
-} from "~/features/side-panel";
+import { PAGE_HEADER_SIDE_PANEL_BUTTON_CLICK_OUTSIDE_ID } from "~/features/side-panel/constants/side-panel-click-outside-id";
+import { SIDE_PANEL_HOTKEY } from "~/features/side-panel/constants/side-panel-hotkey";
+import { createRootSidePanelPage } from "~/features/side-panel/navigation/create-side-panel-page";
+import { useSidePanel } from "~/features/side-panel/state/use-side-panel";
 import { createExtensionPortConnection } from "~/lib/extension/port";
 import { useHotkey } from "~/lib/hotkey/use-hotkey";
 import { getHeaderRoute } from "~/lib/nav/nav-policy";

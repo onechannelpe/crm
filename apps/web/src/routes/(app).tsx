@@ -11,10 +11,8 @@ import {
   AppNavigationDrawer,
   NavigationDrawerStateProvider,
 } from "~/features/navigation-drawer";
-import {
-  MainContainerWithSidePanel,
-  SidePanelProvider,
-} from "~/features/side-panel";
+import { MainContainerWithSidePanel } from "~/features/side-panel/shell/main-container-with-side-panel";
+import { SidePanelProvider } from "~/features/side-panel/state/use-side-panel";
 import { isSettingsRoutePath } from "~/lib/navigation/route-classification";
 import { cn } from "~/lib/utils";
 

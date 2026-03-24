@@ -8,7 +8,7 @@ import X from "~/components/icons/x";
 import { AccountMenu } from "~/components/layout/account-menu";
 import { useSession } from "~/components/providers/session-provider";
 import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
-import { NAVIGATION_DRAWER_CLICK_OUTSIDE_ID } from "~/features/side-panel";
+import { NAVIGATION_DRAWER_CLICK_OUTSIDE_ID } from "~/features/side-panel/constants/side-panel-click-outside-id";
 import { shortName } from "~/lib/users/display-name";
 import { cn } from "~/lib/utils";
 
