@@ -29,11 +29,7 @@ interface DatePickerPopoverProps {
   onYearChange: (year: number) => void;
   onPreviousMonth: () => void;
   onNextMonth: () => void;
-  focusedIso: string;
-  onFocusDate: (iso: string) => void;
-  onFocusMoveByDays: (dayDelta: number) => void;
-  onFocusMonthBoundary: (kind: "start" | "end") => void;
-  onSelect: (iso: string) => void;
+  onSelect: (date: Date) => void;
   onPopoverMount: (element: HTMLDivElement | undefined) => void;
 }
 
@@ -109,10 +105,6 @@ export function DatePickerPopover(props: DatePickerPopoverProps) {
             onYearChange={props.onYearChange}
             onPreviousMonth={props.onPreviousMonth}
             onNextMonth={props.onNextMonth}
-            focusedIso={props.focusedIso}
-            onFocusDate={props.onFocusDate}
-            onFocusMoveByDays={props.onFocusMoveByDays}
-            onFocusMonthBoundary={props.onFocusMonthBoundary}
             onSelect={props.onSelect}
           />
         </div>

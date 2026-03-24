@@ -11,16 +11,11 @@ import { useHotkey } from "~/lib/hotkey/use-hotkey";
 import { cn } from "~/lib/utils";
 
 import {
-  addDays,
-  endOfMonth,
   formatIsoDate,
   getVisibleMonth,
   parseIsoDate,
-  shiftDateByMonths,
-  startOfMonth,
   todayLocalDate,
-  withDateMonth,
-  withDateYear,
+  type VisibleMonth,
 } from "./date-picker-model";
 import { DatePickerPopover } from "./date-picker-popover";
 
@@ -46,20 +41,18 @@ export function DatePicker(props: DatePickerProps) {
   const [isOpen, setIsOpen] = createSignal(false);
   const selectedDate = createMemo(() => parseIsoDate(props.value));
   const minDate = createMemo(() => parseIsoDate(props.min ?? ""));
-  const fallbackDate = createMemo(
+  const initialViewDate = createMemo(
     () => selectedDate() ?? minDate() ?? todayLocalDate(),
   );
-  const [cursorDate, setCursorDate] = createSignal<Date | null>(null);
-  const effectiveCursorDate = createMemo(() => cursorDate() ?? fallbackDate());
-  const visibleMonth = createMemo(() => getVisibleMonth(effectiveCursorDate()));
-  const focusedIso = createMemo(() => formatIsoDate(effectiveCursorDate()));
+  const [viewMonth, setViewMonth] = createSignal<VisibleMonth>(
+    getVisibleMonth(initialViewDate()),
+  );
   let fieldRef: HTMLDivElement | undefined;
   let controlRef: HTMLDivElement | undefined;
   let popoverRef: HTMLDivElement | undefined;
 
   const closePicker = () => {
     setIsOpen(false);
-    setCursorDate(null);
   };
 
   createEffect(() => {
@@ -90,22 +83,19 @@ export function DatePicker(props: DatePickerProps) {
     return messageId;
   };
 
-  const clampDate = (date: Date) => {
-    const min = minDate();
-    if (min && date.getTime() < min.getTime()) {
-      return min;
-    }
-    return date;
+  const syncViewMonth = () => {
+    setViewMonth(getVisibleMonth(initialViewDate()));
   };
 
   const openPicker = () => {
-    setCursorDate((current) => current ?? clampDate(fallbackDate()));
+    syncViewMonth();
     setIsOpen(true);
   };
 
-  const updateCursorDate = (updater: (current: Date) => Date) => {
-    setCursorDate((current) => clampDate(updater(current ?? fallbackDate())));
-  };
+  createEffect(() => {
+    if (isOpen()) return;
+    syncViewMonth();
+  });
 
   return (
     <div
@@ -150,7 +140,9 @@ export function DatePicker(props: DatePickerProps) {
           onFocus={openPicker}
           onInput={(event) => {
             props.onInput(event.currentTarget.value);
-            setIsOpen(true);
+            if (!isOpen()) {
+              openPicker();
+            }
           }}
         />
         <button
@@ -184,37 +176,31 @@ export function DatePicker(props: DatePickerProps) {
         anchor={() => controlRef ?? fieldRef}
         selectedDate={selectedDate()}
         minDate={minDate()}
-        visibleMonth={visibleMonth()}
-        focusedIso={focusedIso()}
+        visibleMonth={viewMonth()}
         onMonthChange={(month) =>
-          updateCursorDate((current) => withDateMonth(current, month))
+          setViewMonth((current) => ({
+            year: current.year,
+            month,
+          }))
         }
         onYearChange={(year) =>
-          updateCursorDate((current) => withDateYear(current, year))
+          setViewMonth((current) => ({
+            year,
+            month: current.month,
+          }))
         }
         onPreviousMonth={() =>
-          updateCursorDate((current) => shiftDateByMonths(current, -1))
+          setViewMonth((current) =>
+            getVisibleMonth(new Date(current.year, current.month - 1, 1)),
+          )
         }
         onNextMonth={() =>
-          updateCursorDate((current) => shiftDateByMonths(current, 1))
+          setViewMonth((current) =>
+            getVisibleMonth(new Date(current.year, current.month + 1, 1)),
+          )
         }
-        onFocusDate={(iso) => {
-          const nextDate = parseIsoDate(iso);
-          if (!nextDate) return;
-          updateCursorDate(() => nextDate);
-        }}
-        onFocusMoveByDays={(dayDelta) => {
-          updateCursorDate((current) => addDays(current, dayDelta));
-        }}
-        onFocusMonthBoundary={(kind) => {
-          const boundary =
-            kind === "start"
-              ? startOfMonth(visibleMonth())
-              : endOfMonth(visibleMonth());
-          updateCursorDate(() => boundary);
-        }}
-        onSelect={(iso) => {
-          props.onInput(iso);
+        onSelect={(date) => {
+          props.onInput(formatIsoDate(date));
           closePicker();
         }}
         onPopoverMount={(element) => {

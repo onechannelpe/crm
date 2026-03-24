@@ -1,4 +1,4 @@
-import { For, createEffect } from "solid-js";
+import { For } from "solid-js";
 
 import ChevronLeft from "~/components/icons/chevron-left";
 import ChevronRight from "~/components/icons/chevron-right";
@@ -8,16 +8,12 @@ import {
   DAY_NAMES,
   buildCalendarCells,
   getMonthOptions,
+  getYearOptions,
   type CalendarCell,
   type VisibleMonth,
 } from "./date-picker-model";
 
 import styles from "./date-picker.module.css";
-
-const YEAR_OPTIONS = Array.from(
-  { length: 200 },
-  (_, index) => new Date().getFullYear() + 50 - index,
-);
 
 interface DatePickerCalendarProps {
   visibleMonth: VisibleMonth;
@@ -28,23 +24,14 @@ interface DatePickerCalendarProps {
   onYearChange: (year: number) => void;
   onPreviousMonth: () => void;
   onNextMonth: () => void;
-  focusedIso: string;
-  onFocusDate: (iso: string) => void;
-  onFocusMoveByDays: (dayDelta: number) => void;
-  onFocusMonthBoundary: (kind: "start" | "end") => void;
-  onSelect: (iso: string) => void;
+  onSelect: (date: Date) => void;
 }
 
 export function DatePickerCalendar(props: DatePickerCalendarProps) {
   const monthOptions = () => getMonthOptions(props.visibleMonth);
+  const yearOptions = () => getYearOptions(props.minDate);
   const cells = () =>
     buildCalendarCells(props.visibleMonth, props.selectedDate, props.minDate);
-  const dayRefs = new Map<string, HTMLButtonElement>();
-
-  createEffect(() => {
-    const activeButton = dayRefs.get(props.focusedIso);
-    activeButton?.focus();
-  });
 
   return (
     <>
@@ -74,7 +61,7 @@ export function DatePickerCalendar(props: DatePickerCalendarProps) {
             props.onYearChange(Number(event.currentTarget.value))
           }
         >
-          <For each={YEAR_OPTIONS}>
+          <For each={yearOptions()}>
             {(year) => (
               <option
                 value={String(year)}
@@ -111,21 +98,7 @@ export function DatePickerCalendar(props: DatePickerCalendarProps) {
       <div class={styles.daysGrid}>
         <For each={cells()}>
           {(cell) => (
-            <CalendarDayButton
-              cell={cell}
-              isFocused={cell.iso === props.focusedIso}
-              onFocusDate={props.onFocusDate}
-              onFocusMoveByDays={props.onFocusMoveByDays}
-              onFocusMonthBoundary={props.onFocusMonthBoundary}
-              onSelect={props.onSelect}
-              ref={(element) => {
-                if (element) {
-                  dayRefs.set(cell.iso, element);
-                } else {
-                  dayRefs.delete(cell.iso);
-                }
-              }}
-            />
+            <CalendarDayButton cell={cell} onSelect={props.onSelect} />
           )}
         </For>
       </div>
@@ -135,12 +108,7 @@ export function DatePickerCalendar(props: DatePickerCalendarProps) {
 
 function CalendarDayButton(props: {
   cell: CalendarCell;
-  isFocused: boolean;
-  onFocusDate: (iso: string) => void;
-  onFocusMoveByDays: (dayDelta: number) => void;
-  onFocusMonthBoundary: (kind: "start" | "end") => void;
-  onSelect: (iso: string) => void;
-  ref: (element: HTMLButtonElement | undefined) => void;
+  onSelect: (date: Date) => void;
 }) {
   return (
     <button
@@ -151,37 +119,8 @@ function CalendarDayButton(props: {
         props.cell.isSelected ? styles.daySelected : undefined,
       )}
       disabled={props.cell.isDisabled}
-      tabIndex={props.isFocused ? 0 : -1}
       aria-pressed={props.cell.isSelected}
-      ref={props.ref}
-      onFocus={() => props.onFocusDate(props.cell.iso)}
-      onKeyDown={(event) => {
-        if (event.key === "ArrowLeft") {
-          event.preventDefault();
-          props.onFocusMoveByDays(-1);
-        } else if (event.key === "ArrowRight") {
-          event.preventDefault();
-          props.onFocusMoveByDays(1);
-        } else if (event.key === "ArrowUp") {
-          event.preventDefault();
-          props.onFocusMoveByDays(-7);
-        } else if (event.key === "ArrowDown") {
-          event.preventDefault();
-          props.onFocusMoveByDays(7);
-        } else if (event.key === "Home") {
-          event.preventDefault();
-          props.onFocusMonthBoundary("start");
-        } else if (event.key === "End") {
-          event.preventDefault();
-          props.onFocusMonthBoundary("end");
-        } else if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          if (!props.cell.isDisabled) {
-            props.onSelect(props.cell.iso);
-          }
-        }
-      }}
-      onClick={() => props.onSelect(props.cell.iso)}
+      onClick={() => props.onSelect(props.cell.date)}
     >
       {props.cell.label}
     </button>

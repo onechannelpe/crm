@@ -2,37 +2,13 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildCalendarCells,
-  clampVisibleMonth,
-  endOfMonth,
+  formatIsoDate,
   getVisibleMonth,
+  getYearOptions,
   isPreviousMonthDisabled,
-  shiftDateByMonths,
-  startOfMonth,
 } from "../../src/components/ui/date-picker/date-picker-model";
 
 describe("date picker model", () => {
-  it("clamps visible month to the minimum allowed month", () => {
-    const minDate = new Date(2026, 2, 31);
-
-    expect(clampVisibleMonth({ year: 2026, month: 0 }, minDate)).toEqual({
-      year: 2026,
-      month: 2,
-    });
-    expect(clampVisibleMonth({ year: 2026, month: 3 }, minDate)).toEqual({
-      year: 2026,
-      month: 3,
-    });
-  });
-
-  it("shifts cursor dates across year boundaries", () => {
-    expect(shiftDateByMonths(new Date(2026, 0, 15), -1)).toEqual(
-      new Date(2025, 11, 1),
-    );
-    expect(shiftDateByMonths(new Date(2025, 11, 15), 1)).toEqual(
-      new Date(2026, 0, 1),
-    );
-  });
-
   it("disables previous-month navigation at the minimum month", () => {
     const minDate = new Date(2026, 2, 31);
 
@@ -52,9 +28,15 @@ describe("date picker model", () => {
       minDate,
     );
 
-    const march30 = cells.find((cell) => cell.iso === "2026-03-30");
-    const march31 = cells.find((cell) => cell.iso === "2026-03-31");
-    const april1 = cells.find((cell) => cell.iso === "2026-04-01");
+    const march30 = cells.find(
+      (cell) => formatIsoDate(cell.date) === "2026-03-30",
+    );
+    const march31 = cells.find(
+      (cell) => formatIsoDate(cell.date) === "2026-03-31",
+    );
+    const april1 = cells.find(
+      (cell) => formatIsoDate(cell.date) === "2026-04-01",
+    );
 
     expect(march30?.isDisabled).toBe(true);
     expect(march31?.isDisabled).toBe(false);
@@ -65,7 +47,13 @@ describe("date picker model", () => {
   it("returns the expected visible month boundaries", () => {
     const visibleMonth = getVisibleMonth(new Date(2026, 2, 31));
 
-    expect(startOfMonth(visibleMonth)).toEqual(new Date(2026, 2, 1));
-    expect(endOfMonth(visibleMonth)).toEqual(new Date(2026, 2, 31));
+    expect(visibleMonth).toEqual({ year: 2026, month: 2 });
+  });
+
+  it("limits year options to the minimum year and later", () => {
+    const yearOptions = getYearOptions(new Date(2026, 2, 31));
+
+    expect(yearOptions.at(-1)).toBe(2026);
+    expect(yearOptions[0]).toBe(2076);
   });
 });

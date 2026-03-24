@@ -2,7 +2,7 @@ export const DAY_NAMES = ["L", "M", "X", "J", "V", "S", "D"] as const;
 const CALENDAR_START_DAY = 1;
 
 export interface CalendarCell {
-  iso: string;
+  date: Date;
   label: number;
   isCurrentMonth: boolean;
   isSelected: boolean;
@@ -30,7 +30,7 @@ export function buildCalendarCells(
     );
 
     return {
-      iso: formatIsoDate(date),
+      date,
       label: date.getDate(),
       isCurrentMonth:
         date.getFullYear() === visibleMonth.year &&
@@ -39,18 +39,6 @@ export function buildCalendarCells(
       isDisabled: minDate ? date.getTime() < minDate.getTime() : false,
     };
   });
-}
-
-export function clampVisibleMonth(
-  visibleMonth: VisibleMonth,
-  minDate: Date | null,
-): VisibleMonth {
-  if (!minDate) return visibleMonth;
-  const minMonth = getVisibleMonth(minDate);
-  if (compareVisibleMonth(visibleMonth, minMonth) < 0) {
-    return minMonth;
-  }
-  return visibleMonth;
 }
 
 export function parseIsoDate(value: string): Date | null {
@@ -74,13 +62,6 @@ export function parseIsoDate(value: string): Date | null {
 
 export function formatIsoDate(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-}
-
-export function addDays(date: Date, dayDelta: number): Date {
-  const next = new Date(date);
-  next.setDate(next.getDate() + dayDelta);
-  next.setHours(0, 0, 0, 0);
-  return next;
 }
 
 export function todayLocalDate(): Date {
@@ -112,11 +93,9 @@ export function getMonthOptions(visibleMonth: VisibleMonth): Array<{
   });
 }
 
-export function shiftDateByMonths(date: Date, monthDelta: number): Date {
-  const next = new Date(date);
-  next.setMonth(next.getMonth() + monthDelta, 1);
-  next.setHours(0, 0, 0, 0);
-  return next;
+export function getYearOptions(minDate: Date | null): number[] {
+  const minYear = minDate?.getFullYear() ?? new Date().getFullYear();
+  return Array.from({ length: 51 }, (_, index) => minYear + 50 - index);
 }
 
 export function isPreviousMonthDisabled(
@@ -126,30 +105,6 @@ export function isPreviousMonthDisabled(
   if (!minDate) return false;
   const minMonth = getVisibleMonth(minDate);
   return compareVisibleMonth(visibleMonth, minMonth) <= 0;
-}
-
-export function startOfMonth(visibleMonth: VisibleMonth): Date {
-  return toMonthDate(visibleMonth);
-}
-
-export function endOfMonth(visibleMonth: VisibleMonth): Date {
-  const end = new Date(visibleMonth.year, visibleMonth.month + 1, 0);
-  end.setHours(0, 0, 0, 0);
-  return end;
-}
-
-export function withDateMonth(date: Date, month: number): Date {
-  const next = new Date(date);
-  next.setMonth(month, 1);
-  next.setHours(0, 0, 0, 0);
-  return next;
-}
-
-export function withDateYear(date: Date, year: number): Date {
-  const next = new Date(date);
-  next.setFullYear(year, next.getMonth(), 1);
-  next.setHours(0, 0, 0, 0);
-  return next;
 }
 
 function getStartOfWeek(date: Date): Date {
