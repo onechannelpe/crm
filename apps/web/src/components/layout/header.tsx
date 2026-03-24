@@ -3,6 +3,7 @@ import { createMemo, createSignal, onMount } from "solid-js";
 
 import { CommandPalette } from "~/components/features/command-palette/command-palette";
 import { ExtensionStatusIndicator } from "~/components/features/extension/extension-status-indicator";
+import LayoutSidebarRightCollapse from "~/components/icons/layout-sidebar-right-collapse";
 import { HeaderNotificationsPanel } from "~/components/layout/header-notifications-panel";
 import { ICON_BY_ROUTE } from "~/components/layout/route-icons";
 import { TopBarCommandButton } from "~/components/layout/top-bar-command-button";
@@ -23,7 +24,7 @@ export function Header() {
   const currentRoute = createMemo(() => getHeaderRoute(location.pathname));
   const [paletteOpen, setPaletteOpen] = createSignal(false);
   const [modKey, setModKey] = createSignal("Ctrl");
-  const { isMobile } = useNavigationDrawerState();
+  const { expanded, isMobile, setExpanded } = useNavigationDrawerState();
   const { state: extensionState, error: extensionError } =
     createExtensionPortConnection();
 
@@ -54,7 +55,18 @@ export function Header() {
         onClose={() => setPaletteOpen(false)}
       />
       <PageHeader
-        isMobile={isMobile()}
+        leading={
+          !isMobile() && !expanded() ? (
+            <button
+              type="button"
+              class={styles.drawerExpandButton}
+              onClick={() => setExpanded(true)}
+              aria-label="Expandir barra lateral"
+            >
+              <LayoutSidebarRightCollapse size={14} />
+            </button>
+          ) : undefined
+        }
         icon={
           <div class={styles.iconContainer}>
             {(() => {

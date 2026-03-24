@@ -32,7 +32,6 @@ export function SubMenuTopBarContainer(props: SubMenuTopBarContainerProps) {
             isMobile={isMobile()}
           />
         }
-        isMobile={isMobile()}
       >
         {props.actionButton}
       </PageHeader>
