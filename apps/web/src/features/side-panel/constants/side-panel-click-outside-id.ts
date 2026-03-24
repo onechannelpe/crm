@@ -1,0 +1,11 @@
+export const SIDE_PANEL_CLICK_OUTSIDE_ID = "side-panel";
+
+export const NAVIGATION_DRAWER_CLICK_OUTSIDE_ID = "navigation-drawer";
+export const PAGE_HEADER_SIDE_PANEL_BUTTON_CLICK_OUTSIDE_ID =
+  "page-header-side-panel-button";
+
+export const SIDE_PANEL_EXCLUDED_CLICK_OUTSIDE_IDS: string[] = [
+  SIDE_PANEL_CLICK_OUTSIDE_ID,
+  NAVIGATION_DRAWER_CLICK_OUTSIDE_ID,
+  PAGE_HEADER_SIDE_PANEL_BUTTON_CLICK_OUTSIDE_ID,
+];
