@@ -9,6 +9,7 @@ interface TopBarCommandButtonProps {
   isOpen: boolean;
   modKey: string;
   onClick: () => void;
+  dataClickOutsideId?: string;
 }
 
 export function TopBarCommandButton(props: TopBarCommandButtonProps) {
@@ -23,6 +24,7 @@ export function TopBarCommandButton(props: TopBarCommandButtonProps) {
         onClick={props.onClick}
         pressed={props.isOpen}
         dataTestId="page-header-command-button"
+        dataClickOutsideId={props.dataClickOutsideId}
       >
         <svg
           class={cn(styles.icon, props.isOpen ? styles.open : styles.closed)}

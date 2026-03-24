@@ -1,0 +1,30 @@
+.container {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+}
+
+.iconWrapper {
+  align-items: center;
+  background: var(--bg-translucent);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-shrink: 0;
+  height: 24px;
+  justify-content: center;
+  width: 24px;
+}
+
+.titleWrapper {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.label {
+  color: var(--foreground-tertiary);
+  flex-shrink: 0;
+  font-size: var(--font-size-caption);
+}

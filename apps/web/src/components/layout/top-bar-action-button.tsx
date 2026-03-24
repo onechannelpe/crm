@@ -19,6 +19,7 @@ interface TopBarActionButtonProps {
   disabled?: boolean;
   pressed?: boolean;
   dataTestId?: string;
+  dataClickOutsideId?: string;
 }
 
 export function TopBarActionButton(props: TopBarActionButtonProps) {
@@ -36,6 +37,7 @@ export function TopBarActionButton(props: TopBarActionButtonProps) {
     "disabled",
     "pressed",
     "dataTestId",
+    "dataClickOutsideId",
   ]);
 
   const content = (
@@ -72,6 +74,7 @@ export function TopBarActionButton(props: TopBarActionButtonProps) {
             aria-label={local.ariaLabel}
             aria-pressed={local.pressed}
             data-testid={local.dataTestId}
+            data-click-outside-id={local.dataClickOutsideId}
           >
             {content}
           </button>
@@ -89,6 +92,7 @@ export function TopBarActionButton(props: TopBarActionButtonProps) {
             aria-label={local.ariaLabel}
             aria-disabled={local.disabled ? "true" : undefined}
             data-testid={local.dataTestId}
+            data-click-outside-id={local.dataClickOutsideId}
           >
             {content}
           </A>
