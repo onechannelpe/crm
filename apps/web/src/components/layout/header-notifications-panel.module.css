@@ -2,22 +2,22 @@
   position: relative;
 }
 
+.triggerRoot {
+  display: inline-flex;
+}
+
 .trigger {
   position: relative;
   width: 28px;
-  height: 28px;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  background: transparent;
-  color: var(--muted-foreground);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  padding: 0;
 }
 
-.trigger:hover {
-  background: var(--bg-translucent);
-  color: var(--foreground);
+.icon {
+  align-items: center;
+  display: inline-flex;
+  height: 14px;
+  justify-content: center;
+  width: 14px;
 }
 
 .badge {

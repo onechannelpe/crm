@@ -45,7 +45,9 @@ export function PageHeader(props: PageHeaderProps) {
         </div>
       </div>
 
-      <div class={styles.actions}>{actions()}</div>
+      <div class={styles.actions} data-click-outside-id="page-action-container">
+        {actions()}
+      </div>
     </header>
   );
 }

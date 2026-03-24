@@ -1,0 +1,46 @@
+.icon {
+  display: block;
+  overflow: visible;
+}
+
+.line,
+.dot {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition:
+    opacity var(--motion-fast) var(--ease-standard),
+    transform var(--motion-fast) var(--ease-standard),
+    stroke-dasharray var(--motion-fast) var(--ease-standard);
+}
+
+.line {
+  stroke-dasharray: 0 16;
+}
+
+.open .line {
+  opacity: 1;
+  stroke-dasharray: 16 0;
+}
+
+.closed .line {
+  opacity: 0;
+  stroke-dasharray: 0 16;
+}
+
+.open .centerDot {
+  opacity: 0;
+  transform: scale(0);
+}
+
+.closed .centerDot,
+.closed .topDot,
+.closed .bottomDot {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.open .topDot,
+.open .bottomDot {
+  opacity: 0;
+  transform: scale(0);
+}
