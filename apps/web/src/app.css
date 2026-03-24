@@ -64,6 +64,13 @@
   --panel-radius: var(--radius-md);
   --panel-bg: var(--surface);
 
+  /* side panel */
+  --side-panel-width: 400px;
+  --side-panel-width-min: 320px;
+  --side-panel-width-max: 600px;
+  --side-panel-top-bar-height: 40px;
+  --side-panel-top-bar-height-mobile: 52px;
+
   /* translucent fills */
   --bg-translucent-subtle: color(display-p3 0 0 0 / 0.02);
   --bg-translucent: color(display-p3 0 0 0 / 0.039);

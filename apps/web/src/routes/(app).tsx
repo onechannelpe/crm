@@ -1,12 +1,8 @@
 import { useLocation, type RouteSectionProps } from "@solidjs/router";
-import { Show, Suspense } from "solid-js";
+import { Show } from "solid-js";
 
 import { Loading } from "~/components/feedback/loading";
 import { Header } from "~/components/layout/header";
-import {
-  MainDetailPanelProvider,
-  useMainDetailPanel,
-} from "~/components/providers/main-detail-panel-provider";
 import {
   SessionProvider,
   useSession,
@@ -15,35 +11,12 @@ import {
   AppNavigationDrawer,
   NavigationDrawerStateProvider,
 } from "~/features/navigation-drawer";
+import { MainContainerWithSidePanel } from "~/features/side-panel/shell/main-container-with-side-panel";
+import { SidePanelProvider } from "~/features/side-panel/state/use-side-panel";
 import { isSettingsRoutePath } from "~/lib/navigation/route-classification";
 import { cn } from "~/lib/utils";
 
 import shellStyles from "~/components/layout/shell.module.css";
-
-function MainPanelWithDetail(props: RouteSectionProps) {
-  const { panel } = useMainDetailPanel();
-
-  return (
-    <div
-      class={cn(shellStyles.panel, panel() && shellStyles.panelWithDetail)}
-      data-has-detail-panel={panel() ? "true" : "false"}
-    >
-      <div class={shellStyles.panelMain}>
-        <Suspense fallback={<Loading />}>{props.children}</Suspense>
-      </div>
-      <div
-        aria-hidden="true"
-        class={cn(
-          shellStyles.detailGap,
-          !panel() && shellStyles.detailGapClosed,
-        )}
-      />
-      <Show when={panel()}>
-        {(detail) => <aside class={shellStyles.detailPanel}>{detail()}</aside>}
-      </Show>
-    </div>
-  );
-}
 
 function AuthenticatedAppShell(props: RouteSectionProps) {
   const { user } = useSession();
@@ -64,14 +37,16 @@ function AuthenticatedAppShell(props: RouteSectionProps) {
             <Show
               when={isSettingsRoute()}
               fallback={
-                <MainDetailPanelProvider>
+                <SidePanelProvider>
                   <div class={shellStyles.main}>
                     <Header />
                     <main class={shellStyles.body}>
-                      <MainPanelWithDetail {...props} />
+                      <MainContainerWithSidePanel>
+                        {props.children}
+                      </MainContainerWithSidePanel>
                     </main>
                   </div>
-                </MainDetailPanelProvider>
+                </SidePanelProvider>
               }
             >
               <div class={shellStyles.main}>
