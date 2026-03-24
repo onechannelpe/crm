@@ -9,6 +9,11 @@ import {
 } from "~/features/search/model/display";
 import { createSearchViewModel } from "~/features/search/model/search-view-model";
 import { SearchLayout } from "~/features/search/ui/search-layout";
+import { useSidePanel } from "~/features/side-panel/state/use-side-panel";
+import {
+  createSearchCompanyDetailSidePanelPage,
+  createSearchPersonDetailSidePanelPage,
+} from "~/features/side-panel/types/side-panel-page";
 import { mySearchAllowanceQuery } from "~/lib/queries/search";
 import { isSearchType, type SearchType } from "~/server/shared/pipeline-types";
 
@@ -26,24 +31,8 @@ export default function SearchPage() {
   const [selectedKey, setSelectedKey] = createSignal<string | null>(null);
   const [searching, setSearching] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
+  const { openPanel, closePanel } = useSidePanel();
   const resultCount = createMemo(() => model().total);
-
-  const selectedPerson = createMemo(
-    () => model().people.find((person) => person.key === selectedKey()) ?? null,
-  );
-  const selectedCompany = createMemo(
-    () =>
-      model().companies.find((company) => company.key === selectedKey()) ??
-      null,
-  );
-
-  function syncSelection(nextTab: SearchTab) {
-    if (nextTab === "people") {
-      setSelectedKey(model().people[0]?.key ?? null);
-      return;
-    }
-    setSelectedKey(model().companies[0]?.key ?? null);
-  }
 
   createEffect(() => {
     const paramQuery =
@@ -70,15 +59,13 @@ export default function SearchPage() {
       setSearchParams({ type: searchType(), query: query(), limit: "20" });
       const nextModel = createSearchViewModel(response);
       setModel(nextModel);
-      if (tab() === "people") {
-        setSelectedKey(nextModel.people[0]?.key ?? null);
-      } else {
-        setSelectedKey(nextModel.companies[0]?.key ?? null);
-      }
+      setSelectedKey(null);
+      closePanel();
       await revalidate(mySearchAllowanceQuery.key);
     } catch (searchError) {
       setModel(createSearchViewModel({ items: [], raw: [] }));
       setSelectedKey(null);
+      closePanel();
       setError(
         searchError instanceof Error ? searchError.message : "Search failed",
       );
@@ -125,12 +112,15 @@ export default function SearchPage() {
             setTab(nextTab);
             const inferred = inferSearchType(query(), nextTab);
             setSearchType(inferred);
-            syncSelection(nextTab);
+            setSelectedKey(null);
+            closePanel();
           }}
           query={query()}
           onQueryInput={(value) => {
             setQuery(value);
             setSearchType(inferSearchType(value, tab()));
+            setSelectedKey(null);
+            closePanel();
           }}
           searching={searching()}
           onSearch={(event) => void handleSearch(event)}
@@ -138,9 +128,24 @@ export default function SearchPage() {
           people={model().people}
           companies={model().companies}
           selectedKey={selectedKey()}
-          onSelect={setSelectedKey}
-          selectedPerson={selectedPerson()}
-          selectedCompany={selectedCompany()}
+          onOpenPerson={(person) => {
+            setSelectedKey(person.key);
+            openPanel(
+              createSearchPersonDetailSidePanelPage({
+                person,
+                query: query(),
+              }),
+            );
+          }}
+          onOpenCompany={(company) => {
+            setSelectedKey(company.key);
+            openPanel(
+              createSearchCompanyDetailSidePanelPage({
+                company,
+                query: query(),
+              }),
+            );
+          }}
         />
 
         <Show when={error()}>

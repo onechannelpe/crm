@@ -1,26 +1,28 @@
-import { Show } from "solid-js/web";
+import { Show } from "solid-js";
 
-import { SidePanelRecordPageInfo } from "../pages/record/side-panel-record-page-info";
+import { SidePanelPageInstanceProvider } from "../state/side-panel-page-instance";
+import { SIDE_PANEL_PAGES_CONFIG } from "../state/side-panel-pages-config";
 import { useSidePanel } from "../state/use-side-panel";
 
 export function SidePanelPageInfo() {
-  const { currentPage } = useSidePanel();
+  const { currentEntry } = useSidePanel();
 
   return (
-    <Show when={currentPage()}>
-      {(currentPageValue) => {
-        const page = currentPageValue();
+    <Show when={currentEntry()}>
+      {(entryValue) => {
+        const entry = entryValue();
+        const PageInfoComponent =
+          SIDE_PANEL_PAGES_CONFIG[entry.page].pageInfoComponent;
 
-        switch (page.type) {
-          case "root":
-          case "search-results":
-            return null;
-          case "record":
-            return <SidePanelRecordPageInfo page={page} />;
+        if (!PageInfoComponent) {
+          return null;
         }
 
-        page satisfies never;
-        return null;
+        return (
+          <SidePanelPageInstanceProvider pageId={entry.pageId}>
+            <PageInfoComponent />
+          </SidePanelPageInstanceProvider>
+        );
       }}
     </Show>
   );

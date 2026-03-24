@@ -21,7 +21,8 @@ interface ResultTableProps {
   people: PersonGroup[];
   companies: CompanyGroup[];
   selectedKey: string | null;
-  onSelect: (key: string) => void;
+  onOpenPerson: (person: PersonGroup) => void;
+  onOpenCompany: (company: CompanyGroup) => void;
 }
 
 export function ResultTable(props: ResultTableProps) {
@@ -52,7 +53,7 @@ export function ResultTable(props: ResultTableProps) {
                         ? "bg-secondary"
                         : undefined
                     }
-                    onClick={() => props.onSelect(group.key)}
+                    onClick={() => props.onOpenPerson(group)}
                   >
                     <TableCell>{group.displayName}</TableCell>
                     <TableCell>{group.dni}</TableCell>
@@ -98,7 +99,7 @@ export function ResultTable(props: ResultTableProps) {
                         ? "bg-secondary"
                         : undefined
                     }
-                    onClick={() => props.onSelect(group.key)}
+                    onClick={() => props.onOpenCompany(group)}
                   >
                     <TableCell>{group.name ?? "Unknown company"}</TableCell>
                     <TableCell>{group.ruc ?? "-"}</TableCell>
