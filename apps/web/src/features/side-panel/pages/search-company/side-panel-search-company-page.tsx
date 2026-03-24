@@ -29,7 +29,9 @@ export function SidePanelSearchCompanyPage() {
           <div class={styles.title}>
             {pageState().company.name ?? "Unknown company"}
           </div>
-          <div class={styles.subtitle}>RUC {pageState().company.ruc ?? "-"}</div>
+          <div class={styles.subtitle}>
+            RUC {pageState().company.ruc ?? "-"}
+          </div>
         </section>
 
         <section class={styles.section}>

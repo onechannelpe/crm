@@ -136,7 +136,10 @@ export function createSidePanelStore() {
     const newStack = stack.slice(0, -1);
     setState({
       navigationStack: newStack,
-      pageStateById: retainPageStateByNavigationStack(state.pageStateById, newStack),
+      pageStateById: retainPageStateByNavigationStack(
+        state.pageStateById,
+        newStack,
+      ),
     });
   };
 
@@ -148,7 +151,10 @@ export function createSidePanelStore() {
     const newStack = state.navigationStack.slice(0, boundedIndex + 1);
     setState({
       navigationStack: newStack,
-      pageStateById: retainPageStateByNavigationStack(state.pageStateById, newStack),
+      pageStateById: retainPageStateByNavigationStack(
+        state.pageStateById,
+        newStack,
+      ),
     });
   };
 

@@ -1,8 +1,8 @@
 import { createMemo } from "solid-js";
 
-import { SidePanelPageInfoLayout } from "../../top-bar/side-panel-page-info-layout";
 import { useSidePanelPageInstanceId } from "../../state/side-panel-page-instance";
 import { useSidePanel } from "../../state/use-side-panel";
+import { SidePanelPageInfoLayout } from "../../top-bar/side-panel-page-info-layout";
 
 export function SidePanelSearchCompanyPageInfo() {
   const pageId = useSidePanelPageInstanceId();

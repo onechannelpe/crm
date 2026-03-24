@@ -35,7 +35,8 @@ export function SidePanelRouter() {
         <div class={styles.pageBody}>
           <Show when={currentEntry()} keyed>
             {(entry) => {
-              const PageComponent = SIDE_PANEL_PAGES_CONFIG[entry.page].component;
+              const PageComponent =
+                SIDE_PANEL_PAGES_CONFIG[entry.page].component;
 
               return (
                 <SidePanelPageInstanceProvider pageId={entry.pageId}>

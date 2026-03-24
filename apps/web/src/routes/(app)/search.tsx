@@ -8,12 +8,12 @@ import {
   type SearchTab,
 } from "~/features/search/model/display";
 import { createSearchViewModel } from "~/features/search/model/search-view-model";
+import { SearchLayout } from "~/features/search/ui/search-layout";
 import { useSidePanel } from "~/features/side-panel/state/use-side-panel";
 import {
   createSearchCompanyDetailSidePanelPage,
   createSearchPersonDetailSidePanelPage,
 } from "~/features/side-panel/types/side-panel-page";
-import { SearchLayout } from "~/features/search/ui/search-layout";
 import { mySearchAllowanceQuery } from "~/lib/queries/search";
 import { isSearchType, type SearchType } from "~/server/shared/pipeline-types";
 

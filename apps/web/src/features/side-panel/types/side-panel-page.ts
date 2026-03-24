@@ -1,8 +1,8 @@
 import type { Component } from "solid-js";
 
+import Search from "~/components/icons/search";
 import User from "~/components/icons/user";
 import Users from "~/components/icons/users";
-import Search from "~/components/icons/search";
 import type {
   CompanyGroup,
   PersonGroup,
