@@ -1,7 +1,7 @@
 import { createStore } from "solid-js/store";
 
-import type { SidePanelState } from "../types/side-panel-state";
 import type { SidePanelPage } from "../types/side-panel-page";
+import type { SidePanelState } from "../types/side-panel-state";
 
 // Constants
 

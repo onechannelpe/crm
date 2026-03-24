@@ -15,7 +15,10 @@ export function SidePanelSearchResultsPage(
   return (
     <SidePanelList>
       <div class={styles.emptyState}>
-        <Show when={props.page.query.trim()} fallback={"Todavía no hay una búsqueda activa"}>
+        <Show
+          when={props.page.query.trim()}
+          fallback={"Todavía no hay una búsqueda activa"}
+        >
           {`Los resultados para "${props.page.query}" se renderizarán aquí en un próximo PR.`}
         </Show>
       </div>

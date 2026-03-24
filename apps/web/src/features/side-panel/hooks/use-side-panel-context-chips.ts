@@ -1,8 +1,8 @@
 import type { Accessor } from "solid-js";
 import { createMemo } from "solid-js";
 
-import type { SidePanelPage } from "../types/side-panel-page";
 import { useSidePanel } from "../state/use-side-panel";
+import type { SidePanelPage } from "../types/side-panel-page";
 
 export type SidePanelContextChip = {
   page: SidePanelPage;

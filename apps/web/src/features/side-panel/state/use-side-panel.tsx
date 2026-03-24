@@ -6,10 +6,8 @@ import {
   useContext,
 } from "solid-js";
 
-import {
-  createSidePanelStore,
-} from "./side-panel-store";
 import type { SidePanelPage } from "../types/side-panel-page";
+import { createSidePanelStore } from "./side-panel-store";
 
 export type SidePanelContextValue = {
   isOpen: Accessor<boolean>;

@@ -81,7 +81,9 @@ export function SidePanelRootPage(_props: SidePanelRootPageProps) {
     <SidePanelList>
       <Show
         when={hasResults()}
-        fallback={<div class={styles.emptyState}>No se encontraron resultados</div>}
+        fallback={
+          <div class={styles.emptyState}>No se encontraron resultados</div>
+        }
       >
         <For each={filteredGroups()}>
           {(group) => (
