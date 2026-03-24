@@ -27,20 +27,22 @@ interface SearchLayoutProps {
 
 export function SearchLayout(props: SearchLayoutProps) {
   return (
-    <div class="space-y-4">
+    <section class={styles.surface}>
       <form
-        class="flex gap-3"
+        class={styles.searchForm}
         onSubmit={(event) => {
           event.preventDefault();
           props.onSearch(event);
         }}
       >
-        <Input
-          label="Search"
-          value={props.query}
-          onInput={(event) => props.onQueryInput(event.currentTarget.value)}
-          required
-        />
+        <div class={styles.searchField}>
+          <Input
+            label="Search"
+            value={props.query}
+            onInput={(event) => props.onQueryInput(event.currentTarget.value)}
+            required
+          />
+        </div>
         <Button
           type="submit"
           loading={props.searching}
@@ -50,22 +52,27 @@ export function SearchLayout(props: SearchLayoutProps) {
         </Button>
       </form>
 
-      <div class={styles.tabList}>
-        <For each={props.tabs}>
-          {(tab) => (
-            <button
-              type="button"
-              class={`${styles.tabButton}${props.tab === tab ? ` ${styles.tabButtonActive}` : ""}`}
-              onClick={() => props.onTabChange(tab)}
-            >
-              {tab === "people" ? "People" : "Companies"}
-            </button>
-          )}
-        </For>
-      </div>
+      <div class={styles.toolbarMeta}>
+        <div class={styles.tabList} role="tablist" aria-label="Search tabs">
+          <For each={props.tabs}>
+            {(tab) => (
+              <button
+                type="button"
+                role="tab"
+                aria-selected={props.tab === tab}
+                class={`${styles.tabButton}${props.tab === tab ? ` ${styles.tabButtonActive}` : ""}`}
+                onClick={() => props.onTabChange(tab)}
+              >
+                {tab === "people" ? "People" : "Companies"}
+              </button>
+            )}
+          </For>
+        </div>
 
-      <div class="text-sm text-muted-foreground">
-        {props.totalCount} results
+        <div class={styles.resultCount}>
+          {props.totalCount} grouped{" "}
+          {props.tab === "people" ? "people" : "companies"}
+        </div>
       </div>
 
       <div class={styles.layout}>
@@ -82,6 +89,6 @@ export function SearchLayout(props: SearchLayoutProps) {
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

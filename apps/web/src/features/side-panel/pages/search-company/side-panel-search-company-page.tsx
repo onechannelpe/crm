@@ -1,5 +1,6 @@
 import { createMemo, For } from "solid-js";
 
+import Users from "~/components/icons/users";
 import { ResultPills } from "~/features/search/ui/result-pills";
 
 import { SidePanelList } from "../../components/side-panel-list";
@@ -26,11 +27,16 @@ export function SidePanelSearchCompanyPage() {
     <SidePanelList>
       <div class={styles.content}>
         <section class={styles.hero}>
-          <div class={styles.title}>
-            {pageState().company.name ?? "Unknown company"}
+          <div class={styles.heroIcon}>
+            <Users size={16} />
           </div>
-          <div class={styles.subtitle}>
-            RUC {pageState().company.ruc ?? "-"}
+          <div class={styles.heroText}>
+            <div class={styles.title}>
+              {pageState().company.name ?? "Unknown company"}
+            </div>
+            <div class={styles.subtitle}>
+              RUC {pageState().company.ruc ?? "-"}
+            </div>
           </div>
         </section>
 

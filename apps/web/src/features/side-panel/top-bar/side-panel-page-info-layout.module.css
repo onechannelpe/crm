@@ -1,23 +1,27 @@
 .container {
   align-items: center;
   display: flex;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
 }
 
 .iconWrapper {
   align-items: center;
-  background: var(--bg-translucent);
+  background: color-mix(in srgb, var(--secondary) 76%, white);
   border-radius: var(--radius-sm);
+  color: var(--foreground-secondary);
   display: flex;
   flex-shrink: 0;
-  height: 24px;
+  height: 28px;
   justify-content: center;
-  width: 24px;
+  width: 28px;
 }
 
 .titleWrapper {
-  max-width: 150px;
+  color: var(--foreground);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  max-width: 160px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

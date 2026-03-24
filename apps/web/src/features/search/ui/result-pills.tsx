@@ -33,7 +33,7 @@ export function ResultPills(props: ResultPillsProps) {
           class={`${styles.pill} ${styles.moreButton}`}
           onClick={() => setVisibleCount((count) => count + DEFAULT_VISIBLE)}
         >
-          +{hiddenCount()} more
+          +{hiddenCount()}
         </button>
       </Show>
       <Show when={props.items.length === 0}>
