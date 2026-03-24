@@ -5,6 +5,7 @@ import { CommandPalette } from "~/components/features/command-palette/command-pa
 import { ExtensionStatusIndicator } from "~/components/features/extension/extension-status-indicator";
 import { HeaderNotificationsPanel } from "~/components/layout/header-notifications-panel";
 import { ICON_BY_ROUTE } from "~/components/layout/route-icons";
+import { TopBarCommandButton } from "~/components/layout/top-bar-command-button";
 import { useNavigationDrawerState } from "~/features/navigation-drawer";
 import { PageHeader } from "~/features/settings-shell";
 import { createExtensionPortConnection } from "~/lib/extension/port";
@@ -64,21 +65,17 @@ export function Header() {
         }
         title={<span class={styles.routeLabel}>{currentRoute().label}</span>}
       >
-        <button
-          class={styles.commandButton}
-          type="button"
-          onClick={() => setPaletteOpen(true)}
-          aria-label="Abrir lista de comandos"
-        >
-          <span class={styles.kbd}>{modKey()}</span>
-          <span class={styles.kbd}>K</span>
-        </button>
         <ExtensionStatusIndicator
           extensionState={extensionState}
           extensionError={extensionError}
           onOpen={handleExtensionIndicatorClick}
         />
         <HeaderNotificationsPanel />
+        <TopBarCommandButton
+          isOpen={paletteOpen()}
+          modKey={modKey()}
+          onClick={() => setPaletteOpen((value) => !value)}
+        />
       </PageHeader>
     </>
   );
