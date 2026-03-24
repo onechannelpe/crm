@@ -23,7 +23,7 @@ export function SettingsNavigationDrawerItem(
     return null;
   }
 
-  const active =
+  const isActive = () =>
     settingsItemMatchesPath(
       location.pathname,
       props.item.href,
@@ -35,7 +35,7 @@ export function SettingsNavigationDrawerItem(
       label={props.item.label}
       to={props.item.href}
       Icon={props.item.icon}
-      active={active}
+      active={isActive()}
       modifier={props.item.modifier}
       onClick={() => {
         void props.item.onClick?.();
