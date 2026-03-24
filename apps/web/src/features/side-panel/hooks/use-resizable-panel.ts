@@ -19,7 +19,6 @@ type UseResizablePanelReturn = {
 export function useResizablePanel(
   props: UseResizablePanelProps,
 ): UseResizablePanelReturn {
-  // Plain variables -- internal drag state does not need reactivity
   let startX = 0;
   let startWidth = 0;
   let isResizing = false;
