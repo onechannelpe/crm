@@ -23,12 +23,13 @@ interface DatePickerCalendarProps {
   visibleMonth: VisibleMonth;
   selectedDate: Date | null;
   minDate: Date | null;
+  isPreviousMonthDisabled: boolean;
   onMonthChange: (month: number) => void;
   onYearChange: (year: number) => void;
   onPreviousMonth: () => void;
   onNextMonth: () => void;
   focusedIso: string;
-  onFocusedIsoChange: (iso: string) => void;
+  onFocusDate: (iso: string) => void;
   onFocusMoveByDays: (dayDelta: number) => void;
   onFocusMonthBoundary: (kind: "start" | "end") => void;
   onSelect: (iso: string) => void;
@@ -88,6 +89,7 @@ export function DatePickerCalendar(props: DatePickerCalendarProps) {
           type="button"
           class={styles.navButton}
           aria-label="Mes anterior"
+          disabled={props.isPreviousMonthDisabled}
           onClick={props.onPreviousMonth}
         >
           <ChevronLeft size={16} />
@@ -112,7 +114,7 @@ export function DatePickerCalendar(props: DatePickerCalendarProps) {
             <CalendarDayButton
               cell={cell}
               isFocused={cell.iso === props.focusedIso}
-              onFocusedIsoChange={props.onFocusedIsoChange}
+              onFocusDate={props.onFocusDate}
               onFocusMoveByDays={props.onFocusMoveByDays}
               onFocusMonthBoundary={props.onFocusMonthBoundary}
               onSelect={props.onSelect}
@@ -134,7 +136,7 @@ export function DatePickerCalendar(props: DatePickerCalendarProps) {
 function CalendarDayButton(props: {
   cell: CalendarCell;
   isFocused: boolean;
-  onFocusedIsoChange: (iso: string) => void;
+  onFocusDate: (iso: string) => void;
   onFocusMoveByDays: (dayDelta: number) => void;
   onFocusMonthBoundary: (kind: "start" | "end") => void;
   onSelect: (iso: string) => void;
@@ -152,7 +154,7 @@ function CalendarDayButton(props: {
       tabIndex={props.isFocused ? 0 : -1}
       aria-pressed={props.cell.isSelected}
       ref={props.ref}
-      onFocus={() => props.onFocusedIsoChange(props.cell.iso)}
+      onFocus={() => props.onFocusDate(props.cell.iso)}
       onKeyDown={(event) => {
         if (event.key === "ArrowLeft") {
           event.preventDefault();

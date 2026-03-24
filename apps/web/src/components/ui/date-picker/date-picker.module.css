@@ -80,6 +80,11 @@
   background: color-mix(in oklab, var(--surface) 76%, var(--accent) 24%);
 }
 
+.iconButton:focus-visible {
+  color: var(--foreground);
+  box-shadow: var(--focus-ring-shadow);
+}
+
 .iconButton:disabled,
 .control:disabled {
   opacity: 0.5;
@@ -105,17 +110,19 @@
   position: fixed;
   z-index: calc(var(--z-index-dialog, 50) + 1);
   width: 280px;
-  padding: 8px;
+  padding: 0 8px 8px;
   border: 1px solid color-mix(in oklab, var(--border) 90%, transparent);
   border-radius: var(--radius-md);
   background: var(--background);
   box-shadow: var(--shadow-elevation-2);
+  overflow: hidden;
 }
 
 .header {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  padding-top: 8px;
   margin-bottom: 8px;
 }
 
@@ -127,6 +134,7 @@
   background: color-mix(in oklab, var(--surface) 88%, var(--accent) 12%);
   color: var(--foreground);
   font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
   padding: 0 8px;
 }
 
@@ -139,8 +147,8 @@
 }
 
 .navButton {
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   border: none;
   border-radius: var(--radius-sm);
   background: transparent;
@@ -156,17 +164,28 @@
   color: var(--foreground);
 }
 
+.navButton:disabled {
+  color: var(--foreground-tertiary);
+  cursor: not-allowed;
+}
+
+.navButton:focus-visible,
+.select:focus-visible,
+.dayButton:focus-visible {
+  box-shadow: var(--focus-ring-shadow);
+  outline: none;
+}
+
 .dayNames {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  margin-bottom: 4px;
 }
 
 .dayName {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 32px;
+  height: 40px;
   color: var(--muted-foreground);
   font-size: var(--font-size-caption);
   font-weight: var(--font-weight-semibold);
@@ -175,7 +194,6 @@
 .daysGrid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 2px;
 }
 
 .dayButton {
@@ -195,6 +213,7 @@
 
 .dayButton:hover:not(:disabled) {
   background: var(--bg-translucent);
+  color: var(--foreground-tertiary);
 }
 
 .dayButton:disabled {

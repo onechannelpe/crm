@@ -8,9 +8,16 @@ import {
 import { Portal } from "solid-js/web";
 
 import { DatePickerCalendar } from "./date-picker-calendar";
-import type { VisibleMonth } from "./date-picker-model";
+import {
+  isPreviousMonthDisabled,
+  type VisibleMonth,
+} from "./date-picker-model";
 
 import styles from "./date-picker.module.css";
+
+const VIEWPORT_PADDING = 8;
+const POPOVER_FALLBACK_WIDTH = 280;
+const POPOVER_FALLBACK_HEIGHT = 320;
 
 interface DatePickerPopoverProps {
   isOpen: Accessor<boolean>;
@@ -23,7 +30,7 @@ interface DatePickerPopoverProps {
   onPreviousMonth: () => void;
   onNextMonth: () => void;
   focusedIso: string;
-  onFocusedIsoChange: (iso: string) => void;
+  onFocusDate: (iso: string) => void;
   onFocusMoveByDays: (dayDelta: number) => void;
   onFocusMonthBoundary: (kind: "start" | "end") => void;
   onSelect: (iso: string) => void;
@@ -42,17 +49,25 @@ export function DatePickerPopover(props: DatePickerPopoverProps) {
       if (!anchor || typeof window === "undefined") return;
 
       const rect = anchor.getBoundingClientRect();
-      const popoverHeight = popoverRef?.offsetHeight ?? 320;
-      const left = Math.min(rect.left, window.innerWidth - 280 - 8);
+      const popoverWidth = popoverRef?.offsetWidth ?? POPOVER_FALLBACK_WIDTH;
+      const popoverHeight = popoverRef?.offsetHeight ?? POPOVER_FALLBACK_HEIGHT;
+      const left = Math.min(
+        rect.left,
+        window.innerWidth - popoverWidth - VIEWPORT_PADDING,
+      );
       const fitsBelow =
-        rect.bottom + 8 + popoverHeight <= window.innerHeight - 8;
+        rect.bottom + VIEWPORT_PADDING + popoverHeight <=
+        window.innerHeight - VIEWPORT_PADDING;
       const top = fitsBelow
-        ? rect.bottom + 8
-        : Math.max(8, rect.top - popoverHeight - 8);
+        ? rect.bottom + VIEWPORT_PADDING
+        : Math.max(
+            VIEWPORT_PADDING,
+            rect.top - popoverHeight - VIEWPORT_PADDING,
+          );
 
       setPosition({
         top,
-        left: Math.max(8, left),
+        left: Math.max(VIEWPORT_PADDING, left),
       });
     };
 
@@ -86,12 +101,16 @@ export function DatePickerPopover(props: DatePickerPopoverProps) {
             visibleMonth={props.visibleMonth}
             selectedDate={props.selectedDate}
             minDate={props.minDate}
+            isPreviousMonthDisabled={isPreviousMonthDisabled(
+              props.visibleMonth,
+              props.minDate,
+            )}
             onMonthChange={props.onMonthChange}
             onYearChange={props.onYearChange}
             onPreviousMonth={props.onPreviousMonth}
             onNextMonth={props.onNextMonth}
             focusedIso={props.focusedIso}
-            onFocusedIsoChange={props.onFocusedIsoChange}
+            onFocusDate={props.onFocusDate}
             onFocusMoveByDays={props.onFocusMoveByDays}
             onFocusMonthBoundary={props.onFocusMonthBoundary}
             onSelect={props.onSelect}

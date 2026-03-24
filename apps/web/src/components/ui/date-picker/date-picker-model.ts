@@ -112,12 +112,20 @@ export function getMonthOptions(visibleMonth: VisibleMonth): Array<{
   });
 }
 
-export function shiftVisibleMonth(
+export function shiftDateByMonths(date: Date, monthDelta: number): Date {
+  const next = new Date(date);
+  next.setMonth(next.getMonth() + monthDelta, 1);
+  next.setHours(0, 0, 0, 0);
+  return next;
+}
+
+export function isPreviousMonthDisabled(
   visibleMonth: VisibleMonth,
-  monthDelta: number,
-): VisibleMonth {
-  const next = new Date(visibleMonth.year, visibleMonth.month + monthDelta, 1);
-  return getVisibleMonth(next);
+  minDate: Date | null,
+): boolean {
+  if (!minDate) return false;
+  const minMonth = getVisibleMonth(minDate);
+  return compareVisibleMonth(visibleMonth, minMonth) <= 0;
 }
 
 export function startOfMonth(visibleMonth: VisibleMonth): Date {
@@ -130,24 +138,18 @@ export function endOfMonth(visibleMonth: VisibleMonth): Date {
   return end;
 }
 
-export function withVisibleMonthMonth(
-  visibleMonth: VisibleMonth,
-  month: number,
-): VisibleMonth {
-  return {
-    year: visibleMonth.year,
-    month,
-  };
+export function withDateMonth(date: Date, month: number): Date {
+  const next = new Date(date);
+  next.setMonth(month, 1);
+  next.setHours(0, 0, 0, 0);
+  return next;
 }
 
-export function withVisibleMonthYear(
-  visibleMonth: VisibleMonth,
-  year: number,
-): VisibleMonth {
-  return {
-    year,
-    month: visibleMonth.month,
-  };
+export function withDateYear(date: Date, year: number): Date {
+  const next = new Date(date);
+  next.setFullYear(year, next.getMonth(), 1);
+  next.setHours(0, 0, 0, 0);
+  return next;
 }
 
 function getStartOfWeek(date: Date): Date {

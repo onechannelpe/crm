@@ -5,7 +5,8 @@ import {
   clampVisibleMonth,
   endOfMonth,
   getVisibleMonth,
-  shiftVisibleMonth,
+  isPreviousMonthDisabled,
+  shiftDateByMonths,
   startOfMonth,
 } from "../../src/components/ui/date-picker/date-picker-model";
 
@@ -23,15 +24,24 @@ describe("date picker model", () => {
     });
   });
 
-  it("shifts visible month across year boundaries", () => {
-    expect(shiftVisibleMonth({ year: 2026, month: 0 }, -1)).toEqual({
-      year: 2025,
-      month: 11,
-    });
-    expect(shiftVisibleMonth({ year: 2025, month: 11 }, 1)).toEqual({
-      year: 2026,
-      month: 0,
-    });
+  it("shifts cursor dates across year boundaries", () => {
+    expect(shiftDateByMonths(new Date(2026, 0, 15), -1)).toEqual(
+      new Date(2025, 11, 1),
+    );
+    expect(shiftDateByMonths(new Date(2025, 11, 15), 1)).toEqual(
+      new Date(2026, 0, 1),
+    );
+  });
+
+  it("disables previous-month navigation at the minimum month", () => {
+    const minDate = new Date(2026, 2, 31);
+
+    expect(isPreviousMonthDisabled({ year: 2026, month: 2 }, minDate)).toBe(
+      true,
+    );
+    expect(isPreviousMonthDisabled({ year: 2026, month: 3 }, minDate)).toBe(
+      false,
+    );
   });
 
   it("builds disabled days before the minimum date while keeping current-month flags", () => {

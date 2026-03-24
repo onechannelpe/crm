@@ -1,4 +1,6 @@
 const MIN_INVITE_EXPIRY_DAYS = 7;
+const INVITE_EXPIRY_HELPER_TEXT =
+  "Opcional. Debe vencer al menos 7 días después de hoy.";
 const INVALID_INVITE_EXPIRY_ERROR_TEXT = "Ingresa una fecha válida.";
 const INVITE_EXPIRY_ERROR_TEXT =
   "Elige una fecha al menos 7 días después de hoy.";
@@ -70,5 +72,6 @@ export function getInviteExpiryOffsetMs(): number {
 export {
   INVALID_INVITE_EXPIRY_ERROR_TEXT,
   INVITE_EXPIRY_ERROR_TEXT,
+  INVITE_EXPIRY_HELPER_TEXT,
   MIN_INVITE_EXPIRY_DAYS,
 };

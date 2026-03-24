@@ -12,17 +12,15 @@ import { cn } from "~/lib/utils";
 
 import {
   addDays,
-  clampVisibleMonth,
   endOfMonth,
   formatIsoDate,
   getVisibleMonth,
   parseIsoDate,
-  shiftVisibleMonth,
+  shiftDateByMonths,
   startOfMonth,
   todayLocalDate,
-  withVisibleMonthMonth,
-  withVisibleMonthYear,
-  type VisibleMonth,
+  withDateMonth,
+  withDateYear,
 } from "./date-picker-model";
 import { DatePickerPopover } from "./date-picker-popover";
 
@@ -48,26 +46,21 @@ export function DatePicker(props: DatePickerProps) {
   const [isOpen, setIsOpen] = createSignal(false);
   const selectedDate = createMemo(() => parseIsoDate(props.value));
   const minDate = createMemo(() => parseIsoDate(props.min ?? ""));
-  const preferredVisibleMonth = () =>
-    getVisibleMonth(selectedDate() ?? minDate() ?? todayLocalDate());
-  const [visibleMonth, setVisibleMonth] = createSignal<VisibleMonth>(
-    preferredVisibleMonth(),
+  const fallbackDate = createMemo(
+    () => selectedDate() ?? minDate() ?? todayLocalDate(),
   );
-  const [focusedIso, setFocusedIso] = createSignal(
-    formatIsoDate(selectedDate() ?? minDate() ?? todayLocalDate()),
-  );
+  const [cursorDate, setCursorDate] = createSignal<Date | null>(null);
+  const effectiveCursorDate = createMemo(() => cursorDate() ?? fallbackDate());
+  const visibleMonth = createMemo(() => getVisibleMonth(effectiveCursorDate()));
+  const focusedIso = createMemo(() => formatIsoDate(effectiveCursorDate()));
   let fieldRef: HTMLDivElement | undefined;
   let controlRef: HTMLDivElement | undefined;
   let popoverRef: HTMLDivElement | undefined;
 
-  createEffect(() => {
-    if (!isOpen()) {
-      setVisibleMonth(preferredVisibleMonth());
-      setFocusedIso(
-        formatIsoDate(selectedDate() ?? minDate() ?? todayLocalDate()),
-      );
-    }
-  });
+  const closePicker = () => {
+    setIsOpen(false);
+    setCursorDate(null);
+  };
 
   createEffect(() => {
     if (typeof document === "undefined") return;
@@ -78,7 +71,7 @@ export function DatePicker(props: DatePickerProps) {
       if (!(target instanceof Node)) return;
       if (fieldRef?.contains(target)) return;
       if (popoverRef?.contains(target)) return;
-      setIsOpen(false);
+      closePicker();
     };
 
     document.addEventListener("pointerdown", handlePointerDown);
@@ -87,7 +80,7 @@ export function DatePicker(props: DatePickerProps) {
     });
   });
 
-  useHotkey("Escape", () => setIsOpen(false), {
+  useHotkey("Escape", closePicker, {
     enabled: isOpen,
     allowInInputs: true,
   });
@@ -97,20 +90,21 @@ export function DatePicker(props: DatePickerProps) {
     return messageId;
   };
 
-  const updateVisibleMonth = (
-    updater: (current: VisibleMonth) => VisibleMonth,
-  ) => {
-    setVisibleMonth((current) =>
-      clampVisibleMonth(updater(current), minDate()),
-    );
+  const clampDate = (date: Date) => {
+    const min = minDate();
+    if (min && date.getTime() < min.getTime()) {
+      return min;
+    }
+    return date;
   };
 
-  const updateFocusedDate = (nextDate: Date) => {
-    const min = minDate();
-    const clampedDate =
-      min && nextDate.getTime() < min.getTime() ? min : nextDate;
-    setFocusedIso(formatIsoDate(clampedDate));
-    setVisibleMonth(getVisibleMonth(clampedDate));
+  const openPicker = () => {
+    setCursorDate((current) => current ?? clampDate(fallbackDate()));
+    setIsOpen(true);
+  };
+
+  const updateCursorDate = (updater: (current: Date) => Date) => {
+    setCursorDate((current) => clampDate(updater(current ?? fallbackDate())));
   };
 
   return (
@@ -153,7 +147,7 @@ export function DatePicker(props: DatePickerProps) {
           aria-describedby={describedBy()}
           aria-invalid={props.error ? "true" : undefined}
           disabled={props.disabled}
-          onFocus={() => setIsOpen(true)}
+          onFocus={openPicker}
           onInput={(event) => {
             props.onInput(event.currentTarget.value);
             setIsOpen(true);
@@ -166,7 +160,13 @@ export function DatePicker(props: DatePickerProps) {
           aria-haspopup="dialog"
           aria-expanded={isOpen()}
           disabled={props.disabled}
-          onClick={() => setIsOpen((current) => !current)}
+          onClick={() => {
+            if (isOpen()) {
+              closePicker();
+              return;
+            }
+            openPicker();
+          }}
         >
           <CalendarDays size={16} />
         </button>
@@ -185,38 +185,37 @@ export function DatePicker(props: DatePickerProps) {
         selectedDate={selectedDate()}
         minDate={minDate()}
         visibleMonth={visibleMonth()}
+        focusedIso={focusedIso()}
         onMonthChange={(month) =>
-          updateVisibleMonth((current) => withVisibleMonthMonth(current, month))
+          updateCursorDate((current) => withDateMonth(current, month))
         }
         onYearChange={(year) =>
-          updateVisibleMonth((current) => withVisibleMonthYear(current, year))
+          updateCursorDate((current) => withDateYear(current, year))
         }
         onPreviousMonth={() =>
-          updateVisibleMonth((current) => shiftVisibleMonth(current, -1))
+          updateCursorDate((current) => shiftDateByMonths(current, -1))
         }
         onNextMonth={() =>
-          updateVisibleMonth((current) => shiftVisibleMonth(current, 1))
+          updateCursorDate((current) => shiftDateByMonths(current, 1))
         }
-        focusedIso={focusedIso()}
-        onFocusedIsoChange={setFocusedIso}
+        onFocusDate={(iso) => {
+          const nextDate = parseIsoDate(iso);
+          if (!nextDate) return;
+          updateCursorDate(() => nextDate);
+        }}
         onFocusMoveByDays={(dayDelta) => {
-          const current =
-            parseIsoDate(focusedIso()) ??
-            selectedDate() ??
-            minDate() ??
-            todayLocalDate();
-          updateFocusedDate(addDays(current, dayDelta));
+          updateCursorDate((current) => addDays(current, dayDelta));
         }}
         onFocusMonthBoundary={(kind) => {
           const boundary =
             kind === "start"
               ? startOfMonth(visibleMonth())
               : endOfMonth(visibleMonth());
-          updateFocusedDate(boundary);
+          updateCursorDate(() => boundary);
         }}
         onSelect={(iso) => {
           props.onInput(iso);
-          setIsOpen(false);
+          closePicker();
         }}
         onPopoverMount={(element) => {
           popoverRef = element;

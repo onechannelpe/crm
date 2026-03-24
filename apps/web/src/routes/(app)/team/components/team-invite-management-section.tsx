@@ -43,13 +43,11 @@ import {
   getInviteExpiryFieldError,
   getMinInviteExpiryDate,
   INVITE_EXPIRY_ERROR_TEXT,
+  INVITE_EXPIRY_HELPER_TEXT,
   parseInviteExpiryDate,
 } from "./team-invite-expiry";
 
 import styles from "../team-page.module.css";
-
-const INVITE_EXPIRY_HELPER_TEXT =
-  "Opcional. Debe vencer al menos 7 días después de hoy.";
 
 export function TeamInviteManagementSection() {
   const inviteManagement = createAsync(() => inviteManagementQuery());
