@@ -1,7 +1,7 @@
 import { createMemo, For } from "solid-js";
 
 import User from "~/components/icons/user";
-import { ResultPills } from "~/features/search/ui/result-pills";
+import { RecordChipList } from "~/components/ui/record-chip/record-chip";
 
 import { SidePanelList } from "../../components/side-panel-list";
 import { useSidePanelPageInstanceId } from "../../state/side-panel-page-instance";
@@ -38,12 +38,12 @@ export function SidePanelSearchPersonPage() {
 
         <section class={styles.section}>
           <div class={styles.sectionTitle}>Aliases</div>
-          <ResultPills items={pageState().person.aliases} />
+          <RecordChipList items={pageState().person.aliases} shape="round" />
         </section>
 
         <section class={styles.section}>
           <div class={styles.sectionTitle}>Phones</div>
-          <ResultPills items={pageState().person.phones} />
+          <RecordChipList items={pageState().person.phones} shape="square" />
         </section>
 
         <section class={styles.section}>
