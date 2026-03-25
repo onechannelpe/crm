@@ -1,113 +1,241 @@
 import type { Kysely } from "kysely";
-import { sql } from "kysely";
 
-import type { Database, NewLeadAssignment } from "~/lib/db/types";
+import type {
+  Estado,
+  LeadStage,
+  Prioridad,
+  Database,
+  NewLead,
+  NewLeadPipelineAssignment,
+  NewLeadCommercialInput,
+} from "~/lib/db/types";
 
-export function createLeadAssignmentsRepo(db: Kysely<Database>) {
+export function createLeadsRepo(db: Kysely<Database>) {
   return {
-    create(values: NewLeadAssignment) {
-      return db
-        .insertInto("lead_assignments")
+    async create(values: NewLead): Promise<number> {
+      const result = await db
+        .insertInto("crm_leads")
         .values(values)
         .executeTakeFirstOrThrow();
+      return Number(result.insertId);
     },
 
-    async createMany(assignments: NewLeadAssignment[]): Promise<void> {
-      if (assignments.length === 0) return;
-      await db.insertInto("lead_assignments").values(assignments).execute();
-    },
-
-    findActiveByUser(userId: number) {
+    findById(id: number) {
       return db
-        .selectFrom("lead_assignments")
+        .selectFrom("crm_leads")
         .selectAll()
-        .where("user_id", "=", userId)
-        .where("status", "=", "active")
-        .where("expires_at", ">", Date.now())
-        .execute();
+        .where("id", "=", id)
+        .executeTakeFirst();
     },
 
-    findActiveByUserWithContacts(userId: number) {
+    findByRuc(ruc: string) {
       return db
-        .selectFrom("lead_assignments")
-        .innerJoin("contacts", "contacts.id", "lead_assignments.contact_id")
-        .select([
-          "lead_assignments.id as assignmentId",
-          "lead_assignments.assigned_at",
-          "lead_assignments.expires_at",
-          "lead_assignments.status",
-          "contacts.id as contactId",
-          "contacts.name",
-          "contacts.dni",
-          "contacts.phone_primary",
-          "contacts.organization_id",
-        ])
-        .where("lead_assignments.user_id", "=", userId)
-        .where("lead_assignments.status", "=", "active")
-        .where("lead_assignments.expires_at", ">", Date.now())
-        .orderBy("lead_assignments.assigned_at", "desc")
+        .selectFrom("crm_leads")
+        .selectAll()
+        .where("ruc", "=", ruc)
+        .executeTakeFirst();
+    },
+
+    async updateStage(id: number, stage: LeadStage): Promise<void> {
+      await db
+        .updateTable("crm_leads")
+        .set({ stage, updated_at: Date.now() })
+        .where("id", "=", id)
         .execute();
     },
 
-    async countActiveByUser(userId: number) {
-      const rows = await this.findActiveByUser(userId);
-      return rows.length;
+    async updateEstado(id: number, estado: Estado): Promise<void> {
+      await db
+        .updateTable("crm_leads")
+        .set({ estado, updated_at: Date.now() })
+        .where("id", "=", id)
+        .execute();
     },
 
-    async countActiveByUsers(userIds: number[]) {
-      if (userIds.length === 0) {
-        return [] as Array<{ userId: number; activeCount: number }>;
+    async updatePrioridad(id: number, prioridad: Prioridad): Promise<void> {
+      await db
+        .updateTable("crm_leads")
+        .set({ prioridad, updated_at: Date.now() })
+        .where("id", "=", id)
+        .execute();
+    },
+
+    list(filters: {
+      executiveId?: number;
+      stage?: LeadStage;
+      estado?: Estado;
+      prioridad?: Prioridad;
+      fromDate?: number;
+      toDate?: number;
+      limit: number;
+      offset: number;
+    }) {
+      let query = db.selectFrom("crm_leads").selectAll();
+      if (filters.executiveId !== undefined) {
+        query = query.where("executive_id", "=", filters.executiveId);
       }
-
-      const rows = await db
-        .selectFrom("lead_assignments")
-        .select(["user_id as userId", sql<number>`count(*)`.as("activeCount")])
-        .where("user_id", "in", userIds)
-        .where("status", "=", "active")
-        .where("expires_at", ">", Date.now())
-        .groupBy("user_id")
+      if (filters.stage !== undefined) {
+        query = query.where("stage", "=", filters.stage);
+      }
+      if (filters.estado !== undefined) {
+        query = query.where("estado", "=", filters.estado);
+      }
+      if (filters.prioridad !== undefined) {
+        query = query.where("prioridad", "=", filters.prioridad);
+      }
+      if (filters.fromDate !== undefined) {
+        query = query.where("created_at", ">=", filters.fromDate);
+      }
+      if (filters.toDate !== undefined) {
+        query = query.where("created_at", "<=", filters.toDate);
+      }
+      return query
+        .orderBy("created_at", "desc")
+        .limit(filters.limit)
+        .offset(filters.offset)
         .execute();
-
-      return rows.map((row) => ({
-        userId: Number(row.userId),
-        activeCount: Number(row.activeCount),
-      }));
     },
 
-    findActiveForContact(userId: number, contactId: number) {
+    findByRucInList(rucs: string[]) {
+      if (rucs.length === 0) return Promise.resolve([]);
       return db
-        .selectFrom("lead_assignments")
+        .selectFrom("crm_leads")
+        .select(["id", "ruc", "estado", "prioridad", "stage"])
+        .where("ruc", "in", rucs)
+        .execute();
+    },
+
+    async updateEstadoByRuc(ruc: string, estado: Estado): Promise<boolean> {
+      const result = await db
+        .updateTable("crm_leads")
+        .set({ estado, updated_at: Date.now() })
+        .where("ruc", "=", ruc)
+        .executeTakeFirst();
+      return Number(result.numUpdatedRows) > 0;
+    },
+
+    async updateExecutiveId(
+      leadId: number,
+      executiveId: number,
+    ): Promise<void> {
+      await db
+        .updateTable("crm_leads")
+        .set({ executive_id: executiveId, updated_at: Date.now() })
+        .where("id", "=", leadId)
+        .execute();
+    },
+
+    async updatePrioridadByRuc(
+      ruc: string,
+      prioridad: Prioridad,
+    ): Promise<boolean> {
+      const result = await db
+        .updateTable("crm_leads")
+        .set({ prioridad, updated_at: Date.now() })
+        .where("ruc", "=", ruc)
+        .executeTakeFirst();
+      return Number(result.numUpdatedRows) > 0;
+    },
+
+    listForExport(filters: {
+      fromDate?: number;
+      toDate?: number;
+      executiveId?: number;
+    }) {
+      let query = db
+        .selectFrom("crm_leads as l")
+        .innerJoin("users as u", "u.id", "l.executive_id")
+        .select([
+          "l.ruc",
+          "l.razon_social",
+          "l.address",
+          "l.stage",
+          "l.estado",
+          "l.prioridad",
+          "l.created_at",
+          "l.executive_id",
+          "u.names as executive_name",
+        ]);
+      if (filters.fromDate !== undefined) {
+        query = query.where("l.created_at", ">=", filters.fromDate);
+      }
+      if (filters.toDate !== undefined) {
+        query = query.where("l.created_at", "<=", filters.toDate);
+      }
+      if (filters.executiveId !== undefined) {
+        query = query.where("l.executive_id", "=", filters.executiveId);
+      }
+      return query.orderBy("l.created_at", "desc").execute();
+    },
+  };
+}
+
+export function createLeadPipelineAssignmentsRepo(db: Kysely<Database>) {
+  return {
+    async create(values: NewLeadPipelineAssignment): Promise<number> {
+      const result = await db
+        .insertInto("crm_lead_assignments")
+        .values(values)
+        .executeTakeFirstOrThrow();
+      return Number(result.insertId);
+    },
+
+    findActiveByLead(leadId: number) {
+      return db
+        .selectFrom("crm_lead_assignments")
         .selectAll()
-        .where("user_id", "=", userId)
-        .where("contact_id", "=", contactId)
-        .where("status", "=", "active")
-        .where("expires_at", ">", Date.now())
+        .where("lead_id", "=", leadId)
+        .where("is_active", "=", 1)
         .executeTakeFirst();
     },
 
-    async hasActiveForContact(userId: number, contactId: number) {
-      const row = await this.findActiveForContact(userId, contactId);
-      return !!row;
-    },
-
-    findActiveByIdForUser(id: number, userId: number) {
-      return db
-        .selectFrom("lead_assignments")
-        .selectAll()
-        .where("id", "=", id)
-        .where("user_id", "=", userId)
-        .where("status", "=", "active")
-        .where("expires_at", ">", Date.now())
-        .executeTakeFirst();
-    },
-
-    markCompleted(id: number, userId: number) {
-      return db
-        .updateTable("lead_assignments")
-        .set({ status: "completed" })
-        .where("id", "=", id)
-        .where("user_id", "=", userId)
+    async deactivateForLead(leadId: number): Promise<void> {
+      await db
+        .updateTable("crm_lead_assignments")
+        .set({ is_active: 0 })
+        .where("lead_id", "=", leadId)
+        .where("is_active", "=", 1)
         .execute();
+    },
+
+    listByLead(leadId: number) {
+      return db
+        .selectFrom("crm_lead_assignments")
+        .selectAll()
+        .where("lead_id", "=", leadId)
+        .orderBy("assigned_at", "desc")
+        .execute();
+    },
+  };
+}
+
+export function createLeadCommercialInputsRepo(db: Kysely<Database>) {
+  return {
+    async upsert(values: NewLeadCommercialInput): Promise<void> {
+      await db
+        .insertInto("crm_lead_commercial_inputs")
+        .values(values)
+        .onConflict((oc) =>
+          oc.column("lead_id").doUpdateSet({
+            proveedor_actual: values.proveedor_actual ?? null,
+            tasa_actual: values.tasa_actual ?? null,
+            gpv: values.gpv ?? null,
+            ticket: values.ticket ?? null,
+            abono: values.abono ?? null,
+            cantidad_pos: values.cantidad_pos ?? null,
+            updated_at: values.updated_at,
+            updated_by: values.updated_by,
+          }),
+        )
+        .execute();
+    },
+
+    findByLeadId(leadId: number) {
+      return db
+        .selectFrom("crm_lead_commercial_inputs")
+        .selectAll()
+        .where("lead_id", "=", leadId)
+        .executeTakeFirst();
     },
   };
 }

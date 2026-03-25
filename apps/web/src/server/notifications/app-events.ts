@@ -12,7 +12,10 @@ export interface AppNotificationEvent {
     | "sale.submitted"
     | "sale.rejected"
     | "sale.confirmed"
-    | "sale.resubmitted";
+    | "sale.resubmitted"
+    | "lead.needs_executive_input"
+    | "lead.ready_for_quotation"
+    | "lead.ready_for_sale";
   title: string;
   bodyText: string;
   actionUrl: string | null;

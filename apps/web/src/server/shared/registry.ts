@@ -26,18 +26,26 @@ import {
   createSearchUsageReservationsRepo,
 } from "~/server/capacity-usage/repos";
 import { createSearchEnrichmentRepo } from "~/server/client-search/repos-enrichment";
+import { createLeadAssignmentsRepo } from "~/server/contacts/repos-assignments";
 import { createContactsRepo } from "~/server/contacts/repos-contacts";
 import { createOrganizationsRepo } from "~/server/contacts/repos-organizations";
 import { createExtensionRuntimeRepo } from "~/server/extension/repos";
+import { createIntegrationJobsRepo } from "~/server/integrations/repos-jobs";
 import { createInventoryRepo } from "~/server/inventory/repos";
 import { createProductsRepo } from "~/server/inventory/repos-products";
-import { createLeadAssignmentsRepo } from "~/server/leads/repos";
+import {
+  createLeadPipelineAssignmentsRepo,
+  createLeadCommercialInputsRepo,
+  createLeadsRepo,
+} from "~/server/leads/repos";
 import { createAppNotificationsRepo } from "~/server/notifications/repos-app-notifications";
 import { createNotificationCampaignsRepo } from "~/server/notifications/repos-campaigns";
 import { createNotificationContactsRepo } from "~/server/notifications/repos-contacts";
 import { createNotificationPreferencesRepo } from "~/server/notifications/repos-preferences";
 import { createActionObservationsRepo } from "~/server/observability/repos-action-observations";
 import { createAuthFunnelEventsRepo } from "~/server/observability/repos-auth-funnel-events";
+import { createQuotationsRepo } from "~/server/quotations/repos";
+import { createLeadSalesRepo } from "~/server/sales/repos-conversions";
 import { createReportExportRepo } from "~/server/sales/repos-report-exports";
 import { createSalesRecordsRepo } from "~/server/sales/repos-sales-records";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
@@ -101,6 +109,12 @@ export function createRepositories(db: Kysely<Database>) {
     passwordResetTokens: createPasswordResetTokensRepo(db),
     branches: createBranchesRepo(db),
     teams: createTeamsRepo(db),
+    leads: createLeadsRepo(db),
+    pipelineAssignments: createLeadPipelineAssignmentsRepo(db),
+    leadCommercialInputs: createLeadCommercialInputsRepo(db),
+    quotations: createQuotationsRepo(db),
+    leadSales: createLeadSalesRepo(db),
+    integrationJobs: createIntegrationJobsRepo(db),
   };
 }
 

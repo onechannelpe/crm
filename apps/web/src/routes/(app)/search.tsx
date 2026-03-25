@@ -1,4 +1,4 @@
-import { createAsync, revalidate, useSearchParams } from "@solidjs/router";
+import { revalidate, useSearchParams } from "@solidjs/router";
 import { createEffect, createMemo, createSignal, Show } from "solid-js";
 
 import { searchDirect } from "~/actions/search/run";
@@ -22,9 +22,6 @@ import { isSearchType, type SearchType } from "~/server/shared/pipeline-types";
 import pageStyles from "~/features/search/ui/search-page-shell.module.css";
 
 export default function SearchPage() {
-  const searchAllowance = createAsync(() => mySearchAllowanceQuery(), {
-    initialValue: null,
-  });
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = createSignal("");
   const [searchType, setSearchType] = createSignal<SearchType>("person_name");

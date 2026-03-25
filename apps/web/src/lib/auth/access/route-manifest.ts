@@ -14,12 +14,14 @@ export type AppPath =
   | "/team/invite"
   | "/team/import"
   | "/inventory"
-  | "/sales/leads"
+  | "/leads"
+  | "/leads/new"
+  | "/review"
+  | "/quotations"
+  | "/integrations"
+  | "/integrations/imports"
+  | "/integrations/exports"
   | "/dashboard"
-  | "/sales/records/new"
-  | "/sales/confirmed"
-  | "/sales/confirmations"
-  | "/sales/reports/exports"
   | "/audit"
   | "/audit/auth"
   | "/audit/log"
@@ -51,12 +53,14 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
   "/team/invite": { permission: "team:manage" },
   "/team/import": { permission: "team:manage" },
   "/inventory": { permission: "inventory:read", landingPriority: 5 },
-  "/sales/leads": { permission: "lead:work", landingPriority: 2 },
+  "/leads": { permission: "lead:register", landingPriority: 2 },
+  "/leads/new": { permission: "lead:register" },
+  "/review": { permission: "lead:review", landingPriority: 4 },
+  "/quotations": { permission: "quotation:manage", landingPriority: 3 },
+  "/integrations": { permission: "integration:manage" },
+  "/integrations/imports": { permission: "integration:manage" },
+  "/integrations/exports": { permission: "integration:manage" },
   "/dashboard": { permission: "sales:review", landingPriority: 1 },
-  "/sales/records/new": { permission: "sales:create" },
-  "/sales/confirmed": { permission: "sales:review" },
-  "/sales/confirmations": { permission: "sales:review", landingPriority: 4 },
-  "/sales/reports/exports": { permission: "sales:review" },
   "/audit": { permission: "audit:read", landingPriority: 8 },
   "/audit/auth": { permission: "audit:read" },
   "/audit/log": { permission: "audit:read" },
@@ -66,6 +70,15 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
 };
 
 export const DYNAMIC_ROUTES: DynamicRouteConfig[] = [
+  { pattern: /^\/leads\/[^/]+$/, permission: "lead:register" },
+  { pattern: /^\/leads\/[^/]+\/complete$/, permission: "lead:register" },
+  { pattern: /^\/review\/[^/]+$/, permission: "lead:review" },
+  { pattern: /^\/quotations\/[^/]+$/, permission: "quotation:manage" },
+  { pattern: /^\/sales\/new\/[^/]+$/, permission: "quotation:manage" },
+  {
+    pattern: /^\/integrations\/imports\/[^/]+$/,
+    permission: "integration:manage",
+  },
   { pattern: /^\/sales\/records\/[^/]+\/edit$/, permission: "sales:create" },
   {
     pattern: /^\/team\/members\/[^/]+\/capacity$/,

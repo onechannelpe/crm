@@ -3,6 +3,8 @@ import { renderAccountExpiringEmail } from "@crm/notifications";
 import { createLogger } from "~/lib/observability/logger";
 import { shortName } from "~/lib/users/display-name";
 import {
+  exportService,
+  importService,
   notificationSender,
   repos,
   salesExportService,
@@ -84,6 +86,26 @@ export function startBackgroundJobs() {
         }
         if (expired > 0) {
           logger.info("sales_export_jobs_expired", { expired });
+        }
+      },
+    }),
+    startLoop({
+      name: "CRM import jobs",
+      intervalMs: 2_000,
+      async run() {
+        const processed = await importService.runBatch(10, 30_000, WORKER_ID);
+        if (processed > 0) {
+          logger.info("crm_import_jobs_processed", { processed });
+        }
+      },
+    }),
+    startLoop({
+      name: "CRM export jobs",
+      intervalMs: 2_000,
+      async run() {
+        const processed = await exportService.runBatch(10, 30_000, WORKER_ID);
+        if (processed > 0) {
+          logger.info("crm_export_jobs_processed", { processed });
         }
       },
     }),

@@ -19,6 +19,7 @@ import * as s06 from "./06-extensions";
 import * as s07 from "./07-search";
 import * as s08 from "./08-platform";
 import * as s09 from "./09-observability";
+import * as s10 from "./10-workflow";
 
 export const SCHEMA_MODULES: SchemaModule[] = [
   s00,
@@ -31,6 +32,7 @@ export const SCHEMA_MODULES: SchemaModule[] = [
   s07,
   s08,
   s09,
+  s10,
 ];
 
 export const SEED_MODULES: SeedModule[] = [seed00];
