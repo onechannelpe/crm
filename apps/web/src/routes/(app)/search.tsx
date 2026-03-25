@@ -87,7 +87,7 @@ export default function SearchPage() {
   });
 
   return (
-    <AppPage width="wide" class={pageStyles.page}>
+    <AppPage class={pageStyles.page}>
       <PageHeader
         class={pageStyles.header}
         icon={
@@ -97,25 +97,8 @@ export default function SearchPage() {
         }
         title={<span class={pageStyles.headerTitle}>Search</span>}
       >
-        <div class={pageStyles.allowanceCard}>
-          <div class={pageStyles.allowanceLabel}>Allowance</div>
-          <div class={pageStyles.allowanceValue}>
-            {searchAllowance()?.remaining ?? 0}
-          </div>
-          <div class={pageStyles.allowanceMeta}>
-            {searchAllowance()?.committed ?? 0}/
-            {(searchAllowance()?.policy.monthlyLimit ?? 0) +
-              (searchAllowance()?.granted ?? 0)}{" "}
-            used
-          </div>
-        </div>
       </PageHeader>
-
-      <p class={pageStyles.intro}>
-        Search results are grouped into reusable entity rows. Open a person or
-        company to inspect the aggregated context in the side panel.
-      </p>
-
+      
       <div class="space-y-6">
         <SearchLayout
           tab={tab()}
