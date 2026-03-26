@@ -56,7 +56,6 @@ const ALL_COLUMNS = [
     label: "Razón social",
     icon: <Building2 size={14} />,
     minWidth: 220,
-    maxWidth: 320,
     grow: true,
     render: (lead) => (
       <div class={styles.fieldWithIcon}>
