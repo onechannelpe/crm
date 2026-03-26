@@ -1,0 +1,60 @@
+import type { JSX } from "solid-js";
+
+export type NavigationDrawerSubItemState =
+  | "intermediate-before-selected"
+  | "intermediate-selected"
+  | "intermediate-after-selected"
+  | "last-selected"
+  | "last-not-selected";
+
+export type NavigationDrawerItemModifier = "new" | "soon";
+
+export type NavigationDrawerItemVariant = "default" | "tertiary";
+
+export interface NavigationDrawerIconProps {
+  class?: string;
+  size?: number;
+  strokeWidth?: number;
+}
+
+export type NavigationDrawerIcon = (
+  props: NavigationDrawerIconProps,
+) => JSX.Element;
+
+export interface NavigationDrawerItemProps {
+  className?: string;
+  label: string;
+  secondaryLabel?: string;
+  indentationLevel?: 1 | 2;
+  subItemState?: NavigationDrawerSubItemState;
+  to?: string;
+  onClick?: () => void;
+  Icon?: NavigationDrawerIcon;
+  active?: boolean;
+  modifier?: NavigationDrawerItemModifier;
+  rightOptions?: JSX.Element;
+  alwaysShowRightOptions?: boolean;
+  closeOnNavigate?: () => void;
+  showChevron?: boolean;
+  chevronExpanded?: boolean;
+  preventCollapseOnMobile?: boolean;
+  variant?: NavigationDrawerItemVariant;
+}
+
+export interface NavigationDrawerItemFrameBaseProps {
+  className?: string;
+  label: string;
+  secondaryLabel?: string;
+  indentationLevel: 1 | 2;
+  subItemState?: NavigationDrawerSubItemState;
+  Icon?: NavigationDrawerIcon;
+  active?: boolean;
+  modifier?: NavigationDrawerItemModifier;
+  rightOptions?: JSX.Element;
+  alwaysShowRightOptions?: boolean;
+  showChevron?: boolean;
+  chevronExpanded?: boolean;
+  variant?: NavigationDrawerItemVariant;
+  collapsedMain: boolean;
+  isMobile: boolean;
+}

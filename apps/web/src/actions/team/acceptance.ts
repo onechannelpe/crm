@@ -2,11 +2,8 @@
 
 import { getRequestEvent } from "solid-js/web";
 
-import {
-  conflictError,
-  internalError,
-  validationError,
-} from "~/lib/app-errors";
+import { throwDomainError } from "~/actions/throw-domain-error";
+import { validationError } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { isValidInviteTokenFormat } from "~/lib/auth/invite/tokens";
 import { getClientIp } from "~/lib/auth/password/client-ip";
@@ -17,27 +14,9 @@ import { assertNonEmptyString } from "~/lib/contracts/guards";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
 import { repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
-import type { AcceptInviteError } from "~/server/users/service-user-provisioning";
 
 import { provisioning } from "./provisioning";
 import { assertStrongPassword } from "./validators";
-
-function throwProvisioningError(error: AcceptInviteError): never {
-  switch (error.reason) {
-    case "invite_invalid_or_expired":
-      throw validationError(error.message);
-    case "invite_target_active":
-      throw conflictError(error.message);
-    case "unexpected":
-      throw internalError(error.message);
-    default: {
-      const exhausted: never = error;
-      throw internalError(
-        `Unhandled invite acceptance error: ${String(exhausted)}`,
-      );
-    }
-  }
-}
 
 export async function acceptTeamInvite(input: {
   token: string;
@@ -60,7 +39,7 @@ export async function acceptTeamInvite(input: {
         passwordHash: await hashPassword(safePassword),
       });
       if (isErr(result)) {
-        throwProvisioningError(result.error);
+        throwDomainError(result.error);
       }
       actor.userId = result.value.userId;
       actor.role = result.value.role;

@@ -2,8 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import { getUserLoginRetryReport } from "../../src/actions/admin";
 import { listUserSessions, revokeUserSession } from "../../src/actions/admin";
-import { requestLeads } from "../../src/actions/leads";
-import { allocateQuota } from "../../src/actions/quota";
 import { requestSalesExport } from "../../src/actions/sales-exports";
 import {
   createSalesRecordDraft,
@@ -21,9 +19,6 @@ describe("action guards fail fast", () => {
   it("rejects malformed numeric ids before auth", async () => {
     await expect(rejectSalesRecord(0, "missing docs")).rejects.toThrow(
       "recordId must be a positive integer",
-    );
-    await expect(allocateQuota(0, 1)).rejects.toThrow(
-      "executiveId must be a positive integer",
     );
     await expect(updateProductPricing(0, 10, true)).rejects.toThrow(
       "productId must be a positive integer",
@@ -104,12 +99,6 @@ describe("action guards fail fast", () => {
         products: [{ productId: 1, quantity: 1 }],
       }),
     ).rejects.toThrow("addresses[0].fullText is required");
-    await expect(requestLeads(0)).rejects.toThrow(
-      "bufferSize must be a positive integer",
-    );
-    await expect(allocateQuota(1, 0)).rejects.toThrow(
-      "amount must be a positive integer",
-    );
     await expect(resendTeamInvite(0)).rejects.toThrow(
       "inviteId must be a positive integer",
     );

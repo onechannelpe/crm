@@ -11,6 +11,8 @@ import {
 } from "~/lib/auth/session/session-manager";
 import { hashSessionToken } from "~/lib/auth/session/tokens";
 import type { User } from "~/lib/db/types";
+import { asBranchId, asUserId } from "~/server/shared/ids";
+import type { UserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
 
 import type { LoginDecision } from "../policy/policy-types";
@@ -28,7 +30,7 @@ export interface SessionRequestMetadata {
 }
 
 export interface IssuedSessionResult {
-  userId: number;
+  userId: UserId;
   role: User["role"];
   onboardingCompleted: boolean;
   sessionClass: SessionClass;
@@ -57,10 +59,13 @@ async function transitionSession(
     throw forbiddenError("Invalid credentials");
   }
 
+  const userId = asUserId(user.id);
+  const branchId = asBranchId(user.branch_id);
+
   const token = await createSession(
     {
-      userId: user.id,
-      branchId: user.branch_id,
+      userId,
+      branchId,
       role: user.role,
       sessionClass: params.sessionClass,
       ipAddress: params.request.ipAddress,
@@ -84,7 +89,7 @@ async function transitionSession(
   }
 
   return {
-    userId: user.id,
+    userId,
     role: user.role,
     onboardingCompleted: user.onboarding_completed_at !== null,
     sessionClass: params.sessionClass,

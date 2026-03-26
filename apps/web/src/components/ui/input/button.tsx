@@ -1,4 +1,4 @@
-import { Show, type JSX, mergeProps, splitProps } from "solid-js";
+import { type JSX, mergeProps, splitProps } from "solid-js";
 
 import { Loader } from "~/components/feedback/loader";
 import { cn } from "~/lib/utils";
@@ -62,10 +62,13 @@ export function Button(props: ButtonProps) {
       disabled={others.disabled || local.loading}
       {...others}
     >
-      <Show when={local.loading}>
-        <Loader />
-      </Show>
-      {local.children}
+      <span
+        class={cn(styles.loaderSlot, !local.loading && styles.loaderSlotHidden)}
+        aria-hidden={local.loading ? undefined : "true"}
+      >
+        {local.loading ? <Loader /> : null}
+      </span>
+      <span class={styles.content}>{local.children}</span>
     </button>
   );
 }

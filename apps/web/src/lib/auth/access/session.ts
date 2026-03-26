@@ -1,3 +1,5 @@
+import type { BranchId, UserId } from "~/server/shared/ids";
+
 import type {
   PrimaryAuthMethod,
   SessionClass,
@@ -9,10 +11,10 @@ import { hasPermission, type Permission, type Role } from "./rbac";
 
 export interface SessionData {
   sessionId: string;
-  userId: number;
+  userId: UserId;
   email?: string;
   role: Role;
-  branchId: number;
+  branchId: BranchId;
   onboardingCompleted: boolean;
   sessionClass: SessionClass;
   primaryAuthMethod: PrimaryAuthMethod;

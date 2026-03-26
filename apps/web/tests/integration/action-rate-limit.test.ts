@@ -163,7 +163,7 @@ describe("action rate limit", () => {
       await checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1");
     }
 
-    // different action — separate counter
+    // Different action, uses a separate counter.
     await expect(
       checkActionRateLimit(
         "sales_records.create_draft",

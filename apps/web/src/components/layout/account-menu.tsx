@@ -1,4 +1,4 @@
-import { A, useNavigate } from "@solidjs/router";
+import { useNavigate } from "@solidjs/router";
 import { Show, createSignal, onMount } from "solid-js";
 
 import ChevronDown from "~/components/icons/chevron-down";
@@ -22,6 +22,7 @@ interface AccountMenuProps {
   label: string;
   avatarUrl?: string | null;
   collapsed?: boolean;
+  onOpenSettings?: () => void;
   onLogout: () => Promise<void>;
 }
 
@@ -79,14 +80,18 @@ export function AccountMenu(props: AccountMenuProps) {
 
       <Show when={open()}>
         <div class={styles.menu}>
-          <A
-            href="/settings/profile"
-            onClick={() => setOpen(false)}
+          <button
+            type="button"
+            onClick={() => {
+              props.onOpenSettings?.();
+              setOpen(false);
+              navigate("/settings/profile");
+            }}
             class={styles.item}
           >
             <UserRound size={16} />
             Mi perfil
-          </A>
+          </button>
           <button
             type="button"
             onClick={() => {

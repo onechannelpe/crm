@@ -1,0 +1,53 @@
+.root {
+  align-items: center;
+  color: var(--foreground-tertiary);
+  display: grid;
+  font-size: var(--font-size-body);
+  grid-auto-flow: column;
+  column-gap: 4px;
+  height: 32px;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.segment {
+  align-items: center;
+  display: contents;
+}
+
+.linkContainer > a {
+  color: inherit;
+  overflow: hidden;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.link {
+  color: inherit;
+  overflow: hidden;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.text {
+  color: var(--foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.divider {
+  width: 8px;
+}
+
+.mobileBack {
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

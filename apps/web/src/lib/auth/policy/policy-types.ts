@@ -1,18 +1,20 @@
+import type { UserId } from "~/server/shared/ids";
+
 import type { SessionClass, StrongAuthMethod } from "../core/session-contract";
 
 export type AuthProof =
   | {
       kind: "password";
-      userId: number;
+      userId: UserId;
     }
   | {
       kind: "google";
-      userId: number;
+      userId: UserId;
       trustedFederatedMfa: boolean;
     }
   | {
       kind: "passkey";
-      userId: number;
+      userId: UserId;
     };
 
 export type LoginDecision =

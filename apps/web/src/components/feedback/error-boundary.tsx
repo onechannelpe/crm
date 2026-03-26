@@ -1,6 +1,10 @@
 import type { JSX } from "solid-js";
 import { ErrorBoundary as SolidErrorBoundary } from "solid-js";
 
+import {
+  isHydrationMismatchError,
+  traceHydrationEvent,
+} from "~/lib/observability/diagnostics";
 import { createLogger } from "~/lib/observability/logger";
 
 import { ErrorState } from "./error-state";
@@ -23,10 +27,29 @@ export function reportBoundaryError(
   sink: { error: (message: string, meta?: Record<string, unknown>) => void },
   error: unknown,
 ) {
+  const browserMeta =
+    typeof window === "undefined"
+      ? undefined
+      : {
+          path: window.location.pathname,
+          search: window.location.search,
+          hash: window.location.hash,
+        };
+
   sink.error("ui_boundary_error", {
     boundary: "app-root",
     error,
+    browser: browserMeta,
   });
+
+  if (typeof window !== "undefined") {
+    traceHydrationEvent("app-error-boundary", "boundary_error", {
+      boundary: "app-root",
+      browser: browserMeta,
+      hydrationMismatch: isHydrationMismatchError(error),
+      error,
+    });
+  }
 }
 
 export function AppErrorBoundary(props: AppErrorBoundaryProps) {

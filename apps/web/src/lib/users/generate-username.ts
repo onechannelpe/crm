@@ -27,6 +27,6 @@ export async function generateUsername(
     if (!(await exists(candidate))) return candidate;
   }
 
-  // Fallback with timestamp suffix — should never be reached in practice
+  // Fallback with timestamp suffix, should not be reached in practice.
   return `${first}.${fs}.${Date.now()}`;
 }

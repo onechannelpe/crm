@@ -8,7 +8,7 @@ Authenticated pages live under [`src/routes/(app).tsx`](src/routes/%28app%29.tsx
 
 Most feature work follows the same path. A route calls a server function in [`src/actions/`](src/actions/). The action calls a service under [`src/server/`](src/server/), and the service uses repositories from [`src/server/shared/registry.ts`](src/server/shared/registry.ts). Database access starts in [`src/lib/db/client.ts`](src/lib/db/client.ts) and [`src/lib/db/db.ts`](src/lib/db/db.ts). Schema modules live under [`src/lib/db/schema/`](src/lib/db/schema/).
 
-Search is the main cross-service dependency. Engine integration is configured in [`src/server/shared/engine/index.ts`](src/server/shared/engine/index.ts) and implemented in [`src/server/shared/engine/client.ts`](src/server/shared/engine/client.ts). Client search flows through [`src/server/client-search/service.ts`](src/server/client-search/service.ts). Lead assignment also depends on engine health and search state through [`src/server/leads/service.ts`](src/server/leads/service.ts). Extension session and event APIs live under [`src/routes/api/extension/`](src/routes/api/extension/).
+Search and candidate discovery are the main cross-service dependencies. Engine integration is configured in [`src/server/shared/engine/index.ts`](src/server/shared/engine/index.ts) and implemented in [`src/server/shared/engine/client.ts`](src/server/shared/engine/client.ts). Direct search flows through [`src/actions/search/use.ts`](src/actions/search/use.ts) and [`src/server/engine-gateway/search-service.ts`](src/server/engine-gateway/search-service.ts). Lead refill flows through [`src/actions/lead-operations/refill.ts`](src/actions/lead-operations/refill.ts), [`src/server/lead-operations/refill-service.ts`](src/server/lead-operations/refill-service.ts), and [`src/server/engine-gateway/lead-candidate-service.ts`](src/server/engine-gateway/lead-candidate-service.ts). Extension session and event APIs live under [`src/routes/api/extension/`](src/routes/api/extension/).
 
 Configuration is loaded from env files selected by the script or passed by the caller.
 
@@ -54,44 +54,6 @@ bun --env-file=../../.env.production run worker:maintenance:prod
 
 Local scripts choose their default env file automatically. Production entrypoints stay explicit through `start`, `migrate:prod`, `seed:prod`, and `worker:maintenance:prod`.
 
-## Production
-
-Production is Bun-first.
-Use the app-local Bun commands directly.
-For a real server, prefer keeping secrets outside the repo and pass an explicit env file path.
-
-Build from `apps/web/`:
-
-```sh
-bun run build
-```
-
-Run migrations:
-
-```sh
-bun --env-file=../../.env.production run migrate:prod
-```
-
-Run seeds if needed:
-
-```sh
-bun --env-file=../../.env.production run seed:prod
-```
-
-Start the web server:
-
-```sh
-bun --env-file=../../.env.production run start
-```
-
-Start the maintenance worker:
-
-```sh
-bun --env-file=../../.env.production run worker:maintenance
-```
-
-Systemd unit examples live in [`../../ops/systemd/web.service`](../../ops/systemd/web.service) and [`../../ops/systemd/web-worker.service`](../../ops/systemd/web-worker.service).
-
 ## Validation
 
 Validation commands:
@@ -104,8 +66,31 @@ bun run test:integration:browser
 bun run test:perf
 ```
 
+## Diagnostics
+
+Use diagnostics for SSR, hydration, and request debugging. These traces are opt-in and separate from audit or operational logs. Keep product code instrumentation minimal. Prefer stable boundaries and generic wrappers over feature-level render tracing.
+
+Server-side channels use `DEBUG_DIAGNOSTICS`. Client-side channels use `VITE_DEBUG_DIAGNOSTICS`. Narrow output with `DEBUG_DIAGNOSTICS_FILTER` or `VITE_DEBUG_DIAGNOSTICS_FILTER`.
+
+```sh
+DEBUG_DIAGNOSTICS=ssr bun run dev
+VITE_DEBUG_DIAGNOSTICS=hydration bun run dev
+DEBUG_DIAGNOSTICS=requests bun run dev
+DEBUG_DIAGNOSTICS=requests DEBUG_DIAGNOSTICS_REQUESTS=verbose bun run dev
+DEBUG_DIAGNOSTICS=requests DEBUG_DIAGNOSTICS_REQUESTS_SLOW_MS=500 bun run dev
+DEBUG_DIAGNOSTICS=ssr DEBUG_DIAGNOSTICS_FILTER=app-layout,auth-session-action bun run dev
+```
+
+Diagnostic channels:
+
+- `ssr`: shared render boundaries and a small set of server-side wrappers
+- `hydration`: client mount, boundary failures, window errors, unhandled rejections
+- `requests`: Vite dev-server request tracing
+
+Request tracing defaults to useful traffic only: document navigations, `/_server`, `/api/*`, non-`GET` requests, slow responses, failures, and aborted requests. Use `DEBUG_DIAGNOSTICS_REQUESTS=verbose` only when you need asset-level request noise.
+
 ## First reads
 
 The engine contract is [`engine-api.json (contracts)`](../../contracts/engine-api.json). Generated bindings live in [`src/server/shared/engine/contract.ts`](src/server/shared/engine/contract.ts).
 
-Start with [`src/middleware.ts`](src/middleware.ts) and [`src/lib/auth/access/request-auth.ts`](src/lib/auth/access/request-auth.ts) for request and session flow. Then read [`src/actions/auth/login.ts`](src/actions/auth/login.ts), [`src/server/shared/context.ts`](src/server/shared/context.ts), and [`src/server/shared/registry.ts`](src/server/shared/registry.ts). For contact search or lead assignment, continue with [`src/server/shared/engine/client.ts`](src/server/shared/engine/client.ts).
+Start with [`src/middleware.ts`](src/middleware.ts) and [`src/lib/auth/access/request-auth.ts`](src/lib/auth/access/request-auth.ts) for request and session flow. Then read [`src/actions/auth/login.ts`](src/actions/auth/login.ts), [`src/server/shared/context.ts`](src/server/shared/context.ts), and [`src/server/shared/registry.ts`](src/server/shared/registry.ts). For search or lead refill, continue with [`src/server/shared/engine/client.ts`](src/server/shared/engine/client.ts), [`src/server/engine-gateway/search-service.ts`](src/server/engine-gateway/search-service.ts), and [`src/server/engine-gateway/lead-candidate-service.ts`](src/server/engine-gateway/lead-candidate-service.ts).

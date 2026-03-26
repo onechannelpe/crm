@@ -1,5 +1,4 @@
 import { For, splitProps, type JSX } from "solid-js";
-import { Dynamic } from "solid-js/web";
 
 const defaultAttributes = {
   xmlns: "http://www.w3.org/2000/svg",
@@ -13,7 +12,11 @@ const defaultAttributes = {
   "stroke-linejoin": "round",
 } as const;
 
-export type IconNode = ReadonlyArray<readonly [string, Record<string, string>]>;
+type SupportedSvgTag = "path" | "circle" | "rect" | "line" | "polyline";
+
+export type IconNode = ReadonlyArray<
+  readonly [SupportedSvgTag, Record<string, string>]
+>;
 
 export interface IconProps extends Omit<
   JSX.SvgSVGAttributes<SVGSVGElement>,
@@ -27,6 +30,17 @@ export interface IconProps extends Omit<
   name?: string;
   title?: string;
 }
+
+const SVG_NODE_RENDERERS: Record<
+  SupportedSvgTag,
+  (attrs: Record<string, string>) => JSX.Element
+> = {
+  path: (attrs) => <path {...attrs} />,
+  circle: (attrs) => <circle {...attrs} />,
+  rect: (attrs) => <rect {...attrs} />,
+  line: (attrs) => <line {...attrs} />,
+  polyline: (attrs) => <polyline {...attrs} />,
+};
 
 function hasA11yProp(props: JSX.SvgSVGAttributes<SVGSVGElement>) {
   for (const prop in props) {
@@ -108,9 +122,7 @@ export function IconBase(props: IconProps) {
     >
       <title>{iconTitle()}</title>
       <For each={local.iconNode}>
-        {([elementName, attrs]) => (
-          <Dynamic component={elementName} {...attrs} />
-        )}
+        {([elementName, attrs]) => SVG_NODE_RENDERERS[elementName](attrs)}
       </For>
       {local.children}
     </svg>

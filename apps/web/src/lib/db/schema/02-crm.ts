@@ -46,27 +46,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createTable("quota_allocations")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
-      col.notNull().references("users.id"),
-    )
-    .addColumn("allocated_by_user_id", "integer", (col) =>
-      col.notNull().references("users.id"),
-    )
-    .addColumn("date", "varchar(10)", (col) => col.notNull())
-    .addColumn("quota_amount", "integer", (col) => col.notNull())
-    .addColumn("used_amount", "integer", (col) => col.notNull().defaultTo(0))
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .execute();
-
-  await db.schema
-    .createIndex("idx_quota_user_date")
-    .on("quota_allocations")
-    .columns(["user_id", "date"])
-    .execute();
-
-  await db.schema
     .createTable("interaction_logs")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("contact_id", "integer", (col) =>

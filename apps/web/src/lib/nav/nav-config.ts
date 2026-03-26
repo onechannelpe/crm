@@ -10,7 +10,7 @@ export type RouteIcon =
   | "confirmed"
   | "review"
   | "audit"
-  | "quota"
+  | "capacity"
   | "profile"
   | "schedule"
   | "monitoring";
@@ -53,42 +53,67 @@ export interface PageHeaderRule {
 export const PAGE_HEADERS: PageHeaderRule[] = [
   // Dynamic patterns first
   {
-    match: /^\/sales\/records\/[^/]+\/edit$/,
-    header: { label: "Editar venta", icon: "new-sale" },
+    match: /^\/leads\/[^/]+\/complete$/,
+    header: { label: "Completar prospecto", icon: "leads" },
   },
   {
-    match: /^\/sales\/reports\/exports\/[^/]+$/,
-    header: { label: "Detalle", icon: "confirmed" },
+    match: /^\/leads\/[^/]+$/,
+    header: { label: "Detalle del prospecto", icon: "leads" },
+  },
+  {
+    match: /^\/review\/[^/]+$/,
+    header: { label: "Revisar prospecto", icon: "review" },
+  },
+  {
+    match: /^\/quotations\/[^/]+$/,
+    header: { label: "Cotización", icon: "sales" },
+  },
+  {
+    match: /^\/sales\/new\/[^/]+$/,
+    header: { label: "Registrar venta", icon: "new-sale" },
+  },
+  {
+    match: /^\/sales\/[0-9]+$/,
+    header: { label: "Detalle de venta", icon: "sales" },
+  },
+  {
+    match: /^\/integrations\/imports\/[^/]+$/,
+    header: { label: "Detalle de importación", icon: "confirmed" },
+  },
+  {
+    match: /^\/team\/members\/[^/]+\/capacity$/,
+    header: { label: "Capacidad del ejecutivo", icon: "team" },
   },
 
   // Exact paths
   { match: "/dashboard", header: { label: "Inicio", icon: "dashboard" } },
-  {
-    match: "/sales/records/new",
-    header: { label: "Crear venta", icon: "new-sale" },
-  },
   { match: "/schedule", header: { label: "Agenda", icon: "schedule" } },
-  { match: "/contacts/people", header: { label: "Personas", icon: "search" } },
+  { match: "/leads", header: { label: "Prospectos", icon: "leads" } },
+  { match: "/review", header: { label: "Revisión", icon: "review" } },
+  { match: "/quotations", header: { label: "Cotizaciones", icon: "sales" } },
+  { match: "/sales/crm", header: { label: "Ventas CRM", icon: "sales" } },
   {
-    match: "/contacts/companies",
-    header: { label: "Empresas", icon: "search" },
-  },
-  { match: "/sales/leads", header: { label: "Prospectos", icon: "leads" } },
-  {
-    match: "/sales/confirmed",
-    header: { label: "Ventas confirmadas", icon: "confirmed" },
+    match: "/integrations",
+    header: { label: "Integraciones", icon: "confirmed" },
   },
   {
-    match: "/sales/confirmations",
-    header: { label: "Cola de confirmaciones", icon: "review" },
+    match: "/integrations/imports",
+    header: { label: "Importaciones", icon: "confirmed" },
   },
   {
-    match: "/sales/reports/exports",
+    match: "/integrations/exports",
     header: { label: "Exportaciones", icon: "confirmed" },
   },
-  { match: "/quota", header: { label: "Cuota", icon: "quota" } },
+  {
+    match: "/me/capacity",
+    header: { label: "Mi capacidad", icon: "capacity" },
+  },
   { match: "/inventory", header: { label: "Inventario", icon: "inventory" } },
   { match: "/team", header: { label: "Equipo", icon: "team" } },
+  {
+    match: "/team/requests",
+    header: { label: "Solicitudes", icon: "team" },
+  },
   { match: "/team/invite", header: { label: "Invitaciones", icon: "team" } },
   {
     match: "/team/import",
@@ -101,6 +126,14 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
   },
   { match: "/monitoring", header: { label: "Monitoreo", icon: "monitoring" } },
   { match: "/settings/profile", header: { label: "Perfil", icon: "profile" } },
+  {
+    match: "/settings/capacity-policies",
+    header: { label: "Políticas comerciales", icon: "settings" },
+  },
+  {
+    match: "/settings/capacity-audit",
+    header: { label: "Auditoría de capacidad", icon: "settings" },
+  },
 ];
 
 export const SIDEBAR_ENTRIES: SidebarEntry[] = [
@@ -115,15 +148,6 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     order: 1,
   },
   {
-    id: "sales-records-new",
-    href: "/sales/records/new",
-    activePrefixes: ["/sales/records/new"],
-    label: "Crear venta",
-    icon: "new-sale",
-    section: "primary",
-    order: 2,
-  },
-  {
     id: "schedule",
     href: "/schedule",
     activePrefixes: ["/schedule"],
@@ -131,55 +155,56 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     navLabel: "Agenda",
     icon: "schedule",
     section: "primary",
-    order: 3,
+    order: 2,
   },
 
   // Secondary › Comercial
   {
-    id: "contacts-people",
-    href: "/contacts/people",
-    activePrefixes: ["/contacts/people", "/contacts/companies"],
-    label: "Personas",
-    navLabel: "Contactos",
-    icon: "search",
+    id: "leads",
+    href: "/leads",
+    activePrefixes: ["/leads", "/sales/new"],
+    label: "Prospectos",
+    navLabel: "Prospectos",
+    icon: "leads",
     section: "secondary",
     order: 1,
     group: "Comercial",
-    children: [
-      { href: "/contacts/people", label: "Personas", order: 1 },
-      { href: "/contacts/companies", label: "Empresas", order: 2 },
-    ],
   },
   {
-    id: "sales",
-    href: "/sales/leads",
-    activePrefixes: ["/sales"],
-    label: "Ventas",
-    navLabel: "Ventas",
-    icon: "sales",
+    id: "my-capacity",
+    href: "/me/capacity",
+    activePrefixes: ["/me/capacity"],
+    label: "Mi capacidad",
+    navLabel: "Mi capacidad",
+    icon: "capacity",
     section: "secondary",
     order: 2,
-    group: "Comercial",
-    children: [
-      { href: "/sales/leads", label: "Prospectos", order: 1 },
-      { href: "/sales/confirmed", label: "Confirmadas", order: 4 },
-      { href: "/sales/confirmations", label: "Cola", order: 5 },
-      { href: "/sales/reports/exports", label: "Exportar", order: 6 },
-    ],
-  },
-  {
-    id: "quota",
-    href: "/quota",
-    activePrefixes: ["/quota"],
-    label: "Cuota",
-    navLabel: "Cuota",
-    icon: "quota",
-    section: "secondary",
-    order: 3,
     group: "Comercial",
   },
 
   // Secondary › Operaciones
+  {
+    id: "review",
+    href: "/review",
+    activePrefixes: ["/review"],
+    label: "Revisión",
+    navLabel: "Revisión",
+    icon: "review",
+    section: "secondary",
+    order: 3,
+    group: "Operaciones",
+  },
+  {
+    id: "quotations",
+    href: "/quotations",
+    activePrefixes: ["/quotations"],
+    label: "Cotizaciones",
+    navLabel: "Cotizaciones",
+    icon: "sales",
+    section: "secondary",
+    order: 4,
+    group: "Operaciones",
+  },
   {
     id: "inventory",
     href: "/inventory",
@@ -188,7 +213,7 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     navLabel: "Inventario",
     icon: "inventory",
     section: "secondary",
-    order: 4,
+    order: 5,
     group: "Operaciones",
   },
   {
@@ -199,16 +224,32 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     navLabel: "Equipo",
     icon: "team",
     section: "secondary",
-    order: 5,
+    order: 6,
     group: "Operaciones",
     children: [
       { href: "/team", label: "Miembros", order: 1 },
-      { href: "/team/invite", label: "Invitaciones", order: 2 },
-      { href: "/team/import", label: "Importar", order: 3 },
+      { href: "/team/requests", label: "Solicitudes", order: 2 },
+      { href: "/team/invite", label: "Invitaciones", order: 3 },
+      { href: "/team/import", label: "Importar", order: 4 },
     ],
   },
 
   // Secondary › Administración
+  {
+    id: "integrations",
+    href: "/integrations",
+    activePrefixes: ["/integrations"],
+    label: "Integraciones",
+    navLabel: "Integraciones",
+    icon: "confirmed",
+    section: "secondary",
+    order: 7,
+    group: "Administración",
+    children: [
+      { href: "/integrations/imports", label: "Importaciones", order: 1 },
+      { href: "/integrations/exports", label: "Exportaciones", order: 2 },
+    ],
+  },
   {
     id: "audit",
     href: "/audit/log",
@@ -217,7 +258,7 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     navLabel: "Auditoría",
     icon: "audit",
     section: "secondary",
-    order: 6,
+    order: 8,
     group: "Administración",
     children: [
       { href: "/audit/log", label: "Registro", order: 1 },
@@ -232,7 +273,7 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     navLabel: "Monitoreo",
     icon: "monitoring",
     section: "secondary",
-    order: 7,
+    order: 9,
     group: "Administración",
   },
 ];

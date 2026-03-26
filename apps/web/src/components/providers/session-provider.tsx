@@ -15,6 +15,7 @@ const SessionContext = createContext<SessionContextValue>();
 
 export function SessionProvider(props: ParentProps) {
   const [user, { mutate, refetch }] = createResource(getMe);
+
   const currentUser = () => {
     const value = user();
     if (!value) {

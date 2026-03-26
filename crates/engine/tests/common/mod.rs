@@ -1,149 +1,109 @@
-use hmac::{Hmac, Mac};
+use axum::Router;
+use axum::routing::get;
+use axum_test::TestServer;
+use leads::api::{LeadState, router as lead_router};
+use leads::service::{CandidateService, ImportService};
 use rusqlite::Connection;
-use sha2::Sha256;
-use std::time::{SystemTime, UNIX_EPOCH};
+use search::api::{SearchState, router as search_router};
+use search::service::SearchService;
+use shared::hmac::HmacVerifier;
+use shared::rate_limit::RateLimiter;
+use shared::sqlite::make_readonly_pool;
+use std::collections::HashMap;
+use std::sync::Arc;
 
+/// Creates a temp SQLite file with the minimal search schema needed for engine tests.
 #[allow(dead_code)]
-type HmacSha256 = Hmac<Sha256>;
-
 pub fn create_test_db() -> tempfile::NamedTempFile {
     let file = tempfile::NamedTempFile::new().expect("temp file");
-    let conn = Connection::open(file.path()).expect("open sqlite");
+    let conn = Connection::open(file.path()).expect("open");
     conn.execute_batch(
-        "
-        CREATE TABLE person_profile (
-            person_id INTEGER PRIMARY KEY,
-            dni TEXT UNIQUE,
-            natural_ruc10 TEXT UNIQUE,
-            full_name TEXT NOT NULL DEFAULT '',
-            birth_date TEXT,
-            birth_place TEXT,
-            sex TEXT,
-            marital_status TEXT,
-            location_text TEXT,
-            mother_name TEXT,
-            father_name TEXT,
-            email TEXT,
-            ubigeo_code TEXT
-        );
-        CREATE TABLE company_profile (
-            company_id INTEGER PRIMARY KEY,
-            ruc TEXT NOT NULL UNIQUE,
-            legal_name TEXT NOT NULL DEFAULT '',
-            trade_name TEXT,
-            registration_date TEXT,
+        "CREATE TABLE search_projection (
+            id                  INTEGER PRIMARY KEY,
+            dni                 TEXT NOT NULL,
+            name                TEXT,
+            birth_date          TEXT,
+            birth_place         TEXT,
+            sex                 TEXT,
+            marital_status      TEXT,
+            location_text       TEXT,
+            ubigeo_code         TEXT,
+            mother_name         TEXT,
+            father_name         TEXT,
+            email               TEXT,
+            person_ruc          TEXT,
+            org_ruc             TEXT,
+            org_name            TEXT,
+            trade_name          TEXT,
+            company_type        TEXT,
+            org_status          TEXT,
+            org_condition       TEXT,
+            fiscal_address      TEXT,
+            registration_date   TEXT,
             activity_start_date TEXT,
-            fiscal_address TEXT,
-            company_type TEXT,
-            line_of_business TEXT,
-            status TEXT,
-            condition TEXT,
-            economic_activity TEXT
-        );
-        CREATE TABLE person_company_role (
-            role_id INTEGER PRIMARY KEY,
-            person_id INTEGER,
-            company_id INTEGER NOT NULL,
-            rep_doc_type TEXT NOT NULL DEFAULT '',
-            rep_doc_number TEXT NOT NULL DEFAULT '',
-            rep_name TEXT NOT NULL DEFAULT '',
-            role_name TEXT NOT NULL DEFAULT '',
-            role_start_date TEXT NOT NULL DEFAULT '',
-            resolution_status TEXT NOT NULL DEFAULT 'unresolved'
-        );
-        CREATE TABLE ruc_phone_agg (org_ruc TEXT PRIMARY KEY, phones TEXT NOT NULL);
-        CREATE TABLE dni_phone_agg (dni TEXT PRIMARY KEY, phones TEXT NOT NULL);
-        CREATE TABLE search_projection (
-            id INTEGER PRIMARY KEY,
-            dni TEXT NOT NULL,
-            name TEXT,
-            birth_date TEXT,
-            birth_place TEXT,
-            sex TEXT,
-            marital_status TEXT,
-            location_text TEXT,
-            ubigeo_code TEXT,
-            mother_name TEXT,
-            father_name TEXT,
-            email TEXT,
-            person_ruc TEXT,
-            org_ruc TEXT,
-            org_name TEXT,
-            trade_name TEXT,
-            company_type TEXT,
-            org_status TEXT,
-            org_condition TEXT,
-            fiscal_address TEXT,
-            registration_date TEXT,
-            activity_start_date TEXT,
-            line_of_business TEXT,
-            economic_activity TEXT,
-            org_ubigeo_code TEXT,
-            org_department TEXT,
-            org_province TEXT,
-            org_district TEXT,
-            role_name TEXT,
-            role_start_date TEXT,
-            rep_doc_type TEXT,
-            rep_doc_number TEXT,
-            rep_name TEXT,
-            phone_primary TEXT,
-            phone_secondary TEXT
+            line_of_business    TEXT,
+            economic_activity   TEXT,
+            org_ubigeo_code     TEXT,
+            org_department      TEXT,
+            org_province        TEXT,
+            org_district        TEXT,
+            role_name           TEXT,
+            role_start_date     TEXT,
+            rep_doc_type        TEXT,
+            rep_doc_number      TEXT,
+            rep_name            TEXT,
+            phone_primary       TEXT,
+            phone_secondary     TEXT
         );
         CREATE TABLE search_projection_phone_index (
-            phone TEXT NOT NULL,
+            phone         TEXT    NOT NULL,
             projection_id INTEGER NOT NULL
         );
         CREATE VIRTUAL TABLE search_projection_fts USING fts5(person_name, company_name);
-
-        INSERT INTO person_profile(person_id,dni,full_name,sex,birth_date) VALUES
-          (1,'12345678','JUAN PEREZ','M','1980-05-10'),
-          (2,'87654321','MARIA LOPEZ','F',NULL),
-          (3,'11223344','CARLOS DIAZ',NULL,NULL);
-
-        INSERT INTO company_profile(company_id,ruc,legal_name,trade_name,status,fiscal_address) VALUES
-          (1,'20100011111','ACME SAC','ACME','ACTIVO','AV. LIMA 123');
-
-        INSERT INTO person_company_role(role_id,person_id,company_id,role_name,role_start_date) VALUES
-          (1,1,1,'GERENTE GENERAL','2020-01-01'),
-          (2,2,1,'SOCIO','2020-01-01');
-
-        INSERT INTO search_projection(
-          id,dni,name,birth_date,birth_place,sex,marital_status,location_text,ubigeo_code,mother_name,father_name,email,person_ruc,
-          org_ruc,org_name,trade_name,company_type,org_status,org_condition,fiscal_address,registration_date,activity_start_date,
-          line_of_business,economic_activity,role_name,role_start_date,rep_doc_type,rep_doc_number,rep_name,phone_primary,phone_secondary
-        ) VALUES
-          (1,'12345678','JUAN PEREZ','1980-05-10',NULL,'M',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'20100011111','ACME SAC','ACME',NULL,'ACTIVO',NULL,'AV. LIMA 123',NULL,NULL,NULL,NULL,'GERENTE GENERAL','2020-01-01','','','', '999111222','999333444'),
-          (2,'87654321','MARIA LOPEZ',NULL,NULL,'F',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'20100011111','ACME SAC','ACME',NULL,'ACTIVO',NULL,'AV. LIMA 123',NULL,NULL,NULL,NULL,'SOCIO','2020-01-01','','','', '988777666',NULL),
-          (3,'11223344','CARLOS DIAZ',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'','',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'','','', '977000111',NULL);
-
-        INSERT INTO search_projection_phone_index(phone, projection_id) VALUES
-          ('999111222',1),('999333444',1),('988777666',2),('977000111',3);
-
-        INSERT INTO ruc_phone_agg(org_ruc, phones) VALUES
-          ('20100011111','999111222;999333444;988777666');
-        INSERT INTO dni_phone_agg(dni, phones) VALUES
-          ('12345678','999111222;999333444'),
-          ('87654321','988777666'),
-          ('11223344','977000111');
-
-        INSERT INTO search_projection_fts(rowid, person_name, company_name)
-        SELECT id, COALESCE(name,''), COALESCE(org_name,'')
-        FROM search_projection;
-        ",
+        CREATE TABLE ruc_phone_agg (org_ruc TEXT PRIMARY KEY, phones TEXT NOT NULL);
+        CREATE TABLE dni_phone_agg (dni     TEXT PRIMARY KEY, phones TEXT NOT NULL);",
     )
-    .expect("seed db");
+    .expect("seed schema");
     file
 }
 
+/// Builds a full `TestServer` wiring search + lead routers together with a
+/// stub health endpoint. Useful for engine-level integration tests.
 #[allow(dead_code)]
-pub fn sign(secret: &str, body: &[u8]) -> (String, String) {
-    let ts = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("time")
-        .as_secs();
-    let mut mac = HmacSha256::new_from_slice(secret.as_bytes()).expect("hmac key");
-    mac.update(&ts.to_be_bytes());
-    mac.update(body);
-    (ts.to_string(), hex::encode(mac.finalize().into_bytes()))
+pub fn make_test_server() -> (TestServer, tempfile::NamedTempFile) {
+    let db = create_test_db();
+    let pool = make_readonly_pool(db.path().to_str().expect("path")).expect("pool");
+
+    let conn = pool.get().expect("conn");
+    search::validate_schema(&conn).expect("schema");
+    drop(conn);
+
+    let hmac = Arc::new(HmacVerifier::new(
+        HashMap::from([("web".to_string(), "test-secret".to_string())]),
+        60,
+    ));
+    let limiter = Arc::new(RateLimiter::new(600));
+
+    let search_state = Arc::new(SearchState {
+        service: Arc::new(SearchService::new(pool.clone(), 100)),
+        hmac: hmac.clone(),
+        limiter: limiter.clone(),
+    });
+    let lead_state = Arc::new(LeadState {
+        service: Arc::new(CandidateService::new(pool.clone(), 100)),
+        import_service: Arc::new(ImportService::new(pool.clone())),
+        hmac: hmac.clone(),
+        limiter: limiter.clone(),
+    });
+
+    let app = Router::new()
+        .route(
+            "/v1/health",
+            get(|| async { axum::Json(serde_json::json!({"status": "ok"})) }),
+        )
+        .merge(search_router(search_state))
+        .merge(lead_router(lead_state));
+
+    let server = TestServer::new(app);
+    (server, db)
 }

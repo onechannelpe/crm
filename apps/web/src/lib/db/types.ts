@@ -49,6 +49,7 @@ export interface UsersTable {
     | "hr"
     | "admin"
     | "superuser";
+  executive_category: ExecutiveCategory | null;
   is_active: number;
   created_at: number;
 }
@@ -171,6 +172,26 @@ export interface ClientSearchViewsTable {
   updated_at: number;
 }
 
+export interface SearchPolicyDefaultsTable {
+  id: Generated<number>;
+  scope_type: "branch" | "team";
+  scope_id: number;
+  period_type: "month";
+  search_limit: number;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface SearchPolicyOverridesTable {
+  id: Generated<number>;
+  user_id: number;
+  search_limit: number;
+  effective_from: number;
+  expires_at: number | null;
+  set_by_user_id: number;
+  created_at: number;
+}
+
 export interface OrganizationsTable {
   id: Generated<number>;
   ruc: string;
@@ -279,14 +300,91 @@ export interface SalesRecordAttemptsTable {
   created_at: number;
 }
 
-export interface QuotaAllocationsTable {
+export interface LeadPolicyDefaultsTable {
+  id: Generated<number>;
+  scope_type: "branch" | "team";
+  scope_id: number;
+  active_buffer_target: number;
+  daily_refill_limit: number;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface LeadPolicyOverridesTable {
   id: Generated<number>;
   user_id: number;
-  allocated_by_user_id: number;
-  date: string;
-  quota_amount: number;
-  used_amount: number;
+  active_buffer_target: number;
+  daily_refill_limit: number;
+  effective_from: number;
+  expires_at: number | null;
+  set_by_user_id: number;
   created_at: number;
+}
+
+export interface SearchCapacityGrantsTable {
+  id: string;
+  user_id: number;
+  amount: number;
+  reason: string;
+  actor_user_id: number;
+  created_at: number;
+}
+
+export interface SearchUsageReservationsTable {
+  id: string;
+  user_id: number;
+  amount: number;
+  status: "pending" | "committed" | "cancelled" | "expired";
+  reason: string;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface SearchUsageCommitsTable {
+  id: string;
+  reservation_id: string;
+  amount: number;
+  created_at: number;
+}
+
+export interface LeadCapacityGrantsTable {
+  id: string;
+  user_id: number;
+  amount: number;
+  reason: string;
+  actor_user_id: number;
+  created_at: number;
+}
+
+export interface LeadUsageReservationsTable {
+  id: string;
+  user_id: number;
+  amount: number;
+  status: "pending" | "committed" | "cancelled" | "expired";
+  reason: string;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface LeadUsageCommitsTable {
+  id: string;
+  reservation_id: string;
+  amount: number;
+  created_at: number;
+}
+
+export interface CapacityRequestsTable {
+  id: Generated<number>;
+  user_id: number;
+  kind: "search_extra" | "lead_refill_extra";
+  status: "pending" | "approved" | "rejected" | "canceled";
+  requested_amount: number;
+  reason: string;
+  decision_note: string | null;
+  reviewer_user_id: number | null;
+  created_at: number;
+  updated_at: number;
+  decided_at: number | null;
 }
 
 export interface ProductsTable {
@@ -635,6 +733,146 @@ export interface UserInvitesTable {
   sent_at: number | null;
 }
 
+export type LeadStage =
+  | "REGISTERED"
+  | "ENRICHING"
+  | "PENDING_EXTERNAL_REVIEW"
+  | "REJECTED_BY_STATUS"
+  | "NEEDS_EXECUTIVE_INPUT"
+  | "READY_FOR_QUOTATION"
+  | "QUOTED"
+  | "READY_FOR_SALE"
+  | "CONVERTED";
+
+export type LeadStatus =
+  | "DISPONIBLE"
+  | "SIN RESULTADO"
+  | "CARTERIZADO"
+  | "STOCK";
+
+export type Prioridad = "P1" | "P2" | "SIN RESULTADO";
+
+export type ExecutiveCategory = "elite" | "corporativa";
+
+export const LEAD_STAGES = [
+  "REGISTERED",
+  "ENRICHING",
+  "PENDING_EXTERNAL_REVIEW",
+  "REJECTED_BY_STATUS",
+  "NEEDS_EXECUTIVE_INPUT",
+  "READY_FOR_QUOTATION",
+  "QUOTED",
+  "READY_FOR_SALE",
+  "CONVERTED",
+] as const satisfies readonly LeadStage[];
+
+export const LEAD_STATUS_VALUES = [
+  "DISPONIBLE",
+  "SIN RESULTADO",
+  "CARTERIZADO",
+  "STOCK",
+] as const satisfies readonly LeadStatus[];
+
+export const PRIORIDAD_VALUES = [
+  "P1",
+  "P2",
+  "SIN RESULTADO",
+] as const satisfies readonly Prioridad[];
+
+export function toLeadStage(v: string | undefined): LeadStage | undefined {
+  return v !== undefined ? LEAD_STAGES.find((s) => s === v) : undefined;
+}
+
+export function toLeadStatus(v: string | undefined): LeadStatus | undefined {
+  return v !== undefined ? LEAD_STATUS_VALUES.find((e) => e === v) : undefined;
+}
+
+export function toPrioridad(v: string | undefined): Prioridad | undefined {
+  return v !== undefined ? PRIORIDAD_VALUES.find((p) => p === v) : undefined;
+}
+
+export interface PipelineLeadsTable {
+  id: Generated<number>;
+  ruc: string;
+  razon_social: string | null;
+  address: string | null;
+  executive_id: number;
+  stage: LeadStage;
+  status: LeadStatus | null;
+  prioridad: Prioridad | null;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface PipelineLeadCommercialInputsTable {
+  lead_id: number;
+  proveedor_actual: string | null;
+  tasa_actual: number | null;
+  gpv: number | null;
+  ticket: number | null;
+  abono: number | null;
+  cantidad_pos: number | null;
+  updated_at: number;
+  updated_by: number;
+}
+
+export interface PipelineQuotationsTable {
+  id: Generated<number>;
+  lead_id: number;
+  payback_pricing: number;
+  tarifa_debito: number;
+  tarifa_credito: number;
+  tarifa_foraneo: number;
+  fee: number;
+  moneda: "PEN" | "USD";
+  version: number;
+  created_at: number;
+  created_by: number;
+}
+
+export interface PipelineSalesTable {
+  id: Generated<number>;
+  lead_id: number;
+  executive_id: number;
+  proveedor_actual: string;
+  tasa_actual: number;
+  gpv: number;
+  ticket: number;
+  abono: number;
+  cantidad_pos: number;
+  banco: string;
+  nro_cuenta: string;
+  cci: string | null;
+  created_at: number;
+}
+
+export interface PipelineLeadAssignmentsTable {
+  id: Generated<number>;
+  lead_id: number;
+  executive_id: number;
+  assigned_by: number;
+  is_active: number;
+  assigned_at: number;
+}
+
+export interface PipelineIntegrationJobsTable {
+  id: Generated<number>;
+  type: "export" | "import_status" | "import_prioridad";
+  status: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
+  user_id: number;
+  file_path: string | null;
+  error_message: string | null;
+  rows_total: number | null;
+  rows_applied: number | null;
+  rows_failed: number | null;
+  results_json: string | null;
+  lease_owner: string | null;
+  lease_until: number | null;
+  attempt_count: ColumnType<number, number | undefined, number>;
+  created_at: number;
+  completed_at: number | null;
+}
+
 export interface Database {
   branches: BranchesTable;
   teams: TeamsTable;
@@ -648,6 +886,8 @@ export interface Database {
   notification_deliveries: NotificationDeliveriesTable;
   app_notifications: AppNotificationsTable;
   client_search_views: ClientSearchViewsTable;
+  search_policy_defaults: SearchPolicyDefaultsTable;
+  search_policy_overrides: SearchPolicyOverridesTable;
   user_sessions: UserSessionsTable;
   action_rate_limit_counters: ActionRateLimitCountersTable;
   auth_throttle_counters: AuthThrottleCountersTable;
@@ -663,7 +903,15 @@ export interface Database {
   sales_record_addresses: SalesRecordAddressesTable;
   sales_record_products: SalesRecordProductsTable;
   sales_record_attempts: SalesRecordAttemptsTable;
-  quota_allocations: QuotaAllocationsTable;
+  lead_policy_defaults: LeadPolicyDefaultsTable;
+  lead_policy_overrides: LeadPolicyOverridesTable;
+  search_capacity_grants: SearchCapacityGrantsTable;
+  search_usage_reservations: SearchUsageReservationsTable;
+  search_usage_commits: SearchUsageCommitsTable;
+  lead_capacity_grants: LeadCapacityGrantsTable;
+  lead_usage_reservations: LeadUsageReservationsTable;
+  lead_usage_commits: LeadUsageCommitsTable;
+  capacity_requests: CapacityRequestsTable;
   products: ProductsTable;
   interaction_logs: InteractionLogsTable;
   inventory_items: InventoryItemsTable;
@@ -684,6 +932,12 @@ export interface Database {
   webauthn_challenges: WebauthnChallengesTable;
   user_oauth_accounts: UserOAuthAccountsTable;
   password_reset_tokens: PasswordResetTokensTable;
+  pipeline_leads: PipelineLeadsTable;
+  pipeline_lead_commercial_inputs: PipelineLeadCommercialInputsTable;
+  pipeline_quotations: PipelineQuotationsTable;
+  pipeline_sales: PipelineSalesTable;
+  pipeline_lead_assignments: PipelineLeadAssignmentsTable;
+  pipeline_integration_jobs: PipelineIntegrationJobsTable;
 }
 
 export type Branch = Selectable<BranchesTable>;
@@ -697,6 +951,8 @@ export type NotificationJob = Selectable<NotificationJobsTable>;
 export type NotificationDelivery = Selectable<NotificationDeliveriesTable>;
 export type AppNotification = Selectable<AppNotificationsTable>;
 export type ClientSearchView = Selectable<ClientSearchViewsTable>;
+export type SearchPolicyDefault = Selectable<SearchPolicyDefaultsTable>;
+export type SearchPolicyOverride = Selectable<SearchPolicyOverridesTable>;
 export type Organization = Selectable<OrganizationsTable>;
 export type Contact = Selectable<ContactsTable>;
 export type LeadAssignment = Selectable<LeadAssignmentsTable>;
@@ -705,7 +961,15 @@ export type SalesRecordClient = Selectable<SalesRecordClientTable>;
 export type SalesRecordAddress = Selectable<SalesRecordAddressesTable>;
 export type SalesRecordProduct = Selectable<SalesRecordProductsTable>;
 export type SalesRecordAttempt = Selectable<SalesRecordAttemptsTable>;
-export type QuotaAllocation = Selectable<QuotaAllocationsTable>;
+export type LeadPolicyDefault = Selectable<LeadPolicyDefaultsTable>;
+export type LeadPolicyOverride = Selectable<LeadPolicyOverridesTable>;
+export type SearchCapacityGrant = Selectable<SearchCapacityGrantsTable>;
+export type SearchUsageReservation = Selectable<SearchUsageReservationsTable>;
+export type SearchUsageCommit = Selectable<SearchUsageCommitsTable>;
+export type LeadCapacityGrant = Selectable<LeadCapacityGrantsTable>;
+export type LeadUsageReservation = Selectable<LeadUsageReservationsTable>;
+export type LeadUsageCommit = Selectable<LeadUsageCommitsTable>;
+export type CapacityRequest = Selectable<CapacityRequestsTable>;
 export type Product = Selectable<ProductsTable>;
 export type InteractionLog = Selectable<InteractionLogsTable>;
 export type InventoryItem = Selectable<InventoryItemsTable>;
@@ -738,6 +1002,8 @@ export type NewNotificationJob = Insertable<NotificationJobsTable>;
 export type NewNotificationDelivery = Insertable<NotificationDeliveriesTable>;
 export type NewAppNotification = Insertable<AppNotificationsTable>;
 export type NewClientSearchView = Insertable<ClientSearchViewsTable>;
+export type NewSearchPolicyDefault = Insertable<SearchPolicyDefaultsTable>;
+export type NewSearchPolicyOverride = Insertable<SearchPolicyOverridesTable>;
 export type NewUserSession = Insertable<UserSessionsTable>;
 export type NewAuthThrottleCounter = Insertable<AuthThrottleCountersTable>;
 export type NewAuthEvent = Insertable<AuthEventsTable>;
@@ -752,7 +1018,9 @@ export type NewSalesRecordClient = Insertable<SalesRecordClientTable>;
 export type NewSalesRecordAddress = Insertable<SalesRecordAddressesTable>;
 export type NewSalesRecordProduct = Insertable<SalesRecordProductsTable>;
 export type NewSalesRecordAttempt = Insertable<SalesRecordAttemptsTable>;
-export type NewQuotaAllocation = Insertable<QuotaAllocationsTable>;
+export type NewLeadPolicyDefault = Insertable<LeadPolicyDefaultsTable>;
+export type NewLeadPolicyOverride = Insertable<LeadPolicyOverridesTable>;
+export type NewCapacityRequest = Insertable<CapacityRequestsTable>;
 export type NewInteractionLog = Insertable<InteractionLogsTable>;
 export type NewAuditLog = Insertable<AuditLogsTable>;
 export type NewAuditActionPolicy = Insertable<AuditActionPoliciesTable>;
@@ -766,3 +1034,19 @@ export type NewSearchEnrichmentOverlay =
 export type ActionRateLimitCounter = Selectable<ActionRateLimitCountersTable>;
 export type NewActionRateLimitCounter =
   Insertable<ActionRateLimitCountersTable>;
+
+export type Lead = Selectable<PipelineLeadsTable>;
+export type LeadCommercialInput = Selectable<PipelineLeadCommercialInputsTable>;
+export type Quotation = Selectable<PipelineQuotationsTable>;
+export type LeadSale = Selectable<PipelineSalesTable>;
+export type LeadPipelineAssignment = Selectable<PipelineLeadAssignmentsTable>;
+export type IntegrationJob = Selectable<PipelineIntegrationJobsTable>;
+
+export type NewLead = Insertable<PipelineLeadsTable>;
+export type NewLeadCommercialInput =
+  Insertable<PipelineLeadCommercialInputsTable>;
+export type NewQuotation = Insertable<PipelineQuotationsTable>;
+export type NewLeadSale = Insertable<PipelineSalesTable>;
+export type NewLeadPipelineAssignment =
+  Insertable<PipelineLeadAssignmentsTable>;
+export type NewIntegrationJob = Insertable<PipelineIntegrationJobsTable>;

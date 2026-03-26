@@ -4,6 +4,8 @@ import {
   assertNonEmptyString,
   assertPositiveInt,
 } from "~/lib/contracts/guards";
+import { asTeamId } from "~/server/shared/ids";
+import type { TeamId } from "~/server/shared/ids";
 
 export function assertEmail(value: string): string {
   const safe = assertNonEmptyString(value, "email").toLowerCase();
@@ -22,11 +24,11 @@ export function assertRole(value: string): Role {
 
 export function assertOptionalTeamId(
   value: number | null | undefined,
-): number | null {
+): TeamId | null {
   if (value === null || value === undefined) {
     return null;
   }
-  return assertPositiveInt(value, "teamId");
+  return asTeamId(assertPositiveInt(value, "teamId"));
 }
 
 const MIN_EXPIRY_OFFSET_MS = 7 * 24 * 60 * 60 * 1000;

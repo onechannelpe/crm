@@ -1,0 +1,8 @@
+{
+  "version": "v1",
+  "endpoints": {
+    "search": "/search",
+    "leadCandidates": "/lead-candidates",
+    "health": "/health"
+  }
+}

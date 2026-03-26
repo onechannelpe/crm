@@ -109,5 +109,17 @@ export function AnimatedExpandableContainer(
 
   onCleanup(() => currentAnim?.cancel());
 
-  return <div ref={(e) => (el = e)}>{props.children}</div>;
+  return (
+    <div
+      ref={(e) => (el = e)}
+      style={{
+        height: props.isExpanded ? "auto" : "0px",
+        overflow: props.isExpanded ? "visible" : "hidden",
+        opacity: props.isExpanded ? "1" : "0",
+        "pointer-events": props.isExpanded ? "auto" : "none",
+      }}
+    >
+      {props.children}
+    </div>
+  );
 }

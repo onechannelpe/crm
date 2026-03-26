@@ -1,97 +1,15 @@
-import { useLocation, type RouteSectionProps } from "@solidjs/router";
-import { Show, Suspense } from "solid-js";
+import type { RouteSectionProps } from "@solidjs/router";
 
-import { Loading } from "~/components/feedback/loading";
-import { Header } from "~/components/layout/header";
-import { SettingsShell } from "~/components/layout/settings-shell";
-import { SettingsTopbar } from "~/components/layout/settings-topbar";
-import { Sidebar } from "~/components/layout/sidebar";
-import {
-  MainDetailPanelProvider,
-  useMainDetailPanel,
-} from "~/components/providers/main-detail-panel-provider";
-import {
-  SessionProvider,
-  useSession,
-} from "~/components/providers/session-provider";
-import { cn } from "~/lib/utils";
-
-import shellStyles from "~/components/layout/shell.module.css";
-
-function MainPanelWithDetail(props: RouteSectionProps) {
-  const { panel } = useMainDetailPanel();
-
-  return (
-    <div
-      class={cn(shellStyles.panel, panel() && shellStyles.panelWithDetail)}
-      data-has-detail-panel={panel() ? "true" : "false"}
-    >
-      <div class={shellStyles.panelMain}>
-        <Suspense fallback={<Loading />}>{props.children}</Suspense>
-      </div>
-      <div
-        aria-hidden="true"
-        class={cn(
-          shellStyles.detailGap,
-          !panel() && shellStyles.detailGapClosed,
-        )}
-      />
-      <Show when={panel()}>
-        {(detail) => <aside class={shellStyles.detailPanel}>{detail()}</aside>}
-      </Show>
-    </div>
-  );
-}
-
-function AuthenticatedAppShell(props: RouteSectionProps) {
-  const { user } = useSession();
-  const location = useLocation();
-  const isSettingsRoute = () =>
-    location.pathname === "/settings" ||
-    location.pathname.startsWith("/settings/");
-
-  return (
-    <Show when={user()} fallback={<Loading />}>
-      <div class={shellStyles.root}>
-        <Show
-          when={isSettingsRoute()}
-          fallback={
-            <>
-              <Sidebar />
-              <MainDetailPanelProvider>
-                <div class={shellStyles.main}>
-                  <Header />
-                  <main class={shellStyles.body}>
-                    <MainPanelWithDetail {...props} />
-                  </main>
-                </div>
-              </MainDetailPanelProvider>
-            </>
-          }
-        >
-          <div class={shellStyles.settingsLayout}>
-            <SettingsShell />
-            <div class={cn(shellStyles.main, shellStyles.settingsMain)}>
-              <SettingsTopbar />
-              <main class={cn(shellStyles.body, shellStyles.settingsBody)}>
-                <div class={cn(shellStyles.panel, shellStyles.settingsPanel)}>
-                  <Suspense fallback={<Loading />}>{props.children}</Suspense>
-                </div>
-              </main>
-            </div>
-          </div>
-        </Show>
-      </div>
-    </Show>
-  );
-}
+import { AuthenticatedAppShell } from "~/components/layout/app-shell";
+import { SessionProvider } from "~/components/providers/session-provider";
+import { traceSsrBoundary } from "~/lib/observability/diagnostics";
 
 export default function AppLayout(props: RouteSectionProps) {
+  traceSsrBoundary("app-layout", "layout_render");
+
   return (
     <SessionProvider>
-      <Suspense fallback={<Loading />}>
-        <AuthenticatedAppShell {...props} />
-      </Suspense>
+      <AuthenticatedAppShell {...props} />
     </SessionProvider>
   );
 }

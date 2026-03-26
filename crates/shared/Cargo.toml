@@ -1,0 +1,22 @@
+[package]
+name    = "shared"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+axum        = { workspace = true }
+thiserror   = { workspace = true }
+serde       = { workspace = true }
+hmac        = { workspace = true }
+sha2        = { workspace = true }
+hex         = { workspace = true }
+dashmap     = { workspace = true }
+r2d2        = { workspace = true }
+r2d2_sqlite = { workspace = true }
+rusqlite    = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }
+hmac     = { workspace = true }
+sha2     = { workspace = true }
+hex      = { workspace = true }

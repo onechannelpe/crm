@@ -24,6 +24,7 @@ import {
   validateSessionToken,
 } from "~/lib/auth/session/session-manager";
 import { hashSessionToken } from "~/lib/auth/session/tokens";
+import { traceServerAction } from "~/lib/observability/diagnostics";
 import { repos } from "~/server/shared/context";
 
 export async function logout(): Promise<void> {
@@ -83,75 +84,77 @@ export interface CurrentUser extends WorkspaceIdentity {
 }
 
 export async function getMe(): Promise<CurrentUser | null> {
-  const token = getSessionCookie();
-  if (!token) return null;
+  return traceServerAction("auth-session-action", "get_me", async () => {
+    const token = getSessionCookie();
+    if (!token) return null;
 
-  const { session } = await validateSessionToken(token);
-  if (!session) return null;
+    const { session } = await validateSessionToken(token);
+    if (!session) return null;
 
-  const user = await repos.users.findById(session.userId);
-  if (!user) return null;
-  const strongAuthStatus = await getStrongAuthStatus(user.id, repos);
+    const user = await repos.users.findById(session.userId);
+    if (!user) return null;
+    const strongAuthStatus = await getStrongAuthStatus(session.userId, repos);
 
-  const [branch, assignedTeam, managedTeam] = await Promise.all([
-    repos.branches.findById(user.branch_id),
-    user.team_id ? repos.teams.findByIdWithSupervisor(user.team_id) : null,
-    session.role === "supervisor"
-      ? repos.teams.findBySupervisorId(user.id)
-      : Promise.resolve(null),
-  ]);
-  const workspace = resolveWorkspaceContext({
-    role: session.role,
-    userId: user.id,
-    branchId: user.branch_id,
-    branchName: branch?.name ?? null,
-    userTeamId: user.team_id,
-    assignedTeam: assignedTeam
-      ? {
-          id: assignedTeam.id,
-          name: assignedTeam.name,
-          branch_id: assignedTeam.branch_id,
-          supervisor_id: assignedTeam.supervisor_id,
-          supervisor_names: assignedTeam.supervisor_names,
-          supervisor_first_surname: assignedTeam.supervisor_first_surname,
-          supervisor_role: assignedTeam.supervisor_role,
-          supervisor_branch_id: assignedTeam.supervisor_branch_id,
-        }
-      : null,
-    managedTeam: managedTeam
-      ? {
-          id: managedTeam.id,
-          name: managedTeam.name,
-          branch_id: managedTeam.branch_id,
-        }
-      : null,
+    const [branch, assignedTeam, managedTeam] = await Promise.all([
+      repos.branches.findById(user.branch_id),
+      user.team_id ? repos.teams.findByIdWithSupervisor(user.team_id) : null,
+      session.role === "supervisor"
+        ? repos.teams.findBySupervisorId(user.id)
+        : Promise.resolve(null),
+    ]);
+    const workspace = resolveWorkspaceContext({
+      role: session.role,
+      userId: user.id,
+      branchId: user.branch_id,
+      branchName: branch?.name ?? null,
+      userTeamId: user.team_id,
+      assignedTeam: assignedTeam
+        ? {
+            id: assignedTeam.id,
+            name: assignedTeam.name,
+            branch_id: assignedTeam.branch_id,
+            supervisor_id: assignedTeam.supervisor_id,
+            supervisor_names: assignedTeam.supervisor_names,
+            supervisor_first_surname: assignedTeam.supervisor_first_surname,
+            supervisor_role: assignedTeam.supervisor_role,
+            supervisor_branch_id: assignedTeam.supervisor_branch_id,
+          }
+        : null,
+      managedTeam: managedTeam
+        ? {
+            id: managedTeam.id,
+            name: managedTeam.name,
+            branch_id: managedTeam.branch_id,
+          }
+        : null,
+    });
+
+    return {
+      id: user.id,
+      email: user.email,
+      names: user.names,
+      firstSurname: user.first_surname,
+      secondSurname: user.second_surname,
+      phoneE164: user.phone_e164,
+      avatarUrl: user.avatar_storage_key
+        ? `/api/me/avatar?v=${user.avatar_version}`
+        : null,
+      avatarVersion: user.avatar_version,
+      onboardingCompletedAt: user.onboarding_completed_at,
+      role: session.role,
+      strongAuthRequired: requiresStrongAuthRole(user.role),
+      strongAuthConfigured: strongAuthStatus.hasVerifiedStrongAuth,
+      totpEnabled: strongAuthStatus.hasTotp,
+      hasPasskey: strongAuthStatus.hasPasskey,
+      passkeyCount: strongAuthStatus.passkeyCount,
+      sessionClass: session.sessionClass,
+      primaryAuthMethod: session.primaryAuthMethod,
+      strongAuthMethod: session.strongAuthMethod,
+      branchId: user.branch_id,
+      scopeType: workspace.scopeType,
+      team: workspace.team,
+      supervisor: workspace.supervisor,
+      branch: workspace.branch,
+    };
   });
-
-  return {
-    id: user.id,
-    email: user.email,
-    names: user.names,
-    firstSurname: user.first_surname,
-    secondSurname: user.second_surname,
-    phoneE164: user.phone_e164,
-    avatarUrl: user.avatar_storage_key
-      ? `/api/me/avatar?v=${user.avatar_version}`
-      : null,
-    avatarVersion: user.avatar_version,
-    onboardingCompletedAt: user.onboarding_completed_at,
-    role: session.role,
-    strongAuthRequired: requiresStrongAuthRole(user.role),
-    strongAuthConfigured: strongAuthStatus.hasVerifiedStrongAuth,
-    totpEnabled: strongAuthStatus.hasTotp,
-    hasPasskey: strongAuthStatus.hasPasskey,
-    passkeyCount: strongAuthStatus.passkeyCount,
-    sessionClass: session.sessionClass,
-    primaryAuthMethod: session.primaryAuthMethod,
-    strongAuthMethod: session.strongAuthMethod,
-    branchId: user.branch_id,
-    scopeType: workspace.scopeType,
-    team: workspace.team,
-    supervisor: workspace.supervisor,
-    branch: workspace.branch,
-  };
 }

@@ -12,9 +12,20 @@ import { getHeaderRoute } from "../../src/lib/nav/nav-policy";
 describe("route permissions", () => {
   it("resolves static and dynamic route permissions", () => {
     expect(getRoutePermission("/team")).toBe("team:read");
-    expect(getRoutePermission("/sales/records/new")).toBe("sales:create");
-    expect(getRoutePermission("/sales/records/123/edit")).toBe("sales:create");
-    expect(getRoutePermission("/sales/reports/exports")).toBe("sales:review");
+    expect(getRoutePermission("/review")).toBe("lead:review");
+    expect(getRoutePermission("/review/123")).toBe("lead:review");
+    expect(getRoutePermission("/quotations")).toBe("quotation:manage");
+    expect(getRoutePermission("/quotations/123")).toBe("quotation:manage");
+    expect(getRoutePermission("/leads")).toBe("lead:pipeline");
+    expect(getRoutePermission("/leads/new")).toBe("lead:pipeline");
+    expect(getRoutePermission("/leads/123")).toBe("lead:pipeline");
+    expect(getRoutePermission("/sales/crm")).toBe("lead:register");
+    expect(getRoutePermission("/sales/new/123")).toBe("lead:register");
+    expect(getRoutePermission("/sales/123")).toBe("lead:register");
+    expect(getRoutePermission("/integrations/imports/123")).toBe(
+      "integration:manage",
+    );
+    expect(getRoutePermission("/sales/reports/exports")).toBeNull();
     expect(getRoutePermission("/sales/reports/exports/123")).toBe(
       "sales:review",
     );
@@ -25,18 +36,20 @@ describe("route permissions", () => {
   it("enforces role access checks for restricted paths", () => {
     expect(canAccessPath("executive", "/audit")).toBe(false);
     expect(canAccessPath("supervisor", "/audit")).toBe(true);
-    expect(canAccessPath("executive", "/quota")).toBe(false);
-    expect(canAccessPath("executive", "/team")).toBe(false);
-    expect(canAccessPath("hr", "/team")).toBe(true);
-    expect(canAccessPath("admin", "/catalog")).toBe(true);
-    expect(canAccessPath("sales_manager", "/sales/records/42/edit")).toBe(
+    expect(canAccessPath("executive", "/settings/capacity-policies")).toBe(
       false,
     );
-    expect(canAccessPath("executive", "/sales/records/42/edit")).toBe(true);
+    expect(canAccessPath("executive", "/leads")).toBe(true);
+    expect(canAccessPath("admin", "/leads")).toBe(false);
+    expect(canAccessPath("executive", "/team")).toBe(false);
+    expect(canAccessPath("hr", "/team")).toBe(true);
+    expect(canAccessPath("admin", "/settings/catalog")).toBe(true);
+    expect(canAccessPath("sales_manager", "/sales/new/42")).toBe(false);
+    expect(canAccessPath("executive", "/sales/new/42")).toBe(true);
   });
 
   it("returns a role-safe default path", () => {
-    expect(getDefaultAppPath("executive")).toBe("/sales/leads");
+    expect(getDefaultAppPath("executive")).toBe("/leads");
     expect(getDefaultAppPath("logistics")).toBe("/inventory");
     expect(getDefaultAppPath("hr")).toBe("/team");
     expect(getDefaultAppPath("admin")).toBe("/dashboard");
@@ -44,13 +57,16 @@ describe("route permissions", () => {
 });
 
 describe("nav config structural invariants", () => {
-  it("resolves header metadata for dynamic routes", () => {
-    expect(getHeaderRoute("/sales/records/42/edit").label).toBe("Editar venta");
-    expect(getHeaderRoute("/sales/records/42/edit").icon).toBe("new-sale");
+  it("resolves header metadata for current dynamic routes", () => {
+    expect(getHeaderRoute("/sales/new/42").label).toBe("Registrar venta");
+    expect(getHeaderRoute("/sales/new/42").icon).toBe("new-sale");
+    expect(getHeaderRoute("/sales/42").label).toBe("Detalle de venta");
+    expect(getHeaderRoute("/review/42").label).toBe("Revisar prospecto");
   });
 
-  it("resolves header via active-prefix for sub-paths", () => {
-    expect(getHeaderRoute("/sales/leads").label).toBe("Prospectos");
+  it("uses fallback when no header rule exists", () => {
+    expect(getHeaderRoute("/sales/leads").label).toBe("Espacio de trabajo");
+    expect(getHeaderRoute("/sales/new/42").label).toBe("Registrar venta");
     expect(getHeaderRoute("/dashboard").label).toBe("Inicio");
   });
 

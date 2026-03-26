@@ -1,5 +1,6 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { PasskeyLoginFlowState } from "~/lib/auth/passkey/service";
+import type { UserId } from "~/server/shared/ids";
 
 export interface TotpLoginFlowState {
   id: number;
@@ -10,7 +11,7 @@ export interface TotpLoginFlowState {
 export type LoginFlowState = TotpLoginFlowState | PasskeyLoginFlowState;
 
 export interface LoginFlowLoginResult {
-  userId: number;
+  userId: UserId;
   role: Role;
   onboardingCompleted: boolean;
   token: string;

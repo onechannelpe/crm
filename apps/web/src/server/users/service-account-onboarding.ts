@@ -3,6 +3,7 @@ import {
   getStrongAuthStatus,
   requiresStrongAuthRole,
 } from "~/lib/auth/security/strong-auth-status";
+import type { UserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -18,12 +19,12 @@ type OnboardingRepos = Pick<
 >;
 
 export type CompleteOnboardingError =
-  | { reason: "user_not_found"; message: string }
-  | { reason: "strong_auth_required"; message: string }
-  | { reason: "unexpected"; message: string };
+  | { kind: "not_found"; code: "user_not_found"; message: string }
+  | { kind: "conflict"; code: "strong_auth_required"; message: string }
+  | { kind: "unexpected"; code: "unexpected"; message: string };
 
 export interface CompleteOnboardingInput {
-  userId: number;
+  userId: UserId;
   phoneE164: string;
 }
 
@@ -42,7 +43,8 @@ export async function completeAccountOnboardingWithRepos(
     const user = await repos.users.findById(input.userId);
     if (!user) {
       return Err({
-        reason: "user_not_found",
+        kind: "not_found",
+        code: "user_not_found",
         message: "User not found",
       });
     }
@@ -51,13 +53,14 @@ export async function completeAccountOnboardingWithRepos(
       return Ok(undefined);
     }
 
-    const strongAuthStatus = await getStrongAuthStatus(user.id, repos);
+    const strongAuthStatus = await getStrongAuthStatus(input.userId, repos);
     if (
       requiresStrongAuthRole(user.role as Role) &&
       !strongAuthStatus.hasVerifiedStrongAuth
     ) {
       return Err({
-        reason: "strong_auth_required",
+        kind: "conflict",
+        code: "strong_auth_required",
         message: "Strong authentication setup required",
       });
     }
@@ -79,7 +82,8 @@ export async function completeAccountOnboardingWithRepos(
     return Ok(undefined);
   } catch {
     return Err({
-      reason: "unexpected",
+      kind: "unexpected",
+      code: "unexpected",
       message: "Unexpected onboarding completion failure",
     });
   }

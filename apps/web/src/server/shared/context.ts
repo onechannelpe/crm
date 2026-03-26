@@ -5,15 +5,15 @@ import { config } from "~/lib/config";
 import { db } from "~/lib/db/db";
 import { env } from "~/lib/env";
 import { createSearchEnrichmentService } from "~/server/client-search/enrichment-service";
-import { createClientSearchService } from "~/server/client-search/service";
 import { createExtensionService } from "~/server/extension/service";
-import { createLeadAssignmentService } from "~/server/leads/service";
+import { createExportBatchRunner } from "~/server/integrations/application/run-export-job";
+import { createImportBatchRunner } from "~/server/integrations/application/run-import-job";
 import { createAppNotificationCenter } from "~/server/notifications/app-center-service";
 import { createObservabilityService } from "~/server/observability/service";
-import { createQuotaService } from "~/server/quota/service";
 import { createSalesExportBlobStore } from "~/server/sales/export-blob-store";
 import { createSalesExportService } from "~/server/sales/export-service";
 import { createSalesRecordsWorkflowService } from "~/server/sales/records-service";
+import { createAuditService } from "~/server/shared/audit";
 import { createRepositories } from "~/server/shared/registry";
 import { createProfilePictureBlobStore } from "~/server/users/profile-picture-blob-store";
 import { createProfilePictureService } from "~/server/users/profile-picture-service";
@@ -33,10 +33,12 @@ export function runInRepositoryTransaction<T>(
 export const appNotificationCenter = createAppNotificationCenter({
   repos: { appNotifications: repos.appNotifications, users: repos.users },
 });
-export const clientSearchService = createClientSearchService();
+export const auditService = createAuditService(repos);
+export const rateLimitDeps = {
+  actionRateLimits: repos.actionRateLimits,
+  auditLogs: repos.auditLogs,
+};
 export const searchEnrichmentService = createSearchEnrichmentService(repos);
-export const quotaService = createQuotaService(repos);
-export const leadService = createLeadAssignmentService(repos);
 export const extensionService = createExtensionService(repos, {
   runInTransaction: runInRepositoryTransaction,
 });
@@ -62,6 +64,8 @@ export const salesRecordsService = createSalesRecordsWorkflowService(
   repos,
   runInRepositoryTransaction,
 );
+export const importService = createImportBatchRunner();
+export const exportService = createExportBatchRunner();
 
 export const notificationSender = createNotificationService({
   resendApiKey: env.resendApiKey || undefined,

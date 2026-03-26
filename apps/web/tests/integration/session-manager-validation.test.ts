@@ -10,6 +10,7 @@ import {
   generateSessionToken,
   hashSessionToken,
 } from "../../src/lib/auth/session/tokens";
+import { asBranchId, asUserId } from "../../src/server/shared/ids";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -54,8 +55,8 @@ describe("session manager validation", () => {
   it("invalidates cached session immediately after user deactivation", async () => {
     const token = await createSession(
       {
-        userId: 1,
-        branchId: 1,
+        userId: asUserId(1),
+        branchId: asBranchId(1),
         role: "executive",
         sessionClass: "app",
         ipAddress: null,
@@ -85,8 +86,8 @@ describe("session manager validation", () => {
   it("invalidates cached session when user role changes", async () => {
     const token = await createSession(
       {
-        userId: 1,
-        branchId: 1,
+        userId: asUserId(1),
+        branchId: asBranchId(1),
         role: "executive",
         sessionClass: "app",
         ipAddress: null,
@@ -116,8 +117,8 @@ describe("session manager validation", () => {
   it("invalidates cached session when user branch changes", async () => {
     const token = await createSession(
       {
-        userId: 1,
-        branchId: 1,
+        userId: asUserId(1),
+        branchId: asBranchId(1),
         role: "executive",
         sessionClass: "app",
         ipAddress: null,

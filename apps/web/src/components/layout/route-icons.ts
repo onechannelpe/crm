@@ -32,7 +32,7 @@ export const ICON_BY_ROUTE: Record<
   confirmed: CircleCheckBig,
   review: ShieldCheck,
   audit: Info,
-  quota: Building2,
+  capacity: Building2,
   profile: UserRound,
   schedule: CalendarDays,
   monitoring: Activity,

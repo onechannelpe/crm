@@ -10,21 +10,40 @@ import {
   createUserTotpFactorsRepo,
   createUserTotpRecoveryCodesRepo,
 } from "~/server/auth/repos-user-totp-factors";
+import { createCapacityRequestsRepo } from "~/server/capacity-admin/repos";
+import {
+  createLeadPolicyDefaultsRepo,
+  createLeadPolicyOverridesRepo,
+  createSearchPolicyDefaultsRepo,
+  createSearchPolicyOverridesRepo,
+} from "~/server/capacity-policy/repos";
+import {
+  createLeadCapacityGrantsRepo,
+  createLeadUsageCommitsRepo,
+  createLeadUsageReservationsRepo,
+  createSearchCapacityGrantsRepo,
+  createSearchUsageCommitsRepo,
+  createSearchUsageReservationsRepo,
+} from "~/server/capacity-usage/repos";
 import { createSearchEnrichmentRepo } from "~/server/client-search/repos-enrichment";
-import { createClientSearchViewsRepo } from "~/server/client-search/repos-views";
+import { createLeadAssignmentsRepo } from "~/server/contacts/repos-assignments";
 import { createContactsRepo } from "~/server/contacts/repos-contacts";
 import { createOrganizationsRepo } from "~/server/contacts/repos-organizations";
 import { createExtensionRuntimeRepo } from "~/server/extension/repos";
+import { createIntegrationJobRepo } from "~/server/integrations/infrastructure/integration-job-repo";
 import { createInventoryRepo } from "~/server/inventory/repos";
 import { createProductsRepo } from "~/server/inventory/repos-products";
-import { createLeadAssignmentsRepo } from "~/server/leads/repos";
+import { createLeadAssignmentRepo } from "~/server/leads/infrastructure/lead-assignment-repo";
+import { createLeadCommercialInputRepo } from "~/server/leads/infrastructure/lead-commercial-input-repo";
+import { createLeadRepo } from "~/server/leads/infrastructure/lead-repo";
 import { createAppNotificationsRepo } from "~/server/notifications/repos-app-notifications";
 import { createNotificationCampaignsRepo } from "~/server/notifications/repos-campaigns";
 import { createNotificationContactsRepo } from "~/server/notifications/repos-contacts";
 import { createNotificationPreferencesRepo } from "~/server/notifications/repos-preferences";
 import { createActionObservationsRepo } from "~/server/observability/repos-action-observations";
 import { createAuthFunnelEventsRepo } from "~/server/observability/repos-auth-funnel-events";
-import { createQuotaAllocationsRepo } from "~/server/quota/repos";
+import { createQuotationRepo } from "~/server/quotations/infrastructure/quotation-repo";
+import { createSaleRepo } from "~/server/sales/infrastructure/sale-repo";
 import { createReportExportRepo } from "~/server/sales/repos-report-exports";
 import { createSalesRecordsRepo } from "~/server/sales/repos-sales-records";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
@@ -53,11 +72,20 @@ export function createRepositories(db: Kysely<Database>) {
     userTotpFactors: createUserTotpFactorsRepo(db),
     userTotpRecoveryCodes: createUserTotpRecoveryCodesRepo(db),
     organizations: createOrganizationsRepo(db),
-    clientSearchViews: createClientSearchViewsRepo(db),
     searchEnrichment: createSearchEnrichmentRepo(db),
     contacts: createContactsRepo(db),
     leadAssignments: createLeadAssignmentsRepo(db),
-    quotaAllocations: createQuotaAllocationsRepo(db),
+    searchPolicyDefaults: createSearchPolicyDefaultsRepo(db),
+    searchPolicyOverrides: createSearchPolicyOverridesRepo(db),
+    leadPolicyDefaults: createLeadPolicyDefaultsRepo(db),
+    leadPolicyOverrides: createLeadPolicyOverridesRepo(db),
+    searchCapacityGrants: createSearchCapacityGrantsRepo(db),
+    searchUsageReservations: createSearchUsageReservationsRepo(db),
+    searchUsageCommits: createSearchUsageCommitsRepo(db),
+    leadCapacityGrants: createLeadCapacityGrantsRepo(db),
+    leadUsageReservations: createLeadUsageReservationsRepo(db),
+    leadUsageCommits: createLeadUsageCommitsRepo(db),
+    capacityRequests: createCapacityRequestsRepo(db),
     reportExportJobs: createReportExportRepo(db),
     salesRecords: createSalesRecordsRepo(db),
     interactionLogs: createInteractionLogsRepo(db),
@@ -79,6 +107,12 @@ export function createRepositories(db: Kysely<Database>) {
     passwordResetTokens: createPasswordResetTokensRepo(db),
     branches: createBranchesRepo(db),
     teams: createTeamsRepo(db),
+    leads: createLeadRepo(db),
+    pipelineAssignments: createLeadAssignmentRepo(db),
+    leadCommercialInputs: createLeadCommercialInputRepo(db),
+    quotations: createQuotationRepo(db),
+    leadSales: createSaleRepo(db),
+    integrationJobs: createIntegrationJobRepo(db),
   };
 }
 

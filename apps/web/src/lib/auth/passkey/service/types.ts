@@ -30,10 +30,6 @@ export type PasskeyLoginFlowState =
 
 export type PasskeyLoginResult = IssuedSessionResult;
 
-export type PasskeyEnrollmentError =
-  | { reason: "invalid_request"; message: string }
-  | { reason: "unexpected"; message: string };
-
 export type BeginPasskeyLoginError =
   | InvalidCredentialsError
   | { kind: "unexpected"; message: string };

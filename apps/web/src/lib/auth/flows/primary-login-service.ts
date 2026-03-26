@@ -5,6 +5,7 @@ import { authenticatePassword } from "~/lib/auth/providers/password-provider";
 import { sendAlertOnNewLoginSource } from "~/lib/auth/security/login-source-alert";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
+import type { UserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
@@ -166,7 +167,7 @@ export async function submitPasswordLogin(
 
 export async function submitGoogleLogin(
   input: {
-    userId: number;
+    userId: UserId;
     ipAddress: string;
     userAgent: string | null;
     trustedFederatedMfa?: boolean;
@@ -182,7 +183,7 @@ export async function submitGoogleLogin(
   return completePrimaryAuthProof({
     proof: {
       kind: "google",
-      userId: context.user.id,
+      userId: input.userId,
       trustedFederatedMfa: input.trustedFederatedMfa === true,
     },
     identifier: context.user.username,

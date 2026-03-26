@@ -16,9 +16,11 @@ interface ActionRateLimitPolicy {
 
 export const ACTION_RATE_LIMIT_POLICY = {
   "leads.request": { limit: 10, ipLimit: 50, windowMs: 60_000 },
+  "search.use": { limit: 120, ipLimit: 300, windowMs: 60_000 },
+  "capacity.request": { limit: 20, ipLimit: 60, windowMs: 60_000 },
+  "capacity.approve": { limit: 60, ipLimit: 180, windowMs: 60_000 },
   "sales_records.create_draft": { limit: 20, ipLimit: 100, windowMs: 60_000 },
   "sales_records.submit": { limit: 30, ipLimit: 150, windowMs: 60_000 },
-  "quota.allocate": { limit: 5, ipLimit: 25, windowMs: 60_000 },
   "team.invite.create": { limit: 10, ipLimit: 30, windowMs: 60 * 60_000 },
 } satisfies Record<string, ActionRateLimitPolicy>;
 
@@ -110,7 +112,7 @@ export async function checkActionRateLimit(
   const now = Date.now();
 
   // Check the per-user counter first. If the user is already over limit, skip
-  // the shared IP counter entirely — incrementing it for a blocked user would
+  // the shared IP counter entirely. Incrementing it for a blocked user would
   // consume IP budget and could deny legitimate users on the same NAT/proxy.
   const userSnapshot = await deps.actionRateLimits.checkAndIncrement(
     buildUserKey(actionName, userId),
@@ -131,7 +133,7 @@ export async function checkActionRateLimit(
     });
   }
 
-  // User is within limit — now evaluate the shared IP counter.
+  // User is within the limit, now check the shared IP counter.
   const ipSnapshot = await deps.actionRateLimits.checkAndIncrement(
     buildIpKey(actionName, ip),
     now,

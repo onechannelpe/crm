@@ -1,4 +1,10 @@
-import { createContext, useContext, onCleanup, type JSX } from "solid-js";
+import {
+  createContext,
+  useContext,
+  onCleanup,
+  onMount,
+  type JSX,
+} from "solid-js";
 import { createStore } from "solid-js/store";
 
 interface Toast {
@@ -24,24 +30,6 @@ export function ToastProvider(props: { children: JSX.Element }) {
   const [toasts, setToasts] = createStore<Toast[]>([]);
   let toastCounter = 0;
 
-  // Global tick for all toasts
-  const tickInterval = setInterval(() => {
-    setToasts(
-      (t) => !t.paused,
-      "remaining",
-      (r) => Math.max(0, r - 100),
-    );
-
-    // Auto-remove expired toasts
-    toasts.forEach((toast) => {
-      if (toast.remaining <= 0) {
-        removeToast(toast.id);
-      }
-    });
-  }, 100);
-
-  onCleanup(() => clearInterval(tickInterval));
-
   const showToast = (type: Toast["type"], message: string, duration = 5000) => {
     toastCounter += 1;
     const id = `toast-${Date.now()}-${toastCounter}`;
@@ -62,6 +50,24 @@ export function ToastProvider(props: { children: JSX.Element }) {
   const resumeToast = (id: string) => {
     setToasts((t) => t.id === id, "paused", false);
   };
+
+  onMount(() => {
+    const tickInterval = setInterval(() => {
+      setToasts(
+        (t) => !t.paused,
+        "remaining",
+        (r) => Math.max(0, r - 100),
+      );
+
+      toasts.forEach((toast) => {
+        if (toast.remaining <= 0) {
+          removeToast(toast.id);
+        }
+      });
+    }, 100);
+
+    onCleanup(() => clearInterval(tickInterval));
+  });
 
   return (
     <ToastContext.Provider

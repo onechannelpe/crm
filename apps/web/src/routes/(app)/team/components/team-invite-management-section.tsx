@@ -14,6 +14,7 @@ import Mail from "~/components/icons/mail";
 import X from "~/components/icons/x";
 import { AppPageSection, AppPageSectionTitle } from "~/components/layout/page";
 import { ConfirmDialog } from "~/components/ui/confirm-dialog";
+import { DatePicker } from "~/components/ui/date-picker";
 import { Badge } from "~/components/ui/display/badge";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
@@ -31,12 +32,20 @@ import {
   getRoleBadgeVariant,
   getRoleLabel,
 } from "~/lib/auth/access/role-display";
-import { getErrorMessage } from "~/lib/errors";
+import { getErrorCode, getErrorMessage } from "~/lib/errors";
 import {
   resendTeamInviteMutation,
   revokeTeamInviteMutation,
 } from "~/lib/mutations/team";
 import { inviteManagementQuery } from "~/lib/queries/team";
+
+import {
+  getInviteExpiryFieldError,
+  getMinInviteExpiryDate,
+  INVITE_EXPIRY_ERROR_TEXT,
+  INVITE_EXPIRY_HELPER_TEXT,
+  parseInviteExpiryDate,
+} from "./team-invite-expiry";
 
 import styles from "../team-page.module.css";
 
@@ -53,6 +62,9 @@ export function TeamInviteManagementSection() {
   const [role, setRole] = createSignal("");
   const [teamId, setTeamId] = createSignal("");
   const [expiresAt, setExpiresAt] = createSignal("");
+  const [expiresAtError, setExpiresAtError] = createSignal<
+    string | undefined
+  >();
   const [pendingRevokeId, setPendingRevokeId] = createSignal<number | null>(
     null,
   );
@@ -82,6 +94,7 @@ export function TeamInviteManagementSection() {
     resendSubmissions.some((s) => s.pending && s.input[0] === inviteId);
   const isRevokePending = (inviteId: number) =>
     revokeSubmissions.some((s) => s.pending && s.input[0] === inviteId);
+  const minInviteExpiryDate = () => getMinInviteExpiryDate();
 
   async function handleResend(inviteId: number): Promise<void> {
     try {
@@ -112,6 +125,11 @@ export function TeamInviteManagementSection() {
       event.preventDefault();
       const im = inviteManagement();
       if (!im) return;
+      const parsedExpiresAt = parseInviteExpiryDate(expiresAt());
+      if (parsedExpiresAt.isErr) {
+        setExpiresAtError(parsedExpiresAt.error);
+        return;
+      }
       try {
         await createTeamInvite({
           names: names(),
@@ -120,7 +138,7 @@ export function TeamInviteManagementSection() {
           email: email(),
           role: role(),
           teamId: teamId() ? Number(teamId()) : null,
-          expiresAt: expiresAt() ? new Date(expiresAt()).getTime() : null,
+          expiresAt: parsedExpiresAt.value,
         });
         setNames("");
         setFirstSurname("");
@@ -129,9 +147,17 @@ export function TeamInviteManagementSection() {
         setRole(getDefaultAssignableRole(im));
         setTeamId("");
         setExpiresAt("");
+        setExpiresAtError(undefined);
         await revalidateQuery(inviteManagementQuery.key);
         showToast("success", "Invitación enviada");
       } catch (err: unknown) {
+        if (getErrorCode(err) === "validation") {
+          const message = getErrorMessage(err, INVITE_EXPIRY_ERROR_TEXT);
+          if (message.includes("expiresAt")) {
+            setExpiresAtError(INVITE_EXPIRY_ERROR_TEXT);
+            return;
+          }
+        }
         showToast(
           "error",
           getErrorMessage(err, "No se pudo crear la invitación"),
@@ -210,15 +236,28 @@ export function TeamInviteManagementSection() {
                   {(team) => <option value={team.id}>{team.name}</option>}
                 </For>
               </Select>
-              <Input
-                type="date"
+              <DatePicker
                 label="Fecha de vencimiento (opcional)"
                 value={expiresAt()}
-                onInput={(event) => setExpiresAt(event.currentTarget.value)}
+                min={minInviteExpiryDate()}
+                description={INVITE_EXPIRY_HELPER_TEXT}
+                error={expiresAtError()}
+                onInput={(nextValue) => {
+                  setExpiresAt(nextValue);
+                  setExpiresAtError(getInviteExpiryFieldError(nextValue));
+                }}
               />
               <div class={styles.inviteActions}>
-                <Button type="submit" disabled={isSavingInvite() || !role()}>
-                  {isSavingInvite() ? "Enviando..." : "Enviar invitación"}
+                <Button
+                  type="submit"
+                  loading={isSavingInvite()}
+                  disabled={
+                    isSavingInvite() ||
+                    !role() ||
+                    expiresAtError() !== undefined
+                  }
+                >
+                  Enviar invitación
                 </Button>
               </div>
             </form>
