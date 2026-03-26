@@ -16,6 +16,9 @@ describe("route permissions", () => {
     expect(getRoutePermission("/review/123")).toBe("lead:review");
     expect(getRoutePermission("/quotations")).toBe("quotation:manage");
     expect(getRoutePermission("/quotations/123")).toBe("quotation:manage");
+    expect(getRoutePermission("/leads")).toBe("lead:pipeline");
+    expect(getRoutePermission("/leads/new")).toBe("lead:pipeline");
+    expect(getRoutePermission("/leads/123")).toBe("lead:pipeline");
     expect(getRoutePermission("/sales/crm")).toBe("lead:register");
     expect(getRoutePermission("/sales/new/123")).toBe("lead:register");
     expect(getRoutePermission("/sales/123")).toBe("lead:register");
@@ -36,6 +39,8 @@ describe("route permissions", () => {
     expect(canAccessPath("executive", "/settings/capacity-policies")).toBe(
       false,
     );
+    expect(canAccessPath("executive", "/leads")).toBe(true);
+    expect(canAccessPath("admin", "/leads")).toBe(false);
     expect(canAccessPath("executive", "/team")).toBe(false);
     expect(canAccessPath("hr", "/team")).toBe(true);
     expect(canAccessPath("admin", "/settings/catalog")).toBe(true);

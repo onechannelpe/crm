@@ -1,22 +1,30 @@
 import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { engineClient } from "~/server/shared/composition-root";
 import {
   createPipelineRepos,
   pipelineAuditService,
 } from "~/server/shared/pipeline-runtime";
 import { runInPipelineTransaction } from "~/server/shared/pipeline-transaction";
-import { Ok, Err, type Result } from "~/server/shared/result";
+import { isErr, Ok, Err, type Result } from "~/server/shared/result";
 
 import { buildRegisteredLead } from "../domain/lead-pipeline";
 
 export async function registerLeadUseCase(input: {
   ruc: string;
-  razonSocial: string | null;
-  address: string | null;
   executiveId: number;
   actorId: number;
 }): Promise<Result<{ id: number }, DomainError>> {
+  const enrichment = await engineClient.search("ruc", input.ruc, 1);
+  const searchResult = isErr(enrichment)
+    ? null
+    : enrichment.value.find((candidate) => candidate.org?.ruc === input.ruc) ??
+      enrichment.value[0] ??
+      null;
+
   const built = buildRegisteredLead({
     ...input,
+    razonSocial: searchResult?.org?.name ?? null,
+    address: searchResult?.org?.fiscal_address ?? null,
     now: Date.now(),
   });
   if (!built.ok) return built;

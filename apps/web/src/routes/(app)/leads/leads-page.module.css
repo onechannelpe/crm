@@ -1,0 +1,172 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 0 12px;
+  flex-shrink: 0;
+}
+
+.indexContainer {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+.tableCard {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--panel-radius);
+  background: var(--background);
+}
+
+.draftRow {
+  background: color-mix(in oklab, var(--surface) 90%, white);
+}
+
+.rucCell {
+  min-width: 320px;
+}
+
+.rucValueCell {
+  width: 160px;
+}
+
+.addressCell {
+  max-width: 360px;
+  color: var(--muted-foreground);
+}
+
+.leadLink {
+  color: var(--foreground);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+}
+
+.leadLink:hover {
+  text-decoration: underline;
+}
+
+.inlineForm {
+  display: grid;
+  gap: 8px;
+}
+
+.inlineActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.placeholderText {
+  color: var(--muted-foreground);
+}
+
+.stageBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--surface) 88%, white);
+  color: var(--foreground-secondary);
+  font-size: var(--font-size-caption);
+  white-space: nowrap;
+}
+
+.emptyCell {
+  padding: 0;
+}
+
+.emptyState {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 56px 24px;
+  text-align: center;
+}
+
+.emptyIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--surface) 88%, white);
+  color: var(--muted-foreground);
+}
+
+.emptyTitle {
+  margin: 0;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+}
+
+.emptyDescription {
+  margin: 0 0 4px;
+  max-width: 360px;
+  color: var(--muted-foreground);
+}
+
+.actionCell {
+  padding: 0;
+}
+
+.actionRow {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 48px;
+  padding: 0 16px;
+  border: 0;
+  background: transparent;
+  color: var(--foreground-secondary);
+  cursor: pointer;
+  text-align: left;
+}
+
+.actionRow:hover {
+  background: var(--bg-translucent);
+}
+
+.actionIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  margin-right: 12px;
+  color: var(--muted-foreground);
+}
+
+.actionText {
+  font-size: var(--font-size-body);
+}
+
+@media (max-width: 768px) {
+  .toolbar {
+    justify-content: stretch;
+  }
+
+  .toolbar > * {
+    width: 100%;
+  }
+
+  .rucCell {
+    min-width: 240px;
+  }
+}
