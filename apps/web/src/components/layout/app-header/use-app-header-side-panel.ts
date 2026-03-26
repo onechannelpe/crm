@@ -35,8 +35,8 @@ export function useAppHeaderSidePanel() {
   useHotkey(SIDE_PANEL_HOTKEY, toggleSidePanel);
 
   const focusExtensionWindow = () => {
-    const runtime =
-      (globalThis as { chrome?: { runtime?: ChromeRuntime } }).chrome?.runtime;
+    const runtime = (globalThis as { chrome?: { runtime?: ChromeRuntime } })
+      .chrome?.runtime;
 
     runtime?.sendMessage?.({ action: "focusWindow" }, () => {});
   };
@@ -48,7 +48,6 @@ export function useAppHeaderSidePanel() {
     extensionError,
     focusExtensionWindow,
     toggleSidePanel,
-    commandButtonClickOutsideId:
-      PAGE_HEADER_SIDE_PANEL_BUTTON_CLICK_OUTSIDE_ID,
+    commandButtonClickOutsideId: PAGE_HEADER_SIDE_PANEL_BUTTON_CLICK_OUTSIDE_ID,
   };
 }
