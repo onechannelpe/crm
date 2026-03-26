@@ -1,6 +1,8 @@
-import { createAuditService } from "~/server/shared/audit";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { createPipelineRepos } from "~/server/shared/pipeline-runtime";
+import {
+  createPipelineRepos,
+  pipelineAuditService,
+} from "~/server/shared/pipeline-runtime";
 import { runInPipelineTransaction } from "~/server/shared/pipeline-transaction";
 import { type Result, Err, Ok } from "~/server/shared/result";
 
@@ -11,8 +13,8 @@ export async function reassignLeadUseCase(input: {
   newExecutiveId: number;
   actorId: number;
 }): Promise<Result<void, DomainError>> {
-  return runInPipelineTransaction(async (trx) => {
-    const repos = createPipelineRepos(trx);
+  return runInPipelineTransaction(async ({ executor, afterCommit }) => {
+    const repos = createPipelineRepos(executor);
     const lead = await repos.leads.findById(input.leadId);
     if (!lead) {
       return Err(domainError("not_found", "lead_not_found", "Lead not found"));
@@ -49,10 +51,17 @@ export async function reassignLeadUseCase(input: {
       updated_at: now,
     });
 
-    const audit = createAuditService({ auditLogs: repos.auditLogs });
-    await audit.log(input.actorId, "lead_reassigned", "lead", input.leadId, {
-      from: lead.executive_id,
-      to: input.newExecutiveId,
+    afterCommit(async () => {
+      await pipelineAuditService.log(
+        input.actorId,
+        "lead_reassigned",
+        "lead",
+        input.leadId,
+        {
+          from: lead.executive_id,
+          to: input.newExecutiveId,
+        },
+      );
     });
 
     return Ok(undefined);
