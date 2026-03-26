@@ -34,7 +34,7 @@ export function IndexTable<T extends { id: number }>(props: {
     <div class={styles.indexContainer}>
       <div class={styles.tableContainer}>
         <div class={styles.scrollWrapper}>
-          <div class={styles.table} role="table" aria-label={props.ariaLabel}>
+          <section class={styles.table} aria-label={props.ariaLabel}>
             <IndexHeader
               allSelected={props.selection.allSelected()}
               columns={props.columns}
@@ -78,7 +78,7 @@ export function IndexTable<T extends { id: number }>(props: {
                 />
               ) : null}
             </Show>
-          </div>
+          </section>
         </div>
       </div>
     </div>
