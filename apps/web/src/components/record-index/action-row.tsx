@@ -18,7 +18,9 @@ export function IndexActionRow(props: {
       style={{ "grid-template-columns": props.gridTemplateColumns }}
       onClick={props.onClick}
     >
-      <div class={`${styles.actionCell} ${styles.checkboxCell}`}>{props.icon}</div>
+      <div class={`${styles.actionCell} ${styles.checkboxCell}`}>
+        {props.icon}
+      </div>
       <div
         class={`${styles.actionCell} ${props.labelColumnIndex === props.stickyColumnIndex ? styles.stickyCell : ""}`}
         style={{

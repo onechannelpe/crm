@@ -3,6 +3,7 @@ import { For } from "solid-js";
 import { Checkbox } from "~/components/ui/input/checkbox";
 
 import type { IndexColumn } from "./types";
+
 import styles from "./styles.module.css";
 
 export function IndexHeader<T>(props: {
@@ -19,7 +20,10 @@ export function IndexHeader<T>(props: {
       role="row"
       style={{ "grid-template-columns": props.gridTemplateColumns }}
     >
-      <div class={`${styles.headerCell} ${styles.checkboxCell}`} role="columnheader">
+      <div
+        class={`${styles.headerCell} ${styles.checkboxCell}`}
+        role="columnheader"
+      >
         <Checkbox
           checked={props.allSelected}
           onChange={(event: Event & { currentTarget: HTMLInputElement }) =>

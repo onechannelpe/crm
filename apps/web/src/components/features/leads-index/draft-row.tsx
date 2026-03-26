@@ -1,10 +1,11 @@
 import { For, Show } from "solid-js";
 
 import type { IndexColumn } from "~/components/record-index/types";
-import sharedStyles from "~/components/record-index/styles.module.css";
 
 import type { LeadRow } from "./columns";
+
 import styles from "./styles.module.css";
+import sharedStyles from "~/components/record-index/styles.module.css";
 
 export function DraftRow(props: {
   columns: IndexColumn<LeadRow>[];
@@ -38,7 +39,9 @@ export function DraftRow(props: {
             <Show
               when={column.key === "ruc"}
               fallback={
-                <span class={styles.placeholderText}>Se completa al guardar</span>
+                <span class={styles.placeholderText}>
+                  Se completa al guardar
+                </span>
               }
             >
               <form
@@ -54,13 +57,17 @@ export function DraftRow(props: {
                   inputMode="numeric"
                   placeholder="Ingresa el RUC"
                   value={props.draftRuc}
-                  onInput={(event) => props.onDraftRucInput(event.currentTarget.value)}
+                  onInput={(event) =>
+                    props.onDraftRucInput(event.currentTarget.value)
+                  }
                 />
                 <div class={styles.inlineComposerActions}>
                   <button
                     type="submit"
                     class={styles.inlineSaveButton}
-                    disabled={props.submitting || props.draftRuc.trim().length === 0}
+                    disabled={
+                      props.submitting || props.draftRuc.trim().length === 0
+                    }
                   >
                     {props.submitting ? "Guardando..." : "Save"}
                   </button>
@@ -74,7 +81,9 @@ export function DraftRow(props: {
                   </button>
                 </div>
                 <Show when={props.error}>
-                  {(message) => <span class={styles.errorText}>{message()}</span>}
+                  {(message) => (
+                    <span class={styles.errorText}>{message()}</span>
+                  )}
                 </Show>
               </form>
             </Show>

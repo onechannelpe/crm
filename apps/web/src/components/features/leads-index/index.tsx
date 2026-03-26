@@ -11,7 +11,6 @@ import {
 } from "~/components/record-index/grid";
 import { ViewBarMenu } from "~/components/record-index/menu";
 import { createSelectionModel } from "~/components/record-index/selection";
-import sharedStyles from "~/components/record-index/styles.module.css";
 import { IndexTable } from "~/components/record-index/table";
 import { ViewBar } from "~/components/record-index/view-bar";
 import { useSidePanel } from "~/features/side-panel/state/use-side-panel";
@@ -21,8 +20,15 @@ import { toAppError } from "~/lib/app-errors";
 import { LEAD_COLUMNS, type LeadRow } from "./columns";
 import { DraftRow } from "./draft-row";
 import { EmptyState } from "./empty-state";
+import {
+  FILTER_OPTIONS,
+  SORT_OPTIONS,
+  type SortKey,
+  sortLeads,
+} from "./view-config";
+
 import styles from "./styles.module.css";
-import { FILTER_OPTIONS, SORT_OPTIONS, type SortKey, sortLeads } from "./view-config";
+import sharedStyles from "~/components/record-index/styles.module.css";
 
 type ViewMenu = "filter" | "sort" | "options" | null;
 
@@ -67,12 +73,6 @@ export function LeadsIndex() {
   );
   const stickyColumnIndex = createMemo(() =>
     getStickyColumnIndex(visibleColumns()),
-  );
-
-  const allSelected = createMemo(
-    () =>
-      filteredLeads().length > 0 &&
-      selection.selectedIds().length === filteredLeads().length,
   );
 
   function openLeadPanel(lead: Pick<LeadRow, "id" | "ruc" | "razon_social">) {
@@ -153,7 +153,9 @@ export function LeadsIndex() {
               open={openMenu() === "filter"}
               onDismiss={() => setOpenMenu(null)}
               onToggle={() =>
-                setOpenMenu((current) => (current === "filter" ? null : "filter"))
+                setOpenMenu((current) =>
+                  current === "filter" ? null : "filter",
+                )
               }
             >
               <For each={FILTER_OPTIONS}>
@@ -162,8 +164,12 @@ export function LeadsIndex() {
                     type="button"
                     class={sharedStyles.menuItem}
                     role="menuitemradio"
-                    data-active={stageFilter() === option.value ? "true" : "false"}
-                    aria-checked={stageFilter() === option.value ? "true" : "false"}
+                    data-active={
+                      stageFilter() === option.value ? "true" : "false"
+                    }
+                    aria-checked={
+                      stageFilter() === option.value ? "true" : "false"
+                    }
                     onClick={() => {
                       setStageFilter(option.value);
                       setOpenMenu(null);
@@ -209,12 +215,12 @@ export function LeadsIndex() {
               open={openMenu() === "options"}
               onDismiss={() => setOpenMenu(null)}
               onToggle={() =>
-                setOpenMenu((current) => (current === "options" ? null : "options"))
+                setOpenMenu((current) =>
+                  current === "options" ? null : "options",
+                )
               }
             >
-              <div class={sharedStyles.menuSectionLabel}>
-                Visible fields
-              </div>
+              <div class={sharedStyles.menuSectionLabel}>Visible fields</div>
               <For each={LEAD_COLUMNS}>
                 {(column) => (
                   <button
@@ -222,10 +228,14 @@ export function LeadsIndex() {
                     class={sharedStyles.menuItem}
                     role="menuitemcheckbox"
                     data-active={
-                      visibleColumnKeys().includes(column.key) ? "true" : "false"
+                      visibleColumnKeys().includes(column.key)
+                        ? "true"
+                        : "false"
                     }
                     aria-checked={
-                      visibleColumnKeys().includes(column.key) ? "true" : "false"
+                      visibleColumnKeys().includes(column.key)
+                        ? "true"
+                        : "false"
                     }
                     onClick={() => toggleColumn(column.key)}
                   >
@@ -255,7 +265,6 @@ export function LeadsIndex() {
               }
             : undefined
         }
-        allSelected={allSelected()}
         ariaLabel="Prospectos"
         columns={visibleColumns()}
         draftRow={
@@ -275,16 +284,9 @@ export function LeadsIndex() {
           ) : undefined
         }
         emptyState={<EmptyState onAddNew={openDraftRow} />}
-        gridTemplateColumns={gridTemplateColumns()}
         onRowClick={openLeadPanel}
-        onSelectionPointerDown={selection.beginSelectionDrag}
-        onSelectionPointerEnter={selection.updateSelectionDrag}
-        onToggleAll={selection.toggleAll}
-        onToggleSelected={selection.setSelected}
         rows={filteredLeads()}
-        selectedIds={selection.selectedIds()}
-        stickyColumnIndex={stickyColumnIndex()}
-        stickyLeft={SELECTION_COLUMN_WIDTH}
+        selection={selection}
       />
     </div>
   );

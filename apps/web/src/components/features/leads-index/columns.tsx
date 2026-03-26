@@ -6,10 +6,9 @@ import CalendarDays from "~/components/icons/calendar-days";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import House from "~/components/icons/house";
 import Package from "~/components/icons/package";
+import type { IndexColumn } from "~/components/record-index/types";
 import { Badge } from "~/components/ui/display/badge";
 import { formatDate } from "~/lib/utils";
-
-import type { IndexColumn } from "~/components/record-index/types";
 
 import styles from "./styles.module.css";
 

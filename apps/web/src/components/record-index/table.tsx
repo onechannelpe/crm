@@ -1,9 +1,16 @@
-import { For, Show, type JSX } from "solid-js";
+import { For, Show, createMemo, type JSX } from "solid-js";
 
 import { IndexActionRow } from "./action-row";
+import {
+  buildGridTemplateColumns,
+  getStickyColumnIndex,
+  SELECTION_COLUMN_WIDTH,
+} from "./grid";
 import { IndexHeader } from "./header";
 import { IndexRow } from "./row";
+import type { SelectionModel } from "./selection";
 import type { IndexColumn } from "./types";
+
 import styles from "./styles.module.css";
 
 export function IndexTable<T extends { id: number }>(props: {
@@ -12,34 +19,33 @@ export function IndexTable<T extends { id: number }>(props: {
     label: string;
     onClick: () => void;
   };
-  allSelected: boolean;
   ariaLabel: string;
   columns: IndexColumn<T>[];
   draftRow?: JSX.Element;
   emptyState: JSX.Element;
-  gridTemplateColumns: string;
   onRowClick: (row: T) => void;
-  onSelectionPointerDown: (id: number) => void;
-  onSelectionPointerEnter: (id: number) => void;
-  onToggleAll: (checked: boolean) => void;
-  onToggleSelected: (id: number, checked: boolean) => void;
   rows: T[];
-  selectedIds: number[];
-  stickyColumnIndex: number;
-  stickyLeft: number;
+  selection: SelectionModel;
 }) {
+  const gridTemplateColumns = createMemo(() =>
+    buildGridTemplateColumns(props.columns),
+  );
+  const stickyColumnIndex = createMemo(() =>
+    getStickyColumnIndex(props.columns),
+  );
+
   return (
     <div class={styles.indexContainer}>
       <div class={styles.tableContainer}>
         <div class={styles.scrollWrapper}>
           <div class={styles.table} role="table" aria-label={props.ariaLabel}>
             <IndexHeader
-              allSelected={props.allSelected}
+              allSelected={props.selection.allSelected()}
               columns={props.columns}
-              gridTemplateColumns={props.gridTemplateColumns}
-              stickyColumnIndex={props.stickyColumnIndex}
-              stickyLeft={props.stickyLeft}
-              onToggleAll={props.onToggleAll}
+              gridTemplateColumns={gridTemplateColumns()}
+              stickyColumnIndex={stickyColumnIndex()}
+              stickyLeft={SELECTION_COLUMN_WIDTH}
+              onToggleAll={props.selection.toggleAll}
             />
 
             {props.draftRow}
@@ -49,28 +55,30 @@ export function IndexTable<T extends { id: number }>(props: {
                 {(row) => (
                   <IndexRow
                     columns={props.columns}
-                    gridTemplateColumns={props.gridTemplateColumns}
+                    gridTemplateColumns={gridTemplateColumns()}
                     onRowClick={props.onRowClick}
-                    onSelectionPointerDown={props.onSelectionPointerDown}
-                    onSelectionPointerEnter={props.onSelectionPointerEnter}
-                    onToggleSelected={props.onToggleSelected}
+                    onSelectionPointerDown={props.selection.beginSelectionDrag}
+                    onSelectionPointerEnter={
+                      props.selection.updateSelectionDrag
+                    }
+                    onToggleSelected={props.selection.setSelected}
                     row={row}
-                    selected={props.selectedIds.includes(row.id)}
-                    stickyColumnIndex={props.stickyColumnIndex}
-                    stickyLeft={props.stickyLeft}
+                    selected={props.selection.selectedIds().includes(row.id)}
+                    stickyColumnIndex={stickyColumnIndex()}
+                    stickyLeft={SELECTION_COLUMN_WIDTH}
                   />
                 )}
               </For>
 
               {props.actionRow ? (
                 <IndexActionRow
-                  gridTemplateColumns={props.gridTemplateColumns}
+                  gridTemplateColumns={gridTemplateColumns()}
                   icon={props.actionRow.icon}
                   label={props.actionRow.label}
-                  labelColumnIndex={Math.max(props.stickyColumnIndex, 0)}
+                  labelColumnIndex={Math.max(stickyColumnIndex(), 0)}
                   onClick={props.actionRow.onClick}
-                  stickyColumnIndex={props.stickyColumnIndex}
-                  stickyLeft={props.stickyLeft}
+                  stickyColumnIndex={stickyColumnIndex()}
+                  stickyLeft={SELECTION_COLUMN_WIDTH}
                 />
               ) : null}
             </Show>

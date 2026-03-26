@@ -1,12 +1,31 @@
-import { createSignal, onCleanup, onMount, type Accessor } from "solid-js";
+import {
+  createMemo,
+  createSignal,
+  onCleanup,
+  onMount,
+  type Accessor,
+} from "solid-js";
 
 type DragMode = "add" | "remove" | null;
 
+export type SelectionModel = {
+  selectedIds: Accessor<number[]>;
+  allSelected: Accessor<boolean>;
+  setSelected: (id: number, checked: boolean) => void;
+  toggleAll: (checked: boolean) => void;
+  beginSelectionDrag: (id: number) => void;
+  updateSelectionDrag: (id: number) => void;
+};
+
 export function createSelectionModel<T extends { id: number }>(
   rows: Accessor<T[]>,
-) {
+): SelectionModel {
   const [selectedIds, setSelectedIds] = createSignal<number[]>([]);
   const [dragMode, setDragMode] = createSignal<DragMode>(null);
+
+  const allSelected = createMemo(
+    () => rows().length > 0 && selectedIds().length === rows().length,
+  );
 
   function setSelected(id: number, checked: boolean) {
     setSelectedIds((current) => {
@@ -42,6 +61,7 @@ export function createSelectionModel<T extends { id: number }>(
 
   return {
     selectedIds,
+    allSelected,
     setSelected,
     toggleAll,
     beginSelectionDrag,

@@ -1,6 +1,7 @@
 import ChevronDown from "~/components/icons/chevron-down";
 
 import type { IndexPicker } from "./types";
+
 import styles from "./styles.module.css";
 
 export function ViewBar(props: {
@@ -18,7 +19,9 @@ export function ViewBar(props: {
           <span class={styles.viewPickerIcon}>{props.picker.icon}</span>
           <span class={styles.viewPickerLabel}>{props.picker.label}</span>
           <span class={styles.viewPickerMeta}>
-            {typeof props.picker.count === "number" ? `· ${props.picker.count}` : null}
+            {typeof props.picker.count === "number"
+              ? `· ${props.picker.count}`
+              : null}
             <ChevronDown size={14} />
           </span>
         </button>

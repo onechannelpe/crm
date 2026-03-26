@@ -3,6 +3,7 @@ import { For } from "solid-js";
 import { Checkbox } from "~/components/ui/input/checkbox";
 
 import type { IndexColumn } from "./types";
+
 import styles from "./styles.module.css";
 
 export function IndexRow<T extends { id: number }>(props: {
