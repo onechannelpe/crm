@@ -15,10 +15,12 @@ import CalendarDays from "~/components/icons/calendar-days";
 import ChevronDown from "~/components/icons/chevron-down";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import House from "~/components/icons/house";
+import List from "~/components/icons/list";
 import Package from "~/components/icons/package";
 import Plus from "~/components/icons/plus";
 import { Badge } from "~/components/ui/display/badge";
 import { Checkbox } from "~/components/ui/input/checkbox";
+import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
 import { useSidePanel } from "~/features/side-panel/state/use-side-panel";
 import { createLeadDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
 import { toAppError } from "~/lib/app-errors";
@@ -29,6 +31,7 @@ import styles from "./leads-record-index.module.css";
 type LeadRow = Awaited<ReturnType<typeof listLeads>>[number];
 type SortKey = "created_at_desc" | "created_at_asc" | "ruc_asc" | "ruc_desc";
 type DragMode = "add" | "remove" | null;
+type ViewMenu = "filter" | "sort" | "options" | null;
 
 type LeadColumn = {
   key: "ruc" | "razon_social" | "address" | "stage" | "created_at";
@@ -185,10 +188,11 @@ export function LeadsRecordIndex() {
   const [visibleColumnKeys, setVisibleColumnKeys] = createSignal(
     ALL_COLUMNS.map((column) => column.key),
   );
-  const [filterMenuOpen, setFilterMenuOpen] = createSignal(false);
-  const [sortMenuOpen, setSortMenuOpen] = createSignal(false);
-  const [optionsMenuOpen, setOptionsMenuOpen] = createSignal(false);
+  const [openMenu, setOpenMenu] = createSignal<ViewMenu>(null);
   const [dragMode, setDragMode] = createSignal<DragMode>(null);
+  let filterMenuContainer: HTMLDivElement | undefined;
+  let sortMenuContainer: HTMLDivElement | undefined;
+  let optionsMenuContainer: HTMLDivElement | undefined;
 
   const visibleColumns = createMemo(() =>
     ALL_COLUMNS.filter((column) => visibleColumnKeys().includes(column.key)),
@@ -213,8 +217,31 @@ export function LeadsRecordIndex() {
   const identifierColumnIndex = createMemo(() =>
     visibleColumns().findIndex((column) => column.sticky),
   );
+  const isFilterActive = createMemo(() => stageFilter() !== "all");
+  const isSortActive = createMemo(() => sortKey() !== "created_at_desc");
+  const isOptionsActive = createMemo(
+    () => visibleColumnKeys().length !== ALL_COLUMNS.length,
+  );
 
   const identifierLeft = 40;
+
+  useDismissibleLayer({
+    enabled: () => openMenu() === "filter",
+    onDismiss: () => setOpenMenu(null),
+    getContainer: () => filterMenuContainer,
+  });
+
+  useDismissibleLayer({
+    enabled: () => openMenu() === "sort",
+    onDismiss: () => setOpenMenu(null),
+    getContainer: () => sortMenuContainer,
+  });
+
+  useDismissibleLayer({
+    enabled: () => openMenu() === "options",
+    onDismiss: () => setOpenMenu(null),
+    getContainer: () => optionsMenuContainer,
+  });
 
   function openLeadPanel(lead: Pick<LeadRow, "id" | "ruc" | "razon_social">) {
     openPanel(
@@ -314,36 +341,56 @@ export function LeadsRecordIndex() {
       <div class={styles.viewBar}>
         <div class={styles.viewBarTop}>
           <button type="button" class={styles.viewPicker}>
-            <span>All prospects</span>
-            <ChevronDown size={14} />
+            <span class={styles.viewPickerIcon}>
+              <List size={16} />
+            </span>
+            <span class={styles.viewPickerLabel}>All prospects</span>
+            <span class={styles.viewPickerMeta}>
+              <Show when={typeof leads().length === "number"}>
+                · {leads().length}
+              </Show>
+              <ChevronDown size={14} />
+            </span>
           </button>
           <div class={styles.viewActions}>
-            <div class={styles.menuWrap}>
+            <div class={styles.menuWrap} ref={filterMenuContainer}>
               <button
                 type="button"
                 class={styles.toolbarButton}
-                data-open={filterMenuOpen() ? "true" : "false"}
-                onClick={() => {
-                  setFilterMenuOpen((open) => !open);
-                  setSortMenuOpen(false);
-                  setOptionsMenuOpen(false);
-                }}
+                aria-controls="view-bar-main-filter-dropdown-id-options"
+                aria-expanded={openMenu() === "filter" ? "true" : "false"}
+                aria-haspopup="menu"
+                data-active={isFilterActive() ? "true" : "false"}
+                data-open={openMenu() === "filter" ? "true" : "false"}
+                onClick={() =>
+                  setOpenMenu((current) =>
+                    current === "filter" ? null : "filter",
+                  )
+                }
               >
                 Filter
               </button>
-              <Show when={filterMenuOpen()}>
-                <div class={styles.menu}>
+              <Show when={openMenu() === "filter"}>
+                <div
+                  class={styles.menu}
+                  id="view-bar-main-filter-dropdown-id-options"
+                  role="menu"
+                >
                   <For each={FILTER_OPTIONS}>
                     {(option) => (
                       <button
                         type="button"
                         class={styles.menuItem}
+                        role="menuitemradio"
                         data-active={
+                          stageFilter() === option.value ? "true" : "false"
+                        }
+                        aria-checked={
                           stageFilter() === option.value ? "true" : "false"
                         }
                         onClick={() => {
                           setStageFilter(option.value);
-                          setFilterMenuOpen(false);
+                          setOpenMenu(null);
                         }}
                       >
                         {option.label}
@@ -354,32 +401,38 @@ export function LeadsRecordIndex() {
               </Show>
             </div>
 
-            <div class={styles.menuWrap}>
+            <div class={styles.menuWrap} ref={sortMenuContainer}>
               <button
                 type="button"
                 class={styles.toolbarButton}
-                data-open={sortMenuOpen() ? "true" : "false"}
-                onClick={() => {
-                  setSortMenuOpen((open) => !open);
-                  setFilterMenuOpen(false);
-                  setOptionsMenuOpen(false);
-                }}
+                aria-controls="sort-dropdown-options"
+                aria-expanded={openMenu() === "sort" ? "true" : "false"}
+                aria-haspopup="menu"
+                data-active={isSortActive() ? "true" : "false"}
+                data-open={openMenu() === "sort" ? "true" : "false"}
+                onClick={() =>
+                  setOpenMenu((current) => (current === "sort" ? null : "sort"))
+                }
               >
                 Sort
               </button>
-              <Show when={sortMenuOpen()}>
-                <div class={styles.menu}>
+              <Show when={openMenu() === "sort"}>
+                <div class={styles.menu} id="sort-dropdown-options" role="menu">
                   <For each={SORT_OPTIONS}>
                     {(option) => (
                       <button
                         type="button"
                         class={styles.menuItem}
+                        role="menuitemradio"
                         data-active={
+                          sortKey() === option.value ? "true" : "false"
+                        }
+                        aria-checked={
                           sortKey() === option.value ? "true" : "false"
                         }
                         onClick={() => {
                           setSortKey(option.value);
-                          setSortMenuOpen(false);
+                          setOpenMenu(null);
                         }}
                       >
                         {option.label}
@@ -390,28 +443,42 @@ export function LeadsRecordIndex() {
               </Show>
             </div>
 
-            <div class={styles.menuWrap}>
+            <div class={styles.menuWrap} ref={optionsMenuContainer}>
               <button
                 type="button"
                 class={styles.toolbarButton}
-                data-open={optionsMenuOpen() ? "true" : "false"}
-                onClick={() => {
-                  setOptionsMenuOpen((open) => !open);
-                  setFilterMenuOpen(false);
-                  setSortMenuOpen(false);
-                }}
+                aria-controls="object-options-dropdown-id-options"
+                aria-expanded={openMenu() === "options" ? "true" : "false"}
+                aria-haspopup="menu"
+                data-active={isOptionsActive() ? "true" : "false"}
+                data-open={openMenu() === "options" ? "true" : "false"}
+                onClick={() =>
+                  setOpenMenu((current) =>
+                    current === "options" ? null : "options",
+                  )
+                }
               >
                 Options
               </button>
-              <Show when={optionsMenuOpen()}>
-                <div class={styles.menu}>
+              <Show when={openMenu() === "options"}>
+                <div
+                  class={styles.menu}
+                  id="object-options-dropdown-id-options"
+                  role="menu"
+                >
                   <div class={styles.menuSectionLabel}>Visible fields</div>
                   <For each={ALL_COLUMNS}>
                     {(column) => (
                       <button
                         type="button"
                         class={styles.menuItem}
+                        role="menuitemcheckbox"
                         data-active={
+                          visibleColumnKeys().includes(column.key)
+                            ? "true"
+                            : "false"
+                        }
+                        aria-checked={
                           visibleColumnKeys().includes(column.key)
                             ? "true"
                             : "false"
@@ -422,6 +489,8 @@ export function LeadsRecordIndex() {
                           checked={visibleColumnKeys().includes(column.key)}
                           class={styles.menuCheckbox}
                           type="checkbox"
+                          aria-hidden="true"
+                          tabIndex={-1}
                         />
                         <span>{column.label}</span>
                       </button>
