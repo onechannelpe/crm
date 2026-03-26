@@ -3,6 +3,7 @@ import {
   createMemo,
   type ParentProps,
   createContext,
+  onMount,
   useContext,
 } from "solid-js";
 
@@ -11,7 +12,10 @@ import type {
   SidePanelPageDefinition,
   SidePanelPageState,
 } from "../types/side-panel-page";
-import { createSidePanelStore } from "./side-panel-store";
+import {
+  createSidePanelStore,
+  readStoredSidePanelWidth,
+} from "./side-panel-store";
 
 export type SidePanelContextValue = {
   isOpen: Accessor<boolean>;
@@ -60,6 +64,14 @@ export function SidePanelProvider(props: ParentProps) {
     setSearchText: store.setSearchText,
     setPanelWidth: store.setPanelWidth,
   };
+
+  onMount(() => {
+    const persistedWidth = readStoredSidePanelWidth();
+
+    if (persistedWidth !== state.panelWidth) {
+      store.setPanelWidth(persistedWidth);
+    }
+  });
 
   return (
     <SidePanelContext.Provider value={value}>

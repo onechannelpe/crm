@@ -4,6 +4,7 @@ import {
   createSignal,
   createUniqueId,
   onCleanup,
+  onMount,
 } from "solid-js";
 
 import CalendarDays from "~/components/icons/calendar-days";
@@ -55,9 +56,7 @@ export function DatePicker(props: DatePickerProps) {
     setIsOpen(false);
   };
 
-  createEffect(() => {
-    if (typeof document === "undefined") return;
-
+  onMount(() => {
     const handlePointerDown = (event: PointerEvent) => {
       if (!isOpen()) return;
       const target = event.target;

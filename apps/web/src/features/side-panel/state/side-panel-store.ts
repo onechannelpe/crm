@@ -14,32 +14,22 @@ export const SIDE_PANEL_WIDTH_DEFAULT = 400;
 export const SIDE_PANEL_WIDTH_MIN = 320;
 export const SIDE_PANEL_WIDTH_MAX = 600;
 
-// Read and validate width from localStorage synchronously at module evaluation time.
-function readInitialWidth(): number {
+function clampPanelWidth(width: number): number {
+  return Math.min(SIDE_PANEL_WIDTH_MAX, Math.max(SIDE_PANEL_WIDTH_MIN, width));
+}
+
+export function readStoredSidePanelWidth(): number {
   try {
     const raw = localStorage.getItem(SIDE_PANEL_WIDTH_KEY);
     if (raw === null) return SIDE_PANEL_WIDTH_DEFAULT;
     const parsed = parseInt(raw, 10);
-    if (
-      Number.isNaN(parsed) ||
-      parsed < SIDE_PANEL_WIDTH_MIN ||
-      parsed > SIDE_PANEL_WIDTH_MAX
-    ) {
+    if (Number.isNaN(parsed)) {
       return SIDE_PANEL_WIDTH_DEFAULT;
     }
-    return parsed;
+    return clampPanelWidth(parsed);
   } catch {
     return SIDE_PANEL_WIDTH_DEFAULT;
   }
-}
-
-const initialWidth = readInitialWidth();
-
-if (typeof document !== "undefined") {
-  document.documentElement.style.setProperty(
-    "--side-panel-width",
-    `${initialWidth}px`,
-  );
 }
 
 // Store factory
@@ -68,7 +58,7 @@ export function createSidePanelStore() {
     navigationStack: [],
     pageStateById: {},
     searchText: "",
-    panelWidth: initialWidth,
+    panelWidth: SIDE_PANEL_WIDTH_DEFAULT,
   });
 
   const openPanel = (page: SidePanelPageDefinition) => {
@@ -163,9 +153,10 @@ export function createSidePanelStore() {
   };
 
   const setPanelWidth = (width: number) => {
-    setState({ panelWidth: width });
+    const nextWidth = clampPanelWidth(width);
+    setState({ panelWidth: nextWidth });
     try {
-      localStorage.setItem(SIDE_PANEL_WIDTH_KEY, String(width));
+      localStorage.setItem(SIDE_PANEL_WIDTH_KEY, String(nextWidth));
     } catch {
       // localStorage may be unavailable in some environments
     }
