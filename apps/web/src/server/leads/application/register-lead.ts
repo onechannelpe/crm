@@ -1,5 +1,5 @@
-import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { engineClient } from "~/server/shared/composition-root";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
 import {
   createPipelineRepos,
   pipelineAuditService,
@@ -17,9 +17,9 @@ export async function registerLeadUseCase(input: {
   const enrichment = await engineClient.search("ruc", input.ruc, 1);
   const searchResult = isErr(enrichment)
     ? null
-    : enrichment.value.find((candidate) => candidate.org?.ruc === input.ruc) ??
+    : (enrichment.value.find((candidate) => candidate.org?.ruc === input.ruc) ??
       enrichment.value[0] ??
-      null;
+      null);
 
   const built = buildRegisteredLead({
     ...input,

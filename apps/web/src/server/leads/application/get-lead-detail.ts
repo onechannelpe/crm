@@ -12,6 +12,7 @@ import { type Result, Err, Ok } from "~/server/shared/result";
 
 function canReadLead(role: Role): boolean {
   const permissions: Permission[] = [
+    "lead:pipeline",
     "lead:register",
     "lead:review",
     "quotation:manage",
