@@ -8,14 +8,14 @@ import { SidePanelContainer } from "./side-panel-container";
 
 import styles from "./side-panel-router.module.css";
 
-export function SidePanelRouter() {
+export function SidePanelRouter(props: { isMobile: boolean }) {
   const { currentEntry } = useSidePanel();
 
   return (
-    <SidePanelContainer>
+    <SidePanelContainer isMobile={props.isMobile}>
       <div class={styles.router}>
         <div class={styles.topBar}>
-          <SidePanelTopBar />
+          <SidePanelTopBar isMobile={props.isMobile} />
         </div>
         <div class={styles.pageBody}>
           <Show when={currentEntry()} keyed>
