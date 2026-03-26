@@ -11,7 +11,7 @@ import { isSettingsRoutePath } from "~/lib/navigation/route-classification";
 import { traceSsrBoundary } from "~/lib/observability/diagnostics";
 import { cn } from "~/lib/utils";
 
-import { Header } from "./header";
+import { AppHeader } from "./app-header";
 
 import shellStyles from "./shell.module.css";
 
@@ -38,7 +38,7 @@ function StandardAppShell(props: RouteSectionProps) {
   return (
     <SidePanelProvider>
       <div class={shellStyles.main}>
-        <Header />
+        <AppHeader />
         <main class={shellStyles.body}>
           <MainContainerWithSidePanel>
             {props.children}
