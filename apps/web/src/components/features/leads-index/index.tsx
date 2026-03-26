@@ -31,7 +31,9 @@ import styles from "./styles.module.css";
 import sharedStyles from "~/components/record-index/styles.module.css";
 
 type ViewMenu = "filter" | "sort" | "options" | null;
-const LEAD_COLUMN_KEYS = LEAD_COLUMNS.map((column) => column.key);
+const DEFAULT_VISIBLE_COLUMNS = new Set(
+  LEAD_COLUMNS.map((column) => column.key),
+);
 
 export function LeadsIndex() {
   const [reloadToken, setReloadToken] = createSignal(0);
@@ -50,13 +52,13 @@ export function LeadsIndex() {
   const [stageFilter, setStageFilter] =
     createSignal<(typeof FILTER_OPTIONS)[number]["value"]>("all");
   const [sortKey, setSortKey] = createSignal<SortKey>("created_at_desc");
-  const [visibleColumnKeys, setVisibleColumnKeys] =
-    createSignal(LEAD_COLUMN_KEYS);
+  const [visibleColumnKeys, setVisibleColumnKeys] = createSignal(
+    DEFAULT_VISIBLE_COLUMNS,
+  );
   const [openMenu, setOpenMenu] = createSignal<ViewMenu>(null);
-  const visibleColumnKeySet = createMemo(() => new Set(visibleColumnKeys()));
 
   const visibleColumns = createMemo(() =>
-    LEAD_COLUMNS.filter((column) => visibleColumnKeySet().has(column.key)),
+    LEAD_COLUMNS.filter((column) => visibleColumnKeys().has(column.key)),
   );
 
   const filteredLeads = createMemo(() => {
@@ -88,13 +90,17 @@ export function LeadsIndex() {
 
   function toggleColumn(key: string) {
     setVisibleColumnKeys((current) => {
-      if (current.includes(key)) {
-        if (current.length === 1) return current;
-        return current.filter((value) => value !== key);
+      if (current.has(key)) {
+        if (current.size === 1) return current;
+
+        const next = new Set(current);
+        next.delete(key);
+        return next;
       }
 
-      const next = new Set([...current, key]);
-      return LEAD_COLUMN_KEYS.filter((columnKey) => next.has(columnKey));
+      const next = new Set(current);
+      next.add(key);
+      return next;
     });
   }
 
@@ -209,7 +215,7 @@ export function LeadsIndex() {
               </For>
             </ViewBarMenu>
             <ViewBarMenu
-              active={visibleColumnKeys().length !== LEAD_COLUMNS.length}
+              active={visibleColumnKeys().size !== LEAD_COLUMNS.length}
               label="Options"
               menuId="object-options-dropdown-id-options"
               open={openMenu() === "options"}
@@ -228,15 +234,15 @@ export function LeadsIndex() {
                     class={sharedStyles.menuItem}
                     role="menuitemcheckbox"
                     data-active={
-                      visibleColumnKeySet().has(column.key) ? "true" : "false"
+                      visibleColumnKeys().has(column.key) ? "true" : "false"
                     }
                     aria-checked={
-                      visibleColumnKeySet().has(column.key) ? "true" : "false"
+                      visibleColumnKeys().has(column.key) ? "true" : "false"
                     }
                     onClick={() => toggleColumn(column.key)}
                   >
                     <input
-                      checked={visibleColumnKeySet().has(column.key)}
+                      checked={visibleColumnKeys().has(column.key)}
                       class={sharedStyles.menuCheckbox}
                       type="checkbox"
                       aria-hidden="true"
