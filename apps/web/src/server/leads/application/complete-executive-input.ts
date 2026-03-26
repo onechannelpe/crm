@@ -1,8 +1,8 @@
-import { createAuditService } from "~/server/shared/audit";
 import type { DomainError } from "~/server/shared/domain-error";
 import { domainError } from "~/server/shared/domain-error";
 import {
   createPipelineRepos,
+  pipelineAuditService,
   pipelineNotificationCenter,
 } from "~/server/shared/pipeline-runtime";
 import { runInPipelineTransaction } from "~/server/shared/pipeline-transaction";
@@ -22,36 +22,53 @@ export async function completeExecutiveInputUseCase(input: {
   actorId: number;
   branchId: number;
 }): Promise<Result<void, DomainError>> {
-  const result = await runInPipelineTransaction(async (trx) => {
-    const repos = createPipelineRepos(trx);
-    const lead = await repos.leads.findById(input.leadId);
-    if (!lead) {
-      return Err(domainError("not_found", "lead_not_found", "Lead not found"));
-    }
+  const result = await runInPipelineTransaction(
+    async ({ executor, afterCommit }) => {
+      const repos = createPipelineRepos(executor);
+      const lead = await repos.leads.findById(input.leadId);
+      if (!lead) {
+        return Err(
+          domainError("not_found", "lead_not_found", "Lead not found"),
+        );
+      }
 
-    const decision = completeCommercialInput({
-      ...input,
-      lead,
-      now: Date.now(),
-    });
-    if (!decision.ok) return decision;
+      const decision = completeCommercialInput({
+        ...input,
+        lead,
+        now: Date.now(),
+      });
+      if (!decision.ok) return decision;
 
-    await repos.leadCommercialInputs.upsert(decision.value.commercialInput);
-    await repos.leads.updateById(input.leadId, {
-      stage: "READY_FOR_QUOTATION",
-      updated_at: Date.now(),
-    });
+      await repos.leadCommercialInputs.upsert(decision.value.commercialInput);
+      await repos.leads.updateById(input.leadId, {
+        stage: "READY_FOR_QUOTATION",
+        updated_at: Date.now(),
+      });
 
-    const audit = createAuditService({ auditLogs: repos.auditLogs });
-    await audit.log(input.actorId, "stage_changed", "lead", input.leadId, {
-      from: lead.stage,
-      to: "READY_FOR_QUOTATION",
-    });
+      afterCommit(async () => {
+        await pipelineAuditService.log(
+          input.actorId,
+          "stage_changed",
+          "lead",
+          input.leadId,
+          {
+            from: lead.stage,
+            to: "READY_FOR_QUOTATION",
+          },
+        );
+      });
+      if (decision.value.events.length > 0) {
+        afterCommit(() =>
+          dispatchLeadNotifications(
+            decision.value.events,
+            pipelineNotificationCenter,
+          ),
+        );
+      }
 
-    return Ok(decision.value.events);
-  });
+      return Ok(decision.value.events);
+    },
+  );
 
-  if (!result.ok) return result;
-  await dispatchLeadNotifications(result.value, pipelineNotificationCenter);
-  return Ok(undefined);
+  return result.ok ? Ok(undefined) : result;
 }

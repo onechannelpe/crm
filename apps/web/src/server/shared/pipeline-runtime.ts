@@ -11,6 +11,7 @@ import { createLeadRepo } from "../leads/infrastructure/lead-repo";
 import { createAppNotificationCenter } from "../notifications/app-center-service";
 import { createQuotationRepo } from "../quotations/infrastructure/quotation-repo";
 import { createSaleRepo } from "../sales/infrastructure/sale-repo";
+import { createAuditService } from "./audit";
 import type { DatabaseExecutor } from "./db-executor";
 import { createAuditLogsRepo } from "./repos-audit-logs";
 
@@ -31,6 +32,9 @@ export function createPipelineRepos(executor: DatabaseExecutor) {
 export type PipelineRepos = ReturnType<typeof createPipelineRepos>;
 
 export const pipelineRepos = createPipelineRepos(db);
+export const pipelineAuditService = createAuditService({
+  auditLogs: pipelineRepos.auditLogs,
+});
 export const jobBlobStore = createJobBlobStore(config.uploads.storageRoot);
 export const pipelineNotificationCenter = createAppNotificationCenter({
   repos: {

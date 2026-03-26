@@ -1,6 +1,8 @@
-import { createAuditService } from "~/server/shared/audit";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { createPipelineRepos } from "~/server/shared/pipeline-runtime";
+import {
+  createPipelineRepos,
+  pipelineAuditService,
+} from "~/server/shared/pipeline-runtime";
 import { runInPipelineTransaction } from "~/server/shared/pipeline-transaction";
 import { Ok, Err, type Result } from "~/server/shared/result";
 
@@ -19,8 +21,8 @@ export async function registerLeadUseCase(input: {
   });
   if (!built.ok) return built;
 
-  return runInPipelineTransaction(async (trx) => {
-    const repos = createPipelineRepos(trx);
+  return runInPipelineTransaction(async ({ executor, afterCommit }) => {
+    const repos = createPipelineRepos(executor);
     const existing = await repos.leads.findByRuc(input.ruc);
     if (existing) {
       return Err(
@@ -52,10 +54,17 @@ export async function registerLeadUseCase(input: {
       assigned_at: built.value.lead.created_at,
     });
 
-    const audit = createAuditService({ auditLogs: repos.auditLogs });
-    await audit.log(input.actorId, "lead_created", "lead", leadId, {
-      ruc: input.ruc,
-      stage: "PENDING_EXTERNAL_REVIEW",
+    afterCommit(async () => {
+      await pipelineAuditService.log(
+        input.actorId,
+        "lead_created",
+        "lead",
+        leadId,
+        {
+          ruc: input.ruc,
+          stage: "PENDING_EXTERNAL_REVIEW",
+        },
+      );
     });
 
     return Ok({ id: leadId });

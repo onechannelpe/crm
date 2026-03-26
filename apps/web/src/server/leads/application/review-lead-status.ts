@@ -1,7 +1,7 @@
-import { createAuditService } from "~/server/shared/audit";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import {
   createPipelineRepos,
+  pipelineAuditService,
   pipelineNotificationCenter,
 } from "~/server/shared/pipeline-runtime";
 import { runInPipelineTransaction } from "~/server/shared/pipeline-transaction";
@@ -17,45 +17,71 @@ export async function reviewLeadStatusUseCase(input: {
   actorId: number;
   branchId: number;
 }): Promise<Result<void, DomainError>> {
-  const result = await runInPipelineTransaction(async (trx) => {
-    const repos = createPipelineRepos(trx);
-    const lead = await repos.leads.findById(input.leadId);
-    if (!lead) {
-      return Err(domainError("not_found", "lead_not_found", "Lead not found"));
-    }
+  const result = await runInPipelineTransaction(
+    async ({ executor, afterCommit }) => {
+      const repos = createPipelineRepos(executor);
+      const lead = await repos.leads.findById(input.leadId);
+      if (!lead) {
+        return Err(
+          domainError("not_found", "lead_not_found", "Lead not found"),
+        );
+      }
 
-    const decision = applyStatusReview({
-      lead,
-      status: input.status,
-      actorId: input.actorId,
-      branchId: input.branchId,
-    });
-    if (!decision.ok) return decision;
-
-    await repos.leads.updateById(input.leadId, {
-      status: input.status,
-      stage: decision.value.nextStage ?? undefined,
-      updated_at: Date.now(),
-    });
-
-    const audit = createAuditService({ auditLogs: repos.auditLogs });
-    await audit.log(input.actorId, "status_changed", "lead", input.leadId, {
-      from: lead.status,
-      to: input.status,
-      reason: input.reason,
-    });
-
-    if (decision.value.nextStage) {
-      await audit.log(input.actorId, "stage_changed", "lead", input.leadId, {
-        from: lead.stage,
-        to: decision.value.nextStage,
+      const decision = applyStatusReview({
+        lead,
+        status: input.status,
+        actorId: input.actorId,
+        branchId: input.branchId,
       });
-    }
+      if (!decision.ok) return decision;
 
-    return Ok(decision.value.events);
-  });
+      await repos.leads.updateById(input.leadId, {
+        status: input.status,
+        stage: decision.value.nextStage ?? undefined,
+        updated_at: Date.now(),
+      });
 
-  if (!result.ok) return result;
-  await dispatchLeadNotifications(result.value, pipelineNotificationCenter);
-  return Ok(undefined);
+      afterCommit(async () => {
+        await pipelineAuditService.log(
+          input.actorId,
+          "status_changed",
+          "lead",
+          input.leadId,
+          {
+            from: lead.status,
+            to: input.status,
+            reason: input.reason,
+          },
+        );
+      });
+
+      if (decision.value.nextStage) {
+        afterCommit(async () => {
+          await pipelineAuditService.log(
+            input.actorId,
+            "stage_changed",
+            "lead",
+            input.leadId,
+            {
+              from: lead.stage,
+              to: decision.value.nextStage,
+            },
+          );
+        });
+      }
+
+      if (decision.value.events.length > 0) {
+        afterCommit(() =>
+          dispatchLeadNotifications(
+            decision.value.events,
+            pipelineNotificationCenter,
+          ),
+        );
+      }
+
+      return Ok(decision.value.events);
+    },
+  );
+
+  return result.ok ? Ok(undefined) : result;
 }
