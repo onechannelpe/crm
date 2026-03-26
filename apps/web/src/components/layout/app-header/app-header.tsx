@@ -10,8 +10,9 @@ import { useNavigationDrawerState } from "~/features/navigation-drawer/state/nav
 import { PageHeader } from "~/features/settings-shell";
 import { getHeaderRoute } from "~/lib/nav/nav-policy";
 
-import styles from "./app-header.module.css";
 import { useAppHeaderSidePanel } from "./use-app-header-side-panel";
+
+import styles from "./app-header.module.css";
 
 export function AppHeader() {
   const location = useLocation();
