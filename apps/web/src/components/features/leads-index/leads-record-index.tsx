@@ -1,5 +1,13 @@
 import { createAsync } from "@solidjs/router";
-import { For, Show, createMemo, createSignal, type JSX } from "solid-js";
+import {
+  For,
+  Show,
+  createMemo,
+  createSignal,
+  onCleanup,
+  onMount,
+  type JSX,
+} from "solid-js";
 
 import { listLeads, registerLead } from "~/actions/pipeline/leads";
 import Building2 from "~/components/icons/building-2";
@@ -7,9 +15,8 @@ import CalendarDays from "~/components/icons/calendar-days";
 import ChevronDown from "~/components/icons/chevron-down";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import House from "~/components/icons/house";
-import Plus from "~/components/icons/plus";
 import Package from "~/components/icons/package";
-import Settings from "~/components/icons/settings";
+import Plus from "~/components/icons/plus";
 import { Badge } from "~/components/ui/display/badge";
 import { Checkbox } from "~/components/ui/input/checkbox";
 import { useSidePanel } from "~/features/side-panel/state/use-side-panel";
@@ -21,30 +28,36 @@ import styles from "./leads-record-index.module.css";
 
 type LeadRow = Awaited<ReturnType<typeof listLeads>>[number];
 type SortKey = "created_at_desc" | "created_at_asc" | "ruc_asc" | "ruc_desc";
+type DragMode = "add" | "remove" | null;
 
 type LeadColumn = {
   key: "ruc" | "razon_social" | "address" | "stage" | "created_at";
   label: string;
-  width: number;
-  sticky?: boolean;
   icon: JSX.Element;
-  render: (lead: LeadRow) => string | JSX.Element;
+  width?: number;
+  minWidth?: number;
+  maxWidth?: number;
+  grow?: boolean;
+  sticky?: boolean;
+  render: (lead: LeadRow) => JSX.Element;
 };
 
 const ALL_COLUMNS = [
   {
     key: "ruc",
     label: "RUC",
-    width: 210,
-    sticky: true,
     icon: <CircleQuestionMark size={14} />,
+    width: 196,
+    sticky: true,
     render: (lead) => <span class={styles.identifierText}>{lead.ruc}</span>,
   },
   {
     key: "razon_social",
     label: "Razón social",
-    width: 320,
     icon: <Building2 size={14} />,
+    minWidth: 220,
+    maxWidth: 320,
+    grow: true,
     render: (lead) => (
       <div class={styles.fieldWithIcon}>
         <span class={styles.fieldIcon}>
@@ -57,8 +70,9 @@ const ALL_COLUMNS = [
   {
     key: "address",
     label: "Dirección",
-    width: 360,
     icon: <House size={14} />,
+    minWidth: 220,
+    maxWidth: 300,
     render: (lead) => (
       <div class={styles.fieldWithIcon}>
         <span class={styles.fieldIcon}>
@@ -71,8 +85,8 @@ const ALL_COLUMNS = [
   {
     key: "stage",
     label: "Etapa",
-    width: 170,
     icon: <Package size={14} />,
+    width: 172,
     render: (lead) => (
       <Badge
         variant={
@@ -90,8 +104,8 @@ const ALL_COLUMNS = [
   {
     key: "created_at",
     label: "Creado",
-    width: 140,
     icon: <CalendarDays size={14} />,
+    width: 140,
     render: (lead) => (
       <span class={styles.mutedCellText}>{formatDate(lead.created_at)}</span>
     ),
@@ -134,6 +148,23 @@ function sortLeads(leads: LeadRow[], sortKey: SortKey) {
   return items;
 }
 
+function toTrack(column: LeadColumn) {
+  if (column.width) return `${column.width}px`;
+  if (column.grow && column.minWidth && column.maxWidth) {
+    return `minmax(${column.minWidth}px, ${column.maxWidth}px)`;
+  }
+  if (column.grow && column.minWidth) {
+    return `minmax(${column.minWidth}px, 1fr)`;
+  }
+  if (column.minWidth && column.maxWidth) {
+    return `minmax(${column.minWidth}px, ${column.maxWidth}px)`;
+  }
+  if (column.minWidth) return `minmax(${column.minWidth}px, max-content)`;
+  if (column.maxWidth) return `fit-content(${column.maxWidth}px)`;
+  if (column.grow) return "minmax(180px, 1fr)";
+  return "max-content";
+}
+
 export function LeadsRecordIndex() {
   const [reloadToken, setReloadToken] = createSignal(0);
   const leads = createAsync(
@@ -158,6 +189,7 @@ export function LeadsRecordIndex() {
   const [filterMenuOpen, setFilterMenuOpen] = createSignal(false);
   const [sortMenuOpen, setSortMenuOpen] = createSignal(false);
   const [optionsMenuOpen, setOptionsMenuOpen] = createSignal(false);
+  const [dragMode, setDragMode] = createSignal<DragMode>(null);
 
   const visibleColumns = createMemo(() =>
     ALL_COLUMNS.filter((column) => visibleColumnKeys().includes(column.key)),
@@ -171,6 +203,85 @@ export function LeadsRecordIndex() {
 
     return sortLeads(filtered, sortKey());
   });
+
+  const gridTemplateColumns = createMemo(
+    () =>
+      `40px ${visibleColumns()
+        .map((column) => toTrack(column))
+        .join(" ")}`,
+  );
+
+  const identifierColumnIndex = createMemo(() =>
+    visibleColumns().findIndex((column) => column.sticky),
+  );
+
+  const identifierLeft = 40;
+
+  function openLeadPanel(lead: Pick<LeadRow, "id" | "ruc" | "razon_social">) {
+    openPanel(
+      createLeadDetailSidePanelPage({
+        leadId: lead.id,
+        title: lead.razon_social || lead.ruc,
+        subtitle: `RUC ${lead.ruc}`,
+      }),
+    );
+  }
+
+  function setSelected(id: number, checked: boolean) {
+    setSelectedIds((current) => {
+      if (checked) {
+        return current.includes(id) ? current : [...current, id];
+      }
+      return current.filter((value) => value !== id);
+    });
+  }
+
+  function toggleAll(checked: boolean) {
+    setSelectedIds(checked ? filteredLeads().map((lead) => lead.id) : []);
+  }
+
+  function beginSelectionDrag(id: number) {
+    const shouldAdd = !selectedIds().includes(id);
+    setDragMode(shouldAdd ? "add" : "remove");
+    setSelected(id, shouldAdd);
+  }
+
+  function updateSelectionDrag(id: number) {
+    const mode = dragMode();
+    if (!mode) return;
+    setSelected(id, mode === "add");
+  }
+
+  onMount(() => {
+    const handlePointerUp = () => setDragMode(null);
+    window.addEventListener("pointerup", handlePointerUp);
+    onCleanup(() => window.removeEventListener("pointerup", handlePointerUp));
+  });
+
+  function toggleColumn(key: LeadColumn["key"]) {
+    setVisibleColumnKeys((current) => {
+      if (current.includes(key)) {
+        if (current.length === 1) return current;
+        return current.filter((value) => value !== key);
+      }
+
+      const next = [...current, key];
+      return ALL_COLUMNS.filter((column) => next.includes(column.key)).map(
+        (column) => column.key,
+      );
+    });
+  }
+
+  function openDraftRow() {
+    setShowDraftRow(true);
+    setError(null);
+  }
+
+  function closeDraftRow() {
+    setShowDraftRow(false);
+    setDraftRuc("");
+    setError(null);
+  }
 
   async function handleRegister() {
     setError(null);
@@ -198,56 +309,6 @@ export function LeadsRecordIndex() {
       setSubmitting(false);
     }
   }
-
-  function openLeadPanel(lead: Pick<LeadRow, "id" | "ruc" | "razon_social">) {
-    openPanel(
-      createLeadDetailSidePanelPage({
-        leadId: lead.id,
-        title: lead.razon_social || lead.ruc,
-        subtitle: `RUC ${lead.ruc}`,
-      }),
-    );
-  }
-
-  function toggleSelected(id: number, checked: boolean) {
-    setSelectedIds((current) =>
-      checked ? [...current, id] : current.filter((value) => value !== id),
-    );
-  }
-
-  function toggleAll(checked: boolean) {
-    setSelectedIds(checked ? filteredLeads().map((lead) => lead.id) : []);
-  }
-
-  function toggleColumn(key: LeadColumn["key"]) {
-    setVisibleColumnKeys((current) => {
-      if (current.includes(key)) {
-        if (current.length === 1) return current;
-        return current.filter((value) => value !== key);
-      }
-
-      const next = [...current, key];
-      return ALL_COLUMNS.filter((column) => next.includes(column.key)).map(
-        (column) => column.key,
-      );
-    });
-  }
-
-  function openDraftRow() {
-    setShowDraftRow(true);
-    setError(null);
-  }
-
-  function closeDraftRow() {
-    setShowDraftRow(false);
-    setDraftRuc("");
-    setError(null);
-  }
-
-  const identifierColumn = createMemo(
-    () =>
-      visibleColumns().find((column) => column.sticky) ?? visibleColumns()[0],
-  );
 
   return (
     <div class={`${styles.page} record-index-container-gater-for-drag-select`}>
@@ -378,11 +439,11 @@ export function LeadsRecordIndex() {
         <div class={styles.tableContainer}>
           <div class={styles.scrollWrapper}>
             <div class={styles.table} role="table" aria-label="Prospectos">
-              <div class={styles.headerRow} role="row">
-                <div
-                  class={`${styles.headerCell} ${styles.dragCell}`}
-                  role="columnheader"
-                />
+              <div
+                class={styles.headerRow}
+                role="row"
+                style={{ "grid-template-columns": gridTemplateColumns() }}
+              >
                 <div
                   class={`${styles.headerCell} ${styles.checkboxCell}`}
                   role="columnheader"
@@ -396,18 +457,15 @@ export function LeadsRecordIndex() {
                   />
                 </div>
                 <For each={visibleColumns()}>
-                  {(column) => (
+                  {(column, index) => (
                     <div
-                      class={`${styles.headerCell} ${column.key === identifierColumn()?.key ? styles.identifierColumn : ""}`}
-                      classList={{
-                        [styles.stickyIdentifierCell]:
-                          column.key === identifierColumn()?.key,
-                      }}
+                      class={`${styles.headerCell} ${index() === identifierColumnIndex() ? styles.stickyIdentifierCell : ""}`}
                       role="columnheader"
-                      style={{
-                        width: `${column.width}px`,
-                        "min-width": `${column.width}px`,
-                      }}
+                      style={
+                        index() === identifierColumnIndex()
+                          ? { left: `${identifierLeft}px` }
+                          : undefined
+                      }
                     >
                       <span class={styles.headerCellContent}>
                         <span class={styles.headerIcon}>{column.icon}</span>
@@ -416,35 +474,24 @@ export function LeadsRecordIndex() {
                     </div>
                   )}
                 </For>
-                <div class={styles.addColumnCell} role="columnheader">
-                  <button
-                    type="button"
-                    class={styles.addColumnButton}
-                    onClick={() => setOptionsMenuOpen(true)}
-                    aria-label="Agregar columna"
-                  >
-                    <Plus size={14} />
-                  </button>
-                </div>
-                <div class={styles.trailingFillCell} role="columnheader" />
               </div>
 
               <Show when={showDraftRow()}>
-                <div class={styles.draftRow} role="row">
-                  <div class={`${styles.bodyCell} ${styles.dragCell}`} />
+                <div
+                  class={styles.draftRow}
+                  role="row"
+                  style={{ "grid-template-columns": gridTemplateColumns() }}
+                >
                   <div class={`${styles.bodyCell} ${styles.checkboxCell}`} />
                   <For each={visibleColumns()}>
-                    {(column) => (
+                    {(column, index) => (
                       <div
-                        class={`${styles.bodyCell} ${column.key === identifierColumn()?.key ? styles.identifierColumn : ""}`}
-                        classList={{
-                          [styles.stickyIdentifierCell]:
-                            column.key === identifierColumn()?.key,
-                        }}
-                        style={{
-                          width: `${column.width}px`,
-                          "min-width": `${column.width}px`,
-                        }}
+                        class={`${styles.bodyCell} ${index() === identifierColumnIndex() ? styles.stickyIdentifierCell : ""}`}
+                        style={
+                          index() === identifierColumnIndex()
+                            ? { left: `${identifierLeft}px` }
+                            : undefined
+                        }
                       >
                         <Show
                           when={column.key === "ruc"}
@@ -502,8 +549,6 @@ export function LeadsRecordIndex() {
                       </div>
                     )}
                   </For>
-                  <div class={styles.addColumnCell} />
-                  <div class={styles.trailingFillCell} />
                 </div>
               </Show>
 
@@ -534,49 +579,36 @@ export function LeadsRecordIndex() {
                     <div
                       class={styles.bodyRow}
                       role="row"
+                      style={{ "grid-template-columns": gridTemplateColumns() }}
                       onClick={() => openLeadPanel(lead)}
                     >
-                      <div class={`${styles.bodyCell} ${styles.dragCell}`}>
-                        <span class={styles.dragHandle} />
-                      </div>
                       <div
                         class={`${styles.bodyCell} ${styles.checkboxCell}`}
                         onClick={(event) => event.stopPropagation()}
+                        onPointerDown={() => beginSelectionDrag(lead.id)}
+                        onPointerEnter={() => updateSelectionDrag(lead.id)}
                       >
                         <Checkbox
                           checked={selectedIds().includes(lead.id)}
                           onChange={(event) =>
-                            toggleSelected(lead.id, event.currentTarget.checked)
+                            setSelected(lead.id, event.currentTarget.checked)
                           }
                         />
                       </div>
                       <For each={visibleColumns()}>
-                        {(column) => (
+                        {(column, index) => (
                           <div
-                            class={`${styles.bodyCell} ${column.key === identifierColumn()?.key ? styles.identifierColumn : ""}`}
-                            classList={{
-                              [styles.stickyIdentifierCell]:
-                                column.key === identifierColumn()?.key,
-                            }}
-                            style={{
-                              width: `${column.width}px`,
-                              "min-width": `${column.width}px`,
-                            }}
+                            class={`${styles.bodyCell} ${index() === identifierColumnIndex() ? styles.stickyIdentifierCell : ""}`}
+                            style={
+                              index() === identifierColumnIndex()
+                                ? { left: `${identifierLeft}px` }
+                                : undefined
+                            }
                           >
                             {column.render(lead)}
                           </div>
                         )}
                       </For>
-                      <div class={styles.addColumnCell}>
-                        <button
-                          type="button"
-                          class={styles.rowOptionsButton}
-                          onClick={(event) => event.stopPropagation()}
-                        >
-                          <Settings size={14} />
-                        </button>
-                      </div>
-                      <div class={styles.trailingFillCell} />
                     </div>
                   )}
                 </For>
@@ -585,24 +617,24 @@ export function LeadsRecordIndex() {
                   <button
                     type="button"
                     class={styles.actionRow}
+                    style={{ "grid-template-columns": gridTemplateColumns() }}
                     onClick={openDraftRow}
                   >
-                    <div class={styles.dragCell} />
-                    <div class={styles.actionIconCell}>
+                    <div class={`${styles.actionCell} ${styles.checkboxCell}`}>
                       <Plus size={14} />
                     </div>
                     <div
-                      class={`${styles.actionLabelCell} ${styles.stickyIdentifierCell}`}
-                      style={{
-                        width: `${identifierColumn()?.width ?? 210}px`,
-                        "min-width": `${identifierColumn()?.width ?? 210}px`,
-                      }}
+                      class={`${styles.actionCell} ${styles.stickyIdentifierCell}`}
+                      style={{ left: `${identifierLeft}px` }}
                     >
-                      <span>Add New</span>
+                      Add New
                     </div>
-                    <div class={styles.actionSpacer} />
-                    <div class={styles.addColumnCell} />
-                    <div class={styles.trailingFillCell} />
+                    <div
+                      class={styles.actionTail}
+                      style={{
+                        "grid-column": `3 / ${visibleColumns().length + 2}`,
+                      }}
+                    />
                   </button>
                 </Show>
               </Show>

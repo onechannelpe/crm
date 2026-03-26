@@ -139,8 +139,9 @@
 .bodyRow,
 .draftRow,
 .actionRow {
-  display: flex;
-  width: 100%;
+  display: grid;
+  min-width: 100%;
+  width: max-content;
 }
 
 .headerRow {
@@ -150,33 +151,22 @@
 }
 
 .bodyRow,
-.draftRow {
+.draftRow,
+.actionRow {
   cursor: pointer;
-}
-
-.bodyRow:hover .bodyCell:not(.dragCell),
-.actionRow:hover .actionIconCell,
-.actionRow:hover .actionLabelCell,
-.actionRow:hover .actionSpacer,
-.actionRow:hover .addColumnCell,
-.actionRow:hover .trailingFillCell {
-  background: color-mix(in srgb, var(--secondary) 88%, white);
 }
 
 .headerCell,
 .bodyCell,
-.actionIconCell,
-.actionLabelCell,
-.actionSpacer,
-.addColumnCell,
-.trailingFillCell {
+.actionCell,
+.actionTail {
   align-items: center;
   background: var(--background);
   border-bottom: 1px solid var(--border);
   box-sizing: border-box;
   display: flex;
-  flex-shrink: 0;
-  height: 38px;
+  min-height: 38px;
+  min-width: 0;
   padding: 0 12px;
 }
 
@@ -204,70 +194,25 @@
   font-size: 13px;
 }
 
-.dragCell {
+.checkboxCell {
   justify-content: center;
   left: 0;
   padding: 0;
   position: sticky;
-  width: 24px;
+  width: 40px;
   z-index: 6;
-}
-
-.checkboxCell {
-  justify-content: center;
-  left: 24px;
-  padding: 0;
-  position: sticky;
-  width: 32px;
-  z-index: 6;
-}
-
-.identifierColumn {
-  border-right: 1px solid color-mix(in srgb, var(--border) 75%, transparent);
 }
 
 .stickyIdentifierCell {
-  left: 56px;
+  left: 40px;
   position: sticky;
   z-index: 5;
 }
 
-.addColumnCell {
-  justify-content: center;
-  padding: 0;
-  width: 40px;
-}
-
-.trailingFillCell {
-  flex: 1;
-  min-width: 160px;
-}
-
-.addColumnButton,
-.rowOptionsButton {
-  align-items: center;
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-sm);
-  color: var(--foreground-tertiary);
-  cursor: pointer;
-  display: inline-flex;
-  height: 24px;
-  justify-content: center;
-  width: 24px;
-}
-
-.addColumnButton:hover,
-.rowOptionsButton:hover {
-  background: color-mix(in srgb, var(--secondary) 84%, white);
-}
-
-.dragHandle {
-  background: color-mix(in srgb, var(--foreground-tertiary) 55%, transparent);
-  border-radius: 999px;
-  display: inline-flex;
-  height: 14px;
-  width: 2px;
+.bodyRow:hover .bodyCell,
+.actionRow:hover .actionCell,
+.actionRow:hover .actionTail {
+  background: color-mix(in srgb, var(--secondary) 88%, white);
 }
 
 .identifierText {
@@ -311,7 +256,6 @@
 
 .draftRow .bodyCell {
   align-items: flex-start;
-  height: auto;
   min-height: 54px;
 }
 
@@ -418,29 +362,17 @@
   background: transparent;
   border: none;
   color: var(--foreground-tertiary);
-  cursor: pointer;
   padding: 0;
   text-align: left;
 }
 
-.actionIconCell {
-  color: var(--foreground-tertiary);
-  justify-content: center;
-  left: 24px;
-  padding: 0;
-  position: sticky;
-  width: 32px;
-  z-index: 6;
-}
-
-.actionLabelCell {
+.actionCell {
   color: var(--foreground-tertiary);
   font-size: 14px;
   font-weight: 500;
 }
 
-.actionSpacer {
-  flex: 1;
+.actionTail {
   min-width: 0;
 }
 
