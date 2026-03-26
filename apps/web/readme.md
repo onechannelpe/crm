@@ -68,7 +68,7 @@ bun run test:perf
 
 ## Diagnostics
 
-Use diagnostics for SSR, hydration, and request debugging. These traces are opt-in and separate from audit or operational logs.
+Use diagnostics for SSR, hydration, and request debugging. These traces are opt-in and separate from audit or operational logs. Keep product code instrumentation minimal. Prefer stable boundaries and generic wrappers over feature-level render tracing.
 
 Server-side channels use `DEBUG_DIAGNOSTICS`. Client-side channels use `VITE_DEBUG_DIAGNOSTICS`. Narrow output with `DEBUG_DIAGNOSTICS_FILTER` or `VITE_DEBUG_DIAGNOSTICS_FILTER`.
 
@@ -78,12 +78,12 @@ VITE_DEBUG_DIAGNOSTICS=hydration bun run dev
 DEBUG_DIAGNOSTICS=requests bun run dev
 DEBUG_DIAGNOSTICS=requests DEBUG_DIAGNOSTICS_REQUESTS=verbose bun run dev
 DEBUG_DIAGNOSTICS=requests DEBUG_DIAGNOSTICS_REQUESTS_SLOW_MS=500 bun run dev
-DEBUG_DIAGNOSTICS=ssr DEBUG_DIAGNOSTICS_FILTER=app-layout,session-provider bun run dev
+DEBUG_DIAGNOSTICS=ssr DEBUG_DIAGNOSTICS_FILTER=app-layout,auth-session-action bun run dev
 ```
 
 Diagnostic channels:
 
-- `ssr`: shared render boundaries and selected server data dependencies
+- `ssr`: shared render boundaries and a small set of server-side wrappers
 - `hydration`: client mount, boundary failures, window errors, unhandled rejections
 - `requests`: Vite dev-server request tracing
 

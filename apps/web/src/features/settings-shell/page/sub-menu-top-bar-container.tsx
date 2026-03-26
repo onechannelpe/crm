@@ -1,7 +1,7 @@
 import type { JSX, ParentProps } from "solid-js";
 import { Show } from "solid-js";
 
-import { useNavigationDrawerState } from "~/features/navigation-drawer";
+import { useNavigationDrawerState } from "~/features/navigation-drawer/state/navigation-drawer-state";
 
 import { Breadcrumb } from "./breadcrumb";
 import type { BreadcrumbItem, MobileBackAction } from "./breadcrumb-model";

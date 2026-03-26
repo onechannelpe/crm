@@ -7,19 +7,15 @@ import {
   SessionProvider,
   useSession,
 } from "~/components/providers/session-provider";
-import {
-  AppNavigationDrawer,
-  NavigationDrawerStateProvider,
-} from "~/features/navigation-drawer";
+import { AppNavigationDrawer } from "~/features/navigation-drawer/shell/app-navigation-drawer";
+import { NavigationDrawerStateProvider } from "~/features/navigation-drawer/state/navigation-drawer-state";
 import { MainContainerWithSidePanel } from "~/features/side-panel/shell/main-container-with-side-panel";
 import { SidePanelProvider } from "~/features/side-panel/state/use-side-panel";
 import { isSettingsRoutePath } from "~/lib/navigation/route-classification";
-import { createDiagnostics } from "~/lib/observability/diagnostics";
+import { traceSsrBoundary } from "~/lib/observability/diagnostics";
 import { cn } from "~/lib/utils";
 
 import shellStyles from "~/components/layout/shell.module.css";
-
-const diagnostics = createDiagnostics("app-layout");
 
 function AuthenticatedAppShell(props: RouteSectionProps) {
   const { user } = useSession();
@@ -27,7 +23,7 @@ function AuthenticatedAppShell(props: RouteSectionProps) {
   const isSettingsRoute = () => isSettingsRoutePath(location.pathname);
   const currentUser = user();
 
-  diagnostics.trace("ssr", "authenticated_shell_render", {
+  traceSsrBoundary("app-layout", "authenticated_shell_render", {
     path: location.pathname,
     hasUser: currentUser !== undefined && currentUser !== null,
     loadingUser: currentUser === undefined,
@@ -72,7 +68,7 @@ function AuthenticatedAppShell(props: RouteSectionProps) {
 }
 
 export default function AppLayout(props: RouteSectionProps) {
-  diagnostics.trace("ssr", "layout_render");
+  traceSsrBoundary("app-layout", "layout_render");
 
   return (
     <SessionProvider>

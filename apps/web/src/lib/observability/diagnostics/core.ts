@@ -1,10 +1,11 @@
-import { createLogger } from "./logger";
+import { createLogger } from "../logger";
 
 const DIAGNOSTIC_CHANNELS = ["requests", "ssr", "hydration"] as const;
 
 export type DiagnosticChannel = (typeof DIAGNOSTIC_CHANNELS)[number];
+export type DiagnosticMeta = Record<string, unknown>;
 
-type DiagnosticMeta = Record<string, unknown>;
+const loggerByScope = new Map<string, ReturnType<typeof createLogger>>();
 
 function readImportMetaEnv(): Record<string, unknown> | undefined {
   const metaEnv = (import.meta as { env?: Record<string, unknown> }).env;
@@ -86,11 +87,23 @@ function normalizeMeta(meta: DiagnosticMeta): DiagnosticMeta {
   );
 }
 
-function getRuntime(): "server" | "client" {
+export function getDiagnosticRuntime(): "server" | "client" {
   return typeof window === "undefined" ? "server" : "client";
 }
 
-function shouldTrace(channel: DiagnosticChannel, scope: string): boolean {
+function getLogger(scope: string) {
+  const cached = loggerByScope.get(scope);
+  if (cached) return cached;
+
+  const logger = createLogger(`diagnostic:${scope}`);
+  loggerByScope.set(scope, logger);
+  return logger;
+}
+
+export function isDiagnosticEnabled(
+  channel: DiagnosticChannel,
+  scope: string,
+): boolean {
   if (!enabledChannels.has(channel)) return false;
   if (scopeFilter.size === 0) return true;
 
@@ -101,82 +114,55 @@ function shouldTrace(channel: DiagnosticChannel, scope: string): boolean {
   );
 }
 
-export interface Diagnostics {
-  enabled(channel: DiagnosticChannel): boolean;
-  trace(channel: DiagnosticChannel, event: string, meta?: DiagnosticMeta): void;
-  traceAsync<T>(
-    channel: DiagnosticChannel,
-    event: string,
-    run: () => Promise<T>,
-    meta?: DiagnosticMeta,
-  ): Promise<T>;
+export function traceDiagnostic(
+  scope: string,
+  channel: DiagnosticChannel,
+  event: string,
+  meta: DiagnosticMeta = {},
+) {
+  if (!isDiagnosticEnabled(channel, scope)) return;
+
+  getLogger(scope).info(
+    event,
+    normalizeMeta({
+      diagnostic: true,
+      channel,
+      scope,
+      runtime: getDiagnosticRuntime(),
+      ...meta,
+    }),
+  );
 }
 
-export function createDiagnostics(
+export async function traceDiagnosticAsync<T>(
   scope: string,
-  baseMeta: DiagnosticMeta = {},
-): Diagnostics {
-  const logger = createLogger(`diagnostic:${scope}`);
-
-  function enabled(channel: DiagnosticChannel): boolean {
-    return shouldTrace(channel, scope);
+  channel: DiagnosticChannel,
+  event: string,
+  run: () => Promise<T>,
+  meta: DiagnosticMeta = {},
+): Promise<T> {
+  if (!isDiagnosticEnabled(channel, scope)) {
+    return run();
   }
 
-  function trace(
-    channel: DiagnosticChannel,
-    event: string,
-    meta: DiagnosticMeta = {},
-  ) {
-    if (!enabled(channel)) return;
+  const startedAt = Date.now();
+  traceDiagnostic(scope, channel, `${event}_start`, meta);
 
-    logger.info(
-      event,
-      normalizeMeta({
-        diagnostic: true,
-        channel,
-        scope,
-        runtime: getRuntime(),
-        ...baseMeta,
-        ...meta,
-      }),
-    );
+  try {
+    const result = await run();
+    traceDiagnostic(scope, channel, `${event}_complete`, {
+      ...meta,
+      durationMs: Date.now() - startedAt,
+    });
+    return result;
+  } catch (error) {
+    traceDiagnostic(scope, channel, `${event}_error`, {
+      ...meta,
+      durationMs: Date.now() - startedAt,
+      error,
+    });
+    throw error;
   }
-
-  async function traceAsync<T>(
-    channel: DiagnosticChannel,
-    event: string,
-    run: () => Promise<T>,
-    meta: DiagnosticMeta = {},
-  ): Promise<T> {
-    if (!enabled(channel)) {
-      return run();
-    }
-
-    const startedAt = Date.now();
-    trace(channel, `${event}_start`, meta);
-
-    try {
-      const result = await run();
-      trace(channel, `${event}_complete`, {
-        ...meta,
-        durationMs: Date.now() - startedAt,
-      });
-      return result;
-    } catch (error) {
-      trace(channel, `${event}_error`, {
-        ...meta,
-        durationMs: Date.now() - startedAt,
-        error,
-      });
-      throw error;
-    }
-  }
-
-  return {
-    enabled,
-    trace,
-    traceAsync,
-  };
 }
 
 export function isHydrationMismatchError(error: unknown): boolean {

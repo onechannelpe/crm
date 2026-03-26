@@ -6,7 +6,7 @@ import LayoutSidebarRightCollapse from "~/components/icons/layout-sidebar-right-
 import { HeaderNotificationsPanel } from "~/components/layout/header-notifications-panel";
 import { ICON_BY_ROUTE } from "~/components/layout/route-icons";
 import { TopBarCommandButton } from "~/components/layout/top-bar-command-button";
-import { useNavigationDrawerState } from "~/features/navigation-drawer";
+import { useNavigationDrawerState } from "~/features/navigation-drawer/state/navigation-drawer-state";
 import { PageHeader } from "~/features/settings-shell";
 import { PAGE_HEADER_SIDE_PANEL_BUTTON_CLICK_OUTSIDE_ID } from "~/features/side-panel/constants/side-panel-click-outside-id";
 import { SIDE_PANEL_HOTKEY } from "~/features/side-panel/constants/side-panel-hotkey";
