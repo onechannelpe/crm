@@ -22,7 +22,7 @@ export function ViewBarMenu(props: {
   });
 
   return (
-    <div class={styles.menuWrap} ref={container}>
+    <div class={styles.menuWrap} ref={(element) => (container = element)}>
       <button
         type="button"
         class={styles.toolbarButton}

@@ -5,7 +5,7 @@ import styles from "./styles.module.css";
 
 export function EmptyState(props: { onAddNew: () => void }) {
   return (
-    <div class={styles.emptyState} role="rowgroup">
+    <div class={styles.emptyState}>
       <div class={styles.emptyIcon}>
         <Building2 size={18} />
       </div>

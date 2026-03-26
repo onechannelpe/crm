@@ -21,18 +21,17 @@ export function IndexRow<T extends { id: number }>(props: {
   return (
     <div
       class={styles.bodyRow}
-      role="row"
       style={{ "grid-template-columns": props.gridTemplateColumns }}
-      onClick={() => props.onRowClick(props.row)}
     >
       <div
         class={`${styles.bodyCell} ${styles.checkboxCell}`}
-        onClick={(event) => event.stopPropagation()}
+        data-selection-cell="true"
         onPointerDown={() => props.onSelectionPointerDown(props.row.id)}
         onPointerEnter={() => props.onSelectionPointerEnter(props.row.id)}
       >
         <Checkbox
           checked={props.selected}
+          onClick={(event) => event.stopPropagation()}
           onChange={(event) =>
             props.onToggleSelected(props.row.id, event.currentTarget.checked)
           }
@@ -48,7 +47,13 @@ export function IndexRow<T extends { id: number }>(props: {
                 : undefined
             }
           >
-            {column.render(props.row)}
+            <button
+              type="button"
+              class={styles.rowButton}
+              onClick={() => props.onRowClick(props.row)}
+            >
+              {column.render(props.row)}
+            </button>
           </div>
         )}
       </For>

@@ -22,7 +22,6 @@ export function DraftRow(props: {
   return (
     <div
       class={sharedStyles.draftRow}
-      role="row"
       style={{ "grid-template-columns": props.gridTemplateColumns }}
     >
       <div class={`${sharedStyles.bodyCell} ${sharedStyles.checkboxCell}`} />

@@ -17,13 +17,9 @@ export function IndexHeader<T>(props: {
   return (
     <div
       class={styles.headerRow}
-      role="row"
       style={{ "grid-template-columns": props.gridTemplateColumns }}
     >
-      <div
-        class={`${styles.headerCell} ${styles.checkboxCell}`}
-        role="columnheader"
-      >
+      <div class={`${styles.headerCell} ${styles.checkboxCell}`}>
         <Checkbox
           checked={props.allSelected}
           onChange={(event: Event & { currentTarget: HTMLInputElement }) =>
@@ -37,7 +33,6 @@ export function IndexHeader<T>(props: {
           return (
             <div
               class={`${styles.headerCell} ${index() === props.stickyColumnIndex ? styles.stickyCell : ""}`}
-              role="columnheader"
               style={
                 index() === props.stickyColumnIndex
                   ? { left: `${props.stickyLeft}px` }
