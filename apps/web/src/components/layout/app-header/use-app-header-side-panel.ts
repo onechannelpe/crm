@@ -7,10 +7,6 @@ import { createRootSidePanelPage } from "~/features/side-panel/types/side-panel-
 import { createExtensionPortConnection } from "~/lib/extension/port";
 import { useHotkey } from "~/lib/hotkey/use-hotkey";
 
-interface ChromeRuntime {
-  sendMessage: (message: unknown, callback?: () => void) => void;
-}
-
 export function useAppHeaderSidePanel() {
   const [modKey, setModKey] = createSignal("Ctrl");
   const { isOpen, openPanel, closePanel } = useSidePanel();
@@ -35,10 +31,13 @@ export function useAppHeaderSidePanel() {
   useHotkey(SIDE_PANEL_HOTKEY, toggleSidePanel);
 
   const focusExtensionWindow = () => {
-    const runtime = (globalThis as { chrome?: { runtime?: ChromeRuntime } })
-      .chrome?.runtime;
-
-    runtime?.sendMessage?.({ action: "focusWindow" }, () => {});
+    const chrome = Reflect.get(globalThis, "chrome");
+    if (typeof chrome !== "object" || chrome === null) return;
+    const runtime = Reflect.get(chrome, "runtime");
+    if (typeof runtime !== "object" || runtime === null) return;
+    const send: unknown = Reflect.get(runtime, "sendMessage");
+    if (typeof send === "function")
+      send.call(runtime, { action: "focusWindow" });
   };
 
   return {
