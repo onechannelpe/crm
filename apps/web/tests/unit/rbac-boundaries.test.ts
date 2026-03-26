@@ -8,6 +8,7 @@ import {
 
 const ALL_PERMISSIONS: Permission[] = [
   "lead:work",
+  "lead:pipeline",
   "sales:create",
   "sales:submit",
   "sales:review",
@@ -76,26 +77,32 @@ describe("rbac boundaries", () => {
     expect(executivePerms.has("sales:approve")).toBe(false);
     expect(supervisorPerms.has("team:manage")).toBe(true);
     expect(executivePerms.has("team:manage")).toBe(false);
+    expect(executivePerms.has("lead:pipeline")).toBe(true);
+    expect(supervisorPerms.has("lead:pipeline")).toBe(false);
     expect(executivePerms.has("lead:register")).toBe(true);
     expect(supervisorPerms.has("lead:register")).toBe(false);
   });
 
   it("keeps pipeline permissions scoped to the intended roles", () => {
+    expect(hasPermission("executive", "lead:pipeline")).toBe(true);
     expect(hasPermission("executive", "lead:register")).toBe(true);
     expect(hasPermission("executive", "lead:review")).toBe(false);
     expect(hasPermission("executive", "quotation:manage")).toBe(false);
 
+    expect(hasPermission("back_office", "lead:pipeline")).toBe(false);
     expect(hasPermission("back_office", "lead:view:all")).toBe(true);
     expect(hasPermission("back_office", "lead:review")).toBe(true);
     expect(hasPermission("back_office", "quotation:manage")).toBe(true);
     expect(hasPermission("back_office", "integration:manage")).toBe(true);
     expect(hasPermission("back_office", "lead:register")).toBe(false);
 
+    expect(hasPermission("admin", "lead:pipeline")).toBe(false);
     expect(hasPermission("admin", "lead:register")).toBe(true);
     expect(hasPermission("admin", "lead:reassign")).toBe(true);
     expect(hasPermission("admin", "quotation:manage")).toBe(true);
     expect(hasPermission("admin", "integration:manage")).toBe(true);
 
+    expect(hasPermission("superuser", "lead:pipeline")).toBe(false);
     expect(hasPermission("superuser", "lead:register")).toBe(true);
     expect(hasPermission("superuser", "lead:review")).toBe(true);
     expect(hasPermission("superuser", "quotation:manage")).toBe(true);

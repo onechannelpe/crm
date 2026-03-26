@@ -88,6 +88,32 @@ describe("pipeline read access", () => {
     expect(result.error.kind).toBe("forbidden");
   });
 
+  it("lets executives read their own lead detail from the pipeline workspace", async () => {
+    mocks.findLeadById.mockResolvedValue({
+      id: 15,
+      executive_id: 7,
+      stage: "NEW",
+      status: null,
+      prioridad: null,
+      ruc: "20100000015",
+      razon_social: "Pipeline Org",
+      address: "Lima",
+      created_at: 20,
+      updated_at: 20,
+    });
+
+    const result = await getLeadDetailQuery({
+      leadId: 15,
+      actorUserId: 7,
+      actorRole: "executive",
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    expect(result.value.lead.id).toBe(15);
+  });
+
   it("lets an executive read only their own sale detail", async () => {
     mocks.findSaleById.mockResolvedValue({
       id: 21,

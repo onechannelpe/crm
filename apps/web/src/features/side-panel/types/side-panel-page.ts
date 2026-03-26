@@ -1,5 +1,6 @@
 import type { Component } from "solid-js";
 
+import Building2 from "~/components/icons/building-2";
 import Search from "~/components/icons/search";
 import User from "~/components/icons/user";
 import Users from "~/components/icons/users";
@@ -17,7 +18,8 @@ export type SidePanelIcon = Component<{
 export type SidePanelPageKey =
   | "root"
   | "search-person-detail"
-  | "search-company-detail";
+  | "search-company-detail"
+  | "lead-detail";
 
 export type SidePanelNavigationEntry = {
   page: SidePanelPageKey;
@@ -42,10 +44,18 @@ export type SearchCompanyDetailSidePanelPageState = {
   query: string;
 };
 
+export type LeadDetailSidePanelPageState = {
+  page: "lead-detail";
+  leadId: number;
+  title: string;
+  subtitle: string;
+};
+
 export type SidePanelPageState =
   | RootSidePanelPageState
   | SearchPersonDetailSidePanelPageState
-  | SearchCompanyDetailSidePanelPageState;
+  | SearchCompanyDetailSidePanelPageState
+  | LeadDetailSidePanelPageState;
 
 export type SidePanelPageDefinition = {
   entry: SidePanelNavigationEntry;
@@ -117,6 +127,33 @@ export function createSearchCompanyDetailSidePanelPage(
       page: "search-company-detail",
       company: input.company,
       query: input.query,
+    },
+  };
+}
+
+type CreateLeadDetailSidePanelPageInput = {
+  leadId: number;
+  title: string;
+  subtitle?: string;
+};
+
+export function createLeadDetailSidePanelPage(
+  input: CreateLeadDetailSidePanelPageInput,
+): SidePanelPageDefinition {
+  const pageId = createSidePanelPageId();
+
+  return {
+    entry: {
+      page: "lead-detail",
+      pageId,
+      pageTitle: input.title,
+      pageIcon: Building2,
+    },
+    state: {
+      page: "lead-detail",
+      leadId: input.leadId,
+      title: input.title,
+      subtitle: input.subtitle ?? `Prospecto ${input.leadId}`,
     },
   };
 }
