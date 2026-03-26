@@ -1,7 +1,6 @@
 import {
   createContext,
   createEffect,
-  createMemo,
   createSignal,
   onCleanup,
   onMount,
@@ -10,10 +9,6 @@ import {
 } from "solid-js";
 
 import { isSettingsRoutePath } from "~/lib/navigation/route-classification";
-
-const DRAWER_EXPANDED_STORAGE_KEY = "crm-navigation-drawer-expanded";
-const DRAWER_WIDTH_STORAGE_KEY = "crm-navigation-drawer-width";
-const ADVANCED_MODE_STORAGE_KEY = "crm-navigation-drawer-advanced-mode";
 
 const MOBILE_BREAKPOINT = 768;
 const MIN_WIDTH = 180;
@@ -66,14 +61,13 @@ function isSettingsLikePath(path: string) {
 }
 
 export function NavigationDrawerStateProvider(props: ParentProps) {
-  const initialViewportWidth = 1280;
   const initialExpanded = true;
   const initialWidth = DEFAULT_WIDTH;
   const initialAdvancedMode = false;
 
   const [expanded, setExpandedSignal] = createSignal(initialExpanded);
   const [width, setWidthSignal] = createSignal(initialWidth);
-  const [viewportWidth, setViewportWidth] = createSignal(initialViewportWidth);
+  const [isMobile, setIsMobile] = createSignal(false);
   const [currentMobileDrawer, setCurrentMobileDrawer] =
     createSignal<MobileDrawerType>("main");
   const [advancedModeEnabled, setAdvancedModeEnabledSignal] =
@@ -88,8 +82,6 @@ export function NavigationDrawerStateProvider(props: ParentProps) {
   const [openFolders, setOpenFolders] = createSignal<Record<string, boolean>>(
     {},
   );
-  const [hasPersistableInteraction, setHasPersistableInteraction] =
-    createSignal(false);
 
   const setExpanded: NavigationDrawerStateValue["setExpanded"] = (value) => {
     const previous = expanded();
@@ -97,10 +89,6 @@ export function NavigationDrawerStateProvider(props: ParentProps) {
       typeof value === "function"
         ? (value as (current: boolean) => boolean)(previous)
         : value;
-
-    if (previous !== next) {
-      setHasPersistableInteraction(true);
-    }
 
     setExpandedSignal(next);
   };
@@ -112,73 +100,28 @@ export function NavigationDrawerStateProvider(props: ParentProps) {
         typeof value === "function"
           ? (value as (current: boolean) => boolean)(previous)
           : value;
-      if (previous !== next) {
-        setHasPersistableInteraction(true);
-      }
       setAdvancedModeEnabledSignal(next);
     };
 
-  const isMobile = createMemo(() => viewportWidth() <= MOBILE_BREAKPOINT);
-
   onMount(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
+    const mediaQuery = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`);
+    setIsMobile(mediaQuery.matches);
 
-    setViewportWidth(window.innerWidth);
-
-    const handleResize = () => {
-      setViewportWidth(window.innerWidth);
+    const handleChange = (event: MediaQueryListEvent) => {
+      setIsMobile(event.matches);
     };
 
-    window.addEventListener("resize", handleResize);
-    onCleanup(() => window.removeEventListener("resize", handleResize));
-  });
+    mediaQuery.addEventListener("change", handleChange);
+    onCleanup(() => mediaQuery.removeEventListener("change", handleChange));
 
-  createEffect(() => {
-    if (typeof window === "undefined" || !hasPersistableInteraction()) {
-      return;
-    }
+    createEffect(() => {
+      const drawerWidth = clampWidth(width());
 
-    window.localStorage.setItem(
-      DRAWER_EXPANDED_STORAGE_KEY,
-      String(expanded()),
-    );
-  });
-
-  createEffect(() => {
-    if (typeof window === "undefined" || !hasPersistableInteraction()) {
-      return;
-    }
-
-    window.localStorage.setItem(
-      DRAWER_WIDTH_STORAGE_KEY,
-      String(clampWidth(width())),
-    );
-  });
-
-  createEffect(() => {
-    if (typeof window === "undefined" || !hasPersistableInteraction()) {
-      return;
-    }
-
-    window.localStorage.setItem(
-      ADVANCED_MODE_STORAGE_KEY,
-      String(advancedModeEnabled()),
-    );
-  });
-
-  createEffect(() => {
-    if (typeof document === "undefined") {
-      return;
-    }
-
-    const drawerWidth = clampWidth(width());
-
-    document.documentElement.style.setProperty(
-      "--nav-drawer-current-width",
-      isMobile() ? "0px" : expanded() ? `${drawerWidth}px` : "40px",
-    );
+      document.documentElement.style.setProperty(
+        "--nav-drawer-current-width",
+        isMobile() ? "0px" : expanded() ? `${drawerWidth}px` : "40px",
+      );
+    });
   });
 
   const isSectionOpen = (id: string) => {
@@ -230,11 +173,7 @@ export function NavigationDrawerStateProvider(props: ParentProps) {
         setExpanded,
         width,
         setWidth: (next) => {
-          const nextClamped = clampWidth(next);
-          if (width() !== nextClamped) {
-            setHasPersistableInteraction(true);
-          }
-          setWidthSignal(nextClamped);
+          setWidthSignal(clampWidth(next));
         },
         isMobile,
         currentMobileDrawer,
