@@ -1,11 +1,3 @@
-.page {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-height: 0;
-  width: 100%;
-}
-
 .viewBar {
   border-bottom: 1px solid var(--border);
   display: flex;
@@ -47,13 +39,11 @@
   background: color-mix(in srgb, var(--secondary) 84%, white);
 }
 
-.viewPicker[data-open="true"],
 .toolbarButton[data-open="true"] {
   background: color-mix(in srgb, var(--secondary) 84%, white);
 }
 
-.toolbarButton[data-open="true"]:hover,
-.viewPicker[data-open="true"]:hover {
+.toolbarButton[data-open="true"]:hover {
   background: color-mix(in srgb, var(--secondary) 76%, white);
 }
 
@@ -199,8 +189,7 @@
 
 .headerCell,
 .bodyCell,
-.actionCell,
-.actionTail {
+.actionCell {
   align-items: center;
   background: var(--background);
   border-bottom: 1px solid var(--border);
@@ -244,159 +233,15 @@
   z-index: 6;
 }
 
-.stickyIdentifierCell {
+.stickyCell {
   left: 40px;
   position: sticky;
   z-index: 5;
 }
 
 .bodyRow:hover .bodyCell,
-.actionRow:hover .actionCell,
-.actionRow:hover .actionTail {
+.actionRow:hover .actionCell {
   background: color-mix(in srgb, var(--secondary) 88%, white);
-}
-
-.identifierText {
-  color: var(--foreground);
-  font-weight: 500;
-}
-
-.cellText,
-.mutedCellText {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.mutedCellText {
-  color: var(--foreground-secondary);
-}
-
-.fieldWithIcon {
-  align-items: center;
-  display: flex;
-  gap: 8px;
-  min-width: 0;
-}
-
-.fieldIcon {
-  align-items: center;
-  color: var(--foreground-tertiary);
-  display: inline-flex;
-  flex-shrink: 0;
-  justify-content: center;
-}
-
-.inlineComposer {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 8px 0;
-  width: 100%;
-}
-
-.draftRow .bodyCell {
-  align-items: flex-start;
-  min-height: 54px;
-}
-
-.inlineInput {
-  background: color-mix(in srgb, var(--secondary) 92%, white);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--foreground);
-  font: inherit;
-  min-height: 34px;
-  outline: none;
-  padding: 0 10px;
-  width: 100%;
-}
-
-.inlineInput:focus {
-  border-color: var(--foreground-secondary);
-}
-
-.inlineComposerActions {
-  display: flex;
-  gap: 8px;
-}
-
-.inlineSaveButton,
-.inlineCancelButton,
-.emptyAction {
-  align-items: center;
-  border: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  display: inline-flex;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 500;
-  gap: 6px;
-  min-height: 30px;
-  padding: 0 10px;
-}
-
-.inlineSaveButton,
-.emptyAction {
-  background: var(--foreground);
-  color: var(--background);
-}
-
-.inlineCancelButton {
-  background: color-mix(in srgb, var(--secondary) 84%, white);
-  color: var(--foreground);
-}
-
-.inlineSaveButton:disabled,
-.inlineCancelButton:disabled {
-  cursor: default;
-  opacity: 0.5;
-}
-
-.placeholderText,
-.errorText {
-  color: var(--foreground-tertiary);
-  font-size: 12px;
-}
-
-.errorText {
-  color: var(--destructive, #b91c1c);
-}
-
-.emptyState {
-  align-items: center;
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: 10px;
-  justify-content: center;
-  min-height: 320px;
-  padding: 32px 24px 48px;
-}
-
-.emptyIcon {
-  align-items: center;
-  background: color-mix(in srgb, var(--secondary) 84%, white);
-  border-radius: 14px;
-  color: var(--foreground-secondary);
-  display: flex;
-  height: 40px;
-  justify-content: center;
-  width: 40px;
-}
-
-.emptyTitle {
-  color: var(--foreground);
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.emptyDescription {
-  color: var(--foreground-secondary);
-  font-size: 13px;
-  max-width: 360px;
-  text-align: center;
 }
 
 .actionRow {
@@ -411,10 +256,6 @@
   color: var(--foreground-tertiary);
   font-size: 14px;
   font-weight: 500;
-}
-
-.actionTail {
-  min-width: 0;
 }
 
 @media (max-width: 960px) {
