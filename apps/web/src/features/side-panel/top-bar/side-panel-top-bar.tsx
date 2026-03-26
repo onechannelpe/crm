@@ -1,4 +1,4 @@
-import { Show, createSignal, onCleanup, onMount } from "solid-js";
+import { Show } from "solid-js";
 
 import X from "~/components/icons/x";
 import { cn } from "~/lib/utils";
@@ -10,7 +10,7 @@ import { SidePanelPageInfo } from "./side-panel-page-info";
 
 import styles from "./side-panel-top-bar.module.css";
 
-export function SidePanelTopBar() {
+export function SidePanelTopBar(props: { isMobile: boolean }) {
   const {
     navigationStack,
     currentEntry,
@@ -19,18 +19,9 @@ export function SidePanelTopBar() {
     setSearchText,
   } = useSidePanel();
 
-  const [isMobile, setIsMobile] = createSignal(false);
-
-  onMount(() => {
-    const mq = window.matchMedia("(max-width: 768px)");
-    setIsMobile(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mq.addEventListener("change", handler);
-    onCleanup(() => mq.removeEventListener("change", handler));
-  });
-
   const showBackButton = () => navigationStack().length > 1;
-  const showCloseButton = () => navigationStack().length === 1 && !isMobile();
+  const showCloseButton = () =>
+    navigationStack().length === 1 && !props.isMobile;
   const showSearch = () => {
     const entry = currentEntry();
     if (!entry) return false;
@@ -39,7 +30,7 @@ export function SidePanelTopBar() {
   };
 
   return (
-    <div class={cn(styles.topBar, isMobile() && styles.topBarMobile)}>
+    <div class={cn(styles.topBar, props.isMobile && styles.topBarMobile)}>
       <div class={styles.leftControls}>
         <SidePanelBackButton visible={showBackButton()} />
         <Show when={showCloseButton()}>

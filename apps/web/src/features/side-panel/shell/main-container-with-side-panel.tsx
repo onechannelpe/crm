@@ -1,61 +1,19 @@
-import {
-  type ParentProps,
-  Suspense,
-  createMemo,
-  createSignal,
-  onCleanup,
-  onMount,
-} from "solid-js";
+import { type ParentProps, Suspense } from "solid-js";
 
 import { Loading } from "~/components/feedback/loading";
 import { cn } from "~/lib/utils";
 
-import { SidePanelRouter } from "../router/side-panel-router";
-import { ResizeGap } from "./resize-gap";
-import { SidePanelMobileShell } from "./side-panel-mobile-shell";
-import { SidePanelShell } from "./side-panel-shell";
-import { SidePanelWidthEffect } from "./side-panel-width-effect";
+import { SidePanelHost } from "./side-panel-host";
 
 import shellStyles from "~/components/layout/shell.module.css";
 
 export function MainContainerWithSidePanel(props: ParentProps) {
-  const [isHydrated, setIsHydrated] = createSignal(false);
-  const [isMobileViewport, setIsMobileViewport] = createSignal(false);
-
-  onMount(() => {
-    setIsHydrated(true);
-
-    const mq = window.matchMedia("(max-width: 768px)");
-    setIsMobileViewport(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setIsMobileViewport(e.matches);
-    mq.addEventListener("change", handler);
-    onCleanup(() => mq.removeEventListener("change", handler));
-  });
-
-  const [isResizing, setIsResizing] = createSignal(false);
-  const useMobileShell = createMemo(() => isHydrated() && isMobileViewport());
-
   return (
     <div class={cn(shellStyles.panel, shellStyles.panelWithDetail)}>
       <div class={shellStyles.panelMain}>
         <Suspense fallback={<Loading />}>{props.children}</Suspense>
       </div>
-      {!useMobileShell() ? (
-        <>
-          <SidePanelWidthEffect />
-          <ResizeGap
-            onResizeStart={() => setIsResizing(true)}
-            onResizeEnd={() => setIsResizing(false)}
-          />
-          <SidePanelShell isResizing={isResizing()}>
-            <SidePanelRouter />
-          </SidePanelShell>
-        </>
-      ) : (
-        <SidePanelMobileShell targetVariant="fullScreen">
-          <SidePanelRouter />
-        </SidePanelMobileShell>
-      )}
+      <SidePanelHost />
     </div>
   );
 }
