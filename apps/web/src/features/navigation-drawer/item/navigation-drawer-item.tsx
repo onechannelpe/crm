@@ -1,7 +1,7 @@
 import { Show, type JSX } from "solid-js";
 
 import { useIsSettingsPage } from "../hooks/use-is-settings-page";
-import { useNavigationDrawerState } from "../state/navigation-drawer-state";
+import { useNavigationDrawerState } from "../state/navigation-drawer-provider";
 import { NavigationDrawerActionItem } from "./navigation-drawer-action-item";
 import { NavigationDrawerExternalItem } from "./navigation-drawer-external-item";
 import type { NavigationDrawerItemProps } from "./navigation-drawer-item.types";

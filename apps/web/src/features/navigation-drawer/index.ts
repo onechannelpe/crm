@@ -2,7 +2,7 @@ export { AppNavigationDrawer } from "./shell/app-navigation-drawer";
 export {
   NavigationDrawerStateProvider,
   useNavigationDrawerState,
-} from "./state/navigation-drawer-state";
+} from "./state/navigation-drawer-provider";
 export {
   getCurrentSettingsItem,
   getSettingsSectionHref,

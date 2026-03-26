@@ -20,7 +20,7 @@ import { NavigationDrawerItemsCollapsableContainer } from "../item/navigation-dr
 import { NavigationDrawerSubItem } from "../item/navigation-drawer-sub-item";
 import { NavigationDrawerSection } from "../section/navigation-drawer-section";
 import { NavigationDrawerSectionTitle } from "../section/navigation-drawer-section-title";
-import { useNavigationDrawerState } from "../state/navigation-drawer-state";
+import { useNavigationDrawerState } from "../state/navigation-drawer-provider";
 import { NavigationDrawerScrollableContent } from "./navigation-drawer-scrollable-content";
 import { NavigationDrawer } from "./navigation-drawer-shell";
 

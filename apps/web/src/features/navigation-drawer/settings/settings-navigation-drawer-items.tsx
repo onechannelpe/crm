@@ -9,7 +9,7 @@ import { getNavigationSubItemLeftAdornment } from "../item/get-navigation-sub-it
 import { NavigationDrawerItemGroup } from "../item/navigation-drawer-item-group";
 import { NavigationDrawerSection } from "../section/navigation-drawer-section";
 import { NavigationDrawerSectionTitle } from "../section/navigation-drawer-section-title";
-import { useNavigationDrawerState } from "../state/navigation-drawer-state";
+import { useNavigationDrawerState } from "../state/navigation-drawer-provider";
 import { createSettingsNavigationSections } from "./settings-navigation-config";
 import { SettingsNavigationDrawerItem } from "./settings-navigation-drawer-item";
 import { settingsItemMatchesPath } from "./settings-navigation-path-match";
