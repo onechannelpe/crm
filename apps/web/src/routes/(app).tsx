@@ -14,17 +14,28 @@ import {
 import { MainContainerWithSidePanel } from "~/features/side-panel/shell/main-container-with-side-panel";
 import { SidePanelProvider } from "~/features/side-panel/state/use-side-panel";
 import { isSettingsRoutePath } from "~/lib/navigation/route-classification";
+import { createDiagnostics } from "~/lib/observability/diagnostics";
 import { cn } from "~/lib/utils";
 
 import shellStyles from "~/components/layout/shell.module.css";
+
+const diagnostics = createDiagnostics("app-layout");
 
 function AuthenticatedAppShell(props: RouteSectionProps) {
   const { user } = useSession();
   const location = useLocation();
   const isSettingsRoute = () => isSettingsRoutePath(location.pathname);
+  const currentUser = user();
+
+  diagnostics.trace("ssr", "authenticated_shell_render", {
+    path: location.pathname,
+    hasUser: currentUser !== undefined && currentUser !== null,
+    loadingUser: currentUser === undefined,
+    isSettingsRoute: isSettingsRoute(),
+  });
 
   return (
-    <Show when={user()} fallback={<Loading />}>
+    <Show when={currentUser} fallback={<Loading />}>
       <NavigationDrawerStateProvider>
         <div class={shellStyles.layoutRoot}>
           <div
@@ -61,6 +72,8 @@ function AuthenticatedAppShell(props: RouteSectionProps) {
 }
 
 export default function AppLayout(props: RouteSectionProps) {
+  diagnostics.trace("ssr", "layout_render");
+
   return (
     <SessionProvider>
       <AuthenticatedAppShell {...props} />
