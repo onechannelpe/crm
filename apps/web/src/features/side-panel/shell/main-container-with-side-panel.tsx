@@ -8,6 +8,7 @@ import {
 } from "solid-js";
 
 import { Loading } from "~/components/feedback/loading";
+import { createDiagnostics } from "~/lib/observability/diagnostics";
 import { cn } from "~/lib/utils";
 
 import { SidePanelRouter } from "../router/side-panel-router";
@@ -18,10 +19,18 @@ import { SidePanelWidthEffect } from "./side-panel-width-effect";
 
 import shellStyles from "~/components/layout/shell.module.css";
 
+const diagnostics = createDiagnostics("main-container-with-side-panel");
+
 export function MainContainerWithSidePanel(props: ParentProps) {
   const [isMobile, setIsMobile] = createSignal(false);
 
+  diagnostics.trace("ssr", "render", {
+    isMobile: isMobile(),
+  });
+
   onMount(() => {
+    diagnostics.trace("hydration", "mounted");
+
     const mq = window.matchMedia("(max-width: 768px)");
     setIsMobile(mq.matches);
     const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);

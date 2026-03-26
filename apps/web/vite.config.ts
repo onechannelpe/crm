@@ -6,8 +6,13 @@ import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import { visualizer } from "rollup-plugin-visualizer";
 import { defineConfig } from "vite";
 
+import { createRequestTracePlugin, resolveRequestTraceConfig } from "./tracer";
+
+const requestTraceConfig = resolveRequestTraceConfig(process.env);
+
 export default defineConfig({
   plugins: [
+    ...createRequestTracePlugin(requestTraceConfig),
     {
       enforce: "pre",
       ...mdx({
