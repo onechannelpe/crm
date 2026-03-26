@@ -32,6 +32,12 @@ const ALL_PERMISSIONS: Permission[] = [
   "admin:read",
   "admin:manage",
   "audit:read",
+  "lead:register",
+  "lead:view:all",
+  "lead:review",
+  "lead:reassign",
+  "quotation:manage",
+  "integration:manage",
 ];
 
 const EXPECTED_ROLE_PERMISSIONS: Record<Role, Permission[]> =
@@ -59,15 +65,15 @@ describe("rbac boundaries", () => {
     }
   });
 
-  it("prevents privilege inversion between executive and supervisor", () => {
+  it("keeps executive and supervisor permissions on separate boundaries", () => {
     const executivePerms = new Set(getPermissions("executive"));
     const supervisorPerms = new Set(getPermissions("supervisor"));
 
     expect(supervisorPerms.has("sales:approve")).toBe(true);
     expect(executivePerms.has("sales:approve")).toBe(false);
-
-    for (const p of executivePerms) {
-      expect(supervisorPerms.has(p)).toBe(true);
-    }
+    expect(supervisorPerms.has("team:manage")).toBe(true);
+    expect(executivePerms.has("team:manage")).toBe(false);
+    expect(executivePerms.has("lead:register")).toBe(true);
+    expect(supervisorPerms.has("lead:register")).toBe(false);
   });
 });

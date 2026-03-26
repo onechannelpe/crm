@@ -125,7 +125,7 @@ describe("auth middleware request guard", () => {
 
     expect(decision.kind).toBe("redirect_home");
     if (decision.kind === "redirect_home") {
-      expect(decision.to).toBe("/sales/leads");
+      expect(decision.to).toBe("/leads");
     }
   });
 
@@ -139,7 +139,7 @@ describe("auth middleware request guard", () => {
 
     expect(decision.kind).toBe("redirect_home");
     if (decision.kind === "redirect_home") {
-      expect(decision.to).toBe("/sales/leads");
+      expect(decision.to).toBe("/leads");
     }
   });
 
