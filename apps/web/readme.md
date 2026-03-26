@@ -66,6 +66,29 @@ bun run test:integration:browser
 bun run test:perf
 ```
 
+## Diagnostics
+
+Use diagnostics for SSR, hydration, and request debugging. These traces are opt-in and separate from audit or operational logs.
+
+Server-side channels use `DEBUG_DIAGNOSTICS`. Client-side channels use `VITE_DEBUG_DIAGNOSTICS`. Narrow output with `DEBUG_DIAGNOSTICS_FILTER` or `VITE_DEBUG_DIAGNOSTICS_FILTER`.
+
+```sh
+DEBUG_DIAGNOSTICS=ssr bun run dev
+VITE_DEBUG_DIAGNOSTICS=hydration bun run dev
+DEBUG_DIAGNOSTICS=requests bun run dev
+DEBUG_DIAGNOSTICS=requests DEBUG_DIAGNOSTICS_REQUESTS=verbose bun run dev
+DEBUG_DIAGNOSTICS=requests DEBUG_DIAGNOSTICS_REQUESTS_SLOW_MS=500 bun run dev
+DEBUG_DIAGNOSTICS=ssr DEBUG_DIAGNOSTICS_FILTER=app-layout,session-provider bun run dev
+```
+
+Diagnostic channels:
+
+- `ssr`: shared render boundaries and selected server data dependencies
+- `hydration`: client mount, boundary failures, window errors, unhandled rejections
+- `requests`: Vite dev-server request tracing
+
+Request tracing defaults to useful traffic only: document navigations, `/_server`, `/api/*`, non-`GET` requests, slow responses, failures, and aborted requests. Use `DEBUG_DIAGNOSTICS_REQUESTS=verbose` only when you need asset-level request noise.
+
 ## First reads
 
 The engine contract is [`engine-api.json (contracts)`](../../contracts/engine-api.json). Generated bindings live in [`src/server/shared/engine/contract.ts`](src/server/shared/engine/contract.ts).
