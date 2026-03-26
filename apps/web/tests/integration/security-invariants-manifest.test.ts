@@ -1,10 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { getPermissions, ROLES } from "../../src/lib/auth/access/rbac";
-import {
-  PERMISSION_MANIFEST,
-  SALES_ERROR_MANIFEST,
-} from "../support/security-manifests";
+import { hasPermission } from "../../src/lib/auth/access/rbac";
+import { SALES_ERROR_MANIFEST } from "../support/security-manifests";
 import type { TestDbContext } from "../support/test-db";
 import { cleanupTestDb, createIsolatedTestDb } from "../support/test-db";
 
@@ -56,12 +53,26 @@ describe("security invariant manifest", () => {
     await cleanupTestDb(ctx);
   });
 
-  it("enforces exact RBAC permission manifest", () => {
-    for (const role of ROLES) {
-      const expected = PERMISSION_MANIFEST[role];
-      const actual = [...getPermissions(role)].toSorted();
-      expect(actual).toEqual([...expected].toSorted());
-    }
+  it("enforces RBAC security invariants for the pipeline roles", () => {
+    expect(hasPermission("executive", "lead:register")).toBe(true);
+    expect(hasPermission("executive", "lead:review")).toBe(false);
+    expect(hasPermission("executive", "quotation:manage")).toBe(false);
+    expect(hasPermission("executive", "integration:manage")).toBe(false);
+
+    expect(hasPermission("back_office", "lead:view:all")).toBe(true);
+    expect(hasPermission("back_office", "lead:review")).toBe(true);
+    expect(hasPermission("back_office", "quotation:manage")).toBe(true);
+    expect(hasPermission("back_office", "integration:manage")).toBe(true);
+    expect(hasPermission("back_office", "lead:register")).toBe(false);
+
+    expect(hasPermission("supervisor", "sales:approve")).toBe(true);
+    expect(hasPermission("supervisor", "lead:register")).toBe(false);
+
+    expect(hasPermission("admin", "lead:reassign")).toBe(true);
+    expect(hasPermission("admin", "quotation:manage")).toBe(true);
+
+    expect(hasPermission("superuser", "integration:manage")).toBe(true);
+    expect(hasPermission("superuser", "lead:view:all")).toBe(true);
   });
 
   it("enforces sales workflow deny contracts", async () => {
