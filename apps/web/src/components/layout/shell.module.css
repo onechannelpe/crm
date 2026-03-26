@@ -83,6 +83,8 @@
   flex: 1 1 0%;
   flex-direction: row;
   min-height: 0;
+  padding-bottom: 12px;
+  padding-right: 12px;
 }
 
 .panelMain {
@@ -100,6 +102,8 @@
   border: var(--panel-border);
   border-radius: var(--panel-radius);
   overflow: hidden;
+  padding-bottom: 0;
+  padding-right: 0;
 }
 
 .detailGap {

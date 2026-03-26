@@ -1,0 +1,68 @@
+.chip {
+  align-items: center;
+  background: var(--tertiary);
+  border-radius: 999px;
+  display: inline-flex;
+  gap: 4px;
+  height: 20px;
+  max-width: min(100%, 200px);
+  padding: 0 6px 0 2px;
+  vertical-align: middle;
+}
+
+.avatar {
+  align-items: center;
+  display: inline-flex;
+  flex-shrink: 0;
+  font-size: var(--font-size-tiny);
+  font-weight: var(--font-weight-medium);
+  height: 14px;
+  justify-content: center;
+  line-height: 1;
+  width: 14px;
+}
+
+.avatarRound {
+  border-radius: 50%;
+}
+
+.avatarSquare {
+  border-radius: 2px;
+}
+
+.label {
+  color: var(--foreground-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  min-width: 0;
+}
+
+/* chip list container */
+.chipList {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+}
+
+.empty {
+  color: var(--foreground-tertiary);
+  font-size: var(--font-size-caption);
+}
+
+.moreButton {
+  background: var(--tertiary);
+  border: 0;
+  border-radius: 999px;
+  color: var(--foreground-secondary);
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  height: 20px;
+  padding: 0 8px;
+}
+
+.moreButton:hover {
+  background: var(--border);
+}

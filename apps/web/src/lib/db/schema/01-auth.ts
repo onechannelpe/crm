@@ -21,6 +21,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("avatar_version", "integer", (col) => col.notNull().defaultTo(0))
     .addColumn("onboarding_completed_at", "integer")
     .addColumn("role", "varchar(50)", (col) => col.notNull())
+    .addColumn("executive_category", "varchar(20)")
     .addColumn("is_active", "integer", (col) => col.notNull().defaultTo(1))
     .addColumn("expires_at", "integer")
     .addColumn("expiry_notified_at", "integer")

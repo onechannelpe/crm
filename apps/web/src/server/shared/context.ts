@@ -6,6 +6,8 @@ import { db } from "~/lib/db/db";
 import { env } from "~/lib/env";
 import { createSearchEnrichmentService } from "~/server/client-search/enrichment-service";
 import { createExtensionService } from "~/server/extension/service";
+import { createExportBatchRunner } from "~/server/integrations/application/run-export-job";
+import { createImportBatchRunner } from "~/server/integrations/application/run-import-job";
 import { createAppNotificationCenter } from "~/server/notifications/app-center-service";
 import { createObservabilityService } from "~/server/observability/service";
 import { createSalesExportBlobStore } from "~/server/sales/export-blob-store";
@@ -62,6 +64,8 @@ export const salesRecordsService = createSalesRecordsWorkflowService(
   repos,
   runInRepositoryTransaction,
 );
+export const importService = createImportBatchRunner();
+export const exportService = createExportBatchRunner();
 
 export const notificationSender = createNotificationService({
   resendApiKey: env.resendApiKey || undefined,
