@@ -35,12 +35,10 @@ export function useResizablePanel(
 
     currentComputedWidth = clamped;
 
-    if (typeof document !== "undefined") {
-      document.documentElement.style.setProperty(
-        "--side-panel-width",
-        `${Math.max(SIDE_PANEL_WIDTH_MIN, clamped)}px`,
-      );
-    }
+    document.documentElement.style.setProperty(
+      "--side-panel-width",
+      `${Math.max(SIDE_PANEL_WIDTH_MIN, clamped)}px`,
+    );
 
     if (!resizeStarted && Math.abs(delta) > 4) {
       resizeStarted = true;

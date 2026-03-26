@@ -25,7 +25,6 @@ export function useDismissibleLayer(options: UseDismissibleLayerOptions) {
   });
 
   onMount(() => {
-    if (typeof document === "undefined") return;
     document.addEventListener("pointerdown", handlePointerDown);
     onCleanup(() => {
       document.removeEventListener("pointerdown", handlePointerDown);

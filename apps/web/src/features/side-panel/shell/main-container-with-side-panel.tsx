@@ -1,7 +1,7 @@
 import {
   type ParentProps,
-  Show,
   Suspense,
+  createMemo,
   createSignal,
   onCleanup,
   onMount,
@@ -22,46 +22,49 @@ import shellStyles from "~/components/layout/shell.module.css";
 const diagnostics = createDiagnostics("main-container-with-side-panel");
 
 export function MainContainerWithSidePanel(props: ParentProps) {
-  const [isMobile, setIsMobile] = createSignal(false);
+  const [isHydrated, setIsHydrated] = createSignal(false);
+  const [isMobileViewport, setIsMobileViewport] = createSignal(false);
 
   diagnostics.trace("ssr", "render", {
-    isMobile: isMobile(),
+    hydrated: isHydrated(),
+    isMobileViewport: isMobileViewport(),
   });
 
   onMount(() => {
     diagnostics.trace("hydration", "mounted");
+    setIsHydrated(true);
 
     const mq = window.matchMedia("(max-width: 768px)");
-    setIsMobile(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    setIsMobileViewport(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobileViewport(e.matches);
     mq.addEventListener("change", handler);
     onCleanup(() => mq.removeEventListener("change", handler));
   });
 
   const [isResizing, setIsResizing] = createSignal(false);
+  const useMobileShell = createMemo(() => isHydrated() && isMobileViewport());
 
   return (
     <div class={cn(shellStyles.panel, shellStyles.panelWithDetail)}>
       <div class={shellStyles.panelMain}>
         <Suspense fallback={<Loading />}>{props.children}</Suspense>
       </div>
-      <Show
-        when={!isMobile()}
-        fallback={
-          <SidePanelMobileShell targetVariant="fullScreen">
+      {!useMobileShell() ? (
+        <>
+          <SidePanelWidthEffect />
+          <ResizeGap
+            onResizeStart={() => setIsResizing(true)}
+            onResizeEnd={() => setIsResizing(false)}
+          />
+          <SidePanelShell isResizing={isResizing()}>
             <SidePanelRouter />
-          </SidePanelMobileShell>
-        }
-      >
-        <SidePanelWidthEffect />
-        <ResizeGap
-          onResizeStart={() => setIsResizing(true)}
-          onResizeEnd={() => setIsResizing(false)}
-        />
-        <SidePanelShell isResizing={isResizing()}>
+          </SidePanelShell>
+        </>
+      ) : (
+        <SidePanelMobileShell targetVariant="fullScreen">
           <SidePanelRouter />
-        </SidePanelShell>
-      </Show>
+        </SidePanelMobileShell>
+      )}
     </div>
   );
 }
