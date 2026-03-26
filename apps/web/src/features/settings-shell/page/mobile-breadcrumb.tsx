@@ -2,7 +2,7 @@ import { A } from "@solidjs/router";
 import { Show } from "solid-js";
 
 import ChevronLeft from "~/components/icons/chevron-left";
-import { useNavigationDrawerState } from "~/features/navigation-drawer";
+import { useNavigationDrawerState } from "~/features/navigation-drawer/state/navigation-drawer-state";
 
 import type { MobileBackAction } from "./breadcrumb-model";
 

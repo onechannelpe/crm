@@ -2,8 +2,8 @@ import type { JSX } from "solid-js";
 import { ErrorBoundary as SolidErrorBoundary } from "solid-js";
 
 import {
-  createDiagnostics,
   isHydrationMismatchError,
+  traceHydrationEvent,
 } from "~/lib/observability/diagnostics";
 import { createLogger } from "~/lib/observability/logger";
 
@@ -15,7 +15,6 @@ interface AppErrorBoundaryProps {
 }
 
 const logger = createLogger("app-error-boundary");
-const diagnostics = createDiagnostics("app-error-boundary");
 
 export function getErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message.trim().length > 0) {
@@ -44,7 +43,7 @@ export function reportBoundaryError(
   });
 
   if (typeof window !== "undefined") {
-    diagnostics.trace("hydration", "boundary_error", {
+    traceHydrationEvent("app-error-boundary", "boundary_error", {
       boundary: "app-root",
       browser: browserMeta,
       hydrationMismatch: isHydrationMismatchError(error),

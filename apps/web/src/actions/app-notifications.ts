@@ -2,7 +2,6 @@
 
 import { requireAuth } from "~/lib/auth/access/session";
 import { assertPositiveInt } from "~/lib/contracts/guards";
-import { createDiagnostics } from "~/lib/observability/diagnostics";
 import { repos } from "~/server/shared/context";
 
 export interface HeaderNotification {
@@ -21,34 +20,26 @@ export interface HeaderNotificationFeed {
   notifications: HeaderNotification[];
 }
 
-const diagnostics = createDiagnostics("header-notifications-action");
-
 export async function getHeaderNotifications(): Promise<HeaderNotificationFeed> {
-  return diagnostics.traceAsync(
-    "ssr",
-    "load_header_notifications",
-    async () => {
-      const session = await requireAuth();
-      const [unreadCount, notifications] = await Promise.all([
-        repos.appNotifications.countUnreadByUser(session.userId),
-        repos.appNotifications.listByUser(session.userId, 20),
-      ]);
+  const session = await requireAuth();
+  const [unreadCount, notifications] = await Promise.all([
+    repos.appNotifications.countUnreadByUser(session.userId),
+    repos.appNotifications.listByUser(session.userId, 20),
+  ]);
 
-      return {
-        unreadCount,
-        notifications: notifications.map((it) => ({
-          id: it.id,
-          eventType: it.event_type,
-          priority: it.priority,
-          title: it.title,
-          bodyText: it.body_text,
-          actionUrl: it.action_url,
-          createdAt: it.created_at,
-          readAt: it.read_at,
-        })),
-      };
-    },
-  );
+  return {
+    unreadCount,
+    notifications: notifications.map((it) => ({
+      id: it.id,
+      eventType: it.event_type,
+      priority: it.priority,
+      title: it.title,
+      bodyText: it.body_text,
+      actionUrl: it.action_url,
+      createdAt: it.created_at,
+      readAt: it.read_at,
+    })),
+  };
 }
 
 export async function markNotificationRead(

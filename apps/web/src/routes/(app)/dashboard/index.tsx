@@ -124,12 +124,18 @@ export default function DashboardPage() {
     ];
   });
 
+  const renderedColumns = createMemo(() => {
+    const value = columns();
+
+    return value;
+  });
+
   return (
     <AppPage>
       <div class={styles.boardGrid}>
         <div class={styles.boardWrap}>
           <div class={styles.board}>
-            <For each={columns()}>
+            <For each={renderedColumns()}>
               {(column) => (
                 <div class={styles.column}>
                   <div class={styles.columnHead}>

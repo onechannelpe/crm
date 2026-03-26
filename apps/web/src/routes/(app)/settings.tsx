@@ -6,7 +6,7 @@ import {
   getCurrentSettingsItem,
   getSettingsSectionHref,
   getSettingsSectionLabel,
-} from "~/features/navigation-drawer";
+} from "~/features/navigation-drawer/settings/settings-navigation.selectors";
 import {
   type BreadcrumbItem,
   type MobileBackAction,
