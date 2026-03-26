@@ -1,16 +1,18 @@
-import type { JSX } from "solid-js";
+import type { IndexIcon } from "./types";
 
 import styles from "./styles.module.css";
 
 export function IndexActionRow(props: {
   gridTemplateColumns: string;
-  icon: JSX.Element;
+  icon: IndexIcon;
   label: string;
   labelColumnIndex: number;
   onClick: () => void;
   stickyColumnIndex: number;
   stickyLeft: number;
 }) {
+  const Icon = props.icon;
+
   return (
     <button
       type="button"
@@ -19,7 +21,7 @@ export function IndexActionRow(props: {
       onClick={props.onClick}
     >
       <div class={`${styles.actionCell} ${styles.checkboxCell}`}>
-        {props.icon}
+        <Icon size={14} />
       </div>
       <div
         class={`${styles.actionCell} ${props.labelColumnIndex === props.stickyColumnIndex ? styles.stickyCell : ""}`}

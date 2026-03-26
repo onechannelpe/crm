@@ -8,6 +8,8 @@ export function ViewBar(props: {
   picker: IndexPicker;
   rightContent: import("solid-js").JSX.Element;
 }) {
+  const PickerIcon = props.picker.icon;
+
   return (
     <div class={styles.viewBar}>
       <div class={styles.viewBarTop}>
@@ -16,7 +18,9 @@ export function ViewBar(props: {
           class={styles.viewPicker}
           onClick={props.picker.onClick}
         >
-          <span class={styles.viewPickerIcon}>{props.picker.icon}</span>
+          <span class={styles.viewPickerIcon}>
+            <PickerIcon size={16} />
+          </span>
           <span class={styles.viewPickerLabel}>{props.picker.label}</span>
           <span class={styles.viewPickerMeta}>
             {typeof props.picker.count === "number"

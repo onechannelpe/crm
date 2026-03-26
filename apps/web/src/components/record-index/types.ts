@@ -1,9 +1,15 @@
-import type { JSX } from "solid-js";
+import type { Component, JSX } from "solid-js";
+
+type IndexIconProps = {
+  size?: number | string;
+};
+
+export type IndexIcon = Component<IndexIconProps>;
 
 export type IndexColumn<T> = {
   key: string;
   label: string;
-  icon: JSX.Element;
+  icon: IndexIcon;
   width?: number;
   minWidth?: number;
   maxWidth?: number;
@@ -13,8 +19,14 @@ export type IndexColumn<T> = {
 };
 
 export type IndexPicker = {
-  icon: JSX.Element;
+  icon: IndexIcon;
   label: string;
   count?: number;
   onClick?: () => void;
+};
+
+export type IndexActionRowConfig = {
+  icon: IndexIcon;
+  label: string;
+  onClick: () => void;
 };

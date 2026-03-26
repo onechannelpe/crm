@@ -9,16 +9,12 @@ import {
 import { IndexHeader } from "./header";
 import { IndexRow } from "./row";
 import type { SelectionModel } from "./selection";
-import type { IndexColumn } from "./types";
+import type { IndexActionRowConfig, IndexColumn } from "./types";
 
 import styles from "./styles.module.css";
 
 export function IndexTable<T extends { id: number }>(props: {
-  actionRow?: {
-    icon: JSX.Element;
-    label: string;
-    onClick: () => void;
-  };
+  actionRow?: IndexActionRowConfig;
   ariaLabel: string;
   columns: IndexColumn<T>[];
   draftRow?: JSX.Element;

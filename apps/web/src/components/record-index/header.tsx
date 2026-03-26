@@ -32,22 +32,27 @@ export function IndexHeader<T>(props: {
         />
       </div>
       <For each={props.columns}>
-        {(column, index) => (
-          <div
-            class={`${styles.headerCell} ${index() === props.stickyColumnIndex ? styles.stickyCell : ""}`}
-            role="columnheader"
-            style={
-              index() === props.stickyColumnIndex
-                ? { left: `${props.stickyLeft}px` }
-                : undefined
-            }
-          >
-            <span class={styles.headerCellContent}>
-              <span class={styles.headerIcon}>{column.icon}</span>
-              <span>{column.label}</span>
-            </span>
-          </div>
-        )}
+        {(column, index) => {
+          const Icon = column.icon;
+          return (
+            <div
+              class={`${styles.headerCell} ${index() === props.stickyColumnIndex ? styles.stickyCell : ""}`}
+              role="columnheader"
+              style={
+                index() === props.stickyColumnIndex
+                  ? { left: `${props.stickyLeft}px` }
+                  : undefined
+              }
+            >
+              <span class={styles.headerCellContent}>
+                <span class={styles.headerIcon}>
+                  <Icon size={14} />
+                </span>
+                <span>{column.label}</span>
+              </span>
+            </div>
+          );
+        }}
       </For>
     </div>
   );

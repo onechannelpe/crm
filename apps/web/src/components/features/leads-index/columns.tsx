@@ -1,5 +1,3 @@
-import type { JSX } from "solid-js";
-
 import { listLeads } from "~/actions/pipeline/leads";
 import Building2 from "~/components/icons/building-2";
 import CalendarDays from "~/components/icons/calendar-days";
@@ -18,7 +16,7 @@ export const LEAD_COLUMNS = [
   {
     key: "ruc",
     label: "RUC",
-    icon: <CircleQuestionMark size={14} />,
+    icon: CircleQuestionMark,
     width: 196,
     sticky: true,
     render: (lead) => <span class={styles.identifierText}>{lead.ruc}</span>,
@@ -26,7 +24,7 @@ export const LEAD_COLUMNS = [
   {
     key: "razon_social",
     label: "Razón social",
-    icon: <Building2 size={14} />,
+    icon: Building2,
     minWidth: 220,
     grow: true,
     render: (lead) => (
@@ -41,7 +39,7 @@ export const LEAD_COLUMNS = [
   {
     key: "address",
     label: "Dirección",
-    icon: <House size={14} />,
+    icon: House,
     minWidth: 220,
     maxWidth: 300,
     render: (lead) => (
@@ -56,7 +54,7 @@ export const LEAD_COLUMNS = [
   {
     key: "stage",
     label: "Etapa",
-    icon: <Package size={14} />,
+    icon: Package,
     width: 172,
     render: (lead) => (
       <Badge
@@ -75,7 +73,7 @@ export const LEAD_COLUMNS = [
   {
     key: "created_at",
     label: "Creado",
-    icon: <CalendarDays size={14} />,
+    icon: CalendarDays,
     width: 140,
     render: (lead) => (
       <span class={styles.mutedCellText}>{formatDate(lead.created_at)}</span>

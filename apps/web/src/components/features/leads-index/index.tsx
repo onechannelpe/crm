@@ -140,7 +140,7 @@ export function LeadsIndex() {
     <div class={`${styles.page} record-index-container-gater-for-drag-select`}>
       <ViewBar
         picker={{
-          icon: <List size={16} />,
+          icon: List,
           label: "All prospects",
           count: leads().length,
         }}
@@ -259,7 +259,7 @@ export function LeadsIndex() {
         actionRow={
           !showDraftRow()
             ? {
-                icon: <Plus size={14} />,
+                icon: Plus,
                 label: "Add New",
                 onClick: openDraftRow,
               }
