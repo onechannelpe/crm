@@ -1,4 +1,4 @@
-import { createAsync, revalidate, useSearchParams } from "@solidjs/router";
+import { revalidate, useSearchParams } from "@solidjs/router";
 import { createEffect, createMemo, createSignal, Show } from "solid-js";
 
 import { searchDirect } from "~/actions/search/run";
@@ -22,9 +22,6 @@ import { isSearchType, type SearchType } from "~/server/shared/pipeline-types";
 import pageStyles from "~/features/search/ui/search-page-shell.module.css";
 
 export default function SearchPage() {
-  const searchAllowance = createAsync(() => mySearchAllowanceQuery(), {
-    initialValue: null,
-  });
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = createSignal("");
   const [searchType, setSearchType] = createSignal<SearchType>("person_name");
@@ -87,7 +84,7 @@ export default function SearchPage() {
   });
 
   return (
-    <AppPage width="wide" class={pageStyles.page}>
+    <AppPage class={pageStyles.page}>
       <PageHeader
         class={pageStyles.header}
         icon={
@@ -96,25 +93,7 @@ export default function SearchPage() {
           </div>
         }
         title={<span class={pageStyles.headerTitle}>Search</span>}
-      >
-        <div class={pageStyles.allowanceCard}>
-          <div class={pageStyles.allowanceLabel}>Allowance</div>
-          <div class={pageStyles.allowanceValue}>
-            {searchAllowance()?.remaining ?? 0}
-          </div>
-          <div class={pageStyles.allowanceMeta}>
-            {searchAllowance()?.committed ?? 0}/
-            {(searchAllowance()?.policy.monthlyLimit ?? 0) +
-              (searchAllowance()?.granted ?? 0)}{" "}
-            used
-          </div>
-        </div>
-      </PageHeader>
-
-      <p class={pageStyles.intro}>
-        Search results are grouped into reusable entity rows. Open a person or
-        company to inspect the aggregated context in the side panel.
-      </p>
+      ></PageHeader>
 
       <div class="space-y-6">
         <SearchLayout

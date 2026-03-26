@@ -1,3 +1,12 @@
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .router {
   display: flex;
   flex: 1;
@@ -7,12 +16,7 @@
 }
 
 .topBar {
-  opacity: 0;
-}
-
-.topBarVisible {
-  opacity: 1;
-  transition: opacity var(--motion-fast);
+  animation: fadeIn var(--motion-fast) var(--ease-standard) both;
 }
 
 .pageBody {
@@ -21,4 +25,9 @@
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
+}
+
+.pageContent {
+  animation: fadeIn var(--motion-fast) var(--ease-standard) 100ms both;
+  display: contents;
 }

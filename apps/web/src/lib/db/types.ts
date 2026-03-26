@@ -49,6 +49,7 @@ export interface UsersTable {
     | "hr"
     | "admin"
     | "superuser";
+  executive_category: ExecutiveCategory | null;
   is_active: number;
   created_at: number;
 }
@@ -732,6 +733,146 @@ export interface UserInvitesTable {
   sent_at: number | null;
 }
 
+export type LeadStage =
+  | "REGISTERED"
+  | "ENRICHING"
+  | "PENDING_EXTERNAL_REVIEW"
+  | "REJECTED_BY_STATUS"
+  | "NEEDS_EXECUTIVE_INPUT"
+  | "READY_FOR_QUOTATION"
+  | "QUOTED"
+  | "READY_FOR_SALE"
+  | "CONVERTED";
+
+export type LeadStatus =
+  | "DISPONIBLE"
+  | "SIN RESULTADO"
+  | "CARTERIZADO"
+  | "STOCK";
+
+export type Prioridad = "P1" | "P2" | "SIN RESULTADO";
+
+export type ExecutiveCategory = "elite" | "corporativa";
+
+export const LEAD_STAGES = [
+  "REGISTERED",
+  "ENRICHING",
+  "PENDING_EXTERNAL_REVIEW",
+  "REJECTED_BY_STATUS",
+  "NEEDS_EXECUTIVE_INPUT",
+  "READY_FOR_QUOTATION",
+  "QUOTED",
+  "READY_FOR_SALE",
+  "CONVERTED",
+] as const satisfies readonly LeadStage[];
+
+export const LEAD_STATUS_VALUES = [
+  "DISPONIBLE",
+  "SIN RESULTADO",
+  "CARTERIZADO",
+  "STOCK",
+] as const satisfies readonly LeadStatus[];
+
+export const PRIORIDAD_VALUES = [
+  "P1",
+  "P2",
+  "SIN RESULTADO",
+] as const satisfies readonly Prioridad[];
+
+export function toLeadStage(v: string | undefined): LeadStage | undefined {
+  return v !== undefined ? LEAD_STAGES.find((s) => s === v) : undefined;
+}
+
+export function toLeadStatus(v: string | undefined): LeadStatus | undefined {
+  return v !== undefined ? LEAD_STATUS_VALUES.find((e) => e === v) : undefined;
+}
+
+export function toPrioridad(v: string | undefined): Prioridad | undefined {
+  return v !== undefined ? PRIORIDAD_VALUES.find((p) => p === v) : undefined;
+}
+
+export interface PipelineLeadsTable {
+  id: Generated<number>;
+  ruc: string;
+  razon_social: string | null;
+  address: string | null;
+  executive_id: number;
+  stage: LeadStage;
+  status: LeadStatus | null;
+  prioridad: Prioridad | null;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface PipelineLeadCommercialInputsTable {
+  lead_id: number;
+  proveedor_actual: string | null;
+  tasa_actual: number | null;
+  gpv: number | null;
+  ticket: number | null;
+  abono: number | null;
+  cantidad_pos: number | null;
+  updated_at: number;
+  updated_by: number;
+}
+
+export interface PipelineQuotationsTable {
+  id: Generated<number>;
+  lead_id: number;
+  payback_pricing: number;
+  tarifa_debito: number;
+  tarifa_credito: number;
+  tarifa_foraneo: number;
+  fee: number;
+  moneda: "PEN" | "USD";
+  version: number;
+  created_at: number;
+  created_by: number;
+}
+
+export interface PipelineSalesTable {
+  id: Generated<number>;
+  lead_id: number;
+  executive_id: number;
+  proveedor_actual: string;
+  tasa_actual: number;
+  gpv: number;
+  ticket: number;
+  abono: number;
+  cantidad_pos: number;
+  banco: string;
+  nro_cuenta: string;
+  cci: string | null;
+  created_at: number;
+}
+
+export interface PipelineLeadAssignmentsTable {
+  id: Generated<number>;
+  lead_id: number;
+  executive_id: number;
+  assigned_by: number;
+  is_active: number;
+  assigned_at: number;
+}
+
+export interface PipelineIntegrationJobsTable {
+  id: Generated<number>;
+  type: "export" | "import_status" | "import_prioridad";
+  status: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
+  user_id: number;
+  file_path: string | null;
+  error_message: string | null;
+  rows_total: number | null;
+  rows_applied: number | null;
+  rows_failed: number | null;
+  results_json: string | null;
+  lease_owner: string | null;
+  lease_until: number | null;
+  attempt_count: ColumnType<number, number | undefined, number>;
+  created_at: number;
+  completed_at: number | null;
+}
+
 export interface Database {
   branches: BranchesTable;
   teams: TeamsTable;
@@ -791,6 +932,12 @@ export interface Database {
   webauthn_challenges: WebauthnChallengesTable;
   user_oauth_accounts: UserOAuthAccountsTable;
   password_reset_tokens: PasswordResetTokensTable;
+  pipeline_leads: PipelineLeadsTable;
+  pipeline_lead_commercial_inputs: PipelineLeadCommercialInputsTable;
+  pipeline_quotations: PipelineQuotationsTable;
+  pipeline_sales: PipelineSalesTable;
+  pipeline_lead_assignments: PipelineLeadAssignmentsTable;
+  pipeline_integration_jobs: PipelineIntegrationJobsTable;
 }
 
 export type Branch = Selectable<BranchesTable>;
@@ -887,3 +1034,19 @@ export type NewSearchEnrichmentOverlay =
 export type ActionRateLimitCounter = Selectable<ActionRateLimitCountersTable>;
 export type NewActionRateLimitCounter =
   Insertable<ActionRateLimitCountersTable>;
+
+export type Lead = Selectable<PipelineLeadsTable>;
+export type LeadCommercialInput = Selectable<PipelineLeadCommercialInputsTable>;
+export type Quotation = Selectable<PipelineQuotationsTable>;
+export type LeadSale = Selectable<PipelineSalesTable>;
+export type LeadPipelineAssignment = Selectable<PipelineLeadAssignmentsTable>;
+export type IntegrationJob = Selectable<PipelineIntegrationJobsTable>;
+
+export type NewLead = Insertable<PipelineLeadsTable>;
+export type NewLeadCommercialInput =
+  Insertable<PipelineLeadCommercialInputsTable>;
+export type NewQuotation = Insertable<PipelineQuotationsTable>;
+export type NewLeadSale = Insertable<PipelineSalesTable>;
+export type NewLeadPipelineAssignment =
+  Insertable<PipelineLeadAssignmentsTable>;
+export type NewIntegrationJob = Insertable<PipelineIntegrationJobsTable>;

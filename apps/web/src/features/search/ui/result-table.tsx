@@ -8,13 +8,16 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
+import { OverflowingText } from "~/components/ui/overflow-tooltip/overflow-tooltip";
+import {
+  RecordChipList,
+  type ChipShape,
+} from "~/components/ui/record-chip/record-chip";
 import type { SearchTab } from "~/features/search/model/display";
 import type {
   CompanyGroup,
   PersonGroup,
 } from "~/features/search/model/grouping";
-
-import { ResultPills } from "./result-pills";
 
 import styles from "./search-layout.module.css";
 
@@ -25,6 +28,42 @@ interface ResultTableProps {
   selectedKey: string | null;
   onOpenPerson: (person: PersonGroup) => void;
   onOpenCompany: (company: CompanyGroup) => void;
+}
+
+function rowClass(selected: boolean) {
+  return `${styles.resultRow}${selected ? ` ${styles.resultRowSelected}` : ""}`;
+}
+
+function PrimaryCell(props: {
+  name: string;
+  secondary: string;
+  shape: ChipShape;
+}) {
+  const hue = () => nameToHue(props.name);
+
+  return (
+    <TableCell class={styles.primaryCell}>
+      <div class={styles.primaryCellInner}>
+        <span
+          class={`${styles.rowAvatar} ${props.shape === "round" ? styles.rowAvatarRound : styles.rowAvatarSquare}`}
+          style={{
+            "background-color": `hsl(${hue()} 60% 88%)`,
+            color: `hsl(${hue()} 50% 32%)`,
+          }}
+          aria-hidden="true"
+        >
+          {initials(props.name)}
+        </span>
+        <div class={styles.primaryText}>
+          <OverflowingText class={styles.primaryValue} text={props.name} />
+          <OverflowingText
+            class={styles.secondaryValue}
+            text={props.secondary}
+          />
+        </div>
+      </div>
+    </TableCell>
+  );
 }
 
 export function ResultTable(props: ResultTableProps) {
@@ -51,7 +90,7 @@ export function ResultTable(props: ResultTableProps) {
                 {(group) => (
                   <TableRow
                     tabIndex={0}
-                    class={`${styles.resultRow}${props.selectedKey === group.key ? ` ${styles.resultRowSelected}` : ""}`}
+                    class={rowClass(props.selectedKey === group.key)}
                     onClick={() => props.onOpenPerson(group)}
                     onKeyDown={(event) => {
                       if (event.key === "Enter" || event.key === " ") {
@@ -60,24 +99,26 @@ export function ResultTable(props: ResultTableProps) {
                       }
                     }}
                   >
-                    <TableCell class={styles.primaryCell}>
-                      <div class={styles.primaryValue}>{group.displayName}</div>
-                      <div class={styles.secondaryValue}>
-                        {group.aliases.find(
+                    <PrimaryCell
+                      name={group.displayName}
+                      secondary={
+                        group.aliases.find(
                           (alias) => alias !== group.displayName,
-                        ) ?? `${group.companies.length} linked companies`}
-                      </div>
-                    </TableCell>
+                        ) ?? `${group.companies.length} linked companies`
+                      }
+                      shape="round"
+                    />
                     <TableCell class={styles.codeCell}>{group.dni}</TableCell>
                     <TableCell class={styles.dataCell}>
-                      <ResultPills
+                      <RecordChipList
                         items={group.companies
-                          .map((company) => company.name ?? company.ruc ?? "")
-                          .filter((value) => value.length > 0)}
+                          .map((c) => c.name ?? c.ruc ?? "")
+                          .filter((v) => v.length > 0)}
+                        shape="square"
                       />
                     </TableCell>
                     <TableCell class={styles.dataCell}>
-                      <ResultPills items={group.phones} />
+                      <RecordChipList items={group.phones} shape="square" />
                     </TableCell>
                   </TableRow>
                 )}
@@ -86,6 +127,7 @@ export function ResultTable(props: ResultTableProps) {
           </Table>
         </Show>
       </Match>
+
       <Match when={props.tab === "companies"}>
         <Show
           when={props.companies.length > 0}
@@ -107,7 +149,7 @@ export function ResultTable(props: ResultTableProps) {
                 {(group) => (
                   <TableRow
                     tabIndex={0}
-                    class={`${styles.resultRow}${props.selectedKey === group.key ? ` ${styles.resultRowSelected}` : ""}`}
+                    class={rowClass(props.selectedKey === group.key)}
                     onClick={() => props.onOpenCompany(group)}
                     onKeyDown={(event) => {
                       if (event.key === "Enter" || event.key === " ") {
@@ -116,26 +158,24 @@ export function ResultTable(props: ResultTableProps) {
                       }
                     }}
                   >
-                    <TableCell class={styles.primaryCell}>
-                      <div class={styles.primaryValue}>
-                        {group.name ?? "Unknown company"}
-                      </div>
-                      <div class={styles.secondaryValue}>
-                        {group.people.length} linked people
-                      </div>
-                    </TableCell>
+                    <PrimaryCell
+                      name={group.name ?? "Unknown company"}
+                      secondary={`${group.people.length} linked people`}
+                      shape="square"
+                    />
                     <TableCell class={styles.codeCell}>
-                      {group.ruc ?? "-"}
+                      {group.ruc ?? "—"}
                     </TableCell>
                     <TableCell class={styles.dataCell}>
-                      <ResultPills
+                      <RecordChipList
                         items={group.people
-                          .map((person) => person.name || person.dni)
-                          .filter((value) => value.length > 0)}
+                          .map((p) => p.name || p.dni)
+                          .filter((v) => v.length > 0)}
+                        shape="round"
                       />
                     </TableCell>
                     <TableCell class={styles.dataCell}>
-                      <ResultPills items={group.phones} />
+                      <RecordChipList items={group.phones} shape="square" />
                     </TableCell>
                   </TableRow>
                 )}
@@ -146,4 +186,22 @@ export function ResultTable(props: ResultTableProps) {
       </Match>
     </Switch>
   );
+}
+
+// helpers
+
+function nameToHue(name: string): number {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+  }
+  return hash % 360;
+}
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return (parts[0]?.[0] ?? "?").toUpperCase();
+  return (
+    (parts[0]?.[0] ?? "") + (parts[parts.length - 1]?.[0] ?? "")
+  ).toUpperCase();
 }

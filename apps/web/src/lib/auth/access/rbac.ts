@@ -30,7 +30,13 @@ export type Permission =
   | "hr:manage"
   | "admin:read"
   | "admin:manage"
-  | "audit:read";
+  | "audit:read"
+  | "lead:register"
+  | "lead:view:all"
+  | "lead:review"
+  | "lead:reassign"
+  | "quotation:manage"
+  | "integration:manage";
 
 export const ROLES = [
   "executive",
@@ -51,6 +57,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "search:use",
     "capacity:read:self",
     "capacity:request:self",
+    "lead:register",
   ],
   supervisor: [
     "lead:work",
@@ -68,7 +75,15 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "team:manage",
     "audit:read",
   ],
-  back_office: ["sales:review", "sales:approve", "audit:read"],
+  back_office: [
+    "sales:review",
+    "sales:approve",
+    "audit:read",
+    "lead:view:all",
+    "lead:review",
+    "quotation:manage",
+    "integration:manage",
+  ],
   sales_manager: [
     "lead:work",
     "sales:review",
@@ -94,6 +109,12 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "lead:work",
     "sales:review",
     "search:use",
+    "lead:register",
+    "lead:view:all",
+    "lead:review",
+    "lead:reassign",
+    "quotation:manage",
+    "integration:manage",
     "capacity:read:self",
     "capacity:request:self",
     "capacity:read:team",
@@ -117,6 +138,12 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "sales:submit",
     "sales:review",
     "sales:approve",
+    "lead:register",
+    "lead:view:all",
+    "lead:review",
+    "lead:reassign",
+    "quotation:manage",
+    "integration:manage",
     "search:use",
     "capacity:read:self",
     "capacity:request:self",
