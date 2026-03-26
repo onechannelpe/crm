@@ -2,7 +2,7 @@ import ChevronRight from "~/components/icons/chevron-right";
 import { cn } from "~/lib/utils";
 
 import { useIsSettingsPage } from "../hooks/use-is-settings-page";
-import { useNavigationDrawerState } from "../state/navigation-drawer-state";
+import { useNavigationDrawerState } from "../state/navigation-drawer-provider";
 
 import styles from "./navigation-drawer-section.module.css";
 

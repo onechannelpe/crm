@@ -1,7 +1,7 @@
 import type { ParentProps } from "solid-js";
 
 import { useIsSettingsPage } from "../hooks/use-is-settings-page";
-import { useNavigationDrawerState } from "../state/navigation-drawer-state";
+import { useNavigationDrawerState } from "../state/navigation-drawer-provider";
 
 import styles from "./navigation-drawer-item.module.css";
 

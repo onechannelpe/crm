@@ -10,7 +10,7 @@ import { cn } from "~/lib/utils";
 
 import { useIsSettingsPage } from "../hooks/use-is-settings-page";
 import { useOpenSettingsMenu } from "../hooks/use-open-settings-menu";
-import { useNavigationDrawerState } from "../state/navigation-drawer-state";
+import { useNavigationDrawerState } from "../state/navigation-drawer-provider";
 
 import styles from "./mobile-navigation-bar.module.css";
 

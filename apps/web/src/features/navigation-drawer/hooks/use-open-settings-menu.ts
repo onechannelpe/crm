@@ -1,4 +1,4 @@
-import { useNavigationDrawerState } from "../state/navigation-drawer-state";
+import { useNavigationDrawerState } from "../state/navigation-drawer-provider";
 
 export function useOpenSettingsMenu() {
   const { setExpanded, setCurrentMobileDrawer } = useNavigationDrawerState();

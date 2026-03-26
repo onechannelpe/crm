@@ -13,7 +13,7 @@ import { shortName } from "~/lib/users/display-name";
 import { cn } from "~/lib/utils";
 
 import { useIsSettingsDrawer } from "../hooks/use-is-settings-drawer";
-import { useNavigationDrawerState } from "../state/navigation-drawer-state";
+import { useNavigationDrawerState } from "../state/navigation-drawer-provider";
 
 import styles from "./navigation-drawer-shell.module.css";
 
