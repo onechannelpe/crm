@@ -18,6 +18,7 @@ export type AppPath =
   | "/leads/new"
   | "/review"
   | "/quotations"
+  | "/sales/crm"
   | "/integrations"
   | "/integrations/imports"
   | "/integrations/exports"
@@ -57,6 +58,7 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
   "/leads/new": { permission: "lead:register" },
   "/review": { permission: "lead:review", landingPriority: 4 },
   "/quotations": { permission: "quotation:manage", landingPriority: 3 },
+  "/sales/crm": { permission: "lead:register" },
   "/integrations": { permission: "integration:manage" },
   "/integrations/imports": { permission: "integration:manage" },
   "/integrations/exports": { permission: "integration:manage" },
@@ -74,7 +76,8 @@ export const DYNAMIC_ROUTES: DynamicRouteConfig[] = [
   { pattern: /^\/leads\/[^/]+\/complete$/, permission: "lead:register" },
   { pattern: /^\/review\/[^/]+$/, permission: "lead:review" },
   { pattern: /^\/quotations\/[^/]+$/, permission: "quotation:manage" },
-  { pattern: /^\/sales\/new\/[^/]+$/, permission: "quotation:manage" },
+  { pattern: /^\/sales\/new\/[^/]+$/, permission: "lead:register" },
+  { pattern: /^\/sales\/[0-9]+$/, permission: "lead:register" },
   {
     pattern: /^\/integrations\/imports\/[^/]+$/,
     permission: "integration:manage",

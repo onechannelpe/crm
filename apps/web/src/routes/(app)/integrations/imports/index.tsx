@@ -80,7 +80,7 @@ export default function ImportsPage() {
                     "border-radius": "0.375rem",
                   }}
                 >
-                  <option value="import_estado">Estado</option>
+                  <option value="import_status">Estado</option>
                   <option value="import_prioridad">Prioridad</option>
                 </select>
               </label>

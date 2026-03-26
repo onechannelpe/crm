@@ -1,10 +1,14 @@
 "use server";
 
+import { throwDomainError } from "~/actions/throw-domain-error";
 import { notFoundError, validationError } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { requirePermission } from "~/lib/auth/access/session";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
-import { crmJobBlobStore, repos } from "~/server/shared/context";
+import { getIntegrationJobQuery } from "~/server/integrations/application/get-integration-job";
+import { queueExportJobUseCase } from "~/server/integrations/application/queue-export-job";
+import { jobBlobStore } from "~/server/shared/pipeline-runtime";
+import { isErr } from "~/server/shared/result";
 
 export async function queueLeadExport(): Promise<{ jobId: number }> {
   const actor = { userId: null as number | null, role: null as Role | null };
@@ -17,15 +21,9 @@ export async function queueLeadExport(): Promise<{ jobId: number }> {
       actor.userId = session.userId;
       actor.role = session.role;
 
-      const jobId = await repos.integrationJobs.create({
-        type: "export",
-        status: "PENDING",
-        user_id: session.userId,
-        file_path: null,
-        created_at: Date.now(),
-      });
-
-      return { jobId };
+      const result = await queueExportJobUseCase({ actorId: session.userId });
+      if (isErr(result)) throwDomainError(result.error);
+      return result.value;
     },
   });
 }
@@ -41,7 +39,7 @@ export async function getExportJob(jobId: number) {
       actor.userId = session.userId;
       actor.role = session.role;
 
-      const job = await repos.integrationJobs.findById(jobId);
+      const job = await getIntegrationJobQuery(jobId);
       if (!job) throw notFoundError("Export job not found");
 
       return job;
@@ -60,13 +58,13 @@ export async function downloadExport(jobId: number): Promise<Uint8Array> {
       actor.userId = session.userId;
       actor.role = session.role;
 
-      const job = await repos.integrationJobs.findById(jobId);
+      const job = await getIntegrationJobQuery(jobId);
       if (!job) throw notFoundError("Export job not found");
       if (job.status !== "COMPLETED" || !job.file_path) {
         throw validationError("Export is not ready for download");
       }
 
-      return crmJobBlobStore.get(job.file_path);
+      return jobBlobStore.get(job.file_path);
     },
   });
 }

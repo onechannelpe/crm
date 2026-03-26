@@ -3,21 +3,21 @@ import { createSignal, Show } from "solid-js";
 
 import { getLead } from "~/actions/pipeline/leads";
 import {
-  updateLeadEstado,
+  updateLeadStatus,
   updateLeadPrioridad,
 } from "~/actions/pipeline/review";
 import { AppPage } from "~/components/layout/page";
 import { toAppError } from "~/lib/app-errors";
-import { ESTADO_VALUES, PRIORIDAD_VALUES } from "~/lib/db/types";
-import type { Estado, Prioridad } from "~/lib/db/types";
+import { LEAD_STATUS_VALUES, PRIORIDAD_VALUES } from "~/lib/db/types";
+import type { LeadStatus, Prioridad } from "~/lib/db/types";
 
 export default function ReviewLeadPage() {
   const params = useParams<{ leadId: string }>();
   const navigate = useNavigate();
   const data = createAsync(() => getLead(Number(params.leadId)));
   const [error, setError] = createSignal<string | null>(null);
-  const [estadoVal, setEstadoVal] = createSignal<Estado>("DISPONIBLE");
-  const [estadoReason, setEstadoReason] = createSignal("");
+  const [statusVal, setStatusVal] = createSignal<LeadStatus>("DISPONIBLE");
+  const [statusReason, setStatusReason] = createSignal("");
   const [prioridadVal, setPrioridadVal] = createSignal<Prioridad>("P1");
   const [prioridadReason, setPrioridadReason] = createSignal("");
 
@@ -34,14 +34,14 @@ export default function ReviewLeadPage() {
     gap: "0.25rem",
   };
 
-  async function handleEstado(e: SubmitEvent) {
+  async function handleStatus(e: SubmitEvent) {
     e.preventDefault();
     setError(null);
     try {
-      await updateLeadEstado({
+      await updateLeadStatus({
         leadId: Number(params.leadId),
-        estado: estadoVal(),
-        reason: estadoReason(),
+        status: statusVal(),
+        reason: statusReason(),
       });
       navigate(`/review`);
     } catch (err) {
@@ -99,7 +99,7 @@ export default function ReviewLeadPage() {
               }}
             >
               <form
-                onSubmit={(e) => void handleEstado(e)}
+                onSubmit={(e) => void handleStatus(e)}
                 style={{
                   display: "flex",
                   "flex-direction": "column",
@@ -113,12 +113,12 @@ export default function ReviewLeadPage() {
                   <label style={labelStyle}>
                     Estado
                     <select
-                      value={estadoVal()}
+                      value={statusVal()}
                       onInput={(e) => {
-                        const v = ESTADO_VALUES.find(
+                        const v = LEAD_STATUS_VALUES.find(
                           (o) => o === e.currentTarget.value,
                         );
-                        if (v) setEstadoVal(v);
+                        if (v) setStatusVal(v);
                       }}
                       required
                       style={inputStyle}
@@ -134,8 +134,8 @@ export default function ReviewLeadPage() {
                   <label style={labelStyle}>
                     Razon
                     <input
-                      value={estadoReason()}
-                      onInput={(e) => setEstadoReason(e.currentTarget.value)}
+                      value={statusReason()}
+                      onInput={(e) => setStatusReason(e.currentTarget.value)}
                       required
                       style={inputStyle}
                     />

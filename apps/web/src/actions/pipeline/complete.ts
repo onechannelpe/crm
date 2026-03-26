@@ -5,11 +5,8 @@ import { validationError } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { requirePermission } from "~/lib/auth/access/session";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
-import {
-  appNotificationCenter,
-  leadWorkflowService,
-  repos,
-} from "~/server/shared/context";
+import { completeExecutiveInputUseCase } from "~/server/leads/application/complete-executive-input";
+import { reassignLeadUseCase } from "~/server/leads/application/reassign-lead";
 import { isErr } from "~/server/shared/result";
 
 export interface CompleteExecutiveInputInput {
@@ -56,7 +53,7 @@ export async function completeExecutiveInput(
         throw validationError("cantidadPos must be a non-negative integer");
       }
 
-      const result = await leadWorkflowService.completeExecutiveInput({
+      const result = await completeExecutiveInputUseCase({
         leadId: input.leadId,
         proveedorActual: input.proveedorActual,
         tasaActual: input.tasaActual,
@@ -65,25 +62,10 @@ export async function completeExecutiveInput(
         abono: input.abono,
         cantidadPos: input.cantidadPos,
         actorId: session.userId,
+        branchId: session.branchId,
       });
 
       if (isErr(result)) throwDomainError(result.error);
-
-      const lead = await repos.leads.findById(input.leadId);
-      if (lead?.stage === "READY_FOR_QUOTATION") {
-        await appNotificationCenter.notifyBranchRoles(
-          session.branchId,
-          ["back_office"],
-          {
-            type: "lead.ready_for_quotation",
-            title: "Lead listo para cotizacion",
-            bodyText: `El lead RUC ${lead.ruc} ya tiene informacion completa`,
-            actionUrl: `/quotations/${lead.id}`,
-            priority: "normal",
-            dedupeKey: `lead_rfq_${lead.id}`,
-          },
-        );
-      }
     },
   });
 }
@@ -102,7 +84,7 @@ export async function reassignLead(input: {
       actor.userId = session.userId;
       actor.role = session.role;
 
-      const result = await leadWorkflowService.reassignLead({
+      const result = await reassignLeadUseCase({
         leadId: input.leadId,
         newExecutiveId: input.newExecutiveId,
         actorId: session.userId,

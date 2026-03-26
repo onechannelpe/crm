@@ -1,10 +1,19 @@
 import type { NewAppNotification, UsersTable } from "~/lib/db/types";
-import type { Repositories } from "~/server/shared/registry";
 
 import type { AppNotificationEvent } from "./app-events";
 
 interface Deps {
-  repos: Pick<Repositories, "appNotifications" | "users">;
+  repos: {
+    appNotifications: {
+      createMany(values: NewAppNotification[]): Promise<void>;
+    };
+    users: {
+      findActiveIdsByBranchAndRoles(
+        branchId: number,
+        roles: UsersTable["role"][],
+      ): Promise<Array<{ id: number }>>;
+    };
+  };
 }
 
 function serializeMetadata(metadata?: Record<string, unknown>): string | null {

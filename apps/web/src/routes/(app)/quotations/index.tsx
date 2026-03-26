@@ -1,11 +1,11 @@
 import { A, createAsync } from "@solidjs/router";
 import { For, Show } from "solid-js";
 
-import { listLeads } from "~/actions/pipeline/leads";
+import { listLeadsForQuotation } from "~/actions/pipeline/quotations";
 import { AppPage } from "~/components/layout/page";
 
 export default function QuotationsPage() {
-  const leads = createAsync(() => listLeads({ stage: "READY_FOR_QUOTATION" }), {
+  const leads = createAsync(() => listLeadsForQuotation({}), {
     initialValue: [],
   });
 

@@ -2,7 +2,7 @@ import type { Kysely } from "kysely";
 
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
-    .createTable("crm_leads")
+    .createTable("pipeline_leads")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("ruc", "varchar(11)", (col) => col.notNull().unique())
     .addColumn("razon_social", "varchar(255)")
@@ -11,42 +11,42 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
       col.notNull().references("users.id"),
     )
     .addColumn("stage", "varchar(30)", (col) => col.notNull())
-    .addColumn("estado", "varchar(30)")
+    .addColumn("status", "varchar(30)")
     .addColumn("prioridad", "varchar(20)")
     .addColumn("created_at", "integer", (col) => col.notNull())
     .addColumn("updated_at", "integer", (col) => col.notNull())
     .execute();
 
   await db.schema
-    .createIndex("idx_crm_leads_ruc")
-    .on("crm_leads")
+    .createIndex("idx_pipeline_leads_ruc")
+    .on("pipeline_leads")
     .column("ruc")
     .execute();
   await db.schema
-    .createIndex("idx_crm_leads_executive")
-    .on("crm_leads")
+    .createIndex("idx_pipeline_leads_executive")
+    .on("pipeline_leads")
     .column("executive_id")
     .execute();
   await db.schema
-    .createIndex("idx_crm_leads_estado")
-    .on("crm_leads")
-    .column("estado")
+    .createIndex("idx_pipeline_leads_status")
+    .on("pipeline_leads")
+    .column("status")
     .execute();
   await db.schema
-    .createIndex("idx_crm_leads_prioridad")
-    .on("crm_leads")
+    .createIndex("idx_pipeline_leads_prioridad")
+    .on("pipeline_leads")
     .column("prioridad")
     .execute();
   await db.schema
-    .createIndex("idx_crm_leads_stage")
-    .on("crm_leads")
+    .createIndex("idx_pipeline_leads_stage")
+    .on("pipeline_leads")
     .column("stage")
     .execute();
 
   await db.schema
-    .createTable("crm_lead_commercial_inputs")
+    .createTable("pipeline_lead_commercial_inputs")
     .addColumn("lead_id", "integer", (col) =>
-      col.primaryKey().references("crm_leads.id").onDelete("cascade"),
+      col.primaryKey().references("pipeline_leads.id").onDelete("cascade"),
     )
     .addColumn("proveedor_actual", "varchar(255)")
     .addColumn("tasa_actual", "real")
@@ -61,10 +61,10 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createTable("crm_quotations")
+    .createTable("pipeline_quotations")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("lead_id", "integer", (col) =>
-      col.notNull().references("crm_leads.id").onDelete("cascade"),
+      col.notNull().references("pipeline_leads.id").onDelete("cascade"),
     )
     .addColumn("payback_pricing", "real", (col) => col.notNull())
     .addColumn("tarifa_debito", "real", (col) => col.notNull())
@@ -80,16 +80,16 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createIndex("idx_crm_quotations_lead")
-    .on("crm_quotations")
+    .createIndex("idx_pipeline_quotations_lead")
+    .on("pipeline_quotations")
     .columns(["lead_id", "version"])
     .execute();
 
   await db.schema
-    .createTable("crm_sales")
+    .createTable("pipeline_sales")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("lead_id", "integer", (col) =>
-      col.notNull().references("crm_leads.id"),
+      col.notNull().references("pipeline_leads.id"),
     )
     .addColumn("executive_id", "integer", (col) =>
       col.notNull().references("users.id"),
@@ -107,21 +107,21 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createIndex("idx_crm_sales_lead")
-    .on("crm_sales")
+    .createIndex("idx_pipeline_sales_lead")
+    .on("pipeline_sales")
     .column("lead_id")
     .execute();
   await db.schema
-    .createIndex("idx_crm_sales_executive")
-    .on("crm_sales")
+    .createIndex("idx_pipeline_sales_executive")
+    .on("pipeline_sales")
     .column("executive_id")
     .execute();
 
   await db.schema
-    .createTable("crm_lead_assignments")
+    .createTable("pipeline_lead_assignments")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("lead_id", "integer", (col) =>
-      col.notNull().references("crm_leads.id"),
+      col.notNull().references("pipeline_leads.id"),
     )
     .addColumn("executive_id", "integer", (col) =>
       col.notNull().references("users.id"),
@@ -134,13 +134,13 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createIndex("idx_crm_lead_assignments_lead")
-    .on("crm_lead_assignments")
+    .createIndex("idx_pipeline_lead_assignments_lead")
+    .on("pipeline_lead_assignments")
     .columns(["lead_id", "is_active"])
     .execute();
 
   await db.schema
-    .createTable("crm_integration_jobs")
+    .createTable("pipeline_integration_jobs")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("type", "varchar(30)", (col) => col.notNull())
     .addColumn("status", "varchar(20)", (col) => col.notNull())
@@ -161,8 +161,8 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createIndex("idx_crm_integration_jobs_status")
-    .on("crm_integration_jobs")
+    .createIndex("idx_pipeline_integration_jobs_status")
+    .on("pipeline_integration_jobs")
     .columns(["status", "lease_until"])
     .execute();
 }

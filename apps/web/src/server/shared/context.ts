@@ -6,10 +6,8 @@ import { db } from "~/lib/db/db";
 import { env } from "~/lib/env";
 import { createSearchEnrichmentService } from "~/server/client-search/enrichment-service";
 import { createExtensionService } from "~/server/extension/service";
-import { createCrmJobBlobStore } from "~/server/integrations/blob-store";
-import { createExportService } from "~/server/integrations/export-service";
-import { createImportService } from "~/server/integrations/import-service";
-import { createLeadWorkflowService } from "~/server/leads/workflow-service";
+import { createExportBatchRunner } from "~/server/integrations/application/run-export-job";
+import { createImportBatchRunner } from "~/server/integrations/application/run-import-job";
 import { createAppNotificationCenter } from "~/server/notifications/app-center-service";
 import { createObservabilityService } from "~/server/observability/service";
 import { createSalesExportBlobStore } from "~/server/sales/export-blob-store";
@@ -66,16 +64,8 @@ export const salesRecordsService = createSalesRecordsWorkflowService(
   repos,
   runInRepositoryTransaction,
 );
-
-export const crmJobBlobStore = createCrmJobBlobStore(
-  config.uploads.storageRoot,
-);
-export const leadWorkflowService = createLeadWorkflowService(
-  repos,
-  runInRepositoryTransaction,
-);
-export const importService = createImportService(repos, crmJobBlobStore);
-export const exportService = createExportService(repos, crmJobBlobStore);
+export const importService = createImportBatchRunner();
+export const exportService = createExportBatchRunner();
 
 export const notificationSender = createNotificationService({
   resendApiKey: env.resendApiKey || undefined,

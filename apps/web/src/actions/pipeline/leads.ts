@@ -1,17 +1,15 @@
 "use server";
 
 import { throwDomainError } from "~/actions/throw-domain-error";
-import {
-  forbiddenError,
-  notFoundError,
-  validationError,
-} from "~/lib/app-errors";
+import { forbiddenError, validationError } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { hasPermission } from "~/lib/auth/access/rbac";
-import { requirePermission } from "~/lib/auth/access/session";
-import { toEstado, toLeadStage, toPrioridad } from "~/lib/db/types";
+import { requireAuth, requirePermission } from "~/lib/auth/access/session";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
-import { leadWorkflowService, repos } from "~/server/shared/context";
+import { getLeadDetailQuery } from "~/server/leads/application/get-lead-detail";
+import { listLeadsQuery } from "~/server/leads/application/list-leads";
+import { registerLeadUseCase } from "~/server/leads/application/register-lead";
+import { pipelineRepos } from "~/server/shared/pipeline-runtime";
 import { isErr } from "~/server/shared/result";
 
 export interface RegisterLeadInput {
@@ -44,7 +42,7 @@ export async function registerLead(
           ? input.executiveId
           : session.userId;
 
-      const result = await leadWorkflowService.registerLead({
+      const result = await registerLeadUseCase({
         ruc: input.ruc.trim(),
         razonSocial: input.razonSocial,
         address: input.address,
@@ -53,14 +51,14 @@ export async function registerLead(
       });
 
       if (isErr(result)) throwDomainError(result.error);
-      return { id: result.value };
+      return result.value;
     },
   });
 }
 
 export interface ListLeadsFilters {
   stage?: string;
-  estado?: string;
+  status?: string;
   prioridad?: string;
   fromDate?: number;
   toDate?: number;
@@ -80,17 +78,17 @@ export async function listLeads(filters: ListLeadsFilters) {
       actor.userId = session.userId;
       actor.role = session.role;
 
-      const canViewAll = hasPermission(session.role, "lead:view:all");
-
-      return repos.leads.list({
-        executiveId: canViewAll ? filters.executiveId : session.userId,
-        stage: toLeadStage(filters.stage),
-        estado: toEstado(filters.estado),
-        prioridad: toPrioridad(filters.prioridad),
+      return listLeadsQuery({
+        actorRole: session.role,
+        actorUserId: session.userId,
+        stage: filters.stage,
+        status: filters.status,
+        prioridad: filters.prioridad,
         fromDate: filters.fromDate,
         toDate: filters.toDate,
-        limit: Math.min(filters.limit ?? 50, 200),
-        offset: filters.offset ?? 0,
+        executiveId: filters.executiveId,
+        limit: filters.limit,
+        offset: filters.offset,
       });
     },
   });
@@ -103,24 +101,17 @@ export async function getLead(leadId: number) {
     actor,
     input: { leadId },
     run: async () => {
-      const session = await requirePermission("lead:register");
+      const session = await requireAuth();
       actor.userId = session.userId;
       actor.role = session.role;
 
-      const lead = await repos.leads.findById(leadId);
-      if (!lead) throw notFoundError("Lead not found");
-
-      const canViewAll = hasPermission(session.role, "lead:view:all");
-      if (!canViewAll && lead.executive_id !== session.userId) {
-        throw forbiddenError("Access denied");
-      }
-
-      const [commercialInput, quotations] = await Promise.all([
-        repos.leadCommercialInputs.findByLeadId(leadId),
-        repos.quotations.listByLead(leadId),
-      ]);
-
-      return { lead, commercialInput, quotations };
+      const result = await getLeadDetailQuery({
+        leadId,
+        actorUserId: session.userId,
+        actorRole: session.role,
+      });
+      if (isErr(result)) throwDomainError(result.error);
+      return result.value;
     },
   });
 }
@@ -139,7 +130,7 @@ export async function searchLeadByRuc(ruc: string) {
       if (!ruc || typeof ruc !== "string")
         throw validationError("ruc is required");
 
-      const lead = await repos.leads.findByRuc(ruc.trim());
+      const lead = await pipelineRepos.leads.findByRuc(ruc.trim());
       if (!lead) return null;
 
       const canViewAll = hasPermission(session.role, "lead:view:all");

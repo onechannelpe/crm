@@ -1,12 +1,20 @@
-import type { Kysely } from "kysely";
+import type { Insertable, Selectable } from "kysely";
 
-import type { Database, NewIntegrationJob } from "~/lib/db/types";
+import type { Database } from "~/lib/db/types";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
-export function createIntegrationJobsRepo(db: Kysely<Database>) {
+export type IntegrationJobRow = Selectable<
+  Database["pipeline_integration_jobs"]
+>;
+export type NewIntegrationJobRow = Insertable<
+  Database["pipeline_integration_jobs"]
+>;
+
+export function createIntegrationJobRepo(db: DatabaseExecutor) {
   return {
-    async create(values: NewIntegrationJob): Promise<number> {
+    async insert(values: NewIntegrationJobRow): Promise<number> {
       const result = await db
-        .insertInto("crm_integration_jobs")
+        .insertInto("pipeline_integration_jobs")
         .values(values)
         .executeTakeFirstOrThrow();
       return Number(result.insertId);
@@ -14,7 +22,7 @@ export function createIntegrationJobsRepo(db: Kysely<Database>) {
 
     findById(id: number) {
       return db
-        .selectFrom("crm_integration_jobs")
+        .selectFrom("pipeline_integration_jobs")
         .selectAll()
         .where("id", "=", id)
         .executeTakeFirst();
@@ -22,7 +30,7 @@ export function createIntegrationJobsRepo(db: Kysely<Database>) {
 
     list(limit: number, offset: number) {
       return db
-        .selectFrom("crm_integration_jobs")
+        .selectFrom("pipeline_integration_jobs")
         .selectAll()
         .orderBy("created_at", "desc")
         .limit(limit)
@@ -34,34 +42,44 @@ export function createIntegrationJobsRepo(db: Kysely<Database>) {
       leaseMs: number,
       workerId: string,
       batchSize: number,
-    ): Promise<number[]> {
+    ): Promise<IntegrationJobRow[]> {
       const now = Date.now();
       const leaseUntil = now + leaseMs;
-      const rows = await db
-        .selectFrom("crm_integration_jobs")
-        .select("id")
+      const pending = await db
+        .selectFrom("pipeline_integration_jobs")
+        .select(["id"])
         .where("status", "=", "PENDING")
         .where((eb) =>
           eb.or([eb("lease_until", "is", null), eb("lease_until", "<", now)]),
         )
         .limit(batchSize)
         .execute();
-      if (rows.length === 0) return [];
-      const ids = rows.map((r) => r.id);
+
+      if (pending.length === 0) return [];
+
+      const ids = pending.map((row) => row.id);
       await db
-        .updateTable("crm_integration_jobs")
+        .updateTable("pipeline_integration_jobs")
         .set({
           status: "PROCESSING",
           lease_owner: workerId,
           lease_until: leaseUntil,
+          attempt_count: 1,
         })
         .where("id", "in", ids)
         .where("status", "=", "PENDING")
         .execute();
-      return ids;
+
+      return db
+        .selectFrom("pipeline_integration_jobs")
+        .selectAll()
+        .where("id", "in", ids)
+        .where("status", "=", "PROCESSING")
+        .where("lease_owner", "=", workerId)
+        .execute();
     },
 
-    async markCompleted(
+    markCompleted(
       id: number,
       result: {
         rowsTotal: number;
@@ -69,9 +87,9 @@ export function createIntegrationJobsRepo(db: Kysely<Database>) {
         rowsFailed: number;
         resultsJson: string | null;
       },
-    ): Promise<void> {
-      await db
-        .updateTable("crm_integration_jobs")
+    ) {
+      return db
+        .updateTable("pipeline_integration_jobs")
         .set({
           status: "COMPLETED",
           rows_total: result.rowsTotal,
@@ -86,9 +104,9 @@ export function createIntegrationJobsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    async markFailed(id: number, errorMessage: string): Promise<void> {
-      await db
-        .updateTable("crm_integration_jobs")
+    markFailed(id: number, errorMessage: string) {
+      return db
+        .updateTable("pipeline_integration_jobs")
         .set({
           status: "FAILED",
           error_message: errorMessage,
@@ -100,9 +118,9 @@ export function createIntegrationJobsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    async setFilePath(id: number, filePath: string): Promise<void> {
-      await db
-        .updateTable("crm_integration_jobs")
+    setFilePath(id: number, filePath: string) {
+      return db
+        .updateTable("pipeline_integration_jobs")
         .set({ file_path: filePath })
         .where("id", "=", id)
         .execute();

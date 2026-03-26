@@ -1,15 +1,14 @@
 "use server";
 
 import { throwDomainError } from "~/actions/throw-domain-error";
-import { notFoundError, validationError } from "~/lib/app-errors";
+import { validationError } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { requirePermission } from "~/lib/auth/access/session";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
-import {
-  appNotificationCenter,
-  leadWorkflowService,
-  repos,
-} from "~/server/shared/context";
+import { getLeadDetailQuery } from "~/server/leads/application/get-lead-detail";
+import { approveForSaleUseCase } from "~/server/quotations/application/approve-for-sale";
+import { createQuotationUseCase } from "~/server/quotations/application/create-quotation";
+import { listQuotationQueueQuery } from "~/server/quotations/application/list-quotation-queue";
 import { isErr } from "~/server/shared/result";
 
 export interface CreateQuotationInput {
@@ -49,7 +48,7 @@ export async function createQuotation(
         }
       }
 
-      const result = await leadWorkflowService.createQuotation({
+      const result = await createQuotationUseCase({
         leadId: input.leadId,
         paybackPricing: input.paybackPricing,
         tarifaDebito: input.tarifaDebito,
@@ -61,7 +60,7 @@ export async function createQuotation(
       });
 
       if (isErr(result)) throwDomainError(result.error);
-      return { id: result.value };
+      return result.value;
     },
   });
 }
@@ -77,24 +76,12 @@ export async function approveLeadForSale(leadId: number): Promise<void> {
       actor.userId = session.userId;
       actor.role = session.role;
 
-      const result = await leadWorkflowService.approveForSale({
+      const result = await approveForSaleUseCase({
         leadId,
         actorId: session.userId,
       });
 
       if (isErr(result)) throwDomainError(result.error);
-
-      const lead = await repos.leads.findById(leadId);
-      if (lead) {
-        await appNotificationCenter.notifyUsers([lead.executive_id], {
-          type: "lead.ready_for_sale",
-          title: "Lead listo para venta",
-          bodyText: `El lead RUC ${lead.ruc} fue aprobado. Puedes registrar la venta.`,
-          actionUrl: `/sales/new/${lead.id}`,
-          priority: "high",
-          dedupeKey: `lead_rfs_${lead.id}`,
-        });
-      }
     },
   });
 }
@@ -110,11 +97,32 @@ export async function getLeadQuotations(leadId: number) {
       actor.userId = session.userId;
       actor.role = session.role;
 
-      const lead = await repos.leads.findById(leadId);
-      if (!lead) throw notFoundError("Lead not found");
+      const result = await getLeadDetailQuery({
+        leadId,
+        actorUserId: session.userId,
+        actorRole: session.role,
+      });
+      if (isErr(result)) throwDomainError(result.error);
+      return { lead: result.value.lead, quotations: result.value.quotations };
+    },
+  });
+}
 
-      const quotations = await repos.quotations.listByLead(leadId);
-      return { lead, quotations };
+export async function listLeadsForQuotation(filters: {
+  limit?: number;
+  offset?: number;
+}) {
+  const actor = { userId: null as number | null, role: null as Role | null };
+  return runObservedAction({
+    actionName: "quotation.list_queue",
+    actor,
+    input: {},
+    run: async () => {
+      const session = await requirePermission("quotation:manage");
+      actor.userId = session.userId;
+      actor.role = session.role;
+
+      return listQuotationQueueQuery(filters);
     },
   });
 }

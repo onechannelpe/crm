@@ -1,11 +1,13 @@
 "use server";
 
 import { throwDomainError } from "~/actions/throw-domain-error";
-import { notFoundError, validationError } from "~/lib/app-errors";
+import { validationError } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { requirePermission } from "~/lib/auth/access/session";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
-import { leadWorkflowService, repos } from "~/server/shared/context";
+import { createSaleUseCase } from "~/server/sales/application/create-sale";
+import { getSaleDetailQuery } from "~/server/sales/application/get-sale-detail";
+import { listSalesQuery } from "~/server/sales/application/list-sales";
 import { isErr } from "~/server/shared/result";
 
 export interface CreateLeadSaleInput {
@@ -57,7 +59,7 @@ export async function createLeadSale(
         throw validationError("cantidadPos must be a non-negative integer");
       }
 
-      const result = await leadWorkflowService.createSale({
+      const result = await createSaleUseCase({
         leadId: input.leadId,
         executiveId: session.userId,
         proveedorActual: input.proveedorActual,
@@ -72,7 +74,7 @@ export async function createLeadSale(
       });
 
       if (isErr(result)) throwDomainError(result.error);
-      return { id: result.value };
+      return result.value;
     },
   });
 }
@@ -88,10 +90,13 @@ export async function getLeadSale(saleId: number) {
       actor.userId = session.userId;
       actor.role = session.role;
 
-      const sale = await repos.leadSales.findById(saleId);
-      if (!sale) throw notFoundError("Sale not found");
-
-      return sale;
+      const result = await getSaleDetailQuery({
+        saleId,
+        actorUserId: session.userId,
+        actorRole: session.role,
+      });
+      if (isErr(result)) throwDomainError(result.error);
+      return result.value;
     },
   });
 }
@@ -110,13 +115,12 @@ export async function listLeadSales(filters: {
       actor.userId = session.userId;
       actor.role = session.role;
 
-      const limit = Math.min(filters.limit ?? 50, 200);
-      const offset = filters.offset ?? 0;
-
-      if (session.role === "executive") {
-        return repos.leadSales.listByExecutive(session.userId, limit, offset);
-      }
-      return repos.leadSales.list(limit, offset);
+      return listSalesQuery({
+        actorRole: session.role,
+        actorUserId: session.userId,
+        limit: filters.limit,
+        offset: filters.offset,
+      });
     },
   });
 }

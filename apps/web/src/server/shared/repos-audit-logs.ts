@@ -1,9 +1,8 @@
-import type { Kysely } from "kysely";
-
-import type { Database, NewAuditLog } from "~/lib/db/types";
+import type { NewAuditLog } from "~/lib/db/types";
 import type { AuditReaderQueryFilter } from "~/server/audit-reader/contracts";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
-export function createAuditLogsRepo(db: Kysely<Database>) {
+export function createAuditLogsRepo(db: DatabaseExecutor) {
   return {
     create(values: NewAuditLog) {
       return db

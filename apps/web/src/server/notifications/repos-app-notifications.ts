@@ -1,8 +1,7 @@
-import type { Kysely } from "kysely";
+import type { NewAppNotification } from "~/lib/db/types";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
-import type { Database, NewAppNotification } from "~/lib/db/types";
-
-export function createAppNotificationsRepo(db: Kysely<Database>) {
+export function createAppNotificationsRepo(db: DatabaseExecutor) {
   return {
     listByUser(userId: number, limit: number) {
       return db

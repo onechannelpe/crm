@@ -95,7 +95,7 @@ export function startBackgroundJobs() {
       async run() {
         const processed = await importService.runBatch(10, 30_000, WORKER_ID);
         if (processed > 0) {
-          logger.info("crm_import_jobs_processed", { processed });
+          logger.info("pipeline_import_jobs_processed", { processed });
         }
       },
     }),
@@ -105,7 +105,7 @@ export function startBackgroundJobs() {
       async run() {
         const processed = await exportService.runBatch(10, 30_000, WORKER_ID);
         if (processed > 0) {
-          logger.info("crm_export_jobs_processed", { processed });
+          logger.info("pipeline_export_jobs_processed", { processed });
         }
       },
     }),

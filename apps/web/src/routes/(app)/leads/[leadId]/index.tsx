@@ -58,7 +58,7 @@ export default function LeadDetailPage() {
               <dt style={{ color: "#6b7280", "font-size": "0.875rem" }}>
                 Estado
               </dt>
-              <dd style={{ margin: 0 }}>{d().lead.estado ?? "—"}</dd>
+              <dd style={{ margin: 0 }}>{d().lead.status ?? "—"}</dd>
               <dt style={{ color: "#6b7280", "font-size": "0.875rem" }}>
                 Prioridad
               </dt>

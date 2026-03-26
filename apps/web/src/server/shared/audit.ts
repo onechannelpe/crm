@@ -1,9 +1,21 @@
 import { serializeAuditChanges } from "~/lib/contracts/audit";
-import type { Repositories } from "~/server/shared/registry";
 
-type AuditRepos = Pick<Repositories, "auditLogs">;
+interface AuditLogWriter {
+  create(values: {
+    user_id: number;
+    action: string;
+    entity_type: string;
+    entity_id: number;
+    changes: string | null;
+    created_at: number;
+  }): Promise<unknown>;
+}
 
-export function createAuditService(repos: AuditRepos) {
+interface AuditDeps {
+  auditLogs: AuditLogWriter;
+}
+
+export function createAuditService(deps: AuditDeps) {
   return {
     log(
       userId: number,
@@ -12,7 +24,7 @@ export function createAuditService(repos: AuditRepos) {
       entityId: number,
       changes?: unknown,
     ) {
-      return repos.auditLogs.create({
+      return deps.auditLogs.create({
         user_id: userId,
         action,
         entity_type: entityType,

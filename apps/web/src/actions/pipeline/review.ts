@@ -4,32 +4,30 @@ import { throwDomainError } from "~/actions/throw-domain-error";
 import { validationError } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { requirePermission } from "~/lib/auth/access/session";
-import { ESTADO_VALUES, PRIORIDAD_VALUES, toLeadStage } from "~/lib/db/types";
-import type { Estado, Prioridad } from "~/lib/db/types";
+import { LEAD_STATUS_VALUES, PRIORIDAD_VALUES } from "~/lib/db/types";
+import type { LeadStatus, Prioridad } from "~/lib/db/types";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
-import {
-  appNotificationCenter,
-  leadWorkflowService,
-  repos,
-} from "~/server/shared/context";
+import { listReviewQueueQuery } from "~/server/leads/application/list-review-queue";
+import { reviewLeadPrioridadUseCase } from "~/server/leads/application/review-lead-prioridad";
+import { reviewLeadStatusUseCase } from "~/server/leads/application/review-lead-status";
 import { isErr } from "~/server/shared/result";
 
-function isEstado(v: string): v is Estado {
-  return (ESTADO_VALUES as readonly string[]).includes(v);
+function isLeadStatus(v: string): v is LeadStatus {
+  return (LEAD_STATUS_VALUES as readonly string[]).includes(v);
 }
 
 function isPrioridad(v: string): v is Prioridad {
   return (PRIORIDAD_VALUES as readonly string[]).includes(v);
 }
 
-export async function updateLeadEstado(input: {
+export async function updateLeadStatus(input: {
   leadId: number;
-  estado: string;
+  status: string;
   reason: string;
 }): Promise<void> {
   const actor = { userId: null as number | null, role: null as Role | null };
   return runObservedAction({
-    actionName: "lead.update_estado",
+    actionName: "lead.update_status",
     actor,
     input: { leadId: input.leadId },
     run: async () => {
@@ -37,46 +35,19 @@ export async function updateLeadEstado(input: {
       actor.userId = session.userId;
       actor.role = session.role;
 
-      if (!isEstado(input.estado))
-        throw validationError("Invalid estado value");
+      if (!isLeadStatus(input.status))
+        throw validationError("Invalid status value");
       if (!input.reason?.trim()) throw validationError("reason is required");
 
-      const result = await leadWorkflowService.updateEstado({
+      const result = await reviewLeadStatusUseCase({
         leadId: input.leadId,
-        estado: input.estado,
+        status: input.status,
         reason: input.reason,
         actorId: session.userId,
+        branchId: session.branchId,
       });
 
       if (isErr(result)) throwDomainError(result.error);
-
-      // Check if stage advanced to NEEDS_EXECUTIVE_INPUT or READY_FOR_QUOTATION
-      const lead = await repos.leads.findById(input.leadId);
-      if (!lead) return;
-
-      if (lead.stage === "NEEDS_EXECUTIVE_INPUT") {
-        await appNotificationCenter.notifyUsers([lead.executive_id], {
-          type: "lead.needs_executive_input",
-          title: "Accion requerida",
-          bodyText: `El lead RUC ${lead.ruc} requiere tu informacion comercial`,
-          actionUrl: `/leads/${lead.id}/complete`,
-          priority: "high",
-          dedupeKey: `lead_nei_${lead.id}`,
-        });
-      } else if (lead.stage === "READY_FOR_QUOTATION") {
-        await appNotificationCenter.notifyBranchRoles(
-          session.branchId,
-          ["back_office"],
-          {
-            type: "lead.ready_for_quotation",
-            title: "Lead listo para cotizacion",
-            bodyText: `El lead RUC ${lead.ruc} esta listo para cotizar`,
-            actionUrl: `/quotations/${lead.id}`,
-            priority: "normal",
-            dedupeKey: `lead_rfq_${lead.id}`,
-          },
-        );
-      }
     },
   });
 }
@@ -100,41 +71,15 @@ export async function updateLeadPrioridad(input: {
         throw validationError("Invalid prioridad value");
       if (!input.reason?.trim()) throw validationError("reason is required");
 
-      const result = await leadWorkflowService.updatePrioridad({
+      const result = await reviewLeadPrioridadUseCase({
         leadId: input.leadId,
         prioridad: input.prioridad,
         reason: input.reason,
         actorId: session.userId,
+        branchId: session.branchId,
       });
 
       if (isErr(result)) throwDomainError(result.error);
-
-      const lead = await repos.leads.findById(input.leadId);
-      if (!lead) return;
-
-      if (lead.stage === "NEEDS_EXECUTIVE_INPUT") {
-        await appNotificationCenter.notifyUsers([lead.executive_id], {
-          type: "lead.needs_executive_input",
-          title: "Accion requerida",
-          bodyText: `El lead RUC ${lead.ruc} requiere tu informacion comercial`,
-          actionUrl: `/leads/${lead.id}/complete`,
-          priority: "high",
-          dedupeKey: `lead_nei_${lead.id}`,
-        });
-      } else if (lead.stage === "READY_FOR_QUOTATION") {
-        await appNotificationCenter.notifyBranchRoles(
-          session.branchId,
-          ["back_office"],
-          {
-            type: "lead.ready_for_quotation",
-            title: "Lead listo para cotizacion",
-            bodyText: `El lead RUC ${lead.ruc} esta listo para cotizar`,
-            actionUrl: `/quotations/${lead.id}`,
-            priority: "normal",
-            dedupeKey: `lead_rfq_${lead.id}`,
-          },
-        );
-      }
     },
   });
 }
@@ -154,11 +99,7 @@ export async function listLeadsForReview(filters: {
       actor.userId = session.userId;
       actor.role = session.role;
 
-      return repos.leads.list({
-        stage: toLeadStage(filters.stage),
-        limit: Math.min(filters.limit ?? 50, 200),
-        offset: filters.offset ?? 0,
-      });
+      return listReviewQueueQuery(filters);
     },
   });
 }

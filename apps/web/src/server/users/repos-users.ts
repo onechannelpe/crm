@@ -1,10 +1,9 @@
-import type { Kysely } from "kysely";
-
-import type { Database, UsersTable } from "~/lib/db/types";
+import type { UsersTable } from "~/lib/db/types";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 type UserRole = UsersTable["role"];
 
-export function createUsersRepo(db: Kysely<Database>) {
+export function createUsersRepo(db: DatabaseExecutor) {
   return {
     findById(id: number) {
       return db

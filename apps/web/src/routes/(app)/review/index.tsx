@@ -65,7 +65,7 @@ export default function ReviewQueuePage() {
                       color: "#6b7280",
                     }}
                   >
-                    <p style={{ margin: 0 }}>Estado: {lead.estado ?? "—"}</p>
+                    <p style={{ margin: 0 }}>Estado: {lead.status ?? "—"}</p>
                     <p style={{ margin: 0 }}>
                       Prioridad: {lead.prioridad ?? "—"}
                     </p>

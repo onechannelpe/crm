@@ -73,6 +73,10 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
     header: { label: "Registrar venta", icon: "new-sale" },
   },
   {
+    match: /^\/sales\/[0-9]+$/,
+    header: { label: "Detalle de venta", icon: "sales" },
+  },
+  {
     match: /^\/integrations\/imports\/[^/]+$/,
     header: { label: "Detalle de importación", icon: "confirmed" },
   },
@@ -87,6 +91,7 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
   { match: "/leads", header: { label: "Prospectos", icon: "leads" } },
   { match: "/review", header: { label: "Revisión", icon: "review" } },
   { match: "/quotations", header: { label: "Cotizaciones", icon: "sales" } },
+  { match: "/sales/crm", header: { label: "Ventas CRM", icon: "sales" } },
   {
     match: "/integrations",
     header: { label: "Integraciones", icon: "confirmed" },

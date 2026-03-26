@@ -84,7 +84,7 @@ export default function LeadsPage() {
                     >
                       {lead.stage}
                     </span>
-                    <Show when={lead.estado}>
+                    <Show when={lead.status}>
                       <p
                         style={{
                           margin: "0.25rem 0 0",
@@ -92,7 +92,7 @@ export default function LeadsPage() {
                           color: "#6b7280",
                         }}
                       >
-                        {lead.estado}
+                        {lead.status}
                       </p>
                     </Show>
                   </div>
