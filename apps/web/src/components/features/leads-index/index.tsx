@@ -31,6 +31,9 @@ import styles from "./styles.module.css";
 import sharedStyles from "~/components/record-index/styles.module.css";
 
 type ViewMenu = "filter" | "sort" | "options" | null;
+const DEFAULT_VISIBLE_COLUMNS = new Set(
+  LEAD_COLUMNS.map((column) => column.key),
+);
 
 export function LeadsIndex() {
   const [reloadToken, setReloadToken] = createSignal(0);
@@ -50,12 +53,12 @@ export function LeadsIndex() {
     createSignal<(typeof FILTER_OPTIONS)[number]["value"]>("all");
   const [sortKey, setSortKey] = createSignal<SortKey>("created_at_desc");
   const [visibleColumnKeys, setVisibleColumnKeys] = createSignal(
-    LEAD_COLUMNS.map((column) => column.key),
+    DEFAULT_VISIBLE_COLUMNS,
   );
   const [openMenu, setOpenMenu] = createSignal<ViewMenu>(null);
 
   const visibleColumns = createMemo(() =>
-    LEAD_COLUMNS.filter((column) => visibleColumnKeys().includes(column.key)),
+    LEAD_COLUMNS.filter((column) => visibleColumnKeys().has(column.key)),
   );
 
   const filteredLeads = createMemo(() => {
@@ -87,15 +90,17 @@ export function LeadsIndex() {
 
   function toggleColumn(key: string) {
     setVisibleColumnKeys((current) => {
-      if (current.includes(key)) {
-        if (current.length === 1) return current;
-        return current.filter((value) => value !== key);
+      if (current.has(key)) {
+        if (current.size === 1) return current;
+
+        const next = new Set(current);
+        next.delete(key);
+        return next;
       }
 
-      const next = [...current, key];
-      return LEAD_COLUMNS.filter((column) => next.includes(column.key)).map(
-        (column) => column.key,
-      );
+      const next = new Set(current);
+      next.add(key);
+      return next;
     });
   }
 
@@ -111,18 +116,19 @@ export function LeadsIndex() {
   }
 
   async function handleRegister() {
+    const ruc = draftRuc().trim();
     setError(null);
     setSubmitting(true);
 
     try {
       const result = await registerLead({
-        ruc: draftRuc().trim(),
+        ruc,
         executiveId: 0,
       });
 
       openLeadPanel({
         id: result.id,
-        ruc: draftRuc().trim(),
+        ruc,
         razon_social: null,
       });
       closeDraftRow();
@@ -209,7 +215,7 @@ export function LeadsIndex() {
               </For>
             </ViewBarMenu>
             <ViewBarMenu
-              active={visibleColumnKeys().length !== LEAD_COLUMNS.length}
+              active={visibleColumnKeys().size !== LEAD_COLUMNS.length}
               label="Options"
               menuId="object-options-dropdown-id-options"
               open={openMenu() === "options"}
@@ -228,19 +234,15 @@ export function LeadsIndex() {
                     class={sharedStyles.menuItem}
                     role="menuitemcheckbox"
                     data-active={
-                      visibleColumnKeys().includes(column.key)
-                        ? "true"
-                        : "false"
+                      visibleColumnKeys().has(column.key) ? "true" : "false"
                     }
                     aria-checked={
-                      visibleColumnKeys().includes(column.key)
-                        ? "true"
-                        : "false"
+                      visibleColumnKeys().has(column.key) ? "true" : "false"
                     }
                     onClick={() => toggleColumn(column.key)}
                   >
                     <input
-                      checked={visibleColumnKeys().includes(column.key)}
+                      checked={visibleColumnKeys().has(column.key)}
                       class={sharedStyles.menuCheckbox}
                       type="checkbox"
                       aria-hidden="true"
