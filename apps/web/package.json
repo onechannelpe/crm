@@ -33,7 +33,7 @@
     "@oslojs/encoding": "^1.1.0",
     "@oslojs/otp": "^1.1.0",
     "@simplewebauthn/server": "^13.3.0",
-    "@solidjs/router": "^0.15.4",
+    "@solidjs/router": "^0.16.1",
     "@solidjs/start": "2.0.0-alpha.2",
     "@solidjs/vite-plugin-nitro-2": "^0.2.0",
     "arctic": "^3.7.0",
