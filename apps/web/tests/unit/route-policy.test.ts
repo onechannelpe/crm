@@ -39,9 +39,7 @@ describe("route permissions", () => {
     expect(canAccessPath("executive", "/team")).toBe(false);
     expect(canAccessPath("hr", "/team")).toBe(true);
     expect(canAccessPath("admin", "/settings/catalog")).toBe(true);
-    expect(canAccessPath("sales_manager", "/sales/new/42")).toBe(
-      false,
-    );
+    expect(canAccessPath("sales_manager", "/sales/new/42")).toBe(false);
     expect(canAccessPath("executive", "/sales/new/42")).toBe(true);
   });
 
