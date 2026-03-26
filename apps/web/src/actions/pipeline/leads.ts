@@ -14,8 +14,6 @@ import { isErr } from "~/server/shared/result";
 
 export interface RegisterLeadInput {
   ruc: string;
-  razonSocial: string | null;
-  address: string | null;
   executiveId: number;
 }
 
@@ -28,7 +26,7 @@ export async function registerLead(
     actor,
     input: { ruc: input.ruc },
     run: async () => {
-      const session = await requirePermission("lead:register");
+      const session = await requirePermission("lead:pipeline");
       actor.userId = session.userId;
       actor.role = session.role;
 
@@ -44,8 +42,6 @@ export async function registerLead(
 
       const result = await registerLeadUseCase({
         ruc: input.ruc.trim(),
-        razonSocial: input.razonSocial,
-        address: input.address,
         executiveId: effectiveExecutiveId,
         actorId: session.userId,
       });
@@ -74,7 +70,7 @@ export async function listLeads(filters: ListLeadsFilters) {
     actor,
     input: {},
     run: async () => {
-      const session = await requirePermission("lead:register");
+      const session = await requirePermission("lead:pipeline");
       actor.userId = session.userId;
       actor.role = session.role;
 
@@ -123,7 +119,7 @@ export async function searchLeadByRuc(ruc: string) {
     actor,
     input: { ruc },
     run: async () => {
-      const session = await requirePermission("lead:register");
+      const session = await requirePermission("lead:pipeline");
       actor.userId = session.userId;
       actor.role = session.role;
 

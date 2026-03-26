@@ -54,8 +54,8 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
   "/team/invite": { permission: "team:manage" },
   "/team/import": { permission: "team:manage" },
   "/inventory": { permission: "inventory:read", landingPriority: 5 },
-  "/leads": { permission: "lead:register", landingPriority: 2 },
-  "/leads/new": { permission: "lead:register" },
+  "/leads": { permission: "lead:pipeline", landingPriority: 2 },
+  "/leads/new": { permission: "lead:pipeline" },
   "/review": { permission: "lead:review", landingPriority: 4 },
   "/quotations": { permission: "quotation:manage", landingPriority: 3 },
   "/sales/crm": { permission: "lead:register" },
@@ -72,8 +72,8 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
 };
 
 export const DYNAMIC_ROUTES: DynamicRouteConfig[] = [
-  { pattern: /^\/leads\/[^/]+$/, permission: "lead:register" },
-  { pattern: /^\/leads\/[^/]+\/complete$/, permission: "lead:register" },
+  { pattern: /^\/leads\/[^/]+$/, permission: "lead:pipeline" },
+  { pattern: /^\/leads\/[^/]+\/complete$/, permission: "lead:pipeline" },
   { pattern: /^\/review\/[^/]+$/, permission: "lead:review" },
   { pattern: /^\/quotations\/[^/]+$/, permission: "quotation:manage" },
   { pattern: /^\/sales\/new\/[^/]+$/, permission: "lead:register" },

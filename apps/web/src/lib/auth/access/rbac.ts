@@ -10,6 +10,7 @@ export type Role =
 
 export type Permission =
   | "lead:work"
+  | "lead:pipeline"
   | "sales:create"
   | "sales:submit"
   | "sales:review"
@@ -52,6 +53,7 @@ export const ROLES = [
 const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   executive: [
     "lead:work",
+    "lead:pipeline",
     "sales:create",
     "sales:submit",
     "search:use",
