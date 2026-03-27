@@ -9,11 +9,15 @@ import {
   revokeTeamInvite as revokeTeamInviteService,
 } from "~/server/team/application/invites";
 import type { InviteInfo } from "~/server/team/domain/types";
+import { createTeamDeps } from "~/server/team/infrastructure/deps";
 
 import { parseCreateTeamInviteInput, parseInviteIdInput } from "./input";
 
 export async function getInviteInfo(token: string): Promise<InviteInfo | null> {
-  const result = await getInviteInfoService({ token });
+  const result = await getInviteInfoService({
+    token,
+    deps: createTeamDeps(),
+  });
   if (isErr(result)) {
     throw result.error;
   }
@@ -38,7 +42,7 @@ export async function createTeamInvite(input: {
       role: safeInput.role,
       hasTeamId: safeInput.teamId !== null,
     },
-    execute: (ctx) => createTeamInviteService(ctx, safeInput),
+    execute: (ctx) => createTeamInviteService(ctx, createTeamDeps(), safeInput),
   });
 }
 
@@ -52,7 +56,8 @@ export async function resendTeamInvite(inviteId: number): Promise<void> {
     actionName: "team.invite.resend",
     permission: "hr:manage",
     input: { inviteId: parsedInput.value.inviteId },
-    execute: (ctx) => resendTeamInviteService(ctx, parsedInput.value),
+    execute: (ctx) =>
+      resendTeamInviteService(ctx, createTeamDeps(), parsedInput.value),
   });
 }
 
@@ -66,6 +71,7 @@ export async function revokeTeamInvite(inviteId: number): Promise<void> {
     actionName: "team.invite.revoke",
     permission: "hr:manage",
     input: { inviteId: parsedInput.value.inviteId },
-    execute: (ctx) => revokeTeamInviteService(ctx, parsedInput.value),
+    execute: (ctx) =>
+      revokeTeamInviteService(ctx, createTeamDeps(), parsedInput.value),
   });
 }

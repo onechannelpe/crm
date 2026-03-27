@@ -7,6 +7,7 @@ import {
   listUserSessions as listUserSessionsService,
   type SessionInfo,
 } from "~/server/auth/application/admin-sessions";
+import { createAuthDeps } from "~/server/auth/infrastructure/deps";
 import { runAction } from "~/server/shared/action-runtime";
 import { isErr } from "~/server/shared/result";
 
@@ -24,7 +25,8 @@ export async function listUserSessions(userId: number) {
     role: "admin",
     stepUp: "recent_strong_auth",
     input: parsedInput.value,
-    execute: (ctx) => listUserSessionsService(ctx, parsedInput.value),
+    execute: (ctx) =>
+      listUserSessionsService(ctx, createAuthDeps(), parsedInput.value),
   });
 }
 
@@ -33,7 +35,7 @@ export async function getActiveSessionsCount(): Promise<number> {
     actionName: "admin.sessions.count.read",
     role: "admin",
     stepUp: "recent_strong_auth",
-    execute: () => countActiveSessionsService(),
+    execute: () => countActiveSessionsService(createAuthDeps()),
   });
 }
 
@@ -42,6 +44,6 @@ export async function listAllActiveSessions(): Promise<SessionInfo[]> {
     actionName: "admin.sessions.active.read",
     role: "admin",
     stepUp: "recent_strong_auth",
-    execute: () => listAllActiveSessionsService(),
+    execute: () => listAllActiveSessionsService(createAuthDeps()),
   });
 }

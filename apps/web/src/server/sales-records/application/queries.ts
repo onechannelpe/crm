@@ -1,19 +1,21 @@
 import { forbiddenError, notFoundError } from "~/lib/app-errors";
 import { assertOwnedRecord } from "~/lib/auth/access/ownership";
+import { computeClientCompletenessScore } from "~/server/sales/completeness";
 import type { AppContext } from "~/server/shared/action-runtime";
 
-import { computeClientCompletenessScore } from "../domain/client-completeness";
 import type {
   SalesRecordBootstrap,
   SalesRecordFixContext,
   SalesRecordProductOption,
   SalesRecordQueueItem,
 } from "../domain/types";
-import { salesRecordRepos } from "../infrastructure/runtime";
+import type { SalesRecordDeps } from "../infrastructure/deps";
 
 function mapQueueItem(
   row: Awaited<
-    ReturnType<typeof salesRecordRepos.salesRecords.listPendingWithClient>
+    ReturnType<
+      SalesRecordDeps["repos"]["salesRecords"]["listPendingWithClient"]
+    >
   >[number],
 ): SalesRecordQueueItem {
   return {
@@ -38,12 +40,15 @@ function parsePhonesJson(raw: string): string[] {
   }
 }
 
-export async function listProducts(): Promise<SalesRecordProductOption[]> {
-  return salesRecordRepos.products.findActive();
+export async function listProducts(
+  deps: Pick<SalesRecordDeps, "repos">,
+): Promise<SalesRecordProductOption[]> {
+  return deps.repos.products.findActive();
 }
 
 export async function getBootstrap(
   ctx: AppContext,
+  deps: Pick<SalesRecordDeps, "repos">,
   input: { contactId: number | null },
 ): Promise<SalesRecordBootstrap> {
   if (input.contactId === null) {
@@ -69,21 +74,20 @@ export async function getBootstrap(
     };
   }
 
-  const assignment =
-    await salesRecordRepos.leadAssignments.findActiveForContact(
-      ctx.actor.userId,
-      input.contactId,
-    );
+  const assignment = await deps.repos.leadAssignments.findActiveForContact(
+    ctx.actor.userId,
+    input.contactId,
+  );
   if (!assignment) {
     throw forbiddenError(
       "You can only create sales from your active assigned leads",
     );
   }
 
-  const contact = await salesRecordRepos.contacts.findById(input.contactId);
+  const contact = await deps.repos.contacts.findById(input.contactId);
   if (!contact) throw notFoundError("Contact not found");
 
-  const organization = await salesRecordRepos.organizations.findById(
+  const organization = await deps.repos.organizations.findById(
     contact.organization_id,
   );
   if (!organization) throw notFoundError("Organization not found");
@@ -112,8 +116,9 @@ export async function getBootstrap(
 
 export async function listPending(
   ctx: AppContext,
+  deps: Pick<SalesRecordDeps, "repos">,
 ): Promise<SalesRecordQueueItem[]> {
-  const rows = await salesRecordRepos.salesRecords.listPendingWithClient(
+  const rows = await deps.repos.salesRecords.listPendingWithClient(
     ctx.actor.role === "superuser"
       ? undefined
       : { branchId: ctx.actor.branchId },
@@ -123,6 +128,7 @@ export async function listPending(
 
 export async function listConfirmed(
   ctx: AppContext,
+  deps: Pick<SalesRecordDeps, "repos">,
 ): Promise<SalesRecordQueueItem[]> {
   const scope =
     ctx.actor.role === "executive"
@@ -130,27 +136,27 @@ export async function listConfirmed(
       : ctx.actor.role === "superuser"
         ? undefined
         : { branchId: ctx.actor.branchId };
-  const rows =
-    await salesRecordRepos.salesRecords.listConfirmedWithClient(scope);
+  const rows = await deps.repos.salesRecords.listConfirmedWithClient(scope);
   return rows.map(mapQueueItem);
 }
 
 export async function getFixContext(
   ctx: AppContext,
+  deps: Pick<SalesRecordDeps, "repos">,
   input: { recordId: number },
 ): Promise<SalesRecordFixContext> {
   const record = assertOwnedRecord(
-    await salesRecordRepos.salesRecords.findById(input.recordId),
+    await deps.repos.salesRecords.findById(input.recordId),
     (r) => r.executive_user_id,
     ctx.actor,
     { resourceName: "Sales record" },
   );
 
   const [client, addresses, products, attempts] = await Promise.all([
-    salesRecordRepos.salesRecords.findClientByRecord(input.recordId),
-    salesRecordRepos.salesRecords.findAddressesByRecord(input.recordId),
-    salesRecordRepos.salesRecords.findProductsByRecord(input.recordId),
-    salesRecordRepos.salesRecords.listAttemptsByRecord(input.recordId),
+    deps.repos.salesRecords.findClientByRecord(input.recordId),
+    deps.repos.salesRecords.findAddressesByRecord(input.recordId),
+    deps.repos.salesRecords.findProductsByRecord(input.recordId),
+    deps.repos.salesRecords.listAttemptsByRecord(input.recordId),
   ]);
 
   return {

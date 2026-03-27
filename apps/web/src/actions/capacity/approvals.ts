@@ -7,6 +7,7 @@ import {
   grantSearchCapacityDirect as grantSearchCapacityService,
   rejectCapacityRequest as rejectCapacityService,
 } from "~/server/capacity/application/commands";
+import { createCapacityDeps } from "~/server/capacity/infrastructure/deps";
 import { runAction } from "~/server/shared/action-runtime";
 
 import { parseCapacityDecisionInput, parseCapacityGrantInput } from "./input";
@@ -18,7 +19,8 @@ export async function approveCapacity(requestId: number, note?: string) {
     actionName: "capacity.approve",
     permission: "capacity:approve",
     input: decisionInput.value,
-    execute: (ctx) => approveCapacityService(ctx, decisionInput.value),
+    execute: (ctx) =>
+      approveCapacityService(ctx, createCapacityDeps(), decisionInput.value),
   });
 }
 
@@ -32,7 +34,7 @@ export async function rejectCapacity(requestId: number, note: string) {
     permission: "capacity:approve",
     input: { requestId: decisionInput.value.requestId, note: safeNote },
     execute: (ctx) =>
-      rejectCapacityService(ctx, {
+      rejectCapacityService(ctx, createCapacityDeps(), {
         requestId: decisionInput.value.requestId,
         note: safeNote,
       }),
@@ -51,7 +53,7 @@ export async function grantMoreSearches(
     permission: "capacity:manage",
     input: grantInput.value,
     execute: (ctx) =>
-      grantSearchCapacityService(ctx, {
+      grantSearchCapacityService(ctx, createCapacityDeps(), {
         targetUserId: grantInput.value.userId,
         amount: grantInput.value.amount,
         reason: grantInput.value.reason,
@@ -71,7 +73,7 @@ export async function grantMoreLeadRefill(
     permission: "capacity:manage",
     input: grantInput.value,
     execute: (ctx) =>
-      grantLeadCapacityService(ctx, {
+      grantLeadCapacityService(ctx, createCapacityDeps(), {
         targetUserId: grantInput.value.userId,
         amount: grantInput.value.amount,
         reason: grantInput.value.reason,

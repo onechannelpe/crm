@@ -6,6 +6,7 @@ import {
   approveCapacityRequest,
   rejectCapacityRequest,
 } from "~/server/capacity/application/commands";
+import { createCapacityDeps } from "~/server/capacity/infrastructure/deps";
 import type { AppContext } from "~/server/shared/action-runtime";
 
 import {
@@ -39,8 +40,8 @@ const { runInRepositoryTransactionMock, capacityReposMock } = vi.hoisted(
   }),
 );
 
-vi.mock("../../src/server/capacity/infrastructure/runtime", () => ({
-  capacityRepos: capacityReposMock,
+vi.mock("../../src/server/shared/context", () => ({
+  repos: capacityReposMock,
   rateLimitDeps: {},
   runInRepositoryTransaction: runInRepositoryTransactionMock,
 }));
@@ -195,10 +196,14 @@ describe("approveCapacityRequest", () => {
       leadCapacityGrants: makeLeadCapacityGrantsRepo(),
     });
 
-    const result = await approveCapacityRequest(makeContext(), {
-      requestId: REQUEST_ID,
-      note: null,
-    });
+    const result = await approveCapacityRequest(
+      makeContext(),
+      createCapacityDeps(),
+      {
+        requestId: REQUEST_ID,
+        note: null,
+      },
+    );
 
     expect(result.ok).toBe(true);
     expect(capacityRequests.rows[0].status).toBe("approved");
@@ -224,10 +229,14 @@ describe("approveCapacityRequest", () => {
       leadCapacityGrants: makeLeadCapacityGrantsRepo(),
     });
 
-    const result = await approveCapacityRequest(makeContext(), {
-      requestId: REQUEST_ID,
-      note: null,
-    });
+    const result = await approveCapacityRequest(
+      makeContext(),
+      createCapacityDeps(),
+      {
+        requestId: REQUEST_ID,
+        note: null,
+      },
+    );
 
     expect(result.ok).toBe(false);
     if (!result.ok) {
@@ -262,6 +271,7 @@ describe("approveCapacityRequest", () => {
 
     const result = await approveCapacityRequest(
       makeContext("admin"), // admin in branch 1
+      createCapacityDeps(),
       { requestId: REQUEST_ID, note: null },
     );
 
@@ -298,10 +308,14 @@ describe("approveCapacityRequest", () => {
       leadCapacityGrants: makeLeadCapacityGrantsRepo(),
     });
 
-    const result = await approveCapacityRequest(makeContext(), {
-      requestId: REQUEST_ID,
-      note: null,
-    });
+    const result = await approveCapacityRequest(
+      makeContext(),
+      createCapacityDeps(),
+      {
+        requestId: REQUEST_ID,
+        note: null,
+      },
+    );
 
     expect(result.ok).toBe(false);
     // Original request row is unchanged (transaction never committed)
@@ -329,10 +343,14 @@ describe("rejectCapacityRequest", () => {
       leadCapacityGrants: makeLeadCapacityGrantsRepo(),
     });
 
-    const result = await rejectCapacityRequest(makeContext(), {
-      requestId: REQUEST_ID,
-      note: "not justified",
-    });
+    const result = await rejectCapacityRequest(
+      makeContext(),
+      createCapacityDeps(),
+      {
+        requestId: REQUEST_ID,
+        note: "not justified",
+      },
+    );
 
     expect(result.ok).toBe(true);
     expect(capacityRequests.rows[0].status).toBe("rejected");
@@ -342,10 +360,14 @@ describe("rejectCapacityRequest", () => {
     runInRepositoryTransactionMock.mockImplementation(async () => {
       throw new Error("transaction should not be called");
     });
-    const result = await rejectCapacityRequest(makeContext(), {
-      requestId: REQUEST_ID,
-      note: "   ",
-    });
+    const result = await rejectCapacityRequest(
+      makeContext(),
+      createCapacityDeps(),
+      {
+        requestId: REQUEST_ID,
+        note: "   ",
+      },
+    );
 
     expect(result.ok).toBe(false);
     if (!result.ok) {

@@ -12,24 +12,18 @@ import type {
   InviteInfo,
   InviteManagement,
 } from "../domain/types";
+import type { TeamDeps } from "../infrastructure/deps";
 import {
   buildInviteUrl,
   sendInviteEmail,
 } from "../infrastructure/invite-delivery";
-import {
-  createTeamProvisioning,
-  enforceInviteCreateRateLimit,
-  issuePreAuthTeamSession,
-  teamRepos,
-} from "../infrastructure/runtime";
-
-const teamProvisioning = createTeamProvisioning();
 
 export async function getInviteInfo(input: {
   token: string;
+  deps: Pick<TeamDeps, "repos">;
 }): Promise<Result<InviteInfo | null, DomainError>> {
   try {
-    const invite = await teamRepos.userInvites.findPendingByTokenHash(
+    const invite = await input.deps.repos.userInvites.findPendingByTokenHash(
       hashInviteToken(input.token),
       Date.now(),
     );
@@ -52,9 +46,11 @@ export async function getInviteInfo(input: {
 
 export async function getInviteManagement(
   ctx: AppContext,
+  deps: Pick<TeamDeps, "repos" | "createProvisioningService">,
 ): Promise<Result<InviteManagement, DomainError>> {
+  const teamProvisioning = deps.createProvisioningService();
   const [teams, pendingInvites] = await Promise.all([
-    teamRepos.teams.findByBranch(ctx.actor.branchId),
+    deps.repos.teams.findByBranch(ctx.actor.branchId),
     teamProvisioning.listPendingInvites(ctx.actor.branchId),
   ]);
   if (isErr(pendingInvites)) {
@@ -78,9 +74,14 @@ export async function getBulkImportSetup(
 
 export async function createTeamInvite(
   ctx: AppContext,
+  deps: Pick<
+    TeamDeps,
+    "createProvisioningService" | "enforceInviteCreateRateLimit"
+  >,
   input: CreateTeamInviteCommand,
 ): Promise<Result<{ inviteId: number }, DomainError>> {
-  await enforceInviteCreateRateLimit(ctx.actor.userId);
+  await deps.enforceInviteCreateRateLimit(ctx.actor.userId);
+  const teamProvisioning = deps.createProvisioningService();
 
   const result = await teamProvisioning.createInvite({
     actorUserId: ctx.actor.userId,
@@ -122,8 +123,10 @@ export async function createTeamInvite(
 
 export async function resendTeamInvite(
   ctx: AppContext,
+  deps: Pick<TeamDeps, "repos" | "createProvisioningService">,
   input: { inviteId: number },
 ): Promise<Result<void, DomainError>> {
+  const teamProvisioning = deps.createProvisioningService();
   const result = await teamProvisioning.resendInvite({
     actorUserId: ctx.actor.userId,
     actorRole: ctx.actor.role,
@@ -134,8 +137,8 @@ export async function resendTeamInvite(
     return result;
   }
 
-  const invite = await teamRepos.userInvites.findById(result.value.inviteId);
-  const user = invite ? await teamRepos.users.findById(invite.user_id) : null;
+  const invite = await deps.repos.userInvites.findById(result.value.inviteId);
+  const user = invite ? await deps.repos.users.findById(invite.user_id) : null;
   if (!user) {
     return Err({
       kind: "not_found",
@@ -164,8 +167,10 @@ export async function resendTeamInvite(
 
 export async function revokeTeamInvite(
   ctx: AppContext,
+  deps: Pick<TeamDeps, "createProvisioningService">,
   input: { inviteId: number },
 ): Promise<Result<void, DomainError>> {
+  const teamProvisioning = deps.createProvisioningService();
   return teamProvisioning.revokeInvite({
     actorUserId: ctx.actor.userId,
     actorRole: ctx.actor.role,
@@ -175,12 +180,14 @@ export async function revokeTeamInvite(
 }
 
 export async function acceptTeamInvite(
+  deps: Pick<TeamDeps, "createProvisioningService" | "issuePreAuthSession">,
   request: {
     ipAddress: string;
     userAgent: string | null;
   },
   input: AcceptTeamInviteCommand & { passwordHash: string },
 ): Promise<Result<{ sessionToken: string; redirectTo: string }, DomainError>> {
+  const teamProvisioning = deps.createProvisioningService();
   const result = await teamProvisioning.acceptInvite({
     token: input.token,
     passwordHash: input.passwordHash,
@@ -189,7 +196,7 @@ export async function acceptTeamInvite(
     return result;
   }
 
-  const issued = await issuePreAuthTeamSession({
+  const issued = await deps.issuePreAuthSession({
     user: {
       id: result.value.userId,
       branch_id: result.value.branchId,

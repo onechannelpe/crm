@@ -1,20 +1,19 @@
 "use server";
 
 import { assertPositiveInt } from "~/lib/contracts/guards";
-import {
-  getAuditEvents as getAuditEventsService,
-  getExecutiveDetail as getExecutiveDetailService,
-  getPolicyDefaults as getPolicyDefaultsService,
-  listManagedExecutives as listManagedExecutivesService,
-  listPendingRequests as listPendingRequestsService,
-} from "~/server/capacity/application/queries";
+import { getAuditEvents as getAuditEventsService } from "~/server/capacity/application/get-audit-events";
+import { getExecutiveDetail as getExecutiveDetailService } from "~/server/capacity/application/get-executive-detail";
+import { getPolicyDefaults as getPolicyDefaultsService } from "~/server/capacity/application/get-policy-defaults";
+import { listManagedExecutives as listManagedExecutivesService } from "~/server/capacity/application/list-managed-executives";
+import { listPendingRequests as listPendingRequestsService } from "~/server/capacity/application/list-pending-requests";
+import { createCapacityDeps } from "~/server/capacity/infrastructure/deps";
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function getManagedExecutivesList() {
   return runAction({
     actionName: "capacity.managed_executives.read",
     permission: "capacity:read:team",
-    execute: listManagedExecutivesService,
+    execute: (ctx) => listManagedExecutivesService(ctx, createCapacityDeps()),
   });
 }
 
@@ -24,7 +23,10 @@ export async function getExecutiveDetail(userId: number) {
     actionName: "capacity.executive_detail.read",
     permission: "capacity:read:team",
     input: { userId: safeUserId },
-    execute: (ctx) => getExecutiveDetailService(ctx, { userId: safeUserId }),
+    execute: (ctx) =>
+      getExecutiveDetailService(ctx, createCapacityDeps(), {
+        userId: safeUserId,
+      }),
   });
 }
 
@@ -32,7 +34,7 @@ export async function getPendingRequests() {
   return runAction({
     actionName: "capacity.pending_requests.read",
     permission: "capacity:read:team",
-    execute: listPendingRequestsService,
+    execute: (ctx) => listPendingRequestsService(ctx, createCapacityDeps()),
   });
 }
 
@@ -40,7 +42,7 @@ export async function getPolicyDefaults() {
   return runAction({
     actionName: "capacity.policy_defaults.read",
     permission: "capacity:policy:manage",
-    execute: getPolicyDefaultsService,
+    execute: (ctx) => getPolicyDefaultsService(ctx, createCapacityDeps()),
   });
 }
 
@@ -51,6 +53,7 @@ export async function getAuditEvents(limit?: number) {
     actionName: "capacity.audit.read",
     permission: "capacity:audit:read",
     input: { limit: safeLimit },
-    execute: (ctx) => getAuditEventsService(ctx, { limit: safeLimit }),
+    execute: (ctx) =>
+      getAuditEventsService(ctx, createCapacityDeps(), { limit: safeLimit }),
   });
 }

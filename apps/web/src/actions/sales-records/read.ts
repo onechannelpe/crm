@@ -13,6 +13,7 @@ import type {
   SalesRecordProductOption,
   SalesRecordQueueItem,
 } from "~/server/sales-records/domain/types";
+import { createSalesRecordDeps } from "~/server/sales-records/infrastructure/deps";
 import { runAction } from "~/server/shared/action-runtime";
 import { Ok } from "~/server/shared/result";
 
@@ -24,7 +25,7 @@ export async function listSalesRecordProducts(): Promise<
   return runAction({
     actionName: "sales_records.products.read",
     permission: "sales:create",
-    execute: async () => Ok(await listProductsService()),
+    execute: async () => Ok(await listProductsService(createSalesRecordDeps())),
   });
 }
 
@@ -38,7 +39,11 @@ export async function getSalesRecordBootstrap(
     permission: "sales:create",
     input: { contactId: safeContactId },
     execute: async (ctx) =>
-      Ok(await getBootstrapService(ctx, { contactId: safeContactId })),
+      Ok(
+        await getBootstrapService(ctx, createSalesRecordDeps(), {
+          contactId: safeContactId,
+        }),
+      ),
   });
 }
 
@@ -48,7 +53,8 @@ export async function listPendingSalesRecords(): Promise<
   return runAction({
     actionName: "sales_records.pending.read",
     permission: "sales:review",
-    execute: async (ctx) => Ok(await listPendingService(ctx)),
+    execute: async (ctx) =>
+      Ok(await listPendingService(ctx, createSalesRecordDeps())),
   });
 }
 
@@ -58,7 +64,8 @@ export async function listConfirmedSalesRecords(): Promise<
   return runAction({
     actionName: "sales_records.confirmed.read",
     permission: "sales:review",
-    execute: async (ctx) => Ok(await listConfirmedService(ctx)),
+    execute: async (ctx) =>
+      Ok(await listConfirmedService(ctx, createSalesRecordDeps())),
   });
 }
 
@@ -71,6 +78,10 @@ export async function getSalesRecordFixContext(
     permission: "sales:create",
     input: { recordId: safeRecordId },
     execute: async (ctx) =>
-      Ok(await getFixContextService(ctx, { recordId: safeRecordId })),
+      Ok(
+        await getFixContextService(ctx, createSalesRecordDeps(), {
+          recordId: safeRecordId,
+        }),
+      ),
   });
 }

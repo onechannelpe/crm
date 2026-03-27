@@ -10,13 +10,11 @@ import {
 } from "~/server/users/service-bulk-import";
 
 import type { CreateTeamInviteCommand } from "../domain/types";
+import type { TeamDeps } from "../infrastructure/deps";
 import {
   buildInviteUrl,
   sendInviteEmail,
 } from "../infrastructure/invite-delivery";
-import { createTeamProvisioning } from "../infrastructure/runtime";
-
-const teamProvisioning = createTeamProvisioning();
 
 export async function previewBulkImport(
   csvContent: string,
@@ -37,11 +35,13 @@ export async function previewBulkImport(
 
 export async function applyBulkImport(
   ctx: AppContext,
+  deps: Pick<TeamDeps, "createProvisioningService">,
   input: {
     csvContent: string;
     role: CreateTeamInviteCommand["role"];
   },
 ): Promise<Result<BulkApplyResult, DomainError>> {
+  const teamProvisioning = deps.createProvisioningService();
   const parsed = await previewBulkImport(input.csvContent);
   if (!parsed.ok) {
     return parsed;

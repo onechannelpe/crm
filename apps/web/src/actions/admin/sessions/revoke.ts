@@ -6,6 +6,7 @@ import {
   revokeAllUserSessions as revokeAllUserSessionsService,
   revokeUserSession as revokeUserSessionService,
 } from "~/server/auth/application/admin-sessions";
+import { createAuthDeps } from "~/server/auth/infrastructure/deps";
 import { runAction } from "~/server/shared/action-runtime";
 import { isErr } from "~/server/shared/result";
 
@@ -27,7 +28,8 @@ export async function revokeUserSession(
     role: "admin",
     stepUp: "recent_strong_auth",
     input: parsedInput.value,
-    execute: (ctx) => revokeUserSessionService(ctx, parsedInput.value),
+    execute: (ctx) =>
+      revokeUserSessionService(ctx, createAuthDeps(), parsedInput.value),
   });
 }
 
@@ -43,6 +45,7 @@ export async function revokeAllUserSessions(
     role: "admin",
     stepUp: "recent_strong_auth",
     input: parsedInput.value,
-    execute: (ctx) => revokeAllUserSessionsService(ctx, parsedInput.value),
+    execute: (ctx) =>
+      revokeAllUserSessionsService(ctx, createAuthDeps(), parsedInput.value),
   });
 }

@@ -6,6 +6,7 @@ import {
   updateSearchPolicyDefault as updateSearchPolicyDefaultService,
   updateSearchPolicyOverride as updateSearchPolicyOverrideService,
 } from "~/server/capacity/application/commands";
+import { createCapacityDeps } from "~/server/capacity/infrastructure/deps";
 import { runAction } from "~/server/shared/action-runtime";
 
 import {
@@ -28,7 +29,11 @@ export async function updateSearchPolicyOverride(input: {
     permission: "capacity:policy:manage",
     input: overrideInput.value,
     execute: (ctx) =>
-      updateSearchPolicyOverrideService(ctx, overrideInput.value),
+      updateSearchPolicyOverrideService(
+        ctx,
+        createCapacityDeps(),
+        overrideInput.value,
+      ),
   });
 }
 
@@ -44,7 +49,12 @@ export async function updateLeadPolicyOverride(input: {
     actionName: "capacity.lead_policy_override.update",
     permission: "capacity:policy:manage",
     input: overrideInput.value,
-    execute: (ctx) => updateLeadPolicyOverrideService(ctx, overrideInput.value),
+    execute: (ctx) =>
+      updateLeadPolicyOverrideService(
+        ctx,
+        createCapacityDeps(),
+        overrideInput.value,
+      ),
   });
 }
 
@@ -68,7 +78,7 @@ export async function updateSearchPolicyDefault(input: {
       monthlyLimit: limitResult.value,
     },
     execute: (ctx) =>
-      updateSearchPolicyDefaultService(ctx, {
+      updateSearchPolicyDefaultService(ctx, createCapacityDeps(), {
         scope: {
           kind: scopeInput.value.scopeType,
           scopeId: scopeInput.value.scopeId,
@@ -103,7 +113,7 @@ export async function updateLeadPolicyDefault(input: {
       dailyLimit: policyResult.value.dailyRefillLimit,
     },
     execute: (ctx) =>
-      updateLeadPolicyDefaultService(ctx, {
+      updateLeadPolicyDefaultService(ctx, createCapacityDeps(), {
         scope: {
           kind: scopeInput.value.scopeType,
           scopeId: scopeInput.value.scopeId,

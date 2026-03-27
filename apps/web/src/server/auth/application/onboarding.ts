@@ -1,5 +1,6 @@
 import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 
+import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { createPasskeyEnrollmentAuthService } from "~/lib/auth/passkey/service";
 import {
   issueSessionTransition,
@@ -12,39 +13,54 @@ import {
   type CompleteOnboardingError,
 } from "~/server/users/service-account-onboarding";
 
-import { resolvePostLoginRedirect } from "../domain/redirect-policy";
 import { requiresStrongAuthRole } from "../domain/strong-auth-policy";
-import { createRequestPasskeyProviderFactory } from "../infrastructure/request-passkey-provider";
-import {
-  authRepos,
-  runInRepositoryTransaction,
-} from "../infrastructure/runtime";
+import type { AuthDeps } from "../infrastructure/deps";
 
-function createEnrollmentService() {
-  return createPasskeyEnrollmentAuthService(authRepos, {
-    createWebauthnProvider: createRequestPasskeyProviderFactory(),
+type EnrollmentProviderFactory = NonNullable<
+  Parameters<typeof createPasskeyEnrollmentAuthService>[1]
+>["createWebauthnProvider"];
+
+function createEnrollmentService(
+  deps: Pick<AuthDeps, "repos">,
+  input: {
+    createWebauthnProvider: EnrollmentProviderFactory;
+  },
+) {
+  return createPasskeyEnrollmentAuthService(deps.repos, {
+    createWebauthnProvider: input.createWebauthnProvider,
   });
 }
 
-export function beginPasskeyRegistration(input: {
-  userId: number;
-  ipAddress: string;
-}) {
-  return createEnrollmentService().beginEnrollment(input);
+export function beginPasskeyRegistration(
+  deps: Pick<AuthDeps, "repos">,
+  input: {
+    userId: number;
+    ipAddress: string;
+    createWebauthnProvider: EnrollmentProviderFactory;
+  },
+) {
+  return createEnrollmentService(deps, input).beginEnrollment({
+    userId: input.userId,
+    ipAddress: input.ipAddress,
+  });
 }
 
-export async function finishPasskeyRegistration(input: {
-  session: {
-    userId: number;
-    sessionClass: "pre_auth" | "app";
-    primaryAuthMethod: "password" | "google" | "passkey";
-  };
-  challengeId: number;
-  response: RegistrationResponseJSON;
-  ipAddress: string;
-  userAgent: string | null;
-}): Promise<Result<void, DomainError>> {
-  const result = await createEnrollmentService().finishEnrollment({
+export async function finishPasskeyRegistration(
+  deps: Pick<AuthDeps, "repos">,
+  input: {
+    session: {
+      userId: number;
+      sessionClass: "pre_auth" | "app";
+      primaryAuthMethod: "password" | "google" | "passkey";
+    };
+    challengeId: number;
+    response: RegistrationResponseJSON;
+    ipAddress: string;
+    userAgent: string | null;
+    createWebauthnProvider: EnrollmentProviderFactory;
+  },
+): Promise<Result<void, DomainError>> {
+  const result = await createEnrollmentService(deps, input).finishEnrollment({
     userId: input.session.userId,
     challengeId: input.challengeId,
     response: input.response,
@@ -54,7 +70,7 @@ export async function finishPasskeyRegistration(input: {
     return Err(result.error);
   }
 
-  const user = await authRepos.users.findById(input.session.userId);
+  const user = await deps.repos.users.findById(input.session.userId);
   if (!user) {
     return Err({
       kind: "unexpected",
@@ -73,25 +89,28 @@ export async function finishPasskeyRegistration(input: {
     primaryAuthMethod: input.session.primaryAuthMethod,
     strongAuthMethod: "passkey",
     strongAuthAt: Date.now(),
-    deps: authRepos,
+    deps: deps.repos,
   });
   await replaceCurrentSession(issued.token);
   return Ok(undefined);
 }
 
-export async function completeOnboarding(input: {
-  session: {
-    userId: number;
-    role: Parameters<typeof resolvePostLoginRedirect>[0];
-    primaryAuthMethod: "password" | "google" | "passkey";
-    strongAuthMethod: "totp" | "passkey" | "federated" | null;
-    strongAuthAt: number | null;
-  };
-  phoneE164: string;
-  ipAddress: string;
-  userAgent: string | null;
-}): Promise<Result<{ redirectTo: string }, CompleteOnboardingError>> {
-  const result = await runInRepositoryTransaction((transactionRepos) =>
+export async function completeOnboarding(
+  deps: Pick<AuthDeps, "repos" | "runInRepositoryTransaction">,
+  input: {
+    session: {
+      userId: number;
+      role: Parameters<typeof getDefaultAppPath>[0];
+      primaryAuthMethod: "password" | "google" | "passkey";
+      strongAuthMethod: "totp" | "passkey" | "federated" | null;
+      strongAuthAt: number | null;
+    };
+    phoneE164: string;
+    ipAddress: string;
+    userAgent: string | null;
+  },
+): Promise<Result<{ redirectTo: string }, CompleteOnboardingError>> {
+  const result = await deps.runInRepositoryTransaction((transactionRepos) =>
     completeAccountOnboardingWithRepos(transactionRepos, {
       userId: input.session.userId,
       phoneE164: input.phoneE164,
@@ -101,7 +120,7 @@ export async function completeOnboarding(input: {
     return result;
   }
 
-  const user = await authRepos.users.findById(input.session.userId);
+  const user = await deps.repos.users.findById(input.session.userId);
   if (!user) {
     return Err({
       kind: "unexpected",
@@ -134,8 +153,8 @@ export async function completeOnboarding(input: {
     primaryAuthMethod: input.session.primaryAuthMethod,
     strongAuthMethod,
     strongAuthAt,
-    deps: authRepos,
+    deps: deps.repos,
   });
   await replaceCurrentSession(issued.token);
-  return Ok({ redirectTo: resolvePostLoginRedirect(input.session.role) });
+  return Ok({ redirectTo: getDefaultAppPath(input.session.role) });
 }

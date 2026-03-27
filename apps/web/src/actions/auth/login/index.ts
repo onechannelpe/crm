@@ -9,9 +9,11 @@ import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { getActionRequestContext } from "~/lib/observability/context";
 import {
   createPasskeyStartService,
-  submitPasswordLoginWithRepos,
-  submitTotpLoginWithRepos,
+  submitPasswordLoginWithDeps,
+  submitTotpLoginWithDeps,
 } from "~/server/auth/application/login";
+import { createAuthDeps } from "~/server/auth/infrastructure/deps";
+import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
 import { isErr } from "~/server/shared/result";
 
 import {
@@ -57,7 +59,7 @@ export async function passwordLogin(
   const identifier = readLoginText(formData, "identifier");
   const password = readLoginText(formData, "password", { trim: false });
   const request = getRequestClientMetadata();
-  const result = await submitPasswordLoginWithRepos({
+  const result = await submitPasswordLoginWithDeps(createAuthDeps(), {
     identifier,
     password,
     ipAddress: request.ipAddress,
@@ -123,7 +125,9 @@ export async function passkeyStart(
   }
 
   const request = getRequestClientMetadata();
-  const service = createPasskeyStartService();
+  const service = createPasskeyStartService(createAuthDeps(), {
+    createWebauthnProvider: createRequestPasskeyProviderFactory(),
+  });
   const result =
     mode === "identified"
       ? await service.beginLogin({
@@ -171,7 +175,7 @@ export async function totpLogin(
     throw redirect("/login/user?error=flow_expired");
   }
   const request = getRequestClientMetadata();
-  const result = await submitTotpLoginWithRepos({
+  const result = await submitTotpLoginWithDeps(createAuthDeps(), {
     flowId,
     totpCode,
     ipAddress: request.ipAddress,

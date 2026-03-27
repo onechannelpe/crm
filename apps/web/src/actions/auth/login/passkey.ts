@@ -8,9 +8,11 @@ import type { FinishPasskeyLoginError } from "~/lib/auth/passkey/service";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { getActionRequestContext } from "~/lib/observability/context";
 import {
-  finishPasskeyLoginWithRepos,
+  finishPasskeyLoginWithDeps,
   replaceCurrentSessionAndResolveRedirect,
 } from "~/server/auth/application/login";
+import { createAuthDeps } from "~/server/auth/infrastructure/deps";
+import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
 import { isErr } from "~/server/shared/result";
 
 function normalizePasskeyLoginError(error: FinishPasskeyLoginError): {
@@ -47,11 +49,12 @@ export async function finishPasskeyLogin(
     }
 > {
   const request = getRequestClientMetadata();
-  const result = await finishPasskeyLoginWithRepos({
+  const result = await finishPasskeyLoginWithDeps(createAuthDeps(), {
     flowId,
     response,
     ipAddress: request.ipAddress,
     userAgent: request.userAgent,
+    createWebauthnProvider: createRequestPasskeyProviderFactory(),
   });
 
   if (isErr(result)) {

@@ -7,6 +7,7 @@ import { setSessionCookie } from "~/lib/auth/session/cookies";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { isErr } from "~/server/shared/result";
 import { acceptTeamInvite as acceptTeamInviteService } from "~/server/team/application/invites";
+import { createTeamDeps } from "~/server/team/infrastructure/deps";
 
 import { parseAcceptTeamInviteInput } from "./input";
 import { assertStrongPassword } from "./validators";
@@ -23,6 +24,7 @@ export async function acceptTeamInvite(input: {
   const request = getRequestClientMetadata();
 
   const result = await acceptTeamInviteService(
+    createTeamDeps(),
     {
       ipAddress: request.ipAddress,
       userAgent: request.userAgent,

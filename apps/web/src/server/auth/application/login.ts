@@ -1,5 +1,6 @@
 import type { AuthenticationResponseJSON } from "@simplewebauthn/server";
 
+import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { submitPasswordLogin } from "~/lib/auth/flows/primary-login-service";
 import { submitTotpForLoginFlow } from "~/lib/auth/flows/totp-step-up-service";
 import {
@@ -8,59 +9,88 @@ import {
 } from "~/lib/auth/passkey/service";
 import { replaceCurrentSession } from "~/lib/auth/session/session-transition";
 
-import { resolvePostLoginRedirect } from "../domain/redirect-policy";
-import { createRequestPasskeyProviderFactory } from "../infrastructure/request-passkey-provider";
-import {
-  authRepos,
-  privilegedLoginAlertSender,
-} from "../infrastructure/runtime";
+import type { AuthDeps } from "../infrastructure/deps";
 
-export function createPasskeyStartService() {
-  return createPasskeyLoginStartAuthService(authRepos, {
-    createWebauthnProvider: createRequestPasskeyProviderFactory(),
+type PasskeyStartProviderFactory = NonNullable<
+  Parameters<typeof createPasskeyLoginStartAuthService>[1]
+>["createWebauthnProvider"];
+
+type PasskeyFinishProviderFactory = NonNullable<
+  Parameters<typeof createPasskeyLoginFinishAuthService>[1]
+>["createWebauthnProvider"];
+
+export function createPasskeyStartService(
+  deps: Pick<AuthDeps, "repos">,
+  input: {
+    createWebauthnProvider: PasskeyStartProviderFactory;
+  },
+) {
+  return createPasskeyLoginStartAuthService(deps.repos, {
+    createWebauthnProvider: input.createWebauthnProvider,
   });
 }
 
-export function submitPasswordLoginWithRepos(input: {
-  identifier: string;
-  password: string;
-  ipAddress: string;
-  userAgent: string | null;
-}) {
-  return submitPasswordLogin(input, authRepos, privilegedLoginAlertSender);
+export function submitPasswordLoginWithDeps(
+  deps: Pick<AuthDeps, "repos" | "privilegedLoginAlertSender">,
+  input: {
+    identifier: string;
+    password: string;
+    ipAddress: string;
+    userAgent: string | null;
+  },
+) {
+  return submitPasswordLogin(
+    input,
+    deps.repos,
+    deps.privilegedLoginAlertSender,
+  );
 }
 
-export function submitTotpLoginWithRepos(input: {
-  flowId: number;
-  totpCode: string;
-  ipAddress: string;
-  userAgent: string | null;
-}) {
-  return submitTotpForLoginFlow(input, authRepos, privilegedLoginAlertSender);
+export function submitTotpLoginWithDeps(
+  deps: Pick<AuthDeps, "repos" | "privilegedLoginAlertSender">,
+  input: {
+    flowId: number;
+    totpCode: string;
+    ipAddress: string;
+    userAgent: string | null;
+  },
+) {
+  return submitTotpForLoginFlow(
+    input,
+    deps.repos,
+    deps.privilegedLoginAlertSender,
+  );
 }
 
-export async function finishPasskeyLoginWithRepos(input: {
-  flowId: number;
-  response: AuthenticationResponseJSON;
-  ipAddress: string;
-  userAgent: string | null;
-}) {
-  const service = createPasskeyLoginFinishAuthService(authRepos, {
-    createWebauthnProvider: createRequestPasskeyProviderFactory(),
+export async function finishPasskeyLoginWithDeps(
+  deps: Pick<AuthDeps, "repos" | "privilegedLoginAlertSender">,
+  input: {
+    flowId: number;
+    response: AuthenticationResponseJSON;
+    ipAddress: string;
+    userAgent: string | null;
+    createWebauthnProvider: PasskeyFinishProviderFactory;
+  },
+) {
+  const service = createPasskeyLoginFinishAuthService(deps.repos, {
+    createWebauthnProvider: input.createWebauthnProvider,
   });
   return service.finishLogin({
-    ...input,
-    sendPrivilegedLoginAlert: privilegedLoginAlertSender,
+    flowId: input.flowId,
+    response: input.response,
+    ipAddress: input.ipAddress,
+    userAgent: input.userAgent,
+    sendPrivilegedLoginAlert: deps.privilegedLoginAlertSender,
   });
 }
 
 export async function replaceCurrentSessionAndResolveRedirect(input: {
   token: string;
   onboardingCompleted: boolean;
-  role: Parameters<typeof resolvePostLoginRedirect>[0];
+  role: Parameters<typeof getDefaultAppPath>[0];
 }) {
   await replaceCurrentSession(input.token);
   return input.onboardingCompleted
-    ? resolvePostLoginRedirect(input.role)
+    ? getDefaultAppPath(input.role)
     : "/onboarding";
 }

@@ -1,5 +1,4 @@
 import { resolveWorkspaceContext } from "~/lib/auth/access/workspace-context";
-import { getLoginFlowState } from "~/lib/auth/flows/login-state-service";
 import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
 import { deleteSessionCookie } from "~/lib/auth/session/cookies";
 import { invalidateSession } from "~/lib/auth/session/session-manager";
@@ -8,30 +7,27 @@ import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
 import { requiresStrongAuthRole } from "../domain/strong-auth-policy";
-import { authRepos } from "../infrastructure/runtime";
+import type { AuthDeps } from "../infrastructure/deps";
 import type { CurrentUserView } from "../types";
-
-export async function getLoginFlow(flowId: number) {
-  return getLoginFlowState(flowId, authRepos);
-}
 
 export async function logoutUser(
   ctx: AppContext,
+  deps: Pick<AuthDeps, "repos">,
 ): Promise<Result<void, DomainError>> {
   const { sessionId, userId } = ctx.actor;
 
   await invalidateSession(sessionId);
-  await authRepos.extensionRuntime.revokeInstallationSessionsByAuthSession(
+  await deps.repos.extensionRuntime.revokeInstallationSessionsByAuthSession(
     sessionId,
     ctx.now(),
   );
-  await authRepos.extensionRuntime.updateExecutiveSyncHealthByUser({
+  await deps.repos.extensionRuntime.updateExecutiveSyncHealthByUser({
     user_id: userId,
     sync_health: "reauth_required",
     sync_updated_at: ctx.now(),
   });
   deleteSessionCookie();
-  await authRepos.auditLogs.create({
+  await deps.repos.auditLogs.create({
     user_id: userId,
     action: "logout",
     entity_type: "user",
@@ -45,20 +41,21 @@ export async function logoutUser(
 
 export async function getCurrentUser(
   ctx: AppContext,
+  deps: Pick<AuthDeps, "repos">,
 ): Promise<Result<CurrentUserView | null, DomainError>> {
   const { userId, role, sessionClass, primaryAuthMethod, strongAuthMethod } =
     ctx.actor;
 
-  const user = await authRepos.users.findById(userId);
+  const user = await deps.repos.users.findById(userId);
   if (!user) return Ok(null);
 
-  const strongAuthStatus = await getStrongAuthStatus(userId, authRepos);
+  const strongAuthStatus = await getStrongAuthStatus(userId, deps.repos);
 
   const [branch, assignedTeam, managedTeam] = await Promise.all([
-    authRepos.branches.findById(user.branch_id),
-    user.team_id ? authRepos.teams.findByIdWithSupervisor(user.team_id) : null,
+    deps.repos.branches.findById(user.branch_id),
+    user.team_id ? deps.repos.teams.findByIdWithSupervisor(user.team_id) : null,
     role === "supervisor"
-      ? authRepos.teams.findBySupervisorId(user.id)
+      ? deps.repos.teams.findBySupervisorId(user.id)
       : Promise.resolve(null),
   ]);
 

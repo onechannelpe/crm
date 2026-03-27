@@ -9,12 +9,13 @@ import type {
   BulkImportSetup,
   InviteManagement,
 } from "~/server/team/domain/types";
+import { createTeamDeps } from "~/server/team/infrastructure/deps";
 
 export async function getInviteManagement(): Promise<InviteManagement> {
   return runAction({
     actionName: "team.invite_management.read",
     permission: "hr:manage",
-    execute: (ctx) => getInviteManagementService(ctx),
+    execute: (ctx) => getInviteManagementService(ctx, createTeamDeps()),
   });
 }
 

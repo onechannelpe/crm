@@ -1,34 +1,32 @@
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
+import { computeClientCompletenessScore } from "~/server/sales/completeness";
 import type { AppContext } from "~/server/shared/action-runtime";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 
-import { computeClientCompletenessScore } from "../domain/client-completeness";
 import type {
   CreateSalesRecordDraftInput,
   SalesRecordAttemptOutcome,
 } from "../domain/types";
-import { rateLimitDeps, salesRecordsService } from "../infrastructure/runtime";
+import type { SalesRecordDeps } from "../infrastructure/deps";
+
+type CreateDraftError =
+  Awaited<
+    ReturnType<SalesRecordDeps["salesRecordsService"]["createDraft"]>
+  > extends Result<any, infer E>
+    ? E
+    : never;
 
 export async function createDraft(
   ctx: AppContext,
+  deps: Pick<SalesRecordDeps, "rateLimitDeps" | "salesRecordsService">,
   input: CreateSalesRecordDraftInput,
-): Promise<
-  Result<
-    { id: number },
-    Awaited<ReturnType<typeof salesRecordsService.createDraft>> extends Result<
-      any,
-      infer E
-    >
-      ? E
-      : never
-  >
-> {
+): Promise<Result<{ id: number }, CreateDraftError>> {
   await checkActionRateLimit(
     "sales_records.create_draft",
     ctx.actor.userId,
-    rateLimitDeps,
+    deps.rateLimitDeps,
   );
-  const result = await salesRecordsService.createDraft({
+  const result = await deps.salesRecordsService.createDraft({
     source: input.source,
     executiveUserId: ctx.actor.userId,
     branchId: ctx.actor.branchId,
@@ -48,14 +46,15 @@ export async function createDraft(
 
 export async function submitRecord(
   ctx: AppContext,
+  deps: Pick<SalesRecordDeps, "rateLimitDeps" | "salesRecordsService">,
   input: { recordId: number },
 ) {
   await checkActionRateLimit(
     "sales_records.submit",
     ctx.actor.userId,
-    rateLimitDeps,
+    deps.rateLimitDeps,
   );
-  const result = await salesRecordsService.submit(
+  const result = await deps.salesRecordsService.submit(
     input.recordId,
     ctx.actor.userId,
   );
@@ -67,9 +66,10 @@ export async function submitRecord(
 
 export async function confirmRecord(
   ctx: AppContext,
+  deps: Pick<SalesRecordDeps, "salesRecordsService">,
   input: { recordId: number },
 ) {
-  const result = await salesRecordsService.confirm(
+  const result = await deps.salesRecordsService.confirm(
     input.recordId,
     ctx.actor.userId,
     ctx.actor.branchId,
@@ -83,9 +83,10 @@ export async function confirmRecord(
 
 export async function rejectRecord(
   ctx: AppContext,
+  deps: Pick<SalesRecordDeps, "salesRecordsService">,
   input: { recordId: number; reason: string },
 ) {
-  const result = await salesRecordsService.reject(
+  const result = await deps.salesRecordsService.reject(
     input.recordId,
     ctx.actor.userId,
     ctx.actor.branchId,
@@ -100,9 +101,10 @@ export async function rejectRecord(
 
 export async function cancelRecord(
   ctx: AppContext,
+  deps: Pick<SalesRecordDeps, "salesRecordsService">,
   input: { recordId: number },
 ) {
-  const result = await salesRecordsService.cancel(
+  const result = await deps.salesRecordsService.cancel(
     input.recordId,
     ctx.actor.userId,
   );
@@ -114,13 +116,14 @@ export async function cancelRecord(
 
 export async function updateDraft(
   ctx: AppContext,
+  deps: Pick<SalesRecordDeps, "salesRecordsService">,
   input: {
     recordId: number;
     draft: Omit<CreateSalesRecordDraftInput, "source" | "leadAssignmentId">;
     correctionNotes: string | null;
   },
 ) {
-  const result = await salesRecordsService.updateDraft(
+  const result = await deps.salesRecordsService.updateDraft(
     input.recordId,
     ctx.actor.userId,
     {
@@ -140,6 +143,7 @@ export async function updateDraft(
 
 export async function registerAttempt(
   ctx: AppContext,
+  deps: Pick<SalesRecordDeps, "salesRecordsService">,
   input: {
     recordId: number;
     outcome: SalesRecordAttemptOutcome;
@@ -147,7 +151,7 @@ export async function registerAttempt(
     nextAttemptAt: number | null;
   },
 ) {
-  const result = await salesRecordsService.registerAttempt(
+  const result = await deps.salesRecordsService.registerAttempt(
     input.recordId,
     ctx.actor.userId,
     ctx.actor.branchId,
