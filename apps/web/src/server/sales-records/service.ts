@@ -1,11 +1,28 @@
 import { computeClientCompletenessScore } from "~/server/sales/completeness";
 import type { AppContext } from "~/server/shared/action-runtime";
 import { salesRecordsService } from "~/server/shared/context";
+import { isErr, Ok, type Result } from "~/server/shared/result";
 
-import type { CreateSalesRecordDraftInput } from "./types";
+import type {
+  CreateSalesRecordDraftInput,
+  SalesRecordAttemptOutcome,
+} from "./types";
 
-export function createDraft(ctx: AppContext, input: CreateSalesRecordDraftInput) {
-  return salesRecordsService.createDraft({
+export async function createDraft(
+  ctx: AppContext,
+  input: CreateSalesRecordDraftInput,
+): Promise<
+  Result<
+    { id: number },
+    Awaited<ReturnType<typeof salesRecordsService.createDraft>> extends Result<
+      any,
+      infer E
+    >
+      ? E
+      : never
+  >
+> {
+  const result = await salesRecordsService.createDraft({
     source: input.source,
     executiveUserId: ctx.actor.userId,
     branchId: ctx.actor.branchId,
@@ -17,39 +34,74 @@ export function createDraft(ctx: AppContext, input: CreateSalesRecordDraftInput)
     addresses: input.addresses,
     products: input.products,
   });
+  if (isErr(result)) {
+    return result;
+  }
+  return Ok({ id: result.value });
 }
 
-export function submitRecord(ctx: AppContext, input: { recordId: number }) {
-  return salesRecordsService.submit(input.recordId, ctx.actor.userId);
+export async function submitRecord(
+  ctx: AppContext,
+  input: { recordId: number },
+) {
+  const result = await salesRecordsService.submit(
+    input.recordId,
+    ctx.actor.userId,
+  );
+  if (isErr(result)) {
+    return result;
+  }
+  return Ok({ success: true as const });
 }
 
-export function confirmRecord(ctx: AppContext, input: { recordId: number }) {
-  return salesRecordsService.confirm(
+export async function confirmRecord(
+  ctx: AppContext,
+  input: { recordId: number },
+) {
+  const result = await salesRecordsService.confirm(
     input.recordId,
     ctx.actor.userId,
     ctx.actor.branchId,
     ctx.actor.role === "superuser",
   );
+  if (isErr(result)) {
+    return result;
+  }
+  return Ok({ success: true as const });
 }
 
-export function rejectRecord(
+export async function rejectRecord(
   ctx: AppContext,
   input: { recordId: number; reason: string },
 ) {
-  return salesRecordsService.reject(
+  const result = await salesRecordsService.reject(
     input.recordId,
     ctx.actor.userId,
     ctx.actor.branchId,
     ctx.actor.role === "superuser",
     input.reason,
   );
+  if (isErr(result)) {
+    return result;
+  }
+  return Ok({ success: true as const });
 }
 
-export function cancelRecord(ctx: AppContext, input: { recordId: number }) {
-  return salesRecordsService.cancel(input.recordId, ctx.actor.userId);
+export async function cancelRecord(
+  ctx: AppContext,
+  input: { recordId: number },
+) {
+  const result = await salesRecordsService.cancel(
+    input.recordId,
+    ctx.actor.userId,
+  );
+  if (isErr(result)) {
+    return result;
+  }
+  return Ok({ success: true as const });
 }
 
-export function updateDraft(
+export async function updateDraft(
   ctx: AppContext,
   input: {
     recordId: number;
@@ -57,7 +109,7 @@ export function updateDraft(
     correctionNotes: string | null;
   },
 ) {
-  return salesRecordsService.updateDraft(
+  const result = await salesRecordsService.updateDraft(
     input.recordId,
     ctx.actor.userId,
     {
@@ -69,18 +121,22 @@ export function updateDraft(
     },
     input.correctionNotes,
   );
+  if (isErr(result)) {
+    return result;
+  }
+  return Ok({ success: true as const });
 }
 
-export function registerAttempt(
+export async function registerAttempt(
   ctx: AppContext,
   input: {
     recordId: number;
-    outcome: string;
+    outcome: SalesRecordAttemptOutcome;
     notes: string | null;
     nextAttemptAt: number | null;
   },
 ) {
-  return salesRecordsService.registerAttempt(
+  const result = await salesRecordsService.registerAttempt(
     input.recordId,
     ctx.actor.userId,
     ctx.actor.branchId,
@@ -89,4 +145,8 @@ export function registerAttempt(
     input.notes,
     input.nextAttemptAt,
   );
+  if (isErr(result)) {
+    return result;
+  }
+  return Ok({ success: true as const });
 }

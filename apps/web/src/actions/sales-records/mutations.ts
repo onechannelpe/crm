@@ -3,8 +3,6 @@
 import { requirePermission } from "~/lib/auth/access/session";
 import type { ActionSuccess } from "~/lib/contracts/common";
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
-import { runAction } from "~/server/shared/action-runtime";
-import { repos } from "~/server/shared/context";
 import {
   cancelRecord,
   confirmRecord,
@@ -14,6 +12,9 @@ import {
   submitRecord,
   updateDraft,
 } from "~/server/sales-records/service";
+import type { CreateSalesRecordDraftInput } from "~/server/sales-records/types";
+import { runAction } from "~/server/shared/action-runtime";
+import { repos } from "~/server/shared/context";
 
 import {
   parseCreateSalesRecordDraftInput,
@@ -22,14 +23,17 @@ import {
   parseSalesRecordId,
   parseUpdateSalesRecordDraftInput,
 } from "./input";
-import type { CreateSalesRecordDraftInput } from "./types";
 
 export async function createSalesRecordDraft(
   input: CreateSalesRecordDraftInput,
 ): Promise<{ id: number }> {
   const parsedInput = parseCreateSalesRecordDraftInput(input);
   const session = await requirePermission("sales:create");
-  await checkActionRateLimit("sales_records.create_draft", session.userId, repos);
+  await checkActionRateLimit(
+    "sales_records.create_draft",
+    session.userId,
+    repos,
+  );
   return runAction({
     actionName: "sales_records.create_draft",
     actor: session,

@@ -14,7 +14,8 @@ import {
 } from "~/server/users/service-bulk-import";
 
 export type { BulkApplyResult } from "~/server/users/service-bulk-import";
-import { provisioning } from "./provisioning";
+import { provisioning } from "~/server/team/provisioning";
+
 import { getInviteUrl, sendInviteEmail } from "./utils";
 import { assertRole } from "./validators";
 

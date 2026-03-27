@@ -3,18 +3,18 @@ import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 import { createRequestPasskeyProviderFactory } from "~/actions/auth/shared/request-passkey-provider";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { createPasskeyEnrollmentAuthService } from "~/lib/auth/passkey/service";
+import { requiresStrongAuthRole } from "~/lib/auth/security/strong-auth-status";
 import {
   issueSessionTransition,
   replaceCurrentSession,
 } from "~/lib/auth/session/session-transition";
-import { requiresStrongAuthRole } from "~/lib/auth/security/strong-auth-status";
 import { repos, runInRepositoryTransaction } from "~/server/shared/context";
 import type { DomainError } from "~/server/shared/domain-error";
+import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 import {
   completeAccountOnboardingWithRepos,
   type CompleteOnboardingError,
 } from "~/server/users/service-account-onboarding";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 function createEnrollmentService() {
   return createPasskeyEnrollmentAuthService(repos, {
@@ -101,7 +101,7 @@ export async function completeOnboarding(input: {
   if (!user) {
     return Err({
       kind: "unexpected",
-      code: "user_not_found",
+      code: "unexpected",
       message: "No se pudo completar el registro",
     });
   }

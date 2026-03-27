@@ -8,9 +8,9 @@ import {
 } from "~/actions/capacity/approvals";
 import {
   updateLeadPolicyOverride,
-  updateLeadScopeDefault_,
+  updateLeadPolicyDefault,
   updateSearchPolicyOverride,
-  updateSearchScopeDefault_,
+  updateSearchPolicyDefault,
 } from "~/actions/capacity/policies";
 import {
   requestMoreLeadRefill,
@@ -149,7 +149,7 @@ export const updateSearchScopeDefaultMutation = action(
     scopeId: number;
     monthlySearchLimit: number;
   }) => {
-    const result = await updateSearchScopeDefault_(input);
+    const result = await updateSearchPolicyDefault(input);
     return json(result, {
       revalidate: [capacityPolicyDefaultsQuery.key, managedExecutivesQuery.key],
     });
@@ -164,7 +164,7 @@ export const updateLeadScopeDefaultMutation = action(
     activeBufferTarget: number;
     dailyRefillLimit: number;
   }) => {
-    const result = await updateLeadScopeDefault_(input);
+    const result = await updateLeadPolicyDefault(input);
     return json(result, {
       revalidate: [capacityPolicyDefaultsQuery.key, managedExecutivesQuery.key],
     });

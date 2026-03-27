@@ -1,16 +1,16 @@
 import { issueSessionTransition } from "~/lib/auth/session/session-transition";
 import { repos } from "~/server/shared/context";
-import type { AppContext } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import { isErr, Ok, type Result } from "~/server/shared/result";
-import { createUserProvisioningService } from "~/server/users/service-user-provisioning";
 
+import { provisioning } from "./provisioning";
 import type { AcceptTeamInviteCommand } from "./types";
 
-const provisioning = createUserProvisioningService(repos);
-
 export async function acceptTeamInvite(
-  ctx: AppContext,
+  ctx: {
+    ipAddress: string;
+    userAgent: string | null;
+  },
   input: AcceptTeamInviteCommand & { passwordHash: string },
 ): Promise<Result<{ sessionToken: string; redirectTo: string }, DomainError>> {
   const result = await provisioning.acceptInvite({

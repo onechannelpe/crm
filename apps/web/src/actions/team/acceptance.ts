@@ -5,8 +5,8 @@ import { isValidInviteTokenFormat } from "~/lib/auth/invite/tokens";
 import { hashPassword } from "~/lib/auth/password/password";
 import { setSessionCookie } from "~/lib/auth/session/cookies";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
-import { acceptTeamInvite as acceptTeamInviteService } from "~/server/team/service-acceptance";
 import { isErr } from "~/server/shared/result";
+import { acceptTeamInvite as acceptTeamInviteService } from "~/server/team/service-acceptance";
 
 import { parseAcceptTeamInviteInput } from "./input";
 import { assertStrongPassword } from "./validators";
@@ -24,22 +24,8 @@ export async function acceptTeamInvite(input: {
 
   const result = await acceptTeamInviteService(
     {
-      actor: {
-        userId: 0,
-        role: "admin",
-        branchId: 0,
-        onboardingCompleted: false,
-        sessionClass: "pre_auth",
-        primaryAuthMethod: "password",
-        strongAuthMethod: null,
-        strongAuthAt: null,
-      },
-      requestId: crypto.randomUUID(),
-      traceId: crypto.randomUUID(),
       ipAddress: request.ipAddress,
       userAgent: request.userAgent,
-      publicOrigin: "",
-      now: Date.now,
     },
     {
       token: safeInput.token,

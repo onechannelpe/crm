@@ -3,14 +3,13 @@ import {
   assertNonEmptyString,
   assertPositiveInt,
 } from "~/lib/contracts/guards";
-
 import type {
   CreateSalesRecordDraftInput,
   SalesRecordAddressInput,
   SalesRecordAttemptOutcome,
   SalesRecordProductInput,
   SalesRecordSource,
-} from "./types";
+} from "~/server/sales-records/types";
 
 function isSalesRecordSource(value: string): value is SalesRecordSource {
   return value === "lead_assignment" || value === "manual";

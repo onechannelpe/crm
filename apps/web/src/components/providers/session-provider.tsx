@@ -25,7 +25,9 @@ export function SessionProvider(props: ParentProps) {
   };
 
   const updateCurrentUser = (update: (current: CurrentUser) => CurrentUser) => {
-    mutate((existing) => (existing ? update(existing) : existing));
+    mutate((existing: CurrentUser | null | undefined) =>
+      existing ? update(existing) : existing,
+    );
   };
 
   return (
