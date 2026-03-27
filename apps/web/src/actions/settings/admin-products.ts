@@ -17,6 +17,18 @@ type ProductCatalogItem = Awaited<
   ReturnType<typeof repos.products.findAll>
 >[number];
 
+function parseUpdateProductPricingInput(input: {
+  productId: number;
+  price: number;
+  isActive: boolean;
+}): { productId: number; price: number; isActive: boolean } {
+  return {
+    productId: assertPositiveInt(input.productId, "productId"),
+    price: assertFinitePositive(input.price, "price"),
+    isActive: assertBoolean(input.isActive, "isActive"),
+  };
+}
+
 export async function getProductCatalog(): Promise<ProductCatalogItem[]> {
   await requirePermission("admin:manage");
   return repos.products.findAll();
@@ -27,27 +39,32 @@ export async function updateProductPricing(
   price: number,
   isActive: boolean,
 ): Promise<ActionSuccess> {
-  const safeProductId = assertPositiveInt(productId, "productId");
-  const safePrice = assertFinitePositive(price, "price");
-  const safeIsActive = assertBoolean(isActive, "isActive");
+  const parsedInput = parseUpdateProductPricingInput({
+    productId,
+    price,
+    isActive,
+  });
   const session = await requirePermission("admin:manage");
   assertRecentStrongAuth(session);
-  const product = await repos.products.findById(safeProductId);
+  const product = await repos.products.findById(parsedInput.productId);
   if (!product) throw notFoundError("Product not found");
 
-  await repos.products.update(safeProductId, {
-    price: safePrice,
-    is_active: safeIsActive ? 1 : 0,
+  await repos.products.update(parsedInput.productId, {
+    price: parsedInput.price,
+    is_active: parsedInput.isActive ? 1 : 0,
   });
   const changes: ProductUpdatedChanges = {
     previous: { price: product.price, is_active: product.is_active },
-    next: { price: safePrice, is_active: safeIsActive ? 1 : 0 },
+    next: {
+      price: parsedInput.price,
+      is_active: parsedInput.isActive ? 1 : 0,
+    },
   };
   await repos.auditLogs.create({
     user_id: session.userId,
     action: "product_updated",
     entity_type: "product",
-    entity_id: safeProductId,
+    entity_id: parsedInput.productId,
     changes: serializeAuditChanges(changes),
     created_at: Date.now(),
   });

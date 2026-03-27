@@ -7,23 +7,22 @@ import {
   type ApproveRepos,
   type ApproveTransactionRunner,
 } from "~/server/capacity-admin/approve-capacity";
-import { asBranchId, asCapacityRequestId, asUserId } from "~/server/shared/ids";
 
 import {
   makeLeadCapacityGrantsRepo,
   makeSearchCapacityGrantsRepo,
 } from "../support/capacity-fakes";
 
-const ACTOR_USER_ID = asUserId(99);
-const TARGET_USER_ID = asUserId(1);
-const REQUEST_ID = asCapacityRequestId(42);
+const ACTOR_USER_ID = 99;
+const TARGET_USER_ID = 1;
+const REQUEST_ID = 42;
 
 function makeActor(role: Role = "admin") {
   return {
     sessionId: "test",
     userId: ACTOR_USER_ID,
     role,
-    branchId: asBranchId(1),
+    branchId: 1,
     onboardingCompleted: true,
     sessionClass: "app" as const,
     primaryAuthMethod: "password" as const,
@@ -35,7 +34,7 @@ function makeActor(role: Role = "admin") {
 type RequestRow = {
   id: number;
   user_id: number;
-  kind: "search_extra" | "lead_extra";
+  kind: "search_extra" | "lead_refill_extra";
   status: "pending" | "approved" | "rejected";
   requested_amount: number;
   reason: string;
@@ -59,7 +58,7 @@ function makeCapacityRequestsRepo(request: RequestRow | undefined) {
   };
 }
 
-function makeUsersRepo(role = "executive", branchId = 1) {
+function makeUsersRepo(role: Role = "executive", branchId = 1) {
   return {
     findById: async () => ({ role, branch_id: branchId, team_id: null }),
   };

@@ -3,7 +3,7 @@ import { createEffect, createSignal } from "solid-js";
 import {
   beginPasskeyRegistration,
   finishPasskeyRegistration,
-} from "~/actions/auth";
+} from "~/actions/auth/onboarding/passkey";
 import {
   createRegistrationResponse,
   isPasskeyRegistrationSupported,

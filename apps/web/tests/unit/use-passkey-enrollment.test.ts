@@ -15,7 +15,7 @@ const {
   isPasskeyRegistrationSupported: vi.fn(),
 }));
 
-vi.mock("../../src/actions/auth", () => ({
+vi.mock("../../src/actions/auth/onboarding/passkey", () => ({
   beginPasskeyRegistration,
   finishPasskeyRegistration,
 }));

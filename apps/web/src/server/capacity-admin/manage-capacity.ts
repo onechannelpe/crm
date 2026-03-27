@@ -1,3 +1,4 @@
+import type { Role } from "~/lib/auth/access/rbac";
 import type { SessionData } from "~/lib/auth/access/session";
 import {
   setLeadScopeDefault,
@@ -36,7 +37,7 @@ interface ManageRepos {
     findById(
       id: UserId,
     ): Promise<
-      { role: string; branch_id: number; team_id: number | null } | undefined
+      { role: Role; branch_id: number; team_id: number | null } | undefined
     >;
   };
   teams: {

@@ -7,7 +7,6 @@ import {
   type AuthAnalyticsMethod,
   type AuthAnalyticsScreen,
 } from "~/lib/auth/auth-analytics";
-import { assertPositiveInt } from "~/lib/contracts/guards";
 import {
   isAuthFunnelEventName,
   isAuthFunnelMethod,
@@ -17,6 +16,8 @@ import {
   type AuthFunnelSource,
 } from "~/lib/observability/auth-funnel";
 import { observabilityService } from "~/server/shared/context";
+
+import { resolveBoundedPositiveInt } from "./analytics-input";
 
 export interface AuthFunnelSummaryRow {
   eventName: AuthFunnelEventName;
@@ -43,23 +44,6 @@ export interface AuthFunnelSnapshot {
   windowMinutes: number;
   summary: AuthFunnelSummaryRow[];
   recent: AuthFunnelRecentEvent[];
-}
-
-function resolveBoundedPositiveInt(params: {
-  value: number | undefined;
-  fallback: number;
-  name: string;
-  max: number;
-  maxMessage: string;
-}): number {
-  const resolved = assertPositiveInt(
-    params.value ?? params.fallback,
-    params.name,
-  );
-  if (resolved > params.max) {
-    throw validationError(params.maxMessage);
-  }
-  return resolved;
 }
 
 function assertEventName(

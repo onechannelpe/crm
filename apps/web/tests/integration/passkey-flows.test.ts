@@ -9,7 +9,6 @@ import { hashAuthKey } from "../../src/lib/auth/password/key-hash";
 import { recordPasskeyChallengeFailure } from "../../src/lib/auth/password/throttle";
 import { PasskeyRequestError } from "../../src/lib/auth/providers/passkey-provider";
 import type { SendPrivilegedLoginAlert } from "../../src/lib/auth/security/privileged-login-alert";
-import { asUserId } from "../../src/server/shared/ids";
 import { isErr } from "../../src/server/shared/result";
 import {
   cleanupTestDb,
@@ -378,7 +377,7 @@ describe("passkey flows", () => {
           throw new Error("not used in this test");
         },
         async verifyAuthentication() {
-          return { verified: true, userId: asUserId(1) };
+          return { verified: true, userId: 1 };
         },
       }),
     }).finishLogin({
@@ -515,7 +514,7 @@ describe("passkey flows", () => {
           throw new Error("not used in this test");
         },
         async verifyAuthentication() {
-          return { verified: true, userId: asUserId(2) };
+          return { verified: true, userId: 2 };
         },
       }),
     }).finishLogin({
@@ -574,7 +573,7 @@ describe("passkey flows", () => {
           throw new Error("not used in this test");
         },
         async verifyAuthentication() {
-          return { verified: true, userId: asUserId(1) };
+          return { verified: true, userId: 1 };
         },
       }),
       async issueLoginSession() {

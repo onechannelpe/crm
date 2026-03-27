@@ -1,5 +1,6 @@
-import type { Kysely } from "kysely";
+import { sql, type Kysely } from "kysely";
 
+import type { Role } from "~/lib/auth/access/rbac";
 import type { Database, NewUserSession, UserSession } from "~/lib/db/types";
 
 export function createSessionRepository(db: Kysely<Database>) {
@@ -73,6 +74,57 @@ export function createSessionRepository(db: Kysely<Database>) {
         .executeTakeFirst();
 
       return result?.count ?? 0;
+    },
+
+    async listAllActive(): Promise<
+      Array<{
+        id: string;
+        userId: number;
+        userEmail: string;
+        userName: string;
+        role: Role;
+        branchName: string;
+        ipAddress: string | null;
+        userAgent: string | null;
+        createdAt: number;
+        lastActivity: number;
+        expiresAt: number;
+      }>
+    > {
+      const sessions = await db
+        .selectFrom("user_sessions")
+        .innerJoin("users", "user_sessions.user_id", "users.id")
+        .innerJoin("branches", "user_sessions.branch_id", "branches.id")
+        .select([
+          "user_sessions.id",
+          "user_sessions.user_id",
+          "users.email as userEmail",
+          sql<string>`users.names || ' ' || users.first_surname`.as("userName"),
+          "user_sessions.role",
+          "branches.name as branchName",
+          "user_sessions.ip_address as ipAddress",
+          "user_sessions.user_agent as userAgent",
+          "user_sessions.created_at as createdAt",
+          "user_sessions.last_activity as lastActivity",
+          "user_sessions.expires_at as expiresAt",
+        ])
+        .where("user_sessions.expires_at", ">", Date.now())
+        .orderBy("user_sessions.last_activity", "desc")
+        .execute();
+
+      return sessions.map((session) => ({
+        id: session.id,
+        userId: session.user_id,
+        userEmail: session.userEmail,
+        userName: session.userName,
+        role: session.role,
+        branchName: session.branchName,
+        ipAddress: session.ipAddress,
+        userAgent: session.userAgent,
+        createdAt: session.createdAt,
+        lastActivity: session.lastActivity,
+        expiresAt: session.expiresAt,
+      }));
     },
   };
 }

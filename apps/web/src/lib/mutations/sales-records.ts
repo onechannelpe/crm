@@ -4,7 +4,7 @@ import {
   confirmSalesRecord,
   registerSalesRecordAttempt,
   rejectSalesRecord,
-} from "~/actions/sales-records";
+} from "~/actions/sales-records/mutations";
 import { pendingSalesRecordsQuery } from "~/lib/queries/sales-records";
 
 export const confirmSalesRecordMutation = action(async (recordId: number) => {

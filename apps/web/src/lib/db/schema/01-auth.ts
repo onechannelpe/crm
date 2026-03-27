@@ -75,6 +75,21 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
+    .createTable("request_sessions")
+    .addColumn("id", "text", (col) => col.primaryKey())
+    .addColumn("csrf_token", "text", (col) => col.notNull())
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("last_activity", "integer", (col) => col.notNull())
+    .addColumn("expires_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await db.schema
+    .createIndex("idx_request_sessions_expires_at")
+    .on("request_sessions")
+    .column("expires_at")
+    .execute();
+
+  await db.schema
     .createTable("auth_throttle_counters")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("scope", "varchar(20)", (col) => col.notNull())

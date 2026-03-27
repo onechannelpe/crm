@@ -1,14 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import { evaluateLoginPolicy } from "../../src/lib/auth/policy/login-policy";
-import { asUserId } from "../../src/server/shared/ids";
 
 describe("login policy", () => {
   it("denies onboarded privileged google login when no strong factor is enrolled", () => {
     const decision = evaluateLoginPolicy({
       proof: {
         kind: "google",
-        userId: asUserId(1),
+        userId: 1,
         trustedFederatedMfa: false,
       },
       context: {
@@ -35,7 +34,7 @@ describe("login policy", () => {
     const decision = evaluateLoginPolicy({
       proof: {
         kind: "google",
-        userId: asUserId(1),
+        userId: 1,
         trustedFederatedMfa: false,
       },
       context: {
@@ -61,7 +60,7 @@ describe("login policy", () => {
     const decision = evaluateLoginPolicy({
       proof: {
         kind: "password",
-        userId: asUserId(1),
+        userId: 1,
       },
       context: {
         user: {

@@ -1,85 +1,53 @@
 "use server";
 
-import { requireRole } from "~/lib/auth/access/session";
+import { validationError } from "~/lib/app-errors";
 import { assertRecentStrongAuth } from "~/lib/auth/security/step-up";
-import { invalidateUserSessions } from "~/lib/auth/session/session-manager";
-import {
-  allSessionsRevokedChanges,
-  serializeAuditChanges,
-  sessionRevokedByAdminChanges,
-} from "~/lib/contracts/audit";
 import type { ActionSuccess } from "~/lib/contracts/common";
 import {
-  assertNonEmptyString,
-  assertPositiveInt,
-} from "~/lib/contracts/guards";
-import { repos } from "~/server/shared/context";
-import { asUserId } from "~/server/shared/ids";
+  revokeAllUserSessions as revokeAllUserSessionsService,
+  revokeUserSession as revokeUserSessionService,
+} from "~/server/auth/service-admin-sessions";
+import { runAction } from "~/server/shared/action-runtime";
+import { isErr } from "~/server/shared/result";
+
+import {
+  parseRevokeAllUserSessionsInput,
+  parseRevokeUserSessionInput,
+} from "./input";
 
 export async function revokeUserSession(
   sessionId: string,
   targetUserId: number,
 ): Promise<ActionSuccess> {
-  const safeSessionId = assertNonEmptyString(sessionId, "sessionId");
-  const safeTargetUserId = asUserId(
-    assertPositiveInt(targetUserId, "targetUserId"),
-  );
+  const parsedInput = parseRevokeUserSessionInput({ sessionId, targetUserId });
+  if (isErr(parsedInput)) {
+    throw validationError(parsedInput.error.message);
+  }
+  const { requireRole } = await import("~/lib/auth/access/session");
   const session = await requireRole("admin");
   assertRecentStrongAuth(session);
-
-  await repos.sessions.delete(safeSessionId);
-  await repos.extensionRuntime.revokeInstallationSessionsByAuthSession(
-    safeSessionId,
-    Date.now(),
-  );
-  await repos.extensionRuntime.updateExecutiveSyncHealthByUser({
-    user_id: safeTargetUserId,
-    sync_health: "reauth_required",
-    sync_updated_at: Date.now(),
+  return runAction({
+    actionName: "admin.sessions.revoke",
+    actor: session,
+    input: parsedInput.value,
+    execute: (ctx) => revokeUserSessionService(ctx, parsedInput.value),
   });
-
-  await repos.auditLogs.create({
-    user_id: session.userId,
-    action: "session_revoked_by_admin",
-    entity_type: "user_session",
-    entity_id: safeTargetUserId,
-    changes: serializeAuditChanges(
-      sessionRevokedByAdminChanges(safeSessionId, session.userId),
-    ),
-    created_at: Date.now(),
-  });
-
-  return { success: true };
 }
 
 export async function revokeAllUserSessions(
   targetUserId: number,
 ): Promise<ActionSuccess> {
-  const safeTargetUserId = asUserId(
-    assertPositiveInt(targetUserId, "targetUserId"),
-  );
+  const parsedInput = parseRevokeAllUserSessionsInput(targetUserId);
+  if (isErr(parsedInput)) {
+    throw validationError(parsedInput.error.message);
+  }
+  const { requireRole } = await import("~/lib/auth/access/session");
   const session = await requireRole("admin");
   assertRecentStrongAuth(session);
-
-  await invalidateUserSessions(safeTargetUserId);
-  await repos.extensionRuntime.revokeInstallationSessionsByUser(
-    safeTargetUserId,
-    Date.now(),
-  );
-  await repos.extensionRuntime.updateExecutiveSyncHealthByUser({
-    user_id: safeTargetUserId,
-    sync_health: "reauth_required",
-    sync_updated_at: Date.now(),
+  return runAction({
+    actionName: "admin.sessions.revoke_all",
+    actor: session,
+    input: parsedInput.value,
+    execute: (ctx) => revokeAllUserSessionsService(ctx, parsedInput.value),
   });
-
-  await repos.auditLogs.create({
-    user_id: session.userId,
-    action: "all_sessions_revoked",
-    entity_type: "user",
-    entity_id: safeTargetUserId,
-    changes: serializeAuditChanges(allSessionsRevokedChanges(session.userId)),
-    created_at: Date.now(),
-  });
-
-  return { success: true };
 }

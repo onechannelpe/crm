@@ -82,10 +82,18 @@ function mapDownload(
   };
 }
 
+function parseSalesExportListLimit(limit: number): number {
+  return Math.min(assertPositiveInt(limit, "limit"), 100);
+}
+
+function parseSalesExportJobId(jobId: number): number {
+  return assertPositiveInt(jobId, "jobId");
+}
+
 export async function listSalesExportJobs(
   limit = 20,
 ): Promise<SalesExportJob[]> {
-  const safeLimit = Math.min(assertPositiveInt(limit, "limit"), 100);
+  const safeLimit = parseSalesExportListLimit(limit);
   const session = await requirePermission("sales:review");
   const rows = await repos.reportExportJobs.listJobs(
     safeLimit,
@@ -97,7 +105,7 @@ export async function listSalesExportJobs(
 export async function getSalesExportJob(
   jobId: number,
 ): Promise<SalesExportJob | null> {
-  const safeJobId = assertPositiveInt(jobId, "jobId");
+  const safeJobId = parseSalesExportJobId(jobId);
   const session = await requirePermission("sales:review");
   const job = await repos.reportExportJobs.findJobById(safeJobId);
   if (!job) return null;
@@ -123,7 +131,7 @@ export async function getSalesExportJob(
 export async function listSalesExportDownloads(
   jobId: number,
 ): Promise<SalesExportDownload[]> {
-  const safeJobId = assertPositiveInt(jobId, "jobId");
+  const safeJobId = parseSalesExportJobId(jobId);
   const session = await requirePermission("sales:review");
   const job = await repos.reportExportJobs.findJobById(safeJobId);
   if (!job) return [];

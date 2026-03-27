@@ -1,43 +1,35 @@
 "use server";
 
-import { requirePermission } from "~/lib/auth/access/session";
-import { assertPositiveInt } from "~/lib/contracts/guards";
 import {
-  updateLeadScopeDefault,
-  updateLeadUserOverride,
-  updateSearchScopeDefault,
-  updateSearchUserOverride,
-} from "~/server/capacity-admin/manage-capacity";
-import { repos } from "~/server/shared/context";
-import { asBranchId, asTeamId, asUserId } from "~/server/shared/ids";
-import { isErr } from "~/server/shared/result";
+  updateLeadPolicyDefault as updateLeadPolicyDefaultService,
+  updateLeadPolicyOverride as updateLeadPolicyOverrideService,
+  updateSearchPolicyDefault as updateSearchPolicyDefaultService,
+  updateSearchPolicyOverride as updateSearchPolicyOverrideService,
+} from "~/server/capacity/service-policies";
+import { runAction } from "~/server/shared/action-runtime";
 
-import { mapCapacityError } from "./errors";
-import { parseLeadPolicyValues, parseSearchPolicyLimit } from "./input";
+import {
+  parseLeadPolicyOverrideInput,
+  parseLeadPolicyValues,
+  parseScopeDefaultInput,
+  parseSearchPolicyLimit,
+  parseSearchPolicyOverrideInput,
+} from "./input";
 
 export async function updateSearchPolicyOverride(input: {
   userId: number;
   monthlySearchLimit: number;
   expiresAt: number | null;
 }) {
-  const safeUserId = asUserId(assertPositiveInt(input.userId, "userId"));
-  const limitResult = parseSearchPolicyLimit(input.monthlySearchLimit);
-  if (isErr(limitResult)) mapCapacityError(limitResult.error);
-
-  const session = await requirePermission("capacity:policy:manage");
-
-  const result = await updateSearchUserOverride(
-    {
-      actorUserId: session.userId,
-      targetUserId: safeUserId,
-      monthlyLimit: limitResult.value,
-      expiresAt: input.expiresAt,
-    },
-    session,
-    repos,
-  );
-  if (isErr(result)) mapCapacityError(result.error);
-  return result.value;
+  const overrideInput = parseSearchPolicyOverrideInput(input);
+  if (!overrideInput.ok) throw overrideInput.error;
+  return runAction({
+    actionName: "capacity.search_policy_override.update",
+    permission: "capacity:policy:manage",
+    input: overrideInput.value,
+    execute: (ctx) =>
+      updateSearchPolicyOverrideService(ctx, overrideInput.value),
+  });
 }
 
 export async function updateLeadPolicyOverride(input: {
@@ -46,98 +38,78 @@ export async function updateLeadPolicyOverride(input: {
   dailyRefillLimit: number;
   expiresAt: number | null;
 }) {
-  const safeUserId = asUserId(assertPositiveInt(input.userId, "userId"));
-  const policyResult = parseLeadPolicyValues({
-    activeBufferTarget: input.activeBufferTarget,
-    dailyRefillLimit: input.dailyRefillLimit,
+  const overrideInput = parseLeadPolicyOverrideInput(input);
+  if (!overrideInput.ok) throw overrideInput.error;
+  return runAction({
+    actionName: "capacity.lead_policy_override.update",
+    permission: "capacity:policy:manage",
+    input: overrideInput.value,
+    execute: (ctx) => updateLeadPolicyOverrideService(ctx, overrideInput.value),
   });
-  if (isErr(policyResult)) mapCapacityError(policyResult.error);
-
-  const session = await requirePermission("capacity:policy:manage");
-
-  const result = await updateLeadUserOverride(
-    {
-      actorUserId: session.userId,
-      targetUserId: safeUserId,
-      bufferTarget: policyResult.value.activeBufferTarget,
-      dailyLimit: policyResult.value.dailyRefillLimit,
-      expiresAt: input.expiresAt,
-    },
-    session,
-    repos,
-  );
-  if (isErr(result)) mapCapacityError(result.error);
-  return result.value;
 }
 
-export async function updateSearchScopeDefault_(input: {
+export async function updateSearchPolicyDefault(input: {
   scopeType: "branch" | "team";
   scopeId: number;
   monthlySearchLimit: number;
 }) {
-  const safeScopeId = assertPositiveInt(input.scopeId, "scopeId");
+  const scopeInput = parseScopeDefaultInput(input);
+  if (!scopeInput.ok) throw scopeInput.error;
   const limitResult = parseSearchPolicyLimit(input.monthlySearchLimit);
-  if (isErr(limitResult)) mapCapacityError(limitResult.error);
-
-  const session = await requirePermission("capacity:policy:manage");
-
-  const searchScopeCommand =
-    input.scopeType === "branch"
-      ? {
-          actorUserId: session.userId,
-          scopeType: "branch" as const,
-          scopeId: asBranchId(safeScopeId),
-          monthlyLimit: limitResult.value,
-        }
-      : {
-          actorUserId: session.userId,
-          scopeType: "team" as const,
-          scopeId: asTeamId(safeScopeId),
-          monthlyLimit: limitResult.value,
-        };
-
-  const result = await updateSearchScopeDefault(
-    searchScopeCommand,
-    session,
-    repos,
-  );
-  if (isErr(result)) mapCapacityError(result.error);
-  return result.value;
+  if (!limitResult.ok) throw limitResult.error;
+  return runAction({
+    actionName: "capacity.search_policy_default.update",
+    permission: "capacity:policy:manage",
+    input: {
+      scope: {
+        kind: scopeInput.value.scopeType,
+        scopeId: scopeInput.value.scopeId,
+      },
+      monthlyLimit: limitResult.value,
+    },
+    execute: (ctx) =>
+      updateSearchPolicyDefaultService(ctx, {
+        scope: {
+          kind: scopeInput.value.scopeType,
+          scopeId: scopeInput.value.scopeId,
+        },
+        monthlyLimit: limitResult.value,
+      }),
+  });
 }
 
-export async function updateLeadScopeDefault_(input: {
+export async function updateLeadPolicyDefault(input: {
   scopeType: "branch" | "team";
   scopeId: number;
   activeBufferTarget: number;
   dailyRefillLimit: number;
 }) {
-  const safeScopeId = assertPositiveInt(input.scopeId, "scopeId");
+  const scopeInput = parseScopeDefaultInput(input);
+  if (!scopeInput.ok) throw scopeInput.error;
   const policyResult = parseLeadPolicyValues({
     activeBufferTarget: input.activeBufferTarget,
     dailyRefillLimit: input.dailyRefillLimit,
   });
-  if (isErr(policyResult)) mapCapacityError(policyResult.error);
-
-  const session = await requirePermission("capacity:policy:manage");
-
-  const leadScopeCommand =
-    input.scopeType === "branch"
-      ? {
-          actorUserId: session.userId,
-          scopeType: "branch" as const,
-          scopeId: asBranchId(safeScopeId),
-          bufferTarget: policyResult.value.activeBufferTarget,
-          dailyLimit: policyResult.value.dailyRefillLimit,
-        }
-      : {
-          actorUserId: session.userId,
-          scopeType: "team" as const,
-          scopeId: asTeamId(safeScopeId),
-          bufferTarget: policyResult.value.activeBufferTarget,
-          dailyLimit: policyResult.value.dailyRefillLimit,
-        };
-
-  const result = await updateLeadScopeDefault(leadScopeCommand, session, repos);
-  if (isErr(result)) mapCapacityError(result.error);
-  return result.value;
+  if (!policyResult.ok) throw policyResult.error;
+  return runAction({
+    actionName: "capacity.lead_policy_default.update",
+    permission: "capacity:policy:manage",
+    input: {
+      scope: {
+        kind: scopeInput.value.scopeType,
+        scopeId: scopeInput.value.scopeId,
+      },
+      bufferTarget: policyResult.value.activeBufferTarget,
+      dailyLimit: policyResult.value.dailyRefillLimit,
+    },
+    execute: (ctx) =>
+      updateLeadPolicyDefaultService(ctx, {
+        scope: {
+          kind: scopeInput.value.scopeType,
+          scopeId: scopeInput.value.scopeId,
+        },
+        bufferTarget: policyResult.value.activeBufferTarget,
+        dailyLimit: policyResult.value.dailyRefillLimit,
+      }),
+  });
 }

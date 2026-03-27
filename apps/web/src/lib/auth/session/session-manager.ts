@@ -1,7 +1,6 @@
 import type { NewUserSession } from "~/lib/db/types";
 import { createLogger } from "~/lib/observability/logger";
 import { repos } from "~/server/shared/context";
-import { asBranchId, asUserId } from "~/server/shared/ids";
 import type { BranchId, UserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
 
@@ -16,6 +15,7 @@ import {
   type StrongAuthMethod,
 } from "../core/session-contract";
 import { sessionCache } from "./session-cache";
+import { mapUserSessionRowToAuthSession } from "./session-mappers";
 import {
   generateSessionToken,
   hashSessionToken,
@@ -31,29 +31,10 @@ export interface SessionValidationResult {
   session: AuthSession | null;
 }
 
-type SessionDeps = Pick<Repositories, "sessions" | "users">;
+type SessionDeps = Pick<Repositories, "sessions">;
 
 function getSessionDeps(deps?: SessionDeps): SessionDeps {
   return deps ?? repos;
-}
-
-async function getSessionUser(
-  userId: UserId,
-  deps: SessionDeps,
-): ReturnType<SessionDeps["users"]["findById"]> {
-  return deps.users.findById(userId);
-}
-
-function isSessionConsistent(params: {
-  user: Awaited<ReturnType<SessionDeps["users"]["findById"]>>;
-  branchId: BranchId;
-  role: Role;
-}): boolean {
-  const { user, branchId, role } = params;
-  if (!user?.is_active) return false;
-  if (user.branch_id !== branchId) return false;
-  if (user.role !== role) return false;
-  return true;
 }
 
 export async function createSession(
@@ -104,59 +85,19 @@ export async function validateSessionToken(
     return { session: null };
   }
   const { sessions } = getSessionDeps(deps);
-  const resolvedDeps = getSessionDeps(deps);
 
   const sessionId = hashSessionToken(token);
   const now = Date.now();
 
   const cached = sessionCache.get(sessionId);
   if (cached) {
-    const user = await getSessionUser(cached.userId, resolvedDeps);
-    if (
-      !isSessionConsistent({
-        user,
-        branchId: cached.branchId,
-        role: cached.role,
-      })
-    ) {
-      await sessions.delete(sessionId);
-      sessionCache.delete(sessionId);
-      return { session: null };
-    }
-    if (!user) {
-      await sessions.delete(sessionId);
-      sessionCache.delete(sessionId);
-      return { session: null };
-    }
-    const onboardingCompleted = user.onboarding_completed_at !== null;
-    if (
-      (cached.sessionClass === "app" && !onboardingCompleted) ||
-      (cached.sessionClass === "pre_auth" && onboardingCompleted)
-    ) {
-      await sessions.delete(sessionId);
-      sessionCache.delete(sessionId);
-      return { session: null };
-    }
-    if (cached.onboardingCompleted !== onboardingCompleted) {
-      sessionCache.set(sessionId, {
-        userId: cached.userId,
-        branchId: cached.branchId,
-        role: cached.role,
-        onboardingCompleted,
-        sessionClass: cached.sessionClass,
-        primaryAuthMethod: cached.primaryAuthMethod,
-        strongAuthMethod: cached.strongAuthMethod,
-        strongAuthAt: cached.strongAuthAt,
-        expiresAt: cached.expiresAt,
-      });
-    }
     return {
       session: {
         id: sessionId,
         userId: cached.userId,
         branchId: cached.branchId,
         role: cached.role,
-        onboardingCompleted,
+        onboardingCompleted: cached.onboardingCompleted,
         sessionClass: cached.sessionClass,
         primaryAuthMethod: cached.primaryAuthMethod,
         strongAuthMethod: cached.strongAuthMethod,
@@ -195,33 +136,6 @@ export async function validateSessionToken(
     await sessions.delete(sessionId);
     return { session: null };
   }
-
-  const user = await getSessionUser(asUserId(dbSession.user_id), resolvedDeps);
-  if (
-    !isSessionConsistent({
-      user,
-      branchId: asBranchId(dbSession.branch_id),
-      role: dbSession.role,
-    })
-  ) {
-    await sessions.delete(sessionId);
-    return { session: null };
-  }
-  if (!user) {
-    await sessions.delete(sessionId);
-    return { session: null };
-  }
-  const sessionUser = user;
-  const onboardingCompleted = sessionUser.onboarding_completed_at !== null;
-
-  if (
-    (dbSession.session_class === "app" && !onboardingCompleted) ||
-    (dbSession.session_class === "pre_auth" && onboardingCompleted)
-  ) {
-    await sessions.delete(sessionId);
-    return { session: null };
-  }
-
   if (now - dbSession.last_activity > ACTIVITY_UPDATE_THRESHOLD) {
     sessions.updateActivity(sessionId, now).catch((error: unknown) => {
       logger.error("update_activity_failed", { sessionId, error });
@@ -236,30 +150,22 @@ export async function validateSessionToken(
     dbSession.expires_at = newExpiry;
   }
 
+  const authSession = mapUserSessionRowToAuthSession(sessionId, dbSession);
+
   sessionCache.set(sessionId, {
-    userId: asUserId(dbSession.user_id),
-    branchId: asBranchId(dbSession.branch_id),
-    role: dbSession.role,
-    onboardingCompleted,
-    sessionClass: dbSession.session_class,
-    primaryAuthMethod: dbSession.primary_auth_method,
-    strongAuthMethod: dbSession.strong_auth_method,
-    strongAuthAt: dbSession.strong_auth_at,
+    userId: authSession.userId,
+    branchId: authSession.branchId,
+    role: authSession.role,
+    onboardingCompleted: authSession.onboardingCompleted,
+    sessionClass: authSession.sessionClass,
+    primaryAuthMethod: authSession.primaryAuthMethod,
+    strongAuthMethod: authSession.strongAuthMethod,
+    strongAuthAt: authSession.strongAuthAt,
     expiresAt: dbSession.expires_at,
   });
 
   return {
-    session: {
-      id: sessionId,
-      userId: asUserId(dbSession.user_id),
-      branchId: asBranchId(dbSession.branch_id),
-      role: dbSession.role,
-      onboardingCompleted,
-      sessionClass: dbSession.session_class,
-      primaryAuthMethod: dbSession.primary_auth_method,
-      strongAuthMethod: dbSession.strong_auth_method,
-      strongAuthAt: dbSession.strong_auth_at,
-    },
+    session: authSession,
   };
 }
 

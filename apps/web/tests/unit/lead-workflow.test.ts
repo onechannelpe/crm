@@ -7,7 +7,6 @@ import {
 } from "~/server/lead-workflow/request-refill";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { type LeadCandidate } from "~/server/shared/engine/lead-contract";
-import { asBranchId, asUserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import {
@@ -17,8 +16,8 @@ import {
   makeNullLeadPolicyRepos,
 } from "../support/capacity-fakes";
 
-const USER_ID = asUserId(1);
-const BRANCH_ID = asBranchId(1);
+const USER_ID = 1;
+const BRANCH_ID = 1;
 
 function makeCandidate(n: number): LeadCandidate {
   return {

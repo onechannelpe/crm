@@ -10,6 +10,7 @@ import {
   salesExportService,
   searchEnrichmentService,
 } from "~/server/shared/context";
+import { expireUsersAndInvalidateSessions } from "~/server/users/expire-users";
 
 const WORKER_ID = `bg-${process.pid}`;
 const logger = createLogger("background-jobs", { workerId: WORKER_ID });
@@ -113,15 +114,9 @@ export function startBackgroundJobs() {
       name: "Account expiry",
       intervalMs: 60_000,
       async run() {
-        const expiredIds = await repos.users.expireActiveUsersBefore(
-          Date.now(),
-        );
-        for (const userId of expiredIds) {
-          // eslint-disable-next-line no-await-in-loop
-          await repos.sessions.deleteAllForUser(userId);
-        }
-        if (expiredIds.length > 0) {
-          logger.info("accounts_expired", { count: expiredIds.length });
+        const expiredCount = await expireUsersAndInvalidateSessions(Date.now());
+        if (expiredCount > 0) {
+          logger.info("accounts_expired", { count: expiredCount });
         }
       },
     }),

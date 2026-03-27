@@ -6,14 +6,14 @@ import { requestSalesExport } from "../../src/actions/sales-exports";
 import {
   createSalesRecordDraft,
   rejectSalesRecord,
-} from "../../src/actions/sales-records";
+} from "../../src/actions/sales-records/mutations";
 import { updateProductPricing } from "../../src/actions/settings";
+import { acceptTeamInvite } from "../../src/actions/team/acceptance";
 import {
-  acceptTeamInvite,
   createTeamInvite,
   resendTeamInvite,
   revokeTeamInvite,
-} from "../../src/actions/team";
+} from "../../src/actions/team/invites";
 
 describe("action guards fail fast", () => {
   it("rejects malformed numeric ids before auth", async () => {

@@ -1,7 +1,7 @@
 import { useLocation } from "@solidjs/router";
 import { For, Show, createMemo } from "solid-js";
 
-import { logout } from "~/actions/auth";
+import { logout } from "~/actions/auth/session";
 import { useSession } from "~/components/providers/session-provider";
 
 import { AdvancedSettingsWrapper } from "../advanced/advanced-settings-wrapper";

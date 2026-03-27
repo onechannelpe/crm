@@ -1,4 +1,4 @@
-import type { CurrentUser } from "~/actions/auth";
+import type { CurrentUser } from "~/actions/auth/session";
 
 export type OnboardingStep = "profile" | "security";
 

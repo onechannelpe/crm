@@ -47,6 +47,7 @@ import { createSaleRepo } from "~/server/sales/infrastructure/sale-repo";
 import { createReportExportRepo } from "~/server/sales/repos-report-exports";
 import { createSalesRecordsRepo } from "~/server/sales/repos-sales-records";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
+import { createRequestSessionsRepo } from "~/server/security/repos-request-sessions";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
 import { createBranchesRepo } from "~/server/users/repos-branches";
 import { createPasskeysRepo } from "~/server/users/repos-passkeys";
@@ -65,6 +66,7 @@ export function createRepositories(db: Kysely<Database>) {
     users: createUsersRepo(db),
     userInvites: createUserInvitesRepo(db),
     sessions: createSessionRepository(db),
+    requestSessions: createRequestSessionsRepo(db),
     authEvents: createAuthEventsRepo(db),
     loginFlows: createLoginFlowsRepo(db),
     authThrottle: createAuthThrottleRepo(db),

@@ -1,6 +1,18 @@
 // @refresh reload
 import type { DocumentComponentProps } from "@solidjs/start/server";
 import { createHandler, StartServer } from "@solidjs/start/server";
+import { getRequestEvent } from "solid-js/web";
+
+import { CSRF_CONFIG } from "./lib/security/csrf-config";
+
+function RequestMeta() {
+  const event = getRequestEvent();
+  const csrfToken = event?.locals?.requestContext?.csrfToken;
+
+  return csrfToken ? (
+    <meta name={CSRF_CONFIG.META_NAME} content={csrfToken} />
+  ) : null;
+}
 
 export default createHandler(
   () => {
@@ -14,6 +26,7 @@ export default createHandler(
                 name="viewport"
                 content="width=device-width, initial-scale=1"
               />
+              <RequestMeta />
               <title>CRM | One Channel</title>
               {assets}
             </head>
