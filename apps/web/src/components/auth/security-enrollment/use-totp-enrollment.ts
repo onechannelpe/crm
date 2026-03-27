@@ -3,7 +3,7 @@ import { createSignal } from "solid-js";
 import {
   beginTotpEnrollment,
   finishTotpEnrollment,
-} from "~/actions/auth/login/totp";
+} from "~/actions/auth/security/totp";
 import { getErrorMessage } from "~/lib/errors";
 
 type ShowToast = (type: "success" | "error" | "info", message: string) => void;
