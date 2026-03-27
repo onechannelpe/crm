@@ -103,6 +103,7 @@ export async function enforceAuthRequest(
   event: AuthRequestEvent,
 ): Promise<AuthRequestDecision> {
   const url = new URL(event.request.url);
+  const requestContext = event.locals?.requestContext;
 
   if (!SAFE_METHODS.has(event.request.method)) {
     const csrfPolicyError = enforceCsrfRequestPolicy(event.request);
@@ -114,7 +115,9 @@ export async function enforceAuthRequest(
       };
     }
 
-    const csrfToken = event.locals?.requestContext?.csrfToken;
+    const csrfToken = requestContext
+      ? await requestContext.getRequestCsrfToken()
+      : null;
     const isCsrfValid = csrfToken
       ? await verifyCsrf(event.request, csrfToken)
       : false;
@@ -128,7 +131,7 @@ export async function enforceAuthRequest(
 
   if (isPublicPath(url.pathname)) return { kind: "allow" };
 
-  const session = event.locals?.requestContext?.session;
+  const session = requestContext ? await requestContext.getAuthSession() : null;
   if (!session) {
     return { kind: "redirect_login" };
   }

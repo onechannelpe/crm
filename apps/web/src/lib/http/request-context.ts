@@ -23,28 +23,47 @@ export interface RequestContext {
   clientIp: string;
   userAgent: string | null;
   observability: ActionRequestContext;
-  authState: RequestAuthState;
   csrfToken: string | null;
-  session: AuthSession | null;
+  getAuthSession(): Promise<AuthSession | null>;
+  getAuthState(): Promise<RequestAuthState>;
+  getRequestCsrfToken(): Promise<string | null>;
 }
 
 export async function buildRequestContext(
   request: Request,
   observability: ActionRequestContext,
 ): Promise<RequestContext> {
-  const [session, requestSession] = await Promise.all([
-    loadRequestSession(),
-    loadRequestSessionState(request),
-  ]);
+  const initialRequestSession = shouldBootstrapRequestSession(request)
+    ? await loadRequestSessionState(request, true)
+    : null;
+  let authSessionPromise: Promise<AuthSession | null> | null = null;
+  let requestSessionPromise: Promise<{
+    id: string;
+    csrfToken: string;
+  } | null> | null = initialRequestSession
+    ? Promise.resolve(initialRequestSession)
+    : null;
 
   return {
     publicOrigin: getRequestPublicOrigin(request),
     clientIp: getClientIp(request.headers),
     userAgent: request.headers.get("user-agent") ?? null,
     observability,
-    authState: session?.sessionClass ?? "anonymous",
-    csrfToken: requestSession?.csrfToken ?? null,
-    session,
+    csrfToken: initialRequestSession?.csrfToken ?? null,
+    getAuthSession() {
+      authSessionPromise ??= loadRequestSession();
+      return authSessionPromise;
+    },
+    async getAuthState() {
+      authSessionPromise ??= loadRequestSession();
+      const session = await authSessionPromise;
+      return session?.sessionClass ?? "anonymous";
+    },
+    async getRequestCsrfToken() {
+      requestSessionPromise ??= loadRequestSessionState(request, false);
+      const requestSession = await requestSessionPromise;
+      return requestSession?.csrfToken ?? null;
+    },
   };
 }
 
@@ -80,6 +99,7 @@ async function loadRequestSession(): Promise<AuthSession | null> {
 
 async function loadRequestSessionState(
   request: Request,
+  createIfMissing: boolean,
 ): Promise<{ id: string; csrfToken: string } | null> {
   const existingId = getRequestSessionCookie();
   if (existingId) {
@@ -96,7 +116,7 @@ async function loadRequestSessionState(
     deleteRequestSessionCookie();
   }
 
-  if (!shouldBootstrapRequestSession(request)) {
+  if (!createIfMissing) {
     return null;
   }
 

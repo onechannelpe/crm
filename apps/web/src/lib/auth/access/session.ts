@@ -22,7 +22,7 @@ export interface SessionData {
 }
 
 export async function getSession(): Promise<SessionData | null> {
-  const session = getRequestContext().session;
+  const session = await getRequestContext().getAuthSession();
   if (!session) return null;
 
   return {

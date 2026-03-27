@@ -22,7 +22,7 @@ import { traceServerAction } from "~/lib/observability/diagnostics";
 import { repos } from "~/server/shared/context";
 
 export async function logout(): Promise<void> {
-  const { session } = getRequestContext();
+  const session = await getRequestContext().getAuthSession();
   if (!session) {
     deleteSessionCookie();
     return;
@@ -79,7 +79,7 @@ export interface CurrentUser extends WorkspaceIdentity {
 
 export async function getMe(): Promise<CurrentUser | null> {
   return traceServerAction("auth-session-action", "get_me", async () => {
-    const { session } = getRequestContext();
+    const session = await getRequestContext().getAuthSession();
     if (!session) return null;
 
     const user = await repos.users.findById(session.userId);

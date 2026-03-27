@@ -42,9 +42,10 @@ function createRequestContext(
       httpMethod: "GET",
       requestStartedAt: Date.now(),
     },
-    authState: session?.sessionClass ?? "anonymous",
     csrfToken,
-    session,
+    getAuthSession: async () => session,
+    getAuthState: async () => session?.sessionClass ?? "anonymous",
+    getRequestCsrfToken: async () => csrfToken,
   };
 }
 
@@ -176,7 +177,9 @@ describe("auth middleware request guard", () => {
     const decision = await enforceAuthRequest(event);
 
     expect(decision.kind).toBe("allow");
-    expect(event.locals.requestContext?.session).toEqual(session);
+    await expect(
+      event.locals.requestContext?.getAuthSession(),
+    ).resolves.toEqual(session);
   });
 
   it("redirects to /onboarding when session is not onboarded", async () => {
