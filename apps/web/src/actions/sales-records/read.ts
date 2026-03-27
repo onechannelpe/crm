@@ -1,7 +1,6 @@
 "use server";
 
 import { requirePermission } from "~/lib/auth/access/session";
-import { runAction } from "~/server/shared/action-runtime";
 import {
   getBootstrap as getBootstrapService,
   getFixContext as getFixContextService,
@@ -15,6 +14,7 @@ import type {
   SalesRecordProductOption,
   SalesRecordQueueItem,
 } from "~/server/sales-records/types";
+import { runAction } from "~/server/shared/action-runtime";
 
 import { parseSalesContactId, parseSalesRecordId } from "./input";
 
@@ -33,7 +33,8 @@ export async function getSalesRecordBootstrap(
   contactId: number | null,
 ): Promise<SalesRecordBootstrap> {
   const session = await requirePermission("sales:create");
-  const safeContactId = contactId === null ? null : parseSalesContactId(contactId);
+  const safeContactId =
+    contactId === null ? null : parseSalesContactId(contactId);
   return runAction({
     actionName: "sales_records.bootstrap.read",
     actor: session,
@@ -52,7 +53,10 @@ export async function listPendingSalesRecords(): Promise<
   return runAction({
     actionName: "sales_records.pending.read",
     actor: session,
-    execute: async (ctx) => ({ ok: true, value: await listPendingService(ctx) }),
+    execute: async (ctx) => ({
+      ok: true,
+      value: await listPendingService(ctx),
+    }),
   });
 }
 

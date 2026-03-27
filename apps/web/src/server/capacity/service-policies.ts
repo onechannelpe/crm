@@ -1,6 +1,11 @@
+import {
+  updateLeadScopeDefault,
+  updateLeadUserOverride,
+  updateSearchScopeDefault,
+  updateSearchUserOverride,
+} from "~/server/capacity-admin/manage-capacity";
 import type { AppContext } from "~/server/shared/action-runtime";
 import { repos } from "~/server/shared/context";
-import { updateLeadScopeDefault, updateLeadUserOverride, updateSearchScopeDefault, updateSearchUserOverride } from "~/server/capacity-admin/manage-capacity";
 
 import type { ScopeRef } from "./types";
 

@@ -1,8 +1,8 @@
 import { forbiddenError, notFoundError } from "~/lib/app-errors";
 import { assertOwnedRecord } from "~/lib/auth/access/ownership";
 import { computeClientCompletenessScore } from "~/server/sales/completeness";
-import { repos } from "~/server/shared/context";
 import type { AppContext } from "~/server/shared/action-runtime";
+import { repos } from "~/server/shared/context";
 
 import type {
   SalesRecordBootstrap,
@@ -109,9 +109,13 @@ export async function getBootstrap(
   };
 }
 
-export async function listPending(ctx: AppContext): Promise<SalesRecordQueueItem[]> {
+export async function listPending(
+  ctx: AppContext,
+): Promise<SalesRecordQueueItem[]> {
   const rows = await repos.salesRecords.listPendingWithClient(
-    ctx.actor.role === "superuser" ? undefined : { branchId: ctx.actor.branchId },
+    ctx.actor.role === "superuser"
+      ? undefined
+      : { branchId: ctx.actor.branchId },
   );
   return rows.map(mapQueueItem);
 }

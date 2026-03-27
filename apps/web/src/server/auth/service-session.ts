@@ -12,10 +12,12 @@ import { repos } from "~/server/shared/context";
 
 import type { CurrentUserView } from "./types";
 
-export async function logoutUser(session: {
-  id: string;
-  userId: number;
-} | null): Promise<void> {
+export async function logoutUser(
+  session: {
+    id: string;
+    userId: number;
+  } | null,
+): Promise<void> {
   if (!session) {
     deleteSessionCookie();
     return;
@@ -42,13 +44,15 @@ export async function logoutUser(session: {
   });
 }
 
-export async function getCurrentUser(session: {
-  userId: number;
-  role: CurrentUserView["role"];
-  sessionClass: CurrentUserView["sessionClass"];
-  primaryAuthMethod: CurrentUserView["primaryAuthMethod"];
-  strongAuthMethod: CurrentUserView["strongAuthMethod"];
-} | null): Promise<CurrentUserView | null> {
+export async function getCurrentUser(
+  session: {
+    userId: number;
+    role: CurrentUserView["role"];
+    sessionClass: CurrentUserView["sessionClass"];
+    primaryAuthMethod: CurrentUserView["primaryAuthMethod"];
+    strongAuthMethod: CurrentUserView["strongAuthMethod"];
+  } | null,
+): Promise<CurrentUserView | null> {
   if (!session) return null;
 
   const user = await repos.users.findById(session.userId);

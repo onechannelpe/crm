@@ -6,7 +6,6 @@ import {
   getBulkImportSetup as getBulkImportSetupService,
   getInviteManagement as getInviteManagementService,
 } from "~/server/team/service-invites";
-
 import type { BulkImportSetup, InviteManagement } from "~/server/team/types";
 
 export async function getInviteManagement(): Promise<InviteManagement> {

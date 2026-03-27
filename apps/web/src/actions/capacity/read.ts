@@ -2,7 +2,6 @@
 
 import { requirePermission } from "~/lib/auth/access/session";
 import { assertPositiveInt } from "~/lib/contracts/guards";
-import { runAction } from "~/server/shared/action-runtime";
 import {
   getAuditEvents as getAuditEventsService,
   getExecutiveDetail as getExecutiveDetailService,
@@ -10,6 +9,7 @@ import {
   listManagedExecutives as listManagedExecutivesService,
   listPendingRequests as listPendingRequestsService,
 } from "~/server/capacity/service-read";
+import { runAction } from "~/server/shared/action-runtime";
 
 export async function getManagedExecutivesList() {
   const session = await requirePermission("capacity:read:team");

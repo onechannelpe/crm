@@ -45,7 +45,10 @@ export async function createTeamInvite(input: {
       hasTeamId: safeInput.teamId !== null,
     },
     execute: (ctx) =>
-      createTeamInviteService(ctx, safeInput, { sendInviteEmail, getInviteUrl }),
+      createTeamInviteService(ctx, safeInput, {
+        sendInviteEmail,
+        getInviteUrl,
+      }),
   });
 }
 
