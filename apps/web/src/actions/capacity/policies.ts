@@ -5,7 +5,7 @@ import {
   updateLeadPolicyOverride as updateLeadPolicyOverrideService,
   updateSearchPolicyDefault as updateSearchPolicyDefaultService,
   updateSearchPolicyOverride as updateSearchPolicyOverrideService,
-} from "~/server/capacity/service-policies";
+} from "~/server/capacity/service-write";
 import { runAction } from "~/server/shared/action-runtime";
 
 import {

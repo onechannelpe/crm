@@ -1,7 +1,6 @@
 import type { AuthenticationResponseJSON } from "@simplewebauthn/server";
 
 import { createRequestPasskeyProviderFactory } from "~/actions/auth/shared/request-passkey-provider";
-import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { submitPasswordLogin } from "~/lib/auth/flows/primary-login-service";
 import { submitTotpForLoginFlow } from "~/lib/auth/flows/totp-step-up-service";
 import {
@@ -9,10 +8,12 @@ import {
   createPasskeyLoginStartAuthService,
 } from "~/lib/auth/passkey/service";
 import { replaceCurrentSession } from "~/lib/auth/session/session-transition";
-import { privilegedLoginAlertSender, repos } from "~/server/shared/context";
+
+import { getDefaultAppPath } from "./domain";
+import { authRepos, privilegedLoginAlertSender } from "./repos";
 
 export function createPasskeyStartService() {
-  return createPasskeyLoginStartAuthService(repos, {
+  return createPasskeyLoginStartAuthService(authRepos, {
     createWebauthnProvider: createRequestPasskeyProviderFactory(),
   });
 }
@@ -23,7 +24,7 @@ export function submitPasswordLoginWithRepos(input: {
   ipAddress: string;
   userAgent: string | null;
 }) {
-  return submitPasswordLogin(input, repos, privilegedLoginAlertSender);
+  return submitPasswordLogin(input, authRepos, privilegedLoginAlertSender);
 }
 
 export function submitTotpLoginWithRepos(input: {
@@ -32,7 +33,7 @@ export function submitTotpLoginWithRepos(input: {
   ipAddress: string;
   userAgent: string | null;
 }) {
-  return submitTotpForLoginFlow(input, repos, privilegedLoginAlertSender);
+  return submitTotpForLoginFlow(input, authRepos, privilegedLoginAlertSender);
 }
 
 export async function finishPasskeyLoginWithRepos(input: {
@@ -41,7 +42,7 @@ export async function finishPasskeyLoginWithRepos(input: {
   ipAddress: string;
   userAgent: string | null;
 }) {
-  const service = createPasskeyLoginFinishAuthService(repos, {
+  const service = createPasskeyLoginFinishAuthService(authRepos, {
     createWebauthnProvider: createRequestPasskeyProviderFactory(),
   });
   return service.finishLogin({

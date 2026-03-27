@@ -8,14 +8,11 @@ import {
   type BulkApplyResult,
   type BulkParseResult,
 } from "~/server/users/service-bulk-import";
-import type { createUserProvisioningService } from "~/server/users/service-user-provisioning";
 
+import { createTeamProvisioning } from "./repos";
 import type { CreateTeamInviteCommand } from "./types";
 
-type TeamBulkProvisioning = Pick<
-  ReturnType<typeof createUserProvisioningService>,
-  "createInvite" | "markInviteDelivered"
->;
+const teamProvisioning = createTeamProvisioning();
 
 export async function previewBulkImport(
   csvContent: string,
@@ -41,7 +38,6 @@ export async function applyBulkImport(
     role: CreateTeamInviteCommand["role"];
   },
   deps: {
-    provisioning: TeamBulkProvisioning;
     sendInviteEmail: (input: {
       email: string;
       fullName: string;
@@ -76,7 +72,7 @@ export async function applyBulkImport(
       branchId: ctx.actor.branchId,
     },
     input.role,
-    deps.provisioning,
+    teamProvisioning,
     async ({ row, inviteId, token, expiresAt }) => {
       await deps.sendInviteEmail({
         email: row.email,
@@ -89,7 +85,7 @@ export async function applyBulkImport(
         inviteUrl: deps.getInviteUrl(token),
         expiresAt,
       });
-      await deps.provisioning.markInviteDelivered(inviteId);
+      await teamProvisioning.markInviteDelivered(inviteId);
     },
   );
 

@@ -2,24 +2,19 @@
 
 import { runAction } from "~/server/shared/action-runtime";
 import { isErr } from "~/server/shared/result";
-import { createTeamInviteRuntime } from "~/server/team/runtime";
 import {
   createTeamInvite as createTeamInviteService,
   getInviteInfo as getInviteInfoService,
   resendTeamInvite as resendTeamInviteService,
   revokeTeamInvite as revokeTeamInviteService,
-} from "~/server/team/service-invites";
+} from "~/server/team/service";
 import type { InviteInfo } from "~/server/team/types";
 
 import { parseCreateTeamInviteInput, parseInviteIdInput } from "./input";
 import { getInviteUrl, sendInviteEmail } from "./utils";
 
 export async function getInviteInfo(token: string): Promise<InviteInfo | null> {
-  const runtime = createTeamInviteRuntime();
-  const result = await getInviteInfoService({
-    token,
-    repos: runtime.repos,
-  });
+  const result = await getInviteInfoService({ token });
   if (isErr(result)) {
     throw result.error;
   }
@@ -36,7 +31,6 @@ export async function createTeamInvite(input: {
   expiresAt?: number | null;
 }): Promise<{ inviteId: number }> {
   const safeInput = parseCreateTeamInviteInput(input);
-  const runtime = createTeamInviteRuntime();
 
   return runAction({
     actionName: "team.invite.create",
@@ -47,11 +41,8 @@ export async function createTeamInvite(input: {
     },
     execute: (ctx) =>
       createTeamInviteService(ctx, safeInput, {
-        provisioning: runtime.provisioning,
         sendInviteEmail,
         getInviteUrl,
-        enforceRateLimit: (userId) =>
-          runtime.enforceInviteCreateRateLimit(userId),
       }),
   });
 }
@@ -62,15 +53,12 @@ export async function resendTeamInvite(inviteId: number): Promise<void> {
     throw parsedInput.error;
   }
 
-  const runtime = createTeamInviteRuntime();
   await runAction({
     actionName: "team.invite.resend",
     permission: "hr:manage",
     input: { inviteId: parsedInput.value.inviteId },
     execute: (ctx) =>
       resendTeamInviteService(ctx, parsedInput.value, {
-        repos: runtime.repos,
-        provisioning: runtime.provisioning,
         sendInviteEmail,
         getInviteUrl,
       }),
@@ -83,14 +71,10 @@ export async function revokeTeamInvite(inviteId: number): Promise<void> {
     throw parsedInput.error;
   }
 
-  const runtime = createTeamInviteRuntime();
   await runAction({
     actionName: "team.invite.revoke",
     permission: "hr:manage",
     input: { inviteId: parsedInput.value.inviteId },
-    execute: (ctx) =>
-      revokeTeamInviteService(ctx, parsedInput.value, {
-        provisioning: runtime.provisioning,
-      }),
+    execute: (ctx) => revokeTeamInviteService(ctx, parsedInput.value),
   });
 }

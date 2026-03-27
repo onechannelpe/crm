@@ -1,9 +1,9 @@
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
-import { computeClientCompletenessScore } from "~/server/sales/completeness";
 import type { AppContext } from "~/server/shared/action-runtime";
-import { rateLimitDeps, salesRecordsService } from "~/server/shared/context";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 
+import { computeClientCompletenessScore } from "./domain";
+import { rateLimitDeps, salesRecordsService } from "./repos";
 import type {
   CreateSalesRecordDraftInput,
   SalesRecordAttemptOutcome,

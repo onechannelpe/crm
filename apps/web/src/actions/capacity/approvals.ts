@@ -1,11 +1,12 @@
 "use server";
 
+import { validationError } from "~/lib/app-errors";
 import {
-  approveCapacity as approveCapacityService,
-  grantLeadCapacity as grantLeadCapacityService,
-  grantSearchCapacity as grantSearchCapacityService,
-  rejectCapacity as rejectCapacityService,
-} from "~/server/capacity/service-requests";
+  approveCapacityRequest as approveCapacityService,
+  grantLeadCapacityDirect as grantLeadCapacityService,
+  grantSearchCapacityDirect as grantSearchCapacityService,
+  rejectCapacityRequest as rejectCapacityService,
+} from "~/server/capacity/service-write";
 import { runAction } from "~/server/shared/action-runtime";
 
 import { parseCapacityDecisionInput, parseCapacityGrantInput } from "./input";
@@ -24,17 +25,16 @@ export async function approveCapacity(requestId: number, note?: string) {
 export async function rejectCapacity(requestId: number, note: string) {
   const decisionInput = parseCapacityDecisionInput({ requestId, note });
   if (!decisionInput.ok) throw decisionInput.error;
+  if (!decisionInput.value.note) throw validationError("note is required");
+  const safeNote = decisionInput.value.note;
   return runAction({
     actionName: "capacity.reject",
     permission: "capacity:approve",
-    input: {
-      requestId: decisionInput.value.requestId,
-      note: decisionInput.value.note ?? "",
-    },
+    input: { requestId: decisionInput.value.requestId, note: safeNote },
     execute: (ctx) =>
       rejectCapacityService(ctx, {
         requestId: decisionInput.value.requestId,
-        note: decisionInput.value.note ?? "",
+        note: safeNote,
       }),
   });
 }

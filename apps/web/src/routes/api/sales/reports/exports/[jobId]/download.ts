@@ -1,15 +1,18 @@
 import type { APIEvent } from "@solidjs/start/server";
 
-import type { Role } from "~/lib/auth/access/rbac";
 import { requirePermission } from "~/lib/auth/access/session";
 import { assertPositiveInt } from "~/lib/contracts/guards";
-import { runObservedAction } from "~/lib/observability/run-observed-action";
-import { repos, salesExportBlobStore } from "~/server/shared/context";
+import { createAppContext } from "~/server/shared/action-runtime";
+import {
+  repos,
+  observabilityService,
+  salesExportBlobStore,
+} from "~/server/shared/context";
 import type { Repositories } from "~/server/shared/registry";
 
 interface SalesExportDownloadSession {
   userId: number;
-  role: Role;
+  role: import("~/lib/auth/access/rbac").Role;
   branchId: number;
 }
 
@@ -91,21 +94,34 @@ export async function downloadSalesExportById(
 export async function GET(event: Pick<APIEvent, "params">): Promise<Response> {
   try {
     const safeJobId = assertPositiveInt(Number(event.params.jobId), "jobId");
-    const actor = { userId: null as number | null, role: null as Role | null };
-    return await runObservedAction({
-      actionName: "sales.export.download",
-      actor,
-      input: { jobId: safeJobId },
-      run: async () => {
-        const session = await requirePermission("sales:review");
-        actor.userId = session.userId;
-        actor.role = session.role;
-        return downloadSalesExportById(safeJobId, session, {
-          repos,
-          blobStore: salesExportBlobStore,
-        });
-      },
+    const session = await requirePermission("sales:review");
+    const ctx = createAppContext(session);
+    const startedAt = ctx.now();
+
+    const response = await downloadSalesExportById(safeJobId, session, {
+      repos,
+      blobStore: salesExportBlobStore,
     });
+
+    void observabilityService
+      .recordAction({
+        traceId: ctx.traceId,
+        requestId: ctx.requestId,
+        routePath: "/api/sales/reports/exports/[jobId]/download",
+        httpMethod: "GET",
+        actionName: "sales.export.download",
+        actorUserId: ctx.actor.userId,
+        actorRole: ctx.actor.role,
+        status: "ok",
+        durationMs: ctx.now() - startedAt,
+        errorCode: null,
+        errorMessage: null,
+        input: { jobId: safeJobId },
+        createdAt: ctx.now(),
+      })
+      .catch(() => {});
+
+    return response;
   } catch (error: unknown) {
     return new Response(mapErrorToMessage(error), {
       status: mapErrorToStatus(error),

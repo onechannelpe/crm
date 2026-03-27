@@ -1,4 +1,5 @@
 import { throwDomainError } from "~/actions/throw-domain-error";
+import { isAppError } from "~/lib/app-errors";
 import type { Permission, Role } from "~/lib/auth/access/rbac";
 import {
   requireAuth as requireAuthActor,
@@ -114,7 +115,7 @@ export async function runAction<T, E extends DomainError>(params: {
         actorRole: ctx.actor.role,
         status: "error",
         durationMs: ctx.now() - startedAt,
-        errorCode: null,
+        errorCode: isAppError(error) ? error.code : null,
         errorMessage: getErrorMessage(error, "Unknown error"),
         input: params.input ?? null,
         createdAt: ctx.now(),

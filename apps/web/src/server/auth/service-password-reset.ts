@@ -6,7 +6,8 @@ import {
   hashPasswordResetToken,
   isValidPasswordResetTokenFormat,
 } from "~/lib/auth/password/reset-tokens";
-import { notificationSender, repos } from "~/server/shared/context";
+
+import { authRepos, notificationSender } from "./repos";
 
 const TOKEN_TTL_MS = 60 * 60 * 1000;
 const MAX_REQUESTS_PER_HOUR = 3;
@@ -25,12 +26,12 @@ export async function requestPasswordReset(input: {
   }
 
   const now = Date.now();
-  const user = await repos.users.findByEmail(email);
+  const user = await authRepos.users.findByEmail(email);
   if (!user || !user.is_active) {
     return { ok: true };
   }
 
-  const recentCount = await repos.passwordResetTokens.countRecentForUser(
+  const recentCount = await authRepos.passwordResetTokens.countRecentForUser(
     user.id,
     now - TOKEN_TTL_MS,
   );
@@ -39,7 +40,7 @@ export async function requestPasswordReset(input: {
   }
 
   const token = generatePasswordResetToken();
-  await repos.passwordResetTokens.create({
+  await authRepos.passwordResetTokens.create({
     user_id: user.id,
     token_hash: hashPasswordResetToken(token),
     expires_at: now + TOKEN_TTL_MS,
@@ -85,7 +86,7 @@ export async function resetPassword(input: {
   }
 
   const now = Date.now();
-  const record = await repos.passwordResetTokens.findValidByHash(
+  const record = await authRepos.passwordResetTokens.findValidByHash(
     hashPasswordResetToken(input.token),
     now,
   );
@@ -93,8 +94,8 @@ export async function resetPassword(input: {
     return { ok: false, code: "invalid_token" };
   }
 
-  await repos.passwordResetTokens.expireAllForUser(record.user_id, now);
-  await repos.users.updatePassword(
+  await authRepos.passwordResetTokens.expireAllForUser(record.user_id, now);
+  await authRepos.users.updatePassword(
     record.user_id,
     await hashPassword(input.password),
   );

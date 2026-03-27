@@ -1,9 +1,9 @@
 import { forbiddenError, notFoundError } from "~/lib/app-errors";
 import { assertOwnedRecord } from "~/lib/auth/access/ownership";
-import { computeClientCompletenessScore } from "~/server/sales/completeness";
 import type { AppContext } from "~/server/shared/action-runtime";
-import { repos } from "~/server/shared/context";
 
+import { computeClientCompletenessScore } from "./domain";
+import { salesRecordRepos } from "./repos";
 import type {
   SalesRecordBootstrap,
   SalesRecordFixContext,
@@ -13,7 +13,7 @@ import type {
 
 function mapQueueItem(
   row: Awaited<
-    ReturnType<typeof repos.salesRecords.listPendingWithClient>
+    ReturnType<typeof salesRecordRepos.salesRecords.listPendingWithClient>
   >[number],
 ): SalesRecordQueueItem {
   return {
@@ -39,7 +39,7 @@ function parsePhonesJson(raw: string): string[] {
 }
 
 export async function listProducts(): Promise<SalesRecordProductOption[]> {
-  return repos.products.findActive();
+  return salesRecordRepos.products.findActive();
 }
 
 export async function getBootstrap(
@@ -69,20 +69,21 @@ export async function getBootstrap(
     };
   }
 
-  const assignment = await repos.leadAssignments.findActiveForContact(
-    ctx.actor.userId,
-    input.contactId,
-  );
+  const assignment =
+    await salesRecordRepos.leadAssignments.findActiveForContact(
+      ctx.actor.userId,
+      input.contactId,
+    );
   if (!assignment) {
     throw forbiddenError(
       "You can only create sales from your active assigned leads",
     );
   }
 
-  const contact = await repos.contacts.findById(input.contactId);
+  const contact = await salesRecordRepos.contacts.findById(input.contactId);
   if (!contact) throw notFoundError("Contact not found");
 
-  const organization = await repos.organizations.findById(
+  const organization = await salesRecordRepos.organizations.findById(
     contact.organization_id,
   );
   if (!organization) throw notFoundError("Organization not found");
@@ -112,7 +113,7 @@ export async function getBootstrap(
 export async function listPending(
   ctx: AppContext,
 ): Promise<SalesRecordQueueItem[]> {
-  const rows = await repos.salesRecords.listPendingWithClient(
+  const rows = await salesRecordRepos.salesRecords.listPendingWithClient(
     ctx.actor.role === "superuser"
       ? undefined
       : { branchId: ctx.actor.branchId },
@@ -129,7 +130,8 @@ export async function listConfirmed(
       : ctx.actor.role === "superuser"
         ? undefined
         : { branchId: ctx.actor.branchId };
-  const rows = await repos.salesRecords.listConfirmedWithClient(scope);
+  const rows =
+    await salesRecordRepos.salesRecords.listConfirmedWithClient(scope);
   return rows.map(mapQueueItem);
 }
 
@@ -138,17 +140,17 @@ export async function getFixContext(
   input: { recordId: number },
 ): Promise<SalesRecordFixContext> {
   const record = assertOwnedRecord(
-    await repos.salesRecords.findById(input.recordId),
+    await salesRecordRepos.salesRecords.findById(input.recordId),
     (r) => r.executive_user_id,
     ctx.actor,
     { resourceName: "Sales record" },
   );
 
   const [client, addresses, products, attempts] = await Promise.all([
-    repos.salesRecords.findClientByRecord(input.recordId),
-    repos.salesRecords.findAddressesByRecord(input.recordId),
-    repos.salesRecords.findProductsByRecord(input.recordId),
-    repos.salesRecords.listAttemptsByRecord(input.recordId),
+    salesRecordRepos.salesRecords.findClientByRecord(input.recordId),
+    salesRecordRepos.salesRecords.findAddressesByRecord(input.recordId),
+    salesRecordRepos.salesRecords.findProductsByRecord(input.recordId),
+    salesRecordRepos.salesRecords.listAttemptsByRecord(input.recordId),
   ]);
 
   return {

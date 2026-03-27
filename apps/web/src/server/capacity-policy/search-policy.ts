@@ -11,18 +11,8 @@ import type {
 export type { SearchPolicy };
 
 export type SetSearchScopeDefaultCommand =
-  | {
-      actorUserId: UserId;
-      scopeType: "branch";
-      scopeId: BranchId;
-      monthlyLimit: number;
-    }
-  | {
-      actorUserId: UserId;
-      scopeType: "team";
-      scopeId: TeamId;
-      monthlyLimit: number;
-    };
+  | { scopeType: "branch"; scopeId: BranchId; monthlyLimit: number }
+  | { scopeType: "team"; scopeId: TeamId; monthlyLimit: number };
 
 export interface SetSearchUserOverrideCommand {
   actorUserId: UserId;

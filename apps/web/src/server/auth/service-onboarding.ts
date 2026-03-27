@@ -1,14 +1,11 @@
 import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 
 import { createRequestPasskeyProviderFactory } from "~/actions/auth/shared/request-passkey-provider";
-import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { createPasskeyEnrollmentAuthService } from "~/lib/auth/passkey/service";
-import { requiresStrongAuthRole } from "~/lib/auth/security/strong-auth-status";
 import {
   issueSessionTransition,
   replaceCurrentSession,
 } from "~/lib/auth/session/session-transition";
-import { repos, runInRepositoryTransaction } from "~/server/shared/context";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 import {
@@ -16,8 +13,11 @@ import {
   type CompleteOnboardingError,
 } from "~/server/users/service-account-onboarding";
 
+import { getDefaultAppPath, requiresStrongAuthRole } from "./domain";
+import { authRepos, runInRepositoryTransaction } from "./repos";
+
 function createEnrollmentService() {
-  return createPasskeyEnrollmentAuthService(repos, {
+  return createPasskeyEnrollmentAuthService(authRepos, {
     createWebauthnProvider: createRequestPasskeyProviderFactory(),
   });
 }
@@ -50,7 +50,7 @@ export async function finishPasskeyRegistration(input: {
     return Err(result.error);
   }
 
-  const user = await repos.users.findById(input.session.userId);
+  const user = await authRepos.users.findById(input.session.userId);
   if (!user) {
     return Err({
       kind: "unexpected",
@@ -69,7 +69,7 @@ export async function finishPasskeyRegistration(input: {
     primaryAuthMethod: input.session.primaryAuthMethod,
     strongAuthMethod: "passkey",
     strongAuthAt: Date.now(),
-    deps: repos,
+    deps: authRepos,
   });
   await replaceCurrentSession(issued.token);
   return Ok(undefined);
@@ -97,7 +97,7 @@ export async function completeOnboarding(input: {
     return result;
   }
 
-  const user = await repos.users.findById(input.session.userId);
+  const user = await authRepos.users.findById(input.session.userId);
   if (!user) {
     return Err({
       kind: "unexpected",
@@ -130,7 +130,7 @@ export async function completeOnboarding(input: {
     primaryAuthMethod: input.session.primaryAuthMethod,
     strongAuthMethod,
     strongAuthAt,
-    deps: repos,
+    deps: authRepos,
   });
   await replaceCurrentSession(issued.token);
   return Ok({ redirectTo: getDefaultAppPath(input.session.role) });

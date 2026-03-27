@@ -5,66 +5,30 @@ import { shortName } from "~/lib/users/display-name";
 import type { AppContext } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
-import type { createUserProvisioningService } from "~/server/users/service-user-provisioning";
 
+import {
+  createTeamProvisioning,
+  enforceInviteCreateRateLimit,
+  issuePreAuthTeamSession,
+  teamRepos,
+} from "./repos";
 import type {
+  AcceptTeamInviteCommand,
   BulkImportSetup,
   CreateTeamInviteCommand,
   InviteInfo,
   InviteManagement,
 } from "./types";
 
-type TeamInviteRepos = {
-  teams: {
-    findByBranch(
-      branchId: number,
-    ): Promise<Array<{ id: number; name: string }>>;
-  };
-  userInvites: {
-    findPendingByTokenHash(
-      tokenHash: string,
-      now: number,
-    ): Promise<
-      | {
-          user_names: string;
-          user_first_surname: string;
-          user_second_surname: string;
-          user_username: string;
-          user_email: string;
-        }
-      | undefined
-    >;
-    findById(inviteId: number): Promise<{ user_id: number } | undefined>;
-  };
-  users: {
-    findById(userId: number): Promise<
-      | {
-          email: string;
-          names: string;
-          first_surname: string;
-          second_surname: string;
-          role: Role;
-        }
-      | undefined
-    >;
-  };
-};
+type TeamProvisioning = ReturnType<typeof createTeamProvisioning>;
 
-type TeamProvisioning = Pick<
-  ReturnType<typeof createUserProvisioningService>,
-  | "createInvite"
-  | "listPendingInvites"
-  | "markInviteDelivered"
-  | "resendInvite"
-  | "revokeInvite"
->;
+const teamProvisioning = createTeamProvisioning();
 
 export async function getInviteInfo(input: {
   token: string;
-  repos: Pick<TeamInviteRepos, "userInvites">;
 }): Promise<Result<InviteInfo | null, DomainError>> {
   try {
-    const invite = await input.repos.userInvites.findPendingByTokenHash(
+    const invite = await teamRepos.userInvites.findPendingByTokenHash(
       hashInviteToken(input.token),
       Date.now(),
     );
@@ -87,14 +51,10 @@ export async function getInviteInfo(input: {
 
 export async function getInviteManagement(
   ctx: AppContext,
-  deps: {
-    repos: Pick<TeamInviteRepos, "teams">;
-    provisioning: Pick<TeamProvisioning, "listPendingInvites">;
-  },
 ): Promise<Result<InviteManagement, DomainError>> {
   const [teams, pendingInvites] = await Promise.all([
-    deps.repos.teams.findByBranch(ctx.actor.branchId),
-    deps.provisioning.listPendingInvites(ctx.actor.branchId),
+    teamRepos.teams.findByBranch(ctx.actor.branchId),
+    teamProvisioning.listPendingInvites(ctx.actor.branchId),
   ]);
   if (isErr(pendingInvites)) {
     return pendingInvites;
@@ -119,10 +79,6 @@ export async function createTeamInvite(
   ctx: AppContext,
   input: CreateTeamInviteCommand,
   deps: {
-    provisioning: Pick<
-      TeamProvisioning,
-      "createInvite" | "markInviteDelivered"
-    >;
     sendInviteEmail: (input: {
       email: string;
       fullName: string;
@@ -131,12 +87,11 @@ export async function createTeamInvite(
       expiresAt: number;
     }) => Promise<void>;
     getInviteUrl: (token: string) => string;
-    enforceRateLimit: (userId: number) => Promise<void>;
   },
 ): Promise<Result<{ inviteId: number }, DomainError>> {
-  await deps.enforceRateLimit(ctx.actor.userId);
+  await enforceInviteCreateRateLimit(ctx.actor.userId);
 
-  const result = await deps.provisioning.createInvite({
+  const result = await teamProvisioning.createInvite({
     actorUserId: ctx.actor.userId,
     actorRole: ctx.actor.role,
     branchId: ctx.actor.branchId,
@@ -164,7 +119,7 @@ export async function createTeamInvite(
     expiresAt: result.value.expiresAt,
   });
 
-  const deliveryResult = await deps.provisioning.markInviteDelivered(
+  const deliveryResult = await teamProvisioning.markInviteDelivered(
     result.value.inviteId,
   );
   if (isErr(deliveryResult)) {
@@ -173,15 +128,11 @@ export async function createTeamInvite(
 
   return Ok({ inviteId: result.value.inviteId });
 }
+
 export async function resendTeamInvite(
   ctx: AppContext,
   input: { inviteId: number },
   deps: {
-    repos: Pick<TeamInviteRepos, "userInvites" | "users">;
-    provisioning: Pick<
-      TeamProvisioning,
-      "resendInvite" | "markInviteDelivered"
-    >;
     sendInviteEmail: (input: {
       email: string;
       fullName: string;
@@ -192,7 +143,7 @@ export async function resendTeamInvite(
     getInviteUrl: (token: string) => string;
   },
 ): Promise<Result<void, DomainError>> {
-  const result = await deps.provisioning.resendInvite({
+  const result = await teamProvisioning.resendInvite({
     actorUserId: ctx.actor.userId,
     actorRole: ctx.actor.role,
     branchId: ctx.actor.branchId,
@@ -202,8 +153,8 @@ export async function resendTeamInvite(
     return result;
   }
 
-  const invite = await deps.repos.userInvites.findById(result.value.inviteId);
-  const user = invite ? await deps.repos.users.findById(invite.user_id) : null;
+  const invite = await teamRepos.userInvites.findById(result.value.inviteId);
+  const user = invite ? await teamRepos.users.findById(invite.user_id) : null;
   if (!user) {
     return Err({
       kind: "not_found",
@@ -220,7 +171,7 @@ export async function resendTeamInvite(
     expiresAt: result.value.expiresAt,
   });
 
-  const deliveryResult = await deps.provisioning.markInviteDelivered(
+  const deliveryResult = await teamProvisioning.markInviteDelivered(
     result.value.inviteId,
   );
   if (isErr(deliveryResult)) {
@@ -233,14 +184,42 @@ export async function resendTeamInvite(
 export async function revokeTeamInvite(
   ctx: AppContext,
   input: { inviteId: number },
-  deps: {
-    provisioning: Pick<TeamProvisioning, "revokeInvite">;
-  },
 ): Promise<Result<void, DomainError>> {
-  return deps.provisioning.revokeInvite({
+  return teamProvisioning.revokeInvite({
     actorUserId: ctx.actor.userId,
     actorRole: ctx.actor.role,
     branchId: ctx.actor.branchId,
     inviteId: input.inviteId,
+  });
+}
+
+export async function acceptTeamInvite(
+  request: {
+    ipAddress: string;
+    userAgent: string | null;
+  },
+  input: AcceptTeamInviteCommand & { passwordHash: string },
+): Promise<Result<{ sessionToken: string; redirectTo: string }, DomainError>> {
+  const result = await teamProvisioning.acceptInvite({
+    token: input.token,
+    passwordHash: input.passwordHash,
+  });
+  if (isErr(result)) {
+    return result;
+  }
+
+  const issued = await issuePreAuthTeamSession({
+    user: {
+      id: result.value.userId,
+      branch_id: result.value.branchId,
+      role: result.value.role,
+      onboarding_completed_at: null,
+    },
+    request,
+  });
+
+  return Ok({
+    sessionToken: issued.token,
+    redirectTo: "/onboarding",
   });
 }

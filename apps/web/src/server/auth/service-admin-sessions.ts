@@ -10,9 +10,10 @@ import {
 } from "~/lib/contracts/audit";
 import type { UserSession } from "~/lib/db/types";
 import type { AppContext } from "~/server/shared/action-runtime";
-import { repos } from "~/server/shared/context";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
+
+import { authRepos } from "./repos";
 
 export interface SessionInfo {
   id: string;
@@ -32,19 +33,19 @@ export async function listUserSessions(
   _ctx: AppContext,
   input: { userId: number },
 ): Promise<Result<UserSession[], DomainError>> {
-  return Ok(await repos.sessions.listForUser(input.userId));
+  return Ok(await authRepos.sessions.listForUser(input.userId));
 }
 
 export async function countActiveSessions(): Promise<
   Result<number, DomainError>
 > {
-  return Ok(await repos.sessions.countActive());
+  return Ok(await authRepos.sessions.countActive());
 }
 
 export async function listAllActiveSessions(): Promise<
   Result<SessionInfo[], DomainError>
 > {
-  return Ok(await repos.sessions.listAllActive());
+  return Ok(await authRepos.sessions.listAllActive());
 }
 
 export async function revokeUserSession(
@@ -53,16 +54,16 @@ export async function revokeUserSession(
 ): Promise<Result<{ success: true }, DomainError>> {
   const now = ctx.now();
   await invalidateSession(input.sessionId);
-  await repos.extensionRuntime.revokeInstallationSessionsByAuthSession(
+  await authRepos.extensionRuntime.revokeInstallationSessionsByAuthSession(
     input.sessionId,
     now,
   );
-  await repos.extensionRuntime.updateExecutiveSyncHealthByUser({
+  await authRepos.extensionRuntime.updateExecutiveSyncHealthByUser({
     user_id: input.targetUserId,
     sync_health: "reauth_required",
     sync_updated_at: now,
   });
-  await repos.auditLogs.create({
+  await authRepos.auditLogs.create({
     user_id: ctx.actor.userId,
     action: "session_revoked_by_admin",
     entity_type: "user_session",
@@ -81,16 +82,16 @@ export async function revokeAllUserSessions(
 ): Promise<Result<{ success: true }, DomainError>> {
   const now = ctx.now();
   await invalidateUserSessions(input.targetUserId);
-  await repos.extensionRuntime.revokeInstallationSessionsByUser(
+  await authRepos.extensionRuntime.revokeInstallationSessionsByUser(
     input.targetUserId,
     now,
   );
-  await repos.extensionRuntime.updateExecutiveSyncHealthByUser({
+  await authRepos.extensionRuntime.updateExecutiveSyncHealthByUser({
     user_id: input.targetUserId,
     sync_health: "reauth_required",
     sync_updated_at: now,
   });
-  await repos.auditLogs.create({
+  await authRepos.auditLogs.create({
     user_id: ctx.actor.userId,
     action: "all_sessions_revoked",
     entity_type: "user",

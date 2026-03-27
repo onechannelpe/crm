@@ -1,8 +1,8 @@
-import { privilegedLoginAlertSender, repos } from "~/server/shared/context";
+import { authRepos, privilegedLoginAlertSender } from "./repos";
 
 export function getGoogleOAuthCallbackRuntime() {
   return {
-    repos,
+    repos: authRepos,
     privilegedLoginAlertSender,
   };
 }

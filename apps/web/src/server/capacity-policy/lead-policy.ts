@@ -9,14 +9,12 @@ export type { LeadPolicy };
 
 export type SetLeadScopeDefaultCommand =
   | {
-      actorUserId: UserId;
       scopeType: "branch";
       scopeId: BranchId;
       bufferTarget: number;
       dailyLimit: number;
     }
   | {
-      actorUserId: UserId;
       scopeType: "team";
       scopeId: TeamId;
       bufferTarget: number;

@@ -1,6 +1,6 @@
 "use server";
 
-import { requestCapacity } from "~/server/capacity/service-requests";
+import { requestCapacity } from "~/server/capacity/service-write";
 import { runAction } from "~/server/shared/action-runtime";
 
 import { parseCapacityAmount, parseCapacityReason } from "./input";
@@ -36,7 +36,7 @@ export async function requestMoreLeadRefill(amount: number, reason: string) {
     input: { amount: amountResult.value, reason: reasonResult.value },
     execute: (ctx) =>
       requestCapacity(ctx, {
-        kind: "lead_refill_extra",
+        kind: "lead_refill",
         amount: amountResult.value,
         reason: reasonResult.value,
       }),

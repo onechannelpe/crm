@@ -1,8 +1,7 @@
 "use server";
 
-import { getLoginFlowState } from "~/lib/auth/flows/login-state-service";
-import { repos } from "~/server/shared/context";
+import { getLoginFlow as getLoginFlowService } from "~/server/auth/service-session";
 
 export async function getLoginFlow(flowId: number) {
-  return getLoginFlowState(flowId, repos);
+  return getLoginFlowService(flowId);
 }

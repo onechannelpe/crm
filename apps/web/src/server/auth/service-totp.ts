@@ -11,9 +11,10 @@ import {
   verifyTotpCode,
 } from "~/lib/auth/totp/totp";
 import type { AppContext } from "~/server/shared/action-runtime";
-import { repos } from "~/server/shared/context";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
+
+import { authRepos } from "./repos";
 
 export async function beginTotpEnrollment(ctx: AppContext): Promise<
   Result<
@@ -24,12 +25,12 @@ export async function beginTotpEnrollment(ctx: AppContext): Promise<
     DomainError
   >
 > {
-  const user = await repos.users.findById(ctx.actor.userId);
+  const user = await authRepos.users.findById(ctx.actor.userId);
   if (!user) {
     return Err(domainError("forbidden", "forbidden", "Unauthorized"));
   }
 
-  const existing = await repos.userTotpFactors.findByUserId(user.id);
+  const existing = await authRepos.userTotpFactors.findByUserId(user.id);
   if (existing?.is_enabled === 1) {
     return Err(
       domainError("conflict", "totp_already_enabled", "TOTP already enabled"),
@@ -38,7 +39,7 @@ export async function beginTotpEnrollment(ctx: AppContext): Promise<
 
   const secret = generateTotpSecret();
   const encrypted = await encryptTotpSecret(secret);
-  await repos.userTotpFactors.createOrRotate(user.id, encrypted);
+  await authRepos.userTotpFactors.createOrRotate(user.id, encrypted);
 
   const otpauthUri = buildTotpProvisioningUri(secret, user.email);
   return Ok({
@@ -53,8 +54,8 @@ export async function finishTotpEnrollment(
 ): Promise<
   Result<{ recoveryCodes: string[]; sessionToken: string }, DomainError>
 > {
-  const user = await repos.users.findById(ctx.actor.userId);
-  const factor = await repos.userTotpFactors.findByUserId(ctx.actor.userId);
+  const user = await authRepos.users.findById(ctx.actor.userId);
+  const factor = await authRepos.userTotpFactors.findByUserId(ctx.actor.userId);
   if (!user || !factor) {
     return Err(
       domainError(
@@ -74,11 +75,11 @@ export async function finishTotpEnrollment(
     );
   }
 
-  await repos.userTotpFactors.markEnabled(user.id);
+  await authRepos.userTotpFactors.markEnabled(user.id);
   const recoveryCodes = generateRecoveryCodes();
   const hashes = await hashRecoveryCodes(recoveryCodes);
-  await repos.userTotpRecoveryCodes.replaceForUser(user.id, hashes);
-  await repos.auditLogs.create({
+  await authRepos.userTotpRecoveryCodes.replaceForUser(user.id, hashes);
+  await authRepos.auditLogs.create({
     user_id: user.id,
     action: "totp_enabled",
     entity_type: "user",
@@ -97,7 +98,7 @@ export async function finishTotpEnrollment(
     primaryAuthMethod: ctx.actor.primaryAuthMethod,
     strongAuthMethod: "totp",
     strongAuthAt: ctx.now(),
-    deps: repos,
+    deps: authRepos,
   });
 
   return Ok({

@@ -14,6 +14,7 @@ import type {
   SalesRecordQueueItem,
 } from "~/server/sales-records/types";
 import { runAction } from "~/server/shared/action-runtime";
+import { Ok } from "~/server/shared/result";
 
 import { parseSalesContactId, parseSalesRecordId } from "./input";
 
@@ -23,7 +24,7 @@ export async function listSalesRecordProducts(): Promise<
   return runAction({
     actionName: "sales_records.products.read",
     permission: "sales:create",
-    execute: async () => ({ ok: true, value: await listProductsService() }),
+    execute: async () => Ok(await listProductsService()),
   });
 }
 
@@ -36,10 +37,8 @@ export async function getSalesRecordBootstrap(
     actionName: "sales_records.bootstrap.read",
     permission: "sales:create",
     input: { contactId: safeContactId },
-    execute: async (ctx) => ({
-      ok: true,
-      value: await getBootstrapService(ctx, { contactId: safeContactId }),
-    }),
+    execute: async (ctx) =>
+      Ok(await getBootstrapService(ctx, { contactId: safeContactId })),
   });
 }
 
@@ -49,10 +48,7 @@ export async function listPendingSalesRecords(): Promise<
   return runAction({
     actionName: "sales_records.pending.read",
     permission: "sales:review",
-    execute: async (ctx) => ({
-      ok: true,
-      value: await listPendingService(ctx),
-    }),
+    execute: async (ctx) => Ok(await listPendingService(ctx)),
   });
 }
 
@@ -62,10 +58,7 @@ export async function listConfirmedSalesRecords(): Promise<
   return runAction({
     actionName: "sales_records.confirmed.read",
     permission: "sales:review",
-    execute: async (ctx) => ({
-      ok: true,
-      value: await listConfirmedService(ctx),
-    }),
+    execute: async (ctx) => Ok(await listConfirmedService(ctx)),
   });
 }
 
@@ -77,9 +70,7 @@ export async function getSalesRecordFixContext(
     actionName: "sales_records.fix_context.read",
     permission: "sales:create",
     input: { recordId: safeRecordId },
-    execute: async (ctx) => ({
-      ok: true,
-      value: await getFixContextService(ctx, { recordId: safeRecordId }),
-    }),
+    execute: async (ctx) =>
+      Ok(await getFixContextService(ctx, { recordId: safeRecordId })),
   });
 }
