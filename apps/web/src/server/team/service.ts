@@ -20,8 +20,6 @@ import type {
   InviteManagement,
 } from "./types";
 
-type TeamProvisioning = ReturnType<typeof createTeamProvisioning>;
-
 const teamProvisioning = createTeamProvisioning();
 
 export async function getInviteInfo(input: {

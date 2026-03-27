@@ -16,7 +16,6 @@ import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 import {
   canManageExecutive,
   canManageScope,
-  fromDbCapacityRequestKind,
   normalizeDecisionNote,
   toDbCapacityRequestKind,
 } from "./domain";
