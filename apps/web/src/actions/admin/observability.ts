@@ -2,8 +2,9 @@
 
 import { validationError } from "~/lib/app-errors";
 import { requirePermission } from "~/lib/auth/access/session";
-import { assertPositiveInt } from "~/lib/contracts/guards";
 import { observabilityService } from "~/server/shared/context";
+
+import { resolveBoundedPositiveInt, trimOrUndefined } from "./analytics-input";
 
 type ObservationStatus = "ok" | "error";
 
@@ -42,29 +43,6 @@ function assertStatus(
   if (!value) return undefined;
   if (value === "ok" || value === "error") return value;
   throw validationError("status is invalid");
-}
-
-function resolveBoundedPositiveInt(params: {
-  value: number | undefined;
-  fallback: number;
-  name: string;
-  max: number;
-  maxMessage: string;
-}): number {
-  const resolved = assertPositiveInt(
-    params.value ?? params.fallback,
-    params.name,
-  );
-  if (resolved > params.max) {
-    throw validationError(params.maxMessage);
-  }
-  return resolved;
-}
-
-function trimOrUndefined(value: string | undefined): string | undefined {
-  const trimmed = value?.trim();
-  if (!trimmed) return undefined;
-  return trimmed;
 }
 
 export async function getObservabilitySnapshot(params?: {

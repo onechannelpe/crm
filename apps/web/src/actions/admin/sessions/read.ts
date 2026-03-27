@@ -2,18 +2,24 @@
 
 import { sql } from "kysely";
 
+import { validationError } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { requireRole } from "~/lib/auth/access/session";
 import { assertRecentStrongAuth } from "~/lib/auth/security/step-up";
-import { assertPositiveInt } from "~/lib/contracts/guards";
 import type { UserSession } from "~/lib/db/types";
 import { repos } from "~/server/shared/context";
+import { isErr } from "~/server/shared/result";
+
+import { parseUserSessionsInput } from "./input";
 
 export async function listUserSessions(userId: number): Promise<UserSession[]> {
-  const safeUserId = assertPositiveInt(userId, "userId");
+  const parsedInput = parseUserSessionsInput(userId);
+  if (isErr(parsedInput)) {
+    throw validationError(parsedInput.error.message);
+  }
   const session = await requireRole("admin");
   assertRecentStrongAuth(session);
-  return repos.sessions.listForUser(safeUserId);
+  return repos.sessions.listForUser(parsedInput.value.userId);
 }
 
 export async function getActiveSessionsCount(): Promise<number> {

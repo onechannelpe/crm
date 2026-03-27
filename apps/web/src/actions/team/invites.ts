@@ -5,24 +5,15 @@ import { notFoundError } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { requirePermission } from "~/lib/auth/access/session";
 import { hashInviteToken } from "~/lib/auth/invite/tokens";
-import {
-  assertNonEmptyString,
-  assertPositiveInt,
-} from "~/lib/contracts/guards";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
 import { shortName } from "~/lib/users/display-name";
 import { repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
+import { parseCreateTeamInviteInput, parseInviteIdInput } from "./input";
 import { provisioning } from "./provisioning";
 import { getInviteUrl, sendInviteEmail } from "./utils";
-import {
-  assertEmail,
-  assertOptionalExpiresAt,
-  assertOptionalTeamId,
-  assertRole,
-} from "./validators";
 
 export interface InviteInfo {
   fullName: string;
@@ -52,15 +43,7 @@ export async function createTeamInvite(input: {
   teamId?: number | null;
   expiresAt?: number | null;
 }): Promise<{ inviteId: number }> {
-  const safeInput = {
-    names: assertNonEmptyString(input.names, "names"),
-    firstSurname: assertNonEmptyString(input.firstSurname, "firstSurname"),
-    secondSurname: assertNonEmptyString(input.secondSurname, "secondSurname"),
-    email: assertEmail(input.email),
-    role: assertRole(input.role),
-    teamId: assertOptionalTeamId(input.teamId),
-    expiresAt: assertOptionalExpiresAt(input.expiresAt),
-  };
+  const safeInput = parseCreateTeamInviteInput(input);
 
   const actor = { userId: null as number | null, role: null as Role | null };
   return runObservedAction({
@@ -115,12 +98,15 @@ export async function createTeamInvite(input: {
 }
 
 export async function resendTeamInvite(inviteId: number): Promise<void> {
-  const safeInviteId = assertPositiveInt(inviteId, "inviteId");
+  const parsedInput = parseInviteIdInput(inviteId);
+  if (isErr(parsedInput)) {
+    throwDomainError(parsedInput.error);
+  }
   const actor = { userId: null as number | null, role: null as Role | null };
   await runObservedAction({
     actionName: "team.invite.resend",
     actor,
-    input: { inviteId: safeInviteId },
+    input: { inviteId: parsedInput.value.inviteId },
     run: async () => {
       const session = await requirePermission("hr:manage");
       actor.userId = session.userId;
@@ -130,7 +116,7 @@ export async function resendTeamInvite(inviteId: number): Promise<void> {
         actorUserId: session.userId,
         actorRole: session.role,
         branchId: session.branchId,
-        inviteId: safeInviteId,
+        inviteId: parsedInput.value.inviteId,
       });
       if (isErr(result)) {
         throwDomainError(result.error);
@@ -160,12 +146,15 @@ export async function resendTeamInvite(inviteId: number): Promise<void> {
 }
 
 export async function revokeTeamInvite(inviteId: number): Promise<void> {
-  const safeInviteId = assertPositiveInt(inviteId, "inviteId");
+  const parsedInput = parseInviteIdInput(inviteId);
+  if (isErr(parsedInput)) {
+    throwDomainError(parsedInput.error);
+  }
   const actor = { userId: null as number | null, role: null as Role | null };
   await runObservedAction({
     actionName: "team.invite.revoke",
     actor,
-    input: { inviteId: safeInviteId },
+    input: { inviteId: parsedInput.value.inviteId },
     run: async () => {
       const session = await requirePermission("hr:manage");
       actor.userId = session.userId;
@@ -174,7 +163,7 @@ export async function revokeTeamInvite(inviteId: number): Promise<void> {
         actorUserId: session.userId,
         actorRole: session.role,
         branchId: session.branchId,
-        inviteId: safeInviteId,
+        inviteId: parsedInput.value.inviteId,
       });
       if (isErr(result)) {
         throwDomainError(result.error);

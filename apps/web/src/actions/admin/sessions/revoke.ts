@@ -1,5 +1,6 @@
 "use server";
 
+import { validationError } from "~/lib/app-errors";
 import { requireRole } from "~/lib/auth/access/session";
 import { assertRecentStrongAuth } from "~/lib/auth/security/step-up";
 import {
@@ -12,28 +13,32 @@ import {
   sessionRevokedByAdminChanges,
 } from "~/lib/contracts/audit";
 import type { ActionSuccess } from "~/lib/contracts/common";
-import {
-  assertNonEmptyString,
-  assertPositiveInt,
-} from "~/lib/contracts/guards";
 import { repos } from "~/server/shared/context";
+import { isErr } from "~/server/shared/result";
+
+import {
+  parseRevokeAllUserSessionsInput,
+  parseRevokeUserSessionInput,
+} from "./input";
 
 export async function revokeUserSession(
   sessionId: string,
   targetUserId: number,
 ): Promise<ActionSuccess> {
-  const safeSessionId = assertNonEmptyString(sessionId, "sessionId");
-  const safeTargetUserId = assertPositiveInt(targetUserId, "targetUserId");
+  const parsedInput = parseRevokeUserSessionInput({ sessionId, targetUserId });
+  if (isErr(parsedInput)) {
+    throw validationError(parsedInput.error.message);
+  }
   const session = await requireRole("admin");
   assertRecentStrongAuth(session);
 
-  await invalidateSession(safeSessionId);
+  await invalidateSession(parsedInput.value.sessionId);
   await repos.extensionRuntime.revokeInstallationSessionsByAuthSession(
-    safeSessionId,
+    parsedInput.value.sessionId,
     Date.now(),
   );
   await repos.extensionRuntime.updateExecutiveSyncHealthByUser({
-    user_id: safeTargetUserId,
+    user_id: parsedInput.value.targetUserId,
     sync_health: "reauth_required",
     sync_updated_at: Date.now(),
   });
@@ -42,9 +47,9 @@ export async function revokeUserSession(
     user_id: session.userId,
     action: "session_revoked_by_admin",
     entity_type: "user_session",
-    entity_id: safeTargetUserId,
+    entity_id: parsedInput.value.targetUserId,
     changes: serializeAuditChanges(
-      sessionRevokedByAdminChanges(safeSessionId, session.userId),
+      sessionRevokedByAdminChanges(parsedInput.value.sessionId, session.userId),
     ),
     created_at: Date.now(),
   });
@@ -55,17 +60,20 @@ export async function revokeUserSession(
 export async function revokeAllUserSessions(
   targetUserId: number,
 ): Promise<ActionSuccess> {
-  const safeTargetUserId = assertPositiveInt(targetUserId, "targetUserId");
+  const parsedInput = parseRevokeAllUserSessionsInput(targetUserId);
+  if (isErr(parsedInput)) {
+    throw validationError(parsedInput.error.message);
+  }
   const session = await requireRole("admin");
   assertRecentStrongAuth(session);
 
-  await invalidateUserSessions(safeTargetUserId);
+  await invalidateUserSessions(parsedInput.value.targetUserId);
   await repos.extensionRuntime.revokeInstallationSessionsByUser(
-    safeTargetUserId,
+    parsedInput.value.targetUserId,
     Date.now(),
   );
   await repos.extensionRuntime.updateExecutiveSyncHealthByUser({
-    user_id: safeTargetUserId,
+    user_id: parsedInput.value.targetUserId,
     sync_health: "reauth_required",
     sync_updated_at: Date.now(),
   });
@@ -74,7 +82,7 @@ export async function revokeAllUserSessions(
     user_id: session.userId,
     action: "all_sessions_revoked",
     entity_type: "user",
-    entity_id: safeTargetUserId,
+    entity_id: parsedInput.value.targetUserId,
     changes: serializeAuditChanges(allSessionsRevokedChanges(session.userId)),
     created_at: Date.now(),
   });

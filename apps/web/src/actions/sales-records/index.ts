@@ -1,139 +1,44 @@
 "use server";
 
 import { throwDomainError } from "~/actions/throw-domain-error";
-import {
-  forbiddenError,
-  notFoundError,
-  validationError,
-} from "~/lib/app-errors";
+import { forbiddenError, notFoundError } from "~/lib/app-errors";
 import { assertOwnedRecord } from "~/lib/auth/access/ownership";
 import type { Role } from "~/lib/auth/access/rbac";
 import { requirePermission } from "~/lib/auth/access/session";
 import type { ActionSuccess } from "~/lib/contracts/common";
-import {
-  assertNonEmptyString,
-  assertPositiveInt,
-} from "~/lib/contracts/guards";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
 import { computeClientCompletenessScore } from "~/server/sales/completeness";
 import { repos, salesRecordsService } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
-type SalesRecordSource = "lead_assignment" | "manual";
-type SalesRecordAttemptOutcome =
-  | "no_answer"
-  | "callback_scheduled"
-  | "validated"
-  | "invalid_data"
-  | "rejected";
+import {
+  parseCreateSalesRecordDraftInput,
+  parseRejectSalesRecordInput,
+  parseSalesContactId,
+  parseSalesRecordAttemptInput,
+  parseSalesRecordId,
+  parseUpdateSalesRecordDraftInput,
+} from "./input";
+import type {
+  CreateSalesRecordDraftInput,
+  SalesRecordBootstrap,
+  SalesRecordFixContext,
+  SalesRecordProductOption,
+  SalesRecordQueueItem,
+} from "./types";
 
-function isSalesRecordSource(value: string): value is SalesRecordSource {
-  return value === "lead_assignment" || value === "manual";
-}
-
-function isSalesRecordAttemptOutcome(
-  value: string,
-): value is SalesRecordAttemptOutcome {
-  return (
-    value === "no_answer" ||
-    value === "callback_scheduled" ||
-    value === "validated" ||
-    value === "invalid_data" ||
-    value === "rejected"
-  );
-}
-
-export interface SalesRecordClientInput {
-  ruc: string | null;
-  companyName: string | null;
-  contactName: string | null;
-  dni: string | null;
-  phones: string[];
-  engineMatchId: string | null;
-  completenessScore: number;
-}
-
-export interface SalesRecordAddressInput {
-  addressType: "installation" | "billing" | "reference";
-  fullText: string;
-  department: string | null;
-  province: string | null;
-  district: string | null;
-  ubigeo: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  isPrimary: boolean;
-}
-
-export interface SalesRecordProductInput {
-  productId: number;
-  quantity: number;
-}
-
-export interface CreateSalesRecordDraftInput {
-  source: SalesRecordSource;
-  leadAssignmentId: number | null;
-  client: SalesRecordClientInput;
-  addresses: SalesRecordAddressInput[];
-  products: SalesRecordProductInput[];
-}
-
-export interface SalesRecordQueueItem {
-  id: number;
-  status: string;
-  companyName: string | null;
-  contactName: string | null;
-  contactDni: string | null;
-  executiveName: string;
-  createdAt: number;
-  updatedAt: number;
-}
-
-export interface SalesRecordProductOption {
-  id: number;
-  name: string;
-  category: string;
-  subtype: string | null;
-  price: number;
-}
-
-export interface SalesRecordBootstrap {
-  source: SalesRecordSource;
-  leadAssignmentId: number | null;
-  client: SalesRecordClientInput;
-}
-
-export interface SalesRecordFixContext {
-  id: number;
-  status: string;
-  client: {
-    ruc: string | null;
-    companyName: string | null;
-    contactName: string | null;
-    dni: string | null;
-    phones: string[];
-  } | null;
-  addresses: Array<{
-    id: number;
-    addressType: string;
-    fullText: string;
-    isPrimary: number;
-  }>;
-  products: Array<{
-    id: number;
-    productName: string;
-    quantity: number;
-  }>;
-  attempts: Array<{
-    id: number;
-    outcome: SalesRecordAttemptOutcome;
-    notes: string | null;
-    nextAttemptAt: number | null;
-    createdAt: number;
-    reviewerName: string;
-  }>;
-}
+export type {
+  CreateSalesRecordDraftInput,
+  SalesRecordAddressInput,
+  SalesRecordBootstrap,
+  SalesRecordClientInput,
+  SalesRecordFixContext,
+  SalesRecordProductInput,
+  SalesRecordProductOption,
+  SalesRecordQueueItem,
+  SalesRecordSource,
+} from "./types";
 
 function mapQueueItem(
   row: Awaited<
@@ -197,7 +102,7 @@ export async function getSalesRecordBootstrap(
     };
   }
 
-  const safeContactId = assertPositiveInt(contactId, "contactId");
+  const safeContactId = parseSalesContactId(contactId);
   const assignment = await repos.leadAssignments.findActiveForContact(
     session.userId,
     safeContactId,
@@ -241,32 +146,16 @@ export async function getSalesRecordBootstrap(
 export async function createSalesRecordDraft(
   input: CreateSalesRecordDraftInput,
 ): Promise<{ id: number }> {
-  if (!isSalesRecordSource(input.source)) {
-    throw validationError("source is invalid");
-  }
-  if (input.source === "lead_assignment") {
-    assertPositiveInt(input.leadAssignmentId ?? 0, "leadAssignmentId");
-  }
-  if (input.source === "manual" && input.leadAssignmentId !== null) {
-    throw validationError("leadAssignmentId must be null for manual sales");
-  }
-
-  input.addresses.forEach((address, index) => {
-    assertNonEmptyString(address.fullText, `addresses[${index}].fullText`);
-  });
-  input.products.forEach((product, index) => {
-    assertPositiveInt(product.productId, `products[${index}].productId`);
-    assertPositiveInt(product.quantity, `products[${index}].quantity`);
-  });
+  const parsedInput = parseCreateSalesRecordDraftInput(input);
 
   const actor = { userId: null as number | null, role: null as Role | null };
   return runObservedAction({
     actionName: "sales_records.create_draft",
     actor,
     input: {
-      source: input.source,
-      addresses: input.addresses.length,
-      products: input.products.length,
+      source: parsedInput.source,
+      addresses: parsedInput.addresses.length,
+      products: parsedInput.products.length,
     },
     run: async () => {
       const session = await requirePermission("sales:create");
@@ -279,16 +168,16 @@ export async function createSalesRecordDraft(
       );
 
       const result = await salesRecordsService.createDraft({
-        source: input.source,
+        source: parsedInput.source,
         executiveUserId: session.userId,
         branchId: session.branchId,
-        leadAssignmentId: input.leadAssignmentId,
+        leadAssignmentId: parsedInput.leadAssignmentId,
         client: {
-          ...input.client,
-          completenessScore: computeClientCompletenessScore(input.client),
+          ...parsedInput.client,
+          completenessScore: computeClientCompletenessScore(parsedInput.client),
         },
-        addresses: input.addresses,
-        products: input.products,
+        addresses: parsedInput.addresses,
+        products: parsedInput.products,
       });
       if (isErr(result)) throwDomainError(result.error);
       return { id: result.value };
@@ -299,7 +188,7 @@ export async function createSalesRecordDraft(
 export async function submitSalesRecord(
   recordId: number,
 ): Promise<ActionSuccess> {
-  const safeRecordId = assertPositiveInt(recordId, "recordId");
+  const safeRecordId = parseSalesRecordId(recordId);
   const actor = { userId: null as number | null, role: null as Role | null };
   return runObservedAction({
     actionName: "sales_records.submit",
@@ -323,7 +212,7 @@ export async function submitSalesRecord(
 export async function confirmSalesRecord(
   recordId: number,
 ): Promise<ActionSuccess> {
-  const safeRecordId = assertPositiveInt(recordId, "recordId");
+  const safeRecordId = parseSalesRecordId(recordId);
   const actor = { userId: null as number | null, role: null as Role | null };
   return runObservedAction({
     actionName: "sales_records.confirm",
@@ -349,23 +238,22 @@ export async function rejectSalesRecord(
   recordId: number,
   reason: string,
 ): Promise<ActionSuccess> {
-  const safeRecordId = assertPositiveInt(recordId, "recordId");
-  const safeReason = assertNonEmptyString(reason, "reason");
+  const parsedInput = parseRejectSalesRecordInput(recordId, reason);
   const actor = { userId: null as number | null, role: null as Role | null };
   return runObservedAction({
     actionName: "sales_records.reject",
     actor,
-    input: { recordId: safeRecordId },
+    input: { recordId: parsedInput.recordId },
     run: async () => {
       const session = await requirePermission("sales:approve");
       actor.userId = session.userId;
       actor.role = session.role;
       const result = await salesRecordsService.reject(
-        safeRecordId,
+        parsedInput.recordId,
         session.userId,
         session.branchId,
         session.role === "superuser",
-        safeReason,
+        parsedInput.reason,
       );
       if (isErr(result)) throwDomainError(result.error);
       return { success: true };
@@ -376,7 +264,7 @@ export async function rejectSalesRecord(
 export async function cancelSalesRecord(
   recordId: number,
 ): Promise<ActionSuccess> {
-  const safeRecordId = assertPositiveInt(recordId, "recordId");
+  const safeRecordId = parseSalesRecordId(recordId);
   const actor = { userId: null as number | null, role: null as Role | null };
   return runObservedAction({
     actionName: "sales_records.cancel",
@@ -423,7 +311,7 @@ export async function listConfirmedSalesRecords(): Promise<
 export async function getSalesRecordFixContext(
   recordId: number,
 ): Promise<SalesRecordFixContext> {
-  const safeRecordId = assertPositiveInt(recordId, "recordId");
+  const safeRecordId = parseSalesRecordId(recordId);
   const session = await requirePermission("sales:create");
   const record = assertOwnedRecord(
     await repos.salesRecords.findById(safeRecordId),
@@ -478,28 +366,21 @@ export async function updateSalesRecordDraft(
   input: Omit<CreateSalesRecordDraftInput, "source" | "leadAssignmentId">,
   correctionNotes: string | null = null,
 ): Promise<ActionSuccess> {
-  const safeRecordId = assertPositiveInt(recordId, "recordId");
-  const safeCorrectionNotes =
-    correctionNotes !== null && correctionNotes.trim().length > 0
-      ? correctionNotes.trim()
-      : null;
-  input.addresses.forEach((address, index) => {
-    assertNonEmptyString(address.fullText, `addresses[${index}].fullText`);
-  });
-  input.products.forEach((product, index) => {
-    assertPositiveInt(product.productId, `products[${index}].productId`);
-    assertPositiveInt(product.quantity, `products[${index}].quantity`);
-  });
+  const parsedInput = parseUpdateSalesRecordDraftInput(
+    recordId,
+    input,
+    correctionNotes,
+  );
 
   const actor = { userId: null as number | null, role: null as Role | null };
   return runObservedAction({
     actionName: "sales_records.update_draft",
     actor,
     input: {
-      recordId: safeRecordId,
-      addresses: input.addresses.length,
-      products: input.products.length,
-      hasCorrectionNotes: safeCorrectionNotes !== null,
+      recordId: parsedInput.recordId,
+      addresses: parsedInput.input.addresses.length,
+      products: parsedInput.input.products.length,
+      hasCorrectionNotes: parsedInput.correctionNotes !== null,
     },
     run: async () => {
       const session = await requirePermission("sales:create");
@@ -507,16 +388,18 @@ export async function updateSalesRecordDraft(
       actor.role = session.role;
 
       const result = await salesRecordsService.updateDraft(
-        safeRecordId,
+        parsedInput.recordId,
         session.userId,
         {
-          ...input,
+          ...parsedInput.input,
           client: {
-            ...input.client,
-            completenessScore: computeClientCompletenessScore(input.client),
+            ...parsedInput.input.client,
+            completenessScore: computeClientCompletenessScore(
+              parsedInput.input.client,
+            ),
           },
         },
-        safeCorrectionNotes,
+        parsedInput.correctionNotes,
       );
       if (isErr(result)) throwDomainError(result.error);
       return { success: true };
@@ -530,27 +413,29 @@ export async function registerSalesRecordAttempt(
   notes: string | null = null,
   nextAttemptAt: number | null = null,
 ): Promise<ActionSuccess> {
-  const safeRecordId = assertPositiveInt(recordId, "recordId");
-  if (!isSalesRecordAttemptOutcome(outcome)) {
-    throw validationError("outcome is invalid");
-  }
+  const parsedInput = parseSalesRecordAttemptInput(
+    recordId,
+    outcome,
+    notes,
+    nextAttemptAt,
+  );
   const actor = { userId: null as number | null, role: null as Role | null };
   return runObservedAction({
     actionName: "sales_records.attempt",
     actor,
-    input: { recordId: safeRecordId, outcome },
+    input: { recordId: parsedInput.recordId, outcome: parsedInput.outcome },
     run: async () => {
       const session = await requirePermission("sales:approve");
       actor.userId = session.userId;
       actor.role = session.role;
       const result = await salesRecordsService.registerAttempt(
-        safeRecordId,
+        parsedInput.recordId,
         session.userId,
         session.branchId,
         session.role === "superuser",
-        outcome,
-        notes,
-        nextAttemptAt,
+        parsedInput.outcome,
+        parsedInput.notes,
+        parsedInput.nextAttemptAt,
       );
       if (isErr(result)) throwDomainError(result.error);
       return { success: true };

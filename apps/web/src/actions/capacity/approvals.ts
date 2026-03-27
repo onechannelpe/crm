@@ -1,10 +1,6 @@
 "use server";
 
 import { requirePermission } from "~/lib/auth/access/session";
-import {
-  assertNonEmptyString,
-  assertPositiveInt,
-} from "~/lib/contracts/guards";
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
 import {
   approveCapacityRequest,
@@ -22,18 +18,19 @@ import {
 import { isErr } from "~/server/shared/result";
 
 import { mapCapacityError } from "./errors";
-import { parseCapacityAmount, parseCapacityReason } from "./input";
+import { parseCapacityDecisionInput, parseCapacityGrantInput } from "./input";
 
 export async function approveCapacity(requestId: number, note?: string) {
-  const safeRequestId = assertPositiveInt(requestId, "requestId");
+  const decisionInput = parseCapacityDecisionInput({ requestId, note });
+  if (isErr(decisionInput)) mapCapacityError(decisionInput.error);
   const session = await requirePermission("capacity:approve");
   await checkActionRateLimit("capacity.approve", session.userId, rateLimitDeps);
 
   const result = await approveCapacityRequest(
     {
       actorUserId: session.userId,
-      requestId: safeRequestId,
-      note: note ?? null,
+      requestId: decisionInput.value.requestId,
+      note: decisionInput.value.note,
     },
     session,
     runInRepositoryTransaction,
@@ -43,13 +40,17 @@ export async function approveCapacity(requestId: number, note?: string) {
 }
 
 export async function rejectCapacity(requestId: number, note: string) {
-  const safeRequestId = assertPositiveInt(requestId, "requestId");
-  const safeNote = assertNonEmptyString(note, "note");
+  const decisionInput = parseCapacityDecisionInput({ requestId, note });
+  if (isErr(decisionInput)) mapCapacityError(decisionInput.error);
   const session = await requirePermission("capacity:approve");
   await checkActionRateLimit("capacity.approve", session.userId, rateLimitDeps);
 
   const result = await rejectCapacityRequest(
-    { actorUserId: session.userId, requestId: safeRequestId, note: safeNote },
+    {
+      actorUserId: session.userId,
+      requestId: decisionInput.value.requestId,
+      note: decisionInput.value.note ?? "",
+    },
     session,
     runInRepositoryTransaction,
   );
@@ -62,20 +63,17 @@ export async function grantMoreSearches(
   amount: number,
   reason: string,
 ) {
-  const safeUserId = assertPositiveInt(userId, "userId");
-  const amountResult = parseCapacityAmount(amount);
-  if (isErr(amountResult)) mapCapacityError(amountResult.error);
-  const reasonResult = parseCapacityReason(reason);
-  if (isErr(reasonResult)) mapCapacityError(reasonResult.error);
+  const grantInput = parseCapacityGrantInput({ userId, amount, reason });
+  if (isErr(grantInput)) mapCapacityError(grantInput.error);
 
   const session = await requirePermission("capacity:manage");
 
   const result = await grantSearchCapacityDirect(
     {
       actorUserId: session.userId,
-      targetUserId: safeUserId,
-      amount: amountResult.value,
-      reason: reasonResult.value,
+      targetUserId: grantInput.value.userId,
+      amount: grantInput.value.amount,
+      reason: grantInput.value.reason,
     },
     session,
     repos,
@@ -89,20 +87,17 @@ export async function grantMoreLeadRefill(
   amount: number,
   reason: string,
 ) {
-  const safeUserId = assertPositiveInt(userId, "userId");
-  const amountResult = parseCapacityAmount(amount);
-  if (isErr(amountResult)) mapCapacityError(amountResult.error);
-  const reasonResult = parseCapacityReason(reason);
-  if (isErr(reasonResult)) mapCapacityError(reasonResult.error);
+  const grantInput = parseCapacityGrantInput({ userId, amount, reason });
+  if (isErr(grantInput)) mapCapacityError(grantInput.error);
 
   const session = await requirePermission("capacity:manage");
 
   const result = await grantLeadCapacityDirect(
     {
       actorUserId: session.userId,
-      targetUserId: safeUserId,
-      amount: amountResult.value,
-      reason: reasonResult.value,
+      targetUserId: grantInput.value.userId,
+      amount: grantInput.value.amount,
+      reason: grantInput.value.reason,
     },
     session,
     repos,

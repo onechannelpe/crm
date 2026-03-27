@@ -7,12 +7,12 @@ import { isValidInviteTokenFormat } from "~/lib/auth/invite/tokens";
 import { hashPassword } from "~/lib/auth/password/password";
 import { setSessionCookie } from "~/lib/auth/session/cookies";
 import { issueSessionTransition } from "~/lib/auth/session/session-transition";
-import { assertNonEmptyString } from "~/lib/contracts/guards";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
 import { repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
+import { parseAcceptTeamInviteInput } from "./input";
 import { provisioning } from "./provisioning";
 import { assertStrongPassword } from "./validators";
 
@@ -20,11 +20,11 @@ export async function acceptTeamInvite(input: {
   token: string;
   password: string;
 }): Promise<void> {
-  const safeToken = assertNonEmptyString(input.token, "token");
-  if (!isValidInviteTokenFormat(safeToken)) {
+  const safeInput = parseAcceptTeamInviteInput(input);
+  if (!isValidInviteTokenFormat(safeInput.token)) {
     throw validationError("token is invalid");
   }
-  const safePassword = assertStrongPassword(input.password);
+  const safePassword = assertStrongPassword(safeInput.password);
 
   const actor = { userId: null as number | null, role: null as Role | null };
   await runObservedAction({
@@ -33,7 +33,7 @@ export async function acceptTeamInvite(input: {
     input: { hasToken: true },
     run: async () => {
       const result = await provisioning.acceptInvite({
-        token: safeToken,
+        token: safeInput.token,
         passwordHash: await hashPassword(safePassword),
       });
       if (isErr(result)) {
