@@ -9,8 +9,12 @@ import {
   type BulkParseResult,
 } from "~/server/users/service-bulk-import";
 
-import { createTeamProvisioning } from "./repos";
-import type { CreateTeamInviteCommand } from "./types";
+import type { CreateTeamInviteCommand } from "../domain/types";
+import {
+  buildInviteUrl,
+  sendInviteEmail,
+} from "../infrastructure/invite-delivery";
+import { createTeamProvisioning } from "../infrastructure/runtime";
 
 const teamProvisioning = createTeamProvisioning();
 
@@ -36,16 +40,6 @@ export async function applyBulkImport(
   input: {
     csvContent: string;
     role: CreateTeamInviteCommand["role"];
-  },
-  deps: {
-    sendInviteEmail: (input: {
-      email: string;
-      fullName: string;
-      role: CreateTeamInviteCommand["role"];
-      inviteUrl: string;
-      expiresAt: number;
-    }) => Promise<void>;
-    getInviteUrl: (token: string) => string;
   },
 ): Promise<Result<BulkApplyResult, DomainError>> {
   const parsed = await previewBulkImport(input.csvContent);
@@ -74,7 +68,7 @@ export async function applyBulkImport(
     input.role,
     teamProvisioning,
     async ({ row, inviteId, token, expiresAt }) => {
-      await deps.sendInviteEmail({
+      await sendInviteEmail({
         email: row.email,
         fullName: shortName({
           names: row.names,
@@ -82,7 +76,7 @@ export async function applyBulkImport(
           secondSurname: row.secondSurname,
         }),
         role: input.role,
-        inviteUrl: deps.getInviteUrl(token),
+        inviteUrl: buildInviteUrl(token),
         expiresAt,
       });
       await teamProvisioning.markInviteDelivered(inviteId);

@@ -2,8 +2,11 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import { resolveLeadPolicy, type LeadPolicy } from "./domain";
-import type { LeadPolicyDefaultsRepo, LeadPolicyOverridesRepo } from "./repos";
+import { resolveLeadPolicy, type LeadPolicy } from "../domain/policy";
+import type {
+  LeadPolicyDefaultsRepo,
+  LeadPolicyOverridesRepo,
+} from "../infrastructure/policy-repos";
 
 export type { LeadPolicy };
 

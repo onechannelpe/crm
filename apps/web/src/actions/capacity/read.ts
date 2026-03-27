@@ -7,7 +7,7 @@ import {
   getPolicyDefaults as getPolicyDefaultsService,
   listManagedExecutives as listManagedExecutivesService,
   listPendingRequests as listPendingRequestsService,
-} from "~/server/capacity/service-read";
+} from "~/server/capacity/application/queries";
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function getManagedExecutivesList() {

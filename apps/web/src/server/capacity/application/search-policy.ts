@@ -2,11 +2,11 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import { resolveSearchPolicy, type SearchPolicy } from "./domain";
+import { resolveSearchPolicy, type SearchPolicy } from "../domain/policy";
 import type {
   SearchPolicyDefaultsRepo,
   SearchPolicyOverridesRepo,
-} from "./repos";
+} from "../infrastructure/policy-repos";
 
 export type { SearchPolicy };
 

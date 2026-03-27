@@ -1,4 +1,4 @@
-import { getEffectiveSearchPolicy } from "~/server/capacity-policy/search-policy";
+import { getEffectiveSearchPolicy } from "~/server/capacity/application/search-policy";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import {

@@ -1,4 +1,7 @@
-import { authRepos, privilegedLoginAlertSender } from "./repos";
+import {
+  authRepos,
+  privilegedLoginAlertSender,
+} from "./infrastructure/runtime";
 
 export function getGoogleOAuthCallbackRuntime() {
   return {

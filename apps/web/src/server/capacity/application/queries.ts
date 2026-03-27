@@ -12,9 +12,10 @@ import type { AppContext } from "~/server/shared/action-runtime";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
-import { canManageExecutive, fromDbCapacityRequestKind } from "./domain";
-import { capacityRepos } from "./repos";
-import type { CapacityRequestStatus } from "./types";
+import { canManageExecutive } from "../domain/access-policy";
+import { fromDbCapacityRequestKind } from "../domain/request-policy";
+import type { CapacityRequestStatus } from "../domain/types";
+import { capacityRepos } from "../infrastructure/runtime";
 
 export type { SearchCapacitySnapshot, LeadCapacitySnapshot };
 

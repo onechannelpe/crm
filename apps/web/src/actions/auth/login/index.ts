@@ -11,7 +11,7 @@ import {
   createPasskeyStartService,
   submitPasswordLoginWithRepos,
   submitTotpLoginWithRepos,
-} from "~/server/auth/service-login";
+} from "~/server/auth/application/login";
 import { isErr } from "~/server/shared/result";
 
 import {

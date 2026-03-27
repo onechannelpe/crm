@@ -6,7 +6,7 @@ import { getRequestEvent } from "solid-js/web";
 import type { Role } from "~/lib/auth/access/rbac";
 import { notificationSender } from "~/server/shared/context";
 
-export function getInviteUrl(token: string): string {
+export function buildInviteUrl(token: string): string {
   const event = getRequestEvent();
   const requestUrl = event?.request.url;
   if (!requestUrl) {

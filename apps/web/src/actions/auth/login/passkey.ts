@@ -10,7 +10,7 @@ import { getActionRequestContext } from "~/lib/observability/context";
 import {
   finishPasskeyLoginWithRepos,
   replaceCurrentSessionAndResolveRedirect,
-} from "~/server/auth/service-login";
+} from "~/server/auth/application/login";
 import { isErr } from "~/server/shared/result";
 
 function normalizePasskeyLoginError(error: FinishPasskeyLoginError): {

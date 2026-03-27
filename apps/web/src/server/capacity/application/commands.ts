@@ -1,30 +1,23 @@
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
-import {
-  setLeadScopeDefault,
-  setLeadUserOverride,
-} from "~/server/capacity-policy/lead-policy";
-import {
-  setSearchScopeDefault,
-  setSearchUserOverride,
-} from "~/server/capacity-policy/search-policy";
 import { grantLeadCapacity } from "~/server/capacity-usage/lead-usage";
 import { grantSearchCapacity } from "~/server/capacity-usage/search-usage";
 import type { AppContext } from "~/server/shared/action-runtime";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
+import { canManageExecutive, canManageScope } from "../domain/access-policy";
 import {
-  canManageExecutive,
-  canManageScope,
   normalizeDecisionNote,
   toDbCapacityRequestKind,
-} from "./domain";
+} from "../domain/request-policy";
+import type { CapacityRequestKind, ScopeRef } from "../domain/types";
 import {
   capacityRepos,
   rateLimitDeps,
   runInRepositoryTransaction,
-} from "./repos";
-import type { CapacityRequestKind, ScopeRef } from "./types";
+} from "../infrastructure/runtime";
+import { setLeadScopeDefault, setLeadUserOverride } from "./lead-policy";
+import { setSearchScopeDefault, setSearchUserOverride } from "./search-policy";
 
 class RollbackError extends Error {
   constructor(readonly domainErr: DomainError) {

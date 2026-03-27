@@ -9,7 +9,7 @@ import { getRequestClientMetadata } from "~/lib/http/request-context";
 import {
   beginPasskeyRegistration as beginPasskeyRegistrationService,
   finishPasskeyRegistration as finishPasskeyRegistrationService,
-} from "~/server/auth/service-onboarding";
+} from "~/server/auth/application/onboarding";
 import { isErr } from "~/server/shared/result";
 
 export async function beginPasskeyRegistration(): Promise<PasskeyEnrollmentChallenge> {

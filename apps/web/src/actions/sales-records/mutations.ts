@@ -9,8 +9,8 @@ import {
   rejectRecord,
   submitRecord,
   updateDraft,
-} from "~/server/sales-records/service";
-import type { CreateSalesRecordDraftInput } from "~/server/sales-records/types";
+} from "~/server/sales-records/application/commands";
+import type { CreateSalesRecordDraftInput } from "~/server/sales-records/domain/types";
 import { runAction } from "~/server/shared/action-runtime";
 
 import {

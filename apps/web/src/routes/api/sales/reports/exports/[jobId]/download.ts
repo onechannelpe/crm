@@ -2,93 +2,22 @@ import type { APIEvent } from "@solidjs/start/server";
 
 import { requirePermission } from "~/lib/auth/access/session";
 import { assertPositiveInt } from "~/lib/contracts/guards";
+import { downloadSalesExportById } from "~/server/sales-records/application/download-export";
 import { createAppContext } from "~/server/shared/action-runtime";
 import {
   repos,
   observabilityService,
   salesExportBlobStore,
 } from "~/server/shared/context";
-import type { Repositories } from "~/server/shared/registry";
+import type { DomainError } from "~/server/shared/domain-error";
+import { isErr } from "~/server/shared/result";
 
-interface SalesExportDownloadSession {
-  userId: number;
-  role: import("~/lib/auth/access/rbac").Role;
-  branchId: number;
-}
-
-interface DownloadSalesExportDeps {
-  repos: Pick<Repositories, "reportExportJobs">;
-  blobStore: {
-    get(storageKey: string): Promise<Uint8Array>;
-  };
-  now?: () => number;
-}
-
-function mapErrorToStatus(error: unknown): number {
-  const message = error instanceof Error ? error.message : "Unexpected error";
-  if (message === "Unauthorized") return 401;
-  if (message === "Forbidden") return 403;
-  if (
-    message === "Export job not found" ||
-    message === "Export file not found"
-  ) {
-    return 404;
-  }
-  if (message === "Export file is not ready") return 409;
-  if (message === "jobId is invalid") return 400;
+function mapErrorToStatus(error: DomainError): number {
+  if (error.kind === "validation") return 400;
+  if (error.kind === "forbidden") return 403;
+  if (error.kind === "not_found") return 404;
+  if (error.kind === "conflict") return 409;
   return 500;
-}
-
-function mapErrorToMessage(error: unknown): string {
-  if (error instanceof Error) return error.message;
-  return "Unexpected error";
-}
-
-export async function downloadSalesExportById(
-  jobId: number,
-  session: SalesExportDownloadSession,
-  deps: DownloadSalesExportDeps,
-): Promise<Response> {
-  const job = await deps.repos.reportExportJobs.findJobById(jobId);
-  if (!job) throw new Error("Export job not found");
-  if (session.role !== "superuser" && job.branch_id !== session.branchId) {
-    throw new Error("Export job not found");
-  }
-  if (job.status !== "completed" || !job.file_storage_key) {
-    throw new Error("Export file is not ready");
-  }
-
-  let fileBytes: Uint8Array;
-  try {
-    fileBytes = await deps.blobStore.get(job.file_storage_key);
-  } catch {
-    throw new Error("Export file not found");
-  }
-
-  await deps.repos.reportExportJobs.createDownload({
-    export_job_id: jobId,
-    downloaded_by_user_id: session.userId,
-    downloaded_at: deps.now?.() ?? Date.now(),
-    ip_hash: null,
-    user_agent_hash: null,
-  });
-
-  const extension = job.format === "xlsx" ? "xlsx" : "csv";
-  const mimeType =
-    job.format === "xlsx"
-      ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-      : "text/csv; charset=utf-8";
-
-  const bodyBuffer = new ArrayBuffer(fileBytes.byteLength);
-  new Uint8Array(bodyBuffer).set(fileBytes);
-  return new Response(bodyBuffer, {
-    status: 200,
-    headers: {
-      "content-type": mimeType,
-      "content-disposition": `attachment; filename="sales-export-${job.id}.${extension}"`,
-      "cache-control": "no-store",
-    },
-  });
 }
 
 export async function GET(event: Pick<APIEvent, "params">): Promise<Response> {
@@ -102,6 +31,11 @@ export async function GET(event: Pick<APIEvent, "params">): Promise<Response> {
       repos,
       blobStore: salesExportBlobStore,
     });
+    if (isErr(response)) {
+      return new Response(response.error.message, {
+        status: mapErrorToStatus(response.error),
+      });
+    }
 
     void observabilityService
       .recordAction({
@@ -121,10 +55,23 @@ export async function GET(event: Pick<APIEvent, "params">): Promise<Response> {
       })
       .catch(() => {});
 
-    return response;
-  } catch (error: unknown) {
-    return new Response(mapErrorToMessage(error), {
-      status: mapErrorToStatus(error),
+    return new Response(response.value.body, {
+      status: 200,
+      headers: {
+        "content-type": response.value.mimeType,
+        "content-disposition": `attachment; filename="${response.value.filename}"`,
+        "cache-control": "no-store",
+      },
     });
+  } catch (error: unknown) {
+    return new Response(
+      error instanceof Error ? error.message : "Unexpected error",
+      {
+        status:
+          error instanceof Error && error.message === "jobId is invalid"
+            ? 400
+            : 500,
+      },
+    );
   }
 }

@@ -13,7 +13,7 @@ import type { AppContext } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
-import { authRepos } from "./repos";
+import { authRepos } from "../infrastructure/runtime";
 
 export interface SessionInfo {
   id: string;

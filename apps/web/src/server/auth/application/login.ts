@@ -1,6 +1,5 @@
 import type { AuthenticationResponseJSON } from "@simplewebauthn/server";
 
-import { createRequestPasskeyProviderFactory } from "~/actions/auth/shared/request-passkey-provider";
 import { submitPasswordLogin } from "~/lib/auth/flows/primary-login-service";
 import { submitTotpForLoginFlow } from "~/lib/auth/flows/totp-step-up-service";
 import {
@@ -9,8 +8,12 @@ import {
 } from "~/lib/auth/passkey/service";
 import { replaceCurrentSession } from "~/lib/auth/session/session-transition";
 
-import { getDefaultAppPath } from "./domain";
-import { authRepos, privilegedLoginAlertSender } from "./repos";
+import { resolvePostLoginRedirect } from "../domain/redirect-policy";
+import { createRequestPasskeyProviderFactory } from "../infrastructure/request-passkey-provider";
+import {
+  authRepos,
+  privilegedLoginAlertSender,
+} from "../infrastructure/runtime";
 
 export function createPasskeyStartService() {
   return createPasskeyLoginStartAuthService(authRepos, {
@@ -54,10 +57,10 @@ export async function finishPasskeyLoginWithRepos(input: {
 export async function replaceCurrentSessionAndResolveRedirect(input: {
   token: string;
   onboardingCompleted: boolean;
-  role: Parameters<typeof getDefaultAppPath>[0];
+  role: Parameters<typeof resolvePostLoginRedirect>[0];
 }) {
   await replaceCurrentSession(input.token);
   return input.onboardingCompleted
-    ? getDefaultAppPath(input.role)
+    ? resolvePostLoginRedirect(input.role)
     : "/onboarding";
 }

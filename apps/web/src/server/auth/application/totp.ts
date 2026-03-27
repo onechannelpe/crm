@@ -14,7 +14,7 @@ import type { AppContext } from "~/server/shared/action-runtime";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import { authRepos } from "./repos";
+import { authRepos } from "../infrastructure/runtime";
 
 export async function beginTotpEnrollment(ctx: AppContext): Promise<
   Result<

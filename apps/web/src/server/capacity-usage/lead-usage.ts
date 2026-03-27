@@ -1,4 +1,4 @@
-import { getEffectiveLeadPolicy } from "~/server/capacity-policy/lead-policy";
+import { getEffectiveLeadPolicy } from "~/server/capacity/application/lead-policy";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import {
   asLeadReservationId,

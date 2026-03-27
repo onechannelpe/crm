@@ -1,4 +1,3 @@
-import type { Role } from "~/lib/auth/access/rbac";
 import { getAssignableRoleOptions } from "~/lib/auth/access/role-display";
 import { hashInviteToken } from "~/lib/auth/invite/tokens";
 import { shortName } from "~/lib/users/display-name";
@@ -6,19 +5,23 @@ import type { AppContext } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
-import {
-  createTeamProvisioning,
-  enforceInviteCreateRateLimit,
-  issuePreAuthTeamSession,
-  teamRepos,
-} from "./repos";
 import type {
   AcceptTeamInviteCommand,
   BulkImportSetup,
   CreateTeamInviteCommand,
   InviteInfo,
   InviteManagement,
-} from "./types";
+} from "../domain/types";
+import {
+  buildInviteUrl,
+  sendInviteEmail,
+} from "../infrastructure/invite-delivery";
+import {
+  createTeamProvisioning,
+  enforceInviteCreateRateLimit,
+  issuePreAuthTeamSession,
+  teamRepos,
+} from "../infrastructure/runtime";
 
 const teamProvisioning = createTeamProvisioning();
 
@@ -76,16 +79,6 @@ export async function getBulkImportSetup(
 export async function createTeamInvite(
   ctx: AppContext,
   input: CreateTeamInviteCommand,
-  deps: {
-    sendInviteEmail: (input: {
-      email: string;
-      fullName: string;
-      role: Role;
-      inviteUrl: string;
-      expiresAt: number;
-    }) => Promise<void>;
-    getInviteUrl: (token: string) => string;
-  },
 ): Promise<Result<{ inviteId: number }, DomainError>> {
   await enforceInviteCreateRateLimit(ctx.actor.userId);
 
@@ -105,7 +98,7 @@ export async function createTeamInvite(
     return result;
   }
 
-  await deps.sendInviteEmail({
+  await sendInviteEmail({
     email: input.email,
     fullName: shortName({
       names: input.names,
@@ -113,7 +106,7 @@ export async function createTeamInvite(
       secondSurname: input.secondSurname,
     }),
     role: input.role,
-    inviteUrl: deps.getInviteUrl(result.value.token),
+    inviteUrl: buildInviteUrl(result.value.token),
     expiresAt: result.value.expiresAt,
   });
 
@@ -130,16 +123,6 @@ export async function createTeamInvite(
 export async function resendTeamInvite(
   ctx: AppContext,
   input: { inviteId: number },
-  deps: {
-    sendInviteEmail: (input: {
-      email: string;
-      fullName: string;
-      role: Role;
-      inviteUrl: string;
-      expiresAt: number;
-    }) => Promise<void>;
-    getInviteUrl: (token: string) => string;
-  },
 ): Promise<Result<void, DomainError>> {
   const result = await teamProvisioning.resendInvite({
     actorUserId: ctx.actor.userId,
@@ -161,11 +144,11 @@ export async function resendTeamInvite(
     });
   }
 
-  await deps.sendInviteEmail({
+  await sendInviteEmail({
     email: user.email,
     fullName: shortName(user),
     role: user.role,
-    inviteUrl: deps.getInviteUrl(result.value.token),
+    inviteUrl: buildInviteUrl(result.value.token),
     expiresAt: result.value.expiresAt,
   });
 

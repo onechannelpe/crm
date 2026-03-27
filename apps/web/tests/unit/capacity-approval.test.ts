@@ -5,7 +5,7 @@ import type { Role } from "~/lib/auth/access/rbac";
 import {
   approveCapacityRequest,
   rejectCapacityRequest,
-} from "~/server/capacity/service-write";
+} from "~/server/capacity/application/commands";
 import type { AppContext } from "~/server/shared/action-runtime";
 
 import {
@@ -39,7 +39,7 @@ const { runInRepositoryTransactionMock, capacityReposMock } = vi.hoisted(
   }),
 );
 
-vi.mock("../../src/server/capacity/repos", () => ({
+vi.mock("../../src/server/capacity/infrastructure/runtime", () => ({
   capacityRepos: capacityReposMock,
   rateLimitDeps: {},
   runInRepositoryTransaction: runInRepositoryTransactionMock,

@@ -6,13 +6,13 @@ import {
   listConfirmed as listConfirmedService,
   listPending as listPendingService,
   listProducts as listProductsService,
-} from "~/server/sales-records/read-service";
+} from "~/server/sales-records/application/queries";
 import type {
   SalesRecordBootstrap,
   SalesRecordFixContext,
   SalesRecordProductOption,
   SalesRecordQueueItem,
-} from "~/server/sales-records/types";
+} from "~/server/sales-records/domain/types";
 import { runAction } from "~/server/shared/action-runtime";
 import { Ok } from "~/server/shared/result";
 

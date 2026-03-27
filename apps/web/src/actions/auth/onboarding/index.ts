@@ -12,7 +12,7 @@ import { getRequestClientMetadata } from "~/lib/http/request-context";
 import {
   completeOnboarding as completeOnboardingService,
   finishPasskeyRegistration as finishPasskeyRegistrationService,
-} from "~/server/auth/service-onboarding";
+} from "~/server/auth/application/onboarding";
 import { isErr } from "~/server/shared/result";
 
 function normalizePeruvianPhone(value: string): string {

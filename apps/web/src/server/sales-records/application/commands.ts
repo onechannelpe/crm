@@ -2,12 +2,12 @@ import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
 import type { AppContext } from "~/server/shared/action-runtime";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 
-import { computeClientCompletenessScore } from "./domain";
-import { rateLimitDeps, salesRecordsService } from "./repos";
+import { computeClientCompletenessScore } from "../domain/client-completeness";
 import type {
   CreateSalesRecordDraftInput,
   SalesRecordAttemptOutcome,
-} from "./types";
+} from "../domain/types";
+import { rateLimitDeps, salesRecordsService } from "../infrastructure/runtime";
 
 export async function createDraft(
   ctx: AppContext,

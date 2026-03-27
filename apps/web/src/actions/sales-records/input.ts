@@ -9,7 +9,7 @@ import type {
   SalesRecordAttemptOutcome,
   SalesRecordProductInput,
   SalesRecordSource,
-} from "~/server/sales-records/types";
+} from "~/server/sales-records/domain/types";
 
 function isSalesRecordSource(value: string): value is SalesRecordSource {
   return value === "lead_assignment" || value === "manual";

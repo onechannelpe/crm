@@ -2,14 +2,14 @@ import { forbiddenError, notFoundError } from "~/lib/app-errors";
 import { assertOwnedRecord } from "~/lib/auth/access/ownership";
 import type { AppContext } from "~/server/shared/action-runtime";
 
-import { computeClientCompletenessScore } from "./domain";
-import { salesRecordRepos } from "./repos";
+import { computeClientCompletenessScore } from "../domain/client-completeness";
 import type {
   SalesRecordBootstrap,
   SalesRecordFixContext,
   SalesRecordProductOption,
   SalesRecordQueueItem,
-} from "./types";
+} from "../domain/types";
+import { salesRecordRepos } from "../infrastructure/runtime";
 
 function mapQueueItem(
   row: Awaited<

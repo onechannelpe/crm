@@ -7,9 +7,9 @@ import type { AppContext } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
-import { requiresStrongAuthRole } from "./domain";
-import { authRepos } from "./repos";
-import type { CurrentUserView } from "./types";
+import { requiresStrongAuthRole } from "../domain/strong-auth-policy";
+import { authRepos } from "../infrastructure/runtime";
+import type { CurrentUserView } from "../types";
 
 export async function getLoginFlow(flowId: number) {
   return getLoginFlowState(flowId, authRepos);

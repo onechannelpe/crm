@@ -5,7 +5,7 @@ import { assertNonEmptyString } from "~/lib/contracts/guards";
 import {
   beginTotpEnrollment as beginTotpEnrollmentService,
   finishTotpEnrollment as finishTotpEnrollmentService,
-} from "~/server/auth/service-totp";
+} from "~/server/auth/application/totp";
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function beginTotpEnrollment(): Promise<{

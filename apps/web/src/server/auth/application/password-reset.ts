@@ -7,7 +7,7 @@ import {
   isValidPasswordResetTokenFormat,
 } from "~/lib/auth/password/reset-tokens";
 
-import { authRepos, notificationSender } from "./repos";
+import { authRepos, notificationSender } from "../infrastructure/runtime";
 
 const TOKEN_TTL_MS = 60 * 60 * 1000;
 const MAX_REQUESTS_PER_HOUR = 3;

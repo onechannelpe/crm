@@ -6,13 +6,13 @@ import {
   listAllActiveSessions as listAllActiveSessionsService,
   listUserSessions as listUserSessionsService,
   type SessionInfo,
-} from "~/server/auth/service-admin-sessions";
+} from "~/server/auth/application/admin-sessions";
 import { runAction } from "~/server/shared/action-runtime";
 import { isErr } from "~/server/shared/result";
 
 import { parseUserSessionsInput } from "./input";
 
-export { type SessionInfo } from "~/server/auth/service-admin-sessions";
+export { type SessionInfo } from "~/server/auth/application/admin-sessions";
 
 export async function listUserSessions(userId: number) {
   const parsedInput = parseUserSessionsInput(userId);

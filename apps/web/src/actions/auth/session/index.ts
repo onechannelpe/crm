@@ -1,6 +1,6 @@
 "use server";
 
-import { getCurrentUser, logoutUser } from "~/server/auth/service-session";
+import { getCurrentUser, logoutUser } from "~/server/auth/application/session";
 import type { CurrentUserView } from "~/server/auth/types";
 import { runAction } from "~/server/shared/action-runtime";
 

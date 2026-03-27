@@ -1,6 +1,5 @@
 import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 
-import { createRequestPasskeyProviderFactory } from "~/actions/auth/shared/request-passkey-provider";
 import { createPasskeyEnrollmentAuthService } from "~/lib/auth/passkey/service";
 import {
   issueSessionTransition,
@@ -13,8 +12,13 @@ import {
   type CompleteOnboardingError,
 } from "~/server/users/service-account-onboarding";
 
-import { getDefaultAppPath, requiresStrongAuthRole } from "./domain";
-import { authRepos, runInRepositoryTransaction } from "./repos";
+import { resolvePostLoginRedirect } from "../domain/redirect-policy";
+import { requiresStrongAuthRole } from "../domain/strong-auth-policy";
+import { createRequestPasskeyProviderFactory } from "../infrastructure/request-passkey-provider";
+import {
+  authRepos,
+  runInRepositoryTransaction,
+} from "../infrastructure/runtime";
 
 function createEnrollmentService() {
   return createPasskeyEnrollmentAuthService(authRepos, {
@@ -78,7 +82,7 @@ export async function finishPasskeyRegistration(input: {
 export async function completeOnboarding(input: {
   session: {
     userId: number;
-    role: Parameters<typeof getDefaultAppPath>[0];
+    role: Parameters<typeof resolvePostLoginRedirect>[0];
     primaryAuthMethod: "password" | "google" | "passkey";
     strongAuthMethod: "totp" | "passkey" | "federated" | null;
     strongAuthAt: number | null;
@@ -133,5 +137,5 @@ export async function completeOnboarding(input: {
     deps: authRepos,
   });
   await replaceCurrentSession(issued.token);
-  return Ok({ redirectTo: getDefaultAppPath(input.session.role) });
+  return Ok({ redirectTo: resolvePostLoginRedirect(input.session.role) });
 }

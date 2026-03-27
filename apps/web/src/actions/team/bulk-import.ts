@@ -7,11 +7,10 @@ import {
   previewBulkImport as previewBulkImportService,
   type BulkApplyResult,
   type BulkParseResult,
-} from "~/server/team/bulk-import";
+} from "~/server/team/application/bulk-import";
 
-export type { BulkApplyResult } from "~/server/team/bulk-import";
+export type { BulkApplyResult } from "~/server/team/application/bulk-import";
 
-import { getInviteUrl, sendInviteEmail } from "./utils";
 import { assertRole } from "./validators";
 
 export interface BulkPreviewResult {
@@ -48,16 +47,9 @@ export async function applyBulkImport(
     permission: "admin:manage",
     input: { role: safeRole },
     execute: (ctx) =>
-      applyBulkImportService(
-        ctx,
-        {
-          csvContent,
-          role: safeRole,
-        },
-        {
-          sendInviteEmail,
-          getInviteUrl,
-        },
-      ),
+      applyBulkImportService(ctx, {
+        csvContent,
+        role: safeRole,
+      }),
   });
 }

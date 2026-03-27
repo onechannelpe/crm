@@ -1,6 +1,6 @@
 "use server";
 
-import { requestCapacity } from "~/server/capacity/service-write";
+import { requestCapacity } from "~/server/capacity/application/commands";
 import { runAction } from "~/server/shared/action-runtime";
 
 import { parseCapacityAmount, parseCapacityReason } from "./input";

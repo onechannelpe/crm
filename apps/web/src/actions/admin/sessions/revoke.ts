@@ -5,7 +5,7 @@ import type { ActionSuccess } from "~/lib/contracts/common";
 import {
   revokeAllUserSessions as revokeAllUserSessionsService,
   revokeUserSession as revokeUserSessionService,
-} from "~/server/auth/service-admin-sessions";
+} from "~/server/auth/application/admin-sessions";
 import { runAction } from "~/server/shared/action-runtime";
 import { isErr } from "~/server/shared/result";
 

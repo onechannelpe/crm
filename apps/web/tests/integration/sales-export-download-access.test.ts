@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { downloadSalesExportById } from "../../src/routes/api/sales/reports/exports/[jobId]/download";
+import { downloadSalesExportById } from "../../src/server/sales-records/application/download-export";
 import { createSalesExportBlobStore } from "../../src/server/sales/export-blob-store";
 import {
   cleanupTestDb,
@@ -52,8 +52,10 @@ describe("sales export download access", () => {
       { repos: ctx.repos, blobStore, now: () => now + 1 },
     );
 
-    expect(response.status).toBe(200);
-    expect(response.headers.get("content-type")).toContain("text/csv");
+    expect(response.ok).toBe(true);
+    if (response.ok) {
+      expect(response.value.mimeType).toContain("text/csv");
+    }
 
     const downloads =
       await ctx.repos.reportExportJobs.listDownloadsByJob(jobId);
@@ -88,13 +90,16 @@ describe("sales export download access", () => {
       max_attempts: 5,
     });
 
-    await expect(
-      downloadSalesExportById(
-        jobId,
-        { userId: 4, role: "back_office", branchId: 2 },
-        { repos: ctx.repos, blobStore },
-      ),
-    ).rejects.toThrow("Export job not found");
+    const response = await downloadSalesExportById(
+      jobId,
+      { userId: 4, role: "back_office", branchId: 2 },
+      { repos: ctx.repos, blobStore },
+    );
+
+    expect(response.ok).toBe(false);
+    if (!response.ok) {
+      expect(response.error.message).toBe("Export job not found");
+    }
 
     const downloads =
       await ctx.repos.reportExportJobs.listDownloadsByJob(jobId);
@@ -134,7 +139,7 @@ describe("sales export download access", () => {
       { repos: ctx.repos, blobStore },
     );
 
-    expect(response.status).toBe(200);
+    expect(response.ok).toBe(true);
 
     const downloads =
       await ctx.repos.reportExportJobs.listDownloadsByJob(jobId);
@@ -165,12 +170,15 @@ describe("sales export download access", () => {
       max_attempts: 5,
     });
 
-    await expect(
-      downloadSalesExportById(
-        jobId,
-        { userId: 2, role: "back_office", branchId: 1 },
-        { repos: ctx.repos, blobStore },
-      ),
-    ).rejects.toThrow("Export file is not ready");
+    const response = await downloadSalesExportById(
+      jobId,
+      { userId: 2, role: "back_office", branchId: 1 },
+      { repos: ctx.repos, blobStore },
+    );
+
+    expect(response.ok).toBe(false);
+    if (!response.ok) {
+      expect(response.error.message).toBe("Export file is not ready");
+    }
   });
 });

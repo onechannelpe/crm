@@ -1,7 +1,3 @@
-import type {
-  LeadPolicyDefaultsRepo,
-  LeadPolicyOverridesRepo,
-} from "~/server/capacity-policy/repos";
 import {
   cancelLeadUsage,
   commitLeadUsage,
@@ -13,6 +9,10 @@ import type {
   LeadUsageCommitsRepo,
   LeadUsageReservationsRepo,
 } from "~/server/capacity-usage/repos";
+import type {
+  LeadPolicyDefaultsRepo,
+  LeadPolicyOverridesRepo,
+} from "~/server/capacity/infrastructure/policy-repos";
 import { createAssignment } from "~/server/leads/domain-assignment";
 import { canContactNow } from "~/server/leads/domain-cooldown";
 import { engineClient } from "~/server/shared/composition-root";

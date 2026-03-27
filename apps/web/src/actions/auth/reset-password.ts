@@ -8,7 +8,7 @@ import {
   resetPassword as resetPasswordService,
   type RequestPasswordResetResult,
   type ResetPasswordResult,
-} from "~/server/auth/service-password-reset";
+} from "~/server/auth/application/password-reset";
 
 export type { RequestPasswordResetResult, ResetPasswordResult };
 

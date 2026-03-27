@@ -7,11 +7,10 @@ import {
   getInviteInfo as getInviteInfoService,
   resendTeamInvite as resendTeamInviteService,
   revokeTeamInvite as revokeTeamInviteService,
-} from "~/server/team/service";
-import type { InviteInfo } from "~/server/team/types";
+} from "~/server/team/application/invites";
+import type { InviteInfo } from "~/server/team/domain/types";
 
 import { parseCreateTeamInviteInput, parseInviteIdInput } from "./input";
-import { getInviteUrl, sendInviteEmail } from "./utils";
 
 export async function getInviteInfo(token: string): Promise<InviteInfo | null> {
   const result = await getInviteInfoService({ token });
@@ -39,11 +38,7 @@ export async function createTeamInvite(input: {
       role: safeInput.role,
       hasTeamId: safeInput.teamId !== null,
     },
-    execute: (ctx) =>
-      createTeamInviteService(ctx, safeInput, {
-        sendInviteEmail,
-        getInviteUrl,
-      }),
+    execute: (ctx) => createTeamInviteService(ctx, safeInput),
   });
 }
 
@@ -57,11 +52,7 @@ export async function resendTeamInvite(inviteId: number): Promise<void> {
     actionName: "team.invite.resend",
     permission: "hr:manage",
     input: { inviteId: parsedInput.value.inviteId },
-    execute: (ctx) =>
-      resendTeamInviteService(ctx, parsedInput.value, {
-        sendInviteEmail,
-        getInviteUrl,
-      }),
+    execute: (ctx) => resendTeamInviteService(ctx, parsedInput.value),
   });
 }
 

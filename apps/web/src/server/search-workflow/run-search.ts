@@ -1,8 +1,4 @@
 import type {
-  SearchPolicyDefaultsRepo,
-  SearchPolicyOverridesRepo,
-} from "~/server/capacity-policy/repos";
-import type {
   SearchCapacityGrantsRepo,
   SearchUsageCommitsRepo,
   SearchUsageReservationsRepo,
@@ -13,6 +9,10 @@ import {
   getSearchCapacitySnapshot,
   reserveSearchUsage,
 } from "~/server/capacity-usage/search-usage";
+import type {
+  SearchPolicyDefaultsRepo,
+  SearchPolicyOverridesRepo,
+} from "~/server/capacity/infrastructure/policy-repos";
 import { engineClient } from "~/server/shared/composition-root";
 import { type DomainError } from "~/server/shared/domain-error";
 import type { EngineClient } from "~/server/shared/engine/client";

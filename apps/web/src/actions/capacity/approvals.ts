@@ -6,7 +6,7 @@ import {
   grantLeadCapacityDirect as grantLeadCapacityService,
   grantSearchCapacityDirect as grantSearchCapacityService,
   rejectCapacityRequest as rejectCapacityService,
-} from "~/server/capacity/service-write";
+} from "~/server/capacity/application/commands";
 import { runAction } from "~/server/shared/action-runtime";
 
 import { parseCapacityDecisionInput, parseCapacityGrantInput } from "./input";

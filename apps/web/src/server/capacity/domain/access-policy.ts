@@ -1,36 +1,35 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { SessionData } from "~/lib/auth/access/session";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
-import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-type UserRow = {
+import type { ScopeRef } from "./types";
+
+type ManagedUser = {
   role: Role;
   branch_id: number;
   team_id: number | null;
 };
 
-type TeamRow = {
+type ManagedTeam = {
   id: number;
   branch_id: number;
   supervisor_id: number | null;
 };
 
-interface ScopeRepos<T extends UserRow = UserRow> {
+interface ScopeRepos<T extends ManagedUser = ManagedUser> {
   users: {
-    findById(id: UserId): Promise<T | undefined>;
+    findById(id: number): Promise<T | undefined>;
   };
   teams: {
-    findBySupervisorId(
-      supervisorId: UserId,
-    ): Promise<{ id: number } | undefined>;
-    findByIdWithSupervisor(id: TeamId): Promise<TeamRow | undefined>;
+    findBySupervisorId(id: number): Promise<{ id: number } | undefined>;
+    findByIdWithSupervisor(id: number): Promise<ManagedTeam | undefined>;
   };
 }
 
 function canManageExecutiveRecord(
   actor: SessionData,
-  target: UserRow,
+  target: ManagedUser,
   supervisedTeamId: number | null,
 ): boolean {
   if (target.role !== "executive") return false;
@@ -41,9 +40,9 @@ function canManageExecutiveRecord(
   return target.team_id === supervisedTeamId;
 }
 
-export async function canManageExecutive<T extends UserRow>(
+export async function canManageExecutive<T extends ManagedUser>(
   actor: SessionData,
-  targetUserId: UserId,
+  targetUserId: number,
   repos: ScopeRepos<T>,
 ): Promise<{ ok: boolean; target: T | null }> {
   const target = await repos.users.findById(targetUserId);
@@ -60,14 +59,12 @@ export async function canManageExecutive<T extends UserRow>(
   return { ok: true, target };
 }
 
-export async function canManageScopeDefault(
+export async function canManageScope(
   actor: SessionData,
-  scope:
-    | { scopeType: "branch"; scopeId: BranchId }
-    | { scopeType: "team"; scopeId: TeamId },
+  scope: ScopeRef,
   repos: ScopeRepos,
 ): Promise<Result<void, DomainError>> {
-  if (scope.scopeType === "branch") {
+  if (scope.kind === "branch") {
     if (actor.role !== "superuser" && actor.role !== "admin") {
       return Err(
         domainError(

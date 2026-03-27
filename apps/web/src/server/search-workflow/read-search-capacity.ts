@@ -1,8 +1,4 @@
 import type {
-  SearchPolicyDefaultsRepo,
-  SearchPolicyOverridesRepo,
-} from "~/server/capacity-policy/repos";
-import type {
   SearchCapacityGrantsRepo,
   SearchUsageCommitsRepo,
   SearchUsageReservationsRepo,
@@ -11,6 +7,10 @@ import {
   getSearchCapacitySnapshot,
   type SearchCapacitySnapshot,
 } from "~/server/capacity-usage/search-usage";
+import type {
+  SearchPolicyDefaultsRepo,
+  SearchPolicyOverridesRepo,
+} from "~/server/capacity/infrastructure/policy-repos";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import type { Result } from "~/server/shared/result";

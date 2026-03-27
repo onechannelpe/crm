@@ -13,7 +13,7 @@ vi.mock("../../src/server/shared/action-runtime", () => ({
   runAction: runActionMock,
 }));
 
-vi.mock("../../src/server/team/repos", () => ({
+vi.mock("../../src/server/team/infrastructure/runtime", () => ({
   teamRepos: {
     teams: {
       findByBranch: teamsFindByBranchMock,
