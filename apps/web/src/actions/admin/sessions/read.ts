@@ -1,7 +1,6 @@
 "use server";
 
 import { validationError } from "~/lib/app-errors";
-import { assertRecentStrongAuth } from "~/lib/auth/security/step-up";
 import {
   countActiveSessions as countActiveSessionsService,
   listAllActiveSessions as listAllActiveSessionsService,
@@ -20,35 +19,29 @@ export async function listUserSessions(userId: number) {
   if (isErr(parsedInput)) {
     throw validationError(parsedInput.error.message);
   }
-  const { requireRole } = await import("~/lib/auth/access/session");
-  const session = await requireRole("admin");
-  assertRecentStrongAuth(session);
   return runAction({
     actionName: "admin.sessions.user.read",
-    actor: session,
+    role: "admin",
+    stepUp: "recent_strong_auth",
     input: parsedInput.value,
     execute: (ctx) => listUserSessionsService(ctx, parsedInput.value),
   });
 }
 
 export async function getActiveSessionsCount(): Promise<number> {
-  const { requireRole } = await import("~/lib/auth/access/session");
-  const session = await requireRole("admin");
-  assertRecentStrongAuth(session);
   return runAction({
     actionName: "admin.sessions.count.read",
-    actor: session,
+    role: "admin",
+    stepUp: "recent_strong_auth",
     execute: () => countActiveSessionsService(),
   });
 }
 
 export async function listAllActiveSessions(): Promise<SessionInfo[]> {
-  const { requireRole } = await import("~/lib/auth/access/session");
-  const session = await requireRole("admin");
-  assertRecentStrongAuth(session);
   return runAction({
     actionName: "admin.sessions.active.read",
-    actor: session,
+    role: "admin",
+    stepUp: "recent_strong_auth",
     execute: () => listAllActiveSessionsService(),
   });
 }

@@ -1,7 +1,6 @@
 "use server";
 
 import { validationError } from "~/lib/app-errors";
-import { assertRecentStrongAuth } from "~/lib/auth/security/step-up";
 import type { ActionSuccess } from "~/lib/contracts/common";
 import {
   revokeAllUserSessions as revokeAllUserSessionsService,
@@ -23,12 +22,10 @@ export async function revokeUserSession(
   if (isErr(parsedInput)) {
     throw validationError(parsedInput.error.message);
   }
-  const { requireRole } = await import("~/lib/auth/access/session");
-  const session = await requireRole("admin");
-  assertRecentStrongAuth(session);
   return runAction({
     actionName: "admin.sessions.revoke",
-    actor: session,
+    role: "admin",
+    stepUp: "recent_strong_auth",
     input: parsedInput.value,
     execute: (ctx) => revokeUserSessionService(ctx, parsedInput.value),
   });
@@ -41,12 +38,10 @@ export async function revokeAllUserSessions(
   if (isErr(parsedInput)) {
     throw validationError(parsedInput.error.message);
   }
-  const { requireRole } = await import("~/lib/auth/access/session");
-  const session = await requireRole("admin");
-  assertRecentStrongAuth(session);
   return runAction({
     actionName: "admin.sessions.revoke_all",
-    actor: session,
+    role: "admin",
+    stepUp: "recent_strong_auth",
     input: parsedInput.value,
     execute: (ctx) => revokeAllUserSessionsService(ctx, parsedInput.value),
   });
