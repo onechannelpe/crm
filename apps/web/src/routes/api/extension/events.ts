@@ -1,7 +1,7 @@
 import type { APIEvent } from "@solidjs/start/server";
 
 import { isExtensionRuntimeEventEnvelope } from "~/server/extension/contracts";
-import { extensionService } from "~/server/shared/context";
+import { getExtensionApiRuntime } from "~/server/extension/runtime";
 import { isErr } from "~/server/shared/result";
 
 import { readJsonBody } from "./json-body";
@@ -32,10 +32,11 @@ export async function POST(event: APIEvent): Promise<Response> {
       );
     }
 
-    const result = await extensionService.ingestRuntimeEvent({
-      sessionToken,
-      event: body,
-    });
+    const result =
+      await getExtensionApiRuntime().extensionService.ingestRuntimeEvent({
+        sessionToken,
+        event: body,
+      });
     if (isErr(result)) {
       const status =
         result.error.reason === "session_invalid"

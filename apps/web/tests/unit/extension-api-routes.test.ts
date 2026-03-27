@@ -13,13 +13,15 @@ vi.mock("../../src/lib/auth/access/session", () => ({
   requirePermission: mocks.requirePermission,
 }));
 
-vi.mock("../../src/server/shared/context", () => ({
-  extensionService: {
-    claimInstallationSession: mocks.claimInstallationSession,
-    refreshInstallationSession: mocks.refreshInstallationSession,
-    ingestRuntimeEvent: mocks.ingestRuntimeEvent,
-    createHandoffToken: mocks.createHandoffToken,
-  },
+vi.mock("../../src/server/extension/runtime", () => ({
+  getExtensionApiRuntime: () => ({
+    extensionService: {
+      claimInstallationSession: mocks.claimInstallationSession,
+      refreshInstallationSession: mocks.refreshInstallationSession,
+      ingestRuntimeEvent: mocks.ingestRuntimeEvent,
+      createHandoffToken: mocks.createHandoffToken,
+    },
+  }),
 }));
 
 import { POST as postEvents } from "../../src/routes/api/extension/events";
