@@ -1,6 +1,5 @@
 "use server";
 
-import { requirePermission } from "~/lib/auth/access/session";
 import { requestCapacity } from "~/server/capacity/service-requests";
 import { runAction } from "~/server/shared/action-runtime";
 
@@ -12,10 +11,9 @@ export async function requestMoreSearches(amount: number, reason: string) {
   const reasonResult = parseCapacityReason(reason);
   if (!reasonResult.ok) throw reasonResult.error;
 
-  const session = await requirePermission("capacity:request:self");
   return runAction({
     actionName: "capacity.request_search",
-    actor: session,
+    permission: "capacity:request:self",
     input: { amount: amountResult.value, reason: reasonResult.value },
     execute: (ctx) =>
       requestCapacity(ctx, {
@@ -32,10 +30,9 @@ export async function requestMoreLeadRefill(amount: number, reason: string) {
   const reasonResult = parseCapacityReason(reason);
   if (!reasonResult.ok) throw reasonResult.error;
 
-  const session = await requirePermission("capacity:request:self");
   return runAction({
     actionName: "capacity.request_lead_refill",
-    actor: session,
+    permission: "capacity:request:self",
     input: { amount: amountResult.value, reason: reasonResult.value },
     execute: (ctx) =>
       requestCapacity(ctx, {

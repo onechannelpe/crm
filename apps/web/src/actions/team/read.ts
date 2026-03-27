@@ -1,7 +1,7 @@
 "use server";
 
-import { requirePermission } from "~/lib/auth/access/session";
 import { runAction } from "~/server/shared/action-runtime";
+import { createTeamInviteRuntime } from "~/server/team/runtime";
 import {
   getBulkImportSetup as getBulkImportSetupService,
   getInviteManagement as getInviteManagementService,
@@ -9,19 +9,22 @@ import {
 import type { BulkImportSetup, InviteManagement } from "~/server/team/types";
 
 export async function getInviteManagement(): Promise<InviteManagement> {
-  const session = await requirePermission("hr:manage");
+  const runtime = createTeamInviteRuntime();
   return runAction({
     actionName: "team.invite_management.read",
-    actor: session,
-    execute: getInviteManagementService,
+    permission: "hr:manage",
+    execute: (ctx) =>
+      getInviteManagementService(ctx, {
+        repos: runtime.repos,
+        provisioning: runtime.provisioning,
+      }),
   });
 }
 
 export async function getBulkImportSetup(): Promise<BulkImportSetup> {
-  const session = await requirePermission("admin:manage");
   return runAction({
     actionName: "team.bulk_import_setup.read",
-    actor: session,
+    permission: "admin:manage",
     execute: getBulkImportSetupService,
   });
 }

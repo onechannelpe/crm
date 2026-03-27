@@ -1,8 +1,8 @@
 import type { SessionData } from "~/lib/auth/access/session";
+import type { CapacityRequestKind } from "~/server/capacity/types";
 import { canManageExecutive } from "~/server/capacity-policy/scope-access";
 import {
   grantLeadCapacity,
-  type GrantLeadCapacityCommand,
 } from "~/server/capacity-usage/lead-usage";
 import type {
   LeadCapacityGrantsRepo,
@@ -10,13 +10,14 @@ import type {
 } from "~/server/capacity-usage/repos";
 import {
   grantSearchCapacity,
-  type GrantSearchCapacityCommand,
 } from "~/server/capacity-usage/search-usage";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { CapacityRequestId, TeamId, UserId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import { normalizeDecisionNote } from "./domain";
+
+type CapacityRequestStatus = "pending" | "approved" | "rejected" | "canceled";
 
 export interface ApproveCapacityRequestCommand {
   actorUserId: SessionData["userId"];
@@ -36,8 +37,8 @@ export interface ApproveRepos {
       | {
           id: number;
           user_id: number;
-          kind: string;
-          status: string;
+          kind: CapacityRequestKind;
+          status: CapacityRequestStatus;
           requested_amount: number;
           reason: string;
         }
@@ -150,16 +151,35 @@ export async function approveCapacityRequest(
 
       if (request.kind === "search_extra") {
         const grantResult = await grantSearchCapacity(
-          grantCmd as GrantSearchCapacityCommand,
+          {
+            actorUserId: command.actorUserId,
+            targetUserId: request.user_id,
+            amount: request.requested_amount,
+            reason: note ?? request.reason,
+          },
+          txRepos,
+        );
+        if (isErr(grantResult)) rollback(grantResult.error);
+      } else if (request.kind === "lead_refill_extra") {
+        const grantResult = await grantLeadCapacity(
+          {
+            actorUserId: command.actorUserId,
+            targetUserId: request.user_id,
+            amount: request.requested_amount,
+            reason: note ?? request.reason,
+          },
           txRepos,
         );
         if (isErr(grantResult)) rollback(grantResult.error);
       } else {
-        const grantResult = await grantLeadCapacity(
-          grantCmd as GrantLeadCapacityCommand,
-          txRepos,
+        request.kind satisfies never;
+        rollback(
+          domainError(
+            "unexpected",
+            "unexpected",
+            "Unsupported capacity request kind",
+          ),
         );
-        if (isErr(grantResult)) rollback(grantResult.error);
       }
 
       return { success: true as const };

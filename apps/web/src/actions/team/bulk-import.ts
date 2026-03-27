@@ -1,20 +1,16 @@
 "use server";
 
-import { internalError, validationError } from "~/lib/app-errors";
-import type { Role } from "~/lib/auth/access/rbac";
-import { requirePermission } from "~/lib/auth/access/session";
-import { runObservedAction } from "~/lib/observability/run-observed-action";
-import { shortName } from "~/lib/users/display-name";
-import { isErr } from "~/server/shared/result";
+import { validationError } from "~/lib/app-errors";
+import { runAction } from "~/server/shared/action-runtime";
 import {
-  applyImport,
-  parseAndValidateCsvRows,
+  applyBulkImport as applyBulkImportService,
+  previewBulkImport as previewBulkImportService,
   type BulkApplyResult,
   type BulkParseResult,
-} from "~/server/users/service-bulk-import";
+} from "~/server/team/service-bulk-import";
+import { createTeamInviteRuntime } from "~/server/team/runtime";
 
-export type { BulkApplyResult } from "~/server/users/service-bulk-import";
-import { provisioning } from "~/server/team/provisioning";
+export type { BulkApplyResult } from "~/server/team/service-bulk-import";
 
 import { getInviteUrl, sendInviteEmail } from "./utils";
 import { assertRole } from "./validators";
@@ -27,75 +23,54 @@ export async function previewBulkCsv(
   csvContent: string,
   role: string,
 ): Promise<BulkPreviewResult> {
-  await requirePermission("admin:manage");
-  assertRole(role);
-
-  if (!csvContent || csvContent.trim().length === 0) {
-    throw validationError("CSV content is required");
-  }
-
-  const result = parseAndValidateCsvRows(csvContent);
-  if (isErr(result)) {
-    throw validationError(result.error.message);
-  }
-
-  return { parsed: result.value };
+  const safeRole = assertRole(role);
+  const parsed = await runAction({
+    actionName: "team.bulk_import.preview",
+    permission: "admin:manage",
+    input: { role: safeRole },
+    execute: async () => {
+      if (!csvContent || csvContent.trim().length === 0) {
+        return {
+          ok: false,
+          error: {
+            kind: "validation",
+            code: "team.bulk_import.csv_required",
+            message: "CSV content is required",
+          },
+        };
+      }
+      return previewBulkImportService(csvContent);
+    },
+  });
+  return { parsed };
 }
 
 export async function applyBulkImport(
   csvContent: string,
   role: string,
 ): Promise<BulkApplyResult> {
-  const actor = { userId: null as number | null, role: null as Role | null };
-  return runObservedAction({
+  const safeRole = assertRole(role);
+  if (!csvContent || csvContent.trim().length === 0) {
+    throw validationError("CSV content is required");
+  }
+
+  const runtime = createTeamInviteRuntime();
+  return runAction({
     actionName: "team.bulk_import.apply",
-    actor,
-    input: { role },
-    run: async () => {
-      const session = await requirePermission("admin:manage");
-      actor.userId = session.userId;
-      actor.role = session.role;
-
-      const safeRole = assertRole(role);
-
-      if (!csvContent || csvContent.trim().length === 0) {
-        throw validationError("CSV content is required");
-      }
-
-      const parseResult = parseAndValidateCsvRows(csvContent);
-      if (isErr(parseResult)) {
-        throw internalError(parseResult.error.message);
-      }
-
-      const { valid } = parseResult.value;
-      if (valid.length === 0) {
-        throw validationError("No valid rows to import");
-      }
-
-      return applyImport(
-        valid,
+    permission: "admin:manage",
+    input: { role: safeRole },
+    execute: (ctx) =>
+      applyBulkImportService(
+        ctx,
         {
-          userId: session.userId,
-          role: session.role,
-          branchId: session.branchId,
+          csvContent,
+          role: safeRole,
         },
-        safeRole,
-        provisioning,
-        async ({ row, inviteId, token, expiresAt }) => {
-          await sendInviteEmail({
-            email: row.email,
-            fullName: shortName({
-              names: row.names,
-              firstSurname: row.firstSurname,
-              secondSurname: row.secondSurname,
-            }),
-            role: safeRole,
-            inviteUrl: getInviteUrl(token),
-            expiresAt,
-          });
-          await provisioning.markInviteDelivered(inviteId);
+        {
+          provisioning: runtime.provisioning,
+          sendInviteEmail,
+          getInviteUrl,
         },
-      );
-    },
+      ),
   });
 }

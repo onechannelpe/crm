@@ -1,83 +1,54 @@
 "use server";
 
-import { sql } from "kysely";
-
 import { validationError } from "~/lib/app-errors";
-import type { Role } from "~/lib/auth/access/rbac";
-import { requireRole } from "~/lib/auth/access/session";
 import { assertRecentStrongAuth } from "~/lib/auth/security/step-up";
-import type { UserSession } from "~/lib/db/types";
-import { repos } from "~/server/shared/context";
+import { runAction } from "~/server/shared/action-runtime";
+import {
+  countActiveSessions as countActiveSessionsService,
+  listAllActiveSessions as listAllActiveSessionsService,
+  listUserSessions as listUserSessionsService,
+  type SessionInfo,
+} from "~/server/auth/service-admin-sessions";
 import { isErr } from "~/server/shared/result";
 
 import { parseUserSessionsInput } from "./input";
 
-export async function listUserSessions(userId: number): Promise<UserSession[]> {
+export { type SessionInfo } from "~/server/auth/service-admin-sessions";
+
+export async function listUserSessions(userId: number) {
   const parsedInput = parseUserSessionsInput(userId);
   if (isErr(parsedInput)) {
     throw validationError(parsedInput.error.message);
   }
+  const { requireRole } = await import("~/lib/auth/access/session");
   const session = await requireRole("admin");
   assertRecentStrongAuth(session);
-  return repos.sessions.listForUser(parsedInput.value.userId);
+  return runAction({
+    actionName: "admin.sessions.user.read",
+    actor: session,
+    input: parsedInput.value,
+    execute: (ctx) => listUserSessionsService(ctx, parsedInput.value),
+  });
 }
 
 export async function getActiveSessionsCount(): Promise<number> {
+  const { requireRole } = await import("~/lib/auth/access/session");
   const session = await requireRole("admin");
   assertRecentStrongAuth(session);
-  return repos.sessions.countActive();
-}
-
-export interface SessionInfo {
-  id: string;
-  userId: number;
-  userEmail: string;
-  userName: string;
-  role: Role;
-  branchName: string;
-  ipAddress: string | null;
-  userAgent: string | null;
-  createdAt: number;
-  lastActivity: number;
-  expiresAt: number;
+  return runAction({
+    actionName: "admin.sessions.count.read",
+    actor: session,
+    execute: () => countActiveSessionsService(),
+  });
 }
 
 export async function listAllActiveSessions(): Promise<SessionInfo[]> {
+  const { requireRole } = await import("~/lib/auth/access/session");
   const session = await requireRole("admin");
   assertRecentStrongAuth(session);
-
-  const sessions = await repos.sessions.db
-    .selectFrom("user_sessions")
-    .innerJoin("users", "user_sessions.user_id", "users.id")
-    .innerJoin("branches", "user_sessions.branch_id", "branches.id")
-    .select([
-      "user_sessions.id",
-      "user_sessions.user_id",
-      "users.email as userEmail",
-      sql<string>`users.names || ' ' || users.first_surname`.as("userName"),
-      "user_sessions.role",
-      "branches.name as branchName",
-      "user_sessions.ip_address as ipAddress",
-      "user_sessions.user_agent as userAgent",
-      "user_sessions.created_at as createdAt",
-      "user_sessions.last_activity as lastActivity",
-      "user_sessions.expires_at as expiresAt",
-    ])
-    .where("user_sessions.expires_at", ">", Date.now())
-    .orderBy("user_sessions.last_activity", "desc")
-    .execute();
-
-  return sessions.map((s) => ({
-    id: s.id,
-    userId: s.user_id,
-    userEmail: s.userEmail,
-    userName: s.userName,
-    role: s.role,
-    branchName: s.branchName,
-    ipAddress: s.ipAddress,
-    userAgent: s.userAgent,
-    createdAt: s.createdAt,
-    lastActivity: s.lastActivity,
-    expiresAt: s.expiresAt,
-  }));
+  return runAction({
+    actionName: "admin.sessions.active.read",
+    actor: session,
+    execute: () => listAllActiveSessionsService(),
+  });
 }

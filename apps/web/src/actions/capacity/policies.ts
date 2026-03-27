@@ -1,6 +1,5 @@
 "use server";
 
-import { requirePermission } from "~/lib/auth/access/session";
 import {
   updateLeadPolicyDefault as updateLeadPolicyDefaultService,
   updateLeadPolicyOverride as updateLeadPolicyOverrideService,
@@ -24,10 +23,9 @@ export async function updateSearchPolicyOverride(input: {
 }) {
   const overrideInput = parseSearchPolicyOverrideInput(input);
   if (!overrideInput.ok) throw overrideInput.error;
-  const session = await requirePermission("capacity:policy:manage");
   return runAction({
     actionName: "capacity.search_policy_override.update",
-    actor: session,
+    permission: "capacity:policy:manage",
     input: overrideInput.value,
     execute: (ctx) =>
       updateSearchPolicyOverrideService(ctx, overrideInput.value),
@@ -42,10 +40,9 @@ export async function updateLeadPolicyOverride(input: {
 }) {
   const overrideInput = parseLeadPolicyOverrideInput(input);
   if (!overrideInput.ok) throw overrideInput.error;
-  const session = await requirePermission("capacity:policy:manage");
   return runAction({
     actionName: "capacity.lead_policy_override.update",
-    actor: session,
+    permission: "capacity:policy:manage",
     input: overrideInput.value,
     execute: (ctx) => updateLeadPolicyOverrideService(ctx, overrideInput.value),
   });
@@ -60,10 +57,9 @@ export async function updateSearchPolicyDefault(input: {
   if (!scopeInput.ok) throw scopeInput.error;
   const limitResult = parseSearchPolicyLimit(input.monthlySearchLimit);
   if (!limitResult.ok) throw limitResult.error;
-  const session = await requirePermission("capacity:policy:manage");
   return runAction({
     actionName: "capacity.search_policy_default.update",
-    actor: session,
+    permission: "capacity:policy:manage",
     input: {
       scope: {
         kind: scopeInput.value.scopeType,
@@ -95,10 +91,9 @@ export async function updateLeadPolicyDefault(input: {
     dailyRefillLimit: input.dailyRefillLimit,
   });
   if (!policyResult.ok) throw policyResult.error;
-  const session = await requirePermission("capacity:policy:manage");
   return runAction({
     actionName: "capacity.lead_policy_default.update",
-    actor: session,
+    permission: "capacity:policy:manage",
     input: {
       scope: {
         kind: scopeInput.value.scopeType,

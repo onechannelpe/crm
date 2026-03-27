@@ -1,6 +1,5 @@
 "use server";
 
-import { requirePermission } from "~/lib/auth/access/session";
 import {
   getBootstrap as getBootstrapService,
   getFixContext as getFixContextService,
@@ -21,10 +20,9 @@ import { parseSalesContactId, parseSalesRecordId } from "./input";
 export async function listSalesRecordProducts(): Promise<
   SalesRecordProductOption[]
 > {
-  const session = await requirePermission("sales:create");
   return runAction({
     actionName: "sales_records.products.read",
-    actor: session,
+    permission: "sales:create",
     execute: async () => ({ ok: true, value: await listProductsService() }),
   });
 }
@@ -32,12 +30,11 @@ export async function listSalesRecordProducts(): Promise<
 export async function getSalesRecordBootstrap(
   contactId: number | null,
 ): Promise<SalesRecordBootstrap> {
-  const session = await requirePermission("sales:create");
   const safeContactId =
     contactId === null ? null : parseSalesContactId(contactId);
   return runAction({
     actionName: "sales_records.bootstrap.read",
-    actor: session,
+    permission: "sales:create",
     input: { contactId: safeContactId },
     execute: async (ctx) => ({
       ok: true,
@@ -49,10 +46,9 @@ export async function getSalesRecordBootstrap(
 export async function listPendingSalesRecords(): Promise<
   SalesRecordQueueItem[]
 > {
-  const session = await requirePermission("sales:review");
   return runAction({
     actionName: "sales_records.pending.read",
-    actor: session,
+    permission: "sales:review",
     execute: async (ctx) => ({
       ok: true,
       value: await listPendingService(ctx),
@@ -63,10 +59,9 @@ export async function listPendingSalesRecords(): Promise<
 export async function listConfirmedSalesRecords(): Promise<
   SalesRecordQueueItem[]
 > {
-  const session = await requirePermission("sales:review");
   return runAction({
     actionName: "sales_records.confirmed.read",
-    actor: session,
+    permission: "sales:review",
     execute: async (ctx) => ({
       ok: true,
       value: await listConfirmedService(ctx),
@@ -78,10 +73,9 @@ export async function getSalesRecordFixContext(
   recordId: number,
 ): Promise<SalesRecordFixContext> {
   const safeRecordId = parseSalesRecordId(recordId);
-  const session = await requirePermission("sales:create");
   return runAction({
     actionName: "sales_records.fix_context.read",
-    actor: session,
+    permission: "sales:create",
     input: { recordId: safeRecordId },
     execute: async (ctx) => ({
       ok: true,

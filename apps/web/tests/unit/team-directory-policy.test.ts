@@ -1,46 +1,48 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { Role } from "../../src/lib/auth/access/rbac";
 import { Ok } from "../../src/server/shared/result";
 
-const { requirePermissionMock, teamsFindByBranchMock, listPendingInvitesMock } =
-  vi.hoisted(() => ({
-    requirePermissionMock: vi.fn(),
-    teamsFindByBranchMock: vi.fn(),
-    listPendingInvitesMock: vi.fn(),
-  }));
-
-vi.mock("../../src/lib/auth/access/session", () => ({
-  requirePermission: requirePermissionMock,
+const {
+  runActionMock,
+  teamsFindByBranchMock,
+  listPendingInvitesMock,
+} = vi.hoisted(() => ({
+  runActionMock: vi.fn(),
+  teamsFindByBranchMock: vi.fn(),
+  listPendingInvitesMock: vi.fn(),
 }));
 
-vi.mock("../../src/server/shared/context", () => ({
-  repos: {
-    teams: {
-      findByBranch: teamsFindByBranchMock,
+vi.mock("../../src/server/shared/action-runtime", () => ({
+  runAction: runActionMock,
+}));
+
+vi.mock("../../src/server/team/runtime", () => ({
+  createTeamInviteRuntime: () => ({
+    repos: {
+      teams: {
+        findByBranch: teamsFindByBranchMock,
+      },
     },
-  },
-}));
-
-vi.mock("../../src/actions/team/provisioning", () => ({
-  provisioning: {
-    listPendingInvites: listPendingInvitesMock,
-  },
+    provisioning: {
+      listPendingInvites: listPendingInvitesMock,
+    },
+  }),
 }));
 
 import { getInviteManagement } from "../../src/actions/team/read";
 
-function setSession(role: Role) {
-  requirePermissionMock.mockResolvedValue({
-    userId: 7,
-    role,
-    branchId: 3,
-  });
-}
-
 describe("invite management query", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    runActionMock.mockImplementation((params) =>
+      params.execute({
+        actor: {
+          userId: 7,
+          role: "hr",
+          branchId: 3,
+        },
+      }),
+    );
     teamsFindByBranchMock.mockResolvedValue([{ id: 11, name: "Operaciones" }]);
     listPendingInvitesMock.mockResolvedValue(
       Ok([
@@ -61,7 +63,6 @@ describe("invite management query", () => {
   });
 
   it("fetches invites and teams for hr", async () => {
-    setSession("hr");
     const im = await getInviteManagement();
     expect(teamsFindByBranchMock).toHaveBeenCalledWith(3);
     expect(listPendingInvitesMock).toHaveBeenCalledWith(3);

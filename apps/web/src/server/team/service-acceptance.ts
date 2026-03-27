@@ -1,10 +1,33 @@
-import { issueSessionTransition } from "~/lib/auth/session/session-transition";
-import { repos } from "~/server/shared/context";
+import type { Role } from "~/lib/auth/access/rbac";
 import type { DomainError } from "~/server/shared/domain-error";
 import { isErr, Ok, type Result } from "~/server/shared/result";
+import type { createUserProvisioningService } from "~/server/users/service-user-provisioning";
 
-import { provisioning } from "./provisioning";
 import type { AcceptTeamInviteCommand } from "./types";
+
+type TeamAcceptanceProvisioning = Pick<
+  ReturnType<typeof createUserProvisioningService>,
+  "acceptInvite"
+>;
+
+type IssuePreAuthSession = (input: {
+  user: {
+    id: number;
+    branch_id: number;
+    role: AcceptInviteResult["role"];
+    onboarding_completed_at: null;
+  };
+  request: {
+    ipAddress: string;
+    userAgent: string | null;
+  };
+}) => Promise<{ token: string }>;
+
+type AcceptInviteResult = {
+  userId: number;
+  branchId: number;
+  role: Role;
+};
 
 export async function acceptTeamInvite(
   ctx: {
@@ -12,8 +35,12 @@ export async function acceptTeamInvite(
     userAgent: string | null;
   },
   input: AcceptTeamInviteCommand & { passwordHash: string },
+  deps: {
+    provisioning: TeamAcceptanceProvisioning;
+    issuePreAuthSession: IssuePreAuthSession;
+  },
 ): Promise<Result<{ sessionToken: string; redirectTo: string }, DomainError>> {
-  const result = await provisioning.acceptInvite({
+  const result = await deps.provisioning.acceptInvite({
     token: input.token,
     passwordHash: input.passwordHash,
   });
@@ -21,22 +48,17 @@ export async function acceptTeamInvite(
     return result;
   }
 
-  const issued = await issueSessionTransition({
+  const issued = await deps.issuePreAuthSession({
     user: {
       id: result.value.userId,
       branch_id: result.value.branchId,
       role: result.value.role,
       onboarding_completed_at: null,
     },
-    sessionClass: "pre_auth",
     request: {
       ipAddress: ctx.ipAddress,
       userAgent: ctx.userAgent,
     },
-    primaryAuthMethod: "password",
-    strongAuthMethod: null,
-    strongAuthAt: null,
-    deps: repos,
   });
 
   return Ok({

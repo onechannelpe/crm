@@ -1,6 +1,5 @@
 "use server";
 
-import { requirePermission } from "~/lib/auth/access/session";
 import {
   approveCapacity as approveCapacityService,
   grantLeadCapacity as grantLeadCapacityService,
@@ -14,10 +13,9 @@ import { parseCapacityDecisionInput, parseCapacityGrantInput } from "./input";
 export async function approveCapacity(requestId: number, note?: string) {
   const decisionInput = parseCapacityDecisionInput({ requestId, note });
   if (!decisionInput.ok) throw decisionInput.error;
-  const session = await requirePermission("capacity:approve");
   return runAction({
     actionName: "capacity.approve",
-    actor: session,
+    permission: "capacity:approve",
     input: decisionInput.value,
     execute: (ctx) => approveCapacityService(ctx, decisionInput.value),
   });
@@ -26,10 +24,9 @@ export async function approveCapacity(requestId: number, note?: string) {
 export async function rejectCapacity(requestId: number, note: string) {
   const decisionInput = parseCapacityDecisionInput({ requestId, note });
   if (!decisionInput.ok) throw decisionInput.error;
-  const session = await requirePermission("capacity:approve");
   return runAction({
     actionName: "capacity.reject",
-    actor: session,
+    permission: "capacity:approve",
     input: {
       requestId: decisionInput.value.requestId,
       note: decisionInput.value.note ?? "",
@@ -49,10 +46,9 @@ export async function grantMoreSearches(
 ) {
   const grantInput = parseCapacityGrantInput({ userId, amount, reason });
   if (!grantInput.ok) throw grantInput.error;
-  const session = await requirePermission("capacity:manage");
   return runAction({
     actionName: "capacity.grant_search",
-    actor: session,
+    permission: "capacity:manage",
     input: grantInput.value,
     execute: (ctx) =>
       grantSearchCapacityService(ctx, {
@@ -70,10 +66,9 @@ export async function grantMoreLeadRefill(
 ) {
   const grantInput = parseCapacityGrantInput({ userId, amount, reason });
   if (!grantInput.ok) throw grantInput.error;
-  const session = await requirePermission("capacity:manage");
   return runAction({
     actionName: "capacity.grant_lead",
-    actor: session,
+    permission: "capacity:manage",
     input: grantInput.value,
     execute: (ctx) =>
       grantLeadCapacityService(ctx, {

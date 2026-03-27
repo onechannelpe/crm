@@ -34,7 +34,7 @@ function makeActor(role: Role = "admin") {
 type RequestRow = {
   id: number;
   user_id: number;
-  kind: "search_extra" | "lead_extra";
+  kind: "search_extra" | "lead_refill_extra";
   status: "pending" | "approved" | "rejected";
   requested_amount: number;
   reason: string;

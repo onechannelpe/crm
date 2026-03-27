@@ -1,5 +1,11 @@
 import { throwDomainError } from "~/actions/throw-domain-error";
-import type { SessionData } from "~/lib/auth/access/session";
+import {
+  requirePermission,
+  requireRole,
+  requireSession as requireSessionActor,
+  type SessionData,
+} from "~/lib/auth/access/session";
+import type { Permission, Role } from "~/lib/auth/access/rbac";
 import { getErrorMessage } from "~/lib/errors";
 import { getRequestContext } from "~/lib/http/request-context";
 import { getActionRequestContext } from "~/lib/observability/context";
@@ -31,13 +37,38 @@ export function createAppContext(actor: SessionData): AppContext {
   };
 }
 
+async function resolveActor(params: {
+  actor?: SessionData;
+  permission?: Permission;
+  role?: Role;
+  requireSession?: boolean;
+}): Promise<SessionData> {
+  if (params.actor) {
+    return params.actor;
+  }
+  if (params.permission) {
+    return requirePermission(params.permission);
+  }
+  if (params.role) {
+    return requireRole(params.role);
+  }
+  if (params.requireSession) {
+    return requireSessionActor();
+  }
+  throw new Error("runAction requires an actor or auth requirement");
+}
+
 export async function runAction<T, E extends DomainError>(params: {
   actionName: string;
-  actor: SessionData;
+  actor?: SessionData;
+  permission?: Permission;
+  role?: Role;
+  requireSession?: boolean;
   input?: unknown;
   execute: (ctx: AppContext) => Promise<Result<T, E>>;
 }): Promise<T> {
-  const ctx = createAppContext(params.actor);
+  const actor = await resolveActor(params);
+  const ctx = createAppContext(actor);
   const startedAt = ctx.now();
 
   try {

@@ -1,100 +1,35 @@
 "use server";
 
-import QRCode from "qrcode";
-
-import {
-  conflictError,
-  forbiddenError,
-  validationError,
-} from "~/lib/app-errors";
-import { requireSession } from "~/lib/auth/access/session";
-import {
-  issueSessionTransition,
-  replaceCurrentSession,
-} from "~/lib/auth/session/session-transition";
-import {
-  generateRecoveryCodes,
-  hashRecoveryCodes,
-} from "~/lib/auth/totp/recovery-codes";
-import {
-  decryptTotpSecret,
-  encryptTotpSecret,
-} from "~/lib/auth/totp/secret-crypto";
-import {
-  buildTotpProvisioningUri,
-  generateTotpSecret,
-  verifyTotpCode,
-} from "~/lib/auth/totp/totp";
+import { replaceCurrentSession } from "~/lib/auth/session/session-transition";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
-import { getRequestClientMetadata } from "~/lib/http/request-context";
-import { repos } from "~/server/shared/context";
+import { runAction } from "~/server/shared/action-runtime";
+import {
+  beginTotpEnrollment as beginTotpEnrollmentService,
+  finishTotpEnrollment as finishTotpEnrollmentService,
+} from "~/server/auth/service-totp";
 
 export async function beginTotpEnrollment(): Promise<{
   otpauthUri: string;
   qrCodeDataUrl: string;
 }> {
-  const session = await requireSession();
-  const user = await repos.users.findById(session.userId);
-  if (!user) {
-    throw forbiddenError("Unauthorized");
-  }
-  const existing = await repos.userTotpFactors.findByUserId(user.id);
-  if (existing?.is_enabled === 1) {
-    throw conflictError("TOTP already enabled");
-  }
-
-  const secret = generateTotpSecret();
-  const encrypted = await encryptTotpSecret(secret);
-  await repos.userTotpFactors.createOrRotate(user.id, encrypted);
-
-  const otpauthUri = buildTotpProvisioningUri(secret, user.email);
-  const qrCodeDataUrl = await QRCode.toDataURL(otpauthUri);
-  return { otpauthUri, qrCodeDataUrl };
+  return runAction({
+    actionName: "auth.totp.begin",
+    requireSession: true,
+    execute: beginTotpEnrollmentService,
+  });
 }
 
 export async function finishTotpEnrollment(code: string): Promise<string[]> {
-  const session = await requireSession();
   const safeCode = assertNonEmptyString(code, "code");
-  const user = await repos.users.findById(session.userId);
-  const factor = await repos.userTotpFactors.findByUserId(session.userId);
-  if (!user || !factor) {
-    throw validationError("Invalid TOTP setup request");
-  }
-
-  const secret = await decryptTotpSecret(factor.secret_encrypted);
-  const valid = verifyTotpCode(secret, safeCode);
-  if (!valid) {
-    throw validationError("Invalid TOTP code");
-  }
-
-  await repos.userTotpFactors.markEnabled(user.id);
-  const recoveryCodes = generateRecoveryCodes();
-  const hashes = await hashRecoveryCodes(recoveryCodes);
-  await repos.userTotpRecoveryCodes.replaceForUser(user.id, hashes);
-
-  await repos.auditLogs.create({
-    user_id: user.id,
-    action: "totp_enabled",
-    entity_type: "user",
-    entity_id: user.id,
-    changes: null,
-    created_at: Date.now(),
+  const result = await runAction({
+    actionName: "auth.totp.finish",
+    requireSession: true,
+    input: { hasCode: true },
+    execute: (ctx) =>
+      finishTotpEnrollmentService(ctx, {
+        code: safeCode,
+      }),
   });
-
-  const request = getRequestClientMetadata();
-  const issued = await issueSessionTransition({
-    user,
-    sessionClass: session.sessionClass,
-    request: {
-      ipAddress: request.ipAddress,
-      userAgent: request.userAgent,
-    },
-    primaryAuthMethod: session.primaryAuthMethod,
-    strongAuthMethod: "totp",
-    strongAuthAt: Date.now(),
-    deps: repos,
-  });
-  await replaceCurrentSession(issued.token);
-
-  return recoveryCodes;
+  await replaceCurrentSession(result.sessionToken);
+  return result.recoveryCodes;
 }
