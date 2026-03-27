@@ -5,18 +5,11 @@ import { completeExecutiveInputUseCase } from "~/server/leads/application/comple
 import { reassignLeadUseCase } from "~/server/leads/application/reassign-lead";
 import { runAction } from "~/server/shared/action-runtime";
 
-export interface CompleteExecutiveInputInput {
-  leadId: number;
-  proveedorActual: string;
-  tasaActual: number;
-  gpv: number;
-  ticket: number;
-  abono: number;
-  cantidadPos: number;
-}
-
 export async function completeExecutiveInput(
-  input: CompleteExecutiveInputInput,
+  input: Omit<
+    Parameters<typeof completeExecutiveInputUseCase>[0],
+    "actorId" | "branchId"
+  >,
 ): Promise<void> {
   if (!input.proveedorActual?.trim()) {
     throw validationError("proveedorActual is required");

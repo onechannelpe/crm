@@ -7,21 +7,8 @@ import { listSalesQuery } from "~/server/sales/application/list-sales";
 import { runAction } from "~/server/shared/action-runtime";
 import { Ok } from "~/server/shared/result";
 
-export interface CreateLeadSaleInput {
-  leadId: number;
-  proveedorActual: string;
-  tasaActual: number;
-  gpv: number;
-  ticket: number;
-  abono: number;
-  cantidadPos: number;
-  banco: string;
-  nroCuenta: string;
-  cci: string | null;
-}
-
 export async function createLeadSale(
-  input: CreateLeadSaleInput,
+  input: Omit<Parameters<typeof createSaleUseCase>[0], "executiveId">,
 ): Promise<{ id: number }> {
   if (!input.proveedorActual?.trim())
     throw validationError("proveedorActual is required");

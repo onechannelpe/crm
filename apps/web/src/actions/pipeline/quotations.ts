@@ -8,18 +8,8 @@ import { listQuotationQueueQuery } from "~/server/quotations/application/list-qu
 import { runAction } from "~/server/shared/action-runtime";
 import { isErr, Ok } from "~/server/shared/result";
 
-export interface CreateQuotationInput {
-  leadId: number;
-  paybackPricing: number;
-  tarifaDebito: number;
-  tarifaCredito: number;
-  tarifaForaneo: number;
-  fee: number;
-  moneda: string;
-}
-
 export async function createQuotation(
-  input: CreateQuotationInput,
+  input: Omit<Parameters<typeof createQuotationUseCase>[0], "actorId">,
 ): Promise<{ id: number }> {
   if (input.moneda !== "PEN" && input.moneda !== "USD") {
     throw validationError("moneda must be PEN or USD");
