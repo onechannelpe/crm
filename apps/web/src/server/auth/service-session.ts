@@ -1,7 +1,4 @@
-import {
-  resolveWorkspaceContext,
-  type WorkspaceIdentity,
-} from "~/lib/auth/access/workspace-context";
+import { resolveWorkspaceContext } from "~/lib/auth/access/workspace-context";
 import {
   getStrongAuthStatus,
   requiresStrongAuthRole,

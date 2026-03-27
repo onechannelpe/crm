@@ -15,7 +15,7 @@ import {
   runInRepositoryTransaction,
 } from "~/server/shared/context";
 import type { DomainError } from "~/server/shared/domain-error";
-import { Ok, type Result } from "~/server/shared/result";
+import { type Result } from "~/server/shared/result";
 
 import type { CapacityRequestKind } from "./types";
 

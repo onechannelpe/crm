@@ -3,10 +3,9 @@ import { getAssignableRoleOptions } from "~/lib/auth/access/role-display";
 import { hashInviteToken } from "~/lib/auth/invite/tokens";
 import { shortName } from "~/lib/users/display-name";
 import type { AppContext } from "~/server/shared/action-runtime";
-import { repos, runInRepositoryTransaction } from "~/server/shared/context";
+import { repos } from "~/server/shared/context";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
-import { createUserProvisioningService } from "~/server/users/service-user-provisioning";
 
 import { provisioning } from "./provisioning";
 import type {
