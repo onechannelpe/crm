@@ -40,42 +40,46 @@
     workspace = {
       onCreate = {
         bootstrap = ''
+          set -eu
+
           if [ ! -f .env ]; then
             cp .env.example .env
           fi
 
-          if ! grep -q '^SESSION_SECRET=.' .env; then
-            printf '\nSESSION_SECRET=%s\n' "$(openssl rand -base64 32)" >> .env
-          fi
+          set_env_value() {
+            key="$1"
+            value="$2"
+            escaped_value="$(printf '%s' "$value" | sed 's/[&|]/\\&/g')"
+            if grep -q "^''${key}=" .env; then
+              sed -i "s|^''${key}=.*|''${key}=''${escaped_value}|" .env
+            else
+              printf '\n%s=%s\n' "$key" "$value" >> .env
+            fi
+          }
 
-          if ! grep -q '^TOTP_ENCRYPTION_KEY=.' .env; then
-            printf '\nTOTP_ENCRYPTION_KEY=%s\n' "$(openssl rand -base64 32)" >> .env
-          fi
+          get_env_value() {
+            key="$1"
+            grep "^''${key}=" .env | tail -n 1 | cut -d= -f2-
+          }
 
-          if ! grep -q '^ENGINE_HMAC_SECRET=.' .env; then
-            engine_hmac_secret="$(openssl rand -hex 32)"
-            printf '\nENGINE_HMAC_SECRET=%s\n' "$engine_hmac_secret" >> .env
-          fi
+          ensure_generated_value() {
+            key="$1"
+            value="$2"
+            current_value="$(get_env_value "$key" || true)"
+            if [ -z "$current_value" ]; then
+              set_env_value "$key" "$value"
+            fi
+          }
 
-          if ! grep -q '^ENGINE_HMAC_KEYS_JSON=.' .env; then
-            engine_hmac_secret="$(grep '^ENGINE_HMAC_SECRET=.' .env | tail -n 1 | cut -d= -f2-)"
-            printf "\nENGINE_HMAC_KEYS_JSON='{\"web\":\"%s\"}'\n" "$engine_hmac_secret" >> .env
-          fi
+          ensure_generated_value "SESSION_SECRET" "$(openssl rand -base64 32)"
+          ensure_generated_value "TOTP_ENCRYPTION_KEY" "$(openssl rand -base64 32)"
+          ensure_generated_value "ENGINE_HMAC_SECRET" "$(openssl rand -hex 32)"
 
-          if ! grep -q '^GOOGLE_CLIENT_ID=.' .env; then
-            printf '\nGOOGLE_CLIENT_ID=idx-placeholder-client-id\n' >> .env
-          fi
-
-          if ! grep -q '^GOOGLE_CLIENT_SECRET=.' .env; then
-            printf '\nGOOGLE_CLIENT_SECRET=idx-placeholder-client-secret\n' >> .env
-          fi
-
-          if ! grep -q '^RESEND_API_KEY=.' .env; then
-            printf '\nRESEND_API_KEY=idx-placeholder-resend-key\n' >> .env
-          fi
-
-          if ! grep -q '^EMAIL_FROM=.' .env; then
-            printf '\nEMAIL_FROM=dev@example.com\n' >> .env
+          engine_hmac_secret="$(get_env_value "ENGINE_HMAC_SECRET" || true)"
+          if [ -n "$engine_hmac_secret" ]; then
+            ensure_generated_value \
+              "ENGINE_HMAC_KEYS_JSON" \
+              "'{\"web\":\"$engine_hmac_secret\"}'"
           fi
 
           mise install
