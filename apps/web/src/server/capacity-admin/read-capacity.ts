@@ -1,3 +1,4 @@
+import type { Role } from "~/lib/auth/access/rbac";
 import type { SessionData } from "~/lib/auth/access/session";
 import { longName } from "~/lib/users/display-name";
 import { AUDIT_READER_DEFAULT_LIMIT } from "~/server/audit-reader/contracts";
@@ -26,7 +27,6 @@ import {
 } from "~/server/search-workflow/read-search-capacity";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { TeamId, UserId } from "~/server/shared/ids";
-import { asUserId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import type { CapacityRequestsRepo } from "./repos";
@@ -91,7 +91,7 @@ interface ReadRepos {
     findById(id: UserId): Promise<
       | {
           id: number;
-          role: string;
+          role: Role;
           branch_id: number;
           team_id: number | null;
           names: string;
@@ -184,16 +184,12 @@ export async function getManagedExecutives(
 
     const summaries = await Promise.all(
       users.map(async (user) => {
-        const managed = await canManageExecutive(
-          actor,
-          asUserId(user.id),
-          repos,
-        );
+        const managed = await canManageExecutive(actor, user.id, repos);
         if (!managed.ok) return null;
 
         const [searchStatus, leadStatus] = await Promise.all([
-          getSearchCapacityForUser(asUserId(user.id), repos),
-          getLeadCapacityForUser(asUserId(user.id), repos),
+          getSearchCapacityForUser(user.id, repos),
+          getLeadCapacityForUser(user.id, repos),
         ]);
         if (isErr(searchStatus) || isErr(leadStatus)) return null;
 

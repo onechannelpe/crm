@@ -4,7 +4,6 @@ import {
   commitSearchUsage,
   reserveSearchUsage,
 } from "~/server/capacity-usage/search-usage";
-import { asUserId } from "~/server/shared/ids";
 
 import {
   cleanupTestDb,
@@ -51,7 +50,7 @@ describe("search capacity consume action benchmark", () => {
 
       const reserveResult = await reserveSearchUsage(
         {
-          actorUserId: asUserId(userId),
+          actorUserId: userId,
           amount: 1,
           remainingCapacity: 2,
           reason: "direct_search",

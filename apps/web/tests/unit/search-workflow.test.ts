@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import { runDirectSearch } from "~/server/search-workflow/run-search";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { SearchResult } from "~/server/shared/engine/types";
-import { asBranchId, asUserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import {
@@ -13,7 +12,7 @@ import {
   makeSearchUsageReservationsRepo,
 } from "../support/capacity-fakes";
 
-const USER_ID = asUserId(1);
+const USER_ID = 1;
 
 function makeRepos() {
   const searchCapacityGrants = makeSearchCapacityGrantsRepo();
@@ -21,7 +20,7 @@ function makeRepos() {
   const searchUsageCommits = makeSearchUsageCommitsRepo();
   return {
     users: {
-      findById: async () => ({ team_id: null, branch_id: asBranchId(1) }),
+      findById: async () => ({ team_id: null, branch_id: 1 }),
     },
     ...makeNullSearchPolicyRepos(),
     searchCapacityGrants,

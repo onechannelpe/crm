@@ -2,7 +2,6 @@ import { afterAll, beforeAll, bench, describe } from "vitest";
 
 import { requestLeadRefill } from "~/server/lead-workflow/request-refill";
 import type { EngineClient } from "~/server/shared/engine/client";
-import { asBranchId, asUserId } from "~/server/shared/ids";
 import { createRepositories } from "~/server/shared/registry";
 
 import {
@@ -45,8 +44,8 @@ describe("lead refill action benchmark", () => {
 
       const result = await requestLeadRefill(
         {
-          actorUserId: asUserId(userId),
-          branchId: asBranchId(1),
+          actorUserId: userId,
+          branchId: 1,
         },
         {
           repos: ctx!.repos,

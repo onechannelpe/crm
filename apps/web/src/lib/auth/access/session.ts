@@ -1,3 +1,4 @@
+import { getRequestContext } from "~/lib/http/request-context";
 import type { BranchId, UserId } from "~/server/shared/ids";
 
 import type {
@@ -5,8 +6,6 @@ import type {
   SessionClass,
   StrongAuthMethod,
 } from "../core/session-contract";
-import { getSessionCookie } from "../session/cookies";
-import { validateSessionToken } from "../session/session-manager";
 import { hasPermission, type Permission, type Role } from "./rbac";
 
 export interface SessionData {
@@ -23,10 +22,7 @@ export interface SessionData {
 }
 
 export async function getSession(): Promise<SessionData | null> {
-  const token = getSessionCookie();
-  if (!token) return null;
-
-  const { session } = await validateSessionToken(token);
+  const session = await getRequestContext().getAuthSession();
   if (!session) return null;
 
   return {

@@ -1,54 +1,56 @@
 "use server";
 
-import { requirePermission } from "~/lib/auth/access/session";
 import { assertPositiveInt } from "~/lib/contracts/guards";
 import {
-  getCapacityAuditEvents,
-  getCapacityPolicyDefaults,
-  getExecutiveCapacityDetail,
-  getManagedExecutives,
-  getPendingCapacityRequests,
-} from "~/server/capacity-admin/read-capacity";
-import { repos } from "~/server/shared/context";
-import { asUserId } from "~/server/shared/ids";
-import { isErr } from "~/server/shared/result";
-
-import { mapCapacityError } from "./errors";
+  getAuditEvents as getAuditEventsService,
+  getExecutiveDetail as getExecutiveDetailService,
+  getPolicyDefaults as getPolicyDefaultsService,
+  listManagedExecutives as listManagedExecutivesService,
+  listPendingRequests as listPendingRequestsService,
+} from "~/server/capacity/service-read";
+import { runAction } from "~/server/shared/action-runtime";
 
 export async function getManagedExecutivesList() {
-  const session = await requirePermission("capacity:read:team");
-  const result = await getManagedExecutives(session, repos);
-  if (isErr(result)) mapCapacityError(result.error);
-  return result.value;
+  return runAction({
+    actionName: "capacity.managed_executives.read",
+    permission: "capacity:read:team",
+    execute: listManagedExecutivesService,
+  });
 }
 
 export async function getExecutiveDetail(userId: number) {
-  const safeUserId = asUserId(assertPositiveInt(userId, "userId"));
-  const session = await requirePermission("capacity:read:team");
-  const result = await getExecutiveCapacityDetail(session, safeUserId, repos);
-  if (isErr(result)) mapCapacityError(result.error);
-  return result.value;
+  const safeUserId = assertPositiveInt(userId, "userId");
+  return runAction({
+    actionName: "capacity.executive_detail.read",
+    permission: "capacity:read:team",
+    input: { userId: safeUserId },
+    execute: (ctx) => getExecutiveDetailService(ctx, { userId: safeUserId }),
+  });
 }
 
 export async function getPendingRequests() {
-  const session = await requirePermission("capacity:read:team");
-  const result = await getPendingCapacityRequests(session, repos);
-  if (isErr(result)) mapCapacityError(result.error);
-  return result.value;
+  return runAction({
+    actionName: "capacity.pending_requests.read",
+    permission: "capacity:read:team",
+    execute: listPendingRequestsService,
+  });
 }
 
 export async function getPolicyDefaults() {
-  const session = await requirePermission("capacity:policy:manage");
-  const result = await getCapacityPolicyDefaults(session, repos);
-  if (isErr(result)) mapCapacityError(result.error);
-  return result.value;
+  return runAction({
+    actionName: "capacity.policy_defaults.read",
+    permission: "capacity:policy:manage",
+    execute: getPolicyDefaultsService,
+  });
 }
 
 export async function getAuditEvents(limit?: number) {
-  const session = await requirePermission("capacity:audit:read");
   const safeLimit =
     limit == null ? undefined : assertPositiveInt(limit, "limit");
-  const result = await getCapacityAuditEvents(session, repos, safeLimit);
-  if (isErr(result)) mapCapacityError(result.error);
-  return result.value;
+  return runAction({
+    actionName: "capacity.audit.read",
+    permission: "capacity:audit:read",
+    input: { limit: safeLimit },
+    execute: (ctx) => getAuditEventsService(ctx, { limit: safeLimit }),
+  });
 }

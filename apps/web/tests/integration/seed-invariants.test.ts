@@ -9,7 +9,6 @@ import {
 } from "../../src/lib/auth/security/strong-auth-status";
 import { createDb } from "../../src/lib/db/client";
 import { SCHEMA_MODULES, SEED_MODULES } from "../../src/lib/db/schema";
-import { asUserId } from "../../src/server/shared/ids";
 import { createRepositories } from "../../src/server/shared/registry";
 
 describe("seed invariants", () => {
@@ -52,18 +51,12 @@ describe("seed invariants", () => {
       expect(valeria?.onboarding_completed_at).toBeNull();
       expect(valeria && requiresStrongAuthRole(valeria.role)).toBe(true);
 
-      const valeriaStatus = await getStrongAuthStatus(
-        asUserId(valeria!.id),
-        repos,
-      );
+      const valeriaStatus = await getStrongAuthStatus(valeria!.id, repos);
       expect(valeriaStatus.hasVerifiedStrongAuth).toBe(false);
       expect(valeriaStatus.hasTotp).toBe(false);
       expect(valeriaStatus.hasPasskey).toBe(false);
 
-      const managerStatus = await getStrongAuthStatus(
-        asUserId(manager!.id),
-        repos,
-      );
+      const managerStatus = await getStrongAuthStatus(manager!.id, repos);
       expect(managerStatus.hasVerifiedStrongAuth).toBe(true);
       expect(managerStatus.hasTotp).toBe(true);
     } finally {

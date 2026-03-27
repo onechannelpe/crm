@@ -29,3 +29,24 @@ export interface InviteManagement {
   teams: TeamOption[];
   assignableRoles: RoleOption[];
 }
+
+export interface InviteInfo {
+  fullName: string;
+  username: string;
+  email: string;
+}
+
+export interface CreateTeamInviteCommand {
+  names: string;
+  firstSurname: string;
+  secondSurname: string;
+  email: string;
+  role: Role;
+  teamId: number | null;
+  expiresAt: number | null;
+}
+
+export interface AcceptTeamInviteCommand {
+  token: string;
+  password: string;
+}

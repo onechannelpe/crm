@@ -9,12 +9,32 @@ import {
 } from "@simplewebauthn/server";
 
 import { env } from "~/lib/env";
-import { asUserId } from "~/server/shared/ids";
+import { getRequestPublicOrigin } from "~/lib/http/public-origin";
 import type { Repositories } from "~/server/shared/registry";
 
 const rpName = "CRM OneChannel";
-const rpID = env.webauthnRpId;
-const origin = env.webauthnOrigin;
+
+export interface WebauthnRelyingParty {
+  rpID: string;
+  origin: string;
+}
+
+export function resolveWebauthnRelyingParty(
+  request?: Request,
+): WebauthnRelyingParty {
+  if (!request) {
+    return {
+      rpID: env.webauthnRpId,
+      origin: env.webauthnOrigin,
+    };
+  }
+
+  const origin = getRequestPublicOrigin(request);
+  return {
+    origin,
+    rpID: new URL(origin).hostname,
+  };
+}
 
 export class PasskeyRequestError extends Error {
   constructor(message: string) {
@@ -73,7 +93,12 @@ function parseStoredTransports(
 
 type PasskeyProviderDeps = Pick<Repositories, "passkeys" | "auditLogs">;
 
-export function createPasskeyProvider(repos: PasskeyProviderDeps) {
+export function createPasskeyProvider(
+  repos: PasskeyProviderDeps,
+  relyingParty = resolveWebauthnRelyingParty(),
+) {
+  const { origin, rpID } = relyingParty;
+
   async function buildAuthenticationOptions(
     input: {
       userId?: number;
@@ -223,7 +248,10 @@ export function createPasskeyProvider(repos: PasskeyProviderDeps) {
         verification.authenticationInfo.newCounter,
       );
 
-      return { verified: true, userId: asUserId(passkey.user_id) };
+      return {
+        verified: true,
+        userId: passkey.user_id,
+      };
     },
   };
 }

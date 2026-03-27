@@ -1,10 +1,11 @@
+import type { Role } from "~/lib/auth/access/rbac";
 import type { SessionData } from "~/lib/auth/access/session";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 type UserRow = {
-  role: string;
+  role: Role;
   branch_id: number;
   team_id: number | null;
 };

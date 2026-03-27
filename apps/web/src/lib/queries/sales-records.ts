@@ -5,7 +5,7 @@ import {
   listConfirmedSalesRecords,
   listPendingSalesRecords,
   listSalesRecordProducts,
-} from "~/actions/sales-records";
+} from "~/actions/sales-records/read";
 
 export const pendingSalesRecordsQuery = query(
   listPendingSalesRecords,

@@ -1,19 +1,16 @@
 "use server";
 
 import type { AuthenticationResponseJSON } from "@simplewebauthn/server";
-import { getRequestEvent } from "solid-js/web";
 
 import { internalError } from "~/lib/app-errors";
-import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
-import {
-  createPasskeyLoginFinishAuthService,
-  type FinishPasskeyLoginError,
-} from "~/lib/auth/passkey/service";
-import { getClientIp } from "~/lib/auth/password/client-ip";
-import { replaceCurrentSession } from "~/lib/auth/session/session-transition";
+import type { FinishPasskeyLoginError } from "~/lib/auth/passkey/service";
+import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { getActionRequestContext } from "~/lib/observability/context";
-import { privilegedLoginAlertSender, repos } from "~/server/shared/context";
+import {
+  finishPasskeyLoginWithRepos,
+  replaceCurrentSessionAndResolveRedirect,
+} from "~/server/auth/service-login";
 import { isErr } from "~/server/shared/result";
 
 function normalizePasskeyLoginError(error: FinishPasskeyLoginError): {
@@ -49,14 +46,12 @@ export async function finishPasskeyLogin(
       redirectTo: string;
     }
 > {
-  const event = getRequestEvent();
-  const service = createPasskeyLoginFinishAuthService(repos);
-  const result = await service.finishLogin({
+  const request = getRequestClientMetadata();
+  const result = await finishPasskeyLoginWithRepos({
     flowId,
     response,
-    ipAddress: getClientIp(event?.request.headers ?? new Headers()),
-    userAgent: event?.request.headers.get("user-agent") ?? null,
-    sendPrivilegedLoginAlert: privilegedLoginAlertSender,
+    ipAddress: request.ipAddress,
+    userAgent: request.userAgent,
   });
 
   if (isErr(result)) {
@@ -80,11 +75,12 @@ export async function finishPasskeyLogin(
     },
     getActionRequestContext(),
   );
-  await replaceCurrentSession(result.value.token);
   return {
-    ok: true as const,
-    redirectTo: result.value.onboardingCompleted
-      ? getDefaultAppPath(result.value.role)
-      : "/onboarding",
+    ok: true,
+    redirectTo: await replaceCurrentSessionAndResolveRedirect({
+      token: result.value.token,
+      onboardingCompleted: result.value.onboardingCompleted,
+      role: result.value.role,
+    }),
   };
 }

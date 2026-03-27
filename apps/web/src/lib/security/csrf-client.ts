@@ -1,4 +1,4 @@
-import { CSRF_CONFIG, getCsrfCookieName } from "./csrf-config";
+import { CSRF_CONFIG } from "./csrf-config";
 
 const SAFE_METHODS = ["GET", "HEAD", "OPTIONS", "TRACE"];
 
@@ -22,7 +22,7 @@ export function setupCsrfInterceptor() {
     const method = init?.method?.toUpperCase() || "GET";
 
     if (!SAFE_METHODS.includes(method)) {
-      const token = getCookie(getCsrfCookieName());
+      const token = getCsrfMetaToken();
 
       if (token) {
         init = init || {};
@@ -50,10 +50,10 @@ export function setupCsrfInterceptor() {
   });
 }
 
-function getCookie(name: string): string | null {
+function getCsrfMetaToken(): string | null {
   if (typeof document === "undefined") return null;
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop()?.split(";").shift() ?? null;
-  return null;
+  const meta = document.querySelector<HTMLMetaElement>(
+    `meta[name="${CSRF_CONFIG.META_NAME}"]`,
+  );
+  return meta?.content ?? null;
 }

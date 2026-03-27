@@ -1,27 +1,20 @@
+import type { Role } from "~/lib/auth/access/rbac";
 import type { SessionData } from "~/lib/auth/access/session";
 import { canManageExecutive } from "~/server/capacity-policy/scope-access";
-import {
-  grantLeadCapacity,
-  type GrantLeadCapacityCommand,
-} from "~/server/capacity-usage/lead-usage";
+import { grantLeadCapacity } from "~/server/capacity-usage/lead-usage";
 import type {
   LeadCapacityGrantsRepo,
   SearchCapacityGrantsRepo,
 } from "~/server/capacity-usage/repos";
-import {
-  grantSearchCapacity,
-  type GrantSearchCapacityCommand,
-} from "~/server/capacity-usage/search-usage";
+import { grantSearchCapacity } from "~/server/capacity-usage/search-usage";
+import type { CapacityRequestKind } from "~/server/capacity/types";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
-import {
-  asUserId,
-  type CapacityRequestId,
-  type UserId,
-} from "~/server/shared/ids";
-import type { TeamId } from "~/server/shared/ids";
+import type { CapacityRequestId, TeamId, UserId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import { normalizeDecisionNote } from "./domain";
+
+type CapacityRequestStatus = "pending" | "approved" | "rejected" | "canceled";
 
 export interface ApproveCapacityRequestCommand {
   actorUserId: SessionData["userId"];
@@ -41,8 +34,8 @@ export interface ApproveRepos {
       | {
           id: number;
           user_id: number;
-          kind: string;
-          status: string;
+          kind: CapacityRequestKind;
+          status: CapacityRequestStatus;
           requested_amount: number;
           reason: string;
         }
@@ -63,7 +56,7 @@ export interface ApproveRepos {
     findById(
       id: UserId,
     ): Promise<
-      { role: string; branch_id: number; team_id: number | null } | undefined
+      { role: Role; branch_id: number; team_id: number | null } | undefined
     >;
   };
   teams: {
@@ -117,11 +110,7 @@ export async function approveCapacityRequest(
           ),
         );
 
-      const managed = await canManageExecutive(
-        actor,
-        asUserId(request.user_id),
-        txRepos,
-      );
+      const managed = await canManageExecutive(actor, request.user_id, txRepos);
       if (!managed.target)
         rollback(
           domainError(
@@ -150,25 +139,37 @@ export async function approveCapacityRequest(
           ),
         );
 
-      const grantCmd = {
-        actorUserId: command.actorUserId,
-        targetUserId: asUserId(request.user_id),
-        amount: request.requested_amount,
-        reason: note ?? request.reason,
-      };
-
       if (request.kind === "search_extra") {
         const grantResult = await grantSearchCapacity(
-          grantCmd as GrantSearchCapacityCommand,
+          {
+            actorUserId: command.actorUserId,
+            targetUserId: request.user_id,
+            amount: request.requested_amount,
+            reason: note ?? request.reason,
+          },
+          txRepos,
+        );
+        if (isErr(grantResult)) rollback(grantResult.error);
+      } else if (request.kind === "lead_refill_extra") {
+        const grantResult = await grantLeadCapacity(
+          {
+            actorUserId: command.actorUserId,
+            targetUserId: request.user_id,
+            amount: request.requested_amount,
+            reason: note ?? request.reason,
+          },
           txRepos,
         );
         if (isErr(grantResult)) rollback(grantResult.error);
       } else {
-        const grantResult = await grantLeadCapacity(
-          grantCmd as GrantLeadCapacityCommand,
-          txRepos,
+        request.kind satisfies never;
+        rollback(
+          domainError(
+            "unexpected",
+            "unexpected",
+            "Unsupported capacity request kind",
+          ),
         );
-        if (isErr(grantResult)) rollback(grantResult.error);
       }
 
       return { success: true as const };
@@ -221,11 +222,7 @@ export async function rejectCapacityRequest(
           ),
         );
 
-      const managed = await canManageExecutive(
-        actor,
-        asUserId(request.user_id),
-        txRepos,
-      );
+      const managed = await canManageExecutive(actor, request.user_id, txRepos);
       if (!managed.target)
         rollback(
           domainError(

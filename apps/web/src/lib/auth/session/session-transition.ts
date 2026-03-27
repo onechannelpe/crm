@@ -11,11 +11,11 @@ import {
 } from "~/lib/auth/session/session-manager";
 import { hashSessionToken } from "~/lib/auth/session/tokens";
 import type { User } from "~/lib/db/types";
-import { asBranchId, asUserId } from "~/server/shared/ids";
 import type { UserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
 
 import type { LoginDecision } from "../policy/policy-types";
+import { mapUserToSessionIdentity } from "./session-mappers";
 
 type SessionAuditDeps = Pick<Repositories, "auditLogs" | "sessions" | "users">;
 
@@ -59,14 +59,13 @@ async function transitionSession(
     throw forbiddenError("Invalid credentials");
   }
 
-  const userId = asUserId(user.id);
-  const branchId = asBranchId(user.branch_id);
+  const identity = mapUserToSessionIdentity(user);
 
   const token = await createSession(
     {
-      userId,
-      branchId,
-      role: user.role,
+      userId: identity.userId,
+      branchId: identity.branchId,
+      role: identity.role,
       sessionClass: params.sessionClass,
       ipAddress: params.request.ipAddress,
       userAgent: params.request.userAgent,
@@ -89,9 +88,9 @@ async function transitionSession(
   }
 
   return {
-    userId,
-    role: user.role,
-    onboardingCompleted: user.onboarding_completed_at !== null,
+    userId: identity.userId,
+    role: identity.role,
+    onboardingCompleted: identity.onboardingCompleted,
     sessionClass: params.sessionClass,
     primaryAuthMethod: params.primaryAuthMethod,
     strongAuthMethod: params.strongAuthMethod,

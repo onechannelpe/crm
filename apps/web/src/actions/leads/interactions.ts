@@ -14,14 +14,23 @@ interface RegisterCallResult extends ActionSuccess {
   draftRecordId: number | null;
 }
 
+function parseRegisterCallInput(input: {
+  assignmentId: number;
+  contactId: number;
+}): { assignmentId: number; contactId: number } {
+  return {
+    assignmentId: assertPositiveInt(input.assignmentId, "assignmentId"),
+    contactId: assertPositiveInt(input.contactId, "contactId"),
+  };
+}
+
 export async function registerCall(
   assignmentId: number,
   contactId: number,
   outcome: string,
   notes?: string,
 ): Promise<RegisterCallResult> {
-  const safeAssignmentId = assertPositiveInt(assignmentId, "assignmentId");
-  const safeContactId = assertPositiveInt(contactId, "contactId");
+  const parsedInput = parseRegisterCallInput({ assignmentId, contactId });
   const session = await requirePermission("lead:work");
   if (outcome === "sale_made") {
     await requirePermission("sales:create");
@@ -31,10 +40,10 @@ export async function registerCall(
     async (transactionRepos) => {
       const assignment =
         await transactionRepos.leadAssignments.findActiveByIdForUser(
-          safeAssignmentId,
+          parsedInput.assignmentId,
           session.userId,
         );
-      if (!assignment || assignment.contact_id !== safeContactId) {
+      if (!assignment || assignment.contact_id !== parsedInput.contactId) {
         throwDomainError(
           domainError(
             "unexpected",
@@ -46,7 +55,9 @@ export async function registerCall(
 
       let nextDraftRecordId: number | null = null;
       if (outcome === "sale_made") {
-        const contact = await transactionRepos.contacts.findById(safeContactId);
+        const contact = await transactionRepos.contacts.findById(
+          parsedInput.contactId,
+        );
         if (!contact) {
           throw new Error("Contact not found");
         }
@@ -64,7 +75,7 @@ export async function registerCall(
           source: "lead_assignment",
           executiveUserId: session.userId,
           branchId: session.branchId,
-          leadAssignmentId: safeAssignmentId,
+          leadAssignmentId: parsedInput.assignmentId,
           client: {
             ruc: organization.ruc,
             companyName: organization.name,
@@ -91,11 +102,11 @@ export async function registerCall(
       }
 
       await transactionRepos.leadAssignments.markCompleted(
-        safeAssignmentId,
+        parsedInput.assignmentId,
         session.userId,
       );
       await transactionRepos.interactionLogs.create({
-        contact_id: safeContactId,
+        contact_id: parsedInput.contactId,
         user_id: session.userId,
         outcome,
         notes: notes || null,

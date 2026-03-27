@@ -1,4 +1,4 @@
-import type { AuthSession } from "~/lib/auth/access/session-types";
+import type { RequestContext } from "~/lib/http/request-context";
 
 declare namespace App {
   interface RequestObservabilityContext {
@@ -10,8 +10,7 @@ declare namespace App {
   }
 
   interface RequestEventLocals {
-    session?: AuthSession;
-    observability?: RequestObservabilityContext;
+    requestContext?: RequestContext;
     nonce: string;
   }
 }

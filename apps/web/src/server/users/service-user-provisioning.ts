@@ -5,7 +5,6 @@ import { hashPassword } from "~/lib/auth/password/password";
 import { generateUsername } from "~/lib/users/generate-username";
 import { createAuditService } from "~/server/shared/audit";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { asBranchId, asUserId } from "~/server/shared/ids";
 import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
@@ -42,6 +41,18 @@ export interface UserProvisioningDeps {
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
+}
+
+function mapAcceptedInviteResult(invite: {
+  user_id: number;
+  user_branch_id: number;
+  user_role: Role;
+}): { userId: UserId; branchId: BranchId; role: Role } {
+  return {
+    userId: invite.user_id,
+    branchId: invite.user_branch_id,
+    role: invite.user_role,
+  };
 }
 
 function provisioningError(code: string, message: string): DomainError {
@@ -554,11 +565,7 @@ export function createUserProvisioningService(
               inviteId: invite.invite_id,
             },
           );
-          return Ok({
-            userId: asUserId(invite.user_id),
-            branchId: asBranchId(invite.user_branch_id),
-            role: invite.user_role,
-          });
+          return Ok(mapAcceptedInviteResult(invite));
         });
       } catch {
         return Err(

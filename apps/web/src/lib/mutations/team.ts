@@ -1,6 +1,6 @@
 import { action, json } from "@solidjs/router";
 
-import { resendTeamInvite, revokeTeamInvite } from "~/actions/team";
+import { resendTeamInvite, revokeTeamInvite } from "~/actions/team/invites";
 import { inviteManagementQuery } from "~/lib/queries/team";
 
 export const resendTeamInviteMutation = action(async (inviteId: number) => {

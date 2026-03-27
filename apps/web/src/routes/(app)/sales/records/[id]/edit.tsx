@@ -4,7 +4,7 @@ import { createEffect, createMemo, createSignal, For, Show } from "solid-js";
 import {
   submitSalesRecord,
   updateSalesRecordDraft,
-} from "~/actions/sales-records";
+} from "~/actions/sales-records/mutations";
 import { AddressFields } from "~/components/features/sales/address-fields";
 import { ClientFields } from "~/components/features/sales/client-fields";
 import { ProductLineEditor } from "~/components/features/sales/product-line-editor";

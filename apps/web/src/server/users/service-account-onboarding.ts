@@ -1,4 +1,3 @@
-import type { Role } from "~/lib/auth/access/rbac";
 import {
   getStrongAuthStatus,
   requiresStrongAuthRole,
@@ -55,7 +54,7 @@ export async function completeAccountOnboardingWithRepos(
 
     const strongAuthStatus = await getStrongAuthStatus(input.userId, repos);
     if (
-      requiresStrongAuthRole(user.role as Role) &&
+      requiresStrongAuthRole(user.role) &&
       !strongAuthStatus.hasVerifiedStrongAuth
     ) {
       return Err({
