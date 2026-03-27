@@ -18,8 +18,12 @@ import {
   type PasskeyLoginFlowState,
   type BeginPasskeyLoginError,
 } from "~/lib/auth/passkey/service";
-import { getClientIp } from "~/lib/auth/password/client-ip";
+import {
+  createPasskeyProvider,
+  resolveWebauthnRelyingParty,
+} from "~/lib/auth/providers/passkey-provider";
 import { replaceCurrentSession } from "~/lib/auth/session/session-transition";
+import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { getActionRequestContext } from "~/lib/observability/context";
 import { privilegedLoginAlertSender, repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
@@ -83,15 +87,6 @@ async function completeLoginAndRedirect(result: {
   );
 }
 
-function getRequestContext() {
-  const event = getRequestEvent();
-
-  return {
-    ipAddress: getClientIp(event?.request.headers ?? new Headers()),
-    userAgent: event?.request.headers.get("user-agent") ?? null,
-  };
-}
-
 function normalizePasskeyStartError(
   error: BeginPasskeyLoginError,
 ): PasskeyStartSubmissionResult {
@@ -134,7 +129,7 @@ export async function passwordLogin(
 ): Promise<PasswordLoginSubmissionResult> {
   const identifier = readText(formData, "identifier");
   const password = readText(formData, "password", { trim: false });
-  const request = getRequestContext();
+  const request = getRequestClientMetadata();
   const result = await submitPasswordLogin(
     {
       identifier,
@@ -204,8 +199,12 @@ export async function passkeyStart(
     throw internalError("Invalid passkey login mode");
   }
 
-  const request = getRequestContext();
-  const service = createPasskeyLoginStartAuthService(repos);
+  const request = getRequestClientMetadata();
+  const event = getRequestEvent();
+  const service = createPasskeyLoginStartAuthService(repos, {
+    createWebauthnProvider: (repos) =>
+      createPasskeyProvider(repos, resolveWebauthnRelyingParty(event?.request)),
+  });
   const result =
     mode === "identified"
       ? await service.beginLogin({
@@ -252,7 +251,7 @@ export async function totpLogin(
   if (!flowId) {
     throw redirect("/login/user?error=flow_expired");
   }
-  const request = getRequestContext();
+  const request = getRequestClientMetadata();
   const result = await submitTotpForLoginFlow(
     {
       flowId,

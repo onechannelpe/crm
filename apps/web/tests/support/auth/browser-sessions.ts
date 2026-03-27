@@ -31,6 +31,7 @@ export async function seedBrowserSession(
     strong_auth_at: options?.strongAuthAt ?? null,
     ip_address: "127.0.0.1",
     user_agent: "playwright",
+    csrf_token: `csrf-${token}`,
     created_at: now,
     last_activity: now,
     expires_at: now + 30 * 24 * 60 * 60 * 1000,

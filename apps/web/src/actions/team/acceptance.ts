@@ -1,16 +1,14 @@
 "use server";
 
-import { getRequestEvent } from "solid-js/web";
-
 import { throwDomainError } from "~/actions/throw-domain-error";
 import { validationError } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { isValidInviteTokenFormat } from "~/lib/auth/invite/tokens";
-import { getClientIp } from "~/lib/auth/password/client-ip";
 import { hashPassword } from "~/lib/auth/password/password";
 import { setSessionCookie } from "~/lib/auth/session/cookies";
 import { issueSessionTransition } from "~/lib/auth/session/session-transition";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
+import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { runObservedAction } from "~/lib/observability/run-observed-action";
 import { repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
@@ -44,9 +42,7 @@ export async function acceptTeamInvite(input: {
       actor.userId = result.value.userId;
       actor.role = result.value.role;
 
-      const event = getRequestEvent();
-      const ipAddress = getClientIp(event?.request.headers ?? new Headers());
-      const userAgent = event?.request.headers.get("user-agent") ?? null;
+      const request = getRequestClientMetadata();
       const issued = await issueSessionTransition({
         user: {
           id: result.value.userId,
@@ -56,8 +52,8 @@ export async function acceptTeamInvite(input: {
         },
         sessionClass: "pre_auth",
         request: {
-          ipAddress,
-          userAgent,
+          ipAddress: request.ipAddress,
+          userAgent: request.userAgent,
         },
         primaryAuthMethod: "password",
         strongAuthMethod: null,

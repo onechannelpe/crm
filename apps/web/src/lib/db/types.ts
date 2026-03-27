@@ -664,6 +664,7 @@ export interface UserSessionsTable {
   strong_auth_at: number | null;
   ip_address: string | null;
   user_agent: string | null;
+  csrf_token: string;
   created_at: number;
   last_activity: number;
   expires_at: number;

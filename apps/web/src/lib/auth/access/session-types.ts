@@ -12,6 +12,7 @@ export interface AuthSession {
   userId: UserId;
   branchId: BranchId;
   role: Role;
+  csrfToken: string;
   onboardingCompleted: boolean;
   sessionClass: SessionClass;
   primaryAuthMethod: PrimaryAuthMethod;

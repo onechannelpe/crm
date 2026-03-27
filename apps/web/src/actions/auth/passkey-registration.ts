@@ -8,19 +8,26 @@ import { internalError } from "~/lib/app-errors";
 import { requireSession } from "~/lib/auth/access/session";
 import type { PasskeyEnrollmentChallenge } from "~/lib/auth/passkey/service";
 import { createPasskeyEnrollmentAuthService } from "~/lib/auth/passkey/service";
-import { getClientIp } from "~/lib/auth/password/client-ip";
+import {
+  createPasskeyProvider,
+  resolveWebauthnRelyingParty,
+} from "~/lib/auth/providers/passkey-provider";
 import {
   issueSessionTransition,
   replaceCurrentSession,
 } from "~/lib/auth/session/session-transition";
+import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
 export async function beginPasskeyRegistration(): Promise<PasskeyEnrollmentChallenge> {
   const session = await requireSession();
   const event = getRequestEvent();
-  const ipAddress = getClientIp(event?.request.headers ?? new Headers());
-  const service = createPasskeyEnrollmentAuthService(repos);
+  const { ipAddress } = getRequestClientMetadata();
+  const service = createPasskeyEnrollmentAuthService(repos, {
+    createWebauthnProvider: (repos) =>
+      createPasskeyProvider(repos, resolveWebauthnRelyingParty(event?.request)),
+  });
   const result = await service.beginEnrollment({
     userId: session.userId,
     ipAddress,
@@ -37,13 +44,16 @@ export async function finishPasskeyRegistration(
 ): Promise<void> {
   const session = await requireSession();
   const event = getRequestEvent();
-  const ipAddress = getClientIp(event?.request.headers ?? new Headers());
-  const service = createPasskeyEnrollmentAuthService(repos);
+  const request = getRequestClientMetadata();
+  const service = createPasskeyEnrollmentAuthService(repos, {
+    createWebauthnProvider: (repos) =>
+      createPasskeyProvider(repos, resolveWebauthnRelyingParty(event?.request)),
+  });
   const result = await service.finishEnrollment({
     userId: session.userId,
     challengeId,
     response,
-    ipAddress,
+    ipAddress: request.ipAddress,
   });
   if (isErr(result)) {
     throwDomainError(result.error);
@@ -57,8 +67,8 @@ export async function finishPasskeyRegistration(
     user,
     sessionClass: session.sessionClass,
     request: {
-      ipAddress,
-      userAgent: event?.request.headers.get("user-agent") ?? null,
+      ipAddress: request.ipAddress,
+      userAgent: request.userAgent,
     },
     primaryAuthMethod: session.primaryAuthMethod,
     strongAuthMethod: "passkey",

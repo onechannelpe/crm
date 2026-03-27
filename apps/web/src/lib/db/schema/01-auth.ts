@@ -57,6 +57,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("strong_auth_at", "integer")
     .addColumn("ip_address", "text")
     .addColumn("user_agent", "text")
+    .addColumn("csrf_token", "text", (col) => col.notNull())
     .addColumn("created_at", "integer", (col) => col.notNull())
     .addColumn("last_activity", "integer", (col) => col.notNull())
     .addColumn("expires_at", "integer", (col) => col.notNull())

@@ -40,11 +40,12 @@ describe("session manager validation", () => {
     const strongAuthAt: number | null = null;
     const ipAddress: string | null = null;
     const userAgent: string | null = null;
+    const csrfToken = "csrf-invalid-role";
 
     await sql`
       insert into user_sessions
-      (id, user_id, branch_id, role, session_class, primary_auth_method, strong_auth_method, strong_auth_at, ip_address, user_agent, created_at, last_activity, expires_at)
-      values (${sessionId}, ${1}, ${1}, ${"invalid_role"}, ${sessionClass}, ${primaryAuthMethod}, ${strongAuthMethod}, ${strongAuthAt}, ${ipAddress}, ${userAgent}, ${now}, ${now}, ${now + 60_000})
+      (id, user_id, branch_id, role, session_class, primary_auth_method, strong_auth_method, strong_auth_at, ip_address, user_agent, csrf_token, created_at, last_activity, expires_at)
+      values (${sessionId}, ${1}, ${1}, ${"invalid_role"}, ${sessionClass}, ${primaryAuthMethod}, ${strongAuthMethod}, ${strongAuthAt}, ${ipAddress}, ${userAgent}, ${csrfToken}, ${now}, ${now}, ${now + 60_000})
     `.execute(ctx.db);
 
     const result = await validateSessionToken(token, ctx.repos);

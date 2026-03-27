@@ -74,6 +74,7 @@ export async function createSession(
   const token = generateSessionToken();
   const sessionId = hashSessionToken(token);
   const now = Date.now();
+  const csrfToken = crypto.randomUUID().replace(/-/g, "");
 
   const newSession: NewUserSession = {
     id: sessionId,
@@ -86,6 +87,7 @@ export async function createSession(
     strong_auth_at: params.strongAuthAt,
     ip_address: params.ipAddress,
     user_agent: params.userAgent,
+    csrf_token: csrfToken,
     created_at: now,
     last_activity: now,
     expires_at: now + SESSION_DURATION,
@@ -142,6 +144,7 @@ export async function validateSessionToken(
         userId: cached.userId,
         branchId: cached.branchId,
         role: cached.role,
+        csrfToken: cached.csrfToken,
         onboardingCompleted,
         sessionClass: cached.sessionClass,
         primaryAuthMethod: cached.primaryAuthMethod,
@@ -156,6 +159,7 @@ export async function validateSessionToken(
         userId: cached.userId,
         branchId: cached.branchId,
         role: cached.role,
+        csrfToken: cached.csrfToken,
         onboardingCompleted,
         sessionClass: cached.sessionClass,
         primaryAuthMethod: cached.primaryAuthMethod,
@@ -240,6 +244,7 @@ export async function validateSessionToken(
     userId: asUserId(dbSession.user_id),
     branchId: asBranchId(dbSession.branch_id),
     role: dbSession.role,
+    csrfToken: dbSession.csrf_token,
     onboardingCompleted,
     sessionClass: dbSession.session_class,
     primaryAuthMethod: dbSession.primary_auth_method,
@@ -254,6 +259,7 @@ export async function validateSessionToken(
       userId: asUserId(dbSession.user_id),
       branchId: asBranchId(dbSession.branch_id),
       role: dbSession.role,
+      csrfToken: dbSession.csrf_token,
       onboardingCompleted,
       sessionClass: dbSession.session_class,
       primaryAuthMethod: dbSession.primary_auth_method,

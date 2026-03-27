@@ -55,6 +55,7 @@ describe("extension runtime status invariants", () => {
       strong_auth_at: null,
       ip_address: "127.0.0.1",
       user_agent: "vitest",
+      csrf_token: `csrf-${authSessionId}`,
       created_at: now,
       last_activity: now,
       expires_at: now + 60 * 60_000,

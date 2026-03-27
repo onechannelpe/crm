@@ -1,7 +1,6 @@
 "use server";
 
 import QRCode from "qrcode";
-import { getRequestEvent } from "solid-js/web";
 
 import {
   conflictError,
@@ -9,7 +8,6 @@ import {
   validationError,
 } from "~/lib/app-errors";
 import { requireSession } from "~/lib/auth/access/session";
-import { getClientIp } from "~/lib/auth/password/client-ip";
 import {
   issueSessionTransition,
   replaceCurrentSession,
@@ -28,6 +26,7 @@ import {
   verifyTotpCode,
 } from "~/lib/auth/totp/totp";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
+import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { repos } from "~/server/shared/context";
 
 export async function beginTotpEnrollment(): Promise<{
@@ -82,13 +81,13 @@ export async function finishTotpEnrollment(code: string): Promise<string[]> {
     created_at: Date.now(),
   });
 
-  const event = getRequestEvent();
+  const request = getRequestClientMetadata();
   const issued = await issueSessionTransition({
     user,
     sessionClass: session.sessionClass,
     request: {
-      ipAddress: getClientIp(event?.request.headers ?? new Headers()),
-      userAgent: event?.request.headers.get("user-agent") ?? null,
+      ipAddress: request.ipAddress,
+      userAgent: request.userAgent,
     },
     primaryAuthMethod: session.primaryAuthMethod,
     strongAuthMethod: "totp",

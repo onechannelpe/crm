@@ -2,12 +2,8 @@ import { redirect } from "@solidjs/router";
 import { createMiddleware } from "@solidjs/start/middleware";
 
 import { enforceAuthRequest } from "~/lib/auth/access/request-auth";
+import { buildRequestContext } from "~/lib/http/request-context";
 import { generateRequestId, generateTraceId } from "~/lib/observability/ids";
-import {
-  generateCsrfToken,
-  getCsrfFromCookie,
-  setCsrfCookie,
-} from "~/lib/security/csrf";
 
 export default createMiddleware({
   onRequest: async (event) => {
@@ -18,18 +14,17 @@ export default createMiddleware({
     const nonce = crypto.randomUUID().replace(/-/g, "");
     event.locals.nonce = nonce;
 
-    event.locals.observability = {
+    const observability = {
       traceId: generateTraceId(),
       requestId: generateRequestId(),
       routePath: url.pathname,
       httpMethod: event.request.method,
       requestStartedAt: Date.now(),
     };
-
-    const csrfToken = getCsrfFromCookie();
-    if (!csrfToken) {
-      setCsrfCookie(await generateCsrfToken());
-    }
+    event.locals.requestContext = await buildRequestContext(
+      event.request,
+      observability,
+    );
 
     // Nonce-based strict CSP per https://docs.solidjs.com/solid-start/guides/security
     // 'unsafe-eval' is required for SolidStart SSR hydration.

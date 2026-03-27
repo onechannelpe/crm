@@ -15,28 +15,22 @@ import {
   getStrongAuthStatus,
   requiresStrongAuthRole,
 } from "~/lib/auth/security/strong-auth-status";
-import {
-  deleteSessionCookie,
-  getSessionCookie,
-} from "~/lib/auth/session/cookies";
-import {
-  invalidateSession,
-  validateSessionToken,
-} from "~/lib/auth/session/session-manager";
-import { hashSessionToken } from "~/lib/auth/session/tokens";
+import { deleteSessionCookie } from "~/lib/auth/session/cookies";
+import { invalidateSession } from "~/lib/auth/session/session-manager";
+import { getRequestContext } from "~/lib/http/request-context";
 import { traceServerAction } from "~/lib/observability/diagnostics";
 import { repos } from "~/server/shared/context";
 
 export async function logout(): Promise<void> {
-  const token = getSessionCookie();
-  if (!token) return;
+  const { session } = getRequestContext();
+  if (!session) {
+    deleteSessionCookie();
+    return;
+  }
 
-  const sessionId = hashSessionToken(token);
-  const { session } = await validateSessionToken(token);
-
-  await invalidateSession(sessionId);
+  await invalidateSession(session.id);
   await repos.extensionRuntime.revokeInstallationSessionsByAuthSession(
-    sessionId,
+    session.id,
     Date.now(),
   );
   if (session) {
@@ -85,10 +79,7 @@ export interface CurrentUser extends WorkspaceIdentity {
 
 export async function getMe(): Promise<CurrentUser | null> {
   return traceServerAction("auth-session-action", "get_me", async () => {
-    const token = getSessionCookie();
-    if (!token) return null;
-
-    const { session } = await validateSessionToken(token);
+    const { session } = getRequestContext();
     if (!session) return null;
 
     const user = await repos.users.findById(session.userId);

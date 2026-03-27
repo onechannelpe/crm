@@ -11,12 +11,16 @@ import {
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { requireSession } from "~/lib/auth/access/session";
 import { createPasskeyEnrollmentAuthService } from "~/lib/auth/passkey/service";
-import { getClientIp } from "~/lib/auth/password/client-ip";
+import {
+  createPasskeyProvider,
+  resolveWebauthnRelyingParty,
+} from "~/lib/auth/providers/passkey-provider";
 import { requiresStrongAuthRole } from "~/lib/auth/security/strong-auth-status";
 import {
   issueSessionTransition,
   replaceCurrentSession,
 } from "~/lib/auth/session/session-transition";
+import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { repos, runInRepositoryTransaction } from "~/server/shared/context";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, type Result } from "~/server/shared/result";
@@ -51,8 +55,7 @@ async function promoteCompletedOnboardingSession(
   }
 
   const event = getRequestEvent();
-  const ipAddress = getClientIp(event?.request.headers ?? new Headers());
-  const userAgent = event?.request.headers.get("user-agent") ?? null;
+  const request = getRequestClientMetadata();
   const strongAuthMethod = proof?.strongAuthMethod ?? session.strongAuthMethod;
   const strongAuthAt =
     strongAuthMethod === null
@@ -67,8 +70,8 @@ async function promoteCompletedOnboardingSession(
     user,
     sessionClass: "app",
     request: {
-      ipAddress,
-      userAgent,
+      ipAddress: request.ipAddress,
+      userAgent: request.userAgent,
     },
     primaryAuthMethod: session.primaryAuthMethod,
     strongAuthMethod,
@@ -140,17 +143,25 @@ export async function completePasskeyOnboarding(
   const session = await requireSession();
   const safePhone = normalizePeruvianPhone(phoneE164);
   const event = getRequestEvent();
-  const ipAddress = getClientIp(event?.request.headers ?? new Headers());
+  const request = getRequestClientMetadata();
   const result =
     await runInRepositoryTransaction<CompletePasskeyOnboardingResult>(
       async (transactionRepos) => {
-        const passkeyService =
-          createPasskeyEnrollmentAuthService(transactionRepos);
+        const passkeyService = createPasskeyEnrollmentAuthService(
+          transactionRepos,
+          {
+            createWebauthnProvider: (repos) =>
+              createPasskeyProvider(
+                repos,
+                resolveWebauthnRelyingParty(event?.request),
+              ),
+          },
+        );
         const passkeyResult = await passkeyService.finishEnrollment({
           userId: session.userId,
           challengeId,
           response,
-          ipAddress,
+          ipAddress: request.ipAddress,
         });
         if (isErr(passkeyResult)) {
           return Err(passkeyResult.error);

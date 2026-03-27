@@ -12,7 +12,7 @@ export interface ActionRequestContext {
 
 export function getActionRequestContext(): ActionRequestContext {
   const event = getRequestEvent();
-  const existing = event?.locals?.observability;
+  const existing = event?.locals?.requestContext?.observability;
   if (existing) {
     return existing;
   }

@@ -1,10 +1,7 @@
-import { verifyCsrf } from "../../security/csrf";
-import { getSessionCookie } from "../session/cookies";
-import {
-  validateSessionToken,
-  type SessionValidationResult,
-} from "../session/session-manager";
+import { getRequestPublicOrigin } from "~/lib/http/public-origin";
 import { createLogger } from "~/lib/observability/logger";
+
+import { verifyCsrf } from "../../security/csrf";
 import { canAccessPath, getDefaultAppPath } from "./route-policy";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
@@ -14,16 +11,6 @@ export interface AuthRequestEvent {
   request: Request;
   locals?: App.RequestEventLocals;
 }
-
-export interface AuthRequestDeps {
-  getSessionCookie: () => string | null | undefined;
-  validateSessionToken: (token: string) => Promise<SessionValidationResult>;
-}
-
-const defaultDeps: AuthRequestDeps = {
-  getSessionCookie,
-  validateSessionToken,
-};
 
 export type AuthRequestDecision =
   | { kind: "allow" }
@@ -101,14 +88,7 @@ function getSourceOrigin(request: Request): string | null {
 }
 
 export function getTargetOrigin(request: Request): string {
-  if (process.env.TRUSTED_PROXY === "true") {
-    const forwardedOrigin = getForwardedOrigin(request.headers);
-    if (forwardedOrigin) {
-      return forwardedOrigin;
-    }
-  }
-
-  return new URL(request.url).origin;
+  return getRequestPublicOrigin(request);
 }
 
 function normalizeOrigin(value: string): string | null {
@@ -119,36 +99,8 @@ function normalizeOrigin(value: string): string | null {
   }
 }
 
-function getForwardedOrigin(headers: Headers): string | null {
-  const forwarded = headers.get("forwarded");
-  if (forwarded) {
-    const protoMatch = forwarded.match(/(?:^|[;,]\s*)proto=([^;,\s]+)/i);
-    const hostMatch = forwarded.match(/(?:^|[;,]\s*)host=([^;,\s]+)/i);
-    const proto = stripForwardedValue(protoMatch?.[1]);
-    const host = stripForwardedValue(hostMatch?.[1]);
-    if (proto && host) {
-      return `${proto}://${host}`;
-    }
-  }
-
-  const proto = headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
-  const host = headers.get("x-forwarded-host")?.split(",")[0]?.trim();
-  if (proto && host) {
-    return `${proto}://${host}`;
-  }
-
-  return null;
-}
-
-function stripForwardedValue(value: string | undefined): string | null {
-  if (!value) return null;
-  const normalized = value.trim().replace(/^"|"$/g, "");
-  return normalized || null;
-}
-
 export async function enforceAuthRequest(
   event: AuthRequestEvent,
-  deps: AuthRequestDeps = defaultDeps,
 ): Promise<AuthRequestDecision> {
   const url = new URL(event.request.url);
 
@@ -162,7 +114,13 @@ export async function enforceAuthRequest(
       };
     }
 
-    const isCsrfValid = await verifyCsrf(event.request);
+    const csrfToken = event.locals?.requestContext?.csrfToken;
+    const isAnonymous = event.locals?.requestContext?.authState === "anonymous";
+    const isCsrfValid = isAnonymous
+      ? true
+      : csrfToken
+        ? await verifyCsrf(event.request, csrfToken)
+        : false;
     if (!isCsrfValid) {
       return {
         kind: "reject",
@@ -173,12 +131,7 @@ export async function enforceAuthRequest(
 
   if (isPublicPath(url.pathname)) return { kind: "allow" };
 
-  const token = deps.getSessionCookie();
-  if (!token) {
-    return { kind: "redirect_login" };
-  }
-
-  const { session } = await deps.validateSessionToken(token);
+  const session = event.locals?.requestContext?.session;
   if (!session) {
     return { kind: "redirect_login" };
   }
@@ -202,9 +155,6 @@ export async function enforceAuthRequest(
   if (!canAccessPath(session.role, url.pathname)) {
     return { kind: "redirect_home", to: getDefaultAppPath(session.role) };
   }
-
-  event.locals = event.locals ?? {};
-  event.locals.session = session;
   return { kind: "allow" };
 }
 
@@ -217,7 +167,7 @@ function logCsrfReject(event: AuthRequestEvent, reason: string): void {
     fetchSite: request.headers.get("sec-fetch-site"),
     origin: request.headers.get("origin"),
     targetOrigin: getTargetOrigin(request),
-    requestId: event.locals?.observability?.requestId ?? null,
-    traceId: event.locals?.observability?.traceId ?? null,
+    requestId: event.locals?.requestContext?.observability.requestId ?? null,
+    traceId: event.locals?.requestContext?.observability.traceId ?? null,
   });
 }

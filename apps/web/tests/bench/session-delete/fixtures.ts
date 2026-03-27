@@ -45,6 +45,7 @@ export async function seedSessionDeleteFixtures(
       strong_auth_at: null,
       ip_address: null,
       user_agent: "bench",
+      csrf_token: `csrf-${sessionIdPrefix}-${userId}-${index}`,
       created_at: BENCH_NOW,
       last_activity: BENCH_NOW,
       expires_at: BENCH_NOW + 60_000,

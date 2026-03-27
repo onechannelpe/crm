@@ -5,9 +5,9 @@ import {
   enforceAuthRequest,
   getTargetOrigin,
   isPublicPath,
-  type AuthRequestDeps,
 } from "../../src/lib/auth/access/request-auth";
 import type { AuthSession } from "../../src/lib/auth/access/session-types";
+import type { RequestContext } from "../../src/lib/http/request-context";
 import { asBranchId, asUserId } from "../../src/server/shared/ids";
 
 function createSession(
@@ -19,6 +19,7 @@ function createSession(
     userId: asUserId(1),
     branchId: asBranchId(1),
     role,
+    csrfToken: "csrf-token",
     onboardingCompleted,
     sessionClass: onboardingCompleted ? "app" : "pre_auth",
     primaryAuthMethod: "password",
@@ -27,13 +28,21 @@ function createSession(
   };
 }
 
-function createDeps(params: {
-  token: string | null | undefined;
-  session: AuthSession | null;
-}): AuthRequestDeps {
+function createRequestContext(session: AuthSession | null): RequestContext {
   return {
-    getSessionCookie: () => params.token,
-    validateSessionToken: async () => ({ session: params.session }),
+    publicOrigin: "http://localhost:3000",
+    clientIp: "127.0.0.1",
+    userAgent: "vitest",
+    observability: {
+      traceId: "trace-id",
+      requestId: "request-id",
+      routePath: "/dashboard",
+      httpMethod: "GET",
+      requestStartedAt: Date.now(),
+    },
+    authState: session?.sessionClass ?? "anonymous",
+    csrfToken: session?.csrfToken ?? null,
+    session,
   };
 }
 
@@ -121,63 +130,56 @@ describe("auth middleware request guard", () => {
   });
 
   it("redirects to /login when private route has no session token", async () => {
-    const decision = await enforceAuthRequest(
-      {
-        request: new Request("http://localhost:3000/dashboard"),
-      },
-      createDeps({ token: null, session: null }),
-    );
+    const decision = await enforceAuthRequest({
+      request: new Request("http://localhost:3000/dashboard"),
+      locals: { nonce: "nonce", requestContext: createRequestContext(null) },
+    });
 
     expect(decision.kind).toBe("redirect_login");
   });
 
   it("redirects to /login when token is invalid", async () => {
-    const decision = await enforceAuthRequest(
-      {
-        request: new Request("http://localhost:3000/dashboard"),
-      },
-      createDeps({ token: "token", session: null }),
-    );
+    const decision = await enforceAuthRequest({
+      request: new Request("http://localhost:3000/dashboard"),
+      locals: { nonce: "nonce", requestContext: createRequestContext(null) },
+    });
 
     expect(decision.kind).toBe("redirect_login");
   });
 
-  it("attaches session to locals when token is valid", async () => {
+  it("keeps the validated session on request context when token is valid", async () => {
+    const session = createSession("executive");
     const event: { request: Request; locals: App.RequestEventLocals } = {
       request: new Request("http://localhost:3000/leads"),
-      locals: {},
+      locals: { nonce: "nonce", requestContext: createRequestContext(session) },
     };
 
-    const decision = await enforceAuthRequest(
-      event,
-      createDeps({ token: "token", session: createSession("executive") }),
-    );
+    const decision = await enforceAuthRequest(event);
 
     expect(decision.kind).toBe("allow");
-    expect(event.locals.session).toEqual(createSession("executive"));
+    expect(event.locals.requestContext?.session).toEqual(session);
   });
 
   it("redirects to /onboarding when session is not onboarded", async () => {
-    const decision = await enforceAuthRequest(
-      {
-        request: new Request("http://localhost:3000/dashboard"),
+    const decision = await enforceAuthRequest({
+      request: new Request("http://localhost:3000/dashboard"),
+      locals: {
+        nonce: "nonce",
+        requestContext: createRequestContext(createSession("executive", false)),
       },
-      createDeps({
-        token: "token",
-        session: createSession("executive", false),
-      }),
-    );
+    });
 
     expect(decision.kind).toBe("redirect_onboarding");
   });
 
   it("redirects onboarded users away from /onboarding", async () => {
-    const decision = await enforceAuthRequest(
-      {
-        request: new Request("http://localhost:3000/onboarding"),
+    const decision = await enforceAuthRequest({
+      request: new Request("http://localhost:3000/onboarding"),
+      locals: {
+        nonce: "nonce",
+        requestContext: createRequestContext(createSession("executive")),
       },
-      createDeps({ token: "token", session: createSession("executive") }),
-    );
+    });
 
     expect(decision.kind).toBe("redirect_home");
     if (decision.kind === "redirect_home") {
@@ -186,12 +188,13 @@ describe("auth middleware request guard", () => {
   });
 
   it("redirects users from routes they cannot access", async () => {
-    const decision = await enforceAuthRequest(
-      {
-        request: new Request("http://localhost:3000/audit"),
+    const decision = await enforceAuthRequest({
+      request: new Request("http://localhost:3000/audit"),
+      locals: {
+        nonce: "nonce",
+        requestContext: createRequestContext(createSession("executive")),
       },
-      createDeps({ token: "token", session: createSession("executive") }),
-    );
+    });
 
     expect(decision.kind).toBe("redirect_home");
     if (decision.kind === "redirect_home") {
@@ -200,12 +203,13 @@ describe("auth middleware request guard", () => {
   });
 
   it("redirects authenticated users from root to their home route", async () => {
-    const decision = await enforceAuthRequest(
-      {
-        request: new Request("http://localhost:3000/"),
+    const decision = await enforceAuthRequest({
+      request: new Request("http://localhost:3000/"),
+      locals: {
+        nonce: "nonce",
+        requestContext: createRequestContext(createSession("logistics")),
       },
-      createDeps({ token: "token", session: createSession("logistics") }),
-    );
+    });
 
     expect(decision.kind).toBe("redirect_home");
     if (decision.kind === "redirect_home") {
@@ -214,44 +218,41 @@ describe("auth middleware request guard", () => {
   });
 
   it("allows users to access permitted routes", async () => {
-    const decision = await enforceAuthRequest(
-      {
-        request: new Request("http://localhost:3000/settings/profile"),
+    const decision = await enforceAuthRequest({
+      request: new Request("http://localhost:3000/settings/profile"),
+      locals: {
+        nonce: "nonce",
+        requestContext: createRequestContext(createSession("admin")),
       },
-      createDeps({ token: "token", session: createSession("admin") }),
-    );
+    });
 
     expect(decision.kind).toBe("allow");
   });
 
   it("allows a not-onboarded user to reach /onboarding", async () => {
-    const decision = await enforceAuthRequest(
-      {
-        request: new Request("http://localhost:3000/onboarding"),
+    const decision = await enforceAuthRequest({
+      request: new Request("http://localhost:3000/onboarding"),
+      locals: {
+        nonce: "nonce",
+        requestContext: createRequestContext(createSession("executive", false)),
       },
-      createDeps({
-        token: "token",
-        session: createSession("executive", false),
-      }),
-    );
+    });
 
     // Without the `pathname !== "/onboarding"` exception they'd loop forever
     expect(decision.kind).toBe("allow");
   });
 
   it("allows GET requests even when Origin does not match Host", async () => {
-    const decision = await enforceAuthRequest(
-      {
-        request: new Request("http://localhost:3000/login", {
-          method: "GET",
-          headers: {
-            Origin: "http://evil.local",
-            Host: "localhost:3000",
-          },
-        }),
-      },
-      createDeps({ token: null, session: null }),
-    );
+    const decision = await enforceAuthRequest({
+      request: new Request("http://localhost:3000/login", {
+        method: "GET",
+        headers: {
+          Origin: "http://evil.local",
+          Host: "localhost:3000",
+        },
+      }),
+      locals: { nonce: "nonce", requestContext: createRequestContext(null) },
+    });
 
     // CSRF origin check must only fire on mutating methods, not GET
     expect(decision.kind).not.toBe("reject");

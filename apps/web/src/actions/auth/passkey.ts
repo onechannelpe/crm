@@ -10,8 +10,12 @@ import {
   createPasskeyLoginFinishAuthService,
   type FinishPasskeyLoginError,
 } from "~/lib/auth/passkey/service";
-import { getClientIp } from "~/lib/auth/password/client-ip";
+import {
+  createPasskeyProvider,
+  resolveWebauthnRelyingParty,
+} from "~/lib/auth/providers/passkey-provider";
 import { replaceCurrentSession } from "~/lib/auth/session/session-transition";
+import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { getActionRequestContext } from "~/lib/observability/context";
 import { privilegedLoginAlertSender, repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
@@ -50,12 +54,16 @@ export async function finishPasskeyLogin(
     }
 > {
   const event = getRequestEvent();
-  const service = createPasskeyLoginFinishAuthService(repos);
+  const service = createPasskeyLoginFinishAuthService(repos, {
+    createWebauthnProvider: (repos) =>
+      createPasskeyProvider(repos, resolveWebauthnRelyingParty(event?.request)),
+  });
+  const request = getRequestClientMetadata();
   const result = await service.finishLogin({
     flowId,
     response,
-    ipAddress: getClientIp(event?.request.headers ?? new Headers()),
-    userAgent: event?.request.headers.get("user-agent") ?? null,
+    ipAddress: request.ipAddress,
+    userAgent: request.userAgent,
     sendPrivilegedLoginAlert: privilegedLoginAlertSender,
   });
 
