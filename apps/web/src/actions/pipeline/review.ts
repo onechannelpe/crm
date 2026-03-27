@@ -1,29 +1,18 @@
 "use server";
 
 import { validationError } from "~/lib/app-errors";
-import { LEAD_STATUS_VALUES, PRIORIDAD_VALUES } from "~/lib/db/types";
-import type { LeadStatus, Prioridad } from "~/lib/db/types";
 import { listReviewQueueQuery } from "~/server/leads/application/list-review-queue";
 import { reviewLeadPrioridadUseCase } from "~/server/leads/application/review-lead-prioridad";
 import { reviewLeadStatusUseCase } from "~/server/leads/application/review-lead-status";
 import { runAction } from "~/server/shared/action-runtime";
 import { Ok } from "~/server/shared/result";
 
-function isLeadStatus(v: string): v is LeadStatus {
-  return (LEAD_STATUS_VALUES as readonly string[]).includes(v);
-}
-
-function isPrioridad(v: string): v is Prioridad {
-  return (PRIORIDAD_VALUES as readonly string[]).includes(v);
-}
-
-export async function updateLeadStatus(input: {
-  leadId: number;
-  status: string;
-  reason: string;
-}): Promise<void> {
-  if (!isLeadStatus(input.status))
-    throw validationError("Invalid status value");
+export async function updateLeadStatus(
+  input: Omit<
+    Parameters<typeof reviewLeadStatusUseCase>[0],
+    "actorId" | "branchId"
+  >,
+): Promise<void> {
   if (!input.reason?.trim()) throw validationError("reason is required");
 
   return runAction({
@@ -33,7 +22,7 @@ export async function updateLeadStatus(input: {
     execute: (ctx) =>
       reviewLeadStatusUseCase({
         leadId: input.leadId,
-        status: input.status as LeadStatus,
+        status: input.status,
         reason: input.reason,
         actorId: ctx.actor.userId,
         branchId: ctx.actor.branchId,
@@ -41,13 +30,12 @@ export async function updateLeadStatus(input: {
   });
 }
 
-export async function updateLeadPrioridad(input: {
-  leadId: number;
-  prioridad: string;
-  reason: string;
-}): Promise<void> {
-  if (!isPrioridad(input.prioridad))
-    throw validationError("Invalid prioridad value");
+export async function updateLeadPrioridad(
+  input: Omit<
+    Parameters<typeof reviewLeadPrioridadUseCase>[0],
+    "actorId" | "branchId"
+  >,
+): Promise<void> {
   if (!input.reason?.trim()) throw validationError("reason is required");
 
   return runAction({
@@ -57,7 +45,7 @@ export async function updateLeadPrioridad(input: {
     execute: (ctx) =>
       reviewLeadPrioridadUseCase({
         leadId: input.leadId,
-        prioridad: input.prioridad as Prioridad,
+        prioridad: input.prioridad,
         reason: input.reason,
         actorId: ctx.actor.userId,
         branchId: ctx.actor.branchId,
