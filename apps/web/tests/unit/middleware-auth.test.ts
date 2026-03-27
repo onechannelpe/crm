@@ -1,7 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import {
+  enforceCsrfRequestPolicy,
   enforceAuthRequest,
+  getTargetOrigin,
   isPublicPath,
   type AuthRequestDeps,
 } from "../../src/lib/auth/access/request-auth";
@@ -36,6 +38,10 @@ function createDeps(params: {
 }
 
 describe("auth middleware request guard", () => {
+  afterEach(() => {
+    process.env.TRUSTED_PROXY = "false";
+  });
+
   it("detects public routes", () => {
     expect(isPublicPath("/login")).toBe(true);
     expect(isPublicPath("/auth/callback")).toBe(true);
@@ -45,23 +51,73 @@ describe("auth middleware request guard", () => {
     expect(isPublicPath("/dashboard")).toBe(false);
   });
 
-  it("returns 403 on csrf origin mismatch for non-get requests", async () => {
-    const decision = await enforceAuthRequest(
-      {
-        request: new Request("http://localhost:3000/dashboard", {
-          method: "POST",
-          headers: {
-            Origin: "http://evil.local",
-            Host: "localhost:3000",
-          },
-        }),
-      },
-      createDeps({ token: null, session: null }),
+  it("rejects cross-site unsafe requests via fetch metadata", () => {
+    const error = enforceCsrfRequestPolicy(
+      new Request("http://localhost:3000/dashboard", {
+        method: "POST",
+        headers: {
+          "sec-fetch-site": "cross-site",
+        },
+      }),
     );
 
-    expect(decision.kind).toBe("reject");
-    const status = decision.kind === "reject" ? decision.response.status : null;
-    expect(status).toBe(403);
+    expect(error).toBe("CSRF validation failed (Fetch Metadata)");
+  });
+
+  it("rejects same-site unsafe requests via fetch metadata", () => {
+    const error = enforceCsrfRequestPolicy(
+      new Request("http://localhost:3000/dashboard", {
+        method: "POST",
+        headers: {
+          "sec-fetch-site": "same-site",
+        },
+      }),
+    );
+
+    expect(error).toBe("CSRF validation failed (Fetch Metadata)");
+  });
+
+  it("falls back to strict origin matching when fetch metadata is absent", () => {
+    const error = enforceCsrfRequestPolicy(
+      new Request("http://localhost:3000/dashboard", {
+        method: "POST",
+        headers: {
+          Origin: "http://evil.local",
+        },
+      }),
+    );
+
+    expect(error).toBe("CSRF validation failed (Origin mismatch)");
+  });
+
+  it("fails closed when fetch metadata and origin headers are absent", () => {
+    const error = enforceCsrfRequestPolicy(
+      new Request("http://localhost:3000/dashboard", {
+        method: "POST",
+      }),
+    );
+
+    expect(error).toBe("CSRF validation failed (Origin missing)");
+  });
+
+  it("uses the forwarded public origin behind a trusted proxy", () => {
+    process.env.TRUSTED_PROXY = "true";
+
+    const request = new Request("http://127.0.0.1:3000/dashboard", {
+      method: "POST",
+      headers: {
+        Origin:
+          "https://5173-firebase-crm-1772279181549.cluster-zhw3w37rxzgkutusbbhib6qhra.cloudworkstations.dev",
+        "x-forwarded-proto": "https",
+        "x-forwarded-host":
+          "5173-firebase-crm-1772279181549.cluster-zhw3w37rxzgkutusbbhib6qhra.cloudworkstations.dev",
+      },
+    });
+
+    expect(getTargetOrigin(request)).toBe(
+      "https://5173-firebase-crm-1772279181549.cluster-zhw3w37rxzgkutusbbhib6qhra.cloudworkstations.dev",
+    );
+    expect(enforceCsrfRequestPolicy(request)).toBeNull();
   });
 
   it("redirects to /login when private route has no session token", async () => {

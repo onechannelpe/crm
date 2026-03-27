@@ -32,6 +32,7 @@
           manager = "web";
           env = {
             PORT = "$PORT";
+            TRUSTED_PROXY = "true";
             __VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS = ".cloudworkstations.dev";
           };
         };
