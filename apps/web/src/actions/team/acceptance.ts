@@ -1,19 +1,14 @@
 "use server";
 
-import { throwDomainError } from "~/actions/throw-domain-error";
 import { validationError } from "~/lib/app-errors";
-import type { Role } from "~/lib/auth/access/rbac";
 import { isValidInviteTokenFormat } from "~/lib/auth/invite/tokens";
 import { hashPassword } from "~/lib/auth/password/password";
 import { setSessionCookie } from "~/lib/auth/session/cookies";
-import { issueSessionTransition } from "~/lib/auth/session/session-transition";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
-import { runObservedAction } from "~/lib/observability/run-observed-action";
-import { repos } from "~/server/shared/context";
+import { acceptTeamInvite as acceptTeamInviteService } from "~/server/team/service-acceptance";
 import { isErr } from "~/server/shared/result";
 
 import { parseAcceptTeamInviteInput } from "./input";
-import { provisioning } from "./provisioning";
 import { assertStrongPassword } from "./validators";
 
 export async function acceptTeamInvite(input: {
@@ -25,42 +20,35 @@ export async function acceptTeamInvite(input: {
     throw validationError("token is invalid");
   }
   const safePassword = assertStrongPassword(safeInput.password);
+  const request = getRequestClientMetadata();
 
-  const actor = { userId: null as number | null, role: null as Role | null };
-  await runObservedAction({
-    actionName: "team.invite.accept",
-    actor,
-    input: { hasToken: true },
-    run: async () => {
-      const result = await provisioning.acceptInvite({
-        token: safeInput.token,
-        passwordHash: await hashPassword(safePassword),
-      });
-      if (isErr(result)) {
-        throwDomainError(result.error);
-      }
-      actor.userId = result.value.userId;
-      actor.role = result.value.role;
-
-      const request = getRequestClientMetadata();
-      const issued = await issueSessionTransition({
-        user: {
-          id: result.value.userId,
-          branch_id: result.value.branchId,
-          role: result.value.role,
-          onboarding_completed_at: null,
-        },
+  const result = await acceptTeamInviteService(
+    {
+      actor: {
+        userId: 0,
+        role: "admin",
+        branchId: 0,
+        onboardingCompleted: false,
         sessionClass: "pre_auth",
-        request: {
-          ipAddress: request.ipAddress,
-          userAgent: request.userAgent,
-        },
         primaryAuthMethod: "password",
         strongAuthMethod: null,
         strongAuthAt: null,
-        deps: repos,
-      });
-      setSessionCookie(issued.token);
+      },
+      requestId: crypto.randomUUID(),
+      traceId: crypto.randomUUID(),
+      ipAddress: request.ipAddress,
+      userAgent: request.userAgent,
+      publicOrigin: "",
+      now: Date.now,
     },
-  });
+    {
+      token: safeInput.token,
+      password: safeInput.password,
+      passwordHash: await hashPassword(safePassword),
+    },
+  );
+  if (isErr(result)) {
+    throw result.error;
+  }
+  setSessionCookie(result.value.sessionToken);
 }

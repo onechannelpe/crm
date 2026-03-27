@@ -2,18 +2,15 @@
 
 import type { AuthenticationResponseJSON } from "@simplewebauthn/server";
 
-import { createRequestPasskeyProviderFactory } from "~/actions/auth/shared/request-passkey-provider";
 import { internalError } from "~/lib/app-errors";
-import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
-import {
-  createPasskeyLoginFinishAuthService,
-  type FinishPasskeyLoginError,
-} from "~/lib/auth/passkey/service";
-import { replaceCurrentSession } from "~/lib/auth/session/session-transition";
+import type { FinishPasskeyLoginError } from "~/lib/auth/passkey/service";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { getActionRequestContext } from "~/lib/observability/context";
-import { privilegedLoginAlertSender, repos } from "~/server/shared/context";
+import {
+  finishPasskeyLoginWithRepos,
+  replaceCurrentSessionAndResolveRedirect,
+} from "~/server/auth/service-login";
 import { isErr } from "~/server/shared/result";
 
 function normalizePasskeyLoginError(error: FinishPasskeyLoginError): {
@@ -49,16 +46,12 @@ export async function finishPasskeyLogin(
       redirectTo: string;
     }
 > {
-  const service = createPasskeyLoginFinishAuthService(repos, {
-    createWebauthnProvider: createRequestPasskeyProviderFactory(),
-  });
   const request = getRequestClientMetadata();
-  const result = await service.finishLogin({
+  const result = await finishPasskeyLoginWithRepos({
     flowId,
     response,
     ipAddress: request.ipAddress,
     userAgent: request.userAgent,
-    sendPrivilegedLoginAlert: privilegedLoginAlertSender,
   });
 
   if (isErr(result)) {
@@ -82,11 +75,12 @@ export async function finishPasskeyLogin(
     },
     getActionRequestContext(),
   );
-  await replaceCurrentSession(result.value.token);
   return {
-    ok: true as const,
-    redirectTo: result.value.onboardingCompleted
-      ? getDefaultAppPath(result.value.role)
-      : "/onboarding",
+    ok: true,
+    redirectTo: await replaceCurrentSessionAndResolveRedirect({
+      token: result.value.token,
+      onboardingCompleted: result.value.onboardingCompleted,
+      role: result.value.role,
+    }),
   };
 }

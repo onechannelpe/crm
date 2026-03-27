@@ -1,4 +1,5 @@
 import { getAssignableRoleOptions } from "~/lib/auth/access/role-display";
+import type { Role } from "~/lib/auth/access/rbac";
 import { hashInviteToken } from "~/lib/auth/invite/tokens";
 import { shortName } from "~/lib/users/display-name";
 import { repos, runInRepositoryTransaction } from "~/server/shared/context";
@@ -120,9 +121,6 @@ export async function createTeamInvite(
 
   return Ok({ inviteId: result.value.inviteId });
 }
-
-import type { Role } from "~/lib/auth/access/rbac";
-
 export async function resendTeamInvite(
   ctx: AppContext,
   input: { inviteId: number },

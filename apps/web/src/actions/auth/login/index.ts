@@ -2,18 +2,16 @@
 
 import { redirect } from "@solidjs/router";
 
-import { createRequestPasskeyProviderFactory } from "~/actions/auth/shared/request-passkey-provider";
 import { internalError } from "~/lib/app-errors";
 import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
-import { submitPasswordLogin } from "~/lib/auth/flows/primary-login-service";
-import { submitTotpForLoginFlow } from "~/lib/auth/flows/totp-step-up-service";
-import {
-  createPasskeyLoginStartAuthService,
-  type PasskeyLoginFlowState,
-} from "~/lib/auth/passkey/service";
+import type { PasskeyLoginFlowState } from "~/lib/auth/passkey/service";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { getActionRequestContext } from "~/lib/observability/context";
-import { privilegedLoginAlertSender, repos } from "~/server/shared/context";
+import {
+  createPasskeyStartService,
+  submitPasswordLoginWithRepos,
+  submitTotpLoginWithRepos,
+} from "~/server/auth/service-login";
 import { isErr } from "~/server/shared/result";
 
 import {
@@ -59,16 +57,12 @@ export async function passwordLogin(
   const identifier = readLoginText(formData, "identifier");
   const password = readLoginText(formData, "password", { trim: false });
   const request = getRequestClientMetadata();
-  const result = await submitPasswordLogin(
-    {
-      identifier,
-      password,
-      ipAddress: request.ipAddress,
-      userAgent: request.userAgent,
-    },
-    repos,
-    privilegedLoginAlertSender,
-  );
+  const result = await submitPasswordLoginWithRepos({
+    identifier,
+    password,
+    ipAddress: request.ipAddress,
+    userAgent: request.userAgent,
+  });
   if (isErr(result)) {
     await recordAuthAnalyticsEvent(
       {
@@ -129,9 +123,7 @@ export async function passkeyStart(
   }
 
   const request = getRequestClientMetadata();
-  const service = createPasskeyLoginStartAuthService(repos, {
-    createWebauthnProvider: createRequestPasskeyProviderFactory(),
-  });
+  const service = createPasskeyStartService();
   const result =
     mode === "identified"
       ? await service.beginLogin({
@@ -179,16 +171,12 @@ export async function totpLogin(
     throw redirect("/login/user?error=flow_expired");
   }
   const request = getRequestClientMetadata();
-  const result = await submitTotpForLoginFlow(
-    {
-      flowId,
-      totpCode,
-      ipAddress: request.ipAddress,
-      userAgent: request.userAgent,
-    },
-    repos,
-    privilegedLoginAlertSender,
-  );
+  const result = await submitTotpLoginWithRepos({
+    flowId,
+    totpCode,
+    ipAddress: request.ipAddress,
+    userAgent: request.userAgent,
+  });
   if (isErr(result)) {
     if (result.error.kind === "flow_expired") {
       await recordAuthAnalyticsEvent(

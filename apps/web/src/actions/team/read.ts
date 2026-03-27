@@ -1,31 +1,28 @@
 "use server";
 
-import { throwDomainError } from "~/actions/throw-domain-error";
-import { getAssignableRoleOptions } from "~/lib/auth/access/role-display";
 import { requirePermission } from "~/lib/auth/access/session";
-import { repos } from "~/server/shared/context";
-import { isErr } from "~/server/shared/result";
+import { runAction } from "~/server/shared/action-runtime";
+import {
+  getBulkImportSetup as getBulkImportSetupService,
+  getInviteManagement as getInviteManagementService,
+} from "~/server/team/service-invites";
 
-import { provisioning } from "./provisioning";
-import type { BulkImportSetup, InviteManagement } from "./types";
+import type { BulkImportSetup, InviteManagement } from "~/server/team/types";
 
 export async function getInviteManagement(): Promise<InviteManagement> {
   const session = await requirePermission("hr:manage");
-  const [teams, pendingInvitesResult] = await Promise.all([
-    repos.teams.findByBranch(session.branchId),
-    provisioning.listPendingInvites(session.branchId),
-  ]);
-  if (isErr(pendingInvitesResult)) {
-    throwDomainError(pendingInvitesResult.error);
-  }
-  return {
-    pendingInvites: pendingInvitesResult.value,
-    teams: teams.map((team) => ({ id: team.id, name: team.name })),
-    assignableRoles: getAssignableRoleOptions(session.role),
-  };
+  return runAction({
+    actionName: "team.invite_management.read",
+    actor: session,
+    execute: getInviteManagementService,
+  });
 }
 
 export async function getBulkImportSetup(): Promise<BulkImportSetup> {
   const session = await requirePermission("admin:manage");
-  return { assignableRoles: getAssignableRoleOptions(session.role) };
+  return runAction({
+    actionName: "team.bulk_import_setup.read",
+    actor: session,
+    execute: getBulkImportSetupService,
+  });
 }
