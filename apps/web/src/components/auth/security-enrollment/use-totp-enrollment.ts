@@ -1,6 +1,6 @@
 import { createSignal } from "solid-js";
 
-import { beginTotpEnrollment, finishTotpEnrollment } from "~/actions/auth";
+import { beginTotpEnrollment, finishTotpEnrollment } from "~/actions/auth/login/totp";
 import { getErrorMessage } from "~/lib/errors";
 
 type ShowToast = (type: "success" | "error" | "info", message: string) => void;
