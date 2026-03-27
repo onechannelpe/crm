@@ -1,7 +1,7 @@
 import type { APIEvent } from "@solidjs/start/server";
 
 import { isClaimExtensionSessionRequest } from "~/server/extension/contracts";
-import { extensionService } from "~/server/shared/context";
+import { getExtensionApiRuntime } from "~/server/extension/runtime";
 import { isErr } from "~/server/shared/result";
 
 import { readJsonBody } from "../json-body";
@@ -20,7 +20,10 @@ export async function POST(event: APIEvent): Promise<Response> {
       );
     }
 
-    const result = await extensionService.claimInstallationSession(body);
+    const result =
+      await getExtensionApiRuntime().extensionService.claimInstallationSession(
+        body,
+      );
     if (isErr(result)) {
       const status =
         result.error.reason === "installation_invalid"

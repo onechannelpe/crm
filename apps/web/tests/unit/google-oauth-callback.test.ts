@@ -23,9 +23,11 @@ vi.mock("~/lib/auth/password/client-ip", () => ({
   getClientIp: mocks.getClientIp,
 }));
 
-vi.mock("~/server/shared/context", () => ({
-  privilegedLoginAlertSender: vi.fn(),
-  repos: {},
+vi.mock("~/server/auth/runtime-google-oauth", () => ({
+  getGoogleOAuthCallbackRuntime: () => ({
+    privilegedLoginAlertSender: vi.fn(),
+    repos: {},
+  }),
 }));
 
 import { GET } from "../../src/routes/api/auth/google/callback";
