@@ -139,13 +139,6 @@ export async function approveCapacityRequest(
           ),
         );
 
-      const grantCmd = {
-        actorUserId: command.actorUserId,
-        targetUserId: request.user_id,
-        amount: request.requested_amount,
-        reason: note ?? request.reason,
-      };
-
       if (request.kind === "search_extra") {
         const grantResult = await grantSearchCapacity(
           {

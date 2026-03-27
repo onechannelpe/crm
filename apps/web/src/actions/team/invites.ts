@@ -50,7 +50,8 @@ export async function createTeamInvite(input: {
         provisioning: runtime.provisioning,
         sendInviteEmail,
         getInviteUrl,
-        enforceRateLimit: runtime.enforceInviteCreateRateLimit,
+        enforceRateLimit: (userId) =>
+          runtime.enforceInviteCreateRateLimit(userId),
       }),
   });
 }
