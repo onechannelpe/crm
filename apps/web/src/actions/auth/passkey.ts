@@ -1,8 +1,8 @@
 "use server";
 
 import type { AuthenticationResponseJSON } from "@simplewebauthn/server";
-import { getRequestEvent } from "solid-js/web";
 
+import { createRequestPasskeyProviderFactory } from "~/actions/auth/request-passkey-provider";
 import { internalError } from "~/lib/app-errors";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
@@ -10,10 +10,6 @@ import {
   createPasskeyLoginFinishAuthService,
   type FinishPasskeyLoginError,
 } from "~/lib/auth/passkey/service";
-import {
-  createPasskeyProvider,
-  resolveWebauthnRelyingParty,
-} from "~/lib/auth/providers/passkey-provider";
 import { replaceCurrentSession } from "~/lib/auth/session/session-transition";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { getActionRequestContext } from "~/lib/observability/context";
@@ -53,10 +49,8 @@ export async function finishPasskeyLogin(
       redirectTo: string;
     }
 > {
-  const event = getRequestEvent();
   const service = createPasskeyLoginFinishAuthService(repos, {
-    createWebauthnProvider: (repos) =>
-      createPasskeyProvider(repos, resolveWebauthnRelyingParty(event?.request)),
+    createWebauthnProvider: createRequestPasskeyProviderFactory(),
   });
   const request = getRequestClientMetadata();
   const result = await service.finishLogin({

@@ -34,7 +34,10 @@ export function isPublicPath(pathname: string): boolean {
   );
 }
 
-export function enforceCsrfRequestPolicy(request: Request): string | null {
+export function enforceCsrfRequestPolicy(
+  request: Request,
+  targetOrigin = getTargetOrigin(request),
+): string | null {
   if (SAFE_METHODS.has(request.method)) {
     return null;
   }
@@ -61,7 +64,6 @@ export function enforceCsrfRequestPolicy(request: Request): string | null {
     return "CSRF validation failed (Origin missing)";
   }
 
-  const targetOrigin = getTargetOrigin(request);
   if (sourceOrigin !== targetOrigin) {
     return "CSRF validation failed (Origin mismatch)";
   }
@@ -104,11 +106,15 @@ export async function enforceAuthRequest(
 ): Promise<AuthRequestDecision> {
   const url = new URL(event.request.url);
   const requestContext = event.locals?.requestContext;
+  const targetOrigin = requestContext?.publicOrigin ?? getTargetOrigin(event.request);
 
   if (!SAFE_METHODS.has(event.request.method)) {
-    const csrfPolicyError = enforceCsrfRequestPolicy(event.request);
+    const csrfPolicyError = enforceCsrfRequestPolicy(
+      event.request,
+      targetOrigin,
+    );
     if (csrfPolicyError) {
-      logCsrfReject(event, csrfPolicyError);
+      logCsrfReject(event, csrfPolicyError, targetOrigin);
       return {
         kind: "reject",
         response: new Response(csrfPolicyError, { status: 403 }),
@@ -158,7 +164,11 @@ export async function enforceAuthRequest(
   return { kind: "allow" };
 }
 
-function logCsrfReject(event: AuthRequestEvent, reason: string): void {
+function logCsrfReject(
+  event: AuthRequestEvent,
+  reason: string,
+  targetOrigin: string,
+): void {
   const request = event.request;
   logger.warn("csrf_request_rejected", {
     reason,
@@ -166,7 +176,7 @@ function logCsrfReject(event: AuthRequestEvent, reason: string): void {
     path: new URL(request.url).pathname,
     fetchSite: request.headers.get("sec-fetch-site"),
     origin: request.headers.get("origin"),
-    targetOrigin: getTargetOrigin(request),
+    targetOrigin,
     requestId: event.locals?.requestContext?.observability.requestId ?? null,
     traceId: event.locals?.requestContext?.observability.traceId ?? null,
   });

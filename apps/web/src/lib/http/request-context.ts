@@ -15,7 +15,6 @@ import { repos } from "~/server/shared/context";
 
 import { getRequestPublicOrigin } from "./public-origin";
 
-export type RequestAuthState = "anonymous" | "pre_auth" | "app";
 const REQUEST_SESSION_ACTIVITY_UPDATE_MS = 5 * 60 * 1000;
 
 export interface RequestContext {
@@ -25,7 +24,6 @@ export interface RequestContext {
   observability: ActionRequestContext;
   csrfToken: string | null;
   getAuthSession(): Promise<AuthSession | null>;
-  getAuthState(): Promise<RequestAuthState>;
   getRequestCsrfToken(): Promise<string | null>;
 }
 
@@ -53,11 +51,6 @@ export async function buildRequestContext(
     getAuthSession() {
       authSessionPromise ??= loadRequestSession();
       return authSessionPromise;
-    },
-    async getAuthState() {
-      authSessionPromise ??= loadRequestSession();
-      const session = await authSessionPromise;
-      return session?.sessionClass ?? "anonymous";
     },
     async getRequestCsrfToken() {
       requestSessionPromise ??= loadRequestSessionState(request, false);

@@ -1,8 +1,8 @@
 "use server";
 
 import type { RegistrationResponseJSON } from "@simplewebauthn/server";
-import { getRequestEvent } from "solid-js/web";
 
+import { createRequestPasskeyProviderFactory } from "~/actions/auth/request-passkey-provider";
 import {
   conflictError,
   internalError,
@@ -11,10 +11,6 @@ import {
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { requireSession } from "~/lib/auth/access/session";
 import { createPasskeyEnrollmentAuthService } from "~/lib/auth/passkey/service";
-import {
-  createPasskeyProvider,
-  resolveWebauthnRelyingParty,
-} from "~/lib/auth/providers/passkey-provider";
 import { requiresStrongAuthRole } from "~/lib/auth/security/strong-auth-status";
 import {
   issueSessionTransition,
@@ -54,7 +50,6 @@ async function promoteCompletedOnboardingSession(
     throw internalError("No se pudo completar el registro");
   }
 
-  const event = getRequestEvent();
   const request = getRequestClientMetadata();
   const strongAuthMethod = proof?.strongAuthMethod ?? session.strongAuthMethod;
   const strongAuthAt =
@@ -142,7 +137,6 @@ export async function completePasskeyOnboarding(
 ): Promise<{ redirectTo: string }> {
   const session = await requireSession();
   const safePhone = normalizePeruvianPhone(phoneE164);
-  const event = getRequestEvent();
   const request = getRequestClientMetadata();
   const result =
     await runInRepositoryTransaction<CompletePasskeyOnboardingResult>(
@@ -150,11 +144,7 @@ export async function completePasskeyOnboarding(
         const passkeyService = createPasskeyEnrollmentAuthService(
           transactionRepos,
           {
-            createWebauthnProvider: (repos) =>
-              createPasskeyProvider(
-                repos,
-                resolveWebauthnRelyingParty(event?.request),
-              ),
+            createWebauthnProvider: createRequestPasskeyProviderFactory(),
           },
         );
         const passkeyResult = await passkeyService.finishEnrollment({

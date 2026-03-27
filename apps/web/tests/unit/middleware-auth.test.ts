@@ -43,7 +43,6 @@ function createRequestContext(
     },
     csrfToken,
     getAuthSession: async () => session,
-    getAuthState: async () => session?.sessionClass ?? "anonymous",
     getRequestCsrfToken: async () => csrfToken,
   };
 }

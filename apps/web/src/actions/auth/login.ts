@@ -1,32 +1,35 @@
 "use server";
 
 import { redirect } from "@solidjs/router";
-import { getRequestEvent } from "solid-js/web";
 
+import { createRequestPasskeyProviderFactory } from "~/actions/auth/request-passkey-provider";
 import { internalError } from "~/lib/app-errors";
-import type { Role } from "~/lib/auth/access/rbac";
-import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
 import {
   submitPasswordLogin,
   type SubmitPrimaryLoginError,
 } from "~/lib/auth/flows/primary-login-service";
 import { submitTotpForLoginFlow } from "~/lib/auth/flows/totp-step-up-service";
-import { parseLoginFlowId } from "~/lib/auth/login-route-flow";
 import {
   createPasskeyLoginStartAuthService,
   type PasskeyLoginFlowState,
   type BeginPasskeyLoginError,
 } from "~/lib/auth/passkey/service";
-import {
-  createPasskeyProvider,
-  resolveWebauthnRelyingParty,
-} from "~/lib/auth/providers/passkey-provider";
-import { replaceCurrentSession } from "~/lib/auth/session/session-transition";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { getActionRequestContext } from "~/lib/observability/context";
 import { privilegedLoginAlertSender, repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
+
+import {
+  completeLoginAndRedirect,
+  normalizePasskeyStartError,
+  normalizePasswordLoginError,
+  readLoginFlowId,
+  readLoginText,
+  readPasskeyStartMode,
+  resolvePasskeyStartAnalyticsCode,
+  resolvePasswordAnalyticsCode,
+} from "./login-support";
 
 export type PasswordLoginSubmissionResult =
   | {
@@ -54,81 +57,11 @@ export type TotpLoginSubmissionResult = {
   code: "invalid_totp";
 };
 
-function readPasskeyStartMode(
-  formData: FormData,
-): "identified" | "discoverable" | null {
-  const value = formData.get("mode");
-  return value === "identified" || value === "discoverable" ? value : null;
-}
-
-function readText(
-  formData: FormData,
-  field: "identifier" | "password" | "totpCode",
-  options?: { trim?: boolean },
-): string {
-  const value = formData.get(field);
-  if (typeof value !== "string") return "";
-  return options?.trim === false ? value : value.trim();
-}
-
-function readPositiveInt(formData: FormData, field: "flowId"): number | null {
-  const value = formData.get(field);
-  return typeof value === "string" ? parseLoginFlowId(value) : null;
-}
-
-async function completeLoginAndRedirect(result: {
-  token: string;
-  role: Role;
-  onboardingCompleted: boolean;
-}): Promise<never> {
-  await replaceCurrentSession(result.token);
-  throw redirect(
-    result.onboardingCompleted ? getDefaultAppPath(result.role) : "/onboarding",
-  );
-}
-
-function normalizePasskeyStartError(
-  error: BeginPasskeyLoginError,
-): PasskeyStartSubmissionResult {
-  if (error.kind === "unexpected") {
-    throw internalError(error.message);
-  }
-  return {
-    ok: false,
-    code: "invalid_credentials",
-  };
-}
-
-function resolvePasskeyStartAnalyticsCode(
-  error: BeginPasskeyLoginError,
-): "invalid_credentials" | "internal" {
-  return error.kind === "unexpected" ? "internal" : "invalid_credentials";
-}
-
-function normalizePasswordLoginError(
-  error: SubmitPrimaryLoginError,
-): PasswordLoginSubmissionResult {
-  if (error.kind === "unexpected") {
-    throw internalError(error.message ?? "Unexpected password login failure");
-  }
-
-  return {
-    ok: false,
-    code: error.kind,
-  };
-}
-
-function resolvePasswordAnalyticsCode(
-  error: SubmitPrimaryLoginError,
-): "invalid_credentials" | "strong_auth_required" | "internal" {
-  return error.kind === "unexpected" ? "internal" : error.kind;
-}
-
 export async function passwordLogin(
   formData: FormData,
 ): Promise<PasswordLoginSubmissionResult> {
-  const identifier = readText(formData, "identifier");
-  const password = readText(formData, "password", { trim: false });
+  const identifier = readLoginText(formData, "identifier");
+  const password = readLoginText(formData, "password", { trim: false });
   const request = getRequestClientMetadata();
   const result = await submitPasswordLogin(
     {
@@ -200,15 +133,13 @@ export async function passkeyStart(
   }
 
   const request = getRequestClientMetadata();
-  const event = getRequestEvent();
   const service = createPasskeyLoginStartAuthService(repos, {
-    createWebauthnProvider: (repos) =>
-      createPasskeyProvider(repos, resolveWebauthnRelyingParty(event?.request)),
+    createWebauthnProvider: createRequestPasskeyProviderFactory(),
   });
   const result =
     mode === "identified"
       ? await service.beginLogin({
-          identifier: readText(formData, "identifier"),
+          identifier: readLoginText(formData, "identifier"),
           ipAddress: request.ipAddress,
           mode,
         })
@@ -246,8 +177,8 @@ export async function passkeyStart(
 export async function totpLogin(
   formData: FormData,
 ): Promise<TotpLoginSubmissionResult> {
-  const flowId = readPositiveInt(formData, "flowId");
-  const totpCode = readText(formData, "totpCode");
+  const flowId = readLoginFlowId(formData, "flowId");
+  const totpCode = readLoginText(formData, "totpCode");
   if (!flowId) {
     throw redirect("/login/user?error=flow_expired");
   }

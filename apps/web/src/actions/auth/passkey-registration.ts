@@ -1,17 +1,13 @@
 "use server";
 
 import type { RegistrationResponseJSON } from "@simplewebauthn/server";
-import { getRequestEvent } from "solid-js/web";
 
 import { throwDomainError } from "~/actions/throw-domain-error";
+import { createRequestPasskeyProviderFactory } from "~/actions/auth/request-passkey-provider";
 import { internalError } from "~/lib/app-errors";
 import { requireSession } from "~/lib/auth/access/session";
 import type { PasskeyEnrollmentChallenge } from "~/lib/auth/passkey/service";
 import { createPasskeyEnrollmentAuthService } from "~/lib/auth/passkey/service";
-import {
-  createPasskeyProvider,
-  resolveWebauthnRelyingParty,
-} from "~/lib/auth/providers/passkey-provider";
 import {
   issueSessionTransition,
   replaceCurrentSession,
@@ -22,11 +18,9 @@ import { isErr } from "~/server/shared/result";
 
 export async function beginPasskeyRegistration(): Promise<PasskeyEnrollmentChallenge> {
   const session = await requireSession();
-  const event = getRequestEvent();
   const { ipAddress } = getRequestClientMetadata();
   const service = createPasskeyEnrollmentAuthService(repos, {
-    createWebauthnProvider: (repos) =>
-      createPasskeyProvider(repos, resolveWebauthnRelyingParty(event?.request)),
+    createWebauthnProvider: createRequestPasskeyProviderFactory(),
   });
   const result = await service.beginEnrollment({
     userId: session.userId,
@@ -43,11 +37,9 @@ export async function finishPasskeyRegistration(
   response: RegistrationResponseJSON,
 ): Promise<void> {
   const session = await requireSession();
-  const event = getRequestEvent();
   const request = getRequestClientMetadata();
   const service = createPasskeyEnrollmentAuthService(repos, {
-    createWebauthnProvider: (repos) =>
-      createPasskeyProvider(repos, resolveWebauthnRelyingParty(event?.request)),
+    createWebauthnProvider: createRequestPasskeyProviderFactory(),
   });
   const result = await service.finishEnrollment({
     userId: session.userId,
