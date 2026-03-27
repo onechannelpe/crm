@@ -10,7 +10,9 @@
     pkgs.pkg-config
   ];
 
-  env = {};
+  env = {
+    PATH = "$HOME/.local/share/mise/shims:$PATH";
+  };
 
   idx = {
     extensions = [];
