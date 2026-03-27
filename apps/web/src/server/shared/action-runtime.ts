@@ -1,6 +1,7 @@
 import { throwDomainError } from "~/actions/throw-domain-error";
 import type { Permission, Role } from "~/lib/auth/access/rbac";
 import {
+  requireAuth as requireAuthActor,
   requirePermission,
   requireRole,
   requireSession as requireSessionActor,
@@ -41,6 +42,7 @@ export function createAppContext(actor: SessionData): AppContext {
 async function resolveActor(params: {
   permission?: Permission;
   role?: Role;
+  requireAuth?: boolean;
   requireSession?: boolean;
 }): Promise<SessionData> {
   if (params.permission) {
@@ -48,6 +50,9 @@ async function resolveActor(params: {
   }
   if (params.role) {
     return requireRole(params.role);
+  }
+  if (params.requireAuth) {
+    return requireAuthActor();
   }
   if (params.requireSession) {
     return requireSessionActor();
@@ -59,6 +64,7 @@ export async function runAction<T, E extends DomainError>(params: {
   actionName: string;
   permission?: Permission;
   role?: Role;
+  requireAuth?: boolean;
   requireSession?: boolean;
   stepUp?: "recent_strong_auth";
   input?: unknown;
