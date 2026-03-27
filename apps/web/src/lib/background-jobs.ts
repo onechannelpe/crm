@@ -1,7 +1,9 @@
 import { renderAccountExpiringEmail } from "@crm/notifications";
 
+import { invalidateUserSessions } from "~/lib/auth/session/session-manager";
 import { createLogger } from "~/lib/observability/logger";
 import { shortName } from "~/lib/users/display-name";
+import { asUserId } from "~/server/shared/ids";
 import {
   exportService,
   importService,
@@ -118,7 +120,7 @@ export function startBackgroundJobs() {
         );
         for (const userId of expiredIds) {
           // eslint-disable-next-line no-await-in-loop
-          await repos.sessions.deleteAllForUser(userId);
+          await invalidateUserSessions(asUserId(userId));
         }
         if (expiredIds.length > 0) {
           logger.info("accounts_expired", { count: expiredIds.length });

@@ -1,9 +1,10 @@
 import { sql } from "kysely";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { sessionCache } from "../../src/lib/auth/session/session-cache";
 import {
   createSession,
+  invalidateUserSessions,
   validateSessionToken,
 } from "../../src/lib/auth/session/session-manager";
 import {
@@ -52,7 +53,32 @@ describe("session manager validation", () => {
     expect(await ctx.repos.sessions.findById(sessionId)).toBeNull();
   });
 
-  it("invalidates cached session immediately after user deactivation", async () => {
+  it("returns cached session without reloading the user record", async () => {
+    const token = await createSession(
+      {
+        userId: asUserId(1),
+        branchId: asBranchId(1),
+        role: "executive",
+        sessionClass: "app",
+        ipAddress: null,
+        userAgent: null,
+        primaryAuthMethod: "password",
+        strongAuthMethod: null,
+        strongAuthAt: null,
+      },
+      ctx.repos,
+    );
+
+    const first = await validateSessionToken(token, ctx.repos);
+    expect(first.session).not.toBeNull();
+
+    const userFindSpy = vi.spyOn(ctx.repos.users, "findById");
+    const second = await validateSessionToken(token, ctx.repos);
+    expect(second.session).not.toBeNull();
+    expect(userFindSpy).not.toHaveBeenCalled();
+  });
+
+  it("removes cached sessions after explicit invalidation", async () => {
     const token = await createSession(
       {
         userId: asUserId(1),
@@ -72,24 +98,20 @@ describe("session manager validation", () => {
     const first = await validateSessionToken(token, ctx.repos);
     expect(first.session).not.toBeNull();
 
-    await ctx.db
-      .updateTable("users")
-      .set({ is_active: 0 })
-      .where("id", "=", 1)
-      .execute();
+    await invalidateUserSessions(asUserId(1), ctx.repos);
 
     const second = await validateSessionToken(token, ctx.repos);
     expect(second.session).toBeNull();
     expect(await ctx.repos.sessions.findById(sessionId)).toBeNull();
   });
 
-  it("invalidates cached session when user role changes", async () => {
+  it("derives onboarding completion from session class without user lookup", async () => {
     const token = await createSession(
       {
         userId: asUserId(1),
         branchId: asBranchId(1),
         role: "executive",
-        sessionClass: "app",
+        sessionClass: "pre_auth",
         ipAddress: null,
         userAgent: null,
         primaryAuthMethod: "password",
@@ -98,50 +120,7 @@ describe("session manager validation", () => {
       },
       ctx.repos,
     );
-    const sessionId = hashSessionToken(token);
-
-    const first = await validateSessionToken(token, ctx.repos);
-    expect(first.session).not.toBeNull();
-
-    await ctx.db
-      .updateTable("users")
-      .set({ role: "supervisor" })
-      .where("id", "=", 1)
-      .execute();
-
-    const second = await validateSessionToken(token, ctx.repos);
-    expect(second.session).toBeNull();
-    expect(await ctx.repos.sessions.findById(sessionId)).toBeNull();
-  });
-
-  it("invalidates cached session when user branch changes", async () => {
-    const token = await createSession(
-      {
-        userId: asUserId(1),
-        branchId: asBranchId(1),
-        role: "executive",
-        sessionClass: "app",
-        ipAddress: null,
-        userAgent: null,
-        primaryAuthMethod: "password",
-        strongAuthMethod: null,
-        strongAuthAt: null,
-      },
-      ctx.repos,
-    );
-    const sessionId = hashSessionToken(token);
-
-    const first = await validateSessionToken(token, ctx.repos);
-    expect(first.session).not.toBeNull();
-
-    await ctx.db
-      .updateTable("users")
-      .set({ branch_id: 2 })
-      .where("id", "=", 1)
-      .execute();
-
-    const second = await validateSessionToken(token, ctx.repos);
-    expect(second.session).toBeNull();
-    expect(await ctx.repos.sessions.findById(sessionId)).toBeNull();
+    const result = await validateSessionToken(token, ctx.repos);
+    expect(result.session?.onboardingCompleted).toBe(false);
   });
 });

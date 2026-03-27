@@ -2,7 +2,10 @@
 
 import { requireRole } from "~/lib/auth/access/session";
 import { assertRecentStrongAuth } from "~/lib/auth/security/step-up";
-import { invalidateUserSessions } from "~/lib/auth/session/session-manager";
+import {
+  invalidateSession,
+  invalidateUserSessions,
+} from "~/lib/auth/session/session-manager";
 import {
   allSessionsRevokedChanges,
   serializeAuditChanges,
@@ -27,7 +30,7 @@ export async function revokeUserSession(
   const session = await requireRole("admin");
   assertRecentStrongAuth(session);
 
-  await repos.sessions.delete(safeSessionId);
+  await invalidateSession(safeSessionId);
   await repos.extensionRuntime.revokeInstallationSessionsByAuthSession(
     safeSessionId,
     Date.now(),
