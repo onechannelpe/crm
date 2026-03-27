@@ -31,15 +31,16 @@ import { getInviteManagement } from "../../src/actions/team/read";
 describe("invite management query", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    runActionMock.mockImplementation((params) =>
-      params.execute({
+    runActionMock.mockImplementation(async (params) => {
+      const result = await params.execute({
         actor: {
           userId: 7,
           role: "hr",
           branchId: 3,
         },
-      }),
-    );
+      });
+      return result.value;
+    });
     teamsFindByBranchMock.mockResolvedValue([{ id: 11, name: "Operaciones" }]);
     listPendingInvitesMock.mockResolvedValue(
       Ok([
