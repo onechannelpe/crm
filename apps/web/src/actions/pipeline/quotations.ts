@@ -1,15 +1,12 @@
 "use server";
 
-import { throwDomainError } from "~/actions/throw-domain-error";
 import { validationError } from "~/lib/app-errors";
-import type { Role } from "~/lib/auth/access/rbac";
-import { requirePermission } from "~/lib/auth/access/session";
-import { runObservedAction } from "~/lib/observability/run-observed-action";
+import { runAction } from "~/server/shared/action-runtime";
 import { getLeadDetailQuery } from "~/server/leads/application/get-lead-detail";
 import { approveForSaleUseCase } from "~/server/quotations/application/approve-for-sale";
 import { createQuotationUseCase } from "~/server/quotations/application/create-quotation";
 import { listQuotationQueueQuery } from "~/server/quotations/application/list-quotation-queue";
-import { isErr } from "~/server/shared/result";
+import { isErr, Ok } from "~/server/shared/result";
 
 export interface CreateQuotationInput {
   leadId: number;
@@ -24,31 +21,21 @@ export interface CreateQuotationInput {
 export async function createQuotation(
   input: CreateQuotationInput,
 ): Promise<{ id: number }> {
-  const actor = { userId: null as number | null, role: null as Role | null };
-  return runObservedAction({
+  if (input.moneda !== "PEN" && input.moneda !== "USD") {
+    throw validationError("moneda must be PEN or USD");
+  }
+  for (const [key, val] of Object.entries(input)) {
+    if (key !== "leadId" && key !== "moneda" && typeof val === "number" && val < 0) {
+      throw validationError(`${key} must be non-negative`);
+    }
+  }
+
+  return runAction({
     actionName: "quotation.create",
-    actor,
+    permission: "quotation:manage",
     input: { leadId: input.leadId },
-    run: async () => {
-      const session = await requirePermission("quotation:manage");
-      actor.userId = session.userId;
-      actor.role = session.role;
-
-      if (input.moneda !== "PEN" && input.moneda !== "USD") {
-        throw validationError("moneda must be PEN or USD");
-      }
-      for (const [key, val] of Object.entries(input)) {
-        if (
-          key !== "leadId" &&
-          key !== "moneda" &&
-          typeof val === "number" &&
-          val < 0
-        ) {
-          throw validationError(`${key} must be non-negative`);
-        }
-      }
-
-      const result = await createQuotationUseCase({
+    execute: (ctx) =>
+      createQuotationUseCase({
         leadId: input.leadId,
         paybackPricing: input.paybackPricing,
         tarifaDebito: input.tarifaDebito,
@@ -56,54 +43,37 @@ export async function createQuotation(
         tarifaForaneo: input.tarifaForaneo,
         fee: input.fee,
         moneda: input.moneda,
-        actorId: session.userId,
-      });
-
-      if (isErr(result)) throwDomainError(result.error);
-      return result.value;
-    },
+        actorId: ctx.actor.userId,
+      }),
   });
 }
 
 export async function approveLeadForSale(leadId: number): Promise<void> {
-  const actor = { userId: null as number | null, role: null as Role | null };
-  return runObservedAction({
+  return runAction({
     actionName: "quotation.approve_for_sale",
-    actor,
+    permission: "quotation:manage",
     input: { leadId },
-    run: async () => {
-      const session = await requirePermission("quotation:manage");
-      actor.userId = session.userId;
-      actor.role = session.role;
-
-      const result = await approveForSaleUseCase({
+    execute: (ctx) =>
+      approveForSaleUseCase({
         leadId,
-        actorId: session.userId,
-      });
-
-      if (isErr(result)) throwDomainError(result.error);
-    },
+        actorId: ctx.actor.userId,
+      }),
   });
 }
 
 export async function getLeadQuotations(leadId: number) {
-  const actor = { userId: null as number | null, role: null as Role | null };
-  return runObservedAction({
+  return runAction({
     actionName: "quotation.list_by_lead",
-    actor,
+    permission: "quotation:manage",
     input: { leadId },
-    run: async () => {
-      const session = await requirePermission("quotation:manage");
-      actor.userId = session.userId;
-      actor.role = session.role;
-
+    execute: async (ctx) => {
       const result = await getLeadDetailQuery({
         leadId,
-        actorUserId: session.userId,
-        actorRole: session.role,
+        actorUserId: ctx.actor.userId,
+        actorRole: ctx.actor.role,
       });
-      if (isErr(result)) throwDomainError(result.error);
-      return { lead: result.value.lead, quotations: result.value.quotations };
+      if (isErr(result)) return result;
+      return Ok({ lead: result.value.lead, quotations: result.value.quotations });
     },
   });
 }
@@ -112,17 +82,10 @@ export async function listLeadsForQuotation(filters: {
   limit?: number;
   offset?: number;
 }) {
-  const actor = { userId: null as number | null, role: null as Role | null };
-  return runObservedAction({
+  return runAction({
     actionName: "quotation.list_queue",
-    actor,
+    permission: "quotation:manage",
     input: {},
-    run: async () => {
-      const session = await requirePermission("quotation:manage");
-      actor.userId = session.userId;
-      actor.role = session.role;
-
-      return listQuotationQueueQuery(filters);
-    },
+    execute: async () => Ok(await listQuotationQueueQuery(filters)),
   });
 }

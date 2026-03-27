@@ -1,14 +1,11 @@
 "use server";
 
-import { throwDomainError } from "~/actions/throw-domain-error";
 import { notFoundError, validationError } from "~/lib/app-errors";
-import type { Role } from "~/lib/auth/access/rbac";
-import { requirePermission } from "~/lib/auth/access/session";
-import { runObservedAction } from "~/lib/observability/run-observed-action";
+import { runAction } from "~/server/shared/action-runtime";
 import { getIntegrationJobQuery } from "~/server/integrations/application/get-integration-job";
 import { listIntegrationJobsQuery } from "~/server/integrations/application/list-integration-jobs";
 import { queueImportJobUseCase } from "~/server/integrations/application/queue-import-job";
-import { isErr } from "~/server/shared/result";
+import { Ok } from "~/server/shared/result";
 
 type ImportType = "import_status" | "import_prioridad";
 
@@ -19,55 +16,42 @@ function isImportType(v: string): v is ImportType {
 export async function uploadImportFile(
   formData: FormData,
 ): Promise<{ jobId: number }> {
-  const actor = { userId: null as number | null, role: null as Role | null };
-  return runObservedAction({
+  const file = formData.get("file");
+  const type = formData.get("type");
+
+  if (!(file instanceof File)) throw validationError("file is required");
+  if (typeof type !== "string" || !isImportType(type)) {
+    throw validationError("type must be import_status or import_prioridad");
+  }
+  if (!file.name.toLowerCase().endsWith(".csv")) {
+    throw validationError("Only CSV files are accepted");
+  }
+
+  const bytes = new Uint8Array(await file.arrayBuffer());
+
+  return runAction({
     actionName: "integration.upload_import",
-    actor,
+    permission: "integration:manage",
     input: {},
-    run: async () => {
-      const session = await requirePermission("integration:manage");
-      actor.userId = session.userId;
-      actor.role = session.role;
-
-      const file = formData.get("file");
-      const type = formData.get("type");
-
-      if (!(file instanceof File)) throw validationError("file is required");
-      if (typeof type !== "string" || !isImportType(type)) {
-        throw validationError("type must be import_status or import_prioridad");
-      }
-      if (!file.name.toLowerCase().endsWith(".csv")) {
-        throw validationError("Only CSV files are accepted");
-      }
-
-      const bytes = new Uint8Array(await file.arrayBuffer());
-      const result = await queueImportJobUseCase({
+    execute: (ctx) =>
+      queueImportJobUseCase({
         type,
-        actorId: session.userId,
+        actorId: ctx.actor.userId,
         fileName: file.name,
         bytes,
-      });
-      if (isErr(result)) throwDomainError(result.error);
-      return result.value;
-    },
+      }),
   });
 }
 
 export async function getImportJob(jobId: number) {
-  const actor = { userId: null as number | null, role: null as Role | null };
-  return runObservedAction({
+  return runAction({
     actionName: "integration.get_import_job",
-    actor,
+    permission: "integration:manage",
     input: { jobId },
-    run: async () => {
-      const session = await requirePermission("integration:manage");
-      actor.userId = session.userId;
-      actor.role = session.role;
-
+    execute: async () => {
       const job = await getIntegrationJobQuery(jobId);
       if (!job) throw notFoundError("Import job not found");
-
-      return job;
+      return Ok(job);
     },
   });
 }
@@ -76,17 +60,10 @@ export async function listIntegrationJobs(filters: {
   limit?: number;
   offset?: number;
 }) {
-  const actor = { userId: null as number | null, role: null as Role | null };
-  return runObservedAction({
+  return runAction({
     actionName: "integration.list_jobs",
-    actor,
+    permission: "integration:manage",
     input: {},
-    run: async () => {
-      const session = await requirePermission("integration:manage");
-      actor.userId = session.userId;
-      actor.role = session.role;
-
-      return listIntegrationJobsQuery(filters);
-    },
+    execute: async () => Ok(await listIntegrationJobsQuery(filters)),
   });
 }
