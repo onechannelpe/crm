@@ -13,17 +13,19 @@ vi.mock("../../src/server/shared/action-runtime", () => ({
   runAction: runActionMock,
 }));
 
-vi.mock("../../src/server/team/infrastructure/runtime", () => ({
-  teamRepos: {
-    teams: {
-      findByBranch: teamsFindByBranchMock,
+vi.mock("../../src/server/team/infrastructure/deps", () => ({
+  createTeamDeps: () => ({
+    repos: {
+      teams: {
+        findByBranch: teamsFindByBranchMock,
+      },
     },
-  },
-  createTeamProvisioning: () => ({
-    listPendingInvites: listPendingInvitesMock,
+    createProvisioningService: () => ({
+      listPendingInvites: listPendingInvitesMock,
+    }),
+    enforceInviteCreateRateLimit: vi.fn(),
+    issuePreAuthSession: vi.fn(),
   }),
-  enforceInviteCreateRateLimit: vi.fn(),
-  issuePreAuthTeamSession: vi.fn(),
 }));
 
 import { getInviteManagement } from "../../src/actions/team/read";
