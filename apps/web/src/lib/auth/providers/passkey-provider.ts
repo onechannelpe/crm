@@ -10,7 +10,6 @@ import {
 
 import { env } from "~/lib/env";
 import { getRequestPublicOrigin } from "~/lib/http/public-origin";
-import { asUserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
 
 const rpName = "CRM OneChannel";
@@ -249,7 +248,10 @@ export function createPasskeyProvider(
         verification.authenticationInfo.newCounter,
       );
 
-      return { verified: true, userId: asUserId(passkey.user_id) };
+      return {
+        verified: true,
+        userId: passkey.user_id,
+      };
     },
   };
 }

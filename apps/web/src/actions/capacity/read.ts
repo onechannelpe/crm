@@ -10,7 +10,6 @@ import {
   getPendingCapacityRequests,
 } from "~/server/capacity-admin/read-capacity";
 import { repos } from "~/server/shared/context";
-import { asUserId } from "~/server/shared/ids";
 import { isErr } from "~/server/shared/result";
 
 import { mapCapacityError } from "./errors";
@@ -23,7 +22,7 @@ export async function getManagedExecutivesList() {
 }
 
 export async function getExecutiveDetail(userId: number) {
-  const safeUserId = asUserId(assertPositiveInt(userId, "userId"));
+  const safeUserId = assertPositiveInt(userId, "userId");
   const session = await requirePermission("capacity:read:team");
   const result = await getExecutiveCapacityDetail(session, safeUserId, repos);
   if (isErr(result)) mapCapacityError(result.error);

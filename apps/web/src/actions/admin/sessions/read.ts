@@ -8,10 +8,9 @@ import { assertRecentStrongAuth } from "~/lib/auth/security/step-up";
 import { assertPositiveInt } from "~/lib/contracts/guards";
 import type { UserSession } from "~/lib/db/types";
 import { repos } from "~/server/shared/context";
-import { asUserId } from "~/server/shared/ids";
 
 export async function listUserSessions(userId: number): Promise<UserSession[]> {
-  const safeUserId = asUserId(assertPositiveInt(userId, "userId"));
+  const safeUserId = assertPositiveInt(userId, "userId");
   const session = await requireRole("admin");
   assertRecentStrongAuth(session);
   return repos.sessions.listForUser(safeUserId);

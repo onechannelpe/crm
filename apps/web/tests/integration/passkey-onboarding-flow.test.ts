@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { createPasskeyEnrollmentAuthService } from "../../src/lib/auth/passkey/service";
-import { asUserId } from "../../src/server/shared/ids";
 import { createRepositories } from "../../src/server/shared/registry";
 import { Err, isErr } from "../../src/server/shared/result";
 import { completeAccountOnboardingWithRepos } from "../../src/server/users/service-account-onboarding";
@@ -89,7 +88,7 @@ describe("passkey onboarding flow", () => {
       }
 
       return completeAccountOnboardingWithRepos(transactionRepos, {
-        userId: asUserId(5),
+        userId: 5,
         phoneE164: "+51999888777",
       });
     });

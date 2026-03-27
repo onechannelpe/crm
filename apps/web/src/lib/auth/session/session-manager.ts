@@ -1,7 +1,6 @@
 import type { NewUserSession } from "~/lib/db/types";
 import { createLogger } from "~/lib/observability/logger";
 import { repos } from "~/server/shared/context";
-import { asBranchId, asUserId } from "~/server/shared/ids";
 import type { BranchId, UserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
 
@@ -16,6 +15,7 @@ import {
   type StrongAuthMethod,
 } from "../core/session-contract";
 import { sessionCache } from "./session-cache";
+import { mapUserSessionRowToAuthSession } from "./session-mappers";
 import {
   generateSessionToken,
   hashSessionToken,
@@ -136,8 +136,6 @@ export async function validateSessionToken(
     await sessions.delete(sessionId);
     return { session: null };
   }
-  const onboardingCompleted = dbSession.session_class === "app";
-
   if (now - dbSession.last_activity > ACTIVITY_UPDATE_THRESHOLD) {
     sessions.updateActivity(sessionId, now).catch((error: unknown) => {
       logger.error("update_activity_failed", { sessionId, error });
@@ -152,30 +150,22 @@ export async function validateSessionToken(
     dbSession.expires_at = newExpiry;
   }
 
+  const authSession = mapUserSessionRowToAuthSession(sessionId, dbSession);
+
   sessionCache.set(sessionId, {
-    userId: asUserId(dbSession.user_id),
-    branchId: asBranchId(dbSession.branch_id),
-    role: dbSession.role,
-    onboardingCompleted,
-    sessionClass: dbSession.session_class,
-    primaryAuthMethod: dbSession.primary_auth_method,
-    strongAuthMethod: dbSession.strong_auth_method,
-    strongAuthAt: dbSession.strong_auth_at,
+    userId: authSession.userId,
+    branchId: authSession.branchId,
+    role: authSession.role,
+    onboardingCompleted: authSession.onboardingCompleted,
+    sessionClass: authSession.sessionClass,
+    primaryAuthMethod: authSession.primaryAuthMethod,
+    strongAuthMethod: authSession.strongAuthMethod,
+    strongAuthAt: authSession.strongAuthAt,
     expiresAt: dbSession.expires_at,
   });
 
   return {
-    session: {
-      id: sessionId,
-      userId: asUserId(dbSession.user_id),
-      branchId: asBranchId(dbSession.branch_id),
-      role: dbSession.role,
-      onboardingCompleted,
-      sessionClass: dbSession.session_class,
-      primaryAuthMethod: dbSession.primary_auth_method,
-      strongAuthMethod: dbSession.strong_auth_method,
-      strongAuthAt: dbSession.strong_auth_at,
-    },
+    session: authSession,
   };
 }
 

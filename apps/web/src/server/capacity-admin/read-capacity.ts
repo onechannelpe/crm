@@ -26,7 +26,6 @@ import {
 } from "~/server/search-workflow/read-search-capacity";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { TeamId, UserId } from "~/server/shared/ids";
-import { asUserId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import type { CapacityRequestsRepo } from "./repos";
@@ -184,16 +183,12 @@ export async function getManagedExecutives(
 
     const summaries = await Promise.all(
       users.map(async (user) => {
-        const managed = await canManageExecutive(
-          actor,
-          asUserId(user.id),
-          repos,
-        );
+        const managed = await canManageExecutive(actor, user.id, repos);
         if (!managed.ok) return null;
 
         const [searchStatus, leadStatus] = await Promise.all([
-          getSearchCapacityForUser(asUserId(user.id), repos),
-          getLeadCapacityForUser(asUserId(user.id), repos),
+          getSearchCapacityForUser(user.id, repos),
+          getLeadCapacityForUser(user.id, repos),
         ]);
         if (isErr(searchStatus) || isErr(leadStatus)) return null;
 

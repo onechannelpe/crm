@@ -9,7 +9,6 @@ import {
   updateSearchUserOverride,
 } from "~/server/capacity-admin/manage-capacity";
 import { repos } from "~/server/shared/context";
-import { asBranchId, asTeamId, asUserId } from "~/server/shared/ids";
 import { isErr } from "~/server/shared/result";
 
 import { mapCapacityError } from "./errors";
@@ -20,7 +19,7 @@ export async function updateSearchPolicyOverride(input: {
   monthlySearchLimit: number;
   expiresAt: number | null;
 }) {
-  const safeUserId = asUserId(assertPositiveInt(input.userId, "userId"));
+  const safeUserId = assertPositiveInt(input.userId, "userId");
   const limitResult = parseSearchPolicyLimit(input.monthlySearchLimit);
   if (isErr(limitResult)) mapCapacityError(limitResult.error);
 
@@ -46,7 +45,7 @@ export async function updateLeadPolicyOverride(input: {
   dailyRefillLimit: number;
   expiresAt: number | null;
 }) {
-  const safeUserId = asUserId(assertPositiveInt(input.userId, "userId"));
+  const safeUserId = assertPositiveInt(input.userId, "userId");
   const policyResult = parseLeadPolicyValues({
     activeBufferTarget: input.activeBufferTarget,
     dailyRefillLimit: input.dailyRefillLimit,
@@ -86,13 +85,13 @@ export async function updateSearchScopeDefault_(input: {
       ? {
           actorUserId: session.userId,
           scopeType: "branch" as const,
-          scopeId: asBranchId(safeScopeId),
+          scopeId: safeScopeId,
           monthlyLimit: limitResult.value,
         }
       : {
           actorUserId: session.userId,
           scopeType: "team" as const,
-          scopeId: asTeamId(safeScopeId),
+          scopeId: safeScopeId,
           monthlyLimit: limitResult.value,
         };
 
@@ -125,14 +124,14 @@ export async function updateLeadScopeDefault_(input: {
       ? {
           actorUserId: session.userId,
           scopeType: "branch" as const,
-          scopeId: asBranchId(safeScopeId),
+          scopeId: safeScopeId,
           bufferTarget: policyResult.value.activeBufferTarget,
           dailyLimit: policyResult.value.dailyRefillLimit,
         }
       : {
           actorUserId: session.userId,
           scopeType: "team" as const,
-          scopeId: asTeamId(safeScopeId),
+          scopeId: safeScopeId,
           bufferTarget: policyResult.value.activeBufferTarget,
           dailyLimit: policyResult.value.dailyRefillLimit,
         };

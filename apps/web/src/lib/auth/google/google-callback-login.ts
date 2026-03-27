@@ -1,5 +1,4 @@
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
-import { asUserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
@@ -87,7 +86,7 @@ export async function completeGoogleOAuthCallback(
 
   const loginResult = await submitGoogleLogin(
     {
-      userId: asUserId(user.id),
+      userId: user.id,
       ipAddress: input.ipAddress,
       userAgent: input.userAgent,
       trustedFederatedMfa: false,

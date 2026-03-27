@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 
 import type { Role } from "~/lib/auth/access/rbac";
 import { canManageExecutive } from "~/server/capacity-policy/scope-access";
-import { asBranchId, asUserId } from "~/server/shared/ids";
 
 // Roles that must never be able to manage an executive
 const NON_MANAGER_ROLES = [
@@ -17,9 +16,9 @@ const NON_MANAGER_ROLES = [
 function makeActor(role: Role = "admin", branchId = 1) {
   return {
     sessionId: "test",
-    userId: asUserId(99),
+    userId: 99,
     role,
-    branchId: asBranchId(branchId),
+    branchId,
     onboardingCompleted: true,
     sessionClass: "app" as const,
     primaryAuthMethod: "password" as const,
@@ -58,7 +57,7 @@ describe("canManageExecutive", () => {
             team_id: null,
           };
           const repos = makeRepos(target);
-          const result = await canManageExecutive(actor, asUserId(1), repos);
+          const result = await canManageExecutive(actor, 1, repos);
           return !result.ok;
         },
       ),
@@ -69,7 +68,7 @@ describe("canManageExecutive", () => {
   it("returns ok false when target user does not exist", async () => {
     const actor = makeActor("superuser");
     const repos = makeRepos(undefined);
-    const result = await canManageExecutive(actor, asUserId(1), repos);
+    const result = await canManageExecutive(actor, 1, repos);
     expect(result.ok).toBe(false);
     expect(result.target).toBeNull();
   });
@@ -78,7 +77,7 @@ describe("canManageExecutive", () => {
     const actor = makeActor("admin");
     const target = { role: "back_office", branch_id: 1, team_id: null };
     const repos = makeRepos(target);
-    const result = await canManageExecutive(actor, asUserId(1), repos);
+    const result = await canManageExecutive(actor, 1, repos);
     expect(result.ok).toBe(false);
   });
 
@@ -86,7 +85,7 @@ describe("canManageExecutive", () => {
     const actor = makeActor("superuser", 1);
     const target = { role: "executive", branch_id: 2, team_id: null };
     const repos = makeRepos(target);
-    const result = await canManageExecutive(actor, asUserId(1), repos);
+    const result = await canManageExecutive(actor, 1, repos);
     expect(result.ok).toBe(true);
   });
 
@@ -94,7 +93,7 @@ describe("canManageExecutive", () => {
     const actor = makeActor("admin", 1);
     const target = { role: "executive", branch_id: 1, team_id: null };
     const repos = makeRepos(target);
-    const result = await canManageExecutive(actor, asUserId(1), repos);
+    const result = await canManageExecutive(actor, 1, repos);
     expect(result.ok).toBe(true);
   });
 
@@ -102,7 +101,7 @@ describe("canManageExecutive", () => {
     const actor = makeActor("admin", 1);
     const target = { role: "executive", branch_id: 2, team_id: null };
     const repos = makeRepos(target);
-    const result = await canManageExecutive(actor, asUserId(1), repos);
+    const result = await canManageExecutive(actor, 1, repos);
     expect(result.ok).toBe(false);
   });
 
@@ -116,7 +115,7 @@ describe("canManageExecutive", () => {
         findByIdWithSupervisor: async () => undefined,
       },
     };
-    const result = await canManageExecutive(actor, asUserId(1), repos);
+    const result = await canManageExecutive(actor, 1, repos);
     expect(result.ok).toBe(true);
   });
 
@@ -130,7 +129,7 @@ describe("canManageExecutive", () => {
         findByIdWithSupervisor: async () => undefined,
       },
     };
-    const result = await canManageExecutive(actor, asUserId(1), repos);
+    const result = await canManageExecutive(actor, 1, repos);
     expect(result.ok).toBe(false);
   });
 });

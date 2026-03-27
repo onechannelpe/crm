@@ -7,23 +7,22 @@ import {
   type ApproveRepos,
   type ApproveTransactionRunner,
 } from "~/server/capacity-admin/approve-capacity";
-import { asBranchId, asCapacityRequestId, asUserId } from "~/server/shared/ids";
 
 import {
   makeLeadCapacityGrantsRepo,
   makeSearchCapacityGrantsRepo,
 } from "../support/capacity-fakes";
 
-const ACTOR_USER_ID = asUserId(99);
-const TARGET_USER_ID = asUserId(1);
-const REQUEST_ID = asCapacityRequestId(42);
+const ACTOR_USER_ID = 99;
+const TARGET_USER_ID = 1;
+const REQUEST_ID = 42;
 
 function makeActor(role: Role = "admin") {
   return {
     sessionId: "test",
     userId: ACTOR_USER_ID,
     role,
-    branchId: asBranchId(1),
+    branchId: 1,
     onboardingCompleted: true,
     sessionClass: "app" as const,
     primaryAuthMethod: "password" as const,

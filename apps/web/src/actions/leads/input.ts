@@ -1,6 +1,6 @@
 import type { RequestLeadRefillCommand } from "~/server/lead-workflow/request-refill";
 import { domainError } from "~/server/shared/domain-error";
-import { asBranchId, type UserId } from "~/server/shared/ids";
+import type { UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 export function parseLeadRefillCommand(
@@ -20,5 +20,5 @@ export function parseLeadRefillCommand(
       ),
     );
   }
-  return Ok({ actorUserId, branchId: asBranchId(branchId) });
+  return Ok({ actorUserId, branchId });
 }

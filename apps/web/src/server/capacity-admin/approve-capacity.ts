@@ -13,12 +13,7 @@ import {
   type GrantSearchCapacityCommand,
 } from "~/server/capacity-usage/search-usage";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
-import {
-  asUserId,
-  type CapacityRequestId,
-  type UserId,
-} from "~/server/shared/ids";
-import type { TeamId } from "~/server/shared/ids";
+import type { CapacityRequestId, TeamId, UserId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import { normalizeDecisionNote } from "./domain";
@@ -117,11 +112,7 @@ export async function approveCapacityRequest(
           ),
         );
 
-      const managed = await canManageExecutive(
-        actor,
-        asUserId(request.user_id),
-        txRepos,
-      );
+      const managed = await canManageExecutive(actor, request.user_id, txRepos);
       if (!managed.target)
         rollback(
           domainError(
@@ -152,7 +143,7 @@ export async function approveCapacityRequest(
 
       const grantCmd = {
         actorUserId: command.actorUserId,
-        targetUserId: asUserId(request.user_id),
+        targetUserId: request.user_id,
         amount: request.requested_amount,
         reason: note ?? request.reason,
       };
@@ -221,11 +212,7 @@ export async function rejectCapacityRequest(
           ),
         );
 
-      const managed = await canManageExecutive(
-        actor,
-        asUserId(request.user_id),
-        txRepos,
-      );
+      const managed = await canManageExecutive(actor, request.user_id, txRepos);
       if (!managed.target)
         rollback(
           domainError(

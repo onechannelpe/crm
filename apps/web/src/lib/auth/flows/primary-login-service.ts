@@ -5,7 +5,6 @@ import { authenticatePassword } from "~/lib/auth/providers/password-provider";
 import { sendAlertOnNewLoginSource } from "~/lib/auth/security/login-source-alert";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
-import type { UserId } from "~/server/shared/ids";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
@@ -167,7 +166,7 @@ export async function submitPasswordLogin(
 
 export async function submitGoogleLogin(
   input: {
-    userId: UserId;
+    userId: number;
     ipAddress: string;
     userAgent: string | null;
     trustedFederatedMfa?: boolean;
@@ -175,17 +174,18 @@ export async function submitGoogleLogin(
   deps: LoginFlowDeps,
   sendPrivilegedLoginAlert: SendPrivilegedLoginAlert,
 ): Promise<Result<SubmitPrimaryLoginResult, SubmitPrimaryLoginError>> {
-  const context = await loadActiveAuthContext(input.userId, deps);
+  const proof: Extract<AuthProof, { kind: "google" }> = {
+    kind: "google",
+    userId: input.userId,
+    trustedFederatedMfa: input.trustedFederatedMfa === true,
+  };
+  const context = await loadActiveAuthContext(proof.userId, deps);
   if (!context) {
     return Err({ kind: "invalid_credentials" });
   }
 
   return completePrimaryAuthProof({
-    proof: {
-      kind: "google",
-      userId: input.userId,
-      trustedFederatedMfa: input.trustedFederatedMfa === true,
-    },
+    proof,
     identifier: context.user.username,
     request: {
       ipAddress: input.ipAddress,

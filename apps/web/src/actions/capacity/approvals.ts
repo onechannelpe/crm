@@ -19,16 +19,13 @@ import {
   rateLimitDeps,
   runInRepositoryTransaction,
 } from "~/server/shared/context";
-import { asCapacityRequestId, asUserId } from "~/server/shared/ids";
 import { isErr } from "~/server/shared/result";
 
 import { mapCapacityError } from "./errors";
 import { parseCapacityAmount, parseCapacityReason } from "./input";
 
 export async function approveCapacity(requestId: number, note?: string) {
-  const safeRequestId = asCapacityRequestId(
-    assertPositiveInt(requestId, "requestId"),
-  );
+  const safeRequestId = assertPositiveInt(requestId, "requestId");
   const session = await requirePermission("capacity:approve");
   await checkActionRateLimit("capacity.approve", session.userId, rateLimitDeps);
 
@@ -46,9 +43,7 @@ export async function approveCapacity(requestId: number, note?: string) {
 }
 
 export async function rejectCapacity(requestId: number, note: string) {
-  const safeRequestId = asCapacityRequestId(
-    assertPositiveInt(requestId, "requestId"),
-  );
+  const safeRequestId = assertPositiveInt(requestId, "requestId");
   const safeNote = assertNonEmptyString(note, "note");
   const session = await requirePermission("capacity:approve");
   await checkActionRateLimit("capacity.approve", session.userId, rateLimitDeps);
@@ -67,7 +62,7 @@ export async function grantMoreSearches(
   amount: number,
   reason: string,
 ) {
-  const safeUserId = asUserId(assertPositiveInt(userId, "userId"));
+  const safeUserId = assertPositiveInt(userId, "userId");
   const amountResult = parseCapacityAmount(amount);
   if (isErr(amountResult)) mapCapacityError(amountResult.error);
   const reasonResult = parseCapacityReason(reason);
@@ -94,7 +89,7 @@ export async function grantMoreLeadRefill(
   amount: number,
   reason: string,
 ) {
-  const safeUserId = asUserId(assertPositiveInt(userId, "userId"));
+  const safeUserId = assertPositiveInt(userId, "userId");
   const amountResult = parseCapacityAmount(amount);
   if (isErr(amountResult)) mapCapacityError(amountResult.error);
   const reasonResult = parseCapacityReason(reason);

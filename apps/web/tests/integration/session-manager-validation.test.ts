@@ -11,7 +11,6 @@ import {
   generateSessionToken,
   hashSessionToken,
 } from "../../src/lib/auth/session/tokens";
-import { asBranchId, asUserId } from "../../src/server/shared/ids";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -56,8 +55,8 @@ describe("session manager validation", () => {
   it("returns cached session without reloading the user record", async () => {
     const token = await createSession(
       {
-        userId: asUserId(1),
-        branchId: asBranchId(1),
+        userId: 1,
+        branchId: 1,
         role: "executive",
         sessionClass: "app",
         ipAddress: null,
@@ -81,8 +80,8 @@ describe("session manager validation", () => {
   it("removes cached sessions after explicit invalidation", async () => {
     const token = await createSession(
       {
-        userId: asUserId(1),
-        branchId: asBranchId(1),
+        userId: 1,
+        branchId: 1,
         role: "executive",
         sessionClass: "app",
         ipAddress: null,
@@ -98,7 +97,7 @@ describe("session manager validation", () => {
     const first = await validateSessionToken(token, ctx.repos);
     expect(first.session).not.toBeNull();
 
-    await invalidateUserSessions(asUserId(1), ctx.repos);
+    await invalidateUserSessions(1, ctx.repos);
 
     const second = await validateSessionToken(token, ctx.repos);
     expect(second.session).toBeNull();
@@ -108,8 +107,8 @@ describe("session manager validation", () => {
   it("derives onboarding completion from session class without user lookup", async () => {
     const token = await createSession(
       {
-        userId: asUserId(1),
-        branchId: asBranchId(1),
+        userId: 1,
+        branchId: 1,
         role: "executive",
         sessionClass: "pre_auth",
         ipAddress: null,
