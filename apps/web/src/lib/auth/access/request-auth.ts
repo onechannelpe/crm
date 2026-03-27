@@ -106,7 +106,8 @@ export async function enforceAuthRequest(
 ): Promise<AuthRequestDecision> {
   const url = new URL(event.request.url);
   const requestContext = event.locals?.requestContext;
-  const targetOrigin = requestContext?.publicOrigin ?? getTargetOrigin(event.request);
+  const targetOrigin =
+    requestContext?.publicOrigin ?? getTargetOrigin(event.request);
 
   if (!SAFE_METHODS.has(event.request.method)) {
     const csrfPolicyError = enforceCsrfRequestPolicy(

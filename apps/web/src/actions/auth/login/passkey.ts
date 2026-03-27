@@ -2,7 +2,7 @@
 
 import type { AuthenticationResponseJSON } from "@simplewebauthn/server";
 
-import { createRequestPasskeyProviderFactory } from "~/actions/auth/request-passkey-provider";
+import { createRequestPasskeyProviderFactory } from "~/actions/auth/shared/request-passkey-provider";
 import { internalError } from "~/lib/app-errors";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";

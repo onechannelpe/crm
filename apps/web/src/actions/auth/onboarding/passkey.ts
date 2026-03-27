@@ -2,8 +2,8 @@
 
 import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 
+import { createRequestPasskeyProviderFactory } from "~/actions/auth/shared/request-passkey-provider";
 import { throwDomainError } from "~/actions/throw-domain-error";
-import { createRequestPasskeyProviderFactory } from "~/actions/auth/request-passkey-provider";
 import { internalError } from "~/lib/app-errors";
 import { requireSession } from "~/lib/auth/access/session";
 import type { PasskeyEnrollmentChallenge } from "~/lib/auth/passkey/service";
