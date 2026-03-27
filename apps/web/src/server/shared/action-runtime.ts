@@ -6,6 +6,7 @@ import {
   requireSession as requireSessionActor,
   type SessionData,
 } from "~/lib/auth/access/session";
+import { assertRecentStrongAuth } from "~/lib/auth/security/step-up";
 import { getErrorMessage } from "~/lib/errors";
 import { getRequestContext } from "~/lib/http/request-context";
 import { getActionRequestContext } from "~/lib/observability/context";
@@ -38,14 +39,10 @@ export function createAppContext(actor: SessionData): AppContext {
 }
 
 async function resolveActor(params: {
-  actor?: SessionData;
   permission?: Permission;
   role?: Role;
   requireSession?: boolean;
 }): Promise<SessionData> {
-  if (params.actor) {
-    return params.actor;
-  }
   if (params.permission) {
     return requirePermission(params.permission);
   }
@@ -55,19 +52,22 @@ async function resolveActor(params: {
   if (params.requireSession) {
     return requireSessionActor();
   }
-  throw new Error("runAction requires an actor or auth requirement");
+  throw new Error("runAction requires an auth requirement");
 }
 
 export async function runAction<T, E extends DomainError>(params: {
   actionName: string;
-  actor?: SessionData;
   permission?: Permission;
   role?: Role;
   requireSession?: boolean;
+  stepUp?: "recent_strong_auth";
   input?: unknown;
   execute: (ctx: AppContext) => Promise<Result<T, E>>;
 }): Promise<T> {
   const actor = await resolveActor(params);
+  if (params.stepUp === "recent_strong_auth") {
+    assertRecentStrongAuth(actor);
+  }
   const ctx = createAppContext(actor);
   const startedAt = ctx.now();
 

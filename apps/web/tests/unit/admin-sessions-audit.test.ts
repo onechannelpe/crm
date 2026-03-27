@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   requireRole: vi.fn(),
-  runAction: vi.fn(),
+  recordAction: vi.fn(),
   invalidateSession: vi.fn(),
   invalidateUserSessions: vi.fn(),
   auditCreate: vi.fn(),
@@ -15,8 +15,22 @@ vi.mock("~/lib/auth/access/session", () => ({
   requireRole: mocks.requireRole,
 }));
 
-vi.mock("~/server/shared/action-runtime", () => ({
-  runAction: mocks.runAction,
+vi.mock("~/lib/http/request-context", () => ({
+  getRequestContext: () => ({
+    clientIp: "127.0.0.1",
+    userAgent: "vitest",
+    publicOrigin: "http://localhost:3000",
+  }),
+}));
+
+vi.mock("~/lib/observability/context", () => ({
+  getActionRequestContext: () => ({
+    traceId: "trace-test",
+    requestId: "req-test",
+    routePath: null,
+    httpMethod: null,
+    requestStartedAt: 1_700_000_000_000,
+  }),
 }));
 
 vi.mock("~/lib/auth/session/session-manager", () => ({
@@ -36,6 +50,9 @@ vi.mock("~/server/shared/context", () => ({
       create: mocks.auditCreate,
     },
   },
+  observabilityService: {
+    recordAction: mocks.recordAction,
+  },
 }));
 
 import {
@@ -46,7 +63,7 @@ import {
 describe("admin sessions audit contracts", () => {
   beforeEach(() => {
     mocks.requireRole.mockReset();
-    mocks.runAction.mockReset();
+    mocks.recordAction.mockReset();
     mocks.invalidateSession.mockReset();
     mocks.invalidateUserSessions.mockReset();
     mocks.auditCreate.mockReset();
@@ -65,17 +82,7 @@ describe("admin sessions audit contracts", () => {
       strongAuthMethod: "passkey",
       strongAuthAt: Date.now(),
     });
-    mocks.runAction.mockImplementation(async (params) =>
-      params.execute({
-        actor: params.actor,
-        requestId: "req-test",
-        traceId: "trace-test",
-        ipAddress: "127.0.0.1",
-        userAgent: "vitest",
-        publicOrigin: "http://localhost:3000",
-        now: () => 1_700_000_000_000,
-      }),
-    );
+    mocks.recordAction.mockResolvedValue(undefined);
     mocks.invalidateSession.mockResolvedValue(undefined);
     mocks.invalidateUserSessions.mockResolvedValue(undefined);
     mocks.auditCreate.mockResolvedValue(undefined);
@@ -141,7 +148,7 @@ describe("admin sessions audit contracts", () => {
     expect(changes.revokedBy).toBe(9001);
   });
 
-  it("revokeUserSession throws before any repo call when strong auth is missing", async () => {
+  it("revokeUserSession throws when strong auth is missing and no repo is touched", async () => {
     mocks.requireRole.mockResolvedValue({
       sessionId: "sid-admin",
       userId: 9001,
@@ -151,19 +158,16 @@ describe("admin sessions audit contracts", () => {
       sessionClass: "app",
       primaryAuthMethod: "password",
       strongAuthMethod: null,
-      strongAuthAt: null, // no step-up completed
+      strongAuthAt: null,
     });
 
     await expect(revokeUserSession("session-abc", 42)).rejects.toThrow();
 
-    // Nothing must have been touched! Removing assertRecentStrongAuth would
-    // allow an unauthorized admin to revoke sessions
-    expect(mocks.runAction).not.toHaveBeenCalled();
     expect(mocks.invalidateSession).not.toHaveBeenCalled();
     expect(mocks.auditCreate).not.toHaveBeenCalled();
   });
 
-  it("revokeAllUserSessions throws before any repo call when strong auth is missing", async () => {
+  it("revokeAllUserSessions throws when strong auth is missing and no repo is touched", async () => {
     mocks.requireRole.mockResolvedValue({
       sessionId: "sid-admin",
       userId: 9001,
@@ -178,7 +182,6 @@ describe("admin sessions audit contracts", () => {
 
     await expect(revokeAllUserSessions(77)).rejects.toThrow();
 
-    expect(mocks.runAction).not.toHaveBeenCalled();
     expect(mocks.invalidateUserSessions).not.toHaveBeenCalled();
     expect(mocks.auditCreate).not.toHaveBeenCalled();
   });
