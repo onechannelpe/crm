@@ -1,10 +1,10 @@
 "use server";
 
 import { validationError } from "~/lib/app-errors";
-import { runAction } from "~/server/shared/action-runtime";
 import { createSaleUseCase } from "~/server/sales/application/create-sale";
 import { getSaleDetailQuery } from "~/server/sales/application/get-sale-detail";
 import { listSalesQuery } from "~/server/sales/application/list-sales";
+import { runAction } from "~/server/shared/action-runtime";
 import { Ok } from "~/server/shared/result";
 
 export interface CreateLeadSaleInput {
@@ -26,8 +26,7 @@ export async function createLeadSale(
   if (!input.proveedorActual?.trim())
     throw validationError("proveedorActual is required");
   if (!input.banco?.trim()) throw validationError("banco is required");
-  if (!input.nroCuenta?.trim())
-    throw validationError("nroCuenta is required");
+  if (!input.nroCuenta?.trim()) throw validationError("nroCuenta is required");
   for (const [key, val] of [
     ["tasaActual", input.tasaActual],
     ["gpv", input.gpv],

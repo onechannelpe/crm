@@ -3,10 +3,10 @@
 import { validationError } from "~/lib/app-errors";
 import { LEAD_STATUS_VALUES, PRIORIDAD_VALUES } from "~/lib/db/types";
 import type { LeadStatus, Prioridad } from "~/lib/db/types";
-import { runAction } from "~/server/shared/action-runtime";
 import { listReviewQueueQuery } from "~/server/leads/application/list-review-queue";
 import { reviewLeadPrioridadUseCase } from "~/server/leads/application/review-lead-prioridad";
 import { reviewLeadStatusUseCase } from "~/server/leads/application/review-lead-status";
+import { runAction } from "~/server/shared/action-runtime";
 import { Ok } from "~/server/shared/result";
 
 function isLeadStatus(v: string): v is LeadStatus {
@@ -22,7 +22,8 @@ export async function updateLeadStatus(input: {
   status: string;
   reason: string;
 }): Promise<void> {
-  if (!isLeadStatus(input.status)) throw validationError("Invalid status value");
+  if (!isLeadStatus(input.status))
+    throw validationError("Invalid status value");
   if (!input.reason?.trim()) throw validationError("reason is required");
 
   return runAction({

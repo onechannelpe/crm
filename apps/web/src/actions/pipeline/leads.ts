@@ -5,8 +5,8 @@ import { hasPermission } from "~/lib/auth/access/rbac";
 import { getLeadDetailQuery } from "~/server/leads/application/get-lead-detail";
 import { listLeadsQuery } from "~/server/leads/application/list-leads";
 import { registerLeadUseCase } from "~/server/leads/application/register-lead";
-import { pipelineRepos } from "~/server/shared/pipeline-runtime";
 import { runAction } from "~/server/shared/action-runtime";
+import { pipelineRepos } from "~/server/shared/pipeline-runtime";
 import { Ok } from "~/server/shared/result";
 
 export interface RegisterLeadInput {

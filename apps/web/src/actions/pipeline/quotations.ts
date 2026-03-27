@@ -1,11 +1,11 @@
 "use server";
 
 import { validationError } from "~/lib/app-errors";
-import { runAction } from "~/server/shared/action-runtime";
 import { getLeadDetailQuery } from "~/server/leads/application/get-lead-detail";
 import { approveForSaleUseCase } from "~/server/quotations/application/approve-for-sale";
 import { createQuotationUseCase } from "~/server/quotations/application/create-quotation";
 import { listQuotationQueueQuery } from "~/server/quotations/application/list-quotation-queue";
+import { runAction } from "~/server/shared/action-runtime";
 import { isErr, Ok } from "~/server/shared/result";
 
 export interface CreateQuotationInput {
@@ -25,7 +25,12 @@ export async function createQuotation(
     throw validationError("moneda must be PEN or USD");
   }
   for (const [key, val] of Object.entries(input)) {
-    if (key !== "leadId" && key !== "moneda" && typeof val === "number" && val < 0) {
+    if (
+      key !== "leadId" &&
+      key !== "moneda" &&
+      typeof val === "number" &&
+      val < 0
+    ) {
       throw validationError(`${key} must be non-negative`);
     }
   }
@@ -73,7 +78,10 @@ export async function getLeadQuotations(leadId: number) {
         actorRole: ctx.actor.role,
       });
       if (isErr(result)) return result;
-      return Ok({ lead: result.value.lead, quotations: result.value.quotations });
+      return Ok({
+        lead: result.value.lead,
+        quotations: result.value.quotations,
+      });
     },
   });
 }
