@@ -1,16 +1,12 @@
 import type { SessionData } from "~/lib/auth/access/session";
-import type { CapacityRequestKind } from "~/server/capacity/types";
 import { canManageExecutive } from "~/server/capacity-policy/scope-access";
-import {
-  grantLeadCapacity,
-} from "~/server/capacity-usage/lead-usage";
+import { grantLeadCapacity } from "~/server/capacity-usage/lead-usage";
 import type {
   LeadCapacityGrantsRepo,
   SearchCapacityGrantsRepo,
 } from "~/server/capacity-usage/repos";
-import {
-  grantSearchCapacity,
-} from "~/server/capacity-usage/search-usage";
+import { grantSearchCapacity } from "~/server/capacity-usage/search-usage";
+import type { CapacityRequestKind } from "~/server/capacity/types";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { CapacityRequestId, TeamId, UserId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";

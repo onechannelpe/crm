@@ -2,15 +2,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { Ok } from "../../src/server/shared/result";
 
-const {
-  runActionMock,
-  teamsFindByBranchMock,
-  listPendingInvitesMock,
-} = vi.hoisted(() => ({
-  runActionMock: vi.fn(),
-  teamsFindByBranchMock: vi.fn(),
-  listPendingInvitesMock: vi.fn(),
-}));
+const { runActionMock, teamsFindByBranchMock, listPendingInvitesMock } =
+  vi.hoisted(() => ({
+    runActionMock: vi.fn(),
+    teamsFindByBranchMock: vi.fn(),
+    listPendingInvitesMock: vi.fn(),
+  }));
 
 vi.mock("../../src/server/shared/action-runtime", () => ({
   runAction: runActionMock,

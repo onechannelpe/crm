@@ -3,11 +3,11 @@
 import { validationError } from "~/lib/app-errors";
 import { assertRecentStrongAuth } from "~/lib/auth/security/step-up";
 import type { ActionSuccess } from "~/lib/contracts/common";
-import { runAction } from "~/server/shared/action-runtime";
 import {
   revokeAllUserSessions as revokeAllUserSessionsService,
   revokeUserSession as revokeUserSessionService,
 } from "~/server/auth/service-admin-sessions";
+import { runAction } from "~/server/shared/action-runtime";
 import { isErr } from "~/server/shared/result";
 
 import {

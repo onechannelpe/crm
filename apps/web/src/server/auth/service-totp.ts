@@ -1,5 +1,6 @@
 import QRCode from "qrcode";
 
+import { issueSessionTransition } from "~/lib/auth/session/session-transition";
 import {
   decryptTotpSecret,
   encryptTotpSecret,
@@ -9,15 +10,12 @@ import {
   generateTotpSecret,
   verifyTotpCode,
 } from "~/lib/auth/totp/totp";
-import { issueSessionTransition } from "~/lib/auth/session/session-transition";
 import type { AppContext } from "~/server/shared/action-runtime";
 import { repos } from "~/server/shared/context";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-export async function beginTotpEnrollment(
-  ctx: AppContext,
-): Promise<
+export async function beginTotpEnrollment(ctx: AppContext): Promise<
   Result<
     {
       otpauthUri: string;
@@ -52,7 +50,9 @@ export async function beginTotpEnrollment(
 export async function finishTotpEnrollment(
   ctx: AppContext,
   input: { code: string },
-): Promise<Result<{ recoveryCodes: string[]; sessionToken: string }, DomainError>> {
+): Promise<
+  Result<{ recoveryCodes: string[]; sessionToken: string }, DomainError>
+> {
   const user = await repos.users.findById(ctx.actor.userId);
   const factor = await repos.userTotpFactors.findByUserId(ctx.actor.userId);
   if (!user || !factor) {
@@ -65,9 +65,8 @@ export async function finishTotpEnrollment(
     );
   }
 
-  const { generateRecoveryCodes, hashRecoveryCodes } = await import(
-    "~/lib/auth/totp/recovery-codes"
-  );
+  const { generateRecoveryCodes, hashRecoveryCodes } =
+    await import("~/lib/auth/totp/recovery-codes");
   const secret = await decryptTotpSecret(factor.secret_encrypted);
   if (!verifyTotpCode(secret, input.code)) {
     return Err(

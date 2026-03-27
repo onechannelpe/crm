@@ -53,7 +53,10 @@ export async function completeAccountOnboardingWithRepos(
     }
 
     const strongAuthStatus = await getStrongAuthStatus(input.userId, repos);
-    if (requiresStrongAuthRole(user.role) && !strongAuthStatus.hasVerifiedStrongAuth) {
+    if (
+      requiresStrongAuthRole(user.role) &&
+      !strongAuthStatus.hasVerifiedStrongAuth
+    ) {
       return Err({
         kind: "conflict",
         code: "strong_auth_required",

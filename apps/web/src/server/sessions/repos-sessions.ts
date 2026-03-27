@@ -1,7 +1,7 @@
 import { sql, type Kysely } from "kysely";
 
-import type { Database, NewUserSession, UserSession } from "~/lib/db/types";
 import type { Role } from "~/lib/auth/access/rbac";
+import type { Database, NewUserSession, UserSession } from "~/lib/db/types";
 
 export function createSessionRepository(db: Kysely<Database>) {
   return {

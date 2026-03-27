@@ -1,11 +1,11 @@
 import { throwDomainError } from "~/actions/throw-domain-error";
+import type { Permission, Role } from "~/lib/auth/access/rbac";
 import {
   requirePermission,
   requireRole,
   requireSession as requireSessionActor,
   type SessionData,
 } from "~/lib/auth/access/session";
-import type { Permission, Role } from "~/lib/auth/access/rbac";
 import { getErrorMessage } from "~/lib/errors";
 import { getRequestContext } from "~/lib/http/request-context";
 import { getActionRequestContext } from "~/lib/observability/context";

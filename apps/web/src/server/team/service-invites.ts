@@ -16,7 +16,9 @@ import type {
 
 type TeamInviteRepos = {
   teams: {
-    findByBranch(branchId: number): Promise<Array<{ id: number; name: string }>>;
+    findByBranch(
+      branchId: number,
+    ): Promise<Array<{ id: number; name: string }>>;
   };
   userInvites: {
     findPendingByTokenHash(
@@ -35,9 +37,7 @@ type TeamInviteRepos = {
     findById(inviteId: number): Promise<{ user_id: number } | undefined>;
   };
   users: {
-    findById(
-      userId: number,
-    ): Promise<
+    findById(userId: number): Promise<
       | {
           email: string;
           names: string;

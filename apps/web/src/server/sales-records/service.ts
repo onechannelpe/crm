@@ -1,6 +1,6 @@
+import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
 import { computeClientCompletenessScore } from "~/server/sales/completeness";
 import type { AppContext } from "~/server/shared/action-runtime";
-import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
 import { rateLimitDeps, salesRecordsService } from "~/server/shared/context";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 
@@ -50,7 +50,11 @@ export async function submitRecord(
   ctx: AppContext,
   input: { recordId: number },
 ) {
-  await checkActionRateLimit("sales_records.submit", ctx.actor.userId, rateLimitDeps);
+  await checkActionRateLimit(
+    "sales_records.submit",
+    ctx.actor.userId,
+    rateLimitDeps,
+  );
   const result = await salesRecordsService.submit(
     input.recordId,
     ctx.actor.userId,

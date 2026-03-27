@@ -2,11 +2,11 @@
 
 import { replaceCurrentSession } from "~/lib/auth/session/session-transition";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
-import { runAction } from "~/server/shared/action-runtime";
 import {
   beginTotpEnrollment as beginTotpEnrollmentService,
   finishTotpEnrollment as finishTotpEnrollmentService,
 } from "~/server/auth/service-totp";
+import { runAction } from "~/server/shared/action-runtime";
 
 export async function beginTotpEnrollment(): Promise<{
   otpauthUri: string;

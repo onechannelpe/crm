@@ -35,7 +35,9 @@ export async function listUserSessions(
   return Ok(await repos.sessions.listForUser(input.userId));
 }
 
-export async function countActiveSessions(): Promise<Result<number, DomainError>> {
+export async function countActiveSessions(): Promise<
+  Result<number, DomainError>
+> {
   return Ok(await repos.sessions.countActive());
 }
 
