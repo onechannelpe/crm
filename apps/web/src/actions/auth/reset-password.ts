@@ -9,6 +9,7 @@ import {
   hashPasswordResetToken,
   isValidPasswordResetTokenFormat,
 } from "~/lib/auth/password/reset-tokens";
+import { getRequestPublicOrigin } from "~/lib/http/public-origin";
 import { repos, notificationSender } from "~/server/shared/context";
 
 const TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
@@ -16,8 +17,8 @@ const MAX_REQUESTS_PER_HOUR = 3;
 
 function getOrigin(): string {
   const event = getRequestEvent();
-  if (!event?.request.url) return "";
-  return new URL(event.request.url).origin;
+  if (!event?.request) return "";
+  return getRequestPublicOrigin(event.request);
 }
 
 export type RequestPasswordResetResult =

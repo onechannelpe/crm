@@ -13,6 +13,13 @@ export async function cleanupExpiredSessions(): Promise<void> {
   }
 }
 
+export async function cleanupExpiredRequestSessions(): Promise<void> {
+  const deleted = await repos.requestSessions.deleteExpired();
+  if (deleted > 0) {
+    logger.info("expired_request_sessions_deleted", { deleted });
+  }
+}
+
 export async function cleanupExpiredWebauthnChallenges(): Promise<void> {
   const deleted = await repos.webauthnChallenges.deleteExpired();
   if (deleted > 0) {
@@ -76,6 +83,9 @@ export function startSessionCleanupScheduler(intervalMs = 60 * 60 * 1000) {
   setInterval(() => {
     cleanupExpiredSessions().catch((error: unknown) => {
       logger.error("expired_sessions_cleanup_failed", { error });
+    });
+    cleanupExpiredRequestSessions().catch((error: unknown) => {
+      logger.error("expired_request_sessions_cleanup_failed", { error });
     });
     cleanupExpiredWebauthnChallenges().catch((error: unknown) => {
       logger.error("webauthn_challenges_cleanup_failed", { error });

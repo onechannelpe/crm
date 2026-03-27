@@ -57,7 +57,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("strong_auth_at", "integer")
     .addColumn("ip_address", "text")
     .addColumn("user_agent", "text")
-    .addColumn("csrf_token", "text", (col) => col.notNull())
     .addColumn("created_at", "integer", (col) => col.notNull())
     .addColumn("last_activity", "integer", (col) => col.notNull())
     .addColumn("expires_at", "integer", (col) => col.notNull())
@@ -72,6 +71,21 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createIndex("idx_user_sessions_expires_at")
     .on("user_sessions")
+    .column("expires_at")
+    .execute();
+
+  await db.schema
+    .createTable("request_sessions")
+    .addColumn("id", "text", (col) => col.primaryKey())
+    .addColumn("csrf_token", "text", (col) => col.notNull())
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("last_activity", "integer", (col) => col.notNull())
+    .addColumn("expires_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await db.schema
+    .createIndex("idx_request_sessions_expires_at")
+    .on("request_sessions")
     .column("expires_at")
     .execute();
 

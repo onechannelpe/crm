@@ -115,12 +115,9 @@ export async function enforceAuthRequest(
     }
 
     const csrfToken = event.locals?.requestContext?.csrfToken;
-    const isAnonymous = event.locals?.requestContext?.authState === "anonymous";
-    const isCsrfValid = isAnonymous
-      ? true
-      : csrfToken
-        ? await verifyCsrf(event.request, csrfToken)
-        : false;
+    const isCsrfValid = csrfToken
+      ? await verifyCsrf(event.request, csrfToken)
+      : false;
     if (!isCsrfValid) {
       return {
         kind: "reject",

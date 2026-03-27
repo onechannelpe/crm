@@ -664,6 +664,13 @@ export interface UserSessionsTable {
   strong_auth_at: number | null;
   ip_address: string | null;
   user_agent: string | null;
+  created_at: number;
+  last_activity: number;
+  expires_at: number;
+}
+
+export interface RequestSessionsTable {
+  id: string;
   csrf_token: string;
   created_at: number;
   last_activity: number;
@@ -890,6 +897,7 @@ export interface Database {
   search_policy_defaults: SearchPolicyDefaultsTable;
   search_policy_overrides: SearchPolicyOverridesTable;
   user_sessions: UserSessionsTable;
+  request_sessions: RequestSessionsTable;
   action_rate_limit_counters: ActionRateLimitCountersTable;
   auth_throttle_counters: AuthThrottleCountersTable;
   auth_events: AuthEventsTable;
@@ -985,6 +993,7 @@ export type SearchEnrichmentJob = Selectable<SearchEnrichmentJobsTable>;
 export type SearchEnrichmentOverlay = Selectable<SearchEnrichmentOverlaysTable>;
 export type Passkey = Selectable<PasskeysTable>;
 export type UserSession = Selectable<UserSessionsTable>;
+export type RequestSession = Selectable<RequestSessionsTable>;
 export type AuthThrottleCounter = Selectable<AuthThrottleCountersTable>;
 export type AuthEvent = Selectable<AuthEventsTable>;
 export type UserTotpFactor = Selectable<UserTotpFactorsTable>;
@@ -1006,6 +1015,7 @@ export type NewClientSearchView = Insertable<ClientSearchViewsTable>;
 export type NewSearchPolicyDefault = Insertable<SearchPolicyDefaultsTable>;
 export type NewSearchPolicyOverride = Insertable<SearchPolicyOverridesTable>;
 export type NewUserSession = Insertable<UserSessionsTable>;
+export type NewRequestSession = Insertable<RequestSessionsTable>;
 export type NewAuthThrottleCounter = Insertable<AuthThrottleCountersTable>;
 export type NewAuthEvent = Insertable<AuthEventsTable>;
 export type NewUserTotpFactor = Insertable<UserTotpFactorsTable>;

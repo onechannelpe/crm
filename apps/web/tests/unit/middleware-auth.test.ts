@@ -19,7 +19,6 @@ function createSession(
     userId: asUserId(1),
     branchId: asBranchId(1),
     role,
-    csrfToken: "csrf-token",
     onboardingCompleted,
     sessionClass: onboardingCompleted ? "app" : "pre_auth",
     primaryAuthMethod: "password",
@@ -28,7 +27,10 @@ function createSession(
   };
 }
 
-function createRequestContext(session: AuthSession | null): RequestContext {
+function createRequestContext(
+  session: AuthSession | null,
+  csrfToken: string | null = "csrf-token",
+): RequestContext {
   return {
     publicOrigin: "http://localhost:3000",
     clientIp: "127.0.0.1",
@@ -41,7 +43,7 @@ function createRequestContext(session: AuthSession | null): RequestContext {
       requestStartedAt: Date.now(),
     },
     authState: session?.sessionClass ?? "anonymous",
-    csrfToken: session?.csrfToken ?? null,
+    csrfToken,
     session,
   };
 }
@@ -107,6 +109,23 @@ describe("auth middleware request guard", () => {
     );
 
     expect(error).toBe("CSRF validation failed (Origin missing)");
+  });
+
+  it("rejects anonymous unsafe requests without a synchronizer token", async () => {
+    const decision = await enforceAuthRequest({
+      request: new Request("http://localhost:3000/login", {
+        method: "POST",
+        headers: {
+          origin: "http://localhost:3000",
+        },
+      }),
+      locals: {
+        nonce: "nonce",
+        requestContext: createRequestContext(null, null),
+      },
+    });
+
+    expect(decision.kind).toBe("reject");
   });
 
   it("uses the forwarded public origin behind a trusted proxy", () => {
