@@ -1,7 +1,8 @@
 import { createAsync, useNavigate, useParams } from "@solidjs/router";
 import { Show, createSignal } from "solid-js";
 
-import { acceptTeamInvite, getInviteInfo } from "~/actions/team";
+import { acceptTeamInvite } from "~/actions/team/acceptance";
+import { getInviteInfo } from "~/actions/team/invites";
 import { useToast } from "~/components/feedback/toast-provider";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";

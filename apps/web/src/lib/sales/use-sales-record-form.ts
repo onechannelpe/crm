@@ -5,7 +5,7 @@ import type {
   SalesRecordAddressInput,
   SalesRecordClientInput,
   SalesRecordProductInput,
-} from "~/actions/sales-records";
+} from "~/actions/sales-records/types";
 
 export interface ProductLine {
   productId: number;

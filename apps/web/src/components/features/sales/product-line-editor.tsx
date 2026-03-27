@@ -1,6 +1,6 @@
 import { createSignal, For, Show } from "solid-js";
 
-import type { SalesRecordProductOption } from "~/actions/sales-records";
+import type { SalesRecordProductOption } from "~/actions/sales-records/types";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { Select } from "~/components/ui/input/select";

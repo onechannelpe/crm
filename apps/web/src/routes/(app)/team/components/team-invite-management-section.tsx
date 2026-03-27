@@ -6,7 +6,7 @@ import {
 } from "@solidjs/router";
 import { For, Show, createEffect, createSignal, on } from "solid-js";
 
-import { createTeamInvite } from "~/actions/team";
+import { createTeamInvite } from "~/actions/team/invites";
 import type { InviteManagement } from "~/actions/team/types";
 import { EmptyState } from "~/components/feedback/empty-state";
 import { useToast } from "~/components/feedback/toast-provider";
