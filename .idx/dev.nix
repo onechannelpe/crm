@@ -10,9 +10,7 @@
     pkgs.pkg-config
   ];
 
-  env = {
-    PATH = "$HOME/.local/share/mise/shims:$PATH";
-  };
+  env = {};
 
   idx = {
     extensions = [];
@@ -25,6 +23,7 @@
             "sh"
             "-c"
             ''
+              export PATH="$HOME/.local/share/mise/shims:$PATH"
               bun run --cwd apps/web migrate
               bun run --cwd apps/web seed
               exec bun run --cwd apps/web dev:server -- --host 0.0.0.0 --port "$PORT"
@@ -43,6 +42,7 @@
       onCreate = {
         bootstrap = ''
           set -eu
+          export PATH="$HOME/.local/share/mise/shims:$PATH"
 
           if [ ! -f .env ]; then
             cp .env.example .env
@@ -91,7 +91,10 @@
       };
 
       onStart = {
-        engine = "cargo run -p engine --bin engine";
+        engine = ''
+          export PATH="$HOME/.local/share/mise/shims:$PATH"
+          cargo run -p engine --bin engine
+        '';
       };
     };
   };
