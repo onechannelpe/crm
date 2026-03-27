@@ -68,11 +68,11 @@ export function parseCapacityGrantInput(input: {
   try {
     const userId = assertPositiveInt(input.userId, "userId");
     const amountResult = parseCapacityAmount(input.amount);
-    if (amountResult.ok === false) {
+    if (!amountResult.ok) {
       return amountResult;
     }
     const reasonResult = parseCapacityReason(input.reason);
-    if (reasonResult.ok === false) {
+    if (!reasonResult.ok) {
       return reasonResult;
     }
     return Ok({
@@ -147,7 +147,7 @@ export function parseSearchPolicyOverrideInput(input: {
   try {
     const userId = assertPositiveInt(input.userId, "userId");
     const limitResult = parseSearchPolicyLimit(input.monthlySearchLimit);
-    if (limitResult.ok === false) {
+    if (!limitResult.ok) {
       return limitResult;
     }
     return Ok({
@@ -234,7 +234,7 @@ export function parseLeadPolicyOverrideInput(input: {
       activeBufferTarget: input.activeBufferTarget,
       dailyRefillLimit: input.dailyRefillLimit,
     });
-    if (valuesResult.ok === false) {
+    if (!valuesResult.ok) {
       return valuesResult;
     }
     return Ok({
