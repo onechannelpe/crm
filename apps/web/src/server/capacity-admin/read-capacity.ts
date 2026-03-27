@@ -1,3 +1,4 @@
+import type { Role } from "~/lib/auth/access/rbac";
 import type { SessionData } from "~/lib/auth/access/session";
 import { longName } from "~/lib/users/display-name";
 import { AUDIT_READER_DEFAULT_LIMIT } from "~/server/audit-reader/contracts";
@@ -90,7 +91,7 @@ interface ReadRepos {
     findById(id: UserId): Promise<
       | {
           id: number;
-          role: string;
+          role: Role;
           branch_id: number;
           team_id: number | null;
           names: string;

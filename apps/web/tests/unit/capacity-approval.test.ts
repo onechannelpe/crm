@@ -58,7 +58,7 @@ function makeCapacityRequestsRepo(request: RequestRow | undefined) {
   };
 }
 
-function makeUsersRepo(role = "executive", branchId = 1) {
+function makeUsersRepo(role: Role = "executive", branchId = 1) {
   return {
     findById: async () => ({ role, branch_id: branchId, team_id: null }),
   };

@@ -1,3 +1,4 @@
+import type { Role } from "~/lib/auth/access/rbac";
 import type { SessionData } from "~/lib/auth/access/session";
 import { canManageExecutive } from "~/server/capacity-policy/scope-access";
 import { grantLeadCapacity } from "~/server/capacity-usage/lead-usage";
@@ -55,7 +56,7 @@ export interface ApproveRepos {
     findById(
       id: UserId,
     ): Promise<
-      { role: string; branch_id: number; team_id: number | null } | undefined
+      { role: Role; branch_id: number; team_id: number | null } | undefined
     >;
   };
   teams: {
