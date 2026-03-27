@@ -5,9 +5,7 @@ import { redirect } from "@solidjs/router";
 import { createRequestPasskeyProviderFactory } from "~/actions/auth/shared/request-passkey-provider";
 import { internalError } from "~/lib/app-errors";
 import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
-import {
-  submitPasswordLogin,
-} from "~/lib/auth/flows/primary-login-service";
+import { submitPasswordLogin } from "~/lib/auth/flows/primary-login-service";
 import { submitTotpForLoginFlow } from "~/lib/auth/flows/totp-step-up-service";
 import {
   createPasskeyLoginStartAuthService,

@@ -1,7 +1,10 @@
 import { useNavigate } from "@solidjs/router";
 import { createEffect, createMemo, createSignal } from "solid-js";
 
-import { completeOnboarding, completePasskeyOnboarding } from "~/actions/auth/onboarding";
+import {
+  completeOnboarding,
+  completePasskeyOnboarding,
+} from "~/actions/auth/onboarding";
 import { beginPasskeyRegistration } from "~/actions/auth/onboarding/passkey";
 import { useTotpEnrollment } from "~/components/auth/security-enrollment/use-totp-enrollment";
 import { useToast } from "~/components/feedback/toast-provider";
