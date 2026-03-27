@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   requireRole: vi.fn(),
+  invalidateSession: vi.fn(),
   invalidateUserSessions: vi.fn(),
-  sessionsDelete: vi.fn(),
   auditCreate: vi.fn(),
   revokeInstallationSessionsByAuthSession: vi.fn(),
   revokeInstallationSessionsByUser: vi.fn(),
@@ -15,17 +15,12 @@ vi.mock("~/lib/auth/access/session", () => ({
 }));
 
 vi.mock("~/lib/auth/session/session-manager", () => ({
+  invalidateSession: mocks.invalidateSession,
   invalidateUserSessions: mocks.invalidateUserSessions,
 }));
 
 vi.mock("~/server/shared/context", () => ({
   repos: {
-    sessions: {
-      delete: mocks.sessionsDelete,
-      listForUser: vi.fn(),
-      countActive: vi.fn(),
-      db: {},
-    },
     extensionRuntime: {
       revokeInstallationSessionsByAuthSession:
         mocks.revokeInstallationSessionsByAuthSession,
@@ -46,8 +41,8 @@ import {
 describe("admin sessions audit contracts", () => {
   beforeEach(() => {
     mocks.requireRole.mockReset();
+    mocks.invalidateSession.mockReset();
     mocks.invalidateUserSessions.mockReset();
-    mocks.sessionsDelete.mockReset();
     mocks.auditCreate.mockReset();
     mocks.revokeInstallationSessionsByAuthSession.mockReset();
     mocks.revokeInstallationSessionsByUser.mockReset();
@@ -64,7 +59,7 @@ describe("admin sessions audit contracts", () => {
       strongAuthMethod: "passkey",
       strongAuthAt: Date.now(),
     });
-    mocks.sessionsDelete.mockResolvedValue(undefined);
+    mocks.invalidateSession.mockResolvedValue(undefined);
     mocks.invalidateUserSessions.mockResolvedValue(undefined);
     mocks.auditCreate.mockResolvedValue(undefined);
     mocks.revokeInstallationSessionsByAuthSession.mockResolvedValue(undefined);
@@ -75,7 +70,7 @@ describe("admin sessions audit contracts", () => {
   it("logs revokeUserSession with actor as user_id and target as entity_id", async () => {
     await revokeUserSession("session-abc", 42);
 
-    expect(mocks.sessionsDelete).toHaveBeenCalledWith("session-abc");
+    expect(mocks.invalidateSession).toHaveBeenCalledWith("session-abc");
     expect(mocks.revokeInstallationSessionsByAuthSession).toHaveBeenCalledWith(
       "session-abc",
       expect.any(Number),
@@ -146,7 +141,7 @@ describe("admin sessions audit contracts", () => {
 
     // Nothing must have been touched! Removing assertRecentStrongAuth would
     // allow an unauthorized admin to revoke sessions
-    expect(mocks.sessionsDelete).not.toHaveBeenCalled();
+    expect(mocks.invalidateSession).not.toHaveBeenCalled();
     expect(mocks.auditCreate).not.toHaveBeenCalled();
   });
 
