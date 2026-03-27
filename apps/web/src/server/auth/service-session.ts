@@ -5,66 +5,62 @@ import {
 } from "~/lib/auth/security/strong-auth-status";
 import { deleteSessionCookie } from "~/lib/auth/session/cookies";
 import { invalidateSession } from "~/lib/auth/session/session-manager";
+import type { AppContext } from "~/server/shared/action-runtime";
 import { repos } from "~/server/shared/context";
+import type { DomainError } from "~/server/shared/domain-error";
+import { Ok, type Result } from "~/server/shared/result";
 
 import type { CurrentUserView } from "./types";
 
 export async function logoutUser(
-  session: {
-    id: string;
-    userId: number;
-  } | null,
-): Promise<void> {
-  if (!session) {
-    deleteSessionCookie();
-    return;
-  }
+  ctx: AppContext,
+): Promise<Result<void, DomainError>> {
+  const { sessionId, userId } = ctx.actor;
 
-  await invalidateSession(session.id);
+  await invalidateSession(sessionId);
   await repos.extensionRuntime.revokeInstallationSessionsByAuthSession(
-    session.id,
-    Date.now(),
+    sessionId,
+    ctx.now(),
   );
   await repos.extensionRuntime.updateExecutiveSyncHealthByUser({
-    user_id: session.userId,
+    user_id: userId,
     sync_health: "reauth_required",
-    sync_updated_at: Date.now(),
+    sync_updated_at: ctx.now(),
   });
   deleteSessionCookie();
   await repos.auditLogs.create({
-    user_id: session.userId,
+    user_id: userId,
     action: "logout",
     entity_type: "user",
-    entity_id: session.userId,
+    entity_id: userId,
     changes: null,
-    created_at: Date.now(),
+    created_at: ctx.now(),
   });
+
+  return Ok(undefined);
 }
 
 export async function getCurrentUser(
-  session: {
-    userId: number;
-    role: CurrentUserView["role"];
-    sessionClass: CurrentUserView["sessionClass"];
-    primaryAuthMethod: CurrentUserView["primaryAuthMethod"];
-    strongAuthMethod: CurrentUserView["strongAuthMethod"];
-  } | null,
-): Promise<CurrentUserView | null> {
-  if (!session) return null;
+  ctx: AppContext,
+): Promise<Result<CurrentUserView | null, DomainError>> {
+  const { userId, role, sessionClass, primaryAuthMethod, strongAuthMethod } =
+    ctx.actor;
 
-  const user = await repos.users.findById(session.userId);
-  if (!user) return null;
-  const strongAuthStatus = await getStrongAuthStatus(session.userId, repos);
+  const user = await repos.users.findById(userId);
+  if (!user) return Ok(null);
+
+  const strongAuthStatus = await getStrongAuthStatus(userId, repos);
 
   const [branch, assignedTeam, managedTeam] = await Promise.all([
     repos.branches.findById(user.branch_id),
     user.team_id ? repos.teams.findByIdWithSupervisor(user.team_id) : null,
-    session.role === "supervisor"
+    role === "supervisor"
       ? repos.teams.findBySupervisorId(user.id)
       : Promise.resolve(null),
   ]);
+
   const workspace = resolveWorkspaceContext({
-    role: session.role,
+    role,
     userId: user.id,
     branchId: user.branch_id,
     branchName: branch?.name ?? null,
@@ -90,7 +86,7 @@ export async function getCurrentUser(
       : null,
   });
 
-  return {
+  return Ok({
     id: user.id,
     email: user.email,
     names: user.names,
@@ -102,19 +98,19 @@ export async function getCurrentUser(
       : null,
     avatarVersion: user.avatar_version,
     onboardingCompletedAt: user.onboarding_completed_at,
-    role: session.role,
+    role,
     strongAuthRequired: requiresStrongAuthRole(user.role),
     strongAuthConfigured: strongAuthStatus.hasVerifiedStrongAuth,
     totpEnabled: strongAuthStatus.hasTotp,
     hasPasskey: strongAuthStatus.hasPasskey,
     passkeyCount: strongAuthStatus.passkeyCount,
-    sessionClass: session.sessionClass,
-    primaryAuthMethod: session.primaryAuthMethod,
-    strongAuthMethod: session.strongAuthMethod,
+    sessionClass,
+    primaryAuthMethod,
+    strongAuthMethod,
     branchId: user.branch_id,
     scopeType: workspace.scopeType,
     team: workspace.team,
     supervisor: workspace.supervisor,
     branch: workspace.branch,
-  };
+  });
 }
