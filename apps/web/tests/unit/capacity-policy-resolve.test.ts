@@ -4,7 +4,7 @@ import { describe, it } from "vitest";
 import {
   resolveLeadPolicy,
   resolveSearchPolicy,
-} from "~/server/capacity-policy/domain";
+} from "~/server/capacity/domain/policy";
 
 const optionalSearchRow = fc.option(fc.record({ search_limit: fc.nat() }), {
   nil: null,

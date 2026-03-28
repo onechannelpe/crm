@@ -1,6 +1,8 @@
 import { createSignal, onCleanup } from "solid-js";
 import type { Accessor } from "solid-js";
 
+import { isPlainRecord } from "~/lib/type-guards";
+
 import { getExtensionId, isRuntimeResponse } from "./runtime";
 import type { ExtensionExecutiveState } from "./runtime";
 
@@ -15,19 +17,15 @@ interface ChromeRuntimeConnectApi {
   connect(extensionId: string, connectInfo?: { name?: string }): ChromePort;
 }
 
-function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
 function isChromeRuntimeConnectApi(
   value: unknown,
 ): value is ChromeRuntimeConnectApi {
-  return isObject(value) && typeof value.connect === "function";
+  return isPlainRecord(value) && typeof value.connect === "function";
 }
 
 function getChromeRuntimeConnectApi(): ChromeRuntimeConnectApi | null {
   const chromeValue = Reflect.get(globalThis, "chrome");
-  if (!isObject(chromeValue)) return null;
+  if (!isPlainRecord(chromeValue)) return null;
   const runtimeValue = Reflect.get(chromeValue, "runtime");
   if (!isChromeRuntimeConnectApi(runtimeValue)) return null;
   return runtimeValue;

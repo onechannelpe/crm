@@ -6,8 +6,8 @@ import { hashPassword } from "~/lib/auth/password/password";
 import { setSessionCookie } from "~/lib/auth/session/cookies";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { isErr } from "~/server/shared/result";
-import { createTeamAcceptanceRuntime } from "~/server/team/runtime";
-import { acceptTeamInvite as acceptTeamInviteService } from "~/server/team/service-acceptance";
+import { acceptTeamInvite as acceptTeamInviteService } from "~/server/team/application/invites";
+import { createTeamDeps } from "~/server/team/infrastructure/deps";
 
 import { parseAcceptTeamInviteInput } from "./input";
 import { assertStrongPassword } from "./validators";
@@ -22,9 +22,9 @@ export async function acceptTeamInvite(input: {
   }
   const safePassword = assertStrongPassword(safeInput.password);
   const request = getRequestClientMetadata();
-  const runtime = createTeamAcceptanceRuntime();
 
   const result = await acceptTeamInviteService(
+    createTeamDeps(),
     {
       ipAddress: request.ipAddress,
       userAgent: request.userAgent,
@@ -34,7 +34,6 @@ export async function acceptTeamInvite(input: {
       password: safeInput.password,
       passwordHash: await hashPassword(safePassword),
     },
-    runtime,
   );
   if (isErr(result)) {
     throw result.error;

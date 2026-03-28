@@ -12,7 +12,9 @@ import { getRequestClientMetadata } from "~/lib/http/request-context";
 import {
   completeOnboarding as completeOnboardingService,
   finishPasskeyRegistration as finishPasskeyRegistrationService,
-} from "~/server/auth/service-onboarding";
+} from "~/server/auth/application/onboarding";
+import { createAuthDeps } from "~/server/auth/infrastructure/deps";
+import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
 import { isErr } from "~/server/shared/result";
 
 function normalizePeruvianPhone(value: string): string {
@@ -38,7 +40,7 @@ export async function completeOnboarding(
 ): Promise<{ redirectTo: string }> {
   const session = await requireSession();
   const request = getRequestClientMetadata();
-  const result = await completeOnboardingService({
+  const result = await completeOnboardingService(createAuthDeps(), {
     session,
     phoneE164: normalizePeruvianPhone(phoneE164),
     ipAddress: request.ipAddress,
@@ -57,17 +59,21 @@ export async function completePasskeyOnboarding(
 ): Promise<{ redirectTo: string }> {
   const session = await requireSession();
   const request = getRequestClientMetadata();
-  const registrationResult = await finishPasskeyRegistrationService({
-    session,
-    challengeId,
-    response,
-    ipAddress: request.ipAddress,
-    userAgent: request.userAgent,
-  });
+  const registrationResult = await finishPasskeyRegistrationService(
+    createAuthDeps(),
+    {
+      session,
+      challengeId,
+      response,
+      ipAddress: request.ipAddress,
+      userAgent: request.userAgent,
+      createWebauthnProvider: createRequestPasskeyProviderFactory(),
+    },
+  );
   if (isErr(registrationResult)) {
     throw internalError(registrationResult.error.message);
   }
-  const result = await completeOnboardingService({
+  const result = await completeOnboardingService(createAuthDeps(), {
     session: {
       ...session,
       strongAuthMethod: "passkey",

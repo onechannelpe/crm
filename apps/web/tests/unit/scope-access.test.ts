@@ -2,7 +2,7 @@ import * as fc from "fast-check";
 import { describe, expect, it } from "vitest";
 
 import type { Role } from "~/lib/auth/access/rbac";
-import { canManageExecutive } from "~/server/capacity-policy/scope-access";
+import { canManageExecutive } from "~/server/capacity/domain/access-policy";
 
 type TargetUser = { role: Role; branch_id: number; team_id: number | null };
 

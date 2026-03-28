@@ -1,3 +1,5 @@
+import type { JSX } from "solid-js";
+
 import ChevronDown from "~/components/icons/chevron-down";
 
 import type { IndexPicker } from "./types";
@@ -6,7 +8,7 @@ import styles from "./styles.module.css";
 
 export function ViewBar(props: {
   picker: IndexPicker;
-  rightContent: import("solid-js").JSX.Element;
+  rightContent: JSX.Element;
 }) {
   const PickerIcon = props.picker.icon;
 

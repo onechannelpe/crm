@@ -9,8 +9,9 @@ import {
   rejectRecord,
   submitRecord,
   updateDraft,
-} from "~/server/sales-records/service";
-import type { CreateSalesRecordDraftInput } from "~/server/sales-records/types";
+} from "~/server/sales-records/application/commands";
+import type { CreateSalesRecordDraftInput } from "~/server/sales-records/domain/types";
+import { createSalesRecordDeps } from "~/server/sales-records/infrastructure/deps";
 import { runAction } from "~/server/shared/action-runtime";
 
 import {
@@ -33,7 +34,7 @@ export async function createSalesRecordDraft(
       addresses: parsedInput.addresses.length,
       products: parsedInput.products.length,
     },
-    execute: (ctx) => createDraft(ctx, parsedInput),
+    execute: (ctx) => createDraft(ctx, createSalesRecordDeps(), parsedInput),
   });
 }
 
@@ -45,7 +46,8 @@ export async function submitSalesRecord(
     actionName: "sales_records.submit",
     permission: "sales:submit",
     input: { recordId: safeRecordId },
-    execute: (ctx) => submitRecord(ctx, { recordId: safeRecordId }),
+    execute: (ctx) =>
+      submitRecord(ctx, createSalesRecordDeps(), { recordId: safeRecordId }),
   });
 }
 
@@ -57,7 +59,8 @@ export async function confirmSalesRecord(
     actionName: "sales_records.confirm",
     permission: "sales:approve",
     input: { recordId: safeRecordId },
-    execute: (ctx) => confirmRecord(ctx, { recordId: safeRecordId }),
+    execute: (ctx) =>
+      confirmRecord(ctx, createSalesRecordDeps(), { recordId: safeRecordId }),
   });
 }
 
@@ -71,7 +74,7 @@ export async function rejectSalesRecord(
     permission: "sales:approve",
     input: { recordId: parsedInput.recordId },
     execute: (ctx) =>
-      rejectRecord(ctx, {
+      rejectRecord(ctx, createSalesRecordDeps(), {
         recordId: parsedInput.recordId,
         reason: parsedInput.reason,
       }),
@@ -86,7 +89,8 @@ export async function cancelSalesRecord(
     actionName: "sales_records.cancel",
     permission: "sales:create",
     input: { recordId: safeRecordId },
-    execute: (ctx) => cancelRecord(ctx, { recordId: safeRecordId }),
+    execute: (ctx) =>
+      cancelRecord(ctx, createSalesRecordDeps(), { recordId: safeRecordId }),
   });
 }
 
@@ -110,7 +114,7 @@ export async function updateSalesRecordDraft(
       hasCorrectionNotes: parsedInput.correctionNotes !== null,
     },
     execute: (ctx) =>
-      updateDraft(ctx, {
+      updateDraft(ctx, createSalesRecordDeps(), {
         recordId: parsedInput.recordId,
         draft: parsedInput.input,
         correctionNotes: parsedInput.correctionNotes,
@@ -135,7 +139,7 @@ export async function registerSalesRecordAttempt(
     permission: "sales:approve",
     input: { recordId: parsedInput.recordId, outcome: parsedInput.outcome },
     execute: (ctx) =>
-      registerAttempt(ctx, {
+      registerAttempt(ctx, createSalesRecordDeps(), {
         recordId: parsedInput.recordId,
         outcome: parsedInput.outcome,
         notes: parsedInput.notes,

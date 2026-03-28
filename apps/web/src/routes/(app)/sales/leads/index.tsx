@@ -15,16 +15,13 @@ import { requestLeadRefillNowMutation } from "~/lib/mutations/lead-operations";
 import { registerCallMutation } from "~/lib/mutations/leads";
 import { myLeadCapacityQuery } from "~/lib/queries/lead-operations";
 import { activeLeadsQuery } from "~/lib/queries/leads";
+import { isPlainRecord } from "~/lib/type-guards";
 import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
 
 import styles from "./leads-page.module.css";
 
-function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
 function readErrorMessage(value: unknown): string | null {
-  if (!isObject(value) || typeof value.error !== "string") {
+  if (!isPlainRecord(value) || typeof value.error !== "string") {
     return null;
   }
 
@@ -35,7 +32,7 @@ function isHandoffTokenResponse(
   value: unknown,
 ): value is { handoffToken: string; expiresAt: number } {
   return (
-    isObject(value) &&
+    isPlainRecord(value) &&
     typeof value.handoffToken === "string" &&
     typeof value.expiresAt === "number"
   );

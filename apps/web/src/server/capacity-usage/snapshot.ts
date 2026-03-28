@@ -1,4 +1,4 @@
-import type { LeadPolicy, SearchPolicy } from "~/server/capacity-policy/domain";
+import type { LeadPolicy, SearchPolicy } from "~/server/capacity/domain/policy";
 import type { ReservationStatus } from "~/server/shared/scope";
 
 import { remainingCapacity, sumAmount, sumPending } from "./domain";

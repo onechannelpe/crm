@@ -1,3 +1,5 @@
+import { isPlainRecord } from "~/lib/type-guards";
+
 export type ExtensionExecutivePresenceStatus =
   | "idle"
   | "ready"
@@ -50,13 +52,9 @@ interface ChromeRuntimeApi {
   ) => void;
 }
 
-function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
 function isExecutiveState(value: unknown): value is ExtensionExecutiveState {
   return (
-    isObject(value) &&
+    isPlainRecord(value) &&
     typeof value.presenceStatus === "string" &&
     typeof value.syncHealth === "string" &&
     (value.assignmentId === null || typeof value.assignmentId === "number") &&
@@ -71,7 +69,7 @@ function isExecutiveState(value: unknown): value is ExtensionExecutiveState {
 export function isRuntimeResponse(
   value: unknown,
 ): value is ExtensionRuntimeResponse {
-  if (!isObject(value) || typeof value.ok !== "boolean") {
+  if (!isPlainRecord(value) || typeof value.ok !== "boolean") {
     return false;
   }
 
@@ -87,12 +85,12 @@ export function isRuntimeResponse(
 }
 
 function isChromeRuntimeApi(value: unknown): value is ChromeRuntimeApi {
-  return isObject(value) && typeof value.sendMessage === "function";
+  return isPlainRecord(value) && typeof value.sendMessage === "function";
 }
 
 function getChromeRuntime(): ChromeRuntimeApi | null {
   const chromeValue = Reflect.get(globalThis, "chrome");
-  if (!isObject(chromeValue)) {
+  if (!isPlainRecord(chromeValue)) {
     return null;
   }
 

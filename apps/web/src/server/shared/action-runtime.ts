@@ -1,4 +1,4 @@
-import { throwDomainError } from "~/actions/throw-domain-error";
+import { isAppError } from "~/lib/app-errors";
 import type { Permission, Role } from "~/lib/auth/access/rbac";
 import {
   requireAuth as requireAuthActor,
@@ -14,6 +14,7 @@ import { getActionRequestContext } from "~/lib/observability/context";
 import { observabilityService } from "~/server/shared/context";
 import type { DomainError } from "~/server/shared/domain-error";
 import { isErr, type Result } from "~/server/shared/result";
+import { throwDomainError } from "~/server/shared/throw-domain-error";
 
 export interface AppContext {
   actor: SessionData;
@@ -114,7 +115,7 @@ export async function runAction<T, E extends DomainError>(params: {
         actorRole: ctx.actor.role,
         status: "error",
         durationMs: ctx.now() - startedAt,
-        errorCode: null,
+        errorCode: isAppError(error) ? error.code : null,
         errorMessage: getErrorMessage(error, "Unknown error"),
         input: params.input ?? null,
         createdAt: ctx.now(),
