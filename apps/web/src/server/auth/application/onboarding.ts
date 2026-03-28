@@ -2,6 +2,7 @@ import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { createPasskeyEnrollmentAuthService } from "~/lib/auth/passkey/service";
+import { requiresStrongAuthRole } from "~/lib/auth/security/strong-auth-status";
 import {
   issueSessionTransition,
   replaceCurrentSession,
@@ -13,7 +14,6 @@ import {
   type CompleteOnboardingError,
 } from "~/server/users/service-account-onboarding";
 
-import { requiresStrongAuthRole } from "../domain/strong-auth-policy";
 import type { AuthDeps } from "../infrastructure/deps";
 
 type EnrollmentProviderFactory = NonNullable<

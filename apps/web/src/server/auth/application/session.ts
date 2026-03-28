@@ -1,12 +1,12 @@
 import { resolveWorkspaceContext } from "~/lib/auth/access/workspace-context";
 import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
+import { requiresStrongAuthRole } from "~/lib/auth/security/strong-auth-status";
 import { deleteSessionCookie } from "~/lib/auth/session/cookies";
 import { invalidateSession } from "~/lib/auth/session/session-manager";
 import type { AppContext } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
-import { requiresStrongAuthRole } from "../domain/strong-auth-policy";
 import type { AuthDeps } from "../infrastructure/deps";
 import type { CurrentUserView } from "../types";
 
