@@ -1,12 +1,10 @@
-import {
-  getLeadCapacitySnapshot,
-  type LeadCapacitySnapshot,
-} from "~/server/capacity-usage/lead-usage";
+import { getLeadCapacitySnapshot } from "~/server/capacity-usage/lead-usage";
 import type {
   LeadCapacityGrantsRepo,
   LeadUsageCommitsRepo,
   LeadUsageReservationsRepo,
 } from "~/server/capacity-usage/repos";
+import type { LeadCapacitySnapshot } from "~/server/capacity-usage/snapshot";
 import type {
   LeadPolicyDefaultsRepo,
   LeadPolicyOverridesRepo,
