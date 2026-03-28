@@ -1,4 +1,4 @@
-import { For, createMemo, createSignal, onCleanup, type JSX } from "solid-js";
+import { For, createMemo, createSignal, type JSX } from "solid-js";
 
 import styles from "./otp-slot-input.module.css";
 
@@ -15,8 +15,7 @@ function normalizeOtp(value: string): string {
 }
 
 export function OtpSlotInput(props: OtpSlotInputProps) {
-  const [activeIndex, setActiveIndex] = createSignal<number | null>(null);
-  let inputs: Array<HTMLInputElement | undefined> = [];
+  const [focused, setFocused] = createSignal(false);
 
   const digits = createMemo(() => {
     const normalized = normalizeOtp(props.value);
@@ -26,120 +25,69 @@ export function OtpSlotInput(props: OtpSlotInputProps) {
     );
   });
 
-  const focusInput = (index: number) => {
-    const next = inputs[index];
-    if (!next) return;
-    next.focus();
-    next.select();
-  };
-
-  const updateDigits = (nextDigits: string[]) => {
-    props.onValueChange(normalizeOtp(nextDigits.join("")));
-  };
+  const activeIndex = createMemo(() => {
+    if (!focused()) return null;
+    return Math.min(normalizeOtp(props.value).length, SLOT_COUNT - 1);
+  });
 
   const handleInput: JSX.EventHandler<HTMLInputElement, InputEvent> = (
     event,
   ) => {
-    const index = Number(event.currentTarget.dataset.index);
-    const incoming = normalizeOtp(event.currentTarget.value);
-    const nextDigits = [...digits()];
-
-    if (!incoming) {
-      nextDigits[index] = "";
-      updateDigits(nextDigits);
-      return;
-    }
-
-    incoming.split("").forEach((digit, offset) => {
-      const target = index + offset;
-      if (target < SLOT_COUNT) {
-        nextDigits[target] = digit;
-      }
-    });
-    updateDigits(nextDigits);
-
-    const nextIndex = Math.min(index + incoming.length, SLOT_COUNT - 1);
-    queueMicrotask(() => focusInput(nextIndex));
+    props.onValueChange(normalizeOtp(event.currentTarget.value));
   };
-
-  const handleKeyDown: JSX.EventHandler<HTMLInputElement, KeyboardEvent> = (
-    event,
-  ) => {
-    const index = Number(event.currentTarget.dataset.index);
-    const nextDigits = [...digits()];
-
-    if (event.key === "Backspace" && !nextDigits[index] && index > 0) {
-      nextDigits[index - 1] = "";
-      updateDigits(nextDigits);
-      event.preventDefault();
-      queueMicrotask(() => focusInput(index - 1));
-      return;
-    }
-
-    if (event.key === "ArrowLeft" && index > 0) {
-      event.preventDefault();
-      focusInput(index - 1);
-      return;
-    }
-
-    if (event.key === "ArrowRight" && index < SLOT_COUNT - 1) {
-      event.preventDefault();
-      focusInput(index + 1);
-    }
-  };
-
-  const handlePaste: JSX.EventHandler<HTMLInputElement, ClipboardEvent> = (
-    event,
-  ) => {
-    const pasted = normalizeOtp(event.clipboardData?.getData("text") ?? "");
-    if (!pasted) return;
-    event.preventDefault();
-    props.onValueChange(pasted);
-    queueMicrotask(() => focusInput(Math.min(pasted.length, SLOT_COUNT - 1)));
-  };
-
-  onCleanup(() => {
-    inputs = [];
-  });
 
   return (
     <div class={styles.container}>
-      <For each={digits()}>
+      <For each={digits().slice(0, 3)}>
         {(digit, index) => (
-          <>
-            <div
-              classList={{
-                [styles.slot]: true,
-                [styles.slotActive]: activeIndex() === index(),
-              }}
-            >
-              {digit || <span class={styles.placeholder}>X</span>}
-              <input
-                ref={(element) => {
-                  inputs[index()] = element;
-                }}
-                type="text"
-                inputmode="numeric"
-                autocomplete={index() === 0 ? "one-time-code" : undefined}
-                aria-label={`Digito ${index() + 1} del codigo de verificacion`}
-                maxlength={1}
-                class={styles.input}
-                data-index={index()}
-                value={digit}
-                disabled={props.disabled}
-                onFocus={() => setActiveIndex(index())}
-                onBlur={() => setActiveIndex(null)}
-                onInput={handleInput}
-                onKeyDown={handleKeyDown}
-                onPaste={handlePaste}
-              />
-            </div>
-            <span class={styles.dash} hidden={index() !== 2}>
-              <span class={styles.dashLine} />
-            </span>
-          </>
+          <div
+            aria-hidden="true"
+            classList={{
+              [styles.slot]: true,
+              [styles.slotActive]: activeIndex() === index(),
+            }}
+          >
+            {digit ? digit : <span class={styles.placeholder}>X</span>}
+            {!digit && activeIndex() === index() && (
+              <span class={styles.caret} aria-hidden="true" />
+            )}
+          </div>
         )}
       </For>
+      <span class={styles.dash} aria-hidden="true">
+        <span class={styles.dashLine} />
+      </span>
+      <For each={digits().slice(3)}>
+        {(digit, index) => (
+          <div
+            aria-hidden="true"
+            classList={{
+              [styles.slot]: true,
+              [styles.slotActive]: activeIndex() === index() + 3,
+            }}
+          >
+            {digit ? digit : <span class={styles.placeholder}>X</span>}
+            {!digit && activeIndex() === index() + 3 && (
+              <span class={styles.caret} aria-hidden="true" />
+            )}
+          </div>
+        )}
+      </For>
+      <input
+        type="text"
+        inputmode="numeric"
+        autocomplete="one-time-code"
+        maxlength={SLOT_COUNT}
+        pattern="\d{6}"
+        name="otp"
+        aria-label="Codigo de verificacion de 6 digitos"
+        class={styles.input}
+        value={props.value}
+        disabled={props.disabled}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        onInput={handleInput}
+      />
     </div>
   );
 }

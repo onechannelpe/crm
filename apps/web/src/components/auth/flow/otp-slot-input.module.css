@@ -1,4 +1,5 @@
 .container {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -12,18 +13,37 @@
   align-items: center;
   justify-content: center;
   border: 1px solid var(--border);
-  border-radius: 6px;
-  background: color-mix(in oklab, var(--surface) 94%, white 6%);
+  border-radius: var(--radius-sm);
+  background: transparent;
   font-size: var(--font-size-body);
   color: var(--foreground);
+  transition: all 0.3s;
 }
 
 .slotActive {
-  outline: 1px solid var(--foreground);
+  outline: 1px solid var(--border);
 }
 
 .placeholder {
   opacity: 0.2;
+}
+
+.caret {
+  position: absolute;
+  width: 1px;
+  height: 20px;
+  background-color: var(--foreground);
+  animation: caret-blink 1s steps(2, start) infinite;
+}
+
+@keyframes caret-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
 }
 
 .input {
@@ -33,7 +53,6 @@
   background: transparent;
   color: transparent;
   caret-color: transparent;
-  text-align: center;
 }
 
 .input:focus {
@@ -48,6 +67,6 @@
 
 .dashLine {
   width: 6px;
-  height: 1px;
+  height: 1.6px;
   background: var(--muted-foreground);
 }
