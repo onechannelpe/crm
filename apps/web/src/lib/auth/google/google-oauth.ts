@@ -1,6 +1,7 @@
 import { decodeIdToken, Google } from "arctic";
 
 import { env } from "~/lib/env";
+import { isPlainRecord } from "~/lib/type-guards";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 export const googleOAuth = new Google(
@@ -16,12 +17,8 @@ export interface GoogleIdTokenClaims {
   picture?: string;
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
 export function parseGoogleClaims(claims: unknown): GoogleIdTokenClaims {
-  if (!isRecord(claims)) {
+  if (!isPlainRecord(claims)) {
     throw new Error("Invalid Google ID token claims");
   }
 

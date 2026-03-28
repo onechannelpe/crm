@@ -1,3 +1,4 @@
+import { isPlainRecord } from "~/lib/type-guards";
 import { AUDIT_READER_DEFAULT_LIMIT } from "~/server/audit-reader/contracts";
 import type { AppContext } from "~/server/shared/action-runtime";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
@@ -23,31 +24,28 @@ export type CapacityAuditEvent = {
   changes: AuditChangeValue;
 };
 
-function isAuditChangeValue(value: unknown): value is AuditChangeValue {
-  if (
+function isAuditScalar(
+  value: unknown,
+): value is string | number | boolean | null {
+  return (
     value === null ||
     typeof value === "string" ||
     typeof value === "number" ||
     typeof value === "boolean"
-  ) {
-    return true;
-  }
+  );
+}
+
+function isAuditChangeValue(value: unknown): value is AuditChangeValue {
+  if (isAuditScalar(value)) return true;
   if (Array.isArray(value)) return value.every(isAuditChangeValue);
-  if (typeof value === "object" && value !== null) {
+  if (isPlainRecord(value)) {
     return Object.values(value).every(isAuditChangeValue);
   }
   return false;
 }
 
 function parseAuditChanges(raw: unknown): AuditChangeValue {
-  if (
-    raw == null ||
-    typeof raw === "string" ||
-    typeof raw === "number" ||
-    typeof raw === "boolean"
-  ) {
-    return raw ?? null;
-  }
+  if (isAuditScalar(raw)) return raw;
   if (typeof raw !== "string") {
     try {
       const parsed: unknown = JSON.parse(JSON.stringify(raw));
