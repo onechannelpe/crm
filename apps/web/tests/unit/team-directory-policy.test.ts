@@ -13,16 +13,18 @@ vi.mock("../../src/server/shared/action-runtime", () => ({
   runAction: runActionMock,
 }));
 
-vi.mock("../../src/server/team/runtime", () => ({
-  createTeamInviteRuntime: () => ({
+vi.mock("../../src/server/team/infrastructure/deps", () => ({
+  createTeamDeps: () => ({
     repos: {
       teams: {
         findByBranch: teamsFindByBranchMock,
       },
     },
-    provisioning: {
+    createProvisioningService: () => ({
       listPendingInvites: listPendingInvitesMock,
-    },
+    }),
+    enforceInviteCreateRateLimit: vi.fn(),
+    issuePreAuthSession: vi.fn(),
   }),
 }));
 

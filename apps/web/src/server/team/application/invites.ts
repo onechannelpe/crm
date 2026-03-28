@@ -1,0 +1,213 @@
+import { getAssignableRoleOptions } from "~/lib/auth/access/role-display";
+import { hashInviteToken } from "~/lib/auth/invite/tokens";
+import { shortName } from "~/lib/users/display-name";
+import type { AppContext } from "~/server/shared/action-runtime";
+import type { DomainError } from "~/server/shared/domain-error";
+import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+
+import type {
+  AcceptTeamInviteCommand,
+  BulkImportSetup,
+  CreateTeamInviteCommand,
+  InviteInfo,
+  InviteManagement,
+} from "../domain/types";
+import type { TeamDeps } from "../infrastructure/deps";
+import {
+  buildInviteUrl,
+  sendInviteEmail,
+} from "../infrastructure/invite-delivery";
+
+export async function getInviteInfo(input: {
+  token: string;
+  deps: Pick<TeamDeps, "repos">;
+}): Promise<Result<InviteInfo | null, DomainError>> {
+  try {
+    const invite = await input.deps.repos.userInvites.findPendingByTokenHash(
+      hashInviteToken(input.token),
+      Date.now(),
+    );
+    if (!invite) {
+      return Ok(null);
+    }
+    return Ok({
+      fullName: `${invite.user_names} ${invite.user_first_surname} ${invite.user_second_surname}`,
+      username: invite.user_username,
+      email: invite.user_email,
+    });
+  } catch (error) {
+    return Err({
+      kind: "unexpected",
+      code: "unexpected",
+      message: error instanceof Error ? error.message : "Invite read failed",
+    });
+  }
+}
+
+export async function getInviteManagement(
+  ctx: AppContext,
+  deps: Pick<TeamDeps, "repos" | "createProvisioningService">,
+): Promise<Result<InviteManagement, DomainError>> {
+  const teamProvisioning = deps.createProvisioningService();
+  const [teams, pendingInvites] = await Promise.all([
+    deps.repos.teams.findByBranch(ctx.actor.branchId),
+    teamProvisioning.listPendingInvites(ctx.actor.branchId),
+  ]);
+  if (isErr(pendingInvites)) {
+    return pendingInvites;
+  }
+
+  return Ok({
+    pendingInvites: pendingInvites.value,
+    teams: teams.map((team) => ({ id: team.id, name: team.name })),
+    assignableRoles: getAssignableRoleOptions(ctx.actor.role),
+  });
+}
+
+export async function getBulkImportSetup(
+  ctx: AppContext,
+): Promise<Result<BulkImportSetup, DomainError>> {
+  return Ok({
+    assignableRoles: getAssignableRoleOptions(ctx.actor.role),
+  });
+}
+
+export async function createTeamInvite(
+  ctx: AppContext,
+  deps: Pick<
+    TeamDeps,
+    "createProvisioningService" | "enforceInviteCreateRateLimit"
+  >,
+  input: CreateTeamInviteCommand,
+): Promise<Result<{ inviteId: number }, DomainError>> {
+  await deps.enforceInviteCreateRateLimit(ctx.actor.userId);
+  const teamProvisioning = deps.createProvisioningService();
+
+  const result = await teamProvisioning.createInvite({
+    actorUserId: ctx.actor.userId,
+    actorRole: ctx.actor.role,
+    branchId: ctx.actor.branchId,
+    names: input.names,
+    firstSurname: input.firstSurname,
+    secondSurname: input.secondSurname,
+    email: input.email,
+    role: input.role,
+    teamId: input.teamId,
+    expiresAt: input.expiresAt,
+  });
+  if (isErr(result)) {
+    return result;
+  }
+
+  await sendInviteEmail({
+    email: input.email,
+    fullName: shortName({
+      names: input.names,
+      firstSurname: input.firstSurname,
+      secondSurname: input.secondSurname,
+    }),
+    role: input.role,
+    inviteUrl: buildInviteUrl(result.value.token),
+    expiresAt: result.value.expiresAt,
+  });
+
+  const deliveryResult = await teamProvisioning.markInviteDelivered(
+    result.value.inviteId,
+  );
+  if (isErr(deliveryResult)) {
+    return deliveryResult;
+  }
+
+  return Ok({ inviteId: result.value.inviteId });
+}
+
+export async function resendTeamInvite(
+  ctx: AppContext,
+  deps: Pick<TeamDeps, "repos" | "createProvisioningService">,
+  input: { inviteId: number },
+): Promise<Result<void, DomainError>> {
+  const teamProvisioning = deps.createProvisioningService();
+  const result = await teamProvisioning.resendInvite({
+    actorUserId: ctx.actor.userId,
+    actorRole: ctx.actor.role,
+    branchId: ctx.actor.branchId,
+    inviteId: input.inviteId,
+  });
+  if (isErr(result)) {
+    return result;
+  }
+
+  const invite = await deps.repos.userInvites.findById(result.value.inviteId);
+  const user = invite ? await deps.repos.users.findById(invite.user_id) : null;
+  if (!user) {
+    return Err({
+      kind: "not_found",
+      code: "invite_target_missing",
+      message: "Invite target user was not found",
+    });
+  }
+
+  await sendInviteEmail({
+    email: user.email,
+    fullName: shortName(user),
+    role: user.role,
+    inviteUrl: buildInviteUrl(result.value.token),
+    expiresAt: result.value.expiresAt,
+  });
+
+  const deliveryResult = await teamProvisioning.markInviteDelivered(
+    result.value.inviteId,
+  );
+  if (isErr(deliveryResult)) {
+    return deliveryResult;
+  }
+
+  return Ok(undefined);
+}
+
+export async function revokeTeamInvite(
+  ctx: AppContext,
+  deps: Pick<TeamDeps, "createProvisioningService">,
+  input: { inviteId: number },
+): Promise<Result<void, DomainError>> {
+  const teamProvisioning = deps.createProvisioningService();
+  return teamProvisioning.revokeInvite({
+    actorUserId: ctx.actor.userId,
+    actorRole: ctx.actor.role,
+    branchId: ctx.actor.branchId,
+    inviteId: input.inviteId,
+  });
+}
+
+export async function acceptTeamInvite(
+  deps: Pick<TeamDeps, "createProvisioningService" | "issuePreAuthSession">,
+  request: {
+    ipAddress: string;
+    userAgent: string | null;
+  },
+  input: AcceptTeamInviteCommand & { passwordHash: string },
+): Promise<Result<{ sessionToken: string; redirectTo: string }, DomainError>> {
+  const teamProvisioning = deps.createProvisioningService();
+  const result = await teamProvisioning.acceptInvite({
+    token: input.token,
+    passwordHash: input.passwordHash,
+  });
+  if (isErr(result)) {
+    return result;
+  }
+
+  const issued = await deps.issuePreAuthSession({
+    user: {
+      id: result.value.userId,
+      branch_id: result.value.branchId,
+      role: result.value.role,
+      onboarding_completed_at: null,
+    },
+    request,
+  });
+
+  return Ok({
+    sessionToken: issued.token,
+    redirectTo: "/onboarding",
+  });
+}

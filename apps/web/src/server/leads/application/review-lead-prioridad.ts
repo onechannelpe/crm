@@ -1,3 +1,4 @@
+import type { Prioridad } from "~/lib/db/types";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import {
   createPipelineRepos,
@@ -12,7 +13,7 @@ import { dispatchLeadNotifications } from "./lead-notification-dispatcher";
 
 export async function reviewLeadPrioridadUseCase(input: {
   leadId: number;
-  prioridad: import("~/lib/db/types").Prioridad;
+  prioridad: Prioridad;
   reason: string;
   actorId: number;
   branchId: number;

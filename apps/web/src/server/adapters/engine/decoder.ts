@@ -1,19 +1,16 @@
+import { isPlainRecord } from "~/lib/type-guards";
 import type {
   LeadCandidate,
   LeadCandidatesResponse,
   SearchResponse,
 } from "~/server/shared/engine/types";
 
-function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
 function isArray(value: unknown): value is unknown[] {
   return Array.isArray(value);
 }
 
 function isLeadCandidate(value: unknown): value is LeadCandidate {
-  if (!isObject(value)) return false;
+  if (!isPlainRecord(value)) return false;
   return (
     typeof value.ruc === "string" &&
     typeof value.organization_name === "string" &&
@@ -25,7 +22,9 @@ function isLeadCandidate(value: unknown): value is LeadCandidate {
 
 function isSearchResponse(value: unknown): value is SearchResponse {
   return (
-    isObject(value) && isArray(value.results) && typeof value.count === "number"
+    isPlainRecord(value) &&
+    isArray(value.results) &&
+    typeof value.count === "number"
   );
 }
 
@@ -40,7 +39,7 @@ export function decodeLeadCandidatesResponse(
   value: unknown,
 ): LeadCandidatesResponse {
   if (
-    !isObject(value) ||
+    !isPlainRecord(value) ||
     !isArray(value.candidates) ||
     !value.candidates.every(isLeadCandidate)
   ) {

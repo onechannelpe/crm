@@ -5,7 +5,8 @@ import { assertNonEmptyString } from "~/lib/contracts/guards";
 import {
   beginTotpEnrollment as beginTotpEnrollmentService,
   finishTotpEnrollment as finishTotpEnrollmentService,
-} from "~/server/auth/service-totp";
+} from "~/server/auth/application/totp";
+import { createAuthDeps } from "~/server/auth/infrastructure/deps";
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function beginTotpEnrollment(): Promise<{
@@ -15,7 +16,7 @@ export async function beginTotpEnrollment(): Promise<{
   return runAction({
     actionName: "auth.totp.begin",
     requireSession: true,
-    execute: beginTotpEnrollmentService,
+    execute: (ctx) => beginTotpEnrollmentService(ctx, createAuthDeps()),
   });
 }
 
@@ -26,7 +27,7 @@ export async function finishTotpEnrollment(code: string): Promise<string[]> {
     requireSession: true,
     input: { hasCode: true },
     execute: (ctx) =>
-      finishTotpEnrollmentService(ctx, {
+      finishTotpEnrollmentService(ctx, createAuthDeps(), {
         code: safeCode,
       }),
   });

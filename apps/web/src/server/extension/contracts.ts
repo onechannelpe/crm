@@ -1,3 +1,5 @@
+import { isPlainRecord } from "~/lib/type-guards";
+
 export const EXTENSION_HANDOFF_TOKEN_ISSUER = "web" as const;
 export const EXTENSION_HANDOFF_TOKEN_AUDIENCE = "crm-extension" as const;
 export const EXTENSION_SESSION_TOKEN_AUDIENCE =
@@ -208,21 +210,17 @@ export function isExtensionSyncHealth(
   );
 }
 
-function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
 export function isCreateExtensionHandoffTokenRequest(
   value: unknown,
 ): value is CreateExtensionHandoffTokenRequest {
-  return isObject(value) && typeof value.assignmentId === "number";
+  return isPlainRecord(value) && typeof value.assignmentId === "number";
 }
 
 export function isClaimExtensionSessionRequest(
   value: unknown,
 ): value is ClaimExtensionSessionRequest {
   return (
-    isObject(value) &&
+    isPlainRecord(value) &&
     typeof value.handoffToken === "string" &&
     typeof value.installationId === "string"
   );
@@ -232,7 +230,7 @@ export function isRefreshExtensionSessionRequest(
   value: unknown,
 ): value is RefreshExtensionSessionRequest {
   return (
-    isObject(value) &&
+    isPlainRecord(value) &&
     typeof value.refreshToken === "string" &&
     typeof value.installationId === "string"
   );
@@ -242,7 +240,7 @@ function isExecutivePresencePayload(
   value: unknown,
 ): value is ExecutivePresenceEventPayload {
   return (
-    isObject(value) &&
+    isPlainRecord(value) &&
     isExtensionExecutivePresenceStatus(value.presenceStatus) &&
     value.presenceStatus !== "offline" &&
     (value.assignmentId === null || typeof value.assignmentId === "number") &&
@@ -253,7 +251,7 @@ function isExecutivePresencePayload(
 }
 
 function isCallLifecyclePayload(value: unknown): value is CallLifecyclePayload {
-  if (!isObject(value) || typeof value.event !== "string") {
+  if (!isPlainRecord(value) || typeof value.event !== "string") {
     return false;
   }
 
@@ -287,12 +285,12 @@ function isCallLifecyclePayload(value: unknown): value is CallLifecyclePayload {
 function isExecutiveHeartbeatPayload(
   value: unknown,
 ): value is ExecutiveHeartbeatPayload {
-  return isObject(value) && typeof value.occurredAt === "number";
+  return isPlainRecord(value) && typeof value.occurredAt === "number";
 }
 
 function isCallMetricPayload(value: unknown): value is CallMetricPayload {
   return (
-    isObject(value) &&
+    isPlainRecord(value) &&
     typeof value.event === "string" &&
     typeof value.sessionId === "string"
   );
@@ -302,7 +300,7 @@ function isRecordingCompletedPayload(
   value: unknown,
 ): value is RecordingCompletedPayload {
   return (
-    isObject(value) &&
+    isPlainRecord(value) &&
     typeof value.sessionId === "string" &&
     typeof value.createdAt === "number"
   );
@@ -312,7 +310,7 @@ function isRecordingChunkPayload(
   value: unknown,
 ): value is RecordingChunkPayload {
   return (
-    isObject(value) &&
+    isPlainRecord(value) &&
     typeof value.sessionId === "string" &&
     typeof value.chunkId === "string" &&
     typeof value.createdAt === "number" &&
@@ -327,7 +325,7 @@ export function isExtensionRuntimeEventEnvelope(
   value: unknown,
 ): value is ExtensionRuntimeEventEnvelope {
   if (
-    !isObject(value) ||
+    !isPlainRecord(value) ||
     typeof value.id !== "string" ||
     typeof value.sequence !== "number" ||
     typeof value.type !== "string" ||

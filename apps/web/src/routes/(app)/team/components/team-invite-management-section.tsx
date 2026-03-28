@@ -37,7 +37,7 @@ import {
   revokeTeamInviteMutation,
 } from "~/lib/mutations/team";
 import { inviteManagementQuery } from "~/lib/queries/team";
-import type { InviteManagement } from "~/server/team/types";
+import type { InviteManagement } from "~/server/team/domain/types";
 
 import {
   getInviteExpiryFieldError,

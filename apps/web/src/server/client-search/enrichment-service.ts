@@ -1,9 +1,9 @@
+import { isPlainRecord } from "~/lib/type-guards";
 import {
   createSunatScraperClient,
   type SunatRucData,
   type SunatScraperClient,
 } from "~/server/client-search/enrichment/sunat";
-import { isRecord } from "~/server/client-search/enrichment/sunat/utils";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -43,7 +43,9 @@ type LeasedJob = Awaited<
 >[number];
 
 function isSunatRucData(value: unknown): value is SunatRucData {
-  return isRecord(value) && typeof value.ruc === "string" && "payload" in value;
+  return (
+    isPlainRecord(value) && typeof value.ruc === "string" && "payload" in value
+  );
 }
 
 function isDigits(value: string, expectedLength: number): boolean {
@@ -102,7 +104,7 @@ function extractFullName(
   payload: unknown,
 ): string | null {
   if (documentType !== "dni") return null;
-  if (!isRecord(payload)) return null;
+  if (!isPlainRecord(payload)) return null;
   const parts = [
     payload.nombres,
     payload.apellidoPaterno,

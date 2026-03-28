@@ -50,6 +50,11 @@ vi.mock("~/server/shared/context", () => ({
       create: mocks.auditCreate,
     },
   },
+  notificationSender: {
+    send: vi.fn(),
+  },
+  privilegedLoginAlertSender: vi.fn(),
+  runInRepositoryTransaction: vi.fn(),
   observabilityService: {
     recordAction: mocks.recordAction,
   },

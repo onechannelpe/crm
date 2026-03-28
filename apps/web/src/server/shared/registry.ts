@@ -10,13 +10,6 @@ import {
   createUserTotpFactorsRepo,
   createUserTotpRecoveryCodesRepo,
 } from "~/server/auth/repos-user-totp-factors";
-import { createCapacityRequestsRepo } from "~/server/capacity-admin/repos";
-import {
-  createLeadPolicyDefaultsRepo,
-  createLeadPolicyOverridesRepo,
-  createSearchPolicyDefaultsRepo,
-  createSearchPolicyOverridesRepo,
-} from "~/server/capacity-policy/repos";
 import {
   createLeadCapacityGrantsRepo,
   createLeadUsageCommitsRepo,
@@ -25,6 +18,13 @@ import {
   createSearchUsageCommitsRepo,
   createSearchUsageReservationsRepo,
 } from "~/server/capacity-usage/repos";
+import { createCapacityRequestsRepo } from "~/server/capacity/infrastructure/capacity-requests-repo";
+import {
+  createLeadPolicyDefaultsRepo,
+  createLeadPolicyOverridesRepo,
+  createSearchPolicyDefaultsRepo,
+  createSearchPolicyOverridesRepo,
+} from "~/server/capacity/infrastructure/policy-repos";
 import { createSearchEnrichmentRepo } from "~/server/client-search/repos-enrichment";
 import { createLeadAssignmentsRepo } from "~/server/contacts/repos-assignments";
 import { createContactsRepo } from "~/server/contacts/repos-contacts";

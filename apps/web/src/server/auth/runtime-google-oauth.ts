@@ -1,8 +1,9 @@
-import { privilegedLoginAlertSender, repos } from "~/server/shared/context";
+import { createAuthDeps } from "./infrastructure/deps";
 
 export function getGoogleOAuthCallbackRuntime() {
+  const deps = createAuthDeps();
   return {
-    repos,
-    privilegedLoginAlertSender,
+    repos: deps.repos,
+    privilegedLoginAlertSender: deps.privilegedLoginAlertSender,
   };
 }

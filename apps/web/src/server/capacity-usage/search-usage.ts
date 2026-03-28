@@ -1,4 +1,4 @@
-import { getEffectiveSearchPolicy } from "~/server/capacity-policy/search-policy";
+import { getEffectiveSearchPolicy } from "~/server/capacity/application/search-policy";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import {
@@ -13,8 +13,10 @@ import type {
   SearchUsageCommitsRepo,
   SearchUsageReservationsRepo,
 } from "./repos";
-import { buildSearchCapacitySnapshot } from "./snapshot";
-export type { SearchCapacitySnapshot } from "./snapshot";
+import {
+  buildSearchCapacitySnapshot,
+  type SearchCapacitySnapshot,
+} from "./snapshot";
 
 export interface ReserveSearchUsageCommand {
   actorUserId: UserId;
@@ -188,7 +190,7 @@ export async function grantSearchCapacity(
 export async function getSearchCapacitySnapshot(
   userId: UserId,
   repos: UsageRepos,
-): Promise<Result<import("./snapshot").SearchCapacitySnapshot, DomainError>> {
+): Promise<Result<SearchCapacitySnapshot, DomainError>> {
   try {
     const policyResult = await getEffectiveSearchPolicy(userId, repos);
     if (!policyResult.ok) return policyResult;

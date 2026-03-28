@@ -1,4 +1,4 @@
-import { getEffectiveLeadPolicy } from "~/server/capacity-policy/lead-policy";
+import { getEffectiveLeadPolicy } from "~/server/capacity/application/lead-policy";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import {
   asLeadReservationId,
@@ -13,8 +13,10 @@ import type {
   LeadUsageCommitsRepo,
   LeadUsageReservationsRepo,
 } from "./repos";
-import { buildLeadCapacitySnapshot } from "./snapshot";
-export type { LeadCapacitySnapshot } from "./snapshot";
+import {
+  buildLeadCapacitySnapshot,
+  type LeadCapacitySnapshot,
+} from "./snapshot";
 
 export interface ReserveLeadUsageCommand {
   actorUserId: UserId;
@@ -184,7 +186,7 @@ export async function grantLeadCapacity(
 export async function getLeadCapacitySnapshot(
   userId: UserId,
   repos: UsageRepos,
-): Promise<Result<import("./snapshot").LeadCapacitySnapshot, DomainError>> {
+): Promise<Result<LeadCapacitySnapshot, DomainError>> {
   try {
     const policyResult = await getEffectiveLeadPolicy(userId, repos);
     if (!policyResult.ok) return policyResult;

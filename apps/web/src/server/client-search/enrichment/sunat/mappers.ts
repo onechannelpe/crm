@@ -1,12 +1,14 @@
+import { isPlainRecord } from "~/lib/type-guards";
+
 import type { SunatDniData, SunatRucData } from "./contracts";
-import { isRecord, sanitizeField } from "./utils";
+import { sanitizeField } from "./utils";
 
 function firstListaEntry(
   payload: Record<string, unknown>,
 ): Record<string, unknown> | null {
   if (!Array.isArray(payload.lista) || payload.lista.length < 1) return null;
   const first = payload.lista[0];
-  return isRecord(first) ? first : null;
+  return isPlainRecord(first) ? first : null;
 }
 
 function splitNamesFromItfisdenreg(full: string): {
@@ -38,7 +40,7 @@ function splitNamesFromItfisdenreg(full: string): {
 }
 
 export function mapDniData(dni: string, payload: unknown): SunatDniData | null {
-  if (!isRecord(payload)) {
+  if (!isPlainRecord(payload)) {
     if (typeof payload === "string" && payload.trim().length > 0) {
       return {
         dni,
@@ -90,7 +92,7 @@ export function mapDniData(dni: string, payload: unknown): SunatDniData | null {
 }
 
 export function mapRucData(ruc: string, payload: unknown): SunatRucData | null {
-  if (!isRecord(payload)) {
+  if (!isPlainRecord(payload)) {
     if (typeof payload === "string" && payload.trim().length > 0) {
       return { ruc, razonSocial: null, payload };
     }

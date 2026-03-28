@@ -1,16 +1,14 @@
-import type {
-  LeadPolicyDefaultsRepo,
-  LeadPolicyOverridesRepo,
-} from "~/server/capacity-policy/repos";
-import {
-  getLeadCapacitySnapshot,
-  type LeadCapacitySnapshot,
-} from "~/server/capacity-usage/lead-usage";
+import { getLeadCapacitySnapshot } from "~/server/capacity-usage/lead-usage";
 import type {
   LeadCapacityGrantsRepo,
   LeadUsageCommitsRepo,
   LeadUsageReservationsRepo,
 } from "~/server/capacity-usage/repos";
+import type { LeadCapacitySnapshot } from "~/server/capacity-usage/snapshot";
+import type {
+  LeadPolicyDefaultsRepo,
+  LeadPolicyOverridesRepo,
+} from "~/server/capacity/infrastructure/policy-repos";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import type { Result } from "~/server/shared/result";
