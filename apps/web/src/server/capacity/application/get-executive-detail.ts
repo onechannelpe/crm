@@ -1,12 +1,12 @@
 import { longName } from "~/lib/users/display-name";
 import {
-  getLeadCapacityForUser,
+  getLeadCapacitySnapshot,
   type LeadCapacitySnapshot,
-} from "~/server/lead-workflow/read-lead-capacity";
+} from "~/server/capacity/application/get-lead-capacity-snapshot";
 import {
-  getSearchCapacityForUser,
+  getSearchCapacitySnapshot,
   type SearchCapacitySnapshot,
-} from "~/server/search-workflow/read-search-capacity";
+} from "~/server/capacity/application/get-search-capacity-snapshot";
 import type { AppContext } from "~/server/shared/action-runtime";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
@@ -61,8 +61,8 @@ export async function getExecutiveDetail(
     }
 
     const [searchStatus, leadStatus, requests] = await Promise.all([
-      getSearchCapacityForUser(input.userId, deps.repos),
-      getLeadCapacityForUser(input.userId, deps.repos),
+      getSearchCapacitySnapshot(input.userId, deps.repos),
+      getLeadCapacitySnapshot(input.userId, deps.repos),
       deps.repos.capacityRequests.listByUser(input.userId),
     ]);
 

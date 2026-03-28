@@ -1,12 +1,12 @@
 import { longName } from "~/lib/users/display-name";
 import {
-  getLeadCapacityForUser,
+  getLeadCapacitySnapshot,
   type LeadCapacitySnapshot,
-} from "~/server/lead-workflow/read-lead-capacity";
+} from "~/server/capacity/application/get-lead-capacity-snapshot";
 import {
-  getSearchCapacityForUser,
+  getSearchCapacitySnapshot,
   type SearchCapacitySnapshot,
-} from "~/server/search-workflow/read-search-capacity";
+} from "~/server/capacity/application/get-search-capacity-snapshot";
 import type { AppContext } from "~/server/shared/action-runtime";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
@@ -45,8 +45,8 @@ export async function listManagedExecutives(
         if (!managed.ok) return null;
 
         const [searchStatus, leadStatus] = await Promise.all([
-          getSearchCapacityForUser(user.id, deps.repos),
-          getLeadCapacityForUser(user.id, deps.repos),
+          getSearchCapacitySnapshot(user.id, deps.repos),
+          getLeadCapacitySnapshot(user.id, deps.repos),
         ]);
         if (isErr(searchStatus) || isErr(leadStatus)) return null;
 

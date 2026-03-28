@@ -1,7 +1,6 @@
 import {
   cancelLeadUsage,
   commitLeadUsage,
-  getLeadCapacitySnapshot,
   reserveLeadUsage,
 } from "~/server/capacity-usage/lead-usage";
 import type {
@@ -9,6 +8,7 @@ import type {
   LeadUsageCommitsRepo,
   LeadUsageReservationsRepo,
 } from "~/server/capacity-usage/repos";
+import { getLeadCapacitySnapshot } from "~/server/capacity/application/get-lead-capacity-snapshot";
 import type {
   LeadPolicyDefaultsRepo,
   LeadPolicyOverridesRepo,

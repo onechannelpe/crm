@@ -1,7 +1,11 @@
-import type { LeadPolicy, SearchPolicy } from "~/server/capacity/domain/policy";
+import {
+  remainingCapacity,
+  sumAmount,
+  sumPending,
+} from "~/server/capacity/domain/math";
 import type { ReservationStatus } from "~/server/shared/scope";
 
-import { remainingCapacity, sumAmount, sumPending } from "./domain";
+import type { LeadPolicy, SearchPolicy } from "./policy";
 
 type GrantRow = { amount: number };
 type CommitRow = { amount: number };
@@ -43,6 +47,7 @@ export function buildSearchCapacitySnapshot(input: {
     committed,
     pending,
   });
+
   return {
     policy: input.policy,
     granted,
@@ -70,6 +75,7 @@ export function buildLeadCapacitySnapshot(input: {
     committed,
     pending,
   });
+
   return {
     policy: input.policy,
     granted,

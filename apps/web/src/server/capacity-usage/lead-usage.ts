@@ -1,4 +1,3 @@
-import { getEffectiveLeadPolicy } from "~/server/capacity/application/lead-policy";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import {
   asLeadReservationId,
@@ -6,17 +5,12 @@ import {
   type UserId,
 } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import { currentDailyPeriod } from "~/server/shared/time";
 
 import type {
   LeadCapacityGrantsRepo,
   LeadUsageCommitsRepo,
   LeadUsageReservationsRepo,
 } from "./repos";
-import {
-  buildLeadCapacitySnapshot,
-  type LeadCapacitySnapshot,
-} from "./snapshot";
 
 export interface ReserveLeadUsageCommand {
   actorUserId: UserId;
@@ -43,21 +37,9 @@ export interface GrantLeadCapacityCommand {
 }
 
 interface UsageRepos {
-  users: {
-    findById(
-      id: UserId,
-    ): Promise<{ team_id: number | null; branch_id: number } | undefined>;
-  };
-  leadPolicyDefaults: Parameters<
-    typeof getEffectiveLeadPolicy
-  >[1]["leadPolicyDefaults"];
-  leadPolicyOverrides: Parameters<
-    typeof getEffectiveLeadPolicy
-  >[1]["leadPolicyOverrides"];
   leadCapacityGrants: LeadCapacityGrantsRepo;
   leadUsageReservations: LeadUsageReservationsRepo;
   leadUsageCommits: LeadUsageCommitsRepo;
-  leadAssignments: { countActiveByUser(userId: number): Promise<number> };
 }
 
 export async function reserveLeadUsage(
@@ -178,45 +160,6 @@ export async function grantLeadCapacity(
         error instanceof Error
           ? error.message
           : "Failed to grant lead capacity",
-      ),
-    );
-  }
-}
-
-export async function getLeadCapacitySnapshot(
-  userId: UserId,
-  repos: UsageRepos,
-): Promise<Result<LeadCapacitySnapshot, DomainError>> {
-  try {
-    const policyResult = await getEffectiveLeadPolicy(userId, repos);
-    if (!policyResult.ok) return policyResult;
-
-    const { date } = currentDailyPeriod(new Date());
-    const [grants, reservations, commits, activeAssignments] =
-      await Promise.all([
-        repos.leadCapacityGrants.findByUserAndDate(userId, date),
-        repos.leadUsageReservations.findByUserAndDate(userId, date),
-        repos.leadUsageCommits.findByUserAndDate(userId, date),
-        repos.leadAssignments.countActiveByUser(userId),
-      ]);
-
-    return Ok(
-      buildLeadCapacitySnapshot({
-        policy: policyResult.value,
-        grants,
-        reservations,
-        commits,
-        activeAssignments,
-      }),
-    );
-  } catch (error) {
-    return Err(
-      domainError(
-        "unexpected",
-        "unexpected",
-        error instanceof Error
-          ? error.message
-          : "Failed to get lead capacity snapshot",
       ),
     );
   }

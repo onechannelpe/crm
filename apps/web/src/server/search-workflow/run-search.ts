@@ -6,9 +6,9 @@ import type {
 import {
   cancelSearchUsage,
   commitSearchUsage,
-  getSearchCapacitySnapshot,
   reserveSearchUsage,
 } from "~/server/capacity-usage/search-usage";
+import { getSearchCapacitySnapshot } from "~/server/capacity/application/get-search-capacity-snapshot";
 import type {
   SearchPolicyDefaultsRepo,
   SearchPolicyOverridesRepo,
