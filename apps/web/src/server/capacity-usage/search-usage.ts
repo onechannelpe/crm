@@ -13,9 +13,10 @@ import type {
   SearchUsageCommitsRepo,
   SearchUsageReservationsRepo,
 } from "./repos";
-import type { SearchCapacitySnapshot } from "./snapshot";
-import { buildSearchCapacitySnapshot } from "./snapshot";
-export type { SearchCapacitySnapshot } from "./snapshot";
+import {
+  buildSearchCapacitySnapshot,
+  type SearchCapacitySnapshot,
+} from "./snapshot";
 
 export interface ReserveSearchUsageCommand {
   actorUserId: UserId;

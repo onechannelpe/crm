@@ -13,9 +13,10 @@ import type {
   LeadUsageCommitsRepo,
   LeadUsageReservationsRepo,
 } from "./repos";
-import type { LeadCapacitySnapshot } from "./snapshot";
-import { buildLeadCapacitySnapshot } from "./snapshot";
-export type { LeadCapacitySnapshot } from "./snapshot";
+import {
+  buildLeadCapacitySnapshot,
+  type LeadCapacitySnapshot,
+} from "./snapshot";
 
 export interface ReserveLeadUsageCommand {
   actorUserId: UserId;
