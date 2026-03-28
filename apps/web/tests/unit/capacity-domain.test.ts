@@ -1,11 +1,11 @@
 import * as fc from "fast-check";
 import { describe, it } from "vitest";
 
-import { remainingCapacity } from "~/server/capacity-usage/domain";
+import { remainingCapacity } from "~/server/capacity/domain/math";
 import {
   buildLeadCapacitySnapshot,
   buildSearchCapacitySnapshot,
-} from "~/server/capacity-usage/snapshot";
+} from "~/server/capacity/domain/snapshot";
 
 // Arbitraries
 
