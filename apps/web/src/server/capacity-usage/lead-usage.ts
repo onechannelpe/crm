@@ -13,6 +13,7 @@ import type {
   LeadUsageCommitsRepo,
   LeadUsageReservationsRepo,
 } from "./repos";
+import type { LeadCapacitySnapshot } from "./snapshot";
 import { buildLeadCapacitySnapshot } from "./snapshot";
 export type { LeadCapacitySnapshot } from "./snapshot";
 
@@ -184,7 +185,7 @@ export async function grantLeadCapacity(
 export async function getLeadCapacitySnapshot(
   userId: UserId,
   repos: UsageRepos,
-): Promise<Result<import("./snapshot").LeadCapacitySnapshot, DomainError>> {
+): Promise<Result<LeadCapacitySnapshot, DomainError>> {
   try {
     const policyResult = await getEffectiveLeadPolicy(userId, repos);
     if (!policyResult.ok) return policyResult;

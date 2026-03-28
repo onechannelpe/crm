@@ -1,3 +1,4 @@
+import type { LeadStatus } from "~/lib/db/types";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import {
   createPipelineRepos,
@@ -12,7 +13,7 @@ import { dispatchLeadNotifications } from "./lead-notification-dispatcher";
 
 export async function reviewLeadStatusUseCase(input: {
   leadId: number;
-  status: import("~/lib/db/types").LeadStatus;
+  status: LeadStatus;
   reason: string;
   actorId: number;
   branchId: number;

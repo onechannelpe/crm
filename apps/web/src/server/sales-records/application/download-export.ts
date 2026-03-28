@@ -1,10 +1,11 @@
+import type { Role } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 export interface SalesExportDownloadSession {
   userId: number;
-  role: import("~/lib/auth/access/rbac").Role;
+  role: Role;
   branchId: number;
 }
 

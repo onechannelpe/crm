@@ -13,6 +13,7 @@ import type {
   SearchUsageCommitsRepo,
   SearchUsageReservationsRepo,
 } from "./repos";
+import type { SearchCapacitySnapshot } from "./snapshot";
 import { buildSearchCapacitySnapshot } from "./snapshot";
 export type { SearchCapacitySnapshot } from "./snapshot";
 
@@ -188,7 +189,7 @@ export async function grantSearchCapacity(
 export async function getSearchCapacitySnapshot(
   userId: UserId,
   repos: UsageRepos,
-): Promise<Result<import("./snapshot").SearchCapacitySnapshot, DomainError>> {
+): Promise<Result<SearchCapacitySnapshot, DomainError>> {
   try {
     const policyResult = await getEffectiveSearchPolicy(userId, repos);
     if (!policyResult.ok) return policyResult;
