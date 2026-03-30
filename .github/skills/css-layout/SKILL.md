@@ -1,9 +1,10 @@
 ---
 name: css-layout
-description: 'Debug or design CSS layout behavior. Use when a UI has sizing, overflow, alignment, positioning, or responsive layout problems. Covers flow, flexbox, grid, containing blocks, and minimal-fix selection.'
+description: "Debug or design CSS layout behavior. Use when a UI has sizing, overflow, alignment, positioning, or responsive layout problems. Covers flow, flexbox, grid, containing blocks, and minimal-fix selection."
 ---
 
 ## workflow
+
 1. Identify the active layout algorithm on the parent: flow, flexbox, grid, or positioned.
 2. Check the containing block, explicit sizes, min and max constraints, and overflow settings.
 3. Inspect how children participate in that algorithm.
@@ -11,6 +12,7 @@ description: 'Debug or design CSS layout behavior. Use when a UI has sizing, ove
 5. Re-check keyboard order and responsive behavior after the fix.
 
 ## decision rules
+
 - Use flexbox for one-axis distribution and centering.
 - Use grid for two-axis placement and repeated tracks.
 - Use positioned layout for overlays and anchored elements.
@@ -18,6 +20,7 @@ description: 'Debug or design CSS layout behavior. Use when a UI has sizing, ove
 - Prefer `fr`, intrinsic sizing, and logical properties over rigid percentages when gaps or writing direction matter.
 
 ## common checks
+
 - Overflow in flow: check `width: 100%`, margins, and long unbroken content.
 - Percentage height: verify that the parent has an explicit height.
 - Flex items: inspect shrink, grow, basis, and min-width or min-height constraints.
@@ -26,6 +29,7 @@ description: 'Debug or design CSS layout behavior. Use when a UI has sizing, ove
 - Centering: choose a layout-based fix before using offset hacks.
 
 ## review rubric
+
 - Algorithm clarity: the chosen fix matches the active layout mode.
 - Constraint awareness: the fix accounts for container size, intrinsic size, and overflow.
 - Minimality: the fix changes the fewest layout rules needed.
@@ -33,6 +37,7 @@ description: 'Debug or design CSS layout behavior. Use when a UI has sizing, ove
 - Resilience: the fix still works when content grows or shrinks.
 
 ## fail conditions
+
 - Switching layout modes without checking the current algorithm first.
 - Using percentages without a defined reference size.
 - Solving overflow by hiding it before understanding the cause.

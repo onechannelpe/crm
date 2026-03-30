@@ -1,9 +1,10 @@
 ---
 name: write-docs
-description: 'Write or revise technical Markdown documents. Use when editing READMEs, runbooks, architecture notes, setup guides, or contributor documentation. Covers document framing, paragraph structure, link labels, command blocks, and readability review.'
+description: "Write or revise technical Markdown documents. Use when editing READMEs, runbooks, architecture notes, setup guides, or contributor documentation. Covers document framing, paragraph structure, link labels, command blocks, and readability review."
 ---
 
 ## workflow
+
 1. Read the document and the code, config, or commands it describes.
 2. Identify the document class before editing: front page, task guide, architecture note, runbook, or reference.
 3. Draft or rewrite the content in plain text first.
@@ -13,6 +14,7 @@ description: 'Write or revise technical Markdown documents. Use when editing REA
 7. Reread the document in raw Markdown and in rendered order.
 
 ## document rules
+
 - Start with the document job.
 - Use headings only for distinct technical topics.
 - Group by task, flow, or system boundary.
@@ -22,6 +24,7 @@ description: 'Write or revise technical Markdown documents. Use when editing REA
 - Put volatile details near the source-of-truth file or regeneration command that controls them.
 
 ## editing rules
+
 - Use short declarative sentences.
 - Keep one technical idea per paragraph.
 - Make the first sentence carry the paragraph topic.
@@ -34,6 +37,7 @@ description: 'Write or revise technical Markdown documents. Use when editing REA
 - Example: `Run migrations before starting the worker.` is better than `This worker is important during setup.`
 
 ## review rubric
+
 - Job clarity: the first screen makes the document purpose obvious.
 - Section economy: each heading introduces a distinct topic with enough content to justify it.
 - Sentence utility: each sentence adds a fact, a constraint, or a procedure.
@@ -43,6 +47,7 @@ description: 'Write or revise technical Markdown documents. Use when editing REA
 - Maintainability: volatile facts point back to the file or command that controls them.
 
 ## fail conditions
+
 - Headings exist only to complete an outline.
 - Paragraphs are lists in disguise.
 - Visible links read like raw filesystem paths when a shorter label would be clear.
