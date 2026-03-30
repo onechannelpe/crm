@@ -4,7 +4,7 @@ import { useHotkey } from "~/lib/hotkey/use-hotkey";
 
 import { useDataGridInstance } from "../context/instance-context";
 
-export function DataGridEffects<T extends { id: number }>(props: {
+export function DataGridSelectionEffects<T extends { id: number }>(props: {
   rows: T[];
   suspendEscapeSelectionClear?: boolean;
 }) {

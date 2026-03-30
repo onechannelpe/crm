@@ -1,7 +1,8 @@
 import { For, Show, createMemo, type JSX } from "solid-js";
 
 import { DataGridInstanceProvider } from "../context/instance-context";
-import { DataGridEffects } from "../effects/effects";
+import { DataGridFocusClickOutsideEffect } from "../effects/focus-click-outside";
+import { DataGridSelectionEffects } from "../effects/selection";
 import { SELECTION_COLUMN_WIDTH } from "../hooks/use-column-layout";
 import {
   buildDataGridTemplateColumns,
@@ -28,6 +29,8 @@ export function DataGrid<T extends { id: number }>(props: {
   selection?: DataGridSelectionModel;
   suspendEscapeSelectionClear?: boolean;
 }) {
+  let tableRef: HTMLElement | undefined;
+
   const selectable = createMemo(() => props.selection !== undefined);
   const rows = createMemo(() => props.rows);
   const gridTemplateColumns = createMemo(() =>
@@ -50,7 +53,11 @@ export function DataGrid<T extends { id: number }>(props: {
       <div class={styles.indexContainer}>
         <div class={styles.tableContainer}>
           <div class={styles.scrollWrapper}>
-            <section class={styles.table} aria-label={props.ariaLabel}>
+            <section
+              ref={(element) => (tableRef = element)}
+              class={styles.table}
+              aria-label={props.ariaLabel}
+            >
               <DataGridHeader
                 columns={props.columns}
                 gridTemplateColumns={gridTemplateColumns()}
@@ -62,10 +69,11 @@ export function DataGrid<T extends { id: number }>(props: {
               />
 
               {props.draftRow}
-              <DataGridEffects
+              <DataGridSelectionEffects
                 rows={props.rows}
                 suspendEscapeSelectionClear={props.suspendEscapeSelectionClear}
               />
+              <DataGridFocusClickOutsideEffect getContainer={() => tableRef} />
 
               <Show when={props.rows.length > 0} fallback={props.emptyState}>
                 <For each={props.rows}>
