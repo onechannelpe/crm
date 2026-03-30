@@ -10,23 +10,23 @@ import {
 } from "~/features/record-index";
 
 import { SALES_CRM_RECORD_INDEX_COLUMNS } from "./columns";
-import { SalesCrmRecordIndexEmptyState } from "./empty-state";
+import { SalesRecordIndexEmptyState } from "./empty-state";
 import { useOpenSalesCrmRecord } from "./open-row";
 
 import styles from "./styles.module.css";
 
-export function SalesCrmRecordIndex() {
+export function SalesRecordIndex() {
   const sales = createAsync(() => listLeadSales({}), { initialValue: [] });
   const selection = createDataGridSelection(sales);
   const { rowOpen } = useOpenSalesCrmRecord();
 
   const adapter = useRecordIndexAdapter({
-    id: "sales-crm",
+    id: "sales",
     title: "Ventas CRM",
     columns: [...SALES_CRM_RECORD_INDEX_COLUMNS],
     getRows: sales,
     rowOpen,
-    emptyState: <SalesCrmRecordIndexEmptyState />,
+    emptyState: <SalesRecordIndexEmptyState />,
   });
 
   return (

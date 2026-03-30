@@ -1,10 +1,10 @@
 import { AppPage } from "~/components/layout/page";
-import { SalesCrmRecordIndex } from "~/features/record-index/adapters/sales-crm";
+import { SalesRecordIndex } from "~/features/record-index/adapters/sales";
 
 export default function LeadSalesPage() {
   return (
     <AppPage>
-      <SalesCrmRecordIndex />
+      <SalesRecordIndex />
     </AppPage>
   );
 }
