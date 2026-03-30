@@ -12,11 +12,9 @@ import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { Select } from "~/components/ui/input/select";
 import { Textarea } from "~/components/ui/input/textarea";
-import {
-  DataGrid,
-  type DataGridColumn,
-  createNoopRowOpen,
-} from "~/features/data-grid";
+import { DataGrid } from "~/features/data-grid/components/grid";
+import { createNoopRowOpen } from "~/features/data-grid/model/row-open";
+import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { getErrorMessage } from "~/lib/errors";
 import {
   confirmSalesRecordMutation,

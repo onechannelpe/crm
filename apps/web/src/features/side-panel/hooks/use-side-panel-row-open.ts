@@ -1,4 +1,5 @@
-import { createPanelRowOpen, type DataGridRowOpen } from "~/features/data-grid";
+import { createPanelRowOpen } from "~/features/data-grid/model/row-open";
+import type { DataGridRowOpen } from "~/features/data-grid/model/row-open";
 
 import { useSidePanel } from "../state/use-side-panel";
 import type { SidePanelPageDefinition } from "../types/side-panel-page";

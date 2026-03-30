@@ -4,20 +4,18 @@ import { For, createMemo, createSignal } from "solid-js";
 import { listLeads, registerLead } from "~/actions/pipeline/leads";
 import List from "~/components/icons/list";
 import Plus from "~/components/icons/plus";
+import { DataGridToolbar } from "~/features/data-grid/components/toolbar";
+import { DataGridToolbarMenu } from "~/features/data-grid/components/toolbar-menu";
 import {
   buildDataGridTemplateColumns,
-  createDataGridSelection,
-  DataGridToolbar,
-  DataGridToolbarMenu,
   getStickyDataGridColumnIndex,
   SELECTION_COLUMN_WIDTH,
-} from "~/features/data-grid";
-import {
-  createRecordIndexViewState,
-  RecordIndexGrid,
-  RecordIndexPage,
-  useRecordIndexAdapter,
-} from "~/features/record-index";
+} from "~/features/data-grid/hooks/use-column-layout";
+import { createDataGridSelection } from "~/features/data-grid/hooks/use-selection";
+import { RecordIndexPage } from "~/features/record-index/components/page";
+import { RecordIndexGrid } from "~/features/record-index/components/table";
+import { useRecordIndexAdapter } from "~/features/record-index/hooks/use-adapter";
+import { createRecordIndexViewState } from "~/features/record-index/hooks/use-state";
 import { toAppError } from "~/lib/app-errors";
 
 import { LEADS_RECORD_INDEX_COLUMNS } from "./columns";

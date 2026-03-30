@@ -1,4 +1,4 @@
-import type { DataGridIcon } from "./data-grid-types";
+import type { DataGridIcon } from "./types";
 
 export type DataGridRowAction<T> = {
   key: string;

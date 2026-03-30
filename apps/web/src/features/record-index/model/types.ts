@@ -1,13 +1,13 @@
 import type { JSX } from "solid-js";
 
+import type { DataGridRowOpen } from "~/features/data-grid/model/row-open";
 import type {
   DataGridActionRowConfig,
   DataGridColumn,
-  DataGridRowOpen,
-} from "~/features/data-grid";
+} from "~/features/data-grid/model/types";
 
-import type { RecordIndexFilterOption } from "./record-index-filter";
-import type { RecordIndexSortOption } from "./record-index-sort";
+import type { RecordIndexFilterOption } from "./filter";
+import type { RecordIndexSortOption } from "./sort";
 
 export type RecordIndexAdapter<T extends { id: number }> = {
   id: string;

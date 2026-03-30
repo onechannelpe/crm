@@ -1,4 +1,4 @@
-import type { DataGridIcon } from "../model/data-grid-types";
+import type { DataGridIcon } from "../model/types";
 
 import styles from "../styles/data-grid.module.css";
 

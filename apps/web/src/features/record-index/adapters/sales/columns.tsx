@@ -3,7 +3,7 @@ import Building2 from "~/components/icons/building-2";
 import CalendarDays from "~/components/icons/calendar-days";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import Package from "~/components/icons/package";
-import type { DataGridColumn } from "~/features/data-grid";
+import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { formatDate } from "~/lib/utils";
 
 import styles from "./styles.module.css";

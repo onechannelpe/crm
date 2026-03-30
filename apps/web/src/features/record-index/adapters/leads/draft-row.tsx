@@ -1,6 +1,6 @@
 import { For, Show } from "solid-js";
 
-import type { DataGridColumn } from "~/features/data-grid";
+import type { DataGridColumn } from "~/features/data-grid/model/types";
 
 import type { LeadRow } from "./columns";
 
