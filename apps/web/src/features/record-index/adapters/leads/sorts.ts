@@ -1,3 +1,4 @@
+import type { RecordIndexSortDefinition } from "../../model/sort";
 import type { LeadRow } from "./columns";
 
 export type LeadSortKey =
@@ -34,3 +35,14 @@ export function sortLeadRows(leads: LeadRow[], sortKey: LeadSortKey) {
 
   return items;
 }
+
+export const LEADS_RECORD_INDEX_SORT: RecordIndexSortDefinition<
+  LeadRow,
+  LeadSortKey
+> = {
+  label: "Sort",
+  menuId: "record-index-sort-menu",
+  options: LEADS_RECORD_INDEX_SORTS,
+  defaultValue: "created_at_desc",
+  apply: sortLeadRows,
+};

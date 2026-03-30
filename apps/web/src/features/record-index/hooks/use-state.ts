@@ -1,7 +1,19 @@
-import { createDataGridViewState } from "~/features/data-grid/hooks/use-view-state";
+import { createSignal } from "solid-js";
+
+export type RecordIndexMenu = "filter" | "sort" | "options" | null;
 
 export function createRecordIndexViewState(
   initialVisibleColumnKeys: Set<string>,
 ) {
-  return createDataGridViewState(initialVisibleColumnKeys);
+  const [openMenu, setOpenMenu] = createSignal<RecordIndexMenu>(null);
+  const [visibleColumnKeys, setVisibleColumnKeys] = createSignal<Set<string>>(
+    initialVisibleColumnKeys,
+  );
+
+  return {
+    openMenu,
+    setOpenMenu,
+    visibleColumnKeys,
+    setVisibleColumnKeys,
+  };
 }

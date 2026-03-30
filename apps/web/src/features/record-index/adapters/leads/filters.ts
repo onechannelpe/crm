@@ -1,3 +1,4 @@
+import type { RecordIndexFilterDefinition } from "../../model/filter";
 import type { LeadRow } from "./columns";
 
 export const LEADS_RECORD_INDEX_FILTERS = [
@@ -20,3 +21,14 @@ export function applyLeadStageFilter(
 
   return rows.filter((row) => row.stage === filterValue);
 }
+
+export const LEADS_RECORD_INDEX_FILTER: RecordIndexFilterDefinition<
+  LeadRow,
+  LeadStageFilterValue
+> = {
+  label: "Filter",
+  menuId: "record-index-filter-menu",
+  options: LEADS_RECORD_INDEX_FILTERS,
+  defaultValue: "all",
+  apply: applyLeadStageFilter,
+};
