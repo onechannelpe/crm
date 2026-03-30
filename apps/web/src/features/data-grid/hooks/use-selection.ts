@@ -11,6 +11,7 @@ type DragMode = "add" | "remove" | null;
 export type DataGridSelectionModel = {
   selectedIds: Accessor<number[]>;
   allSelected: Accessor<boolean>;
+  clear: () => void;
   setSelected: (id: number, checked: boolean) => void;
   toggleAll: (checked: boolean) => void;
   beginSelectionDrag: (id: number) => void;
@@ -41,6 +42,11 @@ export function createDataGridSelection<T extends { id: number }>(
     setSelectedIds(checked ? rows().map((row) => row.id) : []);
   }
 
+  function clear() {
+    setSelectedIds([]);
+    setDragMode(null);
+  }
+
   function beginSelectionDrag(id: number) {
     const shouldAdd = !selectedIds().includes(id);
     setDragMode(shouldAdd ? "add" : "remove");
@@ -62,6 +68,7 @@ export function createDataGridSelection<T extends { id: number }>(
   return {
     selectedIds,
     allSelected,
+    clear,
     setSelected,
     toggleAll,
     beginSelectionDrag,

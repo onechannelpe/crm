@@ -1,13 +1,19 @@
 import { createMemo } from "solid-js";
 
-import {
-  buildDataGridTemplateColumns,
-  getStickyDataGridColumnIndex,
-  SELECTION_COLUMN_WIDTH,
-} from "~/features/data-grid/hooks/use-column-layout";
 import { createDataGridSelection } from "~/features/data-grid/hooks/use-selection";
 
 import { useRecordIndexViewState } from "../context/instance-context";
+import {
+  applyRecordIndexFilter,
+  applyRecordIndexSort,
+  createRecordIndexDraftRowRenderContext,
+  getVisibleRecordIndexColumns,
+  hasHiddenRecordIndexColumns,
+  isRecordIndexFilterActive,
+  isRecordIndexSortActive,
+  resolveRecordIndexOptionValue,
+  toggleRecordIndexVisibleColumnKey,
+} from "../model/derive";
 import type {
   RecordIndexAdapter,
   RecordIndexScreenModel,
@@ -22,109 +28,51 @@ export function useRecordIndexModel<
 ): RecordIndexScreenModel<T, TFilterValue, TSortValue> {
   const viewState = useRecordIndexViewState();
   const visibleColumns = createMemo(() =>
-    adapter.columns.filter((column) =>
-      viewState.visibleColumnKeys().has(column.key),
+    getVisibleRecordIndexColumns(
+      adapter.columns,
+      viewState.visibleColumnKeys(),
     ),
   );
 
   function toggleColumn(key: string) {
-    viewState.setVisibleColumnKeys((current) => {
-      if (current.has(key)) {
-        if (current.size === 1) {
-          return current;
-        }
-
-        const next = new Set(current);
-        next.delete(key);
-        return next;
-      }
-
-      const next = new Set(current);
-      next.add(key);
-      return next;
-    });
+    viewState.setVisibleColumnKeys((current) =>
+      toggleRecordIndexVisibleColumnKey(current, key),
+    );
   }
 
-  const hasHiddenColumns = createMemo(
-    () => viewState.visibleColumnKeys().size !== adapter.columns.length,
+  const hasHiddenColumns = createMemo(() =>
+    hasHiddenRecordIndexColumns(adapter.columns, viewState.visibleColumnKeys()),
   );
 
   const filteredRows = createMemo(() => {
-    const filter = adapter.filter;
-    if (!filter) {
-      return adapter.getRows();
-    }
-
-    const selectedOption = filter.options.find(
-      (option) => option.value === viewState.filterValue(),
+    return applyRecordIndexFilter(
+      adapter.getRows(),
+      adapter.filter,
+      viewState.filterValue(),
     );
-    if (!selectedOption) {
-      return adapter.getRows();
-    }
-
-    return filter.apply(adapter.getRows(), selectedOption.value);
   });
 
   const filterIsActive = createMemo(() => {
-    const filter = adapter.filter;
-    const selectedOption = filter?.options.find(
-      (option) => option.value === viewState.filterValue(),
-    );
-
-    if (!filter || !selectedOption) {
-      return false;
-    }
-
-    return filter.isActive
-      ? filter.isActive(selectedOption.value)
-      : selectedOption.value !== filter.defaultValue;
+    return isRecordIndexFilterActive(adapter.filter, viewState.filterValue());
   });
 
   const sortedRows = createMemo(() => {
-    const sort = adapter.sort;
-    if (!sort) {
-      return filteredRows();
-    }
-
-    const selectedOption = sort.options.find(
-      (option) => option.value === viewState.sortValue(),
+    return applyRecordIndexSort(
+      filteredRows(),
+      adapter.sort,
+      viewState.sortValue(),
     );
-    if (!selectedOption) {
-      return filteredRows();
-    }
-
-    return sort.apply(filteredRows(), selectedOption.value);
   });
 
   const sortIsActive = createMemo(() => {
-    const sort = adapter.sort;
-    const selectedOption = sort?.options.find(
-      (option) => option.value === viewState.sortValue(),
-    );
-
-    if (!sort || !selectedOption) {
-      return false;
-    }
-
-    return sort.isActive
-      ? sort.isActive(selectedOption.value)
-      : selectedOption.value !== sort.defaultValue;
+    return isRecordIndexSortActive(adapter.sort, viewState.sortValue());
   });
 
   const selection = createDataGridSelection(sortedRows);
-  const gridTemplateColumns = createMemo(() =>
-    buildDataGridTemplateColumns(visibleColumns()),
-  );
-  const stickyColumnIndex = createMemo(() =>
-    getStickyDataGridColumnIndex(visibleColumns()),
-  );
   const draftRow = createMemo(() =>
-    adapter.renderDraftRow?.({
-      columns: visibleColumns(),
-      gridTemplateColumns: gridTemplateColumns(),
-      stickyColumnIndex: stickyColumnIndex(),
-      stickyLeft: SELECTION_COLUMN_WIDTH,
-    }),
+    adapter.renderDraftRow?.(
+      createRecordIndexDraftRowRenderContext(visibleColumns()),
+    ),
   );
   const count = createMemo(() =>
     adapter.getCount ? adapter.getCount() : adapter.getRows().length,
@@ -142,24 +90,28 @@ export function useRecordIndexModel<
       toggleColumn,
     },
     filtering: {
-      filterValue: createMemo(() => {
-        const selectedOption = adapter.filter?.options.find(
-          (option) => option.value === viewState.filterValue(),
-        );
-        return selectedOption?.value;
-      }),
-      setFilterValue: viewState.setFilterValue,
+      filterValue: createMemo(() =>
+        adapter.filter
+          ? resolveRecordIndexOptionValue(
+              adapter.filter.options,
+              viewState.filterValue(),
+            )
+          : undefined,
+      ),
+      setFilterValue: (value) => viewState.setFilterValue(() => value),
       filteredRows,
       isActive: filterIsActive,
     },
     sorting: {
-      sortValue: createMemo(() => {
-        const selectedOption = adapter.sort?.options.find(
-          (option) => option.value === viewState.sortValue(),
-        );
-        return selectedOption?.value;
-      }),
-      setSortValue: viewState.setSortValue,
+      sortValue: createMemo(() =>
+        adapter.sort
+          ? resolveRecordIndexOptionValue(
+              adapter.sort.options,
+              viewState.sortValue(),
+            )
+          : undefined,
+      ),
+      setSortValue: (value) => viewState.setSortValue(() => value),
       sortedRows,
       isActive: sortIsActive,
     },

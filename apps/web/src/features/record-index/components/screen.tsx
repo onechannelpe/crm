@@ -1,7 +1,7 @@
 import { RecordIndexInstanceProvider } from "../context/instance-context";
+import { RecordIndexEffects } from "../effects/effects";
 import { useRecordIndexModel } from "../hooks/use-instance";
 import type { RecordIndexAdapter } from "../model/types";
-import { RecordIndexPage } from "./page";
 import { RecordIndexTable } from "./table";
 import { RecordIndexToolbar } from "./toolbar";
 
@@ -18,9 +18,9 @@ export function RecordIndexScreen<
       initialFilterValue={props.adapter.filter?.defaultValue}
       initialSortValue={props.adapter.sort?.defaultValue}
     >
-      <RecordIndexPage class={props.adapter.class}>
+      <div class={props.adapter.class}>
         <RecordIndexScreenContent adapter={props.adapter} />
-      </RecordIndexPage>
+      </div>
     </RecordIndexInstanceProvider>
   );
 }
@@ -36,6 +36,7 @@ function RecordIndexScreenContent<
     <>
       <RecordIndexToolbar model={model} />
       <RecordIndexTable model={model} />
+      <RecordIndexEffects model={model} />
     </>
   );
 }
