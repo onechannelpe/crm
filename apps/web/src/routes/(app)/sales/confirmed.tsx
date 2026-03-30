@@ -1,5 +1,4 @@
 import { createAsync, useNavigate } from "@solidjs/router";
-import { Show } from "solid-js";
 
 import { EmptyState } from "~/components/feedback/empty-state";
 import Building2 from "~/components/icons/building-2";
@@ -71,28 +70,23 @@ export default function ConfirmedSalesPage() {
     initialValue: [],
   });
   const rowOpen = createRouteRowOpen<ConfirmedSaleRow>((sale) => {
-    void navigate(`/sales/${sale.id}`);
+    navigate(`/sales/${sale.id}`);
   });
 
   return (
     <AppPage>
-      <Show
-        when={sales().length > 0}
-        fallback={
+      <DataGrid
+        ariaLabel="Ventas confirmadas"
+        columns={[...CONFIRMED_SALES_COLUMNS]}
+        emptyState={
           <EmptyState
             title="Sin ventas confirmadas"
             description="Las ventas confirmadas aparecerán aquí."
           />
         }
-      >
-        <DataGrid
-          ariaLabel="Ventas confirmadas"
-          columns={[...CONFIRMED_SALES_COLUMNS]}
-          emptyState={<></>}
-          rowOpen={rowOpen}
-          rows={sales()}
-        />
-      </Show>
+        rowOpen={rowOpen}
+        rows={sales()}
+      />
     </AppPage>
   );
 }

@@ -1,5 +1,5 @@
 import { createAsync } from "@solidjs/router";
-import { Show, createMemo } from "solid-js";
+import { createMemo } from "solid-js";
 
 import Activity from "~/components/icons/activity";
 import CalendarDays from "~/components/icons/calendar-days";
@@ -108,20 +108,17 @@ export default function CapacityAuditPage() {
           </p>
         </div>
 
-        <Show
-          when={rows().length > 0}
-          fallback={
-            <p class="text-sm text-muted-foreground">No audit events found.</p>
+        <DataGrid
+          ariaLabel="Capacity audit"
+          columns={[...CAPACITY_AUDIT_COLUMNS]}
+          emptyState={
+            <p class="px-3 py-4 text-sm text-muted-foreground">
+              No audit events found.
+            </p>
           }
-        >
-          <DataGrid
-            ariaLabel="Capacity audit"
-            columns={[...CAPACITY_AUDIT_COLUMNS]}
-            emptyState={<></>}
-            rowOpen={rowOpen}
-            rows={rows()}
-          />
-        </Show>
+          rowOpen={rowOpen}
+          rows={rows()}
+        />
       </div>
     </AppPage>
   );

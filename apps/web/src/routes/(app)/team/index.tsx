@@ -1,5 +1,5 @@
 import { A, createAsync, useNavigate } from "@solidjs/router";
-import { Show, createMemo, createSignal } from "solid-js";
+import { createMemo, createSignal } from "solid-js";
 
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import List from "~/components/icons/list";
@@ -93,7 +93,7 @@ export default function TeamPage() {
     );
   });
   const rowOpen = createRouteRowOpen<TeamExecutiveRow>((executive) => {
-    void navigate(`/team/members/${executive.id}/capacity`);
+    navigate(`/team/members/${executive.id}/capacity`);
   });
 
   return (
@@ -126,22 +126,17 @@ export default function TeamPage() {
           placeholder="Nombre o correo"
         />
 
-        <Show
-          when={filtered().length > 0}
-          fallback={
-            <p class="text-sm text-muted-foreground">
+        <DataGrid
+          ariaLabel="Equipo"
+          columns={[...TEAM_COLUMNS]}
+          emptyState={
+            <p class="px-3 py-4 text-sm text-muted-foreground">
               No hay ejecutivos visibles.
             </p>
           }
-        >
-          <DataGrid
-            ariaLabel="Equipo"
-            columns={[...TEAM_COLUMNS]}
-            emptyState={<></>}
-            rowOpen={rowOpen}
-            rows={filtered()}
-          />
-        </Show>
+          rowOpen={rowOpen}
+          rows={filtered()}
+        />
       </div>
     </AppPage>
   );

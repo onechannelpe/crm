@@ -1,5 +1,4 @@
 import { createAsync, useAction } from "@solidjs/router";
-import { Show } from "solid-js";
 
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import List from "~/components/icons/list";
@@ -93,22 +92,17 @@ export default function TeamRequestsPage() {
             Aprueba o rechaza pedidos de capacidad.
           </p>
         </div>
-        <Show
-          when={requests().length > 0}
-          fallback={
-            <p class="text-sm text-muted-foreground">
+        <DataGrid
+          ariaLabel="Solicitudes del equipo"
+          columns={[...columns]}
+          emptyState={
+            <p class="px-3 py-4 text-sm text-muted-foreground">
               No hay solicitudes pendientes.
             </p>
           }
-        >
-          <DataGrid
-            ariaLabel="Solicitudes del equipo"
-            columns={[...columns]}
-            emptyState={<></>}
-            rowOpen={createNoopRowOpen()}
-            rows={requests()}
-          />
-        </Show>
+          rowOpen={createNoopRowOpen()}
+          rows={requests()}
+        />
       </div>
     </AppPage>
   );
