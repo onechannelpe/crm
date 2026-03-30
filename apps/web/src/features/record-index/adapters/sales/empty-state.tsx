@@ -1,7 +1,7 @@
 import { EmptyState } from "~/components/feedback/empty-state";
 import Building2 from "~/components/icons/building-2";
 
-export function SalesCrmRecordIndexEmptyState() {
+export function SalesRecordIndexEmptyState() {
   return (
     <EmptyState
       icon={Building2}
