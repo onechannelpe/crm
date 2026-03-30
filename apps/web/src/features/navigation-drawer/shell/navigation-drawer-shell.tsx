@@ -6,7 +6,7 @@ import LayoutSidebarLeftCollapse from "~/components/icons/layout-sidebar-left-co
 import Search from "~/components/icons/search";
 import X from "~/components/icons/x";
 import { AccountMenu } from "~/components/layout/account-menu";
-import { useSession } from "~/components/providers/session-provider";
+import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
 import { NAVIGATION_DRAWER_CLICK_OUTSIDE_ID } from "~/features/side-panel/constants/side-panel-click-outside-id";
 import { shortName } from "~/lib/users/display-name";
@@ -29,7 +29,7 @@ interface NavigationDrawerProps {
 export function NavigationDrawer(props: NavigationDrawerProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { currentUser } = useSession();
+  const { currentUser } = useAuthenticatedSession();
   const {
     expanded,
     setExpanded,

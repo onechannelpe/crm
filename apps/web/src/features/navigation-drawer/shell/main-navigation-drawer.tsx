@@ -3,7 +3,7 @@ import { For } from "solid-js";
 
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import Settings from "~/components/icons/settings";
-import { useSession } from "~/components/providers/session-provider";
+import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { AnimatedExpandableContainer } from "~/components/ui/animation/animated-expandable-container";
 
 import {
@@ -29,7 +29,7 @@ import styles from "./main-navigation-drawer.module.css";
 export function MainNavigationDrawer() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { currentUser } = useSession();
+  const { currentUser } = useAuthenticatedSession();
   const {
     isMobile,
     isSectionOpen,

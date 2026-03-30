@@ -10,7 +10,7 @@ import { RecoveryCodesPanel } from "~/components/auth/security-enrollment/recove
 import { usePasskeyEnrollment } from "~/components/auth/security-enrollment/use-passkey-enrollment";
 import { useTotpEnrollment } from "~/components/auth/security-enrollment/use-totp-enrollment";
 import { useToast } from "~/components/feedback/toast-provider";
-import { useSession } from "~/components/providers/session-provider";
+import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { ConfirmDialog } from "~/components/ui/confirm-dialog";
 import { Button } from "~/components/ui/input/button";
@@ -32,7 +32,7 @@ function getSetupKey(otpauthUri: string): string {
 
 export default function SecurityPage() {
   const { showToast } = useToast();
-  const { currentUser, refreshCurrentUser } = useSession();
+  const { currentUser, refreshCurrentUser } = useAuthenticatedSession();
 
   const [currentPassword, setCurrentPassword] = createSignal("");
   const [newPassword, setNewPassword] = createSignal("");
