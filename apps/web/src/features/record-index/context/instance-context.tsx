@@ -1,6 +1,10 @@
 import { createContext, type JSX, useContext } from "solid-js";
 
-import { createRecordIndexViewState } from "../model/state";
+import {
+  createRecordIndexStateOptions,
+  createRecordIndexViewState,
+  type RecordIndexViewStateSource,
+} from "../model/state";
 import type { RecordIndexViewState } from "../model/types";
 
 const RecordIndexInstanceContext = createContext<
@@ -8,16 +12,12 @@ const RecordIndexInstanceContext = createContext<
 >(undefined);
 
 export function RecordIndexInstanceProvider(props: {
-  initialVisibleColumnKeys: Set<string>;
-  initialFilterValue?: string;
-  initialSortValue?: string;
+  source: RecordIndexViewStateSource;
   children: JSX.Element;
 }) {
-  const viewState = createRecordIndexViewState({
-    visibleColumnKeys: props.initialVisibleColumnKeys,
-    filterValue: props.initialFilterValue,
-    sortValue: props.initialSortValue,
-  });
+  const viewState = createRecordIndexViewState(
+    createRecordIndexStateOptions(props.source),
+  );
 
   return (
     <RecordIndexInstanceContext.Provider value={viewState}>

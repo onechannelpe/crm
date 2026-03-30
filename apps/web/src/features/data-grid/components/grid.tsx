@@ -1,9 +1,6 @@
-import { For, Show, createMemo, type JSX } from "solid-js";
+import { createMemo, type JSX } from "solid-js";
 
 import { DataGridInstanceProvider } from "../context/instance-context";
-import { DataGridFocusClickOutsideEffect } from "../effects/focus-click-outside";
-import { DataGridSelectionEffects } from "../effects/selection";
-import { SELECTION_COLUMN_WIDTH } from "../hooks/use-column-layout";
 import {
   buildDataGridTemplateColumns,
   getStickyDataGridColumnIndex,
@@ -12,11 +9,7 @@ import { createDataGridInteraction } from "../hooks/use-instance";
 import type { DataGridSelectionModel } from "../hooks/use-selection";
 import type { DataGridRowOpen } from "../model/row-open";
 import type { DataGridActionRowConfig, DataGridColumn } from "../model/types";
-import { DataGridActionRow } from "./action-row";
-import { DataGridHeader } from "./header";
-import { DataGridRow } from "./row";
-
-import styles from "../styles/data-grid.module.css";
+import { DataGridContent } from "./content";
 
 export function DataGrid<T extends { id: number }>(props: {
   actionRow?: DataGridActionRowConfig;
@@ -50,62 +43,24 @@ export function DataGrid<T extends { id: number }>(props: {
 
   return (
     <DataGridInstanceProvider value={interaction}>
-      <div class={styles.indexContainer}>
-        <div class={styles.tableContainer}>
-          <div class={styles.scrollWrapper}>
-            <section
-              ref={(element) => (tableRef = element)}
-              class={styles.table}
-              aria-label={props.ariaLabel}
-            >
-              <DataGridHeader
-                columns={props.columns}
-                gridTemplateColumns={gridTemplateColumns()}
-                selectable={selectable()}
-                allSelected={interaction.allSelected?.()}
-                stickyColumnIndex={stickyColumnIndex()}
-                stickyLeft={selectable() ? SELECTION_COLUMN_WIDTH : 0}
-                onToggleAll={interaction.toggleAll}
-              />
-
-              {props.draftRow}
-              <DataGridSelectionEffects
-                rows={props.rows}
-                suspendEscapeSelectionClear={props.suspendEscapeSelectionClear}
-              />
-              <DataGridFocusClickOutsideEffect getContainer={() => tableRef} />
-
-              <Show when={props.rows.length > 0} fallback={props.emptyState}>
-                <For each={props.rows}>
-                  {(row) => (
-                    <DataGridRow
-                      columns={props.columns}
-                      gridTemplateColumns={gridTemplateColumns()}
-                      selectable={selectable()}
-                      row={row}
-                      rowOpen={props.rowOpen}
-                      stickyColumnIndex={stickyColumnIndex()}
-                      stickyLeft={selectable() ? SELECTION_COLUMN_WIDTH : 0}
-                    />
-                  )}
-                </For>
-
-                {props.actionRow ? (
-                  <DataGridActionRow
-                    gridTemplateColumns={gridTemplateColumns()}
-                    icon={props.actionRow.icon}
-                    label={props.actionRow.label}
-                    labelColumnIndex={Math.max(stickyColumnIndex(), 0)}
-                    onClick={props.actionRow.onClick}
-                    stickyColumnIndex={stickyColumnIndex()}
-                    stickyLeft={selectable() ? SELECTION_COLUMN_WIDTH : 0}
-                  />
-                ) : null}
-              </Show>
-            </section>
-          </div>
-        </div>
-      </div>
+      <DataGridContent
+        actionRow={props.actionRow}
+        ariaLabel={props.ariaLabel}
+        columns={props.columns}
+        draftRow={props.draftRow}
+        emptyState={props.emptyState}
+        getContainer={() => tableRef}
+        setContainer={(element) => {
+          tableRef = element;
+        }}
+        gridTemplateColumns={gridTemplateColumns()}
+        rowOpen={props.rowOpen}
+        rows={props.rows}
+        selectable={selectable()}
+        selection={props.selection}
+        stickyColumnIndex={stickyColumnIndex()}
+        suspendEscapeSelectionClear={props.suspendEscapeSelectionClear}
+      />
     </DataGridInstanceProvider>
   );
 }

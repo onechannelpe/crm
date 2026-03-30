@@ -1,0 +1,77 @@
+import { Show, type JSX } from "solid-js";
+
+import { DataGridFocusClickOutsideEffect } from "../effects/focus-click-outside";
+import { DataGridSelectionEffects } from "../effects/selection";
+import { SELECTION_COLUMN_WIDTH } from "../hooks/use-column-layout";
+import type { DataGridSelectionModel } from "../hooks/use-selection";
+import type { DataGridRowOpen } from "../model/row-open";
+import type { DataGridActionRowConfig, DataGridColumn } from "../model/types";
+import { DataGridBody } from "./body";
+import { DataGridHeader } from "./header";
+
+import styles from "../styles/data-grid.module.css";
+
+export function DataGridContent<T extends { id: number }>(props: {
+  actionRow?: DataGridActionRowConfig;
+  ariaLabel: string;
+  columns: DataGridColumn<T>[];
+  draftRow?: JSX.Element;
+  emptyState: JSX.Element;
+  getContainer: () => HTMLElement | undefined;
+  setContainer: (element: HTMLElement) => void;
+  gridTemplateColumns: string;
+  rowOpen: DataGridRowOpen<T>;
+  rows: T[];
+  selectable: boolean;
+  selection?: DataGridSelectionModel;
+  stickyColumnIndex: number;
+  suspendEscapeSelectionClear?: boolean;
+}) {
+  const stickyLeft = () => (props.selectable ? SELECTION_COLUMN_WIDTH : 0);
+
+  return (
+    <div class={styles.indexContainer}>
+      <div class={styles.tableContainer}>
+        <div class={styles.scrollWrapper}>
+          <section
+            ref={props.setContainer}
+            class={styles.table}
+            aria-label={props.ariaLabel}
+          >
+            <DataGridHeader
+              columns={props.columns}
+              gridTemplateColumns={props.gridTemplateColumns}
+              selectable={props.selectable}
+              allSelected={props.selection?.allSelected()}
+              stickyColumnIndex={props.stickyColumnIndex}
+              stickyLeft={stickyLeft()}
+              onToggleAll={props.selection?.toggleAll}
+            />
+
+            {props.draftRow}
+            <DataGridSelectionEffects
+              rows={props.rows}
+              suspendEscapeSelectionClear={props.suspendEscapeSelectionClear}
+            />
+            <DataGridFocusClickOutsideEffect
+              getContainer={props.getContainer}
+            />
+
+            <Show when={props.rows.length > 0} fallback={props.emptyState}>
+              <DataGridBody
+                actionRow={props.actionRow}
+                columns={props.columns}
+                gridTemplateColumns={props.gridTemplateColumns}
+                rowOpen={props.rowOpen}
+                rows={props.rows}
+                selectable={props.selectable}
+                stickyColumnIndex={props.stickyColumnIndex}
+                stickyLeft={stickyLeft()}
+              />
+            </Show>
+          </section>
+        </div>
+      </div>
+    </div>
+  );
+}
