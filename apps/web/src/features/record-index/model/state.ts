@@ -2,6 +2,12 @@ import { createSignal } from "solid-js";
 
 import type { RecordIndexMenu, RecordIndexViewState } from "./types";
 
+export type RecordIndexViewStateSource = {
+  columns: ReadonlyArray<{ key: string }>;
+  filter?: { defaultValue?: string };
+  sort?: { defaultValue?: string };
+};
+
 export type RecordIndexStateOptions = {
   visibleColumnKeys: Set<string>;
   filterValue?: string;
@@ -27,5 +33,15 @@ export function createRecordIndexViewState(
     setFilterValue,
     sortValue,
     setSortValue,
+  };
+}
+
+export function createRecordIndexStateOptions(
+  source: RecordIndexViewStateSource,
+): RecordIndexStateOptions {
+  return {
+    visibleColumnKeys: new Set(source.columns.map((column) => column.key)),
+    filterValue: source.filter?.defaultValue,
+    sortValue: source.sort?.defaultValue,
   };
 }

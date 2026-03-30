@@ -10,13 +10,7 @@ export function RecordIndexScreen<
   TSortValue extends string = string,
 >(props: { adapter: RecordIndexAdapter<T, TFilterValue, TSortValue> }) {
   return (
-    <RecordIndexInstanceProvider
-      initialVisibleColumnKeys={
-        new Set(props.adapter.columns.map((column) => column.key))
-      }
-      initialFilterValue={props.adapter.filter?.defaultValue}
-      initialSortValue={props.adapter.sort?.defaultValue}
-    >
+    <RecordIndexInstanceProvider source={props.adapter}>
       <div class={props.adapter.class}>
         <RecordIndexScreenContent adapter={props.adapter} />
       </div>
