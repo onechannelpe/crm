@@ -19,12 +19,16 @@ export function RecordIndexScreen<
   T extends { id: number },
   TFilterValue extends string = string,
   TSortValue extends string = string,
->(props: {
-  adapter: RecordIndexAdapter<T, TFilterValue, TSortValue>;
-}) {
+>(props: { adapter: RecordIndexAdapter<T, TFilterValue, TSortValue> }) {
   const columns = useRecordIndexColumns(props.adapter.columns);
-  const filtering = useRecordIndexFiltering(props.adapter.getRows, props.adapter.filter);
-  const sorting = useRecordIndexSorting(filtering.filteredRows, props.adapter.sort);
+  const filtering = useRecordIndexFiltering(
+    props.adapter.getRows,
+    props.adapter.filter,
+  );
+  const sorting = useRecordIndexSorting(
+    filtering.filteredRows,
+    props.adapter.sort,
+  );
 
   const selection = createDataGridSelection(sorting.sortedRows);
   const gridTemplateColumns = createMemo(() =>
@@ -42,7 +46,9 @@ export function RecordIndexScreen<
     }),
   );
   const count = createMemo(() =>
-    props.adapter.getCount ? props.adapter.getCount() : props.adapter.getRows().length,
+    props.adapter.getCount
+      ? props.adapter.getCount()
+      : props.adapter.getRows().length,
   );
 
   return (

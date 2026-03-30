@@ -25,7 +25,9 @@ export function useRecordIndexFiltering<T, TValue extends string>(
       return false;
     }
 
-    return filter.isActive ? filter.isActive(value) : value !== filter.defaultValue;
+    return filter.isActive
+      ? filter.isActive(value)
+      : value !== filter.defaultValue;
   });
 
   return {

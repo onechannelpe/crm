@@ -3,14 +3,21 @@ import { For, Show, type Setter } from "solid-js";
 import List from "~/components/icons/list";
 import { DataGridToolbar } from "~/features/data-grid/components/toolbar";
 import { DataGridToolbarMenu } from "~/features/data-grid/components/toolbar-menu";
-import type { DataGridColumn, DataGridIcon } from "~/features/data-grid/model/types";
+import type {
+  DataGridColumn,
+  DataGridIcon,
+} from "~/features/data-grid/model/types";
 
 import type { RecordIndexFilterDefinition } from "../model/filter";
 import type { RecordIndexSortDefinition } from "../model/sort";
 
 import sharedStyles from "~/features/data-grid/styles/data-grid.module.css";
 
-export function RecordIndexToolbar<T, TFilterValue extends string, TSortValue extends string>(props: {
+export function RecordIndexToolbar<
+  T,
+  TFilterValue extends string,
+  TSortValue extends string,
+>(props: {
   title: string;
   count: number;
   pickerIcon?: DataGridIcon;
@@ -60,8 +67,12 @@ export function RecordIndexToolbar<T, TFilterValue extends string, TSortValue ex
                       type="button"
                       class={sharedStyles.menuItem}
                       role="menuitemradio"
-                      data-active={props.filterValue === option.value ? "true" : "false"}
-                      aria-checked={props.filterValue === option.value ? "true" : "false"}
+                      data-active={
+                        props.filterValue === option.value ? "true" : "false"
+                      }
+                      aria-checked={
+                        props.filterValue === option.value ? "true" : "false"
+                      }
                       onClick={() => {
                         props.onFilterChange?.(option.value);
                         props.setOpenMenu(null);
@@ -94,8 +105,12 @@ export function RecordIndexToolbar<T, TFilterValue extends string, TSortValue ex
                       type="button"
                       class={sharedStyles.menuItem}
                       role="menuitemradio"
-                      data-active={props.sortValue === option.value ? "true" : "false"}
-                      aria-checked={props.sortValue === option.value ? "true" : "false"}
+                      data-active={
+                        props.sortValue === option.value ? "true" : "false"
+                      }
+                      aria-checked={
+                        props.sortValue === option.value ? "true" : "false"
+                      }
                       onClick={() => {
                         props.onSortChange?.(option.value);
                         props.setOpenMenu(null);
@@ -127,8 +142,12 @@ export function RecordIndexToolbar<T, TFilterValue extends string, TSortValue ex
                   type="button"
                   class={sharedStyles.menuItem}
                   role="menuitemcheckbox"
-                  data-active={props.visibleColumnKeys.has(column.key) ? "true" : "false"}
-                  aria-checked={props.visibleColumnKeys.has(column.key) ? "true" : "false"}
+                  data-active={
+                    props.visibleColumnKeys.has(column.key) ? "true" : "false"
+                  }
+                  aria-checked={
+                    props.visibleColumnKeys.has(column.key) ? "true" : "false"
+                  }
                   onClick={() => props.toggleColumn(column.key)}
                 >
                   <input

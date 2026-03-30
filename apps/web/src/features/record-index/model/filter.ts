@@ -3,10 +3,7 @@ export type RecordIndexFilterOption<TValue extends string = string> = {
   value: TValue;
 };
 
-export type RecordIndexFilterDefinition<
-  T,
-  TValue extends string = string,
-> = {
+export type RecordIndexFilterDefinition<T, TValue extends string = string> = {
   label: string;
   menuId: string;
   options: ReadonlyArray<RecordIndexFilterOption<TValue>>;
