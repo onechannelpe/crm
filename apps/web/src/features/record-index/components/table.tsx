@@ -1,22 +1,22 @@
-import type { JSX } from "solid-js";
-
 import { DataGrid } from "~/features/data-grid/components/grid";
-import type { DataGridSelectionModel } from "~/features/data-grid/hooks/use-selection";
-import type { DataGridRowOpen } from "~/features/data-grid/model/row-open";
-import {
-  type DataGridActionRowConfig,
-  type DataGridColumn,
-} from "~/features/data-grid/model/types";
 
-export function RecordIndexGrid<T extends { id: number }>(props: {
-  actionRow?: DataGridActionRowConfig;
-  ariaLabel: string;
-  columns: DataGridColumn<T>[];
-  draftRow?: JSX.Element;
-  emptyState: JSX.Element;
-  rowOpen: DataGridRowOpen<T>;
-  rows: T[];
-  selection: DataGridSelectionModel;
-}) {
-  return <DataGrid {...props} />;
+import type { RecordIndexScreenModel } from "../model/types";
+
+export function RecordIndexTable<
+  T extends { id: number },
+  TFilterValue extends string = string,
+  TSortValue extends string = string,
+>(props: { model: RecordIndexScreenModel<T, TFilterValue, TSortValue> }) {
+  return (
+    <DataGrid
+      actionRow={props.model.adapter.actionRow}
+      ariaLabel={props.model.adapter.ariaLabel}
+      columns={props.model.columns.visibleColumns()}
+      draftRow={props.model.draftRow()}
+      emptyState={props.model.adapter.emptyState}
+      rowOpen={props.model.adapter.rowOpen}
+      rows={props.model.sorting.sortedRows()}
+      selection={props.model.selection}
+    />
+  );
 }
