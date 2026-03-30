@@ -88,8 +88,10 @@ export function isRuntimeMessage(value: unknown): value is RuntimeMessage {
       return true;
     case "call.start":
       return (
-        (value.assignmentId === undefined || typeof value.assignmentId === "number") &&
-        (value.contactId === undefined || typeof value.contactId === "number") &&
+        (value.assignmentId === undefined ||
+          typeof value.assignmentId === "number") &&
+        (value.contactId === undefined ||
+          typeof value.contactId === "number") &&
         (value.phone === undefined || typeof value.phone === "string")
       );
     case "call.end":
@@ -124,7 +126,9 @@ export function isRuntimeMessage(value: unknown): value is RuntimeMessage {
   }
 }
 
-export function isExternalRuntimeMessage(value: unknown): value is ExternalRuntimeMessage {
+export function isExternalRuntimeMessage(
+  value: unknown,
+): value is ExternalRuntimeMessage {
   if (!isObject(value) || typeof value.type !== "string") {
     return false;
   }

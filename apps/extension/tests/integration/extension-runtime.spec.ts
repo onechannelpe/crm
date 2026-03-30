@@ -1,6 +1,6 @@
+import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { mkdtemp, rm } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 import { expect, test } from "@playwright/test";
@@ -14,7 +14,10 @@ import {
 import { createSyncSink } from "./support/sync-sink";
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
-const EXTENSION_OUTPUT_PATH = path.resolve(currentDirectory, "../../.output/chrome-mv3");
+const EXTENSION_OUTPUT_PATH = path.resolve(
+  currentDirectory,
+  "../../.output/chrome-mv3",
+);
 
 test.describe("extension runtime integration", () => {
   test("rejects invalid call and recording transitions", async () => {
@@ -25,7 +28,9 @@ test.describe("extension runtime integration", () => {
     try {
       const page = await openPopupPage(session.context, session.extensionId);
 
-      const connectBeforeStart = await sendRuntimeMessage(page, { type: "call.connected" });
+      const connectBeforeStart = await sendRuntimeMessage(page, {
+        type: "call.connected",
+      });
       expect(connectBeforeStart.ok).toBe(false);
 
       const callStarted = await sendRuntimeMessage(page, {
@@ -42,7 +47,9 @@ test.describe("extension runtime integration", () => {
       });
       expect(callEnded.ok).toBe(true);
 
-      const connectAfterEnd = await sendRuntimeMessage(page, { type: "call.connected" });
+      const connectAfterEnd = await sendRuntimeMessage(page, {
+        type: "call.connected",
+      });
       expect(connectAfterEnd.ok).toBe(false);
 
       const startRecordingAfterEnd = await sendRuntimeMessage(page, {
@@ -64,10 +71,14 @@ test.describe("extension runtime integration", () => {
     try {
       const page = await openPopupPage(session.context, session.extensionId);
 
-      await expect.poll(async () => {
-        const response = await sendRuntimeMessage(page, { type: "state.get" });
-        return response.ok;
-      }).toBe(true);
+      await expect
+        .poll(async () => {
+          const response = await sendRuntimeMessage(page, {
+            type: "state.get",
+          });
+          return response.ok;
+        })
+        .toBe(true);
 
       await sendRuntimeMessage(page, {
         type: "call.start",
@@ -90,18 +101,28 @@ test.describe("extension runtime integration", () => {
       });
       expect(configResponse.ok).toBe(true);
 
-      const flushResponse = await sendRuntimeMessage(page, { type: "sync.flush" });
+      const flushResponse = await sendRuntimeMessage(page, {
+        type: "sync.flush",
+      });
       expect(flushResponse.ok).toBe(true);
 
-      await expect.poll(() => sink.events.length, { timeout: 20_000 }).toBeGreaterThanOrEqual(4);
+      await expect
+        .poll(() => sink.events.length, { timeout: 20_000 })
+        .toBeGreaterThanOrEqual(4);
 
-      const stateResponse = await sendRuntimeMessage(page, { type: "state.get" });
+      const stateResponse = await sendRuntimeMessage(page, {
+        type: "state.get",
+      });
       if (!stateResponse.ok) {
         throw new Error(stateResponse.error);
       }
 
       expect(stateResponse.state.queue).toHaveLength(0);
-      expect(sink.events.every((event) => event.authorization === "Bearer test-token")).toBe(true);
+      expect(
+        sink.events.every(
+          (event) => event.authorization === "Bearer test-token",
+        ),
+      ).toBe(true);
 
       const eventTypes = sink.events.map((event) => {
         const body = event.body as Record<string, unknown>;
@@ -116,7 +137,9 @@ test.describe("extension runtime integration", () => {
   });
 
   test("persists call state across browser restart and recreates alarms", async () => {
-    const userDataDir = await mkdtemp(path.join(os.tmpdir(), "crm-extension-restart-"));
+    const userDataDir = await mkdtemp(
+      path.join(os.tmpdir(), "crm-extension-restart-"),
+    );
 
     const firstSession = await launchExtensionSession({
       extensionOutputPath: EXTENSION_OUTPUT_PATH,
@@ -124,7 +147,10 @@ test.describe("extension runtime integration", () => {
     });
 
     try {
-      const firstPage = await openPopupPage(firstSession.context, firstSession.extensionId);
+      const firstPage = await openPopupPage(
+        firstSession.context,
+        firstSession.extensionId,
+      );
       const startResponse = await sendRuntimeMessage(firstPage, {
         type: "call.start",
         assignmentId: 777,
@@ -142,8 +168,13 @@ test.describe("extension runtime integration", () => {
     });
 
     try {
-      const secondPage = await openPopupPage(secondSession.context, secondSession.extensionId);
-      const stateResponse = await sendRuntimeMessage(secondPage, { type: "state.get" });
+      const secondPage = await openPopupPage(
+        secondSession.context,
+        secondSession.extensionId,
+      );
+      const stateResponse = await sendRuntimeMessage(secondPage, {
+        type: "state.get",
+      });
       if (!stateResponse.ok) {
         throw new Error(stateResponse.error);
       }

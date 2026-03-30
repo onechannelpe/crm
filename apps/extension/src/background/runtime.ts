@@ -22,16 +22,16 @@ import {
   saveLargePayload,
 } from "@/src/services/journal";
 import {
+  closeOffscreenDocument,
+  ensureOffscreenDocument,
+} from "@/src/services/offscreen";
+import {
   appendJob,
   createJob,
   dueJobs,
   hasQueuedJobType,
   markFailed,
 } from "@/src/services/queue";
-import {
-  closeOffscreenDocument,
-  ensureOffscreenDocument,
-} from "@/src/services/offscreen";
 import { readState, writeState } from "@/src/services/storage";
 import { refreshSyncSession, sendSyncJob } from "@/src/services/sync";
 
@@ -68,7 +68,10 @@ function toSuccessResponse(state: ExtensionState): RuntimeResponse {
   };
 }
 
-function toErrorResponse(error: string, state?: ExtensionState): RuntimeResponse {
+function toErrorResponse(
+  error: string,
+  state?: ExtensionState,
+): RuntimeResponse {
   return {
     ok: false,
     error,
@@ -149,7 +152,10 @@ function isOffscreenControlResponse(
   if (typeof value !== "object" || value === null) return false;
   const maybeResponse = value as Record<string, unknown>;
   if (typeof maybeResponse.ok !== "boolean") return false;
-  if (maybeResponse.error !== undefined && typeof maybeResponse.error !== "string") {
+  if (
+    maybeResponse.error !== undefined &&
+    typeof maybeResponse.error !== "string"
+  ) {
     return false;
   }
   return true;
@@ -224,14 +230,18 @@ function enqueueExecutiveStatus(
 ): ExtensionState {
   return appendQueuedEvent(state, "executive.presence", {
     presenceStatus,
-    assignmentId: state.handoff?.assignmentId ?? state.currentCall?.assignmentId ?? null,
+    assignmentId:
+      state.handoff?.assignmentId ?? state.currentCall?.assignmentId ?? null,
     contactId: state.handoff?.contactId ?? state.currentCall?.contactId ?? null,
     callSessionId: state.currentCall?.sessionId ?? null,
     updatedAt,
   });
 }
 
-function enqueueHeartbeatIfNeeded(state: ExtensionState, occurredAt: number): ExtensionState {
+function enqueueHeartbeatIfNeeded(
+  state: ExtensionState,
+  occurredAt: number,
+): ExtensionState {
   if (
     !state.syncConfig.apiBaseUrl ||
     !state.syncConfig.sessionToken ||
@@ -322,7 +332,9 @@ async function flushQueue(
   return next;
 }
 
-async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> {
+async function handleMessage(
+  message: RuntimeMessage,
+): Promise<RuntimeResponse> {
   const current = await readState();
 
   switch (message.type) {
@@ -370,7 +382,10 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
       try {
         const call = ensureCurrentCall(current);
         if (call.phase !== "dialing" || call.connectedAt) {
-          return toErrorResponse("call cannot be connected from current state", current);
+          return toErrorResponse(
+            "call cannot be connected from current state",
+            current,
+          );
         }
 
         const connectedAt = Date.now();
@@ -400,7 +415,10 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
       try {
         const call = ensureCurrentCall(current);
         if (call.phase !== "dialing" && call.phase !== "active") {
-          return toErrorResponse("call cannot be ended from current state", current);
+          return toErrorResponse(
+            "call cannot be ended from current state",
+            current,
+          );
         }
 
         const endedAt = Date.now();
@@ -446,8 +464,14 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
     }
     case "recording.start": {
       try {
-        if (current.recording.phase !== "idle" && current.recording.phase !== "error") {
-          return toErrorResponse("recording cannot be started from current state", current);
+        if (
+          current.recording.phase !== "idle" &&
+          current.recording.phase !== "error"
+        ) {
+          return toErrorResponse(
+            "recording cannot be started from current state",
+            current,
+          );
         }
 
         const call = ensureRecordableCall(current);
@@ -474,7 +498,9 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
         });
         if (!isOffscreenControlResponse(response) || !response.ok) {
           throw new Error(
-            isOffscreenControlResponse(response) ? response.error ?? "offscreen start failed" : "invalid offscreen response",
+            isOffscreenControlResponse(response)
+              ? (response.error ?? "offscreen start failed")
+              : "invalid offscreen response",
           );
         }
 
@@ -510,8 +536,14 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
         return toSuccessResponse(current);
       }
 
-      if (current.recording.phase !== "recording" && current.recording.phase !== "starting") {
-        return toErrorResponse("recording cannot be stopped from current state", current);
+      if (
+        current.recording.phase !== "recording" &&
+        current.recording.phase !== "starting"
+      ) {
+        return toErrorResponse(
+          "recording cannot be stopped from current state",
+          current,
+        );
       }
 
       try {
@@ -530,7 +562,9 @@ async function handleMessage(message: RuntimeMessage): Promise<RuntimeResponse> 
         });
         if (!isOffscreenControlResponse(response) || !response.ok) {
           throw new Error(
-            isOffscreenControlResponse(response) ? response.error ?? "offscreen stop failed" : "invalid offscreen response",
+            isOffscreenControlResponse(response)
+              ? (response.error ?? "offscreen stop failed")
+              : "invalid offscreen response",
           );
         }
 
@@ -727,7 +761,9 @@ export function registerRuntime(): void {
 
   browser.runtime.onMessageExternal.addListener((message: unknown, sender) => {
     if (!isExternalRuntimeMessage(message)) {
-      return Promise.resolve(toErrorResponse("invalid external message payload"));
+      return Promise.resolve(
+        toErrorResponse("invalid external message payload"),
+      );
     }
 
     return handleExternalRuntimeMessage(message, sender);
@@ -748,7 +784,9 @@ export function registerRuntime(): void {
     const connected = port as unknown as BroadcastPort;
     connectedPorts.add(connected);
     connected.onDisconnect.addListener(() => connectedPorts.delete(connected));
-    void readState().then((state) => connected.postMessage(toSuccessResponse(state)));
+    void readState().then((state) =>
+      connected.postMessage(toSuccessResponse(state)),
+    );
   });
 
   if (chrome.sidePanel?.setPanelBehavior) {

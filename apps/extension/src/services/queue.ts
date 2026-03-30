@@ -26,7 +26,10 @@ export function appendJob(queue: QueueJob[], job: QueueJob): QueueJob[] {
   return [...queue, job];
 }
 
-export function hasQueuedJobType(queue: QueueJob[], type: QueueJobType): boolean {
+export function hasQueuedJobType(
+  queue: QueueJob[],
+  type: QueueJobType,
+): boolean {
   return queue.some((job) => job.type === type);
 }
 

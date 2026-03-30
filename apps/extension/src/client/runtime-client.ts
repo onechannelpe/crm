@@ -3,7 +3,10 @@ import {
   type RuntimeMessage,
   type RuntimeResponse,
 } from "@/src/domain/messages";
-import type { ExecutiveStateSnapshot, ExtensionState } from "@/src/domain/model";
+import type {
+  ExecutiveStateSnapshot,
+  ExtensionState,
+} from "@/src/domain/model";
 
 async function sendMessage(message: RuntimeMessage): Promise<RuntimeResponse> {
   try {
@@ -40,7 +43,10 @@ export function endCall(): Promise<RuntimeResponse> {
 
 export function startRecording(tabId: number): Promise<RuntimeResponse> {
   if (!Number.isInteger(tabId) || tabId <= 0) {
-    return Promise.resolve({ ok: false, error: "tab id must be a positive integer" });
+    return Promise.resolve({
+      ok: false,
+      error: "tab id must be a positive integer",
+    });
   }
 
   return sendMessage({ type: "recording.start", tabId });
@@ -75,9 +81,7 @@ export function configureSync(input: {
   });
 }
 
-export function isSuccessfulResponse(
-  response: RuntimeResponse,
-): response is {
+export function isSuccessfulResponse(response: RuntimeResponse): response is {
   ok: true;
   state: ExtensionState;
   executiveState: ExecutiveStateSnapshot;

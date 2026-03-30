@@ -19,8 +19,16 @@ body {
   font-family: var(--font-sans);
   color: var(--foreground);
   background:
-    radial-gradient(circle at 0 0, color(display-p3 1 0.95 0.85), transparent 40%),
-    radial-gradient(circle at 100% 20%, color(display-p3 0.94 0.88 0.76), transparent 35%),
+    radial-gradient(
+      circle at 0 0,
+      color(display-p3 1 0.95 0.85),
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 100% 20%,
+      color(display-p3 0.94 0.88 0.76),
+      transparent 35%
+    ),
     var(--background);
 }
 

@@ -1,8 +1,8 @@
-import type { AssignmentHandoff, SyncConfig } from "@/src/domain/model";
 import {
   isExtensionHandoffClaims,
   type ExtensionHandoffClaims,
 } from "@/src/domain/handoff-token";
+import type { AssignmentHandoff, SyncConfig } from "@/src/domain/model";
 
 function fromBase64Url(value: string): Uint8Array {
   const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
@@ -74,7 +74,9 @@ function validateClaims(claims: ExtensionHandoffClaims, origin: string): void {
   }
 }
 
-async function verifyTokenSignature(token: string): Promise<ExtensionHandoffClaims> {
+async function verifyTokenSignature(
+  token: string,
+): Promise<ExtensionHandoffClaims> {
   const parts = token.split(".");
   if (parts.length !== 3) {
     throw new Error("invalid token format");
@@ -149,16 +151,19 @@ export async function claimExternalSession(input: {
   installationId: string;
   origin: string;
 }): Promise<SyncConfig> {
-  const claimResponse = await fetch(`${input.origin}/api/extension/session/claim`, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
+  const claimResponse = await fetch(
+    `${input.origin}/api/extension/session/claim`,
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        handoffToken: input.token,
+        installationId: input.installationId,
+      }),
     },
-    body: JSON.stringify({
-      handoffToken: input.token,
-      installationId: input.installationId,
-    }),
-  });
+  );
   if (!claimResponse.ok) {
     let errorMessage = `session claim failed with status ${claimResponse.status}`;
     try {
@@ -176,10 +181,16 @@ export async function claimExternalSession(input: {
     sessionToken?: unknown;
     refreshToken?: unknown;
   };
-  if (typeof claimBody.sessionToken !== "string" || claimBody.sessionToken === "") {
+  if (
+    typeof claimBody.sessionToken !== "string" ||
+    claimBody.sessionToken === ""
+  ) {
     throw new Error("session claim returned an invalid session token");
   }
-  if (typeof claimBody.refreshToken !== "string" || claimBody.refreshToken === "") {
+  if (
+    typeof claimBody.refreshToken !== "string" ||
+    claimBody.refreshToken === ""
+  ) {
     throw new Error("session claim returned an invalid refresh token");
   }
 

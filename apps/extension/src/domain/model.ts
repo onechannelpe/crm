@@ -2,7 +2,12 @@ export const STORAGE_KEY = "crm_extension_state_v1" as const;
 
 export type CallPhase = "dialing" | "active" | "ended";
 
-export type RecordingPhase = "idle" | "starting" | "recording" | "stopping" | "error";
+export type RecordingPhase =
+  | "idle"
+  | "starting"
+  | "recording"
+  | "stopping"
+  | "error";
 
 export type ExecutivePresenceStatus =
   | "idle"
@@ -190,12 +195,15 @@ function getSyncHealth(state: ExtensionState): SyncHealth {
   return "ok";
 }
 
-export function getExecutiveState(state: ExtensionState): ExecutiveStateSnapshot {
+export function getExecutiveState(
+  state: ExtensionState,
+): ExecutiveStateSnapshot {
   const activeCall = state.currentCall;
   return {
     presenceStatus: getPresenceStatus(state),
     syncHealth: getSyncHealth(state),
-    assignmentId: state.handoff?.assignmentId ?? activeCall?.assignmentId ?? null,
+    assignmentId:
+      state.handoff?.assignmentId ?? activeCall?.assignmentId ?? null,
     contactId: state.handoff?.contactId ?? activeCall?.contactId ?? null,
     phone: state.handoff?.phone ?? activeCall?.phone ?? null,
     presenceUpdatedAt: getPresenceUpdatedAt(state),

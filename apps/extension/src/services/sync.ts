@@ -66,7 +66,11 @@ export async function sendSyncJob(
       return { ok: false, reason: "failed", error: error.message };
     }
 
-    return { ok: false, reason: "failed", error: "sync failed with unknown error" };
+    return {
+      ok: false,
+      reason: "failed",
+      error: "sync failed with unknown error",
+    };
   }
 }
 
@@ -83,16 +87,19 @@ export async function refreshSyncSession(
   }
 
   try {
-    const response = await fetch(`${config.apiBaseUrl}/extension/session/refresh`, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
+    const response = await fetch(
+      `${config.apiBaseUrl}/extension/session/refresh`,
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          refreshToken: config.refreshToken,
+          installationId,
+        }),
       },
-      body: JSON.stringify({
-        refreshToken: config.refreshToken,
-        installationId,
-      }),
-    });
+    );
     if (response.status === 401) {
       return {
         ok: false,

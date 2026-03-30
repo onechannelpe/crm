@@ -1,4 +1,9 @@
-import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
+import {
+  createServer,
+  type IncomingMessage,
+  type Server,
+  type ServerResponse,
+} from "node:http";
 
 interface ReceivedEvent {
   authorization: string | null;
@@ -27,7 +32,11 @@ function collectRequestBody(req: IncomingMessage): Promise<string> {
   });
 }
 
-function writeJson(res: ServerResponse, status: number, body: Record<string, unknown>): void {
+function writeJson(
+  res: ServerResponse,
+  status: number,
+  body: Record<string, unknown>,
+): void {
   const payload = JSON.stringify(body);
   res.writeHead(status, {
     "content-type": "application/json",
