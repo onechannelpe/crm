@@ -1,20 +1,20 @@
-import { useSidePanel } from "~/features/side-panel/state/use-side-panel";
+import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-row-open";
 import { createLeadDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
 
 import type { LeadRow } from "./columns";
 
 export function useOpenLeadRecord() {
-  const { openPanel } = useSidePanel();
+  const rowOpen = useSidePanelRowOpen<
+    Pick<LeadRow, "id" | "ruc" | "razon_social">
+  >((lead) =>
+    createLeadDetailSidePanelPage({
+      leadId: lead.id,
+      title: lead.razon_social || lead.ruc,
+      subtitle: `RUC ${lead.ruc}`,
+    }),
+  );
 
   return {
-    openLeadRecord(lead: Pick<LeadRow, "id" | "ruc" | "razon_social">) {
-      openPanel(
-        createLeadDetailSidePanelPage({
-          leadId: lead.id,
-          title: lead.razon_social || lead.ruc,
-          subtitle: `RUC ${lead.ruc}`,
-        }),
-      );
-    },
+    rowOpen,
   };
 }

@@ -4,6 +4,7 @@ import {
   DataGrid,
   type DataGridActionRowConfig,
   type DataGridColumn,
+  type DataGridRowOpen,
   type DataGridSelectionModel,
 } from "~/features/data-grid";
 
@@ -13,7 +14,7 @@ export function RecordIndexGrid<T extends { id: number }>(props: {
   columns: DataGridColumn<T>[];
   draftRow?: JSX.Element;
   emptyState: JSX.Element;
-  onRowClick: (row: T) => void;
+  rowOpen: DataGridRowOpen<T>;
   rows: T[];
   selection: DataGridSelectionModel;
 }) {
