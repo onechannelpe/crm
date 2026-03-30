@@ -2,12 +2,10 @@ import { createAsync } from "@solidjs/router";
 
 import { listLeadsForQuotation } from "~/actions/pipeline/quotations";
 import List from "~/components/icons/list";
-import { DataGridToolbar } from "~/features/data-grid/components/toolbar";
-import { createDataGridSelection } from "~/features/data-grid/hooks/use-selection";
-import { RecordIndexPage } from "~/features/record-index/components/page";
-import { RecordIndexGrid } from "~/features/record-index/components/table";
-import { useRecordIndexAdapter } from "~/features/record-index/hooks/use-adapter";
+import { RecordIndexScreen } from "~/features/record-index/components/screen";
+import type { RecordIndexAdapter } from "~/features/record-index/model/types";
 
+import type { QuotationRow } from "./columns";
 import { QUOTATIONS_RECORD_INDEX_COLUMNS } from "./columns";
 import { QuotationsRecordIndexEmptyState } from "./empty-state";
 import { useOpenQuotationRecord } from "./open-row";
@@ -18,37 +16,19 @@ export function QuotationsRecordIndex() {
   const leads = createAsync(() => listLeadsForQuotation({}), {
     initialValue: [],
   });
-  const selection = createDataGridSelection(leads);
   const { rowOpen } = useOpenQuotationRecord();
 
-  const adapter = useRecordIndexAdapter({
+  const adapter = {
     id: "quotations",
     title: "Cotizaciones",
-    columns: [...QUOTATIONS_RECORD_INDEX_COLUMNS],
+    ariaLabel: "Cotizaciones",
+    pickerIcon: List,
+    columns: QUOTATIONS_RECORD_INDEX_COLUMNS,
     getRows: leads,
     rowOpen,
     emptyState: <QuotationsRecordIndexEmptyState />,
-  });
+    class: styles.page,
+  } satisfies RecordIndexAdapter<QuotationRow>;
 
-  return (
-    <RecordIndexPage class={styles.page}>
-      <DataGridToolbar
-        picker={{
-          icon: List,
-          label: adapter.title,
-          count: adapter.getRows().length,
-        }}
-        rightContent={<></>}
-      />
-
-      <RecordIndexGrid
-        ariaLabel="Cotizaciones"
-        columns={adapter.columns}
-        emptyState={adapter.emptyState}
-        rowOpen={adapter.rowOpen}
-        rows={adapter.getRows()}
-        selection={selection}
-      />
-    </RecordIndexPage>
-  );
+  return <RecordIndexScreen adapter={adapter} />;
 }

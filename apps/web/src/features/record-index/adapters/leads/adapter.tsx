@@ -1,44 +1,25 @@
 import { createAsync } from "@solidjs/router";
-import { For, createMemo, createSignal } from "solid-js";
+import { createSignal } from "solid-js";
 
 import { listLeads, registerLead } from "~/actions/pipeline/leads";
 import List from "~/components/icons/list";
 import Plus from "~/components/icons/plus";
-import { DataGridToolbar } from "~/features/data-grid/components/toolbar";
-import { DataGridToolbarMenu } from "~/features/data-grid/components/toolbar-menu";
-import {
-  buildDataGridTemplateColumns,
-  getStickyDataGridColumnIndex,
-  SELECTION_COLUMN_WIDTH,
-} from "~/features/data-grid/hooks/use-column-layout";
-import { createDataGridSelection } from "~/features/data-grid/hooks/use-selection";
-import { RecordIndexPage } from "~/features/record-index/components/page";
-import { RecordIndexGrid } from "~/features/record-index/components/table";
-import { useRecordIndexAdapter } from "~/features/record-index/hooks/use-adapter";
-import { createRecordIndexViewState } from "~/features/record-index/hooks/use-state";
+import { RecordIndexScreen } from "~/features/record-index/components/screen";
+import type { RecordIndexAdapter } from "~/features/record-index/model/types";
 import { toAppError } from "~/lib/app-errors";
 
+import type { LeadRow } from "./columns";
 import { LEADS_RECORD_INDEX_COLUMNS } from "./columns";
 import { LeadsRecordIndexDraftRow } from "./draft-row";
 import { LeadsRecordIndexEmptyState } from "./empty-state";
 import {
-  applyLeadStageFilter,
-  LEADS_RECORD_INDEX_FILTERS,
+  LEADS_RECORD_INDEX_FILTER,
   type LeadStageFilterValue,
 } from "./filters";
 import { useOpenLeadRecord } from "./open-row";
-import {
-  LEADS_RECORD_INDEX_SORTS,
-  sortLeadRows,
-  type LeadSortKey,
-} from "./sorts";
+import { LEADS_RECORD_INDEX_SORT, type LeadSortKey } from "./sorts";
 
 import styles from "./styles.module.css";
-import sharedStyles from "~/features/data-grid/styles/data-grid.module.css";
-
-const DEFAULT_VISIBLE_COLUMNS = new Set(
-  LEADS_RECORD_INDEX_COLUMNS.map((column) => column.key),
-);
 
 export function LeadsRecordIndex() {
   const [reloadToken, setReloadToken] = createSignal(0);
@@ -54,48 +35,7 @@ export function LeadsRecordIndex() {
   const [draftRuc, setDraftRuc] = createSignal("");
   const [error, setError] = createSignal<string | null>(null);
   const [submitting, setSubmitting] = createSignal(false);
-  const [stageFilter, setStageFilter] =
-    createSignal<LeadStageFilterValue>("all");
-  const [sortKey, setSortKey] = createSignal<LeadSortKey>("created_at_desc");
-
-  const viewState = createRecordIndexViewState(DEFAULT_VISIBLE_COLUMNS);
-
-  const visibleColumns = createMemo(() =>
-    LEADS_RECORD_INDEX_COLUMNS.filter((column) =>
-      viewState.visibleColumnKeys().has(column.key),
-    ),
-  );
-
-  const filteredLeads = createMemo(() =>
-    sortLeadRows(applyLeadStageFilter(leads(), stageFilter()), sortKey()),
-  );
-
-  const selection = createDataGridSelection(filteredLeads);
-  const gridTemplateColumns = createMemo(() =>
-    buildDataGridTemplateColumns(visibleColumns()),
-  );
-  const stickyColumnIndex = createMemo(() =>
-    getStickyDataGridColumnIndex(visibleColumns()),
-  );
   const { rowOpen } = useOpenLeadRecord();
-
-  function toggleColumn(key: string) {
-    viewState.setVisibleColumnKeys((current) => {
-      if (current.has(key)) {
-        if (current.size === 1) {
-          return current;
-        }
-
-        const next = new Set(current);
-        next.delete(key);
-        return next;
-      }
-
-      const next = new Set(current);
-      next.add(key);
-      return next;
-    });
-  }
 
   function openDraftRow() {
     setShowDraftRow(true);
@@ -135,29 +75,34 @@ export function LeadsRecordIndex() {
     }
   }
 
-  const adapter = useRecordIndexAdapter({
+  const adapter = {
     id: "leads",
     title: "All prospects",
-    columns: visibleColumns(),
-    getRows: filteredLeads,
+    ariaLabel: "Prospectos",
+    class: `${styles.page} record-index-container-gater-for-drag-select`,
+    pickerIcon: List,
+    columns: LEADS_RECORD_INDEX_COLUMNS,
+    getRows: leads,
     rowOpen,
-    filters: [...LEADS_RECORD_INDEX_FILTERS],
-    sorts: [...LEADS_RECORD_INDEX_SORTS],
     emptyState: <LeadsRecordIndexEmptyState onAddNew={openDraftRow} />,
-    draftRow: showDraftRow() ? (
-      <LeadsRecordIndexDraftRow
-        columns={visibleColumns()}
-        draftRuc={draftRuc()}
-        error={error()}
-        gridTemplateColumns={gridTemplateColumns()}
-        onCancel={closeDraftRow}
-        onDraftRucInput={setDraftRuc}
-        onSubmit={() => void handleRegister()}
-        stickyColumnIndex={stickyColumnIndex()}
-        stickyLeft={SELECTION_COLUMN_WIDTH}
-        submitting={submitting()}
-      />
-    ) : undefined,
+    filter: LEADS_RECORD_INDEX_FILTER,
+    sort: LEADS_RECORD_INDEX_SORT,
+    renderDraftRow: showDraftRow()
+      ? (context) => (
+          <LeadsRecordIndexDraftRow
+            columns={context.columns}
+            draftRuc={draftRuc()}
+            error={error()}
+            gridTemplateColumns={context.gridTemplateColumns}
+            onCancel={closeDraftRow}
+            onDraftRucInput={setDraftRuc}
+            onSubmit={() => void handleRegister()}
+            stickyColumnIndex={context.stickyColumnIndex}
+            stickyLeft={context.stickyLeft}
+            submitting={submitting()}
+          />
+        )
+      : undefined,
     actionRow: !showDraftRow()
       ? {
           icon: Plus,
@@ -165,144 +110,7 @@ export function LeadsRecordIndex() {
           onClick: openDraftRow,
         }
       : undefined,
-  });
+  } satisfies RecordIndexAdapter<LeadRow, LeadStageFilterValue, LeadSortKey>;
 
-  return (
-    <RecordIndexPage
-      class={`${styles.page} record-index-container-gater-for-drag-select`}
-    >
-      <DataGridToolbar
-        picker={{
-          icon: List,
-          label: adapter.title,
-          count: leads().length,
-        }}
-        rightContent={
-          <>
-            <DataGridToolbarMenu
-              active={stageFilter() !== "all"}
-              label="Filter"
-              menuId="view-bar-main-filter-dropdown-id-options"
-              open={viewState.openMenu() === "filter"}
-              onDismiss={() => viewState.setOpenMenu(null)}
-              onToggle={() =>
-                viewState.setOpenMenu((current) =>
-                  current === "filter" ? null : "filter",
-                )
-              }
-            >
-              <For each={LEADS_RECORD_INDEX_FILTERS}>
-                {(option) => (
-                  <button
-                    type="button"
-                    class={sharedStyles.menuItem}
-                    role="menuitemradio"
-                    data-active={
-                      stageFilter() === option.value ? "true" : "false"
-                    }
-                    aria-checked={
-                      stageFilter() === option.value ? "true" : "false"
-                    }
-                    onClick={() => {
-                      setStageFilter(option.value);
-                      viewState.setOpenMenu(null);
-                    }}
-                  >
-                    {option.label}
-                  </button>
-                )}
-              </For>
-            </DataGridToolbarMenu>
-            <DataGridToolbarMenu
-              active={sortKey() !== "created_at_desc"}
-              label="Sort"
-              menuId="sort-dropdown-options"
-              open={viewState.openMenu() === "sort"}
-              onDismiss={() => viewState.setOpenMenu(null)}
-              onToggle={() =>
-                viewState.setOpenMenu((current) =>
-                  current === "sort" ? null : "sort",
-                )
-              }
-            >
-              <For each={LEADS_RECORD_INDEX_SORTS}>
-                {(option) => (
-                  <button
-                    type="button"
-                    class={sharedStyles.menuItem}
-                    role="menuitemradio"
-                    data-active={sortKey() === option.value ? "true" : "false"}
-                    aria-checked={sortKey() === option.value ? "true" : "false"}
-                    onClick={() => {
-                      setSortKey(option.value);
-                      viewState.setOpenMenu(null);
-                    }}
-                  >
-                    {option.label}
-                  </button>
-                )}
-              </For>
-            </DataGridToolbarMenu>
-            <DataGridToolbarMenu
-              active={
-                viewState.visibleColumnKeys().size !==
-                LEADS_RECORD_INDEX_COLUMNS.length
-              }
-              label="Options"
-              menuId="object-options-dropdown-id-options"
-              open={viewState.openMenu() === "options"}
-              onDismiss={() => viewState.setOpenMenu(null)}
-              onToggle={() =>
-                viewState.setOpenMenu((current) =>
-                  current === "options" ? null : "options",
-                )
-              }
-            >
-              <div class={sharedStyles.menuSectionLabel}>Visible fields</div>
-              <For each={LEADS_RECORD_INDEX_COLUMNS}>
-                {(column) => (
-                  <button
-                    type="button"
-                    class={sharedStyles.menuItem}
-                    role="menuitemcheckbox"
-                    data-active={
-                      viewState.visibleColumnKeys().has(column.key)
-                        ? "true"
-                        : "false"
-                    }
-                    aria-checked={
-                      viewState.visibleColumnKeys().has(column.key)
-                        ? "true"
-                        : "false"
-                    }
-                    onClick={() => toggleColumn(column.key)}
-                  >
-                    <input
-                      checked={viewState.visibleColumnKeys().has(column.key)}
-                      class={sharedStyles.menuCheckbox}
-                      type="checkbox"
-                      aria-hidden="true"
-                      tabIndex={-1}
-                    />
-                    <span>{column.label}</span>
-                  </button>
-                )}
-              </For>
-            </DataGridToolbarMenu>
-          </>
-        }
-      />
-
-      <RecordIndexGrid
-        actionRow={adapter.actionRow}
-        ariaLabel="Prospectos"
-        columns={adapter.columns}
-        draftRow={adapter.draftRow}
-        emptyState={adapter.emptyState}
-        rowOpen={adapter.rowOpen}
-        rows={adapter.getRows()}
-        selection={selection}
-      />
-    </RecordIndexPage>
-  );
+  return <RecordIndexScreen adapter={adapter} />;
 }
