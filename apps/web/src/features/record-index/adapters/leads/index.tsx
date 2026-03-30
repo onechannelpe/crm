@@ -7,35 +7,44 @@ import Plus from "~/components/icons/plus";
 import {
   buildDataGridTemplateColumns,
   createDataGridSelection,
-  DataGrid,
   DataGridToolbar,
   DataGridToolbarMenu,
   getStickyDataGridColumnIndex,
   SELECTION_COLUMN_WIDTH,
 } from "~/features/data-grid";
-import { useSidePanel } from "~/features/side-panel/state/use-side-panel";
-import { createLeadDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
+import {
+  createRecordIndexViewState,
+  RecordIndexGrid,
+  RecordIndexPage,
+  useRecordIndexAdapter,
+} from "~/features/record-index";
 import { toAppError } from "~/lib/app-errors";
 
-import { LEAD_COLUMNS, type LeadRow } from "./columns";
-import { DraftRow } from "./draft-row";
-import { EmptyState } from "./empty-state";
+import { LEADS_RECORD_INDEX_COLUMNS } from "./columns";
+import { LeadsRecordIndexDraftRow } from "./draft-row";
+import { LeadsRecordIndexEmptyState } from "./empty-state";
 import {
-  FILTER_OPTIONS,
-  SORT_OPTIONS,
-  type SortKey,
-  sortLeads,
-} from "./view-config";
+  applyLeadStageFilter,
+  LEADS_RECORD_INDEX_FILTERS,
+  type LeadStageFilterValue,
+} from "./filters";
+import { useOpenLeadRecord } from "./open-row";
+import {
+  LEADS_RECORD_INDEX_SORTS,
+  sortLeadRows,
+  type LeadSortKey,
+} from "./sorts";
 
 import styles from "./styles.module.css";
 import sharedStyles from "~/features/data-grid/styles/data-grid.module.css";
 
 type ViewMenu = "filter" | "sort" | "options" | null;
+
 const DEFAULT_VISIBLE_COLUMNS = new Set(
-  LEAD_COLUMNS.map((column) => column.key),
+  LEADS_RECORD_INDEX_COLUMNS.map((column) => column.key),
 );
 
-export function LeadsIndex() {
+export function LeadsRecordIndex() {
   const [reloadToken, setReloadToken] = createSignal(0);
   const leads = createAsync(
     () => {
@@ -44,31 +53,26 @@ export function LeadsIndex() {
     },
     { initialValue: [] },
   );
-  const { openPanel } = useSidePanel();
+
   const [showDraftRow, setShowDraftRow] = createSignal(false);
   const [draftRuc, setDraftRuc] = createSignal("");
   const [error, setError] = createSignal<string | null>(null);
   const [submitting, setSubmitting] = createSignal(false);
   const [stageFilter, setStageFilter] =
-    createSignal<(typeof FILTER_OPTIONS)[number]["value"]>("all");
-  const [sortKey, setSortKey] = createSignal<SortKey>("created_at_desc");
-  const [visibleColumnKeys, setVisibleColumnKeys] = createSignal(
-    DEFAULT_VISIBLE_COLUMNS,
-  );
-  const [openMenu, setOpenMenu] = createSignal<ViewMenu>(null);
+    createSignal<LeadStageFilterValue>("all");
+  const [sortKey, setSortKey] = createSignal<LeadSortKey>("created_at_desc");
+
+  const viewState = createRecordIndexViewState(DEFAULT_VISIBLE_COLUMNS);
 
   const visibleColumns = createMemo(() =>
-    LEAD_COLUMNS.filter((column) => visibleColumnKeys().has(column.key)),
+    LEADS_RECORD_INDEX_COLUMNS.filter((column) =>
+      viewState.visibleColumnKeys().has(column.key),
+    ),
   );
 
-  const filteredLeads = createMemo(() => {
-    const filtered =
-      stageFilter() === "all"
-        ? leads()
-        : leads().filter((lead) => lead.stage === stageFilter());
-
-    return sortLeads(filtered, sortKey());
-  });
+  const filteredLeads = createMemo(() =>
+    sortLeadRows(applyLeadStageFilter(leads(), stageFilter()), sortKey()),
+  );
 
   const selection = createDataGridSelection(filteredLeads);
   const gridTemplateColumns = createMemo(() =>
@@ -77,21 +81,14 @@ export function LeadsIndex() {
   const stickyColumnIndex = createMemo(() =>
     getStickyDataGridColumnIndex(visibleColumns()),
   );
-
-  function openLeadPanel(lead: Pick<LeadRow, "id" | "ruc" | "razon_social">) {
-    openPanel(
-      createLeadDetailSidePanelPage({
-        leadId: lead.id,
-        title: lead.razon_social || lead.ruc,
-        subtitle: `RUC ${lead.ruc}`,
-      }),
-    );
-  }
+  const { openLeadRecord } = useOpenLeadRecord();
 
   function toggleColumn(key: string) {
-    setVisibleColumnKeys((current) => {
+    viewState.setVisibleColumnKeys((current) => {
       if (current.has(key)) {
-        if (current.size === 1) return current;
+        if (current.size === 1) {
+          return current;
+        }
 
         const next = new Set(current);
         next.delete(key);
@@ -126,7 +123,7 @@ export function LeadsIndex() {
         executiveId: 0,
       });
 
-      openLeadPanel({
+      openLeadRecord({
         id: result.id,
         ruc,
         razon_social: null,
@@ -142,12 +139,49 @@ export function LeadsIndex() {
     }
   }
 
+  const adapter = useRecordIndexAdapter({
+    id: "leads",
+    title: "All prospects",
+    columns: visibleColumns(),
+    getRows: filteredLeads,
+    rowOpen: {
+      mode: "panel",
+      open: openLeadRecord,
+    },
+    filters: [...LEADS_RECORD_INDEX_FILTERS],
+    sorts: [...LEADS_RECORD_INDEX_SORTS],
+    emptyState: <LeadsRecordIndexEmptyState onAddNew={openDraftRow} />,
+    draftRow: showDraftRow() ? (
+      <LeadsRecordIndexDraftRow
+        columns={visibleColumns()}
+        draftRuc={draftRuc()}
+        error={error()}
+        gridTemplateColumns={gridTemplateColumns()}
+        onCancel={closeDraftRow}
+        onDraftRucInput={setDraftRuc}
+        onSubmit={() => void handleRegister()}
+        stickyColumnIndex={stickyColumnIndex()}
+        stickyLeft={SELECTION_COLUMN_WIDTH}
+        submitting={submitting()}
+      />
+    ) : undefined,
+    actionRow: !showDraftRow()
+      ? {
+          icon: Plus,
+          label: "Add New",
+          onClick: openDraftRow,
+        }
+      : undefined,
+  });
+
   return (
-    <div class={`${styles.page} record-index-container-gater-for-drag-select`}>
+    <RecordIndexPage
+      class={`${styles.page} record-index-container-gater-for-drag-select`}
+    >
       <DataGridToolbar
         picker={{
           icon: List,
-          label: "All prospects",
+          label: adapter.title,
           count: leads().length,
         }}
         rightContent={
@@ -156,15 +190,15 @@ export function LeadsIndex() {
               active={stageFilter() !== "all"}
               label="Filter"
               menuId="view-bar-main-filter-dropdown-id-options"
-              open={openMenu() === "filter"}
-              onDismiss={() => setOpenMenu(null)}
+              open={viewState.openMenu() === "filter"}
+              onDismiss={() => viewState.setOpenMenu(null)}
               onToggle={() =>
-                setOpenMenu((current) =>
+                viewState.setOpenMenu((current) =>
                   current === "filter" ? null : "filter",
                 )
               }
             >
-              <For each={FILTER_OPTIONS}>
+              <For each={LEADS_RECORD_INDEX_FILTERS}>
                 {(option) => (
                   <button
                     type="button"
@@ -178,7 +212,7 @@ export function LeadsIndex() {
                     }
                     onClick={() => {
                       setStageFilter(option.value);
-                      setOpenMenu(null);
+                      viewState.setOpenMenu(null);
                     }}
                   >
                     {option.label}
@@ -190,13 +224,15 @@ export function LeadsIndex() {
               active={sortKey() !== "created_at_desc"}
               label="Sort"
               menuId="sort-dropdown-options"
-              open={openMenu() === "sort"}
-              onDismiss={() => setOpenMenu(null)}
+              open={viewState.openMenu() === "sort"}
+              onDismiss={() => viewState.setOpenMenu(null)}
               onToggle={() =>
-                setOpenMenu((current) => (current === "sort" ? null : "sort"))
+                viewState.setOpenMenu((current) =>
+                  current === "sort" ? null : "sort",
+                )
               }
             >
-              <For each={SORT_OPTIONS}>
+              <For each={LEADS_RECORD_INDEX_SORTS}>
                 {(option) => (
                   <button
                     type="button"
@@ -206,7 +242,7 @@ export function LeadsIndex() {
                     aria-checked={sortKey() === option.value ? "true" : "false"}
                     onClick={() => {
                       setSortKey(option.value);
-                      setOpenMenu(null);
+                      viewState.setOpenMenu(null);
                     }}
                   >
                     {option.label}
@@ -215,34 +251,41 @@ export function LeadsIndex() {
               </For>
             </DataGridToolbarMenu>
             <DataGridToolbarMenu
-              active={visibleColumnKeys().size !== LEAD_COLUMNS.length}
+              active={
+                viewState.visibleColumnKeys().size !==
+                LEADS_RECORD_INDEX_COLUMNS.length
+              }
               label="Options"
               menuId="object-options-dropdown-id-options"
-              open={openMenu() === "options"}
-              onDismiss={() => setOpenMenu(null)}
+              open={viewState.openMenu() === "options"}
+              onDismiss={() => viewState.setOpenMenu(null)}
               onToggle={() =>
-                setOpenMenu((current) =>
+                viewState.setOpenMenu((current) =>
                   current === "options" ? null : "options",
                 )
               }
             >
               <div class={sharedStyles.menuSectionLabel}>Visible fields</div>
-              <For each={LEAD_COLUMNS}>
+              <For each={LEADS_RECORD_INDEX_COLUMNS}>
                 {(column) => (
                   <button
                     type="button"
                     class={sharedStyles.menuItem}
                     role="menuitemcheckbox"
                     data-active={
-                      visibleColumnKeys().has(column.key) ? "true" : "false"
+                      viewState.visibleColumnKeys().has(column.key)
+                        ? "true"
+                        : "false"
                     }
                     aria-checked={
-                      visibleColumnKeys().has(column.key) ? "true" : "false"
+                      viewState.visibleColumnKeys().has(column.key)
+                        ? "true"
+                        : "false"
                     }
                     onClick={() => toggleColumn(column.key)}
                   >
                     <input
-                      checked={visibleColumnKeys().has(column.key)}
+                      checked={viewState.visibleColumnKeys().has(column.key)}
                       class={sharedStyles.menuCheckbox}
                       type="checkbox"
                       aria-hidden="true"
@@ -257,39 +300,16 @@ export function LeadsIndex() {
         }
       />
 
-      <DataGrid
-        actionRow={
-          !showDraftRow()
-            ? {
-                icon: Plus,
-                label: "Add New",
-                onClick: openDraftRow,
-              }
-            : undefined
-        }
+      <RecordIndexGrid
+        actionRow={adapter.actionRow}
         ariaLabel="Prospectos"
-        columns={visibleColumns()}
-        draftRow={
-          showDraftRow() ? (
-            <DraftRow
-              columns={visibleColumns()}
-              draftRuc={draftRuc()}
-              error={error()}
-              gridTemplateColumns={gridTemplateColumns()}
-              onCancel={closeDraftRow}
-              onDraftRucInput={setDraftRuc}
-              onSubmit={() => void handleRegister()}
-              stickyColumnIndex={stickyColumnIndex()}
-              stickyLeft={SELECTION_COLUMN_WIDTH}
-              submitting={submitting()}
-            />
-          ) : undefined
-        }
-        emptyState={<EmptyState onAddNew={openDraftRow} />}
-        onRowClick={openLeadPanel}
-        rows={filteredLeads()}
+        columns={adapter.columns}
+        draftRow={adapter.draftRow}
+        emptyState={adapter.emptyState}
+        onRowClick={adapter.rowOpen.open}
+        rows={adapter.getRows()}
         selection={selection}
       />
-    </div>
+    </RecordIndexPage>
   );
 }

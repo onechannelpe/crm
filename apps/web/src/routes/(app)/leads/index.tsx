@@ -1,10 +1,10 @@
-import { LeadsIndex } from "~/components/features/leads-index";
 import { AppPage } from "~/components/layout/page";
+import { LeadsRecordIndex } from "~/features/record-index/adapters/leads";
 
 export default function LeadsPage() {
   return (
     <AppPage>
-      <LeadsIndex />
+      <LeadsRecordIndex />
     </AppPage>
   );
 }

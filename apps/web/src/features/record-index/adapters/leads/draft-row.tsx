@@ -7,7 +7,7 @@ import type { LeadRow } from "./columns";
 import styles from "./styles.module.css";
 import sharedStyles from "~/features/data-grid/styles/data-grid.module.css";
 
-export function DraftRow(props: {
+export function LeadsRecordIndexDraftRow(props: {
   columns: DataGridColumn<LeadRow>[];
   draftRuc: string;
   error: string | null;
