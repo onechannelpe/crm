@@ -2,7 +2,7 @@ import { useNavigate } from "@solidjs/router";
 import { createEffect, createMemo, createSignal, For, Show } from "solid-js";
 
 import Search from "~/components/icons/search";
-import { useSession } from "~/components/providers/session-provider";
+import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { useHotkey } from "~/lib/hotkey/use-hotkey";
 import { getNavigableRoutes } from "~/lib/nav/nav-policy";
 import { cn } from "~/lib/utils";
@@ -23,7 +23,7 @@ interface CommandPaletteProps {
 
 export function CommandPalette(props: CommandPaletteProps) {
   const navigate = useNavigate();
-  const { currentUser } = useSession();
+  const { currentUser } = useAuthenticatedSession();
   const [query, setQuery] = createSignal("");
   const [selectedIndex, setSelectedIndex] = createSignal(0);
 

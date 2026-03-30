@@ -4,7 +4,7 @@ import { createSignal, onCleanup } from "solid-js";
 import { updateUserProfile } from "~/actions/settings";
 import { useToast } from "~/components/feedback/toast-provider";
 import { getUserInitials } from "~/components/layout/account-menu-utils";
-import { useSession } from "~/components/providers/session-provider";
+import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { ProfileImageInput } from "~/components/settings/ProfileImageInput";
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Button } from "~/components/ui/input/button";
@@ -23,7 +23,7 @@ function toMessage(error: unknown, fallback: string): string {
 }
 
 export default function ProfilePage() {
-  const { currentUser, updateCurrentUser } = useSession();
+  const { currentUser, updateCurrentUser } = useAuthenticatedSession();
   const { showToast } = useToast();
   const user = () => currentUser();
 

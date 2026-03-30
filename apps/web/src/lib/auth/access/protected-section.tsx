@@ -1,7 +1,7 @@
 import type { JSX } from "solid-js";
 import { Show } from "solid-js";
 
-import { useSession } from "~/components/providers/session-provider";
+import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 
 import { hasPermission, type Permission } from "./rbac";
 
@@ -12,7 +12,7 @@ interface ProtectedSectionProps {
 }
 
 export function ProtectedSection(props: ProtectedSectionProps) {
-  const { currentUser } = useSession();
+  const { currentUser } = useAuthenticatedSession();
   return (
     <Show
       when={hasPermission(currentUser().role, props.permission)}

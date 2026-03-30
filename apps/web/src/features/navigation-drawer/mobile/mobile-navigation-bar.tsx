@@ -4,7 +4,7 @@ import { createMemo } from "solid-js";
 import ChevronRight from "~/components/icons/chevron-right";
 import Search from "~/components/icons/search";
 import Settings from "~/components/icons/settings";
-import { useSession } from "~/components/providers/session-provider";
+import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { cn } from "~/lib/utils";
 
@@ -17,7 +17,7 @@ import styles from "./mobile-navigation-bar.module.css";
 export function MobileNavigationBar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { currentUser } = useSession();
+  const { currentUser } = useAuthenticatedSession();
   const {
     expanded,
     setExpanded,
