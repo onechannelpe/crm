@@ -18,6 +18,8 @@ type FocusedCell = {
 export type DataGridInteractionModel = {
   isRowFocused: (id: number) => boolean;
   isSelected: (id: number) => boolean;
+  selectedIds: Accessor<number[]>;
+  clearSelection: () => void;
   getCellTabIndex: (rowId: number, columnIndex: number) => number;
   focusCell: (rowId: number, columnIndex: number) => void;
   registerCellElement: (
@@ -108,6 +110,10 @@ export function createDataGridInteraction<T extends { id: number }>(options: {
       return focusedCell()?.rowId === id;
     },
     isSelected,
+    selectedIds: () => options.selection?.selectedIds() ?? [],
+    clearSelection() {
+      options.selection?.clear();
+    },
     getCellTabIndex(rowId: number, columnIndex: number) {
       if (options.rowOpenMode() === "none") {
         return -1;

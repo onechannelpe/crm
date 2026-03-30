@@ -1,6 +1,7 @@
 import { For, Show, createMemo, type JSX } from "solid-js";
 
 import { DataGridInstanceProvider } from "../context/instance-context";
+import { DataGridEffects } from "../effects/effects";
 import { SELECTION_COLUMN_WIDTH } from "../hooks/use-column-layout";
 import {
   buildDataGridTemplateColumns,
@@ -25,6 +26,7 @@ export function DataGrid<T extends { id: number }>(props: {
   rowOpen: DataGridRowOpen<T>;
   rows: T[];
   selection?: DataGridSelectionModel;
+  suspendEscapeSelectionClear?: boolean;
 }) {
   const selectable = createMemo(() => props.selection !== undefined);
   const rows = createMemo(() => props.rows);
@@ -60,6 +62,10 @@ export function DataGrid<T extends { id: number }>(props: {
               />
 
               {props.draftRow}
+              <DataGridEffects
+                rows={props.rows}
+                suspendEscapeSelectionClear={props.suspendEscapeSelectionClear}
+              />
 
               <Show when={props.rows.length > 0} fallback={props.emptyState}>
                 <For each={props.rows}>

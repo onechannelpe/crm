@@ -17,6 +17,7 @@ export function RecordIndexTable<
       rowOpen={props.model.adapter.rowOpen}
       rows={props.model.sorting.sortedRows()}
       selection={props.model.selection}
+      suspendEscapeSelectionClear={props.model.columns.openMenu() !== null}
     />
   );
 }
