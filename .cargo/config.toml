@@ -1,5 +1,14 @@
 [alias]
 xtask-check = "check --workspace --quiet"
 xtask-fmt = "fmt --all --check"
-xtask-clippy = ["clippy", "--workspace", "--all-targets", "--all-features", "--quiet", "--", "-D", "warnings"]
+xtask-clippy = [
+  "clippy",
+  "--workspace",
+  "--all-targets",
+  "--all-features",
+  "--quiet",
+  "--",
+  "-D",
+  "warnings",
+]
 xtask-format = "fmt --all"
