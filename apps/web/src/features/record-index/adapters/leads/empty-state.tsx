@@ -3,7 +3,7 @@ import Plus from "~/components/icons/plus";
 
 import styles from "./styles.module.css";
 
-export function EmptyState(props: { onAddNew: () => void }) {
+export function LeadsRecordIndexEmptyState(props: { onAddNew: () => void }) {
   return (
     <div class={styles.emptyState}>
       <div class={styles.emptyIcon}>

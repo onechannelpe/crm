@@ -1,26 +1,19 @@
 import type { LeadRow } from "./columns";
 
-export type SortKey =
+export type LeadSortKey =
   | "created_at_desc"
   | "created_at_asc"
   | "ruc_asc"
   | "ruc_desc";
 
-export const FILTER_OPTIONS = [
-  { value: "all", label: "All prospects" },
-  { value: "NEW", label: "New" },
-  { value: "NEEDS_EXECUTIVE_INPUT", label: "Needs executive input" },
-  { value: "READY_FOR_SALE", label: "Ready for sale" },
-] as const;
-
-export const SORT_OPTIONS = [
+export const LEADS_RECORD_INDEX_SORTS = [
   { value: "created_at_desc", label: "Newest first" },
   { value: "created_at_asc", label: "Oldest first" },
   { value: "ruc_asc", label: "RUC A-Z" },
   { value: "ruc_desc", label: "RUC Z-A" },
-] as const satisfies ReadonlyArray<{ label: string; value: SortKey }>;
+] as const satisfies ReadonlyArray<{ label: string; value: LeadSortKey }>;
 
-export function sortLeads(leads: LeadRow[], sortKey: SortKey) {
+export function sortLeadRows(leads: LeadRow[], sortKey: LeadSortKey) {
   const items = [...leads];
 
   items.sort((left, right) => {

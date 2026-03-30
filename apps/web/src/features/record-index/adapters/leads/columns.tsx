@@ -12,7 +12,7 @@ import styles from "./styles.module.css";
 
 export type LeadRow = Awaited<ReturnType<typeof listLeads>>[number];
 
-export const LEAD_COLUMNS = [
+export const LEADS_RECORD_INDEX_COLUMNS = [
   {
     key: "ruc",
     label: "RUC",
