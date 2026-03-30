@@ -1,32 +1,32 @@
 import type { Component, JSX } from "solid-js";
 
-type IndexIconProps = {
+type DataGridIconProps = {
   size?: number | string;
 };
 
-export type IndexIcon = Component<IndexIconProps>;
+export type DataGridIcon = Component<DataGridIconProps>;
 
-export type IndexColumn<T> = {
+export type DataGridColumn<T> = {
   key: string;
   label: string;
-  icon: IndexIcon;
+  icon: DataGridIcon;
   width?: number;
   minWidth?: number;
   maxWidth?: number;
   grow?: boolean;
   sticky?: boolean;
-  render: (row: T) => JSX.Element;
+  renderCell: (row: T) => JSX.Element;
 };
 
-export type IndexPicker = {
-  icon: IndexIcon;
+export type DataGridPicker = {
+  icon: DataGridIcon;
   label: string;
   count?: number;
   onClick?: () => void;
 };
 
-export type IndexActionRowConfig = {
-  icon: IndexIcon;
+export type DataGridActionRowConfig = {
+  icon: DataGridIcon;
   label: string;
   onClick: () => void;
 };

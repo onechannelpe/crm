@@ -2,12 +2,13 @@ import { For } from "solid-js";
 
 import { Checkbox } from "~/components/ui/input/checkbox";
 
-import type { IndexColumn } from "./types";
+import type { DataGridColumn } from "../model/data-grid-types";
+import { DataGridCell } from "./data-grid-cell";
 
-import styles from "./styles.module.css";
+import styles from "../styles/data-grid.module.css";
 
-export function IndexRow<T extends { id: number }>(props: {
-  columns: IndexColumn<T>[];
+export function DataGridRow<T extends { id: number }>(props: {
+  columns: DataGridColumn<T>[];
   gridTemplateColumns: string;
   onRowClick: (row: T) => void;
   onSelectionPointerDown: (id: number) => void;
@@ -39,22 +40,18 @@ export function IndexRow<T extends { id: number }>(props: {
       </div>
       <For each={props.columns}>
         {(column, index) => (
-          <div
-            class={`${styles.bodyCell} ${index() === props.stickyColumnIndex ? styles.stickyCell : ""}`}
-            style={
-              index() === props.stickyColumnIndex
-                ? { left: `${props.stickyLeft}px` }
-                : undefined
-            }
+          <DataGridCell
+            sticky={index() === props.stickyColumnIndex}
+            stickyLeft={props.stickyLeft}
           >
             <button
               type="button"
               class={styles.rowButton}
               onClick={() => props.onRowClick(props.row)}
             >
-              {column.render(props.row)}
+              {column.renderCell(props.row)}
             </button>
-          </div>
+          </DataGridCell>
         )}
       </For>
     </div>

@@ -1,14 +1,14 @@
 import { For, Show } from "solid-js";
 
-import type { IndexColumn } from "~/components/record-index/types";
+import type { DataGridColumn } from "~/features/data-grid";
 
 import type { LeadRow } from "./columns";
 
 import styles from "./styles.module.css";
-import sharedStyles from "~/components/record-index/styles.module.css";
+import sharedStyles from "~/features/data-grid/styles/data-grid.module.css";
 
 export function DraftRow(props: {
-  columns: IndexColumn<LeadRow>[];
+  columns: DataGridColumn<LeadRow>[];
   draftRuc: string;
   error: string | null;
   gridTemplateColumns: string;

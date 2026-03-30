@@ -5,14 +5,14 @@ import { listLeads, registerLead } from "~/actions/pipeline/leads";
 import List from "~/components/icons/list";
 import Plus from "~/components/icons/plus";
 import {
-  buildGridTemplateColumns,
-  getStickyColumnIndex,
+  buildDataGridTemplateColumns,
+  createDataGridSelection,
+  DataGrid,
+  DataGridToolbar,
+  DataGridToolbarMenu,
+  getStickyDataGridColumnIndex,
   SELECTION_COLUMN_WIDTH,
-} from "~/components/record-index/grid";
-import { ViewBarMenu } from "~/components/record-index/menu";
-import { createSelectionModel } from "~/components/record-index/selection";
-import { IndexTable } from "~/components/record-index/table";
-import { ViewBar } from "~/components/record-index/view-bar";
+} from "~/features/data-grid";
 import { useSidePanel } from "~/features/side-panel/state/use-side-panel";
 import { createLeadDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
 import { toAppError } from "~/lib/app-errors";
@@ -28,7 +28,7 @@ import {
 } from "./view-config";
 
 import styles from "./styles.module.css";
-import sharedStyles from "~/components/record-index/styles.module.css";
+import sharedStyles from "~/features/data-grid/styles/data-grid.module.css";
 
 type ViewMenu = "filter" | "sort" | "options" | null;
 const DEFAULT_VISIBLE_COLUMNS = new Set(
@@ -70,12 +70,12 @@ export function LeadsIndex() {
     return sortLeads(filtered, sortKey());
   });
 
-  const selection = createSelectionModel(filteredLeads);
+  const selection = createDataGridSelection(filteredLeads);
   const gridTemplateColumns = createMemo(() =>
-    buildGridTemplateColumns(visibleColumns()),
+    buildDataGridTemplateColumns(visibleColumns()),
   );
   const stickyColumnIndex = createMemo(() =>
-    getStickyColumnIndex(visibleColumns()),
+    getStickyDataGridColumnIndex(visibleColumns()),
   );
 
   function openLeadPanel(lead: Pick<LeadRow, "id" | "ruc" | "razon_social">) {
@@ -144,7 +144,7 @@ export function LeadsIndex() {
 
   return (
     <div class={`${styles.page} record-index-container-gater-for-drag-select`}>
-      <ViewBar
+      <DataGridToolbar
         picker={{
           icon: List,
           label: "All prospects",
@@ -152,7 +152,7 @@ export function LeadsIndex() {
         }}
         rightContent={
           <>
-            <ViewBarMenu
+            <DataGridToolbarMenu
               active={stageFilter() !== "all"}
               label="Filter"
               menuId="view-bar-main-filter-dropdown-id-options"
@@ -185,8 +185,8 @@ export function LeadsIndex() {
                   </button>
                 )}
               </For>
-            </ViewBarMenu>
-            <ViewBarMenu
+            </DataGridToolbarMenu>
+            <DataGridToolbarMenu
               active={sortKey() !== "created_at_desc"}
               label="Sort"
               menuId="sort-dropdown-options"
@@ -213,8 +213,8 @@ export function LeadsIndex() {
                   </button>
                 )}
               </For>
-            </ViewBarMenu>
-            <ViewBarMenu
+            </DataGridToolbarMenu>
+            <DataGridToolbarMenu
               active={visibleColumnKeys().size !== LEAD_COLUMNS.length}
               label="Options"
               menuId="object-options-dropdown-id-options"
@@ -252,12 +252,12 @@ export function LeadsIndex() {
                   </button>
                 )}
               </For>
-            </ViewBarMenu>
+            </DataGridToolbarMenu>
           </>
         }
       />
 
-      <IndexTable
+      <DataGrid
         actionRow={
           !showDraftRow()
             ? {

@@ -1,10 +1,10 @@
-import type { IndexIcon } from "./types";
+import type { DataGridIcon } from "../model/data-grid-types";
 
-import styles from "./styles.module.css";
+import styles from "../styles/data-grid.module.css";
 
-export function IndexActionRow(props: {
+export function DataGridActionRow(props: {
   gridTemplateColumns: string;
-  icon: IndexIcon;
+  icon: DataGridIcon;
   label: string;
   labelColumnIndex: number;
   onClick: () => void;
