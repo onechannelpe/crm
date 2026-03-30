@@ -1,10 +1,12 @@
 import { For, Show, createMemo, type JSX } from "solid-js";
 
+import { DataGridInstanceProvider } from "../context/instance-context";
 import { SELECTION_COLUMN_WIDTH } from "../hooks/use-column-layout";
 import {
   buildDataGridTemplateColumns,
   getStickyDataGridColumnIndex,
 } from "../hooks/use-column-layout";
+import { createDataGridInteraction } from "../hooks/use-instance";
 import type { DataGridSelectionModel } from "../hooks/use-selection";
 import type { DataGridRowOpen } from "../model/row-open";
 import type { DataGridActionRowConfig, DataGridColumn } from "../model/types";
@@ -25,6 +27,7 @@ export function DataGrid<T extends { id: number }>(props: {
   selection?: DataGridSelectionModel;
 }) {
   const selectable = createMemo(() => props.selection !== undefined);
+  const rows = createMemo(() => props.rows);
   const gridTemplateColumns = createMemo(() =>
     buildDataGridTemplateColumns(props.columns, {
       selectable: selectable(),
@@ -33,60 +36,62 @@ export function DataGrid<T extends { id: number }>(props: {
   const stickyColumnIndex = createMemo(() =>
     getStickyDataGridColumnIndex(props.columns),
   );
+  const interaction = createDataGridInteraction({
+    rows,
+    rowOpenMode: () => props.rowOpen.mode,
+    columnCount: () => props.columns.length,
+    selection: props.selection,
+  });
 
   return (
-    <div class={styles.indexContainer}>
-      <div class={styles.tableContainer}>
-        <div class={styles.scrollWrapper}>
-          <section class={styles.table} aria-label={props.ariaLabel}>
-            <DataGridHeader
-              columns={props.columns}
-              gridTemplateColumns={gridTemplateColumns()}
-              selectable={selectable()}
-              allSelected={props.selection?.allSelected()}
-              stickyColumnIndex={stickyColumnIndex()}
-              stickyLeft={selectable() ? SELECTION_COLUMN_WIDTH : 0}
-              onToggleAll={props.selection?.toggleAll}
-            />
+    <DataGridInstanceProvider value={interaction}>
+      <div class={styles.indexContainer}>
+        <div class={styles.tableContainer}>
+          <div class={styles.scrollWrapper}>
+            <section class={styles.table} aria-label={props.ariaLabel}>
+              <DataGridHeader
+                columns={props.columns}
+                gridTemplateColumns={gridTemplateColumns()}
+                selectable={selectable()}
+                allSelected={interaction.allSelected?.()}
+                stickyColumnIndex={stickyColumnIndex()}
+                stickyLeft={selectable() ? SELECTION_COLUMN_WIDTH : 0}
+                onToggleAll={interaction.toggleAll}
+              />
 
-            {props.draftRow}
+              {props.draftRow}
 
-            <Show when={props.rows.length > 0} fallback={props.emptyState}>
-              <For each={props.rows}>
-                {(row) => (
-                  <DataGridRow
-                    columns={props.columns}
+              <Show when={props.rows.length > 0} fallback={props.emptyState}>
+                <For each={props.rows}>
+                  {(row) => (
+                    <DataGridRow
+                      columns={props.columns}
+                      gridTemplateColumns={gridTemplateColumns()}
+                      selectable={selectable()}
+                      row={row}
+                      rowOpen={props.rowOpen}
+                      stickyColumnIndex={stickyColumnIndex()}
+                      stickyLeft={selectable() ? SELECTION_COLUMN_WIDTH : 0}
+                    />
+                  )}
+                </For>
+
+                {props.actionRow ? (
+                  <DataGridActionRow
                     gridTemplateColumns={gridTemplateColumns()}
-                    selectable={selectable()}
-                    onSelectionPointerDown={props.selection?.beginSelectionDrag}
-                    onSelectionPointerEnter={
-                      props.selection?.updateSelectionDrag
-                    }
-                    onToggleSelected={props.selection?.setSelected}
-                    row={row}
-                    rowOpen={props.rowOpen}
-                    selected={props.selection?.selectedIds().includes(row.id)}
+                    icon={props.actionRow.icon}
+                    label={props.actionRow.label}
+                    labelColumnIndex={Math.max(stickyColumnIndex(), 0)}
+                    onClick={props.actionRow.onClick}
                     stickyColumnIndex={stickyColumnIndex()}
                     stickyLeft={selectable() ? SELECTION_COLUMN_WIDTH : 0}
                   />
-                )}
-              </For>
-
-              {props.actionRow ? (
-                <DataGridActionRow
-                  gridTemplateColumns={gridTemplateColumns()}
-                  icon={props.actionRow.icon}
-                  label={props.actionRow.label}
-                  labelColumnIndex={Math.max(stickyColumnIndex(), 0)}
-                  onClick={props.actionRow.onClick}
-                  stickyColumnIndex={stickyColumnIndex()}
-                  stickyLeft={selectable() ? SELECTION_COLUMN_WIDTH : 0}
-                />
-              ) : null}
-            </Show>
-          </section>
+                ) : null}
+              </Show>
+            </section>
+          </div>
         </div>
       </div>
-    </div>
+    </DataGridInstanceProvider>
   );
 }
