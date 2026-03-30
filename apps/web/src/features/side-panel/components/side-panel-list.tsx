@@ -1,5 +1,7 @@
 import { type ParentProps, createSignal, onCleanup, onMount } from "solid-js";
 
+import { getVerticalNavigationAction } from "~/lib/keyboard/list-navigation";
+
 import styles from "./side-panel-list.module.css";
 
 export function SidePanelList(props: ParentProps) {
@@ -25,13 +27,24 @@ export function SidePanelList(props: ParentProps) {
       const items = getItems();
       if (items.length === 0) return;
 
-      if (e.key === "ArrowDown") {
+      const action = getVerticalNavigationAction(e.key, {
+        currentIndex: focusedIndex(),
+        itemCount: items.length,
+        loop: true,
+        includeEnter: true,
+      });
+
+      if (!action) {
+        return;
+      }
+
+      if (action.type === "move") {
         e.preventDefault();
-        focusItem(focusedIndex() + 1);
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault();
-        focusItem(focusedIndex() - 1);
-      } else if (e.key === "Enter") {
+        focusItem(action.nextIndex);
+        return;
+      }
+
+      if (action.type === "trigger") {
         const item = items[focusedIndex()];
         item?.click();
       }
