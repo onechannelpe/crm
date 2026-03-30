@@ -19,7 +19,8 @@ export type SidePanelPageKey =
   | "root"
   | "search-person-detail"
   | "search-company-detail"
-  | "lead-detail";
+  | "lead-detail"
+  | "inventory-detail";
 
 export type SidePanelNavigationEntry = {
   page: SidePanelPageKey;
@@ -51,11 +52,22 @@ export type LeadDetailSidePanelPageState = {
   subtitle: string;
 };
 
+export type InventoryDetailSidePanelPageState = {
+  page: "inventory-detail";
+  inventoryItemId: number;
+  productName: string;
+  serialNumber: string;
+  category: string;
+  status: string;
+  createdAt: number;
+};
+
 export type SidePanelPageState =
   | RootSidePanelPageState
   | SearchPersonDetailSidePanelPageState
   | SearchCompanyDetailSidePanelPageState
-  | LeadDetailSidePanelPageState;
+  | LeadDetailSidePanelPageState
+  | InventoryDetailSidePanelPageState;
 
 export type SidePanelPageDefinition = {
   entry: SidePanelNavigationEntry;
@@ -154,6 +166,39 @@ export function createLeadDetailSidePanelPage(
       leadId: input.leadId,
       title: input.title,
       subtitle: input.subtitle ?? `Prospecto ${input.leadId}`,
+    },
+  };
+}
+
+type CreateInventoryDetailSidePanelPageInput = {
+  inventoryItemId: number;
+  productName: string;
+  serialNumber: string;
+  category: string;
+  status: string;
+  createdAt: number;
+};
+
+export function createInventoryDetailSidePanelPage(
+  input: CreateInventoryDetailSidePanelPageInput,
+): SidePanelPageDefinition {
+  const pageId = createSidePanelPageId();
+
+  return {
+    entry: {
+      page: "inventory-detail",
+      pageId,
+      pageTitle: input.productName,
+      pageIcon: Building2,
+    },
+    state: {
+      page: "inventory-detail",
+      inventoryItemId: input.inventoryItemId,
+      productName: input.productName,
+      serialNumber: input.serialNumber,
+      category: input.category,
+      status: input.status,
+      createdAt: input.createdAt,
     },
   };
 }
