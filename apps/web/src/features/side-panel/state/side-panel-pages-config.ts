@@ -1,5 +1,7 @@
 import type { Component } from "solid-js";
 
+import { SidePanelInventoryDetailPage } from "../pages/inventory-detail/side-panel-inventory-detail-page";
+import { SidePanelInventoryDetailPageInfo } from "../pages/inventory-detail/side-panel-inventory-detail-page-info";
 import { SidePanelLeadDetailPage } from "../pages/lead-detail/side-panel-lead-detail-page";
 import { SidePanelLeadDetailPageInfo } from "../pages/lead-detail/side-panel-lead-detail-page-info";
 import { SidePanelRootPage } from "../pages/root/side-panel-root-page";
@@ -35,5 +37,10 @@ export const SIDE_PANEL_PAGES_CONFIG = {
     showsSearch: false,
     component: SidePanelLeadDetailPage,
     pageInfoComponent: SidePanelLeadDetailPageInfo,
+  },
+  "inventory-detail": {
+    showsSearch: false,
+    component: SidePanelInventoryDetailPage,
+    pageInfoComponent: SidePanelInventoryDetailPageInfo,
   },
 } satisfies Record<SidePanelPageKey, SidePanelPageConfig>;
