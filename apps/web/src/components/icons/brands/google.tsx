@@ -1,13 +1,11 @@
-import { createUniqueId } from "solid-js";
+import { createUniqueId, splitProps } from "solid-js";
 
-interface GoogleProps {
-  size?: number | string;
-  class?: string;
-}
+import type { BrandLogoProps } from "./types";
 
-export default function Google(props: GoogleProps) {
+export default function Google(props: BrandLogoProps) {
+  const [local] = splitProps(props, ["size", "class"]);
   const clipPathId = createUniqueId();
-  const size = () => props.size ?? 16;
+  const size = () => local.size ?? 16;
 
   return (
     <svg
@@ -17,7 +15,8 @@ export default function Google(props: GoogleProps) {
       fill="none"
       viewBox="0 0 14 14"
       aria-hidden="true"
-      class={props.class}
+      class={local.class}
+      style={{ "flex-shrink": 0 }}
     >
       <g clip-path={`url(#${clipPathId})`}>
         <path

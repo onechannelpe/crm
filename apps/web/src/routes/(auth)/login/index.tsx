@@ -5,7 +5,7 @@ import { AuthFlowShell } from "~/components/auth/flow/auth-flow-shell";
 import { LastUsedPill } from "~/components/auth/flow/last-used-pill";
 import { LegalFooter } from "~/components/auth/flow/legal-footer";
 import { useToast } from "~/components/feedback/toast-provider";
-import Google from "~/components/icons/google";
+import Google from "~/components/icons/brands/google";
 import { Button } from "~/components/ui/input/button";
 import { ButtonLink } from "~/components/ui/input/button-link";
 import { useAuthPageView } from "~/lib/auth/use-auth-analytics";
@@ -48,8 +48,8 @@ export default function LoginPage() {
               window.location.href = "/api/auth/google";
             }}
           >
-            <Google class={pageStyles.googleIcon} size={16} />
-            <span>Continuar con Google</span>
+            <Google size={16} />
+            Continuar con Google
           </Button>
           <Show when={loginMethods.lastUsedMethod() === "google"}>
             <LastUsedPill />
