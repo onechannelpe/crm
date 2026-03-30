@@ -2,13 +2,13 @@ import { For } from "solid-js";
 
 import { Checkbox } from "~/components/ui/input/checkbox";
 
-import type { IndexColumn } from "./types";
+import type { DataGridColumn } from "../model/data-grid-types";
 
-import styles from "./styles.module.css";
+import styles from "../styles/data-grid.module.css";
 
-export function IndexHeader<T>(props: {
+export function DataGridHeader<T>(props: {
   allSelected: boolean;
-  columns: IndexColumn<T>[];
+  columns: DataGridColumn<T>[];
   gridTemplateColumns: string;
   stickyColumnIndex: number;
   stickyLeft: number;
@@ -30,6 +30,7 @@ export function IndexHeader<T>(props: {
       <For each={props.columns}>
         {(column, index) => {
           const Icon = column.icon;
+
           return (
             <div
               class={`${styles.headerCell} ${index() === props.stickyColumnIndex ? styles.stickyCell : ""}`}

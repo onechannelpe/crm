@@ -4,8 +4,8 @@ import CalendarDays from "~/components/icons/calendar-days";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import House from "~/components/icons/house";
 import Package from "~/components/icons/package";
-import type { IndexColumn } from "~/components/record-index/types";
 import { Badge } from "~/components/ui/display/badge";
+import type { DataGridColumn } from "~/features/data-grid";
 import { formatDate } from "~/lib/utils";
 
 import styles from "./styles.module.css";
@@ -19,7 +19,7 @@ export const LEAD_COLUMNS = [
     icon: CircleQuestionMark,
     width: 196,
     sticky: true,
-    render: (lead) => <span class={styles.identifierText}>{lead.ruc}</span>,
+    renderCell: (lead) => <span class={styles.identifierText}>{lead.ruc}</span>,
   },
   {
     key: "razon_social",
@@ -27,7 +27,7 @@ export const LEAD_COLUMNS = [
     icon: Building2,
     minWidth: 220,
     grow: true,
-    render: (lead) => (
+    renderCell: (lead) => (
       <div class={styles.fieldWithIcon}>
         <span class={styles.fieldIcon}>
           <Building2 size={14} />
@@ -42,7 +42,7 @@ export const LEAD_COLUMNS = [
     icon: House,
     minWidth: 220,
     maxWidth: 300,
-    render: (lead) => (
+    renderCell: (lead) => (
       <div class={styles.fieldWithIcon}>
         <span class={styles.fieldIcon}>
           <House size={14} />
@@ -56,7 +56,7 @@ export const LEAD_COLUMNS = [
     label: "Etapa",
     icon: Package,
     width: 172,
-    render: (lead) => (
+    renderCell: (lead) => (
       <Badge
         variant={
           lead.stage === "READY_FOR_SALE"
@@ -75,8 +75,8 @@ export const LEAD_COLUMNS = [
     label: "Creado",
     icon: CalendarDays,
     width: 140,
-    render: (lead) => (
+    renderCell: (lead) => (
       <span class={styles.mutedCellText}>{formatDate(lead.created_at)}</span>
     ),
   },
-] satisfies ReadonlyArray<IndexColumn<LeadRow>>;
+] satisfies ReadonlyArray<DataGridColumn<LeadRow>>;

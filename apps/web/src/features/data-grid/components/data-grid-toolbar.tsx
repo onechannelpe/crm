@@ -2,12 +2,12 @@ import type { JSX } from "solid-js";
 
 import ChevronDown from "~/components/icons/chevron-down";
 
-import type { IndexPicker } from "./types";
+import type { DataGridPicker } from "../model/data-grid-types";
 
-import styles from "./styles.module.css";
+import styles from "../styles/data-grid.module.css";
 
-export function ViewBar(props: {
-  picker: IndexPicker;
+export function DataGridToolbar(props: {
+  picker: DataGridPicker;
   rightContent: JSX.Element;
 }) {
   const PickerIcon = props.picker.icon;

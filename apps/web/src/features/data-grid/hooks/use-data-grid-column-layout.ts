@@ -1,8 +1,8 @@
-import type { IndexColumn } from "./types";
+import type { DataGridColumn } from "../model/data-grid-types";
 
 export const SELECTION_COLUMN_WIDTH = 40;
 
-export function toTrack<T>(column: IndexColumn<T>) {
+function toTrack<T>(column: DataGridColumn<T>) {
   if (column.width) return `${column.width}px`;
   if (column.grow && column.minWidth && column.maxWidth) {
     return `minmax(${column.minWidth}px, ${column.maxWidth}px)`;
@@ -19,10 +19,10 @@ export function toTrack<T>(column: IndexColumn<T>) {
   return "max-content";
 }
 
-export function buildGridTemplateColumns<T>(columns: IndexColumn<T>[]) {
+export function buildDataGridTemplateColumns<T>(columns: DataGridColumn<T>[]) {
   return `${SELECTION_COLUMN_WIDTH}px ${columns.map((column) => toTrack(column)).join(" ")}`;
 }
 
-export function getStickyColumnIndex<T>(columns: IndexColumn<T>[]) {
+export function getStickyDataGridColumnIndex<T>(columns: DataGridColumn<T>[]) {
   return columns.findIndex((column) => column.sticky);
 }

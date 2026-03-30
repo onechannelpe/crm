@@ -2,9 +2,9 @@ import type { JSX } from "solid-js";
 
 import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
 
-import styles from "./styles.module.css";
+import styles from "../styles/data-grid.module.css";
 
-export function ViewBarMenu(props: {
+export function DataGridToolbarMenu(props: {
   active?: boolean;
   children: JSX.Element;
   label: string;

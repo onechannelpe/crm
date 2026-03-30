@@ -8,7 +8,7 @@ import {
 
 type DragMode = "add" | "remove" | null;
 
-export type SelectionModel = {
+export type DataGridSelectionModel = {
   selectedIds: Accessor<number[]>;
   allSelected: Accessor<boolean>;
   setSelected: (id: number, checked: boolean) => void;
@@ -17,9 +17,9 @@ export type SelectionModel = {
   updateSelectionDrag: (id: number) => void;
 };
 
-export function createSelectionModel<T extends { id: number }>(
+export function createDataGridSelection<T extends { id: number }>(
   rows: Accessor<T[]>,
-): SelectionModel {
+): DataGridSelectionModel {
   const [selectedIds, setSelectedIds] = createSignal<number[]>([]);
   const [dragMode, setDragMode] = createSignal<DragMode>(null);
 
