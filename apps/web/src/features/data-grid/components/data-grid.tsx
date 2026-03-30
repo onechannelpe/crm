@@ -25,10 +25,13 @@ export function DataGrid<T extends { id: number }>(props: {
   emptyState: JSX.Element;
   rowOpen: DataGridRowOpen<T>;
   rows: T[];
-  selection: DataGridSelectionModel;
+  selection?: DataGridSelectionModel;
 }) {
+  const selectable = createMemo(() => props.selection !== undefined);
   const gridTemplateColumns = createMemo(() =>
-    buildDataGridTemplateColumns(props.columns),
+    buildDataGridTemplateColumns(props.columns, {
+      selectable: selectable(),
+    }),
   );
   const stickyColumnIndex = createMemo(() =>
     getStickyDataGridColumnIndex(props.columns),
@@ -40,12 +43,13 @@ export function DataGrid<T extends { id: number }>(props: {
         <div class={styles.scrollWrapper}>
           <section class={styles.table} aria-label={props.ariaLabel}>
             <DataGridHeader
-              allSelected={props.selection.allSelected()}
               columns={props.columns}
               gridTemplateColumns={gridTemplateColumns()}
+              selectable={selectable()}
+              allSelected={props.selection?.allSelected()}
               stickyColumnIndex={stickyColumnIndex()}
-              stickyLeft={SELECTION_COLUMN_WIDTH}
-              onToggleAll={props.selection.toggleAll}
+              stickyLeft={selectable() ? SELECTION_COLUMN_WIDTH : 0}
+              onToggleAll={props.selection?.toggleAll}
             />
 
             {props.draftRow}
@@ -56,16 +60,17 @@ export function DataGrid<T extends { id: number }>(props: {
                   <DataGridRow
                     columns={props.columns}
                     gridTemplateColumns={gridTemplateColumns()}
-                    onSelectionPointerDown={props.selection.beginSelectionDrag}
+                    selectable={selectable()}
+                    onSelectionPointerDown={props.selection?.beginSelectionDrag}
                     onSelectionPointerEnter={
-                      props.selection.updateSelectionDrag
+                      props.selection?.updateSelectionDrag
                     }
-                    onToggleSelected={props.selection.setSelected}
+                    onToggleSelected={props.selection?.setSelected}
                     row={row}
                     rowOpen={props.rowOpen}
-                    selected={props.selection.selectedIds().includes(row.id)}
+                    selected={props.selection?.selectedIds().includes(row.id)}
                     stickyColumnIndex={stickyColumnIndex()}
-                    stickyLeft={SELECTION_COLUMN_WIDTH}
+                    stickyLeft={selectable() ? SELECTION_COLUMN_WIDTH : 0}
                   />
                 )}
               </For>
@@ -78,7 +83,7 @@ export function DataGrid<T extends { id: number }>(props: {
                   labelColumnIndex={Math.max(stickyColumnIndex(), 0)}
                   onClick={props.actionRow.onClick}
                   stickyColumnIndex={stickyColumnIndex()}
-                  stickyLeft={SELECTION_COLUMN_WIDTH}
+                  stickyLeft={selectable() ? SELECTION_COLUMN_WIDTH : 0}
                 />
               ) : null}
             </Show>

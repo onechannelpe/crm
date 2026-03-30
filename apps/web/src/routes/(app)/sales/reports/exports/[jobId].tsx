@@ -1,25 +1,55 @@
 import { useParams } from "@solidjs/router";
-import { createResource, For, Show } from "solid-js";
+import { createResource, Show } from "solid-js";
 
 import {
   getSalesExportJob,
   listSalesExportDownloads,
 } from "~/actions/sales-exports";
 import { useToast } from "~/components/feedback/toast-provider";
+import CalendarDays from "~/components/icons/calendar-days";
+import CircleQuestionMark from "~/components/icons/circle-question-mark";
+import UserRound from "~/components/icons/user-round";
 import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "~/components/ui/layout/table";
+  DataGrid,
+  type DataGridColumn,
+  createNoopRowOpen,
+} from "~/features/data-grid";
 import { getErrorMessage } from "~/lib/errors";
 import { formatDate } from "~/lib/utils";
 
 import styles from "./export-detail-page.module.css";
+
+type SalesExportDownloadRow = Awaited<
+  ReturnType<typeof listSalesExportDownloads>
+>[number];
+
+const SALES_EXPORT_DOWNLOAD_COLUMNS = [
+  {
+    key: "id",
+    label: "ID",
+    icon: CircleQuestionMark,
+    width: 90,
+    sticky: true,
+    renderCell: (download) => `#${download.id}`,
+  },
+  {
+    key: "downloadedByName",
+    label: "User",
+    icon: UserRound,
+    minWidth: 220,
+    grow: true,
+    renderCell: (download) => download.downloadedByName,
+  },
+  {
+    key: "downloadedAt",
+    label: "Downloaded at",
+    icon: CalendarDays,
+    width: 180,
+    renderCell: (download) => formatDate(download.downloadedAt),
+  },
+] satisfies ReadonlyArray<DataGridColumn<SalesExportDownloadRow>>;
 
 export default function SalesExportDetailPage() {
   const params = useParams();
@@ -74,7 +104,7 @@ export default function SalesExportDetailPage() {
               Format: {currentJob().format.toUpperCase()}
             </p>
             <p class={styles.meta}>Status: {currentJob().status}</p>
-            <p class={styles.metaLast}>Rows: {currentJob().rowsCount ?? "—"}</p>
+            <p class={styles.metaLast}>Rows: {currentJob().rowsCount ?? "-"}</p>
             <Button
               disabled={currentJob().status !== "completed"}
               onClick={() => {
@@ -85,33 +115,15 @@ export default function SalesExportDetailPage() {
             </Button>
 
             <h3 class={styles.auditTitle}>Download audit</h3>
-            <Show
-              when={downloads().length > 0}
-              fallback={<p class={styles.emptyText}>No download events yet.</p>}
-            >
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>User</TableHead>
-                    <TableHead>Downloaded at</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <For each={downloads()}>
-                    {(download) => (
-                      <TableRow>
-                        <TableCell>#{download.id}</TableCell>
-                        <TableCell>{download.downloadedByName}</TableCell>
-                        <TableCell>
-                          {formatDate(download.downloadedAt)}
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </For>
-                </TableBody>
-              </Table>
-            </Show>
+            <DataGrid
+              ariaLabel="Download audit"
+              columns={[...SALES_EXPORT_DOWNLOAD_COLUMNS]}
+              emptyState={
+                <p class={styles.emptyText}>No download events yet.</p>
+              }
+              rowOpen={createNoopRowOpen()}
+              rows={downloads()}
+            />
           </>
         )}
       </Show>

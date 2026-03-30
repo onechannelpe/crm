@@ -1,24 +1,77 @@
-import { createAsync } from "@solidjs/router";
-import { For, Show } from "solid-js";
+import { createAsync, useNavigate } from "@solidjs/router";
+import { Show } from "solid-js";
 
 import { EmptyState } from "~/components/feedback/empty-state";
+import Building2 from "~/components/icons/building-2";
+import CalendarDays from "~/components/icons/calendar-days";
+import CircleQuestionMark from "~/components/icons/circle-question-mark";
+import UserRound from "~/components/icons/user-round";
 import { AppPage } from "~/components/layout/page";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "~/components/ui/layout/table";
+  DataGrid,
+  type DataGridColumn,
+  createRouteRowOpen,
+} from "~/features/data-grid";
 import { confirmedSalesRecordsQuery } from "~/lib/queries/sales-records";
 import { formatDate } from "~/lib/utils";
 
-import styles from "./confirmed-sales-page.module.css";
+type ConfirmedSaleRow = Awaited<
+  ReturnType<typeof confirmedSalesRecordsQuery>
+>[number];
+
+const CONFIRMED_SALES_COLUMNS = [
+  {
+    key: "id",
+    label: "ID",
+    icon: CircleQuestionMark,
+    width: 90,
+    sticky: true,
+    renderCell: (sale) => `#${sale.id}`,
+  },
+  {
+    key: "companyName",
+    label: "Empresa",
+    icon: Building2,
+    minWidth: 220,
+    grow: true,
+    renderCell: (sale) => sale.companyName || "-",
+  },
+  {
+    key: "contactName",
+    label: "Contacto",
+    icon: UserRound,
+    minWidth: 220,
+    grow: true,
+    renderCell: (sale) => (
+      <div class="space-y-1">
+        <p class="font-medium">{sale.contactName}</p>
+        <p class="text-xs text-muted-foreground">{sale.contactDni}</p>
+      </div>
+    ),
+  },
+  {
+    key: "executiveName",
+    label: "Ejecutivo",
+    icon: UserRound,
+    width: 180,
+    renderCell: (sale) => sale.executiveName,
+  },
+  {
+    key: "updatedAt",
+    label: "Confirmado",
+    icon: CalendarDays,
+    width: 160,
+    renderCell: (sale) => formatDate(sale.updatedAt),
+  },
+] satisfies ReadonlyArray<DataGridColumn<ConfirmedSaleRow>>;
 
 export default function ConfirmedSalesPage() {
+  const navigate = useNavigate();
   const sales = createAsync(() => confirmedSalesRecordsQuery(), {
     initialValue: [],
+  });
+  const rowOpen = createRouteRowOpen<ConfirmedSaleRow>((sale) => {
+    void navigate(`/sales/${sale.id}`);
   });
 
   return (
@@ -32,39 +85,13 @@ export default function ConfirmedSalesPage() {
           />
         }
       >
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Empresa</TableHead>
-              <TableHead>Contacto</TableHead>
-              <TableHead>Ejecutivo</TableHead>
-              <TableHead>Confirmado</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <For each={sales()}>
-              {(sale) => (
-                <TableRow>
-                  <TableCell class={styles.idCell}>#{sale.id}</TableCell>
-                  <TableCell>
-                    {sale.companyName || <span class={styles.muted}>—</span>}
-                  </TableCell>
-                  <TableCell>
-                    <div class={styles.contactWrap}>
-                      <p class={styles.contactName}>{sale.contactName}</p>
-                      <p class={styles.contactMeta}>{sale.contactDni}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>{sale.executiveName}</TableCell>
-                  <TableCell class={styles.dateCell}>
-                    {formatDate(sale.updatedAt)}
-                  </TableCell>
-                </TableRow>
-              )}
-            </For>
-          </TableBody>
-        </Table>
+        <DataGrid
+          ariaLabel="Ventas confirmadas"
+          columns={[...CONFIRMED_SALES_COLUMNS]}
+          emptyState={<></>}
+          rowOpen={rowOpen}
+          rows={sales()}
+        />
       </Show>
     </AppPage>
   );

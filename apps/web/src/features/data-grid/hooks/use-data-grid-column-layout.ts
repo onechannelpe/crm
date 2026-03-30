@@ -19,8 +19,16 @@ function toTrack<T>(column: DataGridColumn<T>) {
   return "max-content";
 }
 
-export function buildDataGridTemplateColumns<T>(columns: DataGridColumn<T>[]) {
-  return `${SELECTION_COLUMN_WIDTH}px ${columns.map((column) => toTrack(column)).join(" ")}`;
+export function buildDataGridTemplateColumns<T>(
+  columns: DataGridColumn<T>[],
+  options?: { selectable?: boolean },
+) {
+  const columnTracks = columns.map((column) => toTrack(column)).join(" ");
+  if (options?.selectable === false) {
+    return columnTracks;
+  }
+
+  return `${SELECTION_COLUMN_WIDTH}px ${columnTracks}`;
 }
 
 export function getStickyDataGridColumnIndex<T>(columns: DataGridColumn<T>[]) {
