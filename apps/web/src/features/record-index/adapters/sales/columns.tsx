@@ -8,9 +8,9 @@ import { formatDate } from "~/lib/utils";
 
 import styles from "./styles.module.css";
 
-export type SalesCrmRow = Awaited<ReturnType<typeof listLeadSales>>[number];
+export type SalesRow = Awaited<ReturnType<typeof listLeadSales>>[number];
 
-export const SALES_CRM_RECORD_INDEX_COLUMNS = [
+export const SALES_RECORD_INDEX_COLUMNS = [
   {
     key: "id",
     label: "Venta",
@@ -47,4 +47,4 @@ export const SALES_CRM_RECORD_INDEX_COLUMNS = [
       <span class={styles.mutedCellText}>{formatDate(sale.created_at)}</span>
     ),
   },
-] satisfies ReadonlyArray<DataGridColumn<SalesCrmRow>>;
+] satisfies ReadonlyArray<DataGridColumn<SalesRow>>;

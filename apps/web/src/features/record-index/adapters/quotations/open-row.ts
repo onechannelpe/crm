@@ -9,7 +9,7 @@ export function useOpenQuotationRecord() {
 
   return {
     rowOpen: createRouteRowOpen<QuotationRow>((lead) => {
-      void navigate(`/quotations/${lead.id}`);
+      navigate(`/quotations/${lead.id}`);
     }),
   };
 }

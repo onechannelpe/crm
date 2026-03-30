@@ -21,13 +21,12 @@ import {
   auditPolicySnapshotQuery,
   canManageAuditPoliciesQuery,
 } from "~/lib/queries/audit";
+import type { AuditActionPolicyItem } from "~/server/audit-reader/contracts";
 
 import styles from "./settings-page.module.css";
 
 type PolicyRiskLevel = "high" | "medium" | "low";
-type SecurityPolicyRow = Awaited<
-  ReturnType<typeof auditPolicySnapshotQuery>
->["items"][number] & { id: number };
+type SecurityPolicyRow = AuditActionPolicyItem & { id: number };
 
 const SECURITY_POLICY_COLUMNS = [
   {

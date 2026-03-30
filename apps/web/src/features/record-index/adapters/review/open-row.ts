@@ -9,7 +9,7 @@ export function useOpenReviewRecord() {
 
   return {
     rowOpen: createRouteRowOpen<ReviewRow>((lead) => {
-      void navigate(`/review/${lead.id}`);
+      navigate(`/review/${lead.id}`);
     }),
   };
 }

@@ -2,14 +2,14 @@ import { useNavigate } from "@solidjs/router";
 
 import { createRouteRowOpen } from "~/features/data-grid";
 
-import type { SalesCrmRow } from "./columns";
+import type { SalesRow } from "./columns";
 
-export function useOpenSalesCrmRecord() {
+export function useOpenSalesRecord() {
   const navigate = useNavigate();
 
   return {
-    rowOpen: createRouteRowOpen<SalesCrmRow>((sale) => {
-      void navigate(`/sales/${sale.id}`);
+    rowOpen: createRouteRowOpen<SalesRow>((sale) => {
+      navigate(`/sales/${sale.id}`);
     }),
   };
 }

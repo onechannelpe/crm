@@ -38,8 +38,6 @@ import {
 import styles from "./styles.module.css";
 import sharedStyles from "~/features/data-grid/styles/data-grid.module.css";
 
-type ViewMenu = "filter" | "sort" | "options" | null;
-
 const DEFAULT_VISIBLE_COLUMNS = new Set(
   LEADS_RECORD_INDEX_COLUMNS.map((column) => column.key),
 );

@@ -9,21 +9,21 @@ import {
   useRecordIndexAdapter,
 } from "~/features/record-index";
 
-import { SALES_CRM_RECORD_INDEX_COLUMNS } from "./columns";
+import { SALES_RECORD_INDEX_COLUMNS } from "./columns";
 import { SalesRecordIndexEmptyState } from "./empty-state";
-import { useOpenSalesCrmRecord } from "./open-row";
+import { useOpenSalesRecord } from "./open-row";
 
 import styles from "./styles.module.css";
 
 export function SalesRecordIndex() {
   const sales = createAsync(() => listLeadSales({}), { initialValue: [] });
   const selection = createDataGridSelection(sales);
-  const { rowOpen } = useOpenSalesCrmRecord();
+  const { rowOpen } = useOpenSalesRecord();
 
   const adapter = useRecordIndexAdapter({
     id: "sales",
-    title: "Ventas CRM",
-    columns: [...SALES_CRM_RECORD_INDEX_COLUMNS],
+    title: "Ventas",
+    columns: [...SALES_RECORD_INDEX_COLUMNS],
     getRows: sales,
     rowOpen,
     emptyState: <SalesRecordIndexEmptyState />,
@@ -41,7 +41,7 @@ export function SalesRecordIndex() {
       />
 
       <RecordIndexGrid
-        ariaLabel="Ventas CRM"
+        ariaLabel="Ventas"
         columns={adapter.columns}
         emptyState={adapter.emptyState}
         rowOpen={adapter.rowOpen}
