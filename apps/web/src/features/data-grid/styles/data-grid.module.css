@@ -218,6 +218,10 @@
   font-size: 13px;
 }
 
+.bodyRow[data-focused="true"] .bodyCell {
+  background: color-mix(in srgb, var(--secondary) 88%, white);
+}
+
 .rowButton {
   align-items: center;
   background: transparent;
@@ -232,6 +236,15 @@
   padding: 0;
   text-align: left;
   width: 100%;
+}
+
+.rowButton:focus-visible {
+  outline: none;
+}
+
+.bodyRow[data-focused="true"] .rowButton,
+.bodyRow[data-focused="true"] .rowContent {
+  color: var(--foreground);
 }
 
 .rowContent {
