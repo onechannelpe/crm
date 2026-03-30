@@ -35,7 +35,7 @@
     "check:format:rust": "cargo xtask-fmt",
     "check:clippy": "cargo xtask-clippy",
     "format": "bun run --parallel format:ts format:rust",
-    "format:ts": "oxfmt apps/web packages tools",
+    "format:ts": "oxfmt apps packages tools contracts *.md *.json",
     "format:rust": "cargo xtask-format",
     "clean:db": "shx rm -rf apps/web/*.db*",
     "clean:modules": "shx rm -rf node_modules 'apps/*/node_modules' 'packages/*/node_modules'",
