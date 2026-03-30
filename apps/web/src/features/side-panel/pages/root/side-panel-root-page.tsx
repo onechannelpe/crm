@@ -2,7 +2,7 @@ import { useNavigate } from "@solidjs/router";
 import { For, Show, createMemo } from "solid-js";
 
 import { ICON_BY_ROUTE } from "~/components/layout/route-icons";
-import { useSession } from "~/components/providers/session-provider";
+import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { getNavigableRoutes } from "~/lib/nav/nav-policy";
 
 import { SidePanelGroup } from "../../components/side-panel-group";
@@ -25,7 +25,7 @@ type CommandGroup = {
 
 export function SidePanelRootPage() {
   const navigate = useNavigate();
-  const { currentUser } = useSession();
+  const { currentUser } = useAuthenticatedSession();
   const { searchText, closePanel } = useSidePanel();
 
   const commandGroups = createMemo<CommandGroup[]>(() => {

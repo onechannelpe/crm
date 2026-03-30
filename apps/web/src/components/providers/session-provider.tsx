@@ -6,7 +6,6 @@ import { getMe } from "~/actions/auth/session";
 
 interface SessionContextValue {
   user: () => CurrentUser | null | undefined;
-  currentUser: () => CurrentUser;
   updateCurrentUser: (update: (current: CurrentUser) => CurrentUser) => void;
   refreshCurrentUser: () => Promise<CurrentUser | null | undefined>;
 }
@@ -15,14 +14,6 @@ const SessionContext = createContext<SessionContextValue>();
 
 export function SessionProvider(props: ParentProps) {
   const [user, { mutate, refetch }] = createResource(getMe);
-
-  const currentUser = () => {
-    const value = user();
-    if (!value) {
-      throw new Error("Authenticated app rendered without a valid user");
-    }
-    return value;
-  };
 
   const updateCurrentUser = (update: (current: CurrentUser) => CurrentUser) => {
     mutate((existing: CurrentUser | null | undefined) =>
@@ -34,7 +25,6 @@ export function SessionProvider(props: ParentProps) {
     <SessionContext.Provider
       value={{
         user,
-        currentUser,
         updateCurrentUser,
         refreshCurrentUser: async () => refetch(),
       }}

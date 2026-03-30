@@ -1,7 +1,7 @@
 import { useLocation, type RouteSectionProps } from "@solidjs/router";
 import { createMemo } from "solid-js";
 
-import { useSession } from "~/components/providers/session-provider";
+import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import {
   getCurrentSettingsItem,
   getSettingsSectionHref,
@@ -16,7 +16,7 @@ import {
 
 export default function SettingsLayout(props: RouteSectionProps) {
   const location = useLocation();
-  const { currentUser } = useSession();
+  const { currentUser } = useAuthenticatedSession();
 
   const currentItem = createMemo(() =>
     getCurrentSettingsItem(location.pathname, currentUser().role),
