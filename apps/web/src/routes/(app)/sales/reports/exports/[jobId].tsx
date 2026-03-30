@@ -11,11 +11,9 @@ import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import UserRound from "~/components/icons/user-round";
 import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
-import {
-  DataGrid,
-  type DataGridColumn,
-  createNoopRowOpen,
-} from "~/features/data-grid";
+import { DataGrid } from "~/features/data-grid/components/grid";
+import { createNoopRowOpen } from "~/features/data-grid/model/row-open";
+import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { getErrorMessage } from "~/lib/errors";
 import { formatDate } from "~/lib/utils";
 

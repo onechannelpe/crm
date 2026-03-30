@@ -1,12 +1,12 @@
 import type { JSX } from "solid-js";
 
+import { DataGrid } from "~/features/data-grid/components/grid";
+import type { DataGridSelectionModel } from "~/features/data-grid/hooks/use-selection";
+import type { DataGridRowOpen } from "~/features/data-grid/model/row-open";
 import {
-  DataGrid,
   type DataGridActionRowConfig,
   type DataGridColumn,
-  type DataGridRowOpen,
-  type DataGridSelectionModel,
-} from "~/features/data-grid";
+} from "~/features/data-grid/model/types";
 
 export function RecordIndexGrid<T extends { id: number }>(props: {
   actionRow?: DataGridActionRowConfig;

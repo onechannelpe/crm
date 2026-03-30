@@ -1,4 +1,4 @@
-import type { RecordIndexAdapter } from "../model/record-index-types";
+import type { RecordIndexAdapter } from "../model/types";
 
 export function useRecordIndexAdapter<T extends { id: number }>(
   adapter: RecordIndexAdapter<T>,

@@ -2,7 +2,7 @@ import type { JSX } from "solid-js";
 
 import ChevronDown from "~/components/icons/chevron-down";
 
-import type { DataGridPicker } from "../model/data-grid-types";
+import type { DataGridPicker } from "../model/types";
 
 import styles from "../styles/data-grid.module.css";
 

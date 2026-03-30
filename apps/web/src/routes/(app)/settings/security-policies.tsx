@@ -11,11 +11,9 @@ import { Checkbox } from "~/components/ui/input/checkbox";
 import { Input } from "~/components/ui/input/input";
 import { Select } from "~/components/ui/input/select";
 import { FilterBar } from "~/components/ui/layout/filter-bar";
-import {
-  DataGrid,
-  type DataGridColumn,
-  createNoopRowOpen,
-} from "~/features/data-grid";
+import { DataGrid } from "~/features/data-grid/components/grid";
+import { createNoopRowOpen } from "~/features/data-grid/model/row-open";
+import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { upsertAuditPolicyMutation } from "~/lib/mutations/audit";
 import {
   auditPolicySnapshotQuery,

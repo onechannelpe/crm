@@ -2,12 +2,11 @@ import { createAsync } from "@solidjs/router";
 
 import { listLeadsForQuotation } from "~/actions/pipeline/quotations";
 import List from "~/components/icons/list";
-import { createDataGridSelection, DataGridToolbar } from "~/features/data-grid";
-import {
-  RecordIndexGrid,
-  RecordIndexPage,
-  useRecordIndexAdapter,
-} from "~/features/record-index";
+import { DataGridToolbar } from "~/features/data-grid/components/toolbar";
+import { createDataGridSelection } from "~/features/data-grid/hooks/use-selection";
+import { RecordIndexPage } from "~/features/record-index/components/page";
+import { RecordIndexGrid } from "~/features/record-index/components/table";
+import { useRecordIndexAdapter } from "~/features/record-index/hooks/use-adapter";
 
 import { QUOTATIONS_RECORD_INDEX_COLUMNS } from "./columns";
 import { QuotationsRecordIndexEmptyState } from "./empty-state";

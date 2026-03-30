@@ -1,4 +1,4 @@
-import type { DataGridColumn } from "../model/data-grid-types";
+import type { DataGridColumn } from "../model/types";
 
 export const SELECTION_COLUMN_WIDTH = 40;
 

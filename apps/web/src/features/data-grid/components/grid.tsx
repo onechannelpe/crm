@@ -1,19 +1,16 @@
 import { For, Show, createMemo, type JSX } from "solid-js";
 
-import { SELECTION_COLUMN_WIDTH } from "../hooks/use-data-grid-column-layout";
+import { SELECTION_COLUMN_WIDTH } from "../hooks/use-column-layout";
 import {
   buildDataGridTemplateColumns,
   getStickyDataGridColumnIndex,
-} from "../hooks/use-data-grid-column-layout";
-import type { DataGridSelectionModel } from "../hooks/use-data-grid-selection";
-import type { DataGridRowOpen } from "../model/data-grid-row-open";
-import type {
-  DataGridActionRowConfig,
-  DataGridColumn,
-} from "../model/data-grid-types";
-import { DataGridActionRow } from "./data-grid-action-row";
-import { DataGridHeader } from "./data-grid-header";
-import { DataGridRow } from "./data-grid-row";
+} from "../hooks/use-column-layout";
+import type { DataGridSelectionModel } from "../hooks/use-selection";
+import type { DataGridRowOpen } from "../model/row-open";
+import type { DataGridActionRowConfig, DataGridColumn } from "../model/types";
+import { DataGridActionRow } from "./action-row";
+import { DataGridHeader } from "./header";
+import { DataGridRow } from "./row";
 
 import styles from "../styles/data-grid.module.css";
 

@@ -8,11 +8,9 @@ import UserRound from "~/components/icons/user-round";
 import { AppPage } from "~/components/layout/page";
 import { Badge } from "~/components/ui/display/badge";
 import { Input } from "~/components/ui/input/input";
-import {
-  DataGrid,
-  type DataGridColumn,
-  createRouteRowOpen,
-} from "~/features/data-grid";
+import { DataGrid } from "~/features/data-grid/components/grid";
+import { createRouteRowOpen } from "~/features/data-grid/model/row-open";
+import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { managedExecutivesQuery } from "~/lib/queries/capacity";
 
 type TeamExecutiveRow = Awaited<

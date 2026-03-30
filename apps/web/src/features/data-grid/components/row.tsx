@@ -2,9 +2,9 @@ import { For } from "solid-js";
 
 import { Checkbox } from "~/components/ui/input/checkbox";
 
-import type { DataGridRowOpen } from "../model/data-grid-row-open";
-import type { DataGridColumn } from "../model/data-grid-types";
-import { DataGridCell } from "./data-grid-cell";
+import type { DataGridRowOpen } from "../model/row-open";
+import type { DataGridColumn } from "../model/types";
+import { DataGridCell } from "./cell";
 
 import styles from "../styles/data-grid.module.css";
 

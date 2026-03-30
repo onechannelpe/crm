@@ -6,11 +6,9 @@ import CalendarDays from "~/components/icons/calendar-days";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import UserRound from "~/components/icons/user-round";
 import { AppPage } from "~/components/layout/page";
-import {
-  DataGrid,
-  type DataGridColumn,
-  createRouteRowOpen,
-} from "~/features/data-grid";
+import { DataGrid } from "~/features/data-grid/components/grid";
+import { createRouteRowOpen } from "~/features/data-grid/model/row-open";
+import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { confirmedSalesRecordsQuery } from "~/lib/queries/sales-records";
 import { formatDate } from "~/lib/utils";
 

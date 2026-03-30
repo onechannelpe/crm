@@ -5,7 +5,7 @@ import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import House from "~/components/icons/house";
 import Package from "~/components/icons/package";
 import { Badge } from "~/components/ui/display/badge";
-import type { DataGridColumn } from "~/features/data-grid";
+import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { formatDate } from "~/lib/utils";
 
 import styles from "./styles.module.css";

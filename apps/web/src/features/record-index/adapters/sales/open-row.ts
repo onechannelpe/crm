@@ -1,6 +1,6 @@
 import { useNavigate } from "@solidjs/router";
 
-import { createRouteRowOpen } from "~/features/data-grid";
+import { createRouteRowOpen } from "~/features/data-grid/model/row-open";
 
 import type { SalesRow } from "./columns";
 
