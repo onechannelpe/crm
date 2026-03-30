@@ -1,8 +1,8 @@
 {
   "name": "@crm/extension",
-  "description": "CRM browser extension for resilient VoIP session state and recording sync",
-  "private": true,
   "version": "0.0.0",
+  "private": true,
+  "description": "CRM browser extension for resilient VoIP session state and recording sync",
   "type": "module",
   "scripts": {
     "dev": "wxt",

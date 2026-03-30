@@ -12,7 +12,8 @@ let databasePromise: Promise<IDBDatabase> | null = null;
 function withRequest<T>(request: IDBRequest<T>): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error ?? new Error("indexeddb request failed"));
+    request.onerror = () =>
+      reject(request.error ?? new Error("indexeddb request failed"));
   });
 }
 
@@ -32,7 +33,8 @@ function openDatabase(): Promise<IDBDatabase> {
     };
 
     request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error ?? new Error("failed to open indexeddb"));
+    request.onerror = () =>
+      reject(request.error ?? new Error("failed to open indexeddb"));
   });
 
   return databasePromise;
@@ -49,7 +51,9 @@ export async function saveLargePayload(
   await withRequest(store.put(record));
 }
 
-export async function readLargePayload(jobId: string): Promise<Record<string, unknown> | null> {
+export async function readLargePayload(
+  jobId: string,
+): Promise<Record<string, unknown> | null> {
   const database = await openDatabase();
   const transaction = database.transaction(PAYLOAD_STORE, "readonly");
   const store = transaction.objectStore(PAYLOAD_STORE);

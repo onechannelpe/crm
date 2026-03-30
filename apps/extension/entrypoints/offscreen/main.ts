@@ -77,7 +77,10 @@ async function createMediaStream(streamId: string): Promise<MediaStream> {
     },
   };
 
-  return navigator.mediaDevices.getUserMedia({ audio: audioConstraints, video: false });
+  return navigator.mediaDevices.getUserMedia({
+    audio: audioConstraints,
+    video: false,
+  });
 }
 
 async function startRecorder(message: OffscreenStartMessage): Promise<void> {
@@ -170,19 +173,21 @@ browser.runtime.onMessage.addListener((message: unknown) => {
 
   if (message.type === "offscreen.recording.stop") {
     return stopActiveRecorder().then(
-      () => ({ ok: true } as const),
+      () => ({ ok: true }) as const,
       (error: unknown) => ({
         ok: false,
-        error: error instanceof Error ? error.message : "failed to stop recorder",
+        error:
+          error instanceof Error ? error.message : "failed to stop recorder",
       }),
     );
   }
 
   return startRecorder(message).then(
-    () => ({ ok: true } as const),
+    () => ({ ok: true }) as const,
     (error: unknown) => ({
       ok: false,
-      error: error instanceof Error ? error.message : "failed to start recorder",
+      error:
+        error instanceof Error ? error.message : "failed to start recorder",
     }),
   );
 });

@@ -1,4 +1,8 @@
-import { createInitialState, STORAGE_KEY, type ExtensionState } from "@/src/domain/model";
+import {
+  createInitialState,
+  STORAGE_KEY,
+  type ExtensionState,
+} from "@/src/domain/model";
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -57,7 +61,8 @@ function normalizeState(value: unknown): ExtensionState {
   return {
     schemaVersion: 1,
     installationId:
-      typeof value.installationId === "string" && value.installationId.trim() !== ""
+      typeof value.installationId === "string" &&
+      value.installationId.trim() !== ""
         ? value.installationId
         : initial.installationId,
     nextEventSequence: Math.max(1, asNumber(value.nextEventSequence, 1)),

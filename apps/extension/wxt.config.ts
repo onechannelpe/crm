@@ -24,7 +24,14 @@ export default defineConfig({
     name: "CRM call companion",
     description:
       "Persistent VoIP session state, recording queue, and offline-first sync.",
-    permissions: ["storage", "alarms", "offscreen", "tabCapture", "activeTab", "sidePanel"],
+    permissions: [
+      "storage",
+      "alarms",
+      "offscreen",
+      "tabCapture",
+      "activeTab",
+      "sidePanel",
+    ],
     host_permissions: extensionHostPermissions,
     externally_connectable: {
       matches: extensionHostPermissions,

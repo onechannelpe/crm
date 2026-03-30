@@ -1,6 +1,5 @@
 import { createSignal, onCleanup, onMount, Show } from "solid-js";
 
-import type { ExtensionState } from "@/src/domain/model";
 import {
   connectCall,
   endCall,
@@ -9,6 +8,7 @@ import {
   isSuccessfulResponse,
   startCall,
 } from "@/src/client/runtime-client";
+import type { ExtensionState } from "@/src/domain/model";
 
 import "./dashboard.css";
 
@@ -58,7 +58,13 @@ export function Dashboard(props: DashboardProps) {
     setError(null);
   };
 
-  const run = async (task: () => Promise<{ ok: boolean; error?: string; state?: ExtensionState }>) => {
+  const run = async (
+    task: () => Promise<{
+      ok: boolean;
+      error?: string;
+      state?: ExtensionState;
+    }>,
+  ) => {
     const response = await task();
     if (!response.ok) {
       setError(response.error ?? "operation failed");
@@ -91,7 +97,9 @@ export function Dashboard(props: DashboardProps) {
       <header class="header">
         <p class="eyebrow">CRM extension</p>
         <h1>Assigned call companion</h1>
-        <p class="muted">Web sends the assigned client. Extension keeps the runtime alive.</p>
+        <p class="muted">
+          Web sends the assigned client. Extension keeps the runtime alive.
+        </p>
       </header>
 
       <Show when={error()}>
@@ -111,7 +119,9 @@ export function Dashboard(props: DashboardProps) {
           </p>
           <p>
             Client
-            <strong>{state()?.handoff?.clientName ?? "No assigned client"}</strong>
+            <strong>
+              {state()?.handoff?.clientName ?? "No assigned client"}
+            </strong>
           </p>
           <p>
             Phone
@@ -138,7 +148,8 @@ export function Dashboard(props: DashboardProps) {
           when={state()?.handoff}
           fallback={
             <p class="empty-copy">
-              Select an assigned client in CRM to send the next number into the extension.
+              Select an assigned client in CRM to send the next number into the
+              extension.
             </p>
           }
         >
@@ -165,10 +176,16 @@ export function Dashboard(props: DashboardProps) {
         </Show>
 
         <div class="button-row">
-          <button onClick={() => void run(() => startCall())} disabled={!state()?.handoff}>
+          <button
+            onClick={() => void run(() => startCall())}
+            disabled={!state()?.handoff}
+          >
             Start call
           </button>
-          <button class="secondary" onClick={() => void run(() => connectCall())}>
+          <button
+            class="secondary"
+            onClick={() => void run(() => connectCall())}
+          >
             Mark connected
           </button>
           <button class="secondary" onClick={() => void run(() => endCall())}>
@@ -180,11 +197,14 @@ export function Dashboard(props: DashboardProps) {
       <section class="card">
         <h2>Sync status</h2>
         <p class="muted">
-          Sync configuration should come from the web handoff, not from manual entry in the
-          extension.
+          Sync configuration should come from the web handoff, not from manual
+          entry in the extension.
         </p>
         <div class="button-row">
-          <button class="secondary" onClick={() => void run(() => flushQueue())}>
+          <button
+            class="secondary"
+            onClick={() => void run(() => flushQueue())}
+          >
             Flush queue
           </button>
         </div>

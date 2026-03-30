@@ -1,10 +1,13 @@
+import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { mkdtemp, rm } from "node:fs/promises";
 
 import { chromium, type BrowserContext, type Page } from "@playwright/test";
 
-import type { RuntimeMessage, RuntimeResponse } from "../../../src/domain/messages";
+import type {
+  RuntimeMessage,
+  RuntimeResponse,
+} from "../../../src/domain/messages";
 
 interface ExtensionSession {
   context: BrowserContext;
@@ -23,7 +26,9 @@ function extensionArgs(extensionOutputPath: string): string[] {
 function getExtensionIdFromWorkerUrl(url: string): string {
   const extensionId = new URL(url).hostname;
   if (!extensionId) {
-    throw new Error(`Unable to resolve extension id from service worker URL: ${url}`);
+    throw new Error(
+      `Unable to resolve extension id from service worker URL: ${url}`,
+    );
   }
   return extensionId;
 }

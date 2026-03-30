@@ -16,7 +16,10 @@ export async function ensureOffscreenDocument(): Promise<void> {
       justification: "recording call media for resilient upload",
     })
     .catch(async (error: unknown) => {
-      if (error instanceof Error && error.message.includes("single offscreen")) {
+      if (
+        error instanceof Error &&
+        error.message.includes("single offscreen")
+      ) {
         return;
       }
 
@@ -34,7 +37,10 @@ export async function closeOffscreenDocument(): Promise<void> {
   try {
     await chrome.offscreen.closeDocument();
   } catch (error: unknown) {
-    if (error instanceof Error && error.message.includes("No current offscreen")) {
+    if (
+      error instanceof Error &&
+      error.message.includes("No current offscreen")
+    ) {
       return;
     }
 

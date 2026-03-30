@@ -4,7 +4,10 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "@playwright/test";
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
-const extensionOutputPath = path.resolve(currentDirectory, ".output/chrome-mv3");
+const extensionOutputPath = path.resolve(
+  currentDirectory,
+  ".output/chrome-mv3",
+);
 
 export default defineConfig({
   testDir: "./tests/integration",
