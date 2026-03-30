@@ -1,28 +1,83 @@
 import { createAsync, revalidate } from "@solidjs/router";
-import { createSignal, For } from "solid-js";
+import { createMemo, createSignal } from "solid-js";
 
 import { WindowSelect } from "~/components/features/audit/window-select";
+import Activity from "~/components/icons/activity";
+import CalendarDays from "~/components/icons/calendar-days";
+import CircleCheckBig from "~/components/icons/circle-check-big";
+import CircleQuestionMark from "~/components/icons/circle-question-mark";
+import Lock from "~/components/icons/lock";
 import { AppPage } from "~/components/layout/page";
 import { Badge } from "~/components/ui/display/badge";
 import { Button } from "~/components/ui/input/button";
 import { FilterBar } from "~/components/ui/layout/filter-bar";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "~/components/ui/layout/table";
+import { DataGrid, type DataGridColumn } from "~/features/data-grid";
+import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-row-open";
+import { createDataGridDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
 import { authFunnelSnapshotQuery } from "~/lib/queries/audit";
 import { formatDateTime } from "~/lib/utils";
 
 type BadgeVariant = "success" | "destructive" | "outline";
+type AuditAuthRow = Awaited<
+  ReturnType<typeof authFunnelSnapshotQuery>
+>["recent"][number] & { id: number };
+
+const AUDIT_AUTH_COLUMNS = [
+  {
+    key: "createdAt",
+    label: "Hora",
+    icon: CalendarDays,
+    width: 180,
+    sticky: true,
+    renderCell: (row) => formatDateTime(row.createdAt),
+  },
+  {
+    key: "eventName",
+    label: "Evento",
+    icon: Activity,
+    minWidth: 220,
+    grow: true,
+    renderCell: (row) => row.eventName,
+  },
+  {
+    key: "screen",
+    label: "Pantalla",
+    icon: CircleQuestionMark,
+    width: 180,
+    renderCell: (row) => row.screen ?? "-",
+  },
+  {
+    key: "method",
+    label: "Método",
+    icon: Lock,
+    width: 160,
+    renderCell: (row) => row.method ?? "-",
+  },
+  {
+    key: "outcome",
+    label: "Resultado",
+    icon: CircleCheckBig,
+    width: 160,
+    renderCell: (row) => (
+      <Badge variant={outcomeBadgeVariant(row.outcome)}>{row.outcome}</Badge>
+    ),
+  },
+] satisfies ReadonlyArray<DataGridColumn<AuditAuthRow>>;
 
 function outcomeBadgeVariant(outcome: string): BadgeVariant {
-  const o = outcome.toLowerCase();
-  if (o.includes("success") || o.includes("ok")) return "success";
-  if (o.includes("fail") || o.includes("error")) return "destructive";
+  const normalizedOutcome = outcome.toLowerCase();
+  if (
+    normalizedOutcome.includes("success") ||
+    normalizedOutcome.includes("ok")
+  ) {
+    return "success";
+  }
+  if (
+    normalizedOutcome.includes("fail") ||
+    normalizedOutcome.includes("error")
+  ) {
+    return "destructive";
+  }
   return "outline";
 }
 
@@ -38,6 +93,29 @@ export default function AuditAuthPage() {
     { initialValue: { windowMinutes: 60, summary: [], recent: [] } },
   );
 
+  const rows = createMemo<AuditAuthRow[]>(() =>
+    snapshot().recent.map((row, index) => ({
+      ...row,
+      id: index + 1,
+    })),
+  );
+
+  const rowOpen = useSidePanelRowOpen<AuditAuthRow>((row) =>
+    createDataGridDetailSidePanelPage({
+      title: row.eventName,
+      subtitle: row.outcome,
+      items: [
+        { label: "Hora", value: formatDateTime(row.createdAt) },
+        { label: "Pantalla", value: row.screen ?? "-" },
+        { label: "Método", value: row.method ?? "-" },
+        { label: "Resultado", value: row.outcome },
+        { label: "Fuente", value: row.source },
+        { label: "Ruta", value: row.routePath ?? "-" },
+        { label: "Código", value: row.code ?? "-" },
+      ],
+    }),
+  );
+
   return (
     <AppPage>
       <FilterBar>
@@ -51,40 +129,17 @@ export default function AuditAuthPage() {
         </Button>
       </FilterBar>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Hora</TableHead>
-            <TableHead>Evento</TableHead>
-            <TableHead>Pantalla</TableHead>
-            <TableHead>Método</TableHead>
-            <TableHead>Resultado</TableHead>
-            <TableHead>Fuente</TableHead>
-            <TableHead>Ruta</TableHead>
-            <TableHead>Código</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <For each={snapshot().recent}>
-            {(row) => (
-              <TableRow>
-                <TableCell>{formatDateTime(row.createdAt)}</TableCell>
-                <TableCell>{row.eventName}</TableCell>
-                <TableCell>{row.screen ?? "—"}</TableCell>
-                <TableCell>{row.method ?? "—"}</TableCell>
-                <TableCell>
-                  <Badge variant={outcomeBadgeVariant(row.outcome)}>
-                    {row.outcome}
-                  </Badge>
-                </TableCell>
-                <TableCell>{row.source}</TableCell>
-                <TableCell>{row.routePath ?? "—"}</TableCell>
-                <TableCell>{row.code ?? "—"}</TableCell>
-              </TableRow>
-            )}
-          </For>
-        </TableBody>
-      </Table>
+      <DataGrid
+        ariaLabel="Auditoría de autenticación"
+        columns={[...AUDIT_AUTH_COLUMNS]}
+        emptyState={
+          <p class="px-3 py-4 text-sm text-muted-foreground">
+            No hay eventos recientes de autenticación.
+          </p>
+        }
+        rowOpen={rowOpen}
+        rows={rows()}
+      />
     </AppPage>
   );
 }

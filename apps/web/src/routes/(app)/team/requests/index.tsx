@@ -1,21 +1,25 @@
 import { createAsync, useAction } from "@solidjs/router";
-import { For, Show } from "solid-js";
 
+import CircleQuestionMark from "~/components/icons/circle-question-mark";
+import List from "~/components/icons/list";
+import MessageSquare from "~/components/icons/message-square";
+import UserRound from "~/components/icons/user-round";
 import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "~/components/ui/layout/table";
+  DataGrid,
+  type DataGridColumn,
+  createNoopRowOpen,
+} from "~/features/data-grid";
 import {
   approveCapacityRequestMutation,
   rejectCapacityRequestMutation,
 } from "~/lib/mutations/capacity";
 import { pendingCapacityRequestsQuery } from "~/lib/queries/capacity";
+
+type TeamRequestRow = Awaited<
+  ReturnType<typeof pendingCapacityRequestsQuery>
+>[number];
 
 export default function TeamRequestsPage() {
   const requests = createAsync(() => pendingCapacityRequestsQuery(), {
@@ -23,6 +27,61 @@ export default function TeamRequestsPage() {
   });
   const approve = useAction(approveCapacityRequestMutation);
   const reject = useAction(rejectCapacityRequestMutation);
+  const columns = [
+    {
+      key: "names",
+      label: "Ejecutivo",
+      icon: UserRound,
+      minWidth: 240,
+      grow: true,
+      sticky: true,
+      renderCell: (request) =>
+        `${request.names} ${request.first_surname} ${request.second_surname}`,
+    },
+    {
+      key: "kind",
+      label: "Tipo",
+      icon: List,
+      width: 160,
+      renderCell: (request) =>
+        request.kind === "search_extra" ? "Más búsquedas" : "Más refills",
+    },
+    {
+      key: "requested_amount",
+      label: "Cantidad",
+      icon: CircleQuestionMark,
+      width: 120,
+      renderCell: (request) => request.requested_amount,
+    },
+    {
+      key: "reason",
+      label: "Motivo",
+      icon: MessageSquare,
+      minWidth: 260,
+      grow: true,
+      renderCell: (request) => request.reason,
+    },
+    {
+      key: "actions",
+      label: "Acciones",
+      icon: CircleQuestionMark,
+      width: 240,
+      renderCell: (request) => (
+        <div class="flex gap-2">
+          <Button type="button" onClick={() => void approve(request.id)}>
+            Aprobar
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => void reject(request.id, "Rechazado desde la cola")}
+          >
+            Rechazar
+          </Button>
+        </div>
+      ),
+    },
+  ] satisfies ReadonlyArray<DataGridColumn<TeamRequestRow>>;
 
   return (
     <AppPage width="wide">
@@ -33,64 +92,17 @@ export default function TeamRequestsPage() {
             Aprueba o rechaza pedidos de capacidad.
           </p>
         </div>
-        <Show
-          when={requests().length > 0}
-          fallback={
-            <p class="text-sm text-muted-foreground">
+        <DataGrid
+          ariaLabel="Solicitudes del equipo"
+          columns={[...columns]}
+          emptyState={
+            <p class="px-3 py-4 text-sm text-muted-foreground">
               No hay solicitudes pendientes.
             </p>
           }
-        >
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Ejecutivo</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Cantidad</TableHead>
-                <TableHead>Motivo</TableHead>
-                <TableHead>Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <For each={requests()}>
-                {(request) => (
-                  <TableRow>
-                    <TableCell>
-                      {request.names} {request.first_surname}{" "}
-                      {request.second_surname}
-                    </TableCell>
-                    <TableCell>
-                      {request.kind === "search_extra"
-                        ? "Más búsquedas"
-                        : "Más refills"}
-                    </TableCell>
-                    <TableCell>{request.requested_amount}</TableCell>
-                    <TableCell>{request.reason}</TableCell>
-                    <TableCell>
-                      <div class="flex gap-2">
-                        <Button
-                          type="button"
-                          onClick={() => void approve(request.id)}
-                        >
-                          Aprobar
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() =>
-                            void reject(request.id, "Rechazado desde la cola")
-                          }
-                        >
-                          Rechazar
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </For>
-            </TableBody>
-          </Table>
-        </Show>
+          rowOpen={createNoopRowOpen()}
+          rows={requests()}
+        />
       </div>
     </AppPage>
   );

@@ -1,0 +1,298 @@
+.viewBar {
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  margin-left: 12px;
+}
+
+.viewBarTop {
+  align-items: center;
+  color: var(--foreground-secondary);
+  display: flex;
+  font-weight: 500;
+  height: 39px;
+  justify-content: space-between;
+  padding-right: 8px;
+  position: relative;
+  z-index: 7;
+}
+
+.viewPicker,
+.toolbarButton {
+  align-items: center;
+  background: var(--background);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--foreground-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  font-family: inherit;
+  font-size: 13px;
+  gap: 6px;
+  min-height: 28px;
+  padding: 4px 8px;
+  user-select: none;
+}
+
+.viewPicker:hover,
+.toolbarButton:hover {
+  background: color-mix(in srgb, var(--secondary) 84%, white);
+}
+
+.toolbarButton[data-open="true"] {
+  background: color-mix(in srgb, var(--secondary) 84%, white);
+}
+
+.toolbarButton[data-open="true"]:hover {
+  background: color-mix(in srgb, var(--secondary) 76%, white);
+}
+
+.toolbarButton[data-active="true"] {
+  color: var(--accent-foreground, var(--foreground));
+}
+
+.viewPickerIcon,
+.viewPickerMeta {
+  align-items: center;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.viewPickerLabel {
+  margin-left: 2px;
+  max-width: 130px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.viewPickerMeta {
+  color: var(--foreground-tertiary);
+  gap: 4px;
+  margin-left: 2px;
+}
+
+.viewActions {
+  display: flex;
+  gap: 6px;
+  font-weight: 400;
+}
+
+.menuWrap {
+  position: relative;
+}
+
+.menu {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius-sm) + 4px);
+  box-shadow: 0 12px 30px rgb(15 23 42 / 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 220px;
+  padding: 8px;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 20;
+}
+
+.menuItem {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--foreground);
+  cursor: pointer;
+  display: flex;
+  font-size: 13px;
+  gap: 8px;
+  min-height: 32px;
+  padding: 0 10px;
+  text-align: left;
+  width: 100%;
+}
+
+.menuItem[data-active="true"],
+.menuItem:hover {
+  background: color-mix(in srgb, var(--secondary) 84%, white);
+}
+
+.menuCheckbox {
+  accent-color: var(--foreground);
+  pointer-events: none;
+}
+
+.menuSectionLabel {
+  color: var(--foreground-tertiary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 4px 10px 6px;
+  text-transform: uppercase;
+}
+
+.indexContainer {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  width: 100%;
+}
+
+.tableContainer {
+  display: flex;
+  flex: 1;
+  margin-left: 8px;
+  min-height: 0;
+  min-width: 0;
+}
+
+.scrollWrapper {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.table {
+  background: var(--background);
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 100%;
+  min-width: max-content;
+}
+
+.headerRow,
+.bodyRow,
+.draftRow,
+.actionRow {
+  display: grid;
+  min-width: 100%;
+  width: max-content;
+}
+
+.headerRow {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+}
+
+.headerCell,
+.bodyCell,
+.actionCell {
+  align-items: center;
+  background: var(--background);
+  border-bottom: 1px solid var(--border);
+  box-sizing: border-box;
+  display: flex;
+  min-height: 38px;
+  min-width: 0;
+  padding: 0 12px;
+}
+
+.headerCell {
+  color: var(--foreground-tertiary);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.headerCellContent {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+}
+
+.headerIcon {
+  align-items: center;
+  color: var(--foreground-tertiary);
+  display: inline-flex;
+  justify-content: center;
+}
+
+.bodyCell {
+  color: var(--foreground);
+  font-size: 13px;
+}
+
+.rowButton {
+  align-items: center;
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  justify-content: flex-start;
+  min-height: 100%;
+  min-width: 0;
+  padding: 0;
+  text-align: left;
+  width: 100%;
+}
+
+.rowContent {
+  align-items: center;
+  color: inherit;
+  display: flex;
+  justify-content: flex-start;
+  min-height: 100%;
+  min-width: 0;
+  width: 100%;
+}
+
+.checkboxCell {
+  justify-content: center;
+  left: 0;
+  padding: 0;
+  position: sticky;
+  width: 40px;
+  z-index: 6;
+}
+
+.stickyCell {
+  left: 40px;
+  position: sticky;
+  z-index: 5;
+}
+
+.bodyRow:hover .bodyCell,
+.actionRow:hover .actionCell {
+  background: color-mix(in srgb, var(--secondary) 88%, white);
+}
+
+.actionRow {
+  background: transparent;
+  border: none;
+  color: var(--foreground-tertiary);
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+
+.actionCell {
+  color: var(--foreground-tertiary);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+@media (max-width: 960px) {
+  .viewBar {
+    margin-left: 0;
+  }
+
+  .viewBarTop {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+    height: auto;
+    padding: 8px 0;
+  }
+
+  .tableContainer {
+    margin-left: 0;
+  }
+}

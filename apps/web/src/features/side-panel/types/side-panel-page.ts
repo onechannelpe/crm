@@ -1,6 +1,7 @@
 import type { Component } from "solid-js";
 
 import Building2 from "~/components/icons/building-2";
+import Info from "~/components/icons/info";
 import Search from "~/components/icons/search";
 import User from "~/components/icons/user";
 import Users from "~/components/icons/users";
@@ -19,7 +20,9 @@ export type SidePanelPageKey =
   | "root"
   | "search-person-detail"
   | "search-company-detail"
-  | "lead-detail";
+  | "lead-detail"
+  | "inventory-detail"
+  | "data-grid-detail";
 
 export type SidePanelNavigationEntry = {
   page: SidePanelPageKey;
@@ -51,11 +54,35 @@ export type LeadDetailSidePanelPageState = {
   subtitle: string;
 };
 
+export type InventoryDetailSidePanelPageState = {
+  page: "inventory-detail";
+  inventoryItemId: number;
+  productName: string;
+  serialNumber: string;
+  category: string;
+  status: string;
+  createdAt: number;
+};
+
+export type DataGridDetailSidePanelItem = {
+  label: string;
+  value: string;
+};
+
+export type DataGridDetailSidePanelPageState = {
+  page: "data-grid-detail";
+  title: string;
+  subtitle: string;
+  items: DataGridDetailSidePanelItem[];
+};
+
 export type SidePanelPageState =
   | RootSidePanelPageState
   | SearchPersonDetailSidePanelPageState
   | SearchCompanyDetailSidePanelPageState
-  | LeadDetailSidePanelPageState;
+  | LeadDetailSidePanelPageState
+  | InventoryDetailSidePanelPageState
+  | DataGridDetailSidePanelPageState;
 
 export type SidePanelPageDefinition = {
   entry: SidePanelNavigationEntry;
@@ -154,6 +181,66 @@ export function createLeadDetailSidePanelPage(
       leadId: input.leadId,
       title: input.title,
       subtitle: input.subtitle ?? `Prospecto ${input.leadId}`,
+    },
+  };
+}
+
+type CreateInventoryDetailSidePanelPageInput = {
+  inventoryItemId: number;
+  productName: string;
+  serialNumber: string;
+  category: string;
+  status: string;
+  createdAt: number;
+};
+
+export function createInventoryDetailSidePanelPage(
+  input: CreateInventoryDetailSidePanelPageInput,
+): SidePanelPageDefinition {
+  const pageId = createSidePanelPageId();
+
+  return {
+    entry: {
+      page: "inventory-detail",
+      pageId,
+      pageTitle: input.productName,
+      pageIcon: Building2,
+    },
+    state: {
+      page: "inventory-detail",
+      inventoryItemId: input.inventoryItemId,
+      productName: input.productName,
+      serialNumber: input.serialNumber,
+      category: input.category,
+      status: input.status,
+      createdAt: input.createdAt,
+    },
+  };
+}
+
+type CreateDataGridDetailSidePanelPageInput = {
+  title: string;
+  subtitle?: string;
+  items: DataGridDetailSidePanelItem[];
+};
+
+export function createDataGridDetailSidePanelPage(
+  input: CreateDataGridDetailSidePanelPageInput,
+): SidePanelPageDefinition {
+  const pageId = createSidePanelPageId();
+
+  return {
+    entry: {
+      page: "data-grid-detail",
+      pageId,
+      pageTitle: input.title,
+      pageIcon: Info,
+    },
+    state: {
+      page: "data-grid-detail",
+      title: input.title,
+      subtitle: input.subtitle ?? "",
+      items: input.items,
     },
   };
 }
