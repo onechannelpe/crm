@@ -22,6 +22,12 @@ export type {
   DataGridRowOpen,
   DataGridRowOpenMode,
 } from "./model/data-grid-row-open";
+export {
+  createInlineRowOpen,
+  createNoopRowOpen,
+  createPanelRowOpen,
+  createRouteRowOpen,
+} from "./model/data-grid-row-open";
 export type { DataGridViewState } from "./model/data-grid-view-state";
 export type {
   DataGridActionRowConfig,

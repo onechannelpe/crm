@@ -81,7 +81,7 @@ export function LeadsRecordIndex() {
   const stickyColumnIndex = createMemo(() =>
     getStickyDataGridColumnIndex(visibleColumns()),
   );
-  const { openLeadRecord } = useOpenLeadRecord();
+  const { rowOpen } = useOpenLeadRecord();
 
   function toggleColumn(key: string) {
     viewState.setVisibleColumnKeys((current) => {
@@ -123,7 +123,7 @@ export function LeadsRecordIndex() {
         executiveId: 0,
       });
 
-      openLeadRecord({
+      rowOpen.open({
         id: result.id,
         ruc,
         razon_social: null,
@@ -144,10 +144,7 @@ export function LeadsRecordIndex() {
     title: "All prospects",
     columns: visibleColumns(),
     getRows: filteredLeads,
-    rowOpen: {
-      mode: "panel",
-      open: openLeadRecord,
-    },
+    rowOpen,
     filters: [...LEADS_RECORD_INDEX_FILTERS],
     sorts: [...LEADS_RECORD_INDEX_SORTS],
     emptyState: <LeadsRecordIndexEmptyState onAddNew={openDraftRow} />,
@@ -306,7 +303,7 @@ export function LeadsRecordIndex() {
         columns={adapter.columns}
         draftRow={adapter.draftRow}
         emptyState={adapter.emptyState}
-        onRowClick={adapter.rowOpen.open}
+        rowOpen={adapter.rowOpen}
         rows={adapter.getRows()}
         selection={selection}
       />

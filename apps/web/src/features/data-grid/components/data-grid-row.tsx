@@ -2,6 +2,7 @@ import { For } from "solid-js";
 
 import { Checkbox } from "~/components/ui/input/checkbox";
 
+import type { DataGridRowOpen } from "../model/data-grid-row-open";
 import type { DataGridColumn } from "../model/data-grid-types";
 import { DataGridCell } from "./data-grid-cell";
 
@@ -10,11 +11,11 @@ import styles from "../styles/data-grid.module.css";
 export function DataGridRow<T extends { id: number }>(props: {
   columns: DataGridColumn<T>[];
   gridTemplateColumns: string;
-  onRowClick: (row: T) => void;
   onSelectionPointerDown: (id: number) => void;
   onSelectionPointerEnter: (id: number) => void;
   onToggleSelected: (id: number, checked: boolean) => void;
   row: T;
+  rowOpen: DataGridRowOpen<T>;
   selected: boolean;
   stickyColumnIndex: number;
   stickyLeft: number;
@@ -44,13 +45,19 @@ export function DataGridRow<T extends { id: number }>(props: {
             sticky={index() === props.stickyColumnIndex}
             stickyLeft={props.stickyLeft}
           >
-            <button
-              type="button"
-              class={styles.rowButton}
-              onClick={() => props.onRowClick(props.row)}
-            >
-              {column.renderCell(props.row)}
-            </button>
+            {props.rowOpen.mode === "none" ? (
+              <div class={styles.rowContent}>
+                {column.renderCell(props.row)}
+              </div>
+            ) : (
+              <button
+                type="button"
+                class={styles.rowButton}
+                onClick={() => props.rowOpen.open(props.row)}
+              >
+                {column.renderCell(props.row)}
+              </button>
+            )}
           </DataGridCell>
         )}
       </For>

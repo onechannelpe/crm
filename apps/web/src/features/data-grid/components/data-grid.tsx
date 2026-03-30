@@ -6,6 +6,7 @@ import {
   getStickyDataGridColumnIndex,
 } from "../hooks/use-data-grid-column-layout";
 import type { DataGridSelectionModel } from "../hooks/use-data-grid-selection";
+import type { DataGridRowOpen } from "../model/data-grid-row-open";
 import type {
   DataGridActionRowConfig,
   DataGridColumn,
@@ -22,7 +23,7 @@ export function DataGrid<T extends { id: number }>(props: {
   columns: DataGridColumn<T>[];
   draftRow?: JSX.Element;
   emptyState: JSX.Element;
-  onRowClick: (row: T) => void;
+  rowOpen: DataGridRowOpen<T>;
   rows: T[];
   selection: DataGridSelectionModel;
 }) {
@@ -55,13 +56,13 @@ export function DataGrid<T extends { id: number }>(props: {
                   <DataGridRow
                     columns={props.columns}
                     gridTemplateColumns={gridTemplateColumns()}
-                    onRowClick={props.onRowClick}
                     onSelectionPointerDown={props.selection.beginSelectionDrag}
                     onSelectionPointerEnter={
                       props.selection.updateSelectionDrag
                     }
                     onToggleSelected={props.selection.setSelected}
                     row={row}
+                    rowOpen={props.rowOpen}
                     selected={props.selection.selectedIds().includes(row.id)}
                     stickyColumnIndex={stickyColumnIndex()}
                     stickyLeft={SELECTION_COLUMN_WIDTH}

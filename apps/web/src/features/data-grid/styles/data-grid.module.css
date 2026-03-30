@@ -234,6 +234,16 @@
   width: 100%;
 }
 
+.rowContent {
+  align-items: center;
+  color: inherit;
+  display: flex;
+  justify-content: flex-start;
+  min-height: 100%;
+  min-width: 0;
+  width: 100%;
+}
+
 .checkboxCell {
   justify-content: center;
   left: 0;
