@@ -1,21 +1,63 @@
 import { createAsync } from "@solidjs/router";
-import { For, Show } from "solid-js";
+import { createMemo } from "solid-js";
 
+import Activity from "~/components/icons/activity";
+import CalendarDays from "~/components/icons/calendar-days";
+import CircleQuestionMark from "~/components/icons/circle-question-mark";
+import UserRound from "~/components/icons/user-round";
 import { AppPage } from "~/components/layout/page";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "~/components/ui/layout/table";
+import { DataGrid, type DataGridColumn } from "~/features/data-grid";
+import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-row-open";
+import { createDataGridDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
 import { capacityAuditEventsQuery } from "~/lib/queries/capacity";
 
 type CapacityAuditEvents = Awaited<ReturnType<typeof capacityAuditEventsQuery>>;
 type CapacityAuditChange = CapacityAuditEvents[number]["changes"];
+type CapacityAuditRow = CapacityAuditEvents[number] & { id: number };
 
 const EMPTY_EVENTS: CapacityAuditEvents = [];
+
+const CAPACITY_AUDIT_COLUMNS = [
+  {
+    key: "createdAt",
+    label: "Time",
+    icon: CalendarDays,
+    width: 180,
+    sticky: true,
+    renderCell: (event) => formatTime(event.createdAt),
+  },
+  {
+    key: "action",
+    label: "Action",
+    icon: Activity,
+    minWidth: 220,
+    grow: true,
+    renderCell: (event) => event.action,
+  },
+  {
+    key: "userId",
+    label: "Actor",
+    icon: UserRound,
+    width: 120,
+    renderCell: (event) => String(event.userId),
+  },
+  {
+    key: "entity",
+    label: "Entity",
+    icon: CircleQuestionMark,
+    width: 180,
+    renderCell: (event) => `${event.entityType}:${event.entityId}`,
+  },
+  {
+    key: "changes",
+    label: "Changes",
+    icon: CircleQuestionMark,
+    minWidth: 280,
+    maxWidth: 480,
+    grow: true,
+    renderCell: (event) => formatChanges(event.changes),
+  },
+] satisfies ReadonlyArray<DataGridColumn<CapacityAuditRow>>;
 
 function formatTime(value: number): string {
   return new Date(value).toLocaleString();
@@ -36,6 +78,26 @@ export default function CapacityAuditPage() {
     initialValue: EMPTY_EVENTS,
   });
 
+  const rows = createMemo<CapacityAuditRow[]>(() =>
+    events().map((event, index) => ({
+      ...event,
+      id: index + 1,
+    })),
+  );
+
+  const rowOpen = useSidePanelRowOpen<CapacityAuditRow>((event) =>
+    createDataGridDetailSidePanelPage({
+      title: event.action,
+      subtitle: `${event.entityType}:${event.entityId}`,
+      items: [
+        { label: "Time", value: formatTime(event.createdAt) },
+        { label: "Actor", value: String(event.userId) },
+        { label: "Entity", value: `${event.entityType}:${event.entityId}` },
+        { label: "Changes", value: formatChanges(event.changes) },
+      ],
+    }),
+  );
+
   return (
     <AppPage width="wide">
       <div class="space-y-6">
@@ -46,47 +108,17 @@ export default function CapacityAuditPage() {
           </p>
         </div>
 
-        <Show
-          when={events().length > 0}
-          fallback={
-            <p class="text-sm text-muted-foreground">No audit events found.</p>
+        <DataGrid
+          ariaLabel="Capacity audit"
+          columns={[...CAPACITY_AUDIT_COLUMNS]}
+          emptyState={
+            <p class="px-3 py-4 text-sm text-muted-foreground">
+              No audit events found.
+            </p>
           }
-        >
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Time</TableHead>
-                <TableHead>Action</TableHead>
-                <TableHead>Actor</TableHead>
-                <TableHead>Entity</TableHead>
-                <TableHead>Changes</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <For each={events()}>
-                {(event) => {
-                  const changesText = formatChanges(event.changes);
-                  return (
-                    <TableRow>
-                      <TableCell>{formatTime(event.createdAt)}</TableCell>
-                      <TableCell>{event.action}</TableCell>
-                      <TableCell>{event.userId}</TableCell>
-                      <TableCell>
-                        {event.entityType}:{event.entityId}
-                      </TableCell>
-                      <TableCell
-                        class="max-w-[480px] truncate"
-                        title={changesText}
-                      >
-                        {changesText}
-                      </TableCell>
-                    </TableRow>
-                  );
-                }}
-              </For>
-            </TableBody>
-          </Table>
-        </Show>
+          rowOpen={rowOpen}
+          rows={rows()}
+        />
       </div>
     </AppPage>
   );

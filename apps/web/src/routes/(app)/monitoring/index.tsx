@@ -1,29 +1,73 @@
 import { createAsync, revalidate } from "@solidjs/router";
-import { createSignal, For } from "solid-js";
+import { createMemo, createSignal } from "solid-js";
 
 import { WindowSelect } from "~/components/features/audit/window-select";
+import Activity from "~/components/icons/activity";
+import CircleAlert from "~/components/icons/circle-alert";
+import CircleCheckBig from "~/components/icons/circle-check-big";
+import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { Select } from "~/components/ui/input/select";
 import { FilterBar } from "~/components/ui/layout/filter-bar";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "~/components/ui/layout/table";
+import { DataGrid, type DataGridColumn } from "~/features/data-grid";
+import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-row-open";
+import { createDataGridDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
 import { observabilitySnapshotQuery } from "~/lib/queries/audit";
 
-function parseStatus(value: string): "all" | "ok" | "error" {
+type MonitoringStatus = "all" | "ok" | "error";
+type MonitoringRow = Awaited<
+  ReturnType<typeof observabilitySnapshotQuery>
+>["summary"][number] & { id: number };
+
+const MONITORING_COLUMNS = [
+  {
+    key: "actionName",
+    label: "Acción",
+    icon: Activity,
+    minWidth: 240,
+    grow: true,
+    sticky: true,
+    renderCell: (row) => row.actionName,
+  },
+  {
+    key: "count",
+    label: "Ejecuciones",
+    icon: CircleCheckBig,
+    width: 140,
+    renderCell: (row) => row.count,
+  },
+  {
+    key: "errorCount",
+    label: "Errores",
+    icon: CircleAlert,
+    width: 120,
+    renderCell: (row) => row.errorCount,
+  },
+  {
+    key: "avgDurationMs",
+    label: "Promedio (ms)",
+    icon: CircleQuestionMark,
+    width: 150,
+    renderCell: (row) => Math.round(row.avgDurationMs),
+  },
+  {
+    key: "maxDurationMs",
+    label: "Máximo (ms)",
+    icon: CircleQuestionMark,
+    width: 140,
+    renderCell: (row) => Math.round(row.maxDurationMs),
+  },
+] satisfies ReadonlyArray<DataGridColumn<MonitoringRow>>;
+
+function parseStatus(value: string): MonitoringStatus {
   if (value === "ok" || value === "error") return value;
   return "all";
 }
 
 export default function MonitoringPage() {
   const [windowMinutes, setWindowMinutes] = createSignal(60);
-  const [status, setStatus] = createSignal<"all" | "ok" | "error">("all");
+  const [status, setStatus] = createSignal<MonitoringStatus>("all");
 
   const snapshot = createAsync(
     () =>
@@ -33,6 +77,29 @@ export default function MonitoringPage() {
         limit: 80,
       }),
     { initialValue: { windowMinutes: 60, summary: [], recent: [] } },
+  );
+
+  const rows = createMemo<MonitoringRow[]>(() =>
+    snapshot().summary.map((row, index) => ({
+      ...row,
+      id: index + 1,
+    })),
+  );
+
+  const rowOpen = useSidePanelRowOpen<MonitoringRow>((row) =>
+    createDataGridDetailSidePanelPage({
+      title: row.actionName,
+      subtitle: `${row.errorCount} errores`,
+      items: [
+        { label: "Ejecuciones", value: String(row.count) },
+        { label: "Errores", value: String(row.errorCount) },
+        {
+          label: "Promedio (ms)",
+          value: String(Math.round(row.avgDurationMs)),
+        },
+        { label: "Máximo (ms)", value: String(Math.round(row.maxDurationMs)) },
+      ],
+    }),
   );
 
   return (
@@ -59,30 +126,17 @@ export default function MonitoringPage() {
         </Button>
       </FilterBar>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Acción</TableHead>
-            <TableHead>Ejecuciones</TableHead>
-            <TableHead>Errores</TableHead>
-            <TableHead>Promedio (ms)</TableHead>
-            <TableHead>Máximo (ms)</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <For each={snapshot().summary}>
-            {(row) => (
-              <TableRow>
-                <TableCell>{row.actionName}</TableCell>
-                <TableCell>{row.count}</TableCell>
-                <TableCell>{row.errorCount}</TableCell>
-                <TableCell>{Math.round(row.avgDurationMs)}</TableCell>
-                <TableCell>{Math.round(row.maxDurationMs)}</TableCell>
-              </TableRow>
-            )}
-          </For>
-        </TableBody>
-      </Table>
+      <DataGrid
+        ariaLabel="Monitoreo"
+        columns={[...MONITORING_COLUMNS]}
+        emptyState={
+          <p class="px-3 py-4 text-sm text-muted-foreground">
+            No hay métricas disponibles para la ventana actual.
+          </p>
+        }
+        rowOpen={rowOpen}
+        rows={rows()}
+      />
     </AppPage>
   );
 }
