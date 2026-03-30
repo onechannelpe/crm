@@ -1,20 +1,86 @@
-import { A, createAsync } from "@solidjs/router";
-import { For, Show, createMemo, createSignal } from "solid-js";
+import { A, createAsync, useNavigate } from "@solidjs/router";
+import { Show, createMemo, createSignal } from "solid-js";
 
+import CircleQuestionMark from "~/components/icons/circle-question-mark";
+import List from "~/components/icons/list";
+import Mail from "~/components/icons/mail";
+import UserRound from "~/components/icons/user-round";
 import { AppPage } from "~/components/layout/page";
 import { Badge } from "~/components/ui/display/badge";
 import { Input } from "~/components/ui/input/input";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "~/components/ui/layout/table";
+  DataGrid,
+  type DataGridColumn,
+  createRouteRowOpen,
+} from "~/features/data-grid";
 import { managedExecutivesQuery } from "~/lib/queries/capacity";
 
+type TeamExecutiveRow = Awaited<
+  ReturnType<typeof managedExecutivesQuery>
+>[number];
+
+const TEAM_COLUMNS = [
+  {
+    key: "fullName",
+    label: "Ejecutivo",
+    icon: UserRound,
+    minWidth: 240,
+    grow: true,
+    sticky: true,
+    renderCell: (executive) => (
+      <div class="space-y-1">
+        <div class="font-medium">{executive.fullName}</div>
+        <div class="text-xs text-muted-foreground">{executive.email}</div>
+      </div>
+    ),
+  },
+  {
+    key: "searchStatus",
+    label: "Búsquedas",
+    icon: CircleQuestionMark,
+    width: 220,
+    renderCell: (executive) => (
+      <div class="space-y-1">
+        <div>
+          {executive.searchStatus.committed}/
+          {executive.searchStatus.policy.monthlyLimit +
+            executive.searchStatus.granted}
+        </div>
+        <Badge variant="outline">
+          {executive.searchStatus.remaining} restantes
+        </Badge>
+      </div>
+    ),
+  },
+  {
+    key: "leadStatus",
+    label: "Leads",
+    icon: List,
+    width: 220,
+    renderCell: (executive) => (
+      <div class="space-y-1">
+        <div>
+          {executive.leadStatus.activeAssignments}/
+          {executive.leadStatus.policy.bufferTarget} activos
+        </div>
+        <Badge variant="outline">
+          {executive.leadStatus.remaining} refills restantes
+        </Badge>
+      </div>
+    ),
+  },
+  {
+    key: "email",
+    label: "Correo",
+    icon: Mail,
+    minWidth: 220,
+    grow: true,
+    renderCell: (executive) => executive.email,
+  },
+] satisfies ReadonlyArray<DataGridColumn<TeamExecutiveRow>>;
+
 export default function TeamPage() {
+  const navigate = useNavigate();
   const executives = createAsync(() => managedExecutivesQuery(), {
     initialValue: [],
   });
@@ -25,6 +91,9 @@ export default function TeamPage() {
     return executives().filter((executive) =>
       `${executive.fullName} ${executive.email}`.toLowerCase().includes(value),
     );
+  });
+  const rowOpen = createRouteRowOpen<TeamExecutiveRow>((executive) => {
+    void navigate(`/team/members/${executive.id}/capacity`);
   });
 
   return (
@@ -65,63 +134,13 @@ export default function TeamPage() {
             </p>
           }
         >
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Ejecutivo</TableHead>
-                <TableHead>Búsquedas</TableHead>
-                <TableHead>Leads</TableHead>
-                <TableHead>Detalle</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <For each={filtered()}>
-                {(executive) => (
-                  <TableRow>
-                    <TableCell>
-                      <div class="space-y-1">
-                        <div class="font-medium">{executive.fullName}</div>
-                        <div class="text-xs text-muted-foreground">
-                          {executive.email}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div class="space-y-1">
-                        <div>
-                          {executive.searchStatus.committed}/
-                          {executive.searchStatus.policy.monthlyLimit +
-                            executive.searchStatus.granted}
-                        </div>
-                        <Badge variant="outline">
-                          {executive.searchStatus.remaining} restantes
-                        </Badge>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div class="space-y-1">
-                        <div>
-                          {executive.leadStatus.activeAssignments}/
-                          {executive.leadStatus.policy.bufferTarget} activos
-                        </div>
-                        <Badge variant="outline">
-                          {executive.leadStatus.remaining} refills restantes
-                        </Badge>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <A
-                        href={`/team/members/${executive.id}/capacity`}
-                        class="underline"
-                      >
-                        Abrir
-                      </A>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </For>
-            </TableBody>
-          </Table>
+          <DataGrid
+            ariaLabel="Equipo"
+            columns={[...TEAM_COLUMNS]}
+            emptyState={<></>}
+            rowOpen={rowOpen}
+            rows={filtered()}
+          />
         </Show>
       </div>
     </AppPage>

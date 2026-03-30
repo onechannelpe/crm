@@ -7,26 +7,29 @@ import type { DataGridColumn } from "../model/data-grid-types";
 import styles from "../styles/data-grid.module.css";
 
 export function DataGridHeader<T>(props: {
-  allSelected: boolean;
   columns: DataGridColumn<T>[];
   gridTemplateColumns: string;
+  selectable?: boolean;
+  allSelected?: boolean;
   stickyColumnIndex: number;
   stickyLeft: number;
-  onToggleAll: (checked: boolean) => void;
+  onToggleAll?: (checked: boolean) => void;
 }) {
   return (
     <div
       class={styles.headerRow}
       style={{ "grid-template-columns": props.gridTemplateColumns }}
     >
-      <div class={`${styles.headerCell} ${styles.checkboxCell}`}>
-        <Checkbox
-          checked={props.allSelected}
-          onChange={(event: Event & { currentTarget: HTMLInputElement }) =>
-            props.onToggleAll(event.currentTarget.checked)
-          }
-        />
-      </div>
+      {props.selectable === false ? null : (
+        <div class={`${styles.headerCell} ${styles.checkboxCell}`}>
+          <Checkbox
+            checked={props.allSelected ?? false}
+            onChange={(event: Event & { currentTarget: HTMLInputElement }) =>
+              props.onToggleAll?.(event.currentTarget.checked)
+            }
+          />
+        </div>
+      )}
       <For each={props.columns}>
         {(column, index) => {
           const Icon = column.icon;

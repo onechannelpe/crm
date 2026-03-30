@@ -1,22 +1,22 @@
 import { useAction } from "@solidjs/router";
-import { createSignal, For, Show } from "solid-js";
+import { For, Show, createMemo, createSignal } from "solid-js";
 
 import { RejectionForm } from "~/components/features/sales/rejection-form";
 import { EmptyState } from "~/components/feedback/empty-state";
 import { useToast } from "~/components/feedback/toast-provider";
+import CalendarDays from "~/components/icons/calendar-days";
+import CircleQuestionMark from "~/components/icons/circle-question-mark";
+import UserRound from "~/components/icons/user-round";
 import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { Select } from "~/components/ui/input/select";
 import { Textarea } from "~/components/ui/input/textarea";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "~/components/ui/layout/table";
+  DataGrid,
+  type DataGridColumn,
+  createNoopRowOpen,
+} from "~/features/data-grid";
 import { getErrorMessage } from "~/lib/errors";
 import {
   confirmSalesRecordMutation,
@@ -36,6 +36,10 @@ const ATTEMPT_OUTCOMES = [
   { value: "invalid_data", label: "Datos inválidos" },
   { value: "rejected", label: "Rechazado" },
 ] as const;
+
+type SalesConfirmationRow = Awaited<
+  ReturnType<typeof pendingSalesRecordsQuery>
+>[number];
 
 function isAttemptOutcome(
   value: string,
@@ -86,7 +90,7 @@ export default function SalesConfirmationsPage() {
         optimistic: (prev) => prev.filter((note) => note.id !== noteId),
         commit: async () => {
           const reason = rejections
-            .map((it) => `${it.fieldId}: ${it.note}`)
+            .map((item) => `${item.fieldId}: ${item.note}`)
             .join(" | ");
           await rejectRecord(noteId, reason);
         },
@@ -133,6 +137,82 @@ export default function SalesConfirmationsPage() {
       );
     }
   };
+
+  const columns = createMemo(
+    () =>
+      [
+        {
+          key: "id",
+          label: "ID",
+          icon: CircleQuestionMark,
+          width: 90,
+          sticky: true,
+          renderCell: (note) => `#${note.id}`,
+        },
+        {
+          key: "contactName",
+          label: "Contacto",
+          icon: UserRound,
+          minWidth: 220,
+          grow: true,
+          renderCell: (note) => (
+            <div class={styles.contactWrap}>
+              <p class={styles.contactName}>{note.contactName}</p>
+              <p class={styles.contactMeta}>{note.contactDni}</p>
+            </div>
+          ),
+        },
+        {
+          key: "executiveName",
+          label: "Responsable",
+          icon: UserRound,
+          width: 180,
+          renderCell: (note) => note.executiveName,
+        },
+        {
+          key: "createdAt",
+          label: "Fecha",
+          icon: CalendarDays,
+          width: 160,
+          renderCell: (note) => formatDate(note.createdAt),
+        },
+        {
+          key: "actions",
+          label: "Acciones",
+          icon: CircleQuestionMark,
+          width: 320,
+          renderCell: (note) => (
+            <div class={styles.actions}>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => {
+                  void handleApprove(note.id);
+                }}
+              >
+                Confirmar
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => setRejectingNoteId(note.id)}
+              >
+                Rechazar
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  setAttemptingNoteId(note.id);
+                }}
+              >
+                Registrar intento
+              </Button>
+            </div>
+          ),
+        },
+      ] satisfies ReadonlyArray<DataGridColumn<SalesConfirmationRow>>,
+  );
 
   return (
     <AppPage>
@@ -209,65 +289,13 @@ export default function SalesConfirmationsPage() {
             </section>
           )}
         </Show>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Contacto</TableHead>
-              <TableHead>Responsable</TableHead>
-              <TableHead>Fecha</TableHead>
-              <TableHead class={styles.actionsHead}>Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <For each={currentNotes()}>
-              {(note) => (
-                <TableRow>
-                  <TableCell class={styles.idCell}>#{note.id}</TableCell>
-                  <TableCell>
-                    <div class={styles.contactWrap}>
-                      <p class={styles.contactName}>{note.contactName}</p>
-                      <p class={styles.contactMeta}>{note.contactDni}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>{note.executiveName}</TableCell>
-                  <TableCell class={styles.dateCell}>
-                    {formatDate(note.createdAt)}
-                  </TableCell>
-                  <TableCell class={styles.actionsCell}>
-                    <div class={styles.actions}>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => {
-                          void handleApprove(note.id);
-                        }}
-                      >
-                        Confirmar
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => setRejectingNoteId(note.id)}
-                      >
-                        Rechazar
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          setAttemptingNoteId(note.id);
-                        }}
-                      >
-                        Registrar intento
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )}
-            </For>
-          </TableBody>
-        </Table>
+        <DataGrid
+          ariaLabel="Confirmaciones de ventas"
+          columns={[...columns()]}
+          emptyState={<></>}
+          rowOpen={createNoopRowOpen()}
+          rows={currentNotes()}
+        />
       </Show>
     </AppPage>
   );

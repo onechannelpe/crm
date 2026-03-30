@@ -1,25 +1,71 @@
 import { createAsync, revalidate } from "@solidjs/router";
-import { createSignal, For } from "solid-js";
+import { createMemo, createSignal } from "solid-js";
 
 import {
   WINDOW_OPTIONS_EXTENDED,
   WindowSelect,
 } from "~/components/features/audit/window-select";
+import Activity from "~/components/icons/activity";
+import CalendarDays from "~/components/icons/calendar-days";
+import CircleQuestionMark from "~/components/icons/circle-question-mark";
+import UserRound from "~/components/icons/user-round";
 import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { Checkbox } from "~/components/ui/input/checkbox";
 import { Input } from "~/components/ui/input/input";
 import { FilterBar } from "~/components/ui/layout/filter-bar";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "~/components/ui/layout/table";
+import { DataGrid, type DataGridColumn } from "~/features/data-grid";
+import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-row-open";
+import { createDataGridDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
 import { auditReaderSnapshotQuery } from "~/lib/queries/audit";
 import { formatDateTime } from "~/lib/utils";
+
+type AuditLogEvent = Awaited<
+  ReturnType<typeof auditReaderSnapshotQuery>
+>["events"][number];
+type AuditLogGridRow = AuditLogEvent & { id: number };
+
+const AUDIT_LOG_COLUMNS = [
+  {
+    key: "createdAt",
+    label: "Hora",
+    icon: CalendarDays,
+    width: 180,
+    sticky: true,
+    renderCell: (row) => formatDateTime(row.createdAt),
+  },
+  {
+    key: "action",
+    label: "Acción",
+    icon: Activity,
+    minWidth: 220,
+    grow: true,
+    renderCell: (row) => row.action,
+  },
+  {
+    key: "entity",
+    label: "Entidad",
+    icon: CircleQuestionMark,
+    width: 180,
+    renderCell: (row) => `${row.entityType}#${row.entityId}`,
+  },
+  {
+    key: "actor",
+    label: "Actor",
+    icon: UserRound,
+    width: 120,
+    renderCell: (row) => `#${row.userId}`,
+  },
+  {
+    key: "changes",
+    label: "Cambios",
+    icon: CircleQuestionMark,
+    minWidth: 280,
+    maxWidth: 520,
+    grow: true,
+    renderCell: (row) => row.changes ?? "-",
+  },
+] satisfies ReadonlyArray<DataGridColumn<AuditLogGridRow>>;
 
 function parseActorUserId(value: string): number | undefined {
   const trimmed = value.trim();
@@ -47,6 +93,26 @@ export default function AuditLogPage() {
         actorUserId: parseActorUserId(actorUserIdFilter()),
       }),
     { initialValue: { windowMinutes: 1440, events: [] } },
+  );
+
+  const rows = createMemo<AuditLogGridRow[]>(() =>
+    snapshot().events.map((event, index) => ({
+      ...event,
+      id: index + 1,
+    })),
+  );
+
+  const rowOpen = useSidePanelRowOpen<AuditLogGridRow>((row) =>
+    createDataGridDetailSidePanelPage({
+      title: row.action,
+      subtitle: `${row.entityType}#${row.entityId}`,
+      items: [
+        { label: "Hora", value: formatDateTime(row.createdAt) },
+        { label: "Entidad", value: `${row.entityType}#${row.entityId}` },
+        { label: "Actor", value: `#${row.userId}` },
+        { label: "Cambios", value: row.changes ?? "-" },
+      ],
+    }),
   );
 
   return (
@@ -95,32 +161,17 @@ export default function AuditLogPage() {
         </Button>
       </FilterBar>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Hora</TableHead>
-            <TableHead>Acción</TableHead>
-            <TableHead>Entidad</TableHead>
-            <TableHead>Actor</TableHead>
-            <TableHead>Cambios</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <For each={snapshot().events}>
-            {(row) => (
-              <TableRow>
-                <TableCell>{formatDateTime(row.createdAt)}</TableCell>
-                <TableCell>{row.action}</TableCell>
-                <TableCell>
-                  {row.entityType}#{row.entityId}
-                </TableCell>
-                <TableCell>#{row.userId}</TableCell>
-                <TableCell>{row.changes ?? "—"}</TableCell>
-              </TableRow>
-            )}
-          </For>
-        </TableBody>
-      </Table>
+      <DataGrid
+        ariaLabel="Auditoría"
+        columns={[...AUDIT_LOG_COLUMNS]}
+        emptyState={
+          <p class="px-3 py-4 text-sm text-muted-foreground">
+            No hay eventos de auditoría para los filtros actuales.
+          </p>
+        }
+        rowOpen={rowOpen}
+        rows={rows()}
+      />
     </AppPage>
   );
 }

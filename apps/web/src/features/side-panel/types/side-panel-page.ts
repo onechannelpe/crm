@@ -1,6 +1,7 @@
 import type { Component } from "solid-js";
 
 import Building2 from "~/components/icons/building-2";
+import Info from "~/components/icons/info";
 import Search from "~/components/icons/search";
 import User from "~/components/icons/user";
 import Users from "~/components/icons/users";
@@ -20,7 +21,8 @@ export type SidePanelPageKey =
   | "search-person-detail"
   | "search-company-detail"
   | "lead-detail"
-  | "inventory-detail";
+  | "inventory-detail"
+  | "data-grid-detail";
 
 export type SidePanelNavigationEntry = {
   page: SidePanelPageKey;
@@ -62,12 +64,25 @@ export type InventoryDetailSidePanelPageState = {
   createdAt: number;
 };
 
+export type DataGridDetailSidePanelItem = {
+  label: string;
+  value: string;
+};
+
+export type DataGridDetailSidePanelPageState = {
+  page: "data-grid-detail";
+  title: string;
+  subtitle: string;
+  items: DataGridDetailSidePanelItem[];
+};
+
 export type SidePanelPageState =
   | RootSidePanelPageState
   | SearchPersonDetailSidePanelPageState
   | SearchCompanyDetailSidePanelPageState
   | LeadDetailSidePanelPageState
-  | InventoryDetailSidePanelPageState;
+  | InventoryDetailSidePanelPageState
+  | DataGridDetailSidePanelPageState;
 
 export type SidePanelPageDefinition = {
   entry: SidePanelNavigationEntry;
@@ -199,6 +214,33 @@ export function createInventoryDetailSidePanelPage(
       category: input.category,
       status: input.status,
       createdAt: input.createdAt,
+    },
+  };
+}
+
+type CreateDataGridDetailSidePanelPageInput = {
+  title: string;
+  subtitle?: string;
+  items: DataGridDetailSidePanelItem[];
+};
+
+export function createDataGridDetailSidePanelPage(
+  input: CreateDataGridDetailSidePanelPageInput,
+): SidePanelPageDefinition {
+  const pageId = createSidePanelPageId();
+
+  return {
+    entry: {
+      page: "data-grid-detail",
+      pageId,
+      pageTitle: input.title,
+      pageIcon: Info,
+    },
+    state: {
+      page: "data-grid-detail",
+      title: input.title,
+      subtitle: input.subtitle ?? "",
+      items: input.items,
     },
   };
 }

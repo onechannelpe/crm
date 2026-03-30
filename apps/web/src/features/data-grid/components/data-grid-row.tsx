@@ -11,12 +11,13 @@ import styles from "../styles/data-grid.module.css";
 export function DataGridRow<T extends { id: number }>(props: {
   columns: DataGridColumn<T>[];
   gridTemplateColumns: string;
-  onSelectionPointerDown: (id: number) => void;
-  onSelectionPointerEnter: (id: number) => void;
-  onToggleSelected: (id: number, checked: boolean) => void;
+  selectable?: boolean;
+  onSelectionPointerDown?: (id: number) => void;
+  onSelectionPointerEnter?: (id: number) => void;
+  onToggleSelected?: (id: number, checked: boolean) => void;
   row: T;
   rowOpen: DataGridRowOpen<T>;
-  selected: boolean;
+  selected?: boolean;
   stickyColumnIndex: number;
   stickyLeft: number;
 }) {
@@ -25,20 +26,25 @@ export function DataGridRow<T extends { id: number }>(props: {
       class={styles.bodyRow}
       style={{ "grid-template-columns": props.gridTemplateColumns }}
     >
-      <div
-        class={`${styles.bodyCell} ${styles.checkboxCell}`}
-        data-selection-cell="true"
-        onPointerDown={() => props.onSelectionPointerDown(props.row.id)}
-        onPointerEnter={() => props.onSelectionPointerEnter(props.row.id)}
-      >
-        <Checkbox
-          checked={props.selected}
-          onClick={(event) => event.stopPropagation()}
-          onChange={(event) =>
-            props.onToggleSelected(props.row.id, event.currentTarget.checked)
-          }
-        />
-      </div>
+      {props.selectable === false ? null : (
+        <div
+          class={`${styles.bodyCell} ${styles.checkboxCell}`}
+          data-selection-cell="true"
+          onPointerDown={() => props.onSelectionPointerDown?.(props.row.id)}
+          onPointerEnter={() => props.onSelectionPointerEnter?.(props.row.id)}
+        >
+          <Checkbox
+            checked={props.selected ?? false}
+            onClick={(event) => event.stopPropagation()}
+            onChange={(event) =>
+              props.onToggleSelected?.(
+                props.row.id,
+                event.currentTarget.checked,
+              )
+            }
+          />
+        </div>
+      )}
       <For each={props.columns}>
         {(column, index) => (
           <DataGridCell
