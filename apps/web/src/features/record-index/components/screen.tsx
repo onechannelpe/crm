@@ -1,5 +1,4 @@
 import { RecordIndexInstanceProvider } from "../context/instance-context";
-import { RecordIndexEffects } from "../effects/effects";
 import { useRecordIndexModel } from "../hooks/use-instance";
 import type { RecordIndexAdapter } from "../model/types";
 import { RecordIndexTable } from "./table";
@@ -36,7 +35,6 @@ function RecordIndexScreenContent<
     <>
       <RecordIndexToolbar model={model} />
       <RecordIndexTable model={model} />
-      <RecordIndexEffects model={model} />
     </>
   );
 }
