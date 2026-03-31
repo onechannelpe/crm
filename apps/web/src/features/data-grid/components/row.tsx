@@ -1,9 +1,11 @@
 import { For } from "solid-js";
 
+import ChevronRight from "~/components/icons/chevron-right";
+import LayoutSidebarRightCollapse from "~/components/icons/layout-sidebar-right-collapse";
 import { Checkbox } from "~/components/ui/input/checkbox";
 
 import { useDataGridInstance } from "../context/instance-context";
-import type { DataGridRowOpen } from "../model/row-open";
+import type { DataGridRowOpen, DataGridRowOpenMode } from "../model/row-open";
 import type { DataGridColumn } from "../model/types";
 import { DataGridCell } from "./cell";
 
@@ -35,6 +37,7 @@ export function DataGridRow<T extends { id: number }>(props: {
       }
       data-active={interaction.isRowActive(props.row.id) ? "true" : "false"}
       data-focused={interaction.isRowFocused(props.row.id) ? "true" : "false"}
+      data-open-mode={props.rowOpen.mode}
       style={{ "grid-template-columns": props.gridTemplateColumns }}
     >
       {props.selectable === false ? null : (
@@ -82,6 +85,7 @@ export function DataGridRow<T extends { id: number }>(props: {
                 type="button"
                 class={styles.rowButton}
                 data-grid-focusable-cell={`${props.row.id}:${index()}`}
+                data-open-mode={props.rowOpen.mode}
                 onClick={() => {
                   interaction.activateRow(props.row.id);
                   props.rowOpen.open(props.row);
@@ -92,7 +96,14 @@ export function DataGridRow<T extends { id: number }>(props: {
                 }
                 tabIndex={interaction.getCellTabIndex(props.row.id, index())}
               >
-                {column.renderCell(props.row)}
+                <span class={styles.rowButtonContent}>
+                  <span class={styles.rowButtonLabel}>
+                    {column.renderCell(props.row)}
+                  </span>
+                  {index() === props.columns.length - 1 ? (
+                    <DataGridRowOpenHint mode={props.rowOpen.mode} />
+                  ) : null}
+                </span>
               </button>
             )}
           </DataGridCell>
@@ -100,4 +111,24 @@ export function DataGridRow<T extends { id: number }>(props: {
       </For>
     </div>
   );
+}
+
+function DataGridRowOpenHint(props: { mode: DataGridRowOpenMode }) {
+  if (props.mode === "panel") {
+    return (
+      <span class={styles.rowOpenHint} aria-hidden="true">
+        <LayoutSidebarRightCollapse size={14} />
+      </span>
+    );
+  }
+
+  if (props.mode === "route" || props.mode === "inline") {
+    return (
+      <span class={styles.rowOpenHint} aria-hidden="true">
+        <ChevronRight size={14} />
+      </span>
+    );
+  }
+
+  return null;
 }
