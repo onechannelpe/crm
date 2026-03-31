@@ -18,10 +18,15 @@ export function DataGridHeader<T>(props: {
   return (
     <div
       class={styles.headerRow}
+      role="row"
       style={{ "grid-template-columns": props.gridTemplateColumns }}
     >
       {props.selectable === false ? null : (
-        <div class={`${styles.headerCell} ${styles.checkboxCell}`}>
+        <div
+          class={`${styles.headerCell} ${styles.checkboxCell}`}
+          role="columnheader"
+          aria-colindex={1}
+        >
           <Checkbox
             checked={props.allSelected ?? false}
             onChange={(event: Event & { currentTarget: HTMLInputElement }) =>
@@ -33,10 +38,13 @@ export function DataGridHeader<T>(props: {
       <For each={props.columns}>
         {(column, index) => {
           const Icon = column.icon;
+          const colIndex = () => index() + (props.selectable ? 2 : 1);
 
           return (
             <div
               class={`${styles.headerCell} ${index() === props.stickyColumnIndex ? styles.stickyCell : ""}`}
+              role="columnheader"
+              aria-colindex={colIndex()}
               style={
                 index() === props.stickyColumnIndex
                   ? { left: `${props.stickyLeft}px` }

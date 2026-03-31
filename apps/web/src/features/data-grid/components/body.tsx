@@ -18,10 +18,11 @@ export function DataGridBody<T extends { id: number }>(props: {
   return (
     <>
       <For each={props.rows}>
-        {(row) => (
+        {(row, index) => (
           <DataGridRow
             columns={props.columns}
             gridTemplateColumns={props.gridTemplateColumns}
+            rowIndex={index() + 2}
             selectable={props.selectable}
             row={row}
             rowOpen={props.rowOpen}

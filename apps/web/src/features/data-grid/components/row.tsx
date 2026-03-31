@@ -12,6 +12,7 @@ import styles from "../styles/data-grid.module.css";
 export function DataGridRow<T extends { id: number }>(props: {
   columns: DataGridColumn<T>[];
   gridTemplateColumns: string;
+  rowIndex: number;
   selectable?: boolean;
   row: T;
   rowOpen: DataGridRowOpen<T>;
@@ -23,14 +24,25 @@ export function DataGridRow<T extends { id: number }>(props: {
   return (
     <div
       class={styles.bodyRow}
+      role="row"
+      aria-rowindex={props.rowIndex}
+      aria-selected={
+        props.selectable === false
+          ? undefined
+          : interaction.isSelected(props.row.id)
+            ? "true"
+            : "false"
+      }
+      data-active={interaction.isRowActive(props.row.id) ? "true" : "false"}
       data-focused={interaction.isRowFocused(props.row.id) ? "true" : "false"}
       style={{ "grid-template-columns": props.gridTemplateColumns }}
     >
       {props.selectable === false ? null : (
         <div
           class={`${styles.bodyCell} ${styles.checkboxCell}`}
+          aria-colindex={1}
           data-selection-cell="true"
-          role="presentation"
+          role="gridcell"
           onPointerDown={() => interaction.beginSelectionDrag?.(props.row.id)}
           onPointerEnter={() => interaction.updateSelectionDrag?.(props.row.id)}
         >
@@ -49,6 +61,8 @@ export function DataGridRow<T extends { id: number }>(props: {
       <For each={props.columns}>
         {(column, index) => (
           <DataGridCell
+            ariaColIndex={index() + (props.selectable ? 2 : 1)}
+            role="gridcell"
             sticky={index() === props.stickyColumnIndex}
             stickyLeft={props.stickyLeft}
           >
@@ -68,7 +82,10 @@ export function DataGridRow<T extends { id: number }>(props: {
                 type="button"
                 class={styles.rowButton}
                 data-grid-focusable-cell={`${props.row.id}:${index()}`}
-                onClick={() => props.rowOpen.open(props.row)}
+                onClick={() => {
+                  interaction.activateRow(props.row.id);
+                  props.rowOpen.open(props.row);
+                }}
                 onFocus={() => interaction.focusCell(props.row.id, index())}
                 onKeyDown={(event) =>
                   interaction.handleCellKeyDown(event, props.row.id, index())
