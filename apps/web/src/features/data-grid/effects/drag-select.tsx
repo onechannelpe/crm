@@ -1,37 +1,59 @@
-import { onCleanup, onMount } from "solid-js";
+import { createSignal, onCleanup, onMount, Show } from "solid-js";
+import { Portal } from "solid-js/web";
 
 import { useDataGridInstance } from "../context/instance-context";
 import { useDataGridTable } from "../context/table-context";
+import {
+  autoScrollContainer,
+  createSelectionBox,
+  getPointRelativeToContainer,
+  getSelectableRowIdsInBox,
+} from "../dnd/geometry";
+import type { DataGridPoint, DataGridSelectionBox } from "../dnd/types";
 
-type DragMode = "add" | "remove";
+import styles from "../styles/data-grid.module.css";
 
-const DRAG_SELECTION_THRESHOLD = 5;
+const DRAG_SELECTION_THRESHOLD = 6;
 
 export function DataGridDragSelectEffect() {
   const interaction = useDataGridInstance();
   const table = useDataGridTable();
+  const [selectionBox, setSelectionBox] = createSignal<
+    DataGridSelectionBox | undefined
+  >();
 
   onMount(() => {
     let pointerId: number | undefined;
-    let dragMode: DragMode | undefined;
-    let pendingRowId: number | undefined;
-    let startY = 0;
-    let started = false;
+    let startPoint: DataGridPoint | undefined;
+    let selecting = false;
 
     function reset() {
       pointerId = undefined;
-      dragMode = undefined;
-      pendingRowId = undefined;
-      startY = 0;
-      started = false;
+      startPoint = undefined;
+      selecting = false;
+      setSelectionBox(undefined);
     }
 
-    function setSelectionForRow(rowId: number) {
-      if (!dragMode || !interaction.setSelected) {
+    function handleSelectionBox(nextSelectionBox: DataGridSelectionBox) {
+      const scrollWrapper = table.getScrollWrapper();
+      if (!scrollWrapper || !interaction.setSelected) {
         return;
       }
 
-      interaction.setSelected(rowId, dragMode === "add");
+      const selectedRowIds = new Set(
+        getSelectableRowIdsInBox(scrollWrapper, nextSelectionBox),
+      );
+
+      for (const rowElement of scrollWrapper.querySelectorAll<HTMLElement>(
+        "[data-selectable-id]",
+      )) {
+        const rowId = Number(rowElement.dataset.selectableId);
+        if (Number.isNaN(rowId)) {
+          continue;
+        }
+
+        interaction.setSelected(rowId, selectedRowIds.has(rowId));
+      }
     }
 
     function handlePointerDown(event: PointerEvent) {
@@ -44,58 +66,63 @@ export function DataGridDragSelectEffect() {
         return;
       }
 
-      if (target.closest("[data-grid-reorder-handle='true']")) {
+      const scrollWrapper = table.getScrollWrapper();
+      if (!scrollWrapper || !scrollWrapper.contains(target)) {
         return;
       }
 
-      const rowElement = target.closest<HTMLElement>("[data-grid-row-id]");
-      const rowId = Number(rowElement?.dataset.gridRowId);
-
-      if (!rowElement || Number.isNaN(rowId)) {
+      if (target.closest("[data-select-disable='true']")) {
         return;
       }
 
       pointerId = event.pointerId;
-      startY = event.clientY;
-      pendingRowId = rowId;
-      dragMode = interaction.isSelected(rowId) ? "remove" : "add";
+      startPoint = getPointRelativeToContainer(
+        scrollWrapper,
+        event.clientX,
+        event.clientY,
+      );
     }
 
     function handlePointerMove(event: PointerEvent) {
       if (
         pointerId === undefined ||
         event.pointerId !== pointerId ||
-        !interaction.setSelected
+        !interaction.setSelected ||
+        !startPoint
       ) {
         return;
       }
 
-      if (!started) {
-        const distance = Math.abs(event.clientY - startY);
+      const scrollWrapper = table.getScrollWrapper();
+      if (!scrollWrapper) {
+        return;
+      }
+
+      autoScrollContainer(scrollWrapper, event.clientY);
+
+      const nextPoint = getPointRelativeToContainer(
+        scrollWrapper,
+        event.clientX,
+        event.clientY,
+      );
+      const nextSelectionBox = createSelectionBox(startPoint, nextPoint);
+
+      if (!selecting) {
+        const distance = Math.max(
+          Math.abs(nextPoint.x - startPoint.x),
+          Math.abs(nextPoint.y - startPoint.y),
+        );
         if (distance < DRAG_SELECTION_THRESHOLD) {
           return;
         }
 
-        started = true;
+        selecting = true;
+        interaction.clearSelection();
         interaction.markRowOpenSuppressed();
-        if (pendingRowId !== undefined) {
-          setSelectionForRow(pendingRowId);
-        }
       }
 
-      const target = event.target;
-      if (!(target instanceof HTMLElement)) {
-        return;
-      }
-
-      const rowElement = target.closest<HTMLElement>("[data-grid-row-id]");
-      const rowId = Number(rowElement?.dataset.gridRowId);
-
-      if (!rowElement || Number.isNaN(rowId)) {
-        return;
-      }
-
-      setSelectionForRow(rowId);
+      setSelectionBox(nextSelectionBox);
+      handleSelectionBox(nextSelectionBox);
     }
 
     function handlePointerUp(event: PointerEvent) {
@@ -103,21 +130,42 @@ export function DataGridDragSelectEffect() {
         return;
       }
 
-      setTimeout(() => interaction.clearPendingRowOpenSuppression(), 0);
+      if (selecting) {
+        setTimeout(() => interaction.clearPendingRowOpenSuppression(), 0);
+      }
       reset();
     }
 
-    const container = table.getContainer();
-    container?.addEventListener("pointerdown", handlePointerDown);
+    const scrollWrapper = table.getScrollWrapper();
+    scrollWrapper?.addEventListener("pointerdown", handlePointerDown);
     window.addEventListener("pointermove", handlePointerMove);
     window.addEventListener("pointerup", handlePointerUp);
 
     onCleanup(() => {
-      container?.removeEventListener("pointerdown", handlePointerDown);
+      scrollWrapper?.removeEventListener("pointerdown", handlePointerDown);
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
     });
   });
 
-  return null;
+  const overlayMount = () => table.getScrollWrapper();
+
+  return (
+    <Show when={overlayMount() && selectionBox()}>
+      {(currentSelectionBox) => (
+        <Portal mount={overlayMount()}>
+          <div
+            class={styles.dragSelectionBox}
+            aria-hidden="true"
+            style={{
+              top: `${currentSelectionBox().top}px`,
+              left: `${currentSelectionBox().left}px`,
+              width: `${currentSelectionBox().width}px`,
+              height: `${currentSelectionBox().height}px`,
+            }}
+          />
+        </Portal>
+      )}
+    </Show>
+  );
 }

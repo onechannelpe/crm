@@ -32,6 +32,7 @@ export function DataGridRow<T extends { id: number }>(props: {
       role="row"
       data-grid-row-id={props.row.id}
       data-grid-row-index={props.rowOrderIndex}
+      data-selectable-id={props.row.id}
       aria-rowindex={props.rowIndex}
       aria-selected={
         props.selectable === false
@@ -59,6 +60,7 @@ export function DataGridRow<T extends { id: number }>(props: {
             type="button"
             class={styles.reorderHandle}
             data-grid-reorder-handle="true"
+            data-select-disable="true"
             aria-label="Reorder row"
             onPointerDown={(event) => {
               event.preventDefault();
@@ -79,6 +81,7 @@ export function DataGridRow<T extends { id: number }>(props: {
           class={`${styles.bodyCell} ${styles.checkboxCell}`}
           aria-colindex={props.reorderable ? 2 : 1}
           data-selection-cell="true"
+          data-select-disable="true"
           role="gridcell"
           style={
             props.reorderable ? { left: `${props.selectionLeft}px` } : undefined

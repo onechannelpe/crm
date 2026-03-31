@@ -1,3 +1,5 @@
+import type { DataGridPoint, DataGridSelectionBox } from "./types";
+
 const AUTO_SCROLL_EDGE_THRESHOLD = 48;
 const AUTO_SCROLL_STEP = 18;
 
@@ -48,4 +50,72 @@ export function autoScrollContainer(
   if (clientY > rect.bottom - AUTO_SCROLL_EDGE_THRESHOLD) {
     scrollWrapper.scrollTop += AUTO_SCROLL_STEP;
   }
+}
+
+export function getPointRelativeToContainer(
+  container: HTMLElement,
+  clientX: number,
+  clientY: number,
+): DataGridPoint {
+  const rect = container.getBoundingClientRect();
+
+  return {
+    x: clientX - rect.left,
+    y: clientY - rect.top,
+  };
+}
+
+export function createSelectionBox(
+  startPoint: DataGridPoint,
+  endPoint: DataGridPoint,
+): DataGridSelectionBox {
+  return {
+    top: Math.min(startPoint.y, endPoint.y),
+    left: Math.min(startPoint.x, endPoint.x),
+    width: Math.abs(endPoint.x - startPoint.x),
+    height: Math.abs(endPoint.y - startPoint.y),
+  };
+}
+
+export function getSelectableRowIdsInBox(
+  container: HTMLElement,
+  selectionBox: DataGridSelectionBox,
+): number[] {
+  const containerRect = container.getBoundingClientRect();
+  const selectedRowIds: number[] = [];
+
+  for (const rowElement of container.querySelectorAll<HTMLElement>(
+    "[data-selectable-id]",
+  )) {
+    const rowId = Number(rowElement.dataset.selectableId);
+    if (Number.isNaN(rowId)) {
+      continue;
+    }
+
+    const rect = rowElement.getBoundingClientRect();
+    const rowBox = {
+      top: rect.top - containerRect.top,
+      left: rect.left - containerRect.left,
+      width: rect.width,
+      height: rect.height,
+    };
+
+    if (boxesIntersect(selectionBox, rowBox)) {
+      selectedRowIds.push(rowId);
+    }
+  }
+
+  return selectedRowIds;
+}
+
+function boxesIntersect(
+  boxA: DataGridSelectionBox,
+  boxB: DataGridSelectionBox,
+) {
+  return (
+    boxA.left <= boxB.left + boxB.width &&
+    boxA.left + boxA.width >= boxB.left &&
+    boxA.top <= boxB.top + boxB.height &&
+    boxA.top + boxA.height >= boxB.top
+  );
 }
