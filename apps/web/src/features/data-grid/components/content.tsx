@@ -63,7 +63,12 @@ export function DataGridContent<T extends { id: number }>(props: {
             />
 
             <Show when={!props.isLoading} fallback={<DataGridLoadingState />}>
-              <Show when={props.rows.length > 0} fallback={props.emptyState}>
+              <Show
+                when={props.rows.length > 0}
+                fallback={
+                  <div class={styles.emptyStateSurface}>{props.emptyState}</div>
+                }
+              >
                 <DataGridBody
                   actionRow={props.actionRow}
                   columns={props.columns}

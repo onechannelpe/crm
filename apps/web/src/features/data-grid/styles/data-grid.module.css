@@ -177,6 +177,33 @@
   min-height: 240px;
 }
 
+.loadingStateContent {
+  align-items: center;
+  color: var(--foreground-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.loadingStateLabel {
+  font-size: 13px;
+  margin: 0;
+}
+
+.emptyStateSurface {
+  align-items: center;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--secondary) 28%, white) 0%,
+    var(--background) 24%
+  );
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  min-height: 300px;
+}
+
 .headerRow,
 .bodyRow,
 .draftRow,
@@ -187,6 +214,7 @@
 }
 
 .headerRow {
+  background: color-mix(in srgb, var(--background) 94%, white);
   box-shadow: 0 1px 0 rgb(15 23 42 / 0.05);
   position: sticky;
   top: 0;
@@ -399,6 +427,10 @@
 .bodyRow:hover .bodyCell,
 .actionRow:hover .actionCell {
   background: color-mix(in srgb, var(--secondary) 94%, white);
+}
+
+.bodyRow {
+  transition: background-color 140ms ease;
 }
 
 .bodyRow:hover .rowOpenHint,
