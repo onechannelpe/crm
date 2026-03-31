@@ -1,3 +1,5 @@
+import type { JSX } from "solid-js";
+
 import { cn } from "~/lib/utils";
 
 import { useResizablePanel } from "../hooks/use-resizable-panel";
@@ -9,6 +11,22 @@ type ResizeGapProps = {
   onResizeStart?: () => void;
   onResizeEnd?: () => void;
 };
+
+type ResizeGapFrameProps = {
+  isOpen: boolean;
+  onPointerDown?: JSX.EventHandlerUnion<HTMLDivElement, PointerEvent>;
+};
+
+export function ResizeGapFrame(props: ResizeGapFrameProps) {
+  return (
+    <div
+      class={cn(styles.gap, !props.isOpen && styles.gapClosed)}
+      onPointerDown={props.onPointerDown}
+      role="separator"
+      aria-orientation="vertical"
+    />
+  );
+}
 
 export function ResizeGap(props: ResizeGapProps) {
   const { isOpen, panelWidth, setPanelWidth, closePanel } = useSidePanel();
@@ -28,12 +46,5 @@ export function ResizeGap(props: ResizeGapProps) {
     onResizeStart: () => props.onResizeStart?.(),
   });
 
-  return (
-    <div
-      class={cn(styles.gap, !isOpen() && styles.gapClosed)}
-      onPointerDown={onPointerDown}
-      role="separator"
-      aria-orientation="vertical"
-    />
-  );
+  return <ResizeGapFrame isOpen={isOpen()} onPointerDown={onPointerDown} />;
 }

@@ -1,4 +1,11 @@
-import { type ParentProps, Show, onCleanup, onMount } from "solid-js";
+import {
+  type JSX,
+  Show,
+  createEffect,
+  createSignal,
+  onCleanup,
+  onMount,
+} from "solid-js";
 
 import { cn } from "~/lib/utils";
 
@@ -10,22 +17,34 @@ import { useSidePanel } from "../state/use-side-panel";
 
 import styles from "./side-panel-shell.module.css";
 
-type SidePanelShellProps = ParentProps<{ isResizing?: boolean }>;
+type SidePanelShellProps = {
+  renderContent?: () => JSX.Element;
+  isResizing?: boolean;
+  isInteractive?: boolean;
+  shouldRenderChildren?: boolean;
+};
 
 export function SidePanelShell(props: SidePanelShellProps) {
   const { isOpen, isClosing, closePanel, onCloseAnimationComplete } =
     useSidePanel();
+  const [shouldRenderContent, setShouldRenderContent] = createSignal(isOpen());
 
-  const shouldRenderContent = () => isOpen() || isClosing();
+  createEffect(() => {
+    if (isOpen()) {
+      setShouldRenderContent(true);
+    }
+  });
 
   function handleTransitionEnd(event: TransitionEvent) {
     if (event.propertyName === "width" && !isOpen() && isClosing()) {
+      setShouldRenderContent(false);
       onCloseAnimationComplete();
     }
   }
 
   onMount(() => {
     function handlePointerDown(e: PointerEvent) {
+      if (props.isInteractive === false) return;
       if (!isOpen()) return;
       const path = e.composedPath();
       const isExcluded = path.some((el) => {
@@ -56,9 +75,16 @@ export function SidePanelShell(props: SidePanelShellProps) {
       data-click-outside-id={SIDE_PANEL_CLICK_OUTSIDE_ID}
       onTransitionEnd={handleTransitionEnd}
     >
-      <Show when={shouldRenderContent()}>
-        <aside class={styles.aside}>{props.children}</aside>
-      </Show>
+      <aside class={styles.aside}>
+        <Show
+          when={
+            props.shouldRenderChildren !== false &&
+            (isOpen() || shouldRenderContent())
+          }
+        >
+          {props.renderContent?.()}
+        </Show>
+      </aside>
     </div>
   );
 }

@@ -62,6 +62,20 @@ export function createSidePanelStore() {
   });
 
   const openPanel = (page: SidePanelPageDefinition) => {
+    const currentEntry = state.navigationStack.at(-1);
+
+    if (
+      currentEntry &&
+      currentEntry.page === page.entry.page &&
+      currentEntry.pageId === page.entry.pageId
+    ) {
+      setState("isOpen", true);
+      setState("isClosing", false);
+      setState("searchText", "");
+      setState("pageStateById", page.entry.pageId, page.state);
+      return;
+    }
+
     setState({
       isOpen: true,
       isClosing: false,
@@ -75,16 +89,11 @@ export function createSidePanelStore() {
 
   const closePanel = () => {
     if (!state.isOpen && !state.isClosing) return;
-    setState({ isOpen: false, isClosing: true });
+    setState({ isOpen: false, isClosing: true, searchText: "" });
   };
 
   const onCloseAnimationComplete = () => {
-    setState({
-      isClosing: false,
-      navigationStack: [],
-      pageStateById: {},
-      searchText: "",
-    });
+    setState({ isClosing: false });
   };
 
   const navigateTo = (

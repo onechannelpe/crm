@@ -1,34 +1,59 @@
-import { Show, createSignal, onCleanup, onMount } from "solid-js";
+import { Show, createSignal, onCleanup, onMount, type JSX } from "solid-js";
 
+import { useResizablePanel } from "../hooks/use-resizable-panel";
 import { SidePanelRouter } from "../router/side-panel-router";
-import { ResizeGap } from "./resize-gap";
+import { useSidePanel } from "../state/use-side-panel";
+import { DesktopSidePanelContent } from "./desktop-content";
+import { DesktopSidePanelFrame } from "./desktop-frame";
 import { SidePanelMobileShell } from "./side-panel-mobile-shell";
-import { SidePanelShell } from "./side-panel-shell";
-import { SidePanelWidthEffect } from "./side-panel-width-effect";
 
-function SidePanelSurface(props: { isMobile: boolean }) {
+function SidePanelDesktopController(props: {
+  isHydrated: boolean;
+  isMobile: boolean;
+}) {
+  const { closePanel, panelWidth, setPanelWidth } = useSidePanel();
   const [isResizing, setIsResizing] = createSignal(false);
+  const [gapPointerDown, setGapPointerDown] =
+    createSignal<JSX.EventHandlerUnion<HTMLDivElement, PointerEvent>>();
+
+  onMount(() => {
+    const { onPointerDown } = useResizablePanel({
+      get currentWidth() {
+        return panelWidth();
+      },
+      onWidthChange: (width) => {
+        setIsResizing(false);
+        setPanelWidth(width);
+      },
+      onCollapse: () => {
+        setIsResizing(false);
+        closePanel();
+      },
+      onResizeStart: () => setIsResizing(true),
+    });
+
+    setGapPointerDown(() => onPointerDown);
+  });
+
+  const isInteractive = () => props.isHydrated && !props.isMobile;
+  const renderDesktopContent = () =>
+    isInteractive() ? <DesktopSidePanelContent /> : <></>;
 
   return (
-    <Show
-      when={props.isMobile}
-      fallback={
-        <>
-          <SidePanelWidthEffect />
-          <ResizeGap
-            onResizeStart={() => setIsResizing(true)}
-            onResizeEnd={() => setIsResizing(false)}
-          />
-          <SidePanelShell isResizing={isResizing()}>
-            <SidePanelRouter isMobile={false} />
-          </SidePanelShell>
-        </>
-      }
-    >
-      <SidePanelMobileShell targetVariant="fullScreen">
-        <SidePanelRouter isMobile />
-      </SidePanelMobileShell>
-    </Show>
+    <>
+      <DesktopSidePanelFrame
+        gapPointerDown={isInteractive() ? gapPointerDown() : undefined}
+        isInteractive={isInteractive()}
+        isResizing={isResizing()}
+        renderContent={renderDesktopContent}
+        shouldRenderChildren={isInteractive()}
+      />
+      <Show when={props.isHydrated && props.isMobile}>
+        <SidePanelMobileShell targetVariant="fullScreen">
+          <SidePanelRouter isMobile />
+        </SidePanelMobileShell>
+      </Show>
+    </>
   );
 }
 
@@ -50,8 +75,9 @@ export function SidePanelHost() {
   });
 
   return (
-    <Show when={isHydrated()}>
-      <SidePanelSurface isMobile={isMobile()} />
-    </Show>
+    <SidePanelDesktopController
+      isHydrated={isHydrated()}
+      isMobile={isMobile()}
+    />
   );
 }

@@ -1,0 +1,9 @@
+.root {
+  display: contents;
+}
+
+@media (max-width: 768px) {
+  .root {
+    display: none;
+  }
+}
