@@ -291,6 +291,7 @@ export default function SalesConfirmationsPage() {
           ariaLabel="Confirmaciones de ventas"
           columns={[...columns()]}
           emptyState={<></>}
+          isLoading={false}
           rowOpen={createNoopRowOpen()}
           rows={currentNotes()}
         />

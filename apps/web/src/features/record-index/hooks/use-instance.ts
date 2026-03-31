@@ -76,13 +76,26 @@ export function useRecordIndexModel<
       createRecordIndexDraftRowRenderContext(visibleColumns()),
     ),
   );
-  const count = createMemo(() =>
-    adapter.getCount ? adapter.getCount() : adapter.getRows().length,
-  );
+  const visibleCount = createMemo(() => sortedRows().length);
+  const totalCount = createMemo(() => adapter.getTotalCount?.());
+  const pickerMeta = createMemo(() => {
+    const visible = visibleCount();
+    const total = totalCount();
+
+    if (typeof total === "number" && total !== visible) {
+      return `${visible} of ${total}`;
+    }
+
+    return String(visible);
+  });
 
   return {
     adapter,
-    count,
+    counts: {
+      pickerMeta,
+      total: totalCount,
+      visible: visibleCount,
+    },
     columns: {
       openMenu: viewState.openMenu,
       setOpenMenu: viewState.setOpenMenu,
@@ -116,6 +129,9 @@ export function useRecordIndexModel<
       setSortValue: (value) => viewState.setSortValue(() => value),
       sortedRows,
       isActive: sortIsActive,
+    },
+    loading: {
+      isInitial: adapter.isLoading,
     },
     selection,
     draftRow,

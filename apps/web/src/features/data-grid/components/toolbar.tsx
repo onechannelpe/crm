@@ -25,9 +25,7 @@ export function DataGridToolbar(props: {
           </span>
           <span class={styles.viewPickerLabel}>{props.picker.label}</span>
           <span class={styles.viewPickerMeta}>
-            {typeof props.picker.count === "number"
-              ? `· ${props.picker.count}`
-              : null}
+            {props.picker.meta ? `· ${props.picker.meta}` : null}
             <ChevronDown size={14} />
           </span>
         </button>

@@ -70,22 +70,21 @@ export default function MonitoringPage() {
   const [windowMinutes, setWindowMinutes] = createSignal(60);
   const [status, setStatus] = createSignal<MonitoringStatus>("all");
 
-  const snapshot = createAsync(
-    () =>
-      observabilitySnapshotQuery({
-        windowMinutes: windowMinutes(),
-        status: status() === "all" ? undefined : status(),
-        limit: 80,
-      }),
-    { initialValue: { windowMinutes: 60, summary: [], recent: [] } },
+  const snapshot = createAsync(() =>
+    observabilitySnapshotQuery({
+      windowMinutes: windowMinutes(),
+      status: status() === "all" ? undefined : status(),
+      limit: 80,
+    }),
   );
 
   const rows = createMemo<MonitoringRow[]>(() =>
-    snapshot().summary.map((row, index) => ({
+    (snapshot()?.summary ?? []).map((row, index) => ({
       ...row,
       id: index + 1,
     })),
   );
+  const isLoading = () => snapshot() === undefined;
 
   const rowOpen = useSidePanelRowOpen<MonitoringRow>((row) =>
     createDataGridDetailSidePanelPage({
@@ -135,6 +134,7 @@ export default function MonitoringPage() {
             No hay métricas disponibles para la ventana actual.
           </p>
         }
+        isLoading={isLoading()}
         rowOpen={rowOpen}
         rows={rows()}
       />

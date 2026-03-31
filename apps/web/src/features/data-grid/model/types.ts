@@ -21,7 +21,7 @@ export type DataGridColumn<T> = {
 export type DataGridPicker = {
   icon: DataGridIcon;
   label: string;
-  count?: number;
+  meta?: string;
   onClick?: () => void;
 };
 

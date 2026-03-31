@@ -17,6 +17,7 @@ export function DataGrid<T extends { id: number }>(props: {
   columns: DataGridColumn<T>[];
   draftRow?: JSX.Element;
   emptyState: JSX.Element;
+  isLoading: boolean;
   rowOpen: DataGridRowOpen<T>;
   rows: T[];
   selection?: DataGridSelectionModel;
@@ -50,6 +51,7 @@ export function DataGrid<T extends { id: number }>(props: {
         draftRow={props.draftRow}
         emptyState={props.emptyState}
         getContainer={() => tableRef}
+        isLoading={props.isLoading}
         setContainer={(element) => {
           tableRef = element;
         }}

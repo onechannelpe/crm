@@ -23,13 +23,12 @@ import styles from "./styles.module.css";
 
 export function LeadsRecordIndex() {
   const [reloadToken, setReloadToken] = createSignal(0);
-  const leads = createAsync(
-    () => {
-      reloadToken();
-      return listLeads({});
-    },
-    { initialValue: [] },
-  );
+  const leads = createAsync(() => {
+    reloadToken();
+    return listLeads({});
+  });
+  const rows = () => leads() ?? [];
+  const isLoading = () => leads() === undefined;
 
   const [showDraftRow, setShowDraftRow] = createSignal(false);
   const [draftRuc, setDraftRuc] = createSignal("");
@@ -82,7 +81,8 @@ export function LeadsRecordIndex() {
     class: `${styles.page} record-index-container-gater-for-drag-select`,
     pickerIcon: List,
     columns: LEADS_RECORD_INDEX_COLUMNS,
-    getRows: leads,
+    getRows: rows,
+    isLoading,
     rowOpen,
     emptyState: <LeadsRecordIndexEmptyState onAddNew={openDraftRow} />,
     filter: LEADS_RECORD_INDEX_FILTER,

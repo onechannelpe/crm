@@ -32,7 +32,8 @@ export type RecordIndexAdapter<
   pickerIcon?: DataGridIcon;
   columns: ReadonlyArray<DataGridColumn<T>>;
   getRows: () => T[];
-  getCount?: () => number;
+  isLoading: () => boolean;
+  getTotalCount?: () => number | undefined;
   selectable?: boolean;
   rowOpen: DataGridRowOpen<T>;
   emptyState: JSX.Element;
@@ -84,9 +85,16 @@ export type RecordIndexScreenModel<
   TSortValue extends string = string,
 > = {
   adapter: RecordIndexAdapter<T, TFilterValue, TSortValue>;
-  count: Accessor<number>;
+  counts: {
+    pickerMeta: Accessor<string>;
+    total: Accessor<number | undefined>;
+    visible: Accessor<number>;
+  };
   columns: RecordIndexColumnsState<T>;
   filtering: RecordIndexFilteringState<T, TFilterValue>;
+  loading: {
+    isInitial: Accessor<boolean>;
+  };
   sorting: RecordIndexSortingState<T, TSortValue>;
   selection?: DataGridSelectionModel;
   draftRow: Accessor<JSX.Element | undefined>;

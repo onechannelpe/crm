@@ -20,9 +20,9 @@ type TeamRequestRow = Awaited<
 >[number];
 
 export default function TeamRequestsPage() {
-  const requests = createAsync(() => pendingCapacityRequestsQuery(), {
-    initialValue: [],
-  });
+  const requests = createAsync(() => pendingCapacityRequestsQuery());
+  const rows = () => requests() ?? [];
+  const isLoading = () => requests() === undefined;
   const approve = useAction(approveCapacityRequestMutation);
   const reject = useAction(rejectCapacityRequestMutation);
   const columns = [
@@ -98,8 +98,9 @@ export default function TeamRequestsPage() {
               No hay solicitudes pendientes.
             </p>
           }
+          isLoading={isLoading()}
           rowOpen={createNoopRowOpen()}
-          rows={requests()}
+          rows={rows()}
         />
       </div>
     </AppPage>

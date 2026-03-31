@@ -79,19 +79,18 @@ export default function SecurityPoliciesPage() {
   const [policyIsActive, setPolicyIsActive] = createSignal(true);
   const [policyError, setPolicyError] = createSignal<string | null>(null);
 
-  const policySnapshot = createAsync(() => auditPolicySnapshotQuery(), {
-    initialValue: { items: [] },
-  });
+  const policySnapshot = createAsync(() => auditPolicySnapshotQuery());
   const canManagePolicies = createAsync(() => canManageAuditPoliciesQuery(), {
     initialValue: false,
   });
 
   const rows = createMemo<SecurityPolicyRow[]>(() =>
-    policySnapshot().items.map((item, index) => ({
+    (policySnapshot()?.items ?? []).map((item, index) => ({
       ...item,
       id: index + 1,
     })),
   );
+  const isLoading = () => policySnapshot() === undefined;
 
   const saveAuditPolicy = useAction(upsertAuditPolicyMutation);
   const canSubmit = createMemo(
@@ -159,6 +158,7 @@ export default function SecurityPoliciesPage() {
             No hay políticas registradas.
           </p>
         }
+        isLoading={isLoading()}
         rowOpen={createNoopRowOpen()}
         rows={rows()}
       />
