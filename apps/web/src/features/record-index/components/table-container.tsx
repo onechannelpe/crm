@@ -2,7 +2,7 @@ import { DataGrid } from "~/features/data-grid/components/grid";
 
 import type { RecordIndexScreenModel } from "../model/types";
 
-export function RecordIndexTable<
+export function RecordIndexTableContainer<
   T extends { id: number },
   TFilterValue extends string = string,
   TSortValue extends string = string,

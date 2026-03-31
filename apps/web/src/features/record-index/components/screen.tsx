@@ -1,20 +1,28 @@
 import { RecordIndexInstanceProvider } from "../context/instance-context";
+import { RecordIndexModelProvider } from "../context/model-context";
+import { RecordIndexSetupProvider } from "../context/setup-context";
+import { RecordIndexSetupEffects } from "../effects/setup";
 import { useRecordIndexModel } from "../hooks/use-instance";
+import { createRecordIndexContextModel } from "../model/derive";
+import { createRecordIndexSetup } from "../model/setup";
 import type { RecordIndexAdapter } from "../model/types";
-import { RecordIndexTable } from "./table";
-import { RecordIndexToolbar } from "./toolbar";
+import { RecordIndexHeader } from "./header";
+import { RecordIndexLayout } from "./layout";
+import { RecordIndexTableContainer } from "./table-container";
 
 export function RecordIndexScreen<
   T extends { id: number },
   TFilterValue extends string = string,
   TSortValue extends string = string,
 >(props: { adapter: RecordIndexAdapter<T, TFilterValue, TSortValue> }) {
+  const setup = createRecordIndexSetup(props.adapter);
+
   return (
-    <RecordIndexInstanceProvider source={props.adapter}>
-      <div class={props.adapter.class}>
+    <RecordIndexSetupProvider value={setup}>
+      <RecordIndexInstanceProvider source={setup}>
         <RecordIndexScreenContent adapter={props.adapter} />
-      </div>
-    </RecordIndexInstanceProvider>
+      </RecordIndexInstanceProvider>
+    </RecordIndexSetupProvider>
   );
 }
 
@@ -26,9 +34,12 @@ function RecordIndexScreenContent<
   const model = useRecordIndexModel(props.adapter);
 
   return (
-    <>
-      <RecordIndexToolbar model={model} />
-      <RecordIndexTable model={model} />
-    </>
+    <RecordIndexModelProvider value={createRecordIndexContextModel(model)}>
+      <RecordIndexLayout>
+        <RecordIndexSetupEffects />
+        <RecordIndexHeader />
+        <RecordIndexTableContainer model={model} />
+      </RecordIndexLayout>
+    </RecordIndexModelProvider>
   );
 }
