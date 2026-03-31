@@ -1,22 +1,42 @@
 import { DataGrid } from "~/features/data-grid/components/grid";
 
 import type { RecordIndexScreenModel } from "../model/types";
+import { RecordIndexEmpty } from "./empty";
 
 export function RecordIndexTableContainer<
   T extends { id: number },
   TFilterValue extends string = string,
   TSortValue extends string = string,
 >(props: { model: RecordIndexScreenModel<T, TFilterValue, TSortValue> }) {
+  const rows = () => props.model.sorting.sortedRows();
+
+  if (props.model.loading.isInitial()) {
+    return (
+      <DataGrid
+        ariaLabel={props.model.adapter.ariaLabel}
+        columns={props.model.columns.visibleColumns()}
+        emptyState={<></>}
+        isLoading={true}
+        rowOpen={props.model.adapter.rowOpen}
+        rows={[]}
+        selection={props.model.selection}
+        suspendEscapeSelectionClear={props.model.columns.openMenu() !== null}
+      />
+    );
+  }
+
+  if (rows().length === 0) {
+    return <RecordIndexEmpty model={props.model} />;
+  }
+
   return (
     <DataGrid
-      actionRow={props.model.adapter.actionRow}
       ariaLabel={props.model.adapter.ariaLabel}
       columns={props.model.columns.visibleColumns()}
-      draftRow={props.model.draftRow()}
-      emptyState={props.model.adapter.emptyState}
-      isLoading={props.model.loading.isInitial()}
+      emptyState={<></>}
+      isLoading={false}
       rowOpen={props.model.adapter.rowOpen}
-      rows={props.model.sorting.sortedRows()}
+      rows={rows()}
       selection={props.model.selection}
       suspendEscapeSelectionClear={props.model.columns.openMenu() !== null}
     />

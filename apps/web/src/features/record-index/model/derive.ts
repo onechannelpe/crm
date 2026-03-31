@@ -1,15 +1,9 @@
-import {
-  buildDataGridTemplateColumns,
-  getStickyDataGridColumnIndex,
-  SELECTION_COLUMN_WIDTH,
-} from "~/features/data-grid/hooks/use-column-layout";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 
 import type { RecordIndexFilterDefinition } from "./filter";
 import type { RecordIndexSortDefinition } from "./sort";
 import type {
   RecordIndexModel,
-  RecordIndexDraftRowRenderContext,
   RecordIndexMenu,
   RecordIndexScreenModel,
   RecordIndexSetup,
@@ -125,17 +119,6 @@ export function isRecordIndexSortActive<T, TValue extends string>(
   return sort.isActive
     ? sort.isActive(selectedOption)
     : selectedOption !== sort.defaultValue;
-}
-
-export function createRecordIndexDraftRowRenderContext<T>(
-  columns: DataGridColumn<T>[],
-): RecordIndexDraftRowRenderContext<T> {
-  return {
-    columns,
-    gridTemplateColumns: buildDataGridTemplateColumns(columns),
-    stickyColumnIndex: getStickyDataGridColumnIndex(columns),
-    stickyLeft: SELECTION_COLUMN_WIDTH,
-  };
 }
 
 export function reconcileVisibleRecordIndexColumnKeys(

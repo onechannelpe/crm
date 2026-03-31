@@ -12,6 +12,8 @@ export function createRecordIndexSetup<
     class: adapter.class,
     pickerIcon: adapter.pickerIcon,
     selectable: adapter.selectable ?? false,
+    emptyState: adapter.emptyState,
+    createAction: adapter.createAction,
     columns: adapter.columns.map((column) => ({
       key: column.key,
       label: column.label,

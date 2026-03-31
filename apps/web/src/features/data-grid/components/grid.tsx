@@ -15,7 +15,6 @@ export function DataGrid<T extends { id: number }>(props: {
   actionRow?: DataGridActionRowConfig;
   ariaLabel: string;
   columns: DataGridColumn<T>[];
-  draftRow?: JSX.Element;
   emptyState: JSX.Element;
   isLoading: boolean;
   rowOpen: DataGridRowOpen<T>;
@@ -48,7 +47,6 @@ export function DataGrid<T extends { id: number }>(props: {
         actionRow={props.actionRow}
         ariaLabel={props.ariaLabel}
         columns={props.columns}
-        draftRow={props.draftRow}
         emptyState={props.emptyState}
         getContainer={() => tableRef}
         isLoading={props.isLoading}
