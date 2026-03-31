@@ -1,7 +1,5 @@
 import { Show, type JSX } from "solid-js";
 
-import { DataGridFocusClickOutsideEffect } from "../effects/focus-click-outside";
-import { DataGridSelectionEffects } from "../effects/selection";
 import { SELECTION_COLUMN_WIDTH } from "../hooks/use-column-layout";
 import type { DataGridSelectionModel } from "../hooks/use-selection";
 import type { DataGridRowOpen } from "../model/row-open";
@@ -17,7 +15,6 @@ export function DataGridContent<T extends { id: number }>(props: {
   ariaLabel: string;
   columns: DataGridColumn<T>[];
   emptyState: JSX.Element;
-  getContainer: () => HTMLElement | undefined;
   isLoading: boolean;
   setContainer: (element: HTMLElement) => void;
   gridTemplateColumns: string;
@@ -26,7 +23,6 @@ export function DataGridContent<T extends { id: number }>(props: {
   selectable: boolean;
   selection?: DataGridSelectionModel;
   stickyColumnIndex: number;
-  suspendEscapeSelectionClear?: boolean;
 }) {
   const stickyLeft = () => (props.selectable ? SELECTION_COLUMN_WIDTH : 0);
 
@@ -51,14 +47,6 @@ export function DataGridContent<T extends { id: number }>(props: {
               stickyColumnIndex={props.stickyColumnIndex}
               stickyLeft={stickyLeft()}
               onToggleAll={props.selection?.toggleAll}
-            />
-            <DataGridSelectionEffects
-              getContainer={props.getContainer}
-              rows={props.rows}
-              suspendEscapeSelectionClear={props.suspendEscapeSelectionClear}
-            />
-            <DataGridFocusClickOutsideEffect
-              getContainer={props.getContainer}
             />
 
             <Show when={!props.isLoading} fallback={<DataGridLoadingState />}>

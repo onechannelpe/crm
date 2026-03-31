@@ -1,6 +1,5 @@
 import { createMemo, type JSX } from "solid-js";
 
-import { DataGridInstanceProvider } from "../context/instance-context";
 import {
   buildDataGridTemplateColumns,
   getStickyDataGridColumnIndex,
@@ -10,6 +9,7 @@ import type { DataGridSelectionModel } from "../hooks/use-selection";
 import type { DataGridRowOpen } from "../model/row-open";
 import type { DataGridActionRowConfig, DataGridColumn } from "../model/types";
 import { DataGridContent } from "./content";
+import { DataGridWrappers } from "./wrappers";
 
 export function DataGrid<T extends { id: number }>(props: {
   actionRow?: DataGridActionRowConfig;
@@ -42,13 +42,17 @@ export function DataGrid<T extends { id: number }>(props: {
   });
 
   return (
-    <DataGridInstanceProvider value={interaction}>
+    <DataGridWrappers
+      getContainer={() => tableRef}
+      interaction={interaction}
+      rows={props.rows}
+      suspendEscapeSelectionClear={props.suspendEscapeSelectionClear ?? false}
+    >
       <DataGridContent
         actionRow={props.actionRow}
         ariaLabel={props.ariaLabel}
         columns={props.columns}
         emptyState={props.emptyState}
-        getContainer={() => tableRef}
         isLoading={props.isLoading}
         setContainer={(element) => {
           tableRef = element;
@@ -59,8 +63,7 @@ export function DataGrid<T extends { id: number }>(props: {
         selectable={selectable()}
         selection={props.selection}
         stickyColumnIndex={stickyColumnIndex()}
-        suspendEscapeSelectionClear={props.suspendEscapeSelectionClear}
       />
-    </DataGridInstanceProvider>
+    </DataGridWrappers>
   );
 }

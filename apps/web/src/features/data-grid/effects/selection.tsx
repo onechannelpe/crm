@@ -3,13 +3,13 @@ import { createEffect } from "solid-js";
 import { useHotkey } from "~/lib/hotkey/use-hotkey";
 
 import { useDataGridInstance } from "../context/instance-context";
+import { useDataGridTable } from "../context/table-context";
 
 export function DataGridSelectionEffects<T extends { id: number }>(props: {
-  getContainer: () => HTMLElement | undefined;
   rows: T[];
-  suspendEscapeSelectionClear?: boolean;
 }) {
   const interaction = useDataGridInstance();
+  const table = useDataGridTable();
 
   createEffect(() => {
     const visibleRowIds = new Set(props.rows.map((row) => row.id));
@@ -29,8 +29,8 @@ export function DataGridSelectionEffects<T extends { id: number }>(props: {
     },
     {
       enabled: () =>
-        !props.suspendEscapeSelectionClear &&
-        isGridInteractionActive(props.getContainer) &&
+        !table.suspendEscapeSelectionClear &&
+        isGridInteractionActive(table.getContainer) &&
         interaction.selectedIds().length > 0,
     },
   );
