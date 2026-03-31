@@ -99,6 +99,13 @@ function createSidePanelPageId() {
   return crypto.randomUUID();
 }
 
+function createEntitySidePanelPageId(
+  page: SidePanelPageKey,
+  entityId: number | string,
+) {
+  return `${page}:${entityId}`;
+}
+
 export function createRootSidePanelPage(): SidePanelPageDefinition {
   const pageId = createSidePanelPageId();
   return {
@@ -189,7 +196,7 @@ export function createLeadCreateSidePanelPage(): SidePanelPageDefinition {
 export function createLeadDetailSidePanelPage(
   input: CreateLeadDetailSidePanelPageInput,
 ): SidePanelPageDefinition {
-  const pageId = createSidePanelPageId();
+  const pageId = createEntitySidePanelPageId("lead-detail", input.leadId);
 
   return {
     entry: {
@@ -219,7 +226,10 @@ type CreateInventoryDetailSidePanelPageInput = {
 export function createInventoryDetailSidePanelPage(
   input: CreateInventoryDetailSidePanelPageInput,
 ): SidePanelPageDefinition {
-  const pageId = createSidePanelPageId();
+  const pageId = createEntitySidePanelPageId(
+    "inventory-detail",
+    input.inventoryItemId,
+  );
 
   return {
     entry: {
