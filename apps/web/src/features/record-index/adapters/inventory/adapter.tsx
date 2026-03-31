@@ -1,13 +1,13 @@
 import { createAsync } from "@solidjs/router";
 
 import List from "~/components/icons/list";
+import Package from "~/components/icons/package";
 import { RecordIndexScreen } from "~/features/record-index/components/screen";
 import type { RecordIndexAdapter } from "~/features/record-index/model/types";
 import { inventoryItemsQuery } from "~/lib/queries/inventory";
 
 import type { InventoryRow } from "./columns";
 import { INVENTORY_RECORD_INDEX_COLUMNS } from "./columns";
-import { InventoryRecordIndexEmptyState } from "./empty-state";
 import { useOpenInventoryRecord } from "./open-row";
 
 import styles from "./styles.module.css";
@@ -27,7 +27,11 @@ export function InventoryRecordIndex() {
     getRows: rows,
     isLoading,
     rowOpen,
-    emptyState: <InventoryRecordIndexEmptyState />,
+    emptyState: {
+      icon: Package,
+      title: "Add your first inventory item",
+      description: "Add your first inventory item manually.",
+    },
     class: styles.page,
   } satisfies RecordIndexAdapter<InventoryRow>;
 

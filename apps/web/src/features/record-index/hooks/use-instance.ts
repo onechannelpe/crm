@@ -7,7 +7,6 @@ import { useRecordIndexSetup } from "../context/setup-context";
 import {
   applyRecordIndexFilter,
   applyRecordIndexSort,
-  createRecordIndexDraftRowRenderContext,
   getVisibleRecordIndexColumns,
   hasHiddenRecordIndexColumns,
   isRecordIndexFilterActive,
@@ -74,11 +73,6 @@ export function useRecordIndexModel<
   const selection = adapter.selectable
     ? createDataGridSelection(sortedRows)
     : undefined;
-  const draftRow = createMemo(() =>
-    adapter.renderDraftRow?.(
-      createRecordIndexDraftRowRenderContext(visibleColumns()),
-    ),
-  );
   const visibleCount = createMemo(() => sortedRows().length);
   const totalCount = createMemo(() => adapter.getTotalCount?.());
   const pickerMeta = createMemo(() => {
@@ -153,6 +147,5 @@ export function useRecordIndexModel<
     },
     loading: sharedModel.loading,
     selection,
-    draftRow,
   };
 }

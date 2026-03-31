@@ -20,6 +20,7 @@ export type SidePanelPageKey =
   | "root"
   | "search-person-detail"
   | "search-company-detail"
+  | "lead-create"
   | "lead-detail"
   | "inventory-detail"
   | "data-grid-detail";
@@ -54,6 +55,10 @@ export type LeadDetailSidePanelPageState = {
   subtitle: string;
 };
 
+export type LeadCreateSidePanelPageState = {
+  page: "lead-create";
+};
+
 export type InventoryDetailSidePanelPageState = {
   page: "inventory-detail";
   inventoryItemId: number;
@@ -80,6 +85,7 @@ export type SidePanelPageState =
   | RootSidePanelPageState
   | SearchPersonDetailSidePanelPageState
   | SearchCompanyDetailSidePanelPageState
+  | LeadCreateSidePanelPageState
   | LeadDetailSidePanelPageState
   | InventoryDetailSidePanelPageState
   | DataGridDetailSidePanelPageState;
@@ -163,6 +169,22 @@ type CreateLeadDetailSidePanelPageInput = {
   title: string;
   subtitle?: string;
 };
+
+export function createLeadCreateSidePanelPage(): SidePanelPageDefinition {
+  const pageId = createSidePanelPageId();
+
+  return {
+    entry: {
+      page: "lead-create",
+      pageId,
+      pageTitle: "Nuevo prospecto",
+      pageIcon: Building2,
+    },
+    state: {
+      page: "lead-create",
+    },
+  };
+}
 
 export function createLeadDetailSidePanelPage(
   input: CreateLeadDetailSidePanelPageInput,
