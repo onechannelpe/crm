@@ -3,6 +3,7 @@ import { createMemo } from "solid-js";
 import { createDataGridSelection } from "~/features/data-grid/hooks/use-selection";
 
 import { useRecordIndexViewState } from "../context/instance-context";
+import { useRecordIndexSetup } from "../context/setup-context";
 import {
   applyRecordIndexFilter,
   applyRecordIndexSort,
@@ -15,6 +16,7 @@ import {
   toggleRecordIndexVisibleColumnKey,
 } from "../model/derive";
 import type {
+  RecordIndexModel,
   RecordIndexAdapter,
   RecordIndexScreenModel,
 } from "../model/types";
@@ -26,6 +28,7 @@ export function useRecordIndexModel<
 >(
   adapter: RecordIndexAdapter<T, TFilterValue, TSortValue>,
 ): RecordIndexScreenModel<T, TFilterValue, TSortValue> {
+  const setup = useRecordIndexSetup();
   const viewState = useRecordIndexViewState();
   const visibleColumns = createMemo(() =>
     getVisibleRecordIndexColumns(
@@ -89,8 +92,7 @@ export function useRecordIndexModel<
     return String(visible);
   });
 
-  return {
-    adapter,
+  const sharedModel = {
     counts: {
       pickerMeta,
       total: totalCount,
@@ -100,39 +102,56 @@ export function useRecordIndexModel<
       openMenu: viewState.openMenu,
       setOpenMenu: viewState.setOpenMenu,
       visibleColumnKeys: viewState.visibleColumnKeys,
-      visibleColumns,
       hasHiddenColumns,
       toggleColumn,
     },
     filtering: {
       filterValue: createMemo(() =>
-        adapter.filter
+        setup.filter
           ? resolveRecordIndexOptionValue(
-              adapter.filter.options,
+              setup.filter.options,
               viewState.filterValue(),
             )
           : undefined,
       ),
-      setFilterValue: (value) => viewState.setFilterValue(() => value),
-      filteredRows,
+      setFilterValue: (value: string | undefined) =>
+        viewState.setFilterValue(() => value),
       isActive: filterIsActive,
-    },
-    sorting: {
-      sortValue: createMemo(() =>
-        adapter.sort
-          ? resolveRecordIndexOptionValue(
-              adapter.sort.options,
-              viewState.sortValue(),
-            )
-          : undefined,
-      ),
-      setSortValue: (value) => viewState.setSortValue(() => value),
-      sortedRows,
-      isActive: sortIsActive,
     },
     loading: {
       isInitial: adapter.isLoading,
     },
+    sorting: {
+      sortValue: createMemo(() =>
+        setup.sort
+          ? resolveRecordIndexOptionValue(
+              setup.sort.options,
+              viewState.sortValue(),
+            )
+          : undefined,
+      ),
+      setSortValue: (value: string | undefined) =>
+        viewState.setSortValue(() => value),
+      isActive: sortIsActive,
+    },
+  } satisfies RecordIndexModel;
+
+  return {
+    adapter,
+    counts: sharedModel.counts,
+    columns: {
+      ...sharedModel.columns,
+      visibleColumns,
+    },
+    filtering: {
+      ...sharedModel.filtering,
+      filteredRows,
+    },
+    sorting: {
+      ...sharedModel.sorting,
+      sortedRows,
+    },
+    loading: sharedModel.loading,
     selection,
     draftRow,
   };

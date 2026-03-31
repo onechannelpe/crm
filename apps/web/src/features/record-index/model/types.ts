@@ -18,6 +18,11 @@ export type RecordIndexDraftRowRenderContext<T> = {
   stickyLeft: number;
 };
 
+export type RecordIndexOption<TValue extends string = string> = {
+  label: string;
+  value: TValue;
+};
+
 export type RecordIndexMenu = "filter" | "sort" | "options" | null;
 
 export type RecordIndexAdapter<
@@ -45,6 +50,31 @@ export type RecordIndexAdapter<
   actionRow?: DataGridActionRowConfig;
 };
 
+export type RecordIndexSetup = {
+  id: string;
+  title: string;
+  ariaLabel: string;
+  class?: string;
+  pickerIcon?: DataGridIcon;
+  selectable: boolean;
+  columns: ReadonlyArray<{
+    key: string;
+    label: string;
+  }>;
+  filter?: {
+    label: string;
+    menuId: string;
+    defaultValue: string;
+    options: ReadonlyArray<RecordIndexOption>;
+  };
+  sort?: {
+    label: string;
+    menuId: string;
+    defaultValue: string;
+    options: ReadonlyArray<RecordIndexOption>;
+  };
+};
+
 export type RecordIndexColumnsState<T> = {
   openMenu: Accessor<RecordIndexMenu>;
   setOpenMenu: Setter<RecordIndexMenu>;
@@ -54,16 +84,16 @@ export type RecordIndexColumnsState<T> = {
   toggleColumn: (key: string) => void;
 };
 
-export type RecordIndexFilteringState<T, TValue extends string> = {
-  filterValue: Accessor<TValue | undefined>;
-  setFilterValue: (value: TValue | undefined) => void;
+export type RecordIndexFilteringState<T> = {
+  filterValue: Accessor<string | undefined>;
+  setFilterValue: (value: string | undefined) => void;
   filteredRows: Accessor<T[]>;
   isActive: Accessor<boolean>;
 };
 
-export type RecordIndexSortingState<T, TValue extends string> = {
-  sortValue: Accessor<TValue | undefined>;
-  setSortValue: (value: TValue | undefined) => void;
+export type RecordIndexSortingState<T> = {
+  sortValue: Accessor<string | undefined>;
+  setSortValue: (value: string | undefined) => void;
   sortedRows: Accessor<T[]>;
   isActive: Accessor<boolean>;
 };
@@ -79,6 +109,34 @@ export type RecordIndexViewState = {
   setSortValue: Setter<string | undefined>;
 };
 
+export type RecordIndexModel = {
+  counts: {
+    pickerMeta: Accessor<string>;
+    total: Accessor<number | undefined>;
+    visible: Accessor<number>;
+  };
+  columns: {
+    openMenu: Accessor<RecordIndexMenu>;
+    setOpenMenu: Setter<RecordIndexMenu>;
+    visibleColumnKeys: Accessor<Set<string>>;
+    hasHiddenColumns: Accessor<boolean>;
+    toggleColumn: (key: string) => void;
+  };
+  filtering: {
+    filterValue: Accessor<string | undefined>;
+    setFilterValue: (value: string | undefined) => void;
+    isActive: Accessor<boolean>;
+  };
+  loading: {
+    isInitial: Accessor<boolean>;
+  };
+  sorting: {
+    sortValue: Accessor<string | undefined>;
+    setSortValue: (value: string | undefined) => void;
+    isActive: Accessor<boolean>;
+  };
+};
+
 export type RecordIndexScreenModel<
   T extends { id: number },
   TFilterValue extends string = string,
@@ -90,12 +148,13 @@ export type RecordIndexScreenModel<
     total: Accessor<number | undefined>;
     visible: Accessor<number>;
   };
-  columns: RecordIndexColumnsState<T>;
-  filtering: RecordIndexFilteringState<T, TFilterValue>;
+  columns: RecordIndexColumnsState<T> &
+    Pick<RecordIndexModel["columns"], "openMenu" | "setOpenMenu">;
+  filtering: RecordIndexFilteringState<T>;
   loading: {
     isInitial: Accessor<boolean>;
   };
-  sorting: RecordIndexSortingState<T, TSortValue>;
+  sorting: RecordIndexSortingState<T>;
   selection?: DataGridSelectionModel;
   draftRow: Accessor<JSX.Element | undefined>;
 };

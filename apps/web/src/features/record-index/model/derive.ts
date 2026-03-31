@@ -7,7 +7,13 @@ import type { DataGridColumn } from "~/features/data-grid/model/types";
 
 import type { RecordIndexFilterDefinition } from "./filter";
 import type { RecordIndexSortDefinition } from "./sort";
-import type { RecordIndexDraftRowRenderContext } from "./types";
+import type {
+  RecordIndexModel,
+  RecordIndexDraftRowRenderContext,
+  RecordIndexMenu,
+  RecordIndexScreenModel,
+  RecordIndexSetup,
+} from "./types";
 
 export function getVisibleRecordIndexColumns<T>(
   columns: ReadonlyArray<DataGridColumn<T>>,
@@ -130,4 +136,77 @@ export function createRecordIndexDraftRowRenderContext<T>(
     stickyColumnIndex: getStickyDataGridColumnIndex(columns),
     stickyLeft: SELECTION_COLUMN_WIDTH,
   };
+}
+
+export function reconcileVisibleRecordIndexColumnKeys(
+  setup: Pick<RecordIndexSetup, "columns">,
+  visibleColumnKeys: Set<string>,
+) {
+  const allowedKeys = new Set(setup.columns.map((column) => column.key));
+  const nextVisibleColumnKeys = new Set(
+    [...visibleColumnKeys].filter((key) => allowedKeys.has(key)),
+  );
+
+  if (nextVisibleColumnKeys.size === 0) {
+    return new Set(setup.columns.map((column) => column.key));
+  }
+
+  return nextVisibleColumnKeys;
+}
+
+export function reconcileRecordIndexOptionValue(
+  options: ReadonlyArray<{ value: string }> | undefined,
+  value: string | undefined,
+  defaultValue: string | undefined,
+) {
+  if (!options || !value) {
+    return defaultValue;
+  }
+
+  return options.some((option) => option.value === value)
+    ? value
+    : defaultValue;
+}
+
+export function reconcileRecordIndexOpenMenu(
+  openMenu: RecordIndexMenu,
+  setup: Pick<RecordIndexSetup, "filter" | "sort">,
+) {
+  if (openMenu === "filter" && !setup.filter) {
+    return null;
+  }
+
+  if (openMenu === "sort" && !setup.sort) {
+    return null;
+  }
+
+  return openMenu;
+}
+
+export function createRecordIndexContextModel<
+  T extends { id: number },
+  TFilterValue extends string = string,
+  TSortValue extends string = string,
+>(model: RecordIndexScreenModel<T, TFilterValue, TSortValue>) {
+  return {
+    counts: model.counts,
+    columns: {
+      openMenu: model.columns.openMenu,
+      setOpenMenu: model.columns.setOpenMenu,
+      visibleColumnKeys: model.columns.visibleColumnKeys,
+      hasHiddenColumns: model.columns.hasHiddenColumns,
+      toggleColumn: model.columns.toggleColumn,
+    },
+    filtering: {
+      filterValue: model.filtering.filterValue,
+      setFilterValue: model.filtering.setFilterValue,
+      isActive: model.filtering.isActive,
+    },
+    loading: model.loading,
+    sorting: {
+      sortValue: model.sorting.sortValue,
+      setSortValue: model.sorting.setSortValue,
+      isActive: model.sorting.isActive,
+    },
+  } satisfies RecordIndexModel;
 }
