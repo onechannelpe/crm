@@ -28,6 +28,7 @@ export function ReviewRecordIndex() {
     columns: REVIEW_RECORD_INDEX_COLUMNS,
     getRows: rows,
     isLoading,
+    selectable: true,
     rowOpen,
     emptyState: {
       icon: Info,

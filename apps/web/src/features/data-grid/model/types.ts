@@ -1,5 +1,7 @@
 import type { Component, JSX } from "solid-js";
 
+import type { DataGridReorderConfig } from "../dnd/types";
+
 type DataGridIconProps = {
   size?: number | string;
 };
@@ -29,4 +31,8 @@ export type DataGridActionRowConfig = {
   icon: DataGridIcon;
   label: string;
   onClick: () => void;
+};
+
+export type DataGridFeatures<T> = {
+  reorder?: DataGridReorderConfig<T>;
 };

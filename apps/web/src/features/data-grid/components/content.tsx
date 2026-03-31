@@ -1,8 +1,9 @@
 import { Show, type JSX } from "solid-js";
 
-import { DataGridFocusClickOutsideEffect } from "../effects/focus-click-outside";
-import { DataGridSelectionEffects } from "../effects/selection";
-import { SELECTION_COLUMN_WIDTH } from "../hooks/use-column-layout";
+import {
+  REORDER_COLUMN_WIDTH,
+  SELECTION_COLUMN_WIDTH,
+} from "../hooks/use-column-layout";
 import type { DataGridSelectionModel } from "../hooks/use-selection";
 import type { DataGridRowOpen } from "../model/row-open";
 import type { DataGridActionRowConfig, DataGridColumn } from "../model/types";
@@ -17,28 +18,34 @@ export function DataGridContent<T extends { id: number }>(props: {
   ariaLabel: string;
   columns: DataGridColumn<T>[];
   emptyState: JSX.Element;
-  getContainer: () => HTMLElement | undefined;
   isLoading: boolean;
+  reorderable: boolean;
   setContainer: (element: HTMLElement) => void;
+  setScrollWrapper: (element: HTMLElement) => void;
   gridTemplateColumns: string;
   rowOpen: DataGridRowOpen<T>;
   rows: T[];
   selectable: boolean;
   selection?: DataGridSelectionModel;
   stickyColumnIndex: number;
-  suspendEscapeSelectionClear?: boolean;
 }) {
-  const stickyLeft = () => (props.selectable ? SELECTION_COLUMN_WIDTH : 0);
+  const selectionLeft = () => (props.reorderable ? REORDER_COLUMN_WIDTH : 0);
+  const stickyLeft = () =>
+    selectionLeft() + (props.selectable ? SELECTION_COLUMN_WIDTH : 0);
 
   return (
     <div class={styles.indexContainer}>
       <div class={styles.tableContainer}>
-        <div class={styles.scrollWrapper}>
+        <div ref={props.setScrollWrapper} class={styles.scrollWrapper}>
           <section
             ref={props.setContainer}
             class={styles.table}
             aria-label={props.ariaLabel}
-            aria-colcount={props.columns.length + (props.selectable ? 1 : 0)}
+            aria-colcount={
+              props.columns.length +
+              (props.selectable ? 1 : 0) +
+              (props.reorderable ? 1 : 0)
+            }
             aria-multiselectable={props.selectable ? "true" : undefined}
             aria-rowcount={props.rows.length + 1}
             role="grid"
@@ -46,19 +53,13 @@ export function DataGridContent<T extends { id: number }>(props: {
             <DataGridHeader
               columns={props.columns}
               gridTemplateColumns={props.gridTemplateColumns}
+              reorderable={props.reorderable}
+              selectionLeft={selectionLeft()}
               selectable={props.selectable}
               allSelected={props.selection?.allSelected()}
               stickyColumnIndex={props.stickyColumnIndex}
               stickyLeft={stickyLeft()}
               onToggleAll={props.selection?.toggleAll}
-            />
-            <DataGridSelectionEffects
-              getContainer={props.getContainer}
-              rows={props.rows}
-              suspendEscapeSelectionClear={props.suspendEscapeSelectionClear}
-            />
-            <DataGridFocusClickOutsideEffect
-              getContainer={props.getContainer}
             />
 
             <Show when={!props.isLoading} fallback={<DataGridLoadingState />}>
@@ -67,8 +68,10 @@ export function DataGridContent<T extends { id: number }>(props: {
                   actionRow={props.actionRow}
                   columns={props.columns}
                   gridTemplateColumns={props.gridTemplateColumns}
+                  reorderable={props.reorderable}
                   rowOpen={props.rowOpen}
                   rows={props.rows}
+                  selectionLeft={selectionLeft()}
                   selectable={props.selectable}
                   stickyColumnIndex={props.stickyColumnIndex}
                   stickyLeft={stickyLeft()}

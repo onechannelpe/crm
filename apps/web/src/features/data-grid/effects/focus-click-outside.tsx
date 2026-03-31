@@ -1,14 +1,14 @@
 import { onCleanup, onMount } from "solid-js";
 
 import { useDataGridInstance } from "../context/instance-context";
+import { useDataGridTable } from "../context/table-context";
 
-export function DataGridFocusClickOutsideEffect(props: {
-  getContainer: () => HTMLElement | undefined;
-}) {
+export function DataGridFocusClickOutsideEffect() {
   const interaction = useDataGridInstance();
+  const table = useDataGridTable();
 
   const handlePointerDown = (event: PointerEvent) => {
-    const container = props.getContainer();
+    const container = table.getContainer();
     const target = event.target;
 
     if (

@@ -8,6 +8,8 @@ export function DataGridActionRow(props: {
   label: string;
   labelColumnIndex: number;
   onClick: () => void;
+  reorderable: boolean;
+  selectionLeft: number;
   stickyColumnIndex: number;
   stickyLeft: number;
 }) {
@@ -20,13 +22,21 @@ export function DataGridActionRow(props: {
       style={{ "grid-template-columns": props.gridTemplateColumns }}
       onClick={props.onClick}
     >
-      <div class={`${styles.actionCell} ${styles.checkboxCell}`}>
+      {props.reorderable ? (
+        <div class={`${styles.actionCell} ${styles.reorderCell}`} />
+      ) : null}
+      <div
+        class={`${styles.actionCell} ${styles.checkboxCell}`}
+        style={
+          props.reorderable ? { left: `${props.selectionLeft}px` } : undefined
+        }
+      >
         <Icon size={14} />
       </div>
       <div
         class={`${styles.actionCell} ${props.labelColumnIndex === props.stickyColumnIndex ? styles.stickyCell : ""}`}
         style={{
-          "grid-column": `${props.labelColumnIndex + 2} / ${props.labelColumnIndex + 3}`,
+          "grid-column": `${props.labelColumnIndex + (props.reorderable ? 3 : 2)} / ${props.labelColumnIndex + (props.reorderable ? 4 : 3)}`,
           ...(props.labelColumnIndex === props.stickyColumnIndex
             ? { left: `${props.stickyLeft}px` }
             : {}),

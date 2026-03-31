@@ -9,8 +9,10 @@ export function DataGridBody<T extends { id: number }>(props: {
   actionRow?: DataGridActionRowConfig;
   columns: DataGridColumn<T>[];
   gridTemplateColumns: string;
+  reorderable: boolean;
   rowOpen: DataGridRowOpen<T>;
   rows: T[];
+  selectionLeft: number;
   selectable: boolean;
   stickyColumnIndex: number;
   stickyLeft: number;
@@ -22,10 +24,13 @@ export function DataGridBody<T extends { id: number }>(props: {
           <DataGridRow
             columns={props.columns}
             gridTemplateColumns={props.gridTemplateColumns}
+            reorderable={props.reorderable}
             rowIndex={index() + 2}
+            rowOrderIndex={index()}
             selectable={props.selectable}
             row={row}
             rowOpen={props.rowOpen}
+            selectionLeft={props.selectionLeft}
             stickyColumnIndex={props.stickyColumnIndex}
             stickyLeft={props.stickyLeft}
           />
@@ -39,6 +44,8 @@ export function DataGridBody<T extends { id: number }>(props: {
           label={props.actionRow.label}
           labelColumnIndex={Math.max(props.stickyColumnIndex, 0)}
           onClick={props.actionRow.onClick}
+          reorderable={props.reorderable}
+          selectionLeft={props.selectionLeft}
           stickyColumnIndex={props.stickyColumnIndex}
           stickyLeft={props.stickyLeft}
         />

@@ -26,6 +26,7 @@ export function InventoryRecordIndex() {
     columns: INVENTORY_RECORD_INDEX_COLUMNS,
     getRows: rows,
     isLoading,
+    selectable: true,
     rowOpen,
     emptyState: {
       icon: Package,
