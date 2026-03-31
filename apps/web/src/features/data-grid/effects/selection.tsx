@@ -23,6 +23,19 @@ export function DataGridSelectionEffects<T extends { id: number }>(props: {
   });
 
   useHotkey(
+    "Mod+A",
+    () => {
+      interaction.toggleAll?.(true);
+    },
+    {
+      enabled: () =>
+        !table.suspendEscapeSelectionClear &&
+        interaction.toggleAll !== undefined &&
+        isGridInteractionActive(table.getContainer),
+    },
+  );
+
+  useHotkey(
     "Escape",
     () => {
       interaction.clearSelection();
