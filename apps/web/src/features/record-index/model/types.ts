@@ -4,6 +4,7 @@ import type { DataGridSelectionModel } from "~/features/data-grid/hooks/use-sele
 import type { DataGridRowOpen } from "~/features/data-grid/model/row-open";
 import type {
   DataGridColumn,
+  DataGridFeatures,
   DataGridIcon,
 } from "~/features/data-grid/model/types";
 
@@ -42,6 +43,7 @@ export type RecordIndexAdapter<
   getRows: () => T[];
   isLoading: () => boolean;
   getTotalCount?: () => number | undefined;
+  reorder?: DataGridFeatures<T>["reorder"];
   selectable?: boolean;
   rowOpen: DataGridRowOpen<T>;
   emptyState: RecordIndexEmptyState;

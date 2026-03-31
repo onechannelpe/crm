@@ -9,6 +9,8 @@ import styles from "../styles/data-grid.module.css";
 export function DataGridHeader<T>(props: {
   columns: DataGridColumn<T>[];
   gridTemplateColumns: string;
+  reorderable: boolean;
+  selectionLeft: number;
   selectable?: boolean;
   allSelected?: boolean;
   stickyColumnIndex: number;
@@ -21,11 +23,21 @@ export function DataGridHeader<T>(props: {
       role="row"
       style={{ "grid-template-columns": props.gridTemplateColumns }}
     >
+      {props.reorderable ? (
+        <div
+          class={`${styles.headerCell} ${styles.reorderCell}`}
+          role="columnheader"
+          aria-colindex={1}
+        />
+      ) : null}
       {props.selectable === false ? null : (
         <div
           class={`${styles.headerCell} ${styles.checkboxCell}`}
           role="columnheader"
-          aria-colindex={1}
+          aria-colindex={props.reorderable ? 2 : 1}
+          style={
+            props.reorderable ? { left: `${props.selectionLeft}px` } : undefined
+          }
         >
           <Checkbox
             checked={props.allSelected ?? false}
@@ -38,7 +50,8 @@ export function DataGridHeader<T>(props: {
       <For each={props.columns}>
         {(column, index) => {
           const Icon = column.icon;
-          const colIndex = () => index() + (props.selectable ? 2 : 1);
+          const colIndex = () =>
+            index() + (props.selectable ? 2 : 1) + (props.reorderable ? 1 : 0);
 
           return (
             <div

@@ -155,10 +155,12 @@
   flex: 1;
   min-height: 0;
   overflow: auto;
+  position: relative;
 }
 
 .table {
   background: var(--background);
+  border-top: 1px solid var(--border);
   display: flex;
   flex: 1;
   flex-direction: column;
@@ -172,7 +174,7 @@
   display: flex;
   flex: 1;
   justify-content: center;
-  min-height: 220px;
+  min-height: 240px;
 }
 
 .headerRow,
@@ -185,6 +187,7 @@
 }
 
 .headerRow {
+  box-shadow: 0 1px 0 rgb(15 23 42 / 0.05);
   position: sticky;
   top: 0;
   z-index: 8;
@@ -196,6 +199,7 @@
   align-items: center;
   background: var(--background);
   border-bottom: 1px solid var(--border);
+  border-right: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
   box-sizing: border-box;
   display: flex;
   min-height: 38px;
@@ -204,9 +208,19 @@
 }
 
 .headerCell {
-  color: var(--foreground-tertiary);
+  color: var(--foreground-secondary);
   font-size: 12px;
   font-weight: 500;
+}
+
+.reorderCell {
+  background: var(--background);
+  justify-content: center;
+  left: 0;
+  padding: 0;
+  position: sticky;
+  width: 32px;
+  z-index: 7;
 }
 
 .headerCellContent {
@@ -227,12 +241,35 @@
   font-size: 13px;
 }
 
+.headerRow > :last-child,
+.bodyRow > :last-child,
+.actionRow > :last-child {
+  border-right: none;
+}
+
 .bodyRow[data-focused="true"] .bodyCell {
-  background: color-mix(in srgb, var(--secondary) 88%, white);
+  background: color-mix(in srgb, var(--secondary) 92%, white);
 }
 
 .bodyRow[data-active="true"] .bodyCell {
-  background: color-mix(in srgb, var(--secondary) 80%, white);
+  background: color-mix(in srgb, var(--secondary) 84%, white);
+}
+
+.bodyRow[data-dragged="true"] .bodyCell {
+  opacity: 0.55;
+}
+
+.dragSelectionBox {
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 60%, white);
+  pointer-events: none;
+  position: absolute;
+  z-index: 12;
+}
+
+.bodyRow[data-drop-target="true"] .bodyCell {
+  box-shadow: inset 0 2px 0
+    color-mix(in srgb, var(--foreground) 14%, transparent);
 }
 
 .rowButton {
@@ -256,6 +293,75 @@
   outline-offset: -2px;
 }
 
+.rowButtonContent {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  min-width: 0;
+  width: 100%;
+}
+
+.rowButtonLabel {
+  display: flex;
+  min-width: 0;
+}
+
+.reorderHandle {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: var(--foreground-tertiary);
+  cursor: grab;
+  display: inline-flex;
+  height: 24px;
+  justify-content: center;
+  padding: 0;
+  width: 24px;
+}
+
+.reorderHandle:hover {
+  background: color-mix(in srgb, var(--secondary) 92%, white);
+  color: var(--foreground-secondary);
+}
+
+.reorderHandle:active {
+  cursor: grabbing;
+}
+
+.reorderHandle:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  outline-offset: 1px;
+}
+
+.reorderDots {
+  background: currentcolor;
+  border-radius: 999px;
+  box-shadow:
+    0 -5px 0 currentcolor,
+    0 5px 0 currentcolor,
+    5px 0 0 currentcolor,
+    5px -5px 0 currentcolor,
+    5px 5px 0 currentcolor;
+  display: block;
+  height: 2px;
+  width: 2px;
+}
+
+.rowOpenHint {
+  align-items: center;
+  color: var(--foreground-tertiary);
+  display: inline-flex;
+  flex-shrink: 0;
+  opacity: 0;
+  transform: translateX(-2px);
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease,
+    color 140ms ease;
+}
+
 .bodyRow[data-focused="true"] .rowButton,
 .bodyRow[data-focused="true"] .rowContent {
   color: var(--foreground);
@@ -272,6 +378,8 @@
 }
 
 .checkboxCell {
+  background: var(--background);
+  border-right: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
   justify-content: center;
   left: 0;
   padding: 0;
@@ -281,6 +389,8 @@
 }
 
 .stickyCell {
+  background: var(--background);
+  box-shadow: 8px 0 14px -14px rgb(15 23 42 / 0.18);
   left: 40px;
   position: sticky;
   z-index: 5;
@@ -288,7 +398,20 @@
 
 .bodyRow:hover .bodyCell,
 .actionRow:hover .actionCell {
-  background: color-mix(in srgb, var(--secondary) 88%, white);
+  background: color-mix(in srgb, var(--secondary) 94%, white);
+}
+
+.bodyRow:hover .rowOpenHint,
+.bodyRow[data-focused="true"] .rowOpenHint,
+.bodyRow[data-active="true"] .rowOpenHint {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.bodyRow[data-open-mode="route"]:hover .rowOpenHint,
+.bodyRow[data-open-mode="route"][data-focused="true"] .rowOpenHint,
+.bodyRow[data-open-mode="route"][data-active="true"] .rowOpenHint {
+  color: var(--foreground-secondary);
 }
 
 .actionRow {

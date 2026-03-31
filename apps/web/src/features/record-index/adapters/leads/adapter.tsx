@@ -34,6 +34,7 @@ export function LeadsRecordIndex() {
     columns: LEADS_RECORD_INDEX_COLUMNS,
     getRows: rows,
     isLoading,
+    selectable: true,
     rowOpen,
     emptyState: {
       icon: Building2,

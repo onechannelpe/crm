@@ -1,5 +1,6 @@
 import type { DataGridColumn } from "../model/types";
 
+export const REORDER_COLUMN_WIDTH = 32;
 export const SELECTION_COLUMN_WIDTH = 40;
 
 function toTrack<T>(column: DataGridColumn<T>) {
@@ -21,14 +22,21 @@ function toTrack<T>(column: DataGridColumn<T>) {
 
 export function buildDataGridTemplateColumns<T>(
   columns: DataGridColumn<T>[],
-  options?: { selectable?: boolean },
+  options?: { reorderable?: boolean; selectable?: boolean },
 ) {
   const columnTracks = columns.map((column) => toTrack(column)).join(" ");
-  if (options?.selectable === false) {
+  const leadingTracks = [
+    options?.reorderable === true ? `${REORDER_COLUMN_WIDTH}px` : null,
+    options?.selectable === false ? null : `${SELECTION_COLUMN_WIDTH}px`,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  if (!leadingTracks) {
     return columnTracks;
   }
 
-  return `${SELECTION_COLUMN_WIDTH}px ${columnTracks}`;
+  return `${leadingTracks} ${columnTracks}`;
 }
 
 export function getStickyDataGridColumnIndex<T>(columns: DataGridColumn<T>[]) {
