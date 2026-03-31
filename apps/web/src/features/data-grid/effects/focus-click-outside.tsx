@@ -12,7 +12,7 @@ export function DataGridFocusClickOutsideEffect(props: {
     const target = event.target;
 
     if (
-      !interaction.hasFocusedCell() ||
+      (!interaction.hasFocusedCell() && !interaction.hasActiveRow()) ||
       !container ||
       !(target instanceof Node) ||
       container.contains(target)
@@ -21,6 +21,7 @@ export function DataGridFocusClickOutsideEffect(props: {
     }
 
     interaction.clearFocus();
+    interaction.clearActiveRow();
   };
 
   onMount(() => {

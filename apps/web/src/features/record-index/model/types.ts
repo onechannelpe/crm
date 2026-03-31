@@ -33,6 +33,7 @@ export type RecordIndexAdapter<
   columns: ReadonlyArray<DataGridColumn<T>>;
   getRows: () => T[];
   getCount?: () => number;
+  selectable?: boolean;
   rowOpen: DataGridRowOpen<T>;
   emptyState: JSX.Element;
   filter?: RecordIndexFilterDefinition<T, TFilterValue>;
@@ -87,6 +88,6 @@ export type RecordIndexScreenModel<
   columns: RecordIndexColumnsState<T>;
   filtering: RecordIndexFilteringState<T, TFilterValue>;
   sorting: RecordIndexSortingState<T, TSortValue>;
-  selection: DataGridSelectionModel;
+  selection?: DataGridSelectionModel;
   draftRow: Accessor<JSX.Element | undefined>;
 };

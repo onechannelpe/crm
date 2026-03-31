@@ -3,14 +3,18 @@ import type { JSX } from "solid-js";
 import styles from "../styles/data-grid.module.css";
 
 export function DataGridCell(props: {
+  ariaColIndex?: number;
   children: JSX.Element;
   class?: string;
+  role?: JSX.AriaAttributes["role"];
   sticky?: boolean;
   stickyLeft?: number;
 }) {
   return (
     <div
       class={`${styles.bodyCell}${props.class ? ` ${props.class}` : ""}${props.sticky ? ` ${styles.stickyCell}` : ""}`}
+      role={props.role}
+      aria-colindex={props.ariaColIndex}
       style={props.sticky ? { left: `${props.stickyLeft ?? 0}px` } : undefined}
     >
       {props.children}

@@ -16,9 +16,13 @@ type FocusedCell = {
 };
 
 export type DataGridInteractionModel = {
+  isRowActive: (id: number) => boolean;
   isRowFocused: (id: number) => boolean;
   isSelected: (id: number) => boolean;
   selectedIds: Accessor<number[]>;
+  hasActiveRow: Accessor<boolean>;
+  activateRow: (id: number) => void;
+  clearActiveRow: () => void;
   clearSelection: () => void;
   hasFocusedCell: Accessor<boolean>;
   clearFocus: () => void;
@@ -47,6 +51,7 @@ export function createDataGridInteraction<T extends { id: number }>(options: {
   columnCount: Accessor<number>;
   selection?: DataGridSelectionModel;
 }) {
+  const [activeRowId, setActiveRowId] = createSignal<number | undefined>();
   const [focusedCell, setFocusedCell] = createSignal<FocusedCell | undefined>(
     getInitialFocusedCell(
       options.rows(),
@@ -59,7 +64,16 @@ export function createDataGridInteraction<T extends { id: number }>(options: {
   const rowIds = createMemo(() => options.rows().map((row) => row.id));
 
   createEffect(() => {
+    const currentActiveRowId = activeRowId();
     const currentFocusedCell = focusedCell();
+    const currentRowIds = rowIds();
+
+    if (
+      currentActiveRowId !== undefined &&
+      !currentRowIds.includes(currentActiveRowId)
+    ) {
+      setActiveRowId(undefined);
+    }
 
     if (options.rowOpenMode() === "none" || options.rows().length === 0) {
       if (currentFocusedCell !== undefined) {
@@ -108,11 +122,21 @@ export function createDataGridInteraction<T extends { id: number }>(options: {
   }
 
   return {
+    isRowActive(id: number) {
+      return activeRowId() === id;
+    },
     isRowFocused(id: number) {
       return focusedCell()?.rowId === id;
     },
     isSelected,
     selectedIds: () => options.selection?.selectedIds() ?? [],
+    hasActiveRow: createMemo(() => activeRowId() !== undefined),
+    activateRow(id: number) {
+      setActiveRowId(id);
+    },
+    clearActiveRow() {
+      setActiveRowId(undefined);
+    },
     clearSelection() {
       options.selection?.clear();
     },

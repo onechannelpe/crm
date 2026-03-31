@@ -222,6 +222,10 @@
   background: color-mix(in srgb, var(--secondary) 88%, white);
 }
 
+.bodyRow[data-active="true"] .bodyCell {
+  background: color-mix(in srgb, var(--secondary) 80%, white);
+}
+
 .rowButton {
   align-items: center;
   background: transparent;
@@ -239,7 +243,8 @@
 }
 
 .rowButton:focus-visible {
-  outline: none;
+  outline: 2px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  outline-offset: -2px;
 }
 
 .bodyRow[data-focused="true"] .rowButton,

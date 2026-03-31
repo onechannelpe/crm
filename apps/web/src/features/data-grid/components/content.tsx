@@ -37,6 +37,10 @@ export function DataGridContent<T extends { id: number }>(props: {
             ref={props.setContainer}
             class={styles.table}
             aria-label={props.ariaLabel}
+            aria-colcount={props.columns.length + (props.selectable ? 1 : 0)}
+            aria-multiselectable={props.selectable ? "true" : undefined}
+            aria-rowcount={props.rows.length + 1}
+            role="grid"
           >
             <DataGridHeader
               columns={props.columns}
@@ -50,6 +54,7 @@ export function DataGridContent<T extends { id: number }>(props: {
 
             {props.draftRow}
             <DataGridSelectionEffects
+              getContainer={props.getContainer}
               rows={props.rows}
               suspendEscapeSelectionClear={props.suspendEscapeSelectionClear}
             />

@@ -68,7 +68,9 @@ export function useRecordIndexModel<
     return isRecordIndexSortActive(adapter.sort, viewState.sortValue());
   });
 
-  const selection = createDataGridSelection(sortedRows);
+  const selection = adapter.selectable
+    ? createDataGridSelection(sortedRows)
+    : undefined;
   const draftRow = createMemo(() =>
     adapter.renderDraftRow?.(
       createRecordIndexDraftRowRenderContext(visibleColumns()),
