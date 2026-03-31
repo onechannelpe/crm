@@ -8,6 +8,7 @@ import type { DataGridInteractionModel } from "../hooks/use-instance";
 export function DataGridWrappers<T extends { id: number }>(props: {
   children: JSX.Element;
   getContainer: () => HTMLElement | undefined;
+  getScrollWrapper: () => HTMLElement | undefined;
   interaction: DataGridInteractionModel;
   rows: T[];
   suspendEscapeSelectionClear: boolean;
@@ -16,6 +17,7 @@ export function DataGridWrappers<T extends { id: number }>(props: {
     <DataGridTableProvider
       value={{
         getContainer: props.getContainer,
+        getScrollWrapper: props.getScrollWrapper,
         suspendEscapeSelectionClear: props.suspendEscapeSelectionClear,
       }}
     >

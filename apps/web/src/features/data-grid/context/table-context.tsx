@@ -2,6 +2,7 @@ import { createContext, type JSX, useContext } from "solid-js";
 
 type DataGridTableContextValue = {
   getContainer: () => HTMLElement | undefined;
+  getScrollWrapper: () => HTMLElement | undefined;
   suspendEscapeSelectionClear: boolean;
 };
 

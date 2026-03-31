@@ -17,6 +17,7 @@ export function RecordIndexTableContainer<
         columns={props.model.columns.visibleColumns()}
         emptyState={<></>}
         isLoading={true}
+        reorder={props.model.adapter.reorder}
         rowOpen={props.model.adapter.rowOpen}
         rows={[]}
         selection={props.model.selection}
@@ -35,6 +36,7 @@ export function RecordIndexTableContainer<
       columns={props.model.columns.visibleColumns()}
       emptyState={<></>}
       isLoading={false}
+      reorder={props.model.adapter.reorder}
       rowOpen={props.model.adapter.rowOpen}
       rows={rows()}
       selection={props.model.selection}

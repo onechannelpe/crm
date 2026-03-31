@@ -26,6 +26,7 @@ export function QuotationsRecordIndex() {
     columns: QUOTATIONS_RECORD_INDEX_COLUMNS,
     getRows: rows,
     isLoading,
+    selectable: true,
     rowOpen,
     emptyState: {
       icon: Building2,
