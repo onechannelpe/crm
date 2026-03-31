@@ -1,9 +1,8 @@
-import type { Accessor, JSX, Setter } from "solid-js";
+import type { Accessor, Setter } from "solid-js";
 
 import type { DataGridSelectionModel } from "~/features/data-grid/hooks/use-selection";
 import type { DataGridRowOpen } from "~/features/data-grid/model/row-open";
 import type {
-  DataGridActionRowConfig,
   DataGridColumn,
   DataGridIcon,
 } from "~/features/data-grid/model/types";
@@ -11,11 +10,15 @@ import type {
 import type { RecordIndexFilterDefinition } from "./filter";
 import type { RecordIndexSortDefinition } from "./sort";
 
-export type RecordIndexDraftRowRenderContext<T> = {
-  columns: DataGridColumn<T>[];
-  gridTemplateColumns: string;
-  stickyColumnIndex: number;
-  stickyLeft: number;
+export type RecordIndexCreateAction = {
+  label: string;
+  onClick: () => void;
+};
+
+export type RecordIndexEmptyState = {
+  icon?: DataGridIcon;
+  title: string;
+  description?: string;
 };
 
 export type RecordIndexOption<TValue extends string = string> = {
@@ -41,13 +44,10 @@ export type RecordIndexAdapter<
   getTotalCount?: () => number | undefined;
   selectable?: boolean;
   rowOpen: DataGridRowOpen<T>;
-  emptyState: JSX.Element;
+  emptyState: RecordIndexEmptyState;
+  createAction?: RecordIndexCreateAction;
   filter?: RecordIndexFilterDefinition<T, TFilterValue>;
   sort?: RecordIndexSortDefinition<T, TSortValue>;
-  renderDraftRow?: (
-    context: RecordIndexDraftRowRenderContext<T>,
-  ) => JSX.Element | undefined;
-  actionRow?: DataGridActionRowConfig;
 };
 
 export type RecordIndexSetup = {
@@ -61,6 +61,8 @@ export type RecordIndexSetup = {
     key: string;
     label: string;
   }>;
+  emptyState: RecordIndexEmptyState;
+  createAction?: RecordIndexCreateAction;
   filter?: {
     label: string;
     menuId: string;
@@ -156,5 +158,4 @@ export type RecordIndexScreenModel<
   };
   sorting: RecordIndexSortingState<T>;
   selection?: DataGridSelectionModel;
-  draftRow: Accessor<JSX.Element | undefined>;
 };

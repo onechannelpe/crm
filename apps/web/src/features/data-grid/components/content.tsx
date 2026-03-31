@@ -16,7 +16,6 @@ export function DataGridContent<T extends { id: number }>(props: {
   actionRow?: DataGridActionRowConfig;
   ariaLabel: string;
   columns: DataGridColumn<T>[];
-  draftRow?: JSX.Element;
   emptyState: JSX.Element;
   getContainer: () => HTMLElement | undefined;
   isLoading: boolean;
@@ -53,8 +52,6 @@ export function DataGridContent<T extends { id: number }>(props: {
               stickyLeft={stickyLeft()}
               onToggleAll={props.selection?.toggleAll}
             />
-
-            {props.draftRow}
             <DataGridSelectionEffects
               getContainer={props.getContainer}
               rows={props.rows}

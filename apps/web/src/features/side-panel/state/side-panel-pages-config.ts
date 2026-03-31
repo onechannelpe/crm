@@ -4,6 +4,7 @@ import { SidePanelDataGridDetailPage } from "../pages/data-grid-detail/side-pane
 import { SidePanelDataGridDetailPageInfo } from "../pages/data-grid-detail/side-panel-data-grid-detail-page-info";
 import { SidePanelInventoryDetailPage } from "../pages/inventory-detail/side-panel-inventory-detail-page";
 import { SidePanelInventoryDetailPageInfo } from "../pages/inventory-detail/side-panel-inventory-detail-page-info";
+import { SidePanelLeadCreatePage } from "../pages/lead-create/side-panel-lead-create-page";
 import { SidePanelLeadDetailPage } from "../pages/lead-detail/side-panel-lead-detail-page";
 import { SidePanelLeadDetailPageInfo } from "../pages/lead-detail/side-panel-lead-detail-page-info";
 import { SidePanelRootPage } from "../pages/root/side-panel-root-page";
@@ -34,6 +35,11 @@ export const SIDE_PANEL_PAGES_CONFIG = {
     showsSearch: false,
     component: SidePanelSearchCompanyPage,
     pageInfoComponent: SidePanelSearchCompanyPageInfo,
+  },
+  "lead-create": {
+    showsSearch: false,
+    component: SidePanelLeadCreatePage,
+    pageInfoComponent: undefined,
   },
   "lead-detail": {
     showsSearch: false,

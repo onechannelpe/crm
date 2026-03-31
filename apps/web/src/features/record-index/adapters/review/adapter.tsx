@@ -1,13 +1,13 @@
 import { createAsync } from "@solidjs/router";
 
 import { listLeadsForReview } from "~/actions/pipeline/review";
+import Info from "~/components/icons/info";
 import List from "~/components/icons/list";
 import { RecordIndexScreen } from "~/features/record-index/components/screen";
 import type { RecordIndexAdapter } from "~/features/record-index/model/types";
 
 import type { ReviewRow } from "./columns";
 import { REVIEW_RECORD_INDEX_COLUMNS } from "./columns";
-import { ReviewRecordIndexEmptyState } from "./empty-state";
 import { useOpenReviewRecord } from "./open-row";
 
 import styles from "./styles.module.css";
@@ -29,7 +29,11 @@ export function ReviewRecordIndex() {
     getRows: rows,
     isLoading,
     rowOpen,
-    emptyState: <ReviewRecordIndexEmptyState />,
+    emptyState: {
+      icon: Info,
+      title: "Add your first review lead",
+      description: "Add your first review lead manually.",
+    },
     class: styles.page,
   } satisfies RecordIndexAdapter<ReviewRow>;
 
