@@ -8,6 +8,7 @@ import type { DataGridRowOpen } from "../model/row-open";
 import type { DataGridActionRowConfig, DataGridColumn } from "../model/types";
 import { DataGridBody } from "./body";
 import { DataGridHeader } from "./header";
+import { DataGridLoadingState } from "./loading-state";
 
 import styles from "../styles/data-grid.module.css";
 
@@ -18,6 +19,7 @@ export function DataGridContent<T extends { id: number }>(props: {
   draftRow?: JSX.Element;
   emptyState: JSX.Element;
   getContainer: () => HTMLElement | undefined;
+  isLoading: boolean;
   setContainer: (element: HTMLElement) => void;
   gridTemplateColumns: string;
   rowOpen: DataGridRowOpen<T>;
@@ -62,17 +64,19 @@ export function DataGridContent<T extends { id: number }>(props: {
               getContainer={props.getContainer}
             />
 
-            <Show when={props.rows.length > 0} fallback={props.emptyState}>
-              <DataGridBody
-                actionRow={props.actionRow}
-                columns={props.columns}
-                gridTemplateColumns={props.gridTemplateColumns}
-                rowOpen={props.rowOpen}
-                rows={props.rows}
-                selectable={props.selectable}
-                stickyColumnIndex={props.stickyColumnIndex}
-                stickyLeft={stickyLeft()}
-              />
+            <Show when={!props.isLoading} fallback={<DataGridLoadingState />}>
+              <Show when={props.rows.length > 0} fallback={props.emptyState}>
+                <DataGridBody
+                  actionRow={props.actionRow}
+                  columns={props.columns}
+                  gridTemplateColumns={props.gridTemplateColumns}
+                  rowOpen={props.rowOpen}
+                  rows={props.rows}
+                  selectable={props.selectable}
+                  stickyColumnIndex={props.stickyColumnIndex}
+                  stickyLeft={stickyLeft()}
+                />
+              </Show>
             </Show>
           </section>
         </div>

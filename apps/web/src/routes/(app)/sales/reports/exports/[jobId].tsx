@@ -1,5 +1,5 @@
 import { useParams } from "@solidjs/router";
-import { createResource, Show } from "solid-js";
+import { createMemo, createResource, Show } from "solid-js";
 
 import {
   getSalesExportJob,
@@ -58,8 +58,8 @@ export default function SalesExportDetailPage() {
   const [downloads, { refetch: refetchDownloads }] = createResource(
     jobId,
     async (id) => listSalesExportDownloads(id),
-    { initialValue: [] },
   );
+  const downloadRows = createMemo(() => downloads() ?? []);
 
   async function handleDownload() {
     try {
@@ -119,8 +119,9 @@ export default function SalesExportDetailPage() {
               emptyState={
                 <p class={styles.emptyText}>No download events yet.</p>
               }
+              isLoading={downloads.loading && downloads() === undefined}
               rowOpen={createNoopRowOpen()}
-              rows={downloads()}
+              rows={downloadRows()}
             />
           </>
         )}

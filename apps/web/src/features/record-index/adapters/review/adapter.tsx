@@ -13,10 +13,11 @@ import { useOpenReviewRecord } from "./open-row";
 import styles from "./styles.module.css";
 
 export function ReviewRecordIndex() {
-  const leads = createAsync(
-    () => listLeadsForReview({ stage: "PENDING_EXTERNAL_REVIEW" }),
-    { initialValue: [] },
+  const leads = createAsync(() =>
+    listLeadsForReview({ stage: "PENDING_EXTERNAL_REVIEW" }),
   );
+  const rows = () => leads() ?? [];
+  const isLoading = () => leads() === undefined;
   const { rowOpen } = useOpenReviewRecord();
 
   const adapter = {
@@ -25,7 +26,8 @@ export function ReviewRecordIndex() {
     ariaLabel: "Revisión",
     pickerIcon: List,
     columns: REVIEW_RECORD_INDEX_COLUMNS,
-    getRows: leads,
+    getRows: rows,
+    isLoading,
     rowOpen,
     emptyState: <ReviewRecordIndexEmptyState />,
     class: styles.page,

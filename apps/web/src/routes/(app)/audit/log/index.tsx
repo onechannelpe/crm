@@ -83,25 +83,24 @@ export default function AuditLogPage() {
   const [entityTypeFilter, setEntityTypeFilter] = createSignal("");
   const [actorUserIdFilter, setActorUserIdFilter] = createSignal("");
 
-  const snapshot = createAsync(
-    () =>
-      auditReaderSnapshotQuery({
-        windowMinutes: windowMinutes(),
-        limit: 80,
-        onlyHighRisk: onlyHighRisk(),
-        action: actionFilter().trim() || undefined,
-        entityType: entityTypeFilter().trim() || undefined,
-        actorUserId: parseActorUserId(actorUserIdFilter()),
-      }),
-    { initialValue: { windowMinutes: 1440, events: [] } },
+  const snapshot = createAsync(() =>
+    auditReaderSnapshotQuery({
+      windowMinutes: windowMinutes(),
+      limit: 80,
+      onlyHighRisk: onlyHighRisk(),
+      action: actionFilter().trim() || undefined,
+      entityType: entityTypeFilter().trim() || undefined,
+      actorUserId: parseActorUserId(actorUserIdFilter()),
+    }),
   );
 
   const rows = createMemo<AuditLogGridRow[]>(() =>
-    snapshot().events.map((event, index) => ({
+    (snapshot()?.events ?? []).map((event, index) => ({
       ...event,
       id: index + 1,
     })),
   );
+  const isLoading = () => snapshot() === undefined;
 
   const rowOpen = useSidePanelRowOpen<AuditLogGridRow>((row) =>
     createDataGridDetailSidePanelPage({
@@ -170,6 +169,7 @@ export default function AuditLogPage() {
             No hay eventos de auditoría para los filtros actuales.
           </p>
         }
+        isLoading={isLoading()}
         rowOpen={rowOpen}
         rows={rows()}
       />

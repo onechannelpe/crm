@@ -166,6 +166,15 @@
   min-width: max-content;
 }
 
+.loadingState {
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  min-height: 220px;
+}
+
 .headerRow,
 .bodyRow,
 .draftRow,

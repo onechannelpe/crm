@@ -13,9 +13,9 @@ import { useOpenQuotationRecord } from "./open-row";
 import styles from "./styles.module.css";
 
 export function QuotationsRecordIndex() {
-  const leads = createAsync(() => listLeadsForQuotation({}), {
-    initialValue: [],
-  });
+  const leads = createAsync(() => listLeadsForQuotation({}));
+  const rows = () => leads() ?? [];
+  const isLoading = () => leads() === undefined;
   const { rowOpen } = useOpenQuotationRecord();
 
   const adapter = {
@@ -24,7 +24,8 @@ export function QuotationsRecordIndex() {
     ariaLabel: "Cotizaciones",
     pickerIcon: List,
     columns: QUOTATIONS_RECORD_INDEX_COLUMNS,
-    getRows: leads,
+    getRows: rows,
+    isLoading,
     rowOpen,
     emptyState: <QuotationsRecordIndexEmptyState />,
     class: styles.page,

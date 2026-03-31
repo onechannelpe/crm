@@ -85,21 +85,20 @@ function outcomeBadgeVariant(outcome: string): BadgeVariant {
 export default function AuditAuthPage() {
   const [windowMinutes, setWindowMinutes] = createSignal(60);
 
-  const snapshot = createAsync(
-    () =>
-      authFunnelSnapshotQuery({
-        windowMinutes: windowMinutes(),
-        limit: 80,
-      }),
-    { initialValue: { windowMinutes: 60, summary: [], recent: [] } },
+  const snapshot = createAsync(() =>
+    authFunnelSnapshotQuery({
+      windowMinutes: windowMinutes(),
+      limit: 80,
+    }),
   );
 
   const rows = createMemo<AuditAuthRow[]>(() =>
-    snapshot().recent.map((row, index) => ({
+    (snapshot()?.recent ?? []).map((row, index) => ({
       ...row,
       id: index + 1,
     })),
   );
+  const isLoading = () => snapshot() === undefined;
 
   const rowOpen = useSidePanelRowOpen<AuditAuthRow>((row) =>
     createDataGridDetailSidePanelPage({
@@ -138,6 +137,7 @@ export default function AuditAuthPage() {
             No hay eventos recientes de autenticación.
           </p>
         }
+        isLoading={isLoading()}
         rowOpen={rowOpen}
         rows={rows()}
       />

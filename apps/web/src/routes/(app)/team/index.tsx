@@ -79,17 +79,17 @@ const TEAM_COLUMNS = [
 
 export default function TeamPage() {
   const navigate = useNavigate();
-  const executives = createAsync(() => managedExecutivesQuery(), {
-    initialValue: [],
-  });
+  const executives = createAsync(() => managedExecutivesQuery());
   const [filter, setFilter] = createSignal("");
   const filtered = createMemo(() => {
     const value = filter().trim().toLowerCase();
-    if (!value) return executives();
-    return executives().filter((executive) =>
+    const rows = executives() ?? [];
+    if (!value) return rows;
+    return rows.filter((executive) =>
       `${executive.fullName} ${executive.email}`.toLowerCase().includes(value),
     );
   });
+  const isLoading = () => executives() === undefined;
   const rowOpen = createRouteRowOpen<TeamExecutiveRow>((executive) => {
     navigate(`/team/members/${executive.id}/capacity`);
   });
@@ -132,6 +132,7 @@ export default function TeamPage() {
               No hay ejecutivos visibles.
             </p>
           }
+          isLoading={isLoading()}
           rowOpen={rowOpen}
           rows={filtered()}
         />

@@ -20,7 +20,7 @@ export function RecordIndexToolbar<
       picker={{
         icon: PickerIcon,
         label: props.model.adapter.title,
-        count: props.model.count(),
+        meta: props.model.counts.pickerMeta(),
       }}
       rightContent={
         <>

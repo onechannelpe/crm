@@ -64,9 +64,9 @@ const CONFIRMED_SALES_COLUMNS = [
 
 export default function ConfirmedSalesPage() {
   const navigate = useNavigate();
-  const sales = createAsync(() => confirmedSalesRecordsQuery(), {
-    initialValue: [],
-  });
+  const sales = createAsync(() => confirmedSalesRecordsQuery());
+  const rows = () => sales() ?? [];
+  const isLoading = () => sales() === undefined;
   const rowOpen = createRouteRowOpen<ConfirmedSaleRow>((sale) => {
     navigate(`/sales/${sale.id}`);
   });
@@ -82,8 +82,9 @@ export default function ConfirmedSalesPage() {
             description="Las ventas confirmadas aparecerán aquí."
           />
         }
+        isLoading={isLoading()}
         rowOpen={rowOpen}
-        rows={sales()}
+        rows={rows()}
       />
     </AppPage>
   );

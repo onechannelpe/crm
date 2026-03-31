@@ -13,7 +13,9 @@ import { useOpenSalesRecord } from "./open-row";
 import styles from "./styles.module.css";
 
 export function SalesRecordIndex() {
-  const sales = createAsync(() => listLeadSales({}), { initialValue: [] });
+  const sales = createAsync(() => listLeadSales({}));
+  const rows = () => sales() ?? [];
+  const isLoading = () => sales() === undefined;
   const { rowOpen } = useOpenSalesRecord();
 
   const adapter = {
@@ -22,7 +24,8 @@ export function SalesRecordIndex() {
     ariaLabel: "Ventas",
     pickerIcon: List,
     columns: SALES_RECORD_INDEX_COLUMNS,
-    getRows: sales,
+    getRows: rows,
+    isLoading,
     rowOpen,
     emptyState: <SalesRecordIndexEmptyState />,
     class: styles.page,

@@ -13,7 +13,9 @@ import { useOpenInventoryRecord } from "./open-row";
 import styles from "./styles.module.css";
 
 export function InventoryRecordIndex() {
-  const items = createAsync(() => inventoryItemsQuery(), { initialValue: [] });
+  const items = createAsync(() => inventoryItemsQuery());
+  const rows = () => items() ?? [];
+  const isLoading = () => items() === undefined;
   const { rowOpen } = useOpenInventoryRecord();
 
   const adapter = {
@@ -22,7 +24,8 @@ export function InventoryRecordIndex() {
     ariaLabel: "Inventario",
     pickerIcon: List,
     columns: INVENTORY_RECORD_INDEX_COLUMNS,
-    getRows: items,
+    getRows: rows,
+    isLoading,
     rowOpen,
     emptyState: <InventoryRecordIndexEmptyState />,
     class: styles.page,

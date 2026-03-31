@@ -14,6 +14,7 @@ export function RecordIndexTable<
       columns={props.model.columns.visibleColumns()}
       draftRow={props.model.draftRow()}
       emptyState={props.model.adapter.emptyState}
+      isLoading={props.model.loading.isInitial()}
       rowOpen={props.model.adapter.rowOpen}
       rows={props.model.sorting.sortedRows()}
       selection={props.model.selection}
