@@ -62,7 +62,8 @@ bun run generate
 bun run dev
 ```
 
-`bun run dev` starts the engine and web application. Alternatively, you can start a single process from the repo root with `bun run dev:web`, `bun run dev:engine`, or `bun run dev:worker`.
+`bun run dev` starts engine, web, and worker.
+`bun run dev:web`, `bun run dev:engine`, and `bun run dev:worker` start each process individually.
 
 ## Read this first
 

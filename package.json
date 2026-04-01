@@ -7,7 +7,7 @@
     "tools/*"
   ],
   "scripts": {
-    "dev": "bun run --parallel dev:engine dev:web",
+    "dev": "bun run --parallel dev:engine dev:web dev:worker",
     "dev:engine": "cargo run -p engine --bin engine",
     "dev:web": "bun run --cwd apps/web dev",
     "dev:worker": "bun run --cwd apps/web worker:maintenance",
