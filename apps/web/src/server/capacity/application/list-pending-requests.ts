@@ -4,7 +4,7 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { fromDbCapacityRequestKind } from "../domain/request-policy";
 import type { CapacityRequestStatus } from "../domain/types";
-import type { CapacityDeps } from "../infrastructure/deps";
+import type { CapacityReadContext } from "../infrastructure/read-context";
 
 export type PendingCapacityRequest = {
   id: number;
@@ -27,7 +27,7 @@ export type PendingCapacityRequest = {
 
 export async function listPendingRequests(
   ctx: AppContext,
-  deps: Pick<CapacityDeps, "repos">,
+  deps: CapacityReadContext,
 ): Promise<Result<PendingCapacityRequest[], DomainError>> {
   try {
     const pending = await deps.repos.capacityRequests.listPendingByBranch(

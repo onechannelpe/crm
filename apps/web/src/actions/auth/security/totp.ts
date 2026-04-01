@@ -6,7 +6,7 @@ import {
   beginTotpEnrollment as beginTotpEnrollmentService,
   finishTotpEnrollment as finishTotpEnrollmentService,
 } from "~/server/auth/application/totp";
-import { createAuthDeps } from "~/server/auth/infrastructure/deps";
+import { createTotpEnrollmentContext } from "~/server/auth/infrastructure/totp-context";
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function beginTotpEnrollment(): Promise<{
@@ -16,7 +16,8 @@ export async function beginTotpEnrollment(): Promise<{
   return runAction({
     actionName: "auth.totp.begin",
     requireSession: true,
-    execute: (ctx) => beginTotpEnrollmentService(ctx, createAuthDeps()),
+    execute: (ctx) =>
+      beginTotpEnrollmentService(ctx, createTotpEnrollmentContext()),
   });
 }
 
@@ -27,7 +28,7 @@ export async function finishTotpEnrollment(code: string): Promise<string[]> {
     requireSession: true,
     input: { hasCode: true },
     execute: (ctx) =>
-      finishTotpEnrollmentService(ctx, createAuthDeps(), {
+      finishTotpEnrollmentService(ctx, createTotpEnrollmentContext(), {
         code: safeCode,
       }),
   });

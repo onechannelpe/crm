@@ -11,8 +11,12 @@ import {
   toDbCapacityRequestKind,
 } from "../domain/request-policy";
 import type { CapacityRequestKind, ScopeRef } from "../domain/types";
-import type { CapacityDeps } from "../infrastructure/deps";
+import type {
+  CapacityCommandRepos,
+  CapacityCommandsContext,
+} from "../infrastructure/commands-context";
 import { setLeadScopeDefault, setLeadUserOverride } from "./lead-policy";
+import type { CapacityApprovalPort, CapacityApprovalTxPort } from "./ports";
 import { setSearchScopeDefault, setSearchUserOverride } from "./search-policy";
 
 class RollbackError extends Error {
@@ -25,9 +29,38 @@ function rollback(err: DomainError): never {
   throw new RollbackError(err);
 }
 
+function toManagedScopeRepos(tx: CapacityApprovalTxPort) {
+  return {
+    users: {
+      findById: async (userId: number) => {
+        const user = await tx.findManagedUserById(userId);
+        if (!user) return undefined;
+        return {
+          role: user.role,
+          branch_id: user.branchId,
+          team_id: user.teamId,
+        };
+      },
+    },
+    teams: {
+      findBySupervisorId: (supervisorId: number) =>
+        tx.findSupervisedTeamBySupervisorId(supervisorId),
+      findByIdWithSupervisor: async (teamId: number) => {
+        const team = await tx.findManagedTeamById(teamId);
+        if (!team) return undefined;
+        return {
+          id: team.id,
+          branch_id: team.branchId,
+          supervisor_id: team.supervisorId,
+        };
+      },
+    },
+  };
+}
+
 export async function requestCapacity(
   ctx: AppContext,
-  deps: Pick<CapacityDeps, "repos" | "rateLimitDeps">,
+  deps: CapacityCommandsContext,
   input: { kind: CapacityRequestKind; amount: number; reason: string },
 ): Promise<Result<{ success: true }, DomainError>> {
   await checkActionRateLimit(
@@ -57,17 +90,13 @@ export async function requestCapacity(
 
 export async function approveCapacityRequest(
   ctx: AppContext,
-  deps: Pick<CapacityDeps, "rateLimitDeps" | "runInRepositoryTransaction">,
+  port: CapacityApprovalPort,
   input: { requestId: number; note: string | null },
 ): Promise<Result<{ success: true }, DomainError>> {
-  await checkActionRateLimit(
-    "capacity.approve",
-    ctx.actor.userId,
-    deps.rateLimitDeps,
-  );
+  await port.enforceApprovalRateLimit(ctx.actor.userId);
   try {
-    const result = await deps.runInRepositoryTransaction(async (txRepos) => {
-      const request = await txRepos.capacityRequests.findById(input.requestId);
+    const result = await port.withTransaction(async (tx) => {
+      const request = await tx.findRequestById(input.requestId);
       if (!request) {
         rollback(
           domainError("not_found", "request_not_found", "Request not found"),
@@ -85,8 +114,8 @@ export async function approveCapacityRequest(
 
       const managed = await canManageExecutive(
         ctx.actor,
-        request.user_id,
-        txRepos,
+        request.userId,
+        toManagedScopeRepos(tx),
       );
       if (!managed.target) {
         rollback(
@@ -104,12 +133,12 @@ export async function approveCapacityRequest(
       }
 
       const note = normalizeDecisionNote(input.note);
-      const updateResult = await txRepos.capacityRequests.markApproved(
+      const approved = await tx.markRequestApproved(
         request.id,
         ctx.actor.userId,
         note,
       );
-      if (!updateResult?.numUpdatedRows) {
+      if (!approved) {
         rollback(
           domainError(
             "conflict",
@@ -120,27 +149,43 @@ export async function approveCapacityRequest(
       }
 
       if (request.kind === "search_extra") {
-        const grantResult = await grantSearchCapacity(
-          {
+        try {
+          await tx.grantSearchCapacity({
             actorUserId: ctx.actor.userId,
-            targetUserId: request.user_id,
-            amount: request.requested_amount,
+            userId: request.userId,
+            amount: request.requestedAmount,
             reason: note ?? request.reason,
-          },
-          txRepos,
-        );
-        if (isErr(grantResult)) rollback(grantResult.error);
+          });
+        } catch (error) {
+          rollback(
+            domainError(
+              "unexpected",
+              "unexpected",
+              error instanceof Error
+                ? error.message
+                : "Failed to grant search capacity",
+            ),
+          );
+        }
       } else {
-        const grantResult = await grantLeadCapacity(
-          {
+        try {
+          await tx.grantLeadCapacity({
             actorUserId: ctx.actor.userId,
-            targetUserId: request.user_id,
-            amount: request.requested_amount,
+            userId: request.userId,
+            amount: request.requestedAmount,
             reason: note ?? request.reason,
-          },
-          txRepos,
-        );
-        if (isErr(grantResult)) rollback(grantResult.error);
+          });
+        } catch (error) {
+          rollback(
+            domainError(
+              "unexpected",
+              "unexpected",
+              error instanceof Error
+                ? error.message
+                : "Failed to grant lead capacity",
+            ),
+          );
+        }
       }
 
       return { success: true as const };
@@ -161,14 +206,10 @@ export async function approveCapacityRequest(
 
 export async function rejectCapacityRequest(
   ctx: AppContext,
-  deps: Pick<CapacityDeps, "rateLimitDeps" | "runInRepositoryTransaction">,
+  port: CapacityApprovalPort,
   input: { requestId: number; note: string },
 ): Promise<Result<{ success: true }, DomainError>> {
-  await checkActionRateLimit(
-    "capacity.approve",
-    ctx.actor.userId,
-    deps.rateLimitDeps,
-  );
+  await port.enforceApprovalRateLimit(ctx.actor.userId);
   const note = normalizeDecisionNote(input.note);
   if (!note) {
     return Err(
@@ -181,8 +222,8 @@ export async function rejectCapacityRequest(
   }
 
   try {
-    const result = await deps.runInRepositoryTransaction(async (txRepos) => {
-      const request = await txRepos.capacityRequests.findById(input.requestId);
+    const result = await port.withTransaction(async (tx) => {
+      const request = await tx.findRequestById(input.requestId);
       if (!request) {
         rollback(
           domainError("not_found", "request_not_found", "Request not found"),
@@ -200,8 +241,8 @@ export async function rejectCapacityRequest(
 
       const managed = await canManageExecutive(
         ctx.actor,
-        request.user_id,
-        txRepos,
+        request.userId,
+        toManagedScopeRepos(tx),
       );
       if (!managed.target) {
         rollback(
@@ -218,12 +259,12 @@ export async function rejectCapacityRequest(
         );
       }
 
-      const updateResult = await txRepos.capacityRequests.markRejected(
+      const rejected = await tx.markRequestRejected(
         request.id,
         ctx.actor.userId,
         note,
       );
-      if (!updateResult?.numUpdatedRows) {
+      if (!rejected) {
         rollback(
           domainError(
             "conflict",
@@ -251,14 +292,10 @@ export async function rejectCapacityRequest(
 
 export async function grantSearchCapacityDirect(
   ctx: AppContext,
-  deps: Pick<CapacityDeps, "repos">,
+  repos: CapacityCommandRepos,
   input: { targetUserId: number; amount: number; reason: string },
 ): Promise<Result<{ success: true }, DomainError>> {
-  const check = await canManageExecutive(
-    ctx.actor,
-    input.targetUserId,
-    deps.repos,
-  );
+  const check = await canManageExecutive(ctx.actor, input.targetUserId, repos);
   if (!check.target) {
     return Err(
       domainError("not_found", "executive_not_found", "Executive not found"),
@@ -276,7 +313,7 @@ export async function grantSearchCapacityDirect(
 
   const result = await grantSearchCapacity(
     { actorUserId: ctx.actor.userId, ...input },
-    deps.repos,
+    repos,
   );
   if (isErr(result)) return result;
   return Ok({ success: true });
@@ -284,14 +321,10 @@ export async function grantSearchCapacityDirect(
 
 export async function grantLeadCapacityDirect(
   ctx: AppContext,
-  deps: Pick<CapacityDeps, "repos">,
+  repos: CapacityCommandRepos,
   input: { targetUserId: number; amount: number; reason: string },
 ): Promise<Result<{ success: true }, DomainError>> {
-  const check = await canManageExecutive(
-    ctx.actor,
-    input.targetUserId,
-    deps.repos,
-  );
+  const check = await canManageExecutive(ctx.actor, input.targetUserId, repos);
   if (!check.target) {
     return Err(
       domainError("not_found", "executive_not_found", "Executive not found"),
@@ -309,7 +342,7 @@ export async function grantLeadCapacityDirect(
 
   const result = await grantLeadCapacity(
     { actorUserId: ctx.actor.userId, ...input },
-    deps.repos,
+    repos,
   );
   if (isErr(result)) return result;
   return Ok({ success: true });
@@ -317,10 +350,10 @@ export async function grantLeadCapacityDirect(
 
 export async function updateSearchPolicyDefault(
   ctx: AppContext,
-  deps: Pick<CapacityDeps, "repos">,
+  repos: CapacityCommandRepos,
   input: { scope: ScopeRef; monthlyLimit: number },
 ): Promise<Result<{ success: true }, DomainError>> {
-  const check = await canManageScope(ctx.actor, input.scope, deps.repos);
+  const check = await canManageScope(ctx.actor, input.scope, repos);
   if (isErr(check)) return check;
   const result = await setSearchScopeDefault(
     {
@@ -328,7 +361,7 @@ export async function updateSearchPolicyDefault(
       scopeId: input.scope.scopeId,
       monthlyLimit: input.monthlyLimit,
     },
-    deps.repos,
+    repos,
   );
   if (isErr(result)) return result;
   return Ok({ success: true });
@@ -336,10 +369,10 @@ export async function updateSearchPolicyDefault(
 
 export async function updateLeadPolicyDefault(
   ctx: AppContext,
-  deps: Pick<CapacityDeps, "repos">,
+  repos: CapacityCommandRepos,
   input: { scope: ScopeRef; bufferTarget: number; dailyLimit: number },
 ): Promise<Result<{ success: true }, DomainError>> {
-  const check = await canManageScope(ctx.actor, input.scope, deps.repos);
+  const check = await canManageScope(ctx.actor, input.scope, repos);
   if (isErr(check)) return check;
   const result = await setLeadScopeDefault(
     {
@@ -348,7 +381,7 @@ export async function updateLeadPolicyDefault(
       bufferTarget: input.bufferTarget,
       dailyLimit: input.dailyLimit,
     },
-    deps.repos,
+    repos,
   );
   if (isErr(result)) return result;
   return Ok({ success: true });
@@ -356,10 +389,10 @@ export async function updateLeadPolicyDefault(
 
 export async function updateSearchPolicyOverride(
   ctx: AppContext,
-  deps: Pick<CapacityDeps, "repos">,
+  repos: CapacityCommandRepos,
   input: { userId: number; monthlyLimit: number; expiresAt: number | null },
 ): Promise<Result<{ success: true }, DomainError>> {
-  const check = await canManageExecutive(ctx.actor, input.userId, deps.repos);
+  const check = await canManageExecutive(ctx.actor, input.userId, repos);
   if (!check.target) {
     return Err(
       domainError("not_found", "executive_not_found", "Executive not found"),
@@ -381,7 +414,7 @@ export async function updateSearchPolicyOverride(
       monthlyLimit: input.monthlyLimit,
       expiresAt: input.expiresAt,
     },
-    deps.repos,
+    repos,
   );
   if (isErr(result)) return result;
   return Ok({ success: true });
@@ -389,7 +422,7 @@ export async function updateSearchPolicyOverride(
 
 export async function updateLeadPolicyOverride(
   ctx: AppContext,
-  deps: Pick<CapacityDeps, "repos">,
+  repos: CapacityCommandRepos,
   input: {
     userId: number;
     bufferTarget: number;
@@ -397,7 +430,7 @@ export async function updateLeadPolicyOverride(
     expiresAt: number | null;
   },
 ): Promise<Result<{ success: true }, DomainError>> {
-  const check = await canManageExecutive(ctx.actor, input.userId, deps.repos);
+  const check = await canManageExecutive(ctx.actor, input.userId, repos);
   if (!check.target) {
     return Err(
       domainError("not_found", "executive_not_found", "Executive not found"),
@@ -420,7 +453,7 @@ export async function updateLeadPolicyOverride(
       dailyLimit: input.dailyLimit,
       expiresAt: input.expiresAt,
     },
-    deps.repos,
+    repos,
   );
   if (isErr(result)) return result;
   return Ok({ success: true });

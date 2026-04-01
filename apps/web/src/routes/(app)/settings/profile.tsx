@@ -29,9 +29,7 @@ export default function ProfilePage() {
 
   const [profilePhone, setProfilePhone] = createSignal(user().phoneE164 || "");
   const [savingProfile, setSavingProfile] = createSignal(false);
-  const [avatarUrl, setAvatarUrl] = createSignal<string | null>(
-    user().avatarUrl,
-  );
+  const [avatarUrl, setAvatarUrl] = createSignal(user().avatarUrl);
   const [avatarPreviewUrl, setAvatarPreviewUrl] = createSignal<string | null>(
     null,
   );

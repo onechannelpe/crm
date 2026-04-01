@@ -16,7 +16,7 @@ describe("app error boundary helpers", () => {
   });
 
   it("reports boundary failures with app-root context", () => {
-    const errorLog = vi.fn();
+    const errorLog = vi.fn<(event: string, payload: unknown) => void>();
     const error = new Error("render failed");
 
     reportBoundaryError({ error: errorLog }, error);

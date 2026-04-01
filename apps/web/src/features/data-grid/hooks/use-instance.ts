@@ -11,11 +11,6 @@ import type { DataGridReorderConfig } from "../dnd/types";
 import type { DataGridRowOpenMode } from "../model/row-open";
 import type { DataGridSelectionModel } from "./use-selection";
 
-type FocusedCell = {
-  rowId: number;
-  columnIndex: number;
-};
-
 export type DataGridInteractionModel = {
   isRowActive: (id: number) => boolean;
   isRowDragged: (id: number) => boolean;
@@ -71,7 +66,7 @@ export function createDataGridInteraction<T extends { id: number }>(options: {
   const [activeRowId, setActiveRowId] = createSignal<number | undefined>();
   const [pendingRowOpenSuppression, setPendingRowOpenSuppression] =
     createSignal(false);
-  const [focusedCell, setFocusedCell] = createSignal<FocusedCell | undefined>(
+  const [focusedCell, setFocusedCell] = createSignal(
     getInitialFocusedCell(
       options.rows(),
       options.rowOpenMode(),
@@ -338,7 +333,7 @@ function getInitialFocusedCell(
   rows: Array<{ id: number }>,
   rowOpenMode: DataGridRowOpenMode,
   columnCount: number,
-) {
+): { rowId: number; columnIndex: number } | undefined {
   if (rowOpenMode === "none" || rows.length === 0 || columnCount === 0) {
     return undefined;
   }

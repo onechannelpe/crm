@@ -11,7 +11,7 @@ import {
   finishPasskeyLoginWithDeps,
   replaceCurrentSessionAndResolveRedirect,
 } from "~/server/auth/application/login";
-import { createAuthDeps } from "~/server/auth/infrastructure/deps";
+import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
 import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
 import { isErr } from "~/server/shared/result";
 
@@ -49,7 +49,7 @@ export async function finishPasskeyLogin(
     }
 > {
   const request = getRequestClientMetadata();
-  const result = await finishPasskeyLoginWithDeps(createAuthDeps(), {
+  const result = await finishPasskeyLoginWithDeps(createAuthLoginContext(), {
     flowId,
     response,
     ipAddress: request.ipAddress,

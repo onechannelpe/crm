@@ -9,7 +9,7 @@ import {
   type RequestPasswordResetResult,
   type ResetPasswordResult,
 } from "~/server/auth/application/password-reset";
-import { createAuthDeps } from "~/server/auth/infrastructure/deps";
+import { createPasswordResetContext } from "~/server/auth/infrastructure/password-reset-context";
 
 export type { RequestPasswordResetResult, ResetPasswordResult };
 
@@ -24,7 +24,7 @@ export async function requestPasswordReset(
 ): Promise<RequestPasswordResetResult> {
   const rawEmail = formData.get("email");
   return requestPasswordResetService({
-    deps: createAuthDeps(),
+    deps: createPasswordResetContext(),
     email: typeof rawEmail === "string" ? rawEmail : "",
     origin: getOrigin(),
   });
@@ -41,7 +41,7 @@ export async function resetPassword(
   const confirmPassword = typeof rawConfirm === "string" ? rawConfirm : "";
 
   return resetPasswordService({
-    deps: createAuthDeps(),
+    repos: createPasswordResetContext().repos,
     token,
     password,
     confirmPassword,

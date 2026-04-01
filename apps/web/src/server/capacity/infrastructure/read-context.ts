@@ -1,10 +1,6 @@
-import {
-  repos,
-  rateLimitDeps,
-  runInRepositoryTransaction,
-} from "~/server/shared/context";
+import { repos } from "~/server/shared/context";
 
-export function createCapacityDeps() {
+export function createCapacityReadContext() {
   return {
     repos: {
       users: repos.users,
@@ -23,9 +19,7 @@ export function createCapacityDeps() {
       leadUsageCommits: repos.leadUsageCommits,
       leadAssignments: repos.leadAssignments,
     },
-    rateLimitDeps,
-    runInRepositoryTransaction,
   };
 }
 
-export type CapacityDeps = ReturnType<typeof createCapacityDeps>;
+export type CapacityReadContext = ReturnType<typeof createCapacityReadContext>;

@@ -6,7 +6,7 @@ import {
   updateSearchPolicyDefault as updateSearchPolicyDefaultService,
   updateSearchPolicyOverride as updateSearchPolicyOverrideService,
 } from "~/server/capacity/application/commands";
-import { createCapacityDeps } from "~/server/capacity/infrastructure/deps";
+import { createCapacityCommandsContext } from "~/server/capacity/infrastructure/commands-context";
 import { runAction } from "~/server/shared/action-runtime";
 
 import {
@@ -31,7 +31,7 @@ export async function updateSearchPolicyOverride(input: {
     execute: (ctx) =>
       updateSearchPolicyOverrideService(
         ctx,
-        createCapacityDeps(),
+        createCapacityCommandsContext().repos,
         overrideInput.value,
       ),
   });
@@ -52,7 +52,7 @@ export async function updateLeadPolicyOverride(input: {
     execute: (ctx) =>
       updateLeadPolicyOverrideService(
         ctx,
-        createCapacityDeps(),
+        createCapacityCommandsContext().repos,
         overrideInput.value,
       ),
   });
@@ -78,13 +78,17 @@ export async function updateSearchPolicyDefault(input: {
       monthlyLimit: limitResult.value,
     },
     execute: (ctx) =>
-      updateSearchPolicyDefaultService(ctx, createCapacityDeps(), {
-        scope: {
-          kind: scopeInput.value.scopeType,
-          scopeId: scopeInput.value.scopeId,
+      updateSearchPolicyDefaultService(
+        ctx,
+        createCapacityCommandsContext().repos,
+        {
+          scope: {
+            kind: scopeInput.value.scopeType,
+            scopeId: scopeInput.value.scopeId,
+          },
+          monthlyLimit: limitResult.value,
         },
-        monthlyLimit: limitResult.value,
-      }),
+      ),
   });
 }
 
@@ -113,13 +117,17 @@ export async function updateLeadPolicyDefault(input: {
       dailyLimit: policyResult.value.dailyRefillLimit,
     },
     execute: (ctx) =>
-      updateLeadPolicyDefaultService(ctx, createCapacityDeps(), {
-        scope: {
-          kind: scopeInput.value.scopeType,
-          scopeId: scopeInput.value.scopeId,
+      updateLeadPolicyDefaultService(
+        ctx,
+        createCapacityCommandsContext().repos,
+        {
+          scope: {
+            kind: scopeInput.value.scopeType,
+            scopeId: scopeInput.value.scopeId,
+          },
+          bufferTarget: policyResult.value.activeBufferTarget,
+          dailyLimit: policyResult.value.dailyRefillLimit,
         },
-        bufferTarget: policyResult.value.activeBufferTarget,
-        dailyLimit: policyResult.value.dailyRefillLimit,
-      }),
+      ),
   });
 }

@@ -16,7 +16,6 @@ import {
   getVisibleMonth,
   parseIsoDate,
   todayLocalDate,
-  type VisibleMonth,
 } from "./date-picker-model";
 import { DatePickerPopover } from "./date-picker-popover";
 
@@ -45,7 +44,7 @@ export function DatePicker(props: DatePickerProps) {
   const initialViewDate = createMemo(
     () => selectedDate() ?? minDate() ?? todayLocalDate(),
   );
-  const [viewMonth, setViewMonth] = createSignal<VisibleMonth>(
+  const [viewMonth, setViewMonth] = createSignal(
     getVisibleMonth(initialViewDate()),
   );
   let fieldRef: HTMLDivElement | undefined;

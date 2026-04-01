@@ -6,14 +6,15 @@ import { getExecutiveDetail as getExecutiveDetailService } from "~/server/capaci
 import { getPolicyDefaults as getPolicyDefaultsService } from "~/server/capacity/application/get-policy-defaults";
 import { listManagedExecutives as listManagedExecutivesService } from "~/server/capacity/application/list-managed-executives";
 import { listPendingRequests as listPendingRequestsService } from "~/server/capacity/application/list-pending-requests";
-import { createCapacityDeps } from "~/server/capacity/infrastructure/deps";
+import { createCapacityReadContext } from "~/server/capacity/infrastructure/read-context";
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function getManagedExecutivesList() {
   return runAction({
     actionName: "capacity.managed_executives.read",
     permission: "capacity:read:team",
-    execute: (ctx) => listManagedExecutivesService(ctx, createCapacityDeps()),
+    execute: (ctx) =>
+      listManagedExecutivesService(ctx, createCapacityReadContext()),
   });
 }
 
@@ -24,7 +25,7 @@ export async function getExecutiveDetail(userId: number) {
     permission: "capacity:read:team",
     input: { userId: safeUserId },
     execute: (ctx) =>
-      getExecutiveDetailService(ctx, createCapacityDeps(), {
+      getExecutiveDetailService(ctx, createCapacityReadContext(), {
         userId: safeUserId,
       }),
   });
@@ -34,7 +35,8 @@ export async function getPendingRequests() {
   return runAction({
     actionName: "capacity.pending_requests.read",
     permission: "capacity:read:team",
-    execute: (ctx) => listPendingRequestsService(ctx, createCapacityDeps()),
+    execute: (ctx) =>
+      listPendingRequestsService(ctx, createCapacityReadContext()),
   });
 }
 
@@ -42,7 +44,8 @@ export async function getPolicyDefaults() {
   return runAction({
     actionName: "capacity.policy_defaults.read",
     permission: "capacity:policy:manage",
-    execute: (ctx) => getPolicyDefaultsService(ctx, createCapacityDeps()),
+    execute: (ctx) =>
+      getPolicyDefaultsService(ctx, createCapacityReadContext()),
   });
 }
 
@@ -54,6 +57,8 @@ export async function getAuditEvents(limit?: number) {
     permission: "capacity:audit:read",
     input: { limit: safeLimit },
     execute: (ctx) =>
-      getAuditEventsService(ctx, createCapacityDeps(), { limit: safeLimit }),
+      getAuditEventsService(ctx, createCapacityReadContext(), {
+        limit: safeLimit,
+      }),
   });
 }

@@ -13,7 +13,7 @@ import type {
   SalesRecordProductOption,
   SalesRecordQueueItem,
 } from "~/server/sales-records/domain/types";
-import { createSalesRecordDeps } from "~/server/sales-records/infrastructure/deps";
+import { createSalesRecordReadContext } from "~/server/sales-records/infrastructure/read-context";
 import { runAction } from "~/server/shared/action-runtime";
 import { Ok } from "~/server/shared/result";
 
@@ -25,7 +25,8 @@ export async function listSalesRecordProducts(): Promise<
   return runAction({
     actionName: "sales_records.products.read",
     permission: "sales:create",
-    execute: async () => Ok(await listProductsService(createSalesRecordDeps())),
+    execute: async () =>
+      Ok(await listProductsService(createSalesRecordReadContext())),
   });
 }
 
@@ -40,7 +41,7 @@ export async function getSalesRecordBootstrap(
     input: { contactId: safeContactId },
     execute: async (ctx) =>
       Ok(
-        await getBootstrapService(ctx, createSalesRecordDeps(), {
+        await getBootstrapService(ctx, createSalesRecordReadContext(), {
           contactId: safeContactId,
         }),
       ),
@@ -54,7 +55,7 @@ export async function listPendingSalesRecords(): Promise<
     actionName: "sales_records.pending.read",
     permission: "sales:review",
     execute: async (ctx) =>
-      Ok(await listPendingService(ctx, createSalesRecordDeps())),
+      Ok(await listPendingService(ctx, createSalesRecordReadContext())),
   });
 }
 
@@ -65,7 +66,7 @@ export async function listConfirmedSalesRecords(): Promise<
     actionName: "sales_records.confirmed.read",
     permission: "sales:review",
     execute: async (ctx) =>
-      Ok(await listConfirmedService(ctx, createSalesRecordDeps())),
+      Ok(await listConfirmedService(ctx, createSalesRecordReadContext())),
   });
 }
 
@@ -79,7 +80,7 @@ export async function getSalesRecordFixContext(
     input: { recordId: safeRecordId },
     execute: async (ctx) =>
       Ok(
-        await getFixContextService(ctx, createSalesRecordDeps(), {
+        await getFixContextService(ctx, createSalesRecordReadContext(), {
           recordId: safeRecordId,
         }),
       ),

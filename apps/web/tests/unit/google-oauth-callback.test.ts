@@ -2,9 +2,10 @@ import type { APIEvent } from "@solidjs/start/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  completeGoogleOAuthCallback: vi.fn(),
-  readGoogleOAuthCookies: vi.fn(),
-  getClientIp: vi.fn(),
+  completeGoogleOAuthCallback: vi.fn<() => Promise<unknown>>(),
+  readGoogleOAuthCookies:
+    vi.fn<() => { state: string; codeVerifier: string }>(),
+  getClientIp: vi.fn<() => string>(),
 }));
 
 vi.mock("~/lib/auth/google/google-callback-login", () => ({
@@ -25,7 +26,7 @@ vi.mock("~/lib/auth/password/client-ip", () => ({
 
 vi.mock("~/server/auth/runtime-google-oauth", () => ({
   getGoogleOAuthCallbackRuntime: () => ({
-    privilegedLoginAlertSender: vi.fn(),
+    privilegedLoginAlertSender: vi.fn<() => Promise<void>>(),
     repos: {},
   }),
 }));

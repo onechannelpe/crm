@@ -10,7 +10,7 @@ import {
 } from "~/server/users/service-bulk-import";
 
 import type { CreateTeamInviteCommand } from "../domain/types";
-import type { TeamDeps } from "../infrastructure/deps";
+import type { TeamInviteProvisioningContext } from "../infrastructure/invite-context";
 import {
   buildInviteUrl,
   sendInviteEmail,
@@ -35,7 +35,7 @@ export async function previewBulkImport(
 
 export async function applyBulkImport(
   ctx: AppContext,
-  deps: Pick<TeamDeps, "createProvisioningService">,
+  deps: TeamInviteProvisioningContext,
   input: {
     csvContent: string;
     role: CreateTeamInviteCommand["role"];

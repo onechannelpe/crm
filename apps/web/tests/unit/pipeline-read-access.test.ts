@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  findLeadById: vi.fn(),
-  findCommercialInputByLeadId: vi.fn(),
-  listQuotationsByLead: vi.fn(),
-  findSaleById: vi.fn(),
+  findLeadById: vi.fn<() => Promise<unknown>>(),
+  findCommercialInputByLeadId: vi.fn<() => Promise<unknown>>(),
+  listQuotationsByLead: vi.fn<() => Promise<unknown[]>>(),
+  findSaleById: vi.fn<() => Promise<unknown>>(),
 }));
 
 vi.mock("../../src/server/shared/pipeline-runtime", () => ({
