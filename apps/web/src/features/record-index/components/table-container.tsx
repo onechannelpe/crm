@@ -9,17 +9,17 @@ export function RecordIndexTableContainer<
   TSortValue extends string = string,
 >(props: { model: RecordIndexScreenModel<T, TFilterValue, TSortValue> }) {
   const rows = () => props.model.sorting.sortedRows();
+  const source = () => props.model.source.grid();
 
-  if (props.model.loading.isInitial()) {
+  if (props.model.loading.status() === "pending") {
     return (
       <DataGrid
         ariaLabel={props.model.adapter.ariaLabel}
         columns={props.model.columns.visibleColumns()}
         emptyState={<></>}
-        isLoading={true}
+        source={source()}
         reorder={props.model.adapter.reorder}
         rowOpen={props.model.adapter.rowOpen}
-        rows={[]}
         selection={props.model.selection}
         suspendEscapeSelectionClear={props.model.columns.openMenu() !== null}
       />
@@ -35,10 +35,9 @@ export function RecordIndexTableContainer<
       ariaLabel={props.model.adapter.ariaLabel}
       columns={props.model.columns.visibleColumns()}
       emptyState={<></>}
-      isLoading={false}
+      source={source()}
       reorder={props.model.adapter.reorder}
       rowOpen={props.model.adapter.rowOpen}
-      rows={rows()}
       selection={props.model.selection}
       suspendEscapeSelectionClear={props.model.columns.openMenu() !== null}
     />

@@ -4,7 +4,10 @@ import { listLeadsForQuotation } from "~/actions/pipeline/quotations";
 import Building2 from "~/components/icons/building-2";
 import List from "~/components/icons/list";
 import { RecordIndexScreen } from "~/features/record-index/components/screen";
-import type { RecordIndexAdapter } from "~/features/record-index/model/types";
+import type {
+  RecordIndexAdapter,
+  RecordIndexSource,
+} from "~/features/record-index/model/types";
 
 import type { QuotationRow } from "./columns";
 import { QUOTATIONS_RECORD_INDEX_COLUMNS } from "./columns";
@@ -14,9 +17,16 @@ import styles from "./styles.module.css";
 
 export function QuotationsRecordIndex() {
   const leads = createAsync(() => listLeadsForQuotation({}));
-  const rows = () => leads() ?? [];
-  const isLoading = () => leads() === undefined;
   const { rowOpen } = useOpenQuotationRecord();
+  const source = (): RecordIndexSource<QuotationRow> => {
+    const data = leads();
+
+    if (data === undefined) {
+      return { status: "pending", rows: [] };
+    }
+
+    return { status: "ready", rows: data };
+  };
 
   const adapter = {
     id: "quotations",
@@ -24,8 +34,7 @@ export function QuotationsRecordIndex() {
     ariaLabel: "Cotizaciones",
     pickerIcon: List,
     columns: QUOTATIONS_RECORD_INDEX_COLUMNS,
-    getRows: rows,
-    isLoading,
+    source,
     selectable: true,
     rowOpen,
     emptyState: {

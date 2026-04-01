@@ -98,9 +98,11 @@ export default function TeamRequestsPage() {
               No hay solicitudes pendientes.
             </p>
           }
-          isLoading={isLoading()}
           rowOpen={createNoopRowOpen()}
-          rows={rows()}
+          source={{
+            status: isLoading() ? "pending" : "ready",
+            rows: rows(),
+          }}
         />
       </div>
     </AppPage>

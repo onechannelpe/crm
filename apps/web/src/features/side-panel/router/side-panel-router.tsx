@@ -1,4 +1,6 @@
-import { Show } from "solid-js";
+import { ErrorBoundary, Show, Suspense } from "solid-js";
+
+import { Loading } from "~/components/feedback/loading";
 
 import { SidePanelPageInstanceProvider } from "../state/side-panel-page-instance";
 import { SIDE_PANEL_PAGES_CONFIG } from "../state/side-panel-pages-config";
@@ -26,7 +28,23 @@ export function SidePanelRouter(props: { isMobile: boolean }) {
               return (
                 <div class={styles.pageContent}>
                   <SidePanelPageInstanceProvider pageId={entry.pageId}>
-                    <PageComponent />
+                    <ErrorBoundary
+                      fallback={
+                        <div class={styles.pageState}>
+                          No se pudo cargar el panel.
+                        </div>
+                      }
+                    >
+                      <Suspense
+                        fallback={
+                          <div class={styles.pageState}>
+                            <Loading size="sm" />
+                          </div>
+                        }
+                      >
+                        <PageComponent />
+                      </Suspense>
+                    </ErrorBoundary>
                   </SidePanelPageInstanceProvider>
                 </div>
               );

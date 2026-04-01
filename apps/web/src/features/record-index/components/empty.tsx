@@ -30,9 +30,8 @@ export function RecordIndexEmpty<
           }
         />
       }
-      isLoading={false}
+      source={{ status: "ready", rows: [] }}
       rowOpen={createNoopRowOpen<T>()}
-      rows={[]}
       selection={props.model.selection}
       suspendEscapeSelectionClear={props.model.columns.openMenu() !== null}
     />

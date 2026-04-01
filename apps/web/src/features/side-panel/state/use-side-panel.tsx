@@ -1,6 +1,7 @@
 import {
   type Accessor,
   createMemo,
+  createSignal,
   type ParentProps,
   createContext,
   onMount,
@@ -43,9 +44,25 @@ const SidePanelContext = createContext<SidePanelContextValue>();
 export function SidePanelProvider(props: ParentProps) {
   const store = createSidePanelStore();
   const { state } = store;
+  const [hasOpenedPanelOnce, setHasOpenedPanelOnce] = createSignal(false);
   const currentEntry = createMemo<SidePanelNavigationEntry | null>(
     () => state.navigationStack.at(-1) ?? null,
   );
+
+  const openPanel: SidePanelContextValue["openPanel"] = (page) => {
+    if (state.isOpen || hasOpenedPanelOnce()) {
+      setHasOpenedPanelOnce(true);
+      store.openPanel(page);
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setHasOpenedPanelOnce(true);
+        store.openPanel(page);
+      });
+    });
+  };
 
   const value: SidePanelContextValue = {
     isOpen: () => state.isOpen,
@@ -55,7 +72,7 @@ export function SidePanelProvider(props: ParentProps) {
     searchText: () => state.searchText,
     panelWidth: () => state.panelWidth,
     getPageState: (pageId) => state.pageStateById[pageId],
-    openPanel: store.openPanel,
+    openPanel,
     closePanel: store.closePanel,
     navigateTo: store.navigateTo,
     goBack: store.goBack,

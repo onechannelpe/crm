@@ -2,6 +2,7 @@ import type { Accessor, Setter } from "solid-js";
 
 import type { DataGridSelectionModel } from "~/features/data-grid/hooks/use-selection";
 import type { DataGridRowOpen } from "~/features/data-grid/model/row-open";
+import type { DataGridSource } from "~/features/data-grid/model/source";
 import type {
   DataGridColumn,
   DataGridFeatures,
@@ -14,6 +15,10 @@ import type { RecordIndexSortDefinition } from "./sort";
 export type RecordIndexCreateAction = {
   label: string;
   onClick: () => void;
+};
+
+export type RecordIndexSource<T> = DataGridSource<T> & {
+  totalCount?: number;
 };
 
 export type RecordIndexEmptyState = {
@@ -40,9 +45,7 @@ export type RecordIndexAdapter<
   class?: string;
   pickerIcon?: DataGridIcon;
   columns: ReadonlyArray<DataGridColumn<T>>;
-  getRows: () => T[];
-  isLoading: () => boolean;
-  getTotalCount?: () => number | undefined;
+  source: () => RecordIndexSource<T>;
   reorder?: DataGridFeatures<T>["reorder"];
   selectable?: boolean;
   rowOpen: DataGridRowOpen<T>;
@@ -132,7 +135,7 @@ export type RecordIndexModel = {
     isActive: Accessor<boolean>;
   };
   loading: {
-    isInitial: Accessor<boolean>;
+    status: Accessor<RecordIndexSource<unknown>["status"]>;
   };
   sorting: {
     sortValue: Accessor<string | undefined>;
@@ -156,7 +159,11 @@ export type RecordIndexScreenModel<
     Pick<RecordIndexModel["columns"], "openMenu" | "setOpenMenu">;
   filtering: RecordIndexFilteringState<T>;
   loading: {
-    isInitial: Accessor<boolean>;
+    status: Accessor<RecordIndexSource<T>["status"]>;
+  };
+  source: {
+    grid: Accessor<DataGridSource<T>>;
+    recordIndex: Accessor<RecordIndexSource<T>>;
   };
   sorting: RecordIndexSortingState<T>;
   selection?: DataGridSelectionModel;

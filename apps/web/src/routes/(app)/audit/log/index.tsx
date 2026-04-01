@@ -169,9 +169,11 @@ export default function AuditLogPage() {
             No hay eventos de auditoría para los filtros actuales.
           </p>
         }
-        isLoading={isLoading()}
         rowOpen={rowOpen}
-        rows={rows()}
+        source={{
+          status: isLoading() ? "pending" : "ready",
+          rows: rows(),
+        }}
       />
     </AppPage>
   );

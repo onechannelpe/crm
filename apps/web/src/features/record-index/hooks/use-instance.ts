@@ -29,6 +29,7 @@ export function useRecordIndexModel<
 ): RecordIndexScreenModel<T, TFilterValue, TSortValue> {
   const setup = useRecordIndexSetup();
   const viewState = useRecordIndexViewState();
+  const source = createMemo(() => adapter.source());
   const visibleColumns = createMemo(() =>
     getVisibleRecordIndexColumns(
       adapter.columns,
@@ -48,7 +49,7 @@ export function useRecordIndexModel<
 
   const filteredRows = createMemo(() => {
     return applyRecordIndexFilter(
-      adapter.getRows(),
+      source().rows,
       adapter.filter,
       viewState.filterValue(),
     );
@@ -74,7 +75,7 @@ export function useRecordIndexModel<
     ? createDataGridSelection(sortedRows)
     : undefined;
   const visibleCount = createMemo(() => sortedRows().length);
-  const totalCount = createMemo(() => adapter.getTotalCount?.());
+  const totalCount = createMemo(() => source().totalCount);
   const pickerMeta = createMemo(() => {
     const visible = visibleCount();
     const total = totalCount();
@@ -113,7 +114,7 @@ export function useRecordIndexModel<
       isActive: filterIsActive,
     },
     loading: {
-      isInitial: adapter.isLoading,
+      status: createMemo(() => source().status),
     },
     sorting: {
       sortValue: createMemo(() =>
@@ -146,6 +147,14 @@ export function useRecordIndexModel<
       sortedRows,
     },
     loading: sharedModel.loading,
+    source: {
+      grid: createMemo(() => ({
+        status: source().status,
+        rows: sortedRows(),
+        error: source().error,
+      })),
+      recordIndex: source,
+    },
     selection,
   };
 }
