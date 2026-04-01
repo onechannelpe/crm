@@ -1,110 +1,33 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-type AuditPayload = {
-  user_id: number;
-  entity_id: number;
-  action: string;
-  changes: string;
-};
-
-const mocks = vi.hoisted(() => ({
-  requireRole: vi.fn<
-    () => Promise<{
-      sessionId: string;
-      userId: number;
-      branchId: number;
-      role: string;
-      onboardingCompleted: boolean;
-      sessionClass: string;
-      primaryAuthMethod: string;
-      strongAuthMethod: string | null;
-      strongAuthAt: number | null;
-    }>
-  >(),
-  recordAction: vi.fn<() => Promise<void>>(),
-  invalidateSession: vi.fn<(sessionId: string) => Promise<void>>(),
-  invalidateUserSessions: vi.fn<(userId: number) => Promise<void>>(),
-  auditCreate: vi.fn<(payload: AuditPayload) => Promise<void>>(),
-  revokeInstallationSessionsByAuthSession:
-    vi.fn<(sessionId: string, now: number) => Promise<void>>(),
-  revokeInstallationSessionsByUser:
-    vi.fn<(userId: number, now: number) => Promise<void>>(),
-  updateExecutiveSyncHealthByUser:
-    vi.fn<
-      (payload: {
-        user_id: number;
-        sync_health: string;
-        sync_updated_at: number;
-      }) => Promise<void>
-    >(),
-}));
-
-vi.mock("~/lib/auth/access/session", () => ({
-  requireRole: mocks.requireRole,
-}));
-
-vi.mock("~/lib/http/request-context", () => ({
-  getRequestContext: () => ({
-    clientIp: "127.0.0.1",
-    userAgent: "vitest",
-    publicOrigin: "http://localhost:3000",
-  }),
-}));
-
-vi.mock("~/lib/observability/context", () => ({
-  getActionRequestContext: () => ({
-    traceId: "trace-test",
-    requestId: "req-test",
-    routePath: null,
-    httpMethod: null,
-    requestStartedAt: 1_700_000_000_000,
-  }),
-}));
-
-vi.mock("~/lib/auth/session/session-manager", () => ({
-  invalidateSession: mocks.invalidateSession,
-  invalidateUserSessions: mocks.invalidateUserSessions,
-}));
-
-vi.mock("~/server/shared/context", () => ({
-  repos: {
-    extensionRuntime: {
-      revokeInstallationSessionsByAuthSession:
-        mocks.revokeInstallationSessionsByAuthSession,
-      revokeInstallationSessionsByUser: mocks.revokeInstallationSessionsByUser,
-      updateExecutiveSyncHealthByUser: mocks.updateExecutiveSyncHealthByUser,
-    },
-    auditLogs: {
-      create: mocks.auditCreate,
-    },
-  },
-  notificationSender: {
-    send: vi.fn<() => Promise<void>>(),
-  },
-  privilegedLoginAlertSender: vi.fn<() => Promise<void>>(),
-  runInRepositoryTransaction: vi.fn<() => Promise<void>>(),
-  observabilityService: {
-    recordAction: mocks.recordAction,
-  },
-}));
+import {
+  invalidateSession,
+  invalidateUserSessions,
+} from "~/lib/auth/session/session-manager";
 
 import {
   revokeAllUserSessions,
   revokeUserSession,
-} from "../../src/actions/admin";
+} from "../../src/server/auth/application/admin-sessions";
+import type { AppContext } from "../../src/server/shared/action-runtime";
 
-describe("admin sessions audit contracts", () => {
-  beforeEach(() => {
-    mocks.requireRole.mockReset();
-    mocks.recordAction.mockReset();
-    mocks.invalidateSession.mockReset();
-    mocks.invalidateUserSessions.mockReset();
-    mocks.auditCreate.mockReset();
-    mocks.revokeInstallationSessionsByAuthSession.mockReset();
-    mocks.revokeInstallationSessionsByUser.mockReset();
-    mocks.updateExecutiveSyncHealthByUser.mockReset();
+vi.mock("~/lib/auth/session/session-manager", () => ({
+  invalidateSession: vi.fn<(sessionId: string) => Promise<void>>(),
+  invalidateUserSessions: vi.fn<(userId: number) => Promise<void>>(),
+}));
 
-    mocks.requireRole.mockResolvedValue({
+type AuditPayload = {
+  user_id: number;
+  action: string;
+  entity_type: string;
+  entity_id: number;
+  changes: string;
+  created_at: number;
+};
+
+function makeContext(): AppContext {
+  return {
+    actor: {
       sessionId: "sid-admin",
       userId: 9001,
       branchId: 1,
@@ -113,109 +36,135 @@ describe("admin sessions audit contracts", () => {
       sessionClass: "app",
       primaryAuthMethod: "passkey",
       strongAuthMethod: "passkey",
-      strongAuthAt: Date.now(),
-    });
-    mocks.recordAction.mockResolvedValue(undefined);
-    mocks.invalidateSession.mockResolvedValue(undefined);
-    mocks.invalidateUserSessions.mockResolvedValue(undefined);
-    mocks.auditCreate.mockResolvedValue(undefined);
-    mocks.revokeInstallationSessionsByAuthSession.mockResolvedValue(undefined);
-    mocks.revokeInstallationSessionsByUser.mockResolvedValue(undefined);
-    mocks.updateExecutiveSyncHealthByUser.mockResolvedValue(undefined);
+      strongAuthAt: 1_700_000_000_000,
+    },
+    requestId: "req-test",
+    traceId: "trace-test",
+    ipAddress: "127.0.0.1",
+    userAgent: "vitest",
+    publicOrigin: "http://localhost:3000",
+    now: () => 1_700_000_100_000,
+  };
+}
+
+function makeDeps() {
+  const auditLogs: AuditPayload[] = [];
+  const authSessionRevocations: Array<{ sessionId: string; now: number }> = [];
+  const userRevocations: Array<{ userId: number; now: number }> = [];
+  const syncUpdates: Array<{
+    user_id: number;
+    sync_health: string;
+    sync_updated_at: number;
+  }> = [];
+
+  return {
+    deps: {
+      repos: {
+        extensionRuntime: {
+          revokeInstallationSessionsByAuthSession: async (
+            sessionId: string,
+            now: number,
+          ) => {
+            authSessionRevocations.push({ sessionId, now });
+          },
+          revokeInstallationSessionsByUser: async (
+            userId: number,
+            now: number,
+          ) => {
+            userRevocations.push({ userId, now });
+          },
+          updateExecutiveSyncHealthByUser: async (payload: {
+            user_id: number;
+            sync_health: string;
+            sync_updated_at: number;
+          }) => {
+            syncUpdates.push(payload);
+          },
+        },
+        auditLogs: {
+          create: async (payload: AuditPayload) => {
+            auditLogs.push(payload);
+          },
+        },
+      },
+    },
+    auditLogs,
+    authSessionRevocations,
+    userRevocations,
+    syncUpdates,
+  };
+}
+
+describe("admin session revocation", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(invalidateSession).mockResolvedValue(undefined);
+    vi.mocked(invalidateUserSessions).mockResolvedValue(undefined);
   });
 
-  it("logs revokeUserSession with actor as user_id and target as entity_id", async () => {
-    await revokeUserSession("session-abc", 42);
+  it("revokes one session and writes an audit record for the target user", async () => {
+    const harness = makeDeps();
 
-    expect(mocks.invalidateSession).toHaveBeenCalledWith("session-abc");
-    expect(mocks.revokeInstallationSessionsByAuthSession).toHaveBeenCalledWith(
-      "session-abc",
-      expect.any(Number),
-    );
-    expect(mocks.updateExecutiveSyncHealthByUser).toHaveBeenCalledWith({
-      user_id: 42,
-      sync_health: "reauth_required",
-      sync_updated_at: expect.any(Number),
+    const result = await revokeUserSession(makeContext(), harness.deps, {
+      sessionId: "session-abc",
+      targetUserId: 42,
     });
-    expect(mocks.auditCreate).toHaveBeenCalledTimes(1);
-    const payload = mocks.auditCreate.mock.calls[0]?.[0];
-    expect(payload.user_id).toBe(9001);
-    expect(payload.entity_id).toBe(42);
-    expect(payload.action).toBe("session_revoked_by_admin");
 
-    const changesRaw = payload.changes;
-    expect(typeof changesRaw).toBe("string");
-    const changes =
-      typeof changesRaw === "string"
-        ? JSON.parse(changesRaw)
-        : { sessionId: "", revokedBy: null };
-    expect(changes.sessionId).toBe("session-abc");
-    expect(changes.revokedBy).toBe(9001);
+    expect(result.ok).toBe(true);
+    expect(invalidateSession).toHaveBeenCalledWith("session-abc");
+    expect(harness.authSessionRevocations).toEqual([
+      { sessionId: "session-abc", now: 1_700_000_100_000 },
+    ]);
+    expect(harness.syncUpdates).toEqual([
+      {
+        user_id: 42,
+        sync_health: "reauth_required",
+        sync_updated_at: 1_700_000_100_000,
+      },
+    ]);
+    expect(harness.auditLogs).toHaveLength(1);
+    expect(harness.auditLogs[0]).toMatchObject({
+      user_id: 9001,
+      action: "session_revoked_by_admin",
+      entity_type: "user_session",
+      entity_id: 42,
+      created_at: 1_700_000_100_000,
+    });
+    expect(JSON.parse(harness.auditLogs[0].changes)).toEqual({
+      sessionId: "session-abc",
+      revokedBy: 9001,
+    });
   });
 
-  it("logs revokeAllUserSessions with actor and target fields", async () => {
-    await revokeAllUserSessions(77);
+  it("revokes all user sessions and writes a single audit record", async () => {
+    const harness = makeDeps();
 
-    expect(mocks.invalidateUserSessions).toHaveBeenCalledWith(77);
-    expect(mocks.revokeInstallationSessionsByUser).toHaveBeenCalledWith(
-      77,
-      expect.any(Number),
-    );
-    expect(mocks.updateExecutiveSyncHealthByUser).toHaveBeenCalledWith({
-      user_id: 77,
-      sync_health: "reauth_required",
-      sync_updated_at: expect.any(Number),
-    });
-    expect(mocks.auditCreate).toHaveBeenCalledTimes(1);
-    const payload = mocks.auditCreate.mock.calls[0]?.[0];
-    expect(payload.user_id).toBe(9001);
-    expect(payload.entity_id).toBe(77);
-    expect(payload.action).toBe("all_sessions_revoked");
-
-    const changesRaw = payload.changes;
-    expect(typeof changesRaw).toBe("string");
-    const changes =
-      typeof changesRaw === "string"
-        ? JSON.parse(changesRaw)
-        : { revokedBy: null };
-    expect(changes.revokedBy).toBe(9001);
-  });
-
-  it("revokeUserSession throws when strong auth is missing and no repo is touched", async () => {
-    mocks.requireRole.mockResolvedValue({
-      sessionId: "sid-admin",
-      userId: 9001,
-      branchId: 1,
-      role: "admin",
-      onboardingCompleted: true,
-      sessionClass: "app",
-      primaryAuthMethod: "password",
-      strongAuthMethod: null,
-      strongAuthAt: null,
+    const result = await revokeAllUserSessions(makeContext(), harness.deps, {
+      targetUserId: 77,
     });
 
-    await expect(revokeUserSession("session-abc", 42)).rejects.toThrow();
-
-    expect(mocks.invalidateSession).not.toHaveBeenCalled();
-    expect(mocks.auditCreate).not.toHaveBeenCalled();
-  });
-
-  it("revokeAllUserSessions throws when strong auth is missing and no repo is touched", async () => {
-    mocks.requireRole.mockResolvedValue({
-      sessionId: "sid-admin",
-      userId: 9001,
-      branchId: 1,
-      role: "admin",
-      onboardingCompleted: true,
-      sessionClass: "app",
-      primaryAuthMethod: "password",
-      strongAuthMethod: null,
-      strongAuthAt: null,
+    expect(result.ok).toBe(true);
+    expect(invalidateUserSessions).toHaveBeenCalledWith(77);
+    expect(harness.userRevocations).toEqual([
+      { userId: 77, now: 1_700_000_100_000 },
+    ]);
+    expect(harness.syncUpdates).toEqual([
+      {
+        user_id: 77,
+        sync_health: "reauth_required",
+        sync_updated_at: 1_700_000_100_000,
+      },
+    ]);
+    expect(harness.auditLogs).toHaveLength(1);
+    expect(harness.auditLogs[0]).toMatchObject({
+      user_id: 9001,
+      action: "all_sessions_revoked",
+      entity_type: "user",
+      entity_id: 77,
+      created_at: 1_700_000_100_000,
     });
-
-    await expect(revokeAllUserSessions(77)).rejects.toThrow();
-
-    expect(mocks.invalidateUserSessions).not.toHaveBeenCalled();
-    expect(mocks.auditCreate).not.toHaveBeenCalled();
+    expect(JSON.parse(harness.auditLogs[0].changes)).toEqual({
+      revokedBy: 9001,
+    });
   });
 });

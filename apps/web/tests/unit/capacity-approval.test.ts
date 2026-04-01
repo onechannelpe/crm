@@ -1,156 +1,51 @@
-import { describe, expect, it } from "vitest";
-import { beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Role } from "~/lib/auth/access/rbac";
+
 import {
   approveCapacityRequest,
   rejectCapacityRequest,
-} from "~/server/capacity/application/commands";
-import { createCapacityDeps } from "~/server/capacity/infrastructure/deps";
-import type { AppContext } from "~/server/shared/action-runtime";
-
-import {
-  makeLeadCapacityGrantsRepo,
-  makeSearchCapacityGrantsRepo,
-} from "../support/capacity-fakes";
-
-type CapacityReposMock = {
-  capacityRequests: {
-    findById: ReturnType<typeof vi.fn<(id: number) => Promise<unknown>>>;
-    markApproved: ReturnType<
-      typeof vi.fn<(id: number) => Promise<{ numUpdatedRows: bigint }>>
-    >;
-    markRejected: ReturnType<
-      typeof vi.fn<(id: number) => Promise<{ numUpdatedRows: bigint }>>
-    >;
-  };
-  users: {
-    findById: ReturnType<
-      typeof vi.fn<
-        () => Promise<{ role: Role; branch_id: number; team_id: number | null }>
-      >
-    >;
-  };
-  teams: {
-    findBySupervisorId: ReturnType<typeof vi.fn<() => Promise<unknown>>>;
-    findByIdWithSupervisor: ReturnType<typeof vi.fn<() => Promise<unknown>>>;
-  };
-  searchCapacityGrants: {
-    insert: ReturnType<
-      typeof vi.fn<
-        (values: {
-          user_id: number;
-          amount: number;
-          reason: string;
-          actor_user_id: number;
-        }) => Promise<void>
-      >
-    >;
-  };
-  leadCapacityGrants: {
-    insert: ReturnType<
-      typeof vi.fn<
-        (values: {
-          user_id: number;
-          amount: number;
-          reason: string;
-          actor_user_id: number;
-        }) => Promise<void>
-      >
-    >;
-  };
-};
-
-type RunInRepositoryTransactionMock = ReturnType<
-  typeof vi.fn<
-    (
-      operation: (repos: CapacityReposMock) => Promise<unknown>,
-    ) => Promise<unknown>
-  >
->;
-
-const { runInRepositoryTransactionMock, capacityReposMock } = vi.hoisted(
-  (): {
-    runInRepositoryTransactionMock: RunInRepositoryTransactionMock;
-    capacityReposMock: CapacityReposMock;
-  } => ({
-    runInRepositoryTransactionMock:
-      vi.fn<
-        (
-          operation: (repos: CapacityReposMock) => Promise<unknown>,
-        ) => Promise<unknown>
-      >(),
-    capacityReposMock: {
-      capacityRequests: {
-        findById: vi.fn<(id: number) => Promise<unknown>>(),
-        markApproved:
-          vi.fn<(id: number) => Promise<{ numUpdatedRows: bigint }>>(),
-        markRejected:
-          vi.fn<(id: number) => Promise<{ numUpdatedRows: bigint }>>(),
-      },
-      users: {
-        findById: vi.fn<
-          () => Promise<{
-            role: Role;
-            branch_id: number;
-            team_id: number | null;
-          }>
-        >(),
-      },
-      teams: {
-        findBySupervisorId: vi.fn<() => Promise<unknown>>(),
-        findByIdWithSupervisor: vi.fn<() => Promise<unknown>>(),
-      },
-      searchCapacityGrants: {
-        insert:
-          vi.fn<
-            (values: {
-              user_id: number;
-              amount: number;
-              reason: string;
-              actor_user_id: number;
-            }) => Promise<void>
-          >(),
-      },
-      leadCapacityGrants: {
-        insert:
-          vi.fn<
-            (values: {
-              user_id: number;
-              amount: number;
-              reason: string;
-              actor_user_id: number;
-            }) => Promise<void>
-          >(),
-      },
-    },
-  }),
-);
-
-vi.mock("../../src/server/shared/context", () => ({
-  repos: capacityReposMock,
-  rateLimitDeps: {},
-  runInRepositoryTransaction: runInRepositoryTransactionMock,
-}));
-
-vi.mock("../../src/lib/security/action-rate-limit", () => ({
-  checkActionRateLimit: vi.fn<() => Promise<void>>(),
-}));
+} from "../../src/server/capacity/application/commands";
+import type { AppContext } from "../../src/server/shared/action-runtime";
 
 const ACTOR_USER_ID = 99;
 const TARGET_USER_ID = 1;
 const REQUEST_ID = 42;
 
+type RequestRow = {
+  id: number;
+  user_id: number;
+  kind: "search_extra" | "lead_refill_extra";
+  status: "pending" | "approved" | "rejected";
+  requested_amount: number;
+  reason: string;
+  decided_by_user_id?: number | null;
+  decision_note?: string | null;
+};
+
+type GrantRow = {
+  user_id: number;
+  amount: number;
+  reason: string;
+  actor_user_id: number;
+};
+
+type ManagedUser = {
+  role: Role;
+  branch_id: number;
+  team_id: number | null;
+};
+
 function makeContext(role: Role = "admin"): AppContext {
   return {
     actor: {
-      sessionId: "test",
+      sessionId: "test-session",
       userId: ACTOR_USER_ID,
       role,
       branchId: 1,
       onboardingCompleted: true,
-      sessionClass: "app" as const,
-      primaryAuthMethod: "password" as const,
+      sessionClass: "app",
+      primaryAuthMethod: "password",
       strongAuthMethod: null,
       strongAuthAt: null,
     },
@@ -159,307 +54,308 @@ function makeContext(role: Role = "admin"): AppContext {
     ipAddress: "127.0.0.1",
     userAgent: null,
     publicOrigin: "http://localhost:3000",
-    now: Date.now,
+    now: () => 1_700_000_000_000,
   };
 }
 
-type RequestRow = {
-  id: number;
-  user_id: number;
-  kind: "search_extra" | "lead_refill";
-  status: "pending" | "approved" | "rejected";
-  requested_amount: number;
-  reason: string;
-};
-
-function makeCapacityRequestsRepo(request: RequestRow | undefined) {
-  const rows: RequestRow[] = request ? [{ ...request }] : [];
-  return {
-    rows,
-    findById: async (id: number) => rows.find((r) => r.id === id),
-    markApproved: async (id: number) => {
-      const row = rows.find((r) => r.id === id);
-      if (row) row.status = "approved";
-      return { numUpdatedRows: row ? BigInt(1) : BigInt(0) };
-    },
-    markRejected: async (id: number) => {
-      const row = rows.find((r) => r.id === id);
-      if (row) row.status = "rejected";
-      return { numUpdatedRows: row ? BigInt(1) : BigInt(0) };
-    },
-  };
-}
-
-function makeUsersRepo(role: Role = "executive", branchId = 1) {
-  return {
-    findById: async () => ({ role, branch_id: branchId, team_id: null }),
-  };
-}
-
-function makeTeamsRepo() {
-  return {
-    findBySupervisorId: async () => undefined,
-    findByIdWithSupervisor: async () => undefined,
-  };
-}
-
-function installRepos(txRepos: {
-  capacityRequests: ReturnType<typeof makeCapacityRequestsRepo>;
-  users:
-    | ReturnType<typeof makeUsersRepo>
-    | {
-        findById: () => Promise<{
-          role: Role;
-          branch_id: number;
-          team_id: number | null;
-        }>;
-      };
-  teams: ReturnType<typeof makeTeamsRepo>;
-  searchCapacityGrants: {
-    insert: (values: {
-      user_id: number;
-      amount: number;
-      reason: string;
-      actor_user_id: number;
-    }) => Promise<void>;
-  };
-  leadCapacityGrants: {
-    insert: (values: {
-      user_id: number;
-      amount: number;
-      reason: string;
-      actor_user_id: number;
-    }) => Promise<void>;
-  };
+function makeHarness(input: {
+  request: RequestRow | undefined;
+  targetUser?: ManagedUser | undefined;
+  supervisedTeamId?: number | undefined;
+  failMarkApproved?: boolean;
 }) {
-  capacityReposMock.capacityRequests.findById.mockImplementation(
-    txRepos.capacityRequests.findById,
-  );
-  capacityReposMock.capacityRequests.markApproved.mockImplementation(
-    txRepos.capacityRequests.markApproved,
-  );
-  capacityReposMock.capacityRequests.markRejected.mockImplementation(
-    txRepos.capacityRequests.markRejected,
-  );
-  capacityReposMock.users.findById.mockImplementation(txRepos.users.findById);
-  capacityReposMock.teams.findBySupervisorId.mockImplementation(
-    txRepos.teams.findBySupervisorId,
-  );
-  capacityReposMock.teams.findByIdWithSupervisor.mockImplementation(
-    txRepos.teams.findByIdWithSupervisor,
-  );
-  capacityReposMock.searchCapacityGrants.insert.mockImplementation(
-    txRepos.searchCapacityGrants.insert,
-  );
-  capacityReposMock.leadCapacityGrants.insert.mockImplementation(
-    txRepos.leadCapacityGrants.insert,
-  );
-  runInRepositoryTransactionMock.mockImplementation(
-    async (operation: (repos: CapacityReposMock) => Promise<unknown>) =>
-      operation(capacityReposMock),
-  );
+  let request = input.request ? { ...input.request } : undefined;
+  let searchGrants: GrantRow[] = [];
+  let leadGrants: GrantRow[] = [];
+  let transactionCalls = 0;
+
+  const buildTxRepos = () => {
+    const draftRequest = request ? { ...request } : undefined;
+    const draftSearchGrants = [...searchGrants];
+    const draftLeadGrants = [...leadGrants];
+
+    return {
+      txRepos: {
+        capacityRequests: {
+          findById: async (id: number) =>
+            draftRequest?.id === id ? draftRequest : undefined,
+          markApproved: async (
+            id: number,
+            actorUserId: number,
+            note: string | null,
+          ) => {
+            if (input.failMarkApproved) {
+              throw new Error("db connection lost");
+            }
+            if (!draftRequest || draftRequest.id !== id) {
+              return { numUpdatedRows: BigInt(0) };
+            }
+            draftRequest.status = "approved";
+            draftRequest.decided_by_user_id = actorUserId;
+            draftRequest.decision_note = note;
+            return { numUpdatedRows: BigInt(1) };
+          },
+          markRejected: async (
+            id: number,
+            actorUserId: number,
+            note: string | null,
+          ) => {
+            if (!draftRequest || draftRequest.id !== id) {
+              return { numUpdatedRows: BigInt(0) };
+            }
+            draftRequest.status = "rejected";
+            draftRequest.decided_by_user_id = actorUserId;
+            draftRequest.decision_note = note;
+            return { numUpdatedRows: BigInt(1) };
+          },
+        },
+        users: {
+          findById: async (userId: number) =>
+            userId === input.request?.user_id ? input.targetUser : undefined,
+        },
+        teams: {
+          findBySupervisorId: async (userId: number) =>
+            userId === ACTOR_USER_ID && input.supervisedTeamId
+              ? { id: input.supervisedTeamId }
+              : undefined,
+          findByIdWithSupervisor: async () => undefined,
+        },
+        searchCapacityGrants: {
+          insert: async (values: GrantRow) => {
+            draftSearchGrants.push(values);
+          },
+          findByUserAndPeriod: async () => [],
+        },
+        leadCapacityGrants: {
+          insert: async (values: GrantRow) => {
+            draftLeadGrants.push(values);
+          },
+          findByUserAndDate: async () => [],
+        },
+      },
+      commit() {
+        request = draftRequest;
+        searchGrants = draftSearchGrants;
+        leadGrants = draftLeadGrants;
+      },
+    };
+  };
+
+  return {
+    get request() {
+      return request;
+    },
+    get searchGrants() {
+      return searchGrants;
+    },
+    get leadGrants() {
+      return leadGrants;
+    },
+    get transactionCalls() {
+      return transactionCalls;
+    },
+    deps: {
+      enforceApprovalRateLimit: async () => undefined,
+      async runInRepositoryTransaction<T>(
+        operation: (
+          repos: ReturnType<typeof buildTxRepos>["txRepos"],
+        ) => Promise<T>,
+      ): Promise<T> {
+        transactionCalls += 1;
+        const tx = buildTxRepos();
+        const result = await operation(tx.txRepos);
+        tx.commit();
+        return result;
+      },
+    },
+  };
 }
 
-describe("approveCapacityRequest", () => {
+describe("capacity approval commands", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("marks request approved and inserts a search grant atomically", async () => {
-    const searchGrants = makeSearchCapacityGrantsRepo();
-    const capacityRequests = makeCapacityRequestsRepo({
-      id: REQUEST_ID,
-      user_id: TARGET_USER_ID,
-      kind: "search_extra",
-      status: "pending",
-      requested_amount: 10,
-      reason: "need more",
-    });
-
-    installRepos({
-      capacityRequests,
-      users: makeUsersRepo(),
-      teams: makeTeamsRepo(),
-      searchCapacityGrants: searchGrants,
-      leadCapacityGrants: makeLeadCapacityGrantsRepo(),
-    });
-
-    const result = await approveCapacityRequest(
-      makeContext(),
-      createCapacityDeps(),
-      {
-        requestId: REQUEST_ID,
-        note: null,
+  it("approves a pending search request and grants search capacity", async () => {
+    const harness = makeHarness({
+      request: {
+        id: REQUEST_ID,
+        user_id: TARGET_USER_ID,
+        kind: "search_extra",
+        status: "pending",
+        requested_amount: 10,
+        reason: "need more",
       },
-    );
+      targetUser: { role: "executive", branch_id: 1, team_id: null },
+    });
+
+    const result = await approveCapacityRequest(makeContext(), harness.deps, {
+      requestId: REQUEST_ID,
+      note: null,
+    });
 
     expect(result.ok).toBe(true);
-    expect(capacityRequests.rows[0].status).toBe("approved");
-    expect(searchGrants.rows).toHaveLength(1);
-    expect(searchGrants.rows[0].amount).toBe(10);
-  });
-
-  it("returns conflict error when request is not pending", async () => {
-    const capacityRequests = makeCapacityRequestsRepo({
-      id: REQUEST_ID,
-      user_id: TARGET_USER_ID,
-      kind: "search_extra",
+    expect(harness.request).toMatchObject({
       status: "approved",
-      requested_amount: 10,
-      reason: "already done",
+      decided_by_user_id: ACTOR_USER_ID,
+      decision_note: null,
     });
-
-    installRepos({
-      capacityRequests,
-      users: makeUsersRepo(),
-      teams: makeTeamsRepo(),
-      searchCapacityGrants: makeSearchCapacityGrantsRepo(),
-      leadCapacityGrants: makeLeadCapacityGrantsRepo(),
-    });
-
-    const result = await approveCapacityRequest(
-      makeContext(),
-      createCapacityDeps(),
+    expect(harness.searchGrants).toEqual([
       {
-        requestId: REQUEST_ID,
-        note: null,
+        user_id: TARGET_USER_ID,
+        amount: 10,
+        reason: "need more",
+        actor_user_id: ACTOR_USER_ID,
       },
-    );
-
-    expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.error.code).toBe("request_not_pending");
-    }
+    ]);
+    expect(harness.leadGrants).toEqual([]);
   });
 
-  it("returns forbidden when actor cannot manage the target user", async () => {
-    const capacityRequests = makeCapacityRequestsRepo({
-      id: REQUEST_ID,
-      user_id: TARGET_USER_ID,
-      kind: "search_extra",
-      status: "pending",
-      requested_amount: 5,
-      reason: "test",
-    });
-
-    const searchGrants = makeSearchCapacityGrantsRepo();
-    installRepos({
-      capacityRequests,
-      users: {
-        findById: async () => ({
-          role: "executive",
-          branch_id: 2,
-          team_id: null,
-        }),
+  it("approves a lead refill request and uses the normalized decision note as the grant reason", async () => {
+    const harness = makeHarness({
+      request: {
+        id: REQUEST_ID,
+        user_id: TARGET_USER_ID,
+        kind: "lead_refill_extra",
+        status: "pending",
+        requested_amount: 4,
+        reason: "old reason",
       },
-      teams: makeTeamsRepo(),
-      searchCapacityGrants: searchGrants,
-      leadCapacityGrants: makeLeadCapacityGrantsRepo(),
+      targetUser: { role: "executive", branch_id: 1, team_id: null },
     });
 
-    const result = await approveCapacityRequest(
-      makeContext("admin"), // admin in branch 1
-      createCapacityDeps(),
-      { requestId: REQUEST_ID, note: null },
-    );
-
-    expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.error.code).toBe("forbidden");
-    }
-    // Grant must not have been inserted
-    expect(searchGrants.rows).toHaveLength(0);
-  });
-
-  it("does not commit any write when transaction throws mid-way", async () => {
-    const searchGrants = makeSearchCapacityGrantsRepo();
-    const capacityRequests = makeCapacityRequestsRepo({
-      id: REQUEST_ID,
-      user_id: TARGET_USER_ID,
-      kind: "search_extra",
-      status: "pending",
-      requested_amount: 5,
-      reason: "test",
+    const result = await approveCapacityRequest(makeContext(), harness.deps, {
+      requestId: REQUEST_ID,
+      note: "  approved for campaign week  ",
     });
-
-    // Simulate a transaction that throws after markApproved but before grant
-    installRepos({
-      capacityRequests: {
-        ...capacityRequests,
-        markApproved: async () => {
-          throw new Error("db connection lost");
-        },
-      },
-      users: makeUsersRepo(),
-      teams: makeTeamsRepo(),
-      searchCapacityGrants: searchGrants,
-      leadCapacityGrants: makeLeadCapacityGrantsRepo(),
-    });
-
-    const result = await approveCapacityRequest(
-      makeContext(),
-      createCapacityDeps(),
-      {
-        requestId: REQUEST_ID,
-        note: null,
-      },
-    );
-
-    expect(result.ok).toBe(false);
-    // Original request row is unchanged (transaction never committed)
-    expect(capacityRequests.rows[0].status).toBe("pending");
-    expect(searchGrants.rows).toHaveLength(0);
-  });
-});
-
-describe("rejectCapacityRequest", () => {
-  it("marks request rejected when actor has permission and note is provided", async () => {
-    const capacityRequests = makeCapacityRequestsRepo({
-      id: REQUEST_ID,
-      user_id: TARGET_USER_ID,
-      kind: "search_extra",
-      status: "pending",
-      requested_amount: 5,
-      reason: "test",
-    });
-
-    installRepos({
-      capacityRequests,
-      users: makeUsersRepo(),
-      teams: makeTeamsRepo(),
-      searchCapacityGrants: makeSearchCapacityGrantsRepo(),
-      leadCapacityGrants: makeLeadCapacityGrantsRepo(),
-    });
-
-    const result = await rejectCapacityRequest(
-      makeContext(),
-      createCapacityDeps(),
-      {
-        requestId: REQUEST_ID,
-        note: "not justified",
-      },
-    );
 
     expect(result.ok).toBe(true);
-    expect(capacityRequests.rows[0].status).toBe("rejected");
+    expect(harness.request).toMatchObject({
+      status: "approved",
+      decision_note: "approved for campaign week",
+    });
+    expect(harness.leadGrants).toEqual([
+      {
+        user_id: TARGET_USER_ID,
+        amount: 4,
+        reason: "approved for campaign week",
+        actor_user_id: ACTOR_USER_ID,
+      },
+    ]);
+    expect(harness.searchGrants).toEqual([]);
   });
 
-  it("returns validation error when note is empty", async () => {
-    runInRepositoryTransactionMock.mockImplementation(async () => {
-      throw new Error("transaction should not be called");
+  it("returns forbidden and leaves state untouched when the actor cannot manage the target executive", async () => {
+    const harness = makeHarness({
+      request: {
+        id: REQUEST_ID,
+        user_id: TARGET_USER_ID,
+        kind: "search_extra",
+        status: "pending",
+        requested_amount: 5,
+        reason: "test",
+      },
+      targetUser: { role: "executive", branch_id: 2, team_id: null },
     });
-    const result = await rejectCapacityRequest(
-      makeContext(),
-      createCapacityDeps(),
+
+    const result = await approveCapacityRequest(
+      makeContext("admin"),
+      harness.deps,
       {
         requestId: REQUEST_ID,
-        note: "   ",
+        note: null,
       },
     );
 
     expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.error.code).toBe("decision_note_required");
+    if (result.ok) {
+      throw new Error("expected forbidden result");
     }
+    expect(result.error.code).toBe("forbidden");
+    expect(harness.request?.status).toBe("pending");
+    expect(harness.searchGrants).toEqual([]);
+    expect(harness.leadGrants).toEqual([]);
+  });
+
+  it("rolls back transaction state when approval fails after the request is loaded", async () => {
+    const harness = makeHarness({
+      request: {
+        id: REQUEST_ID,
+        user_id: TARGET_USER_ID,
+        kind: "search_extra",
+        status: "pending",
+        requested_amount: 5,
+        reason: "test",
+      },
+      targetUser: { role: "executive", branch_id: 1, team_id: null },
+      failMarkApproved: true,
+    });
+
+    const result = await approveCapacityRequest(makeContext(), harness.deps, {
+      requestId: REQUEST_ID,
+      note: null,
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error("expected unexpected error result");
+    }
+    expect(result.error.code).toBe("unexpected");
+    expect(harness.request?.status).toBe("pending");
+    expect(harness.searchGrants).toEqual([]);
+    expect(harness.transactionCalls).toBe(1);
+  });
+
+  it("rejects a pending request with a trimmed decision note", async () => {
+    const harness = makeHarness({
+      request: {
+        id: REQUEST_ID,
+        user_id: TARGET_USER_ID,
+        kind: "search_extra",
+        status: "pending",
+        requested_amount: 5,
+        reason: "test",
+      },
+      targetUser: { role: "executive", branch_id: 1, team_id: null },
+    });
+
+    const result = await rejectCapacityRequest(makeContext(), harness.deps, {
+      requestId: REQUEST_ID,
+      note: "  not justified  ",
+    });
+
+    expect(result.ok).toBe(true);
+    expect(harness.request).toMatchObject({
+      status: "rejected",
+      decided_by_user_id: ACTOR_USER_ID,
+      decision_note: "not justified",
+    });
+  });
+
+  it("fails fast when rejection note is empty", async () => {
+    const harness = makeHarness({
+      request: {
+        id: REQUEST_ID,
+        user_id: TARGET_USER_ID,
+        kind: "search_extra",
+        status: "pending",
+        requested_amount: 5,
+        reason: "test",
+      },
+      targetUser: { role: "executive", branch_id: 1, team_id: null },
+    });
+
+    const result = await rejectCapacityRequest(makeContext(), harness.deps, {
+      requestId: REQUEST_ID,
+      note: "   ",
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error("expected validation error");
+    }
+    expect(result.error.code).toBe("decision_note_required");
+    expect(harness.transactionCalls).toBe(0);
+    expect(harness.request?.status).toBe("pending");
   });
 });

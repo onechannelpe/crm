@@ -12,7 +12,10 @@ import type {
   InviteInfo,
   InviteManagement,
 } from "../domain/types";
-import type { TeamDeps } from "../infrastructure/deps";
+import type {
+  TeamDeps,
+  TeamInviteManagementDeps,
+} from "../infrastructure/deps";
 import {
   buildInviteUrl,
   sendInviteEmail,
@@ -46,7 +49,7 @@ export async function getInviteInfo(input: {
 
 export async function getInviteManagement(
   ctx: AppContext,
-  deps: Pick<TeamDeps, "repos" | "createProvisioningService">,
+  deps: TeamInviteManagementDeps,
 ): Promise<Result<InviteManagement, DomainError>> {
   const teamProvisioning = deps.createProvisioningService();
   const [teams, pendingInvites] = await Promise.all([

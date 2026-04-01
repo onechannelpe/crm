@@ -13,7 +13,7 @@ import type { AppContext } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
-import type { AuthDeps } from "../infrastructure/deps";
+import type { AdminSessionDeps, AuthDeps } from "../infrastructure/deps";
 
 export interface SessionInfo {
   id: string;
@@ -51,7 +51,7 @@ export async function listAllActiveSessions(
 
 export async function revokeUserSession(
   ctx: AppContext,
-  deps: Pick<AuthDeps, "repos">,
+  deps: AdminSessionDeps,
   input: { sessionId: string; targetUserId: number },
 ): Promise<Result<{ success: true }, DomainError>> {
   const now = ctx.now();
@@ -80,7 +80,7 @@ export async function revokeUserSession(
 
 export async function revokeAllUserSessions(
   ctx: AppContext,
-  deps: Pick<AuthDeps, "repos">,
+  deps: AdminSessionDeps,
   input: { targetUserId: number },
 ): Promise<Result<{ success: true }, DomainError>> {
   const now = ctx.now();

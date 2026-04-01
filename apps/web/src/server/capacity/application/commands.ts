@@ -11,7 +11,10 @@ import {
   toDbCapacityRequestKind,
 } from "../domain/request-policy";
 import type { CapacityRequestKind, ScopeRef } from "../domain/types";
-import type { CapacityDeps } from "../infrastructure/deps";
+import type {
+  CapacityApprovalDeps,
+  CapacityDeps,
+} from "../infrastructure/deps";
 import { setLeadScopeDefault, setLeadUserOverride } from "./lead-policy";
 import { setSearchScopeDefault, setSearchUserOverride } from "./search-policy";
 
@@ -57,14 +60,10 @@ export async function requestCapacity(
 
 export async function approveCapacityRequest(
   ctx: AppContext,
-  deps: Pick<CapacityDeps, "rateLimitDeps" | "runInRepositoryTransaction">,
+  deps: CapacityApprovalDeps,
   input: { requestId: number; note: string | null },
 ): Promise<Result<{ success: true }, DomainError>> {
-  await checkActionRateLimit(
-    "capacity.approve",
-    ctx.actor.userId,
-    deps.rateLimitDeps,
-  );
+  await deps.enforceApprovalRateLimit(ctx.actor.userId);
   try {
     const result = await deps.runInRepositoryTransaction(async (txRepos) => {
       const request = await txRepos.capacityRequests.findById(input.requestId);
@@ -161,14 +160,10 @@ export async function approveCapacityRequest(
 
 export async function rejectCapacityRequest(
   ctx: AppContext,
-  deps: Pick<CapacityDeps, "rateLimitDeps" | "runInRepositoryTransaction">,
+  deps: CapacityApprovalDeps,
   input: { requestId: number; note: string },
 ): Promise<Result<{ success: true }, DomainError>> {
-  await checkActionRateLimit(
-    "capacity.approve",
-    ctx.actor.userId,
-    deps.rateLimitDeps,
-  );
+  await deps.enforceApprovalRateLimit(ctx.actor.userId);
   const note = normalizeDecisionNote(input.note);
   if (!note) {
     return Err(
