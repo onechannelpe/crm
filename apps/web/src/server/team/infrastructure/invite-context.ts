@@ -48,7 +48,8 @@ export function createTeamInviteContext() {
   };
 }
 
-export type TeamInviteContext = ReturnType<typeof createTeamInviteContext>;
+type TeamInviteContext = ReturnType<typeof createTeamInviteContext>;
+
 export type TeamInviteRepos = TeamInviteContext["repos"];
 export type TeamInviteProvisioningContext = Pick<
   TeamInviteContext,
