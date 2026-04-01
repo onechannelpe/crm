@@ -1,7 +1,7 @@
 import { createAsync, useParams } from "@solidjs/router";
 import { Show } from "solid-js";
 
-import { querySaleDetail } from "~/actions/lead-pipeline/sales";
+import { querySaleDetail } from "~/actions/pipeline/queries/sales";
 import { AppPage } from "~/components/layout/page";
 
 export default function LeadSaleDetailPage() {

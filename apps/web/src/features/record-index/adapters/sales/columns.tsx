@@ -1,4 +1,4 @@
-import { querySales } from "~/actions/lead-pipeline/sales";
+import { querySales } from "~/actions/pipeline/queries/sales";
 import Building2 from "~/components/icons/building-2";
 import CalendarDays from "~/components/icons/calendar-days";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";

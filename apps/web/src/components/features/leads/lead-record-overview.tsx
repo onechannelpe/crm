@@ -1,12 +1,12 @@
 import { A } from "@solidjs/router";
 import { createSignal, For, Show } from "solid-js";
 
-import type { recordLeadCall } from "~/actions/lead-pipeline/interactions";
+import type { recordCall } from "~/actions/pipeline/commands/interactions";
 import {
-  recordLeadCall as recordLeadCallAction,
-  recordLeadNote as recordLeadNoteAction,
-} from "~/actions/lead-pipeline/interactions";
-import type { queryLeadDetail } from "~/actions/lead-pipeline/lead-detail";
+  addRecordNote,
+  recordCall as recordCallAction,
+} from "~/actions/pipeline/commands/interactions";
+import type { queryRecordDetail } from "~/actions/pipeline/queries/records";
 import Building2 from "~/components/icons/building-2";
 import CalendarDays from "~/components/icons/calendar-days";
 import CircleAlert from "~/components/icons/circle-alert";
@@ -20,7 +20,7 @@ import { formatDateTime } from "~/lib/utils";
 
 import styles from "./lead-record-overview.module.css";
 
-type LeadDetail = Awaited<ReturnType<typeof queryLeadDetail>>;
+type RecordDetail = Awaited<ReturnType<typeof queryRecordDetail>>;
 
 function stageVariant(stage: string) {
   if (stage === "READY_FOR_SALE") return "success" as const;
@@ -28,7 +28,7 @@ function stageVariant(stage: string) {
   return "secondary" as const;
 }
 
-function timelineIcon(kind: LeadDetail["timeline"][number]["kind"]) {
+function timelineIcon(kind: RecordDetail["timeline"][number]["kind"]) {
   if (kind === "call") {
     return <Phone size={14} />;
   }
@@ -52,38 +52,38 @@ const CALL_OUTCOME_OPTIONS = [
   { value: "qualified", label: "Calificado" },
   { value: "disqualified", label: "Descartado" },
 ] as const satisfies ReadonlyArray<{
-  value: Parameters<typeof recordLeadCall>[0]["outcome"];
+  value: Parameters<typeof recordCall>[0]["outcome"];
   label: string;
 }>;
 
 const COMPOSER_MODE_OPTIONS = ["call", "note"] as const;
 
 export function LeadRecordOverview(props: {
-  data: LeadDetail;
+  data: RecordDetail;
   compact?: boolean;
   onChanged?: () => void;
 }) {
   const [composerMode, setComposerMode] = createSignal<"call" | "note">("call");
   const [callOutcome, setCallOutcome] =
-    createSignal<Parameters<typeof recordLeadCall>[0]["outcome"]>("answered");
+    createSignal<Parameters<typeof recordCall>[0]["outcome"]>("answered");
   const [bodyText, setBodyText] = createSignal("");
   const [error, setError] = createSignal<string | null>(null);
   const [submitting, setSubmitting] = createSignal(false);
 
   const fields = () =>
     [
-      { label: "RUC", value: props.data.lead.ruc },
+      { label: "RUC", value: props.data.record.ruc },
       {
         label: "Razón social",
-        value: props.data.lead.razon_social ?? "Sin datos",
+        value: props.data.record.razon_social ?? "Sin datos",
       },
-      { label: "Dirección", value: props.data.lead.address ?? "Sin datos" },
-      { label: "Estado", value: props.data.lead.status ?? "Sin datos" },
-      { label: "Prioridad", value: props.data.lead.prioridad ?? "Sin datos" },
-      { label: "Creado", value: formatDateTime(props.data.lead.created_at) },
+      { label: "Dirección", value: props.data.record.address ?? "Sin datos" },
+      { label: "Estado", value: props.data.record.status ?? "Sin datos" },
+      { label: "Prioridad", value: props.data.record.prioridad ?? "Sin datos" },
+      { label: "Creado", value: formatDateTime(props.data.record.created_at) },
       {
         label: "Actualizado",
-        value: formatDateTime(props.data.lead.updated_at),
+        value: formatDateTime(props.data.record.updated_at),
       },
     ] as const;
 
@@ -101,14 +101,14 @@ export function LeadRecordOverview(props: {
 
     try {
       if (composerMode() === "call") {
-        await recordLeadCallAction({
-          leadId: props.data.lead.id,
+        await recordCallAction({
+          leadId: props.data.record.id,
           outcome: callOutcome(),
           notes: bodyText(),
         });
       } else {
-        await recordLeadNoteAction({
-          leadId: props.data.lead.id,
+        await addRecordNote({
+          leadId: props.data.record.id,
           body: bodyText(),
         });
       }
@@ -134,12 +134,12 @@ export function LeadRecordOverview(props: {
         </div>
         <div class={styles.heroText}>
           <div class={styles.heroTitle}>
-            {props.data.lead.razon_social ?? props.data.lead.ruc}
+            {props.data.record.razon_social ?? props.data.record.ruc}
           </div>
-          <div class={styles.heroSubtitle}>RUC {props.data.lead.ruc}</div>
+          <div class={styles.heroSubtitle}>RUC {props.data.record.ruc}</div>
         </div>
-        <Badge variant={stageVariant(props.data.lead.stage)}>
-          {props.data.lead.stage}
+        <Badge variant={stageVariant(props.data.record.stage)}>
+          {props.data.record.stage}
         </Badge>
       </section>
 
@@ -268,7 +268,7 @@ export function LeadRecordOverview(props: {
           >
             <A
               class={styles.primaryAction}
-              href={`/leads/${props.data.lead.id}/complete`}
+              href={`/leads/${props.data.record.id}/complete`}
             >
               Completar información comercial
             </A>
@@ -276,14 +276,14 @@ export function LeadRecordOverview(props: {
           <Show when={props.data.availableActions.includes("create-sale")}>
             <A
               class={styles.primaryAction}
-              href={`/sales/new/${props.data.lead.id}`}
+              href={`/sales/new/${props.data.record.id}`}
             >
               Crear venta
             </A>
           </Show>
           <A
             class={styles.secondaryAction}
-            href={`/leads/${props.data.lead.id}`}
+            href={`/leads/${props.data.record.id}`}
           >
             Abrir detalle completo
           </A>

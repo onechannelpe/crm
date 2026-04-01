@@ -1,7 +1,7 @@
 import { useNavigate, useParams } from "@solidjs/router";
 import { createSignal } from "solid-js";
 
-import { requestExecutiveInputCompletion } from "~/actions/lead-pipeline/lead-commands";
+import { requestCommercialInputCompletion } from "~/actions/pipeline/commands/records";
 import { AppPage } from "~/components/layout/page";
 import { toAppError } from "~/lib/app-errors";
 
@@ -19,7 +19,7 @@ export default function CompleteLeadPage() {
     if (!(e.currentTarget instanceof HTMLFormElement)) return;
     const fd = new FormData(e.currentTarget);
     try {
-      await requestExecutiveInputCompletion({
+      await requestCommercialInputCompletion({
         leadId: Number(params.leadId),
         proveedorActual: proveedorActual(),
         tasaActual: Number(fd.get("tasaActual")),

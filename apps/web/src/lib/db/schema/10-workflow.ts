@@ -140,24 +140,24 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createTable("pipeline_lead_interactions")
+    .createTable("pipeline_history_events")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("lead_id", "integer", (col) =>
       col.notNull().references("pipeline_leads.id").onDelete("cascade"),
     )
-    .addColumn("kind", "varchar(20)", (col) => col.notNull())
-    .addColumn("outcome", "varchar(30)")
-    .addColumn("body_text", "text")
-    .addColumn("created_by", "integer", (col) =>
-      col.notNull().references("users.id"),
+    .addColumn("event_type", "varchar(40)", (col) => col.notNull())
+    .addColumn("actor_user_id", "integer", (col) => col.references("users.id"))
+    .addColumn("subject_user_id", "integer", (col) =>
+      col.references("users.id"),
     )
-    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("payload_json", "text")
+    .addColumn("occurred_at", "integer", (col) => col.notNull())
     .execute();
 
   await db.schema
-    .createIndex("idx_pipeline_lead_interactions_lead")
-    .on("pipeline_lead_interactions")
-    .columns(["lead_id", "created_at"])
+    .createIndex("idx_pipeline_history_events_lead")
+    .on("pipeline_history_events")
+    .columns(["lead_id", "occurred_at"])
     .execute();
 
   await db.schema

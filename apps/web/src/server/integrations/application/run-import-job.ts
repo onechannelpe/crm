@@ -1,7 +1,7 @@
 import { TextDecoder } from "node:util";
 
 import { db } from "~/lib/db/db";
-import { reviewLead } from "~/server/lead-pipeline/application/lead-commands";
+import { reviewRecord } from "~/server/pipeline/application/commands/review-record";
 import { createAuditService } from "~/server/shared/audit";
 import {
   createPipelineRepos,
@@ -99,7 +99,7 @@ async function runStatusImportJob(
           ? await repos.users.findById(lead.executive_id)
           : null;
 
-      const reviewed = await reviewLead({
+      const reviewed = await reviewRecord({
         leadId: lead.id,
         status: row.status,
         prioridad: lead.prioridad ?? "P1",
@@ -164,7 +164,7 @@ async function runPrioridadImportJob(
           ? await repos.users.findById(lead.executive_id)
           : null;
 
-      const reviewed = await reviewLead({
+      const reviewed = await reviewRecord({
         leadId: lead.id,
         status: lead.status ?? "DISPONIBLE",
         prioridad: row.prioridad,

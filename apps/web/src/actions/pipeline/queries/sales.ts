@@ -1,0 +1,33 @@
+"use server";
+
+import { getSaleDetail } from "~/server/pipeline/application/queries/get-sale-detail";
+import { listSales } from "~/server/pipeline/application/queries/list-sales";
+import { runAction } from "~/server/shared/action-runtime";
+
+export async function querySales(filters: { limit?: number; offset?: number }) {
+  return runAction({
+    actionName: "pipeline.list_sales",
+    permission: "lead:register",
+    input: filters,
+    execute: (ctx) =>
+      listSales({
+        actorRole: ctx.actor.role,
+        actorUserId: ctx.actor.userId,
+        ...filters,
+      }),
+  });
+}
+
+export async function querySaleDetail(saleId: number) {
+  return runAction({
+    actionName: "pipeline.get_sale_detail",
+    permission: "lead:register",
+    input: { saleId },
+    execute: (ctx) =>
+      getSaleDetail({
+        actorRole: ctx.actor.role,
+        actorUserId: ctx.actor.userId,
+        saleId,
+      }),
+  });
+}

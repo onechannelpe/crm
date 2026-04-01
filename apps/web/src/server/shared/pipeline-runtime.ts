@@ -1,13 +1,13 @@
 import { config } from "~/lib/config";
 import { db } from "~/lib/db/db";
 import { createAppNotificationsRepo } from "~/server/notifications/repos-app-notifications";
+import { createAssignmentRepo } from "~/server/pipeline/infrastructure/assignment-repo";
+import { createCommercialInputRepo } from "~/server/pipeline/infrastructure/commercial-input-repo";
+import { createRecordRepo } from "~/server/pipeline/infrastructure/record-repo";
 import { createUsersRepo } from "~/server/users/repos-users";
 
 import { createIntegrationJobRepo } from "../integrations/infrastructure/integration-job-repo";
 import { createJobBlobStore } from "../integrations/job-blob-store";
-import { createLeadAssignmentRepo } from "../lead-pipeline/infrastructure/lead-assignment-repo";
-import { createLeadCommercialInputRepo } from "../lead-pipeline/infrastructure/lead-commercial-input-repo";
-import { createLeadRepo } from "../lead-pipeline/infrastructure/lead-repo";
 import { createAppNotificationCenter } from "../notifications/app-center-service";
 import { createQuotationRepo } from "../quotations/infrastructure/quotation-repo";
 import { createSaleRepo } from "../sales/infrastructure/sale-repo";
@@ -17,9 +17,9 @@ import { createAuditLogsRepo } from "./repos-audit-logs";
 
 export function createPipelineRepos(executor: DatabaseExecutor) {
   return {
-    leads: createLeadRepo(executor),
-    leadCommercialInputs: createLeadCommercialInputRepo(executor),
-    leadAssignments: createLeadAssignmentRepo(executor),
+    leads: createRecordRepo(executor),
+    leadCommercialInputs: createCommercialInputRepo(executor),
+    leadAssignments: createAssignmentRepo(executor),
     quotations: createQuotationRepo(executor),
     sales: createSaleRepo(executor),
     integrationJobs: createIntegrationJobRepo(executor),

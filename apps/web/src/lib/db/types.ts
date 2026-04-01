@@ -770,6 +770,19 @@ export type LeadCallOutcome =
   | "qualified"
   | "disqualified";
 
+export type PipelineHistoryEventType =
+  | "record_registered"
+  | "record_reviewed"
+  | "workflow_stage_changed"
+  | "record_assigned"
+  | "record_reassigned"
+  | "commercial_input_completed"
+  | "quotation_created"
+  | "sale_approved"
+  | "sale_created"
+  | "call_logged"
+  | "note_added";
+
 export type ExecutiveCategory = "elite" | "corporativa";
 
 export const LEAD_STAGES = [
@@ -873,14 +886,14 @@ export interface PipelineLeadAssignmentsTable {
   assigned_at: number;
 }
 
-export interface PipelineLeadInteractionsTable {
+export interface PipelineHistoryEventsTable {
   id: Generated<number>;
   lead_id: number;
-  kind: LeadInteractionKind;
-  outcome: LeadCallOutcome | null;
-  body_text: string | null;
-  created_by: number;
-  created_at: number;
+  event_type: PipelineHistoryEventType;
+  actor_user_id: number | null;
+  subject_user_id: number | null;
+  payload_json: string | null;
+  occurred_at: number;
 }
 
 export interface LeadSourcingPoliciesTable {
@@ -973,7 +986,7 @@ export interface Database {
   pipeline_quotations: PipelineQuotationsTable;
   pipeline_sales: PipelineSalesTable;
   pipeline_lead_assignments: PipelineLeadAssignmentsTable;
-  pipeline_lead_interactions: PipelineLeadInteractionsTable;
+  pipeline_history_events: PipelineHistoryEventsTable;
   lead_sourcing_policies: LeadSourcingPoliciesTable;
   pipeline_integration_jobs: PipelineIntegrationJobsTable;
 }
@@ -1035,7 +1048,7 @@ export type PipelineLeadCommercialInput =
 export type PipelineQuotation = Selectable<PipelineQuotationsTable>;
 export type PipelineSale = Selectable<PipelineSalesTable>;
 export type PipelineLeadAssignment = Selectable<PipelineLeadAssignmentsTable>;
-export type PipelineLeadInteraction = Selectable<PipelineLeadInteractionsTable>;
+export type PipelineHistoryEvent = Selectable<PipelineHistoryEventsTable>;
 export type LeadSourcingPolicy = Selectable<LeadSourcingPoliciesTable>;
 
 export type NewUser = Insertable<UsersTable>;

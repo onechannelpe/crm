@@ -1,6 +1,6 @@
 import { createAsync } from "@solidjs/router";
 
-import { queryLeadList } from "~/actions/lead-pipeline/lead-detail";
+import { queryRecordList } from "~/actions/pipeline/queries/records";
 import Building2 from "~/components/icons/building-2";
 import List from "~/components/icons/list";
 import { RecordIndexScreen } from "~/features/record-index/components/screen";
@@ -22,7 +22,7 @@ import { LEADS_RECORD_INDEX_SORT, type LeadSortKey } from "./sorts";
 import styles from "./styles.module.css";
 
 export function LeadsRecordIndex() {
-  const leads = createAsync(() => queryLeadList({}));
+  const leads = createAsync(() => queryRecordList({}));
   const { rowOpen } = useOpenLeadRecord();
   const createAction = useCreateLeadRecordAction();
   const source = (): RecordIndexSource<LeadRow> => {

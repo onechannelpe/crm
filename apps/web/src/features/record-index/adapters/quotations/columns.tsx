@@ -1,4 +1,4 @@
-import { queryLeadList } from "~/actions/lead-pipeline/lead-detail";
+import { queryRecordList } from "~/actions/pipeline/queries/records";
 import Building2 from "~/components/icons/building-2";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import Package from "~/components/icons/package";
@@ -8,7 +8,7 @@ import type { DataGridColumn } from "~/features/data-grid/model/types";
 import styles from "./styles.module.css";
 
 export type QuotationRow = Awaited<
-  ReturnType<typeof queryLeadList>
+  ReturnType<typeof queryRecordList>
 >["rows"][number];
 
 export const QUOTATIONS_RECORD_INDEX_COLUMNS = [

@@ -1,6 +1,6 @@
 import { createAsync } from "@solidjs/router";
 
-import { querySales } from "~/actions/lead-pipeline/sales";
+import { querySales } from "~/actions/pipeline/queries/sales";
 import Building2 from "~/components/icons/building-2";
 import List from "~/components/icons/list";
 import { RecordIndexScreen } from "~/features/record-index/components/screen";

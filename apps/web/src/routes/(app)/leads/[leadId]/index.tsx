@@ -1,7 +1,7 @@
 import { createAsync, useParams } from "@solidjs/router";
 import { createSignal, Show } from "solid-js";
 
-import { queryLeadDetail } from "~/actions/lead-pipeline/lead-detail";
+import { queryRecordDetail } from "~/actions/pipeline/queries/records";
 import { LeadRecordOverview } from "~/components/features/leads/lead-record-overview";
 import { AppPage } from "~/components/layout/page";
 
@@ -10,7 +10,7 @@ export default function LeadDetailPage() {
   const [refreshTick, setRefreshTick] = createSignal(0);
   const data = createAsync(() => {
     refreshTick();
-    return queryLeadDetail(Number(params.leadId));
+    return queryRecordDetail(Number(params.leadId));
   });
 
   return (

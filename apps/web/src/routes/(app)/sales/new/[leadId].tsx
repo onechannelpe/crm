@@ -1,15 +1,15 @@
 import { createAsync, useNavigate, useParams } from "@solidjs/router";
 import { createSignal, Show } from "solid-js";
 
-import { queryLeadDetail } from "~/actions/lead-pipeline/lead-detail";
-import { requestSaleCreation } from "~/actions/lead-pipeline/sales";
+import { requestSaleCreation } from "~/actions/pipeline/commands/sales";
+import { queryRecordDetail } from "~/actions/pipeline/queries/records";
 import { AppPage } from "~/components/layout/page";
 import { toAppError } from "~/lib/app-errors";
 
 export default function NewLeadSalePage() {
   const params = useParams<{ leadId: string }>();
   const navigate = useNavigate();
-  const data = createAsync(() => queryLeadDetail(Number(params.leadId)));
+  const data = createAsync(() => queryRecordDetail(Number(params.leadId)));
   const [error, setError] = createSignal<string | null>(null);
   const [submitting, setSubmitting] = createSignal(false);
   const [proveedorActual, setProveedorActual] = createSignal("");
@@ -69,7 +69,7 @@ export default function NewLeadSalePage() {
               Nueva Venta
             </h1>
             <p style={{ margin: "0 0 1.5rem", color: "#6b7280" }}>
-              Lead: {d().lead.ruc} — {d().lead.razon_social ?? "—"}
+              Lead: {d().record.ruc} — {d().record.razon_social ?? "—"}
             </p>
 
             <form
