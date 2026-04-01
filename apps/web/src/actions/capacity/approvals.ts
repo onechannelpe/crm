@@ -7,7 +7,8 @@ import {
   grantSearchCapacityDirect as grantSearchCapacityService,
   rejectCapacityRequest as rejectCapacityService,
 } from "~/server/capacity/application/commands";
-import { createCapacityDeps } from "~/server/capacity/infrastructure/deps";
+import { createCapacityApprovalContext } from "~/server/capacity/infrastructure/approval-context";
+import { createCapacityCommandsContext } from "~/server/capacity/infrastructure/commands-context";
 import { runAction } from "~/server/shared/action-runtime";
 
 import { parseCapacityDecisionInput, parseCapacityGrantInput } from "./input";
@@ -20,7 +21,11 @@ export async function approveCapacity(requestId: number, note?: string) {
     permission: "capacity:approve",
     input: decisionInput.value,
     execute: (ctx) =>
-      approveCapacityService(ctx, createCapacityDeps(), decisionInput.value),
+      approveCapacityService(
+        ctx,
+        createCapacityApprovalContext(),
+        decisionInput.value,
+      ),
   });
 }
 
@@ -34,7 +39,7 @@ export async function rejectCapacity(requestId: number, note: string) {
     permission: "capacity:approve",
     input: { requestId: decisionInput.value.requestId, note: safeNote },
     execute: (ctx) =>
-      rejectCapacityService(ctx, createCapacityDeps(), {
+      rejectCapacityService(ctx, createCapacityApprovalContext(), {
         requestId: decisionInput.value.requestId,
         note: safeNote,
       }),
@@ -53,7 +58,7 @@ export async function grantMoreSearches(
     permission: "capacity:manage",
     input: grantInput.value,
     execute: (ctx) =>
-      grantSearchCapacityService(ctx, createCapacityDeps(), {
+      grantSearchCapacityService(ctx, createCapacityCommandsContext().repos, {
         targetUserId: grantInput.value.userId,
         amount: grantInput.value.amount,
         reason: grantInput.value.reason,
@@ -73,7 +78,7 @@ export async function grantMoreLeadRefill(
     permission: "capacity:manage",
     input: grantInput.value,
     execute: (ctx) =>
-      grantLeadCapacityService(ctx, createCapacityDeps(), {
+      grantLeadCapacityService(ctx, createCapacityCommandsContext().repos, {
         targetUserId: grantInput.value.userId,
         amount: grantInput.value.amount,
         reason: grantInput.value.reason,

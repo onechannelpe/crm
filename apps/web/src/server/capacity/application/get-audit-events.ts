@@ -4,7 +4,7 @@ import type { AppContext } from "~/server/shared/action-runtime";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import type { CapacityDeps } from "../infrastructure/deps";
+import type { CapacityReadContext } from "../infrastructure/read-context";
 
 export type AuditChangeValue =
   | string
@@ -64,7 +64,7 @@ function parseAuditChanges(raw: unknown): AuditChangeValue {
 
 export async function getAuditEvents(
   ctx: AppContext,
-  deps: Pick<CapacityDeps, "repos">,
+  deps: CapacityReadContext,
   input: { limit?: number },
 ): Promise<Result<CapacityAuditEvent[], DomainError>> {
   try {

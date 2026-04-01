@@ -2,11 +2,14 @@ import type { APIEvent } from "@solidjs/start/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  requirePermission: vi.fn(),
-  claimInstallationSession: vi.fn(),
-  refreshInstallationSession: vi.fn(),
-  ingestRuntimeEvent: vi.fn(),
-  createHandoffToken: vi.fn(),
+  requirePermission:
+    vi.fn<
+      () => Promise<{ userId: number; sessionId: string; branchId: number }>
+    >(),
+  claimInstallationSession: vi.fn<() => Promise<unknown>>(),
+  refreshInstallationSession: vi.fn<() => Promise<unknown>>(),
+  ingestRuntimeEvent: vi.fn<() => Promise<unknown>>(),
+  createHandoffToken: vi.fn<() => Promise<unknown>>(),
 }));
 
 vi.mock("../../src/lib/auth/access/session", () => ({

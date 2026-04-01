@@ -14,11 +14,11 @@ import type { AppContext } from "~/server/shared/action-runtime";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import type { AuthDeps } from "../infrastructure/deps";
+import type { TotpEnrollmentContext } from "../infrastructure/totp-context";
 
 export async function beginTotpEnrollment(
   ctx: AppContext,
-  deps: Pick<AuthDeps, "repos">,
+  deps: TotpEnrollmentContext,
 ): Promise<
   Result<
     {
@@ -53,7 +53,7 @@ export async function beginTotpEnrollment(
 
 export async function finishTotpEnrollment(
   ctx: AppContext,
-  deps: Pick<AuthDeps, "repos">,
+  deps: TotpEnrollmentContext,
   input: { code: string },
 ): Promise<
   Result<{ recoveryCodes: string[]; sessionToken: string }, DomainError>

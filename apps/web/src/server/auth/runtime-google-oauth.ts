@@ -1,7 +1,7 @@
-import { createAuthDeps } from "./infrastructure/deps";
+import { createAuthLoginContext } from "./infrastructure/login-context";
 
 export function getGoogleOAuthCallbackRuntime() {
-  const deps = createAuthDeps();
+  const deps = createAuthLoginContext();
   return {
     repos: deps.repos,
     privilegedLoginAlertSender: deps.privilegedLoginAlertSender,

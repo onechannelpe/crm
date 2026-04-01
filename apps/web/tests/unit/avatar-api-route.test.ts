@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { getSessionMock, getMock } = vi.hoisted(() => ({
-  getSessionMock: vi.fn(),
-  getMock: vi.fn(),
+  getSessionMock: vi.fn<() => Promise<{ userId: number } | null>>(),
+  getMock: vi.fn<() => Promise<unknown>>(),
 }));
 
 vi.mock("../../src/lib/auth/access/session", () => ({

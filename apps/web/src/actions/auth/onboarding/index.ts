@@ -13,7 +13,7 @@ import {
   completeOnboarding as completeOnboardingService,
   finishPasskeyRegistration as finishPasskeyRegistrationService,
 } from "~/server/auth/application/onboarding";
-import { createAuthDeps } from "~/server/auth/infrastructure/deps";
+import { createAuthOnboardingContext } from "~/server/auth/infrastructure/onboarding-context";
 import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
 import { isErr } from "~/server/shared/result";
 
@@ -40,12 +40,15 @@ export async function completeOnboarding(
 ): Promise<{ redirectTo: string }> {
   const session = await requireSession();
   const request = getRequestClientMetadata();
-  const result = await completeOnboardingService(createAuthDeps(), {
-    session,
-    phoneE164: normalizePeruvianPhone(phoneE164),
-    ipAddress: request.ipAddress,
-    userAgent: request.userAgent,
-  });
+  const result = await completeOnboardingService(
+    createAuthOnboardingContext(),
+    {
+      session,
+      phoneE164: normalizePeruvianPhone(phoneE164),
+      ipAddress: request.ipAddress,
+      userAgent: request.userAgent,
+    },
+  );
   if (isErr(result)) {
     mapOnboardingError(result.error);
   }
@@ -60,7 +63,7 @@ export async function completePasskeyOnboarding(
   const session = await requireSession();
   const request = getRequestClientMetadata();
   const registrationResult = await finishPasskeyRegistrationService(
-    createAuthDeps(),
+    createAuthOnboardingContext().repos,
     {
       session,
       challengeId,
@@ -73,16 +76,19 @@ export async function completePasskeyOnboarding(
   if (isErr(registrationResult)) {
     throw internalError(registrationResult.error.message);
   }
-  const result = await completeOnboardingService(createAuthDeps(), {
-    session: {
-      ...session,
-      strongAuthMethod: "passkey",
-      strongAuthAt: Date.now(),
+  const result = await completeOnboardingService(
+    createAuthOnboardingContext(),
+    {
+      session: {
+        ...session,
+        strongAuthMethod: "passkey",
+        strongAuthAt: Date.now(),
+      },
+      phoneE164: normalizePeruvianPhone(phoneE164),
+      ipAddress: request.ipAddress,
+      userAgent: request.userAgent,
     },
-    phoneE164: normalizePeruvianPhone(phoneE164),
-    ipAddress: request.ipAddress,
-    userAgent: request.userAgent,
-  });
+  );
   if (isErr(result)) {
     mapOnboardingError(result.error);
   }

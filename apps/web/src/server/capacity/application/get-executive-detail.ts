@@ -14,7 +14,7 @@ import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 import { canManageExecutive } from "../domain/access-policy";
 import { fromDbCapacityRequestKind } from "../domain/request-policy";
 import type { CapacityRequestStatus } from "../domain/types";
-import type { CapacityDeps } from "../infrastructure/deps";
+import type { CapacityReadContext } from "../infrastructure/read-context";
 
 export type ExecutiveCapacityDetail = {
   executive: {
@@ -42,7 +42,7 @@ export type ExecutiveCapacityDetail = {
 
 export async function getExecutiveDetail(
   ctx: AppContext,
-  deps: Pick<CapacityDeps, "repos">,
+  deps: CapacityReadContext,
   input: { userId: number },
 ): Promise<Result<ExecutiveCapacityDetail, DomainError>> {
   try {

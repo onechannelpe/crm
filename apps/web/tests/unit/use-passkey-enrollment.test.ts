@@ -9,10 +9,13 @@ const {
   createRegistrationResponse,
   isPasskeyRegistrationSupported,
 } = vi.hoisted(() => ({
-  beginPasskeyRegistration: vi.fn(),
-  finishPasskeyRegistration: vi.fn(),
-  createRegistrationResponse: vi.fn(),
-  isPasskeyRegistrationSupported: vi.fn(),
+  beginPasskeyRegistration:
+    vi.fn<
+      () => Promise<{ challengeId: string; options: { challenge: string } }>
+    >(),
+  finishPasskeyRegistration: vi.fn<() => Promise<void>>(),
+  createRegistrationResponse: vi.fn<() => Promise<{ id: string }>>(),
+  isPasskeyRegistrationSupported: vi.fn<() => boolean>(),
 }));
 
 vi.mock("../../src/actions/auth/onboarding/passkey", () => ({
@@ -41,8 +44,10 @@ describe("usePasskeyEnrollment", () => {
   });
 
   it("shows the configured toast after registering a passkey", async () => {
-    const showToast = vi.fn();
-    const refreshStatus = vi.fn().mockResolvedValue(undefined);
+    const showToast = vi.fn<(kind: string, message: string) => void>();
+    const refreshStatus = vi
+      .fn<() => Promise<void>>()
+      .mockResolvedValue(undefined);
 
     let dispose: () => void = () => undefined;
     const enrollment = createRoot((rootDispose) => {
@@ -68,8 +73,8 @@ describe("usePasskeyEnrollment", () => {
   });
 
   it("shows the registration failure message when setup fails", async () => {
-    const showToast = vi.fn();
-    const refreshStatus = vi.fn();
+    const showToast = vi.fn<(kind: string, message: string) => void>();
+    const refreshStatus = vi.fn<() => void>();
     finishPasskeyRegistration.mockRejectedValue(new Error("boom"));
 
     let dispose: () => void = () => undefined;

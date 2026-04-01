@@ -1,39 +1,36 @@
 import { resolveWorkspaceContext } from "~/lib/auth/access/workspace-context";
 import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
 import { requiresStrongAuthRole } from "~/lib/auth/security/strong-auth-status";
-import { deleteSessionCookie } from "~/lib/auth/session/cookies";
-import { invalidateSession } from "~/lib/auth/session/session-manager";
 import type { AppContext } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
-import type { AuthDeps } from "../infrastructure/deps";
+import type { AuthSessionReadContext } from "../infrastructure/session-context";
 import type { CurrentUserView } from "../types";
+import type { AuthSessionLogoutPort } from "./ports";
 
 export async function logoutUser(
   ctx: AppContext,
-  deps: Pick<AuthDeps, "repos">,
+  port: AuthSessionLogoutPort,
 ): Promise<Result<void, DomainError>> {
   const { sessionId, userId } = ctx.actor;
+  const now = ctx.now();
 
-  await invalidateSession(sessionId);
-  await deps.repos.extensionRuntime.revokeInstallationSessionsByAuthSession(
-    sessionId,
-    ctx.now(),
-  );
-  await deps.repos.extensionRuntime.updateExecutiveSyncHealthByUser({
-    user_id: userId,
-    sync_health: "reauth_required",
-    sync_updated_at: ctx.now(),
+  await port.invalidateSession(sessionId);
+  await port.revokeInstallationSessionsByAuthSession(sessionId, now);
+  await port.updateExecutiveSyncHealth({
+    userId,
+    syncHealth: "reauth_required",
+    syncUpdatedAt: now,
   });
-  deleteSessionCookie();
-  await deps.repos.auditLogs.create({
-    user_id: userId,
+  port.clearSessionCookie();
+  await port.createAuditLog({
+    userId,
     action: "logout",
-    entity_type: "user",
-    entity_id: userId,
+    entityType: "user",
+    entityId: userId,
     changes: null,
-    created_at: ctx.now(),
+    createdAt: now,
   });
 
   return Ok(undefined);
@@ -41,7 +38,7 @@ export async function logoutUser(
 
 export async function getCurrentUser(
   ctx: AppContext,
-  deps: Pick<AuthDeps, "repos">,
+  deps: AuthSessionReadContext,
 ): Promise<Result<CurrentUserView | null, DomainError>> {
   const { userId, role, sessionClass, primaryAuthMethod, strongAuthMethod } =
     ctx.actor;

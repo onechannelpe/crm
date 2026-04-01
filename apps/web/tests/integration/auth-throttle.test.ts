@@ -31,10 +31,11 @@ describe("auth throttle", () => {
     count: number,
     task: (index: number) => Promise<void>,
   ): Promise<void> {
-    return Array.from({ length: count }).reduce<Promise<void>>(
-      (prev, _, index) => prev.then(() => task(index)),
-      Promise.resolve(),
-    );
+    let sequence = Promise.resolve();
+    for (let index = 0; index < count; index += 1) {
+      sequence = sequence.then(() => task(index));
+    }
+    return sequence;
   }
 
   it("blocks account after repeated failures across many ips", async () => {

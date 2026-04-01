@@ -8,7 +8,7 @@ import {
 } from "~/server/shared/context";
 import { createUserProvisioningService } from "~/server/users/service-user-provisioning";
 
-export function createTeamDeps() {
+export function createTeamInviteContext() {
   return {
     repos: {
       teams: repos.teams,
@@ -48,4 +48,22 @@ export function createTeamDeps() {
   };
 }
 
-export type TeamDeps = ReturnType<typeof createTeamDeps>;
+type TeamInviteContext = ReturnType<typeof createTeamInviteContext>;
+
+export type TeamInviteRepos = TeamInviteContext["repos"];
+export type TeamInviteProvisioningContext = Pick<
+  TeamInviteContext,
+  "createProvisioningService"
+>;
+export type TeamInviteCreateContext = Pick<
+  TeamInviteContext,
+  "createProvisioningService" | "enforceInviteCreateRateLimit"
+>;
+export type TeamInviteResendContext = Pick<
+  TeamInviteContext,
+  "repos" | "createProvisioningService"
+>;
+export type TeamInviteAcceptanceContext = Pick<
+  TeamInviteContext,
+  "createProvisioningService" | "issuePreAuthSession"
+>;

@@ -1,72 +1,108 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { Ok } from "../../src/server/shared/result";
+import type { Role } from "~/lib/auth/access/rbac";
 
-const { runActionMock, teamsFindByBranchMock, listPendingInvitesMock } =
-  vi.hoisted(() => ({
-    runActionMock: vi.fn(),
-    teamsFindByBranchMock: vi.fn(),
-    listPendingInvitesMock: vi.fn(),
-  }));
+import type { AppContext } from "../../src/server/shared/action-runtime";
+import { Err, Ok } from "../../src/server/shared/result";
+import { getInviteManagement } from "../../src/server/team/application/invites";
+import type { InviteManagementQueryPort } from "../../src/server/team/application/ports";
 
-vi.mock("../../src/server/shared/action-runtime", () => ({
-  runAction: runActionMock,
-}));
-
-vi.mock("../../src/server/team/infrastructure/deps", () => ({
-  createTeamDeps: () => ({
-    repos: {
-      teams: {
-        findByBranch: teamsFindByBranchMock,
-      },
+function makeContext(role: Role = "hr"): AppContext {
+  return {
+    actor: {
+      sessionId: "session-1",
+      userId: 7,
+      role,
+      branchId: 3,
+      onboardingCompleted: true,
+      sessionClass: "app",
+      primaryAuthMethod: "password",
+      strongAuthMethod: null,
+      strongAuthAt: null,
     },
-    createProvisioningService: () => ({
-      listPendingInvites: listPendingInvitesMock,
-    }),
-    enforceInviteCreateRateLimit: vi.fn(),
-    issuePreAuthSession: vi.fn(),
-  }),
-}));
+    requestId: "req-test",
+    traceId: "trace-test",
+    ipAddress: "127.0.0.1",
+    userAgent: "vitest",
+    publicOrigin: "http://localhost:3000",
+    now: () => 1_700_000_000_000,
+  };
+}
 
-import { getInviteManagement } from "../../src/actions/team/read";
+describe("getInviteManagement", () => {
+  it("returns teams, pending invites, and assignable roles for the actor branch", async () => {
+    const teamBranchCalls: number[] = [];
+    const inviteBranchCalls: number[] = [];
 
-describe("invite management query", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    runActionMock.mockImplementation(async (params) => {
-      const result = await params.execute({
-        actor: {
-          userId: 7,
-          role: "hr",
-          branchId: 3,
-        },
-      });
-      return result.value;
-    });
-    teamsFindByBranchMock.mockResolvedValue([{ id: 11, name: "Operaciones" }]);
-    listPendingInvitesMock.mockResolvedValue(
-      Ok([
-        {
-          inviteId: 1001,
-          userId: 91,
-          email: "pending@crm.local",
-          fullName: "Pending User",
-          role: "executive",
-          teamId: null,
-          expiresAt: Date.now() + 60_000,
-          createdAt: Date.now(),
-          createdByUserId: 7,
-          sentAt: Date.now(),
-        },
-      ]),
-    );
+    const port = {
+      listTeamsByBranch: async (branchId: number) => {
+        teamBranchCalls.push(branchId);
+        return [{ id: 11, name: "Operaciones" }];
+      },
+      listPendingInvites: async (branchId: number) => {
+        inviteBranchCalls.push(branchId);
+        return Ok([
+          {
+            inviteId: 1001,
+            userId: 91,
+            email: "pending@crm.local",
+            names: "Pending",
+            firstSurname: "User",
+            secondSurname: "",
+            role: "executive",
+            teamId: null,
+            expiresAt: 1_700_000_060_000,
+            createdAt: 1_700_000_000_000,
+            createdByUserId: 7,
+            sentAt: 1_700_000_000_100,
+          },
+        ]);
+      },
+    } satisfies InviteManagementQueryPort;
+
+    const result = await getInviteManagement(makeContext(), port);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      throw new Error("expected invite management result");
+    }
+
+    expect(teamBranchCalls).toEqual([3]);
+    expect(inviteBranchCalls).toEqual([3]);
+    expect(result.value.teams).toEqual([{ id: 11, name: "Operaciones" }]);
+    expect(result.value.pendingInvites).toEqual([
+      expect.objectContaining({
+        inviteId: 1001,
+        email: "pending@crm.local",
+      }),
+    ]);
+    expect(result.value.assignableRoles).toEqual([
+      { value: "executive", label: "Ejecutivo" },
+      { value: "supervisor", label: "Supervisor" },
+      { value: "back_office", label: "Validación de ventas" },
+      { value: "sales_manager", label: "Gerente de ventas" },
+      { value: "logistics", label: "Logística" },
+      { value: "hr", label: "RRHH" },
+    ]);
   });
 
-  it("fetches invites and teams for hr", async () => {
-    const im = await getInviteManagement();
-    expect(teamsFindByBranchMock).toHaveBeenCalledWith(3);
-    expect(listPendingInvitesMock).toHaveBeenCalledWith(3);
-    expect(im.pendingInvites).toHaveLength(1);
-    expect(im.teams).toEqual([{ id: 11, name: "Operaciones" }]);
+  it("propagates provisioning errors without masking them", async () => {
+    const port = {
+      listTeamsByBranch: async () => [{ id: 11, name: "Operaciones" }],
+      listPendingInvites: async () =>
+        Err({
+          kind: "unexpected",
+          code: "invite_read_failed",
+          message: "Invite service unavailable",
+        }),
+    } satisfies InviteManagementQueryPort;
+
+    const result = await getInviteManagement(makeContext(), port);
+
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error("expected invite management error");
+    }
+    expect(result.error.code).toBe("invite_read_failed");
   });
 });

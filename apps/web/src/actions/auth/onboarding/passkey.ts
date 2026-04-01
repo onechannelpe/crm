@@ -10,18 +10,21 @@ import {
   beginPasskeyRegistration as beginPasskeyRegistrationService,
   finishPasskeyRegistration as finishPasskeyRegistrationService,
 } from "~/server/auth/application/onboarding";
-import { createAuthDeps } from "~/server/auth/infrastructure/deps";
+import { createAuthOnboardingContext } from "~/server/auth/infrastructure/onboarding-context";
 import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
 import { isErr } from "~/server/shared/result";
 
 export async function beginPasskeyRegistration(): Promise<PasskeyEnrollmentChallenge> {
   const session = await requireSession();
   const { ipAddress } = getRequestClientMetadata();
-  const result = await beginPasskeyRegistrationService(createAuthDeps(), {
-    userId: session.userId,
-    ipAddress,
-    createWebauthnProvider: createRequestPasskeyProviderFactory(),
-  });
+  const result = await beginPasskeyRegistrationService(
+    createAuthOnboardingContext().repos,
+    {
+      userId: session.userId,
+      ipAddress,
+      createWebauthnProvider: createRequestPasskeyProviderFactory(),
+    },
+  );
   if (isErr(result)) {
     throwDomainError(result.error);
   }
@@ -34,14 +37,17 @@ export async function finishPasskeyRegistration(
 ): Promise<void> {
   const session = await requireSession();
   const request = getRequestClientMetadata();
-  const result = await finishPasskeyRegistrationService(createAuthDeps(), {
-    session,
-    challengeId,
-    response,
-    ipAddress: request.ipAddress,
-    userAgent: request.userAgent,
-    createWebauthnProvider: createRequestPasskeyProviderFactory(),
-  });
+  const result = await finishPasskeyRegistrationService(
+    createAuthOnboardingContext().repos,
+    {
+      session,
+      challengeId,
+      response,
+      ipAddress: request.ipAddress,
+      userAgent: request.userAgent,
+      createWebauthnProvider: createRequestPasskeyProviderFactory(),
+    },
+  );
   if (isErr(result)) {
     throwDomainError(result.error);
   }
