@@ -33,7 +33,9 @@ bun run dev:web
 bun run dev:worker
 ```
 
-`bun run dev` starts the web app and runs migrations and seeds before starting Vite. `bun run dev:worker` starts `worker:maintenance`.
+From the repo root, `bun run dev` starts engine, web, and worker.
+Web startup runs migrations and seeds before Vite starts.
+`bun run dev:worker` starts only the maintenance worker.
 
 Run from `apps/web/`:
 
