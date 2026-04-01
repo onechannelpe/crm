@@ -6,7 +6,7 @@ import { repos } from "~/server/shared/context";
 
 import type { AdminSessionRevocationPort } from "../application/ports";
 
-export function createAdminSessionRevocationPort(): AdminSessionRevocationPort {
+export function createAdminSessionRevocationContext(): AdminSessionRevocationPort {
   return {
     invalidateSession,
     invalidateUserSessions,
@@ -22,11 +22,22 @@ export function createAdminSessionRevocationPort(): AdminSessionRevocationPort {
         now,
       );
     },
-    async updateExecutiveSyncHealthByUser(input) {
-      await repos.extensionRuntime.updateExecutiveSyncHealthByUser(input);
+    async updateExecutiveSyncHealth(input) {
+      await repos.extensionRuntime.updateExecutiveSyncHealthByUser({
+        user_id: input.userId,
+        sync_health: input.syncHealth,
+        sync_updated_at: input.syncUpdatedAt,
+      });
     },
     async createAuditLog(input) {
-      await repos.auditLogs.create(input);
+      await repos.auditLogs.create({
+        user_id: input.userId,
+        action: input.action,
+        entity_type: input.entityType,
+        entity_id: input.entityId,
+        changes: input.changes,
+        created_at: input.createdAt,
+      });
     },
   };
 }

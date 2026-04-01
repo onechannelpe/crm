@@ -8,12 +8,12 @@ import type { AdminSessionRevocationPort } from "../../src/server/auth/applicati
 import type { AppContext } from "../../src/server/shared/action-runtime";
 
 type AuditPayload = {
-  user_id: number;
+  userId: number;
   action: string;
-  entity_type: string;
-  entity_id: number;
+  entityType: string;
+  entityId: number;
   changes: string;
-  created_at: number;
+  createdAt: number;
 };
 
 function makeContext(): AppContext {
@@ -45,9 +45,9 @@ function makeDeps() {
   const authSessionRevocations: Array<{ sessionId: string; now: number }> = [];
   const userRevocations: Array<{ userId: number; now: number }> = [];
   const syncUpdates: Array<{
-    user_id: number;
-    sync_health: string;
-    sync_updated_at: number;
+    userId: number;
+    syncHealth: string;
+    syncUpdatedAt: number;
   }> = [];
 
   return {
@@ -67,7 +67,7 @@ function makeDeps() {
       revokeInstallationSessionsByUser: async (userId: number, now: number) => {
         userRevocations.push({ userId, now });
       },
-      updateExecutiveSyncHealthByUser: async (payload) => {
+      updateExecutiveSyncHealth: async (payload) => {
         syncUpdates.push(payload);
       },
       createAuditLog: async (payload: AuditPayload) => {
@@ -99,18 +99,18 @@ describe("admin session revocation", () => {
     ]);
     expect(harness.syncUpdates).toEqual([
       {
-        user_id: 42,
-        sync_health: "reauth_required",
-        sync_updated_at: 1_700_000_100_000,
+        userId: 42,
+        syncHealth: "reauth_required",
+        syncUpdatedAt: 1_700_000_100_000,
       },
     ]);
     expect(harness.auditLogs).toHaveLength(1);
     expect(harness.auditLogs[0]).toMatchObject({
-      user_id: 9001,
+      userId: 9001,
       action: "session_revoked_by_admin",
-      entity_type: "user_session",
-      entity_id: 42,
-      created_at: 1_700_000_100_000,
+      entityType: "user_session",
+      entityId: 42,
+      createdAt: 1_700_000_100_000,
     });
     expect(JSON.parse(harness.auditLogs[0].changes)).toEqual({
       sessionId: "session-abc",
@@ -132,18 +132,18 @@ describe("admin session revocation", () => {
     ]);
     expect(harness.syncUpdates).toEqual([
       {
-        user_id: 77,
-        sync_health: "reauth_required",
-        sync_updated_at: 1_700_000_100_000,
+        userId: 77,
+        syncHealth: "reauth_required",
+        syncUpdatedAt: 1_700_000_100_000,
       },
     ]);
     expect(harness.auditLogs).toHaveLength(1);
     expect(harness.auditLogs[0]).toMatchObject({
-      user_id: 9001,
+      userId: 9001,
       action: "all_sessions_revoked",
-      entity_type: "user",
-      entity_id: 77,
-      created_at: 1_700_000_100_000,
+      entityType: "user",
+      entityId: 77,
+      createdAt: 1_700_000_100_000,
     });
     expect(JSON.parse(harness.auditLogs[0].changes)).toEqual({
       revokedBy: 9001,

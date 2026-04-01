@@ -7,7 +7,7 @@ import {
   grantSearchCapacityDirect as grantSearchCapacityService,
   rejectCapacityRequest as rejectCapacityService,
 } from "~/server/capacity/application/commands";
-import { createCapacityApprovalPort } from "~/server/capacity/infrastructure/approval-port";
+import { createCapacityApprovalContext } from "~/server/capacity/infrastructure/approval-context";
 import { createCapacityCommandsContext } from "~/server/capacity/infrastructure/commands-context";
 import { runAction } from "~/server/shared/action-runtime";
 
@@ -23,7 +23,7 @@ export async function approveCapacity(requestId: number, note?: string) {
     execute: (ctx) =>
       approveCapacityService(
         ctx,
-        createCapacityApprovalPort(),
+        createCapacityApprovalContext(),
         decisionInput.value,
       ),
   });
@@ -39,7 +39,7 @@ export async function rejectCapacity(requestId: number, note: string) {
     permission: "capacity:approve",
     input: { requestId: decisionInput.value.requestId, note: safeNote },
     execute: (ctx) =>
-      rejectCapacityService(ctx, createCapacityApprovalPort(), {
+      rejectCapacityService(ctx, createCapacityApprovalContext(), {
         requestId: decisionInput.value.requestId,
         note: safeNote,
       }),

@@ -9,7 +9,7 @@ import type {
   CapacityApprovalTxPort,
 } from "../application/ports";
 
-export function createCapacityApprovalPort(): CapacityApprovalPort {
+export function createCapacityApprovalContext(): CapacityApprovalPort {
   return {
     async enforceApprovalRateLimit(userId: number) {
       await checkActionRateLimit("capacity.approve", userId, rateLimitDeps);

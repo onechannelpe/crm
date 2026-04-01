@@ -3,7 +3,7 @@ import { createUserProvisioningService } from "~/server/users/service-user-provi
 
 import type { InviteManagementQueryPort } from "../application/ports";
 
-export function createInviteManagementQueryPort(): InviteManagementQueryPort {
+export function createInviteManagementContext(): InviteManagementQueryPort {
   const provisioning = createUserProvisioningService(repos, {
     runInTransaction: runInRepositoryTransaction,
   });

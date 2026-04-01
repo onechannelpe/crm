@@ -6,17 +6,17 @@ export interface AdminSessionRevocationPort {
     now: number,
   ): Promise<void>;
   revokeInstallationSessionsByUser(userId: number, now: number): Promise<void>;
-  updateExecutiveSyncHealthByUser(input: {
-    user_id: number;
-    sync_health: "ok" | "stale" | "reauth_required";
-    sync_updated_at: number;
+  updateExecutiveSyncHealth(input: {
+    userId: number;
+    syncHealth: "ok" | "stale" | "reauth_required";
+    syncUpdatedAt: number;
   }): Promise<void>;
   createAuditLog(input: {
-    user_id: number;
+    userId: number;
     action: string;
-    entity_type: string;
-    entity_id: number;
+    entityType: string;
+    entityId: number;
     changes: string | null;
-    created_at: number;
+    createdAt: number;
   }): Promise<void>;
 }

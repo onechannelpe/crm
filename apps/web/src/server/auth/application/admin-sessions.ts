@@ -54,20 +54,20 @@ export async function revokeUserSession(
   const now = ctx.now();
   await port.invalidateSession(input.sessionId);
   await port.revokeInstallationSessionsByAuthSession(input.sessionId, now);
-  await port.updateExecutiveSyncHealthByUser({
-    user_id: input.targetUserId,
-    sync_health: "reauth_required",
-    sync_updated_at: now,
+  await port.updateExecutiveSyncHealth({
+    userId: input.targetUserId,
+    syncHealth: "reauth_required",
+    syncUpdatedAt: now,
   });
   await port.createAuditLog({
-    user_id: ctx.actor.userId,
+    userId: ctx.actor.userId,
     action: "session_revoked_by_admin",
-    entity_type: "user_session",
-    entity_id: input.targetUserId,
+    entityType: "user_session",
+    entityId: input.targetUserId,
     changes: serializeAuditChanges(
       sessionRevokedByAdminChanges(input.sessionId, ctx.actor.userId),
     ),
-    created_at: now,
+    createdAt: now,
   });
   return Ok({ success: true });
 }
@@ -80,18 +80,18 @@ export async function revokeAllUserSessions(
   const now = ctx.now();
   await port.invalidateUserSessions(input.targetUserId);
   await port.revokeInstallationSessionsByUser(input.targetUserId, now);
-  await port.updateExecutiveSyncHealthByUser({
-    user_id: input.targetUserId,
-    sync_health: "reauth_required",
-    sync_updated_at: now,
+  await port.updateExecutiveSyncHealth({
+    userId: input.targetUserId,
+    syncHealth: "reauth_required",
+    syncUpdatedAt: now,
   });
   await port.createAuditLog({
-    user_id: ctx.actor.userId,
+    userId: ctx.actor.userId,
     action: "all_sessions_revoked",
-    entity_type: "user",
-    entity_id: input.targetUserId,
+    entityType: "user",
+    entityId: input.targetUserId,
     changes: serializeAuditChanges(allSessionsRevokedChanges(ctx.actor.userId)),
-    created_at: now,
+    createdAt: now,
   });
   return Ok({ success: true });
 }
