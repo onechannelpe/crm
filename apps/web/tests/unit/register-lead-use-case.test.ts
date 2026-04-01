@@ -1,12 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  engineSearch: vi.fn(),
-  findByRuc: vi.fn(),
-  findById: vi.fn(),
-  insertLead: vi.fn(),
-  insertAssignment: vi.fn(),
-  logAudit: vi.fn(),
+  engineSearch: vi.fn<() => Promise<unknown>>(),
+  findByRuc: vi.fn<() => Promise<unknown>>(),
+  findById:
+    vi.fn<() => Promise<{ id: number; is_active: number } | undefined>>(),
+  insertLead: vi.fn<() => Promise<number>>(),
+  insertAssignment: vi.fn<() => Promise<void>>(),
+  logAudit: vi.fn<() => Promise<void>>(),
 }));
 
 vi.mock("../../src/server/shared/composition-root", () => ({

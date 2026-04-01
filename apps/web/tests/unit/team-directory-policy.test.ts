@@ -4,9 +4,17 @@ import { Ok } from "../../src/server/shared/result";
 
 const { runActionMock, teamsFindByBranchMock, listPendingInvitesMock } =
   vi.hoisted(() => ({
-    runActionMock: vi.fn(),
-    teamsFindByBranchMock: vi.fn(),
-    listPendingInvitesMock: vi.fn(),
+    runActionMock:
+      vi.fn<
+        (params: {
+          execute: (context: {
+            actor: { userId: number; role: string; branchId: number };
+          }) => Promise<{ value: unknown }>;
+        }) => Promise<unknown>
+      >(),
+    teamsFindByBranchMock:
+      vi.fn<() => Promise<Array<{ id: number; name: string }>>>(),
+    listPendingInvitesMock: vi.fn<() => Promise<unknown>>(),
   }));
 
 vi.mock("../../src/server/shared/action-runtime", () => ({
@@ -23,8 +31,8 @@ vi.mock("../../src/server/team/infrastructure/deps", () => ({
     createProvisioningService: () => ({
       listPendingInvites: listPendingInvitesMock,
     }),
-    enforceInviteCreateRateLimit: vi.fn(),
-    issuePreAuthSession: vi.fn(),
+    enforceInviteCreateRateLimit: vi.fn<() => Promise<void>>(),
+    issuePreAuthSession: vi.fn<() => Promise<void>>(),
   }),
 }));
 

@@ -14,27 +14,114 @@ import {
   makeSearchCapacityGrantsRepo,
 } from "../support/capacity-fakes";
 
+type CapacityReposMock = {
+  capacityRequests: {
+    findById: ReturnType<typeof vi.fn<(id: number) => Promise<unknown>>>;
+    markApproved: ReturnType<
+      typeof vi.fn<(id: number) => Promise<{ numUpdatedRows: bigint }>>
+    >;
+    markRejected: ReturnType<
+      typeof vi.fn<(id: number) => Promise<{ numUpdatedRows: bigint }>>
+    >;
+  };
+  users: {
+    findById: ReturnType<
+      typeof vi.fn<
+        () => Promise<{ role: Role; branch_id: number; team_id: number | null }>
+      >
+    >;
+  };
+  teams: {
+    findBySupervisorId: ReturnType<typeof vi.fn<() => Promise<unknown>>>;
+    findByIdWithSupervisor: ReturnType<typeof vi.fn<() => Promise<unknown>>>;
+  };
+  searchCapacityGrants: {
+    insert: ReturnType<
+      typeof vi.fn<
+        (values: {
+          user_id: number;
+          amount: number;
+          reason: string;
+          actor_user_id: number;
+        }) => Promise<void>
+      >
+    >;
+  };
+  leadCapacityGrants: {
+    insert: ReturnType<
+      typeof vi.fn<
+        (values: {
+          user_id: number;
+          amount: number;
+          reason: string;
+          actor_user_id: number;
+        }) => Promise<void>
+      >
+    >;
+  };
+};
+
+type RunInRepositoryTransactionMock = ReturnType<
+  typeof vi.fn<
+    (
+      operation: (repos: CapacityReposMock) => Promise<unknown>,
+    ) => Promise<unknown>
+  >
+>;
+
 const { runInRepositoryTransactionMock, capacityReposMock } = vi.hoisted(
-  () => ({
-    runInRepositoryTransactionMock: vi.fn(),
+  (): {
+    runInRepositoryTransactionMock: RunInRepositoryTransactionMock;
+    capacityReposMock: CapacityReposMock;
+  } => ({
+    runInRepositoryTransactionMock:
+      vi.fn<
+        (
+          operation: (repos: CapacityReposMock) => Promise<unknown>,
+        ) => Promise<unknown>
+      >(),
     capacityReposMock: {
       capacityRequests: {
-        findById: vi.fn(),
-        markApproved: vi.fn(),
-        markRejected: vi.fn(),
+        findById: vi.fn<(id: number) => Promise<unknown>>(),
+        markApproved:
+          vi.fn<(id: number) => Promise<{ numUpdatedRows: bigint }>>(),
+        markRejected:
+          vi.fn<(id: number) => Promise<{ numUpdatedRows: bigint }>>(),
       },
       users: {
-        findById: vi.fn(),
+        findById: vi.fn<
+          () => Promise<{
+            role: Role;
+            branch_id: number;
+            team_id: number | null;
+          }>
+        >(),
       },
       teams: {
-        findBySupervisorId: vi.fn(),
-        findByIdWithSupervisor: vi.fn(),
+        findBySupervisorId: vi.fn<() => Promise<unknown>>(),
+        findByIdWithSupervisor: vi.fn<() => Promise<unknown>>(),
       },
       searchCapacityGrants: {
-        insert: vi.fn(),
+        insert:
+          vi.fn<
+            (values: {
+              user_id: number;
+              amount: number;
+              reason: string;
+              actor_user_id: number;
+            }) => Promise<void>
+          >(),
       },
       leadCapacityGrants: {
-        insert: vi.fn(),
+        insert:
+          vi.fn<
+            (values: {
+              user_id: number;
+              amount: number;
+              reason: string;
+              actor_user_id: number;
+            }) => Promise<void>
+          >(),
       },
     },
   }),
@@ -47,7 +134,7 @@ vi.mock("../../src/server/shared/context", () => ({
 }));
 
 vi.mock("../../src/lib/security/action-rate-limit", () => ({
-  checkActionRateLimit: vi.fn(),
+  checkActionRateLimit: vi.fn<() => Promise<void>>(),
 }));
 
 const ACTOR_USER_ID = 99;
@@ -167,8 +254,9 @@ function installRepos(txRepos: {
   capacityReposMock.leadCapacityGrants.insert.mockImplementation(
     txRepos.leadCapacityGrants.insert,
   );
-  runInRepositoryTransactionMock.mockImplementation(async (operation) =>
-    operation(capacityReposMock),
+  runInRepositoryTransactionMock.mockImplementation(
+    async (operation: (repos: CapacityReposMock) => Promise<unknown>) =>
+      operation(capacityReposMock),
   );
 }
 

@@ -1,14 +1,42 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+type AuditPayload = {
+  user_id: number;
+  entity_id: number;
+  action: string;
+  changes: string;
+};
+
 const mocks = vi.hoisted(() => ({
-  requireRole: vi.fn(),
-  recordAction: vi.fn(),
-  invalidateSession: vi.fn(),
-  invalidateUserSessions: vi.fn(),
-  auditCreate: vi.fn(),
-  revokeInstallationSessionsByAuthSession: vi.fn(),
-  revokeInstallationSessionsByUser: vi.fn(),
-  updateExecutiveSyncHealthByUser: vi.fn(),
+  requireRole: vi.fn<
+    () => Promise<{
+      sessionId: string;
+      userId: number;
+      branchId: number;
+      role: string;
+      onboardingCompleted: boolean;
+      sessionClass: string;
+      primaryAuthMethod: string;
+      strongAuthMethod: string | null;
+      strongAuthAt: number | null;
+    }>
+  >(),
+  recordAction: vi.fn<() => Promise<void>>(),
+  invalidateSession: vi.fn<(sessionId: string) => Promise<void>>(),
+  invalidateUserSessions: vi.fn<(userId: number) => Promise<void>>(),
+  auditCreate: vi.fn<(payload: AuditPayload) => Promise<void>>(),
+  revokeInstallationSessionsByAuthSession:
+    vi.fn<(sessionId: string, now: number) => Promise<void>>(),
+  revokeInstallationSessionsByUser:
+    vi.fn<(userId: number, now: number) => Promise<void>>(),
+  updateExecutiveSyncHealthByUser:
+    vi.fn<
+      (payload: {
+        user_id: number;
+        sync_health: string;
+        sync_updated_at: number;
+      }) => Promise<void>
+    >(),
 }));
 
 vi.mock("~/lib/auth/access/session", () => ({
@@ -51,10 +79,10 @@ vi.mock("~/server/shared/context", () => ({
     },
   },
   notificationSender: {
-    send: vi.fn(),
+    send: vi.fn<() => Promise<void>>(),
   },
-  privilegedLoginAlertSender: vi.fn(),
-  runInRepositoryTransaction: vi.fn(),
+  privilegedLoginAlertSender: vi.fn<() => Promise<void>>(),
+  runInRepositoryTransaction: vi.fn<() => Promise<void>>(),
   observabilityService: {
     recordAction: mocks.recordAction,
   },
