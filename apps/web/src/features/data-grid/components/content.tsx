@@ -6,6 +6,7 @@ import {
 } from "../hooks/use-column-layout";
 import type { DataGridSelectionModel } from "../hooks/use-selection";
 import type { DataGridRowOpen } from "../model/row-open";
+import type { DataGridSource } from "../model/source";
 import type { DataGridActionRowConfig, DataGridColumn } from "../model/types";
 import { DataGridBody } from "./body";
 import { DataGridHeader } from "./header";
@@ -18,13 +19,13 @@ export function DataGridContent<T extends { id: number }>(props: {
   ariaLabel: string;
   columns: DataGridColumn<T>[];
   emptyState: JSX.Element;
-  isLoading: boolean;
+  errorState?: JSX.Element;
   reorderable: boolean;
   setContainer: (element: HTMLElement) => void;
   setScrollWrapper: (element: HTMLElement) => void;
   gridTemplateColumns: string;
   rowOpen: DataGridRowOpen<T>;
-  rows: T[];
+  source: DataGridSource<T>;
   selectable: boolean;
   selection?: DataGridSelectionModel;
   stickyColumnIndex: number;
@@ -32,6 +33,10 @@ export function DataGridContent<T extends { id: number }>(props: {
   const selectionLeft = () => (props.reorderable ? REORDER_COLUMN_WIDTH : 0);
   const stickyLeft = () =>
     selectionLeft() + (props.selectable ? SELECTION_COLUMN_WIDTH : 0);
+  const rows = () => props.source.rows;
+  const isLoading = () => props.source.status === "pending";
+  const isError = () => props.source.status === "error";
+  const errorState = () => props.errorState ?? <>No se pudo cargar la tabla.</>;
 
   return (
     <div class={styles.indexContainer}>
@@ -47,7 +52,7 @@ export function DataGridContent<T extends { id: number }>(props: {
               (props.reorderable ? 1 : 0)
             }
             aria-multiselectable={props.selectable ? "true" : undefined}
-            aria-rowcount={props.rows.length + 1}
+            aria-rowcount={rows().length + 1}
             role="grid"
           >
             <DataGridHeader
@@ -62,25 +67,34 @@ export function DataGridContent<T extends { id: number }>(props: {
               onToggleAll={props.selection?.toggleAll}
             />
 
-            <Show when={!props.isLoading} fallback={<DataGridLoadingState />}>
+            <Show when={!isLoading()} fallback={<DataGridLoadingState />}>
               <Show
-                when={props.rows.length > 0}
+                when={!isError()}
                 fallback={
-                  <div class={styles.emptyStateSurface}>{props.emptyState}</div>
+                  <div class={styles.emptyStateSurface}>{errorState()}</div>
                 }
               >
-                <DataGridBody
-                  actionRow={props.actionRow}
-                  columns={props.columns}
-                  gridTemplateColumns={props.gridTemplateColumns}
-                  reorderable={props.reorderable}
-                  rowOpen={props.rowOpen}
-                  rows={props.rows}
-                  selectionLeft={selectionLeft()}
-                  selectable={props.selectable}
-                  stickyColumnIndex={props.stickyColumnIndex}
-                  stickyLeft={stickyLeft()}
-                />
+                <Show
+                  when={rows().length > 0}
+                  fallback={
+                    <div class={styles.emptyStateSurface}>
+                      {props.emptyState}
+                    </div>
+                  }
+                >
+                  <DataGridBody
+                    actionRow={props.actionRow}
+                    columns={props.columns}
+                    gridTemplateColumns={props.gridTemplateColumns}
+                    reorderable={props.reorderable}
+                    rowOpen={props.rowOpen}
+                    rows={rows()}
+                    selectionLeft={selectionLeft()}
+                    selectable={props.selectable}
+                    stickyColumnIndex={props.stickyColumnIndex}
+                    stickyLeft={stickyLeft()}
+                  />
+                </Show>
               </Show>
             </Show>
           </section>

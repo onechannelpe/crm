@@ -3,7 +3,10 @@ import { createAsync } from "@solidjs/router";
 import List from "~/components/icons/list";
 import Package from "~/components/icons/package";
 import { RecordIndexScreen } from "~/features/record-index/components/screen";
-import type { RecordIndexAdapter } from "~/features/record-index/model/types";
+import type {
+  RecordIndexAdapter,
+  RecordIndexSource,
+} from "~/features/record-index/model/types";
 import { inventoryItemsQuery } from "~/lib/queries/inventory";
 
 import type { InventoryRow } from "./columns";
@@ -14,9 +17,16 @@ import styles from "./styles.module.css";
 
 export function InventoryRecordIndex() {
   const items = createAsync(() => inventoryItemsQuery());
-  const rows = () => items() ?? [];
-  const isLoading = () => items() === undefined;
   const { rowOpen } = useOpenInventoryRecord();
+  const source = (): RecordIndexSource<InventoryRow> => {
+    const data = items();
+
+    if (data === undefined) {
+      return { status: "pending", rows: [] };
+    }
+
+    return { status: "ready", rows: data };
+  };
 
   const adapter = {
     id: "inventory",
@@ -24,8 +34,7 @@ export function InventoryRecordIndex() {
     ariaLabel: "Inventario",
     pickerIcon: List,
     columns: INVENTORY_RECORD_INDEX_COLUMNS,
-    getRows: rows,
-    isLoading,
+    source,
     selectable: true,
     rowOpen,
     emptyState: {

@@ -28,14 +28,24 @@ export function SidePanelShell(props: SidePanelShellProps) {
   const { isOpen, isClosing, closePanel, onCloseAnimationComplete } =
     useSidePanel();
   const [shouldRenderContent, setShouldRenderContent] = createSignal(isOpen());
+  const [hasCompletedInitialOpen, setHasCompletedInitialOpen] =
+    createSignal(false);
 
   createEffect(() => {
     if (isOpen()) {
-      setShouldRenderContent(true);
+      if (hasCompletedInitialOpen()) {
+        setShouldRenderContent(true);
+      }
     }
   });
 
   function handleTransitionEnd(event: TransitionEvent) {
+    if (event.propertyName === "width" && isOpen()) {
+      setHasCompletedInitialOpen(true);
+      setShouldRenderContent(true);
+      return;
+    }
+
     if (event.propertyName === "width" && !isOpen() && isClosing()) {
       setShouldRenderContent(false);
       onCloseAnimationComplete();

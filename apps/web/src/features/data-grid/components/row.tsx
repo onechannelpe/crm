@@ -5,6 +5,7 @@ import LayoutSidebarRightCollapse from "~/components/icons/layout-sidebar-right-
 import { Checkbox } from "~/components/ui/input/checkbox";
 
 import { useDataGridInstance } from "../context/instance-context";
+import { useDataGridInteractionReady } from "../context/interaction-context";
 import type { DataGridRowOpen, DataGridRowOpenMode } from "../model/row-open";
 import type { DataGridColumn } from "../model/types";
 import { DataGridCell } from "./cell";
@@ -25,6 +26,7 @@ export function DataGridRow<T extends { id: number }>(props: {
   stickyLeft: number;
 }) {
   const interaction = useDataGridInstance();
+  const isInteractive = useDataGridInteractionReady();
 
   return (
     <div
@@ -62,6 +64,7 @@ export function DataGridRow<T extends { id: number }>(props: {
             data-grid-reorder-handle="true"
             data-select-disable="true"
             aria-label="Reorder row"
+            disabled={!isInteractive()}
             onPointerDown={(event) => {
               event.preventDefault();
               event.stopPropagation();
@@ -89,6 +92,7 @@ export function DataGridRow<T extends { id: number }>(props: {
         >
           <Checkbox
             checked={interaction.isSelected(props.row.id)}
+            disabled={!isInteractive()}
             onClick={(event) => event.stopPropagation()}
             onChange={(event) =>
               interaction.setSelected?.(
@@ -126,6 +130,7 @@ export function DataGridRow<T extends { id: number }>(props: {
                 class={styles.rowButton}
                 data-grid-focusable-cell={`${props.row.id}:${index()}`}
                 data-open-mode={props.rowOpen.mode}
+                disabled={!isInteractive()}
                 onClick={() => {
                   if (interaction.hasPendingRowOpenSuppression()) {
                     interaction.clearPendingRowOpenSuppression();
@@ -139,7 +144,11 @@ export function DataGridRow<T extends { id: number }>(props: {
                 onKeyDown={(event) =>
                   interaction.handleCellKeyDown(event, props.row.id, index())
                 }
-                tabIndex={interaction.getCellTabIndex(props.row.id, index())}
+                tabIndex={
+                  isInteractive()
+                    ? interaction.getCellTabIndex(props.row.id, index())
+                    : -1
+                }
               >
                 <span class={styles.rowButtonContent}>
                   <span class={styles.rowButtonLabel}>

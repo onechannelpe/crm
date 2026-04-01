@@ -115,9 +115,11 @@ export default function CapacityAuditPage() {
               No audit events found.
             </p>
           }
-          isLoading={isLoading()}
           rowOpen={rowOpen}
-          rows={rows()}
+          source={{
+            status: isLoading() ? "pending" : "ready",
+            rows: rows(),
+          }}
         />
       </div>
     </AppPage>

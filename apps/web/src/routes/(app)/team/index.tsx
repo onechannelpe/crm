@@ -132,9 +132,11 @@ export default function TeamPage() {
               No hay ejecutivos visibles.
             </p>
           }
-          isLoading={isLoading()}
           rowOpen={rowOpen}
-          rows={filtered()}
+          source={{
+            status: isLoading() ? "pending" : "ready",
+            rows: filtered(),
+          }}
         />
       </div>
     </AppPage>

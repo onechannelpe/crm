@@ -21,3 +21,13 @@
 .pageContent {
   display: contents;
 }
+
+.pageState {
+  align-items: center;
+  color: var(--foreground-muted);
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  min-height: 96px;
+  padding: 16px;
+}

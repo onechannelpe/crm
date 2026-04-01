@@ -134,9 +134,11 @@ export default function MonitoringPage() {
             No hay métricas disponibles para la ventana actual.
           </p>
         }
-        isLoading={isLoading()}
         rowOpen={rowOpen}
-        rows={rows()}
+        source={{
+          status: isLoading() ? "pending" : "ready",
+          rows: rows(),
+        }}
       />
     </AppPage>
   );

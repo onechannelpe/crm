@@ -4,7 +4,10 @@ import { listLeadsForReview } from "~/actions/pipeline/review";
 import Info from "~/components/icons/info";
 import List from "~/components/icons/list";
 import { RecordIndexScreen } from "~/features/record-index/components/screen";
-import type { RecordIndexAdapter } from "~/features/record-index/model/types";
+import type {
+  RecordIndexAdapter,
+  RecordIndexSource,
+} from "~/features/record-index/model/types";
 
 import type { ReviewRow } from "./columns";
 import { REVIEW_RECORD_INDEX_COLUMNS } from "./columns";
@@ -16,9 +19,16 @@ export function ReviewRecordIndex() {
   const leads = createAsync(() =>
     listLeadsForReview({ stage: "PENDING_EXTERNAL_REVIEW" }),
   );
-  const rows = () => leads() ?? [];
-  const isLoading = () => leads() === undefined;
   const { rowOpen } = useOpenReviewRecord();
+  const source = (): RecordIndexSource<ReviewRow> => {
+    const data = leads();
+
+    if (data === undefined) {
+      return { status: "pending", rows: [] };
+    }
+
+    return { status: "ready", rows: data };
+  };
 
   const adapter = {
     id: "review",
@@ -26,8 +36,7 @@ export function ReviewRecordIndex() {
     ariaLabel: "Revisión",
     pickerIcon: List,
     columns: REVIEW_RECORD_INDEX_COLUMNS,
-    getRows: rows,
-    isLoading,
+    source,
     selectable: true,
     rowOpen,
     emptyState: {

@@ -137,9 +137,11 @@ export default function AuditAuthPage() {
             No hay eventos recientes de autenticación.
           </p>
         }
-        isLoading={isLoading()}
         rowOpen={rowOpen}
-        rows={rows()}
+        source={{
+          status: isLoading() ? "pending" : "ready",
+          rows: rows(),
+        }}
       />
     </AppPage>
   );
