@@ -11,7 +11,10 @@ import {
   toDbCapacityRequestKind,
 } from "../domain/request-policy";
 import type { CapacityRequestKind, ScopeRef } from "../domain/types";
-import type { CapacityCommandsContext } from "../infrastructure/commands-context";
+import type {
+  CapacityCommandRepos,
+  CapacityCommandsContext,
+} from "../infrastructure/commands-context";
 import { setLeadScopeDefault, setLeadUserOverride } from "./lead-policy";
 import type { CapacityApprovalPort, CapacityApprovalTxPort } from "./ports";
 import { setSearchScopeDefault, setSearchUserOverride } from "./search-policy";
@@ -289,14 +292,10 @@ export async function rejectCapacityRequest(
 
 export async function grantSearchCapacityDirect(
   ctx: AppContext,
-  deps: Pick<CapacityCommandsContext, "repos">,
+  repos: CapacityCommandRepos,
   input: { targetUserId: number; amount: number; reason: string },
 ): Promise<Result<{ success: true }, DomainError>> {
-  const check = await canManageExecutive(
-    ctx.actor,
-    input.targetUserId,
-    deps.repos,
-  );
+  const check = await canManageExecutive(ctx.actor, input.targetUserId, repos);
   if (!check.target) {
     return Err(
       domainError("not_found", "executive_not_found", "Executive not found"),
@@ -314,7 +313,7 @@ export async function grantSearchCapacityDirect(
 
   const result = await grantSearchCapacity(
     { actorUserId: ctx.actor.userId, ...input },
-    deps.repos,
+    repos,
   );
   if (isErr(result)) return result;
   return Ok({ success: true });
@@ -322,14 +321,10 @@ export async function grantSearchCapacityDirect(
 
 export async function grantLeadCapacityDirect(
   ctx: AppContext,
-  deps: Pick<CapacityCommandsContext, "repos">,
+  repos: CapacityCommandRepos,
   input: { targetUserId: number; amount: number; reason: string },
 ): Promise<Result<{ success: true }, DomainError>> {
-  const check = await canManageExecutive(
-    ctx.actor,
-    input.targetUserId,
-    deps.repos,
-  );
+  const check = await canManageExecutive(ctx.actor, input.targetUserId, repos);
   if (!check.target) {
     return Err(
       domainError("not_found", "executive_not_found", "Executive not found"),
@@ -347,7 +342,7 @@ export async function grantLeadCapacityDirect(
 
   const result = await grantLeadCapacity(
     { actorUserId: ctx.actor.userId, ...input },
-    deps.repos,
+    repos,
   );
   if (isErr(result)) return result;
   return Ok({ success: true });
@@ -355,10 +350,10 @@ export async function grantLeadCapacityDirect(
 
 export async function updateSearchPolicyDefault(
   ctx: AppContext,
-  deps: Pick<CapacityCommandsContext, "repos">,
+  repos: CapacityCommandRepos,
   input: { scope: ScopeRef; monthlyLimit: number },
 ): Promise<Result<{ success: true }, DomainError>> {
-  const check = await canManageScope(ctx.actor, input.scope, deps.repos);
+  const check = await canManageScope(ctx.actor, input.scope, repos);
   if (isErr(check)) return check;
   const result = await setSearchScopeDefault(
     {
@@ -366,7 +361,7 @@ export async function updateSearchPolicyDefault(
       scopeId: input.scope.scopeId,
       monthlyLimit: input.monthlyLimit,
     },
-    deps.repos,
+    repos,
   );
   if (isErr(result)) return result;
   return Ok({ success: true });
@@ -374,10 +369,10 @@ export async function updateSearchPolicyDefault(
 
 export async function updateLeadPolicyDefault(
   ctx: AppContext,
-  deps: Pick<CapacityCommandsContext, "repos">,
+  repos: CapacityCommandRepos,
   input: { scope: ScopeRef; bufferTarget: number; dailyLimit: number },
 ): Promise<Result<{ success: true }, DomainError>> {
-  const check = await canManageScope(ctx.actor, input.scope, deps.repos);
+  const check = await canManageScope(ctx.actor, input.scope, repos);
   if (isErr(check)) return check;
   const result = await setLeadScopeDefault(
     {
@@ -386,7 +381,7 @@ export async function updateLeadPolicyDefault(
       bufferTarget: input.bufferTarget,
       dailyLimit: input.dailyLimit,
     },
-    deps.repos,
+    repos,
   );
   if (isErr(result)) return result;
   return Ok({ success: true });
@@ -394,10 +389,10 @@ export async function updateLeadPolicyDefault(
 
 export async function updateSearchPolicyOverride(
   ctx: AppContext,
-  deps: Pick<CapacityCommandsContext, "repos">,
+  repos: CapacityCommandRepos,
   input: { userId: number; monthlyLimit: number; expiresAt: number | null },
 ): Promise<Result<{ success: true }, DomainError>> {
-  const check = await canManageExecutive(ctx.actor, input.userId, deps.repos);
+  const check = await canManageExecutive(ctx.actor, input.userId, repos);
   if (!check.target) {
     return Err(
       domainError("not_found", "executive_not_found", "Executive not found"),
@@ -419,7 +414,7 @@ export async function updateSearchPolicyOverride(
       monthlyLimit: input.monthlyLimit,
       expiresAt: input.expiresAt,
     },
-    deps.repos,
+    repos,
   );
   if (isErr(result)) return result;
   return Ok({ success: true });
@@ -427,7 +422,7 @@ export async function updateSearchPolicyOverride(
 
 export async function updateLeadPolicyOverride(
   ctx: AppContext,
-  deps: Pick<CapacityCommandsContext, "repos">,
+  repos: CapacityCommandRepos,
   input: {
     userId: number;
     bufferTarget: number;
@@ -435,7 +430,7 @@ export async function updateLeadPolicyOverride(
     expiresAt: number | null;
   },
 ): Promise<Result<{ success: true }, DomainError>> {
-  const check = await canManageExecutive(ctx.actor, input.userId, deps.repos);
+  const check = await canManageExecutive(ctx.actor, input.userId, repos);
   if (!check.target) {
     return Err(
       domainError("not_found", "executive_not_found", "Executive not found"),
@@ -458,7 +453,7 @@ export async function updateLeadPolicyOverride(
       dailyLimit: input.dailyLimit,
       expiresAt: input.expiresAt,
     },
-    deps.repos,
+    repos,
   );
   if (isErr(result)) return result;
   return Ok({ success: true });

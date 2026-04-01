@@ -49,3 +49,20 @@ export function createTeamInviteContext() {
 }
 
 export type TeamInviteContext = ReturnType<typeof createTeamInviteContext>;
+export type TeamInviteRepos = TeamInviteContext["repos"];
+export type TeamInviteProvisioningContext = Pick<
+  TeamInviteContext,
+  "createProvisioningService"
+>;
+export type TeamInviteCreateContext = Pick<
+  TeamInviteContext,
+  "createProvisioningService" | "enforceInviteCreateRateLimit"
+>;
+export type TeamInviteResendContext = Pick<
+  TeamInviteContext,
+  "repos" | "createProvisioningService"
+>;
+export type TeamInviteAcceptanceContext = Pick<
+  TeamInviteContext,
+  "createProvisioningService" | "issuePreAuthSession"
+>;

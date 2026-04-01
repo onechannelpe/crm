@@ -10,3 +10,5 @@ export function createSalesRecordMutationsContext() {
 export type SalesRecordMutationsContext = ReturnType<
   typeof createSalesRecordMutationsContext
 >;
+export type SalesRecordsMutationService =
+  SalesRecordMutationsContext["salesRecordsService"];

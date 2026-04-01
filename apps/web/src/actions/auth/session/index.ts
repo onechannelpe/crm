@@ -3,7 +3,10 @@
 import { getLoginFlowState } from "~/lib/auth/flows/login-state-service";
 import { getCurrentUser, logoutUser } from "~/server/auth/application/session";
 import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
-import { createAuthSessionContext } from "~/server/auth/infrastructure/session-context";
+import {
+  createAuthSessionLogoutContext,
+  createAuthSessionReadContext,
+} from "~/server/auth/infrastructure/session-context";
 import type { CurrentUserView } from "~/server/auth/types";
 import { runAction } from "~/server/shared/action-runtime";
 
@@ -17,7 +20,7 @@ export async function logout(): Promise<void> {
   await runAction({
     actionName: "auth.session.logout",
     requireSession: true,
-    execute: (ctx) => logoutUser(ctx, createAuthSessionContext()),
+    execute: (ctx) => logoutUser(ctx, createAuthSessionLogoutContext()),
   });
 }
 
@@ -25,6 +28,6 @@ export async function getMe(): Promise<CurrentUserView | null> {
   return runAction({
     actionName: "auth.session.get_me",
     requireSession: true,
-    execute: (ctx) => getCurrentUser(ctx, createAuthSessionContext()),
+    execute: (ctx) => getCurrentUser(ctx, createAuthSessionReadContext()),
   });
 }

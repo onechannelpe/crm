@@ -18,7 +18,7 @@ export async function beginPasskeyRegistration(): Promise<PasskeyEnrollmentChall
   const session = await requireSession();
   const { ipAddress } = getRequestClientMetadata();
   const result = await beginPasskeyRegistrationService(
-    createAuthOnboardingContext(),
+    createAuthOnboardingContext().repos,
     {
       userId: session.userId,
       ipAddress,
@@ -38,7 +38,7 @@ export async function finishPasskeyRegistration(
   const session = await requireSession();
   const request = getRequestClientMetadata();
   const result = await finishPasskeyRegistrationService(
-    createAuthOnboardingContext(),
+    createAuthOnboardingContext().repos,
     {
       session,
       challengeId,

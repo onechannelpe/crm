@@ -13,3 +13,8 @@ export function createPasswordResetContext() {
 export type PasswordResetContext = ReturnType<
   typeof createPasswordResetContext
 >;
+export type PasswordResetRepos = PasswordResetContext["repos"];
+export type PasswordResetRequestContext = Pick<
+  PasswordResetContext,
+  "repos" | "notificationSender"
+>;

@@ -1,3 +1,4 @@
+import type { Role } from "~/lib/auth/access/rbac";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { Result } from "~/server/shared/result";
 
@@ -8,15 +9,7 @@ export interface InviteManagementPendingInvite {
   names: string;
   firstSurname: string;
   secondSurname: string;
-  role:
-    | "executive"
-    | "supervisor"
-    | "back_office"
-    | "sales_manager"
-    | "logistics"
-    | "hr"
-    | "admin"
-    | "superuser";
+  role: Role;
   teamId: number | null;
   expiresAt: number;
   createdAt: number;

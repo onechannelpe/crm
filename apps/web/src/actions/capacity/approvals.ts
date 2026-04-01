@@ -58,7 +58,7 @@ export async function grantMoreSearches(
     permission: "capacity:manage",
     input: grantInput.value,
     execute: (ctx) =>
-      grantSearchCapacityService(ctx, createCapacityCommandsContext(), {
+      grantSearchCapacityService(ctx, createCapacityCommandsContext().repos, {
         targetUserId: grantInput.value.userId,
         amount: grantInput.value.amount,
         reason: grantInput.value.reason,
@@ -78,7 +78,7 @@ export async function grantMoreLeadRefill(
     permission: "capacity:manage",
     input: grantInput.value,
     execute: (ctx) =>
-      grantLeadCapacityService(ctx, createCapacityCommandsContext(), {
+      grantLeadCapacityService(ctx, createCapacityCommandsContext().repos, {
         targetUserId: grantInput.value.userId,
         amount: grantInput.value.amount,
         reason: grantInput.value.reason,

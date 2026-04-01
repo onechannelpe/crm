@@ -125,7 +125,8 @@ export async function passkeyStart(
   }
 
   const request = getRequestClientMetadata();
-  const service = createPasskeyStartService(createAuthLoginContext(), {
+  const loginContext = createAuthLoginContext();
+  const service = createPasskeyStartService(loginContext.repos, {
     createWebauthnProvider: createRequestPasskeyProviderFactory(),
   });
   const result =

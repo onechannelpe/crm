@@ -7,7 +7,10 @@ import {
   isValidPasswordResetTokenFormat,
 } from "~/lib/auth/password/reset-tokens";
 
-import type { PasswordResetContext } from "../infrastructure/password-reset-context";
+import type {
+  PasswordResetRepos,
+  PasswordResetRequestContext,
+} from "../infrastructure/password-reset-context";
 
 const TOKEN_TTL_MS = 60 * 60 * 1000;
 const MAX_REQUESTS_PER_HOUR = 3;
@@ -19,7 +22,7 @@ export type RequestPasswordResetResult =
 export async function requestPasswordReset(input: {
   email: string;
   origin: string;
-  deps: PasswordResetContext;
+  deps: PasswordResetRequestContext;
 }): Promise<RequestPasswordResetResult> {
   const email = input.email.trim().toLowerCase();
   if (!email) {
@@ -76,7 +79,7 @@ export async function resetPassword(input: {
   token: string;
   password: string;
   confirmPassword: string;
-  deps: Pick<PasswordResetContext, "repos">;
+  repos: PasswordResetRepos;
 }): Promise<ResetPasswordResult> {
   if (!isValidPasswordResetTokenFormat(input.token)) {
     return { ok: false, code: "invalid_token" };
@@ -89,7 +92,7 @@ export async function resetPassword(input: {
   }
 
   const now = Date.now();
-  const record = await input.deps.repos.passwordResetTokens.findValidByHash(
+  const record = await input.repos.passwordResetTokens.findValidByHash(
     hashPasswordResetToken(input.token),
     now,
   );
@@ -97,11 +100,8 @@ export async function resetPassword(input: {
     return { ok: false, code: "invalid_token" };
   }
 
-  await input.deps.repos.passwordResetTokens.expireAllForUser(
-    record.user_id,
-    now,
-  );
-  await input.deps.repos.users.updatePassword(
+  await input.repos.passwordResetTokens.expireAllForUser(record.user_id, now);
+  await input.repos.users.updatePassword(
     record.user_id,
     await hashPassword(input.password),
   );

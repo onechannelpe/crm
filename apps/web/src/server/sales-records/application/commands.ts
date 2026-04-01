@@ -7,7 +7,10 @@ import type {
   CreateSalesRecordDraftInput,
   SalesRecordAttemptOutcome,
 } from "../domain/types";
-import type { SalesRecordMutationsContext } from "../infrastructure/mutations-context";
+import type {
+  SalesRecordMutationsContext,
+  SalesRecordsMutationService,
+} from "../infrastructure/mutations-context";
 
 type CreateDraftError =
   Awaited<
@@ -68,10 +71,10 @@ export async function submitRecord(
 
 export async function confirmRecord(
   ctx: AppContext,
-  deps: Pick<SalesRecordMutationsContext, "salesRecordsService">,
+  salesRecordsService: SalesRecordsMutationService,
   input: { recordId: number },
 ) {
-  const result = await deps.salesRecordsService.confirm(
+  const result = await salesRecordsService.confirm(
     input.recordId,
     ctx.actor.userId,
     ctx.actor.branchId,
@@ -85,10 +88,10 @@ export async function confirmRecord(
 
 export async function rejectRecord(
   ctx: AppContext,
-  deps: Pick<SalesRecordMutationsContext, "salesRecordsService">,
+  salesRecordsService: SalesRecordsMutationService,
   input: { recordId: number; reason: string },
 ) {
-  const result = await deps.salesRecordsService.reject(
+  const result = await salesRecordsService.reject(
     input.recordId,
     ctx.actor.userId,
     ctx.actor.branchId,
@@ -103,10 +106,10 @@ export async function rejectRecord(
 
 export async function cancelRecord(
   ctx: AppContext,
-  deps: Pick<SalesRecordMutationsContext, "salesRecordsService">,
+  salesRecordsService: SalesRecordsMutationService,
   input: { recordId: number },
 ) {
-  const result = await deps.salesRecordsService.cancel(
+  const result = await salesRecordsService.cancel(
     input.recordId,
     ctx.actor.userId,
   );
@@ -118,14 +121,14 @@ export async function cancelRecord(
 
 export async function updateDraft(
   ctx: AppContext,
-  deps: Pick<SalesRecordMutationsContext, "salesRecordsService">,
+  salesRecordsService: SalesRecordsMutationService,
   input: {
     recordId: number;
     draft: Omit<CreateSalesRecordDraftInput, "source" | "leadAssignmentId">;
     correctionNotes: string | null;
   },
 ) {
-  const result = await deps.salesRecordsService.updateDraft(
+  const result = await salesRecordsService.updateDraft(
     input.recordId,
     ctx.actor.userId,
     {
@@ -145,7 +148,7 @@ export async function updateDraft(
 
 export async function registerAttempt(
   ctx: AppContext,
-  deps: Pick<SalesRecordMutationsContext, "salesRecordsService">,
+  salesRecordsService: SalesRecordsMutationService,
   input: {
     recordId: number;
     outcome: SalesRecordAttemptOutcome;
@@ -153,7 +156,7 @@ export async function registerAttempt(
     nextAttemptAt: number | null;
   },
 ) {
-  const result = await deps.salesRecordsService.registerAttempt(
+  const result = await salesRecordsService.registerAttempt(
     input.recordId,
     ctx.actor.userId,
     ctx.actor.branchId,

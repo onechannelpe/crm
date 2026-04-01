@@ -16,7 +16,7 @@ import { parseCreateTeamInviteInput, parseInviteIdInput } from "./input";
 export async function getInviteInfo(token: string): Promise<InviteInfo | null> {
   const result = await getInviteInfoService({
     token,
-    deps: createTeamInviteContext(),
+    repos: createTeamInviteContext().repos,
   });
   if (isErr(result)) {
     throw result.error;

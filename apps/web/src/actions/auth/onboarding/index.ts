@@ -63,7 +63,7 @@ export async function completePasskeyOnboarding(
   const session = await requireSession();
   const request = getRequestClientMetadata();
   const registrationResult = await finishPasskeyRegistrationService(
-    createAuthOnboardingContext(),
+    createAuthOnboardingContext().repos,
     {
       session,
       challengeId,

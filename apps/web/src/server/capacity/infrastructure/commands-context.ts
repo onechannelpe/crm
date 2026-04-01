@@ -31,3 +31,4 @@ export function createCapacityCommandsContext() {
 export type CapacityCommandsContext = ReturnType<
   typeof createCapacityCommandsContext
 >;
+export type CapacityCommandRepos = CapacityCommandsContext["repos"];

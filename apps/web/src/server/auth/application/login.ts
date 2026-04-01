@@ -9,7 +9,10 @@ import {
 } from "~/lib/auth/passkey/service";
 import { replaceCurrentSession } from "~/lib/auth/session/session-transition";
 
-import type { AuthLoginContext } from "../infrastructure/login-context";
+import type {
+  AuthLoginContext,
+  AuthLoginRepos,
+} from "../infrastructure/login-context";
 
 type PasskeyStartProviderFactory = NonNullable<
   Parameters<typeof createPasskeyLoginStartAuthService>[1]
@@ -20,12 +23,12 @@ type PasskeyFinishProviderFactory = NonNullable<
 >["createWebauthnProvider"];
 
 export function createPasskeyStartService(
-  deps: Pick<AuthLoginContext, "repos">,
+  repos: AuthLoginRepos,
   input: {
     createWebauthnProvider: PasskeyStartProviderFactory;
   },
 ) {
-  return createPasskeyLoginStartAuthService(deps.repos, {
+  return createPasskeyLoginStartAuthService(repos, {
     createWebauthnProvider: input.createWebauthnProvider,
   });
 }

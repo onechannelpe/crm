@@ -1,7 +1,7 @@
 import { privilegedLoginAlertSender, repos } from "~/server/shared/context";
 import type { Repositories } from "~/server/shared/registry";
 
-type AuthLoginRepos = Pick<
+export type AuthLoginRepos = Pick<
   Repositories,
   | "oauthAccounts"
   | "loginFlows"

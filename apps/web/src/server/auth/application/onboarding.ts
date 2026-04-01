@@ -14,39 +14,42 @@ import {
   type CompleteOnboardingError,
 } from "~/server/users/service-account-onboarding";
 
-import type { AuthOnboardingContext } from "../infrastructure/onboarding-context";
+import type {
+  AuthOnboardingContext,
+  AuthOnboardingRepos,
+} from "../infrastructure/onboarding-context";
 
 type EnrollmentProviderFactory = NonNullable<
   Parameters<typeof createPasskeyEnrollmentAuthService>[1]
 >["createWebauthnProvider"];
 
 function createEnrollmentService(
-  deps: Pick<AuthOnboardingContext, "repos">,
+  repos: AuthOnboardingRepos,
   input: {
     createWebauthnProvider: EnrollmentProviderFactory;
   },
 ) {
-  return createPasskeyEnrollmentAuthService(deps.repos, {
+  return createPasskeyEnrollmentAuthService(repos, {
     createWebauthnProvider: input.createWebauthnProvider,
   });
 }
 
 export function beginPasskeyRegistration(
-  deps: Pick<AuthOnboardingContext, "repos">,
+  repos: AuthOnboardingRepos,
   input: {
     userId: number;
     ipAddress: string;
     createWebauthnProvider: EnrollmentProviderFactory;
   },
 ) {
-  return createEnrollmentService(deps, input).beginEnrollment({
+  return createEnrollmentService(repos, input).beginEnrollment({
     userId: input.userId,
     ipAddress: input.ipAddress,
   });
 }
 
 export async function finishPasskeyRegistration(
-  deps: Pick<AuthOnboardingContext, "repos">,
+  repos: AuthOnboardingRepos,
   input: {
     session: {
       userId: number;
@@ -60,7 +63,7 @@ export async function finishPasskeyRegistration(
     createWebauthnProvider: EnrollmentProviderFactory;
   },
 ): Promise<Result<void, DomainError>> {
-  const result = await createEnrollmentService(deps, input).finishEnrollment({
+  const result = await createEnrollmentService(repos, input).finishEnrollment({
     userId: input.session.userId,
     challengeId: input.challengeId,
     response: input.response,
@@ -70,7 +73,7 @@ export async function finishPasskeyRegistration(
     return Err(result.error);
   }
 
-  const user = await deps.repos.users.findById(input.session.userId);
+  const user = await repos.users.findById(input.session.userId);
   if (!user) {
     return Err({
       kind: "unexpected",
@@ -89,7 +92,7 @@ export async function finishPasskeyRegistration(
     primaryAuthMethod: input.session.primaryAuthMethod,
     strongAuthMethod: "passkey",
     strongAuthAt: Date.now(),
-    deps: deps.repos,
+    deps: repos,
   });
   await replaceCurrentSession(issued.token);
   return Ok(undefined);
