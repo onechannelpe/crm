@@ -7,10 +7,8 @@ import {
   grantSearchCapacityDirect as grantSearchCapacityService,
   rejectCapacityRequest as rejectCapacityService,
 } from "~/server/capacity/application/commands";
-import {
-  createCapacityApprovalDeps,
-  createCapacityDeps,
-} from "~/server/capacity/infrastructure/deps";
+import { createCapacityApprovalPort } from "~/server/capacity/infrastructure/approval-port";
+import { createCapacityCommandsContext } from "~/server/capacity/infrastructure/commands-context";
 import { runAction } from "~/server/shared/action-runtime";
 
 import { parseCapacityDecisionInput, parseCapacityGrantInput } from "./input";
@@ -25,7 +23,7 @@ export async function approveCapacity(requestId: number, note?: string) {
     execute: (ctx) =>
       approveCapacityService(
         ctx,
-        createCapacityApprovalDeps(),
+        createCapacityApprovalPort(),
         decisionInput.value,
       ),
   });
@@ -41,7 +39,7 @@ export async function rejectCapacity(requestId: number, note: string) {
     permission: "capacity:approve",
     input: { requestId: decisionInput.value.requestId, note: safeNote },
     execute: (ctx) =>
-      rejectCapacityService(ctx, createCapacityApprovalDeps(), {
+      rejectCapacityService(ctx, createCapacityApprovalPort(), {
         requestId: decisionInput.value.requestId,
         note: safeNote,
       }),
@@ -60,7 +58,7 @@ export async function grantMoreSearches(
     permission: "capacity:manage",
     input: grantInput.value,
     execute: (ctx) =>
-      grantSearchCapacityService(ctx, createCapacityDeps(), {
+      grantSearchCapacityService(ctx, createCapacityCommandsContext(), {
         targetUserId: grantInput.value.userId,
         amount: grantInput.value.amount,
         reason: grantInput.value.reason,
@@ -80,7 +78,7 @@ export async function grantMoreLeadRefill(
     permission: "capacity:manage",
     input: grantInput.value,
     execute: (ctx) =>
-      grantLeadCapacityService(ctx, createCapacityDeps(), {
+      grantLeadCapacityService(ctx, createCapacityCommandsContext(), {
         targetUserId: grantInput.value.userId,
         amount: grantInput.value.amount,
         reason: grantInput.value.reason,

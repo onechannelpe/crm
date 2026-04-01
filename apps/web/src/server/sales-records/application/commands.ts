@@ -7,18 +7,20 @@ import type {
   CreateSalesRecordDraftInput,
   SalesRecordAttemptOutcome,
 } from "../domain/types";
-import type { SalesRecordDeps } from "../infrastructure/deps";
+import type { SalesRecordMutationsContext } from "../infrastructure/mutations-context";
 
 type CreateDraftError =
   Awaited<
-    ReturnType<SalesRecordDeps["salesRecordsService"]["createDraft"]>
+    ReturnType<
+      SalesRecordMutationsContext["salesRecordsService"]["createDraft"]
+    >
   > extends Result<any, infer E>
     ? E
     : never;
 
 export async function createDraft(
   ctx: AppContext,
-  deps: Pick<SalesRecordDeps, "rateLimitDeps" | "salesRecordsService">,
+  deps: SalesRecordMutationsContext,
   input: CreateSalesRecordDraftInput,
 ): Promise<Result<{ id: number }, CreateDraftError>> {
   await checkActionRateLimit(
@@ -46,7 +48,7 @@ export async function createDraft(
 
 export async function submitRecord(
   ctx: AppContext,
-  deps: Pick<SalesRecordDeps, "rateLimitDeps" | "salesRecordsService">,
+  deps: SalesRecordMutationsContext,
   input: { recordId: number },
 ) {
   await checkActionRateLimit(
@@ -66,7 +68,7 @@ export async function submitRecord(
 
 export async function confirmRecord(
   ctx: AppContext,
-  deps: Pick<SalesRecordDeps, "salesRecordsService">,
+  deps: Pick<SalesRecordMutationsContext, "salesRecordsService">,
   input: { recordId: number },
 ) {
   const result = await deps.salesRecordsService.confirm(
@@ -83,7 +85,7 @@ export async function confirmRecord(
 
 export async function rejectRecord(
   ctx: AppContext,
-  deps: Pick<SalesRecordDeps, "salesRecordsService">,
+  deps: Pick<SalesRecordMutationsContext, "salesRecordsService">,
   input: { recordId: number; reason: string },
 ) {
   const result = await deps.salesRecordsService.reject(
@@ -101,7 +103,7 @@ export async function rejectRecord(
 
 export async function cancelRecord(
   ctx: AppContext,
-  deps: Pick<SalesRecordDeps, "salesRecordsService">,
+  deps: Pick<SalesRecordMutationsContext, "salesRecordsService">,
   input: { recordId: number },
 ) {
   const result = await deps.salesRecordsService.cancel(
@@ -116,7 +118,7 @@ export async function cancelRecord(
 
 export async function updateDraft(
   ctx: AppContext,
-  deps: Pick<SalesRecordDeps, "salesRecordsService">,
+  deps: Pick<SalesRecordMutationsContext, "salesRecordsService">,
   input: {
     recordId: number;
     draft: Omit<CreateSalesRecordDraftInput, "source" | "leadAssignmentId">;
@@ -143,7 +145,7 @@ export async function updateDraft(
 
 export async function registerAttempt(
   ctx: AppContext,
-  deps: Pick<SalesRecordDeps, "salesRecordsService">,
+  deps: Pick<SalesRecordMutationsContext, "salesRecordsService">,
   input: {
     recordId: number;
     outcome: SalesRecordAttemptOutcome;

@@ -1,10 +1,11 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { Role } from "~/lib/auth/access/rbac";
 
 import type { AppContext } from "../../src/server/shared/action-runtime";
 import { Err, Ok } from "../../src/server/shared/result";
 import { getInviteManagement } from "../../src/server/team/application/invites";
+import type { InviteManagementQueryPort } from "../../src/server/team/application/ports";
 
 function makeContext(role: Role = "hr"): AppContext {
   return {
@@ -29,45 +30,37 @@ function makeContext(role: Role = "hr"): AppContext {
 }
 
 describe("getInviteManagement", () => {
-  beforeEach(() => {
-    // No shared mocks. Each test builds its own explicit deps.
-  });
-
   it("returns teams, pending invites, and assignable roles for the actor branch", async () => {
     const teamBranchCalls: number[] = [];
     const inviteBranchCalls: number[] = [];
 
-    const result = await getInviteManagement(makeContext(), {
-      repos: {
-        teams: {
-          findByBranch: async (branchId: number) => {
-            teamBranchCalls.push(branchId);
-            return [{ id: 11, name: "Operaciones" }];
-          },
-        },
+    const port = {
+      listTeamsByBranch: async (branchId: number) => {
+        teamBranchCalls.push(branchId);
+        return [{ id: 11, name: "Operaciones" }];
       },
-      createProvisioningService: () => ({
-        listPendingInvites: async (branchId: number) => {
-          inviteBranchCalls.push(branchId);
-          return Ok([
-            {
-              inviteId: 1001,
-              userId: 91,
-              email: "pending@crm.local",
-              names: "Pending",
-              firstSurname: "User",
-              secondSurname: "",
-              role: "executive",
-              teamId: null,
-              expiresAt: 1_700_000_060_000,
-              createdAt: 1_700_000_000_000,
-              createdByUserId: 7,
-              sentAt: 1_700_000_000_100,
-            },
-          ]);
-        },
-      }),
-    });
+      listPendingInvites: async (branchId: number) => {
+        inviteBranchCalls.push(branchId);
+        return Ok([
+          {
+            inviteId: 1001,
+            userId: 91,
+            email: "pending@crm.local",
+            names: "Pending",
+            firstSurname: "User",
+            secondSurname: "",
+            role: "executive",
+            teamId: null,
+            expiresAt: 1_700_000_060_000,
+            createdAt: 1_700_000_000_000,
+            createdByUserId: 7,
+            sentAt: 1_700_000_000_100,
+          },
+        ]);
+      },
+    } satisfies InviteManagementQueryPort;
+
+    const result = await getInviteManagement(makeContext(), port);
 
     expect(result.ok).toBe(true);
     if (!result.ok) {
@@ -94,21 +87,17 @@ describe("getInviteManagement", () => {
   });
 
   it("propagates provisioning errors without masking them", async () => {
-    const result = await getInviteManagement(makeContext(), {
-      repos: {
-        teams: {
-          findByBranch: async () => [{ id: 11, name: "Operaciones" }],
-        },
-      },
-      createProvisioningService: () => ({
-        listPendingInvites: async () =>
-          Err({
-            kind: "unexpected",
-            code: "invite_read_failed",
-            message: "Invite service unavailable",
-          }),
-      }),
-    });
+    const port = {
+      listTeamsByBranch: async () => [{ id: 11, name: "Operaciones" }],
+      listPendingInvites: async () =>
+        Err({
+          kind: "unexpected",
+          code: "invite_read_failed",
+          message: "Invite service unavailable",
+        }),
+    } satisfies InviteManagementQueryPort;
+
+    const result = await getInviteManagement(makeContext(), port);
 
     expect(result.ok).toBe(false);
     if (result.ok) {

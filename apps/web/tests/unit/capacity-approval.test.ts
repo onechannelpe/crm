@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { Role } from "~/lib/auth/access/rbac";
 
@@ -6,6 +6,10 @@ import {
   approveCapacityRequest,
   rejectCapacityRequest,
 } from "../../src/server/capacity/application/commands";
+import type {
+  CapacityApprovalPort,
+  CapacityApprovalTxPort,
+} from "../../src/server/capacity/application/ports";
 import type { AppContext } from "../../src/server/shared/action-runtime";
 
 const ACTOR_USER_ID = 99;
@@ -14,26 +18,26 @@ const REQUEST_ID = 42;
 
 type RequestRow = {
   id: number;
-  user_id: number;
+  userId: number;
   kind: "search_extra" | "lead_refill_extra";
-  status: "pending" | "approved" | "rejected";
-  requested_amount: number;
+  status: "pending" | "approved" | "rejected" | "canceled";
+  requestedAmount: number;
   reason: string;
-  decided_by_user_id?: number | null;
-  decision_note?: string | null;
+  decidedByUserId?: number | null;
+  decisionNote?: string | null;
 };
 
 type GrantRow = {
-  user_id: number;
+  userId: number;
   amount: number;
   reason: string;
-  actor_user_id: number;
+  actorUserId: number;
 };
 
 type ManagedUser = {
   role: Role;
-  branch_id: number;
-  team_id: number | null;
+  branchId: number;
+  teamId: number | null;
 };
 
 function makeContext(role: Role = "admin"): AppContext {
@@ -69,70 +73,58 @@ function makeHarness(input: {
   let leadGrants: GrantRow[] = [];
   let transactionCalls = 0;
 
-  const buildTxRepos = () => {
+  const buildTxPort = () => {
     const draftRequest = request ? { ...request } : undefined;
     const draftSearchGrants = [...searchGrants];
     const draftLeadGrants = [...leadGrants];
 
     return {
-      txRepos: {
-        capacityRequests: {
-          findById: async (id: number) =>
-            draftRequest?.id === id ? draftRequest : undefined,
-          markApproved: async (
-            id: number,
-            actorUserId: number,
-            note: string | null,
-          ) => {
-            if (input.failMarkApproved) {
-              throw new Error("db connection lost");
-            }
-            if (!draftRequest || draftRequest.id !== id) {
-              return { numUpdatedRows: BigInt(0) };
-            }
-            draftRequest.status = "approved";
-            draftRequest.decided_by_user_id = actorUserId;
-            draftRequest.decision_note = note;
-            return { numUpdatedRows: BigInt(1) };
-          },
-          markRejected: async (
-            id: number,
-            actorUserId: number,
-            note: string | null,
-          ) => {
-            if (!draftRequest || draftRequest.id !== id) {
-              return { numUpdatedRows: BigInt(0) };
-            }
-            draftRequest.status = "rejected";
-            draftRequest.decided_by_user_id = actorUserId;
-            draftRequest.decision_note = note;
-            return { numUpdatedRows: BigInt(1) };
-          },
+      tx: {
+        findRequestById: async (id: number) =>
+          draftRequest?.id === id ? draftRequest : undefined,
+        markRequestApproved: async (
+          id: number,
+          actorUserId: number,
+          note: string | null,
+        ) => {
+          if (input.failMarkApproved) {
+            throw new Error("db connection lost");
+          }
+          if (!draftRequest || draftRequest.id !== id) {
+            return false;
+          }
+          draftRequest.status = "approved";
+          draftRequest.decidedByUserId = actorUserId;
+          draftRequest.decisionNote = note;
+          return true;
         },
-        users: {
-          findById: async (userId: number) =>
-            userId === input.request?.user_id ? input.targetUser : undefined,
+        markRequestRejected: async (
+          id: number,
+          actorUserId: number,
+          note: string,
+        ) => {
+          if (!draftRequest || draftRequest.id !== id) {
+            return false;
+          }
+          draftRequest.status = "rejected";
+          draftRequest.decidedByUserId = actorUserId;
+          draftRequest.decisionNote = note;
+          return true;
         },
-        teams: {
-          findBySupervisorId: async (userId: number) =>
-            userId === ACTOR_USER_ID && input.supervisedTeamId
-              ? { id: input.supervisedTeamId }
-              : undefined,
-          findByIdWithSupervisor: async () => undefined,
+        findManagedUserById: async (userId: number) =>
+          userId === input.request?.userId ? input.targetUser : undefined,
+        findSupervisedTeamBySupervisorId: async (userId: number) =>
+          userId === ACTOR_USER_ID && input.supervisedTeamId
+            ? { id: input.supervisedTeamId }
+            : undefined,
+        findManagedTeamById: async () => undefined,
+        grantSearchCapacity: async (values: GrantRow) => {
+          draftSearchGrants.push(values);
         },
-        searchCapacityGrants: {
-          insert: async (values: GrantRow) => {
-            draftSearchGrants.push(values);
-          },
-          findByUserAndPeriod: async () => [],
+        grantLeadCapacity: async (values: GrantRow) => {
+          draftLeadGrants.push(values);
         },
-        leadCapacityGrants: {
-          insert: async (values: GrantRow) => {
-            draftLeadGrants.push(values);
-          },
-          findByUserAndDate: async () => [],
-        },
-      },
+      } satisfies CapacityApprovalTxPort,
       commit() {
         request = draftRequest;
         searchGrants = draftSearchGrants;
@@ -154,42 +146,36 @@ function makeHarness(input: {
     get transactionCalls() {
       return transactionCalls;
     },
-    deps: {
+    port: {
       enforceApprovalRateLimit: async () => undefined,
-      async runInRepositoryTransaction<T>(
-        operation: (
-          repos: ReturnType<typeof buildTxRepos>["txRepos"],
-        ) => Promise<T>,
+      async withTransaction<T>(
+        operation: (tx: CapacityApprovalTxPort) => Promise<T>,
       ): Promise<T> {
         transactionCalls += 1;
-        const tx = buildTxRepos();
-        const result = await operation(tx.txRepos);
-        tx.commit();
+        const transaction = buildTxPort();
+        const result = await operation(transaction.tx);
+        transaction.commit();
         return result;
       },
-    },
+    } satisfies CapacityApprovalPort,
   };
 }
 
 describe("capacity approval commands", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("approves a pending search request and grants search capacity", async () => {
     const harness = makeHarness({
       request: {
         id: REQUEST_ID,
-        user_id: TARGET_USER_ID,
+        userId: TARGET_USER_ID,
         kind: "search_extra",
         status: "pending",
-        requested_amount: 10,
+        requestedAmount: 10,
         reason: "need more",
       },
-      targetUser: { role: "executive", branch_id: 1, team_id: null },
+      targetUser: { role: "executive", branchId: 1, teamId: null },
     });
 
-    const result = await approveCapacityRequest(makeContext(), harness.deps, {
+    const result = await approveCapacityRequest(makeContext(), harness.port, {
       requestId: REQUEST_ID,
       note: null,
     });
@@ -197,15 +183,15 @@ describe("capacity approval commands", () => {
     expect(result.ok).toBe(true);
     expect(harness.request).toMatchObject({
       status: "approved",
-      decided_by_user_id: ACTOR_USER_ID,
-      decision_note: null,
+      decidedByUserId: ACTOR_USER_ID,
+      decisionNote: null,
     });
     expect(harness.searchGrants).toEqual([
       {
-        user_id: TARGET_USER_ID,
+        userId: TARGET_USER_ID,
         amount: 10,
         reason: "need more",
-        actor_user_id: ACTOR_USER_ID,
+        actorUserId: ACTOR_USER_ID,
       },
     ]);
     expect(harness.leadGrants).toEqual([]);
@@ -215,16 +201,16 @@ describe("capacity approval commands", () => {
     const harness = makeHarness({
       request: {
         id: REQUEST_ID,
-        user_id: TARGET_USER_ID,
+        userId: TARGET_USER_ID,
         kind: "lead_refill_extra",
         status: "pending",
-        requested_amount: 4,
+        requestedAmount: 4,
         reason: "old reason",
       },
-      targetUser: { role: "executive", branch_id: 1, team_id: null },
+      targetUser: { role: "executive", branchId: 1, teamId: null },
     });
 
-    const result = await approveCapacityRequest(makeContext(), harness.deps, {
+    const result = await approveCapacityRequest(makeContext(), harness.port, {
       requestId: REQUEST_ID,
       note: "  approved for campaign week  ",
     });
@@ -232,14 +218,14 @@ describe("capacity approval commands", () => {
     expect(result.ok).toBe(true);
     expect(harness.request).toMatchObject({
       status: "approved",
-      decision_note: "approved for campaign week",
+      decisionNote: "approved for campaign week",
     });
     expect(harness.leadGrants).toEqual([
       {
-        user_id: TARGET_USER_ID,
+        userId: TARGET_USER_ID,
         amount: 4,
         reason: "approved for campaign week",
-        actor_user_id: ACTOR_USER_ID,
+        actorUserId: ACTOR_USER_ID,
       },
     ]);
     expect(harness.searchGrants).toEqual([]);
@@ -249,18 +235,18 @@ describe("capacity approval commands", () => {
     const harness = makeHarness({
       request: {
         id: REQUEST_ID,
-        user_id: TARGET_USER_ID,
+        userId: TARGET_USER_ID,
         kind: "search_extra",
         status: "pending",
-        requested_amount: 5,
+        requestedAmount: 5,
         reason: "test",
       },
-      targetUser: { role: "executive", branch_id: 2, team_id: null },
+      targetUser: { role: "executive", branchId: 2, teamId: null },
     });
 
     const result = await approveCapacityRequest(
       makeContext("admin"),
-      harness.deps,
+      harness.port,
       {
         requestId: REQUEST_ID,
         note: null,
@@ -281,17 +267,17 @@ describe("capacity approval commands", () => {
     const harness = makeHarness({
       request: {
         id: REQUEST_ID,
-        user_id: TARGET_USER_ID,
+        userId: TARGET_USER_ID,
         kind: "search_extra",
         status: "pending",
-        requested_amount: 5,
+        requestedAmount: 5,
         reason: "test",
       },
-      targetUser: { role: "executive", branch_id: 1, team_id: null },
+      targetUser: { role: "executive", branchId: 1, teamId: null },
       failMarkApproved: true,
     });
 
-    const result = await approveCapacityRequest(makeContext(), harness.deps, {
+    const result = await approveCapacityRequest(makeContext(), harness.port, {
       requestId: REQUEST_ID,
       note: null,
     });
@@ -310,16 +296,16 @@ describe("capacity approval commands", () => {
     const harness = makeHarness({
       request: {
         id: REQUEST_ID,
-        user_id: TARGET_USER_ID,
+        userId: TARGET_USER_ID,
         kind: "search_extra",
         status: "pending",
-        requested_amount: 5,
+        requestedAmount: 5,
         reason: "test",
       },
-      targetUser: { role: "executive", branch_id: 1, team_id: null },
+      targetUser: { role: "executive", branchId: 1, teamId: null },
     });
 
-    const result = await rejectCapacityRequest(makeContext(), harness.deps, {
+    const result = await rejectCapacityRequest(makeContext(), harness.port, {
       requestId: REQUEST_ID,
       note: "  not justified  ",
     });
@@ -327,8 +313,8 @@ describe("capacity approval commands", () => {
     expect(result.ok).toBe(true);
     expect(harness.request).toMatchObject({
       status: "rejected",
-      decided_by_user_id: ACTOR_USER_ID,
-      decision_note: "not justified",
+      decidedByUserId: ACTOR_USER_ID,
+      decisionNote: "not justified",
     });
   });
 
@@ -336,16 +322,16 @@ describe("capacity approval commands", () => {
     const harness = makeHarness({
       request: {
         id: REQUEST_ID,
-        user_id: TARGET_USER_ID,
+        userId: TARGET_USER_ID,
         kind: "search_extra",
         status: "pending",
-        requested_amount: 5,
+        requestedAmount: 5,
         reason: "test",
       },
-      targetUser: { role: "executive", branch_id: 1, team_id: null },
+      targetUser: { role: "executive", branchId: 1, teamId: null },
     });
 
-    const result = await rejectCapacityRequest(makeContext(), harness.deps, {
+    const result = await rejectCapacityRequest(makeContext(), harness.port, {
       requestId: REQUEST_ID,
       note: "   ",
     });

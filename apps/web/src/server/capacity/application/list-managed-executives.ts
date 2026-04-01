@@ -12,7 +12,7 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import { canManageExecutive } from "../domain/access-policy";
-import type { CapacityDeps } from "../infrastructure/deps";
+import type { CapacityReadContext } from "../infrastructure/read-context";
 
 export type { SearchCapacitySnapshot, LeadCapacitySnapshot };
 
@@ -27,7 +27,7 @@ export type ManagedExecutiveSummary = {
 
 export async function listManagedExecutives(
   ctx: AppContext,
-  deps: Pick<CapacityDeps, "repos">,
+  deps: CapacityReadContext,
 ): Promise<Result<ManagedExecutiveSummary[], DomainError>> {
   try {
     const users =

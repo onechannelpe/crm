@@ -7,7 +7,7 @@ import {
   isValidPasswordResetTokenFormat,
 } from "~/lib/auth/password/reset-tokens";
 
-import type { AuthDeps } from "../infrastructure/deps";
+import type { PasswordResetContext } from "../infrastructure/password-reset-context";
 
 const TOKEN_TTL_MS = 60 * 60 * 1000;
 const MAX_REQUESTS_PER_HOUR = 3;
@@ -19,7 +19,7 @@ export type RequestPasswordResetResult =
 export async function requestPasswordReset(input: {
   email: string;
   origin: string;
-  deps: Pick<AuthDeps, "repos" | "notificationSender">;
+  deps: PasswordResetContext;
 }): Promise<RequestPasswordResetResult> {
   const email = input.email.trim().toLowerCase();
   if (!email) {
@@ -76,7 +76,7 @@ export async function resetPassword(input: {
   token: string;
   password: string;
   confirmPassword: string;
-  deps: Pick<AuthDeps, "repos">;
+  deps: Pick<PasswordResetContext, "repos">;
 }): Promise<ResetPasswordResult> {
   if (!isValidPasswordResetTokenFormat(input.token)) {
     return { ok: false, code: "invalid_token" };

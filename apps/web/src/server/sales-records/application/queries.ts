@@ -9,12 +9,12 @@ import type {
   SalesRecordProductOption,
   SalesRecordQueueItem,
 } from "../domain/types";
-import type { SalesRecordDeps } from "../infrastructure/deps";
+import type { SalesRecordReadContext } from "../infrastructure/read-context";
 
 function mapQueueItem(
   row: Awaited<
     ReturnType<
-      SalesRecordDeps["repos"]["salesRecords"]["listPendingWithClient"]
+      SalesRecordReadContext["repos"]["salesRecords"]["listPendingWithClient"]
     >
   >[number],
 ): SalesRecordQueueItem {
@@ -41,14 +41,14 @@ function parsePhonesJson(raw: string): string[] {
 }
 
 export async function listProducts(
-  deps: Pick<SalesRecordDeps, "repos">,
+  deps: SalesRecordReadContext,
 ): Promise<SalesRecordProductOption[]> {
   return deps.repos.products.findActive();
 }
 
 export async function getBootstrap(
   ctx: AppContext,
-  deps: Pick<SalesRecordDeps, "repos">,
+  deps: SalesRecordReadContext,
   input: { contactId: number | null },
 ): Promise<SalesRecordBootstrap> {
   if (input.contactId === null) {
@@ -116,7 +116,7 @@ export async function getBootstrap(
 
 export async function listPending(
   ctx: AppContext,
-  deps: Pick<SalesRecordDeps, "repos">,
+  deps: SalesRecordReadContext,
 ): Promise<SalesRecordQueueItem[]> {
   const rows = await deps.repos.salesRecords.listPendingWithClient(
     ctx.actor.role === "superuser"
@@ -128,7 +128,7 @@ export async function listPending(
 
 export async function listConfirmed(
   ctx: AppContext,
-  deps: Pick<SalesRecordDeps, "repos">,
+  deps: SalesRecordReadContext,
 ): Promise<SalesRecordQueueItem[]> {
   const scope =
     ctx.actor.role === "executive"
@@ -142,7 +142,7 @@ export async function listConfirmed(
 
 export async function getFixContext(
   ctx: AppContext,
-  deps: Pick<SalesRecordDeps, "repos">,
+  deps: SalesRecordReadContext,
   input: { recordId: number },
 ): Promise<SalesRecordFixContext> {
   const record = assertOwnedRecord(

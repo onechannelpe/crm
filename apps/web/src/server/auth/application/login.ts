@@ -9,7 +9,7 @@ import {
 } from "~/lib/auth/passkey/service";
 import { replaceCurrentSession } from "~/lib/auth/session/session-transition";
 
-import type { AuthDeps } from "../infrastructure/deps";
+import type { AuthLoginContext } from "../infrastructure/login-context";
 
 type PasskeyStartProviderFactory = NonNullable<
   Parameters<typeof createPasskeyLoginStartAuthService>[1]
@@ -20,7 +20,7 @@ type PasskeyFinishProviderFactory = NonNullable<
 >["createWebauthnProvider"];
 
 export function createPasskeyStartService(
-  deps: Pick<AuthDeps, "repos">,
+  deps: Pick<AuthLoginContext, "repos">,
   input: {
     createWebauthnProvider: PasskeyStartProviderFactory;
   },
@@ -31,7 +31,7 @@ export function createPasskeyStartService(
 }
 
 export function submitPasswordLoginWithDeps(
-  deps: Pick<AuthDeps, "repos" | "privilegedLoginAlertSender">,
+  deps: AuthLoginContext,
   input: {
     identifier: string;
     password: string;
@@ -47,7 +47,7 @@ export function submitPasswordLoginWithDeps(
 }
 
 export function submitTotpLoginWithDeps(
-  deps: Pick<AuthDeps, "repos" | "privilegedLoginAlertSender">,
+  deps: AuthLoginContext,
   input: {
     flowId: number;
     totpCode: string;
@@ -63,7 +63,7 @@ export function submitTotpLoginWithDeps(
 }
 
 export async function finishPasskeyLoginWithDeps(
-  deps: Pick<AuthDeps, "repos" | "privilegedLoginAlertSender">,
+  deps: AuthLoginContext,
   input: {
     flowId: number;
     response: AuthenticationResponseJSON;

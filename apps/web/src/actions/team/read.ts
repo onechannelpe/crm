@@ -9,14 +9,14 @@ import type {
   BulkImportSetup,
   InviteManagement,
 } from "~/server/team/domain/types";
-import { createTeamInviteManagementDeps } from "~/server/team/infrastructure/deps";
+import { createInviteManagementQueryPort } from "~/server/team/infrastructure/invite-management-query";
 
 export async function getInviteManagement(): Promise<InviteManagement> {
   return runAction({
     actionName: "team.invite_management.read",
     permission: "hr:manage",
     execute: (ctx) =>
-      getInviteManagementService(ctx, createTeamInviteManagementDeps()),
+      getInviteManagementService(ctx, createInviteManagementQueryPort()),
   });
 }
 

@@ -12,18 +12,16 @@ import type {
   InviteInfo,
   InviteManagement,
 } from "../domain/types";
-import type {
-  TeamDeps,
-  TeamInviteManagementDeps,
-} from "../infrastructure/deps";
+import type { TeamInviteContext } from "../infrastructure/invite-context";
 import {
   buildInviteUrl,
   sendInviteEmail,
 } from "../infrastructure/invite-delivery";
+import type { InviteManagementQueryPort } from "./ports";
 
 export async function getInviteInfo(input: {
   token: string;
-  deps: Pick<TeamDeps, "repos">;
+  deps: Pick<TeamInviteContext, "repos">;
 }): Promise<Result<InviteInfo | null, DomainError>> {
   try {
     const invite = await input.deps.repos.userInvites.findPendingByTokenHash(
@@ -49,12 +47,11 @@ export async function getInviteInfo(input: {
 
 export async function getInviteManagement(
   ctx: AppContext,
-  deps: TeamInviteManagementDeps,
+  port: InviteManagementQueryPort,
 ): Promise<Result<InviteManagement, DomainError>> {
-  const teamProvisioning = deps.createProvisioningService();
   const [teams, pendingInvites] = await Promise.all([
-    deps.repos.teams.findByBranch(ctx.actor.branchId),
-    teamProvisioning.listPendingInvites(ctx.actor.branchId),
+    port.listTeamsByBranch(ctx.actor.branchId),
+    port.listPendingInvites(ctx.actor.branchId),
   ]);
   if (isErr(pendingInvites)) {
     return pendingInvites;
@@ -62,7 +59,7 @@ export async function getInviteManagement(
 
   return Ok({
     pendingInvites: pendingInvites.value,
-    teams: teams.map((team) => ({ id: team.id, name: team.name })),
+    teams,
     assignableRoles: getAssignableRoleOptions(ctx.actor.role),
   });
 }
@@ -78,7 +75,7 @@ export async function getBulkImportSetup(
 export async function createTeamInvite(
   ctx: AppContext,
   deps: Pick<
-    TeamDeps,
+    TeamInviteContext,
     "createProvisioningService" | "enforceInviteCreateRateLimit"
   >,
   input: CreateTeamInviteCommand,
@@ -126,7 +123,7 @@ export async function createTeamInvite(
 
 export async function resendTeamInvite(
   ctx: AppContext,
-  deps: Pick<TeamDeps, "repos" | "createProvisioningService">,
+  deps: Pick<TeamInviteContext, "repos" | "createProvisioningService">,
   input: { inviteId: number },
 ): Promise<Result<void, DomainError>> {
   const teamProvisioning = deps.createProvisioningService();
@@ -170,7 +167,7 @@ export async function resendTeamInvite(
 
 export async function revokeTeamInvite(
   ctx: AppContext,
-  deps: Pick<TeamDeps, "createProvisioningService">,
+  deps: Pick<TeamInviteContext, "createProvisioningService">,
   input: { inviteId: number },
 ): Promise<Result<void, DomainError>> {
   const teamProvisioning = deps.createProvisioningService();
@@ -183,7 +180,10 @@ export async function revokeTeamInvite(
 }
 
 export async function acceptTeamInvite(
-  deps: Pick<TeamDeps, "createProvisioningService" | "issuePreAuthSession">,
+  deps: Pick<
+    TeamInviteContext,
+    "createProvisioningService" | "issuePreAuthSession"
+  >,
   request: {
     ipAddress: string;
     userAgent: string | null;

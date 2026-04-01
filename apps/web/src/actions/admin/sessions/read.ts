@@ -7,7 +7,7 @@ import {
   listUserSessions as listUserSessionsService,
   type SessionInfo,
 } from "~/server/auth/application/admin-sessions";
-import { createAuthDeps } from "~/server/auth/infrastructure/deps";
+import { createAdminSessionsReadContext } from "~/server/auth/infrastructure/admin-sessions-read-context";
 import { runAction } from "~/server/shared/action-runtime";
 import { isErr } from "~/server/shared/result";
 
@@ -26,7 +26,11 @@ export async function listUserSessions(userId: number) {
     stepUp: "recent_strong_auth",
     input: parsedInput.value,
     execute: (ctx) =>
-      listUserSessionsService(ctx, createAuthDeps(), parsedInput.value),
+      listUserSessionsService(
+        ctx,
+        createAdminSessionsReadContext(),
+        parsedInput.value,
+      ),
   });
 }
 
@@ -35,7 +39,7 @@ export async function getActiveSessionsCount(): Promise<number> {
     actionName: "admin.sessions.count.read",
     role: "admin",
     stepUp: "recent_strong_auth",
-    execute: () => countActiveSessionsService(createAuthDeps()),
+    execute: () => countActiveSessionsService(createAdminSessionsReadContext()),
   });
 }
 
@@ -44,6 +48,7 @@ export async function listAllActiveSessions(): Promise<SessionInfo[]> {
     actionName: "admin.sessions.active.read",
     role: "admin",
     stepUp: "recent_strong_auth",
-    execute: () => listAllActiveSessionsService(createAuthDeps()),
+    execute: () =>
+      listAllActiveSessionsService(createAdminSessionsReadContext()),
   });
 }

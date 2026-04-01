@@ -14,14 +14,14 @@ import {
   type CompleteOnboardingError,
 } from "~/server/users/service-account-onboarding";
 
-import type { AuthDeps } from "../infrastructure/deps";
+import type { AuthOnboardingContext } from "../infrastructure/onboarding-context";
 
 type EnrollmentProviderFactory = NonNullable<
   Parameters<typeof createPasskeyEnrollmentAuthService>[1]
 >["createWebauthnProvider"];
 
 function createEnrollmentService(
-  deps: Pick<AuthDeps, "repos">,
+  deps: Pick<AuthOnboardingContext, "repos">,
   input: {
     createWebauthnProvider: EnrollmentProviderFactory;
   },
@@ -32,7 +32,7 @@ function createEnrollmentService(
 }
 
 export function beginPasskeyRegistration(
-  deps: Pick<AuthDeps, "repos">,
+  deps: Pick<AuthOnboardingContext, "repos">,
   input: {
     userId: number;
     ipAddress: string;
@@ -46,7 +46,7 @@ export function beginPasskeyRegistration(
 }
 
 export async function finishPasskeyRegistration(
-  deps: Pick<AuthDeps, "repos">,
+  deps: Pick<AuthOnboardingContext, "repos">,
   input: {
     session: {
       userId: number;
@@ -96,7 +96,7 @@ export async function finishPasskeyRegistration(
 }
 
 export async function completeOnboarding(
-  deps: Pick<AuthDeps, "repos" | "runInRepositoryTransaction">,
+  deps: AuthOnboardingContext,
   input: {
     session: {
       userId: number;

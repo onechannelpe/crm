@@ -8,7 +8,7 @@ import {
 } from "~/server/shared/context";
 import { createUserProvisioningService } from "~/server/users/service-user-provisioning";
 
-export function createTeamDeps() {
+export function createTeamInviteContext() {
   return {
     repos: {
       teams: repos.teams,
@@ -48,37 +48,4 @@ export function createTeamDeps() {
   };
 }
 
-export type TeamDeps = ReturnType<typeof createTeamDeps>;
-
-export type TeamInviteManagementDeps = {
-  repos: {
-    teams: {
-      findByBranch(
-        branchId: number,
-      ): Promise<Array<{ id: number; name: string }>>;
-    };
-  };
-  createProvisioningService(): {
-    listPendingInvites: ReturnType<
-      TeamDeps["createProvisioningService"]
-    >["listPendingInvites"];
-  };
-};
-
-export function createTeamInviteManagementDeps(): TeamInviteManagementDeps {
-  return {
-    repos: {
-      teams: repos.teams,
-    },
-    createProvisioningService() {
-      const provisioning = createUserProvisioningService(repos, {
-        runInTransaction: runInRepositoryTransaction,
-      });
-      return {
-        listPendingInvites(branchId: number) {
-          return provisioning.listPendingInvites(branchId);
-        },
-      };
-    },
-  };
-}
+export type TeamInviteContext = ReturnType<typeof createTeamInviteContext>;

@@ -2,7 +2,7 @@ import type { AppContext } from "~/server/shared/action-runtime";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import type { CapacityDeps } from "../infrastructure/deps";
+import type { CapacityReadContext } from "../infrastructure/read-context";
 
 export type CapacityPolicyDefaults = {
   branchId: number;
@@ -20,7 +20,7 @@ export type CapacityPolicyDefaults = {
 
 export async function getPolicyDefaults(
   ctx: AppContext,
-  deps: Pick<CapacityDeps, "repos">,
+  deps: CapacityReadContext,
 ): Promise<Result<CapacityPolicyDefaults, DomainError>> {
   try {
     const [teams, branchSearch, branchLead] = await Promise.all([

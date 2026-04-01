@@ -7,12 +7,12 @@ import type { AppContext } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
-import type { AuthDeps } from "../infrastructure/deps";
+import type { AuthSessionContext } from "../infrastructure/session-context";
 import type { CurrentUserView } from "../types";
 
 export async function logoutUser(
   ctx: AppContext,
-  deps: Pick<AuthDeps, "repos">,
+  deps: AuthSessionContext,
 ): Promise<Result<void, DomainError>> {
   const { sessionId, userId } = ctx.actor;
 
@@ -41,7 +41,7 @@ export async function logoutUser(
 
 export async function getCurrentUser(
   ctx: AppContext,
-  deps: Pick<AuthDeps, "repos">,
+  deps: AuthSessionContext,
 ): Promise<Result<CurrentUserView | null, DomainError>> {
   const { userId, role, sessionClass, primaryAuthMethod, strongAuthMethod } =
     ctx.actor;

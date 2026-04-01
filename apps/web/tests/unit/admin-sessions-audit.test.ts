@@ -1,20 +1,11 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
-import {
-  invalidateSession,
-  invalidateUserSessions,
-} from "~/lib/auth/session/session-manager";
+import { describe, expect, it } from "vitest";
 
 import {
   revokeAllUserSessions,
   revokeUserSession,
 } from "../../src/server/auth/application/admin-sessions";
+import type { AdminSessionRevocationPort } from "../../src/server/auth/application/ports";
 import type { AppContext } from "../../src/server/shared/action-runtime";
-
-vi.mock("~/lib/auth/session/session-manager", () => ({
-  invalidateSession: vi.fn<(sessionId: string) => Promise<void>>(),
-  invalidateUserSessions: vi.fn<(userId: number) => Promise<void>>(),
-}));
 
 type AuditPayload = {
   user_id: number;
@@ -49,6 +40,8 @@ function makeContext(): AppContext {
 
 function makeDeps() {
   const auditLogs: AuditPayload[] = [];
+  const invalidatedSessions: string[] = [];
+  const invalidatedUsers: number[] = [];
   const authSessionRevocations: Array<{ sessionId: string; now: number }> = [];
   const userRevocations: Array<{ userId: number; now: number }> = [];
   const syncUpdates: Array<{
@@ -58,37 +51,32 @@ function makeDeps() {
   }> = [];
 
   return {
-    deps: {
-      repos: {
-        extensionRuntime: {
-          revokeInstallationSessionsByAuthSession: async (
-            sessionId: string,
-            now: number,
-          ) => {
-            authSessionRevocations.push({ sessionId, now });
-          },
-          revokeInstallationSessionsByUser: async (
-            userId: number,
-            now: number,
-          ) => {
-            userRevocations.push({ userId, now });
-          },
-          updateExecutiveSyncHealthByUser: async (payload: {
-            user_id: number;
-            sync_health: string;
-            sync_updated_at: number;
-          }) => {
-            syncUpdates.push(payload);
-          },
-        },
-        auditLogs: {
-          create: async (payload: AuditPayload) => {
-            auditLogs.push(payload);
-          },
-        },
+    port: {
+      invalidateSession: async (sessionId: string) => {
+        invalidatedSessions.push(sessionId);
       },
-    },
+      invalidateUserSessions: async (userId: number) => {
+        invalidatedUsers.push(userId);
+      },
+      revokeInstallationSessionsByAuthSession: async (
+        sessionId: string,
+        now: number,
+      ) => {
+        authSessionRevocations.push({ sessionId, now });
+      },
+      revokeInstallationSessionsByUser: async (userId: number, now: number) => {
+        userRevocations.push({ userId, now });
+      },
+      updateExecutiveSyncHealthByUser: async (payload) => {
+        syncUpdates.push(payload);
+      },
+      createAuditLog: async (payload: AuditPayload) => {
+        auditLogs.push(payload);
+      },
+    } satisfies AdminSessionRevocationPort,
     auditLogs,
+    invalidatedSessions,
+    invalidatedUsers,
     authSessionRevocations,
     userRevocations,
     syncUpdates,
@@ -96,22 +84,16 @@ function makeDeps() {
 }
 
 describe("admin session revocation", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    vi.mocked(invalidateSession).mockResolvedValue(undefined);
-    vi.mocked(invalidateUserSessions).mockResolvedValue(undefined);
-  });
-
   it("revokes one session and writes an audit record for the target user", async () => {
     const harness = makeDeps();
 
-    const result = await revokeUserSession(makeContext(), harness.deps, {
+    const result = await revokeUserSession(makeContext(), harness.port, {
       sessionId: "session-abc",
       targetUserId: 42,
     });
 
     expect(result.ok).toBe(true);
-    expect(invalidateSession).toHaveBeenCalledWith("session-abc");
+    expect(harness.invalidatedSessions).toEqual(["session-abc"]);
     expect(harness.authSessionRevocations).toEqual([
       { sessionId: "session-abc", now: 1_700_000_100_000 },
     ]);
@@ -139,12 +121,12 @@ describe("admin session revocation", () => {
   it("revokes all user sessions and writes a single audit record", async () => {
     const harness = makeDeps();
 
-    const result = await revokeAllUserSessions(makeContext(), harness.deps, {
+    const result = await revokeAllUserSessions(makeContext(), harness.port, {
       targetUserId: 77,
     });
 
     expect(result.ok).toBe(true);
-    expect(invalidateUserSessions).toHaveBeenCalledWith(77);
+    expect(harness.invalidatedUsers).toEqual([77]);
     expect(harness.userRevocations).toEqual([
       { userId: 77, now: 1_700_000_100_000 },
     ]);

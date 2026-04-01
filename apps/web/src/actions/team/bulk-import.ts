@@ -8,7 +8,7 @@ import {
   type BulkApplyResult,
   type BulkParseResult,
 } from "~/server/team/application/bulk-import";
-import { createTeamDeps } from "~/server/team/infrastructure/deps";
+import { createTeamInviteContext } from "~/server/team/infrastructure/invite-context";
 
 export type { BulkApplyResult } from "~/server/team/application/bulk-import";
 
@@ -48,7 +48,7 @@ export async function applyBulkImport(
     permission: "admin:manage",
     input: { role: safeRole },
     execute: (ctx) =>
-      applyBulkImportService(ctx, createTeamDeps(), {
+      applyBulkImportService(ctx, createTeamInviteContext(), {
         csvContent,
         role: safeRole,
       }),

@@ -6,7 +6,7 @@ import {
   revokeAllUserSessions as revokeAllUserSessionsService,
   revokeUserSession as revokeUserSessionService,
 } from "~/server/auth/application/admin-sessions";
-import { createAdminSessionDeps } from "~/server/auth/infrastructure/deps";
+import { createAdminSessionRevocationPort } from "~/server/auth/infrastructure/admin-session-revocation-port";
 import { runAction } from "~/server/shared/action-runtime";
 import { isErr } from "~/server/shared/result";
 
@@ -31,7 +31,7 @@ export async function revokeUserSession(
     execute: (ctx) =>
       revokeUserSessionService(
         ctx,
-        createAdminSessionDeps(),
+        createAdminSessionRevocationPort(),
         parsedInput.value,
       ),
   });
@@ -52,7 +52,7 @@ export async function revokeAllUserSessions(
     execute: (ctx) =>
       revokeAllUserSessionsService(
         ctx,
-        createAdminSessionDeps(),
+        createAdminSessionRevocationPort(),
         parsedInput.value,
       ),
   });
