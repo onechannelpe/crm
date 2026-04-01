@@ -158,9 +158,11 @@ export default function SecurityPoliciesPage() {
             No hay políticas registradas.
           </p>
         }
-        isLoading={isLoading()}
         rowOpen={createNoopRowOpen()}
-        rows={rows()}
+        source={{
+          status: isLoading() ? "pending" : "ready",
+          rows: rows(),
+        }}
       />
       <div class={styles.formActions}>
         <Button

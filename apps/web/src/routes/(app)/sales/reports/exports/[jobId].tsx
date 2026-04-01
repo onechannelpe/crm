@@ -119,9 +119,14 @@ export default function SalesExportDetailPage() {
               emptyState={
                 <p class={styles.emptyText}>No download events yet.</p>
               }
-              isLoading={downloads.loading && downloads() === undefined}
               rowOpen={createNoopRowOpen()}
-              rows={downloadRows()}
+              source={{
+                status:
+                  downloads.loading && downloads() === undefined
+                    ? "pending"
+                    : "ready",
+                rows: downloadRows(),
+              }}
             />
           </>
         )}

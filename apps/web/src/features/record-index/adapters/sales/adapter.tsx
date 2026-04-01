@@ -4,7 +4,10 @@ import { listLeadSales } from "~/actions/pipeline/sales";
 import Building2 from "~/components/icons/building-2";
 import List from "~/components/icons/list";
 import { RecordIndexScreen } from "~/features/record-index/components/screen";
-import type { RecordIndexAdapter } from "~/features/record-index/model/types";
+import type {
+  RecordIndexAdapter,
+  RecordIndexSource,
+} from "~/features/record-index/model/types";
 
 import type { SalesRow } from "./columns";
 import { SALES_RECORD_INDEX_COLUMNS } from "./columns";
@@ -14,9 +17,16 @@ import styles from "./styles.module.css";
 
 export function SalesRecordIndex() {
   const sales = createAsync(() => listLeadSales({}));
-  const rows = () => sales() ?? [];
-  const isLoading = () => sales() === undefined;
   const { rowOpen } = useOpenSalesRecord();
+  const source = (): RecordIndexSource<SalesRow> => {
+    const data = sales();
+
+    if (data === undefined) {
+      return { status: "pending", rows: [] };
+    }
+
+    return { status: "ready", rows: data };
+  };
 
   const adapter = {
     id: "sales",
@@ -24,8 +34,7 @@ export function SalesRecordIndex() {
     ariaLabel: "Ventas",
     pickerIcon: List,
     columns: SALES_RECORD_INDEX_COLUMNS,
-    getRows: rows,
-    isLoading,
+    source,
     selectable: true,
     rowOpen,
     emptyState: {

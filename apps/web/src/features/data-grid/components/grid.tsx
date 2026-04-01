@@ -7,6 +7,7 @@ import {
 import { createDataGridInteraction } from "../hooks/use-instance";
 import type { DataGridSelectionModel } from "../hooks/use-selection";
 import type { DataGridRowOpen } from "../model/row-open";
+import type { DataGridSource } from "../model/source";
 import type {
   DataGridActionRowConfig,
   DataGridColumn,
@@ -20,10 +21,10 @@ export function DataGrid<T extends { id: number }>(props: {
   ariaLabel: string;
   columns: DataGridColumn<T>[];
   emptyState: JSX.Element;
-  isLoading: boolean;
+  errorState?: JSX.Element;
   reorder?: DataGridFeatures<T>["reorder"];
   rowOpen: DataGridRowOpen<T>;
-  rows: T[];
+  source: DataGridSource<T>;
   selection?: DataGridSelectionModel;
   suspendEscapeSelectionClear?: boolean;
 }) {
@@ -32,7 +33,7 @@ export function DataGrid<T extends { id: number }>(props: {
 
   const selectable = createMemo(() => props.selection !== undefined);
   const reorderable = createMemo(() => props.reorder !== undefined);
-  const rows = createMemo(() => props.rows);
+  const rows = createMemo(() => props.source.rows);
   const gridTemplateColumns = createMemo(() =>
     buildDataGridTemplateColumns(props.columns, {
       reorderable: reorderable(),
@@ -55,7 +56,7 @@ export function DataGrid<T extends { id: number }>(props: {
       getContainer={() => tableRef}
       getScrollWrapper={() => scrollWrapperRef}
       interaction={interaction}
-      rows={props.rows}
+      rows={rows()}
       suspendEscapeSelectionClear={props.suspendEscapeSelectionClear ?? false}
     >
       <DataGridContent
@@ -63,7 +64,7 @@ export function DataGrid<T extends { id: number }>(props: {
         ariaLabel={props.ariaLabel}
         columns={props.columns}
         emptyState={props.emptyState}
-        isLoading={props.isLoading}
+        errorState={props.errorState}
         reorderable={reorderable()}
         setContainer={(element) => {
           tableRef = element;
@@ -73,7 +74,7 @@ export function DataGrid<T extends { id: number }>(props: {
         }}
         gridTemplateColumns={gridTemplateColumns()}
         rowOpen={props.rowOpen}
-        rows={props.rows}
+        source={props.source}
         selectable={selectable()}
         selection={props.selection}
         stickyColumnIndex={stickyColumnIndex()}

@@ -1,3 +1,4 @@
+import { useDataGridInteractionReady } from "../context/interaction-context";
 import type { DataGridIcon } from "../model/types";
 
 import styles from "../styles/data-grid.module.css";
@@ -14,11 +15,13 @@ export function DataGridActionRow(props: {
   stickyLeft: number;
 }) {
   const Icon = props.icon;
+  const isInteractive = useDataGridInteractionReady();
 
   return (
     <button
       type="button"
       class={styles.actionRow}
+      disabled={!isInteractive()}
       style={{ "grid-template-columns": props.gridTemplateColumns }}
       onClick={props.onClick}
     >

@@ -4,7 +4,10 @@ import { listLeads } from "~/actions/pipeline/leads";
 import Building2 from "~/components/icons/building-2";
 import List from "~/components/icons/list";
 import { RecordIndexScreen } from "~/features/record-index/components/screen";
-import type { RecordIndexAdapter } from "~/features/record-index/model/types";
+import type {
+  RecordIndexAdapter,
+  RecordIndexSource,
+} from "~/features/record-index/model/types";
 
 import type { LeadRow } from "./columns";
 import { LEADS_RECORD_INDEX_COLUMNS } from "./columns";
@@ -20,10 +23,23 @@ import styles from "./styles.module.css";
 
 export function LeadsRecordIndex() {
   const leads = createAsync(() => listLeads({}));
-  const rows = () => leads() ?? [];
-  const isLoading = () => leads() === undefined;
   const { rowOpen } = useOpenLeadRecord();
   const createAction = useCreateLeadRecordAction();
+  const source = (): RecordIndexSource<LeadRow> => {
+    const data = leads();
+
+    if (data === undefined) {
+      return {
+        status: "pending",
+        rows: [],
+      };
+    }
+
+    return {
+      status: "ready",
+      rows: data,
+    };
+  };
 
   const adapter = {
     id: "leads",
@@ -32,8 +48,7 @@ export function LeadsRecordIndex() {
     class: `${styles.page} record-index-container-gater-for-drag-select`,
     pickerIcon: List,
     columns: LEADS_RECORD_INDEX_COLUMNS,
-    getRows: rows,
-    isLoading,
+    source,
     selectable: true,
     rowOpen,
     emptyState: {

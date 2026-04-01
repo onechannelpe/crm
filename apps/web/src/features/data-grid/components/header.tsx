@@ -2,6 +2,7 @@ import { For } from "solid-js";
 
 import { Checkbox } from "~/components/ui/input/checkbox";
 
+import { useDataGridInteractionReady } from "../context/interaction-context";
 import type { DataGridColumn } from "../model/types";
 
 import styles from "../styles/data-grid.module.css";
@@ -17,6 +18,8 @@ export function DataGridHeader<T>(props: {
   stickyLeft: number;
   onToggleAll?: (checked: boolean) => void;
 }) {
+  const isInteractive = useDataGridInteractionReady();
+
   return (
     <div
       class={styles.headerRow}
@@ -41,6 +44,7 @@ export function DataGridHeader<T>(props: {
         >
           <Checkbox
             checked={props.allSelected ?? false}
+            disabled={!isInteractive()}
             onChange={(event: Event & { currentTarget: HTMLInputElement }) =>
               props.onToggleAll?.(event.currentTarget.checked)
             }

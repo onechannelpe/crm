@@ -82,9 +82,11 @@ export default function ConfirmedSalesPage() {
             description="Las ventas confirmadas aparecerán aquí."
           />
         }
-        isLoading={isLoading()}
         rowOpen={rowOpen}
-        rows={rows()}
+        source={{
+          status: isLoading() ? "pending" : "ready",
+          rows: rows(),
+        }}
       />
     </AppPage>
   );
