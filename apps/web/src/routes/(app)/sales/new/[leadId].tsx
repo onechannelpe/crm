@@ -1,7 +1,7 @@
 import { createAsync, useNavigate, useParams } from "@solidjs/router";
 import { createSignal, Show } from "solid-js";
 
-import { getLead } from "~/actions/pipeline/leads";
+import { getLeadDetail } from "~/actions/lead-pipeline/leads";
 import { createLeadSale } from "~/actions/pipeline/sales";
 import { AppPage } from "~/components/layout/page";
 import { toAppError } from "~/lib/app-errors";
@@ -9,7 +9,7 @@ import { toAppError } from "~/lib/app-errors";
 export default function NewLeadSalePage() {
   const params = useParams<{ leadId: string }>();
   const navigate = useNavigate();
-  const data = createAsync(() => getLead(Number(params.leadId)));
+  const data = createAsync(() => getLeadDetail(Number(params.leadId)));
   const [error, setError] = createSignal<string | null>(null);
   const [submitting, setSubmitting] = createSignal(false);
   const [proveedorActual, setProveedorActual] = createSignal("");

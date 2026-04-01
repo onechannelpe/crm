@@ -140,6 +140,41 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
+    .createTable("pipeline_lead_interactions")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("lead_id", "integer", (col) =>
+      col.notNull().references("pipeline_leads.id").onDelete("cascade"),
+    )
+    .addColumn("kind", "varchar(20)", (col) => col.notNull())
+    .addColumn("outcome", "varchar(30)")
+    .addColumn("body_text", "text")
+    .addColumn("created_by", "integer", (col) =>
+      col.notNull().references("users.id"),
+    )
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .execute();
+
+  await db.schema
+    .createIndex("idx_pipeline_lead_interactions_lead")
+    .on("pipeline_lead_interactions")
+    .columns(["lead_id", "created_at"])
+    .execute();
+
+  await db.schema
+    .createTable("lead_sourcing_policies")
+    .addColumn("branch_id", "integer", (col) =>
+      col.primaryKey().references("branches.id").onDelete("cascade"),
+    )
+    .addColumn("engine_assignment_enabled", "integer", (col) =>
+      col.notNull().defaultTo(0),
+    )
+    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .addColumn("updated_by_user_id", "integer", (col) =>
+      col.notNull().references("users.id"),
+    )
+    .execute();
+
+  await db.schema
     .createTable("pipeline_integration_jobs")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("type", "varchar(30)", (col) => col.notNull())

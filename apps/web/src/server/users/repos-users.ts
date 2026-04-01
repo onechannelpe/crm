@@ -13,6 +13,18 @@ export function createUsersRepo(db: DatabaseExecutor) {
         .executeTakeFirst();
     },
 
+    findByIds(ids: number[]) {
+      if (ids.length === 0) {
+        return Promise.resolve([] as UsersTable[]);
+      }
+
+      return db
+        .selectFrom("users")
+        .selectAll()
+        .where("id", "in", ids)
+        .execute();
+    },
+
     findByEmail(email: string) {
       return db
         .selectFrom("users")

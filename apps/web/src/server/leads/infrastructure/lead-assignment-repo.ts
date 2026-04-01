@@ -37,5 +37,14 @@ export function createLeadAssignmentRepo(db: DatabaseExecutor) {
         .where("is_active", "=", 1)
         .executeTakeFirst();
     },
+
+    listByLead(leadId: number) {
+      return db
+        .selectFrom("pipeline_lead_assignments")
+        .selectAll()
+        .where("lead_id", "=", leadId)
+        .orderBy("assigned_at", "desc")
+        .execute();
+    },
   };
 }

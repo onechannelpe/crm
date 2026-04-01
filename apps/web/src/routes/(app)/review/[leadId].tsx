@@ -1,7 +1,7 @@
 import { createAsync, useNavigate, useParams } from "@solidjs/router";
 import { createSignal, Show } from "solid-js";
 
-import { getLead } from "~/actions/pipeline/leads";
+import { getLeadDetail } from "~/actions/lead-pipeline/leads";
 import {
   updateLeadStatus,
   updateLeadPrioridad,
@@ -14,7 +14,7 @@ import type { LeadStatus, Prioridad } from "~/lib/db/types";
 export default function ReviewLeadPage() {
   const params = useParams<{ leadId: string }>();
   const navigate = useNavigate();
-  const data = createAsync(() => getLead(Number(params.leadId)));
+  const data = createAsync(() => getLeadDetail(Number(params.leadId)));
   const [error, setError] = createSignal<string | null>(null);
   const [statusVal, setStatusVal] = createSignal<LeadStatus>("DISPONIBLE");
   const [statusReason, setStatusReason] = createSignal("");

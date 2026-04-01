@@ -24,6 +24,15 @@ export function createSaleRepo(db: DatabaseExecutor) {
         .executeTakeFirst();
     },
 
+    findByLead(leadId: number) {
+      return db
+        .selectFrom("pipeline_sales")
+        .selectAll()
+        .where("lead_id", "=", leadId)
+        .orderBy("created_at", "desc")
+        .executeTakeFirst();
+    },
+
     list(limit: number, offset: number) {
       return db
         .selectFrom("pipeline_sales")

@@ -760,6 +760,16 @@ export type LeadStatus =
 
 export type Prioridad = "P1" | "P2" | "SIN RESULTADO";
 
+export type LeadInteractionKind = "call" | "note";
+
+export type LeadCallOutcome =
+  | "answered"
+  | "no_answer"
+  | "wrong_number"
+  | "callback_requested"
+  | "qualified"
+  | "disqualified";
+
 export type ExecutiveCategory = "elite" | "corporativa";
 
 export const LEAD_STAGES = [
@@ -863,6 +873,23 @@ export interface PipelineLeadAssignmentsTable {
   assigned_at: number;
 }
 
+export interface PipelineLeadInteractionsTable {
+  id: Generated<number>;
+  lead_id: number;
+  kind: LeadInteractionKind;
+  outcome: LeadCallOutcome | null;
+  body_text: string | null;
+  created_by: number;
+  created_at: number;
+}
+
+export interface LeadSourcingPoliciesTable {
+  branch_id: number;
+  engine_assignment_enabled: number;
+  updated_at: number;
+  updated_by_user_id: number;
+}
+
 export interface PipelineIntegrationJobsTable {
   id: Generated<number>;
   type: "export" | "import_status" | "import_prioridad";
@@ -946,6 +973,8 @@ export interface Database {
   pipeline_quotations: PipelineQuotationsTable;
   pipeline_sales: PipelineSalesTable;
   pipeline_lead_assignments: PipelineLeadAssignmentsTable;
+  pipeline_lead_interactions: PipelineLeadInteractionsTable;
+  lead_sourcing_policies: LeadSourcingPoliciesTable;
   pipeline_integration_jobs: PipelineIntegrationJobsTable;
 }
 
@@ -1000,6 +1029,14 @@ export type UserTotpFactor = Selectable<UserTotpFactorsTable>;
 export type UserTotpRecoveryCode = Selectable<UserTotpRecoveryCodesTable>;
 export type UserInvite = Selectable<UserInvitesTable>;
 export type PasswordResetToken = Selectable<PasswordResetTokensTable>;
+export type PipelineLead = Selectable<PipelineLeadsTable>;
+export type PipelineLeadCommercialInput =
+  Selectable<PipelineLeadCommercialInputsTable>;
+export type PipelineQuotation = Selectable<PipelineQuotationsTable>;
+export type PipelineSale = Selectable<PipelineSalesTable>;
+export type PipelineLeadAssignment = Selectable<PipelineLeadAssignmentsTable>;
+export type PipelineLeadInteraction = Selectable<PipelineLeadInteractionsTable>;
+export type LeadSourcingPolicy = Selectable<LeadSourcingPoliciesTable>;
 
 export type NewUser = Insertable<UsersTable>;
 export type NewLoginFlow = Insertable<LoginFlowsTable>;

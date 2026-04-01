@@ -1,6 +1,6 @@
 import { createAsync } from "@solidjs/router";
 
-import { listLeads } from "~/actions/pipeline/leads";
+import { listLeads } from "~/actions/lead-pipeline/leads";
 import Building2 from "~/components/icons/building-2";
 import List from "~/components/icons/list";
 import { RecordIndexScreen } from "~/features/record-index/components/screen";
@@ -37,7 +37,7 @@ export function LeadsRecordIndex() {
 
     return {
       status: "ready",
-      rows: data,
+      rows: data.rows,
     };
   };
 

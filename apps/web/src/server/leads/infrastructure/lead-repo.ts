@@ -24,6 +24,31 @@ export interface LeadListFilters {
 }
 
 export function createLeadRepo(db: DatabaseExecutor) {
+  function applyFilters(query: any, filters: LeadListFilters) {
+    let nextQuery = query;
+
+    if (filters.executiveId !== undefined) {
+      nextQuery = nextQuery.where("executive_id", "=", filters.executiveId);
+    }
+    if (filters.stage !== undefined) {
+      nextQuery = nextQuery.where("stage", "=", filters.stage);
+    }
+    if (filters.status !== undefined) {
+      nextQuery = nextQuery.where("status", "=", filters.status);
+    }
+    if (filters.prioridad !== undefined) {
+      nextQuery = nextQuery.where("prioridad", "=", filters.prioridad);
+    }
+    if (filters.fromDate !== undefined) {
+      nextQuery = nextQuery.where("created_at", ">=", filters.fromDate);
+    }
+    if (filters.toDate !== undefined) {
+      nextQuery = nextQuery.where("created_at", "<=", filters.toDate);
+    }
+
+    return nextQuery;
+  }
+
   return {
     async insert(values: NewLeadRow): Promise<number> {
       const result = await db
@@ -67,32 +92,22 @@ export function createLeadRepo(db: DatabaseExecutor) {
     },
 
     list(filters: LeadListFilters) {
-      let query = db.selectFrom("pipeline_leads").selectAll();
-
-      if (filters.executiveId !== undefined) {
-        query = query.where("executive_id", "=", filters.executiveId);
-      }
-      if (filters.stage !== undefined) {
-        query = query.where("stage", "=", filters.stage);
-      }
-      if (filters.status !== undefined) {
-        query = query.where("status", "=", filters.status);
-      }
-      if (filters.prioridad !== undefined) {
-        query = query.where("prioridad", "=", filters.prioridad);
-      }
-      if (filters.fromDate !== undefined) {
-        query = query.where("created_at", ">=", filters.fromDate);
-      }
-      if (filters.toDate !== undefined) {
-        query = query.where("created_at", "<=", filters.toDate);
-      }
-
-      return query
+      return applyFilters(db.selectFrom("pipeline_leads").selectAll(), filters)
         .orderBy("created_at", "desc")
         .limit(filters.limit)
         .offset(filters.offset)
         .execute();
+    },
+
+    async count(filters: LeadListFilters) {
+      const row = await applyFilters(
+        db
+          .selectFrom("pipeline_leads")
+          .select((eb) => eb.fn.countAll<number>().as("count")),
+        filters,
+      ).executeTakeFirstOrThrow();
+
+      return Number(row.count);
     },
 
     listForExport(filters: {
