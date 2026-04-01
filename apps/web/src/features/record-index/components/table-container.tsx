@@ -10,8 +10,9 @@ export function RecordIndexTableContainer<
 >(props: { model: RecordIndexScreenModel<T, TFilterValue, TSortValue> }) {
   const rows = () => props.model.sorting.sortedRows();
   const source = () => props.model.source.grid();
+  const status = () => props.model.loading.status();
 
-  if (props.model.loading.status() === "pending") {
+  if (status() === "pending" || status() === "error") {
     return (
       <DataGrid
         ariaLabel={props.model.adapter.ariaLabel}
