@@ -1,12 +1,12 @@
 import { createAsync, useParams } from "@solidjs/router";
 import { Show } from "solid-js";
 
-import { getLeadSale } from "~/actions/pipeline/sales";
+import { getSaleDetail } from "~/actions/lead-pipeline/leads";
 import { AppPage } from "~/components/layout/page";
 
 export default function LeadSaleDetailPage() {
   const params = useParams<{ saleId: string }>();
-  const sale = createAsync(() => getLeadSale(Number(params.saleId)));
+  const sale = createAsync(() => getSaleDetail(Number(params.saleId)));
 
   return (
     <AppPage>

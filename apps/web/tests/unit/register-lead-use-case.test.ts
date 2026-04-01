@@ -16,8 +16,8 @@ vi.mock("../../src/server/shared/composition-root", () => ({
   },
 }));
 
-vi.mock("../../src/server/shared/pipeline-runtime", () => ({
-  createPipelineRepos: () => ({
+vi.mock("../../src/server/lead-pipeline/infrastructure/repos", () => ({
+  createLeadPipelineRepos: () => ({
     leads: {
       findByRuc: mocks.findByRuc,
       insert: mocks.insertLead,
@@ -29,6 +29,9 @@ vi.mock("../../src/server/shared/pipeline-runtime", () => ({
       findById: mocks.findById,
     },
   }),
+}));
+
+vi.mock("../../src/server/shared/pipeline-runtime", () => ({
   pipelineAuditService: {
     log: mocks.logAudit,
   },
@@ -55,9 +58,9 @@ vi.mock("../../src/server/shared/pipeline-transaction", () => ({
   },
 }));
 
-import { registerLeadUseCase } from "../../src/server/leads/application/register-lead";
+import { createLead } from "../../src/server/lead-pipeline/application/leads";
 
-describe("registerLeadUseCase", () => {
+describe("createLead", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.findByRuc.mockResolvedValue(undefined);
@@ -109,10 +112,11 @@ describe("registerLeadUseCase", () => {
       ],
     });
 
-    const result = await registerLeadUseCase({
+    const result = await createLead({
       ruc: "20100000001",
       executiveId: 7,
-      actorId: 7,
+      actorUserId: 7,
+      actorRole: "admin",
     });
 
     expect(result.ok).toBe(true);
@@ -136,10 +140,11 @@ describe("registerLeadUseCase", () => {
       },
     });
 
-    const result = await registerLeadUseCase({
+    const result = await createLead({
       ruc: "20100000001",
       executiveId: 7,
-      actorId: 7,
+      actorUserId: 7,
+      actorRole: "admin",
     });
 
     expect(result.ok).toBe(true);

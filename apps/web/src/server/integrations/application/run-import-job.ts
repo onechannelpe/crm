@@ -1,8 +1,7 @@
 import { TextDecoder } from "node:util";
 
 import { db } from "~/lib/db/db";
-import { reviewLeadPrioridadUseCase } from "~/server/leads/application/review-lead-prioridad";
-import { reviewLeadStatusUseCase } from "~/server/leads/application/review-lead-status";
+import { reviewLead } from "~/server/lead-pipeline/application/leads";
 import { createAuditService } from "~/server/shared/audit";
 import {
   createPipelineRepos,
@@ -100,11 +99,13 @@ async function runStatusImportJob(
           ? await repos.users.findById(lead.executive_id)
           : null;
 
-      const reviewed = await reviewLeadStatusUseCase({
+      const reviewed = await reviewLead({
         leadId: lead.id,
         status: row.status,
+        prioridad: lead.prioridad ?? "P1",
         reason: "Imported from CSV",
-        actorId,
+        actorUserId: actorId,
+        actorRole: "admin",
         branchId: executive?.branch_id ?? 0,
       });
 
@@ -163,11 +164,13 @@ async function runPrioridadImportJob(
           ? await repos.users.findById(lead.executive_id)
           : null;
 
-      const reviewed = await reviewLeadPrioridadUseCase({
+      const reviewed = await reviewLead({
         leadId: lead.id,
+        status: lead.status ?? "DISPONIBLE",
         prioridad: row.prioridad,
         reason: "Imported from CSV",
-        actorId,
+        actorUserId: actorId,
+        actorRole: "admin",
         branchId: executive?.branch_id ?? 0,
       });
 

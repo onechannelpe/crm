@@ -75,7 +75,10 @@ export function createLeadRepo(db: DatabaseExecutor) {
     },
 
     findByRucMany(rucs: string[]) {
-      if (rucs.length === 0) return Promise.resolve([] as LeadRow[]);
+      if (rucs.length === 0) {
+        return Promise.resolve([] as LeadRow[]);
+      }
+
       return db
         .selectFrom("pipeline_leads")
         .selectAll()
@@ -116,32 +119,32 @@ export function createLeadRepo(db: DatabaseExecutor) {
       executiveId?: number;
     }) {
       let query = db
-        .selectFrom("pipeline_leads as l")
-        .innerJoin("users as u", "u.id", "l.executive_id")
+        .selectFrom("pipeline_leads as lead")
+        .innerJoin("users as executive", "executive.id", "lead.executive_id")
         .select([
-          "l.id",
-          "l.ruc",
-          "l.razon_social",
-          "l.address",
-          "l.stage",
-          "l.status",
-          "l.prioridad",
-          "l.created_at",
-          "l.executive_id",
-          "u.names as executive_name",
+          "lead.id",
+          "lead.ruc",
+          "lead.razon_social",
+          "lead.address",
+          "lead.stage",
+          "lead.status",
+          "lead.prioridad",
+          "lead.created_at",
+          "lead.executive_id",
+          "executive.names as executive_name",
         ]);
 
       if (filters.fromDate !== undefined) {
-        query = query.where("l.created_at", ">=", filters.fromDate);
+        query = query.where("lead.created_at", ">=", filters.fromDate);
       }
       if (filters.toDate !== undefined) {
-        query = query.where("l.created_at", "<=", filters.toDate);
+        query = query.where("lead.created_at", "<=", filters.toDate);
       }
       if (filters.executiveId !== undefined) {
-        query = query.where("l.executive_id", "=", filters.executiveId);
+        query = query.where("lead.executive_id", "=", filters.executiveId);
       }
 
-      return query.orderBy("l.created_at", "desc").execute();
+      return query.orderBy("lead.created_at", "desc").execute();
     },
   };
 }

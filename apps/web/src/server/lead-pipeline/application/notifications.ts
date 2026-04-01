@@ -1,6 +1,6 @@
 import { createAppNotificationCenter } from "~/server/notifications/app-center-service";
 
-import type { LeadDomainEvent } from "../domain/lead-events";
+import type { LeadDomainEvent } from "../domain/lead-event";
 
 type AppNotificationCenter = ReturnType<typeof createAppNotificationCenter>;
 

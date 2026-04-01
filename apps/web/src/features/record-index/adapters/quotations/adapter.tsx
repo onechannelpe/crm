@@ -1,6 +1,6 @@
 import { createAsync } from "@solidjs/router";
 
-import { listLeadsForQuotation } from "~/actions/pipeline/quotations";
+import { listLeads } from "~/actions/lead-pipeline/leads";
 import Building2 from "~/components/icons/building-2";
 import List from "~/components/icons/list";
 import { RecordIndexScreen } from "~/features/record-index/components/screen";
@@ -16,7 +16,7 @@ import { useOpenQuotationRecord } from "./open-row";
 import styles from "./styles.module.css";
 
 export function QuotationsRecordIndex() {
-  const leads = createAsync(() => listLeadsForQuotation({}));
+  const leads = createAsync(() => listLeads({ stage: "READY_FOR_QUOTATION" }));
   const { rowOpen } = useOpenQuotationRecord();
   const source = (): RecordIndexSource<QuotationRow> => {
     const data = leads();
@@ -25,7 +25,7 @@ export function QuotationsRecordIndex() {
       return { status: "pending", rows: [] };
     }
 
-    return { status: "ready", rows: data };
+    return { status: "ready", rows: data.rows };
   };
 
   const adapter = {

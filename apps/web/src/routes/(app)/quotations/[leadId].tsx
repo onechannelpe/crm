@@ -4,15 +4,15 @@ import { createSignal, For, Show } from "solid-js";
 import {
   approveLeadForSale,
   createQuotation,
-  getLeadQuotations,
-} from "~/actions/pipeline/quotations";
+  getLeadDetail,
+} from "~/actions/lead-pipeline/leads";
 import { AppPage } from "~/components/layout/page";
 import { toAppError } from "~/lib/app-errors";
 
 export default function LeadQuotationPage() {
   const params = useParams<{ leadId: string }>();
   const navigate = useNavigate();
-  const data = createAsync(() => getLeadQuotations(Number(params.leadId)));
+  const data = createAsync(() => getLeadDetail(Number(params.leadId)));
   const [error, setError] = createSignal<string | null>(null);
 
   const inputStyle = {

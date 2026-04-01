@@ -5,9 +5,9 @@ import { createUsersRepo } from "~/server/users/repos-users";
 
 import { createIntegrationJobRepo } from "../integrations/infrastructure/integration-job-repo";
 import { createJobBlobStore } from "../integrations/job-blob-store";
-import { createLeadAssignmentRepo } from "../leads/infrastructure/lead-assignment-repo";
-import { createLeadCommercialInputRepo } from "../leads/infrastructure/lead-commercial-input-repo";
-import { createLeadRepo } from "../leads/infrastructure/lead-repo";
+import { createLeadAssignmentRepo } from "../lead-pipeline/infrastructure/lead-assignment-repo";
+import { createLeadCommercialInputRepo } from "../lead-pipeline/infrastructure/lead-commercial-input-repo";
+import { createLeadRepo } from "../lead-pipeline/infrastructure/lead-repo";
 import { createAppNotificationCenter } from "../notifications/app-center-service";
 import { createQuotationRepo } from "../quotations/infrastructure/quotation-repo";
 import { createSaleRepo } from "../sales/infrastructure/sale-repo";

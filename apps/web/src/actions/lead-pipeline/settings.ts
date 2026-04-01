@@ -3,7 +3,7 @@
 import {
   getSourcingPolicy as getSourcingPolicyUseCase,
   updateSourcingPolicy as updateSourcingPolicyUseCase,
-} from "~/server/lead-pipeline/application/leads";
+} from "~/server/lead-pipeline/application/settings";
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function getLeadSourcingPolicy(branchId: number) {

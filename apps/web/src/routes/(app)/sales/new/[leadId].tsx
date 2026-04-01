@@ -1,8 +1,7 @@
 import { createAsync, useNavigate, useParams } from "@solidjs/router";
 import { createSignal, Show } from "solid-js";
 
-import { getLeadDetail } from "~/actions/lead-pipeline/leads";
-import { createLeadSale } from "~/actions/pipeline/sales";
+import { createSale, getLeadDetail } from "~/actions/lead-pipeline/leads";
 import { AppPage } from "~/components/layout/page";
 import { toAppError } from "~/lib/app-errors";
 
@@ -37,7 +36,7 @@ export default function NewLeadSalePage() {
     if (!(e.currentTarget instanceof HTMLFormElement)) return;
     const fd = new FormData(e.currentTarget);
     try {
-      const { id } = await createLeadSale({
+      const { id } = await createSale({
         leadId: Number(params.leadId),
         proveedorActual: proveedorActual(),
         tasaActual: Number(fd.get("tasaActual")),

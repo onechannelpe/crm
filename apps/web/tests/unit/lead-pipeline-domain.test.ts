@@ -40,6 +40,10 @@ describe("lead pipeline domain helpers", () => {
         canLogTimeline: true,
         canCompleteCommercialInput: true,
         canCreateSale: false,
+        canReviewLead: false,
+        canCreateQuotation: false,
+        canApproveForSale: false,
+        canReassignLead: false,
       }),
     ).toEqual(["log-call", "add-note", "complete-commercial-input"]);
 
@@ -49,6 +53,10 @@ describe("lead pipeline domain helpers", () => {
         canLogTimeline: false,
         canCompleteCommercialInput: false,
         canCreateSale: true,
+        canReviewLead: false,
+        canCreateQuotation: false,
+        canApproveForSale: false,
+        canReassignLead: false,
       }),
     ).toEqual(["create-sale"]);
   });

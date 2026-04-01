@@ -1,4 +1,4 @@
-import { listLeadsForQuotation } from "~/actions/pipeline/quotations";
+import { listLeads } from "~/actions/lead-pipeline/leads";
 import Building2 from "~/components/icons/building-2";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import Package from "~/components/icons/package";
@@ -8,8 +8,8 @@ import type { DataGridColumn } from "~/features/data-grid/model/types";
 import styles from "./styles.module.css";
 
 export type QuotationRow = Awaited<
-  ReturnType<typeof listLeadsForQuotation>
->[number];
+  ReturnType<typeof listLeads>
+>["rows"][number];
 
 export const QUOTATIONS_RECORD_INDEX_COLUMNS = [
   {

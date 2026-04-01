@@ -1,11 +1,7 @@
 import { A } from "@solidjs/router";
 import { createSignal, For, Show } from "solid-js";
 
-import type {
-  addLeadNote,
-  getLeadDetail,
-  logLeadCall,
-} from "~/actions/lead-pipeline/leads";
+import type { getLeadDetail, logLeadCall } from "~/actions/lead-pipeline/leads";
 import { addLeadNote as addLeadNoteAction } from "~/actions/lead-pipeline/leads";
 import { logLeadCall as logLeadCallAction } from "~/actions/lead-pipeline/leads";
 import Building2 from "~/components/icons/building-2";
@@ -57,6 +53,8 @@ const CALL_OUTCOME_OPTIONS = [
   label: string;
 }>;
 
+const COMPOSER_MODE_OPTIONS = ["call", "note"] as const;
+
 export function LeadRecordOverview(props: {
   data: LeadDetail;
   compact?: boolean;
@@ -89,6 +87,10 @@ export function LeadRecordOverview(props: {
   const quotations = () => props.data.quotations ?? [];
   const canLogCall = () => props.data.availableActions.includes("log-call");
   const canAddNote = () => props.data.availableActions.includes("add-note");
+  const composerModes = () =>
+    COMPOSER_MODE_OPTIONS.filter((value) =>
+      value === "call" ? canLogCall() : canAddNote(),
+    );
 
   async function handleComposerSubmit() {
     setError(null);
@@ -159,9 +161,14 @@ export function LeadRecordOverview(props: {
             <Select
               label="Tipo"
               value={composerMode()}
-              onChange={(event) =>
-                setComposerMode(event.currentTarget.value as "call" | "note")
-              }
+              onChange={(event) => {
+                const nextMode = composerModes().find(
+                  (value) => value === event.currentTarget.value,
+                );
+                if (nextMode) {
+                  setComposerMode(nextMode);
+                }
+              }}
             >
               <Show when={canLogCall()}>
                 <option value="call">Llamada</option>
@@ -174,13 +181,14 @@ export function LeadRecordOverview(props: {
               <Select
                 label="Resultado"
                 value={callOutcome()}
-                onChange={(event) =>
-                  setCallOutcome(
-                    event.currentTarget.value as Parameters<
-                      typeof logLeadCall
-                    >[0]["outcome"],
-                  )
-                }
+                onChange={(event) => {
+                  const nextOutcome = CALL_OUTCOME_OPTIONS.find(
+                    (option) => option.value === event.currentTarget.value,
+                  );
+                  if (nextOutcome) {
+                    setCallOutcome(nextOutcome.value);
+                  }
+                }}
               >
                 <For each={CALL_OUTCOME_OPTIONS}>
                   {(option) => (

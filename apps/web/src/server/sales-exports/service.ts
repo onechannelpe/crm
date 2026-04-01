@@ -32,6 +32,8 @@ export interface SalesExportActor {
   branchId: number;
 }
 
+import { isPlainRecord } from "~/lib/type-guards";
+
 export interface SalesExportServiceDeps {
   reportExportJobs: {
     listJobs(
@@ -109,14 +111,10 @@ export interface SalesExportServiceDeps {
   };
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
 function parseFiltersJson(filtersJson: string): Record<string, unknown> | null {
   try {
     const parsed: unknown = JSON.parse(filtersJson);
-    return isRecord(parsed) ? parsed : null;
+    return isPlainRecord(parsed) ? parsed : null;
   } catch {
     return null;
   }

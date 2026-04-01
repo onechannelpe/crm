@@ -4,11 +4,15 @@ const mocks = vi.hoisted(() => ({
   findLeadById: vi.fn<() => Promise<unknown>>(),
   findCommercialInputByLeadId: vi.fn<() => Promise<unknown>>(),
   listQuotationsByLead: vi.fn<() => Promise<unknown[]>>(),
+  findSaleByLead: vi.fn<() => Promise<unknown>>(),
+  listInteractionsByLeadId: vi.fn<() => Promise<unknown[]>>(),
+  listAssignmentsByLead: vi.fn<() => Promise<unknown[]>>(),
+  listAuditEvents: vi.fn<() => Promise<unknown[]>>(),
   findSaleById: vi.fn<() => Promise<unknown>>(),
 }));
 
-vi.mock("../../src/server/shared/pipeline-runtime", () => ({
-  pipelineRepos: {
+vi.mock("../../src/server/lead-pipeline/infrastructure/repos", () => ({
+  createLeadPipelineRepos: () => ({
     leads: {
       findById: mocks.findLeadById,
     },
@@ -19,19 +23,33 @@ vi.mock("../../src/server/shared/pipeline-runtime", () => ({
       listByLead: mocks.listQuotationsByLead,
     },
     sales: {
+      findByLead: mocks.findSaleByLead,
       findById: mocks.findSaleById,
     },
-  },
+    leadInteractions: {
+      listByLeadId: mocks.listInteractionsByLeadId,
+    },
+    leadHistory: {
+      listAssignments: mocks.listAssignmentsByLead,
+      listAuditEvents: mocks.listAuditEvents,
+    },
+  }),
 }));
 
-import { getLeadDetailQuery } from "../../src/server/leads/application/get-lead-detail";
-import { getSaleDetailQuery } from "../../src/server/sales/application/get-sale-detail";
+import {
+  getLeadDetail,
+  getSaleDetail,
+} from "../../src/server/lead-pipeline/application/leads";
 
 describe("pipeline read access", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.findCommercialInputByLeadId.mockResolvedValue(undefined);
     mocks.listQuotationsByLead.mockResolvedValue([]);
+    mocks.findSaleByLead.mockResolvedValue(null);
+    mocks.listInteractionsByLeadId.mockResolvedValue([]);
+    mocks.listAssignmentsByLead.mockResolvedValue([]);
+    mocks.listAuditEvents.mockResolvedValue([]);
   });
 
   it("lets review users read lead detail even when they are not the assigned executive", async () => {
@@ -48,7 +66,7 @@ describe("pipeline read access", () => {
       updated_at: 10,
     });
 
-    const result = await getLeadDetailQuery({
+    const result = await getLeadDetail({
       leadId: 11,
       actorUserId: 99,
       actorRole: "back_office",
@@ -76,7 +94,7 @@ describe("pipeline read access", () => {
       updated_at: 10,
     });
 
-    const result = await getLeadDetailQuery({
+    const result = await getLeadDetail({
       leadId: 11,
       actorUserId: 2,
       actorRole: "executive",
@@ -92,7 +110,7 @@ describe("pipeline read access", () => {
     mocks.findLeadById.mockResolvedValue({
       id: 15,
       executive_id: 7,
-      stage: "NEW",
+      stage: "PENDING_EXTERNAL_REVIEW",
       status: null,
       prioridad: null,
       ruc: "20100000015",
@@ -102,7 +120,7 @@ describe("pipeline read access", () => {
       updated_at: 20,
     });
 
-    const result = await getLeadDetailQuery({
+    const result = await getLeadDetail({
       leadId: 15,
       actorUserId: 7,
       actorRole: "executive",
@@ -131,7 +149,7 @@ describe("pipeline read access", () => {
       created_at: 10,
     });
 
-    const result = await getSaleDetailQuery({
+    const result = await getSaleDetail({
       saleId: 21,
       actorUserId: 7,
       actorRole: "executive",
@@ -160,7 +178,7 @@ describe("pipeline read access", () => {
       created_at: 10,
     });
 
-    const result = await getSaleDetailQuery({
+    const result = await getSaleDetail({
       saleId: 21,
       actorUserId: 8,
       actorRole: "executive",

@@ -1,7 +1,7 @@
 import { useNavigate, useParams } from "@solidjs/router";
 import { createSignal } from "solid-js";
 
-import { completeExecutiveInput } from "~/actions/pipeline/complete";
+import { completeExecutiveInput } from "~/actions/lead-pipeline/leads";
 import { AppPage } from "~/components/layout/page";
 import { toAppError } from "~/lib/app-errors";
 
