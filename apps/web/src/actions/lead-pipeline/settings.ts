@@ -1,25 +1,25 @@
 "use server";
 
 import {
-  getSourcingPolicy as getSourcingPolicyUseCase,
-  updateSourcingPolicy as updateSourcingPolicyUseCase,
+  getSourcingPolicy,
+  updateSourcingPolicy,
 } from "~/server/lead-pipeline/application/settings";
 import { runAction } from "~/server/shared/action-runtime";
 
-export async function getLeadSourcingPolicy(branchId: number) {
+export async function querySourcingPolicy(branchId: number) {
   return runAction({
     actionName: "lead_pipeline.get_sourcing_policy",
     permission: "capacity:policy:manage",
     input: { branchId },
     execute: (ctx) =>
-      getSourcingPolicyUseCase({
+      getSourcingPolicy({
         actorRole: ctx.actor.role,
         branchId,
       }),
   });
 }
 
-export async function updateLeadSourcingPolicy(input: {
+export async function saveSourcingPolicy(input: {
   branchId: number;
   engineAssignmentEnabled: boolean;
 }) {
@@ -28,7 +28,7 @@ export async function updateLeadSourcingPolicy(input: {
     permission: "capacity:policy:manage",
     input,
     execute: (ctx) =>
-      updateSourcingPolicyUseCase({
+      updateSourcingPolicy({
         actorUserId: ctx.actor.userId,
         actorRole: ctx.actor.role,
         branchId: input.branchId,

@@ -58,7 +58,7 @@ vi.mock("../../src/server/shared/pipeline-transaction", () => ({
   },
 }));
 
-import { createLead } from "../../src/server/lead-pipeline/application/leads";
+import { createLead } from "../../src/server/lead-pipeline/application/lead-commands";
 
 describe("createLead", () => {
   beforeEach(() => {

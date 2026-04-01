@@ -1,18 +1,18 @@
 import { createAsync, useNavigate, useParams } from "@solidjs/router";
 import { createSignal, For, Show } from "solid-js";
 
+import { queryLeadDetail } from "~/actions/lead-pipeline/lead-detail";
 import {
-  approveLeadForSale,
-  createQuotation,
-  getLeadDetail,
-} from "~/actions/lead-pipeline/leads";
+  requestQuotationCreation,
+  requestSaleApproval,
+} from "~/actions/lead-pipeline/quotations";
 import { AppPage } from "~/components/layout/page";
 import { toAppError } from "~/lib/app-errors";
 
 export default function LeadQuotationPage() {
   const params = useParams<{ leadId: string }>();
   const navigate = useNavigate();
-  const data = createAsync(() => getLeadDetail(Number(params.leadId)));
+  const data = createAsync(() => queryLeadDetail(Number(params.leadId)));
   const [error, setError] = createSignal<string | null>(null);
 
   const inputStyle = {
@@ -28,7 +28,7 @@ export default function LeadQuotationPage() {
     if (!(e.currentTarget instanceof HTMLFormElement)) return;
     const fd = new FormData(e.currentTarget);
     try {
-      await createQuotation({
+      await requestQuotationCreation({
         leadId: Number(params.leadId),
         paybackPricing: Number(fd.get("paybackPricing")),
         tarifaDebito: Number(fd.get("tarifaDebito")),
@@ -46,7 +46,7 @@ export default function LeadQuotationPage() {
   async function handleApprove() {
     setError(null);
     try {
-      await approveLeadForSale(Number(params.leadId));
+      await requestSaleApproval(Number(params.leadId));
       navigate(`/review`);
     } catch (err) {
       setError(toAppError(err, "Error").publicMessage);

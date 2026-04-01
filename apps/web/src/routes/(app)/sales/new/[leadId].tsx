@@ -1,14 +1,15 @@
 import { createAsync, useNavigate, useParams } from "@solidjs/router";
 import { createSignal, Show } from "solid-js";
 
-import { createSale, getLeadDetail } from "~/actions/lead-pipeline/leads";
+import { queryLeadDetail } from "~/actions/lead-pipeline/lead-detail";
+import { requestSaleCreation } from "~/actions/lead-pipeline/sales";
 import { AppPage } from "~/components/layout/page";
 import { toAppError } from "~/lib/app-errors";
 
 export default function NewLeadSalePage() {
   const params = useParams<{ leadId: string }>();
   const navigate = useNavigate();
-  const data = createAsync(() => getLeadDetail(Number(params.leadId)));
+  const data = createAsync(() => queryLeadDetail(Number(params.leadId)));
   const [error, setError] = createSignal<string | null>(null);
   const [submitting, setSubmitting] = createSignal(false);
   const [proveedorActual, setProveedorActual] = createSignal("");
@@ -36,7 +37,7 @@ export default function NewLeadSalePage() {
     if (!(e.currentTarget instanceof HTMLFormElement)) return;
     const fd = new FormData(e.currentTarget);
     try {
-      const { id } = await createSale({
+      const { id } = await requestSaleCreation({
         leadId: Number(params.leadId),
         proveedorActual: proveedorActual(),
         tasaActual: Number(fd.get("tasaActual")),

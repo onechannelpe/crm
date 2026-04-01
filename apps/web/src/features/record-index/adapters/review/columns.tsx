@@ -1,4 +1,4 @@
-import { listLeads } from "~/actions/lead-pipeline/leads";
+import { queryLeadList } from "~/actions/lead-pipeline/lead-detail";
 import Building2 from "~/components/icons/building-2";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import Info from "~/components/icons/info";
@@ -8,7 +8,9 @@ import type { DataGridColumn } from "~/features/data-grid/model/types";
 
 import styles from "./styles.module.css";
 
-export type ReviewRow = Awaited<ReturnType<typeof listLeads>>["rows"][number];
+export type ReviewRow = Awaited<
+  ReturnType<typeof queryLeadList>
+>["rows"][number];
 
 export const REVIEW_RECORD_INDEX_COLUMNS = [
   {

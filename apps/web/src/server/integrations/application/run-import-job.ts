@@ -1,7 +1,7 @@
 import { TextDecoder } from "node:util";
 
 import { db } from "~/lib/db/db";
-import { reviewLead } from "~/server/lead-pipeline/application/leads";
+import { reviewLead } from "~/server/lead-pipeline/application/lead-commands";
 import { createAuditService } from "~/server/shared/audit";
 import {
   createPipelineRepos,

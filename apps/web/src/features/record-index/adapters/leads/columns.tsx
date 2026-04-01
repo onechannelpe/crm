@@ -1,4 +1,4 @@
-import { listLeads } from "~/actions/lead-pipeline/leads";
+import { queryLeadList } from "~/actions/lead-pipeline/lead-detail";
 import Building2 from "~/components/icons/building-2";
 import CalendarDays from "~/components/icons/calendar-days";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
@@ -10,7 +10,7 @@ import { formatDate } from "~/lib/utils";
 
 import styles from "./styles.module.css";
 
-export type LeadRow = Awaited<ReturnType<typeof listLeads>>["rows"][number];
+export type LeadRow = Awaited<ReturnType<typeof queryLeadList>>["rows"][number];
 
 export const LEADS_RECORD_INDEX_COLUMNS = [
   {

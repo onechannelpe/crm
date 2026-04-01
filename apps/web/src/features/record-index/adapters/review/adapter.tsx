@@ -1,6 +1,6 @@
 import { createAsync } from "@solidjs/router";
 
-import { listLeads } from "~/actions/lead-pipeline/leads";
+import { queryLeadList } from "~/actions/lead-pipeline/lead-detail";
 import Info from "~/components/icons/info";
 import List from "~/components/icons/list";
 import { RecordIndexScreen } from "~/features/record-index/components/screen";
@@ -17,7 +17,7 @@ import styles from "./styles.module.css";
 
 export function ReviewRecordIndex() {
   const leads = createAsync(() =>
-    listLeads({ stage: "PENDING_EXTERNAL_REVIEW" }),
+    queryLeadList({ stage: "PENDING_EXTERNAL_REVIEW" }),
   );
   const { rowOpen } = useOpenReviewRecord();
   const source = (): RecordIndexSource<ReviewRow> => {

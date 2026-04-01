@@ -1,4 +1,4 @@
-import { listSales } from "~/actions/lead-pipeline/leads";
+import { querySales } from "~/actions/lead-pipeline/sales";
 import Building2 from "~/components/icons/building-2";
 import CalendarDays from "~/components/icons/calendar-days";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
@@ -8,7 +8,7 @@ import { formatDate } from "~/lib/utils";
 
 import styles from "./styles.module.css";
 
-export type SalesRow = Awaited<ReturnType<typeof listSales>>[number];
+export type SalesRow = Awaited<ReturnType<typeof querySales>>[number];
 
 export const SALES_RECORD_INDEX_COLUMNS = [
   {

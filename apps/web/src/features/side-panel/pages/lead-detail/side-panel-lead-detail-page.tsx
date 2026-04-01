@@ -1,7 +1,7 @@
 import { createAsync } from "@solidjs/router";
 import { createMemo, createSignal, Show } from "solid-js";
 
-import { getLeadDetail } from "~/actions/lead-pipeline/leads";
+import { queryLeadDetail } from "~/actions/lead-pipeline/lead-detail";
 import { LeadRecordOverview } from "~/components/features/leads/lead-record-overview";
 
 import { SidePanelList } from "../../components/side-panel-list";
@@ -25,7 +25,7 @@ export function SidePanelLeadDetailPage() {
   const [refreshTick, setRefreshTick] = createSignal(0);
   const data = createAsync(() => {
     refreshTick();
-    return getLeadDetail(pageState().leadId);
+    return queryLeadDetail(pageState().leadId);
   });
 
   return (

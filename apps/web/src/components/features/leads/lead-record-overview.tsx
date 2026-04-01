@@ -1,9 +1,12 @@
 import { A } from "@solidjs/router";
 import { createSignal, For, Show } from "solid-js";
 
-import type { getLeadDetail, logLeadCall } from "~/actions/lead-pipeline/leads";
-import { addLeadNote as addLeadNoteAction } from "~/actions/lead-pipeline/leads";
-import { logLeadCall as logLeadCallAction } from "~/actions/lead-pipeline/leads";
+import type { recordLeadCall } from "~/actions/lead-pipeline/interactions";
+import {
+  recordLeadCall as recordLeadCallAction,
+  recordLeadNote as recordLeadNoteAction,
+} from "~/actions/lead-pipeline/interactions";
+import type { queryLeadDetail } from "~/actions/lead-pipeline/lead-detail";
 import Building2 from "~/components/icons/building-2";
 import CalendarDays from "~/components/icons/calendar-days";
 import CircleAlert from "~/components/icons/circle-alert";
@@ -17,7 +20,7 @@ import { formatDateTime } from "~/lib/utils";
 
 import styles from "./lead-record-overview.module.css";
 
-type LeadDetail = Awaited<ReturnType<typeof getLeadDetail>>;
+type LeadDetail = Awaited<ReturnType<typeof queryLeadDetail>>;
 
 function stageVariant(stage: string) {
   if (stage === "READY_FOR_SALE") return "success" as const;
@@ -49,7 +52,7 @@ const CALL_OUTCOME_OPTIONS = [
   { value: "qualified", label: "Calificado" },
   { value: "disqualified", label: "Descartado" },
 ] as const satisfies ReadonlyArray<{
-  value: Parameters<typeof logLeadCall>[0]["outcome"];
+  value: Parameters<typeof recordLeadCall>[0]["outcome"];
   label: string;
 }>;
 
@@ -62,7 +65,7 @@ export function LeadRecordOverview(props: {
 }) {
   const [composerMode, setComposerMode] = createSignal<"call" | "note">("call");
   const [callOutcome, setCallOutcome] =
-    createSignal<Parameters<typeof logLeadCall>[0]["outcome"]>("answered");
+    createSignal<Parameters<typeof recordLeadCall>[0]["outcome"]>("answered");
   const [bodyText, setBodyText] = createSignal("");
   const [error, setError] = createSignal<string | null>(null);
   const [submitting, setSubmitting] = createSignal(false);
@@ -98,13 +101,13 @@ export function LeadRecordOverview(props: {
 
     try {
       if (composerMode() === "call") {
-        await logLeadCallAction({
+        await recordLeadCallAction({
           leadId: props.data.lead.id,
           outcome: callOutcome(),
           notes: bodyText(),
         });
       } else {
-        await addLeadNoteAction({
+        await recordLeadNoteAction({
           leadId: props.data.lead.id,
           body: bodyText(),
         });

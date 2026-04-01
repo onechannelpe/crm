@@ -36,10 +36,8 @@ vi.mock("../../src/server/lead-pipeline/infrastructure/repos", () => ({
   }),
 }));
 
-import {
-  getLeadDetail,
-  getSaleDetail,
-} from "../../src/server/lead-pipeline/application/leads";
+import { getLeadDetail } from "../../src/server/lead-pipeline/application/detail";
+import { getSaleDetail } from "../../src/server/lead-pipeline/application/sales";
 
 describe("pipeline read access", () => {
   beforeEach(() => {

@@ -1,6 +1,6 @@
 import { createAsync } from "@solidjs/router";
 
-import { listSales } from "~/actions/lead-pipeline/leads";
+import { querySales } from "~/actions/lead-pipeline/sales";
 import Building2 from "~/components/icons/building-2";
 import List from "~/components/icons/list";
 import { RecordIndexScreen } from "~/features/record-index/components/screen";
@@ -16,7 +16,7 @@ import { useOpenSalesRecord } from "./open-row";
 import styles from "./styles.module.css";
 
 export function SalesRecordIndex() {
-  const sales = createAsync(() => listSales({}));
+  const sales = createAsync(() => querySales({}));
   const { rowOpen } = useOpenSalesRecord();
   const source = (): RecordIndexSource<SalesRow> => {
     const data = sales();
