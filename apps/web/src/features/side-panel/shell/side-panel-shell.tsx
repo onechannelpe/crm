@@ -1,11 +1,4 @@
-import {
-  type JSX,
-  Show,
-  createEffect,
-  createSignal,
-  onCleanup,
-  onMount,
-} from "solid-js";
+import { type JSX, Show, onCleanup, onMount } from "solid-js";
 
 import { cn } from "~/lib/utils";
 
@@ -27,27 +20,9 @@ type SidePanelShellProps = {
 export function SidePanelShell(props: SidePanelShellProps) {
   const { isOpen, isClosing, closePanel, onCloseAnimationComplete } =
     useSidePanel();
-  const [shouldRenderContent, setShouldRenderContent] = createSignal(isOpen());
-  const [hasCompletedInitialOpen, setHasCompletedInitialOpen] =
-    createSignal(false);
-
-  createEffect(() => {
-    if (isOpen()) {
-      if (hasCompletedInitialOpen()) {
-        setShouldRenderContent(true);
-      }
-    }
-  });
 
   function handleTransitionEnd(event: TransitionEvent) {
-    if (event.propertyName === "width" && isOpen()) {
-      setHasCompletedInitialOpen(true);
-      setShouldRenderContent(true);
-      return;
-    }
-
     if (event.propertyName === "width" && !isOpen() && isClosing()) {
-      setShouldRenderContent(false);
       onCloseAnimationComplete();
     }
   }
@@ -88,8 +63,7 @@ export function SidePanelShell(props: SidePanelShellProps) {
       <aside class={styles.aside}>
         <Show
           when={
-            props.shouldRenderChildren !== false &&
-            (isOpen() || shouldRenderContent())
+            props.shouldRenderChildren !== false && (isOpen() || isClosing())
           }
         >
           {props.renderContent?.()}
