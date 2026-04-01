@@ -67,11 +67,11 @@ export default function DashboardPage() {
             title: "Cola de clientes",
             value: `${s.activeLeads}`,
             detail: "Clientes activos",
-            href: "/sales/leads",
+            href: "/leads",
           },
         ],
         actionLabel: "Ver clientes",
-        actionHref: "/sales/leads",
+        actionHref: "/leads",
       },
       {
         key: "screening",

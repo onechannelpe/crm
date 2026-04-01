@@ -74,7 +74,7 @@ export default function NewSalePage() {
       });
       await submitSalesRecord(created.id);
       showToast("success", `Registro de venta #${created.id} enviado`);
-      navigate("/sales/leads");
+      navigate("/leads");
     } catch (err: unknown) {
       showToast("error", getErrorMessage(err, "No se pudo enviar el registro"));
     }
@@ -103,7 +103,7 @@ export default function NewSalePage() {
           <Button
             type="button"
             variant="secondary"
-            onClick={() => navigate("/sales/leads")}
+            onClick={() => navigate("/leads")}
             disabled={isSubmitting()}
           >
             Cancelar

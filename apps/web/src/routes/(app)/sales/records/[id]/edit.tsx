@@ -173,7 +173,7 @@ export default function FixSalePage() {
                 <Button
                   type="button"
                   variant="secondary"
-                  onClick={() => navigate("/sales/leads")}
+                  onClick={() => navigate("/leads")}
                 >
                   Volver a leads
                 </Button>
