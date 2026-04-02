@@ -2,9 +2,14 @@ import type { Role } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import { createPipelineQueryDeps } from "../../infrastructure/deps";
 import { requireLeadAccess } from "../policies/access";
-import type { PipelineQueryDeps } from "../ports";
+import type {
+  LeadCommercialInputRepository,
+  LeadHistoryRepository,
+  LeadQuotationRepository,
+  LeadRepository,
+  LeadSaleRepository,
+} from "../ports";
 import {
   presentLeadDetail,
   type LeadDetailOutput,
@@ -12,8 +17,16 @@ import {
 
 export type { LeadDetailOutput };
 
-export async function getLeadDetailWithDeps(
-  deps: PipelineQueryDeps,
+type GetLeadDetailDeps = {
+  leads: LeadRepository;
+  leadCommercialInputs: LeadCommercialInputRepository;
+  leadHistory: LeadHistoryRepository;
+  leadQuotations: LeadQuotationRepository;
+  leadSales: LeadSaleRepository;
+};
+
+export async function getLeadDetail(
+  deps: GetLeadDetailDeps,
   input: {
     actorUserId: number;
     actorRole: Role;
@@ -52,13 +65,4 @@ export async function getLeadDetailWithDeps(
       history,
     }),
   );
-}
-
-export async function getLeadDetail(input: {
-  actorUserId: number;
-  actorRole: Role;
-  leadId: number;
-}): Promise<Result<LeadDetailOutput, DomainError>> {
-  const deps = createPipelineQueryDeps();
-  return getLeadDetailWithDeps(deps, input);
 }

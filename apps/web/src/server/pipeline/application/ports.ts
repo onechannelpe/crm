@@ -1,3 +1,6 @@
+import type { Role } from "~/lib/auth/access/rbac";
+import type { AppNotificationEvent } from "~/server/notifications/app-events";
+
 import type {
   LeadHistoryEntry,
   LeadHistoryEventDraft,
@@ -116,59 +119,63 @@ export type AuditLogDraft = {
   createdAt: number;
 };
 
-export type PipelineDeps = {
-  leads: {
-    insert(values: LeadDraft): Promise<number>;
-    findById(id: number): Promise<Lead | undefined>;
-    findByRuc(ruc: string): Promise<Lead | undefined>;
-    findByRucMany(rucs: string[]): Promise<Lead[]>;
-    updateById(id: number, values: LeadPatch): Promise<unknown>;
-    list(filters: LeadListFilters): Promise<Lead[]>;
-    count(filters: LeadListFilters): Promise<number>;
-    listForExport(filters: { executiveId?: number }): Promise<LeadExportRow[]>;
-  };
-  leadAssignments: {
-    insert(values: LeadAssignmentDraft): Promise<number>;
-    deactivateActiveForLead(leadId: number): Promise<unknown>;
-    findActiveByLead(leadId: number): Promise<LeadAssignment | undefined>;
-  };
-  leadHistory: {
-    insert(values: LeadHistoryEventDraft): Promise<number>;
-    listByLeadId(leadId: number): Promise<LeadHistoryEntry[]>;
-  };
-  leadCommercialInputs: {
-    findByLeadId(leadId: number): Promise<LeadCommercialInput | undefined>;
-    upsert(values: LeadCommercialInputDraft): Promise<unknown>;
-  };
-  leadQuotations: {
-    insert(values: LeadQuotationDraft): Promise<number>;
-    listByLeadId(leadId: number): Promise<LeadQuotation[]>;
-    nextVersion(leadId: number): Promise<number>;
-  };
-  leadSales: {
-    insert(values: LeadSaleDraft): Promise<number>;
-    findById(id: number): Promise<LeadSale | undefined>;
-    findByLeadId(leadId: number): Promise<LeadSale | undefined>;
-    list(limit: number, offset: number): Promise<LeadSale[]>;
-    listByExecutive(
-      executiveId: number,
-      limit: number,
-      offset: number,
-    ): Promise<LeadSale[]>;
-  };
-  sourcingPolicies: {
-    findByBranchId(branchId: number): Promise<LeadSourcingPolicy | undefined>;
-    upsert(values: LeadSourcingPolicyDraft): Promise<unknown>;
-  };
-  users: {
-    findById(id: number): Promise<PipelineUser | undefined>;
-  };
-  auditLogs: {
-    create(values: AuditLogDraft): Promise<unknown>;
-  };
+export type LeadRepository = {
+  insert(values: LeadDraft): Promise<number>;
+  findById(id: number): Promise<Lead | undefined>;
+  findByRuc(ruc: string): Promise<Lead | undefined>;
+  findByRucMany(rucs: string[]): Promise<Lead[]>;
+  updateById(id: number, values: LeadPatch): Promise<unknown>;
+  list(filters: LeadListFilters): Promise<Lead[]>;
+  count(filters: LeadListFilters): Promise<number>;
+  listForExport(filters: { executiveId?: number }): Promise<LeadExportRow[]>;
 };
 
-export type PipelineQueryDeps = PipelineDeps;
+export type LeadAssignmentRepository = {
+  insert(values: LeadAssignmentDraft): Promise<number>;
+  deactivateActiveForLead(leadId: number): Promise<unknown>;
+  findActiveByLead(leadId: number): Promise<LeadAssignment | undefined>;
+};
+
+export type LeadHistoryRepository = {
+  insert(values: LeadHistoryEventDraft): Promise<number>;
+  listByLeadId(leadId: number): Promise<LeadHistoryEntry[]>;
+};
+
+export type LeadCommercialInputRepository = {
+  findByLeadId(leadId: number): Promise<LeadCommercialInput | undefined>;
+  upsert(values: LeadCommercialInputDraft): Promise<unknown>;
+};
+
+export type LeadQuotationRepository = {
+  insert(values: LeadQuotationDraft): Promise<number>;
+  listByLeadId(leadId: number): Promise<LeadQuotation[]>;
+  nextVersion(leadId: number): Promise<number>;
+};
+
+export type LeadSaleRepository = {
+  insert(values: LeadSaleDraft): Promise<number>;
+  findById(id: number): Promise<LeadSale | undefined>;
+  findByLeadId(leadId: number): Promise<LeadSale | undefined>;
+  list(limit: number, offset: number): Promise<LeadSale[]>;
+  listByExecutive(
+    executiveId: number,
+    limit: number,
+    offset: number,
+  ): Promise<LeadSale[]>;
+};
+
+export type LeadSourcingPolicyRepository = {
+  findByBranchId(branchId: number): Promise<LeadSourcingPolicy | undefined>;
+  upsert(values: LeadSourcingPolicyDraft): Promise<unknown>;
+};
+
+export type PipelineUserRepository = {
+  findById(id: number): Promise<PipelineUser | undefined>;
+};
+
+export type AuditLogRepository = {
+  create(values: AuditLogDraft): Promise<unknown>;
+};
 
 export type PipelineAuditService = {
   log(
@@ -177,6 +184,18 @@ export type PipelineAuditService = {
     entity: string,
     entityId: number,
     changes?: Record<string, unknown>,
+  ): Promise<unknown>;
+};
+
+export type PipelineNotificationCenter = {
+  notifyUsers(
+    userIds: number[],
+    notification: AppNotificationEvent,
+  ): Promise<unknown>;
+  notifyBranchRoles(
+    branchId: number,
+    roles: Role[],
+    notification: AppNotificationEvent,
   ): Promise<unknown>;
 };
 

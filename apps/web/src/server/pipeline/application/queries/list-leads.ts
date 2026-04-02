@@ -7,28 +7,34 @@ import {
   parseLeadStage,
   parseLeadStatus,
 } from "../../domain/lead";
-import { createPipelineQueryDeps } from "../../infrastructure/deps";
 import {
   requireLeadReadAccess,
   resolveLeadListExecutiveScope,
 } from "../policies/access";
-import type { PipelineQueryDeps } from "../ports";
+import type { LeadRepository } from "../ports";
 
-export async function listLeads(input: {
-  actorUserId: number;
-  actorRole: Role;
-  filters: {
-    stage?: string;
-    status?: string;
-    prioridad?: string;
-    executiveId?: number;
-    limit?: number;
-    offset?: number;
-  };
-}): Promise<
+type ListLeadsDeps = {
+  leads: LeadRepository;
+};
+
+export async function listLeads(
+  deps: ListLeadsDeps,
+  input: {
+    actorUserId: number;
+    actorRole: Role;
+    filters: {
+      stage?: string;
+      status?: string;
+      prioridad?: string;
+      executiveId?: number;
+      limit?: number;
+      offset?: number;
+    };
+  },
+): Promise<
   Result<
     {
-      rows: Awaited<ReturnType<PipelineQueryDeps["leads"]["list"]>>;
+      rows: Awaited<ReturnType<LeadRepository["list"]>>;
       totalCount: number;
     },
     DomainError
@@ -39,7 +45,6 @@ export async function listLeads(input: {
     return canRead;
   }
 
-  const deps = createPipelineQueryDeps();
   const stage = parseLeadStage(input.filters.stage);
   if (!stage.ok) {
     return stage;

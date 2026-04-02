@@ -1,18 +1,15 @@
 import { hasPermission, type Role } from "~/lib/auth/access/rbac";
-import {
-  createPipelineAuditService,
-  createPipelineDeps,
-  createPipelineEngineGateway,
-} from "~/server/pipeline/infrastructure/deps";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { runInPipelineTransaction } from "~/server/shared/pipeline-transaction";
 import { Err, type Result } from "~/server/shared/result";
 
 import { createLeadDraft } from "../../domain/lead";
 import type {
+  LeadAssignmentRepository,
+  LeadHistoryRepository,
+  LeadRepository,
   PipelineAuditService,
-  PipelineDeps,
   PipelineEngineGateway,
+  PipelineUserRepository,
 } from "../ports";
 import {
   ensureActiveExecutive,
@@ -23,12 +20,19 @@ import {
   reassignExistingLeadOnRegistration,
 } from "./register-lead-writer";
 
-export async function registerLeadWithDeps(input: {
+type RegisterLeadDeps = {
+  leads: LeadRepository;
+  leadAssignments: LeadAssignmentRepository;
+  leadHistory: LeadHistoryRepository;
+  users: PipelineUserRepository;
+};
+
+export async function registerLead(input: {
   actorUserId: number;
   actorRole: Role;
   executiveId: number;
   ruc: string;
-  deps: PipelineDeps;
+  deps: RegisterLeadDeps;
   auditService: PipelineAuditService;
   engineGateway: PipelineEngineGateway;
 }): Promise<Result<{ leadId: number }, DomainError>> {
@@ -89,22 +93,5 @@ export async function registerLeadWithDeps(input: {
     executiveId: input.executiveId,
     draft: draft.value,
     now,
-  });
-}
-
-export async function registerLead(input: {
-  actorUserId: number;
-  actorRole: Role;
-  executiveId: number;
-  ruc: string;
-}): Promise<Result<{ leadId: number }, DomainError>> {
-  return runInPipelineTransaction(async ({ executor }) => {
-    const deps = createPipelineDeps(executor);
-    return registerLeadWithDeps({
-      ...input,
-      deps,
-      auditService: createPipelineAuditService(deps),
-      engineGateway: createPipelineEngineGateway(),
-    });
   });
 }

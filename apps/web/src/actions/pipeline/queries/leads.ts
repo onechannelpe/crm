@@ -4,6 +4,8 @@ import { getLeadDetail } from "~/server/pipeline/application/queries/get-lead-de
 import { listLeads } from "~/server/pipeline/application/queries/list-leads";
 import { runAction } from "~/server/shared/action-runtime";
 
+import { createPipelineQueryRuntime } from "../runtime";
+
 export async function queryLeadList(filters: {
   stage?: string;
   status?: string;
@@ -17,7 +19,7 @@ export async function queryLeadList(filters: {
     requireAuth: true,
     input: filters,
     execute: (ctx) =>
-      listLeads({
+      listLeads(createPipelineQueryRuntime(), {
         actorUserId: ctx.actor.userId,
         actorRole: ctx.actor.role,
         filters,
@@ -31,7 +33,7 @@ export async function queryLeadDetail(leadId: number) {
     requireAuth: true,
     input: { leadId },
     execute: (ctx) =>
-      getLeadDetail({
+      getLeadDetail(createPipelineQueryRuntime(), {
         actorUserId: ctx.actor.userId,
         actorRole: ctx.actor.role,
         leadId,

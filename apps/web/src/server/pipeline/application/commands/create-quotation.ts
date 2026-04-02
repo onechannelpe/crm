@@ -1,89 +1,96 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import { hasPermission } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { runInPipelineTransaction } from "~/server/shared/pipeline-transaction";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { createHistoryEvent } from "../../domain/history";
 import { ensureCanCreateQuotation } from "../../domain/workflow";
-import {
-  createPipelineAuditService,
-  createPipelineDeps,
-} from "../../infrastructure/deps";
+import type {
+  LeadHistoryRepository,
+  LeadQuotationRepository,
+  LeadRepository,
+  PipelineAuditService,
+} from "../ports";
 
-export async function createQuotation(input: {
-  actorUserId: number;
-  actorRole: Role;
-  leadId: number;
-  paybackPricing: number;
-  tarifaDebito: number;
-  tarifaCredito: number;
-  tarifaForaneo: number;
-  fee: number;
-  moneda: "PEN" | "USD";
-}): Promise<Result<{ id: number }, DomainError>> {
+type CreateQuotationDeps = {
+  leads: LeadRepository;
+  leadHistory: LeadHistoryRepository;
+  leadQuotations: LeadQuotationRepository;
+};
+
+export async function createQuotation(
+  deps: CreateQuotationDeps,
+  auditService: PipelineAuditService,
+  input: {
+    actorUserId: number;
+    actorRole: Role;
+    leadId: number;
+    paybackPricing: number;
+    tarifaDebito: number;
+    tarifaCredito: number;
+    tarifaForaneo: number;
+    fee: number;
+    moneda: "PEN" | "USD";
+  },
+): Promise<Result<{ id: number }, DomainError>> {
   if (!hasPermission(input.actorRole, "quotation:manage")) {
     return Err(domainError("forbidden", "forbidden", "Access denied"));
   }
 
-  return runInPipelineTransaction(async ({ executor }) => {
-    const deps = createPipelineDeps(executor);
-    const auditService = createPipelineAuditService(deps);
-    const lead = await deps.leads.findById(input.leadId);
-    if (!lead) {
-      return Err(domainError("not_found", "lead_not_found", "Lead not found"));
-    }
+  const lead = await deps.leads.findById(input.leadId);
+  if (!lead) {
+    return Err(domainError("not_found", "lead_not_found", "Lead not found"));
+  }
 
-    const allowed = ensureCanCreateQuotation(lead.stage);
-    if (!allowed.ok) {
-      return allowed;
-    }
+  const allowed = ensureCanCreateQuotation(lead.stage);
+  if (!allowed.ok) {
+    return allowed;
+  }
 
-    const version = await deps.leadQuotations.nextVersion(input.leadId);
-    const quotationId = await deps.leadQuotations.insert({
-      leadId: input.leadId,
-      paybackPricing: input.paybackPricing,
-      tarifaDebito: input.tarifaDebito,
-      tarifaCredito: input.tarifaCredito,
-      tarifaForaneo: input.tarifaForaneo,
-      fee: input.fee,
-      moneda: input.moneda,
-      version,
-      createdAt: Date.now(),
-      createdBy: input.actorUserId,
-    });
-
-    const now = Date.now();
-    await deps.leads.updateById(input.leadId, {
-      stage: "QUOTED",
-      updatedAt: now,
-    });
-    await deps.leadHistory.insert(
-      createHistoryEvent({
-        leadId: input.leadId,
-        eventType: "quotation_created",
-        actorUserId: input.actorUserId,
-        payload: { quotationId, version, moneda: input.moneda },
-        occurredAt: now,
-      }),
-    );
-    await deps.leadHistory.insert(
-      createHistoryEvent({
-        leadId: input.leadId,
-        eventType: "workflow_stage_changed",
-        actorUserId: input.actorUserId,
-        payload: { from: lead.stage, to: "QUOTED" },
-        occurredAt: now,
-      }),
-    );
-    await auditService.log(
-      input.actorUserId,
-      "quotation_created",
-      "lead",
-      input.leadId,
-      { quotationId, version, to: "QUOTED" },
-    );
-
-    return Ok({ id: quotationId });
+  const version = await deps.leadQuotations.nextVersion(input.leadId);
+  const now = Date.now();
+  const quotationId = await deps.leadQuotations.insert({
+    leadId: input.leadId,
+    paybackPricing: input.paybackPricing,
+    tarifaDebito: input.tarifaDebito,
+    tarifaCredito: input.tarifaCredito,
+    tarifaForaneo: input.tarifaForaneo,
+    fee: input.fee,
+    moneda: input.moneda,
+    version,
+    createdAt: now,
+    createdBy: input.actorUserId,
   });
+
+  await deps.leads.updateById(input.leadId, {
+    stage: "QUOTED",
+    updatedAt: now,
+  });
+  await deps.leadHistory.insert(
+    createHistoryEvent({
+      leadId: input.leadId,
+      eventType: "quotation_created",
+      actorUserId: input.actorUserId,
+      payload: { quotationId, version, moneda: input.moneda },
+      occurredAt: now,
+    }),
+  );
+  await deps.leadHistory.insert(
+    createHistoryEvent({
+      leadId: input.leadId,
+      eventType: "workflow_stage_changed",
+      actorUserId: input.actorUserId,
+      payload: { from: lead.stage, to: "QUOTED" },
+      occurredAt: now,
+    }),
+  );
+  await auditService.log(
+    input.actorUserId,
+    "quotation_created",
+    "lead",
+    input.leadId,
+    { quotationId, version, to: "QUOTED" },
+  );
+
+  return Ok({ id: quotationId });
 }

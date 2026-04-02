@@ -4,13 +4,15 @@ import { getSaleDetail } from "~/server/pipeline/application/queries/get-sale-de
 import { listSales } from "~/server/pipeline/application/queries/list-sales";
 import { runAction } from "~/server/shared/action-runtime";
 
+import { createPipelineQueryRuntime } from "../runtime";
+
 export async function querySales(filters: { limit?: number; offset?: number }) {
   return runAction({
     actionName: "pipeline.list_sales",
     permission: "lead:register",
     input: filters,
     execute: (ctx) =>
-      listSales({
+      listSales(createPipelineQueryRuntime(), {
         actorRole: ctx.actor.role,
         actorUserId: ctx.actor.userId,
         ...filters,
@@ -24,7 +26,7 @@ export async function querySaleDetail(saleId: number) {
     permission: "lead:register",
     input: { saleId },
     execute: (ctx) =>
-      getSaleDetail({
+      getSaleDetail(createPipelineQueryRuntime(), {
         actorRole: ctx.actor.role,
         actorUserId: ctx.actor.userId,
         saleId,

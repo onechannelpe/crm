@@ -8,6 +8,12 @@ import { registerLead } from "~/server/pipeline/application/commands/register-le
 import { reviewLead } from "~/server/pipeline/application/commands/review-lead";
 import { runAction } from "~/server/shared/action-runtime";
 
+import {
+  runPipelineCommand,
+  runPipelineNotificationCommand,
+  runPipelineRegistrationCommand,
+} from "../runtime";
+
 export async function requestLeadCreation(input: {
   ruc: string;
   executiveId?: number;
@@ -21,12 +27,17 @@ export async function requestLeadCreation(input: {
     permission: "lead:register",
     input,
     execute: (ctx) =>
-      registerLead({
-        actorUserId: ctx.actor.userId,
-        actorRole: ctx.actor.role,
-        executiveId: input.executiveId ?? ctx.actor.userId,
-        ruc: input.ruc,
-      }),
+      runPipelineRegistrationCommand(({ deps, auditService, engineGateway }) =>
+        registerLead({
+          actorUserId: ctx.actor.userId,
+          actorRole: ctx.actor.role,
+          executiveId: input.executiveId ?? ctx.actor.userId,
+          ruc: input.ruc,
+          deps,
+          auditService,
+          engineGateway,
+        }),
+      ),
   });
 }
 
@@ -55,15 +66,18 @@ export async function requestLeadReview(input: {
     permission: "lead:review",
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      reviewLead({
-        actorUserId: ctx.actor.userId,
-        actorRole: ctx.actor.role,
-        branchId: ctx.actor.branchId,
-        leadId: input.leadId,
-        status,
-        prioridad,
-        reason: input.reason,
-      }),
+      runPipelineNotificationCommand(
+        ({ deps, auditService, notificationCenter }) =>
+          reviewLead(deps, auditService, notificationCenter, {
+            actorUserId: ctx.actor.userId,
+            actorRole: ctx.actor.role,
+            branchId: ctx.actor.branchId,
+            leadId: input.leadId,
+            status,
+            prioridad,
+            reason: input.reason,
+          }),
+      ),
   });
 }
 
@@ -85,12 +99,15 @@ export async function requestLeadCommercialInputCompletion(input: {
     permission: "lead:register",
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      completeCommercialInput({
-        actorUserId: ctx.actor.userId,
-        actorRole: ctx.actor.role,
-        branchId: ctx.actor.branchId,
-        ...input,
-      }),
+      runPipelineNotificationCommand(
+        ({ deps, auditService, notificationCenter }) =>
+          completeCommercialInput(deps, auditService, notificationCenter, {
+            actorUserId: ctx.actor.userId,
+            actorRole: ctx.actor.role,
+            branchId: ctx.actor.branchId,
+            ...input,
+          }),
+      ),
   });
 }
 
@@ -103,10 +120,12 @@ export async function requestLeadReassignment(input: {
     permission: "lead:reassign",
     input,
     execute: (ctx) =>
-      reassignLead({
-        actorUserId: ctx.actor.userId,
-        actorRole: ctx.actor.role,
-        ...input,
-      }),
+      runPipelineCommand(({ deps, auditService }) =>
+        reassignLead(deps, auditService, {
+          actorUserId: ctx.actor.userId,
+          actorRole: ctx.actor.role,
+          ...input,
+        }),
+      ),
   });
 }

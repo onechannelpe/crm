@@ -2,12 +2,15 @@ import type { Role } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import { createPipelineQueryDeps } from "../../infrastructure/deps";
 import { canViewAllSales } from "../policies/access";
-import type { PipelineQueryDeps } from "../ports";
+import type { LeadSaleRepository } from "../ports";
 
-export async function getSaleDetailWithDeps(
-  deps: PipelineQueryDeps,
+type GetSaleDetailDeps = {
+  leadSales: LeadSaleRepository;
+};
+
+export async function getSaleDetail(
+  deps: GetSaleDetailDeps,
   input: {
     actorRole: Role;
     actorUserId: number;
@@ -15,9 +18,7 @@ export async function getSaleDetailWithDeps(
   },
 ): Promise<
   Result<
-    NonNullable<
-      Awaited<ReturnType<PipelineQueryDeps["leadSales"]["findById"]>>
-    >,
+    NonNullable<Awaited<ReturnType<LeadSaleRepository["findById"]>>>,
     DomainError
   >
 > {
@@ -34,20 +35,4 @@ export async function getSaleDetailWithDeps(
   }
 
   return Ok(sale);
-}
-
-export async function getSaleDetail(input: {
-  actorRole: Role;
-  actorUserId: number;
-  saleId: number;
-}): Promise<
-  Result<
-    NonNullable<
-      Awaited<ReturnType<PipelineQueryDeps["leadSales"]["findById"]>>
-    >,
-    DomainError
-  >
-> {
-  const deps = createPipelineQueryDeps();
-  return getSaleDetailWithDeps(deps, input);
 }

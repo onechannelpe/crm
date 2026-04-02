@@ -1,9 +1,7 @@
-import { createAppNotificationCenter } from "~/server/notifications/app-center-service";
-
-type AppNotificationCenter = ReturnType<typeof createAppNotificationCenter>;
+import type { PipelineNotificationCenter } from "./ports";
 
 export async function notifyExecutiveInputRequired(input: {
-  center: AppNotificationCenter;
+  center: PipelineNotificationCenter;
   executiveId: number;
   leadId: number;
   ruc: string;
@@ -19,7 +17,7 @@ export async function notifyExecutiveInputRequired(input: {
 }
 
 export async function notifyReadyForQuotation(input: {
-  center: AppNotificationCenter;
+  center: PipelineNotificationCenter;
   branchId: number;
   leadId: number;
   ruc: string;
@@ -35,7 +33,7 @@ export async function notifyReadyForQuotation(input: {
 }
 
 export async function notifyReadyForSale(input: {
-  center: AppNotificationCenter;
+  center: PipelineNotificationCenter;
   executiveId: number;
   leadId: number;
   ruc: string;

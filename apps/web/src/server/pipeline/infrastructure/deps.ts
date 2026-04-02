@@ -7,10 +7,11 @@ import { createAppNotificationCenter } from "../../notifications/app-center-serv
 import type { DatabaseExecutor } from "../../shared/db-executor";
 import { createAuditLogsRepo } from "../../shared/repos-audit-logs";
 import type {
+  AuditLogDraft,
+  AuditLogRepository,
   PipelineAuditService,
-  PipelineDeps,
   PipelineEngineGateway,
-  PipelineQueryDeps,
+  PipelineUserRepository,
 } from "../application/ports";
 import { createAssignmentRepo } from "./assignment-repo";
 import { createCommercialInputRepo } from "./commercial-input-repo";
@@ -21,7 +22,7 @@ import { createQuotationRepo } from "./quotation-repo";
 import { createSaleRepo } from "./sale-repo";
 import { createSourcingPolicyRepo } from "./sourcing-policy-repo";
 
-export function createPipelineDeps(executor: DatabaseExecutor): PipelineDeps {
+export function createPipelineDeps(executor: DatabaseExecutor) {
   const users = createUsersRepo(executor);
   const auditLogs = createAuditLogsRepo(executor);
 
@@ -34,7 +35,7 @@ export function createPipelineDeps(executor: DatabaseExecutor): PipelineDeps {
     leadSales: createSaleRepo(executor),
     sourcingPolicies: createSourcingPolicyRepo(executor),
     users: {
-      async findById(id) {
+      async findById(id: number) {
         const user = await users.findById(id);
         if (!user) {
           return undefined;
@@ -45,9 +46,9 @@ export function createPipelineDeps(executor: DatabaseExecutor): PipelineDeps {
           isActive: user.is_active === 1,
         };
       },
-    },
+    } satisfies PipelineUserRepository,
     auditLogs: {
-      create(values) {
+      create(values: AuditLogDraft) {
         return auditLogs.create({
           user_id: values.userId,
           action: values.action,
@@ -57,17 +58,17 @@ export function createPipelineDeps(executor: DatabaseExecutor): PipelineDeps {
           created_at: values.createdAt,
         });
       },
-    },
+    } satisfies AuditLogRepository,
   };
 }
 
-export function createPipelineQueryDeps(): PipelineQueryDeps {
+export function createPipelineQueryDeps() {
   return createPipelineDeps(db);
 }
 
-export function createPipelineAuditService(
-  deps: Pick<PipelineDeps, "auditLogs">,
-): PipelineAuditService {
+export function createPipelineAuditService(deps: {
+  auditLogs: AuditLogRepository;
+}): PipelineAuditService {
   return {
     log(actorUserId, action, entityType, entityId, changes) {
       return deps.auditLogs.create({

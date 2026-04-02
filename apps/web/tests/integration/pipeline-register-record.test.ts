@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { registerLeadWithDeps } from "../../src/server/pipeline/application/commands/register-lead";
+import { registerLead } from "../../src/server/pipeline/application/commands/register-lead";
 import { createPipelineDeps } from "../../src/server/pipeline/infrastructure/deps";
 import {
   cleanupTestDb,
@@ -23,7 +23,7 @@ describe("register lead", () => {
     const auditLog = vi.fn<() => Promise<void>>(async () => undefined);
 
     const result = await ctx.db.transaction().execute((trx) =>
-      registerLeadWithDeps({
+      registerLead({
         ruc: "20100000001",
         executiveId: 1,
         actorUserId: 1,
@@ -59,15 +59,15 @@ describe("register lead", () => {
     expect(record.razon_social).toBe("Acme SAC");
     expect(record.address).toBe("Av. Lima 123");
     expect(history.map((event) => event.event_type)).toEqual([
-      "record_registered",
-      "record_assigned",
+      "lead_registered",
+      "lead_assigned",
     ]);
     expect(auditLog).toHaveBeenCalledTimes(1);
   });
 
   it("keeps registration working when enrichment is unavailable", async () => {
     const result = await ctx.db.transaction().execute((trx) =>
-      registerLeadWithDeps({
+      registerLead({
         ruc: "20100000002",
         executiveId: 1,
         actorUserId: 1,

@@ -4,6 +4,8 @@ import { approveForSale } from "~/server/pipeline/application/commands/approve-f
 import { createQuotation } from "~/server/pipeline/application/commands/create-quotation";
 import { runAction } from "~/server/shared/action-runtime";
 
+import { runPipelineCommand, runPipelineNotificationCommand } from "../runtime";
+
 export async function requestQuotationCreation(input: {
   leadId: number;
   paybackPricing: number;
@@ -18,11 +20,13 @@ export async function requestQuotationCreation(input: {
     permission: "quotation:manage",
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      createQuotation({
-        actorUserId: ctx.actor.userId,
-        actorRole: ctx.actor.role,
-        ...input,
-      }),
+      runPipelineCommand(({ deps, auditService }) =>
+        createQuotation(deps, auditService, {
+          actorUserId: ctx.actor.userId,
+          actorRole: ctx.actor.role,
+          ...input,
+        }),
+      ),
   });
 }
 
@@ -32,10 +36,13 @@ export async function requestSaleApproval(leadId: number) {
     permission: "quotation:manage",
     input: { leadId },
     execute: (ctx) =>
-      approveForSale({
-        actorUserId: ctx.actor.userId,
-        actorRole: ctx.actor.role,
-        leadId,
-      }),
+      runPipelineNotificationCommand(
+        ({ deps, auditService, notificationCenter }) =>
+          approveForSale(deps, auditService, notificationCenter, {
+            actorUserId: ctx.actor.userId,
+            actorRole: ctx.actor.role,
+            leadId,
+          }),
+      ),
   });
 }

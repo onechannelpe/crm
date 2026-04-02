@@ -2,7 +2,14 @@ import { TextDecoder } from "node:util";
 
 import { db } from "~/lib/db/db";
 import { reviewLead } from "~/server/pipeline/application/commands/review-lead";
+import type { LeadPriority, LeadStatus } from "~/server/pipeline/domain/lead";
+import {
+  createPipelineAuditService,
+  createPipelineDeps,
+  createPipelineNotificationCenter,
+} from "~/server/pipeline/infrastructure/deps";
 import { createAuditService } from "~/server/shared/audit";
+import { runInPipelineTransaction } from "~/server/shared/pipeline-transaction";
 
 import {
   parsePrioridadImport,
@@ -99,13 +106,11 @@ async function runStatusImportJob(
           ? await runtime.users.findById(lead.executiveId)
           : null;
 
-      const reviewed = await reviewLead({
+      const reviewed = await reviewImportedLead({
         leadId: lead.id,
         status: row.status,
         prioridad: lead.prioridad ?? "P1",
-        reason: "Imported from CSV",
-        actorUserId: actorId,
-        actorRole: "admin",
+        actorId,
         branchId: executive?.branch_id ?? 0,
       });
 
@@ -164,13 +169,11 @@ async function runPrioridadImportJob(
           ? await runtime.users.findById(lead.executiveId)
           : null;
 
-      const reviewed = await reviewLead({
+      const reviewed = await reviewImportedLead({
         leadId: lead.id,
         status: lead.status ?? "DISPONIBLE",
         prioridad: row.prioridad,
-        reason: "Imported from CSV",
-        actorUserId: actorId,
-        actorRole: "admin",
+        actorId,
         branchId: executive?.branch_id ?? 0,
       });
 
@@ -204,4 +207,30 @@ async function runPrioridadImportJob(
     failed: results.filter((row) => !row.ok).length,
     results,
   };
+}
+
+function reviewImportedLead(input: {
+  leadId: number;
+  status: LeadStatus;
+  prioridad: LeadPriority;
+  actorId: number;
+  branchId: number;
+}) {
+  return runInPipelineTransaction(async ({ executor }) => {
+    const pipelineDeps = createPipelineDeps(executor);
+    return reviewLead(
+      pipelineDeps,
+      createPipelineAuditService(pipelineDeps),
+      createPipelineNotificationCenter(executor),
+      {
+        leadId: input.leadId,
+        status: input.status,
+        prioridad: input.prioridad,
+        reason: "Imported from CSV",
+        actorUserId: input.actorId,
+        actorRole: "admin",
+        branchId: input.branchId,
+      },
+    );
+  });
 }

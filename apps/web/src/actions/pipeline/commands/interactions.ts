@@ -6,6 +6,8 @@ import { addNote } from "~/server/pipeline/application/commands/add-note";
 import { logCall } from "~/server/pipeline/application/commands/log-call";
 import { runAction } from "~/server/shared/action-runtime";
 
+import { runPipelineCommand } from "../runtime";
+
 export async function recordLeadCall(input: {
   leadId: number;
   outcome: LeadCallOutcome;
@@ -16,13 +18,15 @@ export async function recordLeadCall(input: {
     permission: "lead:pipeline",
     input,
     execute: (ctx) =>
-      logCall({
-        actorUserId: ctx.actor.userId,
-        actorRole: ctx.actor.role,
-        leadId: input.leadId,
-        outcome: input.outcome,
-        notes: input.notes ?? null,
-      }),
+      runPipelineCommand(({ deps, auditService }) =>
+        logCall(deps, auditService, {
+          actorUserId: ctx.actor.userId,
+          actorRole: ctx.actor.role,
+          leadId: input.leadId,
+          outcome: input.outcome,
+          notes: input.notes ?? null,
+        }),
+      ),
   });
 }
 
@@ -36,11 +40,13 @@ export async function addLeadNote(input: { leadId: number; body: string }) {
     permission: "lead:pipeline",
     input,
     execute: (ctx) =>
-      addNote({
-        actorUserId: ctx.actor.userId,
-        actorRole: ctx.actor.role,
-        leadId: input.leadId,
-        body: input.body,
-      }),
+      runPipelineCommand(({ deps, auditService }) =>
+        addNote(deps, auditService, {
+          actorUserId: ctx.actor.userId,
+          actorRole: ctx.actor.role,
+          leadId: input.leadId,
+          body: input.body,
+        }),
+      ),
   });
 }

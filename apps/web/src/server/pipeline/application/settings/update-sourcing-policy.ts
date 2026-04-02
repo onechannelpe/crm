@@ -1,17 +1,23 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import { hasPermission } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { runInPipelineTransaction } from "~/server/shared/pipeline-transaction";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import { createPipelineDeps } from "../../infrastructure/deps";
+import type { LeadSourcingPolicyRepository } from "../ports";
 
-export async function updateSourcingPolicy(input: {
-  actorUserId: number;
-  actorRole: Role;
-  branchId: number;
-  engineAssignmentEnabled: boolean;
-}): Promise<
+type UpdateSourcingPolicyDeps = {
+  sourcingPolicies: LeadSourcingPolicyRepository;
+};
+
+export async function updateSourcingPolicy(
+  deps: UpdateSourcingPolicyDeps,
+  input: {
+    actorUserId: number;
+    actorRole: Role;
+    branchId: number;
+    engineAssignmentEnabled: boolean;
+  },
+): Promise<
   Result<
     {
       branchId: number;
@@ -24,18 +30,15 @@ export async function updateSourcingPolicy(input: {
     return Err(domainError("forbidden", "forbidden", "Access denied"));
   }
 
-  return runInPipelineTransaction(async ({ executor }) => {
-    const deps = createPipelineDeps(executor);
-    await deps.sourcingPolicies.upsert({
-      branchId: input.branchId,
-      engineAssignmentEnabled: input.engineAssignmentEnabled,
-      updatedAt: Date.now(),
-      updatedByUserId: input.actorUserId,
-    });
+  await deps.sourcingPolicies.upsert({
+    branchId: input.branchId,
+    engineAssignmentEnabled: input.engineAssignmentEnabled,
+    updatedAt: Date.now(),
+    updatedByUserId: input.actorUserId,
+  });
 
-    return Ok({
-      branchId: input.branchId,
-      engineAssignmentEnabled: input.engineAssignmentEnabled,
-    });
+  return Ok({
+    branchId: input.branchId,
+    engineAssignmentEnabled: input.engineAssignmentEnabled,
   });
 }

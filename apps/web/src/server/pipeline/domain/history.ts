@@ -1,4 +1,9 @@
-import type { LeadCallOutcome } from "./lead";
+import type {
+  LeadCallOutcome,
+  LeadPriority,
+  LeadStage,
+  LeadStatus,
+} from "./lead";
 
 export type LeadHistoryEventType =
   | "lead_registered"
@@ -13,95 +18,75 @@ export type LeadHistoryEventType =
   | "call_logged"
   | "note_added";
 
-export type LeadHistoryPayload =
-  | { ruc: string; toStage: "PENDING_EXTERNAL_REVIEW" }
-  | {
-      status: string;
-      prioridad: string;
-      reason: string;
-      fromStage: string;
-      toStage: string;
-    }
-  | { from: string; to: string }
-  | { executiveId: number; reason?: string }
-  | { fromExecutiveId: number; toExecutiveId: number; reason?: string }
-  | {
-      proveedorActual: string;
-      tasaActual: number;
-      gpv: number;
-      ticket: number;
-      abono: number;
-      cantidadPos: number;
-    }
-  | { quotationId: number; version: number; moneda: "PEN" | "USD" }
-  | { saleId: number }
-  | { outcome: LeadCallOutcome; notes: string | null }
-  | { body: string };
+export type LeadHistoryPayloadByEvent = {
+  lead_registered: {
+    ruc: string;
+    toStage: Extract<LeadStage, "PENDING_EXTERNAL_REVIEW">;
+  };
+  lead_reviewed: {
+    status: LeadStatus;
+    prioridad: LeadPriority;
+    reason: string;
+    fromStage: LeadStage;
+    toStage: LeadStage;
+  };
+  workflow_stage_changed: {
+    from: LeadStage;
+    to: LeadStage;
+  };
+  lead_assigned: {
+    executiveId: number;
+    reason?: string;
+  };
+  lead_reassigned: {
+    fromExecutiveId: number;
+    toExecutiveId: number;
+    reason?: string;
+  };
+  commercial_input_completed: {
+    proveedorActual: string;
+    tasaActual: number;
+    gpv: number;
+    ticket: number;
+    abono: number;
+    cantidadPos: number;
+  };
+  quotation_created: {
+    quotationId: number;
+    version: number;
+    moneda: "PEN" | "USD";
+  };
+  sale_approved: null;
+  sale_created: {
+    saleId: number;
+  };
+  call_logged: {
+    outcome: LeadCallOutcome;
+    notes: string | null;
+  };
+  note_added: {
+    body: string;
+  };
+};
+
+export type LeadHistoryEventDraftFor<TEventType extends LeadHistoryEventType> =
+  {
+    leadId: number;
+    eventType: TEventType;
+    actorUserId: number | null;
+    subjectUserId: number | null;
+    payload: LeadHistoryPayloadByEvent[TEventType];
+    occurredAt: number;
+  };
 
 export type LeadHistoryEventDraft = {
-  leadId: number;
-  eventType: LeadHistoryEventType;
-  actorUserId: number | null;
-  subjectUserId: number | null;
-  payload: LeadHistoryPayload | null;
-  occurredAt: number;
-};
+  [TEventType in LeadHistoryEventType]: LeadHistoryEventDraftFor<TEventType>;
+}[LeadHistoryEventType];
 
 export type LeadHistoryPerson = {
   names: string | null;
   firstSurname: string | null;
   secondSurname: string | null;
-};
-
-export type LeadHistoryPayloadByEvent = {
-  lead_registered: Extract<
-    LeadHistoryPayload,
-    { ruc: string; toStage: "PENDING_EXTERNAL_REVIEW" }
-  > | null;
-  lead_reviewed: Extract<
-    LeadHistoryPayload,
-    {
-      status: string;
-      prioridad: string;
-      reason: string;
-      fromStage: string;
-      toStage: string;
-    }
-  > | null;
-  workflow_stage_changed: Extract<
-    LeadHistoryPayload,
-    { from: string; to: string }
-  > | null;
-  lead_assigned: Extract<
-    LeadHistoryPayload,
-    { executiveId: number; reason?: string }
-  > | null;
-  lead_reassigned: Extract<
-    LeadHistoryPayload,
-    { fromExecutiveId: number; toExecutiveId: number; reason?: string }
-  > | null;
-  commercial_input_completed: Extract<
-    LeadHistoryPayload,
-    {
-      proveedorActual: string;
-      tasaActual: number;
-      gpv: number;
-      ticket: number;
-      abono: number;
-      cantidadPos: number;
-    }
-  > | null;
-  quotation_created: Extract<
-    LeadHistoryPayload,
-    { quotationId: number; version: number; moneda: "PEN" | "USD" }
-  > | null;
-  sale_approved: null;
-  sale_created: Extract<LeadHistoryPayload, { saleId: number }> | null;
-  call_logged: Extract<
-    LeadHistoryPayload,
-    { outcome: LeadCallOutcome; notes: string | null }
-  > | null;
-  note_added: Extract<LeadHistoryPayload, { body: string }> | null;
 };
 
 export type LeadHistoryEntryFor<
@@ -122,20 +107,22 @@ export type LeadHistoryEntry = {
   [TEventType in keyof LeadHistoryPayloadByEvent]: LeadHistoryEntryFor<TEventType>;
 }[keyof LeadHistoryPayloadByEvent];
 
-export function createHistoryEvent(input: {
+export function createHistoryEvent<
+  TEventType extends LeadHistoryEventType,
+>(input: {
   leadId: number;
-  eventType: LeadHistoryEventType;
+  eventType: TEventType;
   actorUserId?: number | null;
   subjectUserId?: number | null;
-  payload?: LeadHistoryPayload;
+  payload: LeadHistoryPayloadByEvent[TEventType];
   occurredAt: number;
-}): LeadHistoryEventDraft {
+}): LeadHistoryEventDraftFor<TEventType> {
   return {
     leadId: input.leadId,
     eventType: input.eventType,
     actorUserId: input.actorUserId ?? null,
     subjectUserId: input.subjectUserId ?? null,
-    payload: input.payload ?? null,
+    payload: input.payload,
     occurredAt: input.occurredAt,
   };
 }

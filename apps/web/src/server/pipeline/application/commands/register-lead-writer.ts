@@ -3,11 +3,22 @@ import { Ok, type Result } from "~/server/shared/result";
 
 import { createHistoryEvent } from "../../domain/history";
 import type { LeadDraft } from "../../domain/lead";
-import type { PipelineAuditService, PipelineDeps } from "../ports";
+import type {
+  LeadAssignmentRepository,
+  LeadHistoryRepository,
+  LeadRepository,
+  PipelineAuditService,
+} from "../ports";
 import type { ExistingLead } from "./register-lead-resolution";
 
+type RegisterLeadWriterDeps = {
+  leads: LeadRepository;
+  leadAssignments: LeadAssignmentRepository;
+  leadHistory: LeadHistoryRepository;
+};
+
 export async function createRegisteredLead(input: {
-  deps: PipelineDeps;
+  deps: RegisterLeadWriterDeps;
   auditService: PipelineAuditService;
   actorUserId: number;
   executiveId: number;
@@ -53,7 +64,7 @@ export async function createRegisteredLead(input: {
 }
 
 export async function reassignExistingLeadOnRegistration(input: {
-  deps: PipelineDeps;
+  deps: RegisterLeadWriterDeps;
   auditService: PipelineAuditService;
   actorUserId: number;
   executiveId: number;

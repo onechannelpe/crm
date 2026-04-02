@@ -4,13 +4,15 @@ import { getSourcingPolicy } from "~/server/pipeline/application/queries/get-sou
 import { updateSourcingPolicy } from "~/server/pipeline/application/settings/update-sourcing-policy";
 import { runAction } from "~/server/shared/action-runtime";
 
+import { createPipelineQueryRuntime, runPipelineCommand } from "../runtime";
+
 export async function querySourcingPolicy(branchId: number) {
   return runAction({
     actionName: "pipeline.get_sourcing_policy",
     permission: "capacity:policy:manage",
     input: { branchId },
     execute: (ctx) =>
-      getSourcingPolicy({
+      getSourcingPolicy(createPipelineQueryRuntime(), {
         actorRole: ctx.actor.role,
         branchId,
       }),
@@ -26,11 +28,13 @@ export async function saveSourcingPolicy(input: {
     permission: "capacity:policy:manage",
     input,
     execute: (ctx) =>
-      updateSourcingPolicy({
-        actorUserId: ctx.actor.userId,
-        actorRole: ctx.actor.role,
-        branchId: input.branchId,
-        engineAssignmentEnabled: input.engineAssignmentEnabled,
-      }),
+      runPipelineCommand(({ deps }) =>
+        updateSourcingPolicy(deps, {
+          actorUserId: ctx.actor.userId,
+          actorRole: ctx.actor.role,
+          branchId: input.branchId,
+          engineAssignmentEnabled: input.engineAssignmentEnabled,
+        }),
+      ),
   });
 }

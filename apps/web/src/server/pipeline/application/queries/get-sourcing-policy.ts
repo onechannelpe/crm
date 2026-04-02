@@ -3,12 +3,19 @@ import { hasPermission } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import { createPipelineQueryDeps } from "../../infrastructure/deps";
+import type { LeadSourcingPolicyRepository } from "../ports";
 
-export async function getSourcingPolicy(input: {
-  actorRole: Role;
-  branchId: number;
-}): Promise<
+type GetSourcingPolicyDeps = {
+  sourcingPolicies: LeadSourcingPolicyRepository;
+};
+
+export async function getSourcingPolicy(
+  deps: GetSourcingPolicyDeps,
+  input: {
+    actorRole: Role;
+    branchId: number;
+  },
+): Promise<
   Result<
     {
       branchId: number;
@@ -21,7 +28,6 @@ export async function getSourcingPolicy(input: {
     return Err(domainError("forbidden", "forbidden", "Access denied"));
   }
 
-  const deps = createPipelineQueryDeps();
   const current = await deps.sourcingPolicies.findByBranchId(input.branchId);
 
   return Ok({

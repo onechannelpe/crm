@@ -2,22 +2,24 @@ import type { Role } from "~/lib/auth/access/rbac";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
-import { createPipelineQueryDeps } from "../../infrastructure/deps";
 import { canViewAllSales } from "../policies/access";
-import type { PipelineQueryDeps } from "../ports";
+import type { LeadSaleRepository } from "../ports";
 
-export async function listSales(input: {
-  actorRole: Role;
-  actorUserId: number;
-  limit?: number;
-  offset?: number;
-}): Promise<
-  Result<
-    Awaited<ReturnType<PipelineQueryDeps["leadSales"]["list"]>>,
-    DomainError
-  >
+type ListSalesDeps = {
+  leadSales: LeadSaleRepository;
+};
+
+export async function listSales(
+  deps: ListSalesDeps,
+  input: {
+    actorRole: Role;
+    actorUserId: number;
+    limit?: number;
+    offset?: number;
+  },
+): Promise<
+  Result<Awaited<ReturnType<LeadSaleRepository["list"]>>, DomainError>
 > {
-  const deps = createPipelineQueryDeps();
   const limit = Math.min(input.limit ?? 50, 200);
   const offset = input.offset ?? 0;
 
