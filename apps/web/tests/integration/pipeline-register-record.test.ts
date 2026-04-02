@@ -20,7 +20,7 @@ describe("register record", () => {
   });
 
   it("fills legal name and address from engine enrichment and writes history events", async () => {
-    const auditLog = vi.fn(async () => undefined);
+    const auditLog = vi.fn<() => Promise<void>>(async () => undefined);
 
     const result = await ctx.db.transaction().execute((trx) =>
       registerRecordWithDeps({
