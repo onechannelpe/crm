@@ -26,6 +26,6 @@ export async function getSourcingPolicy(input: {
 
   return Ok({
     branchId: input.branchId,
-    engineAssignmentEnabled: current?.engine_assignment_enabled === 1,
+    engineAssignmentEnabled: current?.engineAssignmentEnabled === true,
   });
 }

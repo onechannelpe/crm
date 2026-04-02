@@ -202,8 +202,8 @@ export default function LeadQuotationPage() {
                           color: "#6b7280",
                         }}
                       >
-                        Debito: {q.tarifa_debito} | Credito: {q.tarifa_credito}{" "}
-                        | Foraneo: {q.tarifa_foraneo}
+                        Debito: {q.tarifaDebito} | Credito: {q.tarifaCredito} |
+                        Foraneo: {q.tarifaForaneo}
                       </p>
                     </div>
                   )}

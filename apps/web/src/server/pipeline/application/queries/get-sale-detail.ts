@@ -28,7 +28,7 @@ export async function getSaleDetailWithDeps(
 
   if (
     !canViewAllSales(input.actorRole) &&
-    sale.executive_id !== input.actorUserId
+    sale.executiveId !== input.actorUserId
   ) {
     return Err(domainError("forbidden", "forbidden", "Access denied"));
   }

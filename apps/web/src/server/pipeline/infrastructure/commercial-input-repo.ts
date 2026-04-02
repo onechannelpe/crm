@@ -1,6 +1,10 @@
 import type { Insertable, Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type {
+  LeadCommercialInput,
+  LeadCommercialInputDraft,
+} from "~/server/pipeline/application/ports";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 export type CommercialInputRow = Selectable<
@@ -10,30 +14,58 @@ export type NewCommercialInputRow = Insertable<
   Database["pipeline_lead_commercial_inputs"]
 >;
 
+function toLeadCommercialInput(row: CommercialInputRow): LeadCommercialInput {
+  return {
+    leadId: row.lead_id,
+    proveedorActual: row.proveedor_actual,
+    tasaActual: row.tasa_actual,
+    gpv: row.gpv,
+    ticket: row.ticket,
+    abono: row.abono,
+    cantidadPos: row.cantidad_pos,
+    updatedAt: row.updated_at,
+    updatedBy: row.updated_by,
+  };
+}
+
 export function createCommercialInputRepo(db: DatabaseExecutor) {
   return {
-    findByLeadId(leadId: number) {
-      return db
+    async findByLeadId(
+      leadId: number,
+    ): Promise<LeadCommercialInput | undefined> {
+      const row = await db
         .selectFrom("pipeline_lead_commercial_inputs")
         .selectAll()
         .where("lead_id", "=", leadId)
         .executeTakeFirst();
+
+      return row ? toLeadCommercialInput(row) : undefined;
     },
 
-    upsert(values: NewCommercialInputRow) {
+    upsert(values: LeadCommercialInputDraft) {
       return db
         .insertInto("pipeline_lead_commercial_inputs")
-        .values(values)
+        .values({
+          lead_id: values.leadId,
+          proveedor_actual: values.proveedorActual,
+          tasa_actual: values.tasaActual,
+          gpv: values.gpv,
+          ticket: values.ticket,
+          abono: values.abono,
+          cantidad_pos: values.cantidadPos,
+          updated_at: values.updatedAt,
+          updated_by: values.updatedBy,
+        } satisfies NewCommercialInputRow)
         .onConflict((oc) =>
           oc.column("lead_id").doUpdateSet({
-            proveedor_actual: values.proveedor_actual,
-            tasa_actual: values.tasa_actual,
+            proveedor_actual: values.proveedorActual,
+            tasa_actual: values.tasaActual,
             gpv: values.gpv,
             ticket: values.ticket,
             abono: values.abono,
-            cantidad_pos: values.cantidad_pos,
-            updated_at: values.updated_at,
-            updated_by: values.updated_by,
+            cantidad_pos: values.cantidadPos,
+            updated_at: values.updatedAt,
+            updated_by: values.updatedBy,
           }),
         )
         .execute();

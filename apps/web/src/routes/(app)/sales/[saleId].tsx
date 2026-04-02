@@ -29,11 +29,11 @@ export default function LeadSaleDetailPage() {
               <dt style={{ color: "#6b7280", "font-size": "0.875rem" }}>
                 Proveedor Actual
               </dt>
-              <dd style={{ margin: 0 }}>{s().proveedor_actual}</dd>
+              <dd style={{ margin: 0 }}>{s().proveedorActual}</dd>
               <dt style={{ color: "#6b7280", "font-size": "0.875rem" }}>
                 Tasa Actual
               </dt>
-              <dd style={{ margin: 0 }}>{s().tasa_actual}</dd>
+              <dd style={{ margin: 0 }}>{s().tasaActual}</dd>
               <dt style={{ color: "#6b7280", "font-size": "0.875rem" }}>GPV</dt>
               <dd style={{ margin: 0 }}>{s().gpv}</dd>
               <dt style={{ color: "#6b7280", "font-size": "0.875rem" }}>
@@ -47,7 +47,7 @@ export default function LeadSaleDetailPage() {
               <dt style={{ color: "#6b7280", "font-size": "0.875rem" }}>
                 Cantidad POS
               </dt>
-              <dd style={{ margin: 0 }}>{s().cantidad_pos}</dd>
+              <dd style={{ margin: 0 }}>{s().cantidadPos}</dd>
               <dt style={{ color: "#6b7280", "font-size": "0.875rem" }}>
                 Banco
               </dt>
@@ -55,14 +55,14 @@ export default function LeadSaleDetailPage() {
               <dt style={{ color: "#6b7280", "font-size": "0.875rem" }}>
                 Nro. Cuenta
               </dt>
-              <dd style={{ margin: 0 }}>{s().nro_cuenta}</dd>
+              <dd style={{ margin: 0 }}>{s().nroCuenta}</dd>
               <dt style={{ color: "#6b7280", "font-size": "0.875rem" }}>CCI</dt>
               <dd style={{ margin: 0 }}>{s().cci ?? "—"}</dd>
               <dt style={{ color: "#6b7280", "font-size": "0.875rem" }}>
                 Fecha
               </dt>
               <dd style={{ margin: 0 }}>
-                {new Date(s().created_at).toLocaleString()}
+                {new Date(s().createdAt).toLocaleString()}
               </dd>
             </dl>
           </div>

@@ -15,63 +15,67 @@ export type LeadAssignmentDraft = {
   leadId: number;
   executiveId: number;
   assignedBy: number;
-  isActive: number;
+  isActive: boolean;
   assignedAt: number;
 };
 
+export type LeadAssignment = LeadAssignmentDraft & {
+  id: number;
+};
+
 export type LeadCommercialInput = {
-  lead_id: number;
-  proveedor_actual: string | null;
-  tasa_actual: number | null;
+  leadId: number;
+  proveedorActual: string | null;
+  tasaActual: number | null;
   gpv: number | null;
   ticket: number | null;
   abono: number | null;
-  cantidad_pos: number | null;
-  updated_at: number;
-  updated_by: number;
+  cantidadPos: number | null;
+  updatedAt: number;
+  updatedBy: number;
 };
 
 export type LeadCommercialInputDraft = LeadCommercialInput;
 
 export type LeadQuotation = {
   id: number;
-  lead_id: number;
-  payback_pricing: number;
-  tarifa_debito: number;
-  tarifa_credito: number;
-  tarifa_foraneo: number;
+  leadId: number;
+  paybackPricing: number;
+  tarifaDebito: number;
+  tarifaCredito: number;
+  tarifaForaneo: number;
   fee: number;
   moneda: "PEN" | "USD";
   version: number;
-  created_at: number;
-  created_by: number;
+  createdAt: number;
+  createdBy: number;
 };
 
 export type LeadQuotationDraft = Omit<LeadQuotation, "id">;
 
 export type LeadSale = {
   id: number;
-  lead_id: number;
-  executive_id: number;
-  proveedor_actual: string;
-  tasa_actual: number;
+  leadId: number;
+  executiveId: number;
+  proveedorActual: string;
+  tasaActual: number;
   gpv: number;
   ticket: number;
   abono: number;
-  cantidad_pos: number;
+  cantidadPos: number;
   banco: string;
-  nro_cuenta: string;
+  nroCuenta: string;
   cci: string | null;
-  created_at: number;
+  createdAt: number;
 };
 
 export type LeadSaleDraft = Omit<LeadSale, "id">;
 
 export type LeadSourcingPolicy = {
-  branch_id: number;
-  engine_assignment_enabled: number;
-  updated_at: number;
-  updated_by_user_id: number;
+  branchId: number;
+  engineAssignmentEnabled: boolean;
+  updatedAt: number;
+  updatedByUserId: number;
 };
 
 export type LeadSourcingPolicyDraft = LeadSourcingPolicy;
@@ -87,7 +91,29 @@ export type LeadListFilters = {
 
 export type PipelineUser = {
   id: number;
-  is_active: number;
+  isActive: boolean;
+};
+
+export type LeadExportRow = {
+  id: number;
+  ruc: string;
+  razonSocial: string | null;
+  address: string | null;
+  stage: LeadStage;
+  status: LeadStatus | null;
+  prioridad: LeadPriority | null;
+  createdAt: number;
+  executiveId: number;
+  executiveName: string;
+};
+
+export type AuditLogDraft = {
+  userId: number;
+  action: string;
+  entityType: string;
+  entityId: number;
+  changes: string | null;
+  createdAt: number;
 };
 
 export type PipelineDeps = {
@@ -99,35 +125,12 @@ export type PipelineDeps = {
     updateById(id: number, values: LeadPatch): Promise<unknown>;
     list(filters: LeadListFilters): Promise<Lead[]>;
     count(filters: LeadListFilters): Promise<number>;
-    listForExport(filters: { executiveId?: number }): Promise<
-      Array<{
-        id: number;
-        ruc: string;
-        razon_social: string | null;
-        address: string | null;
-        stage: LeadStage;
-        status: LeadStatus | null;
-        prioridad: LeadPriority | null;
-        created_at: number;
-        executive_id: number;
-        executive_name: string;
-      }>
-    >;
+    listForExport(filters: { executiveId?: number }): Promise<LeadExportRow[]>;
   };
   leadAssignments: {
     insert(values: LeadAssignmentDraft): Promise<number>;
     deactivateActiveForLead(leadId: number): Promise<unknown>;
-    findActiveByLead(leadId: number): Promise<
-      | {
-          id: number;
-          lead_id: number;
-          executive_id: number;
-          assigned_by: number;
-          is_active: number;
-          assigned_at: number;
-        }
-      | undefined
-    >;
+    findActiveByLead(leadId: number): Promise<LeadAssignment | undefined>;
   };
   leadHistory: {
     insert(values: LeadHistoryEventDraft): Promise<number>;
@@ -161,14 +164,7 @@ export type PipelineDeps = {
     findById(id: number): Promise<PipelineUser | undefined>;
   };
   auditLogs: {
-    create(values: {
-      user_id: number;
-      action: string;
-      entity_type: string;
-      entity_id: number;
-      changes: string | null;
-      created_at: number;
-    }): Promise<unknown>;
+    create(values: AuditLogDraft): Promise<unknown>;
   };
 };
 

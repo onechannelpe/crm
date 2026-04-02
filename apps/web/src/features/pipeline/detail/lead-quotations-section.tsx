@@ -19,7 +19,7 @@ export function LeadQuotationsSection(props: {
               <div class={styles.quoteRow}>
                 <span>#{quotation.id}</span>
                 <span class={styles.timelineMeta}>
-                  {formatDateTime(quotation.created_at)}
+                  {formatDateTime(quotation.createdAt)}
                 </span>
               </div>
             )}

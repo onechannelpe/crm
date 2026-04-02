@@ -19,7 +19,7 @@ export async function createRegisteredLead(input: {
     leadId,
     executiveId: input.executiveId,
     assignedBy: input.actorUserId,
-    isActive: 1,
+    isActive: true,
     assignedAt: input.now,
   });
   await input.deps.leadHistory.insert(
@@ -65,7 +65,7 @@ export async function reassignExistingLeadOnRegistration(input: {
     leadId: input.lead.id,
     executiveId: input.executiveId,
     assignedBy: input.actorUserId,
-    isActive: 1,
+    isActive: true,
     assignedAt: input.now,
   });
   await input.deps.leads.updateById(input.lead.id, {

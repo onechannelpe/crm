@@ -1,29 +1,23 @@
 import type { Role } from "~/lib/auth/access/rbac";
 
+import type { LeadHistoryEntry } from "../../domain/history";
+import type { Lead } from "../../domain/lead";
 import { canRevealFullTimeline } from "../policies/access";
 import {
   resolveAvailableActions,
   type LeadAction,
 } from "../policies/action-availability";
-import type { PipelineQueryDeps } from "../ports";
+import type { LeadCommercialInput, LeadQuotation, LeadSale } from "../ports";
 import { presentTimeline, type TimelineItem } from "./timeline";
 
 export type LeadDetailSource = {
   actorUserId: number;
   actorRole: Role;
-  lead: NonNullable<
-    Awaited<ReturnType<PipelineQueryDeps["leads"]["findById"]>>
-  >;
-  commercialInput: Awaited<
-    ReturnType<PipelineQueryDeps["leadCommercialInputs"]["findByLeadId"]>
-  >;
-  quotations: Awaited<
-    ReturnType<PipelineQueryDeps["leadQuotations"]["listByLeadId"]>
-  >;
-  sale: Awaited<ReturnType<PipelineQueryDeps["leadSales"]["findByLeadId"]>>;
-  history: Awaited<
-    ReturnType<PipelineQueryDeps["leadHistory"]["listByLeadId"]>
-  >;
+  lead: Lead;
+  commercialInput: LeadCommercialInput | undefined;
+  quotations: LeadQuotation[];
+  sale: LeadSale | undefined;
+  history: LeadHistoryEntry[];
 };
 
 export type LeadDetailOutput = {

@@ -22,13 +22,13 @@ export const SALES_RECORD_INDEX_COLUMNS = [
     ),
   },
   {
-    key: "proveedor_actual",
+    key: "proveedorActual",
     label: "Proveedor",
     icon: Building2,
     minWidth: 220,
     grow: true,
     renderCell: (sale) => (
-      <span class={styles.cellText}>{sale.proveedor_actual}</span>
+      <span class={styles.cellText}>{sale.proveedorActual}</span>
     ),
   },
   {
@@ -39,12 +39,12 @@ export const SALES_RECORD_INDEX_COLUMNS = [
     renderCell: (sale) => <span class={styles.cellText}>{sale.gpv}</span>,
   },
   {
-    key: "created_at",
+    key: "createdAt",
     label: "Creado",
     icon: CalendarDays,
     width: 140,
     renderCell: (sale) => (
-      <span class={styles.mutedCellText}>{formatDate(sale.created_at)}</span>
+      <span class={styles.mutedCellText}>{formatDate(sale.createdAt)}</span>
     ),
   },
 ] satisfies ReadonlyArray<DataGridColumn<SalesRow>>;

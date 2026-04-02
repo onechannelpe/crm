@@ -15,18 +15,24 @@ import type {
 } from "~/server/pipeline/domain/lead";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
+import type { LeadExportRow, LeadListFilters } from "../application/ports";
+
 export type LeadRow = Selectable<Database["pipeline_leads"]>;
 export type NewLeadRow = Insertable<Database["pipeline_leads"]>;
 export type LeadUpdateRow = Updateable<Database["pipeline_leads"]>;
 
-export interface LeadListFilters {
-  executiveId?: number;
-  stage?: LeadStage;
-  status?: LeadStatus;
-  prioridad?: LeadPriority;
-  limit: number;
-  offset: number;
-}
+type LeadExportRowSource = {
+  id: number;
+  ruc: string;
+  razon_social: string | null;
+  address: string | null;
+  stage: LeadStage;
+  status: LeadStatus | null;
+  prioridad: LeadPriority | null;
+  created_at: number;
+  executive_id: number;
+  executive_name: string;
+};
 
 function toLead(row: LeadRow): Lead {
   return {
@@ -87,6 +93,21 @@ function applyLeadFilters<TRow>(
   }
 
   return nextQuery;
+}
+
+function toLeadExportRow(row: LeadExportRowSource): LeadExportRow {
+  return {
+    id: row.id,
+    ruc: row.ruc,
+    razonSocial: row.razon_social,
+    address: row.address,
+    stage: row.stage,
+    status: row.status,
+    prioridad: row.prioridad,
+    createdAt: row.created_at,
+    executiveId: row.executive_id,
+    executiveName: row.executive_name,
+  };
 }
 
 export function createLeadRepo(db: DatabaseExecutor) {
@@ -167,7 +188,9 @@ export function createLeadRepo(db: DatabaseExecutor) {
       return Number(row.count);
     },
 
-    listForExport(filters: { executiveId?: number }) {
+    async listForExport(filters: {
+      executiveId?: number;
+    }): Promise<LeadExportRow[]> {
       let query = db
         .selectFrom("pipeline_leads as lead")
         .innerJoin("users as executive", "executive.id", "lead.executive_id")
@@ -188,7 +211,8 @@ export function createLeadRepo(db: DatabaseExecutor) {
         query = query.where("lead.executive_id", "=", filters.executiveId);
       }
 
-      return query.orderBy("lead.created_at", "desc").execute();
+      const rows = await query.orderBy("lead.created_at", "desc").execute();
+      return rows.map(toLeadExportRow);
     },
   };
 }

@@ -39,11 +39,6 @@ import { createNotificationContactsRepo } from "~/server/notifications/repos-con
 import { createNotificationPreferencesRepo } from "~/server/notifications/repos-preferences";
 import { createActionObservationsRepo } from "~/server/observability/repos-action-observations";
 import { createAuthFunnelEventsRepo } from "~/server/observability/repos-auth-funnel-events";
-import { createAssignmentRepo } from "~/server/pipeline/infrastructure/assignment-repo";
-import { createCommercialInputRepo } from "~/server/pipeline/infrastructure/commercial-input-repo";
-import { createLeadRepo } from "~/server/pipeline/infrastructure/lead-repo";
-import { createQuotationRepo } from "~/server/quotations/infrastructure/quotation-repo";
-import { createSaleRepo } from "~/server/sales/infrastructure/sale-repo";
 import { createReportExportRepo } from "~/server/sales/repos-report-exports";
 import { createSalesRecordsRepo } from "~/server/sales/repos-sales-records";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
@@ -109,11 +104,6 @@ export function createRepositories(db: Kysely<Database>) {
     passwordResetTokens: createPasswordResetTokensRepo(db),
     branches: createBranchesRepo(db),
     teams: createTeamsRepo(db),
-    pipelineLeads: createLeadRepo(db),
-    pipelineLeadAssignments: createAssignmentRepo(db),
-    pipelineLeadCommercialInputs: createCommercialInputRepo(db),
-    pipelineLeadQuotations: createQuotationRepo(db),
-    pipelineLeadSales: createSaleRepo(db),
     integrationJobs: createIntegrationJobRepo(db),
   };
 }

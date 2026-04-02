@@ -20,7 +20,7 @@ export async function ensureActiveExecutive(input: {
   executiveId: number;
 }): Promise<Result<void, DomainError>> {
   const targetExecutive = await input.deps.users.findById(input.executiveId);
-  if (!targetExecutive || !targetExecutive.is_active) {
+  if (!targetExecutive || !targetExecutive.isActive) {
     return Err(
       domainError(
         "validation",
@@ -48,7 +48,7 @@ export async function resolveLeadRegistration(input: {
   );
   const decision = decideRegistrationConflict({
     existingStage: existingLead.stage,
-    hasActiveExecutive: existingExecutive?.is_active === 1,
+    hasActiveExecutive: existingExecutive?.isActive === true,
   });
 
   if (decision === "conflict") {

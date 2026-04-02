@@ -1,10 +1,25 @@
-import type { Insertable } from "kysely";
+import type { Insertable, Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
-import type { LeadAssignmentDraft } from "~/server/pipeline/application/ports";
+import type {
+  LeadAssignment,
+  LeadAssignmentDraft,
+} from "~/server/pipeline/application/ports";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
+type AssignmentRow = Selectable<Database["pipeline_lead_assignments"]>;
 type NewAssignmentRow = Insertable<Database["pipeline_lead_assignments"]>;
+
+function toLeadAssignment(row: AssignmentRow): LeadAssignment {
+  return {
+    id: row.id,
+    leadId: row.lead_id,
+    executiveId: row.executive_id,
+    assignedBy: row.assigned_by,
+    isActive: row.is_active === 1,
+    assignedAt: row.assigned_at,
+  };
+}
 
 export function createAssignmentRepo(db: DatabaseExecutor) {
   return {
@@ -15,7 +30,7 @@ export function createAssignmentRepo(db: DatabaseExecutor) {
           lead_id: values.leadId,
           executive_id: values.executiveId,
           assigned_by: values.assignedBy,
-          is_active: values.isActive,
+          is_active: values.isActive ? 1 : 0,
           assigned_at: values.assignedAt,
         } satisfies NewAssignmentRow)
         .executeTakeFirstOrThrow();
@@ -32,13 +47,15 @@ export function createAssignmentRepo(db: DatabaseExecutor) {
         .execute();
     },
 
-    findActiveByLead(leadId: number) {
-      return db
+    async findActiveByLead(leadId: number) {
+      const row = await db
         .selectFrom("pipeline_lead_assignments")
         .selectAll()
         .where("lead_id", "=", leadId)
         .where("is_active", "=", 1)
         .executeTakeFirst();
+
+      return row ? toLeadAssignment(row) : undefined;
     },
   };
 }

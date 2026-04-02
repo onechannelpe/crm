@@ -38,7 +38,7 @@ export async function reassignLead(input: {
     }
 
     const newExecutive = await deps.users.findById(input.newExecutiveId);
-    if (!newExecutive || !newExecutive.is_active) {
+    if (!newExecutive || !newExecutive.isActive) {
       return Err(
         domainError(
           "validation",
@@ -54,7 +54,7 @@ export async function reassignLead(input: {
       leadId: input.leadId,
       executiveId: input.newExecutiveId,
       assignedBy: input.actorUserId,
-      isActive: 1,
+      isActive: true,
       assignedAt: now,
     });
     await deps.leads.updateById(input.leadId, {

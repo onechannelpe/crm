@@ -49,15 +49,15 @@ export async function completeCommercialInput(input: {
 
     const now = Date.now();
     await deps.leadCommercialInputs.upsert({
-      lead_id: input.leadId,
-      proveedor_actual: input.proveedorActual,
-      tasa_actual: input.tasaActual,
+      leadId: input.leadId,
+      proveedorActual: input.proveedorActual,
+      tasaActual: input.tasaActual,
       gpv: input.gpv,
       ticket: input.ticket,
       abono: input.abono,
-      cantidad_pos: input.cantidadPos,
-      updated_at: now,
-      updated_by: input.actorUserId,
+      cantidadPos: input.cantidadPos,
+      updatedAt: now,
+      updatedBy: input.actorUserId,
     });
     await deps.leads.updateById(input.leadId, {
       stage: "READY_FOR_QUOTATION",

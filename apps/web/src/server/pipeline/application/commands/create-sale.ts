@@ -49,18 +49,18 @@ export async function createSale(input: {
     }
 
     const saleId = await deps.leadSales.insert({
-      lead_id: input.leadId,
-      executive_id: input.actorUserId,
-      proveedor_actual: input.proveedorActual,
-      tasa_actual: input.tasaActual,
+      leadId: input.leadId,
+      executiveId: input.actorUserId,
+      proveedorActual: input.proveedorActual,
+      tasaActual: input.tasaActual,
       gpv: input.gpv,
       ticket: input.ticket,
       abono: input.abono,
-      cantidad_pos: input.cantidadPos,
+      cantidadPos: input.cantidadPos,
       banco: input.banco,
-      nro_cuenta: input.nroCuenta,
+      nroCuenta: input.nroCuenta,
       cci: input.cci,
-      created_at: Date.now(),
+      createdAt: Date.now(),
     });
 
     const now = Date.now();

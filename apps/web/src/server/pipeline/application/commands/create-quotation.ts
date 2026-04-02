@@ -41,16 +41,16 @@ export async function createQuotation(input: {
 
     const version = await deps.leadQuotations.nextVersion(input.leadId);
     const quotationId = await deps.leadQuotations.insert({
-      lead_id: input.leadId,
-      payback_pricing: input.paybackPricing,
-      tarifa_debito: input.tarifaDebito,
-      tarifa_credito: input.tarifaCredito,
-      tarifa_foraneo: input.tarifaForaneo,
+      leadId: input.leadId,
+      paybackPricing: input.paybackPricing,
+      tarifaDebito: input.tarifaDebito,
+      tarifaCredito: input.tarifaCredito,
+      tarifaForaneo: input.tarifaForaneo,
       fee: input.fee,
       moneda: input.moneda,
       version,
-      created_at: Date.now(),
-      created_by: input.actorUserId,
+      createdAt: Date.now(),
+      createdBy: input.actorUserId,
     });
 
     const now = Date.now();

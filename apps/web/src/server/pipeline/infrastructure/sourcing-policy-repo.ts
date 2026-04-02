@@ -1,6 +1,10 @@
 import type { Insertable, Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type {
+  LeadSourcingPolicy,
+  LeadSourcingPolicyDraft,
+} from "~/server/pipeline/application/ports";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 export type SourcingPolicyRow = Selectable<Database["lead_sourcing_policies"]>;
@@ -8,25 +12,43 @@ export type NewSourcingPolicyRow = Insertable<
   Database["lead_sourcing_policies"]
 >;
 
+function toLeadSourcingPolicy(row: SourcingPolicyRow): LeadSourcingPolicy {
+  return {
+    branchId: row.branch_id,
+    engineAssignmentEnabled: row.engine_assignment_enabled === 1,
+    updatedAt: row.updated_at,
+    updatedByUserId: row.updated_by_user_id,
+  };
+}
+
 export function createSourcingPolicyRepo(db: DatabaseExecutor) {
   return {
-    findByBranchId(branchId: number) {
-      return db
+    async findByBranchId(
+      branchId: number,
+    ): Promise<LeadSourcingPolicy | undefined> {
+      const row = await db
         .selectFrom("lead_sourcing_policies")
         .selectAll()
         .where("branch_id", "=", branchId)
         .executeTakeFirst();
+
+      return row ? toLeadSourcingPolicy(row) : undefined;
     },
 
-    upsert(values: NewSourcingPolicyRow) {
+    upsert(values: LeadSourcingPolicyDraft) {
       return db
         .insertInto("lead_sourcing_policies")
-        .values(values)
+        .values({
+          branch_id: values.branchId,
+          engine_assignment_enabled: values.engineAssignmentEnabled ? 1 : 0,
+          updated_at: values.updatedAt,
+          updated_by_user_id: values.updatedByUserId,
+        } satisfies NewSourcingPolicyRow)
         .onConflict((oc) =>
           oc.column("branch_id").doUpdateSet({
-            engine_assignment_enabled: values.engine_assignment_enabled,
-            updated_at: values.updated_at,
-            updated_by_user_id: values.updated_by_user_id,
+            engine_assignment_enabled: values.engineAssignmentEnabled ? 1 : 0,
+            updated_at: values.updatedAt,
+            updated_by_user_id: values.updatedByUserId,
           }),
         )
         .execute();
