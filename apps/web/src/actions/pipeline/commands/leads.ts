@@ -3,12 +3,12 @@
 import { validationError } from "~/lib/app-errors";
 import { LEAD_STATUS_VALUES, PRIORIDAD_VALUES } from "~/lib/db/types";
 import { completeCommercialInput } from "~/server/pipeline/application/commands/complete-commercial-input";
-import { reassignRecord } from "~/server/pipeline/application/commands/reassign-record";
-import { registerRecord } from "~/server/pipeline/application/commands/register-record";
-import { reviewRecord } from "~/server/pipeline/application/commands/review-record";
+import { reassignLead } from "~/server/pipeline/application/commands/reassign-lead";
+import { registerLead } from "~/server/pipeline/application/commands/register-lead";
+import { reviewLead } from "~/server/pipeline/application/commands/review-lead";
 import { runAction } from "~/server/shared/action-runtime";
 
-export async function requestRecordCreation(input: {
+export async function requestLeadCreation(input: {
   ruc: string;
   executiveId?: number;
 }) {
@@ -17,11 +17,11 @@ export async function requestRecordCreation(input: {
   }
 
   return runAction({
-    actionName: "pipeline.register_record",
-    permission: "lead:pipeline",
+    actionName: "pipeline.register_lead",
+    permission: "lead:register",
     input,
     execute: (ctx) =>
-      registerRecord({
+      registerLead({
         actorUserId: ctx.actor.userId,
         actorRole: ctx.actor.role,
         executiveId: input.executiveId ?? ctx.actor.userId,
@@ -30,7 +30,7 @@ export async function requestRecordCreation(input: {
   });
 }
 
-export async function requestRecordReview(input: {
+export async function requestLeadReview(input: {
   leadId: number;
   status: string;
   prioridad: string;
@@ -51,11 +51,11 @@ export async function requestRecordReview(input: {
   }
 
   return runAction({
-    actionName: "pipeline.review_record",
+    actionName: "pipeline.review_lead",
     permission: "lead:review",
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      reviewRecord({
+      reviewLead({
         actorUserId: ctx.actor.userId,
         actorRole: ctx.actor.role,
         branchId: ctx.actor.branchId,
@@ -67,7 +67,7 @@ export async function requestRecordReview(input: {
   });
 }
 
-export async function requestCommercialInputCompletion(input: {
+export async function requestLeadCommercialInputCompletion(input: {
   leadId: number;
   proveedorActual: string;
   tasaActual: number;
@@ -94,16 +94,16 @@ export async function requestCommercialInputCompletion(input: {
   });
 }
 
-export async function requestRecordReassignment(input: {
+export async function requestLeadReassignment(input: {
   leadId: number;
   newExecutiveId: number;
 }) {
   return runAction({
-    actionName: "pipeline.reassign_record",
+    actionName: "pipeline.reassign_lead",
     permission: "lead:reassign",
     input,
     execute: (ctx) =>
-      reassignRecord({
+      reassignLead({
         actorUserId: ctx.actor.userId,
         actorRole: ctx.actor.role,
         ...input,

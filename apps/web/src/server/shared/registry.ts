@@ -26,7 +26,7 @@ import {
   createSearchPolicyOverridesRepo,
 } from "~/server/capacity/infrastructure/policy-repos";
 import { createSearchEnrichmentRepo } from "~/server/client-search/repos-enrichment";
-import { createLeadAssignmentsRepo } from "~/server/contacts/repos-assignments";
+import { createContactAssignmentsRepo } from "~/server/contacts/repos-assignments";
 import { createContactsRepo } from "~/server/contacts/repos-contacts";
 import { createOrganizationsRepo } from "~/server/contacts/repos-organizations";
 import { createExtensionRuntimeRepo } from "~/server/extension/repos";
@@ -41,7 +41,7 @@ import { createActionObservationsRepo } from "~/server/observability/repos-actio
 import { createAuthFunnelEventsRepo } from "~/server/observability/repos-auth-funnel-events";
 import { createAssignmentRepo } from "~/server/pipeline/infrastructure/assignment-repo";
 import { createCommercialInputRepo } from "~/server/pipeline/infrastructure/commercial-input-repo";
-import { createRecordRepo } from "~/server/pipeline/infrastructure/record-repo";
+import { createLeadRepo } from "~/server/pipeline/infrastructure/lead-repo";
 import { createQuotationRepo } from "~/server/quotations/infrastructure/quotation-repo";
 import { createSaleRepo } from "~/server/sales/infrastructure/sale-repo";
 import { createReportExportRepo } from "~/server/sales/repos-report-exports";
@@ -76,7 +76,7 @@ export function createRepositories(db: Kysely<Database>) {
     organizations: createOrganizationsRepo(db),
     searchEnrichment: createSearchEnrichmentRepo(db),
     contacts: createContactsRepo(db),
-    leadAssignments: createLeadAssignmentsRepo(db),
+    contactAssignments: createContactAssignmentsRepo(db),
     searchPolicyDefaults: createSearchPolicyDefaultsRepo(db),
     searchPolicyOverrides: createSearchPolicyOverridesRepo(db),
     leadPolicyDefaults: createLeadPolicyDefaultsRepo(db),
@@ -109,11 +109,11 @@ export function createRepositories(db: Kysely<Database>) {
     passwordResetTokens: createPasswordResetTokensRepo(db),
     branches: createBranchesRepo(db),
     teams: createTeamsRepo(db),
-    leads: createRecordRepo(db),
-    pipelineAssignments: createAssignmentRepo(db),
-    leadCommercialInputs: createCommercialInputRepo(db),
-    quotations: createQuotationRepo(db),
-    leadSales: createSaleRepo(db),
+    pipelineLeads: createLeadRepo(db),
+    pipelineLeadAssignments: createAssignmentRepo(db),
+    pipelineLeadCommercialInputs: createCommercialInputRepo(db),
+    pipelineLeadQuotations: createQuotationRepo(db),
+    pipelineLeadSales: createSaleRepo(db),
     integrationJobs: createIntegrationJobRepo(db),
   };
 }

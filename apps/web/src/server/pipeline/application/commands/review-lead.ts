@@ -1,23 +1,23 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import { hasPermission } from "~/lib/auth/access/rbac";
 import type { LeadStatus, Prioridad } from "~/lib/db/types";
-import {
-  pipelineAuditService,
-  pipelineNotificationCenter,
-} from "~/server/pipeline/infrastructure/deps";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { runInPipelineTransaction } from "~/server/shared/pipeline-transaction";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { createHistoryEvent } from "../../domain/history";
 import { resolveReviewTransition } from "../../domain/workflow";
-import { createPipelineDeps } from "../../infrastructure/deps";
+import {
+  createPipelineAuditService,
+  createPipelineDeps,
+  createPipelineNotificationCenter,
+} from "../../infrastructure/deps";
 import {
   notifyExecutiveInputRequired,
   notifyReadyForQuotation,
 } from "../notifications";
 
-export async function reviewRecord(input: {
+export async function reviewLead(input: {
   actorUserId: number;
   actorRole: Role;
   branchId: number;
@@ -32,15 +32,15 @@ export async function reviewRecord(input: {
 
   return runInPipelineTransaction(async ({ executor }) => {
     const deps = createPipelineDeps(executor);
-    const record = await deps.records.findById(input.leadId);
-    if (!record) {
-      return Err(
-        domainError("not_found", "record_not_found", "Record not found"),
-      );
+    const auditService = createPipelineAuditService(deps);
+    const notificationCenter = createPipelineNotificationCenter(executor);
+    const lead = await deps.leads.findById(input.leadId);
+    if (!lead) {
+      return Err(domainError("not_found", "lead_not_found", "Lead not found"));
     }
 
     const transition = resolveReviewTransition({
-      currentStage: record.stage,
+      currentStage: lead.stage,
       status: input.status,
       prioridad: input.prioridad,
     });
@@ -49,47 +49,47 @@ export async function reviewRecord(input: {
     }
 
     const now = Date.now();
-    await deps.records.updateById(input.leadId, {
+    await deps.leads.updateById(input.leadId, {
       status: input.status,
       prioridad: input.prioridad,
       stage: transition.value,
       updated_at: now,
     });
-    await deps.history.insert(
+    await deps.leadHistory.insert(
       createHistoryEvent({
         leadId: input.leadId,
-        eventType: "record_reviewed",
+        eventType: "lead_reviewed",
         actorUserId: input.actorUserId,
         payload: {
           status: input.status,
           prioridad: input.prioridad,
           reason: input.reason,
-          fromStage: record.stage,
+          fromStage: lead.stage,
           toStage: transition.value,
         },
         occurredAt: now,
       }),
     );
-    await deps.history.insert(
+    await deps.leadHistory.insert(
       createHistoryEvent({
         leadId: input.leadId,
         eventType: "workflow_stage_changed",
         actorUserId: input.actorUserId,
-        payload: { from: record.stage, to: transition.value },
+        payload: { from: lead.stage, to: transition.value },
         occurredAt: now,
       }),
     );
-    await pipelineAuditService.log(
+    await auditService.log(
       input.actorUserId,
-      "record_reviewed",
+      "lead_reviewed",
       "lead",
       input.leadId,
       {
-        fromStage: record.stage,
+        fromStage: lead.stage,
         toStage: transition.value,
-        fromStatus: record.status,
+        fromStatus: lead.status,
         toStatus: input.status,
-        fromPrioridad: record.prioridad,
+        fromPrioridad: lead.prioridad,
         toPrioridad: input.prioridad,
         reason: input.reason,
       },
@@ -97,19 +97,19 @@ export async function reviewRecord(input: {
 
     if (transition.value === "NEEDS_EXECUTIVE_INPUT") {
       await notifyExecutiveInputRequired({
-        center: pipelineNotificationCenter,
-        executiveId: record.executive_id,
-        leadId: record.id,
-        ruc: record.ruc,
+        center: notificationCenter,
+        executiveId: lead.executive_id,
+        leadId: lead.id,
+        ruc: lead.ruc,
       });
     }
 
     if (transition.value === "READY_FOR_QUOTATION") {
       await notifyReadyForQuotation({
-        center: pipelineNotificationCenter,
+        center: notificationCenter,
         branchId: input.branchId,
-        leadId: record.id,
-        ruc: record.ruc,
+        leadId: lead.id,
+        ruc: lead.ruc,
       });
     }
 

@@ -16,11 +16,11 @@ export async function getSaleDetailWithDeps(
   },
 ): Promise<
   Result<
-    NonNullable<Awaited<ReturnType<QueryDeps["sales"]["findById"]>>>,
+    NonNullable<Awaited<ReturnType<QueryDeps["leadSales"]["findById"]>>>,
     DomainError
   >
 > {
-  const sale = await deps.sales.findById(input.saleId);
+  const sale = await deps.leadSales.findById(input.saleId);
   if (!sale) {
     return Err(domainError("not_found", "sale_not_found", "Sale not found"));
   }
@@ -41,7 +41,7 @@ export async function getSaleDetail(input: {
   saleId: number;
 }): Promise<
   Result<
-    NonNullable<Awaited<ReturnType<QueryDeps["sales"]["findById"]>>>,
+    NonNullable<Awaited<ReturnType<QueryDeps["leadSales"]["findById"]>>>,
     DomainError
   >
 > {

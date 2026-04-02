@@ -25,7 +25,7 @@ export function createSaleRepo(db: DatabaseExecutor) {
         .executeTakeFirst();
     },
 
-    findByRecord(leadId: number) {
+    findByLeadId(leadId: number) {
       return db
         .selectFrom("pipeline_sales")
         .selectAll()

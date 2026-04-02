@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { getRecordDetailWithDeps } from "../../src/server/pipeline/application/queries/get-record-detail";
+import { getLeadDetailWithDeps } from "../../src/server/pipeline/application/queries/get-lead-detail";
 import { getSaleDetailWithDeps } from "../../src/server/pipeline/application/queries/get-sale-detail";
 import { createPipelineDeps } from "../../src/server/pipeline/infrastructure/deps";
 import {
@@ -37,7 +37,7 @@ describe("pipeline read access", () => {
       })
       .execute();
 
-    const result = await getRecordDetailWithDeps(createPipelineDeps(ctx.db), {
+    const result = await getLeadDetailWithDeps(createPipelineDeps(ctx.db), {
       leadId: 11,
       actorUserId: 2,
       actorRole: "back_office",
@@ -46,7 +46,7 @@ describe("pipeline read access", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
 
-    expect(result.value.record.id).toBe(11);
+    expect(result.value.lead.id).toBe(11);
     expect(result.value.timeline).toEqual([]);
   });
 
@@ -67,7 +67,7 @@ describe("pipeline read access", () => {
       })
       .execute();
 
-    const result = await getRecordDetailWithDeps(createPipelineDeps(ctx.db), {
+    const result = await getLeadDetailWithDeps(createPipelineDeps(ctx.db), {
       leadId: 12,
       actorUserId: 3,
       actorRole: "executive",

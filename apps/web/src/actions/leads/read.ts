@@ -7,12 +7,12 @@ import { repos } from "~/server/shared/context";
 import { isErr } from "~/server/shared/result";
 
 type ActiveLead = Awaited<
-  ReturnType<typeof repos.leadAssignments.findActiveByUserWithContacts>
+  ReturnType<typeof repos.contactAssignments.findActiveByUserWithContacts>
 >[number];
 
 export async function getActiveLeads(): Promise<ActiveLead[]> {
   const session = await requirePermission("lead:work");
-  return repos.leadAssignments.findActiveByUserWithContacts(session.userId);
+  return repos.contactAssignments.findActiveByUserWithContacts(session.userId);
 }
 
 export async function getMyLeadCapacity() {

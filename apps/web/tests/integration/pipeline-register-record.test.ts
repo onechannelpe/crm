@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { registerRecordWithDeps } from "../../src/server/pipeline/application/commands/register-record";
+import { registerLeadWithDeps } from "../../src/server/pipeline/application/commands/register-lead";
 import { createPipelineDeps } from "../../src/server/pipeline/infrastructure/deps";
 import {
   cleanupTestDb,
@@ -8,7 +8,7 @@ import {
   type TestDbContext,
 } from "../support/test-db";
 
-describe("register record", () => {
+describe("register lead", () => {
   let ctx: TestDbContext;
 
   beforeEach(async () => {
@@ -23,7 +23,7 @@ describe("register record", () => {
     const auditLog = vi.fn<() => Promise<void>>(async () => undefined);
 
     const result = await ctx.db.transaction().execute((trx) =>
-      registerRecordWithDeps({
+      registerLeadWithDeps({
         ruc: "20100000001",
         executiveId: 1,
         actorUserId: 1,
@@ -67,7 +67,7 @@ describe("register record", () => {
 
   it("keeps registration working when enrichment is unavailable", async () => {
     const result = await ctx.db.transaction().execute((trx) =>
-      registerRecordWithDeps({
+      registerLeadWithDeps({
         ruc: "20100000002",
         executiveId: 1,
         actorUserId: 1,

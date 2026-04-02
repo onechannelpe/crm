@@ -74,7 +74,7 @@ export async function getBootstrap(
     };
   }
 
-  const assignment = await deps.repos.leadAssignments.findActiveForContact(
+  const assignment = await deps.repos.contactAssignments.findActiveForContact(
     ctx.actor.userId,
     input.contactId,
   );

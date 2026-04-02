@@ -3,7 +3,7 @@ import { sql } from "kysely";
 
 import type { Database, NewLeadAssignment } from "~/lib/db/types";
 
-export function createLeadAssignmentsRepo(db: Kysely<Database>) {
+export function createContactAssignmentsRepo(db: Kysely<Database>) {
   return {
     create(values: NewLeadAssignment) {
       return db

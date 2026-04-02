@@ -38,7 +38,7 @@ function makeRepos(activeAssignments = 0) {
     leadCapacityGrants: makeLeadCapacityGrantsRepo(),
     leadUsageReservations: makeLeadUsageReservationsRepo(),
     leadUsageCommits: makeLeadUsageCommitsRepo(),
-    leadAssignments: {
+    contactAssignments: {
       countActiveByUser: async () => activeAssignments,
       createMany: async () => undefined,
     },

@@ -39,7 +39,7 @@ export async function registerCall(
   const draftRecordId = await runInRepositoryTransaction(
     async (transactionRepos) => {
       const assignment =
-        await transactionRepos.leadAssignments.findActiveByIdForUser(
+        await transactionRepos.contactAssignments.findActiveByIdForUser(
           parsedInput.assignmentId,
           session.userId,
         );
@@ -101,7 +101,7 @@ export async function registerCall(
         nextDraftRecordId = draftResult.value;
       }
 
-      await transactionRepos.leadAssignments.markCompleted(
+      await transactionRepos.contactAssignments.markCompleted(
         parsedInput.assignmentId,
         session.userId,
       );

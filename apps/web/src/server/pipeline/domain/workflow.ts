@@ -14,7 +14,7 @@ export function resolveReviewTransition(input: {
   if (input.currentStage !== "PENDING_EXTERNAL_REVIEW") {
     return fail(
       "invalid_stage",
-      "Record must be pending external review before it can be reviewed",
+      "Lead must be pending external review before it can be reviewed",
     );
   }
 
@@ -35,7 +35,7 @@ export function ensureCanCompleteCommercialInput(input: {
   actorUserId: number;
 }): Result<void, DomainError> {
   if (input.stage !== "NEEDS_EXECUTIVE_INPUT") {
-    return fail("invalid_stage", "Record is not awaiting commercial input");
+    return fail("invalid_stage", "Lead is not awaiting commercial input");
   }
 
   if (input.executiveId !== input.actorUserId) {
@@ -57,7 +57,7 @@ export function ensureCanCreateQuotation(
   if (stage !== "READY_FOR_QUOTATION") {
     return fail(
       "invalid_stage",
-      "Record must be ready for quotation before creating a quotation",
+      "Lead must be ready for quotation before creating a quotation",
     );
   }
 
@@ -70,7 +70,7 @@ export function ensureCanApproveForSale(
   if (stage !== "QUOTED") {
     return fail(
       "invalid_stage",
-      "Record must be quoted before it can be approved for sale",
+      "Lead must be quoted before it can be approved for sale",
     );
   }
 
@@ -85,7 +85,7 @@ export function ensureCanCreateSale(input: {
   cci: string | null;
 }): Result<void, DomainError> {
   if (input.stage !== "READY_FOR_SALE") {
-    return fail("invalid_stage", "Record must be ready for sale");
+    return fail("invalid_stage", "Lead must be ready for sale");
   }
 
   if (input.executiveId !== input.actorUserId) {

@@ -6,14 +6,14 @@ function fail(code: string, message: string): Result<never, DomainError> {
   return Err(domainError("validation", code, message));
 }
 
-export function ensureCanReassignRecord(input: {
+export function ensureCanReassignLead(input: {
   currentExecutiveId: number;
   newExecutiveId: number;
 }): Result<void, DomainError> {
   if (input.currentExecutiveId === input.newExecutiveId) {
     return fail(
       "same_executive",
-      "Record is already assigned to the selected executive",
+      "Lead is already assigned to the selected executive",
     );
   }
 

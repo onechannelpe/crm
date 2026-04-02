@@ -17,7 +17,7 @@ export function createCapacityReadContext() {
       leadCapacityGrants: repos.leadCapacityGrants,
       leadUsageReservations: repos.leadUsageReservations,
       leadUsageCommits: repos.leadUsageCommits,
-      leadAssignments: repos.leadAssignments,
+      contactAssignments: repos.contactAssignments,
     },
   };
 }

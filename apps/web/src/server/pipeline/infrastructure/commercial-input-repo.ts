@@ -12,7 +12,7 @@ export type NewCommercialInputRow = Insertable<
 
 export function createCommercialInputRepo(db: DatabaseExecutor) {
   return {
-    findByRecordId(leadId: number) {
+    findByLeadId(leadId: number) {
       return db
         .selectFrom("pipeline_lead_commercial_inputs")
         .selectAll()

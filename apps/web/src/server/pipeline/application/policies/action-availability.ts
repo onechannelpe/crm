@@ -1,21 +1,21 @@
 import { hasPermission, type Role } from "~/lib/auth/access/rbac";
 import type { LeadStage } from "~/lib/db/types";
 
-export type RecordAction =
+export type LeadAction =
   | "log-call"
   | "add-note"
   | "complete-commercial-input"
   | "create-sale"
-  | "review-record"
+  | "review-lead"
   | "create-quotation"
   | "approve-for-sale"
-  | "reassign-record";
+  | "reassign-lead";
 
 export function resolveAvailableActions(input: {
   actorRole: Role;
   stage: LeadStage;
 }) {
-  const actions: RecordAction[] = [];
+  const actions: LeadAction[] = [];
 
   if (hasPermission(input.actorRole, "lead:pipeline")) {
     actions.push("log-call", "add-note");
@@ -36,7 +36,7 @@ export function resolveAvailableActions(input: {
     hasPermission(input.actorRole, "lead:review") &&
     input.stage === "PENDING_EXTERNAL_REVIEW"
   ) {
-    actions.push("review-record");
+    actions.push("review-lead");
   }
   if (
     hasPermission(input.actorRole, "quotation:manage") &&
@@ -51,7 +51,7 @@ export function resolveAvailableActions(input: {
     actions.push("approve-for-sale");
   }
   if (hasPermission(input.actorRole, "lead:reassign")) {
-    actions.push("reassign-record");
+    actions.push("reassign-lead");
   }
 
   return actions;

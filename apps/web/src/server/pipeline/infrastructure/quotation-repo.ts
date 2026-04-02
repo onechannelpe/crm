@@ -17,7 +17,7 @@ export function createQuotationRepo(db: DatabaseExecutor) {
       return Number(result.insertId);
     },
 
-    listByRecord(leadId: number) {
+    listByLeadId(leadId: number) {
       return db
         .selectFrom("pipeline_quotations")
         .selectAll()

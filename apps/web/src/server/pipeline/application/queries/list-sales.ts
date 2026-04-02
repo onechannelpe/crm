@@ -13,7 +13,7 @@ export async function listSales(input: {
   limit?: number;
   offset?: number;
 }): Promise<
-  Result<Awaited<ReturnType<QueryDeps["sales"]["list"]>>, DomainError>
+  Result<Awaited<ReturnType<QueryDeps["leadSales"]["list"]>>, DomainError>
 > {
   const deps = createPipelineQueryDeps();
   const limit = Math.min(input.limit ?? 50, 200);
@@ -21,9 +21,9 @@ export async function listSales(input: {
 
   if (!canViewAllSales(input.actorRole)) {
     return Ok(
-      await deps.sales.listByExecutive(input.actorUserId, limit, offset),
+      await deps.leadSales.listByExecutive(input.actorUserId, limit, offset),
     );
   }
 
-  return Ok(await deps.sales.list(limit, offset));
+  return Ok(await deps.leadSales.list(limit, offset));
 }

@@ -1,16 +1,16 @@
 import { createAsync, useParams } from "@solidjs/router";
 import { createSignal, Show } from "solid-js";
 
-import { queryRecordDetail } from "~/actions/pipeline/queries/records";
-import { LeadRecordOverview } from "~/components/features/leads/lead-record-overview";
+import { queryLeadDetail } from "~/actions/pipeline/queries/leads";
 import { AppPage } from "~/components/layout/page";
+import { LeadDetailOverview } from "~/features/pipeline/detail/lead-detail-overview";
 
 export default function LeadDetailPage() {
   const params = useParams<{ leadId: string }>();
   const [refreshTick, setRefreshTick] = createSignal(0);
   const data = createAsync(() => {
     refreshTick();
-    return queryRecordDetail(Number(params.leadId));
+    return queryLeadDetail(Number(params.leadId));
   });
 
   return (
@@ -20,7 +20,7 @@ export default function LeadDetailPage() {
         fallback={<p style={{ padding: "1.5rem" }}>Cargando...</p>}
       >
         {(detail) => (
-          <LeadRecordOverview
+          <LeadDetailOverview
             data={detail()}
             onChanged={() => setRefreshTick((value) => value + 1)}
           />

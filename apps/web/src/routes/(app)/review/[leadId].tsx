@@ -1,8 +1,8 @@
 import { createAsync, useNavigate, useParams } from "@solidjs/router";
 import { createSignal, Show } from "solid-js";
 
-import { requestRecordReview } from "~/actions/pipeline/commands/records";
-import { queryRecordDetail } from "~/actions/pipeline/queries/records";
+import { requestLeadReview } from "~/actions/pipeline/commands/leads";
+import { queryLeadDetail } from "~/actions/pipeline/queries/leads";
 import { AppPage } from "~/components/layout/page";
 import { toAppError } from "~/lib/app-errors";
 import { LEAD_STATUS_VALUES, PRIORIDAD_VALUES } from "~/lib/db/types";
@@ -11,7 +11,7 @@ import type { LeadStatus, Prioridad } from "~/lib/db/types";
 export default function ReviewLeadPage() {
   const params = useParams<{ leadId: string }>();
   const navigate = useNavigate();
-  const data = createAsync(() => queryRecordDetail(Number(params.leadId)));
+  const data = createAsync(() => queryLeadDetail(Number(params.leadId)));
   const [error, setError] = createSignal<string | null>(null);
   const [statusVal, setStatusVal] = createSignal<LeadStatus>("DISPONIBLE");
   const [prioridadVal, setPrioridadVal] = createSignal<Prioridad>("P1");
@@ -34,7 +34,7 @@ export default function ReviewLeadPage() {
     e.preventDefault();
     setError(null);
     try {
-      await requestRecordReview({
+      await requestLeadReview({
         leadId: Number(params.leadId),
         status: statusVal(),
         prioridad: prioridadVal(),
@@ -55,10 +55,10 @@ export default function ReviewLeadPage() {
         {(d) => (
           <div style={{ padding: "1.5rem", "max-width": "36rem" }}>
             <h1 style={{ margin: "0 0 0.5rem", "font-size": "1.25rem" }}>
-              Revisar Lead: {d().record.ruc}
+              Revisar lead: {d().lead.ruc}
             </h1>
             <p style={{ margin: "0 0 1.5rem", color: "#6b7280" }}>
-              {d().record.razon_social ?? "—"} — Stage: {d().record.stage}
+              {d().lead.razon_social ?? "—"} - Etapa: {d().lead.stage}
             </p>
 
             {error() && (

@@ -5,14 +5,14 @@ import {
   requestQuotationCreation,
   requestSaleApproval,
 } from "~/actions/pipeline/commands/quotations";
-import { queryRecordDetail } from "~/actions/pipeline/queries/records";
+import { queryLeadDetail } from "~/actions/pipeline/queries/leads";
 import { AppPage } from "~/components/layout/page";
 import { toAppError } from "~/lib/app-errors";
 
 export default function LeadQuotationPage() {
   const params = useParams<{ leadId: string }>();
   const navigate = useNavigate();
-  const data = createAsync(() => queryRecordDetail(Number(params.leadId)));
+  const data = createAsync(() => queryLeadDetail(Number(params.leadId)));
   const [error, setError] = createSignal<string | null>(null);
 
   const inputStyle = {
@@ -62,10 +62,10 @@ export default function LeadQuotationPage() {
         {(d) => (
           <div style={{ padding: "1.5rem", "max-width": "40rem" }}>
             <h1 style={{ margin: "0 0 0.25rem", "font-size": "1.25rem" }}>
-              Cotizacion — {d().record.ruc}
+              Cotizacion - {d().lead.ruc}
             </h1>
             <p style={{ margin: "0 0 1.5rem", color: "#6b7280" }}>
-              Stage: {d().record.stage}
+              Etapa: {d().lead.stage}
             </p>
 
             {error() && (
@@ -80,7 +80,7 @@ export default function LeadQuotationPage() {
               </p>
             )}
 
-            <Show when={d().record.stage === "READY_FOR_QUOTATION"}>
+            <Show when={d().lead.stage === "READY_FOR_QUOTATION"}>
               <form
                 onSubmit={(e) => void handleCreateQuotation(e)}
                 style={{
@@ -153,7 +153,7 @@ export default function LeadQuotationPage() {
               </form>
             </Show>
 
-            <Show when={d().record.stage === "QUOTED"}>
+            <Show when={d().lead.stage === "QUOTED"}>
               <button
                 onClick={() => void handleApprove()}
                 style={{

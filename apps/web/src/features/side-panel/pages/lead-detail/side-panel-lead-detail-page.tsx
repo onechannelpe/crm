@@ -1,8 +1,8 @@
 import { createAsync } from "@solidjs/router";
 import { createMemo, createSignal, Show } from "solid-js";
 
-import { queryRecordDetail } from "~/actions/pipeline/queries/records";
-import { LeadRecordOverview } from "~/components/features/leads/lead-record-overview";
+import { queryLeadDetail } from "~/actions/pipeline/queries/leads";
+import { LeadDetailOverview } from "~/features/pipeline/detail/lead-detail-overview";
 
 import { SidePanelList } from "../../components/side-panel-list";
 import { useSidePanelPageInstanceId } from "../../state/side-panel-page-instance";
@@ -25,7 +25,7 @@ export function SidePanelLeadDetailPage() {
   const [refreshTick, setRefreshTick] = createSignal(0);
   const data = createAsync(() => {
     refreshTick();
-    return queryRecordDetail(pageState().leadId);
+    return queryLeadDetail(pageState().leadId);
   });
 
   return (
@@ -39,7 +39,7 @@ export function SidePanelLeadDetailPage() {
         }
       >
         {(detail) => (
-          <LeadRecordOverview
+          <LeadDetailOverview
             data={detail()}
             compact
             onChanged={() => setRefreshTick((value) => value + 1)}

@@ -1,4 +1,9 @@
-import type { Insertable, Selectable, Updateable } from "kysely";
+import type {
+  Insertable,
+  SelectQueryBuilder,
+  Selectable,
+  Updateable,
+} from "kysely";
 
 import type {
   Database,
@@ -8,11 +13,11 @@ import type {
 } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
-export type RecordRow = Selectable<Database["pipeline_leads"]>;
-export type NewRecordRow = Insertable<Database["pipeline_leads"]>;
-export type RecordUpdateRow = Updateable<Database["pipeline_leads"]>;
+export type LeadRow = Selectable<Database["pipeline_leads"]>;
+export type NewLeadRow = Insertable<Database["pipeline_leads"]>;
+export type LeadUpdateRow = Updateable<Database["pipeline_leads"]>;
 
-export interface RecordListFilters {
+export interface LeadListFilters {
   executiveId?: number;
   stage?: LeadStage;
   status?: LeadStatus;
@@ -21,7 +26,10 @@ export interface RecordListFilters {
   offset: number;
 }
 
-function applyFilters(query: any, filters: RecordListFilters) {
+function applyLeadFilters<TRow>(
+  query: SelectQueryBuilder<Database, "pipeline_leads", TRow>,
+  filters: LeadListFilters,
+) {
   let nextQuery = query;
 
   if (filters.executiveId !== undefined) {
@@ -40,9 +48,9 @@ function applyFilters(query: any, filters: RecordListFilters) {
   return nextQuery;
 }
 
-export function createRecordRepo(db: DatabaseExecutor) {
+export function createLeadRepo(db: DatabaseExecutor) {
   return {
-    async insert(values: NewRecordRow): Promise<number> {
+    async insert(values: NewLeadRow): Promise<number> {
       const result = await db
         .insertInto("pipeline_leads")
         .values(values)
@@ -69,7 +77,7 @@ export function createRecordRepo(db: DatabaseExecutor) {
 
     findByRucMany(rucs: string[]) {
       if (rucs.length === 0) {
-        return Promise.resolve([] as RecordRow[]);
+        return Promise.resolve([] as LeadRow[]);
       }
 
       return db
@@ -79,7 +87,7 @@ export function createRecordRepo(db: DatabaseExecutor) {
         .execute();
     },
 
-    updateById(id: number, values: RecordUpdateRow) {
+    updateById(id: number, values: LeadUpdateRow) {
       return db
         .updateTable("pipeline_leads")
         .set({ ...values, updated_at: values.updated_at ?? Date.now() })
@@ -87,16 +95,19 @@ export function createRecordRepo(db: DatabaseExecutor) {
         .execute();
     },
 
-    list(filters: RecordListFilters) {
-      return applyFilters(db.selectFrom("pipeline_leads").selectAll(), filters)
+    list(filters: LeadListFilters) {
+      return applyLeadFilters(
+        db.selectFrom("pipeline_leads").selectAll(),
+        filters,
+      )
         .orderBy("created_at", "desc")
         .limit(filters.limit)
         .offset(filters.offset)
         .execute();
     },
 
-    async count(filters: RecordListFilters) {
-      const row = await applyFilters(
+    async count(filters: LeadListFilters) {
+      const row = await applyLeadFilters(
         db
           .selectFrom("pipeline_leads")
           .select((eb) => eb.fn.countAll<number>().as("count")),
@@ -108,26 +119,26 @@ export function createRecordRepo(db: DatabaseExecutor) {
 
     listForExport(filters: { executiveId?: number }) {
       let query = db
-        .selectFrom("pipeline_leads as record")
-        .innerJoin("users as executive", "executive.id", "record.executive_id")
+        .selectFrom("pipeline_leads as lead")
+        .innerJoin("users as executive", "executive.id", "lead.executive_id")
         .select([
-          "record.id",
-          "record.ruc",
-          "record.razon_social",
-          "record.address",
-          "record.stage",
-          "record.status",
-          "record.prioridad",
-          "record.created_at",
-          "record.executive_id",
+          "lead.id",
+          "lead.ruc",
+          "lead.razon_social",
+          "lead.address",
+          "lead.stage",
+          "lead.status",
+          "lead.prioridad",
+          "lead.created_at",
+          "lead.executive_id",
           "executive.names as executive_name",
         ]);
 
       if (filters.executiveId !== undefined) {
-        query = query.where("record.executive_id", "=", filters.executiveId);
+        query = query.where("lead.executive_id", "=", filters.executiveId);
       }
 
-      return query.orderBy("record.created_at", "desc").execute();
+      return query.orderBy("lead.created_at", "desc").execute();
     },
   };
 }

@@ -1,6 +1,6 @@
 import { createAsync } from "@solidjs/router";
 
-import { queryRecordList } from "~/actions/pipeline/queries/records";
+import { queryLeadList } from "~/actions/pipeline/queries/leads";
 import Building2 from "~/components/icons/building-2";
 import List from "~/components/icons/list";
 import { RecordIndexScreen } from "~/features/record-index/components/screen";
@@ -17,7 +17,7 @@ import styles from "./styles.module.css";
 
 export function QuotationsRecordIndex() {
   const leads = createAsync(() =>
-    queryRecordList({ stage: "READY_FOR_QUOTATION" }),
+    queryLeadList({ stage: "READY_FOR_QUOTATION" }),
   );
   const { rowOpen } = useOpenQuotationRecord();
   const source = (): RecordIndexSource<QuotationRow> => {

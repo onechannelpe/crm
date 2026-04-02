@@ -308,7 +308,7 @@ export function createExtensionService(
           });
         }
 
-        const assignment = await repos.leadAssignments.findActiveByIdForUser(
+        const assignment = await repos.contactAssignments.findActiveByIdForUser(
           assignmentId,
           input.userId,
         );

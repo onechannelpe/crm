@@ -771,11 +771,11 @@ export type LeadCallOutcome =
   | "disqualified";
 
 export type PipelineHistoryEventType =
-  | "record_registered"
-  | "record_reviewed"
+  | "lead_registered"
+  | "lead_reviewed"
   | "workflow_stage_changed"
-  | "record_assigned"
-  | "record_reassigned"
+  | "lead_assigned"
+  | "lead_reassigned"
   | "commercial_input_completed"
   | "quotation_created"
   | "sale_approved"

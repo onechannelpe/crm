@@ -4,7 +4,7 @@ export function createSalesRecordReadContext() {
   return {
     repos: {
       products: repos.products,
-      leadAssignments: repos.leadAssignments,
+      contactAssignments: repos.contactAssignments,
       contacts: repos.contacts,
       organizations: repos.organizations,
       salesRecords: repos.salesRecords,

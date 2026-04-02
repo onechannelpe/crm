@@ -1,13 +1,15 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import { hasPermission } from "~/lib/auth/access/rbac";
-import { pipelineAuditService } from "~/server/pipeline/infrastructure/deps";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { runInPipelineTransaction } from "~/server/shared/pipeline-transaction";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { createHistoryEvent } from "../../domain/history";
 import { ensureCanCreateSale } from "../../domain/workflow";
-import { createPipelineDeps } from "../../infrastructure/deps";
+import {
+  createPipelineAuditService,
+  createPipelineDeps,
+} from "../../infrastructure/deps";
 
 export async function createSale(input: {
   actorUserId: number;
@@ -29,16 +31,15 @@ export async function createSale(input: {
 
   return runInPipelineTransaction(async ({ executor }) => {
     const deps = createPipelineDeps(executor);
-    const record = await deps.records.findById(input.leadId);
-    if (!record) {
-      return Err(
-        domainError("not_found", "record_not_found", "Record not found"),
-      );
+    const auditService = createPipelineAuditService(deps);
+    const lead = await deps.leads.findById(input.leadId);
+    if (!lead) {
+      return Err(domainError("not_found", "lead_not_found", "Lead not found"));
     }
 
     const allowed = ensureCanCreateSale({
-      stage: record.stage,
-      executiveId: record.executive_id,
+      stage: lead.stage,
+      executiveId: lead.executive_id,
       actorUserId: input.actorUserId,
       bank: input.banco,
       cci: input.cci,
@@ -47,7 +48,7 @@ export async function createSale(input: {
       return allowed;
     }
 
-    const saleId = await deps.sales.insert({
+    const saleId = await deps.leadSales.insert({
       lead_id: input.leadId,
       executive_id: input.actorUserId,
       proveedor_actual: input.proveedorActual,
@@ -63,11 +64,11 @@ export async function createSale(input: {
     });
 
     const now = Date.now();
-    await deps.records.updateById(input.leadId, {
+    await deps.leads.updateById(input.leadId, {
       stage: "CONVERTED",
       updated_at: now,
     });
-    await deps.history.insert(
+    await deps.leadHistory.insert(
       createHistoryEvent({
         leadId: input.leadId,
         eventType: "sale_created",
@@ -76,16 +77,16 @@ export async function createSale(input: {
         occurredAt: now,
       }),
     );
-    await deps.history.insert(
+    await deps.leadHistory.insert(
       createHistoryEvent({
         leadId: input.leadId,
         eventType: "workflow_stage_changed",
         actorUserId: input.actorUserId,
-        payload: { from: record.stage, to: "CONVERTED" },
+        payload: { from: lead.stage, to: "CONVERTED" },
         occurredAt: now,
       }),
     );
-    await pipelineAuditService.log(
+    await auditService.log(
       input.actorUserId,
       "sale_created",
       "lead",

@@ -6,7 +6,7 @@ import { addNote } from "~/server/pipeline/application/commands/add-note";
 import { logCall } from "~/server/pipeline/application/commands/log-call";
 import { runAction } from "~/server/shared/action-runtime";
 
-export async function recordCall(input: {
+export async function recordLeadCall(input: {
   leadId: number;
   outcome: LeadCallOutcome;
   notes?: string;
@@ -26,7 +26,7 @@ export async function recordCall(input: {
   });
 }
 
-export async function addRecordNote(input: { leadId: number; body: string }) {
+export async function addLeadNote(input: { leadId: number; body: string }) {
   if (!input.body.trim()) {
     throw validationError("body is required");
   }

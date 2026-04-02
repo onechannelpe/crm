@@ -234,7 +234,7 @@ export function createSalesRecordsWorkflowService(
 
           if (input.leadAssignmentId !== null) {
             const assignment =
-              await activeRepos.leadAssignments.findActiveByIdForUser(
+              await activeRepos.contactAssignments.findActiveByIdForUser(
                 input.leadAssignmentId,
                 input.executiveUserId,
               );

@@ -1,15 +1,17 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import { hasPermission } from "~/lib/auth/access/rbac";
-import { pipelineAuditService } from "~/server/pipeline/infrastructure/deps";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { runInPipelineTransaction } from "~/server/shared/pipeline-transaction";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import { ensureCanReassignRecord } from "../../domain/assignment";
+import { ensureCanReassignLead } from "../../domain/assignment";
 import { createHistoryEvent } from "../../domain/history";
-import { createPipelineDeps } from "../../infrastructure/deps";
+import {
+  createPipelineAuditService,
+  createPipelineDeps,
+} from "../../infrastructure/deps";
 
-export async function reassignRecord(input: {
+export async function reassignLead(input: {
   actorUserId: number;
   actorRole: Role;
   leadId: number;
@@ -21,15 +23,14 @@ export async function reassignRecord(input: {
 
   return runInPipelineTransaction(async ({ executor }) => {
     const deps = createPipelineDeps(executor);
-    const record = await deps.records.findById(input.leadId);
-    if (!record) {
-      return Err(
-        domainError("not_found", "record_not_found", "Record not found"),
-      );
+    const auditService = createPipelineAuditService(deps);
+    const lead = await deps.leads.findById(input.leadId);
+    if (!lead) {
+      return Err(domainError("not_found", "lead_not_found", "Lead not found"));
     }
 
-    const allowed = ensureCanReassignRecord({
-      currentExecutiveId: record.executive_id,
+    const allowed = ensureCanReassignLead({
+      currentExecutiveId: lead.executive_id,
       newExecutiveId: input.newExecutiveId,
     });
     if (!allowed.ok) {
@@ -48,38 +49,38 @@ export async function reassignRecord(input: {
     }
 
     const now = Date.now();
-    await deps.assignments.deactivateActiveForRecord(input.leadId);
-    await deps.assignments.insert({
+    await deps.leadAssignments.deactivateActiveForLead(input.leadId);
+    await deps.leadAssignments.insert({
       lead_id: input.leadId,
       executive_id: input.newExecutiveId,
       assigned_by: input.actorUserId,
       is_active: 1,
       assigned_at: now,
     });
-    await deps.records.updateById(input.leadId, {
+    await deps.leads.updateById(input.leadId, {
       executive_id: input.newExecutiveId,
       updated_at: now,
     });
-    await deps.history.insert(
+    await deps.leadHistory.insert(
       createHistoryEvent({
         leadId: input.leadId,
-        eventType: "record_reassigned",
+        eventType: "lead_reassigned",
         actorUserId: input.actorUserId,
         subjectUserId: input.newExecutiveId,
         payload: {
-          fromExecutiveId: record.executive_id,
+          fromExecutiveId: lead.executive_id,
           toExecutiveId: input.newExecutiveId,
         },
         occurredAt: now,
       }),
     );
-    await pipelineAuditService.log(
+    await auditService.log(
       input.actorUserId,
-      "record_reassigned",
+      "lead_reassigned",
       "lead",
       input.leadId,
       {
-        from: record.executive_id,
+        from: lead.executive_id,
         to: input.newExecutiveId,
       },
     );

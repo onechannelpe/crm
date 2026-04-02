@@ -4,9 +4,12 @@ import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
 import { createPipelineQueryDeps } from "../../infrastructure/deps";
-import { canViewAllRecords } from "../policies/access";
+import {
+  requireLeadReadAccess,
+  resolveLeadListExecutiveScope,
+} from "../policies/access";
 
-export async function listRecords(input: {
+export async function listLeads(input: {
   actorUserId: number;
   actorRole: Role;
   filters: {
@@ -21,20 +24,25 @@ export async function listRecords(input: {
   Result<
     {
       rows: Awaited<
-        ReturnType<
-          ReturnType<typeof createPipelineQueryDeps>["records"]["list"]
-        >
+        ReturnType<ReturnType<typeof createPipelineQueryDeps>["leads"]["list"]>
       >;
       totalCount: number;
     },
     DomainError
   >
 > {
+  const canRead = requireLeadReadAccess(input.actorRole);
+  if (!canRead.ok) {
+    return canRead;
+  }
+
   const deps = createPipelineQueryDeps();
   const filters = {
-    executiveId: canViewAllRecords(input.actorRole)
-      ? input.filters.executiveId
-      : input.actorUserId,
+    executiveId: resolveLeadListExecutiveScope({
+      actorUserId: input.actorUserId,
+      actorRole: input.actorRole,
+      requestedExecutiveId: input.filters.executiveId,
+    }),
     stage: toLeadStage(input.filters.stage),
     status: toLeadStatus(input.filters.status),
     prioridad: toPrioridad(input.filters.prioridad),
@@ -43,8 +51,8 @@ export async function listRecords(input: {
   };
 
   const [rows, totalCount] = await Promise.all([
-    deps.records.list(filters),
-    deps.records.count(filters),
+    deps.leads.list(filters),
+    deps.leads.count(filters),
   ]);
 
   return Ok({ rows, totalCount });

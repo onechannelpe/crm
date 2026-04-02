@@ -19,7 +19,7 @@ export function createAssignmentRepo(db: DatabaseExecutor) {
       return Number(result.insertId);
     },
 
-    deactivateActiveForRecord(leadId: number) {
+    deactivateActiveForLead(leadId: number) {
       return db
         .updateTable("pipeline_lead_assignments")
         .set({ is_active: 0 })
@@ -28,7 +28,7 @@ export function createAssignmentRepo(db: DatabaseExecutor) {
         .execute();
     },
 
-    findActiveByRecord(leadId: number) {
+    findActiveByLead(leadId: number) {
       return db
         .selectFrom("pipeline_lead_assignments")
         .selectAll()

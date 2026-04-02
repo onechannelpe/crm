@@ -15,7 +15,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   const session = await requireAuth();
   await requirePermission("sales:review");
 
-  const activeLeads = await repos.leadAssignments.findActiveByUser(
+  const activeLeads = await repos.contactAssignments.findActiveByUser(
     session.userId,
   );
   const pendingSalesCount = await repos.salesRecords.countByExecutiveAndStatus(

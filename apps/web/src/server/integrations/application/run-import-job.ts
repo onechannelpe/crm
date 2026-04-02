@@ -1,17 +1,17 @@
 import { TextDecoder } from "node:util";
 
 import { db } from "~/lib/db/db";
-import { reviewRecord } from "~/server/pipeline/application/commands/review-record";
+import { reviewLead } from "~/server/pipeline/application/commands/review-lead";
 import { createAuditService } from "~/server/shared/audit";
-import {
-  createPipelineRepos,
-  jobBlobStore,
-} from "~/server/shared/pipeline-runtime";
 
 import {
   parsePrioridadImport,
   type ImportRowFailure as PrioridadImportFailure,
 } from "../infrastructure/prioridad-import-parser";
+import {
+  createIntegrationRuntime,
+  integrationJobBlobStore,
+} from "../infrastructure/runtime";
 import {
   parseStatusImport,
   type ImportRowFailure as StatusImportFailure,
@@ -29,8 +29,8 @@ export function createImportBatchRunner() {
       leaseMs: number,
       workerId: string,
     ): Promise<number> {
-      const repos = createPipelineRepos(db);
-      const jobs = await repos.integrationJobs.claimPending(
+      const runtime = createIntegrationRuntime(db);
+      const jobs = await runtime.jobs.claimPending(
         leaseMs,
         workerId,
         batchSize,
@@ -41,7 +41,7 @@ export function createImportBatchRunner() {
 
           try {
             const text = new TextDecoder("utf-8").decode(
-              await jobBlobStore.get(job.file_path),
+              await integrationJobBlobStore.get(job.file_path),
             );
 
             const result =
@@ -49,7 +49,7 @@ export function createImportBatchRunner() {
                 ? await runStatusImportJob(job.id, text, job.user_id)
                 : await runPrioridadImportJob(job.id, text, job.user_id);
 
-            await repos.integrationJobs.markCompleted(job.id, {
+            await runtime.jobs.markCompleted(job.id, {
               rowsTotal: result.total,
               rowsApplied: result.applied,
               rowsFailed: result.failed,
@@ -59,7 +59,7 @@ export function createImportBatchRunner() {
           } catch (error) {
             const message =
               error instanceof Error ? error.message : "Unknown error";
-            await repos.integrationJobs.markFailed(job.id, message);
+            await runtime.jobs.markFailed(job.id, message);
             return false;
           }
         }),
@@ -81,25 +81,25 @@ async function runStatusImportJob(
   results: RowResult[];
 }> {
   const parsed = parseStatusImport(text);
-  const repos = createPipelineRepos(db);
-  const leads = await repos.leads.findByRucMany(
+  const runtime = createIntegrationRuntime(db);
+  const leads = await runtime.pipelineLeads.findByRucMany(
     parsed.valid.map((row) => row.ruc),
   );
-  const leadMap = new Map(leads.map((lead) => [lead.ruc, lead]));
+  const leadByRuc = new Map(leads.map((lead) => [lead.ruc, lead]));
   const results: RowResult[] = [...parsed.invalid];
   const reviewedRows = await Promise.all(
     parsed.valid.map(async (row): Promise<RowResult> => {
-      const lead = leadMap.get(row.ruc);
+      const lead = leadByRuc.get(row.ruc);
       if (!lead) {
         return { row: row.row, ok: false, reason: "RUC not found" };
       }
 
       const executive =
         lead.executive_id > 0
-          ? await repos.users.findById(lead.executive_id)
+          ? await runtime.users.findById(lead.executive_id)
           : null;
 
-      const reviewed = await reviewRecord({
+      const reviewed = await reviewLead({
         leadId: lead.id,
         status: row.status,
         prioridad: lead.prioridad ?? "P1",
@@ -119,7 +119,7 @@ async function runStatusImportJob(
   results.push(...reviewedRows);
   const applied = reviewedRows.filter((row) => row.ok).length;
 
-  const audit = createAuditService({ auditLogs: repos.auditLogs });
+  const audit = createAuditService({ auditLogs: runtime.auditLogs });
   if (applied > 0) {
     await audit.log(actorId, "bulk_status_update", "integration_job", jobId, {
       applied,
@@ -146,25 +146,25 @@ async function runPrioridadImportJob(
   results: RowResult[];
 }> {
   const parsed = parsePrioridadImport(text);
-  const repos = createPipelineRepos(db);
-  const leads = await repos.leads.findByRucMany(
+  const runtime = createIntegrationRuntime(db);
+  const leads = await runtime.pipelineLeads.findByRucMany(
     parsed.valid.map((row) => row.ruc),
   );
-  const leadMap = new Map(leads.map((lead) => [lead.ruc, lead]));
+  const leadByRuc = new Map(leads.map((lead) => [lead.ruc, lead]));
   const results: RowResult[] = [...parsed.invalid];
   const reviewedRows = await Promise.all(
     parsed.valid.map(async (row): Promise<RowResult> => {
-      const lead = leadMap.get(row.ruc);
+      const lead = leadByRuc.get(row.ruc);
       if (!lead) {
         return { row: row.row, ok: false, reason: "RUC not found" };
       }
 
       const executive =
         lead.executive_id > 0
-          ? await repos.users.findById(lead.executive_id)
+          ? await runtime.users.findById(lead.executive_id)
           : null;
 
-      const reviewed = await reviewRecord({
+      const reviewed = await reviewLead({
         leadId: lead.id,
         status: lead.status ?? "DISPONIBLE",
         prioridad: row.prioridad,
@@ -184,7 +184,7 @@ async function runPrioridadImportJob(
   results.push(...reviewedRows);
   const applied = reviewedRows.filter((row) => row.ok).length;
 
-  const audit = createAuditService({ auditLogs: repos.auditLogs });
+  const audit = createAuditService({ auditLogs: runtime.auditLogs });
   if (applied > 0) {
     await audit.log(
       actorId,

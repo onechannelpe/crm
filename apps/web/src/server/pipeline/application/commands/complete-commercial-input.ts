@@ -1,16 +1,16 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import { hasPermission } from "~/lib/auth/access/rbac";
-import {
-  pipelineAuditService,
-  pipelineNotificationCenter,
-} from "~/server/pipeline/infrastructure/deps";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { runInPipelineTransaction } from "~/server/shared/pipeline-transaction";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { createHistoryEvent } from "../../domain/history";
 import { ensureCanCompleteCommercialInput } from "../../domain/workflow";
-import { createPipelineDeps } from "../../infrastructure/deps";
+import {
+  createPipelineAuditService,
+  createPipelineDeps,
+  createPipelineNotificationCenter,
+} from "../../infrastructure/deps";
 import { notifyReadyForQuotation } from "../notifications";
 
 export async function completeCommercialInput(input: {
@@ -31,16 +31,16 @@ export async function completeCommercialInput(input: {
 
   return runInPipelineTransaction(async ({ executor }) => {
     const deps = createPipelineDeps(executor);
-    const record = await deps.records.findById(input.leadId);
-    if (!record) {
-      return Err(
-        domainError("not_found", "record_not_found", "Record not found"),
-      );
+    const auditService = createPipelineAuditService(deps);
+    const notificationCenter = createPipelineNotificationCenter(executor);
+    const lead = await deps.leads.findById(input.leadId);
+    if (!lead) {
+      return Err(domainError("not_found", "lead_not_found", "Lead not found"));
     }
 
     const allowed = ensureCanCompleteCommercialInput({
-      stage: record.stage,
-      executiveId: record.executive_id,
+      stage: lead.stage,
+      executiveId: lead.executive_id,
       actorUserId: input.actorUserId,
     });
     if (!allowed.ok) {
@@ -48,7 +48,7 @@ export async function completeCommercialInput(input: {
     }
 
     const now = Date.now();
-    await deps.commercialInputs.upsert({
+    await deps.leadCommercialInputs.upsert({
       lead_id: input.leadId,
       proveedor_actual: input.proveedorActual,
       tasa_actual: input.tasaActual,
@@ -59,11 +59,11 @@ export async function completeCommercialInput(input: {
       updated_at: now,
       updated_by: input.actorUserId,
     });
-    await deps.records.updateById(input.leadId, {
+    await deps.leads.updateById(input.leadId, {
       stage: "READY_FOR_QUOTATION",
       updated_at: now,
     });
-    await deps.history.insert(
+    await deps.leadHistory.insert(
       createHistoryEvent({
         leadId: input.leadId,
         eventType: "commercial_input_completed",
@@ -79,28 +79,28 @@ export async function completeCommercialInput(input: {
         occurredAt: now,
       }),
     );
-    await deps.history.insert(
+    await deps.leadHistory.insert(
       createHistoryEvent({
         leadId: input.leadId,
         eventType: "workflow_stage_changed",
         actorUserId: input.actorUserId,
-        payload: { from: record.stage, to: "READY_FOR_QUOTATION" },
+        payload: { from: lead.stage, to: "READY_FOR_QUOTATION" },
         occurredAt: now,
       }),
     );
-    await pipelineAuditService.log(
+    await auditService.log(
       input.actorUserId,
       "commercial_input_completed",
       "lead",
       input.leadId,
-      { from: record.stage, to: "READY_FOR_QUOTATION" },
+      { from: lead.stage, to: "READY_FOR_QUOTATION" },
     );
 
     await notifyReadyForQuotation({
-      center: pipelineNotificationCenter,
+      center: notificationCenter,
       branchId: input.branchId,
-      leadId: record.id,
-      ruc: record.ruc,
+      leadId: lead.id,
+      ruc: lead.ruc,
     });
 
     return Ok(undefined);

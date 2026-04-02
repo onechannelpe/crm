@@ -1,10 +1,10 @@
 "use server";
 
-import { getRecordDetail } from "~/server/pipeline/application/queries/get-record-detail";
-import { listRecords } from "~/server/pipeline/application/queries/list-records";
+import { getLeadDetail } from "~/server/pipeline/application/queries/get-lead-detail";
+import { listLeads } from "~/server/pipeline/application/queries/list-leads";
 import { runAction } from "~/server/shared/action-runtime";
 
-export async function queryRecordList(filters: {
+export async function queryLeadList(filters: {
   stage?: string;
   status?: string;
   prioridad?: string;
@@ -13,11 +13,11 @@ export async function queryRecordList(filters: {
   offset?: number;
 }) {
   return runAction({
-    actionName: "pipeline.list_records",
+    actionName: "pipeline.list_leads",
     requireAuth: true,
     input: filters,
     execute: (ctx) =>
-      listRecords({
+      listLeads({
         actorUserId: ctx.actor.userId,
         actorRole: ctx.actor.role,
         filters,
@@ -25,13 +25,13 @@ export async function queryRecordList(filters: {
   });
 }
 
-export async function queryRecordDetail(leadId: number) {
+export async function queryLeadDetail(leadId: number) {
   return runAction({
-    actionName: "pipeline.get_record_detail",
+    actionName: "pipeline.get_lead_detail",
     requireAuth: true,
     input: { leadId },
     execute: (ctx) =>
-      getRecordDetail({
+      getLeadDetail({
         actorUserId: ctx.actor.userId,
         actorRole: ctx.actor.role,
         leadId,

@@ -13,8 +13,8 @@ import type {
   LeadPolicyDefaultsRepo,
   LeadPolicyOverridesRepo,
 } from "~/server/capacity/infrastructure/policy-repos";
-import { createAssignment } from "~/server/leads/domain-assignment";
-import { canContactNow } from "~/server/leads/domain-cooldown";
+import { createAssignment } from "~/server/contact-assignments/domain/assignment";
+import { canContactNow } from "~/server/contact-assignments/domain/cooldown";
 import { engineClient } from "~/server/shared/composition-root";
 import { type DomainError } from "~/server/shared/domain-error";
 import type { EngineClient } from "~/server/shared/engine/client";
@@ -44,7 +44,7 @@ interface RefillRepos {
   leadCapacityGrants: LeadCapacityGrantsRepo;
   leadUsageReservations: LeadUsageReservationsRepo;
   leadUsageCommits: LeadUsageCommitsRepo;
-  leadAssignments: { countActiveByUser(userId: number): Promise<number> };
+  contactAssignments: { countActiveByUser(userId: number): Promise<number> };
   organizations: {
     findOrCreate(ruc: string, name: string): Promise<{ id: number }>;
   };
@@ -70,7 +70,7 @@ export interface RefillTxRepos {
       phone: string,
     ): Promise<{ id: number; cooldown_until: number | null }>;
   };
-  leadAssignments: {
+  contactAssignments: {
     createMany(
       assignments: ReturnType<typeof createAssignment>[],
     ): Promise<void>;
@@ -179,7 +179,7 @@ export async function requestLeadRefill(
     }
 
     if (assignments.length > 0) {
-      await txRepos.leadAssignments.createMany(assignments);
+      await txRepos.contactAssignments.createMany(assignments);
     }
     return assignments.length;
   });
