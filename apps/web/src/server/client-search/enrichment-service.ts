@@ -1,5 +1,5 @@
-import { createSunatScraperClient } from "~/server/client-search/enrichment/sunat/client";
 import { isPlainRecord } from "~/lib/type-guards";
+import { createSunatScraperClient } from "~/server/client-search/enrichment/sunat/client";
 import type {
   SunatRucData,
   SunatScraperClient,

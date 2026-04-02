@@ -2,8 +2,8 @@ import { A, createAsync } from "@solidjs/router";
 import { createMemo, For } from "solid-js";
 
 import { AppPage } from "~/components/layout/page";
-import { dashboardStatsQuery } from "~/lib/queries/dashboard";
 import { myContactAssignmentCapacityQuery } from "~/lib/queries/contact-assignment-capacity";
+import { dashboardStatsQuery } from "~/lib/queries/dashboard";
 
 import styles from "./dashboard-page.module.css";
 
