@@ -17,15 +17,15 @@ export function LeadSummarySection(props: { data: LeadDetailData }) {
     { label: "RUC", value: props.data.lead.ruc },
     {
       label: "Razon social",
-      value: props.data.lead.razon_social ?? "Sin datos",
+      value: props.data.lead.razonSocial ?? "Sin datos",
     },
     { label: "Direccion", value: props.data.lead.address ?? "Sin datos" },
     { label: "Estado", value: props.data.lead.status ?? "Sin datos" },
     { label: "Prioridad", value: props.data.lead.prioridad ?? "Sin datos" },
-    { label: "Creado", value: formatDateTime(props.data.lead.created_at) },
+    { label: "Creado", value: formatDateTime(props.data.lead.createdAt) },
     {
       label: "Actualizado",
-      value: formatDateTime(props.data.lead.updated_at),
+      value: formatDateTime(props.data.lead.updatedAt),
     },
   ] as const;
 
@@ -37,7 +37,7 @@ export function LeadSummarySection(props: { data: LeadDetailData }) {
         </div>
         <div class={styles.heroText}>
           <div class={styles.heroTitle}>
-            {props.data.lead.razon_social ?? props.data.lead.ruc}
+            {props.data.lead.razonSocial ?? props.data.lead.ruc}
           </div>
           <div class={styles.heroSubtitle}>RUC {props.data.lead.ruc}</div>
         </div>

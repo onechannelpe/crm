@@ -39,7 +39,7 @@ export async function createSale(input: {
 
     const allowed = ensureCanCreateSale({
       stage: lead.stage,
-      executiveId: lead.executive_id,
+      executiveId: lead.executiveId,
       actorUserId: input.actorUserId,
       bank: input.banco,
       cci: input.cci,
@@ -66,7 +66,7 @@ export async function createSale(input: {
     const now = Date.now();
     await deps.leads.updateById(input.leadId, {
       stage: "CONVERTED",
-      updated_at: now,
+      updatedAt: now,
     });
     await deps.leadHistory.insert(
       createHistoryEvent({

@@ -39,7 +39,7 @@ export async function addNote(input: {
     const canAccessLead = requireLeadAccess({
       actorUserId: input.actorUserId,
       actorRole: input.actorRole,
-      executiveId: lead.executive_id,
+      executiveId: lead.executiveId,
     });
     if (!canAccessLead.ok) {
       return canAccessLead;

@@ -1,5 +1,5 @@
-import type { LeadCallOutcome } from "~/lib/db/types";
-import type { ParsedHistoryEntry } from "~/server/pipeline/domain/history";
+import type { LeadHistoryEntry } from "~/server/pipeline/domain/history";
+import type { LeadCallOutcome } from "~/server/pipeline/domain/lead";
 
 import { formatTimelineActorName } from "./timeline-actor-name";
 
@@ -32,25 +32,11 @@ function describeCallOutcome(outcome: LeadCallOutcome | null) {
 }
 
 export function presentTimelineItem(
-  event: ParsedHistoryEntry,
+  event: LeadHistoryEntry,
   revealFull: boolean,
 ): TimelineItem {
-  const actorDisplayName = formatTimelineActorName(
-    {
-      names: event.actorNames,
-      firstSurname: event.actorFirstSurname,
-      secondSurname: event.actorSecondSurname,
-    },
-    revealFull,
-  );
-  const subjectDisplayName = formatTimelineActorName(
-    {
-      names: event.subjectNames,
-      firstSurname: event.subjectFirstSurname,
-      secondSurname: event.subjectSecondSurname,
-    },
-    revealFull,
-  );
+  const actorDisplayName = formatTimelineActorName(event.actor, revealFull);
+  const subjectDisplayName = formatTimelineActorName(event.subject, revealFull);
 
   switch (event.eventType) {
     case "lead_registered":

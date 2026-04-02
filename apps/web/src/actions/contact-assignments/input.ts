@@ -1,12 +1,15 @@
-import type { RequestLeadRefillCommand } from "~/server/lead-workflow/request-refill";
+import type { RequestContactAssignmentRefillCommand } from "~/server/contact-assignments/application/request-refill";
 import { domainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-export function parseLeadRefillCommand(
+export function parseContactAssignmentRefillCommand(
   actorUserId: UserId,
   branchId: unknown,
-): Result<RequestLeadRefillCommand, ReturnType<typeof domainError>> {
+): Result<
+  RequestContactAssignmentRefillCommand,
+  ReturnType<typeof domainError>
+> {
   if (
     typeof branchId !== "number" ||
     !Number.isInteger(branchId) ||

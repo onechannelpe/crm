@@ -1,11 +1,11 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import { hasPermission } from "~/lib/auth/access/rbac";
-import type { LeadStatus, Prioridad } from "~/lib/db/types";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { runInPipelineTransaction } from "~/server/shared/pipeline-transaction";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { createHistoryEvent } from "../../domain/history";
+import type { LeadPriority, LeadStatus } from "../../domain/lead";
 import { resolveReviewTransition } from "../../domain/workflow";
 import {
   createPipelineAuditService,
@@ -23,7 +23,7 @@ export async function reviewLead(input: {
   branchId: number;
   leadId: number;
   status: LeadStatus;
-  prioridad: Prioridad;
+  prioridad: LeadPriority;
   reason: string;
 }): Promise<Result<void, DomainError>> {
   if (!hasPermission(input.actorRole, "lead:review")) {
@@ -53,7 +53,7 @@ export async function reviewLead(input: {
       status: input.status,
       prioridad: input.prioridad,
       stage: transition.value,
-      updated_at: now,
+      updatedAt: now,
     });
     await deps.leadHistory.insert(
       createHistoryEvent({
@@ -98,7 +98,7 @@ export async function reviewLead(input: {
     if (transition.value === "NEEDS_EXECUTIVE_INPUT") {
       await notifyExecutiveInputRequired({
         center: notificationCenter,
-        executiveId: lead.executive_id,
+        executiveId: lead.executiveId,
         leadId: lead.id,
         ruc: lead.ruc,
       });

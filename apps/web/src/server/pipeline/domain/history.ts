@@ -1,7 +1,19 @@
-import type { LeadCallOutcome, PipelineHistoryEventType } from "~/lib/db/types";
-import { isPlainRecord } from "~/lib/type-guards";
+import type { LeadCallOutcome } from "./lead";
 
-export type PipelineHistoryEventPayload =
+export type LeadHistoryEventType =
+  | "lead_registered"
+  | "lead_reviewed"
+  | "workflow_stage_changed"
+  | "lead_assigned"
+  | "lead_reassigned"
+  | "commercial_input_completed"
+  | "quotation_created"
+  | "sale_approved"
+  | "sale_created"
+  | "call_logged"
+  | "note_added";
+
+export type LeadHistoryPayload =
   | { ruc: string; toStage: "PENDING_EXTERNAL_REVIEW" }
   | {
       status: string;
@@ -28,20 +40,26 @@ export type PipelineHistoryEventPayload =
 
 export type LeadHistoryEventDraft = {
   leadId: number;
-  eventType: PipelineHistoryEventType;
+  eventType: LeadHistoryEventType;
   actorUserId: number | null;
   subjectUserId: number | null;
-  payload: PipelineHistoryEventPayload | null;
+  payload: LeadHistoryPayload | null;
   occurredAt: number;
 };
 
-export type ParsedHistoryPayloadMap = {
+export type LeadHistoryPerson = {
+  names: string | null;
+  firstSurname: string | null;
+  secondSurname: string | null;
+};
+
+export type LeadHistoryPayloadByEvent = {
   lead_registered: Extract<
-    PipelineHistoryEventPayload,
+    LeadHistoryPayload,
     { ruc: string; toStage: "PENDING_EXTERNAL_REVIEW" }
   > | null;
   lead_reviewed: Extract<
-    PipelineHistoryEventPayload,
+    LeadHistoryPayload,
     {
       status: string;
       prioridad: string;
@@ -51,19 +69,19 @@ export type ParsedHistoryPayloadMap = {
     }
   > | null;
   workflow_stage_changed: Extract<
-    PipelineHistoryEventPayload,
+    LeadHistoryPayload,
     { from: string; to: string }
   > | null;
   lead_assigned: Extract<
-    PipelineHistoryEventPayload,
+    LeadHistoryPayload,
     { executiveId: number; reason?: string }
   > | null;
   lead_reassigned: Extract<
-    PipelineHistoryEventPayload,
+    LeadHistoryPayload,
     { fromExecutiveId: number; toExecutiveId: number; reason?: string }
   > | null;
   commercial_input_completed: Extract<
-    PipelineHistoryEventPayload,
+    LeadHistoryPayload,
     {
       proveedorActual: string;
       tasaActual: number;
@@ -74,259 +92,42 @@ export type ParsedHistoryPayloadMap = {
     }
   > | null;
   quotation_created: Extract<
-    PipelineHistoryEventPayload,
+    LeadHistoryPayload,
     { quotationId: number; version: number; moneda: "PEN" | "USD" }
   > | null;
   sale_approved: null;
-  sale_created: Extract<PipelineHistoryEventPayload, { saleId: number }> | null;
+  sale_created: Extract<LeadHistoryPayload, { saleId: number }> | null;
   call_logged: Extract<
-    PipelineHistoryEventPayload,
+    LeadHistoryPayload,
     { outcome: LeadCallOutcome; notes: string | null }
   > | null;
-  note_added: Extract<PipelineHistoryEventPayload, { body: string }> | null;
+  note_added: Extract<LeadHistoryPayload, { body: string }> | null;
 };
 
-export type LeadHistoryEntrySource = {
+export type LeadHistoryEntryFor<
+  TEventType extends keyof LeadHistoryPayloadByEvent,
+> = {
   id: number;
   leadId: number;
-  eventType: PipelineHistoryEventType;
+  eventType: TEventType;
   actorUserId: number | null;
   subjectUserId: number | null;
-  payloadJson: string | null;
+  payload: LeadHistoryPayloadByEvent[TEventType];
   occurredAt: number;
-  actorNames: string | null;
-  actorFirstSurname: string | null;
-  actorSecondSurname: string | null;
-  subjectNames: string | null;
-  subjectFirstSurname: string | null;
-  subjectSecondSurname: string | null;
+  actor: LeadHistoryPerson | null;
+  subject: LeadHistoryPerson | null;
 };
 
-type ParsedHistoryEntryBase = Omit<
-  LeadHistoryEntrySource,
-  "eventType" | "payloadJson"
->;
-
-export type ParsedHistoryEntryFor<
-  TEventType extends keyof ParsedHistoryPayloadMap,
-> = ParsedHistoryEntryBase & {
-  eventType: TEventType;
-  payload: ParsedHistoryPayloadMap[TEventType];
-};
-
-export type ParsedHistoryEntry = {
-  [TEventType in keyof ParsedHistoryPayloadMap]: ParsedHistoryEntryFor<TEventType>;
-}[keyof ParsedHistoryPayloadMap];
-
-function parseJsonRecord(payloadJson: string | null) {
-  if (!payloadJson) {
-    return null;
-  }
-
-  try {
-    const parsed = JSON.parse(payloadJson) as unknown;
-    return isPlainRecord(parsed) ? parsed : null;
-  } catch {
-    return null;
-  }
-}
-
-function isString(value: unknown): value is string {
-  return typeof value === "string";
-}
-
-function isNumber(value: unknown): value is number {
-  return typeof value === "number";
-}
-
-function parseCallOutcome(value: unknown): LeadCallOutcome | null {
-  switch (value) {
-    case "answered":
-    case "no_answer":
-    case "wrong_number":
-    case "callback_requested":
-    case "qualified":
-    case "disqualified":
-      return value;
-    default:
-      return null;
-  }
-}
-
-function toParsedHistoryEntryBase(
-  row: LeadHistoryEntrySource,
-): ParsedHistoryEntryBase {
-  return {
-    id: row.id,
-    leadId: row.leadId,
-    actorUserId: row.actorUserId,
-    subjectUserId: row.subjectUserId,
-    occurredAt: row.occurredAt,
-    actorNames: row.actorNames,
-    actorFirstSurname: row.actorFirstSurname,
-    actorSecondSurname: row.actorSecondSurname,
-    subjectNames: row.subjectNames,
-    subjectFirstSurname: row.subjectFirstSurname,
-    subjectSecondSurname: row.subjectSecondSurname,
-  };
-}
-
-export function parseHistoryEntry(
-  row: LeadHistoryEntrySource,
-): ParsedHistoryEntry {
-  const base = toParsedHistoryEntryBase(row);
-  const payload = parseJsonRecord(row.payloadJson);
-
-  switch (row.eventType) {
-    case "lead_registered":
-      return {
-        ...base,
-        eventType: "lead_registered",
-        payload:
-          payload &&
-          isString(payload.ruc) &&
-          payload.toStage === "PENDING_EXTERNAL_REVIEW"
-            ? { ruc: payload.ruc, toStage: "PENDING_EXTERNAL_REVIEW" }
-            : null,
-      };
-    case "lead_reviewed":
-      return {
-        ...base,
-        eventType: "lead_reviewed",
-        payload:
-          payload &&
-          isString(payload.status) &&
-          isString(payload.prioridad) &&
-          isString(payload.reason) &&
-          isString(payload.fromStage) &&
-          isString(payload.toStage)
-            ? {
-                status: payload.status,
-                prioridad: payload.prioridad,
-                reason: payload.reason,
-                fromStage: payload.fromStage,
-                toStage: payload.toStage,
-              }
-            : null,
-      };
-    case "workflow_stage_changed":
-      return {
-        ...base,
-        eventType: "workflow_stage_changed",
-        payload:
-          payload && isString(payload.from) && isString(payload.to)
-            ? { from: payload.from, to: payload.to }
-            : null,
-      };
-    case "lead_assigned":
-      return {
-        ...base,
-        eventType: "lead_assigned",
-        payload:
-          payload && isNumber(payload.executiveId)
-            ? {
-                executiveId: payload.executiveId,
-                reason: isString(payload.reason) ? payload.reason : undefined,
-              }
-            : null,
-      };
-    case "lead_reassigned":
-      return {
-        ...base,
-        eventType: "lead_reassigned",
-        payload:
-          payload &&
-          isNumber(payload.fromExecutiveId) &&
-          isNumber(payload.toExecutiveId)
-            ? {
-                fromExecutiveId: payload.fromExecutiveId,
-                toExecutiveId: payload.toExecutiveId,
-                reason: isString(payload.reason) ? payload.reason : undefined,
-              }
-            : null,
-      };
-    case "commercial_input_completed":
-      return {
-        ...base,
-        eventType: "commercial_input_completed",
-        payload:
-          payload &&
-          isString(payload.proveedorActual) &&
-          isNumber(payload.tasaActual) &&
-          isNumber(payload.gpv) &&
-          isNumber(payload.ticket) &&
-          isNumber(payload.abono) &&
-          isNumber(payload.cantidadPos)
-            ? {
-                proveedorActual: payload.proveedorActual,
-                tasaActual: payload.tasaActual,
-                gpv: payload.gpv,
-                ticket: payload.ticket,
-                abono: payload.abono,
-                cantidadPos: payload.cantidadPos,
-              }
-            : null,
-      };
-    case "quotation_created":
-      return {
-        ...base,
-        eventType: "quotation_created",
-        payload:
-          payload &&
-          isNumber(payload.quotationId) &&
-          isNumber(payload.version) &&
-          (payload.moneda === "PEN" || payload.moneda === "USD")
-            ? {
-                quotationId: payload.quotationId,
-                version: payload.version,
-                moneda: payload.moneda,
-              }
-            : null,
-      };
-    case "sale_approved":
-      return {
-        ...base,
-        eventType: "sale_approved",
-        payload: null,
-      };
-    case "sale_created":
-      return {
-        ...base,
-        eventType: "sale_created",
-        payload:
-          payload && isNumber(payload.saleId)
-            ? { saleId: payload.saleId }
-            : null,
-      };
-    case "call_logged":
-      const outcome = parseCallOutcome(payload?.outcome);
-      return {
-        ...base,
-        eventType: "call_logged",
-        payload:
-          payload && outcome
-            ? {
-                outcome,
-                notes: isString(payload.notes) ? payload.notes : null,
-              }
-            : null,
-      };
-    case "note_added":
-      return {
-        ...base,
-        eventType: "note_added",
-        payload:
-          payload && isString(payload.body) ? { body: payload.body } : null,
-      };
-  }
-}
+export type LeadHistoryEntry = {
+  [TEventType in keyof LeadHistoryPayloadByEvent]: LeadHistoryEntryFor<TEventType>;
+}[keyof LeadHistoryPayloadByEvent];
 
 export function createHistoryEvent(input: {
   leadId: number;
-  eventType: PipelineHistoryEventType;
+  eventType: LeadHistoryEventType;
   actorUserId?: number | null;
   subjectUserId?: number | null;
-  payload?: PipelineHistoryEventPayload;
+  payload?: LeadHistoryPayload;
   occurredAt: number;
 }): LeadHistoryEventDraft {
   return {

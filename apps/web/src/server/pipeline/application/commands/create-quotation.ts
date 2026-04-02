@@ -56,7 +56,7 @@ export async function createQuotation(input: {
     const now = Date.now();
     await deps.leads.updateById(input.leadId, {
       stage: "QUOTED",
-      updated_at: now,
+      updatedAt: now,
     });
     await deps.leadHistory.insert(
       createHistoryEvent({

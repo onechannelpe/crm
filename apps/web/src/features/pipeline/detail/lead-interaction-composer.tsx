@@ -1,14 +1,14 @@
 import { createSignal, For, Show } from "solid-js";
 
-import type { recordLeadCall } from "~/actions/pipeline/commands/interactions";
 import {
   addLeadNote,
-  recordLeadCall as recordLeadCallAction,
+  recordLeadCall,
 } from "~/actions/pipeline/commands/interactions";
 import { Button } from "~/components/ui/input/button";
 import { Select } from "~/components/ui/input/select";
 import { Textarea } from "~/components/ui/input/textarea";
 import type { LeadAction } from "~/server/pipeline/application/policies/action-availability";
+import type { LeadCallOutcome } from "~/server/pipeline/domain/lead";
 
 import styles from "./lead-detail-overview.module.css";
 
@@ -20,7 +20,7 @@ const CALL_OUTCOME_OPTIONS = [
   { value: "qualified", label: "Calificado" },
   { value: "disqualified", label: "Descartado" },
 ] as const satisfies ReadonlyArray<{
-  value: Parameters<typeof recordLeadCall>[0]["outcome"];
+  value: LeadCallOutcome;
   label: string;
 }>;
 
@@ -33,7 +33,7 @@ export function LeadInteractionComposer(props: {
 }) {
   const [composerMode, setComposerMode] = createSignal<"call" | "note">("call");
   const [callOutcome, setCallOutcome] =
-    createSignal<Parameters<typeof recordLeadCall>[0]["outcome"]>("answered");
+    createSignal<LeadCallOutcome>("answered");
   const [bodyText, setBodyText] = createSignal("");
   const [error, setError] = createSignal<string | null>(null);
   const [submitting, setSubmitting] = createSignal(false);
@@ -51,7 +51,7 @@ export function LeadInteractionComposer(props: {
 
     try {
       if (composerMode() === "call") {
-        await recordLeadCallAction({
+        await recordLeadCall({
           leadId: props.leadId,
           outcome: callOutcome(),
           notes: bodyText(),

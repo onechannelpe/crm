@@ -40,7 +40,7 @@ export async function completeCommercialInput(input: {
 
     const allowed = ensureCanCompleteCommercialInput({
       stage: lead.stage,
-      executiveId: lead.executive_id,
+      executiveId: lead.executiveId,
       actorUserId: input.actorUserId,
     });
     if (!allowed.ok) {
@@ -61,7 +61,7 @@ export async function completeCommercialInput(input: {
     });
     await deps.leads.updateById(input.leadId, {
       stage: "READY_FOR_QUOTATION",
-      updated_at: now,
+      updatedAt: now,
     });
     await deps.leadHistory.insert(
       createHistoryEvent({

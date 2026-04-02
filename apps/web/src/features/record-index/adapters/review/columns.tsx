@@ -22,13 +22,13 @@ export const REVIEW_RECORD_INDEX_COLUMNS = [
     renderCell: (lead) => <span class={styles.identifierText}>{lead.ruc}</span>,
   },
   {
-    key: "razon_social",
+    key: "razonSocial",
     label: "Razón social",
     icon: Building2,
     minWidth: 220,
     grow: true,
     renderCell: (lead) => (
-      <span class={styles.cellText}>{lead.razon_social ?? "—"}</span>
+      <span class={styles.cellText}>{lead.razonSocial ?? "-"}</span>
     ),
   },
   {
@@ -36,7 +36,7 @@ export const REVIEW_RECORD_INDEX_COLUMNS = [
     label: "Estado",
     icon: Info,
     width: 180,
-    renderCell: (lead) => <Badge variant="outline">{lead.status ?? "—"}</Badge>,
+    renderCell: (lead) => <Badge variant="outline">{lead.status ?? "-"}</Badge>,
   },
   {
     key: "prioridad",
@@ -44,7 +44,7 @@ export const REVIEW_RECORD_INDEX_COLUMNS = [
     icon: Package,
     width: 160,
     renderCell: (lead) => (
-      <Badge variant="secondary">{lead.prioridad ?? "—"}</Badge>
+      <Badge variant="secondary">{lead.prioridad ?? "-"}</Badge>
     ),
   },
 ] satisfies ReadonlyArray<DataGridColumn<ReviewRow>>;

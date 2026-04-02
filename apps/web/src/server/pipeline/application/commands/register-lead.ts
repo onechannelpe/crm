@@ -9,6 +9,11 @@ import { runInPipelineTransaction } from "~/server/shared/pipeline-transaction";
 import { Err, type Result } from "~/server/shared/result";
 
 import { createLeadDraft } from "../../domain/lead";
+import type {
+  PipelineAuditService,
+  PipelineDeps,
+  PipelineEngineGateway,
+} from "../ports";
 import {
   ensureActiveExecutive,
   resolveLeadRegistration,
@@ -18,15 +23,12 @@ import {
   reassignExistingLeadOnRegistration,
 } from "./register-lead-writer";
 
-type PipelineCommandDeps = ReturnType<typeof createPipelineDeps>;
-type PipelineAuditService = ReturnType<typeof createPipelineAuditService>;
-type PipelineEngineGateway = ReturnType<typeof createPipelineEngineGateway>;
 export async function registerLeadWithDeps(input: {
   actorUserId: number;
   actorRole: Role;
   executiveId: number;
   ruc: string;
-  deps: PipelineCommandDeps;
+  deps: PipelineDeps;
   auditService: PipelineAuditService;
   engineGateway: PipelineEngineGateway;
 }): Promise<Result<{ leadId: number }, DomainError>> {

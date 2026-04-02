@@ -10,7 +10,7 @@ import {
 } from "~/features/search/model/display";
 import { createSearchViewModel } from "~/features/search/model/search-view-model";
 import { SearchLayout } from "~/features/search/ui/search-layout";
-import { PageHeader } from "~/features/settings-shell";
+import { PageHeader } from "~/features/settings-shell/page/page-header";
 import { useSidePanel } from "~/features/side-panel/state/use-side-panel";
 import {
   createSearchCompanyDetailSidePanelPage,

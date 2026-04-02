@@ -4,16 +4,16 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { createPipelineQueryDeps } from "../../infrastructure/deps";
 import { requireLeadAccess } from "../policies/access";
+import type { PipelineQueryDeps } from "../ports";
 import {
   presentLeadDetail,
   type LeadDetailOutput,
 } from "../presenters/lead-detail";
 
-type QueryDeps = ReturnType<typeof createPipelineQueryDeps>;
 export type { LeadDetailOutput };
 
 export async function getLeadDetailWithDeps(
-  deps: QueryDeps,
+  deps: PipelineQueryDeps,
   input: {
     actorUserId: number;
     actorRole: Role;
@@ -28,7 +28,7 @@ export async function getLeadDetailWithDeps(
   const canAccessLead = requireLeadAccess({
     actorUserId: input.actorUserId,
     actorRole: input.actorRole,
-    executiveId: lead.executive_id,
+    executiveId: lead.executiveId,
   });
   if (!canAccessLead.ok) {
     return canAccessLead;
@@ -43,6 +43,7 @@ export async function getLeadDetailWithDeps(
 
   return Ok(
     presentLeadDetail({
+      actorUserId: input.actorUserId,
       actorRole: input.actorRole,
       lead,
       commercialInput,

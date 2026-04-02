@@ -1,13 +1,18 @@
 import type { Role } from "~/lib/auth/access/rbac";
-import { toLeadStage, toLeadStatus, toPrioridad } from "~/lib/db/types";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
+import {
+  parseLeadPriority,
+  parseLeadStage,
+  parseLeadStatus,
+} from "../../domain/lead";
 import { createPipelineQueryDeps } from "../../infrastructure/deps";
 import {
   requireLeadReadAccess,
   resolveLeadListExecutiveScope,
 } from "../policies/access";
+import type { PipelineQueryDeps } from "../ports";
 
 export async function listLeads(input: {
   actorUserId: number;
@@ -23,9 +28,7 @@ export async function listLeads(input: {
 }): Promise<
   Result<
     {
-      rows: Awaited<
-        ReturnType<ReturnType<typeof createPipelineQueryDeps>["leads"]["list"]>
-      >;
+      rows: Awaited<ReturnType<PipelineQueryDeps["leads"]["list"]>>;
       totalCount: number;
     },
     DomainError
@@ -37,15 +40,30 @@ export async function listLeads(input: {
   }
 
   const deps = createPipelineQueryDeps();
+  const stage = parseLeadStage(input.filters.stage);
+  if (!stage.ok) {
+    return stage;
+  }
+
+  const status = parseLeadStatus(input.filters.status);
+  if (!status.ok) {
+    return status;
+  }
+
+  const prioridad = parseLeadPriority(input.filters.prioridad);
+  if (!prioridad.ok) {
+    return prioridad;
+  }
+
   const filters = {
     executiveId: resolveLeadListExecutiveScope({
       actorUserId: input.actorUserId,
       actorRole: input.actorRole,
       requestedExecutiveId: input.filters.executiveId,
     }),
-    stage: toLeadStage(input.filters.stage),
-    status: toLeadStatus(input.filters.status),
-    prioridad: toPrioridad(input.filters.prioridad),
+    stage: stage.value,
+    status: status.value,
+    prioridad: prioridad.value,
     limit: Math.min(input.filters.limit ?? 50, 200),
     offset: input.filters.offset ?? 0,
   };

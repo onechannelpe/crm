@@ -3,7 +3,7 @@ import { createMemo, For } from "solid-js";
 
 import { AppPage } from "~/components/layout/page";
 import { dashboardStatsQuery } from "~/lib/queries/dashboard";
-import { myLeadCapacityQuery } from "~/lib/queries/lead-operations";
+import { myContactAssignmentCapacityQuery } from "~/lib/queries/contact-assignment-capacity";
 
 import styles from "./dashboard-page.module.css";
 
@@ -18,7 +18,7 @@ type DashboardColumn = {
 };
 
 export default function DashboardPage() {
-  const leadCapacity = createAsync(() => myLeadCapacityQuery(), {
+  const leadCapacity = createAsync(() => myContactAssignmentCapacityQuery(), {
     initialValue: {
       policy: { source: "system" as const, bufferTarget: 0, dailyLimit: 0 },
       granted: 0,

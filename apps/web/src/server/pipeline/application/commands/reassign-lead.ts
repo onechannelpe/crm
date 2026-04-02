@@ -30,7 +30,7 @@ export async function reassignLead(input: {
     }
 
     const allowed = ensureCanReassignLead({
-      currentExecutiveId: lead.executive_id,
+      currentExecutiveId: lead.executiveId,
       newExecutiveId: input.newExecutiveId,
     });
     if (!allowed.ok) {
@@ -51,15 +51,15 @@ export async function reassignLead(input: {
     const now = Date.now();
     await deps.leadAssignments.deactivateActiveForLead(input.leadId);
     await deps.leadAssignments.insert({
-      lead_id: input.leadId,
-      executive_id: input.newExecutiveId,
-      assigned_by: input.actorUserId,
-      is_active: 1,
-      assigned_at: now,
+      leadId: input.leadId,
+      executiveId: input.newExecutiveId,
+      assignedBy: input.actorUserId,
+      isActive: 1,
+      assignedAt: now,
     });
     await deps.leads.updateById(input.leadId, {
-      executive_id: input.newExecutiveId,
-      updated_at: now,
+      executiveId: input.newExecutiveId,
+      updatedAt: now,
     });
     await deps.leadHistory.insert(
       createHistoryEvent({
@@ -68,7 +68,7 @@ export async function reassignLead(input: {
         actorUserId: input.actorUserId,
         subjectUserId: input.newExecutiveId,
         payload: {
-          fromExecutiveId: lead.executive_id,
+          fromExecutiveId: lead.executiveId,
           toExecutiveId: input.newExecutiveId,
         },
         occurredAt: now,
@@ -80,7 +80,7 @@ export async function reassignLead(input: {
       "lead",
       input.leadId,
       {
-        from: lead.executive_id,
+        from: lead.executiveId,
         to: input.newExecutiveId,
       },
     );

@@ -3,17 +3,11 @@ import { Ok, type Result } from "~/server/shared/result";
 
 import { createHistoryEvent } from "../../domain/history";
 import type { LeadDraft } from "../../domain/lead";
-import type {
-  createPipelineAuditService,
-  createPipelineDeps,
-} from "../../infrastructure/deps";
+import type { PipelineAuditService, PipelineDeps } from "../ports";
 import type { ExistingLead } from "./register-lead-resolution";
 
-type PipelineCommandDeps = ReturnType<typeof createPipelineDeps>;
-type PipelineAuditService = ReturnType<typeof createPipelineAuditService>;
-
 export async function createRegisteredLead(input: {
-  deps: PipelineCommandDeps;
+  deps: PipelineDeps;
   auditService: PipelineAuditService;
   actorUserId: number;
   executiveId: number;
@@ -22,11 +16,11 @@ export async function createRegisteredLead(input: {
 }): Promise<Result<{ leadId: number }, DomainError>> {
   const leadId = await input.deps.leads.insert(input.draft);
   await input.deps.leadAssignments.insert({
-    lead_id: leadId,
-    executive_id: input.executiveId,
-    assigned_by: input.actorUserId,
-    is_active: 1,
-    assigned_at: input.now,
+    leadId,
+    executiveId: input.executiveId,
+    assignedBy: input.actorUserId,
+    isActive: 1,
+    assignedAt: input.now,
   });
   await input.deps.leadHistory.insert(
     createHistoryEvent({
@@ -59,7 +53,7 @@ export async function createRegisteredLead(input: {
 }
 
 export async function reassignExistingLeadOnRegistration(input: {
-  deps: PipelineCommandDeps;
+  deps: PipelineDeps;
   auditService: PipelineAuditService;
   actorUserId: number;
   executiveId: number;
@@ -68,15 +62,15 @@ export async function reassignExistingLeadOnRegistration(input: {
 }): Promise<Result<{ leadId: number }, DomainError>> {
   await input.deps.leadAssignments.deactivateActiveForLead(input.lead.id);
   await input.deps.leadAssignments.insert({
-    lead_id: input.lead.id,
-    executive_id: input.executiveId,
-    assigned_by: input.actorUserId,
-    is_active: 1,
-    assigned_at: input.now,
+    leadId: input.lead.id,
+    executiveId: input.executiveId,
+    assignedBy: input.actorUserId,
+    isActive: 1,
+    assignedAt: input.now,
   });
   await input.deps.leads.updateById(input.lead.id, {
-    executive_id: input.executiveId,
-    updated_at: input.now,
+    executiveId: input.executiveId,
+    updatedAt: input.now,
   });
   await input.deps.leadHistory.insert(
     createHistoryEvent({
@@ -85,7 +79,7 @@ export async function reassignExistingLeadOnRegistration(input: {
       actorUserId: input.actorUserId,
       subjectUserId: input.executiveId,
       payload: {
-        fromExecutiveId: input.lead.executive_id,
+        fromExecutiveId: input.lead.executiveId,
         toExecutiveId: input.executiveId,
         reason: "inactive_previous_executive",
       },
@@ -98,7 +92,7 @@ export async function reassignExistingLeadOnRegistration(input: {
     "lead",
     input.lead.id,
     {
-      from: input.lead.executive_id,
+      from: input.lead.executiveId,
       to: input.executiveId,
       reason: "inactive_previous_executive",
     },

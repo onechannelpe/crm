@@ -10,11 +10,11 @@ import { runInRepositoryTransaction } from "~/server/shared/context";
 import { domainError } from "~/server/shared/domain-error";
 import { isErr } from "~/server/shared/result";
 
-interface RegisterCallResult extends ActionSuccess {
+interface CompleteContactAssignmentCallResult extends ActionSuccess {
   draftRecordId: number | null;
 }
 
-function parseRegisterCallInput(input: {
+function parseCompleteContactAssignmentCallInput(input: {
   assignmentId: number;
   contactId: number;
 }): { assignmentId: number; contactId: number } {
@@ -24,13 +24,16 @@ function parseRegisterCallInput(input: {
   };
 }
 
-export async function registerCall(
+export async function completeContactAssignmentCall(
   assignmentId: number,
   contactId: number,
   outcome: string,
   notes?: string,
-): Promise<RegisterCallResult> {
-  const parsedInput = parseRegisterCallInput({ assignmentId, contactId });
+): Promise<CompleteContactAssignmentCallResult> {
+  const parsedInput = parseCompleteContactAssignmentCallInput({
+    assignmentId,
+    contactId,
+  });
   const session = await requirePermission("lead:work");
   if (outcome === "sale_made") {
     await requirePermission("sales:create");
@@ -48,7 +51,7 @@ export async function registerCall(
           domainError(
             "unexpected",
             "unexpected",
-            "Lead assignment is not active or does not match the contact",
+            "Contact assignment is not active or does not match the contact",
           ),
         );
       }

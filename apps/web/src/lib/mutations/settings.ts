@@ -1,6 +1,6 @@
 import { action, json } from "@solidjs/router";
 
-import { updateProductPricing } from "~/actions/settings";
+import { updateProductPricing } from "~/actions/settings/admin-products";
 import { productCatalogQuery } from "~/lib/queries/settings";
 
 export const updateProductPricingMutation = action(

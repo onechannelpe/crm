@@ -1,9 +1,9 @@
+import { createSunatScraperClient } from "~/server/client-search/enrichment/sunat/client";
 import { isPlainRecord } from "~/lib/type-guards";
-import {
-  createSunatScraperClient,
-  type SunatRucData,
-  type SunatScraperClient,
-} from "~/server/client-search/enrichment/sunat";
+import type {
+  SunatRucData,
+  SunatScraperClient,
+} from "~/server/client-search/enrichment/sunat/contracts";
 import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 

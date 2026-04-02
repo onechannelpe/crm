@@ -69,7 +69,7 @@ export default function NewLeadSalePage() {
               Nueva Venta
             </h1>
             <p style={{ margin: "0 0 1.5rem", color: "#6b7280" }}>
-              Prospecto: {d().lead.ruc} - {d().lead.razon_social ?? "—"}
+              Prospecto: {d().lead.ruc} - {d().lead.razonSocial ?? "-"}
             </p>
 
             <form

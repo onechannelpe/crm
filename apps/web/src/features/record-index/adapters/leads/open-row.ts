@@ -5,11 +5,11 @@ import type { LeadRow } from "./columns";
 
 export function useOpenLeadRecord() {
   const rowOpen = useSidePanelRowOpen<
-    Pick<LeadRow, "id" | "ruc" | "razon_social">
+    Pick<LeadRow, "id" | "ruc" | "razonSocial">
   >((lead) =>
     createLeadDetailSidePanelPage({
       leadId: lead.id,
-      title: lead.razon_social || lead.ruc,
+      title: lead.razonSocial || lead.ruc,
       subtitle: `RUC ${lead.ruc}`,
     }),
   );

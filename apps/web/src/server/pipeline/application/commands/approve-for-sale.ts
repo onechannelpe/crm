@@ -39,7 +39,7 @@ export async function approveForSale(input: {
     const now = Date.now();
     await deps.leads.updateById(input.leadId, {
       stage: "READY_FOR_SALE",
-      updated_at: now,
+      updatedAt: now,
     });
     await deps.leadHistory.insert(
       createHistoryEvent({
@@ -68,7 +68,7 @@ export async function approveForSale(input: {
 
     await notifyReadyForSale({
       center: notificationCenter,
-      executiveId: lead.executive_id,
+      executiveId: lead.executiveId,
       leadId: lead.id,
       ruc: lead.ruc,
     });

@@ -1,10 +1,10 @@
 import type { Role } from "~/lib/auth/access/rbac";
-import type { LeadCallOutcome } from "~/lib/db/types";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { runInPipelineTransaction } from "~/server/shared/pipeline-transaction";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { createHistoryEvent } from "../../domain/history";
+import type { LeadCallOutcome } from "../../domain/lead";
 import {
   createPipelineAuditService,
   createPipelineDeps,
@@ -34,7 +34,7 @@ export async function logCall(input: {
     const canAccessLead = requireLeadAccess({
       actorUserId: input.actorUserId,
       actorRole: input.actorRole,
-      executiveId: lead.executive_id,
+      executiveId: lead.executiveId,
     });
     if (!canAccessLead.ok) {
       return canAccessLead;

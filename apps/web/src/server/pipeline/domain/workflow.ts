@@ -1,6 +1,7 @@
-import type { LeadStage, LeadStatus, Prioridad } from "~/lib/db/types";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
+
+import type { LeadPriority, LeadStage, LeadStatus } from "./lead";
 
 function fail(code: string, message: string): Result<never, DomainError> {
   return Err(domainError("validation", code, message));
@@ -9,7 +10,7 @@ function fail(code: string, message: string): Result<never, DomainError> {
 export function resolveReviewTransition(input: {
   currentStage: LeadStage;
   status: LeadStatus;
-  prioridad: Prioridad;
+  prioridad: LeadPriority;
 }): Result<LeadStage, DomainError> {
   if (input.currentStage !== "PENDING_EXTERNAL_REVIEW") {
     return fail(

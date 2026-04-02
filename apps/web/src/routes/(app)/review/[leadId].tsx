@@ -58,7 +58,7 @@ export default function ReviewLeadPage() {
               Revisar lead: {d().lead.ruc}
             </h1>
             <p style={{ margin: "0 0 1.5rem", color: "#6b7280" }}>
-              {d().lead.razon_social ?? "—"} - Etapa: {d().lead.stage}
+              {d().lead.razonSocial ?? "-"} - Etapa: {d().lead.stage}
             </p>
 
             {error() && (

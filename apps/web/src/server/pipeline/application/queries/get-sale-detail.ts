@@ -4,11 +4,10 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { createPipelineQueryDeps } from "../../infrastructure/deps";
 import { canViewAllSales } from "../policies/access";
-
-type QueryDeps = ReturnType<typeof createPipelineQueryDeps>;
+import type { PipelineQueryDeps } from "../ports";
 
 export async function getSaleDetailWithDeps(
-  deps: QueryDeps,
+  deps: PipelineQueryDeps,
   input: {
     actorRole: Role;
     actorUserId: number;
@@ -16,7 +15,9 @@ export async function getSaleDetailWithDeps(
   },
 ): Promise<
   Result<
-    NonNullable<Awaited<ReturnType<QueryDeps["leadSales"]["findById"]>>>,
+    NonNullable<
+      Awaited<ReturnType<PipelineQueryDeps["leadSales"]["findById"]>>
+    >,
     DomainError
   >
 > {
@@ -41,7 +42,9 @@ export async function getSaleDetail(input: {
   saleId: number;
 }): Promise<
   Result<
-    NonNullable<Awaited<ReturnType<QueryDeps["leadSales"]["findById"]>>>,
+    NonNullable<
+      Awaited<ReturnType<PipelineQueryDeps["leadSales"]["findById"]>>
+    >,
     DomainError
   >
 > {

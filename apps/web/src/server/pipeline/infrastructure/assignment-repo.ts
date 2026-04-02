@@ -1,19 +1,23 @@
-import type { Insertable, Selectable } from "kysely";
+import type { Insertable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type { LeadAssignmentDraft } from "~/server/pipeline/application/ports";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
-export type AssignmentRow = Selectable<Database["pipeline_lead_assignments"]>;
-export type NewAssignmentRow = Insertable<
-  Database["pipeline_lead_assignments"]
->;
+type NewAssignmentRow = Insertable<Database["pipeline_lead_assignments"]>;
 
 export function createAssignmentRepo(db: DatabaseExecutor) {
   return {
-    async insert(values: NewAssignmentRow): Promise<number> {
+    async insert(values: LeadAssignmentDraft): Promise<number> {
       const result = await db
         .insertInto("pipeline_lead_assignments")
-        .values(values)
+        .values({
+          lead_id: values.leadId,
+          executive_id: values.executiveId,
+          assigned_by: values.assignedBy,
+          is_active: values.isActive,
+          assigned_at: values.assignedAt,
+        } satisfies NewAssignmentRow)
         .executeTakeFirstOrThrow();
 
       return Number(result.insertId);

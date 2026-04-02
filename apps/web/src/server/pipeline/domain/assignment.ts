@@ -1,6 +1,7 @@
-import type { LeadStage } from "~/lib/db/types";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
+
+import type { LeadStage } from "./lead";
 
 function fail(code: string, message: string): Result<never, DomainError> {
   return Err(domainError("validation", code, message));

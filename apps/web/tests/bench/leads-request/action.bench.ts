@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
-import { requestLeadRefill } from "~/server/lead-workflow/request-refill";
+import { requestContactAssignmentRefill } from "~/server/contact-assignments/application/request-refill";
 import type { EngineClient } from "~/server/shared/engine/client";
 import { createRepositories } from "~/server/shared/registry";
 
@@ -42,7 +42,7 @@ describe("lead refill action benchmark", () => {
         "leads-request pool exhausted before iterations completed",
       );
 
-      const result = await requestLeadRefill(
+      const result = await requestContactAssignmentRefill(
         {
           actorUserId: userId,
           branchId: 1,

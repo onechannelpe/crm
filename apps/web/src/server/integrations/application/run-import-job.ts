@@ -95,8 +95,8 @@ async function runStatusImportJob(
       }
 
       const executive =
-        lead.executive_id > 0
-          ? await runtime.users.findById(lead.executive_id)
+        lead.executiveId > 0
+          ? await runtime.users.findById(lead.executiveId)
           : null;
 
       const reviewed = await reviewLead({
@@ -160,8 +160,8 @@ async function runPrioridadImportJob(
       }
 
       const executive =
-        lead.executive_id > 0
-          ? await runtime.users.findById(lead.executive_id)
+        lead.executiveId > 0
+          ? await runtime.users.findById(lead.executiveId)
           : null;
 
       const reviewed = await reviewLead({

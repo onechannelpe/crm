@@ -22,7 +22,7 @@ export const LEADS_RECORD_INDEX_COLUMNS = [
     renderCell: (lead) => <span class={styles.identifierText}>{lead.ruc}</span>,
   },
   {
-    key: "razon_social",
+    key: "razonSocial",
     label: "Razón social",
     icon: Building2,
     minWidth: 220,
@@ -32,7 +32,7 @@ export const LEADS_RECORD_INDEX_COLUMNS = [
         <span class={styles.fieldIcon}>
           <Building2 size={14} />
         </span>
-        <span class={styles.cellText}>{lead.razon_social || "Sin datos"}</span>
+        <span class={styles.cellText}>{lead.razonSocial || "Sin datos"}</span>
       </div>
     ),
   },
@@ -71,12 +71,12 @@ export const LEADS_RECORD_INDEX_COLUMNS = [
     ),
   },
   {
-    key: "created_at",
+    key: "createdAt",
     label: "Creado",
     icon: CalendarDays,
     width: 140,
     renderCell: (lead) => (
-      <span class={styles.mutedCellText}>{formatDate(lead.created_at)}</span>
+      <span class={styles.mutedCellText}>{formatDate(lead.createdAt)}</span>
     ),
   },
 ] satisfies ReadonlyArray<DataGridColumn<LeadRow>>;

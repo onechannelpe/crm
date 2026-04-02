@@ -5,12 +5,14 @@ import type {
   Updateable,
 } from "kysely";
 
+import type { Database } from "~/lib/db/types";
+import type { LeadDraft, LeadPatch } from "~/server/pipeline/domain/lead";
 import type {
-  Database,
+  Lead,
+  LeadPriority,
   LeadStage,
   LeadStatus,
-  Prioridad,
-} from "~/lib/db/types";
+} from "~/server/pipeline/domain/lead";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 export type LeadRow = Selectable<Database["pipeline_leads"]>;
@@ -21,9 +23,48 @@ export interface LeadListFilters {
   executiveId?: number;
   stage?: LeadStage;
   status?: LeadStatus;
-  prioridad?: Prioridad;
+  prioridad?: LeadPriority;
   limit: number;
   offset: number;
+}
+
+function toLead(row: LeadRow): Lead {
+  return {
+    id: row.id,
+    ruc: row.ruc,
+    razonSocial: row.razon_social,
+    address: row.address,
+    executiveId: row.executive_id,
+    stage: row.stage,
+    status: row.status,
+    prioridad: row.prioridad,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function toNewLeadRow(values: LeadDraft): NewLeadRow {
+  return {
+    ruc: values.ruc,
+    razon_social: values.razonSocial,
+    address: values.address,
+    executive_id: values.executiveId,
+    stage: values.stage,
+    status: values.status,
+    prioridad: values.prioridad,
+    created_at: values.createdAt,
+    updated_at: values.updatedAt,
+  };
+}
+
+function toLeadUpdateRow(values: LeadPatch): LeadUpdateRow {
+  return {
+    executive_id: values.executiveId,
+    stage: values.stage,
+    status: values.status,
+    prioridad: values.prioridad,
+    updated_at: values.updatedAt,
+  };
 }
 
 function applyLeadFilters<TRow>(
@@ -50,53 +91,61 @@ function applyLeadFilters<TRow>(
 
 export function createLeadRepo(db: DatabaseExecutor) {
   return {
-    async insert(values: NewLeadRow): Promise<number> {
+    async insert(values: LeadDraft): Promise<number> {
       const result = await db
         .insertInto("pipeline_leads")
-        .values(values)
+        .values(toNewLeadRow(values))
         .executeTakeFirstOrThrow();
 
       return Number(result.insertId);
     },
 
-    findById(id: number) {
-      return db
+    async findById(id: number) {
+      const row = await db
         .selectFrom("pipeline_leads")
         .selectAll()
         .where("id", "=", id)
         .executeTakeFirst();
+      return row ? toLead(row) : undefined;
     },
 
-    findByRuc(ruc: string) {
-      return db
+    async findByRuc(ruc: string) {
+      const row = await db
         .selectFrom("pipeline_leads")
         .selectAll()
         .where("ruc", "=", ruc)
         .executeTakeFirst();
+      return row ? toLead(row) : undefined;
     },
 
-    findByRucMany(rucs: string[]) {
+    async findByRucMany(rucs: string[]) {
       if (rucs.length === 0) {
-        return Promise.resolve([] as LeadRow[]);
+        return [];
       }
 
-      return db
+      const rows = await db
         .selectFrom("pipeline_leads")
         .selectAll()
         .where("ruc", "in", rucs)
         .execute();
+      return rows.map(toLead);
     },
 
-    updateById(id: number, values: LeadUpdateRow) {
+    updateById(id: number, values: LeadPatch) {
       return db
         .updateTable("pipeline_leads")
-        .set({ ...values, updated_at: values.updated_at ?? Date.now() })
+        .set(
+          toLeadUpdateRow({
+            ...values,
+            updatedAt: values.updatedAt ?? Date.now(),
+          }),
+        )
         .where("id", "=", id)
         .execute();
     },
 
-    list(filters: LeadListFilters) {
-      return applyLeadFilters(
+    async list(filters: LeadListFilters) {
+      const rows = await applyLeadFilters(
         db.selectFrom("pipeline_leads").selectAll(),
         filters,
       )
@@ -104,6 +153,7 @@ export function createLeadRepo(db: DatabaseExecutor) {
         .limit(filters.limit)
         .offset(filters.offset)
         .execute();
+      return rows.map(toLead);
     },
 
     async count(filters: LeadListFilters) {

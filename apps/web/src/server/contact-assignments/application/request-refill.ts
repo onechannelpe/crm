@@ -21,14 +21,14 @@ import type { EngineClient } from "~/server/shared/engine/client";
 import type { BranchId, UserId } from "~/server/shared/ids";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 
-import { computeNeededAssignments } from "./domain";
+import { computeNeededAssignments } from "../domain/refill";
 
-export interface RequestLeadRefillCommand {
+export interface RequestContactAssignmentRefillCommand {
   actorUserId: UserId;
   branchId: BranchId;
 }
 
-export interface LeadRefillResult {
+export interface ContactAssignmentRefillResult {
   requested: number;
   assigned: number;
 }
@@ -87,10 +87,10 @@ interface RefillDeps {
   engine?: Pick<EngineClient, "requestCandidates">;
 }
 
-export async function requestLeadRefill(
-  command: RequestLeadRefillCommand,
+export async function requestContactAssignmentRefill(
+  command: RequestContactAssignmentRefillCommand,
   deps: RefillDeps,
-): Promise<Result<LeadRefillResult, DomainError>> {
+): Promise<Result<ContactAssignmentRefillResult, DomainError>> {
   const { repos, runInTransaction, engine = engineClient } = deps;
 
   const snapshotResult = await getLeadCapacitySnapshot(

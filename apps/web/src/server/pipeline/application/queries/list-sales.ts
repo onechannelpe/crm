@@ -4,8 +4,7 @@ import { Ok, type Result } from "~/server/shared/result";
 
 import { createPipelineQueryDeps } from "../../infrastructure/deps";
 import { canViewAllSales } from "../policies/access";
-
-type QueryDeps = ReturnType<typeof createPipelineQueryDeps>;
+import type { PipelineQueryDeps } from "../ports";
 
 export async function listSales(input: {
   actorRole: Role;
@@ -13,7 +12,10 @@ export async function listSales(input: {
   limit?: number;
   offset?: number;
 }): Promise<
-  Result<Awaited<ReturnType<QueryDeps["leadSales"]["list"]>>, DomainError>
+  Result<
+    Awaited<ReturnType<PipelineQueryDeps["leadSales"]["list"]>>,
+    DomainError
+  >
 > {
   const deps = createPipelineQueryDeps();
   const limit = Math.min(input.limit ?? 50, 200);

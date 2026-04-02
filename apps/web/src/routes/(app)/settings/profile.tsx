@@ -1,7 +1,7 @@
 import { useAction, useSubmissions } from "@solidjs/router";
 import { createSignal, onCleanup } from "solid-js";
 
-import { updateUserProfile } from "~/actions/settings";
+import { updateUserProfile } from "~/actions/settings/profile";
 import { useToast } from "~/components/feedback/toast-provider";
 import { getUserInitials } from "~/components/layout/account-menu-utils";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";

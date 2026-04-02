@@ -21,13 +21,13 @@ export const QUOTATIONS_RECORD_INDEX_COLUMNS = [
     renderCell: (lead) => <span class={styles.identifierText}>{lead.ruc}</span>,
   },
   {
-    key: "razon_social",
+    key: "razonSocial",
     label: "Razón social",
     icon: Building2,
     minWidth: 220,
     grow: true,
     renderCell: (lead) => (
-      <span class={styles.cellText}>{lead.razon_social ?? "—"}</span>
+      <span class={styles.cellText}>{lead.razonSocial ?? "-"}</span>
     ),
   },
   {

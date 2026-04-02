@@ -1,5 +1,6 @@
 import { hasPermission, type Role } from "~/lib/auth/access/rbac";
-import type { LeadStage } from "~/lib/db/types";
+
+import type { LeadStage } from "../../domain/lead";
 
 export type LeadAction =
   | "log-call"
@@ -12,22 +13,27 @@ export type LeadAction =
   | "reassign-lead";
 
 export function resolveAvailableActions(input: {
+  actorUserId: number;
   actorRole: Role;
+  executiveId: number;
   stage: LeadStage;
 }) {
   const actions: LeadAction[] = [];
+  const ownsLead = input.executiveId === input.actorUserId;
 
   if (hasPermission(input.actorRole, "lead:pipeline")) {
     actions.push("log-call", "add-note");
   }
   if (
     hasPermission(input.actorRole, "lead:register") &&
+    ownsLead &&
     input.stage === "NEEDS_EXECUTIVE_INPUT"
   ) {
     actions.push("complete-commercial-input");
   }
   if (
     hasPermission(input.actorRole, "lead:register") &&
+    ownsLead &&
     input.stage === "READY_FOR_SALE"
   ) {
     actions.push("create-sale");

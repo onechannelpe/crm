@@ -6,6 +6,12 @@ import { createAppNotificationCenter } from "../../notifications/app-center-serv
 import { createAuditService } from "../../shared/audit";
 import type { DatabaseExecutor } from "../../shared/db-executor";
 import { createAuditLogsRepo } from "../../shared/repos-audit-logs";
+import type {
+  PipelineAuditService,
+  PipelineDeps,
+  PipelineEngineGateway,
+  PipelineQueryDeps,
+} from "../application/ports";
 import { createAssignmentRepo } from "./assignment-repo";
 import { createCommercialInputRepo } from "./commercial-input-repo";
 import { createEngineGateway } from "./engine-gateway";
@@ -15,7 +21,7 @@ import { createQuotationRepo } from "./quotation-repo";
 import { createSaleRepo } from "./sale-repo";
 import { createSourcingPolicyRepo } from "./sourcing-policy-repo";
 
-export function createPipelineDeps(executor: DatabaseExecutor) {
+export function createPipelineDeps(executor: DatabaseExecutor): PipelineDeps {
   return {
     leads: createLeadRepo(executor),
     leadAssignments: createAssignmentRepo(executor),
@@ -29,15 +35,13 @@ export function createPipelineDeps(executor: DatabaseExecutor) {
   };
 }
 
-export type PipelineDeps = ReturnType<typeof createPipelineDeps>;
-
-export function createPipelineQueryDeps() {
+export function createPipelineQueryDeps(): PipelineQueryDeps {
   return createPipelineDeps(db);
 }
 
 export function createPipelineAuditService(
   deps: Pick<PipelineDeps, "auditLogs">,
-) {
+): PipelineAuditService {
   return createAuditService({ auditLogs: deps.auditLogs });
 }
 
@@ -52,6 +56,6 @@ export function createPipelineNotificationCenter(
   });
 }
 
-export function createPipelineEngineGateway() {
+export function createPipelineEngineGateway(): PipelineEngineGateway {
   return createEngineGateway();
 }

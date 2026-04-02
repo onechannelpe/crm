@@ -1,4 +1,4 @@
-import type { getProductCatalog } from "~/actions/settings";
+import type { getProductCatalog } from "~/actions/settings/admin-products";
 
 export interface CatalogProductDraft {
   price: string;

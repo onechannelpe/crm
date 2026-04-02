@@ -4,7 +4,7 @@ import {
   changePassword,
   disableTotp,
   removeAllPasskeys,
-} from "~/actions/settings";
+} from "~/actions/settings/security";
 import { OtpSlotInput } from "~/components/auth/flow/otp-slot-input";
 import { RecoveryCodesPanel } from "~/components/auth/security-enrollment/recovery-codes-panel";
 import { usePasskeyEnrollment } from "~/components/auth/security-enrollment/use-passkey-enrollment";
