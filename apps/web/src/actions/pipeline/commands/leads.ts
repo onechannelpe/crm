@@ -9,7 +9,7 @@ import {
   parseRequiredLeadPriority,
   parseRequiredLeadStatus,
 } from "~/server/pipeline/domain/lead";
-import { runPipelineCommand } from "~/server/pipeline/infrastructure/runtime";
+import { runPipelineCommand } from "~/server/pipeline/infrastructure/command-runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function requestLeadCreation(input: {

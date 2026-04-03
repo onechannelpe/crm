@@ -15,7 +15,5 @@ export function useOpenInventoryRecord() {
     }),
   );
 
-  return {
-    rowOpen,
-  };
+  return { rowOpen };
 }

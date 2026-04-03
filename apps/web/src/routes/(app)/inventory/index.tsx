@@ -1,5 +1,5 @@
 import { AppPage } from "~/components/layout/page";
-import { InventoryRecordIndex } from "~/features/record-index/adapters/inventory/adapter";
+import { InventoryRecordIndex } from "~/features/inventory/record-index/adapter";
 
 export default function InventoryPage() {
   return (

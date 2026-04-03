@@ -6,7 +6,7 @@ import { ensureCanCreateSale } from "../../domain/workflow";
 import type { CreateSaleDeps } from "../deps/sales";
 import { canCreateSale, requirePipelineActionAccess } from "../policies/access";
 import type { PipelineAuditService } from "../ports/audit-service";
-import { writeLeadSale } from "./create-sale-writer";
+import { persistLeadSaleConversion } from "./create-sale-effects";
 
 export async function createSale(input: {
   deps: CreateSaleDeps;
@@ -46,7 +46,7 @@ export async function createSale(input: {
   }
 
   const now = Date.now();
-  const saleId = await writeLeadSale({
+  const saleId = await persistLeadSaleConversion({
     deps: input.deps,
     auditService: input.auditService,
     lead,

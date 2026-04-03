@@ -3,7 +3,7 @@ import type { Lead } from "../../domain/lead";
 import type { CreateQuotationDeps } from "../deps/quotations";
 import type { PipelineAuditService } from "../ports/audit-service";
 
-export async function writeLeadQuotation(input: {
+export async function persistLeadQuotationTransition(input: {
   deps: CreateQuotationDeps;
   auditService: PipelineAuditService;
   lead: Lead;

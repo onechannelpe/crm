@@ -1,6 +1,6 @@
 import type { Role } from "~/lib/auth/access/rbac";
 
-import type { LeadAction } from "../../contracts/lead-detail";
+import type { LeadAction } from "~/actions/pipeline/contracts/lead-detail";
 import type { LeadStage } from "../../domain/lead";
 import {
   canAddLeadInteraction,

@@ -7,7 +7,7 @@ import { createDb } from "../../src/lib/db/client";
 import { computeHash, writeStoredHash } from "../../src/lib/db/migration-hash";
 import { SCHEMA_MODULES, SEED_MODULES } from "../../src/lib/db/schema";
 import type { Database } from "../../src/lib/db/types";
-import { createSalesRecordsWorkflowService } from "../../src/server/sales/records-service";
+import { createSalesRecordsWorkflowService } from "../../src/server/sales-records/application/workflow-service";
 import {
   createTestRepositories,
   type TestRepositories,

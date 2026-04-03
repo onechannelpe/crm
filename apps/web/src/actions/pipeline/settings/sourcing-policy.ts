@@ -2,10 +2,8 @@
 
 import { getSourcingPolicy } from "~/server/pipeline/application/queries/get-sourcing-policy";
 import { updateSourcingPolicy } from "~/server/pipeline/application/settings/update-sourcing-policy";
-import {
-  createPipelineQueryRuntime,
-  runPipelineCommand,
-} from "~/server/pipeline/infrastructure/runtime";
+import { runPipelineCommand } from "~/server/pipeline/infrastructure/command-runtime";
+import { createPipelineQueryRuntime } from "~/server/pipeline/infrastructure/query-runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function querySourcingPolicy(branchId: number) {

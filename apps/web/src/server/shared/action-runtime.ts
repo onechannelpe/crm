@@ -47,6 +47,13 @@ export interface AppContext {
   now: () => number;
 }
 
+type RunActionParams<T, E extends DomainError> = ActionAuthRequirement & {
+  actionName: string;
+  stepUp?: "recent_strong_auth";
+  input?: unknown;
+  execute: (ctx: AppContext) => Promise<Result<T, E>>;
+};
+
 export function createAppContext(actor: SessionData): AppContext {
   const request = getRequestContext();
   const action = getActionRequestContext();
@@ -129,36 +136,42 @@ function recordActionError(
     .catch(() => {});
 }
 
-export async function runAction<T, E extends DomainError>(params: {
-  actionName: string;
-  permission?: Permission;
-  role?: Role;
-  requireAuth?: boolean;
-  requireSession?: boolean;
-  stepUp?: "recent_strong_auth";
-  input?: unknown;
-  execute: (ctx: AppContext) => Promise<Result<T, E>>;
-}): Promise<T> {
+async function createActionTelemetry(
+  params: ActionAuthRequirement & Pick<RunActionParams<unknown, DomainError>, "actionName" | "stepUp" | "input">,
+): Promise<ActionTelemetryInput> {
   const actor = await resolveActor(params);
   if (params.stepUp === "recent_strong_auth") {
     assertRecentStrongAuth(actor);
   }
-  const telemetry = {
+
+  return {
     actionName: params.actionName,
     ctx: createAppContext(actor),
     startedAt: Date.now(),
     input: params.input,
-  } satisfies ActionTelemetryInput;
+  };
+}
 
+async function executeActionResult<T, E extends DomainError>(
+  ctx: AppContext,
+  execute: (ctx: AppContext) => Promise<Result<T, E>>,
+): Promise<T> {
+  const result = await execute(ctx);
+  if (isErr(result)) {
+    throwDomainError(result.error);
+  }
+
+  return result.value;
+}
+
+export async function runAction<T, E extends DomainError>(
+  params: RunActionParams<T, E>,
+): Promise<T> {
+  const telemetry = await createActionTelemetry(params);
   try {
-    const result = await params.execute(telemetry.ctx);
-    if (isErr(result)) {
-      throwDomainError(result.error);
-    }
-
+    const value = await executeActionResult(telemetry.ctx, params.execute);
     recordActionSuccess(telemetry);
-
-    return result.value;
+    return value;
   } catch (error) {
     recordActionError(telemetry, toTelemetryError(error));
 

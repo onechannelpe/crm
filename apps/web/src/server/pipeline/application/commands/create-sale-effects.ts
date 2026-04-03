@@ -3,7 +3,7 @@ import type { Lead } from "../../domain/lead";
 import type { CreateSaleDeps } from "../deps/sales";
 import type { PipelineAuditService } from "../ports/audit-service";
 
-export async function writeLeadSale(input: {
+export async function persistLeadSaleConversion(input: {
   deps: CreateSaleDeps;
   auditService: PipelineAuditService;
   lead: Lead;

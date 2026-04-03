@@ -2,7 +2,7 @@
 
 import { approveForSale } from "~/server/pipeline/application/commands/approve-for-sale";
 import { createQuotation } from "~/server/pipeline/application/commands/create-quotation";
-import { runPipelineCommand } from "~/server/pipeline/infrastructure/runtime";
+import { runPipelineCommand } from "~/server/pipeline/infrastructure/command-runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function requestQuotationCreation(input: {

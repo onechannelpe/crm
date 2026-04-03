@@ -10,7 +10,7 @@ import {
 } from "../policies/access";
 import type { PipelineAuditService } from "../ports/audit-service";
 import type { PipelineNotificationCenter } from "../ports/notification-center";
-import { writeCompletedCommercialInput } from "./complete-commercial-input-writer";
+import { persistCommercialInputCompletion } from "./complete-commercial-input-effects";
 
 export async function completeCommercialInput(input: {
   deps: CompleteCommercialInputDeps;
@@ -50,7 +50,7 @@ export async function completeCommercialInput(input: {
   }
 
   const now = Date.now();
-  await writeCompletedCommercialInput({
+  await persistCommercialInputCompletion({
     deps: input.deps,
     auditService: input.auditService,
     notificationCenter: input.notificationCenter,

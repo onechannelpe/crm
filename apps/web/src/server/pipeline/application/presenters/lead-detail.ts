@@ -4,8 +4,8 @@ import type {
   LeadDetailOutput,
   LeadDetailQuotation,
   LeadDetailSale,
-} from "../../contracts/lead-detail";
-import type { LeadAction } from "../../contracts/lead-detail";
+  LeadAction,
+} from "~/actions/pipeline/contracts/lead-detail";
 import type { LeadHistoryEntry } from "../../domain/history";
 import type { Lead } from "../../domain/lead";
 import type { LeadCommercialInput } from "../ports/commercial-input-repository";

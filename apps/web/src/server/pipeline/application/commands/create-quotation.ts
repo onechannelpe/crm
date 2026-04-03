@@ -9,7 +9,7 @@ import {
   requirePipelineActionAccess,
 } from "../policies/access";
 import type { PipelineAuditService } from "../ports/audit-service";
-import { writeLeadQuotation } from "./create-quotation-writer";
+import { persistLeadQuotationTransition } from "./create-quotation-effects";
 
 export async function createQuotation(input: {
   deps: CreateQuotationDeps;
@@ -43,7 +43,7 @@ export async function createQuotation(input: {
   }
 
   const now = Date.now();
-  const quotationId = await writeLeadQuotation({
+  const quotationId = await persistLeadQuotationTransition({
     deps: input.deps,
     auditService: input.auditService,
     lead,

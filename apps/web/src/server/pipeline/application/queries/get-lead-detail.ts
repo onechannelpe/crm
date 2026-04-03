@@ -2,7 +2,7 @@ import type { Role } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import type { LeadDetailOutput } from "../../contracts/lead-detail";
+import type { LeadDetailOutput } from "~/actions/pipeline/contracts/lead-detail";
 import type { LeadDetailDeps } from "../deps/lead-queries";
 import { canRevealFullTimeline, requireLeadAccess } from "../policies/access";
 import { resolveAvailableActions } from "../policies/action-availability";

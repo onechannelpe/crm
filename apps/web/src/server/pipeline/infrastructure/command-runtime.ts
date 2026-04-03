@@ -19,10 +19,6 @@ export type PipelineCommandRuntime = {
   notificationCenter: PipelineNotificationCenter;
 };
 
-export type PipelineQueryRuntime = {
-  deps: PipelineDeps;
-};
-
 function createPipelineAuditServiceRuntime(executor: DatabaseExecutor) {
   return createPipelineAuditService({
     auditLogs: createPipelineAuditLogRepo(createAuditLogsRepo(executor)),
@@ -40,16 +36,10 @@ function createPipelineCommandRuntime(
   };
 }
 
-export function createPipelineQueryRuntime(): PipelineQueryRuntime {
-  return {
-    deps: createPipelineDeps(),
-  };
-}
-
 export async function runPipelineCommand<TResult>(
   operation: (runtime: PipelineCommandRuntime) => Promise<TResult>,
 ): Promise<TResult> {
-  return runInPipelineTransaction(async ({ executor }) => {
-    return operation(createPipelineCommandRuntime(executor));
-  });
+  return runInPipelineTransaction(async ({ executor }) =>
+    operation(createPipelineCommandRuntime(executor)),
+  );
 }

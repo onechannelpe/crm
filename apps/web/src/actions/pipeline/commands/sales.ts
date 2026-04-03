@@ -2,7 +2,7 @@
 
 import { validationError } from "~/lib/app-errors";
 import { createSale } from "~/server/pipeline/application/commands/create-sale";
-import { runPipelineCommand } from "~/server/pipeline/infrastructure/runtime";
+import { runPipelineCommand } from "~/server/pipeline/infrastructure/command-runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function requestSaleCreation(input: {

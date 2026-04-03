@@ -8,8 +8,8 @@ import type { ReviewLeadDeps } from "../deps/review-lead";
 import { canReviewLead, requirePipelineActionAccess } from "../policies/access";
 import type { PipelineAuditService } from "../ports/audit-service";
 import type { PipelineNotificationCenter } from "../ports/notification-center";
+import { persistLeadReviewTransition } from "./review-lead-effects";
 import { notifyLeadReviewOutcome } from "./review-lead-notifier";
-import { writeLeadReview } from "./review-lead-writer";
 
 export async function reviewLead(input: {
   deps: ReviewLeadDeps;
@@ -43,7 +43,7 @@ export async function reviewLead(input: {
   }
 
   const now = Date.now();
-  await writeLeadReview({
+  await persistLeadReviewTransition({
     deps: input.deps,
     auditService: input.auditService,
     lead,

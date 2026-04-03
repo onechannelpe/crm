@@ -5,7 +5,7 @@ import { notifyReadyForQuotation } from "../notifications";
 import type { PipelineAuditService } from "../ports/audit-service";
 import type { PipelineNotificationCenter } from "../ports/notification-center";
 
-export async function writeCompletedCommercialInput(input: {
+export async function persistCommercialInputCompletion(input: {
   deps: CompleteCommercialInputDeps;
   auditService: PipelineAuditService;
   notificationCenter: PipelineNotificationCenter;

@@ -2,7 +2,7 @@
 
 import { getSaleDetail } from "~/server/pipeline/application/queries/get-sale-detail";
 import { listSales } from "~/server/pipeline/application/queries/list-sales";
-import { createPipelineQueryRuntime } from "~/server/pipeline/infrastructure/runtime";
+import { createPipelineQueryRuntime } from "~/server/pipeline/infrastructure/query-runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function querySales(filters: { limit?: number; offset?: number }) {

@@ -5,7 +5,7 @@ import { notifyReadyForSale } from "../notifications";
 import type { PipelineAuditService } from "../ports/audit-service";
 import type { PipelineNotificationCenter } from "../ports/notification-center";
 
-export async function writeLeadSaleApproval(input: {
+export async function persistLeadSaleApproval(input: {
   deps: ApproveForSaleDeps;
   auditService: PipelineAuditService;
   notificationCenter: PipelineNotificationCenter;

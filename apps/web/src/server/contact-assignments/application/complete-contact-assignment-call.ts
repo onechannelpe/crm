@@ -1,7 +1,7 @@
 import { hasPermission, type Role } from "~/lib/auth/access/rbac";
 import type { ActionSuccess } from "~/lib/contracts/common";
 import { computeClientCompletenessScore } from "~/server/sales/completeness";
-import { createSalesRecordsWorkflowService } from "~/server/sales/records-service";
+import { createSalesRecordsWorkflowService } from "~/server/sales-records/application/workflow-service";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { BranchId, UserId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";

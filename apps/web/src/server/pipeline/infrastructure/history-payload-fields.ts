@@ -1,9 +1,9 @@
 import { isPlainRecord } from "~/lib/type-guards";
 import type { LeadCallOutcome } from "~/server/pipeline/domain/lead";
 import {
-  parseLeadPriority,
-  parseLeadStage,
-  parseLeadStatus,
+  parseRequiredLeadPriority,
+  parseRequiredLeadStage,
+  parseRequiredLeadStatus,
   type LeadPriority,
   type LeadStage,
   type LeadStatus,
@@ -108,15 +108,11 @@ export function requireLeadStage(
     return value;
   }
 
-  const parsed = parseLeadStage(value.value);
+  const parsed = parseRequiredLeadStage(value.value);
   if (!parsed.ok) {
     return parsed;
   }
-  if (parsed.value !== undefined) {
-    return Ok(parsed.value);
-  }
-
-  return Err(invalidPayload(row, key));
+  return Ok(parsed.value);
 }
 
 export function requireLeadStatus(
@@ -129,15 +125,11 @@ export function requireLeadStatus(
     return value;
   }
 
-  const parsed = parseLeadStatus(value.value);
+  const parsed = parseRequiredLeadStatus(value.value);
   if (!parsed.ok) {
     return parsed;
   }
-  if (parsed.value !== undefined) {
-    return Ok(parsed.value);
-  }
-
-  return Err(invalidPayload(row, key));
+  return Ok(parsed.value);
 }
 
 export function requireLeadPriority(
@@ -150,15 +142,11 @@ export function requireLeadPriority(
     return value;
   }
 
-  const parsed = parseLeadPriority(value.value);
+  const parsed = parseRequiredLeadPriority(value.value);
   if (!parsed.ok) {
     return parsed;
   }
-  if (parsed.value !== undefined) {
-    return Ok(parsed.value);
-  }
-
-  return Err(invalidPayload(row, key));
+  return Ok(parsed.value);
 }
 
 export function requireCallOutcome(

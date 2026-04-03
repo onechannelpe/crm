@@ -4,13 +4,13 @@ import type { PipelineAuditService } from "../ports/audit-service";
 import type { LeadHistoryRepository } from "../ports/history-repository";
 import type { LeadRepository } from "../ports/lead-repository";
 
-type ReviewLeadWriterDeps = {
+type ReviewLeadEffectsDeps = {
   leads: LeadRepository;
   leadHistory: LeadHistoryRepository;
 };
 
-export async function writeLeadReview(input: {
-  deps: ReviewLeadWriterDeps;
+export async function persistLeadReviewTransition(input: {
+  deps: ReviewLeadEffectsDeps;
   auditService: PipelineAuditService;
   lead: Lead;
   actorUserId: number;

@@ -7,17 +7,15 @@ import type { DataGridColumn } from "~/features/data-grid/model/types";
 
 import styles from "./styles.module.css";
 
-export type InventoryRow = Awaited<
-  ReturnType<typeof getInventoryItems>
->[number];
+export type InventoryRow = Awaited<ReturnType<typeof getInventoryItems>>[number];
 
-const statusLabels: Record<string, string> = {
+const STATUS_LABELS: Record<string, string> = {
   available: "Disponible",
   reserved: "Reservado",
   sold: "Vendido",
 };
 
-function statusVariant(status: string) {
+function resolveStatusVariant(status: string) {
   switch (status) {
     case "available":
       return "success" as const;
@@ -38,9 +36,7 @@ export const INVENTORY_RECORD_INDEX_COLUMNS = [
     minWidth: 220,
     grow: true,
     sticky: true,
-    renderCell: (item) => (
-      <span class={styles.product}>{item.productName}</span>
-    ),
+    renderCell: (item) => <span class={styles.product}>{item.productName}</span>,
   },
   {
     key: "serial_number",
@@ -64,8 +60,8 @@ export const INVENTORY_RECORD_INDEX_COLUMNS = [
     icon: Package,
     width: 160,
     renderCell: (item) => (
-      <Badge variant={statusVariant(item.status)}>
-        {statusLabels[item.status] ?? item.status}
+      <Badge variant={resolveStatusVariant(item.status)}>
+        {STATUS_LABELS[item.status] ?? item.status}
       </Badge>
     ),
   },

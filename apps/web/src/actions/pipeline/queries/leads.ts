@@ -2,8 +2,9 @@
 
 import { getLeadDetail } from "~/server/pipeline/application/queries/get-lead-detail";
 import { listLeads } from "~/server/pipeline/application/queries/list-leads";
-import type { LeadDetailOutput } from "~/server/pipeline/contracts/lead-detail";
-import { createPipelineQueryRuntime } from "~/server/pipeline/infrastructure/runtime";
+import type { LeadDetailOutput } from "../contracts/lead-detail";
+import type { LeadListOutput } from "../contracts/lead-list";
+import { createPipelineQueryRuntime } from "~/server/pipeline/infrastructure/query-runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function queryLeadList(filters: {
@@ -13,7 +14,7 @@ export async function queryLeadList(filters: {
   executiveId?: number;
   limit?: number;
   offset?: number;
-}) {
+}): Promise<LeadListOutput> {
   return runAction({
     actionName: "pipeline.list_leads",
     requireAuth: true,

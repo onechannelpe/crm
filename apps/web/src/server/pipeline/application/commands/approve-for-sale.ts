@@ -10,7 +10,7 @@ import {
 } from "../policies/access";
 import type { PipelineAuditService } from "../ports/audit-service";
 import type { PipelineNotificationCenter } from "../ports/notification-center";
-import { writeLeadSaleApproval } from "./approve-for-sale-writer";
+import { persistLeadSaleApproval } from "./approve-for-sale-effects";
 
 export async function approveForSale(input: {
   deps: ApproveForSaleDeps;
@@ -39,7 +39,7 @@ export async function approveForSale(input: {
   }
 
   const now = Date.now();
-  await writeLeadSaleApproval({
+  await persistLeadSaleApproval({
     deps: input.deps,
     auditService: input.auditService,
     notificationCenter: input.notificationCenter,

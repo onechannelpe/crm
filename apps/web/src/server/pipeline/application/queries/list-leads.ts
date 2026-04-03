@@ -1,4 +1,5 @@
 import type { Role } from "~/lib/auth/access/rbac";
+import type { LeadListOutput } from "~/actions/pipeline/contracts/lead-list";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
@@ -12,7 +13,6 @@ import {
   requireLeadReadAccess,
   resolveLeadListExecutiveScope,
 } from "../policies/access";
-import type { LeadRepository } from "../ports/lead-repository";
 import { parsePageParams } from "./pagination";
 
 export async function listLeads(
@@ -29,15 +29,7 @@ export async function listLeads(
       offset?: number;
     };
   },
-): Promise<
-  Result<
-    {
-      rows: Awaited<ReturnType<LeadRepository["list"]>>;
-      totalCount: number;
-    },
-    DomainError
-  >
-> {
+): Promise<Result<LeadListOutput, DomainError>> {
   const canRead = requireLeadReadAccess(input.actorRole);
   if (!canRead.ok) {
     return canRead;

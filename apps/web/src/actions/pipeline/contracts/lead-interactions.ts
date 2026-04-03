@@ -1,4 +1,4 @@
-import type { LeadCallOutcome } from "../domain/lead";
+import type { LeadCallOutcome } from "~/server/pipeline/domain/lead";
 
 export type { LeadCallOutcome };
 

@@ -3,7 +3,7 @@ import { TextDecoder } from "node:util";
 import { db } from "~/lib/db/db";
 import { reviewLead } from "~/server/pipeline/application/commands/review-lead";
 import type { LeadPriority, LeadStatus } from "~/server/pipeline/domain/lead";
-import { runPipelineCommand } from "~/server/pipeline/infrastructure/runtime";
+import { runPipelineCommand } from "~/server/pipeline/infrastructure/command-runtime";
 import { createAuditService } from "~/server/shared/audit";
 
 import {

@@ -170,6 +170,17 @@ export function parseRequiredLeadStatus(
   );
 }
 
+export function parseRequiredLeadStage(
+  value: string,
+): Result<LeadStage, DomainError> {
+  return parseRequiredLeadValue(
+    value,
+    LEAD_STAGES,
+    "invalid_stage",
+    "Invalid stage",
+  );
+}
+
 export function parseRequiredLeadPriority(
   value: string,
 ): Result<LeadPriority, DomainError> {
