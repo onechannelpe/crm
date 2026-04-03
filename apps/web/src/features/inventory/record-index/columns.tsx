@@ -7,7 +7,9 @@ import type { DataGridColumn } from "~/features/data-grid/model/types";
 
 import styles from "./styles.module.css";
 
-export type InventoryRow = Awaited<ReturnType<typeof getInventoryItems>>[number];
+export type InventoryRow = Awaited<
+  ReturnType<typeof getInventoryItems>
+>[number];
 
 const STATUS_LABELS: Record<string, string> = {
   available: "Disponible",
@@ -36,7 +38,9 @@ export const INVENTORY_RECORD_INDEX_COLUMNS = [
     minWidth: 220,
     grow: true,
     sticky: true,
-    renderCell: (item) => <span class={styles.product}>{item.productName}</span>,
+    renderCell: (item) => (
+      <span class={styles.product}>{item.productName}</span>
+    ),
   },
   {
     key: "serial_number",

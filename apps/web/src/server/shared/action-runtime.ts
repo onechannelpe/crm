@@ -137,7 +137,11 @@ function recordActionError(
 }
 
 async function createActionTelemetry(
-  params: ActionAuthRequirement & Pick<RunActionParams<unknown, DomainError>, "actionName" | "stepUp" | "input">,
+  params: ActionAuthRequirement &
+    Pick<
+      RunActionParams<unknown, DomainError>,
+      "actionName" | "stepUp" | "input"
+    >,
 ): Promise<ActionTelemetryInput> {
   const actor = await resolveActor(params);
   if (params.stepUp === "recent_strong_auth") {

@@ -1,12 +1,12 @@
 import { For, Show } from "solid-js";
 
+import type { TimelineItem } from "~/actions/pipeline/contracts/lead-detail";
 import Building2 from "~/components/icons/building-2";
 import CalendarDays from "~/components/icons/calendar-days";
 import CircleAlert from "~/components/icons/circle-alert";
 import Package from "~/components/icons/package";
 import Phone from "~/components/icons/phone";
 import { formatDateTime } from "~/lib/utils";
-import type { TimelineItem } from "~/actions/pipeline/contracts/lead-detail";
 
 import styles from "./lead-detail-overview.module.css";
 

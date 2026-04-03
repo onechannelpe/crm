@@ -6,6 +6,7 @@ import type {
   LeadDetailSale,
   LeadAction,
 } from "~/actions/pipeline/contracts/lead-detail";
+
 import type { LeadHistoryEntry } from "../../domain/history";
 import type { Lead } from "../../domain/lead";
 import type { LeadCommercialInput } from "../ports/commercial-input-repository";

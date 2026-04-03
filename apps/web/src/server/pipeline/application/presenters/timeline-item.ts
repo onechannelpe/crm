@@ -1,7 +1,7 @@
+import type { TimelineItem } from "~/actions/pipeline/contracts/lead-detail";
 import type { LeadHistoryEntry } from "~/server/pipeline/domain/history";
 import type { LeadCallOutcome } from "~/server/pipeline/domain/lead";
 
-import type { TimelineItem } from "~/actions/pipeline/contracts/lead-detail";
 import { formatTimelineActorName } from "./timeline-actor-name";
 
 function describeCallOutcome(outcome: LeadCallOutcome | null) {

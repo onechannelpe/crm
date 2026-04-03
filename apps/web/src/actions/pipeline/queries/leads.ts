@@ -2,10 +2,11 @@
 
 import { getLeadDetail } from "~/server/pipeline/application/queries/get-lead-detail";
 import { listLeads } from "~/server/pipeline/application/queries/list-leads";
-import type { LeadDetailOutput } from "../contracts/lead-detail";
-import type { LeadListOutput } from "../contracts/lead-list";
 import { createPipelineQueryRuntime } from "~/server/pipeline/infrastructure/query-runtime";
 import { runAction } from "~/server/shared/action-runtime";
+
+import type { LeadDetailOutput } from "../contracts/lead-detail";
+import type { LeadListOutput } from "../contracts/lead-list";
 
 export async function queryLeadList(filters: {
   stage?: string;
