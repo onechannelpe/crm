@@ -3,7 +3,8 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { LeadDetailDeps } from "../deps/lead-queries";
-import { requireLeadAccess } from "../policies/access";
+import { canRevealFullTimeline, requireLeadAccess } from "../policies/access";
+import { resolveAvailableActions } from "../policies/action-availability";
 import {
   presentLeadDetail,
   type LeadDetailOutput,
@@ -45,13 +46,18 @@ export async function getLeadDetail(
 
   return Ok(
     presentLeadDetail({
-      actorUserId: input.actorUserId,
-      actorRole: input.actorRole,
       lead,
       commercialInput,
       quotations,
       sale,
       history: history.value,
+      canRevealFullTimeline: canRevealFullTimeline(input.actorRole),
+      availableActions: resolveAvailableActions({
+        actorUserId: input.actorUserId,
+        actorRole: input.actorRole,
+        executiveId: lead.executiveId,
+        stage: lead.stage,
+      }),
     }),
   );
 }

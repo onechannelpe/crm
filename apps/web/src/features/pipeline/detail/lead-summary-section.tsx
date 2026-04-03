@@ -1,8 +1,7 @@
 import Building2 from "~/components/icons/building-2";
 import { Badge } from "~/components/ui/display/badge";
 import { formatDateTime } from "~/lib/utils";
-
-import type { LeadDetailData } from "./types";
+import type { LeadDetailOutput } from "~/server/pipeline/application/presenters/lead-detail";
 
 import styles from "./lead-detail-overview.module.css";
 
@@ -12,7 +11,7 @@ function stageVariant(stage: string) {
   return "secondary" as const;
 }
 
-export function LeadSummarySection(props: { data: LeadDetailData }) {
+export function LeadSummarySection(props: { data: LeadDetailOutput }) {
   const fields = [
     { label: "RUC", value: props.data.lead.ruc },
     {

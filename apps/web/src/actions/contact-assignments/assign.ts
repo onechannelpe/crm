@@ -1,26 +1,26 @@
 "use server";
 
-import { requirePermission } from "~/lib/auth/access/session";
 import { assignContacts } from "~/server/contact-assignments/application/assign-contacts";
 import { createContactAssignmentContext } from "~/server/contact-assignments/infrastructure/assignment-context";
-import { isErr } from "~/server/shared/result";
+import { runAction } from "~/server/shared/action-runtime";
 
-import { mapContactAssignmentError } from "./errors";
 import { parseAssignContactsCommand } from "./input";
 
 export async function assignCurrentUserContacts() {
-  const session = await requirePermission("lead:work");
+  return runAction({
+    actionName: "contact_assignments.assign_current_user",
+    permission: "lead:work",
+    input: {},
+    execute: (ctx) => {
+      const cmdResult = parseAssignContactsCommand(
+        ctx.actor.userId,
+        ctx.actor.branchId,
+      );
+      if (!cmdResult.ok) {
+        return Promise.resolve(cmdResult);
+      }
 
-  const cmdResult = parseAssignContactsCommand(
-    session.userId,
-    session.branchId,
-  );
-  if (isErr(cmdResult)) mapContactAssignmentError(cmdResult.error);
-
-  const result = await assignContacts(cmdResult.value, {
-    ...createContactAssignmentContext(),
+      return assignContacts(cmdResult.value, createContactAssignmentContext());
+    },
   });
-  if (isErr(result)) mapContactAssignmentError(result.error);
-
-  return result.value;
 }

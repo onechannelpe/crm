@@ -3,12 +3,11 @@ import { hasPermission } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import { createHistoryEvent } from "../../domain/history";
 import { ensureCanCompleteCommercialInput } from "../../domain/workflow";
 import type { CompleteCommercialInputDeps } from "../deps/sales";
-import { notifyReadyForQuotation } from "../notifications";
 import type { PipelineAuditService } from "../ports/audit-service";
 import type { PipelineNotificationCenter } from "../ports/notification-center";
+import { writeCompletedCommercialInput } from "./complete-commercial-input-writer";
 
 export async function completeCommercialInput(
   deps: CompleteCommercialInputDeps,
@@ -46,59 +45,20 @@ export async function completeCommercialInput(
   }
 
   const now = Date.now();
-  await deps.leadCommercialInputs.upsert({
-    leadId: input.leadId,
+  await writeCompletedCommercialInput({
+    deps,
+    auditService,
+    notificationCenter,
+    lead,
+    actorUserId: input.actorUserId,
+    branchId: input.branchId,
     proveedorActual: input.proveedorActual,
     tasaActual: input.tasaActual,
     gpv: input.gpv,
     ticket: input.ticket,
     abono: input.abono,
     cantidadPos: input.cantidadPos,
-    updatedAt: now,
-    updatedBy: input.actorUserId,
-  });
-  await deps.leads.updateById(input.leadId, {
-    stage: "READY_FOR_QUOTATION",
-    updatedAt: now,
-  });
-  await deps.leadHistory.insert(
-    createHistoryEvent({
-      leadId: input.leadId,
-      eventType: "commercial_input_completed",
-      actorUserId: input.actorUserId,
-      payload: {
-        proveedorActual: input.proveedorActual,
-        tasaActual: input.tasaActual,
-        gpv: input.gpv,
-        ticket: input.ticket,
-        abono: input.abono,
-        cantidadPos: input.cantidadPos,
-      },
-      occurredAt: now,
-    }),
-  );
-  await deps.leadHistory.insert(
-    createHistoryEvent({
-      leadId: input.leadId,
-      eventType: "workflow_stage_changed",
-      actorUserId: input.actorUserId,
-      payload: { from: lead.stage, to: "READY_FOR_QUOTATION" },
-      occurredAt: now,
-    }),
-  );
-  await auditService.log(
-    input.actorUserId,
-    "commercial_input_completed",
-    "lead",
-    input.leadId,
-    { from: lead.stage, to: "READY_FOR_QUOTATION" },
-  );
-
-  await notifyReadyForQuotation({
-    center: notificationCenter,
-    branchId: input.branchId,
-    leadId: lead.id,
-    ruc: lead.ruc,
+    now,
   });
 
   return Ok(undefined);

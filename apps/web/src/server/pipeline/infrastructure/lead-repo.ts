@@ -77,7 +77,7 @@ function applyLeadFilters<TRow>(
   return nextQuery;
 }
 
-export function createLeadsRepo(db: DatabaseExecutor) {
+export function createLeadRepo(db: DatabaseExecutor) {
   return {
     async insert(values: LeadDraft): Promise<number> {
       const result = await db

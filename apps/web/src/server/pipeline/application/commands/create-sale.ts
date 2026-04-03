@@ -3,10 +3,10 @@ import { hasPermission } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import { createHistoryEvent } from "../../domain/history";
 import { ensureCanCreateSale } from "../../domain/workflow";
 import type { CreateSaleDeps } from "../deps/sales";
 import type { PipelineAuditService } from "../ports/audit-service";
+import { writeLeadSale } from "./create-sale-writer";
 
 export async function createSale(
   deps: CreateSaleDeps,
@@ -47,9 +47,11 @@ export async function createSale(
   }
 
   const now = Date.now();
-  const saleId = await deps.leadSales.insert({
-    leadId: input.leadId,
-    executiveId: input.actorUserId,
+  const saleId = await writeLeadSale({
+    deps,
+    auditService,
+    lead,
+    actorUserId: input.actorUserId,
     proveedorActual: input.proveedorActual,
     tasaActual: input.tasaActual,
     gpv: input.gpv,
@@ -59,38 +61,8 @@ export async function createSale(
     banco: input.banco,
     nroCuenta: input.nroCuenta,
     cci: input.cci,
-    createdAt: now,
+    now,
   });
-
-  await deps.leads.updateById(input.leadId, {
-    stage: "CONVERTED",
-    updatedAt: now,
-  });
-  await deps.leadHistory.insert(
-    createHistoryEvent({
-      leadId: input.leadId,
-      eventType: "sale_created",
-      actorUserId: input.actorUserId,
-      payload: { saleId },
-      occurredAt: now,
-    }),
-  );
-  await deps.leadHistory.insert(
-    createHistoryEvent({
-      leadId: input.leadId,
-      eventType: "workflow_stage_changed",
-      actorUserId: input.actorUserId,
-      payload: { from: lead.stage, to: "CONVERTED" },
-      occurredAt: now,
-    }),
-  );
-  await auditService.log(
-    input.actorUserId,
-    "sale_created",
-    "lead",
-    input.leadId,
-    { saleId, to: "CONVERTED" },
-  );
 
   return Ok({ id: saleId });
 }

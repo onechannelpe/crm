@@ -3,9 +3,8 @@
 import { validationError } from "~/lib/app-errors";
 import { createSale } from "~/server/pipeline/application/commands/create-sale";
 import { createSaleDeps } from "~/server/pipeline/infrastructure/deps";
+import { runPipelineCommand } from "~/server/pipeline/infrastructure/runtime";
 import { runAction } from "~/server/shared/action-runtime";
-
-import { runPipelineCommand } from "../runtime/commands";
 
 export async function requestSaleCreation(input: {
   leadId: number;
@@ -31,7 +30,7 @@ export async function requestSaleCreation(input: {
 
   return runAction({
     actionName: "pipeline.create_sale",
-    permission: "lead:register",
+    requireAuth: true,
     input: { leadId: input.leadId },
     execute: (ctx) =>
       runPipelineCommand(createSaleDeps, ({ deps, auditService }) =>

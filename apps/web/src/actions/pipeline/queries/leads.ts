@@ -1,5 +1,6 @@
 "use server";
 
+import type { LeadDetailOutput } from "~/server/pipeline/application/presenters/lead-detail";
 import { getLeadDetail } from "~/server/pipeline/application/queries/get-lead-detail";
 import { listLeads } from "~/server/pipeline/application/queries/list-leads";
 import {
@@ -7,9 +8,6 @@ import {
   createLeadListDeps,
 } from "~/server/pipeline/infrastructure/deps";
 import { runAction } from "~/server/shared/action-runtime";
-
-import type { LeadDetailData } from "../contracts/lead-detail";
-import { createPipelineQueryRuntime } from "../runtime/queries";
 
 export async function queryLeadList(filters: {
   stage?: string;
@@ -24,7 +22,7 @@ export async function queryLeadList(filters: {
     requireAuth: true,
     input: filters,
     execute: (ctx) =>
-      listLeads(createPipelineQueryRuntime(createLeadListDeps), {
+      listLeads(createLeadListDeps(), {
         actorUserId: ctx.actor.userId,
         actorRole: ctx.actor.role,
         filters,
@@ -32,13 +30,15 @@ export async function queryLeadList(filters: {
   });
 }
 
-export async function queryLeadDetail(leadId: number): Promise<LeadDetailData> {
+export async function queryLeadDetail(
+  leadId: number,
+): Promise<LeadDetailOutput> {
   return runAction({
     actionName: "pipeline.get_lead_detail",
     requireAuth: true,
     input: { leadId },
     execute: (ctx) =>
-      getLeadDetail(createPipelineQueryRuntime(createLeadDetailDeps), {
+      getLeadDetail(createLeadDetailDeps(), {
         actorUserId: ctx.actor.userId,
         actorRole: ctx.actor.role,
         leadId,

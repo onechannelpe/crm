@@ -3,10 +3,10 @@ import { hasPermission } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import { createHistoryEvent } from "../../domain/history";
 import { ensureCanCreateQuotation } from "../../domain/workflow";
 import type { CreateQuotationDeps } from "../deps/quotations";
 import type { PipelineAuditService } from "../ports/audit-service";
+import { writeLeadQuotation } from "./create-quotation-writer";
 
 export async function createQuotation(
   deps: CreateQuotationDeps,
@@ -37,50 +37,20 @@ export async function createQuotation(
     return allowed;
   }
 
-  const version = await deps.leadQuotations.nextVersion(input.leadId);
   const now = Date.now();
-  const quotationId = await deps.leadQuotations.insert({
-    leadId: input.leadId,
+  const quotationId = await writeLeadQuotation({
+    deps,
+    auditService,
+    lead,
+    actorUserId: input.actorUserId,
     paybackPricing: input.paybackPricing,
     tarifaDebito: input.tarifaDebito,
     tarifaCredito: input.tarifaCredito,
     tarifaForaneo: input.tarifaForaneo,
     fee: input.fee,
     moneda: input.moneda,
-    version,
-    createdAt: now,
-    createdBy: input.actorUserId,
+    now,
   });
-
-  await deps.leads.updateById(input.leadId, {
-    stage: "QUOTED",
-    updatedAt: now,
-  });
-  await deps.leadHistory.insert(
-    createHistoryEvent({
-      leadId: input.leadId,
-      eventType: "quotation_created",
-      actorUserId: input.actorUserId,
-      payload: { quotationId, version, moneda: input.moneda },
-      occurredAt: now,
-    }),
-  );
-  await deps.leadHistory.insert(
-    createHistoryEvent({
-      leadId: input.leadId,
-      eventType: "workflow_stage_changed",
-      actorUserId: input.actorUserId,
-      payload: { from: lead.stage, to: "QUOTED" },
-      occurredAt: now,
-    }),
-  );
-  await auditService.log(
-    input.actorUserId,
-    "quotation_created",
-    "lead",
-    input.leadId,
-    { quotationId, version, to: "QUOTED" },
-  );
 
   return Ok({ id: quotationId });
 }

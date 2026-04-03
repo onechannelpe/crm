@@ -3,12 +3,11 @@ import { hasPermission } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import { createHistoryEvent } from "../../domain/history";
 import { ensureCanApproveForSale } from "../../domain/workflow";
 import type { ApproveForSaleDeps } from "../deps/quotations";
-import { notifyReadyForSale } from "../notifications";
 import type { PipelineAuditService } from "../ports/audit-service";
 import type { PipelineNotificationCenter } from "../ports/notification-center";
+import { writeLeadSaleApproval } from "./approve-for-sale-writer";
 
 export async function approveForSale(
   deps: ApproveForSaleDeps,
@@ -35,41 +34,13 @@ export async function approveForSale(
   }
 
   const now = Date.now();
-  await deps.leads.updateById(input.leadId, {
-    stage: "READY_FOR_SALE",
-    updatedAt: now,
-  });
-  await deps.leadHistory.insert(
-    createHistoryEvent({
-      leadId: input.leadId,
-      eventType: "sale_approved",
-      actorUserId: input.actorUserId,
-      payload: null,
-      occurredAt: now,
-    }),
-  );
-  await deps.leadHistory.insert(
-    createHistoryEvent({
-      leadId: input.leadId,
-      eventType: "workflow_stage_changed",
-      actorUserId: input.actorUserId,
-      payload: { from: lead.stage, to: "READY_FOR_SALE" },
-      occurredAt: now,
-    }),
-  );
-  await auditService.log(
-    input.actorUserId,
-    "sale_approved",
-    "lead",
-    input.leadId,
-    { from: lead.stage, to: "READY_FOR_SALE" },
-  );
-
-  await notifyReadyForSale({
-    center: notificationCenter,
-    executiveId: lead.executiveId,
-    leadId: lead.id,
-    ruc: lead.ruc,
+  await writeLeadSaleApproval({
+    deps,
+    auditService,
+    notificationCenter,
+    lead,
+    actorUserId: input.actorUserId,
+    now,
   });
 
   return Ok(undefined);

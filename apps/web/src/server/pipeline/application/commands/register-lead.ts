@@ -59,6 +59,7 @@ export async function registerLead(input: {
       executiveId: input.executiveId,
       lead: resolution.value.lead,
       now,
+      reason: "inactive_previous_executive",
     });
   }
 

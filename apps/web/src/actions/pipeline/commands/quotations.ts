@@ -6,12 +6,11 @@ import {
   createApproveForSaleDeps,
   createQuotationDeps,
 } from "~/server/pipeline/infrastructure/deps";
-import { runAction } from "~/server/shared/action-runtime";
-
 import {
   runPipelineCommand,
   runPipelineNotificationCommand,
-} from "../runtime/commands";
+} from "~/server/pipeline/infrastructure/runtime";
+import { runAction } from "~/server/shared/action-runtime";
 
 export async function requestQuotationCreation(input: {
   leadId: number;
@@ -24,7 +23,7 @@ export async function requestQuotationCreation(input: {
 }) {
   return runAction({
     actionName: "pipeline.create_quotation",
-    permission: "quotation:manage",
+    requireAuth: true,
     input: { leadId: input.leadId },
     execute: (ctx) =>
       runPipelineCommand(createQuotationDeps, ({ deps, auditService }) =>
@@ -40,7 +39,7 @@ export async function requestQuotationCreation(input: {
 export async function requestSaleApproval(leadId: number) {
   return runAction({
     actionName: "pipeline.approve_for_sale",
-    permission: "quotation:manage",
+    requireAuth: true,
     input: { leadId },
     execute: (ctx) =>
       runPipelineNotificationCommand(

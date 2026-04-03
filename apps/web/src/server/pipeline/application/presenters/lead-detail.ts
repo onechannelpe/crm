@@ -1,25 +1,19 @@
-import type { Role } from "~/lib/auth/access/rbac";
-
 import type { LeadHistoryEntry } from "../../domain/history";
 import type { Lead } from "../../domain/lead";
-import { canRevealFullTimeline } from "../policies/access";
-import {
-  resolveAvailableActions,
-  type LeadAction,
-} from "../policies/action-availability";
+import type { LeadAction } from "../policies/action-availability";
 import type { LeadCommercialInput } from "../ports/commercial-input-repository";
 import type { LeadQuotation } from "../ports/quotation-repository";
 import type { LeadSale } from "../ports/sale-repository";
 import { presentTimeline, type TimelineItem } from "./timeline";
 
 export type LeadDetailSource = {
-  actorUserId: number;
-  actorRole: Role;
   lead: Lead;
   commercialInput: LeadCommercialInput | undefined;
   quotations: LeadQuotation[];
   sale: LeadSale | undefined;
   history: LeadHistoryEntry[];
+  canRevealFullTimeline: boolean;
+  availableActions: LeadAction[];
 };
 
 export type LeadDetailLead = {
@@ -159,15 +153,7 @@ export function presentLeadDetail(source: LeadDetailSource): LeadDetailOutput {
       : undefined,
     quotations: source.quotations.map(toLeadDetailQuotation),
     sale: source.sale ? toLeadDetailSale(source.sale) : undefined,
-    timeline: presentTimeline(
-      source.history,
-      canRevealFullTimeline(source.actorRole),
-    ),
-    availableActions: resolveAvailableActions({
-      actorUserId: source.actorUserId,
-      actorRole: source.actorRole,
-      executiveId: source.lead.executiveId,
-      stage: source.lead.stage,
-    }),
+    timeline: presentTimeline(source.history, source.canRevealFullTimeline),
+    availableActions: source.availableActions,
   };
 }

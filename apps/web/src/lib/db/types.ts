@@ -7,6 +7,15 @@ import type {
   AuthFunnelScreen,
   AuthFunnelSource,
 } from "~/lib/observability/auth-funnel";
+import {
+  LEAD_PRIORITIES,
+  LEAD_STAGES as PIPELINE_LEAD_STAGES,
+  LEAD_STATUSES,
+  type LeadCallOutcome,
+  type LeadPriority,
+  type LeadStage,
+  type LeadStatus,
+} from "~/server/pipeline/domain/lead";
 
 export interface BranchesTable {
   id: Generated<number>;
@@ -741,32 +750,10 @@ export interface UserInvitesTable {
   sent_at: number | null;
 }
 
-export type LeadStage =
-  | "PENDING_EXTERNAL_REVIEW"
-  | "REJECTED_BY_STATUS"
-  | "NEEDS_EXECUTIVE_INPUT"
-  | "READY_FOR_QUOTATION"
-  | "QUOTED"
-  | "READY_FOR_SALE"
-  | "CONVERTED";
-
-export type LeadStatus =
-  | "DISPONIBLE"
-  | "SIN RESULTADO"
-  | "CARTERIZADO"
-  | "STOCK";
-
-export type Prioridad = "P1" | "P2" | "SIN RESULTADO";
+export type { LeadCallOutcome, LeadStage, LeadStatus };
+export type Prioridad = LeadPriority;
 
 export type LeadInteractionKind = "call" | "note";
-
-export type LeadCallOutcome =
-  | "answered"
-  | "no_answer"
-  | "wrong_number"
-  | "callback_requested"
-  | "qualified"
-  | "disqualified";
 
 export type PipelineHistoryEventType =
   | "lead_registered"
@@ -783,28 +770,9 @@ export type PipelineHistoryEventType =
 
 export type ExecutiveCategory = "elite" | "corporativa";
 
-export const LEAD_STAGES = [
-  "PENDING_EXTERNAL_REVIEW",
-  "REJECTED_BY_STATUS",
-  "NEEDS_EXECUTIVE_INPUT",
-  "READY_FOR_QUOTATION",
-  "QUOTED",
-  "READY_FOR_SALE",
-  "CONVERTED",
-] as const satisfies readonly LeadStage[];
-
-export const LEAD_STATUS_VALUES = [
-  "DISPONIBLE",
-  "SIN RESULTADO",
-  "CARTERIZADO",
-  "STOCK",
-] as const satisfies readonly LeadStatus[];
-
-export const PRIORIDAD_VALUES = [
-  "P1",
-  "P2",
-  "SIN RESULTADO",
-] as const satisfies readonly Prioridad[];
+export const LEAD_STAGES = PIPELINE_LEAD_STAGES;
+export const LEAD_STATUS_VALUES = LEAD_STATUSES;
+export const PRIORIDAD_VALUES = LEAD_PRIORITIES;
 
 export function toLeadStage(v: string | undefined): LeadStage | undefined {
   return v !== undefined ? LEAD_STAGES.find((s) => s === v) : undefined;

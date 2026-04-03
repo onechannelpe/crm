@@ -60,6 +60,7 @@ export async function writeLeadReassignmentEffects(input: {
   executiveId: number;
   lead: ExistingLead;
   now: number;
+  reason?: "inactive_previous_executive";
 }): Promise<Result<{ leadId: number }, DomainError>> {
   await input.deps.leadAssignments.deactivateActiveForLead(input.lead.id);
   await input.deps.leadAssignments.insert({
@@ -82,7 +83,7 @@ export async function writeLeadReassignmentEffects(input: {
       payload: {
         fromExecutiveId: input.lead.executiveId,
         toExecutiveId: input.executiveId,
-        reason: "inactive_previous_executive",
+        ...(input.reason ? { reason: input.reason } : {}),
       },
       occurredAt: input.now,
     }),
@@ -95,7 +96,7 @@ export async function writeLeadReassignmentEffects(input: {
     {
       from: input.lead.executiveId,
       to: input.executiveId,
-      reason: "inactive_previous_executive",
+      ...(input.reason ? { reason: input.reason } : {}),
     },
   );
 

@@ -1,6 +1,6 @@
 import { type DomainError } from "~/server/shared/domain-error";
 import type { EngineClient } from "~/server/shared/engine/client";
-import type { BranchId, UserId } from "~/server/shared/ids";
+import type { BranchId, LeadReservationId, UserId } from "~/server/shared/ids";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 
 import {
@@ -53,6 +53,51 @@ interface AssignContactsDeps {
   engine: Pick<EngineClient, "requestCandidates">;
 }
 
+async function requestAssignableCandidates(input: {
+  command: AssignContactsCommand;
+  requested: number;
+  engine: Pick<EngineClient, "requestCandidates">;
+  reservationId: LeadReservationId;
+  repos: AssignmentCapacityRepos;
+}) {
+  const candidatesResult = await input.engine.requestCandidates({
+    branchId: input.command.branchId,
+    userId: input.command.actorUserId,
+    amount: input.requested,
+  });
+  if (isErr(candidatesResult)) {
+    await cancelAssignmentReservation(
+      input.reservationId,
+      "external_failure",
+      input.repos,
+    );
+  }
+  return candidatesResult;
+}
+
+async function finalizeAssignmentReservation(input: {
+  reservationId: LeadReservationId;
+  assigned: number;
+  repos: AssignmentCapacityRepos;
+}) {
+  if (input.assigned === 0) {
+    await cancelAssignmentReservation(
+      input.reservationId,
+      "partial_use",
+      input.repos,
+    );
+    return;
+  }
+
+  await commitAssignmentReservation(
+    {
+      reservationId: input.reservationId,
+      assigned: input.assigned,
+    },
+    input.repos,
+  );
+}
+
 export async function assignContacts(
   command: AssignContactsCommand,
   deps: AssignContactsDeps,
@@ -76,13 +121,14 @@ export async function assignContacts(
 
   const reservationId = reservationResult.value;
 
-  const candidatesResult = await engine.requestCandidates({
-    branchId: command.branchId,
-    userId: command.actorUserId,
-    amount: plan.value.requested,
+  const candidatesResult = await requestAssignableCandidates({
+    command,
+    requested: plan.value.requested,
+    engine,
+    reservationId,
+    repos,
   });
   if (isErr(candidatesResult)) {
-    await cancelAssignmentReservation(reservationId, "external_failure", repos);
     return candidatesResult;
   }
 
@@ -92,11 +138,7 @@ export async function assignContacts(
     runInTransaction,
   });
 
-  if (assigned === 0) {
-    await cancelAssignmentReservation(reservationId, "partial_use", repos);
-  } else {
-    await commitAssignmentReservation({ reservationId, assigned }, repos);
-  }
+  await finalizeAssignmentReservation({ reservationId, assigned, repos });
 
   return Ok({ requested: plan.value.requested, assigned });
 }

@@ -1,26 +1,10 @@
 "use server";
 
-import { throwDomainError } from "~/actions/throw-domain-error";
-import { requirePermission } from "~/lib/auth/access/session";
-import type { ActionSuccess } from "~/lib/contracts/common";
 import { assertPositiveInt } from "~/lib/contracts/guards";
-import { db } from "~/lib/db/db";
-import { createContactAssignmentsRepo } from "~/server/contacts/repos-assignments";
-import { createContactsRepo } from "~/server/contacts/repos-contacts";
-import { createOrganizationsRepo } from "~/server/contacts/repos-organizations";
-import { createProductsRepo } from "~/server/inventory/repos-products";
-import { computeClientCompletenessScore } from "~/server/sales/completeness";
-import { createSalesRecordsWorkflowService } from "~/server/sales/records-service";
-import { createSalesRecordsRepo } from "~/server/sales/repos-sales-records";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { domainError } from "~/server/shared/domain-error";
-import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
-import { createInteractionLogsRepo } from "~/server/shared/repos-interaction-logs";
-import { isErr } from "~/server/shared/result";
-
-interface CompleteContactAssignmentCallResult extends ActionSuccess {
-  draftRecordId: number | null;
-}
+import { completeContactAssignmentCall as completeContactAssignmentCallUseCase } from "~/server/contact-assignments/application/complete-contact-assignment-call";
+import type { CompleteContactAssignmentCallResult } from "~/server/contact-assignments/application/complete-contact-assignment-call";
+import { runContactAssignmentInteraction } from "~/server/contact-assignments/infrastructure/interaction-context";
+import { runAction } from "~/server/shared/action-runtime";
 
 function parseCompleteContactAssignmentCallInput(input: {
   assignmentId: number;
@@ -29,18 +13,6 @@ function parseCompleteContactAssignmentCallInput(input: {
   return {
     assignmentId: assertPositiveInt(input.assignmentId, "assignmentId"),
     contactId: assertPositiveInt(input.contactId, "contactId"),
-  };
-}
-
-function createContactAssignmentInteractionRepos(executor: DatabaseExecutor) {
-  return {
-    auditLogs: createAuditLogsRepo(executor),
-    contactAssignments: createContactAssignmentsRepo(executor),
-    contacts: createContactsRepo(executor),
-    interactionLogs: createInteractionLogsRepo(executor),
-    organizations: createOrganizationsRepo(executor),
-    products: createProductsRepo(executor),
-    salesRecords: createSalesRecordsRepo(executor),
   };
 }
 
@@ -54,95 +26,26 @@ export async function completeContactAssignmentCall(
     assignmentId,
     contactId,
   });
-  const session = await requirePermission("lead:work");
-  if (outcome === "sale_made") {
-    await requirePermission("sales:create");
-  }
-
-  const draftRecordId = await db
-    .transaction()
-    .execute(async (transactionDb) => {
-      const transactionRepos =
-        createContactAssignmentInteractionRepos(transactionDb);
-
-      const assignment =
-        await transactionRepos.contactAssignments.findActiveByIdForUser(
-          parsedInput.assignmentId,
-          session.userId,
-        );
-      if (!assignment || assignment.contact_id !== parsedInput.contactId) {
-        throwDomainError(
-          domainError(
-            "unexpected",
-            "unexpected",
-            "Contact assignment is not active or does not match the contact",
-          ),
-        );
-      }
-
-      let nextDraftRecordId: number | null = null;
-      if (outcome === "sale_made") {
-        const contact = await transactionRepos.contacts.findById(
-          parsedInput.contactId,
-        );
-        if (!contact) {
-          throw new Error("Contact not found");
-        }
-
-        const organization = await transactionRepos.organizations.findById(
-          contact.organization_id,
-        );
-        if (!organization) {
-          throw new Error("Organization not found");
-        }
-
-        const salesRecords =
-          createSalesRecordsWorkflowService(transactionRepos);
-        const draftResult = await salesRecords.createDraft({
-          source: "lead_assignment",
-          executiveUserId: session.userId,
-          branchId: session.branchId,
-          leadAssignmentId: parsedInput.assignmentId,
-          client: {
-            ruc: organization.ruc,
-            companyName: organization.name,
-            contactName: contact.name,
-            dni: contact.dni,
-            phones: contact.phone_primary ? [contact.phone_primary] : [],
-            engineMatchId: null,
-            completenessScore: computeClientCompletenessScore({
-              ruc: organization.ruc,
-              companyName: organization.name,
-              contactName: contact.name,
-              dni: contact.dni,
-              phones: contact.phone_primary ? [contact.phone_primary] : [],
-              engineMatchId: null,
-            }),
-          },
-          addresses: [],
-          products: [],
-        });
-        if (isErr(draftResult)) {
-          throwDomainError(draftResult.error);
-        }
-        nextDraftRecordId = draftResult.value;
-      }
-
-      await transactionRepos.contactAssignments.markCompleted(
-        parsedInput.assignmentId,
-        session.userId,
-      );
-      await transactionRepos.interactionLogs.create({
-        contact_id: parsedInput.contactId,
-        user_id: session.userId,
-        outcome,
-        notes: notes || null,
-        duration_seconds: null,
-        created_at: Date.now(),
-      });
-
-      return nextDraftRecordId;
-    });
-
-  return { success: true, draftRecordId };
+  return runAction({
+    actionName: "contact_assignments.complete_call",
+    permission: "lead:work",
+    input: {
+      assignmentId: parsedInput.assignmentId,
+      contactId: parsedInput.contactId,
+      outcome,
+    },
+    execute: (ctx) =>
+      completeContactAssignmentCallUseCase(
+        {
+          actorUserId: ctx.actor.userId,
+          actorRole: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+          assignmentId: parsedInput.assignmentId,
+          contactId: parsedInput.contactId,
+          outcome,
+          notes: notes?.trim() ? notes : null,
+        },
+        runContactAssignmentInteraction,
+      ),
+  });
 }

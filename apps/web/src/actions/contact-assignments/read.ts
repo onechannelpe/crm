@@ -1,46 +1,34 @@
 "use server";
 
-import { throwDomainError } from "~/actions/throw-domain-error";
-import { requirePermission } from "~/lib/auth/access/session";
-import { db } from "~/lib/db/db";
-import {
-  createLeadCapacityGrantsRepo,
-  createLeadUsageCommitsRepo,
-  createLeadUsageReservationsRepo,
-} from "~/server/capacity-usage/repos";
-import { getLeadCapacitySnapshot } from "~/server/capacity/application/get-lead-capacity-snapshot";
-import {
-  createLeadPolicyDefaultsRepo,
-  createLeadPolicyOverridesRepo,
-} from "~/server/capacity/infrastructure/policy-repos";
-import { createContactAssignmentsRepo } from "~/server/contacts/repos-assignments";
-import { isErr } from "~/server/shared/result";
-import { createUsersRepo } from "~/server/users/repos-users";
+import { getActiveContactAssignments as getActiveContactAssignmentsUseCase } from "~/server/contact-assignments/application/get-active-contact-assignments";
+import { getContactAssignmentCapacity } from "~/server/contact-assignments/application/get-contact-assignment-capacity";
+import { createContactAssignmentReadContext } from "~/server/contact-assignments/infrastructure/read-context";
+import { runAction } from "~/server/shared/action-runtime";
+import { Ok } from "~/server/shared/result";
 
-const repos = {
-  users: createUsersRepo(db),
-  leadPolicyDefaults: createLeadPolicyDefaultsRepo(db),
-  leadPolicyOverrides: createLeadPolicyOverridesRepo(db),
-  leadCapacityGrants: createLeadCapacityGrantsRepo(db),
-  leadUsageReservations: createLeadUsageReservationsRepo(db),
-  leadUsageCommits: createLeadUsageCommitsRepo(db),
-  contactAssignments: createContactAssignmentsRepo(db),
-};
+const readRepos = createContactAssignmentReadContext();
 
 type ActiveContactAssignment = Awaited<
-  ReturnType<typeof repos.contactAssignments.findActiveByUserWithContacts>
+  ReturnType<typeof readRepos.contactAssignments.findActiveByUserWithContacts>
 >[number];
 
 export async function getActiveContactAssignments(): Promise<
   ActiveContactAssignment[]
 > {
-  const session = await requirePermission("lead:work");
-  return repos.contactAssignments.findActiveByUserWithContacts(session.userId);
+  return runAction({
+    actionName: "contact_assignments.list_active",
+    permission: "lead:work",
+    input: {},
+    execute: async (ctx) =>
+      Ok(await getActiveContactAssignmentsUseCase(ctx.actor.userId, readRepos)),
+  });
 }
 
 export async function getMyContactAssignmentCapacity() {
-  const session = await requirePermission("capacity:read:self");
-  const result = await getLeadCapacitySnapshot(session.userId, repos);
-  if (isErr(result)) throwDomainError(result.error);
-  return result.value;
+  return runAction({
+    actionName: "contact_assignments.get_capacity",
+    permission: "capacity:read:self",
+    input: {},
+    execute: (ctx) => getContactAssignmentCapacity(ctx.actor.userId, readRepos),
+  });
 }

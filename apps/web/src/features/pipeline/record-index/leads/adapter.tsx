@@ -45,7 +45,7 @@ export function LeadsRecordIndex() {
     id: "leads",
     title: "All prospects",
     ariaLabel: "Prospectos",
-    class: `${styles.page} record-index-container-gater-for-drag-select`,
+    class: `${styles.page} record-index-container-gate-for-drag-select`,
     pickerIcon: List,
     columns: LEADS_RECORD_INDEX_COLUMNS,
     source,

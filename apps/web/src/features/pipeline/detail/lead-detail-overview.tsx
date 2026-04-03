@@ -1,14 +1,15 @@
+import type { LeadDetailOutput } from "~/server/pipeline/application/presenters/lead-detail";
+
 import { InteractionsPanel } from "./interactions/interactions-panel";
 import { LeadActionsSection } from "./lead-actions-section";
 import { LeadQuotationsSection } from "./lead-quotations-section";
 import { LeadSummarySection } from "./lead-summary-section";
 import { LeadTimelineSection } from "./lead-timeline-section";
-import type { LeadDetailData } from "./types";
 
 import styles from "./lead-detail-overview.module.css";
 
 export function LeadDetailOverview(props: {
-  data: LeadDetailData;
+  data: LeadDetailOutput;
   compact?: boolean;
   onChanged?: () => void;
 }) {

@@ -1,24 +1,26 @@
 "use server";
 
 import { validationError } from "~/lib/app-errors";
-import { LEAD_STATUS_VALUES, PRIORIDAD_VALUES } from "~/lib/db/types";
 import { completeCommercialInput } from "~/server/pipeline/application/commands/complete-commercial-input";
 import { reassignLead } from "~/server/pipeline/application/commands/reassign-lead";
 import { registerLead } from "~/server/pipeline/application/commands/register-lead";
 import { reviewLead } from "~/server/pipeline/application/commands/review-lead";
+import {
+  parseLeadPriority,
+  parseLeadStatus,
+} from "~/server/pipeline/domain/lead";
 import {
   createCompleteCommercialInputDeps,
   createRegisterLeadDeps,
   createReassignLeadDeps,
   createReviewLeadDeps,
 } from "~/server/pipeline/infrastructure/deps";
-import { runAction } from "~/server/shared/action-runtime";
-
 import {
   runPipelineCommand,
   runPipelineNotificationCommand,
   runPipelineRegistrationCommand,
-} from "../runtime/commands";
+} from "~/server/pipeline/infrastructure/runtime";
+import { runAction } from "~/server/shared/action-runtime";
 
 export async function requestLeadCreation(input: {
   ruc: string;
@@ -30,7 +32,7 @@ export async function requestLeadCreation(input: {
 
   return runAction({
     actionName: "pipeline.register_lead",
-    permission: "lead:register",
+    requireAuth: true,
     input,
     execute: (ctx) =>
       runPipelineRegistrationCommand(
@@ -59,19 +61,27 @@ export async function requestLeadReview(input: {
     throw validationError("reason is required");
   }
 
-  const status = LEAD_STATUS_VALUES.find((value) => value === input.status);
-  if (!status) {
+  const status = parseLeadStatus(input.status);
+  if (!status.ok) {
     throw validationError("invalid status");
   }
+  if (status.value === undefined) {
+    throw validationError("invalid status");
+  }
+  const reviewedStatus = status.value;
 
-  const prioridad = PRIORIDAD_VALUES.find((value) => value === input.prioridad);
-  if (!prioridad) {
+  const prioridad = parseLeadPriority(input.prioridad);
+  if (!prioridad.ok) {
     throw validationError("invalid prioridad");
   }
+  if (prioridad.value === undefined) {
+    throw validationError("invalid prioridad");
+  }
+  const reviewedPrioridad = prioridad.value;
 
   return runAction({
     actionName: "pipeline.review_lead",
-    permission: "lead:review",
+    requireAuth: true,
     input: { leadId: input.leadId },
     execute: (ctx) =>
       runPipelineNotificationCommand(
@@ -82,8 +92,8 @@ export async function requestLeadReview(input: {
             actorRole: ctx.actor.role,
             branchId: ctx.actor.branchId,
             leadId: input.leadId,
-            status,
-            prioridad,
+            status: reviewedStatus,
+            prioridad: reviewedPrioridad,
             reason: input.reason,
           }),
       ),
@@ -105,7 +115,7 @@ export async function requestLeadCommercialInputCompletion(input: {
 
   return runAction({
     actionName: "pipeline.complete_commercial_input",
-    permission: "lead:register",
+    requireAuth: true,
     input: { leadId: input.leadId },
     execute: (ctx) =>
       runPipelineNotificationCommand(
@@ -127,7 +137,7 @@ export async function requestLeadReassignment(input: {
 }) {
   return runAction({
     actionName: "pipeline.reassign_lead",
-    permission: "lead:reassign",
+    requireAuth: true,
     input,
     execute: (ctx) =>
       runPipelineCommand(createReassignLeadDeps, ({ deps, auditService }) =>

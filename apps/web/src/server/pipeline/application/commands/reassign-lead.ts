@@ -4,12 +4,13 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { ensureCanReassignLead } from "../../domain/assignment";
-import { createHistoryEvent } from "../../domain/history";
-import type { RegisterLeadDeps } from "../deps/register-lead";
+import type { ReassignLeadDeps } from "../deps/register-lead";
 import type { PipelineAuditService } from "../ports/audit-service";
+import { writeLeadReassignmentEffects } from "./register-lead-effects";
+import { ensureActiveExecutive } from "./register-lead-resolution";
 
 export async function reassignLead(
-  deps: RegisterLeadDeps,
+  deps: ReassignLeadDeps,
   auditService: PipelineAuditService,
   input: {
     actorUserId: number;
@@ -35,53 +36,25 @@ export async function reassignLead(
     return allowed;
   }
 
-  const newExecutive = await deps.users.findById(input.newExecutiveId);
-  if (!newExecutive || !newExecutive.isActive) {
-    return Err(
-      domainError(
-        "validation",
-        "invalid_executive",
-        "Target executive not found or inactive",
-      ),
-    );
+  const activeExecutive = await ensureActiveExecutive({
+    deps,
+    executiveId: input.newExecutiveId,
+  });
+  if (!activeExecutive.ok) {
+    return activeExecutive;
   }
 
-  const now = Date.now();
-  await deps.leadAssignments.deactivateActiveForLead(input.leadId);
-  await deps.leadAssignments.insert({
-    leadId: input.leadId,
+  const result = await writeLeadReassignmentEffects({
+    deps,
+    auditService,
+    lead,
+    actorUserId: input.actorUserId,
     executiveId: input.newExecutiveId,
-    assignedBy: input.actorUserId,
-    isActive: true,
-    assignedAt: now,
+    now: Date.now(),
   });
-  await deps.leads.updateById(input.leadId, {
-    executiveId: input.newExecutiveId,
-    updatedAt: now,
-  });
-  await deps.leadHistory.insert(
-    createHistoryEvent({
-      leadId: input.leadId,
-      eventType: "lead_reassigned",
-      actorUserId: input.actorUserId,
-      subjectUserId: input.newExecutiveId,
-      payload: {
-        fromExecutiveId: lead.executiveId,
-        toExecutiveId: input.newExecutiveId,
-      },
-      occurredAt: now,
-    }),
-  );
-  await auditService.log(
-    input.actorUserId,
-    "lead_reassigned",
-    "lead",
-    input.leadId,
-    {
-      from: lead.executiveId,
-      to: input.newExecutiveId,
-    },
-  );
+  if (!result.ok) {
+    return result;
+  }
 
   return Ok(undefined);
 }

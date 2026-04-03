@@ -3,18 +3,16 @@
 import { getSourcingPolicy } from "~/server/pipeline/application/queries/get-sourcing-policy";
 import { updateSourcingPolicy } from "~/server/pipeline/application/settings/update-sourcing-policy";
 import { createSourcingPolicyDeps } from "~/server/pipeline/infrastructure/deps";
+import { runPipelineCommand } from "~/server/pipeline/infrastructure/runtime";
 import { runAction } from "~/server/shared/action-runtime";
-
-import { runPipelineCommand } from "../runtime/commands";
-import { createPipelineQueryRuntime } from "../runtime/queries";
 
 export async function querySourcingPolicy(branchId: number) {
   return runAction({
     actionName: "pipeline.get_sourcing_policy",
-    permission: "capacity:policy:manage",
+    requireAuth: true,
     input: { branchId },
     execute: (ctx) =>
-      getSourcingPolicy(createPipelineQueryRuntime(createSourcingPolicyDeps), {
+      getSourcingPolicy(createSourcingPolicyDeps(), {
         actorRole: ctx.actor.role,
         branchId,
       }),
@@ -27,7 +25,7 @@ export async function saveSourcingPolicy(input: {
 }) {
   return runAction({
     actionName: "pipeline.update_sourcing_policy",
-    permission: "capacity:policy:manage",
+    requireAuth: true,
     input,
     execute: (ctx) =>
       runPipelineCommand(createSourcingPolicyDeps, ({ deps }) =>
