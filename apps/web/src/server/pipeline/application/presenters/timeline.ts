@@ -1,8 +1,7 @@
 import type { LeadHistoryEntry } from "~/server/pipeline/domain/history";
 
-import { presentTimelineItem, type TimelineItem } from "./timeline-item";
-
-export type { TimelineItem };
+import type { TimelineItem } from "../contracts/lead-detail";
+import { presentTimelineItem } from "./timeline-item";
 
 export function presentTimeline(
   events: LeadHistoryEntry[],

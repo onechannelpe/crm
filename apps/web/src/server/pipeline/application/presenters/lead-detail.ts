@@ -1,10 +1,17 @@
 import type { LeadHistoryEntry } from "../../domain/history";
 import type { Lead } from "../../domain/lead";
-import type { LeadAction } from "../policies/action-availability";
+import type {
+  LeadDetailCommercialInput,
+  LeadDetailLead,
+  LeadDetailOutput,
+  LeadDetailQuotation,
+  LeadDetailSale,
+} from "../contracts/lead-detail";
+import type { LeadAction } from "../contracts/lead-detail";
 import type { LeadCommercialInput } from "../ports/commercial-input-repository";
 import type { LeadQuotation } from "../ports/quotation-repository";
 import type { LeadSale } from "../ports/sale-repository";
-import { presentTimeline, type TimelineItem } from "./timeline";
+import { presentTimeline } from "./timeline";
 
 export type LeadDetailSource = {
   lead: Lead;
@@ -13,70 +20,6 @@ export type LeadDetailSource = {
   sale: LeadSale | undefined;
   history: LeadHistoryEntry[];
   canRevealFullTimeline: boolean;
-  availableActions: LeadAction[];
-};
-
-export type LeadDetailLead = {
-  id: number;
-  ruc: string;
-  razonSocial: string | null;
-  address: string | null;
-  executiveId: number;
-  stage: Lead["stage"];
-  status: Lead["status"];
-  prioridad: Lead["prioridad"];
-  createdAt: number;
-  updatedAt: number;
-};
-
-export type LeadDetailCommercialInput = {
-  leadId: number;
-  proveedorActual: string | null;
-  tasaActual: number | null;
-  gpv: number | null;
-  ticket: number | null;
-  abono: number | null;
-  cantidadPos: number | null;
-  updatedAt: number;
-  updatedBy: number;
-};
-
-export type LeadDetailQuotation = {
-  id: number;
-  leadId: number;
-  version: number;
-  moneda: "PEN" | "USD";
-  fee: number;
-  paybackPricing: number;
-  tarifaDebito: number;
-  tarifaCredito: number;
-  tarifaForaneo: number;
-  createdAt: number;
-  createdBy: number;
-};
-
-export type LeadDetailSale = {
-  id: number;
-  leadId: number;
-  executiveId: number;
-  proveedorActual: string;
-  tasaActual: number;
-  gpv: number;
-  ticket: number;
-  abono: number;
-  cantidadPos: number;
-  banco: string;
-  nroCuenta: string;
-  cci: string | null;
-  createdAt: number;
-};
-
-export type LeadDetailOutput = {
-  lead: LeadDetailLead;
-  commercialInput: LeadDetailCommercialInput | undefined;
-  quotations: LeadDetailQuotation[];
-  sale: LeadDetailSale | undefined;
-  timeline: TimelineItem[];
   availableActions: LeadAction[];
 };
 

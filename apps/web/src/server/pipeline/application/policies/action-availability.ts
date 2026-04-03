@@ -1,16 +1,7 @@
 import { hasPermission, type Role } from "~/lib/auth/access/rbac";
 
 import type { LeadStage } from "../../domain/lead";
-
-export type LeadAction =
-  | "log-call"
-  | "add-note"
-  | "complete-commercial-input"
-  | "create-sale"
-  | "review-lead"
-  | "create-quotation"
-  | "approve-for-sale"
-  | "reassign-lead";
+import type { LeadAction } from "../contracts/lead-detail";
 
 export function resolveAvailableActions(input: {
   actorUserId: number;

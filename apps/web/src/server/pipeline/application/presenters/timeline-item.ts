@@ -1,16 +1,8 @@
 import type { LeadHistoryEntry } from "~/server/pipeline/domain/history";
 import type { LeadCallOutcome } from "~/server/pipeline/domain/lead";
 
+import type { TimelineItem } from "../contracts/lead-detail";
 import { formatTimelineActorName } from "./timeline-actor-name";
-
-export type TimelineItem = {
-  id: string;
-  occurredAt: number;
-  kind: "call" | "note" | "assignment" | "stage-change" | "system";
-  title: string;
-  description: string;
-  actorDisplayName: string;
-};
 
 function describeCallOutcome(outcome: LeadCallOutcome | null) {
   switch (outcome) {

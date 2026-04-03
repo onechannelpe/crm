@@ -3,14 +3,13 @@
 import { validationError } from "~/lib/app-errors";
 import { addNote } from "~/server/pipeline/application/commands/add-note";
 import { logCall } from "~/server/pipeline/application/commands/log-call";
-import { createLeadInteractionDeps } from "~/server/pipeline/infrastructure/deps";
-import { runPipelineCommand } from "~/server/pipeline/infrastructure/runtime";
-import { runAction } from "~/server/shared/action-runtime";
-
 import type {
   AddLeadNoteInput,
   RecordLeadCallInput,
-} from "../contracts/lead-interactions";
+} from "~/server/pipeline/application/contracts/lead-interactions";
+import { createLeadInteractionDeps } from "~/server/pipeline/infrastructure/deps";
+import { runPipelineCommand } from "~/server/pipeline/infrastructure/runtime";
+import { runAction } from "~/server/shared/action-runtime";
 
 export async function recordLeadCall(input: RecordLeadCallInput) {
   return runAction({

@@ -1,4 +1,4 @@
-import type { LeadCallOutcome } from "~/server/pipeline/domain/lead";
+import type { LeadCallOutcome } from "../../domain/lead";
 
 export type RecordLeadCallInput = {
   leadId: number;

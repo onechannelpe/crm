@@ -1,6 +1,6 @@
 "use server";
 
-import type { LeadDetailOutput } from "~/server/pipeline/application/presenters/lead-detail";
+import type { LeadDetailOutput } from "~/server/pipeline/application/contracts/lead-detail";
 import { getLeadDetail } from "~/server/pipeline/application/queries/get-lead-detail";
 import { listLeads } from "~/server/pipeline/application/queries/list-leads";
 import {

@@ -1,7 +1,7 @@
 import { A } from "@solidjs/router";
 import { Show } from "solid-js";
 
-import type { LeadAction } from "~/server/pipeline/application/policies/action-availability";
+import type { LeadAction } from "~/server/pipeline/application/contracts/lead-detail";
 
 import styles from "./lead-detail-overview.module.css";
 
