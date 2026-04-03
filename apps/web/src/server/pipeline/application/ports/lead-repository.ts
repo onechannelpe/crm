@@ -37,5 +37,8 @@ export type LeadRepository = {
   updateById(id: number, values: LeadPatch): Promise<unknown>;
   list(filters: LeadListFilters): Promise<Lead[]>;
   count(filters: LeadListFilters): Promise<number>;
-  listForExport(filters: { executiveId?: number }): Promise<LeadExportRow[]>;
+};
+
+export type LeadExportQuery = {
+  list(filters: { executiveId?: number }): Promise<LeadExportRow[]>;
 };

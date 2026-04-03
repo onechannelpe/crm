@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  requestContactAssignmentRefill,
+  assignContacts,
   type RefillTransactionRunner,
   type RefillTxRepos,
-} from "~/server/contact-assignments/application/request-refill";
+} from "~/server/contact-assignments/application/assign-contacts";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { type LeadCandidate } from "~/server/shared/engine/lead-contract";
 import { Err, Ok, type Result } from "~/server/shared/result";
@@ -68,12 +68,12 @@ const emptyEngine = {
     Ok([]),
 };
 
-describe("requestContactAssignmentRefill", () => {
+describe("assignContacts", () => {
   it("returns 0 requested and 0 assigned when buffer is already full", async () => {
     // System default bufferTarget is read from config; we simulate full buffer
     // by setting activeAssignments to a large number.
     const repos = makeRepos(9999);
-    const result = await requestContactAssignmentRefill(
+    const result = await assignContacts(
       { actorUserId: USER_ID, branchId: BRANCH_ID },
       {
         repos,
@@ -118,7 +118,7 @@ describe("requestContactAssignmentRefill", () => {
       }): Promise<Result<LeadCandidate[], DomainError>> => Ok(candidates),
     };
 
-    const result = await requestContactAssignmentRefill(
+    const result = await assignContacts(
       { actorUserId: USER_ID, branchId: BRANCH_ID },
       { repos, runInTransaction: makeTransaction(repos), engine },
     );
@@ -153,7 +153,7 @@ describe("requestContactAssignmentRefill", () => {
       }): Promise<Result<LeadCandidate[], DomainError>> => Ok(candidates),
     };
 
-    const result = await requestContactAssignmentRefill(
+    const result = await assignContacts(
       { actorUserId: USER_ID, branchId: BRANCH_ID },
       { repos, runInTransaction: makeTransaction(repos), engine },
     );
@@ -189,7 +189,7 @@ describe("requestContactAssignmentRefill", () => {
         ),
     };
 
-    const result = await requestContactAssignmentRefill(
+    const result = await assignContacts(
       { actorUserId: USER_ID, branchId: BRANCH_ID },
       { repos, runInTransaction: makeTransaction(repos), engine },
     );

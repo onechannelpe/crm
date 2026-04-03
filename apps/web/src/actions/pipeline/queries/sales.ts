@@ -4,7 +4,7 @@ import { getSaleDetail } from "~/server/pipeline/application/queries/get-sale-de
 import { listSales } from "~/server/pipeline/application/queries/list-sales";
 import { runAction } from "~/server/shared/action-runtime";
 
-import { createPipelineQueryRuntime } from "../runtime";
+import { createPipelineQueryRuntime } from "../runtime/queries";
 
 export async function querySales(filters: { limit?: number; offset?: number }) {
   return runAction({

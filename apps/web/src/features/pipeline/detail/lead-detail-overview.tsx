@@ -1,5 +1,5 @@
+import { InteractionsPanel } from "./interactions/interactions-panel";
 import { LeadActionsSection } from "./lead-actions-section";
-import { LeadInteractionComposer } from "./lead-interaction-composer";
 import { LeadQuotationsSection } from "./lead-quotations-section";
 import { LeadSummarySection } from "./lead-summary-section";
 import { LeadTimelineSection } from "./lead-timeline-section";
@@ -15,7 +15,7 @@ export function LeadDetailOverview(props: {
   return (
     <div class={styles.content} data-compact={props.compact ? "true" : "false"}>
       <LeadSummarySection data={props.data} />
-      <LeadInteractionComposer
+      <InteractionsPanel
         leadId={props.data.lead.id}
         availableActions={props.data.availableActions}
         onChanged={props.onChanged}

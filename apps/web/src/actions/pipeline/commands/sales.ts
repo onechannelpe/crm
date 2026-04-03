@@ -4,7 +4,7 @@ import { validationError } from "~/lib/app-errors";
 import { createSale } from "~/server/pipeline/application/commands/create-sale";
 import { runAction } from "~/server/shared/action-runtime";
 
-import { runPipelineCommand } from "../runtime";
+import { runPipelineCommand } from "../runtime/commands";
 
 export async function requestSaleCreation(input: {
   leadId: number;

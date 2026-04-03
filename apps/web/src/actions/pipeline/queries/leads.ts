@@ -4,7 +4,7 @@ import { getLeadDetail } from "~/server/pipeline/application/queries/get-lead-de
 import { listLeads } from "~/server/pipeline/application/queries/list-leads";
 import { runAction } from "~/server/shared/action-runtime";
 
-import { createPipelineQueryRuntime } from "../runtime";
+import { createPipelineQueryRuntime } from "../runtime/queries";
 
 export async function queryLeadList(filters: {
   stage?: string;

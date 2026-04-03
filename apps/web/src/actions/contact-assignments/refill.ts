@@ -1,7 +1,7 @@
 "use server";
 
 import { requirePermission } from "~/lib/auth/access/session";
-import { requestContactAssignmentRefill } from "~/server/contact-assignments/application/request-refill";
+import { assignContacts } from "~/server/contact-assignments/application/assign-contacts";
 import { createContactAssignmentRefillContext } from "~/server/contact-assignments/infrastructure/refill-context";
 import { isErr } from "~/server/shared/result";
 
@@ -17,7 +17,7 @@ export async function refillContactAssignments() {
   );
   if (isErr(cmdResult)) mapContactAssignmentError(cmdResult.error);
 
-  const result = await requestContactAssignmentRefill(cmdResult.value, {
+  const result = await assignContacts(cmdResult.value, {
     ...createContactAssignmentRefillContext(),
   });
   if (isErr(result)) mapContactAssignmentError(result.error);

@@ -3,11 +3,9 @@ import { TextDecoder } from "node:util";
 import { db } from "~/lib/db/db";
 import { reviewLead } from "~/server/pipeline/application/commands/review-lead";
 import type { LeadPriority, LeadStatus } from "~/server/pipeline/domain/lead";
-import {
-  createPipelineAuditService,
-  createPipelineDeps,
-  createPipelineNotificationCenter,
-} from "~/server/pipeline/infrastructure/deps";
+import { createPipelineAuditService } from "~/server/pipeline/infrastructure/audit-log";
+import { createPipelineCommandDeps } from "~/server/pipeline/infrastructure/deps";
+import { createPipelineNotificationCenter } from "~/server/pipeline/infrastructure/notifications";
 import { createAuditService } from "~/server/shared/audit";
 import { runInPipelineTransaction } from "~/server/shared/pipeline-transaction";
 
@@ -89,7 +87,7 @@ async function runStatusImportJob(
 }> {
   const parsed = parseStatusImport(text);
   const runtime = createIntegrationRuntime(db);
-  const leads = await runtime.pipelineLeads.findByRucMany(
+  const leads = await runtime.leads.findByRucMany(
     parsed.valid.map((row) => row.ruc),
   );
   const leadByRuc = new Map(leads.map((lead) => [lead.ruc, lead]));
@@ -152,7 +150,7 @@ async function runPrioridadImportJob(
 }> {
   const parsed = parsePrioridadImport(text);
   const runtime = createIntegrationRuntime(db);
-  const leads = await runtime.pipelineLeads.findByRucMany(
+  const leads = await runtime.leads.findByRucMany(
     parsed.valid.map((row) => row.ruc),
   );
   const leadByRuc = new Map(leads.map((lead) => [lead.ruc, lead]));
@@ -217,7 +215,7 @@ function reviewImportedLead(input: {
   branchId: number;
 }) {
   return runInPipelineTransaction(async ({ executor }) => {
-    const pipelineDeps = createPipelineDeps(executor);
+    const pipelineDeps = createPipelineCommandDeps(executor);
     return reviewLead(
       pipelineDeps,
       createPipelineAuditService(pipelineDeps),

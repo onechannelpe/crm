@@ -12,7 +12,7 @@ import {
   runPipelineCommand,
   runPipelineNotificationCommand,
   runPipelineRegistrationCommand,
-} from "../runtime";
+} from "../runtime/commands";
 
 export async function requestLeadCreation(input: {
   ruc: string;

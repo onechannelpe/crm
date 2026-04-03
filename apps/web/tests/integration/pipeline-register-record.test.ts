@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { registerLead } from "../../src/server/pipeline/application/commands/register-lead";
-import { createPipelineDeps } from "../../src/server/pipeline/infrastructure/deps";
+import { createPipelineCommandDeps } from "../../src/server/pipeline/infrastructure/deps";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -28,7 +28,7 @@ describe("register lead", () => {
         executiveId: 1,
         actorUserId: 1,
         actorRole: "admin",
-        deps: createPipelineDeps(trx),
+        deps: createPipelineCommandDeps(trx),
         engineGateway: {
           enrichByRuc: async () => ({
             razonSocial: "Acme SAC",
@@ -72,7 +72,7 @@ describe("register lead", () => {
         executiveId: 1,
         actorUserId: 1,
         actorRole: "admin",
-        deps: createPipelineDeps(trx),
+        deps: createPipelineCommandDeps(trx),
         engineGateway: {
           enrichByRuc: async () => null,
         },

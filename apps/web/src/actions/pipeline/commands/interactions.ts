@@ -6,7 +6,7 @@ import { addNote } from "~/server/pipeline/application/commands/add-note";
 import { logCall } from "~/server/pipeline/application/commands/log-call";
 import { runAction } from "~/server/shared/action-runtime";
 
-import { runPipelineCommand } from "../runtime";
+import { runPipelineCommand } from "../runtime/commands";
 
 export async function recordLeadCall(input: {
   leadId: number;

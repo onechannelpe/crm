@@ -1,99 +1,43 @@
-import { serializeAuditChanges } from "~/lib/contracts/audit";
 import { db } from "~/lib/db/db";
-import { createAppNotificationsRepo } from "~/server/notifications/repos-app-notifications";
-import { createUsersRepo } from "~/server/users/repos-users";
 
-import { createAppNotificationCenter } from "../../notifications/app-center-service";
 import type { DatabaseExecutor } from "../../shared/db-executor";
 import { createAuditLogsRepo } from "../../shared/repos-audit-logs";
-import type {
-  AuditLogDraft,
-  AuditLogRepository,
-  PipelineAuditService,
-} from "../application/ports/audit-service";
-import type { PipelineEngineGateway } from "../application/ports/engine-gateway";
-import type { PipelineUserRepository } from "../application/ports/user-repository";
 import { createAssignmentRepo } from "./assignment-repo";
+import { createPipelineAuditLogRepo } from "./audit-log";
 import { createCommercialInputRepo } from "./commercial-input-repo";
 import { createEngineGateway } from "./engine-gateway";
 import { createHistoryRepo } from "./history-repo";
-import { createLeadRepo } from "./lead-repo";
+import { createLeadsRepo } from "./leads-repo";
 import { createQuotationRepo } from "./quotation-repo";
 import { createSaleRepo } from "./sale-repo";
 import { createSourcingPolicyRepo } from "./sourcing-policy-repo";
+import { createPipelineUsersRepo } from "./users-repo";
 
-export function createPipelineDeps(executor: DatabaseExecutor) {
-  const users = createUsersRepo(executor);
-  const auditLogs = createAuditLogsRepo(executor);
-
+export function createPipelineCommandDeps(executor: DatabaseExecutor) {
   return {
-    leads: createLeadRepo(executor),
+    leads: createLeadsRepo(executor),
     leadAssignments: createAssignmentRepo(executor),
     leadHistory: createHistoryRepo(executor),
     leadCommercialInputs: createCommercialInputRepo(executor),
     leadQuotations: createQuotationRepo(executor),
     leadSales: createSaleRepo(executor),
     sourcingPolicies: createSourcingPolicyRepo(executor),
-    users: {
-      async findById(id: number) {
-        const user = await users.findById(id);
-        if (!user) {
-          return undefined;
-        }
-
-        return {
-          id: user.id,
-          isActive: user.is_active === 1,
-        };
-      },
-    } satisfies PipelineUserRepository,
-    auditLogs: {
-      create(values: AuditLogDraft) {
-        return auditLogs.create({
-          user_id: values.userId,
-          action: values.action,
-          entity_type: values.entityType,
-          entity_id: values.entityId,
-          changes: values.changes,
-          created_at: values.createdAt,
-        });
-      },
-    } satisfies AuditLogRepository,
+    users: createPipelineUsersRepo(executor),
+    auditLogs: createPipelineAuditLogRepo(createAuditLogsRepo(executor)),
   };
 }
 
-export function createPipelineQueryDeps() {
-  return createPipelineDeps(db);
-}
-
-export function createPipelineAuditService(deps: {
-  auditLogs: AuditLogRepository;
-}): PipelineAuditService {
+export function createPipelineQueryDeps(executor: DatabaseExecutor = db) {
   return {
-    log(actorUserId, action, entityType, entityId, changes) {
-      return deps.auditLogs.create({
-        userId: actorUserId,
-        action,
-        entityType,
-        entityId,
-        changes: serializeAuditChanges(changes),
-        createdAt: Date.now(),
-      });
-    },
+    leads: createLeadsRepo(executor),
+    leadCommercialInputs: createCommercialInputRepo(executor),
+    leadHistory: createHistoryRepo(executor),
+    leadQuotations: createQuotationRepo(executor),
+    leadSales: createSaleRepo(executor),
+    sourcingPolicies: createSourcingPolicyRepo(executor),
   };
 }
 
-export function createPipelineNotificationCenter(
-  executor: DatabaseExecutor = db,
-) {
-  return createAppNotificationCenter({
-    repos: {
-      appNotifications: createAppNotificationsRepo(executor),
-      users: createUsersRepo(executor),
-    },
-  });
-}
-
-export function createPipelineEngineGateway(): PipelineEngineGateway {
+export function createPipelineEngineGateway() {
   return createEngineGateway();
 }

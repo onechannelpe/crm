@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { getLeadDetail } from "../../src/server/pipeline/application/queries/get-lead-detail";
 import { getSaleDetail } from "../../src/server/pipeline/application/queries/get-sale-detail";
-import { createPipelineDeps } from "../../src/server/pipeline/infrastructure/deps";
+import { createPipelineQueryDeps } from "../../src/server/pipeline/infrastructure/deps";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -37,7 +37,7 @@ describe("pipeline read access", () => {
       })
       .execute();
 
-    const result = await getLeadDetail(createPipelineDeps(ctx.db), {
+    const result = await getLeadDetail(createPipelineQueryDeps(ctx.db), {
       leadId: 11,
       actorUserId: 2,
       actorRole: "back_office",
@@ -67,7 +67,7 @@ describe("pipeline read access", () => {
       })
       .execute();
 
-    const result = await getLeadDetail(createPipelineDeps(ctx.db), {
+    const result = await getLeadDetail(createPipelineQueryDeps(ctx.db), {
       leadId: 12,
       actorUserId: 3,
       actorRole: "executive",
@@ -115,7 +115,7 @@ describe("pipeline read access", () => {
       })
       .execute();
 
-    const result = await getSaleDetail(createPipelineDeps(ctx.db), {
+    const result = await getSaleDetail(createPipelineQueryDeps(ctx.db), {
       saleId: 21,
       actorUserId: 1,
       actorRole: "executive",
@@ -163,7 +163,7 @@ describe("pipeline read access", () => {
       })
       .execute();
 
-    const result = await getSaleDetail(createPipelineDeps(ctx.db), {
+    const result = await getSaleDetail(createPipelineQueryDeps(ctx.db), {
       saleId: 22,
       actorUserId: 3,
       actorRole: "executive",

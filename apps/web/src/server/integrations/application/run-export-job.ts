@@ -26,7 +26,7 @@ export function createExportBatchRunner() {
           if (job.type !== "export") return false;
 
           try {
-            const leads = await runtime.pipelineLeads.listForExport({});
+            const leads = await runtime.leadExportQuery.list({});
             const csv = buildLeadExportCsv(
               leads.map((lead) => ({
                 ruc: lead.ruc,

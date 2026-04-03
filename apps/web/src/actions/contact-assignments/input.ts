@@ -1,4 +1,4 @@
-import type { RequestContactAssignmentRefillCommand } from "~/server/contact-assignments/application/request-refill";
+import type { RequestContactAssignmentRefillCommand } from "~/server/contact-assignments/application/assign-contacts";
 import { domainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
