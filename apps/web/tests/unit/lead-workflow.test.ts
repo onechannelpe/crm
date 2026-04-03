@@ -63,6 +63,11 @@ function makeTransaction(repos: RefillTxRepos): RefillTransactionRunner {
   return async <T>(op: (r: RefillTxRepos) => Promise<T>) => op(repos);
 }
 
+const emptyEngine = {
+  requestCandidates: async (): Promise<Result<LeadCandidate[], DomainError>> =>
+    Ok([]),
+};
+
 describe("requestContactAssignmentRefill", () => {
   it("returns 0 requested and 0 assigned when buffer is already full", async () => {
     // System default bufferTarget is read from config; we simulate full buffer
@@ -70,7 +75,11 @@ describe("requestContactAssignmentRefill", () => {
     const repos = makeRepos(9999);
     const result = await requestContactAssignmentRefill(
       { actorUserId: USER_ID, branchId: BRANCH_ID },
-      { repos, runInTransaction: makeTransaction(repos) },
+      {
+        repos,
+        runInTransaction: makeTransaction(repos),
+        engine: emptyEngine,
+      },
     );
 
     expect(result.ok).toBe(true);

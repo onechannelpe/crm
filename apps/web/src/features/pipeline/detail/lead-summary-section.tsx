@@ -2,7 +2,7 @@ import Building2 from "~/components/icons/building-2";
 import { Badge } from "~/components/ui/display/badge";
 import { formatDateTime } from "~/lib/utils";
 
-import type { LeadDetailData } from "./lead-detail-overview";
+import type { LeadDetailData } from "./types";
 
 import styles from "./lead-detail-overview.module.css";
 

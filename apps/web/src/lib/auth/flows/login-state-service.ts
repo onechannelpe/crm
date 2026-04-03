@@ -1,16 +1,23 @@
 import { config } from "~/lib/config";
 import { assertPositiveInt } from "~/lib/contracts/guards";
-import type { Repositories } from "~/server/shared/registry";
+import type { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
+import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
+import type { createUsersRepo } from "~/server/users/repos-users";
+import type { createWebauthnChallengesRepo } from "~/server/users/repos-webauthn-challenges";
 
 import { deleteLoginFlow } from "../login-flow/shared";
 import { createPasskeyLoginStateService } from "../passkey/service/login-state";
 import { createPasskeyProvider } from "../providers/passkey-provider";
 import type { LoginFlowState, TotpLoginFlowState } from "./login-types";
 
-type LoginStateDeps = Pick<
-  Repositories,
-  "loginFlows" | "passkeys" | "webauthnChallenges" | "users" | "auditLogs"
->;
+type LoginStateDeps = {
+  loginFlows: ReturnType<typeof createLoginFlowsRepo>;
+  passkeys: ReturnType<typeof createPasskeysRepo>;
+  webauthnChallenges: ReturnType<typeof createWebauthnChallengesRepo>;
+  users: ReturnType<typeof createUsersRepo>;
+  auditLogs: ReturnType<typeof createAuditLogsRepo>;
+};
 
 async function readActiveLoginFlow(
   flowId: number,
@@ -54,7 +61,7 @@ export async function createTotpLoginFlow(
   identifier: string,
   userId: number,
   primaryAuthMethod: "password" | "google" | "passkey",
-  deps: Pick<Repositories, "loginFlows">,
+  deps: { loginFlows: ReturnType<typeof createLoginFlowsRepo> },
 ): Promise<TotpLoginFlowState> {
   const flowId = await deps.loginFlows.create({
     identifier,

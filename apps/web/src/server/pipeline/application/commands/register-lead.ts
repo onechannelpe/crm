@@ -2,15 +2,13 @@ import { hasPermission, type Role } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, type Result } from "~/server/shared/result";
 
-import { createLeadDraft } from "../../domain/lead";
-import type {
-  LeadAssignmentRepository,
-  LeadHistoryRepository,
-  LeadRepository,
-  PipelineAuditService,
-  PipelineEngineGateway,
-  PipelineUserRepository,
-} from "../ports";
+import { createLeadDraft, normalizeLeadRuc } from "../../domain/lead";
+import type { LeadAssignmentRepository } from "../ports/assignment-repository";
+import type { PipelineAuditService } from "../ports/audit-service";
+import type { PipelineEngineGateway } from "../ports/engine-gateway";
+import type { LeadHistoryRepository } from "../ports/history-repository";
+import type { LeadRepository } from "../ports/lead-repository";
+import type { PipelineUserRepository } from "../ports/user-repository";
 import {
   ensureActiveExecutive,
   resolveLeadRegistration,
@@ -40,22 +38,9 @@ export async function registerLead(input: {
     return Err(domainError("forbidden", "forbidden", "Access denied"));
   }
 
-  const ruc = input.ruc.trim();
-  if (!ruc) {
-    return Err(domainError("validation", "invalid_ruc", "RUC is required"));
-  }
-
-  const enrichment = await input.engineGateway.enrichByRuc(ruc);
-  const now = Date.now();
-  const draft = createLeadDraft({
-    ruc,
-    razonSocial: enrichment?.razonSocial ?? null,
-    address: enrichment?.address ?? null,
-    executiveId: input.executiveId,
-    now,
-  });
-  if (!draft.ok) {
-    return draft;
+  const ruc = normalizeLeadRuc(input.ruc);
+  if (!ruc.ok) {
+    return ruc;
   }
 
   const activeExecutive = await ensureActiveExecutive({
@@ -68,13 +53,14 @@ export async function registerLead(input: {
 
   const resolution = await resolveLeadRegistration({
     deps: input.deps,
-    ruc,
+    ruc: ruc.value,
     executiveId: input.executiveId,
   });
   if (!resolution.ok) {
     return resolution;
   }
 
+  const now = Date.now();
   if (resolution.value.kind === "reassign") {
     return reassignExistingLeadOnRegistration({
       deps: input.deps,
@@ -84,6 +70,18 @@ export async function registerLead(input: {
       lead: resolution.value.lead,
       now,
     });
+  }
+
+  const enrichment = await input.engineGateway.enrichByRuc(ruc.value);
+  const draft = createLeadDraft({
+    ruc: ruc.value,
+    razonSocial: enrichment?.razonSocial ?? null,
+    address: enrichment?.address ?? null,
+    executiveId: input.executiveId,
+    now,
+  });
+  if (!draft.ok) {
+    return draft;
   }
 
   return createRegisteredLead({

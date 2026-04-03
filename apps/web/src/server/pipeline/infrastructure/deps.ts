@@ -10,9 +10,9 @@ import type {
   AuditLogDraft,
   AuditLogRepository,
   PipelineAuditService,
-  PipelineEngineGateway,
-  PipelineUserRepository,
-} from "../application/ports";
+} from "../application/ports/audit-service";
+import type { PipelineEngineGateway } from "../application/ports/engine-gateway";
+import type { PipelineUserRepository } from "../application/ports/user-repository";
 import { createAssignmentRepo } from "./assignment-repo";
 import { createCommercialInputRepo } from "./commercial-input-repo";
 import { createEngineGateway } from "./engine-gateway";

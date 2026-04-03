@@ -6,15 +6,20 @@ import { generateUsername } from "~/lib/users/generate-username";
 import { createAuditService } from "~/server/shared/audit";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
-import type { Repositories } from "~/server/shared/registry";
+import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import { Err, Ok, type Result } from "~/server/shared/result";
+import type { createTeamsRepo } from "~/server/users/repos-teams";
+import type { createUserInvitesRepo } from "~/server/users/repos-user-invites";
+import type { createUsersRepo } from "~/server/users/repos-users";
 
 const DEFAULT_INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
-type ProvisioningRepos = Pick<
-  Repositories,
-  "users" | "teams" | "userInvites" | "auditLogs"
->;
+type ProvisioningRepos = {
+  users: ReturnType<typeof createUsersRepo>;
+  teams: ReturnType<typeof createTeamsRepo>;
+  userInvites: ReturnType<typeof createUserInvitesRepo>;
+  auditLogs: ReturnType<typeof createAuditLogsRepo>;
+};
 
 export interface PendingBranchInvite {
   inviteId: number;

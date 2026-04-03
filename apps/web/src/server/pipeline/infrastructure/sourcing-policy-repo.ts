@@ -1,10 +1,7 @@
 import type { Insertable, Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
-import type {
-  LeadSourcingPolicy,
-  LeadSourcingPolicyDraft,
-} from "~/server/pipeline/application/ports";
+import type { LeadSourcingPolicy } from "~/server/pipeline/application/ports/sourcing-policy-repository";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 export type SourcingPolicyRow = Selectable<Database["lead_sourcing_policies"]>;
@@ -35,7 +32,7 @@ export function createSourcingPolicyRepo(db: DatabaseExecutor) {
       return row ? toLeadSourcingPolicy(row) : undefined;
     },
 
-    upsert(values: LeadSourcingPolicyDraft) {
+    upsert(values: LeadSourcingPolicy) {
       return db
         .insertInto("lead_sourcing_policies")
         .values({

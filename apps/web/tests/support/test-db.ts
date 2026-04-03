@@ -8,7 +8,10 @@ import { computeHash, writeStoredHash } from "../../src/lib/db/migration-hash";
 import { SCHEMA_MODULES, SEED_MODULES } from "../../src/lib/db/schema";
 import type { Database } from "../../src/lib/db/types";
 import { createSalesRecordsWorkflowService } from "../../src/server/sales/records-service";
-import { createRepositories } from "../../src/server/shared/registry";
+import {
+  createTestRepositories,
+  type TestRepositories,
+} from "./test-repositories";
 
 const ARTIFACT_DIR = join(process.cwd(), ".vitest-db");
 
@@ -180,7 +183,7 @@ export interface TestDbContext {
   dbPath: string;
   storageRoot: string;
   db: Kysely<Database>;
-  repos: ReturnType<typeof createRepositories>;
+  repos: TestRepositories;
   salesRecords: ReturnType<typeof createSalesRecordsWorkflowService>;
 }
 
@@ -212,11 +215,13 @@ export async function createIsolatedTestDb(
   await writeStoredHash(db, hash);
 
   await seedTemplate(db);
-  const repos = createRepositories(db);
+  const repos = createTestRepositories(db);
   const salesRecords = createSalesRecordsWorkflowService(repos, (operation) =>
     db
       .transaction()
-      .execute((transactionDb) => operation(createRepositories(transactionDb))),
+      .execute((transactionDb) =>
+        operation(createTestRepositories(transactionDb)),
+      ),
   );
 
   return {

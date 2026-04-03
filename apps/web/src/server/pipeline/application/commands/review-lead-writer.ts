@@ -1,10 +1,8 @@
 import { createHistoryEvent } from "../../domain/history";
 import type { Lead, LeadPriority, LeadStatus } from "../../domain/lead";
-import type {
-  LeadHistoryRepository,
-  LeadRepository,
-  PipelineAuditService,
-} from "../ports";
+import type { PipelineAuditService } from "../ports/audit-service";
+import type { LeadHistoryRepository } from "../ports/history-repository";
+import type { LeadRepository } from "../ports/lead-repository";
 
 type ReviewLeadWriterDeps = {
   leads: LeadRepository;

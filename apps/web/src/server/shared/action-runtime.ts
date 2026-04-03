@@ -11,10 +11,12 @@ import { assertRecentStrongAuth } from "~/lib/auth/security/step-up";
 import { getErrorMessage } from "~/lib/errors";
 import { getRequestContext } from "~/lib/http/request-context";
 import { getActionRequestContext } from "~/lib/observability/context";
-import { observabilityService } from "~/server/shared/context";
+import { getObservabilityRuntime } from "~/server/observability/runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import { isErr, type Result } from "~/server/shared/result";
 import { throwDomainError } from "~/server/shared/throw-domain-error";
+
+const { observabilityService } = getObservabilityRuntime();
 
 export interface AppContext {
   actor: SessionData;

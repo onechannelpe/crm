@@ -4,10 +4,18 @@ import { throwDomainError } from "~/actions/throw-domain-error";
 import { requirePermission } from "~/lib/auth/access/session";
 import type { ActionSuccess } from "~/lib/contracts/common";
 import { assertPositiveInt } from "~/lib/contracts/guards";
+import { db } from "~/lib/db/db";
+import { createContactAssignmentsRepo } from "~/server/contacts/repos-assignments";
+import { createContactsRepo } from "~/server/contacts/repos-contacts";
+import { createOrganizationsRepo } from "~/server/contacts/repos-organizations";
+import { createProductsRepo } from "~/server/inventory/repos-products";
 import { computeClientCompletenessScore } from "~/server/sales/completeness";
 import { createSalesRecordsWorkflowService } from "~/server/sales/records-service";
-import { runInRepositoryTransaction } from "~/server/shared/context";
+import { createSalesRecordsRepo } from "~/server/sales/repos-sales-records";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { domainError } from "~/server/shared/domain-error";
+import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import { createInteractionLogsRepo } from "~/server/shared/repos-interaction-logs";
 import { isErr } from "~/server/shared/result";
 
 interface CompleteContactAssignmentCallResult extends ActionSuccess {
@@ -21,6 +29,18 @@ function parseCompleteContactAssignmentCallInput(input: {
   return {
     assignmentId: assertPositiveInt(input.assignmentId, "assignmentId"),
     contactId: assertPositiveInt(input.contactId, "contactId"),
+  };
+}
+
+function createContactAssignmentInteractionRepos(executor: DatabaseExecutor) {
+  return {
+    auditLogs: createAuditLogsRepo(executor),
+    contactAssignments: createContactAssignmentsRepo(executor),
+    contacts: createContactsRepo(executor),
+    interactionLogs: createInteractionLogsRepo(executor),
+    organizations: createOrganizationsRepo(executor),
+    products: createProductsRepo(executor),
+    salesRecords: createSalesRecordsRepo(executor),
   };
 }
 
@@ -39,8 +59,12 @@ export async function completeContactAssignmentCall(
     await requirePermission("sales:create");
   }
 
-  const draftRecordId = await runInRepositoryTransaction(
-    async (transactionRepos) => {
+  const draftRecordId = await db
+    .transaction()
+    .execute(async (transactionDb) => {
+      const transactionRepos =
+        createContactAssignmentInteractionRepos(transactionDb);
+
       const assignment =
         await transactionRepos.contactAssignments.findActiveByIdForUser(
           parsedInput.assignmentId,
@@ -118,8 +142,7 @@ export async function completeContactAssignmentCall(
       });
 
       return nextDraftRecordId;
-    },
-  );
+    });
 
   return { success: true, draftRecordId };
 }

@@ -1,8 +1,6 @@
-import type {
-  PipelineAuditService,
-  PipelineEngineGateway,
-  PipelineNotificationCenter,
-} from "~/server/pipeline/application/ports";
+import type { PipelineAuditService } from "~/server/pipeline/application/ports/audit-service";
+import type { PipelineEngineGateway } from "~/server/pipeline/application/ports/engine-gateway";
+import type { PipelineNotificationCenter } from "~/server/pipeline/application/ports/notification-center";
 import {
   createPipelineAuditService,
   createPipelineDeps,

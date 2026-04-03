@@ -1,4 +1,4 @@
-import type { RecordIndexSortDefinition } from "../../model/sort";
+import type { RecordIndexSortDefinition } from "../../../record-index/model/sort";
 import type { LeadRow } from "./columns";
 
 export type LeadSortKey =

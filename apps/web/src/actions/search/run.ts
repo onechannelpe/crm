@@ -1,13 +1,38 @@
 "use server";
 
 import { requirePermission } from "~/lib/auth/access/session";
+import { db } from "~/lib/db/db";
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
+import {
+  createSearchCapacityGrantsRepo,
+  createSearchUsageCommitsRepo,
+  createSearchUsageReservationsRepo,
+} from "~/server/capacity-usage/repos";
+import {
+  createSearchPolicyDefaultsRepo,
+  createSearchPolicyOverridesRepo,
+} from "~/server/capacity/infrastructure/policy-repos";
 import { runDirectSearch } from "~/server/search-workflow/run-search";
-import { rateLimitDeps, repos } from "~/server/shared/context";
+import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
+import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import { isErr } from "~/server/shared/result";
+import { createUsersRepo } from "~/server/users/repos-users";
 
 import { mapSearchError } from "./errors";
 import { parseSearchCommand } from "./input";
+
+const repos = {
+  users: createUsersRepo(db),
+  searchPolicyDefaults: createSearchPolicyDefaultsRepo(db),
+  searchPolicyOverrides: createSearchPolicyOverridesRepo(db),
+  searchCapacityGrants: createSearchCapacityGrantsRepo(db),
+  searchUsageReservations: createSearchUsageReservationsRepo(db),
+  searchUsageCommits: createSearchUsageCommitsRepo(db),
+};
+const rateLimitDeps = {
+  actionRateLimits: createActionRateLimitsRepo(db),
+  auditLogs: createAuditLogsRepo(db),
+};
 
 export async function searchDirect(
   type: unknown,

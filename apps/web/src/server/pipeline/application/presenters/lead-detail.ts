@@ -7,7 +7,9 @@ import {
   resolveAvailableActions,
   type LeadAction,
 } from "../policies/action-availability";
-import type { LeadCommercialInput, LeadQuotation, LeadSale } from "../ports";
+import type { LeadCommercialInput } from "../ports/commercial-input-repository";
+import type { LeadQuotation } from "../ports/quotation-repository";
+import type { LeadSale } from "../ports/sale-repository";
 import { presentTimeline, type TimelineItem } from "./timeline";
 
 export type LeadDetailSource = {

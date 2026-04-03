@@ -5,7 +5,8 @@ import {
   decideRegistrationConflict,
   ensureCanReassignLead,
 } from "../../domain/assignment";
-import type { LeadRepository, PipelineUserRepository } from "../ports";
+import type { LeadRepository } from "../ports/lead-repository";
+import type { PipelineUserRepository } from "../ports/user-repository";
 
 type EnsureActiveExecutiveDeps = {
   users: PipelineUserRepository;

@@ -1,14 +1,28 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import { issueSessionTransition } from "~/lib/auth/session/session-transition";
+import { db } from "~/lib/db/db";
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
-import {
-  rateLimitDeps,
-  repos,
-  runInRepositoryTransaction,
-} from "~/server/shared/context";
+import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
+import { createSessionRepository } from "~/server/sessions/repos-sessions";
+import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import { createTeamsRepo } from "~/server/users/repos-teams";
+import { createUserInvitesRepo } from "~/server/users/repos-user-invites";
+import { createUsersRepo } from "~/server/users/repos-users";
 import { createUserProvisioningService } from "~/server/users/service-user-provisioning";
 
+function createTeamInviteRepos(currentDb: typeof db) {
+  return {
+    teams: createTeamsRepo(currentDb),
+    userInvites: createUserInvitesRepo(currentDb),
+    users: createUsersRepo(currentDb),
+    sessions: createSessionRepository(currentDb),
+    auditLogs: createAuditLogsRepo(currentDb),
+  };
+}
+
 export function createTeamInviteContext() {
+  const repos = createTeamInviteRepos(db);
+
   return {
     repos: {
       teams: repos.teams,
@@ -17,11 +31,20 @@ export function createTeamInviteContext() {
     },
     createProvisioningService() {
       return createUserProvisioningService(repos, {
-        runInTransaction: runInRepositoryTransaction,
+        runInTransaction(operation) {
+          return db
+            .transaction()
+            .execute((transactionDb) =>
+              operation(createTeamInviteRepos(transactionDb)),
+            );
+        },
       });
     },
     async enforceInviteCreateRateLimit(userId: number) {
-      await checkActionRateLimit("team.invite.create", userId, rateLimitDeps);
+      await checkActionRateLimit("team.invite.create", userId, {
+        actionRateLimits: createActionRateLimitsRepo(db),
+        auditLogs: repos.auditLogs,
+      });
     },
     issuePreAuthSession(input: {
       user: {

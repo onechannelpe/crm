@@ -4,7 +4,7 @@ import type { Database } from "~/lib/db/types";
 import type {
   LeadAssignment,
   LeadAssignmentDraft,
-} from "~/server/pipeline/application/ports";
+} from "~/server/pipeline/application/ports/assignment-repository";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 type AssignmentRow = Selectable<Database["pipeline_lead_assignments"]>;

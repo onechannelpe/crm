@@ -2,13 +2,13 @@ import { afterAll, beforeAll, bench, describe } from "vitest";
 
 import { requestContactAssignmentRefill } from "~/server/contact-assignments/application/request-refill";
 import type { EngineClient } from "~/server/shared/engine/client";
-import { createRepositories } from "~/server/shared/registry";
 
 import {
   cleanupTestDb,
   createIsolatedTestDb,
   type TestDbContext,
 } from "../../support/test-db";
+import { createTestRepositories } from "../../support/test-repositories";
 import { fixedIterations } from "../_shared/options";
 import { takeFromPool } from "../_shared/pool";
 import { seedLeadsRequestFixtures, USER_POOL_SIZE } from "./fixtures";
@@ -52,7 +52,7 @@ describe("lead refill action benchmark", () => {
           runInTransaction: (operation) =>
             ctx!.db
               .transaction()
-              .execute((txDb) => operation(createRepositories(txDb))),
+              .execute((txDb) => operation(createTestRepositories(txDb))),
           engine: engine!,
         },
       );

@@ -1,4 +1,4 @@
-import type { RecordIndexFilterDefinition } from "../../model/filter";
+import type { RecordIndexFilterDefinition } from "../../../record-index/model/filter";
 import type { LeadRow } from "./columns";
 
 export const LEADS_RECORD_INDEX_FILTERS = [

@@ -1,4 +1,4 @@
-import type { PipelineNotificationCenter } from "./ports";
+import type { PipelineNotificationCenter } from "./ports/notification-center";
 
 export async function notifyExecutiveInputRequired(input: {
   center: PipelineNotificationCenter;

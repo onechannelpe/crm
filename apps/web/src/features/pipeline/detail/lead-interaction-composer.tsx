@@ -7,8 +7,8 @@ import {
 import { Button } from "~/components/ui/input/button";
 import { Select } from "~/components/ui/input/select";
 import { Textarea } from "~/components/ui/input/textarea";
-import type { LeadAction } from "~/server/pipeline/application/policies/action-availability";
-import type { LeadCallOutcome } from "~/server/pipeline/domain/lead";
+
+import type { LeadAction, LeadCallOutcome } from "./types";
 
 import styles from "./lead-detail-overview.module.css";
 

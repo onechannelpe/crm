@@ -2,20 +2,23 @@ import {
   getStrongAuthStatus,
   requiresStrongAuthRole,
 } from "~/lib/auth/security/strong-auth-status";
+import type { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
+import type { createNotificationContactsRepo } from "~/server/notifications/repos-contacts";
+import type { createNotificationPreferencesRepo } from "~/server/notifications/repos-preferences";
 import type { UserId } from "~/server/shared/ids";
-import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
+import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
+import type { createUsersRepo } from "~/server/users/repos-users";
 
 import { bootstrapUserNotifications } from "./service-user-notification-bootstrap";
 
-type OnboardingRepos = Pick<
-  Repositories,
-  | "users"
-  | "passkeys"
-  | "userTotpFactors"
-  | "notificationContacts"
-  | "notificationPreferences"
->;
+type OnboardingRepos = {
+  users: ReturnType<typeof createUsersRepo>;
+  passkeys: ReturnType<typeof createPasskeysRepo>;
+  userTotpFactors: ReturnType<typeof createUserTotpFactorsRepo>;
+  notificationContacts: ReturnType<typeof createNotificationContactsRepo>;
+  notificationPreferences: ReturnType<typeof createNotificationPreferencesRepo>;
+};
 
 export type CompleteOnboardingError =
   | { kind: "not_found"; code: "user_not_found"; message: string }

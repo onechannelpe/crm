@@ -1,10 +1,7 @@
 import type { Insertable, Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
-import type {
-  LeadQuotation,
-  LeadQuotationDraft,
-} from "~/server/pipeline/application/ports";
+import type { LeadQuotation } from "~/server/pipeline/application/ports/quotation-repository";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 export type QuotationRow = Selectable<Database["pipeline_quotations"]>;
@@ -28,7 +25,7 @@ function toLeadQuotation(row: QuotationRow): LeadQuotation {
 
 export function createQuotationRepo(db: DatabaseExecutor) {
   return {
-    async insert(values: LeadQuotationDraft): Promise<number> {
+    async insert(values: Omit<LeadQuotation, "id">): Promise<number> {
       const result = await db
         .insertInto("pipeline_quotations")
         .values({

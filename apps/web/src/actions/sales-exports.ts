@@ -32,7 +32,7 @@ export async function listSalesExportJobs(
   limit = 20,
 ): Promise<SalesExportJob[]> {
   const safeLimit = parseSalesExportListLimit(limit);
-  const runtime = await createSalesExportRuntime();
+  const runtime = createSalesExportRuntime();
   return runAction({
     actionName: "sales_exports.list",
     permission: "sales:review",
@@ -48,7 +48,7 @@ export async function getSalesExportJob(
   jobId: number,
 ): Promise<SalesExportJob | null> {
   const safeJobId = parseSalesExportJobId(jobId);
-  const runtime = await createSalesExportRuntime();
+  const runtime = createSalesExportRuntime();
   return runAction({
     actionName: "sales_exports.job.read",
     permission: "sales:review",
@@ -64,7 +64,7 @@ export async function listSalesExportDownloads(
   jobId: number,
 ): Promise<SalesExportDownload[]> {
   const safeJobId = parseSalesExportJobId(jobId);
-  const runtime = await createSalesExportRuntime();
+  const runtime = createSalesExportRuntime();
   return runAction({
     actionName: "sales_exports.downloads.list",
     permission: "sales:review",
@@ -86,7 +86,7 @@ export async function requestSalesExport(
   if (!isSalesExportFormat(format)) {
     throw validationError("format is invalid");
   }
-  const runtime = await createSalesExportRuntime();
+  const runtime = createSalesExportRuntime();
   return runAction({
     actionName: "sales_exports.request",
     permission: "sales:review",

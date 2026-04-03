@@ -1,14 +1,17 @@
 "use server";
 
 import { requirePermission } from "~/lib/auth/access/session";
-import { repos } from "~/server/shared/context";
+import { db } from "~/lib/db/db";
+import { createInventoryRepo } from "~/server/inventory/repos";
+
+const inventory = createInventoryRepo(db);
 
 type InventoryItemWithProduct = Awaited<
-  ReturnType<typeof repos.inventory.findAllWithProduct>
+  ReturnType<typeof inventory.findAllWithProduct>
 >[number];
 
 export async function getInventoryItems(): Promise<InventoryItemWithProduct[]> {
   await requirePermission("inventory:read");
 
-  return repos.inventory.findAllWithProduct();
+  return inventory.findAllWithProduct();
 }

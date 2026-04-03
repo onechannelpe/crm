@@ -1,10 +1,7 @@
 import type { Insertable, Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
-import type {
-  LeadCommercialInput,
-  LeadCommercialInputDraft,
-} from "~/server/pipeline/application/ports";
+import type { LeadCommercialInput } from "~/server/pipeline/application/ports/commercial-input-repository";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 export type CommercialInputRow = Selectable<
@@ -42,7 +39,7 @@ export function createCommercialInputRepo(db: DatabaseExecutor) {
       return row ? toLeadCommercialInput(row) : undefined;
     },
 
-    upsert(values: LeadCommercialInputDraft) {
+    upsert(values: LeadCommercialInput) {
       return db
         .insertInto("pipeline_lead_commercial_inputs")
         .values({

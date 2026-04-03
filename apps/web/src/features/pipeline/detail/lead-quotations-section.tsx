@@ -2,7 +2,7 @@ import { For, Show } from "solid-js";
 
 import { formatDateTime } from "~/lib/utils";
 
-import type { LeadDetailData } from "./lead-detail-overview";
+import type { LeadDetailData } from "./types";
 
 import styles from "./lead-detail-overview.module.css";
 

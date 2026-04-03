@@ -3,7 +3,7 @@ import {
   notifyExecutiveInputRequired,
   notifyReadyForQuotation,
 } from "../notifications";
-import type { PipelineNotificationCenter } from "../ports";
+import type { PipelineNotificationCenter } from "../ports/notification-center";
 
 export async function notifyLeadReviewOutcome(input: {
   notificationCenter: PipelineNotificationCenter;

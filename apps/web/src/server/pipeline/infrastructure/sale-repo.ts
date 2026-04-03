@@ -1,10 +1,7 @@
 import type { Insertable, Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
-import type {
-  LeadSale,
-  LeadSaleDraft,
-} from "~/server/pipeline/application/ports";
+import type { LeadSale } from "~/server/pipeline/application/ports/sale-repository";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 export type SaleRow = Selectable<Database["pipeline_sales"]>;
@@ -30,7 +27,7 @@ function toLeadSale(row: SaleRow): LeadSale {
 
 export function createSaleRepo(db: DatabaseExecutor) {
   return {
-    async insert(values: LeadSaleDraft): Promise<number> {
+    async insert(values: Omit<LeadSale, "id">): Promise<number> {
       const result = await db
         .insertInto("pipeline_sales")
         .values({

@@ -11,11 +11,14 @@ import {
   assertFinitePositive,
   assertPositiveInt,
 } from "~/lib/contracts/guards";
-import { repos } from "~/server/shared/context";
+import { db } from "~/lib/db/db";
+import { createProductsRepo } from "~/server/inventory/repos-products";
+import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 
-type ProductCatalogItem = Awaited<
-  ReturnType<typeof repos.products.findAll>
->[number];
+const products = createProductsRepo(db);
+const auditLogs = createAuditLogsRepo(db);
+
+type ProductCatalogItem = Awaited<ReturnType<typeof products.findAll>>[number];
 
 function parseUpdateProductPricingInput(input: {
   productId: number;
@@ -31,7 +34,7 @@ function parseUpdateProductPricingInput(input: {
 
 export async function getProductCatalog(): Promise<ProductCatalogItem[]> {
   await requirePermission("admin:manage");
-  return repos.products.findAll();
+  return products.findAll();
 }
 
 export async function updateProductPricing(
@@ -46,10 +49,10 @@ export async function updateProductPricing(
   });
   const session = await requirePermission("admin:manage");
   assertRecentStrongAuth(session);
-  const product = await repos.products.findById(parsedInput.productId);
+  const product = await products.findById(parsedInput.productId);
   if (!product) throw notFoundError("Product not found");
 
-  await repos.products.update(parsedInput.productId, {
+  await products.update(parsedInput.productId, {
     price: parsedInput.price,
     is_active: parsedInput.isActive ? 1 : 0,
   });
@@ -60,7 +63,7 @@ export async function updateProductPricing(
       is_active: parsedInput.isActive ? 1 : 0,
     },
   };
-  await repos.auditLogs.create({
+  await auditLogs.create({
     user_id: session.userId,
     action: "product_updated",
     entity_type: "product",

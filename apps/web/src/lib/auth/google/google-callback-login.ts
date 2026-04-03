@@ -1,24 +1,35 @@
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
-import type { Repositories } from "~/server/shared/registry";
+import type { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
+import type { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
+import type { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
+import type { createOAuthAccountsRepo } from "~/server/auth/repos-oauth-accounts";
+import type {
+  createUserTotpFactorsRepo,
+  createUserTotpRecoveryCodesRepo,
+} from "~/server/auth/repos-user-totp-factors";
+import type { createSessionRepository } from "~/server/sessions/repos-sessions";
+import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
+import type { createUsersRepo } from "~/server/users/repos-users";
+import type { createWebauthnChallengesRepo } from "~/server/users/repos-webauthn-challenges";
 
 import { submitGoogleLogin } from "../flows/primary-login-service";
 import { authenticateGoogleAuthorizationCode } from "./google-oauth";
 
-type GoogleCallbackDeps = Pick<
-  Repositories,
-  | "oauthAccounts"
-  | "users"
-  | "loginFlows"
-  | "sessions"
-  | "auditLogs"
-  | "authThrottle"
-  | "authEvents"
-  | "userTotpFactors"
-  | "userTotpRecoveryCodes"
-  | "passkeys"
-  | "webauthnChallenges"
->;
+type GoogleCallbackDeps = {
+  oauthAccounts: ReturnType<typeof createOAuthAccountsRepo>;
+  users: ReturnType<typeof createUsersRepo>;
+  loginFlows: ReturnType<typeof createLoginFlowsRepo>;
+  sessions: ReturnType<typeof createSessionRepository>;
+  auditLogs: ReturnType<typeof createAuditLogsRepo>;
+  authThrottle: ReturnType<typeof createAuthThrottleRepo>;
+  authEvents: ReturnType<typeof createAuthEventsRepo>;
+  userTotpFactors: ReturnType<typeof createUserTotpFactorsRepo>;
+  userTotpRecoveryCodes: ReturnType<typeof createUserTotpRecoveryCodesRepo>;
+  passkeys: ReturnType<typeof createPasskeysRepo>;
+  webauthnChallenges: ReturnType<typeof createWebauthnChallengesRepo>;
+};
 
 export type CompleteGoogleOAuthCallbackError =
   | { kind: "bad_request" }

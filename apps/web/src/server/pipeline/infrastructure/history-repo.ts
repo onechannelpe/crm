@@ -6,6 +6,8 @@ import {
   type LeadHistoryEventDraft,
 } from "~/server/pipeline/domain/history";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { DomainError } from "~/server/shared/domain-error";
+import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { toHistoryEntry } from "./history-entry-parser";
 
@@ -29,7 +31,9 @@ export function createHistoryRepo(db: DatabaseExecutor) {
       return Number(result.insertId);
     },
 
-    async listByLeadId(leadId: number): Promise<LeadHistoryEntry[]> {
+    async listByLeadId(
+      leadId: number,
+    ): Promise<Result<LeadHistoryEntry[], DomainError>> {
       const rows = await db
         .selectFrom("pipeline_history_events as event")
         .leftJoin("users as actor", "actor.id", "event.actor_user_id")
@@ -53,7 +57,16 @@ export function createHistoryRepo(db: DatabaseExecutor) {
         .orderBy("event.occurred_at", "desc")
         .execute();
 
-      return rows.map(toHistoryEntry);
+      const entries: LeadHistoryEntry[] = [];
+      for (const row of rows) {
+        const entry = toHistoryEntry(row);
+        if (!entry.ok) {
+          return Err(entry.error);
+        }
+        entries.push(entry.value);
+      }
+
+      return Ok(entries);
     },
   };
 }

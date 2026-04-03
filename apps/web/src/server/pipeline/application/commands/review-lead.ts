@@ -5,12 +5,10 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { LeadPriority, LeadStatus } from "../../domain/lead";
 import { resolveReviewTransition } from "../../domain/workflow";
-import type {
-  LeadHistoryRepository,
-  LeadRepository,
-  PipelineAuditService,
-  PipelineNotificationCenter,
-} from "../ports";
+import type { PipelineAuditService } from "../ports/audit-service";
+import type { LeadHistoryRepository } from "../ports/history-repository";
+import type { LeadRepository } from "../ports/lead-repository";
+import type { PipelineNotificationCenter } from "../ports/notification-center";
 import { notifyLeadReviewOutcome } from "./review-lead-notifier";
 import { writeLeadReview } from "./review-lead-writer";
 

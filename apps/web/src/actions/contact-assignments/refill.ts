@@ -2,7 +2,7 @@
 
 import { requirePermission } from "~/lib/auth/access/session";
 import { requestContactAssignmentRefill } from "~/server/contact-assignments/application/request-refill";
-import { repos, runInRepositoryTransaction } from "~/server/shared/context";
+import { createContactAssignmentRefillContext } from "~/server/contact-assignments/infrastructure/refill-context";
 import { isErr } from "~/server/shared/result";
 
 import { mapContactAssignmentError } from "./errors";
@@ -18,8 +18,7 @@ export async function refillContactAssignments() {
   if (isErr(cmdResult)) mapContactAssignmentError(cmdResult.error);
 
   const result = await requestContactAssignmentRefill(cmdResult.value, {
-    repos,
-    runInTransaction: runInRepositoryTransaction,
+    ...createContactAssignmentRefillContext(),
   });
   if (isErr(result)) mapContactAssignmentError(result.error);
 

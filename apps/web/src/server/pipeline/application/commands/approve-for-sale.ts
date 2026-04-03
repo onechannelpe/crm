@@ -6,12 +6,10 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 import { createHistoryEvent } from "../../domain/history";
 import { ensureCanApproveForSale } from "../../domain/workflow";
 import { notifyReadyForSale } from "../notifications";
-import type {
-  LeadHistoryRepository,
-  LeadRepository,
-  PipelineAuditService,
-  PipelineNotificationCenter,
-} from "../ports";
+import type { PipelineAuditService } from "../ports/audit-service";
+import type { LeadHistoryRepository } from "../ports/history-repository";
+import type { LeadRepository } from "../ports/lead-repository";
+import type { PipelineNotificationCenter } from "../ports/notification-center";
 
 type ApproveForSaleDeps = {
   leads: LeadRepository;

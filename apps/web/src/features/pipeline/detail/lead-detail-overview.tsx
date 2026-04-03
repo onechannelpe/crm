@@ -1,14 +1,11 @@
-import type { queryLeadDetail } from "~/actions/pipeline/queries/leads";
-
 import { LeadActionsSection } from "./lead-actions-section";
 import { LeadInteractionComposer } from "./lead-interaction-composer";
 import { LeadQuotationsSection } from "./lead-quotations-section";
 import { LeadSummarySection } from "./lead-summary-section";
 import { LeadTimelineSection } from "./lead-timeline-section";
+import type { LeadDetailData } from "./types";
 
 import styles from "./lead-detail-overview.module.css";
-
-export type LeadDetailData = Awaited<ReturnType<typeof queryLeadDetail>>;
 
 export function LeadDetailOverview(props: {
   data: LeadDetailData;

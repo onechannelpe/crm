@@ -2,8 +2,6 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 export const LEAD_STAGES = [
-  "REGISTERED",
-  "ENRICHING",
   "PENDING_EXTERNAL_REVIEW",
   "REJECTED_BY_STATUS",
   "NEEDS_EXECUTIVE_INPUT",
@@ -59,6 +57,15 @@ function fail(code: string, message: string): Result<never, DomainError> {
   return Err(domainError("validation", code, message));
 }
 
+export function normalizeLeadRuc(ruc: string): Result<string, DomainError> {
+  const normalizedRuc = ruc.trim();
+  if (!/^\d{11}$/.test(normalizedRuc)) {
+    return fail("invalid_ruc", "RUC must be an 11 digit string");
+  }
+
+  return Ok(normalizedRuc);
+}
+
 export function createLeadDraft(input: {
   ruc: string;
   razonSocial: string | null;
@@ -66,13 +73,13 @@ export function createLeadDraft(input: {
   executiveId: number;
   now: number;
 }): Result<LeadDraft, DomainError> {
-  const ruc = input.ruc.trim();
-  if (!/^\d{11}$/.test(ruc)) {
-    return fail("invalid_ruc", "RUC must be an 11 digit string");
+  const ruc = normalizeLeadRuc(input.ruc);
+  if (!ruc.ok) {
+    return ruc;
   }
 
   return Ok({
-    ruc,
+    ruc: ruc.value,
     razonSocial: input.razonSocial,
     address: input.address,
     executiveId: input.executiveId,

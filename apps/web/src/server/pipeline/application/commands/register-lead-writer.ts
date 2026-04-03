@@ -3,12 +3,10 @@ import { Ok, type Result } from "~/server/shared/result";
 
 import { createHistoryEvent } from "../../domain/history";
 import type { LeadDraft } from "../../domain/lead";
-import type {
-  LeadAssignmentRepository,
-  LeadHistoryRepository,
-  LeadRepository,
-  PipelineAuditService,
-} from "../ports";
+import type { LeadAssignmentRepository } from "../ports/assignment-repository";
+import type { PipelineAuditService } from "../ports/audit-service";
+import type { LeadHistoryRepository } from "../ports/history-repository";
+import type { LeadRepository } from "../ports/lead-repository";
 import type { ExistingLead } from "./register-lead-resolution";
 
 type RegisterLeadWriterDeps = {

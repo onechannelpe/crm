@@ -1,5 +1,5 @@
-import { repos } from "~/server/shared/context";
-import type { Repositories } from "~/server/shared/registry";
+import { db } from "~/lib/db/db";
+import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 
 import { buildThrottleKeys } from "./throttle-keys";
 import {
@@ -9,7 +9,12 @@ import {
 } from "./throttle-policy";
 import { calculateBlockMs, isThrottleWindowExpired } from "./throttle-state";
 
-type Deps = Pick<Repositories, "authThrottle">;
+type Deps = {
+  authThrottle: ReturnType<typeof createAuthThrottleRepo>;
+};
+const repos = {
+  authThrottle: createAuthThrottleRepo(db),
+};
 type CheckResult = { allowed: true } | { allowed: false; retryAfterMs: number };
 
 async function checkThrottle(

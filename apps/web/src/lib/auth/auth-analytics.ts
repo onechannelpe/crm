@@ -9,7 +9,9 @@ import {
   type AuthFunnelServerEventPayload,
 } from "~/lib/observability/auth-funnel";
 import type { ActionRequestContext } from "~/lib/observability/context";
-import { observabilityService } from "~/server/shared/context";
+import { getObservabilityRuntime } from "~/server/observability/runtime";
+
+const { observabilityService } = getObservabilityRuntime();
 
 export const AUTH_ANALYTICS_SCREENS = AUTH_FUNNEL_SCREENS;
 

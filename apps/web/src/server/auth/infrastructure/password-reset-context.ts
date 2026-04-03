@@ -1,10 +1,15 @@
-import { notificationSender, repos } from "~/server/shared/context";
+import { db } from "~/lib/db/db";
+import { createPasswordResetTokensRepo } from "~/server/auth/repos-password-reset";
+import { getNotificationRuntime } from "~/server/notifications/runtime";
+import { createUsersRepo } from "~/server/users/repos-users";
+
+const { notificationSender } = getNotificationRuntime();
 
 export function createPasswordResetContext() {
   return {
     repos: {
-      users: repos.users,
-      passwordResetTokens: repos.passwordResetTokens,
+      users: createUsersRepo(db),
+      passwordResetTokens: createPasswordResetTokensRepo(db),
     },
     notificationSender,
   };

@@ -3,7 +3,7 @@ import { hasPermission } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import type { LeadSourcingPolicyRepository } from "../ports";
+import type { LeadSourcingPolicyRepository } from "../ports/sourcing-policy-repository";
 
 type GetSourcingPolicyDeps = {
   sourcingPolicies: LeadSourcingPolicyRepository;

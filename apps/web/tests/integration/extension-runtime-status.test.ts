@@ -2,19 +2,19 @@ import { generateKeyPairSync } from "node:crypto";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createRepositories } from "../../src/server/shared/registry";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
   type TestDbContext,
 } from "../support/test-db";
+import { createTestRepositories } from "../support/test-repositories";
 
 function createTransactionRunner(ctx: TestDbContext) {
   return <T>(
     operation: (transactionRepos: TestDbContext["repos"]) => Promise<T>,
   ) =>
     ctx.db.transaction().execute((transactionDb) => {
-      return operation(createRepositories(transactionDb));
+      return operation(createTestRepositories(transactionDb));
     });
 }
 

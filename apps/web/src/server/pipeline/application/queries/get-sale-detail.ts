@@ -3,7 +3,7 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { canViewAllSales } from "../policies/access";
-import type { LeadSaleRepository } from "../ports";
+import type { LeadSaleRepository } from "../ports/sale-repository";
 
 type GetSaleDetailDeps = {
   leadSales: LeadSaleRepository;

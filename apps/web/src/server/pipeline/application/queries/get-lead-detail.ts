@@ -3,13 +3,11 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { requireLeadAccess } from "../policies/access";
-import type {
-  LeadCommercialInputRepository,
-  LeadHistoryRepository,
-  LeadQuotationRepository,
-  LeadRepository,
-  LeadSaleRepository,
-} from "../ports";
+import type { LeadCommercialInputRepository } from "../ports/commercial-input-repository";
+import type { LeadHistoryRepository } from "../ports/history-repository";
+import type { LeadRepository } from "../ports/lead-repository";
+import type { LeadQuotationRepository } from "../ports/quotation-repository";
+import type { LeadSaleRepository } from "../ports/sale-repository";
 import {
   presentLeadDetail,
   type LeadDetailOutput,
@@ -53,6 +51,9 @@ export async function getLeadDetail(
     deps.leadSales.findByLeadId(input.leadId),
     deps.leadHistory.listByLeadId(input.leadId),
   ]);
+  if (!history.ok) {
+    return history;
+  }
 
   return Ok(
     presentLeadDetail({
@@ -62,7 +63,7 @@ export async function getLeadDetail(
       commercialInput,
       quotations,
       sale,
-      history,
+      history: history.value,
     }),
   );
 }

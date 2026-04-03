@@ -1,6 +1,7 @@
 import * as XLSX from "xlsx";
 
-import type { Repositories } from "~/server/shared/registry";
+import type { createReportExportRepo } from "~/server/sales/repos-report-exports";
+import type { createSalesRecordsRepo } from "~/server/sales/repos-sales-records";
 
 import type { SalesExportBlobStore } from "./export-blob-store";
 
@@ -96,7 +97,10 @@ function sanitizeStoragePart(raw: string): string {
 }
 
 export function createSalesExportService(
-  repos: Repositories,
+  repos: {
+    reportExportJobs: ReturnType<typeof createReportExportRepo>;
+    salesRecords: ReturnType<typeof createSalesRecordsRepo>;
+  },
   blobStore: SalesExportBlobStore,
 ) {
   const parseScope = (
@@ -121,7 +125,7 @@ export function createSalesExportService(
 
   const processLeasedJob = async (
     job: Awaited<
-      ReturnType<Repositories["reportExportJobs"]["leaseQueuedJobs"]>
+      ReturnType<ReturnType<typeof createReportExportRepo>["leaseQueuedJobs"]>
     >[number],
     leaseOwner: string,
   ): Promise<void> => {

@@ -1,9 +1,10 @@
-import { repos } from "~/server/shared/context";
+import { db } from "~/lib/db/db";
+import { createSessionRepository } from "~/server/sessions/repos-sessions";
 
 export function createAdminSessionsReadContext() {
   return {
     repos: {
-      sessions: repos.sessions,
+      sessions: createSessionRepository(db),
     },
   };
 }

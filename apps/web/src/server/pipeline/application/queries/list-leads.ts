@@ -11,7 +11,8 @@ import {
   requireLeadReadAccess,
   resolveLeadListExecutiveScope,
 } from "../policies/access";
-import type { LeadRepository } from "../ports";
+import type { LeadRepository } from "../ports/lead-repository";
+import { parsePageParams } from "./pagination";
 
 type ListLeadsDeps = {
   leads: LeadRepository;
@@ -60,6 +61,11 @@ export async function listLeads(
     return prioridad;
   }
 
+  const page = parsePageParams(input.filters);
+  if (!page.ok) {
+    return page;
+  }
+
   const filters = {
     executiveId: resolveLeadListExecutiveScope({
       actorUserId: input.actorUserId,
@@ -69,8 +75,8 @@ export async function listLeads(
     stage: stage.value,
     status: status.value,
     prioridad: prioridad.value,
-    limit: Math.min(input.filters.limit ?? 50, 200),
-    offset: input.filters.offset ?? 0,
+    limit: page.value.limit,
+    offset: page.value.offset,
   };
 
   const [rows, totalCount] = await Promise.all([

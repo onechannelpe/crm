@@ -1,13 +1,16 @@
-import type { Repositories } from "~/server/shared/registry";
+import type { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
+import type { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import { Err, Ok, type Result } from "~/server/shared/result";
+import type { createUsersRepo } from "~/server/users/repos-users";
 
 import { verifyPasswordLoginCredentials } from "../password/password-login";
 import type { AuthProof } from "../policy/policy-types";
 
-type PasswordProviderDeps = Pick<
-  Repositories,
-  "users" | "authThrottle" | "authEvents"
->;
+type PasswordProviderDeps = {
+  users: ReturnType<typeof createUsersRepo>;
+  authThrottle: ReturnType<typeof createAuthThrottleRepo>;
+  authEvents: ReturnType<typeof createAuthEventsRepo>;
+};
 
 export async function authenticatePassword(
   input: {

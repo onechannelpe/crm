@@ -5,8 +5,19 @@ import { authenticatePassword } from "~/lib/auth/providers/password-provider";
 import { sendAlertOnNewLoginSource } from "~/lib/auth/security/login-source-alert";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
-import type { Repositories } from "~/server/shared/registry";
+import type { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
+import type { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
+import type { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
+import type {
+  createUserTotpFactorsRepo,
+  createUserTotpRecoveryCodesRepo,
+} from "~/server/auth/repos-user-totp-factors";
+import type { createSessionRepository } from "~/server/sessions/repos-sessions";
+import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
+import type { createUsersRepo } from "~/server/users/repos-users";
+import type { createWebauthnChallengesRepo } from "~/server/users/repos-webauthn-challenges";
 
 import { createPasskeyLoginStartAuthService } from "../passkey/service";
 import {
@@ -16,19 +27,18 @@ import {
 import { createTotpLoginFlow } from "./login-state-service";
 import type { SubmitPrimaryLoginResult } from "./login-types";
 
-type LoginFlowDeps = Pick<
-  Repositories,
-  | "loginFlows"
-  | "users"
-  | "sessions"
-  | "auditLogs"
-  | "authThrottle"
-  | "authEvents"
-  | "userTotpFactors"
-  | "userTotpRecoveryCodes"
-  | "passkeys"
-  | "webauthnChallenges"
->;
+type LoginFlowDeps = {
+  loginFlows: ReturnType<typeof createLoginFlowsRepo>;
+  users: ReturnType<typeof createUsersRepo>;
+  sessions: ReturnType<typeof createSessionRepository>;
+  auditLogs: ReturnType<typeof createAuditLogsRepo>;
+  authThrottle: ReturnType<typeof createAuthThrottleRepo>;
+  authEvents: ReturnType<typeof createAuthEventsRepo>;
+  userTotpFactors: ReturnType<typeof createUserTotpFactorsRepo>;
+  userTotpRecoveryCodes: ReturnType<typeof createUserTotpRecoveryCodesRepo>;
+  passkeys: ReturnType<typeof createPasskeysRepo>;
+  webauthnChallenges: ReturnType<typeof createWebauthnChallengesRepo>;
+};
 
 export type SubmitPrimaryLoginError =
   | {

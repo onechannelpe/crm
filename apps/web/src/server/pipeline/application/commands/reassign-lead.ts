@@ -5,13 +5,11 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { ensureCanReassignLead } from "../../domain/assignment";
 import { createHistoryEvent } from "../../domain/history";
-import type {
-  LeadAssignmentRepository,
-  LeadHistoryRepository,
-  LeadRepository,
-  PipelineAuditService,
-  PipelineUserRepository,
-} from "../ports";
+import type { LeadAssignmentRepository } from "../ports/assignment-repository";
+import type { PipelineAuditService } from "../ports/audit-service";
+import type { LeadHistoryRepository } from "../ports/history-repository";
+import type { LeadRepository } from "../ports/lead-repository";
+import type { PipelineUserRepository } from "../ports/user-repository";
 
 type ReassignLeadDeps = {
   leads: LeadRepository;

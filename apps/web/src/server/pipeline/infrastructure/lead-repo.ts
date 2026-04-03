@@ -15,7 +15,10 @@ import type {
 } from "~/server/pipeline/domain/lead";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
-import type { LeadExportRow, LeadListFilters } from "../application/ports";
+import type {
+  LeadExportRow,
+  LeadListFilters,
+} from "../application/ports/lead-repository";
 
 export type LeadRow = Selectable<Database["pipeline_leads"]>;
 export type NewLeadRow = Insertable<Database["pipeline_leads"]>;

@@ -6,15 +6,16 @@ import {
   requireRole,
 } from "~/lib/auth/access/session";
 import { hasRole } from "~/lib/auth/access/session";
+import { db } from "~/lib/db/db";
 import type { AuditPolicySnapshot } from "~/server/audit-reader/contracts";
 import {
   createAuditPolicyService,
   type UpsertAuditPolicyInput,
 } from "~/server/audit-reader/policy-service";
-import { repos } from "~/server/shared/context";
+import { createAuditActionPoliciesRepo } from "~/server/shared/repos-audit-action-policies";
 
 const auditPolicyService = createAuditPolicyService({
-  auditActionPolicies: repos.auditActionPolicies,
+  auditActionPolicies: createAuditActionPoliciesRepo(db),
 });
 
 export async function getAuditPolicySnapshot(): Promise<AuditPolicySnapshot> {

@@ -4,11 +4,9 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { createHistoryEvent } from "../../domain/history";
 import { requireLeadAccess, requireLeadReadAccess } from "../policies/access";
-import type {
-  LeadHistoryRepository,
-  LeadRepository,
-  PipelineAuditService,
-} from "../ports";
+import type { PipelineAuditService } from "../ports/audit-service";
+import type { LeadHistoryRepository } from "../ports/history-repository";
+import type { LeadRepository } from "../ports/lead-repository";
 
 type AddNoteDeps = {
   leads: LeadRepository;

@@ -5,7 +5,10 @@ import {
 } from "@crm/notifications";
 
 import type { UsersTable } from "~/lib/db/types";
-import type { Repositories } from "~/server/shared/registry";
+
+import type { createNotificationCampaignsRepo } from "./repos-campaigns";
+import type { createNotificationContactsRepo } from "./repos-contacts";
+import type { createNotificationPreferencesRepo } from "./repos-preferences";
 
 const LEASE_MS = 30_000;
 const MAX_ATTEMPTS = 5;
@@ -40,10 +43,13 @@ export interface PublishCampaignInput {
 }
 
 export interface NotificationServiceDeps {
-  repos: Pick<
-    Repositories,
-    "notificationCampaigns" | "notificationContacts" | "notificationPreferences"
-  >;
+  repos: {
+    notificationCampaigns: ReturnType<typeof createNotificationCampaignsRepo>;
+    notificationContacts: ReturnType<typeof createNotificationContactsRepo>;
+    notificationPreferences: ReturnType<
+      typeof createNotificationPreferencesRepo
+    >;
+  };
   config: NotificationsConfig;
 }
 

@@ -742,8 +742,6 @@ export interface UserInvitesTable {
 }
 
 export type LeadStage =
-  | "REGISTERED"
-  | "ENRICHING"
   | "PENDING_EXTERNAL_REVIEW"
   | "REJECTED_BY_STATUS"
   | "NEEDS_EXECUTIVE_INPUT"
@@ -786,8 +784,6 @@ export type PipelineHistoryEventType =
 export type ExecutiveCategory = "elite" | "corporativa";
 
 export const LEAD_STAGES = [
-  "REGISTERED",
-  "ENRICHING",
   "PENDING_EXTERNAL_REVIEW",
   "REJECTED_BY_STATUS",
   "NEEDS_EXECUTIVE_INPUT",

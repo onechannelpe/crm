@@ -1,6 +1,10 @@
+import type { createContactAssignmentsRepo } from "~/server/contacts/repos-assignments";
+import type { createContactsRepo } from "~/server/contacts/repos-contacts";
+import type { createProductsRepo } from "~/server/inventory/repos-products";
+import type { createSalesRecordsRepo } from "~/server/sales/repos-sales-records";
 import { createAuditService } from "~/server/shared/audit";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
-import type { Repositories } from "~/server/shared/registry";
+import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 type SalesRecordStatus =
@@ -77,15 +81,23 @@ interface UpdateSalesRecordDraftInput {
 }
 
 type SalesProductRow = NonNullable<
-  Awaited<ReturnType<Repositories["products"]["findById"]>>
+  Awaited<ReturnType<ReturnType<typeof createProductsRepo>["findById"]>>
 >;
 
+type SalesRecordsRepos = {
+  auditLogs: ReturnType<typeof createAuditLogsRepo>;
+  contactAssignments: ReturnType<typeof createContactAssignmentsRepo>;
+  contacts: ReturnType<typeof createContactsRepo>;
+  products: ReturnType<typeof createProductsRepo>;
+  salesRecords: ReturnType<typeof createSalesRecordsRepo>;
+};
+
 export type RepositoryTransactionRunner = <T>(
-  operation: (transactionRepos: Repositories) => Promise<T>,
+  operation: (transactionRepos: SalesRecordsRepos) => Promise<T>,
 ) => Promise<T>;
 
 export function createSalesRecordsWorkflowService(
-  repos: Repositories,
+  repos: SalesRecordsRepos,
   runInTransaction?: RepositoryTransactionRunner,
 ) {
   const withTransaction: RepositoryTransactionRunner =
@@ -133,7 +145,7 @@ export function createSalesRecordsWorkflowService(
   }
 
   async function loadProducts(
-    activeRepos: Repositories,
+    activeRepos: SalesRecordsRepos,
     lines: DraftProductInput[],
   ): Promise<Result<SalesProductRow[], DomainError>> {
     const products = await Promise.all(
@@ -150,7 +162,7 @@ export function createSalesRecordsWorkflowService(
   }
 
   async function persistDraftState(params: {
-    activeRepos: Repositories;
+    activeRepos: SalesRecordsRepos;
     recordId: number;
     input: UpdateSalesRecordDraftInput;
     products: SalesProductRow[];

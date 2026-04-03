@@ -6,13 +6,11 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 import { createHistoryEvent } from "../../domain/history";
 import { ensureCanCompleteCommercialInput } from "../../domain/workflow";
 import { notifyReadyForQuotation } from "../notifications";
-import type {
-  LeadCommercialInputRepository,
-  LeadHistoryRepository,
-  LeadRepository,
-  PipelineAuditService,
-  PipelineNotificationCenter,
-} from "../ports";
+import type { PipelineAuditService } from "../ports/audit-service";
+import type { LeadCommercialInputRepository } from "../ports/commercial-input-repository";
+import type { LeadHistoryRepository } from "../ports/history-repository";
+import type { LeadRepository } from "../ports/lead-repository";
+import type { PipelineNotificationCenter } from "../ports/notification-center";
 
 type CompleteCommercialInputDeps = {
   leads: LeadRepository;
