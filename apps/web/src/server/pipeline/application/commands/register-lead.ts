@@ -7,13 +7,13 @@ import type { RegisterLeadDeps } from "../deps/register-lead";
 import type { PipelineAuditService } from "../ports/audit-service";
 import type { PipelineEngineGateway } from "../ports/engine-gateway";
 import {
-  ensureActiveExecutive,
-  resolveLeadRegistration,
-} from "./register-lead-resolution";
-import {
   writeLeadRegistrationEffects,
   writeLeadReassignmentEffects,
 } from "./register-lead-effects";
+import {
+  ensureActiveExecutive,
+  resolveLeadRegistration,
+} from "./register-lead-resolution";
 
 export async function registerLead(input: {
   actorUserId: number;

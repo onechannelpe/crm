@@ -54,7 +54,9 @@ export function createLeadInteractionDeps(
   };
 }
 
-export function createReviewLeadDeps(executor: DatabaseExecutor): ReviewLeadDeps {
+export function createReviewLeadDeps(
+  executor: DatabaseExecutor,
+): ReviewLeadDeps {
   return {
     leads: createLeadsRepo(executor),
     leadHistory: createHistoryRepo(executor),

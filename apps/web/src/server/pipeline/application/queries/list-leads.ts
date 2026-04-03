@@ -7,11 +7,11 @@ import {
   parseLeadStage,
   parseLeadStatus,
 } from "../../domain/lead";
+import type { LeadListDeps } from "../deps/lead-queries";
 import {
   requireLeadReadAccess,
   resolveLeadListExecutiveScope,
 } from "../policies/access";
-import type { LeadListDeps } from "../deps/lead-queries";
 import type { LeadRepository } from "../ports/lead-repository";
 import { parsePageParams } from "./pagination";
 
