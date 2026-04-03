@@ -1,13 +1,13 @@
-import type { LeadHistoryEntry } from "../../domain/history";
-import type { Lead } from "../../domain/lead";
 import type {
   LeadDetailCommercialInput,
   LeadDetailLead,
   LeadDetailOutput,
   LeadDetailQuotation,
   LeadDetailSale,
-} from "../contracts/lead-detail";
-import type { LeadAction } from "../contracts/lead-detail";
+} from "../../contracts/lead-detail";
+import type { LeadAction } from "../../contracts/lead-detail";
+import type { LeadHistoryEntry } from "../../domain/history";
+import type { Lead } from "../../domain/lead";
 import type { LeadCommercialInput } from "../ports/commercial-input-repository";
 import type { LeadQuotation } from "../ports/quotation-repository";
 import type { LeadSale } from "../ports/sale-repository";

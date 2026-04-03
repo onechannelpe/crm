@@ -8,23 +8,20 @@ import {
   createPipelineAuditLogRepo,
   createPipelineAuditService,
 } from "./audit-log";
+import { createPipelineDeps, type PipelineDeps } from "./deps";
 import { createEngineGateway } from "./engine-gateway";
 import { createPipelineNotificationCenter } from "./notifications";
 
-export type PipelineCommandRuntime<TDeps> = {
-  deps: TDeps;
+export type PipelineCommandRuntime = {
+  deps: PipelineDeps;
   auditService: PipelineAuditService;
+  engineGateway: PipelineEngineGateway;
+  notificationCenter: PipelineNotificationCenter;
 };
 
-export type PipelineNotificationRuntime<TDeps> =
-  PipelineCommandRuntime<TDeps> & {
-    notificationCenter: PipelineNotificationCenter;
-  };
-
-export type PipelineRegistrationRuntime<TDeps> =
-  PipelineCommandRuntime<TDeps> & {
-    engineGateway: PipelineEngineGateway;
-  };
+export type PipelineQueryRuntime = {
+  deps: PipelineDeps;
+};
 
 function createPipelineAuditServiceRuntime(executor: DatabaseExecutor) {
   return createPipelineAuditService({
@@ -32,57 +29,27 @@ function createPipelineAuditServiceRuntime(executor: DatabaseExecutor) {
   });
 }
 
-async function runPipelineRuntime<TDeps, TRuntime, TResult>(input: {
-  createDeps: (executor: DatabaseExecutor) => TDeps;
-  createRuntime: (executor: DatabaseExecutor, deps: TDeps) => TRuntime;
-  operation: (runtime: TRuntime) => Promise<TResult>;
-}): Promise<TResult> {
+function createPipelineCommandRuntime(
+  executor: DatabaseExecutor,
+): PipelineCommandRuntime {
+  return {
+    deps: createPipelineDeps(executor),
+    auditService: createPipelineAuditServiceRuntime(executor),
+    engineGateway: createEngineGateway(),
+    notificationCenter: createPipelineNotificationCenter(executor),
+  };
+}
+
+export function createPipelineQueryRuntime(): PipelineQueryRuntime {
+  return {
+    deps: createPipelineDeps(),
+  };
+}
+
+export async function runPipelineCommand<TResult>(
+  operation: (runtime: PipelineCommandRuntime) => Promise<TResult>,
+): Promise<TResult> {
   return runInPipelineTransaction(async ({ executor }) => {
-    const deps = input.createDeps(executor);
-    return input.operation(input.createRuntime(executor, deps));
-  });
-}
-
-export function runPipelineCommand<TDeps, TResult>(
-  createDeps: (executor: DatabaseExecutor) => TDeps,
-  operation: (runtime: PipelineCommandRuntime<TDeps>) => Promise<TResult>,
-): Promise<TResult> {
-  return runPipelineRuntime({
-    createDeps,
-    createRuntime: (executor, deps) => ({
-      deps,
-      auditService: createPipelineAuditServiceRuntime(executor),
-    }),
-    operation,
-  });
-}
-
-export function runPipelineNotificationCommand<TDeps, TResult>(
-  createDeps: (executor: DatabaseExecutor) => TDeps,
-  operation: (runtime: PipelineNotificationRuntime<TDeps>) => Promise<TResult>,
-): Promise<TResult> {
-  return runPipelineRuntime({
-    createDeps,
-    createRuntime: (executor, deps) => ({
-      deps,
-      auditService: createPipelineAuditServiceRuntime(executor),
-      notificationCenter: createPipelineNotificationCenter(executor),
-    }),
-    operation,
-  });
-}
-
-export function runPipelineRegistrationCommand<TDeps, TResult>(
-  createDeps: (executor: DatabaseExecutor) => TDeps,
-  operation: (runtime: PipelineRegistrationRuntime<TDeps>) => Promise<TResult>,
-): Promise<TResult> {
-  return runPipelineRuntime({
-    createDeps,
-    createRuntime: (executor, deps) => ({
-      deps,
-      auditService: createPipelineAuditServiceRuntime(executor),
-      engineGateway: createEngineGateway(),
-    }),
-    operation,
+    return operation(createPipelineCommandRuntime(executor));
   });
 }

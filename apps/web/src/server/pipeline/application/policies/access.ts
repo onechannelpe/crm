@@ -9,6 +9,8 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 const LEAD_READ_PERMISSIONS: Permission[] = [
   "lead:pipeline",
   "lead:register",
+  "lead:commercial-input:complete",
+  "lead:sale:create",
   "lead:review",
   "quotation:manage",
   "lead:reassign",
@@ -39,6 +41,49 @@ export function canRevealFullTimeline(role: Role) {
 
 export function canViewAllSales(role: Role) {
   return role !== "executive";
+}
+
+export function canAddLeadInteraction(role: Role) {
+  return hasPermission(role, "lead:pipeline");
+}
+
+export function canRegisterLead(role: Role) {
+  return hasPermission(role, "lead:register");
+}
+
+export function canCompleteCommercialInput(role: Role) {
+  return hasPermission(role, "lead:commercial-input:complete");
+}
+
+export function canCreateSale(role: Role) {
+  return hasPermission(role, "lead:sale:create");
+}
+
+export function canReviewLead(role: Role) {
+  return hasPermission(role, "lead:review");
+}
+
+export function canCreateQuotation(role: Role) {
+  return hasPermission(role, "quotation:manage");
+}
+
+export function canApproveForSale(role: Role) {
+  return hasPermission(role, "quotation:manage");
+}
+
+export function canReassignLead(role: Role) {
+  return hasPermission(role, "lead:reassign");
+}
+
+export function requirePipelineActionAccess(
+  role: Role,
+  canRunAction: (role: Role) => boolean,
+): Result<void, DomainError> {
+  if (!canRunAction(role)) {
+    return forbidden();
+  }
+
+  return Ok(undefined);
 }
 
 export function requireLeadReadAccess(role: Role): Result<void, DomainError> {

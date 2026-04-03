@@ -1,29 +1,34 @@
 import type { Role } from "~/lib/auth/access/rbac";
-import { hasPermission } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { ensureCanReassignLead } from "../../domain/assignment";
 import type { ReassignLeadDeps } from "../deps/register-lead";
+import {
+  canReassignLead,
+  requirePipelineActionAccess,
+} from "../policies/access";
 import type { PipelineAuditService } from "../ports/audit-service";
 import { writeLeadReassignmentEffects } from "./register-lead-effects";
 import { ensureActiveExecutive } from "./register-lead-resolution";
 
-export async function reassignLead(
-  deps: ReassignLeadDeps,
-  auditService: PipelineAuditService,
-  input: {
-    actorUserId: number;
-    actorRole: Role;
-    leadId: number;
-    newExecutiveId: number;
-  },
-): Promise<Result<void, DomainError>> {
-  if (!hasPermission(input.actorRole, "lead:reassign")) {
-    return Err(domainError("forbidden", "forbidden", "Access denied"));
+export async function reassignLead(input: {
+  deps: ReassignLeadDeps;
+  auditService: PipelineAuditService;
+  actorUserId: number;
+  actorRole: Role;
+  leadId: number;
+  newExecutiveId: number;
+}): Promise<Result<void, DomainError>> {
+  const canReassign = requirePipelineActionAccess(
+    input.actorRole,
+    canReassignLead,
+  );
+  if (!canReassign.ok) {
+    return canReassign;
   }
 
-  const lead = await deps.leads.findById(input.leadId);
+  const lead = await input.deps.leads.findById(input.leadId);
   if (!lead) {
     return Err(domainError("not_found", "lead_not_found", "Lead not found"));
   }
@@ -37,7 +42,7 @@ export async function reassignLead(
   }
 
   const activeExecutive = await ensureActiveExecutive({
-    deps,
+    deps: input.deps,
     executiveId: input.newExecutiveId,
   });
   if (!activeExecutive.ok) {
@@ -45,8 +50,8 @@ export async function reassignLead(
   }
 
   const result = await writeLeadReassignmentEffects({
-    deps,
-    auditService,
+    deps: input.deps,
+    auditService: input.auditService,
     lead,
     actorUserId: input.actorUserId,
     executiveId: input.newExecutiveId,

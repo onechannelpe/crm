@@ -1,12 +1,9 @@
 "use server";
 
-import type { LeadDetailOutput } from "~/server/pipeline/application/contracts/lead-detail";
 import { getLeadDetail } from "~/server/pipeline/application/queries/get-lead-detail";
 import { listLeads } from "~/server/pipeline/application/queries/list-leads";
-import {
-  createLeadDetailDeps,
-  createLeadListDeps,
-} from "~/server/pipeline/infrastructure/deps";
+import type { LeadDetailOutput } from "~/server/pipeline/contracts/lead-detail";
+import { createPipelineQueryRuntime } from "~/server/pipeline/infrastructure/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function queryLeadList(filters: {
@@ -22,7 +19,7 @@ export async function queryLeadList(filters: {
     requireAuth: true,
     input: filters,
     execute: (ctx) =>
-      listLeads(createLeadListDeps(), {
+      listLeads(createPipelineQueryRuntime().deps.leadList, {
         actorUserId: ctx.actor.userId,
         actorRole: ctx.actor.role,
         filters,
@@ -38,7 +35,7 @@ export async function queryLeadDetail(
     requireAuth: true,
     input: { leadId },
     execute: (ctx) =>
-      getLeadDetail(createLeadDetailDeps(), {
+      getLeadDetail(createPipelineQueryRuntime().deps.leadDetail, {
         actorUserId: ctx.actor.userId,
         actorRole: ctx.actor.role,
         leadId,

@@ -1,35 +1,34 @@
 import type { Role } from "~/lib/auth/access/rbac";
-import { hasPermission } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { LeadPriority, LeadStatus } from "../../domain/lead";
 import { resolveReviewTransition } from "../../domain/workflow";
 import type { ReviewLeadDeps } from "../deps/review-lead";
+import { canReviewLead, requirePipelineActionAccess } from "../policies/access";
 import type { PipelineAuditService } from "../ports/audit-service";
 import type { PipelineNotificationCenter } from "../ports/notification-center";
 import { notifyLeadReviewOutcome } from "./review-lead-notifier";
 import { writeLeadReview } from "./review-lead-writer";
 
-export async function reviewLead(
-  deps: ReviewLeadDeps,
-  auditService: PipelineAuditService,
-  notificationCenter: PipelineNotificationCenter,
-  input: {
-    actorUserId: number;
-    actorRole: Role;
-    branchId: number;
-    leadId: number;
-    status: LeadStatus;
-    prioridad: LeadPriority;
-    reason: string;
-  },
-): Promise<Result<void, DomainError>> {
-  if (!hasPermission(input.actorRole, "lead:review")) {
-    return Err(domainError("forbidden", "forbidden", "Access denied"));
+export async function reviewLead(input: {
+  deps: ReviewLeadDeps;
+  auditService: PipelineAuditService;
+  notificationCenter: PipelineNotificationCenter;
+  actorUserId: number;
+  actorRole: Role;
+  branchId: number;
+  leadId: number;
+  status: LeadStatus;
+  prioridad: LeadPriority;
+  reason: string;
+}): Promise<Result<void, DomainError>> {
+  const canReview = requirePipelineActionAccess(input.actorRole, canReviewLead);
+  if (!canReview.ok) {
+    return canReview;
   }
 
-  const lead = await deps.leads.findById(input.leadId);
+  const lead = await input.deps.leads.findById(input.leadId);
   if (!lead) {
     return Err(domainError("not_found", "lead_not_found", "Lead not found"));
   }
@@ -45,8 +44,8 @@ export async function reviewLead(
 
   const now = Date.now();
   await writeLeadReview({
-    deps,
-    auditService,
+    deps: input.deps,
+    auditService: input.auditService,
     lead,
     actorUserId: input.actorUserId,
     status: input.status,
@@ -57,7 +56,7 @@ export async function reviewLead(
   });
 
   await notifyLeadReviewOutcome({
-    notificationCenter,
+    notificationCenter: input.notificationCenter,
     branchId: input.branchId,
     lead,
     nextStage: transition.value,

@@ -6,8 +6,7 @@ import { logCall } from "~/server/pipeline/application/commands/log-call";
 import type {
   AddLeadNoteInput,
   RecordLeadCallInput,
-} from "~/server/pipeline/application/contracts/lead-interactions";
-import { createLeadInteractionDeps } from "~/server/pipeline/infrastructure/deps";
+} from "~/server/pipeline/contracts/lead-interactions";
 import { runPipelineCommand } from "~/server/pipeline/infrastructure/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
@@ -17,8 +16,10 @@ export async function recordLeadCall(input: RecordLeadCallInput) {
     requireAuth: true,
     input,
     execute: (ctx) =>
-      runPipelineCommand(createLeadInteractionDeps, ({ deps, auditService }) =>
-        logCall(deps, auditService, {
+      runPipelineCommand(({ deps, auditService }) =>
+        logCall({
+          deps: deps.leadInteractions,
+          auditService,
           actorUserId: ctx.actor.userId,
           actorRole: ctx.actor.role,
           leadId: input.leadId,
@@ -39,8 +40,10 @@ export async function addLeadNote(input: AddLeadNoteInput) {
     requireAuth: true,
     input,
     execute: (ctx) =>
-      runPipelineCommand(createLeadInteractionDeps, ({ deps, auditService }) =>
-        addNote(deps, auditService, {
+      runPipelineCommand(({ deps, auditService }) =>
+        addNote({
+          deps: deps.leadInteractions,
+          auditService,
           actorUserId: ctx.actor.userId,
           actorRole: ctx.actor.role,
           leadId: input.leadId,

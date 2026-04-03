@@ -1,4 +1,6 @@
-import type { LeadCallOutcome } from "../../domain/lead";
+import type { LeadCallOutcome } from "../domain/lead";
+
+export type { LeadCallOutcome };
 
 export type RecordLeadCallInput = {
   leadId: number;

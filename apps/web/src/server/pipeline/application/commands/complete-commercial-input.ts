@@ -1,36 +1,41 @@
 import type { Role } from "~/lib/auth/access/rbac";
-import { hasPermission } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { ensureCanCompleteCommercialInput } from "../../domain/workflow";
 import type { CompleteCommercialInputDeps } from "../deps/sales";
+import {
+  canCompleteCommercialInput,
+  requirePipelineActionAccess,
+} from "../policies/access";
 import type { PipelineAuditService } from "../ports/audit-service";
 import type { PipelineNotificationCenter } from "../ports/notification-center";
 import { writeCompletedCommercialInput } from "./complete-commercial-input-writer";
 
-export async function completeCommercialInput(
-  deps: CompleteCommercialInputDeps,
-  auditService: PipelineAuditService,
-  notificationCenter: PipelineNotificationCenter,
-  input: {
-    actorUserId: number;
-    actorRole: Role;
-    branchId: number;
-    leadId: number;
-    proveedorActual: string;
-    tasaActual: number;
-    gpv: number;
-    ticket: number;
-    abono: number;
-    cantidadPos: number;
-  },
-): Promise<Result<void, DomainError>> {
-  if (!hasPermission(input.actorRole, "lead:register")) {
-    return Err(domainError("forbidden", "forbidden", "Access denied"));
+export async function completeCommercialInput(input: {
+  deps: CompleteCommercialInputDeps;
+  auditService: PipelineAuditService;
+  notificationCenter: PipelineNotificationCenter;
+  actorUserId: number;
+  actorRole: Role;
+  branchId: number;
+  leadId: number;
+  proveedorActual: string;
+  tasaActual: number;
+  gpv: number;
+  ticket: number;
+  abono: number;
+  cantidadPos: number;
+}): Promise<Result<void, DomainError>> {
+  const canComplete = requirePipelineActionAccess(
+    input.actorRole,
+    canCompleteCommercialInput,
+  );
+  if (!canComplete.ok) {
+    return canComplete;
   }
 
-  const lead = await deps.leads.findById(input.leadId);
+  const lead = await input.deps.leads.findById(input.leadId);
   if (!lead) {
     return Err(domainError("not_found", "lead_not_found", "Lead not found"));
   }
@@ -46,9 +51,9 @@ export async function completeCommercialInput(
 
   const now = Date.now();
   await writeCompletedCommercialInput({
-    deps,
-    auditService,
-    notificationCenter,
+    deps: input.deps,
+    auditService: input.auditService,
+    notificationCenter: input.notificationCenter,
     lead,
     actorUserId: input.actorUserId,
     branchId: input.branchId,

@@ -1,9 +1,13 @@
-import { hasPermission, type Role } from "~/lib/auth/access/rbac";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { Err, type Result } from "~/server/shared/result";
+import type { Role } from "~/lib/auth/access/rbac";
+import type { DomainError } from "~/server/shared/domain-error";
+import type { Result } from "~/server/shared/result";
 
 import { createLeadDraft, normalizeLeadRuc } from "../../domain/lead";
 import type { RegisterLeadDeps } from "../deps/register-lead";
+import {
+  canRegisterLead,
+  requirePipelineActionAccess,
+} from "../policies/access";
 import type { PipelineAuditService } from "../ports/audit-service";
 import type { PipelineEngineGateway } from "../ports/engine-gateway";
 import {
@@ -24,8 +28,12 @@ export async function registerLead(input: {
   auditService: PipelineAuditService;
   engineGateway: PipelineEngineGateway;
 }): Promise<Result<{ leadId: number }, DomainError>> {
-  if (!hasPermission(input.actorRole, "lead:register")) {
-    return Err(domainError("forbidden", "forbidden", "Access denied"));
+  const canRegister = requirePipelineActionAccess(
+    input.actorRole,
+    canRegisterLead,
+  );
+  if (!canRegister.ok) {
+    return canRegister;
   }
 
   const ruc = normalizeLeadRuc(input.ruc);

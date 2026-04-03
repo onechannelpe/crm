@@ -2,7 +2,7 @@
 
 import { getSaleDetail } from "~/server/pipeline/application/queries/get-sale-detail";
 import { listSales } from "~/server/pipeline/application/queries/list-sales";
-import { createSaleQueryDeps } from "~/server/pipeline/infrastructure/deps";
+import { createPipelineQueryRuntime } from "~/server/pipeline/infrastructure/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function querySales(filters: { limit?: number; offset?: number }) {
@@ -11,7 +11,7 @@ export async function querySales(filters: { limit?: number; offset?: number }) {
     requireAuth: true,
     input: filters,
     execute: (ctx) =>
-      listSales(createSaleQueryDeps(), {
+      listSales(createPipelineQueryRuntime().deps.saleQueries, {
         actorRole: ctx.actor.role,
         actorUserId: ctx.actor.userId,
         ...filters,
@@ -25,7 +25,7 @@ export async function querySaleDetail(saleId: number) {
     requireAuth: true,
     input: { saleId },
     execute: (ctx) =>
-      getSaleDetail(createSaleQueryDeps(), {
+      getSaleDetail(createPipelineQueryRuntime().deps.saleQueries, {
         actorRole: ctx.actor.role,
         actorUserId: ctx.actor.userId,
         saleId,

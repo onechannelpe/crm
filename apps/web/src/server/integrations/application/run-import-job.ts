@@ -3,15 +3,8 @@ import { TextDecoder } from "node:util";
 import { db } from "~/lib/db/db";
 import { reviewLead } from "~/server/pipeline/application/commands/review-lead";
 import type { LeadPriority, LeadStatus } from "~/server/pipeline/domain/lead";
-import {
-  createPipelineAuditLogRepo,
-  createPipelineAuditService,
-} from "~/server/pipeline/infrastructure/audit-log";
-import { createReviewLeadDeps } from "~/server/pipeline/infrastructure/deps";
-import { createPipelineNotificationCenter } from "~/server/pipeline/infrastructure/notifications";
+import { runPipelineCommand } from "~/server/pipeline/infrastructure/runtime";
 import { createAuditService } from "~/server/shared/audit";
-import { runInPipelineTransaction } from "~/server/shared/pipeline-transaction";
-import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 
 import {
   parsePrioridadImport,
@@ -218,22 +211,18 @@ function reviewImportedLead(input: {
   actorId: number;
   branchId: number;
 }) {
-  return runInPipelineTransaction(async ({ executor }) => {
-    return reviewLead(
-      createReviewLeadDeps(executor),
-      createPipelineAuditService({
-        auditLogs: createPipelineAuditLogRepo(createAuditLogsRepo(executor)),
-      }),
-      createPipelineNotificationCenter(executor),
-      {
-        leadId: input.leadId,
-        status: input.status,
-        prioridad: input.prioridad,
-        reason: "Imported from CSV",
-        actorUserId: input.actorId,
-        actorRole: "admin",
-        branchId: input.branchId,
-      },
-    );
-  });
+  return runPipelineCommand(({ deps, auditService, notificationCenter }) =>
+    reviewLead({
+      deps: deps.reviewLead,
+      auditService,
+      notificationCenter,
+      leadId: input.leadId,
+      status: input.status,
+      prioridad: input.prioridad,
+      reason: "Imported from CSV",
+      actorUserId: input.actorId,
+      actorRole: "admin",
+      branchId: input.branchId,
+    }),
+  );
 }

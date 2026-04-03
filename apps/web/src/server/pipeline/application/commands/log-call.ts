@@ -5,26 +5,31 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 import { createHistoryEvent } from "../../domain/history";
 import type { LeadCallOutcome } from "../../domain/lead";
 import type { LeadInteractionDeps } from "../deps/lead-interactions";
-import { requireLeadAccess, requireLeadReadAccess } from "../policies/access";
+import {
+  canAddLeadInteraction,
+  requireLeadAccess,
+  requirePipelineActionAccess,
+} from "../policies/access";
 import type { PipelineAuditService } from "../ports/audit-service";
 
-export async function logCall(
-  deps: LeadInteractionDeps,
-  auditService: PipelineAuditService,
-  input: {
-    actorUserId: number;
-    actorRole: Role;
-    leadId: number;
-    outcome: LeadCallOutcome;
-    notes?: string | null;
-  },
-): Promise<Result<{ interactionId: number }, DomainError>> {
-  const canRead = requireLeadReadAccess(input.actorRole);
-  if (!canRead.ok) {
-    return canRead;
+export async function logCall(input: {
+  deps: LeadInteractionDeps;
+  auditService: PipelineAuditService;
+  actorUserId: number;
+  actorRole: Role;
+  leadId: number;
+  outcome: LeadCallOutcome;
+  notes?: string | null;
+}): Promise<Result<{ interactionId: number }, DomainError>> {
+  const canWriteInteraction = requirePipelineActionAccess(
+    input.actorRole,
+    canAddLeadInteraction,
+  );
+  if (!canWriteInteraction.ok) {
+    return canWriteInteraction;
   }
 
-  const lead = await deps.leads.findById(input.leadId);
+  const lead = await input.deps.leads.findById(input.leadId);
   if (!lead) {
     return Err(domainError("not_found", "lead_not_found", "Lead not found"));
   }
@@ -39,7 +44,7 @@ export async function logCall(
   }
 
   const now = Date.now();
-  const historyId = await deps.leadHistory.insert(
+  const historyId = await input.deps.leadHistory.insert(
     createHistoryEvent({
       leadId: input.leadId,
       eventType: "call_logged",
@@ -48,7 +53,7 @@ export async function logCall(
       occurredAt: now,
     }),
   );
-  await auditService.log(
+  await input.auditService.log(
     input.actorUserId,
     "call_logged",
     "lead",

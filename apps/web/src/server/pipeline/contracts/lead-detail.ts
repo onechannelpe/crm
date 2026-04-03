@@ -1,4 +1,4 @@
-import type { Lead } from "../../domain/lead";
+import type { Lead } from "../domain/lead";
 
 export type LeadAction =
   | "log-call"

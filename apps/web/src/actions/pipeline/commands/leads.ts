@@ -6,20 +6,10 @@ import { reassignLead } from "~/server/pipeline/application/commands/reassign-le
 import { registerLead } from "~/server/pipeline/application/commands/register-lead";
 import { reviewLead } from "~/server/pipeline/application/commands/review-lead";
 import {
-  parseLeadPriority,
-  parseLeadStatus,
+  parseRequiredLeadPriority,
+  parseRequiredLeadStatus,
 } from "~/server/pipeline/domain/lead";
-import {
-  createCompleteCommercialInputDeps,
-  createRegisterLeadDeps,
-  createReassignLeadDeps,
-  createReviewLeadDeps,
-} from "~/server/pipeline/infrastructure/deps";
-import {
-  runPipelineCommand,
-  runPipelineNotificationCommand,
-  runPipelineRegistrationCommand,
-} from "~/server/pipeline/infrastructure/runtime";
+import { runPipelineCommand } from "~/server/pipeline/infrastructure/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function requestLeadCreation(input: {
@@ -35,18 +25,16 @@ export async function requestLeadCreation(input: {
     requireAuth: true,
     input,
     execute: (ctx) =>
-      runPipelineRegistrationCommand(
-        createRegisterLeadDeps,
-        ({ deps, auditService, engineGateway }) =>
-          registerLead({
-            actorUserId: ctx.actor.userId,
-            actorRole: ctx.actor.role,
-            executiveId: input.executiveId ?? ctx.actor.userId,
-            ruc: input.ruc,
-            deps,
-            auditService,
-            engineGateway,
-          }),
+      runPipelineCommand(({ deps, auditService, engineGateway }) =>
+        registerLead({
+          deps: deps.registerLead,
+          auditService,
+          engineGateway,
+          actorUserId: ctx.actor.userId,
+          actorRole: ctx.actor.role,
+          executiveId: input.executiveId ?? ctx.actor.userId,
+          ruc: input.ruc,
+        }),
       ),
   });
 }
@@ -61,20 +49,14 @@ export async function requestLeadReview(input: {
     throw validationError("reason is required");
   }
 
-  const status = parseLeadStatus(input.status);
+  const status = parseRequiredLeadStatus(input.status);
   if (!status.ok) {
-    throw validationError("invalid status");
-  }
-  if (status.value === undefined) {
     throw validationError("invalid status");
   }
   const reviewedStatus = status.value;
 
-  const prioridad = parseLeadPriority(input.prioridad);
+  const prioridad = parseRequiredLeadPriority(input.prioridad);
   if (!prioridad.ok) {
-    throw validationError("invalid prioridad");
-  }
-  if (prioridad.value === undefined) {
     throw validationError("invalid prioridad");
   }
   const reviewedPrioridad = prioridad.value;
@@ -84,18 +66,19 @@ export async function requestLeadReview(input: {
     requireAuth: true,
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      runPipelineNotificationCommand(
-        createReviewLeadDeps,
-        ({ deps, auditService, notificationCenter }) =>
-          reviewLead(deps, auditService, notificationCenter, {
-            actorUserId: ctx.actor.userId,
-            actorRole: ctx.actor.role,
-            branchId: ctx.actor.branchId,
-            leadId: input.leadId,
-            status: reviewedStatus,
-            prioridad: reviewedPrioridad,
-            reason: input.reason,
-          }),
+      runPipelineCommand(({ deps, auditService, notificationCenter }) =>
+        reviewLead({
+          deps: deps.reviewLead,
+          auditService,
+          notificationCenter,
+          actorUserId: ctx.actor.userId,
+          actorRole: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+          leadId: input.leadId,
+          status: reviewedStatus,
+          prioridad: reviewedPrioridad,
+          reason: input.reason,
+        }),
       ),
   });
 }
@@ -118,15 +101,16 @@ export async function requestLeadCommercialInputCompletion(input: {
     requireAuth: true,
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      runPipelineNotificationCommand(
-        createCompleteCommercialInputDeps,
-        ({ deps, auditService, notificationCenter }) =>
-          completeCommercialInput(deps, auditService, notificationCenter, {
-            actorUserId: ctx.actor.userId,
-            actorRole: ctx.actor.role,
-            branchId: ctx.actor.branchId,
-            ...input,
-          }),
+      runPipelineCommand(({ deps, auditService, notificationCenter }) =>
+        completeCommercialInput({
+          deps: deps.completeCommercialInput,
+          auditService,
+          notificationCenter,
+          actorUserId: ctx.actor.userId,
+          actorRole: ctx.actor.role,
+          branchId: ctx.actor.branchId,
+          ...input,
+        }),
       ),
   });
 }
@@ -140,8 +124,10 @@ export async function requestLeadReassignment(input: {
     requireAuth: true,
     input,
     execute: (ctx) =>
-      runPipelineCommand(createReassignLeadDeps, ({ deps, auditService }) =>
-        reassignLead(deps, auditService, {
+      runPipelineCommand(({ deps, auditService }) =>
+        reassignLead({
+          deps: deps.reassignLead,
+          auditService,
           actorUserId: ctx.actor.userId,
           actorRole: ctx.actor.role,
           ...input,

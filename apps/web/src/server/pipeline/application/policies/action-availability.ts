@@ -1,7 +1,16 @@
-import { hasPermission, type Role } from "~/lib/auth/access/rbac";
+import type { Role } from "~/lib/auth/access/rbac";
 
+import type { LeadAction } from "../../contracts/lead-detail";
 import type { LeadStage } from "../../domain/lead";
-import type { LeadAction } from "../contracts/lead-detail";
+import {
+  canAddLeadInteraction,
+  canApproveForSale,
+  canCompleteCommercialInput,
+  canCreateQuotation,
+  canCreateSale,
+  canReassignLead,
+  canReviewLead,
+} from "./access";
 
 export function resolveAvailableActions(input: {
   actorUserId: number;
@@ -12,42 +21,39 @@ export function resolveAvailableActions(input: {
   const actions: LeadAction[] = [];
   const ownsLead = input.executiveId === input.actorUserId;
 
-  if (hasPermission(input.actorRole, "lead:pipeline")) {
+  if (canAddLeadInteraction(input.actorRole)) {
     actions.push("log-call", "add-note");
   }
   if (
-    hasPermission(input.actorRole, "lead:register") &&
+    canCompleteCommercialInput(input.actorRole) &&
     ownsLead &&
     input.stage === "NEEDS_EXECUTIVE_INPUT"
   ) {
     actions.push("complete-commercial-input");
   }
   if (
-    hasPermission(input.actorRole, "lead:register") &&
+    canCreateSale(input.actorRole) &&
     ownsLead &&
     input.stage === "READY_FOR_SALE"
   ) {
     actions.push("create-sale");
   }
   if (
-    hasPermission(input.actorRole, "lead:review") &&
+    canReviewLead(input.actorRole) &&
     input.stage === "PENDING_EXTERNAL_REVIEW"
   ) {
     actions.push("review-lead");
   }
   if (
-    hasPermission(input.actorRole, "quotation:manage") &&
+    canCreateQuotation(input.actorRole) &&
     input.stage === "READY_FOR_QUOTATION"
   ) {
     actions.push("create-quotation");
   }
-  if (
-    hasPermission(input.actorRole, "quotation:manage") &&
-    input.stage === "QUOTED"
-  ) {
+  if (canApproveForSale(input.actorRole) && input.stage === "QUOTED") {
     actions.push("approve-for-sale");
   }
-  if (hasPermission(input.actorRole, "lead:reassign")) {
+  if (canReassignLead(input.actorRole)) {
     actions.push("reassign-lead");
   }
 

@@ -2,14 +2,7 @@
 
 import { approveForSale } from "~/server/pipeline/application/commands/approve-for-sale";
 import { createQuotation } from "~/server/pipeline/application/commands/create-quotation";
-import {
-  createApproveForSaleDeps,
-  createQuotationDeps,
-} from "~/server/pipeline/infrastructure/deps";
-import {
-  runPipelineCommand,
-  runPipelineNotificationCommand,
-} from "~/server/pipeline/infrastructure/runtime";
+import { runPipelineCommand } from "~/server/pipeline/infrastructure/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function requestQuotationCreation(input: {
@@ -26,8 +19,10 @@ export async function requestQuotationCreation(input: {
     requireAuth: true,
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      runPipelineCommand(createQuotationDeps, ({ deps, auditService }) =>
-        createQuotation(deps, auditService, {
+      runPipelineCommand(({ deps, auditService }) =>
+        createQuotation({
+          deps: deps.createQuotation,
+          auditService,
           actorUserId: ctx.actor.userId,
           actorRole: ctx.actor.role,
           ...input,
@@ -42,14 +37,15 @@ export async function requestSaleApproval(leadId: number) {
     requireAuth: true,
     input: { leadId },
     execute: (ctx) =>
-      runPipelineNotificationCommand(
-        createApproveForSaleDeps,
-        ({ deps, auditService, notificationCenter }) =>
-          approveForSale(deps, auditService, notificationCenter, {
-            actorUserId: ctx.actor.userId,
-            actorRole: ctx.actor.role,
-            leadId,
-          }),
+      runPipelineCommand(({ deps, auditService, notificationCenter }) =>
+        approveForSale({
+          deps: deps.approveForSale,
+          auditService,
+          notificationCenter,
+          actorUserId: ctx.actor.userId,
+          actorRole: ctx.actor.role,
+          leadId,
+        }),
       ),
   });
 }

@@ -4,7 +4,7 @@ import {
   addLeadNote,
   recordLeadCall,
 } from "~/actions/pipeline/commands/interactions";
-import type { LeadAction } from "~/server/pipeline/application/contracts/lead-detail";
+import type { LeadAction } from "~/server/pipeline/contracts/lead-detail";
 
 import { InteractionForm } from "./interaction-form";
 import { createInteractionState } from "./state";

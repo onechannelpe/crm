@@ -1,36 +1,35 @@
 import type { Role } from "~/lib/auth/access/rbac";
-import { hasPermission } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { ensureCanCreateSale } from "../../domain/workflow";
 import type { CreateSaleDeps } from "../deps/sales";
+import { canCreateSale, requirePipelineActionAccess } from "../policies/access";
 import type { PipelineAuditService } from "../ports/audit-service";
 import { writeLeadSale } from "./create-sale-writer";
 
-export async function createSale(
-  deps: CreateSaleDeps,
-  auditService: PipelineAuditService,
-  input: {
-    actorUserId: number;
-    actorRole: Role;
-    leadId: number;
-    proveedorActual: string;
-    tasaActual: number;
-    gpv: number;
-    ticket: number;
-    abono: number;
-    cantidadPos: number;
-    banco: string;
-    nroCuenta: string;
-    cci: string | null;
-  },
-): Promise<Result<{ id: number }, DomainError>> {
-  if (!hasPermission(input.actorRole, "lead:register")) {
-    return Err(domainError("forbidden", "forbidden", "Access denied"));
+export async function createSale(input: {
+  deps: CreateSaleDeps;
+  auditService: PipelineAuditService;
+  actorUserId: number;
+  actorRole: Role;
+  leadId: number;
+  proveedorActual: string;
+  tasaActual: number;
+  gpv: number;
+  ticket: number;
+  abono: number;
+  cantidadPos: number;
+  banco: string;
+  nroCuenta: string;
+  cci: string | null;
+}): Promise<Result<{ id: number }, DomainError>> {
+  const canCreate = requirePipelineActionAccess(input.actorRole, canCreateSale);
+  if (!canCreate.ok) {
+    return canCreate;
   }
 
-  const lead = await deps.leads.findById(input.leadId);
+  const lead = await input.deps.leads.findById(input.leadId);
   if (!lead) {
     return Err(domainError("not_found", "lead_not_found", "Lead not found"));
   }
@@ -48,8 +47,8 @@ export async function createSale(
 
   const now = Date.now();
   const saleId = await writeLeadSale({
-    deps,
-    auditService,
+    deps: input.deps,
+    auditService: input.auditService,
     lead,
     actorUserId: input.actorUserId,
     proveedorActual: input.proveedorActual,

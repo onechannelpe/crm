@@ -30,110 +30,55 @@ import { createSaleRepo } from "./sale-repo";
 import { createSourcingPolicyRepo } from "./sourcing-policy-repo";
 import { createPipelineUsersRepo } from "./users-repo";
 
-export function createRegisterLeadDeps(
-  executor: DatabaseExecutor,
-): RegisterLeadDeps {
-  return {
-    leads: createLeadRepo(executor),
-    leadAssignments: createAssignmentRepo(executor),
-    leadHistory: createHistoryRepo(executor),
-    users: createPipelineUsersRepo(executor),
-  };
-}
+export type PipelineDeps = {
+  registerLead: RegisterLeadDeps;
+  reassignLead: ReassignLeadDeps;
+  leadInteractions: LeadInteractionDeps;
+  reviewLead: ReviewLeadDeps;
+  completeCommercialInput: CompleteCommercialInputDeps;
+  createQuotation: CreateQuotationDeps;
+  approveForSale: ApproveForSaleDeps;
+  createSale: CreateSaleDeps;
+  leadList: LeadListDeps;
+  leadDetail: LeadDetailDeps;
+  saleQueries: SaleQueryDeps;
+  sourcingPolicy: SourcingPolicyDeps;
+};
 
-export function createReassignLeadDeps(
-  executor: DatabaseExecutor,
-): ReassignLeadDeps {
-  return createRegisterLeadDeps(executor);
-}
-
-export function createLeadInteractionDeps(
-  executor: DatabaseExecutor,
-): LeadInteractionDeps {
-  return {
-    leads: createLeadRepo(executor),
-    leadHistory: createHistoryRepo(executor),
-  };
-}
-
-export function createReviewLeadDeps(
-  executor: DatabaseExecutor,
-): ReviewLeadDeps {
-  return {
-    leads: createLeadRepo(executor),
-    leadHistory: createHistoryRepo(executor),
-  };
-}
-
-export function createCompleteCommercialInputDeps(
-  executor: DatabaseExecutor,
-): CompleteCommercialInputDeps {
-  return {
-    leads: createLeadRepo(executor),
-    leadCommercialInputs: createCommercialInputRepo(executor),
-    leadHistory: createHistoryRepo(executor),
-  };
-}
-
-export function createQuotationDeps(
-  executor: DatabaseExecutor,
-): CreateQuotationDeps {
-  return {
-    leads: createLeadRepo(executor),
-    leadHistory: createHistoryRepo(executor),
-    leadQuotations: createQuotationRepo(executor),
-  };
-}
-
-export function createApproveForSaleDeps(
-  executor: DatabaseExecutor,
-): ApproveForSaleDeps {
-  return {
-    leads: createLeadRepo(executor),
-    leadHistory: createHistoryRepo(executor),
-  };
-}
-
-export function createSaleDeps(executor: DatabaseExecutor): CreateSaleDeps {
-  return {
-    leads: createLeadRepo(executor),
-    leadHistory: createHistoryRepo(executor),
-    leadSales: createSaleRepo(executor),
-  };
-}
-
-export function createLeadListDeps(
+export function createPipelineDeps(
   executor: DatabaseExecutor = db,
-): LeadListDeps {
-  return {
-    leads: createLeadRepo(executor),
-  };
-}
+): PipelineDeps {
+  const leads = createLeadRepo(executor);
+  const leadAssignments = createAssignmentRepo(executor);
+  const leadCommercialInputs = createCommercialInputRepo(executor);
+  const leadHistory = createHistoryRepo(executor);
+  const leadQuotations = createQuotationRepo(executor);
+  const leadSales = createSaleRepo(executor);
+  const sourcingPolicies = createSourcingPolicyRepo(executor);
+  const users = createPipelineUsersRepo(executor);
 
-export function createLeadDetailDeps(
-  executor: DatabaseExecutor = db,
-): LeadDetailDeps {
   return {
-    leads: createLeadRepo(executor),
-    leadCommercialInputs: createCommercialInputRepo(executor),
-    leadHistory: createHistoryRepo(executor),
-    leadQuotations: createQuotationRepo(executor),
-    leadSales: createSaleRepo(executor),
-  };
-}
-
-export function createSaleQueryDeps(
-  executor: DatabaseExecutor = db,
-): SaleQueryDeps {
-  return {
-    leadSales: createSaleRepo(executor),
-  };
-}
-
-export function createSourcingPolicyDeps(
-  executor: DatabaseExecutor = db,
-): SourcingPolicyDeps {
-  return {
-    sourcingPolicies: createSourcingPolicyRepo(executor),
+    registerLead: { leads, leadAssignments, leadHistory, users },
+    reassignLead: { leads, leadAssignments, leadHistory, users },
+    leadInteractions: { leads, leadHistory },
+    reviewLead: { leads, leadHistory },
+    completeCommercialInput: {
+      leads,
+      leadCommercialInputs,
+      leadHistory,
+    },
+    createQuotation: { leads, leadHistory, leadQuotations },
+    approveForSale: { leads, leadHistory },
+    createSale: { leads, leadHistory, leadSales },
+    leadList: { leads },
+    leadDetail: {
+      leads,
+      leadCommercialInputs,
+      leadHistory,
+      leadQuotations,
+      leadSales,
+    },
+    saleQueries: { leadSales },
+    sourcingPolicy: { sourcingPolicies },
   };
 }

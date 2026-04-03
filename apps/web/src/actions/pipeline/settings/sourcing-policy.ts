@@ -2,8 +2,10 @@
 
 import { getSourcingPolicy } from "~/server/pipeline/application/queries/get-sourcing-policy";
 import { updateSourcingPolicy } from "~/server/pipeline/application/settings/update-sourcing-policy";
-import { createSourcingPolicyDeps } from "~/server/pipeline/infrastructure/deps";
-import { runPipelineCommand } from "~/server/pipeline/infrastructure/runtime";
+import {
+  createPipelineQueryRuntime,
+  runPipelineCommand,
+} from "~/server/pipeline/infrastructure/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function querySourcingPolicy(branchId: number) {
@@ -12,7 +14,7 @@ export async function querySourcingPolicy(branchId: number) {
     requireAuth: true,
     input: { branchId },
     execute: (ctx) =>
-      getSourcingPolicy(createSourcingPolicyDeps(), {
+      getSourcingPolicy(createPipelineQueryRuntime().deps.sourcingPolicy, {
         actorRole: ctx.actor.role,
         branchId,
       }),
@@ -28,8 +30,8 @@ export async function saveSourcingPolicy(input: {
     requireAuth: true,
     input,
     execute: (ctx) =>
-      runPipelineCommand(createSourcingPolicyDeps, ({ deps }) =>
-        updateSourcingPolicy(deps, {
+      runPipelineCommand(({ deps }) =>
+        updateSourcingPolicy(deps.sourcingPolicy, {
           actorUserId: ctx.actor.userId,
           actorRole: ctx.actor.role,
           branchId: input.branchId,

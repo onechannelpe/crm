@@ -91,7 +91,7 @@ export function createLeadDraft(input: {
   });
 }
 
-function parseLeadValue<TValue extends string>(
+function parseOptionalLeadValue<TValue extends string>(
   value: string | undefined,
   options: readonly TValue[],
   errorCode: string,
@@ -109,10 +109,27 @@ function parseLeadValue<TValue extends string>(
   return Ok(parsed);
 }
 
+function parseRequiredLeadValue<TValue extends string>(
+  value: string,
+  options: readonly TValue[],
+  errorCode: string,
+  message: string,
+): Result<TValue, DomainError> {
+  const parsed = parseOptionalLeadValue(value, options, errorCode, message);
+  if (!parsed.ok) {
+    return parsed;
+  }
+  if (parsed.value === undefined) {
+    return fail(errorCode, message);
+  }
+
+  return Ok(parsed.value);
+}
+
 export function parseLeadStage(
   value: string | undefined,
 ): Result<LeadStage | undefined, DomainError> {
-  return parseLeadValue(
+  return parseOptionalLeadValue(
     value,
     LEAD_STAGES,
     "invalid_stage",
@@ -123,7 +140,7 @@ export function parseLeadStage(
 export function parseLeadStatus(
   value: string | undefined,
 ): Result<LeadStatus | undefined, DomainError> {
-  return parseLeadValue(
+  return parseOptionalLeadValue(
     value,
     LEAD_STATUSES,
     "invalid_status",
@@ -134,10 +151,32 @@ export function parseLeadStatus(
 export function parseLeadPriority(
   value: string | undefined,
 ): Result<LeadPriority | undefined, DomainError> {
-  return parseLeadValue(
+  return parseOptionalLeadValue(
     value,
     LEAD_PRIORITIES,
     "invalid_prioridad",
     "Invalid prioridad filter",
+  );
+}
+
+export function parseRequiredLeadStatus(
+  value: string,
+): Result<LeadStatus, DomainError> {
+  return parseRequiredLeadValue(
+    value,
+    LEAD_STATUSES,
+    "invalid_status",
+    "Invalid status",
+  );
+}
+
+export function parseRequiredLeadPriority(
+  value: string,
+): Result<LeadPriority, DomainError> {
+  return parseRequiredLeadValue(
+    value,
+    LEAD_PRIORITIES,
+    "invalid_prioridad",
+    "Invalid prioridad",
   );
 }
