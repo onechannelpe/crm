@@ -2,12 +2,8 @@ import type { Role } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
+import type { LeadDetailDeps } from "../deps/lead-queries";
 import { requireLeadAccess } from "../policies/access";
-import type { LeadCommercialInputRepository } from "../ports/commercial-input-repository";
-import type { LeadHistoryRepository } from "../ports/history-repository";
-import type { LeadRepository } from "../ports/lead-repository";
-import type { LeadQuotationRepository } from "../ports/quotation-repository";
-import type { LeadSaleRepository } from "../ports/sale-repository";
 import {
   presentLeadDetail,
   type LeadDetailOutput,
@@ -15,16 +11,8 @@ import {
 
 export type { LeadDetailOutput };
 
-type GetLeadDetailDeps = {
-  leads: LeadRepository;
-  leadCommercialInputs: LeadCommercialInputRepository;
-  leadHistory: LeadHistoryRepository;
-  leadQuotations: LeadQuotationRepository;
-  leadSales: LeadSaleRepository;
-};
-
 export async function getLeadDetail(
-  deps: GetLeadDetailDeps,
+  deps: LeadDetailDeps,
   input: {
     actorUserId: number;
     actorRole: Role;

@@ -1,15 +1,12 @@
-import type { RequestContactAssignmentRefillCommand } from "~/server/contact-assignments/application/assign-contacts";
+import type { AssignContactsCommand } from "~/server/contact-assignments/application/assign-contacts";
 import { domainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-export function parseContactAssignmentRefillCommand(
+export function parseAssignContactsCommand(
   actorUserId: UserId,
   branchId: unknown,
-): Result<
-  RequestContactAssignmentRefillCommand,
-  ReturnType<typeof domainError>
-> {
+): Result<AssignContactsCommand, ReturnType<typeof domainError>> {
   if (
     typeof branchId !== "number" ||
     !Number.isInteger(branchId) ||

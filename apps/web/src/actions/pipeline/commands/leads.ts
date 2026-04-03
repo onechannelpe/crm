@@ -6,6 +6,12 @@ import { completeCommercialInput } from "~/server/pipeline/application/commands/
 import { reassignLead } from "~/server/pipeline/application/commands/reassign-lead";
 import { registerLead } from "~/server/pipeline/application/commands/register-lead";
 import { reviewLead } from "~/server/pipeline/application/commands/review-lead";
+import {
+  createCompleteCommercialInputDeps,
+  createRegisterLeadDeps,
+  createReassignLeadDeps,
+  createReviewLeadDeps,
+} from "~/server/pipeline/infrastructure/deps";
 import { runAction } from "~/server/shared/action-runtime";
 
 import {
@@ -27,16 +33,18 @@ export async function requestLeadCreation(input: {
     permission: "lead:register",
     input,
     execute: (ctx) =>
-      runPipelineRegistrationCommand(({ deps, auditService, engineGateway }) =>
-        registerLead({
-          actorUserId: ctx.actor.userId,
-          actorRole: ctx.actor.role,
-          executiveId: input.executiveId ?? ctx.actor.userId,
-          ruc: input.ruc,
-          deps,
-          auditService,
-          engineGateway,
-        }),
+      runPipelineRegistrationCommand(
+        createRegisterLeadDeps,
+        ({ deps, auditService, engineGateway }) =>
+          registerLead({
+            actorUserId: ctx.actor.userId,
+            actorRole: ctx.actor.role,
+            executiveId: input.executiveId ?? ctx.actor.userId,
+            ruc: input.ruc,
+            deps,
+            auditService,
+            engineGateway,
+          }),
       ),
   });
 }
@@ -67,6 +75,7 @@ export async function requestLeadReview(input: {
     input: { leadId: input.leadId },
     execute: (ctx) =>
       runPipelineNotificationCommand(
+        createReviewLeadDeps,
         ({ deps, auditService, notificationCenter }) =>
           reviewLead(deps, auditService, notificationCenter, {
             actorUserId: ctx.actor.userId,
@@ -100,6 +109,7 @@ export async function requestLeadCommercialInputCompletion(input: {
     input: { leadId: input.leadId },
     execute: (ctx) =>
       runPipelineNotificationCommand(
+        createCompleteCommercialInputDeps,
         ({ deps, auditService, notificationCenter }) =>
           completeCommercialInput(deps, auditService, notificationCenter, {
             actorUserId: ctx.actor.userId,
@@ -120,7 +130,7 @@ export async function requestLeadReassignment(input: {
     permission: "lead:reassign",
     input,
     execute: (ctx) =>
-      runPipelineCommand(({ deps, auditService }) =>
+      runPipelineCommand(createReassignLeadDeps, ({ deps, auditService }) =>
         reassignLead(deps, auditService, {
           actorUserId: ctx.actor.userId,
           actorRole: ctx.actor.role,

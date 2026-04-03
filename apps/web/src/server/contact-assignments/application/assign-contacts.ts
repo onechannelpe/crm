@@ -15,21 +15,21 @@ import {
 } from "./assignment-plan";
 import {
   createContactAssignmentsFromCandidates,
-  type ContactAssignmentRefillTransactionRunner,
-  type ContactAssignmentRefillTxRepos,
-} from "./refill-writer";
+  type AssignContactsTransactionRepos,
+  type AssignContactsTransactionRunner,
+} from "./contact-assignment-writer";
 
-export interface RequestContactAssignmentRefillCommand {
+export interface AssignContactsCommand {
   actorUserId: UserId;
   branchId: BranchId;
 }
 
-export interface ContactAssignmentRefillResult {
+export interface AssignContactsResult {
   requested: number;
   assigned: number;
 }
 
-type RefillRepos = AssignmentPlanRepos &
+type AssignContactsRepos = AssignmentPlanRepos &
   AssignmentCapacityRepos & {
     organizations: {
       findOrCreate(ruc: string, name: string): Promise<{ id: number }>;
@@ -44,19 +44,19 @@ type RefillRepos = AssignmentPlanRepos &
     };
   };
 
-export type RefillTxRepos = ContactAssignmentRefillTxRepos;
-export type RefillTransactionRunner = ContactAssignmentRefillTransactionRunner;
+export type AssignmentTransactionRepos = AssignContactsTransactionRepos;
+export type AssignmentTransactionRunner = AssignContactsTransactionRunner;
 
-interface RefillDeps {
-  repos: RefillRepos;
-  runInTransaction: RefillTransactionRunner;
+interface AssignContactsDeps {
+  repos: AssignContactsRepos;
+  runInTransaction: AssignmentTransactionRunner;
   engine: Pick<EngineClient, "requestCandidates">;
 }
 
 export async function assignContacts(
-  command: RequestContactAssignmentRefillCommand,
-  deps: RefillDeps,
-): Promise<Result<ContactAssignmentRefillResult, DomainError>> {
+  command: AssignContactsCommand,
+  deps: AssignContactsDeps,
+): Promise<Result<AssignContactsResult, DomainError>> {
   const { repos, runInTransaction, engine } = deps;
 
   const plan = await planContactAssignments(command.actorUserId, repos);

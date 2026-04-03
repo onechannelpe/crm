@@ -3,27 +3,17 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, type Result } from "~/server/shared/result";
 
 import { createLeadDraft, normalizeLeadRuc } from "../../domain/lead";
-import type { LeadAssignmentRepository } from "../ports/assignment-repository";
+import type { RegisterLeadDeps } from "../deps/register-lead";
 import type { PipelineAuditService } from "../ports/audit-service";
 import type { PipelineEngineGateway } from "../ports/engine-gateway";
-import type { LeadHistoryRepository } from "../ports/history-repository";
-import type { LeadRepository } from "../ports/lead-repository";
-import type { PipelineUserRepository } from "../ports/user-repository";
 import {
   ensureActiveExecutive,
   resolveLeadRegistration,
 } from "./register-lead-resolution";
 import {
-  createRegisteredLead,
-  reassignExistingLeadOnRegistration,
-} from "./register-lead-writer";
-
-type RegisterLeadDeps = {
-  leads: LeadRepository;
-  leadAssignments: LeadAssignmentRepository;
-  leadHistory: LeadHistoryRepository;
-  users: PipelineUserRepository;
-};
+  writeLeadRegistrationEffects,
+  writeLeadReassignmentEffects,
+} from "./register-lead-effects";
 
 export async function registerLead(input: {
   actorUserId: number;
@@ -62,7 +52,7 @@ export async function registerLead(input: {
 
   const now = Date.now();
   if (resolution.value.kind === "reassign") {
-    return reassignExistingLeadOnRegistration({
+    return writeLeadReassignmentEffects({
       deps: input.deps,
       auditService: input.auditService,
       actorUserId: input.actorUserId,
@@ -84,7 +74,7 @@ export async function registerLead(input: {
     return draft;
   }
 
-  return createRegisteredLead({
+  return writeLeadRegistrationEffects({
     deps: input.deps,
     auditService: input.auditService,
     actorUserId: input.actorUserId,

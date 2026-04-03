@@ -3,18 +3,12 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { createHistoryEvent } from "../../domain/history";
+import type { LeadInteractionDeps } from "../deps/lead-interactions";
 import { requireLeadAccess, requireLeadReadAccess } from "../policies/access";
 import type { PipelineAuditService } from "../ports/audit-service";
-import type { LeadHistoryRepository } from "../ports/history-repository";
-import type { LeadRepository } from "../ports/lead-repository";
-
-type AddNoteDeps = {
-  leads: LeadRepository;
-  leadHistory: LeadHistoryRepository;
-};
 
 export async function addNote(
-  deps: AddNoteDeps,
+  deps: LeadInteractionDeps,
   auditService: PipelineAuditService,
   input: {
     actorUserId: number;

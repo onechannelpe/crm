@@ -5,16 +5,8 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { createHistoryEvent } from "../../domain/history";
 import { ensureCanCreateSale } from "../../domain/workflow";
+import type { CreateSaleDeps } from "../deps/sales";
 import type { PipelineAuditService } from "../ports/audit-service";
-import type { LeadHistoryRepository } from "../ports/history-repository";
-import type { LeadRepository } from "../ports/lead-repository";
-import type { LeadSaleRepository } from "../ports/sale-repository";
-
-type CreateSaleDeps = {
-  leads: LeadRepository;
-  leadHistory: LeadHistoryRepository;
-  leadSales: LeadSaleRepository;
-};
 
 export async function createSale(
   deps: CreateSaleDeps,

@@ -3,7 +3,7 @@ import { canContactNow } from "~/server/contact-assignments/domain/cooldown";
 import type { LeadCandidate } from "~/server/shared/engine/lead-contract";
 import type { UserId } from "~/server/shared/ids";
 
-export interface ContactAssignmentRefillTxRepos {
+export interface AssignContactsTransactionRepos {
   organizations: {
     findOrCreate(ruc: string, name: string): Promise<{ id: number }>;
   };
@@ -22,8 +22,8 @@ export interface ContactAssignmentRefillTxRepos {
   };
 }
 
-export type ContactAssignmentRefillTransactionRunner = <T>(
-  operation: (repos: ContactAssignmentRefillTxRepos) => Promise<T>,
+export type AssignContactsTransactionRunner = <T>(
+  operation: (repos: AssignContactsTransactionRepos) => Promise<T>,
 ) => Promise<T>;
 
 function groupCandidatesByRuc(
@@ -48,7 +48,7 @@ function resolveContactKey(input: {
 export async function createContactAssignmentsFromCandidates(input: {
   actorUserId: UserId;
   candidates: LeadCandidate[];
-  runInTransaction: ContactAssignmentRefillTransactionRunner;
+  runInTransaction: AssignContactsTransactionRunner;
 }): Promise<number> {
   return input.runInTransaction(async (txRepos) => {
     const orgEntries = await Promise.all(

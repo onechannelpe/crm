@@ -11,15 +11,12 @@ import {
   requireLeadReadAccess,
   resolveLeadListExecutiveScope,
 } from "../policies/access";
+import type { LeadListDeps } from "../deps/lead-queries";
 import type { LeadRepository } from "../ports/lead-repository";
 import { parsePageParams } from "./pagination";
 
-type ListLeadsDeps = {
-  leads: LeadRepository;
-};
-
 export async function listLeads(
-  deps: ListLeadsDeps,
+  deps: LeadListDeps,
   input: {
     actorUserId: number;
     actorRole: Role;

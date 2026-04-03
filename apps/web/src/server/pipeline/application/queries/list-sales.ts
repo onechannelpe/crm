@@ -2,16 +2,13 @@ import type { Role } from "~/lib/auth/access/rbac";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
+import type { SaleQueryDeps } from "../deps/lead-queries";
 import { canViewAllSales } from "../policies/access";
 import type { LeadSaleRepository } from "../ports/sale-repository";
 import { parsePageParams } from "./pagination";
 
-type ListSalesDeps = {
-  leadSales: LeadSaleRepository;
-};
-
 export async function listSales(
-  deps: ListSalesDeps,
+  deps: SaleQueryDeps,
   input: {
     actorRole: Role;
     actorUserId: number;

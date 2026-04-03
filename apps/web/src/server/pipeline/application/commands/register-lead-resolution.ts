@@ -5,17 +5,11 @@ import {
   decideRegistrationConflict,
   ensureCanReassignLead,
 } from "../../domain/assignment";
+import type {
+  ActiveExecutiveDeps,
+  LeadRegistrationLookupDeps,
+} from "../deps/register-lead";
 import type { LeadRepository } from "../ports/lead-repository";
-import type { PipelineUserRepository } from "../ports/user-repository";
-
-type EnsureActiveExecutiveDeps = {
-  users: PipelineUserRepository;
-};
-
-type ResolveLeadRegistrationDeps = {
-  leads: LeadRepository;
-  users: PipelineUserRepository;
-};
 
 export type ExistingLead = NonNullable<
   Awaited<ReturnType<LeadRepository["findByRuc"]>>
@@ -26,7 +20,7 @@ export type LeadRegistrationResolution =
   | { kind: "reassign"; lead: ExistingLead };
 
 export async function ensureActiveExecutive(input: {
-  deps: EnsureActiveExecutiveDeps;
+  deps: ActiveExecutiveDeps;
   executiveId: number;
 }): Promise<Result<void, DomainError>> {
   const targetExecutive = await input.deps.users.findById(input.executiveId);
@@ -44,7 +38,7 @@ export async function ensureActiveExecutive(input: {
 }
 
 export async function resolveLeadRegistration(input: {
-  deps: ResolveLeadRegistrationDeps;
+  deps: LeadRegistrationLookupDeps;
   ruc: string;
   executiveId: number;
 }): Promise<Result<LeadRegistrationResolution, DomainError>> {

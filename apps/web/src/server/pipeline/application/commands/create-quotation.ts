@@ -5,16 +5,8 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { createHistoryEvent } from "../../domain/history";
 import { ensureCanCreateQuotation } from "../../domain/workflow";
+import type { CreateQuotationDeps } from "../deps/quotations";
 import type { PipelineAuditService } from "../ports/audit-service";
-import type { LeadHistoryRepository } from "../ports/history-repository";
-import type { LeadRepository } from "../ports/lead-repository";
-import type { LeadQuotationRepository } from "../ports/quotation-repository";
-
-type CreateQuotationDeps = {
-  leads: LeadRepository;
-  leadHistory: LeadHistoryRepository;
-  leadQuotations: LeadQuotationRepository;
-};
 
 export async function createQuotation(
   deps: CreateQuotationDeps,

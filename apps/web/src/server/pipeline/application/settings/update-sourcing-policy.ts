@@ -3,14 +3,10 @@ import { hasPermission } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import type { LeadSourcingPolicyRepository } from "../ports/sourcing-policy-repository";
-
-type UpdateSourcingPolicyDeps = {
-  sourcingPolicies: LeadSourcingPolicyRepository;
-};
+import type { SourcingPolicyDeps } from "../deps/sourcing-policy";
 
 export async function updateSourcingPolicy(
-  deps: UpdateSourcingPolicyDeps,
+  deps: SourcingPolicyDeps,
   input: {
     actorUserId: number;
     actorRole: Role;

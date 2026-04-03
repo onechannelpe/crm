@@ -16,7 +16,7 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { EngineClient } from "~/server/shared/engine/client";
 import { createUsersRepo } from "~/server/users/repos-users";
 
-function createContactAssignmentRefillRepos(executor: DatabaseExecutor) {
+function createContactAssignmentRepos(executor: DatabaseExecutor) {
   return {
     users: createUsersRepo(executor),
     leadPolicyDefaults: createLeadPolicyDefaultsRepo(executor),
@@ -30,24 +30,24 @@ function createContactAssignmentRefillRepos(executor: DatabaseExecutor) {
   };
 }
 
-export function createContactAssignmentRefillContext() {
+export function createContactAssignmentContext() {
   return {
-    repos: createContactAssignmentRefillRepos(db),
+    repos: createContactAssignmentRepos(db),
     engine: engineClient satisfies Pick<EngineClient, "requestCandidates">,
     runInTransaction<T>(
       operation: (
-        repos: ReturnType<typeof createContactAssignmentRefillRepos>,
+        repos: ReturnType<typeof createContactAssignmentRepos>,
       ) => Promise<T>,
     ) {
       return db
         .transaction()
         .execute((transactionDb) =>
-          operation(createContactAssignmentRefillRepos(transactionDb)),
+          operation(createContactAssignmentRepos(transactionDb)),
         );
     },
   };
 }
 
-export type ContactAssignmentRefillContext = ReturnType<
-  typeof createContactAssignmentRefillContext
+export type ContactAssignmentContext = ReturnType<
+  typeof createContactAssignmentContext
 >;

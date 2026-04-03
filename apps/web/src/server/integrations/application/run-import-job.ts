@@ -3,11 +3,15 @@ import { TextDecoder } from "node:util";
 import { db } from "~/lib/db/db";
 import { reviewLead } from "~/server/pipeline/application/commands/review-lead";
 import type { LeadPriority, LeadStatus } from "~/server/pipeline/domain/lead";
-import { createPipelineAuditService } from "~/server/pipeline/infrastructure/audit-log";
-import { createPipelineCommandDeps } from "~/server/pipeline/infrastructure/deps";
+import {
+  createPipelineAuditLogRepo,
+  createPipelineAuditService,
+} from "~/server/pipeline/infrastructure/audit-log";
+import { createReviewLeadDeps } from "~/server/pipeline/infrastructure/deps";
 import { createPipelineNotificationCenter } from "~/server/pipeline/infrastructure/notifications";
 import { createAuditService } from "~/server/shared/audit";
 import { runInPipelineTransaction } from "~/server/shared/pipeline-transaction";
+import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 
 import {
   parsePrioridadImport,
@@ -215,10 +219,11 @@ function reviewImportedLead(input: {
   branchId: number;
 }) {
   return runInPipelineTransaction(async ({ executor }) => {
-    const pipelineDeps = createPipelineCommandDeps(executor);
     return reviewLead(
-      pipelineDeps,
-      createPipelineAuditService(pipelineDeps),
+      createReviewLeadDeps(executor),
+      createPipelineAuditService({
+        auditLogs: createPipelineAuditLogRepo(createAuditLogsRepo(executor)),
+      }),
       createPipelineNotificationCenter(executor),
       {
         leadId: input.leadId,

@@ -5,21 +5,11 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { ensureCanReassignLead } from "../../domain/assignment";
 import { createHistoryEvent } from "../../domain/history";
-import type { LeadAssignmentRepository } from "../ports/assignment-repository";
+import type { RegisterLeadDeps } from "../deps/register-lead";
 import type { PipelineAuditService } from "../ports/audit-service";
-import type { LeadHistoryRepository } from "../ports/history-repository";
-import type { LeadRepository } from "../ports/lead-repository";
-import type { PipelineUserRepository } from "../ports/user-repository";
-
-type ReassignLeadDeps = {
-  leads: LeadRepository;
-  leadAssignments: LeadAssignmentRepository;
-  leadHistory: LeadHistoryRepository;
-  users: PipelineUserRepository;
-};
 
 export async function reassignLead(
-  deps: ReassignLeadDeps,
+  deps: RegisterLeadDeps,
   auditService: PipelineAuditService,
   input: {
     actorUserId: number;

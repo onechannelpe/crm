@@ -4,18 +4,12 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { createHistoryEvent } from "../../domain/history";
 import type { LeadCallOutcome } from "../../domain/lead";
+import type { LeadInteractionDeps } from "../deps/lead-interactions";
 import { requireLeadAccess, requireLeadReadAccess } from "../policies/access";
 import type { PipelineAuditService } from "../ports/audit-service";
-import type { LeadHistoryRepository } from "../ports/history-repository";
-import type { LeadRepository } from "../ports/lead-repository";
-
-type LogCallDeps = {
-  leads: LeadRepository;
-  leadHistory: LeadHistoryRepository;
-};
 
 export async function logCall(
-  deps: LogCallDeps,
+  deps: LeadInteractionDeps,
   auditService: PipelineAuditService,
   input: {
     actorUserId: number;

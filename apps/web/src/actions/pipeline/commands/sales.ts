@@ -2,6 +2,7 @@
 
 import { validationError } from "~/lib/app-errors";
 import { createSale } from "~/server/pipeline/application/commands/create-sale";
+import { createSaleDeps } from "~/server/pipeline/infrastructure/deps";
 import { runAction } from "~/server/shared/action-runtime";
 
 import { runPipelineCommand } from "../runtime/commands";
@@ -33,7 +34,7 @@ export async function requestSaleCreation(input: {
     permission: "lead:register",
     input: { leadId: input.leadId },
     execute: (ctx) =>
-      runPipelineCommand(({ deps, auditService }) =>
+      runPipelineCommand(createSaleDeps, ({ deps, auditService }) =>
         createSale(deps, auditService, {
           actorUserId: ctx.actor.userId,
           actorRole: ctx.actor.role,

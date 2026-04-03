@@ -12,7 +12,7 @@ import type { DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 
-import { computeNeededAssignments } from "../domain/refill";
+import { computeNeededAssignments } from "../domain/assignment-demand";
 
 export type AssignmentPlanRepos = {
   users: {
