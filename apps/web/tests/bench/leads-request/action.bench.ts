@@ -35,7 +35,7 @@ describe("lead refill action benchmark", () => {
   });
 
   bench(
-    "action path: request lead refill for one user",
+    "service path: request lead refill for one user",
     async () => {
       const userId = takeFromPool(
         userIds,
