@@ -5,8 +5,12 @@ import { requestLeadReview } from "~/actions/pipeline/commands/leads";
 import { queryLeadDetail } from "~/actions/pipeline/queries/leads";
 import { AppPage } from "~/components/layout/page";
 import { toAppError } from "~/lib/app-errors";
-import { LEAD_STATUS_VALUES, PRIORIDAD_VALUES } from "~/lib/db/types";
-import type { LeadStatus, Prioridad } from "~/lib/db/types";
+import {
+  LEAD_PRIORITIES,
+  LEAD_STATUSES,
+  type LeadPriority,
+  type LeadStatus,
+} from "~/server/pipeline/domain/lead";
 
 export default function ReviewLeadPage() {
   const params = useParams<{ leadId: string }>();
@@ -14,7 +18,7 @@ export default function ReviewLeadPage() {
   const data = createAsync(() => queryLeadDetail(Number(params.leadId)));
   const [error, setError] = createSignal<string | null>(null);
   const [statusVal, setStatusVal] = createSignal<LeadStatus>("DISPONIBLE");
-  const [prioridadVal, setPrioridadVal] = createSignal<Prioridad>("P1");
+  const [prioridadVal, setPrioridadVal] = createSignal<LeadPriority>("P1");
   const [reason, setReason] = createSignal("");
 
   const inputStyle = {
@@ -89,7 +93,7 @@ export default function ReviewLeadPage() {
                   <select
                     value={statusVal()}
                     onInput={(e) => {
-                      const v = LEAD_STATUS_VALUES.find(
+                      const v = LEAD_STATUSES.find(
                         (option) => option === e.currentTarget.value,
                       );
                       if (v) setStatusVal(v);
@@ -110,7 +114,7 @@ export default function ReviewLeadPage() {
                   <select
                     value={prioridadVal()}
                     onInput={(e) => {
-                      const v = PRIORIDAD_VALUES.find(
+                      const v = LEAD_PRIORITIES.find(
                         (option) => option === e.currentTarget.value,
                       );
                       if (v) setPrioridadVal(v);
