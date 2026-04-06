@@ -4,7 +4,7 @@ import { createSignal, For } from "solid-js";
 import {
   listIntegrationJobs,
   uploadImportFile,
-} from "~/actions/pipeline/imports";
+} from "~/actions/integrations/imports";
 import { AppPage } from "~/components/layout/page";
 import { toAppError } from "~/lib/app-errors";
 

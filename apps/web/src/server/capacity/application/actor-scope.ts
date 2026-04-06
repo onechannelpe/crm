@@ -5,9 +5,12 @@ export type ActorScope = {
   branchId: number;
 };
 
-export type CapacityUser = ActorScope & {
-  id: number;
+export type ManageableCapacityUser = ActorScope & {
   role: Role;
+};
+
+export type CapacityUser = ManageableCapacityUser & {
+  id: number;
   email: string;
   names: string;
   firstSurname: string;

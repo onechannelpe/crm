@@ -1,6 +1,6 @@
 import { For, Show } from "solid-js";
 
-import type { LeadCallOutcome } from "~/actions/pipeline/commands/interactions";
+import type { LeadCallOutcome } from "~/actions/pipeline/contracts/lead-interactions";
 import { Button } from "~/components/ui/input/button";
 import { Select } from "~/components/ui/input/select";
 import { Textarea } from "~/components/ui/input/textarea";

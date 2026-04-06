@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
+import { createCapacityUsersRepo } from "~/server/capacity/infrastructure/capacity-users-repo";
 import { assignContacts } from "~/server/contact-assignments/application/assign-contacts";
 import type { EngineClient } from "~/server/shared/engine/client";
 
@@ -48,7 +49,10 @@ describe("lead refill action benchmark", () => {
           branchId: 1,
         },
         {
-          repos: ctx!.repos,
+          repos: {
+            ...ctx!.repos,
+            users: createCapacityUsersRepo(ctx!.db),
+          },
           runInTransaction: (operation) =>
             ctx!.db
               .transaction()

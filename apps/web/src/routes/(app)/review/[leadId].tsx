@@ -1,13 +1,13 @@
 import { createAsync, useNavigate, useParams } from "@solidjs/router";
 import { createSignal, Show } from "solid-js";
 
+import { requestLeadReview } from "~/actions/pipeline/commands/leads";
 import {
   LEAD_REVIEW_PRIORITIES,
   LEAD_REVIEW_STATUSES,
-  requestLeadReview,
   type LeadReviewPriority,
   type LeadReviewStatus,
-} from "~/actions/pipeline/commands/leads";
+} from "~/actions/pipeline/contracts/lead-review";
 import { queryLeadDetail } from "~/actions/pipeline/queries/leads";
 import { AppPage } from "~/components/layout/page";
 import { toAppError } from "~/lib/app-errors";

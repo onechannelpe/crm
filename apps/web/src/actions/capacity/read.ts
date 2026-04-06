@@ -11,7 +11,15 @@ import { listPendingRequests as listPendingRequestsService } from "~/server/capa
 import { createCapacityReadContext } from "~/server/capacity/infrastructure/read-context";
 import { runAction } from "~/server/shared/action-runtime";
 
-export async function getManagedExecutivesList() {
+import type {
+  ExecutiveCapacityDetailView,
+  ManagedExecutiveView,
+  PendingCapacityRequestView,
+} from "./contracts/read";
+
+export async function getManagedExecutivesList(): Promise<
+  ManagedExecutiveView[]
+> {
   return runAction({
     actionName: "capacity.managed_executives.read",
     permission: "capacity:read:team",
@@ -20,7 +28,9 @@ export async function getManagedExecutivesList() {
   });
 }
 
-export async function getExecutiveDetail(userId: number) {
+export async function getExecutiveDetail(
+  userId: number,
+): Promise<ExecutiveCapacityDetailView> {
   const safeUserId = assertPositiveInt(userId, "userId");
   return runAction({
     actionName: "capacity.executive_detail.read",
@@ -33,7 +43,9 @@ export async function getExecutiveDetail(userId: number) {
   });
 }
 
-export async function getPendingRequests() {
+export async function getPendingRequests(): Promise<
+  PendingCapacityRequestView[]
+> {
   return runAction({
     actionName: "capacity.pending_requests.read",
     permission: "capacity:read:team",

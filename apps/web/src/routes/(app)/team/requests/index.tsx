@@ -1,5 +1,6 @@
 import { createAsync, useAction } from "@solidjs/router";
 
+import type { PendingCapacityRequestView } from "~/actions/capacity/contracts/read";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import List from "~/components/icons/list";
 import MessageSquare from "~/components/icons/message-square";
@@ -15,9 +16,7 @@ import {
 } from "~/lib/mutations/capacity";
 import { pendingCapacityRequestsQuery } from "~/lib/queries/capacity";
 
-type TeamRequestRow = Awaited<
-  ReturnType<typeof pendingCapacityRequestsQuery>
->[number];
+type TeamRequestRow = PendingCapacityRequestView;
 
 export default function TeamRequestsPage() {
   const requests = createAsync(() => pendingCapacityRequestsQuery());

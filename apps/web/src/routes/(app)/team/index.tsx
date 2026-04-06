@@ -1,6 +1,7 @@
 import { A, createAsync, useNavigate } from "@solidjs/router";
 import { createMemo, createSignal } from "solid-js";
 
+import type { ManagedExecutiveView } from "~/actions/capacity/contracts/read";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import List from "~/components/icons/list";
 import Mail from "~/components/icons/mail";
@@ -13,9 +14,7 @@ import { createRouteRowOpen } from "~/features/data-grid/model/row-open";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { managedExecutivesQuery } from "~/lib/queries/capacity";
 
-type TeamExecutiveRow = Awaited<
-  ReturnType<typeof managedExecutivesQuery>
->[number];
+type TeamExecutiveRow = ManagedExecutiveView;
 
 const TEAM_COLUMNS = [
   {

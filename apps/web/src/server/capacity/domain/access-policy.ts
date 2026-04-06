@@ -2,10 +2,15 @@ import type { SessionData } from "~/lib/auth/access/session";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import type { CapacityTeam, CapacityUser } from "../application/actor-scope";
+import type {
+  CapacityTeam,
+  ManageableCapacityUser,
+} from "../application/actor-scope";
 import type { ScopeRef } from "./types";
 
-interface ScopeRepos<T extends CapacityUser = CapacityUser> {
+interface ScopeRepos<
+  T extends ManageableCapacityUser = ManageableCapacityUser,
+> {
   users: {
     findById(id: number): Promise<T | undefined>;
   };
@@ -17,7 +22,7 @@ interface ScopeRepos<T extends CapacityUser = CapacityUser> {
 
 function canManageExecutiveRecord(
   actor: SessionData,
-  target: CapacityUser,
+  target: ManageableCapacityUser,
   supervisedTeamId: number | null,
 ): boolean {
   if (target.role !== "executive") return false;
@@ -28,7 +33,7 @@ function canManageExecutiveRecord(
   return target.teamId === supervisedTeamId;
 }
 
-export async function canManageExecutive<T extends CapacityUser>(
+export async function canManageExecutive<T extends ManageableCapacityUser>(
   actor: SessionData,
   targetUserId: number,
   repos: ScopeRepos<T>,

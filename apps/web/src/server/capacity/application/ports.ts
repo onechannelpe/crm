@@ -1,4 +1,4 @@
-import type { CapacityTeam, CapacityUser } from "./actor-scope";
+import type { CapacityTeam, ManageableCapacityUser } from "./actor-scope";
 
 export interface CapacityApprovalRequest {
   id: number;
@@ -23,7 +23,9 @@ export interface CapacityApprovalTxPort {
     actorUserId: number,
     note: string,
   ): Promise<boolean>;
-  findManagedUserById(userId: number): Promise<CapacityUser | undefined>;
+  findManagedUserById(
+    userId: number,
+  ): Promise<ManageableCapacityUser | undefined>;
   findSupervisedTeamBySupervisorId(
     supervisorId: number,
   ): Promise<{ id: number } | undefined>;

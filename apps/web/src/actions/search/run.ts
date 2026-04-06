@@ -8,6 +8,7 @@ import {
   createSearchUsageCommitsRepo,
   createSearchUsageReservationsRepo,
 } from "~/server/capacity-usage/repos";
+import { createCapacityUsersRepo } from "~/server/capacity/infrastructure/capacity-users-repo";
 import {
   createSearchPolicyDefaultsRepo,
   createSearchPolicyOverridesRepo,
@@ -16,13 +17,12 @@ import { runDirectSearch } from "~/server/search-workflow/run-search";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import { isErr } from "~/server/shared/result";
-import { createUsersRepo } from "~/server/users/repos-users";
 
 import { mapSearchError } from "./errors";
 import { parseSearchCommand } from "./input";
 
 const repos = {
-  users: createUsersRepo(db),
+  users: createCapacityUsersRepo(db),
   searchPolicyDefaults: createSearchPolicyDefaultsRepo(db),
   searchPolicyOverrides: createSearchPolicyOverridesRepo(db),
   searchCapacityGrants: createSearchCapacityGrantsRepo(db),
