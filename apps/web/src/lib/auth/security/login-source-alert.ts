@@ -1,5 +1,7 @@
+import type { Selectable } from "kysely";
+
 import { hashAuthKey } from "~/lib/auth/password/key-hash";
-import type { User } from "~/lib/db/types";
+import type { UsersTable } from "~/lib/db/types";
 import { longName } from "~/lib/users/display-name";
 import type { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 
@@ -11,9 +13,11 @@ type Deps = {
 
 const LOOKBACK_MS = 90 * 24 * 60 * 60 * 1000;
 
+type UserRow = Selectable<UsersTable>;
+
 export async function sendAlertOnNewLoginSource(params: {
   user: Pick<
-    User,
+    UserRow,
     "id" | "email" | "names" | "first_surname" | "second_surname" | "role"
   >;
   ipAddress: string;

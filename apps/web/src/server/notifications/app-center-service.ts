@@ -1,11 +1,15 @@
-import type { NewAppNotification, UsersTable } from "~/lib/db/types";
+import type { Insertable } from "kysely";
+
+import type { AppNotificationsTable, UsersTable } from "~/lib/db/types";
 
 import type { AppNotificationEvent } from "./app-events";
+
+type NewAppNotificationRow = Insertable<AppNotificationsTable>;
 
 interface Deps {
   repos: {
     appNotifications: {
-      createMany(values: NewAppNotification[]): Promise<void>;
+      createMany(values: NewAppNotificationRow[]): Promise<void>;
     };
     users: {
       findActiveIdsByBranchAndRoles(
@@ -30,7 +34,7 @@ export function createAppNotificationCenter({ repos }: Deps) {
     const unique = Array.from(new Set(userIds.filter((id) => id > 0)));
     if (unique.length === 0) return;
 
-    const rows: NewAppNotification[] = unique.map((userId) => ({
+    const rows: NewAppNotificationRow[] = unique.map((userId) => ({
       user_id: userId,
       event_type: event.type,
       priority: event.priority,

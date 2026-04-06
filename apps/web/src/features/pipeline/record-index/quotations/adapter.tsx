@@ -1,7 +1,7 @@
 import { createAsync } from "@solidjs/router";
 
+import type { LeadListRowView } from "~/actions/pipeline/queries/leads";
 import { queryLeadList } from "~/actions/pipeline/queries/leads";
-import type { LeadListRow } from "~/actions/pipeline/queries/leads";
 import Building2 from "~/components/icons/building-2";
 import List from "~/components/icons/list";
 import { RecordIndexScreen } from "~/features/record-index/components/screen";
@@ -20,7 +20,7 @@ export function QuotationsRecordIndex() {
     queryLeadList({ stage: "READY_FOR_QUOTATION" }),
   );
   const { rowOpen } = useOpenQuotationRecord();
-  const source = (): RecordIndexSource<LeadListRow> => {
+  const source = (): RecordIndexSource<LeadListRowView> => {
     const data = leads();
 
     if (data === undefined) {
@@ -45,7 +45,7 @@ export function QuotationsRecordIndex() {
       description: "Add your first quotation lead manually.",
     },
     class: styles.page,
-  } satisfies RecordIndexAdapter<LeadListRow>;
+  } satisfies RecordIndexAdapter<LeadListRowView>;
 
   return <RecordIndexScreen adapter={adapter} />;
 }

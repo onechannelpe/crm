@@ -30,7 +30,7 @@ describe("session delete action benchmark", () => {
   });
 
   bench(
-    "action path: delete all sessions for user",
+    "repository path: delete all sessions for user",
     async () => {
       const userId = takeFromPool(
         userIds,

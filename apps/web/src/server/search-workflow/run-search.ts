@@ -8,6 +8,7 @@ import {
   commitSearchUsage,
   reserveSearchUsage,
 } from "~/server/capacity-usage/search-usage";
+import type { ActorScope } from "~/server/capacity/application/actor-scope";
 import { getSearchCapacitySnapshot } from "~/server/capacity/application/get-search-capacity-snapshot";
 import type {
   SearchPolicyDefaultsRepo,
@@ -31,9 +32,7 @@ export interface RunDirectSearchCommand {
 
 interface SearchRepos {
   users: {
-    findById(
-      id: UserId,
-    ): Promise<{ team_id: number | null; branch_id: number } | undefined>;
+    findById(id: UserId): Promise<ActorScope | undefined>;
   };
   searchPolicyDefaults: SearchPolicyDefaultsRepo;
   searchPolicyOverrides: SearchPolicyOverridesRepo;

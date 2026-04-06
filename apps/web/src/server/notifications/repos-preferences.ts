@@ -1,10 +1,8 @@
-import type { Kysely } from "kysely";
+import type { Insertable, Kysely } from "kysely";
 
-import type {
-  Database,
-  NewNotificationPreference,
-  NotificationPreferencesTable,
-} from "~/lib/db/types";
+import type { Database, NotificationPreferencesTable } from "~/lib/db/types";
+
+type NewNotificationPreferenceRow = Insertable<NotificationPreferencesTable>;
 
 type NotificationChannel = NotificationPreferencesTable["channel"];
 
@@ -30,7 +28,7 @@ export function createNotificationPreferencesRepo(db: Kysely<Database>) {
       return preference.is_enabled === 1;
     },
 
-    async upsert(values: NewNotificationPreference): Promise<void> {
+    async upsert(values: NewNotificationPreferenceRow): Promise<void> {
       await db
         .insertInto("notification_preferences")
         .values(values)

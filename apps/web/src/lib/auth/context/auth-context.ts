@@ -1,4 +1,6 @@
-import type { User } from "~/lib/db/types";
+import type { Selectable } from "kysely";
+
+import type { UsersTable } from "~/lib/db/types";
 import type { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
 import type { UserId } from "~/server/shared/ids";
 import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
@@ -9,8 +11,10 @@ import {
   type StrongAuthStatus,
 } from "../security/strong-auth-status";
 
+type UserRow = Selectable<UsersTable>;
+
 export type AuthContextUser = Pick<
-  User,
+  UserRow,
   | "id"
   | "email"
   | "names"

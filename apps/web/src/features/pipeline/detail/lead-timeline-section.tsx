@@ -1,6 +1,6 @@
 import { For, Show } from "solid-js";
 
-import type { TimelineItem } from "~/actions/pipeline/queries/leads";
+import type { LeadTimelineItem } from "~/actions/pipeline/queries/leads";
 import Building2 from "~/components/icons/building-2";
 import CalendarDays from "~/components/icons/calendar-days";
 import CircleAlert from "~/components/icons/circle-alert";
@@ -10,14 +10,14 @@ import { formatDateTime } from "~/lib/utils";
 
 import styles from "./lead-detail-overview.module.css";
 
-function timelineIcon(kind: TimelineItem["kind"]) {
+function timelineIcon(kind: LeadTimelineItem["kind"]) {
   if (kind === "call") return <Phone size={14} />;
   if (kind === "assignment") return <Building2 size={14} />;
   if (kind === "stage-change") return <Package size={14} />;
   return <CalendarDays size={14} />;
 }
 
-export function LeadTimelineSection(props: { timeline: TimelineItem[] }) {
+export function LeadTimelineSection(props: { timeline: LeadTimelineItem[] }) {
   return (
     <section class={styles.section}>
       <div class={styles.sectionTitle}>Timeline</div>

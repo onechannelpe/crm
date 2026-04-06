@@ -4,6 +4,7 @@ import { createMemo, createResource, Show } from "solid-js";
 import {
   getSalesExportJob,
   listSalesExportDownloads,
+  type SalesExportDownload,
 } from "~/actions/sales-exports";
 import { useToast } from "~/components/feedback/toast-provider";
 import CalendarDays from "~/components/icons/calendar-days";
@@ -19,9 +20,7 @@ import { formatDate } from "~/lib/utils";
 
 import styles from "./export-detail-page.module.css";
 
-type SalesExportDownloadRow = Awaited<
-  ReturnType<typeof listSalesExportDownloads>
->[number];
+type SalesExportDownloadRow = SalesExportDownload;
 
 const SALES_EXPORT_DOWNLOAD_COLUMNS = [
   {

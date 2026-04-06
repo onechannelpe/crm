@@ -1,5 +1,7 @@
+import type { Insertable } from "kysely";
+
 import { db } from "~/lib/db/db";
-import type { NewUserSession } from "~/lib/db/types";
+import type { Database } from "~/lib/db/types";
 import { createLogger } from "~/lib/observability/logger";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
 import type { BranchId, UserId } from "~/server/shared/ids";
@@ -26,6 +28,8 @@ const SESSION_DURATION = 30 * 24 * 60 * 60 * 1000;
 const ACTIVITY_UPDATE_THRESHOLD = 5 * 60 * 1000;
 const EXTENSION_THRESHOLD = 7 * 24 * 60 * 60 * 1000;
 const logger = createLogger("session-manager");
+
+type NewUserSessionRow = Insertable<Database["user_sessions"]>;
 
 export interface SessionValidationResult {
   session: AuthSession | null;
@@ -61,7 +65,7 @@ export async function createSession(
   const sessionId = hashSessionToken(token);
   const now = Date.now();
 
-  const newSession: NewUserSession = {
+  const newSession: NewUserSessionRow = {
     id: sessionId,
     user_id: params.userId,
     branch_id: params.branchId,

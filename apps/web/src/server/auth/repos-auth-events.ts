@@ -1,10 +1,13 @@
-import type { Kysely } from "kysely";
+import type { Insertable, Kysely, Selectable } from "kysely";
 
-import type { AuthEvent, Database, NewAuthEvent } from "~/lib/db/types";
+import type { Database } from "~/lib/db/types";
+
+type AuthEventRow = Selectable<Database["auth_events"]>;
+type NewAuthEventRow = Insertable<Database["auth_events"]>;
 
 export function createAuthEventsRepo(db: Kysely<Database>) {
   return {
-    create(values: NewAuthEvent) {
+    create(values: NewAuthEventRow) {
       return db.insertInto("auth_events").values(values).executeTakeFirst();
     },
 
@@ -62,7 +65,7 @@ export function createAuthEventsRepo(db: Kysely<Database>) {
 
     findLastByIdentifier(
       identifierHash: string,
-    ): Promise<AuthEvent | undefined> {
+    ): Promise<AuthEventRow | undefined> {
       return db
         .selectFrom("auth_events")
         .selectAll()

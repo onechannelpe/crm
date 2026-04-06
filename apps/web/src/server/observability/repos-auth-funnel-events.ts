@@ -1,11 +1,13 @@
-import type { Kysely } from "kysely";
+import type { Insertable, Kysely } from "kysely";
 
-import type { Database, NewAuthFunnelEvent } from "~/lib/db/types";
+import type { Database } from "~/lib/db/types";
 import type {
   AuthFunnelEventName,
   AuthFunnelMethod,
   AuthFunnelOutcome,
 } from "~/lib/observability/auth-funnel";
+
+type NewAuthFunnelEventRow = Insertable<Database["auth_funnel_events"]>;
 
 export interface AuthFunnelEventFilter {
   fromInclusive: number;
@@ -26,7 +28,7 @@ export interface AuthFunnelSummaryFilter {
 
 export function createAuthFunnelEventsRepo(db: Kysely<Database>) {
   return {
-    create(values: NewAuthFunnelEvent) {
+    create(values: NewAuthFunnelEventRow) {
       return db
         .insertInto("auth_funnel_events")
         .values(values)

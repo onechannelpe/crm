@@ -1,5 +1,7 @@
+import type { Selectable } from "kysely";
+
 import { assertNonEmptyString } from "~/lib/contracts/guards";
-import type { User } from "~/lib/db/types";
+import type { UsersTable } from "~/lib/db/types";
 import type { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import type { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import { Err, Ok, type Result } from "~/server/shared/result";
@@ -22,6 +24,8 @@ type Deps = {
   authEvents: ReturnType<typeof createAuthEventsRepo>;
 };
 
+type UserRow = Selectable<UsersTable>;
+
 export interface PasswordCredentialInput {
   username: string;
   password: string;
@@ -31,7 +35,7 @@ export interface PasswordCredentialInput {
 export async function verifyPasswordLoginCredentials(
   input: PasswordCredentialInput,
   deps: { repos: Deps },
-): Promise<Result<User, InvalidCredentialsError>> {
+): Promise<Result<UserRow, InvalidCredentialsError>> {
   const safeUsername = assertNonEmptyString(input.username, "username");
   const safePassword = assertNonEmptyString(input.password, "password");
   const resolvedDeps = deps.repos;

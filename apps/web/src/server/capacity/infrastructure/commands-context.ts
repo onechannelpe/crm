@@ -8,6 +8,8 @@ import {
   createSearchUsageReservationsRepo,
 } from "~/server/capacity-usage/repos";
 import { createCapacityRequestsRepo } from "~/server/capacity/infrastructure/capacity-requests-repo";
+import { createCapacityTeamsRepo } from "~/server/capacity/infrastructure/capacity-teams-repo";
+import { createCapacityUsersRepo } from "~/server/capacity/infrastructure/capacity-users-repo";
 import {
   createLeadPolicyDefaultsRepo,
   createLeadPolicyOverridesRepo,
@@ -18,13 +20,11 @@ import { createContactAssignmentsRepo } from "~/server/contacts/repos-assignment
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
-import { createTeamsRepo } from "~/server/users/repos-teams";
-import { createUsersRepo } from "~/server/users/repos-users";
 
 function createCapacityRepos(executor: DatabaseExecutor) {
   return {
-    users: createUsersRepo(executor),
-    teams: createTeamsRepo(executor),
+    users: createCapacityUsersRepo(executor),
+    teams: createCapacityTeamsRepo(executor),
     auditLogs: createAuditLogsRepo(executor),
     capacityRequests: createCapacityRequestsRepo(executor),
     searchPolicyDefaults: createSearchPolicyDefaultsRepo(executor),

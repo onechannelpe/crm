@@ -1,12 +1,12 @@
 import type { AssignContactsCommand } from "~/server/contact-assignments/application/types/assign-contacts";
-import { domainError } from "~/server/shared/domain-error";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 export function parseAssignContactsCommand(
   actorUserId: UserId,
   branchId: unknown,
-): Result<AssignContactsCommand, ReturnType<typeof domainError>> {
+): Result<AssignContactsCommand, DomainError> {
   if (
     typeof branchId !== "number" ||
     !Number.isInteger(branchId) ||

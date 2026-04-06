@@ -16,6 +16,8 @@ import {
 import {
   createContactAssignmentsFromCandidates,
   type AssignContactsTransactionRunner,
+  type ContactRecord,
+  type OrganizationRecord,
 } from "./contact-assignment-writer";
 import type {
   AssignContactsCommand,
@@ -25,7 +27,7 @@ import type {
 type AssignContactsRepos = AssignmentPlanRepos &
   AssignmentCapacityRepos & {
     organizations: {
-      findOrCreate(ruc: string, name: string): Promise<{ id: number }>;
+      findOrCreate(ruc: string, name: string): Promise<OrganizationRecord>;
     };
     contacts: {
       findOrCreate(
@@ -33,7 +35,7 @@ type AssignContactsRepos = AssignmentPlanRepos &
         dni: string,
         name: string,
         phone: string,
-      ): Promise<{ id: number; cooldown_until: number | null }>;
+      ): Promise<ContactRecord>;
     };
   };
 

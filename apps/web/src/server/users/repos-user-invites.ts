@@ -1,11 +1,8 @@
-import type { Kysely } from "kysely";
+import type { Insertable, Kysely } from "kysely";
 
-import type {
-  Database,
-  NewUserInvite,
-  UserInvitesTable,
-  UsersTable,
-} from "~/lib/db/types";
+import type { Database, UserInvitesTable, UsersTable } from "~/lib/db/types";
+
+type NewUserInviteRow = Insertable<UserInvitesTable>;
 
 type InviteStatus = UserInvitesTable["status"];
 type UserRole = UsersTable["role"];
@@ -30,7 +27,7 @@ export interface PendingInviteWithUser {
 
 export function createUserInvitesRepo(db: Kysely<Database>) {
   return {
-    async create(values: NewUserInvite): Promise<number> {
+    async create(values: NewUserInviteRow): Promise<number> {
       const result = await db
         .insertInto("user_invites")
         .values(values)

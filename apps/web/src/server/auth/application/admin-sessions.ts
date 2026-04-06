@@ -1,16 +1,20 @@
+import type { Selectable } from "kysely";
+
 import type { Role } from "~/lib/auth/access/rbac";
 import {
   allSessionsRevokedChanges,
   serializeAuditChanges,
   sessionRevokedByAdminChanges,
 } from "~/lib/contracts/audit";
-import type { UserSession } from "~/lib/db/types";
+import type { Database } from "~/lib/db/types";
 import type { AppContext } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
 import type { AdminSessionsReadContext } from "../infrastructure/admin-sessions-read-context";
 import type { AdminSessionRevocationPort } from "./ports";
+
+type UserSessionRow = Selectable<Database["user_sessions"]>;
 
 export interface SessionInfo {
   id: string;
@@ -30,7 +34,7 @@ export async function listUserSessions(
   _ctx: AppContext,
   deps: AdminSessionsReadContext,
   input: { userId: number },
-): Promise<Result<UserSession[], DomainError>> {
+): Promise<Result<UserSessionRow[], DomainError>> {
   return Ok(await deps.repos.sessions.listForUser(input.userId));
 }
 

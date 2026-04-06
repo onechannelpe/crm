@@ -24,6 +24,7 @@ export async function createDraft(
     "sales_records.create_draft",
     ctx.actor.userId,
     deps.rateLimitDeps,
+    ctx.ipAddress,
   );
   return runSalesRecordMutation(deps, async (repos) => {
     const audit = getSalesRecordAudit(repos);

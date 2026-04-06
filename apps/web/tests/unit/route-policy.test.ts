@@ -19,9 +19,9 @@ describe("route permissions", () => {
     expect(getRoutePermission("/leads")).toBe("lead:pipeline");
     expect(getRoutePermission("/leads/new")).toBe("lead:pipeline");
     expect(getRoutePermission("/leads/123")).toBe("lead:pipeline");
-    expect(getRoutePermission("/sales/crm")).toBe("lead:register");
-    expect(getRoutePermission("/sales/new/123")).toBe("lead:register");
-    expect(getRoutePermission("/sales/123")).toBe("lead:register");
+    expect(getRoutePermission("/sales/crm")).toBe("lead:sale:create");
+    expect(getRoutePermission("/sales/new/123")).toBe("lead:sale:create");
+    expect(getRoutePermission("/sales/123")).toBe("lead:sale:create");
     expect(getRoutePermission("/integrations/imports/123")).toBe(
       "integration:manage",
     );

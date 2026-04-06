@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import type { Role } from "~/lib/auth/access/rbac";
 import { canManageExecutive } from "~/server/capacity/domain/access-policy";
 
-type TargetUser = { role: Role; branch_id: number; team_id: number | null };
+type TargetUser = { role: Role; branchId: number; teamId: number | null };
 
 // Roles that must never be able to manage an executive
 const NON_MANAGER_ROLES = [
@@ -30,7 +30,7 @@ function makeActor(role: Role = "admin", branchId = 1) {
 }
 
 function makeRepos(
-  target: { role: Role; branch_id: number; team_id: number | null } | undefined,
+  target: { role: Role; branchId: number; teamId: number | null } | undefined,
 ) {
   return {
     users: {
@@ -53,8 +53,8 @@ describe("canManageExecutive", () => {
           const actor = makeActor(role, branchId);
           const target: TargetUser = {
             role: "executive",
-            branch_id: branchId,
-            team_id: null,
+            branchId,
+            teamId: null,
           };
           const repos = makeRepos(target);
           const result = await canManageExecutive(actor, 1, repos);
@@ -77,8 +77,8 @@ describe("canManageExecutive", () => {
     const actor = makeActor("admin");
     const target: TargetUser = {
       role: "back_office",
-      branch_id: 1,
-      team_id: null,
+      branchId: 1,
+      teamId: null,
     };
     const repos = makeRepos(target);
     const result = await canManageExecutive(actor, 1, repos);
@@ -89,8 +89,8 @@ describe("canManageExecutive", () => {
     const actor = makeActor("superuser", 1);
     const target: TargetUser = {
       role: "executive",
-      branch_id: 2,
-      team_id: null,
+      branchId: 2,
+      teamId: null,
     };
     const repos = makeRepos(target);
     const result = await canManageExecutive(actor, 1, repos);
@@ -101,8 +101,8 @@ describe("canManageExecutive", () => {
     const actor = makeActor("admin", 1);
     const target: TargetUser = {
       role: "executive",
-      branch_id: 1,
-      team_id: null,
+      branchId: 1,
+      teamId: null,
     };
     const repos = makeRepos(target);
     const result = await canManageExecutive(actor, 1, repos);
@@ -113,8 +113,8 @@ describe("canManageExecutive", () => {
     const actor = makeActor("admin", 1);
     const target: TargetUser = {
       role: "executive",
-      branch_id: 2,
-      team_id: null,
+      branchId: 2,
+      teamId: null,
     };
     const repos = makeRepos(target);
     const result = await canManageExecutive(actor, 1, repos);
@@ -123,7 +123,7 @@ describe("canManageExecutive", () => {
 
   it("supervisor can manage executive on their team in same branch", async () => {
     const actor = makeActor("supervisor", 1);
-    const target: TargetUser = { role: "executive", branch_id: 1, team_id: 5 };
+    const target: TargetUser = { role: "executive", branchId: 1, teamId: 5 };
     const repos = {
       users: { findById: async () => target },
       teams: {
@@ -137,7 +137,7 @@ describe("canManageExecutive", () => {
 
   it("supervisor cannot manage executive on a different team", async () => {
     const actor = makeActor("supervisor", 1);
-    const target: TargetUser = { role: "executive", branch_id: 1, team_id: 7 };
+    const target: TargetUser = { role: "executive", branchId: 1, teamId: 7 };
     const repos = {
       users: { findById: async () => target },
       teams: {

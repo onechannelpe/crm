@@ -1,4 +1,4 @@
-import type { LeadListRow } from "~/actions/pipeline/queries/leads";
+import type { LeadListRowView } from "~/actions/pipeline/queries/leads";
 import Building2 from "~/components/icons/building-2";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import Package from "~/components/icons/package";
@@ -33,4 +33,4 @@ export const QUOTATIONS_RECORD_INDEX_COLUMNS = [
     width: 180,
     renderCell: (lead) => <Badge variant="warning">{lead.stage}</Badge>,
   },
-] satisfies ReadonlyArray<DataGridColumn<LeadListRow>>;
+] satisfies ReadonlyArray<DataGridColumn<LeadListRowView>>;

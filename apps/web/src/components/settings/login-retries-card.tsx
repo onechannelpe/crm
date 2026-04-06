@@ -1,6 +1,9 @@
 import { createSignal, For, Show } from "solid-js";
 
-import { getUserLoginRetryReport } from "~/actions/admin/auth-security";
+import {
+  getUserLoginRetryReport,
+  type UserLoginRetryReport,
+} from "~/actions/admin/auth-security";
 import { useToast } from "~/components/feedback/toast-provider";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
@@ -29,8 +32,7 @@ function labelFor(stage: string): string {
 
 export function LoginRetriesCard() {
   const [email, setEmail] = createSignal("");
-  const [report, setReport] =
-    createSignal<Awaited<ReturnType<typeof getUserLoginRetryReport>>>(null);
+  const [report, setReport] = createSignal<UserLoginRetryReport | null>(null);
   const { showToast } = useToast();
 
   const [lookup, isLookingUp] = useAsyncAction(async () => {

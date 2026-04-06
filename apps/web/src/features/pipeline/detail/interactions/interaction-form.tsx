@@ -1,11 +1,11 @@
 import { For, Show } from "solid-js";
 
-import type { LeadCallOutcome } from "~/actions/pipeline/commands/interactions";
 import { Button } from "~/components/ui/input/button";
 import { Select } from "~/components/ui/input/select";
 import { Textarea } from "~/components/ui/input/textarea";
+import type { LeadCallOutcome } from "~/lib/pipeline/lead-values";
 
-import type { createInteractionState } from "./state";
+import type { InteractionState } from "./state";
 
 import styles from "../lead-detail-overview.module.css";
 
@@ -20,8 +20,6 @@ const CALL_OUTCOME_OPTIONS = [
   value: LeadCallOutcome;
   label: string;
 }>;
-
-type InteractionState = ReturnType<typeof createInteractionState>;
 
 export function InteractionForm(props: {
   state: InteractionState;

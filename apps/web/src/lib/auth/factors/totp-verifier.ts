@@ -1,3 +1,5 @@
+import type { Selectable } from "kysely";
+
 import {
   checkTotpVerifyThrottle,
   clearTotpVerifyFailureState,
@@ -6,7 +8,7 @@ import {
 import { matchesRecoveryCode } from "~/lib/auth/totp/recovery-codes";
 import { decryptTotpSecret } from "~/lib/auth/totp/secret-crypto";
 import { verifyTotpCode } from "~/lib/auth/totp/totp";
-import type { User } from "~/lib/db/types";
+import type { UsersTable } from "~/lib/db/types";
 import type { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import type { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import type {
@@ -16,6 +18,8 @@ import type {
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { recordAuthEvent } from "../security/auth-events";
+
+type UserRow = Selectable<UsersTable>;
 
 type Deps = {
   userTotpFactors: ReturnType<typeof createUserTotpFactorsRepo>;
@@ -29,7 +33,7 @@ export type TotpStepUpError =
   | { kind: "invalid_totp" };
 
 export async function verifyTotpStepUp(params: {
-  user: User;
+  user: UserRow;
   ipAddress: string;
   totpCode?: string;
   deps: Deps;

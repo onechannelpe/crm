@@ -40,7 +40,7 @@ describe("search capacity consume action benchmark", () => {
   });
 
   bench(
-    "action path: reserve and commit search usage for one user",
+    "service path: reserve and commit search usage for one user",
     async () => {
       const userId = takeFromPool(
         userIds,

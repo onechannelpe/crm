@@ -1,4 +1,4 @@
-import type { SalesListRow } from "~/actions/pipeline/queries/sales";
+import type { SaleView } from "~/actions/pipeline/queries/sales";
 import Building2 from "~/components/icons/building-2";
 import CalendarDays from "~/components/icons/calendar-days";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
@@ -45,4 +45,4 @@ export const SALES_RECORD_INDEX_COLUMNS = [
       <span class={styles.mutedCellText}>{formatDate(sale.createdAt)}</span>
     ),
   },
-] satisfies ReadonlyArray<DataGridColumn<SalesListRow>>;
+] satisfies ReadonlyArray<DataGridColumn<SaleView>>;

@@ -12,13 +12,12 @@ import type { UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import { currentMonthlyPeriod } from "~/server/shared/time";
 
+import type { ActorScope } from "./actor-scope";
 import { getEffectiveSearchPolicy } from "./search-policy";
 
 interface SnapshotRepos {
   users: {
-    findById(
-      id: UserId,
-    ): Promise<{ team_id: number | null; branch_id: number } | undefined>;
+    findById(id: UserId): Promise<ActorScope | undefined>;
   };
   searchPolicyDefaults: Parameters<
     typeof getEffectiveSearchPolicy
@@ -30,8 +29,6 @@ interface SnapshotRepos {
   searchUsageReservations: SearchUsageReservationsRepo;
   searchUsageCommits: SearchUsageCommitsRepo;
 }
-
-export type { SearchCapacitySnapshot };
 
 export async function getSearchCapacitySnapshot(
   userId: UserId,
@@ -82,3 +79,5 @@ export async function getSearchCapacitySnapshot(
     );
   }
 }
+
+export type { SearchCapacitySnapshot };

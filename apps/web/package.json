@@ -16,7 +16,7 @@
     "test:server": "bun --env-file=../../.env.test --bun vite --config vite.config.ts",
     "test:integration:browser": "playwright test",
     "test:integration:browser:headed": "playwright test --headed",
-    "test:perf": "bun --env-file=../../.env.test vitest bench --config vitest.bench.config.ts",
+    "test:perf": "bun --env-file=../../.env.test vitest bench --run --config vitest.bench.config.ts",
     "migrate": "bun --env-file=../../.env src/lib/db/migrate-cli.ts",
     "migrate:test": "bun --env-file=../../.env.test src/lib/db/migrate-cli.ts",
     "migrate:prod": "bun src/lib/db/migrate-cli.ts",

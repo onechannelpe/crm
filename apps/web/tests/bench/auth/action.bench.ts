@@ -55,7 +55,7 @@ describe("auth login action benchmark", () => {
   });
 
   bench(
-    "action path: authenticate password login",
+    "service path: authenticate password login",
     async () => {
       const fixture = takeFromPool(
         fixtures,

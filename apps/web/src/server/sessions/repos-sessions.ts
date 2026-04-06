@@ -1,17 +1,20 @@
-import { sql, type Kysely } from "kysely";
+import { sql, type Insertable, type Kysely, type Selectable } from "kysely";
 
 import type { Role } from "~/lib/auth/access/rbac";
-import type { Database, NewUserSession, UserSession } from "~/lib/db/types";
+import type { Database } from "~/lib/db/types";
+
+type UserSessionRow = Selectable<Database["user_sessions"]>;
+type NewUserSessionRow = Insertable<Database["user_sessions"]>;
 
 export function createSessionRepository(db: Kysely<Database>) {
   return {
     db,
 
-    async create(session: NewUserSession): Promise<void> {
+    async create(session: NewUserSessionRow): Promise<void> {
       await db.insertInto("user_sessions").values(session).execute();
     },
 
-    async findById(id: string): Promise<UserSession | null> {
+    async findById(id: string): Promise<UserSessionRow | null> {
       const session = await db
         .selectFrom("user_sessions")
         .selectAll()
@@ -57,7 +60,7 @@ export function createSessionRepository(db: Kysely<Database>) {
       return Number(result.numDeletedRows ?? 0);
     },
 
-    async listForUser(userId: number): Promise<UserSession[]> {
+    async listForUser(userId: number): Promise<UserSessionRow[]> {
       return db
         .selectFrom("user_sessions")
         .selectAll()

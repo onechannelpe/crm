@@ -14,6 +14,8 @@ import {
 } from "~/server/sales-exports/service";
 import { runAction } from "~/server/shared/action-runtime";
 
+export type { SalesExportDownload, SalesExportFormat, SalesExportJob };
+
 const EXPORT_FORMATS: ReadonlyArray<SalesExportFormat> = ["csv", "xlsx"];
 
 function isSalesExportFormat(value: string): value is SalesExportFormat {

@@ -1,4 +1,4 @@
-import type { LeadListRow } from "~/actions/pipeline/queries/leads";
+import type { LeadListRowView } from "~/actions/pipeline/queries/leads";
 import Building2 from "~/components/icons/building-2";
 import CalendarDays from "~/components/icons/calendar-days";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
@@ -77,4 +77,4 @@ export const LEADS_RECORD_INDEX_COLUMNS = [
       <span class={styles.mutedCellText}>{formatDate(lead.createdAt)}</span>
     ),
   },
-] satisfies ReadonlyArray<DataGridColumn<LeadListRow>>;
+] satisfies ReadonlyArray<DataGridColumn<LeadListRowView>>;

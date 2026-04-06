@@ -32,7 +32,7 @@ function makeCandidate(n: number): LeadCandidate {
 function makeRepos(activeAssignments = 0) {
   return {
     users: {
-      findById: async () => ({ team_id: null, branch_id: BRANCH_ID }),
+      findById: async () => ({ teamId: null, branchId: BRANCH_ID }),
     },
     ...makeNullLeadPolicyRepos(),
     leadCapacityGrants: makeLeadCapacityGrantsRepo(),

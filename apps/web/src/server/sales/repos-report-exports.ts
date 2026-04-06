@@ -1,16 +1,17 @@
-import { sql, type Kysely } from "kysely";
+import { sql, type Insertable, type Kysely } from "kysely";
 
-import type {
-  Database,
-  NewReportExportDownload,
-  NewReportExportJob,
-} from "~/lib/db/types";
+import type { Database } from "~/lib/db/types";
 
-type ExportJobStatus = NewReportExportJob["status"];
+type NewReportExportJobRow = Insertable<Database["report_export_jobs"]>;
+type NewReportExportDownloadRow = Insertable<
+  Database["report_export_downloads"]
+>;
+
+type ExportJobStatus = NewReportExportJobRow["status"];
 
 export function createReportExportRepo(db: Kysely<Database>) {
   return {
-    async createJob(values: NewReportExportJob): Promise<number> {
+    async createJob(values: NewReportExportJobRow): Promise<number> {
       const result = await db
         .insertInto("report_export_jobs")
         .values(values)
@@ -216,7 +217,7 @@ export function createReportExportRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    createDownload(values: NewReportExportDownload) {
+    createDownload(values: NewReportExportDownloadRow) {
       return db
         .insertInto("report_export_downloads")
         .values(values)

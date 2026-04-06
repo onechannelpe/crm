@@ -12,13 +12,12 @@ import type { UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import { currentDailyPeriod } from "~/server/shared/time";
 
+import type { ActorScope } from "./actor-scope";
 import { getEffectiveLeadPolicy } from "./lead-policy";
 
 interface SnapshotRepos {
   users: {
-    findById(
-      id: UserId,
-    ): Promise<{ team_id: number | null; branch_id: number } | undefined>;
+    findById(id: UserId): Promise<ActorScope | undefined>;
   };
   leadPolicyDefaults: Parameters<
     typeof getEffectiveLeadPolicy
@@ -31,8 +30,6 @@ interface SnapshotRepos {
   leadUsageCommits: LeadUsageCommitsRepo;
   contactAssignments: { countActiveByUser(userId: number): Promise<number> };
 }
-
-export type { LeadCapacitySnapshot };
 
 export async function getLeadCapacitySnapshot(
   userId: UserId,
@@ -72,3 +69,5 @@ export async function getLeadCapacitySnapshot(
     );
   }
 }
+
+export type { LeadCapacitySnapshot };

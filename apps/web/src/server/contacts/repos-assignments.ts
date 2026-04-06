@@ -1,13 +1,15 @@
-import type { Kysely } from "kysely";
+import type { Insertable, Kysely } from "kysely";
 import { sql } from "kysely";
 
-import type { Database, NewLeadAssignment } from "~/lib/db/types";
+import type { Database } from "~/lib/db/types";
 import type { ActiveContactAssignmentView } from "~/server/contact-assignments/application/views/active-contact-assignment-view";
 import type { ContactAssignmentDraft } from "~/server/contact-assignments/domain/assignment";
 
+type NewLeadAssignmentRow = Insertable<Database["lead_assignments"]>;
+
 export function createContactAssignmentsRepo(db: Kysely<Database>) {
   return {
-    create(values: NewLeadAssignment) {
+    create(values: NewLeadAssignmentRow) {
       return db
         .insertInto("lead_assignments")
         .values(values)
