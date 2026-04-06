@@ -11,10 +11,7 @@ import type {
   ApproveForSaleDeps,
   CreateQuotationDeps,
 } from "../application/deps/quotations";
-import type {
-  RegisterLeadDeps,
-  ReassignLeadDeps,
-} from "../application/deps/register-lead";
+import type { RegisterLeadDeps } from "../application/deps/register-lead";
 import type { ReviewLeadDeps } from "../application/deps/review-lead";
 import type {
   CompleteCommercialInputDeps,
@@ -32,7 +29,7 @@ import { createPipelineUsersRepo } from "./users-repo";
 
 export type PipelineDeps = {
   registerLead: RegisterLeadDeps;
-  reassignLead: ReassignLeadDeps;
+  reassignLead: RegisterLeadDeps;
   leadInteractions: LeadInteractionDeps;
   reviewLead: ReviewLeadDeps;
   completeCommercialInput: CompleteCommercialInputDeps;

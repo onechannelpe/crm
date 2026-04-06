@@ -44,12 +44,9 @@ type AssignContactsRepos = AssignmentPlanRepos &
     };
   };
 
-export type AssignmentTransactionRepos = AssignContactsTransactionRepos;
-export type AssignmentTransactionRunner = AssignContactsTransactionRunner;
-
 interface AssignContactsDeps {
   repos: AssignContactsRepos;
-  runInTransaction: AssignmentTransactionRunner;
+  runInTransaction: AssignContactsTransactionRunner;
   engine: Pick<EngineClient, "requestCandidates">;
 }
 

@@ -10,8 +10,6 @@ export type RegisterLeadDeps = {
   users: PipelineUserRepository;
 };
 
-export type ReassignLeadDeps = RegisterLeadDeps;
-
 export type LeadRegistrationLookupDeps = {
   leads: LeadRepository;
   users: PipelineUserRepository;

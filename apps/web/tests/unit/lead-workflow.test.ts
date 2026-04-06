@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  type AssignmentTransactionRepos,
-  type AssignmentTransactionRunner,
-  assignContacts,
-} from "~/server/contact-assignments/application/assign-contacts";
+import { assignContacts } from "~/server/contact-assignments/application/assign-contacts";
+import type {
+  AssignContactsTransactionRepos,
+  AssignContactsTransactionRunner,
+} from "~/server/contact-assignments/application/contact-assignment-writer";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { type LeadCandidate } from "~/server/shared/engine/lead-contract";
 import { Err, Ok, type Result } from "~/server/shared/result";
@@ -60,9 +60,9 @@ function makeRepos(activeAssignments = 0) {
 }
 
 function makeTransaction(
-  repos: AssignmentTransactionRepos,
-): AssignmentTransactionRunner {
-  return async <T>(op: (r: AssignmentTransactionRepos) => Promise<T>) =>
+  repos: AssignContactsTransactionRepos,
+): AssignContactsTransactionRunner {
+  return async <T>(op: (r: AssignContactsTransactionRepos) => Promise<T>) =>
     op(repos);
 }
 

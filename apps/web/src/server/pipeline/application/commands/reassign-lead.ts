@@ -3,7 +3,7 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { ensureCanReassignLead } from "../../domain/assignment";
-import type { ReassignLeadDeps } from "../deps/register-lead";
+import type { RegisterLeadDeps } from "../deps/register-lead";
 import {
   canReassignLead,
   requirePipelineActionAccess,
@@ -13,7 +13,7 @@ import { writeLeadReassignmentEffects } from "./register-lead-effects";
 import { ensureActiveExecutive } from "./register-lead-resolution";
 
 export async function reassignLead(input: {
-  deps: ReassignLeadDeps;
+  deps: RegisterLeadDeps;
   auditService: PipelineAuditService;
   actorUserId: number;
   actorRole: Role;
