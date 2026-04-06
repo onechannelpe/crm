@@ -1,3 +1,6 @@
+import type { Selectable } from "kysely";
+
+import type { SearchEnrichmentJobsTable } from "~/lib/db/types";
 import { isPlainRecord } from "~/lib/type-guards";
 import { createSunatScraperClient } from "~/server/client-search/enrichment/sunat/client";
 import type {
@@ -39,7 +42,7 @@ export type SearchEnrichmentRequestError =
   | { reason: "unexpected"; message: string };
 
 type SearchEnrichmentRepo = ReturnType<typeof createSearchEnrichmentRepo>;
-type LeasedJob = Awaited<ReturnType<SearchEnrichmentRepo["leaseJobs"]>>[number];
+type SearchEnrichmentJobLeaseRow = Selectable<SearchEnrichmentJobsTable>;
 
 function isSunatRucData(value: unknown): value is SunatRucData {
   return (
@@ -127,7 +130,7 @@ function extractLegalName(
 }
 
 async function processEnrichmentJob(
-  job: LeasedJob,
+  job: SearchEnrichmentJobLeaseRow,
   scraper: SunatScraperClient,
   repo: SearchEnrichmentRepo,
   currentNow: number,

@@ -17,6 +17,10 @@ import { createAuthOnboardingContext } from "~/server/auth/infrastructure/onboar
 import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
 import { isErr } from "~/server/shared/result";
 
+export interface OnboardingRedirectResponse {
+  redirectTo: string;
+}
+
 function normalizePeruvianPhone(value: string): string {
   const v = value.replace(/\s+/g, "").trim();
   if (/^\+51\d{9}$/.test(v)) return v;
@@ -37,7 +41,7 @@ function mapOnboardingError(error: { code: string; message: string }): never {
 
 export async function completeOnboarding(
   phoneE164: string,
-): Promise<{ redirectTo: string }> {
+): Promise<OnboardingRedirectResponse> {
   const session = await requireSession();
   const request = getRequestClientMetadata();
   const result = await completeOnboardingService(
@@ -59,7 +63,7 @@ export async function completePasskeyOnboarding(
   phoneE164: string,
   challengeId: number,
   response: RegistrationResponseJSON,
-): Promise<{ redirectTo: string }> {
+): Promise<OnboardingRedirectResponse> {
   const session = await requireSession();
   const request = getRequestClientMetadata();
   const registrationResult = await finishPasskeyRegistrationService(
