@@ -14,7 +14,7 @@ import type { LeadListFilters } from "../application/ports/lead-repository";
 
 export type LeadRow = Selectable<Database["pipeline_leads"]>;
 export type NewLeadRow = Insertable<Database["pipeline_leads"]>;
-export type LeadUpdateRow = Updateable<Database["pipeline_leads"]>;
+export type LeadRowPatch = Updateable<Database["pipeline_leads"]>;
 
 function toLead(row: LeadRow): Lead {
   return {
@@ -45,7 +45,7 @@ function toNewLeadRow(values: LeadDraft): NewLeadRow {
   };
 }
 
-function toLeadUpdateRow(values: LeadPatch): LeadUpdateRow {
+function toLeadPatchRow(values: LeadPatch): LeadRowPatch {
   return {
     executive_id: values.executiveId,
     stage: values.stage,
@@ -122,7 +122,7 @@ export function createLeadRepo(db: DatabaseExecutor) {
     updateById(id: number, values: LeadPatch) {
       return db
         .updateTable("pipeline_leads")
-        .set(toLeadUpdateRow(values))
+        .set(toLeadPatchRow(values))
         .where("id", "=", id)
         .execute();
     },
