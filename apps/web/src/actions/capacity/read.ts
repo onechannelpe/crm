@@ -5,17 +5,14 @@ import { getAuditEvents as getAuditEventsService } from "~/server/capacity/appli
 import type { CapacityAuditEvent } from "~/server/capacity/application/get-audit-events";
 import { getExecutiveDetail as getExecutiveDetailService } from "~/server/capacity/application/get-executive-detail";
 import { getPolicyDefaults as getPolicyDefaultsService } from "~/server/capacity/application/get-policy-defaults";
-import type { CapacityPolicyDefaults } from "~/server/capacity/application/get-policy-defaults";
 import { listManagedExecutives as listManagedExecutivesService } from "~/server/capacity/application/list-managed-executives";
 import { listPendingRequests as listPendingRequestsService } from "~/server/capacity/application/list-pending-requests";
+import type { CapacityPolicyDefaultsView } from "~/server/capacity/application/queries/views/capacity-policy-defaults-view";
+import type { ExecutiveCapacityDetailView } from "~/server/capacity/application/queries/views/executive-capacity-detail-view";
+import type { ManagedExecutiveView } from "~/server/capacity/application/queries/views/managed-executive-view";
+import type { PendingCapacityRequestView } from "~/server/capacity/application/queries/views/pending-capacity-request-view";
 import { createCapacityReadContext } from "~/server/capacity/infrastructure/read-context";
 import { runAction } from "~/server/shared/action-runtime";
-
-import type {
-  ExecutiveCapacityDetailView,
-  ManagedExecutiveView,
-  PendingCapacityRequestView,
-} from "./contracts/read";
 
 export async function getManagedExecutivesList(): Promise<
   ManagedExecutiveView[]
@@ -54,7 +51,7 @@ export async function getPendingRequests(): Promise<
   });
 }
 
-export async function getPolicyDefaults(): Promise<CapacityPolicyDefaults> {
+export async function getPolicyDefaults(): Promise<CapacityPolicyDefaultsView> {
   return runAction({
     actionName: "capacity.policy_defaults.read",
     permission: "capacity:policy:manage",

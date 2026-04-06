@@ -3,25 +3,12 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { CapacityReadContext } from "../infrastructure/read-context";
-
-export type CapacityPolicyDefaults = {
-  branchId: number;
-  branchSearchLimit: number | null;
-  branchActiveBufferTarget: number | null;
-  branchDailyRefillLimit: number | null;
-  teams: Array<{
-    teamId: number;
-    teamName: string;
-    searchLimit: number | null;
-    activeBufferTarget: number | null;
-    dailyRefillLimit: number | null;
-  }>;
-};
+import type { CapacityPolicyDefaultsView } from "./queries/views/capacity-policy-defaults-view";
 
 export async function getPolicyDefaults(
   ctx: AppContext,
   deps: CapacityReadContext,
-): Promise<Result<CapacityPolicyDefaults, DomainError>> {
+): Promise<Result<CapacityPolicyDefaultsView, DomainError>> {
   try {
     const [teams, branchSearch, branchLead] = await Promise.all([
       deps.repos.teams.findByBranch(ctx.actor.branchId),
@@ -69,3 +56,5 @@ export async function getPolicyDefaults(
     );
   }
 }
+
+export type { CapacityPolicyDefaultsView };

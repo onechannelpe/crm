@@ -3,32 +3,13 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { fromDbCapacityRequestKind } from "../domain/request-policy";
-import type { CapacityRequestStatus } from "../domain/types";
 import type { CapacityReadContext } from "../infrastructure/read-context";
-
-export type PendingCapacityRequest = {
-  id: number;
-  userId: number;
-  kind: "search_extra" | "lead_refill";
-  status: CapacityRequestStatus;
-  requestedAmount: number;
-  reason: string;
-  decisionNote: string | null;
-  reviewerUserId: number | null;
-  createdAt: number;
-  updatedAt: number;
-  decidedAt: number | null;
-  names: string;
-  firstSurname: string;
-  secondSurname: string;
-  teamId: number | null;
-  branchId: number;
-};
+import type { PendingCapacityRequestView } from "./queries/views/pending-capacity-request-view";
 
 export async function listPendingRequests(
   ctx: AppContext,
   deps: CapacityReadContext,
-): Promise<Result<PendingCapacityRequest[], DomainError>> {
+): Promise<Result<PendingCapacityRequestView[], DomainError>> {
   try {
     const pending = await deps.repos.capacityRequests.listPendingByBranch(
       ctx.actor.branchId,
@@ -73,3 +54,5 @@ export async function listPendingRequests(
     );
   }
 }
+
+export type { PendingCapacityRequestView };
