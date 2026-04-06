@@ -1,19 +1,18 @@
-import type { Kysely } from "kysely";
+import type { Insertable, Kysely, Selectable } from "kysely";
 
-import type {
-  AuthThrottleCounter,
-  Database,
-  NewAuthThrottleCounter,
-} from "~/lib/db/types";
+import type { Database } from "~/lib/db/types";
 
-export type AuthThrottleScope = AuthThrottleCounter["scope"];
+type AuthThrottleCounterRow = Selectable<Database["auth_throttle_counters"]>;
+type NewAuthThrottleCounterRow = Insertable<Database["auth_throttle_counters"]>;
+
+export type AuthThrottleScope = AuthThrottleCounterRow["scope"];
 
 export function createAuthThrottleRepo(db: Kysely<Database>) {
   return {
     async findByScopeAndKey(
       scope: AuthThrottleScope,
       keyHash: string,
-    ): Promise<AuthThrottleCounter | null> {
+    ): Promise<AuthThrottleCounterRow | null> {
       const row = await db
         .selectFrom("auth_throttle_counters")
         .selectAll()
@@ -23,7 +22,7 @@ export function createAuthThrottleRepo(db: Kysely<Database>) {
       return row ?? null;
     },
 
-    async upsert(counter: NewAuthThrottleCounter): Promise<void> {
+    async upsert(counter: NewAuthThrottleCounterRow): Promise<void> {
       await db
         .insertInto("auth_throttle_counters")
         .values(counter)

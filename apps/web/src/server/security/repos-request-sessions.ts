@@ -1,18 +1,17 @@
-import type { Kysely } from "kysely";
+import type { Insertable, Kysely, Selectable } from "kysely";
 
-import type {
-  Database,
-  NewRequestSession,
-  RequestSession,
-} from "~/lib/db/types";
+import type { Database } from "~/lib/db/types";
+
+type RequestSessionRow = Selectable<Database["request_sessions"]>;
+type NewRequestSessionRow = Insertable<Database["request_sessions"]>;
 
 export function createRequestSessionsRepo(db: Kysely<Database>) {
   return {
-    async create(session: NewRequestSession): Promise<void> {
+    async create(session: NewRequestSessionRow): Promise<void> {
       await db.insertInto("request_sessions").values(session).execute();
     },
 
-    async findById(id: string): Promise<RequestSession | null> {
+    async findById(id: string): Promise<RequestSessionRow | null> {
       const session = await db
         .selectFrom("request_sessions")
         .selectAll()

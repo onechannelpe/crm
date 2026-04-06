@@ -1,10 +1,14 @@
-import type { NewAuditLog } from "~/lib/db/types";
+import type { Insertable } from "kysely";
+
+import type { Database } from "~/lib/db/types";
 import type { AuditReaderQueryFilter } from "~/server/audit-reader/contracts";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
+type NewAuditLogRow = Insertable<Database["audit_logs"]>;
+
 export function createAuditLogsRepo(db: DatabaseExecutor) {
   return {
-    create(values: NewAuditLog) {
+    create(values: NewAuditLogRow) {
       return db
         .insertInto("audit_logs")
         .values(values)

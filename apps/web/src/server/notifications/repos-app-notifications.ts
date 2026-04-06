@@ -1,5 +1,9 @@
-import type { NewAppNotification } from "~/lib/db/types";
+import type { Insertable } from "kysely";
+
+import type { AppNotificationsTable } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+
+type NewAppNotificationRow = Insertable<AppNotificationsTable>;
 
 export function createAppNotificationsRepo(db: DatabaseExecutor) {
   return {
@@ -23,7 +27,7 @@ export function createAppNotificationsRepo(db: DatabaseExecutor) {
       return Number(row?.count ?? 0);
     },
 
-    async createMany(values: NewAppNotification[]): Promise<void> {
+    async createMany(values: NewAppNotificationRow[]): Promise<void> {
       if (values.length === 0) return;
       await db
         .insertInto("app_notifications")

@@ -1,14 +1,19 @@
+import type { Selectable } from "kysely";
+
 import type { AuthSession } from "~/lib/auth/access/session-types";
-import type { User, UserSession } from "~/lib/db/types";
+import type { Database, UsersTable } from "~/lib/db/types";
 import type { BranchId, UserId } from "~/server/shared/ids";
 
+type UserRow = Selectable<UsersTable>;
+type UserSessionRow = Selectable<Database["user_sessions"]>;
+
 type SessionIdentitySource = Pick<
-  User,
+  UserRow,
   "id" | "branch_id" | "role" | "onboarding_completed_at"
 >;
 
 type PersistedSessionSource = Pick<
-  UserSession,
+  UserSessionRow,
   | "user_id"
   | "branch_id"
   | "role"
@@ -21,7 +26,7 @@ type PersistedSessionSource = Pick<
 export interface SessionIdentity {
   userId: UserId;
   branchId: BranchId;
-  role: User["role"];
+  role: UserRow["role"];
   onboardingCompleted: boolean;
 }
 

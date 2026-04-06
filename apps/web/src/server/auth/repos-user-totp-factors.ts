@@ -1,16 +1,17 @@
-import type { Kysely } from "kysely";
+import type { Insertable, Kysely, Selectable } from "kysely";
 
-import type {
-  Database,
-  NewUserTotpFactor,
-  NewUserTotpRecoveryCode,
-  UserTotpFactor,
-  UserTotpRecoveryCode,
-} from "~/lib/db/types";
+import type { Database } from "~/lib/db/types";
+
+type UserTotpFactorRow = Selectable<Database["user_totp_factors"]>;
+type NewUserTotpFactorRow = Insertable<Database["user_totp_factors"]>;
+type UserTotpRecoveryCodeRow = Selectable<Database["user_totp_recovery_codes"]>;
+type NewUserTotpRecoveryCodeRow = Insertable<
+  Database["user_totp_recovery_codes"]
+>;
 
 export function createUserTotpFactorsRepo(db: Kysely<Database>) {
   return {
-    findByUserId(userId: number): Promise<UserTotpFactor | undefined> {
+    findByUserId(userId: number): Promise<UserTotpFactorRow | undefined> {
       return db
         .selectFrom("user_totp_factors")
         .selectAll()
@@ -21,7 +22,7 @@ export function createUserTotpFactorsRepo(db: Kysely<Database>) {
     async createOrRotate(
       userId: number,
       secretEncrypted: string,
-    ): Promise<UserTotpFactor> {
+    ): Promise<UserTotpFactorRow> {
       const now = Date.now();
       await db
         .insertInto("user_totp_factors")
@@ -32,7 +33,7 @@ export function createUserTotpFactorsRepo(db: Kysely<Database>) {
           created_at: now,
           updated_at: now,
           enabled_at: null,
-        } satisfies NewUserTotpFactor)
+        } satisfies NewUserTotpFactorRow)
         .onConflict((oc) =>
           oc.column("user_id").doUpdateSet({
             secret_encrypted: secretEncrypted,
@@ -83,7 +84,7 @@ export function createUserTotpRecoveryCodesRepo(db: Kysely<Database>) {
     async replaceForUser(
       userId: number,
       codeHashes: string[],
-    ): Promise<UserTotpRecoveryCode[]> {
+    ): Promise<UserTotpRecoveryCodeRow[]> {
       await db
         .deleteFrom("user_totp_recovery_codes")
         .where("user_id", "=", userId)
@@ -99,7 +100,7 @@ export function createUserTotpRecoveryCodesRepo(db: Kysely<Database>) {
                 code_hash,
                 used_at: null,
                 created_at: now,
-              }) satisfies NewUserTotpRecoveryCode,
+              }) satisfies NewUserTotpRecoveryCodeRow,
           ),
         )
         .execute();
@@ -110,7 +111,7 @@ export function createUserTotpRecoveryCodesRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    listUnusedByUser(userId: number): Promise<UserTotpRecoveryCode[]> {
+    listUnusedByUser(userId: number): Promise<UserTotpRecoveryCodeRow[]> {
       return db
         .selectFrom("user_totp_recovery_codes")
         .selectAll()

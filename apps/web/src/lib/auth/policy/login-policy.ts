@@ -1,4 +1,4 @@
-import type { User } from "~/lib/db/types";
+import type { UsersTable } from "~/lib/db/types";
 
 import type { StrongAuthStatus } from "../security/strong-auth-status";
 import { requiresStrongAuthRole } from "../security/strong-auth-status";
@@ -8,7 +8,7 @@ export interface LoginPolicyInput {
   proof: AuthProof;
   context: {
     user: {
-      role: User["role"];
+      role: UsersTable["role"];
       onboarding_completed_at: number | null;
     };
     strongAuthStatus: StrongAuthStatus;

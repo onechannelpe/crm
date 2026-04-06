@@ -1,10 +1,8 @@
-import type { Kysely } from "kysely";
+import type { Insertable, Kysely } from "kysely";
 
-import type {
-  ActionObservationsTable,
-  Database,
-  NewActionObservation,
-} from "~/lib/db/types";
+import type { ActionObservationsTable, Database } from "~/lib/db/types";
+
+type NewActionObservationRow = Insertable<Database["action_observations"]>;
 
 type ObservationStatus = ActionObservationsTable["status"];
 
@@ -27,7 +25,7 @@ export interface ActionObservationSummaryFilter {
 
 export function createActionObservationsRepo(db: Kysely<Database>) {
   return {
-    create(values: NewActionObservation) {
+    create(values: NewActionObservationRow) {
       return db
         .insertInto("action_observations")
         .values(values)

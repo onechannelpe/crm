@@ -1,15 +1,19 @@
-import type { Kysely } from "kysely";
+import type { Insertable, Kysely } from "kysely";
 
 import { isRole } from "~/lib/auth/access/rbac";
 import type {
   Database,
-  NewNotificationCampaign,
-  NewNotificationDelivery,
-  NewNotificationJob,
-  NewNotificationRecipient,
   NotificationCampaignsTable,
+  NotificationDeliveriesTable,
+  NotificationJobsTable,
+  NotificationRecipientsTable,
   UsersTable,
 } from "~/lib/db/types";
+
+type NewNotificationCampaignRow = Insertable<NotificationCampaignsTable>;
+type NewNotificationRecipientRow = Insertable<NotificationRecipientsTable>;
+type NewNotificationJobRow = Insertable<NotificationJobsTable>;
+type NewNotificationDeliveryRow = Insertable<NotificationDeliveriesTable>;
 
 export interface AudienceUser {
   id: number;
@@ -21,7 +25,7 @@ export type AudienceType = NotificationCampaignsTable["audience_type"];
 
 export function createNotificationCampaignsRepo(db: Kysely<Database>) {
   return {
-    async createCampaign(values: NewNotificationCampaign): Promise<number> {
+    async createCampaign(values: NewNotificationCampaignRow): Promise<number> {
       const result = await db
         .insertInto("notification_campaigns")
         .values(values)
@@ -106,7 +110,9 @@ export function createNotificationCampaignsRepo(db: Kysely<Database>) {
       return base.where("id", "=", userId).execute();
     },
 
-    async createRecipient(values: NewNotificationRecipient): Promise<number> {
+    async createRecipient(
+      values: NewNotificationRecipientRow,
+    ): Promise<number> {
       const result = await db
         .insertInto("notification_recipients")
         .values(values)
@@ -115,7 +121,7 @@ export function createNotificationCampaignsRepo(db: Kysely<Database>) {
       return Number(result.insertId);
     },
 
-    createJob(values: NewNotificationJob) {
+    createJob(values: NewNotificationJobRow) {
       return db.insertInto("notification_jobs").values(values).execute();
     },
 
@@ -228,7 +234,7 @@ export function createNotificationCampaignsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    createDelivery(values: NewNotificationDelivery) {
+    createDelivery(values: NewNotificationDeliveryRow) {
       return db.insertInto("notification_deliveries").values(values).execute();
     },
 

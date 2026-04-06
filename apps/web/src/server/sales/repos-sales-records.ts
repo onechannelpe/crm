@@ -1,13 +1,12 @@
-import { sql, type Kysely } from "kysely";
+import { sql, type Insertable, type Kysely } from "kysely";
 
-import type {
-  Database,
-  NewSalesRecordAttemptRow,
-  NewSalesRecordRow,
-  NewSalesRecordAddressRow,
-  NewSalesRecordClientRow,
-  NewSalesRecordProductRow,
-} from "~/lib/db/types";
+import type { Database } from "~/lib/db/types";
+
+type NewSalesRecordRow = Insertable<Database["sales_records"]>;
+type NewSalesRecordClientRow = Insertable<Database["sales_record_client"]>;
+type NewSalesRecordAddressRow = Insertable<Database["sales_record_addresses"]>;
+type NewSalesRecordProductRow = Insertable<Database["sales_record_products"]>;
+type NewSalesRecordAttemptRow = Insertable<Database["sales_record_attempts"]>;
 
 export function createSalesRecordsRepo(db: Kysely<Database>) {
   return {

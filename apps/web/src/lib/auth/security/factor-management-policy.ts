@@ -1,9 +1,9 @@
-import type { User } from "~/lib/db/types";
+import type { UsersTable } from "~/lib/db/types";
 
 import { requiresStrongAuthRole } from "./strong-auth-status";
 
 export interface FactorRemovalPolicyInput {
-  role: User["role"];
+  role: UsersTable["role"];
   removingTotp: boolean;
   removingPasskeys: boolean;
   hasTotp: boolean;

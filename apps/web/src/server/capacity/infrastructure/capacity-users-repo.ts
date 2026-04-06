@@ -1,9 +1,13 @@
-import type { User } from "~/lib/db/types";
+import type { Selectable } from "kysely";
+
+import type { UsersTable } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import type { CapacityUser } from "../application/actor-scope";
 
-function toCapacityUser(user: User): CapacityUser {
+type UserRow = Selectable<UsersTable>;
+
+function toCapacityUser(user: UserRow): CapacityUser {
   return {
     id: user.id,
     role: user.role,
