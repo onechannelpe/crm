@@ -2,16 +2,16 @@ import { sql, type Kysely } from "kysely";
 
 import type {
   Database,
-  NewSalesRecordAttempt,
-  NewSalesRecord,
-  NewSalesRecordAddress,
-  NewSalesRecordClient,
-  NewSalesRecordProduct,
+  NewSalesRecordAttemptRow,
+  NewSalesRecordRow,
+  NewSalesRecordAddressRow,
+  NewSalesRecordClientRow,
+  NewSalesRecordProductRow,
 } from "~/lib/db/types";
 
 export function createSalesRecordsRepo(db: Kysely<Database>) {
   return {
-    async create(values: NewSalesRecord): Promise<number> {
+    async create(values: NewSalesRecordRow): Promise<number> {
       const result = await db
         .insertInto("sales_records")
         .values(values)
@@ -39,7 +39,7 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
 
     async countByExecutiveAndStatus(
       executiveUserId: number,
-      status: NewSalesRecord["status"],
+      status: NewSalesRecordRow["status"],
     ): Promise<number> {
       const row = await db
         .selectFrom("sales_records")
@@ -132,7 +132,7 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
 
     updateStatus(
       id: number,
-      status: NewSalesRecord["status"],
+      status: NewSalesRecordRow["status"],
       patch: {
         submitted_at?: number | null;
         confirmed_at?: number | null;
@@ -162,7 +162,7 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    upsertClient(values: NewSalesRecordClient) {
+    upsertClient(values: NewSalesRecordClientRow) {
       return db
         .insertInto("sales_record_client")
         .values(values)
@@ -191,7 +191,7 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
 
     async replaceAddresses(
       salesRecordId: number,
-      addresses: NewSalesRecordAddress[],
+      addresses: NewSalesRecordAddressRow[],
     ): Promise<void> {
       await db
         .deleteFrom("sales_record_addresses")
@@ -213,7 +213,7 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
 
     async replaceProducts(
       salesRecordId: number,
-      products: NewSalesRecordProduct[],
+      products: NewSalesRecordProductRow[],
     ): Promise<void> {
       await db
         .deleteFrom("sales_record_products")
@@ -232,7 +232,7 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    createAttempt(values: NewSalesRecordAttempt) {
+    createAttempt(values: NewSalesRecordAttemptRow) {
       return db
         .insertInto("sales_record_attempts")
         .values(values)

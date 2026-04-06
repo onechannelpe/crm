@@ -2,25 +2,23 @@ import { createAsync, useNavigate, useParams } from "@solidjs/router";
 import { createSignal, Show } from "solid-js";
 
 import { requestLeadReview } from "~/actions/pipeline/commands/leads";
-import {
-  LEAD_REVIEW_PRIORITIES,
-  LEAD_REVIEW_STATUSES,
-  type LeadReviewPriority,
-  type LeadReviewStatus,
-} from "~/actions/pipeline/contracts/lead-review";
 import { queryLeadDetail } from "~/actions/pipeline/queries/leads";
 import { AppPage } from "~/components/layout/page";
 import { toAppError } from "~/lib/app-errors";
+import {
+  LEAD_PRIORITIES,
+  LEAD_STATUSES,
+  type LeadPriority,
+  type LeadStatus,
+} from "~/lib/pipeline/lead-values";
 
 export default function ReviewLeadPage() {
   const params = useParams<{ leadId: string }>();
   const navigate = useNavigate();
   const data = createAsync(() => queryLeadDetail(Number(params.leadId)));
   const [error, setError] = createSignal<string | null>(null);
-  const [statusVal, setStatusVal] =
-    createSignal<LeadReviewStatus>("DISPONIBLE");
-  const [prioridadVal, setPrioridadVal] =
-    createSignal<LeadReviewPriority>("P1");
+  const [statusVal, setStatusVal] = createSignal<LeadStatus>("DISPONIBLE");
+  const [prioridadVal, setPrioridadVal] = createSignal<LeadPriority>("P1");
   const [reason, setReason] = createSignal("");
 
   const inputStyle = {
@@ -95,7 +93,7 @@ export default function ReviewLeadPage() {
                   <select
                     value={statusVal()}
                     onInput={(e) => {
-                      const v = LEAD_REVIEW_STATUSES.find(
+                      const v = LEAD_STATUSES.find(
                         (option) => option === e.currentTarget.value,
                       );
                       if (v) setStatusVal(v);
@@ -116,7 +114,7 @@ export default function ReviewLeadPage() {
                   <select
                     value={prioridadVal()}
                     onInput={(e) => {
-                      const v = LEAD_REVIEW_PRIORITIES.find(
+                      const v = LEAD_PRIORITIES.find(
                         (option) => option === e.currentTarget.value,
                       );
                       if (v) setPrioridadVal(v);

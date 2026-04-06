@@ -31,33 +31,6 @@ type AuthFunnelOutcomeValue =
   | "started"
   | "totp_required"
   | "passkey_required";
-type PipelineLeadStageValue =
-  | "PENDING_EXTERNAL_REVIEW"
-  | "REJECTED_BY_STATUS"
-  | "NEEDS_EXECUTIVE_INPUT"
-  | "READY_FOR_QUOTATION"
-  | "QUOTED"
-  | "READY_FOR_SALE"
-  | "CONVERTED";
-type PipelineLeadStatusValue =
-  | "DISPONIBLE"
-  | "SIN RESULTADO"
-  | "CARTERIZADO"
-  | "STOCK";
-type PipelineLeadPriorityValue = "P1" | "P2" | "SIN RESULTADO";
-type PipelineLeadHistoryEventTypeValue =
-  | "lead_registered"
-  | "lead_reviewed"
-  | "workflow_stage_changed"
-  | "lead_assigned"
-  | "lead_reassigned"
-  | "commercial_input_completed"
-  | "quotation_created"
-  | "sale_approved"
-  | "sale_created"
-  | "call_logged"
-  | "note_added";
-
 export interface BranchesTable {
   id: Generated<number>;
   name: string;
@@ -799,9 +772,16 @@ export interface PipelineLeadsTable {
   razon_social: string | null;
   address: string | null;
   executive_id: number;
-  stage: PipelineLeadStageValue;
-  status: PipelineLeadStatusValue | null;
-  prioridad: PipelineLeadPriorityValue | null;
+  stage:
+    | "PENDING_EXTERNAL_REVIEW"
+    | "REJECTED_BY_STATUS"
+    | "NEEDS_EXECUTIVE_INPUT"
+    | "READY_FOR_QUOTATION"
+    | "QUOTED"
+    | "READY_FOR_SALE"
+    | "CONVERTED";
+  status: "DISPONIBLE" | "SIN RESULTADO" | "CARTERIZADO" | "STOCK" | null;
+  prioridad: "P1" | "P2" | "SIN RESULTADO" | null;
   created_at: number;
   updated_at: number;
 }
@@ -860,7 +840,18 @@ export interface PipelineLeadAssignmentsTable {
 export interface PipelineHistoryEventsTable {
   id: Generated<number>;
   lead_id: number;
-  event_type: PipelineLeadHistoryEventTypeValue;
+  event_type:
+    | "lead_registered"
+    | "lead_reviewed"
+    | "workflow_stage_changed"
+    | "lead_assigned"
+    | "lead_reassigned"
+    | "commercial_input_completed"
+    | "quotation_created"
+    | "sale_approved"
+    | "sale_created"
+    | "call_logged"
+    | "note_added";
   actor_user_id: number | null;
   subject_user_id: number | null;
   payload_json: string | null;
@@ -977,17 +968,22 @@ export type SearchPolicyDefault = Selectable<SearchPolicyDefaultsTable>;
 export type SearchPolicyOverride = Selectable<SearchPolicyOverridesTable>;
 export type Organization = Selectable<OrganizationsTable>;
 export type Contact = Selectable<ContactsTable>;
-export type LeadAssignment = Selectable<LeadAssignmentsTable>;
-export type SalesRecord = Selectable<SalesRecordsTable>;
-export type SalesRecordClient = Selectable<SalesRecordClientTable>;
-export type SalesRecordAddress = Selectable<SalesRecordAddressesTable>;
-export type SalesRecordProduct = Selectable<SalesRecordProductsTable>;
-export type SalesRecordAttempt = Selectable<SalesRecordAttemptsTable>;
-export type LeadPolicyDefault = Selectable<LeadPolicyDefaultsTable>;
-export type LeadPolicyOverride = Selectable<LeadPolicyOverridesTable>;
-export type SearchCapacityGrant = Selectable<SearchCapacityGrantsTable>;
-export type SearchUsageReservation = Selectable<SearchUsageReservationsTable>;
-export type SearchUsageCommit = Selectable<SearchUsageCommitsTable>;
+export type LeadAssignmentRow = Selectable<LeadAssignmentsTable>;
+export type SalesRecordRow = Selectable<SalesRecordsTable>;
+export type SalesRecordClientRow = Selectable<SalesRecordClientTable>;
+export type SalesRecordAddressRow = Selectable<SalesRecordAddressesTable>;
+export type SalesRecordProductRow = Selectable<SalesRecordProductsTable>;
+export type SalesRecordAttemptRow = Selectable<SalesRecordAttemptsTable>;
+export type LeadPolicyDefaultRow = Selectable<LeadPolicyDefaultsTable>;
+export type LeadPolicyOverrideRow = Selectable<LeadPolicyOverridesTable>;
+export type SearchCapacityGrantRow = Selectable<SearchCapacityGrantsTable>;
+export type SearchUsageReservationRow =
+  Selectable<SearchUsageReservationsTable>;
+export type SearchUsageCommitRow = Selectable<SearchUsageCommitsTable>;
+export type NewSearchCapacityGrantRow = Insertable<SearchCapacityGrantsTable>;
+export type NewSearchUsageReservationRow =
+  Insertable<SearchUsageReservationsTable>;
+export type NewSearchUsageCommitRow = Insertable<SearchUsageCommitsTable>;
 export type LeadCapacityGrant = Selectable<LeadCapacityGrantsTable>;
 export type LeadUsageReservation = Selectable<LeadUsageReservationsTable>;
 export type LeadUsageCommit = Selectable<LeadUsageCommitsTable>;
@@ -1045,14 +1041,14 @@ export type NewUserTotpRecoveryCode = Insertable<UserTotpRecoveryCodesTable>;
 export type NewUserInvite = Insertable<UserInvitesTable>;
 export type NewOrganization = Insertable<OrganizationsTable>;
 export type NewContact = Insertable<ContactsTable>;
-export type NewLeadAssignment = Insertable<LeadAssignmentsTable>;
-export type NewSalesRecord = Insertable<SalesRecordsTable>;
-export type NewSalesRecordClient = Insertable<SalesRecordClientTable>;
-export type NewSalesRecordAddress = Insertable<SalesRecordAddressesTable>;
-export type NewSalesRecordProduct = Insertable<SalesRecordProductsTable>;
-export type NewSalesRecordAttempt = Insertable<SalesRecordAttemptsTable>;
-export type NewLeadPolicyDefault = Insertable<LeadPolicyDefaultsTable>;
-export type NewLeadPolicyOverride = Insertable<LeadPolicyOverridesTable>;
+export type NewLeadAssignmentRow = Insertable<LeadAssignmentsTable>;
+export type NewSalesRecordRow = Insertable<SalesRecordsTable>;
+export type NewSalesRecordClientRow = Insertable<SalesRecordClientTable>;
+export type NewSalesRecordAddressRow = Insertable<SalesRecordAddressesTable>;
+export type NewSalesRecordProductRow = Insertable<SalesRecordProductsTable>;
+export type NewSalesRecordAttemptRow = Insertable<SalesRecordAttemptsTable>;
+export type NewLeadPolicyDefaultRow = Insertable<LeadPolicyDefaultsTable>;
+export type NewLeadPolicyOverrideRow = Insertable<LeadPolicyOverridesTable>;
 export type NewCapacityRequest = Insertable<CapacityRequestsTable>;
 export type NewInteractionLog = Insertable<InteractionLogsTable>;
 export type NewAuditLog = Insertable<AuditLogsTable>;
