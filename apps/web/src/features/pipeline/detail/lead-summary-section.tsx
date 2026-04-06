@@ -1,4 +1,4 @@
-import type { LeadDetailOutput } from "~/actions/pipeline/contracts/lead-detail";
+import type { LeadDetailOutput } from "~/actions/pipeline/queries/leads";
 import Building2 from "~/components/icons/building-2";
 import { Badge } from "~/components/ui/display/badge";
 import { formatDateTime } from "~/lib/utils";

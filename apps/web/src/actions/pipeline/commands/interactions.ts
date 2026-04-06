@@ -1,15 +1,15 @@
 "use server";
 import { addNote } from "~/server/pipeline/application/commands/add-note";
 import { logCall } from "~/server/pipeline/application/commands/log-call";
+import type {
+  AddNoteInput,
+  LogCallInput,
+} from "~/server/pipeline/application/commands/types/lead-interactions";
+export type { LeadCallOutcome } from "~/server/pipeline/domain/lead";
 import { runPipelineCommand } from "~/server/pipeline/infrastructure/command-runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
-import type {
-  AddLeadNoteInput,
-  RecordLeadCallInput,
-} from "../contracts/lead-interactions";
-
-export async function recordLeadCall(input: RecordLeadCallInput) {
+export async function recordLeadCall(input: LogCallInput) {
   return runAction({
     actionName: "pipeline.log_call",
     requireAuth: true,
@@ -29,7 +29,7 @@ export async function recordLeadCall(input: RecordLeadCallInput) {
   });
 }
 
-export async function addLeadNote(input: AddLeadNoteInput) {
+export async function addLeadNote(input: AddNoteInput) {
   return runAction({
     actionName: "pipeline.add_note",
     requireAuth: true,

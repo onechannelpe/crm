@@ -1,6 +1,6 @@
 import { For, Show } from "solid-js";
 
-import type { TimelineItem } from "~/actions/pipeline/contracts/lead-detail";
+import type { TimelineItem } from "~/actions/pipeline/queries/leads";
 import Building2 from "~/components/icons/building-2";
 import CalendarDays from "~/components/icons/calendar-days";
 import CircleAlert from "~/components/icons/circle-alert";

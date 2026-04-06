@@ -1,7 +1,7 @@
 import { createAsync } from "@solidjs/router";
 
-import type { LeadListRow } from "~/actions/pipeline/contracts/lead-list";
 import { queryLeadList } from "~/actions/pipeline/queries/leads";
+import type { LeadListRow } from "~/actions/pipeline/queries/leads";
 import Info from "~/components/icons/info";
 import List from "~/components/icons/list";
 import { RecordIndexScreen } from "~/features/record-index/components/screen";

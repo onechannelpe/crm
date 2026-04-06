@@ -1,18 +1,56 @@
 import type { ColumnType, Generated, Insertable, Selectable } from "kysely";
 
-import type {
-  AuthFunnelEventName,
-  AuthFunnelMethod,
-  AuthFunnelOutcome,
-  AuthFunnelScreen,
-  AuthFunnelSource,
-} from "~/lib/observability/auth-funnel";
-import type { LeadHistoryEventType } from "~/server/pipeline/domain/history";
-import {
-  type LeadPriority,
-  type LeadStage,
-  type LeadStatus,
-} from "~/server/pipeline/domain/lead";
+type AuthFunnelSourceValue = "client" | "server";
+type AuthFunnelEventNameValue =
+  | "screen_viewed"
+  | "password_result"
+  | "passkey_start_result"
+  | "totp_result"
+  | "passkey_result";
+type AuthFunnelScreenValue =
+  | "login"
+  | "login_user"
+  | "login_verify"
+  | "login_passkey"
+  | "reset_password";
+type AuthFunnelMethodValue =
+  | "password"
+  | "password_totp"
+  | "passkey"
+  | "google";
+type AuthFunnelOutcomeValue =
+  | "viewed"
+  | "failed"
+  | "succeeded"
+  | "started"
+  | "totp_required"
+  | "passkey_required";
+type PipelineLeadStageValue =
+  | "PENDING_EXTERNAL_REVIEW"
+  | "REJECTED_BY_STATUS"
+  | "NEEDS_EXECUTIVE_INPUT"
+  | "READY_FOR_QUOTATION"
+  | "QUOTED"
+  | "READY_FOR_SALE"
+  | "CONVERTED";
+type PipelineLeadStatusValue =
+  | "DISPONIBLE"
+  | "SIN RESULTADO"
+  | "CARTERIZADO"
+  | "STOCK";
+type PipelineLeadPriorityValue = "P1" | "P2" | "SIN RESULTADO";
+type PipelineLeadHistoryEventTypeValue =
+  | "lead_registered"
+  | "lead_reviewed"
+  | "workflow_stage_changed"
+  | "lead_assigned"
+  | "lead_reassigned"
+  | "commercial_input_completed"
+  | "quotation_created"
+  | "sale_approved"
+  | "sale_created"
+  | "call_logged"
+  | "note_added";
 
 export interface BranchesTable {
   id: Generated<number>;
@@ -557,11 +595,11 @@ export interface AuthFunnelEventsTable {
   trace_id: string;
   request_id: string;
   route_path: string | null;
-  source: AuthFunnelSource;
-  event_name: AuthFunnelEventName;
-  screen: AuthFunnelScreen | null;
-  method: AuthFunnelMethod | null;
-  outcome: AuthFunnelOutcome;
+  source: AuthFunnelSourceValue;
+  event_name: AuthFunnelEventNameValue;
+  screen: AuthFunnelScreenValue | null;
+  method: AuthFunnelMethodValue | null;
+  outcome: AuthFunnelOutcomeValue;
   code: string | null;
   created_at: number;
 }
@@ -755,9 +793,9 @@ export interface PipelineLeadsTable {
   razon_social: string | null;
   address: string | null;
   executive_id: number;
-  stage: LeadStage;
-  status: LeadStatus | null;
-  prioridad: LeadPriority | null;
+  stage: PipelineLeadStageValue;
+  status: PipelineLeadStatusValue | null;
+  prioridad: PipelineLeadPriorityValue | null;
   created_at: number;
   updated_at: number;
 }
@@ -816,7 +854,7 @@ export interface PipelineLeadAssignmentsTable {
 export interface PipelineHistoryEventsTable {
   id: Generated<number>;
   lead_id: number;
-  event_type: LeadHistoryEventType;
+  event_type: PipelineLeadHistoryEventTypeValue;
   actor_user_id: number | null;
   subject_user_id: number | null;
   payload_json: string | null;

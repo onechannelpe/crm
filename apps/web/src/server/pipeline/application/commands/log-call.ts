@@ -3,7 +3,6 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { createHistoryEvent } from "../../domain/history";
-import type { LeadCallOutcome } from "../../domain/lead";
 import type { LeadInteractionDeps } from "../deps/lead-interactions";
 import {
   canAddLeadInteraction,
@@ -11,16 +10,19 @@ import {
   requirePipelineActionAccess,
 } from "../policies/access";
 import type { PipelineAuditService } from "../ports/audit-service";
+import type {
+  LeadInteractionResult,
+  LogCallInput,
+} from "./types/lead-interactions";
 
-export async function logCall(input: {
-  deps: LeadInteractionDeps;
-  auditService: PipelineAuditService;
-  actorUserId: number;
-  actorRole: Role;
-  leadId: number;
-  outcome: LeadCallOutcome;
-  notes?: string | null;
-}): Promise<Result<{ interactionId: number }, DomainError>> {
+export async function logCall(
+  input: {
+    deps: LeadInteractionDeps;
+    auditService: PipelineAuditService;
+    actorUserId: number;
+    actorRole: Role;
+  } & LogCallInput,
+): Promise<Result<LeadInteractionResult, DomainError>> {
   const canWriteInteraction = requirePipelineActionAccess(
     input.actorRole,
     canAddLeadInteraction,

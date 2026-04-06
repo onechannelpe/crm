@@ -1,4 +1,4 @@
-import type { LeadListRow } from "~/actions/pipeline/contracts/lead-list";
+import type { LeadListRow } from "~/actions/pipeline/queries/leads";
 import Building2 from "~/components/icons/building-2";
 import CalendarDays from "~/components/icons/calendar-days";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";

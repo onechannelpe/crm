@@ -1,6 +1,6 @@
 import { For, Show } from "solid-js";
 
-import type { LeadDetailOutput } from "~/actions/pipeline/contracts/lead-detail";
+import type { LeadDetailOutput } from "~/actions/pipeline/queries/leads";
 import { formatDateTime } from "~/lib/utils";
 
 import styles from "./lead-detail-overview.module.css";

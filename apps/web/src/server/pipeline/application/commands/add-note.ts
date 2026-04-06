@@ -10,15 +10,19 @@ import {
   requirePipelineActionAccess,
 } from "../policies/access";
 import type { PipelineAuditService } from "../ports/audit-service";
+import type {
+  AddNoteInput,
+  LeadInteractionResult,
+} from "./types/lead-interactions";
 
-export async function addNote(input: {
-  deps: LeadInteractionDeps;
-  auditService: PipelineAuditService;
-  actorUserId: number;
-  actorRole: Role;
-  leadId: number;
-  body: string;
-}): Promise<Result<{ interactionId: number }, DomainError>> {
+export async function addNote(
+  input: {
+    deps: LeadInteractionDeps;
+    auditService: PipelineAuditService;
+    actorUserId: number;
+    actorRole: Role;
+  } & AddNoteInput,
+): Promise<Result<LeadInteractionResult, DomainError>> {
   const canWriteInteraction = requirePipelineActionAccess(
     input.actorRole,
     canAddLeadInteraction,
