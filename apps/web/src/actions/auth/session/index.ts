@@ -2,15 +2,15 @@
 
 import { getLoginFlowState } from "~/lib/auth/flows/login-state-service";
 import { getCurrentUser, logoutUser } from "~/server/auth/application/session";
+import type { CurrentUserView } from "~/server/auth/application/views/current-user-view";
 import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
 import {
   createAuthSessionLogoutContext,
   createAuthSessionReadContext,
 } from "~/server/auth/infrastructure/session-context";
-import type { CurrentUserView } from "~/server/auth/types";
 import { runAction } from "~/server/shared/action-runtime";
 
-export type { CurrentUserView as CurrentUser } from "~/server/auth/types";
+export type { CurrentUserView as CurrentUser } from "~/server/auth/application/views/current-user-view";
 
 export async function getLoginFlow(flowId: number) {
   return getLoginFlowState(flowId, createAuthLoginContext().repos);

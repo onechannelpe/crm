@@ -1,4 +1,4 @@
-import type { InventoryItem } from "~/actions/inventory";
+import type { InventoryItem } from "~/actions/inventory/queries";
 import Building2 from "~/components/icons/building-2";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import Package from "~/components/icons/package";

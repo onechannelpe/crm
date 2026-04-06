@@ -5,7 +5,6 @@ import type {
   SessionClass,
   StrongAuthMethod,
 } from "~/lib/auth/core/session-contract";
-import type { PasskeyLoginFlowState } from "~/lib/auth/passkey/service";
 
 export interface CurrentUserView {
   id: number;
@@ -32,20 +31,3 @@ export interface CurrentUserView {
   supervisor: unknown;
   branch: unknown;
 }
-
-export type PasswordLoginResult =
-  | {
-      ok: false;
-      code: "invalid_credentials" | "strong_auth_required";
-    }
-  | {
-      ok: true;
-      nextStep: "passkey";
-      flow: PasskeyLoginFlowState;
-    };
-
-export type PasskeyStartResult =
-  | { ok: false; code: "invalid_credentials" }
-  | { ok: true; flow: PasskeyLoginFlowState };
-
-export type TotpLoginResult = { ok: false; code: "invalid_totp" };
