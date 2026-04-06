@@ -1,8 +1,11 @@
 import { createAsync, useNavigate } from "@solidjs/router";
 import { createSignal, For } from "solid-js";
 
-import { downloadExport, queueLeadExport } from "~/actions/pipeline/exports";
-import { listIntegrationJobs } from "~/actions/pipeline/imports";
+import {
+  downloadExport,
+  queueLeadExport,
+} from "~/actions/integrations/exports";
+import { listIntegrationJobs } from "~/actions/integrations/imports";
 import { AppPage } from "~/components/layout/page";
 import { toAppError } from "~/lib/app-errors";
 

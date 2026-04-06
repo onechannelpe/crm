@@ -5,7 +5,6 @@ import type {
   AddNoteInput,
   LogCallInput,
 } from "~/server/pipeline/application/commands/types/lead-interactions";
-export type { LeadCallOutcome } from "~/server/pipeline/domain/lead";
 import { runPipelineCommand } from "~/server/pipeline/infrastructure/command-runtime";
 import { runAction } from "~/server/shared/action-runtime";
 

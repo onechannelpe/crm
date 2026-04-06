@@ -9,9 +9,9 @@ import {
   updateSearchScopeDefaultMutation,
 } from "~/lib/mutations/capacity";
 import { capacityPolicyDefaultsQuery } from "~/lib/queries/capacity";
-import type { CapacityPolicyDefaults } from "~/server/capacity/application/get-policy-defaults";
+import type { CapacityPolicyDefaultsView } from "~/server/capacity/application/queries/views/capacity-policy-defaults-view";
 
-type TeamPolicy = CapacityPolicyDefaults["teams"][number];
+type TeamPolicy = CapacityPolicyDefaultsView["teams"][number];
 
 interface TeamPolicyRowProps {
   team: TeamPolicy;

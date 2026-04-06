@@ -1,10 +1,8 @@
-import type { Kysely } from "kysely";
+import type { Insertable, Kysely } from "kysely";
 
-import type {
-  Database,
-  NewNotificationContact,
-  NotificationContactsTable,
-} from "~/lib/db/types";
+import type { Database, NotificationContactsTable } from "~/lib/db/types";
+
+type NewNotificationContactRow = Insertable<NotificationContactsTable>;
 
 type NotificationChannel = NotificationContactsTable["channel"];
 
@@ -33,7 +31,7 @@ export function createNotificationContactsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    async upsertPrimary(values: NewNotificationContact): Promise<void> {
+    async upsertPrimary(values: NewNotificationContactRow): Promise<void> {
       const now = Date.now();
       await db
         .deleteFrom("notification_contacts")

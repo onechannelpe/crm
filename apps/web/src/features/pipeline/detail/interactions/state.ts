@@ -1,13 +1,15 @@
 import { createSignal } from "solid-js";
 
-import type { LeadCallOutcome } from "~/actions/pipeline/commands/interactions";
-import type { LeadAction } from "~/actions/pipeline/queries/leads";
+import type { LeadAvailableAction } from "~/actions/pipeline/queries/leads";
+import type { LeadCallOutcome } from "~/lib/pipeline/lead-values";
 
 export type InteractionMode = "call" | "note";
 
 const INTERACTION_MODES = ["call", "note"] as const;
 
-export function createInteractionState(availableActions: () => LeadAction[]) {
+export function createInteractionState(
+  availableActions: () => LeadAvailableAction[],
+) {
   const [mode, setMode] = createSignal<InteractionMode>("call");
   const [callOutcome, setCallOutcome] =
     createSignal<LeadCallOutcome>("answered");
@@ -51,3 +53,5 @@ export function createInteractionState(availableActions: () => LeadAction[]) {
     clearDraft,
   };
 }
+
+export type InteractionState = ReturnType<typeof createInteractionState>;

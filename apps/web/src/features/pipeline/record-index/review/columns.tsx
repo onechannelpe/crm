@@ -1,4 +1,4 @@
-import type { LeadListRow } from "~/actions/pipeline/queries/leads";
+import type { LeadListRowView } from "~/actions/pipeline/queries/leads";
 import Building2 from "~/components/icons/building-2";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import Info from "~/components/icons/info";
@@ -43,4 +43,4 @@ export const REVIEW_RECORD_INDEX_COLUMNS = [
       <Badge variant="secondary">{lead.prioridad ?? "-"}</Badge>
     ),
   },
-] satisfies ReadonlyArray<DataGridColumn<LeadListRow>>;
+] satisfies ReadonlyArray<DataGridColumn<LeadListRowView>>;

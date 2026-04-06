@@ -1,10 +1,12 @@
-import type { Kysely } from "kysely";
+import type { Insertable, Kysely } from "kysely";
 
-import type { Database, NewInteractionLog } from "~/lib/db/types";
+import type { Database } from "~/lib/db/types";
+
+type NewInteractionLogRow = Insertable<Database["interaction_logs"]>;
 
 export function createInteractionLogsRepo(db: Kysely<Database>) {
   return {
-    create(values: NewInteractionLog) {
+    create(values: NewInteractionLogRow) {
       return db
         .insertInto("interaction_logs")
         .values(values)

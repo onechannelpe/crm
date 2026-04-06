@@ -1,13 +1,15 @@
-import type { Kysely } from "kysely";
+import type { Insertable, Kysely } from "kysely";
 
 import type {
   Database,
-  NewSearchEnrichmentJob,
-  NewSearchEnrichmentOverlay,
+  SearchEnrichmentJobsTable,
+  SearchEnrichmentOverlaysTable,
 } from "~/lib/db/types";
 
-type DocumentType = NewSearchEnrichmentJob["document_type"];
-type JobStatus = NewSearchEnrichmentJob["status"];
+type NewSearchEnrichmentJobRow = Insertable<SearchEnrichmentJobsTable>;
+type NewSearchEnrichmentOverlayRow = Insertable<SearchEnrichmentOverlaysTable>;
+type DocumentType = NewSearchEnrichmentJobRow["document_type"];
+type JobStatus = NewSearchEnrichmentJobRow["status"];
 
 export function createSearchEnrichmentRepo(db: Kysely<Database>) {
   return {
@@ -22,7 +24,7 @@ export function createSearchEnrichmentRepo(db: Kysely<Database>) {
 
     async enqueueJob(
       values: Pick<
-        NewSearchEnrichmentJob,
+        NewSearchEnrichmentJobRow,
         "document_type" | "document_value" | "requested_by_user_id"
       > & { now: number; max_attempts: number },
     ): Promise<number> {
@@ -195,7 +197,7 @@ export function createSearchEnrichmentRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    upsertOverlay(values: NewSearchEnrichmentOverlay) {
+    upsertOverlay(values: NewSearchEnrichmentOverlayRow) {
       return db
         .insertInto("search_enrichment_overlays")
         .values(values)

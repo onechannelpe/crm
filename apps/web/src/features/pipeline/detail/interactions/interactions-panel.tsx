@@ -4,7 +4,7 @@ import {
   addLeadNote,
   recordLeadCall,
 } from "~/actions/pipeline/commands/interactions";
-import type { LeadAction } from "~/actions/pipeline/queries/leads";
+import type { LeadAvailableAction } from "~/actions/pipeline/queries/leads";
 
 import { InteractionForm } from "./interaction-form";
 import { createInteractionState } from "./state";
@@ -13,7 +13,7 @@ import styles from "../lead-detail-overview.module.css";
 
 export function InteractionsPanel(props: {
   leadId: number;
-  availableActions: LeadAction[];
+  availableActions: LeadAvailableAction[];
   onChanged?: () => void;
 }) {
   const state = createInteractionState(() => props.availableActions);

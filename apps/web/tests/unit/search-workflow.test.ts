@@ -20,7 +20,7 @@ function makeRepos() {
   const searchUsageCommits = makeSearchUsageCommitsRepo();
   return {
     users: {
-      findById: async () => ({ team_id: null, branch_id: 1 }),
+      findById: async () => ({ teamId: null, branchId: 1 }),
     },
     ...makeNullSearchPolicyRepos(),
     searchCapacityGrants,

@@ -34,12 +34,7 @@ function toManagedScopeRepos(tx: CapacityApprovalTxPort) {
     users: {
       findById: async (userId: number) => {
         const user = await tx.findManagedUserById(userId);
-        if (!user) return undefined;
-        return {
-          role: user.role,
-          branch_id: user.branchId,
-          team_id: user.teamId,
-        };
+        return user ?? undefined;
       },
     },
     teams: {
@@ -47,12 +42,7 @@ function toManagedScopeRepos(tx: CapacityApprovalTxPort) {
         tx.findSupervisedTeamBySupervisorId(supervisorId),
       findByIdWithSupervisor: async (teamId: number) => {
         const team = await tx.findManagedTeamById(teamId);
-        if (!team) return undefined;
-        return {
-          id: team.id,
-          branch_id: team.branchId,
-          supervisor_id: team.supervisorId,
-        };
+        return team ?? undefined;
       },
     },
   };

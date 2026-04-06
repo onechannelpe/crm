@@ -7,8 +7,7 @@ import type {
   SearchPolicyDefaultsRepo,
   SearchPolicyOverridesRepo,
 } from "../infrastructure/policy-repos";
-
-export type { SearchPolicy };
+import type { ActorScope } from "./actor-scope";
 
 export type SetSearchScopeDefaultCommand =
   | { scopeType: "branch"; scopeId: BranchId; monthlyLimit: number }
@@ -23,9 +22,7 @@ export interface SetSearchUserOverrideCommand {
 
 interface PolicyRepos {
   users: {
-    findById(
-      id: UserId,
-    ): Promise<{ team_id: number | null; branch_id: number } | undefined>;
+    findById(id: UserId): Promise<ActorScope | undefined>;
   };
   searchPolicyDefaults: SearchPolicyDefaultsRepo;
   searchPolicyOverrides: SearchPolicyOverridesRepo;
@@ -46,12 +43,12 @@ export async function getEffectiveSearchPolicy(
       userId,
       now,
     );
-    const teamDefault = user.team_id
-      ? await repos.searchPolicyDefaults.findForScope("team", user.team_id)
+    const teamDefault = user.teamId
+      ? await repos.searchPolicyDefaults.findForScope("team", user.teamId)
       : null;
     const branchDefault = await repos.searchPolicyDefaults.findForScope(
       "branch",
-      user.branch_id,
+      user.branchId,
     );
 
     return Ok(

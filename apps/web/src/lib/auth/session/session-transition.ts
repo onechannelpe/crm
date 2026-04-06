@@ -1,3 +1,5 @@
+import type { Selectable } from "kysely";
+
 import { forbiddenError } from "~/lib/app-errors";
 import type {
   PrimaryAuthMethod,
@@ -10,7 +12,7 @@ import {
   invalidateSession,
 } from "~/lib/auth/session/session-manager";
 import { hashSessionToken } from "~/lib/auth/session/tokens";
-import type { User } from "~/lib/db/types";
+import type { UsersTable } from "~/lib/db/types";
 import type { createSessionRepository } from "~/server/sessions/repos-sessions";
 import type { UserId } from "~/server/shared/ids";
 import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
@@ -25,8 +27,10 @@ type SessionAuditDeps = {
   users: ReturnType<typeof createUsersRepo>;
 };
 
+type UserRow = Selectable<UsersTable>;
+
 type SessionUser = Pick<
-  User,
+  UserRow,
   "id" | "branch_id" | "role" | "onboarding_completed_at"
 >;
 
@@ -37,7 +41,7 @@ export interface SessionRequestMetadata {
 
 export interface IssuedSessionResult {
   userId: UserId;
-  role: User["role"];
+  role: UserRow["role"];
   onboardingCompleted: boolean;
   sessionClass: SessionClass;
   primaryAuthMethod: PrimaryAuthMethod;

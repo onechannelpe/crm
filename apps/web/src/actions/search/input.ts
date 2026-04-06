@@ -1,5 +1,5 @@
 import type { RunDirectSearchCommand } from "~/server/search-workflow/run-search";
-import { domainError } from "~/server/shared/domain-error";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import { isSearchType } from "~/server/shared/pipeline-types";
 import { Err, Ok, type Result } from "~/server/shared/result";
@@ -9,7 +9,7 @@ export function parseSearchCommand(
   type: unknown,
   value: unknown,
   limit: unknown,
-): Result<RunDirectSearchCommand, ReturnType<typeof domainError>> {
+): Result<RunDirectSearchCommand, DomainError> {
   if (typeof type !== "string" || !isSearchType(type)) {
     return Err(
       domainError(

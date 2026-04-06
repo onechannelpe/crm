@@ -6,13 +6,12 @@ import type { SaleView } from "~/server/pipeline/application/queries/views/sale-
 import { createPipelineQueryRuntime } from "~/server/pipeline/infrastructure/query-runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
-export type SalesListRow = SaleView;
-export type SaleDetailView = SaleView;
+export type { SaleView };
 
 export async function querySales(filters: {
   limit?: number;
   offset?: number;
-}): Promise<SalesListRow[]> {
+}): Promise<SaleView[]> {
   const result = await runAction({
     actionName: "pipeline.list_sales",
     requireAuth: true,
@@ -28,7 +27,7 @@ export async function querySales(filters: {
   return result;
 }
 
-export async function querySaleDetail(saleId: number): Promise<SaleDetailView> {
+export async function querySaleDetail(saleId: number): Promise<SaleView> {
   return runAction({
     actionName: "pipeline.get_sale_detail",
     requireAuth: true,

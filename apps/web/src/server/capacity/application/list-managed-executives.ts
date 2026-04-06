@@ -1,34 +1,18 @@
 import { longName } from "~/lib/users/display-name";
-import {
-  getLeadCapacitySnapshot,
-  type LeadCapacitySnapshot,
-} from "~/server/capacity/application/get-lead-capacity-snapshot";
-import {
-  getSearchCapacitySnapshot,
-  type SearchCapacitySnapshot,
-} from "~/server/capacity/application/get-search-capacity-snapshot";
+import { getLeadCapacitySnapshot } from "~/server/capacity/application/get-lead-capacity-snapshot";
+import { getSearchCapacitySnapshot } from "~/server/capacity/application/get-search-capacity-snapshot";
 import type { AppContext } from "~/server/shared/action-runtime";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import { canManageExecutive } from "../domain/access-policy";
 import type { CapacityReadContext } from "../infrastructure/read-context";
-
-export type { SearchCapacitySnapshot, LeadCapacitySnapshot };
-
-export type ManagedExecutiveSummary = {
-  id: number;
-  fullName: string;
-  email: string;
-  teamId: number | null;
-  searchStatus: SearchCapacitySnapshot;
-  leadStatus: LeadCapacitySnapshot;
-};
+import type { ManagedExecutiveView } from "./queries/views/managed-executive-view";
 
 export async function listManagedExecutives(
   ctx: AppContext,
   deps: CapacityReadContext,
-): Promise<Result<ManagedExecutiveSummary[], DomainError>> {
+): Promise<Result<ManagedExecutiveView[], DomainError>> {
   try {
     const users =
       ctx.actor.role === "superuser"
@@ -54,7 +38,7 @@ export async function listManagedExecutives(
           id: user.id,
           fullName: longName(user),
           email: user.email,
-          teamId: user.team_id,
+          teamId: user.teamId,
           searchStatus: searchStatus.value,
           leadStatus: leadStatus.value,
         };
@@ -63,7 +47,7 @@ export async function listManagedExecutives(
 
     return Ok(
       summaries
-        .filter((value): value is ManagedExecutiveSummary => value !== null)
+        .filter((value): value is ManagedExecutiveView => value !== null)
         .sort((a, b) => a.fullName.localeCompare(b.fullName)),
     );
   } catch (error) {
@@ -78,3 +62,5 @@ export async function listManagedExecutives(
     );
   }
 }
+
+export type { ManagedExecutiveView };

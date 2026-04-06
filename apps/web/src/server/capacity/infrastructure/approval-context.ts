@@ -55,11 +55,7 @@ export function createCapacityApprovalContext(): CapacityApprovalPort {
             if (!user) {
               return undefined;
             }
-            return {
-              role: user.role,
-              branchId: user.branch_id,
-              teamId: user.team_id,
-            };
+            return user;
           },
           findSupervisedTeamBySupervisorId(supervisorId) {
             return repos.teams.findBySupervisorId(supervisorId);
@@ -69,11 +65,7 @@ export function createCapacityApprovalContext(): CapacityApprovalPort {
             if (!team) {
               return undefined;
             }
-            return {
-              id: team.id,
-              branchId: team.branch_id,
-              supervisorId: team.supervisor_id,
-            };
+            return team;
           },
           async grantSearchCapacity(input) {
             await repos.searchCapacityGrants.insert({

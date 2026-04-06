@@ -1,50 +1,20 @@
 import { longName } from "~/lib/users/display-name";
-import {
-  getLeadCapacitySnapshot,
-  type LeadCapacitySnapshot,
-} from "~/server/capacity/application/get-lead-capacity-snapshot";
-import {
-  getSearchCapacitySnapshot,
-  type SearchCapacitySnapshot,
-} from "~/server/capacity/application/get-search-capacity-snapshot";
+import { getLeadCapacitySnapshot } from "~/server/capacity/application/get-lead-capacity-snapshot";
+import { getSearchCapacitySnapshot } from "~/server/capacity/application/get-search-capacity-snapshot";
 import type { AppContext } from "~/server/shared/action-runtime";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import { canManageExecutive } from "../domain/access-policy";
 import { fromDbCapacityRequestKind } from "../domain/request-policy";
-import type { CapacityRequestStatus } from "../domain/types";
 import type { CapacityReadContext } from "../infrastructure/read-context";
-
-export type ExecutiveCapacityDetail = {
-  executive: {
-    id: number;
-    fullName: string;
-    email: string;
-    teamId: number | null;
-  };
-  searchStatus: SearchCapacitySnapshot;
-  leadStatus: LeadCapacitySnapshot;
-  requests: Array<{
-    id: number;
-    user_id: number;
-    kind: "search_extra" | "lead_refill";
-    status: CapacityRequestStatus;
-    requested_amount: number;
-    reason: string;
-    decision_note: string | null;
-    reviewer_user_id: number | null;
-    created_at: number;
-    updated_at: number;
-    decided_at: number | null;
-  }>;
-};
+import type { ExecutiveCapacityDetailView } from "./queries/views/executive-capacity-detail-view";
 
 export async function getExecutiveDetail(
   ctx: AppContext,
   deps: CapacityReadContext,
   input: { userId: number },
-): Promise<Result<ExecutiveCapacityDetail, DomainError>> {
+): Promise<Result<ExecutiveCapacityDetailView, DomainError>> {
   try {
     const managed = await canManageExecutive(
       ctx.actor,
@@ -74,13 +44,22 @@ export async function getExecutiveDetail(
         id: input.userId,
         fullName: longName(managed.target),
         email: managed.target.email,
-        teamId: managed.target.team_id,
+        teamId: managed.target.teamId,
       },
       searchStatus: searchStatus.value,
       leadStatus: leadStatus.value,
       requests: requests.map((request) => ({
-        ...request,
+        id: request.id,
+        userId: request.user_id,
         kind: fromDbCapacityRequestKind(request.kind),
+        status: request.status,
+        requestedAmount: request.requested_amount,
+        reason: request.reason,
+        decisionNote: request.decision_note,
+        reviewerUserId: request.reviewer_user_id,
+        createdAt: request.created_at,
+        updatedAt: request.updated_at,
+        decidedAt: request.decided_at,
       })),
     });
   } catch (error) {
@@ -95,3 +74,5 @@ export async function getExecutiveDetail(
     );
   }
 }
+
+export type { ExecutiveCapacityDetailView };

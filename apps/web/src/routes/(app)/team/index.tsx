@@ -12,10 +12,9 @@ import { DataGrid } from "~/features/data-grid/components/grid";
 import { createRouteRowOpen } from "~/features/data-grid/model/row-open";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { managedExecutivesQuery } from "~/lib/queries/capacity";
+import type { ManagedExecutiveView } from "~/server/capacity/application/queries/views/managed-executive-view";
 
-type TeamExecutiveRow = Awaited<
-  ReturnType<typeof managedExecutivesQuery>
->[number];
+type TeamExecutiveRow = ManagedExecutiveView;
 
 const TEAM_COLUMNS = [
   {

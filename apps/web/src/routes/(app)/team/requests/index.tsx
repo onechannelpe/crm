@@ -14,10 +14,9 @@ import {
   rejectCapacityRequestMutation,
 } from "~/lib/mutations/capacity";
 import { pendingCapacityRequestsQuery } from "~/lib/queries/capacity";
+import type { PendingCapacityRequestView } from "~/server/capacity/application/queries/views/pending-capacity-request-view";
 
-type TeamRequestRow = Awaited<
-  ReturnType<typeof pendingCapacityRequestsQuery>
->[number];
+type TeamRequestRow = PendingCapacityRequestView;
 
 export default function TeamRequestsPage() {
   const requests = createAsync(() => pendingCapacityRequestsQuery());
@@ -34,7 +33,7 @@ export default function TeamRequestsPage() {
       grow: true,
       sticky: true,
       renderCell: (request) =>
-        `${request.names} ${request.first_surname} ${request.second_surname}`,
+        `${request.names} ${request.firstSurname} ${request.secondSurname}`,
     },
     {
       key: "kind",
@@ -45,11 +44,11 @@ export default function TeamRequestsPage() {
         request.kind === "search_extra" ? "Más búsquedas" : "Más refills",
     },
     {
-      key: "requested_amount",
+      key: "requestedAmount",
       label: "Cantidad",
       icon: CircleQuestionMark,
       width: 120,
-      renderCell: (request) => request.requested_amount,
+      renderCell: (request) => request.requestedAmount,
     },
     {
       key: "reason",

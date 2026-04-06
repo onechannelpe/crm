@@ -1,9 +1,11 @@
 import { validationError } from "~/lib/app-errors";
+import type { Role } from "~/lib/auth/access/rbac";
 import {
   assertNonEmptyString,
   assertPositiveInt,
 } from "~/lib/contracts/guards";
-import { domainError } from "~/server/shared/domain-error";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
+import type { TeamId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import {
@@ -26,9 +28,9 @@ export function parseCreateTeamInviteInput(input: {
   firstSurname: string;
   secondSurname: string;
   email: string;
-  role: ReturnType<typeof assertRole>;
-  teamId: ReturnType<typeof assertOptionalTeamId>;
-  expiresAt: ReturnType<typeof assertOptionalExpiresAt>;
+  role: Role;
+  teamId: TeamId | null;
+  expiresAt: number | null;
 } {
   return {
     names: assertNonEmptyString(input.names, "names"),
@@ -43,7 +45,7 @@ export function parseCreateTeamInviteInput(input: {
 
 export function parseInviteIdInput(
   inviteId: number,
-): Result<{ inviteId: number }, ReturnType<typeof domainError>> {
+): Result<{ inviteId: number }, DomainError> {
   try {
     return Ok({ inviteId: assertPositiveInt(inviteId, "inviteId") });
   } catch (error) {

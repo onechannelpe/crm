@@ -33,6 +33,14 @@ export interface AvatarRecord {
   bytes: Uint8Array;
 }
 
+export interface AvatarMetaRow {
+  id: number;
+  avatar_storage_key: string | null;
+  avatar_mime_type: string | null;
+  avatar_updated_at: number | null;
+  avatar_version: number;
+}
+
 export interface ProfilePictureService {
   upload(
     userId: number,
@@ -45,17 +53,9 @@ export interface ProfilePictureService {
 }
 
 export interface AvatarUsersRepository {
-  findAvatarMetaById: (userId: number) => Promise<
-    | {
-        id: number;
-        avatar_storage_key: string | null;
-        avatar_mime_type: string | null;
-        avatar_updated_at: number | null;
-        avatar_version: number;
-      }
-    | null
-    | undefined
-  >;
+  findAvatarMetaById: (
+    userId: number,
+  ) => Promise<AvatarMetaRow | null | undefined>;
   updateAvatar: (
     userId: number,
     values: {
@@ -98,9 +98,7 @@ export function createProfilePictureService(
         return validation;
       }
 
-      let currentAvatar: Awaited<
-        ReturnType<typeof repos.users.findAvatarMetaById>
-      >;
+      let currentAvatar: AvatarMetaRow | null | undefined;
       try {
         currentAvatar = await repos.users.findAvatarMetaById(userId);
       } catch {
@@ -160,9 +158,7 @@ export function createProfilePictureService(
     },
 
     async remove(userId: number) {
-      let currentAvatar: Awaited<
-        ReturnType<typeof repos.users.findAvatarMetaById>
-      >;
+      let currentAvatar: AvatarMetaRow | null | undefined;
       try {
         currentAvatar = await repos.users.findAvatarMetaById(userId);
       } catch {
@@ -201,7 +197,7 @@ export function createProfilePictureService(
     },
 
     async get(userId: number) {
-      let avatar: Awaited<ReturnType<typeof repos.users.findAvatarMetaById>>;
+      let avatar: AvatarMetaRow | null | undefined;
       try {
         avatar = await repos.users.findAvatarMetaById(userId);
       } catch {

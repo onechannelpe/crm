@@ -21,6 +21,7 @@ export async function submitRecord(
     "sales_records.submit",
     ctx.actor.userId,
     deps.rateLimitDeps,
+    ctx.ipAddress,
   );
   return runSalesRecordMutation(deps, async (repos) => {
     const audit = getSalesRecordAudit(repos);

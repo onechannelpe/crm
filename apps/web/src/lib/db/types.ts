@@ -1,10 +1,4 @@
-import type {
-  ColumnType,
-  Generated,
-  Insertable,
-  Selectable,
-  Updateable,
-} from "kysely";
+import type { ColumnType, Generated } from "kysely";
 
 type AuthFunnelSourceValue = "client" | "server";
 type AuthFunnelEventNameValue =
@@ -31,33 +25,6 @@ type AuthFunnelOutcomeValue =
   | "started"
   | "totp_required"
   | "passkey_required";
-type PipelineLeadStageValue =
-  | "PENDING_EXTERNAL_REVIEW"
-  | "REJECTED_BY_STATUS"
-  | "NEEDS_EXECUTIVE_INPUT"
-  | "READY_FOR_QUOTATION"
-  | "QUOTED"
-  | "READY_FOR_SALE"
-  | "CONVERTED";
-type PipelineLeadStatusValue =
-  | "DISPONIBLE"
-  | "SIN RESULTADO"
-  | "CARTERIZADO"
-  | "STOCK";
-type PipelineLeadPriorityValue = "P1" | "P2" | "SIN RESULTADO";
-type PipelineLeadHistoryEventTypeValue =
-  | "lead_registered"
-  | "lead_reviewed"
-  | "workflow_stage_changed"
-  | "lead_assigned"
-  | "lead_reassigned"
-  | "commercial_input_completed"
-  | "quotation_created"
-  | "sale_approved"
-  | "sale_created"
-  | "call_logged"
-  | "note_added";
-
 export interface BranchesTable {
   id: Generated<number>;
   name: string;
@@ -799,9 +766,16 @@ export interface PipelineLeadsTable {
   razon_social: string | null;
   address: string | null;
   executive_id: number;
-  stage: PipelineLeadStageValue;
-  status: PipelineLeadStatusValue | null;
-  prioridad: PipelineLeadPriorityValue | null;
+  stage:
+    | "PENDING_EXTERNAL_REVIEW"
+    | "REJECTED_BY_STATUS"
+    | "NEEDS_EXECUTIVE_INPUT"
+    | "READY_FOR_QUOTATION"
+    | "QUOTED"
+    | "READY_FOR_SALE"
+    | "CONVERTED";
+  status: "DISPONIBLE" | "SIN RESULTADO" | "CARTERIZADO" | "STOCK" | null;
+  prioridad: "P1" | "P2" | "SIN RESULTADO" | null;
   created_at: number;
   updated_at: number;
 }
@@ -860,7 +834,18 @@ export interface PipelineLeadAssignmentsTable {
 export interface PipelineHistoryEventsTable {
   id: Generated<number>;
   lead_id: number;
-  event_type: PipelineLeadHistoryEventTypeValue;
+  event_type:
+    | "lead_registered"
+    | "lead_reviewed"
+    | "workflow_stage_changed"
+    | "lead_assigned"
+    | "lead_reassigned"
+    | "commercial_input_completed"
+    | "quotation_created"
+    | "sale_approved"
+    | "sale_created"
+    | "call_logged"
+    | "note_added";
   actor_user_id: number | null;
   subject_user_id: number | null;
   payload_json: string | null;
@@ -961,125 +946,3 @@ export interface Database {
   lead_sourcing_policies: LeadSourcingPoliciesTable;
   pipeline_integration_jobs: PipelineIntegrationJobsTable;
 }
-
-export type Branch = Selectable<BranchesTable>;
-export type User = Selectable<UsersTable>;
-export type LoginFlow = Selectable<LoginFlowsTable>;
-export type NotificationContact = Selectable<NotificationContactsTable>;
-export type NotificationPreference = Selectable<NotificationPreferencesTable>;
-export type NotificationCampaign = Selectable<NotificationCampaignsTable>;
-export type NotificationRecipient = Selectable<NotificationRecipientsTable>;
-export type NotificationJob = Selectable<NotificationJobsTable>;
-export type NotificationDelivery = Selectable<NotificationDeliveriesTable>;
-export type AppNotification = Selectable<AppNotificationsTable>;
-export type ClientSearchView = Selectable<ClientSearchViewsTable>;
-export type SearchPolicyDefault = Selectable<SearchPolicyDefaultsTable>;
-export type SearchPolicyOverride = Selectable<SearchPolicyOverridesTable>;
-export type Organization = Selectable<OrganizationsTable>;
-export type Contact = Selectable<ContactsTable>;
-export type LeadAssignment = Selectable<LeadAssignmentsTable>;
-export type SalesRecord = Selectable<SalesRecordsTable>;
-export type SalesRecordClient = Selectable<SalesRecordClientTable>;
-export type SalesRecordAddress = Selectable<SalesRecordAddressesTable>;
-export type SalesRecordProduct = Selectable<SalesRecordProductsTable>;
-export type SalesRecordAttempt = Selectable<SalesRecordAttemptsTable>;
-export type LeadPolicyDefault = Selectable<LeadPolicyDefaultsTable>;
-export type LeadPolicyOverride = Selectable<LeadPolicyOverridesTable>;
-export type SearchCapacityGrant = Selectable<SearchCapacityGrantsTable>;
-export type SearchUsageReservation = Selectable<SearchUsageReservationsTable>;
-export type SearchUsageCommit = Selectable<SearchUsageCommitsTable>;
-export type LeadCapacityGrant = Selectable<LeadCapacityGrantsTable>;
-export type LeadUsageReservation = Selectable<LeadUsageReservationsTable>;
-export type LeadUsageCommit = Selectable<LeadUsageCommitsTable>;
-export type CapacityRequest = Selectable<CapacityRequestsTable>;
-export type Product = Selectable<ProductsTable>;
-export type InteractionLog = Selectable<InteractionLogsTable>;
-export type InventoryItem = Selectable<InventoryItemsTable>;
-export type AgentStatusLog = Selectable<AgentStatusLogsTable>;
-export type AuditLog = Selectable<AuditLogsTable>;
-export type AuditActionPolicy = Selectable<AuditActionPoliciesTable>;
-export type ActionObservation = Selectable<ActionObservationsTable>;
-export type AuthFunnelEvent = Selectable<AuthFunnelEventsTable>;
-export type ReportExportJob = Selectable<ReportExportJobsTable>;
-export type ReportExportDownload = Selectable<ReportExportDownloadsTable>;
-export type SearchEnrichmentJob = Selectable<SearchEnrichmentJobsTable>;
-export type SearchEnrichmentOverlay = Selectable<SearchEnrichmentOverlaysTable>;
-export type Passkey = Selectable<PasskeysTable>;
-export type UserSession = Selectable<UserSessionsTable>;
-export type RequestSession = Selectable<RequestSessionsTable>;
-export type AuthThrottleCounter = Selectable<AuthThrottleCountersTable>;
-export type AuthEvent = Selectable<AuthEventsTable>;
-export type UserTotpFactor = Selectable<UserTotpFactorsTable>;
-export type UserTotpRecoveryCode = Selectable<UserTotpRecoveryCodesTable>;
-export type UserInvite = Selectable<UserInvitesTable>;
-export type PasswordResetToken = Selectable<PasswordResetTokensTable>;
-export type PipelineLeadRow = Selectable<PipelineLeadsTable>;
-export type PipelineLeadCommercialInputRow =
-  Selectable<PipelineLeadCommercialInputsTable>;
-export type PipelineQuotationRow = Selectable<PipelineQuotationsTable>;
-export type PipelineSaleRow = Selectable<PipelineSalesTable>;
-export type PipelineLeadAssignmentRow =
-  Selectable<PipelineLeadAssignmentsTable>;
-export type PipelineHistoryEventRow = Selectable<PipelineHistoryEventsTable>;
-export type LeadSourcingPolicyRow = Selectable<LeadSourcingPoliciesTable>;
-
-export type NewUser = Insertable<UsersTable>;
-export type NewLoginFlow = Insertable<LoginFlowsTable>;
-export type NewNotificationContact = Insertable<NotificationContactsTable>;
-export type NewNotificationPreference =
-  Insertable<NotificationPreferencesTable>;
-export type NewNotificationCampaign = Insertable<NotificationCampaignsTable>;
-export type NewNotificationRecipient = Insertable<NotificationRecipientsTable>;
-export type NewNotificationJob = Insertable<NotificationJobsTable>;
-export type NewNotificationDelivery = Insertable<NotificationDeliveriesTable>;
-export type NewAppNotification = Insertable<AppNotificationsTable>;
-export type NewClientSearchView = Insertable<ClientSearchViewsTable>;
-export type NewSearchPolicyDefault = Insertable<SearchPolicyDefaultsTable>;
-export type NewSearchPolicyOverride = Insertable<SearchPolicyOverridesTable>;
-export type NewUserSession = Insertable<UserSessionsTable>;
-export type NewRequestSession = Insertable<RequestSessionsTable>;
-export type NewAuthThrottleCounter = Insertable<AuthThrottleCountersTable>;
-export type NewAuthEvent = Insertable<AuthEventsTable>;
-export type NewUserTotpFactor = Insertable<UserTotpFactorsTable>;
-export type NewUserTotpRecoveryCode = Insertable<UserTotpRecoveryCodesTable>;
-export type NewUserInvite = Insertable<UserInvitesTable>;
-export type NewOrganization = Insertable<OrganizationsTable>;
-export type NewContact = Insertable<ContactsTable>;
-export type NewLeadAssignment = Insertable<LeadAssignmentsTable>;
-export type NewSalesRecord = Insertable<SalesRecordsTable>;
-export type NewSalesRecordClient = Insertable<SalesRecordClientTable>;
-export type NewSalesRecordAddress = Insertable<SalesRecordAddressesTable>;
-export type NewSalesRecordProduct = Insertable<SalesRecordProductsTable>;
-export type NewSalesRecordAttempt = Insertable<SalesRecordAttemptsTable>;
-export type NewLeadPolicyDefault = Insertable<LeadPolicyDefaultsTable>;
-export type NewLeadPolicyOverride = Insertable<LeadPolicyOverridesTable>;
-export type NewCapacityRequest = Insertable<CapacityRequestsTable>;
-export type NewInteractionLog = Insertable<InteractionLogsTable>;
-export type NewAuditLog = Insertable<AuditLogsTable>;
-export type NewAuditActionPolicy = Insertable<AuditActionPoliciesTable>;
-export type NewActionObservation = Insertable<ActionObservationsTable>;
-export type NewAuthFunnelEvent = Insertable<AuthFunnelEventsTable>;
-export type NewReportExportJob = Insertable<ReportExportJobsTable>;
-export type NewReportExportDownload = Insertable<ReportExportDownloadsTable>;
-export type NewSearchEnrichmentJob = Insertable<SearchEnrichmentJobsTable>;
-export type NewSearchEnrichmentOverlay =
-  Insertable<SearchEnrichmentOverlaysTable>;
-export type ActionRateLimitCounter = Selectable<ActionRateLimitCountersTable>;
-export type NewActionRateLimitCounter =
-  Insertable<ActionRateLimitCountersTable>;
-export type IntegrationJob = Selectable<PipelineIntegrationJobsTable>;
-export type NewPipelineLeadRow = Insertable<PipelineLeadsTable>;
-export type NewPipelineLeadCommercialInputRow =
-  Insertable<PipelineLeadCommercialInputsTable>;
-export type NewPipelineQuotationRow = Insertable<PipelineQuotationsTable>;
-export type NewPipelineSaleRow = Insertable<PipelineSalesTable>;
-export type NewPipelineLeadAssignmentRow =
-  Insertable<PipelineLeadAssignmentsTable>;
-export type UpdatePipelineLeadRow = Updateable<PipelineLeadsTable>;
-export type UpdatePipelineLeadCommercialInputRow =
-  Updateable<PipelineLeadCommercialInputsTable>;
-export type UpdatePipelineQuotationRow = Updateable<PipelineQuotationsTable>;
-export type UpdatePipelineSaleRow = Updateable<PipelineSalesTable>;
-export type UpdatePipelineLeadAssignmentRow =
-  Updateable<PipelineLeadAssignmentsTable>;
-export type NewIntegrationJob = Insertable<PipelineIntegrationJobsTable>;

@@ -4,12 +4,12 @@ import {
   assertNonEmptyString,
   assertPositiveInt,
 } from "~/lib/contracts/guards";
-import { domainError } from "~/server/shared/domain-error";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 export function parseCapacityAmount(
   amount: number,
-): Result<number, ReturnType<typeof domainError>> {
+): Result<number, DomainError> {
   try {
     const safeAmount = assertPositiveInt(amount, "amount");
     if (safeAmount > config.capacityRequests.maxRequestAmount) {
@@ -36,10 +36,7 @@ export function parseCapacityAmount(
 export function parseCapacityDecisionInput(input: {
   requestId: number;
   note?: string;
-}): Result<
-  { requestId: number; note: string | null },
-  ReturnType<typeof domainError>
-> {
+}): Result<{ requestId: number; note: string | null }, DomainError> {
   try {
     return Ok({
       requestId: assertPositiveInt(input.requestId, "requestId"),
@@ -61,10 +58,7 @@ export function parseCapacityGrantInput(input: {
   userId: number;
   amount: number;
   reason: string;
-}): Result<
-  { userId: number; amount: number; reason: string },
-  ReturnType<typeof domainError>
-> {
+}): Result<{ userId: number; amount: number; reason: string }, DomainError> {
   try {
     const userId = assertPositiveInt(input.userId, "userId");
     const amountResult = parseCapacityAmount(input.amount);
@@ -93,7 +87,7 @@ export function parseCapacityGrantInput(input: {
 
 export function parseCapacityReason(
   reason: string,
-): Result<string, ReturnType<typeof domainError>> {
+): Result<string, DomainError> {
   try {
     return Ok(assertNonEmptyString(reason, "reason"));
   } catch (error) {
@@ -109,7 +103,7 @@ export function parseCapacityReason(
 
 export function parseSearchPolicyLimit(
   monthlySearchLimit: number,
-): Result<number, ReturnType<typeof domainError>> {
+): Result<number, DomainError> {
   try {
     const safeLimit = assertFinitePositive(
       monthlySearchLimit,
@@ -142,7 +136,7 @@ export function parseSearchPolicyOverrideInput(input: {
   expiresAt: number | null;
 }): Result<
   { userId: number; monthlyLimit: number; expiresAt: number | null },
-  ReturnType<typeof domainError>
+  DomainError
 > {
   try {
     const userId = assertPositiveInt(input.userId, "userId");
@@ -173,7 +167,7 @@ export function parseLeadPolicyValues(input: {
   dailyRefillLimit: number;
 }): Result<
   { activeBufferTarget: number; dailyRefillLimit: number },
-  ReturnType<typeof domainError>
+  DomainError
 > {
   try {
     const safeBuffer = assertFinitePositive(
@@ -226,7 +220,7 @@ export function parseLeadPolicyOverrideInput(input: {
     dailyLimit: number;
     expiresAt: number | null;
   },
-  ReturnType<typeof domainError>
+  DomainError
 > {
   try {
     const userId = assertPositiveInt(input.userId, "userId");
@@ -257,10 +251,7 @@ export function parseLeadPolicyOverrideInput(input: {
 export function parseScopeDefaultInput(input: {
   scopeType: "branch" | "team";
   scopeId: number;
-}): Result<
-  { scopeType: "branch" | "team"; scopeId: number },
-  ReturnType<typeof domainError>
-> {
+}): Result<{ scopeType: "branch" | "team"; scopeId: number }, DomainError> {
   try {
     return Ok({
       scopeType: input.scopeType,

@@ -1,7 +1,7 @@
 import { createAsync, useParams } from "@solidjs/router";
 import { For, Show } from "solid-js";
 
-import { getImportJob } from "~/actions/pipeline/imports";
+import { getImportJob } from "~/actions/integrations/imports";
 import { AppPage } from "~/components/layout/page";
 
 export default function ImportJobDetailPage() {

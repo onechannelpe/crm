@@ -1,13 +1,13 @@
 import { A } from "@solidjs/router";
 import { Show } from "solid-js";
 
-import type { LeadAction } from "~/actions/pipeline/queries/leads";
+import type { LeadAvailableAction } from "~/actions/pipeline/queries/leads";
 
 import styles from "./lead-detail-overview.module.css";
 
 export function LeadActionsSection(props: {
   leadId: number;
-  availableActions: LeadAction[];
+  availableActions: LeadAvailableAction[];
 }) {
   return (
     <section class={styles.section}>

@@ -1,9 +1,11 @@
+import type { Insertable } from "kysely";
 import { getRequestEvent } from "solid-js/web";
 
 import { rateLimitError } from "~/lib/app-errors";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { hashAuthKey } from "~/lib/auth/password/key-hash";
-import type { NewAuditLog } from "~/lib/db/types";
+import type { Database } from "~/lib/db/types";
+type NewAuditLogRow = Insertable<Database["audit_logs"]>;
 import type { ActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 
 interface ActionRateLimitPolicy {
@@ -29,7 +31,7 @@ export type RateLimitedAction = keyof typeof ACTION_RATE_LIMIT_POLICY;
 export type RateLimitDeps = {
   actionRateLimits: ActionRateLimitsRepo;
   auditLogs: {
-    create(values: NewAuditLog): unknown;
+    create(values: NewAuditLogRow): unknown;
   };
 };
 
