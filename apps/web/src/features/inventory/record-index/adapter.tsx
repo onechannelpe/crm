@@ -1,5 +1,6 @@
 import { createAsync } from "@solidjs/router";
 
+import type { InventoryItemView } from "~/actions/inventory/queries";
 import List from "~/components/icons/list";
 import Package from "~/components/icons/package";
 import { RecordIndexScreen } from "~/features/record-index/components/screen";
@@ -9,7 +10,6 @@ import type {
 } from "~/features/record-index/model/types";
 import { inventoryItemsQuery } from "~/lib/queries/inventory";
 
-import type { InventoryRow } from "./columns";
 import { INVENTORY_RECORD_INDEX_COLUMNS } from "./columns";
 import { useOpenInventoryRecord } from "./open-row";
 
@@ -18,7 +18,7 @@ import styles from "./styles.module.css";
 export function InventoryRecordIndex() {
   const items = createAsync(() => inventoryItemsQuery());
   const { rowOpen } = useOpenInventoryRecord();
-  const source = (): RecordIndexSource<InventoryRow> => {
+  const source = (): RecordIndexSource<InventoryItemView> => {
     const data = items();
 
     if (data === undefined) {
@@ -43,7 +43,7 @@ export function InventoryRecordIndex() {
       description: "Add your first inventory item manually.",
     },
     class: styles.page,
-  } satisfies RecordIndexAdapter<InventoryRow>;
+  } satisfies RecordIndexAdapter<InventoryItemView>;
 
   return <RecordIndexScreen adapter={adapter} />;
 }

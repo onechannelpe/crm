@@ -10,8 +10,6 @@ import { formatDate } from "~/lib/utils";
 
 import styles from "./styles.module.css";
 
-export type LeadRow = LeadListRow;
-
 export const LEADS_RECORD_INDEX_COLUMNS = [
   {
     key: "ruc",
@@ -79,4 +77,4 @@ export const LEADS_RECORD_INDEX_COLUMNS = [
       <span class={styles.mutedCellText}>{formatDate(lead.createdAt)}</span>
     ),
   },
-] satisfies ReadonlyArray<DataGridColumn<LeadRow>>;
+] satisfies ReadonlyArray<DataGridColumn<LeadListRow>>;

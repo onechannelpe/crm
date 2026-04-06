@@ -2,15 +2,17 @@ import { Navigate } from "@solidjs/router";
 import type { ParentProps } from "solid-js";
 import { Match, Switch, createContext, useContext } from "solid-js";
 
-import type { CurrentUser } from "~/actions/auth/session";
+import type { CurrentUserView } from "~/actions/auth/session";
 import { Loading } from "~/components/feedback/loading";
 
 import { SessionProvider, useSession } from "./session-provider";
 
 interface AuthenticatedSessionContextValue {
-  currentUser: () => CurrentUser;
-  updateCurrentUser: (update: (current: CurrentUser) => CurrentUser) => void;
-  refreshCurrentUser: () => Promise<CurrentUser | null | undefined>;
+  currentUser: () => CurrentUserView;
+  updateCurrentUser: (
+    update: (current: CurrentUserView) => CurrentUserView,
+  ) => void;
+  refreshCurrentUser: () => Promise<CurrentUserView | null | undefined>;
 }
 
 const AuthenticatedSessionContext =

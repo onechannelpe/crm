@@ -1,5 +1,6 @@
+import type { LeadListRow } from "~/actions/pipeline/queries/leads";
+
 import type { RecordIndexSortDefinition } from "../../../record-index/model/sort";
-import type { LeadRow } from "./columns";
 
 export type LeadSortKey =
   | "createdAt_desc"
@@ -14,7 +15,7 @@ export const LEADS_RECORD_INDEX_SORTS = [
   { value: "ruc_desc", label: "RUC Z-A" },
 ] as const satisfies ReadonlyArray<{ label: string; value: LeadSortKey }>;
 
-export function sortLeadRows(leads: LeadRow[], sortKey: LeadSortKey) {
+export function sortLeadRows(leads: LeadListRow[], sortKey: LeadSortKey) {
   const items = [...leads];
 
   items.sort((left, right) => {
@@ -37,7 +38,7 @@ export function sortLeadRows(leads: LeadRow[], sortKey: LeadSortKey) {
 }
 
 export const LEADS_RECORD_INDEX_SORT: RecordIndexSortDefinition<
-  LeadRow,
+  LeadListRow,
   LeadSortKey
 > = {
   label: "Sort",

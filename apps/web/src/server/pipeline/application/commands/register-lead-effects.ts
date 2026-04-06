@@ -2,10 +2,9 @@ import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
 import { createHistoryEvent } from "../../domain/history";
-import type { LeadDraft } from "../../domain/lead";
+import type { Lead, LeadDraft } from "../../domain/lead";
 import type { RegisterLeadDeps } from "../deps/register-lead";
 import type { PipelineAuditService } from "../ports/audit-service";
-import type { ExistingLead } from "./register-lead-resolution";
 
 export async function writeLeadRegistrationEffects(input: {
   deps: RegisterLeadDeps;
@@ -58,7 +57,7 @@ export async function writeLeadReassignmentEffects(input: {
   auditService: PipelineAuditService;
   actorUserId: number;
   executiveId: number;
-  lead: ExistingLead;
+  lead: Lead;
   now: number;
   reason?: "inactive_previous_executive";
 }): Promise<Result<{ leadId: number }, DomainError>> {

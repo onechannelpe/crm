@@ -1,4 +1,4 @@
-import type { InventoryItem } from "~/actions/inventory/queries";
+import type { InventoryItemView } from "~/actions/inventory/queries";
 import Building2 from "~/components/icons/building-2";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import Package from "~/components/icons/package";
@@ -6,8 +6,6 @@ import { Badge } from "~/components/ui/display/badge";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 
 import styles from "./styles.module.css";
-
-export type InventoryRow = InventoryItem;
 
 const STATUS_LABELS: Record<string, string> = {
   available: "Disponible",
@@ -67,4 +65,4 @@ export const INVENTORY_RECORD_INDEX_COLUMNS = [
       </Badge>
     ),
   },
-] satisfies ReadonlyArray<DataGridColumn<InventoryRow>>;
+] satisfies ReadonlyArray<DataGridColumn<InventoryItemView>>;

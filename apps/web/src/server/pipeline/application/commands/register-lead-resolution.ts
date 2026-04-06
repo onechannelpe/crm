@@ -11,11 +11,9 @@ import type {
   LeadRegistrationLookupDeps,
 } from "../deps/register-lead";
 
-export type ExistingLead = Lead;
-
 export type LeadRegistrationResolution =
   | { kind: "create" }
-  | { kind: "reassign"; lead: ExistingLead };
+  | { kind: "reassign"; lead: Lead };
 
 export async function ensureActiveExecutive(input: {
   deps: ActiveExecutiveDeps;

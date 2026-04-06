@@ -10,7 +10,7 @@ import {
 } from "~/server/auth/infrastructure/session-context";
 import { runAction } from "~/server/shared/action-runtime";
 
-export type { CurrentUserView as CurrentUser } from "~/server/auth/application/views/current-user-view";
+export type { CurrentUserView } from "~/server/auth/application/views/current-user-view";
 
 export async function getLoginFlow(flowId: number) {
   return getLoginFlowState(flowId, createAuthLoginContext().repos);

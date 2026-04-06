@@ -1,6 +1,7 @@
 import { createAsync } from "@solidjs/router";
 
 import { queryLeadList } from "~/actions/pipeline/queries/leads";
+import type { LeadListRow } from "~/actions/pipeline/queries/leads";
 import Building2 from "~/components/icons/building-2";
 import List from "~/components/icons/list";
 import { RecordIndexScreen } from "~/features/record-index/components/screen";
@@ -9,7 +10,6 @@ import type {
   RecordIndexSource,
 } from "~/features/record-index/model/types";
 
-import type { LeadRow } from "./columns";
 import { LEADS_RECORD_INDEX_COLUMNS } from "./columns";
 import { useCreateLeadRecordAction } from "./create-action";
 import {
@@ -25,7 +25,7 @@ export function LeadsRecordIndex() {
   const leads = createAsync(() => queryLeadList({}));
   const { rowOpen } = useOpenLeadRecord();
   const createAction = useCreateLeadRecordAction();
-  const source = (): RecordIndexSource<LeadRow> => {
+  const source = (): RecordIndexSource<LeadListRow> => {
     const data = leads();
 
     if (data === undefined) {
@@ -59,7 +59,11 @@ export function LeadsRecordIndex() {
     createAction,
     filter: LEADS_RECORD_INDEX_FILTER,
     sort: LEADS_RECORD_INDEX_SORT,
-  } satisfies RecordIndexAdapter<LeadRow, LeadStageFilterValue, LeadSortKey>;
+  } satisfies RecordIndexAdapter<
+    LeadListRow,
+    LeadStageFilterValue,
+    LeadSortKey
+  >;
 
   return <RecordIndexScreen adapter={adapter} />;
 }
