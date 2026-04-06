@@ -1,21 +1,36 @@
 import { renderAccountExpiringEmail } from "@crm/notifications";
 
+import { config } from "~/lib/config";
+import { db } from "~/lib/db/db";
 import { createLogger } from "~/lib/observability/logger";
 import { shortName } from "~/lib/users/display-name";
-import {
-  exportService,
-  importService,
-  notificationSender,
-  repos,
-  salesExportService,
-  searchEnrichmentService,
-} from "~/server/shared/context";
+import { getClientSearchRuntime } from "~/server/client-search/runtime";
+import { createExportBatchRunner } from "~/server/integrations/application/run-export-job";
+import { createImportBatchRunner } from "~/server/integrations/application/run-import-job";
+import { getNotificationRuntime } from "~/server/notifications/runtime";
+import { createSalesExportBlobStore } from "~/server/sales/export-blob-store";
+import { createSalesExportService } from "~/server/sales/export-service";
+import { createReportExportRepo } from "~/server/sales/repos-report-exports";
+import { createSalesRecordsRepo } from "~/server/sales/repos-sales-records";
 import { expireUsersAndInvalidateSessions } from "~/server/users/expire-users";
+import { createUsersRepo } from "~/server/users/repos-users";
 
 const WORKER_ID = `bg-${process.pid}`;
 const logger = createLogger("background-jobs", { workerId: WORKER_ID });
 
 const EXPIRY_NOTIFICATION_THRESHOLD_MS = 7 * 24 * 60 * 60 * 1000;
+const users = createUsersRepo(db);
+const { notificationSender } = getNotificationRuntime();
+const { searchEnrichmentService } = getClientSearchRuntime();
+const salesExportService = createSalesExportService(
+  {
+    reportExportJobs: createReportExportRepo(db),
+    salesRecords: createSalesRecordsRepo(db),
+  },
+  createSalesExportBlobStore(config.uploads.storageRoot),
+);
+const importService = createImportBatchRunner();
+const exportService = createExportBatchRunner();
 
 interface JobLoopConfig {
   name: string;
@@ -23,34 +38,34 @@ interface JobLoopConfig {
   run: () => Promise<void>;
 }
 
-function startLoop(config: JobLoopConfig) {
+function startLoop(loopConfig: JobLoopConfig) {
   let stopped = false;
   let inFlight = false;
 
   const loop = async () => {
     if (stopped) return;
     if (inFlight) {
-      setTimeout(() => void loop(), config.intervalMs);
+      setTimeout(() => void loop(), loopConfig.intervalMs);
       return;
     }
 
     inFlight = true;
     try {
-      await config.run();
+      await loopConfig.run();
     } catch (error) {
-      logger.error("batch_failed", { job: config.name, error });
+      logger.error("batch_failed", { job: loopConfig.name, error });
     } finally {
       inFlight = false;
       if (!stopped) {
-        setTimeout(() => void loop(), config.intervalMs);
+        setTimeout(() => void loop(), loopConfig.intervalMs);
       }
     }
   };
 
   void loop();
   logger.info("loop_started", {
-    job: config.name,
-    intervalMs: config.intervalMs,
+    job: loopConfig.name,
+    intervalMs: loopConfig.intervalMs,
   });
 
   return () => {
@@ -125,9 +140,9 @@ export function startBackgroundJobs() {
       intervalMs: 24 * 60 * 60_000,
       async run() {
         const threshold = Date.now() + EXPIRY_NOTIFICATION_THRESHOLD_MS;
-        const users = await repos.users.findExpiringBefore(threshold);
+        const expiringUsers = await users.findExpiringBefore(threshold);
         const now = Date.now();
-        for (const user of users) {
+        for (const user of expiringUsers) {
           const { html, text } = renderAccountExpiringEmail({
             fullName: shortName(user),
             username: user.username,
@@ -146,10 +161,12 @@ export function startBackgroundJobs() {
             text,
           });
           // eslint-disable-next-line no-await-in-loop
-          await repos.users.markExpiryNotified(user.id, now);
+          await users.markExpiryNotified(user.id, now);
         }
-        if (users.length > 0) {
-          logger.info("expiry_notifications_sent", { count: users.length });
+        if (expiringUsers.length > 0) {
+          logger.info("expiry_notifications_sent", {
+            count: expiringUsers.length,
+          });
         }
       },
     }),

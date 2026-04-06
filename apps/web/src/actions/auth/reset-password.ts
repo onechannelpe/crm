@@ -11,8 +11,6 @@ import {
 } from "~/server/auth/application/password-reset";
 import { createPasswordResetContext } from "~/server/auth/infrastructure/password-reset-context";
 
-export type { RequestPasswordResetResult, ResetPasswordResult };
-
 function getOrigin(): string {
   const event = getRequestEvent();
   if (!event?.request) return "";

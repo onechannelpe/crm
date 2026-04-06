@@ -1,6 +1,6 @@
 import type { Role } from "~/lib/auth/access/rbac";
+import type { createReportExportRepo } from "~/server/sales/repos-report-exports";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
-import type { Repositories } from "~/server/shared/registry";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 export interface SalesExportDownloadSession {
@@ -10,7 +10,9 @@ export interface SalesExportDownloadSession {
 }
 
 interface DownloadSalesExportDeps {
-  repos: Pick<Repositories, "reportExportJobs">;
+  repos: {
+    reportExportJobs: ReturnType<typeof createReportExportRepo>;
+  };
   blobStore: {
     get(storageKey: string): Promise<Uint8Array>;
   };

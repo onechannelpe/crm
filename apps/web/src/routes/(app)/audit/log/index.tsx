@@ -20,10 +20,9 @@ import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-
 import { createDataGridDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
 import { auditReaderSnapshotQuery } from "~/lib/queries/audit";
 import { formatDateTime } from "~/lib/utils";
+import type { AuditReaderSnapshot } from "~/server/audit-reader/contracts";
 
-type AuditLogEvent = Awaited<
-  ReturnType<typeof auditReaderSnapshotQuery>
->["events"][number];
+type AuditLogEvent = AuditReaderSnapshot["events"][number];
 type AuditLogGridRow = AuditLogEvent & { id: number };
 
 const AUDIT_LOG_COLUMNS = [

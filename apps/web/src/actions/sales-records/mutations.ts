@@ -1,16 +1,14 @@
 "use server";
 
 import type { ActionSuccess } from "~/lib/contracts/common";
-import {
-  cancelRecord,
-  confirmRecord,
-  createDraft,
-  registerAttempt,
-  rejectRecord,
-  submitRecord,
-  updateDraft,
-} from "~/server/sales-records/application/commands";
-import type { CreateSalesRecordDraftInput } from "~/server/sales-records/domain/types";
+import { cancelRecord } from "~/server/sales-records/application/commands/cancel-record";
+import { confirmRecord } from "~/server/sales-records/application/commands/confirm-record";
+import { createDraft } from "~/server/sales-records/application/commands/create-draft";
+import { registerAttempt } from "~/server/sales-records/application/commands/register-attempt";
+import { rejectRecord } from "~/server/sales-records/application/commands/reject-record";
+import { submitRecord } from "~/server/sales-records/application/commands/submit-draft";
+import type { CreateSalesRecordDraftInput } from "~/server/sales-records/application/commands/types/draft-input";
+import { updateDraft } from "~/server/sales-records/application/commands/update-draft";
 import { createSalesRecordMutationsContext } from "~/server/sales-records/infrastructure/mutations-context";
 import { runAction } from "~/server/shared/action-runtime";
 
@@ -63,13 +61,9 @@ export async function confirmSalesRecord(
     permission: "sales:approve",
     input: { recordId: safeRecordId },
     execute: (ctx) =>
-      confirmRecord(
-        ctx,
-        createSalesRecordMutationsContext().salesRecordsService,
-        {
-          recordId: safeRecordId,
-        },
-      ),
+      confirmRecord(ctx, createSalesRecordMutationsContext(), {
+        recordId: safeRecordId,
+      }),
   });
 }
 
@@ -83,14 +77,10 @@ export async function rejectSalesRecord(
     permission: "sales:approve",
     input: { recordId: parsedInput.recordId },
     execute: (ctx) =>
-      rejectRecord(
-        ctx,
-        createSalesRecordMutationsContext().salesRecordsService,
-        {
-          recordId: parsedInput.recordId,
-          reason: parsedInput.reason,
-        },
-      ),
+      rejectRecord(ctx, createSalesRecordMutationsContext(), {
+        recordId: parsedInput.recordId,
+        reason: parsedInput.reason,
+      }),
   });
 }
 
@@ -103,13 +93,9 @@ export async function cancelSalesRecord(
     permission: "sales:create",
     input: { recordId: safeRecordId },
     execute: (ctx) =>
-      cancelRecord(
-        ctx,
-        createSalesRecordMutationsContext().salesRecordsService,
-        {
-          recordId: safeRecordId,
-        },
-      ),
+      cancelRecord(ctx, createSalesRecordMutationsContext(), {
+        recordId: safeRecordId,
+      }),
   });
 }
 
@@ -133,15 +119,11 @@ export async function updateSalesRecordDraft(
       hasCorrectionNotes: parsedInput.correctionNotes !== null,
     },
     execute: (ctx) =>
-      updateDraft(
-        ctx,
-        createSalesRecordMutationsContext().salesRecordsService,
-        {
-          recordId: parsedInput.recordId,
-          draft: parsedInput.input,
-          correctionNotes: parsedInput.correctionNotes,
-        },
-      ),
+      updateDraft(ctx, createSalesRecordMutationsContext(), {
+        recordId: parsedInput.recordId,
+        draft: parsedInput.input,
+        correctionNotes: parsedInput.correctionNotes,
+      }),
   });
 }
 
@@ -162,15 +144,11 @@ export async function registerSalesRecordAttempt(
     permission: "sales:approve",
     input: { recordId: parsedInput.recordId, outcome: parsedInput.outcome },
     execute: (ctx) =>
-      registerAttempt(
-        ctx,
-        createSalesRecordMutationsContext().salesRecordsService,
-        {
-          recordId: parsedInput.recordId,
-          outcome: parsedInput.outcome,
-          notes: parsedInput.notes,
-          nextAttemptAt: parsedInput.nextAttemptAt,
-        },
-      ),
+      registerAttempt(ctx, createSalesRecordMutationsContext(), {
+        recordId: parsedInput.recordId,
+        outcome: parsedInput.outcome,
+        notes: parsedInput.notes,
+        nextAttemptAt: parsedInput.nextAttemptAt,
+      }),
   });
 }

@@ -4,6 +4,7 @@ import type { AuthSession } from "~/lib/auth/access/session-types";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { getSessionCookie } from "~/lib/auth/session/cookies";
 import { validateSessionToken } from "~/lib/auth/session/session-manager";
+import { db } from "~/lib/db/db";
 import type { ActionRequestContext } from "~/lib/observability/context";
 import {
   deleteRequestSessionCookie,
@@ -11,11 +12,12 @@ import {
   getRequestSessionMaxAgeSeconds,
   setRequestSessionCookie,
 } from "~/lib/security/request-session";
-import { repos } from "~/server/shared/context";
+import { createRequestSessionsRepo } from "~/server/security/repos-request-sessions";
 
 import { getRequestPublicOrigin } from "./public-origin";
 
 const REQUEST_SESSION_ACTIVITY_UPDATE_MS = 5 * 60 * 1000;
+const requestSessions = createRequestSessionsRepo(db);
 
 export interface RequestContext {
   publicOrigin: string;
@@ -96,13 +98,11 @@ async function loadRequestSessionState(
 ): Promise<{ id: string; csrfToken: string } | null> {
   const existingId = getRequestSessionCookie();
   if (existingId) {
-    const existing = await repos.requestSessions.findById(existingId);
+    const existing = await requestSessions.findById(existingId);
     const now = Date.now();
     if (existing && existing.expires_at >= now) {
       if (now - existing.last_activity > REQUEST_SESSION_ACTIVITY_UPDATE_MS) {
-        void repos.requestSessions
-          .updateActivity(existing.id, now)
-          .catch(() => {});
+        void requestSessions.updateActivity(existing.id, now).catch(() => {});
       }
       return { id: existing.id, csrfToken: existing.csrf_token };
     }
@@ -118,7 +118,7 @@ async function loadRequestSessionState(
   const csrfToken = crypto.randomUUID().replace(/-/g, "");
   const expiresAt = now + getRequestSessionMaxAgeSeconds() * 1000;
 
-  await repos.requestSessions.create({
+  await requestSessions.create({
     id,
     csrf_token: csrfToken,
     created_at: now,

@@ -1,10 +1,10 @@
 import { isPlainRecord } from "~/lib/type-guards";
-import {
-  createSunatScraperClient,
-  type SunatRucData,
-  type SunatScraperClient,
-} from "~/server/client-search/enrichment/sunat";
-import type { Repositories } from "~/server/shared/registry";
+import { createSunatScraperClient } from "~/server/client-search/enrichment/sunat/client";
+import type {
+  SunatRucData,
+  SunatScraperClient,
+} from "~/server/client-search/enrichment/sunat/contracts";
+import type { createSearchEnrichmentRepo } from "~/server/client-search/repos-enrichment";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 const OVERLAY_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -38,9 +38,8 @@ export type SearchEnrichmentRequestError =
   | { reason: "invalid_document"; message: string }
   | { reason: "unexpected"; message: string };
 
-type LeasedJob = Awaited<
-  ReturnType<Repositories["searchEnrichment"]["leaseJobs"]>
->[number];
+type SearchEnrichmentRepo = ReturnType<typeof createSearchEnrichmentRepo>;
+type LeasedJob = Awaited<ReturnType<SearchEnrichmentRepo["leaseJobs"]>>[number];
 
 function isSunatRucData(value: unknown): value is SunatRucData {
   return (
@@ -130,7 +129,7 @@ function extractLegalName(
 async function processEnrichmentJob(
   job: LeasedJob,
   scraper: SunatScraperClient,
-  repo: Repositories["searchEnrichment"],
+  repo: SearchEnrichmentRepo,
   currentNow: number,
   leaseOwner: string,
 ): Promise<void> {
@@ -170,7 +169,7 @@ async function processEnrichmentJob(
 }
 
 export function createSearchEnrichmentService(
-  repos: Repositories,
+  repos: { searchEnrichment: SearchEnrichmentRepo },
   deps: {
     now?: () => number;
     maxAttempts?: number;

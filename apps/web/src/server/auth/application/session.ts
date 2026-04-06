@@ -6,8 +6,8 @@ import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
 import type { AuthSessionReadContext } from "../infrastructure/session-context";
-import type { CurrentUserView } from "../types";
 import type { AuthSessionLogoutPort } from "./ports";
+import type { CurrentUserView } from "./views/current-user-view";
 
 export async function logoutUser(
   ctx: AppContext,

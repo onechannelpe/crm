@@ -1,8 +1,8 @@
+import { db } from "~/lib/db/db";
 import type { NewUserSession } from "~/lib/db/types";
 import { createLogger } from "~/lib/observability/logger";
-import { repos } from "~/server/shared/context";
+import { createSessionRepository } from "~/server/sessions/repos-sessions";
 import type { BranchId, UserId } from "~/server/shared/ids";
-import type { Repositories } from "~/server/shared/registry";
 
 import { isRole, type Role } from "../access/rbac";
 import type { AuthSession } from "../access/session-types";
@@ -31,7 +31,12 @@ export interface SessionValidationResult {
   session: AuthSession | null;
 }
 
-type SessionDeps = Pick<Repositories, "sessions">;
+type SessionDeps = {
+  sessions: ReturnType<typeof createSessionRepository>;
+};
+const repos = {
+  sessions: createSessionRepository(db),
+};
 
 function getSessionDeps(deps?: SessionDeps): SessionDeps {
   return deps ?? repos;

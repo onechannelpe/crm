@@ -1,30 +1,64 @@
+import { db } from "~/lib/db/db";
 import {
-  rateLimitDeps,
-  repos,
-  runInRepositoryTransaction,
-} from "~/server/shared/context";
+  createLeadCapacityGrantsRepo,
+  createLeadUsageCommitsRepo,
+  createLeadUsageReservationsRepo,
+  createSearchCapacityGrantsRepo,
+  createSearchUsageCommitsRepo,
+  createSearchUsageReservationsRepo,
+} from "~/server/capacity-usage/repos";
+import { createCapacityRequestsRepo } from "~/server/capacity/infrastructure/capacity-requests-repo";
+import {
+  createLeadPolicyDefaultsRepo,
+  createLeadPolicyOverridesRepo,
+  createSearchPolicyDefaultsRepo,
+  createSearchPolicyOverridesRepo,
+} from "~/server/capacity/infrastructure/policy-repos";
+import { createContactAssignmentsRepo } from "~/server/contacts/repos-assignments";
+import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import { createTeamsRepo } from "~/server/users/repos-teams";
+import { createUsersRepo } from "~/server/users/repos-users";
+
+function createCapacityRepos(executor: DatabaseExecutor) {
+  return {
+    users: createUsersRepo(executor),
+    teams: createTeamsRepo(executor),
+    auditLogs: createAuditLogsRepo(executor),
+    capacityRequests: createCapacityRequestsRepo(executor),
+    searchPolicyDefaults: createSearchPolicyDefaultsRepo(executor),
+    searchPolicyOverrides: createSearchPolicyOverridesRepo(executor),
+    leadPolicyDefaults: createLeadPolicyDefaultsRepo(executor),
+    leadPolicyOverrides: createLeadPolicyOverridesRepo(executor),
+    searchCapacityGrants: createSearchCapacityGrantsRepo(executor),
+    searchUsageReservations: createSearchUsageReservationsRepo(executor),
+    searchUsageCommits: createSearchUsageCommitsRepo(executor),
+    leadCapacityGrants: createLeadCapacityGrantsRepo(executor),
+    leadUsageReservations: createLeadUsageReservationsRepo(executor),
+    leadUsageCommits: createLeadUsageCommitsRepo(executor),
+    contactAssignments: createContactAssignmentsRepo(executor),
+  };
+}
 
 export function createCapacityCommandsContext() {
   return {
-    repos: {
-      users: repos.users,
-      teams: repos.teams,
-      auditLogs: repos.auditLogs,
-      capacityRequests: repos.capacityRequests,
-      searchPolicyDefaults: repos.searchPolicyDefaults,
-      searchPolicyOverrides: repos.searchPolicyOverrides,
-      leadPolicyDefaults: repos.leadPolicyDefaults,
-      leadPolicyOverrides: repos.leadPolicyOverrides,
-      searchCapacityGrants: repos.searchCapacityGrants,
-      searchUsageReservations: repos.searchUsageReservations,
-      searchUsageCommits: repos.searchUsageCommits,
-      leadCapacityGrants: repos.leadCapacityGrants,
-      leadUsageReservations: repos.leadUsageReservations,
-      leadUsageCommits: repos.leadUsageCommits,
-      leadAssignments: repos.leadAssignments,
+    repos: createCapacityRepos(db),
+    rateLimitDeps: {
+      actionRateLimits: createActionRateLimitsRepo(db),
+      auditLogs: createAuditLogsRepo(db),
     },
-    rateLimitDeps,
-    runInRepositoryTransaction,
+    runInRepositoryTransaction<T>(
+      operation: (
+        transactionRepos: ReturnType<typeof createCapacityRepos>,
+      ) => Promise<T>,
+    ) {
+      return db
+        .transaction()
+        .execute((transactionDb) =>
+          operation(createCapacityRepos(transactionDb)),
+        );
+    },
   };
 }
 

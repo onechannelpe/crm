@@ -1,10 +1,13 @@
 import { invalidateUserSessions } from "~/lib/auth/session/session-manager";
-import { repos } from "~/server/shared/context";
+import { db } from "~/lib/db/db";
+import { createUsersRepo } from "~/server/users/repos-users";
+
+const users = createUsersRepo(db);
 
 export async function expireUsersAndInvalidateSessions(
   now: number,
 ): Promise<number> {
-  const expiredUserIds = await repos.users.expireActiveUsersBefore(now);
+  const expiredUserIds = await users.expireActiveUsersBefore(now);
 
   for (const userId of expiredUserIds) {
     // eslint-disable-next-line no-await-in-loop

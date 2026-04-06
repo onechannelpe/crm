@@ -2,22 +2,29 @@ import {
   assertNonEmptyString,
   assertPositiveInt,
 } from "~/lib/contracts/guards";
-import type { Repositories } from "~/server/shared/registry";
+import type { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
+import type { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
+import type { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
+import type { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
+import type { createSessionRepository } from "~/server/sessions/repos-sessions";
+import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
+import type { createUsersRepo } from "~/server/users/repos-users";
+import type { createWebauthnChallengesRepo } from "~/server/users/repos-webauthn-challenges";
 
 import type { BeginPasskeyLoginError, FinishPasskeyLoginError } from "./types";
 
-export type PasskeyAuthRepos = Pick<
-  Repositories,
-  | "users"
-  | "sessions"
-  | "loginFlows"
-  | "passkeys"
-  | "webauthnChallenges"
-  | "auditLogs"
-  | "authThrottle"
-  | "authEvents"
-  | "userTotpFactors"
->;
+export type PasskeyAuthRepos = {
+  users: ReturnType<typeof createUsersRepo>;
+  sessions: ReturnType<typeof createSessionRepository>;
+  loginFlows: ReturnType<typeof createLoginFlowsRepo>;
+  passkeys: ReturnType<typeof createPasskeysRepo>;
+  webauthnChallenges: ReturnType<typeof createWebauthnChallengesRepo>;
+  auditLogs: ReturnType<typeof createAuditLogsRepo>;
+  authThrottle: ReturnType<typeof createAuthThrottleRepo>;
+  authEvents: ReturnType<typeof createAuthEventsRepo>;
+  userTotpFactors: ReturnType<typeof createUserTotpFactorsRepo>;
+};
 
 export const INVALID_PASSKEY_REQUEST = "Invalid passkey request";
 export const UNEXPECTED_PASSKEY_ENROLLMENT_FAILURE =

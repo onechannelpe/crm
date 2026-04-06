@@ -2,9 +2,11 @@
 
 import { validationError } from "~/lib/app-errors";
 import { requirePermission } from "~/lib/auth/access/session";
-import { observabilityService } from "~/server/shared/context";
+import { getObservabilityRuntime } from "~/server/observability/runtime";
 
 import { resolveBoundedPositiveInt, trimOrUndefined } from "./analytics-input";
+
+const { observabilityService } = getObservabilityRuntime();
 
 type ObservationStatus = "ok" | "error";
 

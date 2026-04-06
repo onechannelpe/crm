@@ -1,6 +1,6 @@
 import type { RouteSectionProps } from "@solidjs/router";
 
-import { AppHeader } from "~/components/layout/app-header";
+import { AppHeader } from "~/components/layout/app-header/app-header";
 import { MainContainerWithSidePanel } from "~/features/side-panel/shell/main-container-with-side-panel";
 import { SidePanelProvider } from "~/features/side-panel/state/use-side-panel";
 

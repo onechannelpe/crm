@@ -3,9 +3,9 @@ import { mount, StartClient } from "@solidjs/start/client";
 
 import {
   isHydrationDiagnosticsEnabled,
-  isHydrationMismatchError,
   traceHydrationEvent,
-} from "./lib/observability/diagnostics";
+} from "./lib/observability/diagnostics/client";
+import { isHydrationMismatchError } from "./lib/observability/diagnostics/core";
 import { setupCsrfInterceptor } from "./lib/security/csrf-client";
 
 setupCsrfInterceptor();

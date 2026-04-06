@@ -1,6 +1,8 @@
-import { toPrioridad } from "~/lib/db/types";
-import type { Prioridad } from "~/lib/db/types";
 import { parseCsv, validateHeaders } from "~/server/integrations/csv-parser";
+import {
+  parseLeadPriority,
+  type LeadPriority,
+} from "~/server/pipeline/domain/lead";
 
 const PRIORIDAD_COLUMNS = [
   "nro_de_solicitud",
@@ -16,7 +18,7 @@ const PRIORIDAD_COLUMNS = [
 export interface ParsedPrioridadRow {
   row: number;
   ruc: string;
-  prioridad: Prioridad;
+  prioridad: LeadPriority;
 }
 
 export interface ImportRowFailure {
@@ -58,8 +60,8 @@ export function parsePrioridadImport(text: string): {
       continue;
     }
 
-    const prioridad = toPrioridad(prioridadRaw);
-    if (!prioridad) {
+    const prioridad = parseLeadPriority(prioridadRaw);
+    if (!prioridad.ok || prioridad.value === undefined) {
       invalid.push({
         row: row.rowNumber,
         ok: false,
@@ -68,7 +70,7 @@ export function parsePrioridadImport(text: string): {
       continue;
     }
 
-    valid.push({ row: row.rowNumber, ruc, prioridad });
+    valid.push({ row: row.rowNumber, ruc, prioridad: prioridad.value });
   }
 
   return { valid, invalid };

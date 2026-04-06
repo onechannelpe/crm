@@ -9,7 +9,7 @@ import {
 } from "../../src/lib/auth/security/strong-auth-status";
 import { createDb } from "../../src/lib/db/client";
 import { SCHEMA_MODULES, SEED_MODULES } from "../../src/lib/db/schema";
-import { createRepositories } from "../../src/server/shared/registry";
+import { createTestRepositories } from "../support/test-repositories";
 
 describe("seed invariants", () => {
   const artifactDir = join(process.cwd(), ".vitest-db");
@@ -44,7 +44,7 @@ describe("seed invariants", () => {
       const { seedIfEmpty } = await import("../../src/lib/db/seed");
       await seedIfEmpty();
 
-      const repos = createRepositories(db);
+      const repos = createTestRepositories(db);
       const valeria = await repos.users.findByUsername("valeria.paredes");
       const manager = await repos.users.findById(12);
 

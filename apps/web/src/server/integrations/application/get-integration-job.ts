@@ -1,5 +1,5 @@
-import { pipelineRepos } from "~/server/shared/pipeline-runtime";
+import { integrationRuntime } from "../infrastructure/runtime";
 
 export function getIntegrationJobQuery(jobId: number) {
-  return pipelineRepos.integrationJobs.findById(jobId);
+  return integrationRuntime.jobs.findById(jobId);
 }

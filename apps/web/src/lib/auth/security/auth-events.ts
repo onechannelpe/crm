@@ -1,7 +1,9 @@
 import { hashAuthKey } from "~/lib/auth/password/key-hash";
-import type { Repositories } from "~/server/shared/registry";
+import type { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 
-type Deps = Pick<Repositories, "authEvents">;
+type Deps = {
+  authEvents: ReturnType<typeof createAuthEventsRepo>;
+};
 
 export type AuthEventMethod = "password" | "passkey" | "totp";
 export type AuthEventStage = "login" | "challenge" | "verify" | "recovery";

@@ -1,14 +1,30 @@
 "use server";
 
 import { conflictError, forbiddenError, notFoundError } from "~/lib/app-errors";
+import type { Role } from "~/lib/auth/access/rbac";
 import { requireSession } from "~/lib/auth/access/session";
 import { hashPassword, verifyPassword } from "~/lib/auth/password/password";
 import { canRemoveStrongAuthFactor } from "~/lib/auth/security/factor-management-policy";
 import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
 import type { ActionSuccess } from "~/lib/contracts/common";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
-import { repos } from "~/server/shared/context";
+import { db } from "~/lib/db/db";
+import {
+  createUserTotpFactorsRepo,
+  createUserTotpRecoveryCodesRepo,
+} from "~/server/auth/repos-user-totp-factors";
 import type { UserId } from "~/server/shared/ids";
+import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import { createPasskeysRepo } from "~/server/users/repos-passkeys";
+import { createUsersRepo } from "~/server/users/repos-users";
+
+const repos = {
+  users: createUsersRepo(db),
+  passkeys: createPasskeysRepo(db),
+  userTotpFactors: createUserTotpFactorsRepo(db),
+  userTotpRecoveryCodes: createUserTotpRecoveryCodesRepo(db),
+  auditLogs: createAuditLogsRepo(db),
+};
 
 async function requireCurrentUserWithStrongAuthState(userId: UserId) {
   const user = await repos.users.findById(userId);
@@ -19,7 +35,7 @@ async function requireCurrentUserWithStrongAuthState(userId: UserId) {
 }
 
 function assertProtectedRoleKeepsStrongAuth(input: {
-  role: NonNullable<Awaited<ReturnType<typeof repos.users.findById>>>["role"];
+  role: Role;
   removingTotp: boolean;
   removingPasskeys: boolean;
   hasTotp: boolean;

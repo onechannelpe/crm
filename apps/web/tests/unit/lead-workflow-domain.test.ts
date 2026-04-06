@@ -1,7 +1,7 @@
 import * as fc from "fast-check";
 import { describe, it } from "vitest";
 
-import { computeNeededAssignments } from "~/server/lead-workflow/domain";
+import { computeNeededAssignments } from "~/server/contact-assignments/domain/assignment-demand";
 
 describe("computeNeededAssignments", () => {
   it("result is always >= 0", () => {

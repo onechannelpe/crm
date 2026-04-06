@@ -1,6 +1,6 @@
 import { createSignal, For, Show } from "solid-js";
 
-import { getUserLoginRetryReport } from "~/actions/admin";
+import { getUserLoginRetryReport } from "~/actions/admin/auth-security";
 import { useToast } from "~/components/feedback/toast-provider";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";

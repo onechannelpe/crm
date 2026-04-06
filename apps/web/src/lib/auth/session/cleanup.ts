@@ -1,10 +1,28 @@
 import { config } from "~/lib/config";
+import { db } from "~/lib/db/db";
 import { createLogger } from "~/lib/observability/logger";
-import { repos } from "~/server/shared/context";
+import { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
+import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
+import { createActionObservationsRepo } from "~/server/observability/repos-action-observations";
+import { createAuthFunnelEventsRepo } from "~/server/observability/repos-auth-funnel-events";
+import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
+import { createRequestSessionsRepo } from "~/server/security/repos-request-sessions";
+import { createSessionRepository } from "~/server/sessions/repos-sessions";
+import { createWebauthnChallengesRepo } from "~/server/users/repos-webauthn-challenges";
 
 import { sessionCache } from "./session-cache";
 
 const logger = createLogger("session-cleanup");
+const repos = {
+  sessions: createSessionRepository(db),
+  requestSessions: createRequestSessionsRepo(db),
+  webauthnChallenges: createWebauthnChallengesRepo(db),
+  authThrottle: createAuthThrottleRepo(db),
+  authEvents: createAuthEventsRepo(db),
+  actionObservations: createActionObservationsRepo(db),
+  authFunnelEvents: createAuthFunnelEventsRepo(db),
+  actionRateLimits: createActionRateLimitsRepo(db),
+};
 
 export async function cleanupExpiredSessions(): Promise<void> {
   const deleted = await repos.sessions.deleteExpired();

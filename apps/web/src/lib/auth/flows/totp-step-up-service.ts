@@ -2,8 +2,18 @@ import { verifyTotpStepUp } from "~/lib/auth/factors/totp-verifier";
 import { sendAlertOnNewLoginSource } from "~/lib/auth/security/login-source-alert";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
 import { assertPositiveInt } from "~/lib/contracts/guards";
-import type { Repositories } from "~/server/shared/registry";
+import type { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
+import type { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
+import type { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
+import type {
+  createUserTotpFactorsRepo,
+  createUserTotpRecoveryCodesRepo,
+} from "~/server/auth/repos-user-totp-factors";
+import type { createSessionRepository } from "~/server/sessions/repos-sessions";
+import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import type { createUsersRepo } from "~/server/users/repos-users";
+import type { createWebauthnChallengesRepo } from "~/server/users/repos-webauthn-challenges";
 
 import { deleteLoginFlow } from "../login-flow/shared";
 import {
@@ -12,18 +22,17 @@ import {
 } from "../session/session-transition";
 import type { LoginFlowLoginResult } from "./login-types";
 
-type TotpStepUpDeps = Pick<
-  Repositories,
-  | "loginFlows"
-  | "users"
-  | "sessions"
-  | "auditLogs"
-  | "authThrottle"
-  | "authEvents"
-  | "userTotpFactors"
-  | "userTotpRecoveryCodes"
-  | "webauthnChallenges"
->;
+type TotpStepUpDeps = {
+  loginFlows: ReturnType<typeof createLoginFlowsRepo>;
+  users: ReturnType<typeof createUsersRepo>;
+  sessions: ReturnType<typeof createSessionRepository>;
+  auditLogs: ReturnType<typeof createAuditLogsRepo>;
+  authThrottle: ReturnType<typeof createAuthThrottleRepo>;
+  authEvents: ReturnType<typeof createAuthEventsRepo>;
+  userTotpFactors: ReturnType<typeof createUserTotpFactorsRepo>;
+  userTotpRecoveryCodes: ReturnType<typeof createUserTotpRecoveryCodesRepo>;
+  webauthnChallenges: ReturnType<typeof createWebauthnChallengesRepo>;
+};
 
 export type SubmitTotpLoginError =
   | { kind: "flow_expired" }

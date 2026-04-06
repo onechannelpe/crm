@@ -2,8 +2,8 @@ import { A, createAsync } from "@solidjs/router";
 import { createMemo, For } from "solid-js";
 
 import { AppPage } from "~/components/layout/page";
+import { myContactAssignmentCapacityQuery } from "~/lib/queries/contact-assignment-capacity";
 import { dashboardStatsQuery } from "~/lib/queries/dashboard";
-import { myLeadCapacityQuery } from "~/lib/queries/lead-operations";
 
 import styles from "./dashboard-page.module.css";
 
@@ -18,7 +18,7 @@ type DashboardColumn = {
 };
 
 export default function DashboardPage() {
-  const leadCapacity = createAsync(() => myLeadCapacityQuery(), {
+  const leadCapacity = createAsync(() => myContactAssignmentCapacityQuery(), {
     initialValue: {
       policy: { source: "system" as const, bufferTarget: 0, dailyLimit: 0 },
       granted: 0,
@@ -67,11 +67,11 @@ export default function DashboardPage() {
             title: "Cola de clientes",
             value: `${s.activeLeads}`,
             detail: "Clientes activos",
-            href: "/sales/leads",
+            href: "/leads",
           },
         ],
         actionLabel: "Ver clientes",
-        actionHref: "/sales/leads",
+        actionHref: "/leads",
       },
       {
         key: "screening",

@@ -1,5 +1,5 @@
 import { assertPositiveInt } from "~/lib/contracts/guards";
-import type { Repositories } from "~/server/shared/registry";
+import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 
 import {
   AUDIT_READER_DEFAULT_LIMIT,
@@ -11,7 +11,7 @@ import {
 } from "./contracts";
 
 interface AuditReaderDeps {
-  auditLogs: Repositories["auditLogs"];
+  auditLogs: ReturnType<typeof createAuditLogsRepo>;
 }
 
 function trimOrUndefined(value: string | undefined): string | undefined {

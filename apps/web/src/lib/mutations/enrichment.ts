@@ -1,6 +1,6 @@
 import { action, json } from "@solidjs/router";
 
-import { requestSearchEnrichment } from "~/actions/client-search";
+import { requestSearchEnrichment } from "~/actions/client-search/enrichment";
 import { enrichmentStatusQuery } from "~/lib/queries/enrichment";
 
 export const requestEnrichmentMutation = action(

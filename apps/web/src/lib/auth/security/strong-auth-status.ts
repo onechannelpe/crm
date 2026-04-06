@@ -1,8 +1,12 @@
 import type { User } from "~/lib/db/types";
+import type { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
 import type { UserId } from "~/server/shared/ids";
-import type { Repositories } from "~/server/shared/registry";
+import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
 
-type StrongAuthRepos = Pick<Repositories, "passkeys" | "userTotpFactors">;
+type StrongAuthRepos = {
+  passkeys: ReturnType<typeof createPasskeysRepo>;
+  userTotpFactors: ReturnType<typeof createUserTotpFactorsRepo>;
+};
 
 export interface StrongAuthStatus {
   hasTotp: boolean;

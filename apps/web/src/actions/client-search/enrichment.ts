@@ -2,8 +2,10 @@
 
 import { internalError, validationError } from "~/lib/app-errors";
 import { requirePermission } from "~/lib/auth/access/session";
-import { searchEnrichmentService } from "~/server/shared/context";
+import { getClientSearchRuntime } from "~/server/client-search/runtime";
 import { isErr } from "~/server/shared/result";
+
+const { searchEnrichmentService } = getClientSearchRuntime();
 
 function assertDocumentType(value: string): "dni" | "ruc" {
   if (value === "dni" || value === "ruc") return value;

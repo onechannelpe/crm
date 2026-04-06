@@ -1,6 +1,9 @@
 import { bench, describe } from "vitest";
 
-import { createAssignment, isExpired } from "~/server/leads/domain-assignment";
+import {
+  createAssignment,
+  isExpired,
+} from "~/server/contact-assignments/domain/assignment";
 
 import { COMPONENT_ITERATIONS } from "../_shared/constants";
 import { fixedIterations } from "../_shared/options";

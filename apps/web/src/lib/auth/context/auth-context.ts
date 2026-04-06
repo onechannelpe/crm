@@ -1,6 +1,8 @@
 import type { User } from "~/lib/db/types";
+import type { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
 import type { UserId } from "~/server/shared/ids";
-import type { Repositories } from "~/server/shared/registry";
+import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
+import type { createUsersRepo } from "~/server/users/repos-users";
 
 import {
   getStrongAuthStatus,
@@ -26,10 +28,11 @@ export interface AuthContext {
   strongAuthStatus: StrongAuthStatus;
 }
 
-type AuthContextDeps = Pick<
-  Repositories,
-  "users" | "passkeys" | "userTotpFactors"
->;
+type AuthContextDeps = {
+  users: ReturnType<typeof createUsersRepo>;
+  passkeys: ReturnType<typeof createPasskeysRepo>;
+  userTotpFactors: ReturnType<typeof createUserTotpFactorsRepo>;
+};
 
 export async function loadActiveAuthContext(
   userId: UserId,

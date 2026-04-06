@@ -1,6 +1,7 @@
 import { createAsync, revalidate } from "@solidjs/router";
 import { createMemo, createSignal } from "solid-js";
 
+import type { AuthFunnelSnapshot } from "~/actions/admin/auth-funnel";
 import { WindowSelect } from "~/components/features/audit/window-select";
 import Activity from "~/components/icons/activity";
 import CalendarDays from "~/components/icons/calendar-days";
@@ -19,9 +20,7 @@ import { authFunnelSnapshotQuery } from "~/lib/queries/audit";
 import { formatDateTime } from "~/lib/utils";
 
 type BadgeVariant = "success" | "destructive" | "outline";
-type AuditAuthRow = Awaited<
-  ReturnType<typeof authFunnelSnapshotQuery>
->["recent"][number] & { id: number };
+type AuditAuthRow = AuthFunnelSnapshot["recent"][number] & { id: number };
 
 const AUDIT_AUTH_COLUMNS = [
   {

@@ -10,7 +10,8 @@ import {
 
 import { env } from "~/lib/env";
 import { getRequestPublicOrigin } from "~/lib/http/public-origin";
-import type { Repositories } from "~/server/shared/registry";
+import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
 
 const rpName = "CRM OneChannel";
 
@@ -91,7 +92,10 @@ function parseStoredTransports(
   return undefined;
 }
 
-type PasskeyProviderDeps = Pick<Repositories, "passkeys" | "auditLogs">;
+type PasskeyProviderDeps = {
+  passkeys: ReturnType<typeof createPasskeysRepo>;
+  auditLogs: ReturnType<typeof createAuditLogsRepo>;
+};
 
 export function createPasskeyProvider(
   repos: PasskeyProviderDeps,

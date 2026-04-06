@@ -3,10 +3,10 @@ import { query } from "@solidjs/router";
 import {
   canManageAuditPolicies,
   getAuditPolicySnapshot,
-  getAuditReaderSnapshot,
-  getAuthFunnelSnapshot,
-  getObservabilitySnapshot,
-} from "~/actions/admin";
+} from "~/actions/admin/audit-policy";
+import { getAuditReaderSnapshot } from "~/actions/admin/audit-reader";
+import { getAuthFunnelSnapshot } from "~/actions/admin/auth-funnel";
+import { getObservabilitySnapshot } from "~/actions/admin/observability";
 
 export const observabilitySnapshotQuery = query(
   getObservabilitySnapshot,

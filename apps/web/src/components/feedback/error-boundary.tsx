@@ -1,10 +1,8 @@
 import type { JSX } from "solid-js";
 import { ErrorBoundary as SolidErrorBoundary } from "solid-js";
 
-import {
-  isHydrationMismatchError,
-  traceHydrationEvent,
-} from "~/lib/observability/diagnostics";
+import { traceHydrationEvent } from "~/lib/observability/diagnostics/client";
+import { isHydrationMismatchError } from "~/lib/observability/diagnostics/core";
 import { createLogger } from "~/lib/observability/logger";
 
 import { ErrorState } from "./error-state";

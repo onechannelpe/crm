@@ -11,13 +11,19 @@ import {
 } from "~/lib/auth/session/session-manager";
 import { hashSessionToken } from "~/lib/auth/session/tokens";
 import type { User } from "~/lib/db/types";
+import type { createSessionRepository } from "~/server/sessions/repos-sessions";
 import type { UserId } from "~/server/shared/ids";
-import type { Repositories } from "~/server/shared/registry";
+import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import type { createUsersRepo } from "~/server/users/repos-users";
 
 import type { LoginDecision } from "../policy/policy-types";
 import { mapUserToSessionIdentity } from "./session-mappers";
 
-type SessionAuditDeps = Pick<Repositories, "auditLogs" | "sessions" | "users">;
+type SessionAuditDeps = {
+  auditLogs: ReturnType<typeof createAuditLogsRepo>;
+  sessions: ReturnType<typeof createSessionRepository>;
+  users: ReturnType<typeof createUsersRepo>;
+};
 
 type SessionUser = Pick<
   User,

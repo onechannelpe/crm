@@ -1,6 +1,7 @@
 import { createAsync, revalidate } from "@solidjs/router";
 import { createMemo, createSignal } from "solid-js";
 
+import type { ObservabilitySnapshot } from "~/actions/admin/observability";
 import { WindowSelect } from "~/components/features/audit/window-select";
 import Activity from "~/components/icons/activity";
 import CircleAlert from "~/components/icons/circle-alert";
@@ -17,9 +18,7 @@ import { createDataGridDetailSidePanelPage } from "~/features/side-panel/types/s
 import { observabilitySnapshotQuery } from "~/lib/queries/audit";
 
 type MonitoringStatus = "all" | "ok" | "error";
-type MonitoringRow = Awaited<
-  ReturnType<typeof observabilitySnapshotQuery>
->["summary"][number] & { id: number };
+type MonitoringRow = ObservabilitySnapshot["summary"][number] & { id: number };
 
 const MONITORING_COLUMNS = [
   {

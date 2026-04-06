@@ -8,12 +8,12 @@ import {
   requestMoreLeadRefillMutation,
   requestMoreSearchesMutation,
 } from "~/lib/mutations/capacity";
-import { myLeadCapacityQuery } from "~/lib/queries/lead-operations";
+import { myContactAssignmentCapacityQuery } from "~/lib/queries/contact-assignment-capacity";
 import { mySearchAllowanceQuery } from "~/lib/queries/search";
 
 export default function MyCapacityPage() {
   const searchStatus = createAsync(() => mySearchAllowanceQuery());
-  const leadStatus = createAsync(() => myLeadCapacityQuery());
+  const leadStatus = createAsync(() => myContactAssignmentCapacityQuery());
   const requestSearches = useAction(requestMoreSearchesMutation);
   const requestRefill = useAction(requestMoreLeadRefillMutation);
   const [searchAmount, setSearchAmount] = createSignal("25");

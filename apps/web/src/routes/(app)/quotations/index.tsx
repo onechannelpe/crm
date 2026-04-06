@@ -1,5 +1,5 @@
 import { AppPage } from "~/components/layout/page";
-import { QuotationsRecordIndex } from "~/features/record-index/adapters/quotations/adapter";
+import { QuotationsRecordIndex } from "~/features/pipeline/record-index/quotations/adapter";
 
 export default function QuotationsPage() {
   return (

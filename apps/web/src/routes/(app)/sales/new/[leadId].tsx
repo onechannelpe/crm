@@ -1,15 +1,15 @@
 import { createAsync, useNavigate, useParams } from "@solidjs/router";
 import { createSignal, Show } from "solid-js";
 
-import { getLead } from "~/actions/pipeline/leads";
-import { createLeadSale } from "~/actions/pipeline/sales";
+import { requestSaleCreation } from "~/actions/pipeline/commands/sales";
+import { queryLeadDetail } from "~/actions/pipeline/queries/leads";
 import { AppPage } from "~/components/layout/page";
 import { toAppError } from "~/lib/app-errors";
 
 export default function NewLeadSalePage() {
   const params = useParams<{ leadId: string }>();
   const navigate = useNavigate();
-  const data = createAsync(() => getLead(Number(params.leadId)));
+  const data = createAsync(() => queryLeadDetail(Number(params.leadId)));
   const [error, setError] = createSignal<string | null>(null);
   const [submitting, setSubmitting] = createSignal(false);
   const [proveedorActual, setProveedorActual] = createSignal("");
@@ -37,7 +37,7 @@ export default function NewLeadSalePage() {
     if (!(e.currentTarget instanceof HTMLFormElement)) return;
     const fd = new FormData(e.currentTarget);
     try {
-      const { id } = await createLeadSale({
+      const { id } = await requestSaleCreation({
         leadId: Number(params.leadId),
         proveedorActual: proveedorActual(),
         tasaActual: Number(fd.get("tasaActual")),
@@ -69,7 +69,7 @@ export default function NewLeadSalePage() {
               Nueva Venta
             </h1>
             <p style={{ margin: "0 0 1.5rem", color: "#6b7280" }}>
-              Lead: {d().lead.ruc} — {d().lead.razon_social ?? "—"}
+              Prospecto: {d().lead.ruc} - {d().lead.razonSocial ?? "-"}
             </p>
 
             <form

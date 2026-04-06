@@ -1,7 +1,10 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import { assertPositiveInt } from "~/lib/contracts/guards";
 import { env } from "~/lib/env";
-import type { Repositories } from "~/server/shared/registry";
+import type { createContactAssignmentsRepo } from "~/server/contacts/repos-assignments";
+import type { createContactsRepo } from "~/server/contacts/repos-contacts";
+import type { createOrganizationsRepo } from "~/server/contacts/repos-organizations";
+import type { createSessionRepository } from "~/server/sessions/repos-sessions";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import {
@@ -24,11 +27,20 @@ import {
   signExtensionToken,
   verifyExtensionToken,
 } from "./crypto";
+import type { createExtensionRuntimeRepo } from "./repos";
+
+type ExtensionRepos = {
+  contactAssignments: ReturnType<typeof createContactAssignmentsRepo>;
+  contacts: ReturnType<typeof createContactsRepo>;
+  extensionRuntime: ReturnType<typeof createExtensionRuntimeRepo>;
+  organizations: ReturnType<typeof createOrganizationsRepo>;
+  sessions: ReturnType<typeof createSessionRepository>;
+};
 
 interface ExtensionServiceDeps {
   now?: () => number;
   runInTransaction?: <T>(
-    operation: (transactionRepos: Repositories) => Promise<T>,
+    operation: (transactionRepos: ExtensionRepos) => Promise<T>,
   ) => Promise<T>;
 }
 
@@ -112,7 +124,7 @@ function withDerivedProjectionStatuses(
 }
 
 async function upsertSyncHealth(
-  repos: Repositories,
+  repos: ExtensionRepos,
   values: {
     userId: number;
     branchId: number;
@@ -257,7 +269,7 @@ async function issueSessionCredentials(
 }
 
 async function hasActiveAuthSession(
-  repos: Repositories,
+  repos: ExtensionRepos,
   authSessionId: string,
   nowMs: number,
 ): Promise<boolean> {
@@ -274,7 +286,7 @@ function isInvalidExtensionToken(error: unknown): boolean {
 }
 
 export function createExtensionService(
-  repos: Repositories,
+  repos: ExtensionRepos,
   deps: ExtensionServiceDeps = {},
 ) {
   const now = deps.now ?? (() => Date.now());
@@ -308,7 +320,7 @@ export function createExtensionService(
           });
         }
 
-        const assignment = await repos.leadAssignments.findActiveByIdForUser(
+        const assignment = await repos.contactAssignments.findActiveByIdForUser(
           assignmentId,
           input.userId,
         );
@@ -749,7 +761,7 @@ export function createExtensionService(
         const run =
           runInTransaction ??
           (async <T>(
-            operation: (transactionRepos: Repositories) => Promise<T>,
+            operation: (transactionRepos: ExtensionRepos) => Promise<T>,
           ) => operation(repos));
 
         return await run(async (txRepos) => {

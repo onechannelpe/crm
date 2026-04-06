@@ -2,8 +2,10 @@
 
 import { assertPositiveInt } from "~/lib/contracts/guards";
 import { getAuditEvents as getAuditEventsService } from "~/server/capacity/application/get-audit-events";
+import type { CapacityAuditEvent } from "~/server/capacity/application/get-audit-events";
 import { getExecutiveDetail as getExecutiveDetailService } from "~/server/capacity/application/get-executive-detail";
 import { getPolicyDefaults as getPolicyDefaultsService } from "~/server/capacity/application/get-policy-defaults";
+import type { CapacityPolicyDefaults } from "~/server/capacity/application/get-policy-defaults";
 import { listManagedExecutives as listManagedExecutivesService } from "~/server/capacity/application/list-managed-executives";
 import { listPendingRequests as listPendingRequestsService } from "~/server/capacity/application/list-pending-requests";
 import { createCapacityReadContext } from "~/server/capacity/infrastructure/read-context";
@@ -40,7 +42,7 @@ export async function getPendingRequests() {
   });
 }
 
-export async function getPolicyDefaults() {
+export async function getPolicyDefaults(): Promise<CapacityPolicyDefaults> {
   return runAction({
     actionName: "capacity.policy_defaults.read",
     permission: "capacity:policy:manage",
@@ -49,7 +51,9 @@ export async function getPolicyDefaults() {
   });
 }
 
-export async function getAuditEvents(limit?: number) {
+export async function getAuditEvents(
+  limit?: number,
+): Promise<CapacityAuditEvent[]> {
   const safeLimit =
     limit == null ? undefined : assertPositiveInt(limit, "limit");
   return runAction({

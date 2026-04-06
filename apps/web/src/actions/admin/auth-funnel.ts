@@ -15,9 +15,11 @@ import {
   type AuthFunnelOutcome,
   type AuthFunnelSource,
 } from "~/lib/observability/auth-funnel";
-import { observabilityService } from "~/server/shared/context";
+import { getObservabilityRuntime } from "~/server/observability/runtime";
 
 import { resolveBoundedPositiveInt } from "./analytics-input";
+
+const { observabilityService } = getObservabilityRuntime();
 
 export interface AuthFunnelSummaryRow {
   eventName: AuthFunnelEventName;

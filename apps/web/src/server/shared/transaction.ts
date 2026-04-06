@@ -1,7 +1,3 @@
-import type { createRepositories } from "~/server/shared/registry";
-
-export type RepositoryTransactionRunner = <T>(
-  operation: (
-    transactionRepos: ReturnType<typeof createRepositories>,
-  ) => Promise<T>,
+export type RepositoryTransactionRunner<TRepos> = <T>(
+  operation: (transactionRepos: TRepos) => Promise<T>,
 ) => Promise<T>;

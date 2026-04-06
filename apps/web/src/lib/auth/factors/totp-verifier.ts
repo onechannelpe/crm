@@ -7,15 +7,22 @@ import { matchesRecoveryCode } from "~/lib/auth/totp/recovery-codes";
 import { decryptTotpSecret } from "~/lib/auth/totp/secret-crypto";
 import { verifyTotpCode } from "~/lib/auth/totp/totp";
 import type { User } from "~/lib/db/types";
-import type { Repositories } from "~/server/shared/registry";
+import type { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
+import type { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
+import type {
+  createUserTotpFactorsRepo,
+  createUserTotpRecoveryCodesRepo,
+} from "~/server/auth/repos-user-totp-factors";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { recordAuthEvent } from "../security/auth-events";
 
-type Deps = Pick<
-  Repositories,
-  "userTotpFactors" | "userTotpRecoveryCodes" | "authThrottle" | "authEvents"
->;
+type Deps = {
+  userTotpFactors: ReturnType<typeof createUserTotpFactorsRepo>;
+  userTotpRecoveryCodes: ReturnType<typeof createUserTotpRecoveryCodesRepo>;
+  authThrottle: ReturnType<typeof createAuthThrottleRepo>;
+  authEvents: ReturnType<typeof createAuthEventsRepo>;
+};
 
 export type TotpStepUpError =
   | { kind: "flow_expired" }

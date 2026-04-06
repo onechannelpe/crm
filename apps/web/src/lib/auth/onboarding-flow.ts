@@ -1,4 +1,4 @@
-import type { CurrentUser } from "~/actions/auth/session";
+import type { CurrentUserView } from "~/server/auth/application/views/current-user-view";
 
 export type OnboardingStep = "profile" | "security";
 
@@ -20,7 +20,7 @@ export function isValidOnboardingPhone(value: string): boolean {
 export function deriveOnboardingState(input: {
   requestedStep: OnboardingStep;
   phoneE164: string;
-  user: Pick<CurrentUser, "strongAuthRequired" | "strongAuthConfigured">;
+  user: Pick<CurrentUserView, "strongAuthRequired" | "strongAuthConfigured">;
 }): OnboardingState {
   const profileReady = isValidOnboardingPhone(input.phoneE164);
   const securityReady =
