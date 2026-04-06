@@ -54,9 +54,7 @@ function toLeadDetailCommercialInput(
   };
 }
 
-function toLeadDetailQuotation(
-  quotation: LeadQuotation,
-): LeadQuotationView {
+function toLeadDetailQuotation(quotation: LeadQuotation): LeadQuotationView {
   return {
     id: quotation.id,
     leadId: quotation.leadId,
@@ -90,9 +88,7 @@ function toLeadDetailSale(sale: LeadSale): LeadSaleView {
   };
 }
 
-export function presentLeadDetail(
-  source: LeadDetailSource,
-): LeadDetailView {
+export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
   return {
     lead: toLeadDetailLead(source.lead),
     commercialInput: source.commercialInput

@@ -1,8 +1,8 @@
 "use server";
 
 import { getActiveContactAssignments as getActiveContactAssignmentsUseCase } from "~/server/contact-assignments/application/get-active-contact-assignments";
-import type { ActiveContactAssignmentView } from "~/server/contact-assignments/application/views/active-contact-assignment-view";
 import { getContactAssignmentCapacity } from "~/server/contact-assignments/application/get-contact-assignment-capacity";
+import type { ActiveContactAssignmentView } from "~/server/contact-assignments/application/views/active-contact-assignment-view";
 import { createContactAssignmentReadContext } from "~/server/contact-assignments/infrastructure/read-context";
 import { runAction } from "~/server/shared/action-runtime";
 import { Ok } from "~/server/shared/result";
