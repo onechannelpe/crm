@@ -4,8 +4,8 @@ import { Ok, type Result } from "~/server/shared/result";
 
 import type { SaleQueryDeps } from "../deps/lead-queries";
 import { canViewAllSales } from "../policies/access";
-import type { LeadSaleRepository } from "../ports/sale-repository";
 import { parsePageParams } from "./pagination";
+import type { SaleView } from "./views/sale-view";
 
 export async function listSales(
   deps: SaleQueryDeps,
@@ -15,9 +15,7 @@ export async function listSales(
     limit?: number;
     offset?: number;
   },
-): Promise<
-  Result<Awaited<ReturnType<LeadSaleRepository["list"]>>, DomainError>
-> {
+): Promise<Result<SaleView[], DomainError>> {
   const page = parsePageParams(input);
   if (!page.ok) {
     return page;

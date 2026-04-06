@@ -7,20 +7,16 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-type SalesRecordStatus =
-  | "draft"
-  | "submitted_for_confirmation"
-  | "confirmed"
-  | "rejected"
-  | "cancelled";
-
-type SalesRecordSource = "lead_assignment" | "manual";
-type SalesRecordAttemptOutcome =
-  | "no_answer"
-  | "callback_scheduled"
-  | "validated"
-  | "invalid_data"
-  | "rejected";
+import type {
+  SalesRecordAttemptOutcome,
+  SalesRecordStatus,
+} from "../domain/types";
+import type {
+  CreateSalesRecordDraftInput,
+  SalesRecordAddressInput,
+  SalesRecordProductInput,
+  UpdateSalesRecordDraftInput,
+} from "./commands/types/draft-input";
 
 const STATUS_TRANSITIONS: Record<SalesRecordStatus, SalesRecordStatus[]> = {
   draft: ["submitted_for_confirmation", "cancelled"],
@@ -37,47 +33,9 @@ function canTransition(
   return STATUS_TRANSITIONS[from]?.includes(to) ?? false;
 }
 
-interface DraftClientInput {
-  ruc: string | null;
-  companyName: string | null;
-  contactName: string | null;
-  dni: string | null;
-  phones: string[];
-  engineMatchId: string | null;
-  completenessScore: number;
-}
-
-interface DraftAddressInput {
-  addressType: "installation" | "billing" | "reference";
-  fullText: string;
-  department: string | null;
-  province: string | null;
-  district: string | null;
-  ubigeo: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  isPrimary: boolean;
-}
-
-interface DraftProductInput {
-  productId: number;
-  quantity: number;
-}
-
-interface CreateSalesRecordDraftInput {
-  source: SalesRecordSource;
+interface WorkflowCreateSalesRecordDraftInput extends CreateSalesRecordDraftInput {
   executiveUserId: number;
   branchId: number;
-  leadAssignmentId: number | null;
-  client: DraftClientInput;
-  addresses: DraftAddressInput[];
-  products: DraftProductInput[];
-}
-
-interface UpdateSalesRecordDraftInput {
-  client: DraftClientInput;
-  addresses: DraftAddressInput[];
-  products: DraftProductInput[];
 }
 
 type SalesProductRow = NonNullable<
@@ -129,8 +87,8 @@ export function createSalesRecordsWorkflowService(
   }
 
   function validateDraftPayload(input: {
-    addresses: DraftAddressInput[];
-    products: DraftProductInput[];
+    addresses: SalesRecordAddressInput[];
+    products: SalesRecordProductInput[];
   }): Result<void, DomainError> {
     if (input.addresses.length > 0) {
       const primaryCount = input.addresses.filter((it) => it.isPrimary).length;
@@ -146,7 +104,7 @@ export function createSalesRecordsWorkflowService(
 
   async function loadProducts(
     activeRepos: SalesRecordsRepos,
-    lines: DraftProductInput[],
+    lines: SalesRecordProductInput[],
   ): Promise<Result<SalesProductRow[], DomainError>> {
     const products = await Promise.all(
       lines.map((item) => activeRepos.products.findById(item.productId)),
@@ -214,7 +172,7 @@ export function createSalesRecordsWorkflowService(
 
   return {
     async createDraft(
-      input: CreateSalesRecordDraftInput,
+      input: WorkflowCreateSalesRecordDraftInput,
     ): Promise<Result<number, DomainError>> {
       return runSafely(() =>
         withTransaction(async (activeRepos) => {

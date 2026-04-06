@@ -6,8 +6,11 @@ import {
 import type {
   CreateSalesRecordDraftInput,
   SalesRecordAddressInput,
-  SalesRecordAttemptOutcome,
   SalesRecordProductInput,
+  RegisterSalesRecordAttemptInput,
+} from "~/server/sales-records/application/commands/types/draft-input";
+import type {
+  SalesRecordAttemptOutcome,
   SalesRecordSource,
 } from "~/server/sales-records/domain/types";
 
@@ -112,12 +115,7 @@ export function parseSalesRecordAttemptInput(
   outcome: string,
   notes: string | null,
   nextAttemptAt: number | null,
-): {
-  recordId: number;
-  outcome: SalesRecordAttemptOutcome;
-  notes: string | null;
-  nextAttemptAt: number | null;
-} {
+): RegisterSalesRecordAttemptInput {
   const safeRecordId = parseSalesRecordId(recordId);
   if (!isSalesRecordAttemptOutcome(outcome)) {
     throw validationError("outcome is invalid");

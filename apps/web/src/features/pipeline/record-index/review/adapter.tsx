@@ -1,5 +1,6 @@
 import { createAsync } from "@solidjs/router";
 
+import type { LeadListRow } from "~/actions/pipeline/contracts/lead-list";
 import { queryLeadList } from "~/actions/pipeline/queries/leads";
 import Info from "~/components/icons/info";
 import List from "~/components/icons/list";
@@ -9,7 +10,6 @@ import type {
   RecordIndexSource,
 } from "~/features/record-index/model/types";
 
-import type { ReviewRow } from "./columns";
 import { REVIEW_RECORD_INDEX_COLUMNS } from "./columns";
 import { useOpenReviewRecord } from "./open-row";
 
@@ -20,7 +20,7 @@ export function ReviewRecordIndex() {
     queryLeadList({ stage: "PENDING_EXTERNAL_REVIEW" }),
   );
   const { rowOpen } = useOpenReviewRecord();
-  const source = (): RecordIndexSource<ReviewRow> => {
+  const source = (): RecordIndexSource<LeadListRow> => {
     const data = leads();
 
     if (data === undefined) {
@@ -45,7 +45,7 @@ export function ReviewRecordIndex() {
       description: "Add your first review lead manually.",
     },
     class: styles.page,
-  } satisfies RecordIndexAdapter<ReviewRow>;
+  } satisfies RecordIndexAdapter<LeadListRow>;
 
   return <RecordIndexScreen adapter={adapter} />;
 }

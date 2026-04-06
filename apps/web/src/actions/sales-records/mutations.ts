@@ -10,7 +10,7 @@ import {
   submitRecord,
   updateDraft,
 } from "~/server/sales-records/application/commands";
-import type { CreateSalesRecordDraftInput } from "~/server/sales-records/domain/types";
+import type { CreateSalesRecordDraftInput } from "~/server/sales-records/application/commands/types/draft-input";
 import { createSalesRecordMutationsContext } from "~/server/sales-records/infrastructure/mutations-context";
 import { runAction } from "~/server/shared/action-runtime";
 

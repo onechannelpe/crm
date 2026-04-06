@@ -1,4 +1,4 @@
-import { queryLeadList } from "~/actions/pipeline/queries/leads";
+import type { LeadListRow } from "~/actions/pipeline/contracts/lead-list";
 import Building2 from "~/components/icons/building-2";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import Info from "~/components/icons/info";
@@ -7,10 +7,6 @@ import { Badge } from "~/components/ui/display/badge";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 
 import styles from "./styles.module.css";
-
-export type ReviewRow = Awaited<
-  ReturnType<typeof queryLeadList>
->["rows"][number];
 
 export const REVIEW_RECORD_INDEX_COLUMNS = [
   {
@@ -47,4 +43,4 @@ export const REVIEW_RECORD_INDEX_COLUMNS = [
       <Badge variant="secondary">{lead.prioridad ?? "-"}</Badge>
     ),
   },
-] satisfies ReadonlyArray<DataGridColumn<ReviewRow>>;
+] satisfies ReadonlyArray<DataGridColumn<LeadListRow>>;

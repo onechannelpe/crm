@@ -4,13 +4,13 @@ import type { AppContext } from "~/server/shared/action-runtime";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 
 import type {
-  CreateSalesRecordDraftInput,
-  SalesRecordAttemptOutcome,
-} from "../domain/types";
-import type {
   SalesRecordMutationsContext,
   SalesRecordsMutationService,
 } from "../infrastructure/mutations-context";
+import type {
+  CreateSalesRecordDraftInput,
+  RegisterSalesRecordAttemptInput,
+} from "./commands/types/draft-input";
 
 type CreateDraftError =
   Awaited<
@@ -149,12 +149,7 @@ export async function updateDraft(
 export async function registerAttempt(
   ctx: AppContext,
   salesRecordsService: SalesRecordsMutationService,
-  input: {
-    recordId: number;
-    outcome: SalesRecordAttemptOutcome;
-    notes: string | null;
-    nextAttemptAt: number | null;
-  },
+  input: RegisterSalesRecordAttemptInput,
 ) {
   const result = await salesRecordsService.registerAttempt(
     input.recordId,

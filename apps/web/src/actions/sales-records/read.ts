@@ -1,18 +1,16 @@
 "use server";
 
-import {
-  getBootstrap as getBootstrapService,
-  getFixContext as getFixContextService,
-  listConfirmed as listConfirmedService,
-  listPending as listPendingService,
-  listProducts as listProductsService,
-} from "~/server/sales-records/application/queries";
+import { getBootstrap as getBootstrapService } from "~/server/sales-records/application/queries/get-bootstrap";
+import { getFixContext as getFixContextService } from "~/server/sales-records/application/queries/get-fix-context";
+import { listConfirmed as listConfirmedService } from "~/server/sales-records/application/queries/list-confirmed";
+import { listPending as listPendingService } from "~/server/sales-records/application/queries/list-pending";
+import { listProducts as listProductsService } from "~/server/sales-records/application/queries/list-products";
 import type {
-  SalesRecordBootstrap,
-  SalesRecordFixContext,
-  SalesRecordProductOption,
-  SalesRecordQueueItem,
-} from "~/server/sales-records/domain/types";
+  SalesRecordBootstrapView,
+  SalesRecordFixContextView,
+  SalesRecordProductOptionView,
+  SalesRecordQueueItemView,
+} from "~/server/sales-records/application/queries/views/sales-record-view";
 import { createSalesRecordReadContext } from "~/server/sales-records/infrastructure/read-context";
 import { runAction } from "~/server/shared/action-runtime";
 import { Ok } from "~/server/shared/result";
@@ -20,7 +18,7 @@ import { Ok } from "~/server/shared/result";
 import { parseSalesContactId, parseSalesRecordId } from "./input";
 
 export async function listSalesRecordProducts(): Promise<
-  SalesRecordProductOption[]
+  SalesRecordProductOptionView[]
 > {
   return runAction({
     actionName: "sales_records.products.read",
@@ -32,7 +30,7 @@ export async function listSalesRecordProducts(): Promise<
 
 export async function getSalesRecordBootstrap(
   contactId: number | null,
-): Promise<SalesRecordBootstrap> {
+): Promise<SalesRecordBootstrapView> {
   const safeContactId =
     contactId === null ? null : parseSalesContactId(contactId);
   return runAction({
@@ -49,7 +47,7 @@ export async function getSalesRecordBootstrap(
 }
 
 export async function listPendingSalesRecords(): Promise<
-  SalesRecordQueueItem[]
+  SalesRecordQueueItemView[]
 > {
   return runAction({
     actionName: "sales_records.pending.read",
@@ -60,7 +58,7 @@ export async function listPendingSalesRecords(): Promise<
 }
 
 export async function listConfirmedSalesRecords(): Promise<
-  SalesRecordQueueItem[]
+  SalesRecordQueueItemView[]
 > {
   return runAction({
     actionName: "sales_records.confirmed.read",
@@ -72,7 +70,7 @@ export async function listConfirmedSalesRecords(): Promise<
 
 export async function getSalesRecordFixContext(
   recordId: number,
-): Promise<SalesRecordFixContext> {
+): Promise<SalesRecordFixContextView> {
   const safeRecordId = parseSalesRecordId(recordId);
   return runAction({
     actionName: "sales_records.fix_context.read",

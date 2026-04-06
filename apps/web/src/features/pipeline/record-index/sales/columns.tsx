@@ -1,4 +1,4 @@
-import { querySales } from "~/actions/pipeline/queries/sales";
+import type { SaleRow } from "~/actions/pipeline/contracts/sales";
 import Building2 from "~/components/icons/building-2";
 import CalendarDays from "~/components/icons/calendar-days";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
@@ -7,8 +7,6 @@ import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { formatDate } from "~/lib/utils";
 
 import styles from "./styles.module.css";
-
-export type SalesRow = Awaited<ReturnType<typeof querySales>>[number];
 
 export const SALES_RECORD_INDEX_COLUMNS = [
   {
@@ -47,4 +45,4 @@ export const SALES_RECORD_INDEX_COLUMNS = [
       <span class={styles.mutedCellText}>{formatDate(sale.createdAt)}</span>
     ),
   },
-] satisfies ReadonlyArray<DataGridColumn<SalesRow>>;
+] satisfies ReadonlyArray<DataGridColumn<SaleRow>>;

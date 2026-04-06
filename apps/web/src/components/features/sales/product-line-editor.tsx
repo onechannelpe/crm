@@ -7,13 +7,13 @@ import type {
   ProductLine,
   SalesRecordFormState,
 } from "~/lib/sales/use-sales-record-form";
-import type { SalesRecordProductOption } from "~/server/sales-records/domain/types";
+import type { SalesRecordProductOptionView } from "~/server/sales-records/application/queries/views/sales-record-view";
 
 import styles from "./product-line-editor.module.css";
 
 interface Props {
   form: SalesRecordFormState;
-  products: SalesRecordProductOption[];
+  products: SalesRecordProductOptionView[];
   onError: (message: string) => void;
 }
 
