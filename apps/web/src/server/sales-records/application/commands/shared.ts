@@ -1,16 +1,16 @@
+import type { RateLimitDeps } from "~/lib/security/action-rate-limit";
 import { createAuditService } from "~/server/shared/audit";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { canTransitionSalesRecord } from "../../domain/workflow";
-import type {
-  ContactAssignmentRepository,
-} from "../ports/contact-assignment-repository";
 import type { SalesRecordAuditLogPort } from "../ports/audit-service";
-import type { ProductRepository, SalesProductRecord } from "../ports/product-repository";
+import type { ContactAssignmentRepository } from "../ports/contact-assignment-repository";
 import type {
-  SalesRecordRepository,
-} from "../ports/sales-record-repository";
+  ProductRepository,
+  SalesProductRecord,
+} from "../ports/product-repository";
+import type { SalesRecordRepository } from "../ports/sales-record-repository";
 import type {
   SalesRecordAddressInput,
   SalesRecordProductInput,
@@ -31,6 +31,10 @@ export type RepositoryTransactionRunner = <T>(
 export type SalesRecordMutationDeps = {
   repos: SalesRecordCommandRepos;
   runInTransaction: RepositoryTransactionRunner;
+};
+
+export type SalesRecordRateLimitedMutationDeps = SalesRecordMutationDeps & {
+  rateLimitDeps: RateLimitDeps;
 };
 
 export function okCommandResult(): Result<{ success: true }, never> {
@@ -57,7 +61,9 @@ export function salesRecordFailure(
 
 export async function runSalesRecordMutation<T>(
   deps: SalesRecordMutationDeps,
-  operation: (repos: SalesRecordCommandRepos) => Promise<Result<T, DomainError>>,
+  operation: (
+    repos: SalesRecordCommandRepos,
+  ) => Promise<Result<T, DomainError>>,
 ): Promise<Result<T, DomainError>> {
   try {
     return await deps.runInTransaction(operation);

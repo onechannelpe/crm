@@ -9,7 +9,6 @@ import type {
 } from "~/lib/observability/auth-funnel";
 import type { LeadHistoryEventType } from "~/server/pipeline/domain/history";
 import {
-  type LeadCallOutcome,
   type LeadPriority,
   type LeadStage,
   type LeadStatus,

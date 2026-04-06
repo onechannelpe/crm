@@ -91,7 +91,7 @@ export interface SalesRecordProductSnapshot {
   category_snapshot: string;
   subtype_snapshot: string | null;
   quantity: number;
-  unit_price_snapshot: number;
+  unit_price_snapshot: number | null;
   created_at: number;
 }
 

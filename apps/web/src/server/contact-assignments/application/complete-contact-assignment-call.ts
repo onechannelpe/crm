@@ -1,6 +1,6 @@
 import { hasPermission, type Role } from "~/lib/auth/access/rbac";
 import type { ActionSuccess } from "~/lib/contracts/common";
-import { createSalesRecordsWorkflowService } from "~/server/sales-records/application/workflow-service";
+import { getSalesRecordAudit } from "~/server/sales-records/application/commands/shared";
 import { computeClientCompletenessScore } from "~/server/sales/completeness";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { BranchId, UserId } from "~/server/shared/ids";
@@ -59,31 +59,50 @@ async function createDraftRecordFromAssignment(
     );
   }
 
-  const salesRecords = createSalesRecordsWorkflowService(repos);
-  return salesRecords.createDraft({
+  const audit = getSalesRecordAudit(repos);
+  const now = Date.now();
+  const recordId = await repos.salesRecords.create({
     source: "lead_assignment",
-    executiveUserId: input.actorUserId,
-    branchId: input.branchId,
-    leadAssignmentId: input.assignmentId,
-    client: {
+    status: "draft",
+    executive_user_id: input.actorUserId,
+    lead_assignment_id: input.assignmentId,
+    branch_id: input.branchId,
+    submitted_at: null,
+    confirmed_at: null,
+    rejected_at: null,
+    cancelled_at: null,
+    created_at: now,
+    updated_at: now,
+  });
+  await repos.salesRecords.upsertClient({
+    sales_record_id: recordId,
+    ruc: organization.ruc,
+    company_name: organization.name,
+    contact_name: contact.name,
+    dni: contact.dni,
+    phones_json: JSON.stringify(
+      contact.phone_primary ? [contact.phone_primary] : [],
+    ),
+    engine_match_id: null,
+    completeness_score: computeClientCompletenessScore({
       ruc: organization.ruc,
       companyName: organization.name,
       contactName: contact.name,
       dni: contact.dni,
       phones: contact.phone_primary ? [contact.phone_primary] : [],
       engineMatchId: null,
-      completenessScore: computeClientCompletenessScore({
-        ruc: organization.ruc,
-        companyName: organization.name,
-        contactName: contact.name,
-        dni: contact.dni,
-        phones: contact.phone_primary ? [contact.phone_primary] : [],
-        engineMatchId: null,
-      }),
-    },
-    addresses: [],
-    products: [],
+    }),
+    created_at: now,
+    updated_at: now,
   });
+  await audit.log(
+    input.actorUserId,
+    "sales_record_created",
+    "sales_record",
+    recordId,
+    { source: "lead_assignment" },
+  );
+  return Ok(recordId);
 }
 
 async function completeAssignmentInteraction(
