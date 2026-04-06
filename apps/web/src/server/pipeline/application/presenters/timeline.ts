@@ -1,11 +1,11 @@
 import type { LeadHistoryEntry } from "~/server/pipeline/domain/history";
 
-import type { PipelineTimelineItem } from "../read-models/lead-detail";
+import type { LeadTimelineItem } from "../queries/views/lead-detail-view";
 import { presentTimelineItem } from "./timeline-item";
 
 export function presentTimeline(
   events: LeadHistoryEntry[],
   revealFull: boolean,
-): PipelineTimelineItem[] {
+): LeadTimelineItem[] {
   return events.map((event) => presentTimelineItem(event, revealFull));
 }

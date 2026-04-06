@@ -4,13 +4,13 @@ import type { LeadCommercialInput } from "../ports/commercial-input-repository";
 import type { LeadQuotation } from "../ports/quotation-repository";
 import type { LeadSale } from "../ports/sale-repository";
 import type {
-  PipelineLeadAction,
-  PipelineLeadDetail,
-  PipelineLeadDetailCommercialInput,
-  PipelineLeadDetailLead,
-  PipelineLeadDetailQuotation,
-  PipelineLeadDetailSale,
-} from "../read-models/lead-detail";
+  LeadAvailableAction,
+  LeadCommercialInputView,
+  LeadDetailLeadView,
+  LeadDetailView,
+  LeadQuotationView,
+  LeadSaleView,
+} from "../queries/views/lead-detail-view";
 import { presentTimeline } from "./timeline";
 
 export type LeadDetailSource = {
@@ -20,10 +20,10 @@ export type LeadDetailSource = {
   sale: LeadSale | undefined;
   history: LeadHistoryEntry[];
   canRevealFullTimeline: boolean;
-  availableActions: PipelineLeadAction[];
+  availableActions: LeadAvailableAction[];
 };
 
-function toLeadDetailLead(lead: Lead): PipelineLeadDetailLead {
+function toLeadDetailLead(lead: Lead): LeadDetailLeadView {
   return {
     id: lead.id,
     ruc: lead.ruc,
@@ -40,7 +40,7 @@ function toLeadDetailLead(lead: Lead): PipelineLeadDetailLead {
 
 function toLeadDetailCommercialInput(
   input: LeadCommercialInput,
-): PipelineLeadDetailCommercialInput {
+): LeadCommercialInputView {
   return {
     leadId: input.leadId,
     proveedorActual: input.proveedorActual,
@@ -56,7 +56,7 @@ function toLeadDetailCommercialInput(
 
 function toLeadDetailQuotation(
   quotation: LeadQuotation,
-): PipelineLeadDetailQuotation {
+): LeadQuotationView {
   return {
     id: quotation.id,
     leadId: quotation.leadId,
@@ -72,7 +72,7 @@ function toLeadDetailQuotation(
   };
 }
 
-function toLeadDetailSale(sale: LeadSale): PipelineLeadDetailSale {
+function toLeadDetailSale(sale: LeadSale): LeadSaleView {
   return {
     id: sale.id,
     leadId: sale.leadId,
@@ -92,7 +92,7 @@ function toLeadDetailSale(sale: LeadSale): PipelineLeadDetailSale {
 
 export function presentLeadDetail(
   source: LeadDetailSource,
-): PipelineLeadDetail {
+): LeadDetailView {
   return {
     lead: toLeadDetailLead(source.lead),
     commercialInput: source.commercialInput

@@ -3,17 +3,17 @@
 import { getLeadDetail } from "~/server/pipeline/application/queries/get-lead-detail";
 import { listLeads } from "~/server/pipeline/application/queries/list-leads";
 import type {
-  PipelineLeadDetail,
-  PipelineLeadDetailCommercialInput,
-  PipelineLeadDetailLead,
-  PipelineLeadDetailQuotation,
-  PipelineLeadDetailSale,
-  PipelineTimelineItem,
-} from "~/server/pipeline/application/read-models/lead-detail";
+  LeadCommercialInputView,
+  LeadDetailLeadView,
+  LeadDetailView,
+  LeadQuotationView,
+  LeadSaleView,
+  LeadTimelineItem,
+} from "~/server/pipeline/application/queries/views/lead-detail-view";
 import type {
-  PipelineLeadList,
-  PipelineLeadListRow,
-} from "~/server/pipeline/application/read-models/lead-list";
+  LeadListRowView,
+  LeadListView,
+} from "~/server/pipeline/application/queries/views/lead-list-view";
 import { createPipelineQueryRuntime } from "~/server/pipeline/infrastructure/query-runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
@@ -28,41 +28,41 @@ import type {
 } from "../contracts/lead-detail";
 import type { LeadListOutput, LeadListRow } from "../contracts/lead-list";
 
-function mapLeadDetailLead(lead: PipelineLeadDetailLead): LeadDetailLead {
+function mapLeadDetailLead(lead: LeadDetailLeadView): LeadDetailLead {
   const output: LeadDetailLead = lead;
   return output;
 }
 
 function mapLeadDetailCommercialInput(
-  commercialInput: PipelineLeadDetailCommercialInput,
+  commercialInput: LeadCommercialInputView,
 ): LeadDetailCommercialInput {
   const output: LeadDetailCommercialInput = commercialInput;
   return output;
 }
 
 function mapLeadDetailQuotation(
-  quotation: PipelineLeadDetailQuotation,
+  quotation: LeadQuotationView,
 ): LeadDetailQuotation {
   const output: LeadDetailQuotation = quotation;
   return output;
 }
 
-function mapLeadDetailSale(sale: PipelineLeadDetailSale): LeadDetailSale {
+function mapLeadDetailSale(sale: LeadSaleView): LeadDetailSale {
   const output: LeadDetailSale = sale;
   return output;
 }
 
-function mapTimelineItem(item: PipelineTimelineItem): TimelineItem {
+function mapTimelineItem(item: LeadTimelineItem): TimelineItem {
   const output: TimelineItem = item;
   return output;
 }
 
-function mapLeadAction(action: PipelineLeadDetail["availableActions"][number]) {
+function mapLeadAction(action: LeadDetailView["availableActions"][number]) {
   const output: LeadAction = action;
   return output;
 }
 
-function mapLeadDetail(detail: PipelineLeadDetail): LeadDetailOutput {
+function mapLeadDetail(detail: LeadDetailView): LeadDetailOutput {
   return {
     lead: mapLeadDetailLead(detail.lead),
     commercialInput: detail.commercialInput
@@ -75,12 +75,12 @@ function mapLeadDetail(detail: PipelineLeadDetail): LeadDetailOutput {
   };
 }
 
-function mapLeadListRow(row: PipelineLeadListRow): LeadListRow {
+function mapLeadListRow(row: LeadListRowView): LeadListRow {
   const output: LeadListRow = row;
   return output;
 }
 
-function mapLeadList(list: PipelineLeadList): LeadListOutput {
+function mapLeadList(list: LeadListView): LeadListOutput {
   return {
     rows: list.rows.map(mapLeadListRow),
     totalCount: list.totalCount,

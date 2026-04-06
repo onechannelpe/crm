@@ -6,7 +6,7 @@ import type { LeadDetailDeps } from "../deps/lead-queries";
 import { canRevealFullTimeline, requireLeadAccess } from "../policies/access";
 import { resolveAvailableActions } from "../policies/action-availability";
 import { presentLeadDetail } from "../presenters/lead-detail";
-import type { PipelineLeadDetail } from "../read-models/lead-detail";
+import type { LeadDetailView } from "./views/lead-detail-view";
 
 export async function getLeadDetail(
   deps: LeadDetailDeps,
@@ -15,7 +15,7 @@ export async function getLeadDetail(
     actorRole: Role;
     leadId: number;
   },
-): Promise<Result<PipelineLeadDetail, DomainError>> {
+): Promise<Result<LeadDetailView, DomainError>> {
   const lead = await deps.leads.findById(input.leadId);
   if (!lead) {
     return Err(domainError("not_found", "lead_not_found", "Lead not found"));

@@ -12,8 +12,8 @@ import {
   requireLeadReadAccess,
   resolveLeadListExecutiveScope,
 } from "../policies/access";
-import type { PipelineLeadList } from "../read-models/lead-list";
 import { parsePageParams } from "./pagination";
+import type { LeadListView } from "./views/lead-list-view";
 
 export async function listLeads(
   deps: LeadListDeps,
@@ -29,7 +29,7 @@ export async function listLeads(
       offset?: number;
     };
   },
-): Promise<Result<PipelineLeadList, DomainError>> {
+): Promise<Result<LeadListView, DomainError>> {
   const canRead = requireLeadReadAccess(input.actorRole);
   if (!canRead.ok) {
     return canRead;

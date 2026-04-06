@@ -7,10 +7,8 @@ import type {
   AuthFunnelScreen,
   AuthFunnelSource,
 } from "~/lib/observability/auth-funnel";
+import type { LeadHistoryEventType } from "~/server/pipeline/domain/history";
 import {
-  LEAD_PRIORITIES,
-  LEAD_STAGES as PIPELINE_LEAD_STAGES,
-  LEAD_STATUSES,
   type LeadCallOutcome,
   type LeadPriority,
   type LeadStage,
@@ -750,41 +748,7 @@ export interface UserInvitesTable {
   sent_at: number | null;
 }
 
-export type { LeadCallOutcome, LeadStage, LeadStatus };
-export type Prioridad = LeadPriority;
-
-export type LeadInteractionKind = "call" | "note";
-
-export type PipelineHistoryEventType =
-  | "lead_registered"
-  | "lead_reviewed"
-  | "workflow_stage_changed"
-  | "lead_assigned"
-  | "lead_reassigned"
-  | "commercial_input_completed"
-  | "quotation_created"
-  | "sale_approved"
-  | "sale_created"
-  | "call_logged"
-  | "note_added";
-
 export type ExecutiveCategory = "elite" | "corporativa";
-
-export const LEAD_STAGES = PIPELINE_LEAD_STAGES;
-export const LEAD_STATUS_VALUES = LEAD_STATUSES;
-export const PRIORIDAD_VALUES = LEAD_PRIORITIES;
-
-export function toLeadStage(v: string | undefined): LeadStage | undefined {
-  return v !== undefined ? LEAD_STAGES.find((s) => s === v) : undefined;
-}
-
-export function toLeadStatus(v: string | undefined): LeadStatus | undefined {
-  return v !== undefined ? LEAD_STATUS_VALUES.find((e) => e === v) : undefined;
-}
-
-export function toPrioridad(v: string | undefined): Prioridad | undefined {
-  return v !== undefined ? PRIORIDAD_VALUES.find((p) => p === v) : undefined;
-}
 
 export interface PipelineLeadsTable {
   id: Generated<number>;
@@ -794,7 +758,7 @@ export interface PipelineLeadsTable {
   executive_id: number;
   stage: LeadStage;
   status: LeadStatus | null;
-  prioridad: Prioridad | null;
+  prioridad: LeadPriority | null;
   created_at: number;
   updated_at: number;
 }
@@ -853,7 +817,7 @@ export interface PipelineLeadAssignmentsTable {
 export interface PipelineHistoryEventsTable {
   id: Generated<number>;
   lead_id: number;
-  event_type: PipelineHistoryEventType;
+  event_type: LeadHistoryEventType;
   actor_user_id: number | null;
   subject_user_id: number | null;
   payload_json: string | null;

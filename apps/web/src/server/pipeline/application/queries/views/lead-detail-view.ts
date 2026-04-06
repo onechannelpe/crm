@@ -1,21 +1,6 @@
-export type PipelineLeadStage =
-  | "PENDING_EXTERNAL_REVIEW"
-  | "REJECTED_BY_STATUS"
-  | "NEEDS_EXECUTIVE_INPUT"
-  | "READY_FOR_QUOTATION"
-  | "QUOTED"
-  | "READY_FOR_SALE"
-  | "CONVERTED";
+import type { LeadPriority, LeadStage, LeadStatus } from "../../../domain/lead";
 
-export type PipelineLeadStatus =
-  | "DISPONIBLE"
-  | "SIN RESULTADO"
-  | "CARTERIZADO"
-  | "STOCK";
-
-export type PipelineLeadPriority = "P1" | "P2" | "SIN RESULTADO";
-
-export type PipelineLeadAction =
+export type LeadAvailableAction =
   | "log-call"
   | "add-note"
   | "complete-commercial-input"
@@ -25,7 +10,7 @@ export type PipelineLeadAction =
   | "approve-for-sale"
   | "reassign-lead";
 
-export type PipelineTimelineItem = {
+export type LeadTimelineItem = {
   id: string;
   occurredAt: number;
   kind: "call" | "note" | "assignment" | "stage-change" | "system";
@@ -34,20 +19,20 @@ export type PipelineTimelineItem = {
   actorDisplayName: string;
 };
 
-export type PipelineLeadDetailLead = {
+export type LeadDetailLeadView = {
   id: number;
   ruc: string;
   razonSocial: string | null;
   address: string | null;
   executiveId: number;
-  stage: PipelineLeadStage;
-  status: PipelineLeadStatus | null;
-  prioridad: PipelineLeadPriority | null;
+  stage: LeadStage;
+  status: LeadStatus | null;
+  prioridad: LeadPriority | null;
   createdAt: number;
   updatedAt: number;
 };
 
-export type PipelineLeadDetailCommercialInput = {
+export type LeadCommercialInputView = {
   leadId: number;
   proveedorActual: string | null;
   tasaActual: number | null;
@@ -59,7 +44,7 @@ export type PipelineLeadDetailCommercialInput = {
   updatedBy: number;
 };
 
-export type PipelineLeadDetailQuotation = {
+export type LeadQuotationView = {
   id: number;
   leadId: number;
   version: number;
@@ -73,7 +58,7 @@ export type PipelineLeadDetailQuotation = {
   createdBy: number;
 };
 
-export type PipelineLeadDetailSale = {
+export type LeadSaleView = {
   id: number;
   leadId: number;
   executiveId: number;
@@ -89,11 +74,11 @@ export type PipelineLeadDetailSale = {
   createdAt: number;
 };
 
-export type PipelineLeadDetail = {
-  lead: PipelineLeadDetailLead;
-  commercialInput: PipelineLeadDetailCommercialInput | undefined;
-  quotations: PipelineLeadDetailQuotation[];
-  sale: PipelineLeadDetailSale | undefined;
-  timeline: PipelineTimelineItem[];
-  availableActions: PipelineLeadAction[];
+export type LeadDetailView = {
+  lead: LeadDetailLeadView;
+  commercialInput: LeadCommercialInputView | undefined;
+  quotations: LeadQuotationView[];
+  sale: LeadSaleView | undefined;
+  timeline: LeadTimelineItem[];
+  availableActions: LeadAvailableAction[];
 };
