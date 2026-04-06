@@ -1,4 +1,3 @@
-import type { LeadDetailOutput } from "~/actions/pipeline/contracts/lead-detail";
 import type { Role } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
@@ -7,6 +6,7 @@ import type { LeadDetailDeps } from "../deps/lead-queries";
 import { canRevealFullTimeline, requireLeadAccess } from "../policies/access";
 import { resolveAvailableActions } from "../policies/action-availability";
 import { presentLeadDetail } from "../presenters/lead-detail";
+import type { PipelineLeadDetail } from "../read-models/lead-detail";
 
 export async function getLeadDetail(
   deps: LeadDetailDeps,
@@ -15,7 +15,7 @@ export async function getLeadDetail(
     actorRole: Role;
     leadId: number;
   },
-): Promise<Result<LeadDetailOutput, DomainError>> {
+): Promise<Result<PipelineLeadDetail, DomainError>> {
   const lead = await deps.leads.findById(input.leadId);
   if (!lead) {
     return Err(domainError("not_found", "lead_not_found", "Lead not found"));

@@ -1,7 +1,7 @@
-import type { LeadAction } from "~/actions/pipeline/contracts/lead-detail";
 import type { Role } from "~/lib/auth/access/rbac";
 
 import type { LeadStage } from "../../domain/lead";
+import type { PipelineLeadAction } from "../read-models/lead-detail";
 import {
   canAddLeadInteraction,
   canApproveForSale,
@@ -18,7 +18,7 @@ export function resolveAvailableActions(input: {
   executiveId: number;
   stage: LeadStage;
 }) {
-  const actions: LeadAction[] = [];
+  const actions: PipelineLeadAction[] = [];
   const ownsLead = input.executiveId === input.actorUserId;
 
   if (canAddLeadInteraction(input.actorRole)) {

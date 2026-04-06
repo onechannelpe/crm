@@ -1,6 +1,10 @@
-import type { LeadCallOutcome } from "~/server/pipeline/domain/lead";
-
-export type { LeadCallOutcome };
+export type LeadCallOutcome =
+  | "answered"
+  | "no_answer"
+  | "wrong_number"
+  | "callback_requested"
+  | "qualified"
+  | "disqualified";
 
 export type RecordLeadCallInput = {
   leadId: number;

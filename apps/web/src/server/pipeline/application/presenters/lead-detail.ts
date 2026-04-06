@@ -1,17 +1,16 @@
-import type {
-  LeadDetailCommercialInput,
-  LeadDetailLead,
-  LeadDetailOutput,
-  LeadDetailQuotation,
-  LeadDetailSale,
-  LeadAction,
-} from "~/actions/pipeline/contracts/lead-detail";
-
 import type { LeadHistoryEntry } from "../../domain/history";
 import type { Lead } from "../../domain/lead";
 import type { LeadCommercialInput } from "../ports/commercial-input-repository";
 import type { LeadQuotation } from "../ports/quotation-repository";
 import type { LeadSale } from "../ports/sale-repository";
+import type {
+  PipelineLeadAction,
+  PipelineLeadDetail,
+  PipelineLeadDetailCommercialInput,
+  PipelineLeadDetailLead,
+  PipelineLeadDetailQuotation,
+  PipelineLeadDetailSale,
+} from "../read-models/lead-detail";
 import { presentTimeline } from "./timeline";
 
 export type LeadDetailSource = {
@@ -21,10 +20,10 @@ export type LeadDetailSource = {
   sale: LeadSale | undefined;
   history: LeadHistoryEntry[];
   canRevealFullTimeline: boolean;
-  availableActions: LeadAction[];
+  availableActions: PipelineLeadAction[];
 };
 
-function toLeadDetailLead(lead: Lead): LeadDetailLead {
+function toLeadDetailLead(lead: Lead): PipelineLeadDetailLead {
   return {
     id: lead.id,
     ruc: lead.ruc,
@@ -41,7 +40,7 @@ function toLeadDetailLead(lead: Lead): LeadDetailLead {
 
 function toLeadDetailCommercialInput(
   input: LeadCommercialInput,
-): LeadDetailCommercialInput {
+): PipelineLeadDetailCommercialInput {
   return {
     leadId: input.leadId,
     proveedorActual: input.proveedorActual,
@@ -55,7 +54,9 @@ function toLeadDetailCommercialInput(
   };
 }
 
-function toLeadDetailQuotation(quotation: LeadQuotation): LeadDetailQuotation {
+function toLeadDetailQuotation(
+  quotation: LeadQuotation,
+): PipelineLeadDetailQuotation {
   return {
     id: quotation.id,
     leadId: quotation.leadId,
@@ -71,7 +72,7 @@ function toLeadDetailQuotation(quotation: LeadQuotation): LeadDetailQuotation {
   };
 }
 
-function toLeadDetailSale(sale: LeadSale): LeadDetailSale {
+function toLeadDetailSale(sale: LeadSale): PipelineLeadDetailSale {
   return {
     id: sale.id,
     leadId: sale.leadId,
@@ -89,7 +90,9 @@ function toLeadDetailSale(sale: LeadSale): LeadDetailSale {
   };
 }
 
-export function presentLeadDetail(source: LeadDetailSource): LeadDetailOutput {
+export function presentLeadDetail(
+  source: LeadDetailSource,
+): PipelineLeadDetail {
   return {
     lead: toLeadDetailLead(source.lead),
     commercialInput: source.commercialInput

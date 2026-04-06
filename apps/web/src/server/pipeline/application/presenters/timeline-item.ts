@@ -1,7 +1,7 @@
-import type { TimelineItem } from "~/actions/pipeline/contracts/lead-detail";
 import type { LeadHistoryEntry } from "~/server/pipeline/domain/history";
 import type { LeadCallOutcome } from "~/server/pipeline/domain/lead";
 
+import type { PipelineTimelineItem } from "../read-models/lead-detail";
 import { formatTimelineActorName } from "./timeline-actor-name";
 
 function describeCallOutcome(outcome: LeadCallOutcome | null) {
@@ -26,7 +26,7 @@ function describeCallOutcome(outcome: LeadCallOutcome | null) {
 export function presentTimelineItem(
   event: LeadHistoryEntry,
   revealFull: boolean,
-): TimelineItem {
+): PipelineTimelineItem {
   const actorDisplayName = formatTimelineActorName(event.actor, revealFull);
   const subjectDisplayName = formatTimelineActorName(event.subject, revealFull);
 

@@ -1,4 +1,21 @@
-export type LeadAction =
+export type PipelineLeadStage =
+  | "PENDING_EXTERNAL_REVIEW"
+  | "REJECTED_BY_STATUS"
+  | "NEEDS_EXECUTIVE_INPUT"
+  | "READY_FOR_QUOTATION"
+  | "QUOTED"
+  | "READY_FOR_SALE"
+  | "CONVERTED";
+
+export type PipelineLeadStatus =
+  | "DISPONIBLE"
+  | "SIN RESULTADO"
+  | "CARTERIZADO"
+  | "STOCK";
+
+export type PipelineLeadPriority = "P1" | "P2" | "SIN RESULTADO";
+
+export type PipelineLeadAction =
   | "log-call"
   | "add-note"
   | "complete-commercial-input"
@@ -8,7 +25,7 @@ export type LeadAction =
   | "approve-for-sale"
   | "reassign-lead";
 
-export type TimelineItem = {
+export type PipelineTimelineItem = {
   id: string;
   occurredAt: number;
   kind: "call" | "note" | "assignment" | "stage-change" | "system";
@@ -17,27 +34,20 @@ export type TimelineItem = {
   actorDisplayName: string;
 };
 
-export type LeadDetailLead = {
+export type PipelineLeadDetailLead = {
   id: number;
   ruc: string;
   razonSocial: string | null;
   address: string | null;
   executiveId: number;
-  stage:
-    | "PENDING_EXTERNAL_REVIEW"
-    | "REJECTED_BY_STATUS"
-    | "NEEDS_EXECUTIVE_INPUT"
-    | "READY_FOR_QUOTATION"
-    | "QUOTED"
-    | "READY_FOR_SALE"
-    | "CONVERTED";
-  status: "DISPONIBLE" | "SIN RESULTADO" | "CARTERIZADO" | "STOCK" | null;
-  prioridad: "P1" | "P2" | "SIN RESULTADO" | null;
+  stage: PipelineLeadStage;
+  status: PipelineLeadStatus | null;
+  prioridad: PipelineLeadPriority | null;
   createdAt: number;
   updatedAt: number;
 };
 
-export type LeadDetailCommercialInput = {
+export type PipelineLeadDetailCommercialInput = {
   leadId: number;
   proveedorActual: string | null;
   tasaActual: number | null;
@@ -49,7 +59,7 @@ export type LeadDetailCommercialInput = {
   updatedBy: number;
 };
 
-export type LeadDetailQuotation = {
+export type PipelineLeadDetailQuotation = {
   id: number;
   leadId: number;
   version: number;
@@ -63,7 +73,7 @@ export type LeadDetailQuotation = {
   createdBy: number;
 };
 
-export type LeadDetailSale = {
+export type PipelineLeadDetailSale = {
   id: number;
   leadId: number;
   executiveId: number;
@@ -79,11 +89,11 @@ export type LeadDetailSale = {
   createdAt: number;
 };
 
-export type LeadDetailOutput = {
-  lead: LeadDetailLead;
-  commercialInput: LeadDetailCommercialInput | undefined;
-  quotations: LeadDetailQuotation[];
-  sale: LeadDetailSale | undefined;
-  timeline: TimelineItem[];
-  availableActions: LeadAction[];
+export type PipelineLeadDetail = {
+  lead: PipelineLeadDetailLead;
+  commercialInput: PipelineLeadDetailCommercialInput | undefined;
+  quotations: PipelineLeadDetailQuotation[];
+  sale: PipelineLeadDetailSale | undefined;
+  timeline: PipelineTimelineItem[];
+  availableActions: PipelineLeadAction[];
 };
