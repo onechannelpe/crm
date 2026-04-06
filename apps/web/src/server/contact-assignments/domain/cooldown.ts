@@ -1,9 +1,9 @@
-import type { Contact } from "~/lib/db/types";
-
-type WithCooldown = Pick<Contact, "cooldown_until">;
+export type ContactCooldownSnapshot = {
+  cooldown_until: number | null;
+};
 
 export function isInCooldown(
-  contact: WithCooldown,
+  contact: ContactCooldownSnapshot,
   now: number = Date.now(),
 ): boolean {
   if (!contact.cooldown_until) return false;
@@ -11,7 +11,7 @@ export function isInCooldown(
 }
 
 export function canContactNow(
-  contact: WithCooldown,
+  contact: ContactCooldownSnapshot,
   now: number = Date.now(),
 ): boolean {
   return !isInCooldown(contact, now);

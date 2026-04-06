@@ -1,11 +1,20 @@
 import { config } from "~/lib/config";
-import type { NewLeadAssignment } from "~/lib/db/types";
+
+export type ContactAssignmentStatus = "active" | "completed" | "expired";
+
+export type ContactAssignmentDraft = {
+  user_id: number;
+  contact_id: number;
+  assigned_at: number;
+  expires_at: number;
+  status: ContactAssignmentStatus;
+};
 
 export function createAssignment(
   userId: number,
   contactId: number,
   ttlHours: number = config.leadAssignment.ttlHours,
-): NewLeadAssignment {
+): ContactAssignmentDraft {
   const now = Date.now();
   return {
     user_id: userId,

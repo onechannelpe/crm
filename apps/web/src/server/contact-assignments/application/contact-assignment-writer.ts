@@ -3,6 +3,11 @@ import { canContactNow } from "~/server/contact-assignments/domain/cooldown";
 import type { LeadCandidate } from "~/server/shared/engine/lead-contract";
 import type { UserId } from "~/server/shared/ids";
 
+type ContactRecord = {
+  id: number;
+  cooldown_until: number | null;
+};
+
 export interface AssignContactsTransactionRepos {
   organizations: {
     findOrCreate(ruc: string, name: string): Promise<{ id: number }>;
@@ -13,7 +18,7 @@ export interface AssignContactsTransactionRepos {
       dni: string,
       name: string,
       phone: string,
-    ): Promise<{ id: number; cooldown_until: number | null }>;
+    ): Promise<ContactRecord>;
   };
   contactAssignments: {
     createMany(
@@ -92,7 +97,7 @@ async function findOrCreateContactsByKey(
     { organizationId: number; candidate: LeadCandidate }
   >,
   repos: Pick<AssignContactsTransactionRepos, "contacts">,
-) {
+): Promise<Map<string, ContactRecord>> {
   const contactEntries = await Promise.all(
     [...contactInputByKey.entries()].map(
       async ([key, { organizationId, candidate }]) => {
@@ -114,7 +119,7 @@ function buildAvailableAssignments(input: {
   actorUserId: UserId;
   candidates: LeadCandidate[];
   organizationIdsByRuc: Map<string, number>;
-  contactsByKey: Awaited<ReturnType<typeof findOrCreateContactsByKey>>;
+  contactsByKey: Map<string, ContactRecord>;
 }) {
   const assignments = [];
   for (const candidate of input.candidates) {

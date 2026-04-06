@@ -2,6 +2,8 @@ import type { Kysely } from "kysely";
 import { sql } from "kysely";
 
 import type { Database, NewLeadAssignment } from "~/lib/db/types";
+import type { ActiveContactAssignmentView } from "~/server/contact-assignments/application/views/active-contact-assignment-view";
+import type { ContactAssignmentDraft } from "~/server/contact-assignments/domain/assignment";
 
 export function createContactAssignmentsRepo(db: Kysely<Database>) {
   return {
@@ -12,7 +14,7 @@ export function createContactAssignmentsRepo(db: Kysely<Database>) {
         .executeTakeFirstOrThrow();
     },
 
-    async createMany(assignments: NewLeadAssignment[]): Promise<void> {
+    async createMany(assignments: ContactAssignmentDraft[]): Promise<void> {
       if (assignments.length === 0) return;
       await db.insertInto("lead_assignments").values(assignments).execute();
     },
@@ -27,20 +29,22 @@ export function createContactAssignmentsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    findActiveByUserWithContacts(userId: number) {
+    findActiveByUserWithContacts(
+      userId: number,
+    ): Promise<ActiveContactAssignmentView[]> {
       return db
         .selectFrom("lead_assignments")
         .innerJoin("contacts", "contacts.id", "lead_assignments.contact_id")
         .select([
           "lead_assignments.id as assignmentId",
-          "lead_assignments.assigned_at",
-          "lead_assignments.expires_at",
+          "lead_assignments.assigned_at as assignedAt",
+          "lead_assignments.expires_at as expiresAt",
           "lead_assignments.status",
           "contacts.id as contactId",
           "contacts.name",
           "contacts.dni",
-          "contacts.phone_primary",
-          "contacts.organization_id",
+          "contacts.phone_primary as phonePrimary",
+          "contacts.organization_id as organizationId",
         ])
         .where("lead_assignments.user_id", "=", userId)
         .where("lead_assignments.status", "=", "active")

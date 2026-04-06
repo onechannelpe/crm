@@ -5,15 +5,13 @@ import {
   decideRegistrationConflict,
   ensureCanReassignLead,
 } from "../../domain/assignment";
+import type { Lead } from "../../domain/lead";
 import type {
   ActiveExecutiveDeps,
   LeadRegistrationLookupDeps,
 } from "../deps/register-lead";
-import type { LeadRepository } from "../ports/lead-repository";
 
-export type ExistingLead = NonNullable<
-  Awaited<ReturnType<LeadRepository["findByRuc"]>>
->;
+export type ExistingLead = Lead;
 
 export type LeadRegistrationResolution =
   | { kind: "create" }
