@@ -95,9 +95,50 @@ export interface SalesRecordProductSnapshot {
   created_at: number;
 }
 
+export interface PendingSalesRecordQueueRecord {
+  id: number;
+  status: SalesRecordStatus;
+  created_at: number;
+  updated_at: number;
+  company_name: string | null;
+  contact_name: string | null;
+  dni: string | null;
+  executive_name: string;
+}
+
+export interface ConfirmedSalesRecordQueueRecord {
+  id: number;
+  status: SalesRecordStatus;
+  created_at: number;
+  updated_at: number;
+  confirmed_at: number | null;
+  company_name: string | null;
+  contact_name: string | null;
+  dni: string | null;
+  executive_name: string;
+}
+
+export interface SalesRecordAttemptDetailRecord {
+  id: number;
+  sales_record_id: number;
+  reviewer_user_id: number;
+  outcome: SalesRecordAttemptOutcome;
+  notes: string | null;
+  next_attempt_at: number | null;
+  created_at: number;
+  reviewer_name: string;
+}
+
 export interface SalesRecordRepository {
   create(values: Omit<SalesRecordRecord, "id">): Promise<number>;
   findById(id: number): Promise<SalesRecordRecord | undefined>;
+  listPendingWithClient(scope?: {
+    branchId?: number;
+  }): Promise<PendingSalesRecordQueueRecord[]>;
+  listConfirmedWithClient(scope?: {
+    branchId?: number;
+    executiveUserId?: number;
+  }): Promise<ConfirmedSalesRecordQueueRecord[]>;
   updateStatus(
     id: number,
     status: SalesRecordStatus,
@@ -128,4 +169,7 @@ export interface SalesRecordRepository {
     salesRecordId: number,
   ): Promise<SalesRecordProductSnapshot[]>;
   createAttempt(values: SalesRecordAttemptRecord): Promise<unknown>;
+  listAttemptsByRecord(
+    salesRecordId: number,
+  ): Promise<SalesRecordAttemptDetailRecord[]>;
 }

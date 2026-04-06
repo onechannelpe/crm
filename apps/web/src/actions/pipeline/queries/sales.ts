@@ -6,17 +6,13 @@ import type { SaleView } from "~/server/pipeline/application/queries/views/sale-
 import { createPipelineQueryRuntime } from "~/server/pipeline/infrastructure/query-runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
-import type { SaleRow } from "../contracts/sales";
-
-function mapSaleRow(row: SaleView): SaleRow {
-  const output: SaleRow = row;
-  return output;
-}
+export type SalesListRow = SaleView;
+export type SaleDetailView = SaleView;
 
 export async function querySales(filters: {
   limit?: number;
   offset?: number;
-}): Promise<SaleRow[]> {
+}): Promise<SalesListRow[]> {
   const result = await runAction({
     actionName: "pipeline.list_sales",
     requireAuth: true,
@@ -29,11 +25,11 @@ export async function querySales(filters: {
       }),
   });
 
-  return result.map(mapSaleRow);
+  return result;
 }
 
-export async function querySaleDetail(saleId: number): Promise<SaleRow> {
-  const result = await runAction({
+export async function querySaleDetail(saleId: number): Promise<SaleDetailView> {
+  return runAction({
     actionName: "pipeline.get_sale_detail",
     requireAuth: true,
     input: { saleId },
@@ -44,6 +40,4 @@ export async function querySaleDetail(saleId: number): Promise<SaleRow> {
         saleId,
       }),
   });
-
-  return mapSaleRow(result);
 }

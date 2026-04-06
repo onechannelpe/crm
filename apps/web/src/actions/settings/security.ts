@@ -1,6 +1,7 @@
 "use server";
 
 import { conflictError, forbiddenError, notFoundError } from "~/lib/app-errors";
+import type { Role } from "~/lib/auth/access/rbac";
 import { requireSession } from "~/lib/auth/access/session";
 import { hashPassword, verifyPassword } from "~/lib/auth/password/password";
 import { canRemoveStrongAuthFactor } from "~/lib/auth/security/factor-management-policy";
@@ -34,7 +35,7 @@ async function requireCurrentUserWithStrongAuthState(userId: UserId) {
 }
 
 function assertProtectedRoleKeepsStrongAuth(input: {
-  role: NonNullable<Awaited<ReturnType<typeof repos.users.findById>>>["role"];
+  role: Role;
   removingTotp: boolean;
   removingPasskeys: boolean;
   hasTotp: boolean;

@@ -1,6 +1,5 @@
 import { createAsync } from "@solidjs/router";
 
-import type { InventoryItemView } from "~/actions/inventory/queries";
 import List from "~/components/icons/list";
 import Package from "~/components/icons/package";
 import { RecordIndexScreen } from "~/features/record-index/components/screen";
@@ -9,6 +8,7 @@ import type {
   RecordIndexSource,
 } from "~/features/record-index/model/types";
 import { inventoryItemsQuery } from "~/lib/queries/inventory";
+import type { InventoryItemView } from "~/server/inventory/application/views/inventory-item-view";
 
 import { INVENTORY_RECORD_INDEX_COLUMNS } from "./columns";
 import { useOpenInventoryRecord } from "./open-row";

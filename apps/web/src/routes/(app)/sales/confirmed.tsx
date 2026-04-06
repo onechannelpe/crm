@@ -1,5 +1,6 @@
 import { createAsync, useNavigate } from "@solidjs/router";
 
+import type { SalesRecordQueueItemView } from "~/actions/sales-records/read";
 import { EmptyState } from "~/components/feedback/empty-state";
 import Building2 from "~/components/icons/building-2";
 import CalendarDays from "~/components/icons/calendar-days";
@@ -12,9 +13,7 @@ import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { confirmedSalesRecordsQuery } from "~/lib/queries/sales-records";
 import { formatDate } from "~/lib/utils";
 
-type ConfirmedSaleRow = Awaited<
-  ReturnType<typeof confirmedSalesRecordsQuery>
->[number];
+type ConfirmedSaleRow = SalesRecordQueueItemView;
 
 const CONFIRMED_SALES_COLUMNS = [
   {

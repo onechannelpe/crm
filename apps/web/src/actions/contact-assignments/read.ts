@@ -1,5 +1,6 @@
 "use server";
 
+import type { LeadCapacitySnapshot } from "~/server/capacity/application/get-lead-capacity-snapshot";
 import { getActiveContactAssignments as getActiveContactAssignmentsUseCase } from "~/server/contact-assignments/application/get-active-contact-assignments";
 import { getContactAssignmentCapacity } from "~/server/contact-assignments/application/get-contact-assignment-capacity";
 import type { ActiveContactAssignmentView } from "~/server/contact-assignments/application/views/active-contact-assignment-view";
@@ -21,7 +22,7 @@ export async function getActiveContactAssignments(): Promise<
   });
 }
 
-export async function getMyContactAssignmentCapacity() {
+export async function getMyContactAssignmentCapacity(): Promise<LeadCapacitySnapshot> {
   return runAction({
     actionName: "contact_assignments.get_capacity",
     permission: "capacity:read:self",

@@ -1,13 +1,13 @@
 import { useNavigate } from "@solidjs/router";
 
-import type { SaleRow } from "~/actions/pipeline/contracts/sales";
+import type { SalesListRow } from "~/actions/pipeline/queries/sales";
 import { createRouteRowOpen } from "~/features/data-grid/model/row-open";
 
 export function useOpenSalesRecord() {
   const navigate = useNavigate();
 
   return {
-    rowOpen: createRouteRowOpen<SaleRow>((sale) => {
+    rowOpen: createRouteRowOpen<SalesListRow>((sale) => {
       navigate(`/sales/${sale.id}`);
     }),
   };

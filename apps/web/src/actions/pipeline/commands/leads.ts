@@ -6,11 +6,20 @@ import { reassignLead } from "~/server/pipeline/application/commands/reassign-le
 import { registerLead } from "~/server/pipeline/application/commands/register-lead";
 import { reviewLead } from "~/server/pipeline/application/commands/review-lead";
 import {
+  LEAD_PRIORITIES,
+  LEAD_STATUSES,
   parseRequiredLeadPriority,
   parseRequiredLeadStatus,
+  type LeadPriority,
+  type LeadStatus,
 } from "~/server/pipeline/domain/lead";
 import { runPipelineCommand } from "~/server/pipeline/infrastructure/command-runtime";
 import { runAction } from "~/server/shared/action-runtime";
+
+export const LEAD_REVIEW_STATUSES = LEAD_STATUSES;
+export const LEAD_REVIEW_PRIORITIES = LEAD_PRIORITIES;
+export type LeadReviewStatus = LeadStatus;
+export type LeadReviewPriority = LeadPriority;
 
 export async function requestLeadCreation(input: {
   ruc: string;

@@ -1,6 +1,7 @@
 import { useAction } from "@solidjs/router";
 import { For, Show, createMemo, createSignal } from "solid-js";
 
+import type { SalesRecordQueueItemView } from "~/actions/sales-records/read";
 import { RejectionForm } from "~/components/features/sales/rejection-form";
 import { EmptyState } from "~/components/feedback/empty-state";
 import { useToast } from "~/components/feedback/toast-provider";
@@ -35,9 +36,7 @@ const ATTEMPT_OUTCOMES = [
   { value: "rejected", label: "Rechazado" },
 ] as const;
 
-type SalesConfirmationRow = Awaited<
-  ReturnType<typeof pendingSalesRecordsQuery>
->[number];
+type SalesConfirmationRow = SalesRecordQueueItemView;
 
 function isAttemptOutcome(
   value: string,

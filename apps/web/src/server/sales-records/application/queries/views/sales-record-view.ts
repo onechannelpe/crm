@@ -31,33 +31,41 @@ export interface SalesRecordBootstrapView {
   client: SalesRecordClientInput;
 }
 
+export interface SalesRecordFixContextClientView {
+  ruc: string | null;
+  companyName: string | null;
+  contactName: string | null;
+  dni: string | null;
+  phones: string[];
+}
+
+export interface SalesRecordFixContextAddressView {
+  id: number;
+  addressType: string;
+  fullText: string;
+  isPrimary: number;
+}
+
+export interface SalesRecordFixContextProductView {
+  id: number;
+  productName: string;
+  quantity: number;
+}
+
+export interface SalesRecordFixContextAttemptView {
+  id: number;
+  outcome: SalesRecordAttemptOutcome;
+  notes: string | null;
+  nextAttemptAt: number | null;
+  createdAt: number;
+  reviewerName: string;
+}
+
 export interface SalesRecordFixContextView {
   id: number;
   status: SalesRecordStatus;
-  client: {
-    ruc: string | null;
-    companyName: string | null;
-    contactName: string | null;
-    dni: string | null;
-    phones: string[];
-  } | null;
-  addresses: Array<{
-    id: number;
-    addressType: string;
-    fullText: string;
-    isPrimary: number;
-  }>;
-  products: Array<{
-    id: number;
-    productName: string;
-    quantity: number;
-  }>;
-  attempts: Array<{
-    id: number;
-    outcome: SalesRecordAttemptOutcome;
-    notes: string | null;
-    nextAttemptAt: number | null;
-    createdAt: number;
-    reviewerName: string;
-  }>;
+  client: SalesRecordFixContextClientView | null;
+  addresses: SalesRecordFixContextAddressView[];
+  products: SalesRecordFixContextProductView[];
+  attempts: SalesRecordFixContextAttemptView[];
 }

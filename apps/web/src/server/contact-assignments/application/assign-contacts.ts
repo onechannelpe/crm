@@ -1,6 +1,6 @@
 import { type DomainError } from "~/server/shared/domain-error";
 import type { EngineClient } from "~/server/shared/engine/client";
-import type { BranchId, LeadReservationId, UserId } from "~/server/shared/ids";
+import type { LeadReservationId } from "~/server/shared/ids";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 
 import {
@@ -17,16 +17,10 @@ import {
   createContactAssignmentsFromCandidates,
   type AssignContactsTransactionRunner,
 } from "./contact-assignment-writer";
-
-export interface AssignContactsCommand {
-  actorUserId: UserId;
-  branchId: BranchId;
-}
-
-export interface AssignContactsResult {
-  requested: number;
-  assigned: number;
-}
+import type {
+  AssignContactsCommand,
+  AssignContactsResult,
+} from "./types/assign-contacts";
 
 type AssignContactsRepos = AssignmentPlanRepos &
   AssignmentCapacityRepos & {

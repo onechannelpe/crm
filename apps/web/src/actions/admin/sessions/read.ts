@@ -13,8 +13,6 @@ import { isErr } from "~/server/shared/result";
 
 import { parseUserSessionsInput } from "./input";
 
-export { type SessionInfo } from "~/server/auth/application/admin-sessions";
-
 export async function listUserSessions(userId: number) {
   const parsedInput = parseUserSessionsInput(userId);
   if (isErr(parsedInput)) {

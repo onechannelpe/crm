@@ -8,8 +8,6 @@ import { createInventoryRepo } from "~/server/inventory/repos";
 
 const inventory = createInventoryRepo(db);
 
-export type { InventoryItemView };
-
 export async function getInventoryItems(): Promise<InventoryItemView[]> {
   await requirePermission("inventory:read");
 

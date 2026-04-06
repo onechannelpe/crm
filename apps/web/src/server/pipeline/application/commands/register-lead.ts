@@ -18,6 +18,7 @@ import {
   ensureActiveExecutive,
   resolveLeadRegistration,
 } from "./register-lead-resolution";
+import type { LeadRegisteredResult } from "./types/lead-results";
 
 export async function registerLead(input: {
   actorUserId: number;
@@ -27,7 +28,7 @@ export async function registerLead(input: {
   deps: RegisterLeadDeps;
   auditService: PipelineAuditService;
   engineGateway: PipelineEngineGateway;
-}): Promise<Result<{ leadId: number }, DomainError>> {
+}): Promise<Result<LeadRegisteredResult, DomainError>> {
   const canRegister = requirePipelineActionAccess(
     input.actorRole,
     canRegisterLead,

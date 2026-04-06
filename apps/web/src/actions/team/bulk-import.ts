@@ -10,8 +10,6 @@ import {
 } from "~/server/team/application/bulk-import";
 import { createTeamInviteContext } from "~/server/team/infrastructure/invite-context";
 
-export type { BulkApplyResult } from "~/server/team/application/bulk-import";
-
 import { assertRole } from "./validators";
 
 export interface BulkPreviewResult {

@@ -11,12 +11,12 @@ import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-row-open";
 import { createDataGridDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
 import { capacityAuditEventsQuery } from "~/lib/queries/capacity";
+import type { CapacityAuditEvent } from "~/server/capacity/application/get-audit-events";
 
-type CapacityAuditEvents = Awaited<ReturnType<typeof capacityAuditEventsQuery>>;
-type CapacityAuditChange = CapacityAuditEvents[number]["changes"];
-type CapacityAuditRow = CapacityAuditEvents[number] & { id: number };
+type CapacityAuditChange = CapacityAuditEvent["changes"];
+type CapacityAuditRow = CapacityAuditEvent & { id: number };
 
-const EMPTY_EVENTS: CapacityAuditEvents = [];
+const EMPTY_EVENTS: CapacityAuditEvent[] = [];
 const CAPACITY_AUDIT_COLUMNS = [
   {
     key: "createdAt",

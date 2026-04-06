@@ -7,6 +7,7 @@ import type { CreateSaleDeps } from "../deps/sales";
 import { canCreateSale, requirePipelineActionAccess } from "../policies/access";
 import type { PipelineAuditService } from "../ports/audit-service";
 import { persistLeadSaleConversion } from "./create-sale-effects";
+import type { SaleCreatedResult } from "./types/lead-results";
 
 export async function createSale(input: {
   deps: CreateSaleDeps;
@@ -23,7 +24,7 @@ export async function createSale(input: {
   banco: string;
   nroCuenta: string;
   cci: string | null;
-}): Promise<Result<{ id: number }, DomainError>> {
+}): Promise<Result<SaleCreatedResult, DomainError>> {
   const canCreate = requirePipelineActionAccess(input.actorRole, canCreateSale);
   if (!canCreate.ok) {
     return canCreate;

@@ -16,6 +16,7 @@ import type {
   SalesRecordProductInput,
   UpdateSalesRecordDraftInput,
 } from "./types/draft-input";
+import type { SalesRecordMutationResult } from "./types/results";
 
 export type SalesRecordCommandRepos = {
   auditLogs: SalesRecordAuditLogPort;
@@ -37,7 +38,7 @@ export type SalesRecordRateLimitedMutationDeps = SalesRecordMutationDeps & {
   rateLimitDeps: RateLimitDeps;
 };
 
-export function okCommandResult(): Result<{ success: true }, never> {
+export function okCommandResult(): Result<SalesRecordMutationResult, never> {
   return Ok({ success: true as const });
 }
 
