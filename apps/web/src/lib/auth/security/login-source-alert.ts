@@ -1,11 +1,13 @@
 import { hashAuthKey } from "~/lib/auth/password/key-hash";
 import type { User } from "~/lib/db/types";
 import { longName } from "~/lib/users/display-name";
-import type { Repositories } from "~/server/shared/registry";
+import type { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 
 import type { SendPrivilegedLoginAlert } from "./privileged-login-alert";
 
-type Deps = Pick<Repositories, "authEvents">;
+type Deps = {
+  authEvents: ReturnType<typeof createAuthEventsRepo>;
+};
 
 const LOOKBACK_MS = 90 * 24 * 60 * 60 * 1000;
 

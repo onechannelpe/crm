@@ -33,6 +33,8 @@ export type Permission =
   | "admin:manage"
   | "audit:read"
   | "lead:register"
+  | "lead:commercial-input:complete"
+  | "lead:sale:create"
   | "lead:view:all"
   | "lead:review"
   | "lead:reassign"
@@ -60,6 +62,8 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "capacity:read:self",
     "capacity:request:self",
     "lead:register",
+    "lead:commercial-input:complete",
+    "lead:sale:create",
   ],
   supervisor: [
     "lead:work",
@@ -112,6 +116,8 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "sales:review",
     "search:use",
     "lead:register",
+    "lead:commercial-input:complete",
+    "lead:sale:create",
     "lead:view:all",
     "lead:review",
     "lead:reassign",
@@ -141,6 +147,8 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "sales:review",
     "sales:approve",
     "lead:register",
+    "lead:commercial-input:complete",
+    "lead:sale:create",
     "lead:view:all",
     "lead:review",
     "lead:reassign",

@@ -1,6 +1,6 @@
 import { action } from "@solidjs/router";
 
-import { removeUserAvatar, uploadUserAvatar } from "~/actions/settings";
+import { removeUserAvatar, uploadUserAvatar } from "~/actions/settings/avatar";
 
 export const uploadUserAvatarMutation = action(async (formData: FormData) => {
   return uploadUserAvatar(formData);

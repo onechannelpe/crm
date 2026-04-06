@@ -1,4 +1,4 @@
-import { isAppError } from "~/lib/app-errors";
+import { isAppError, type AppErrorCode } from "~/lib/app-errors";
 import type { Permission, Role } from "~/lib/auth/access/rbac";
 import {
   requireAuth as requireAuthActor,
@@ -11,10 +11,31 @@ import { assertRecentStrongAuth } from "~/lib/auth/security/step-up";
 import { getErrorMessage } from "~/lib/errors";
 import { getRequestContext } from "~/lib/http/request-context";
 import { getActionRequestContext } from "~/lib/observability/context";
-import { observabilityService } from "~/server/shared/context";
+import { getObservabilityRuntime } from "~/server/observability/runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import { isErr, type Result } from "~/server/shared/result";
 import { throwDomainError } from "~/server/shared/throw-domain-error";
+
+const { observabilityService } = getObservabilityRuntime();
+
+type ActionAuthRequirement = {
+  permission?: Permission;
+  role?: Role;
+  requireAuth?: boolean;
+  requireSession?: boolean;
+};
+
+type ActionTelemetryInput = {
+  actionName: string;
+  ctx: AppContext;
+  startedAt: number;
+  input: unknown;
+};
+
+type ActionTelemetryError = {
+  code: AppErrorCode | null;
+  message: string | null;
+};
 
 export interface AppContext {
   actor: SessionData;
@@ -25,6 +46,13 @@ export interface AppContext {
   publicOrigin: string;
   now: () => number;
 }
+
+type RunActionParams<T, E extends DomainError> = ActionAuthRequirement & {
+  actionName: string;
+  stepUp?: "recent_strong_auth";
+  input?: unknown;
+  execute: (ctx: AppContext) => Promise<Result<T, E>>;
+};
 
 export function createAppContext(actor: SessionData): AppContext {
   const request = getRequestContext();
@@ -40,12 +68,9 @@ export function createAppContext(actor: SessionData): AppContext {
   };
 }
 
-async function resolveActor(params: {
-  permission?: Permission;
-  role?: Role;
-  requireAuth?: boolean;
-  requireSession?: boolean;
-}): Promise<SessionData> {
+async function resolveActor(
+  params: ActionAuthRequirement,
+): Promise<SessionData> {
   if (params.permission) {
     return requirePermission(params.permission);
   }
@@ -61,66 +86,98 @@ async function resolveActor(params: {
   throw new Error("runAction requires an auth requirement");
 }
 
-export async function runAction<T, E extends DomainError>(params: {
-  actionName: string;
-  permission?: Permission;
-  role?: Role;
-  requireAuth?: boolean;
-  requireSession?: boolean;
-  stepUp?: "recent_strong_auth";
-  input?: unknown;
-  execute: (ctx: AppContext) => Promise<Result<T, E>>;
-}): Promise<T> {
+function toTelemetryError(error: unknown): ActionTelemetryError {
+  return {
+    code: isAppError(error) ? error.code : null,
+    message: getErrorMessage(error, "Unknown error"),
+  };
+}
+
+function recordActionSuccess(input: ActionTelemetryInput) {
+  void observabilityService
+    .recordAction({
+      traceId: input.ctx.traceId,
+      requestId: input.ctx.requestId,
+      routePath: null,
+      httpMethod: null,
+      actionName: input.actionName,
+      actorUserId: input.ctx.actor.userId,
+      actorRole: input.ctx.actor.role,
+      status: "ok",
+      durationMs: input.ctx.now() - input.startedAt,
+      errorCode: null,
+      errorMessage: null,
+      input: input.input ?? null,
+      createdAt: input.ctx.now(),
+    })
+    .catch(() => {});
+}
+
+function recordActionError(
+  input: ActionTelemetryInput,
+  error: ActionTelemetryError,
+) {
+  void observabilityService
+    .recordAction({
+      traceId: input.ctx.traceId,
+      requestId: input.ctx.requestId,
+      routePath: null,
+      httpMethod: null,
+      actionName: input.actionName,
+      actorUserId: input.ctx.actor.userId,
+      actorRole: input.ctx.actor.role,
+      status: "error",
+      durationMs: input.ctx.now() - input.startedAt,
+      errorCode: error.code,
+      errorMessage: error.message,
+      input: input.input ?? null,
+      createdAt: input.ctx.now(),
+    })
+    .catch(() => {});
+}
+
+async function createActionTelemetry(
+  params: ActionAuthRequirement &
+    Pick<
+      RunActionParams<unknown, DomainError>,
+      "actionName" | "stepUp" | "input"
+    >,
+): Promise<ActionTelemetryInput> {
   const actor = await resolveActor(params);
   if (params.stepUp === "recent_strong_auth") {
     assertRecentStrongAuth(actor);
   }
-  const ctx = createAppContext(actor);
-  const startedAt = ctx.now();
 
+  return {
+    actionName: params.actionName,
+    ctx: createAppContext(actor),
+    startedAt: Date.now(),
+    input: params.input,
+  };
+}
+
+async function executeActionResult<T, E extends DomainError>(
+  ctx: AppContext,
+  execute: (ctx: AppContext) => Promise<Result<T, E>>,
+): Promise<T> {
+  const result = await execute(ctx);
+  if (isErr(result)) {
+    throwDomainError(result.error);
+  }
+
+  return result.value;
+}
+
+export async function runAction<T, E extends DomainError>(
+  params: RunActionParams<T, E>,
+): Promise<T> {
+  const telemetry = await createActionTelemetry(params);
   try {
-    const result = await params.execute(ctx);
-    if (isErr(result)) {
-      throwDomainError(result.error);
-    }
-
-    void observabilityService
-      .recordAction({
-        traceId: ctx.traceId,
-        requestId: ctx.requestId,
-        routePath: null,
-        httpMethod: null,
-        actionName: params.actionName,
-        actorUserId: ctx.actor.userId,
-        actorRole: ctx.actor.role,
-        status: "ok",
-        durationMs: ctx.now() - startedAt,
-        errorCode: null,
-        errorMessage: null,
-        input: params.input ?? null,
-        createdAt: ctx.now(),
-      })
-      .catch(() => {});
-
-    return result.value;
+    const value = await executeActionResult(telemetry.ctx, params.execute);
+    recordActionSuccess(telemetry);
+    return value;
   } catch (error) {
-    void observabilityService
-      .recordAction({
-        traceId: ctx.traceId,
-        requestId: ctx.requestId,
-        routePath: null,
-        httpMethod: null,
-        actionName: params.actionName,
-        actorUserId: ctx.actor.userId,
-        actorRole: ctx.actor.role,
-        status: "error",
-        durationMs: ctx.now() - startedAt,
-        errorCode: isAppError(error) ? error.code : null,
-        errorMessage: getErrorMessage(error, "Unknown error"),
-        input: params.input ?? null,
-        createdAt: ctx.now(),
-      })
-      .catch(() => {});
+    recordActionError(telemetry, toTelemetryError(error));
 
     throw error;
   }

@@ -1,9 +1,10 @@
-import type { Repositories } from "~/server/shared/registry";
+import type { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
+import type { createWebauthnChallengesRepo } from "~/server/users/repos-webauthn-challenges";
 
-type LoginFlowCleanupRepos = Pick<
-  Repositories,
-  "loginFlows" | "webauthnChallenges"
->;
+type LoginFlowCleanupRepos = {
+  loginFlows: ReturnType<typeof createLoginFlowsRepo>;
+  webauthnChallenges: ReturnType<typeof createWebauthnChallengesRepo>;
+};
 
 export async function deleteLoginFlow(
   flow: Awaited<ReturnType<LoginFlowCleanupRepos["loginFlows"]["findById"]>>,

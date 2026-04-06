@@ -1,14 +1,14 @@
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
-import { requestLeadRefill } from "~/server/lead-workflow/request-refill";
+import { assignContacts } from "~/server/contact-assignments/application/assign-contacts";
 import type { EngineClient } from "~/server/shared/engine/client";
-import { createRepositories } from "~/server/shared/registry";
 
 import {
   cleanupTestDb,
   createIsolatedTestDb,
   type TestDbContext,
 } from "../../support/test-db";
+import { createTestRepositories } from "../../support/test-repositories";
 import { fixedIterations } from "../_shared/options";
 import { takeFromPool } from "../_shared/pool";
 import { seedLeadsRequestFixtures, USER_POOL_SIZE } from "./fixtures";
@@ -42,7 +42,7 @@ describe("lead refill action benchmark", () => {
         "leads-request pool exhausted before iterations completed",
       );
 
-      const result = await requestLeadRefill(
+      const result = await assignContacts(
         {
           actorUserId: userId,
           branchId: 1,
@@ -52,7 +52,7 @@ describe("lead refill action benchmark", () => {
           runInTransaction: (operation) =>
             ctx!.db
               .transaction()
-              .execute((txDb) => operation(createRepositories(txDb))),
+              .execute((txDb) => operation(createTestRepositories(txDb))),
           engine: engine!,
         },
       );

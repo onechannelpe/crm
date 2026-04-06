@@ -9,10 +9,7 @@ import {
   updateSearchScopeDefaultMutation,
 } from "~/lib/mutations/capacity";
 import { capacityPolicyDefaultsQuery } from "~/lib/queries/capacity";
-
-type CapacityPolicyDefaults = Awaited<
-  ReturnType<typeof capacityPolicyDefaultsQuery>
->;
+import type { CapacityPolicyDefaults } from "~/server/capacity/application/get-policy-defaults";
 
 type TeamPolicy = CapacityPolicyDefaults["teams"][number];
 

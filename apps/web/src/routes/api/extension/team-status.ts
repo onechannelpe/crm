@@ -1,6 +1,8 @@
 import { requirePermission } from "~/lib/auth/access/session";
-import { extensionService } from "~/server/shared/context";
+import { getExtensionApiRuntime } from "~/server/extension/runtime";
 import { isErr } from "~/server/shared/result";
+
+const { extensionService } = getExtensionApiRuntime();
 
 export async function GET(): Promise<Response> {
   try {

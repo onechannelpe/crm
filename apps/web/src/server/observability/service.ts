@@ -8,11 +8,13 @@ import type {
   AuthFunnelScreen,
   AuthFunnelSource,
 } from "~/lib/observability/auth-funnel";
-import type { Repositories } from "~/server/shared/registry";
+
+import type { createActionObservationsRepo } from "./repos-action-observations";
+import type { createAuthFunnelEventsRepo } from "./repos-auth-funnel-events";
 
 interface ObservabilityRepos {
-  actionObservations: Repositories["actionObservations"];
-  authFunnelEvents: Repositories["authFunnelEvents"];
+  actionObservations: ReturnType<typeof createActionObservationsRepo>;
+  authFunnelEvents: ReturnType<typeof createAuthFunnelEventsRepo>;
 }
 
 export interface RecordActionObservationInput {

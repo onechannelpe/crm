@@ -13,7 +13,7 @@ import Mail from "~/components/icons/mail";
 import X from "~/components/icons/x";
 import { AppPageSection, AppPageSectionTitle } from "~/components/layout/page";
 import { ConfirmDialog } from "~/components/ui/confirm-dialog";
-import { DatePicker } from "~/components/ui/date-picker";
+import { DatePicker } from "~/components/ui/date-picker/date-picker-field";
 import { Badge } from "~/components/ui/display/badge";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";

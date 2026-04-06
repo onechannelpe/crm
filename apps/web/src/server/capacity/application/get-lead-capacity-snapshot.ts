@@ -29,7 +29,7 @@ interface SnapshotRepos {
   leadCapacityGrants: LeadCapacityGrantsRepo;
   leadUsageReservations: LeadUsageReservationsRepo;
   leadUsageCommits: LeadUsageCommitsRepo;
-  leadAssignments: { countActiveByUser(userId: number): Promise<number> };
+  contactAssignments: { countActiveByUser(userId: number): Promise<number> };
 }
 
 export type { LeadCapacitySnapshot };
@@ -48,7 +48,7 @@ export async function getLeadCapacitySnapshot(
         repos.leadCapacityGrants.findByUserAndDate(userId, date),
         repos.leadUsageReservations.findByUserAndDate(userId, date),
         repos.leadUsageCommits.findByUserAndDate(userId, date),
-        repos.leadAssignments.countActiveByUser(userId),
+        repos.contactAssignments.countActiveByUser(userId),
       ]);
 
     return Ok(

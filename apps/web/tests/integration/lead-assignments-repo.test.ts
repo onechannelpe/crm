@@ -46,7 +46,7 @@ describe("lead assignment repository", () => {
       ])
       .execute();
 
-    const active = await ctx.repos.leadAssignments.findActiveByUser(1);
+    const active = await ctx.repos.contactAssignments.findActiveByUser(1);
     expect(active).toHaveLength(1);
     expect(active[0].contact_id).toBe(1);
   });
@@ -73,13 +73,13 @@ describe("lead assignment repository", () => {
       ])
       .execute();
 
-    expect(await ctx.repos.leadAssignments.hasActiveForContact(1, 1)).toBe(
+    expect(await ctx.repos.contactAssignments.hasActiveForContact(1, 1)).toBe(
       true,
     );
-    expect(await ctx.repos.leadAssignments.hasActiveForContact(1, 2)).toBe(
+    expect(await ctx.repos.contactAssignments.hasActiveForContact(1, 2)).toBe(
       false,
     );
-    expect(await ctx.repos.leadAssignments.hasActiveForContact(3, 2)).toBe(
+    expect(await ctx.repos.contactAssignments.hasActiveForContact(3, 2)).toBe(
       true,
     );
   });

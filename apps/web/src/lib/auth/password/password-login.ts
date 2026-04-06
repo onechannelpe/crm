@@ -1,7 +1,9 @@
 import { assertNonEmptyString } from "~/lib/contracts/guards";
 import type { User } from "~/lib/db/types";
-import type { Repositories } from "~/server/shared/registry";
+import type { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
+import type { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import { Err, Ok, type Result } from "~/server/shared/result";
+import type { createUsersRepo } from "~/server/users/repos-users";
 
 import type { InvalidCredentialsError } from "../errors";
 import { recordAuthEvent } from "../security/auth-events";
@@ -14,7 +16,11 @@ import {
 
 const DUMMY_HASH = hashPassword("dummy-constant-for-timing-parity");
 
-type Deps = Pick<Repositories, "users" | "authThrottle" | "authEvents">;
+type Deps = {
+  users: ReturnType<typeof createUsersRepo>;
+  authThrottle: ReturnType<typeof createAuthThrottleRepo>;
+  authEvents: ReturnType<typeof createAuthEventsRepo>;
+};
 
 export interface PasswordCredentialInput {
   username: string;

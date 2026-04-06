@@ -5,14 +5,14 @@ import type { Kysely } from "kysely";
 import { createDb } from "../../../src/lib/db/client";
 import type { Database } from "../../../src/lib/db/types";
 import {
-  createRepositories,
-  type Repositories,
-} from "../../../src/server/shared/registry";
+  createTestRepositories,
+  type TestRepositories,
+} from "../test-repositories";
 
 export interface BrowserDbRuntime {
   db: Kysely<Database>;
   dbPath: string;
-  repos: Repositories;
+  repos: TestRepositories;
 }
 
 const TEST_DB_DIR = resolve(process.cwd(), ".playwright-db");
@@ -27,7 +27,7 @@ export function createBrowserDbRuntime(dbPath: string): BrowserDbRuntime {
   return {
     db,
     dbPath,
-    repos: createRepositories(db),
+    repos: createTestRepositories(db),
   };
 }
 

@@ -4,7 +4,9 @@ import { renderInviteEmail } from "@crm/notifications";
 import { getRequestEvent } from "solid-js/web";
 
 import type { Role } from "~/lib/auth/access/rbac";
-import { notificationSender } from "~/server/shared/context";
+import { getNotificationRuntime } from "~/server/notifications/runtime";
+
+const { notificationSender } = getNotificationRuntime();
 
 export function buildInviteUrl(token: string): string {
   const event = getRequestEvent();

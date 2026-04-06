@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { createPasskeyEnrollmentAuthService } from "../../src/lib/auth/passkey/service";
-import { createRepositories } from "../../src/server/shared/registry";
 import { Err, isErr } from "../../src/server/shared/result";
 import { completeAccountOnboardingWithRepos } from "../../src/server/users/service-account-onboarding";
 import {
@@ -9,6 +8,7 @@ import {
   createIsolatedTestDb,
   type TestDbContext,
 } from "../support/test-db";
+import { createTestRepositories } from "../support/test-repositories";
 
 describe("passkey onboarding flow", () => {
   let ctx: TestDbContext;
@@ -39,7 +39,7 @@ describe("passkey onboarding flow", () => {
     });
 
     const result = await ctx.db.transaction().execute(async (transactionDb) => {
-      const transactionRepos = createRepositories(transactionDb);
+      const transactionRepos = createTestRepositories(transactionDb);
       const passkeyResult = await createPasskeyEnrollmentAuthService(
         transactionRepos,
         {

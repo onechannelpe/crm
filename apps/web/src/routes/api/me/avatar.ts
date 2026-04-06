@@ -1,8 +1,10 @@
 import type { APIEvent } from "@solidjs/start/server";
 
 import { getSession } from "~/lib/auth/access/session";
-import { profilePictureService } from "~/server/shared/context";
+import { getProfilePictureRuntime } from "~/server/users/profile-picture-runtime";
 import type { AvatarDomainErrorCode } from "~/server/users/profile-picture-service";
+
+const { profilePictureService } = getProfilePictureRuntime();
 
 interface AvatarErrorResponse {
   status: number;

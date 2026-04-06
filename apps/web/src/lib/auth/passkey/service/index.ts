@@ -1,4 +1,5 @@
-import type { Repositories } from "~/server/shared/registry";
+import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
 
 import { createPasskeyProvider } from "../../providers/passkey-provider";
 import { issueLoginSession } from "../../session/session-transition";
@@ -17,9 +18,10 @@ export type {
 } from "./types";
 
 interface PasskeyServiceDeps {
-  createWebauthnProvider?: (
-    repos: Pick<Repositories, "passkeys" | "auditLogs">,
-  ) => ReturnType<typeof createPasskeyProvider>;
+  createWebauthnProvider?: (repos: {
+    passkeys: ReturnType<typeof createPasskeysRepo>;
+    auditLogs: ReturnType<typeof createAuditLogsRepo>;
+  }) => ReturnType<typeof createPasskeyProvider>;
   issueLoginSession?: typeof issueLoginSession;
 }
 

@@ -1,6 +1,8 @@
-import { toLeadStatus } from "~/lib/db/types";
-import type { LeadStatus } from "~/lib/db/types";
 import { parseCsv, validateHeaders } from "~/server/integrations/csv-parser";
+import {
+  parseLeadStatus,
+  type LeadStatus,
+} from "~/server/pipeline/domain/lead";
 
 const STATUS_COLUMNS = [
   "nro_de_solicitud",
@@ -53,8 +55,8 @@ export function parseStatusImport(text: string): {
       continue;
     }
 
-    const status = toLeadStatus(statusRaw);
-    if (!status) {
+    const status = parseLeadStatus(statusRaw);
+    if (!status.ok || status.value === undefined) {
       invalid.push({
         row: row.rowNumber,
         ok: false,
@@ -63,7 +65,7 @@ export function parseStatusImport(text: string): {
       continue;
     }
 
-    valid.push({ row: row.rowNumber, ruc, status });
+    valid.push({ row: row.rowNumber, ruc, status: status.value });
   }
 
   return { valid, invalid };

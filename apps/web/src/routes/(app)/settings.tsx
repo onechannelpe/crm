@@ -7,12 +7,12 @@ import {
   getSettingsSectionHref,
   getSettingsSectionLabel,
 } from "~/features/navigation-drawer/settings/settings-navigation.selectors";
-import {
-  type BreadcrumbItem,
-  type MobileBackAction,
-  SettingsPageContainer,
-  SubMenuTopBarContainer,
-} from "~/features/settings-shell";
+import { SettingsPageContainer } from "~/features/settings-shell/content/settings-page-container";
+import type {
+  BreadcrumbItem,
+  MobileBackAction,
+} from "~/features/settings-shell/page/breadcrumb-model";
+import { SubMenuTopBarContainer } from "~/features/settings-shell/page/sub-menu-top-bar-container";
 
 export default function SettingsLayout(props: RouteSectionProps) {
   const location = useLocation();

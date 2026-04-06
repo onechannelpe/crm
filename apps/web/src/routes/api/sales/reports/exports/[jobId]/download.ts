@@ -1,16 +1,21 @@
 import type { APIEvent } from "@solidjs/start/server";
 
 import { requirePermission } from "~/lib/auth/access/session";
+import { config } from "~/lib/config";
 import { assertPositiveInt } from "~/lib/contracts/guards";
+import { db } from "~/lib/db/db";
+import { getObservabilityRuntime } from "~/server/observability/runtime";
 import { downloadSalesExportById } from "~/server/sales-records/application/download-export";
+import { createSalesExportBlobStore } from "~/server/sales/export-blob-store";
+import { createReportExportRepo } from "~/server/sales/repos-report-exports";
 import { createAppContext } from "~/server/shared/action-runtime";
-import {
-  repos,
-  observabilityService,
-  salesExportBlobStore,
-} from "~/server/shared/context";
 import type { DomainError } from "~/server/shared/domain-error";
 import { isErr } from "~/server/shared/result";
+
+const { observabilityService } = getObservabilityRuntime();
+const salesExportBlobStore = createSalesExportBlobStore(
+  config.uploads.storageRoot,
+);
 
 function mapErrorToStatus(error: DomainError): number {
   if (error.kind === "validation") return 400;
@@ -28,7 +33,9 @@ export async function GET(event: Pick<APIEvent, "params">): Promise<Response> {
     const startedAt = ctx.now();
 
     const response = await downloadSalesExportById(safeJobId, session, {
-      repos,
+      repos: {
+        reportExportJobs: createReportExportRepo(db),
+      },
       blobStore: salesExportBlobStore,
     });
     if (isErr(response)) {

@@ -1,12 +1,62 @@
-import type { ColumnType, Generated, Insertable, Selectable } from "kysely";
-
 import type {
-  AuthFunnelEventName,
-  AuthFunnelMethod,
-  AuthFunnelOutcome,
-  AuthFunnelScreen,
-  AuthFunnelSource,
-} from "~/lib/observability/auth-funnel";
+  ColumnType,
+  Generated,
+  Insertable,
+  Selectable,
+  Updateable,
+} from "kysely";
+
+type AuthFunnelSourceValue = "client" | "server";
+type AuthFunnelEventNameValue =
+  | "screen_viewed"
+  | "password_result"
+  | "passkey_start_result"
+  | "totp_result"
+  | "passkey_result";
+type AuthFunnelScreenValue =
+  | "login"
+  | "login_user"
+  | "login_verify"
+  | "login_passkey"
+  | "reset_password";
+type AuthFunnelMethodValue =
+  | "password"
+  | "password_totp"
+  | "passkey"
+  | "google";
+type AuthFunnelOutcomeValue =
+  | "viewed"
+  | "failed"
+  | "succeeded"
+  | "started"
+  | "totp_required"
+  | "passkey_required";
+type PipelineLeadStageValue =
+  | "PENDING_EXTERNAL_REVIEW"
+  | "REJECTED_BY_STATUS"
+  | "NEEDS_EXECUTIVE_INPUT"
+  | "READY_FOR_QUOTATION"
+  | "QUOTED"
+  | "READY_FOR_SALE"
+  | "CONVERTED";
+type PipelineLeadStatusValue =
+  | "DISPONIBLE"
+  | "SIN RESULTADO"
+  | "CARTERIZADO"
+  | "STOCK";
+type PipelineLeadPriorityValue = "P1" | "P2" | "SIN RESULTADO";
+type PipelineLeadHistoryEventTypeValue =
+  | "lead_registered"
+  | "lead_reviewed"
+  | "workflow_stage_changed"
+  | "lead_assigned"
+  | "lead_reassigned"
+  | "commercial_input_completed"
+  | "quotation_created"
+  | "sale_approved"
+  | "sale_created"
+  | "call_logged"
+  | "note_added";
 
 export interface BranchesTable {
   id: Generated<number>;
@@ -551,11 +601,11 @@ export interface AuthFunnelEventsTable {
   trace_id: string;
   request_id: string;
   route_path: string | null;
-  source: AuthFunnelSource;
-  event_name: AuthFunnelEventName;
-  screen: AuthFunnelScreen | null;
-  method: AuthFunnelMethod | null;
-  outcome: AuthFunnelOutcome;
+  source: AuthFunnelSourceValue;
+  event_name: AuthFunnelEventNameValue;
+  screen: AuthFunnelScreenValue | null;
+  method: AuthFunnelMethodValue | null;
+  outcome: AuthFunnelOutcomeValue;
   code: string | null;
   created_at: number;
 }
@@ -741,63 +791,7 @@ export interface UserInvitesTable {
   sent_at: number | null;
 }
 
-export type LeadStage =
-  | "REGISTERED"
-  | "ENRICHING"
-  | "PENDING_EXTERNAL_REVIEW"
-  | "REJECTED_BY_STATUS"
-  | "NEEDS_EXECUTIVE_INPUT"
-  | "READY_FOR_QUOTATION"
-  | "QUOTED"
-  | "READY_FOR_SALE"
-  | "CONVERTED";
-
-export type LeadStatus =
-  | "DISPONIBLE"
-  | "SIN RESULTADO"
-  | "CARTERIZADO"
-  | "STOCK";
-
-export type Prioridad = "P1" | "P2" | "SIN RESULTADO";
-
 export type ExecutiveCategory = "elite" | "corporativa";
-
-export const LEAD_STAGES = [
-  "REGISTERED",
-  "ENRICHING",
-  "PENDING_EXTERNAL_REVIEW",
-  "REJECTED_BY_STATUS",
-  "NEEDS_EXECUTIVE_INPUT",
-  "READY_FOR_QUOTATION",
-  "QUOTED",
-  "READY_FOR_SALE",
-  "CONVERTED",
-] as const satisfies readonly LeadStage[];
-
-export const LEAD_STATUS_VALUES = [
-  "DISPONIBLE",
-  "SIN RESULTADO",
-  "CARTERIZADO",
-  "STOCK",
-] as const satisfies readonly LeadStatus[];
-
-export const PRIORIDAD_VALUES = [
-  "P1",
-  "P2",
-  "SIN RESULTADO",
-] as const satisfies readonly Prioridad[];
-
-export function toLeadStage(v: string | undefined): LeadStage | undefined {
-  return v !== undefined ? LEAD_STAGES.find((s) => s === v) : undefined;
-}
-
-export function toLeadStatus(v: string | undefined): LeadStatus | undefined {
-  return v !== undefined ? LEAD_STATUS_VALUES.find((e) => e === v) : undefined;
-}
-
-export function toPrioridad(v: string | undefined): Prioridad | undefined {
-  return v !== undefined ? PRIORIDAD_VALUES.find((p) => p === v) : undefined;
-}
 
 export interface PipelineLeadsTable {
   id: Generated<number>;
@@ -805,9 +799,9 @@ export interface PipelineLeadsTable {
   razon_social: string | null;
   address: string | null;
   executive_id: number;
-  stage: LeadStage;
-  status: LeadStatus | null;
-  prioridad: Prioridad | null;
+  stage: PipelineLeadStageValue;
+  status: PipelineLeadStatusValue | null;
+  prioridad: PipelineLeadPriorityValue | null;
   created_at: number;
   updated_at: number;
 }
@@ -861,6 +855,23 @@ export interface PipelineLeadAssignmentsTable {
   assigned_by: number;
   is_active: number;
   assigned_at: number;
+}
+
+export interface PipelineHistoryEventsTable {
+  id: Generated<number>;
+  lead_id: number;
+  event_type: PipelineLeadHistoryEventTypeValue;
+  actor_user_id: number | null;
+  subject_user_id: number | null;
+  payload_json: string | null;
+  occurred_at: number;
+}
+
+export interface LeadSourcingPoliciesTable {
+  branch_id: number;
+  engine_assignment_enabled: number;
+  updated_at: number;
+  updated_by_user_id: number;
 }
 
 export interface PipelineIntegrationJobsTable {
@@ -946,6 +957,8 @@ export interface Database {
   pipeline_quotations: PipelineQuotationsTable;
   pipeline_sales: PipelineSalesTable;
   pipeline_lead_assignments: PipelineLeadAssignmentsTable;
+  pipeline_history_events: PipelineHistoryEventsTable;
+  lead_sourcing_policies: LeadSourcingPoliciesTable;
   pipeline_integration_jobs: PipelineIntegrationJobsTable;
 }
 
@@ -1000,6 +1013,15 @@ export type UserTotpFactor = Selectable<UserTotpFactorsTable>;
 export type UserTotpRecoveryCode = Selectable<UserTotpRecoveryCodesTable>;
 export type UserInvite = Selectable<UserInvitesTable>;
 export type PasswordResetToken = Selectable<PasswordResetTokensTable>;
+export type PipelineLeadRow = Selectable<PipelineLeadsTable>;
+export type PipelineLeadCommercialInputRow =
+  Selectable<PipelineLeadCommercialInputsTable>;
+export type PipelineQuotationRow = Selectable<PipelineQuotationsTable>;
+export type PipelineSaleRow = Selectable<PipelineSalesTable>;
+export type PipelineLeadAssignmentRow =
+  Selectable<PipelineLeadAssignmentsTable>;
+export type PipelineHistoryEventRow = Selectable<PipelineHistoryEventsTable>;
+export type LeadSourcingPolicyRow = Selectable<LeadSourcingPoliciesTable>;
 
 export type NewUser = Insertable<UsersTable>;
 export type NewLoginFlow = Insertable<LoginFlowsTable>;
@@ -1045,19 +1067,19 @@ export type NewSearchEnrichmentOverlay =
 export type ActionRateLimitCounter = Selectable<ActionRateLimitCountersTable>;
 export type NewActionRateLimitCounter =
   Insertable<ActionRateLimitCountersTable>;
-
-export type Lead = Selectable<PipelineLeadsTable>;
-export type LeadCommercialInput = Selectable<PipelineLeadCommercialInputsTable>;
-export type Quotation = Selectable<PipelineQuotationsTable>;
-export type LeadSale = Selectable<PipelineSalesTable>;
-export type LeadPipelineAssignment = Selectable<PipelineLeadAssignmentsTable>;
 export type IntegrationJob = Selectable<PipelineIntegrationJobsTable>;
-
-export type NewLead = Insertable<PipelineLeadsTable>;
-export type NewLeadCommercialInput =
+export type NewPipelineLeadRow = Insertable<PipelineLeadsTable>;
+export type NewPipelineLeadCommercialInputRow =
   Insertable<PipelineLeadCommercialInputsTable>;
-export type NewQuotation = Insertable<PipelineQuotationsTable>;
-export type NewLeadSale = Insertable<PipelineSalesTable>;
-export type NewLeadPipelineAssignment =
+export type NewPipelineQuotationRow = Insertable<PipelineQuotationsTable>;
+export type NewPipelineSaleRow = Insertable<PipelineSalesTable>;
+export type NewPipelineLeadAssignmentRow =
   Insertable<PipelineLeadAssignmentsTable>;
+export type UpdatePipelineLeadRow = Updateable<PipelineLeadsTable>;
+export type UpdatePipelineLeadCommercialInputRow =
+  Updateable<PipelineLeadCommercialInputsTable>;
+export type UpdatePipelineQuotationRow = Updateable<PipelineQuotationsTable>;
+export type UpdatePipelineSaleRow = Updateable<PipelineSalesTable>;
+export type UpdatePipelineLeadAssignmentRow =
+  Updateable<PipelineLeadAssignmentsTable>;
 export type NewIntegrationJob = Insertable<PipelineIntegrationJobsTable>;

@@ -1,8 +1,10 @@
 import type { NotificationsConfig } from "@crm/notifications";
 
 import { createLogger } from "~/lib/observability/logger";
+import type { createNotificationCampaignsRepo } from "~/server/notifications/repos-campaigns";
+import type { createNotificationContactsRepo } from "~/server/notifications/repos-contacts";
+import type { createNotificationPreferencesRepo } from "~/server/notifications/repos-preferences";
 import { createAppNotificationService } from "~/server/notifications/service";
-import type { Repositories } from "~/server/shared/registry";
 
 import type {
   PrivilegedLoginAlertPayload,
@@ -10,10 +12,11 @@ import type {
 } from "./privileged-login-alert";
 import { requiresStrongAuthRole } from "./strong-auth-status";
 
-type AlertRepos = Pick<
-  Repositories,
-  "notificationCampaigns" | "notificationContacts" | "notificationPreferences"
->;
+type AlertRepos = {
+  notificationCampaigns: ReturnType<typeof createNotificationCampaignsRepo>;
+  notificationContacts: ReturnType<typeof createNotificationContactsRepo>;
+  notificationPreferences: ReturnType<typeof createNotificationPreferencesRepo>;
+};
 
 const logger = createLogger("login-alerts");
 

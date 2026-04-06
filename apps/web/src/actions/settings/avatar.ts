@@ -2,8 +2,10 @@
 
 import { internalError, validationError } from "~/lib/app-errors";
 import { requireSession } from "~/lib/auth/access/session";
-import { profilePictureService } from "~/server/shared/context";
+import { getProfilePictureRuntime } from "~/server/users/profile-picture-runtime";
 import type { AvatarDomainErrorCode } from "~/server/users/profile-picture-service";
+
+const { profilePictureService } = getProfilePictureRuntime();
 
 function mapAvatarErrorToMessage(code: AvatarDomainErrorCode): string {
   switch (code) {

@@ -11,9 +11,11 @@ import {
 import {
   requestPasswordReset,
   resetPassword,
-  type RequestPasswordResetResult,
-  type ResetPasswordResult,
 } from "~/actions/auth/reset-password";
+import type {
+  RequestPasswordResetResult,
+  ResetPasswordResult,
+} from "~/server/auth/application/password-reset";
 
 export const passwordLoginMutation = action(
   async (formData: FormData): Promise<PasswordLoginSubmissionResult> =>

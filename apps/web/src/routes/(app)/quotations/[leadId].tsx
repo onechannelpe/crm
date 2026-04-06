@@ -2,17 +2,17 @@ import { createAsync, useNavigate, useParams } from "@solidjs/router";
 import { createSignal, For, Show } from "solid-js";
 
 import {
-  approveLeadForSale,
-  createQuotation,
-  getLeadQuotations,
-} from "~/actions/pipeline/quotations";
+  requestQuotationCreation,
+  requestSaleApproval,
+} from "~/actions/pipeline/commands/quotations";
+import { queryLeadDetail } from "~/actions/pipeline/queries/leads";
 import { AppPage } from "~/components/layout/page";
 import { toAppError } from "~/lib/app-errors";
 
 export default function LeadQuotationPage() {
   const params = useParams<{ leadId: string }>();
   const navigate = useNavigate();
-  const data = createAsync(() => getLeadQuotations(Number(params.leadId)));
+  const data = createAsync(() => queryLeadDetail(Number(params.leadId)));
   const [error, setError] = createSignal<string | null>(null);
 
   const inputStyle = {
@@ -28,7 +28,7 @@ export default function LeadQuotationPage() {
     if (!(e.currentTarget instanceof HTMLFormElement)) return;
     const fd = new FormData(e.currentTarget);
     try {
-      await createQuotation({
+      await requestQuotationCreation({
         leadId: Number(params.leadId),
         paybackPricing: Number(fd.get("paybackPricing")),
         tarifaDebito: Number(fd.get("tarifaDebito")),
@@ -46,7 +46,7 @@ export default function LeadQuotationPage() {
   async function handleApprove() {
     setError(null);
     try {
-      await approveLeadForSale(Number(params.leadId));
+      await requestSaleApproval(Number(params.leadId));
       navigate(`/review`);
     } catch (err) {
       setError(toAppError(err, "Error").publicMessage);
@@ -62,10 +62,10 @@ export default function LeadQuotationPage() {
         {(d) => (
           <div style={{ padding: "1.5rem", "max-width": "40rem" }}>
             <h1 style={{ margin: "0 0 0.25rem", "font-size": "1.25rem" }}>
-              Cotizacion — {d().lead.ruc}
+              Cotizacion - {d().lead.ruc}
             </h1>
             <p style={{ margin: "0 0 1.5rem", color: "#6b7280" }}>
-              Stage: {d().lead.stage}
+              Etapa: {d().lead.stage}
             </p>
 
             {error() && (
@@ -202,8 +202,8 @@ export default function LeadQuotationPage() {
                           color: "#6b7280",
                         }}
                       >
-                        Debito: {q.tarifa_debito} | Credito: {q.tarifa_credito}{" "}
-                        | Foraneo: {q.tarifa_foraneo}
+                        Debito: {q.tarifaDebito} | Credito: {q.tarifaCredito} |
+                        Foraneo: {q.tarifaForaneo}
                       </p>
                     </div>
                   )}

@@ -4,15 +4,18 @@ import { validationError } from "~/lib/app-errors";
 import { isRole, type Role } from "~/lib/auth/access/rbac";
 import { requireRole } from "~/lib/auth/access/session";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
+import { db } from "~/lib/db/db";
 import { env } from "~/lib/env";
+import { createNotificationCampaignsRepo } from "~/server/notifications/repos-campaigns";
+import { createNotificationContactsRepo } from "~/server/notifications/repos-contacts";
+import { createNotificationPreferencesRepo } from "~/server/notifications/repos-preferences";
 import { createAppNotificationService } from "~/server/notifications/service";
-import { repos } from "~/server/shared/context";
 
 const notifications = createAppNotificationService({
   repos: {
-    notificationCampaigns: repos.notificationCampaigns,
-    notificationContacts: repos.notificationContacts,
-    notificationPreferences: repos.notificationPreferences,
+    notificationCampaigns: createNotificationCampaignsRepo(db),
+    notificationContacts: createNotificationContactsRepo(db),
+    notificationPreferences: createNotificationPreferencesRepo(db),
   },
   config: {
     resendApiKey: env.resendApiKey || undefined,

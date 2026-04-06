@@ -1,21 +1,24 @@
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
-import {
-  rateLimitDeps,
-  runInRepositoryTransaction,
-} from "~/server/shared/context";
 
 import type {
   CapacityApprovalPort,
   CapacityApprovalTxPort,
 } from "../application/ports";
+import { createCapacityCommandsContext } from "./commands-context";
 
 export function createCapacityApprovalContext(): CapacityApprovalPort {
+  const context = createCapacityCommandsContext();
+
   return {
     async enforceApprovalRateLimit(userId: number) {
-      await checkActionRateLimit("capacity.approve", userId, rateLimitDeps);
+      await checkActionRateLimit(
+        "capacity.approve",
+        userId,
+        context.rateLimitDeps,
+      );
     },
     withTransaction<T>(operation: (tx: CapacityApprovalTxPort) => Promise<T>) {
-      return runInRepositoryTransaction((repos) =>
+      return context.runInRepositoryTransaction((repos) =>
         operation({
           async findRequestById(requestId) {
             const request = await repos.capacityRequests.findById(requestId);

@@ -1,13 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { getUserLoginRetryReport } from "../../src/actions/admin";
-import { listUserSessions, revokeUserSession } from "../../src/actions/admin";
+import { getUserLoginRetryReport } from "../../src/actions/admin/auth-security";
+import { listUserSessions } from "../../src/actions/admin/sessions/read";
+import { revokeUserSession } from "../../src/actions/admin/sessions/revoke";
 import { requestSalesExport } from "../../src/actions/sales-exports";
 import {
   createSalesRecordDraft,
   rejectSalesRecord,
 } from "../../src/actions/sales-records/mutations";
-import { updateProductPricing } from "../../src/actions/settings";
+import { updateProductPricing } from "../../src/actions/settings/admin-products";
 import { acceptTeamInvite } from "../../src/actions/team/acceptance";
 import {
   createTeamInvite,

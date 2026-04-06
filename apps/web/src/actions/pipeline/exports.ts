@@ -3,8 +3,8 @@
 import { notFoundError, validationError } from "~/lib/app-errors";
 import { getIntegrationJobQuery } from "~/server/integrations/application/get-integration-job";
 import { queueExportJobUseCase } from "~/server/integrations/application/queue-export-job";
+import { integrationJobBlobStore } from "~/server/integrations/infrastructure/runtime";
 import { runAction } from "~/server/shared/action-runtime";
-import { jobBlobStore } from "~/server/shared/pipeline-runtime";
 import { Ok } from "~/server/shared/result";
 
 export async function queueLeadExport(): Promise<{ jobId: number }> {
@@ -40,7 +40,7 @@ export async function downloadExport(jobId: number): Promise<Uint8Array> {
       if (job.status !== "COMPLETED" || !job.file_path) {
         throw validationError("Export is not ready for download");
       }
-      return Ok(await jobBlobStore.get(job.file_path));
+      return Ok(await integrationJobBlobStore.get(job.file_path));
     },
   });
 }

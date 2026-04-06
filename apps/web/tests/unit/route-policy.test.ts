@@ -65,7 +65,7 @@ describe("nav config structural invariants", () => {
   });
 
   it("uses fallback when no header rule exists", () => {
-    expect(getHeaderRoute("/sales/leads").label).toBe("Espacio de trabajo");
+    expect(getHeaderRoute("/unknown-route").label).toBe("Espacio de trabajo");
     expect(getHeaderRoute("/sales/new/42").label).toBe("Registrar venta");
     expect(getHeaderRoute("/dashboard").label).toBe("Inicio");
   });

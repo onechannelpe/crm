@@ -1,9 +1,10 @@
-import type { Repositories } from "~/server/shared/registry";
+import type { createNotificationContactsRepo } from "~/server/notifications/repos-contacts";
+import type { createNotificationPreferencesRepo } from "~/server/notifications/repos-preferences";
 
-type NotificationBootstrapRepos = Pick<
-  Repositories,
-  "notificationContacts" | "notificationPreferences"
->;
+type NotificationBootstrapRepos = {
+  notificationContacts: ReturnType<typeof createNotificationContactsRepo>;
+  notificationPreferences: ReturnType<typeof createNotificationPreferencesRepo>;
+};
 
 async function provisionNotificationContacts(params: {
   userId: number;

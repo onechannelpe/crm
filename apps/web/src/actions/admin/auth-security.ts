@@ -3,11 +3,16 @@
 import { requireRole } from "~/lib/auth/access/session";
 import { assertRecentStrongAuth } from "~/lib/auth/security/step-up";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
+import { db } from "~/lib/db/db";
 import { longName } from "~/lib/users/display-name";
-import { repos } from "~/server/shared/context";
+import { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
+import { createUsersRepo } from "~/server/users/repos-users";
+
+const users = createUsersRepo(db);
+const authEvents = createAuthEventsRepo(db);
 
 type RetryEvent = Awaited<
-  ReturnType<typeof repos.authEvents.findRecentLoginRetriesByUser>
+  ReturnType<typeof authEvents.findRecentLoginRetriesByUser>
 >[number];
 
 export interface UserLoginRetryReport {
@@ -29,14 +34,14 @@ export async function getUserLoginRetryReport(
   const safeUsername = assertNonEmptyString(username, "username").toLowerCase();
   const session = await requireRole("admin");
   assertRecentStrongAuth(session);
-  const user = await repos.users.findByUsername(safeUsername);
+  const user = await users.findByUsername(safeUsername);
   if (!user) return null;
 
   const now = Date.now();
   const [retryCount15m, retryCount24h, recentRetries] = await Promise.all([
-    repos.authEvents.countLoginRetriesSince(user.id, now - 15 * 60_000),
-    repos.authEvents.countLoginRetriesSince(user.id, now - 24 * 60 * 60_000),
-    repos.authEvents.findRecentLoginRetriesByUser(user.id, 25),
+    authEvents.countLoginRetriesSince(user.id, now - 15 * 60_000),
+    authEvents.countLoginRetriesSince(user.id, now - 24 * 60 * 60_000),
+    authEvents.findRecentLoginRetriesByUser(user.id, 25),
   ]);
 
   return {

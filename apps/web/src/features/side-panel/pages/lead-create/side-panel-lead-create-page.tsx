@@ -1,6 +1,6 @@
 import { createSignal } from "solid-js";
 
-import { registerLead } from "~/actions/pipeline/leads";
+import { requestLeadCreation } from "~/actions/pipeline/commands/leads";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { toAppError } from "~/lib/app-errors";
@@ -27,14 +27,13 @@ export function SidePanelLeadCreatePage() {
     setSubmitting(true);
 
     try {
-      const result = await registerLead({
+      const result = await requestLeadCreation({
         ruc: value,
-        executiveId: 0,
       });
 
       navigateTo(
         createLeadDetailSidePanelPage({
-          leadId: result.id,
+          leadId: result.leadId,
           title: value,
           subtitle: `RUC ${value}`,
         }),

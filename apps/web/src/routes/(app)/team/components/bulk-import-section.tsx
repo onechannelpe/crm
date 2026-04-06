@@ -4,7 +4,6 @@ import { For, Show, createEffect, createSignal, on } from "solid-js";
 import {
   applyBulkImport,
   previewBulkCsv,
-  type BulkApplyResult,
   type BulkPreviewResult,
 } from "~/actions/team/bulk-import";
 import { EmptyState } from "~/components/feedback/empty-state";
@@ -23,6 +22,7 @@ import {
 } from "~/components/ui/layout/table";
 import { getErrorMessage } from "~/lib/errors";
 import { bulkImportSetupQuery } from "~/lib/queries/team";
+import type { BulkApplyResult } from "~/server/team/application/bulk-import";
 
 import styles from "../team-page.module.css";
 

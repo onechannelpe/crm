@@ -3,7 +3,7 @@ import { useLocation } from "@solidjs/router";
 
 import { NavigationDrawerStateProvider } from "~/features/navigation-drawer/state/navigation-drawer-provider";
 import { isSettingsRoutePath } from "~/lib/navigation/route-classification";
-import { traceSsrBoundary } from "~/lib/observability/diagnostics";
+import { traceSsrBoundary } from "~/lib/observability/diagnostics/server";
 
 import { AppShell } from "./app-shell";
 
