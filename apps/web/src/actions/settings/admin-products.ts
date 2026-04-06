@@ -18,7 +18,32 @@ import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 const products = createProductsRepo(db);
 const auditLogs = createAuditLogsRepo(db);
 
-type ProductCatalogItem = Awaited<ReturnType<typeof products.findAll>>[number];
+export type ProductCatalogItem = {
+  id: number;
+  name: string;
+  category: string;
+  subtype: string | null;
+  price: number;
+  is_active: number;
+};
+
+function toProductCatalogItem(row: {
+  id: number;
+  name: string;
+  category: string;
+  subtype: string | null;
+  price: number;
+  is_active: number;
+}): ProductCatalogItem {
+  return {
+    id: row.id,
+    name: row.name,
+    category: row.category,
+    subtype: row.subtype,
+    price: row.price,
+    is_active: row.is_active,
+  };
+}
 
 function parseUpdateProductPricingInput(input: {
   productId: number;
@@ -34,7 +59,8 @@ function parseUpdateProductPricingInput(input: {
 
 export async function getProductCatalog(): Promise<ProductCatalogItem[]> {
   await requirePermission("admin:manage");
-  return products.findAll();
+  const rows = await products.findAll();
+  return rows.map(toProductCatalogItem);
 }
 
 export async function updateProductPricing(

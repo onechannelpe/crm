@@ -15,7 +15,6 @@ import {
 } from "./assignment-plan";
 import {
   createContactAssignmentsFromCandidates,
-  type AssignContactsTransactionRepos,
   type AssignContactsTransactionRunner,
 } from "./contact-assignment-writer";
 

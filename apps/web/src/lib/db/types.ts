@@ -1,4 +1,10 @@
-import type { ColumnType, Generated, Insertable, Selectable } from "kysely";
+import type {
+  ColumnType,
+  Generated,
+  Insertable,
+  Selectable,
+  Updateable,
+} from "kysely";
 
 type AuthFunnelSourceValue = "client" | "server";
 type AuthFunnelEventNameValue =
@@ -1007,14 +1013,15 @@ export type UserTotpFactor = Selectable<UserTotpFactorsTable>;
 export type UserTotpRecoveryCode = Selectable<UserTotpRecoveryCodesTable>;
 export type UserInvite = Selectable<UserInvitesTable>;
 export type PasswordResetToken = Selectable<PasswordResetTokensTable>;
-export type PipelineLead = Selectable<PipelineLeadsTable>;
-export type PipelineLeadCommercialInput =
+export type PipelineLeadRow = Selectable<PipelineLeadsTable>;
+export type PipelineLeadCommercialInputRow =
   Selectable<PipelineLeadCommercialInputsTable>;
-export type PipelineQuotation = Selectable<PipelineQuotationsTable>;
-export type PipelineSale = Selectable<PipelineSalesTable>;
-export type PipelineLeadAssignment = Selectable<PipelineLeadAssignmentsTable>;
-export type PipelineHistoryEvent = Selectable<PipelineHistoryEventsTable>;
-export type LeadSourcingPolicy = Selectable<LeadSourcingPoliciesTable>;
+export type PipelineQuotationRow = Selectable<PipelineQuotationsTable>;
+export type PipelineSaleRow = Selectable<PipelineSalesTable>;
+export type PipelineLeadAssignmentRow =
+  Selectable<PipelineLeadAssignmentsTable>;
+export type PipelineHistoryEventRow = Selectable<PipelineHistoryEventsTable>;
+export type LeadSourcingPolicyRow = Selectable<LeadSourcingPoliciesTable>;
 
 export type NewUser = Insertable<UsersTable>;
 export type NewLoginFlow = Insertable<LoginFlowsTable>;
@@ -1060,19 +1067,19 @@ export type NewSearchEnrichmentOverlay =
 export type ActionRateLimitCounter = Selectable<ActionRateLimitCountersTable>;
 export type NewActionRateLimitCounter =
   Insertable<ActionRateLimitCountersTable>;
-
-export type Lead = Selectable<PipelineLeadsTable>;
-export type LeadCommercialInput = Selectable<PipelineLeadCommercialInputsTable>;
-export type Quotation = Selectable<PipelineQuotationsTable>;
-export type LeadSale = Selectable<PipelineSalesTable>;
-export type LeadPipelineAssignment = Selectable<PipelineLeadAssignmentsTable>;
 export type IntegrationJob = Selectable<PipelineIntegrationJobsTable>;
-
-export type NewLead = Insertable<PipelineLeadsTable>;
-export type NewLeadCommercialInput =
+export type NewPipelineLeadRow = Insertable<PipelineLeadsTable>;
+export type NewPipelineLeadCommercialInputRow =
   Insertable<PipelineLeadCommercialInputsTable>;
-export type NewQuotation = Insertable<PipelineQuotationsTable>;
-export type NewLeadSale = Insertable<PipelineSalesTable>;
-export type NewLeadPipelineAssignment =
+export type NewPipelineQuotationRow = Insertable<PipelineQuotationsTable>;
+export type NewPipelineSaleRow = Insertable<PipelineSalesTable>;
+export type NewPipelineLeadAssignmentRow =
   Insertable<PipelineLeadAssignmentsTable>;
+export type UpdatePipelineLeadRow = Updateable<PipelineLeadsTable>;
+export type UpdatePipelineLeadCommercialInputRow =
+  Updateable<PipelineLeadCommercialInputsTable>;
+export type UpdatePipelineQuotationRow = Updateable<PipelineQuotationsTable>;
+export type UpdatePipelineSaleRow = Updateable<PipelineSalesTable>;
+export type UpdatePipelineLeadAssignmentRow =
+  Updateable<PipelineLeadAssignmentsTable>;
 export type NewIntegrationJob = Insertable<PipelineIntegrationJobsTable>;
