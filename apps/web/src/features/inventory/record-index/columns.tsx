@@ -1,4 +1,4 @@
-import { getInventoryItems } from "~/actions/inventory";
+import type { InventoryItem } from "~/actions/inventory";
 import Building2 from "~/components/icons/building-2";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import Package from "~/components/icons/package";
@@ -7,9 +7,7 @@ import type { DataGridColumn } from "~/features/data-grid/model/types";
 
 import styles from "./styles.module.css";
 
-export type InventoryRow = Awaited<
-  ReturnType<typeof getInventoryItems>
->[number];
+export type InventoryRow = InventoryItem;
 
 const STATUS_LABELS: Record<string, string> = {
   available: "Disponible",

@@ -2,16 +2,16 @@
 
 import { requirePermission } from "~/lib/auth/access/session";
 import { db } from "~/lib/db/db";
+import { listInventoryItems } from "~/server/inventory/application/list-inventory-items";
+import type { InventoryItemView } from "~/server/inventory/application/views/inventory-item-view";
 import { createInventoryRepo } from "~/server/inventory/repos";
 
 const inventory = createInventoryRepo(db);
 
-type InventoryItemWithProduct = Awaited<
-  ReturnType<typeof inventory.findAllWithProduct>
->[number];
+export type InventoryItem = InventoryItemView;
 
-export async function getInventoryItems(): Promise<InventoryItemWithProduct[]> {
+export async function getInventoryItems(): Promise<InventoryItem[]> {
   await requirePermission("inventory:read");
 
-  return inventory.findAllWithProduct();
+  return listInventoryItems({ inventory });
 }

@@ -1,26 +1,18 @@
 import type { UserId } from "~/server/shared/ids";
 
+import type { ActiveContactAssignmentView } from "./views/active-contact-assignment-view";
+
 export type ContactAssignmentReadRepos = {
   contactAssignments: {
-    findActiveByUserWithContacts: (userId: UserId) => Promise<
-      Array<{
-        assignmentId: number;
-        assigned_at: number;
-        expires_at: number;
-        status: "active" | "completed" | "expired";
-        contactId: number;
-        name: string;
-        dni: string;
-        phone_primary: string | null;
-        organization_id: number;
-      }>
-    >;
+    findActiveByUserWithContacts: (
+      userId: UserId,
+    ) => Promise<ActiveContactAssignmentView[]>;
   };
 };
 
 export async function getActiveContactAssignments(
   actorUserId: UserId,
   repos: ContactAssignmentReadRepos,
-) {
+): Promise<ActiveContactAssignmentView[]> {
   return repos.contactAssignments.findActiveByUserWithContacts(actorUserId);
 }

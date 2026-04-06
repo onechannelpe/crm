@@ -1,6 +1,7 @@
 "use server";
 
 import { getActiveContactAssignments as getActiveContactAssignmentsUseCase } from "~/server/contact-assignments/application/get-active-contact-assignments";
+import type { ActiveContactAssignmentView } from "~/server/contact-assignments/application/views/active-contact-assignment-view";
 import { getContactAssignmentCapacity } from "~/server/contact-assignments/application/get-contact-assignment-capacity";
 import { createContactAssignmentReadContext } from "~/server/contact-assignments/infrastructure/read-context";
 import { runAction } from "~/server/shared/action-runtime";
@@ -8,12 +9,8 @@ import { Ok } from "~/server/shared/result";
 
 const readRepos = createContactAssignmentReadContext();
 
-type ActiveContactAssignment = Awaited<
-  ReturnType<typeof readRepos.contactAssignments.findActiveByUserWithContacts>
->[number];
-
 export async function getActiveContactAssignments(): Promise<
-  ActiveContactAssignment[]
+  ActiveContactAssignmentView[]
 > {
   return runAction({
     actionName: "contact_assignments.list_active",
