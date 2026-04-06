@@ -1,12 +1,12 @@
 import { For, Show } from "solid-js";
 
-import type { LeadDetailOutput } from "~/actions/pipeline/queries/leads";
+import type { LeadDetailView } from "~/actions/pipeline/queries/leads";
 import { formatDateTime } from "~/lib/utils";
 
 import styles from "./lead-detail-overview.module.css";
 
 export function LeadQuotationsSection(props: {
-  quotations: LeadDetailOutput["quotations"];
+  quotations: LeadDetailView["quotations"];
 }) {
   return (
     <Show when={props.quotations.length > 0}>

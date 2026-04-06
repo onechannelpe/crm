@@ -1,46 +1,34 @@
-import type { Role } from "~/lib/auth/access/rbac";
 import type { SessionData } from "~/lib/auth/access/session";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
+import type { CapacityTeam, CapacityUser } from "../application/actor-scope";
 import type { ScopeRef } from "./types";
 
-type ManagedUser = {
-  role: Role;
-  branch_id: number;
-  team_id: number | null;
-};
-
-type ManagedTeam = {
-  id: number;
-  branch_id: number;
-  supervisor_id: number | null;
-};
-
-interface ScopeRepos<T extends ManagedUser = ManagedUser> {
+interface ScopeRepos<T extends CapacityUser = CapacityUser> {
   users: {
     findById(id: number): Promise<T | undefined>;
   };
   teams: {
     findBySupervisorId(id: number): Promise<{ id: number } | undefined>;
-    findByIdWithSupervisor(id: number): Promise<ManagedTeam | undefined>;
+    findByIdWithSupervisor(id: number): Promise<CapacityTeam | undefined>;
   };
 }
 
 function canManageExecutiveRecord(
   actor: SessionData,
-  target: ManagedUser,
+  target: CapacityUser,
   supervisedTeamId: number | null,
 ): boolean {
   if (target.role !== "executive") return false;
   if (actor.role === "superuser") return true;
-  if (target.branch_id !== actor.branchId) return false;
+  if (target.branchId !== actor.branchId) return false;
   if (actor.role === "admin") return true;
   if (actor.role !== "supervisor" || supervisedTeamId == null) return false;
-  return target.team_id === supervisedTeamId;
+  return target.teamId === supervisedTeamId;
 }
 
-export async function canManageExecutive<T extends ManagedUser>(
+export async function canManageExecutive<T extends CapacityUser>(
   actor: SessionData,
   targetUserId: number,
   repos: ScopeRepos<T>,
@@ -87,13 +75,13 @@ export async function canManageScope(
   }
 
   const team = await repos.teams.findByIdWithSupervisor(scope.scopeId);
-  if (!team || team.branch_id !== actor.branchId) {
+  if (!team || team.branchId !== actor.branchId) {
     return Err(domainError("not_found", "team_not_found", "Team not found"));
   }
   if (actor.role === "superuser" || actor.role === "admin") {
     return Ok(undefined);
   }
-  if (actor.role !== "supervisor" || team.supervisor_id !== actor.userId) {
+  if (actor.role !== "supervisor" || team.supervisorId !== actor.userId) {
     return Err(
       domainError(
         "forbidden",

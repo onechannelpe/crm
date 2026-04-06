@@ -2,19 +2,17 @@
 
 import { getLeadDetail } from "~/server/pipeline/application/queries/get-lead-detail";
 import { listLeads } from "~/server/pipeline/application/queries/list-leads";
-import type {
-  LeadDetailView,
-  LeadTimelineItem,
-} from "~/server/pipeline/application/queries/views/lead-detail-view";
+import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail-view";
 import type { LeadListView } from "~/server/pipeline/application/queries/views/lead-list-view";
 import { createPipelineQueryRuntime } from "~/server/pipeline/infrastructure/query-runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
-export type LeadDetailOutput = LeadDetailView;
-export type LeadAction = LeadDetailView["availableActions"][number];
-export type TimelineItem = LeadTimelineItem;
-export type LeadListOutput = LeadListView;
-export type LeadListRow = LeadListView["rows"][number];
+export type { LeadDetailView, LeadListView };
+export type {
+  LeadAvailableAction,
+  LeadTimelineItem,
+} from "~/server/pipeline/application/queries/views/lead-detail-view";
+export type { LeadListRowView } from "~/server/pipeline/application/queries/views/lead-list-view";
 
 export async function queryLeadList(filters: {
   stage?: string;
@@ -23,7 +21,7 @@ export async function queryLeadList(filters: {
   executiveId?: number;
   limit?: number;
   offset?: number;
-}): Promise<LeadListOutput> {
+}): Promise<LeadListView> {
   return runAction({
     actionName: "pipeline.list_leads",
     requireAuth: true,
@@ -37,9 +35,7 @@ export async function queryLeadList(filters: {
   });
 }
 
-export async function queryLeadDetail(
-  leadId: number,
-): Promise<LeadDetailOutput> {
+export async function queryLeadDetail(leadId: number): Promise<LeadDetailView> {
   return runAction({
     actionName: "pipeline.get_lead_detail",
     requireAuth: true,

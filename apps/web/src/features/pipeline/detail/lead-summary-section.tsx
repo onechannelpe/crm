@@ -1,4 +1,4 @@
-import type { LeadDetailOutput } from "~/actions/pipeline/queries/leads";
+import type { LeadDetailView } from "~/actions/pipeline/queries/leads";
 import Building2 from "~/components/icons/building-2";
 import { Badge } from "~/components/ui/display/badge";
 import { formatDateTime } from "~/lib/utils";
@@ -11,7 +11,7 @@ function stageVariant(stage: string) {
   return "secondary" as const;
 }
 
-export function LeadSummarySection(props: { data: LeadDetailOutput }) {
+export function LeadSummarySection(props: { data: LeadDetailView }) {
   const fields = [
     { label: "RUC", value: props.data.lead.ruc },
     {

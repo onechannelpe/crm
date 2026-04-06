@@ -2,12 +2,12 @@ import {
   assertNonEmptyString,
   assertPositiveInt,
 } from "~/lib/contracts/guards";
-import { domainError } from "~/server/shared/domain-error";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 export function parseUserSessionsInput(
   userId: number,
-): Result<{ userId: number }, ReturnType<typeof domainError>> {
+): Result<{ userId: number }, DomainError> {
   try {
     return Ok({ userId: assertPositiveInt(userId, "userId") });
   } catch (error) {
@@ -24,10 +24,7 @@ export function parseUserSessionsInput(
 export function parseRevokeUserSessionInput(input: {
   sessionId: string;
   targetUserId: number;
-}): Result<
-  { sessionId: string; targetUserId: number },
-  ReturnType<typeof domainError>
-> {
+}): Result<{ sessionId: string; targetUserId: number }, DomainError> {
   try {
     return Ok({
       sessionId: assertNonEmptyString(input.sessionId, "sessionId"),
@@ -46,7 +43,7 @@ export function parseRevokeUserSessionInput(input: {
 
 export function parseRevokeAllUserSessionsInput(
   targetUserId: number,
-): Result<{ targetUserId: number }, ReturnType<typeof domainError>> {
+): Result<{ targetUserId: number }, DomainError> {
   try {
     return Ok({
       targetUserId: assertPositiveInt(targetUserId, "targetUserId"),

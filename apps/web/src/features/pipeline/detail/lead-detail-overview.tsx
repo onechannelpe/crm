@@ -1,4 +1,4 @@
-import type { LeadDetailOutput } from "~/actions/pipeline/queries/leads";
+import type { LeadDetailView } from "~/actions/pipeline/queries/leads";
 
 import { InteractionsPanel } from "./interactions/interactions-panel";
 import { LeadActionsSection } from "./lead-actions-section";
@@ -9,7 +9,7 @@ import { LeadTimelineSection } from "./lead-timeline-section";
 import styles from "./lead-detail-overview.module.css";
 
 export function LeadDetailOverview(props: {
-  data: LeadDetailOutput;
+  data: LeadDetailView;
   compact?: boolean;
   onChanged?: () => void;
 }) {

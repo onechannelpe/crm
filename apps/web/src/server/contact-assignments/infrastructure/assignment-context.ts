@@ -4,6 +4,7 @@ import {
   createLeadUsageCommitsRepo,
   createLeadUsageReservationsRepo,
 } from "~/server/capacity-usage/repos";
+import { createCapacityUsersRepo } from "~/server/capacity/infrastructure/capacity-users-repo";
 import {
   createLeadPolicyDefaultsRepo,
   createLeadPolicyOverridesRepo,
@@ -14,11 +15,10 @@ import { createOrganizationsRepo } from "~/server/contacts/repos-organizations";
 import { engineClient } from "~/server/shared/composition-root";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { EngineClient } from "~/server/shared/engine/client";
-import { createUsersRepo } from "~/server/users/repos-users";
 
 function createContactAssignmentRepos(executor: DatabaseExecutor) {
   return {
-    users: createUsersRepo(executor),
+    users: createCapacityUsersRepo(executor),
     leadPolicyDefaults: createLeadPolicyDefaultsRepo(executor),
     leadPolicyOverrides: createLeadPolicyOverridesRepo(executor),
     leadCapacityGrants: createLeadCapacityGrantsRepo(executor),

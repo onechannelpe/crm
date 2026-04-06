@@ -9,15 +9,15 @@ import {
   createSearchUsageReservationsRepo,
 } from "~/server/capacity-usage/repos";
 import { getSearchCapacitySnapshot } from "~/server/capacity/application/get-search-capacity-snapshot";
+import { createCapacityUsersRepo } from "~/server/capacity/infrastructure/capacity-users-repo";
 import {
   createSearchPolicyDefaultsRepo,
   createSearchPolicyOverridesRepo,
 } from "~/server/capacity/infrastructure/policy-repos";
 import { isErr } from "~/server/shared/result";
-import { createUsersRepo } from "~/server/users/repos-users";
 
 const repos = {
-  users: createUsersRepo(db),
+  users: createCapacityUsersRepo(db),
   searchPolicyDefaults: createSearchPolicyDefaultsRepo(db),
   searchPolicyOverrides: createSearchPolicyOverridesRepo(db),
   searchCapacityGrants: createSearchCapacityGrantsRepo(db),

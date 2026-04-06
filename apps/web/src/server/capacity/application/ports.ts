@@ -1,4 +1,4 @@
-import type { Role } from "~/lib/auth/access/rbac";
+import type { CapacityTeam, CapacityUser } from "./actor-scope";
 
 export interface CapacityApprovalRequest {
   id: number;
@@ -7,18 +7,6 @@ export interface CapacityApprovalRequest {
   status: "pending" | "approved" | "rejected" | "canceled";
   requestedAmount: number;
   reason: string;
-}
-
-export interface CapacityApprovalManagedUser {
-  role: Role;
-  branchId: number;
-  teamId: number | null;
-}
-
-export interface CapacityApprovalManagedTeam {
-  id: number;
-  branchId: number;
-  supervisorId: number | null;
 }
 
 export interface CapacityApprovalTxPort {
@@ -35,15 +23,11 @@ export interface CapacityApprovalTxPort {
     actorUserId: number,
     note: string,
   ): Promise<boolean>;
-  findManagedUserById(
-    userId: number,
-  ): Promise<CapacityApprovalManagedUser | undefined>;
+  findManagedUserById(userId: number): Promise<CapacityUser | undefined>;
   findSupervisedTeamBySupervisorId(
     supervisorId: number,
   ): Promise<{ id: number } | undefined>;
-  findManagedTeamById(
-    teamId: number,
-  ): Promise<CapacityApprovalManagedTeam | undefined>;
+  findManagedTeamById(teamId: number): Promise<CapacityTeam | undefined>;
   grantSearchCapacity(input: {
     userId: number;
     amount: number;

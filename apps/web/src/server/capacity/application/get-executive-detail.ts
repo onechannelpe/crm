@@ -27,16 +27,16 @@ export type ExecutiveCapacityDetail = {
   leadStatus: LeadCapacitySnapshot;
   requests: Array<{
     id: number;
-    user_id: number;
+    userId: number;
     kind: "search_extra" | "lead_refill";
     status: CapacityRequestStatus;
-    requested_amount: number;
+    requestedAmount: number;
     reason: string;
-    decision_note: string | null;
-    reviewer_user_id: number | null;
-    created_at: number;
-    updated_at: number;
-    decided_at: number | null;
+    decisionNote: string | null;
+    reviewerUserId: number | null;
+    createdAt: number;
+    updatedAt: number;
+    decidedAt: number | null;
   }>;
 };
 
@@ -74,13 +74,22 @@ export async function getExecutiveDetail(
         id: input.userId,
         fullName: longName(managed.target),
         email: managed.target.email,
-        teamId: managed.target.team_id,
+        teamId: managed.target.teamId,
       },
       searchStatus: searchStatus.value,
       leadStatus: leadStatus.value,
       requests: requests.map((request) => ({
-        ...request,
+        id: request.id,
+        userId: request.user_id,
         kind: fromDbCapacityRequestKind(request.kind),
+        status: request.status,
+        requestedAmount: request.requested_amount,
+        reason: request.reason,
+        decisionNote: request.decision_note,
+        reviewerUserId: request.reviewer_user_id,
+        createdAt: request.created_at,
+        updatedAt: request.updated_at,
+        decidedAt: request.decided_at,
       })),
     });
   } catch (error) {

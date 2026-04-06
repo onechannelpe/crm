@@ -3,14 +3,18 @@ import { canContactNow } from "~/server/contact-assignments/domain/cooldown";
 import type { LeadCandidate } from "~/server/shared/engine/lead-contract";
 import type { UserId } from "~/server/shared/ids";
 
-type ContactRecord = {
+export type OrganizationRecord = {
+  id: number;
+};
+
+export type ContactRecord = {
   id: number;
   cooldown_until: number | null;
 };
 
 export interface AssignContactsTransactionRepos {
   organizations: {
-    findOrCreate(ruc: string, name: string): Promise<{ id: number }>;
+    findOrCreate(ruc: string, name: string): Promise<OrganizationRecord>;
   };
   contacts: {
     findOrCreate(

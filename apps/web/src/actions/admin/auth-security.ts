@@ -4,16 +4,13 @@ import { requireRole } from "~/lib/auth/access/session";
 import { assertRecentStrongAuth } from "~/lib/auth/security/step-up";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
 import { db } from "~/lib/db/db";
+import type { AuthEvent } from "~/lib/db/types";
 import { longName } from "~/lib/users/display-name";
 import { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import { createUsersRepo } from "~/server/users/repos-users";
 
 const users = createUsersRepo(db);
 const authEvents = createAuthEventsRepo(db);
-
-type RetryEvent = Awaited<
-  ReturnType<typeof authEvents.findRecentLoginRetriesByUser>
->[number];
 
 export interface UserLoginRetryReport {
   user: {
@@ -25,7 +22,7 @@ export interface UserLoginRetryReport {
   };
   retryCount15m: number;
   retryCount24h: number;
-  recentRetries: RetryEvent[];
+  recentRetries: AuthEvent[];
 }
 
 export async function getUserLoginRetryReport(

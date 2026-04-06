@@ -7,8 +7,7 @@ import type {
   LeadPolicyDefaultsRepo,
   LeadPolicyOverridesRepo,
 } from "../infrastructure/policy-repos";
-
-export type { LeadPolicy };
+import type { ActorScope } from "./actor-scope";
 
 export type SetLeadScopeDefaultCommand =
   | {
@@ -34,9 +33,7 @@ export interface SetLeadUserOverrideCommand {
 
 interface PolicyRepos {
   users: {
-    findById(
-      id: UserId,
-    ): Promise<{ team_id: number | null; branch_id: number } | undefined>;
+    findById(id: UserId): Promise<ActorScope | undefined>;
   };
   leadPolicyDefaults: LeadPolicyDefaultsRepo;
   leadPolicyOverrides: LeadPolicyOverridesRepo;
@@ -57,12 +54,12 @@ export async function getEffectiveLeadPolicy(
       userId,
       now,
     );
-    const teamDefault = user.team_id
-      ? await repos.leadPolicyDefaults.findForScope("team", user.team_id)
+    const teamDefault = user.teamId
+      ? await repos.leadPolicyDefaults.findForScope("team", user.teamId)
       : null;
     const branchDefault = await repos.leadPolicyDefaults.findForScope(
       "branch",
-      user.branch_id,
+      user.branchId,
     );
 
     return Ok(resolveLeadPolicy({ userOverride, teamDefault, branchDefault }));

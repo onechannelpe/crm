@@ -221,7 +221,7 @@ export default function TeamMemberCapacityPage() {
                         {request.kind === "search_extra"
                           ? "Más búsquedas"
                           : "Más refills"}{" "}
-                        · {request.requested_amount}
+                        request.requestedAmount
                       </div>
                       <div class="text-sm text-muted-foreground">
                         {request.status} · {request.reason}

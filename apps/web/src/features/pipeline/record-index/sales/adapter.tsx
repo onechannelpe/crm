@@ -1,9 +1,7 @@
 import { createAsync } from "@solidjs/router";
 
-import {
-  querySales,
-  type SalesListRow,
-} from "~/actions/pipeline/queries/sales";
+import type { SaleView } from "~/actions/pipeline/queries/sales";
+import { querySales } from "~/actions/pipeline/queries/sales";
 import Building2 from "~/components/icons/building-2";
 import List from "~/components/icons/list";
 import { RecordIndexScreen } from "~/features/record-index/components/screen";
@@ -20,7 +18,7 @@ import styles from "./styles.module.css";
 export function SalesRecordIndex() {
   const sales = createAsync(() => querySales({}));
   const { rowOpen } = useOpenSalesRecord();
-  const source = (): RecordIndexSource<SalesListRow> => {
+  const source = (): RecordIndexSource<SaleView> => {
     const data = sales();
 
     if (data === undefined) {
@@ -45,7 +43,7 @@ export function SalesRecordIndex() {
       description: "Add your first sale manually.",
     },
     class: styles.page,
-  } satisfies RecordIndexAdapter<SalesListRow>;
+  } satisfies RecordIndexAdapter<SaleView>;
 
   return <RecordIndexScreen adapter={adapter} />;
 }

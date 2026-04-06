@@ -14,8 +14,6 @@ import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 import { canManageExecutive } from "../domain/access-policy";
 import type { CapacityReadContext } from "../infrastructure/read-context";
 
-export type { SearchCapacitySnapshot, LeadCapacitySnapshot };
-
 export type ManagedExecutiveSummary = {
   id: number;
   fullName: string;
@@ -54,7 +52,7 @@ export async function listManagedExecutives(
           id: user.id,
           fullName: longName(user),
           email: user.email,
-          teamId: user.team_id,
+          teamId: user.teamId,
           searchStatus: searchStatus.value,
           leadStatus: leadStatus.value,
         };

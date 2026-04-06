@@ -3,6 +3,7 @@ import type {
   LeadUsageCommitsRepo,
   LeadUsageReservationsRepo,
 } from "~/server/capacity-usage/repos";
+import type { ActorScope } from "~/server/capacity/application/actor-scope";
 import { getLeadCapacitySnapshot } from "~/server/capacity/application/get-lead-capacity-snapshot";
 import type {
   LeadPolicyDefaultsRepo,
@@ -16,9 +17,7 @@ import { computeNeededAssignments } from "../domain/assignment-demand";
 
 export type AssignmentPlanRepos = {
   users: {
-    findById(
-      id: UserId,
-    ): Promise<{ team_id: number | null; branch_id: number } | undefined>;
+    findById(id: UserId): Promise<ActorScope | undefined>;
   };
   leadPolicyDefaults: LeadPolicyDefaultsRepo;
   leadPolicyOverrides: LeadPolicyOverridesRepo;

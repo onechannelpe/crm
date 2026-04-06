@@ -1,4 +1,4 @@
-import type { LeadListRow } from "~/actions/pipeline/queries/leads";
+import type { LeadListRowView } from "~/actions/pipeline/queries/leads";
 
 import type { RecordIndexFilterDefinition } from "../../../record-index/model/filter";
 
@@ -13,7 +13,7 @@ export type LeadStageFilterValue =
   (typeof LEADS_RECORD_INDEX_FILTERS)[number]["value"];
 
 export function applyLeadStageFilter(
-  rows: LeadListRow[],
+  rows: LeadListRowView[],
   filterValue: LeadStageFilterValue,
 ) {
   if (filterValue === "all") {
@@ -24,7 +24,7 @@ export function applyLeadStageFilter(
 }
 
 export const LEADS_RECORD_INDEX_FILTER: RecordIndexFilterDefinition<
-  LeadListRow,
+  LeadListRowView,
   LeadStageFilterValue
 > = {
   label: "Filter",

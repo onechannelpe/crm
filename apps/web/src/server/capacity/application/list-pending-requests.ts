@@ -8,21 +8,21 @@ import type { CapacityReadContext } from "../infrastructure/read-context";
 
 export type PendingCapacityRequest = {
   id: number;
-  user_id: number;
+  userId: number;
   kind: "search_extra" | "lead_refill";
   status: CapacityRequestStatus;
-  requested_amount: number;
+  requestedAmount: number;
   reason: string;
-  decision_note: string | null;
-  reviewer_user_id: number | null;
-  created_at: number;
-  updated_at: number;
-  decided_at: number | null;
+  decisionNote: string | null;
+  reviewerUserId: number | null;
+  createdAt: number;
+  updatedAt: number;
+  decidedAt: number | null;
   names: string;
-  first_surname: string;
-  second_surname: string;
-  team_id: number | null;
-  branch_id: number;
+  firstSurname: string;
+  secondSurname: string;
+  teamId: number | null;
+  branchId: number;
 };
 
 export async function listPendingRequests(
@@ -34,8 +34,22 @@ export async function listPendingRequests(
       ctx.actor.branchId,
     );
     const scopedPending = pending.map((request) => ({
-      ...request,
+      id: request.id,
+      userId: request.user_id,
       kind: fromDbCapacityRequestKind(request.kind),
+      status: request.status,
+      requestedAmount: request.requested_amount,
+      reason: request.reason,
+      decisionNote: request.decision_note,
+      reviewerUserId: request.reviewer_user_id,
+      createdAt: request.created_at,
+      updatedAt: request.updated_at,
+      decidedAt: request.decided_at,
+      names: request.names,
+      firstSurname: request.first_surname,
+      secondSurname: request.second_surname,
+      teamId: request.team_id,
+      branchId: request.branch_id,
     }));
     if (ctx.actor.role !== "supervisor") return Ok(scopedPending);
 
@@ -45,7 +59,7 @@ export async function listPendingRequests(
     if (!supervisedTeam) return Ok([]);
 
     return Ok(
-      scopedPending.filter((request) => request.team_id === supervisedTeam.id),
+      scopedPending.filter((request) => request.teamId === supervisedTeam.id),
     );
   } catch (error) {
     return Err(
