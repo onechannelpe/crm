@@ -5,7 +5,11 @@ import { Button } from "~/components/ui/input/button";
 import { Select } from "~/components/ui/input/select";
 import { Textarea } from "~/components/ui/input/textarea";
 
-import type { InteractionState } from "./state";
+import {
+  hasInteractionMode,
+  type InteractionAvailability,
+} from "./availability";
+import { isInteractionMode, type InteractionState } from "./state";
 
 import styles from "../lead-detail-overview.module.css";
 
@@ -22,6 +26,7 @@ const CALL_OUTCOME_OPTIONS = [
 }>;
 
 export function InteractionForm(props: {
+  availability: InteractionAvailability;
   state: InteractionState;
   onSubmit: () => void;
 }) {
@@ -30,12 +35,17 @@ export function InteractionForm(props: {
       <Select
         label="Tipo"
         value={props.state.mode()}
-        onChange={(event) => props.state.setMode(event.currentTarget.value)}
+        onChange={(event) => {
+          const nextMode = event.currentTarget.value;
+          if (isInteractionMode(nextMode)) {
+            props.state.setMode(nextMode);
+          }
+        }}
       >
-        <Show when={props.state.canLogCall()}>
+        <Show when={hasInteractionMode(props.availability, "call")}>
           <option value="call">Llamada</option>
         </Show>
-        <Show when={props.state.canAddNote()}>
+        <Show when={hasInteractionMode(props.availability, "note")}>
           <option value="note">Nota</option>
         </Show>
       </Select>

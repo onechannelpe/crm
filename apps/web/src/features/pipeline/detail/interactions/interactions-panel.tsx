@@ -1,4 +1,4 @@
-import { Show } from "solid-js";
+import { Show, createEffect, createMemo } from "solid-js";
 
 import {
   addLeadNote,
@@ -6,6 +6,10 @@ import {
 } from "~/actions/pipeline/commands/interactions";
 import type { LeadAvailableAction } from "~/actions/pipeline/contracts";
 
+import {
+  deriveInteractionAvailability,
+  resolveInteractionMode,
+} from "./availability";
 import { InteractionForm } from "./interaction-form";
 import { createInteractionState } from "./state";
 
@@ -16,7 +20,17 @@ export function InteractionsPanel(props: {
   availableActions: LeadAvailableAction[];
   onChanged?: () => void;
 }) {
-  const state = createInteractionState(() => props.availableActions);
+  const availability = createMemo(() =>
+    deriveInteractionAvailability(props.availableActions),
+  );
+  const state = createInteractionState("call");
+
+  createEffect(() => {
+    const nextMode = resolveInteractionMode(availability(), state.mode());
+    if (nextMode && nextMode !== state.mode()) {
+      state.setMode(nextMode);
+    }
+  });
 
   async function handleSubmit() {
     state.setError(null);
@@ -50,10 +64,14 @@ export function InteractionsPanel(props: {
   }
 
   return (
-    <Show when={state.canLogCall() || state.canAddNote()}>
+    <Show when={availability().visibleModes.length > 0}>
       <section class={styles.section}>
         <div class={styles.sectionTitle}>Registrar interaccion</div>
-        <InteractionForm state={state} onSubmit={() => void handleSubmit()} />
+        <InteractionForm
+          availability={availability()}
+          state={state}
+          onSubmit={() => void handleSubmit()}
+        />
       </section>
     </Show>
   );
