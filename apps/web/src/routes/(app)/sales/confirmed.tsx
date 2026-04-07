@@ -13,8 +13,6 @@ import { confirmedSalesRecordsQuery } from "~/lib/queries/sales-records";
 import { formatDate } from "~/lib/utils";
 import type { SalesRecordQueueItemView } from "~/server/sales-records/application/contracts";
 
-type ConfirmedSaleRow = SalesRecordQueueItemView;
-
 const CONFIRMED_SALES_COLUMNS = [
   {
     key: "id",
@@ -59,14 +57,14 @@ const CONFIRMED_SALES_COLUMNS = [
     width: 160,
     renderCell: (sale) => formatDate(sale.updatedAt),
   },
-] satisfies ReadonlyArray<DataGridColumn<ConfirmedSaleRow>>;
+] satisfies ReadonlyArray<DataGridColumn<SalesRecordQueueItemView>>;
 
 export default function ConfirmedSalesPage() {
   const navigate = useNavigate();
   const sales = createAsync(() => confirmedSalesRecordsQuery());
   const rows = () => sales() ?? [];
   const isLoading = () => sales() === undefined;
-  const rowOpen = createRouteRowOpen<ConfirmedSaleRow>((sale) => {
+  const rowOpen = createRouteRowOpen<SalesRecordQueueItemView>((sale) => {
     navigate(`/sales/${sale.id}`);
   });
 

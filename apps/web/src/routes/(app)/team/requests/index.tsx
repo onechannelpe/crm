@@ -16,8 +16,6 @@ import {
 import { pendingCapacityRequestsQuery } from "~/lib/queries/capacity";
 import type { PendingCapacityRequestView } from "~/server/capacity/application/contracts";
 
-type TeamRequestRow = PendingCapacityRequestView;
-
 export default function TeamRequestsPage() {
   const requests = createAsync(() => pendingCapacityRequestsQuery());
   const rows = () => requests() ?? [];
@@ -78,7 +76,7 @@ export default function TeamRequestsPage() {
         </div>
       ),
     },
-  ] satisfies ReadonlyArray<DataGridColumn<TeamRequestRow>>;
+  ] satisfies ReadonlyArray<DataGridColumn<PendingCapacityRequestView>>;
 
   return (
     <AppPage width="wide">

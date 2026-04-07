@@ -20,8 +20,6 @@ import { formatDate } from "~/lib/utils";
 
 import styles from "./export-detail-page.module.css";
 
-type SalesExportDownloadRow = SalesExportDownload;
-
 const SALES_EXPORT_DOWNLOAD_COLUMNS = [
   {
     key: "id",
@@ -46,7 +44,7 @@ const SALES_EXPORT_DOWNLOAD_COLUMNS = [
     width: 180,
     renderCell: (download) => formatDate(download.downloadedAt),
   },
-] satisfies ReadonlyArray<DataGridColumn<SalesExportDownloadRow>>;
+] satisfies ReadonlyArray<DataGridColumn<SalesExportDownload>>;
 
 export default function SalesExportDetailPage() {
   const params = useParams();
