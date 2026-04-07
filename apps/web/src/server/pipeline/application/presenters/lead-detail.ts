@@ -1,16 +1,16 @@
 import type { LeadHistoryEntry } from "../../domain/history";
 import type { Lead } from "../../domain/lead";
+import type { LeadAvailableAction } from "../policies/action-availability";
+import type { LeadCommercialInput } from "../ports/commercial-input-repository";
+import type { LeadQuotation } from "../ports/quotation-repository";
+import type { LeadSale } from "../ports/sale-repository";
 import type {
-  LeadAvailableAction,
   LeadDetailCommercialInputView,
   LeadDetailLeadView,
   LeadDetailQuotationView,
   LeadDetailSaleView,
   LeadDetailView,
-} from "../contracts";
-import type { LeadCommercialInput } from "../ports/commercial-input-repository";
-import type { LeadQuotation } from "../ports/quotation-repository";
-import type { LeadSale } from "../ports/sale-repository";
+} from "../queries/views/lead-detail";
 import { presentTimeline } from "./timeline";
 
 export type LeadDetailSource = {

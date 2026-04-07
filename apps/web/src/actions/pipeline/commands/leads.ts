@@ -1,16 +1,34 @@
 "use server";
 
+import {
+  LEAD_PRIORITIES,
+  LEAD_STATUSES,
+  type LeadPriority,
+  type LeadStatus,
+} from "~/actions/pipeline/contracts";
 import { validationError } from "~/lib/app-errors";
 import { completeCommercialInput } from "~/server/pipeline/application/commands/complete-commercial-input";
 import { reassignLead } from "~/server/pipeline/application/commands/reassign-lead";
 import { registerLead } from "~/server/pipeline/application/commands/register-lead";
 import { reviewLead } from "~/server/pipeline/application/commands/review-lead";
-import {
-  parseRequiredLeadPriority,
-  parseRequiredLeadStatus,
-} from "~/server/pipeline/domain/lead";
 import { runPipelineCommand } from "~/server/pipeline/infrastructure/command-runtime";
 import { runAction } from "~/server/shared/action-runtime";
+
+function parseRequiredLeadStatus(value: string): LeadStatus {
+  const parsed = LEAD_STATUSES.find((status) => status === value);
+  if (!parsed) {
+    throw validationError("invalid status");
+  }
+  return parsed;
+}
+
+function parseRequiredLeadPriority(value: string): LeadPriority {
+  const parsed = LEAD_PRIORITIES.find((priority) => priority === value);
+  if (!parsed) {
+    throw validationError("invalid prioridad");
+  }
+  return parsed;
+}
 
 export async function requestLeadCreation(input: {
   ruc: string;
@@ -49,17 +67,8 @@ export async function requestLeadReview(input: {
     throw validationError("reason is required");
   }
 
-  const status = parseRequiredLeadStatus(input.status);
-  if (!status.ok) {
-    throw validationError("invalid status");
-  }
-  const reviewedStatus = status.value;
-
-  const prioridad = parseRequiredLeadPriority(input.prioridad);
-  if (!prioridad.ok) {
-    throw validationError("invalid prioridad");
-  }
-  const reviewedPrioridad = prioridad.value;
+  const reviewedStatus = parseRequiredLeadStatus(input.status);
+  const reviewedPrioridad = parseRequiredLeadPriority(input.prioridad);
 
   return runAction({
     actionName: "pipeline.review_lead",

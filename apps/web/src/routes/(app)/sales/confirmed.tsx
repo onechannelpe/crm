@@ -1,5 +1,6 @@
 import { createAsync, useNavigate } from "@solidjs/router";
 
+import type { SalesRecordQueueItemView } from "~/actions/sales-records/contracts";
 import { EmptyState } from "~/components/feedback/empty-state";
 import Building2 from "~/components/icons/building-2";
 import CalendarDays from "~/components/icons/calendar-days";
@@ -11,7 +12,6 @@ import { createRouteRowOpen } from "~/features/data-grid/model/row-open";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { confirmedSalesRecordsQuery } from "~/lib/queries/sales-records";
 import { formatDate } from "~/lib/utils";
-import type { SalesRecordQueueItemView } from "~/server/sales-records/application/contracts";
 
 const CONFIRMED_SALES_COLUMNS = [
   {

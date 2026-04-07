@@ -1,4 +1,4 @@
-import type { LeadListRowView } from "~/server/pipeline/application/contracts";
+import type { LeadListRowView } from "~/actions/pipeline/contracts";
 
 import type { RecordIndexSortDefinition } from "../../../record-index/model/sort";
 

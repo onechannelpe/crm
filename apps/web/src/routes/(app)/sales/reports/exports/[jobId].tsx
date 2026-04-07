@@ -4,8 +4,8 @@ import { createMemo, createResource, Show } from "solid-js";
 import {
   getSalesExportJob,
   listSalesExportDownloads,
-  type SalesExportDownload,
 } from "~/actions/sales-exports";
+import type { SalesExportDownload } from "~/actions/sales-exports/contracts";
 import { useToast } from "~/components/feedback/toast-provider";
 import CalendarDays from "~/components/icons/calendar-days";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";

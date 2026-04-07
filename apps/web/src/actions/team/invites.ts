@@ -1,8 +1,8 @@
 "use server";
 
+import type { InviteInfo } from "~/actions/team/contracts";
 import { runAction } from "~/server/shared/action-runtime";
 import { isErr } from "~/server/shared/result";
-import type { InviteInfo } from "~/server/team/application/contracts";
 import {
   createTeamInvite as createTeamInviteService,
   getInviteInfo as getInviteInfoService,

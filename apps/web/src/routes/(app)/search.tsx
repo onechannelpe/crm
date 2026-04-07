@@ -1,6 +1,7 @@
 import { revalidate, useSearchParams } from "@solidjs/router";
 import { createEffect, createMemo, createSignal, Show } from "solid-js";
 
+import { isSearchType, type SearchType } from "~/actions/search/contracts";
 import { searchDirect } from "~/actions/search/run";
 import Search from "~/components/icons/search";
 import { AppPage } from "~/components/layout/page";
@@ -17,7 +18,6 @@ import {
   createSearchPersonDetailSidePanelPage,
 } from "~/features/side-panel/types/side-panel-page";
 import { mySearchAllowanceQuery } from "~/lib/queries/search";
-import { isSearchType, type SearchType } from "~/server/shared/pipeline-types";
 
 import pageStyles from "~/features/search/ui/search-page-shell.module.css";
 
@@ -36,19 +36,23 @@ export default function SearchPage() {
   const resultCount = createMemo(() => model().total);
 
   createEffect(() => {
-    const paramQuery =
-      typeof searchParams.query === "string" ? searchParams.query : "";
-    const paramType =
-      typeof searchParams.type === "string" ? searchParams.type : "";
-    if (paramQuery) {
-      setQuery(paramQuery);
+    if (typeof searchParams.query === "string" && searchParams.query) {
+      setQuery(searchParams.query);
     }
-    if (isSearchType(paramType)) {
-      setSearchType(paramType);
-      if (paramType === "company_name" || paramType === "ruc") {
-        setTab("companies");
-      }
+
+    if (typeof searchParams.type !== "string") {
+      return;
     }
+    if (!isSearchType(searchParams.type)) {
+      return;
+    }
+
+    setSearchType(searchParams.type);
+    setTab(
+      searchParams.type === "company_name" || searchParams.type === "ruc"
+        ? "companies"
+        : "people",
+    );
   });
 
   async function handleSearch(event?: Event) {

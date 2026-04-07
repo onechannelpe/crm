@@ -5,7 +5,7 @@ import type {
   SalesRecordEditContextView,
   SalesRecordProductOptionView,
   SalesRecordQueueItemView,
-} from "~/server/sales-records/application/contracts";
+} from "~/actions/sales-records/contracts";
 import { getBootstrap as getBootstrapService } from "~/server/sales-records/application/queries/get-bootstrap";
 import { getEditContext as getEditContextService } from "~/server/sales-records/application/queries/get-fix-context";
 import { listConfirmed as listConfirmedService } from "~/server/sales-records/application/queries/list-confirmed";

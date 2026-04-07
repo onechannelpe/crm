@@ -2,14 +2,14 @@
 
 import { redirect } from "@solidjs/router";
 
+import type {
+  PasskeyStartSubmissionResult,
+  PasswordLoginSubmissionResult,
+} from "~/actions/auth/contracts";
 import { internalError } from "~/lib/app-errors";
 import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { getActionRequestContext } from "~/lib/observability/context";
-import type {
-  PasskeyStartSubmissionResult,
-  PasswordLoginSubmissionResult,
-} from "~/server/auth/application/contracts";
 import {
   createPasskeyStartService,
   submitPasswordLoginWithDeps,

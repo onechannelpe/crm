@@ -2,8 +2,8 @@ import { Navigate } from "@solidjs/router";
 import type { ParentProps } from "solid-js";
 import { Match, Switch, createContext, useContext } from "solid-js";
 
+import type { CurrentUserView } from "~/actions/auth/contracts";
 import { Loading } from "~/components/feedback/loading";
-import type { CurrentUserView } from "~/server/auth/application/contracts";
 
 import { SessionProvider, useSession } from "./session-provider";
 
