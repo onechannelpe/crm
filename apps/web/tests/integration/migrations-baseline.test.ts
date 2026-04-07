@@ -87,7 +87,7 @@ describe("schema baseline", () => {
         .selectFrom("branches")
         .select((eb) => eb.fn.count<number>("id").as("count"))
         .executeTakeFirstOrThrow();
-      expect(Number(branches.count)).toBe(1);
+      expect(branches.count).toBe(1);
 
       const integrity = await sql<{ migrations_hash: string }>`
         SELECT migrations_hash FROM schema_integrity

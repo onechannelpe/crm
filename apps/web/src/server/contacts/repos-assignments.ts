@@ -75,8 +75,8 @@ export function createContactAssignmentsRepo(db: Kysely<Database>) {
         .execute();
 
       return rows.map((row) => ({
-        userId: Number(row.userId),
-        activeCount: Number(row.activeCount),
+        userId: row.userId,
+        activeCount: row.activeCount,
       }));
     },
 

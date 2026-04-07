@@ -95,10 +95,10 @@ export async function getObservabilitySnapshot(params?: {
     windowMinutes,
     summary: summary.map((row) => ({
       actionName: row.action_name,
-      count: Number(row.count ?? 0),
-      errorCount: Number(row.error_count ?? 0),
-      avgDurationMs: Number(row.avg_duration_ms ?? 0),
-      maxDurationMs: Number(row.max_duration_ms ?? 0),
+      count: row.count ?? 0,
+      errorCount: row.error_count ?? 0,
+      avgDurationMs: row.avg_duration_ms ?? 0,
+      maxDurationMs: row.max_duration_ms ?? 0,
     })),
     recent: recent.map((row) => ({
       id: row.id,

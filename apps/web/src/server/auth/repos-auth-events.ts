@@ -42,7 +42,7 @@ export function createAuthEventsRepo(db: Kysely<Database>) {
         .where("outcome", "in", ["failure", "throttled"])
         .where("created_at", ">=", since)
         .executeTakeFirst()
-        .then((row) => Number(row?.total ?? 0));
+        .then((row) => row?.total ?? 0);
     },
 
     async hasRecentSuccessFromIp(

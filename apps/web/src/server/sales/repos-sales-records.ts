@@ -46,7 +46,7 @@ export function createSalesRecordsRepo(db: Kysely<Database>) {
         .where("executive_user_id", "=", executiveUserId)
         .where("status", "=", status)
         .executeTakeFirst();
-      return Number(row?.count ?? 0);
+      return row?.count ?? 0;
     },
 
     listByBranch(branchId: number, limit: number) {

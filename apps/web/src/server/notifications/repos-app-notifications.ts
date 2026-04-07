@@ -24,7 +24,7 @@ export function createAppNotificationsRepo(db: DatabaseExecutor) {
         .where("user_id", "=", userId)
         .where("read_at", "is", null)
         .executeTakeFirst();
-      return Number(row?.count ?? 0);
+      return row?.count ?? 0;
     },
 
     async createMany(values: NewAppNotificationRow[]): Promise<void> {

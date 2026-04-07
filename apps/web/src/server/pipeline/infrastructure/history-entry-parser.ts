@@ -54,5 +54,9 @@ export function toHistoryEntry(
       return toCallEntry(row, payload.value);
     case "note_added":
       return toNoteEntry(row, payload.value);
+    default: {
+      const exhaustive: never = row.event_type;
+      return exhaustive;
+    }
   }
 }

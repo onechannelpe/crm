@@ -250,7 +250,7 @@ export function createNotificationCampaignsRepo(db: Kysely<Database>) {
         .where("notification_recipients.campaign_id", "=", campaignId)
         .where("notification_jobs.status", "in", ["pending", "leased"])
         .executeTakeFirst()
-        .then((row) => Number(row?.count ?? 0));
+        .then((row) => row?.count ?? 0);
     },
   };
 }
