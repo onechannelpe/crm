@@ -17,16 +17,17 @@ import {
   seedTeamInviteFixtures,
 } from "./fixtures";
 
-describe("team invite accept benchmark", () => {
+describe("team invite accept command benchmark", () => {
   let ctx: TestDbContext | null = null;
   let inviteAccept: InviteService["acceptInvite"] | null = null;
   let acceptFixtures: AcceptFixture[] = [];
   const acceptCursor = { value: 0 };
 
   beforeAll(async () => {
-    ctx = await createIsolatedTestDb("bench-team-invite-accept-service");
+    ctx = await createIsolatedTestDb("bench-team-invite-accept-command");
     const kit = createInviteTestKit(ctx, {
       now: () => BENCH_NOW,
+      hashPassword: async () => "bench-password-hash",
     });
     inviteAccept = kit.commands.accept;
 
@@ -42,12 +43,12 @@ describe("team invite accept benchmark", () => {
   });
 
   bench(
-    "service path: accept invite (with password hash)",
+    "command path: accept invite",
     async () => {
       const fixture = takeFromPool(
         acceptFixtures,
         acceptCursor,
-        "team-invite-accept service pool exhausted before iterations completed",
+        "team-invite-accept command pool exhausted before iterations completed",
       );
 
       const result = await inviteAccept!({
