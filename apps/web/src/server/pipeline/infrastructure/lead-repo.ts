@@ -147,7 +147,7 @@ export function createLeadRepo(db: DatabaseExecutor) {
         filters,
       ).executeTakeFirstOrThrow();
 
-      return Number(row.count);
+      return row.count;
     },
   };
 }

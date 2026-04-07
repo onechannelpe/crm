@@ -140,7 +140,7 @@ export async function getAuthFunnelSnapshot(params?: {
       method: row.method,
       outcome: row.outcome,
       source: row.source,
-      count: Number(row.count ?? 0),
+      count: row.count ?? 0,
     })),
     recent: recent.map((row) => ({
       id: row.id,

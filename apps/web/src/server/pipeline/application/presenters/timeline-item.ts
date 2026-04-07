@@ -139,5 +139,9 @@ export function presentTimelineItem(
           event.payload?.body || `Registrada por ${actorDisplayName}.`,
         actorDisplayName,
       };
+    default: {
+      const exhaustive: never = event;
+      return exhaustive;
+    }
   }
 }

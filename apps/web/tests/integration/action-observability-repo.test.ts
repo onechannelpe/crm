@@ -67,8 +67,8 @@ describe("action observability repository", () => {
     });
     expect(summary).toHaveLength(1);
     expect(summary[0]?.action_name).toBe("sales.create");
-    expect(Number(summary[0]?.count ?? 0)).toBe(2);
-    expect(Number(summary[0]?.error_count ?? 0)).toBe(1);
+    expect(summary[0]?.count ?? 0).toBe(2);
+    expect(summary[0]?.error_count ?? 0).toBe(1);
   });
 
   it("uses fixed validation error code and can delete old records", async () => {
@@ -196,7 +196,7 @@ describe("action observability repository", () => {
 
     expect(filteredSummary).toHaveLength(1);
     expect(filteredSummary[0]?.action_name).toBe("team.invite.create");
-    expect(Number(filteredSummary[0]?.count ?? 0)).toBe(1);
-    expect(Number(filteredSummary[0]?.error_count ?? 0)).toBe(1);
+    expect(filteredSummary[0]?.count ?? 0).toBe(1);
+    expect(filteredSummary[0]?.error_count ?? 0).toBe(1);
   });
 });

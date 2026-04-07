@@ -33,7 +33,7 @@ export function createPasswordResetTokensRepo(db: Kysely<Database>) {
         .where("user_id", "=", userId)
         .where("created_at", ">=", since)
         .executeTakeFirstOrThrow();
-      return Number(row.count);
+      return row.count;
     },
 
     markUsed(id: number, usedAt: number) {
