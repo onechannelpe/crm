@@ -51,6 +51,16 @@ function retainPageStateByNavigationStack(
   return retainedState;
 }
 
+function isSameNavigationEntry(
+  currentEntry: SidePanelNavigationEntry,
+  page: SidePanelPageDefinition,
+): boolean {
+  return (
+    currentEntry.page === page.entry.page &&
+    currentEntry.pageId === page.entry.pageId
+  );
+}
+
 export function createSidePanelStore() {
   const [state, setState] = createStore<SidePanelState>({
     isOpen: false,
@@ -64,11 +74,7 @@ export function createSidePanelStore() {
   const openPanel = (page: SidePanelPageDefinition) => {
     const currentEntry = state.navigationStack.at(-1);
 
-    if (
-      currentEntry &&
-      currentEntry.page === page.entry.page &&
-      currentEntry.pageId === page.entry.pageId
-    ) {
+    if (currentEntry && isSameNavigationEntry(currentEntry, page)) {
       setState("isOpen", true);
       setState("isClosing", false);
       setState("searchText", "");

@@ -7,6 +7,10 @@ import {
   type LeadStatus,
 } from "~/actions/pipeline/contracts";
 import { validationError } from "~/lib/app-errors";
+import {
+  isValidLeadRucInput,
+  normalizeLeadRucInput,
+} from "~/lib/validation/lead";
 import { completeCommercialInput } from "~/server/pipeline/application/commands/complete-commercial-input";
 import { reassignLead } from "~/server/pipeline/application/commands/reassign-lead";
 import { registerLead } from "~/server/pipeline/application/commands/register-lead";
@@ -34,7 +38,9 @@ export async function requestLeadCreation(input: {
   ruc: string;
   executiveId?: number;
 }) {
-  if (!input.ruc?.trim()) {
+  const normalizedRuc = normalizeLeadRucInput(input.ruc);
+
+  if (!isValidLeadRucInput(normalizedRuc)) {
     throw validationError("ruc is required");
   }
 
@@ -51,7 +57,7 @@ export async function requestLeadCreation(input: {
           actorUserId: ctx.actor.userId,
           actorRole: ctx.actor.role,
           executiveId: input.executiveId ?? ctx.actor.userId,
-          ruc: input.ruc,
+          ruc: normalizedRuc,
         }),
       ),
   });
