@@ -3,7 +3,7 @@ import { For, Show } from "solid-js";
 import { Button } from "~/components/ui/input/button";
 import { Select } from "~/components/ui/input/select";
 import { Textarea } from "~/components/ui/input/textarea";
-import type { LeadCallOutcome } from "~/lib/pipeline/lead-values";
+import type { LeadCallOutcome } from "~/server/pipeline/domain/lead";
 
 import type { InteractionState } from "./state";
 

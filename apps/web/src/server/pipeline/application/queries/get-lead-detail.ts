@@ -2,11 +2,11 @@ import type { Role } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import type { LeadDetailView } from "../contracts";
 import type { LeadDetailDeps } from "../deps/lead-queries";
 import { canRevealFullTimeline, requireLeadAccess } from "../policies/access";
 import { resolveAvailableActions } from "../policies/action-availability";
 import { presentLeadDetail } from "../presenters/lead-detail";
+import type { LeadDetailView } from "./views/lead-detail";
 
 export async function getLeadDetail(
   deps: LeadDetailDeps,

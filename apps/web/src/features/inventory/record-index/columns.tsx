@@ -1,9 +1,9 @@
+import type { InventoryItemView } from "~/actions/inventory/contracts";
 import Building2 from "~/components/icons/building-2";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import Package from "~/components/icons/package";
 import { Badge } from "~/components/ui/display/badge";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
-import type { InventoryItemView } from "~/server/inventory/application/contracts";
 
 import styles from "./styles.module.css";
 

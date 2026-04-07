@@ -2,9 +2,9 @@ import type { Role } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import type { SaleView } from "../contracts";
 import type { SaleQueryDeps } from "../deps/lead-queries";
 import { canViewAllSales } from "../policies/access";
+import type { SaleView } from "./views/sale";
 
 export async function getSaleDetail(
   deps: SaleQueryDeps,

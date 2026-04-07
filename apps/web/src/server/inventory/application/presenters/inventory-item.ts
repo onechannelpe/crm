@@ -1,5 +1,5 @@
-import type { InventoryItemView } from "../contracts";
 import type { InventoryItemWithProductRecord } from "../ports";
+import type { InventoryItemView } from "../queries/views/inventory-item";
 
 export function presentInventoryItem(
   item: InventoryItemWithProductRecord,

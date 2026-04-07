@@ -1,5 +1,6 @@
 import { createAsync } from "@solidjs/router";
 
+import type { LeadListRowView } from "~/actions/pipeline/contracts";
 import { queryLeadList } from "~/actions/pipeline/queries/leads";
 import Info from "~/components/icons/info";
 import List from "~/components/icons/list";
@@ -8,7 +9,6 @@ import type {
   RecordIndexAdapter,
   RecordIndexSource,
 } from "~/features/record-index/model/types";
-import type { LeadListRowView } from "~/server/pipeline/application/contracts";
 
 import { REVIEW_RECORD_INDEX_COLUMNS } from "./columns";
 import { useOpenReviewRecord } from "./open-row";

@@ -1,7 +1,16 @@
 import type { Role } from "~/lib/auth/access/rbac";
 
 import type { LeadStage } from "../../domain/lead";
-import type { LeadAvailableAction } from "../contracts";
+
+export type LeadAvailableAction =
+  | "log-call"
+  | "add-note"
+  | "complete-commercial-input"
+  | "create-sale"
+  | "review-lead"
+  | "create-quotation"
+  | "approve-for-sale"
+  | "reassign-lead";
 import {
   canAddLeadInteraction,
   canApproveForSale,
