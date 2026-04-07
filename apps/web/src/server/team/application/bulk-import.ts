@@ -1,3 +1,4 @@
+import type { Role } from "~/lib/auth/access/rbac";
 import { shortName } from "~/lib/users/display-name";
 import type { AppContext } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
@@ -14,7 +15,6 @@ import {
   buildInviteUrl,
   sendInviteEmail,
 } from "../infrastructure/invite-delivery";
-import type { CreateTeamInviteCommand } from "./contracts";
 
 export async function previewBulkImport(
   csvContent: string,
@@ -38,7 +38,7 @@ export async function applyBulkImport(
   deps: TeamInviteProvisioningContext,
   input: {
     csvContent: string;
-    role: CreateTeamInviteCommand["role"];
+    role: Role;
   },
 ): Promise<Result<BulkApplyResult, DomainError>> {
   const parsed = await previewBulkImport(input.csvContent);

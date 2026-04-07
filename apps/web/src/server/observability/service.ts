@@ -205,9 +205,9 @@ export function createObservabilityService(repos: ObservabilityRepos) {
     async listRecentAuthFunnel(params: {
       fromInclusive: number;
       toInclusive: number;
-      eventName?: RecordAuthFunnelEventInput["eventName"];
-      method?: Exclude<RecordAuthFunnelEventInput["method"], null>;
-      outcome?: RecordAuthFunnelEventInput["outcome"];
+      eventName?: AuthFunnelEventName;
+      method?: AuthFunnelMethod;
+      outcome?: AuthFunnelOutcome;
       limit: number;
     }) {
       return repos.authFunnelEvents.findRecent(params);
@@ -216,9 +216,9 @@ export function createObservabilityService(repos: ObservabilityRepos) {
     async summarizeAuthFunnel(params: {
       fromInclusive: number;
       toInclusive: number;
-      eventName?: RecordAuthFunnelEventInput["eventName"];
-      method?: Exclude<RecordAuthFunnelEventInput["method"], null>;
-      outcome?: RecordAuthFunnelEventInput["outcome"];
+      eventName?: AuthFunnelEventName;
+      method?: AuthFunnelMethod;
+      outcome?: AuthFunnelOutcome;
     }) {
       return repos.authFunnelEvents.summarize(params);
     },
