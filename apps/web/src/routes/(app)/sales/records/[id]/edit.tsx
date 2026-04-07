@@ -15,7 +15,7 @@ import { Textarea } from "~/components/ui/input/textarea";
 import { useAsyncAction } from "~/hooks/use-async-action";
 import { getErrorMessage } from "~/lib/errors";
 import {
-  salesRecordFixContextQuery,
+  salesRecordEditContextQuery,
   salesRecordProductsQuery,
 } from "~/lib/queries/sales-records";
 import { useSalesRecordForm } from "~/lib/sales/use-sales-record-form";
@@ -31,13 +31,13 @@ export default function FixSalePage() {
   const form = useSalesRecordForm();
   const { showToast } = useToast();
 
-  const fixContext = createAsync(() => salesRecordFixContextQuery(noteId()));
+  const editContext = createAsync(() => salesRecordEditContextQuery(noteId()));
   const currentProducts = createAsync(() => salesRecordProductsQuery(), {
     initialValue: [],
   });
 
   createEffect(() => {
-    const context = fixContext();
+    const context = editContext();
     if (!context) return;
 
     form.setRuc(context.client?.ruc ?? "");
@@ -68,10 +68,10 @@ export default function FixSalePage() {
   });
 
   const canResubmit = createMemo(() => {
-    const status = fixContext()?.status;
+    const status = editContext()?.status;
     return status === "rejected" || status === "draft";
   });
-  const isDraft = createMemo(() => fixContext()?.status === "draft");
+  const isDraft = createMemo(() => editContext()?.status === "draft");
 
   const [handleResubmit, isSubmitting] = useAsyncAction(async (e: Event) => {
     e.preventDefault();
@@ -107,7 +107,7 @@ export default function FixSalePage() {
 
   return (
     <AppPage width="medium">
-      <Show when={fixContext()}>
+      <Show when={editContext()}>
         {(context) => (
           <form onSubmit={(e) => void handleResubmit(e)}>
             <div class={styles.panelPadded}>

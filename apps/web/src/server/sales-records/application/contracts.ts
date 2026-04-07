@@ -115,7 +115,7 @@ interface ContextAttempt {
   reviewerName: string;
 }
 
-export interface SalesRecordFixContextView {
+export interface SalesRecordEditContextView {
   id: number;
   status: SalesRecordStatus;
   client: ContextClient | null;
