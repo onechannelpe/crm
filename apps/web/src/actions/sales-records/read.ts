@@ -2,12 +2,12 @@
 
 import type {
   SalesRecordBootstrapView,
-  SalesRecordFixContextView,
+  SalesRecordEditContextView,
   SalesRecordProductOptionView,
   SalesRecordQueueItemView,
 } from "~/server/sales-records/application/contracts";
 import { getBootstrap as getBootstrapService } from "~/server/sales-records/application/queries/get-bootstrap";
-import { getFixContext as getFixContextService } from "~/server/sales-records/application/queries/get-fix-context";
+import { getEditContext as getEditContextService } from "~/server/sales-records/application/queries/get-fix-context";
 import { listConfirmed as listConfirmedService } from "~/server/sales-records/application/queries/list-confirmed";
 import { listPending as listPendingService } from "~/server/sales-records/application/queries/list-pending";
 import { listProducts as listProductsService } from "~/server/sales-records/application/queries/list-products";
@@ -68,17 +68,17 @@ export async function listConfirmedSalesRecords(): Promise<
   });
 }
 
-export async function getSalesRecordFixContext(
+export async function getSalesRecordEditContext(
   recordId: number,
-): Promise<SalesRecordFixContextView> {
+): Promise<SalesRecordEditContextView> {
   const safeRecordId = parseSalesRecordId(recordId);
   return runAction({
-    actionName: "sales_records.fix_context.read",
+    actionName: "sales_records.edit_context.read",
     permission: "sales:create",
     input: { recordId: safeRecordId },
     execute: async (ctx) =>
       Ok(
-        await getFixContextService(ctx, createSalesRecordReadContext(), {
+        await getEditContextService(ctx, createSalesRecordReadContext(), {
           recordId: safeRecordId,
         }),
       ),

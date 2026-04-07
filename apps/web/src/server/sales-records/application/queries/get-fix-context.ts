@@ -2,7 +2,7 @@ import { assertOwnedRecord } from "~/lib/auth/access/ownership";
 import type { AppContext } from "~/server/shared/action-runtime";
 
 import type { SalesRecordReadContext } from "../../infrastructure/read-context";
-import type { SalesRecordFixContextView } from "../contracts";
+import type { SalesRecordEditContextView } from "../contracts";
 
 function parsePhonesJson(raw: string): string[] {
   try {
@@ -14,11 +14,11 @@ function parsePhonesJson(raw: string): string[] {
   }
 }
 
-export async function getFixContext(
+export async function getEditContext(
   ctx: AppContext,
   deps: SalesRecordReadContext,
   input: { recordId: number },
-): Promise<SalesRecordFixContextView> {
+): Promise<SalesRecordEditContextView> {
   const record = assertOwnedRecord(
     await deps.repos.salesRecords.findById(input.recordId),
     (row) => row.executive_user_id,
