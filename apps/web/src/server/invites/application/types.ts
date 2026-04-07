@@ -244,3 +244,44 @@ export interface InviteService {
     input: AcceptInviteInput,
   ): Promise<Result<InviteAcceptedResult, DomainError>>;
 }
+
+export interface TeamInviteReadTeamsPort {
+  findByBranch(branchId: number): Promise<Array<{ id: number; name: string }>>;
+}
+
+export interface TeamInviteReadUsersPort {
+  findById(id: number): Promise<
+    | {
+        id: number;
+        email: string;
+        role: Role;
+        names: string;
+        first_surname: string;
+        second_surname: string;
+      }
+    | undefined
+  >;
+}
+
+export interface TeamInviteReadUserInvitesPort {
+  findById(inviteId: number): Promise<{ user_id: number } | undefined>;
+  findPendingByTokenHash(
+    tokenHash: string,
+    now: number,
+  ): Promise<
+    | {
+        user_names: string;
+        user_first_surname: string;
+        user_second_surname: string;
+        user_username: string;
+        user_email: string;
+      }
+    | undefined
+  >;
+}
+
+export interface TeamInviteReadRepos {
+  teams: TeamInviteReadTeamsPort;
+  userInvites: TeamInviteReadUserInvitesPort;
+  users: TeamInviteReadUsersPort;
+}
