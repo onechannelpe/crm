@@ -20,20 +20,20 @@ export async function listUserSessions(
   _ctx: AppContext,
   deps: AdminSessionsReadContext,
   input: { userId: number },
-): Promise<Result<UserSessionRow[], DomainError>> {
-  return Ok(await deps.repos.sessions.listForUser(input.userId));
+): Promise<UserSessionRow[]> {
+  return deps.repos.sessions.listForUser(input.userId);
 }
 
 export async function countActiveSessions(
   deps: AdminSessionsReadContext,
-): Promise<Result<number, DomainError>> {
-  return Ok(await deps.repos.sessions.countActive());
+): Promise<number> {
+  return deps.repos.sessions.countActive();
 }
 
 export async function listAllActiveSessions(
   deps: AdminSessionsReadContext,
-): Promise<Result<SessionInfo[], DomainError>> {
-  return Ok(await deps.repos.sessions.listAllActive());
+): Promise<SessionInfo[]> {
+  return deps.repos.sessions.listAllActive();
 }
 
 export async function revokeUserSession(
