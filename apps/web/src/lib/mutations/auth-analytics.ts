@@ -1,10 +1,10 @@
 import { action } from "@solidjs/router";
 
 import { trackAuthClientEvent } from "~/actions/auth/analytics";
-import type { AuthClientAnalyticsEvent } from "~/lib/auth/auth-analytics";
+import type { AuthFunnelClientEventPayload } from "~/lib/observability/auth-funnel";
 
 export const trackAuthClientEventMutation = action(
-  async (event: AuthClientAnalyticsEvent): Promise<void> =>
+  async (event: AuthFunnelClientEventPayload): Promise<void> =>
     trackAuthClientEvent(event),
   "trackAuthClientEvent",
 );

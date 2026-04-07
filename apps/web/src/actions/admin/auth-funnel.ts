@@ -2,18 +2,16 @@
 
 import { validationError } from "~/lib/app-errors";
 import { requirePermission } from "~/lib/auth/access/session";
-import {
-  isAuthAnalyticsScreen,
-  type AuthAnalyticsMethod,
-  type AuthAnalyticsScreen,
-} from "~/lib/auth/auth-analytics";
+import { isAuthAnalyticsScreen } from "~/lib/auth/auth-analytics";
 import {
   isAuthFunnelEventName,
   isAuthFunnelMethod,
   isAuthFunnelOutcome,
   type AuthFunnelEventName,
+  type AuthFunnelMethod,
   type AuthFunnelOutcome,
   type AuthFunnelSource,
+  type AuthFunnelScreen,
 } from "~/lib/observability/auth-funnel";
 import { getObservabilityRuntime } from "~/server/observability/runtime";
 
@@ -23,8 +21,8 @@ const { observabilityService } = getObservabilityRuntime();
 
 export interface AuthFunnelSummaryRow {
   eventName: AuthFunnelEventName;
-  screen: AuthAnalyticsScreen | null;
-  method: AuthAnalyticsMethod | null;
+  screen: AuthFunnelScreen | null;
+  method: AuthFunnelMethod | null;
   outcome: AuthFunnelOutcome;
   source: AuthFunnelSource;
   count: number;
@@ -34,8 +32,8 @@ export interface AuthFunnelRecentEvent {
   id: number;
   createdAt: number;
   eventName: AuthFunnelEventName;
-  screen: AuthAnalyticsScreen | null;
-  method: AuthAnalyticsMethod | null;
+  screen: AuthFunnelScreen | null;
+  method: AuthFunnelMethod | null;
   outcome: AuthFunnelOutcome;
   source: AuthFunnelSource;
   routePath: string | null;
@@ -60,7 +58,7 @@ function assertEventName(
 
 function assertMethod(
   value: string | undefined,
-): Exclude<AuthAnalyticsMethod, null> | undefined {
+): Exclude<AuthFunnelMethod, null> | undefined {
   if (!value) return undefined;
   if (isAuthFunnelMethod(value)) {
     return value;
@@ -78,7 +76,7 @@ function assertOutcome(
   throw validationError("outcome is invalid");
 }
 
-function assertScreen(value: string | null): AuthAnalyticsScreen | null {
+function assertScreen(value: string | null): AuthFunnelScreen | null {
   if (value === null) return null;
   if (!isAuthAnalyticsScreen(value)) throw validationError("screen is invalid");
   return value;
