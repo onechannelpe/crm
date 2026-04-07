@@ -42,7 +42,7 @@ describe("team invite accept benchmark", () => {
   });
 
   bench(
-    "service path: accept invite",
+    "service path: accept invite (with password hash)",
     async () => {
       const fixture = takeFromPool(
         acceptFixtures,
