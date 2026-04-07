@@ -1,12 +1,14 @@
 "use server";
 
+import type {
+  BulkApplyResult,
+  BulkParseResult,
+} from "~/actions/team/contracts";
 import { validationError } from "~/lib/app-errors";
 import { runAction } from "~/server/shared/action-runtime";
 import {
   applyBulkImport as applyBulkImportService,
   previewBulkImport as previewBulkImportService,
-  type BulkApplyResult,
-  type BulkParseResult,
 } from "~/server/team/application/bulk-import";
 import { createTeamInviteContext } from "~/server/team/infrastructure/invite-context";
 
@@ -52,3 +54,5 @@ export async function applyBulkImport(
       }),
   });
 }
+
+export type { BulkApplyResult, BulkParseResult };

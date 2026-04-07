@@ -5,7 +5,7 @@ import { config } from "~/lib/config";
 import { assertPositiveInt } from "~/lib/contracts/guards";
 import { db } from "~/lib/db/db";
 import { getObservabilityRuntime } from "~/server/observability/runtime";
-import { downloadSalesExportById } from "~/server/sales-records/application/download-export";
+import { downloadSalesExportById } from "~/server/sales-exports/download";
 import { createSalesExportBlobStore } from "~/server/sales/export-blob-store";
 import { createReportExportRepo } from "~/server/sales/repos-report-exports";
 import { createAppContext } from "~/server/shared/action-runtime";

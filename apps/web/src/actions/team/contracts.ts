@@ -5,6 +5,30 @@ export interface BulkImportSetup {
   assignableRoles: RoleOption[];
 }
 
+export interface BulkImportRow {
+  firstSurname: string;
+  secondSurname: string;
+  names: string;
+  email: string;
+  expiresAt: number | null;
+}
+
+export type BulkRowError = {
+  row: number;
+  message: string;
+};
+
+export interface BulkParseResult {
+  valid: BulkImportRow[];
+  errors: BulkRowError[];
+}
+
+export interface BulkApplyResult {
+  created: number;
+  skipped: number;
+  rowErrors: string[];
+}
+
 export interface TeamInvite {
   inviteId: number;
   userId: number;
