@@ -1,16 +1,7 @@
 import type { Role } from "~/lib/auth/access/rbac";
 
 import type { LeadStage } from "../../domain/lead";
-
-export type LeadAvailableAction =
-  | "log-call"
-  | "add-note"
-  | "complete-commercial-input"
-  | "create-sale"
-  | "review-lead"
-  | "create-quotation"
-  | "approve-for-sale"
-  | "reassign-lead";
+import type { LeadAvailableAction } from "../contracts/lead-available-action";
 import {
   canAddLeadInteraction,
   canApproveForSale,
@@ -26,7 +17,7 @@ export function resolveAvailableActions(input: {
   actorRole: Role;
   executiveId: number;
   stage: LeadStage;
-}) {
+}): LeadAvailableAction[] {
   const actions: LeadAvailableAction[] = [];
   const ownsLead = input.executiveId === input.actorUserId;
 

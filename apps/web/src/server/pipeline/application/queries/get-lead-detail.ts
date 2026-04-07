@@ -40,6 +40,14 @@ export async function getLeadDetail(
     return history;
   }
 
+  const canRevealTimeline = canRevealFullTimeline(input.actorRole);
+  const availableActions = resolveAvailableActions({
+    actorUserId: input.actorUserId,
+    actorRole: input.actorRole,
+    executiveId: lead.executiveId,
+    stage: lead.stage,
+  });
+
   return Ok(
     presentLeadDetail({
       lead,
@@ -47,13 +55,8 @@ export async function getLeadDetail(
       quotations,
       sale,
       history: history.value,
-      canRevealFullTimeline: canRevealFullTimeline(input.actorRole),
-      availableActions: resolveAvailableActions({
-        actorUserId: input.actorUserId,
-        actorRole: input.actorRole,
-        executiveId: lead.executiveId,
-        stage: lead.stage,
-      }),
+      canRevealFullTimeline: canRevealTimeline,
+      availableActions,
     }),
   );
 }
