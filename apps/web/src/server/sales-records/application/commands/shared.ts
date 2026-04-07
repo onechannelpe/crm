@@ -39,7 +39,7 @@ export type SalesRecordRateLimitedMutationDeps = SalesRecordMutationDeps & {
 };
 
 export function okCommandResult(): Result<SalesRecordMutationResult, never> {
-  return Ok({ success: true as const });
+  return Ok({ success: true });
 }
 
 export function salesRecordFailure(

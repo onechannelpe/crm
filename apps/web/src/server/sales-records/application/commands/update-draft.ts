@@ -3,7 +3,10 @@ import type { AppContext } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { Result } from "~/server/shared/result";
 
-import type { CreateSalesRecordDraftInput } from "../contracts";
+import type {
+  CreateSalesRecordDraftInput,
+  SalesRecordMutationResult,
+} from "../contracts";
 import {
   getSalesRecordAudit,
   loadProducts,
@@ -23,7 +26,7 @@ export async function updateDraft(
     draft: Omit<CreateSalesRecordDraftInput, "source" | "leadAssignmentId">;
     correctionNotes: string | null;
   },
-): Promise<Result<{ success: true }, DomainError>> {
+): Promise<Result<SalesRecordMutationResult, DomainError>> {
   return runSalesRecordMutation(deps, async (repos) => {
     const audit = getSalesRecordAudit(repos);
     const record = await repos.salesRecords.findById(input.recordId);

@@ -2,6 +2,7 @@ import type { AppContext } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { Result } from "~/server/shared/result";
 
+import type { SalesRecordMutationResult } from "../contracts";
 import {
   assertTransition,
   getSalesRecordAudit,
@@ -15,7 +16,7 @@ export async function rejectRecord(
   ctx: AppContext,
   deps: SalesRecordMutationDeps,
   input: { recordId: number; reason: string },
-): Promise<Result<{ success: true }, DomainError>> {
+): Promise<Result<SalesRecordMutationResult, DomainError>> {
   return runSalesRecordMutation(deps, async (repos) => {
     const audit = getSalesRecordAudit(repos);
     const record = await repos.salesRecords.findById(input.recordId);

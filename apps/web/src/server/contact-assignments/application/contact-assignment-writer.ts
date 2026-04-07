@@ -65,7 +65,8 @@ async function findOrCreateOrganizationsByRuc(
           ruc,
           candidate.organization_name,
         );
-        return [ruc, organization.id] as const;
+        const entry: [string, number] = [ruc, organization.id];
+        return entry;
       },
     ),
   );
@@ -111,7 +112,8 @@ async function findOrCreateContactsByKey(
           candidate.person_name,
           candidate.phone_primary,
         );
-        return [key, contact] as const;
+        const entry: [string, ContactRecord] = [key, contact];
+        return entry;
       },
     ),
   );

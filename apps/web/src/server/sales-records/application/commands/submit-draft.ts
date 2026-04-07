@@ -3,6 +3,7 @@ import type { AppContext } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { Result } from "~/server/shared/result";
 
+import type { SalesRecordMutationResult } from "../contracts";
 import {
   assertTransition,
   getSalesRecordAudit,
@@ -16,7 +17,7 @@ export async function submitRecord(
   ctx: AppContext,
   deps: SalesRecordRateLimitedMutationDeps,
   input: { recordId: number },
-): Promise<Result<{ success: true }, DomainError>> {
+): Promise<Result<SalesRecordMutationResult, DomainError>> {
   await checkActionRateLimit(
     "sales_records.submit",
     ctx.actor.userId,

@@ -2,7 +2,10 @@ import type { Role } from "~/lib/auth/access/rbac";
 import type { ActionSuccess } from "~/lib/contracts/common";
 import type { BranchId, UserId } from "~/server/shared/ids";
 
-import type { ContactAssignmentStatus } from "../domain/assignment";
+import type {
+  ContactAssignmentCallOutcome,
+  ContactAssignmentStatus,
+} from "../domain/assignment";
 
 export interface AssignContactsCommand {
   actorUserId: UserId;
@@ -24,7 +27,7 @@ export type CompleteContactAssignmentCallCommand = {
   branchId: BranchId;
   assignmentId: number;
   contactId: number;
-  outcome: string;
+  outcome: ContactAssignmentCallOutcome;
   notes: string | null;
 };
 
