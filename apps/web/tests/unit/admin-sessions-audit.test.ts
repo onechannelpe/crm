@@ -19,7 +19,7 @@ type AuditPayload = {
 function makeContext(): AppContext {
   return {
     actor: {
-      sessionId: "sid-admin",
+      id: "sid-admin",
       userId: 9001,
       branchId: 1,
       role: "admin",

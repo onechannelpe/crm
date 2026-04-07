@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 import type { Kysely } from "kysely";
 
-import type { SessionData } from "../../src/lib/auth/access/session";
+import type { Role } from "../../src/lib/auth/access/rbac";
 import { createDb } from "../../src/lib/db/client";
 import { computeHash, writeStoredHash } from "../../src/lib/db/migration-hash";
 import { SCHEMA_MODULES, SEED_MODULES } from "../../src/lib/db/schema";
@@ -76,12 +76,12 @@ type TestSalesRecordCommands = {
 
 function createTestAppContext(input: {
   userId: number;
-  role: SessionData["role"];
+  role: Role;
   branchId: number;
 }): AppContext {
   return {
     actor: {
-      sessionId: `test-session-${input.userId}`,
+      id: `test-session-${input.userId}`,
       userId: input.userId,
       role: input.role,
       branchId: input.branchId,

@@ -1,4 +1,4 @@
-import type { SessionData } from "~/lib/auth/access/session";
+import type { AuthSession } from "~/lib/auth/access/session-types";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -21,7 +21,7 @@ interface ScopeRepos<
 }
 
 function canManageExecutiveRecord(
-  actor: SessionData,
+  actor: AuthSession,
   target: ManageableCapacityUser,
   supervisedTeamId: number | null,
 ): boolean {
@@ -34,7 +34,7 @@ function canManageExecutiveRecord(
 }
 
 export async function canManageExecutive<T extends ManageableCapacityUser>(
-  actor: SessionData,
+  actor: AuthSession,
   targetUserId: number,
   repos: ScopeRepos<T>,
 ): Promise<{ ok: boolean; target: T | null }> {
@@ -53,7 +53,7 @@ export async function canManageExecutive<T extends ManageableCapacityUser>(
 }
 
 export async function canManageScope(
-  actor: SessionData,
+  actor: AuthSession,
   scope: ScopeRef,
   repos: ScopeRepos,
 ): Promise<Result<void, DomainError>> {

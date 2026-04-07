@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   requirePermission:
     vi.fn<
-      () => Promise<{ userId: number; sessionId: string; branchId: number }>
+      () => Promise<{ userId: number; id: string; branchId: number }>
     >(),
   claimInstallationSession: vi.fn<() => Promise<unknown>>(),
   refreshInstallationSession: vi.fn<() => Promise<unknown>>(),
@@ -66,7 +66,7 @@ describe("extension api routes", () => {
     vi.clearAllMocks();
     mocks.requirePermission.mockResolvedValue({
       userId: 1,
-      sessionId: "session-1",
+      id: "session-1",
       branchId: 1,
     });
   });

@@ -5,8 +5,8 @@ import {
   requirePermission,
   requireRole,
   requireSession as requireSessionActor,
-  type SessionData,
 } from "~/lib/auth/access/session";
+import type { AuthSession } from "~/lib/auth/access/session-types";
 import { assertRecentStrongAuth } from "~/lib/auth/security/step-up";
 import { getErrorMessage } from "~/lib/errors";
 import { getRequestContext } from "~/lib/http/request-context";
@@ -38,7 +38,7 @@ type ActionTelemetryError = {
 };
 
 export interface AppContext {
-  actor: SessionData;
+  actor: AuthSession;
   requestId: string;
   traceId: string;
   ipAddress: string;
@@ -54,7 +54,7 @@ type RunActionParams<T, E extends DomainError> = ActionAuthRequirement & {
   execute: (ctx: AppContext) => Promise<Result<T, E>>;
 };
 
-export function createAppContext(actor: SessionData): AppContext {
+export function createAppContext(actor: AuthSession): AppContext {
   const request = getRequestContext();
   const action = getActionRequestContext();
   return {
@@ -70,7 +70,7 @@ export function createAppContext(actor: SessionData): AppContext {
 
 async function resolveActor(
   params: ActionAuthRequirement,
-): Promise<SessionData> {
+): Promise<AuthSession> {
   if (params.permission) {
     return requirePermission(params.permission);
   }

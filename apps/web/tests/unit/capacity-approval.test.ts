@@ -43,7 +43,7 @@ type ManagedUser = {
 function makeContext(role: Role = "admin"): AppContext {
   return {
     actor: {
-      sessionId: "test-session",
+      id: "test-session",
       userId: ACTOR_USER_ID,
       role,
       branchId: 1,

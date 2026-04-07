@@ -13,11 +13,11 @@ export async function logoutUser(
   ctx: AppContext,
   port: AuthSessionLogoutPort,
 ): Promise<Result<void, DomainError>> {
-  const { sessionId, userId } = ctx.actor;
+  const { id, userId } = ctx.actor;
   const now = ctx.now();
 
-  await port.invalidateSession(sessionId);
-  await port.revokeInstallationSessionsByAuthSession(sessionId, now);
+  await port.invalidateSession(id);
+  await port.revokeInstallationSessionsByAuthSession(id, now);
   await port.updateExecutiveSyncHealth({
     userId,
     syncHealth: "reauth_required",
