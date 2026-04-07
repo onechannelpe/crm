@@ -1,11 +1,11 @@
 import { Show, createSignal, onCleanup, onMount, type JSX } from "solid-js";
 
 import { useResizablePanel } from "../hooks/use-resizable-panel";
-import { SidePanelRouter } from "../router/side-panel-router";
+import { SidePanelRouter } from "../router/router";
 import { useSidePanel } from "../state/use-side-panel";
 import { DesktopSidePanelContent } from "./desktop-content";
 import { DesktopSidePanelFrame } from "./desktop-frame";
-import { SidePanelMobileShell } from "./side-panel-mobile-shell";
+import { SidePanelMobileShell } from "./mobile-shell";
 
 function SidePanelDesktopController(props: {
   isHydrated: boolean;

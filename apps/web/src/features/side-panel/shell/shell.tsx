@@ -8,7 +8,7 @@ import {
 } from "../constants/side-panel-click-outside-id";
 import { useSidePanel } from "../state/use-side-panel";
 
-import styles from "./side-panel-shell.module.css";
+import styles from "./shell.module.css";
 
 type SidePanelShellProps = {
   renderContent?: () => JSX.Element;

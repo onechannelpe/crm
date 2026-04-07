@@ -5,7 +5,7 @@ import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { toAppError } from "~/lib/app-errors";
 
-import { SidePanelList } from "../../components/side-panel-list";
+import { SidePanelList } from "../../components/list";
 import { useSidePanel } from "../../state/use-side-panel";
 import { createLeadDetailSidePanelPage } from "../../types/side-panel-page";
 

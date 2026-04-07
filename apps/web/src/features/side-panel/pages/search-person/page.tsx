@@ -3,8 +3,8 @@ import { createMemo, For } from "solid-js";
 import User from "~/components/icons/user";
 import { RecordChipList } from "~/components/ui/record-chip/record-chip";
 
-import { SidePanelList } from "../../components/side-panel-list";
-import { useSidePanelPageInstanceId } from "../../state/side-panel-page-instance";
+import { SidePanelList } from "../../components/list";
+import { useSidePanelPageInstanceId } from "../../state/page-instance";
 import { useSidePanel } from "../../state/use-side-panel";
 
 import styles from "./page.module.css";

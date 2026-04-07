@@ -12,10 +12,7 @@ import type {
   SidePanelPageDefinition,
   SidePanelPageState,
 } from "../types/side-panel-page";
-import {
-  createSidePanelStore,
-  readStoredSidePanelWidth,
-} from "./side-panel-store";
+import { createSidePanelStore, readStoredSidePanelWidth } from "./store";
 
 export type SidePanelContextValue = {
   isOpen: Accessor<boolean>;

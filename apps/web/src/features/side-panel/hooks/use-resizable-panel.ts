@@ -1,9 +1,6 @@
 import { onCleanup } from "solid-js";
 
-import {
-  SIDE_PANEL_WIDTH_MAX,
-  SIDE_PANEL_WIDTH_MIN,
-} from "../state/side-panel-store";
+import { SIDE_PANEL_WIDTH_MAX, SIDE_PANEL_WIDTH_MIN } from "../state/store";
 
 type UseResizablePanelProps = {
   currentWidth: number;

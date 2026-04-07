@@ -1,6 +1,6 @@
 import Building2 from "~/components/icons/building-2";
 
-import { PageInfoLayout } from "../../top-bar/side-panel-page-info-layout";
+import { PageInfoLayout } from "../../top-bar/page-info-layout";
 
 export function LeadCreatePageInfo() {
   return (

@@ -7,7 +7,7 @@ import { cn } from "~/lib/utils";
 import { SIDE_PANEL_CLICK_OUTSIDE_ID } from "../constants/side-panel-click-outside-id";
 import { useSidePanel } from "../state/use-side-panel";
 
-import styles from "./side-panel-back-button.module.css";
+import styles from "./back-button.module.css";
 
 type SidePanelBackButtonProps = {
   visible: boolean;

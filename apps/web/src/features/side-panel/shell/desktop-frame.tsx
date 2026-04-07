@@ -2,8 +2,8 @@ import type { JSX } from "solid-js";
 
 import { useSidePanel } from "../state/use-side-panel";
 import { ResizeGapFrame } from "./resize-gap";
-import { SidePanelShell } from "./side-panel-shell";
-import { SidePanelWidthEffect } from "./side-panel-width-effect";
+import { SidePanelShell } from "./shell";
+import { SidePanelWidthEffect } from "./width-effect";
 
 import styles from "./desktop-frame.module.css";
 

@@ -1,7 +1,7 @@
 import { createMemo, For } from "solid-js";
 
-import { SidePanelList } from "../../components/side-panel-list";
-import { useSidePanelPageInstanceId } from "../../state/side-panel-page-instance";
+import { SidePanelList } from "../../components/list";
+import { useSidePanelPageInstanceId } from "../../state/page-instance";
 import { useSidePanel } from "../../state/use-side-panel";
 
 export function DataGridDetailPage() {

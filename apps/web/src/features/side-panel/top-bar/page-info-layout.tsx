@@ -1,7 +1,7 @@
 import type { JSX } from "solid-js";
 import { Show } from "solid-js";
 
-import styles from "./side-panel-page-info-layout.module.css";
+import styles from "./page-info-layout.module.css";
 
 type PageInfoLayoutProps = {
   icon?: JSX.Element;

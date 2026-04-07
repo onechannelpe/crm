@@ -1,7 +1,7 @@
 import { Show } from "solid-js";
 
-import { SidePanelPageInstanceProvider } from "../state/side-panel-page-instance";
-import { SIDE_PANEL_PAGES_CONFIG } from "../state/side-panel-pages-config";
+import { SidePanelPageInstanceProvider } from "../state/page-instance";
+import { SIDE_PANEL_PAGES_CONFIG } from "../state/pages-config";
 import { useSidePanel } from "../state/use-side-panel";
 
 export function PageInfo() {

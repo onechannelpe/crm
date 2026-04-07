@@ -2,13 +2,13 @@ import { ErrorBoundary, Show, Suspense } from "solid-js";
 
 import { Loading } from "~/components/feedback/loading";
 
-import { SidePanelPageInstanceProvider } from "../state/side-panel-page-instance";
-import { SIDE_PANEL_PAGES_CONFIG } from "../state/side-panel-pages-config";
+import { SidePanelPageInstanceProvider } from "../state/page-instance";
+import { SIDE_PANEL_PAGES_CONFIG } from "../state/pages-config";
 import { useSidePanel } from "../state/use-side-panel";
-import { SidePanelTopBar } from "../top-bar/side-panel-top-bar";
-import { SidePanelContainer } from "./side-panel-container";
+import { SidePanelTopBar } from "../top-bar/top-bar";
+import { SidePanelContainer } from "./container";
 
-import styles from "./side-panel-router.module.css";
+import styles from "./router.module.css";
 
 export function SidePanelRouter(props: { isMobile: boolean }) {
   const { currentEntry } = useSidePanel();

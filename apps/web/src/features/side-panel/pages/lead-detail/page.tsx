@@ -4,8 +4,8 @@ import { createMemo, createSignal, Show } from "solid-js";
 import { queryLeadDetail } from "~/actions/pipeline/queries/leads";
 import { LeadDetailOverview } from "~/features/pipeline/detail/lead-detail-overview";
 
-import { SidePanelList } from "../../components/side-panel-list";
-import { useSidePanelPageInstanceId } from "../../state/side-panel-page-instance";
+import { SidePanelList } from "../../components/list";
+import { useSidePanelPageInstanceId } from "../../state/page-instance";
 import { useSidePanel } from "../../state/use-side-panel";
 
 export function LeadDetailPage() {

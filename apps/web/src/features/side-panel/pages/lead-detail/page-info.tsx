@@ -2,9 +2,9 @@ import { createMemo } from "solid-js";
 
 import Building2 from "~/components/icons/building-2";
 
-import { useSidePanelPageInstanceId } from "../../state/side-panel-page-instance";
+import { useSidePanelPageInstanceId } from "../../state/page-instance";
 import { useSidePanel } from "../../state/use-side-panel";
-import { PageInfoLayout } from "../../top-bar/side-panel-page-info-layout";
+import { PageInfoLayout } from "../../top-bar/page-info-layout";
 
 export function LeadDetailPageInfo() {
   const pageId = useSidePanelPageInstanceId();

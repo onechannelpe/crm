@@ -6,7 +6,7 @@ import { cn } from "~/lib/utils";
 import { SIDE_PANEL_CLICK_OUTSIDE_ID } from "../constants/side-panel-click-outside-id";
 import { useSidePanel } from "../state/use-side-panel";
 
-import styles from "./side-panel-mobile-shell.module.css";
+import styles from "./mobile-shell.module.css";
 
 type SidePanelMobileShellProps = ParentProps<{
   targetVariant: "normal" | "fullScreen";

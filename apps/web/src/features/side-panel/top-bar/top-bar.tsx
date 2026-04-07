@@ -3,12 +3,12 @@ import { Show } from "solid-js";
 import X from "~/components/icons/x";
 import { cn } from "~/lib/utils";
 
-import { SIDE_PANEL_PAGES_CONFIG } from "../state/side-panel-pages-config";
+import { SIDE_PANEL_PAGES_CONFIG } from "../state/pages-config";
 import { useSidePanel } from "../state/use-side-panel";
-import { SidePanelBackButton } from "./side-panel-back-button";
-import { PageInfo } from "./side-panel-page-info";
+import { SidePanelBackButton } from "./back-button";
+import { PageInfo } from "./page-info";
 
-import styles from "./side-panel-top-bar.module.css";
+import styles from "./top-bar.module.css";
 
 export function SidePanelTopBar(props: { isMobile: boolean }) {
   const {

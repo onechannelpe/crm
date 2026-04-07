@@ -2,9 +2,9 @@ import { createMemo } from "solid-js";
 
 import Users from "~/components/icons/users";
 
-import { useSidePanelPageInstanceId } from "../../state/side-panel-page-instance";
+import { useSidePanelPageInstanceId } from "../../state/page-instance";
 import { useSidePanel } from "../../state/use-side-panel";
-import { PageInfoLayout } from "../../top-bar/side-panel-page-info-layout";
+import { PageInfoLayout } from "../../top-bar/page-info-layout";
 
 export function SearchCompanyPageInfo() {
   const pageId = useSidePanelPageInstanceId();

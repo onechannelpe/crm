@@ -5,8 +5,8 @@ import { ICON_BY_ROUTE } from "~/components/layout/route-icons";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { getNavigableRoutes } from "~/lib/nav/nav-policy";
 
-import { SidePanelGroup } from "../../components/side-panel-group";
-import { SidePanelList } from "../../components/side-panel-list";
+import { SidePanelGroup } from "../../components/group";
+import { SidePanelList } from "../../components/list";
 import { useSidePanel } from "../../state/use-side-panel";
 import { EmptyState } from "../common/empty-state";
 
