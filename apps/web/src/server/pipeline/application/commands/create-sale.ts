@@ -3,7 +3,6 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { ensureCanCreateSale } from "../../domain/workflow";
-import type { SaleCreatedResult } from "../contracts";
 import type { CreateSaleDeps } from "../deps/sales";
 import { canCreateSale, requirePipelineActionAccess } from "../policies/access";
 import type { PipelineAuditService } from "../ports/audit-service";
@@ -24,7 +23,7 @@ export async function createSale(input: {
   banco: string;
   nroCuenta: string;
   cci: string | null;
-}): Promise<Result<SaleCreatedResult, DomainError>> {
+}): Promise<Result<{ id: number }, DomainError>> {
   const canCreate = requirePipelineActionAccess(input.actorRole, canCreateSale);
   if (!canCreate.ok) {
     return canCreate;

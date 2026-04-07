@@ -2,7 +2,6 @@
 
 import type {
   LeadDetailView,
-  LeadListFiltersInput,
   LeadListView,
 } from "~/server/pipeline/application/contracts";
 import { getLeadDetail } from "~/server/pipeline/application/queries/get-lead-detail";
@@ -10,9 +9,14 @@ import { listLeads } from "~/server/pipeline/application/queries/list-leads";
 import { createPipelineQueryRuntime } from "~/server/pipeline/infrastructure/query-runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
-export async function queryLeadList(
-  filters: LeadListFiltersInput,
-): Promise<LeadListView> {
+export async function queryLeadList(filters: {
+  stage?: string;
+  status?: string;
+  prioridad?: string;
+  executiveId?: number;
+  limit?: number;
+  offset?: number;
+}): Promise<LeadListView> {
   return runAction({
     actionName: "pipeline.list_leads",
     requireAuth: true,

@@ -3,7 +3,6 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { ensureCanCreateQuotation } from "../../domain/workflow";
-import type { QuotationCreatedResult } from "../contracts";
 import type { CreateQuotationDeps } from "../deps/quotations";
 import {
   canCreateQuotation,
@@ -24,7 +23,7 @@ export async function createQuotation(input: {
   tarifaForaneo: number;
   fee: number;
   moneda: "PEN" | "USD";
-}): Promise<Result<QuotationCreatedResult, DomainError>> {
+}): Promise<Result<{ id: number }, DomainError>> {
   const canCreate = requirePipelineActionAccess(
     input.actorRole,
     canCreateQuotation,

@@ -24,66 +24,62 @@ export type LeadTimelineItem = {
   actorDisplayName: string;
 };
 
-export type LeadDetailLeadView = {
-  id: number;
-  ruc: string;
-  razonSocial: string | null;
-  address: string | null;
-  executiveId: number;
-  stage: LeadStage;
-  status: LeadStatus | null;
-  prioridad: LeadPriority | null;
-  createdAt: number;
-  updatedAt: number;
-};
-
-export type LeadCommercialInputView = {
-  leadId: number;
-  proveedorActual: string | null;
-  tasaActual: number | null;
-  gpv: number | null;
-  ticket: number | null;
-  abono: number | null;
-  cantidadPos: number | null;
-  updatedAt: number;
-  updatedBy: number;
-};
-
-export type LeadQuotationView = {
-  id: number;
-  leadId: number;
-  version: number;
-  moneda: "PEN" | "USD";
-  fee: number;
-  paybackPricing: number;
-  tarifaDebito: number;
-  tarifaCredito: number;
-  tarifaForaneo: number;
-  createdAt: number;
-  createdBy: number;
-};
-
-export type LeadSaleView = {
-  id: number;
-  leadId: number;
-  executiveId: number;
-  proveedorActual: string;
-  tasaActual: number;
-  gpv: number;
-  ticket: number;
-  abono: number;
-  cantidadPos: number;
-  banco: string;
-  nroCuenta: string;
-  cci: string | null;
-  createdAt: number;
-};
-
 export type LeadDetailView = {
-  lead: LeadDetailLeadView;
-  commercialInput: LeadCommercialInputView | undefined;
-  quotations: LeadQuotationView[];
-  sale: LeadSaleView | undefined;
+  lead: {
+    id: number;
+    ruc: string;
+    razonSocial: string | null;
+    address: string | null;
+    executiveId: number;
+    stage: LeadStage;
+    status: LeadStatus | null;
+    prioridad: LeadPriority | null;
+    createdAt: number;
+    updatedAt: number;
+  };
+  commercialInput:
+    | {
+        leadId: number;
+        proveedorActual: string | null;
+        tasaActual: number | null;
+        gpv: number | null;
+        ticket: number | null;
+        abono: number | null;
+        cantidadPos: number | null;
+        updatedAt: number;
+        updatedBy: number;
+      }
+    | undefined;
+  quotations: {
+    id: number;
+    leadId: number;
+    version: number;
+    moneda: "PEN" | "USD";
+    fee: number;
+    paybackPricing: number;
+    tarifaDebito: number;
+    tarifaCredito: number;
+    tarifaForaneo: number;
+    createdAt: number;
+    createdBy: number;
+  }[];
+  sale:
+    | {
+        id: number;
+        leadId: number;
+        executiveId: number;
+        proveedorActual: string;
+        tasaActual: number;
+        gpv: number;
+        ticket: number;
+        abono: number;
+        cantidadPos: number;
+        banco: string;
+        nroCuenta: string;
+        cci: string | null;
+        createdAt: number;
+      }
+    | undefined;
   timeline: LeadTimelineItem[];
   availableActions: LeadAvailableAction[];
 };
@@ -123,71 +119,4 @@ export type LeadInteractionResult = {
 
 export type LeadRegisteredResult = {
   leadId: number;
-};
-
-export type QuotationCreatedResult = {
-  id: number;
-};
-
-export type SaleCreatedResult = {
-  id: number;
-};
-
-export type LeadListFiltersInput = {
-  stage?: string;
-  status?: string;
-  prioridad?: string;
-  executiveId?: number;
-  limit?: number;
-  offset?: number;
-};
-
-export type RequestLeadCreationInput = {
-  ruc: string;
-  executiveId?: number;
-};
-
-export type RequestLeadReviewInput = {
-  leadId: number;
-  status: string;
-  prioridad: string;
-  reason: string;
-};
-
-export type RequestLeadCommercialInputCompletionInput = {
-  leadId: number;
-  proveedorActual: string;
-  tasaActual: number;
-  gpv: number;
-  ticket: number;
-  abono: number;
-  cantidadPos: number;
-};
-
-export type RequestLeadReassignmentInput = {
-  leadId: number;
-  newExecutiveId: number;
-};
-
-export type RequestQuotationCreationInput = {
-  leadId: number;
-  paybackPricing: number;
-  tarifaDebito: number;
-  tarifaCredito: number;
-  tarifaForaneo: number;
-  fee: number;
-  moneda: "PEN" | "USD";
-};
-
-export type RequestSaleCreationInput = {
-  leadId: number;
-  proveedorActual: string;
-  tasaActual: number;
-  gpv: number;
-  ticket: number;
-  abono: number;
-  cantidadPos: number;
-  banco: string;
-  nroCuenta: string;
-  cci: string | null;
 };
