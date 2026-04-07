@@ -5,6 +5,7 @@ import styles from "./page-info-layout.module.css";
 
 type PageInfoLayoutProps = {
   icon?: JSX.Element;
+  iconColor?: string;
   title: JSX.Element;
   label?: string;
 };
@@ -13,7 +14,9 @@ export function PageInfoLayout(props: PageInfoLayoutProps) {
   return (
     <div class={styles.container}>
       <Show when={props.icon}>
-        <div class={styles.iconWrapper}>{props.icon}</div>
+        <div class={styles.iconWrapper} style={{ color: props.iconColor }}>
+          {props.icon}
+        </div>
       </Show>
       <div class={styles.textContainer}>
         <span class={styles.titleWrapper}>{props.title}</span>

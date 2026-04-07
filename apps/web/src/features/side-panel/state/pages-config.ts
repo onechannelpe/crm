@@ -19,6 +19,7 @@ type SidePanelPageConfig = {
   showsSearch: boolean;
   component: Component;
   pageInfoComponent?: Component;
+  topBarActionsComponent?: Component;
 };
 
 export const SIDE_PANEL_PAGES_CONFIG = {
@@ -26,35 +27,42 @@ export const SIDE_PANEL_PAGES_CONFIG = {
     showsSearch: true,
     component: RootPage,
     pageInfoComponent: undefined,
+    topBarActionsComponent: undefined,
   },
   "search-person-detail": {
     showsSearch: false,
     component: SearchPersonPage,
     pageInfoComponent: SearchPersonPageInfo,
+    topBarActionsComponent: undefined,
   },
   "search-company-detail": {
     showsSearch: false,
     component: SearchCompanyPage,
     pageInfoComponent: SearchCompanyPageInfo,
+    topBarActionsComponent: undefined,
   },
   "lead-create": {
     showsSearch: false,
     component: LeadCreatePage,
     pageInfoComponent: LeadCreatePageInfo,
+    topBarActionsComponent: undefined,
   },
   "lead-detail": {
     showsSearch: false,
     component: LeadDetailPage,
     pageInfoComponent: LeadDetailPageInfo,
+    topBarActionsComponent: undefined,
   },
   "inventory-detail": {
     showsSearch: false,
     component: InventoryDetailPage,
     pageInfoComponent: InventoryDetailPageInfo,
+    topBarActionsComponent: undefined,
   },
   "data-grid-detail": {
     showsSearch: false,
     component: DataGridDetailPage,
     pageInfoComponent: DataGridDetailPageInfo,
+    topBarActionsComponent: undefined,
   },
 } satisfies Record<SidePanelPageKey, SidePanelPageConfig>;
