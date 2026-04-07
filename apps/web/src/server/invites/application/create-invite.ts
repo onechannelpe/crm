@@ -8,7 +8,7 @@ import {
   buildPendingIdentity,
   normalizeInviteEmail,
 } from "../domain/pending-identity";
-import { issueInvite } from "./runtime";
+import { issueInvite } from "./issue-invite";
 import type {
   CreateInviteInput,
   InviteDeps,

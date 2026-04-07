@@ -3,7 +3,7 @@ import type { DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { inviteError } from "../domain/errors";
-import { issueInvite } from "./runtime";
+import { issueInvite } from "./issue-invite";
 import type {
   InviteDeps,
   InviteIssueResult,
