@@ -1,10 +1,10 @@
 import type { Role } from "~/lib/auth/access/rbac";
+import type { createInviteService } from "~/server/invites/application/invite-service";
 import type { BranchId, UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import type { createUserProvisioningService } from "~/server/users/service-user-provisioning";
 
 type ProvisioningInterface = Pick<
-  ReturnType<typeof createUserProvisioningService>,
+  ReturnType<typeof createInviteService>,
   "createInvite" | "markInviteDelivered"
 >;
 

@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { hashPassword } from "../../src/lib/auth/password/password";
-import { createUserProvisioningService } from "../../src/server/users/service-user-provisioning";
+import { createInviteService } from "../../src/server/invites/application/invite-service";
 import { cleanupTestDb, createIsolatedTestDb } from "../support/test-db";
 
 describe("user invite lifecycle", () => {
@@ -16,7 +15,7 @@ describe("user invite lifecycle", () => {
 
   it("creates and accepts an invite for a new user", async () => {
     ctx = await createIsolatedTestDb("user-invites");
-    const service = createUserProvisioningService(ctx.repos, {
+    const service = createInviteService(ctx.repos, {
       now: () => 1_700_000_000_000,
     });
 
@@ -36,7 +35,7 @@ describe("user invite lifecycle", () => {
 
     const accepted = await service.acceptInvite({
       token: created.value.token,
-      passwordHash: await hashPassword("StrongPass123"),
+      password: "StrongPass123",
     });
     expect(accepted.ok).toBe(true);
     if (!accepted.ok) return;
@@ -50,7 +49,7 @@ describe("user invite lifecycle", () => {
 
   it("can revoke a pending invite", async () => {
     ctx = await createIsolatedTestDb("user-invites-revoke");
-    const service = createUserProvisioningService(ctx.repos, {
+    const service = createInviteService(ctx.repos, {
       now: () => 1_700_000_000_000,
     });
 
@@ -111,7 +110,7 @@ describe("user invite lifecycle", () => {
       },
     };
 
-    const service = createUserProvisioningService(reposWithRace, {
+    const service = createInviteService(reposWithRace, {
       now: () => 1_700_000_000_000,
     });
 

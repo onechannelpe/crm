@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
-import { createUserProvisioningService } from "~/server/users/service-user-provisioning";
+import { createInviteService } from "~/server/invites/application/invite-service";
 
 import {
   cleanupTestDb,
@@ -14,14 +14,13 @@ import { CREATE_POOL_SIZE, seedTeamInviteFixtures } from "./fixtures";
 
 describe("team invite create benchmark", () => {
   let ctx: TestDbContext | null = null;
-  let provisioning: ReturnType<typeof createUserProvisioningService> | null =
-    null;
+  let inviteService: ReturnType<typeof createInviteService> | null = null;
   let createEmails: string[] = [];
   const createCursor = { value: 0 };
 
   beforeAll(async () => {
     ctx = await createIsolatedTestDb("bench-team-invite-create");
-    provisioning = createUserProvisioningService(ctx.repos, {
+    inviteService = createInviteService(ctx.repos, {
       now: () => BENCH_NOW,
     });
 
@@ -33,7 +32,7 @@ describe("team invite create benchmark", () => {
     if (!ctx) return;
     await cleanupTestDb(ctx);
     ctx = null;
-    provisioning = null;
+    inviteService = null;
   });
 
   bench(
@@ -45,7 +44,7 @@ describe("team invite create benchmark", () => {
         "team-invite-create pool exhausted before iterations completed",
       );
 
-      const result = await provisioning!.createInvite({
+      const result = await inviteService!.createInvite({
         actorUserId: 5,
         actorRole: "superuser",
         branchId: 2,

@@ -2,13 +2,13 @@ import type { Role } from "~/lib/auth/access/rbac";
 import { issueSessionTransition } from "~/lib/auth/session/session-transition";
 import { db } from "~/lib/db/db";
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
+import { createInviteServiceContext } from "~/server/invites/infrastructure/invite-service-context";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import { createTeamsRepo } from "~/server/users/repos-teams";
 import { createUserInvitesRepo } from "~/server/users/repos-user-invites";
 import { createUsersRepo } from "~/server/users/repos-users";
-import { createUserProvisioningService } from "~/server/users/service-user-provisioning";
 
 function createTeamInviteRepos(currentDb: typeof db) {
   return {
@@ -22,6 +22,7 @@ function createTeamInviteRepos(currentDb: typeof db) {
 
 export function createTeamInviteContext() {
   const repos = createTeamInviteRepos(db);
+  const { inviteService } = createInviteServiceContext();
 
   return {
     repos: {
@@ -29,17 +30,7 @@ export function createTeamInviteContext() {
       userInvites: repos.userInvites,
       users: repos.users,
     },
-    createProvisioningService() {
-      return createUserProvisioningService(repos, {
-        runInTransaction(operation) {
-          return db
-            .transaction()
-            .execute((transactionDb) =>
-              operation(createTeamInviteRepos(transactionDb)),
-            );
-        },
-      });
-    },
+    inviteService,
     async enforceInviteCreateRateLimit(userId: number) {
       await checkActionRateLimit("team.invite.create", userId, {
         actionRateLimits: createActionRateLimitsRepo(db),
@@ -76,17 +67,17 @@ type TeamInviteContext = ReturnType<typeof createTeamInviteContext>;
 export type TeamInviteRepos = TeamInviteContext["repos"];
 export type TeamInviteProvisioningContext = Pick<
   TeamInviteContext,
-  "createProvisioningService"
+  "inviteService"
 >;
 export type TeamInviteCreateContext = Pick<
   TeamInviteContext,
-  "createProvisioningService" | "enforceInviteCreateRateLimit"
+  "inviteService" | "enforceInviteCreateRateLimit"
 >;
 export type TeamInviteResendContext = Pick<
   TeamInviteContext,
-  "repos" | "createProvisioningService"
+  "repos" | "inviteService"
 >;
 export type TeamInviteAcceptanceContext = Pick<
   TeamInviteContext,
-  "createProvisioningService" | "issuePreAuthSession"
+  "inviteService" | "issuePreAuthSession"
 >;

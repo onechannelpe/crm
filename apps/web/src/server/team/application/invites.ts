@@ -84,9 +84,8 @@ export async function createTeamInvite(
   input: CreateTeamInviteCommand,
 ): Promise<Result<{ inviteId: number }, DomainError>> {
   await deps.enforceInviteCreateRateLimit(ctx.actor.userId);
-  const teamProvisioning = deps.createProvisioningService();
 
-  const result = await teamProvisioning.createInvite({
+  const result = await deps.inviteService.createInvite({
     actorUserId: ctx.actor.userId,
     actorRole: ctx.actor.role,
     branchId: ctx.actor.branchId,
@@ -114,7 +113,7 @@ export async function createTeamInvite(
     expiresAt: result.value.expiresAt,
   });
 
-  const deliveryResult = await teamProvisioning.markInviteDelivered(
+  const deliveryResult = await deps.inviteService.markInviteDelivered(
     result.value.inviteId,
   );
   if (isErr(deliveryResult)) {
@@ -129,8 +128,7 @@ export async function resendTeamInvite(
   deps: TeamInviteResendContext,
   input: { inviteId: number },
 ): Promise<Result<void, DomainError>> {
-  const teamProvisioning = deps.createProvisioningService();
-  const result = await teamProvisioning.resendInvite({
+  const result = await deps.inviteService.resendInvite({
     actorUserId: ctx.actor.userId,
     actorRole: ctx.actor.role,
     branchId: ctx.actor.branchId,
@@ -158,7 +156,7 @@ export async function resendTeamInvite(
     expiresAt: result.value.expiresAt,
   });
 
-  const deliveryResult = await teamProvisioning.markInviteDelivered(
+  const deliveryResult = await deps.inviteService.markInviteDelivered(
     result.value.inviteId,
   );
   if (isErr(deliveryResult)) {
@@ -173,8 +171,7 @@ export async function revokeTeamInvite(
   deps: TeamInviteProvisioningContext,
   input: { inviteId: number },
 ): Promise<Result<void, DomainError>> {
-  const teamProvisioning = deps.createProvisioningService();
-  return teamProvisioning.revokeInvite({
+  return deps.inviteService.revokeInvite({
     actorUserId: ctx.actor.userId,
     actorRole: ctx.actor.role,
     branchId: ctx.actor.branchId,
@@ -188,12 +185,11 @@ export async function acceptTeamInvite(
     ipAddress: string;
     userAgent: string | null;
   },
-  input: AcceptTeamInviteCommand & { passwordHash: string },
+  input: AcceptTeamInviteCommand,
 ): Promise<Result<{ sessionToken: string; redirectTo: string }, DomainError>> {
-  const teamProvisioning = deps.createProvisioningService();
-  const result = await teamProvisioning.acceptInvite({
+  const result = await deps.inviteService.acceptInvite({
     token: input.token,
-    passwordHash: input.passwordHash,
+    password: input.password,
   });
   if (isErr(result)) {
     return result;
