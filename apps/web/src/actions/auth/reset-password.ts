@@ -3,11 +3,13 @@
 import { getRequestEvent } from "solid-js/web";
 
 import { getRequestPublicOrigin } from "~/lib/http/public-origin";
+import type {
+  RequestPasswordResetResult,
+  ResetPasswordResult,
+} from "~/server/auth/application/contracts";
 import {
   requestPasswordReset as requestPasswordResetService,
   resetPassword as resetPasswordService,
-  type RequestPasswordResetResult,
-  type ResetPasswordResult,
 } from "~/server/auth/application/password-reset";
 import { createPasswordResetContext } from "~/server/auth/infrastructure/password-reset-context";
 

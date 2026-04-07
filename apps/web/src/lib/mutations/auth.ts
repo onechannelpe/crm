@@ -4,8 +4,6 @@ import {
   passkeyStart,
   passwordLogin,
   totpLogin,
-  type PasskeyStartSubmissionResult,
-  type PasswordLoginSubmissionResult,
   type TotpLoginSubmissionResult,
 } from "~/actions/auth/login";
 import {
@@ -13,9 +11,11 @@ import {
   resetPassword,
 } from "~/actions/auth/reset-password";
 import type {
+  PasskeyStartSubmissionResult,
+  PasswordLoginSubmissionResult,
   RequestPasswordResetResult,
   ResetPasswordResult,
-} from "~/server/auth/application/password-reset";
+} from "~/server/auth/application/contracts";
 
 export const passwordLoginMutation = action(
   async (formData: FormData): Promise<PasswordLoginSubmissionResult> =>

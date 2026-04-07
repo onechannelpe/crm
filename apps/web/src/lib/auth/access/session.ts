@@ -1,6 +1,7 @@
 import { getRequestContext } from "~/lib/http/request-context";
-import type { AuthSession } from "./session-types";
+
 import { hasPermission, type Permission, type Role } from "./rbac";
+import type { AuthSession } from "./session-types";
 
 export async function getSession(): Promise<AuthSession | null> {
   const session = await getRequestContext().getAuthSession();

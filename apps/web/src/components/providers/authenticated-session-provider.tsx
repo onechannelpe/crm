@@ -3,7 +3,7 @@ import type { ParentProps } from "solid-js";
 import { Match, Switch, createContext, useContext } from "solid-js";
 
 import { Loading } from "~/components/feedback/loading";
-import type { CurrentUserView } from "~/server/auth/application/views/current-user-view";
+import type { CurrentUserView } from "~/server/auth/application/contracts";
 
 import { SessionProvider, useSession } from "./session-provider";
 

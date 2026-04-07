@@ -1,6 +1,5 @@
 import type { Selectable } from "kysely";
 
-import type { Role } from "~/lib/auth/access/rbac";
 import {
   allSessionsRevokedChanges,
   serializeAuditChanges,
@@ -12,23 +11,10 @@ import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
 import type { AdminSessionsReadContext } from "../infrastructure/admin-sessions-read-context";
+import type { SessionInfo } from "./contracts";
 import type { AdminSessionRevocationPort } from "./ports";
 
 type UserSessionRow = Selectable<Database["user_sessions"]>;
-
-export interface SessionInfo {
-  id: string;
-  userId: number;
-  userEmail: string;
-  userName: string;
-  role: Role;
-  branchName: string;
-  ipAddress: string | null;
-  userAgent: string | null;
-  createdAt: number;
-  lastActivity: number;
-  expiresAt: number;
-}
 
 export async function listUserSessions(
   _ctx: AppContext,

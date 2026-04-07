@@ -2,7 +2,7 @@ import { createContext, type ParentProps, useContext } from "solid-js";
 import { createResource } from "solid-js";
 
 import { getMe } from "~/actions/auth/session";
-import type { CurrentUserView } from "~/server/auth/application/views/current-user-view";
+import type { CurrentUserView } from "~/server/auth/application/contracts";
 
 interface SessionContextValue {
   user: () => CurrentUserView | null | undefined;

@@ -9,11 +9,10 @@ import type { SubmitPrimaryLoginError } from "~/lib/auth/flows/primary-login-ser
 import { parseLoginFlowId } from "~/lib/auth/login-route-flow";
 import type { BeginPasskeyLoginError } from "~/lib/auth/passkey/service";
 import { replaceCurrentSession } from "~/lib/auth/session/session-transition";
-
 import type {
   PasskeyStartSubmissionResult,
   PasswordLoginSubmissionResult,
-} from "./index";
+} from "~/server/auth/application/contracts";
 
 export function readPasskeyStartMode(
   formData: FormData,
