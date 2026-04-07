@@ -2,11 +2,11 @@
 
 import { getRequestEvent } from "solid-js/web";
 
-import { getRequestPublicOrigin } from "~/lib/http/public-origin";
 import type {
   RequestPasswordResetResult,
   ResetPasswordResult,
-} from "~/server/auth/application/contracts";
+} from "~/actions/auth/contracts";
+import { getRequestPublicOrigin } from "~/lib/http/public-origin";
 import {
   requestPasswordReset as requestPasswordResetService,
   resetPassword as resetPasswordService,

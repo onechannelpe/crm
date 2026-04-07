@@ -1,9 +1,9 @@
 "use server";
 
+import { CONTACT_ASSIGNMENT_CALL_OUTCOMES } from "~/actions/contact-assignments/contracts";
+import type { CompleteContactAssignmentCallResult } from "~/actions/contact-assignments/contracts";
 import { assertPositiveInt } from "~/lib/contracts/guards";
 import { completeContactAssignmentCall as completeContactAssignmentCallUseCase } from "~/server/contact-assignments/application/complete-contact-assignment-call";
-import type { CompleteContactAssignmentCallResult } from "~/server/contact-assignments/application/contracts";
-import { CONTACT_ASSIGNMENT_CALL_OUTCOMES } from "~/server/contact-assignments/domain/assignment";
 import { runContactAssignmentInteraction } from "~/server/contact-assignments/infrastructure/interaction-context";
 import { runAction } from "~/server/shared/action-runtime";
 

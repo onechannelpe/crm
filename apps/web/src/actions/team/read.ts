@@ -1,10 +1,10 @@
 "use server";
 
-import { runAction } from "~/server/shared/action-runtime";
 import type {
   BulkImportSetup,
   InviteManagement,
-} from "~/server/team/application/contracts";
+} from "~/actions/team/contracts";
+import { runAction } from "~/server/shared/action-runtime";
 import {
   getBulkImportSetup as getBulkImportSetupService,
   getInviteManagement as getInviteManagementService,

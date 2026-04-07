@@ -1,12 +1,12 @@
 "use server";
 
+import type { SessionInfo } from "~/actions/auth/contracts";
 import { validationError } from "~/lib/app-errors";
 import {
   countActiveSessions as countActiveSessionsService,
   listAllActiveSessions as listAllActiveSessionsService,
   listUserSessions as listUserSessionsService,
 } from "~/server/auth/application/admin-sessions";
-import type { SessionInfo } from "~/server/auth/application/contracts";
 import { createAdminSessionsReadContext } from "~/server/auth/infrastructure/admin-sessions-read-context";
 import { runAction } from "~/server/shared/action-runtime";
 import { isErr } from "~/server/shared/result";

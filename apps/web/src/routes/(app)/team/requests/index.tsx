@@ -1,5 +1,6 @@
 import { createAsync, useAction } from "@solidjs/router";
 
+import type { PendingCapacityRequestView } from "~/actions/capacity/contracts";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import List from "~/components/icons/list";
 import MessageSquare from "~/components/icons/message-square";
@@ -14,7 +15,6 @@ import {
   rejectCapacityRequestMutation,
 } from "~/lib/mutations/capacity";
 import { pendingCapacityRequestsQuery } from "~/lib/queries/capacity";
-import type { PendingCapacityRequestView } from "~/server/capacity/application/contracts";
 
 export default function TeamRequestsPage() {
   const requests = createAsync(() => pendingCapacityRequestsQuery());

@@ -1,13 +1,13 @@
 "use server";
 
-import { assertPositiveInt } from "~/lib/contracts/guards";
 import type {
   CapacityAuditEvent,
   CapacityPolicyDefaultsView,
   ExecutiveCapacityDetailView,
   ManagedExecutiveView,
   PendingCapacityRequestView,
-} from "~/server/capacity/application/contracts";
+} from "~/actions/capacity/contracts";
+import { assertPositiveInt } from "~/lib/contracts/guards";
 import { getAuditEvents as getAuditEventsService } from "~/server/capacity/application/get-audit-events";
 import { getExecutiveDetail as getExecutiveDetailService } from "~/server/capacity/application/get-executive-detail";
 import { getPolicyDefaults as getPolicyDefaultsService } from "~/server/capacity/application/get-policy-defaults";

@@ -1,6 +1,7 @@
 import { createAsync, useAction } from "@solidjs/router";
 import { For, Show, createEffect, createSignal } from "solid-js";
 
+import type { CapacityPolicyTeamDefaultsView } from "~/actions/capacity/contracts";
 import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
@@ -9,7 +10,6 @@ import {
   updateSearchScopeDefaultMutation,
 } from "~/lib/mutations/capacity";
 import { capacityPolicyDefaultsQuery } from "~/lib/queries/capacity";
-import type { CapacityPolicyTeamDefaultsView } from "~/server/capacity/application/contracts";
 
 interface TeamPolicyRowProps {
   team: CapacityPolicyTeamDefaultsView;

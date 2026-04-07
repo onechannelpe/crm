@@ -1,5 +1,6 @@
 import { createSignal, For, Show } from "solid-js";
 
+import type { SalesRecordProductOptionView } from "~/actions/sales-records/contracts";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { Select } from "~/components/ui/input/select";
@@ -7,7 +8,6 @@ import type {
   ProductLine,
   SalesRecordFormState,
 } from "~/lib/sales/use-sales-record-form";
-import type { SalesRecordProductOptionView } from "~/server/sales-records/application/contracts";
 
 import styles from "./product-line-editor.module.css";
 
