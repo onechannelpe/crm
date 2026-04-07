@@ -2,13 +2,13 @@
 
 import { runAction } from "~/server/shared/action-runtime";
 import { isErr } from "~/server/shared/result";
+import type { InviteInfo } from "~/server/team/application/contracts";
 import {
   createTeamInvite as createTeamInviteService,
   getInviteInfo as getInviteInfoService,
   resendTeamInvite as resendTeamInviteService,
   revokeTeamInvite as revokeTeamInviteService,
 } from "~/server/team/application/invites";
-import type { InviteInfo } from "~/server/team/domain/types";
 import { createTeamInviteContext } from "~/server/team/infrastructure/invite-context";
 
 import { parseCreateTeamInviteInput, parseInviteIdInput } from "./input";

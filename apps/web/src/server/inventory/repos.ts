@@ -1,11 +1,10 @@
-import type { Kysely } from "kysely";
+import type { Kysely, Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 
-import type {
-  InventoryItemRow,
-  InventoryItemWithProductRecord,
-} from "./application/ports";
+import type { InventoryItemWithProductRecord } from "./application/ports";
+
+type InventoryItemRow = Selectable<Database["inventory_items"]>;
 
 export function createInventoryRepo(db: Kysely<Database>) {
   return {
@@ -35,7 +34,6 @@ export function createInventoryRepo(db: Kysely<Database>) {
           "inventory_items.serial_number",
           "inventory_items.status",
           "inventory_items.created_at",
-          "products.id as product_id",
           "products.name as product_name",
           "products.category",
         ])

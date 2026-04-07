@@ -3,7 +3,7 @@ import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import Package from "~/components/icons/package";
 import { Badge } from "~/components/ui/display/badge";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
-import type { InventoryItemView } from "~/server/inventory/application/views/inventory-item-view";
+import type { InventoryItemView } from "~/server/inventory/application/contracts";
 
 import styles from "./styles.module.css";
 

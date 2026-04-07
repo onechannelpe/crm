@@ -1,14 +1,14 @@
 "use server";
 
 import { runAction } from "~/server/shared/action-runtime";
+import type {
+  BulkImportSetup,
+  InviteManagement,
+} from "~/server/team/application/contracts";
 import {
   getBulkImportSetup as getBulkImportSetupService,
   getInviteManagement as getInviteManagementService,
 } from "~/server/team/application/invites";
-import type {
-  BulkImportSetup,
-  InviteManagement,
-} from "~/server/team/domain/types";
 import { createInviteManagementContext } from "~/server/team/infrastructure/invite-management-context";
 
 export async function getInviteManagement(): Promise<InviteManagement> {

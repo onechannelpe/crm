@@ -9,12 +9,12 @@ import {
   type BulkParseResult,
 } from "~/server/users/service-bulk-import";
 
-import type { CreateTeamInviteCommand } from "../domain/types";
 import type { TeamInviteProvisioningContext } from "../infrastructure/invite-context";
 import {
   buildInviteUrl,
   sendInviteEmail,
 } from "../infrastructure/invite-delivery";
+import type { CreateTeamInviteCommand } from "./contracts";
 
 export async function previewBulkImport(
   csvContent: string,

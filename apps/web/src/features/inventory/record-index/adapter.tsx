@@ -8,7 +8,7 @@ import type {
   RecordIndexAdapter,
   RecordIndexSource,
 } from "~/features/record-index/model/types";
-import type { InventoryItemView } from "~/server/inventory/application/views/inventory-item-view";
+import type { InventoryItemView } from "~/server/inventory/application/contracts";
 
 import { INVENTORY_RECORD_INDEX_COLUMNS } from "./columns";
 import { useOpenInventoryRecord } from "./open-row";

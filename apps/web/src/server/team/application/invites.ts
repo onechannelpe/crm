@@ -6,13 +6,6 @@ import type { DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import type {
-  AcceptTeamInviteCommand,
-  BulkImportSetup,
-  CreateTeamInviteCommand,
-  InviteInfo,
-  InviteManagement,
-} from "../domain/types";
-import type {
   TeamInviteAcceptanceContext,
   TeamInviteCreateContext,
   TeamInviteProvisioningContext,
@@ -23,6 +16,13 @@ import {
   buildInviteUrl,
   sendInviteEmail,
 } from "../infrastructure/invite-delivery";
+import type {
+  AcceptTeamInviteCommand,
+  BulkImportSetup,
+  CreateTeamInviteCommand,
+  InviteInfo,
+  InviteManagement,
+} from "./contracts";
 import type { InviteManagementQueryPort } from "./ports";
 
 export async function getInviteInfo(input: {
