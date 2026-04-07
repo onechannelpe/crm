@@ -41,7 +41,6 @@ export async function applyBulkImport(
     role: CreateTeamInviteCommand["role"];
   },
 ): Promise<Result<BulkApplyResult, DomainError>> {
-  const teamProvisioning = deps.createProvisioningService();
   const parsed = await previewBulkImport(input.csvContent);
   if (!parsed.ok) {
     return parsed;
@@ -66,7 +65,7 @@ export async function applyBulkImport(
       branchId: ctx.actor.branchId,
     },
     input.role,
-    teamProvisioning,
+    deps.inviteService,
     async ({ row, inviteId, token, expiresAt }) => {
       await sendInviteEmail({
         email: row.email,
@@ -79,7 +78,7 @@ export async function applyBulkImport(
         inviteUrl: buildInviteUrl(token),
         expiresAt,
       });
-      await teamProvisioning.markInviteDelivered(inviteId);
+      await deps.inviteService.markInviteDelivered(inviteId);
     },
   );
 
