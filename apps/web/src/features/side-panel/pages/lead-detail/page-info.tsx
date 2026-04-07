@@ -4,9 +4,9 @@ import Building2 from "~/components/icons/building-2";
 
 import { useSidePanelPageInstanceId } from "../../state/side-panel-page-instance";
 import { useSidePanel } from "../../state/use-side-panel";
-import { SidePanelPageInfoLayout } from "../../top-bar/side-panel-page-info-layout";
+import { PageInfoLayout } from "../../top-bar/side-panel-page-info-layout";
 
-export function SidePanelLeadDetailPageInfo() {
+export function LeadDetailPageInfo() {
   const pageId = useSidePanelPageInstanceId();
   const { getPageState } = useSidePanel();
 
@@ -23,7 +23,7 @@ export function SidePanelLeadDetailPageInfo() {
   });
 
   return (
-    <SidePanelPageInfoLayout
+    <PageInfoLayout
       icon={<Building2 size={14} />}
       title={pageState().title}
       label={pageState().subtitle}

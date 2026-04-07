@@ -4,9 +4,9 @@ import Package from "~/components/icons/package";
 
 import { useSidePanelPageInstanceId } from "../../state/side-panel-page-instance";
 import { useSidePanel } from "../../state/use-side-panel";
-import { SidePanelPageInfoLayout } from "../../top-bar/side-panel-page-info-layout";
+import { PageInfoLayout } from "../../top-bar/side-panel-page-info-layout";
 
-export function SidePanelInventoryDetailPageInfo() {
+export function InventoryDetailPageInfo() {
   const pageId = useSidePanelPageInstanceId();
   const { getPageState } = useSidePanel();
 
@@ -23,7 +23,7 @@ export function SidePanelInventoryDetailPageInfo() {
   });
 
   return (
-    <SidePanelPageInfoLayout
+    <PageInfoLayout
       icon={<Package size={14} />}
       title={pageState().productName}
       label={pageState().serialNumber}

@@ -3,13 +3,13 @@ import { Show } from "solid-js";
 
 import styles from "./side-panel-page-info-layout.module.css";
 
-type SidePanelPageInfoLayoutProps = {
+type PageInfoLayoutProps = {
   icon?: JSX.Element;
   title: JSX.Element;
   label?: string;
 };
 
-export function SidePanelPageInfoLayout(props: SidePanelPageInfoLayoutProps) {
+export function PageInfoLayout(props: PageInfoLayoutProps) {
   return (
     <div class={styles.container}>
       <Show when={props.icon}>

@@ -6,7 +6,7 @@ import { cn } from "~/lib/utils";
 import { SIDE_PANEL_PAGES_CONFIG } from "../state/side-panel-pages-config";
 import { useSidePanel } from "../state/use-side-panel";
 import { SidePanelBackButton } from "./side-panel-back-button";
-import { SidePanelPageInfo } from "./side-panel-page-info";
+import { PageInfo } from "./side-panel-page-info";
 
 import styles from "./side-panel-top-bar.module.css";
 
@@ -47,7 +47,7 @@ export function SidePanelTopBar(props: { isMobile: boolean }) {
         </div>
 
         <div class={styles.rightSlot}>
-          <Show when={showSearch()} fallback={<SidePanelPageInfo />}>
+          <Show when={showSearch()} fallback={<PageInfo />}>
             <input
               type="text"
               class={styles.searchInput}

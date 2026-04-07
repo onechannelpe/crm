@@ -4,7 +4,7 @@ import { SidePanelList } from "../../components/side-panel-list";
 import { useSidePanelPageInstanceId } from "../../state/side-panel-page-instance";
 import { useSidePanel } from "../../state/use-side-panel";
 
-export function SidePanelInventoryDetailPage() {
+export function InventoryDetailPage() {
   const pageId = useSidePanelPageInstanceId();
   const { getPageState } = useSidePanel();
 

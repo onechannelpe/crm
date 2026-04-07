@@ -9,7 +9,7 @@ import { useSidePanel } from "../../state/use-side-panel";
 
 import styles from "./page.module.css";
 
-export function SidePanelSearchCompanyPage() {
+export function SearchCompanyPage() {
   const pageId = useSidePanelPageInstanceId();
   const { getPageState } = useSidePanel();
 

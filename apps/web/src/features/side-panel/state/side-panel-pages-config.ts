@@ -1,18 +1,18 @@
 import type { Component } from "solid-js";
 
-import { SidePanelDataGridDetailPage } from "../pages/data-grid-detail/page";
-import { SidePanelDataGridDetailPageInfo } from "../pages/data-grid-detail/page-info";
-import { SidePanelInventoryDetailPage } from "../pages/inventory-detail/page";
-import { SidePanelInventoryDetailPageInfo } from "../pages/inventory-detail/page-info";
-import { SidePanelLeadCreatePage } from "../pages/lead-create/page";
-import { SidePanelLeadCreatePageInfo } from "../pages/lead-create/page-info";
-import { SidePanelLeadDetailPage } from "../pages/lead-detail/page";
-import { SidePanelLeadDetailPageInfo } from "../pages/lead-detail/page-info";
-import { SidePanelRootPage } from "../pages/root/page";
-import { SidePanelSearchCompanyPage } from "../pages/search-company/page";
-import { SidePanelSearchCompanyPageInfo } from "../pages/search-company/page-info";
-import { SidePanelSearchPersonPage } from "../pages/search-person/page";
-import { SidePanelSearchPersonPageInfo } from "../pages/search-person/page-info";
+import { DataGridDetailPage } from "../pages/data-grid-detail/page";
+import { DataGridDetailPageInfo } from "../pages/data-grid-detail/page-info";
+import { InventoryDetailPage } from "../pages/inventory-detail/page";
+import { InventoryDetailPageInfo } from "../pages/inventory-detail/page-info";
+import { LeadCreatePage } from "../pages/lead-create/page";
+import { LeadCreatePageInfo } from "../pages/lead-create/page-info";
+import { LeadDetailPage } from "../pages/lead-detail/page";
+import { LeadDetailPageInfo } from "../pages/lead-detail/page-info";
+import { RootPage } from "../pages/root/page";
+import { SearchCompanyPage } from "../pages/search-company/page";
+import { SearchCompanyPageInfo } from "../pages/search-company/page-info";
+import { SearchPersonPage } from "../pages/search-person/page";
+import { SearchPersonPageInfo } from "../pages/search-person/page-info";
 import type { SidePanelPageKey } from "../types/side-panel-page";
 
 type SidePanelPageConfig = {
@@ -24,37 +24,37 @@ type SidePanelPageConfig = {
 export const SIDE_PANEL_PAGES_CONFIG = {
   root: {
     showsSearch: true,
-    component: SidePanelRootPage,
+    component: RootPage,
     pageInfoComponent: undefined,
   },
   "search-person-detail": {
     showsSearch: false,
-    component: SidePanelSearchPersonPage,
-    pageInfoComponent: SidePanelSearchPersonPageInfo,
+    component: SearchPersonPage,
+    pageInfoComponent: SearchPersonPageInfo,
   },
   "search-company-detail": {
     showsSearch: false,
-    component: SidePanelSearchCompanyPage,
-    pageInfoComponent: SidePanelSearchCompanyPageInfo,
+    component: SearchCompanyPage,
+    pageInfoComponent: SearchCompanyPageInfo,
   },
   "lead-create": {
     showsSearch: false,
-    component: SidePanelLeadCreatePage,
-    pageInfoComponent: SidePanelLeadCreatePageInfo,
+    component: LeadCreatePage,
+    pageInfoComponent: LeadCreatePageInfo,
   },
   "lead-detail": {
     showsSearch: false,
-    component: SidePanelLeadDetailPage,
-    pageInfoComponent: SidePanelLeadDetailPageInfo,
+    component: LeadDetailPage,
+    pageInfoComponent: LeadDetailPageInfo,
   },
   "inventory-detail": {
     showsSearch: false,
-    component: SidePanelInventoryDetailPage,
-    pageInfoComponent: SidePanelInventoryDetailPageInfo,
+    component: InventoryDetailPage,
+    pageInfoComponent: InventoryDetailPageInfo,
   },
   "data-grid-detail": {
     showsSearch: false,
-    component: SidePanelDataGridDetailPage,
-    pageInfoComponent: SidePanelDataGridDetailPageInfo,
+    component: DataGridDetailPage,
+    pageInfoComponent: DataGridDetailPageInfo,
   },
 } satisfies Record<SidePanelPageKey, SidePanelPageConfig>;

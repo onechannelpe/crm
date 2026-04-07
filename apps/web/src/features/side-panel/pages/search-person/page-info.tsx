@@ -4,9 +4,9 @@ import User from "~/components/icons/user";
 
 import { useSidePanelPageInstanceId } from "../../state/side-panel-page-instance";
 import { useSidePanel } from "../../state/use-side-panel";
-import { SidePanelPageInfoLayout } from "../../top-bar/side-panel-page-info-layout";
+import { PageInfoLayout } from "../../top-bar/side-panel-page-info-layout";
 
-export function SidePanelSearchPersonPageInfo() {
+export function SearchPersonPageInfo() {
   const pageId = useSidePanelPageInstanceId();
   const { getPageState } = useSidePanel();
 
@@ -23,7 +23,7 @@ export function SidePanelSearchPersonPageInfo() {
   });
 
   return (
-    <SidePanelPageInfoLayout
+    <PageInfoLayout
       icon={<User size={14} />}
       title={pageState().person.displayName}
       label={`Resultado de "${pageState().query}"`}

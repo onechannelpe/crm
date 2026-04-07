@@ -4,9 +4,9 @@ import Info from "~/components/icons/info";
 
 import { useSidePanelPageInstanceId } from "../../state/side-panel-page-instance";
 import { useSidePanel } from "../../state/use-side-panel";
-import { SidePanelPageInfoLayout } from "../../top-bar/side-panel-page-info-layout";
+import { PageInfoLayout } from "../../top-bar/side-panel-page-info-layout";
 
-export function SidePanelDataGridDetailPageInfo() {
+export function DataGridDetailPageInfo() {
   const pageId = useSidePanelPageInstanceId();
   const { getPageState } = useSidePanel();
 
@@ -23,7 +23,7 @@ export function SidePanelDataGridDetailPageInfo() {
   });
 
   return (
-    <SidePanelPageInfoLayout
+    <PageInfoLayout
       icon={<Info size={14} />}
       title={pageState().title}
       label={pageState().subtitle}

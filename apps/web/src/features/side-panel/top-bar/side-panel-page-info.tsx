@@ -4,7 +4,7 @@ import { SidePanelPageInstanceProvider } from "../state/side-panel-page-instance
 import { SIDE_PANEL_PAGES_CONFIG } from "../state/side-panel-pages-config";
 import { useSidePanel } from "../state/use-side-panel";
 
-export function SidePanelPageInfo() {
+export function PageInfo() {
   const { currentEntry } = useSidePanel();
 
   return (

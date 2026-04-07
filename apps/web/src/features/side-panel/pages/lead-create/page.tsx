@@ -11,7 +11,7 @@ import { createLeadDetailSidePanelPage } from "../../types/side-panel-page";
 
 import styles from "./page.module.css";
 
-export function SidePanelLeadCreatePage() {
+export function LeadCreatePage() {
   const { closePanel, navigateTo } = useSidePanel();
   const [ruc, setRuc] = createSignal("");
   const [error, setError] = createSignal<string | null>(null);

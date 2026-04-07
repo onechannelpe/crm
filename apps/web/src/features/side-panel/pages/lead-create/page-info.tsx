@@ -1,12 +1,9 @@
 import Building2 from "~/components/icons/building-2";
 
-import { SidePanelPageInfoLayout } from "../../top-bar/side-panel-page-info-layout";
+import { PageInfoLayout } from "../../top-bar/side-panel-page-info-layout";
 
-export function SidePanelLeadCreatePageInfo() {
+export function LeadCreatePageInfo() {
   return (
-    <SidePanelPageInfoLayout
-      icon={<Building2 size={14} />}
-      title="Nuevo prospecto"
-    />
+    <PageInfoLayout icon={<Building2 size={14} />} title="Nuevo prospecto" />
   );
 }

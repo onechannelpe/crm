@@ -8,7 +8,7 @@ import { getNavigableRoutes } from "~/lib/nav/nav-policy";
 import { SidePanelGroup } from "../../components/side-panel-group";
 import { SidePanelList } from "../../components/side-panel-list";
 import { useSidePanel } from "../../state/use-side-panel";
-import { SidePanelEmptyState } from "../common/empty-state";
+import { EmptyState } from "../common/empty-state";
 
 import styles from "./page.module.css";
 
@@ -23,7 +23,7 @@ type CommandGroup = {
   items: ActionItem[];
 };
 
-export function SidePanelRootPage() {
+export function RootPage() {
   const navigate = useNavigate();
   const { currentUser } = useAuthenticatedSession();
   const { searchText, closePanel } = useSidePanel();
@@ -78,9 +78,7 @@ export function SidePanelRootPage() {
       <Show
         when={hasResults()}
         fallback={
-          <SidePanelEmptyState>
-            No se encontraron resultados
-          </SidePanelEmptyState>
+          <EmptyState>No se encontraron resultados</EmptyState>
         }
       >
         <For each={filteredGroups()}>
