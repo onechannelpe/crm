@@ -8,7 +8,7 @@ export function useOpenReviewRecord() {
 
   return {
     rowOpen: createRouteRowOpen<LeadListRowView>((lead) => {
-      navigate(`/review/${lead.id}`);
+      navigate(`/leads/${lead.id}`);
     }),
   };
 }

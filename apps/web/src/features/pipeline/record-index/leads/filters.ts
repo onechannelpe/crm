@@ -3,10 +3,12 @@ import type { LeadListRowView } from "~/actions/pipeline/contracts";
 import type { RecordIndexFilterDefinition } from "../../../record-index/model/filter";
 
 export const LEADS_RECORD_INDEX_FILTERS = [
-  { value: "all", label: "All prospects" },
-  { value: "NEW", label: "New" },
-  { value: "NEEDS_EXECUTIVE_INPUT", label: "Needs executive input" },
-  { value: "READY_FOR_SALE", label: "Ready for sale" },
+  { value: "all", label: "Todos" },
+  { value: "PENDING_EXTERNAL_REVIEW", label: "Pendientes de revisión" },
+  { value: "NEEDS_EXECUTIVE_INPUT", label: "Necesitan mi información" },
+  { value: "READY_FOR_QUOTATION", label: "Listos para cotizar" },
+  { value: "READY_FOR_SALE", label: "Listos para venta" },
+  { value: "REJECTED_BY_STATUS", label: "Rechazados" },
 ] as const;
 
 export type LeadStageFilterValue =

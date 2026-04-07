@@ -1,4 +1,5 @@
 import type { LeadPriority, LeadStage, LeadStatus } from "../../../domain/lead";
+import type { LeadBlockingField } from "../../../domain/lead-progress";
 import type { LeadAvailableAction } from "../../contracts/lead-available-action";
 
 export type LeadTimelineItem = {
@@ -19,6 +20,7 @@ export type LeadDetailLeadView = {
   stage: LeadStage;
   status: LeadStatus | null;
   prioridad: LeadPriority | null;
+  nextStep: string;
   createdAt: number;
   updatedAt: number;
 };
@@ -72,4 +74,5 @@ export type LeadDetailView = {
   sale: LeadDetailSaleView | undefined;
   timeline: LeadTimelineItem[];
   availableActions: LeadAvailableAction[];
+  blockingFields: LeadBlockingField[];
 };

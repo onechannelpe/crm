@@ -8,11 +8,11 @@ import type { LeadCreateTabId } from "./model";
 const LABEL_BY_TAB: Record<LeadCreateTabId, string> = {
   home: "Borrador",
   timeline: "Timeline",
-  tasks: "Tasks",
-  notes: "Notes",
-  files: "Files",
+  tasks: "Tareas",
+  notes: "Notas",
+  files: "Archivos",
   emails: "Emails",
-  calendar: "Calendar",
+  calendar: "Calendario",
 };
 
 export function useLeadCreatePageState() {

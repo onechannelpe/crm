@@ -1,17 +1,13 @@
 import type { JSX } from "solid-js";
 
-import BrandLinkedin from "~/components/icons/brand-linkedin";
-import BrandX from "~/components/icons/brand-x";
+import Building2 from "~/components/icons/building-2";
 import Clock from "~/components/icons/calendar-clock";
 import Checkbox from "~/components/icons/checkbox";
 import HomeTabler from "~/components/icons/home-tabler";
-import LinkIcon from "~/components/icons/link";
 import MapIcon from "~/components/icons/map";
-import Moneybag from "~/components/icons/moneybag";
+import Package from "~/components/icons/package";
 import TimelineEvent from "~/components/icons/timeline-event";
 import User from "~/components/icons/user";
-import UserRound from "~/components/icons/user-round";
-import Users from "~/components/icons/users";
 
 import {
   LEAD_CREATE_PRIMARY_TABS,
@@ -44,7 +40,7 @@ export const TAB_ITEMS: ReadonlyArray<{
 }> = [
   { id: LEAD_CREATE_PRIMARY_TABS[0], icon: HomeTabler, label: "Home" },
   { id: LEAD_CREATE_PRIMARY_TABS[1], icon: TimelineEvent, label: "Timeline" },
-  { id: LEAD_CREATE_PRIMARY_TABS[2], icon: Checkbox, label: "Tasks" },
+  { id: LEAD_CREATE_PRIMARY_TABS[2], icon: Checkbox, label: "Tareas" },
 ] as const;
 
 export const HIDDEN_TAB_ITEMS: ReadonlyArray<{
@@ -59,23 +55,21 @@ export const HIDDEN_TAB_ITEMS: ReadonlyArray<{
 
 export const FIELD_ROWS: ReadonlyArray<DisplayField> = [
   { label: "RUC", icon: MapIcon, key: "ruc" },
-  { label: "Address", icon: MapIcon },
-  { label: "ARR", icon: Moneybag },
-  { label: "Created by", icon: User, value: "You" },
-  { label: "Domain Name", icon: LinkIcon },
-  { label: "Employees", icon: Users },
-  { label: "ICP", icon: HomeTabler },
-  { label: "Linkedin", icon: BrandLinkedin },
-  { label: "Last update", icon: Clock, value: "24 minutes ago" },
-  { label: "Updated by", icon: UserRound, value: "You" },
-  { label: "X", icon: BrandX },
+  { label: "Razón social", icon: Building2, key: "razonSocial" },
+  { label: "Dirección", icon: MapIcon, key: "address" },
+  { label: "Ejecutivo asignado", icon: User, value: "Actual" },
+  {
+    label: "Etapa inicial",
+    icon: Package,
+    value: "PENDING_EXTERNAL_REVIEW",
+  },
+  { label: "Última actualización", icon: Clock, value: "Pendiente" },
 ] as const;
 
 export const RELATION_WIDGETS: ReadonlyArray<{
   title: string;
   showSeeAll: boolean;
 }> = [
-  { title: "Account Owner", showSeeAll: false },
-  { title: "Opportunities", showSeeAll: true },
-  { title: "People", showSeeAll: true },
+  { title: "Bootstrap desde Engine", showSeeAll: false },
+  { title: "Verificación SUNAT", showSeeAll: false },
 ] as const;

@@ -4,6 +4,7 @@ import CalendarDays from "~/components/icons/calendar-days";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import House from "~/components/icons/house";
 import Package from "~/components/icons/package";
+import TimelineEvent from "~/components/icons/timeline-event";
 import { Badge } from "~/components/ui/display/badge";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { formatDate } from "~/lib/utils";
@@ -69,12 +70,21 @@ export const LEADS_RECORD_INDEX_COLUMNS = [
     ),
   },
   {
+    key: "nextStep",
+    label: "Siguiente paso",
+    icon: TimelineEvent,
+    minWidth: 220,
+    renderCell: (lead) => (
+      <span class={styles.mutedCellText}>{lead.nextStep}</span>
+    ),
+  },
+  {
     key: "createdAt",
-    label: "Creado",
+    label: "Actualizado",
     icon: CalendarDays,
     width: 140,
     renderCell: (lead) => (
-      <span class={styles.mutedCellText}>{formatDate(lead.createdAt)}</span>
+      <span class={styles.mutedCellText}>{formatDate(lead.updatedAt)}</span>
     ),
   },
 ] satisfies ReadonlyArray<DataGridColumn<LeadListRowView>>;

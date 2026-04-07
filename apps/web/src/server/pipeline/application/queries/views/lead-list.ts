@@ -9,6 +9,7 @@ export type LeadListRowView = {
   stage: LeadStage;
   status: LeadStatus | null;
   prioridad: LeadPriority | null;
+  nextStep: string;
   createdAt: number;
   updatedAt: number;
 };

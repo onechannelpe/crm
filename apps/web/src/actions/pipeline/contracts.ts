@@ -59,6 +59,7 @@ export type LeadDetailLeadView = {
   stage: LeadStage;
   status: LeadStatus | null;
   prioridad: LeadPriority | null;
+  nextStep: string;
   createdAt: number;
   updatedAt: number;
 };
@@ -112,6 +113,7 @@ export type LeadDetailView = {
   sale: LeadDetailSaleView | undefined;
   timeline: LeadTimelineItem[];
   availableActions: LeadAvailableAction[];
+  blockingFields: string[];
 };
 
 export type LeadListRowView = {
@@ -123,6 +125,7 @@ export type LeadListRowView = {
   stage: LeadStage;
   status: LeadStatus | null;
   prioridad: LeadPriority | null;
+  nextStep: string;
   createdAt: number;
   updatedAt: number;
 };

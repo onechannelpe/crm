@@ -12,6 +12,7 @@ import {
   requireLeadReadAccess,
   resolveLeadListExecutiveScope,
 } from "../policies/access";
+import { presentLeadNextStep } from "../presenters/lead-progress";
 import { parsePageParams } from "./pagination";
 import type { LeadListView } from "./views/lead-list";
 
@@ -73,5 +74,11 @@ export async function listLeads(
     deps.leads.count(filters),
   ]);
 
-  return Ok({ rows, totalCount });
+  return Ok({
+    rows: rows.map((row) => ({
+      ...row,
+      nextStep: presentLeadNextStep({ lead: row, sale: undefined }),
+    })),
+    totalCount,
+  });
 }

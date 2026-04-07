@@ -1,8 +1,10 @@
-import { createSignal, onCleanup, onMount } from "solid-js";
+import { createAsync } from "@solidjs/router";
+import { createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import type { JSX } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
 import { requestLeadCreation } from "~/actions/pipeline/commands/leads";
+import { queryLeadBootstrapPreview } from "~/actions/pipeline/queries/leads";
 import { toAppError } from "~/lib/app-errors";
 
 import { PanelList } from "../../components/list";
@@ -20,6 +22,10 @@ import styles from "./page.module.css";
 
 type TabContentProps = {
   ruc?: string;
+  razonSocial?: string | null;
+  address?: string | null;
+  engineStatus?: string;
+  canCreate?: boolean;
   onRucInput?: (value: string) => void;
   onSubmit?: () => void;
 };
@@ -33,8 +39,10 @@ const TAB_COMPONENTS: Record<
   (props: TabContentProps) => JSX.Element
 > = {
   home: HomeTabContent,
-  timeline: () => <TimelineTabContent />,
-  tasks: () => <TasksTabContent />,
+  timeline: (props) => <TimelineTabContent {...props} />,
+  tasks: (props) => (
+    <TasksTabContent {...props} canCreate={!!props.canCreate} />
+  ),
   notes: () => <HiddenTabContent title="Notes" />,
   files: () => <HiddenTabContent title="Files" />,
   emails: () => <HiddenTabContent title="Emails" />,
@@ -47,6 +55,17 @@ export function LeadCreatePage() {
   const { navigateTo } = useSidePanel();
   const [error, setError] = createSignal<string | null>(null);
   const { pageState, setActiveTab, setRuc } = useLeadCreatePageState();
+  const validRuc = createMemo(() => {
+    const value = pageState().draft.ruc.trim();
+    return /^\d{11}$/.test(value) ? value : null;
+  });
+  const bootstrapPreview = createAsync(async () => {
+    const value = validRuc();
+    if (!value) {
+      return null;
+    }
+    return queryLeadBootstrapPreview(value);
+  });
 
   onMount(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -108,6 +127,18 @@ export function LeadCreatePage() {
           <Dynamic
             component={TAB_COMPONENTS[pageState().draft.activeTab]}
             ruc={pageState().draft.ruc}
+            razonSocial={bootstrapPreview()?.razonSocial ?? null}
+            address={bootstrapPreview()?.address ?? null}
+            engineStatus={
+              validRuc()
+                ? bootstrapPreview()
+                  ? bootstrapPreview()?.engineStatus === "available"
+                    ? "Datos encontrados"
+                    : "Sin datos en Engine"
+                  : "Buscando en Engine"
+                : "Esperando RUC válido"
+            }
+            canCreate={validRuc() !== null}
             onRucInput={setRuc}
             onSubmit={() => void handleSubmit()}
           />

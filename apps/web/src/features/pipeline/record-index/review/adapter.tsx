@@ -41,8 +41,8 @@ export function ReviewRecordIndex() {
     rowOpen,
     emptyState: {
       icon: Info,
-      title: "Add your first review lead",
-      description: "Add your first review lead manually.",
+      title: "No hay leads pendientes",
+      description: "La cola de revisión está vacía.",
     },
     class: styles.page,
   } satisfies RecordIndexAdapter<LeadListRowView>;

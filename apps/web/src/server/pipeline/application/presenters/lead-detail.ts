@@ -11,6 +11,10 @@ import type {
   LeadDetailSaleView,
   LeadDetailView,
 } from "../queries/views/lead-detail";
+import {
+  presentLeadBlockingFields,
+  presentLeadNextStep,
+} from "./lead-progress";
 import { presentTimeline } from "./timeline";
 
 export type LeadDetailSource = {
@@ -23,7 +27,10 @@ export type LeadDetailSource = {
   availableActions: LeadAvailableAction[];
 };
 
-function toLeadDetailLead(lead: Lead): LeadDetailLeadView {
+function toLeadDetailLead(
+  lead: Lead,
+  sale: LeadSale | undefined,
+): LeadDetailLeadView {
   return {
     id: lead.id,
     ruc: lead.ruc,
@@ -33,6 +40,7 @@ function toLeadDetailLead(lead: Lead): LeadDetailLeadView {
     stage: lead.stage,
     status: lead.status,
     prioridad: lead.prioridad,
+    nextStep: presentLeadNextStep({ lead, sale }),
     createdAt: lead.createdAt,
     updatedAt: lead.updatedAt,
   };
@@ -92,7 +100,7 @@ function toLeadDetailSale(sale: LeadSale): LeadDetailSaleView {
 
 export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
   return {
-    lead: toLeadDetailLead(source.lead),
+    lead: toLeadDetailLead(source.lead, source.sale),
     commercialInput: source.commercialInput
       ? toLeadDetailCommercialInput(source.commercialInput)
       : undefined,
@@ -100,5 +108,9 @@ export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
     sale: source.sale ? toLeadDetailSale(source.sale) : undefined,
     timeline: presentTimeline(source.history, source.canRevealFullTimeline),
     availableActions: source.availableActions,
+    blockingFields: presentLeadBlockingFields({
+      lead: source.lead,
+      sale: source.sale,
+    }),
   };
 }
