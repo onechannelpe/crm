@@ -1,29 +1,17 @@
-import { hasPermission, type Role } from "~/lib/auth/access/rbac";
-import type { ActionSuccess } from "~/lib/contracts/common";
+import { hasPermission } from "~/lib/auth/access/rbac";
 import { getSalesRecordAudit } from "~/server/sales-records/application/commands/shared";
 import { computeClientCompletenessScore } from "~/server/sales/completeness";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
-import type { BranchId, UserId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import type {
   ContactAssignmentInteractionRepos,
   ContactAssignmentInteractionRunner,
 } from "../infrastructure/interaction-context";
-
-export type CompleteContactAssignmentCallResult = ActionSuccess & {
-  draftRecordId: number | null;
-};
-
-export type CompleteContactAssignmentCallCommand = {
-  actorUserId: UserId;
-  actorRole: Role;
-  branchId: BranchId;
-  assignmentId: number;
-  contactId: number;
-  outcome: string;
-  notes: string | null;
-};
+import type {
+  CompleteContactAssignmentCallCommand,
+  CompleteContactAssignmentCallResult,
+} from "./contracts";
 
 function rejectMismatchedAssignment(): Result<never, DomainError> {
   return Err(

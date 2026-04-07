@@ -1,5 +1,5 @@
 import type { SalesRecordReadContext } from "../../infrastructure/read-context";
-import type { SalesRecordProductOptionView } from "./views/sales-record-view";
+import type { SalesRecordProductOptionView } from "../contracts";
 
 export async function listProducts(
   deps: SalesRecordReadContext,

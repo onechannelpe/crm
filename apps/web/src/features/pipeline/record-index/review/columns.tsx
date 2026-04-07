@@ -1,10 +1,10 @@
-import type { LeadListRowView } from "~/actions/pipeline/queries/leads";
 import Building2 from "~/components/icons/building-2";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import Info from "~/components/icons/info";
 import Package from "~/components/icons/package";
 import { Badge } from "~/components/ui/display/badge";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
+import type { LeadListRowView } from "~/server/pipeline/application/queries/views/lead-list-view";
 
 import styles from "./styles.module.css";
 

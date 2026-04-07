@@ -3,6 +3,8 @@ import {
   verifyRegistrationResponse,
   generateAuthenticationOptions,
   verifyAuthenticationResponse,
+  type VerifiedAuthenticationResponse,
+  type VerifiedRegistrationResponse,
   type PublicKeyCredentialRequestOptionsJSON,
   type RegistrationResponseJSON,
   type AuthenticationResponseJSON,
@@ -171,7 +173,7 @@ export function createPasskeyProvider(
       response: RegistrationResponseJSON,
       challenge: string,
     ) {
-      let verification: Awaited<ReturnType<typeof verifyRegistrationResponse>>;
+      let verification: VerifiedRegistrationResponse;
       try {
         verification = await verifyRegistrationResponse({
           response,
@@ -223,9 +225,7 @@ export function createPasskeyProvider(
       const passkey = await repos.passkeys.findById(response.id);
       if (!passkey) throw new PasskeyRequestError("Passkey not found");
 
-      let verification: Awaited<
-        ReturnType<typeof verifyAuthenticationResponse>
-      >;
+      let verification: VerifiedAuthenticationResponse;
       try {
         verification = await verifyAuthenticationResponse({
           response,

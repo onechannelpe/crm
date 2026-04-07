@@ -14,12 +14,12 @@ import { registerAttempt } from "../../src/server/sales-records/application/comm
 import { rejectRecord } from "../../src/server/sales-records/application/commands/reject-record";
 import type { SalesRecordRateLimitedMutationDeps } from "../../src/server/sales-records/application/commands/shared";
 import { submitRecord } from "../../src/server/sales-records/application/commands/submit-draft";
+import { updateDraft } from "../../src/server/sales-records/application/commands/update-draft";
 import type {
   CreateSalesRecordDraftInput,
   RegisterSalesRecordAttemptInput,
   UpdateSalesRecordDraftInput,
-} from "../../src/server/sales-records/application/commands/types/draft-input";
-import { updateDraft } from "../../src/server/sales-records/application/commands/update-draft";
+} from "../../src/server/sales-records/application/contracts";
 import { createActionRateLimitsRepo } from "../../src/server/security/repos-action-rate-limits";
 import type { AppContext } from "../../src/server/shared/action-runtime";
 import type { DomainError } from "../../src/server/shared/domain-error";

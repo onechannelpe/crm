@@ -4,6 +4,12 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { canTransitionSalesRecord } from "../../domain/workflow";
+import type {
+  SalesRecordAddressInput,
+  SalesRecordProductInput,
+  UpdateSalesRecordDraftInput,
+} from "../contracts";
+import type { SalesRecordMutationResult } from "../contracts";
 import type { SalesRecordAuditLogPort } from "../ports/audit-service";
 import type { ContactAssignmentRepository } from "../ports/contact-assignment-repository";
 import type {
@@ -11,12 +17,6 @@ import type {
   SalesProductRecord,
 } from "../ports/product-repository";
 import type { SalesRecordRepository } from "../ports/sales-record-repository";
-import type {
-  SalesRecordAddressInput,
-  SalesRecordProductInput,
-  UpdateSalesRecordDraftInput,
-} from "./types/draft-input";
-import type { SalesRecordMutationResult } from "./types/results";
 
 export type SalesRecordCommandRepos = {
   auditLogs: SalesRecordAuditLogPort;
@@ -39,7 +39,7 @@ export type SalesRecordRateLimitedMutationDeps = SalesRecordMutationDeps & {
 };
 
 export function okCommandResult(): Result<SalesRecordMutationResult, never> {
-  return Ok({ success: true as const });
+  return Ok({ success: true });
 }
 
 export function salesRecordFailure(

@@ -1,8 +1,8 @@
 import type { AppContext } from "~/server/shared/action-runtime";
 
 import type { SalesRecordReadContext } from "../../infrastructure/read-context";
+import type { SalesRecordQueueItemView } from "../contracts";
 import type { PendingSalesRecordQueueRecord } from "../ports/sales-record-repository";
-import type { SalesRecordQueueItemView } from "./views/sales-record-view";
 
 function mapQueueItem(
   row: PendingSalesRecordQueueRecord,

@@ -7,7 +7,7 @@ import type {
   ProductLine,
   SalesRecordFormState,
 } from "~/lib/sales/use-sales-record-form";
-import type { SalesRecordProductOptionView } from "~/server/sales-records/application/queries/views/sales-record-view";
+import type { SalesRecordProductOptionView } from "~/server/sales-records/application/contracts";
 
 import styles from "./product-line-editor.module.css";
 

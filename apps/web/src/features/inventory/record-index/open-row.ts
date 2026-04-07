@@ -7,10 +7,10 @@ export function useOpenInventoryRecord() {
     createInventoryDetailSidePanelPage({
       inventoryItemId: item.id,
       productName: item.productName,
-      serialNumber: item.serial_number,
+      serialNumber: item.serialNumber,
       category: item.category,
       status: item.status,
-      createdAt: item.created_at,
+      createdAt: item.createdAt,
     }),
   );
 

@@ -6,8 +6,6 @@ import type { SaleView } from "~/server/pipeline/application/queries/views/sale-
 import { createPipelineQueryRuntime } from "~/server/pipeline/infrastructure/query-runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
-export type { SaleView };
-
 export async function querySales(filters: {
   limit?: number;
   offset?: number;

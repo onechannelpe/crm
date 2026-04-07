@@ -1,4 +1,4 @@
-import type { CreateSalesRecordDraftInput } from "~/server/sales-records/application/commands/types/draft-input";
+import type { CreateSalesRecordDraftInput } from "~/server/sales-records/application/contracts";
 
 import type { TestDbContext } from "../../support/test-db";
 import { BENCH_NOW } from "../_shared/constants";
