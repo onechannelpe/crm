@@ -1,40 +1,21 @@
 import {
-  AUTH_FUNNEL_METHODS,
-  AUTH_FUNNEL_SCREENS,
   isAuthFunnelScreen,
-  type AuthFunnelClientEventPayload,
   type AuthFunnelEvent,
-  type AuthFunnelMethod,
   type AuthFunnelScreen,
-  type AuthFunnelServerEventPayload,
 } from "~/lib/observability/auth-funnel";
 import type { ActionRequestContext } from "~/lib/observability/context";
 import { getObservabilityRuntime } from "~/server/observability/runtime";
 
 const { observabilityService } = getObservabilityRuntime();
 
-export const AUTH_ANALYTICS_SCREENS = AUTH_FUNNEL_SCREENS;
-
-export type AuthAnalyticsScreen = AuthFunnelScreen;
-
-export const AUTH_ANALYTICS_METHODS = AUTH_FUNNEL_METHODS;
-
-export type AuthAnalyticsMethod = AuthFunnelMethod;
-
-export type AuthClientAnalyticsEvent = AuthFunnelClientEventPayload;
-
-export type AuthServerAnalyticsEvent = AuthFunnelServerEventPayload;
-
-export type AuthAnalyticsEvent = AuthFunnelEvent;
-
 export function isAuthAnalyticsScreen(
   value: unknown,
-): value is AuthAnalyticsScreen {
+): value is AuthFunnelScreen {
   return isAuthFunnelScreen(value);
 }
 
 export function recordAuthAnalyticsEvent(
-  event: AuthAnalyticsEvent,
+  event: AuthFunnelEvent,
   requestContext: ActionRequestContext,
 ): Promise<void> {
   return observabilityService.recordAuthFunnelEvent({
@@ -51,18 +32,14 @@ export function recordAuthAnalyticsEvent(
   });
 }
 
-function resolveEventScreen(
-  event: AuthAnalyticsEvent,
-): AuthAnalyticsScreen | null {
+function resolveEventScreen(event: AuthFunnelEvent) {
   if (event.kind === "screen_viewed") {
     return event.screen;
   }
   return null;
 }
 
-function resolveEventMethod(
-  event: AuthAnalyticsEvent,
-): AuthAnalyticsMethod | null {
+function resolveEventMethod(event: AuthFunnelEvent) {
   switch (event.kind) {
     case "screen_viewed":
       if (event.screen === "login_verify") return "password_totp";
@@ -84,22 +61,14 @@ function resolveEventMethod(
   }
 }
 
-function resolveEventOutcome(
-  event: AuthAnalyticsEvent,
-):
-  | "viewed"
-  | "failed"
-  | "succeeded"
-  | "started"
-  | "totp_required"
-  | "passkey_required" {
+function resolveEventOutcome(event: AuthFunnelEvent) {
   if (event.kind === "screen_viewed") {
     return "viewed";
   }
   return event.outcome;
 }
 
-function resolveEventCode(event: AuthAnalyticsEvent): string | null {
+function resolveEventCode(event: AuthFunnelEvent) {
   if ("code" in event) {
     return event.code;
   }
