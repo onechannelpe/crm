@@ -9,7 +9,7 @@ import {
 } from "~/server/auth/application/admin-sessions";
 import { createAdminSessionsReadContext } from "~/server/auth/infrastructure/admin-sessions-read-context";
 import { runAction } from "~/server/shared/action-runtime";
-import { isErr } from "~/server/shared/result";
+import { isErr, Ok } from "~/server/shared/result";
 
 import { parseUserSessionsInput } from "./input";
 
@@ -23,11 +23,13 @@ export async function listUserSessions(userId: number) {
     role: "admin",
     stepUp: "recent_strong_auth",
     input: parsedInput.value,
-    execute: (ctx) =>
-      listUserSessionsService(
-        ctx,
-        createAdminSessionsReadContext(),
-        parsedInput.value,
+    execute: async (ctx) =>
+      Ok(
+        await listUserSessionsService(
+          ctx,
+          createAdminSessionsReadContext(),
+          parsedInput.value,
+        ),
       ),
   });
 }
@@ -37,7 +39,8 @@ export async function getActiveSessionsCount(): Promise<number> {
     actionName: "admin.sessions.count.read",
     role: "admin",
     stepUp: "recent_strong_auth",
-    execute: () => countActiveSessionsService(createAdminSessionsReadContext()),
+    execute: async () =>
+      Ok(await countActiveSessionsService(createAdminSessionsReadContext())),
   });
 }
 
@@ -46,7 +49,7 @@ export async function listAllActiveSessions(): Promise<SessionInfo[]> {
     actionName: "admin.sessions.active.read",
     role: "admin",
     stepUp: "recent_strong_auth",
-    execute: () =>
-      listAllActiveSessionsService(createAdminSessionsReadContext()),
+    execute: async () =>
+      Ok(await listAllActiveSessionsService(createAdminSessionsReadContext())),
   });
 }

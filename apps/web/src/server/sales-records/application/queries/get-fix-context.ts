@@ -1,5 +1,6 @@
-import { assertOwnedRecord } from "~/lib/auth/access/ownership";
 import type { AppContext } from "~/server/shared/action-runtime";
+import { domainError, type DomainError } from "~/server/shared/domain-error";
+import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { SalesRecordReadContext } from "../../infrastructure/read-context";
 import type { SalesRecordEditContextView } from "../contracts";
@@ -18,13 +19,14 @@ export async function getEditContext(
   ctx: AppContext,
   deps: SalesRecordReadContext,
   input: { recordId: number },
-): Promise<SalesRecordEditContextView> {
-  const record = assertOwnedRecord(
-    await deps.repos.salesRecords.findById(input.recordId),
-    (row) => row.executive_user_id,
-    ctx.actor,
-    { resourceName: "Sales record" },
-  );
+): Promise<Result<SalesRecordEditContextView, DomainError>> {
+  const record = await deps.repos.salesRecords.findById(input.recordId);
+  if (!record) {
+    return Err(domainError("not_found", "not_found", "Sales record not found"));
+  }
+  if (record.executive_user_id !== ctx.actor.userId) {
+    return Err(domainError("forbidden", "forbidden", "Not your sales record"));
+  }
 
   const [client, addresses, products, attempts] = await Promise.all([
     deps.repos.salesRecords.findClientByRecord(input.recordId),
@@ -33,7 +35,7 @@ export async function getEditContext(
     deps.repos.salesRecords.listAttemptsByRecord(input.recordId),
   ]);
 
-  return {
+  return Ok({
     id: record.id,
     status: record.status,
     client: client
@@ -52,7 +54,7 @@ export async function getEditContext(
       isPrimary: address.is_primary,
     })),
     products: products.map((product) => ({
-      id: product.product_id,
+      id: product.id,
       productName: product.product_name_snapshot,
       quantity: product.quantity,
     })),
@@ -64,5 +66,5 @@ export async function getEditContext(
       createdAt: attempt.created_at,
       reviewerName: attempt.reviewer_name,
     })),
-  };
+  });
 }

@@ -38,11 +38,9 @@ export async function getSalesRecordBootstrap(
     permission: "sales:create",
     input: { contactId: safeContactId },
     execute: async (ctx) =>
-      Ok(
-        await getBootstrapService(ctx, createSalesRecordReadContext(), {
-          contactId: safeContactId,
-        }),
-      ),
+      getBootstrapService(ctx, createSalesRecordReadContext(), {
+        contactId: safeContactId,
+      }),
   });
 }
 
@@ -77,10 +75,8 @@ export async function getSalesRecordEditContext(
     permission: "sales:create",
     input: { recordId: safeRecordId },
     execute: async (ctx) =>
-      Ok(
-        await getEditContextService(ctx, createSalesRecordReadContext(), {
-          recordId: safeRecordId,
-        }),
-      ),
+      getEditContextService(ctx, createSalesRecordReadContext(), {
+        recordId: safeRecordId,
+      }),
   });
 }
