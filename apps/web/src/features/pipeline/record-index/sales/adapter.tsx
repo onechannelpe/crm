@@ -8,7 +8,7 @@ import type {
   RecordIndexAdapter,
   RecordIndexSource,
 } from "~/features/record-index/model/types";
-import type { SaleView } from "~/server/pipeline/application/queries/views/sale-view";
+import type { SaleView } from "~/server/pipeline/application/contracts";
 
 import { SALES_RECORD_INDEX_COLUMNS } from "./columns";
 import { useOpenSalesRecord } from "./open-row";

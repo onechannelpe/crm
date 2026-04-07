@@ -4,7 +4,7 @@ import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import Package from "~/components/icons/package";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { formatDate } from "~/lib/utils";
-import type { SaleView } from "~/server/pipeline/application/queries/views/sale-view";
+import type { SaleView } from "~/server/pipeline/application/contracts";
 
 import styles from "./styles.module.css";
 

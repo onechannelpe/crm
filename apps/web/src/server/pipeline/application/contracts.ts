@@ -102,6 +102,22 @@ export type LeadListView = {
   totalCount: number;
 };
 
+export type SaleView = {
+  id: number;
+  leadId: number;
+  executiveId: number;
+  proveedorActual: string;
+  tasaActual: number;
+  gpv: number;
+  ticket: number;
+  abono: number;
+  cantidadPos: number;
+  banco: string;
+  nroCuenta: string;
+  cci: string | null;
+  createdAt: number;
+};
+
 export type LogCallInput = {
   leadId: number;
   outcome: LeadCallOutcome;
