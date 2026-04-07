@@ -85,7 +85,7 @@ export interface SalesRecordBootstrapView {
   client: SalesRecordClientInput;
 }
 
-export interface SalesRecordFixContextClientView {
+interface SalesRecordFixContextClientView {
   ruc: string | null;
   companyName: string | null;
   contactName: string | null;
@@ -93,20 +93,20 @@ export interface SalesRecordFixContextClientView {
   phones: string[];
 }
 
-export interface SalesRecordFixContextAddressView {
+interface SalesRecordFixContextAddressView {
   id: number;
   addressType: string;
   fullText: string;
   isPrimary: number;
 }
 
-export interface SalesRecordFixContextProductView {
+interface SalesRecordFixContextProductView {
   id: number;
   productName: string;
   quantity: number;
 }
 
-export interface SalesRecordFixContextAttemptView {
+interface SalesRecordFixContextAttemptView {
   id: number;
   outcome: SalesRecordAttemptOutcome;
   notes: string | null;

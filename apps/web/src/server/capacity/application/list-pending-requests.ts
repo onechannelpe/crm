@@ -4,7 +4,7 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { fromDbCapacityRequestKind } from "../domain/request-policy";
 import type { CapacityReadContext } from "../infrastructure/read-context";
-import type { PendingCapacityRequestView } from "./queries/views/pending-capacity-request-view";
+import type { PendingCapacityRequestView } from "./contracts";
 
 export async function listPendingRequests(
   ctx: AppContext,
@@ -54,5 +54,3 @@ export async function listPendingRequests(
     );
   }
 }
-
-export type { PendingCapacityRequestView };

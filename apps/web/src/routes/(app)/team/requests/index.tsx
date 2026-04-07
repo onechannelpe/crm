@@ -14,7 +14,7 @@ import {
   rejectCapacityRequestMutation,
 } from "~/lib/mutations/capacity";
 import { pendingCapacityRequestsQuery } from "~/lib/queries/capacity";
-import type { PendingCapacityRequestView } from "~/server/capacity/application/queries/views/pending-capacity-request-view";
+import type { PendingCapacityRequestView } from "~/server/capacity/application/contracts";
 
 type TeamRequestRow = PendingCapacityRequestView;
 

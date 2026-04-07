@@ -12,9 +12,7 @@ import { DataGrid } from "~/features/data-grid/components/grid";
 import { createRouteRowOpen } from "~/features/data-grid/model/row-open";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { managedExecutivesQuery } from "~/lib/queries/capacity";
-import type { ManagedExecutiveView } from "~/server/capacity/application/queries/views/managed-executive-view";
-
-type TeamExecutiveRow = ManagedExecutiveView;
+import type { ManagedExecutiveView } from "~/server/capacity/application/contracts";
 
 const TEAM_COLUMNS = [
   {
@@ -74,7 +72,7 @@ const TEAM_COLUMNS = [
     grow: true,
     renderCell: (executive) => executive.email,
   },
-] satisfies ReadonlyArray<DataGridColumn<TeamExecutiveRow>>;
+] satisfies ReadonlyArray<DataGridColumn<ManagedExecutiveView>>;
 
 export default function TeamPage() {
   const navigate = useNavigate();
@@ -89,7 +87,7 @@ export default function TeamPage() {
     );
   });
   const isLoading = () => executives() === undefined;
-  const rowOpen = createRouteRowOpen<TeamExecutiveRow>((executive) => {
+  const rowOpen = createRouteRowOpen<ManagedExecutiveView>((executive) => {
     navigate(`/team/members/${executive.id}/capacity`);
   });
 

@@ -3,7 +3,7 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { CapacityReadContext } from "../infrastructure/read-context";
-import type { CapacityPolicyDefaultsView } from "./queries/views/capacity-policy-defaults-view";
+import type { CapacityPolicyDefaultsView } from "./contracts";
 
 export async function getPolicyDefaults(
   ctx: AppContext,
@@ -56,5 +56,3 @@ export async function getPolicyDefaults(
     );
   }
 }
-
-export type { CapacityPolicyDefaultsView };

@@ -7,7 +7,7 @@ import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import { canManageExecutive } from "../domain/access-policy";
 import type { CapacityReadContext } from "../infrastructure/read-context";
-import type { ManagedExecutiveView } from "./queries/views/managed-executive-view";
+import type { ManagedExecutiveView } from "./contracts";
 
 export async function listManagedExecutives(
   ctx: AppContext,
@@ -62,5 +62,3 @@ export async function listManagedExecutives(
     );
   }
 }
-
-export type { ManagedExecutiveView };
