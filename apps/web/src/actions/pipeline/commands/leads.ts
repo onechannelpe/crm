@@ -40,7 +40,7 @@ export async function requestLeadCreation(input: {
 
   return runAction({
     actionName: "pipeline.register_lead",
-    requireAuth: true,
+    access: { kind: "auth" },
     input,
     execute: (ctx) =>
       runPipelineCommand(({ deps, auditService, engineGateway }) =>
@@ -72,7 +72,7 @@ export async function requestLeadReview(input: {
 
   return runAction({
     actionName: "pipeline.review_lead",
-    requireAuth: true,
+    access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
       runPipelineCommand(({ deps, auditService, notificationCenter }) =>
@@ -107,7 +107,7 @@ export async function requestLeadCommercialInputCompletion(input: {
 
   return runAction({
     actionName: "pipeline.complete_commercial_input",
-    requireAuth: true,
+    access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
       runPipelineCommand(({ deps, auditService, notificationCenter }) =>
@@ -130,7 +130,7 @@ export async function requestLeadReassignment(input: {
 }) {
   return runAction({
     actionName: "pipeline.reassign_lead",
-    requireAuth: true,
+    access: { kind: "auth" },
     input,
     execute: (ctx) =>
       runPipelineCommand(({ deps, auditService }) =>

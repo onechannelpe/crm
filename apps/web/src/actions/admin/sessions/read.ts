@@ -20,7 +20,7 @@ export async function listUserSessions(userId: number) {
   }
   return runAction({
     actionName: "admin.sessions.user.read",
-    role: "admin",
+    access: { kind: "role", role: "admin" },
     stepUp: "recent_strong_auth",
     input: parsedInput.value,
     execute: async (ctx) =>
@@ -37,7 +37,7 @@ export async function listUserSessions(userId: number) {
 export async function getActiveSessionsCount(): Promise<number> {
   return runAction({
     actionName: "admin.sessions.count.read",
-    role: "admin",
+    access: { kind: "role", role: "admin" },
     stepUp: "recent_strong_auth",
     execute: async () =>
       Ok(await countActiveSessionsService(createAdminSessionsReadContext())),
@@ -47,7 +47,7 @@ export async function getActiveSessionsCount(): Promise<number> {
 export async function listAllActiveSessions(): Promise<SessionInfo[]> {
   return runAction({
     actionName: "admin.sessions.active.read",
-    role: "admin",
+    access: { kind: "role", role: "admin" },
     stepUp: "recent_strong_auth",
     execute: async () =>
       Ok(await listAllActiveSessionsService(createAdminSessionsReadContext())),

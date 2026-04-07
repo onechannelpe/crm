@@ -9,7 +9,7 @@ import { parseAssignContactsCommand } from "./input";
 export async function assignCurrentUserContacts() {
   return runAction({
     actionName: "contact_assignments.assign_current_user",
-    permission: "lead:work",
+    access: { kind: "permission", permission: "lead:work" },
     input: {},
     execute: (ctx) => {
       const cmdResult = parseAssignContactsCommand(

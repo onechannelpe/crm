@@ -12,7 +12,7 @@ export async function querySales(filters: {
 }): Promise<SaleView[]> {
   return runAction({
     actionName: "pipeline.list_sales",
-    requireAuth: true,
+    access: { kind: "auth" },
     input: filters,
     execute: (ctx) =>
       listSales(createPipelineQueryRuntime().deps.saleQueries, {
@@ -26,7 +26,7 @@ export async function querySales(filters: {
 export async function querySaleDetail(saleId: number): Promise<SaleView> {
   return runAction({
     actionName: "pipeline.get_sale_detail",
-    requireAuth: true,
+    access: { kind: "auth" },
     input: { saleId },
     execute: (ctx) =>
       getSaleDetail(createPipelineQueryRuntime().deps.saleQueries, {

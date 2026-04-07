@@ -12,7 +12,7 @@ export async function recordLeadCall(input: {
 }) {
   return runAction({
     actionName: "pipeline.log_call",
-    requireAuth: true,
+    access: { kind: "auth" },
     input,
     execute: (ctx) =>
       runPipelineCommand(({ deps, auditService }) =>
@@ -32,7 +32,7 @@ export async function recordLeadCall(input: {
 export async function addLeadNote(input: { leadId: number; body: string }) {
   return runAction({
     actionName: "pipeline.add_note",
-    requireAuth: true,
+    access: { kind: "auth" },
     input,
     execute: (ctx) =>
       runPipelineCommand(({ deps, auditService }) =>

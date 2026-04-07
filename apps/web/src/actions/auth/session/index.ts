@@ -17,7 +17,7 @@ export async function getLoginFlow(flowId: number) {
 export async function logout(): Promise<void> {
   await runAction({
     actionName: "auth.session.logout",
-    requireSession: true,
+    access: { kind: "session" },
     execute: (ctx) => logoutUser(ctx, createAuthSessionLogoutContext()),
   });
 }
@@ -25,7 +25,7 @@ export async function logout(): Promise<void> {
 export async function getMe(): Promise<CurrentUserView | null> {
   return runAction({
     actionName: "auth.session.get_me",
-    requireSession: true,
+    access: { kind: "session" },
     execute: (ctx) => getCurrentUser(ctx, createAuthSessionReadContext()),
   });
 }

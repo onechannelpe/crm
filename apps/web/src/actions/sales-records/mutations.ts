@@ -27,7 +27,7 @@ export async function createSalesRecordDraft(
   const parsedInput = parseCreateSalesRecordDraftInput(input);
   return runAction({
     actionName: "sales_records.create_draft",
-    permission: "sales:create",
+    access: { kind: "permission", permission: "sales:create" },
     input: {
       source: parsedInput.source,
       addresses: parsedInput.addresses.length,
@@ -44,7 +44,7 @@ export async function submitSalesRecord(
   const safeRecordId = parseSalesRecordId(recordId);
   return runAction({
     actionName: "sales_records.submit",
-    permission: "sales:submit",
+    access: { kind: "permission", permission: "sales:submit" },
     input: { recordId: safeRecordId },
     execute: (ctx) =>
       submitRecord(ctx, createSalesRecordMutationsContext(), {
@@ -59,7 +59,7 @@ export async function confirmSalesRecord(
   const safeRecordId = parseSalesRecordId(recordId);
   return runAction({
     actionName: "sales_records.confirm",
-    permission: "sales:approve",
+    access: { kind: "permission", permission: "sales:approve" },
     input: { recordId: safeRecordId },
     execute: (ctx) =>
       confirmRecord(ctx, createSalesRecordMutationsContext(), {
@@ -75,7 +75,7 @@ export async function rejectSalesRecord(
   const parsedInput = parseRejectSalesRecordInput(recordId, reason);
   return runAction({
     actionName: "sales_records.reject",
-    permission: "sales:approve",
+    access: { kind: "permission", permission: "sales:approve" },
     input: { recordId: parsedInput.recordId },
     execute: (ctx) =>
       rejectRecord(ctx, createSalesRecordMutationsContext(), {
@@ -91,7 +91,7 @@ export async function cancelSalesRecord(
   const safeRecordId = parseSalesRecordId(recordId);
   return runAction({
     actionName: "sales_records.cancel",
-    permission: "sales:create",
+    access: { kind: "permission", permission: "sales:create" },
     input: { recordId: safeRecordId },
     execute: (ctx) =>
       cancelRecord(ctx, createSalesRecordMutationsContext(), {
@@ -112,7 +112,7 @@ export async function updateSalesRecordDraft(
   );
   return runAction({
     actionName: "sales_records.update_draft",
-    permission: "sales:create",
+    access: { kind: "permission", permission: "sales:create" },
     input: {
       recordId: parsedInput.recordId,
       addresses: parsedInput.input.addresses.length,
@@ -142,7 +142,7 @@ export async function registerSalesRecordAttempt(
   );
   return runAction({
     actionName: "sales_records.attempt",
-    permission: "sales:approve",
+    access: { kind: "permission", permission: "sales:approve" },
     input: { recordId: parsedInput.recordId, outcome: parsedInput.outcome },
     execute: (ctx) =>
       registerAttempt(ctx, createSalesRecordMutationsContext(), {

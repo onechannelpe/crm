@@ -16,7 +16,7 @@ export async function requestQuotationCreation(input: {
 }) {
   return runAction({
     actionName: "pipeline.create_quotation",
-    requireAuth: true,
+    access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
       runPipelineCommand(({ deps, auditService }) =>
@@ -34,7 +34,7 @@ export async function requestQuotationCreation(input: {
 export async function requestSaleApproval(leadId: number) {
   return runAction({
     actionName: "pipeline.approve_for_sale",
-    requireAuth: true,
+    access: { kind: "auth" },
     input: { leadId },
     execute: (ctx) =>
       runPipelineCommand(({ deps, auditService, notificationCenter }) =>

@@ -14,7 +14,7 @@ import { createInviteManagementContext } from "~/server/team/infrastructure/invi
 export async function getInviteManagement(): Promise<InviteManagement> {
   return runAction({
     actionName: "team.invite_management.read",
-    permission: "hr:manage",
+    access: { kind: "permission", permission: "hr:manage" },
     execute: (ctx) =>
       getInviteManagementService(ctx, createInviteManagementContext()),
   });
@@ -23,7 +23,7 @@ export async function getInviteManagement(): Promise<InviteManagement> {
 export async function getBulkImportSetup(): Promise<BulkImportSetup> {
   return runAction({
     actionName: "team.bulk_import_setup.read",
-    permission: "admin:manage",
+    access: { kind: "permission", permission: "admin:manage" },
     execute: getBulkImportSetupService,
   });
 }

@@ -29,7 +29,7 @@ export async function requestSaleCreation(input: {
 
   return runAction({
     actionName: "pipeline.create_sale",
-    requireAuth: true,
+    access: { kind: "auth" },
     input: { leadId: input.leadId },
     execute: (ctx) =>
       runPipelineCommand(({ deps, auditService }) =>

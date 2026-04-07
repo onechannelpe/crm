@@ -28,7 +28,7 @@ export async function previewBulkCsv(
   const safeRole = assertRole(role);
   const parsed = await runAction({
     actionName: "team.bulk_import.preview",
-    permission: "admin:manage",
+    access: { kind: "permission", permission: "admin:manage" },
     input: { role: safeRole },
     execute: () => previewBulkImportService(csvContent),
   });
@@ -45,7 +45,7 @@ export async function applyBulkImport(
   }
   return runAction({
     actionName: "team.bulk_import.apply",
-    permission: "admin:manage",
+    access: { kind: "permission", permission: "admin:manage" },
     input: { role: safeRole },
     execute: (ctx) =>
       applyBulkImportService(ctx, createTeamInviteContext(), {

@@ -22,7 +22,7 @@ export async function listSalesRecordProducts(): Promise<
 > {
   return runAction({
     actionName: "sales_records.products.read",
-    permission: "sales:create",
+    access: { kind: "permission", permission: "sales:create" },
     execute: async () =>
       Ok(await listProductsService(createSalesRecordReadContext())),
   });
@@ -35,7 +35,7 @@ export async function getSalesRecordBootstrap(
     contactId === null ? null : parseSalesContactId(contactId);
   return runAction({
     actionName: "sales_records.bootstrap.read",
-    permission: "sales:create",
+    access: { kind: "permission", permission: "sales:create" },
     input: { contactId: safeContactId },
     execute: async (ctx) =>
       getBootstrapService(ctx, createSalesRecordReadContext(), {
@@ -49,7 +49,7 @@ export async function listPendingSalesRecords(): Promise<
 > {
   return runAction({
     actionName: "sales_records.pending.read",
-    permission: "sales:review",
+    access: { kind: "permission", permission: "sales:review" },
     execute: async (ctx) =>
       Ok(await listPendingService(ctx, createSalesRecordReadContext())),
   });
@@ -60,7 +60,7 @@ export async function listConfirmedSalesRecords(): Promise<
 > {
   return runAction({
     actionName: "sales_records.confirmed.read",
-    permission: "sales:review",
+    access: { kind: "permission", permission: "sales:review" },
     execute: async (ctx) =>
       Ok(await listConfirmedService(ctx, createSalesRecordReadContext())),
   });
@@ -72,7 +72,7 @@ export async function getSalesRecordEditContext(
   const safeRecordId = parseSalesRecordId(recordId);
   return runAction({
     actionName: "sales_records.edit_context.read",
-    permission: "sales:create",
+    access: { kind: "permission", permission: "sales:create" },
     input: { recordId: safeRecordId },
     execute: async (ctx) =>
       getEditContextService(ctx, createSalesRecordReadContext(), {

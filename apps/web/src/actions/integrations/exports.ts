@@ -10,7 +10,7 @@ import { Ok } from "~/server/shared/result";
 export async function queueLeadExport(): Promise<{ jobId: number }> {
   return runAction({
     actionName: "integration.queue_export",
-    permission: "integration:manage",
+    access: { kind: "permission", permission: "integration:manage" },
     input: {},
     execute: (ctx) => queueExportJobUseCase({ actorId: ctx.actor.userId }),
   });
@@ -19,7 +19,7 @@ export async function queueLeadExport(): Promise<{ jobId: number }> {
 export async function getExportJob(jobId: number) {
   return runAction({
     actionName: "integration.get_export_job",
-    permission: "integration:manage",
+    access: { kind: "permission", permission: "integration:manage" },
     input: { jobId },
     execute: async () => {
       const job = await getIntegrationJobQuery(jobId);
@@ -32,7 +32,7 @@ export async function getExportJob(jobId: number) {
 export async function downloadExport(jobId: number): Promise<Uint8Array> {
   return runAction({
     actionName: "integration.download_export",
-    permission: "integration:manage",
+    access: { kind: "permission", permission: "integration:manage" },
     input: { jobId },
     execute: async () => {
       const job = await getIntegrationJobQuery(jobId);

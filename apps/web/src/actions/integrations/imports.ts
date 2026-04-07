@@ -31,7 +31,7 @@ export async function uploadImportFile(
 
   return runAction({
     actionName: "integration.upload_import",
-    permission: "integration:manage",
+    access: { kind: "permission", permission: "integration:manage" },
     input: {},
     execute: (ctx) =>
       queueImportJobUseCase({
@@ -46,7 +46,7 @@ export async function uploadImportFile(
 export async function getImportJob(jobId: number) {
   return runAction({
     actionName: "integration.get_import_job",
-    permission: "integration:manage",
+    access: { kind: "permission", permission: "integration:manage" },
     input: { jobId },
     execute: async () => {
       const job = await getIntegrationJobQuery(jobId);
@@ -62,7 +62,7 @@ export async function listIntegrationJobs(filters: {
 }) {
   return runAction({
     actionName: "integration.list_jobs",
-    permission: "integration:manage",
+    access: { kind: "permission", permission: "integration:manage" },
     input: {},
     execute: async () => Ok(await listIntegrationJobsQuery(filters)),
   });

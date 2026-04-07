@@ -37,7 +37,7 @@ export async function listSalesExportJobs(
   const runtime = createSalesExportRuntime();
   return runAction({
     actionName: "sales_exports.list",
-    permission: "sales:review",
+    access: { kind: "permission", permission: "sales:review" },
     input: { limit: safeLimit },
     execute: async (ctx) => ({
       ok: true as const,
@@ -53,7 +53,7 @@ export async function getSalesExportJob(
   const runtime = createSalesExportRuntime();
   return runAction({
     actionName: "sales_exports.job.read",
-    permission: "sales:review",
+    access: { kind: "permission", permission: "sales:review" },
     input: { jobId: safeJobId },
     execute: async (ctx) => ({
       ok: true as const,
@@ -69,7 +69,7 @@ export async function listSalesExportDownloads(
   const runtime = createSalesExportRuntime();
   return runAction({
     actionName: "sales_exports.downloads.list",
-    permission: "sales:review",
+    access: { kind: "permission", permission: "sales:review" },
     input: { jobId: safeJobId },
     execute: async (ctx) => ({
       ok: true as const,
@@ -91,7 +91,7 @@ export async function requestSalesExport(
   const runtime = createSalesExportRuntime();
   return runAction({
     actionName: "sales_exports.request",
-    permission: "sales:review",
+    access: { kind: "permission", permission: "sales:review" },
     input: { format },
     execute: async (ctx) => ({
       ok: true as const,

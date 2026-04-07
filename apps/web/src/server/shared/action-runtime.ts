@@ -23,8 +23,7 @@ type ActionMeta = {
 
 type RunActionParams<T, E extends DomainError> = {
   access: ActionAccess;
-} &
-  ActionStepUpRequirement &
+} & ActionStepUpRequirement &
   ActionMeta & {
     execute: (ctx: AppContext) => Promise<Result<T, E>>;
   };
