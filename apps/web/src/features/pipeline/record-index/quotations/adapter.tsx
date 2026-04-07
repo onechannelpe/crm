@@ -8,7 +8,7 @@ import type {
   RecordIndexAdapter,
   RecordIndexSource,
 } from "~/features/record-index/model/types";
-import type { LeadListRowView } from "~/server/pipeline/application/queries/views/lead-list-view";
+import type { LeadListRowView } from "~/server/pipeline/application/contracts";
 
 import { QUOTATIONS_RECORD_INDEX_COLUMNS } from "./columns";
 import { useOpenQuotationRecord } from "./open-row";

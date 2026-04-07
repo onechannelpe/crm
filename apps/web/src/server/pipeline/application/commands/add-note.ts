@@ -10,10 +10,6 @@ import {
   requirePipelineActionAccess,
 } from "../policies/access";
 import type { PipelineAuditService } from "../ports/audit-service";
-import type {
-  AddNoteInput,
-  LeadInteractionResult,
-} from "./types/lead-interactions";
 
 export async function addNote(
   input: {
@@ -21,8 +17,11 @@ export async function addNote(
     auditService: PipelineAuditService;
     actorUserId: number;
     actorRole: Role;
-  } & AddNoteInput,
-): Promise<Result<LeadInteractionResult, DomainError>> {
+  } & {
+    leadId: number;
+    body: string;
+  },
+): Promise<Result<{ interactionId: number }, DomainError>> {
   const canWriteInteraction = requirePipelineActionAccess(
     input.actorRole,
     canAddLeadInteraction,

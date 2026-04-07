@@ -1,6 +1,6 @@
 import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-row-open";
 import { createLeadDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
-import type { LeadListRowView } from "~/server/pipeline/application/queries/views/lead-list-view";
+import type { LeadListRowView } from "~/server/pipeline/application/contracts";
 
 export function useOpenLeadRecord() {
   const rowOpen = useSidePanelRowOpen<

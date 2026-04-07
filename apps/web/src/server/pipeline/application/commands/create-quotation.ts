@@ -10,7 +10,6 @@ import {
 } from "../policies/access";
 import type { PipelineAuditService } from "../ports/audit-service";
 import { persistLeadQuotationTransition } from "./create-quotation-effects";
-import type { QuotationCreatedResult } from "./types/lead-results";
 
 export async function createQuotation(input: {
   deps: CreateQuotationDeps;
@@ -24,7 +23,7 @@ export async function createQuotation(input: {
   tarifaForaneo: number;
   fee: number;
   moneda: "PEN" | "USD";
-}): Promise<Result<QuotationCreatedResult, DomainError>> {
+}): Promise<Result<{ id: number }, DomainError>> {
   const canCreate = requirePipelineActionAccess(
     input.actorRole,
     canCreateQuotation,
