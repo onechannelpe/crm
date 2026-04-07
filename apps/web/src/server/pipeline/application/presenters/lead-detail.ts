@@ -1,6 +1,6 @@
 import type { LeadHistoryEntry } from "../../domain/history";
 import type { Lead } from "../../domain/lead";
-import type { LeadAvailableAction } from "../policies/action-availability";
+import type { LeadAvailableAction } from "../contracts/lead-available-action";
 import type { LeadCommercialInput } from "../ports/commercial-input-repository";
 import type { LeadQuotation } from "../ports/quotation-repository";
 import type { LeadSale } from "../ports/sale-repository";

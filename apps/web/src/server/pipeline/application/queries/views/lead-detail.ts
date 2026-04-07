@@ -1,5 +1,5 @@
 import type { LeadPriority, LeadStage, LeadStatus } from "../../../domain/lead";
-import type { LeadAvailableAction } from "../../policies/action-availability";
+import type { LeadAvailableAction } from "../../contracts/lead-available-action";
 
 export type LeadTimelineItem = {
   id: string;
