@@ -45,9 +45,25 @@ export default createMiddleware({
 
     const decision = await enforceAuthRequest(event);
 
-    if (decision.kind === "reject") return decision.response;
-    if (decision.kind === "redirect_login") return redirect("/login");
-    if (decision.kind === "redirect_onboarding") return redirect("/onboarding");
-    if (decision.kind === "redirect_home") return redirect(decision.to);
+    if (decision.kind === "reject") {
+      decision.response.headers.set("Content-Security-Policy", csp);
+      return decision.response;
+    }
+    if (decision.kind === "redirect_login") {
+      const response = redirect("/login");
+      response.headers.set("Content-Security-Policy", csp);
+      return response;
+    }
+    if (decision.kind === "redirect_onboarding") {
+      const response = redirect("/onboarding");
+      response.headers.set("Content-Security-Policy", csp);
+      return response;
+    }
+    if (decision.kind === "redirect_home") {
+      const response = redirect(decision.to);
+      response.headers.set("Content-Security-Policy", csp);
+      return response;
+    }
+    return undefined;
   },
 });
