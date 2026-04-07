@@ -38,6 +38,7 @@ export function LeadsRecordIndex() {
     return {
       status: "ready",
       rows: data.rows,
+      totalCount: data.rows.length,
     };
   };
 

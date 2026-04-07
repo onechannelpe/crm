@@ -14,6 +14,9 @@ import type { RecordIndexSortDefinition } from "./sort";
 
 export type RecordIndexCreateAction = {
   label: string;
+  emptyLabel?: string;
+  inlineLabel?: string;
+  icon?: DataGridIcon;
   onClick: () => void;
 };
 
@@ -144,6 +147,11 @@ export type RecordIndexModel = {
   };
 };
 
+export type RecordIndexScreenColumnsState<T> = RecordIndexColumnsState<T> & {
+  openMenu: Accessor<RecordIndexMenu>;
+  setOpenMenu: Setter<RecordIndexMenu>;
+};
+
 export type RecordIndexScreenModel<
   T extends { id: number },
   TFilterValue extends string = string,
@@ -155,8 +163,7 @@ export type RecordIndexScreenModel<
     total: Accessor<number | undefined>;
     visible: Accessor<number>;
   };
-  columns: RecordIndexColumnsState<T> &
-    Pick<RecordIndexModel["columns"], "openMenu" | "setOpenMenu">;
+  columns: RecordIndexScreenColumnsState<T>;
   filtering: RecordIndexFilteringState<T>;
   loading: {
     status: Accessor<RecordIndexSource<T>["status"]>;

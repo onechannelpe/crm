@@ -1,0 +1,67 @@
+import { createMemo, For } from "solid-js";
+
+import User from "~/components/icons/user";
+import { RecordChipList } from "~/components/ui/record-chip/record-chip";
+
+import { PanelList } from "../../components/list";
+import { usePageInstanceId } from "../../state/page-instance";
+import { useSidePanel } from "../../state/use-side-panel";
+
+import styles from "./page.module.css";
+
+export function SearchPersonPage() {
+  const pageId = usePageInstanceId();
+  const { getPageState } = useSidePanel();
+
+  const pageState = createMemo(() => {
+    const state = getPageState(pageId());
+
+    if (!state || state.page !== "search-person-detail") {
+      throw new Error("Search person side panel page state is not available");
+    }
+
+    return state;
+  });
+
+  return (
+    <PanelList>
+      <div class={styles.content}>
+        <section class={styles.hero}>
+          <div class={styles.heroIcon}>
+            <User size={16} />
+          </div>
+          <div class={styles.heroText}>
+            <div class={styles.title}>{pageState().person.displayName}</div>
+            <div class={styles.subtitle}>DNI {pageState().person.dni}</div>
+          </div>
+        </section>
+
+        <section class={styles.section}>
+          <div class={styles.sectionTitle}>Aliases</div>
+          <RecordChipList items={pageState().person.aliases} shape="round" />
+        </section>
+
+        <section class={styles.section}>
+          <div class={styles.sectionTitle}>Phones</div>
+          <RecordChipList items={pageState().person.phones} shape="square" />
+        </section>
+
+        <section class={styles.section}>
+          <div class={styles.sectionTitle}>Companies</div>
+          <div class={styles.list}>
+            <For each={pageState().person.companies}>
+              {(company) => (
+                <div class={styles.row}>
+                  <div class={styles.rowTitle}>
+                    {company.name ?? "Unknown company"}
+                  </div>
+                  <div class={styles.rowMeta}>{company.ruc ?? "-"}</div>
+                </div>
+              )}
+            </For>
+          </div>
+        </section>
+      </div>
+    </PanelList>
+  );
+}

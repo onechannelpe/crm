@@ -11,6 +11,21 @@ export function RecordIndexEmpty<
   TFilterValue extends string = string,
   TSortValue extends string = string,
 >(props: { model: RecordIndexScreenModel<T, TFilterValue, TSortValue> }) {
+  const createAction = () => props.model.adapter.createAction;
+  const shouldShowCreateAction = () => {
+    const total = props.model.counts.total();
+
+    if (!createAction()) {
+      return false;
+    }
+
+    if (typeof total !== "number") {
+      return true;
+    }
+
+    return total === 0;
+  };
+
   return (
     <DataGrid
       ariaLabel={props.model.adapter.ariaLabel}
@@ -21,10 +36,17 @@ export function RecordIndexEmpty<
           title={props.model.adapter.emptyState.title}
           description={props.model.adapter.emptyState.description}
           action={
-            props.model.adapter.createAction ? (
-              <Button onClick={props.model.adapter.createAction.onClick}>
-                <Plus size={14} />
-                {props.model.adapter.createAction.label}
+            shouldShowCreateAction() ? (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => createAction()?.onClick()}
+              >
+                {(() => {
+                  const Icon = createAction()?.icon ?? Plus;
+                  return <Icon size={14} />;
+                })()}
+                {createAction()?.emptyLabel ?? createAction()?.label}
               </Button>
             ) : undefined
           }
