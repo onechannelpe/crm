@@ -3,7 +3,7 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
 import type { CreateSaleDeps } from "../deps/sales";
-import { createLeadSubjectLoader } from "../loaders/lead-subject-loader";
+import { loadReadyForSaleLead } from "../loaders/lead-subject-loader";
 import { canCreateSale, requirePipelineActionAccess } from "../policies/access";
 import type { PipelineAuditService } from "../ports/audit-service";
 import { writeSaleCreationEffects } from "./create-sale-effects";
@@ -29,9 +29,7 @@ export async function createSale(input: {
     return canCreate;
   }
 
-  const lead = await createLeadSubjectLoader(
-    input.deps.leads,
-  ).loadReadyForSaleLead(input.leadId);
+  const lead = await loadReadyForSaleLead(input.deps.leads, input.leadId);
   if (!lead.ok) {
     return lead;
   }

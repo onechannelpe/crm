@@ -26,13 +26,10 @@ export async function recomputeReviewStage(input: {
   now: number;
 }): Promise<Result<void, DomainError>> {
   const transition = resolveReviewTransition({
-    currentStage: input.lead.stage,
+    lead: input.lead,
     status: input.status,
     prioridad: input.prioridad,
   });
-  if (!transition.ok) {
-    return transition;
-  }
 
   await persistLeadReviewTransition({
     deps: input.deps,
@@ -42,7 +39,7 @@ export async function recomputeReviewStage(input: {
     status: input.status,
     prioridad: input.prioridad,
     reason: input.reason,
-    nextStage: transition.value,
+    nextStage: transition,
     now: input.now,
   });
 
@@ -50,7 +47,7 @@ export async function recomputeReviewStage(input: {
     notificationCenter: input.notificationCenter,
     branchId: input.branchId,
     lead: input.lead,
-    nextStage: transition.value,
+    nextStage: transition,
   });
 
   return Ok(undefined);

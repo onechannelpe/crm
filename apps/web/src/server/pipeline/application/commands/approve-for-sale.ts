@@ -3,7 +3,7 @@ import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
 import type { ApproveForSaleDeps } from "../deps/quotations";
-import { createLeadSubjectLoader } from "../loaders/lead-subject-loader";
+import { loadQuotedLead } from "../loaders/lead-subject-loader";
 import {
   canApproveForSale,
   requirePipelineActionAccess,
@@ -28,9 +28,7 @@ export async function approveForSale(input: {
     return canApprove;
   }
 
-  const lead = await createLeadSubjectLoader(input.deps.leads).loadQuotedLead(
-    input.leadId,
-  );
+  const lead = await loadQuotedLead(input.deps.leads, input.leadId);
   if (!lead.ok) {
     return lead;
   }

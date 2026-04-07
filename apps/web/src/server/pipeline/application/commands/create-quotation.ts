@@ -3,7 +3,7 @@ import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
 import type { CreateQuotationDeps } from "../deps/quotations";
-import { createLeadSubjectLoader } from "../loaders/lead-subject-loader";
+import { loadReadyForQuotationLead } from "../loaders/lead-subject-loader";
 import {
   canCreateQuotation,
   requirePipelineActionAccess,
@@ -32,9 +32,7 @@ export async function createQuotation(input: {
     return canCreate;
   }
 
-  const lead = await createLeadSubjectLoader(
-    input.deps.leads,
-  ).loadReadyForQuotationLead(input.leadId);
+  const lead = await loadReadyForQuotationLead(input.deps.leads, input.leadId);
   if (!lead.ok) {
     return lead;
   }

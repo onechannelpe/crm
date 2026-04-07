@@ -4,11 +4,13 @@ import type { LeadAvailableAction } from "../contracts/lead-available-action";
 import type { LeadCommercialInput } from "../ports/commercial-input-repository";
 import type { LeadQuotation } from "../ports/quotation-repository";
 import type { LeadSale } from "../ports/sale-repository";
+import type { LeadSourceStatus } from "../ports/source-status-repository";
 import type {
   LeadDetailCommercialInputView,
   LeadDetailLeadView,
   LeadDetailQuotationView,
   LeadDetailSaleView,
+  LeadDetailSourceStatusView,
   LeadDetailView,
 } from "../queries/views/lead-detail";
 import {
@@ -25,7 +27,26 @@ export type LeadDetailSource = {
   history: LeadHistoryEntry[];
   canRevealFullTimeline: boolean;
   availableActions: LeadAvailableAction[];
+  sourceStatus: LeadSourceStatus;
 };
+
+function toLeadSourceStatus(
+  sourceStatus: LeadSourceStatus,
+): LeadDetailSourceStatusView {
+  return {
+    engine: {
+      status: sourceStatus.engine.status,
+      fetchedAt: sourceStatus.engine.fetchedAt,
+      fields: sourceStatus.engine.fields,
+    },
+    sunat: {
+      status: sourceStatus.sunat.status,
+      fetchedAt: sourceStatus.sunat.fetchedAt,
+      legalName: sourceStatus.sunat.legalName,
+      payloadAvailable: sourceStatus.sunat.payloadAvailable,
+    },
+  };
+}
 
 function toLeadDetailLead(
   lead: LeadRecord,
@@ -112,5 +133,6 @@ export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
       lead: source.lead,
       sale: source.sale,
     }),
+    sourceStatus: toLeadSourceStatus(source.sourceStatus),
   };
 }

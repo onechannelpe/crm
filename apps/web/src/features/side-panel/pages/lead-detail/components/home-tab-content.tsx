@@ -3,24 +3,16 @@ import { For, Show } from "solid-js";
 
 import ChevronDown from "~/components/icons/chevron-down";
 import ChevronRight from "~/components/icons/chevron-right";
+import {
+  blockingFieldLabel,
+  mapLeadActionsToUi,
+} from "~/features/pipeline/detail/lead-workflow-ui";
 import { formatDateTime } from "~/lib/utils";
 import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
 
 import { FIELD_ROWS } from "./constants";
 
 import styles from "../page.module.css";
-
-const BLOCKING_FIELD_LABELS: Record<string, string> = {
-  proveedorActual: "Proveedor actual",
-  tasaActual: "Tasa actual",
-  gpv: "GPV",
-  ticket: "Ticket",
-  abono: "Abono",
-  cantidadPos: "Cantidad POS",
-  banco: "Banco",
-  nroCuenta: "Nro. cuenta",
-  cci: "CCI",
-};
 
 type HomeTabContentProps = {
   data: LeadDetailView;
@@ -29,45 +21,7 @@ type HomeTabContentProps = {
 };
 
 function actionItems(data: LeadDetailView) {
-  return data.availableActions
-    .map((action) => {
-      if (action === "review-lead") {
-        return {
-          id: action,
-          label: "Revisar lead",
-          href: `/review/${data.lead.id}`,
-        };
-      }
-      if (action === "complete-commercial-input") {
-        return {
-          id: action,
-          label: "Completar información comercial",
-          href: `/leads/${data.lead.id}/complete`,
-        };
-      }
-      if (action === "create-sale") {
-        return {
-          id: action,
-          label: "Crear venta",
-          href: `/sales/new/${data.lead.id}`,
-        };
-      }
-      if (action === "create-quotation") {
-        return {
-          id: action,
-          label: "Crear cotización",
-          href: `/quotations/${data.lead.id}`,
-        };
-      }
-      if (action === "approve-for-sale") {
-        return {
-          id: action,
-          label: "Aprobar para venta",
-        };
-      }
-      return null;
-    })
-    .filter((item) => item !== null);
+  return mapLeadActionsToUi(data.lead.id, data.availableActions);
 }
 
 function fieldValue(props: {
@@ -134,7 +88,7 @@ export function HomeTabContent(props: HomeTabContentProps) {
                 fallback="Ninguno"
               >
                 {props.data.blockingFields
-                  .map((field) => BLOCKING_FIELD_LABELS[field] ?? field)
+                  .map((field) => blockingFieldLabel(field))
                   .join(", ")}
               </Show>
             </span>
@@ -179,7 +133,10 @@ export function HomeTabContent(props: HomeTabContentProps) {
                   </button>
                 }
               >
-                <A class={styles.actionRowLink} href={action.href!}>
+                <A
+                  class={styles.actionRowLink}
+                  href={action.href ?? `/leads/${props.data.lead.id}`}
+                >
                   <span>{action.label}</span>
                   <ChevronRight size={14} />
                 </A>

@@ -30,14 +30,22 @@ export async function getLeadDetail(
     return canAccessLead;
   }
 
-  const [commercialInput, quotations, sale, history] = await Promise.all([
-    deps.leadCommercialInputs.findByLeadId(input.leadId),
-    deps.leadQuotations.listByLeadId(input.leadId),
-    deps.leadSales.findByLeadId(input.leadId),
-    deps.leadHistory.listByLeadId(input.leadId),
-  ]);
-  if (!history.ok) {
-    return history;
+  const [commercialInput, quotations, sale, historyResult, sourceStatus] =
+    await Promise.all([
+      deps.leadCommercialInputs.findByLeadId(input.leadId),
+      deps.leadQuotations.listByLeadId(input.leadId),
+      deps.leadSales.findByLeadId(input.leadId),
+      deps.leadHistory.listByLeadId(input.leadId),
+      deps.sourceStatuses.findByLead({
+        ruc: lead.ruc,
+        razonSocial: lead.razonSocial,
+        address: lead.address,
+        leadUpdatedAt: lead.updatedAt,
+      }),
+    ]);
+
+  if (!historyResult.ok) {
+    return historyResult;
   }
 
   const canRevealTimeline = canRevealFullTimeline(input.actorRole);
@@ -54,9 +62,10 @@ export async function getLeadDetail(
       commercialInput,
       quotations,
       sale,
-      history: history.value,
+      history: historyResult.value,
       canRevealFullTimeline: canRevealTimeline,
       availableActions,
+      sourceStatus,
     }),
   );
 }

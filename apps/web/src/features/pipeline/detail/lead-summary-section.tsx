@@ -21,6 +21,12 @@ export function LeadSummarySection(props: { data: LeadDetailView }) {
     { label: "Direccion", value: props.data.lead.address ?? "Sin datos" },
     { label: "Estado", value: props.data.lead.status ?? "Sin datos" },
     { label: "Prioridad", value: props.data.lead.prioridad ?? "Sin datos" },
+    { label: "Engine", value: props.data.sourceStatus.engine.status },
+    { label: "SUNAT", value: props.data.sourceStatus.sunat.status },
+    {
+      label: "SUNAT legal name",
+      value: props.data.sourceStatus.sunat.legalName ?? "Sin datos",
+    },
     { label: "Creado", value: formatDateTime(props.data.lead.createdAt) },
     {
       label: "Actualizado",

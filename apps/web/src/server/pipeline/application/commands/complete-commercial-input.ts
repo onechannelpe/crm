@@ -3,7 +3,7 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
 import type { CompleteCommercialInputDeps } from "../deps/sales";
-import { createLeadSubjectLoader } from "../loaders/lead-subject-loader";
+import { loadNeedsExecutiveInputLead } from "../loaders/lead-subject-loader";
 import {
   canCompleteCommercialInput,
   requirePipelineActionAccess,
@@ -35,9 +35,10 @@ export async function completeCommercialInput(input: {
     return canComplete;
   }
 
-  const lead = await createLeadSubjectLoader(
+  const lead = await loadNeedsExecutiveInputLead(
     input.deps.leads,
-  ).loadNeedsExecutiveInputLead(input.leadId);
+    input.leadId,
+  );
   if (!lead.ok) {
     return lead;
   }

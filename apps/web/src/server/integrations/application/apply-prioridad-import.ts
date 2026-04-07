@@ -4,7 +4,7 @@ import { Ok, type Result } from "~/server/shared/result";
 
 import { recomputeReviewStage } from "../../pipeline/application/commands/recompute-review-stage";
 import type { ReviewLeadDeps } from "../../pipeline/application/deps/review-lead";
-import { createLeadSubjectLoader } from "../../pipeline/application/loaders/lead-subject-loader";
+import { loadPendingReviewLead } from "../../pipeline/application/loaders/lead-subject-loader";
 import type { PipelineAuditService } from "../../pipeline/application/ports/audit-service";
 import type { PipelineNotificationCenter } from "../../pipeline/application/ports/notification-center";
 import { createHistoryEvent } from "../../pipeline/domain/history";
@@ -19,9 +19,7 @@ export async function applyPrioridadImport(input: {
   prioridad: LeadPriority;
   reason: string;
 }): Promise<Result<void, DomainError>> {
-  const lead = await createLeadSubjectLoader(
-    input.deps.leads,
-  ).loadPendingReviewLead(input.leadId);
+  const lead = await loadPendingReviewLead(input.deps.leads, input.leadId);
   if (!lead.ok) {
     return lead;
   }

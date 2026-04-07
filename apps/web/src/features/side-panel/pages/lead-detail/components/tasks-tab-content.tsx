@@ -1,21 +1,13 @@
 import { For } from "solid-js";
 
 import Checkbox from "~/components/icons/checkbox";
+import {
+  blockingTaskLabel,
+  mapLeadActionsToUi,
+} from "~/features/pipeline/detail/lead-workflow-ui";
 import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
 
 import styles from "../page.module.css";
-
-const BLOCKING_FIELD_LABELS: Record<string, string> = {
-  proveedorActual: "Completar proveedor actual",
-  tasaActual: "Completar tasa actual",
-  gpv: "Completar GPV",
-  ticket: "Completar ticket",
-  abono: "Completar abono",
-  cantidadPos: "Completar cantidad POS",
-  banco: "Definir banco",
-  nroCuenta: "Registrar número de cuenta",
-  cci: "Registrar CCI",
-};
 
 function deriveTasks(data: LeadDetailView) {
   const tasks = [{ title: "Siguiente paso", meta: data.lead.nextStep }];
@@ -23,16 +15,17 @@ function deriveTasks(data: LeadDetailView) {
   if (data.blockingFields.length > 0) {
     return tasks.concat(
       data.blockingFields.map((field) => ({
-        title: BLOCKING_FIELD_LABELS[field] ?? field,
+        title: blockingTaskLabel(field),
         meta: "Requerido para avanzar",
       })),
     );
   }
 
   if (data.availableActions.length > 0) {
+    const actionItems = mapLeadActionsToUi(data.lead.id, data.availableActions);
     return tasks.concat(
-      data.availableActions.map((action) => ({
-        title: action,
+      actionItems.map((action) => ({
+        title: action.label,
         meta: "Disponible ahora",
       })),
     );

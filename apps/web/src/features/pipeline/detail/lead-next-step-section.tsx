@@ -2,19 +2,9 @@ import { For, Show } from "solid-js";
 
 import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
 
-import styles from "./lead-detail-overview.module.css";
+import { blockingFieldLabel } from "./lead-workflow-ui";
 
-const BLOCKING_FIELD_LABELS: Record<string, string> = {
-  proveedorActual: "Proveedor actual",
-  tasaActual: "Tasa actual",
-  gpv: "GPV",
-  ticket: "Ticket",
-  abono: "Abono",
-  cantidadPos: "Cantidad POS",
-  banco: "Banco",
-  nroCuenta: "Nro. cuenta",
-  cci: "CCI",
-};
+import styles from "./lead-detail-overview.module.css";
 
 export function LeadNextStepSection(props: { data: LeadDetailView }) {
   return (
@@ -36,7 +26,7 @@ export function LeadNextStepSection(props: { data: LeadDetailView }) {
                 {(field, index) => (
                   <>
                     {index() > 0 ? ", " : ""}
-                    {BLOCKING_FIELD_LABELS[field] ?? field}
+                    {blockingFieldLabel(field)}
                   </>
                 )}
               </For>

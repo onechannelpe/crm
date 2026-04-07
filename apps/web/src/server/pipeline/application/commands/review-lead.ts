@@ -7,7 +7,7 @@ import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
 import type { ReviewLeadDeps } from "../deps/review-lead";
-import { createLeadSubjectLoader } from "../loaders/lead-subject-loader";
+import { loadPendingReviewLead } from "../loaders/lead-subject-loader";
 import { canReviewLead, requirePipelineActionAccess } from "../policies/access";
 import type { PipelineAuditService } from "../ports/audit-service";
 import type { PipelineNotificationCenter } from "../ports/notification-center";
@@ -30,9 +30,7 @@ export async function reviewLead(input: {
     return canReview;
   }
 
-  const lead = await createLeadSubjectLoader(
-    input.deps.leads,
-  ).loadPendingReviewLead(input.leadId);
+  const lead = await loadPendingReviewLead(input.deps.leads, input.leadId);
   if (!lead.ok) {
     return lead;
   }

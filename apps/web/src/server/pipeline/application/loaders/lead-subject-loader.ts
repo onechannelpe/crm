@@ -44,71 +44,72 @@ async function loadLeadById(
   return Ok(lead);
 }
 
-export function createLeadSubjectLoader(leads: LeadRepository) {
-  return {
-    async loadPendingReviewLead(
-      leadId: number,
-    ): Promise<Result<PendingReviewLeadSubject, DomainError>> {
-      const lead = await loadLeadById(leads, leadId);
-      if (!lead.ok) {
-        return lead;
-      }
-      if (!isPendingReviewLeadSubject(lead.value)) {
-        return invalidStage();
-      }
-      return Ok(lead.value);
-    },
+export async function loadPendingReviewLead(
+  leads: LeadRepository,
+  leadId: number,
+): Promise<Result<PendingReviewLeadSubject, DomainError>> {
+  const lead = await loadLeadById(leads, leadId);
+  if (!lead.ok) {
+    return lead;
+  }
+  if (!isPendingReviewLeadSubject(lead.value)) {
+    return invalidStage();
+  }
+  return Ok(lead.value);
+}
 
-    async loadNeedsExecutiveInputLead(
-      leadId: number,
-    ): Promise<Result<NeedsExecutiveInputLeadSubject, DomainError>> {
-      const lead = await loadLeadById(leads, leadId);
-      if (!lead.ok) {
-        return lead;
-      }
-      if (!isNeedsExecutiveInputLeadSubject(lead.value)) {
-        return invalidStage();
-      }
-      return Ok(lead.value);
-    },
+export async function loadNeedsExecutiveInputLead(
+  leads: LeadRepository,
+  leadId: number,
+): Promise<Result<NeedsExecutiveInputLeadSubject, DomainError>> {
+  const lead = await loadLeadById(leads, leadId);
+  if (!lead.ok) {
+    return lead;
+  }
+  if (!isNeedsExecutiveInputLeadSubject(lead.value)) {
+    return invalidStage();
+  }
+  return Ok(lead.value);
+}
 
-    async loadReadyForQuotationLead(
-      leadId: number,
-    ): Promise<Result<ReadyForQuotationLeadSubject, DomainError>> {
-      const lead = await loadLeadById(leads, leadId);
-      if (!lead.ok) {
-        return lead;
-      }
-      if (!isReadyForQuotationLeadSubject(lead.value)) {
-        return invalidStage();
-      }
-      return Ok(lead.value);
-    },
+export async function loadReadyForQuotationLead(
+  leads: LeadRepository,
+  leadId: number,
+): Promise<Result<ReadyForQuotationLeadSubject, DomainError>> {
+  const lead = await loadLeadById(leads, leadId);
+  if (!lead.ok) {
+    return lead;
+  }
+  if (!isReadyForQuotationLeadSubject(lead.value)) {
+    return invalidStage();
+  }
+  return Ok(lead.value);
+}
 
-    async loadQuotedLead(
-      leadId: number,
-    ): Promise<Result<QuotedLeadSubject, DomainError>> {
-      const lead = await loadLeadById(leads, leadId);
-      if (!lead.ok) {
-        return lead;
-      }
-      if (!isQuotedLeadSubject(lead.value)) {
-        return invalidStage();
-      }
-      return Ok(lead.value);
-    },
+export async function loadQuotedLead(
+  leads: LeadRepository,
+  leadId: number,
+): Promise<Result<QuotedLeadSubject, DomainError>> {
+  const lead = await loadLeadById(leads, leadId);
+  if (!lead.ok) {
+    return lead;
+  }
+  if (!isQuotedLeadSubject(lead.value)) {
+    return invalidStage();
+  }
+  return Ok(lead.value);
+}
 
-    async loadReadyForSaleLead(
-      leadId: number,
-    ): Promise<Result<ReadyForSaleLeadSubject, DomainError>> {
-      const lead = await loadLeadById(leads, leadId);
-      if (!lead.ok) {
-        return lead;
-      }
-      if (!isReadyForSaleLeadSubject(lead.value)) {
-        return invalidStage();
-      }
-      return Ok(lead.value);
-    },
-  };
+export async function loadReadyForSaleLead(
+  leads: LeadRepository,
+  leadId: number,
+): Promise<Result<ReadyForSaleLeadSubject, DomainError>> {
+  const lead = await loadLeadById(leads, leadId);
+  if (!lead.ok) {
+    return lead;
+  }
+  if (!isReadyForSaleLeadSubject(lead.value)) {
+    return invalidStage();
+  }
+  return Ok(lead.value);
 }

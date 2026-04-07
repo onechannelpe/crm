@@ -72,6 +72,20 @@ export type LeadDetailSaleView = {
   createdAt: number;
 };
 
+export type LeadDetailSourceStatusView = {
+  engine: {
+    status: "available" | "missing" | "failed";
+    fetchedAt: number | null;
+    fields: Array<"razonSocial" | "address">;
+  };
+  sunat: {
+    status: "idle" | "queued" | "running" | "completed" | "failed" | "stale";
+    fetchedAt: number | null;
+    legalName: string | null;
+    payloadAvailable: boolean;
+  };
+};
+
 export type LeadDetailView = {
   lead: LeadDetailLeadView;
   commercialInput: LeadDetailCommercialInputView | undefined;
@@ -80,4 +94,5 @@ export type LeadDetailView = {
   timeline: LeadTimelineItem[];
   availableActions: LeadAvailableAction[];
   blockingFields: LeadBlockingField[];
+  sourceStatus: LeadDetailSourceStatusView;
 };
