@@ -5,7 +5,7 @@ import type {
   SalesRecordAddressInput,
   SalesRecordClientInput,
   SalesRecordProductInput,
-} from "~/server/sales-records/application/commands/types/draft-input";
+} from "~/server/sales-records/application/contracts";
 
 export interface ProductLine {
   productId: number;

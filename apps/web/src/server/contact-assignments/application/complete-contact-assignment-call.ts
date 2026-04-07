@@ -11,7 +11,7 @@ import type {
 import type {
   CompleteContactAssignmentCallCommand,
   CompleteContactAssignmentCallResult,
-} from "./types/complete-contact-assignment-call";
+} from "./contracts";
 
 function rejectMismatchedAssignment(): Result<never, DomainError> {
   return Err(

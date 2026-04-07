@@ -3,7 +3,7 @@ import { computeClientCompletenessScore } from "~/server/sales/completeness";
 import type { AppContext } from "~/server/shared/action-runtime";
 
 import type { SalesRecordReadContext } from "../../infrastructure/read-context";
-import type { SalesRecordBootstrapView } from "./views/sales-record-view";
+import type { SalesRecordBootstrapView } from "../contracts";
 
 export async function getBootstrap(
   ctx: AppContext,

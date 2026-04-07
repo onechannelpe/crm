@@ -24,7 +24,7 @@ import {
 import { pendingSalesRecordsQuery } from "~/lib/queries/sales-records";
 import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
 import { formatDate } from "~/lib/utils";
-import type { SalesRecordQueueItemView } from "~/server/sales-records/application/queries/views/sales-record-view";
+import type { SalesRecordQueueItemView } from "~/server/sales-records/application/contracts";
 
 import styles from "./confirmations-page.module.css";
 

@@ -1,6 +1,6 @@
 import type { UserId } from "~/server/shared/ids";
 
-import type { ActiveContactAssignmentView } from "./views/active-contact-assignment-view";
+import type { ActiveContactAssignmentView } from "./contracts";
 
 export type ContactAssignmentReadRepos = {
   contactAssignments: {

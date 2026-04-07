@@ -11,7 +11,7 @@ import { createRouteRowOpen } from "~/features/data-grid/model/row-open";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { confirmedSalesRecordsQuery } from "~/lib/queries/sales-records";
 import { formatDate } from "~/lib/utils";
-import type { SalesRecordQueueItemView } from "~/server/sales-records/application/queries/views/sales-record-view";
+import type { SalesRecordQueueItemView } from "~/server/sales-records/application/contracts";
 
 type ConfirmedSaleRow = SalesRecordQueueItemView;
 

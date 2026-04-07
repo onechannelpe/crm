@@ -2,7 +2,7 @@ import type { Insertable, Kysely } from "kysely";
 import { sql } from "kysely";
 
 import type { Database } from "~/lib/db/types";
-import type { ActiveContactAssignmentView } from "~/server/contact-assignments/application/views/active-contact-assignment-view";
+import type { ActiveContactAssignmentView } from "~/server/contact-assignments/application/contracts";
 import type { ContactAssignmentDraft } from "~/server/contact-assignments/domain/assignment";
 
 type NewLeadAssignmentRow = Insertable<Database["lead_assignments"]>;

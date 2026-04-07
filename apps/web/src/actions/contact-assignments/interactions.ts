@@ -2,7 +2,7 @@
 
 import { assertPositiveInt } from "~/lib/contracts/guards";
 import { completeContactAssignmentCall as completeContactAssignmentCallUseCase } from "~/server/contact-assignments/application/complete-contact-assignment-call";
-import type { CompleteContactAssignmentCallResult } from "~/server/contact-assignments/application/types/complete-contact-assignment-call";
+import type { CompleteContactAssignmentCallResult } from "~/server/contact-assignments/application/contracts";
 import { runContactAssignmentInteraction } from "~/server/contact-assignments/infrastructure/interaction-context";
 import { runAction } from "~/server/shared/action-runtime";
 

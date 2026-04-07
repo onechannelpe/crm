@@ -8,7 +8,7 @@ import type {
   SalesRecordAddressInput,
   SalesRecordProductInput,
   RegisterSalesRecordAttemptInput,
-} from "~/server/sales-records/application/commands/types/draft-input";
+} from "~/server/sales-records/application/contracts";
 import type {
   SalesRecordAttemptOutcome,
   SalesRecordSource,

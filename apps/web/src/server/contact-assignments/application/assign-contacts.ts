@@ -19,10 +19,7 @@ import {
   type ContactRecord,
   type OrganizationRecord,
 } from "./contact-assignment-writer";
-import type {
-  AssignContactsCommand,
-  AssignContactsResult,
-} from "./types/assign-contacts";
+import type { AssignContactsCommand, AssignContactsResult } from "./contracts";
 
 type AssignContactsRepos = AssignmentPlanRepos &
   AssignmentCapacityRepos & {

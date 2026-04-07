@@ -3,6 +3,7 @@ import type { AppContext } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { Result } from "~/server/shared/result";
 
+import type { CreateSalesRecordDraftInput } from "../contracts";
 import {
   getSalesRecordAudit,
   loadProducts,
@@ -13,7 +14,6 @@ import {
   type SalesRecordMutationDeps,
   validateDraftPayload,
 } from "./shared";
-import type { CreateSalesRecordDraftInput } from "./types/draft-input";
 
 export async function updateDraft(
   ctx: AppContext,
