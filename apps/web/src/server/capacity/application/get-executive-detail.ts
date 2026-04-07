@@ -8,7 +8,7 @@ import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 import { canManageExecutive } from "../domain/access-policy";
 import { fromDbCapacityRequestKind } from "../domain/request-policy";
 import type { CapacityReadContext } from "../infrastructure/read-context";
-import type { ExecutiveCapacityDetailView } from "./queries/views/executive-capacity-detail-view";
+import type { ExecutiveCapacityDetailView } from "./contracts";
 
 export async function getExecutiveDetail(
   ctx: AppContext,
@@ -74,5 +74,3 @@ export async function getExecutiveDetail(
     );
   }
 }
-
-export type { ExecutiveCapacityDetailView };

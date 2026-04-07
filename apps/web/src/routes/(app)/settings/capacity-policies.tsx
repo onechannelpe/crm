@@ -9,12 +9,10 @@ import {
   updateSearchScopeDefaultMutation,
 } from "~/lib/mutations/capacity";
 import { capacityPolicyDefaultsQuery } from "~/lib/queries/capacity";
-import type { CapacityPolicyDefaultsView } from "~/server/capacity/application/queries/views/capacity-policy-defaults-view";
-
-type TeamPolicy = CapacityPolicyDefaultsView["teams"][number];
+import type { CapacityPolicyTeamDefaultsView } from "~/server/capacity/application/contracts";
 
 interface TeamPolicyRowProps {
-  team: TeamPolicy;
+  team: CapacityPolicyTeamDefaultsView;
   branchSearchLimit: number | null;
   branchActiveBufferTarget: number | null;
   branchDailyRefillLimit: number | null;

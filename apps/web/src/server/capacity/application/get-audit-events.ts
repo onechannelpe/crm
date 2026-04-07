@@ -5,24 +5,7 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { CapacityReadContext } from "../infrastructure/read-context";
-
-export type AuditChangeValue =
-  | string
-  | number
-  | boolean
-  | null
-  | AuditChangeValue[]
-  | { [k: string]: AuditChangeValue };
-
-export type CapacityAuditEvent = {
-  id: number;
-  createdAt: number;
-  userId: number;
-  action: string;
-  entityType: string;
-  entityId: number | null;
-  changes: AuditChangeValue;
-};
+import type { CapacityAuditEvent, AuditChangeValue } from "./contracts";
 
 function isAuditScalar(
   value: unknown,
@@ -51,7 +34,7 @@ function parseAuditChanges(raw: unknown): AuditChangeValue {
       const parsed: unknown = JSON.parse(JSON.stringify(raw));
       return isAuditChangeValue(parsed) ? parsed : JSON.stringify(raw);
     } catch {
-      return JSON.stringify(raw);
+      return "[unserializable_changes]";
     }
   }
   try {
