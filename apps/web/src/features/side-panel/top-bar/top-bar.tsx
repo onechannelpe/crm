@@ -5,12 +5,12 @@ import { cn } from "~/lib/utils";
 
 import { SIDE_PANEL_PAGES_CONFIG } from "../state/pages-config";
 import { useSidePanel } from "../state/use-side-panel";
-import { SidePanelBackButton } from "./back-button";
+import { BackButton } from "./back-button";
 import { PageInfo } from "./page-info";
 
 import styles from "./top-bar.module.css";
 
-export function SidePanelTopBar(props: { isMobile: boolean }) {
+export function TopBar(props: { isMobile: boolean }) {
   const {
     navigationStack,
     currentEntry,
@@ -33,7 +33,7 @@ export function SidePanelTopBar(props: { isMobile: boolean }) {
     <div class={cn(styles.topBar, props.isMobile && styles.topBarMobile)}>
       <div class={styles.content}>
         <div class={styles.leftControls}>
-          <SidePanelBackButton visible={showBackButton()} />
+          <BackButton visible={showBackButton()} />
           <Show when={showCloseButton()}>
             <button
               type="button"

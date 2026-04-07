@@ -3,14 +3,14 @@ import { createMemo, For } from "solid-js";
 import Users from "~/components/icons/users";
 import { RecordChipList } from "~/components/ui/record-chip/record-chip";
 
-import { SidePanelList } from "../../components/list";
-import { useSidePanelPageInstanceId } from "../../state/page-instance";
+import { PanelList } from "../../components/list";
+import { usePageInstanceId } from "../../state/page-instance";
 import { useSidePanel } from "../../state/use-side-panel";
 
 import styles from "./page.module.css";
 
 export function SearchCompanyPage() {
-  const pageId = useSidePanelPageInstanceId();
+  const pageId = usePageInstanceId();
   const { getPageState } = useSidePanel();
 
   const pageState = createMemo(() => {
@@ -24,7 +24,7 @@ export function SearchCompanyPage() {
   });
 
   return (
-    <SidePanelList>
+    <PanelList>
       <div class={styles.content}>
         <section class={styles.hero}>
           <div class={styles.heroIcon}>
@@ -64,6 +64,6 @@ export function SearchCompanyPage() {
           <RecordChipList items={pageState().company.emails} shape="square" />
         </section>
       </div>
-    </SidePanelList>
+    </PanelList>
   );
 }

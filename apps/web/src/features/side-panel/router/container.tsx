@@ -1,6 +1,6 @@
 import type { ParentProps } from "solid-js";
 
-export function SidePanelContainer(props: ParentProps<{ isMobile: boolean }>) {
+export function Container(props: ParentProps<{ isMobile: boolean }>) {
   return (
     <div
       style={{

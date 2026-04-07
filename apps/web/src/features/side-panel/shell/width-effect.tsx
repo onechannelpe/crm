@@ -2,7 +2,7 @@ import { createEffect, onMount } from "solid-js";
 
 import { useSidePanel } from "../state/use-side-panel";
 
-export function SidePanelWidthEffect() {
+export function WidthEffect() {
   const { panelWidth } = useSidePanel();
 
   onMount(() => {

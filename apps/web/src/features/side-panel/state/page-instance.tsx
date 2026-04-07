@@ -7,13 +7,11 @@ import {
 
 const SidePanelPageInstanceContext = createContext<Accessor<string>>();
 
-type SidePanelPageInstanceProviderProps = ParentProps<{
+type PageInstanceProviderProps = ParentProps<{
   pageId: string;
 }>;
 
-export function SidePanelPageInstanceProvider(
-  props: SidePanelPageInstanceProviderProps,
-) {
+export function PageInstanceProvider(props: PageInstanceProviderProps) {
   const pageId = () => props.pageId;
 
   return (
@@ -23,12 +21,12 @@ export function SidePanelPageInstanceProvider(
   );
 }
 
-export function useSidePanelPageInstanceId(): Accessor<string> {
+export function usePageInstanceId(): Accessor<string> {
   const pageId = useContext(SidePanelPageInstanceContext);
 
   if (pageId === undefined) {
     throw new Error(
-      "useSidePanelPageInstanceId must be used inside the side panel router",
+      "usePageInstanceId must be used inside the side panel router",
     );
   }
 

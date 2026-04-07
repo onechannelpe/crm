@@ -3,7 +3,7 @@ import { type ParentProps, Suspense } from "solid-js";
 import { Loading } from "~/components/feedback/loading";
 import { cn } from "~/lib/utils";
 
-import { SidePanelHost } from "./host";
+import { Host } from "./host";
 
 import shellStyles from "~/components/layout/shell.module.css";
 
@@ -13,7 +13,7 @@ export function MainContainerWithSidePanel(props: ParentProps) {
       <div class={shellStyles.panelMain}>
         <Suspense fallback={<Loading />}>{props.children}</Suspense>
       </div>
-      <SidePanelHost />
+      <Host />
     </div>
   );
 }

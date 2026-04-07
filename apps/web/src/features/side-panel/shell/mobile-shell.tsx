@@ -8,11 +8,11 @@ import { useSidePanel } from "../state/use-side-panel";
 
 import styles from "./mobile-shell.module.css";
 
-type SidePanelMobileShellProps = ParentProps<{
+type MobileShellProps = ParentProps<{
   targetVariant: "normal" | "fullScreen";
 }>;
 
-export function SidePanelMobileShell(props: SidePanelMobileShellProps) {
+export function MobileShell(props: MobileShellProps) {
   const { isOpen, isClosing, closePanel, onCloseAnimationComplete } =
     useSidePanel();
 

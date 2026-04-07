@@ -1,11 +1,11 @@
 import { createMemo } from "solid-js";
 
-import { SidePanelList } from "../../components/list";
-import { useSidePanelPageInstanceId } from "../../state/page-instance";
+import { PanelList } from "../../components/list";
+import { usePageInstanceId } from "../../state/page-instance";
 import { useSidePanel } from "../../state/use-side-panel";
 
 export function InventoryDetailPage() {
-  const pageId = useSidePanelPageInstanceId();
+  const pageId = usePageInstanceId();
   const { getPageState } = useSidePanel();
 
   const pageState = createMemo(() => {
@@ -21,7 +21,7 @@ export function InventoryDetailPage() {
   });
 
   return (
-    <SidePanelList>
+    <PanelList>
       <div style={{ display: "grid", gap: "12px" }}>
         <section>
           <div
@@ -90,6 +90,6 @@ export function InventoryDetailPage() {
           </div>
         </section>
       </div>
-    </SidePanelList>
+    </PanelList>
   );
 }

@@ -1,6 +1,6 @@
 import { Show } from "solid-js";
 
-import { SidePanelPageInstanceProvider } from "../state/page-instance";
+import { PageInstanceProvider } from "../state/page-instance";
 import { SIDE_PANEL_PAGES_CONFIG } from "../state/pages-config";
 import { useSidePanel } from "../state/use-side-panel";
 
@@ -19,9 +19,9 @@ export function PageInfo() {
         }
 
         return (
-          <SidePanelPageInstanceProvider pageId={entry.pageId}>
+          <PageInstanceProvider pageId={entry.pageId}>
             <PageInfoComponent />
-          </SidePanelPageInstanceProvider>
+          </PageInstanceProvider>
         );
       }}
     </Show>

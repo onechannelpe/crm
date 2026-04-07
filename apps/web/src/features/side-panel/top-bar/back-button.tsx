@@ -9,11 +9,11 @@ import { useSidePanel } from "../state/use-side-panel";
 
 import styles from "./back-button.module.css";
 
-type SidePanelBackButtonProps = {
+type BackButtonProps = {
   visible: boolean;
 };
 
-export function SidePanelBackButton(props: SidePanelBackButtonProps) {
+export function BackButton(props: BackButtonProps) {
   const { navigationStack, goBack, navigateToStackIndex } = useSidePanel();
   const [showDropdown, setShowDropdown] = createSignal(false);
   let buttonRef: HTMLButtonElement | undefined;

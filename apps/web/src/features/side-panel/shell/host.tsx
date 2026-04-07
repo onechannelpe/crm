@@ -1,11 +1,11 @@
 import { Show, createSignal, onCleanup, onMount, type JSX } from "solid-js";
 
 import { useResizablePanel } from "../hooks/use-resizable-panel";
-import { SidePanelRouter } from "../router/router";
+import { Router } from "../router/router";
 import { useSidePanel } from "../state/use-side-panel";
 import { DesktopSidePanelContent } from "./desktop-content";
 import { DesktopSidePanelFrame } from "./desktop-frame";
-import { SidePanelMobileShell } from "./mobile-shell";
+import { MobileShell } from "./mobile-shell";
 
 function SidePanelDesktopController(props: {
   isHydrated: boolean;
@@ -49,15 +49,15 @@ function SidePanelDesktopController(props: {
         shouldRenderChildren={isInteractive()}
       />
       <Show when={props.isHydrated && props.isMobile}>
-        <SidePanelMobileShell targetVariant="fullScreen">
-          <SidePanelRouter isMobile />
-        </SidePanelMobileShell>
+        <MobileShell targetVariant="fullScreen">
+          <Router isMobile />
+        </MobileShell>
       </Show>
     </>
   );
 }
 
-export function SidePanelHost() {
+export function Host() {
   const [isHydrated, setIsHydrated] = createSignal(false);
   const [isMobile, setIsMobile] = createSignal(false);
 

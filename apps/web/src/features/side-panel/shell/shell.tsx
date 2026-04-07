@@ -10,14 +10,14 @@ import { useSidePanel } from "../state/use-side-panel";
 
 import styles from "./shell.module.css";
 
-type SidePanelShellProps = {
+type PanelShellProps = {
   renderContent?: () => JSX.Element;
   isResizing?: boolean;
   isInteractive?: boolean;
   shouldRenderChildren?: boolean;
 };
 
-export function SidePanelShell(props: SidePanelShellProps) {
+export function PanelShell(props: PanelShellProps) {
   const { isOpen, isClosing, closePanel, onCloseAnimationComplete } =
     useSidePanel();
 

@@ -5,8 +5,8 @@ import { ICON_BY_ROUTE } from "~/components/layout/route-icons";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { getNavigableRoutes } from "~/lib/nav/nav-policy";
 
-import { SidePanelGroup } from "../../components/group";
-import { SidePanelList } from "../../components/list";
+import { PanelGroup } from "../../components/group";
+import { PanelList } from "../../components/list";
 import { useSidePanel } from "../../state/use-side-panel";
 import { EmptyState } from "../common/empty-state";
 
@@ -74,14 +74,14 @@ export function RootPage() {
   const hasResults = () => filteredGroups().some((g) => g.items.length > 0);
 
   return (
-    <SidePanelList>
+    <PanelList>
       <Show
         when={hasResults()}
         fallback={<EmptyState>No se encontraron resultados</EmptyState>}
       >
         <For each={filteredGroups()}>
           {(group) => (
-            <SidePanelGroup label={group.label}>
+            <PanelGroup label={group.label}>
               <For each={group.items}>
                 {(item, index) => (
                   <button
@@ -95,10 +95,10 @@ export function RootPage() {
                   </button>
                 )}
               </For>
-            </SidePanelGroup>
+            </PanelGroup>
           )}
         </For>
       </Show>
-    </SidePanelList>
+    </PanelList>
   );
 }

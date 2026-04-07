@@ -2,9 +2,9 @@ import { type ParentProps, Show, children } from "solid-js";
 
 import styles from "./group.module.css";
 
-type SidePanelGroupProps = ParentProps<{ label: string }>;
+type PanelGroupProps = ParentProps<{ label: string }>;
 
-export function SidePanelGroup(props: SidePanelGroupProps) {
+export function PanelGroup(props: PanelGroupProps) {
   const resolved = children(() => props.children);
 
   const hasChildren = () => {

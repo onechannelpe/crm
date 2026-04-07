@@ -4,7 +4,7 @@ import { getVerticalNavigationAction } from "~/lib/keyboard/list-navigation";
 
 import styles from "./list.module.css";
 
-export function SidePanelList(props: ParentProps) {
+export function PanelList(props: ParentProps) {
   let listRef: HTMLDivElement | undefined;
   const [focusedIndex, setFocusedIndex] = createSignal(-1);
 

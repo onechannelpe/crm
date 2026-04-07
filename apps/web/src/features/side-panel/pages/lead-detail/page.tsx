@@ -4,12 +4,12 @@ import { createMemo, createSignal, Show } from "solid-js";
 import { queryLeadDetail } from "~/actions/pipeline/queries/leads";
 import { LeadDetailOverview } from "~/features/pipeline/detail/lead-detail-overview";
 
-import { SidePanelList } from "../../components/list";
-import { useSidePanelPageInstanceId } from "../../state/page-instance";
+import { PanelList } from "../../components/list";
+import { usePageInstanceId } from "../../state/page-instance";
 import { useSidePanel } from "../../state/use-side-panel";
 
 export function LeadDetailPage() {
-  const pageId = useSidePanelPageInstanceId();
+  const pageId = usePageInstanceId();
   const { getPageState } = useSidePanel();
 
   const pageState = createMemo(() => {
@@ -29,7 +29,7 @@ export function LeadDetailPage() {
   });
 
   return (
-    <SidePanelList>
+    <PanelList>
       <Show
         when={data()}
         fallback={
@@ -46,6 +46,6 @@ export function LeadDetailPage() {
           />
         )}
       </Show>
-    </SidePanelList>
+    </PanelList>
   );
 }

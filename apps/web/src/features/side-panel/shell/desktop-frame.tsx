@@ -2,8 +2,8 @@ import type { JSX } from "solid-js";
 
 import { useSidePanel } from "../state/use-side-panel";
 import { ResizeGapFrame } from "./resize-gap";
-import { SidePanelShell } from "./shell";
-import { SidePanelWidthEffect } from "./width-effect";
+import { PanelShell } from "./shell";
+import { WidthEffect } from "./width-effect";
 
 import styles from "./desktop-frame.module.css";
 
@@ -20,9 +20,9 @@ export function DesktopSidePanelFrame(props: DesktopSidePanelFrameProps) {
 
   return (
     <div class={styles.root}>
-      <SidePanelWidthEffect />
+      <WidthEffect />
       <ResizeGapFrame isOpen={isOpen()} onPointerDown={props.gapPointerDown} />
-      <SidePanelShell
+      <PanelShell
         isInteractive={props.isInteractive}
         isResizing={props.isResizing}
         renderContent={props.renderContent}

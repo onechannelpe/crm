@@ -2,22 +2,22 @@ import { ErrorBoundary, Show, Suspense } from "solid-js";
 
 import { Loading } from "~/components/feedback/loading";
 
-import { SidePanelPageInstanceProvider } from "../state/page-instance";
+import { PageInstanceProvider } from "../state/page-instance";
 import { SIDE_PANEL_PAGES_CONFIG } from "../state/pages-config";
 import { useSidePanel } from "../state/use-side-panel";
-import { SidePanelTopBar } from "../top-bar/top-bar";
-import { SidePanelContainer } from "./container";
+import { TopBar } from "../top-bar/top-bar";
+import { Container } from "./container";
 
 import styles from "./router.module.css";
 
-export function SidePanelRouter(props: { isMobile: boolean }) {
+export function Router(props: { isMobile: boolean }) {
   const { currentEntry } = useSidePanel();
 
   return (
-    <SidePanelContainer isMobile={props.isMobile}>
+    <Container isMobile={props.isMobile}>
       <div class={styles.router}>
         <div class={styles.topBar}>
-          <SidePanelTopBar isMobile={props.isMobile} />
+          <TopBar isMobile={props.isMobile} />
         </div>
         <div class={styles.pageBody}>
           <Show when={currentEntry()} keyed>
@@ -27,7 +27,7 @@ export function SidePanelRouter(props: { isMobile: boolean }) {
 
               return (
                 <div class={styles.pageContent}>
-                  <SidePanelPageInstanceProvider pageId={entry.pageId}>
+                  <PageInstanceProvider pageId={entry.pageId}>
                     <ErrorBoundary
                       fallback={
                         <div class={styles.pageState}>
@@ -45,13 +45,13 @@ export function SidePanelRouter(props: { isMobile: boolean }) {
                         <PageComponent />
                       </Suspense>
                     </ErrorBoundary>
-                  </SidePanelPageInstanceProvider>
+                  </PageInstanceProvider>
                 </div>
               );
             }}
           </Show>
         </div>
       </div>
-    </SidePanelContainer>
+    </Container>
   );
 }

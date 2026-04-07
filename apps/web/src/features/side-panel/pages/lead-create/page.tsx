@@ -5,7 +5,7 @@ import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { toAppError } from "~/lib/app-errors";
 
-import { SidePanelList } from "../../components/list";
+import { PanelList } from "../../components/list";
 import { useSidePanel } from "../../state/use-side-panel";
 import { createLeadDetailSidePanelPage } from "../../types/side-panel-page";
 
@@ -51,7 +51,7 @@ export function LeadCreatePage() {
   }
 
   return (
-    <SidePanelList>
+    <PanelList>
       <div class={styles.page}>
         <div class={styles.hero}>
           <p class={styles.eyebrow}>Ingreso manual</p>
@@ -87,6 +87,6 @@ export function LeadCreatePage() {
           </div>
         </div>
       </div>
-    </SidePanelList>
+    </PanelList>
   );
 }

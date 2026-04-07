@@ -1,11 +1,11 @@
 import { createMemo, For } from "solid-js";
 
-import { SidePanelList } from "../../components/list";
-import { useSidePanelPageInstanceId } from "../../state/page-instance";
+import { PanelList } from "../../components/list";
+import { usePageInstanceId } from "../../state/page-instance";
 import { useSidePanel } from "../../state/use-side-panel";
 
 export function DataGridDetailPage() {
-  const pageId = useSidePanelPageInstanceId();
+  const pageId = usePageInstanceId();
   const { getPageState } = useSidePanel();
 
   const pageState = createMemo(() => {
@@ -21,7 +21,7 @@ export function DataGridDetailPage() {
   });
 
   return (
-    <SidePanelList>
+    <PanelList>
       <div style={{ display: "grid", gap: "12px" }}>
         <For each={pageState().items}>
           {(item) => (
@@ -47,6 +47,6 @@ export function DataGridDetailPage() {
           )}
         </For>
       </div>
-    </SidePanelList>
+    </PanelList>
   );
 }
