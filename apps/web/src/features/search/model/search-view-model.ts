@@ -1,4 +1,4 @@
-import type { SearchResult_ } from "~/server/search-workflow/domain";
+import type { SearchDirectResult } from "~/actions/search/contracts";
 
 import {
   groupCompaniesByRuc,
@@ -14,7 +14,7 @@ export interface SearchViewModel {
 }
 
 export function createSearchViewModel(
-  response: SearchResult_,
+  response: SearchDirectResult,
 ): SearchViewModel {
   const people = groupPeopleByDni(response.raw);
   const companies = groupCompaniesByRuc(response.raw);

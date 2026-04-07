@@ -1,5 +1,6 @@
 "use server";
 
+import type { SearchDirectResult } from "~/actions/search/contracts";
 import { requirePermission } from "~/lib/auth/access/session";
 import { db } from "~/lib/db/db";
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
@@ -38,7 +39,7 @@ export async function searchDirect(
   type: unknown,
   value: unknown,
   limit?: unknown,
-) {
+): Promise<SearchDirectResult> {
   const session = await requirePermission("search:use");
   await checkActionRateLimit("search.use", session.userId, rateLimitDeps);
 
