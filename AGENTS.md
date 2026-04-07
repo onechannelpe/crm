@@ -80,23 +80,11 @@ Failure points:
 - Silent error drops with `let _ =` on fallible operations.
 - Unchecked indexing where `.get()` or iterators fit.
 
-## WHEN writing security-sensitive code
-
-Use retrieval-led reasoning for auth, session, cookie, CSP, OAuth, file upload, SSRF, input validation, logging, and extension security changes. Read the relevant OWASP cheat sheet before changing code in these areas.
-
-<!-- OWASP-DOCS-START -->
-[OWASP Docs]|root:.refs/owasp-cheatsheets|root:{Authentication_Cheat_Sheet,Authorization_Cheat_Sheet,Browser_Extension_Vulnerabilities_Cheat_Sheet,Clickjacking_Defense_Cheat_Sheet,Content_Security_Policy_Cheat_Sheet,Cookie_Theft_Mitigation_Cheat_Sheet,Cross-Site_Request_Forgery_Prevention_Cheat_Sheet,Cross_Site_Scripting_Prevention_Cheat_Sheet,File_Upload_Cheat_Sheet,Forgot_Password_Cheat_Sheet,Input_Validation_Cheat_Sheet,Logging_Cheat_Sheet,OAuth2_Cheat_Sheet,Password_Storage_Cheat_Sheet,Secrets_Management_Cheat_Sheet,Server_Side_Request_Forgery_Prevention_Cheat_Sheet,Session_Management_Cheat_Sheet,Transport_Layer_Security_Cheat_Sheet}
-<!-- OWASP-DOCS-END -->
-
 ## WHEN writing documentation
 
 Prefer sentence case for headings. Avoid emojis.
 
 ## WHEN writing SolidJS
-
-<!-- SOLIDJS-DOCS-START -->
-[SolidJS Docs]|root:.refs/solidjs-docs|reactivity:{concepts/intro-to-reactivity,concepts/signals,concepts/components/props,advanced-concepts/fine-grained-reactivity,reference/basic-reactivity/create-signal}|components:{concepts/components/basics,concepts/control-flow/list-rendering,reference/components/for,reference/components/show}|routing:{solid-router/concepts/navigation,solid-router/concepts/nesting,solid-router/concepts/dynamic-routes,solid-router/reference/primitives/use-navigate,solid-start/reference/routing/file-routes}|data:{solid-router/data-fetching/queries,solid-router/reference/data-apis/create-async,solid-router/reference/data-apis/action,solid-start/building-your-application/data-fetching,solid-start/building-your-application/data-mutation}|server:{solid-start/advanced/middleware,solid-start/advanced/request-events,solid-start/building-your-application/api-routes,solid-start/reference/server/create-handler,solid-start/reference/server/create-middleware,solid-start/reference/server/use-server,reference/server-utilities/get-request-event}|auth-session:{solid-start/advanced/auth,solid-start/advanced/session,solid-start/guides/security}|tooling:{solid-start/getting-started,solid-start/reference/config/define-config,configuration/typescript,guides/testing}
-<!-- SOLIDJS-DOCS-END -->
 
 Anti-patterns (check docs before implementing):
 
