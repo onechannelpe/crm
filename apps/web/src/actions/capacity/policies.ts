@@ -26,7 +26,7 @@ export async function updateSearchPolicyOverride(input: {
   if (!overrideInput.ok) throw overrideInput.error;
   return runAction({
     actionName: "capacity.search_policy_override.update",
-    permission: "capacity:policy:manage",
+    access: { kind: "permission", permission: "capacity:policy:manage" },
     input: overrideInput.value,
     execute: (ctx) =>
       updateSearchPolicyOverrideService(
@@ -47,7 +47,7 @@ export async function updateLeadPolicyOverride(input: {
   if (!overrideInput.ok) throw overrideInput.error;
   return runAction({
     actionName: "capacity.lead_policy_override.update",
-    permission: "capacity:policy:manage",
+    access: { kind: "permission", permission: "capacity:policy:manage" },
     input: overrideInput.value,
     execute: (ctx) =>
       updateLeadPolicyOverrideService(
@@ -69,7 +69,7 @@ export async function updateSearchPolicyDefault(input: {
   if (!limitResult.ok) throw limitResult.error;
   return runAction({
     actionName: "capacity.search_policy_default.update",
-    permission: "capacity:policy:manage",
+    access: { kind: "permission", permission: "capacity:policy:manage" },
     input: {
       scope: {
         kind: scopeInput.value.scopeType,
@@ -107,7 +107,7 @@ export async function updateLeadPolicyDefault(input: {
   if (!policyResult.ok) throw policyResult.error;
   return runAction({
     actionName: "capacity.lead_policy_default.update",
-    permission: "capacity:policy:manage",
+    access: { kind: "permission", permission: "capacity:policy:manage" },
     input: {
       scope: {
         kind: scopeInput.value.scopeType,

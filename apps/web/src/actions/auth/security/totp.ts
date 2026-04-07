@@ -15,7 +15,7 @@ export async function beginTotpEnrollment(): Promise<{
 }> {
   return runAction({
     actionName: "auth.totp.begin",
-    requireSession: true,
+    access: { kind: "session" },
     execute: (ctx) =>
       beginTotpEnrollmentService(ctx, createTotpEnrollmentContext()),
   });
@@ -25,7 +25,7 @@ export async function finishTotpEnrollment(code: string): Promise<string[]> {
   const safeCode = assertNonEmptyString(code, "code");
   const result = await runAction({
     actionName: "auth.totp.finish",
-    requireSession: true,
+    access: { kind: "session" },
     input: { hasCode: true },
     execute: (ctx) =>
       finishTotpEnrollmentService(ctx, createTotpEnrollmentContext(), {

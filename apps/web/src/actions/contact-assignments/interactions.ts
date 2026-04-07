@@ -47,7 +47,7 @@ export async function completeContactAssignmentCall(
   });
   return runAction({
     actionName: "contact_assignments.complete_call",
-    permission: "lead:work",
+    access: { kind: "permission", permission: "lead:work" },
     input: {
       assignmentId: parsedInput.assignmentId,
       contactId: parsedInput.contactId,

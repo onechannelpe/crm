@@ -19,7 +19,7 @@ export async function queryLeadList(filters: {
 }): Promise<LeadListView> {
   return runAction({
     actionName: "pipeline.list_leads",
-    requireAuth: true,
+    access: { kind: "auth" },
     input: filters,
     execute: (ctx) =>
       listLeads(createPipelineQueryRuntime().deps.leadList, {
@@ -33,7 +33,7 @@ export async function queryLeadList(filters: {
 export async function queryLeadDetail(leadId: number): Promise<LeadDetailView> {
   return runAction({
     actionName: "pipeline.get_lead_detail",
-    requireAuth: true,
+    access: { kind: "auth" },
     input: { leadId },
     execute: (ctx) =>
       getLeadDetail(createPipelineQueryRuntime().deps.leadDetail, {

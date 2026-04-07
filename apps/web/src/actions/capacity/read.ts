@@ -21,7 +21,7 @@ export async function getManagedExecutivesList(): Promise<
 > {
   return runAction({
     actionName: "capacity.managed_executives.read",
-    permission: "capacity:read:team",
+    access: { kind: "permission", permission: "capacity:read:team" },
     execute: (ctx) =>
       listManagedExecutivesService(ctx, createCapacityReadContext()),
   });
@@ -33,7 +33,7 @@ export async function getExecutiveDetail(
   const safeUserId = assertPositiveInt(userId, "userId");
   return runAction({
     actionName: "capacity.executive_detail.read",
-    permission: "capacity:read:team",
+    access: { kind: "permission", permission: "capacity:read:team" },
     input: { userId: safeUserId },
     execute: (ctx) =>
       getExecutiveDetailService(ctx, createCapacityReadContext(), {
@@ -47,7 +47,7 @@ export async function getPendingRequests(): Promise<
 > {
   return runAction({
     actionName: "capacity.pending_requests.read",
-    permission: "capacity:read:team",
+    access: { kind: "permission", permission: "capacity:read:team" },
     execute: (ctx) =>
       listPendingRequestsService(ctx, createCapacityReadContext()),
   });
@@ -56,7 +56,7 @@ export async function getPendingRequests(): Promise<
 export async function getPolicyDefaults(): Promise<CapacityPolicyDefaultsView> {
   return runAction({
     actionName: "capacity.policy_defaults.read",
-    permission: "capacity:policy:manage",
+    access: { kind: "permission", permission: "capacity:policy:manage" },
     execute: (ctx) =>
       getPolicyDefaultsService(ctx, createCapacityReadContext()),
   });
@@ -69,7 +69,7 @@ export async function getAuditEvents(
     limit == null ? undefined : assertPositiveInt(limit, "limit");
   return runAction({
     actionName: "capacity.audit.read",
-    permission: "capacity:audit:read",
+    access: { kind: "permission", permission: "capacity:audit:read" },
     input: { limit: safeLimit },
     execute: (ctx) =>
       getAuditEventsService(ctx, createCapacityReadContext(), {

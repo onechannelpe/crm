@@ -25,7 +25,7 @@ export async function revokeUserSession(
   }
   return runAction({
     actionName: "admin.sessions.revoke",
-    role: "admin",
+    access: { kind: "role", role: "admin" },
     stepUp: "recent_strong_auth",
     input: parsedInput.value,
     execute: (ctx) =>
@@ -46,7 +46,7 @@ export async function revokeAllUserSessions(
   }
   return runAction({
     actionName: "admin.sessions.revoke_all",
-    role: "admin",
+    access: { kind: "role", role: "admin" },
     stepUp: "recent_strong_auth",
     input: parsedInput.value,
     execute: (ctx) =>

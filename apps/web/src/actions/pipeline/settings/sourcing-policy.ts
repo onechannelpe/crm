@@ -9,7 +9,7 @@ import { runAction } from "~/server/shared/action-runtime";
 export async function querySourcingPolicy(branchId: number) {
   return runAction({
     actionName: "pipeline.get_sourcing_policy",
-    requireAuth: true,
+    access: { kind: "auth" },
     input: { branchId },
     execute: (ctx) =>
       getSourcingPolicy(createPipelineQueryRuntime().deps.sourcingPolicy, {
@@ -25,7 +25,7 @@ export async function saveSourcingPolicy(input: {
 }) {
   return runAction({
     actionName: "pipeline.update_sourcing_policy",
-    requireAuth: true,
+    access: { kind: "auth" },
     input,
     execute: (ctx) =>
       runPipelineCommand(({ deps }) =>

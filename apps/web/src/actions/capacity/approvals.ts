@@ -18,7 +18,7 @@ export async function approveCapacity(requestId: number, note?: string) {
   if (!decisionInput.ok) throw decisionInput.error;
   return runAction({
     actionName: "capacity.approve",
-    permission: "capacity:approve",
+    access: { kind: "permission", permission: "capacity:approve" },
     input: decisionInput.value,
     execute: (ctx) =>
       approveCapacityService(
@@ -36,7 +36,7 @@ export async function rejectCapacity(requestId: number, note: string) {
   const safeNote = decisionInput.value.note;
   return runAction({
     actionName: "capacity.reject",
-    permission: "capacity:approve",
+    access: { kind: "permission", permission: "capacity:approve" },
     input: { requestId: decisionInput.value.requestId, note: safeNote },
     execute: (ctx) =>
       rejectCapacityService(ctx, createCapacityApprovalContext(), {
@@ -55,7 +55,7 @@ export async function grantMoreSearches(
   if (!grantInput.ok) throw grantInput.error;
   return runAction({
     actionName: "capacity.grant_search",
-    permission: "capacity:manage",
+    access: { kind: "permission", permission: "capacity:manage" },
     input: grantInput.value,
     execute: (ctx) =>
       grantSearchCapacityService(ctx, createCapacityCommandsContext().repos, {
@@ -75,7 +75,7 @@ export async function grantMoreLeadRefill(
   if (!grantInput.ok) throw grantInput.error;
   return runAction({
     actionName: "capacity.grant_lead",
-    permission: "capacity:manage",
+    access: { kind: "permission", permission: "capacity:manage" },
     input: grantInput.value,
     execute: (ctx) =>
       grantLeadCapacityService(ctx, createCapacityCommandsContext().repos, {

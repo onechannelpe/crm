@@ -14,7 +14,7 @@ export async function requestMoreSearches(amount: number, reason: string) {
 
   return runAction({
     actionName: "capacity.request_search",
-    permission: "capacity:request:self",
+    access: { kind: "permission", permission: "capacity:request:self" },
     input: { amount: amountResult.value, reason: reasonResult.value },
     execute: (ctx) =>
       requestCapacity(ctx, createCapacityCommandsContext(), {
@@ -33,7 +33,7 @@ export async function requestMoreLeadRefill(amount: number, reason: string) {
 
   return runAction({
     actionName: "capacity.request_lead_refill",
-    permission: "capacity:request:self",
+    access: { kind: "permission", permission: "capacity:request:self" },
     input: { amount: amountResult.value, reason: reasonResult.value },
     execute: (ctx) =>
       requestCapacity(ctx, createCapacityCommandsContext(), {

@@ -15,7 +15,7 @@ export async function getActiveContactAssignments(): Promise<
 > {
   return runAction({
     actionName: "contact_assignments.list_active",
-    permission: "lead:work",
+    access: { kind: "permission", permission: "lead:work" },
     input: {},
     execute: async (ctx) =>
       Ok(await getActiveContactAssignmentsUseCase(ctx.actor.userId, readRepos)),
@@ -25,7 +25,7 @@ export async function getActiveContactAssignments(): Promise<
 export async function getMyContactAssignmentCapacity(): Promise<LeadCapacitySnapshot> {
   return runAction({
     actionName: "contact_assignments.get_capacity",
-    permission: "capacity:read:self",
+    access: { kind: "permission", permission: "capacity:read:self" },
     input: {},
     execute: (ctx) => getContactAssignmentCapacity(ctx.actor.userId, readRepos),
   });

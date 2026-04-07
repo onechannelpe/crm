@@ -37,7 +37,7 @@ export async function createTeamInvite(input: {
 
   return runAction({
     actionName: "team.invite.create",
-    permission: "hr:manage",
+    access: { kind: "permission", permission: "hr:manage" },
     input: {
       role: safeInput.role,
       hasTeamId: safeInput.teamId !== null,
@@ -55,7 +55,7 @@ export async function resendTeamInvite(inviteId: number): Promise<void> {
 
   await runAction({
     actionName: "team.invite.resend",
-    permission: "hr:manage",
+    access: { kind: "permission", permission: "hr:manage" },
     input: { inviteId: parsedInput.value.inviteId },
     execute: (ctx) =>
       resendTeamInviteService(
@@ -74,7 +74,7 @@ export async function revokeTeamInvite(inviteId: number): Promise<void> {
 
   await runAction({
     actionName: "team.invite.revoke",
-    permission: "hr:manage",
+    access: { kind: "permission", permission: "hr:manage" },
     input: { inviteId: parsedInput.value.inviteId },
     execute: (ctx) =>
       revokeTeamInviteService(
