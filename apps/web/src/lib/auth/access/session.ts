@@ -1,44 +1,15 @@
 import { getRequestContext } from "~/lib/http/request-context";
-import type { BranchId, UserId } from "~/server/shared/ids";
-
-import type {
-  PrimaryAuthMethod,
-  SessionClass,
-  StrongAuthMethod,
-} from "../core/session-contract";
+import type { AuthSession } from "./session-types";
 import { hasPermission, type Permission, type Role } from "./rbac";
 
-export interface SessionData {
-  sessionId: string;
-  userId: UserId;
-  email?: string;
-  role: Role;
-  branchId: BranchId;
-  onboardingCompleted: boolean;
-  sessionClass: SessionClass;
-  primaryAuthMethod: PrimaryAuthMethod;
-  strongAuthMethod: StrongAuthMethod | null;
-  strongAuthAt: number | null;
-}
-
-export async function getSession(): Promise<SessionData | null> {
+export async function getSession(): Promise<AuthSession | null> {
   const session = await getRequestContext().getAuthSession();
   if (!session) return null;
 
-  return {
-    sessionId: session.id,
-    userId: session.userId,
-    role: session.role,
-    branchId: session.branchId,
-    onboardingCompleted: session.onboardingCompleted,
-    sessionClass: session.sessionClass,
-    primaryAuthMethod: session.primaryAuthMethod,
-    strongAuthMethod: session.strongAuthMethod,
-    strongAuthAt: session.strongAuthAt,
-  };
+  return session;
 }
 
-export async function requireAuth(): Promise<SessionData> {
+export async function requireAuth(): Promise<AuthSession> {
   const session = await getSession();
 
   if (!session) {
@@ -52,7 +23,7 @@ export async function requireAuth(): Promise<SessionData> {
   return session;
 }
 
-export async function requireSession(): Promise<SessionData> {
+export async function requireSession(): Promise<AuthSession> {
   const session = await getSession();
   if (!session) {
     throw new Error("Unauthorized");

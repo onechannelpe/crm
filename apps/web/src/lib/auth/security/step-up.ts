@@ -1,4 +1,4 @@
-import type { SessionData } from "~/lib/auth/access/session";
+import type { AuthSession } from "~/lib/auth/access/session-types";
 import { config } from "~/lib/config";
 
 import { requiresStrongAuthRole } from "./strong-auth-status";
@@ -6,7 +6,7 @@ import { requiresStrongAuthRole } from "./strong-auth-status";
 const DEFAULT_MAX_AGE_MS = config.auth.strongAuthMaxAgeMs;
 
 export function assertRecentStrongAuth(
-  session: SessionData,
+  session: AuthSession,
   maxAgeMs = DEFAULT_MAX_AGE_MS,
 ): void {
   if (!requiresStrongAuthRole(session.role)) {

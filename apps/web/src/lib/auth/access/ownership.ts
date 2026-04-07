@@ -1,7 +1,7 @@
 import { forbiddenError, notFoundError } from "~/lib/app-errors";
 
+import type { AuthSession } from "./session-types";
 import type { Role } from "./rbac";
-import type { SessionData } from "./session";
 
 /**
  * Asserts that a fetched record is non-null and owned by the session user.
@@ -18,7 +18,7 @@ import type { SessionData } from "./session";
 export function assertOwnedRecord<T>(
   record: T | null | undefined,
   getOwnerId: (r: T) => number | null | undefined,
-  session: Pick<SessionData, "userId" | "role">,
+  session: Pick<AuthSession, "userId" | "role">,
   options?: {
     resourceName?: string;
     bypassRoles?: ReadonlySet<Role>;

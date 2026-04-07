@@ -10,7 +10,7 @@ import type { InviteManagementQueryPort } from "../../src/server/team/applicatio
 function makeContext(role: Role = "hr"): AppContext {
   return {
     actor: {
-      sessionId: "session-1",
+      id: "session-1",
       userId: 7,
       role,
       branchId: 3,

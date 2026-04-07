@@ -26,7 +26,7 @@ export async function POST(event: APIEvent): Promise<Response> {
     const result =
       await getExtensionApiRuntime().extensionService.createHandoffToken({
         userId: session.userId,
-        authSessionId: session.sessionId,
+        authSessionId: session.id,
         branchId: session.branchId,
         assignmentId: body.assignmentId,
         origin,

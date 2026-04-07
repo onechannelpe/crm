@@ -17,7 +17,7 @@ const NON_MANAGER_ROLES = [
 
 function makeActor(role: Role = "admin", branchId = 1) {
   return {
-    sessionId: "test",
+    id: "test",
     userId: 99,
     role,
     branchId,
