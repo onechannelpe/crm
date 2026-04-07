@@ -3,6 +3,15 @@ import type { DataGridIcon } from "../model/types";
 
 import styles from "../styles/data-grid.module.css";
 
+function getActionRowLabelGridColumn(
+  labelColumnIndex: number,
+  reorderable: boolean,
+): string {
+  const leadingColumns = reorderable ? 3 : 2;
+  const start = labelColumnIndex + leadingColumns;
+  return `${start} / ${start + 1}`;
+}
+
 export function DataGridActionRow(props: {
   gridTemplateColumns: string;
   icon: DataGridIcon;
@@ -34,18 +43,23 @@ export function DataGridActionRow(props: {
           props.reorderable ? { left: `${props.selectionLeft}px` } : undefined
         }
       >
-        <Icon size={14} />
+        <span class={styles.actionIcon} aria-hidden="true">
+          <Icon size={14} />
+        </span>
       </div>
       <div
         class={`${styles.actionCell} ${props.labelColumnIndex === props.stickyColumnIndex ? styles.stickyCell : ""}`}
         style={{
-          "grid-column": `${props.labelColumnIndex + (props.reorderable ? 3 : 2)} / ${props.labelColumnIndex + (props.reorderable ? 4 : 3)}`,
+          "grid-column": getActionRowLabelGridColumn(
+            props.labelColumnIndex,
+            props.reorderable,
+          ),
           ...(props.labelColumnIndex === props.stickyColumnIndex
             ? { left: `${props.stickyLeft}px` }
             : {}),
         }}
       >
-        {props.label}
+        <span class={styles.actionText}>{props.label}</span>
       </div>
     </button>
   );

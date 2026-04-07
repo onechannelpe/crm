@@ -34,7 +34,9 @@ export async function requestLeadCreation(input: {
   ruc: string;
   executiveId?: number;
 }) {
-  if (!input.ruc?.trim()) {
+  const normalizedRuc = input.ruc.trim();
+
+  if (!normalizedRuc) {
     throw validationError("ruc is required");
   }
 
@@ -51,7 +53,7 @@ export async function requestLeadCreation(input: {
           actorUserId: ctx.actor.userId,
           actorRole: ctx.actor.role,
           executiveId: input.executiveId ?? ctx.actor.userId,
-          ruc: input.ruc,
+          ruc: normalizedRuc,
         }),
       ),
   });

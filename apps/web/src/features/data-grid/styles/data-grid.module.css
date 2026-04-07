@@ -2,6 +2,7 @@
   border-bottom: 1px solid var(--border);
   display: flex;
   flex-direction: column;
+  margin-bottom: 1px;
   margin-left: 12px;
 }
 
@@ -28,6 +29,7 @@
   display: inline-flex;
   font-family: inherit;
   font-size: 13px;
+  font-weight: 400;
   gap: 6px;
   min-height: 28px;
   padding: 4px 8px;
@@ -36,19 +38,19 @@
 
 .viewPicker:hover,
 .toolbarButton:hover {
-  background: color-mix(in srgb, var(--secondary) 84%, white);
+  background: color-mix(in srgb, var(--accent) 82%, var(--background));
 }
 
 .toolbarButton[data-open="true"] {
-  background: color-mix(in srgb, var(--secondary) 84%, white);
+  background: color-mix(in srgb, var(--accent) 82%, var(--background));
 }
 
 .toolbarButton[data-open="true"]:hover {
-  background: color-mix(in srgb, var(--secondary) 76%, white);
+  background: color-mix(in srgb, var(--accent) 68%, var(--background));
 }
 
 .toolbarButton[data-active="true"] {
-  color: var(--accent-foreground, var(--foreground));
+  color: var(--info);
 }
 
 .viewPickerIcon,
@@ -87,7 +89,9 @@
   background: var(--background);
   border: 1px solid var(--border);
   border-radius: calc(var(--radius-sm) + 4px);
-  box-shadow: 0 12px 30px rgb(15 23 42 / 0.08);
+  box-shadow:
+    0 10px 24px rgb(15 23 42 / 0.08),
+    0 1px 2px rgb(15 23 42 / 0.06);
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -117,7 +121,7 @@
 
 .menuItem[data-active="true"],
 .menuItem:hover {
-  background: color-mix(in srgb, var(--secondary) 84%, white);
+  background: color-mix(in srgb, var(--accent) 82%, var(--background));
 }
 
 .menuCheckbox {
@@ -166,6 +170,7 @@
   flex-direction: column;
   min-height: 100%;
   min-width: max-content;
+  position: relative;
 }
 
 .loadingState {
@@ -174,7 +179,7 @@
   display: flex;
   flex: 1;
   justify-content: center;
-  min-height: 240px;
+  min-height: 280px;
 }
 
 .loadingStateContent {
@@ -192,16 +197,12 @@
 
 .emptyStateSurface {
   align-items: center;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--secondary) 28%, white) 0%,
-    var(--background) 24%
-  );
+  background: var(--background);
   border-bottom: 1px solid var(--border);
   display: flex;
   flex: 1;
   justify-content: center;
-  min-height: 300px;
+  min-height: 360px;
 }
 
 .headerRow,
@@ -214,7 +215,7 @@
 }
 
 .headerRow {
-  background: color-mix(in srgb, var(--background) 94%, white);
+  background: var(--background);
   box-shadow: 0 1px 0 rgb(15 23 42 / 0.05);
   position: sticky;
   top: 0;
@@ -230,15 +231,16 @@
   border-right: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
   box-sizing: border-box;
   display: flex;
-  min-height: 38px;
+  min-height: 32px;
   min-width: 0;
-  padding: 0 12px;
+  padding: 0;
 }
 
 .headerCell {
   color: var(--foreground-secondary);
   font-size: 12px;
   font-weight: 500;
+  padding: 0 12px;
 }
 
 .reorderCell {
@@ -276,11 +278,11 @@
 }
 
 .bodyRow[data-focused="true"] .bodyCell {
-  background: color-mix(in srgb, var(--secondary) 92%, white);
+  background: color-mix(in srgb, var(--accent) 72%, var(--background));
 }
 
 .bodyRow[data-active="true"] .bodyCell {
-  background: color-mix(in srgb, var(--secondary) 84%, white);
+  background: color-mix(in srgb, var(--accent) 86%, var(--background));
 }
 
 .bodyRow[data-dragged="true"] .bodyCell {
@@ -402,6 +404,7 @@
   justify-content: flex-start;
   min-height: 100%;
   min-width: 0;
+  padding: 0 12px;
   width: 100%;
 }
 
@@ -418,7 +421,7 @@
 
 .stickyCell {
   background: var(--background);
-  box-shadow: 8px 0 14px -14px rgb(15 23 42 / 0.18);
+  box-shadow: 10px 0 14px -14px rgb(15 23 42 / 0.22);
   left: 40px;
   position: sticky;
   z-index: 5;
@@ -426,7 +429,7 @@
 
 .bodyRow:hover .bodyCell,
 .actionRow:hover .actionCell {
-  background: color-mix(in srgb, var(--secondary) 94%, white);
+  background: color-mix(in srgb, var(--accent) 56%, var(--background));
 }
 
 .bodyRow {
@@ -457,8 +460,20 @@
 
 .actionCell {
   color: var(--foreground-tertiary);
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.actionIcon {
+  align-items: center;
+  color: var(--foreground-secondary);
+  display: inline-flex;
+  justify-content: center;
+}
+
+.actionText {
+  margin-left: 8px;
+  white-space: nowrap;
 }
 
 @media (max-width: 960px) {

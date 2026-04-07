@@ -1,0 +1,7 @@
+.list {
+  max-height: calc(
+    100dvh - var(--side-panel-top-bar-height) - (var(--spacing-2) * 2)
+  );
+  overflow-y: auto;
+  padding: var(--spacing-2);
+}

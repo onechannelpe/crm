@@ -1,0 +1,32 @@
+import { createMemo } from "solid-js";
+
+import Users from "~/components/icons/users";
+
+import { usePageInstanceId } from "../../state/page-instance";
+import { useSidePanel } from "../../state/use-side-panel";
+import { PageInfoLayout } from "../../top-bar/page-info-layout";
+
+export function SearchCompanyPageInfo() {
+  const pageId = usePageInstanceId();
+  const { getPageState } = useSidePanel();
+
+  const pageState = createMemo(() => {
+    const state = getPageState(pageId());
+
+    if (!state || state.page !== "search-company-detail") {
+      throw new Error(
+        "Search company side panel page info state is not available",
+      );
+    }
+
+    return state;
+  });
+
+  return (
+    <PageInfoLayout
+      icon={<Users size={14} />}
+      title={pageState().company.name ?? "Unknown company"}
+      label={`Resultado de "${pageState().query}"`}
+    />
+  );
+}

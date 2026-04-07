@@ -1,0 +1,104 @@
+.topBar {
+  align-items: center;
+  background: var(--secondary);
+  border-bottom: 1px solid var(--border);
+  box-sizing: border-box;
+  display: flex;
+  flex-shrink: 0;
+  gap: 8px;
+  height: var(--side-panel-top-bar-height);
+  justify-content: space-between;
+  padding: 0 8px;
+  width: 100%;
+}
+
+.topBarMobile {
+  height: var(--side-panel-top-bar-height-mobile);
+}
+
+.content {
+  align-items: center;
+  display: flex;
+  flex: 1;
+  gap: 4px;
+  min-width: 0;
+}
+
+.searchInput {
+  background: transparent;
+  border: none;
+  color: var(--foreground);
+  flex: 1;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  height: 24px;
+  min-width: 0;
+  outline: none;
+  padding: 0;
+}
+
+.searchInput::placeholder {
+  color: var(--foreground-tertiary);
+  font-weight: var(--font-weight-medium);
+}
+
+.closeButton {
+  align-items: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--foreground-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  height: 24px;
+  justify-content: center;
+  width: 24px;
+}
+
+.leftControls {
+  align-items: center;
+  display: flex;
+  flex-shrink: 0;
+  gap: 4px;
+}
+
+.closeButton:hover {
+  background: color-mix(in srgb, var(--accent) 82%, var(--background));
+  color: var(--foreground);
+}
+
+.rightSlot {
+  align-items: center;
+  display: flex;
+  flex: 1;
+  gap: 4px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.actions {
+  align-items: center;
+  color: var(--foreground-secondary);
+  display: flex;
+  flex-shrink: 0;
+  min-width: 24px;
+}
+
+.chip {
+  align-items: center;
+  background: transparent;
+  border: none;
+  color: var(--foreground-tertiary);
+  cursor: pointer;
+  display: inline-flex;
+  flex-shrink: 0;
+  font-size: var(--font-size-caption);
+  gap: 4px;
+  min-width: 0;
+  padding: 0 2px;
+}
+
+.chipStatic {
+  color: var(--foreground-secondary);
+  cursor: default;
+}

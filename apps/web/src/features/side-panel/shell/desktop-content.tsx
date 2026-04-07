@@ -1,5 +1,5 @@
-import { SidePanelRouter } from "../router/side-panel-router";
+import { Router } from "../router/router";
 
 export function DesktopSidePanelContent() {
-  return <SidePanelRouter isMobile={false} />;
+  return <Router isMobile={false} />;
 }
