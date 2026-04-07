@@ -1,156 +1,46 @@
-import { isAppError, type AppErrorCode } from "~/lib/app-errors";
-import type { Permission, Role } from "~/lib/auth/access/rbac";
-import {
-  requireAuth as requireAuthActor,
-  requirePermission,
-  requireRole,
-  requireSession as requireSessionActor,
-} from "~/lib/auth/access/session";
-import type { AuthSession } from "~/lib/auth/access/session-types";
-import { assertRecentStrongAuth } from "~/lib/auth/security/step-up";
-import { getErrorMessage } from "~/lib/errors";
-import { getRequestContext } from "~/lib/http/request-context";
-import { getActionRequestContext } from "~/lib/observability/context";
-import { getObservabilityRuntime } from "~/server/observability/runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import { isErr, type Result } from "~/server/shared/result";
 import { throwDomainError } from "~/server/shared/throw-domain-error";
 
-const { observabilityService } = getObservabilityRuntime();
+import {
+  type ActionAccess,
+  type ActionStepUpRequirement,
+  resolveActionContext,
+} from "./action-runtime/auth";
+import { type AppContext } from "./action-runtime/context";
+import {
+  recordActionError,
+  recordActionSuccess,
+  toTelemetryError,
+  type ActionTelemetryInput,
+} from "./action-runtime/telemetry";
+export { createAppContext, type AppContext } from "./action-runtime/context";
 
-type ActionAuthRequirement = {
-  permission?: Permission;
-  role?: Role;
-  requireAuth?: boolean;
-  requireSession?: boolean;
-};
-
-type ActionTelemetryInput = {
+type ActionMeta = {
   actionName: string;
-  ctx: AppContext;
-  startedAt: number;
-  input: unknown;
-};
-
-type ActionTelemetryError = {
-  code: AppErrorCode | null;
-  message: string | null;
-};
-
-export interface AppContext {
-  actor: AuthSession;
-  requestId: string;
-  traceId: string;
-  ipAddress: string;
-  userAgent: string | null;
-  publicOrigin: string;
-  now: () => number;
-}
-
-type RunActionParams<T, E extends DomainError> = ActionAuthRequirement & {
-  actionName: string;
-  stepUp?: "recent_strong_auth";
   input?: unknown;
-  execute: (ctx: AppContext) => Promise<Result<T, E>>;
 };
 
-export function createAppContext(actor: AuthSession): AppContext {
-  const request = getRequestContext();
-  const action = getActionRequestContext();
-  return {
-    actor,
-    requestId: action.requestId,
-    traceId: action.traceId,
-    ipAddress: request.clientIp,
-    userAgent: request.userAgent,
-    publicOrigin: request.publicOrigin,
-    now: Date.now,
+type RunActionParams<T, E extends DomainError> = {
+  access: ActionAccess;
+} &
+  ActionStepUpRequirement &
+  ActionMeta & {
+    execute: (ctx: AppContext) => Promise<Result<T, E>>;
   };
-}
 
-async function resolveActor(
-  params: ActionAuthRequirement,
-): Promise<AuthSession> {
-  if (params.permission) {
-    return requirePermission(params.permission);
-  }
-  if (params.role) {
-    return requireRole(params.role);
-  }
-  if (params.requireAuth) {
-    return requireAuthActor();
-  }
-  if (params.requireSession) {
-    return requireSessionActor();
-  }
-  throw new Error("runAction requires an auth requirement");
-}
-
-function toTelemetryError(error: unknown): ActionTelemetryError {
-  return {
-    code: isAppError(error) ? error.code : null,
-    message: getErrorMessage(error, "Unknown error"),
-  };
-}
-
-function recordActionSuccess(input: ActionTelemetryInput) {
-  void observabilityService
-    .recordAction({
-      traceId: input.ctx.traceId,
-      requestId: input.ctx.requestId,
-      routePath: null,
-      httpMethod: null,
-      actionName: input.actionName,
-      actorUserId: input.ctx.actor.userId,
-      actorRole: input.ctx.actor.role,
-      status: "ok",
-      durationMs: input.ctx.now() - input.startedAt,
-      errorCode: null,
-      errorMessage: null,
-      input: input.input ?? null,
-      createdAt: input.ctx.now(),
-    })
-    .catch(() => {});
-}
-
-function recordActionError(
-  input: ActionTelemetryInput,
-  error: ActionTelemetryError,
-) {
-  void observabilityService
-    .recordAction({
-      traceId: input.ctx.traceId,
-      requestId: input.ctx.requestId,
-      routePath: null,
-      httpMethod: null,
-      actionName: input.actionName,
-      actorUserId: input.ctx.actor.userId,
-      actorRole: input.ctx.actor.role,
-      status: "error",
-      durationMs: input.ctx.now() - input.startedAt,
-      errorCode: error.code,
-      errorMessage: error.message,
-      input: input.input ?? null,
-      createdAt: input.ctx.now(),
-    })
-    .catch(() => {});
-}
+type ActionTelemetryParams = Pick<
+  RunActionParams<unknown, DomainError>,
+  "access" | "stepUp" | "actionName" | "input"
+>;
 
 async function createActionTelemetry(
-  params: ActionAuthRequirement &
-    Pick<
-      RunActionParams<unknown, DomainError>,
-      "actionName" | "stepUp" | "input"
-    >,
+  params: ActionTelemetryParams,
 ): Promise<ActionTelemetryInput> {
-  const actor = await resolveActor(params);
-  if (params.stepUp === "recent_strong_auth") {
-    assertRecentStrongAuth(actor);
-  }
-
+  const ctx = await resolveActionContext(params);
   return {
     actionName: params.actionName,
-    ctx: createAppContext(actor),
+    ctx,
     startedAt: Date.now(),
     input: params.input,
   };
