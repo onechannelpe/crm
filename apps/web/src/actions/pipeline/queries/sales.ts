@@ -10,7 +10,7 @@ export async function querySales(filters: {
   limit?: number;
   offset?: number;
 }): Promise<SaleView[]> {
-  const result = await runAction({
+  return runAction({
     actionName: "pipeline.list_sales",
     requireAuth: true,
     input: filters,
@@ -21,8 +21,6 @@ export async function querySales(filters: {
         ...filters,
       }),
   });
-
-  return result;
 }
 
 export async function querySaleDetail(saleId: number): Promise<SaleView> {
