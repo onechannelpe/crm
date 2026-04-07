@@ -1,7 +1,7 @@
 import { forbiddenError, notFoundError } from "~/lib/app-errors";
 
-import type { AuthSession } from "./session-types";
 import type { Role } from "./rbac";
+import type { AuthSession } from "./session-types";
 
 /**
  * Asserts that a fetched record is non-null and owned by the session user.

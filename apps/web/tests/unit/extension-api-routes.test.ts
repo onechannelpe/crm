@@ -3,9 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   requirePermission:
-    vi.fn<
-      () => Promise<{ userId: number; id: string; branchId: number }>
-    >(),
+    vi.fn<() => Promise<{ userId: number; id: string; branchId: number }>>(),
   claimInstallationSession: vi.fn<() => Promise<unknown>>(),
   refreshInstallationSession: vi.fn<() => Promise<unknown>>(),
   ingestRuntimeEvent: vi.fn<() => Promise<unknown>>(),

@@ -4,9 +4,12 @@ import { redirect } from "@solidjs/router";
 
 import { internalError } from "~/lib/app-errors";
 import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
-import type { PasskeyLoginFlowState } from "~/lib/auth/passkey/service";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { getActionRequestContext } from "~/lib/observability/context";
+import type {
+  PasskeyStartSubmissionResult,
+  PasswordLoginSubmissionResult,
+} from "~/server/auth/application/contracts";
 import {
   createPasskeyStartService,
   submitPasswordLoginWithDeps,
@@ -26,27 +29,6 @@ import {
   resolvePasskeyStartAnalyticsCode,
   resolvePasswordAnalyticsCode,
 } from "./support";
-
-export type PasswordLoginSubmissionResult =
-  | {
-      ok: false;
-      code: "invalid_credentials" | "strong_auth_required";
-    }
-  | {
-      ok: true;
-      nextStep: "passkey";
-      flow: PasskeyLoginFlowState;
-    };
-
-export type PasskeyStartSubmissionResult =
-  | {
-      ok: false;
-      code: "invalid_credentials";
-    }
-  | {
-      ok: true;
-      flow: PasskeyLoginFlowState;
-    };
 
 export type TotpLoginSubmissionResult = {
   ok: false;

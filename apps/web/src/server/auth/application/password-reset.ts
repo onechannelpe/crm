@@ -11,13 +11,13 @@ import type {
   PasswordResetRepos,
   PasswordResetRequestContext,
 } from "../infrastructure/password-reset-context";
+import type {
+  RequestPasswordResetResult,
+  ResetPasswordResult,
+} from "./contracts";
 
 const TOKEN_TTL_MS = 60 * 60 * 1000;
 const MAX_REQUESTS_PER_HOUR = 3;
-
-export type RequestPasswordResetResult =
-  | { ok: true }
-  | { ok: false; code: "rate_limited" | "email_required" };
 
 export async function requestPasswordReset(input: {
   email: string;
@@ -67,13 +67,6 @@ export async function requestPasswordReset(input: {
 
   return { ok: true };
 }
-
-export type ResetPasswordResult =
-  | { ok: true }
-  | {
-      ok: false;
-      code: "invalid_token" | "password_mismatch" | "password_too_short";
-    };
 
 export async function resetPassword(input: {
   token: string;

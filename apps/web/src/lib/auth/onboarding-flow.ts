@@ -1,4 +1,4 @@
-import type { CurrentUserView } from "~/server/auth/application/views/current-user-view";
+import type { CurrentUserView } from "~/server/auth/application/contracts";
 
 export type OnboardingStep = "profile" | "security";
 
