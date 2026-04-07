@@ -28,9 +28,9 @@ export interface CurrentUserView {
   strongAuthMethod: StrongAuthMethod | null;
   branchId: number;
   scopeType: WorkspaceScopeType;
-  team: unknown;
-  supervisor: unknown;
-  branch: unknown;
+  team: { id: number; name: string } | null;
+  supervisor: { id: number; names: string } | null;
+  branch: { id: number; name: string } | null;
 }
 
 export type PasswordLoginSubmissionResult =
