@@ -1,16 +1,12 @@
-# Benchmarks
+# The bench
 
-Benchmark suites for `apps/web`. Run them with `bun run --cwd apps/web test:perf`. Each row maps a benchmark domain to its action bench files and component bench files.
+Each file owns one benchmark layer for one domain. Keep the split sharp.
 
-| Domain                     | Actions                           | Components                                                 |
-| -------------------------- | --------------------------------- | ---------------------------------------------------------- |
-| `auth/`                    | `authenticatePasswordLogin`       | `buildThrottleKeys`, `hashAuthKey`                         |
-| `team-invite/`             | `createInvite`, `acceptInvite`    | `findPendingByTokenHash`                                   |
-| `sales-create/`            | `createDraft`                     | `isExpired`, `createAssignment`                            |
-| `sales-submit/`            | `submit`                          | `canTransition`, `findActiveLockByChargeNote`              |
-| `sales-review/`            | `approve`, `reject`               | `findByIdWithOwner`                                        |
-| `pending-review/`          | `getPendingReviewNotesForSession` | `findPendingReviewWithContactsByBranch`                    |
-| `leads-request/`           | `requestLeads`                    | `createAssignment`, `canLockOrganization`, `canContactNow` |
-| `quota-consume/`           | `consume`                         | `findByUserAndDate`                                        |
-| `session-delete/`          | `deleteAllForUser`                | `listForUser`                                              |
-| `inventory-release-locks/` | `releaseExpiredLocks`             | `findExpiredLocks`                                         |
+- `component*.bench.ts`: pure CPU helpers and domain logic. No repo or DB access.
+- `boundary*.bench.ts`: parsing and validation only.
+- `repository*.bench.ts`: direct repo and query calls.
+- `command*.bench.ts`: application commands with prepared input.
+- `service*.bench.ts`: end-to-end business flows and orchestration.
+
+Do not benchmark the same function twice unless the scenario is meaningfully different.
+Do not mix parse and DB work in one benchmark when they can be measured separately.

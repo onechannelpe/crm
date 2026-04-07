@@ -11,13 +11,13 @@ import { fixedIterations } from "../_shared/options";
 import { takeFromPool } from "../_shared/pool";
 import { seedQuotaUsers, USER_POOL_SIZE } from "./fixtures";
 
-describe("search capacity grant component benchmark", () => {
+describe("search capacity grant repository benchmark", () => {
   let ctx: TestDbContext | null = null;
   let userIds: number[] = [];
   const cursor = { value: 0 };
 
   beforeAll(async () => {
-    ctx = await createIsolatedTestDb("bench-quota-consume-component");
+    ctx = await createIsolatedTestDb("bench-quota-consume-repository");
     userIds = await seedQuotaUsers(ctx);
 
     for (const userId of userIds) {
@@ -37,12 +37,12 @@ describe("search capacity grant component benchmark", () => {
   });
 
   bench(
-    "component path: load search capacity grants by user and period",
+    "repository path: load search capacity grants by user and period",
     async () => {
       const userId = takeFromPool(
         userIds,
         cursor,
-        "quota-consume query pool exhausted before iterations completed",
+        "quota-consume repository pool exhausted before iterations completed",
       );
 
       const { periodStart, periodEnd } = currentMonthlyPeriod(new Date());

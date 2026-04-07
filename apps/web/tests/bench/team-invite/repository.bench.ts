@@ -10,13 +10,13 @@ import { fixedIterations } from "../_shared/options";
 import { takeFromPool } from "../_shared/pool";
 import { QUERY_POOL_SIZE, seedTeamInviteFixtures } from "./fixtures";
 
-describe("team invite component benchmark", () => {
+describe("team invite repository benchmark", () => {
   let ctx: TestDbContext | null = null;
   let pendingInviteTokenHashes: string[] = [];
   const queryCursor = { value: 0 };
 
   beforeAll(async () => {
-    ctx = await createIsolatedTestDb("bench-team-invite-component");
+    ctx = await createIsolatedTestDb("bench-team-invite-repository");
     const fixtures = await seedTeamInviteFixtures(ctx);
     pendingInviteTokenHashes = fixtures.pendingInviteTokenHashes;
   });
@@ -28,12 +28,12 @@ describe("team invite component benchmark", () => {
   });
 
   bench(
-    "component path: load pending invite by token hash",
+    "repository path: load pending invite by token hash",
     async () => {
       const tokenHash = takeFromPool(
         pendingInviteTokenHashes,
         queryCursor,
-        "team-invite-query pool exhausted before iterations completed",
+        "team-invite repository pool exhausted before iterations completed",
       );
 
       const row = await ctx!.repos.userInvites.findPendingByTokenHash(
