@@ -9,7 +9,7 @@
 
 .buttonWrapperVisible {
   opacity: 1;
-  width: 28px;
+  width: 24px;
 }
 
 .button {
@@ -20,13 +20,13 @@
   color: var(--foreground-secondary);
   cursor: pointer;
   display: inline-flex;
-  height: 28px;
+  height: 24px;
   justify-content: center;
-  width: 28px;
+  width: 24px;
 }
 
 .button:hover {
-  background: var(--bg-translucent);
+  background: color-mix(in srgb, var(--accent) 82%, var(--background));
   color: var(--foreground);
 }
 

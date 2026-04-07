@@ -9,6 +9,8 @@ import { SidePanelList } from "../../components/side-panel-list";
 import { useSidePanel } from "../../state/use-side-panel";
 import { createLeadDetailSidePanelPage } from "../../types/side-panel-page";
 
+import styles from "./side-panel-lead-create-page.module.css";
+
 export function SidePanelLeadCreatePage() {
   const { closePanel, navigateTo } = useSidePanel();
   const [ruc, setRuc] = createSignal("");
@@ -50,28 +52,39 @@ export function SidePanelLeadCreatePage() {
 
   return (
     <SidePanelList>
-      <div class="space-y-4 py-3">
-        <Input
-          label="RUC"
-          value={ruc()}
-          onInput={(event) => setRuc(event.currentTarget.value)}
-          placeholder="Ingresa el RUC"
-        />
-        {error() ? <p class="text-sm text-destructive">{error()}</p> : null}
-        <div class="flex gap-2">
-          <Button
-            onClick={() => void handleSubmit()}
-            disabled={submitting() || ruc().trim().length === 0}
-          >
-            {submitting() ? "Guardando..." : "Guardar"}
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => closePanel()}
-            disabled={submitting()}
-          >
-            Cancelar
-          </Button>
+      <div class={styles.page}>
+        <div class={styles.hero}>
+          <p class={styles.eyebrow}>Ingreso manual</p>
+          <h2 class={styles.title}>Crear un prospecto</h2>
+          <p class={styles.description}>
+            Registra un prospecto nuevo usando su RUC. Cuando se cree, abriremos
+            su ficha en este panel.
+          </p>
+        </div>
+
+        <div class={styles.form}>
+          <Input
+            label="RUC"
+            value={ruc()}
+            onInput={(event) => setRuc(event.currentTarget.value)}
+            placeholder="Ingresa el RUC"
+          />
+          {error() ? <p class={styles.error}>{error()}</p> : null}
+          <div class={styles.actions}>
+            <Button
+              onClick={() => void handleSubmit()}
+              disabled={submitting() || ruc().trim().length === 0}
+            >
+              {submitting() ? "Guardando..." : "Guardar"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => closePanel()}
+              disabled={submitting()}
+            >
+              Cancelar
+            </Button>
+          </div>
         </div>
       </div>
     </SidePanelList>

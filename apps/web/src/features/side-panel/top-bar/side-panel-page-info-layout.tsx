@@ -15,10 +15,12 @@ export function SidePanelPageInfoLayout(props: SidePanelPageInfoLayoutProps) {
       <Show when={props.icon}>
         <div class={styles.iconWrapper}>{props.icon}</div>
       </Show>
-      <span class={styles.titleWrapper}>{props.title}</span>
-      <Show when={props.label}>
-        <span class={styles.label}>{props.label}</span>
-      </Show>
+      <div class={styles.textContainer}>
+        <span class={styles.titleWrapper}>{props.title}</span>
+        <Show when={props.label}>
+          <span class={styles.label}>{props.label}</span>
+        </Show>
+      </div>
     </div>
   );
 }

@@ -31,31 +31,34 @@ export function SidePanelTopBar(props: { isMobile: boolean }) {
 
   return (
     <div class={cn(styles.topBar, props.isMobile && styles.topBarMobile)}>
-      <div class={styles.leftControls}>
-        <SidePanelBackButton visible={showBackButton()} />
-        <Show when={showCloseButton()}>
-          <button
-            type="button"
-            class={styles.closeButton}
-            onClick={closePanel}
-            aria-label="Close panel"
-          >
-            <X size={16} />
-          </button>
-        </Show>
-      </div>
+      <div class={styles.content}>
+        <div class={styles.leftControls}>
+          <SidePanelBackButton visible={showBackButton()} />
+          <Show when={showCloseButton()}>
+            <button
+              type="button"
+              class={styles.closeButton}
+              onClick={closePanel}
+              aria-label="Close panel"
+            >
+              <X size={16} />
+            </button>
+          </Show>
+        </div>
 
-      <div class={styles.rightSlot}>
-        <Show when={showSearch()} fallback={<SidePanelPageInfo />}>
-          <input
-            type="text"
-            class={styles.searchInput}
-            placeholder="Buscar o escribir un comando..."
-            value={searchText()}
-            onInput={(e) => setSearchText(e.currentTarget.value)}
-          />
-        </Show>
+        <div class={styles.rightSlot}>
+          <Show when={showSearch()} fallback={<SidePanelPageInfo />}>
+            <input
+              type="text"
+              class={styles.searchInput}
+              placeholder="Buscar o escribir un comando..."
+              value={searchText()}
+              onInput={(e) => setSearchText(e.currentTarget.value)}
+            />
+          </Show>
+        </div>
       </div>
+      <div class={styles.actions} />
     </div>
   );
 }

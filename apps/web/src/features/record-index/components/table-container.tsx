@@ -1,5 +1,5 @@
-import { DataGrid } from "~/features/data-grid/components/grid";
 import Plus from "~/components/icons/plus";
+import { DataGrid } from "~/features/data-grid/components/grid";
 
 import type { RecordIndexScreenModel } from "../model/types";
 import { RecordIndexEmpty } from "./empty";
