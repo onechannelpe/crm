@@ -1,15 +1,18 @@
 import { createSignal } from "solid-js";
 
-import type {
-  LeadAvailableAction,
-  LeadCallOutcome,
-} from "~/actions/pipeline/contracts";
+import type { LeadCallOutcome } from "~/actions/pipeline/contracts";
 
 export type InteractionMode = "call" | "note";
 
+const INTERACTION_MODES = ["call", "note"] as const;
+
+export function isInteractionMode(value: string): value is InteractionMode {
+  return INTERACTION_MODES.some((mode) => mode === value);
+}
+
 export interface InteractionState {
   mode: () => InteractionMode;
-  setMode: (value: string) => void;
+  setMode: (value: InteractionMode) => void;
   callOutcome: () => LeadCallOutcome;
   setCallOutcome: (value: LeadCallOutcome) => void;
   body: () => string;
@@ -18,37 +21,18 @@ export interface InteractionState {
   setError: (value: string | null) => void;
   submitting: () => boolean;
   setSubmitting: (value: boolean) => void;
-  canLogCall: () => boolean;
-  canAddNote: () => boolean;
-  visibleModes: () => readonly InteractionMode[];
   clearDraft: () => void;
 }
 
-const INTERACTION_MODES = ["call", "note"] as const;
-
 export function createInteractionState(
-  availableActions: () => LeadAvailableAction[],
+  initialMode: InteractionMode,
 ): InteractionState {
-  const [mode, setMode] = createSignal<InteractionMode>("call");
+  const [mode, setMode] = createSignal<InteractionMode>(initialMode);
   const [callOutcome, setCallOutcome] =
     createSignal<LeadCallOutcome>("answered");
   const [body, setBody] = createSignal("");
   const [error, setError] = createSignal<string | null>(null);
   const [submitting, setSubmitting] = createSignal(false);
-
-  const canLogCall = () => availableActions().includes("log-call");
-  const canAddNote = () => availableActions().includes("add-note");
-  const visibleModes = () =>
-    INTERACTION_MODES.filter((value) =>
-      value === "call" ? canLogCall() : canAddNote(),
-    );
-
-  function selectMode(rawValue: string) {
-    const nextMode = visibleModes().find((value) => value === rawValue);
-    if (nextMode) {
-      setMode(nextMode);
-    }
-  }
 
   function clearDraft() {
     setBody("");
@@ -57,7 +41,7 @@ export function createInteractionState(
 
   return {
     mode,
-    setMode: selectMode,
+    setMode,
     callOutcome,
     setCallOutcome,
     body,
@@ -66,9 +50,6 @@ export function createInteractionState(
     setError,
     submitting,
     setSubmitting,
-    canLogCall,
-    canAddNote,
-    visibleModes,
     clearDraft,
   };
 }
