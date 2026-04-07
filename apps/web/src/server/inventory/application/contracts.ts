@@ -1,4 +1,4 @@
-import type { InventoryItemStatus } from "../../domain/item";
+import type { InventoryItemStatus } from "../domain/item";
 
 export type InventoryItemView = {
   id: number;

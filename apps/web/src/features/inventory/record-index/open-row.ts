@@ -1,6 +1,6 @@
 import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-row-open";
 import { createInventoryDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
-import type { InventoryItemView } from "~/server/inventory/application/views/inventory-item-view";
+import type { InventoryItemView } from "~/server/inventory/application/contracts";
 
 export function useOpenInventoryRecord() {
   const rowOpen = useSidePanelRowOpen<InventoryItemView>((item) =>
