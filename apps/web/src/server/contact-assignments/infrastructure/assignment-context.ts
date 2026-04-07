@@ -31,9 +31,11 @@ function createContactAssignmentRepos(executor: DatabaseExecutor) {
 }
 
 export function createContactAssignmentContext() {
+  const engine: Pick<EngineClient, "requestCandidates"> = engineClient;
+
   return {
     repos: createContactAssignmentRepos(db),
-    engine: engineClient satisfies Pick<EngineClient, "requestCandidates">,
+    engine,
     runInTransaction<T>(
       operation: (
         repos: ReturnType<typeof createContactAssignmentRepos>,

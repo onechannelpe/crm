@@ -7,8 +7,9 @@ import { createDraft } from "~/server/sales-records/application/commands/create-
 import { registerAttempt } from "~/server/sales-records/application/commands/register-attempt";
 import { rejectRecord } from "~/server/sales-records/application/commands/reject-record";
 import { submitRecord } from "~/server/sales-records/application/commands/submit-draft";
-import type { CreateSalesRecordDraftInput } from "~/server/sales-records/application/commands/types/draft-input";
 import { updateDraft } from "~/server/sales-records/application/commands/update-draft";
+import type { CreateSalesRecordDraftInput } from "~/server/sales-records/application/contracts";
+import type { SalesRecordDraftCreatedResult } from "~/server/sales-records/application/contracts";
 import { createSalesRecordMutationsContext } from "~/server/sales-records/infrastructure/mutations-context";
 import { runAction } from "~/server/shared/action-runtime";
 
@@ -22,7 +23,7 @@ import {
 
 export async function createSalesRecordDraft(
   input: CreateSalesRecordDraftInput,
-): Promise<{ id: number }> {
+): Promise<SalesRecordDraftCreatedResult> {
   const parsedInput = parseCreateSalesRecordDraftInput(input);
   return runAction({
     actionName: "sales_records.create_draft",

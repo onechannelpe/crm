@@ -1,7 +1,7 @@
 import { For, Show } from "solid-js";
 
-import type { LeadDetailView } from "~/actions/pipeline/queries/leads";
 import { formatDateTime } from "~/lib/utils";
+import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail-view";
 
 import styles from "./lead-detail-overview.module.css";
 

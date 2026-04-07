@@ -2,7 +2,7 @@ import { assertOwnedRecord } from "~/lib/auth/access/ownership";
 import type { AppContext } from "~/server/shared/action-runtime";
 
 import type { SalesRecordReadContext } from "../../infrastructure/read-context";
-import type { SalesRecordFixContextView } from "./views/sales-record-view";
+import type { SalesRecordFixContextView } from "../contracts";
 
 function parsePhonesJson(raw: string): string[] {
   try {

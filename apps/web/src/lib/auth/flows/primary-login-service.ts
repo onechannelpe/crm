@@ -1,4 +1,5 @@
 import { loadActiveAuthContext } from "~/lib/auth/context/auth-context";
+import type { AuthContext } from "~/lib/auth/context/auth-context";
 import { evaluateLoginPolicy } from "~/lib/auth/policy/login-policy";
 import type { AuthProof } from "~/lib/auth/policy/policy-types";
 import { authenticatePassword } from "~/lib/auth/providers/password-provider";
@@ -53,7 +54,7 @@ async function completePrimaryAuthProof(params: {
   proof: AuthProof;
   identifier: string;
   request: SessionRequestMetadata;
-  context?: Awaited<ReturnType<typeof loadActiveAuthContext>>;
+  context?: AuthContext;
   deps: LoginFlowDeps;
   sendPrivilegedLoginAlert: SendPrivilegedLoginAlert;
 }): Promise<Result<SubmitPrimaryLoginResult, SubmitPrimaryLoginError>> {

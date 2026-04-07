@@ -7,13 +7,6 @@ import type { LeadListView } from "~/server/pipeline/application/queries/views/l
 import { createPipelineQueryRuntime } from "~/server/pipeline/infrastructure/query-runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
-export type { LeadDetailView, LeadListView };
-export type {
-  LeadAvailableAction,
-  LeadTimelineItem,
-} from "~/server/pipeline/application/queries/views/lead-detail-view";
-export type { LeadListRowView } from "~/server/pipeline/application/queries/views/lead-list-view";
-
 export async function queryLeadList(filters: {
   stage?: string;
   status?: string;

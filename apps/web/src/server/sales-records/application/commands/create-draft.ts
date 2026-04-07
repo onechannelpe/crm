@@ -4,6 +4,10 @@ import type { AppContext } from "~/server/shared/action-runtime";
 import { type DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
+import type {
+  CreateSalesRecordDraftInput,
+  SalesRecordDraftCreatedResult,
+} from "../contracts";
 import {
   getSalesRecordAudit,
   loadProducts,
@@ -13,13 +17,12 @@ import {
   salesRecordFailure,
   validateDraftPayload,
 } from "./shared";
-import type { CreateSalesRecordDraftInput } from "./types/draft-input";
 
 export async function createDraft(
   ctx: AppContext,
   deps: SalesRecordRateLimitedMutationDeps,
   input: CreateSalesRecordDraftInput,
-): Promise<Result<{ id: number }, DomainError>> {
+): Promise<Result<SalesRecordDraftCreatedResult, DomainError>> {
   await checkActionRateLimit(
     "sales_records.create_draft",
     ctx.actor.userId,

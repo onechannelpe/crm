@@ -1,28 +1,21 @@
 "use server";
 
-import { getBootstrap as getBootstrapService } from "~/server/sales-records/application/queries/get-bootstrap";
-import { getFixContext as getFixContextService } from "~/server/sales-records/application/queries/get-fix-context";
-import { listConfirmed as listConfirmedService } from "~/server/sales-records/application/queries/list-confirmed";
-import { listPending as listPendingService } from "~/server/sales-records/application/queries/list-pending";
-import { listProducts as listProductsService } from "~/server/sales-records/application/queries/list-products";
 import type {
   SalesRecordBootstrapView,
   SalesRecordFixContextView,
   SalesRecordProductOptionView,
   SalesRecordQueueItemView,
-} from "~/server/sales-records/application/queries/views/sales-record-view";
+} from "~/server/sales-records/application/contracts";
+import { getBootstrap as getBootstrapService } from "~/server/sales-records/application/queries/get-bootstrap";
+import { getFixContext as getFixContextService } from "~/server/sales-records/application/queries/get-fix-context";
+import { listConfirmed as listConfirmedService } from "~/server/sales-records/application/queries/list-confirmed";
+import { listPending as listPendingService } from "~/server/sales-records/application/queries/list-pending";
+import { listProducts as listProductsService } from "~/server/sales-records/application/queries/list-products";
 import { createSalesRecordReadContext } from "~/server/sales-records/infrastructure/read-context";
 import { runAction } from "~/server/shared/action-runtime";
 import { Ok } from "~/server/shared/result";
 
 import { parseSalesContactId, parseSalesRecordId } from "./input";
-
-export type {
-  SalesRecordBootstrapView,
-  SalesRecordFixContextView,
-  SalesRecordProductOptionView,
-  SalesRecordQueueItemView,
-};
 
 export async function listSalesRecordProducts(): Promise<
   SalesRecordProductOptionView[]
