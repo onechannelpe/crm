@@ -17,13 +17,6 @@ import { Ok } from "~/server/shared/result";
 
 import { parseSalesContactId, parseSalesRecordId } from "./input";
 
-export type {
-  SalesRecordBootstrapView,
-  SalesRecordFixContextView,
-  SalesRecordProductOptionView,
-  SalesRecordQueueItemView,
-};
-
 export async function listSalesRecordProducts(): Promise<
   SalesRecordProductOptionView[]
 > {

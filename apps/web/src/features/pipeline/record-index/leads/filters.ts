@@ -1,4 +1,4 @@
-import type { LeadListRowView } from "~/actions/pipeline/queries/leads";
+import type { LeadListRowView } from "~/server/pipeline/application/queries/views/lead-list-view";
 
 import type { RecordIndexFilterDefinition } from "../../../record-index/model/filter";
 
