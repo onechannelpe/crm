@@ -13,7 +13,17 @@ import User from "~/components/icons/user";
 import UserRound from "~/components/icons/user-round";
 import Users from "~/components/icons/users";
 
-export type TabId = "home" | "timeline" | "tasks";
+import {
+  LEAD_CREATE_PRIMARY_TABS,
+  LEAD_CREATE_SECONDARY_TABS,
+  type LeadCreatePrimaryTabId,
+  type LeadCreateSecondaryTabId,
+  type LeadCreateTabId,
+} from "../model";
+
+export type TabId = LeadCreatePrimaryTabId;
+export type HiddenTabId = LeadCreateSecondaryTabId;
+export type ExtendedTabId = LeadCreateTabId;
 
 export type IconComponent = (props: {
   size?: number;
@@ -32,9 +42,19 @@ export const TAB_ITEMS: ReadonlyArray<{
   icon: IconComponent;
   label: string;
 }> = [
-  { id: "home", icon: HomeTabler, label: "Home" },
-  { id: "timeline", icon: TimelineEvent, label: "Timeline" },
-  { id: "tasks", icon: Checkbox, label: "Tasks" },
+  { id: LEAD_CREATE_PRIMARY_TABS[0], icon: HomeTabler, label: "Home" },
+  { id: LEAD_CREATE_PRIMARY_TABS[1], icon: TimelineEvent, label: "Timeline" },
+  { id: LEAD_CREATE_PRIMARY_TABS[2], icon: Checkbox, label: "Tasks" },
+] as const;
+
+export const HIDDEN_TAB_ITEMS: ReadonlyArray<{
+  id: HiddenTabId;
+  label: string;
+}> = [
+  { id: LEAD_CREATE_SECONDARY_TABS[0], label: "Notes" },
+  { id: LEAD_CREATE_SECONDARY_TABS[1], label: "Files" },
+  { id: LEAD_CREATE_SECONDARY_TABS[2], label: "Emails" },
+  { id: LEAD_CREATE_SECONDARY_TABS[3], label: "Calendar" },
 ] as const;
 
 export const FIELD_ROWS: ReadonlyArray<DisplayField> = [

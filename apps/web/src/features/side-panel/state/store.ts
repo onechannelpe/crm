@@ -167,6 +167,19 @@ export function createSidePanelStore() {
     setState({ searchText: text });
   };
 
+  const updatePageState = (
+    pageId: string,
+    updater: (state: SidePanelPageState) => SidePanelPageState,
+  ) => {
+    const currentState = state.pageStateById[pageId];
+
+    if (!currentState) {
+      return;
+    }
+
+    setState("pageStateById", pageId, updater(currentState));
+  };
+
   const setPanelWidth = (width: number) => {
     const nextWidth = clampPanelWidth(width);
     setState({ panelWidth: nextWidth });
@@ -187,5 +200,6 @@ export function createSidePanelStore() {
     onCloseAnimationComplete,
     setSearchText,
     setPanelWidth,
+    updatePageState,
   };
 }

@@ -8,12 +8,13 @@ import { toAppError } from "~/lib/app-errors";
 import { PanelList } from "../../components/list";
 import { useSidePanel } from "../../state/use-side-panel";
 import { createLeadDetailSidePanelPage } from "../../types/side-panel-page";
-import type { TabId } from "./components/constants";
+import type { ExtendedTabId } from "./components/constants";
 import { Footer } from "./components/footer";
 import { HomeTabContent } from "./components/home-tab-content";
 import { Tabs } from "./components/tabs";
 import { TasksTabContent } from "./components/tasks-tab-content";
 import { TimelineTabContent } from "./components/timeline-tab-content";
+import { useLeadCreatePageState } from "./state";
 
 import styles from "./page.module.css";
 
@@ -23,19 +24,29 @@ type TabContentProps = {
   onSubmit?: () => void;
 };
 
-const TAB_COMPONENTS: Record<TabId, (props: TabContentProps) => JSX.Element> = {
+function HiddenTabContent(props: { title: string }) {
+  return <div class={styles.hiddenTabContent}>{props.title}</div>;
+}
+
+const TAB_COMPONENTS: Record<
+  ExtendedTabId,
+  (props: TabContentProps) => JSX.Element
+> = {
   home: HomeTabContent,
   timeline: () => <TimelineTabContent />,
   tasks: () => <TasksTabContent />,
+  notes: () => <HiddenTabContent title="Notes" />,
+  files: () => <HiddenTabContent title="Files" />,
+  emails: () => <HiddenTabContent title="Emails" />,
+  calendar: () => <HiddenTabContent title="Calendar" />,
 };
 
 const hiddenTabsCount = 4;
 
 export function LeadCreatePage() {
   const { navigateTo } = useSidePanel();
-  const [ruc, setRuc] = createSignal("");
   const [error, setError] = createSignal<string | null>(null);
-  const [activeTab, setActiveTab] = createSignal<TabId>("home");
+  const { pageState, setActiveTab, setRuc } = useLeadCreatePageState();
 
   onMount(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -54,7 +65,7 @@ export function LeadCreatePage() {
   });
 
   async function handleSubmit() {
-    const value = ruc().trim();
+    const value = pageState().draft.ruc.trim();
 
     if (!value) {
       setError("El RUC es obligatorio");
@@ -88,15 +99,16 @@ export function LeadCreatePage() {
       <PanelList>
         <div class={styles.page}>
           <Tabs
-            activeTab={activeTab()}
+            activeTab={pageState().draft.activeTab}
             hiddenTabsCount={hiddenTabsCount}
             onTabSelect={setActiveTab}
+            onHiddenTabSelect={setActiveTab}
           />
 
           <Dynamic
-            component={TAB_COMPONENTS[activeTab()]}
-            ruc={ruc()}
-            onRucInput={(value) => setRuc(value)}
+            component={TAB_COMPONENTS[pageState().draft.activeTab]}
+            ruc={pageState().draft.ruc}
+            onRucInput={setRuc}
             onSubmit={() => void handleSubmit()}
           />
 
