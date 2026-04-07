@@ -4,16 +4,12 @@ import { requestLeadCreation } from "~/actions/pipeline/commands/leads";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { toAppError } from "~/lib/app-errors";
-import {
-  isValidLeadRucInput,
-  normalizeLeadRucInput,
-} from "~/lib/validation/lead";
 
 import { SidePanelList } from "../../components/side-panel-list";
 import { useSidePanel } from "../../state/use-side-panel";
 import { createLeadDetailSidePanelPage } from "../../types/side-panel-page";
 
-import styles from "./side-panel-lead-create-page.module.css";
+import styles from "./page.module.css";
 
 export function SidePanelLeadCreatePage() {
   const { closePanel, navigateTo } = useSidePanel();
@@ -22,9 +18,9 @@ export function SidePanelLeadCreatePage() {
   const [submitting, setSubmitting] = createSignal(false);
 
   async function handleSubmit() {
-    const value = normalizeLeadRucInput(ruc());
+    const value = ruc().trim();
 
-    if (!isValidLeadRucInput(value)) {
+    if (!value) {
       setError("El RUC es obligatorio");
       return;
     }
@@ -77,7 +73,7 @@ export function SidePanelLeadCreatePage() {
           <div class={styles.actions}>
             <Button
               onClick={() => void handleSubmit()}
-              disabled={submitting() || !isValidLeadRucInput(ruc())}
+              disabled={submitting() || ruc().trim().length === 0}
             >
               {submitting() ? "Guardando..." : "Guardar"}
             </Button>

@@ -8,9 +8,9 @@ import { getNavigableRoutes } from "~/lib/nav/nav-policy";
 import { SidePanelGroup } from "../../components/side-panel-group";
 import { SidePanelList } from "../../components/side-panel-list";
 import { useSidePanel } from "../../state/use-side-panel";
-import { SidePanelEmptyState } from "../common/side-panel-empty-state";
+import { SidePanelEmptyState } from "../common/empty-state";
 
-import styles from "./side-panel-root-page.module.css";
+import styles from "./page.module.css";
 
 type ActionItem = {
   label: string;
