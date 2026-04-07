@@ -5,7 +5,6 @@ import { createHistoryEvent } from "../../domain/history";
 import type { Lead, LeadDraft } from "../../domain/lead";
 import type { RegisterLeadDeps } from "../deps/register-lead";
 import type { PipelineAuditService } from "../ports/audit-service";
-import type { LeadRegisteredResult } from "./types/lead-results";
 
 export async function writeLeadRegistrationEffects(input: {
   deps: RegisterLeadDeps;
@@ -14,7 +13,7 @@ export async function writeLeadRegistrationEffects(input: {
   executiveId: number;
   draft: LeadDraft;
   now: number;
-}): Promise<Result<LeadRegisteredResult, DomainError>> {
+}): Promise<Result<{ leadId: number }, DomainError>> {
   const leadId = await input.deps.leads.insert(input.draft);
   await input.deps.leadAssignments.insert({
     leadId,
@@ -61,7 +60,7 @@ export async function writeLeadReassignmentEffects(input: {
   lead: Lead;
   now: number;
   reason?: "inactive_previous_executive";
-}): Promise<Result<LeadRegisteredResult, DomainError>> {
+}): Promise<Result<{ leadId: number }, DomainError>> {
   await input.deps.leadAssignments.deactivateActiveForLead(input.lead.id);
   await input.deps.leadAssignments.insert({
     leadId: input.lead.id,

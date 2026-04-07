@@ -1,4 +1,4 @@
-import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail-view";
+import type { LeadDetailView } from "~/server/pipeline/application/contracts";
 
 import { InteractionsPanel } from "./interactions/interactions-panel";
 import { LeadActionsSection } from "./lead-actions-section";

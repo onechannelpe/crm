@@ -2,10 +2,10 @@ import type { Role } from "~/lib/auth/access/rbac";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
+import type { SaleView } from "../contracts";
 import type { SaleQueryDeps } from "../deps/lead-queries";
 import { canViewAllSales } from "../policies/access";
 import { parsePageParams } from "./pagination";
-import type { SaleView } from "./views/sale-view";
 
 export async function listSales(
   deps: SaleQueryDeps,

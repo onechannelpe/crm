@@ -1,9 +1,11 @@
 "use server";
 
+import type {
+  LeadDetailView,
+  LeadListView,
+} from "~/server/pipeline/application/contracts";
 import { getLeadDetail } from "~/server/pipeline/application/queries/get-lead-detail";
 import { listLeads } from "~/server/pipeline/application/queries/list-leads";
-import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail-view";
-import type { LeadListView } from "~/server/pipeline/application/queries/views/lead-list-view";
 import { createPipelineQueryRuntime } from "~/server/pipeline/infrastructure/query-runtime";
 import { runAction } from "~/server/shared/action-runtime";
 

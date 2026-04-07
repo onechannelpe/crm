@@ -1,16 +1,9 @@
 import type { LeadHistoryEntry } from "../../domain/history";
 import type { Lead } from "../../domain/lead";
+import type { LeadAvailableAction, LeadDetailView } from "../contracts";
 import type { LeadCommercialInput } from "../ports/commercial-input-repository";
 import type { LeadQuotation } from "../ports/quotation-repository";
 import type { LeadSale } from "../ports/sale-repository";
-import type {
-  LeadAvailableAction,
-  LeadCommercialInputView,
-  LeadDetailLeadView,
-  LeadDetailView,
-  LeadQuotationView,
-  LeadSaleView,
-} from "../queries/views/lead-detail-view";
 import { presentTimeline } from "./timeline";
 
 export type LeadDetailSource = {
@@ -23,7 +16,7 @@ export type LeadDetailSource = {
   availableActions: LeadAvailableAction[];
 };
 
-function toLeadDetailLead(lead: Lead): LeadDetailLeadView {
+function toLeadDetailLead(lead: Lead): LeadDetailView["lead"] {
   return {
     id: lead.id,
     ruc: lead.ruc,
@@ -40,7 +33,7 @@ function toLeadDetailLead(lead: Lead): LeadDetailLeadView {
 
 function toLeadDetailCommercialInput(
   input: LeadCommercialInput,
-): LeadCommercialInputView {
+): NonNullable<LeadDetailView["commercialInput"]> {
   return {
     leadId: input.leadId,
     proveedorActual: input.proveedorActual,
@@ -54,7 +47,9 @@ function toLeadDetailCommercialInput(
   };
 }
 
-function toLeadDetailQuotation(quotation: LeadQuotation): LeadQuotationView {
+function toLeadDetailQuotation(
+  quotation: LeadQuotation,
+): LeadDetailView["quotations"][number] {
   return {
     id: quotation.id,
     leadId: quotation.leadId,
@@ -70,7 +65,7 @@ function toLeadDetailQuotation(quotation: LeadQuotation): LeadQuotationView {
   };
 }
 
-function toLeadDetailSale(sale: LeadSale): LeadSaleView {
+function toLeadDetailSale(sale: LeadSale): NonNullable<LeadDetailView["sale"]> {
   return {
     id: sale.id,
     leadId: sale.leadId,
