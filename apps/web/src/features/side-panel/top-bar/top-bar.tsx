@@ -7,6 +7,7 @@ import { SIDE_PANEL_PAGES_CONFIG } from "../state/pages-config";
 import { useSidePanel } from "../state/use-side-panel";
 import { BackButton } from "./back-button";
 import { PageInfo } from "./page-info";
+import { TopBarActions } from "./top-bar-actions";
 
 import styles from "./top-bar.module.css";
 
@@ -58,7 +59,9 @@ export function TopBar(props: { isMobile: boolean }) {
           </Show>
         </div>
       </div>
-      <div class={styles.actions} />
+      <div class={styles.actions}>
+        <TopBarActions />
+      </div>
     </div>
   );
 }

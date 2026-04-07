@@ -9,6 +9,10 @@ import type {
   CompanyGroup,
   PersonGroup,
 } from "~/features/search/model/grouping";
+import {
+  DEFAULT_LEAD_CREATE_DRAFT_STATE,
+  type LeadCreateDraftState,
+} from "~/features/side-panel/pages/lead-create/model";
 
 export type SidePanelIcon = Component<{
   class?: string;
@@ -57,6 +61,7 @@ export type LeadDetailSidePanelPageState = {
 
 export type LeadCreateSidePanelPageState = {
   page: "lead-create";
+  draft: LeadCreateDraftState;
 };
 
 export type InventoryDetailSidePanelPageState = {
@@ -189,6 +194,7 @@ export function createLeadCreateSidePanelPage(): SidePanelPageDefinition {
     },
     state: {
       page: "lead-create",
+      draft: DEFAULT_LEAD_CREATE_DRAFT_STATE,
     },
   };
 }

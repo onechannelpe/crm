@@ -17,7 +17,7 @@ export function PanelGroup(props: PanelGroupProps) {
     <Show when={hasChildren()}>
       <div class={styles.group}>
         <span class={styles.label}>{props.label}</span>
-        {resolved()}
+        <div class={styles.content}>{resolved()}</div>
       </div>
     </Show>
   );

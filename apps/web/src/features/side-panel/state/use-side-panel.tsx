@@ -22,6 +22,10 @@ export type SidePanelContextValue = {
   searchText: Accessor<string>;
   panelWidth: Accessor<number>;
   getPageState: (pageId: string) => SidePanelPageState | undefined;
+  updatePageState: (
+    pageId: string,
+    updater: (state: SidePanelPageState) => SidePanelPageState,
+  ) => void;
   openPanel: (page: SidePanelPageDefinition) => void;
   closePanel: () => void;
   navigateTo: (
@@ -52,6 +56,7 @@ export function SidePanelProvider(props: ParentProps) {
     searchText: () => state.searchText,
     panelWidth: () => state.panelWidth,
     getPageState: (pageId) => state.pageStateById[pageId],
+    updatePageState: store.updatePageState,
     openPanel: store.openPanel,
     closePanel: store.closePanel,
     navigateTo: store.navigateTo,

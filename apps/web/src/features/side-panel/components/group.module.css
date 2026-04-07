@@ -8,7 +8,13 @@
   color: var(--foreground-tertiary);
   font-size: var(--font-size-label);
   font-weight: var(--font-weight-medium);
-  padding: 8px 8px 4px;
+  padding: 8px 4px 4px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
