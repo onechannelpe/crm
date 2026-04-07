@@ -13,5 +13,5 @@ stats.*
 
 # data
 *.db
-*.db-shm
-*.db-wal
+# matches .db, .db-shm, .db-wal, .db-journal
+*.db*
