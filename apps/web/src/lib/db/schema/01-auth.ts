@@ -63,9 +63,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createIndex("idx_user_sessions_user_id")
+    .createIndex("idx_user_sessions_user_activity")
     .on("user_sessions")
-    .column("user_id")
+    .columns(["user_id", "last_activity"])
     .execute();
 
   await db.schema
