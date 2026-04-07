@@ -4,27 +4,31 @@
 
 - Prefer retrieval-led reasoning over pre-training for libraries/frameworks. Use MCP context7 for current docs before writing code.
 - Follow framework conventions. Do not invent workarounds.
-- Implement ONLY what requested. If the request adds coupling, duplication, special cases, or workaround-driven design, state the concern and propose the cleaner design first.
-- If ambiguous, ask up to 2 clarifying questions OR choose simplest valid interpretation.
-- Keep responses brief: 3-6 sentences for typical answers. For multi-step work: short overview + ≤5 bullets (what changed, where, next steps).
+- Implement only the requested scope.
+- Push back when a request conflicts with conventions, correctness, safety, or maintainability. Explain the concern and choose the cleanest defensible path.
+- Fix structure, not symptoms. Default to the smallest valid local change. Escalate to a structural refactor when the root cause crosses boundaries or creates duplicated ownership.
+- Prefer explicit, straightforward code over clever abstractions.
+- If ambiguous, ask up to 2 clarifying questions OR choose the simplest valid interpretation.
+- Keep responses brief: 3-6 sentences for typical answers. For multi-step work: short overview + up to 5 bullets covering what changed, where, and next steps.
 - State what you verified vs what you're inferring. If uncertain about line numbers or API details, say so.
 - Do not use em dashes in comments, logs, docs, commit messages, or user-facing strings.
 
 ## WHEN implementing
 
 - Make one change at a time.
-- After edits: briefly state what changed, where (file/lines), and validation performed.
-- Parallelize independent tool calls (file reads, searches) when possible.
+- After edits, briefly state what changed, where, and what validation was performed.
+- Parallelize independent tool calls when possible.
 - Provide brief progress updates only when starting major work phases or plan changes.
-- For complex architectural decisions: propose multiple options, evaluate with a rubric (pros/cons/tradeoffs), choose best or suggest hybrid. For straightforward implementations, proceed directly.
-- Apply fail-fast: validate inputs → auth checks → business logic
-  - Check "not OK" first to avoid nesting
-  - Early return or throw immediately for invalid states
-  - Keep happy path as straight-line code at the end
-- For TypeScript services: return `Result<T,E>` and check `isErr()` before throw or return.
-- For Rust handlers and services: validate early and propagate failures with `?`.
+- For complex architectural decisions, propose multiple options, evaluate tradeoffs, and choose the best or a hybrid. For straightforward changes, proceed directly.
+- Apply fail-fast: validate inputs → auth checks → business logic.
+  - Check "not OK" first to avoid nesting.
+  - Early return or throw immediately for invalid states.
+  - Keep the happy path as straight-line code at the end.
+- For TypeScript services, return `Result<T,E>` and check `isErr()` before throw or return.
+- For Rust handlers and services, validate early and propagate failures with `?`.
 - Implement the intended design fully. Do not stop at scaffolding, placeholder phases, or partial rewrites.
-- After implementation, reread the touched files and confirm the work is complete, coherent, and free of temporary compatibility code, duplicate paths, and partial renames.
+- After implementation, reread touched files and confirm the work is complete, coherent, and free of temporary compatibility code, duplicate paths, and partial renames.
+- When a change is behaviorally testable or crosses boundaries, run the smallest direct test or probe before finalizing. If it is not directly testable, say why and use the best available static check.
 - Validate by scope:
   - Docs or instruction changes: reread links, file references, commands, and generated indexes. Do not run full repo checks unless behavior changed.
   - Narrow code changes: run the smallest relevant check while working.
@@ -34,23 +38,23 @@
 
 ## WHEN debugging
 
-1. Reproduce: confirm current behavior
-2. Isolate: narrow the failing component and list the possible causes
-3. Read involved code paths
-4. Add logs or checks where they can confirm or reject each possible cause
-5. Fix only after understanding root cause
-6. After finding the cause, read beyond the local file and decide whether the problem is local, at a boundary, or architectural
-7. If the problem is architectural, fix the design instead of patching the symptom
+1. Reproduce: confirm current behavior.
+2. Isolate: narrow the failing component and list the possible causes.
+3. Read involved code paths.
+4. Add logs or checks where they can confirm or reject each possible cause.
+5. Fix only after understanding root cause.
+6. After finding the cause, read beyond the local file and decide whether the problem is local, at a boundary, or architectural.
+7. If the problem is architectural, fix the design instead of patching the symptom.
 
-Do not assume bug from error messages alone.
+Do not assume a bug from error messages alone.
 Do not choose the quickest patch before checking whether the surrounding design caused the issue.
 For browser-specific issues the agent cannot observe directly, do not guess. Add the needed logs, tell the user what to run, and wait for the resulting console or server logs before fixing.
 
 ## WHEN adding dependencies
 
-- `bun install <package>` to add packages
-- Never manually edit package.json dependency versions
-- Look up current API via context7 if unfamiliar
+- `bun install <package>` to add packages.
+- Never manually edit package.json dependency versions.
+- Look up current API via context7 if unfamiliar.
 
 ## WHEN writing TypeScript
 
@@ -66,6 +70,21 @@ Failure points:
 - Treating parsed JSON, form data, or caught errors as trusted data.
 - Throwing a service-layer failure that should stay in `Result<T,E>`.
 
+### WHEN editing types
+
+1. Start with a discovery pass before any type refactor.
+   - List candidate types in touched files.
+   - List current import paths across `apps/web/src/server`, `apps/web/src/actions`, and `apps/web/src/features`.
+2. Run usage-count checks only for discovered candidates. Do not guess ownership before enumeration.
+   - Count references per candidate type with `rg -n "\\bTypeName\\b" <scope>`.
+   - For web slices, use `<scope>` = `apps/web/src/server apps/web/src/actions apps/web/src/features`.
+   - Keep in contracts only if used by multiple files across boundaries (`server`, `actions`, `features`).
+   - Keep local if used in one file or one boundary.
+   - Inline in a signature when the shape is small and one-off.
+3. Default to local changes, but escalate to structural refactor when the root cause crosses boundaries or creates duplicated ownership.
+4. Do not keep temporary compatibility ownership unless explicitly requested.
+5. Avoid re-export type indirection. Import types directly from their canonical owner.
+
 ## WHEN writing Rust
 
 1. Read the full handler or service path before changing code.
@@ -80,34 +99,22 @@ Failure points:
 - Silent error drops with `let _ =` on fallible operations.
 - Unchecked indexing where `.get()` or iterators fit.
 
-## WHEN writing security-sensitive code
-
-Use retrieval-led reasoning for auth, session, cookie, CSP, OAuth, file upload, SSRF, input validation, logging, and extension security changes. Read the relevant OWASP cheat sheet before changing code in these areas.
-
-<!-- OWASP-DOCS-START -->
-[OWASP Docs]|root:.refs/owasp-cheatsheets|root:{Authentication_Cheat_Sheet,Authorization_Cheat_Sheet,Browser_Extension_Vulnerabilities_Cheat_Sheet,Clickjacking_Defense_Cheat_Sheet,Content_Security_Policy_Cheat_Sheet,Cookie_Theft_Mitigation_Cheat_Sheet,Cross-Site_Request_Forgery_Prevention_Cheat_Sheet,Cross_Site_Scripting_Prevention_Cheat_Sheet,File_Upload_Cheat_Sheet,Forgot_Password_Cheat_Sheet,Input_Validation_Cheat_Sheet,Logging_Cheat_Sheet,OAuth2_Cheat_Sheet,Password_Storage_Cheat_Sheet,Secrets_Management_Cheat_Sheet,Server_Side_Request_Forgery_Prevention_Cheat_Sheet,Session_Management_Cheat_Sheet,Transport_Layer_Security_Cheat_Sheet}
-<!-- OWASP-DOCS-END -->
-
 ## WHEN writing documentation
 
 Prefer sentence case for headings. Avoid emojis.
 
 ## WHEN writing SolidJS
 
-<!-- SOLIDJS-DOCS-START -->
-[SolidJS Docs]|root:.refs/solidjs-docs|reactivity:{concepts/intro-to-reactivity,concepts/signals,concepts/components/props,advanced-concepts/fine-grained-reactivity,reference/basic-reactivity/create-signal}|components:{concepts/components/basics,concepts/control-flow/list-rendering,reference/components/for,reference/components/show}|routing:{solid-router/concepts/navigation,solid-router/concepts/nesting,solid-router/concepts/dynamic-routes,solid-router/reference/primitives/use-navigate,solid-start/reference/routing/file-routes}|data:{solid-router/data-fetching/queries,solid-router/reference/data-apis/create-async,solid-router/reference/data-apis/action,solid-start/building-your-application/data-fetching,solid-start/building-your-application/data-mutation}|server:{solid-start/advanced/middleware,solid-start/advanced/request-events,solid-start/building-your-application/api-routes,solid-start/reference/server/create-handler,solid-start/reference/server/create-middleware,solid-start/reference/server/use-server,reference/server-utilities/get-request-event}|auth-session:{solid-start/advanced/auth,solid-start/advanced/session,solid-start/guides/security}|tooling:{solid-start/getting-started,solid-start/reference/config/define-config,configuration/typescript,guides/testing}
-<!-- SOLIDJS-DOCS-END -->
+Anti-patterns to check before implementing:
 
-Anti-patterns (check docs before implementing):
+- Props destructuring breaks reactivity. Use `props.value`, not `const { value } = props`.
+- Components run once, not on every update. Signals drive updates.
+- Signals are functions. Access with `count()`, not `count`.
+- Use `<For>` for reference-keyed objects and `<Index>` for primitive lists.
+- Side effects belong in `createEffect` or `onMount`, never during render.
 
-- Props destructuring breaks reactivity. Use `props.value`, not `const { value } = props`
-- Components run once, not on every update. Signals drive updates
-- Signals are functions. Access with `count()`, not `count`
-- Use `<For>` (reference-keyed) for objects, `<Index>` (index-keyed) for primitives
-- Side effects belong in `createEffect`/`onMount`, never during render
+## Standards
 
-## standards - files
-
-- Naming: kebab-case.ts, camelCase vars, PascalCase types, UPPER_SNAKE_CASE constants
-- Organization: 70-line guideline (not hard rule). Single responsibility. If "and also" appears in the description, split. Code as documentation. Comments only for non-obvious decisions or JSDoc.
+- Naming: kebab-case.ts, camelCase vars, PascalCase types, UPPER_SNAKE_CASE constants.
+- Organization: 70-line guideline, not a hard rule. Single responsibility. If "and also" appears in the description, split it. Code as documentation. Comments only for non-obvious decisions or JSDoc.
 - Use descriptive test names such as `it("blocks further attempts after repeated failures")`.
