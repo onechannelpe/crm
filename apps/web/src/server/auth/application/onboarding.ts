@@ -1,7 +1,9 @@
 import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 
+import type { Role } from "~/lib/auth/access/rbac";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { createPasskeyEnrollmentAuthService } from "~/lib/auth/passkey/service";
+import type { PasskeyWebauthnProviderFactory } from "~/lib/auth/passkey/service";
 import { requiresStrongAuthRole } from "~/lib/auth/security/strong-auth-status";
 import {
   issueSessionTransition,
@@ -19,14 +21,10 @@ import type {
   AuthOnboardingRepos,
 } from "../infrastructure/onboarding-context";
 
-type EnrollmentProviderFactory = NonNullable<
-  Parameters<typeof createPasskeyEnrollmentAuthService>[1]
->["createWebauthnProvider"];
-
 function createEnrollmentService(
   repos: AuthOnboardingRepos,
   input: {
-    createWebauthnProvider: EnrollmentProviderFactory;
+    createWebauthnProvider: PasskeyWebauthnProviderFactory;
   },
 ) {
   return createPasskeyEnrollmentAuthService(repos, {
@@ -39,7 +37,7 @@ export function beginPasskeyRegistration(
   input: {
     userId: number;
     ipAddress: string;
-    createWebauthnProvider: EnrollmentProviderFactory;
+    createWebauthnProvider: PasskeyWebauthnProviderFactory;
   },
 ) {
   return createEnrollmentService(repos, input).beginEnrollment({
@@ -60,7 +58,7 @@ export async function finishPasskeyRegistration(
     response: RegistrationResponseJSON;
     ipAddress: string;
     userAgent: string | null;
-    createWebauthnProvider: EnrollmentProviderFactory;
+    createWebauthnProvider: PasskeyWebauthnProviderFactory;
   },
 ): Promise<Result<void, DomainError>> {
   const result = await createEnrollmentService(repos, input).finishEnrollment({
@@ -103,7 +101,7 @@ export async function completeOnboarding(
   input: {
     session: {
       userId: number;
-      role: Parameters<typeof getDefaultAppPath>[0];
+      role: Role;
       primaryAuthMethod: "password" | "google" | "passkey";
       strongAuthMethod: "totp" | "passkey" | "federated" | null;
       strongAuthAt: number | null;

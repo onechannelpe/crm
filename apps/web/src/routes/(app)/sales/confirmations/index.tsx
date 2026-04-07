@@ -36,8 +36,6 @@ const ATTEMPT_OUTCOMES = [
   { value: "rejected", label: "Rechazado" },
 ] as const;
 
-type SalesConfirmationRow = SalesRecordQueueItemView;
-
 function isAttemptOutcome(
   value: string,
 ): value is (typeof ATTEMPT_OUTCOMES)[number]["value"] {
@@ -208,7 +206,7 @@ export default function SalesConfirmationsPage() {
             </div>
           ),
         },
-      ] satisfies ReadonlyArray<DataGridColumn<SalesConfirmationRow>>,
+      ] satisfies ReadonlyArray<DataGridColumn<SalesRecordQueueItemView>>,
   );
 
   return (

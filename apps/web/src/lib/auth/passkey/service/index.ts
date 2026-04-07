@@ -25,6 +25,10 @@ interface PasskeyServiceDeps {
   issueLoginSession?: typeof issueLoginSession;
 }
 
+export type PasskeyWebauthnProviderFactory = NonNullable<
+  PasskeyServiceDeps["createWebauthnProvider"]
+>;
+
 export function createPasskeyEnrollmentAuthService(
   repos: PasskeyAuthRepos,
   deps: Omit<PasskeyServiceDeps, "issueLoginSession"> = {},
