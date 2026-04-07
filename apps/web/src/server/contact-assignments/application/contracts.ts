@@ -2,10 +2,13 @@ import type { Role } from "~/lib/auth/access/rbac";
 import type { ActionSuccess } from "~/lib/contracts/common";
 import type { BranchId, UserId } from "~/server/shared/ids";
 
-import type {
-  ContactAssignmentCallOutcome,
-  ContactAssignmentStatus,
-} from "../domain/assignment";
+type AssignmentStatus = "active" | "completed" | "expired";
+
+type CallOutcome =
+  | "no_answer"
+  | "callback_scheduled"
+  | "sale_made"
+  | "invalid_data";
 
 export interface AssignContactsCommand {
   actorUserId: UserId;
@@ -27,7 +30,7 @@ export type CompleteContactAssignmentCallCommand = {
   branchId: BranchId;
   assignmentId: number;
   contactId: number;
-  outcome: ContactAssignmentCallOutcome;
+  outcome: CallOutcome;
   notes: string | null;
 };
 
@@ -35,7 +38,7 @@ export type ActiveContactAssignmentView = {
   assignmentId: number;
   assignedAt: number;
   expiresAt: number;
-  status: ContactAssignmentStatus;
+  status: AssignmentStatus;
   contactId: number;
   name: string;
   dni: string;

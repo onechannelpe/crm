@@ -3,14 +3,13 @@
 import { assertPositiveInt } from "~/lib/contracts/guards";
 import { completeContactAssignmentCall as completeContactAssignmentCallUseCase } from "~/server/contact-assignments/application/complete-contact-assignment-call";
 import type { CompleteContactAssignmentCallResult } from "~/server/contact-assignments/application/contracts";
-import {
-  CONTACT_ASSIGNMENT_CALL_OUTCOMES,
-  type ContactAssignmentCallOutcome,
-} from "~/server/contact-assignments/domain/assignment";
+import { CONTACT_ASSIGNMENT_CALL_OUTCOMES } from "~/server/contact-assignments/domain/assignment";
 import { runContactAssignmentInteraction } from "~/server/contact-assignments/infrastructure/interaction-context";
 import { runAction } from "~/server/shared/action-runtime";
 
-function parseCallOutcome(value: string): ContactAssignmentCallOutcome {
+type CallOutcome = (typeof CONTACT_ASSIGNMENT_CALL_OUTCOMES)[number];
+
+function parseCallOutcome(value: string): CallOutcome {
   for (const outcome of CONTACT_ASSIGNMENT_CALL_OUTCOMES) {
     if (outcome === value) {
       return outcome;
@@ -26,7 +25,7 @@ function parseCompleteContactAssignmentCallInput(input: {
 }): {
   assignmentId: number;
   contactId: number;
-  outcome: ContactAssignmentCallOutcome;
+  outcome: CallOutcome;
 } {
   return {
     assignmentId: assertPositiveInt(input.assignmentId, "assignmentId"),
