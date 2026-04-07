@@ -1,13 +1,18 @@
 import type { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
 import type { createWebauthnChallengesRepo } from "~/server/users/repos-webauthn-challenges";
 
+type LoginFlowCleanupRecord = {
+  id: number;
+  challenge_id: number | null;
+};
+
 type LoginFlowCleanupRepos = {
   loginFlows: ReturnType<typeof createLoginFlowsRepo>;
   webauthnChallenges: ReturnType<typeof createWebauthnChallengesRepo>;
 };
 
 export async function deleteLoginFlow(
-  flow: Awaited<ReturnType<LoginFlowCleanupRepos["loginFlows"]["findById"]>>,
+  flow: LoginFlowCleanupRecord | undefined,
   repos: LoginFlowCleanupRepos,
 ): Promise<void> {
   if (!flow) {

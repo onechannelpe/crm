@@ -39,12 +39,12 @@ export const INVENTORY_RECORD_INDEX_COLUMNS = [
     ),
   },
   {
-    key: "serial_number",
+    key: "serialNumber",
     label: "Número de serie",
     icon: CircleQuestionMark,
     width: 180,
     renderCell: (item) => (
-      <span class={styles.serial}>{item.serial_number}</span>
+      <span class={styles.serial}>{item.serialNumber}</span>
     ),
   },
   {

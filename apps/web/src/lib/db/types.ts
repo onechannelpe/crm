@@ -66,7 +66,7 @@ export interface UsersTable {
     | "hr"
     | "admin"
     | "superuser";
-  executive_category: ExecutiveCategory | null;
+  executive_category: ExecutiveCategoryValue | null;
   is_active: number;
   created_at: number;
 }
@@ -758,7 +758,7 @@ export interface UserInvitesTable {
   sent_at: number | null;
 }
 
-export type ExecutiveCategory = "elite" | "corporativa";
+type ExecutiveCategoryValue = "elite" | "corporativa";
 
 export interface PipelineLeadsTable {
   id: Generated<number>;

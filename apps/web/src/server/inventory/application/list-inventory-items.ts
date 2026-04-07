@@ -1,13 +1,15 @@
+import type { InventoryReadRepo } from "./ports";
+import { presentInventoryItem } from "./presenters/inventory-item";
 import type { InventoryItemView } from "./views/inventory-item-view";
 
 export type InventoryReadDeps = {
-  inventory: {
-    findAllWithProduct(): Promise<InventoryItemView[]>;
-  };
+  inventory: InventoryReadRepo;
 };
 
 export function listInventoryItems(
   deps: InventoryReadDeps,
 ): Promise<InventoryItemView[]> {
-  return deps.inventory.findAllWithProduct();
+  return deps.inventory
+    .findAllWithProduct()
+    .then((items) => items.map(presentInventoryItem));
 }
