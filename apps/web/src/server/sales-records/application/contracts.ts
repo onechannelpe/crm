@@ -85,7 +85,7 @@ export interface SalesRecordBootstrapView {
   client: SalesRecordClientInput;
 }
 
-interface SalesRecordFixContextClientView {
+interface ContextClient {
   ruc: string | null;
   companyName: string | null;
   contactName: string | null;
@@ -93,20 +93,20 @@ interface SalesRecordFixContextClientView {
   phones: string[];
 }
 
-interface SalesRecordFixContextAddressView {
+interface ContextAddress {
   id: number;
   addressType: string;
   fullText: string;
   isPrimary: number;
 }
 
-interface SalesRecordFixContextProductView {
+interface ContextProduct {
   id: number;
   productName: string;
   quantity: number;
 }
 
-interface SalesRecordFixContextAttemptView {
+interface ContextAttempt {
   id: number;
   outcome: SalesRecordAttemptOutcome;
   notes: string | null;
@@ -118,8 +118,8 @@ interface SalesRecordFixContextAttemptView {
 export interface SalesRecordFixContextView {
   id: number;
   status: SalesRecordStatus;
-  client: SalesRecordFixContextClientView | null;
-  addresses: SalesRecordFixContextAddressView[];
-  products: SalesRecordFixContextProductView[];
-  attempts: SalesRecordFixContextAttemptView[];
+  client: ContextClient | null;
+  addresses: ContextAddress[];
+  products: ContextProduct[];
+  attempts: ContextAttempt[];
 }
