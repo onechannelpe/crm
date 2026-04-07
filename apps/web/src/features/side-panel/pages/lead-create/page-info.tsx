@@ -4,6 +4,10 @@ import { PageInfoLayout } from "../../top-bar/page-info-layout";
 
 export function LeadCreatePageInfo() {
   return (
-    <PageInfoLayout icon={<Building2 size={14} />} title="Nuevo prospecto" />
+    <PageInfoLayout
+      icon={<Building2 size={14} />}
+      title="Untitled"
+      label="Created now"
+    />
   );
 }

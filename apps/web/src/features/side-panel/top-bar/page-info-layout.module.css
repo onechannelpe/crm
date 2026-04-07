@@ -1,32 +1,33 @@
 .container {
   align-items: center;
   display: flex;
-  gap: 4px;
+  gap: var(--spacing-0.5);
   min-width: 0;
 }
 
 .iconWrapper {
   align-items: center;
-  background: color-mix(in srgb, var(--accent) 82%, var(--background));
+  background: var(--background-transparent-light);
   border-radius: var(--radius-sm);
-  color: var(--foreground-tertiary);
   display: flex;
   flex-shrink: 0;
   height: 24px;
   justify-content: center;
+  padding: var(--spacing-1);
   width: 24px;
 }
 
 .textContainer {
   align-items: center;
   display: flex;
-  gap: 4px;
+  flex: 1;
+  gap: var(--spacing-0.5);
   min-width: 0;
 }
 
 .titleWrapper {
   color: var(--foreground);
-  font-size: var(--font-size-caption);
+  font-size: var(--font-size-body);
   font-weight: var(--font-weight-semibold);
   max-width: 150px;
   overflow: hidden;
@@ -38,6 +39,6 @@
 .label {
   color: var(--foreground-tertiary);
   flex-shrink: 0;
-  font-size: var(--font-size-caption);
+  font-size: var(--font-size-sm);
   white-space: nowrap;
 }

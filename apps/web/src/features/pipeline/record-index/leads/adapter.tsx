@@ -55,7 +55,7 @@ export function LeadsRecordIndex() {
     emptyState: {
       icon: Building2,
       title: "Add your first prospect",
-      description: "Add your first prospect manually.",
+      description: "Create a prospect to start working this list.",
     },
     createAction,
     filter: LEADS_RECORD_INDEX_FILTER,
