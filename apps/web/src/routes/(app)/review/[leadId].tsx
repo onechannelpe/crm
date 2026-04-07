@@ -10,7 +10,7 @@ import {
   LEAD_STATUSES,
   type LeadPriority,
   type LeadStatus,
-} from "~/lib/pipeline/lead-values";
+} from "~/server/pipeline/domain/lead";
 
 export default function ReviewLeadPage() {
   const params = useParams<{ leadId: string }>();

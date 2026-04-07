@@ -1,6 +1,7 @@
 import { createAsync } from "@solidjs/router";
 import { createMemo } from "solid-js";
 
+import type { CapacityAuditEvent } from "~/actions/capacity/contracts";
 import Activity from "~/components/icons/activity";
 import CalendarDays from "~/components/icons/calendar-days";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
@@ -11,7 +12,6 @@ import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-row-open";
 import { createDataGridDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
 import { capacityAuditEventsQuery } from "~/lib/queries/capacity";
-import type { CapacityAuditEvent } from "~/server/capacity/application/contracts";
 
 type CapacityAuditChange = CapacityAuditEvent["changes"];
 

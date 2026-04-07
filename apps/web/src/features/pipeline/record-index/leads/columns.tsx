@@ -1,3 +1,4 @@
+import type { LeadListRowView } from "~/actions/pipeline/contracts";
 import Building2 from "~/components/icons/building-2";
 import CalendarDays from "~/components/icons/calendar-days";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
@@ -6,7 +7,6 @@ import Package from "~/components/icons/package";
 import { Badge } from "~/components/ui/display/badge";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { formatDate } from "~/lib/utils";
-import type { LeadListRowView } from "~/server/pipeline/application/contracts";
 
 import styles from "./styles.module.css";
 

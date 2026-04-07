@@ -2,6 +2,10 @@
 
 import { redirect } from "@solidjs/router";
 
+import type {
+  PasskeyStartSubmissionResult,
+  PasswordLoginSubmissionResult,
+} from "~/actions/auth/contracts";
 import { internalError } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
@@ -9,10 +13,6 @@ import type { SubmitPrimaryLoginError } from "~/lib/auth/flows/primary-login-ser
 import { parseLoginFlowId } from "~/lib/auth/login-route-flow";
 import type { BeginPasskeyLoginError } from "~/lib/auth/passkey/service";
 import { replaceCurrentSession } from "~/lib/auth/session/session-transition";
-import type {
-  PasskeyStartSubmissionResult,
-  PasswordLoginSubmissionResult,
-} from "~/server/auth/application/contracts";
 
 export function readPasskeyStartMode(
   formData: FormData,

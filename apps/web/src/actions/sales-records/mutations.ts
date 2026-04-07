@@ -1,5 +1,7 @@
 "use server";
 
+import type { CreateSalesRecordDraftInput } from "~/actions/sales-records/contracts";
+import type { SalesRecordDraftCreatedResult } from "~/actions/sales-records/contracts";
 import type { ActionSuccess } from "~/lib/contracts/common";
 import { cancelRecord } from "~/server/sales-records/application/commands/cancel-record";
 import { confirmRecord } from "~/server/sales-records/application/commands/confirm-record";
@@ -8,8 +10,6 @@ import { registerAttempt } from "~/server/sales-records/application/commands/reg
 import { rejectRecord } from "~/server/sales-records/application/commands/reject-record";
 import { submitRecord } from "~/server/sales-records/application/commands/submit-draft";
 import { updateDraft } from "~/server/sales-records/application/commands/update-draft";
-import type { CreateSalesRecordDraftInput } from "~/server/sales-records/application/contracts";
-import type { SalesRecordDraftCreatedResult } from "~/server/sales-records/application/contracts";
 import { createSalesRecordMutationsContext } from "~/server/sales-records/infrastructure/mutations-context";
 import { runAction } from "~/server/shared/action-runtime";
 

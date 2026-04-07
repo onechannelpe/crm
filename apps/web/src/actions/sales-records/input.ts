@@ -1,33 +1,29 @@
+import {
+  SALES_RECORD_ATTEMPT_OUTCOMES,
+  SALES_RECORD_SOURCES,
+} from "~/actions/sales-records/contracts";
+import type {
+  CreateSalesRecordDraftInput,
+  SalesRecordAttemptOutcome,
+  SalesRecordAddressInput,
+  SalesRecordProductInput,
+  RegisterSalesRecordAttemptInput,
+  SalesRecordSource,
+} from "~/actions/sales-records/contracts";
 import { validationError } from "~/lib/app-errors";
 import {
   assertNonEmptyString,
   assertPositiveInt,
 } from "~/lib/contracts/guards";
-import type {
-  CreateSalesRecordDraftInput,
-  SalesRecordAddressInput,
-  SalesRecordProductInput,
-  RegisterSalesRecordAttemptInput,
-} from "~/server/sales-records/application/contracts";
-import type {
-  SalesRecordAttemptOutcome,
-  SalesRecordSource,
-} from "~/server/sales-records/domain/types";
 
 function isSalesRecordSource(value: string): value is SalesRecordSource {
-  return value === "lead_assignment" || value === "manual";
+  return SALES_RECORD_SOURCES.some((source) => source === value);
 }
 
 function isSalesRecordAttemptOutcome(
   value: string,
 ): value is SalesRecordAttemptOutcome {
-  return (
-    value === "no_answer" ||
-    value === "callback_scheduled" ||
-    value === "validated" ||
-    value === "invalid_data" ||
-    value === "rejected"
-  );
+  return SALES_RECORD_ATTEMPT_OUTCOMES.some((outcome) => outcome === value);
 }
 
 function parseSalesRecordAddresses(

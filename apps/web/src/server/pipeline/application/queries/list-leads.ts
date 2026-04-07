@@ -7,13 +7,13 @@ import {
   parseLeadStage,
   parseLeadStatus,
 } from "../../domain/lead";
-import type { LeadListView } from "../contracts";
 import type { LeadListDeps } from "../deps/lead-queries";
 import {
   requireLeadReadAccess,
   resolveLeadListExecutiveScope,
 } from "../policies/access";
 import { parsePageParams } from "./pagination";
+import type { LeadListView } from "./views/lead-list";
 
 export async function listLeads(
   deps: LeadListDeps,

@@ -1,6 +1,6 @@
 "use server";
 
-import type { SaleView } from "~/server/pipeline/application/contracts";
+import type { SaleView } from "~/actions/pipeline/contracts";
 import { getSaleDetail } from "~/server/pipeline/application/queries/get-sale-detail";
 import { listSales } from "~/server/pipeline/application/queries/list-sales";
 import { createPipelineQueryRuntime } from "~/server/pipeline/infrastructure/query-runtime";

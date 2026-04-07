@@ -7,9 +7,7 @@ import {
 import type { AuthFunnelClientEventPayload } from "~/lib/observability/auth-funnel";
 import { getActionRequestContext } from "~/lib/observability/context";
 
-function readClientAuthAnalyticsEvent(
-  input: AuthFunnelClientEventPayload,
- ) {
+function readClientAuthAnalyticsEvent(input: AuthFunnelClientEventPayload) {
   if (input.kind === "screen_viewed") {
     if (!isAuthAnalyticsScreen(input.screen)) {
       throw new Error("Invalid auth analytics screen");

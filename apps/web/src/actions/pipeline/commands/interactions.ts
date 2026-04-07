@@ -1,7 +1,7 @@
 "use server";
+import type { LeadCallOutcome } from "~/actions/pipeline/contracts";
 import { addNote } from "~/server/pipeline/application/commands/add-note";
 import { logCall } from "~/server/pipeline/application/commands/log-call";
-import type { LeadCallOutcome } from "~/server/pipeline/domain/lead";
 import { runPipelineCommand } from "~/server/pipeline/infrastructure/command-runtime";
 import { runAction } from "~/server/shared/action-runtime";
 

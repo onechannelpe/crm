@@ -1,5 +1,6 @@
 import { createAsync } from "@solidjs/router";
 
+import type { SaleView } from "~/actions/pipeline/contracts";
 import { querySales } from "~/actions/pipeline/queries/sales";
 import Building2 from "~/components/icons/building-2";
 import List from "~/components/icons/list";
@@ -8,7 +9,6 @@ import type {
   RecordIndexAdapter,
   RecordIndexSource,
 } from "~/features/record-index/model/types";
-import type { SaleView } from "~/server/pipeline/application/contracts";
 
 import { SALES_RECORD_INDEX_COLUMNS } from "./columns";
 import { useOpenSalesRecord } from "./open-row";

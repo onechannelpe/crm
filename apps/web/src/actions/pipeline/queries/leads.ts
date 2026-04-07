@@ -3,7 +3,7 @@
 import type {
   LeadDetailView,
   LeadListView,
-} from "~/server/pipeline/application/contracts";
+} from "~/actions/pipeline/contracts";
 import { getLeadDetail } from "~/server/pipeline/application/queries/get-lead-detail";
 import { listLeads } from "~/server/pipeline/application/queries/list-leads";
 import { createPipelineQueryRuntime } from "~/server/pipeline/infrastructure/query-runtime";

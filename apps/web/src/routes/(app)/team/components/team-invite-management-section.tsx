@@ -6,6 +6,7 @@ import {
 } from "@solidjs/router";
 import { For, Show, createEffect, createSignal, on } from "solid-js";
 
+import type { InviteManagement } from "~/actions/team/contracts";
 import { createTeamInvite } from "~/actions/team/invites";
 import { EmptyState } from "~/components/feedback/empty-state";
 import { useToast } from "~/components/feedback/toast-provider";
@@ -37,7 +38,6 @@ import {
   revokeTeamInviteMutation,
 } from "~/lib/mutations/team";
 import { inviteManagementQuery } from "~/lib/queries/team";
-import type { InviteManagement } from "~/server/team/application/contracts";
 
 import {
   getInviteExpiryFieldError,

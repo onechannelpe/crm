@@ -1,5 +1,10 @@
 "use server";
 
+import type {
+  SalesExportDownload,
+  SalesExportFormat,
+  SalesExportJob,
+} from "~/actions/sales-exports/contracts";
 import { validationError } from "~/lib/app-errors";
 import { assertPositiveInt } from "~/lib/contracts/guards";
 import { createSalesExportRuntime } from "~/server/sales-exports/runtime";
@@ -8,13 +13,8 @@ import {
   listSalesExportDownloadsForActor,
   listSalesExportJobsForActor,
   requestSalesExportJob,
-  type SalesExportDownload,
-  type SalesExportFormat,
-  type SalesExportJob,
 } from "~/server/sales-exports/service";
 import { runAction } from "~/server/shared/action-runtime";
-
-export type { SalesExportDownload, SalesExportFormat, SalesExportJob };
 
 const EXPORT_FORMATS: ReadonlyArray<SalesExportFormat> = ["csv", "xlsx"];
 

@@ -37,8 +37,6 @@ function useJsonOutput(): boolean {
   );
 }
 
-export type { Logger } from "./logger-shared";
-
 export function createLogger(
   component: string,
   baseMeta: Record<string, unknown> = {},

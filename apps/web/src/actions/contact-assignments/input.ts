@@ -1,10 +1,9 @@
-import type { AssignContactsCommand } from "~/server/contact-assignments/application/contracts";
+import type { AssignContactsCommand } from "~/actions/contact-assignments/contracts";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
-import type { UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 export function parseAssignContactsCommand(
-  actorUserId: UserId,
+  actorUserId: number,
   branchId: unknown,
 ): Result<AssignContactsCommand, DomainError> {
   if (
