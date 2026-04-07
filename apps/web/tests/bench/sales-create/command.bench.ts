@@ -7,40 +7,16 @@ import {
 } from "../../support/test-db";
 import { fixedIterations } from "../_shared/options";
 import { takeFromPool } from "../_shared/pool";
-import { seedSalesCreateUsers, USER_POOL_SIZE } from "./fixtures";
+import {
+  SALES_CREATE_BASE_DRAFT_INPUT,
+  seedSalesCreateUsers,
+  USER_POOL_SIZE,
+} from "./fixtures";
 
 describe("sales create command benchmark", () => {
   let ctx: TestDbContext | null = null;
   let userIds: number[] = [];
   const cursor = { value: 0 };
-
-  const baseDraftInput = {
-    source: "manual" as const,
-    leadAssignmentId: null,
-    client: {
-      ruc: "20100000001",
-      companyName: "Org Lima",
-      contactName: "Contacto Lima",
-      dni: "70000001",
-      phones: ["+51999999111"],
-      engineMatchId: null,
-      completenessScore: 75,
-    },
-    addresses: [
-      {
-        addressType: "installation" as const,
-        fullText: "Av. Demo 123",
-        department: null,
-        province: null,
-        district: null,
-        ubigeo: null,
-        latitude: null,
-        longitude: null,
-        isPrimary: true,
-      },
-    ],
-    products: [{ productId: 1, quantity: 1 }],
-  };
 
   beforeAll(async () => {
     ctx = await createIsolatedTestDb("bench-sales-create-command");
@@ -63,7 +39,7 @@ describe("sales create command benchmark", () => {
       );
 
       const result = await ctx!.salesRecords.createDraft({
-        ...baseDraftInput,
+        ...SALES_CREATE_BASE_DRAFT_INPUT,
         executiveUserId: userId,
         branchId: 1,
       });

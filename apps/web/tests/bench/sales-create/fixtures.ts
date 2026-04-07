@@ -1,8 +1,38 @@
+import type { CreateSalesRecordDraftInput } from "~/server/sales-records/application/commands/types/draft-input";
+
 import type { TestDbContext } from "../../support/test-db";
 import { BENCH_NOW } from "../_shared/constants";
 
 export const USER_POOL_SIZE = 96;
 const USER_ID_START = 100_000;
+
+export const SALES_CREATE_BASE_DRAFT_INPUT: CreateSalesRecordDraftInput = {
+  source: "manual",
+  leadAssignmentId: null,
+  client: {
+    ruc: "20100000001",
+    companyName: "Org Lima",
+    contactName: "Contacto Lima",
+    dni: "70000001",
+    phones: ["+51999999111"],
+    engineMatchId: null,
+    completenessScore: 75,
+  },
+  addresses: [
+    {
+      addressType: "installation",
+      fullText: "Av. Demo 123",
+      department: null,
+      province: null,
+      district: null,
+      ubigeo: null,
+      latitude: null,
+      longitude: null,
+      isPrimary: true,
+    },
+  ],
+  products: [{ productId: 1, quantity: 1 }],
+};
 
 export async function seedSalesCreateUsers(
   ctx: TestDbContext,

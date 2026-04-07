@@ -14,13 +14,13 @@ import { fixedIterations } from "../_shared/options";
 import { takeFromPool } from "../_shared/pool";
 import { seedQuotaUsers, USER_POOL_SIZE } from "./fixtures";
 
-describe("search capacity consume action benchmark", () => {
+describe("search capacity consume service benchmark", () => {
   let ctx: TestDbContext | null = null;
   let userIds: number[] = [];
   const cursor = { value: 0 };
 
   beforeAll(async () => {
-    ctx = await createIsolatedTestDb("bench-quota-consume-action");
+    ctx = await createIsolatedTestDb("bench-quota-consume-service");
     userIds = await seedQuotaUsers(ctx);
 
     for (const userId of userIds) {
