@@ -1,4 +1,5 @@
 import { DataGrid } from "~/features/data-grid/components/grid";
+import Plus from "~/components/icons/plus";
 
 import type { RecordIndexScreenModel } from "../model/types";
 import { RecordIndexEmpty } from "./empty";
@@ -11,6 +12,19 @@ export function RecordIndexTableContainer<
   const rows = () => props.model.sorting.sortedRows();
   const source = () => props.model.source.grid();
   const status = () => props.model.loading.status();
+  const actionRow = () => {
+    const createAction = props.model.adapter.createAction;
+
+    if (!createAction || rows().length === 0) {
+      return undefined;
+    }
+
+    return {
+      icon: createAction.icon ?? Plus,
+      label: createAction.inlineLabel ?? createAction.label,
+      onClick: createAction.onClick,
+    };
+  };
 
   if (status() === "pending" || status() === "error") {
     return (
@@ -33,6 +47,7 @@ export function RecordIndexTableContainer<
 
   return (
     <DataGrid
+      actionRow={actionRow()}
       ariaLabel={props.model.adapter.ariaLabel}
       columns={props.model.columns.visibleColumns()}
       emptyState={<></>}

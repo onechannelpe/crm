@@ -14,6 +14,9 @@ import type { RecordIndexSortDefinition } from "./sort";
 
 export type RecordIndexCreateAction = {
   label: string;
+  emptyLabel?: string;
+  inlineLabel?: string;
+  icon?: DataGridIcon;
   onClick: () => void;
 };
 

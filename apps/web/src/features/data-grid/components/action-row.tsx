@@ -34,7 +34,9 @@ export function DataGridActionRow(props: {
           props.reorderable ? { left: `${props.selectionLeft}px` } : undefined
         }
       >
-        <Icon size={14} />
+        <span class={styles.actionIcon} aria-hidden="true">
+          <Icon size={14} />
+        </span>
       </div>
       <div
         class={`${styles.actionCell} ${props.labelColumnIndex === props.stickyColumnIndex ? styles.stickyCell : ""}`}
@@ -45,7 +47,7 @@ export function DataGridActionRow(props: {
             : {}),
         }}
       >
-        {props.label}
+        <span class={styles.actionText}>{props.label}</span>
       </div>
     </button>
   );

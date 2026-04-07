@@ -9,6 +9,7 @@
 .identifierText {
   color: var(--foreground);
   font-weight: 500;
+  letter-spacing: 0.01em;
 }
 
 .cellText,
@@ -18,6 +19,10 @@
   white-space: nowrap;
 }
 
+.cellText {
+  color: var(--foreground);
+}
+
 .mutedCellText {
   color: var(--foreground-secondary);
 }
@@ -25,7 +30,7 @@
 .fieldWithIcon {
   align-items: center;
   display: flex;
-  gap: 8px;
+  gap: 10px;
   min-width: 0;
 }
 
@@ -35,6 +40,7 @@
   display: inline-flex;
   flex-shrink: 0;
   justify-content: center;
+  width: 14px;
 }
 
 .inlineComposer {
