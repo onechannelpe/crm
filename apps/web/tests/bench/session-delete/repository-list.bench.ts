@@ -7,18 +7,22 @@ import {
 } from "../../support/test-db";
 import { fixedIterations } from "../_shared/options";
 import { takeFromPool } from "../_shared/pool";
-import { seedSessionDeleteFixtures, USER_POOL_SIZE } from "./fixtures";
+import {
+  expectedSessionsPerUser,
+  seedSessionDeleteFixtures,
+  USER_POOL_SIZE,
+} from "./fixtures";
 
-describe("session delete action benchmark", () => {
+describe("session list repository benchmark", () => {
   let ctx: TestDbContext | null = null;
   let userIds: number[] = [];
   const cursor = { value: 0 };
 
   beforeAll(async () => {
-    ctx = await createIsolatedTestDb("bench-session-delete-action");
+    ctx = await createIsolatedTestDb("bench-session-delete-repository");
     const fixtures = await seedSessionDeleteFixtures(
       ctx,
-      "bench-action-session",
+      "bench-repository-session",
     );
     userIds = fixtures.userIds;
   });
@@ -30,15 +34,20 @@ describe("session delete action benchmark", () => {
   });
 
   bench(
-    "repository path: delete all sessions for user",
+    "repository path: list sessions for user",
     async () => {
       const userId = takeFromPool(
         userIds,
         cursor,
-        "session-delete action pool exhausted before iterations completed",
+        "session-delete repository pool exhausted before iterations completed",
       );
 
-      await ctx!.repos.sessions.deleteAllForUser(userId);
+      const rows = await ctx!.repos.sessions.listForUser(userId);
+      if (rows.length !== expectedSessionsPerUser()) {
+        throw new Error(
+          `expected ${expectedSessionsPerUser()} sessions, got ${rows.length}`,
+        );
+      }
     },
     fixedIterations(USER_POOL_SIZE),
   );

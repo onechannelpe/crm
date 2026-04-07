@@ -22,13 +22,13 @@ import {
 
 const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
 
-describe("auth login action benchmark", () => {
+describe("auth login service benchmark", () => {
   let ctx: TestDbContext | null = null;
   let fixtures: LoginFixture[] = [];
   const cursor = { value: 0 };
 
   beforeAll(async () => {
-    ctx = await createIsolatedTestDb("bench-auth-login-action");
+    ctx = await createIsolatedTestDb("bench-auth-login-service");
     fixtures = await seedAuthLoginFixtures(ctx);
 
     await ctx.db

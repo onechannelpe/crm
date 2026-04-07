@@ -14,14 +14,14 @@ import { fixedIterations } from "../_shared/options";
 import { takeFromPool } from "../_shared/pool";
 import { seedLeadsRequestFixtures, USER_POOL_SIZE } from "./fixtures";
 
-describe("lead refill action benchmark", () => {
+describe("lead refill service benchmark", () => {
   let ctx: TestDbContext | null = null;
   let engine: EngineClient | null = null;
   let userIds: number[] = [];
   const cursor = { value: 0 };
 
   beforeAll(async () => {
-    ctx = await createIsolatedTestDb("bench-leads-request-action");
+    ctx = await createIsolatedTestDb("bench-leads-request-service");
     const fixtures = await seedLeadsRequestFixtures(ctx);
     userIds = fixtures.userIds;
     engine = fixtures.engineClient;
