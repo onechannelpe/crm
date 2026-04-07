@@ -9,7 +9,7 @@ import {
   requirePipelineActionAccess,
 } from "../policies/access";
 import type { PipelineAuditService } from "../ports/audit-service";
-import { writeLeadReassignmentEffects } from "./register-lead-effects";
+import { writeLeadReassignmentEffects } from "./reassign-lead-effects";
 import { ensureActiveExecutive } from "./register-lead-resolution";
 
 export async function reassignLead(input: {

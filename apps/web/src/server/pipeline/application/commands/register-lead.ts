@@ -10,10 +10,8 @@ import {
 } from "../policies/access";
 import type { PipelineAuditService } from "../ports/audit-service";
 import type { PipelineEngineGateway } from "../ports/engine-gateway";
-import {
-  writeLeadRegistrationEffects,
-  writeLeadReassignmentEffects,
-} from "./register-lead-effects";
+import { writeLeadReassignmentEffects } from "./reassign-lead-effects";
+import { writeLeadRegistrationEffects } from "./register-lead-effects";
 import {
   ensureActiveExecutive,
   resolveLeadRegistration,
