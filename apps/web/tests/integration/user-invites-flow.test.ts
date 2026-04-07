@@ -1,10 +1,11 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { createInviteService } from "../../src/server/invites/application/invite-service";
+import { createInviteTestKit } from "../support/invite-test-kit";
+import type { TestDbContext } from "../support/test-db";
 import { cleanupTestDb, createIsolatedTestDb } from "../support/test-db";
 
 describe("user invite lifecycle", () => {
-  let ctx: Awaited<ReturnType<typeof createIsolatedTestDb>> | null = null;
+  let ctx: TestDbContext | null = null;
 
   afterEach(async () => {
     if (ctx) {
@@ -15,11 +16,11 @@ describe("user invite lifecycle", () => {
 
   it("creates and accepts an invite for a new user", async () => {
     ctx = await createIsolatedTestDb("user-invites");
-    const service = createInviteService(ctx.repos, {
+    const kit = createInviteTestKit(ctx, {
       now: () => 1_700_000_000_000,
     });
 
-    const created = await service.createInvite({
+    const created = await kit.commands.create({
       actorUserId: 5,
       actorRole: "superuser",
       branchId: 2,
@@ -33,27 +34,26 @@ describe("user invite lifecycle", () => {
     expect(created.ok).toBe(true);
     if (!created.ok) return;
 
-    const accepted = await service.acceptInvite({
+    const accepted = await kit.commands.accept({
       token: created.value.token,
       password: "StrongPass123",
     });
     expect(accepted.ok).toBe(true);
     if (!accepted.ok) return;
 
-    const user = await ctx.repos.users.findById(accepted.value.userId);
-    expect(user?.is_active).toBe(1);
-
-    const invite = await ctx.repos.userInvites.findById(created.value.inviteId);
-    expect(invite?.status).toBe("accepted");
+    expect(await kit.expect.userActive(accepted.value.userId)).toBe(1);
+    expect(await kit.expect.inviteStatus(created.value.inviteId)).toBe(
+      "accepted",
+    );
   });
 
   it("can revoke a pending invite", async () => {
     ctx = await createIsolatedTestDb("user-invites-revoke");
-    const service = createInviteService(ctx.repos, {
+    const kit = createInviteTestKit(ctx, {
       now: () => 1_700_000_000_000,
     });
 
-    const created = await service.createInvite({
+    const created = await kit.commands.create({
       actorUserId: 5,
       actorRole: "superuser",
       branchId: 2,
@@ -67,7 +67,7 @@ describe("user invite lifecycle", () => {
     expect(created.ok).toBe(true);
     if (!created.ok) return;
 
-    const revoked = await service.revokeInvite({
+    const revoked = await kit.commands.revoke({
       actorUserId: 5,
       actorRole: "superuser",
       branchId: 2,
@@ -75,8 +75,9 @@ describe("user invite lifecycle", () => {
     });
     expect(revoked.ok).toBe(true);
 
-    const invite = await ctx.repos.userInvites.findById(created.value.inviteId);
-    expect(invite?.status).toBe("revoked");
+    expect(await kit.expect.inviteStatus(created.value.inviteId)).toBe(
+      "revoked",
+    );
   });
 
   it("handles raced user creation without escaping the Result contract", async () => {
@@ -110,9 +111,15 @@ describe("user invite lifecycle", () => {
       },
     };
 
-    const service = createInviteService(reposWithRace, {
-      now: () => 1_700_000_000_000,
-    });
+    const service = createInviteTestKit(
+      {
+        ...ctx,
+        repos: reposWithRace,
+      },
+      {
+        now: () => 1_700_000_000_000,
+      },
+    ).service;
 
     const created = await service.createInvite({
       actorUserId: 5,

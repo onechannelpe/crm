@@ -1,7 +1,8 @@
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
-import { createInviteService } from "~/server/invites/application/invite-service";
+import type { InviteService } from "~/server/invites/application/types";
 
+import { createInviteTestKit } from "../../support/invite-test-kit";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -14,15 +15,16 @@ import { CREATE_POOL_SIZE, seedTeamInviteFixtures } from "./fixtures";
 
 describe("team invite create benchmark", () => {
   let ctx: TestDbContext | null = null;
-  let inviteService: ReturnType<typeof createInviteService> | null = null;
+  let inviteCreate: InviteService["createInvite"] | null = null;
   let createEmails: string[] = [];
   const createCursor = { value: 0 };
 
   beforeAll(async () => {
     ctx = await createIsolatedTestDb("bench-team-invite-create");
-    inviteService = createInviteService(ctx.repos, {
+    const kit = createInviteTestKit(ctx, {
       now: () => BENCH_NOW,
     });
+    inviteCreate = kit.commands.create;
 
     const fixtures = await seedTeamInviteFixtures(ctx);
     createEmails = fixtures.createEmails;
@@ -32,7 +34,7 @@ describe("team invite create benchmark", () => {
     if (!ctx) return;
     await cleanupTestDb(ctx);
     ctx = null;
-    inviteService = null;
+    inviteCreate = null;
   });
 
   bench(
@@ -44,7 +46,7 @@ describe("team invite create benchmark", () => {
         "team-invite-create pool exhausted before iterations completed",
       );
 
-      const result = await inviteService!.createInvite({
+      const result = await inviteCreate!({
         actorUserId: 5,
         actorRole: "superuser",
         branchId: 2,

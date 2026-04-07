@@ -2,6 +2,7 @@ import type { Role } from "~/lib/auth/access/rbac";
 import { issueSessionTransition } from "~/lib/auth/session/session-transition";
 import { db } from "~/lib/db/db";
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
+import type { InviteService } from "~/server/invites/application/types";
 import { createInviteServiceContext } from "~/server/invites/infrastructure/invite-service-context";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
@@ -20,7 +21,60 @@ function createTeamInviteRepos(currentDb: typeof db) {
   };
 }
 
-export function createTeamInviteContext() {
+interface TeamInviteContext {
+  repos: {
+    teams: {
+      findByBranch(
+        branchId: number,
+      ): Promise<Array<{ id: number; name: string }>>;
+    };
+    userInvites: {
+      findById(inviteId: number): Promise<{ user_id: number } | undefined>;
+      findPendingByTokenHash(
+        tokenHash: string,
+        now: number,
+      ): Promise<
+        | {
+            user_names: string;
+            user_first_surname: string;
+            user_second_surname: string;
+            user_username: string;
+            user_email: string;
+          }
+        | undefined
+      >;
+    };
+    users: {
+      findById(id: number): Promise<
+        | {
+            id: number;
+            email: string;
+            role: Role;
+            names: string;
+            first_surname: string;
+            second_surname: string;
+          }
+        | undefined
+      >;
+    };
+  };
+  inviteService: InviteService;
+  enforceInviteCreateRateLimit(userId: number): Promise<void>;
+  issuePreAuthSession(input: {
+    user: {
+      id: number;
+      branch_id: number;
+      role: Role;
+      onboarding_completed_at: null;
+    };
+    request: {
+      ipAddress: string;
+      userAgent: string | null;
+    };
+  }): Promise<{ token: string }>;
+}
+
+export function createTeamInviteContext(): TeamInviteContext {
   const repos = createTeamInviteRepos(db);
   const { inviteService } = createInviteServiceContext();
 
@@ -61,8 +115,6 @@ export function createTeamInviteContext() {
     },
   };
 }
-
-type TeamInviteContext = ReturnType<typeof createTeamInviteContext>;
 
 export type TeamInviteRepos = TeamInviteContext["repos"];
 export type TeamInviteProvisioningContext = Pick<

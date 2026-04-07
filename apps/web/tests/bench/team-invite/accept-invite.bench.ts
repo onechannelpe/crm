@@ -1,7 +1,8 @@
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
-import { createInviteService } from "~/server/invites/application/invite-service";
+import type { InviteService } from "~/server/invites/application/types";
 
+import { createInviteTestKit } from "../../support/invite-test-kit";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -18,15 +19,16 @@ import {
 
 describe("team invite accept benchmark", () => {
   let ctx: TestDbContext | null = null;
-  let inviteService: ReturnType<typeof createInviteService> | null = null;
+  let inviteAccept: InviteService["acceptInvite"] | null = null;
   let acceptFixtures: AcceptFixture[] = [];
   const acceptCursor = { value: 0 };
 
   beforeAll(async () => {
     ctx = await createIsolatedTestDb("bench-team-invite-accept");
-    inviteService = createInviteService(ctx.repos, {
+    const kit = createInviteTestKit(ctx, {
       now: () => BENCH_NOW,
     });
+    inviteAccept = kit.commands.accept;
 
     const fixtures = await seedTeamInviteFixtures(ctx);
     acceptFixtures = fixtures.acceptFixtures;
@@ -36,7 +38,7 @@ describe("team invite accept benchmark", () => {
     if (!ctx) return;
     await cleanupTestDb(ctx);
     ctx = null;
-    inviteService = null;
+    inviteAccept = null;
   });
 
   bench(
@@ -48,7 +50,7 @@ describe("team invite accept benchmark", () => {
         "team-invite-accept pool exhausted before iterations completed",
       );
 
-      const result = await inviteService!.acceptInvite({
+      const result = await inviteAccept!({
         token: fixture.token,
         password: "bench-password-hash",
       });
