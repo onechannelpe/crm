@@ -1,8 +1,10 @@
 import { TextDecoder } from "node:util";
 
 import { db } from "~/lib/db/db";
-import { reviewLead } from "~/server/pipeline/application/commands/review-lead";
-import type { LeadPriority, LeadStatus } from "~/server/pipeline/domain/lead";
+import type {
+  LeadPriority,
+  LeadStatus,
+} from "~/pipeline/contracts/lead-schema";
 import { runPipelineCommand } from "~/server/pipeline/infrastructure/command-runtime";
 import { createAuditService } from "~/server/shared/audit";
 
@@ -18,6 +20,8 @@ import {
   parseStatusImport,
   type ImportRowFailure as StatusImportFailure,
 } from "../infrastructure/status-import-parser";
+import { applyPrioridadImport } from "./apply-prioridad-import";
+import { applyStatusImport } from "./apply-status-import";
 
 type RowResult =
   | StatusImportFailure
@@ -104,9 +108,9 @@ async function runStatusImportJob(
       const reviewed = await reviewImportedLead({
         leadId: lead.id,
         status: row.status,
-        prioridad: lead.prioridad ?? "P1",
         actorId,
         branchId: executive?.branch_id ?? 0,
+        kind: "status",
       });
 
       if (!reviewed.ok) {
@@ -166,10 +170,10 @@ async function runPrioridadImportJob(
 
       const reviewed = await reviewImportedLead({
         leadId: lead.id,
-        status: lead.status ?? "DISPONIBLE",
         prioridad: row.prioridad,
         actorId,
         branchId: executive?.branch_id ?? 0,
+        kind: "prioridad",
       });
 
       if (!reviewed.ok) {
@@ -204,25 +208,44 @@ async function runPrioridadImportJob(
   };
 }
 
-function reviewImportedLead(input: {
-  leadId: number;
-  status: LeadStatus;
-  prioridad: LeadPriority;
-  actorId: number;
-  branchId: number;
-}) {
+function reviewImportedLead(
+  input:
+    | {
+        leadId: number;
+        status: LeadStatus;
+        actorId: number;
+        branchId: number;
+        kind: "status";
+      }
+    | {
+        leadId: number;
+        prioridad: LeadPriority;
+        actorId: number;
+        branchId: number;
+        kind: "prioridad";
+      },
+) {
   return runPipelineCommand(({ deps, auditService, notificationCenter }) =>
-    reviewLead({
-      deps: deps.reviewLead,
-      auditService,
-      notificationCenter,
-      leadId: input.leadId,
-      status: input.status,
-      prioridad: input.prioridad,
-      reason: "Imported from CSV",
-      actorUserId: input.actorId,
-      actorRole: "admin",
-      branchId: input.branchId,
-    }),
+    input.kind === "status"
+      ? applyStatusImport({
+          deps: deps.reviewLead,
+          auditService,
+          notificationCenter,
+          leadId: input.leadId,
+          status: input.status,
+          reason: "Imported from CSV",
+          actorUserId: input.actorId,
+          branchId: input.branchId,
+        })
+      : applyPrioridadImport({
+          deps: deps.reviewLead,
+          auditService,
+          notificationCenter,
+          leadId: input.leadId,
+          prioridad: input.prioridad,
+          reason: "Imported from CSV",
+          actorUserId: input.actorId,
+          branchId: input.branchId,
+        }),
   );
 }

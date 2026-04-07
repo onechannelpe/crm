@@ -1,4 +1,6 @@
-import type { Lead } from "./lead";
+import type { LeadStage } from "~/pipeline/contracts/lead-schema";
+
+import type { LeadRecord } from "./lead-record";
 
 export type LeadBlockingField =
   | "proveedorActual"
@@ -16,7 +18,7 @@ export type LeadProgress = {
   blockingFields: LeadBlockingField[];
 };
 
-export function resolveLeadNextStep(lead: Pick<Lead, "stage">): string {
+export function resolveLeadNextStep(lead: Pick<LeadRecord, "stage">): string {
   switch (lead.stage) {
     case "PENDING_EXTERNAL_REVIEW":
       return "Review lead";
@@ -40,7 +42,7 @@ export function resolveLeadNextStep(lead: Pick<Lead, "stage">): string {
 }
 
 export function resolveLeadBlockingFields(input: {
-  stage: Lead["stage"];
+  stage: LeadStage;
   bank?: string | null;
 }): LeadBlockingField[] {
   switch (input.stage) {
@@ -74,7 +76,7 @@ export function resolveLeadBlockingFields(input: {
 }
 
 export function resolveLeadProgress(input: {
-  lead: Pick<Lead, "stage">;
+  lead: Pick<LeadRecord, "stage">;
   bank?: string | null;
 }): LeadProgress {
   return {

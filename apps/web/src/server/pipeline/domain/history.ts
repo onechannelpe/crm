@@ -3,10 +3,12 @@ import type {
   LeadPriority,
   LeadStage,
   LeadStatus,
-} from "./lead";
+} from "~/pipeline/contracts/lead-schema";
 
 export type LeadHistoryEventType =
   | "lead_registered"
+  | "lead_status_updated"
+  | "lead_priority_updated"
   | "lead_reviewed"
   | "workflow_stage_changed"
   | "lead_assigned"
@@ -22,6 +24,16 @@ export type LeadHistoryPayloadByEvent = {
   lead_registered: {
     ruc: string;
     toStage: Extract<LeadStage, "PENDING_EXTERNAL_REVIEW">;
+  };
+  lead_status_updated: {
+    fromStatus: LeadStatus | null;
+    toStatus: LeadStatus;
+    reason: string;
+  };
+  lead_priority_updated: {
+    fromPrioridad: LeadPriority | null;
+    toPrioridad: LeadPriority;
+    reason: string;
   };
   lead_reviewed: {
     status: LeadStatus;

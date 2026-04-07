@@ -1,13 +1,15 @@
 import { isPlainRecord } from "~/lib/type-guards";
-import type { LeadCallOutcome } from "~/server/pipeline/domain/lead";
+import type {
+  LeadCallOutcome,
+  LeadPriority,
+  LeadStage,
+  LeadStatus,
+} from "~/pipeline/contracts/lead-schema";
 import {
   parseRequiredLeadPriority,
   parseRequiredLeadStage,
   parseRequiredLeadStatus,
-  type LeadPriority,
-  type LeadStage,
-  type LeadStatus,
-} from "~/server/pipeline/domain/lead";
+} from "~/server/pipeline/domain/lead-schema-parser";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -132,6 +134,26 @@ export function requireLeadStatus(
   return Ok(parsed.value);
 }
 
+export function optionalLeadStatus(
+  payload: Record<string, unknown> | null,
+  key: string,
+  row: HistoryEventRow,
+): Result<LeadStatus | null, DomainError> {
+  const value = payload?.[key];
+  if (value === undefined || value === null) {
+    return Ok(null);
+  }
+  if (typeof value !== "string") {
+    return Err(invalidPayload(row, key));
+  }
+
+  const parsed = parseRequiredLeadStatus(value);
+  if (!parsed.ok) {
+    return parsed;
+  }
+  return Ok(parsed.value);
+}
+
 export function requireLeadPriority(
   payload: Record<string, unknown> | null,
   key: string,
@@ -143,6 +165,26 @@ export function requireLeadPriority(
   }
 
   const parsed = parseRequiredLeadPriority(value.value);
+  if (!parsed.ok) {
+    return parsed;
+  }
+  return Ok(parsed.value);
+}
+
+export function optionalLeadPriority(
+  payload: Record<string, unknown> | null,
+  key: string,
+  row: HistoryEventRow,
+): Result<LeadPriority | null, DomainError> {
+  const value = payload?.[key];
+  if (value === undefined || value === null) {
+    return Ok(null);
+  }
+  if (typeof value !== "string") {
+    return Err(invalidPayload(row, key));
+  }
+
+  const parsed = parseRequiredLeadPriority(value);
   if (!parsed.ok) {
     return parsed;
   }

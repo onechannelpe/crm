@@ -1,8 +1,8 @@
 "use server";
 
-import type { SaleView } from "~/actions/pipeline/contracts";
 import { getSaleDetail } from "~/server/pipeline/application/queries/get-sale-detail";
 import { listSales } from "~/server/pipeline/application/queries/list-sales";
+import type { SaleView } from "~/server/pipeline/application/queries/views/sale";
 import { createPipelineQueryDeps } from "~/server/pipeline/infrastructure/query-runtime";
 import { runAction } from "~/server/shared/action-runtime";
 

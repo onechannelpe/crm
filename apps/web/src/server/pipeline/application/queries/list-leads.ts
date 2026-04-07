@@ -6,7 +6,7 @@ import {
   parseLeadPriority,
   parseLeadStage,
   parseLeadStatus,
-} from "../../domain/lead";
+} from "../../domain/lead-schema-parser";
 import type { LeadListDeps } from "../deps/lead-queries";
 import {
   requireLeadReadAccess,

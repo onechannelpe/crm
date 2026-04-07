@@ -1,4 +1,9 @@
-import type { LeadPriority, LeadStage, LeadStatus } from "../../../domain/lead";
+import type {
+  LeadPriority,
+  LeadStage,
+  LeadStatus,
+} from "~/pipeline/contracts/lead-schema";
+
 import type { LeadBlockingField } from "../../../domain/lead-progress";
 import type { LeadAvailableAction } from "../../contracts/lead-available-action";
 

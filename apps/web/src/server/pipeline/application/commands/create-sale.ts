@@ -1,9 +1,9 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { Ok, type Result } from "~/server/shared/result";
 
-import { ensureCanCreateSale } from "../../domain/workflow";
 import type { CreateSaleDeps } from "../deps/sales";
+import { createLeadSubjectLoader } from "../loaders/lead-subject-loader";
 import { canCreateSale, requirePipelineActionAccess } from "../policies/access";
 import type { PipelineAuditService } from "../ports/audit-service";
 import { writeSaleCreationEffects } from "./create-sale-effects";
@@ -29,27 +29,38 @@ export async function createSale(input: {
     return canCreate;
   }
 
-  const lead = await input.deps.leads.findById(input.leadId);
-  if (!lead) {
-    return Err(domainError("not_found", "lead_not_found", "Lead not found"));
+  const lead = await createLeadSubjectLoader(
+    input.deps.leads,
+  ).loadReadyForSaleLead(input.leadId);
+  if (!lead.ok) {
+    return lead;
   }
-
-  const allowed = ensureCanCreateSale({
-    stage: lead.stage,
-    executiveId: lead.executiveId,
-    actorUserId: input.actorUserId,
-    bank: input.banco,
-    cci: input.cci,
-  });
-  if (!allowed.ok) {
-    return allowed;
+  if (lead.value.executiveId !== input.actorUserId) {
+    return {
+      ok: false,
+      error: domainError(
+        "forbidden",
+        "not_owner",
+        "Only the assigned executive can create the sale",
+      ),
+    };
+  }
+  if (input.banco.trim().toUpperCase() !== "BCP" && !input.cci?.trim()) {
+    return {
+      ok: false,
+      error: domainError(
+        "validation",
+        "missing_cci",
+        "CCI is required when the selected bank is not BCP",
+      ),
+    };
   }
 
   const now = Date.now();
   const saleId = await writeSaleCreationEffects({
     deps: input.deps,
     auditService: input.auditService,
-    lead,
+    lead: lead.value,
     actorUserId: input.actorUserId,
     proveedorActual: input.proveedorActual,
     tasaActual: input.tasaActual,

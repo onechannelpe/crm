@@ -1,12 +1,12 @@
 import { createHistoryEvent } from "../../domain/history";
-import type { Lead } from "../../domain/lead";
+import type { ReadyForSaleLeadSubject } from "../../domain/lead-subjects";
 import type { CreateSaleDeps } from "../deps/sales";
 import type { PipelineAuditService } from "../ports/audit-service";
 
 export async function writeSaleCreationEffects(input: {
   deps: CreateSaleDeps;
   auditService: PipelineAuditService;
-  lead: Lead;
+  lead: ReadyForSaleLeadSubject;
   actorUserId: number;
   proveedorActual: string;
   tasaActual: number;

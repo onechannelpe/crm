@@ -1,5 +1,5 @@
 import type { LeadHistoryEntry } from "../../domain/history";
-import type { Lead } from "../../domain/lead";
+import type { LeadRecord } from "../../domain/lead-record";
 import type { LeadAvailableAction } from "../contracts/lead-available-action";
 import type { LeadCommercialInput } from "../ports/commercial-input-repository";
 import type { LeadQuotation } from "../ports/quotation-repository";
@@ -18,7 +18,7 @@ import {
 import { presentTimeline } from "./timeline";
 
 export type LeadDetailSource = {
-  lead: Lead;
+  lead: LeadRecord;
   commercialInput: LeadCommercialInput | undefined;
   quotations: LeadQuotation[];
   sale: LeadSale | undefined;
@@ -28,7 +28,7 @@ export type LeadDetailSource = {
 };
 
 function toLeadDetailLead(
-  lead: Lead,
+  lead: LeadRecord,
   sale: LeadSale | undefined,
 ): LeadDetailLeadView {
   return {

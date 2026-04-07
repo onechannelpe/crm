@@ -1,4 +1,4 @@
-import type { LeadAvailableAction } from "~/actions/pipeline/contracts";
+import type { LeadAvailableAction } from "~/server/pipeline/application/contracts/lead-available-action";
 
 import type { InteractionMode } from "./state";
 

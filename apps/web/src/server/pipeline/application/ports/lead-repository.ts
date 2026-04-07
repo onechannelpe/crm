@@ -1,11 +1,14 @@
 import type {
-  Lead,
-  LeadDraft,
-  LeadPatch,
   LeadPriority,
   LeadStage,
   LeadStatus,
-} from "../../domain/lead";
+} from "~/pipeline/contracts/lead-schema";
+
+import type {
+  LeadDraft,
+  LeadPatch,
+  LeadRecord,
+} from "../../domain/lead-record";
 
 export type LeadListFilters = {
   executiveId?: number;
@@ -31,11 +34,11 @@ export type LeadExportRow = {
 
 export type LeadRepository = {
   insert(values: LeadDraft): Promise<number>;
-  findById(id: number): Promise<Lead | undefined>;
-  findByRuc(ruc: string): Promise<Lead | undefined>;
-  findByRucMany(rucs: string[]): Promise<Lead[]>;
+  findById(id: number): Promise<LeadRecord | undefined>;
+  findByRuc(ruc: string): Promise<LeadRecord | undefined>;
+  findByRucMany(rucs: string[]): Promise<LeadRecord[]>;
   updateById(id: number, values: LeadPatch): Promise<unknown>;
-  list(filters: LeadListFilters): Promise<Lead[]>;
+  list(filters: LeadListFilters): Promise<LeadRecord[]>;
   count(filters: LeadListFilters): Promise<number>;
 };
 

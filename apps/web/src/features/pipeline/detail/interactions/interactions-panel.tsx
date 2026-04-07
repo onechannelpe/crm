@@ -4,7 +4,7 @@ import {
   addLeadNote,
   recordLeadCall,
 } from "~/actions/pipeline/commands/interactions";
-import type { LeadAvailableAction } from "~/actions/pipeline/contracts";
+import type { LeadAvailableAction } from "~/server/pipeline/application/contracts/lead-available-action";
 
 import {
   deriveInteractionAvailability,

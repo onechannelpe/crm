@@ -1,8 +1,6 @@
+import type { LeadPriority } from "~/pipeline/contracts/lead-schema";
 import { parseCsv, validateHeaders } from "~/server/integrations/csv-parser";
-import {
-  parseLeadPriority,
-  type LeadPriority,
-} from "~/server/pipeline/domain/lead";
+import { parseLeadPriority } from "~/server/pipeline/domain/lead-schema-parser";
 
 const PRIORIDAD_COLUMNS = [
   "nro_de_solicitud",

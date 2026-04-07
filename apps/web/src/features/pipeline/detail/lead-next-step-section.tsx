@@ -1,6 +1,6 @@
 import { For, Show } from "solid-js";
 
-import type { LeadDetailView } from "~/actions/pipeline/contracts";
+import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
 
 import styles from "./lead-detail-overview.module.css";
 

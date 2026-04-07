@@ -1,7 +1,7 @@
 import { useNavigate } from "@solidjs/router";
 
-import type { LeadListRowView } from "~/actions/pipeline/contracts";
 import { createRouteRowOpen } from "~/features/data-grid/model/row-open";
+import type { LeadListRowView } from "~/server/pipeline/application/queries/views/lead-list";
 
 export function useOpenQuotationRecord() {
   const navigate = useNavigate();

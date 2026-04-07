@@ -1,4 +1,8 @@
-import type { LeadPriority, LeadStage, LeadStatus } from "../../../domain/lead";
+import type {
+  LeadPriority,
+  LeadStage,
+  LeadStatus,
+} from "~/pipeline/contracts/lead-schema";
 
 export type LeadListRowView = {
   id: number;

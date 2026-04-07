@@ -3,8 +3,8 @@ import { Show } from "solid-js";
 import { createSignal } from "solid-js";
 
 import { requestSaleApproval } from "~/actions/pipeline/commands/quotations";
-import type { LeadAvailableAction } from "~/actions/pipeline/contracts";
 import { toAppError } from "~/lib/app-errors";
+import type { LeadAvailableAction } from "~/server/pipeline/application/contracts/lead-available-action";
 
 import styles from "./lead-detail-overview.module.css";
 

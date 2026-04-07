@@ -6,8 +6,11 @@ import type {
 } from "kysely";
 
 import type { Database } from "~/lib/db/types";
-import type { LeadDraft, LeadPatch } from "~/server/pipeline/domain/lead";
-import type { Lead } from "~/server/pipeline/domain/lead";
+import type {
+  LeadDraft,
+  LeadPatch,
+  LeadRecord,
+} from "~/server/pipeline/domain/lead-record";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import type { LeadListFilters } from "../application/ports/lead-repository";
@@ -16,7 +19,7 @@ export type LeadRow = Selectable<Database["pipeline_leads"]>;
 export type NewLeadRow = Insertable<Database["pipeline_leads"]>;
 export type LeadRowPatch = Updateable<Database["pipeline_leads"]>;
 
-function toLead(row: LeadRow): Lead {
+function toLead(row: LeadRow): LeadRecord {
   return {
     id: row.id,
     ruc: row.ruc,

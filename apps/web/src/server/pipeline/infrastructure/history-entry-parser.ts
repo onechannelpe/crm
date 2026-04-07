@@ -12,9 +12,11 @@ import { toHistoryEntryBase } from "./history-event-row";
 import { toCallEntry, toNoteEntry } from "./history-interaction-parser";
 import {
   toAssignmentEntry,
+  toPriorityUpdatedEntry,
   toReassignmentEntry,
   toRegisteredEntry,
   toReviewedEntry,
+  toStatusUpdatedEntry,
   toStageChangeEntry,
 } from "./history-lifecycle-parser";
 import { parsePayload } from "./history-payload-fields";
@@ -30,6 +32,10 @@ export function toHistoryEntry(
   switch (row.event_type) {
     case "lead_registered":
       return toRegisteredEntry(row, payload.value);
+    case "lead_status_updated":
+      return toStatusUpdatedEntry(row, payload.value);
+    case "lead_priority_updated":
+      return toPriorityUpdatedEntry(row, payload.value);
     case "lead_reviewed":
       return toReviewedEntry(row, payload.value);
     case "workflow_stage_changed":

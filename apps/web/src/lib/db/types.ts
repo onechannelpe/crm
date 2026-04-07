@@ -836,6 +836,8 @@ export interface PipelineHistoryEventsTable {
   lead_id: number;
   event_type:
     | "lead_registered"
+    | "lead_status_updated"
+    | "lead_priority_updated"
     | "lead_reviewed"
     | "workflow_stage_changed"
     | "lead_assigned"
