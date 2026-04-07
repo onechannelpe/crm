@@ -5,6 +5,8 @@
 - Prefer retrieval-led reasoning over pre-training for libraries/frameworks. Use MCP context7 for current docs before writing code.
 - Follow framework conventions. Do not invent workarounds.
 - Implement ONLY what requested. If the request adds coupling, duplication, special cases, or workaround-driven design, state the concern and propose the cleaner design first.
+- Fix structure, not symptoms. If a structural fix requires breaking changes and reduces long-term coupling or duplication, choose the structural fix.
+- Prefer explicit, straightforward code over clever abstractions.
 - If ambiguous, ask up to 2 clarifying questions OR choose simplest valid interpretation.
 - Keep responses brief: 3-6 sentences for typical answers. For multi-step work: short overview + ≤5 bullets (what changed, where, next steps).
 - State what you verified vs what you're inferring. If uncertain about line numbers or API details, say so.
@@ -65,6 +67,17 @@ Failure points:
 - Duplicating a type that can be inferred from an existing function.
 - Treating parsed JSON, form data, or caught errors as trusted data.
 - Throwing a service-layer failure that should stay in `Result<T,E>`.
+
+### WHEN editing types
+
+1. Start every type-related change with a type ownership map.
+2. Use a usage-count check before deciding ownership:
+  - Count references per candidate type with `rg -n "\\bTypeName\\b" <scope>`.
+  - For web slices, use `<scope>` = `apps/web/src/server apps/web/src/actions apps/web/src/features`.
+  - Keep in contracts only if used by multiple files across boundaries (`server`, `actions`, `features`).
+  - Keep local if used in one file or one boundary.
+  - Inline in a signature when the shape is small and one-off.
+3. Avoid re-export type indirection. Import types directly from their canonical owner.
 
 ## WHEN writing Rust
 
