@@ -77,9 +77,7 @@ export function RootPage() {
     <SidePanelList>
       <Show
         when={hasResults()}
-        fallback={
-          <EmptyState>No se encontraron resultados</EmptyState>
-        }
+        fallback={<EmptyState>No se encontraron resultados</EmptyState>}
       >
         <For each={filteredGroups()}>
           {(group) => (
