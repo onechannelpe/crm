@@ -1,9 +1,4 @@
-import type {
-  LeadCallOutcome,
-  LeadPriority,
-  LeadStage,
-  LeadStatus,
-} from "../domain/lead";
+import type { LeadPriority, LeadStage, LeadStatus } from "../domain/lead";
 
 export type LeadAvailableAction =
   | "log-call"
@@ -116,23 +111,4 @@ export type SaleView = {
   nroCuenta: string;
   cci: string | null;
   createdAt: number;
-};
-
-export type LogCallInput = {
-  leadId: number;
-  outcome: LeadCallOutcome;
-  notes?: string | null;
-};
-
-export type AddNoteInput = {
-  leadId: number;
-  body: string;
-};
-
-export type LeadInteractionResult = {
-  interactionId: number;
-};
-
-export type LeadRegisteredResult = {
-  leadId: number;
 };

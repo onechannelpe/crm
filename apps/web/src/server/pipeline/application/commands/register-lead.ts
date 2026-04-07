@@ -3,7 +3,6 @@ import type { DomainError } from "~/server/shared/domain-error";
 import type { Result } from "~/server/shared/result";
 
 import { createLeadDraft, normalizeLeadRuc } from "../../domain/lead";
-import type { LeadRegisteredResult } from "../contracts";
 import type { RegisterLeadDeps } from "../deps/register-lead";
 import {
   canRegisterLead,
@@ -28,7 +27,7 @@ export async function registerLead(input: {
   deps: RegisterLeadDeps;
   auditService: PipelineAuditService;
   engineGateway: PipelineEngineGateway;
-}): Promise<Result<LeadRegisteredResult, DomainError>> {
+}): Promise<Result<{ leadId: number }, DomainError>> {
   const canRegister = requirePipelineActionAccess(
     input.actorRole,
     canRegisterLead,

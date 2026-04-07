@@ -3,7 +3,6 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { createHistoryEvent } from "../../domain/history";
-import type { AddNoteInput, LeadInteractionResult } from "../contracts";
 import type { LeadInteractionDeps } from "../deps/lead-interactions";
 import {
   canAddLeadInteraction,
@@ -18,8 +17,11 @@ export async function addNote(
     auditService: PipelineAuditService;
     actorUserId: number;
     actorRole: Role;
-  } & AddNoteInput,
-): Promise<Result<LeadInteractionResult, DomainError>> {
+  } & {
+    leadId: number;
+    body: string;
+  },
+): Promise<Result<{ interactionId: number }, DomainError>> {
   const canWriteInteraction = requirePipelineActionAccess(
     input.actorRole,
     canAddLeadInteraction,
