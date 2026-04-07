@@ -6,7 +6,7 @@ import Package from "~/components/icons/package";
 import { Badge } from "~/components/ui/display/badge";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { formatDate } from "~/lib/utils";
-import type { LeadListRowView } from "~/server/pipeline/application/queries/views/lead-list-view";
+import type { LeadListRowView } from "~/server/pipeline/application/contracts";
 
 import styles from "./styles.module.css";
 

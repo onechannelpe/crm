@@ -6,7 +6,7 @@ import CircleAlert from "~/components/icons/circle-alert";
 import Package from "~/components/icons/package";
 import Phone from "~/components/icons/phone";
 import { formatDateTime } from "~/lib/utils";
-import type { LeadTimelineItem } from "~/server/pipeline/application/queries/views/lead-detail-view";
+import type { LeadTimelineItem } from "~/server/pipeline/application/contracts";
 
 import styles from "./lead-detail-overview.module.css";
 

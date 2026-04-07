@@ -2,18 +2,13 @@
 
 import { approveForSale } from "~/server/pipeline/application/commands/approve-for-sale";
 import { createQuotation } from "~/server/pipeline/application/commands/create-quotation";
+import type { RequestQuotationCreationInput } from "~/server/pipeline/application/contracts";
 import { runPipelineCommand } from "~/server/pipeline/infrastructure/command-runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
-export async function requestQuotationCreation(input: {
-  leadId: number;
-  paybackPricing: number;
-  tarifaDebito: number;
-  tarifaCredito: number;
-  tarifaForaneo: number;
-  fee: number;
-  moneda: "PEN" | "USD";
-}) {
+export async function requestQuotationCreation(
+  input: RequestQuotationCreationInput,
+) {
   return runAction({
     actionName: "pipeline.create_quotation",
     requireAuth: true,

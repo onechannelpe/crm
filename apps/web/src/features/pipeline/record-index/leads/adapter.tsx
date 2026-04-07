@@ -8,7 +8,7 @@ import type {
   RecordIndexAdapter,
   RecordIndexSource,
 } from "~/features/record-index/model/types";
-import type { LeadListRowView } from "~/server/pipeline/application/queries/views/lead-list-view";
+import type { LeadListRowView } from "~/server/pipeline/application/contracts";
 
 import { LEADS_RECORD_INDEX_COLUMNS } from "./columns";
 import { useCreateLeadRecordAction } from "./create-action";

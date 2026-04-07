@@ -3,6 +3,7 @@ import type { DomainError } from "~/server/shared/domain-error";
 import type { Result } from "~/server/shared/result";
 
 import { createLeadDraft, normalizeLeadRuc } from "../../domain/lead";
+import type { LeadRegisteredResult } from "../contracts";
 import type { RegisterLeadDeps } from "../deps/register-lead";
 import {
   canRegisterLead,
@@ -18,7 +19,6 @@ import {
   ensureActiveExecutive,
   resolveLeadRegistration,
 } from "./register-lead-resolution";
-import type { LeadRegisteredResult } from "./types/lead-results";
 
 export async function registerLead(input: {
   actorUserId: number;

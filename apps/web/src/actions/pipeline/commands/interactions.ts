@@ -4,7 +4,7 @@ import { logCall } from "~/server/pipeline/application/commands/log-call";
 import type {
   AddNoteInput,
   LogCallInput,
-} from "~/server/pipeline/application/commands/types/lead-interactions";
+} from "~/server/pipeline/application/contracts";
 import { runPipelineCommand } from "~/server/pipeline/infrastructure/command-runtime";
 import { runAction } from "~/server/shared/action-runtime";
 

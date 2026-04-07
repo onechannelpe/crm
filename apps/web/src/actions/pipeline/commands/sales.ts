@@ -2,21 +2,11 @@
 
 import { validationError } from "~/lib/app-errors";
 import { createSale } from "~/server/pipeline/application/commands/create-sale";
+import type { RequestSaleCreationInput } from "~/server/pipeline/application/contracts";
 import { runPipelineCommand } from "~/server/pipeline/infrastructure/command-runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
-export async function requestSaleCreation(input: {
-  leadId: number;
-  proveedorActual: string;
-  tasaActual: number;
-  gpv: number;
-  ticket: number;
-  abono: number;
-  cantidadPos: number;
-  banco: string;
-  nroCuenta: string;
-  cci: string | null;
-}) {
+export async function requestSaleCreation(input: RequestSaleCreationInput) {
   if (!input.proveedorActual?.trim()) {
     throw validationError("proveedorActual is required");
   }

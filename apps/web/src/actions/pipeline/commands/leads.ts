@@ -5,6 +5,12 @@ import { completeCommercialInput } from "~/server/pipeline/application/commands/
 import { reassignLead } from "~/server/pipeline/application/commands/reassign-lead";
 import { registerLead } from "~/server/pipeline/application/commands/register-lead";
 import { reviewLead } from "~/server/pipeline/application/commands/review-lead";
+import type {
+  RequestLeadCommercialInputCompletionInput,
+  RequestLeadCreationInput,
+  RequestLeadReassignmentInput,
+  RequestLeadReviewInput,
+} from "~/server/pipeline/application/contracts";
 import {
   parseRequiredLeadPriority,
   parseRequiredLeadStatus,
@@ -12,10 +18,7 @@ import {
 import { runPipelineCommand } from "~/server/pipeline/infrastructure/command-runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
-export async function requestLeadCreation(input: {
-  ruc: string;
-  executiveId?: number;
-}) {
+export async function requestLeadCreation(input: RequestLeadCreationInput) {
   if (!input.ruc?.trim()) {
     throw validationError("ruc is required");
   }
@@ -39,12 +42,7 @@ export async function requestLeadCreation(input: {
   });
 }
 
-export async function requestLeadReview(input: {
-  leadId: number;
-  status: string;
-  prioridad: string;
-  reason: string;
-}) {
+export async function requestLeadReview(input: RequestLeadReviewInput) {
   if (!input.reason?.trim()) {
     throw validationError("reason is required");
   }
@@ -83,15 +81,9 @@ export async function requestLeadReview(input: {
   });
 }
 
-export async function requestLeadCommercialInputCompletion(input: {
-  leadId: number;
-  proveedorActual: string;
-  tasaActual: number;
-  gpv: number;
-  ticket: number;
-  abono: number;
-  cantidadPos: number;
-}) {
+export async function requestLeadCommercialInputCompletion(
+  input: RequestLeadCommercialInputCompletionInput,
+) {
   if (!input.proveedorActual?.trim()) {
     throw validationError("proveedorActual is required");
   }
@@ -115,10 +107,9 @@ export async function requestLeadCommercialInputCompletion(input: {
   });
 }
 
-export async function requestLeadReassignment(input: {
-  leadId: number;
-  newExecutiveId: number;
-}) {
+export async function requestLeadReassignment(
+  input: RequestLeadReassignmentInput,
+) {
   return runAction({
     actionName: "pipeline.reassign_lead",
     requireAuth: true,

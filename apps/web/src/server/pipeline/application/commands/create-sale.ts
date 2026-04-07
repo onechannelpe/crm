@@ -3,11 +3,11 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { ensureCanCreateSale } from "../../domain/workflow";
+import type { SaleCreatedResult } from "../contracts";
 import type { CreateSaleDeps } from "../deps/sales";
 import { canCreateSale, requirePipelineActionAccess } from "../policies/access";
 import type { PipelineAuditService } from "../ports/audit-service";
 import { persistLeadSaleConversion } from "./create-sale-effects";
-import type { SaleCreatedResult } from "./types/lead-results";
 
 export async function createSale(input: {
   deps: CreateSaleDeps;

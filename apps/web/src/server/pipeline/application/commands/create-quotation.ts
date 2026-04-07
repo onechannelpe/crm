@@ -3,6 +3,7 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { ensureCanCreateQuotation } from "../../domain/workflow";
+import type { QuotationCreatedResult } from "../contracts";
 import type { CreateQuotationDeps } from "../deps/quotations";
 import {
   canCreateQuotation,
@@ -10,7 +11,6 @@ import {
 } from "../policies/access";
 import type { PipelineAuditService } from "../ports/audit-service";
 import { persistLeadQuotationTransition } from "./create-quotation-effects";
-import type { QuotationCreatedResult } from "./types/lead-results";
 
 export async function createQuotation(input: {
   deps: CreateQuotationDeps;

@@ -3,6 +3,7 @@ import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { createHistoryEvent } from "../../domain/history";
+import type { AddNoteInput, LeadInteractionResult } from "../contracts";
 import type { LeadInteractionDeps } from "../deps/lead-interactions";
 import {
   canAddLeadInteraction,
@@ -10,10 +11,6 @@ import {
   requirePipelineActionAccess,
 } from "../policies/access";
 import type { PipelineAuditService } from "../ports/audit-service";
-import type {
-  AddNoteInput,
-  LeadInteractionResult,
-} from "./types/lead-interactions";
 
 export async function addNote(
   input: {
