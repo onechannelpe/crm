@@ -6,12 +6,12 @@ import { SIDE_PANEL_PAGES_CONFIG } from "../registry/page-registry";
 import { useSidePanel } from "../state/use-side-panel";
 import { TopBar } from "../top-bar/top-bar";
 import { Container } from "./container";
-import { PageFrameProvider } from "./page-frame-context";
+import { PageInstanceProvider } from "./page-instance-context";
 
 import styles from "./router.module.css";
 
 export function Router(props: { isMobile: boolean }) {
-  const { currentFrame } = useSidePanel();
+  const { currentEntry } = useSidePanel();
 
   return (
     <Container isMobile={props.isMobile}>
@@ -20,14 +20,14 @@ export function Router(props: { isMobile: boolean }) {
           <TopBar isMobile={props.isMobile} />
         </div>
         <div class={styles.pageBody}>
-          <Show when={currentFrame()} keyed>
-            {(frame) => {
+          <Show when={currentEntry()} keyed>
+            {(entry) => {
               const PageComponent =
-                SIDE_PANEL_PAGES_CONFIG[frame.entry.page].component;
+                SIDE_PANEL_PAGES_CONFIG[entry.page].component;
 
               return (
                 <div class={styles.pageContent}>
-                  <PageFrameProvider frame={frame}>
+                  <PageInstanceProvider pageId={entry.pageId}>
                     <ErrorBoundary
                       fallback={
                         <div class={styles.pageState}>
@@ -45,7 +45,7 @@ export function Router(props: { isMobile: boolean }) {
                         <PageComponent />
                       </Suspense>
                     </ErrorBoundary>
-                  </PageFrameProvider>
+                  </PageInstanceProvider>
                 </div>
               );
             }}

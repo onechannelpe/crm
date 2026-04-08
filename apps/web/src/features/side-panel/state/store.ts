@@ -2,7 +2,7 @@ import { createStore } from "solid-js/store";
 
 import {
   reduceSidePanelPatch,
-  updateSidePanelFrameState,
+  updateSidePanelPageState,
 } from "../core/reducer";
 import type {
   SidePanelPageDefinition,
@@ -42,6 +42,7 @@ export function createSidePanelStore() {
     isOpen: false,
     isClosing: false,
     stack: [],
+    pageStateById: {},
     searchText: "",
     panelWidth: SIDE_PANEL_WIDTH_DEFAULT,
   });
@@ -95,17 +96,17 @@ export function createSidePanelStore() {
     pageId: string,
     updater: (state: SidePanelPageState) => SidePanelPageState,
   ) => {
-    const updatedStack = updateSidePanelFrameState(
-      state.stack,
+    const updatedPageStateById = updateSidePanelPageState(
+      state.pageStateById,
       pageId,
       updater,
     );
 
-    if (updatedStack === state.stack) {
+    if (updatedPageStateById === state.pageStateById) {
       return;
     }
 
-    setState("stack", updatedStack);
+    setState("pageStateById", updatedPageStateById);
   };
 
   const setPanelWidth = (width: number) => {

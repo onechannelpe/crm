@@ -1,9 +1,7 @@
 import { createMemo } from "solid-js";
 
-import {
-  useSidePanelPageFrame,
-  useSidePanelPageState,
-} from "../../router/page-frame-context";
+import { usePageInstanceId } from "../../router/page-instance-context";
+import { useSidePanelPageState } from "../../router/page-state";
 import { useSidePanel } from "../../state/use-side-panel";
 import type { LeadCreateSidePanelPageState } from "../../types/side-panel-page";
 import type { LeadCreateTabId } from "./model";
@@ -19,7 +17,7 @@ const LABEL_BY_TAB: Record<LeadCreateTabId, string> = {
 };
 
 export function useLeadCreatePageState() {
-  const frame = useSidePanelPageFrame();
+  const pageId = usePageInstanceId();
   const { updatePageState } = useSidePanel();
   const pageState = useSidePanelPageState("lead-create");
 
@@ -28,7 +26,7 @@ export function useLeadCreatePageState() {
       draft: LeadCreateSidePanelPageState["draft"],
     ) => LeadCreateSidePanelPageState["draft"],
   ) {
-    updatePageState(frame.entry.pageId, (state) => {
+    updatePageState(pageId(), (state) => {
       if (state.page !== "lead-create") {
         return state;
       }
