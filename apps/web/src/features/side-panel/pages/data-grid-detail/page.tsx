@@ -1,24 +1,10 @@
-import { createMemo, For } from "solid-js";
+import { For } from "solid-js";
 
 import { PanelList } from "../../components/list";
-import { usePageInstanceId } from "../../state/page-instance";
-import { useSidePanel } from "../../state/use-side-panel";
+import { useSidePanelPageState } from "../../router/page-frame-context";
 
 export function DataGridDetailPage() {
-  const pageId = usePageInstanceId();
-  const { getPageState } = useSidePanel();
-
-  const pageState = createMemo(() => {
-    const state = getPageState(pageId());
-
-    if (!state || state.page !== "data-grid-detail") {
-      throw new Error(
-        "Data grid detail side panel page state is not available",
-      );
-    }
-
-    return state;
-  });
+  const pageState = useSidePanelPageState("data-grid-detail");
 
   return (
     <PanelList>

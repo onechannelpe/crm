@@ -3,7 +3,7 @@ import { Show } from "solid-js";
 import X from "~/components/icons/x";
 import { cn } from "~/lib/utils";
 
-import { SIDE_PANEL_PAGES_CONFIG } from "../state/pages-config";
+import { SIDE_PANEL_PAGES_CONFIG } from "../registry/page-registry";
 import { useSidePanel } from "../state/use-side-panel";
 import { BackButton } from "./back-button";
 import { PageInfo } from "./page-info";

@@ -2,16 +2,16 @@ import { ErrorBoundary, Show, Suspense } from "solid-js";
 
 import { Loading } from "~/components/feedback/loading";
 
-import { PageInstanceProvider } from "../state/page-instance";
-import { SIDE_PANEL_PAGES_CONFIG } from "../state/pages-config";
+import { SIDE_PANEL_PAGES_CONFIG } from "../registry/page-registry";
 import { useSidePanel } from "../state/use-side-panel";
 import { TopBar } from "../top-bar/top-bar";
 import { Container } from "./container";
+import { PageFrameProvider } from "./page-frame-context";
 
 import styles from "./router.module.css";
 
 export function Router(props: { isMobile: boolean }) {
-  const { currentEntry } = useSidePanel();
+  const { currentFrame } = useSidePanel();
 
   return (
     <Container isMobile={props.isMobile}>
@@ -20,14 +20,14 @@ export function Router(props: { isMobile: boolean }) {
           <TopBar isMobile={props.isMobile} />
         </div>
         <div class={styles.pageBody}>
-          <Show when={currentEntry()} keyed>
-            {(entry) => {
+          <Show when={currentFrame()} keyed>
+            {(frame) => {
               const PageComponent =
-                SIDE_PANEL_PAGES_CONFIG[entry.page].component;
+                SIDE_PANEL_PAGES_CONFIG[frame.entry.page].component;
 
               return (
                 <div class={styles.pageContent}>
-                  <PageInstanceProvider pageId={entry.pageId}>
+                  <PageFrameProvider frame={frame}>
                     <ErrorBoundary
                       fallback={
                         <div class={styles.pageState}>
@@ -45,7 +45,7 @@ export function Router(props: { isMobile: boolean }) {
                         <PageComponent />
                       </Suspense>
                     </ErrorBoundary>
-                  </PageInstanceProvider>
+                  </PageFrameProvider>
                 </div>
               );
             }}
