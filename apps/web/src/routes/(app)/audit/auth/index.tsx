@@ -1,5 +1,5 @@
-import { createAsync, revalidate } from "@solidjs/router";
-import { createMemo, createSignal } from "solid-js";
+import { revalidate } from "@solidjs/router";
+import { Show, createMemo, createResource, createSignal } from "solid-js";
 
 import type { AuthFunnelSnapshot } from "~/actions/admin/auth-funnel";
 import { WindowSelect } from "~/components/features/audit/window-select";
@@ -84,20 +84,46 @@ function outcomeBadgeVariant(outcome: string): BadgeVariant {
 export default function AuditAuthPage() {
   const [windowMinutes, setWindowMinutes] = createSignal(60);
 
-  const snapshot = createAsync(() =>
+  const queryParams = createMemo(() => ({
+    windowMinutes: windowMinutes(),
+    limit: 80,
+  }));
+  const [snapshot] = createResource(queryParams, (params) =>
     authFunnelSnapshotQuery({
-      windowMinutes: windowMinutes(),
-      limit: 80,
+      windowMinutes: params.windowMinutes,
+      limit: params.limit,
     }),
   );
+  const latestSnapshot = () => snapshot.latest ?? null;
+  const isInitialLoading = () =>
+    snapshot.state === "pending" && snapshot.latest === undefined;
+  const isRefreshing = () => snapshot.state === "refreshing";
+  const snapshotError = (): Error | null => {
+    const error = snapshot.error;
+    if (error instanceof Error) {
+      return error;
+    }
+    if (error === undefined || error === null) {
+      return null;
+    }
+    return new Error(String(error));
+  };
+  const sourceStatus = (): "pending" | "ready" | "error" => {
+    if (snapshotError()) {
+      return "error";
+    }
+    if (isInitialLoading()) {
+      return "pending";
+    }
+    return "ready";
+  };
 
   const rows = createMemo<AuditAuthRow[]>(() =>
-    (snapshot()?.recent ?? []).map((row, index) => ({
+    (latestSnapshot()?.recent ?? []).map((row, index) => ({
       ...row,
       id: index + 1,
     })),
   );
-  const isLoading = () => snapshot() === undefined;
 
   const rowOpen = useSidePanelRowOpen<AuditAuthRow>((row) =>
     createDataGridDetailSidePanelPage({
@@ -126,6 +152,9 @@ export default function AuditAuthPage() {
         >
           Recargar
         </Button>
+        <Show when={isRefreshing() && !isInitialLoading()}>
+          <span class="text-xs text-muted-foreground">Actualizando...</span>
+        </Show>
       </FilterBar>
 
       <DataGrid
@@ -138,8 +167,9 @@ export default function AuditAuthPage() {
         }
         rowOpen={rowOpen}
         source={{
-          status: isLoading() ? "pending" : "ready",
+          status: sourceStatus(),
           rows: rows(),
+          error: snapshotError() ?? undefined,
         }}
       />
     </AppPage>
