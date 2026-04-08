@@ -7,7 +7,11 @@
     "tools/*"
   ],
   "scripts": {
-    "dev": "bun run --parallel dev:engine dev:web dev:worker",
+    "dev": "bun run --parallel --no-exit-on-error dev:infra dev:engine dev:web dev:worker",
+    "dev:infra": "bun run --parallel --no-exit-on-error dev:redis dev:libsql",
+    "dev:redis": "mise x redis@latest -- redis-server ./ops/dev/redis.conf",
+    "dev:libsql": "mise x libsql-server@latest -- sqld --no-welcome",
+    "dev:infra:setup": "mise use libsql-server@latest",
     "dev:engine": "cargo run -p engine --bin engine",
     "dev:web": "bun run --cwd apps/web dev",
     "dev:worker": "bun run --cwd apps/web worker:maintenance",
