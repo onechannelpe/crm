@@ -1,5 +1,5 @@
-import { createAsync, revalidate } from "@solidjs/router";
-import { createMemo, createSignal } from "solid-js";
+import { revalidate } from "@solidjs/router";
+import { Show, createMemo, createResource, createSignal } from "solid-js";
 
 import type { ObservabilitySnapshot } from "~/actions/admin/observability";
 import { WindowSelect } from "~/components/features/audit/window-select";
@@ -69,21 +69,48 @@ export default function MonitoringPage() {
   const [windowMinutes, setWindowMinutes] = createSignal(60);
   const [status, setStatus] = createSignal<MonitoringStatus>("all");
 
-  const snapshot = createAsync(() =>
+  const queryParams = createMemo(() => ({
+    windowMinutes: windowMinutes(),
+    status: status() === "all" ? undefined : status(),
+    limit: 80,
+  }));
+  const [snapshot] = createResource(queryParams, (params) =>
     observabilitySnapshotQuery({
-      windowMinutes: windowMinutes(),
-      status: status() === "all" ? undefined : status(),
-      limit: 80,
+      windowMinutes: params.windowMinutes,
+      status: params.status,
+      limit: params.limit,
     }),
   );
+  const latestSnapshot = () => snapshot.latest ?? null;
+  const isInitialLoading = () =>
+    snapshot.state === "pending" && snapshot.latest === undefined;
+  const isRefreshing = () => snapshot.state === "refreshing";
+  const snapshotError = (): Error | null => {
+    const error = snapshot.error;
+    if (error instanceof Error) {
+      return error;
+    }
+    if (error === undefined || error === null) {
+      return null;
+    }
+    return new Error(String(error));
+  };
+  const sourceStatus = (): "pending" | "ready" | "error" => {
+    if (snapshotError()) {
+      return "error";
+    }
+    if (isInitialLoading()) {
+      return "pending";
+    }
+    return "ready";
+  };
 
   const rows = createMemo<MonitoringRow[]>(() =>
-    (snapshot()?.summary ?? []).map((row, index) => ({
+    (latestSnapshot()?.summary ?? []).map((row, index) => ({
       ...row,
       id: index + 1,
     })),
   );
-  const isLoading = () => snapshot() === undefined;
 
   const rowOpen = useSidePanelRowOpen<MonitoringRow>((row) =>
     createDataGridDetailSidePanelPage({
@@ -123,6 +150,9 @@ export default function MonitoringPage() {
         >
           Recargar
         </Button>
+        <Show when={isRefreshing() && !isInitialLoading()}>
+          <span class="text-xs text-muted-foreground">Actualizando...</span>
+        </Show>
       </FilterBar>
 
       <DataGrid
@@ -135,8 +165,9 @@ export default function MonitoringPage() {
         }
         rowOpen={rowOpen}
         source={{
-          status: isLoading() ? "pending" : "ready",
+          status: sourceStatus(),
           rows: rows(),
+          error: snapshotError() ?? undefined,
         }}
       />
     </AppPage>

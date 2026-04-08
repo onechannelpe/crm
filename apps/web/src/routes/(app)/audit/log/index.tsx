@@ -1,5 +1,5 @@
-import { createAsync, revalidate } from "@solidjs/router";
-import { createMemo, createSignal } from "solid-js";
+import { revalidate } from "@solidjs/router";
+import { Show, createMemo, createResource, createSignal } from "solid-js";
 
 import {
   WINDOW_OPTIONS_EXTENDED,
@@ -82,24 +82,54 @@ export default function AuditLogPage() {
   const [entityTypeFilter, setEntityTypeFilter] = createSignal("");
   const [actorUserIdFilter, setActorUserIdFilter] = createSignal("");
 
-  const snapshot = createAsync(() =>
+  const queryParams = createMemo(() => ({
+    windowMinutes: windowMinutes(),
+    limit: 80,
+    onlyHighRisk: onlyHighRisk(),
+    action: actionFilter().trim() || undefined,
+    entityType: entityTypeFilter().trim() || undefined,
+    actorUserId: parseActorUserId(actorUserIdFilter()),
+  }));
+  const [snapshot] = createResource(queryParams, (params) =>
     auditReaderSnapshotQuery({
-      windowMinutes: windowMinutes(),
-      limit: 80,
-      onlyHighRisk: onlyHighRisk(),
-      action: actionFilter().trim() || undefined,
-      entityType: entityTypeFilter().trim() || undefined,
-      actorUserId: parseActorUserId(actorUserIdFilter()),
+      windowMinutes: params.windowMinutes,
+      limit: params.limit,
+      onlyHighRisk: params.onlyHighRisk,
+      action: params.action,
+      entityType: params.entityType,
+      actorUserId: params.actorUserId,
     }),
   );
+  const latestSnapshot = () => snapshot.latest ?? null;
+  const isInitialLoading = () =>
+    snapshot.state === "pending" && snapshot.latest === undefined;
+  const isRefreshing = () => snapshot.state === "refreshing";
+  const snapshotError = (): Error | null => {
+    const error = snapshot.error;
+    if (error instanceof Error) {
+      return error;
+    }
+    if (error === undefined || error === null) {
+      return null;
+    }
+    return new Error(String(error));
+  };
+  const sourceStatus = (): "pending" | "ready" | "error" => {
+    if (snapshotError()) {
+      return "error";
+    }
+    if (isInitialLoading()) {
+      return "pending";
+    }
+    return "ready";
+  };
 
   const rows = createMemo<AuditLogGridRow[]>(() =>
-    (snapshot()?.events ?? []).map((event, index) => ({
+    (latestSnapshot()?.events ?? []).map((event, index) => ({
       ...event,
       id: index + 1,
     })),
   );
-  const isLoading = () => snapshot() === undefined;
 
   const rowOpen = useSidePanelRowOpen<AuditLogGridRow>((row) =>
     createDataGridDetailSidePanelPage({
@@ -158,6 +188,9 @@ export default function AuditLogPage() {
         >
           Recargar
         </Button>
+        <Show when={isRefreshing() && !isInitialLoading()}>
+          <span class="text-xs text-muted-foreground">Actualizando...</span>
+        </Show>
       </FilterBar>
 
       <DataGrid
@@ -170,8 +203,9 @@ export default function AuditLogPage() {
         }
         rowOpen={rowOpen}
         source={{
-          status: isLoading() ? "pending" : "ready",
+          status: sourceStatus(),
           rows: rows(),
+          error: snapshotError() ?? undefined,
         }}
       />
     </AppPage>
