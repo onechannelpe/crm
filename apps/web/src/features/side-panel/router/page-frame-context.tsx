@@ -6,7 +6,6 @@ import {
   useContext,
 } from "solid-js";
 
-import { assertExpectedSidePanelPage } from "../core/invariants";
 import type {
   SidePanelPageDefinition,
   SidePanelPageKey,
@@ -44,6 +43,17 @@ type PageStateByKey<TPage extends SidePanelPageKey> = Extract<
   { page: TPage }
 >;
 
+function assertExpectedPageState<TPage extends SidePanelPageKey>(
+  expectedPage: TPage,
+  state: SidePanelPageState,
+): asserts state is PageStateByKey<TPage> {
+  if (state.page !== expectedPage) {
+    throw new Error(
+      `Side panel frame mismatch: expected ${expectedPage}, got ${state.page}`,
+    );
+  }
+}
+
 export function useSidePanelPageState<TPage extends SidePanelPageKey>(
   expectedPage: TPage,
 ): Accessor<PageStateByKey<TPage>> {
@@ -51,8 +61,7 @@ export function useSidePanelPageState<TPage extends SidePanelPageKey>(
 
   return createMemo(() => {
     const state = frame.state;
-    assertExpectedSidePanelPage(expectedPage, state.page);
-
-    return state as PageStateByKey<TPage>;
+    assertExpectedPageState(expectedPage, state);
+    return state;
   });
 }

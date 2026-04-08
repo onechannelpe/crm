@@ -14,6 +14,13 @@ export type SidePanelAction =
   | { type: "set-search-text"; text: string }
   | { type: "set-panel-width"; width: number };
 
+export type SidePanelStatePatch = Partial<
+  Pick<
+    SidePanelState,
+    "isOpen" | "isClosing" | "stack" | "searchText" | "panelWidth"
+  >
+>;
+
 function isSameNavigationEntry(
   left: SidePanelPageDefinition,
   right: SidePanelPageDefinition,
@@ -24,10 +31,10 @@ function isSameNavigationEntry(
   );
 }
 
-export function reduceSidePanelState(
+export function reduceSidePanelPatch(
   state: SidePanelState,
   action: SidePanelAction,
-): Partial<SidePanelState> {
+): SidePanelStatePatch | null {
   switch (action.type) {
     case "open-panel": {
       const currentFrame = state.stack.at(-1);
@@ -50,15 +57,23 @@ export function reduceSidePanelState(
     }
     case "close-panel":
       if (!state.isOpen && !state.isClosing) {
-        return {};
+        return null;
       }
 
-      return { isOpen: false, isClosing: true, searchText: "" };
+      return {
+        isOpen: false,
+        isClosing: true,
+        searchText: "",
+      };
     case "close-animation-complete":
       return { isClosing: false };
     case "navigate-to":
       if (action.resetStack) {
-        return { isOpen: true, isClosing: false, stack: [action.page] };
+        return {
+          isOpen: true,
+          isClosing: false,
+          stack: [action.page],
+        };
       }
 
       return {
@@ -68,7 +83,11 @@ export function reduceSidePanelState(
       };
     case "go-back":
       if (state.stack.length <= 1) {
-        return { isOpen: false, isClosing: true, searchText: "" };
+        return {
+          isOpen: false,
+          isClosing: true,
+          searchText: "",
+        };
       }
 
       return { stack: state.stack.slice(0, -1) };

@@ -1,7 +1,7 @@
 import { createStore } from "solid-js/store";
 
 import {
-  reduceSidePanelState,
+  reduceSidePanelPatch,
   updateSidePanelFrameState,
 } from "../core/reducer";
 import type {
@@ -46,43 +46,49 @@ export function createSidePanelStore() {
     panelWidth: SIDE_PANEL_WIDTH_DEFAULT,
   });
 
+  function applyAction(action: Parameters<typeof reduceSidePanelPatch>[1]) {
+    const patch = reduceSidePanelPatch(state, action);
+
+    if (!patch) {
+      return;
+    }
+
+    setState(patch);
+  }
+
   const openPanel = (page: SidePanelPageDefinition) => {
-    setState(reduceSidePanelState(state, { type: "open-panel", page }));
+    applyAction({ type: "open-panel", page });
   };
 
   const closePanel = () => {
-    setState(reduceSidePanelState(state, { type: "close-panel" }));
+    applyAction({ type: "close-panel" });
   };
 
   const onCloseAnimationComplete = () => {
-    setState(reduceSidePanelState(state, { type: "close-animation-complete" }));
+    applyAction({ type: "close-animation-complete" });
   };
 
   const navigateTo = (
     page: SidePanelPageDefinition,
     opts?: { resetStack?: boolean },
   ) => {
-    setState(
-      reduceSidePanelState(state, {
-        type: "navigate-to",
-        page,
-        resetStack: opts?.resetStack,
-      }),
-    );
+    applyAction({
+      type: "navigate-to",
+      page,
+      resetStack: opts?.resetStack,
+    });
   };
 
   const goBack = () => {
-    setState(reduceSidePanelState(state, { type: "go-back" }));
+    applyAction({ type: "go-back" });
   };
 
   const navigateToStackIndex = (index: number) => {
-    setState(
-      reduceSidePanelState(state, { type: "navigate-to-stack-index", index }),
-    );
+    applyAction({ type: "navigate-to-stack-index", index });
   };
 
   const setSearchText = (text: string) => {
-    setState(reduceSidePanelState(state, { type: "set-search-text", text }));
+    applyAction({ type: "set-search-text", text });
   };
 
   const updatePageState = (
@@ -104,12 +110,10 @@ export function createSidePanelStore() {
 
   const setPanelWidth = (width: number) => {
     const nextWidth = clampPanelWidth(width);
-    setState(
-      reduceSidePanelState(state, {
-        type: "set-panel-width",
-        width: nextWidth,
-      }),
-    );
+    applyAction({
+      type: "set-panel-width",
+      width: nextWidth,
+    });
     try {
       localStorage.setItem(SIDE_PANEL_WIDTH_KEY, String(nextWidth));
     } catch {
