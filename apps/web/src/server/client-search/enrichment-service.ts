@@ -1,6 +1,8 @@
 import type { Selectable } from "kysely";
 
 import type { SearchEnrichmentJobsTable } from "~/lib/db/types";
+import { JOB_CHANNELS } from "~/lib/job-queue/channels";
+import { publishJob } from "~/lib/redis/publisher";
 import { isPlainRecord } from "~/lib/type-guards";
 import { createSunatScraperClient } from "~/server/client-search/enrichment/sunat/client";
 import type {
@@ -129,48 +131,6 @@ function extractLegalName(
   return payload.razonSocial?.trim() || null;
 }
 
-async function processEnrichmentJob(
-  job: SearchEnrichmentJobLeaseRow,
-  scraper: SunatScraperClient,
-  repo: SearchEnrichmentRepo,
-  currentNow: number,
-  leaseOwner: string,
-): Promise<void> {
-  const payload =
-    job.document_type === "dni"
-      ? await scraper.fetchDni(job.document_value)
-      : await scraper.fetchRuc(job.document_value);
-
-  if (
-    !payload ||
-    (typeof payload === "object" && Object.keys(payload).length < 1)
-  ) {
-    await repo.markJobFailed(
-      job.id,
-      leaseOwner,
-      "No enrichment data returned",
-      currentNow,
-    );
-    return;
-  }
-
-  const fullName = extractFullName(job.document_type, payload);
-  const legalName = extractLegalName(job.document_type, payload);
-
-  await repo.upsertOverlay({
-    document_type: job.document_type,
-    document_value: job.document_value,
-    full_name: fullName,
-    legal_name: legalName,
-    source: "sunat",
-    confidence: 80,
-    fetched_at: currentNow,
-    expires_at: currentNow + OVERLAY_TTL_MS,
-    payload_json: JSON.stringify(payload.payload),
-  });
-  await repo.markJobCompleted(job.id, leaseOwner, currentNow);
-}
-
 export function createSearchEnrichmentService(
   repos: { searchEnrichment: SearchEnrichmentRepo },
   deps: {
@@ -210,6 +170,53 @@ export function createSearchEnrichmentService(
   };
 
   return {
+    searchEnrichmentRepo: repos.searchEnrichment,
+    async processJob(
+      job: SearchEnrichmentJobLeaseRow,
+      leaseOwner: string,
+      signal?: AbortSignal,
+    ): Promise<void> {
+      const currentNow = now();
+      const payload =
+        job.document_type === "dni"
+          ? await scraper.fetchDni(job.document_value)
+          : await scraper.fetchRuc(job.document_value);
+
+      if (signal?.aborted) throw new Error("Job aborted");
+
+      if (
+        !payload ||
+        (typeof payload === "object" && Object.keys(payload).length < 1)
+      ) {
+        throw new Error("No enrichment data returned");
+      }
+
+      const fullName = extractFullName(job.document_type, payload);
+      const legalName = extractLegalName(job.document_type, payload);
+
+      if (signal?.aborted) throw new Error("Job aborted after processing");
+
+      await repos.searchEnrichment.upsertOverlay({
+        document_type: job.document_type,
+        document_value: job.document_value,
+        full_name: fullName,
+        legal_name: legalName,
+        source: "sunat",
+        confidence: 80,
+        fetched_at: currentNow,
+        expires_at: currentNow + OVERLAY_TTL_MS,
+        payload_json: JSON.stringify(payload.payload),
+      });
+
+      if (signal?.aborted) throw new Error("Job aborted after database update");
+
+      await repos.searchEnrichment.markJobCompleted(
+        job.id,
+        leaseOwner,
+        currentNow,
+      );
+    },
+
     async request(
       documentType: EnrichmentDocumentType,
       documentValue: string,
@@ -224,13 +231,14 @@ export function createSearchEnrichmentService(
       const safeDocumentValue = normalizedDocument.value;
       try {
         const currentNow = now();
-        await repos.searchEnrichment.enqueueJob({
+        const jobId = await repos.searchEnrichment.enqueueJob({
           document_type: documentType,
           document_value: safeDocumentValue,
           requested_by_user_id: requestedByUserId,
           now: currentNow,
           max_attempts: maxAttempts,
         });
+        await publishJob(JOB_CHANNELS.ENRICHMENT, jobId);
         const status = await findStatus(documentType, safeDocumentValue);
         return Ok(status);
       } catch (error: unknown) {
@@ -284,27 +292,18 @@ export function createSearchEnrichmentService(
       const iter = jobs[Symbol.iterator]();
       const worker = async () => {
         for (const job of iter) {
-          const currentNow = now();
           try {
-            // eslint-disable-next-line no-await-in-loop
-            await processEnrichmentJob(
-              job,
-              scraper,
-              repos.searchEnrichment,
-              currentNow,
-              leaseOwner,
-            );
+            await this.processJob(job, leaseOwner);
           } catch (error: unknown) {
             const message =
               error instanceof Error
                 ? error.message
                 : "Search enrichment worker failed";
-            // eslint-disable-next-line no-await-in-loop
             await repos.searchEnrichment.markJobFailed(
               job.id,
               leaseOwner,
               message,
-              currentNow,
+              now(),
             );
           }
         }

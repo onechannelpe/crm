@@ -1,5 +1,7 @@
 import { notFoundError } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
+import { JOB_CHANNELS } from "~/lib/job-queue/channels";
+import { publishJob } from "~/lib/redis/publisher";
 import { shortName } from "~/lib/users/display-name";
 import type { AppContext } from "~/server/shared/action-runtime";
 
@@ -238,6 +240,8 @@ export async function requestSalesExportJob(
     attempt_count: 0,
     max_attempts: 5,
   });
+
+  await publishJob(JOB_CHANNELS.SALES_EXPORT, jobId);
 
   const newest = await deps.reportExportJobs.findJobById(jobId);
   if (!newest) {

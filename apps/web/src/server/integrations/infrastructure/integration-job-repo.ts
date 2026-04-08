@@ -1,6 +1,7 @@
-import type { Insertable, Selectable } from "kysely";
+import { sql, type Insertable, type Selectable } from "kysely";
 
-import type { Database } from "~/lib/db/types";
+import type { Database, PipelineIntegrationJobsTable } from "~/lib/db/types";
+import { createLogger } from "~/lib/observability/logger";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 export type IntegrationJobRow = Selectable<
@@ -9,6 +10,8 @@ export type IntegrationJobRow = Selectable<
 export type NewIntegrationJobRow = Insertable<
   Database["pipeline_integration_jobs"]
 >;
+
+const logger = createLogger("integration-job-repo");
 
 export function createIntegrationJobRepo(db: DatabaseExecutor) {
   return {
@@ -42,35 +45,65 @@ export function createIntegrationJobRepo(db: DatabaseExecutor) {
       leaseMs: number,
       workerId: string,
       batchSize: number,
+      types?: Array<PipelineIntegrationJobsTable["type"]>,
     ): Promise<IntegrationJobRow[]> {
       const now = Date.now();
       const leaseUntil = now + leaseMs;
-      const pending = await db
+
+      let query = db
         .selectFrom("pipeline_integration_jobs")
-        .select(["id"])
-        .where("status", "=", "PENDING")
+        .select(["id", "status", "lease_until"])
         .where((eb) =>
-          eb.or([eb("lease_until", "is", null), eb("lease_until", "<", now)]),
-        )
+          eb.and([
+            eb("status", "=", "PENDING"),
+            eb.or([
+              eb("available_at", "is", null),
+              eb("available_at", "<=", now),
+            ]),
+            eb.or([eb("lease_until", "is", null), eb("lease_until", "<", now)]),
+          ]),
+        );
+
+      if (types && types.length > 0) {
+        query = query.where("type", "in", types);
+      }
+
+      const candidates = await query
+        .orderBy("created_at", "asc")
         .limit(batchSize)
         .execute();
 
-      if (pending.length === 0) return [];
+      if (candidates.length === 0) return [];
 
-      const ids = pending.map((row) => row.id);
-      await db
+      const ids = candidates.map((row) => row.id);
+      let updateQuery = db
         .updateTable("pipeline_integration_jobs")
         .set({
           status: "PROCESSING",
           lease_owner: workerId,
           lease_until: leaseUntil,
-          attempt_count: 1,
+          attempt_count: sql<number>`attempt_count + 1`,
         })
         .where("id", "in", ids)
-        .where("status", "=", "PENDING")
-        .execute();
+        .where((eb) =>
+          eb.and([
+            eb("status", "=", "PENDING"),
+            eb.or([
+              eb("available_at", "is", null),
+              eb("available_at", "<=", now),
+            ]),
+            eb.or([eb("lease_until", "is", null), eb("lease_until", "<", now)]),
+          ]),
+        );
+
+      if (types && types.length > 0) {
+        updateQuery = updateQuery.where("type", "in", types);
+      }
+
+      await updateQuery.execute();
 
       return db
+
         .selectFrom("pipeline_integration_jobs")
         .selectAll()
         .where("id", "in", ids)
@@ -97,6 +130,36 @@ export function createIntegrationJobRepo(db: DatabaseExecutor) {
           rows_failed: result.rowsFailed,
           results_json: result.resultsJson,
           completed_at: Date.now(),
+          lease_owner: null,
+          lease_until: null,
+        })
+        .where("id", "=", id)
+        .execute();
+    },
+
+    async extendLease(
+      id: number,
+      workerId: string,
+      leaseMs: number,
+    ): Promise<boolean> {
+      const now = Date.now();
+      const result = await db
+        .updateTable("pipeline_integration_jobs")
+        .set({ lease_until: now + leaseMs })
+        .where("id", "=", id)
+        .where("lease_owner", "=", workerId)
+        .where("status", "=", "PROCESSING")
+        .executeTakeFirst();
+
+      return Number(result.numUpdatedRows ?? 0) > 0;
+    },
+
+    scheduleRetry(id: number, availableAt: number) {
+      return db
+        .updateTable("pipeline_integration_jobs")
+        .set({
+          status: "PENDING",
+          available_at: availableAt,
           lease_owner: null,
           lease_until: null,
         })

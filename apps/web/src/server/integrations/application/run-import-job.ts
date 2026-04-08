@@ -8,6 +8,7 @@ import type {
 import { runPipelineCommand } from "~/server/pipeline/infrastructure/command-runtime";
 import { createAuditService } from "~/server/shared/audit";
 
+import type { IntegrationJobRow } from "../infrastructure/integration-job-repo";
 import {
   parsePrioridadImport,
   type ImportRowFailure as PrioridadImportFailure,
@@ -30,6 +31,36 @@ type RowResult =
 
 export function createImportBatchRunner() {
   return {
+    async processJob(
+      job: IntegrationJobRow,
+      signal: AbortSignal,
+    ): Promise<void> {
+      const runtime = createIntegrationRuntime(db);
+      if (!job.file_path) {
+        throw new Error("Missing file path for import job");
+      }
+
+      const text = new TextDecoder("utf-8").decode(
+        await integrationJobBlobStore.get(job.file_path),
+      );
+
+      if (signal.aborted) throw new Error("Job aborted");
+
+      const result =
+        job.type === "import_status"
+          ? await runStatusImportJob(job.id, text, job.requested_by_user_id)
+          : await runPrioridadImportJob(job.id, text, job.requested_by_user_id);
+
+      if (signal.aborted) throw new Error("Job aborted after processing");
+
+      await runtime.jobs.markCompleted(job.id, {
+        rowsTotal: result.total,
+        rowsApplied: result.applied,
+        rowsFailed: result.failed,
+        resultsJson: JSON.stringify(result.results),
+      });
+    },
+
     async runBatch(
       batchSize: number,
       leaseMs: number,
@@ -40,27 +71,13 @@ export function createImportBatchRunner() {
         leaseMs,
         workerId,
         batchSize,
+        ["import_status", "import_prioridad"],
       );
       const results = await Promise.all(
         jobs.map(async (job) => {
-          if (!job.file_path) return false;
-
           try {
-            const text = new TextDecoder("utf-8").decode(
-              await integrationJobBlobStore.get(job.file_path),
-            );
-
-            const result =
-              job.type === "import_status"
-                ? await runStatusImportJob(job.id, text, job.user_id)
-                : await runPrioridadImportJob(job.id, text, job.user_id);
-
-            await runtime.jobs.markCompleted(job.id, {
-              rowsTotal: result.total,
-              rowsApplied: result.applied,
-              rowsFailed: result.failed,
-              resultsJson: JSON.stringify(result.results),
-            });
+            const controller = new AbortController();
+            await this.processJob(job, controller.signal);
             return true;
           } catch (error) {
             const message =

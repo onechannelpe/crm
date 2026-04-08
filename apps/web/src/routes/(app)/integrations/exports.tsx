@@ -1,10 +1,7 @@
 import { createAsync, useNavigate } from "@solidjs/router";
 import { createSignal, For } from "solid-js";
 
-import {
-  downloadExport,
-  queueLeadExport,
-} from "~/actions/integrations/exports";
+import { queueLeadExport } from "~/actions/integrations/exports";
 import { listIntegrationJobs } from "~/actions/integrations/imports";
 import { AppPage } from "~/components/layout/page";
 import { toAppError } from "~/lib/app-errors";
@@ -31,21 +28,7 @@ export default function ExportsPage() {
   }
 
   async function handleDownload(jobId: number) {
-    try {
-      const bytes = await downloadExport(jobId);
-      // eslint-disable-next-line no-unsafe-type-assertion
-      const blob = new Blob([bytes.buffer as ArrayBuffer], {
-        type: "text/csv",
-      });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `leads-export-${jobId}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      setError(toAppError(err, "Error al descargar").publicMessage);
-    }
+    window.location.assign(`/api/integrations/exports/${jobId}/download`);
   }
 
   const exportJobs = () => jobs().filter((j) => j.type === "export");

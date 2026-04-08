@@ -15,11 +15,17 @@ export function createDb(path: string): Kysely<DatabaseSchema> {
   });
 
   const applyPragma = (statement: string) => {
-    void client.execute(statement).catch((error: unknown) => {
-      logger.error("pragma_apply_failed", { statement, error });
-    });
+    void client
+      .execute(statement)
+      .then(() => {
+        logger.info("pragma_applied", { statement });
+      })
+      .catch((error: unknown) => {
+        logger.error("pragma_apply_failed", { statement, error });
+      });
   };
 
+  logger.info("db_initialization_started", { path });
   applyPragma("PRAGMA journal_mode = WAL");
   applyPragma("PRAGMA synchronous = NORMAL");
   applyPragma("PRAGMA busy_timeout = 5000");

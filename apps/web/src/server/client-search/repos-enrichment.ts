@@ -1,4 +1,5 @@
 import type { Insertable, Kysely } from "kysely";
+import { sql } from "kysely";
 
 import type {
   Database,
@@ -86,7 +87,11 @@ export function createSearchEnrichmentRepo(db: Kysely<Database>) {
         .select(["id"])
         .where((eb) =>
           eb.and([
-            eb.or([eb("status", "=", "queued"), eb("status", "=", "running")]),
+            eb("status", "=", "queued"),
+            eb.or([
+              eb("available_at", "is", null),
+              eb("available_at", "<=", now),
+            ]),
             eb.or([eb("lease_until", "is", null), eb("lease_until", "<", now)]),
           ]),
         )
@@ -103,13 +108,15 @@ export function createSearchEnrichmentRepo(db: Kysely<Database>) {
               lease_owner: leaseOwner,
               lease_until: leaseUntil,
               last_error: null,
+              attempt_count: sql<number>`attempt_count + 1`,
             })
             .where("id", "=", id)
             .where((eb) =>
               eb.and([
+                eb("status", "=", "queued"),
                 eb.or([
-                  eb("status", "=", "queued"),
-                  eb("status", "=", "running"),
+                  eb("available_at", "is", null),
+                  eb("available_at", "<=", now),
                 ]),
                 eb.or([
                   eb("lease_until", "is", null),
@@ -150,41 +157,54 @@ export function createSearchEnrichmentRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    async markJobFailed(
+    async extendLease(
+      id: number,
+      workerId: string,
+      leaseMs: number,
+    ): Promise<boolean> {
+      const now = Date.now();
+      const result = await db
+        .updateTable("search_enrichment_jobs")
+        .set({ lease_until: now + leaseMs })
+        .where("id", "=", id)
+        .where("lease_owner", "=", workerId)
+        .where("status", "=", "running")
+        .executeTakeFirst();
+
+      return Number(result.numUpdatedRows ?? 0) > 0;
+    },
+
+    scheduleRetry(id: number, availableAt: number) {
+      return db
+        .updateTable("search_enrichment_jobs")
+        .set({
+          status: "queued",
+          available_at: availableAt,
+          lease_owner: null,
+          lease_until: null,
+        })
+        .where("id", "=", id)
+        .execute();
+    },
+
+    markJobFailed(
       id: number,
       leaseOwner: string,
       errorMessage: string,
       now: number,
-    ): Promise<JobStatus | "missing"> {
-      const job = await db
-        .selectFrom("search_enrichment_jobs")
-        .select(["attempt_count", "max_attempts"])
-        .where("id", "=", id)
-        .where("status", "=", "running")
-        .where("lease_owner", "=", leaseOwner)
-        .executeTakeFirst();
-      if (!job) return "missing";
-
-      const nextAttempt = job.attempt_count + 1;
-      const exhausted = nextAttempt >= job.max_attempts;
-      const nextStatus: JobStatus = exhausted ? "failed" : "queued";
-
-      await db
+    ) {
+      return db
         .updateTable("search_enrichment_jobs")
         .set({
-          status: nextStatus,
-          attempt_count: nextAttempt,
-          completed_at: exhausted ? now : null,
+          status: "failed",
+          completed_at: now,
           lease_owner: null,
           lease_until: null,
           last_error: errorMessage,
         })
         .where("id", "=", id)
-        .where("status", "=", "running")
         .where("lease_owner", "=", leaseOwner)
         .execute();
-
-      return nextStatus;
     },
 
     getOverlay(documentType: DocumentType, documentValue: string, now: number) {
