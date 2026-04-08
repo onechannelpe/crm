@@ -8,6 +8,7 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 import type {
   EnrichmentDocumentType,
   SearchEnrichmentJobLeaseRow,
+  SearchEnrichmentOverlayRow,
   SearchEnrichmentOverlay,
   SearchEnrichmentProcessResult,
   SearchEnrichmentRepoPort,
@@ -53,17 +54,7 @@ function normalizeDocumentValue(
   return Ok(value);
 }
 
-function mapOverlay(row: {
-  document_type: EnrichmentDocumentType;
-  document_value: string;
-  full_name: string | null;
-  legal_name: string | null;
-  source: "sunat";
-  confidence: number;
-  fetched_at: number;
-  expires_at: number;
-  payload_json: string;
-}): SearchEnrichmentOverlay {
+function mapOverlay(row: SearchEnrichmentOverlayRow): SearchEnrichmentOverlay {
   return {
     documentType: row.document_type,
     documentValue: row.document_value,

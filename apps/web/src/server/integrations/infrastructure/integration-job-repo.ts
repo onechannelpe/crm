@@ -1,18 +1,15 @@
-import { sql, type Insertable, type Selectable } from "kysely";
+import { sql } from "kysely";
 
-import type { Database, PipelineIntegrationJobsTable } from "~/lib/db/types";
+import type {
+  IntegrationJobRow,
+  IntegrationJobType,
+  NewIntegrationJob,
+} from "~/server/integrations/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-
-export type IntegrationJobRow = Selectable<
-  Database["pipeline_integration_jobs"]
->;
-export type NewIntegrationJobRow = Insertable<
-  Database["pipeline_integration_jobs"]
->;
 
 export function createIntegrationJobRepo(db: DatabaseExecutor) {
   return {
-    async insert(values: NewIntegrationJobRow): Promise<number> {
+    async insert(values: NewIntegrationJob): Promise<number> {
       const result = await db
         .insertInto("pipeline_integration_jobs")
         .values(values)
@@ -42,7 +39,7 @@ export function createIntegrationJobRepo(db: DatabaseExecutor) {
       leaseMs: number,
       workerId: string,
       batchSize: number,
-      types?: Array<PipelineIntegrationJobsTable["type"]>,
+      types?: IntegrationJobType[],
     ): Promise<IntegrationJobRow[]> {
       const now = Date.now();
       const leaseUntil = now + leaseMs;

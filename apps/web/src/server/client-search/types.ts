@@ -39,21 +39,31 @@ export interface SearchEnrichmentProcessResult {
 
 export type SearchEnrichmentJobLeaseRow = Selectable<SearchEnrichmentJobsTable>;
 
+export type SearchEnrichmentOverlayRow = {
+  document_type: EnrichmentDocumentType;
+  document_value: string;
+  full_name: string | null;
+  legal_name: string | null;
+  source: "sunat";
+  confidence: number;
+  fetched_at: number;
+  expires_at: number;
+  payload_json: string;
+};
+
+export type SearchEnrichmentJobStatusRow = {
+  id: number;
+  status: SearchEnrichmentStatus["status"];
+  requested_at: number;
+  completed_at: number | null;
+  last_error: string | null;
+};
+
 export interface SearchEnrichmentRepoPort {
   findJobByDocument(
     documentType: EnrichmentDocumentType,
     documentValue: string,
-  ): Promise<
-    | {
-        id: number;
-        status: SearchEnrichmentStatus["status"];
-        requested_at: number;
-        completed_at: number | null;
-        last_error: string | null;
-      }
-    | null
-    | undefined
-  >;
+  ): Promise<SearchEnrichmentJobStatusRow | null | undefined>;
   enqueueJob(values: {
     document_type: EnrichmentDocumentType;
     document_value: string;
@@ -83,32 +93,8 @@ export interface SearchEnrichmentRepoPort {
     documentType: EnrichmentDocumentType,
     documentValue: string,
     now: number,
-  ): Promise<
-    | {
-        document_type: EnrichmentDocumentType;
-        document_value: string;
-        full_name: string | null;
-        legal_name: string | null;
-        source: "sunat";
-        confidence: number;
-        fetched_at: number;
-        expires_at: number;
-        payload_json: string;
-      }
-    | null
-    | undefined
-  >;
-  upsertOverlay(values: {
-    document_type: EnrichmentDocumentType;
-    document_value: string;
-    full_name: string | null;
-    legal_name: string | null;
-    source: "sunat";
-    confidence: number;
-    fetched_at: number;
-    expires_at: number;
-    payload_json: string;
-  }): Promise<unknown>;
+  ): Promise<SearchEnrichmentOverlayRow | null | undefined>;
+  upsertOverlay(values: SearchEnrichmentOverlayRow): Promise<unknown>;
 }
 
 export interface SearchEnrichmentService {

@@ -1,5 +1,6 @@
 import { RedisClient } from "bun";
 
+import type { JobChannel } from "~/lib/job-queue/channels";
 import { createLogger } from "~/lib/observability/logger";
 
 const logger = createLogger("redis-publisher");
@@ -22,7 +23,7 @@ export function getPublisher(): RedisClient {
 /**
  * Publishes a message to a channel.
  */
-export async function publishJob(channel: string, jobId: number) {
+export async function publishJob(channel: JobChannel, jobId: number) {
   try {
     const client = getPublisher();
     await client.publish(channel, String(jobId));
