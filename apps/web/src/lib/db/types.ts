@@ -892,6 +892,35 @@ export interface PipelineIntegrationJobsTable {
   completed_at: number | null;
 }
 
+export interface PipelineIntegrationImportRowsTable {
+  id: Generated<number>;
+  integration_job_id: number;
+  row_number: number;
+  type: "import_status" | "import_prioridad";
+  ruc: string;
+  status_value: string | null;
+  prioridad_value: string | null;
+  state: "staged" | "applied" | "failed";
+  lead_id: number | null;
+  failure_reason: string | null;
+  created_at: number;
+  applied_at: number | null;
+}
+
+export interface PipelineIntegrationOutboxEventsTable {
+  id: Generated<number>;
+  topic: "lead.needs_executive_input" | "lead.ready_for_quotation";
+  payload_json: string;
+  status: "pending" | "processing" | "completed" | "failed";
+  attempt_count: ColumnType<number, number | undefined, number>;
+  available_at: number;
+  lease_owner: string | null;
+  lease_until: number | null;
+  error_message: string | null;
+  created_at: number;
+  processed_at: number | null;
+}
+
 export interface Database {
   branches: BranchesTable;
   teams: TeamsTable;
@@ -960,4 +989,6 @@ export interface Database {
   pipeline_history_events: PipelineHistoryEventsTable;
   lead_sourcing_policies: LeadSourcingPoliciesTable;
   pipeline_integration_jobs: PipelineIntegrationJobsTable;
+  pipeline_integration_import_rows: PipelineIntegrationImportRowsTable;
+  pipeline_integration_outbox_events: PipelineIntegrationOutboxEventsTable;
 }
