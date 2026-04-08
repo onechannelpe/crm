@@ -26,6 +26,7 @@ export async function seedSessionDeleteFixtures(
     phone_e164: `+5199022${String(index).padStart(4, "0")}`,
     onboarding_completed_at: BENCH_NOW,
     role: "executive" as const,
+    executive_category: "elite" as const,
     is_active: 1,
     created_at: BENCH_NOW,
   }));
