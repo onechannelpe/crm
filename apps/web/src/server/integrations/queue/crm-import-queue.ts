@@ -1,7 +1,7 @@
 import { db } from "~/lib/db/db";
 import { createJobQueue } from "~/lib/job-queue/job-queue";
 
-import { createImportBatchRunner } from "../application/run-import-job";
+import { createImportBatchRunner } from "../application/import/runner";
 import { createIntegrationRuntime } from "../infrastructure/runtime";
 import type {
   ImportBatchRunner,

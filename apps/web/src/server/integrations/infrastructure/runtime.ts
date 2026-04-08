@@ -4,7 +4,6 @@ import { createLeadExportQuery } from "~/server/pipeline/infrastructure/lead-exp
 import { createLeadRepo } from "~/server/pipeline/infrastructure/lead-repo";
 import { createUsersRepo } from "~/server/users/repos-users";
 
-import { createAuditLogsRepo } from "../../shared/repos-audit-logs";
 import { createJobBlobStore } from "../job-blob-store";
 import type { IntegrationRuntime } from "../types";
 import { createIntegrationJobRepo } from "./integration-job-repo";
@@ -15,7 +14,6 @@ export function createIntegrationRuntime(executor = db): IntegrationRuntime {
     leads: createLeadRepo(executor),
     leadExportQuery: createLeadExportQuery(executor),
     users: createUsersRepo(executor),
-    auditLogs: createAuditLogsRepo(executor),
   };
 }
 
