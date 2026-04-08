@@ -1,12 +1,12 @@
 import { For, Show } from "solid-js";
 
-import type { LeadTimelineItem } from "~/actions/pipeline/contracts";
 import Building2 from "~/components/icons/building-2";
 import CalendarDays from "~/components/icons/calendar-days";
 import CircleAlert from "~/components/icons/circle-alert";
 import Package from "~/components/icons/package";
 import Phone from "~/components/icons/phone";
 import { formatDateTime } from "~/lib/utils";
+import type { LeadTimelineItem } from "~/server/pipeline/application/queries/views/lead-detail";
 
 import styles from "./lead-detail-overview.module.css";
 
@@ -20,7 +20,7 @@ function timelineIcon(kind: LeadTimelineItem["kind"]) {
 export function LeadTimelineSection(props: { timeline: LeadTimelineItem[] }) {
   return (
     <section class={styles.section}>
-      <div class={styles.sectionTitle}>Timeline</div>
+      <div class={styles.sectionTitle}>Línea de tiempo</div>
       <div class={styles.timeline}>
         <For each={props.timeline}>
           {(item) => (

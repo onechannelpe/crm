@@ -3,6 +3,7 @@ import { runInPipelineTransaction } from "../../shared/pipeline-transaction";
 import { createAuditLogsRepo } from "../../shared/repos-audit-logs";
 import type { PipelineAuditService } from "../application/ports/audit-service";
 import type { PipelineEngineGateway } from "../application/ports/engine-gateway";
+import type { LeadEnrichmentQueue } from "../application/ports/enrichment-queue";
 import type { PipelineNotificationCenter } from "../application/ports/notification-center";
 import {
   createPipelineAuditLogRepo,
@@ -10,12 +11,14 @@ import {
 } from "./audit-log";
 import { createPipelineDeps, type PipelineDeps } from "./deps";
 import { createEngineGateway } from "./engine-gateway";
+import { createLeadEnrichmentQueue } from "./enrichment-queue";
 import { createPipelineNotificationCenter } from "./notifications";
 
 export type PipelineCommandRuntime = {
   deps: PipelineDeps;
   auditService: PipelineAuditService;
   engineGateway: PipelineEngineGateway;
+  leadEnrichmentQueue: LeadEnrichmentQueue;
   notificationCenter: PipelineNotificationCenter;
 };
 
@@ -32,6 +35,7 @@ function createPipelineCommandRuntime(
     deps: createPipelineDeps(executor),
     auditService: createPipelineAuditServiceRuntime(executor),
     engineGateway: createEngineGateway(),
+    leadEnrichmentQueue: createLeadEnrichmentQueue(executor),
     notificationCenter: createPipelineNotificationCenter(executor),
   };
 }

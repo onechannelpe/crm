@@ -17,6 +17,7 @@ function toCapacityUser(user: UserRow): CapacityUser {
     names: user.names,
     firstSurname: user.first_surname,
     secondSurname: user.second_surname,
+    executiveCategory: user.executive_category,
   };
 }
 

@@ -1,4 +1,4 @@
-import type { LeadListRowView } from "~/actions/pipeline/contracts";
+import type { LeadListRowView } from "~/server/pipeline/application/queries/views/lead-list";
 
 import type { RecordIndexSortDefinition } from "../../../record-index/model/sort";
 
@@ -41,7 +41,7 @@ export const LEADS_RECORD_INDEX_SORT: RecordIndexSortDefinition<
   LeadListRowView,
   LeadSortKey
 > = {
-  label: "Sort",
+  label: "Ordenar",
   menuId: "record-index-sort-menu",
   options: LEADS_RECORD_INDEX_SORTS,
   defaultValue: "createdAt_desc",

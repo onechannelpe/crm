@@ -1,5 +1,5 @@
+import type { LeadCallOutcome } from "~/pipeline/contracts/lead-schema";
 import type { LeadHistoryEntry } from "~/server/pipeline/domain/history";
-import type { LeadCallOutcome } from "~/server/pipeline/domain/lead";
 
 import type { LeadTimelineItem } from "../queries/views/lead-detail";
 import { formatTimelineActorName } from "./timeline-actor-name";
@@ -38,6 +38,24 @@ export function presentTimelineItem(
         kind: "system",
         title: "Prospecto registrado",
         description: `Registrado por ${actorDisplayName}.`,
+        actorDisplayName,
+      };
+    case "lead_status_updated":
+      return {
+        id: `history:${event.id}`,
+        occurredAt: event.occurredAt,
+        kind: "system",
+        title: "Estado actualizado",
+        description: event.payload.reason,
+        actorDisplayName,
+      };
+    case "lead_priority_updated":
+      return {
+        id: `history:${event.id}`,
+        occurredAt: event.occurredAt,
+        kind: "system",
+        title: "Prioridad actualizada",
+        description: event.payload.reason,
         actorDisplayName,
       };
     case "lead_reviewed":

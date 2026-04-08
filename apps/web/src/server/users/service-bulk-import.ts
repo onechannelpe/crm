@@ -1,4 +1,8 @@
 import type { Role } from "~/lib/auth/access/rbac";
+import {
+  isExecutiveCategoryValue,
+  type ExecutiveCategoryValue,
+} from "~/lib/db/types";
 import type { InviteService } from "~/server/invites/application/types";
 import type { BranchId, UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
@@ -14,6 +18,7 @@ export interface BulkImportRow {
   names: string;
   email: string;
   expiresAt: number | null;
+  executiveCategory: ExecutiveCategoryValue | null;
 }
 
 export type BulkImportError = {
@@ -67,6 +72,7 @@ export async function applyImport(
         secondSurname: row.secondSurname,
         email: row.email,
         role: safeRole,
+        executiveCategory: row.executiveCategory,
         teamId: null,
         expiresAt: row.expiresAt,
       });
@@ -106,6 +112,7 @@ const CSV_COLUMNS = [
   "NAMES",
   "EMAIL",
   "DATE_EXPIRY",
+  "EXECUTIVE_CATEGORY",
 ] as const;
 
 function parseCsvLine(line: string): string[] {
@@ -128,7 +135,10 @@ function parseCsvLine(line: string): string[] {
 
 export function parseAndValidateCsvRows(
   csv: string,
+  role: Role,
 ): Result<BulkParseResult, BulkImportError> {
+  const isExecutive = role === "executive";
+
   const lines = csv
     .split(/\r?\n/)
     .map((l) => l.trim())
@@ -141,11 +151,19 @@ export function parseAndValidateCsvRows(
   const header = parseCsvLine(lines[0]).map((h) =>
     h.toUpperCase().replace(/^"(.+)"$/, "$1"),
   );
-  const expectedHeader = CSV_COLUMNS.slice(0, 4).join(",");
+  const requiredColumns = isExecutive
+    ? CSV_COLUMNS.slice(0, 4).join(",") + ",DATE_EXPIRY,EXECUTIVE_CATEGORY"
+    : CSV_COLUMNS.slice(0, 4).join(",");
   if (!header.slice(0, 4).every((col, i) => col === CSV_COLUMNS[i])) {
     return Err({
       reason: "parse_error",
-      message: `Encabezado inválido. Se esperaba: ${expectedHeader}[,DATE_EXPIRY]`,
+      message: `Encabezado inválido. Se esperaba: ${requiredColumns}`,
+    });
+  }
+  if (isExecutive && header[5] !== "EXECUTIVE_CATEGORY") {
+    return Err({
+      reason: "parse_error",
+      message: `Para el rol ejecutivo se requiere la columna EXECUTIVE_CATEGORY. Se esperaba: ${requiredColumns}`,
     });
   }
 
@@ -161,6 +179,7 @@ export function parseAndValidateCsvRows(
     const names = cols[2]?.trim() ?? "";
     const rawEmail = cols[3]?.trim() ?? "";
     const rawDate = cols[4]?.trim() ?? "";
+    const rawCategory = cols[5]?.trim().toLowerCase() ?? "";
 
     if (!firstSurname) {
       errors.push({ row: rowNum, message: "Primer apellido requerido" });
@@ -200,12 +219,25 @@ export function parseAndValidateCsvRows(
       expiresAt = parsed;
     }
 
+    let executiveCategory: ExecutiveCategoryValue | null = null;
+    if (isExecutive) {
+      if (!isExecutiveCategoryValue(rawCategory)) {
+        errors.push({
+          row: rowNum,
+          message: `Categoría de ejecutivo inválida: "${rawCategory}". Valores permitidos: elite, corporativa`,
+        });
+        continue;
+      }
+      executiveCategory = rawCategory;
+    }
+
     valid.push({
       firstSurname,
       secondSurname,
       names,
       email: rawEmail.trim().toLowerCase(),
       expiresAt,
+      executiveCategory,
     });
   }
 

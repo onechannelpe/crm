@@ -1,9 +1,9 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { Ok, type Result } from "~/server/shared/result";
 
-import { ensureCanCompleteCommercialInput } from "../../domain/workflow";
 import type { CompleteCommercialInputDeps } from "../deps/sales";
+import { loadNeedsExecutiveInputLead } from "../loaders/lead-subject-loader";
 import {
   canCompleteCommercialInput,
   requirePipelineActionAccess,
@@ -35,18 +35,22 @@ export async function completeCommercialInput(input: {
     return canComplete;
   }
 
-  const lead = await input.deps.leads.findById(input.leadId);
-  if (!lead) {
-    return Err(domainError("not_found", "lead_not_found", "Lead not found"));
+  const lead = await loadNeedsExecutiveInputLead(
+    input.deps.leads,
+    input.leadId,
+  );
+  if (!lead.ok) {
+    return lead;
   }
-
-  const allowed = ensureCanCompleteCommercialInput({
-    stage: lead.stage,
-    executiveId: lead.executiveId,
-    actorUserId: input.actorUserId,
-  });
-  if (!allowed.ok) {
-    return allowed;
+  if (lead.value.executiveId !== input.actorUserId) {
+    return {
+      ok: false,
+      error: domainError(
+        "forbidden",
+        "not_owner",
+        "Only the assigned executive can complete commercial input",
+      ),
+    };
   }
 
   const now = Date.now();
@@ -54,7 +58,7 @@ export async function completeCommercialInput(input: {
     deps: input.deps,
     auditService: input.auditService,
     notificationCenter: input.notificationCenter,
-    lead,
+    lead: lead.value,
     actorUserId: input.actorUserId,
     branchId: input.branchId,
     proveedorActual: input.proveedorActual,

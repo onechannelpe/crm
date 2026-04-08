@@ -94,6 +94,7 @@ export async function createTeamInvite(
     secondSurname: input.secondSurname,
     email: input.email,
     role: input.role,
+    executiveCategory: input.executiveCategory,
     teamId: input.teamId,
     expiresAt: input.expiresAt,
   });

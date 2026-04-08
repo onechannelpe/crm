@@ -5,7 +5,7 @@ import {
   decideRegistrationConflict,
   ensureCanReassignLead,
 } from "../../domain/assignment";
-import type { Lead } from "../../domain/lead";
+import type { LeadRecord } from "../../domain/lead-record";
 import type {
   ActiveExecutiveDeps,
   LeadRegistrationLookupDeps,
@@ -13,7 +13,7 @@ import type {
 
 export type LeadRegistrationResolution =
   | { kind: "create" }
-  | { kind: "reassign"; lead: Lead };
+  | { kind: "reassign"; lead: LeadRecord };
 
 export async function ensureActiveExecutive(input: {
   deps: ActiveExecutiveDeps;

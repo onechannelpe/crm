@@ -2,7 +2,8 @@ import type { Role } from "~/lib/auth/access/rbac";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { Result } from "~/server/shared/result";
 
-import { createLeadDraft, normalizeLeadRuc } from "../../domain/lead";
+import { createLeadDraft } from "../../domain/lead-record";
+import { normalizeLeadRuc } from "../../domain/lead-schema-parser";
 import type { RegisterLeadDeps } from "../deps/register-lead";
 import {
   canRegisterLead,
@@ -10,6 +11,7 @@ import {
 } from "../policies/access";
 import type { PipelineAuditService } from "../ports/audit-service";
 import type { PipelineEngineGateway } from "../ports/engine-gateway";
+import type { LeadEnrichmentQueue } from "../ports/enrichment-queue";
 import { writeLeadReassignmentEffects } from "./reassign-lead-effects";
 import { writeLeadRegistrationEffects } from "./register-lead-effects";
 import {
@@ -25,6 +27,7 @@ export async function registerLead(input: {
   deps: RegisterLeadDeps;
   auditService: PipelineAuditService;
   engineGateway: PipelineEngineGateway;
+  leadEnrichmentQueue: LeadEnrichmentQueue;
 }): Promise<Result<{ leadId: number }, DomainError>> {
   const canRegister = requirePipelineActionAccess(
     input.actorRole,
@@ -74,6 +77,8 @@ export async function registerLead(input: {
     ruc: ruc.value,
     razonSocial: enrichment?.razonSocial ?? null,
     address: enrichment?.address ?? null,
+    engineCompanyName: enrichment?.razonSocial ?? null,
+    engineAddress: enrichment?.address ?? null,
     executiveId: input.executiveId,
     now,
   });
@@ -81,7 +86,7 @@ export async function registerLead(input: {
     return draft;
   }
 
-  return writeLeadRegistrationEffects({
+  const result = await writeLeadRegistrationEffects({
     deps: input.deps,
     auditService: input.auditService,
     actorUserId: input.actorUserId,
@@ -89,4 +94,14 @@ export async function registerLead(input: {
     draft: draft.value,
     now,
   });
+  if (!result.ok) {
+    return result;
+  }
+
+  await input.leadEnrichmentQueue.enqueueRucVerification(
+    ruc.value,
+    input.actorUserId,
+  );
+
+  return result;
 }

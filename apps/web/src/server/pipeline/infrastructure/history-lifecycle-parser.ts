@@ -5,6 +5,8 @@ import { Ok, type Result } from "~/server/shared/result";
 import type { HistoryEventRow } from "./history-event-row";
 import { toHistoryEntryBase } from "./history-event-row";
 import {
+  optionalLeadPriority,
+  optionalLeadStatus,
   optionalString,
   requireLeadPriority,
   requireLeadStage,
@@ -55,6 +57,54 @@ export function toReviewedEntry(
       reason: reason.value,
       fromStage: fromStage.value,
       toStage: toStage.value,
+    },
+  });
+}
+
+export function toStatusUpdatedEntry(
+  row: HistoryEventRow,
+  payload: Record<string, unknown> | null,
+): Result<LeadHistoryEntry, DomainError> {
+  const toStatus = requireLeadStatus(payload, "toStatus", row);
+  if (!toStatus.ok) return toStatus;
+
+  const reason = requireString(payload, "reason", row);
+  if (!reason.ok) return reason;
+
+  const fromStatus = optionalLeadStatus(payload, "fromStatus", row);
+  if (!fromStatus.ok) return fromStatus;
+
+  return Ok({
+    ...toHistoryEntryBase(row),
+    eventType: "lead_status_updated",
+    payload: {
+      fromStatus: fromStatus.value,
+      toStatus: toStatus.value,
+      reason: reason.value,
+    },
+  });
+}
+
+export function toPriorityUpdatedEntry(
+  row: HistoryEventRow,
+  payload: Record<string, unknown> | null,
+): Result<LeadHistoryEntry, DomainError> {
+  const toPrioridad = requireLeadPriority(payload, "toPrioridad", row);
+  if (!toPrioridad.ok) return toPrioridad;
+
+  const reason = requireString(payload, "reason", row);
+  if (!reason.ok) return reason;
+
+  const fromPrioridad = optionalLeadPriority(payload, "fromPrioridad", row);
+  if (!fromPrioridad.ok) return fromPrioridad;
+
+  return Ok({
+    ...toHistoryEntryBase(row),
+    eventType: "lead_priority_updated",
+    payload: {
+      fromPrioridad: fromPrioridad.value,
+      toPrioridad: toPrioridad.value,
+      reason: reason.value,
     },
   });
 }

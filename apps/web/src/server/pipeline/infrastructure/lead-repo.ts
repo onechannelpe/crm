@@ -6,8 +6,11 @@ import type {
 } from "kysely";
 
 import type { Database } from "~/lib/db/types";
-import type { LeadDraft, LeadPatch } from "~/server/pipeline/domain/lead";
-import type { Lead } from "~/server/pipeline/domain/lead";
+import type {
+  LeadDraft,
+  LeadPatch,
+  LeadRecord,
+} from "~/server/pipeline/domain/lead-record";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import type { LeadListFilters } from "../application/ports/lead-repository";
@@ -16,7 +19,7 @@ export type LeadRow = Selectable<Database["pipeline_leads"]>;
 export type NewLeadRow = Insertable<Database["pipeline_leads"]>;
 export type LeadRowPatch = Updateable<Database["pipeline_leads"]>;
 
-function toLead(row: LeadRow): Lead {
+function toLead(row: LeadRow): LeadRecord {
   return {
     id: row.id,
     ruc: row.ruc,
@@ -26,6 +29,9 @@ function toLead(row: LeadRow): Lead {
     stage: row.stage,
     status: row.status,
     prioridad: row.prioridad,
+    engineCompanyName: row.engine_company_name,
+    engineAddress: row.engine_address,
+    engineFetchedAt: row.engine_fetched_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -40,6 +46,9 @@ function toNewLeadRow(values: LeadDraft): NewLeadRow {
     stage: values.stage,
     status: values.status,
     prioridad: values.prioridad,
+    engine_company_name: values.engineCompanyName,
+    engine_address: values.engineAddress,
+    engine_fetched_at: values.engineFetchedAt,
     created_at: values.createdAt,
     updated_at: values.updatedAt,
   };

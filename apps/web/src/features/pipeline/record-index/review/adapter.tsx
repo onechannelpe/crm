@@ -1,6 +1,5 @@
 import { createAsync } from "@solidjs/router";
 
-import type { LeadListRowView } from "~/actions/pipeline/contracts";
 import { queryLeadList } from "~/actions/pipeline/queries/leads";
 import Info from "~/components/icons/info";
 import List from "~/components/icons/list";
@@ -9,6 +8,7 @@ import type {
   RecordIndexAdapter,
   RecordIndexSource,
 } from "~/features/record-index/model/types";
+import type { LeadListRowView } from "~/server/pipeline/application/queries/views/lead-list";
 
 import { REVIEW_RECORD_INDEX_COLUMNS } from "./columns";
 import { useOpenReviewRecord } from "./open-row";
@@ -41,8 +41,8 @@ export function ReviewRecordIndex() {
     rowOpen,
     emptyState: {
       icon: Info,
-      title: "Add your first review lead",
-      description: "Add your first review lead manually.",
+      title: "No hay leads pendientes",
+      description: "La cola de revisión está vacía.",
     },
     class: styles.page,
   } satisfies RecordIndexAdapter<LeadListRowView>;

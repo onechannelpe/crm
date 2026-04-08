@@ -99,7 +99,7 @@ export function RecordIndexViewBar() {
       </Show>
       <DataGridToolbarMenu
         active={model.columns.hasHiddenColumns()}
-        label="Options"
+        label="Opciones"
         menuId={`${setup.id}-column-options`}
         open={model.columns.openMenu() === "options"}
         onDismiss={() => model.columns.setOpenMenu(null)}

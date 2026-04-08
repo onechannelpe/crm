@@ -35,6 +35,9 @@ describe("register lead", () => {
             address: "Av. Lima 123",
           }),
         },
+        leadEnrichmentQueue: {
+          enqueueRucVerification: async () => undefined,
+        },
         auditService: {
           log: auditLog,
         },
@@ -75,6 +78,9 @@ describe("register lead", () => {
         deps: createPipelineDeps(trx).registerLead,
         engineGateway: {
           enrichByRuc: async () => null,
+        },
+        leadEnrichmentQueue: {
+          enqueueRucVerification: async () => undefined,
         },
         auditService: {
           log: async () => undefined,

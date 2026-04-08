@@ -60,6 +60,7 @@ export function TeamInviteManagementSection() {
   const [secondSurname, setSecondSurname] = createSignal("");
   const [email, setEmail] = createSignal("");
   const [role, setRole] = createSignal("");
+  const [executiveCategory, setExecutiveCategory] = createSignal("");
   const [teamId, setTeamId] = createSignal("");
   const [expiresAt, setExpiresAt] = createSignal("");
   const [expiresAtError, setExpiresAtError] = createSignal<
@@ -137,6 +138,7 @@ export function TeamInviteManagementSection() {
           secondSurname: secondSurname(),
           email: email(),
           role: role(),
+          executiveCategory: executiveCategory() || null,
           teamId: teamId() ? Number(teamId()) : null,
           expiresAt: parsedExpiresAt.value,
         });
@@ -145,6 +147,7 @@ export function TeamInviteManagementSection() {
         setSecondSurname("");
         setEmail("");
         setRole(getDefaultAssignableRole(im));
+        setExecutiveCategory("");
         setTeamId("");
         setExpiresAt("");
         setExpiresAtError(undefined);
@@ -218,7 +221,10 @@ export function TeamInviteManagementSection() {
               <Select
                 label="Rol"
                 value={role()}
-                onInput={(event) => setRole(event.currentTarget.value)}
+                onInput={(event) => {
+                  setRole(event.currentTarget.value);
+                  setExecutiveCategory("");
+                }}
               >
                 <For each={im.assignableRoles}>
                   {(option) => (
@@ -226,6 +232,20 @@ export function TeamInviteManagementSection() {
                   )}
                 </For>
               </Select>
+              <Show when={role() === "executive"}>
+                <Select
+                  label="Categoria"
+                  value={executiveCategory()}
+                  onInput={(event) =>
+                    setExecutiveCategory(event.currentTarget.value)
+                  }
+                  required
+                >
+                  <option value="">Seleccionar categoria...</option>
+                  <option value="elite">Elite</option>
+                  <option value="corporativa">Corporativa</option>
+                </Select>
+              </Show>
               <Select
                 label="Equipo (opcional)"
                 value={teamId()}
@@ -254,6 +274,7 @@ export function TeamInviteManagementSection() {
                   disabled={
                     isSavingInvite() ||
                     !role() ||
+                    (role() === "executive" && !executiveCategory()) ||
                     expiresAtError() !== undefined
                   }
                 >

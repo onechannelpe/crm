@@ -1,6 +1,5 @@
 import { createAsync } from "@solidjs/router";
 
-import type { LeadListRowView } from "~/actions/pipeline/contracts";
 import { queryLeadList } from "~/actions/pipeline/queries/leads";
 import Building2 from "~/components/icons/building-2";
 import List from "~/components/icons/list";
@@ -9,6 +8,7 @@ import type {
   RecordIndexAdapter,
   RecordIndexSource,
 } from "~/features/record-index/model/types";
+import type { LeadListRowView } from "~/server/pipeline/application/queries/views/lead-list";
 
 import { LEADS_RECORD_INDEX_COLUMNS } from "./columns";
 import { useCreateLeadRecordAction } from "./create-action";
@@ -44,7 +44,7 @@ export function LeadsRecordIndex() {
 
   const adapter = {
     id: "leads",
-    title: "All prospects",
+    title: "Todos los prospectos",
     ariaLabel: "Prospectos",
     class: `${styles.page} record-index-container-gate-for-drag-select`,
     pickerIcon: List,
@@ -54,8 +54,8 @@ export function LeadsRecordIndex() {
     rowOpen,
     emptyState: {
       icon: Building2,
-      title: "Add your first prospect",
-      description: "Create a prospect to start working this list.",
+      title: "Agrega tu primer prospecto",
+      description: "Crea un prospecto para comenzar a trabajar esta lista.",
     },
     createAction,
     filter: LEADS_RECORD_INDEX_FILTER,

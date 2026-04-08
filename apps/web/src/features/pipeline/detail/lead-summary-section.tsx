@@ -1,7 +1,7 @@
-import type { LeadDetailView } from "~/actions/pipeline/contracts";
 import Building2 from "~/components/icons/building-2";
 import { Badge } from "~/components/ui/display/badge";
 import { formatDateTime } from "~/lib/utils";
+import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
 
 import styles from "./lead-detail-overview.module.css";
 
@@ -15,12 +15,18 @@ export function LeadSummarySection(props: { data: LeadDetailView }) {
   const fields = [
     { label: "RUC", value: props.data.lead.ruc },
     {
-      label: "Razon social",
+      label: "Razón social",
       value: props.data.lead.razonSocial ?? "Sin datos",
     },
-    { label: "Direccion", value: props.data.lead.address ?? "Sin datos" },
+    { label: "Dirección", value: props.data.lead.address ?? "Sin datos" },
     { label: "Estado", value: props.data.lead.status ?? "Sin datos" },
     { label: "Prioridad", value: props.data.lead.prioridad ?? "Sin datos" },
+    { label: "Engine", value: props.data.sourceStatus.engine.status },
+    { label: "SUNAT", value: props.data.sourceStatus.sunat.status },
+    {
+      label: "Nombre legal SUNAT",
+      value: props.data.sourceStatus.sunat.legalName ?? "Sin datos",
+    },
     { label: "Creado", value: formatDateTime(props.data.lead.createdAt) },
     {
       label: "Actualizado",

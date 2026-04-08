@@ -1,4 +1,6 @@
-import type { Lead } from "../../domain/lead";
+import type { LeadStage } from "~/pipeline/contracts/lead-schema";
+
+import type { PendingReviewLeadSubject } from "../../domain/lead-subjects";
 import {
   notifyExecutiveInputRequired,
   notifyReadyForQuotation,
@@ -8,8 +10,8 @@ import type { PipelineNotificationCenter } from "../ports/notification-center";
 export async function notifyLeadReviewOutcome(input: {
   notificationCenter: PipelineNotificationCenter;
   branchId: number;
-  lead: Lead;
-  nextStage: Lead["stage"];
+  lead: PendingReviewLeadSubject;
+  nextStage: LeadStage;
 }) {
   if (input.nextStage === "NEEDS_EXECUTIVE_INPUT") {
     await notifyExecutiveInputRequired({
