@@ -8,11 +8,11 @@ import type { Database as DatabaseSchema } from "./types";
 
 const logger = createLogger("db-client");
 
-export function createDb(dbPath: string): Kysely<DatabaseSchema> {
-  logger.info("db_initialization_started", { path: dbPath });
+export function createDb(dbUrl: string): Kysely<DatabaseSchema> {
+  logger.info("db_initialization_started", { url: dbUrl });
 
   const client = createClient({
-    url: `file:${dbPath}`,
+    url: dbUrl,
     intMode: "number",
   });
 
@@ -26,11 +26,17 @@ export function createDb(dbPath: string): Kysely<DatabaseSchema> {
     })();
   };
 
-  applyPragma("PRAGMA journal_mode = WAL");
-  applyPragma("PRAGMA synchronous = NORMAL");
-  applyPragma("PRAGMA busy_timeout = 5000");
-  applyPragma("PRAGMA foreign_keys = ON");
-  applyPragma("PRAGMA cache_size = -32000");
+  const isLocalSqlite =
+    dbUrl.startsWith("file:") ||
+    dbUrl === ":memory:" ||
+    dbUrl.startsWith("file://");
+  if (isLocalSqlite) {
+    applyPragma("PRAGMA journal_mode = WAL");
+    applyPragma("PRAGMA synchronous = NORMAL");
+    applyPragma("PRAGMA busy_timeout = 5000");
+    applyPragma("PRAGMA foreign_keys = ON");
+    applyPragma("PRAGMA cache_size = -32000");
+  }
 
   return new Kysely<DatabaseSchema>({
     dialect: new LibSQLDialect({ client }),
