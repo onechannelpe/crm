@@ -3,9 +3,10 @@ import type { QueueRunner } from "~/lib/job-queue/types";
 import { createLogger } from "~/lib/observability/logger";
 import { startJobSubscriber } from "~/lib/redis/subscriber";
 import { createEnrichmentQueue } from "~/server/client-search/queue/enrichment-queue";
-import { dispatchIntegrationOutboxOnce } from "~/server/integrations/application/import/outbox-dispatcher";
 import { createCrmExportQueue } from "~/server/integrations/queue/crm-export-queue";
 import { createCrmImportQueue } from "~/server/integrations/queue/crm-import-queue";
+import { createNeedsExecutiveOutboxQueue } from "~/server/integrations/queue/integration-outbox-needs-executive-queue";
+import { createReadyForQuotationOutboxQueue } from "~/server/integrations/queue/integration-outbox-ready-for-quotation-queue";
 import { createSalesExportQueue } from "~/server/sales/queue/sales-export-queue";
 import { startAccountLifecycleMaintenance } from "~/server/users/account-lifecycle-maintenance";
 
@@ -17,11 +18,16 @@ export function startBackgroundJobs() {
 
   const crmExportQueue = createCrmExportQueue(WORKER_ID);
   const crmImportQueue = createCrmImportQueue(WORKER_ID);
+  const needsExecutiveOutboxQueue = createNeedsExecutiveOutboxQueue(WORKER_ID);
+  const readyForQuotationOutboxQueue =
+    createReadyForQuotationOutboxQueue(WORKER_ID);
   const salesExportQueue = createSalesExportQueue(WORKER_ID);
   const enrichmentQueue = createEnrichmentQueue(WORKER_ID);
   const queues: QueueRunner[] = [
     crmExportQueue,
     crmImportQueue,
+    needsExecutiveOutboxQueue,
+    readyForQuotationOutboxQueue,
     salesExportQueue,
     enrichmentQueue,
   ];
@@ -29,7 +35,6 @@ export function startBackgroundJobs() {
     for (const queue of queues) {
       void queue.runOnce();
     }
-    void dispatchIntegrationOutboxOnce(WORKER_ID);
   };
 
   // Start account lifecycle maintenance tasks
@@ -50,6 +55,12 @@ export function startBackgroundJobs() {
     },
     CRM_IMPORT: () => {
       void crmImportQueue.runOnce();
+    },
+    INTEGRATION_OUTBOX_NEEDS_EXECUTIVE_INPUT: () => {
+      void needsExecutiveOutboxQueue.runOnce();
+    },
+    INTEGRATION_OUTBOX_READY_FOR_QUOTATION: () => {
+      void readyForQuotationOutboxQueue.runOnce();
     },
     SALES_EXPORT: () => {
       void salesExportQueue.runOnce();

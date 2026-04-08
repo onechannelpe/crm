@@ -21,21 +21,27 @@ export async function startJobSubscriber(triggers: {
   try {
     subscriber = new RedisClient(url);
     const channelEntries = [
-      ["CRM_EXPORT", JOB_CHANNELS.CRM_EXPORT],
-      ["CRM_IMPORT", JOB_CHANNELS.CRM_IMPORT],
-      ["SALES_EXPORT", JOB_CHANNELS.SALES_EXPORT],
-      ["ENRICHMENT", JOB_CHANNELS.ENRICHMENT],
+      { key: "CRM_EXPORT", channel: JOB_CHANNELS.CRM_EXPORT },
+      { key: "CRM_IMPORT", channel: JOB_CHANNELS.CRM_IMPORT },
+      {
+        key: "INTEGRATION_OUTBOX_NEEDS_EXECUTIVE_INPUT",
+        channel: JOB_CHANNELS.INTEGRATION_OUTBOX_NEEDS_EXECUTIVE_INPUT,
+      },
+      {
+        key: "INTEGRATION_OUTBOX_READY_FOR_QUOTATION",
+        channel: JOB_CHANNELS.INTEGRATION_OUTBOX_READY_FOR_QUOTATION,
+      },
+      { key: "SALES_EXPORT", channel: JOB_CHANNELS.SALES_EXPORT },
+      { key: "ENRICHMENT", channel: JOB_CHANNELS.ENRICHMENT },
     ] as const;
+    const keyByChannel = new Map<string, keyof typeof JOB_CHANNELS>(
+      channelEntries.map(({ key, channel }) => [channel, key]),
+    );
 
     const resolveKey = (
       channel: string,
     ): keyof typeof JOB_CHANNELS | undefined => {
-      for (const [key, value] of channelEntries) {
-        if (value === channel) {
-          return key;
-        }
-      }
-      return undefined;
+      return keyByChannel.get(channel);
     };
 
     const subscribe = Reflect.get(subscriber, "subscribe");
@@ -53,12 +59,11 @@ export async function startJobSubscriber(triggers: {
       trigger();
     };
 
-    await Promise.all([
-      subscribe.call(subscriber, [JOB_CHANNELS.CRM_EXPORT], onMessage),
-      subscribe.call(subscriber, [JOB_CHANNELS.CRM_IMPORT], onMessage),
-      subscribe.call(subscriber, [JOB_CHANNELS.SALES_EXPORT], onMessage),
-      subscribe.call(subscriber, [JOB_CHANNELS.ENRICHMENT], onMessage),
-    ]);
+    await Promise.all(
+      channelEntries.map(({ channel }) =>
+        subscribe.call(subscriber, [channel], onMessage),
+      ),
+    );
 
     logger.info("subscriber_listening", {
       channels: Object.values(JOB_CHANNELS),

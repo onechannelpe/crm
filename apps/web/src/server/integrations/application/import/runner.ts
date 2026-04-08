@@ -1,5 +1,8 @@
 import { TextDecoder } from "node:util";
 
+import { JOB_CHANNELS } from "~/lib/job-queue/channels";
+import { publishJob } from "~/lib/redis/publisher";
+
 import { integrationJobBlobStore } from "../../infrastructure/runtime";
 import type {
   ImportBatchRunner,
@@ -33,6 +36,14 @@ export function createImportBatchRunner() {
         validRows,
         invalidRows,
       });
+      await publishJob(
+        JOB_CHANNELS.INTEGRATION_OUTBOX_NEEDS_EXECUTIVE_INPUT,
+        job.id,
+      );
+      await publishJob(
+        JOB_CHANNELS.INTEGRATION_OUTBOX_READY_FOR_QUOTATION,
+        job.id,
+      );
 
       if (signal.aborted) {
         throw new Error("Job aborted after processing");
