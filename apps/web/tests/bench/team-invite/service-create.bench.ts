@@ -55,6 +55,7 @@ describe("team invite create benchmark", () => {
         secondSurname: "Bench",
         email,
         role: "executive",
+        executiveCategory: "elite",
         teamId: null,
       });
 
