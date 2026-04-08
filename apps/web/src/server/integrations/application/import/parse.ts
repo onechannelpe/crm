@@ -2,13 +2,23 @@ import {
   parsePrioridadImport,
   type ParsedPrioridadRow,
 } from "../../infrastructure/prioridad-import-parser";
-import { parseStatusImport, type ParsedStatusRow } from "../../infrastructure/status-import-parser";
+import {
+  parseStatusImport,
+  type ParsedStatusRow,
+} from "../../infrastructure/status-import-parser";
 import type { IntegrationJobRow } from "../../types";
 import type { ImportRowInput } from "./types";
 
-export function parseImportRows(job: IntegrationJobRow, text: string): {
+export function parseImportRows(
+  job: IntegrationJobRow,
+  text: string,
+): {
   validRows: ImportRowInput[];
-  invalidRows: Array<{ row: number; reason: string; type: "import_status" | "import_prioridad" }>;
+  invalidRows: Array<{
+    row: number;
+    reason: string;
+    type: "import_status" | "import_prioridad";
+  }>;
 } {
   if (job.type === "import_status") {
     const parsed = parseStatusImport(text);
