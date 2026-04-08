@@ -1,11 +1,20 @@
 import { db } from "~/lib/db/db";
-import type { LeadPriority, LeadStage, LeadStatus } from "~/pipeline/contracts/lead-schema";
+import type {
+  LeadPriority,
+  LeadStage,
+  LeadStatus,
+} from "~/pipeline/contracts/lead-schema";
 import { createHistoryEvent } from "~/server/pipeline/domain/history";
 import { resolveReviewTransition } from "~/server/pipeline/domain/workflow";
 
 import { enqueueOutboxEvents } from "./outbox-repo";
 import { stageImportRows } from "./staging-repo";
-import type { ImportRowInput, LoadedLead, OutboxEvent, RowResult } from "./types";
+import type {
+  ImportRowInput,
+  LoadedLead,
+  OutboxEvent,
+  RowResult,
+} from "./types";
 
 function resultSort(a: RowResult, b: RowResult): number {
   return a.row - b.row;
@@ -63,9 +72,13 @@ export async function applyImportRows(input: {
     .select(["id", "ruc", "executive_id", "status", "prioridad", "stage"])
     .where("ruc", "in", rucs)
     .execute();
-  const leadByRuc = new Map(leads.map((lead) => [lead.ruc, lead as LoadedLead]));
+  const leadByRuc = new Map(
+    leads.map((lead) => [lead.ruc, lead as LoadedLead]),
+  );
 
-  const execIds = Array.from(new Set(leads.map((lead) => lead.executive_id).filter((id) => id > 0)));
+  const execIds = Array.from(
+    new Set(leads.map((lead) => lead.executive_id).filter((id) => id > 0)),
+  );
   const execBranchRows =
     execIds.length > 0
       ? await db
@@ -74,7 +87,9 @@ export async function applyImportRows(input: {
           .where("id", "in", execIds)
           .execute()
       : [];
-  const branchByExecutive = new Map(execBranchRows.map((row) => [row.id, row.branch_id]));
+  const branchByExecutive = new Map(
+    execBranchRows.map((row) => [row.id, row.branch_id]),
+  );
 
   const sortedRows = [...input.validRows].sort((a, b) => a.row - b.row);
   let applied = 0;
@@ -118,7 +133,8 @@ export async function applyImportRows(input: {
         continue;
       }
 
-      const nextStatus = row.type === "import_status" ? row.status : lead.status;
+      const nextStatus =
+        row.type === "import_status" ? row.status : lead.status;
       const nextPrioridad =
         row.type === "import_prioridad" ? row.prioridad : lead.prioridad;
       const nextStage = nextStageFor(lead, nextStatus, nextPrioridad);

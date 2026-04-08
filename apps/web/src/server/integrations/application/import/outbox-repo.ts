@@ -44,7 +44,9 @@ export async function claimOutboxEvents(input: {
     .select("id")
     .where("status", "=", "pending")
     .where("available_at", "<=", now)
-    .where((eb) => eb.or([eb("lease_until", "is", null), eb("lease_until", "<", now)]))
+    .where((eb) =>
+      eb.or([eb("lease_until", "is", null), eb("lease_until", "<", now)]),
+    )
     .orderBy("created_at", "asc")
     .limit(input.limit)
     .execute();
