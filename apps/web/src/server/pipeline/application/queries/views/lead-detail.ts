@@ -1,4 +1,10 @@
-import type { LeadPriority, LeadStage, LeadStatus } from "../../../domain/lead";
+import type {
+  LeadPriority,
+  LeadStage,
+  LeadStatus,
+} from "~/pipeline/contracts/lead-schema";
+
+import type { LeadBlockingField } from "../../../domain/lead-progress";
 import type { LeadAvailableAction } from "../../contracts/lead-available-action";
 
 export type LeadTimelineItem = {
@@ -19,6 +25,7 @@ export type LeadDetailLeadView = {
   stage: LeadStage;
   status: LeadStatus | null;
   prioridad: LeadPriority | null;
+  nextStep: string;
   createdAt: number;
   updatedAt: number;
 };
@@ -65,6 +72,20 @@ export type LeadDetailSaleView = {
   createdAt: number;
 };
 
+export type LeadDetailSourceStatusView = {
+  engine: {
+    status: "available" | "missing" | "failed";
+    fetchedAt: number | null;
+    fields: Array<"razonSocial" | "address">;
+  };
+  sunat: {
+    status: "idle" | "queued" | "running" | "completed" | "failed" | "stale";
+    fetchedAt: number | null;
+    legalName: string | null;
+    payloadAvailable: boolean;
+  };
+};
+
 export type LeadDetailView = {
   lead: LeadDetailLeadView;
   commercialInput: LeadDetailCommercialInputView | undefined;
@@ -72,4 +93,6 @@ export type LeadDetailView = {
   sale: LeadDetailSaleView | undefined;
   timeline: LeadTimelineItem[];
   availableActions: LeadAvailableAction[];
+  blockingFields: LeadBlockingField[];
+  sourceStatus: LeadDetailSourceStatusView;
 };

@@ -1,4 +1,4 @@
-import { For } from "solid-js";
+import { For, Show } from "solid-js";
 
 import ChevronDown from "~/components/icons/chevron-down";
 import ChevronRight from "~/components/icons/chevron-right";
@@ -10,6 +10,9 @@ import styles from "../page.module.css";
 
 type HomeTabContentProps = {
   ruc?: string;
+  razonSocial?: string | null;
+  address?: string | null;
+  engineStatus?: string;
   onRucInput?: (value: string) => void;
   onSubmit?: () => void;
 };
@@ -19,7 +22,7 @@ export function HomeTabContent(props: HomeTabContentProps) {
     <div class={styles.homeContent}>
       <section class={styles.widget}>
         <div class={styles.widgetHeader}>
-          <h3 class={styles.widgetTitle}>Fields</h3>
+          <h3 class={styles.widgetTitle}>Campos</h3>
         </div>
         <button type="button" class={styles.sectionHeader}>
           <span>General</span>
@@ -54,7 +57,11 @@ export function HomeTabContent(props: HomeTabContentProps) {
                     />
                   ) : (
                     <span class={styles.fieldTextValue}>
-                      {field.value ?? ""}
+                      {field.key === "razonSocial"
+                        ? (props.razonSocial ?? "Pendiente de bootstrap")
+                        : field.key === "address"
+                          ? (props.address ?? "Pendiente de bootstrap")
+                          : (field.value ?? "")}
                     </span>
                   )}
                 </div>
@@ -83,10 +90,20 @@ export function HomeTabContent(props: HomeTabContentProps) {
             </div>
 
             <div class={styles.relationRow}>
-              <span>{widget.title}</span>
-              <button type="button" class={styles.plusButton}>
-                <Plus size={14} />
-              </button>
+              <span>
+                {widget.title === "Bootstrap desde Engine"
+                  ? (props.engineStatus ?? "Esperando RUC válido")
+                  : "Se encola al registrar el lead"}
+              </span>
+              <Show when={widget.title === "Bootstrap desde Engine"}>
+                <button
+                  type="button"
+                  class={styles.plusButton}
+                  onClick={() => props.onSubmit?.()}
+                >
+                  <Plus size={14} />
+                </button>
+              </Show>
             </div>
           </section>
         )}

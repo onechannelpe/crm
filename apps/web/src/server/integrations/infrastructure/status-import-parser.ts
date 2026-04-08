@@ -1,8 +1,6 @@
+import type { LeadStatus } from "~/pipeline/contracts/lead-schema";
 import { parseCsv, validateHeaders } from "~/server/integrations/csv-parser";
-import {
-  parseLeadStatus,
-  type LeadStatus,
-} from "~/server/pipeline/domain/lead";
+import { parseLeadStatus } from "~/server/pipeline/domain/lead-schema-parser";
 
 const STATUS_COLUMNS = [
   "nro_de_solicitud",

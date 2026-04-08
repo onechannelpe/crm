@@ -758,7 +758,13 @@ export interface UserInvitesTable {
   sent_at: number | null;
 }
 
-type ExecutiveCategoryValue = "elite" | "corporativa";
+export type ExecutiveCategoryValue = "elite" | "corporativa";
+
+export function isExecutiveCategoryValue(
+  value: string,
+): value is ExecutiveCategoryValue {
+  return value === "elite" || value === "corporativa";
+}
 
 export interface PipelineLeadsTable {
   id: Generated<number>;
@@ -776,6 +782,9 @@ export interface PipelineLeadsTable {
     | "CONVERTED";
   status: "DISPONIBLE" | "SIN RESULTADO" | "CARTERIZADO" | "STOCK" | null;
   prioridad: "P1" | "P2" | "SIN RESULTADO" | null;
+  engine_company_name: string | null;
+  engine_address: string | null;
+  engine_fetched_at: number | null;
   created_at: number;
   updated_at: number;
 }
@@ -836,6 +845,8 @@ export interface PipelineHistoryEventsTable {
   lead_id: number;
   event_type:
     | "lead_registered"
+    | "lead_status_updated"
+    | "lead_priority_updated"
     | "lead_reviewed"
     | "workflow_stage_changed"
     | "lead_assigned"

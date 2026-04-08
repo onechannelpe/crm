@@ -1,5 +1,11 @@
+import type {
+  LeadPriority,
+  LeadStage,
+  LeadStatus,
+} from "~/pipeline/contracts/lead-schema";
+
 import { createHistoryEvent } from "../../domain/history";
-import type { Lead, LeadPriority, LeadStatus } from "../../domain/lead";
+import type { PendingReviewLeadSubject } from "../../domain/lead-subjects";
 import type { PipelineAuditService } from "../ports/audit-service";
 import type { LeadHistoryRepository } from "../ports/history-repository";
 import type { LeadRepository } from "../ports/lead-repository";
@@ -12,12 +18,12 @@ type ReviewLeadEffectsDeps = {
 export async function persistLeadReviewTransition(input: {
   deps: ReviewLeadEffectsDeps;
   auditService: PipelineAuditService;
-  lead: Lead;
+  lead: PendingReviewLeadSubject;
   actorUserId: number;
   status: LeadStatus;
   prioridad: LeadPriority;
   reason: string;
-  nextStage: Lead["stage"];
+  nextStage: LeadStage;
   now: number;
 }) {
   await input.deps.leads.updateById(input.lead.id, {

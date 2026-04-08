@@ -30,6 +30,7 @@ export async function createTeamInvite(input: {
   secondSurname: string;
   email: string;
   role: string;
+  executiveCategory?: string | null;
   teamId?: number | null;
   expiresAt?: number | null;
 }): Promise<{ inviteId: number }> {

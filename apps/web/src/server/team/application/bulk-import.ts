@@ -18,8 +18,9 @@ import {
 
 export async function previewBulkImport(
   csvContent: string,
+  role: Role,
 ): Promise<Result<BulkParseResult, DomainError>> {
-  const parsed = parseAndValidateCsvRows(csvContent);
+  const parsed = parseAndValidateCsvRows(csvContent, role);
   if (!parsed.ok) {
     return {
       ok: false,
@@ -41,7 +42,7 @@ export async function applyBulkImport(
     role: Role;
   },
 ): Promise<Result<BulkApplyResult, DomainError>> {
-  const parsed = await previewBulkImport(input.csvContent);
+  const parsed = await previewBulkImport(input.csvContent, input.role);
   if (!parsed.ok) {
     return parsed;
   }

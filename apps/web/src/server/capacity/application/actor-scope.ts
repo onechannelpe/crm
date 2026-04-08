@@ -1,4 +1,5 @@
 import type { Role } from "~/lib/auth/access/rbac";
+import type { ExecutiveCategoryValue } from "~/lib/db/types";
 
 export type ActorScope = {
   teamId: number | null;
@@ -15,6 +16,7 @@ export type CapacityUser = ManageableCapacityUser & {
   names: string;
   firstSurname: string;
   secondSurname: string;
+  executiveCategory: ExecutiveCategoryValue | null;
 };
 
 export type CapacityTeam = {

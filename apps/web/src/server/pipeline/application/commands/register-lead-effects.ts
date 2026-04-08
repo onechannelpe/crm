@@ -2,7 +2,7 @@ import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
 import { createHistoryEvent } from "../../domain/history";
-import type { LeadDraft } from "../../domain/lead";
+import type { LeadDraft } from "../../domain/lead-record";
 import type { RegisterLeadDeps } from "../deps/register-lead";
 import type { PipelineAuditService } from "../ports/audit-service";
 

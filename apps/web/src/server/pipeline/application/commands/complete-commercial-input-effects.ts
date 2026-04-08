@@ -1,5 +1,5 @@
 import { createHistoryEvent } from "../../domain/history";
-import type { Lead } from "../../domain/lead";
+import type { NeedsExecutiveInputLeadSubject } from "../../domain/lead-subjects";
 import type { CompleteCommercialInputDeps } from "../deps/sales";
 import { notifyReadyForQuotation } from "../notifications";
 import type { PipelineAuditService } from "../ports/audit-service";
@@ -9,7 +9,7 @@ export async function persistCommercialInputCompletion(input: {
   deps: CompleteCommercialInputDeps;
   auditService: PipelineAuditService;
   notificationCenter: PipelineNotificationCenter;
-  lead: Lead;
+  lead: NeedsExecutiveInputLeadSubject;
   actorUserId: number;
   branchId: number;
   proveedorActual: string;

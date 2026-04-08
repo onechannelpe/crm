@@ -1,7 +1,8 @@
-import type { LeadDetailView } from "~/actions/pipeline/contracts";
+import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
 
 import { InteractionsPanel } from "./interactions/interactions-panel";
 import { LeadActionsSection } from "./lead-actions-section";
+import { LeadNextStepSection } from "./lead-next-step-section";
 import { LeadQuotationsSection } from "./lead-quotations-section";
 import { LeadSummarySection } from "./lead-summary-section";
 import { LeadTimelineSection } from "./lead-timeline-section";
@@ -16,6 +17,7 @@ export function LeadDetailOverview(props: {
   return (
     <div class={styles.content} data-compact={props.compact ? "true" : "false"}>
       <LeadSummarySection data={props.data} />
+      <LeadNextStepSection data={props.data} />
       <InteractionsPanel
         leadId={props.data.lead.id}
         availableActions={props.data.availableActions}
@@ -25,6 +27,7 @@ export function LeadDetailOverview(props: {
       <LeadActionsSection
         leadId={props.data.lead.id}
         availableActions={props.data.availableActions}
+        onChanged={props.onChanged}
       />
       <LeadQuotationsSection quotations={props.data.quotations ?? []} />
     </div>

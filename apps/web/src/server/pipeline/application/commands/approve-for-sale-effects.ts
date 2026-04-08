@@ -1,5 +1,5 @@
 import { createHistoryEvent } from "../../domain/history";
-import type { Lead } from "../../domain/lead";
+import type { QuotedLeadSubject } from "../../domain/lead-subjects";
 import type { ApproveForSaleDeps } from "../deps/quotations";
 import { notifyReadyForSale } from "../notifications";
 import type { PipelineAuditService } from "../ports/audit-service";
@@ -9,7 +9,7 @@ export async function persistLeadSaleApproval(input: {
   deps: ApproveForSaleDeps;
   auditService: PipelineAuditService;
   notificationCenter: PipelineNotificationCenter;
-  lead: Lead;
+  lead: QuotedLeadSubject;
   actorUserId: number;
   now: number;
 }) {

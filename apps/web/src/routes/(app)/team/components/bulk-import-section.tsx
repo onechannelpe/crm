@@ -95,7 +95,7 @@ export function BulkImportSection() {
         <AppPageSection>
           <AppPageSectionTitle
             title="Importar desde CSV"
-            description={`Carga un archivo CSV con columnas: FIRST_SURNAME, SECOND_SURNAME, NAMES, EMAIL, DATE_EXPIRY (opcional).`}
+            description={`Carga un archivo CSV con columnas: FIRST_SURNAME, SECOND_SURNAME, NAMES, EMAIL, DATE_EXPIRY (opcional), EXECUTIVE_CATEGORY (requerido para ejecutivos: elite o corporativa).`}
           />
           <div class={styles.inviteForm}>
             <FileInput
@@ -179,6 +179,7 @@ export function BulkImportSection() {
                         <TableHead>Nombres</TableHead>
                         <TableHead>Correo</TableHead>
                         <TableHead>Vencimiento</TableHead>
+                        <TableHead>Categoria</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -201,6 +202,9 @@ export function BulkImportSection() {
                                     },
                                   )
                                 : "—"}
+                            </TableCell>
+                            <TableCell>
+                              {row.executiveCategory ?? "—"}
                             </TableCell>
                           </TableRow>
                         )}

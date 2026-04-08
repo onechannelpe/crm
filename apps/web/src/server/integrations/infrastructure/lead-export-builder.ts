@@ -1,7 +1,17 @@
-export function buildLeadExportCsv(rows: Record<string, unknown>[]): string {
-  if (rows.length === 0) return "";
+const EXPORT_HEADERS = [
+  "ruc",
+  "razon_social",
+  "executive_id",
+  "executive_name",
+  "created_at",
+  "stage",
+  "address",
+  "status",
+  "prioridad",
+] as const;
 
-  const headers = Object.keys(rows[0]);
+export function buildLeadExportCsv(rows: Record<string, unknown>[]): string {
+  const headers = [...EXPORT_HEADERS];
   const lines = rows.map((row) =>
     headers.map((key) => cell(row[key])).join(","),
   );

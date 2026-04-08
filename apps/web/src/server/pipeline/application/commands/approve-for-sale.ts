@@ -1,9 +1,9 @@
 import type { Role } from "~/lib/auth/access/rbac";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import type { DomainError } from "~/server/shared/domain-error";
+import { Ok, type Result } from "~/server/shared/result";
 
-import { ensureCanApproveForSale } from "../../domain/workflow";
 import type { ApproveForSaleDeps } from "../deps/quotations";
+import { loadQuotedLead } from "../loaders/lead-subject-loader";
 import {
   canApproveForSale,
   requirePipelineActionAccess,
@@ -28,14 +28,9 @@ export async function approveForSale(input: {
     return canApprove;
   }
 
-  const lead = await input.deps.leads.findById(input.leadId);
-  if (!lead) {
-    return Err(domainError("not_found", "lead_not_found", "Lead not found"));
-  }
-
-  const allowed = ensureCanApproveForSale(lead.stage);
-  if (!allowed.ok) {
-    return allowed;
+  const lead = await loadQuotedLead(input.deps.leads, input.leadId);
+  if (!lead.ok) {
+    return lead;
   }
 
   const now = Date.now();
@@ -43,7 +38,7 @@ export async function approveForSale(input: {
     deps: input.deps,
     auditService: input.auditService,
     notificationCenter: input.notificationCenter,
-    lead,
+    lead: lead.value,
     actorUserId: input.actorUserId,
     now,
   });

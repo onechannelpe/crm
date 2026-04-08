@@ -4,6 +4,10 @@ import {
   assertNonEmptyString,
   assertPositiveInt,
 } from "~/lib/contracts/guards";
+import {
+  isExecutiveCategoryValue,
+  type ExecutiveCategoryValue,
+} from "~/lib/db/types";
 import type { TeamId } from "~/server/shared/ids";
 
 export function assertEmail(value: string): string {
@@ -17,6 +21,19 @@ export function assertEmail(value: string): string {
 export function assertRole(value: string): Role {
   if (!isRole(value)) {
     throw validationError("role is invalid");
+  }
+  return value;
+}
+
+export function assertExecutiveCategory(
+  value: string | null | undefined,
+  role: Role,
+): ExecutiveCategoryValue | null {
+  if (role !== "executive") return null;
+  if (!value || !isExecutiveCategoryValue(value)) {
+    throw validationError(
+      "executiveCategory must be 'elite' or 'corporativa' for executives",
+    );
   }
   return value;
 }

@@ -45,6 +45,7 @@ export async function getExecutiveDetail(
         fullName: longName(managed.target),
         email: managed.target.email,
         teamId: managed.target.teamId,
+        executiveCategory: managed.target.executiveCategory,
       },
       searchStatus: searchStatus.value,
       leadStatus: leadStatus.value,

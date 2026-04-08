@@ -1,12 +1,12 @@
 import { createHistoryEvent } from "../../domain/history";
-import type { Lead } from "../../domain/lead";
+import type { ReadyForQuotationLeadSubject } from "../../domain/lead-subjects";
 import type { CreateQuotationDeps } from "../deps/quotations";
 import type { PipelineAuditService } from "../ports/audit-service";
 
 export async function persistLeadQuotationTransition(input: {
   deps: CreateQuotationDeps;
   auditService: PipelineAuditService;
-  lead: Lead;
+  lead: ReadyForQuotationLeadSubject;
   actorUserId: number;
   paybackPricing: number;
   tarifaDebito: number;

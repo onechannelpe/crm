@@ -151,7 +151,9 @@
 .primaryAction,
 .secondaryAction {
   align-items: center;
+  border: none;
   border-radius: var(--radius-sm);
+  cursor: pointer;
   display: inline-flex;
   font-size: 12px;
   font-weight: 500;

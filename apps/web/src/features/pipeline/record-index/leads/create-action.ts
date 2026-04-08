@@ -6,9 +6,9 @@ export function useCreateLeadRecordAction() {
   const { openPanel } = useSidePanel();
 
   return {
-    label: "Add New",
-    emptyLabel: "Add a prospect",
-    inlineLabel: "Add New",
+    label: "Añadir nuevo",
+    emptyLabel: "Añadir un prospecto",
+    inlineLabel: "Añadir nuevo",
     icon: Plus,
     onClick: () => {
       openPanel(createLeadCreateSidePanelPage());

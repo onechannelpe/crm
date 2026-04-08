@@ -1,3 +1,5 @@
+import type { ExecutiveCategoryValue } from "~/lib/db/types";
+
 export type PolicySource = "system" | "branch" | "team" | "user";
 
 export type SearchPolicyView = {
@@ -94,6 +96,7 @@ export type ManagedExecutiveView = {
   fullName: string;
   email: string;
   teamId: number | null;
+  executiveCategory: ExecutiveCategoryValue | null;
   searchStatus: SearchCapacitySnapshot;
   leadStatus: LeadCapacitySnapshot;
 };
@@ -104,6 +107,7 @@ export type ExecutiveCapacityDetailView = {
     fullName: string;
     email: string;
     teamId: number | null;
+    executiveCategory: ExecutiveCategoryValue | null;
   };
   searchStatus: SearchCapacitySnapshot;
   leadStatus: LeadCapacitySnapshot;

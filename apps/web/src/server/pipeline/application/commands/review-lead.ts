@@ -1,15 +1,17 @@
 import type { Role } from "~/lib/auth/access/rbac";
-import { domainError, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import type {
+  LeadPriority,
+  LeadStatus,
+} from "~/pipeline/contracts/lead-schema";
+import type { DomainError } from "~/server/shared/domain-error";
+import { Ok, type Result } from "~/server/shared/result";
 
-import type { LeadPriority, LeadStatus } from "../../domain/lead";
-import { resolveReviewTransition } from "../../domain/workflow";
 import type { ReviewLeadDeps } from "../deps/review-lead";
+import { loadPendingReviewLead } from "../loaders/lead-subject-loader";
 import { canReviewLead, requirePipelineActionAccess } from "../policies/access";
 import type { PipelineAuditService } from "../ports/audit-service";
 import type { PipelineNotificationCenter } from "../ports/notification-center";
-import { persistLeadReviewTransition } from "./review-lead-effects";
-import { notifyLeadReviewOutcome } from "./review-lead-notifier";
+import { recomputeReviewStage } from "./recompute-review-stage";
 
 export async function reviewLead(input: {
   deps: ReviewLeadDeps;
@@ -28,39 +30,26 @@ export async function reviewLead(input: {
     return canReview;
   }
 
-  const lead = await input.deps.leads.findById(input.leadId);
-  if (!lead) {
-    return Err(domainError("not_found", "lead_not_found", "Lead not found"));
-  }
-
-  const transition = resolveReviewTransition({
-    currentStage: lead.stage,
-    status: input.status,
-    prioridad: input.prioridad,
-  });
-  if (!transition.ok) {
-    return transition;
+  const lead = await loadPendingReviewLead(input.deps.leads, input.leadId);
+  if (!lead.ok) {
+    return lead;
   }
 
   const now = Date.now();
-  await persistLeadReviewTransition({
+  const result = await recomputeReviewStage({
     deps: input.deps,
     auditService: input.auditService,
-    lead,
+    notificationCenter: input.notificationCenter,
+    branchId: input.branchId,
+    lead: lead.value,
     actorUserId: input.actorUserId,
     status: input.status,
     prioridad: input.prioridad,
     reason: input.reason,
-    nextStage: transition.value,
     now,
   });
-
-  await notifyLeadReviewOutcome({
-    notificationCenter: input.notificationCenter,
-    branchId: input.branchId,
-    lead,
-    nextStage: transition.value,
-  });
-
+  if (!result.ok) {
+    return result;
+  }
   return Ok(undefined);
 }

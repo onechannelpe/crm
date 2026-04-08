@@ -1,4 +1,8 @@
-import type { LeadPriority, LeadStage, LeadStatus } from "../../../domain/lead";
+import type {
+  LeadPriority,
+  LeadStage,
+  LeadStatus,
+} from "~/pipeline/contracts/lead-schema";
 
 export type LeadListRowView = {
   id: number;
@@ -9,6 +13,7 @@ export type LeadListRowView = {
   stage: LeadStage;
   status: LeadStatus | null;
   prioridad: LeadPriority | null;
+  nextStep: string;
   createdAt: number;
   updatedAt: number;
 };

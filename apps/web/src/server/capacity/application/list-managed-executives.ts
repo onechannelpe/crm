@@ -39,6 +39,7 @@ export async function listManagedExecutives(
           fullName: longName(user),
           email: user.email,
           teamId: user.teamId,
+          executiveCategory: user.executiveCategory,
           searchStatus: searchStatus.value,
           leadStatus: leadStatus.value,
         };

@@ -1,5 +1,6 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { RoleOption } from "~/lib/auth/access/role-display";
+import type { ExecutiveCategoryValue } from "~/lib/db/types";
 
 export interface BulkImportSetup {
   assignableRoles: RoleOption[];
@@ -42,6 +43,7 @@ export interface CreateTeamInviteCommand {
   secondSurname: string;
   email: string;
   role: Role;
+  executiveCategory: ExecutiveCategoryValue | null;
   teamId: number | null;
   expiresAt: number | null;
 }

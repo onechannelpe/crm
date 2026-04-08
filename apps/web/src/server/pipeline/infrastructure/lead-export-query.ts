@@ -1,9 +1,14 @@
+import type {
+  LeadPriority,
+  LeadStage,
+  LeadStatus,
+} from "~/pipeline/contracts/lead-schema";
+
 import type { DatabaseExecutor } from "../../shared/db-executor";
 import type {
   LeadExportQuery,
   LeadExportRow,
 } from "../application/ports/lead-repository";
-import type { LeadPriority, LeadStage, LeadStatus } from "../domain/lead";
 
 type LeadExportRowSource = {
   id: number;

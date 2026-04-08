@@ -72,6 +72,17 @@ const TEAM_COLUMNS = [
     grow: true,
     renderCell: (executive) => executive.email,
   },
+  {
+    key: "executiveCategory",
+    label: "Categoria",
+    icon: UserRound,
+    width: 130,
+    renderCell: (executive) =>
+      executive.executiveCategory
+        ? executive.executiveCategory.charAt(0).toUpperCase() +
+          executive.executiveCategory.slice(1)
+        : "—",
+  },
 ] satisfies ReadonlyArray<DataGridColumn<ManagedExecutiveView>>;
 
 export default function TeamPage() {

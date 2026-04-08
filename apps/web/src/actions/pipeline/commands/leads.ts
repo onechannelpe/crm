@@ -1,34 +1,17 @@
 "use server";
 
-import {
-  LEAD_PRIORITIES,
-  LEAD_STATUSES,
-  type LeadPriority,
-  type LeadStatus,
-} from "~/actions/pipeline/contracts";
 import { validationError } from "~/lib/app-errors";
 import { completeCommercialInput } from "~/server/pipeline/application/commands/complete-commercial-input";
 import { reassignLead } from "~/server/pipeline/application/commands/reassign-lead";
 import { registerLead } from "~/server/pipeline/application/commands/register-lead";
+import { requestSunatRefresh } from "~/server/pipeline/application/commands/request-sunat-refresh";
 import { reviewLead } from "~/server/pipeline/application/commands/review-lead";
+import {
+  parseRequiredLeadPriority,
+  parseRequiredLeadStatus,
+} from "~/server/pipeline/domain/lead-schema-parser";
 import { runPipelineCommand } from "~/server/pipeline/infrastructure/command-runtime";
 import { runAction } from "~/server/shared/action-runtime";
-
-function parseRequiredLeadStatus(value: string): LeadStatus {
-  const parsed = LEAD_STATUSES.find((status) => status === value);
-  if (!parsed) {
-    throw validationError("invalid status");
-  }
-  return parsed;
-}
-
-function parseRequiredLeadPriority(value: string): LeadPriority {
-  const parsed = LEAD_PRIORITIES.find((priority) => priority === value);
-  if (!parsed) {
-    throw validationError("invalid prioridad");
-  }
-  return parsed;
-}
 
 export async function requestLeadCreation(input: {
   ruc: string;
@@ -45,16 +28,18 @@ export async function requestLeadCreation(input: {
     access: { kind: "auth" },
     input,
     execute: (ctx) =>
-      runPipelineCommand(({ deps, auditService, engineGateway }) =>
-        registerLead({
-          deps: deps.registerLead,
-          auditService,
-          engineGateway,
-          actorUserId: ctx.actor.userId,
-          actorRole: ctx.actor.role,
-          executiveId: input.executiveId ?? ctx.actor.userId,
-          ruc: normalizedRuc,
-        }),
+      runPipelineCommand(
+        ({ deps, auditService, engineGateway, leadEnrichmentQueue }) =>
+          registerLead({
+            deps: deps.registerLead,
+            auditService,
+            engineGateway,
+            leadEnrichmentQueue,
+            actorUserId: ctx.actor.userId,
+            actorRole: ctx.actor.role,
+            executiveId: input.executiveId ?? ctx.actor.userId,
+            ruc: normalizedRuc,
+          }),
       ),
   });
 }
@@ -70,7 +55,13 @@ export async function requestLeadReview(input: {
   }
 
   const reviewedStatus = parseRequiredLeadStatus(input.status);
+  if (!reviewedStatus.ok) {
+    throw validationError("invalid status");
+  }
   const reviewedPrioridad = parseRequiredLeadPriority(input.prioridad);
+  if (!reviewedPrioridad.ok) {
+    throw validationError("invalid prioridad");
+  }
 
   return runAction({
     actionName: "pipeline.review_lead",
@@ -86,8 +77,8 @@ export async function requestLeadReview(input: {
           actorRole: ctx.actor.role,
           branchId: ctx.actor.branchId,
           leadId: input.leadId,
-          status: reviewedStatus,
-          prioridad: reviewedPrioridad,
+          status: reviewedStatus.value,
+          prioridad: reviewedPrioridad.value,
           reason: input.reason,
         }),
       ),
@@ -142,6 +133,25 @@ export async function requestLeadReassignment(input: {
           actorUserId: ctx.actor.userId,
           actorRole: ctx.actor.role,
           ...input,
+        }),
+      ),
+  });
+}
+
+export async function requestLeadSunatRefresh(input: { leadId: number }) {
+  return runAction({
+    actionName: "pipeline.request_sunat_refresh",
+    access: { kind: "auth" },
+    input,
+    execute: (ctx) =>
+      runPipelineCommand(({ deps, auditService, leadEnrichmentQueue }) =>
+        requestSunatRefresh({
+          actorUserId: ctx.actor.userId,
+          actorRole: ctx.actor.role,
+          leadId: input.leadId,
+          leadRepo: deps.leadDetail.leads,
+          enrichmentQueue: leadEnrichmentQueue,
+          auditService,
         }),
       ),
   });

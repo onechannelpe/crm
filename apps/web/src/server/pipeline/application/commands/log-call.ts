@@ -1,9 +1,9 @@
 import type { Role } from "~/lib/auth/access/rbac";
+import type { LeadCallOutcome } from "~/pipeline/contracts/lead-schema";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { createHistoryEvent } from "../../domain/history";
-import type { LeadCallOutcome } from "../../domain/lead";
 import type { LeadInteractionDeps } from "../deps/lead-interactions";
 import {
   canAddLeadInteraction,
