@@ -29,6 +29,9 @@ function toLead(row: LeadRow): LeadRecord {
     stage: row.stage,
     status: row.status,
     prioridad: row.prioridad,
+    engineCompanyName: row.engine_company_name,
+    engineAddress: row.engine_address,
+    engineFetchedAt: row.engine_fetched_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -43,6 +46,9 @@ function toNewLeadRow(values: LeadDraft): NewLeadRow {
     stage: values.stage,
     status: values.status,
     prioridad: values.prioridad,
+    engine_company_name: values.engineCompanyName,
+    engine_address: values.engineAddress,
+    engine_fetched_at: values.engineFetchedAt,
     created_at: values.createdAt,
     updated_at: values.updatedAt,
   };

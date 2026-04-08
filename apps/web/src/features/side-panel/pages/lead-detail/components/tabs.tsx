@@ -61,7 +61,7 @@ export function Tabs(props: TabsProps) {
           onClick={() => setIsOverflowOpen((value) => !value)}
         >
           <ChevronDown size={14} />
-          <span>+{props.hiddenTabsCount} More</span>
+          <span>+{props.hiddenTabsCount} más</span>
         </button>
         <Show when={isOverflowOpen()}>
           <div class={styles.moreMenu}>

@@ -20,6 +20,7 @@ export type LeadDetailDeps = {
 };
 
 export type LeadBootstrapPreviewDeps = {
+  leads: LeadRepository;
   engineGateway: PipelineEngineGateway;
 };
 

@@ -1,3 +1,5 @@
+import type { ExecutiveCategoryValue } from "~/lib/db/types";
+
 import type { CapacityRequestStatus } from "../domain/types";
 import type { LeadCapacitySnapshot } from "./get-lead-capacity-snapshot";
 import type { SearchCapacitySnapshot } from "./get-search-capacity-snapshot";
@@ -60,6 +62,7 @@ export type ManagedExecutiveView = {
   fullName: string;
   email: string;
   teamId: number | null;
+  executiveCategory: ExecutiveCategoryValue | null;
   searchStatus: SearchCapacitySnapshot;
   leadStatus: LeadCapacitySnapshot;
 };
@@ -70,6 +73,7 @@ export type ExecutiveCapacityDetailView = {
     fullName: string;
     email: string;
     teamId: number | null;
+    executiveCategory: ExecutiveCategoryValue | null;
   };
   searchStatus: SearchCapacitySnapshot;
   leadStatus: LeadCapacitySnapshot;

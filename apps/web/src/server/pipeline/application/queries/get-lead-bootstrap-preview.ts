@@ -8,6 +8,21 @@ export async function getLeadBootstrapPreview(
   deps: LeadBootstrapPreviewDeps,
   input: { ruc: string },
 ): Promise<Result<LeadBootstrapPreviewView, DomainError>> {
+  // Check if lead exists with stored engine data
+  const existingLead = await deps.leads.findByRuc(input.ruc);
+  if (
+    existingLead &&
+    existingLead.engineCompanyName &&
+    existingLead.engineFetchedAt
+  ) {
+    return Ok({
+      razonSocial: existingLead.engineCompanyName,
+      address: existingLead.engineAddress,
+      engineStatus: "available",
+    });
+  }
+
+  // Fallback to engine gateway for new RUCs or if no cached data
   const preview = await deps.engineGateway.enrichByRuc(input.ruc);
 
   if (!preview) {

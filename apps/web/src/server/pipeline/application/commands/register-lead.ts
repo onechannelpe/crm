@@ -77,6 +77,8 @@ export async function registerLead(input: {
     ruc: ruc.value,
     razonSocial: enrichment?.razonSocial ?? null,
     address: enrichment?.address ?? null,
+    engineCompanyName: enrichment?.razonSocial ?? null,
+    engineAddress: enrichment?.address ?? null,
     executiveId: input.executiveId,
     now,
   });

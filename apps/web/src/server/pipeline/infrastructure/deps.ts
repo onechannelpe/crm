@@ -82,7 +82,7 @@ export function createPipelineDeps(
       leadSales,
       sourceStatuses,
     },
-    leadBootstrapPreview: { engineGateway },
+    leadBootstrapPreview: { leads, engineGateway },
     saleQueries: { leadSales },
     sourcingPolicy: { sourcingPolicies },
   };

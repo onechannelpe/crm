@@ -27,6 +27,15 @@ export async function createInvite(
     );
   }
 
+  if (input.role === "executive" && !input.executiveCategory) {
+    return Err(
+      inviteError(
+        "role_not_assignable",
+        "Executive category is required for executives",
+      ),
+    );
+  }
+
   const normalizedEmail = normalizeInviteEmail(input.email);
 
   try {
@@ -84,6 +93,7 @@ export async function createInvite(
               firstSurname: input.firstSurname,
               secondSurname: input.secondSurname,
               expiresAt: input.expiresAt ?? null,
+              executiveCategory: input.executiveCategory ?? null,
             }),
           );
           user = await transactionRepos.users.findById(createdUserId);
@@ -133,6 +143,7 @@ export async function createInvite(
         first_surname: input.firstSurname,
         second_surname: input.secondSurname,
         role: input.role,
+        executive_category: input.executiveCategory ?? null,
         is_active: 0,
       });
 

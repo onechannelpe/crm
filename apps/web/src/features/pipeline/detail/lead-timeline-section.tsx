@@ -20,7 +20,7 @@ function timelineIcon(kind: LeadTimelineItem["kind"]) {
 export function LeadTimelineSection(props: { timeline: LeadTimelineItem[] }) {
   return (
     <section class={styles.section}>
-      <div class={styles.sectionTitle}>Timeline</div>
+      <div class={styles.sectionTitle}>Línea de tiempo</div>
       <div class={styles.timeline}>
         <For each={props.timeline}>
           {(item) => (

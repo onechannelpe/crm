@@ -12,6 +12,9 @@ const pendingReviewLead: PendingReviewLeadSubject = {
   stage: "PENDING_EXTERNAL_REVIEW",
   status: null,
   prioridad: null,
+  engineCompanyName: "Acme SAC",
+  engineAddress: "Lima",
+  engineFetchedAt: 1,
   createdAt: 1,
   updatedAt: 1,
 };

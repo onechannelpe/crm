@@ -29,7 +29,7 @@ export const LEADS_RECORD_INDEX_FILTER: RecordIndexFilterDefinition<
   LeadListRowView,
   LeadStageFilterValue
 > = {
-  label: "Filter",
+  label: "Filtrar",
   menuId: "record-index-filter-menu",
   options: LEADS_RECORD_INDEX_FILTERS,
   defaultValue: "all",

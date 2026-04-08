@@ -16,8 +16,8 @@ import styles from "../lead-detail-overview.module.css";
 const CALL_OUTCOME_OPTIONS = [
   { value: "answered", label: "Contestada" },
   { value: "no_answer", label: "Sin respuesta" },
-  { value: "wrong_number", label: "Numero incorrecto" },
-  { value: "callback_requested", label: "Pidio devolucion" },
+  { value: "wrong_number", label: "Número incorrecto" },
+  { value: "callback_requested", label: "Pidió devolución" },
   { value: "qualified", label: "Calificado" },
   { value: "disqualified", label: "Descartado" },
 ] as const satisfies ReadonlyArray<{

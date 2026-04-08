@@ -1,4 +1,4 @@
-import type { UsersTable } from "~/lib/db/types";
+import type { ExecutiveCategoryValue, UsersTable } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 type UserRole = UsersTable["role"];
@@ -99,6 +99,7 @@ export function createUsersRepo(db: DatabaseExecutor) {
       expires_at?: number | null;
       phone_e164?: string | null;
       role: UserRole;
+      executive_category?: ExecutiveCategoryValue | null;
       is_active: number;
     }) {
       const result = await db
@@ -109,6 +110,7 @@ export function createUsersRepo(db: DatabaseExecutor) {
           expiry_notified_at: null,
           is_active: values.is_active,
           phone_e164: values.phone_e164 ?? null,
+          executive_category: values.executive_category ?? null,
           onboarding_completed_at: null,
           created_at: Date.now(),
         })
@@ -132,6 +134,7 @@ export function createUsersRepo(db: DatabaseExecutor) {
         first_surname: string;
         second_surname: string;
         role: UserRole;
+        executive_category?: ExecutiveCategoryValue | null;
         is_active: number;
       },
     ) {
@@ -143,6 +146,7 @@ export function createUsersRepo(db: DatabaseExecutor) {
           first_surname: values.first_surname,
           second_surname: values.second_surname,
           role: values.role,
+          executive_category: values.executive_category ?? null,
           is_active: values.is_active,
         })
         .where("id", "=", id)

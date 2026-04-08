@@ -1,4 +1,5 @@
 import type { Role } from "~/lib/auth/access/rbac";
+import type { ExecutiveCategoryValue } from "~/lib/db/types";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { BranchId, UserId } from "~/server/shared/ids";
 import type { Result } from "~/server/shared/result";
@@ -51,6 +52,7 @@ export interface InviteUsersPort {
     expires_at?: number | null;
     phone_e164?: string | null;
     role: Role;
+    executive_category?: ExecutiveCategoryValue | null;
     is_active: number;
   }): Promise<number>;
   updateInviteProvisioning(
@@ -61,6 +63,7 @@ export interface InviteUsersPort {
       first_surname: string;
       second_surname: string;
       role: Role;
+      executive_category?: ExecutiveCategoryValue | null;
       is_active: number;
     },
   ): Promise<unknown>;
@@ -184,6 +187,7 @@ export interface CreateInviteInput {
   secondSurname: string;
   email: string;
   role: Role;
+  executiveCategory?: ExecutiveCategoryValue | null;
   teamId: number | null;
   expiresAt?: number | null;
 }

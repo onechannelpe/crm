@@ -18,6 +18,9 @@ export type LeadRecord = {
   stage: LeadStage;
   status: LeadStatus | null;
   prioridad: LeadPriority | null;
+  engineCompanyName: string | null;
+  engineAddress: string | null;
+  engineFetchedAt: number | null;
   createdAt: number;
   updatedAt: number;
 };
@@ -36,6 +39,8 @@ export function createLeadDraft(input: {
   razonSocial: string | null;
   address: string | null;
   executiveId: number;
+  engineCompanyName: string | null;
+  engineAddress: string | null;
   now: number;
 }): Result<LeadDraft, DomainError> {
   const ruc = normalizeLeadRuc(input.ruc);
@@ -48,6 +53,9 @@ export function createLeadDraft(input: {
     razonSocial: input.razonSocial,
     address: input.address,
     executiveId: input.executiveId,
+    engineCompanyName: input.engineCompanyName,
+    engineAddress: input.engineAddress,
+    engineFetchedAt: input.now,
     stage: "PENDING_EXTERNAL_REVIEW",
     status: null,
     prioridad: null,

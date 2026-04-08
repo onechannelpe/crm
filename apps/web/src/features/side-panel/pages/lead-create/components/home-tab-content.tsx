@@ -22,7 +22,7 @@ export function HomeTabContent(props: HomeTabContentProps) {
     <div class={styles.homeContent}>
       <section class={styles.widget}>
         <div class={styles.widgetHeader}>
-          <h3 class={styles.widgetTitle}>Fields</h3>
+          <h3 class={styles.widgetTitle}>Campos</h3>
         </div>
         <button type="button" class={styles.sectionHeader}>
           <span>General</span>

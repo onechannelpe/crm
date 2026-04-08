@@ -10,7 +10,7 @@ export function Footer(props: FooterProps) {
   return (
     <footer class={styles.footer}>
       <button type="button" class={styles.footerButtonSecondary}>
-        <span class={styles.footerLabel}>Options</span>
+        <span class={styles.footerLabel}>Opciones</span>
         <span class={styles.footerDots}>...</span>
         <span class={styles.footerShortcut}>Ctrl O</span>
       </button>

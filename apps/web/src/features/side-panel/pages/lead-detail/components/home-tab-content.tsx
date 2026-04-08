@@ -47,7 +47,7 @@ export function HomeTabContent(props: HomeTabContentProps) {
     <div class={styles.homeContent}>
       <section class={styles.widget}>
         <div class={styles.widgetHeader}>
-          <h3 class={styles.widgetTitle}>Fields</h3>
+          <h3 class={styles.widgetTitle}>Campos</h3>
         </div>
         <button type="button" class={styles.sectionHeader}>
           <span>General</span>
@@ -77,7 +77,7 @@ export function HomeTabContent(props: HomeTabContentProps) {
 
       <section class={styles.widget}>
         <div class={styles.widgetHeader}>
-          <h3 class={styles.widgetTitle}>Workflow</h3>
+          <h3 class={styles.widgetTitle}>Flujo de trabajo</h3>
         </div>
         <div class={styles.relationList}>
           <div class={styles.relationRow}>
@@ -112,7 +112,7 @@ export function HomeTabContent(props: HomeTabContentProps) {
 
       <section class={styles.widget}>
         <div class={styles.widgetHeader}>
-          <h3 class={styles.widgetTitle}>Actions</h3>
+          <h3 class={styles.widgetTitle}>Acciones</h3>
         </div>
         <div class={styles.relationList}>
           <For each={actions()}>

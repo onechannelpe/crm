@@ -7,7 +7,7 @@ import type { LeadCreateTabId } from "./model";
 
 const LABEL_BY_TAB: Record<LeadCreateTabId, string> = {
   home: "Borrador",
-  timeline: "Timeline",
+  timeline: "Línea de tiempo",
   tasks: "Tareas",
   notes: "Notas",
   files: "Archivos",

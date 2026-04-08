@@ -4,6 +4,7 @@ import { validationError } from "~/lib/app-errors";
 import { completeCommercialInput } from "~/server/pipeline/application/commands/complete-commercial-input";
 import { reassignLead } from "~/server/pipeline/application/commands/reassign-lead";
 import { registerLead } from "~/server/pipeline/application/commands/register-lead";
+import { requestSunatRefresh } from "~/server/pipeline/application/commands/request-sunat-refresh";
 import { reviewLead } from "~/server/pipeline/application/commands/review-lead";
 import {
   parseRequiredLeadPriority,
@@ -132,6 +133,25 @@ export async function requestLeadReassignment(input: {
           actorUserId: ctx.actor.userId,
           actorRole: ctx.actor.role,
           ...input,
+        }),
+      ),
+  });
+}
+
+export async function requestLeadSunatRefresh(input: { leadId: number }) {
+  return runAction({
+    actionName: "pipeline.request_sunat_refresh",
+    access: { kind: "auth" },
+    input,
+    execute: (ctx) =>
+      runPipelineCommand(({ deps, auditService, leadEnrichmentQueue }) =>
+        requestSunatRefresh({
+          actorUserId: ctx.actor.userId,
+          actorRole: ctx.actor.role,
+          leadId: input.leadId,
+          leadRepo: deps.leadDetail.leads,
+          enrichmentQueue: leadEnrichmentQueue,
+          auditService,
         }),
       ),
   });

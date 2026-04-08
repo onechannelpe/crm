@@ -44,7 +44,7 @@ export function LeadsRecordIndex() {
 
   const adapter = {
     id: "leads",
-    title: "All prospects",
+    title: "Todos los prospectos",
     ariaLabel: "Prospectos",
     class: `${styles.page} record-index-container-gate-for-drag-select`,
     pickerIcon: List,
@@ -54,8 +54,8 @@ export function LeadsRecordIndex() {
     rowOpen,
     emptyState: {
       icon: Building2,
-      title: "Add your first prospect",
-      description: "Create a prospect to start working this list.",
+      title: "Agrega tu primer prospecto",
+      description: "Crea un prospecto para comenzar a trabajar esta lista.",
     },
     createAction,
     filter: LEADS_RECORD_INDEX_FILTER,

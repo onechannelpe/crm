@@ -48,6 +48,14 @@ export default function TeamMemberCapacityPage() {
               <p class="text-sm text-muted-foreground">
                 {snapshot.executive.email}
               </p>
+              <Show when={snapshot.executive.executiveCategory}>
+                {(category) => (
+                  <p class="text-sm text-muted-foreground">
+                    Categoria:{" "}
+                    {category().charAt(0).toUpperCase() + category().slice(1)}
+                  </p>
+                )}
+              </Show>
             </div>
 
             <section class="space-y-3">

@@ -30,7 +30,7 @@ export async function previewBulkCsv(
     actionName: "team.bulk_import.preview",
     access: { kind: "permission", permission: "admin:manage" },
     input: { role: safeRole },
-    execute: () => previewBulkImportService(csvContent),
+    execute: () => previewBulkImportService(csvContent, safeRole),
   });
   return { parsed };
 }

@@ -17,7 +17,7 @@ function timelineIcon(kind: LeadDetailView["timeline"][number]["kind"]) {
 export function TimelineTabContent(props: { data: LeadDetailView }) {
   return (
     <div class={styles.timelineSection}>
-      <div class={styles.timelineMonth}>Timeline</div>
+      <div class={styles.timelineMonth}>Línea de tiempo</div>
       <For each={props.data.timeline}>
         {(item) => (
           <div class={styles.timelineEntry}>

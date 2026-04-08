@@ -4,12 +4,14 @@ import {
   assertNonEmptyString,
   assertPositiveInt,
 } from "~/lib/contracts/guards";
+import type { ExecutiveCategoryValue } from "~/lib/db/types";
 import { domainError, type DomainError } from "~/server/shared/domain-error";
 import type { TeamId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import {
   assertEmail,
+  assertExecutiveCategory,
   assertOptionalExpiresAt,
   assertOptionalTeamId,
   assertRole,
@@ -21,6 +23,7 @@ export function parseCreateTeamInviteInput(input: {
   secondSurname: string;
   email: string;
   role: string;
+  executiveCategory?: string | null;
   teamId?: number | null;
   expiresAt?: number | null;
 }): {
@@ -29,15 +32,18 @@ export function parseCreateTeamInviteInput(input: {
   secondSurname: string;
   email: string;
   role: Role;
+  executiveCategory: ExecutiveCategoryValue | null;
   teamId: TeamId | null;
   expiresAt: number | null;
 } {
+  const role = assertRole(input.role);
   return {
     names: assertNonEmptyString(input.names, "names"),
     firstSurname: assertNonEmptyString(input.firstSurname, "firstSurname"),
     secondSurname: assertNonEmptyString(input.secondSurname, "secondSurname"),
     email: assertEmail(input.email),
-    role: assertRole(input.role),
+    role,
+    executiveCategory: assertExecutiveCategory(input.executiveCategory, role),
     teamId: assertOptionalTeamId(input.teamId),
     expiresAt: assertOptionalExpiresAt(input.expiresAt),
   };

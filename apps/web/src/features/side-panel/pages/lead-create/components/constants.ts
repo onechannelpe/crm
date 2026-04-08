@@ -38,8 +38,12 @@ export const TAB_ITEMS: ReadonlyArray<{
   icon: IconComponent;
   label: string;
 }> = [
-  { id: LEAD_CREATE_PRIMARY_TABS[0], icon: HomeTabler, label: "Home" },
-  { id: LEAD_CREATE_PRIMARY_TABS[1], icon: TimelineEvent, label: "Timeline" },
+  { id: LEAD_CREATE_PRIMARY_TABS[0], icon: HomeTabler, label: "Inicio" },
+  {
+    id: LEAD_CREATE_PRIMARY_TABS[1],
+    icon: TimelineEvent,
+    label: "Línea de tiempo",
+  },
   { id: LEAD_CREATE_PRIMARY_TABS[2], icon: Checkbox, label: "Tareas" },
 ] as const;
 
