@@ -1,16 +1,16 @@
 import { Show, type Component } from "solid-js";
 
 import { SIDE_PANEL_PAGES_CONFIG } from "../registry/page-registry";
-import { PageFrameProvider } from "../router/page-frame-context";
+import { PageInstanceProvider } from "../router/page-instance-context";
 import { useSidePanel } from "../state/use-side-panel";
 
 export function TopBarActions() {
-  const { currentFrame } = useSidePanel();
+  const { currentEntry } = useSidePanel();
 
   return (
-    <Show when={currentFrame()} keyed>
-      {(frame) => {
-        const ActionsComponent = SIDE_PANEL_PAGES_CONFIG[frame.entry.page]
+    <Show when={currentEntry()} keyed>
+      {(entry) => {
+        const ActionsComponent = SIDE_PANEL_PAGES_CONFIG[entry.page]
           .topBarActionsComponent as Component | undefined;
 
         if (!ActionsComponent) {
@@ -18,9 +18,9 @@ export function TopBarActions() {
         }
 
         return (
-          <PageFrameProvider frame={frame}>
+          <PageInstanceProvider pageId={entry.pageId}>
             <ActionsComponent />
-          </PageFrameProvider>
+          </PageInstanceProvider>
         );
       }}
     </Show>

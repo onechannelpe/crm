@@ -4,7 +4,7 @@ import Users from "~/components/icons/users";
 import { RecordChipList } from "~/components/ui/record-chip/record-chip";
 
 import { PanelList } from "../../components/list";
-import { useSidePanelPageState } from "../../router/page-frame-context";
+import { useSidePanelPageState } from "../../router/page-state";
 
 import styles from "./page.module.css";
 
