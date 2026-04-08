@@ -1,27 +1,15 @@
-import { createMemo, For } from "solid-js";
+import { For } from "solid-js";
 
 import Users from "~/components/icons/users";
 import { RecordChipList } from "~/components/ui/record-chip/record-chip";
 
 import { PanelList } from "../../components/list";
-import { usePageInstanceId } from "../../state/page-instance";
-import { useSidePanel } from "../../state/use-side-panel";
+import { useSidePanelPageState } from "../../router/page-frame-context";
 
 import styles from "./page.module.css";
 
 export function SearchCompanyPage() {
-  const pageId = usePageInstanceId();
-  const { getPageState } = useSidePanel();
-
-  const pageState = createMemo(() => {
-    const state = getPageState(pageId());
-
-    if (!state || state.page !== "search-company-detail") {
-      throw new Error("Search company side panel page state is not available");
-    }
-
-    return state;
-  });
+  const pageState = useSidePanelPageState("search-company-detail");
 
   return (
     <PanelList>

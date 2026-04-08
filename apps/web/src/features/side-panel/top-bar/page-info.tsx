@@ -1,27 +1,26 @@
 import { Show } from "solid-js";
 
-import { PageInstanceProvider } from "../state/page-instance";
-import { SIDE_PANEL_PAGES_CONFIG } from "../state/pages-config";
+import { SIDE_PANEL_PAGES_CONFIG } from "../registry/page-registry";
+import { PageFrameProvider } from "../router/page-frame-context";
 import { useSidePanel } from "../state/use-side-panel";
 
 export function PageInfo() {
-  const { currentEntry } = useSidePanel();
+  const { currentFrame } = useSidePanel();
 
   return (
-    <Show when={currentEntry()}>
-      {(entryValue) => {
-        const entry = entryValue();
+    <Show when={currentFrame()} keyed>
+      {(frame) => {
         const PageInfoComponent =
-          SIDE_PANEL_PAGES_CONFIG[entry.page].pageInfoComponent;
+          SIDE_PANEL_PAGES_CONFIG[frame.entry.page].pageInfoComponent;
 
         if (!PageInfoComponent) {
           return null;
         }
 
         return (
-          <PageInstanceProvider pageId={entry.pageId}>
+          <PageFrameProvider frame={frame}>
             <PageInfoComponent />
-          </PageInstanceProvider>
+          </PageFrameProvider>
         );
       }}
     </Show>

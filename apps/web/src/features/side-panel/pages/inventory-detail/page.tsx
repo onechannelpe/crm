@@ -1,24 +1,8 @@
-import { createMemo } from "solid-js";
-
 import { PanelList } from "../../components/list";
-import { usePageInstanceId } from "../../state/page-instance";
-import { useSidePanel } from "../../state/use-side-panel";
+import { useSidePanelPageState } from "../../router/page-frame-context";
 
 export function InventoryDetailPage() {
-  const pageId = usePageInstanceId();
-  const { getPageState } = useSidePanel();
-
-  const pageState = createMemo(() => {
-    const state = getPageState(pageId());
-
-    if (!state || state.page !== "inventory-detail") {
-      throw new Error(
-        "Inventory detail side panel page state is not available",
-      );
-    }
-
-    return state;
-  });
+  const pageState = useSidePanelPageState("inventory-detail");
 
   return (
     <PanelList>
