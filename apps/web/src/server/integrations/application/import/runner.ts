@@ -1,0 +1,50 @@
+import { TextDecoder } from "node:util";
+
+import { integrationJobBlobStore } from "../../infrastructure/runtime";
+import type {
+  ImportBatchRunner,
+  ImportJobProcessResult,
+  IntegrationJobRow,
+} from "../../types";
+import { applyImportRows } from "./apply-service";
+import { parseImportRows } from "./parse";
+
+export function createImportBatchRunner() {
+  const runner: ImportBatchRunner = {
+    async processJob(
+      job: IntegrationJobRow,
+      signal: AbortSignal,
+    ): Promise<ImportJobProcessResult> {
+      if (!job.file_path) {
+        throw new Error("Missing file path for import job");
+      }
+
+      const text = new TextDecoder("utf-8").decode(
+        await integrationJobBlobStore.get(job.file_path),
+      );
+      if (signal.aborted) {
+        throw new Error("Job aborted");
+      }
+
+      const { validRows, invalidRows } = parseImportRows(job, text);
+      const applied = await applyImportRows({
+        jobId: job.id,
+        actorId: job.requested_by_user_id,
+        validRows,
+        invalidRows,
+      });
+
+      if (signal.aborted) {
+        throw new Error("Job aborted after processing");
+      }
+
+      return {
+        rowsTotal: validRows.length + invalidRows.length,
+        rowsApplied: applied.applied,
+        rowsFailed: applied.failed,
+        resultsJson: JSON.stringify(applied.results),
+      };
+    },
+  };
+  return runner;
+}

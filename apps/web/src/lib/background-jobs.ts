@@ -3,6 +3,7 @@ import type { QueueRunner } from "~/lib/job-queue/types";
 import { createLogger } from "~/lib/observability/logger";
 import { startJobSubscriber } from "~/lib/redis/subscriber";
 import { createEnrichmentQueue } from "~/server/client-search/queue/enrichment-queue";
+import { dispatchIntegrationOutboxOnce } from "~/server/integrations/application/import/outbox-dispatcher";
 import { createCrmExportQueue } from "~/server/integrations/queue/crm-export-queue";
 import { createCrmImportQueue } from "~/server/integrations/queue/crm-import-queue";
 import { createSalesExportQueue } from "~/server/sales/queue/sales-export-queue";
@@ -28,6 +29,7 @@ export function startBackgroundJobs() {
     for (const queue of queues) {
       void queue.runOnce();
     }
+    void dispatchIntegrationOutboxOnce(WORKER_ID);
   };
 
   // Start account lifecycle maintenance tasks

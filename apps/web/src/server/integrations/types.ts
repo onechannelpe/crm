@@ -1,9 +1,5 @@
 import type { PipelineIntegrationJobsTable } from "~/lib/db/types";
 import type { QueueJobBase } from "~/lib/job-queue/types";
-import type {
-  LeadPriority,
-  LeadStatus,
-} from "~/pipeline/contracts/lead-schema";
 
 export type IntegrationJobType = PipelineIntegrationJobsTable["type"];
 export type IntegrationJobStatus = PipelineIntegrationJobsTable["status"];
@@ -85,16 +81,6 @@ export interface IntegrationRuntime {
   users: {
     findById(id: number): Promise<{ branch_id: number } | undefined>;
   };
-  auditLogs: {
-    create(values: {
-      user_id: number;
-      action: string;
-      entity_type: string;
-      entity_id: number;
-      changes: string | null;
-      created_at: number;
-    }): Promise<unknown>;
-  };
 }
 
 export interface ExportJobProcessResult extends IntegrationJobCompletion {}
@@ -116,19 +102,3 @@ export interface ImportBatchRunner {
     signal: AbortSignal,
   ): Promise<ImportJobProcessResult>;
 }
-
-export type IntegrationReviewInput =
-  | {
-      leadId: number;
-      status: LeadStatus;
-      actorId: number;
-      branchId: number;
-      kind: "status";
-    }
-  | {
-      leadId: number;
-      prioridad: LeadPriority;
-      actorId: number;
-      branchId: number;
-      kind: "prioridad";
-    };
