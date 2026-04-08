@@ -595,6 +595,7 @@ export interface ReportExportJobsTable {
   lease_until: number | null;
   attempt_count: number;
   max_attempts: number;
+  available_at: number | null;
 }
 
 export interface ReportExportDownloadsTable {
@@ -618,6 +619,7 @@ export interface SearchEnrichmentJobsTable {
   lease_until: number | null;
   attempt_count: number;
   max_attempts: number;
+  available_at: number | null;
   last_error: string | null;
 }
 
@@ -874,7 +876,7 @@ export interface PipelineIntegrationJobsTable {
   id: Generated<number>;
   type: "export" | "import_status" | "import_prioridad";
   status: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
-  user_id: number;
+  requested_by_user_id: number;
   file_path: string | null;
   error_message: string | null;
   rows_total: number | null;
@@ -884,6 +886,8 @@ export interface PipelineIntegrationJobsTable {
   lease_owner: string | null;
   lease_until: number | null;
   attempt_count: ColumnType<number, number | undefined, number>;
+  max_attempts: number;
+  available_at: number | null;
   created_at: number;
   completed_at: number | null;
 }

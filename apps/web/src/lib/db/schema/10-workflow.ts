@@ -182,7 +182,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
     .addColumn("type", "varchar(30)", (col) => col.notNull())
     .addColumn("status", "varchar(20)", (col) => col.notNull())
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("requested_by_user_id", "integer", (col) =>
       col.notNull().references("users.id"),
     )
     .addColumn("file_path", "text")
@@ -194,6 +194,8 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("lease_owner", "varchar(100)")
     .addColumn("lease_until", "integer")
     .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
+    .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(3))
+    .addColumn("available_at", "integer")
     .addColumn("created_at", "integer", (col) => col.notNull())
     .addColumn("completed_at", "integer")
     .execute();
@@ -201,6 +203,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createIndex("idx_pipeline_integration_jobs_status")
     .on("pipeline_integration_jobs")
-    .columns(["status", "lease_until"])
+    .columns(["status", "available_at", "lease_until"])
     .execute();
 }

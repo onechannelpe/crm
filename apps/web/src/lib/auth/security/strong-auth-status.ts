@@ -1,12 +1,20 @@
 import type { UsersTable } from "~/lib/db/types";
-import type { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
 import type { UserId } from "~/server/shared/ids";
-import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
 
-type StrongAuthRepos = {
-  passkeys: ReturnType<typeof createPasskeysRepo>;
-  userTotpFactors: ReturnType<typeof createUserTotpFactorsRepo>;
-};
+export interface StrongAuthPasskeysPort {
+  findByUser(userId: UserId): Promise<Array<unknown>>;
+}
+
+export interface StrongAuthTotpFactorsPort {
+  findByUserId(
+    userId: UserId,
+  ): Promise<{ is_enabled: number } | null | undefined>;
+}
+
+export interface StrongAuthRepos {
+  passkeys: StrongAuthPasskeysPort;
+  userTotpFactors: StrongAuthTotpFactorsPort;
+}
 
 export interface StrongAuthStatus {
   hasTotp: boolean;

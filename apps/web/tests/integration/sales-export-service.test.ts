@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { createSalesExportBlobStore } from "../../src/server/sales/export-blob-store";
 import { createSalesExportService } from "../../src/server/sales/export-service";
+import { createSalesExportQueue } from "../../src/server/sales/queue/sales-export-queue";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -80,8 +81,12 @@ describe("sales export service", () => {
 
     const blobStore = createSalesExportBlobStore(ctx.storageRoot);
     const service = createSalesExportService(ctx.repos, blobStore);
-    const processed = await service.runBatch(10, 30_000, "test-worker");
-    expect(processed).toBe(1);
+    const queue = createSalesExportQueue("test-worker", {
+      service,
+      leaseMs: 30_000,
+      batchSize: 10,
+    });
+    await queue.runOnce();
 
     const job = await ctx.repos.reportExportJobs.findJobById(jobId);
     expect(job?.status).toBe("completed");

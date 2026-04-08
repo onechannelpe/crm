@@ -1,21 +1,22 @@
-import type { Insertable } from "kysely";
-
 import { db } from "~/lib/db/db";
-import type { Database } from "~/lib/db/types";
 import { createLogger } from "~/lib/observability/logger";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
-import type { BranchId, UserId } from "~/server/shared/ids";
+import type { UserId } from "~/server/shared/ids";
+import { createUsersRepo } from "~/server/users/repos-users";
 
-import { isRole, type Role } from "../access/rbac";
+import { isRole } from "../access/rbac";
 import type { AuthSession } from "../access/session-types";
 import {
   isPrimaryAuthMethod,
   isSessionClass,
   isStrongAuthMethod,
-  type PrimaryAuthMethod,
-  type SessionClass,
-  type StrongAuthMethod,
 } from "../core/session-contract";
+import type {
+  CreateSessionParams,
+  SessionDeps,
+  SessionRepositoryPort,
+  SessionUsersPort,
+} from "../types";
 import { sessionCache } from "./session-cache";
 import { mapUserSessionRowToAuthSession } from "./session-mappers";
 import {
@@ -29,35 +30,26 @@ const ACTIVITY_UPDATE_THRESHOLD = 5 * 60 * 1000;
 const EXTENSION_THRESHOLD = 7 * 24 * 60 * 60 * 1000;
 const logger = createLogger("session-manager");
 
-type NewUserSessionRow = Insertable<Database["user_sessions"]>;
-
 export interface SessionValidationResult {
   session: AuthSession | null;
 }
-
-type SessionDeps = {
-  sessions: ReturnType<typeof createSessionRepository>;
-};
 const repos = {
   sessions: createSessionRepository(db),
+  users: createUsersRepo(db),
 };
 
-function getSessionDeps(deps?: SessionDeps): SessionDeps {
-  return deps ?? repos;
+function getSessionDeps(deps?: SessionDeps): {
+  sessions: SessionRepositoryPort;
+  users: SessionUsersPort;
+} {
+  return {
+    sessions: deps?.sessions ?? repos.sessions,
+    users: deps?.users ?? repos.users,
+  };
 }
 
 export async function createSession(
-  params: {
-    userId: UserId;
-    branchId: BranchId;
-    role: Role;
-    sessionClass: SessionClass;
-    ipAddress: string | null;
-    userAgent: string | null;
-    primaryAuthMethod: PrimaryAuthMethod;
-    strongAuthMethod: StrongAuthMethod | null;
-    strongAuthAt: number | null;
-  },
+  params: CreateSessionParams,
   deps?: SessionDeps,
 ): Promise<string> {
   const { sessions } = getSessionDeps(deps);
@@ -65,7 +57,7 @@ export async function createSession(
   const sessionId = hashSessionToken(token);
   const now = Date.now();
 
-  const newSession: NewUserSessionRow = {
+  const newSession = {
     id: sessionId,
     user_id: params.userId,
     branch_id: params.branchId,
@@ -93,7 +85,7 @@ export async function validateSessionToken(
   if (!isValidTokenFormat(token)) {
     return { session: null };
   }
-  const { sessions } = getSessionDeps(deps);
+  const { sessions, users } = getSessionDeps(deps);
 
   const sessionId = hashSessionToken(token);
   const now = Date.now();
@@ -145,6 +137,18 @@ export async function validateSessionToken(
     await sessions.delete(sessionId);
     return { session: null };
   }
+
+  const user = await users.findById(dbSession.user_id);
+  if (!user || user.is_active !== 1) {
+    await sessions.delete(sessionId);
+    return { session: null };
+  }
+  if (user.expires_at !== null && user.expires_at <= now) {
+    await users.deactivateIfExpired(user.id, now);
+    await sessions.deleteAllForUser(user.id);
+    return { session: null };
+  }
+
   if (now - dbSession.last_activity > ACTIVITY_UPDATE_THRESHOLD) {
     sessions.updateActivity(sessionId, now).catch((error: unknown) => {
       logger.error("update_activity_failed", { sessionId, error });

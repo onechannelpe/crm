@@ -1,15 +1,13 @@
 import type { Selectable } from "kysely";
 
 import type { UsersTable } from "~/lib/db/types";
-import type { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
 import type { UserId } from "~/server/shared/ids";
-import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
-import type { createUsersRepo } from "~/server/users/repos-users";
 
 import {
   getStrongAuthStatus,
   type StrongAuthStatus,
 } from "../security/strong-auth-status";
+import type { AuthContextDeps } from "../types";
 
 type UserRow = Selectable<UsersTable>;
 
@@ -32,18 +30,17 @@ export interface AuthContext {
   strongAuthStatus: StrongAuthStatus;
 }
 
-type AuthContextDeps = {
-  users: ReturnType<typeof createUsersRepo>;
-  passkeys: ReturnType<typeof createPasskeysRepo>;
-  userTotpFactors: ReturnType<typeof createUserTotpFactorsRepo>;
-};
-
 export async function loadActiveAuthContext(
   userId: UserId,
   deps: AuthContextDeps,
 ): Promise<AuthContext | null> {
+  const now = Date.now();
   const user = await deps.users.findById(userId);
   if (!user || !user.is_active) {
+    return null;
+  }
+  if (user.expires_at !== null && user.expires_at <= now) {
+    await deps.users.deactivateIfExpired(userId, now);
     return null;
   }
 

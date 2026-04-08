@@ -240,6 +240,19 @@ export function createUsersRepo(db: DatabaseExecutor) {
       return rows.map((r) => r.id);
     },
 
+    async deactivateIfExpired(userId: number, now: number): Promise<boolean> {
+      const result = await db
+        .updateTable("users")
+        .set({ is_active: 0 })
+        .where("id", "=", userId)
+        .where("is_active", "=", 1)
+        .where("expires_at", "is not", null)
+        .where("expires_at", "<=", now)
+        .executeTakeFirst();
+
+      return Number(result.numUpdatedRows ?? 0) > 0;
+    },
+
     findExpiringBefore(threshold: number) {
       return db
         .selectFrom("users")
@@ -248,6 +261,33 @@ export function createUsersRepo(db: DatabaseExecutor) {
         .where("expires_at", "is not", null)
         .where("expiry_notified_at", "is", null)
         .where("is_active", "=", 1)
+        .execute();
+    },
+
+    async claimExpiryReminder(
+      userId: number,
+      threshold: number,
+      claimedAt: number,
+    ): Promise<boolean> {
+      const result = await db
+        .updateTable("users")
+        .set({ expiry_notified_at: claimedAt })
+        .where("id", "=", userId)
+        .where("is_active", "=", 1)
+        .where("expires_at", "is not", null)
+        .where("expires_at", "<=", threshold)
+        .where("expiry_notified_at", "is", null)
+        .executeTakeFirst();
+
+      return Number(result.numUpdatedRows ?? 0) > 0;
+    },
+
+    releaseExpiryReminderClaim(userId: number, claimedAt: number) {
+      return db
+        .updateTable("users")
+        .set({ expiry_notified_at: null })
+        .where("id", "=", userId)
+        .where("expiry_notified_at", "=", claimedAt)
         .execute();
     },
 

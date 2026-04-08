@@ -29,6 +29,7 @@ describe("user invite lifecycle", () => {
       secondSurname: "Garcia",
       email: "nueva-ejecutiva@test.local",
       role: "executive",
+      executiveCategory: "elite",
       teamId: null,
     });
     expect(created.ok).toBe(true);
@@ -130,6 +131,7 @@ describe("user invite lifecycle", () => {
       secondSurname: "Test",
       email: "race-user@test.local",
       role: "executive",
+      executiveCategory: "elite",
       teamId: null,
     });
 

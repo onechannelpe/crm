@@ -1,9 +1,11 @@
 import { notFoundError } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
+import { JOB_CHANNELS } from "~/lib/job-queue/channels";
+import { publishJob } from "~/lib/redis/publisher";
+import { isPlainRecord } from "~/lib/type-guards";
 import { shortName } from "~/lib/users/display-name";
+import type { SalesExportFormat } from "~/server/sales/types";
 import type { AppContext } from "~/server/shared/action-runtime";
-
-export type SalesExportFormat = "csv" | "xlsx";
 
 export interface SalesExportJob {
   id: number;
@@ -32,27 +34,12 @@ export interface SalesExportActor {
   branchId: number;
 }
 
-import { isPlainRecord } from "~/lib/type-guards";
-
 export interface SalesExportServiceDeps {
   reportExportJobs: {
     listJobs(
       limit: number,
       scope?: { branchId: number },
-    ): Promise<
-      Array<{
-        id: number;
-        requested_by_user_id: number;
-        requested_by_name: string;
-        format: SalesExportFormat;
-        status: SalesExportJob["status"];
-        rows_count: number | null;
-        requested_at: number;
-        completed_at: number | null;
-        expires_at: number | null;
-        filters_json: string;
-      }>
-    >;
+    ): Promise<ReportExportListRow[]>;
     findJobById(jobId: number): Promise<
       | {
           id: number;
@@ -69,15 +56,7 @@ export interface SalesExportServiceDeps {
       | null
       | undefined
     >;
-    listDownloadsByJob(jobId: number): Promise<
-      Array<{
-        id: number;
-        export_job_id: number;
-        downloaded_by_user_id: number;
-        downloaded_by_name: string;
-        downloaded_at: number;
-      }>
-    >;
+    listDownloadsByJob(jobId: number): Promise<ReportExportDownloadRow[]>;
     createJob(input: {
       requested_by_user_id: number;
       branch_id: number;
@@ -111,6 +90,27 @@ export interface SalesExportServiceDeps {
   };
 }
 
+type ReportExportListRow = {
+  id: number;
+  requested_by_user_id: number;
+  requested_by_name: string;
+  format: SalesExportFormat;
+  status: SalesExportJob["status"];
+  rows_count: number | null;
+  requested_at: number;
+  completed_at: number | null;
+  expires_at: number | null;
+  filters_json: string;
+};
+
+type ReportExportDownloadRow = {
+  id: number;
+  export_job_id: number;
+  downloaded_by_user_id: number;
+  downloaded_by_name: string;
+  downloaded_at: number;
+};
+
 function parseFiltersJson(filtersJson: string): Record<string, unknown> | null {
   try {
     const parsed: unknown = JSON.parse(filtersJson);
@@ -120,11 +120,7 @@ function parseFiltersJson(filtersJson: string): Record<string, unknown> | null {
   }
 }
 
-function mapJob(
-  row: Awaited<
-    ReturnType<SalesExportServiceDeps["reportExportJobs"]["listJobs"]>
-  >[number],
-): SalesExportJob {
+function mapJob(row: ReportExportListRow): SalesExportJob {
   return {
     id: row.id,
     requestedByUserId: row.requested_by_user_id,
@@ -139,11 +135,7 @@ function mapJob(
   };
 }
 
-function mapDownload(
-  row: Awaited<
-    ReturnType<SalesExportServiceDeps["reportExportJobs"]["listDownloadsByJob"]>
-  >[number],
-): SalesExportDownload {
+function mapDownload(row: ReportExportDownloadRow): SalesExportDownload {
   return {
     id: row.id,
     exportJobId: row.export_job_id,
@@ -238,6 +230,8 @@ export async function requestSalesExportJob(
     attempt_count: 0,
     max_attempts: 5,
   });
+
+  await publishJob(JOB_CHANNELS.SALES_EXPORT, jobId);
 
   const newest = await deps.reportExportJobs.findJobById(jobId);
   if (!newest) {

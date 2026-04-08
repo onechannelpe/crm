@@ -163,6 +163,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("lease_until", "integer")
     .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
     .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(5))
+    .addColumn("available_at", "integer")
     .execute();
 
   await db.schema
@@ -174,7 +175,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createIndex("idx_report_export_jobs_status_lease_time")
     .on("report_export_jobs")
-    .columns(["status", "lease_until", "requested_at"])
+    .columns(["status", "available_at", "lease_until", "requested_at"])
     .execute();
 
   await db.schema
