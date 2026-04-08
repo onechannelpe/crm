@@ -1,13 +1,11 @@
 import type {
-  SidePanelNavigationEntry,
-  SidePanelPageState,
+  SidePanelPageDefinition,
 } from "./side-panel-page";
 
 export type SidePanelState = {
   isOpen: boolean;
   isClosing: boolean;
-  navigationStack: SidePanelNavigationEntry[];
-  pageStateById: Record<string, SidePanelPageState>;
+  stack: SidePanelPageDefinition[];
   searchText: string;
   panelWidth: number;
 };

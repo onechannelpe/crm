@@ -1,26 +1,10 @@
-import { createMemo } from "solid-js";
-
 import Building2 from "~/components/icons/building-2";
 
-import { usePageInstanceId } from "../../state/page-instance";
-import { useSidePanel } from "../../state/use-side-panel";
+import { useSidePanelPageState } from "../../state/page-frame";
 import { PageInfoLayout } from "../../top-bar/page-info-layout";
 
 export function LeadDetailPageInfo() {
-  const pageId = usePageInstanceId();
-  const { getPageState } = useSidePanel();
-
-  const pageState = createMemo(() => {
-    const state = getPageState(pageId());
-
-    if (!state || state.page !== "lead-detail") {
-      throw new Error(
-        "Lead detail side panel page info state is not available",
-      );
-    }
-
-    return state;
-  });
+  const pageState = useSidePanelPageState("lead-detail");
 
   return (
     <PageInfoLayout

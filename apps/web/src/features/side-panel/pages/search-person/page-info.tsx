@@ -1,26 +1,10 @@
-import { createMemo } from "solid-js";
-
 import User from "~/components/icons/user";
 
-import { usePageInstanceId } from "../../state/page-instance";
-import { useSidePanel } from "../../state/use-side-panel";
+import { useSidePanelPageState } from "../../state/page-frame";
 import { PageInfoLayout } from "../../top-bar/page-info-layout";
 
 export function SearchPersonPageInfo() {
-  const pageId = usePageInstanceId();
-  const { getPageState } = useSidePanel();
-
-  const pageState = createMemo(() => {
-    const state = getPageState(pageId());
-
-    if (!state || state.page !== "search-person-detail") {
-      throw new Error(
-        "Search person side panel page info state is not available",
-      );
-    }
-
-    return state;
-  });
+  const pageState = useSidePanelPageState("search-person-detail");
 
   return (
     <PageInfoLayout

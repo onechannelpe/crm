@@ -1,6 +1,6 @@
 import { createMemo } from "solid-js";
 
-import { usePageInstanceId } from "../../state/page-instance";
+import { useSidePanelPageFrame, useSidePanelPageState } from "../../state/page-frame";
 import { useSidePanel } from "../../state/use-side-panel";
 import type { LeadCreateSidePanelPageState } from "../../types/side-panel-page";
 import type { LeadCreateTabId } from "./model";
@@ -16,25 +16,16 @@ const LABEL_BY_TAB: Record<LeadCreateTabId, string> = {
 };
 
 export function useLeadCreatePageState() {
-  const pageId = usePageInstanceId();
-  const { getPageState, updatePageState } = useSidePanel();
-
-  const pageState = createMemo<LeadCreateSidePanelPageState>(() => {
-    const state = getPageState(pageId());
-
-    if (!state || state.page !== "lead-create") {
-      throw new Error("Lead create side panel page state is not available");
-    }
-
-    return state;
-  });
+  const frame = useSidePanelPageFrame();
+  const { updatePageState } = useSidePanel();
+  const pageState = useSidePanelPageState("lead-create");
 
   function updateDraft(
     updater: (
       draft: LeadCreateSidePanelPageState["draft"],
     ) => LeadCreateSidePanelPageState["draft"],
   ) {
-    updatePageState(pageId(), (state) => {
+    updatePageState(frame.entry.pageId, (state) => {
       if (state.page !== "lead-create") {
         return state;
       }

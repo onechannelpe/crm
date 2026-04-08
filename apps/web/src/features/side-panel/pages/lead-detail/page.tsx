@@ -1,5 +1,5 @@
 import { createAsync } from "@solidjs/router";
-import { createMemo, createSignal, onCleanup, onMount, Show } from "solid-js";
+import { createSignal, onCleanup, onMount, Show } from "solid-js";
 import type { JSX } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
@@ -9,8 +9,7 @@ import { toAppError } from "~/lib/app-errors";
 import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
 
 import { PanelList } from "../../components/list";
-import { usePageInstanceId } from "../../state/page-instance";
-import { useSidePanel } from "../../state/use-side-panel";
+import { useSidePanelPageState } from "../../state/page-frame";
 import type { ExtendedTabId } from "./components/constants";
 import { HomeTabContent } from "./components/home-tab-content";
 import { Tabs } from "./components/tabs";
@@ -43,22 +42,12 @@ const TAB_COMPONENTS: Record<
 const hiddenTabsCount = 4;
 
 export function LeadDetailPage() {
-  const pageId = usePageInstanceId();
-  const { getPageState } = useSidePanel();
   const [activeTab, setActiveTab] = createSignal<ExtendedTabId>("home");
   const [refreshTick, setRefreshTick] = createSignal(0);
   const [error, setError] = createSignal<string | null>(null);
   const [approving, setApproving] = createSignal(false);
 
-  const pageState = createMemo(() => {
-    const state = getPageState(pageId());
-
-    if (!state || state.page !== "lead-detail") {
-      throw new Error("Lead detail side panel page state is not available");
-    }
-
-    return state;
-  });
+  const pageState = useSidePanelPageState("lead-detail");
 
   const data = createAsync(() => {
     refreshTick();

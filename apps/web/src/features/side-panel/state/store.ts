@@ -1,10 +1,10 @@
 import { createStore } from "solid-js/store";
 
-import type {
-  SidePanelNavigationEntry,
-  SidePanelPageDefinition,
-  SidePanelPageState,
-} from "../types/side-panel-page";
+import {
+  reduceSidePanelState,
+  updateSidePanelFrameState,
+} from "../core/reducer";
+import type { SidePanelPageDefinition, SidePanelPageState } from "../types/side-panel-page";
 import type { SidePanelState } from "../types/side-panel-state";
 
 // Constants
@@ -34,155 +34,73 @@ export function readStoredSidePanelWidth(): number {
 
 // Store factory
 
-function retainPageStateByNavigationStack(
-  pageStateById: Record<string, SidePanelPageState>,
-  navigationStack: SidePanelNavigationEntry[],
-) {
-  const retainedState: Record<string, SidePanelPageState> = {};
-
-  for (const entry of navigationStack) {
-    const state = pageStateById[entry.pageId];
-
-    if (!state) continue;
-
-    retainedState[entry.pageId] = state;
-  }
-
-  return retainedState;
-}
-
-function isSameNavigationEntry(
-  currentEntry: SidePanelNavigationEntry,
-  page: SidePanelPageDefinition,
-): boolean {
-  return (
-    currentEntry.page === page.entry.page &&
-    currentEntry.pageId === page.entry.pageId
-  );
-}
-
 export function createSidePanelStore() {
   const [state, setState] = createStore<SidePanelState>({
     isOpen: false,
     isClosing: false,
-    navigationStack: [],
-    pageStateById: {},
+    stack: [],
     searchText: "",
     panelWidth: SIDE_PANEL_WIDTH_DEFAULT,
   });
 
   const openPanel = (page: SidePanelPageDefinition) => {
-    const currentEntry = state.navigationStack.at(-1);
-
-    if (currentEntry && isSameNavigationEntry(currentEntry, page)) {
-      setState("isOpen", true);
-      setState("isClosing", false);
-      setState("searchText", "");
-      setState("pageStateById", page.entry.pageId, page.state);
-      return;
-    }
-
-    setState({
-      isOpen: true,
-      isClosing: false,
-      navigationStack: [page.entry],
-      pageStateById: {
-        [page.entry.pageId]: page.state,
-      },
-      searchText: "",
-    });
+    setState(reduceSidePanelState(state, { type: "open-panel", page }));
   };
 
   const closePanel = () => {
-    if (!state.isOpen && !state.isClosing) return;
-    setState({ isOpen: false, isClosing: true, searchText: "" });
+    setState(reduceSidePanelState(state, { type: "close-panel" }));
   };
 
   const onCloseAnimationComplete = () => {
-    setState({ isClosing: false });
+    setState(reduceSidePanelState(state, { type: "close-animation-complete" }));
   };
 
   const navigateTo = (
     page: SidePanelPageDefinition,
     opts?: { resetStack?: boolean },
   ) => {
-    if (opts?.resetStack) {
-      setState({
-        isOpen: true,
-        isClosing: false,
-        navigationStack: [page.entry],
-        pageStateById: {
-          [page.entry.pageId]: page.state,
-        },
-      });
-
-      return;
-    } else {
-      const nextNavigationStack = [...state.navigationStack, page.entry];
-
-      setState({
-        isOpen: true,
-        isClosing: false,
-        navigationStack: nextNavigationStack,
-        pageStateById: {
-          ...state.pageStateById,
-          [page.entry.pageId]: page.state,
-        },
-      });
-    }
+    setState(
+      reduceSidePanelState(state, {
+        type: "navigate-to",
+        page,
+        resetStack: opts?.resetStack,
+      }),
+    );
   };
 
   const goBack = () => {
-    const stack = state.navigationStack;
-    if (stack.length <= 1) {
-      closePanel();
-      return;
-    }
-    const newStack = stack.slice(0, -1);
-    setState({
-      navigationStack: newStack,
-      pageStateById: retainPageStateByNavigationStack(
-        state.pageStateById,
-        newStack,
-      ),
-    });
+    setState(reduceSidePanelState(state, { type: "go-back" }));
   };
 
   const navigateToStackIndex = (index: number) => {
-    const boundedIndex = Math.max(
-      0,
-      Math.min(index, state.navigationStack.length - 1),
-    );
-    const newStack = state.navigationStack.slice(0, boundedIndex + 1);
-    setState({
-      navigationStack: newStack,
-      pageStateById: retainPageStateByNavigationStack(
-        state.pageStateById,
-        newStack,
-      ),
-    });
+    setState(reduceSidePanelState(state, { type: "navigate-to-stack-index", index }));
   };
 
   const setSearchText = (text: string) => {
-    setState({ searchText: text });
+    setState(reduceSidePanelState(state, { type: "set-search-text", text }));
   };
 
   const updatePageState = (
     pageId: string,
     updater: (state: SidePanelPageState) => SidePanelPageState,
   ) => {
-    const currentState = state.pageStateById[pageId];
+    const updatedStack = updateSidePanelFrameState(state.stack, pageId, updater);
 
-    if (!currentState) {
+    if (updatedStack === state.stack) {
       return;
     }
 
-    setState("pageStateById", pageId, updater(currentState));
+    setState("stack", updatedStack);
   };
 
   const setPanelWidth = (width: number) => {
     const nextWidth = clampPanelWidth(width);
-    setState({ panelWidth: nextWidth });
+    setState(
+      reduceSidePanelState(state, {
+        type: "set-panel-width",
+        width: nextWidth,
+      }),
+    );
     try {
       localStorage.setItem(SIDE_PANEL_WIDTH_KEY, String(nextWidth));
     } catch {

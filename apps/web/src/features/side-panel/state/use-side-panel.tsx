@@ -1,30 +1,33 @@
 import {
   type Accessor,
-  createMemo,
   type ParentProps,
   createContext,
   onMount,
   useContext,
 } from "solid-js";
 
+import {
+  selectCurrentEntry,
+  selectCurrentFrame,
+  selectNavigationStack,
+} from "../core/selectors";
 import type {
   SidePanelNavigationEntry,
   SidePanelPageDefinition,
-  SidePanelPageState,
 } from "../types/side-panel-page";
 import { createSidePanelStore, readStoredSidePanelWidth } from "./store";
 
 export type SidePanelContextValue = {
   isOpen: Accessor<boolean>;
   isClosing: Accessor<boolean>;
+  currentFrame: Accessor<SidePanelPageDefinition | null>;
   currentEntry: Accessor<SidePanelNavigationEntry | null>;
   navigationStack: Accessor<SidePanelNavigationEntry[]>;
   searchText: Accessor<string>;
   panelWidth: Accessor<number>;
-  getPageState: (pageId: string) => SidePanelPageState | undefined;
   updatePageState: (
     pageId: string,
-    updater: (state: SidePanelPageState) => SidePanelPageState,
+    updater: (state: SidePanelPageDefinition["state"]) => SidePanelPageDefinition["state"],
   ) => void;
   openPanel: (page: SidePanelPageDefinition) => void;
   closePanel: () => void;
@@ -44,18 +47,21 @@ const SidePanelContext = createContext<SidePanelContextValue>();
 export function SidePanelProvider(props: ParentProps) {
   const store = createSidePanelStore();
   const { state } = store;
-  const currentEntry = createMemo<SidePanelNavigationEntry | null>(
-    () => state.navigationStack.at(-1) ?? null,
-  );
+  const currentFrame: Accessor<SidePanelPageDefinition | null> = () =>
+    selectCurrentFrame(state);
+  const currentEntry: Accessor<SidePanelNavigationEntry | null> = () =>
+    selectCurrentEntry(state);
+  const navigationStack: Accessor<SidePanelNavigationEntry[]> = () =>
+    selectNavigationStack(state);
 
   const value: SidePanelContextValue = {
     isOpen: () => state.isOpen,
     isClosing: () => state.isClosing,
+    currentFrame,
     currentEntry,
-    navigationStack: () => state.navigationStack,
+    navigationStack,
     searchText: () => state.searchText,
     panelWidth: () => state.panelWidth,
-    getPageState: (pageId) => state.pageStateById[pageId],
     updatePageState: store.updatePageState,
     openPanel: store.openPanel,
     closePanel: store.closePanel,
