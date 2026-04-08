@@ -1,7 +1,7 @@
 import { Show, type Component } from "solid-js";
 
 import { PageFrameProvider } from "../state/page-frame";
-import { SIDE_PANEL_PAGES_CONFIG } from "../state/pages-config";
+import { SIDE_PANEL_PAGES_CONFIG } from "../registry/page-registry";
 import { useSidePanel } from "../state/use-side-panel";
 
 export function TopBarActions() {

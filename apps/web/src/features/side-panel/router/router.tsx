@@ -3,7 +3,7 @@ import { ErrorBoundary, Show, Suspense } from "solid-js";
 import { Loading } from "~/components/feedback/loading";
 
 import { PageFrameProvider } from "../state/page-frame";
-import { SIDE_PANEL_PAGES_CONFIG } from "../state/pages-config";
+import { SIDE_PANEL_PAGES_CONFIG } from "../registry/page-registry";
 import { useSidePanel } from "../state/use-side-panel";
 import { TopBar } from "../top-bar/top-bar";
 import { Container } from "./container";
