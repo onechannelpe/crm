@@ -9,7 +9,7 @@ import { toAppError } from "~/lib/app-errors";
 import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
 
 import { PanelList } from "../../components/list";
-import { useSidePanelPageState } from "../../state/page-frame";
+import { useSidePanelPageState } from "../../router/page-frame-context";
 import type { ExtendedTabId } from "./components/constants";
 import { HomeTabContent } from "./components/home-tab-content";
 import { Tabs } from "./components/tabs";

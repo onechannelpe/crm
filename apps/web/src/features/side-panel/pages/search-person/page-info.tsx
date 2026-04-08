@@ -1,6 +1,6 @@
 import User from "~/components/icons/user";
 
-import { useSidePanelPageState } from "../../state/page-frame";
+import { useSidePanelPageState } from "../../router/page-frame-context";
 import { PageInfoLayout } from "../../top-bar/page-info-layout";
 
 export function SearchPersonPageInfo() {

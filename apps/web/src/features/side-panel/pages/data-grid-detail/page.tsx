@@ -1,7 +1,7 @@
 import { For } from "solid-js";
 
 import { PanelList } from "../../components/list";
-import { useSidePanelPageState } from "../../state/page-frame";
+import { useSidePanelPageState } from "../../router/page-frame-context";
 
 export function DataGridDetailPage() {
   const pageState = useSidePanelPageState("data-grid-detail");

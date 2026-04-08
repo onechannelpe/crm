@@ -1,5 +1,5 @@
 import { PanelList } from "../../components/list";
-import { useSidePanelPageState } from "../../state/page-frame";
+import { useSidePanelPageState } from "../../router/page-frame-context";
 
 export function InventoryDetailPage() {
   const pageState = useSidePanelPageState("inventory-detail");

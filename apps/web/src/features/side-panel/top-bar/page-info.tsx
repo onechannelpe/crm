@@ -1,6 +1,6 @@
 import { Show } from "solid-js";
 
-import { PageFrameProvider } from "../state/page-frame";
+import { PageFrameProvider } from "../router/page-frame-context";
 import { SIDE_PANEL_PAGES_CONFIG } from "../registry/page-registry";
 import { useSidePanel } from "../state/use-side-panel";
 

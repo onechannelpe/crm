@@ -3,7 +3,7 @@ import { createMemo } from "solid-js";
 import {
   useSidePanelPageFrame,
   useSidePanelPageState,
-} from "../../state/page-frame";
+} from "../../router/page-frame-context";
 import { useSidePanel } from "../../state/use-side-panel";
 import type { LeadCreateSidePanelPageState } from "../../types/side-panel-page";
 import type { LeadCreateTabId } from "./model";
