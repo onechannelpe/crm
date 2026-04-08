@@ -4,7 +4,10 @@ import {
   reduceSidePanelState,
   updateSidePanelFrameState,
 } from "../core/reducer";
-import type { SidePanelPageDefinition, SidePanelPageState } from "../types/side-panel-page";
+import type {
+  SidePanelPageDefinition,
+  SidePanelPageState,
+} from "../types/side-panel-page";
 import type { SidePanelState } from "../types/side-panel-state";
 
 // Constants
@@ -73,7 +76,9 @@ export function createSidePanelStore() {
   };
 
   const navigateToStackIndex = (index: number) => {
-    setState(reduceSidePanelState(state, { type: "navigate-to-stack-index", index }));
+    setState(
+      reduceSidePanelState(state, { type: "navigate-to-stack-index", index }),
+    );
   };
 
   const setSearchText = (text: string) => {
@@ -84,7 +89,11 @@ export function createSidePanelStore() {
     pageId: string,
     updater: (state: SidePanelPageState) => SidePanelPageState,
   ) => {
-    const updatedStack = updateSidePanelFrameState(state.stack, pageId, updater);
+    const updatedStack = updateSidePanelFrameState(
+      state.stack,
+      pageId,
+      updater,
+    );
 
     if (updatedStack === state.stack) {
       return;

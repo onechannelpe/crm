@@ -1,4 +1,7 @@
-import type { SidePanelPageDefinition, SidePanelPageState } from "../types/side-panel-page";
+import type {
+  SidePanelPageDefinition,
+  SidePanelPageState,
+} from "../types/side-panel-page";
 import type { SidePanelState } from "../types/side-panel-state";
 
 export type SidePanelAction =

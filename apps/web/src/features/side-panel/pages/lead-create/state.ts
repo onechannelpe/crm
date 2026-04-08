@@ -1,6 +1,9 @@
 import { createMemo } from "solid-js";
 
-import { useSidePanelPageFrame, useSidePanelPageState } from "../../state/page-frame";
+import {
+  useSidePanelPageFrame,
+  useSidePanelPageState,
+} from "../../state/page-frame";
 import { useSidePanel } from "../../state/use-side-panel";
 import type { LeadCreateSidePanelPageState } from "../../types/side-panel-page";
 import type { LeadCreateTabId } from "./model";

@@ -1,6 +1,4 @@
-import type {
-  SidePanelPageDefinition,
-} from "./side-panel-page";
+import type { SidePanelPageDefinition } from "./side-panel-page";
 
 export type SidePanelState = {
   isOpen: boolean;

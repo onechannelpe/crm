@@ -1,4 +1,10 @@
-import { type Accessor, type ParentProps, createContext, createMemo, useContext } from "solid-js";
+import {
+  type Accessor,
+  type ParentProps,
+  createContext,
+  createMemo,
+  useContext,
+} from "solid-js";
 
 import { assertExpectedSidePanelPage } from "../core/invariants";
 import type {
@@ -25,7 +31,9 @@ export function useSidePanelPageFrame(): SidePanelPageDefinition {
   const frame = useContext(SidePanelPageFrameContext);
 
   if (!frame) {
-    throw new Error("useSidePanelPageFrame must be used inside side panel frame");
+    throw new Error(
+      "useSidePanelPageFrame must be used inside side panel frame",
+    );
   }
 
   return frame;

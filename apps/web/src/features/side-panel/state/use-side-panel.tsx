@@ -27,7 +27,9 @@ export type SidePanelContextValue = {
   panelWidth: Accessor<number>;
   updatePageState: (
     pageId: string,
-    updater: (state: SidePanelPageDefinition["state"]) => SidePanelPageDefinition["state"],
+    updater: (
+      state: SidePanelPageDefinition["state"],
+    ) => SidePanelPageDefinition["state"],
   ) => void;
   openPanel: (page: SidePanelPageDefinition) => void;
   closePanel: () => void;
