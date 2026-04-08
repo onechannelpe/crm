@@ -68,7 +68,11 @@ export function createReportExportRepo(db: Kysely<Database>) {
         .select(["id"])
         .where((eb) =>
           eb.and([
-            eb.or([eb("status", "=", "queued"), eb("status", "=", "running")]),
+            eb("status", "=", "queued"),
+            eb.or([
+              eb("available_at", "is", null),
+              eb("available_at", "<=", now),
+            ]),
             eb.or([eb("lease_until", "is", null), eb("lease_until", "<", now)]),
           ]),
         )
@@ -85,13 +89,15 @@ export function createReportExportRepo(db: Kysely<Database>) {
               lease_owner: leaseOwner,
               lease_until: leaseUntil,
               error_message: null,
+              attempt_count: sql<number>`attempt_count + 1`,
             })
             .where("id", "=", id)
             .where((eb) =>
               eb.and([
+                eb("status", "=", "queued"),
                 eb.or([
-                  eb("status", "=", "queued"),
-                  eb("status", "=", "running"),
+                  eb("available_at", "is", null),
+                  eb("available_at", "<=", now),
                 ]),
                 eb.or([
                   eb("lease_until", "is", null),
@@ -129,6 +135,36 @@ export function createReportExportRepo(db: Kysely<Database>) {
         .execute();
     },
 
+    async extendLease(
+      id: number,
+      workerId: string,
+      leaseMs: number,
+    ): Promise<boolean> {
+      const now = Date.now();
+      const result = await db
+        .updateTable("report_export_jobs")
+        .set({ lease_until: now + leaseMs })
+        .where("id", "=", id)
+        .where("lease_owner", "=", workerId)
+        .where("status", "=", "running")
+        .executeTakeFirst();
+
+      return Number(result.numUpdatedRows ?? 0) > 0;
+    },
+
+    scheduleRetry(id: number, availableAt: number) {
+      return db
+        .updateTable("report_export_jobs")
+        .set({
+          status: "queued",
+          available_at: availableAt,
+          lease_owner: null,
+          lease_until: null,
+        })
+        .where("id", "=", id)
+        .execute();
+    },
+
     markJobCompleted(
       id: number,
       leaseOwner: string,
@@ -157,35 +193,22 @@ export function createReportExportRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    async markJobFailed(
+    markJobFailed(
       id: number,
       leaseOwner: string,
       errorMessage: string,
       completedAt: number,
     ) {
-      const job = await db
-        .selectFrom("report_export_jobs")
-        .select(["attempt_count", "max_attempts"])
-        .where("id", "=", id)
-        .where("status", "=", "running")
-        .where("lease_owner", "=", leaseOwner)
-        .executeTakeFirst();
-      if (!job) return "missing" as const;
-
-      const nextAttemptCount = job.attempt_count + 1;
-      const exhausted = nextAttemptCount >= job.max_attempts;
       return db
         .updateTable("report_export_jobs")
         .set({
-          status: exhausted ? "failed" : "queued",
-          attempt_count: nextAttemptCount,
+          status: "failed",
           error_message: errorMessage,
-          completed_at: exhausted ? completedAt : null,
+          completed_at: completedAt,
           lease_owner: null,
           lease_until: null,
         })
         .where("id", "=", id)
-        .where("status", "=", "running")
         .where("lease_owner", "=", leaseOwner)
         .execute();
     },

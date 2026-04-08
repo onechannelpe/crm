@@ -4,6 +4,10 @@ import { DYNAMIC_ROUTES, ROUTE_MANIFEST, type AppPath } from "./route-manifest";
 export type { Role, Permission } from "./rbac";
 export type { AppPath } from "./route-manifest";
 
+const ROLE_DEFAULT_PATHS: Partial<Record<Role, AppPath>> = {
+  back_office: "/review",
+};
+
 function isAppPath(p: string): p is AppPath {
   return p in ROUTE_MANIFEST;
 }
@@ -34,6 +38,9 @@ export function canAccessPath(role: Role, pathname: string): boolean {
 }
 
 export function getDefaultAppPath(role: Role): string {
+  const roleDefault = ROLE_DEFAULT_PATHS[role];
+  if (roleDefault) return roleDefault;
+
   const candidate = Object.keys(ROUTE_MANIFEST)
     .filter(isAppPath)
     .filter((key) => ROUTE_MANIFEST[key].landingPriority !== undefined)
