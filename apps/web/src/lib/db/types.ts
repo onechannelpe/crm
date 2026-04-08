@@ -907,12 +907,30 @@ export interface PipelineIntegrationImportRowsTable {
   applied_at: number | null;
 }
 
-export interface PipelineIntegrationOutboxEventsTable {
+export interface PipelineIntegrationOutboxNeedsExecutiveInputTable {
   id: Generated<number>;
-  topic: "lead.needs_executive_input" | "lead.ready_for_quotation";
-  payload_json: string;
+  lead_id: number;
+  ruc: string;
+  executive_id: number;
   status: "pending" | "processing" | "completed" | "failed";
   attempt_count: ColumnType<number, number | undefined, number>;
+  max_attempts: ColumnType<number, number | undefined, number>;
+  available_at: number;
+  lease_owner: string | null;
+  lease_until: number | null;
+  error_message: string | null;
+  created_at: number;
+  processed_at: number | null;
+}
+
+export interface PipelineIntegrationOutboxReadyForQuotationTable {
+  id: Generated<number>;
+  lead_id: number;
+  ruc: string;
+  branch_id: number;
+  status: "pending" | "processing" | "completed" | "failed";
+  attempt_count: ColumnType<number, number | undefined, number>;
+  max_attempts: ColumnType<number, number | undefined, number>;
   available_at: number;
   lease_owner: string | null;
   lease_until: number | null;
@@ -990,5 +1008,6 @@ export interface Database {
   lead_sourcing_policies: LeadSourcingPoliciesTable;
   pipeline_integration_jobs: PipelineIntegrationJobsTable;
   pipeline_integration_import_rows: PipelineIntegrationImportRowsTable;
-  pipeline_integration_outbox_events: PipelineIntegrationOutboxEventsTable;
+  pipeline_integration_outbox_needs_executive_input: PipelineIntegrationOutboxNeedsExecutiveInputTable;
+  pipeline_integration_outbox_ready_for_quotation: PipelineIntegrationOutboxReadyForQuotationTable;
 }

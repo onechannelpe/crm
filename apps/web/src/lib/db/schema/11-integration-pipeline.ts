@@ -38,12 +38,18 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createTable("pipeline_integration_outbox_events")
+    .createTable("pipeline_integration_outbox_needs_executive_input")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("topic", "varchar(64)", (col) => col.notNull())
-    .addColumn("payload_json", "text", (col) => col.notNull())
+    .addColumn("lead_id", "integer", (col) =>
+      col.notNull().references("pipeline_leads.id"),
+    )
+    .addColumn("ruc", "varchar(20)", (col) => col.notNull())
+    .addColumn("executive_id", "integer", (col) =>
+      col.notNull().references("users.id"),
+    )
     .addColumn("status", "varchar(20)", (col) => col.notNull())
     .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
+    .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(5))
     .addColumn("available_at", "integer", (col) => col.notNull())
     .addColumn("lease_owner", "varchar(100)")
     .addColumn("lease_until", "integer")
@@ -53,8 +59,35 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createIndex("idx_pipeline_integration_outbox_status")
-    .on("pipeline_integration_outbox_events")
+    .createIndex("idx_pipeline_outbox_needs_exec_status")
+    .on("pipeline_integration_outbox_needs_executive_input")
+    .columns(["status", "available_at", "lease_until"])
+    .execute();
+
+  await db.schema
+    .createTable("pipeline_integration_outbox_ready_for_quotation")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("lead_id", "integer", (col) =>
+      col.notNull().references("pipeline_leads.id"),
+    )
+    .addColumn("ruc", "varchar(20)", (col) => col.notNull())
+    .addColumn("branch_id", "integer", (col) =>
+      col.notNull().references("branches.id"),
+    )
+    .addColumn("status", "varchar(20)", (col) => col.notNull())
+    .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
+    .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(5))
+    .addColumn("available_at", "integer", (col) => col.notNull())
+    .addColumn("lease_owner", "varchar(100)")
+    .addColumn("lease_until", "integer")
+    .addColumn("error_message", "text")
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("processed_at", "integer")
+    .execute();
+
+  await db.schema
+    .createIndex("idx_pipeline_outbox_ready_quote_status")
+    .on("pipeline_integration_outbox_ready_for_quotation")
     .columns(["status", "available_at", "lease_until"])
     .execute();
 }

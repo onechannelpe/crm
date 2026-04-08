@@ -26,21 +26,52 @@ export type LoadedLead = {
   id: number;
   ruc: string;
   executive_id: number;
+  updated_at: number;
   status: LeadStatus | null;
   prioridad: LeadPriority | null;
   stage: LeadStage;
 };
 
-export type OutboxEvent =
+export type LeadMutationOutcome = {
+  row: ImportRowInput;
+  leadId: number;
+  ruc: string;
+  executiveId: number;
+  previousStatus: LeadStatus | null;
+  previousPrioridad: LeadPriority | null;
+  previousStage: LeadStage;
+  nextStatus: LeadStatus | null;
+  nextPrioridad: LeadPriority | null;
+  nextStage: LeadStage;
+  changedAt: number;
+  stageChanged: boolean;
+};
+
+export type LeadMutationResult =
   | {
-      topic: "lead.needs_executive_input";
-      leadId: number;
-      ruc: string;
-      executiveId: number;
+      ok: false;
+      rowResult: RowResult;
     }
   | {
-      topic: "lead.ready_for_quotation";
-      leadId: number;
-      ruc: string;
-      branchId: number;
+      ok: true;
+      rowResult: RowResult;
+      mutation: LeadMutationOutcome;
     };
+
+export type NeedsExecutiveOutboxEvent = {
+  leadId: number;
+  ruc: string;
+  executiveId: number;
+};
+
+export type ReadyForQuotationOutboxEvent = {
+  leadId: number;
+  ruc: string;
+  executiveId: number;
+  branchId: number;
+};
+
+export type PlannedOutboxEvents = {
+  needsExecutiveInput: NeedsExecutiveOutboxEvent[];
+  readyForQuotation: ReadyForQuotationOutboxEvent[];
+};
