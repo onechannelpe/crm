@@ -43,6 +43,7 @@ export async function seedTeamInviteFixtures(
     phone_e164: null,
     onboarding_completed_at: null,
     role: "executive" as const,
+    executive_category: "elite" as const,
     is_active: 0,
     created_at: BENCH_NOW,
   }));
@@ -59,6 +60,7 @@ export async function seedTeamInviteFixtures(
     phone_e164: null,
     onboarding_completed_at: null,
     role: "executive" as const,
+    executive_category: "elite" as const,
     is_active: 0,
     created_at: BENCH_NOW,
   }));
