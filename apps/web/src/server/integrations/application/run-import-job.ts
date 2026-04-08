@@ -1,14 +1,9 @@
 import { TextDecoder } from "node:util";
 
 import { db } from "~/lib/db/db";
-import type {
-  LeadPriority,
-  LeadStatus,
-} from "~/pipeline/contracts/lead-schema";
 import { runPipelineCommand } from "~/server/pipeline/infrastructure/command-runtime";
 import { createAuditService } from "~/server/shared/audit";
 
-import type { IntegrationJobRow } from "../infrastructure/integration-job-repo";
 import {
   parsePrioridadImport,
   type ImportRowFailure as PrioridadImportFailure,
@@ -21,6 +16,12 @@ import {
   parseStatusImport,
   type ImportRowFailure as StatusImportFailure,
 } from "../infrastructure/status-import-parser";
+import type {
+  ImportBatchRunner,
+  ImportJobProcessResult,
+  IntegrationJobRow,
+  IntegrationReviewInput,
+} from "../types";
 import { applyPrioridadImport } from "./apply-prioridad-import";
 import { applyStatusImport } from "./apply-status-import";
 
@@ -30,12 +31,11 @@ type RowResult =
   | { row: number; ok: true };
 
 export function createImportBatchRunner() {
-  return {
+  const runner: ImportBatchRunner = {
     async processJob(
       job: IntegrationJobRow,
       signal: AbortSignal,
-    ): Promise<void> {
-      const runtime = createIntegrationRuntime(db);
+    ): Promise<ImportJobProcessResult> {
       if (!job.file_path) {
         throw new Error("Missing file path for import job");
       }
@@ -53,44 +53,15 @@ export function createImportBatchRunner() {
 
       if (signal.aborted) throw new Error("Job aborted after processing");
 
-      await runtime.jobs.markCompleted(job.id, {
+      return {
         rowsTotal: result.total,
         rowsApplied: result.applied,
         rowsFailed: result.failed,
         resultsJson: JSON.stringify(result.results),
-      });
-    },
-
-    async runBatch(
-      batchSize: number,
-      leaseMs: number,
-      workerId: string,
-    ): Promise<number> {
-      const runtime = createIntegrationRuntime(db);
-      const jobs = await runtime.jobs.claimPending(
-        leaseMs,
-        workerId,
-        batchSize,
-        ["import_status", "import_prioridad"],
-      );
-      const results = await Promise.all(
-        jobs.map(async (job) => {
-          try {
-            const controller = new AbortController();
-            await this.processJob(job, controller.signal);
-            return true;
-          } catch (error) {
-            const message =
-              error instanceof Error ? error.message : "Unknown error";
-            await runtime.jobs.markFailed(job.id, message);
-            return false;
-          }
-        }),
-      );
-
-      return results.filter(Boolean).length;
+      };
     },
   };
+  return runner;
 }
 
 async function runStatusImportJob(
@@ -225,23 +196,7 @@ async function runPrioridadImportJob(
   };
 }
 
-function reviewImportedLead(
-  input:
-    | {
-        leadId: number;
-        status: LeadStatus;
-        actorId: number;
-        branchId: number;
-        kind: "status";
-      }
-    | {
-        leadId: number;
-        prioridad: LeadPriority;
-        actorId: number;
-        branchId: number;
-        kind: "prioridad";
-      },
-) {
+function reviewImportedLead(input: IntegrationReviewInput) {
   return runPipelineCommand(({ deps, auditService, notificationCenter }) =>
     input.kind === "status"
       ? applyStatusImport({

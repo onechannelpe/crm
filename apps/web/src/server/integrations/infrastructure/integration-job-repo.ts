@@ -1,7 +1,6 @@
 import { sql, type Insertable, type Selectable } from "kysely";
 
 import type { Database, PipelineIntegrationJobsTable } from "~/lib/db/types";
-import { createLogger } from "~/lib/observability/logger";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 export type IntegrationJobRow = Selectable<
@@ -10,8 +9,6 @@ export type IntegrationJobRow = Selectable<
 export type NewIntegrationJobRow = Insertable<
   Database["pipeline_integration_jobs"]
 >;
-
-const logger = createLogger("integration-job-repo");
 
 export function createIntegrationJobRepo(db: DatabaseExecutor) {
   return {

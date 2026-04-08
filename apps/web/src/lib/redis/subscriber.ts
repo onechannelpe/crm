@@ -20,37 +20,53 @@ export async function startJobSubscriber(triggers: {
 
   try {
     subscriber = new RedisClient(url);
+    const channelEntries = [
+      ["CRM_EXPORT", JOB_CHANNELS.CRM_EXPORT],
+      ["CRM_IMPORT", JOB_CHANNELS.CRM_IMPORT],
+      ["SALES_EXPORT", JOB_CHANNELS.SALES_EXPORT],
+      ["ENRICHMENT", JOB_CHANNELS.ENRICHMENT],
+    ] as const;
 
-    // Reverse map channels to triggers keys
-    const channelToKey = Object.entries(JOB_CHANNELS).reduce(
-      (acc, [key, channel]) => {
-        acc[channel] = key as keyof typeof JOB_CHANNELS;
-        return acc;
-      },
-      {} as Record<string, keyof typeof JOB_CHANNELS>,
-    );
-
-    await (subscriber as any).subscribe(
-      JOB_CHANNELS.CRM_EXPORT,
-      JOB_CHANNELS.CRM_IMPORT,
-      JOB_CHANNELS.SALES_EXPORT,
-      JOB_CHANNELS.ENRICHMENT,
-      (message: string, channel: string) => {
-        const key = channelToKey[channel];
-        const trigger = key ? triggers[key] : null;
-
-        if (trigger) {
-          logger.debug("job_doorbell_received", { channel, key });
-          trigger();
+    const resolveKey = (
+      channel: string,
+    ): keyof typeof JOB_CHANNELS | undefined => {
+      for (const [key, value] of channelEntries) {
+        if (value === channel) {
+          return key;
         }
-      },
-    );
+      }
+      return undefined;
+    };
+
+    const subscribe = Reflect.get(subscriber, "subscribe");
+    if (typeof subscribe !== "function") {
+      throw new Error("Redis subscriber does not expose subscribe()");
+    }
+
+    const onMessage = (_message: string, channel: string) => {
+      const key = resolveKey(channel);
+      const trigger = key ? triggers[key] : null;
+      if (!trigger) {
+        return;
+      }
+      logger.debug("job_doorbell_received", { channel, key });
+      trigger();
+    };
+
+    await Promise.all([
+      subscribe.call(subscriber, [JOB_CHANNELS.CRM_EXPORT], onMessage),
+      subscribe.call(subscriber, [JOB_CHANNELS.CRM_IMPORT], onMessage),
+      subscribe.call(subscriber, [JOB_CHANNELS.SALES_EXPORT], onMessage),
+      subscribe.call(subscriber, [JOB_CHANNELS.ENRICHMENT], onMessage),
+    ]);
 
     logger.info("subscriber_listening", {
       channels: Object.values(JOB_CHANNELS),
     });
-  } catch (err: any) {
-    logger.error("subscriber_failed", { error: err.message });
+  } catch (error: unknown) {
+    logger.error("subscriber_failed", {
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
     // Fallback polling will handle it
   }
 }

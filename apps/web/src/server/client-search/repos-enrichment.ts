@@ -10,7 +10,6 @@ import type {
 type NewSearchEnrichmentJobRow = Insertable<SearchEnrichmentJobsTable>;
 type NewSearchEnrichmentOverlayRow = Insertable<SearchEnrichmentOverlaysTable>;
 type DocumentType = NewSearchEnrichmentJobRow["document_type"];
-type JobStatus = NewSearchEnrichmentJobRow["status"];
 
 export function createSearchEnrichmentRepo(db: Kysely<Database>) {
   return {
@@ -48,6 +47,7 @@ export function createSearchEnrichmentRepo(db: Kysely<Database>) {
             requested_by_user_id: values.requested_by_user_id,
             requested_at: values.now,
             completed_at: null,
+            available_at: null,
             lease_owner: null,
             lease_until: null,
             attempt_count: 0,

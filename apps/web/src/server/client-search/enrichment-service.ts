@@ -1,50 +1,24 @@
-import type { Selectable } from "kysely";
-
-import type { SearchEnrichmentJobsTable } from "~/lib/db/types";
 import { JOB_CHANNELS } from "~/lib/job-queue/channels";
 import { publishJob } from "~/lib/redis/publisher";
 import { isPlainRecord } from "~/lib/type-guards";
 import { createSunatScraperClient } from "~/server/client-search/enrichment/sunat/client";
-import type {
-  SunatRucData,
-  SunatScraperClient,
-} from "~/server/client-search/enrichment/sunat/contracts";
-import type { createSearchEnrichmentRepo } from "~/server/client-search/repos-enrichment";
+import type { SunatRucData } from "~/server/client-search/enrichment/sunat/contracts";
 import { Err, Ok, type Result } from "~/server/shared/result";
+
+import type {
+  EnrichmentDocumentType,
+  SearchEnrichmentJobLeaseRow,
+  SearchEnrichmentOverlay,
+  SearchEnrichmentProcessResult,
+  SearchEnrichmentRepoPort,
+  SearchEnrichmentRequestError,
+  SearchEnrichmentService,
+  SearchEnrichmentServiceDeps,
+  SearchEnrichmentStatus,
+} from "./types";
 
 const OVERLAY_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const DEFAULT_MAX_ATTEMPTS = 5;
-
-export type EnrichmentDocumentType = "dni" | "ruc";
-
-export interface SearchEnrichmentOverlay {
-  documentType: EnrichmentDocumentType;
-  documentValue: string;
-  fullName: string | null;
-  legalName: string | null;
-  source: "sunat";
-  confidence: number;
-  fetchedAt: number;
-  expiresAt: number;
-  payloadJson: string;
-}
-
-export interface SearchEnrichmentStatus {
-  documentType: EnrichmentDocumentType;
-  documentValue: string;
-  status: "idle" | "queued" | "running" | "completed" | "failed";
-  overlay: SearchEnrichmentOverlay | null;
-  lastError: string | null;
-  requestedAt: number | null;
-  completedAt: number | null;
-}
-
-export type SearchEnrichmentRequestError =
-  | { reason: "invalid_document"; message: string }
-  | { reason: "unexpected"; message: string };
-
-type SearchEnrichmentRepo = ReturnType<typeof createSearchEnrichmentRepo>;
-type SearchEnrichmentJobLeaseRow = Selectable<SearchEnrichmentJobsTable>;
 
 function isSunatRucData(value: unknown): value is SunatRucData {
   return (
@@ -132,17 +106,12 @@ function extractLegalName(
 }
 
 export function createSearchEnrichmentService(
-  repos: { searchEnrichment: SearchEnrichmentRepo },
-  deps: {
-    now?: () => number;
-    maxAttempts?: number;
-    scraper?: SunatScraperClient;
-  } = {},
-) {
+  repos: { searchEnrichment: SearchEnrichmentRepoPort },
+  deps: SearchEnrichmentServiceDeps = {},
+): SearchEnrichmentService {
   const now = deps.now ?? (() => Date.now());
   const maxAttempts = deps.maxAttempts ?? DEFAULT_MAX_ATTEMPTS;
-  const scraper: SunatScraperClient =
-    deps.scraper ?? createSunatScraperClient();
+  const scraper = deps.scraper ?? createSunatScraperClient();
 
   const findStatus = async (
     documentType: EnrichmentDocumentType,
@@ -173,9 +142,8 @@ export function createSearchEnrichmentService(
     searchEnrichmentRepo: repos.searchEnrichment,
     async processJob(
       job: SearchEnrichmentJobLeaseRow,
-      leaseOwner: string,
       signal?: AbortSignal,
-    ): Promise<void> {
+    ): Promise<SearchEnrichmentProcessResult> {
       const currentNow = now();
       const payload =
         job.document_type === "dni"
@@ -209,12 +177,7 @@ export function createSearchEnrichmentService(
       });
 
       if (signal?.aborted) throw new Error("Job aborted after database update");
-
-      await repos.searchEnrichment.markJobCompleted(
-        job.id,
-        leaseOwner,
-        currentNow,
-      );
+      return { completedAt: currentNow };
     },
 
     async request(
@@ -273,45 +236,6 @@ export function createSearchEnrichmentService(
               : "Failed to read enrichment status",
         });
       }
-    },
-
-    async runBatch(
-      limit: number,
-      leaseMs: number,
-      leaseOwner: string,
-    ): Promise<number> {
-      const jobs = await repos.searchEnrichment.leaseJobs(
-        limit,
-        leaseMs,
-        leaseOwner,
-      );
-      if (jobs.length < 1) return 0;
-
-      // Cap concurrent SUNAT scraper requests to avoid rate-limiting.
-      const CONCURRENCY = 3;
-      const iter = jobs[Symbol.iterator]();
-      const worker = async () => {
-        for (const job of iter) {
-          try {
-            await this.processJob(job, leaseOwner);
-          } catch (error: unknown) {
-            const message =
-              error instanceof Error
-                ? error.message
-                : "Search enrichment worker failed";
-            await repos.searchEnrichment.markJobFailed(
-              job.id,
-              leaseOwner,
-              message,
-              now(),
-            );
-          }
-        }
-      };
-      await Promise.all(
-        Array.from({ length: Math.min(CONCURRENCY, jobs.length) }, worker),
-      );
-      return jobs.length;
     },
   };
 }

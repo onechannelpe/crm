@@ -8,24 +8,24 @@ import type { Database as DatabaseSchema } from "./types";
 
 const logger = createLogger("db-client");
 
-export function createDb(path: string): Kysely<DatabaseSchema> {
+export function createDb(dbPath: string): Kysely<DatabaseSchema> {
+  logger.info("db_initialization_started", { path: dbPath });
+
   const client = createClient({
-    url: `file:${path}`,
+    url: `file:${dbPath}`,
     intMode: "number",
   });
 
   const applyPragma = (statement: string) => {
-    void client
-      .execute(statement)
-      .then(() => {
-        logger.info("pragma_applied", { statement });
-      })
-      .catch((error: unknown) => {
+    void (async () => {
+      try {
+        await client.execute(statement);
+      } catch (error: unknown) {
         logger.error("pragma_apply_failed", { statement, error });
-      });
+      }
+    })();
   };
 
-  logger.info("db_initialization_started", { path });
   applyPragma("PRAGMA journal_mode = WAL");
   applyPragma("PRAGMA synchronous = NORMAL");
   applyPragma("PRAGMA busy_timeout = 5000");

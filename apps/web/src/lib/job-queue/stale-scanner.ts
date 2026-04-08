@@ -1,5 +1,3 @@
-import { sql } from "kysely";
-
 import { db } from "~/lib/db/db";
 import { createLogger } from "~/lib/observability/logger";
 
@@ -13,33 +11,38 @@ const JOB_TABLES = [
 
 export async function resetStalledJobs() {
   const now = Date.now();
+  await Promise.all(
+    JOB_TABLES.map(async (table) => {
+      try {
+        const result = await db
+          .updateTable(table)
+          .set({
+            status:
+              table === "search_enrichment_jobs" ||
+              table === "report_export_jobs"
+                ? "queued"
+                : "PENDING",
+            lease_owner: null,
+            lease_until: null,
+          })
+          .where("status", "in", ["PROCESSING", "running"])
+          .where("lease_until", "<", now)
+          .executeTakeFirst();
 
-  for (const table of JOB_TABLES) {
-    try {
-      const result = await db
-        .updateTable(table)
-        .set({
-          status:
-            table === "search_enrichment_jobs" || table === "report_export_jobs"
-              ? "queued"
-              : "PENDING",
-          lease_owner: null,
-          lease_until: null,
-        })
-        .where("status", "in", ["PROCESSING", "running"])
-        .where("lease_until", "<", now)
-        .executeTakeFirst();
-
-      if (Number(result.numUpdatedRows ?? 0) > 0) {
-        logger.info("stalled_jobs_reset", {
+        if (Number(result.numUpdatedRows ?? 0) > 0) {
+          logger.info("stalled_jobs_reset", {
+            table,
+            count: Number(result.numUpdatedRows),
+          });
+        }
+      } catch (error: unknown) {
+        logger.error("stale_scan_failed", {
           table,
-          count: Number(result.numUpdatedRows),
+          error: error instanceof Error ? error.message : "Unknown error",
         });
       }
-    } catch (err: any) {
-      logger.error("stale_scan_failed", { table, error: err.message });
-    }
-  }
+    }),
+  );
 }
 
 /**
@@ -47,5 +50,7 @@ export async function resetStalledJobs() {
  */
 export function startStaleScanner(intervalMs = 30_000) {
   logger.info("stale_scanner_started", { intervalMs });
-  setInterval(resetStalledJobs, intervalMs);
+  setInterval(() => {
+    void resetStalledJobs();
+  }, intervalMs);
 }

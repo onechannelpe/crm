@@ -1,9 +1,14 @@
 import * as XLSX from "xlsx";
 
-import type { createReportExportRepo } from "~/server/sales/repos-report-exports";
-import type { createSalesRecordsRepo } from "~/server/sales/repos-sales-records";
-
 import type { SalesExportBlobStore } from "./export-blob-store";
+import type {
+  ReportExportJobsPort,
+  ReportExportLeasedJob,
+  SalesExportProcessResult,
+  SalesExportService,
+  SalesRecordsPort,
+  SalesExportFormat,
+} from "./types";
 
 const EXPORT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -83,7 +88,7 @@ async function toXlsxBytes(rows: ExportRow[]): Promise<Uint8Array> {
 }
 
 async function buildExportBytes(
-  format: "csv" | "xlsx",
+  format: SalesExportFormat,
   rows: ExportRow[],
 ): Promise<Uint8Array> {
   if (format === "xlsx") {
@@ -98,11 +103,11 @@ function sanitizeStoragePart(raw: string): string {
 
 export function createSalesExportService(
   repos: {
-    reportExportJobs: ReturnType<typeof createReportExportRepo>;
-    salesRecords: ReturnType<typeof createSalesRecordsRepo>;
+    reportExportJobs: ReportExportJobsPort;
+    salesRecords: SalesRecordsPort;
   },
   blobStore: SalesExportBlobStore,
-) {
+): SalesExportService {
   const parseScope = (
     filtersJson: string,
   ): { scope: "branch" | "global"; branchId: number | null } => {
@@ -124,12 +129,9 @@ export function createSalesExportService(
   };
 
   const processJob = async (
-    job: Awaited<
-      ReturnType<ReturnType<typeof createReportExportRepo>["leaseQueuedJobs"]>
-    >[number],
-    leaseOwner: string,
+    job: ReportExportLeasedJob,
     signal?: AbortSignal,
-  ): Promise<void> => {
+  ): Promise<SalesExportProcessResult> => {
     const scope = parseScope(job.filters_json);
     const rows = await repos.salesRecords.listConfirmedWithClient(
       scope.scope === "global"
@@ -171,34 +173,18 @@ export function createSalesExportService(
     if (signal?.aborted) throw new Error("Job aborted after store put");
 
     const completedAt = Date.now();
-    await repos.reportExportJobs.markJobCompleted(
-      job.id,
-      leaseOwner,
-      exportRows.length,
-      storageKey,
-      stored.sha256,
+    return {
+      rowsCount: exportRows.length,
+      fileStorageKey: storageKey,
+      fileSha256: stored.sha256,
       completedAt,
-      completedAt + EXPORT_TTL_MS,
-    );
+      expiresAt: completedAt + EXPORT_TTL_MS,
+    };
   };
 
   return {
     reportExportJobsRepo: repos.reportExportJobs,
     processJob,
-    async runBatch(
-      limit: number,
-      leaseMs: number,
-      leaseOwner: string,
-    ): Promise<number> {
-      const jobs = await repos.reportExportJobs.leaseQueuedJobs(
-        limit,
-        leaseMs,
-        leaseOwner,
-      );
-      if (jobs.length < 1) return 0;
-      await Promise.all(jobs.map((job) => processJob(job, leaseOwner)));
-      return jobs.length;
-    },
     async expireCompleted(limit: number): Promise<number> {
       const jobs = await repos.reportExportJobs.listJobsToExpire(
         limit,

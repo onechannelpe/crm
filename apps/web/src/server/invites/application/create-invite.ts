@@ -92,7 +92,6 @@ export async function createInvite(
               names: input.names,
               firstSurname: input.firstSurname,
               secondSurname: input.secondSurname,
-              expiresAt: input.expiresAt ?? null,
               executiveCategory: input.executiveCategory ?? null,
             }),
           );

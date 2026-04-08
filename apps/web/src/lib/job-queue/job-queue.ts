@@ -1,69 +1,71 @@
 import { createLogger } from "~/lib/observability/logger";
 
 import { nextAvailableAt } from "./backoff";
+import type { JobQueueConfig, QueueJobBase, QueueRunner } from "./types";
 
-const globalLogger = createLogger("job-queue");
-
-export interface JobQueueConfig<TJob> {
-  name: string;
-  leaseMs: number;
-  maxConcurrency?: number;
-  timeoutMs?: number;
-  batchSize?: number; // used to detect if full batch was claimed (for re-triggering logic)
-  poll(): Promise<TJob[]>;
-  handle(job: TJob, signal: AbortSignal): Promise<void>;
-  extendLease(jobId: number): Promise<boolean>;
-  onComplete(jobId: number): Promise<void>;
-  onRetry(jobId: number, availableAt: number): Promise<void>;
-  onFail(jobId: number, reason: string): Promise<void>;
-}
-
-export function createJobQueue<
-  TJob extends { id: number; attempt_count: number; max_attempts: number },
->(config: JobQueueConfig<TJob>) {
+export function createJobQueue<TJob extends QueueJobBase, TResult>(
+  config: JobQueueConfig<TJob, TResult>,
+): QueueRunner {
   const name = config.name;
   const leaseMs = config.leaseMs;
   const maxConcurrency = config.maxConcurrency ?? 1;
-  const timeoutMs = config.timeoutMs ?? 120_000; // 2 minutes default
+  const timeoutMs = config.timeoutMs ?? 120_000;
+  const claimBatchSize = config.batchSize ?? maxConcurrency;
 
   let runningCount = 0;
   const logger = createLogger(`queue:${name}`);
 
+  function errorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : "Unknown error";
+  }
+
+  async function renewLease(jobId: number, controller: AbortController) {
+    try {
+      const ok = await config.extendLease(jobId);
+      if (!ok) {
+        logger.error("lease_stolen", { jobId });
+        controller.abort();
+      }
+    } catch (error: unknown) {
+      logger.error("lease_extension_failed", {
+        jobId,
+        error: errorMessage(error),
+      });
+      controller.abort();
+    }
+  }
+
   async function runOnce() {
-    if (runningCount >= maxConcurrency) {
+    const availableSlots = maxConcurrency - runningCount;
+    if (availableSlots <= 0) {
       return;
     }
 
-    runningCount++;
     try {
-      const jobs = await config.poll();
+      const claimLimit = Math.max(1, Math.min(availableSlots, claimBatchSize));
+      const jobs = await config.poll(claimLimit);
       if (jobs.length === 0) {
         return;
       }
 
       await Promise.all(
         jobs.map(async (job) => {
+          runningCount++;
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-          // Lease renewal timer
-          const renewalInterval = setInterval(async () => {
-            const ok = await config.extendLease(job.id);
-            if (!ok) {
-              logger.error("lease_stolen", { jobId: job.id });
-              controller.abort();
-            }
+          const renewalInterval = setInterval(() => {
+            void renewLease(job.id, controller);
           }, leaseMs / 2);
 
           try {
-            await config.handle(job, controller.signal);
-            await config.onComplete(job.id);
+            const result = await config.handle(job, controller.signal);
+            await config.onComplete(job.id, result);
             logger.info("job_completed", { jobId: job.id });
-          } catch (err: any) {
-            const reason = err.message || "Unknown error";
+          } catch (error: unknown) {
+            const reason = errorMessage(error);
             if (controller.signal.aborted) {
               logger.error("job_timeout_or_stolen", { jobId: job.id });
-              // For timeout/stolen, we usually want to retry unless it exceeded max_attempts
               if (job.attempt_count < job.max_attempts) {
                 await config.onRetry(
                   job.id,
@@ -86,24 +88,24 @@ export function createJobQueue<
           } finally {
             clearTimeout(timeoutId);
             clearInterval(renewalInterval);
+            runningCount--;
           }
         }),
       );
 
-      // If we got a full batch, there might be more jobs waiting
-      const batchSize = config.batchSize ?? 1;
-      if (jobs.length >= batchSize) {
-        setTimeout(() => runOnce(), 0);
+      if (jobs.length >= claimLimit) {
+        setTimeout(() => {
+          void runOnce();
+        }, 0);
       }
-    } catch (err: any) {
-      logger.error("poll_failed", { error: err.message });
-    } finally {
-      runningCount--;
+    } catch (error: unknown) {
+      logger.error("poll_failed", { error: errorMessage(error) });
     }
   }
 
-  return {
+  const queue: QueueRunner = {
     name,
     runOnce,
   };
+  return queue;
 }
