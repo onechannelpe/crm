@@ -1,4 +1,5 @@
 import type {
+  SidePanelNavigationEntry,
   SidePanelPageDefinition,
   SidePanelPageState,
 } from "../types/side-panel-page";
@@ -17,18 +18,35 @@ export type SidePanelAction =
 export type SidePanelStatePatch = Partial<
   Pick<
     SidePanelState,
-    "isOpen" | "isClosing" | "stack" | "searchText" | "panelWidth"
+    | "isOpen"
+    | "isClosing"
+    | "stack"
+    | "pageStateById"
+    | "searchText"
+    | "panelWidth"
   >
 >;
 
 function isSameNavigationEntry(
-  left: SidePanelPageDefinition,
-  right: SidePanelPageDefinition,
+  left: SidePanelNavigationEntry,
+  right: SidePanelNavigationEntry,
 ) {
-  return (
-    left.entry.page === right.entry.page &&
-    left.entry.pageId === right.entry.pageId
-  );
+  return left.page === right.page && left.pageId === right.pageId;
+}
+
+function retainPageStateByNavigationStack(
+  pageStateById: Record<string, SidePanelPageState>,
+  stack: SidePanelNavigationEntry[],
+) {
+  const retained: Record<string, SidePanelPageState> = {};
+
+  for (const entry of stack) {
+    const state = pageStateById[entry.pageId];
+    if (!state) continue;
+    retained[entry.pageId] = state;
+  }
+
+  return retained;
 }
 
 export function reduceSidePanelPatch(
@@ -37,14 +55,19 @@ export function reduceSidePanelPatch(
 ): SidePanelStatePatch | null {
   switch (action.type) {
     case "open-panel": {
-      const currentFrame = state.stack.at(-1);
+      const currentEntry = state.stack.at(-1);
+      const nextEntry = action.page.entry;
+      const nextState = action.page.state;
 
-      if (currentFrame && isSameNavigationEntry(currentFrame, action.page)) {
+      if (currentEntry && isSameNavigationEntry(currentEntry, nextEntry)) {
         return {
           isOpen: true,
           isClosing: false,
           searchText: "",
-          stack: [...state.stack.slice(0, -1), action.page],
+          pageStateById: {
+            ...state.pageStateById,
+            [nextEntry.pageId]: nextState,
+          },
         };
       }
 
@@ -52,7 +75,10 @@ export function reduceSidePanelPatch(
         isOpen: true,
         isClosing: false,
         searchText: "",
-        stack: [action.page],
+        stack: [nextEntry],
+        pageStateById: {
+          [nextEntry.pageId]: nextState,
+        },
       };
     }
     case "close-panel":
@@ -69,17 +95,25 @@ export function reduceSidePanelPatch(
       return { isClosing: false };
     case "navigate-to":
       if (action.resetStack) {
+        const nextEntry = action.page.entry;
         return {
           isOpen: true,
           isClosing: false,
-          stack: [action.page],
+          stack: [nextEntry],
+          pageStateById: {
+            [nextEntry.pageId]: action.page.state,
+          },
         };
       }
 
       return {
         isOpen: true,
         isClosing: false,
-        stack: [...state.stack, action.page],
+        stack: [...state.stack, action.page.entry],
+        pageStateById: {
+          ...state.pageStateById,
+          [action.page.entry.pageId]: action.page.state,
+        },
       };
     case "go-back":
       if (state.stack.length <= 1) {
@@ -90,15 +124,26 @@ export function reduceSidePanelPatch(
         };
       }
 
-      return { stack: state.stack.slice(0, -1) };
+      return {
+        stack: state.stack.slice(0, -1),
+        pageStateById: retainPageStateByNavigationStack(
+          state.pageStateById,
+          state.stack.slice(0, -1),
+        ),
+      };
     case "navigate-to-stack-index": {
       const boundedIndex = Math.max(
         0,
         Math.min(action.index, state.stack.length - 1),
       );
+      const nextStack = state.stack.slice(0, boundedIndex + 1);
 
       return {
-        stack: state.stack.slice(0, boundedIndex + 1),
+        stack: nextStack,
+        pageStateById: retainPageStateByNavigationStack(
+          state.pageStateById,
+          nextStack,
+        ),
       };
     }
     case "set-search-text":
@@ -112,25 +157,19 @@ export function reduceSidePanelPatch(
   }
 }
 
-export function updateSidePanelFrameState(
-  stack: SidePanelPageDefinition[],
+export function updateSidePanelPageState(
+  pageStateById: Record<string, SidePanelPageState>,
   pageId: string,
   updater: (state: SidePanelPageState) => SidePanelPageState,
 ) {
-  const frameIndex = stack.findIndex((frame) => frame.entry.pageId === pageId);
+  const current = pageStateById[pageId];
 
-  if (frameIndex === -1) {
-    return stack;
+  if (!current) {
+    return pageStateById;
   }
 
-  return stack.map((frame, index) => {
-    if (index !== frameIndex) {
-      return frame;
-    }
-
-    return {
-      ...frame,
-      state: updater(frame.state),
-    };
-  });
+  return {
+    ...pageStateById,
+    [pageId]: updater(current),
+  };
 }

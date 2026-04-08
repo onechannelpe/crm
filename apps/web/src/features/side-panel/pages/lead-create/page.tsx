@@ -1,10 +1,20 @@
-import { createAsync } from "@solidjs/router";
-import { createMemo, createSignal, onCleanup, onMount } from "solid-js";
+import { useAction } from "@solidjs/router";
+import {
+  createMemo,
+  createResource,
+  createSignal,
+  onCleanup,
+  onMount,
+} from "solid-js";
 import type { JSX } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
-import { requestLeadCreation } from "~/actions/pipeline/commands/leads";
 import { queryLeadBootstrapPreview } from "~/actions/pipeline/queries/leads";
+import { createLeadMutation } from "~/features/pipeline/data/mutations";
+import {
+  addOptimisticLead,
+  createOptimisticLeadRow,
+} from "~/features/pipeline/data/optimistic-leads";
 import { toAppError } from "~/lib/app-errors";
 
 import { PanelList } from "../../components/list";
@@ -25,7 +35,7 @@ type TabContentProps = {
   razonSocial?: string | null;
   address?: string | null;
   engineStatus?: string;
-  canCreate?: boolean;
+  canCreate: boolean;
   onRucInput?: (value: string) => void;
   onSubmit?: () => void;
 };
@@ -39,10 +49,8 @@ const TAB_COMPONENTS: Record<
   (props: TabContentProps) => JSX.Element
 > = {
   home: HomeTabContent,
-  timeline: (props) => <TimelineTabContent {...props} />,
-  tasks: (props) => (
-    <TasksTabContent {...props} canCreate={!!props.canCreate} />
-  ),
+  timeline: TimelineTabContent,
+  tasks: TasksTabContent,
   notes: () => <HiddenTabContent title="Notes" />,
   files: () => <HiddenTabContent title="Files" />,
   emails: () => <HiddenTabContent title="Emails" />,
@@ -53,18 +61,50 @@ const hiddenTabsCount = 4;
 
 export function LeadCreatePage() {
   const { navigateTo } = useSidePanel();
+  const createLead = useAction(createLeadMutation);
   const [error, setError] = createSignal<string | null>(null);
   const { pageState, setActiveTab, setRuc } = useLeadCreatePageState();
   const validRuc = createMemo(() => {
     const value = pageState().draft.ruc.trim();
     return /^\d{11}$/.test(value) ? value : null;
   });
-  const bootstrapPreview = createAsync(async () => {
-    const value = validRuc();
-    if (!value) {
+  const [bootstrapPreview] = createResource(validRuc, async (ruc) => {
+    if (!ruc) {
       return null;
     }
-    return queryLeadBootstrapPreview(value);
+    return queryLeadBootstrapPreview(ruc);
+  });
+  const latestBootstrapPreview = createMemo(
+    () => bootstrapPreview.latest ?? null,
+  );
+  const engineStatus = createMemo(() => {
+    const value = validRuc();
+    const preview = latestBootstrapPreview();
+
+    if (!value) {
+      return "Esperando RUC válido";
+    }
+
+    if (bootstrapPreview.loading && preview === null) {
+      return "Buscando en Engine";
+    }
+
+    return preview?.engineStatus === "available"
+      ? "Datos encontrados"
+      : "Sin datos en Engine";
+  });
+  const tabProps = createMemo<TabContentProps>(() => {
+    const preview = latestBootstrapPreview();
+
+    return {
+      ruc: pageState().draft.ruc,
+      razonSocial: preview?.razonSocial ?? null,
+      address: preview?.address ?? null,
+      engineStatus: engineStatus(),
+      canCreate: validRuc() !== null,
+      onRucInput: setRuc,
+      onSubmit: () => void handleSubmit(),
+    };
   });
 
   onMount(() => {
@@ -84,17 +124,26 @@ export function LeadCreatePage() {
   });
 
   async function handleSubmit() {
-    const value = pageState().draft.ruc.trim();
+    const value = validRuc();
 
     if (!value) {
-      setError("El RUC es obligatorio");
+      setError("El RUC debe tener 11 dígitos");
       return;
     }
 
     setError(null);
 
+    const rollbackOptimistic = addOptimisticLead(
+      ["all", "review"],
+      createOptimisticLeadRow({
+        ruc: value,
+        razonSocial: latestBootstrapPreview()?.razonSocial ?? null,
+        address: latestBootstrapPreview()?.address ?? null,
+      }),
+    );
+
     try {
-      const result = await requestLeadCreation({
+      const result = await createLead({
         ruc: value,
       });
 
@@ -107,6 +156,7 @@ export function LeadCreatePage() {
         { resetStack: true },
       );
     } catch (submitError) {
+      rollbackOptimistic();
       setError(
         toAppError(submitError, "Error al registrar prospecto").publicMessage,
       );
@@ -126,21 +176,7 @@ export function LeadCreatePage() {
 
           <Dynamic
             component={TAB_COMPONENTS[pageState().draft.activeTab]}
-            ruc={pageState().draft.ruc}
-            razonSocial={bootstrapPreview()?.razonSocial ?? null}
-            address={bootstrapPreview()?.address ?? null}
-            engineStatus={
-              validRuc()
-                ? bootstrapPreview()
-                  ? bootstrapPreview()?.engineStatus === "available"
-                    ? "Datos encontrados"
-                    : "Sin datos en Engine"
-                  : "Buscando en Engine"
-                : "Esperando RUC válido"
-            }
-            canCreate={validRuc() !== null}
-            onRucInput={setRuc}
-            onSubmit={() => void handleSubmit()}
+            {...tabProps()}
           />
 
           {error() && <p class={styles.error}>{error()}</p>}
