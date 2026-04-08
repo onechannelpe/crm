@@ -1,8 +1,13 @@
 import { createAsync } from "@solidjs/router";
 
-import { queryLeadList } from "~/actions/pipeline/queries/leads";
 import Building2 from "~/components/icons/building-2";
 import List from "~/components/icons/list";
+import { mergeLeadRows } from "~/features/pipeline/data/merge-lead-rows";
+import { useOptimisticLeadRows } from "~/features/pipeline/data/optimistic-leads";
+import {
+  LEAD_LIST_FILTERS_BY_ID,
+  leadListQuery,
+} from "~/features/pipeline/data/queries";
 import { RecordIndexScreen } from "~/features/record-index/components/screen";
 import type {
   RecordIndexAdapter,
@@ -17,17 +22,24 @@ import styles from "./styles.module.css";
 
 export function QuotationsRecordIndex() {
   const leads = createAsync(() =>
-    queryLeadList({ stage: "READY_FOR_QUOTATION" }),
+    leadListQuery(LEAD_LIST_FILTERS_BY_ID.quotation),
   );
+  const optimisticRows = useOptimisticLeadRows("quotation");
   const { rowOpen } = useOpenQuotationRecord();
   const source = (): RecordIndexSource<LeadListRowView> => {
     const data = leads();
+    const serverRows = data?.rows ?? [];
+    const rows = mergeLeadRows(serverRows, optimisticRows());
 
-    if (data === undefined) {
+    if (data === undefined && rows.length === 0) {
       return { status: "pending", rows: [] };
     }
 
-    return { status: "ready", rows: data.rows };
+    return {
+      status: "ready",
+      rows,
+      totalCount: data?.totalCount ?? rows.length,
+    };
   };
 
   const adapter = {

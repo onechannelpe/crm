@@ -1,10 +1,14 @@
-import { createAsync } from "@solidjs/router";
+import { createAsync, useAction } from "@solidjs/router";
 import { createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import type { JSX } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
-import { requestLeadCreation } from "~/actions/pipeline/commands/leads";
 import { queryLeadBootstrapPreview } from "~/actions/pipeline/queries/leads";
+import { createLeadMutation } from "~/features/pipeline/data/mutations";
+import {
+  addOptimisticLead,
+  createOptimisticLeadRow,
+} from "~/features/pipeline/data/optimistic-leads";
 import { toAppError } from "~/lib/app-errors";
 
 import { PanelList } from "../../components/list";
@@ -53,6 +57,7 @@ const hiddenTabsCount = 4;
 
 export function LeadCreatePage() {
   const { navigateTo } = useSidePanel();
+  const createLead = useAction(createLeadMutation);
   const [error, setError] = createSignal<string | null>(null);
   const { pageState, setActiveTab, setRuc } = useLeadCreatePageState();
   const validRuc = createMemo(() => {
@@ -93,8 +98,17 @@ export function LeadCreatePage() {
 
     setError(null);
 
+    const rollbackOptimistic = addOptimisticLead(
+      ["all", "review"],
+      createOptimisticLeadRow({
+        ruc: value,
+        razonSocial: bootstrapPreview()?.razonSocial ?? null,
+        address: bootstrapPreview()?.address ?? null,
+      }),
+    );
+
     try {
-      const result = await requestLeadCreation({
+      const result = await createLead({
         ruc: value,
       });
 
@@ -107,6 +121,7 @@ export function LeadCreatePage() {
         { resetStack: true },
       );
     } catch (submitError) {
+      rollbackOptimistic();
       setError(
         toAppError(submitError, "Error al registrar prospecto").publicMessage,
       );

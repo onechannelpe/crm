@@ -1,8 +1,13 @@
 import { createAsync } from "@solidjs/router";
 
-import { queryLeadList } from "~/actions/pipeline/queries/leads";
 import Building2 from "~/components/icons/building-2";
 import List from "~/components/icons/list";
+import { mergeLeadRows } from "~/features/pipeline/data/merge-lead-rows";
+import { useOptimisticLeadRows } from "~/features/pipeline/data/optimistic-leads";
+import {
+  LEAD_LIST_FILTERS_BY_ID,
+  leadListQuery,
+} from "~/features/pipeline/data/queries";
 import { RecordIndexScreen } from "~/features/record-index/components/screen";
 import type {
   RecordIndexAdapter,
@@ -22,13 +27,16 @@ import { LEADS_RECORD_INDEX_SORT, type LeadSortKey } from "./sorts";
 import styles from "./styles.module.css";
 
 export function LeadsRecordIndex() {
-  const leads = createAsync(() => queryLeadList({}));
+  const leads = createAsync(() => leadListQuery(LEAD_LIST_FILTERS_BY_ID.all));
+  const optimisticRows = useOptimisticLeadRows("all");
   const { rowOpen } = useOpenLeadRecord();
   const createAction = useCreateLeadRecordAction();
   const source = (): RecordIndexSource<LeadListRowView> => {
     const data = leads();
+    const serverRows = data?.rows ?? [];
+    const rows = mergeLeadRows(serverRows, optimisticRows());
 
-    if (data === undefined) {
+    if (data === undefined && rows.length === 0) {
       return {
         status: "pending",
         rows: [],
@@ -37,8 +45,8 @@ export function LeadsRecordIndex() {
 
     return {
       status: "ready",
-      rows: data.rows,
-      totalCount: data.rows.length,
+      rows,
+      totalCount: data?.totalCount ?? rows.length,
     };
   };
 
