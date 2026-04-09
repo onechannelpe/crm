@@ -10,13 +10,11 @@ import { internalError } from "~/lib/app-errors";
 import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { getActionRequestContext } from "~/lib/observability/context";
-import {
-  createPasskeyStartService,
-  submitPasswordLoginWithDeps,
-  submitTotpLoginWithDeps,
-} from "~/server/auth/application/login";
 import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
 import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
+import { createPasskeyStartService } from "~/server/features/auth/application/login/passkey";
+import { submitPasswordLogin } from "~/server/features/auth/application/login/primary";
+import { submitTotpForLoginFlow } from "~/server/features/auth/application/login/totp";
 import { serverRuntime } from "~/server/runtime";
 import { isErr } from "~/server/shared/result";
 
@@ -43,12 +41,16 @@ export async function passwordLogin(
   const password = readLoginText(formData, "password", { trim: false });
   const request = getRequestClientMetadata();
   const loginContext = createAuthLoginContext(serverRuntime.infra.db);
-  const result = await submitPasswordLoginWithDeps(loginContext, {
-    identifier,
-    password,
-    ipAddress: request.ipAddress,
-    userAgent: request.userAgent,
-  });
+  const result = await submitPasswordLogin(
+    {
+      identifier,
+      password,
+      ipAddress: request.ipAddress,
+      userAgent: request.userAgent,
+    },
+    loginContext.repos,
+    loginContext.privilegedLoginAlertSender,
+  );
   if (isErr(result)) {
     await recordAuthAnalyticsEvent(
       {
@@ -161,12 +163,16 @@ export async function totpLogin(
   }
   const request = getRequestClientMetadata();
   const loginContext = createAuthLoginContext(serverRuntime.infra.db);
-  const result = await submitTotpLoginWithDeps(loginContext, {
-    flowId,
-    totpCode,
-    ipAddress: request.ipAddress,
-    userAgent: request.userAgent,
-  });
+  const result = await submitTotpForLoginFlow(
+    {
+      flowId,
+      totpCode,
+      ipAddress: request.ipAddress,
+      userAgent: request.userAgent,
+    },
+    loginContext.repos,
+    loginContext.privilegedLoginAlertSender,
+  );
   if (isErr(result)) {
     if (result.error.kind === "flow_expired") {
       await recordAuthAnalyticsEvent(

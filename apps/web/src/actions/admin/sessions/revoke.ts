@@ -34,8 +34,10 @@ export async function revokeUserSession(
         ctx,
         createAdminSessionRevocationContext({
           executor: serverRuntime.infra.db,
-          invalidateSession: (sessionId: string) =>
-            serverRuntime.auth.sessionService.invalidateSession(sessionId),
+          invalidateSession: (sessionToInvalidate: string) =>
+            serverRuntime.auth.sessionService.invalidateSession(
+              sessionToInvalidate,
+            ),
           invalidateUserSessions: (userId: number) =>
             serverRuntime.auth.sessionService.invalidateUserSessions(userId),
         }),

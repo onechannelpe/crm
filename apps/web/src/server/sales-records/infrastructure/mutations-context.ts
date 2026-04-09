@@ -1,4 +1,3 @@
-import { db } from "~/lib/db/db";
 import { createContactAssignmentsRepo } from "~/server/contacts/repos-assignments";
 import { createProductsRepo } from "~/server/inventory/repos-products";
 import { createSalesRecordsRepo } from "~/server/sales/repos-sales-records";
@@ -40,13 +39,15 @@ export type SalesRecordMutationsContext = SalesRecordMutationDeps & {
   };
 };
 
-export function createSalesRecordMutationsContext(): SalesRecordMutationsContext {
+export function createSalesRecordMutationsContext(
+  executor: DatabaseExecutor,
+): SalesRecordMutationsContext {
   return {
     rateLimitDeps: {
-      actionRateLimits: createActionRateLimitsRepo(db),
-      auditLogs: createAuditLogsRepo(db),
+      actionRateLimits: createActionRateLimitsRepo(executor),
+      auditLogs: createAuditLogsRepo(executor),
     },
-    repos: createSalesRecordMutationsRepos(db),
-    runInTransaction: createSalesRecordMutationRunner(db),
+    repos: createSalesRecordMutationsRepos(executor),
+    runInTransaction: createSalesRecordMutationRunner(executor),
   };
 }

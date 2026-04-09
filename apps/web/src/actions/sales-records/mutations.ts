@@ -3,6 +3,7 @@
 import type { CreateSalesRecordDraftInput } from "~/actions/sales-records/contracts";
 import type { SalesRecordDraftCreatedResult } from "~/actions/sales-records/contracts";
 import type { ActionSuccess } from "~/lib/contracts/common";
+import { serverRuntime } from "~/server/runtime";
 import { cancelRecord } from "~/server/sales-records/application/commands/cancel-record";
 import { confirmRecord } from "~/server/sales-records/application/commands/confirm-record";
 import { createDraft } from "~/server/sales-records/application/commands/create-draft";
@@ -10,7 +11,6 @@ import { registerAttempt } from "~/server/sales-records/application/commands/reg
 import { rejectRecord } from "~/server/sales-records/application/commands/reject-record";
 import { submitRecord } from "~/server/sales-records/application/commands/submit-draft";
 import { updateDraft } from "~/server/sales-records/application/commands/update-draft";
-import { createSalesRecordMutationsContext } from "~/server/sales-records/infrastructure/mutations-context";
 import { runAction } from "~/server/shared/action-runtime";
 
 import {
@@ -34,7 +34,7 @@ export async function createSalesRecordDraft(
       products: parsedInput.products.length,
     },
     execute: (ctx) =>
-      createDraft(ctx, createSalesRecordMutationsContext(), parsedInput),
+      createDraft(ctx, serverRuntime.salesRecords.mutations, parsedInput),
   });
 }
 
@@ -47,7 +47,7 @@ export async function submitSalesRecord(
     access: { kind: "permission", permission: "sales:submit" },
     input: { recordId: safeRecordId },
     execute: (ctx) =>
-      submitRecord(ctx, createSalesRecordMutationsContext(), {
+      submitRecord(ctx, serverRuntime.salesRecords.mutations, {
         recordId: safeRecordId,
       }),
   });
@@ -62,7 +62,7 @@ export async function confirmSalesRecord(
     access: { kind: "permission", permission: "sales:approve" },
     input: { recordId: safeRecordId },
     execute: (ctx) =>
-      confirmRecord(ctx, createSalesRecordMutationsContext(), {
+      confirmRecord(ctx, serverRuntime.salesRecords.mutations, {
         recordId: safeRecordId,
       }),
   });
@@ -78,7 +78,7 @@ export async function rejectSalesRecord(
     access: { kind: "permission", permission: "sales:approve" },
     input: { recordId: parsedInput.recordId },
     execute: (ctx) =>
-      rejectRecord(ctx, createSalesRecordMutationsContext(), {
+      rejectRecord(ctx, serverRuntime.salesRecords.mutations, {
         recordId: parsedInput.recordId,
         reason: parsedInput.reason,
       }),
@@ -94,7 +94,7 @@ export async function cancelSalesRecord(
     access: { kind: "permission", permission: "sales:create" },
     input: { recordId: safeRecordId },
     execute: (ctx) =>
-      cancelRecord(ctx, createSalesRecordMutationsContext(), {
+      cancelRecord(ctx, serverRuntime.salesRecords.mutations, {
         recordId: safeRecordId,
       }),
   });
@@ -120,7 +120,7 @@ export async function updateSalesRecordDraft(
       hasCorrectionNotes: parsedInput.correctionNotes !== null,
     },
     execute: (ctx) =>
-      updateDraft(ctx, createSalesRecordMutationsContext(), {
+      updateDraft(ctx, serverRuntime.salesRecords.mutations, {
         recordId: parsedInput.recordId,
         draft: parsedInput.input,
         correctionNotes: parsedInput.correctionNotes,
@@ -145,7 +145,7 @@ export async function registerSalesRecordAttempt(
     access: { kind: "permission", permission: "sales:approve" },
     input: { recordId: parsedInput.recordId, outcome: parsedInput.outcome },
     execute: (ctx) =>
-      registerAttempt(ctx, createSalesRecordMutationsContext(), {
+      registerAttempt(ctx, serverRuntime.salesRecords.mutations, {
         recordId: parsedInput.recordId,
         outcome: parsedInput.outcome,
         notes: parsedInput.notes,

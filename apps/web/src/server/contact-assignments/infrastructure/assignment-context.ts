@@ -1,4 +1,3 @@
-import { db } from "~/lib/db/db";
 import {
   createLeadCapacityGrantsRepo,
   createLeadUsageCommitsRepo,
@@ -12,7 +11,6 @@ import {
 import { createContactAssignmentsRepo } from "~/server/contacts/repos-assignments";
 import { createContactsRepo } from "~/server/contacts/repos-contacts";
 import { createOrganizationsRepo } from "~/server/contacts/repos-organizations";
-import { engineClient } from "~/server/shared/composition-root";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { EngineClient } from "~/server/shared/engine/client";
 
@@ -30,18 +28,25 @@ function createContactAssignmentRepos(executor: DatabaseExecutor) {
   };
 }
 
-export function createContactAssignmentContext() {
-  const engine: Pick<EngineClient, "requestCandidates"> = engineClient;
+interface ContactAssignmentContextDeps {
+  executor: DatabaseExecutor;
+  engine: Pick<EngineClient, "requestCandidates">;
+}
+
+export function createContactAssignmentContext(
+  deps: ContactAssignmentContextDeps,
+) {
+  const { executor, engine } = deps;
 
   return {
-    repos: createContactAssignmentRepos(db),
+    repos: createContactAssignmentRepos(executor),
     engine,
     runInTransaction<T>(
       operation: (
         repos: ReturnType<typeof createContactAssignmentRepos>,
       ) => Promise<T>,
     ) {
-      return db
+      return executor
         .transaction()
         .execute((transactionDb) =>
           operation(createContactAssignmentRepos(transactionDb)),

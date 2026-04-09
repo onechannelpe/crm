@@ -6,7 +6,7 @@ import {
   updateSearchPolicyDefault as updateSearchPolicyDefaultService,
   updateSearchPolicyOverride as updateSearchPolicyOverrideService,
 } from "~/server/capacity/application/commands";
-import { createCapacityCommandsContext } from "~/server/capacity/infrastructure/commands-context";
+import { serverRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
 import {
@@ -31,7 +31,7 @@ export async function updateSearchPolicyOverride(input: {
     execute: (ctx) =>
       updateSearchPolicyOverrideService(
         ctx,
-        createCapacityCommandsContext().repos,
+        serverRuntime.capacity.commands.repos,
         overrideInput.value,
       ),
   });
@@ -52,7 +52,7 @@ export async function updateLeadPolicyOverride(input: {
     execute: (ctx) =>
       updateLeadPolicyOverrideService(
         ctx,
-        createCapacityCommandsContext().repos,
+        serverRuntime.capacity.commands.repos,
         overrideInput.value,
       ),
   });
@@ -80,7 +80,7 @@ export async function updateSearchPolicyDefault(input: {
     execute: (ctx) =>
       updateSearchPolicyDefaultService(
         ctx,
-        createCapacityCommandsContext().repos,
+        serverRuntime.capacity.commands.repos,
         {
           scope: {
             kind: scopeInput.value.scopeType,
@@ -119,7 +119,7 @@ export async function updateLeadPolicyDefault(input: {
     execute: (ctx) =>
       updateLeadPolicyDefaultService(
         ctx,
-        createCapacityCommandsContext().repos,
+        serverRuntime.capacity.commands.repos,
         {
           scope: {
             kind: scopeInput.value.scopeType,

@@ -1,4 +1,3 @@
-import { db } from "~/lib/db/db";
 import { createContactAssignmentsRepo } from "~/server/contacts/repos-assignments";
 import { createContactsRepo } from "~/server/contacts/repos-contacts";
 import { createOrganizationsRepo } from "~/server/contacts/repos-organizations";
@@ -28,12 +27,16 @@ export type ContactAssignmentInteractionRunner = <T>(
   operation: (repos: ContactAssignmentInteractionRepos) => Promise<T>,
 ) => Promise<T>;
 
-export function runContactAssignmentInteraction<T>(
-  operation: (repos: ContactAssignmentInteractionRepos) => Promise<T>,
-) {
-  return db
-    .transaction()
-    .execute((transactionDb) =>
-      operation(createContactAssignmentInteractionRepos(transactionDb)),
-    );
+export function createContactAssignmentInteractionRunner(
+  executor: DatabaseExecutor,
+): ContactAssignmentInteractionRunner {
+  return function runContactAssignmentInteraction<T>(
+    operation: (repos: ContactAssignmentInteractionRepos) => Promise<T>,
+  ) {
+    return executor
+      .transaction()
+      .execute((transactionDb) =>
+        operation(createContactAssignmentInteractionRepos(transactionDb)),
+      );
+  };
 }

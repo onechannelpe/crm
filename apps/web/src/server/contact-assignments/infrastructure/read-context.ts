@@ -1,4 +1,3 @@
-import { db } from "~/lib/db/db";
 import {
   createLeadCapacityGrantsRepo,
   createLeadUsageCommitsRepo,
@@ -10,15 +9,16 @@ import {
   createLeadPolicyOverridesRepo,
 } from "~/server/capacity/infrastructure/policy-repos";
 import { createContactAssignmentsRepo } from "~/server/contacts/repos-assignments";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
-export function createContactAssignmentReadContext() {
+export function createContactAssignmentReadContext(executor: DatabaseExecutor) {
   return {
-    users: createCapacityUsersRepo(db),
-    leadPolicyDefaults: createLeadPolicyDefaultsRepo(db),
-    leadPolicyOverrides: createLeadPolicyOverridesRepo(db),
-    leadCapacityGrants: createLeadCapacityGrantsRepo(db),
-    leadUsageReservations: createLeadUsageReservationsRepo(db),
-    leadUsageCommits: createLeadUsageCommitsRepo(db),
-    contactAssignments: createContactAssignmentsRepo(db),
+    users: createCapacityUsersRepo(executor),
+    leadPolicyDefaults: createLeadPolicyDefaultsRepo(executor),
+    leadPolicyOverrides: createLeadPolicyOverridesRepo(executor),
+    leadCapacityGrants: createLeadCapacityGrantsRepo(executor),
+    leadUsageReservations: createLeadUsageReservationsRepo(executor),
+    leadUsageCommits: createLeadUsageCommitsRepo(executor),
+    contactAssignments: createContactAssignmentsRepo(executor),
   };
 }

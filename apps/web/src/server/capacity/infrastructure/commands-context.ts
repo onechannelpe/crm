@@ -1,4 +1,3 @@
-import { db } from "~/lib/db/db";
 import {
   createLeadCapacityGrantsRepo,
   createLeadUsageCommitsRepo,
@@ -41,19 +40,19 @@ function createCapacityRepos(executor: DatabaseExecutor) {
   };
 }
 
-export function createCapacityCommandsContext() {
+export function createCapacityCommandsContext(executor: DatabaseExecutor) {
   return {
-    repos: createCapacityRepos(db),
+    repos: createCapacityRepos(executor),
     rateLimitDeps: {
-      actionRateLimits: createActionRateLimitsRepo(db),
-      auditLogs: createAuditLogsRepo(db),
+      actionRateLimits: createActionRateLimitsRepo(executor),
+      auditLogs: createAuditLogsRepo(executor),
     },
     runInRepositoryTransaction<T>(
       operation: (
         transactionRepos: ReturnType<typeof createCapacityRepos>,
       ) => Promise<T>,
     ) {
-      return db
+      return executor
         .transaction()
         .execute((transactionDb) =>
           operation(createCapacityRepos(transactionDb)),

@@ -13,7 +13,7 @@ import { getExecutiveDetail as getExecutiveDetailService } from "~/server/capaci
 import { getPolicyDefaults as getPolicyDefaultsService } from "~/server/capacity/application/get-policy-defaults";
 import { listManagedExecutives as listManagedExecutivesService } from "~/server/capacity/application/list-managed-executives";
 import { listPendingRequests as listPendingRequestsService } from "~/server/capacity/application/list-pending-requests";
-import { createCapacityReadContext } from "~/server/capacity/infrastructure/read-context";
+import { serverRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function getManagedExecutivesList(): Promise<
@@ -23,7 +23,7 @@ export async function getManagedExecutivesList(): Promise<
     actionName: "capacity.managed_executives.read",
     access: { kind: "permission", permission: "capacity:read:team" },
     execute: (ctx) =>
-      listManagedExecutivesService(ctx, createCapacityReadContext()),
+      listManagedExecutivesService(ctx, serverRuntime.capacity.read),
   });
 }
 
@@ -36,7 +36,7 @@ export async function getExecutiveDetail(
     access: { kind: "permission", permission: "capacity:read:team" },
     input: { userId: safeUserId },
     execute: (ctx) =>
-      getExecutiveDetailService(ctx, createCapacityReadContext(), {
+      getExecutiveDetailService(ctx, serverRuntime.capacity.read, {
         userId: safeUserId,
       }),
   });
@@ -49,7 +49,7 @@ export async function getPendingRequests(): Promise<
     actionName: "capacity.pending_requests.read",
     access: { kind: "permission", permission: "capacity:read:team" },
     execute: (ctx) =>
-      listPendingRequestsService(ctx, createCapacityReadContext()),
+      listPendingRequestsService(ctx, serverRuntime.capacity.read),
   });
 }
 
@@ -58,7 +58,7 @@ export async function getPolicyDefaults(): Promise<CapacityPolicyDefaultsView> {
     actionName: "capacity.policy_defaults.read",
     access: { kind: "permission", permission: "capacity:policy:manage" },
     execute: (ctx) =>
-      getPolicyDefaultsService(ctx, createCapacityReadContext()),
+      getPolicyDefaultsService(ctx, serverRuntime.capacity.read),
   });
 }
 
@@ -72,7 +72,7 @@ export async function getAuditEvents(
     access: { kind: "permission", permission: "capacity:audit:read" },
     input: { limit: safeLimit },
     execute: (ctx) =>
-      getAuditEventsService(ctx, createCapacityReadContext(), {
+      getAuditEventsService(ctx, serverRuntime.capacity.read, {
         limit: safeLimit,
       }),
   });

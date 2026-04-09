@@ -1,13 +1,13 @@
 "use server";
 
 import type { CurrentUserView } from "~/actions/auth/contracts";
-import { getLoginFlowState } from "~/server/auth/application/login";
 import { getCurrentUser, logoutUser } from "~/server/auth/application/session";
 import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
 import {
   createAuthSessionLogoutContext,
   createAuthSessionReadContext,
 } from "~/server/auth/infrastructure/session-context";
+import { getLoginFlowState } from "~/server/features/auth/application/login/flow-state";
 import { serverRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 

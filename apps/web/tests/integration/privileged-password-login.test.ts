@@ -1,14 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import {
-  getLoginFlowState,
-  submitPasswordLogin,
-  submitTotpForLoginFlow,
-} from "../../src/server/auth/application/login";
 import type { SendPrivilegedLoginAlert } from "../../src/lib/auth/security/privileged-login-alert";
 import { requiresStrongAuthRole } from "../../src/lib/auth/security/strong-auth-status";
 import { decryptTotpSecret } from "../../src/lib/auth/totp/secret-crypto";
 import { generateCurrentTotpCode } from "../../src/lib/auth/totp/totp";
+import { getLoginFlowState } from "../../src/server/features/auth/application/login/flow-state";
+import { submitPasswordLogin } from "../../src/server/features/auth/application/login/primary";
+import { submitTotpForLoginFlow } from "../../src/server/features/auth/application/login/totp";
 import { isErr } from "../../src/server/shared/result";
 import {
   cleanupTestDb,
