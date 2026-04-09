@@ -4,27 +4,35 @@ import { validationError } from "~/lib/app-errors";
 import { isRole, type Role } from "~/lib/auth/access/rbac";
 import { requireRole } from "~/lib/auth/access/session";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
-import { db } from "~/lib/db/db";
 import { env } from "~/lib/env";
 import { createNotificationCampaignsRepo } from "~/server/notifications/repos-campaigns";
 import { createNotificationContactsRepo } from "~/server/notifications/repos-contacts";
 import { createNotificationPreferencesRepo } from "~/server/notifications/repos-preferences";
 import { createAppNotificationService } from "~/server/notifications/service";
+import { serverRuntime } from "~/server/runtime";
 
-const notifications = createAppNotificationService({
-  repos: {
-    notificationCampaigns: createNotificationCampaignsRepo(db),
-    notificationContacts: createNotificationContactsRepo(db),
-    notificationPreferences: createNotificationPreferencesRepo(db),
-  },
-  config: {
-    resendApiKey: env.resendApiKey || undefined,
-    fromEmail: env.emailFrom || undefined,
-    whatsappAccessToken: env.whatsappAccessToken || undefined,
-    whatsappPhoneNumberId: env.whatsappPhoneNumberId || undefined,
-    whatsappApiVersion: env.whatsappApiVersion || undefined,
-  },
-});
+function createNotificationsService() {
+  return createAppNotificationService({
+    repos: {
+      notificationCampaigns: createNotificationCampaignsRepo(
+        serverRuntime.infra.db,
+      ),
+      notificationContacts: createNotificationContactsRepo(
+        serverRuntime.infra.db,
+      ),
+      notificationPreferences: createNotificationPreferencesRepo(
+        serverRuntime.infra.db,
+      ),
+    },
+    config: {
+      resendApiKey: env.resendApiKey || undefined,
+      fromEmail: env.emailFrom || undefined,
+      whatsappAccessToken: env.whatsappAccessToken || undefined,
+      whatsappPhoneNumberId: env.whatsappPhoneNumberId || undefined,
+      whatsappApiVersion: env.whatsappApiVersion || undefined,
+    },
+  });
+}
 
 function assertAudienceType(value: string): "user" | "role" | "global" {
   if (value === "user" || value === "role" || value === "global") {
@@ -75,6 +83,7 @@ export async function sendBroadcastNotification(params: {
   audienceType: string;
   audienceRef: string;
 }): Promise<void> {
+  const notifications = createNotificationsService();
   const session = await requireRole("admin");
   const audienceType = assertAudienceType(params.audienceType);
   const audienceRef = assertAudienceRef(audienceType, params.audienceRef);

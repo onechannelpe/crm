@@ -3,33 +3,26 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { applyImportRows } from "../../src/server/integrations/application/import/apply-service";
 import { createNeedsExecutiveOutboxQueue } from "../../src/server/integrations/queue/integration-outbox-needs-executive-queue";
 import { createReadyForQuotationOutboxQueue } from "../../src/server/integrations/queue/integration-outbox-ready-for-quotation-queue";
-import { createLeadExportQuery } from "../../src/server/pipeline/infrastructure/lead-export-query";
 import {
-  cleanupTestDb,
-  createIsolatedTestDb,
-  type TestDbContext,
-} from "../support/test-db";
+  createTestRuntime,
+  type TestRuntime,
+} from "../support/runtime/create-test-runtime";
 
 describe("integration import pipeline concurrency", () => {
-  let ctx: TestDbContext | null = null;
+  let runtime: TestRuntime;
 
   beforeEach(async () => {
-    ctx = await createIsolatedTestDb("integration-import-concurrency");
+    runtime = await createTestRuntime("integration-import-concurrency");
   });
 
   afterEach(async () => {
-    if (ctx) {
-      await cleanupTestDb(ctx);
-    }
+    await runtime.dispose();
   });
 
   it("applies import while export reads run concurrently and dispatches both outboxes", async () => {
-    if (!ctx) {
-      throw new Error("Missing test DB context");
-    }
     const now = Date.now();
 
-    await ctx.db
+    await runtime.ctx.db
       .insertInto("pipeline_leads")
       .values([
         {
@@ -65,7 +58,7 @@ describe("integration import pipeline concurrency", () => {
       ])
       .execute();
 
-    await ctx.db
+    await runtime.ctx.db
       .insertInto("pipeline_integration_jobs")
       .values({
         id: 5001,
@@ -88,7 +81,7 @@ describe("integration import pipeline concurrency", () => {
       })
       .execute();
 
-    const leadExportQuery = createLeadExportQuery(ctx.db);
+    const leadExportQuery = runtime.integrations.leadExportQuery;
     const concurrentExportReads = (async () => {
       for (let i = 0; i < 40; i++) {
         await leadExportQuery.list({});
@@ -115,7 +108,7 @@ describe("integration import pipeline concurrency", () => {
         ],
         invalidRows: [],
       },
-      ctx.db,
+      runtime.integrations.executor,
     );
 
     const [applied] = await Promise.all([applyPromise, concurrentExportReads]);
@@ -123,12 +116,12 @@ describe("integration import pipeline concurrency", () => {
     expect(applied.applied).toBe(2);
     expect(applied.failed).toBe(0);
 
-    const pendingNeedsExec = await ctx.db
+    const pendingNeedsExec = await runtime.ctx.db
       .selectFrom("pipeline_integration_outbox_needs_executive_input")
       .select((eb) => eb.fn.count<number>("id").as("count"))
       .where("status", "=", "pending")
       .executeTakeFirstOrThrow();
-    const pendingReadyForQuote = await ctx.db
+    const pendingReadyForQuote = await runtime.ctx.db
       .selectFrom("pipeline_integration_outbox_ready_for_quotation")
       .select((eb) => eb.fn.count<number>("id").as("count"))
       .where("status", "=", "pending")
@@ -138,11 +131,11 @@ describe("integration import pipeline concurrency", () => {
     expect(pendingReadyForQuote.count).toBe(1);
 
     const needsExecutiveQueue = createNeedsExecutiveOutboxQueue("test-worker", {
-      executor: ctx.db,
+      executor: runtime.integrations.executor,
     });
     const readyForQuotationQueue = createReadyForQuotationOutboxQueue(
       "test-worker",
-      { executor: ctx.db },
+      { executor: runtime.integrations.executor },
     );
 
     await needsExecutiveQueue.runOnce();
@@ -150,7 +143,7 @@ describe("integration import pipeline concurrency", () => {
     await needsExecutiveQueue.runOnce();
     await readyForQuotationQueue.runOnce();
 
-    const notifications = await ctx.db
+    const notifications = await runtime.ctx.db
       .selectFrom("app_notifications")
       .select(["user_id", "event_type", "dedupe_key"])
       .orderBy("id", "asc")
@@ -169,12 +162,12 @@ describe("integration import pipeline concurrency", () => {
       },
     ]);
 
-    const completedNeedsExec = await ctx.db
+    const completedNeedsExec = await runtime.ctx.db
       .selectFrom("pipeline_integration_outbox_needs_executive_input")
       .select((eb) => eb.fn.count<number>("id").as("count"))
       .where("status", "=", "completed")
       .executeTakeFirstOrThrow();
-    const completedReadyForQuote = await ctx.db
+    const completedReadyForQuote = await runtime.ctx.db
       .selectFrom("pipeline_integration_outbox_ready_for_quotation")
       .select((eb) => eb.fn.count<number>("id").as("count"))
       .where("status", "=", "completed")

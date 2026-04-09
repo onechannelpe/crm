@@ -5,14 +5,11 @@ import type { Selectable } from "kysely";
 import { requireRole } from "~/lib/auth/access/session";
 import { assertRecentStrongAuth } from "~/lib/auth/security/step-up";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
-import { db } from "~/lib/db/db";
 import type { Database } from "~/lib/db/types";
 import { longName } from "~/lib/users/display-name";
 import { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
+import { serverRuntime } from "~/server/runtime";
 import { createUsersRepo } from "~/server/users/repos-users";
-
-const users = createUsersRepo(db);
-const authEvents = createAuthEventsRepo(db);
 
 type AuthEventRow = Selectable<Database["auth_events"]>;
 
@@ -32,6 +29,8 @@ export interface UserLoginRetryReport {
 export async function getUserLoginRetryReport(
   username: string,
 ): Promise<UserLoginRetryReport | null> {
+  const users = createUsersRepo(serverRuntime.infra.db);
+  const authEvents = createAuthEventsRepo(serverRuntime.infra.db);
   const safeUsername = assertNonEmptyString(username, "username").toLowerCase();
   const session = await requireRole("admin");
   assertRecentStrongAuth(session);

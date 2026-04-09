@@ -6,9 +6,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   plugins: [codspeedPlugin()],
   test: {
-    reporters: process.env.GITHUB_ACTIONS
-      ? ["dot", "github-actions"]
-      : ["github-actions"],
+    reporters: process.env.GITHUB_ACTIONS ? ["dot", "github-actions"] : ["dot"],
     projects: [
       {
         test: {
