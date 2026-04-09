@@ -2,26 +2,24 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { getLeadDetail } from "../../src/server/pipeline/application/queries/get-lead-detail";
 import { getSaleDetail } from "../../src/server/pipeline/application/queries/get-sale-detail";
-import { createPipelineDeps } from "../../src/server/pipeline/infrastructure/deps";
 import {
-  cleanupTestDb,
-  createIsolatedTestDb,
-  type TestDbContext,
-} from "../support/test-db";
+  createTestRuntime,
+  type TestRuntime,
+} from "../support/runtime/create-test-runtime";
 
 describe("pipeline read access", () => {
-  let ctx: TestDbContext;
+  let runtime: TestRuntime;
 
   beforeEach(async () => {
-    ctx = await createIsolatedTestDb("pipeline-read-access");
+    runtime = await createTestRuntime("pipeline-read-access");
   });
 
   afterEach(async () => {
-    await cleanupTestDb(ctx);
+    await runtime.dispose();
   });
 
   it("lets review users read record detail even when they are not the assigned executive", async () => {
-    await ctx.db
+    await runtime.ctx.db
       .insertInto("pipeline_leads")
       .values({
         id: 11,
@@ -37,7 +35,7 @@ describe("pipeline read access", () => {
       })
       .execute();
 
-    const result = await getLeadDetail(createPipelineDeps(ctx.db).leadDetail, {
+    const result = await getLeadDetail(runtime.pipeline.deps.leadDetail, {
       leadId: 11,
       actorUserId: 2,
       actorRole: "back_office",
@@ -51,7 +49,7 @@ describe("pipeline read access", () => {
   });
 
   it("blocks executives from reading another executive's record detail", async () => {
-    await ctx.db
+    await runtime.ctx.db
       .insertInto("pipeline_leads")
       .values({
         id: 12,
@@ -67,7 +65,7 @@ describe("pipeline read access", () => {
       })
       .execute();
 
-    const result = await getLeadDetail(createPipelineDeps(ctx.db).leadDetail, {
+    const result = await getLeadDetail(runtime.pipeline.deps.leadDetail, {
       leadId: 12,
       actorUserId: 3,
       actorRole: "executive",
@@ -80,7 +78,7 @@ describe("pipeline read access", () => {
   });
 
   it("lets an executive read only their own sale detail", async () => {
-    await ctx.db
+    await runtime.ctx.db
       .insertInto("pipeline_leads")
       .values({
         id: 11,
@@ -96,7 +94,7 @@ describe("pipeline read access", () => {
       })
       .execute();
 
-    await ctx.db
+    await runtime.ctx.db
       .insertInto("pipeline_sales")
       .values({
         id: 21,
@@ -115,7 +113,7 @@ describe("pipeline read access", () => {
       })
       .execute();
 
-    const result = await getSaleDetail(createPipelineDeps(ctx.db).saleQueries, {
+    const result = await getSaleDetail(runtime.pipeline.deps.saleQueries, {
       saleId: 21,
       actorUserId: 1,
       actorRole: "executive",
@@ -128,7 +126,7 @@ describe("pipeline read access", () => {
   });
 
   it("blocks an executive from reading another executive's sale detail", async () => {
-    await ctx.db
+    await runtime.ctx.db
       .insertInto("pipeline_leads")
       .values({
         id: 12,
@@ -144,7 +142,7 @@ describe("pipeline read access", () => {
       })
       .execute();
 
-    await ctx.db
+    await runtime.ctx.db
       .insertInto("pipeline_sales")
       .values({
         id: 22,
@@ -163,7 +161,7 @@ describe("pipeline read access", () => {
       })
       .execute();
 
-    const result = await getSaleDetail(createPipelineDeps(ctx.db).saleQueries, {
+    const result = await getSaleDetail(runtime.pipeline.deps.saleQueries, {
       saleId: 22,
       actorUserId: 3,
       actorRole: "executive",

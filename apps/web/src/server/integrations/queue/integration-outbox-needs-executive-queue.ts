@@ -1,5 +1,5 @@
-import { db } from "~/lib/db/db";
 import { createJobQueue } from "~/lib/job-queue/job-queue";
+import { integrationRuntime } from "~/server/integrations/infrastructure/runtime";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import {
@@ -27,7 +27,7 @@ export function createNeedsExecutiveOutboxQueue(
 ) {
   const leaseMs = 30_000;
   const batchSize = 50;
-  const executor = deps.executor ?? db;
+  const executor = deps.executor ?? integrationRuntime.executor;
   const repo = deps.repo ?? createNeedsExecutiveOutboxRepo(executor);
 
   return createJobQueue<NeedsExecutiveOutboxJob, void>({
