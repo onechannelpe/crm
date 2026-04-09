@@ -1,108 +1,21 @@
 import { db } from "~/lib/db/db";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
-
-import { buildThrottleKeys } from "./throttle-keys";
-import {
-  AUTH_THROTTLE_POLICY,
-  AUTH_THROTTLE_SCOPES,
-  type AuthThrottleEndpoint,
-} from "./throttle-policy";
-import { calculateBlockMs, isThrottleWindowExpired } from "./throttle-state";
+import { createAuthThrottleService } from "~/server/features/auth/application/throttle-service";
 
 type Deps = {
   authThrottle: ReturnType<typeof createAuthThrottleRepo>;
 };
-const repos = {
+
+const defaultDeps = {
   authThrottle: createAuthThrottleRepo(db),
 };
+
 type CheckResult = { allowed: true } | { allowed: false; retryAfterMs: number };
 
-async function checkThrottle(
-  endpoint: AuthThrottleEndpoint,
-  identifier: string,
-  ipAddress: string,
-  deps?: Deps,
-): Promise<CheckResult> {
-  const now = Date.now();
-  const resolvedDeps = deps ?? repos;
-  const keyMap = buildThrottleKeys(endpoint, identifier, ipAddress);
-
-  const rows = await Promise.all(
-    AUTH_THROTTLE_SCOPES.map((scope) =>
-      resolvedDeps.authThrottle.findByScopeAndKey(scope, keyMap[scope]),
-    ),
-  );
-
-  for (const [index, row] of rows.entries()) {
-    const scope = AUTH_THROTTLE_SCOPES[index];
-    if (
-      !row ||
-      isThrottleWindowExpired(endpoint, scope, now, row.window_started_at)
-    ) {
-      continue;
-    }
-    if (row.blocked_until && row.blocked_until > now) {
-      return { allowed: false, retryAfterMs: row.blocked_until - now };
-    }
-  }
-
-  return { allowed: true };
-}
-
-async function recordFailure(
-  endpoint: AuthThrottleEndpoint,
-  identifier: string,
-  ipAddress: string,
-  deps?: Deps,
-): Promise<void> {
-  const now = Date.now();
-  const keyMap = buildThrottleKeys(endpoint, identifier, ipAddress);
-  const resolvedDeps = deps ?? repos;
-
-  const rows = await Promise.all(
-    AUTH_THROTTLE_SCOPES.map((scope) =>
-      resolvedDeps.authThrottle.findByScopeAndKey(scope, keyMap[scope]),
-    ),
-  );
-  await Promise.all(
-    rows.map((row, index) => {
-      const scope = AUTH_THROTTLE_SCOPES[index];
-      const reset =
-        !row ||
-        isThrottleWindowExpired(endpoint, scope, now, row.window_started_at);
-      const failures = reset ? 1 : row.failure_count + 1;
-      const block = failures > AUTH_THROTTLE_POLICY[endpoint][scope].threshold;
-      const blockedUntil = block
-        ? now + calculateBlockMs(endpoint, scope, failures)
-        : null;
-      return resolvedDeps.authThrottle.upsert({
-        scope,
-        key_hash: keyMap[scope],
-        window_started_at: reset ? now : row.window_started_at,
-        failure_count: failures,
-        blocked_until: blockedUntil,
-        updated_at: now,
-      });
-    }),
-  );
-}
-
-async function clearFailureState(
-  endpoint: AuthThrottleEndpoint,
-  identifier: string,
-  ipAddress: string,
-  deps?: Deps,
-): Promise<void> {
-  const resolvedDeps = deps ?? repos;
-  const keyMap = buildThrottleKeys(endpoint, identifier, ipAddress);
-  await resolvedDeps.authThrottle.deleteByScopeAndKey(
-    "account",
-    keyMap.account,
-  );
-  await resolvedDeps.authThrottle.deleteByScopeAndKey(
-    "ip_account",
-    keyMap.ip_account,
-  );
+function resolveThrottleService(deps?: Deps) {
+  return createAuthThrottleService({
+    authThrottle: deps?.authThrottle ?? defaultDeps.authThrottle,
+  });
 }
 
 export async function checkLoginThrottle(
@@ -110,7 +23,7 @@ export async function checkLoginThrottle(
   ipAddress: string,
   deps?: Deps,
 ): Promise<CheckResult> {
-  return checkThrottle("password_login", email, ipAddress, deps);
+  return resolveThrottleService(deps).checkLoginThrottle(email, ipAddress);
 }
 
 export async function recordLoginFailure(
@@ -118,7 +31,7 @@ export async function recordLoginFailure(
   ipAddress: string,
   deps?: Deps,
 ): Promise<void> {
-  await recordFailure("password_login", email, ipAddress, deps);
+  await resolveThrottleService(deps).recordLoginFailure(email, ipAddress);
 }
 
 export async function clearLoginFailureState(
@@ -126,7 +39,7 @@ export async function clearLoginFailureState(
   ipAddress: string,
   deps?: Deps,
 ): Promise<void> {
-  await clearFailureState("password_login", email, ipAddress, deps);
+  await resolveThrottleService(deps).clearLoginFailureState(email, ipAddress);
 }
 
 export async function checkPasskeyChallengeThrottle(
@@ -134,7 +47,10 @@ export async function checkPasskeyChallengeThrottle(
   ipAddress: string,
   deps?: Deps,
 ): Promise<CheckResult> {
-  return checkThrottle("passkey_challenge", identifier, ipAddress, deps);
+  return resolveThrottleService(deps).checkPasskeyChallengeThrottle(
+    identifier,
+    ipAddress,
+  );
 }
 
 export async function recordPasskeyChallengeFailure(
@@ -142,7 +58,10 @@ export async function recordPasskeyChallengeFailure(
   ipAddress: string,
   deps?: Deps,
 ): Promise<void> {
-  await recordFailure("passkey_challenge", identifier, ipAddress, deps);
+  await resolveThrottleService(deps).recordPasskeyChallengeFailure(
+    identifier,
+    ipAddress,
+  );
 }
 
 export async function checkPasskeyVerifyThrottle(
@@ -150,7 +69,10 @@ export async function checkPasskeyVerifyThrottle(
   ipAddress: string,
   deps?: Deps,
 ): Promise<CheckResult> {
-  return checkThrottle("passkey_verify", identifier, ipAddress, deps);
+  return resolveThrottleService(deps).checkPasskeyVerifyThrottle(
+    identifier,
+    ipAddress,
+  );
 }
 
 export async function recordPasskeyVerifyFailure(
@@ -158,7 +80,10 @@ export async function recordPasskeyVerifyFailure(
   ipAddress: string,
   deps?: Deps,
 ): Promise<void> {
-  await recordFailure("passkey_verify", identifier, ipAddress, deps);
+  await resolveThrottleService(deps).recordPasskeyVerifyFailure(
+    identifier,
+    ipAddress,
+  );
 }
 
 export async function clearPasskeyVerifyFailureState(
@@ -166,7 +91,10 @@ export async function clearPasskeyVerifyFailureState(
   ipAddress: string,
   deps?: Deps,
 ): Promise<void> {
-  await clearFailureState("passkey_verify", identifier, ipAddress, deps);
+  await resolveThrottleService(deps).clearPasskeyVerifyFailureState(
+    identifier,
+    ipAddress,
+  );
 }
 
 export async function checkTotpVerifyThrottle(
@@ -174,7 +102,10 @@ export async function checkTotpVerifyThrottle(
   ipAddress: string,
   deps?: Deps,
 ): Promise<CheckResult> {
-  return checkThrottle("totp_verify", identifier, ipAddress, deps);
+  return resolveThrottleService(deps).checkTotpVerifyThrottle(
+    identifier,
+    ipAddress,
+  );
 }
 
 export async function recordTotpVerifyFailure(
@@ -182,7 +113,10 @@ export async function recordTotpVerifyFailure(
   ipAddress: string,
   deps?: Deps,
 ): Promise<void> {
-  await recordFailure("totp_verify", identifier, ipAddress, deps);
+  await resolveThrottleService(deps).recordTotpVerifyFailure(
+    identifier,
+    ipAddress,
+  );
 }
 
 export async function clearTotpVerifyFailureState(
@@ -190,5 +124,8 @@ export async function clearTotpVerifyFailureState(
   ipAddress: string,
   deps?: Deps,
 ): Promise<void> {
-  await clearFailureState("totp_verify", identifier, ipAddress, deps);
+  await resolveThrottleService(deps).clearTotpVerifyFailureState(
+    identifier,
+    ipAddress,
+  );
 }
