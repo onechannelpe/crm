@@ -1,6 +1,7 @@
 import { createJobQueue } from "~/lib/job-queue/job-queue";
 
 import { createExportBatchRunner } from "../application/run-export-job";
+import type { JobBlobStore } from "../job-blob-store";
 import type {
   ExportBatchRunner,
   ExportJobProcessResult,
@@ -9,6 +10,7 @@ import type {
 
 interface CrmExportQueueDeps {
   runtime: IntegrationRuntime;
+  blobStore: JobBlobStore;
   runner?: ExportBatchRunner;
 }
 
@@ -18,8 +20,13 @@ export function createCrmExportQueue(
 ) {
   const leaseMs = 30_000;
   const batchSize = 10;
-  const runtime = deps.runtime;
-  const runner = deps.runner ?? createExportBatchRunner();
+  const { runtime } = deps;
+  const runner =
+    deps.runner ??
+    createExportBatchRunner({
+      runtime: deps.runtime,
+      blobStore: deps.blobStore,
+    });
 
   return createJobQueue({
     name: "crm-export",

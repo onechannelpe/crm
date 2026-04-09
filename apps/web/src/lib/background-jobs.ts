@@ -7,6 +7,7 @@ import { createCrmExportQueue } from "~/server/integrations/queue/crm-export-que
 import { createCrmImportQueue } from "~/server/integrations/queue/crm-import-queue";
 import { createNeedsExecutiveOutboxQueue } from "~/server/integrations/queue/integration-outbox-needs-executive-queue";
 import { createReadyForQuotationOutboxQueue } from "~/server/integrations/queue/integration-outbox-ready-for-quotation-queue";
+import { serverRuntime } from "~/server/runtime";
 import { createSalesExportQueue } from "~/server/sales/queue/sales-export-queue";
 import { startAccountLifecycleMaintenance } from "~/server/users/account-lifecycle-maintenance";
 
@@ -16,11 +17,25 @@ const logger = createLogger("background-jobs", { workerId: WORKER_ID });
 export function startBackgroundJobs() {
   logger.info("background_jobs_initializing", { workerId: WORKER_ID });
 
-  const crmExportQueue = createCrmExportQueue(WORKER_ID);
-  const crmImportQueue = createCrmImportQueue(WORKER_ID);
-  const needsExecutiveOutboxQueue = createNeedsExecutiveOutboxQueue(WORKER_ID);
-  const readyForQuotationOutboxQueue =
-    createReadyForQuotationOutboxQueue(WORKER_ID);
+  const { integration, blobStore } = serverRuntime.integrations;
+
+  const crmExportQueue = createCrmExportQueue(WORKER_ID, {
+    runtime: integration,
+    blobStore,
+  });
+  const crmImportQueue = createCrmImportQueue(WORKER_ID, {
+    runtime: integration,
+    blobStore,
+  });
+  const needsExecutiveOutboxQueue = createNeedsExecutiveOutboxQueue(WORKER_ID, {
+    executor: integration.executor,
+  });
+  const readyForQuotationOutboxQueue = createReadyForQuotationOutboxQueue(
+    WORKER_ID,
+    {
+      executor: integration.executor,
+    },
+  );
   const salesExportQueue = createSalesExportQueue(WORKER_ID);
   const enrichmentQueue = createEnrichmentQueue(WORKER_ID);
   const queues: QueueRunner[] = [

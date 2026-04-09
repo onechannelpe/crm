@@ -5,6 +5,7 @@ import { createClientSearchRuntime } from "./client-search-runtime";
 import { createContactAssignmentsRuntime } from "./contact-assignments-runtime";
 import { createExtensionRuntime } from "./extension-runtime";
 import { createServerInfra } from "./infra";
+import { createIntegrationsRuntime } from "./integrations-runtime";
 import { createInventoryRuntime } from "./inventory-runtime";
 import { createNotificationsRuntime } from "./notifications-runtime";
 import { createObservabilityRuntime } from "./observability-runtime";
@@ -29,6 +30,7 @@ export function createServerRuntime() {
     clientSearch: createClientSearchRuntime(infra),
     contactAssignments: createContactAssignmentsRuntime(infra),
     extension: createExtensionRuntime(infra),
+    integrations: createIntegrationsRuntime(infra),
     inventory: createInventoryRuntime(infra),
     notifications,
     observability: createObservabilityRuntime(infra),

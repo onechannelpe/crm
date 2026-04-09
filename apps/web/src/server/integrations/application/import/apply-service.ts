@@ -1,4 +1,3 @@
-import { integrationRuntime } from "~/server/integrations/infrastructure/runtime";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import { writeHistoryAndAudit } from "./history-audit-writer";
@@ -26,7 +25,7 @@ export async function applyImportRows(
       type: "import_status" | "import_prioridad";
     }>;
   },
-  executor: DatabaseExecutor = integrationRuntime.executor,
+  executor: DatabaseExecutor,
 ): Promise<{
   results: RowResult[];
   applied: number;
