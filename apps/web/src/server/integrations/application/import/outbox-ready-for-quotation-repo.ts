@@ -1,6 +1,5 @@
 import { sql } from "kysely";
 
-import { db } from "~/lib/db/db";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import { createOutboxStateRepo } from "./outbox-state-repo";
@@ -34,9 +33,7 @@ export async function enqueueReadyForQuotationOutboxEvents(
     .execute();
 }
 
-export function createReadyForQuotationOutboxRepo(
-  executor: DatabaseExecutor = db,
-) {
+export function createReadyForQuotationOutboxRepo(executor: DatabaseExecutor) {
   const stateRepo = createOutboxStateRepo(
     executor,
     "pipeline_integration_outbox_ready_for_quotation",

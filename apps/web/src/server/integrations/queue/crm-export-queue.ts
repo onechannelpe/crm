@@ -1,8 +1,6 @@
-import { db } from "~/lib/db/db";
 import { createJobQueue } from "~/lib/job-queue/job-queue";
 
 import { createExportBatchRunner } from "../application/run-export-job";
-import { createIntegrationRuntime } from "../infrastructure/runtime";
 import type {
   ExportBatchRunner,
   ExportJobProcessResult,
@@ -10,17 +8,17 @@ import type {
 } from "../types";
 
 interface CrmExportQueueDeps {
-  runtime?: IntegrationRuntime;
+  runtime: IntegrationRuntime;
   runner?: ExportBatchRunner;
 }
 
 export function createCrmExportQueue(
   workerId: string,
-  deps: CrmExportQueueDeps = {},
+  deps: CrmExportQueueDeps,
 ) {
   const leaseMs = 30_000;
   const batchSize = 10;
-  const runtime = deps.runtime ?? createIntegrationRuntime(db);
+  const runtime = deps.runtime;
   const runner = deps.runner ?? createExportBatchRunner();
 
   return createJobQueue({

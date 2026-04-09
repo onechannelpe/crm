@@ -1,6 +1,5 @@
 import { sql } from "kysely";
 
-import { db } from "~/lib/db/db";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import { createOutboxStateRepo } from "./outbox-state-repo";
@@ -34,9 +33,7 @@ export async function enqueueNeedsExecutiveOutboxEvents(
     .execute();
 }
 
-export function createNeedsExecutiveOutboxRepo(
-  executor: DatabaseExecutor = db,
-) {
+export function createNeedsExecutiveOutboxRepo(executor: DatabaseExecutor) {
   const stateRepo = createOutboxStateRepo(
     executor,
     "pipeline_integration_outbox_needs_executive_input",

@@ -1,14 +1,14 @@
-import { config } from "~/lib/config";
-import { db } from "~/lib/db/db";
 import { createLeadExportQuery } from "~/server/pipeline/infrastructure/lead-export-query";
 import { createLeadRepo } from "~/server/pipeline/infrastructure/lead-repo";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createUsersRepo } from "~/server/users/repos-users";
 
-import { createJobBlobStore } from "../job-blob-store";
 import type { IntegrationRuntime } from "../types";
 import { createIntegrationJobRepo } from "./integration-job-repo";
 
-export function createIntegrationRuntime(executor = db): IntegrationRuntime {
+export function createIntegrationRuntime(
+  executor: DatabaseExecutor,
+): IntegrationRuntime {
   return {
     executor,
     jobs: createIntegrationJobRepo(executor),
@@ -17,8 +17,3 @@ export function createIntegrationRuntime(executor = db): IntegrationRuntime {
     users: createUsersRepo(executor),
   };
 }
-
-export const integrationRuntime = createIntegrationRuntime();
-export const integrationJobBlobStore = createJobBlobStore(
-  config.uploads.storageRoot,
-);
