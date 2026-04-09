@@ -99,15 +99,16 @@ describe("session repository lifecycle", () => {
 
   it("bulk deletes sessions for user", async () => {
     const now = Date.now();
-    await Promise.all(
-      Array.from({ length: 200 }, (_, i) =>
-        ctx.repos.sessions.create({
+    await ctx.db
+      .insertInto("user_sessions")
+      .values(
+        Array.from({ length: 200 }, (_, i) => ({
           id: `bulk-${i}`,
           user_id: 1,
           branch_id: 1,
-          role: "executive",
-          session_class: "app",
-          primary_auth_method: "password",
+          role: "executive" as const,
+          session_class: "app" as const,
+          primary_auth_method: "password" as const,
           strong_auth_method: null,
           strong_auth_at: null,
           ip_address: null,
@@ -115,9 +116,9 @@ describe("session repository lifecycle", () => {
           created_at: now,
           last_activity: now,
           expires_at: now + 60_000,
-        }),
-      ),
-    );
+        })),
+      )
+      .execute();
 
     await ctx.repos.sessions.deleteAllForUser(1);
 

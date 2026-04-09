@@ -16,6 +16,12 @@ export default defineConfig({
           globalSetup: ["./tests/setup/global-setup.ts"],
           include: ["tests/**/*.test.ts"],
           environment: "node",
+          env: {
+            WEB_DB_URL: `file:${path.resolve(
+              __dirname,
+              ".vitest-db/__global-test-runtime.db",
+            )}`,
+          },
           fileParallelism: true,
           alias: {
             "~": path.resolve(__dirname, "./src"),
