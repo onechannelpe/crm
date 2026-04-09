@@ -44,15 +44,13 @@ export async function completeOnboarding(
 ): Promise<OnboardingRedirectResponse> {
   const session = await requireSession();
   const request = getRequestClientMetadata();
-  const result = await completeOnboardingService(
-    createAuthOnboardingContext(),
-    {
-      session,
-      phoneE164: normalizePeruvianPhone(phoneE164),
-      ipAddress: request.ipAddress,
-      userAgent: request.userAgent,
-    },
-  );
+  const onboardingContext = createAuthOnboardingContext();
+  const result = await completeOnboardingService(onboardingContext, {
+    session,
+    phoneE164: normalizePeruvianPhone(phoneE164),
+    ipAddress: request.ipAddress,
+    userAgent: request.userAgent,
+  });
   if (isErr(result)) {
     mapOnboardingError(result.error);
   }
@@ -66,8 +64,9 @@ export async function completePasskeyOnboarding(
 ): Promise<OnboardingRedirectResponse> {
   const session = await requireSession();
   const request = getRequestClientMetadata();
+  const onboardingContext = createAuthOnboardingContext();
   const registrationResult = await finishPasskeyRegistrationService(
-    createAuthOnboardingContext().repos,
+    onboardingContext.repos,
     {
       session,
       challengeId,
@@ -80,19 +79,16 @@ export async function completePasskeyOnboarding(
   if (isErr(registrationResult)) {
     throw internalError(registrationResult.error.message);
   }
-  const result = await completeOnboardingService(
-    createAuthOnboardingContext(),
-    {
-      session: {
-        ...session,
-        strongAuthMethod: "passkey",
-        strongAuthAt: Date.now(),
-      },
-      phoneE164: normalizePeruvianPhone(phoneE164),
-      ipAddress: request.ipAddress,
-      userAgent: request.userAgent,
+  const result = await completeOnboardingService(onboardingContext, {
+    session: {
+      ...session,
+      strongAuthMethod: "passkey",
+      strongAuthAt: Date.now(),
     },
-  );
+    phoneE164: normalizePeruvianPhone(phoneE164),
+    ipAddress: request.ipAddress,
+    userAgent: request.userAgent,
+  });
   if (isErr(result)) {
     mapOnboardingError(result.error);
   }

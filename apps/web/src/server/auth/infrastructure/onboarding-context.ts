@@ -1,11 +1,12 @@
-import { db } from "~/lib/db/db";
 import { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
 import { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
 import { createNotificationContactsRepo } from "~/server/notifications/repos-contacts";
 import { createNotificationPreferencesRepo } from "~/server/notifications/repos-preferences";
+import { serverRuntime } from "~/server/runtime";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import type { RepositoryTransactionRunner } from "~/server/shared/transaction";
 import { createPasskeysRepo } from "~/server/users/repos-passkeys";
@@ -26,34 +27,38 @@ export type AuthOnboardingRepos = {
   notificationPreferences: ReturnType<typeof createNotificationPreferencesRepo>;
 };
 
-function createAuthOnboardingRepos(currentDb: typeof db): AuthOnboardingRepos {
+function createAuthOnboardingRepos(
+  executor: DatabaseExecutor,
+): AuthOnboardingRepos {
   return {
-    users: createUsersRepo(currentDb),
-    sessions: createSessionRepository(currentDb),
-    loginFlows: createLoginFlowsRepo(currentDb),
-    passkeys: createPasskeysRepo(currentDb),
-    webauthnChallenges: createWebauthnChallengesRepo(currentDb),
-    auditLogs: createAuditLogsRepo(currentDb),
-    authThrottle: createAuthThrottleRepo(currentDb),
-    authEvents: createAuthEventsRepo(currentDb),
-    userTotpFactors: createUserTotpFactorsRepo(currentDb),
-    notificationContacts: createNotificationContactsRepo(currentDb),
-    notificationPreferences: createNotificationPreferencesRepo(currentDb),
+    users: createUsersRepo(executor),
+    sessions: createSessionRepository(executor),
+    loginFlows: createLoginFlowsRepo(executor),
+    passkeys: createPasskeysRepo(executor),
+    webauthnChallenges: createWebauthnChallengesRepo(executor),
+    auditLogs: createAuditLogsRepo(executor),
+    authThrottle: createAuthThrottleRepo(executor),
+    authEvents: createAuthEventsRepo(executor),
+    userTotpFactors: createUserTotpFactorsRepo(executor),
+    notificationContacts: createNotificationContactsRepo(executor),
+    notificationPreferences: createNotificationPreferencesRepo(executor),
   };
 }
 
-const runInRepositoryTransaction: RepositoryTransactionRunner<
-  AuthOnboardingRepos
-> = (operation) =>
-  db
-    .transaction()
-    .execute((transactionDb) =>
-      operation(createAuthOnboardingRepos(transactionDb)),
-    );
+export function createAuthOnboardingContext(
+  executor: DatabaseExecutor = serverRuntime.infra.db,
+) {
+  const runInRepositoryTransaction: RepositoryTransactionRunner<
+    AuthOnboardingRepos
+  > = (operation) =>
+    executor
+      .transaction()
+      .execute((transactionDb) =>
+        operation(createAuthOnboardingRepos(transactionDb)),
+      );
 
-export function createAuthOnboardingContext() {
   return {
-    repos: createAuthOnboardingRepos(db),
+    repos: createAuthOnboardingRepos(executor),
     runInRepositoryTransaction,
   };
 }

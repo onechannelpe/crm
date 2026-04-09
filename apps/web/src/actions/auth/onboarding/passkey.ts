@@ -17,8 +17,9 @@ import { isErr } from "~/server/shared/result";
 export async function beginPasskeyRegistration(): Promise<PasskeyEnrollmentChallenge> {
   const session = await requireSession();
   const { ipAddress } = getRequestClientMetadata();
+  const onboardingContext = createAuthOnboardingContext();
   const result = await beginPasskeyRegistrationService(
-    createAuthOnboardingContext().repos,
+    onboardingContext.repos,
     {
       userId: session.userId,
       ipAddress,
@@ -37,8 +38,9 @@ export async function finishPasskeyRegistration(
 ): Promise<void> {
   const session = await requireSession();
   const request = getRequestClientMetadata();
+  const onboardingContext = createAuthOnboardingContext();
   const result = await finishPasskeyRegistrationService(
-    createAuthOnboardingContext().repos,
+    onboardingContext.repos,
     {
       session,
       challengeId,

@@ -4,10 +4,8 @@ import { requirePermission } from "~/lib/auth/access/session";
 import { assertPositiveInt } from "~/lib/contracts/guards";
 import { getIntegrationJobQuery } from "~/server/integrations/application/get-integration-job";
 import { integrationJobBlobStore } from "~/server/integrations/infrastructure/runtime";
-import { getObservabilityRuntime } from "~/server/observability/runtime";
+import { serverRuntime } from "~/server/runtime";
 import { createAppContext } from "~/server/shared/action-runtime";
-
-const { observabilityService } = getObservabilityRuntime();
 
 export async function GET(event: Pick<APIEvent, "params">): Promise<Response> {
   try {
@@ -15,6 +13,7 @@ export async function GET(event: Pick<APIEvent, "params">): Promise<Response> {
     const session = await requirePermission("integration:manage");
     const ctx = createAppContext(session);
     const startedAt = ctx.now();
+    const { observabilityService } = serverRuntime.observability;
 
     const job = await getIntegrationJobQuery(safeJobId);
     if (!job) {

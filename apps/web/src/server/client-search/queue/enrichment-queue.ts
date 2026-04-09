@@ -1,13 +1,13 @@
 import { createJobQueue } from "~/lib/job-queue/job-queue";
+import { serverRuntime } from "~/server/runtime";
 
-import { getClientSearchRuntime } from "../runtime";
 import type { SearchEnrichmentProcessResult } from "../types";
 
 export function createEnrichmentQueue(workerId: string) {
   const leaseMs = 30_000;
   const batchSize = 20;
   const maxConcurrency = 3;
-  const { searchEnrichmentService } = getClientSearchRuntime();
+  const { searchEnrichmentService } = serverRuntime.clientSearch;
 
   return createJobQueue({
     name: "enrichment",

@@ -3,7 +3,6 @@ import type { APIEvent } from "@solidjs/start/server";
 import { requirePermission } from "~/lib/auth/access/session";
 import { config } from "~/lib/config";
 import { assertPositiveInt } from "~/lib/contracts/guards";
-import { getObservabilityRuntime } from "~/server/observability/runtime";
 import { serverRuntime } from "~/server/runtime";
 import { downloadSalesExportById } from "~/server/sales-exports/download";
 import { createSalesExportBlobStore } from "~/server/sales/export-blob-store";
@@ -22,7 +21,7 @@ function mapErrorToStatus(error: DomainError): number {
 
 export async function GET(event: Pick<APIEvent, "params">): Promise<Response> {
   try {
-    const { observabilityService } = getObservabilityRuntime();
+    const { observabilityService } = serverRuntime.observability;
     const salesExportBlobStore = createSalesExportBlobStore(
       config.uploads.storageRoot,
     );

@@ -1,15 +1,18 @@
-import { db } from "~/lib/db/db";
 import { createPasswordResetTokensRepo } from "~/server/auth/repos-password-reset";
 import { getNotificationRuntime } from "~/server/notifications/runtime";
+import { serverRuntime } from "~/server/runtime";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createUsersRepo } from "~/server/users/repos-users";
 
 const { notificationSender } = getNotificationRuntime();
 
-export function createPasswordResetContext() {
+export function createPasswordResetContext(
+  executor: DatabaseExecutor = serverRuntime.infra.db,
+) {
   return {
     repos: {
-      users: createUsersRepo(db),
-      passwordResetTokens: createPasswordResetTokensRepo(db),
+      users: createUsersRepo(executor),
+      passwordResetTokens: createPasswordResetTokensRepo(executor),
     },
     notificationSender,
   };

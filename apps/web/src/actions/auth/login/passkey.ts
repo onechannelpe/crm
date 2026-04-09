@@ -49,7 +49,8 @@ export async function finishPasskeyLogin(
     }
 > {
   const request = getRequestClientMetadata();
-  const result = await finishPasskeyLoginWithDeps(createAuthLoginContext(), {
+  const loginContext = createAuthLoginContext();
+  const result = await finishPasskeyLoginWithDeps(loginContext, {
     flowId,
     response,
     ipAddress: request.ipAddress,

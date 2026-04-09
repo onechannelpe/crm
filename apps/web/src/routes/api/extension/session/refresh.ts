@@ -1,7 +1,7 @@
 import type { APIEvent } from "@solidjs/start/server";
 
 import { isRefreshExtensionSessionRequest } from "~/server/extension/contracts";
-import { getExtensionApiRuntime } from "~/server/extension/runtime";
+import { serverRuntime } from "~/server/runtime";
 import { isErr } from "~/server/shared/result";
 
 import { readJsonBody } from "../json-body";
@@ -21,7 +21,7 @@ export async function POST(event: APIEvent): Promise<Response> {
     }
 
     const result =
-      await getExtensionApiRuntime().extensionService.refreshInstallationSession(
+      await serverRuntime.extension.extensionService.refreshInstallationSession(
         body,
       );
     if (isErr(result)) {

@@ -2,10 +2,8 @@
 
 import { internalError, validationError } from "~/lib/app-errors";
 import { requirePermission } from "~/lib/auth/access/session";
-import { getClientSearchRuntime } from "~/server/client-search/runtime";
+import { serverRuntime } from "~/server/runtime";
 import { isErr } from "~/server/shared/result";
-
-const { searchEnrichmentService } = getClientSearchRuntime();
 
 function assertDocumentType(value: string): "dni" | "ruc" {
   if (value === "dni" || value === "ruc") return value;
@@ -27,6 +25,7 @@ export async function requestSearchEnrichment(
   documentValue: string,
 ) {
   const session = await requirePermission("search:use");
+  const { searchEnrichmentService } = serverRuntime.clientSearch;
   const result = await searchEnrichmentService.request(
     assertDocumentType(documentType),
     documentValue,
@@ -41,6 +40,7 @@ export async function getSearchEnrichmentStatus(
   documentValue: string,
 ) {
   await requirePermission("search:use");
+  const { searchEnrichmentService } = serverRuntime.clientSearch;
   const result = await searchEnrichmentService.status(
     assertDocumentType(documentType),
     documentValue,
