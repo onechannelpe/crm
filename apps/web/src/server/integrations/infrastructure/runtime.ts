@@ -10,6 +10,7 @@ import { createIntegrationJobRepo } from "./integration-job-repo";
 
 export function createIntegrationRuntime(executor = db): IntegrationRuntime {
   return {
+    executor,
     jobs: createIntegrationJobRepo(executor),
     leads: createLeadRepo(executor),
     leadExportQuery: createLeadExportQuery(executor),

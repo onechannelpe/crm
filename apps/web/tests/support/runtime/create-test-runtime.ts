@@ -1,4 +1,5 @@
 import { createAuthRuntime } from "~/server/runtime/auth-runtime";
+import { createPipelineRuntime } from "~/server/runtime/pipeline-runtime";
 
 import {
   cleanupTestDb,
@@ -18,6 +19,7 @@ export interface TestRuntime {
     set(value: number): void;
   };
   auth: ReturnType<typeof createAuthRuntime>;
+  pipeline: ReturnType<typeof createPipelineRuntime>;
   dispose(): Promise<void>;
 }
 
@@ -42,11 +44,17 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
     now: now.get,
     logger,
   });
+  const pipeline = createPipelineRuntime({
+    db: ctx.db,
+    now: now.get,
+    logger,
+  });
 
   return {
     ctx,
     now,
     auth,
+    pipeline,
     async dispose() {
       await cleanupTestDb(ctx);
     },

@@ -1,11 +1,6 @@
-import { config } from "~/lib/config";
-import { db } from "~/lib/db/db";
 import { createJobQueue } from "~/lib/job-queue/job-queue";
+import { salesRuntime } from "~/server/runtime/sales-runtime";
 
-import { createSalesExportBlobStore } from "../export-blob-store";
-import { createSalesExportService } from "../export-service";
-import { createReportExportRepo } from "../repos-report-exports";
-import { createSalesRecordsRepo } from "../repos-sales-records";
 import type { SalesExportProcessResult, SalesExportService } from "../types";
 
 interface SalesExportQueueDeps {
@@ -20,15 +15,7 @@ export function createSalesExportQueue(
 ) {
   const leaseMs = deps.leaseMs ?? 30_000;
   const batchSize = deps.batchSize ?? 25;
-  const service =
-    deps.service ??
-    createSalesExportService(
-      {
-        reportExportJobs: createReportExportRepo(db),
-        salesRecords: createSalesRecordsRepo(db),
-      },
-      createSalesExportBlobStore(config.uploads.storageRoot),
-    );
+  const service = deps.service ?? salesRuntime.salesExportService;
 
   return createJobQueue({
     name: "sales-export",
