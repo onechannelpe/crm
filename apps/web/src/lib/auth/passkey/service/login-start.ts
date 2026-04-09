@@ -1,6 +1,6 @@
-import { createAuthThrottleService } from "~/server/features/auth/application/throttle-service";
 import { recordAuthEvent } from "~/lib/auth/security/auth-events";
 import { config } from "~/lib/config";
+import { createAuthThrottleService } from "~/server/features/auth/application/throttle-service";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { PasskeyAuthRepos } from "./shared";

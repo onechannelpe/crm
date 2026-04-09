@@ -1,7 +1,6 @@
 import type { AuthenticationResponseJSON } from "@simplewebauthn/server";
 
 import { loadActiveAuthContext } from "~/lib/auth/context/auth-context";
-import { createAuthThrottleService } from "~/server/features/auth/application/throttle-service";
 import { evaluateLoginPolicy } from "~/lib/auth/policy/login-policy";
 import {
   isPasskeyRequestError,
@@ -10,6 +9,7 @@ import {
 import { recordAuthEvent } from "~/lib/auth/security/auth-events";
 import { sendAlertOnNewLoginSource } from "~/lib/auth/security/login-source-alert";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
+import { createAuthThrottleService } from "~/server/features/auth/application/throttle-service";
 import type { UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -89,7 +89,10 @@ export function createPasskeyLoginFinishService(
           return Err({ kind: "invalid_credentials" });
         }
         if (!challenge || challenge.type !== "authentication") {
-          await throttleService.recordPasskeyVerifyFailure(identifier, input.ipAddress);
+          await throttleService.recordPasskeyVerifyFailure(
+            identifier,
+            input.ipAddress,
+          );
           await recordAuthEvent(repos, {
             userId: null,
             identifier,
@@ -105,7 +108,10 @@ export function createPasskeyLoginFinishService(
 
         await repos.webauthnChallenges.delete(challenge.id);
         if (challenge.expires_at < Date.now()) {
-          await throttleService.recordPasskeyVerifyFailure(identifier, input.ipAddress);
+          await throttleService.recordPasskeyVerifyFailure(
+            identifier,
+            input.ipAddress,
+          );
           await recordAuthEvent(repos, {
             userId: challenge.user_id,
             identifier,
@@ -135,7 +141,10 @@ export function createPasskeyLoginFinishService(
             return Err(unexpectedPasskeyLoginError());
           }
 
-          await throttleService.recordPasskeyVerifyFailure(identifier, input.ipAddress);
+          await throttleService.recordPasskeyVerifyFailure(
+            identifier,
+            input.ipAddress,
+          );
           await recordAuthEvent(repos, {
             userId: challenge.user_id,
             identifier,

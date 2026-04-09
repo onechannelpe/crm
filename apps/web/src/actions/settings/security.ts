@@ -77,9 +77,8 @@ export async function changePassword(
 export async function removeAllPasskeys(): Promise<ActionSuccess> {
   const { passkeys, auditLogs } = serverRuntime.security;
   const session = await requireSession();
-  const { user, strongAuthStatus } = await requireCurrentUserWithStrongAuthState(
-    session.userId,
-  );
+  const { user, strongAuthStatus } =
+    await requireCurrentUserWithStrongAuthState(session.userId);
   assertProtectedRoleKeepsStrongAuth({
     role: user.role,
     removingTotp: false,
@@ -105,9 +104,8 @@ export async function disableTotp(): Promise<ActionSuccess> {
   const { userTotpFactors, userTotpRecoveryCodes, auditLogs } =
     serverRuntime.security;
   const session = await requireSession();
-  const { user, strongAuthStatus } = await requireCurrentUserWithStrongAuthState(
-    session.userId,
-  );
+  const { user, strongAuthStatus } =
+    await requireCurrentUserWithStrongAuthState(session.userId);
   assertProtectedRoleKeepsStrongAuth({
     role: user.role,
     removingTotp: true,

@@ -87,9 +87,9 @@ describe("auth throttle", () => {
 
     await runSeries(9, () => svc.recordPasskeyChallengeFailure(email, ip));
 
-    expect(
-      (await svc.checkPasskeyChallengeThrottle(email, ip)).allowed,
-    ).toBe(false);
+    expect((await svc.checkPasskeyChallengeThrottle(email, ip)).allowed).toBe(
+      false,
+    );
     expect((await svc.checkLoginThrottle(email, ip)).allowed).toBe(true);
   });
 

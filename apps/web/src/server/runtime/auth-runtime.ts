@@ -1,3 +1,5 @@
+import type { NotificationService } from "@crm/notifications";
+
 import { createAdminSessionRevocationContext } from "~/server/auth/infrastructure/admin-session-revocation-context";
 import { createAdminSessionsReadContext } from "~/server/auth/infrastructure/admin-sessions-read-context";
 import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
@@ -13,8 +15,6 @@ import { createSessionService } from "~/server/features/auth/application/session
 import { createAuthThrottleService } from "~/server/features/auth/application/throttle-service";
 import { createAuthSessionRepo } from "~/server/features/auth/infra/session-repo";
 import { createAuthUsersRepo } from "~/server/features/auth/infra/users-repo";
-
-import type { NotificationService } from "@crm/notifications";
 
 import type { ServerInfra } from "./infra";
 

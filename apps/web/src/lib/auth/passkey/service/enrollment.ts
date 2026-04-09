@@ -1,9 +1,9 @@
 import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 
-import { createAuthThrottleService } from "~/server/features/auth/application/throttle-service";
 import { isPasskeyRequestError } from "~/lib/auth/providers/passkey-provider";
 import { config } from "~/lib/config";
 import { assertPositiveInt } from "~/lib/contracts/guards";
+import { createAuthThrottleService } from "~/server/features/auth/application/throttle-service";
 import { domainError } from "~/server/shared/domain-error";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
@@ -132,7 +132,10 @@ export function createPasskeyEnrollmentService(
           challenge.type !== "registration" ||
           challenge.user_id !== input.userId
         ) {
-          await throttleService.recordPasskeyVerifyFailure(identifier, input.ipAddress);
+          await throttleService.recordPasskeyVerifyFailure(
+            identifier,
+            input.ipAddress,
+          );
           return Err(
             domainError(
               "validation",
@@ -144,7 +147,10 @@ export function createPasskeyEnrollmentService(
 
         await repos.webauthnChallenges.delete(challenge.id);
         if (challenge.expires_at < Date.now()) {
-          await throttleService.recordPasskeyVerifyFailure(identifier, input.ipAddress);
+          await throttleService.recordPasskeyVerifyFailure(
+            identifier,
+            input.ipAddress,
+          );
           return Err(
             domainError(
               "validation",
@@ -171,7 +177,10 @@ export function createPasskeyEnrollmentService(
             );
           }
 
-          await throttleService.recordPasskeyVerifyFailure(identifier, input.ipAddress);
+          await throttleService.recordPasskeyVerifyFailure(
+            identifier,
+            input.ipAddress,
+          );
           return Err(
             domainError(
               "validation",
