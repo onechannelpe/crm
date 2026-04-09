@@ -2,12 +2,11 @@
 
 import type { InventoryItemView } from "~/actions/inventory/contracts";
 import { listInventoryItems } from "~/server/inventory/application/list-inventory-items";
-import { createInventoryRepo } from "~/server/inventory/repos";
 import { serverRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function getInventoryItems(): Promise<InventoryItemView[]> {
-  const inventory = createInventoryRepo(serverRuntime.infra.db);
+  const inventory = serverRuntime.inventory.inventory;
   return runAction({
     actionName: "inventory.list_items",
     access: { kind: "permission", permission: "inventory:read" },
