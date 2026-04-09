@@ -6,20 +6,19 @@ import {
   requireRole,
 } from "~/lib/auth/access/session";
 import { hasRole } from "~/lib/auth/access/session";
-import { db } from "~/lib/db/db";
 import type { AuditPolicySnapshot } from "~/server/audit-reader/contracts";
 import {
   createAuditPolicyService,
   type UpsertAuditPolicyInput,
 } from "~/server/audit-reader/policy-service";
+import { serverRuntime } from "~/server/runtime";
 import { createAuditActionPoliciesRepo } from "~/server/shared/repos-audit-action-policies";
-
-const auditPolicyService = createAuditPolicyService({
-  auditActionPolicies: createAuditActionPoliciesRepo(db),
-});
 
 export async function getAuditPolicySnapshot(): Promise<AuditPolicySnapshot> {
   await requirePermission("audit:read");
+  const auditPolicyService = createAuditPolicyService({
+    auditActionPolicies: createAuditActionPoliciesRepo(serverRuntime.infra.db),
+  });
   return auditPolicyService.getSnapshot();
 }
 
@@ -35,6 +34,9 @@ export async function upsertAuditPolicy(input: {
   isActive: boolean;
 }): Promise<void> {
   const session = await requireRole("admin");
+  const auditPolicyService = createAuditPolicyService({
+    auditActionPolicies: createAuditActionPoliciesRepo(serverRuntime.infra.db),
+  });
   const payload: UpsertAuditPolicyInput = {
     action: input.action,
     riskLevel: input.riskLevel,

@@ -8,11 +8,10 @@ import { createContactAssignmentReadContext } from "~/server/contact-assignments
 import { runAction } from "~/server/shared/action-runtime";
 import { Ok } from "~/server/shared/result";
 
-const readRepos = createContactAssignmentReadContext();
-
 export async function getActiveContactAssignments(): Promise<
   ActiveContactAssignmentView[]
 > {
+  const readRepos = createContactAssignmentReadContext();
   return runAction({
     actionName: "contact_assignments.list_active",
     access: { kind: "permission", permission: "lead:work" },
@@ -23,6 +22,7 @@ export async function getActiveContactAssignments(): Promise<
 }
 
 export async function getMyContactAssignmentCapacity(): Promise<LeadCapacitySnapshot> {
+  const readRepos = createContactAssignmentReadContext();
   return runAction({
     actionName: "contact_assignments.get_capacity",
     access: { kind: "permission", permission: "capacity:read:self" },

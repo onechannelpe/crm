@@ -2,12 +2,9 @@
 
 import { requireAuth } from "~/lib/auth/access/session";
 import { requirePermission } from "~/lib/auth/access/session";
-import { db } from "~/lib/db/db";
 import { createContactAssignmentsRepo } from "~/server/contacts/repos-assignments";
+import { serverRuntime } from "~/server/runtime";
 import { createSalesRecordsRepo } from "~/server/sales/repos-sales-records";
-
-const contactAssignments = createContactAssignmentsRepo(db);
-const salesRecords = createSalesRecordsRepo(db);
 
 export interface DashboardStats {
   activeLeads: number;
@@ -17,6 +14,10 @@ export interface DashboardStats {
 }
 
 export async function getDashboardStats(): Promise<DashboardStats> {
+  const contactAssignments = createContactAssignmentsRepo(
+    serverRuntime.infra.db,
+  );
+  const salesRecords = createSalesRecordsRepo(serverRuntime.infra.db);
   const session = await requireAuth();
   await requirePermission("sales:review");
 

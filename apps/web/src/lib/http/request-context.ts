@@ -15,7 +15,6 @@ import { serverRuntime } from "~/server/runtime";
 import { getRequestPublicOrigin } from "./public-origin";
 
 const REQUEST_SESSION_ACTIVITY_UPDATE_MS = 5 * 60 * 1000;
-const requestSessions = serverRuntime.security.requestSessions;
 
 export interface RequestContext {
   publicOrigin: string;
@@ -96,6 +95,7 @@ async function loadRequestSessionState(
   createIfMissing: boolean,
 ): Promise<{ id: string; csrfToken: string } | null> {
   const existingId = getRequestSessionCookie();
+  const requestSessions = serverRuntime.security.requestSessions;
   if (existingId) {
     const existing = await requestSessions.findById(existingId);
     const now = Date.now();

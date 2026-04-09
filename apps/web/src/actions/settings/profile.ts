@@ -3,12 +3,11 @@
 import { requireSession } from "~/lib/auth/access/session";
 import type { ActionSuccess } from "~/lib/contracts/common";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
-import { db } from "~/lib/db/db";
+import { serverRuntime } from "~/server/runtime";
 import { createUsersRepo } from "~/server/users/repos-users";
 
-const users = createUsersRepo(db);
-
 export async function updateUserProfile(phone: string): Promise<ActionSuccess> {
+  const users = createUsersRepo(serverRuntime.infra.db);
   const safePhone = assertNonEmptyString(phone, "phone");
   const session = await requireSession();
 
