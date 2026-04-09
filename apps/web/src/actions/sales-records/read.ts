@@ -6,12 +6,12 @@ import type {
   SalesRecordProductOptionView,
   SalesRecordQueueItemView,
 } from "~/actions/sales-records/contracts";
+import { serverRuntime } from "~/server/runtime";
 import { getBootstrap as getBootstrapService } from "~/server/sales-records/application/queries/get-bootstrap";
 import { getEditContext as getEditContextService } from "~/server/sales-records/application/queries/get-fix-context";
 import { listConfirmed as listConfirmedService } from "~/server/sales-records/application/queries/list-confirmed";
 import { listPending as listPendingService } from "~/server/sales-records/application/queries/list-pending";
 import { listProducts as listProductsService } from "~/server/sales-records/application/queries/list-products";
-import { createSalesRecordReadContext } from "~/server/sales-records/infrastructure/read-context";
 import { runAction } from "~/server/shared/action-runtime";
 import { Ok } from "~/server/shared/result";
 
@@ -24,7 +24,7 @@ export async function listSalesRecordProducts(): Promise<
     actionName: "sales_records.products.read",
     access: { kind: "permission", permission: "sales:create" },
     execute: async () =>
-      Ok(await listProductsService(createSalesRecordReadContext())),
+      Ok(await listProductsService(serverRuntime.salesRecords.read)),
   });
 }
 
@@ -38,7 +38,7 @@ export async function getSalesRecordBootstrap(
     access: { kind: "permission", permission: "sales:create" },
     input: { contactId: safeContactId },
     execute: async (ctx) =>
-      getBootstrapService(ctx, createSalesRecordReadContext(), {
+      getBootstrapService(ctx, serverRuntime.salesRecords.read, {
         contactId: safeContactId,
       }),
   });
@@ -51,7 +51,7 @@ export async function listPendingSalesRecords(): Promise<
     actionName: "sales_records.pending.read",
     access: { kind: "permission", permission: "sales:review" },
     execute: async (ctx) =>
-      Ok(await listPendingService(ctx, createSalesRecordReadContext())),
+      Ok(await listPendingService(ctx, serverRuntime.salesRecords.read)),
   });
 }
 
@@ -62,7 +62,7 @@ export async function listConfirmedSalesRecords(): Promise<
     actionName: "sales_records.confirmed.read",
     access: { kind: "permission", permission: "sales:review" },
     execute: async (ctx) =>
-      Ok(await listConfirmedService(ctx, createSalesRecordReadContext())),
+      Ok(await listConfirmedService(ctx, serverRuntime.salesRecords.read)),
   });
 }
 
@@ -75,7 +75,7 @@ export async function getSalesRecordEditContext(
     access: { kind: "permission", permission: "sales:create" },
     input: { recordId: safeRecordId },
     execute: async (ctx) =>
-      getEditContextService(ctx, createSalesRecordReadContext(), {
+      getEditContextService(ctx, serverRuntime.salesRecords.read, {
         recordId: safeRecordId,
       }),
   });

@@ -1,4 +1,4 @@
-import { db } from "~/lib/db/db";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import { createTeamsRepo } from "~/server/users/repos-teams";
 import { createUserInvitesRepo } from "~/server/users/repos-user-invites";
@@ -6,21 +6,21 @@ import { createUsersRepo } from "~/server/users/repos-users";
 
 import { createInviteService } from "../application/invite-service";
 
-function createInviteRepos(currentDb: typeof db) {
+function createInviteRepos(executor: DatabaseExecutor) {
   return {
-    auditLogs: createAuditLogsRepo(currentDb),
-    teams: createTeamsRepo(currentDb),
-    userInvites: createUserInvitesRepo(currentDb),
-    users: createUsersRepo(currentDb),
+    auditLogs: createAuditLogsRepo(executor),
+    teams: createTeamsRepo(executor),
+    userInvites: createUserInvitesRepo(executor),
+    users: createUsersRepo(executor),
   };
 }
 
-export function createInviteServiceContext() {
-  const repos = createInviteRepos(db);
+export function createInviteServiceContext(executor: DatabaseExecutor) {
+  const repos = createInviteRepos(executor);
 
   const inviteService = createInviteService(repos, {
     runInTransaction(operation) {
-      return db
+      return executor
         .transaction()
         .execute((transactionDb) =>
           operation(createInviteRepos(transactionDb)),

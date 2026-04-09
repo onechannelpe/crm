@@ -1,6 +1,5 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import { issueSessionTransition } from "~/lib/auth/session/session-transition";
-import { db } from "~/lib/db/db";
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
 import type {
   InviteService,
@@ -9,18 +8,19 @@ import type {
 import { createInviteServiceContext } from "~/server/invites/infrastructure/invite-service-context";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import { createTeamsRepo } from "~/server/users/repos-teams";
 import { createUserInvitesRepo } from "~/server/users/repos-user-invites";
 import { createUsersRepo } from "~/server/users/repos-users";
 
-function createTeamInviteRepos(currentDb: typeof db) {
+function createTeamInviteRepos(executor: DatabaseExecutor) {
   return {
-    teams: createTeamsRepo(currentDb),
-    userInvites: createUserInvitesRepo(currentDb),
-    users: createUsersRepo(currentDb),
-    sessions: createSessionRepository(currentDb),
-    auditLogs: createAuditLogsRepo(currentDb),
+    teams: createTeamsRepo(executor),
+    userInvites: createUserInvitesRepo(executor),
+    users: createUsersRepo(executor),
+    sessions: createSessionRepository(executor),
+    auditLogs: createAuditLogsRepo(executor),
   };
 }
 
@@ -42,9 +42,11 @@ interface TeamInviteContext {
   }): Promise<{ token: string }>;
 }
 
-export function createTeamInviteContext(): TeamInviteContext {
-  const repos = createTeamInviteRepos(db);
-  const { inviteService } = createInviteServiceContext();
+export function createTeamInviteContext(
+  executor: DatabaseExecutor,
+): TeamInviteContext {
+  const repos = createTeamInviteRepos(executor);
+  const { inviteService } = createInviteServiceContext(executor);
 
   return {
     repos: {
@@ -55,7 +57,7 @@ export function createTeamInviteContext(): TeamInviteContext {
     inviteService,
     async enforceInviteCreateRateLimit(userId: number) {
       await checkActionRateLimit("team.invite.create", userId, {
-        actionRateLimits: createActionRateLimitsRepo(db),
+        actionRateLimits: createActionRateLimitsRepo(executor),
         auditLogs: repos.auditLogs,
       });
     },

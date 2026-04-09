@@ -1,18 +1,18 @@
-import { db } from "~/lib/db/db";
 import { createContactAssignmentsRepo } from "~/server/contacts/repos-assignments";
 import { createContactsRepo } from "~/server/contacts/repos-contacts";
 import { createOrganizationsRepo } from "~/server/contacts/repos-organizations";
 import { createProductsRepo } from "~/server/inventory/repos-products";
 import { createSalesRecordsRepo } from "~/server/sales/repos-sales-records";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
-export function createSalesRecordReadContext() {
+export function createSalesRecordReadContext(executor: DatabaseExecutor) {
   return {
     repos: {
-      products: createProductsRepo(db),
-      contactAssignments: createContactAssignmentsRepo(db),
-      contacts: createContactsRepo(db),
-      organizations: createOrganizationsRepo(db),
-      salesRecords: createSalesRecordsRepo(db),
+      products: createProductsRepo(executor),
+      contactAssignments: createContactAssignmentsRepo(executor),
+      contacts: createContactsRepo(executor),
+      organizations: createOrganizationsRepo(executor),
+      salesRecords: createSalesRecordsRepo(executor),
     },
   };
 }

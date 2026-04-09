@@ -5,12 +5,12 @@ import type {
   BulkParseResult,
 } from "~/actions/team/contracts";
 import { validationError } from "~/lib/app-errors";
+import { serverRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 import {
   applyBulkImport as applyBulkImportService,
   previewBulkImport as previewBulkImportService,
 } from "~/server/team/application/bulk-import";
-import { createTeamInviteContext } from "~/server/team/infrastructure/invite-context";
 
 import { assertRole } from "./validators";
 
@@ -48,7 +48,7 @@ export async function applyBulkImport(
     access: { kind: "permission", permission: "admin:manage" },
     input: { role: safeRole },
     execute: (ctx) =>
-      applyBulkImportService(ctx, createTeamInviteContext(), {
+      applyBulkImportService(ctx, serverRuntime.team.invites, {
         csvContent,
         role: safeRole,
       }),

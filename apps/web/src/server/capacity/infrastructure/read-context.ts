@@ -1,4 +1,3 @@
-import { db } from "~/lib/db/db";
 import {
   createLeadCapacityGrantsRepo,
   createLeadUsageCommitsRepo,
@@ -17,26 +16,27 @@ import {
   createSearchPolicyOverridesRepo,
 } from "~/server/capacity/infrastructure/policy-repos";
 import { createContactAssignmentsRepo } from "~/server/contacts/repos-assignments";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 
-export function createCapacityReadContext() {
+export function createCapacityReadContext(executor: DatabaseExecutor) {
   return {
     repos: {
-      users: createCapacityUsersRepo(db),
-      teams: createCapacityTeamsRepo(db),
-      auditLogs: createAuditLogsRepo(db),
-      capacityRequests: createCapacityRequestsRepo(db),
-      searchPolicyDefaults: createSearchPolicyDefaultsRepo(db),
-      searchPolicyOverrides: createSearchPolicyOverridesRepo(db),
-      leadPolicyDefaults: createLeadPolicyDefaultsRepo(db),
-      leadPolicyOverrides: createLeadPolicyOverridesRepo(db),
-      searchCapacityGrants: createSearchCapacityGrantsRepo(db),
-      searchUsageReservations: createSearchUsageReservationsRepo(db),
-      searchUsageCommits: createSearchUsageCommitsRepo(db),
-      leadCapacityGrants: createLeadCapacityGrantsRepo(db),
-      leadUsageReservations: createLeadUsageReservationsRepo(db),
-      leadUsageCommits: createLeadUsageCommitsRepo(db),
-      contactAssignments: createContactAssignmentsRepo(db),
+      users: createCapacityUsersRepo(executor),
+      teams: createCapacityTeamsRepo(executor),
+      auditLogs: createAuditLogsRepo(executor),
+      capacityRequests: createCapacityRequestsRepo(executor),
+      searchPolicyDefaults: createSearchPolicyDefaultsRepo(executor),
+      searchPolicyOverrides: createSearchPolicyOverridesRepo(executor),
+      leadPolicyDefaults: createLeadPolicyDefaultsRepo(executor),
+      leadPolicyOverrides: createLeadPolicyOverridesRepo(executor),
+      searchCapacityGrants: createSearchCapacityGrantsRepo(executor),
+      searchUsageReservations: createSearchUsageReservationsRepo(executor),
+      searchUsageCommits: createSearchUsageCommitsRepo(executor),
+      leadCapacityGrants: createLeadCapacityGrantsRepo(executor),
+      leadUsageReservations: createLeadUsageReservationsRepo(executor),
+      leadUsageCommits: createLeadUsageCommitsRepo(executor),
+      contactAssignments: createContactAssignmentsRepo(executor),
     },
   };
 }

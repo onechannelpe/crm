@@ -4,11 +4,11 @@ import type {
   CapacityApprovalPort,
   CapacityApprovalTxPort,
 } from "../application/ports";
-import { createCapacityCommandsContext } from "./commands-context";
+import { type CapacityCommandsContext } from "./commands-context";
 
-export function createCapacityApprovalContext(): CapacityApprovalPort {
-  const context = createCapacityCommandsContext();
-
+export function createCapacityApprovalContext(
+  context: CapacityCommandsContext,
+): CapacityApprovalPort {
   return {
     async enforceApprovalRateLimit(userId: number) {
       await checkActionRateLimit(

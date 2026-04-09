@@ -2,7 +2,7 @@ import { afterAll, beforeAll, bench, describe } from "vitest";
 
 import { hashAuthKey } from "~/lib/auth/password/key-hash";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
-import { submitPasswordLogin } from "~/server/auth/application/login";
+import { submitPasswordLogin } from "~/server/features/auth/application/login/primary";
 import { isErr } from "~/server/shared/result";
 
 import {
