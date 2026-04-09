@@ -7,7 +7,7 @@ import {
   createAuthSessionLogoutContext,
   createAuthSessionReadContext,
 } from "~/server/auth/infrastructure/session-context";
-import { getLoginFlowState } from "~/server/features/auth/application/login";
+import { getLoginFlowState } from "~/server/features/auth/application/login/flow-state";
 import { serverRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 

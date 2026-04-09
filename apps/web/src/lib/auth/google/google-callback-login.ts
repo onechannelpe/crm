@@ -7,7 +7,7 @@ import type {
   createUserTotpFactorsRepo,
   createUserTotpRecoveryCodesRepo,
 } from "~/server/auth/repos-user-totp-factors";
-import { submitGoogleLogin } from "~/server/features/auth/application/login";
+import { submitGoogleLogin } from "~/server/features/auth/application/login/primary";
 import type { createSessionRepository } from "~/server/sessions/repos-sessions";
 import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";

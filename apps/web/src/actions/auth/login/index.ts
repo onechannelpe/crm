@@ -12,11 +12,11 @@ import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { getActionRequestContext } from "~/lib/observability/context";
 import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
 import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
+import { createPasskeyStartService } from "~/server/features/auth/application/login/passkey";
 import {
-  createPasskeyStartService,
   submitPasswordLoginWithDeps,
   submitTotpLoginWithDeps,
-} from "~/server/features/auth/application/login";
+} from "~/server/features/auth/application/login/with-deps";
 import { serverRuntime } from "~/server/runtime";
 import { isErr } from "~/server/shared/result";
 
