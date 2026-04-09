@@ -1,5 +1,4 @@
 import { createJobQueue } from "~/lib/job-queue/job-queue";
-import { integrationRuntime } from "~/server/integrations/infrastructure/runtime";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import {
@@ -8,7 +7,7 @@ import {
 } from "../application/import/outbox-ready-for-quotation-repo";
 
 interface ReadyForQuotationOutboxQueueDeps {
-  executor?: DatabaseExecutor;
+  executor: DatabaseExecutor;
   repo?: ReadyForQuotationOutboxRepo;
 }
 
@@ -23,11 +22,11 @@ type ReadyForQuotationOutboxJob = {
 
 export function createReadyForQuotationOutboxQueue(
   workerId: string,
-  deps: ReadyForQuotationOutboxQueueDeps = {},
+  deps: ReadyForQuotationOutboxQueueDeps,
 ) {
   const leaseMs = 30_000;
   const batchSize = 50;
-  const executor = deps.executor ?? integrationRuntime.executor;
+  const executor = deps.executor;
   const repo = deps.repo ?? createReadyForQuotationOutboxRepo(executor);
 
   return createJobQueue<ReadyForQuotationOutboxJob, void>({
