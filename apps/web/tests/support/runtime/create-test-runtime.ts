@@ -49,11 +49,10 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
     error() {},
   };
 
-  const auth = createAuthRuntime({
-    db: ctx.db,
-    now: now.get,
-    logger,
-  });
+  const auth = createAuthRuntime(
+    { db: ctx.db, now: now.get, logger },
+    { send: async () => {} },
+  );
   const pipeline = createPipelineRuntime({
     db: ctx.db,
     now: now.get,

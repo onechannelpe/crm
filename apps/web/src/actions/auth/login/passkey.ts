@@ -7,7 +7,6 @@ import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
 import type { FinishPasskeyLoginError } from "~/lib/auth/passkey/service";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { getActionRequestContext } from "~/lib/observability/context";
-import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
 import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
 import { finishPasskeyLogin as finishPasskeyLoginService } from "~/server/features/auth/application/login/passkey";
 import { replaceCurrentSessionAndResolveRedirect } from "~/server/features/auth/application/login/session-redirect";
@@ -48,7 +47,7 @@ export async function finishPasskeyLogin(
     }
 > {
   const request = getRequestClientMetadata();
-  const loginContext = createAuthLoginContext(serverRuntime.infra.db);
+  const loginContext = serverRuntime.auth.login;
   const result = await finishPasskeyLoginService(
     {
       repos: loginContext.repos,

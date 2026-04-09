@@ -1,11 +1,6 @@
 import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 
-import {
-  checkPasskeyChallengeThrottle,
-  checkPasskeyVerifyThrottle,
-  clearPasskeyVerifyFailureState,
-  recordPasskeyVerifyFailure,
-} from "~/lib/auth/password/throttle";
+import { createAuthThrottleService } from "~/server/features/auth/application/throttle-service";
 import { isPasskeyRequestError } from "~/lib/auth/providers/passkey-provider";
 import { config } from "~/lib/config";
 import { assertPositiveInt } from "~/lib/contracts/guards";
@@ -47,15 +42,18 @@ export function createPasskeyEnrollmentService(
   repos: PasskeyAuthRepos,
   deps: PasskeyEnrollmentServiceDeps,
 ) {
+  const throttleService = createAuthThrottleService({
+    authThrottle: repos.authThrottle,
+  });
+
   return {
     async beginEnrollment(
       input: BeginPasskeyEnrollmentInput,
     ): Promise<Result<PasskeyEnrollmentChallenge, DomainError>> {
       const identifier = `user:${input.userId}`;
-      const throttle = await checkPasskeyChallengeThrottle(
+      const throttle = await throttleService.checkPasskeyChallengeThrottle(
         identifier,
         input.ipAddress,
-        repos,
       );
       if (!throttle.allowed) {
         return Err(
@@ -113,10 +111,9 @@ export function createPasskeyEnrollmentService(
       }
 
       try {
-        const throttle = await checkPasskeyVerifyThrottle(
+        const throttle = await throttleService.checkPasskeyVerifyThrottle(
           identifier,
           input.ipAddress,
-          repos,
         );
         if (!throttle.allowed) {
           return Err(
@@ -135,7 +132,7 @@ export function createPasskeyEnrollmentService(
           challenge.type !== "registration" ||
           challenge.user_id !== input.userId
         ) {
-          await recordPasskeyVerifyFailure(identifier, input.ipAddress, repos);
+          await throttleService.recordPasskeyVerifyFailure(identifier, input.ipAddress);
           return Err(
             domainError(
               "validation",
@@ -147,7 +144,7 @@ export function createPasskeyEnrollmentService(
 
         await repos.webauthnChallenges.delete(challenge.id);
         if (challenge.expires_at < Date.now()) {
-          await recordPasskeyVerifyFailure(identifier, input.ipAddress, repos);
+          await throttleService.recordPasskeyVerifyFailure(identifier, input.ipAddress);
           return Err(
             domainError(
               "validation",
@@ -174,7 +171,7 @@ export function createPasskeyEnrollmentService(
             );
           }
 
-          await recordPasskeyVerifyFailure(identifier, input.ipAddress, repos);
+          await throttleService.recordPasskeyVerifyFailure(identifier, input.ipAddress);
           return Err(
             domainError(
               "validation",
@@ -184,10 +181,9 @@ export function createPasskeyEnrollmentService(
           );
         }
 
-        await clearPasskeyVerifyFailureState(
+        await throttleService.clearPasskeyVerifyFailureState(
           identifier,
           input.ipAddress,
-          repos,
         );
         await repos.auditLogs.create({
           user_id: input.userId,

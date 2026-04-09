@@ -11,9 +11,7 @@ import {
   assertFinitePositive,
   assertPositiveInt,
 } from "~/lib/contracts/guards";
-import { createProductsRepo } from "~/server/inventory/repos-products";
 import { serverRuntime } from "~/server/runtime";
-import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 
 export type ProductCatalogItem = {
   id: number;
@@ -55,9 +53,8 @@ function parseUpdateProductPricingInput(input: {
 }
 
 export async function getProductCatalog(): Promise<ProductCatalogItem[]> {
-  const products = createProductsRepo(serverRuntime.infra.db);
   await requirePermission("admin:manage");
-  const rows = await products.findAll();
+  const rows = await serverRuntime.admin.products.findAll();
   return rows.map(toProductCatalogItem);
 }
 
@@ -66,8 +63,7 @@ export async function updateProductPricing(
   price: number,
   isActive: boolean,
 ): Promise<ActionSuccess> {
-  const products = createProductsRepo(serverRuntime.infra.db);
-  const auditLogs = createAuditLogsRepo(serverRuntime.infra.db);
+  const { products, auditLogs } = serverRuntime.admin;
   const parsedInput = parseUpdateProductPricingInput({
     productId,
     price,

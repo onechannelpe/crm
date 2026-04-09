@@ -1,7 +1,4 @@
-import {
-  checkPasskeyChallengeThrottle,
-  recordPasskeyChallengeFailure,
-} from "~/lib/auth/password/throttle";
+import { createAuthThrottleService } from "~/server/features/auth/application/throttle-service";
 import { recordAuthEvent } from "~/lib/auth/security/auth-events";
 import { config } from "~/lib/config";
 import { Err, Ok, type Result } from "~/server/shared/result";
@@ -45,6 +42,10 @@ export function createPasskeyLoginStartService(
   repos: PasskeyAuthRepos,
   deps: PasskeyLoginStartServiceDeps,
 ) {
+  const throttleService = createAuthThrottleService({
+    authThrottle: repos.authThrottle,
+  });
+
   async function createAuthenticationFlow(input: {
     challengeUserId: number | null;
     flowUserId: number | null;
@@ -96,10 +97,9 @@ export function createPasskeyLoginStartService(
     ): Promise<Result<PasskeyLoginFlowState, BeginPasskeyLoginError>> {
       try {
         if (input.mode === "discoverable") {
-          const throttle = await checkPasskeyChallengeThrottle(
+          const throttle = await throttleService.checkPasskeyChallengeThrottle(
             DISCOVERABLE_PASSKEY_IDENTIFIER,
             input.ipAddress,
-            repos,
           );
           if (!throttle.allowed) {
             await recordAuthEvent(repos, {
@@ -131,10 +131,9 @@ export function createPasskeyLoginStartService(
           return Err(identifier);
         }
 
-        const throttle = await checkPasskeyChallengeThrottle(
+        const throttle = await throttleService.checkPasskeyChallengeThrottle(
           identifier,
           input.ipAddress,
-          repos,
         );
         if (!throttle.allowed) {
           const blockedUser = await repos.users.findByUsername(identifier);
@@ -152,10 +151,9 @@ export function createPasskeyLoginStartService(
 
         const user = await repos.users.findByUsername(identifier);
         if (!user || !user.is_active) {
-          await recordPasskeyChallengeFailure(
+          await throttleService.recordPasskeyChallengeFailure(
             identifier,
             input.ipAddress,
-            repos,
           );
           await recordAuthEvent(repos, {
             userId: user?.id ?? null,

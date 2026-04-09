@@ -1,10 +1,5 @@
 import type { Selectable } from "kysely";
 
-import {
-  checkTotpVerifyThrottle,
-  clearTotpVerifyFailureState,
-  recordTotpVerifyFailure,
-} from "~/lib/auth/password/throttle";
 import { matchesRecoveryCode } from "~/lib/auth/totp/recovery-codes";
 import { decryptTotpSecret } from "~/lib/auth/totp/secret-crypto";
 import { verifyTotpCode } from "~/lib/auth/totp/totp";
@@ -15,6 +10,7 @@ import type {
   createUserTotpFactorsRepo,
   createUserTotpRecoveryCodesRepo,
 } from "~/server/auth/repos-user-totp-factors";
+import { createAuthThrottleService } from "~/server/features/auth/application/throttle-service";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { recordAuthEvent } from "../security/auth-events";
@@ -47,6 +43,9 @@ export async function verifyTotpStepUp(params: {
   >
 > {
   const { user, ipAddress, totpCode, deps } = params;
+  const throttleService = createAuthThrottleService({
+    authThrottle: deps.authThrottle,
+  });
   const identifier = `user:${user.id}`;
   const safeCode = totpCode?.trim();
   const factor = await deps.userTotpFactors.findByUserId(user.id);
@@ -64,7 +63,10 @@ export async function verifyTotpStepUp(params: {
     return Err({ kind: "invalid_totp" });
   }
 
-  const throttle = await checkTotpVerifyThrottle(identifier, ipAddress, deps);
+  const throttle = await throttleService.checkTotpVerifyThrottle(
+    identifier,
+    ipAddress,
+  );
   if (!throttle.allowed) {
     await recordAuthEvent(deps, {
       userId: user.id,
@@ -80,7 +82,7 @@ export async function verifyTotpStepUp(params: {
 
   const secret = await decryptTotpSecret(factor.secret_encrypted);
   if (verifyTotpCode(secret, safeCode)) {
-    await clearTotpVerifyFailureState(identifier, ipAddress, deps);
+    await throttleService.clearTotpVerifyFailureState(identifier, ipAddress);
     await recordAuthEvent(deps, {
       userId: user.id,
       identifier,
@@ -105,7 +107,7 @@ export async function verifyTotpStepUp(params: {
   ).find((candidate) => candidate.matches);
   if (recoveryMatch) {
     await deps.userTotpRecoveryCodes.markUsed(recoveryMatch.recovery.id);
-    await clearTotpVerifyFailureState(identifier, ipAddress, deps);
+    await throttleService.clearTotpVerifyFailureState(identifier, ipAddress);
     await recordAuthEvent(deps, {
       userId: user.id,
       identifier,
@@ -117,7 +119,7 @@ export async function verifyTotpStepUp(params: {
     return Ok({ strongAuthMethod: "totp", strongAuthAt: Date.now() });
   }
 
-  await recordTotpVerifyFailure(identifier, ipAddress, deps);
+  await throttleService.recordTotpVerifyFailure(identifier, ipAddress);
   await recordAuthEvent(deps, {
     userId: user.id,
     identifier,
