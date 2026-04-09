@@ -7,10 +7,10 @@ import type {
   StrongAuthMethod,
 } from "~/lib/auth/core/session-contract";
 import { getSessionCookie, setSessionCookie } from "~/lib/auth/session/cookies";
-import { createSessionService } from "~/server/features/auth/application/session-service";
-import { serverRuntime } from "~/server/runtime";
 import { hashSessionToken } from "~/lib/auth/session/tokens";
 import type { UsersTable } from "~/lib/db/types";
+import { createSessionService } from "~/server/features/auth/application/session-service";
+import { serverRuntime } from "~/server/runtime";
 import type { createSessionRepository } from "~/server/sessions/repos-sessions";
 import type { UserId } from "~/server/shared/ids";
 import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
@@ -72,19 +72,17 @@ async function transitionSession(
   const token = await createSessionService({
     sessions: params.deps.sessions,
     users: params.deps.users,
-  }).createSession(
-    {
-      userId: identity.userId,
-      branchId: identity.branchId,
-      role: identity.role,
-      sessionClass: params.sessionClass,
-      ipAddress: params.request.ipAddress,
-      userAgent: params.request.userAgent,
-      primaryAuthMethod: params.primaryAuthMethod,
-      strongAuthMethod: params.strongAuthMethod,
-      strongAuthAt: params.strongAuthAt,
-    },
-  );
+  }).createSession({
+    userId: identity.userId,
+    branchId: identity.branchId,
+    role: identity.role,
+    sessionClass: params.sessionClass,
+    ipAddress: params.request.ipAddress,
+    userAgent: params.request.userAgent,
+    primaryAuthMethod: params.primaryAuthMethod,
+    strongAuthMethod: params.strongAuthMethod,
+    strongAuthAt: params.strongAuthAt,
+  });
 
   if (params.auditAction) {
     await params.deps.auditLogs.create({

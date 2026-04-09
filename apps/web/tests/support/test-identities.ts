@@ -79,17 +79,15 @@ export async function createIdentitySession(
   return await createSessionService({
     sessions: ctx.repos.sessions,
     users: ctx.repos.users,
-  }).createSession(
-    {
-      userId: identity.userId,
-      branchId: identity.branchId,
-      role: identity.role,
-      sessionClass: options?.sessionClass ?? "app",
-      ipAddress: options?.ipAddress ?? "127.0.0.1",
-      userAgent: options?.userAgent ?? "vitest-agent",
-      primaryAuthMethod: options?.primaryAuthMethod ?? "password",
-      strongAuthMethod: options?.strongAuthMethod ?? null,
-      strongAuthAt: options?.strongAuthAt ?? null,
-    },
-  );
+  }).createSession({
+    userId: identity.userId,
+    branchId: identity.branchId,
+    role: identity.role,
+    sessionClass: options?.sessionClass ?? "app",
+    ipAddress: options?.ipAddress ?? "127.0.0.1",
+    userAgent: options?.userAgent ?? "vitest-agent",
+    primaryAuthMethod: options?.primaryAuthMethod ?? "password",
+    strongAuthMethod: options?.strongAuthMethod ?? null,
+    strongAuthAt: options?.strongAuthAt ?? null,
+  });
 }
