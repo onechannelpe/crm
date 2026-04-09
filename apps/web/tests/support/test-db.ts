@@ -5,8 +5,7 @@ import { sql, type Kysely } from "kysely";
 
 import type { Role } from "../../src/lib/auth/access/rbac";
 import { createDb } from "../../src/lib/db/client";
-import { computeHash, writeStoredHash } from "../../src/lib/db/migration-hash";
-import { SCHEMA_MODULES, SEED_MODULES } from "../../src/lib/db/schema";
+import { migrateToLatest } from "../../src/lib/db/migrate";
 import type { Database } from "../../src/lib/db/types";
 import { confirmRecord } from "../../src/server/sales-records/application/commands/confirm-record";
 import { createDraft } from "../../src/server/sales-records/application/commands/create-draft";
@@ -407,17 +406,7 @@ async function buildSeededTemplateDb(templateDbPath: string): Promise<void> {
   try {
     await sql`PRAGMA journal_mode=DELETE`.execute(db);
 
-    for (const module of SCHEMA_MODULES) {
-      // eslint-disable-next-line no-await-in-loop
-      await module.createTables(db);
-    }
-    for (const module of SEED_MODULES) {
-      // eslint-disable-next-line no-await-in-loop
-      await module.run(db);
-    }
-
-    const hash = await computeHash(SCHEMA_MODULES, SEED_MODULES);
-    await writeStoredHash(db, hash);
+    await migrateToLatest(db);
 
     await seedTemplate(db);
     await sql`PRAGMA wal_checkpoint(TRUNCATE)`.execute(db);
