@@ -1,199 +1,71 @@
 import { db } from "~/lib/db/db";
 import { createLogger } from "~/lib/observability/logger";
+import { createSessionService } from "~/server/features/auth/application/session-service";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
 import type { UserId } from "~/server/shared/ids";
 import { createUsersRepo } from "~/server/users/repos-users";
 
-import { isRole } from "../access/rbac";
-import type { AuthSession } from "../access/session-types";
-import {
-  isPrimaryAuthMethod,
-  isSessionClass,
-  isStrongAuthMethod,
-} from "../core/session-contract";
 import type {
   CreateSessionParams,
   SessionDeps,
   SessionRepositoryPort,
   SessionUsersPort,
 } from "../types";
-import { sessionCache } from "./session-cache";
-import { mapUserSessionRowToAuthSession } from "./session-mappers";
-import {
-  generateSessionToken,
-  hashSessionToken,
-  isValidTokenFormat,
-} from "./tokens";
 
-const SESSION_DURATION = 30 * 24 * 60 * 60 * 1000;
-const ACTIVITY_UPDATE_THRESHOLD = 5 * 60 * 1000;
-const EXTENSION_THRESHOLD = 7 * 24 * 60 * 60 * 1000;
 const logger = createLogger("session-manager");
 
 export interface SessionValidationResult {
-  session: AuthSession | null;
+  session: import("~/lib/auth/access/session-types").AuthSession | null;
 }
-const repos = {
+
+const defaultRepos = {
   sessions: createSessionRepository(db),
   users: createUsersRepo(db),
 };
 
-function getSessionDeps(deps?: SessionDeps): {
+function resolveDeps(deps?: SessionDeps): {
   sessions: SessionRepositoryPort;
   users: SessionUsersPort;
 } {
   return {
-    sessions: deps?.sessions ?? repos.sessions,
-    users: deps?.users ?? repos.users,
+    sessions: deps?.sessions ?? defaultRepos.sessions,
+    users: deps?.users ?? defaultRepos.users,
   };
+}
+
+function resolveSessionService(deps?: SessionDeps) {
+  const resolved = resolveDeps(deps);
+  return createSessionService({
+    sessions: resolved.sessions,
+    users: resolved.users,
+    logger,
+  });
 }
 
 export async function createSession(
   params: CreateSessionParams,
   deps?: SessionDeps,
 ): Promise<string> {
-  const { sessions } = getSessionDeps(deps);
-  const token = generateSessionToken();
-  const sessionId = hashSessionToken(token);
-  const now = Date.now();
-
-  const newSession = {
-    id: sessionId,
-    user_id: params.userId,
-    branch_id: params.branchId,
-    role: params.role,
-    session_class: params.sessionClass,
-    primary_auth_method: params.primaryAuthMethod,
-    strong_auth_method: params.strongAuthMethod,
-    strong_auth_at: params.strongAuthAt,
-    ip_address: params.ipAddress,
-    user_agent: params.userAgent,
-    created_at: now,
-    last_activity: now,
-    expires_at: now + SESSION_DURATION,
-  };
-
-  await sessions.create(newSession);
-
-  return token;
+  return resolveSessionService(deps).createSession(params);
 }
 
 export async function validateSessionToken(
   token: string,
   deps?: SessionDeps,
 ): Promise<SessionValidationResult> {
-  if (!isValidTokenFormat(token)) {
-    return { session: null };
-  }
-  const { sessions, users } = getSessionDeps(deps);
-
-  const sessionId = hashSessionToken(token);
-  const now = Date.now();
-
-  const cached = sessionCache.get(sessionId);
-  if (cached) {
-    return {
-      session: {
-        id: sessionId,
-        userId: cached.userId,
-        branchId: cached.branchId,
-        role: cached.role,
-        onboardingCompleted: cached.onboardingCompleted,
-        sessionClass: cached.sessionClass,
-        primaryAuthMethod: cached.primaryAuthMethod,
-        strongAuthMethod: cached.strongAuthMethod,
-        strongAuthAt: cached.strongAuthAt,
-      },
-    };
-  }
-
-  const dbSession = await sessions.findById(sessionId);
-
-  if (!dbSession) {
-    return { session: null };
-  }
-
-  if (!isRole(dbSession.role)) {
-    await sessions.delete(sessionId);
-    return { session: null };
-  }
-  if (!isSessionClass(dbSession.session_class)) {
-    await sessions.delete(sessionId);
-    return { session: null };
-  }
-  if (!isPrimaryAuthMethod(dbSession.primary_auth_method)) {
-    await sessions.delete(sessionId);
-    return { session: null };
-  }
-  if (
-    dbSession.strong_auth_method !== null &&
-    !isStrongAuthMethod(dbSession.strong_auth_method)
-  ) {
-    await sessions.delete(sessionId);
-    return { session: null };
-  }
-
-  if (dbSession.expires_at < now) {
-    await sessions.delete(sessionId);
-    return { session: null };
-  }
-
-  const user = await users.findById(dbSession.user_id);
-  if (!user || user.is_active !== 1) {
-    await sessions.delete(sessionId);
-    return { session: null };
-  }
-  if (user.expires_at !== null && user.expires_at <= now) {
-    await users.deactivateIfExpired(user.id, now);
-    await sessions.deleteAllForUser(user.id);
-    return { session: null };
-  }
-
-  if (now - dbSession.last_activity > ACTIVITY_UPDATE_THRESHOLD) {
-    sessions.updateActivity(sessionId, now).catch((error: unknown) => {
-      logger.error("update_activity_failed", { sessionId, error });
-    });
-  }
-
-  if (dbSession.expires_at - now < EXTENSION_THRESHOLD) {
-    const newExpiry = now + SESSION_DURATION;
-    sessions.extendExpiry(sessionId, newExpiry).catch((error: unknown) => {
-      logger.error("extend_expiry_failed", { sessionId, error });
-    });
-    dbSession.expires_at = newExpiry;
-  }
-
-  const authSession = mapUserSessionRowToAuthSession(sessionId, dbSession);
-
-  sessionCache.set(sessionId, {
-    userId: authSession.userId,
-    branchId: authSession.branchId,
-    role: authSession.role,
-    onboardingCompleted: authSession.onboardingCompleted,
-    sessionClass: authSession.sessionClass,
-    primaryAuthMethod: authSession.primaryAuthMethod,
-    strongAuthMethod: authSession.strongAuthMethod,
-    strongAuthAt: authSession.strongAuthAt,
-    expiresAt: dbSession.expires_at,
-  });
-
-  return {
-    session: authSession,
-  };
+  return resolveSessionService(deps).validateSessionToken(token);
 }
 
 export async function invalidateSession(
   sessionId: string,
   deps?: SessionDeps,
 ): Promise<void> {
-  await getSessionDeps(deps).sessions.delete(sessionId);
-  sessionCache.delete(sessionId);
+  await resolveSessionService(deps).invalidateSession(sessionId);
 }
 
 export async function invalidateUserSessions(
   userId: UserId,
   deps?: SessionDeps,
 ): Promise<void> {
-  await getSessionDeps(deps).sessions.deleteAllForUser(userId);
-  sessionCache.deleteByUserId(userId);
+  await resolveSessionService(deps).invalidateUserSessions(userId);
 }

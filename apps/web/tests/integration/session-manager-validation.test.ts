@@ -3,31 +3,25 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { sessionCache } from "../../src/lib/auth/session/session-cache";
 import {
-  createSession,
-  invalidateUserSessions,
-  validateSessionToken,
-} from "../../src/lib/auth/session/session-manager";
-import {
   generateSessionToken,
   hashSessionToken,
 } from "../../src/lib/auth/session/tokens";
 import {
-  cleanupTestDb,
-  createIsolatedTestDb,
-  type TestDbContext,
-} from "../support/test-db";
+  createTestRuntime,
+  type TestRuntime,
+} from "../support/runtime/create-test-runtime";
 
 describe("session manager validation", () => {
-  let ctx: TestDbContext;
+  let runtime: TestRuntime;
 
   beforeEach(async () => {
-    ctx = await createIsolatedTestDb("session-manager");
+    runtime = await createTestRuntime("session-manager");
     sessionCache.clear();
   });
 
   afterEach(async () => {
     sessionCache.clear();
-    await cleanupTestDb(ctx);
+    await runtime.dispose();
   });
 
   it("deletes session when persisted role is invalid", async () => {
@@ -45,81 +39,76 @@ describe("session manager validation", () => {
       insert into user_sessions
       (id, user_id, branch_id, role, session_class, primary_auth_method, strong_auth_method, strong_auth_at, ip_address, user_agent, created_at, last_activity, expires_at)
       values (${sessionId}, ${1}, ${1}, ${"invalid_role"}, ${sessionClass}, ${primaryAuthMethod}, ${strongAuthMethod}, ${strongAuthAt}, ${ipAddress}, ${userAgent}, ${now}, ${now}, ${now + 60_000})
-    `.execute(ctx.db);
+    `.execute(runtime.ctx.db);
 
-    const result = await validateSessionToken(token, ctx.repos);
+    const result =
+      await runtime.auth.sessionService.validateSessionToken(token);
     expect(result.session).toBeNull();
-    expect(await ctx.repos.sessions.findById(sessionId)).toBeNull();
+    expect(await runtime.ctx.repos.sessions.findById(sessionId)).toBeNull();
   });
 
   it("returns cached session without reloading the user record", async () => {
-    const token = await createSession(
-      {
-        userId: 1,
-        branchId: 1,
-        role: "executive",
-        sessionClass: "app",
-        ipAddress: null,
-        userAgent: null,
-        primaryAuthMethod: "password",
-        strongAuthMethod: null,
-        strongAuthAt: null,
-      },
-      ctx.repos,
-    );
+    const token = await runtime.auth.sessionService.createSession({
+      userId: 1,
+      branchId: 1,
+      role: "executive",
+      sessionClass: "app",
+      ipAddress: null,
+      userAgent: null,
+      primaryAuthMethod: "password",
+      strongAuthMethod: null,
+      strongAuthAt: null,
+    });
 
-    const first = await validateSessionToken(token, ctx.repos);
+    const first = await runtime.auth.sessionService.validateSessionToken(token);
     expect(first.session).not.toBeNull();
 
-    const userFindSpy = vi.spyOn(ctx.repos.users, "findById");
-    const second = await validateSessionToken(token, ctx.repos);
+    const userFindSpy = vi.spyOn(runtime.ctx.repos.users, "findById");
+    const second =
+      await runtime.auth.sessionService.validateSessionToken(token);
     expect(second.session).not.toBeNull();
     expect(userFindSpy).not.toHaveBeenCalled();
   });
 
   it("removes cached sessions after explicit invalidation", async () => {
-    const token = await createSession(
-      {
-        userId: 1,
-        branchId: 1,
-        role: "executive",
-        sessionClass: "app",
-        ipAddress: null,
-        userAgent: null,
-        primaryAuthMethod: "password",
-        strongAuthMethod: null,
-        strongAuthAt: null,
-      },
-      ctx.repos,
-    );
+    const token = await runtime.auth.sessionService.createSession({
+      userId: 1,
+      branchId: 1,
+      role: "executive",
+      sessionClass: "app",
+      ipAddress: null,
+      userAgent: null,
+      primaryAuthMethod: "password",
+      strongAuthMethod: null,
+      strongAuthAt: null,
+    });
     const sessionId = hashSessionToken(token);
 
-    const first = await validateSessionToken(token, ctx.repos);
+    const first = await runtime.auth.sessionService.validateSessionToken(token);
     expect(first.session).not.toBeNull();
 
-    await invalidateUserSessions(1, ctx.repos);
+    await runtime.auth.sessionService.invalidateUserSessions(1);
 
-    const second = await validateSessionToken(token, ctx.repos);
+    const second =
+      await runtime.auth.sessionService.validateSessionToken(token);
     expect(second.session).toBeNull();
-    expect(await ctx.repos.sessions.findById(sessionId)).toBeNull();
+    expect(await runtime.ctx.repos.sessions.findById(sessionId)).toBeNull();
   });
 
   it("derives onboarding completion from session class without user lookup", async () => {
-    const token = await createSession(
-      {
-        userId: 1,
-        branchId: 1,
-        role: "executive",
-        sessionClass: "pre_auth",
-        ipAddress: null,
-        userAgent: null,
-        primaryAuthMethod: "password",
-        strongAuthMethod: null,
-        strongAuthAt: null,
-      },
-      ctx.repos,
-    );
-    const result = await validateSessionToken(token, ctx.repos);
+    const token = await runtime.auth.sessionService.createSession({
+      userId: 1,
+      branchId: 1,
+      role: "executive",
+      sessionClass: "pre_auth",
+      ipAddress: null,
+      userAgent: null,
+      primaryAuthMethod: "password",
+      strongAuthMethod: null,
+      strongAuthAt: null,
+    });
+    const result =
+      await runtime.auth.sessionService.validateSessionToken(token);
     expect(result.session?.onboardingCompleted).toBe(false);
   });
 });
