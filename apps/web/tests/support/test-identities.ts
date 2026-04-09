@@ -1,7 +1,7 @@
 import { hashPassword } from "../../src/lib/auth/password/password";
-import { createSession } from "../../src/lib/auth/session/session-manager";
 import { encryptTotpSecret } from "../../src/lib/auth/totp/secret-crypto";
 import { generateTotpSecret } from "../../src/lib/auth/totp/totp";
+import { createSessionService } from "../../src/server/features/auth/application/session-service";
 import {
   getSeededIdentity,
   type SeededIdentityName,
@@ -76,7 +76,10 @@ export async function createIdentitySession(
     userAgent?: string | null;
   },
 ): Promise<string> {
-  return await createSession(
+  return await createSessionService({
+    sessions: ctx.repos.sessions,
+    users: ctx.repos.users,
+  }).createSession(
     {
       userId: identity.userId,
       branchId: identity.branchId,
@@ -88,6 +91,5 @@ export async function createIdentitySession(
       strongAuthMethod: options?.strongAuthMethod ?? null,
       strongAuthAt: options?.strongAuthAt ?? null,
     },
-    ctx.repos,
   );
 }

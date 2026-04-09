@@ -1,5 +1,6 @@
-import { db } from "~/lib/db/db";
 import { createLogger } from "~/lib/observability/logger";
+import { serverRuntime } from "~/server/runtime";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 const logger = createLogger("stale-scanner");
 
@@ -9,12 +10,14 @@ const JOB_TABLES = [
   "search_enrichment_jobs",
 ] as const;
 
-export async function resetStalledJobs() {
+export async function resetStalledJobs(
+  executor: DatabaseExecutor = serverRuntime.infra.db,
+) {
   const now = Date.now();
   await Promise.all(
     JOB_TABLES.map(async (table) => {
       try {
-        const result = await db
+        const result = await executor
           .updateTable(table)
           .set({
             status:

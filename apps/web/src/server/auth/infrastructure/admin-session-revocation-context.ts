@@ -1,20 +1,21 @@
-import {
-  invalidateSession,
-  invalidateUserSessions,
-} from "~/lib/auth/session/session-manager";
-import { db } from "~/lib/db/db";
 import { createExtensionRuntimeRepo } from "~/server/extension/repos";
+import { serverRuntime } from "~/server/runtime";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 
 import type { AdminSessionRevocationPort } from "../application/ports";
 
 export function createAdminSessionRevocationContext(): AdminSessionRevocationPort {
-  const auditLogs = createAuditLogsRepo(db);
-  const extensionRuntime = createExtensionRuntimeRepo(db);
+  const executor = serverRuntime.infra.db;
+  const auditLogs = createAuditLogsRepo(executor);
+  const extensionRuntime = createExtensionRuntimeRepo(executor);
 
   return {
-    invalidateSession,
-    invalidateUserSessions,
+    invalidateSession(sessionId) {
+      return serverRuntime.auth.sessionService.invalidateSession(sessionId);
+    },
+    invalidateUserSessions(userId) {
+      return serverRuntime.auth.sessionService.invalidateUserSessions(userId);
+    },
     async revokeInstallationSessionsByAuthSession(sessionId, now) {
       await extensionRuntime.revokeInstallationSessionsByAuthSession(
         sessionId,

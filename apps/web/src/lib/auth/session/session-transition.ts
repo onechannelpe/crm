@@ -7,10 +7,8 @@ import type {
   StrongAuthMethod,
 } from "~/lib/auth/core/session-contract";
 import { getSessionCookie, setSessionCookie } from "~/lib/auth/session/cookies";
-import {
-  createSession,
-  invalidateSession,
-} from "~/lib/auth/session/session-manager";
+import { createSessionService } from "~/server/features/auth/application/session-service";
+import { serverRuntime } from "~/server/runtime";
 import { hashSessionToken } from "~/lib/auth/session/tokens";
 import type { UsersTable } from "~/lib/db/types";
 import type { createSessionRepository } from "~/server/sessions/repos-sessions";
@@ -71,7 +69,10 @@ async function transitionSession(
 
   const identity = mapUserToSessionIdentity(user);
 
-  const token = await createSession(
+  const token = await createSessionService({
+    sessions: params.deps.sessions,
+    users: params.deps.users,
+  }).createSession(
     {
       userId: identity.userId,
       branchId: identity.branchId,
@@ -83,7 +84,6 @@ async function transitionSession(
       strongAuthMethod: params.strongAuthMethod,
       strongAuthAt: params.strongAuthAt,
     },
-    params.deps,
   );
 
   if (params.auditAction) {
@@ -113,7 +113,9 @@ export async function replaceCurrentSession(token: string): Promise<void> {
   const oldToken = getSessionCookie();
   if (oldToken) {
     const oldSessionId = hashSessionToken(oldToken);
-    await invalidateSession(oldSessionId).catch(() => {});
+    await serverRuntime.auth.sessionService
+      .invalidateSession(oldSessionId)
+      .catch(() => {});
   }
 
   setSessionCookie(token);

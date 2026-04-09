@@ -3,8 +3,6 @@ import { getRequestEvent } from "solid-js/web";
 import type { AuthSession } from "~/lib/auth/access/session-types";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { getSessionCookie } from "~/lib/auth/session/cookies";
-import { validateSessionToken } from "~/lib/auth/session/session-manager";
-import { db } from "~/lib/db/db";
 import type { ActionRequestContext } from "~/lib/observability/context";
 import {
   deleteRequestSessionCookie,
@@ -12,12 +10,12 @@ import {
   getRequestSessionMaxAgeSeconds,
   setRequestSessionCookie,
 } from "~/lib/security/request-session";
-import { createRequestSessionsRepo } from "~/server/security/repos-request-sessions";
+import { serverRuntime } from "~/server/runtime";
 
 import { getRequestPublicOrigin } from "./public-origin";
 
 const REQUEST_SESSION_ACTIVITY_UPDATE_MS = 5 * 60 * 1000;
-const requestSessions = createRequestSessionsRepo(db);
+const requestSessions = serverRuntime.security.requestSessions;
 
 export interface RequestContext {
   publicOrigin: string;
@@ -88,7 +86,9 @@ async function loadRequestSession(): Promise<AuthSession | null> {
     return null;
   }
 
-  const { session } = await validateSessionToken(token);
+  const { session } = await serverRuntime.auth.sessionService.validateSessionToken(
+    token,
+  );
   return session;
 }
 

@@ -1,8 +1,7 @@
-import { invalidateUserSessions } from "~/lib/auth/session/session-manager";
-import { db } from "~/lib/db/db";
+import { serverRuntime } from "~/server/runtime";
 import { createUsersRepo } from "~/server/users/repos-users";
 
-const users = createUsersRepo(db);
+const users = createUsersRepo(serverRuntime.infra.db);
 
 export async function expireUsersAndInvalidateSessions(
   now: number,
@@ -11,7 +10,7 @@ export async function expireUsersAndInvalidateSessions(
 
   for (const userId of expiredUserIds) {
     // eslint-disable-next-line no-await-in-loop
-    await invalidateUserSessions(userId);
+    await serverRuntime.auth.sessionService.invalidateUserSessions(userId);
   }
 
   return expiredUserIds.length;

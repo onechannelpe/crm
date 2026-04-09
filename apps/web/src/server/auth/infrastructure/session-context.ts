@@ -1,8 +1,7 @@
 import { deleteSessionCookie } from "~/lib/auth/session/cookies";
-import { invalidateSession } from "~/lib/auth/session/session-manager";
-import { db } from "~/lib/db/db";
 import { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
 import { createExtensionRuntimeRepo } from "~/server/extension/repos";
+import { serverRuntime } from "~/server/runtime";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import { createBranchesRepo } from "~/server/users/repos-branches";
 import { createPasskeysRepo } from "~/server/users/repos-passkeys";
@@ -12,23 +11,27 @@ import { createUsersRepo } from "~/server/users/repos-users";
 import type { AuthSessionLogoutPort } from "../application/ports";
 
 export function createAuthSessionReadContext() {
+  const executor = serverRuntime.infra.db;
   return {
     repos: {
-      users: createUsersRepo(db),
-      branches: createBranchesRepo(db),
-      teams: createTeamsRepo(db),
-      passkeys: createPasskeysRepo(db),
-      userTotpFactors: createUserTotpFactorsRepo(db),
+      users: createUsersRepo(executor),
+      branches: createBranchesRepo(executor),
+      teams: createTeamsRepo(executor),
+      passkeys: createPasskeysRepo(executor),
+      userTotpFactors: createUserTotpFactorsRepo(executor),
     },
   };
 }
 
 export function createAuthSessionLogoutContext(): AuthSessionLogoutPort {
-  const auditLogs = createAuditLogsRepo(db);
-  const extensionRuntime = createExtensionRuntimeRepo(db);
+  const executor = serverRuntime.infra.db;
+  const auditLogs = createAuditLogsRepo(executor);
+  const extensionRuntime = createExtensionRuntimeRepo(executor);
 
   return {
-    invalidateSession,
+    invalidateSession(sessionId) {
+      return serverRuntime.auth.sessionService.invalidateSession(sessionId);
+    },
     async revokeInstallationSessionsByAuthSession(sessionId, now) {
       await extensionRuntime.revokeInstallationSessionsByAuthSession(
         sessionId,
