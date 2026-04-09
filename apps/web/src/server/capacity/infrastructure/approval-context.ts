@@ -4,10 +4,7 @@ import type {
   CapacityApprovalPort,
   CapacityApprovalTxPort,
 } from "../application/ports";
-import {
-  createCapacityCommandsContext,
-  type CapacityCommandsContext,
-} from "./commands-context";
+import { type CapacityCommandsContext } from "./commands-context";
 
 export function createCapacityApprovalContext(
   context: CapacityCommandsContext,
