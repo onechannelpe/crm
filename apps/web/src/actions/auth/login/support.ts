@@ -9,10 +9,10 @@ import type {
 import { internalError } from "~/lib/app-errors";
 import type { Role } from "~/lib/auth/access/rbac";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
-import type { SubmitPrimaryLoginError } from "~/lib/auth/flows/primary-login-service";
 import { parseLoginFlowId } from "~/lib/auth/login-route-flow";
 import type { BeginPasskeyLoginError } from "~/lib/auth/passkey/service";
 import { replaceCurrentSession } from "~/lib/auth/session/session-transition";
+import type { SubmitPrimaryLoginError } from "~/server/auth/application/login";
 
 export function readPasskeyStartMode(
   formData: FormData,

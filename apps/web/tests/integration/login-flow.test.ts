@@ -1,8 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { getLoginFlowState } from "../../src/lib/auth/flows/login-state-service";
-import { submitPasswordLogin } from "../../src/lib/auth/flows/primary-login-service";
-import { submitTotpForLoginFlow } from "../../src/lib/auth/flows/totp-step-up-service";
+import {
+  getLoginFlowState,
+  submitPasswordLogin,
+  submitTotpForLoginFlow,
+} from "../../src/server/auth/application/login";
 import { createPasskeyLoginStartAuthService } from "../../src/lib/auth/passkey/service";
 import type { SendPrivilegedLoginAlert } from "../../src/lib/auth/security/privileged-login-alert";
 import { decryptTotpSecret } from "../../src/lib/auth/totp/secret-crypto";
