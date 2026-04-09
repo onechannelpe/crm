@@ -14,7 +14,7 @@ import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
 import type { createUsersRepo } from "~/server/users/repos-users";
 import type { createWebauthnChallengesRepo } from "~/server/users/repos-webauthn-challenges";
 
-import { submitGoogleLogin } from "../flows/primary-login-service";
+import { submitGoogleLogin } from "~/server/auth/application/login";
 import { authenticateGoogleAuthorizationCode } from "./google-oauth";
 
 type GoogleCallbackDeps = {
