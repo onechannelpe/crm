@@ -4,7 +4,6 @@ import { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
 import { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
 import { createNotificationContactsRepo } from "~/server/notifications/repos-contacts";
 import { createNotificationPreferencesRepo } from "~/server/notifications/repos-preferences";
-import { serverRuntime } from "~/server/runtime";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
@@ -45,9 +44,7 @@ function createAuthOnboardingRepos(
   };
 }
 
-export function createAuthOnboardingContext(
-  executor: DatabaseExecutor = serverRuntime.infra.db,
-) {
+export function createAuthOnboardingContext(executor: DatabaseExecutor) {
   const runInRepositoryTransaction: RepositoryTransactionRunner<
     AuthOnboardingRepos
   > = (operation) =>

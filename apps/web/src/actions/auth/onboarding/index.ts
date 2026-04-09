@@ -15,6 +15,7 @@ import {
 } from "~/server/auth/application/onboarding";
 import { createAuthOnboardingContext } from "~/server/auth/infrastructure/onboarding-context";
 import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
+import { serverRuntime } from "~/server/runtime";
 import { isErr } from "~/server/shared/result";
 
 export interface OnboardingRedirectResponse {
@@ -44,7 +45,7 @@ export async function completeOnboarding(
 ): Promise<OnboardingRedirectResponse> {
   const session = await requireSession();
   const request = getRequestClientMetadata();
-  const onboardingContext = createAuthOnboardingContext();
+  const onboardingContext = createAuthOnboardingContext(serverRuntime.infra.db);
   const result = await completeOnboardingService(onboardingContext, {
     session,
     phoneE164: normalizePeruvianPhone(phoneE164),
@@ -64,7 +65,7 @@ export async function completePasskeyOnboarding(
 ): Promise<OnboardingRedirectResponse> {
   const session = await requireSession();
   const request = getRequestClientMetadata();
-  const onboardingContext = createAuthOnboardingContext();
+  const onboardingContext = createAuthOnboardingContext(serverRuntime.infra.db);
   const registrationResult = await finishPasskeyRegistrationService(
     onboardingContext.repos,
     {

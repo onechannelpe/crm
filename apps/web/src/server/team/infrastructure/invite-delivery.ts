@@ -4,9 +4,7 @@ import { renderInviteEmail } from "@crm/notifications";
 import { getRequestEvent } from "solid-js/web";
 
 import type { Role } from "~/lib/auth/access/rbac";
-import { getNotificationRuntime } from "~/server/notifications/runtime";
-
-const { notificationSender } = getNotificationRuntime();
+import { serverRuntime } from "~/server/runtime";
 
 export function buildInviteUrl(token: string): string {
   const event = getRequestEvent();
@@ -35,7 +33,7 @@ export async function sendInviteEmail(params: {
       day: "numeric",
     }),
   });
-  await notificationSender.send({
+  await serverRuntime.notifications.notificationSender.send({
     channel: "email",
     to: params.email,
     subject: "Activa tu acceso al CRM",

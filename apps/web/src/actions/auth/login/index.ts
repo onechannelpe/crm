@@ -17,6 +17,7 @@ import {
 } from "~/server/auth/application/login";
 import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
 import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
+import { serverRuntime } from "~/server/runtime";
 import { isErr } from "~/server/shared/result";
 
 import {
@@ -41,7 +42,7 @@ export async function passwordLogin(
   const identifier = readLoginText(formData, "identifier");
   const password = readLoginText(formData, "password", { trim: false });
   const request = getRequestClientMetadata();
-  const loginContext = createAuthLoginContext();
+  const loginContext = createAuthLoginContext(serverRuntime.infra.db);
   const result = await submitPasswordLoginWithDeps(loginContext, {
     identifier,
     password,
@@ -108,7 +109,7 @@ export async function passkeyStart(
   }
 
   const request = getRequestClientMetadata();
-  const loginContext = createAuthLoginContext();
+  const loginContext = createAuthLoginContext(serverRuntime.infra.db);
   const service = createPasskeyStartService(loginContext.repos, {
     createWebauthnProvider: createRequestPasskeyProviderFactory(),
   });
@@ -159,7 +160,7 @@ export async function totpLogin(
     throw redirect("/login/user?error=flow_expired");
   }
   const request = getRequestClientMetadata();
-  const loginContext = createAuthLoginContext();
+  const loginContext = createAuthLoginContext(serverRuntime.infra.db);
   const result = await submitTotpLoginWithDeps(loginContext, {
     flowId,
     totpCode,

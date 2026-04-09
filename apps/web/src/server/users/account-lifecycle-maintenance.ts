@@ -2,7 +2,6 @@ import { renderAccountExpiringEmail } from "@crm/notifications";
 
 import { createLogger } from "~/lib/observability/logger";
 import { shortName } from "~/lib/users/display-name";
-import { getNotificationRuntime } from "~/server/notifications/runtime";
 import { serverRuntime } from "~/server/runtime";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
@@ -14,9 +13,7 @@ const EXPIRY_NOTIFICATION_THRESHOLD_MS = 7 * 24 * 60 * 60 * 1000;
 
 interface AccountLifecycleDeps {
   executor?: DatabaseExecutor;
-  notificationSender?: ReturnType<
-    typeof getNotificationRuntime
-  >["notificationSender"];
+  notificationSender?: typeof serverRuntime.notifications.notificationSender;
 }
 
 async function runAccountExpiryTick(executor: DatabaseExecutor) {
@@ -36,9 +33,7 @@ async function runAccountExpiryTick(executor: DatabaseExecutor) {
 
 async function runExpiryNotificationTick(
   users: ReturnType<typeof createUsersRepo>,
-  notificationSender: ReturnType<
-    typeof getNotificationRuntime
-  >["notificationSender"],
+  notificationSender: typeof serverRuntime.notifications.notificationSender,
 ) {
   const threshold = Date.now() + EXPIRY_NOTIFICATION_THRESHOLD_MS;
   const expiringUsers = await users.findExpiringBefore(threshold);
@@ -100,7 +95,7 @@ export function startAccountLifecycleMaintenance(
   const executor = deps.executor ?? serverRuntime.infra.db;
   const users = createUsersRepo(executor);
   const notificationSender =
-    deps.notificationSender ?? getNotificationRuntime().notificationSender;
+    deps.notificationSender ?? serverRuntime.notifications.notificationSender;
 
   setInterval(() => {
     void runAccountExpiryTick(executor);

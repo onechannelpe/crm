@@ -12,12 +12,13 @@ import {
 } from "~/server/auth/application/onboarding";
 import { createAuthOnboardingContext } from "~/server/auth/infrastructure/onboarding-context";
 import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
+import { serverRuntime } from "~/server/runtime";
 import { isErr } from "~/server/shared/result";
 
 export async function beginPasskeyRegistration(): Promise<PasskeyEnrollmentChallenge> {
   const session = await requireSession();
   const { ipAddress } = getRequestClientMetadata();
-  const onboardingContext = createAuthOnboardingContext();
+  const onboardingContext = createAuthOnboardingContext(serverRuntime.infra.db);
   const result = await beginPasskeyRegistrationService(
     onboardingContext.repos,
     {
@@ -38,7 +39,7 @@ export async function finishPasskeyRegistration(
 ): Promise<void> {
   const session = await requireSession();
   const request = getRequestClientMetadata();
-  const onboardingContext = createAuthOnboardingContext();
+  const onboardingContext = createAuthOnboardingContext(serverRuntime.infra.db);
   const result = await finishPasskeyRegistrationService(
     onboardingContext.repos,
     {

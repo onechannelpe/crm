@@ -1,5 +1,4 @@
 import { createExtensionRuntimeRepo } from "~/server/extension/repos";
-import { serverRuntime } from "~/server/runtime";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 
@@ -11,36 +10,19 @@ interface AdminSessionRevocationRuntimeDeps {
   invalidateUserSessions(userId: number): Promise<void>;
 }
 
-function resolveAdminSessionRevocationRuntimeDeps(
-  deps?: Partial<AdminSessionRevocationRuntimeDeps>,
-): AdminSessionRevocationRuntimeDeps {
-  return {
-    executor: deps?.executor ?? serverRuntime.infra.db,
-    invalidateSession:
-      deps?.invalidateSession ??
-      ((sessionId: string) =>
-        serverRuntime.auth.sessionService.invalidateSession(sessionId)),
-    invalidateUserSessions:
-      deps?.invalidateUserSessions ??
-      ((userId: number) =>
-        serverRuntime.auth.sessionService.invalidateUserSessions(userId)),
-  };
-}
-
 export function createAdminSessionRevocationContext(
-  deps?: Partial<AdminSessionRevocationRuntimeDeps>,
+  deps: AdminSessionRevocationRuntimeDeps,
 ): AdminSessionRevocationPort {
-  const runtimeDeps = resolveAdminSessionRevocationRuntimeDeps(deps);
-  const executor = runtimeDeps.executor;
+  const executor = deps.executor;
   const auditLogs = createAuditLogsRepo(executor);
   const extensionRuntime = createExtensionRuntimeRepo(executor);
 
   return {
     invalidateSession(sessionId) {
-      return runtimeDeps.invalidateSession(sessionId);
+      return deps.invalidateSession(sessionId);
     },
     invalidateUserSessions(userId) {
-      return runtimeDeps.invalidateUserSessions(userId);
+      return deps.invalidateUserSessions(userId);
     },
     async revokeInstallationSessionsByAuthSession(sessionId, now) {
       await extensionRuntime.revokeInstallationSessionsByAuthSession(

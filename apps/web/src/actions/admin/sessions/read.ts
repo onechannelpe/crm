@@ -8,6 +8,7 @@ import {
   listUserSessions as listUserSessionsService,
 } from "~/server/auth/application/admin-sessions";
 import { createAdminSessionsReadContext } from "~/server/auth/infrastructure/admin-sessions-read-context";
+import { serverRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 import { isErr, Ok } from "~/server/shared/result";
 
@@ -18,7 +19,7 @@ export async function listUserSessions(userId: number) {
   if (isErr(parsedInput)) {
     throw validationError(parsedInput.error.message);
   }
-  const readContext = createAdminSessionsReadContext();
+  const readContext = createAdminSessionsReadContext(serverRuntime.infra.db);
   return runAction({
     actionName: "admin.sessions.user.read",
     access: { kind: "role", role: "admin" },
@@ -30,7 +31,7 @@ export async function listUserSessions(userId: number) {
 }
 
 export async function getActiveSessionsCount(): Promise<number> {
-  const readContext = createAdminSessionsReadContext();
+  const readContext = createAdminSessionsReadContext(serverRuntime.infra.db);
   return runAction({
     actionName: "admin.sessions.count.read",
     access: { kind: "role", role: "admin" },
@@ -40,7 +41,7 @@ export async function getActiveSessionsCount(): Promise<number> {
 }
 
 export async function listAllActiveSessions(): Promise<SessionInfo[]> {
-  const readContext = createAdminSessionsReadContext();
+  const readContext = createAdminSessionsReadContext(serverRuntime.infra.db);
   return runAction({
     actionName: "admin.sessions.active.read",
     access: { kind: "role", role: "admin" },

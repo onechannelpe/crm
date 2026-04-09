@@ -7,7 +7,6 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createExtensionRuntimeRepo } from "../extension/repos";
 import { createExtensionService } from "../extension/service";
 import type { ServerInfra } from "./infra";
-import { createServerInfra } from "./infra";
 
 function createExtensionRepos(executor: DatabaseExecutor) {
   return {
@@ -35,5 +34,3 @@ export function createExtensionRuntime(infra: ServerInfra) {
 
   return { extensionService };
 }
-
-export const extensionRuntime = createExtensionRuntime(createServerInfra());
