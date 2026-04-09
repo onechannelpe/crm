@@ -13,11 +13,9 @@ import {
   type AuthFunnelSource,
   type AuthFunnelScreen,
 } from "~/lib/observability/auth-funnel";
-import { getObservabilityRuntime } from "~/server/observability/runtime";
+import { serverRuntime } from "~/server/runtime";
 
 import { resolveBoundedPositiveInt } from "./analytics-input";
-
-const { observabilityService } = getObservabilityRuntime();
 
 export interface AuthFunnelSummaryRow {
   eventName: AuthFunnelEventName;
@@ -111,6 +109,7 @@ export async function getAuthFunnelSnapshot(params?: {
   const eventName = assertEventName(params?.eventName);
   const method = assertMethod(params?.method);
   const outcome = assertOutcome(params?.outcome);
+  const { observabilityService } = serverRuntime.observability;
 
   const [summary, recent] = await Promise.all([
     observabilityService.summarizeAuthFunnel({

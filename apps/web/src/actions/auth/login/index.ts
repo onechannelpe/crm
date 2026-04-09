@@ -41,7 +41,8 @@ export async function passwordLogin(
   const identifier = readLoginText(formData, "identifier");
   const password = readLoginText(formData, "password", { trim: false });
   const request = getRequestClientMetadata();
-  const result = await submitPasswordLoginWithDeps(createAuthLoginContext(), {
+  const loginContext = createAuthLoginContext();
+  const result = await submitPasswordLoginWithDeps(loginContext, {
     identifier,
     password,
     ipAddress: request.ipAddress,
@@ -158,7 +159,8 @@ export async function totpLogin(
     throw redirect("/login/user?error=flow_expired");
   }
   const request = getRequestClientMetadata();
-  const result = await submitTotpLoginWithDeps(createAuthLoginContext(), {
+  const loginContext = createAuthLoginContext();
+  const result = await submitTotpLoginWithDeps(loginContext, {
     flowId,
     totpCode,
     ipAddress: request.ipAddress,

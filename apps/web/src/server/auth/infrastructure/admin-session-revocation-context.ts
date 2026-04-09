@@ -1,20 +1,46 @@
 import { createExtensionRuntimeRepo } from "~/server/extension/repos";
 import { serverRuntime } from "~/server/runtime";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 
 import type { AdminSessionRevocationPort } from "../application/ports";
 
-export function createAdminSessionRevocationContext(): AdminSessionRevocationPort {
-  const executor = serverRuntime.infra.db;
+interface AdminSessionRevocationRuntimeDeps {
+  executor: DatabaseExecutor;
+  invalidateSession(sessionId: string): Promise<void>;
+  invalidateUserSessions(userId: number): Promise<void>;
+}
+
+function resolveAdminSessionRevocationRuntimeDeps(
+  deps?: Partial<AdminSessionRevocationRuntimeDeps>,
+): AdminSessionRevocationRuntimeDeps {
+  return {
+    executor: deps?.executor ?? serverRuntime.infra.db,
+    invalidateSession:
+      deps?.invalidateSession ??
+      ((sessionId: string) =>
+        serverRuntime.auth.sessionService.invalidateSession(sessionId)),
+    invalidateUserSessions:
+      deps?.invalidateUserSessions ??
+      ((userId: number) =>
+        serverRuntime.auth.sessionService.invalidateUserSessions(userId)),
+  };
+}
+
+export function createAdminSessionRevocationContext(
+  deps?: Partial<AdminSessionRevocationRuntimeDeps>,
+): AdminSessionRevocationPort {
+  const runtimeDeps = resolveAdminSessionRevocationRuntimeDeps(deps);
+  const executor = runtimeDeps.executor;
   const auditLogs = createAuditLogsRepo(executor);
   const extensionRuntime = createExtensionRuntimeRepo(executor);
 
   return {
     invalidateSession(sessionId) {
-      return serverRuntime.auth.sessionService.invalidateSession(sessionId);
+      return runtimeDeps.invalidateSession(sessionId);
     },
     invalidateUserSessions(userId) {
-      return serverRuntime.auth.sessionService.invalidateUserSessions(userId);
+      return runtimeDeps.invalidateUserSessions(userId);
     },
     async revokeInstallationSessionsByAuthSession(sessionId, now) {
       await extensionRuntime.revokeInstallationSessionsByAuthSession(

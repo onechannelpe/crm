@@ -2,10 +2,8 @@
 
 import { internalError, validationError } from "~/lib/app-errors";
 import { requireSession } from "~/lib/auth/access/session";
-import { getProfilePictureRuntime } from "~/server/users/profile-picture-runtime";
+import { serverRuntime } from "~/server/runtime";
 import type { AvatarDomainErrorCode } from "~/server/users/profile-picture-service";
-
-const { profilePictureService } = getProfilePictureRuntime();
 
 function mapAvatarErrorToMessage(code: AvatarDomainErrorCode): string {
   switch (code) {
@@ -63,6 +61,7 @@ export async function uploadUserAvatar(
   formData: FormData,
 ): Promise<UpdateAvatarResult> {
   const session = await requireSession();
+  const { profilePictureService } = serverRuntime.profilePicture;
   const file = formData.get("file");
 
   if (!(file instanceof File)) {
@@ -86,6 +85,7 @@ export async function uploadUserAvatar(
 
 export async function removeUserAvatar(): Promise<RemoveAvatarResult> {
   const session = await requireSession();
+  const { profilePictureService } = serverRuntime.profilePicture;
   const result = await profilePictureService.remove(session.userId);
 
   if (!result.ok) {

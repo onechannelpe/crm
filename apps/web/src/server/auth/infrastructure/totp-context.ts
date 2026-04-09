@@ -1,20 +1,23 @@
-import { db } from "~/lib/db/db";
 import {
   createUserTotpFactorsRepo,
   createUserTotpRecoveryCodesRepo,
 } from "~/server/auth/repos-user-totp-factors";
+import { serverRuntime } from "~/server/runtime";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import { createUsersRepo } from "~/server/users/repos-users";
 
-export function createTotpEnrollmentContext() {
+export function createTotpEnrollmentContext(
+  executor: DatabaseExecutor = serverRuntime.infra.db,
+) {
   return {
     repos: {
-      sessions: createSessionRepository(db),
-      users: createUsersRepo(db),
-      userTotpFactors: createUserTotpFactorsRepo(db),
-      userTotpRecoveryCodes: createUserTotpRecoveryCodesRepo(db),
-      auditLogs: createAuditLogsRepo(db),
+      sessions: createSessionRepository(executor),
+      users: createUsersRepo(executor),
+      userTotpFactors: createUserTotpFactorsRepo(executor),
+      userTotpRecoveryCodes: createUserTotpRecoveryCodesRepo(executor),
+      auditLogs: createAuditLogsRepo(executor),
     },
   };
 }

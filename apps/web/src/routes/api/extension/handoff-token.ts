@@ -2,7 +2,7 @@ import type { APIEvent } from "@solidjs/start/server";
 
 import { requirePermission } from "~/lib/auth/access/session";
 import { isCreateExtensionHandoffTokenRequest } from "~/server/extension/contracts";
-import { getExtensionApiRuntime } from "~/server/extension/runtime";
+import { serverRuntime } from "~/server/runtime";
 import { isErr } from "~/server/shared/result";
 
 import { readJsonBody } from "./json-body";
@@ -24,7 +24,7 @@ export async function POST(event: APIEvent): Promise<Response> {
 
     const origin = event.request.headers.get("origin") ?? "";
     const result =
-      await getExtensionApiRuntime().extensionService.createHandoffToken({
+      await serverRuntime.extension.extensionService.createHandoffToken({
         userId: session.userId,
         authSessionId: session.id,
         branchId: session.branchId,

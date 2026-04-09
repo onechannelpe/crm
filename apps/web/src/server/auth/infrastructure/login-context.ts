@@ -1,5 +1,4 @@
 import { createPrivilegedLoginAlertSender } from "~/lib/auth/security/login-alerts";
-import { db } from "~/lib/db/db";
 import { env } from "~/lib/env";
 import { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
@@ -12,7 +11,9 @@ import {
 import { createNotificationCampaignsRepo } from "~/server/notifications/repos-campaigns";
 import { createNotificationContactsRepo } from "~/server/notifications/repos-contacts";
 import { createNotificationPreferencesRepo } from "~/server/notifications/repos-preferences";
+import { serverRuntime } from "~/server/runtime";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import { createPasskeysRepo } from "~/server/users/repos-passkeys";
 import { createUsersRepo } from "~/server/users/repos-users";
@@ -32,26 +33,28 @@ export type AuthLoginRepos = {
   webauthnChallenges: ReturnType<typeof createWebauthnChallengesRepo>;
 };
 
-export function createAuthLoginContext() {
+export function createAuthLoginContext(
+  executor: DatabaseExecutor = serverRuntime.infra.db,
+) {
   return {
     repos: {
-      oauthAccounts: createOAuthAccountsRepo(db),
-      loginFlows: createLoginFlowsRepo(db),
-      users: createUsersRepo(db),
-      sessions: createSessionRepository(db),
-      auditLogs: createAuditLogsRepo(db),
-      authThrottle: createAuthThrottleRepo(db),
-      authEvents: createAuthEventsRepo(db),
-      userTotpFactors: createUserTotpFactorsRepo(db),
-      userTotpRecoveryCodes: createUserTotpRecoveryCodesRepo(db),
-      passkeys: createPasskeysRepo(db),
-      webauthnChallenges: createWebauthnChallengesRepo(db),
+      oauthAccounts: createOAuthAccountsRepo(executor),
+      loginFlows: createLoginFlowsRepo(executor),
+      users: createUsersRepo(executor),
+      sessions: createSessionRepository(executor),
+      auditLogs: createAuditLogsRepo(executor),
+      authThrottle: createAuthThrottleRepo(executor),
+      authEvents: createAuthEventsRepo(executor),
+      userTotpFactors: createUserTotpFactorsRepo(executor),
+      userTotpRecoveryCodes: createUserTotpRecoveryCodesRepo(executor),
+      passkeys: createPasskeysRepo(executor),
+      webauthnChallenges: createWebauthnChallengesRepo(executor),
     } satisfies AuthLoginRepos,
     privilegedLoginAlertSender: createPrivilegedLoginAlertSender(
       {
-        notificationCampaigns: createNotificationCampaignsRepo(db),
-        notificationContacts: createNotificationContactsRepo(db),
-        notificationPreferences: createNotificationPreferencesRepo(db),
+        notificationCampaigns: createNotificationCampaignsRepo(executor),
+        notificationContacts: createNotificationContactsRepo(executor),
+        notificationPreferences: createNotificationPreferencesRepo(executor),
       },
       {
         resendApiKey: env.resendApiKey || undefined,

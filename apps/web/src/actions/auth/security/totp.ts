@@ -13,22 +13,23 @@ export async function beginTotpEnrollment(): Promise<{
   otpauthUri: string;
   qrCodeDataUrl: string;
 }> {
+  const totpContext = createTotpEnrollmentContext();
   return runAction({
     actionName: "auth.totp.begin",
     access: { kind: "session" },
-    execute: (ctx) =>
-      beginTotpEnrollmentService(ctx, createTotpEnrollmentContext()),
+    execute: (ctx) => beginTotpEnrollmentService(ctx, totpContext),
   });
 }
 
 export async function finishTotpEnrollment(code: string): Promise<string[]> {
   const safeCode = assertNonEmptyString(code, "code");
+  const totpContext = createTotpEnrollmentContext();
   const result = await runAction({
     actionName: "auth.totp.finish",
     access: { kind: "session" },
     input: { hasCode: true },
     execute: (ctx) =>
-      finishTotpEnrollmentService(ctx, createTotpEnrollmentContext(), {
+      finishTotpEnrollmentService(ctx, totpContext, {
         code: safeCode,
       }),
   });

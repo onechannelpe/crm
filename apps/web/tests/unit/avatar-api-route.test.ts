@@ -9,12 +9,14 @@ vi.mock("../../src/lib/auth/access/session", () => ({
   getSession: getSessionMock,
 }));
 
-vi.mock("../../src/server/users/profile-picture-runtime", () => ({
-  getProfilePictureRuntime: () => ({
-    profilePictureService: {
-      get: getMock,
+vi.mock("../../src/server/runtime", () => ({
+  serverRuntime: {
+    profilePicture: {
+      profilePictureService: {
+        get: getMock,
+      },
     },
-  }),
+  },
 }));
 
 import { GET } from "../../src/routes/api/me/avatar";

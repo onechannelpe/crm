@@ -11,7 +11,8 @@ import {
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function getLoginFlow(flowId: number) {
-  return getLoginFlowState(flowId, createAuthLoginContext().repos);
+  const loginContext = createAuthLoginContext();
+  return getLoginFlowState(flowId, loginContext.repos);
 }
 
 export async function logout(): Promise<void> {

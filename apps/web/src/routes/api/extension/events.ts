@@ -1,7 +1,7 @@
 import type { APIEvent } from "@solidjs/start/server";
 
 import { isExtensionRuntimeEventEnvelope } from "~/server/extension/contracts";
-import { getExtensionApiRuntime } from "~/server/extension/runtime";
+import { serverRuntime } from "~/server/runtime";
 import { isErr } from "~/server/shared/result";
 
 import { readJsonBody } from "./json-body";
@@ -33,7 +33,7 @@ export async function POST(event: APIEvent): Promise<Response> {
     }
 
     const result =
-      await getExtensionApiRuntime().extensionService.ingestRuntimeEvent({
+      await serverRuntime.extension.extensionService.ingestRuntimeEvent({
         sessionToken,
         event: body,
       });
