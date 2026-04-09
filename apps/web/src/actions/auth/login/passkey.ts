@@ -9,7 +9,7 @@ import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { getActionRequestContext } from "~/lib/observability/context";
 import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
 import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
-import { finishPasskeyLoginWithDeps } from "~/server/features/auth/application/login/passkey";
+import { finishPasskeyLogin as finishPasskeyLoginService } from "~/server/features/auth/application/login/passkey";
 import { replaceCurrentSessionAndResolveRedirect } from "~/server/features/auth/application/login/session-redirect";
 import { serverRuntime } from "~/server/runtime";
 import { isErr } from "~/server/shared/result";
@@ -49,13 +49,19 @@ export async function finishPasskeyLogin(
 > {
   const request = getRequestClientMetadata();
   const loginContext = createAuthLoginContext(serverRuntime.infra.db);
-  const result = await finishPasskeyLoginWithDeps(loginContext, {
-    flowId,
-    response,
-    ipAddress: request.ipAddress,
-    userAgent: request.userAgent,
-    createWebauthnProvider: createRequestPasskeyProviderFactory(),
-  });
+  const result = await finishPasskeyLoginService(
+    {
+      repos: loginContext.repos,
+      sendPrivilegedLoginAlert: loginContext.privilegedLoginAlertSender,
+    },
+    {
+      flowId,
+      response,
+      ipAddress: request.ipAddress,
+      userAgent: request.userAgent,
+      createWebauthnProvider: createRequestPasskeyProviderFactory(),
+    },
+  );
 
   if (isErr(result)) {
     await recordAuthAnalyticsEvent(

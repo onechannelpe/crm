@@ -4,10 +4,8 @@ import {
   createPasskeyLoginFinishAuthService,
   createPasskeyLoginStartAuthService,
 } from "~/lib/auth/passkey/service";
-import type {
-  AuthLoginContext,
-  AuthLoginRepos,
-} from "~/server/auth/infrastructure/login-context";
+import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
+import type { AuthLoginRepos } from "~/server/auth/infrastructure/login-context";
 
 type PasskeyStartProviderFactory = NonNullable<
   Parameters<typeof createPasskeyLoginStartAuthService>[1]
@@ -28,8 +26,11 @@ export function createPasskeyStartService(
   });
 }
 
-export async function finishPasskeyLoginWithDeps(
-  deps: AuthLoginContext,
+export async function finishPasskeyLogin(
+  deps: {
+    repos: AuthLoginRepos;
+    sendPrivilegedLoginAlert: SendPrivilegedLoginAlert;
+  },
   input: {
     flowId: number;
     response: AuthenticationResponseJSON;
@@ -46,6 +47,6 @@ export async function finishPasskeyLoginWithDeps(
     response: input.response,
     ipAddress: input.ipAddress,
     userAgent: input.userAgent,
-    sendPrivilegedLoginAlert: deps.privilegedLoginAlertSender,
+    sendPrivilegedLoginAlert: deps.sendPrivilegedLoginAlert,
   });
 }

@@ -7,6 +7,7 @@ import { createObservabilityRuntime } from "./observability-runtime";
 import { createPipelineRuntime } from "./pipeline-runtime";
 import { createProfilePictureRuntime } from "./profile-picture-runtime";
 import { createSalesRuntime } from "./sales-runtime";
+import { createSearchRuntime } from "./search-runtime";
 import { createSecurityRuntime } from "./security-runtime";
 
 export function createServerRuntime() {
@@ -23,6 +24,7 @@ export function createServerRuntime() {
     profilePicture: createProfilePictureRuntime(infra),
     security: createSecurityRuntime(infra),
     sales: createSalesRuntime(infra),
+    search: createSearchRuntime(infra),
   };
 }
 
