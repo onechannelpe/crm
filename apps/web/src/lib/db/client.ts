@@ -9,6 +9,9 @@ import type { Database as DatabaseSchema } from "./types";
 const logger = createLogger("db-client");
 
 function normalizeDbUrl(input: string): string {
+  if (input === ":memory:") {
+    return input;
+  }
   if (
     input.startsWith("http://") ||
     input.startsWith("https://") ||

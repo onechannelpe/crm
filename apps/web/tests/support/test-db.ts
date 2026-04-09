@@ -1,7 +1,7 @@
-import { mkdir, rm } from "node:fs/promises";
+import { copyFile, mkdir, rename, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
 
-import type { Kysely } from "kysely";
+import { sql, type Kysely } from "kysely";
 
 import type { Role } from "../../src/lib/auth/access/rbac";
 import { createDb } from "../../src/lib/db/client";
@@ -30,6 +30,9 @@ import {
 } from "./test-repositories";
 
 const ARTIFACT_DIR = join(process.cwd(), ".vitest-db");
+const TEMPLATE_DB_NAME = "__template-seeded.db";
+
+let templateDbPathPromise: Promise<string> | null = null;
 
 type TestSalesRecordCreateDraftInput = CreateSalesRecordDraftInput & {
   executiveUserId: number;
@@ -398,34 +401,75 @@ export interface TestDbContext {
   salesRecords: TestSalesRecordCommands;
 }
 
+async function buildSeededTemplateDb(templateDbPath: string): Promise<void> {
+  const db = createDb(templateDbPath);
+
+  try {
+    await sql`PRAGMA journal_mode=DELETE`.execute(db);
+
+    for (const module of SCHEMA_MODULES) {
+      // eslint-disable-next-line no-await-in-loop
+      await module.createTables(db);
+    }
+    for (const module of SEED_MODULES) {
+      // eslint-disable-next-line no-await-in-loop
+      await module.run(db);
+    }
+
+    const hash = await computeHash(SCHEMA_MODULES, SEED_MODULES);
+    await writeStoredHash(db, hash);
+
+    await seedTemplate(db);
+    await sql`PRAGMA wal_checkpoint(TRUNCATE)`.execute(db);
+  } finally {
+    await db.destroy();
+  }
+}
+
+async function ensureSeededTemplateDb(): Promise<string> {
+  if (templateDbPathPromise) {
+    return templateDbPathPromise;
+  }
+
+  templateDbPathPromise = (async () => {
+    await mkdir(ARTIFACT_DIR, { recursive: true });
+    const templateDbPath = join(ARTIFACT_DIR, TEMPLATE_DB_NAME);
+
+    try {
+      await stat(templateDbPath);
+      return templateDbPath;
+    } catch {
+      const tempTemplateDbPath = join(
+        ARTIFACT_DIR,
+        `${TEMPLATE_DB_NAME}.tmp-${process.pid}-${Date.now()}`,
+      );
+      await buildSeededTemplateDb(tempTemplateDbPath);
+      await rename(tempTemplateDbPath, templateDbPath);
+      return templateDbPath;
+    }
+  })();
+
+  try {
+    return await templateDbPathPromise;
+  } catch (error) {
+    templateDbPathPromise = null;
+    throw error;
+  }
+}
+
+export async function prepareTestDbTemplate(): Promise<void> {
+  await ensureSeededTemplateDb();
+}
+
 export async function createIsolatedTestDb(
   prefix: string,
 ): Promise<TestDbContext> {
-  await mkdir(ARTIFACT_DIR, { recursive: true });
-
-  const dbPath = join(
-    ARTIFACT_DIR,
-    `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}.db`,
-  );
-  const storageRoot = join(
-    ARTIFACT_DIR,
-    `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}-files`,
-  );
+  const templateDbPath = await ensureSeededTemplateDb();
+  const runId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const dbPath = join(ARTIFACT_DIR, `${prefix}-${runId}.db`);
+  const storageRoot = join(ARTIFACT_DIR, `${prefix}-${runId}-files`);
+  await copyFile(templateDbPath, dbPath);
   const db = createDb(dbPath);
-
-  for (const module of SCHEMA_MODULES) {
-    // eslint-disable-next-line no-await-in-loop
-    await module.createTables(db);
-  }
-  for (const module of SEED_MODULES) {
-    // eslint-disable-next-line no-await-in-loop
-    await module.run(db);
-  }
-
-  const hash = await computeHash(SCHEMA_MODULES, SEED_MODULES);
-  await writeStoredHash(db, hash);
-
-  await seedTemplate(db);
   const repos = createTestRepositories(db);
   const mutationDeps: SalesRecordRateLimitedMutationDeps = {
     rateLimitDeps: {
@@ -453,7 +497,13 @@ export async function createIsolatedTestDb(
   };
 }
 
-export async function cleanupTestDb(ctx: TestDbContext): Promise<void> {
+export async function cleanupTestDb(
+  ctx: TestDbContext | null | undefined,
+): Promise<void> {
+  if (!ctx) {
+    return;
+  }
+
   await ctx.db.destroy();
 
   try {

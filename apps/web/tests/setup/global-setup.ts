@@ -1,6 +1,8 @@
 import { rm } from "node:fs/promises";
 import { join } from "node:path";
 
+import { prepareTestDbTemplate } from "../support/test-db";
+
 const ARTIFACT_DIR = join(process.cwd(), ".vitest-db");
 
 export async function setup() {
@@ -15,6 +17,8 @@ export async function setup() {
       throw error;
     }
   }
+
+  await prepareTestDbTemplate();
 
   return async () => {
     try {
