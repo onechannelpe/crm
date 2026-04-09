@@ -1,10 +1,9 @@
 import type { Kysely } from "kysely";
 
-import { db as globalDb } from "./db";
 import { computeHash, readStoredHash, writeStoredHash } from "./migration-hash";
 import { SCHEMA_MODULES, SEED_MODULES } from "./schema";
 
-export async function migrateToLatest(db: Kysely<any> = globalDb) {
+export async function migrateToLatest(db: Kysely<any>) {
   const hash = await computeHash(SCHEMA_MODULES, SEED_MODULES);
   const stored = await readStoredHash(db);
 
@@ -15,13 +14,15 @@ export async function migrateToLatest(db: Kysely<any> = globalDb) {
     );
   }
 
-  for (const module of SCHEMA_MODULES) {
-    // eslint-disable-next-line no-await-in-loop
-    await module.createTables(db);
-  }
-  for (const module of SEED_MODULES) {
-    // eslint-disable-next-line no-await-in-loop
-    await module.run(db);
-  }
-  await writeStoredHash(db, hash);
+  await db.transaction().execute(async (trx) => {
+    for (const module of SCHEMA_MODULES) {
+      // eslint-disable-next-line no-await-in-loop
+      await module.createTables(trx);
+    }
+    for (const module of SEED_MODULES) {
+      // eslint-disable-next-line no-await-in-loop
+      await module.run(trx);
+    }
+    await writeStoredHash(trx, hash);
+  });
 }

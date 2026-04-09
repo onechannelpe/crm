@@ -1,10 +1,13 @@
+import type { Kysely } from "kysely";
+
 import { hashPassword } from "../auth/password/password";
 import { createLogger } from "../observability/logger";
-import { db } from "./db";
+import { db as globalDb } from "./db";
+import type { Database } from "./types";
 
 const logger = createLogger("db-seed");
 
-export async function seedIfEmpty() {
+export async function seedIfEmpty(db: Kysely<Database>) {
   const userCount = await db
     .selectFrom("users")
     .select(db.fn.countAll().as("count"))
@@ -1105,7 +1108,7 @@ export async function seedIfEmpty() {
 
 async function seed() {
   try {
-    await seedIfEmpty();
+    await seedIfEmpty(globalDb);
     process.exit(0);
   } catch (err) {
     logger.error("seed_failed", { error: err });

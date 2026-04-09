@@ -8,7 +8,7 @@ import {
   requiresStrongAuthRole,
 } from "../../src/lib/auth/security/strong-auth-status";
 import { createDb } from "../../src/lib/db/client";
-import { SCHEMA_MODULES, SEED_MODULES } from "../../src/lib/db/schema";
+import { migrateToLatest } from "../../src/lib/db/migrate";
 import { createTestRepositories } from "../support/test-repositories";
 
 describe("seed invariants", () => {
@@ -32,17 +32,10 @@ describe("seed invariants", () => {
     const previousDbPath = process.env.WEB_DB_PATH;
 
     try {
-      for (const module of SCHEMA_MODULES) {
-        // eslint-disable-next-line no-await-in-loop
-        await module.createTables(db);
-      }
-      for (const module of SEED_MODULES) {
-        // eslint-disable-next-line no-await-in-loop
-        await module.run(db);
-      }
+      await migrateToLatest(db);
       process.env.WEB_DB_PATH = dbPath;
       const { seedIfEmpty } = await import("../../src/lib/db/seed");
-      await seedIfEmpty();
+      await seedIfEmpty(db);
 
       const repos = createTestRepositories(db);
       const valeria = await repos.users.findByUsername("valeria.paredes");
