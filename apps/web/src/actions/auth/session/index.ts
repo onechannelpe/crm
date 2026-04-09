@@ -8,10 +8,11 @@ import {
   createAuthSessionLogoutContext,
   createAuthSessionReadContext,
 } from "~/server/auth/infrastructure/session-context";
+import { serverRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function getLoginFlow(flowId: number) {
-  const loginContext = createAuthLoginContext();
+  const loginContext = createAuthLoginContext(serverRuntime.infra.db);
   return getLoginFlowState(flowId, loginContext.repos);
 }
 
@@ -19,7 +20,15 @@ export async function logout(): Promise<void> {
   await runAction({
     actionName: "auth.session.logout",
     access: { kind: "session" },
-    execute: (ctx) => logoutUser(ctx, createAuthSessionLogoutContext()),
+    execute: (ctx) =>
+      logoutUser(
+        ctx,
+        createAuthSessionLogoutContext({
+          executor: serverRuntime.infra.db,
+          invalidateSession: (sessionId: string) =>
+            serverRuntime.auth.sessionService.invalidateSession(sessionId),
+        }),
+      ),
   });
 }
 
@@ -27,6 +36,14 @@ export async function getMe(): Promise<CurrentUserView | null> {
   return runAction({
     actionName: "auth.session.get_me",
     access: { kind: "session" },
-    execute: (ctx) => getCurrentUser(ctx, createAuthSessionReadContext()),
+    execute: (ctx) =>
+      getCurrentUser(
+        ctx,
+        createAuthSessionReadContext({
+          executor: serverRuntime.infra.db,
+          invalidateSession: (sessionId: string) =>
+            serverRuntime.auth.sessionService.invalidateSession(sessionId),
+        }),
+      ),
   });
 }

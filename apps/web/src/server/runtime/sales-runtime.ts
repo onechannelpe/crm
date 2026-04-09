@@ -5,7 +5,6 @@ import { createReportExportRepo } from "~/server/sales/repos-report-exports";
 import { createSalesRecordsRepo } from "~/server/sales/repos-sales-records";
 
 import type { ServerInfra } from "./infra";
-import { createServerInfra } from "./infra";
 
 export function createSalesRuntime(infra: ServerInfra) {
   return {
@@ -18,5 +17,3 @@ export function createSalesRuntime(infra: ServerInfra) {
     ),
   };
 }
-
-export const salesRuntime = createSalesRuntime(createServerInfra());

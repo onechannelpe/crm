@@ -2,7 +2,6 @@ import { createSearchEnrichmentService } from "~/server/client-search/enrichment
 import { createSearchEnrichmentRepo } from "~/server/client-search/repos-enrichment";
 
 import type { ServerInfra } from "./infra";
-import { createServerInfra } from "./infra";
 
 export function createClientSearchRuntime(infra: ServerInfra) {
   return {
@@ -11,6 +10,3 @@ export function createClientSearchRuntime(infra: ServerInfra) {
     }),
   };
 }
-
-export const clientSearchRuntime =
-  createClientSearchRuntime(createServerInfra());

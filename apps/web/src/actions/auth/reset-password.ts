@@ -12,6 +12,7 @@ import {
   resetPassword as resetPasswordService,
 } from "~/server/auth/application/password-reset";
 import { createPasswordResetContext } from "~/server/auth/infrastructure/password-reset-context";
+import { serverRuntime } from "~/server/runtime";
 
 function getOrigin(): string {
   const event = getRequestEvent();
@@ -23,7 +24,10 @@ export async function requestPasswordReset(
   formData: FormData,
 ): Promise<RequestPasswordResetResult> {
   const rawEmail = formData.get("email");
-  const passwordResetContext = createPasswordResetContext();
+  const passwordResetContext = createPasswordResetContext({
+    executor: serverRuntime.infra.db,
+    notificationSender: serverRuntime.notifications.notificationSender,
+  });
   return requestPasswordResetService({
     deps: passwordResetContext,
     email: typeof rawEmail === "string" ? rawEmail : "",
@@ -41,7 +45,10 @@ export async function resetPassword(
   const password = typeof rawPassword === "string" ? rawPassword : "";
   const confirmPassword = typeof rawConfirm === "string" ? rawConfirm : "";
 
-  const passwordResetContext = createPasswordResetContext();
+  const passwordResetContext = createPasswordResetContext({
+    executor: serverRuntime.infra.db,
+    notificationSender: serverRuntime.notifications.notificationSender,
+  });
   return resetPasswordService({
     repos: passwordResetContext.repos,
     token,

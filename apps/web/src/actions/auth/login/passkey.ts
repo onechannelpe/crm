@@ -13,6 +13,7 @@ import {
 } from "~/server/auth/application/login";
 import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
 import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
+import { serverRuntime } from "~/server/runtime";
 import { isErr } from "~/server/shared/result";
 
 function normalizePasskeyLoginError(error: FinishPasskeyLoginError): {
@@ -49,7 +50,7 @@ export async function finishPasskeyLogin(
     }
 > {
   const request = getRequestClientMetadata();
-  const loginContext = createAuthLoginContext();
+  const loginContext = createAuthLoginContext(serverRuntime.infra.db);
   const result = await finishPasskeyLoginWithDeps(loginContext, {
     flowId,
     response,

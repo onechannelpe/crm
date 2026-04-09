@@ -11,7 +11,6 @@ import {
 import { createNotificationCampaignsRepo } from "~/server/notifications/repos-campaigns";
 import { createNotificationContactsRepo } from "~/server/notifications/repos-contacts";
 import { createNotificationPreferencesRepo } from "~/server/notifications/repos-preferences";
-import { serverRuntime } from "~/server/runtime";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
@@ -33,9 +32,7 @@ export type AuthLoginRepos = {
   webauthnChallenges: ReturnType<typeof createWebauthnChallengesRepo>;
 };
 
-export function createAuthLoginContext(
-  executor: DatabaseExecutor = serverRuntime.infra.db,
-) {
+export function createAuthLoginContext(executor: DatabaseExecutor) {
   return {
     repos: {
       oauthAccounts: createOAuthAccountsRepo(executor),

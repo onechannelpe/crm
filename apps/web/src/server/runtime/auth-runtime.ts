@@ -5,7 +5,6 @@ import { createAuthSessionRepo } from "~/server/features/auth/infra/session-repo
 import { createAuthUsersRepo } from "~/server/features/auth/infra/users-repo";
 
 import type { ServerInfra } from "./infra";
-import { createServerInfra } from "./infra";
 
 export function createAuthRuntime(infra: ServerInfra) {
   return {
@@ -21,5 +20,3 @@ export function createAuthRuntime(infra: ServerInfra) {
     }),
   };
 }
-
-export const authRuntime = createAuthRuntime(createServerInfra());

@@ -1,7 +1,6 @@
 import { deleteSessionCookie } from "~/lib/auth/session/cookies";
 import { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
 import { createExtensionRuntimeRepo } from "~/server/extension/repos";
-import { serverRuntime } from "~/server/runtime";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import { createBranchesRepo } from "~/server/users/repos-branches";
@@ -16,23 +15,8 @@ interface AuthSessionRuntimeDeps {
   invalidateSession(sessionId: string): Promise<void>;
 }
 
-function resolveAuthSessionRuntimeDeps(
-  deps?: Partial<AuthSessionRuntimeDeps>,
-): AuthSessionRuntimeDeps {
-  return {
-    executor: deps?.executor ?? serverRuntime.infra.db,
-    invalidateSession:
-      deps?.invalidateSession ??
-      ((sessionId: string) =>
-        serverRuntime.auth.sessionService.invalidateSession(sessionId)),
-  };
-}
-
-export function createAuthSessionReadContext(
-  deps?: Partial<AuthSessionRuntimeDeps>,
-) {
-  const runtimeDeps = resolveAuthSessionRuntimeDeps(deps);
-  const executor = runtimeDeps.executor;
+export function createAuthSessionReadContext(deps: AuthSessionRuntimeDeps) {
+  const executor = deps.executor;
   return {
     repos: {
       users: createUsersRepo(executor),
@@ -45,16 +29,15 @@ export function createAuthSessionReadContext(
 }
 
 export function createAuthSessionLogoutContext(
-  deps?: Partial<AuthSessionRuntimeDeps>,
+  deps: AuthSessionRuntimeDeps,
 ): AuthSessionLogoutPort {
-  const runtimeDeps = resolveAuthSessionRuntimeDeps(deps);
-  const executor = runtimeDeps.executor;
+  const executor = deps.executor;
   const auditLogs = createAuditLogsRepo(executor);
   const extensionRuntime = createExtensionRuntimeRepo(executor);
 
   return {
     invalidateSession(sessionId) {
-      return runtimeDeps.invalidateSession(sessionId);
+      return deps.invalidateSession(sessionId);
     },
     async revokeInstallationSessionsByAuthSession(sessionId, now) {
       await extensionRuntime.revokeInstallationSessionsByAuthSession(

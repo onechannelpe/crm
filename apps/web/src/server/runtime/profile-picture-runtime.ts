@@ -4,7 +4,6 @@ import { createProfilePictureService } from "~/server/users/profile-picture-serv
 import { createUsersRepo } from "~/server/users/repos-users";
 
 import type { ServerInfra } from "./infra";
-import { createServerInfra } from "./infra";
 
 export function createProfilePictureRuntime(infra: ServerInfra) {
   return {
@@ -14,6 +13,3 @@ export function createProfilePictureRuntime(infra: ServerInfra) {
     ),
   };
 }
-
-export const profilePictureRuntime =
-  createProfilePictureRuntime(createServerInfra());

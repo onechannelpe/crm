@@ -7,7 +7,8 @@ import {
 } from "~/lib/auth/google/google-oauth-cookies";
 import { getClientIp } from "~/lib/auth/password/client-ip";
 import { appendSessionCookie } from "~/lib/auth/session/cookies";
-import { getGoogleOAuthCallbackRuntime } from "~/server/auth/runtime-google-oauth";
+import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
+import { serverRuntime } from "~/server/runtime";
 import { isErr } from "~/server/shared/result";
 
 function badRequest(): Response {
@@ -32,7 +33,7 @@ export async function GET(event: APIEvent): Promise<Response> {
 
   const ipAddress = getClientIp(event.request.headers);
   const userAgent = event.request.headers.get("user-agent") ?? null;
-  const runtime = getGoogleOAuthCallbackRuntime();
+  const runtime = createAuthLoginContext(serverRuntime.infra.db);
   const result = await completeGoogleOAuthCallback(
     {
       code,
