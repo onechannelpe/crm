@@ -10,13 +10,13 @@ import { internalError } from "~/lib/app-errors";
 import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { getActionRequestContext } from "~/lib/observability/context";
+import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
+import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
 import {
   createPasskeyStartService,
   submitPasswordLoginWithDeps,
   submitTotpLoginWithDeps,
-} from "~/server/auth/application/login";
-import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
-import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
+} from "~/server/features/auth/application/login";
 import { serverRuntime } from "~/server/runtime";
 import { isErr } from "~/server/shared/result";
 

@@ -12,7 +12,7 @@ import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { parseLoginFlowId } from "~/lib/auth/login-route-flow";
 import type { BeginPasskeyLoginError } from "~/lib/auth/passkey/service";
 import { replaceCurrentSession } from "~/lib/auth/session/session-transition";
-import type { SubmitPrimaryLoginError } from "~/server/auth/application/login";
+import type { SubmitPrimaryLoginError } from "~/server/features/auth/application/login";
 
 export function readPasskeyStartMode(
   formData: FormData,

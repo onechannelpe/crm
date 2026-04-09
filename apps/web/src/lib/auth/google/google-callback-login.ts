@@ -7,6 +7,7 @@ import type {
   createUserTotpFactorsRepo,
   createUserTotpRecoveryCodesRepo,
 } from "~/server/auth/repos-user-totp-factors";
+import { submitGoogleLogin } from "~/server/features/auth/application/login";
 import type { createSessionRepository } from "~/server/sessions/repos-sessions";
 import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
@@ -14,7 +15,6 @@ import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
 import type { createUsersRepo } from "~/server/users/repos-users";
 import type { createWebauthnChallengesRepo } from "~/server/users/repos-webauthn-challenges";
 
-import { submitGoogleLogin } from "~/server/auth/application/login";
 import { authenticateGoogleAuthorizationCode } from "./google-oauth";
 
 type GoogleCallbackDeps = {
