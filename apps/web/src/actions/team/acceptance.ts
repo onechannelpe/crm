@@ -4,9 +4,9 @@ import { validationError } from "~/lib/app-errors";
 import { isValidInviteTokenFormat } from "~/lib/auth/invite/tokens";
 import { setSessionCookie } from "~/lib/auth/session/cookies";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
+import { serverRuntime } from "~/server/runtime";
 import { isErr } from "~/server/shared/result";
 import { acceptTeamInvite as acceptTeamInviteService } from "~/server/team/application/invites";
-import { createTeamInviteContext } from "~/server/team/infrastructure/invite-context";
 
 import { parseAcceptTeamInviteInput } from "./input";
 import { assertStrongPassword } from "./validators";
@@ -23,7 +23,7 @@ export async function acceptTeamInvite(input: {
   const request = getRequestClientMetadata();
 
   const result = await acceptTeamInviteService(
-    createTeamInviteContext(),
+    serverRuntime.team.invites,
     {
       ipAddress: request.ipAddress,
       userAgent: request.userAgent,
