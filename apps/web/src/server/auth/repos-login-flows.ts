@@ -53,3 +53,5 @@ export function createLoginFlowsRepo(db: Kysely<Database>) {
     },
   };
 }
+
+export type LoginFlowsRepo = ReturnType<typeof createLoginFlowsRepo>;

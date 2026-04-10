@@ -2,28 +2,28 @@ import {
   assertNonEmptyString,
   assertPositiveInt,
 } from "~/lib/contracts/guards";
-import { type AuthEventsRepo } from "~/server/auth/repos-auth-events";
-import { type AuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
-import type { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
-import type { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
-import { type SessionRepository } from "~/server/sessions/repos-sessions";
-import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
-import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
-import type { createUsersRepo } from "~/server/users/repos-users";
-import type { createWebauthnChallengesRepo } from "~/server/users/repos-webauthn-challenges";
+import type { AuthEventsRepo } from "~/server/auth/repos-auth-events";
+import type { AuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
+import type { LoginFlowsRepo } from "~/server/auth/repos-login-flows";
+import type { UserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
+import type { SessionRepository } from "~/server/sessions/repos-sessions";
+import type { AuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import type { PasskeysRepo } from "~/server/users/repos-passkeys";
+import type { UsersRepo } from "~/server/users/repos-users";
+import type { WebauthnChallengesRepo } from "~/server/users/repos-webauthn-challenges";
 
 import type { BeginPasskeyLoginError, FinishPasskeyLoginError } from "./types";
 
 export type PasskeyAuthRepos = {
-  users: ReturnType<typeof createUsersRepo>;
+  users: UsersRepo;
   sessions: SessionRepository;
-  loginFlows: ReturnType<typeof createLoginFlowsRepo>;
-  passkeys: ReturnType<typeof createPasskeysRepo>;
-  webauthnChallenges: ReturnType<typeof createWebauthnChallengesRepo>;
-  auditLogs: ReturnType<typeof createAuditLogsRepo>;
+  loginFlows: LoginFlowsRepo;
+  passkeys: PasskeysRepo;
+  webauthnChallenges: WebauthnChallengesRepo;
+  auditLogs: AuditLogsRepo;
   authThrottle: AuthThrottleRepo;
   authEvents: AuthEventsRepo;
-  userTotpFactors: ReturnType<typeof createUserTotpFactorsRepo>;
+  userTotpFactors: UserTotpFactorsRepo;
 };
 
 export const INVALID_PASSKEY_REQUEST = "Invalid passkey request";

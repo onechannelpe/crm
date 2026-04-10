@@ -46,3 +46,5 @@ export function createPasskeysRepo(db: Kysely<Database>) {
     },
   };
 }
+
+export type PasskeysRepo = ReturnType<typeof createPasskeysRepo>;
