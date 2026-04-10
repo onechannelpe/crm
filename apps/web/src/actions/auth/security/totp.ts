@@ -33,6 +33,8 @@ export async function finishTotpEnrollment(code: string): Promise<string[]> {
         code: safeCode,
       }),
   });
-  await replaceCurrentSession(result.sessionToken);
+  await replaceCurrentSession(result.sessionToken, (id) =>
+    serverRuntime.auth.sessionService.invalidateSession(id),
+  );
   return result.recoveryCodes;
 }

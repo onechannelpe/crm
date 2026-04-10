@@ -9,15 +9,19 @@ import type {
 import { getSessionCookie, setSessionCookie } from "~/lib/auth/session/cookies";
 import { hashSessionToken } from "~/lib/auth/session/tokens";
 import type { UsersTable } from "~/lib/db/types";
-import { serverRuntime } from "~/server/runtime";
+import { createSessionService } from "~/server/features/auth/application/session-service";
+import type { createSessionRepository } from "~/server/sessions/repos-sessions";
 import type { UserId } from "~/server/shared/ids";
 import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
+import type { createUsersRepo } from "~/server/users/repos-users";
 
 import type { LoginDecision } from "../policy/policy-types";
 import { mapUserToSessionIdentity } from "./session-mappers";
 
 type SessionAuditDeps = {
   auditLogs: ReturnType<typeof createAuditLogsRepo>;
+  sessions: ReturnType<typeof createSessionRepository>;
+  users: ReturnType<typeof createUsersRepo>;
 };
 
 type UserRow = Selectable<UsersTable>;
@@ -64,7 +68,10 @@ async function transitionSession(
 
   const identity = mapUserToSessionIdentity(user);
 
-  const token = await serverRuntime.auth.sessionService.createSession({
+  const token = await createSessionService({
+    sessions: params.deps.sessions,
+    users: params.deps.users,
+  }).createSession({
     userId: identity.userId,
     branchId: identity.branchId,
     role: identity.role,
@@ -99,13 +106,14 @@ async function transitionSession(
   };
 }
 
-export async function replaceCurrentSession(token: string): Promise<void> {
+export async function replaceCurrentSession(
+  token: string,
+  invalidateSession?: (sessionId: string) => Promise<void>,
+): Promise<void> {
   const oldToken = getSessionCookie();
-  if (oldToken) {
+  if (oldToken && invalidateSession) {
     const oldSessionId = hashSessionToken(oldToken);
-    await serverRuntime.auth.sessionService
-      .invalidateSession(oldSessionId)
-      .catch(() => {});
+    await invalidateSession(oldSessionId).catch(() => {});
   }
 
   setSessionCookie(token);
