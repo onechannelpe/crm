@@ -12,7 +12,6 @@ export default defineConfig({
     },
     runner: "./tests/bench/runner.ts",
     environment: "node",
-    pool: "threads",
     fileParallelism: false,
     alias: {
       "~": path.resolve(__dirname, "./src"),
