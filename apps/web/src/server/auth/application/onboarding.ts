@@ -9,6 +9,7 @@ import {
   issueSessionTransition,
   replaceCurrentSession,
 } from "~/lib/auth/session/session-transition";
+import { serverRuntime } from "~/server/runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 import {
@@ -92,7 +93,9 @@ export async function finishPasskeyRegistration(
     strongAuthAt: Date.now(),
     deps: repos,
   });
-  await replaceCurrentSession(issued.token);
+  await replaceCurrentSession(issued.token, (id) =>
+    serverRuntime.auth.sessionService.invalidateSession(id),
+  );
   return Ok(undefined);
 }
 
@@ -156,6 +159,8 @@ export async function completeOnboarding(
     strongAuthAt,
     deps: deps.repos,
   });
-  await replaceCurrentSession(issued.token);
+  await replaceCurrentSession(issued.token, (id) =>
+    serverRuntime.auth.sessionService.invalidateSession(id),
+  );
   return Ok({ redirectTo: getDefaultAppPath(input.session.role) });
 }

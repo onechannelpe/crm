@@ -13,6 +13,7 @@ import { parseLoginFlowId } from "~/lib/auth/login-route-flow";
 import type { BeginPasskeyLoginError } from "~/lib/auth/passkey/service";
 import { replaceCurrentSession } from "~/lib/auth/session/session-transition";
 import type { SubmitPrimaryLoginError } from "~/server/features/auth/application/login/types";
+import { serverRuntime } from "~/server/runtime";
 
 export function readPasskeyStartMode(
   formData: FormData,
@@ -44,7 +45,9 @@ export async function completeLoginAndRedirect(result: {
   role: Role;
   onboardingCompleted: boolean;
 }): Promise<never> {
-  await replaceCurrentSession(result.token);
+  await replaceCurrentSession(result.token, (id) =>
+    serverRuntime.auth.sessionService.invalidateSession(id),
+  );
   throw redirect(
     result.onboardingCompleted ? getDefaultAppPath(result.role) : "/onboarding",
   );
