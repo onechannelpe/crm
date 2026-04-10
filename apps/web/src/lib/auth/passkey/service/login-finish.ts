@@ -9,7 +9,7 @@ import {
 import { recordAuthEvent } from "~/lib/auth/security/auth-events";
 import { sendAlertOnNewLoginSource } from "~/lib/auth/security/login-source-alert";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
-import { createAuthThrottleService } from "~/server/features/auth/application/throttle-service";
+import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
 import type { UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 

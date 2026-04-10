@@ -4,7 +4,7 @@ import { assertNonEmptyString } from "~/lib/contracts/guards";
 import type { UsersTable } from "~/lib/db/types";
 import type { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import type { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
-import { createAuthThrottleService } from "~/server/features/auth/application/throttle-service";
+import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { createUsersRepo } from "~/server/users/repos-users";
 

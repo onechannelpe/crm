@@ -11,10 +11,10 @@ import {
 } from "~/server/auth/infrastructure/session-context";
 import { createTotpEnrollmentContext } from "~/server/auth/infrastructure/totp-context";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
-import { createSessionService } from "~/server/features/auth/application/session-service";
-import { createAuthThrottleService } from "~/server/features/auth/application/throttle-service";
-import { createAuthSessionRepo } from "~/server/features/auth/infra/session-repo";
-import { createAuthUsersRepo } from "~/server/features/auth/infra/users-repo";
+import { createSessionService } from "~/server/auth/application/session-service";
+import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
+import { createAuthSessionRepo } from "~/server/auth/infra/session-repo";
+import { createAuthUsersRepo } from "~/server/auth/infra/users-repo";
 
 import type { ServerInfra } from "./infra";
 

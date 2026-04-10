@@ -10,7 +10,7 @@ import type {
   createUserTotpFactorsRepo,
   createUserTotpRecoveryCodesRepo,
 } from "~/server/auth/repos-user-totp-factors";
-import { createAuthThrottleService } from "~/server/features/auth/application/throttle-service";
+import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { recordAuthEvent } from "../security/auth-events";

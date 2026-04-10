@@ -3,7 +3,7 @@ import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 import { isPasskeyRequestError } from "~/lib/auth/providers/passkey-provider";
 import { config } from "~/lib/config";
 import { assertPositiveInt } from "~/lib/contracts/guards";
-import { createAuthThrottleService } from "~/server/features/auth/application/throttle-service";
+import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
 import { domainError } from "~/server/shared/domain-error";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";

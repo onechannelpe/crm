@@ -8,8 +8,8 @@ import type { FinishPasskeyLoginError } from "~/lib/auth/passkey/service";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { getActionRequestContext } from "~/lib/observability/context";
 import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
-import { finishPasskeyLogin as finishPasskeyLoginService } from "~/server/features/auth/application/login/passkey";
-import { replaceCurrentSessionAndResolveRedirect } from "~/server/features/auth/application/login/session-redirect";
+import { finishPasskeyLogin as finishPasskeyLoginService } from "~/server/auth/application/login/passkey";
+import { replaceCurrentSessionAndResolveRedirect } from "~/server/auth/application/login/session-redirect";
 import { serverRuntime } from "~/server/runtime";
 import { isErr } from "~/server/shared/result";
 

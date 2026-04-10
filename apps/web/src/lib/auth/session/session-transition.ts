@@ -9,7 +9,7 @@ import type {
 import { getSessionCookie, setSessionCookie } from "~/lib/auth/session/cookies";
 import { hashSessionToken } from "~/lib/auth/session/tokens";
 import type { UsersTable } from "~/lib/db/types";
-import { createSessionService } from "~/server/features/auth/application/session-service";
+import { createSessionService } from "~/server/auth/application/session-service";
 import type { createSessionRepository } from "~/server/sessions/repos-sessions";
 import type { UserId } from "~/server/shared/ids";
 import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
