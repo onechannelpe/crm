@@ -2,11 +2,11 @@ import {
   assertNonEmptyString,
   assertPositiveInt,
 } from "~/lib/contracts/guards";
-import type { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
-import type { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
+import { type AuthEventsRepo } from "~/server/auth/repos-auth-events";
+import { type AuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import type { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
 import type { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
-import type { createSessionRepository } from "~/server/sessions/repos-sessions";
+import { type SessionRepository } from "~/server/sessions/repos-sessions";
 import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
 import type { createUsersRepo } from "~/server/users/repos-users";
@@ -16,13 +16,13 @@ import type { BeginPasskeyLoginError, FinishPasskeyLoginError } from "./types";
 
 export type PasskeyAuthRepos = {
   users: ReturnType<typeof createUsersRepo>;
-  sessions: ReturnType<typeof createSessionRepository>;
+  sessions: SessionRepository;
   loginFlows: ReturnType<typeof createLoginFlowsRepo>;
   passkeys: ReturnType<typeof createPasskeysRepo>;
   webauthnChallenges: ReturnType<typeof createWebauthnChallengesRepo>;
   auditLogs: ReturnType<typeof createAuditLogsRepo>;
-  authThrottle: ReturnType<typeof createAuthThrottleRepo>;
-  authEvents: ReturnType<typeof createAuthEventsRepo>;
+  authThrottle: AuthThrottleRepo;
+  authEvents: AuthEventsRepo;
   userTotpFactors: ReturnType<typeof createUserTotpFactorsRepo>;
 };
 
