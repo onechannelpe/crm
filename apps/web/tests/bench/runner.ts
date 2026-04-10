@@ -6,28 +6,39 @@ import { BenchmarkRunner, TestRunner } from "vitest";
 
 type Suite = Parameters<BenchmarkRunner["runSuite"]>[0];
 
-async function callSuiteHooks(
-  suite: Suite,
-  type: "beforeAll" | "afterAll",
-): Promise<void> {
-  for (const hook of TestRunner.getSuiteHooks(suite)[type]) {
+function getChildSuites(suite: Suite): Suite[] {
+  return suite.tasks.filter((task): task is Suite => task.type === "suite");
+}
+
+async function runBeforeAllHooks(suite: Suite): Promise<void> {
+  const hooks = TestRunner.getSuiteHooks(suite).beforeAll;
+  for (const hook of hooks) {
     await hook(suite);
   }
 
-  for (const task of suite.tasks) {
-    if (task.type === "suite") {
-      await callSuiteHooks(task as Suite, type);
-    }
+  for (const childSuite of getChildSuites(suite)) {
+    await runBeforeAllHooks(childSuite);
+  }
+}
+
+async function runAfterAllHooks(suite: Suite): Promise<void> {
+  for (const childSuite of getChildSuites(suite)) {
+    await runAfterAllHooks(childSuite);
+  }
+
+  const hooks = TestRunner.getSuiteHooks(suite).afterAll;
+  for (const hook of hooks.slice().reverse()) {
+    await hook(suite);
   }
 }
 
 export default class BenchRunner extends BenchmarkRunner {
   async runSuite(suite: Suite): Promise<void> {
-    await callSuiteHooks(suite, "beforeAll");
+    await runBeforeAllHooks(suite);
     try {
       await super.runSuite(suite);
     } finally {
-      await callSuiteHooks(suite, "afterAll");
+      await runAfterAllHooks(suite);
     }
   }
 }
