@@ -8,7 +8,7 @@ import {
 import { hashAuthKey } from "../../src/lib/auth/password/key-hash";
 import { PasskeyRequestError } from "../../src/lib/auth/providers/passkey-provider";
 import type { SendPrivilegedLoginAlert } from "../../src/lib/auth/security/privileged-login-alert";
-import { createAuthThrottleService } from "../../src/server/features/auth/application/throttle-service";
+import { createAuthThrottleService } from "../../src/server/auth/application/throttle-service";
 import { isErr } from "../../src/server/shared/result";
 import {
   cleanupTestDb,

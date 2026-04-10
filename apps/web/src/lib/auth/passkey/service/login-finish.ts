@@ -1,7 +1,6 @@
 import type { AuthenticationResponseJSON } from "@simplewebauthn/server";
 
 import { loadActiveAuthContext } from "~/lib/auth/context/auth-context";
-import { evaluateLoginPolicy } from "~/lib/auth/policy/login-policy";
 import {
   isPasskeyRequestError,
   PasskeyRequestError,
@@ -10,6 +9,7 @@ import { recordAuthEvent } from "~/lib/auth/security/auth-events";
 import { sendAlertOnNewLoginSource } from "~/lib/auth/security/login-source-alert";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
+import { evaluateLoginPolicy } from "~/server/auth/policy/engine";
 import type { UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 

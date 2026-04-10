@@ -5,6 +5,7 @@ import styles from "~/routes/onboarding-page.module.css";
 interface OnboardingSecurityStepProps {
   hasPasskey: boolean;
   totpEnabled: boolean;
+  securityRequired: boolean;
   onSelectPasskey: () => void;
   onSelectTotp: () => void;
 }
@@ -13,7 +14,12 @@ export function OnboardingSecurityStep(props: OnboardingSecurityStepProps) {
   return (
     <section class={styles.stepStack}>
       <p class={styles.helperText}>
-        Elige cómo confirmarás tu identidad al iniciar sesión.
+        <Show
+          when={props.securityRequired}
+          fallback="Configura un método para proteger mejor tu cuenta."
+        >
+          Elige cómo confirmarás tu identidad al iniciar sesión.
+        </Show>
       </p>
       <div class={styles.choiceGrid}>
         <button

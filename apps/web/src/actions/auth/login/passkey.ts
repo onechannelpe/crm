@@ -7,9 +7,9 @@ import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
 import type { FinishPasskeyLoginError } from "~/lib/auth/passkey/service";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { getActionRequestContext } from "~/lib/observability/context";
-import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
 import { finishPasskeyLogin as finishPasskeyLoginService } from "~/server/auth/application/login/passkey";
 import { replaceCurrentSessionAndResolveRedirect } from "~/server/auth/application/login/session-redirect";
+import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
 import { serverRuntime } from "~/server/runtime";
 import { isErr } from "~/server/shared/result";
 

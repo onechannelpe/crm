@@ -1,5 +1,3 @@
-import type { Role } from "~/lib/auth/access/rbac";
-import { issueSessionTransition } from "~/lib/auth/session/session-transition";
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
 import type {
   InviteService,
@@ -7,7 +5,6 @@ import type {
 } from "~/server/invites/application/types";
 import { createInviteServiceContext } from "~/server/invites/infrastructure/invite-service-context";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
-import { createSessionRepository } from "~/server/sessions/repos-sessions";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import { createTeamsRepo } from "~/server/users/repos-teams";
@@ -19,7 +16,6 @@ function createTeamInviteRepos(executor: DatabaseExecutor) {
     teams: createTeamsRepo(executor),
     userInvites: createUserInvitesRepo(executor),
     users: createUsersRepo(executor),
-    sessions: createSessionRepository(executor),
     auditLogs: createAuditLogsRepo(executor),
   };
 }
@@ -28,18 +24,6 @@ interface TeamInviteContext {
   repos: TeamInviteReadRepos;
   inviteService: InviteService;
   enforceInviteCreateRateLimit(userId: number): Promise<void>;
-  issuePreAuthSession(input: {
-    user: {
-      id: number;
-      branch_id: number;
-      role: Role;
-      onboarding_completed_at: null;
-    };
-    request: {
-      ipAddress: string;
-      userAgent: string | null;
-    };
-  }): Promise<{ token: string }>;
 }
 
 export function createTeamInviteContext(
@@ -61,28 +45,6 @@ export function createTeamInviteContext(
         auditLogs: repos.auditLogs,
       });
     },
-    issuePreAuthSession(input: {
-      user: {
-        id: number;
-        branch_id: number;
-        role: Role;
-        onboarding_completed_at: null;
-      };
-      request: {
-        ipAddress: string;
-        userAgent: string | null;
-      };
-    }) {
-      return issueSessionTransition({
-        user: input.user,
-        sessionClass: "pre_auth",
-        request: input.request,
-        primaryAuthMethod: "password",
-        strongAuthMethod: null,
-        strongAuthAt: null,
-        deps: repos,
-      });
-    },
   };
 }
 
@@ -98,8 +60,4 @@ export type TeamInviteCreateContext = Pick<
 export type TeamInviteResendContext = Pick<
   TeamInviteContext,
   "repos" | "inviteService"
->;
-export type TeamInviteAcceptanceContext = Pick<
-  TeamInviteContext,
-  "inviteService" | "issuePreAuthSession"
 >;

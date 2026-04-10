@@ -6,19 +6,17 @@ import {
   completePasskeyOnboarding,
 } from "~/actions/auth/onboarding";
 import { beginPasskeyRegistration } from "~/actions/auth/onboarding/passkey";
+import { getOnboardingRequirements } from "~/actions/auth/policy";
 import { useTotpEnrollment } from "~/components/auth/security-enrollment/use-totp-enrollment";
 import { useToast } from "~/components/feedback/toast-provider";
 import { useSession } from "~/components/providers/session-provider";
-import {
-  deriveOnboardingState,
-  isValidOnboardingPhone,
-  type OnboardingStep,
-} from "~/lib/auth/onboarding-flow";
+import { isValidOnboardingPhone } from "~/lib/auth/onboarding-flow";
 import {
   createRegistrationResponse,
   isPasskeyRegistrationSupported,
 } from "~/lib/auth/passkey/registration-client";
 import { getErrorMessage } from "~/lib/errors";
+import type { OnboardingRequirements } from "~/server/auth/policy/types";
 
 export type OnboardingView = "profile" | "security-choice" | "passkey" | "totp";
 export type PasskeyOnboardingPhase = "idle" | "device" | "server";
@@ -34,6 +32,8 @@ export function useOnboardingFlow() {
   const [passkeyPhase, setPasskeyPhase] =
     createSignal<PasskeyOnboardingPhase>("idle");
   const [passkeySupported, setPasskeySupported] = createSignal(false);
+  const [requirements, setRequirements] =
+    createSignal<OnboardingRequirements | null>(null);
 
   const submitting = createMemo(
     () => onboardingSubmitting() || passkeyPhase() === "server",
@@ -68,13 +68,29 @@ export function useOnboardingFlow() {
     }
   }
 
+  const refreshRequirements = async () => {
+    const next = await getOnboardingRequirements();
+    setRequirements(next);
+  };
+
+  const refreshAuthState = async () => {
+    await refreshCurrentUser();
+    await refreshRequirements();
+  };
+
   const totpEnrollment = useTotpEnrollment({
     showToast,
-    refreshStatus: refreshCurrentUser,
+    refreshStatus: refreshAuthState,
   });
 
   createEffect(() => {
     setPasskeySupported(isPasskeyRegistrationSupported());
+  });
+
+  createEffect(() => {
+    if (user() !== null) {
+      void refreshRequirements();
+    }
   });
 
   // Sync phone from session on first load, strip +51 prefix for local display
@@ -111,20 +127,30 @@ export function useOnboardingFlow() {
 
   const onboardingState = createMemo(() => {
     const u = user();
+    const policy = requirements();
     if (!u) {
       return {
-        currentStep: "profile" as OnboardingStep,
         profileReady: false,
+        securityRequired: false,
         securityReady: false,
         canFinish: false,
+        canFinishWithoutSecurity: false,
       };
     }
-    return deriveOnboardingState({
-      requestedStep:
-        step() === "profile" ? "profile" : ("security" as OnboardingStep),
-      phoneE164: phone(),
-      user: u,
-    });
+
+    const profileReady = isValidOnboardingPhone(phone());
+    const securityRequired = policy
+      ? policy.requiredActions.includes("configure_strong_auth")
+      : u.strongAuthRequired && !u.strongAuthConfigured;
+    const securityReady = !securityRequired || u.strongAuthConfigured;
+
+    return {
+      profileReady,
+      securityRequired,
+      securityReady,
+      canFinish: profileReady && securityReady,
+      canFinishWithoutSecurity: profileReady && !securityRequired,
+    };
   });
 
   function goBack() {
@@ -189,6 +215,9 @@ export function useOnboardingFlow() {
 
   async function handleSubmit(e: Event) {
     e.preventDefault();
+    if (!onboardingState().canFinish) {
+      return;
+    }
     await submitOnboarding(
       () => completeOnboarding(phone()),
       "No se pudo completar el registro",
@@ -205,6 +234,7 @@ export function useOnboardingFlow() {
     canGoBack,
     passkeyPhase,
     onboardingState,
+    requirements,
     passkeySupported,
     totpEnrollment,
     goBack,

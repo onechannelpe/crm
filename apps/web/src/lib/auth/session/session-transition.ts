@@ -10,12 +10,12 @@ import { getSessionCookie, setSessionCookie } from "~/lib/auth/session/cookies";
 import { hashSessionToken } from "~/lib/auth/session/tokens";
 import type { UsersTable } from "~/lib/db/types";
 import { createSessionService } from "~/server/auth/application/session-service";
+import type { LoginDecision } from "~/server/auth/policy/types";
 import type { createSessionRepository } from "~/server/sessions/repos-sessions";
 import type { UserId } from "~/server/shared/ids";
 import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import type { createUsersRepo } from "~/server/users/repos-users";
 
-import type { LoginDecision } from "../policy/policy-types";
 import { mapUserToSessionIdentity } from "./session-mappers";
 
 type SessionAuditDeps = {

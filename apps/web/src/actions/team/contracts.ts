@@ -72,8 +72,3 @@ export interface CreateTeamInviteCommand {
   teamId: number | null;
   expiresAt: number | null;
 }
-
-export interface AcceptTeamInviteCommand {
-  token: string;
-  password: string;
-}

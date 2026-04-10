@@ -4,13 +4,13 @@ import { matchesRecoveryCode } from "~/lib/auth/totp/recovery-codes";
 import { decryptTotpSecret } from "~/lib/auth/totp/secret-crypto";
 import { verifyTotpCode } from "~/lib/auth/totp/totp";
 import type { UsersTable } from "~/lib/db/types";
+import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
 import type { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import type { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import type {
   createUserTotpFactorsRepo,
   createUserTotpRecoveryCodesRepo,
 } from "~/server/auth/repos-user-totp-factors";
-import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import { recordAuthEvent } from "../security/auth-events";

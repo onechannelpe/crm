@@ -1,6 +1,8 @@
+import type {
+  SessionClass,
+  StrongAuthMethod,
+} from "~/lib/auth/core/session-contract";
 import type { UserId } from "~/server/shared/ids";
-
-import type { SessionClass, StrongAuthMethod } from "../core/session-contract";
 
 export type AuthProof =
   | {
@@ -34,3 +36,18 @@ export type LoginDecision =
       kind: "deny";
       reason: "strong_auth_required";
     };
+
+export type AuthSessionState =
+  | "pre_auth"
+  | "onboarding_profile"
+  | "onboarding_security_required"
+  | "app_ready";
+
+export interface OnboardingRequirements {
+  sessionState: AuthSessionState;
+  requiredActions: Array<"set_profile" | "configure_strong_auth">;
+  optionalActions: Array<"configure_totp" | "configure_passkey">;
+  canAccessApp: boolean;
+  nextRoute: string;
+  reasons: string[];
+}

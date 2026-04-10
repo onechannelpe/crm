@@ -1,8 +1,6 @@
 import { loadActiveAuthContext } from "~/lib/auth/context/auth-context";
 import type { AuthContext } from "~/lib/auth/context/auth-context";
 import { createPasskeyLoginStartAuthService } from "~/lib/auth/passkey/service";
-import { evaluateLoginPolicy } from "~/lib/auth/policy/login-policy";
-import type { AuthProof } from "~/lib/auth/policy/policy-types";
 import { authenticatePassword } from "~/lib/auth/providers/password-provider";
 import { sendAlertOnNewLoginSource } from "~/lib/auth/security/login-source-alert";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
@@ -13,6 +11,8 @@ import {
 import { config } from "~/lib/config";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
 import type { AuthLoginRepos } from "~/server/auth/infrastructure/login-context";
+import { evaluateLoginPolicy } from "~/server/auth/policy/engine";
+import type { AuthProof } from "~/server/auth/policy/types";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import type {

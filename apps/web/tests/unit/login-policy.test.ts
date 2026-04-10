@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { evaluateLoginPolicy } from "../../src/lib/auth/policy/login-policy";
+import { evaluateLoginPolicy } from "../../src/server/auth/policy/engine";
 
 describe("login policy", () => {
   it("denies onboarded privileged google login when no strong factor is enrolled", () => {
