@@ -53,7 +53,12 @@ export function startBackgroundJobs() {
   };
 
   // Start account lifecycle maintenance tasks
-  startAccountLifecycleMaintenance();
+  startAccountLifecycleMaintenance({
+    executor: serverRuntime.infra.db,
+    notificationSender: serverRuntime.notifications.notificationSender,
+    invalidateUserSessions: (userId) =>
+      serverRuntime.auth.sessionService.invalidateUserSessions(userId),
+  });
 
   // Start recovery scanner
   startStaleScanner(30_000);

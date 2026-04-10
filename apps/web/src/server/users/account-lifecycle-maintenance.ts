@@ -1,8 +1,8 @@
 import { renderAccountExpiringEmail } from "@crm/notifications";
+import type { createNotificationService } from "@crm/notifications";
 
 import { createLogger } from "~/lib/observability/logger";
 import { shortName } from "~/lib/users/display-name";
-import { serverRuntime } from "~/server/runtime";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import { expireUsersAndInvalidateSessions } from "./expire-users";
@@ -12,14 +12,16 @@ const logger = createLogger("account-lifecycle-maintenance");
 const EXPIRY_NOTIFICATION_THRESHOLD_MS = 7 * 24 * 60 * 60 * 1000;
 
 interface AccountLifecycleDeps {
-  executor?: DatabaseExecutor;
-  notificationSender?: typeof serverRuntime.notifications.notificationSender;
+  executor: DatabaseExecutor;
+  notificationSender: ReturnType<typeof createNotificationService>;
+  invalidateUserSessions: (userId: number) => Promise<void>;
 }
 
-async function runAccountExpiryTick(executor: DatabaseExecutor) {
+async function runAccountExpiryTick(deps: AccountLifecycleDeps) {
   try {
     const expiredCount = await expireUsersAndInvalidateSessions(Date.now(), {
-      executor,
+      executor: deps.executor,
+      invalidateUserSessions: deps.invalidateUserSessions,
     });
     if (expiredCount > 0) {
       logger.info("accounts_expired", { count: expiredCount });
@@ -33,7 +35,7 @@ async function runAccountExpiryTick(executor: DatabaseExecutor) {
 
 async function runExpiryNotificationTick(
   users: ReturnType<typeof createUsersRepo>,
-  notificationSender: typeof serverRuntime.notifications.notificationSender,
+  notificationSender: ReturnType<typeof createNotificationService>,
 ) {
   const threshold = Date.now() + EXPIRY_NOTIFICATION_THRESHOLD_MS;
   const expiringUsers = await users.findExpiringBefore(threshold);
@@ -89,21 +91,16 @@ async function runExpiryNotificationTick(
   }
 }
 
-export function startAccountLifecycleMaintenance(
-  deps: AccountLifecycleDeps = {},
-) {
-  const executor = deps.executor ?? serverRuntime.infra.db;
-  const users = createUsersRepo(executor);
-  const notificationSender =
-    deps.notificationSender ?? serverRuntime.notifications.notificationSender;
+export function startAccountLifecycleMaintenance(deps: AccountLifecycleDeps) {
+  const users = createUsersRepo(deps.executor);
 
   setInterval(() => {
-    void runAccountExpiryTick(executor);
+    void runAccountExpiryTick(deps);
   }, 60_000);
 
   setInterval(
     () => {
-      void runExpiryNotificationTick(users, notificationSender);
+      void runExpiryNotificationTick(users, deps.notificationSender);
     },
     24 * 60 * 60_000,
   );

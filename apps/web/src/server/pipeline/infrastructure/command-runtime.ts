@@ -1,3 +1,8 @@
+import {
+  createPipelineFeatureDeps,
+  type PipelineDeps,
+} from "~/server/features/pipeline/application/pipeline-deps";
+
 import type { DatabaseExecutor } from "../../shared/db-executor";
 import { runInPipelineTransaction } from "../../shared/pipeline-transaction";
 import { createAuditLogsRepo } from "../../shared/repos-audit-logs";
@@ -9,7 +14,6 @@ import {
   createPipelineAuditLogRepo,
   createPipelineAuditService,
 } from "./audit-log";
-import { createPipelineDeps, type PipelineDeps } from "./deps";
 import { createEngineGateway } from "./engine-gateway";
 import { createLeadEnrichmentQueue } from "./enrichment-queue";
 import { createPipelineNotificationCenter } from "./notifications";
@@ -32,7 +36,7 @@ function createPipelineCommandRuntime(
   executor: DatabaseExecutor,
 ): PipelineCommandRuntime {
   return {
-    deps: createPipelineDeps(executor),
+    deps: createPipelineFeatureDeps(executor),
     auditService: createPipelineAuditServiceRuntime(executor),
     engineGateway: createEngineGateway(),
     leadEnrichmentQueue: createLeadEnrichmentQueue(executor),
