@@ -3,8 +3,8 @@ import type {
   ExtensionRuntimeEventEnvelope,
   ExtensionSyncHealth,
   TeamExecutiveStatusView,
-} from "./contracts";
-import type { createExtensionRuntimeRepo } from "./repos";
+} from "../contracts";
+import type { createExtensionRuntimeRepo } from "../repos";
 
 export const EXECUTIVE_STATUS_OFFLINE_AFTER_MS = 2 * 60_000;
 export const EXECUTIVE_SYNC_STALE_AFTER_MS = 2 * 60_000;

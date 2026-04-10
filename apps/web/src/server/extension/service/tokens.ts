@@ -1,8 +1,8 @@
 import {
   EXTENSION_HANDOFF_TOKEN_ISSUER,
   EXTENSION_SESSION_TOKEN_AUDIENCE,
-} from "./contracts";
-import { hashExtensionSecretToken, signExtensionToken } from "./crypto";
+} from "../contracts";
+import { hashExtensionSecretToken, signExtensionToken } from "../crypto";
 
 export const EXTENSION_INSTALLATION_SESSION_TTL_MS = 8 * 60 * 60_000;
 export const EXTENSION_ACCESS_TOKEN_TTL_MS = 15 * 60_000;
