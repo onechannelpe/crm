@@ -5,6 +5,7 @@ import { queueLeadExport } from "~/actions/integrations/exports";
 import { listIntegrationJobs } from "~/actions/integrations/imports";
 import { AppPage } from "~/components/layout/page";
 import { toAppError } from "~/lib/app-errors";
+import type { IntegrationJobRow } from "~/server/integrations/types";
 
 export default function ExportsPage() {
   const navigate = useNavigate();
@@ -31,7 +32,8 @@ export default function ExportsPage() {
     window.location.assign(`/api/integrations/exports/${jobId}/download`);
   }
 
-  const exportJobs = () => jobs().filter((j) => j.type === "export");
+  const exportJobs = () =>
+    jobs().filter((j: IntegrationJobRow) => j.type === "export");
 
   return (
     <AppPage>

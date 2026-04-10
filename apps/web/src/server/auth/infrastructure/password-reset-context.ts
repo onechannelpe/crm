@@ -1,13 +1,12 @@
+import type { NotificationService } from "@crm/notifications";
+
 import { createPasswordResetTokensRepo } from "~/server/auth/repos-password-reset";
-import type { createNotificationsRuntime } from "~/server/runtime/notifications-runtime";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createUsersRepo } from "~/server/users/repos-users";
 
 interface PasswordResetContextDeps {
   executor: DatabaseExecutor;
-  notificationSender: ReturnType<
-    typeof createNotificationsRuntime
-  >["notificationSender"];
+  notificationSender: NotificationService;
 }
 
 export function createPasswordResetContext(deps: PasswordResetContextDeps) {

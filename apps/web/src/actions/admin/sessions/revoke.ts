@@ -6,7 +6,6 @@ import {
   revokeAllUserSessions as revokeAllUserSessionsService,
   revokeUserSession as revokeUserSessionService,
 } from "~/server/auth/application/admin-sessions";
-import { createAdminSessionRevocationContext } from "~/server/auth/infrastructure/admin-session-revocation-context";
 import { serverRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 import { isErr } from "~/server/shared/result";
@@ -32,15 +31,7 @@ export async function revokeUserSession(
     execute: (ctx) =>
       revokeUserSessionService(
         ctx,
-        createAdminSessionRevocationContext({
-          executor: serverRuntime.infra.db,
-          invalidateSession: (sessionToInvalidate: string) =>
-            serverRuntime.auth.sessionService.invalidateSession(
-              sessionToInvalidate,
-            ),
-          invalidateUserSessions: (userId: number) =>
-            serverRuntime.auth.sessionService.invalidateUserSessions(userId),
-        }),
+        serverRuntime.auth.adminSessionRevocation,
         parsedInput.value,
       ),
   });
@@ -61,13 +52,7 @@ export async function revokeAllUserSessions(
     execute: (ctx) =>
       revokeAllUserSessionsService(
         ctx,
-        createAdminSessionRevocationContext({
-          executor: serverRuntime.infra.db,
-          invalidateSession: (sessionId: string) =>
-            serverRuntime.auth.sessionService.invalidateSession(sessionId),
-          invalidateUserSessions: (userId: number) =>
-            serverRuntime.auth.sessionService.invalidateUserSessions(userId),
-        }),
+        serverRuntime.auth.adminSessionRevocation,
         parsedInput.value,
       ),
   });

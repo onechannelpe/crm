@@ -1,12 +1,9 @@
 import type { APIEvent } from "@solidjs/start/server";
 
 import { requirePermission } from "~/lib/auth/access/session";
-import { config } from "~/lib/config";
 import { assertPositiveInt } from "~/lib/contracts/guards";
 import { serverRuntime } from "~/server/runtime";
 import { downloadSalesExportById } from "~/server/sales-exports/download";
-import { createSalesExportBlobStore } from "~/server/sales/export-blob-store";
-import { createReportExportRepo } from "~/server/sales/repos-report-exports";
 import { createAppContext } from "~/server/shared/action-runtime";
 import type { DomainError } from "~/server/shared/domain-error";
 import { isErr } from "~/server/shared/result";
@@ -22,19 +19,15 @@ function mapErrorToStatus(error: DomainError): number {
 export async function GET(event: Pick<APIEvent, "params">): Promise<Response> {
   try {
     const { observabilityService } = serverRuntime.observability;
-    const salesExportBlobStore = createSalesExportBlobStore(
-      config.uploads.storageRoot,
-    );
+    const { blobStore, exportDeps } = serverRuntime.sales;
     const safeJobId = assertPositiveInt(Number(event.params.jobId), "jobId");
     const session = await requirePermission("sales:review");
     const ctx = createAppContext(session);
     const startedAt = ctx.now();
 
     const response = await downloadSalesExportById(safeJobId, session, {
-      repos: {
-        reportExportJobs: createReportExportRepo(serverRuntime.infra.db),
-      },
-      blobStore: salesExportBlobStore,
+      repos: { reportExportJobs: exportDeps.reportExportJobs },
+      blobStore,
     });
     if (isErr(response)) {
       return new Response(response.error.message, {

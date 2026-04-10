@@ -4,35 +4,7 @@ import { validationError } from "~/lib/app-errors";
 import { isRole, type Role } from "~/lib/auth/access/rbac";
 import { requireRole } from "~/lib/auth/access/session";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
-import { env } from "~/lib/env";
-import { createNotificationCampaignsRepo } from "~/server/notifications/repos-campaigns";
-import { createNotificationContactsRepo } from "~/server/notifications/repos-contacts";
-import { createNotificationPreferencesRepo } from "~/server/notifications/repos-preferences";
-import { createAppNotificationService } from "~/server/notifications/service";
 import { serverRuntime } from "~/server/runtime";
-
-function createNotificationsService() {
-  return createAppNotificationService({
-    repos: {
-      notificationCampaigns: createNotificationCampaignsRepo(
-        serverRuntime.infra.db,
-      ),
-      notificationContacts: createNotificationContactsRepo(
-        serverRuntime.infra.db,
-      ),
-      notificationPreferences: createNotificationPreferencesRepo(
-        serverRuntime.infra.db,
-      ),
-    },
-    config: {
-      resendApiKey: env.resendApiKey || undefined,
-      fromEmail: env.emailFrom || undefined,
-      whatsappAccessToken: env.whatsappAccessToken || undefined,
-      whatsappPhoneNumberId: env.whatsappPhoneNumberId || undefined,
-      whatsappApiVersion: env.whatsappApiVersion || undefined,
-    },
-  });
-}
 
 function assertAudienceType(value: string): "user" | "role" | "global" {
   if (value === "user" || value === "role" || value === "global") {
@@ -83,12 +55,11 @@ export async function sendBroadcastNotification(params: {
   audienceType: string;
   audienceRef: string;
 }): Promise<void> {
-  const notifications = createNotificationsService();
   const session = await requireRole("admin");
   const audienceType = assertAudienceType(params.audienceType);
   const audienceRef = assertAudienceRef(audienceType, params.audienceRef);
 
-  await notifications.publishCampaign({
+  await serverRuntime.notifications.service.publishCampaign({
     type: "broadcast",
     eventType: "broadcast.general",
     audienceType,
@@ -98,6 +69,6 @@ export async function sendBroadcastNotification(params: {
     createdByUserId: session.userId,
   });
 
-  await notifications.enqueueDueCampaigns(10);
-  await notifications.processPendingJobs(100);
+  await serverRuntime.notifications.service.enqueueDueCampaigns(10);
+  await serverRuntime.notifications.service.processPendingJobs(100);
 }

@@ -6,7 +6,6 @@ import {
   beginTotpEnrollment as beginTotpEnrollmentService,
   finishTotpEnrollment as finishTotpEnrollmentService,
 } from "~/server/auth/application/totp";
-import { createTotpEnrollmentContext } from "~/server/auth/infrastructure/totp-context";
 import { serverRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
@@ -14,7 +13,7 @@ export async function beginTotpEnrollment(): Promise<{
   otpauthUri: string;
   qrCodeDataUrl: string;
 }> {
-  const totpContext = createTotpEnrollmentContext(serverRuntime.infra.db);
+  const totpContext = serverRuntime.auth.totp;
   return runAction({
     actionName: "auth.totp.begin",
     access: { kind: "session" },
@@ -24,7 +23,7 @@ export async function beginTotpEnrollment(): Promise<{
 
 export async function finishTotpEnrollment(code: string): Promise<string[]> {
   const safeCode = assertNonEmptyString(code, "code");
-  const totpContext = createTotpEnrollmentContext(serverRuntime.infra.db);
+  const totpContext = serverRuntime.auth.totp;
   const result = await runAction({
     actionName: "auth.totp.finish",
     access: { kind: "session" },

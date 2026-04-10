@@ -2,7 +2,6 @@
 
 import { requireAuth } from "~/lib/auth/access/session";
 import { assertPositiveInt } from "~/lib/contracts/guards";
-import { createAppNotificationsRepo } from "~/server/notifications/repos-app-notifications";
 import { serverRuntime } from "~/server/runtime";
 
 export interface HeaderNotification {
@@ -22,7 +21,7 @@ export interface HeaderNotificationFeed {
 }
 
 export async function getHeaderNotifications(): Promise<HeaderNotificationFeed> {
-  const appNotifications = createAppNotificationsRepo(serverRuntime.infra.db);
+  const appNotifications = serverRuntime.notifications.appNotifications;
   const session = await requireAuth();
   const [unreadCount, notifications] = await Promise.all([
     appNotifications.countUnreadByUser(session.userId),
@@ -47,7 +46,7 @@ export async function getHeaderNotifications(): Promise<HeaderNotificationFeed> 
 export async function markNotificationRead(
   notificationId: number,
 ): Promise<void> {
-  const appNotifications = createAppNotificationsRepo(serverRuntime.infra.db);
+  const appNotifications = serverRuntime.notifications.appNotifications;
   const session = await requireAuth();
   await appNotifications.markRead(
     session.userId,
@@ -57,7 +56,7 @@ export async function markNotificationRead(
 }
 
 export async function markAllNotificationsRead(): Promise<void> {
-  const appNotifications = createAppNotificationsRepo(serverRuntime.infra.db);
+  const appNotifications = serverRuntime.notifications.appNotifications;
   const session = await requireAuth();
   await appNotifications.markAllRead(session.userId, Date.now());
 }

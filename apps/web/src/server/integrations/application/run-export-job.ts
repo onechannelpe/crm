@@ -1,28 +1,28 @@
 import { TextEncoder } from "node:util";
 
-import { db } from "~/lib/db/db";
 import { createLogger } from "~/lib/observability/logger";
 
 import { buildLeadExportCsv } from "../infrastructure/lead-export-builder";
-import {
-  createIntegrationRuntime,
-  integrationJobBlobStore,
-} from "../infrastructure/runtime";
+import type { JobBlobStore } from "../job-blob-store";
 import type {
   ExportBatchRunner,
   ExportJobProcessResult,
   IntegrationJobRow,
+  IntegrationRuntime,
 } from "../types";
 
 const logger = createLogger("integration-export-worker");
 
-export function createExportBatchRunner() {
-  const runner: ExportBatchRunner = {
+export function createExportBatchRunner(deps: {
+  runtime: IntegrationRuntime;
+  blobStore: JobBlobStore;
+}): ExportBatchRunner {
+  const { runtime, blobStore } = deps;
+  return {
     async processJob(
       job: IntegrationJobRow,
       signal: AbortSignal,
     ): Promise<ExportJobProcessResult> {
-      const runtime = createIntegrationRuntime(db);
       if (job.type !== "export") {
         throw new Error(`Invalid job type ${job.type} for export runner`);
       }
@@ -48,7 +48,7 @@ export function createExportBatchRunner() {
       const key = `export-${job.id}.csv`;
       const bytes = new TextEncoder().encode(csv);
 
-      await integrationJobBlobStore.put(key, bytes);
+      await blobStore.put(key, bytes);
 
       if (signal.aborted) throw new Error("Job aborted after store put");
 
@@ -67,5 +67,4 @@ export function createExportBatchRunner() {
       return result;
     },
   };
-  return runner;
 }

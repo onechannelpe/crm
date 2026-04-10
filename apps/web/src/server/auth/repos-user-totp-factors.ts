@@ -139,3 +139,5 @@ export function createUserTotpRecoveryCodesRepo(db: Kysely<Database>) {
     },
   };
 }
+
+export type UserTotpFactorsRepo = ReturnType<typeof createUserTotpFactorsRepo>;

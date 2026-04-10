@@ -300,3 +300,5 @@ export function createUsersRepo(db: DatabaseExecutor) {
     },
   };
 }
+
+export type UsersRepo = ReturnType<typeof createUsersRepo>;

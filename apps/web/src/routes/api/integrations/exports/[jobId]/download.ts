@@ -3,7 +3,6 @@ import type { APIEvent } from "@solidjs/start/server";
 import { requirePermission } from "~/lib/auth/access/session";
 import { assertPositiveInt } from "~/lib/contracts/guards";
 import { getIntegrationJobQuery } from "~/server/integrations/application/get-integration-job";
-import { integrationJobBlobStore } from "~/server/integrations/infrastructure/runtime";
 import { serverRuntime } from "~/server/runtime";
 import { createAppContext } from "~/server/shared/action-runtime";
 
@@ -15,7 +14,8 @@ export async function GET(event: Pick<APIEvent, "params">): Promise<Response> {
     const startedAt = ctx.now();
     const { observabilityService } = serverRuntime.observability;
 
-    const job = await getIntegrationJobQuery(safeJobId);
+    const { integration, blobStore } = serverRuntime.integrations;
+    const job = await getIntegrationJobQuery(safeJobId, integration.jobs);
     if (!job) {
       return new Response("Export job not found", { status: 404 });
     }
@@ -26,7 +26,7 @@ export async function GET(event: Pick<APIEvent, "params">): Promise<Response> {
       });
     }
 
-    const bytes = await integrationJobBlobStore.get(job.file_path);
+    const bytes = await blobStore.get(job.file_path);
 
     void observabilityService
       .recordAction({

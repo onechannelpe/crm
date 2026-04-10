@@ -7,7 +7,7 @@ import type {
 } from "~/actions/sales-exports/contracts";
 import { validationError } from "~/lib/app-errors";
 import { assertPositiveInt } from "~/lib/contracts/guards";
-import { createSalesExportRuntime } from "~/server/sales-exports/runtime";
+import { serverRuntime } from "~/server/runtime";
 import {
   getSalesExportJobForActor,
   listSalesExportDownloadsForActor,
@@ -34,14 +34,17 @@ export async function listSalesExportJobs(
   limit = 20,
 ): Promise<SalesExportJob[]> {
   const safeLimit = parseSalesExportListLimit(limit);
-  const runtime = createSalesExportRuntime();
   return runAction({
     actionName: "sales_exports.list",
     access: { kind: "permission", permission: "sales:review" },
     input: { limit: safeLimit },
     execute: async (ctx) => ({
       ok: true as const,
-      value: await listSalesExportJobsForActor(ctx.actor, safeLimit, runtime),
+      value: await listSalesExportJobsForActor(
+        ctx.actor,
+        safeLimit,
+        serverRuntime.sales.exportDeps,
+      ),
     }),
   });
 }
@@ -50,14 +53,17 @@ export async function getSalesExportJob(
   jobId: number,
 ): Promise<SalesExportJob | null> {
   const safeJobId = parseSalesExportJobId(jobId);
-  const runtime = createSalesExportRuntime();
   return runAction({
     actionName: "sales_exports.job.read",
     access: { kind: "permission", permission: "sales:review" },
     input: { jobId: safeJobId },
     execute: async (ctx) => ({
       ok: true as const,
-      value: await getSalesExportJobForActor(ctx.actor, safeJobId, runtime),
+      value: await getSalesExportJobForActor(
+        ctx.actor,
+        safeJobId,
+        serverRuntime.sales.exportDeps,
+      ),
     }),
   });
 }
@@ -66,7 +72,6 @@ export async function listSalesExportDownloads(
   jobId: number,
 ): Promise<SalesExportDownload[]> {
   const safeJobId = parseSalesExportJobId(jobId);
-  const runtime = createSalesExportRuntime();
   return runAction({
     actionName: "sales_exports.downloads.list",
     access: { kind: "permission", permission: "sales:review" },
@@ -76,7 +81,7 @@ export async function listSalesExportDownloads(
       value: await listSalesExportDownloadsForActor(
         ctx.actor,
         safeJobId,
-        runtime,
+        serverRuntime.sales.exportDeps,
       ),
     }),
   });
@@ -88,14 +93,17 @@ export async function requestSalesExport(
   if (!isSalesExportFormat(format)) {
     throw validationError("format is invalid");
   }
-  const runtime = createSalesExportRuntime();
   return runAction({
     actionName: "sales_exports.request",
     access: { kind: "permission", permission: "sales:review" },
     input: { format },
     execute: async (ctx) => ({
       ok: true as const,
-      value: await requestSalesExportJob(ctx, { format }, runtime),
+      value: await requestSalesExportJob(
+        ctx,
+        { format },
+        serverRuntime.sales.exportDeps,
+      ),
     }),
   });
 }

@@ -1,4 +1,3 @@
-import { db } from "~/lib/db/db";
 import {
   createPipelineFeatureDeps,
   type PipelineDeps,
@@ -8,8 +7,6 @@ import type { DatabaseExecutor } from "../../shared/db-executor";
 
 export type { PipelineDeps };
 
-export function createPipelineDeps(
-  executor: DatabaseExecutor = db,
-): PipelineDeps {
+export function createPipelineDeps(executor: DatabaseExecutor): PipelineDeps {
   return createPipelineFeatureDeps(executor);
 }

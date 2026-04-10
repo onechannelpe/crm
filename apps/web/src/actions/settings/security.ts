@@ -8,32 +8,11 @@ import { canRemoveStrongAuthFactor } from "~/lib/auth/security/factor-management
 import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
 import type { ActionSuccess } from "~/lib/contracts/common";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
-import {
-  createUserTotpFactorsRepo,
-  createUserTotpRecoveryCodesRepo,
-} from "~/server/auth/repos-user-totp-factors";
 import { serverRuntime } from "~/server/runtime";
 import type { UserId } from "~/server/shared/ids";
-import { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
-import { createPasskeysRepo } from "~/server/users/repos-passkeys";
-import { createUsersRepo } from "~/server/users/repos-users";
 
-function createSecurityRepos() {
-  return {
-    users: createUsersRepo(serverRuntime.infra.db),
-    passkeys: createPasskeysRepo(serverRuntime.infra.db),
-    userTotpFactors: createUserTotpFactorsRepo(serverRuntime.infra.db),
-    userTotpRecoveryCodes: createUserTotpRecoveryCodesRepo(
-      serverRuntime.infra.db,
-    ),
-    auditLogs: createAuditLogsRepo(serverRuntime.infra.db),
-  };
-}
-
-async function requireCurrentUserWithStrongAuthState(
-  userId: UserId,
-  repos: ReturnType<typeof createSecurityRepos>,
-) {
+async function requireCurrentUserWithStrongAuthState(userId: UserId) {
+  const repos = serverRuntime.security;
   const user = await repos.users.findById(userId);
   if (!user) throw notFoundError("User not found");
 
@@ -69,21 +48,21 @@ export async function changePassword(
   currentPassword: string,
   newPassword: string,
 ): Promise<ActionSuccess> {
-  const repos = createSecurityRepos();
+  const { users, auditLogs } = serverRuntime.security;
   const safeCurrent = assertNonEmptyString(currentPassword, "currentPassword");
   const safeNew = assertNonEmptyString(newPassword, "newPassword");
   const session = await requireSession();
 
-  const user = await repos.users.findById(session.userId);
+  const user = await users.findById(session.userId);
   if (!user) throw notFoundError("User not found");
 
   const valid = await verifyPassword(user.password_hash, safeCurrent);
   if (!valid) throw forbiddenError("Current password is incorrect");
 
   const newHash = await hashPassword(safeNew);
-  await repos.users.updatePassword(session.userId, newHash);
+  await users.updatePassword(session.userId, newHash);
 
-  await repos.auditLogs.create({
+  await auditLogs.create({
     user_id: session.userId,
     action: "password_changed",
     entity_type: "user",
@@ -96,10 +75,10 @@ export async function changePassword(
 }
 
 export async function removeAllPasskeys(): Promise<ActionSuccess> {
-  const repos = createSecurityRepos();
+  const { passkeys, auditLogs } = serverRuntime.security;
   const session = await requireSession();
   const { user, strongAuthStatus } =
-    await requireCurrentUserWithStrongAuthState(session.userId, repos);
+    await requireCurrentUserWithStrongAuthState(session.userId);
   assertProtectedRoleKeepsStrongAuth({
     role: user.role,
     removingTotp: false,
@@ -108,8 +87,8 @@ export async function removeAllPasskeys(): Promise<ActionSuccess> {
     hasPasskey: strongAuthStatus.hasPasskey,
   });
 
-  await repos.passkeys.deleteAllByUser(session.userId);
-  await repos.auditLogs.create({
+  await passkeys.deleteAllByUser(session.userId);
+  await auditLogs.create({
     user_id: session.userId,
     action: "passkeys_removed",
     entity_type: "user",
@@ -122,10 +101,11 @@ export async function removeAllPasskeys(): Promise<ActionSuccess> {
 }
 
 export async function disableTotp(): Promise<ActionSuccess> {
-  const repos = createSecurityRepos();
+  const { userTotpFactors, userTotpRecoveryCodes, auditLogs } =
+    serverRuntime.security;
   const session = await requireSession();
   const { user, strongAuthStatus } =
-    await requireCurrentUserWithStrongAuthState(session.userId, repos);
+    await requireCurrentUserWithStrongAuthState(session.userId);
   assertProtectedRoleKeepsStrongAuth({
     role: user.role,
     removingTotp: true,
@@ -134,9 +114,9 @@ export async function disableTotp(): Promise<ActionSuccess> {
     hasPasskey: strongAuthStatus.hasPasskey,
   });
 
-  await repos.userTotpFactors.disable(session.userId);
-  await repos.userTotpRecoveryCodes.deleteAllByUser(session.userId);
-  await repos.auditLogs.create({
+  await userTotpFactors.disable(session.userId);
+  await userTotpRecoveryCodes.deleteAllByUser(session.userId);
+  await auditLogs.create({
     user_id: session.userId,
     action: "totp_disabled",
     entity_type: "user",

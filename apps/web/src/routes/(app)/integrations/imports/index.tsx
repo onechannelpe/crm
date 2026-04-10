@@ -7,6 +7,7 @@ import {
 } from "~/actions/integrations/imports";
 import { AppPage } from "~/components/layout/page";
 import { toAppError } from "~/lib/app-errors";
+import type { IntegrationJobRow } from "~/server/integrations/types";
 
 export default function ImportsPage() {
   const navigate = useNavigate();
@@ -32,7 +33,8 @@ export default function ImportsPage() {
     }
   }
 
-  const importJobs = () => jobs().filter((j) => j.type !== "export");
+  const importJobs = () =>
+    jobs().filter((j: IntegrationJobRow) => j.type !== "export");
 
   return (
     <AppPage>
