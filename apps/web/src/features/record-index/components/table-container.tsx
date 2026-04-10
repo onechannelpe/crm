@@ -1,3 +1,5 @@
+import { Show } from "solid-js";
+
 import Plus from "~/components/icons/plus";
 import { DataGrid } from "~/features/data-grid/components/grid";
 import type { DataGridActionRowConfig } from "~/features/data-grid/model/types";
@@ -38,14 +40,17 @@ export function RecordIndexTableContainer<
     suspendEscapeSelectionClear: props.model.columns.openMenu() !== null,
   });
 
-  if (loadingStatus() === "ready" && sortedRows().length === 0) {
-    return <RecordIndexEmpty model={props.model} />;
-  }
-
   return (
-    <DataGrid
-      {...commonGridProps()}
-      actionRow={loadingStatus() === "ready" ? buildActionRow() : undefined}
-    />
+    <Show
+      when={loadingStatus() === "ready" && sortedRows().length === 0}
+      fallback={
+        <DataGrid
+          {...commonGridProps()}
+          actionRow={loadingStatus() === "ready" ? buildActionRow() : undefined}
+        />
+      }
+    >
+      <RecordIndexEmpty model={props.model} />
+    </Show>
   );
 }
