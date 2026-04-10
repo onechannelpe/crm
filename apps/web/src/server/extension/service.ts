@@ -10,24 +10,38 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 import {
   EXTENSION_HANDOFF_TOKEN_AUDIENCE,
   EXTENSION_HANDOFF_TOKEN_ISSUER,
-  EXTENSION_SESSION_TOKEN_AUDIENCE,
   type ClaimExtensionSessionResponse,
   type CreateExtensionHandoffTokenResponse,
-  type ExtensionExecutivePresenceStatus,
-  type ExtensionHandoffClaims,
-  type ExtensionInstallationSessionClaims,
   type ExtensionRuntimeEventEnvelope,
-  type ExtensionSyncHealth,
   type RefreshExtensionSessionResponse,
   type TeamExecutiveStatusView,
 } from "./contracts";
 import {
-  ExtensionTokenVerificationError,
   hashExtensionSecretToken,
   signExtensionToken,
   verifyExtensionToken,
 } from "./crypto";
 import type { createExtensionRuntimeRepo } from "./repos";
+import {
+  mapLifecycleStatus,
+  upsertSyncHealth,
+  withDerivedProjectionStatuses,
+} from "./service-presence";
+import {
+  type InstallationSessionRecord,
+  type SessionCredentials,
+  installationSessionExpiresAt,
+  issueSessionCredentials,
+} from "./service-tokens";
+import {
+  isCryptoMisconfiguration,
+  isExtensionHandoffClaims,
+  isExtensionInstallationSessionClaims,
+  isInvalidExtensionToken,
+  isTokenExpired,
+  isUuid,
+  parseSubjectUserId,
+} from "./service-validators";
 
 type ExtensionRepos = {
   contactAssignments: ReturnType<typeof createContactAssignmentsRepo>;
@@ -44,34 +58,7 @@ interface ExtensionServiceDeps {
   ) => Promise<T>;
 }
 
-const EXECUTIVE_STATUS_OFFLINE_AFTER_MS = 2 * 60_000;
-const EXECUTIVE_SYNC_STALE_AFTER_MS = 2 * 60_000;
 const EXTENSION_HANDOFF_TTL_MS = 120_000;
-const EXTENSION_INSTALLATION_SESSION_TTL_MS = 8 * 60 * 60_000;
-const EXTENSION_ACCESS_TOKEN_TTL_MS = 15 * 60_000;
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-interface InstallationSessionRecord {
-  jti: string;
-  user_id: number;
-  branch_id: number;
-  auth_session_id: string;
-  installation_id: string;
-  refresh_token_hash: string;
-  issued_at: number;
-  expires_at: number;
-  revoked_at: number | null;
-  last_seen_at: number | null;
-  refreshed_at: number | null;
-}
-
-interface SessionCredentials {
-  refreshToken: string;
-  refreshTokenHash: string;
-  sessionToken: string;
-  expiresAt: number;
-}
 
 export type ExtensionServiceError =
   | { reason: "unauthorized"; message: string }
@@ -85,189 +72,6 @@ export type ExtensionServiceError =
   | { reason: "session_invalid"; message: string }
   | { reason: "unexpected"; message: string };
 
-function mapLifecycleStatus(
-  event: Extract<ExtensionRuntimeEventEnvelope, { type: "call.lifecycle" }>,
-): Exclude<ExtensionExecutivePresenceStatus, "idle" | "ready" | "offline"> {
-  switch (event.payload.event) {
-    case "started":
-      return "dialing";
-    case "connected":
-      return "active";
-    case "ended":
-      return "wrap_up";
-  }
-
-  throw new Error("Unsupported lifecycle event");
-}
-
-function withDerivedProjectionStatuses(
-  statuses: TeamExecutiveStatusView[],
-  now: number,
-): TeamExecutiveStatusView[] {
-  return statuses.map((status) => {
-    return {
-      ...status,
-      presenceStatus:
-        status.presenceStatus === null ||
-        status.presenceUpdatedAt === null ||
-        now - status.presenceUpdatedAt < EXECUTIVE_STATUS_OFFLINE_AFTER_MS
-          ? status.presenceStatus
-          : "offline",
-      syncHealth:
-        status.syncHealth === "reauth_required" ||
-        (status.syncUpdatedAt !== null &&
-          now - status.syncUpdatedAt < EXECUTIVE_SYNC_STALE_AFTER_MS)
-          ? status.syncHealth
-          : "stale",
-    };
-  });
-}
-
-async function upsertSyncHealth(
-  repos: ExtensionRepos,
-  values: {
-    userId: number;
-    branchId: number;
-    syncHealth: ExtensionSyncHealth;
-    updatedAt: number;
-  },
-): Promise<void> {
-  await repos.extensionRuntime.upsertExecutiveSyncHealth({
-    user_id: values.userId,
-    branch_id: values.branchId,
-    sync_health: values.syncHealth,
-    sync_updated_at: values.updatedAt,
-  });
-}
-
-function isUuid(value: string): boolean {
-  return UUID_PATTERN.test(value);
-}
-
-function isExtensionHandoffClaims(
-  value: unknown,
-): value is ExtensionHandoffClaims {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "iss" in value &&
-    value.iss === EXTENSION_HANDOFF_TOKEN_ISSUER &&
-    "aud" in value &&
-    value.aud === EXTENSION_HANDOFF_TOKEN_AUDIENCE &&
-    "sub" in value &&
-    typeof value.sub === "string" &&
-    "authSessionId" in value &&
-    typeof value.authSessionId === "string" &&
-    "branchId" in value &&
-    typeof value.branchId === "number" &&
-    "assignmentId" in value &&
-    typeof value.assignmentId === "number" &&
-    "contactId" in value &&
-    typeof value.contactId === "number" &&
-    "phone" in value &&
-    typeof value.phone === "string" &&
-    "clientName" in value &&
-    (value.clientName === null || typeof value.clientName === "string") &&
-    "organizationLabel" in value &&
-    (value.organizationLabel === null ||
-      typeof value.organizationLabel === "string") &&
-    "action" in value &&
-    value.action === "start_call" &&
-    "origin" in value &&
-    typeof value.origin === "string" &&
-    "jti" in value &&
-    typeof value.jti === "string" &&
-    "iat" in value &&
-    typeof value.iat === "number" &&
-    "exp" in value &&
-    typeof value.exp === "number"
-  );
-}
-
-function isExtensionInstallationSessionClaims(
-  value: unknown,
-): value is ExtensionInstallationSessionClaims {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "iss" in value &&
-    value.iss === EXTENSION_HANDOFF_TOKEN_ISSUER &&
-    "aud" in value &&
-    value.aud === EXTENSION_SESSION_TOKEN_AUDIENCE &&
-    "sub" in value &&
-    typeof value.sub === "string" &&
-    "authSessionId" in value &&
-    typeof value.authSessionId === "string" &&
-    "branchId" in value &&
-    typeof value.branchId === "number" &&
-    "installationId" in value &&
-    typeof value.installationId === "string" &&
-    "jti" in value &&
-    typeof value.jti === "string" &&
-    "iat" in value &&
-    typeof value.iat === "number" &&
-    "exp" in value &&
-    typeof value.exp === "number"
-  );
-}
-
-function isTokenExpired(expSeconds: number, nowMs: number): boolean {
-  return expSeconds <= Math.floor(nowMs / 1000);
-}
-
-function accessTokenExpiresAt(issuedAt: number): number {
-  return issuedAt + EXTENSION_ACCESS_TOKEN_TTL_MS;
-}
-
-function installationSessionExpiresAt(issuedAt: number): number {
-  return issuedAt + EXTENSION_INSTALLATION_SESSION_TTL_MS;
-}
-
-function parseSubjectUserId(subject: string): number | null {
-  if (!subject.startsWith("user:")) {
-    return null;
-  }
-
-  const parsed = Number(subject.slice("user:".length));
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
-}
-
-function generateRefreshToken(): string {
-  return crypto.randomUUID();
-}
-
-async function signInstallationSessionToken(
-  session: InstallationSessionRecord,
-  issuedAt: number,
-): Promise<string> {
-  return signExtensionToken({
-    iss: EXTENSION_HANDOFF_TOKEN_ISSUER,
-    aud: EXTENSION_SESSION_TOKEN_AUDIENCE,
-    sub: `user:${session.user_id}`,
-    authSessionId: session.auth_session_id,
-    branchId: session.branch_id,
-    installationId: session.installation_id,
-    jti: session.jti,
-    iat: issuedAt,
-    exp: Math.floor(accessTokenExpiresAt(issuedAt) / 1000),
-  });
-}
-
-async function issueSessionCredentials(
-  session: InstallationSessionRecord,
-  issuedAt: number,
-): Promise<SessionCredentials> {
-  const refreshToken = generateRefreshToken();
-  const refreshTokenHash = await hashExtensionSecretToken(refreshToken);
-
-  return {
-    refreshToken,
-    refreshTokenHash,
-    sessionToken: await signInstallationSessionToken(session, issuedAt),
-    expiresAt: accessTokenExpiresAt(issuedAt),
-  };
-}
-
 async function hasActiveAuthSession(
   repos: ExtensionRepos,
   authSessionId: string,
@@ -275,14 +79,6 @@ async function hasActiveAuthSession(
 ): Promise<boolean> {
   const authSession = await repos.sessions.findById(authSessionId);
   return authSession !== null && authSession.expires_at > nowMs;
-}
-
-function isCryptoMisconfiguration(error: unknown): boolean {
-  return error instanceof Error && error.message.includes("private key");
-}
-
-function isInvalidExtensionToken(error: unknown): boolean {
-  return error instanceof ExtensionTokenVerificationError;
 }
 
 export function createExtensionService(
@@ -579,7 +375,7 @@ export function createExtensionService(
                 },
               );
             }
-            await upsertSyncHealth(txRepos, {
+            await upsertSyncHealth(txRepos.extensionRuntime, {
               userId: session.user_id,
               branchId: session.branch_id,
               syncHealth: "ok",
@@ -693,7 +489,7 @@ export function createExtensionService(
           refreshed_at: currentTime,
           expires_at: installationSessionExpiresAt(currentTime),
         });
-        await upsertSyncHealth(repos, {
+        await upsertSyncHealth(repos.extensionRuntime, {
           userId: session.user_id,
           branchId: session.branch_id,
           syncHealth: "ok",
@@ -826,7 +622,7 @@ export function createExtensionService(
               received_at: currentTime,
             });
 
-          await upsertSyncHealth(txRepos, {
+          await upsertSyncHealth(txRepos.extensionRuntime, {
             userId: session.user_id,
             branchId: session.branch_id,
             syncHealth: "ok",
