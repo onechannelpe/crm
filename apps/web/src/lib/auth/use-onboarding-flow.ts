@@ -128,7 +128,7 @@ export function useOnboardingFlow() {
   const onboardingState = createMemo(() => {
     const u = user();
     const policy = requirements();
-    if (!u) {
+    if (!u || policy === null) {
       return {
         profileReady: false,
         securityRequired: false,
@@ -139,9 +139,9 @@ export function useOnboardingFlow() {
     }
 
     const profileReady = isValidOnboardingPhone(phone());
-    const securityRequired = policy
-      ? policy.requiredActions.includes("configure_strong_auth")
-      : u.strongAuthRequired && !u.strongAuthConfigured;
+    const securityRequired = policy.requiredActions.includes(
+      "configure_strong_auth",
+    );
     const securityReady = !securityRequired || u.strongAuthConfigured;
 
     return {
@@ -234,7 +234,6 @@ export function useOnboardingFlow() {
     canGoBack,
     passkeyPhase,
     onboardingState,
-    requirements,
     passkeySupported,
     totpEnrollment,
     goBack,

@@ -94,14 +94,11 @@ export function evaluateLoginPolicy(input: LoginPolicyInput): LoginDecision {
 export function deriveOnboardingRequirements(
   user: Pick<
     CurrentUserView,
-    | "phoneE164"
-    | "strongAuthRequired"
-    | "strongAuthConfigured"
-    | "onboardingCompletedAt"
-    | "role"
+    "phoneE164" | "strongAuthConfigured" | "onboardingCompletedAt" | "role"
   >,
 ): OnboardingRequirements {
   const hasPhone = user.phoneE164 !== null && user.phoneE164.trim().length > 0;
+  const strongAuthRequired = requiresStrongAuthRole(user.role);
   const requiredActions: Array<"set_profile" | "configure_strong_auth"> = [];
   const reasons: string[] = [];
 
@@ -110,13 +107,13 @@ export function deriveOnboardingRequirements(
     reasons.push("phone_required");
   }
 
-  if (user.strongAuthRequired && !user.strongAuthConfigured) {
+  if (strongAuthRequired && !user.strongAuthConfigured) {
     requiredActions.push("configure_strong_auth");
     reasons.push("strong_auth_required");
   }
 
   const optionalActions: Array<"configure_totp" | "configure_passkey"> = [];
-  if (!user.strongAuthRequired) {
+  if (!strongAuthRequired) {
     optionalActions.push("configure_passkey", "configure_totp");
   }
 
@@ -126,7 +123,7 @@ export function deriveOnboardingRequirements(
     sessionState: resolveOnboardingSessionState({
       onboardingCompleted: user.onboardingCompletedAt !== null,
       hasPhone,
-      requiresStrongAuth: requiresStrongAuthRole(user.role),
+      requiresStrongAuth: strongAuthRequired,
       strongAuthConfigured: user.strongAuthConfigured,
     }),
     requiredActions,

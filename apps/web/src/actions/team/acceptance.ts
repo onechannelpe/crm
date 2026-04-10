@@ -23,14 +23,7 @@ export async function acceptTeamInvite(input: {
   const request = getRequestClientMetadata();
 
   const result = await submitInviteAcceptance(
-    {
-      inviteService: serverRuntime.team.invites.inviteService,
-      repos: {
-        users: serverRuntime.auth.onboarding.repos.users,
-        sessions: serverRuntime.auth.onboarding.repos.sessions,
-        auditLogs: serverRuntime.auth.onboarding.repos.auditLogs,
-      },
-    },
+    serverRuntime.auth.inviteAcceptance,
     {
       ipAddress: request.ipAddress,
       userAgent: request.userAgent,

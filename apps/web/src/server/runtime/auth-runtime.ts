@@ -15,6 +15,7 @@ import { createAuthSessionRepo } from "~/server/auth/infrastructure/session-repo
 import { createTotpEnrollmentContext } from "~/server/auth/infrastructure/totp-context";
 import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
+import { createInviteServiceContext } from "~/server/invites/infrastructure/invite-service-context";
 
 import type { ServerInfra } from "./infra";
 
@@ -33,12 +34,22 @@ export function createAuthRuntime(
     authThrottle: createAuthThrottleRepo(infra.db),
     now: infra.now,
   });
+  const onboarding = createAuthOnboardingContext(infra.db);
+  const inviteService = createInviteServiceContext(infra.db).inviteService;
 
   return {
     authThrottleService,
     sessionService,
     login: createAuthLoginContext(infra.db),
-    onboarding: createAuthOnboardingContext(infra.db),
+    onboarding,
+    inviteAcceptance: {
+      inviteService,
+      repos: {
+        users: onboarding.repos.users,
+        sessions: onboarding.repos.sessions,
+        auditLogs: onboarding.repos.auditLogs,
+      },
+    },
     totp: createTotpEnrollmentContext(infra.db),
     passwordReset: createPasswordResetContext({
       executor: infra.db,
