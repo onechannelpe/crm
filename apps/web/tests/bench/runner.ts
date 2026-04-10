@@ -1,17 +1,16 @@
-// Vitest's NodeBenchmarkRunner never calls beforeAll/afterAll on bench suites
-// (tracked upstream: https://github.com/vitest-dev/vitest/issues/5075).
-// When the bench API redesign ships (https://github.com/vitest-dev/vitest/discussions/7850),
-// bench() will run inside test() and this file can be deleted.
-import { NodeBenchmarkRunner } from "vitest/runners";
-import { getHooks } from "vitest/suite";
+// Vitest's BenchmarkRunner currently doesn't execute beforeAll/afterAll for bench suites.
+// Keep this runner until upstream lands the bench API redesign:
+// - https://github.com/vitest-dev/vitest/issues/5075
+// - https://github.com/vitest-dev/vitest/discussions/7850
+import { BenchmarkRunner, TestRunner } from "vitest";
 
-type Suite = Parameters<NodeBenchmarkRunner["runSuite"]>[0];
+type Suite = Parameters<BenchmarkRunner["runSuite"]>[0];
 
 async function callSuiteHooks(
   suite: Suite,
   type: "beforeAll" | "afterAll",
 ): Promise<void> {
-  for (const hook of getHooks(suite)[type]) {
+  for (const hook of TestRunner.getSuiteHooks(suite)[type]) {
     await hook(suite);
   }
 
@@ -22,7 +21,7 @@ async function callSuiteHooks(
   }
 }
 
-export default class BenchRunner extends NodeBenchmarkRunner {
+export default class BenchRunner extends BenchmarkRunner {
   async runSuite(suite: Suite): Promise<void> {
     await callSuiteHooks(suite, "beforeAll");
     try {
