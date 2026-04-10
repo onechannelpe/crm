@@ -1,17 +1,17 @@
-import { createAsync, useNavigate } from "@solidjs/router";
+import { createAsync, useAction } from "@solidjs/router";
 import { createSignal, For } from "solid-js";
 
-import { queueLeadExport } from "~/actions/integrations/exports";
-import { listIntegrationJobs } from "~/actions/integrations/imports";
 import { AppPage } from "~/components/layout/page";
 import { toAppError } from "~/lib/app-errors";
+import { queueLeadExportMutation } from "~/lib/mutations/integrations";
+import { integrationJobsQuery } from "~/lib/queries/integrations";
 import type { IntegrationJobRow } from "~/server/integrations/types";
 
 export default function ExportsPage() {
-  const navigate = useNavigate();
-  const jobs = createAsync(() => listIntegrationJobs({ limit: 20 }), {
+  const jobs = createAsync(() => integrationJobsQuery(20), {
     initialValue: [],
   });
+  const queueExport = useAction(queueLeadExportMutation);
   const [error, setError] = createSignal<string | null>(null);
   const [queuing, setQueuing] = createSignal(false);
 
@@ -19,8 +19,7 @@ export default function ExportsPage() {
     setError(null);
     setQueuing(true);
     try {
-      await queueLeadExport();
-      navigate("/integrations/exports");
+      await queueExport();
     } catch (err) {
       setError(toAppError(err, "Error al encolar exportacion").publicMessage);
     } finally {
