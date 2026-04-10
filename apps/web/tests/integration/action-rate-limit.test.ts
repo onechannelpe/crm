@@ -15,7 +15,7 @@ describe("action rate limit", () => {
   let ctx: TestDbContext;
 
   beforeEach(async () => {
-    vi.useFakeTimers();
+    vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(1_700_000_000_000);
     ctx = await createIsolatedTestDb("action-rate-limit");
   });

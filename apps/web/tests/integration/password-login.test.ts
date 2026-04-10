@@ -24,7 +24,7 @@ describe("password login service", () => {
   const rightPassword = "Secret123!";
 
   beforeEach(async () => {
-    vi.useFakeTimers();
+    vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(1_700_000_000_000);
     ctx = await createIsolatedTestDb("password-login");
     await setIdentityPassword(ctx, identity, rightPassword);
