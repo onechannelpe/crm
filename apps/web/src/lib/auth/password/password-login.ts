@@ -4,17 +4,13 @@ import { assertNonEmptyString } from "~/lib/contracts/guards";
 import type { UsersTable } from "~/lib/db/types";
 import type { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import type { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
+import { createAuthThrottleService } from "~/server/features/auth/application/throttle-service";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { createUsersRepo } from "~/server/users/repos-users";
 
 import type { InvalidCredentialsError } from "../errors";
 import { recordAuthEvent } from "../security/auth-events";
 import { hashPassword, verifyPassword } from "./password";
-import {
-  checkLoginThrottle,
-  clearLoginFailureState,
-  recordLoginFailure,
-} from "./throttle";
 
 const DUMMY_HASH = hashPassword("dummy-constant-for-timing-parity");
 
@@ -39,10 +35,12 @@ export async function verifyPasswordLoginCredentials(
   const safeUsername = assertNonEmptyString(input.username, "username");
   const safePassword = assertNonEmptyString(input.password, "password");
   const resolvedDeps = deps.repos;
-  const throttle = await checkLoginThrottle(
+  const throttleService = createAuthThrottleService({
+    authThrottle: resolvedDeps.authThrottle,
+  });
+  const throttle = await throttleService.checkLoginThrottle(
     safeUsername,
     input.ipAddress,
-    resolvedDeps,
   );
 
   if (!throttle.allowed) {
@@ -63,7 +61,7 @@ export async function verifyPasswordLoginCredentials(
 
   if (!user || !user.is_active) {
     await verifyPassword(await DUMMY_HASH, safePassword);
-    await recordLoginFailure(safeUsername, input.ipAddress, resolvedDeps);
+    await throttleService.recordLoginFailure(safeUsername, input.ipAddress);
     await recordAuthEvent(resolvedDeps, {
       userId: user?.id ?? null,
       identifier: safeUsername,
@@ -77,7 +75,7 @@ export async function verifyPasswordLoginCredentials(
   }
 
   if (!(await verifyPassword(user.password_hash, safePassword))) {
-    await recordLoginFailure(safeUsername, input.ipAddress, resolvedDeps);
+    await throttleService.recordLoginFailure(safeUsername, input.ipAddress);
     await recordAuthEvent(resolvedDeps, {
       userId: user.id,
       identifier: safeUsername,
@@ -90,7 +88,7 @@ export async function verifyPasswordLoginCredentials(
     return Err({ kind: "invalid_credentials" });
   }
 
-  await clearLoginFailureState(safeUsername, input.ipAddress, resolvedDeps);
+  await throttleService.clearLoginFailureState(safeUsername, input.ipAddress);
   await recordAuthEvent(resolvedDeps, {
     userId: user.id,
     identifier: safeUsername,

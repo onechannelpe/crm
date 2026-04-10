@@ -1,5 +1,8 @@
-import { integrationRuntime } from "../infrastructure/runtime";
+import type { IntegrationJobsPort } from "../types";
 
-export function getIntegrationJobQuery(jobId: number) {
-  return integrationRuntime.jobs.findById(jobId);
+export function getIntegrationJobQuery(
+  jobId: number,
+  jobs: IntegrationJobsPort,
+) {
+  return jobs.findById(jobId);
 }

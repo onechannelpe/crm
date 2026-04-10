@@ -6,9 +6,9 @@ import {
   createPasskeyLoginStartAuthService,
 } from "../../src/lib/auth/passkey/service";
 import { hashAuthKey } from "../../src/lib/auth/password/key-hash";
-import { recordPasskeyChallengeFailure } from "../../src/lib/auth/password/throttle";
 import { PasskeyRequestError } from "../../src/lib/auth/providers/passkey-provider";
 import type { SendPrivilegedLoginAlert } from "../../src/lib/auth/security/privileged-login-alert";
+import { createAuthThrottleService } from "../../src/server/features/auth/application/throttle-service";
 import { isErr } from "../../src/server/shared/result";
 import {
   cleanupTestDb,
@@ -159,8 +159,11 @@ describe("passkey flows", () => {
   });
 
   it("returns invalid_request when passkey enrollment start is throttled", async () => {
+    const throttleSvc = createAuthThrottleService({
+      authThrottle: ctx.repos.authThrottle,
+    });
     for (let attempt = 0; attempt < 9; attempt += 1) {
-      await recordPasskeyChallengeFailure("user:1", ipAddress, ctx.repos);
+      await throttleSvc.recordPasskeyChallengeFailure("user:1", ipAddress);
     }
 
     const result = await createPasskeyEnrollmentAuthService(

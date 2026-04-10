@@ -2,8 +2,9 @@ import { TextDecoder } from "node:util";
 
 import { JOB_CHANNELS } from "~/lib/job-queue/channels";
 import { publishJob } from "~/lib/redis/publisher";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
-import { integrationJobBlobStore } from "../../infrastructure/runtime";
+import type { JobBlobStore } from "../../job-blob-store";
 import type {
   ImportBatchRunner,
   ImportJobProcessResult,
@@ -12,8 +13,12 @@ import type {
 import { applyImportRows } from "./apply-service";
 import { parseImportRows } from "./parse";
 
-export function createImportBatchRunner() {
-  const runner: ImportBatchRunner = {
+export function createImportBatchRunner(deps: {
+  executor: DatabaseExecutor;
+  blobStore: JobBlobStore;
+}): ImportBatchRunner {
+  const { executor, blobStore } = deps;
+  return {
     async processJob(
       job: IntegrationJobRow,
       signal: AbortSignal,
@@ -23,19 +28,22 @@ export function createImportBatchRunner() {
       }
 
       const text = new TextDecoder("utf-8").decode(
-        await integrationJobBlobStore.get(job.file_path),
+        await blobStore.get(job.file_path),
       );
       if (signal.aborted) {
         throw new Error("Job aborted");
       }
 
       const { validRows, invalidRows } = parseImportRows(job, text);
-      const applied = await applyImportRows({
-        jobId: job.id,
-        actorId: job.requested_by_user_id,
-        validRows,
-        invalidRows,
-      });
+      const applied = await applyImportRows(
+        {
+          jobId: job.id,
+          actorId: job.requested_by_user_id,
+          validRows,
+          invalidRows,
+        },
+        executor,
+      );
       await publishJob(
         JOB_CHANNELS.INTEGRATION_OUTBOX_NEEDS_EXECUTIVE_INPUT,
         job.id,
@@ -57,5 +65,4 @@ export function createImportBatchRunner() {
       };
     },
   };
-  return runner;
 }

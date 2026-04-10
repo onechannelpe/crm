@@ -94,3 +94,5 @@ export function createAuditLogsRepo(db: DatabaseExecutor) {
     },
   };
 }
+
+export type AuditLogsRepo = ReturnType<typeof createAuditLogsRepo>;

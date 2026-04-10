@@ -3,7 +3,7 @@
 import { getSaleDetail } from "~/server/pipeline/application/queries/get-sale-detail";
 import { listSales } from "~/server/pipeline/application/queries/list-sales";
 import type { SaleView } from "~/server/pipeline/application/queries/views/sale";
-import { createPipelineDeps } from "~/server/pipeline/infrastructure/deps";
+import { serverRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 
 export async function querySales(filters: {
@@ -15,7 +15,7 @@ export async function querySales(filters: {
     access: { kind: "auth" },
     input: filters,
     execute: (ctx) =>
-      listSales(createPipelineDeps().saleQueries, {
+      listSales(serverRuntime.pipeline.deps.saleQueries, {
         actorRole: ctx.actor.role,
         actorUserId: ctx.actor.userId,
         ...filters,
@@ -29,7 +29,7 @@ export async function querySaleDetail(saleId: number): Promise<SaleView> {
     access: { kind: "auth" },
     input: { saleId },
     execute: (ctx) =>
-      getSaleDetail(createPipelineDeps().saleQueries, {
+      getSaleDetail(serverRuntime.pipeline.deps.saleQueries, {
         actorRole: ctx.actor.role,
         actorUserId: ctx.actor.userId,
         saleId,

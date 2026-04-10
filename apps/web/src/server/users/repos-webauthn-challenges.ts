@@ -41,3 +41,6 @@ export function createWebauthnChallengesRepo(db: Kysely<Database>) {
     },
   };
 }
+export type WebauthnChallengesRepo = ReturnType<
+  typeof createWebauthnChallengesRepo
+>;

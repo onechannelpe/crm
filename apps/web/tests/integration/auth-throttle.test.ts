@@ -1,12 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import {
-  checkLoginThrottle,
-  checkPasskeyChallengeThrottle,
-  clearLoginFailureState,
-  recordLoginFailure,
-  recordPasskeyChallengeFailure,
-} from "../../src/lib/auth/password/throttle";
+import { createAuthThrottleService } from "../../src/server/features/auth/application/throttle-service";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -39,57 +33,64 @@ describe("auth throttle", () => {
   }
 
   it("blocks account after repeated failures across many ips", async () => {
+    const svc = createAuthThrottleService({
+      authThrottle: ctx.repos.authThrottle,
+    });
     const email = "exec1@test.local";
-    await runSeries(6, (i) =>
-      recordLoginFailure(email, `198.51.100.${i}`, ctx.repos),
-    );
-    const status = await checkLoginThrottle(email, "203.0.113.1", ctx.repos);
+    await runSeries(6, (i) => svc.recordLoginFailure(email, `198.51.100.${i}`));
+    const status = await svc.checkLoginThrottle(email, "203.0.113.1");
     expect(status.allowed).toBe(false);
   });
 
   it("blocks hot source ip after high-volume failures", async () => {
+    const svc = createAuthThrottleService({
+      authThrottle: ctx.repos.authThrottle,
+    });
     const ip = "198.51.100.5";
     await runSeries(31, (i) =>
-      recordLoginFailure(`user${i}@test.local`, ip, ctx.repos),
+      svc.recordLoginFailure(`user${i}@test.local`, ip),
     );
-    const status = await checkLoginThrottle("exec1@test.local", ip, ctx.repos);
+    const status = await svc.checkLoginThrottle("exec1@test.local", ip);
     expect(status.allowed).toBe(false);
   });
 
   it("clears account and pair state after successful auth", async () => {
+    const svc = createAuthThrottleService({
+      authThrottle: ctx.repos.authThrottle,
+    });
     const email = "exec1@test.local";
     const ip = "198.51.100.2";
-    await runSeries(6, () => recordLoginFailure(email, ip, ctx.repos));
-    expect((await checkLoginThrottle(email, ip, ctx.repos)).allowed).toBe(
-      false,
-    );
-    await clearLoginFailureState(email, ip, ctx.repos);
-    expect((await checkLoginThrottle(email, ip, ctx.repos)).allowed).toBe(true);
+    await runSeries(6, () => svc.recordLoginFailure(email, ip));
+    expect((await svc.checkLoginThrottle(email, ip)).allowed).toBe(false);
+    await svc.clearLoginFailureState(email, ip);
+    expect((await svc.checkLoginThrottle(email, ip)).allowed).toBe(true);
   });
 
   it("resets blocked state after observation windows pass", async () => {
+    const svc = createAuthThrottleService({
+      authThrottle: ctx.repos.authThrottle,
+    });
     const email = "exec1@test.local";
     const ip = "198.51.100.11";
-    await runSeries(6, () => recordLoginFailure(email, ip, ctx.repos));
-    expect((await checkLoginThrottle(email, ip, ctx.repos)).allowed).toBe(
-      false,
-    );
+    await runSeries(6, () => svc.recordLoginFailure(email, ip));
+    expect((await svc.checkLoginThrottle(email, ip)).allowed).toBe(false);
     vi.setSystemTime(Date.now() + 16 * 60_000);
-    expect((await checkLoginThrottle(email, ip, ctx.repos)).allowed).toBe(true);
+    expect((await svc.checkLoginThrottle(email, ip)).allowed).toBe(true);
   });
 
   it("keeps password and passkey counters isolated per endpoint", async () => {
+    const svc = createAuthThrottleService({
+      authThrottle: ctx.repos.authThrottle,
+    });
     const email = "exec1@test.local";
     const ip = "198.51.100.77";
 
-    await runSeries(9, () =>
-      recordPasskeyChallengeFailure(email, ip, ctx.repos),
-    );
+    await runSeries(9, () => svc.recordPasskeyChallengeFailure(email, ip));
 
-    expect(
-      (await checkPasskeyChallengeThrottle(email, ip, ctx.repos)).allowed,
-    ).toBe(false);
-    expect((await checkLoginThrottle(email, ip, ctx.repos)).allowed).toBe(true);
+    expect((await svc.checkPasskeyChallengeThrottle(email, ip)).allowed).toBe(
+      false,
+    );
+    expect((await svc.checkLoginThrottle(email, ip)).allowed).toBe(true);
   });
 
   it("cleans expired and stale throttle counters", async () => {

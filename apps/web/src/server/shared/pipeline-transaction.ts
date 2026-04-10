@@ -1,4 +1,4 @@
-import { db } from "~/lib/db/db";
+import { serverRuntime } from "~/server/runtime";
 
 import type { DatabaseExecutor } from "./db-executor";
 
@@ -13,7 +13,7 @@ export async function runInPipelineTransaction<T>(
   operation: (transaction: PipelineTransaction) => Promise<T>,
 ): Promise<T> {
   const afterCommitEffects: AfterCommitEffect[] = [];
-  const result = await db.transaction().execute((trx) =>
+  const result = await serverRuntime.infra.db.transaction().execute((trx) =>
     operation({
       executor: trx,
       afterCommit(effect) {

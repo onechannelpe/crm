@@ -10,7 +10,6 @@ import { internalError } from "~/lib/app-errors";
 import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { getActionRequestContext } from "~/lib/observability/context";
-import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
 import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
 import { createPasskeyStartService } from "~/server/features/auth/application/login/passkey";
 import { submitPasswordLogin } from "~/server/features/auth/application/login/primary";
@@ -40,7 +39,7 @@ export async function passwordLogin(
   const identifier = readLoginText(formData, "identifier");
   const password = readLoginText(formData, "password", { trim: false });
   const request = getRequestClientMetadata();
-  const loginContext = createAuthLoginContext(serverRuntime.infra.db);
+  const loginContext = serverRuntime.auth.login;
   const result = await submitPasswordLogin(
     {
       identifier,
@@ -111,7 +110,7 @@ export async function passkeyStart(
   }
 
   const request = getRequestClientMetadata();
-  const loginContext = createAuthLoginContext(serverRuntime.infra.db);
+  const loginContext = serverRuntime.auth.login;
   const service = createPasskeyStartService(loginContext.repos, {
     createWebauthnProvider: createRequestPasskeyProviderFactory(),
   });
@@ -162,7 +161,7 @@ export async function totpLogin(
     throw redirect("/login/user?error=flow_expired");
   }
   const request = getRequestClientMetadata();
-  const loginContext = createAuthLoginContext(serverRuntime.infra.db);
+  const loginContext = serverRuntime.auth.login;
   const result = await submitTotpForLoginFlow(
     {
       flowId,

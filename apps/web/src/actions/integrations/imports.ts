@@ -4,6 +4,7 @@ import { notFoundError, validationError } from "~/lib/app-errors";
 import { getIntegrationJobQuery } from "~/server/integrations/application/get-integration-job";
 import { listIntegrationJobsQuery } from "~/server/integrations/application/list-integration-jobs";
 import { queueImportJobUseCase } from "~/server/integrations/application/queue-import-job";
+import { serverRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 import { Ok } from "~/server/shared/result";
 
@@ -39,6 +40,8 @@ export async function uploadImportFile(
         actorId: ctx.actor.userId,
         fileName: file.name,
         bytes,
+        jobs: serverRuntime.integrations.integration.jobs,
+        blobStore: serverRuntime.integrations.blobStore,
       }),
   });
 }
@@ -49,7 +52,10 @@ export async function getImportJob(jobId: number) {
     access: { kind: "permission", permission: "integration:manage" },
     input: { jobId },
     execute: async () => {
-      const job = await getIntegrationJobQuery(jobId);
+      const job = await getIntegrationJobQuery(
+        jobId,
+        serverRuntime.integrations.integration.jobs,
+      );
       if (!job) throw notFoundError("Import job not found");
       return Ok(job);
     },
@@ -64,6 +70,12 @@ export async function listIntegrationJobs(filters: {
     actionName: "integration.list_jobs",
     access: { kind: "permission", permission: "integration:manage" },
     input: {},
-    execute: async () => Ok(await listIntegrationJobsQuery(filters)),
+    execute: async () =>
+      Ok(
+        await listIntegrationJobsQuery(
+          filters,
+          serverRuntime.integrations.integration.jobs,
+        ),
+      ),
   });
 }
