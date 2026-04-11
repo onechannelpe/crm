@@ -2,10 +2,8 @@
 
 import { replaceCurrentSession } from "~/lib/auth/session/session-transition";
 import { assertNonEmptyString } from "~/lib/contracts/guards";
-import {
-  beginTotpEnrollment as beginTotpEnrollmentService,
-  finishTotpEnrollment as finishTotpEnrollmentService,
-} from "~/server/auth/application/totp";
+import { beginTotpEnrollment as beginTotpEnrollmentService } from "~/server/auth/application/commands/begin-totp-enrollment";
+import { finishTotpEnrollment as finishTotpEnrollmentService } from "~/server/auth/application/commands/finish-totp-enrollment";
 import { serverRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 

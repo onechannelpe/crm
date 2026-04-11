@@ -10,7 +10,7 @@ import { assertPositiveInt } from "~/lib/contracts/guards";
 import type { AuthLoginRepos } from "~/server/auth/infrastructure/login-context";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
-import type { LoginFlowLoginResult, SubmitTotpLoginError } from "./types";
+import type { LoginFlowLoginResult, SubmitTotpLoginError } from "../contracts";
 
 export async function submitTotpForLoginFlow(
   input: {

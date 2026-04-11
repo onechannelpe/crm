@@ -1,30 +1,13 @@
 import type { AuthenticationResponseJSON } from "@simplewebauthn/server";
 
-import {
-  createPasskeyLoginFinishAuthService,
-  createPasskeyLoginStartAuthService,
-} from "~/lib/auth/passkey/service";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
-import type { AuthLoginRepos } from "~/server/auth/infrastructure/login-context";
+import { createPasskeyLoginFinishAuthService } from "~/server/auth/passkey/service";
 
-type PasskeyStartProviderFactory = NonNullable<
-  Parameters<typeof createPasskeyLoginStartAuthService>[1]
->["createWebauthnProvider"];
+import type { AuthLoginRepos } from "../../infrastructure/login-context";
 
 type PasskeyFinishProviderFactory = NonNullable<
   Parameters<typeof createPasskeyLoginFinishAuthService>[1]
 >["createWebauthnProvider"];
-
-export function createPasskeyStartService(
-  repos: AuthLoginRepos,
-  input: {
-    createWebauthnProvider: PasskeyStartProviderFactory;
-  },
-) {
-  return createPasskeyLoginStartAuthService(repos, {
-    createWebauthnProvider: input.createWebauthnProvider,
-  });
-}
 
 export async function finishPasskeyLogin(
   deps: {

@@ -1,6 +1,7 @@
 import type { AuthenticationResponseJSON } from "@simplewebauthn/server";
 
 import { loadActiveAuthContext } from "~/lib/auth/context/auth-context";
+import { deleteLoginFlow } from "~/lib/auth/login-flow/shared";
 import {
   isPasskeyRequestError,
   PasskeyRequestError,
@@ -8,13 +9,12 @@ import {
 import { recordAuthEvent } from "~/lib/auth/security/auth-events";
 import { sendAlertOnNewLoginSource } from "~/lib/auth/security/login-source-alert";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
+import type { issueLoginSession } from "~/lib/auth/session/session-transition";
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
 import { evaluateLoginPolicy } from "~/server/auth/policy/engine";
 import type { UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import { deleteLoginFlow } from "../../login-flow/shared";
-import type { issueLoginSession } from "../../session/session-transition";
 import type { PasskeyAuthRepos } from "./shared";
 import { normalizePasskeyFlowId, unexpectedPasskeyLoginError } from "./shared";
 import type { FinishPasskeyLoginError, PasskeyLoginResult } from "./types";

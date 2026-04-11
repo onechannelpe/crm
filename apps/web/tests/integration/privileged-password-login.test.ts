@@ -4,9 +4,9 @@ import type { SendPrivilegedLoginAlert } from "../../src/lib/auth/security/privi
 import { requiresStrongAuthRole } from "../../src/lib/auth/security/strong-auth-status";
 import { decryptTotpSecret } from "../../src/lib/auth/totp/secret-crypto";
 import { generateCurrentTotpCode } from "../../src/lib/auth/totp/totp";
-import { getLoginFlowState } from "../../src/server/auth/application/login/flow-state";
-import { submitPasswordLogin } from "../../src/server/auth/application/login/primary";
-import { submitTotpForLoginFlow } from "../../src/server/auth/application/login/totp";
+import { submitPasswordLogin } from "../../src/server/auth/application/commands/submit-password-login";
+import { submitTotpForLoginFlow } from "../../src/server/auth/application/commands/submit-totp-login";
+import { getLoginFlowState } from "../../src/server/auth/application/queries/get-login-flow-state";
 import { isErr } from "../../src/server/shared/result";
 import {
   cleanupTestDb,

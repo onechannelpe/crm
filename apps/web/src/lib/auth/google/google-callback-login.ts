@@ -1,5 +1,5 @@
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
-import { submitGoogleLogin } from "~/server/auth/application/login/primary";
+import { submitGoogleLogin } from "~/server/auth/application/commands/submit-google-login";
 import type { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import type { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import type { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";

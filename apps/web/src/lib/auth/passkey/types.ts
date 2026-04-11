@@ -3,9 +3,6 @@ import type {
   PublicKeyCredentialRequestOptionsJSON,
 } from "@simplewebauthn/server";
 
-import type { InvalidCredentialsError } from "~/lib/auth/errors";
-import type { IssuedSessionResult } from "~/lib/auth/session/session-transition";
-
 export interface PasskeyEnrollmentChallenge {
   challengeId: number;
   options: PublicKeyCredentialCreationOptionsJSON;
@@ -27,14 +24,3 @@ export type PasskeyLoginFlowState =
       state: "passkey";
       requestOptions: PublicKeyCredentialRequestOptionsJSON;
     };
-
-export type PasskeyLoginResult = IssuedSessionResult;
-
-export type BeginPasskeyLoginError =
-  | InvalidCredentialsError
-  | { kind: "unexpected"; message: string };
-
-export type FinishPasskeyLoginError =
-  | { kind: "flow_expired" }
-  | InvalidCredentialsError
-  | { kind: "unexpected"; message: string };

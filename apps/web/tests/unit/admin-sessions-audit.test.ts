@@ -1,9 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  revokeAllUserSessions,
-  revokeUserSession,
-} from "../../src/server/auth/application/admin-sessions";
+import { revokeAllUserSessions } from "../../src/server/auth/application/commands/revoke-all-user-sessions";
+import { revokeUserSession } from "../../src/server/auth/application/commands/revoke-user-session";
 import type { AdminSessionRevocationPort } from "../../src/server/auth/application/ports";
 import type { AppContext } from "../../src/server/shared/action-runtime";
 

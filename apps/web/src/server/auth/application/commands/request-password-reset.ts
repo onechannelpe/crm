@@ -1,20 +1,12 @@
 import { renderPasswordResetEmail } from "@crm/notifications";
 
-import { hashPassword } from "~/lib/auth/password/password";
 import {
   generatePasswordResetToken,
   hashPasswordResetToken,
-  isValidPasswordResetTokenFormat,
 } from "~/lib/auth/password/reset-tokens";
 
-import type {
-  PasswordResetRepos,
-  PasswordResetRequestContext,
-} from "../infrastructure/password-reset-context";
-import type {
-  RequestPasswordResetResult,
-  ResetPasswordResult,
-} from "./contracts";
+import type { PasswordResetRequestContext } from "../../infrastructure/password-reset-context";
+import type { RequestPasswordResetResult } from "../contracts";
 
 const TOKEN_TTL_MS = 60 * 60 * 1000;
 const MAX_REQUESTS_PER_HOUR = 3;
@@ -64,40 +56,6 @@ export async function requestPasswordReset(input: {
     html,
     text,
   });
-
-  return { ok: true };
-}
-
-export async function resetPassword(input: {
-  token: string;
-  password: string;
-  confirmPassword: string;
-  repos: PasswordResetRepos;
-}): Promise<ResetPasswordResult> {
-  if (!isValidPasswordResetTokenFormat(input.token)) {
-    return { ok: false, code: "invalid_token" };
-  }
-  if (input.password.length < 8) {
-    return { ok: false, code: "password_too_short" };
-  }
-  if (input.password !== input.confirmPassword) {
-    return { ok: false, code: "password_mismatch" };
-  }
-
-  const now = Date.now();
-  const record = await input.repos.passwordResetTokens.findValidByHash(
-    hashPasswordResetToken(input.token),
-    now,
-  );
-  if (!record) {
-    return { ok: false, code: "invalid_token" };
-  }
-
-  await input.repos.passwordResetTokens.expireAllForUser(record.user_id, now);
-  await input.repos.users.updatePassword(
-    record.user_id,
-    await hashPassword(input.password),
-  );
 
   return { ok: true };
 }

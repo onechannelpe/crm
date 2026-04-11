@@ -1,5 +1,6 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
+import { isValidOnboardingPhone } from "~/lib/auth/onboarding-flow";
 import type { CurrentUserView } from "~/server/auth/application/contracts";
 
 import { resolveOnboardingSessionState } from "../state/transitions";
@@ -97,7 +98,8 @@ export function deriveOnboardingRequirements(
     "phoneE164" | "strongAuthConfigured" | "onboardingCompletedAt" | "role"
   >,
 ): OnboardingRequirements {
-  const hasPhone = user.phoneE164 !== null && user.phoneE164.trim().length > 0;
+  const hasPhone =
+    user.phoneE164 !== null && isValidOnboardingPhone(user.phoneE164);
   const strongAuthRequired = requiresStrongAuthRole(user.role);
   const requiredActions: Array<"set_profile" | "configure_strong_auth"> = [];
   const reasons: string[] = [];
@@ -117,15 +119,16 @@ export function deriveOnboardingRequirements(
     optionalActions.push("configure_passkey", "configure_totp");
   }
 
-  const canAccessApp = requiredActions.length === 0;
+  const sessionState = resolveOnboardingSessionState({
+    onboardingCompleted: user.onboardingCompletedAt !== null,
+    hasPhone,
+    requiresStrongAuth: strongAuthRequired,
+    strongAuthConfigured: user.strongAuthConfigured,
+  });
+  const canAccessApp = sessionState === "app_ready";
 
   return {
-    sessionState: resolveOnboardingSessionState({
-      onboardingCompleted: user.onboardingCompletedAt !== null,
-      hasPhone,
-      requiresStrongAuth: strongAuthRequired,
-      strongAuthConfigured: user.strongAuthConfigured,
-    }),
+    sessionState,
     requiredActions,
     optionalActions,
     canAccessApp,

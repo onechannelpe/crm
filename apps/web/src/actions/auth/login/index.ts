@@ -10,9 +10,9 @@ import { internalError } from "~/lib/app-errors";
 import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { getActionRequestContext } from "~/lib/observability/context";
-import { createPasskeyStartService } from "~/server/auth/application/login/passkey";
-import { submitPasswordLogin } from "~/server/auth/application/login/primary";
-import { submitTotpForLoginFlow } from "~/server/auth/application/login/totp";
+import { startPasskeyLogin } from "~/server/auth/application/commands/start-passkey-login";
+import { submitPasswordLogin } from "~/server/auth/application/commands/submit-password-login";
+import { submitTotpForLoginFlow } from "~/server/auth/application/commands/submit-totp-login";
 import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
 import { serverRuntime } from "~/server/runtime";
 import { isErr } from "~/server/shared/result";
@@ -111,20 +111,29 @@ export async function passkeyStart(
 
   const request = getRequestClientMetadata();
   const loginContext = serverRuntime.auth.login;
-  const service = createPasskeyStartService(loginContext.repos, {
-    createWebauthnProvider: createRequestPasskeyProviderFactory(),
-  });
   const result =
     mode === "identified"
-      ? await service.beginLogin({
-          identifier: readLoginText(formData, "identifier"),
-          ipAddress: request.ipAddress,
-          mode,
-        })
-      : await service.beginLogin({
-          ipAddress: request.ipAddress,
-          mode,
-        });
+      ? await startPasskeyLogin(
+          {
+            identifier: readLoginText(formData, "identifier"),
+            ipAddress: request.ipAddress,
+            mode,
+          },
+          loginContext.repos,
+          {
+            createWebauthnProvider: createRequestPasskeyProviderFactory(),
+          },
+        )
+      : await startPasskeyLogin(
+          {
+            ipAddress: request.ipAddress,
+            mode,
+          },
+          loginContext.repos,
+          {
+            createWebauthnProvider: createRequestPasskeyProviderFactory(),
+          },
+        );
   if (isErr(result)) {
     await recordAuthAnalyticsEvent(
       {

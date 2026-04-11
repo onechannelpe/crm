@@ -1,9 +1,9 @@
+import { deleteLoginFlow } from "~/lib/auth/login-flow/shared";
 import type { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
 import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
 import type { createWebauthnChallengesRepo } from "~/server/users/repos-webauthn-challenges";
 
-import { deleteLoginFlow } from "../../login-flow/shared";
 import type { PasskeyLoginFlowState } from "./types";
 
 type PasskeyLoginStateRepos = {

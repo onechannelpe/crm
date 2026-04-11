@@ -1,10 +1,10 @@
 import { deleteLoginFlow } from "~/lib/auth/login-flow/shared";
-import { createPasskeyLoginStateService } from "~/lib/auth/passkey/service/login-state";
 import { createPasskeyProvider } from "~/lib/auth/providers/passkey-provider";
 import { assertPositiveInt } from "~/lib/contracts/guards";
 import type { AuthLoginRepos } from "~/server/auth/infrastructure/login-context";
+import { createPasskeyLoginStateService } from "~/server/auth/passkey/service/login-state";
 
-import type { LoginFlowState } from "./types";
+import type { LoginFlowState } from "../contracts";
 
 async function readActiveLoginFlow(
   flowId: number,

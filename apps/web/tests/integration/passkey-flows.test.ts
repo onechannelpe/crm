@@ -1,14 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import {
-  createPasskeyEnrollmentAuthService,
-  createPasskeyLoginFinishAuthService,
-  createPasskeyLoginStartAuthService,
-} from "../../src/lib/auth/passkey/service";
 import { hashAuthKey } from "../../src/lib/auth/password/key-hash";
 import { PasskeyRequestError } from "../../src/lib/auth/providers/passkey-provider";
 import type { SendPrivilegedLoginAlert } from "../../src/lib/auth/security/privileged-login-alert";
 import { createAuthThrottleService } from "../../src/server/auth/application/throttle-service";
+import {
+  createPasskeyEnrollmentAuthService,
+  createPasskeyLoginFinishAuthService,
+  createPasskeyLoginStartAuthService,
+} from "../../src/server/auth/passkey/service";
 import { isErr } from "../../src/server/shared/result";
 import {
   cleanupTestDb,

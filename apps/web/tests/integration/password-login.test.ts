@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { SendPrivilegedLoginAlert } from "../../src/lib/auth/security/privileged-login-alert";
-import { submitPasswordLogin } from "../../src/server/auth/application/login/primary";
+import { submitPasswordLogin } from "../../src/server/auth/application/commands/submit-password-login";
 import { isErr } from "../../src/server/shared/result";
 import {
   cleanupTestDb,

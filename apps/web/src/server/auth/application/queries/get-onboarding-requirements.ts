@@ -5,7 +5,7 @@ import { Ok, isErr, type Result } from "~/server/shared/result";
 import type { AuthSessionReadContext } from "../../infrastructure/session-context";
 import { deriveOnboardingRequirements } from "../../policy/engine";
 import type { OnboardingRequirements } from "../../policy/types";
-import { getCurrentUser } from "../session";
+import { getCurrentUser } from "./get-current-user";
 
 export async function getOnboardingRequirements(
   ctx: AppContext,

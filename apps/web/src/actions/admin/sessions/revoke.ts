@@ -2,10 +2,8 @@
 
 import { validationError } from "~/lib/app-errors";
 import type { ActionSuccess } from "~/lib/contracts/common";
-import {
-  revokeAllUserSessions as revokeAllUserSessionsService,
-  revokeUserSession as revokeUserSessionService,
-} from "~/server/auth/application/admin-sessions";
+import { revokeAllUserSessions as revokeAllUserSessionsService } from "~/server/auth/application/commands/revoke-all-user-sessions";
+import { revokeUserSession as revokeUserSessionService } from "~/server/auth/application/commands/revoke-user-session";
 import { serverRuntime } from "~/server/runtime";
 import { runAction } from "~/server/shared/action-runtime";
 import { isErr } from "~/server/shared/result";

@@ -1,8 +1,8 @@
+import { createPasskeyProvider } from "~/lib/auth/providers/passkey-provider";
+import { issueLoginSession } from "~/lib/auth/session/session-transition";
 import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
 
-import { createPasskeyProvider } from "../../providers/passkey-provider";
-import { issueLoginSession } from "../../session/session-transition";
 import { createPasskeyEnrollmentService } from "./enrollment";
 import { createPasskeyLoginFinishService } from "./login-finish";
 import { createPasskeyLoginStartService } from "./login-start";
@@ -16,6 +16,7 @@ export type {
   PasskeyLoginMode,
   PasskeyLoginResult,
 } from "./types";
+export type { BeginPasskeyLoginInput } from "./login-start";
 
 interface PasskeyServiceDeps {
   createWebauthnProvider?: (repos: {

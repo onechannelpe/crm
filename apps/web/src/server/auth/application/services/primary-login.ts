@@ -1,7 +1,5 @@
 import { loadActiveAuthContext } from "~/lib/auth/context/auth-context";
 import type { AuthContext } from "~/lib/auth/context/auth-context";
-import { createPasskeyLoginStartAuthService } from "~/lib/auth/passkey/service";
-import { authenticatePassword } from "~/lib/auth/providers/password-provider";
 import { sendAlertOnNewLoginSource } from "~/lib/auth/security/login-source-alert";
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
 import {
@@ -9,8 +7,8 @@ import {
   type SessionRequestMetadata,
 } from "~/lib/auth/session/session-transition";
 import { config } from "~/lib/config";
-import { assertNonEmptyString } from "~/lib/contracts/guards";
 import type { AuthLoginRepos } from "~/server/auth/infrastructure/login-context";
+import { createPasskeyLoginStartAuthService } from "~/server/auth/passkey/service";
 import { evaluateLoginPolicy } from "~/server/auth/policy/engine";
 import type { AuthProof } from "~/server/auth/policy/types";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
@@ -19,7 +17,7 @@ import type {
   SubmitPrimaryLoginError,
   SubmitPrimaryLoginResult,
   TotpLoginFlowState,
-} from "./types";
+} from "../contracts";
 
 async function createTotpLoginFlow(
   identifier: string,
@@ -43,7 +41,7 @@ async function createTotpLoginFlow(
   };
 }
 
-async function completePrimaryAuthProof(params: {
+export async function completePrimaryAuthProof(params: {
   proof: AuthProof;
   identifier: string;
   request: SessionRequestMetadata;
@@ -127,76 +125,5 @@ async function completePrimaryAuthProof(params: {
       onboardingCompleted: issued.onboardingCompleted,
       token: issued.token,
     },
-  });
-}
-
-export async function submitPasswordLogin(
-  input: {
-    identifier: string;
-    password: string;
-    ipAddress: string;
-    userAgent: string | null;
-  },
-  deps: AuthLoginRepos,
-  sendPrivilegedLoginAlert: SendPrivilegedLoginAlert,
-): Promise<Result<SubmitPrimaryLoginResult, SubmitPrimaryLoginError>> {
-  const safeIdentifier = assertNonEmptyString(
-    input.identifier,
-    "identifier",
-  ).trim();
-  const proof = await authenticatePassword(
-    {
-      identifier: safeIdentifier,
-      password: input.password,
-      ipAddress: input.ipAddress,
-    },
-    deps,
-  );
-  if (isErr(proof)) {
-    return Err(proof.error);
-  }
-
-  return completePrimaryAuthProof({
-    proof: proof.value,
-    identifier: safeIdentifier,
-    request: {
-      ipAddress: input.ipAddress,
-      userAgent: input.userAgent,
-    },
-    deps,
-    sendPrivilegedLoginAlert,
-  });
-}
-
-export async function submitGoogleLogin(
-  input: {
-    userId: number;
-    ipAddress: string;
-    userAgent: string | null;
-    trustedFederatedMfa?: boolean;
-  },
-  deps: AuthLoginRepos,
-  sendPrivilegedLoginAlert: SendPrivilegedLoginAlert,
-): Promise<Result<SubmitPrimaryLoginResult, SubmitPrimaryLoginError>> {
-  const proof: Extract<AuthProof, { kind: "google" }> = {
-    kind: "google",
-    userId: input.userId,
-    trustedFederatedMfa: input.trustedFederatedMfa === true,
-  };
-  const context = await loadActiveAuthContext(proof.userId, deps);
-  if (!context) {
-    return Err({ kind: "invalid_credentials" });
-  }
-
-  return completePrimaryAuthProof({
-    proof,
-    identifier: context.user.username,
-    request: {
-      ipAddress: input.ipAddress,
-      userAgent: input.userAgent,
-    },
-    context,
-    deps,
-    sendPrivilegedLoginAlert,
   });
 }

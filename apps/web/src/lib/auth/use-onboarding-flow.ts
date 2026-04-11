@@ -93,6 +93,30 @@ export function useOnboardingFlow() {
     }
   });
 
+  createEffect(() => {
+    const policy = requirements();
+    if (!policy) {
+      return;
+    }
+
+    if (
+      policy.sessionState === "app_ready" &&
+      policy.canAccessApp &&
+      policy.nextRoute !== "/onboarding"
+    ) {
+      navigate(policy.nextRoute);
+      return;
+    }
+
+    if (
+      policy.sessionState === "onboarding_security_required" &&
+      step() === "profile" &&
+      isValidOnboardingPhone(phone())
+    ) {
+      setStep("security-choice");
+    }
+  });
+
   // Sync phone from session on first load, strip +51 prefix for local display
   createEffect(() => {
     const u = user();
