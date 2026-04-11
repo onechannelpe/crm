@@ -1,10 +1,9 @@
 import type { Selectable } from "kysely";
 
-import { assertNonEmptyString } from "~/lib/contracts/guards";
 import type { UsersTable } from "~/lib/db/types";
+import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
 import type { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import type { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
-import { createAuthThrottleService } from "~/server/features/auth/application/throttle-service";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { createUsersRepo } from "~/server/users/repos-users";
 
@@ -32,8 +31,11 @@ export async function verifyPasswordLoginCredentials(
   input: PasswordCredentialInput,
   deps: { repos: Deps },
 ): Promise<Result<UserRow, InvalidCredentialsError>> {
-  const safeUsername = assertNonEmptyString(input.username, "username");
-  const safePassword = assertNonEmptyString(input.password, "password");
+  const safeUsername = input.username.trim();
+  const safePassword = input.password;
+  if (safeUsername.length === 0 || safePassword.length === 0) {
+    return Err({ kind: "invalid_credentials" });
+  }
   const resolvedDeps = deps.repos;
   const throttleService = createAuthThrottleService({
     authThrottle: resolvedDeps.authThrottle,

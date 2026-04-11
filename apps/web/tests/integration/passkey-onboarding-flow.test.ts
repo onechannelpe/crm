@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { createPasskeyEnrollmentAuthService } from "../../src/lib/auth/passkey/service";
+import { createPasskeyEnrollmentAuthService } from "../../src/server/auth/passkey/service";
 import { Err, isErr } from "../../src/server/shared/result";
 import { completeAccountOnboardingWithRepos } from "../../src/server/users/service-account-onboarding";
 import {

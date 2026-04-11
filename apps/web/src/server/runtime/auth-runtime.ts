@@ -1,5 +1,7 @@
 import type { NotificationService } from "@crm/notifications";
 
+import { createSessionService } from "~/server/auth/application/session-service";
+import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
 import { createAdminSessionRevocationContext } from "~/server/auth/infrastructure/admin-session-revocation-context";
 import { createAdminSessionsReadContext } from "~/server/auth/infrastructure/admin-sessions-read-context";
 import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
@@ -9,12 +11,11 @@ import {
   createAuthSessionLogoutContext,
   createAuthSessionReadContext,
 } from "~/server/auth/infrastructure/session-context";
+import { createAuthSessionRepo } from "~/server/auth/infrastructure/session-repo";
 import { createTotpEnrollmentContext } from "~/server/auth/infrastructure/totp-context";
+import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
-import { createSessionService } from "~/server/features/auth/application/session-service";
-import { createAuthThrottleService } from "~/server/features/auth/application/throttle-service";
-import { createAuthSessionRepo } from "~/server/features/auth/infra/session-repo";
-import { createAuthUsersRepo } from "~/server/features/auth/infra/users-repo";
+import { createInviteServiceContext } from "~/server/invites/infrastructure/invite-service-context";
 
 import type { ServerInfra } from "./infra";
 
@@ -33,12 +34,22 @@ export function createAuthRuntime(
     authThrottle: createAuthThrottleRepo(infra.db),
     now: infra.now,
   });
+  const onboarding = createAuthOnboardingContext(infra.db);
+  const inviteService = createInviteServiceContext(infra.db).inviteService;
 
   return {
     authThrottleService,
     sessionService,
     login: createAuthLoginContext(infra.db),
-    onboarding: createAuthOnboardingContext(infra.db),
+    onboarding,
+    inviteAcceptance: {
+      inviteService,
+      repos: {
+        users: onboarding.repos.users,
+        sessions: onboarding.repos.sessions,
+        auditLogs: onboarding.repos.auditLogs,
+      },
+    },
     totp: createTotpEnrollmentContext(infra.db),
     passwordReset: createPasswordResetContext({
       executor: infra.db,
