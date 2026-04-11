@@ -611,7 +611,12 @@ export interface SearchEnrichmentJobsTable {
   id: Generated<number>;
   document_type: "dni" | "ruc";
   document_value: string;
-  status: "queued" | "running" | "completed" | "failed";
+  status:
+    | "queued"
+    | "running"
+    | "completed"
+    | "failed_retryable"
+    | "failed_terminal";
   requested_by_user_id: number;
   requested_at: number;
   completed_at: number | null;

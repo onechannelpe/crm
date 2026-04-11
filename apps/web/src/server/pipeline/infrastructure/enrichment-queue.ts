@@ -1,19 +1,16 @@
-import { createSearchEnrichmentService } from "~/server/client-search/enrichment-service";
-import { createSearchEnrichmentRepo } from "~/server/client-search/repos-enrichment";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { isErr } from "~/server/shared/result";
+import type { EnrichmentCommand } from "~/server/client-search/enqueue";
 
-export function createLeadEnrichmentQueue(executor: DatabaseExecutor) {
-  const service = createSearchEnrichmentService({
-    searchEnrichment: createSearchEnrichmentRepo(executor),
-  });
+export type LeadEnrichmentQueue = {
+  enqueueRucVerification(ruc: string, requestedByUserId: number): Promise<void>;
+};
 
+export function createLeadEnrichmentQueue(
+  enrichmentCommand: EnrichmentCommand,
+): LeadEnrichmentQueue {
   return {
-    async enqueueRucVerification(ruc: string, requestedByUserId: number) {
-      const result = await service.request("ruc", ruc, requestedByUserId);
-      if (isErr(result)) {
-        return;
-      }
+    async enqueueRucVerification(ruc, requestedByUserId) {
+      // Always idempotent: enqueue returns job ID, never throws
+      await enrichmentCommand.enqueueRequest("ruc", ruc, requestedByUserId);
     },
   };
 }

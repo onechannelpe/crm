@@ -39,6 +39,7 @@ function resolveSunatStatus(input: {
   const overlayExpired =
     input.overlay !== undefined && input.overlay.expires_at <= input.now;
 
+  // Valid overlay takes precedence
   if (input.overlay && !overlayExpired) {
     return {
       status: "completed",
@@ -53,6 +54,7 @@ function resolveSunatStatus(input: {
     } as const;
   }
 
+  // Stale overlay
   if (input.overlay && overlayExpired) {
     return {
       status: "stale",
@@ -81,15 +83,24 @@ function resolveSunatStatus(input: {
     return { status: "idle", fetchedAt: null, ...nullFields } as const;
   }
 
-  if (input.job.status === "queued") {
-    return { status: "queued", fetchedAt: null, ...nullFields } as const;
+  // Job exists: map its status
+  const jobStatus = input.job.status;
+
+  if (jobStatus === "queued" || jobStatus === "running") {
+    return {
+      status: jobStatus,
+      fetchedAt: null,
+      ...nullFields,
+    } as const;
   }
 
-  if (input.job.status === "running") {
-    return { status: "running", fetchedAt: null, ...nullFields } as const;
+  if (jobStatus === "completed") {
+    // Shouldn't reach here without overlay, but be defensive
+    return { status: "completed", fetchedAt: null, ...nullFields } as const;
   }
 
-  if (input.job.status === "failed") {
+  // Map both terminal and retryable failures to "failed"
+  if (jobStatus === "failed_terminal" || jobStatus === "failed_retryable") {
     return {
       status: "failed",
       fetchedAt: input.job.completed_at,
@@ -97,11 +108,7 @@ function resolveSunatStatus(input: {
     } as const;
   }
 
-  return {
-    status: "completed",
-    fetchedAt: input.job.completed_at,
-    ...nullFields,
-  } as const;
+  return { status: "idle", fetchedAt: null, ...nullFields } as const;
 }
 
 export function createSourceStatusRepo(

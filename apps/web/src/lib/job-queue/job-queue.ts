@@ -76,13 +76,21 @@ export function createJobQueue<TJob extends QueueJobBase, TResult>(
               }
             } else {
               logger.error("job_failed", { jobId: job.id, error: reason });
-              if (job.attempt_count < job.max_attempts) {
+              const failure = config.classifyFailure
+                ? config.classifyFailure(error, job)
+                : {
+                    retryable: true,
+                    reason,
+                    retryAt: nextAvailableAt(job.attempt_count),
+                  };
+
+              if (failure.retryable && job.attempt_count < job.max_attempts) {
                 await config.onRetry(
                   job.id,
-                  nextAvailableAt(job.attempt_count),
+                  failure.retryAt ?? nextAvailableAt(job.attempt_count),
                 );
               } else {
-                await config.onFail(job.id, reason);
+                await config.onFail(job.id, failure.reason);
               }
             }
           } finally {

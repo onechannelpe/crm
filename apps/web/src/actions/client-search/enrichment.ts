@@ -1,50 +1,44 @@
 "use server";
 
-import { internalError, validationError } from "~/lib/app-errors";
-import { requirePermission } from "~/lib/auth/access/session";
 import { serverRuntime } from "~/server/runtime";
-import { isErr } from "~/server/shared/result";
-
-function assertDocumentType(value: string): "dni" | "ruc" {
-  if (value === "dni" || value === "ruc") return value;
-  throw validationError("Invalid enrichment document type");
-}
-
-function mapEnrichmentError(error: {
-  reason: "invalid_document" | "unexpected";
-  message: string;
-}): never {
-  if (error.reason === "invalid_document") {
-    throw validationError(error.message);
-  }
-  throw internalError(error.message);
-}
 
 export async function requestSearchEnrichment(
   documentType: string,
   documentValue: string,
 ) {
-  const session = await requirePermission("search:use");
-  const { searchEnrichmentService } = serverRuntime.clientSearch;
-  const result = await searchEnrichmentService.request(
-    assertDocumentType(documentType),
+  const session = await (
+    await import("~/lib/auth/access/session")
+  ).requirePermission("search:use");
+  const { enrichmentCommand } = serverRuntime.clientSearch;
+
+  // Validate document type
+  if (documentType !== "dni" && documentType !== "ruc") {
+    throw new Error("Invalid document type");
+  }
+
+  await enrichmentCommand.enqueueRequest(
+    documentType,
     documentValue,
     session.userId,
   );
-  if (isErr(result)) mapEnrichmentError(result.error);
-  return result.value;
+
+  // Return status after enqueue
+  const { enrichmentQuery } = serverRuntime.clientSearch;
+  return enrichmentQuery.getStatus(documentType, documentValue);
 }
 
 export async function getSearchEnrichmentStatus(
   documentType: string,
   documentValue: string,
 ) {
-  await requirePermission("search:use");
-  const { searchEnrichmentService } = serverRuntime.clientSearch;
-  const result = await searchEnrichmentService.status(
-    assertDocumentType(documentType),
-    documentValue,
-  );
-  if (isErr(result)) mapEnrichmentError(result.error);
-  return result.value;
+  await (
+    await import("~/lib/auth/access/session")
+  ).requirePermission("search:use");
+
+  if (documentType !== "dni" && documentType !== "ruc") {
+    throw new Error("Invalid document type");
+  }
+
+  const { enrichmentQuery } = serverRuntime.clientSearch;
+  return enrichmentQuery.getStatus(documentType, documentValue);
 }

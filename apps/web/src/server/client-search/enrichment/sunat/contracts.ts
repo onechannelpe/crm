@@ -1,3 +1,5 @@
+import type { EnrichmentError } from "../../types";
+
 export interface SunatDniData {
   dni: string;
   nombres: string | null;
@@ -17,7 +19,16 @@ export interface SunatRucData {
   payload: unknown;
 }
 
+// Discriminated unions from API layer
+export type DniApiResult =
+  | { ok: true; data: SunatDniData }
+  | { ok: false; error: EnrichmentError };
+
+export type RucApiResult =
+  | { ok: true; data: SunatRucData }
+  | { ok: false; error: EnrichmentError };
+
 export interface SunatScraperClient {
-  fetchDni(dni: string): Promise<SunatDniData | null>;
-  fetchRuc(ruc: string): Promise<SunatRucData | null>;
+  fetchDni(dni: string): Promise<DniApiResult>;
+  fetchRuc(ruc: string): Promise<RucApiResult>;
 }

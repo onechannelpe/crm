@@ -2,6 +2,7 @@ import {
   createPipelineFeatureDeps,
   type PipelineDeps,
 } from "~/server/features/pipeline/application/pipeline-deps";
+import { serverRuntime } from "~/server/runtime";
 
 import type { DatabaseExecutor } from "../../shared/db-executor";
 import { runInPipelineTransaction } from "../../shared/pipeline-transaction";
@@ -35,11 +36,13 @@ function createPipelineAuditServiceRuntime(executor: DatabaseExecutor) {
 function createPipelineCommandRuntime(
   executor: DatabaseExecutor,
 ): PipelineCommandRuntime {
+  const { enrichmentCommand } = serverRuntime.clientSearch;
+
   return {
     deps: createPipelineFeatureDeps(executor),
     auditService: createPipelineAuditServiceRuntime(executor),
     engineGateway: createEngineGateway(),
-    leadEnrichmentQueue: createLeadEnrichmentQueue(executor),
+    leadEnrichmentQueue: createLeadEnrichmentQueue(enrichmentCommand),
     notificationCenter: createPipelineNotificationCenter(executor),
   };
 }

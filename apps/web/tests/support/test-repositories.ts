@@ -25,7 +25,7 @@ import {
   createSearchPolicyDefaultsRepo,
   createSearchPolicyOverridesRepo,
 } from "../../src/server/capacity/infrastructure/policy-repos";
-import { createSearchEnrichmentRepo } from "../../src/server/client-search/repos-enrichment";
+import { createSearchEnrichmentRepo } from "../../src/server/client-search/repository";
 import { createContactAssignmentsRepo } from "../../src/server/contacts/repos-assignments";
 import { createContactsRepo } from "../../src/server/contacts/repos-contacts";
 import { createOrganizationsRepo } from "../../src/server/contacts/repos-organizations";
