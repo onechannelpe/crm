@@ -10,7 +10,7 @@ import {
   createAuthenticationResponse,
   isPasskeyAuthenticationSupported,
 } from "./passkey/authentication-client";
-import type { PasskeyLoginFlowState } from "./passkey/service";
+import type { PasskeyLoginFlowState } from "./passkey/types";
 
 export type PasskeyLoginPhase = "idle" | "starting" | "device" | "verifying";
 export type PasskeySupportStatus = "unknown" | "supported" | "unsupported";

@@ -6,7 +6,6 @@ import type { DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import type {
-  TeamInviteAcceptanceContext,
   TeamInviteCreateContext,
   TeamInviteProvisioningContext,
   TeamInviteRepos,
@@ -17,7 +16,6 @@ import {
   sendInviteEmail,
 } from "../infrastructure/invite-delivery";
 import type {
-  AcceptTeamInviteCommand,
   BulkImportSetup,
   CreateTeamInviteCommand,
   InviteInfo,
@@ -177,37 +175,5 @@ export async function revokeTeamInvite(
     actorRole: ctx.actor.role,
     branchId: ctx.actor.branchId,
     inviteId: input.inviteId,
-  });
-}
-
-export async function acceptTeamInvite(
-  deps: TeamInviteAcceptanceContext,
-  request: {
-    ipAddress: string;
-    userAgent: string | null;
-  },
-  input: AcceptTeamInviteCommand,
-): Promise<Result<{ sessionToken: string; redirectTo: string }, DomainError>> {
-  const result = await deps.inviteService.acceptInvite({
-    token: input.token,
-    password: input.password,
-  });
-  if (isErr(result)) {
-    return result;
-  }
-
-  const issued = await deps.issuePreAuthSession({
-    user: {
-      id: result.value.userId,
-      branch_id: result.value.branchId,
-      role: result.value.role,
-      onboarding_completed_at: null,
-    },
-    request,
-  });
-
-  return Ok({
-    sessionToken: issued.token,
-    redirectTo: "/onboarding",
   });
 }

@@ -5,7 +5,7 @@ import type {
   SessionClass,
   StrongAuthMethod,
 } from "~/lib/auth/core/session-contract";
-import type { PasskeyLoginFlowState } from "~/lib/auth/passkey/service";
+import type { PasskeyLoginFlowState } from "~/lib/auth/passkey/types";
 
 export interface CurrentUserView {
   id: number;

@@ -1,12 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { createPasskeyLoginStartAuthService } from "../../src/lib/auth/passkey/service";
 import type { SendPrivilegedLoginAlert } from "../../src/lib/auth/security/privileged-login-alert";
 import { decryptTotpSecret } from "../../src/lib/auth/totp/secret-crypto";
 import { generateCurrentTotpCode } from "../../src/lib/auth/totp/totp";
-import { getLoginFlowState } from "../../src/server/features/auth/application/login/flow-state";
-import { submitPasswordLogin } from "../../src/server/features/auth/application/login/primary";
-import { submitTotpForLoginFlow } from "../../src/server/features/auth/application/login/totp";
+import { submitPasswordLogin } from "../../src/server/auth/application/commands/submit-password-login";
+import { submitTotpForLoginFlow } from "../../src/server/auth/application/commands/submit-totp-login";
+import { getLoginFlowState } from "../../src/server/auth/application/queries/get-login-flow-state";
+import { createPasskeyLoginStartAuthService } from "../../src/server/auth/passkey/service";
 import { isErr } from "../../src/server/shared/result";
 import {
   cleanupTestDb,
