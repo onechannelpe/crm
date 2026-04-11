@@ -114,9 +114,7 @@ export function mapItfisRucData(
   };
 }
 
-export function mapConsultaRucData(
-  parsed: Record<string, string> | null,
-): {
+export function mapConsultaRucData(parsed: Record<string, string> | null): {
   contributorStatus: string | null;
   contributorCondition: string | null;
 } | null {
