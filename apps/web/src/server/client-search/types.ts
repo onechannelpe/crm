@@ -12,8 +12,12 @@ export interface SearchEnrichmentOverlay {
   documentValue: string;
   fullName: string | null;
   legalName: string | null;
+  address: string | null;
+  district: string | null;
+  department: string | null;
+  contributorStatus: string | null;
+  contributorCondition: string | null;
   source: "sunat";
-  confidence: number;
   fetchedAt: number;
   expiresAt: number;
   payloadJson: string;
@@ -44,8 +48,12 @@ export type SearchEnrichmentOverlayRow = {
   document_value: string;
   full_name: string | null;
   legal_name: string | null;
+  address: string | null;
+  district: string | null;
+  department: string | null;
+  contributor_status: string | null;
+  contributor_condition: string | null;
   source: "sunat";
-  confidence: number;
   fetched_at: number;
   expires_at: number;
   payload_json: string;
@@ -97,12 +105,23 @@ export interface SearchEnrichmentRepoPort {
   upsertOverlay(values: SearchEnrichmentOverlayRow): Promise<unknown>;
 }
 
+// Minimal interface for the job processing worker.
+// request() and status() are additional methods on the concrete service
+// used by UI actions and the pipeline enrichment queue.
 export interface SearchEnrichmentService {
   searchEnrichmentRepo: SearchEnrichmentRepoPort;
   processJob(
     job: SearchEnrichmentJobLeaseRow,
     signal?: AbortSignal,
   ): Promise<SearchEnrichmentProcessResult>;
+}
+
+export interface SearchEnrichmentServiceDeps {
+  now?: () => number;
+  scraper?: SunatScraperClient;
+}
+
+export type SearchEnrichmentServiceWithActions = SearchEnrichmentService & {
   request(
     documentType: EnrichmentDocumentType,
     documentValue: string,
@@ -112,10 +131,4 @@ export interface SearchEnrichmentService {
     documentType: EnrichmentDocumentType,
     documentValue: string,
   ): Promise<Result<SearchEnrichmentStatus, SearchEnrichmentRequestError>>;
-}
-
-export interface SearchEnrichmentServiceDeps {
-  now?: () => number;
-  maxAttempts?: number;
-  scraper?: SunatScraperClient;
-}
+};

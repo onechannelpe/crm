@@ -225,8 +225,12 @@ export function createSearchEnrichmentRepo(db: Kysely<Database>) {
           oc.columns(["document_type", "document_value"]).doUpdateSet({
             full_name: values.full_name,
             legal_name: values.legal_name,
+            address: values.address,
+            district: values.district,
+            department: values.department,
+            contributor_status: values.contributor_status,
+            contributor_condition: values.contributor_condition,
             source: values.source,
-            confidence: values.confidence,
             fetched_at: values.fetched_at,
             expires_at: values.expires_at,
             payload_json: values.payload_json,

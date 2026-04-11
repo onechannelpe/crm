@@ -8,6 +8,11 @@ export type LeadSourceStatus = {
     status: "idle" | "queued" | "running" | "completed" | "failed" | "stale";
     fetchedAt: number | null;
     legalName: string | null;
+    address: string | null;
+    district: string | null;
+    department: string | null;
+    contributorStatus: string | null;
+    contributorCondition: string | null;
     payloadAvailable: boolean;
   };
 };

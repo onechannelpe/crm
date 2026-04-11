@@ -9,6 +9,11 @@ export interface SunatDniData {
 export interface SunatRucData {
   ruc: string;
   razonSocial: string | null;
+  address: string | null;
+  district: string | null;
+  department: string | null;
+  contributorStatus: string | null;
+  contributorCondition: string | null;
   payload: unknown;
 }
 

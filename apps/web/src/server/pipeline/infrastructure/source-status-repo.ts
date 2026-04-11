@@ -44,6 +44,11 @@ function resolveSunatStatus(input: {
       status: "completed",
       fetchedAt: input.overlay.fetched_at,
       legalName: input.overlay.legal_name,
+      address: input.overlay.address,
+      district: input.overlay.district,
+      department: input.overlay.department,
+      contributorStatus: input.overlay.contributor_status,
+      contributorCondition: input.overlay.contributor_condition,
       payloadAvailable: input.overlay.payload_json.trim().length > 0,
     } as const;
   }
@@ -53,51 +58,49 @@ function resolveSunatStatus(input: {
       status: "stale",
       fetchedAt: input.overlay.fetched_at,
       legalName: input.overlay.legal_name,
+      address: input.overlay.address,
+      district: input.overlay.district,
+      department: input.overlay.department,
+      contributorStatus: input.overlay.contributor_status,
+      contributorCondition: input.overlay.contributor_condition,
       payloadAvailable: input.overlay.payload_json.trim().length > 0,
     } as const;
   }
 
+  const nullFields = {
+    legalName: null,
+    address: null,
+    district: null,
+    department: null,
+    contributorStatus: null,
+    contributorCondition: null,
+    payloadAvailable: false,
+  } as const;
+
   if (!input.job) {
-    return {
-      status: "idle",
-      fetchedAt: null,
-      legalName: null,
-      payloadAvailable: false,
-    } as const;
+    return { status: "idle", fetchedAt: null, ...nullFields } as const;
   }
 
   if (input.job.status === "queued") {
-    return {
-      status: "queued",
-      fetchedAt: null,
-      legalName: null,
-      payloadAvailable: false,
-    } as const;
+    return { status: "queued", fetchedAt: null, ...nullFields } as const;
   }
 
   if (input.job.status === "running") {
-    return {
-      status: "running",
-      fetchedAt: null,
-      legalName: null,
-      payloadAvailable: false,
-    } as const;
+    return { status: "running", fetchedAt: null, ...nullFields } as const;
   }
 
   if (input.job.status === "failed") {
     return {
       status: "failed",
       fetchedAt: input.job.completed_at,
-      legalName: null,
-      payloadAvailable: false,
+      ...nullFields,
     } as const;
   }
 
   return {
     status: "completed",
     fetchedAt: input.job.completed_at,
-    legalName: null,
-    payloadAvailable: false,
+    ...nullFields,
   } as const;
 }
 
@@ -132,11 +135,7 @@ export function createSourceStatusRepo(
           address: input.address,
           leadUpdatedAt: input.leadUpdatedAt,
         }),
-        sunat: resolveSunatStatus({
-          job,
-          overlay,
-          now,
-        }),
+        sunat: resolveSunatStatus({ job, overlay, now }),
       };
     },
   };

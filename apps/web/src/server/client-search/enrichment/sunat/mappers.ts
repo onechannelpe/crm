@@ -91,32 +91,40 @@ export function mapDniData(dni: string, payload: unknown): SunatDniData | null {
   };
 }
 
-export function mapRucData(ruc: string, payload: unknown): SunatRucData | null {
-  if (!isPlainRecord(payload)) {
-    if (typeof payload === "string" && payload.trim().length > 0) {
-      return { ruc, razonSocial: null, payload };
-    }
-    return null;
-  }
-
+export function mapItfisRucData(
+  ruc: string,
+  payload: unknown,
+): SunatRucData | null {
+  if (!isPlainRecord(payload)) return null;
   const lista = firstListaEntry(payload);
-  const razonSocialRaw =
-    sanitizeField(lista?.apenomdenunciado) ??
-    sanitizeField(lista?.razonSocial) ??
-    sanitizeField(lista?.nombre_o_razon_social) ??
-    sanitizeField(payload.razonSocial) ??
-    sanitizeField(payload.razon_social) ??
-    sanitizeField(payload.nombre_o_razon_social) ??
-    sanitizeField(payload["Número de RUC"]);
+  if (!lista) return null;
 
-  const razonSocial = (() => {
-    if (!razonSocialRaw) return null;
-    const parts = razonSocialRaw.split(" - ");
-    return parts.length > 1
-      ? sanitizeField(parts.slice(1).join(" - "))
-      : razonSocialRaw;
-  })();
+  const razonSocial = sanitizeField(lista.apenomdenunciado);
+  if (!razonSocial) return null;
 
-  if (!razonSocial && Object.keys(payload).length < 1) return null;
-  return { ruc, razonSocial, payload };
+  return {
+    ruc,
+    razonSocial,
+    address: sanitizeField(lista.direstablecimiento),
+    district: sanitizeField(lista.desdistrito),
+    department: sanitizeField(lista.desdepartamento),
+    contributorStatus: null,
+    contributorCondition: null,
+    payload,
+  };
+}
+
+export function mapConsultaRucData(
+  parsed: Record<string, string> | null,
+): {
+  contributorStatus: string | null;
+  contributorCondition: string | null;
+} | null {
+  if (!parsed) return null;
+  return {
+    contributorStatus:
+      sanitizeField(parsed["Estado del Contribuyente:"]) ?? null,
+    contributorCondition:
+      sanitizeField(parsed["Condicion del Contribuyente:"]) ?? null,
+  };
 }

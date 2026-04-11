@@ -9,12 +9,11 @@ import type {
   EnrichmentDocumentType,
   SearchEnrichmentJobLeaseRow,
   SearchEnrichmentOverlayRow,
-  SearchEnrichmentOverlay,
   SearchEnrichmentProcessResult,
   SearchEnrichmentRepoPort,
   SearchEnrichmentRequestError,
-  SearchEnrichmentService,
   SearchEnrichmentServiceDeps,
+  SearchEnrichmentServiceWithActions,
   SearchEnrichmentStatus,
 } from "./types";
 
@@ -54,60 +53,17 @@ function normalizeDocumentValue(
   return Ok(value);
 }
 
-function mapOverlay(row: SearchEnrichmentOverlayRow): SearchEnrichmentOverlay {
-  return {
-    documentType: row.document_type,
-    documentValue: row.document_value,
-    fullName: row.full_name,
-    legalName: row.legal_name,
-    source: row.source,
-    confidence: row.confidence,
-    fetchedAt: row.fetched_at,
-    expiresAt: row.expires_at,
-    payloadJson: row.payload_json,
-  };
-}
-
-function extractFullName(
-  documentType: EnrichmentDocumentType,
-  payload: unknown,
-): string | null {
-  if (documentType !== "dni") return null;
-  if (!isPlainRecord(payload)) return null;
-  const parts = [
-    payload.nombres,
-    payload.apellidoPaterno,
-    payload.apellidoMaterno,
-  ]
-    .filter(
-      (part): part is string =>
-        typeof part === "string" && part.trim().length > 0,
-    )
-    .map((part) => part.trim());
-  return parts.length > 0 ? parts.join(" ") : null;
-}
-
-function extractLegalName(
-  documentType: EnrichmentDocumentType,
-  payload: unknown,
-): string | null {
-  if (documentType !== "ruc") return null;
-  if (!isSunatRucData(payload)) return null;
-  return payload.razonSocial?.trim() || null;
-}
-
 export function createSearchEnrichmentService(
   repos: { searchEnrichment: SearchEnrichmentRepoPort },
   deps: SearchEnrichmentServiceDeps = {},
-): SearchEnrichmentService {
+): SearchEnrichmentServiceWithActions {
   const now = deps.now ?? (() => Date.now());
-  const maxAttempts = deps.maxAttempts ?? DEFAULT_MAX_ATTEMPTS;
   const scraper = deps.scraper ?? createSunatScraperClient();
 
-  const findStatus = async (
+  async function findStatus(
     documentType: EnrichmentDocumentType,
     documentValue: string,
-  ): Promise<SearchEnrichmentStatus> => {
+  ): Promise<SearchEnrichmentStatus> {
     const currentNow = now();
     const [job, overlay] = await Promise.all([
       repos.searchEnrichment.findJobByDocument(documentType, documentValue),
@@ -118,19 +74,38 @@ export function createSearchEnrichmentService(
       ),
     ]);
 
+    const mappedOverlay = overlay
+      ? {
+          documentType: overlay.document_type,
+          documentValue: overlay.document_value,
+          fullName: overlay.full_name,
+          legalName: overlay.legal_name,
+          address: overlay.address,
+          district: overlay.district,
+          department: overlay.department,
+          contributorStatus: overlay.contributor_status,
+          contributorCondition: overlay.contributor_condition,
+          source: overlay.source,
+          fetchedAt: overlay.fetched_at,
+          expiresAt: overlay.expires_at,
+          payloadJson: overlay.payload_json,
+        }
+      : null;
+
     return {
       documentType,
       documentValue,
       status: job?.status ?? (overlay ? "completed" : "idle"),
-      overlay: overlay ? mapOverlay(overlay) : null,
+      overlay: mappedOverlay,
       lastError: job?.last_error ?? null,
       requestedAt: job?.requested_at ?? null,
       completedAt: job?.completed_at ?? null,
     };
-  };
+  }
 
   return {
     searchEnrichmentRepo: repos.searchEnrichment,
+
     async processJob(
       job: SearchEnrichmentJobLeaseRow,
       signal?: AbortSignal,
@@ -143,29 +118,63 @@ export function createSearchEnrichmentService(
 
       if (signal?.aborted) throw new Error("Job aborted");
 
-      if (
-        !payload ||
-        (typeof payload === "object" && Object.keys(payload).length < 1)
-      ) {
-        throw new Error("No enrichment data returned");
-      }
+      if (!payload) throw new Error("No enrichment data returned");
 
-      const fullName = extractFullName(job.document_type, payload);
-      const legalName = extractLegalName(job.document_type, payload);
+      let overlayRow: SearchEnrichmentOverlayRow;
+
+      if (job.document_type === "dni" && !isSunatRucData(payload)) {
+        const fullName =
+          [
+            isPlainRecord(payload) ? payload.nombres : null,
+            isPlainRecord(payload) ? payload.apellidoPaterno : null,
+            isPlainRecord(payload) ? payload.apellidoMaterno : null,
+          ]
+            .filter(
+              (p): p is string => typeof p === "string" && p.trim().length > 0,
+            )
+            .map((p) => p.trim())
+            .join(" ") || null;
+
+        overlayRow = {
+          document_type: job.document_type,
+          document_value: job.document_value,
+          full_name: fullName,
+          legal_name: null,
+          address: null,
+          district: null,
+          department: null,
+          contributor_status: null,
+          contributor_condition: null,
+          source: "sunat",
+          fetched_at: currentNow,
+          expires_at: currentNow + OVERLAY_TTL_MS,
+          payload_json: JSON.stringify(
+            isPlainRecord(payload) ? payload.payload : payload,
+          ),
+        };
+      } else if (isSunatRucData(payload)) {
+        overlayRow = {
+          document_type: job.document_type,
+          document_value: job.document_value,
+          full_name: null,
+          legal_name: payload.razonSocial?.trim() || null,
+          address: payload.address,
+          district: payload.district,
+          department: payload.department,
+          contributor_status: payload.contributorStatus,
+          contributor_condition: payload.contributorCondition,
+          source: "sunat",
+          fetched_at: currentNow,
+          expires_at: currentNow + OVERLAY_TTL_MS,
+          payload_json: JSON.stringify(payload.payload),
+        };
+      } else {
+        throw new Error("Unexpected payload shape for document type");
+      }
 
       if (signal?.aborted) throw new Error("Job aborted after processing");
 
-      await repos.searchEnrichment.upsertOverlay({
-        document_type: job.document_type,
-        document_value: job.document_value,
-        full_name: fullName,
-        legal_name: legalName,
-        source: "sunat",
-        confidence: 80,
-        fetched_at: currentNow,
-        expires_at: currentNow + OVERLAY_TTL_MS,
-        payload_json: JSON.stringify(payload.payload),
-      });
+      await repos.searchEnrichment.upsertOverlay(overlayRow);
 
       if (signal?.aborted) throw new Error("Job aborted after database update");
       return { completedAt: currentNow };
@@ -190,11 +199,10 @@ export function createSearchEnrichmentService(
           document_value: safeDocumentValue,
           requested_by_user_id: requestedByUserId,
           now: currentNow,
-          max_attempts: maxAttempts,
+          max_attempts: DEFAULT_MAX_ATTEMPTS,
         });
         await publishJob(JOB_CHANNELS.ENRICHMENT, jobId);
-        const status = await findStatus(documentType, safeDocumentValue);
-        return Ok(status);
+        return Ok(await findStatus(documentType, safeDocumentValue));
       } catch (error: unknown) {
         return Err({
           reason: "unexpected",

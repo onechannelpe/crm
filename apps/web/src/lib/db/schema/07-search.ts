@@ -72,10 +72,14 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("document_value", "varchar(32)", (col) => col.notNull())
     .addColumn("full_name", "varchar(255)")
     .addColumn("legal_name", "varchar(255)")
+    .addColumn("address", "text")
+    .addColumn("district", "varchar(128)")
+    .addColumn("department", "varchar(128)")
+    .addColumn("contributor_status", "varchar(64)")
+    .addColumn("contributor_condition", "varchar(64)")
     .addColumn("source", "varchar(32)", (col) =>
       col.notNull().defaultTo("sunat"),
     )
-    .addColumn("confidence", "integer", (col) => col.notNull())
     .addColumn("fetched_at", "integer", (col) => col.notNull())
     .addColumn("expires_at", "integer", (col) => col.notNull())
     .addColumn("payload_json", "text", (col) => col.notNull())

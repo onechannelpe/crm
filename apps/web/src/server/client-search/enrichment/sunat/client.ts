@@ -9,7 +9,7 @@ import {
   fetchRucFromConsultaRuc,
   fetchRucFromItfisdenreg,
 } from "./endpoints";
-import { mapDniData, mapRucData } from "./mappers";
+import { mapConsultaRucData, mapDniData, mapItfisRucData } from "./mappers";
 import { parseRucHtml } from "./parsers";
 
 async function tryRequest<T>(request: () => Promise<T>): Promise<T | null> {
@@ -18,12 +18,6 @@ async function tryRequest<T>(request: () => Promise<T>): Promise<T | null> {
   } catch {
     return null;
   }
-}
-
-function mapConsultaRucPayload(payload: unknown): unknown {
-  if (typeof payload !== "string") return payload;
-  if (!payload.includes("<html")) return payload;
-  return parseRucHtml(payload);
 }
 
 async function fetchDni(dni: string): Promise<SunatDniData | null> {
@@ -36,12 +30,29 @@ async function fetchDni(dni: string): Promise<SunatDniData | null> {
 }
 
 async function fetchRuc(ruc: string): Promise<SunatRucData | null> {
-  const firstPayload = await tryRequest(() => fetchRucFromItfisdenreg(ruc));
-  const firstMapped = mapRucData(ruc, firstPayload);
-  if (firstMapped) return firstMapped;
+  const [itfisResult, consultaResult] = await Promise.allSettled([
+    tryRequest(() => fetchRucFromItfisdenreg(ruc)),
+    tryRequest(() => fetchRucFromConsultaRuc(ruc)),
+  ]);
 
-  const fallbackPayload = await tryRequest(() => fetchRucFromConsultaRuc(ruc));
-  return mapRucData(ruc, mapConsultaRucPayload(fallbackPayload));
+  const itfisPayload =
+    itfisResult.status === "fulfilled" ? itfisResult.value : null;
+  const itfisData = mapItfisRucData(ruc, itfisPayload);
+  if (!itfisData) return null;
+
+  const consultaRaw =
+    consultaResult.status === "fulfilled" ? consultaResult.value : null;
+  const consultaParsed =
+    typeof consultaRaw === "string" && consultaRaw.includes("<html")
+      ? parseRucHtml(consultaRaw)
+      : null;
+  const consultaData = mapConsultaRucData(consultaParsed);
+
+  return {
+    ...itfisData,
+    contributorStatus: consultaData?.contributorStatus ?? null,
+    contributorCondition: consultaData?.contributorCondition ?? null,
+  };
 }
 
 export function createSunatScraperClient(): SunatScraperClient {

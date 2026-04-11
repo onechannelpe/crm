@@ -628,8 +628,12 @@ export interface SearchEnrichmentOverlaysTable {
   document_value: string;
   full_name: string | null;
   legal_name: string | null;
+  address: string | null;
+  district: string | null;
+  department: string | null;
+  contributor_status: string | null;
+  contributor_condition: string | null;
   source: "sunat";
-  confidence: number;
   fetched_at: number;
   expires_at: number;
   payload_json: string;
