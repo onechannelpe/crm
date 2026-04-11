@@ -16,7 +16,6 @@ import {
   createPipelineAuditService,
 } from "./audit-log";
 import { createEngineGateway } from "./engine-gateway";
-import { createLeadEnrichmentQueue } from "./enrichment-queue";
 import { createPipelineNotificationCenter } from "./notifications";
 
 export type PipelineCommandRuntime = {
@@ -42,7 +41,11 @@ function createPipelineCommandRuntime(
     deps: createPipelineFeatureDeps(executor),
     auditService: createPipelineAuditServiceRuntime(executor),
     engineGateway: createEngineGateway(),
-    leadEnrichmentQueue: createLeadEnrichmentQueue(enrichmentCommand),
+    leadEnrichmentQueue: {
+      async enqueueRucVerification(ruc, requestedByUserId) {
+        await enrichmentCommand.enqueueRequest("ruc", ruc, requestedByUserId);
+      },
+    },
     notificationCenter: createPipelineNotificationCenter(executor),
   };
 }
