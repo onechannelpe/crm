@@ -7,10 +7,6 @@ import type { EnrichmentOverlayRow, EnrichmentJobLeaseRow } from "./ports";
 
 const OVERLAY_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
-/**
- * Pure processor: takes a job and a scraper, returns overlay or classified error.
- * No DB access, no side effects. Fully testable.
- */
 export async function processEnrichmentJob(
   job: EnrichmentJobLeaseRow,
   scraper: SunatScraperClient,
@@ -87,9 +83,6 @@ export async function processEnrichmentJob(
   return { ok: true, overlay };
 }
 
-/**
- * Convert overlay to row format for DB insertion.
- */
 export function overlayToRow(overlay: EnrichmentOverlay): EnrichmentOverlayRow {
   return {
     document_type: overlay.documentType,
@@ -108,9 +101,6 @@ export function overlayToRow(overlay: EnrichmentOverlay): EnrichmentOverlayRow {
   };
 }
 
-/**
- * Build full name from DNI payload fields.
- */
 function buildFullName(payload: unknown): string | null {
   if (!isPlainRecord(payload)) {
     return null;
