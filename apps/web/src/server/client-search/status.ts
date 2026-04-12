@@ -1,12 +1,14 @@
 import type {
   EnrichmentDocumentType,
-  EnrichmentRepositoryPort,
   EnrichmentStatus,
-  EnrichmentJobStatus,
+  EnrichmentStatusValue,
   EnrichmentOverlay,
-  EnrichmentJobLease,
+} from "./model";
+import type {
+  EnrichmentRepositoryPort,
+  EnrichmentJobLeaseRow,
   EnrichmentOverlayRow,
-} from "./types";
+} from "./ports";
 
 /**
  * Pure read-side queries for enrichment status.
@@ -49,10 +51,10 @@ export function createEnrichmentQuery(
  * Determine effective status from job + overlay state.
  */
 function resolveStatus(
-  job: EnrichmentJobLease | null | undefined,
+  job: EnrichmentJobLeaseRow | null | undefined,
   overlay: EnrichmentOverlayRow | null | undefined,
   now: number,
-): EnrichmentJobStatus {
+): EnrichmentStatusValue {
   // If we have a valid overlay, status is completed
   if (overlay && overlay.expires_at > now) {
     return "completed";

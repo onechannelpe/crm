@@ -2,12 +2,8 @@ import { isPlainRecord } from "~/lib/type-guards";
 
 import type { SunatScraperClient } from "./enrichment/sunat/contracts";
 import { sanitizeField } from "./enrichment/sunat/utils";
-import type {
-  EnrichmentOverlay,
-  EnrichmentOverlayRow,
-  EnrichmentJobLease,
-  EnrichmentProcessResult,
-} from "./types";
+import type { EnrichmentOverlay, EnrichmentProcessResult } from "./model";
+import type { EnrichmentOverlayRow, EnrichmentJobLeaseRow } from "./ports";
 
 const OVERLAY_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -16,7 +12,7 @@ const OVERLAY_TTL_MS = 7 * 24 * 60 * 60 * 1000;
  * No DB access, no side effects. Fully testable.
  */
 export async function processEnrichmentJob(
-  job: EnrichmentJobLease,
+  job: EnrichmentJobLeaseRow,
   scraper: SunatScraperClient,
   now: number = Date.now(),
 ): Promise<EnrichmentProcessResult> {

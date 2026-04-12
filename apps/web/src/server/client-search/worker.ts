@@ -1,25 +1,16 @@
 import { createJobQueue } from "~/lib/job-queue/job-queue";
 import type { SunatScraperClient } from "~/server/client-search/enrichment/sunat/contracts";
+import type { EnrichmentProcessResult } from "~/server/client-search/model";
+import type { EnrichmentRepositoryPort } from "~/server/client-search/ports";
 import {
   processEnrichmentJob,
   overlayToRow,
 } from "~/server/client-search/process";
-import type { EnrichmentRepositoryPort } from "~/server/client-search/types";
 
 type EnrichmentWorkerDeps = {
   enrichmentRepo: EnrichmentRepositoryPort;
   scraper: SunatScraperClient;
 };
-
-class EnrichmentWorkerError extends Error {
-  readonly retryable: boolean;
-
-  constructor(message: string, retryable: boolean) {
-    super(message);
-    this.name = "EnrichmentWorkerError";
-    this.retryable = retryable;
-  }
-}
 
 export function createEnrichmentQueue(
   workerId: string,
@@ -36,54 +27,36 @@ export function createEnrichmentQueue(
     batchSize,
     maxConcurrency,
     poll: (limit: number) => enrichmentRepo.leaseJobs(limit, leaseMs, workerId),
-    handle: async (job, signal: AbortSignal) => {
-      if (signal.aborted) throw new Error("Job aborted");
-
-      const result = await processEnrichmentJob(job, scraper);
-
-      if (signal.aborted) throw new Error("Job aborted after processing");
-
-      if (!result.ok) {
-        throw new EnrichmentWorkerError(
-          `enrichment:${result.error.kind}${
-            result.error.kind === "malformed_response" ||
-            result.error.kind === "server_error"
-              ? `:${result.error.detail ?? "unknown"}`
-              : ""
-          }`,
-          result.shouldRetry,
+    handle: async (job) => {
+      return processEnrichmentJob(job, scraper);
+    },
+    onResult: async (job, result: EnrichmentProcessResult) => {
+      if (result.ok) {
+        await enrichmentRepo.completeJob(
+          job.id,
+          workerId,
+          overlayToRow(result.overlay),
+          Date.now(),
         );
+        return { kind: "complete" };
       }
 
-      // Success: store overlay
-      await enrichmentRepo.completeJob(
-        job.id,
-        workerId,
-        overlayToRow(result.overlay),
-        Date.now(),
-      );
+      if (result.shouldRetry) {
+        return {
+          kind: "retry",
+          availableAt: Date.now() + 60_000,
+        };
+      }
 
-      return { completedAt: Date.now() };
+      return {
+        kind: "fail",
+        reason: `enrichment:${result.error.kind}`,
+      };
     },
     extendLease: (id: number) =>
       enrichmentRepo.extendLease(id, workerId, leaseMs),
     onComplete: async (_id: number) => {
       // Job already marked complete in handle()
-    },
-    classifyFailure: (error, _job) => {
-      if (error instanceof EnrichmentWorkerError) {
-        return {
-          retryable: error.retryable,
-          reason: error.message,
-          retryAt: Date.now() + 60_000,
-        };
-      }
-
-      return {
-        retryable: true,
-        reason: error instanceof Error ? error.message : "Unknown error",
-        retryAt: Date.now() + 60_000,
-      };
     },
     onRetry: async (id: number, availableAt: number) => {
       await enrichmentRepo.failJobRetryable(

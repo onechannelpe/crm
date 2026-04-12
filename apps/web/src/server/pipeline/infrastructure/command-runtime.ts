@@ -1,8 +1,9 @@
+import { createSearchEnrichmentRepo } from "~/server/client-search/repository";
+import { createEnrichmentCommand } from "~/server/client-search/request";
 import {
   createPipelineFeatureDeps,
   type PipelineDeps,
 } from "~/server/features/pipeline/application/pipeline-deps";
-import { serverRuntime } from "~/server/runtime";
 
 import type { DatabaseExecutor } from "../../shared/db-executor";
 import { runInPipelineTransaction } from "../../shared/pipeline-transaction";
@@ -35,7 +36,8 @@ function createPipelineAuditServiceRuntime(executor: DatabaseExecutor) {
 function createPipelineCommandRuntime(
   executor: DatabaseExecutor,
 ): PipelineCommandRuntime {
-  const { enrichmentCommand } = serverRuntime.clientSearch;
+  const enrichmentRepo = createSearchEnrichmentRepo(executor);
+  const enrichmentCommand = createEnrichmentCommand(enrichmentRepo);
 
   return {
     deps: createPipelineFeatureDeps(executor),

@@ -1,4 +1,4 @@
-import type { EnrichmentError } from "../../types";
+import type { EnrichmentError } from "../../model";
 
 export interface SunatDniData {
   dni: string;

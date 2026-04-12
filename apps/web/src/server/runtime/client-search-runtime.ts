@@ -1,6 +1,6 @@
-import { createEnrichmentCommand } from "~/server/client-search/enqueue";
 import { createSunatScraperClient } from "~/server/client-search/enrichment/sunat/client";
 import { createSearchEnrichmentRepo } from "~/server/client-search/repository";
+import { createEnrichmentCommand } from "~/server/client-search/request";
 import { createEnrichmentQuery } from "~/server/client-search/status";
 import { createEnrichmentQueue } from "~/server/client-search/worker";
 

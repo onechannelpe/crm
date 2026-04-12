@@ -1,12 +1,8 @@
 "use server";
 
 import { requirePermission } from "~/lib/auth/access/session";
+import { normalizeEnrichmentInput } from "~/server/client-search/model";
 import { serverRuntime } from "~/server/runtime";
-
-function assertEnrichmentDocumentType(value: string): "dni" | "ruc" {
-  if (value === "dni" || value === "ruc") return value;
-  throw new Error("Invalid document type");
-}
 
 export async function requestSearchEnrichment(
   documentType: string,
@@ -15,11 +11,14 @@ export async function requestSearchEnrichment(
   const session = await requirePermission("search:use");
   const { enrichmentCommand } = serverRuntime.clientSearch;
 
-  const safeDocumentType = assertEnrichmentDocumentType(documentType);
+  const normalized = normalizeEnrichmentInput({
+    documentType,
+    documentValue,
+  });
 
   return enrichmentCommand.enqueueRequest(
-    safeDocumentType,
-    documentValue,
+    normalized.documentType,
+    normalized.documentValue,
     session.userId,
   );
 }
@@ -30,9 +29,14 @@ export async function getSearchEnrichmentStatus(
 ) {
   await requirePermission("search:use");
 
+  const normalized = normalizeEnrichmentInput({
+    documentType,
+    documentValue,
+  });
+
   const { enrichmentQuery } = serverRuntime.clientSearch;
   return enrichmentQuery.getStatus(
-    assertEnrichmentDocumentType(documentType),
-    documentValue,
+    normalized.documentType,
+    normalized.documentValue,
   );
 }

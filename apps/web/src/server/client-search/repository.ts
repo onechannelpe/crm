@@ -2,7 +2,7 @@ import type { Kysely } from "kysely";
 import { sql } from "kysely";
 
 import type { Database } from "~/lib/db/types";
-import type { EnrichmentRepositoryPort } from "~/server/client-search/types";
+import type { EnrichmentRepositoryPort } from "~/server/client-search/ports";
 
 export function createSearchEnrichmentRepo(
   db: Kysely<Database>,

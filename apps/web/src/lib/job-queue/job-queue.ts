@@ -60,8 +60,23 @@ export function createJobQueue<TJob extends QueueJobBase, TResult>(
 
           try {
             const result = await config.handle(job, controller.signal);
-            await config.onComplete(job.id, result);
-            logger.info("job_completed", { jobId: job.id });
+            if (controller.signal.aborted) {
+              throw new Error("Job aborted after processing");
+            }
+            if (config.onResult) {
+              const decision = await config.onResult(job, result);
+              if (decision.kind === "retry") {
+                await config.onRetry(job.id, decision.availableAt);
+              } else if (decision.kind === "fail") {
+                await config.onFail(job.id, decision.reason);
+              } else {
+                await config.onComplete(job.id, result);
+                logger.info("job_completed", { jobId: job.id });
+              }
+            } else {
+              await config.onComplete(job.id, result);
+              logger.info("job_completed", { jobId: job.id });
+            }
           } catch (error: unknown) {
             const reason = errorMessage(error);
             if (controller.signal.aborted) {
@@ -76,21 +91,13 @@ export function createJobQueue<TJob extends QueueJobBase, TResult>(
               }
             } else {
               logger.error("job_failed", { jobId: job.id, error: reason });
-              const failure = config.classifyFailure
-                ? config.classifyFailure(error, job)
-                : {
-                    retryable: true,
-                    reason,
-                    retryAt: nextAvailableAt(job.attempt_count),
-                  };
-
-              if (failure.retryable && job.attempt_count < job.max_attempts) {
+              if (job.attempt_count < job.max_attempts) {
                 await config.onRetry(
                   job.id,
-                  failure.retryAt ?? nextAvailableAt(job.attempt_count),
+                  nextAvailableAt(job.attempt_count),
                 );
               } else {
-                await config.onFail(job.id, failure.reason);
+                await config.onFail(job.id, reason);
               }
             }
           } finally {

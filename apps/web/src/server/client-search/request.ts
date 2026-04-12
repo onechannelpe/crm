@@ -1,4 +1,5 @@
-import type { EnrichmentDocumentType, EnrichmentRepositoryPort } from "./types";
+import { normalizeEnrichmentInput, type EnrichmentDocumentType } from "./model";
+import type { EnrichmentRepositoryPort } from "./ports";
 
 /**
  * Single canonical enqueue interface for enrichment requests.
@@ -24,10 +25,14 @@ export function createEnrichmentCommand(
       requestedByUserId,
       now = Date.now(),
     ) {
-      // Atomic idempotent upsert: always returns job ID, never fails
+      const normalized = normalizeEnrichmentInput({
+        documentType,
+        documentValue,
+      });
+
       return repo.upsertJob({
-        document_type: documentType,
-        document_value: documentValue,
+        document_type: normalized.documentType,
+        document_value: normalized.documentValue,
         requested_by_user_id: requestedByUserId,
         now,
         max_attempts: 5,
