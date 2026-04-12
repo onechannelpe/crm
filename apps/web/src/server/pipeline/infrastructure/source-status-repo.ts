@@ -1,6 +1,9 @@
 import { createSearchEnrichmentRepo } from "~/server/client-search/repository";
 import { createEnrichmentQuery } from "~/server/client-search/status";
-import type { SourceStatusRepository } from "~/server/pipeline/application/ports/source-status-repository";
+import type {
+  SourceStatusRepository,
+  SunatSourceStatus,
+} from "~/server/pipeline/application/ports/source-status-repository";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 function resolveEngineStatus(input: {
@@ -27,7 +30,7 @@ function resolveEngineStatus(input: {
 function toPipelineSunatStatus(input: {
   lifecycle: "idle" | "queued" | "running" | "succeeded" | "failed";
   freshness: "fresh" | "stale" | "none";
-}): "idle" | "queued" | "running" | "completed" | "failed" | "stale" {
+}): SunatSourceStatus {
   if (input.freshness === "stale") {
     return "stale";
   }

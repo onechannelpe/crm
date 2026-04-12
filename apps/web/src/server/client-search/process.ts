@@ -2,17 +2,17 @@ import { isPlainRecord } from "~/lib/type-guards";
 
 import type { SunatScraperClient } from "./enrichment/sunat/contracts";
 import { sanitizeField } from "./enrichment/sunat/utils";
-import type { EnrichmentOverlay, EnrichmentProcessResult } from "./model";
-import type { EnrichmentOverlayRow, EnrichmentJobLeaseRow } from "./ports";
+import type { Overlay, ProcessResult } from "./model";
+import type { JobRow, OverlayRow } from "./ports";
 
 const OVERLAY_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 export async function processEnrichmentJob(
-  job: EnrichmentJobLeaseRow,
+  job: JobRow,
   scraper: SunatScraperClient,
   signal: AbortSignal,
   now: number = Date.now(),
-): Promise<EnrichmentProcessResult> {
+): Promise<ProcessResult> {
   if (job.document_type === "dni") {
     const result = await scraper.fetchDni(job.document_value, signal);
 
@@ -35,7 +35,7 @@ export async function processEnrichmentJob(
       };
     }
 
-    const overlay: EnrichmentOverlay = {
+    const overlay: Overlay = {
       documentType: "dni",
       documentValue: job.document_value,
       fullName,
@@ -65,7 +65,7 @@ export async function processEnrichmentJob(
     };
   }
 
-  const overlay: EnrichmentOverlay = {
+  const overlay: Overlay = {
     documentType: "ruc",
     documentValue: job.document_value,
     fullName: null,
@@ -83,7 +83,7 @@ export async function processEnrichmentJob(
   return { ok: true, overlay };
 }
 
-export function overlayToRow(overlay: EnrichmentOverlay): EnrichmentOverlayRow {
+export function overlayToRow(overlay: Overlay): OverlayRow {
   return {
     document_type: overlay.documentType,
     document_value: overlay.documentValue,

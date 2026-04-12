@@ -1,14 +1,6 @@
-import type {
-  EnrichmentStatus,
-  EnrichmentFreshness,
-  EnrichmentOverlay,
-} from "./model";
+import type { EnrichmentStatus, Overlay } from "./model";
 import { normalizeEnrichmentInput } from "./model";
-import type {
-  EnrichmentRepositoryPort,
-  EnrichmentJobLeaseRow,
-  EnrichmentOverlayRow,
-} from "./ports";
+import type { EnrichmentRepositoryPort, JobRow, OverlayRow } from "./ports";
 
 export interface EnrichmentQuery {
   getStatus(
@@ -51,9 +43,9 @@ export function createEnrichmentQuery(
 }
 
 function resolveFreshness(
-  overlay: EnrichmentOverlayRow | null | undefined,
+  overlay: OverlayRow | null | undefined,
   now: number,
-): EnrichmentFreshness {
+): EnrichmentStatus["freshness"] {
   if (!overlay) {
     return "none";
   }
@@ -62,8 +54,8 @@ function resolveFreshness(
 }
 
 function resolveLifecycle(
-  job: EnrichmentJobLeaseRow | null | undefined,
-  freshness: EnrichmentFreshness,
+  job: JobRow | null | undefined,
+  freshness: EnrichmentStatus["freshness"],
 ): EnrichmentStatus["lifecycle"] {
   if (!job) {
     return freshness === "none" ? "idle" : "succeeded";
@@ -80,7 +72,7 @@ function resolveLifecycle(
   return "failed";
 }
 
-function rowToOverlay(row: EnrichmentOverlayRow): EnrichmentOverlay {
+function rowToOverlay(row: OverlayRow): Overlay {
   return {
     documentType: row.document_type,
     documentValue: row.document_value,

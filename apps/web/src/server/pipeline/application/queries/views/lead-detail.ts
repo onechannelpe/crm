@@ -6,6 +6,7 @@ import type {
 
 import type { LeadBlockingField } from "../../../domain/lead-progress";
 import type { LeadAvailableAction } from "../../contracts/lead-available-action";
+import type { SunatSourceStatus } from "../../ports/source-status-repository";
 
 export type LeadTimelineItem = {
   id: string;
@@ -81,7 +82,7 @@ export type LeadDetailSourceStatusView = {
     fields: Array<"razonSocial" | "address">;
   };
   sunat: {
-    status: "idle" | "queued" | "running" | "completed" | "failed" | "stale";
+    status: SunatSourceStatus;
     fetchedAt: number | null;
     legalName: string | null;
     address: string | null;

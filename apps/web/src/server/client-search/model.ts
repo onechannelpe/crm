@@ -1,16 +1,11 @@
-export type EnrichmentDocumentType = "dni" | "ruc";
+export type DocumentType = "dni" | "ruc";
 
-export type EnrichmentLifecycle =
-  | "idle"
-  | "queued"
-  | "running"
-  | "succeeded"
-  | "failed";
+type Lifecycle = "idle" | "queued" | "running" | "succeeded" | "failed";
 
-export type EnrichmentFreshness = "fresh" | "stale" | "none";
+type Freshness = "fresh" | "stale" | "none";
 
-export interface EnrichmentOverlay {
-  documentType: EnrichmentDocumentType;
+export interface Overlay {
+  documentType: DocumentType;
   documentValue: string;
   fullName: string | null;
   legalName: string | null;
@@ -26,11 +21,11 @@ export interface EnrichmentOverlay {
 }
 
 export interface EnrichmentStatus {
-  documentType: EnrichmentDocumentType;
+  documentType: DocumentType;
   documentValue: string;
-  lifecycle: EnrichmentLifecycle;
-  freshness: EnrichmentFreshness;
-  overlay: EnrichmentOverlay | null;
+  lifecycle: Lifecycle;
+  freshness: Freshness;
+  overlay: Overlay | null;
   lastError: string | null;
   requestedAt: number | null;
 }
@@ -42,8 +37,8 @@ export type EnrichmentError =
   | { kind: "malformed_response"; detail?: string }
   | { kind: "invalid_document"; message: string };
 
-export type EnrichmentProcessResult =
-  | { ok: true; overlay: EnrichmentOverlay }
+export type ProcessResult =
+  | { ok: true; overlay: Overlay }
   | { ok: false; error: EnrichmentError; shouldRetry: boolean };
 
 function isDigits(value: string): boolean {
@@ -54,7 +49,7 @@ export function normalizeEnrichmentInput(input: {
   documentType: string;
   documentValue: string;
 }): {
-  documentType: EnrichmentDocumentType;
+  documentType: DocumentType;
   documentValue: string;
 } {
   const documentType = input.documentType;

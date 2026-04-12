@@ -1,6 +1,6 @@
 import { createJobQueue } from "~/lib/job-queue/job-queue";
 import type { SunatScraperClient } from "~/server/client-search/enrichment/sunat/contracts";
-import type { EnrichmentProcessResult } from "~/server/client-search/model";
+import type { ProcessResult } from "~/server/client-search/model";
 import type { EnrichmentRepositoryPort } from "~/server/client-search/ports";
 import {
   processEnrichmentJob,
@@ -30,7 +30,7 @@ export function createEnrichmentQueue(
     handle: async (job, signal) => {
       return processEnrichmentJob(job, scraper, signal);
     },
-    onResult: async (job, result: EnrichmentProcessResult) => {
+    onResult: async (job, result: ProcessResult) => {
       if (result.ok) {
         await enrichmentRepo.completeJob(
           job.id,

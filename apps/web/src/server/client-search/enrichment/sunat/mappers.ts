@@ -119,10 +119,28 @@ export function mapConsultaRucData(parsed: Record<string, string> | null): {
   contributorCondition: string | null;
 } | null {
   if (!parsed) return null;
+
+  const normalizeLabel = (label: string): string =>
+    label
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/:/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+
+  const findValue = (candidateLabel: string): string | null => {
+    const normalizedCandidate = normalizeLabel(candidateLabel);
+    for (const [label, value] of Object.entries(parsed)) {
+      if (normalizeLabel(label) === normalizedCandidate) {
+        return sanitizeField(value) ?? null;
+      }
+    }
+    return null;
+  };
+
   return {
-    contributorStatus:
-      sanitizeField(parsed["Estado del Contribuyente:"]) ?? null,
-    contributorCondition:
-      sanitizeField(parsed["Condicion del Contribuyente:"]) ?? null,
+    contributorStatus: findValue("estado del contribuyente"),
+    contributorCondition: findValue("condicion del contribuyente"),
   };
 }

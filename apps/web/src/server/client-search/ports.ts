@@ -2,10 +2,10 @@ import type { Selectable } from "kysely";
 
 import type { SearchEnrichmentJobsTable } from "~/lib/db/types";
 
-import type { EnrichmentDocumentType } from "./model";
+import type { DocumentType } from "./model";
 
-export type EnrichmentOverlayRow = {
-  document_type: EnrichmentDocumentType;
+export type OverlayRow = {
+  document_type: DocumentType;
   document_value: string;
   full_name: string | null;
   legal_name: string | null;
@@ -20,11 +20,11 @@ export type EnrichmentOverlayRow = {
   payload_json: string;
 };
 
-export type EnrichmentJobLeaseRow = Selectable<SearchEnrichmentJobsTable>;
+export type JobRow = Selectable<SearchEnrichmentJobsTable>;
 
 export interface EnrichmentRepositoryPort {
   upsertJob(values: {
-    document_type: EnrichmentDocumentType;
+    document_type: DocumentType;
     document_value: string;
     requested_by_user_id: number;
     now: number;
@@ -34,11 +34,11 @@ export interface EnrichmentRepositoryPort {
     limit: number,
     leaseMs: number,
     leaseOwner: string,
-  ): Promise<EnrichmentJobLeaseRow[]>;
+  ): Promise<JobRow[]>;
   completeJob(
     id: number,
     leaseOwner: string,
-    overlay: EnrichmentOverlayRow,
+    overlay: OverlayRow,
     now: number,
   ): Promise<void>;
   failJob(
@@ -55,11 +55,11 @@ export interface EnrichmentRepositoryPort {
   ): Promise<void>;
   extendLease(id: number, workerId: string, leaseMs: number): Promise<boolean>;
   getOverlay(
-    documentType: EnrichmentDocumentType,
+    documentType: DocumentType,
     documentValue: string,
-  ): Promise<EnrichmentOverlayRow | null | undefined>;
+  ): Promise<OverlayRow | null | undefined>;
   getJobStatus(
-    documentType: EnrichmentDocumentType,
+    documentType: DocumentType,
     documentValue: string,
-  ): Promise<EnrichmentJobLeaseRow | null | undefined>;
+  ): Promise<JobRow | null | undefined>;
 }

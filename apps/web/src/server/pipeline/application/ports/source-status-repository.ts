@@ -1,3 +1,11 @@
+export type SunatSourceStatus =
+  | "idle"
+  | "queued"
+  | "running"
+  | "completed"
+  | "failed"
+  | "stale";
+
 export type LeadSourceStatus = {
   engine: {
     status: "available" | "missing" | "failed";
@@ -5,7 +13,7 @@ export type LeadSourceStatus = {
     fields: Array<"razonSocial" | "address">;
   };
   sunat: {
-    status: "idle" | "queued" | "running" | "completed" | "failed" | "stale";
+    status: SunatSourceStatus;
     fetchedAt: number | null;
     legalName: string | null;
     address: string | null;
