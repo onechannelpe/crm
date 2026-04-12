@@ -14,11 +14,11 @@ const OVERLAY_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 export async function processEnrichmentJob(
   job: EnrichmentJobLeaseRow,
   scraper: SunatScraperClient,
+  signal: AbortSignal,
   now: number = Date.now(),
 ): Promise<EnrichmentProcessResult> {
-  // Fetch from external API; separate paths for DNI vs RUC to maintain type safety
   if (job.document_type === "dni") {
-    const result = await scraper.fetchDni(job.document_value);
+    const result = await scraper.fetchDni(job.document_value, signal);
 
     if (!result.ok) {
       const shouldRetry =
@@ -30,7 +30,7 @@ export async function processEnrichmentJob(
       };
     }
 
-    const fullName = buildFullName(result.data);
+    const fullName = buildFullName(result.data.payload);
     if (!fullName) {
       return {
         ok: false,
@@ -52,42 +52,39 @@ export async function processEnrichmentJob(
       source: "sunat",
       fetchedAt: now,
       expiresAt: now + OVERLAY_TTL_MS,
-      payloadJson: JSON.stringify(
-        isPlainRecord(result.data) ? result.data.payload : result.data,
-      ),
-    };
-    return { ok: true, overlay };
-  } else {
-    // RUC: separate call maintains type narrowing
-    const result = await scraper.fetchRuc(job.document_value);
-
-    if (!result.ok) {
-      const shouldRetry =
-        result.error.kind === "server_error" || result.error.kind === "timeout";
-      return {
-        ok: false,
-        error: result.error,
-        shouldRetry,
-      };
-    }
-
-    const overlay: EnrichmentOverlay = {
-      documentType: "ruc",
-      documentValue: job.document_value,
-      fullName: null,
-      legalName: result.data.razonSocial?.trim() || null,
-      address: result.data.address,
-      district: result.data.district,
-      department: result.data.department,
-      contributorStatus: result.data.contributorStatus,
-      contributorCondition: result.data.contributorCondition,
-      source: "sunat",
-      fetchedAt: now,
-      expiresAt: now + OVERLAY_TTL_MS,
       payloadJson: JSON.stringify(result.data.payload),
     };
     return { ok: true, overlay };
   }
+
+  const result = await scraper.fetchRuc(job.document_value, signal);
+
+  if (!result.ok) {
+    const shouldRetry =
+      result.error.kind === "server_error" || result.error.kind === "timeout";
+    return {
+      ok: false,
+      error: result.error,
+      shouldRetry,
+    };
+  }
+
+  const overlay: EnrichmentOverlay = {
+    documentType: "ruc",
+    documentValue: job.document_value,
+    fullName: null,
+    legalName: result.data.razonSocial?.trim() || null,
+    address: result.data.address,
+    district: result.data.district,
+    department: result.data.department,
+    contributorStatus: result.data.contributorStatus,
+    contributorCondition: result.data.contributorCondition,
+    source: "sunat",
+    fetchedAt: now,
+    expiresAt: now + OVERLAY_TTL_MS,
+    payloadJson: JSON.stringify(result.data.payload),
+  };
+  return { ok: true, overlay };
 }
 
 /**
@@ -114,8 +111,10 @@ export function overlayToRow(overlay: EnrichmentOverlay): EnrichmentOverlayRow {
 /**
  * Build full name from DNI payload fields.
  */
-function buildFullName(payload: any): string | null {
-  if (!isPlainRecord(payload)) return null;
+function buildFullName(payload: unknown): string | null {
+  if (!isPlainRecord(payload)) {
+    return null;
+  }
 
   const nombres =
     sanitizeField(payload.nombres) ??
@@ -131,7 +130,7 @@ function buildFullName(payload: any): string | null {
     sanitizeField(payload.apellido_mat);
 
   const parts = [apellidoPaterno, apellidoMaterno, nombres].filter(
-    (p): p is string => typeof p === "string" && p.length > 0,
+    (part): part is string => typeof part === "string" && part.length > 0,
   );
 
   return parts.length > 0 ? parts.join(" ") : null;

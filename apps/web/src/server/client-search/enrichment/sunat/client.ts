@@ -1,3 +1,4 @@
+import type { EnrichmentError } from "../../model";
 import type {
   DniApiResult,
   RucApiResult,
@@ -8,46 +9,94 @@ import {
   fetchDniFromItfisdenreg,
   fetchRucFromConsultaRuc,
   fetchRucFromItfisdenreg,
+  isHttpStatusError,
 } from "./endpoints";
 import { mapConsultaRucData, mapDniData, mapItfisRucData } from "./mappers";
 import { parseRucHtml } from "./parsers";
 
-async function tryRequest<T>(request: () => Promise<T>): Promise<T | null> {
+function classifyProviderError(error: unknown): EnrichmentError {
+  if (error instanceof DOMException && error.name === "AbortError") {
+    return { kind: "timeout" };
+  }
+
+  if (isHttpStatusError(error)) {
+    if (error.status >= 500) {
+      return { kind: "server_error", detail: error.message };
+    }
+    return { kind: "not_found" };
+  }
+
+  if (error instanceof Error) {
+    return { kind: "server_error", detail: error.message };
+  }
+
+  return { kind: "server_error" };
+}
+
+async function safeRequest<T>(
+  request: () => Promise<T>,
+): Promise<{ ok: true; value: T } | { ok: false; error: EnrichmentError }> {
   try {
-    return await request();
-  } catch {
-    // Ignore all errors; caller will handle null response
-    return null;
+    return { ok: true, value: await request() };
+  } catch (error: unknown) {
+    return { ok: false, error: classifyProviderError(error) };
   }
 }
 
-async function fetchDni(dni: string): Promise<DniApiResult> {
-  const firstPayload = await tryRequest(() => fetchDniFromItfisdenreg(dni));
-  const firstMapped = mapDniData(dni, firstPayload);
-  if (firstMapped) return { ok: true, data: firstMapped };
+async function fetchDni(
+  dni: string,
+  signal: AbortSignal,
+): Promise<DniApiResult> {
+  const primary = await safeRequest(() => fetchDniFromItfisdenreg(dni, signal));
+  if (primary.ok) {
+    const mapped = mapDniData(dni, primary.value);
+    if (mapped) {
+      return { ok: true, data: mapped };
+    }
+  }
 
-  const fallbackPayload = await tryRequest(() => fetchDniFromAtencion(dni));
-  const fallbackMapped = mapDniData(dni, fallbackPayload);
-  if (fallbackMapped) return { ok: true, data: fallbackMapped };
+  const fallback = await safeRequest(() => fetchDniFromAtencion(dni, signal));
+  if (fallback.ok) {
+    const mapped = mapDniData(dni, fallback.value);
+    if (mapped) {
+      return { ok: true, data: mapped };
+    }
+  }
+
+  if (!primary.ok || !fallback.ok) {
+    const retryableError = [primary, fallback].find(
+      (result): result is { ok: false; error: EnrichmentError } =>
+        !result.ok &&
+        (result.error.kind === "server_error" ||
+          result.error.kind === "timeout"),
+    );
+    if (retryableError) {
+      return { ok: false, error: retryableError.error };
+    }
+  }
 
   return { ok: false, error: { kind: "not_found" } };
 }
 
-async function fetchRuc(ruc: string): Promise<RucApiResult> {
-  const [itfisResult, consultaResult] = await Promise.allSettled([
-    tryRequest(() => fetchRucFromItfisdenreg(ruc)),
-    tryRequest(() => fetchRucFromConsultaRuc(ruc)),
+async function fetchRuc(
+  ruc: string,
+  signal: AbortSignal,
+): Promise<RucApiResult> {
+  const [itfisResult, consultaResult] = await Promise.all([
+    safeRequest(() => fetchRucFromItfisdenreg(ruc, signal)),
+    safeRequest(() => fetchRucFromConsultaRuc(ruc, signal)),
   ]);
 
-  const itfisPayload =
-    itfisResult.status === "fulfilled" ? itfisResult.value : null;
-  const itfisData = mapItfisRucData(ruc, itfisPayload);
+  if (!itfisResult.ok) {
+    return { ok: false, error: itfisResult.error };
+  }
+
+  const itfisData = mapItfisRucData(ruc, itfisResult.value);
   if (!itfisData) {
     return { ok: false, error: { kind: "not_found" } };
   }
 
-  const consultaRaw =
-    consultaResult.status === "fulfilled" ? consultaResult.value : null;
+  const consultaRaw = consultaResult.ok ? consultaResult.value : null;
   const consultaParsed =
     typeof consultaRaw === "string" && consultaRaw.includes("<html")
       ? parseRucHtml(consultaRaw)

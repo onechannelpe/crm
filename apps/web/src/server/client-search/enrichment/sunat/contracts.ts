@@ -19,7 +19,6 @@ export interface SunatRucData {
   payload: unknown;
 }
 
-// Discriminated unions from API layer
 export type DniApiResult =
   | { ok: true; data: SunatDniData }
   | { ok: false; error: EnrichmentError };
@@ -29,6 +28,6 @@ export type RucApiResult =
   | { ok: false; error: EnrichmentError };
 
 export interface SunatScraperClient {
-  fetchDni(dni: string): Promise<DniApiResult>;
-  fetchRuc(ruc: string): Promise<RucApiResult>;
+  fetchDni(dni: string, signal: AbortSignal): Promise<DniApiResult>;
+  fetchRuc(ruc: string, signal: AbortSignal): Promise<RucApiResult>;
 }

@@ -41,23 +41,22 @@ export interface EnrichmentRepositoryPort {
     overlay: EnrichmentOverlayRow,
     now: number,
   ): Promise<void>;
-  failJobTerminal(
+  failJob(
     id: number,
     leaseOwner: string,
     errorMessage: string,
     now: number,
   ): Promise<void>;
-  failJobRetryable(
+  retryJob(
     id: number,
     leaseOwner: string,
     errorMessage: string,
-    nextAvailableAt: number,
+    nextAttemptAt: number,
   ): Promise<void>;
   extendLease(id: number, workerId: string, leaseMs: number): Promise<boolean>;
   getOverlay(
     documentType: EnrichmentDocumentType,
     documentValue: string,
-    now: number,
   ): Promise<EnrichmentOverlayRow | null | undefined>;
   getJobStatus(
     documentType: EnrichmentDocumentType,

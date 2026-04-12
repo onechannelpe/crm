@@ -27,8 +27,8 @@ export function createEnrichmentQueue(
     batchSize,
     maxConcurrency,
     poll: (limit: number) => enrichmentRepo.leaseJobs(limit, leaseMs, workerId),
-    handle: async (job) => {
-      return processEnrichmentJob(job, scraper);
+    handle: async (job, signal) => {
+      return processEnrichmentJob(job, scraper, signal);
     },
     onResult: async (job, result: EnrichmentProcessResult) => {
       if (result.ok) {
@@ -56,18 +56,13 @@ export function createEnrichmentQueue(
     extendLease: (id: number) =>
       enrichmentRepo.extendLease(id, workerId, leaseMs),
     onComplete: async (_id: number) => {
-      // Job already marked complete in handle()
+      // Job completion is persisted in onResult.
     },
     onRetry: async (id: number, availableAt: number) => {
-      await enrichmentRepo.failJobRetryable(
-        id,
-        workerId,
-        "Retrying",
-        availableAt,
-      );
+      await enrichmentRepo.retryJob(id, workerId, "Retrying", availableAt);
     },
     onFail: async (id: number, reason: string) => {
-      await enrichmentRepo.failJobTerminal(id, workerId, reason, Date.now());
+      await enrichmentRepo.failJob(id, workerId, reason, Date.now());
     },
   });
 }

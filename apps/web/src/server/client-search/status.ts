@@ -1,9 +1,9 @@
 import type {
-  EnrichmentDocumentType,
   EnrichmentStatus,
-  EnrichmentStatusValue,
+  EnrichmentFreshness,
   EnrichmentOverlay,
 } from "./model";
+import { normalizeEnrichmentInput } from "./model";
 import type {
   EnrichmentRepositoryPort,
   EnrichmentJobLeaseRow,
@@ -15,7 +15,7 @@ import type {
  */
 export interface EnrichmentQuery {
   getStatus(
-    documentType: EnrichmentDocumentType,
+    documentType: string,
     documentValue: string,
     now?: number,
   ): Promise<EnrichmentStatus>;
@@ -26,19 +26,25 @@ export function createEnrichmentQuery(
 ): EnrichmentQuery {
   return {
     async getStatus(documentType, documentValue, now = Date.now()) {
-      // Fetch both job status and overlay in parallel
+      const normalized = normalizeEnrichmentInput({
+        documentType,
+        documentValue,
+      });
+
       const [job, overlayRow] = await Promise.all([
-        repo.getJobStatus(documentType, documentValue),
-        repo.getOverlay(documentType, documentValue, now),
+        repo.getJobStatus(normalized.documentType, normalized.documentValue),
+        repo.getOverlay(normalized.documentType, normalized.documentValue),
       ]);
 
-      const status = resolveStatus(job, overlayRow, now);
+      const freshness = resolveFreshness(overlayRow, now);
+      const lifecycle = resolveLifecycle(job, freshness);
       const overlay = overlayRow ? rowToOverlay(overlayRow) : null;
 
       return {
-        documentType,
-        documentValue,
-        status,
+        documentType: normalized.documentType,
+        documentValue: normalized.documentValue,
+        lifecycle,
+        freshness,
         overlay,
         lastError: job?.last_error ?? null,
         requestedAt: job?.requested_at ?? null,
@@ -47,31 +53,34 @@ export function createEnrichmentQuery(
   };
 }
 
-/**
- * Determine effective status from job + overlay state.
- */
-function resolveStatus(
-  job: EnrichmentJobLeaseRow | null | undefined,
+function resolveFreshness(
   overlay: EnrichmentOverlayRow | null | undefined,
   now: number,
-): EnrichmentStatusValue {
-  // If we have a valid overlay, status is completed
-  if (overlay && overlay.expires_at > now) {
-    return "completed";
+): EnrichmentFreshness {
+  if (!overlay) {
+    return "none";
   }
 
-  // If overlay expired, still mark as completed (don't hide old data)
-  if (overlay && overlay.expires_at <= now) {
-    return "completed";
-  }
+  return overlay.expires_at > now ? "fresh" : "stale";
+}
 
-  // No overlay, check job state
+function resolveLifecycle(
+  job: EnrichmentJobLeaseRow | null | undefined,
+  freshness: EnrichmentFreshness,
+): EnrichmentStatus["lifecycle"] {
   if (!job) {
-    return "idle";
+    return freshness === "none" ? "idle" : "succeeded";
   }
 
-  // Map job status directly
-  return job.status;
+  if (job.status === "queued" || job.status === "running") {
+    return job.status;
+  }
+
+  if (job.status === "succeeded") {
+    return "succeeded";
+  }
+
+  return "failed";
 }
 
 /**
@@ -92,5 +101,65 @@ function rowToOverlay(row: EnrichmentOverlayRow): EnrichmentOverlay {
     fetchedAt: row.fetched_at,
     expiresAt: row.expires_at,
     payloadJson: row.payload_json,
+  };
+}
+
+export function toPipelineSunatStatus(input: {
+  lifecycle: EnrichmentStatus["lifecycle"];
+  freshness: EnrichmentFreshness;
+}): "idle" | "queued" | "running" | "completed" | "failed" | "stale" {
+  if (input.freshness === "stale") {
+    return "stale";
+  }
+
+  switch (input.lifecycle) {
+    case "idle":
+      return "idle";
+    case "queued":
+      return "queued";
+    case "running":
+      return "running";
+    case "succeeded":
+      return "completed";
+    case "failed":
+      return "failed";
+    default:
+      input.lifecycle satisfies never;
+      return "idle";
+  }
+}
+
+export function toPipelineOverlay(overlay: EnrichmentOverlay | null): {
+  fetchedAt: number | null;
+  legalName: string | null;
+  address: string | null;
+  district: string | null;
+  department: string | null;
+  contributorStatus: string | null;
+  contributorCondition: string | null;
+  payloadAvailable: boolean;
+} {
+  if (!overlay) {
+    return {
+      fetchedAt: null,
+      legalName: null,
+      address: null,
+      district: null,
+      department: null,
+      contributorStatus: null,
+      contributorCondition: null,
+      payloadAvailable: false,
+    };
+  }
+
+  return {
+    fetchedAt: overlay.fetchedAt,
+    legalName: overlay.legalName,
+    address: overlay.address,
+    district: overlay.district,
+    department: overlay.department,
+    contributorStatus: overlay.contributorStatus,
+    contributorCondition: overlay.contributorCondition,
+    payloadAvailable: overlay.payloadJson.trim().length > 0,
   };
 }

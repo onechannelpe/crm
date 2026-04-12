@@ -1,16 +1,14 @@
-import type { Kysely } from "kysely";
 import { sql } from "kysely";
 
-import type { Database } from "~/lib/db/types";
-import type { EnrichmentRepositoryPort } from "~/server/client-search/ports";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
+
+import type { EnrichmentRepositoryPort } from "./ports";
 
 export function createSearchEnrichmentRepo(
-  db: Kysely<Database>,
+  db: DatabaseExecutor,
 ): EnrichmentRepositoryPort {
   return {
     async upsertJob(values) {
-      // Atomic upsert: if (doc_type, doc_value) exists, keep old ID but reset status to queued
-      // This is idempotent and race-safe
       const result = await db
         .insertInto("search_enrichment_jobs")
         .values({
@@ -25,7 +23,7 @@ export function createSearchEnrichmentRepo(
           attempt_count: 0,
           max_attempts: values.max_attempts,
           last_error: null,
-          available_at: null,
+          next_attempt_at: values.now,
         })
         .onConflict((oc) =>
           oc.columns(["document_type", "document_value"]).doUpdateSet({
@@ -33,12 +31,12 @@ export function createSearchEnrichmentRepo(
             requested_by_user_id: values.requested_by_user_id,
             requested_at: values.now,
             completed_at: null,
-            available_at: null,
             lease_owner: null,
             lease_until: null,
             attempt_count: 0,
             max_attempts: values.max_attempts,
             last_error: null,
+            next_attempt_at: values.now,
           }),
         )
         .returning("id")
@@ -56,10 +54,7 @@ export function createSearchEnrichmentRepo(
         .where((eb) =>
           eb.and([
             eb("status", "=", "queued"),
-            eb.or([
-              eb("available_at", "is", null),
-              eb("available_at", "<=", now),
-            ]),
+            eb("next_attempt_at", "<=", now),
             eb.or([eb("lease_until", "is", null), eb("lease_until", "<", now)]),
           ]),
         )
@@ -82,10 +77,7 @@ export function createSearchEnrichmentRepo(
             .where((eb) =>
               eb.and([
                 eb("status", "=", "queued"),
-                eb.or([
-                  eb("available_at", "is", null),
-                  eb("available_at", "<=", now),
-                ]),
+                eb("next_attempt_at", "<=", now),
                 eb.or([
                   eb("lease_until", "is", null),
                   eb("lease_until", "<", now),
@@ -93,7 +85,11 @@ export function createSearchEnrichmentRepo(
               ]),
             )
             .executeTakeFirst();
-          if (Number(updated.numUpdatedRows ?? 0) === 0) return null;
+
+          if (Number(updated.numUpdatedRows ?? 0) === 0) {
+            return null;
+          }
+
           return db
             .selectFrom("search_enrichment_jobs")
             .selectAll()
@@ -123,47 +119,52 @@ export function createSearchEnrichmentRepo(
     },
 
     async completeJob(id, leaseOwner, overlay, now) {
-      await db
-        .updateTable("search_enrichment_jobs")
-        .set({
-          status: "completed",
-          completed_at: now,
-          lease_owner: null,
-          lease_until: null,
-          last_error: null,
-        })
-        .where("id", "=", id)
-        .where("status", "=", "running")
-        .where("lease_owner", "=", leaseOwner)
-        .execute();
+      await db.transaction().execute(async (trx) => {
+        const updated = await trx
+          .updateTable("search_enrichment_jobs")
+          .set({
+            status: "succeeded",
+            completed_at: now,
+            lease_owner: null,
+            lease_until: null,
+            last_error: null,
+          })
+          .where("id", "=", id)
+          .where("status", "=", "running")
+          .where("lease_owner", "=", leaseOwner)
+          .executeTakeFirst();
 
-      // Upsert overlay
-      await db
-        .insertInto("search_enrichment_overlays")
-        .values(overlay)
-        .onConflict((oc) =>
-          oc.columns(["document_type", "document_value"]).doUpdateSet({
-            full_name: overlay.full_name,
-            legal_name: overlay.legal_name,
-            address: overlay.address,
-            district: overlay.district,
-            department: overlay.department,
-            contributor_status: overlay.contributor_status,
-            contributor_condition: overlay.contributor_condition,
-            source: overlay.source,
-            fetched_at: overlay.fetched_at,
-            expires_at: overlay.expires_at,
-            payload_json: overlay.payload_json,
-          }),
-        )
-        .execute();
+        if (Number(updated.numUpdatedRows ?? 0) === 0) {
+          return;
+        }
+
+        await trx
+          .insertInto("search_enrichment_overlays")
+          .values(overlay)
+          .onConflict((oc) =>
+            oc.columns(["document_type", "document_value"]).doUpdateSet({
+              full_name: overlay.full_name,
+              legal_name: overlay.legal_name,
+              address: overlay.address,
+              district: overlay.district,
+              department: overlay.department,
+              contributor_status: overlay.contributor_status,
+              contributor_condition: overlay.contributor_condition,
+              source: overlay.source,
+              fetched_at: overlay.fetched_at,
+              expires_at: overlay.expires_at,
+              payload_json: overlay.payload_json,
+            }),
+          )
+          .execute();
+      });
     },
 
-    async failJobTerminal(id, leaseOwner, errorMessage, now) {
+    async failJob(id, leaseOwner, errorMessage, now) {
       await db
         .updateTable("search_enrichment_jobs")
         .set({
-          status: "failed_terminal",
+          status: "failed",
           completed_at: now,
           lease_owner: null,
           lease_until: null,
@@ -174,12 +175,12 @@ export function createSearchEnrichmentRepo(
         .execute();
     },
 
-    async failJobRetryable(id, leaseOwner, errorMessage, nextAvailableAt) {
+    async retryJob(id, leaseOwner, errorMessage, nextAttemptAt) {
       await db
         .updateTable("search_enrichment_jobs")
         .set({
           status: "queued",
-          available_at: nextAvailableAt,
+          next_attempt_at: nextAttemptAt,
           lease_owner: null,
           lease_until: null,
           last_error: errorMessage,
@@ -189,13 +190,12 @@ export function createSearchEnrichmentRepo(
         .execute();
     },
 
-    async getOverlay(documentType, documentValue, now) {
+    async getOverlay(documentType, documentValue) {
       return db
         .selectFrom("search_enrichment_overlays")
         .selectAll()
         .where("document_type", "=", documentType)
         .where("document_value", "=", documentValue)
-        .where("expires_at", ">", now)
         .executeTakeFirst();
     },
 

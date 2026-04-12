@@ -45,14 +45,14 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("lease_until", "integer")
     .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
     .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(5))
-    .addColumn("available_at", "integer")
+    .addColumn("next_attempt_at", "integer", (col) => col.notNull())
     .addColumn("last_error", "text")
     .execute();
 
   await db.schema
     .createIndex("idx_search_enrichment_jobs_status_lease_time")
     .on("search_enrichment_jobs")
-    .columns(["status", "available_at", "lease_until", "requested_at"])
+    .columns(["status", "next_attempt_at", "lease_until", "requested_at"])
     .execute();
 
   await db.schema

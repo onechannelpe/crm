@@ -1,4 +1,4 @@
-import { normalizeEnrichmentInput, type EnrichmentDocumentType } from "./model";
+import { normalizeEnrichmentInput } from "./model";
 import type { EnrichmentRepositoryPort } from "./ports";
 
 /**
@@ -8,7 +8,7 @@ import type { EnrichmentRepositoryPort } from "./ports";
  */
 export interface EnrichmentCommand {
   enqueueRequest(
-    documentType: EnrichmentDocumentType,
+    documentType: string,
     documentValue: string,
     requestedByUserId: number,
     now?: number,

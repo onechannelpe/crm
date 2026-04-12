@@ -1,13 +1,13 @@
 export type EnrichmentDocumentType = "dni" | "ruc";
 
-export type EnrichmentJobRowStatus =
+export type EnrichmentLifecycle =
+  | "idle"
   | "queued"
   | "running"
-  | "completed"
-  | "failed_retryable"
-  | "failed_terminal";
+  | "succeeded"
+  | "failed";
 
-export type EnrichmentStatusValue = EnrichmentJobRowStatus | "idle";
+export type EnrichmentFreshness = "fresh" | "stale" | "none";
 
 export interface EnrichmentOverlay {
   documentType: EnrichmentDocumentType;
@@ -28,7 +28,8 @@ export interface EnrichmentOverlay {
 export interface EnrichmentStatus {
   documentType: EnrichmentDocumentType;
   documentValue: string;
-  status: EnrichmentStatusValue;
+  lifecycle: EnrichmentLifecycle;
+  freshness: EnrichmentFreshness;
   overlay: EnrichmentOverlay | null;
   lastError: string | null;
   requestedAt: number | null;
