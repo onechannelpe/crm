@@ -11,39 +11,31 @@ class HttpStatusError extends Error {
   }
 }
 
-function withTimeoutSignal(signal: AbortSignal): AbortSignal {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-
-  const abort = () => {
-    clearTimeout(timeoutId);
-    controller.abort();
-  };
-
-  if (signal.aborted) {
-    abort();
-  } else {
-    signal.addEventListener("abort", abort, { once: true });
-  }
-
-  return controller.signal;
-}
-
 async function fetchResponseWithTimeout(
   url: string,
   signal: AbortSignal,
   init?: RequestInit,
 ): Promise<Response> {
-  const response = await fetch(url, {
-    ...init,
-    signal: withTimeoutSignal(signal),
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const onAbort = () => controller.abort();
+  signal.addEventListener("abort", onAbort, { once: true });
 
-  if (!response.ok) {
-    throw new HttpStatusError(response.status, `HTTP ${response.status}`);
+  try {
+    const response = await fetch(url, {
+      ...init,
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      throw new HttpStatusError(response.status, `HTTP ${response.status}`);
+    }
+
+    return response;
+  } finally {
+    clearTimeout(timeoutId);
+    signal.removeEventListener("abort", onAbort);
   }
-
-  return response;
 }
 
 async function fetchTextWithTimeout(

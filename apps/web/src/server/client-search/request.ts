@@ -1,3 +1,6 @@
+import { JOB_CHANNELS } from "~/lib/job-queue/channels";
+import { publishJob } from "~/lib/redis/publisher";
+
 import { normalizeEnrichmentInput } from "./model";
 import type { EnrichmentRepositoryPort } from "./ports";
 
@@ -30,13 +33,17 @@ export function createEnrichmentCommand(
         documentValue,
       });
 
-      return repo.upsertJob({
+      const jobId = await repo.upsertJob({
         document_type: normalized.documentType,
         document_value: normalized.documentValue,
         requested_by_user_id: requestedByUserId,
         now,
         max_attempts: 5,
       });
+
+      await publishJob(JOB_CHANNELS.ENRICHMENT, jobId);
+
+      return jobId;
     },
   };
 }
