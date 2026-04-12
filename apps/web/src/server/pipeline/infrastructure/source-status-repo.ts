@@ -1,14 +1,10 @@
-import type { Selectable } from "kysely";
-
+import { createSearchEnrichmentRepo } from "~/server/client-search/repository";
+import { createEnrichmentQuery } from "~/server/client-search/status";
 import type {
-  SearchEnrichmentJobsTable,
-  SearchEnrichmentOverlaysTable,
-} from "~/lib/db/types";
-import type { SourceStatusRepository } from "~/server/pipeline/application/ports/source-status-repository";
+  SourceStatusRepository,
+  SunatSourceStatus,
+} from "~/server/pipeline/application/ports/source-status-repository";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-
-type EnrichmentJobRow = Selectable<SearchEnrichmentJobsTable>;
-type EnrichmentOverlayRow = Selectable<SearchEnrichmentOverlaysTable>;
 
 function resolveEngineStatus(input: {
   razonSocial: string | null;
@@ -31,100 +27,81 @@ function resolveEngineStatus(input: {
   } as const;
 }
 
-function resolveSunatStatus(input: {
-  job: EnrichmentJobRow | undefined;
-  overlay: EnrichmentOverlayRow | undefined;
-  now: number;
-}) {
-  const overlayExpired =
-    input.overlay !== undefined && input.overlay.expires_at <= input.now;
-
-  if (input.overlay && !overlayExpired) {
-    return {
-      status: "completed",
-      fetchedAt: input.overlay.fetched_at,
-      legalName: input.overlay.legal_name,
-      payloadAvailable: input.overlay.payload_json.trim().length > 0,
-    } as const;
+function toPipelineSunatStatus(input: {
+  lifecycle: "idle" | "queued" | "running" | "succeeded" | "failed";
+  freshness: "fresh" | "stale" | "none";
+}): SunatSourceStatus {
+  if (input.freshness === "stale") {
+    return "stale";
   }
 
-  if (input.overlay && overlayExpired) {
-    return {
-      status: "stale",
-      fetchedAt: input.overlay.fetched_at,
-      legalName: input.overlay.legal_name,
-      payloadAvailable: input.overlay.payload_json.trim().length > 0,
-    } as const;
+  switch (input.lifecycle) {
+    case "idle":
+      return "idle";
+    case "queued":
+      return "queued";
+    case "running":
+      return "running";
+    case "succeeded":
+      return "completed";
+    case "failed":
+      return "failed";
+    default:
+      input.lifecycle satisfies never;
+      return "idle";
   }
+}
 
-  if (!input.job) {
+function toPipelineOverlay(
+  overlay: {
+    fetchedAt: number;
+    legalName: string | null;
+    address: string | null;
+    district: string | null;
+    department: string | null;
+    contributorStatus: string | null;
+    contributorCondition: string | null;
+    payloadJson: string;
+  } | null,
+) {
+  if (!overlay) {
     return {
-      status: "idle",
       fetchedAt: null,
       legalName: null,
+      address: null,
+      district: null,
+      department: null,
+      contributorStatus: null,
+      contributorCondition: null,
       payloadAvailable: false,
-    } as const;
-  }
-
-  if (input.job.status === "queued") {
-    return {
-      status: "queued",
-      fetchedAt: null,
-      legalName: null,
-      payloadAvailable: false,
-    } as const;
-  }
-
-  if (input.job.status === "running") {
-    return {
-      status: "running",
-      fetchedAt: null,
-      legalName: null,
-      payloadAvailable: false,
-    } as const;
-  }
-
-  if (input.job.status === "failed") {
-    return {
-      status: "failed",
-      fetchedAt: input.job.completed_at,
-      legalName: null,
-      payloadAvailable: false,
-    } as const;
+    };
   }
 
   return {
-    status: "completed",
-    fetchedAt: input.job.completed_at,
-    legalName: null,
-    payloadAvailable: false,
-  } as const;
+    fetchedAt: overlay.fetchedAt,
+    legalName: overlay.legalName,
+    address: overlay.address,
+    district: overlay.district,
+    department: overlay.department,
+    contributorStatus: overlay.contributorStatus,
+    contributorCondition: overlay.contributorCondition,
+    payloadAvailable: overlay.payloadJson.trim().length > 0,
+  };
 }
 
 export function createSourceStatusRepo(
   db: DatabaseExecutor,
 ): SourceStatusRepository {
+  const enrichmentRepo = createSearchEnrichmentRepo(db);
+  const enrichmentQuery = createEnrichmentQuery(enrichmentRepo);
+
   return {
     async findByLead(input) {
-      const now = Date.now();
-
-      const [job, overlay] = await Promise.all([
-        db
-          .selectFrom("search_enrichment_jobs")
-          .selectAll()
-          .where("document_type", "=", "ruc")
-          .where("document_value", "=", input.ruc)
-          .orderBy("requested_at", "desc")
-          .executeTakeFirst(),
-        db
-          .selectFrom("search_enrichment_overlays")
-          .selectAll()
-          .where("document_type", "=", "ruc")
-          .where("document_value", "=", input.ruc)
-          .where("source", "=", "sunat")
-          .orderBy("fetched_at", "desc")
-          .executeTakeFirst(),
-      ]);
+      const enrichmentStatus = await enrichmentQuery.getStatus(
+        "ruc",
+        input.ruc,
+      );
+      const overlay = toPipelineOverlay(enrichmentStatus.overlay);
 
       return {
         engine: resolveEngineStatus({
@@ -132,11 +109,13 @@ export function createSourceStatusRepo(
           address: input.address,
           leadUpdatedAt: input.leadUpdatedAt,
         }),
-        sunat: resolveSunatStatus({
-          job,
-          overlay,
-          now,
-        }),
+        sunat: {
+          status: toPipelineSunatStatus({
+            lifecycle: enrichmentStatus.lifecycle,
+            freshness: enrichmentStatus.freshness,
+          }),
+          ...overlay,
+        },
       };
     },
   };

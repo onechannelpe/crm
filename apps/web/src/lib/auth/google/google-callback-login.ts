@@ -1,4 +1,5 @@
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
+import { submitGoogleLogin } from "~/server/auth/application/commands/submit-google-login";
 import type { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import type { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import type { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
@@ -7,7 +8,6 @@ import type {
   createUserTotpFactorsRepo,
   createUserTotpRecoveryCodesRepo,
 } from "~/server/auth/repos-user-totp-factors";
-import { submitGoogleLogin } from "~/server/features/auth/application/login/primary";
 import type { createSessionRepository } from "~/server/sessions/repos-sessions";
 import type { createAuditLogsRepo } from "~/server/shared/repos-audit-logs";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";

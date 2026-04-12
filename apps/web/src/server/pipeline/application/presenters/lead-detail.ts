@@ -43,6 +43,11 @@ function toLeadSourceStatus(
       status: sourceStatus.sunat.status,
       fetchedAt: sourceStatus.sunat.fetchedAt,
       legalName: sourceStatus.sunat.legalName,
+      address: sourceStatus.sunat.address,
+      district: sourceStatus.sunat.district,
+      department: sourceStatus.sunat.department,
+      contributorStatus: sourceStatus.sunat.contributorStatus,
+      contributorCondition: sourceStatus.sunat.contributorCondition,
       payloadAvailable: sourceStatus.sunat.payloadAvailable,
     },
   };
@@ -51,12 +56,15 @@ function toLeadSourceStatus(
 function toLeadDetailLead(
   lead: LeadRecord,
   sale: LeadSale | undefined,
+  sourceStatus: LeadSourceStatus,
 ): LeadDetailLeadView {
   return {
     id: lead.id,
     ruc: lead.ruc,
-    razonSocial: lead.razonSocial,
-    address: lead.address,
+    razonSocial: lead.razonSocial ?? sourceStatus.sunat.legalName,
+    address: lead.address ?? sourceStatus.sunat.address,
+    district: sourceStatus.sunat.district,
+    department: sourceStatus.sunat.department,
     executiveId: lead.executiveId,
     stage: lead.stage,
     status: lead.status,
@@ -121,7 +129,7 @@ function toLeadDetailSale(sale: LeadSale): LeadDetailSaleView {
 
 export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
   return {
-    lead: toLeadDetailLead(source.lead, source.sale),
+    lead: toLeadDetailLead(source.lead, source.sale, source.sourceStatus),
     commercialInput: source.commercialInput
       ? toLeadDetailCommercialInput(source.commercialInput)
       : undefined,

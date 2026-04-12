@@ -68,13 +68,30 @@ function OnboardingContent() {
                 <Show
                   when={flow.step() === "profile"}
                   fallback={
-                    <Show when={flow.step() === "totp"}>
+                    <Show
+                      when={
+                        flow.step() === "security-choice" &&
+                        flow.onboardingState().canFinishWithoutSecurity
+                      }
+                      fallback={
+                        <Show when={flow.step() === "totp"}>
+                          <Button
+                            type="submit"
+                            loading={flow.submitting()}
+                            disabled={
+                              flow.submitting() ||
+                              !flow.onboardingState().canFinish
+                            }
+                          >
+                            Finalizar
+                          </Button>
+                        </Show>
+                      }
+                    >
                       <Button
                         type="submit"
                         loading={flow.submitting()}
-                        disabled={
-                          flow.submitting() || !flow.onboardingState().canFinish
-                        }
+                        disabled={flow.submitting()}
                       >
                         Finalizar
                       </Button>
@@ -105,6 +122,7 @@ function OnboardingContent() {
                 <OnboardingSecurityStep
                   hasPasskey={currentUser.hasPasskey}
                   totpEnabled={currentUser.totpEnabled}
+                  securityRequired={flow.onboardingState().securityRequired}
                   onSelectPasskey={flow.handlePasskeySelection}
                   onSelectTotp={() => flow.setStep("totp")}
                 />

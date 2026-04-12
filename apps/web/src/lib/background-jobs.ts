@@ -2,7 +2,6 @@ import { startStaleScanner } from "~/lib/job-queue/stale-scanner";
 import type { QueueRunner } from "~/lib/job-queue/types";
 import { createLogger } from "~/lib/observability/logger";
 import { startJobSubscriber } from "~/lib/redis/subscriber";
-import { createEnrichmentQueue } from "~/server/client-search/queue/enrichment-queue";
 import { createCrmExportQueue } from "~/server/integrations/queue/crm-export-queue";
 import { createCrmImportQueue } from "~/server/integrations/queue/crm-import-queue";
 import { createNeedsExecutiveOutboxQueue } from "~/server/integrations/queue/integration-outbox-needs-executive-queue";
@@ -37,7 +36,8 @@ export function startBackgroundJobs() {
     },
   );
   const salesExportQueue = createSalesExportQueue(WORKER_ID);
-  const enrichmentQueue = createEnrichmentQueue(WORKER_ID);
+  const enrichmentQueue =
+    serverRuntime.clientSearch.createEnrichmentQueue(WORKER_ID);
   const queues: QueueRunner[] = [
     crmExportQueue,
     crmImportQueue,

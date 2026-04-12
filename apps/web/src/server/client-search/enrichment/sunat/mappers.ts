@@ -91,32 +91,56 @@ export function mapDniData(dni: string, payload: unknown): SunatDniData | null {
   };
 }
 
-export function mapRucData(ruc: string, payload: unknown): SunatRucData | null {
-  if (!isPlainRecord(payload)) {
-    if (typeof payload === "string" && payload.trim().length > 0) {
-      return { ruc, razonSocial: null, payload };
+export function mapItfisRucData(
+  ruc: string,
+  payload: unknown,
+): SunatRucData | null {
+  if (!isPlainRecord(payload)) return null;
+  const lista = firstListaEntry(payload);
+  if (!lista) return null;
+
+  const razonSocial = sanitizeField(lista.apenomdenunciado);
+  if (!razonSocial) return null;
+
+  return {
+    ruc,
+    razonSocial,
+    address: sanitizeField(lista.direstablecimiento),
+    district: sanitizeField(lista.desdistrito),
+    department: sanitizeField(lista.desdepartamento),
+    contributorStatus: null,
+    contributorCondition: null,
+    payload,
+  };
+}
+
+export function mapConsultaRucData(parsed: Record<string, string> | null): {
+  contributorStatus: string | null;
+  contributorCondition: string | null;
+} | null {
+  if (!parsed) return null;
+
+  const normalizeLabel = (label: string): string =>
+    label
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/:/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+
+  const findValue = (candidateLabel: string): string | null => {
+    const normalizedCandidate = normalizeLabel(candidateLabel);
+    for (const [label, value] of Object.entries(parsed)) {
+      if (normalizeLabel(label) === normalizedCandidate) {
+        return sanitizeField(value) ?? null;
+      }
     }
     return null;
-  }
+  };
 
-  const lista = firstListaEntry(payload);
-  const razonSocialRaw =
-    sanitizeField(lista?.apenomdenunciado) ??
-    sanitizeField(lista?.razonSocial) ??
-    sanitizeField(lista?.nombre_o_razon_social) ??
-    sanitizeField(payload.razonSocial) ??
-    sanitizeField(payload.razon_social) ??
-    sanitizeField(payload.nombre_o_razon_social) ??
-    sanitizeField(payload["Número de RUC"]);
-
-  const razonSocial = (() => {
-    if (!razonSocialRaw) return null;
-    const parts = razonSocialRaw.split(" - ");
-    return parts.length > 1
-      ? sanitizeField(parts.slice(1).join(" - "))
-      : razonSocialRaw;
-  })();
-
-  if (!razonSocial && Object.keys(payload).length < 1) return null;
-  return { ruc, razonSocial, payload };
+  return {
+    contributorStatus: findValue("estado del contribuyente"),
+    contributorCondition: findValue("condicion del contribuyente"),
+  };
 }

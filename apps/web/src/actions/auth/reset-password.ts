@@ -7,10 +7,8 @@ import type {
   ResetPasswordResult,
 } from "~/actions/auth/contracts";
 import { getRequestPublicOrigin } from "~/lib/http/public-origin";
-import {
-  requestPasswordReset as requestPasswordResetService,
-  resetPassword as resetPasswordService,
-} from "~/server/auth/application/password-reset";
+import { requestPasswordReset as requestPasswordResetService } from "~/server/auth/application/commands/request-password-reset";
+import { resetPassword as resetPasswordService } from "~/server/auth/application/commands/reset-password";
 import { serverRuntime } from "~/server/runtime";
 
 function getOrigin(): string {

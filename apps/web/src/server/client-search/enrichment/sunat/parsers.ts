@@ -2,13 +2,20 @@ import { normalizeWhitespace } from "./utils";
 
 function decodeHtmlEntities(value: string): string {
   return value
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)))
     .replace(/&nbsp;/g, " ")
     .replace(/&aacute;/g, "a")
+    .replace(/&Aacute;/g, "A")
     .replace(/&eacute;/g, "e")
+    .replace(/&Eacute;/g, "E")
     .replace(/&iacute;/g, "i")
+    .replace(/&Iacute;/g, "I")
     .replace(/&oacute;/g, "o")
+    .replace(/&Oacute;/g, "O")
     .replace(/&uacute;/g, "u")
-    .replace(/&ntilde;/g, "n");
+    .replace(/&Uacute;/g, "U")
+    .replace(/&ntilde;/g, "n")
+    .replace(/&Ntilde;/g, "N");
 }
 
 export function parseRucHtml(html: string): Record<string, string> {

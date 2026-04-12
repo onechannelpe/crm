@@ -45,14 +45,14 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("lease_until", "integer")
     .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
     .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(5))
-    .addColumn("available_at", "integer")
+    .addColumn("next_attempt_at", "integer", (col) => col.notNull())
     .addColumn("last_error", "text")
     .execute();
 
   await db.schema
     .createIndex("idx_search_enrichment_jobs_status_lease_time")
     .on("search_enrichment_jobs")
-    .columns(["status", "available_at", "lease_until", "requested_at"])
+    .columns(["status", "next_attempt_at", "lease_until", "requested_at"])
     .execute();
 
   await db.schema
@@ -72,10 +72,14 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("document_value", "varchar(32)", (col) => col.notNull())
     .addColumn("full_name", "varchar(255)")
     .addColumn("legal_name", "varchar(255)")
+    .addColumn("address", "text")
+    .addColumn("district", "varchar(128)")
+    .addColumn("department", "varchar(128)")
+    .addColumn("contributor_status", "varchar(64)")
+    .addColumn("contributor_condition", "varchar(64)")
     .addColumn("source", "varchar(32)", (col) =>
       col.notNull().defaultTo("sunat"),
     )
-    .addColumn("confidence", "integer", (col) => col.notNull())
     .addColumn("fetched_at", "integer", (col) => col.notNull())
     .addColumn("expires_at", "integer", (col) => col.notNull())
     .addColumn("payload_json", "text", (col) => col.notNull())

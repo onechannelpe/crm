@@ -9,10 +9,8 @@ import {
 } from "~/lib/app-errors";
 import { requireSession } from "~/lib/auth/access/session";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
-import {
-  completeOnboarding as completeOnboardingService,
-  finishPasskeyRegistration as finishPasskeyRegistrationService,
-} from "~/server/auth/application/onboarding";
+import { completeOnboarding as completeOnboardingService } from "~/server/auth/application/commands/complete-onboarding";
+import { finishPasskeyOnboarding as finishPasskeyRegistrationService } from "~/server/auth/application/commands/finish-passkey-onboarding";
 import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
 import { serverRuntime } from "~/server/runtime";
 import { isErr } from "~/server/shared/result";
@@ -50,6 +48,8 @@ export async function completeOnboarding(
     phoneE164: normalizePeruvianPhone(phoneE164),
     ipAddress: request.ipAddress,
     userAgent: request.userAgent,
+    invalidateSession: (sessionId) =>
+      serverRuntime.auth.sessionService.invalidateSession(sessionId),
   });
   if (isErr(result)) {
     mapOnboardingError(result.error);
@@ -74,6 +74,8 @@ export async function completePasskeyOnboarding(
       ipAddress: request.ipAddress,
       userAgent: request.userAgent,
       createWebauthnProvider: createRequestPasskeyProviderFactory(),
+      invalidateSession: (sessionId) =>
+        serverRuntime.auth.sessionService.invalidateSession(sessionId),
     },
   );
   if (isErr(registrationResult)) {
@@ -88,6 +90,8 @@ export async function completePasskeyOnboarding(
     phoneE164: normalizePeruvianPhone(phoneE164),
     ipAddress: request.ipAddress,
     userAgent: request.userAgent,
+    invalidateSession: (sessionId) =>
+      serverRuntime.auth.sessionService.invalidateSession(sessionId),
   });
   if (isErr(result)) {
     mapOnboardingError(result.error);

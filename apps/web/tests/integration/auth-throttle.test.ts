@@ -5,8 +5,8 @@ import {
   AUTH_THROTTLE_POLICY,
   type AuthThrottleEndpoint,
 } from "../../src/lib/auth/password/throttle-policy";
+import { createAuthThrottleService } from "../../src/server/auth/application/throttle-service";
 import type { AuthThrottleScope } from "../../src/server/auth/repos-auth-throttle";
-import { createAuthThrottleService } from "../../src/server/features/auth/application/throttle-service";
 import {
   cleanupTestDb,
   createIsolatedTestDb,

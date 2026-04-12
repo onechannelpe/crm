@@ -3,13 +3,14 @@
 import type { AuthenticationResponseJSON } from "@simplewebauthn/server";
 
 import { internalError } from "~/lib/app-errors";
+import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
-import type { FinishPasskeyLoginError } from "~/lib/auth/passkey/service";
+import { replaceCurrentSession } from "~/lib/auth/session/session-transition";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { getActionRequestContext } from "~/lib/observability/context";
+import { finishPasskeyLogin as finishPasskeyLoginService } from "~/server/auth/application/commands/finish-passkey-login";
 import { createRequestPasskeyProviderFactory } from "~/server/auth/infrastructure/request-passkey-provider";
-import { finishPasskeyLogin as finishPasskeyLoginService } from "~/server/features/auth/application/login/passkey";
-import { replaceCurrentSessionAndResolveRedirect } from "~/server/features/auth/application/login/session-redirect";
+import type { FinishPasskeyLoginError } from "~/server/auth/passkey/service";
 import { serverRuntime } from "~/server/runtime";
 import { isErr } from "~/server/shared/result";
 
@@ -83,12 +84,13 @@ export async function finishPasskeyLogin(
     },
     getActionRequestContext(),
   );
+  await replaceCurrentSession(result.value.token, (sessionId) =>
+    serverRuntime.auth.sessionService.invalidateSession(sessionId),
+  );
   return {
     ok: true,
-    redirectTo: await replaceCurrentSessionAndResolveRedirect({
-      token: result.value.token,
-      onboardingCompleted: result.value.onboardingCompleted,
-      role: result.value.role,
-    }),
+    redirectTo: result.value.onboardingCompleted
+      ? getDefaultAppPath(result.value.role)
+      : "/onboarding",
   };
 }

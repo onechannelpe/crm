@@ -1,38 +1,20 @@
 "use server";
 
-import { internalError, validationError } from "~/lib/app-errors";
 import { requirePermission } from "~/lib/auth/access/session";
 import { serverRuntime } from "~/server/runtime";
-import { isErr } from "~/server/shared/result";
-
-function assertDocumentType(value: string): "dni" | "ruc" {
-  if (value === "dni" || value === "ruc") return value;
-  throw validationError("Invalid enrichment document type");
-}
-
-function mapEnrichmentError(error: {
-  reason: "invalid_document" | "unexpected";
-  message: string;
-}): never {
-  if (error.reason === "invalid_document") {
-    throw validationError(error.message);
-  }
-  throw internalError(error.message);
-}
 
 export async function requestSearchEnrichment(
   documentType: string,
   documentValue: string,
 ) {
   const session = await requirePermission("search:use");
-  const { searchEnrichmentService } = serverRuntime.clientSearch;
-  const result = await searchEnrichmentService.request(
-    assertDocumentType(documentType),
+  const { enrichmentCommand } = serverRuntime.clientSearch;
+
+  return enrichmentCommand.enqueueRequest(
+    documentType,
     documentValue,
     session.userId,
   );
-  if (isErr(result)) mapEnrichmentError(result.error);
-  return result.value;
 }
 
 export async function getSearchEnrichmentStatus(
@@ -40,11 +22,7 @@ export async function getSearchEnrichmentStatus(
   documentValue: string,
 ) {
   await requirePermission("search:use");
-  const { searchEnrichmentService } = serverRuntime.clientSearch;
-  const result = await searchEnrichmentService.status(
-    assertDocumentType(documentType),
-    documentValue,
-  );
-  if (isErr(result)) mapEnrichmentError(result.error);
-  return result.value;
+
+  const { enrichmentQuery } = serverRuntime.clientSearch;
+  return enrichmentQuery.getStatus(documentType, documentValue);
 }

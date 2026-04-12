@@ -6,6 +6,7 @@ import type {
 
 import type { LeadBlockingField } from "../../../domain/lead-progress";
 import type { LeadAvailableAction } from "../../contracts/lead-available-action";
+import type { SunatSourceStatus } from "../../ports/source-status-repository";
 
 export type LeadTimelineItem = {
   id: string;
@@ -21,6 +22,8 @@ export type LeadDetailLeadView = {
   ruc: string;
   razonSocial: string | null;
   address: string | null;
+  district: string | null;
+  department: string | null;
   executiveId: number;
   stage: LeadStage;
   status: LeadStatus | null;
@@ -79,9 +82,14 @@ export type LeadDetailSourceStatusView = {
     fields: Array<"razonSocial" | "address">;
   };
   sunat: {
-    status: "idle" | "queued" | "running" | "completed" | "failed" | "stale";
+    status: SunatSourceStatus;
     fetchedAt: number | null;
     legalName: string | null;
+    address: string | null;
+    district: string | null;
+    department: string | null;
+    contributorStatus: string | null;
+    contributorCondition: string | null;
     payloadAvailable: boolean;
   };
 };
