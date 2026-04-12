@@ -97,17 +97,6 @@ export function RecordIndexViewBar() {
           </DataGridToolbarMenu>
         )}
       </Show>
-      <For each={setup.toolbarActions ?? []}>
-        {(action) => (
-          <button
-            type="button"
-            class={sharedStyles.toolbarButton}
-            onClick={action.onClick}
-          >
-            {action.label}
-          </button>
-        )}
-      </For>
       <DataGridToolbarMenu
         active={model.columns.hasHiddenColumns()}
         label="Opciones"
@@ -150,6 +139,23 @@ export function RecordIndexViewBar() {
             </button>
           )}
         </For>
+        <Show when={setup.exportAction}>
+          {(exportAction) => (
+            <>
+              <div class={sharedStyles.menuSectionLabel}>Acciones</div>
+              <button
+                type="button"
+                class={sharedStyles.menuItem}
+                onClick={() => {
+                  model.columns.setOpenMenu(null);
+                  void exportAction()();
+                }}
+              >
+                Exportar
+              </button>
+            </>
+          )}
+        </Show>
       </DataGridToolbarMenu>
     </>
   );

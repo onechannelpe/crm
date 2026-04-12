@@ -1,5 +1,5 @@
 import { A } from "@solidjs/router";
-import { Show } from "solid-js";
+import { For, Show } from "solid-js";
 import { createSignal } from "solid-js";
 
 import { requestSaleApproval } from "~/actions/pipeline/commands/quotations";
@@ -38,36 +38,29 @@ export function LeadActionsSection(props: {
     <section class={styles.section}>
       <div class={styles.sectionTitle}>Acciones</div>
       <div class={styles.actions}>
-        {actions().map((action) => (
-          <Show
-            when={action.id !== "approve-for-sale"}
-            fallback={
-              <button
-                class={styles.primaryAction}
-                disabled={submitting()}
-                onClick={() => void handleApproveForSale()}
-                type="button"
-              >
-                {submitting() ? "Aprobando..." : action.label}
-              </button>
-            }
-          >
+        <For each={actions()}>
+          {(action) => (
             <Show
-              when={action.href}
+              when={action.kind === "link" && action}
               fallback={
-                <button class={styles.primaryAction} type="button" disabled>
-                  {action.label}
+                <button
+                  class={styles.primaryAction}
+                  disabled={submitting()}
+                  onClick={() => void handleApproveForSale()}
+                  type="button"
+                >
+                  {submitting() ? "Aprobando..." : action.label}
                 </button>
               }
             >
-              {(href) => (
-                <A class={styles.primaryAction} href={href()}>
-                  {action.label}
+              {(linkAction) => (
+                <A class={styles.primaryAction} href={linkAction().href}>
+                  {linkAction().label}
                 </A>
               )}
             </Show>
-          </Show>
-        ))}
+          )}
+        </For>
       </div>
       <Show when={error()}>
         {(message) => <p class={styles.errorText}>{message()}</p>}

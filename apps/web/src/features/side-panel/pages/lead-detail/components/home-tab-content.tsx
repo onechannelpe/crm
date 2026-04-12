@@ -118,7 +118,7 @@ export function HomeTabContent(props: HomeTabContentProps) {
           <For each={actions()}>
             {(action) => (
               <Show
-                when={action.id !== "approve-for-sale"}
+                when={action.kind === "link" && action}
                 fallback={
                   <button
                     type="button"
@@ -133,26 +133,12 @@ export function HomeTabContent(props: HomeTabContentProps) {
                   </button>
                 }
               >
-                <Show
-                  when={action.href}
-                  fallback={
-                    <button
-                      type="button"
-                      class={styles.actionRowButton}
-                      disabled
-                    >
-                      <span>{action.label}</span>
-                      <ChevronRight size={14} />
-                    </button>
-                  }
-                >
-                  {(href) => (
-                    <A class={styles.actionRowLink} href={href()}>
-                      <span>{action.label}</span>
-                      <ChevronRight size={14} />
-                    </A>
-                  )}
-                </Show>
+                {(linkAction) => (
+                  <A class={styles.actionRowLink} href={linkAction().href}>
+                    <span>{linkAction().label}</span>
+                    <ChevronRight size={14} />
+                  </A>
+                )}
               </Show>
             )}
           </For>

@@ -5,16 +5,20 @@ export function createRecordIndexSetup<
   TFilterValue extends string = string,
   TSortValue extends string = string,
 >(adapter: RecordIndexAdapter<T, TFilterValue, TSortValue>): RecordIndexSetup {
+  const rawTitle = adapter.title;
+  const title = typeof rawTitle === "function" ? rawTitle : () => rawTitle;
+
   return {
     id: adapter.id,
-    title: adapter.title,
+    title,
     ariaLabel: adapter.ariaLabel,
     class: adapter.class,
     pickerIcon: adapter.pickerIcon,
     selectable: adapter.selectable ?? false,
     emptyState: adapter.emptyState,
     createAction: adapter.createAction,
-    toolbarActions: adapter.toolbarActions,
+    views: adapter.views,
+    exportAction: adapter.exportAction,
     columns: adapter.columns.map((column) => ({
       key: column.key,
       label: column.label,

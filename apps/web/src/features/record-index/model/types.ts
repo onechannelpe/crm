@@ -20,10 +20,15 @@ export type RecordIndexCreateAction = {
   onClick: () => void;
 };
 
-export type RecordIndexToolbarAction = {
-  id: string;
-  label: string;
-  onClick: () => void;
+export type RecordIndexViewDefinition = {
+  readonly id: string;
+  readonly label: string;
+};
+
+export type RecordIndexViews = {
+  readonly available: ReadonlyArray<RecordIndexViewDefinition>;
+  readonly active: Accessor<RecordIndexViewDefinition>;
+  readonly onSelect: (id: string) => void;
 };
 
 export type RecordIndexSource<T> = DataGridSource<T> & {
@@ -41,7 +46,7 @@ export type RecordIndexOption<TValue extends string = string> = {
   value: TValue;
 };
 
-export type RecordIndexMenu = "filter" | "sort" | "options" | null;
+export type RecordIndexMenu = "filter" | "sort" | "options" | "views" | null;
 
 export type RecordIndexAdapter<
   T extends { id: number },
@@ -49,7 +54,7 @@ export type RecordIndexAdapter<
   TSortValue extends string = string,
 > = {
   id: string;
-  title: string;
+  title: string | Accessor<string>;
   ariaLabel: string;
   class?: string;
   pickerIcon?: DataGridIcon;
@@ -60,14 +65,15 @@ export type RecordIndexAdapter<
   rowOpen: DataGridRowOpen<T>;
   emptyState: RecordIndexEmptyState;
   createAction?: RecordIndexCreateAction;
-  toolbarActions?: ReadonlyArray<RecordIndexToolbarAction>;
+  views?: RecordIndexViews;
+  exportAction?: () => Promise<void>;
   filter?: RecordIndexFilterDefinition<T, TFilterValue>;
   sort?: RecordIndexSortDefinition<T, TSortValue>;
 };
 
 export type RecordIndexSetup = {
   id: string;
-  title: string;
+  title: Accessor<string>;
   ariaLabel: string;
   class?: string;
   pickerIcon?: DataGridIcon;
@@ -78,7 +84,8 @@ export type RecordIndexSetup = {
   }>;
   emptyState: RecordIndexEmptyState;
   createAction?: RecordIndexCreateAction;
-  toolbarActions?: ReadonlyArray<RecordIndexToolbarAction>;
+  views?: RecordIndexViews;
+  exportAction?: () => Promise<void>;
   filter?: {
     label: string;
     menuId: string;

@@ -4,6 +4,8 @@ import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import House from "~/components/icons/house";
 import Info from "~/components/icons/info";
 import Package from "~/components/icons/package";
+import Target from "~/components/icons/target";
+import TimelineEvent from "~/components/icons/timeline-event";
 import User from "~/components/icons/user";
 import { Badge } from "~/components/ui/display/badge";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
@@ -11,14 +13,14 @@ import type { Role } from "~/lib/auth/access/rbac";
 import { formatDate } from "~/lib/utils";
 import type { LeadListRowView } from "~/server/pipeline/application/queries/views/lead-list";
 
-import styles from "../record-index/leads/styles.module.css";
+import styles from "./styles.module.css";
 
 const COMMON_COLUMNS: ReadonlyArray<DataGridColumn<LeadListRowView>> = [
   {
     key: "ruc",
     label: "RUC",
     icon: CircleQuestionMark,
-    width: 180,
+    width: 196,
     sticky: true,
     renderCell: (lead) => <span class={styles.identifierText}>{lead.ruc}</span>,
   },
@@ -41,18 +43,35 @@ const COMMON_COLUMNS: ReadonlyArray<DataGridColumn<LeadListRowView>> = [
     key: "address",
     label: "Dirección",
     icon: House,
-    minWidth: 200,
-    maxWidth: 280,
+    minWidth: 220,
+    maxWidth: 300,
     renderCell: (lead) => (
-      <span class={styles.mutedCellText}>{lead.address || "Sin datos"}</span>
+      <div class={styles.fieldWithIcon}>
+        <span class={styles.fieldIcon}>
+          <House size={14} />
+        </span>
+        <span class={styles.mutedCellText}>{lead.address || "Sin datos"}</span>
+      </div>
     ),
   },
   {
     key: "stage",
     label: "Etapa",
-    icon: Package,
+    icon: Target,
     width: 172,
-    renderCell: (lead) => <Badge variant="secondary">{lead.stage}</Badge>,
+    renderCell: (lead) => (
+      <Badge
+        variant={
+          lead.stage === "READY_FOR_SALE"
+            ? "success"
+            : lead.stage === "NEEDS_EXECUTIVE_INPUT"
+              ? "warning"
+              : "secondary"
+        }
+      >
+        {lead.stage}
+      </Badge>
+    ),
   },
   {
     key: "status",
@@ -71,10 +90,19 @@ const COMMON_COLUMNS: ReadonlyArray<DataGridColumn<LeadListRowView>> = [
     ),
   },
   {
+    key: "nextStep",
+    label: "Siguiente paso",
+    icon: TimelineEvent,
+    minWidth: 220,
+    renderCell: (lead) => (
+      <span class={styles.mutedCellText}>{lead.nextStep}</span>
+    ),
+  },
+  {
     key: "updatedAt",
     label: "Actualizado",
     icon: CalendarDays,
-    width: 138,
+    width: 140,
     renderCell: (lead) => (
       <span class={styles.mutedCellText}>{formatDate(lead.updatedAt)}</span>
     ),

@@ -1,160 +1,105 @@
-import { createAsync, useAction, useSearchParams } from "@solidjs/router";
-import { createSignal } from "solid-js";
+import { createAsync, useAction } from "@solidjs/router";
+import { createMemo, createSignal } from "solid-js";
 
+import Building2 from "~/components/icons/building-2";
 import List from "~/components/icons/list";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
+import { mergeLeadRows } from "~/features/pipeline/data/merge-lead-rows";
+import { getOptimisticLeadRows } from "~/features/pipeline/data/optimistic-leads";
 import { leadListQuery } from "~/features/pipeline/data/queries";
 import { RecordIndexScreen } from "~/features/record-index/components/screen";
 import type {
   RecordIndexAdapter,
   RecordIndexSource,
-  RecordIndexToolbarAction,
 } from "~/features/record-index/model/types";
-import { toAppError } from "~/lib/app-errors";
 import { hasPermission } from "~/lib/auth/access/rbac";
 import { queueLeadExportMutation } from "~/lib/mutations/integrations";
 import type { LeadListRowView } from "~/server/pipeline/application/queries/views/lead-list";
 
-import { useCreateLeadRecordAction } from "../record-index/leads/create-action";
-import { useOpenLeadRecord } from "../record-index/leads/open-row";
 import { workspaceColumnsForRole } from "./columns";
-import {
-  defaultWorkspaceView,
-  parseWorkspaceView,
-  resolveWorkspaceFilters,
-} from "./model/filters";
-import type { LeadWorkspaceViewId } from "./model/types";
+import { useCreateLeadRecordAction } from "./create-action";
+import { LEAD_WORKSPACE_FILTER, type LeadStageFilterValue } from "./filter";
+import { useOpenLeadRecord } from "./open-row";
+import { LEAD_WORKSPACE_SORT, type LeadSortKey } from "./sort";
+import { viewsForRole } from "./views";
 
-import styles from "../record-index/leads/styles.module.css";
-
-function titleForView(view: LeadWorkspaceViewId): string {
-  switch (view) {
-    case "review":
-      return "Prospectos en revisión";
-    case "quotation":
-      return "Prospectos para cotización";
-    case "all":
-      return "Todos los prospectos";
-    case "mine":
-    default:
-      return "Mis prospectos";
-  }
-}
+import styles from "./styles.module.css";
 
 export function LeadsWorkspace() {
-  const [searchParams, setSearchParams] = useSearchParams();
   const { currentUser } = useAuthenticatedSession();
-  const queueExport = useAction(queueLeadExportMutation);
-  const [error, setError] = createSignal<string | null>(null);
-  const [queuing, setQueuing] = createSignal(false);
-  const createAction = useCreateLeadRecordAction();
-  const { rowOpen } = useOpenLeadRecord();
+  // Role is stable for the session lifetime — snapshot once.
+  const user = currentUser();
 
-  const activeView = (): LeadWorkspaceViewId =>
-    parseWorkspaceView(
-      typeof searchParams.view === "string" ? searchParams.view : undefined,
-    ) ?? defaultWorkspaceView(currentUser().role);
+  const available = viewsForRole(user.role);
+  const [activeId, setActiveId] = createSignal(available[0].id);
 
-  const queryFilters = () =>
-    resolveWorkspaceFilters({
-      view: activeView(),
-      actorUserId: currentUser().id,
-    });
+  const activeView = createMemo(
+    () => available.find((v) => v.id === activeId()) ?? available[0],
+  );
 
-  const leads = createAsync(() => leadListQuery(queryFilters()));
-
-  async function handleExport() {
-    setError(null);
-    setQueuing(true);
-    try {
-      await queueExport();
-    } catch (err) {
-      setError(toAppError(err, "Error al encolar exportacion").publicMessage);
-    } finally {
-      setQueuing(false);
-    }
-  }
+  const leads = createAsync(() => leadListQuery(activeView().filters(user.id)));
 
   const source = (): RecordIndexSource<LeadListRowView> => {
     const data = leads();
-    const message = error();
+    const serverRows = data?.rows ?? [];
+    const rows = mergeLeadRows(
+      serverRows,
+      getOptimisticLeadRows(activeView().id),
+    );
 
-    if (!data) {
+    if (data === undefined && rows.length === 0) {
       return { status: "pending", rows: [] };
     }
 
     return {
       status: "ready",
-      rows: data.rows,
-      totalCount: data.totalCount,
-      error: message ? new Error(message) : undefined,
+      rows,
+      totalCount: data?.totalCount ?? rows.length,
     };
   };
 
-  const toolbarActions = (): ReadonlyArray<RecordIndexToolbarAction> => {
-    const role = currentUser().role;
-    const actions: RecordIndexToolbarAction[] = [];
+  const { rowOpen } = useOpenLeadRecord();
+  const createAction = useCreateLeadRecordAction();
 
-    if (role !== "executive") {
-      actions.push({
-        id: "view-review",
-        label: "Revisión",
-        onClick: () => setSearchParams({ view: "review" }),
-      });
-    }
-    actions.push({
-      id: "view-mine",
-      label: "Mis prospectos",
-      onClick: () => setSearchParams({ view: "mine" }),
-    });
-    if (hasPermission(role, "lead:view:all")) {
-      actions.push({
-        id: "view-all",
-        label: "Todos",
-        onClick: () => setSearchParams({ view: "all" }),
-      });
-    }
-    if (hasPermission(role, "quotation:manage")) {
-      actions.push({
-        id: "view-quotation",
-        label: "Cotización",
-        onClick: () => setSearchParams({ view: "quotation" }),
-      });
-    }
-    if (hasPermission(role, "integration:manage")) {
-      actions.push({
-        id: "export",
-        label: queuing() ? "Exportando..." : "Exportar",
-        onClick: () => {
-          void handleExport();
-        },
-      });
-    }
+  const queueExport = useAction(queueLeadExportMutation);
 
-    return actions;
-  };
-
-  const role = () => currentUser().role;
+  async function handleExport() {
+    await queueExport();
+  }
 
   const adapter = {
     id: "leads-workspace",
-    title: titleForView(activeView()),
+    title: () => activeView().label,
     ariaLabel: "Prospectos",
     class: `${styles.page} record-index-container-gate-for-drag-select`,
     pickerIcon: List,
-    columns: workspaceColumnsForRole(role()),
+    columns: workspaceColumnsForRole(user.role),
     source,
     selectable: true,
     rowOpen,
     emptyState: {
+      icon: Building2,
       title: "No hay prospectos",
       description: "No existen resultados para esta vista.",
     },
-    createAction: hasPermission(role(), "lead:register")
+    createAction: hasPermission(user.role, "lead:register")
       ? createAction
       : undefined,
-    toolbarActions: toolbarActions(),
-  } satisfies RecordIndexAdapter<LeadListRowView>;
+    views: {
+      available,
+      active: activeView,
+      onSelect: setActiveId,
+    },
+    exportAction: hasPermission(user.role, "integration:manage")
+      ? handleExport
+      : undefined,
+    filter: LEAD_WORKSPACE_FILTER,
+    sort: LEAD_WORKSPACE_SORT,
+  } satisfies RecordIndexAdapter<
+    LeadListRowView,
+    LeadStageFilterValue,
+    LeadSortKey
+  >;
 
   return <RecordIndexScreen adapter={adapter} />;
 }
