@@ -1,3 +1,5 @@
+import type { EnrichmentError } from "../../model";
+
 export interface SunatDniData {
   dni: string;
   nombres: string | null;
@@ -9,10 +11,23 @@ export interface SunatDniData {
 export interface SunatRucData {
   ruc: string;
   razonSocial: string | null;
+  address: string | null;
+  district: string | null;
+  department: string | null;
+  contributorStatus: string | null;
+  contributorCondition: string | null;
   payload: unknown;
 }
 
+export type DniApiResult =
+  | { ok: true; data: SunatDniData }
+  | { ok: false; error: EnrichmentError };
+
+export type RucApiResult =
+  | { ok: true; data: SunatRucData }
+  | { ok: false; error: EnrichmentError };
+
 export interface SunatScraperClient {
-  fetchDni(dni: string): Promise<SunatDniData | null>;
-  fetchRuc(ruc: string): Promise<SunatRucData | null>;
+  fetchDni(dni: string, signal: AbortSignal): Promise<DniApiResult>;
+  fetchRuc(ruc: string, signal: AbortSignal): Promise<RucApiResult>;
 }

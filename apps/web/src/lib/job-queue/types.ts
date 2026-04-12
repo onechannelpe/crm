@@ -12,6 +12,14 @@ export interface JobQueueConfig<TJob extends QueueJobBase, TResult> {
   batchSize?: number;
   poll(limit: number): Promise<TJob[]>;
   handle(job: TJob, signal: AbortSignal): Promise<TResult>;
+  onResult?: (
+    job: TJob,
+    result: TResult,
+  ) => Promise<
+    | { kind: "complete" }
+    | { kind: "retry"; availableAt: number }
+    | { kind: "fail"; reason: string }
+  >;
   extendLease(jobId: number): Promise<boolean>;
   onComplete(jobId: number, result: TResult): Promise<void>;
   onRetry(jobId: number, availableAt: number): Promise<void>;
