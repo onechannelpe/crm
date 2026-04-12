@@ -1,6 +1,5 @@
 import { A } from "@solidjs/router";
-import { For, Show } from "solid-js";
-import { createSignal } from "solid-js";
+import { For, Show, createSignal } from "solid-js";
 
 import { requestSaleApproval } from "~/actions/pipeline/commands/quotations";
 import { toAppError } from "~/lib/app-errors";
@@ -43,14 +42,16 @@ export function LeadActionsSection(props: {
             <Show
               when={action.kind === "link" && action}
               fallback={
-                <button
-                  class={styles.primaryAction}
-                  disabled={submitting()}
-                  onClick={() => void handleApproveForSale()}
-                  type="button"
-                >
-                  {submitting() ? "Aprobando..." : action.label}
-                </button>
+                <Show when={action.id === "approve-for-sale"}>
+                  <button
+                    class={styles.primaryAction}
+                    disabled={submitting()}
+                    onClick={() => void handleApproveForSale()}
+                    type="button"
+                  >
+                    {submitting() ? "Aprobando..." : action.label}
+                  </button>
+                </Show>
               }
             >
               {(linkAction) => (

@@ -1,5 +1,3 @@
-import { Show } from "solid-js";
-
 import List from "~/components/icons/list";
 import { DataGridToolbar } from "~/features/data-grid/components/toolbar";
 
@@ -18,9 +16,7 @@ export function RecordIndexHeader() {
         model.columns.setOpenMenu((current) =>
           current === "views" ? null : "views",
         )
-    : setup.pickerIcon
-      ? () => {}
-      : undefined;
+    : undefined;
 
   return (
     <DataGridToolbar
@@ -30,11 +26,7 @@ export function RecordIndexHeader() {
         meta: model.counts.pickerMeta(),
         onClick: pickerOnClick,
       }}
-      pickerDropdown={
-        <Show when={setup.views}>
-          <RecordIndexViewPicker />
-        </Show>
-      }
+      pickerDropdown={setup.views ? <RecordIndexViewPicker /> : undefined}
       rightContent={<RecordIndexViewBar />}
     />
   );
