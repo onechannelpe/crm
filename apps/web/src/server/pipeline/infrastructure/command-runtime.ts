@@ -1,3 +1,5 @@
+import { createSearchEnrichmentRepo } from "~/server/client-search/repository";
+import { createEnrichmentCommand } from "~/server/client-search/request";
 import {
   createPipelineFeatureDeps,
   type PipelineDeps,
@@ -15,7 +17,6 @@ import {
   createPipelineAuditService,
 } from "./audit-log";
 import { createEngineGateway } from "./engine-gateway";
-import { createLeadEnrichmentQueue } from "./enrichment-queue";
 import { createPipelineNotificationCenter } from "./notifications";
 
 export type PipelineCommandRuntime = {
@@ -35,11 +36,18 @@ function createPipelineAuditServiceRuntime(executor: DatabaseExecutor) {
 function createPipelineCommandRuntime(
   executor: DatabaseExecutor,
 ): PipelineCommandRuntime {
+  const enrichmentRepo = createSearchEnrichmentRepo(executor);
+  const enrichmentCommand = createEnrichmentCommand(enrichmentRepo);
+
   return {
     deps: createPipelineFeatureDeps(executor),
     auditService: createPipelineAuditServiceRuntime(executor),
     engineGateway: createEngineGateway(),
-    leadEnrichmentQueue: createLeadEnrichmentQueue(executor),
+    leadEnrichmentQueue: {
+      async enqueueRucVerification(ruc, requestedByUserId) {
+        await enrichmentCommand.enqueueRequest("ruc", ruc, requestedByUserId);
+      },
+    },
     notificationCenter: createPipelineNotificationCenter(executor),
   };
 }

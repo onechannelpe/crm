@@ -2,52 +2,89 @@ import { parseJsonOrTextPayload } from "./utils";
 
 const REQUEST_TIMEOUT_MS = 6000;
 
+class HttpStatusError extends Error {
+  status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
 async function fetchResponseWithTimeout(
   url: string,
+  signal: AbortSignal,
   init?: RequestInit,
 ): Promise<Response> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const onAbort = () => controller.abort();
+  signal.addEventListener("abort", onAbort, { once: true });
+
   try {
-    return await fetch(url, { ...init, signal: controller.signal });
+    const response = await fetch(url, {
+      ...init,
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      throw new HttpStatusError(response.status, `HTTP ${response.status}`);
+    }
+
+    return response;
   } finally {
     clearTimeout(timeoutId);
+    signal.removeEventListener("abort", onAbort);
   }
 }
 
 async function fetchTextWithTimeout(
   url: string,
+  signal: AbortSignal,
   init?: RequestInit,
 ): Promise<string> {
-  const response = await fetchResponseWithTimeout(url, init);
+  const response = await fetchResponseWithTimeout(url, signal, init);
   return await response.text();
 }
 
 async function fetchJsonWithTimeout(
   url: string,
+  signal: AbortSignal,
   init?: RequestInit,
 ): Promise<unknown> {
-  const response = await fetchResponseWithTimeout(url, init);
+  const response = await fetchResponseWithTimeout(url, signal, init);
   return (await response.json().catch(() => null)) as unknown;
 }
 
-export async function fetchDniFromItfisdenreg(dni: string): Promise<unknown> {
+export async function fetchDniFromItfisdenreg(
+  dni: string,
+  signal: AbortSignal,
+): Promise<unknown> {
   const payloadText = await fetchTextWithTimeout(
     `https://ww1.sunat.gob.pe/ol-ti-itfisdenreg/itfisdenreg.htm?accion=obtenerDatosDni&numDocumento=${encodeURIComponent(dni)}`,
+    signal,
   );
   return parseJsonOrTextPayload(payloadText);
 }
 
-export async function fetchRucFromItfisdenreg(ruc: string): Promise<unknown> {
+export async function fetchRucFromItfisdenreg(
+  ruc: string,
+  signal: AbortSignal,
+): Promise<unknown> {
   const payloadText = await fetchTextWithTimeout(
     `https://ww1.sunat.gob.pe/ol-ti-itfisdenreg/itfisdenreg.htm?accion=obtenerDatosRuc&nroRuc=${encodeURIComponent(ruc)}`,
+    signal,
   );
   return parseJsonOrTextPayload(payloadText);
 }
 
-export async function fetchDniFromAtencion(dni: string): Promise<unknown> {
+export async function fetchDniFromAtencion(
+  dni: string,
+  signal: AbortSignal,
+): Promise<unknown> {
   return fetchJsonWithTimeout(
     "https://ww1.sunat.gob.pe/ol-ti-itatencionf5030/registro/solicitante",
+    signal,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -61,21 +98,28 @@ export async function fetchDniFromAtencion(dni: string): Promise<unknown> {
   );
 }
 
-export async function fetchRucFromConsultaRuc(ruc: string): Promise<unknown> {
+export async function fetchRucFromConsultaRuc(
+  ruc: string,
+  signal: AbortSignal,
+): Promise<unknown> {
   const url =
     "https://e-consultaruc.sunat.gob.pe/cl-ti-itmrconsruc/jcrS00Alias";
 
-  const sessionResponse = await fetchResponseWithTimeout(url);
+  const sessionResponse = await fetchResponseWithTimeout(url, signal);
   const sessionResponseText = await sessionResponse.text();
-  if (sessionResponseText.length < 1) return null;
+  if (sessionResponseText.length < 1) {
+    return null;
+  }
 
   const cookies = sessionResponse.headers
     .getSetCookie()
     .map((cookie) => cookie.split(";")[0])
     .join("; ");
-  if (cookies.length < 1) return null;
+  if (cookies.length < 1) {
+    return null;
+  }
 
-  const tokenHtml = await fetchTextWithTimeout(url, {
+  const tokenHtml = await fetchTextWithTimeout(url, signal, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
@@ -90,9 +134,11 @@ export async function fetchRucFromConsultaRuc(ruc: string): Promise<unknown> {
   const numRnd = tokenHtml.match(
     /<input type="hidden" name="numRnd" value="([^"]+)"/,
   )?.[1];
-  if (!numRnd) return null;
+  if (!numRnd) {
+    return null;
+  }
 
-  return await fetchTextWithTimeout(url, {
+  return await fetchTextWithTimeout(url, signal, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
@@ -106,4 +152,8 @@ export async function fetchRucFromConsultaRuc(ruc: string): Promise<unknown> {
       modo: "1",
     }),
   });
+}
+
+export function isHttpStatusError(error: unknown): error is HttpStatusError {
+  return error instanceof HttpStatusError;
 }
