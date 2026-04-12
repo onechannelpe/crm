@@ -50,18 +50,16 @@ function toPipelineSunatStatus(input: {
 }
 
 function toPipelineOverlay(
-  overlay:
-    | {
-        fetchedAt: number;
-        legalName: string | null;
-        address: string | null;
-        district: string | null;
-        department: string | null;
-        contributorStatus: string | null;
-        contributorCondition: string | null;
-        payloadJson: string;
-      }
-    | null,
+  overlay: {
+    fetchedAt: number;
+    legalName: string | null;
+    address: string | null;
+    district: string | null;
+    department: string | null;
+    contributorStatus: string | null;
+    contributorCondition: string | null;
+    payloadJson: string;
+  } | null,
 ) {
   if (!overlay) {
     return {
