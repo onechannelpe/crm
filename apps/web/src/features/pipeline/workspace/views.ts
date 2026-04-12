@@ -10,7 +10,7 @@ export type WorkspaceView = {
   readonly permission?: Permission;
 };
 
-export const WORKSPACE_VIEWS = [
+export const WORKSPACE_VIEWS: ReadonlyArray<WorkspaceView> = [
   {
     id: "mine",
     label: "Mis prospectos",
@@ -20,21 +20,21 @@ export const WORKSPACE_VIEWS = [
     id: "review",
     label: "Revisión",
     filters: (): LeadListFilters => ({ stage: "PENDING_EXTERNAL_REVIEW" }),
-    permission: "lead:review" as const,
+    permission: "lead:review",
   },
   {
     id: "quotation",
     label: "Cotización",
     filters: (): LeadListFilters => ({ stage: "READY_FOR_QUOTATION" }),
-    permission: "quotation:manage" as const,
+    permission: "quotation:manage",
   },
   {
     id: "all",
     label: "Todos",
     filters: (): LeadListFilters => ({}),
-    permission: "lead:view:all" as const,
+    permission: "lead:view:all",
   },
-] as const satisfies ReadonlyArray<WorkspaceView>;
+];
 
 export function viewsForRole(role: string): WorkspaceView[] {
   return WORKSPACE_VIEWS.filter(
