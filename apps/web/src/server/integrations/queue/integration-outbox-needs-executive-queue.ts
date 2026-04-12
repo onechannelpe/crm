@@ -43,7 +43,7 @@ export function createNeedsExecutiveOutboxQueue(
           priority: "high",
           title: "Accion requerida",
           body_text: `El prospecto RUC ${job.ruc} requiere tu informacion comercial`,
-          action_url: `/leads/${job.lead_id}/complete`,
+          action_url: "/leads?view=mine",
           dedupe_key: `lead_nei_${job.lead_id}`,
           metadata_json: null,
           created_at: Date.now(),

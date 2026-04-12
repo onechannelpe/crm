@@ -10,7 +10,7 @@ export async function notifyExecutiveInputRequired(input: {
     type: "lead.needs_executive_input",
     title: "Accion requerida",
     bodyText: `El prospecto RUC ${input.ruc} requiere tu informacion comercial`,
-    actionUrl: `/leads/${input.leadId}/complete`,
+    actionUrl: "/leads?view=mine",
     priority: "high",
     dedupeKey: `lead_nei_${input.leadId}`,
   });

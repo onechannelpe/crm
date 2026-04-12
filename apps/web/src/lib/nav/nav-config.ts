@@ -8,7 +8,6 @@ export type RouteIcon =
   | "dashboard"
   | "new-sale"
   | "confirmed"
-  | "review"
   | "audit"
   | "capacity"
   | "profile"
@@ -53,18 +52,6 @@ export interface PageHeaderRule {
 export const PAGE_HEADERS: PageHeaderRule[] = [
   // Dynamic patterns first
   {
-    match: /^\/leads\/[^/]+\/complete$/,
-    header: { label: "Completar prospecto", icon: "leads" },
-  },
-  {
-    match: /^\/leads\/[^/]+$/,
-    header: { label: "Detalle del prospecto", icon: "leads" },
-  },
-  {
-    match: /^\/review\/[^/]+$/,
-    header: { label: "Revisar prospecto", icon: "review" },
-  },
-  {
     match: /^\/quotations\/[^/]+$/,
     header: { label: "Cotización", icon: "sales" },
   },
@@ -89,7 +76,6 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
   { match: "/dashboard", header: { label: "Inicio", icon: "dashboard" } },
   { match: "/schedule", header: { label: "Agenda", icon: "schedule" } },
   { match: "/leads", header: { label: "Prospectos", icon: "leads" } },
-  { match: "/review", header: { label: "Revisión", icon: "review" } },
   { match: "/quotations", header: { label: "Cotizaciones", icon: "sales" } },
   { match: "/sales/crm", header: { label: "Ventas CRM", icon: "sales" } },
   {
@@ -99,10 +85,6 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
   {
     match: "/integrations/imports",
     header: { label: "Importaciones", icon: "confirmed" },
-  },
-  {
-    match: "/integrations/exports",
-    header: { label: "Exportaciones", icon: "confirmed" },
   },
   {
     match: "/me/capacity",
@@ -184,17 +166,6 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
 
   // Secondary › Operaciones
   {
-    id: "review",
-    href: "/review",
-    activePrefixes: ["/review"],
-    label: "Revisión",
-    navLabel: "Revisión",
-    icon: "review",
-    section: "secondary",
-    order: 3,
-    group: "Operaciones",
-  },
-  {
     id: "quotations",
     href: "/quotations",
     activePrefixes: ["/quotations"],
@@ -202,7 +173,7 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     navLabel: "Cotizaciones",
     icon: "sales",
     section: "secondary",
-    order: 4,
+    order: 3,
     group: "Operaciones",
   },
   {
@@ -213,7 +184,7 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     navLabel: "Inventario",
     icon: "inventory",
     section: "secondary",
-    order: 5,
+    order: 4,
     group: "Operaciones",
   },
   {
@@ -224,7 +195,7 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     navLabel: "Equipo",
     icon: "team",
     section: "secondary",
-    order: 6,
+    order: 5,
     group: "Operaciones",
     children: [
       { href: "/team", label: "Miembros", order: 1 },
@@ -243,11 +214,10 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     navLabel: "Integraciones",
     icon: "confirmed",
     section: "secondary",
-    order: 7,
+    order: 6,
     group: "Administración",
     children: [
       { href: "/integrations/imports", label: "Importaciones", order: 1 },
-      { href: "/integrations/exports", label: "Exportaciones", order: 2 },
     ],
   },
   {
@@ -258,7 +228,7 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     navLabel: "Auditoría",
     icon: "audit",
     section: "secondary",
-    order: 8,
+    order: 7,
     group: "Administración",
     children: [
       { href: "/audit/log", label: "Registro", order: 1 },
@@ -273,7 +243,7 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     navLabel: "Monitoreo",
     icon: "monitoring",
     section: "secondary",
-    order: 9,
+    order: 8,
     group: "Administración",
   },
 ];

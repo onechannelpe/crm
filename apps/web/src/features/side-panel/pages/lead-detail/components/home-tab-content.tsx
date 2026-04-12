@@ -133,13 +133,26 @@ export function HomeTabContent(props: HomeTabContentProps) {
                   </button>
                 }
               >
-                <A
-                  class={styles.actionRowLink}
-                  href={action.href ?? `/leads/${props.data.lead.id}`}
+                <Show
+                  when={action.href}
+                  fallback={
+                    <button
+                      type="button"
+                      class={styles.actionRowButton}
+                      disabled
+                    >
+                      <span>{action.label}</span>
+                      <ChevronRight size={14} />
+                    </button>
+                  }
                 >
-                  <span>{action.label}</span>
-                  <ChevronRight size={14} />
-                </A>
+                  {(href) => (
+                    <A class={styles.actionRowLink} href={href()}>
+                      <span>{action.label}</span>
+                      <ChevronRight size={14} />
+                    </A>
+                  )}
+                </Show>
               </Show>
             )}
           </For>

@@ -51,14 +51,12 @@ export function mapLeadActionsToUi(
         items.push({
           id: action,
           label: "Revisar lead",
-          href: `/leads/${leadId}`,
         });
         break;
       case "complete-commercial-input":
         items.push({
           id: action,
           label: "Completar informacion comercial",
-          href: `/leads/${leadId}/complete`,
         });
         break;
       case "create-sale":

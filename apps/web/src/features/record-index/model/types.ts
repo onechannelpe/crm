@@ -20,6 +20,12 @@ export type RecordIndexCreateAction = {
   onClick: () => void;
 };
 
+export type RecordIndexToolbarAction = {
+  id: string;
+  label: string;
+  onClick: () => void;
+};
+
 export type RecordIndexSource<T> = DataGridSource<T> & {
   totalCount?: number;
 };
@@ -54,6 +60,7 @@ export type RecordIndexAdapter<
   rowOpen: DataGridRowOpen<T>;
   emptyState: RecordIndexEmptyState;
   createAction?: RecordIndexCreateAction;
+  toolbarActions?: ReadonlyArray<RecordIndexToolbarAction>;
   filter?: RecordIndexFilterDefinition<T, TFilterValue>;
   sort?: RecordIndexSortDefinition<T, TSortValue>;
 };
@@ -71,6 +78,7 @@ export type RecordIndexSetup = {
   }>;
   emptyState: RecordIndexEmptyState;
   createAction?: RecordIndexCreateAction;
+  toolbarActions?: ReadonlyArray<RecordIndexToolbarAction>;
   filter?: {
     label: string;
     menuId: string;

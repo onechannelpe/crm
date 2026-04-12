@@ -52,17 +52,22 @@ export function LeadActionsSection(props: {
               </button>
             }
           >
-            <A
-              class={styles.primaryAction}
-              href={action.href ?? `/leads/${props.leadId}`}
+            <Show
+              when={action.href}
+              fallback={
+                <button class={styles.primaryAction} type="button" disabled>
+                  {action.label}
+                </button>
+              }
             >
-              {action.label}
-            </A>
+              {(href) => (
+                <A class={styles.primaryAction} href={href()}>
+                  {action.label}
+                </A>
+              )}
+            </Show>
           </Show>
         ))}
-        <A class={styles.secondaryAction} href={`/leads/${props.leadId}`}>
-          Abrir detalle completo
-        </A>
       </div>
       <Show when={error()}>
         {(message) => <p class={styles.errorText}>{message()}</p>}

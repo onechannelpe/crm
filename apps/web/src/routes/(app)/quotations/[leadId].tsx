@@ -47,7 +47,7 @@ export default function LeadQuotationPage() {
     setError(null);
     try {
       await requestSaleApproval(Number(params.leadId));
-      navigate(`/review`);
+      navigate(`/leads?view=review`);
     } catch (err) {
       setError(toAppError(err, "Error").publicMessage);
     }
