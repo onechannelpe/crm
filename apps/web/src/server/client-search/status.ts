@@ -10,9 +10,6 @@ import type {
   EnrichmentOverlayRow,
 } from "./ports";
 
-/**
- * Pure read-side queries for enrichment status.
- */
 export interface EnrichmentQuery {
   getStatus(
     documentType: string,
@@ -83,9 +80,6 @@ function resolveLifecycle(
   return "failed";
 }
 
-/**
- * Convert row to overlay shape.
- */
 function rowToOverlay(row: EnrichmentOverlayRow): EnrichmentOverlay {
   return {
     documentType: row.document_type,
