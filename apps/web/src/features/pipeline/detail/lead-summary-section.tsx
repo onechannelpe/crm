@@ -14,19 +14,11 @@ function stageVariant(stage: string) {
 export function LeadSummarySection(props: { data: LeadDetailView }) {
   const fields = [
     { label: "RUC", value: props.data.lead.ruc },
-    {
-      label: "Razón social",
-      value: props.data.lead.razonSocial ?? "Sin datos",
-    },
-    { label: "Dirección", value: props.data.lead.address ?? "Sin datos" },
-    { label: "Estado", value: props.data.lead.status ?? "Sin datos" },
-    { label: "Prioridad", value: props.data.lead.prioridad ?? "Sin datos" },
-    { label: "Engine", value: props.data.sourceStatus.engine.status },
+    { label: "Razón social", value: props.data.lead.razonSocial ?? "" },
+    { label: "Dirección", value: props.data.lead.address ?? "" },
+    { label: "Estado", value: props.data.lead.status ?? "" },
+    { label: "Prioridad", value: props.data.lead.prioridad ?? "" },
     { label: "SUNAT", value: props.data.sourceStatus.sunat.status },
-    {
-      label: "Nombre legal SUNAT",
-      value: props.data.sourceStatus.sunat.legalName ?? "Sin datos",
-    },
     { label: "Creado", value: formatDateTime(props.data.lead.createdAt) },
     {
       label: "Actualizado",
@@ -42,7 +34,7 @@ export function LeadSummarySection(props: { data: LeadDetailView }) {
         </div>
         <div class={styles.heroText}>
           <div class={styles.heroTitle}>
-            {props.data.lead.razonSocial ?? props.data.lead.ruc}
+            {props.data.lead.razonSocial ?? ""}
           </div>
           <div class={styles.heroSubtitle}>RUC {props.data.lead.ruc}</div>
         </div>

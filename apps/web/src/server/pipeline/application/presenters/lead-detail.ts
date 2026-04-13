@@ -34,16 +34,9 @@ function toLeadSourceStatus(
   sourceStatus: LeadSourceStatus,
 ): LeadDetailSourceStatusView {
   return {
-    engine: {
-      status: sourceStatus.engine.status,
-      fetchedAt: sourceStatus.engine.fetchedAt,
-      fields: sourceStatus.engine.fields,
-    },
     sunat: {
       status: sourceStatus.sunat.status,
       fetchedAt: sourceStatus.sunat.fetchedAt,
-      legalName: sourceStatus.sunat.legalName,
-      address: sourceStatus.sunat.address,
       district: sourceStatus.sunat.district,
       department: sourceStatus.sunat.department,
       contributorStatus: sourceStatus.sunat.contributorStatus,
@@ -56,15 +49,14 @@ function toLeadSourceStatus(
 function toLeadDetailLead(
   lead: LeadRecord,
   sale: LeadSale | undefined,
-  sourceStatus: LeadSourceStatus,
 ): LeadDetailLeadView {
   return {
     id: lead.id,
     ruc: lead.ruc,
-    razonSocial: lead.razonSocial ?? sourceStatus.sunat.legalName,
-    address: lead.address ?? sourceStatus.sunat.address,
-    district: sourceStatus.sunat.district,
-    department: sourceStatus.sunat.department,
+    razonSocial: lead.razonSocial,
+    address: lead.address,
+    district: lead.district,
+    department: lead.department,
     executiveId: lead.executiveId,
     stage: lead.stage,
     status: lead.status,
@@ -129,7 +121,7 @@ function toLeadDetailSale(sale: LeadSale): LeadDetailSaleView {
 
 export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
   return {
-    lead: toLeadDetailLead(source.lead, source.sale, source.sourceStatus),
+    lead: toLeadDetailLead(source.lead, source.sale),
     commercialInput: source.commercialInput
       ? toLeadDetailCommercialInput(source.commercialInput)
       : undefined,

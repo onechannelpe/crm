@@ -2,6 +2,9 @@ import { createUniqueId, type JSX, splitProps } from "solid-js";
 
 import { cn } from "~/lib/utils";
 
+import { InputErrorHelper } from "./input-error-helper";
+import { InputLabel } from "./input-label";
+
 import styles from "./field.module.css";
 
 export interface SelectProps extends JSX.SelectHTMLAttributes<HTMLSelectElement> {
@@ -22,10 +25,10 @@ export function Select(props: SelectProps) {
   return (
     <div class={styles.field}>
       {local.label && (
-        <label for={selectId} class={styles.label}>
+        <InputLabel for={selectId}>
           {local.label}
           {props.required && <span class={styles.required}>*</span>}
-        </label>
+        </InputLabel>
       )}
       <select
         id={selectId}
@@ -38,7 +41,7 @@ export function Select(props: SelectProps) {
       >
         {local.children}
       </select>
-      {local.error && <p class={styles.errorText}>{local.error}</p>}
+      {local.error && <InputErrorHelper>{local.error}</InputErrorHelper>}
     </div>
   );
 }

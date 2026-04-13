@@ -8,7 +8,7 @@ export function useOpenLeadRecord() {
   >((lead) =>
     createLeadDetailSidePanelPage({
       leadId: lead.id,
-      title: lead.razonSocial || lead.ruc,
+      title: lead.razonSocial ?? "",
       subtitle: `RUC ${lead.ruc}`,
     }),
   );

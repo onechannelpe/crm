@@ -2,6 +2,9 @@ import { createUniqueId, type JSX, splitProps } from "solid-js";
 
 import { cn } from "~/lib/utils";
 
+import { InputErrorHelper } from "./input-error-helper";
+import { InputLabel } from "./input-label";
+
 import styles from "./field.module.css";
 
 export interface TextareaProps extends JSX.TextareaHTMLAttributes<HTMLTextAreaElement> {
@@ -16,10 +19,10 @@ export function Textarea(props: TextareaProps) {
   return (
     <div class={styles.field}>
       {local.label && (
-        <label for={textareaId} class={styles.label}>
+        <InputLabel for={textareaId}>
           {local.label}
           {props.required && <span class={styles.required}>*</span>}
-        </label>
+        </InputLabel>
       )}
       <textarea
         id={textareaId}
@@ -30,7 +33,7 @@ export function Textarea(props: TextareaProps) {
         )}
         {...others}
       />
-      {local.error && <p class={styles.errorText}>{local.error}</p>}
+      {local.error && <InputErrorHelper>{local.error}</InputErrorHelper>}
     </div>
   );
 }

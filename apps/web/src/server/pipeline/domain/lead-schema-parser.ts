@@ -16,7 +16,10 @@ function fail(code: string, message: string): Result<never, DomainError> {
 export function normalizeLeadRuc(ruc: string): Result<string, DomainError> {
   const normalizedRuc = ruc.trim();
   if (!/^\d{11}$/.test(normalizedRuc)) {
-    return fail("invalid_ruc", "RUC must be an 11 digit string");
+    return fail(
+      "invalid_ruc",
+      "El RUC debe tener 11 dígitos. Intenta nuevamente.",
+    );
   }
 
   return Ok(normalizedRuc);

@@ -53,13 +53,7 @@ export function useLeadCreatePageState() {
   }
 
   const title = createMemo(() => {
-    const ruc = pageState().draft.ruc.trim();
-
-    if (ruc.length > 0) {
-      return ruc;
-    }
-
-    return "Nuevo prospecto";
+    return "";
   });
 
   const label = createMemo(() => {
