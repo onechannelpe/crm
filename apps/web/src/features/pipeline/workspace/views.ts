@@ -36,8 +36,21 @@ export const WORKSPACE_VIEWS: ReadonlyArray<WorkspaceView> = [
   },
 ];
 
+const DEFAULT_VIEW_BY_ROLE: Partial<Record<string, string>> = {
+  back_office: "review",
+  admin: "all",
+  superuser: "all",
+};
+
 export function viewsForRole(role: string): WorkspaceView[] {
   return WORKSPACE_VIEWS.filter(
     (v) => !v.permission || hasPermission(role, v.permission),
   );
+}
+
+export function defaultViewIdForRole(role: string): string {
+  const views = viewsForRole(role);
+  const configured = DEFAULT_VIEW_BY_ROLE[role];
+  if (configured && views.some((v) => v.id === configured)) return configured;
+  return views[0].id;
 }

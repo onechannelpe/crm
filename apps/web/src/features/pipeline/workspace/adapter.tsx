@@ -21,7 +21,7 @@ import { useCreateLeadRecordAction } from "./create-action";
 import { LEAD_WORKSPACE_FILTER, type LeadStageFilterValue } from "./filter";
 import { useOpenLeadRecord } from "./open-row";
 import { LEAD_WORKSPACE_SORT, type LeadSortKey } from "./sort";
-import { viewsForRole } from "./views";
+import { defaultViewIdForRole, viewsForRole } from "./views";
 
 import styles from "./styles.module.css";
 
@@ -31,7 +31,7 @@ export function LeadsWorkspace() {
   const user = currentUser();
 
   const available = viewsForRole(user.role);
-  const [activeId, setActiveId] = createSignal(available[0].id);
+  const [activeId, setActiveId] = createSignal(defaultViewIdForRole(user.role));
 
   const activeView = createMemo(
     () => available.find((v) => v.id === activeId()) ?? available[0],
