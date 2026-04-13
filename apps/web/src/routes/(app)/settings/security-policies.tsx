@@ -85,10 +85,11 @@ export default function SecurityPoliciesPage() {
   });
 
   const rows = createMemo<SecurityPolicyRow[]>(() =>
-    (policySnapshot()?.items ?? []).map((item, index) => ({
-      ...item,
-      id: index + 1,
-    })),
+    (policySnapshot()?.items ?? []).map((item, index) =>
+      Object.assign({}, item, {
+        id: index + 1,
+      }),
+    ),
   );
   const isLoading = () => policySnapshot() === undefined;
 

@@ -125,10 +125,11 @@ export default function AuditLogPage() {
   };
 
   const rows = createMemo<AuditLogGridRow[]>(() =>
-    (latestSnapshot()?.events ?? []).map((event, index) => ({
-      ...event,
-      id: index + 1,
-    })),
+    (latestSnapshot()?.events ?? []).map((event, index) =>
+      Object.assign({}, event, {
+        id: index + 1,
+      }),
+    ),
   );
 
   const rowOpen = useSidePanelRowOpen<AuditLogGridRow>((row) =>
