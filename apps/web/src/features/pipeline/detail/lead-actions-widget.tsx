@@ -10,8 +10,8 @@ import { mapLeadActionsToUi } from "./lead-workflow-ui";
 import { ReassignLeadModal } from "./reassign-lead-modal";
 import { ReviewLeadModal } from "./review-lead-modal";
 
-import widgetStyles from "./lead-actions-widget.module.css";
 import styles from "../../side-panel/pages/lead-detail/page.module.css";
+import widgetStyles from "./lead-actions-widget.module.css";
 
 type OpenModal = "review-lead" | "reassign-lead" | null;
 
@@ -24,7 +24,8 @@ export function LeadActionsWidget(props: {
   const [approving, setApproving] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
 
-  const actions = () => mapLeadActionsToUi(props.leadId, props.availableActions);
+  const actions = () =>
+    mapLeadActionsToUi(props.leadId, props.availableActions);
 
   onMount(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -75,9 +76,7 @@ export function LeadActionsWidget(props: {
                   <button
                     type="button"
                     class={styles.actionRowButton}
-                    disabled={
-                      approving() && action.id === "approve-for-sale"
-                    }
+                    disabled={approving() && action.id === "approve-for-sale"}
                     onClick={() => handleButtonAction(action.id)}
                   >
                     <span>
