@@ -7,12 +7,12 @@ import { DataGridBodyEffects } from "../effects/body";
 import type { DataGridInteractionModel } from "../hooks/use-instance";
 import { createDataGridInteractionReady } from "../hooks/use-interaction-ready";
 
-export function DataGridWrappers<T extends { id: number }>(props: {
+export function DataGridWrappers(props: {
   children: JSX.Element;
   getContainer: () => HTMLElement | undefined;
   getScrollWrapper: () => HTMLElement | undefined;
   interaction: DataGridInteractionModel;
-  rows: T[];
+  rows: Array<{ id: number }>;
   suspendEscapeSelectionClear: boolean;
 }) {
   const isInteractive = createDataGridInteractionReady();
