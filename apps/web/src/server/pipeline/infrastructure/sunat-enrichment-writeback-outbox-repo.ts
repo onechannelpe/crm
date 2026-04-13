@@ -37,6 +37,10 @@ export function createSunatEnrichmentWritebackOutboxRepo(
         })
         .where("id", "in", ids)
         .where("status", "=", "queued")
+        .where("available_at", "<=", now)
+        .where((eb) =>
+          eb.or([eb("lease_until", "is", null), eb("lease_until", "<", now)]),
+        )
         .execute();
 
       return executor
@@ -61,7 +65,7 @@ export function createSunatEnrichmentWritebackOutboxRepo(
       return Number(result.numUpdatedRows ?? 0) > 0;
     },
 
-    async markCompleted(id: number) {
+    async markCompleted(id: number, workerId: string) {
       await executor
         .updateTable("search_enrichment_completion_outbox")
         .set({
@@ -72,10 +76,12 @@ export function createSunatEnrichmentWritebackOutboxRepo(
           error_message: null,
         })
         .where("id", "=", id)
+        .where("status", "=", "running")
+        .where("lease_owner", "=", workerId)
         .execute();
     },
 
-    async scheduleRetry(id: number, availableAt: number) {
+    async scheduleRetry(id: number, availableAt: number, workerId: string) {
       await executor
         .updateTable("search_enrichment_completion_outbox")
         .set({
@@ -85,10 +91,12 @@ export function createSunatEnrichmentWritebackOutboxRepo(
           lease_until: null,
         })
         .where("id", "=", id)
+        .where("status", "=", "running")
+        .where("lease_owner", "=", workerId)
         .execute();
     },
 
-    async markFailed(id: number, reason: string) {
+    async markFailed(id: number, reason: string, workerId: string) {
       await executor
         .updateTable("search_enrichment_completion_outbox")
         .set({
@@ -99,6 +107,8 @@ export function createSunatEnrichmentWritebackOutboxRepo(
           lease_until: null,
         })
         .where("id", "=", id)
+        .where("status", "=", "running")
+        .where("lease_owner", "=", workerId)
         .execute();
     },
   };

@@ -53,9 +53,10 @@ export function createSunatEnrichmentWritebackQueue(
       });
     },
     extendLease: (id: number) => repo.extendLease(id, workerId, leaseMs),
-    onComplete: (id: number) => repo.markCompleted(id),
+    onComplete: (id: number) => repo.markCompleted(id, workerId),
     onRetry: (id: number, availableAt: number) =>
-      repo.scheduleRetry(id, availableAt),
-    onFail: (id: number, reason: string) => repo.markFailed(id, reason),
+      repo.scheduleRetry(id, availableAt, workerId),
+    onFail: (id: number, reason: string) =>
+      repo.markFailed(id, reason, workerId),
   });
 }
