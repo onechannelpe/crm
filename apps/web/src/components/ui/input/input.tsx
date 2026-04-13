@@ -8,29 +8,41 @@ import {
 
 import { cn } from "~/lib/utils";
 
+import { InputErrorHelper } from "./input-error-helper";
+import { InputHint } from "./input-hint";
+import { InputLabel } from "./input-label";
+
 import styles from "./field.module.css";
 
 export interface InputProps extends JSX.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
+  hint?: string;
+  noErrorHelper?: boolean;
 }
 
 export function Input(props: InputProps) {
   const [local, others] = splitProps(props, [
     "label",
     "error",
+    "hint",
+    "noErrorHelper",
     "class",
     "id",
     "type",
   ]);
   const inputId = local.id || createUniqueId();
   const errorId = `${inputId}-error`;
+  const hintId = `${inputId}-hint`;
   const describedBy = () => {
     const existing = others["aria-describedby"];
-    if (!local.error) return existing;
-    return typeof existing === "string" && existing.length > 0
-      ? `${existing} ${errorId}`
-      : errorId;
+    const ids = [
+      typeof existing === "string" && existing.length > 0 ? existing : null,
+      local.error ? errorId : null,
+      !local.error && local.hint ? hintId : null,
+    ].filter((value): value is string => Boolean(value));
+
+    return ids.length > 0 ? ids.join(" ") : undefined;
   };
   const isPassword = local.type === "password";
   const [showPassword, setShowPassword] = createSignal(false);
@@ -38,14 +50,14 @@ export function Input(props: InputProps) {
   return (
     <div class={styles.field}>
       {local.label && (
-        <label for={inputId} class={styles.label}>
+        <InputLabel for={inputId}>
           {local.label}
           {props.required && (
             <span aria-hidden="true" class={styles.required}>
               *
             </span>
           )}
-        </label>
+        </InputLabel>
       )}
       <div class={isPassword ? styles.inputWrap : undefined}>
         <input
@@ -111,11 +123,12 @@ export function Input(props: InputProps) {
           </button>
         </Show>
       </div>
-      {local.error && (
-        <p id={errorId} class={styles.errorText}>
-          {local.error}
-        </p>
-      )}
+      <Show when={local.hint && !local.error}>
+        <InputHint id={hintId}>{local.hint}</InputHint>
+      </Show>
+      <Show when={local.error && !local.noErrorHelper}>
+        <InputErrorHelper id={errorId}>{local.error}</InputErrorHelper>
+      </Show>
     </div>
   );
 }

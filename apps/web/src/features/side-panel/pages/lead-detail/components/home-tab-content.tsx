@@ -29,12 +29,9 @@ function fieldValue(props: {
   key: (typeof FIELD_ROWS)[number]["key"];
 }) {
   if (props.key === "ruc") return props.data.lead.ruc;
-  if (props.key === "razonSocial")
-    return props.data.lead.razonSocial ?? "Sin datos";
-  if (props.key === "address") return props.data.lead.address ?? "Sin datos";
-  if (props.key === "status") return props.data.lead.status ?? "Pendiente";
-  if (props.key === "prioridad")
-    return props.data.lead.prioridad ?? "Pendiente";
+  if (props.key === "razonSocial") return props.data.lead.razonSocial ?? "";
+  if (props.key === "status") return props.data.lead.status ?? "";
+  if (props.key === "prioridad") return props.data.lead.prioridad ?? "";
   if (props.key === "stage") return props.data.lead.stage;
   if (props.key === "nextStep") return props.data.lead.nextStep;
   return formatDateTime(props.data.lead.updatedAt);

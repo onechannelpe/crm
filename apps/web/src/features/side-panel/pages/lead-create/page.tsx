@@ -32,6 +32,7 @@ import styles from "./page.module.css";
 
 type TabContentProps = {
   ruc?: string;
+  rucError?: string | null;
   razonSocial?: string | null;
   address?: string | null;
   engineStatus?: string;
@@ -63,6 +64,7 @@ export function LeadCreatePage() {
   const { navigateTo } = useSidePanel();
   const createLead = useAction(createLeadMutation);
   const [error, setError] = createSignal<string | null>(null);
+  const [rucError, setRucError] = createSignal<string | null>(null);
   const { pageState, setActiveTab, setRuc } = useLeadCreatePageState();
   const validRuc = createMemo(() => {
     const value = pageState().draft.ruc.trim();
@@ -82,7 +84,7 @@ export function LeadCreatePage() {
     const preview = latestBootstrapPreview();
 
     if (!value) {
-      return "Esperando RUC válido";
+      return "";
     }
 
     if (bootstrapPreview.loading && preview === null) {
@@ -98,11 +100,17 @@ export function LeadCreatePage() {
 
     return {
       ruc: pageState().draft.ruc,
+      rucError: rucError(),
       razonSocial: preview?.razonSocial ?? null,
       address: preview?.address ?? null,
       engineStatus: engineStatus(),
       canCreate: validRuc() !== null,
-      onRucInput: setRuc,
+      onRucInput: (value) => {
+        setRuc(value);
+        if (rucError()) {
+          setRucError(null);
+        }
+      },
       onSubmit: () => void handleSubmit(),
     };
   });
@@ -127,11 +135,13 @@ export function LeadCreatePage() {
     const value = validRuc();
 
     if (!value) {
-      setError("El RUC debe tener 11 dígitos");
+      setRucError("El RUC debe tener 11 dígitos.");
+      setActiveTab("home");
       return;
     }
 
     setError(null);
+    setRucError(null);
 
     const rollbackOptimistic = addOptimisticLead(
       ["mine", "review", "all"],
@@ -150,16 +160,24 @@ export function LeadCreatePage() {
       navigateTo(
         createLeadDetailSidePanelPage({
           leadId: result.leadId,
-          title: value,
+          title: latestBootstrapPreview()?.razonSocial ?? "",
           subtitle: `RUC ${value}`,
         }),
         { resetStack: true },
       );
     } catch (submitError) {
       rollbackOptimistic();
-      setError(
-        toAppError(submitError, "Error al registrar prospecto").publicMessage,
-      );
+      const appError = toAppError(submitError, "Error al registrar prospecto");
+      if (
+        appError.code === "validation" &&
+        appError.publicMessage.includes("RUC")
+      ) {
+        setRucError(appError.publicMessage);
+        setActiveTab("home");
+        return;
+      }
+
+      setError(appError.publicMessage);
     }
   }
 

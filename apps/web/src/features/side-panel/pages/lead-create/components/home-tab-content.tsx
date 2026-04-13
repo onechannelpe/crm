@@ -3,6 +3,7 @@ import { For, Show } from "solid-js";
 import ChevronDown from "~/components/icons/chevron-down";
 import ChevronRight from "~/components/icons/chevron-right";
 import Plus from "~/components/icons/plus";
+import { Input } from "~/components/ui/input/input";
 
 import { FIELD_ROWS, RELATION_WIDGETS } from "./constants";
 
@@ -10,6 +11,7 @@ import styles from "../page.module.css";
 
 type HomeTabContentProps = {
   ruc?: string;
+  rucError?: string | null;
   razonSocial?: string | null;
   address?: string | null;
   engineStatus?: string;
@@ -41,7 +43,7 @@ export function HomeTabContent(props: HomeTabContentProps) {
                 </div>
                 <div class={styles.fieldValue}>
                   {field.key === "ruc" ? (
-                    <input
+                    <Input
                       value={props.ruc ?? ""}
                       onInput={(event) =>
                         props.onRucInput?.(event.currentTarget.value)
@@ -52,15 +54,20 @@ export function HomeTabContent(props: HomeTabContentProps) {
                         }
                       }}
                       placeholder="Ingresa el RUC"
-                      class={styles.fieldInput}
+                      class={styles.fieldInputControl}
                       aria-label="RUC"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={11}
+                      autocomplete="off"
+                      error={props.rucError ?? undefined}
                     />
                   ) : (
                     <span class={styles.fieldTextValue}>
                       {field.key === "razonSocial"
-                        ? (props.razonSocial ?? "Pendiente de bootstrap")
+                        ? (props.razonSocial ?? "")
                         : field.key === "address"
-                          ? (props.address ?? "Pendiente de bootstrap")
+                          ? (props.address ?? "")
                           : (field.value ?? "")}
                     </span>
                   )}
@@ -92,7 +99,7 @@ export function HomeTabContent(props: HomeTabContentProps) {
             <div class={styles.relationRow}>
               <span>
                 {widget.title === "Bootstrap desde Engine"
-                  ? (props.engineStatus ?? "Esperando RUC válido")
+                  ? (props.engineStatus ?? "")
                   : "Se encola al registrar el lead"}
               </span>
               <Show when={widget.title === "Bootstrap desde Engine"}>

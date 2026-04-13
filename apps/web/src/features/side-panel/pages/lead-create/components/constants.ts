@@ -67,7 +67,7 @@ export const FIELD_ROWS: ReadonlyArray<DisplayField> = [
     icon: Package,
     value: "PENDING_EXTERNAL_REVIEW",
   },
-  { label: "Última actualización", icon: Clock, value: "Pendiente" },
+  { label: "Última actualización", icon: Clock, value: "" },
 ] as const;
 
 export const RELATION_WIDGETS: ReadonlyArray<{
