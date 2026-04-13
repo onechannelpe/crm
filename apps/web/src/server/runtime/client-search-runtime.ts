@@ -16,6 +16,9 @@ export function createClientSearchRuntime(infra: ServerInfra) {
     enrichmentCommand,
     enrichmentQuery,
     createEnrichmentQueue: (workerId: string) =>
-      createEnrichmentQueue(workerId, { enrichmentRepo, scraper }),
+      createEnrichmentQueue(workerId, {
+        enrichmentRepo,
+        scraper,
+      }),
   };
 }

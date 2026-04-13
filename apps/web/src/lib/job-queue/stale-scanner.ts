@@ -8,6 +8,7 @@ const JOB_TABLES = [
   "pipeline_integration_jobs",
   "report_export_jobs",
   "search_enrichment_jobs",
+  "search_enrichment_completion_outbox",
 ] as const;
 
 export async function resetStalledJobs(
@@ -22,7 +23,8 @@ export async function resetStalledJobs(
           .set({
             status:
               table === "search_enrichment_jobs" ||
-              table === "report_export_jobs"
+              table === "report_export_jobs" ||
+              table === "search_enrichment_completion_outbox"
                 ? "queued"
                 : "PENDING",
             lease_owner: null,

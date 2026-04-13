@@ -11,6 +11,7 @@ export const JOB_CHANNELS = {
     "job:integration-outbox-ready-for-quotation",
   SALES_EXPORT: "job:sales-export",
   ENRICHMENT: "job:enrichment",
+  ENRICHMENT_WRITEBACK: "job:enrichment-writeback",
 } as const;
 
 export type JobChannel = (typeof JOB_CHANNELS)[keyof typeof JOB_CHANNELS];
