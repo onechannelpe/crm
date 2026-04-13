@@ -37,7 +37,7 @@ function RecordIndexScreenContent<
     <RecordIndexModelProvider value={createRecordIndexContextModel(model)}>
       <RecordIndexLayout>
         <RecordIndexSetupEffects />
-        <RecordIndexHeader />
+        <RecordIndexHeader pickerIcon={props.adapter.pickerIcon} />
         <RecordIndexTableContainer model={model} />
       </RecordIndexLayout>
     </RecordIndexModelProvider>

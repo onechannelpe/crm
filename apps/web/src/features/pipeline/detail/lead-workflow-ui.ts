@@ -25,11 +25,9 @@ const BLOCKING_TASK_LABELS: Record<LeadBlockingField, string> = {
   cci: "Registrar CCI",
 };
 
-type LeadActionUiItem = {
-  id: LeadAvailableAction;
-  label: string;
-  href?: string;
-};
+export type LeadActionUiItem =
+  | { id: LeadAvailableAction; label: string; href: string; kind: "link" }
+  | { id: LeadAvailableAction; label: string; kind: "button" };
 
 export function blockingFieldLabel(field: LeadBlockingField): string {
   return BLOCKING_FIELD_LABELS[field];
@@ -47,25 +45,12 @@ export function mapLeadActionsToUi(
 
   for (const action of actions) {
     switch (action) {
-      case "review-lead":
-        items.push({
-          id: action,
-          label: "Revisar lead",
-          href: `/leads/${leadId}`,
-        });
-        break;
-      case "complete-commercial-input":
-        items.push({
-          id: action,
-          label: "Completar informacion comercial",
-          href: `/leads/${leadId}/complete`,
-        });
-        break;
       case "create-sale":
         items.push({
           id: action,
           label: "Crear venta",
           href: `/sales/new/${leadId}`,
+          kind: "link",
         });
         break;
       case "create-quotation":
@@ -73,19 +58,19 @@ export function mapLeadActionsToUi(
           id: action,
           label: "Crear cotizacion",
           href: `/quotations/${leadId}`,
+          kind: "link",
         });
         break;
       case "approve-for-sale":
-        items.push({ id: action, label: "Aprobar para venta" });
+        items.push({ id: action, label: "Aprobar para venta", kind: "button" });
         break;
+      // Actions below have no implemented handler yet.
+      // They are intentionally omitted rather than shown as disabled.
+      case "review-lead":
+      case "complete-commercial-input":
       case "log-call":
-        items.push({ id: action, label: "Registrar llamada" });
-        break;
       case "add-note":
-        items.push({ id: action, label: "Agregar nota" });
-        break;
       case "reassign-lead":
-        items.push({ id: action, label: "Reasignar lead" });
         break;
       default:
         break;

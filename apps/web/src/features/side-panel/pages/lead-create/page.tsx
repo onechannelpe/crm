@@ -134,7 +134,7 @@ export function LeadCreatePage() {
     setError(null);
 
     const rollbackOptimistic = addOptimisticLead(
-      ["all", "review"],
+      ["mine", "review", "all"],
       createOptimisticLeadRow({
         ruc: value,
         razonSocial: latestBootstrapPreview()?.razonSocial ?? null,

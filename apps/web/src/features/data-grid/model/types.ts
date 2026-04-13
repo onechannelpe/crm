@@ -20,13 +20,6 @@ export type DataGridColumn<T> = {
   renderCell: (row: T) => JSX.Element;
 };
 
-export type DataGridPicker = {
-  icon: DataGridIcon;
-  label: string;
-  meta?: string;
-  onClick?: () => void;
-};
-
 export type DataGridActionRowConfig = {
   icon: DataGridIcon;
   label: string;

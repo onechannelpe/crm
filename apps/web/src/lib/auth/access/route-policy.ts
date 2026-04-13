@@ -5,7 +5,8 @@ export type { Role, Permission } from "./rbac";
 export type { AppPath } from "./route-manifest";
 
 const ROLE_DEFAULT_PATHS: Partial<Record<Role, AppPath>> = {
-  back_office: "/review",
+  executive: "/leads",
+  back_office: "/leads",
 };
 
 function isAppPath(p: string): p is AppPath {

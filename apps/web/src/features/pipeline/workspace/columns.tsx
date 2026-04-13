@@ -2,16 +2,20 @@ import Building2 from "~/components/icons/building-2";
 import CalendarDays from "~/components/icons/calendar-days";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import House from "~/components/icons/house";
+import Info from "~/components/icons/info";
 import Package from "~/components/icons/package";
+import Target from "~/components/icons/target";
 import TimelineEvent from "~/components/icons/timeline-event";
+import User from "~/components/icons/user";
 import { Badge } from "~/components/ui/display/badge";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
+import type { Role } from "~/lib/auth/access/rbac";
 import { formatDate } from "~/lib/utils";
 import type { LeadListRowView } from "~/server/pipeline/application/queries/views/lead-list";
 
 import styles from "./styles.module.css";
 
-export const LEADS_RECORD_INDEX_COLUMNS = [
+const COMMON_COLUMNS: ReadonlyArray<DataGridColumn<LeadListRowView>> = [
   {
     key: "ruc",
     label: "RUC",
@@ -53,7 +57,7 @@ export const LEADS_RECORD_INDEX_COLUMNS = [
   {
     key: "stage",
     label: "Etapa",
-    icon: Package,
+    icon: Target,
     width: 172,
     renderCell: (lead) => (
       <Badge
@@ -70,6 +74,22 @@ export const LEADS_RECORD_INDEX_COLUMNS = [
     ),
   },
   {
+    key: "status",
+    label: "Estado",
+    icon: Info,
+    width: 168,
+    renderCell: (lead) => <Badge variant="outline">{lead.status ?? "-"}</Badge>,
+  },
+  {
+    key: "prioridad",
+    label: "Prioridad",
+    icon: Package,
+    width: 152,
+    renderCell: (lead) => (
+      <Badge variant="secondary">{lead.prioridad ?? "-"}</Badge>
+    ),
+  },
+  {
     key: "nextStep",
     label: "Siguiente paso",
     icon: TimelineEvent,
@@ -79,7 +99,7 @@ export const LEADS_RECORD_INDEX_COLUMNS = [
     ),
   },
   {
-    key: "createdAt",
+    key: "updatedAt",
     label: "Actualizado",
     icon: CalendarDays,
     width: 140,
@@ -87,4 +107,26 @@ export const LEADS_RECORD_INDEX_COLUMNS = [
       <span class={styles.mutedCellText}>{formatDate(lead.updatedAt)}</span>
     ),
   },
-] satisfies ReadonlyArray<DataGridColumn<LeadListRowView>>;
+];
+
+const BACK_OFFICE_COLUMNS: ReadonlyArray<DataGridColumn<LeadListRowView>> = [
+  ...COMMON_COLUMNS,
+  {
+    key: "executiveId",
+    label: "Registrado por",
+    icon: User,
+    width: 150,
+    renderCell: (lead) => (
+      <span class={styles.mutedCellText}>Ejecutivo #{lead.executiveId}</span>
+    ),
+  },
+];
+
+export function workspaceColumnsForRole(
+  role: Role,
+): ReadonlyArray<DataGridColumn<LeadListRowView>> {
+  if (role === "back_office") {
+    return BACK_OFFICE_COLUMNS;
+  }
+  return COMMON_COLUMNS;
+}

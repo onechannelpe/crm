@@ -15,12 +15,10 @@ export type AppPath =
   | "/team/import"
   | "/inventory"
   | "/leads"
-  | "/review"
   | "/quotations"
   | "/sales/crm"
   | "/integrations"
   | "/integrations/imports"
-  | "/integrations/exports"
   | "/dashboard"
   | "/audit"
   | "/audit/auth"
@@ -53,13 +51,11 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
   "/team/invite": { permission: "team:manage" },
   "/team/import": { permission: "team:manage" },
   "/inventory": { permission: "inventory:read", landingPriority: 5 },
-  "/leads": { permission: "lead:pipeline", landingPriority: 2 },
-  "/review": { permission: "lead:review", landingPriority: 4 },
+  "/leads": {},
   "/quotations": { permission: "quotation:manage", landingPriority: 3 },
   "/sales/crm": { permission: "lead:sale:create" },
   "/integrations": { permission: "integration:manage" },
   "/integrations/imports": { permission: "integration:manage" },
-  "/integrations/exports": { permission: "integration:manage" },
   "/dashboard": { permission: "sales:review", landingPriority: 1 },
   "/audit": { permission: "audit:read", landingPriority: 8 },
   "/audit/auth": { permission: "audit:read" },
@@ -70,12 +66,6 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
 };
 
 export const DYNAMIC_ROUTES: DynamicRouteConfig[] = [
-  { pattern: /^\/leads\/[^/]+$/, permission: "lead:pipeline" },
-  {
-    pattern: /^\/leads\/[^/]+\/complete$/,
-    permission: "lead:commercial-input:complete",
-  },
-  { pattern: /^\/review\/[^/]+$/, permission: "lead:review" },
   { pattern: /^\/quotations\/[^/]+$/, permission: "quotation:manage" },
   { pattern: /^\/sales\/new\/[^/]+$/, permission: "lead:sale:create" },
   { pattern: /^\/sales\/[0-9]+$/, permission: "lead:sale:create" },

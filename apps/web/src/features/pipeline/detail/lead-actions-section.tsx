@@ -1,6 +1,5 @@
 import { A } from "@solidjs/router";
-import { Show } from "solid-js";
-import { createSignal } from "solid-js";
+import { For, Show, createSignal } from "solid-js";
 
 import { requestSaleApproval } from "~/actions/pipeline/commands/quotations";
 import { toAppError } from "~/lib/app-errors";
@@ -38,31 +37,31 @@ export function LeadActionsSection(props: {
     <section class={styles.section}>
       <div class={styles.sectionTitle}>Acciones</div>
       <div class={styles.actions}>
-        {actions().map((action) => (
-          <Show
-            when={action.id !== "approve-for-sale"}
-            fallback={
-              <button
-                class={styles.primaryAction}
-                disabled={submitting()}
-                onClick={() => void handleApproveForSale()}
-                type="button"
-              >
-                {submitting() ? "Aprobando..." : action.label}
-              </button>
-            }
-          >
-            <A
-              class={styles.primaryAction}
-              href={action.href ?? `/leads/${props.leadId}`}
+        <For each={actions()}>
+          {(action) => (
+            <Show
+              when={action.kind === "link" && action}
+              fallback={
+                <Show when={action.id === "approve-for-sale"}>
+                  <button
+                    class={styles.primaryAction}
+                    disabled={submitting()}
+                    onClick={() => void handleApproveForSale()}
+                    type="button"
+                  >
+                    {submitting() ? "Aprobando..." : action.label}
+                  </button>
+                </Show>
+              }
             >
-              {action.label}
-            </A>
-          </Show>
-        ))}
-        <A class={styles.secondaryAction} href={`/leads/${props.leadId}`}>
-          Abrir detalle completo
-        </A>
+              {(linkAction) => (
+                <A class={styles.primaryAction} href={linkAction().href}>
+                  {linkAction().label}
+                </A>
+              )}
+            </Show>
+          )}
+        </For>
       </div>
       <Show when={error()}>
         {(message) => <p class={styles.errorText}>{message()}</p>}

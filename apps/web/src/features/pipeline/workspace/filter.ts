@@ -1,8 +1,7 @@
+import type { RecordIndexFilterDefinition } from "~/features/record-index/model/filter";
 import type { LeadListRowView } from "~/server/pipeline/application/queries/views/lead-list";
 
-import type { RecordIndexFilterDefinition } from "../../../record-index/model/filter";
-
-export const LEADS_RECORD_INDEX_FILTERS = [
+export const LEAD_WORKSPACE_FILTERS = [
   { value: "all", label: "Todos" },
   { value: "PENDING_EXTERNAL_REVIEW", label: "Pendientes de revisión" },
   { value: "NEEDS_EXECUTIVE_INPUT", label: "Necesitan mi información" },
@@ -12,7 +11,7 @@ export const LEADS_RECORD_INDEX_FILTERS = [
 ] as const;
 
 export type LeadStageFilterValue =
-  (typeof LEADS_RECORD_INDEX_FILTERS)[number]["value"];
+  (typeof LEAD_WORKSPACE_FILTERS)[number]["value"];
 
 export function applyLeadStageFilter(
   rows: LeadListRowView[],
@@ -25,13 +24,13 @@ export function applyLeadStageFilter(
   return rows.filter((row) => row.stage === filterValue);
 }
 
-export const LEADS_RECORD_INDEX_FILTER: RecordIndexFilterDefinition<
+export const LEAD_WORKSPACE_FILTER: RecordIndexFilterDefinition<
   LeadListRowView,
   LeadStageFilterValue
 > = {
   label: "Filtrar",
-  menuId: "record-index-filter-menu",
-  options: LEADS_RECORD_INDEX_FILTERS,
+  menuId: "lead-workspace-filter-menu",
+  options: LEAD_WORKSPACE_FILTERS,
   defaultValue: "all",
   apply: applyLeadStageFilter,
 };

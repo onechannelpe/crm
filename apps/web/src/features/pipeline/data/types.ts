@@ -12,5 +12,3 @@ export type LeadListFilters = {
   limit?: number;
   offset?: number;
 };
-
-export type LeadListId = "all" | "review" | "quotation";
