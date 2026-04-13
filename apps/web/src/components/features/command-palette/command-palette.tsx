@@ -4,7 +4,7 @@ import { createEffect, createMemo, createSignal, For, Show } from "solid-js";
 import Search from "~/components/icons/search";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { useHotkey } from "~/lib/hotkey/use-hotkey";
-import { getNavigableRoutes } from "~/lib/nav/nav-policy";
+import { getNavigableRoutes } from "~/lib/nav/policy";
 import { cn } from "~/lib/utils";
 
 import styles from "./command-palette.module.css";

@@ -8,7 +8,7 @@ import {
   type SidebarChild,
   type SidebarEntry,
   type SidebarSection,
-} from "./nav-config";
+} from "./config";
 
 export type {
   SidebarEntry,
@@ -16,7 +16,7 @@ export type {
   HeaderDescriptor,
   RouteIcon,
   SidebarSection,
-} from "./nav-config";
+} from "./config";
 
 export interface SidebarGroup {
   label: string | undefined;
@@ -51,15 +51,15 @@ export function getSidebarGrouped(
 
   for (const entry of entries) {
     const key = entry.group;
-    const items = seen.get(key);
-    if (!items) {
-      const items: SidebarEntry[] = [];
-      seen.set(key, items);
-      groups.push({ label: key, items });
-      items.push(entry);
+    const groupItems = seen.get(key);
+    if (!groupItems) {
+      const newItems: SidebarEntry[] = [];
+      seen.set(key, newItems);
+      groups.push({ label: key, items: newItems });
+      newItems.push(entry);
       continue;
     }
-    items.push(entry);
+    groupItems.push(entry);
   }
 
   return groups;

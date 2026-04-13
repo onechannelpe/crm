@@ -5,7 +5,7 @@ import {
   getSidebarEntries,
   getSidebarGrouped,
   type SidebarEntry,
-} from "~/lib/nav/nav-policy";
+} from "~/lib/nav/policy";
 
 export interface DrawerNavChild {
   href: string;

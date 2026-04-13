@@ -8,7 +8,7 @@ import { ICON_BY_ROUTE } from "~/components/layout/route-icons";
 import { TopBarCommandButton } from "~/components/layout/top-bar-command-button";
 import { useNavigationDrawerState } from "~/features/navigation-drawer/state/navigation-drawer-provider";
 import { PageHeader } from "~/features/settings-shell/page/page-header";
-import { getHeaderRoute } from "~/lib/nav/nav-policy";
+import { getHeaderRoute } from "~/lib/nav/policy";
 
 import { useAppHeaderSidePanel } from "./use-app-header-side-panel";
 
