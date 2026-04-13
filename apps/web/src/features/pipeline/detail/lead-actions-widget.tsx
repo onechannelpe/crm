@@ -60,6 +60,7 @@ export function LeadActionsWidget(props: {
   }
 
   function handleButtonAction(actionId: LeadAvailableAction) {
+    if (approving()) return;
     if (actionId === "approve-for-sale") {
       void handleApprove();
       return;
@@ -84,7 +85,7 @@ export function LeadActionsWidget(props: {
                   <button
                     type="button"
                     class={styles.actionRowButton}
-                    disabled={approving() && action.id === "approve-for-sale"}
+                    disabled={approving()}
                     onClick={() => handleButtonAction(action.id)}
                   >
                     <span>
