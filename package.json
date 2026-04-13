@@ -32,7 +32,7 @@
     "check:engine": "cargo xtask-check",
     "check:web": "bun run --cwd apps/web check",
     "check:lint": "bun run --parallel check:lint:web check:lint:packages",
-    "check:lint:web": "oxlint -c .oxlintrc.json --type-aware --tsconfig apps/web/tsconfig.json --deny-warnings apps/web/src apps/web/tests",
+    "check:lint:web": "oxlint -c apps/web/.oxlintrc.json --type-aware --tsconfig apps/web/tsconfig.json --deny-warnings apps/web/src apps/web/tests",
     "check:lint:packages": "oxlint -c .oxlintrc.json --deny-warnings packages tools",
     "check:format": "bun run --parallel check:format:ts check:format:rust",
     "check:format:ts": "oxfmt --check apps/web packages tools",
