@@ -5,14 +5,14 @@ import {
   requestQuotationCreation,
   requestSaleApproval,
 } from "~/actions/pipeline/commands/quotations";
-import { queryLeadDetail } from "~/actions/pipeline/queries/leads";
 import { AppPage } from "~/components/layout/page";
+import { leadDetailQuery } from "~/features/pipeline/data/queries";
 import { toAppError } from "~/lib/app-errors";
 
 export default function LeadQuotationPage() {
   const params = useParams<{ leadId: string }>();
   const navigate = useNavigate();
-  const data = createAsync(() => queryLeadDetail(Number(params.leadId)));
+  const data = createAsync(() => leadDetailQuery(Number(params.leadId)));
   const [error, setError] = createSignal<string | null>(null);
 
   const inputStyle = {

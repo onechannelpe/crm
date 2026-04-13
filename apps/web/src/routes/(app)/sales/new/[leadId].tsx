@@ -2,14 +2,14 @@ import { createAsync, useNavigate, useParams } from "@solidjs/router";
 import { createSignal, Show } from "solid-js";
 
 import { requestSaleCreation } from "~/actions/pipeline/commands/sales";
-import { queryLeadDetail } from "~/actions/pipeline/queries/leads";
 import { AppPage } from "~/components/layout/page";
+import { leadDetailQuery } from "~/features/pipeline/data/queries";
 import { toAppError } from "~/lib/app-errors";
 
 export default function NewLeadSalePage() {
   const params = useParams<{ leadId: string }>();
   const navigate = useNavigate();
-  const data = createAsync(() => queryLeadDetail(Number(params.leadId)));
+  const data = createAsync(() => leadDetailQuery(Number(params.leadId)));
   const [error, setError] = createSignal<string | null>(null);
   const [submitting, setSubmitting] = createSignal(false);
   const [proveedorActual, setProveedorActual] = createSignal("");

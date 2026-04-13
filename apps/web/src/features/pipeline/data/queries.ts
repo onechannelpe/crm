@@ -1,6 +1,10 @@
 import { query } from "@solidjs/router";
 
-import { queryLeadList } from "~/actions/pipeline/queries/leads";
+import {
+  queryLeadDetail,
+  queryLeadList,
+} from "~/actions/pipeline/queries/leads";
+import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
 import type { LeadListView } from "~/server/pipeline/application/queries/views/lead-list";
 
 import type { LeadListFilters } from "./types";
@@ -26,3 +30,8 @@ export const leadListQuery = query(
 export function leadListKeyFor(filters: LeadListFilters): string {
   return leadListQuery.keyFor(normalizeLeadListFilters(filters));
 }
+
+export const leadDetailQuery = query(
+  (leadId: number): Promise<LeadDetailView> => queryLeadDetail(leadId),
+  "pipeline.leadDetail",
+);
