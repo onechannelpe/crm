@@ -1,4 +1,6 @@
+import { JOB_CHANNELS } from "~/lib/job-queue/channels";
 import { createJobQueue } from "~/lib/job-queue/job-queue";
+import { publishJob } from "~/lib/redis/publisher";
 import type { SunatScraperClient } from "~/server/client-search/enrichment/sunat/contracts";
 import type { ProcessResult } from "~/server/client-search/model";
 import type { EnrichmentRepositoryPort } from "~/server/client-search/ports";
@@ -38,6 +40,7 @@ export function createEnrichmentQueue(
           overlayToRow(result.overlay),
           Date.now(),
         );
+        await publishJob(JOB_CHANNELS.ENRICHMENT_WRITEBACK, job.id);
         return { kind: "complete" };
       }
 
