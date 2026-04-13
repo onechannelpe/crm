@@ -138,6 +138,14 @@ export function createLeadRepo(db: DatabaseExecutor) {
         .execute();
     },
 
+    updateByRuc(ruc: string, values: LeadPatch) {
+      return db
+        .updateTable("pipeline_leads")
+        .set(toLeadPatchRow(values))
+        .where("ruc", "=", ruc)
+        .execute();
+    },
+
     async list(filters: LeadListFilters) {
       const rows = await applyLeadFilters(
         db.selectFrom("pipeline_leads").selectAll(),

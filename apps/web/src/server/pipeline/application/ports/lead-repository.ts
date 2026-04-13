@@ -38,6 +38,7 @@ export type LeadRepository = {
   findByRuc(ruc: string): Promise<LeadRecord | undefined>;
   findByRucMany(rucs: string[]): Promise<LeadRecord[]>;
   updateById(id: number, values: LeadPatch): Promise<unknown>;
+  updateByRuc(ruc: string, values: LeadPatch): Promise<unknown>;
   list(filters: LeadListFilters): Promise<LeadRecord[]>;
   count(filters: LeadListFilters): Promise<number>;
 };
