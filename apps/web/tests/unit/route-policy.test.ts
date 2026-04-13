@@ -6,8 +6,8 @@ import {
   getDefaultAppPath,
   getRoutePermission,
 } from "../../src/lib/auth/access/route-policy";
-import { SIDEBAR_ENTRIES } from "../../src/lib/nav/nav-config";
-import { getHeaderRoute } from "../../src/lib/nav/nav-policy";
+import { SIDEBAR_ENTRIES } from "../../src/lib/nav/config";
+import { getHeaderRoute } from "../../src/lib/nav/policy";
 
 describe("route permissions", () => {
   it("resolves static and dynamic route permissions", () => {
