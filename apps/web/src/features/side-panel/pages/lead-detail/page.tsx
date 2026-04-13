@@ -71,7 +71,10 @@ export function LeadDetailPage() {
     if (pollStartedAt === undefined) {
       pollStartedAt = Date.now();
     }
-    if (Date.now() - pollStartedAt >= POLL_TIMEOUT_MS) return;
+    if (Date.now() - pollStartedAt >= POLL_TIMEOUT_MS) {
+      pollStartedAt = undefined;
+      return;
+    }
 
     const leadId = pageState().leadId;
     const id = setInterval(() => {

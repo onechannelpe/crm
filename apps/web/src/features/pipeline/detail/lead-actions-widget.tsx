@@ -1,5 +1,12 @@
 import { A, useAction } from "@solidjs/router";
-import { createSignal, For, onCleanup, onMount, Show } from "solid-js";
+import {
+  createMemo,
+  createSignal,
+  For,
+  onCleanup,
+  onMount,
+  Show,
+} from "solid-js";
 
 import ChevronRight from "~/components/icons/chevron-right";
 import { toAppError } from "~/lib/app-errors";
@@ -24,8 +31,9 @@ export function LeadActionsWidget(props: {
   const [approving, setApproving] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
 
-  const actions = () =>
-    mapLeadActionsToUi(props.leadId, props.availableActions);
+  const actions = createMemo(() =>
+    mapLeadActionsToUi(props.leadId, props.availableActions),
+  );
 
   onMount(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -105,11 +113,7 @@ export function LeadActionsWidget(props: {
           </Show>
         </div>
         <Show when={error()}>
-          {(message) => (
-            <p class={widgetStyles.errorText} style={{ padding: "0 8px 8px" }}>
-              {message()}
-            </p>
-          )}
+          {(message) => <p class={widgetStyles.errorText}>{message()}</p>}
         </Show>
       </section>
 
