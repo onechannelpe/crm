@@ -11,7 +11,6 @@ import Mail from "~/components/icons/mail";
 import Package from "~/components/icons/package";
 import Search from "~/components/icons/search";
 import Settings from "~/components/icons/settings";
-import ShieldCheck from "~/components/icons/shield-check";
 import User from "~/components/icons/user";
 import UserRound from "~/components/icons/user-round";
 import Users from "~/components/icons/users";
@@ -30,7 +29,6 @@ export const ICON_BY_ROUTE: Record<
   dashboard: House,
   "new-sale": Mail,
   confirmed: CircleCheckBig,
-  review: ShieldCheck,
   audit: Info,
   capacity: Building2,
   profile: UserRound,

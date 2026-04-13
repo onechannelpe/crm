@@ -103,6 +103,11 @@
   z-index: 20;
 }
 
+.menuLeft {
+  left: 0;
+  right: auto;
+}
+
 .menuItem {
   align-items: center;
   background: transparent;

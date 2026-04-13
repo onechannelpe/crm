@@ -1,6 +1,5 @@
+import type { RecordIndexSortDefinition } from "~/features/record-index/model/sort";
 import type { LeadListRowView } from "~/server/pipeline/application/queries/views/lead-list";
-
-import type { RecordIndexSortDefinition } from "../../../record-index/model/sort";
 
 export type LeadSortKey =
   | "createdAt_desc"
@@ -8,7 +7,7 @@ export type LeadSortKey =
   | "ruc_asc"
   | "ruc_desc";
 
-export const LEADS_RECORD_INDEX_SORTS = [
+export const LEAD_WORKSPACE_SORTS = [
   { value: "createdAt_desc", label: "Newest first" },
   { value: "createdAt_asc", label: "Oldest first" },
   { value: "ruc_asc", label: "RUC A-Z" },
@@ -37,13 +36,13 @@ export function sortLeadRows(leads: LeadListRowView[], sortKey: LeadSortKey) {
   return items;
 }
 
-export const LEADS_RECORD_INDEX_SORT: RecordIndexSortDefinition<
+export const LEAD_WORKSPACE_SORT: RecordIndexSortDefinition<
   LeadListRowView,
   LeadSortKey
 > = {
   label: "Ordenar",
-  menuId: "record-index-sort-menu",
-  options: LEADS_RECORD_INDEX_SORTS,
+  menuId: "lead-workspace-sort-menu",
+  options: LEAD_WORKSPACE_SORTS,
   defaultValue: "createdAt_desc",
   apply: sortLeadRows,
 };

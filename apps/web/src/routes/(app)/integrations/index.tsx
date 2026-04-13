@@ -12,30 +12,11 @@ export default function IntegrationsPage() {
         <div
           style={{
             display: "grid",
-            "grid-template-columns": "repeat(2, 1fr)",
+            "grid-template-columns": "repeat(1, 1fr)",
             gap: "1rem",
-            "max-width": "36rem",
+            "max-width": "18rem",
           }}
         >
-          <A
-            href="/integrations/exports"
-            style={{
-              display: "block",
-              padding: "1.25rem",
-              border: "1px solid #e5e7eb",
-              "border-radius": "0.5rem",
-              "text-decoration": "none",
-              color: "inherit",
-              background: "#fff",
-            }}
-          >
-            <h2 style={{ margin: "0 0 0.5rem", "font-size": "1rem" }}>
-              Exportaciones
-            </h2>
-            <p style={{ margin: 0, "font-size": "0.875rem", color: "#6b7280" }}>
-              Exportar leads a CSV
-            </p>
-          </A>
           <A
             href="/integrations/imports"
             style={{

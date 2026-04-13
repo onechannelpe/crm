@@ -1,10 +1,10 @@
 import { AppPage } from "~/components/layout/page";
-import { LeadsRecordIndex } from "~/features/pipeline/record-index/leads/adapter";
+import { LeadsWorkspace } from "~/features/pipeline/workspace/adapter";
 
 export default function LeadsPage() {
   return (
     <AppPage>
-      <LeadsRecordIndex />
+      <LeadsWorkspace />
     </AppPage>
   );
 }
