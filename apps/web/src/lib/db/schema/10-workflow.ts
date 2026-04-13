@@ -7,15 +7,14 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("ruc", "varchar(11)", (col) => col.notNull().unique())
     .addColumn("razon_social", "varchar(255)")
     .addColumn("address", "text")
+    .addColumn("district", "varchar(100)")
+    .addColumn("department", "varchar(100)")
     .addColumn("executive_id", "integer", (col) =>
       col.notNull().references("users.id"),
     )
     .addColumn("stage", "varchar(30)", (col) => col.notNull())
     .addColumn("status", "varchar(30)")
     .addColumn("prioridad", "varchar(20)")
-    .addColumn("engine_company_name", "varchar(255)")
-    .addColumn("engine_address", "text")
-    .addColumn("engine_fetched_at", "integer")
     .addColumn("created_at", "integer", (col) => col.notNull())
     .addColumn("updated_at", "integer", (col) => col.notNull())
     .execute();

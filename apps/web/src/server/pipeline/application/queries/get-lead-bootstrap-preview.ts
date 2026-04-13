@@ -8,16 +8,11 @@ export async function getLeadBootstrapPreview(
   deps: LeadBootstrapPreviewDeps,
   input: { ruc: string },
 ): Promise<Result<LeadBootstrapPreviewView, DomainError>> {
-  // Check if lead exists with stored engine data
   const existingLead = await deps.leads.findByRuc(input.ruc);
-  if (
-    existingLead &&
-    existingLead.engineCompanyName &&
-    existingLead.engineFetchedAt
-  ) {
+  if (existingLead && existingLead.razonSocial) {
     return Ok({
-      razonSocial: existingLead.engineCompanyName,
-      address: existingLead.engineAddress,
+      razonSocial: existingLead.razonSocial,
+      address: existingLead.address,
       engineStatus: "available",
     });
   }

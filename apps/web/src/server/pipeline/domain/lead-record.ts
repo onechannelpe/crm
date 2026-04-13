@@ -14,13 +14,12 @@ export type LeadRecord = {
   ruc: string;
   razonSocial: string | null;
   address: string | null;
+  district: string | null;
+  department: string | null;
   executiveId: number;
   stage: LeadStage;
   status: LeadStatus | null;
   prioridad: LeadPriority | null;
-  engineCompanyName: string | null;
-  engineAddress: string | null;
-  engineFetchedAt: number | null;
   createdAt: number;
   updatedAt: number;
 };
@@ -30,7 +29,15 @@ export type LeadDraft = Omit<LeadRecord, "id">;
 export type LeadPatch = Partial<
   Pick<
     LeadRecord,
-    "executiveId" | "stage" | "status" | "prioridad" | "updatedAt"
+    | "razonSocial"
+    | "address"
+    | "district"
+    | "department"
+    | "executiveId"
+    | "stage"
+    | "status"
+    | "prioridad"
+    | "updatedAt"
   >
 >;
 
@@ -39,8 +46,6 @@ export function createLeadDraft(input: {
   razonSocial: string | null;
   address: string | null;
   executiveId: number;
-  engineCompanyName: string | null;
-  engineAddress: string | null;
   now: number;
 }): Result<LeadDraft, DomainError> {
   const ruc = normalizeLeadRuc(input.ruc);
@@ -52,10 +57,9 @@ export function createLeadDraft(input: {
     ruc: ruc.value,
     razonSocial: input.razonSocial,
     address: input.address,
+    district: null,
+    department: null,
     executiveId: input.executiveId,
-    engineCompanyName: input.engineCompanyName,
-    engineAddress: input.engineAddress,
-    engineFetchedAt: input.now,
     stage: "PENDING_EXTERNAL_REVIEW",
     status: null,
     prioridad: null,

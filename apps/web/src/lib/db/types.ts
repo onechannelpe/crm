@@ -777,6 +777,8 @@ export interface PipelineLeadsTable {
   ruc: string;
   razon_social: string | null;
   address: string | null;
+  district: string | null;
+  department: string | null;
   executive_id: number;
   stage:
     | "PENDING_EXTERNAL_REVIEW"
@@ -788,9 +790,6 @@ export interface PipelineLeadsTable {
     | "CONVERTED";
   status: "DISPONIBLE" | "SIN RESULTADO" | "CARTERIZADO" | "STOCK" | null;
   prioridad: "P1" | "P2" | "SIN RESULTADO" | null;
-  engine_company_name: string | null;
-  engine_address: string | null;
-  engine_fetched_at: number | null;
   created_at: number;
   updated_at: number;
 }

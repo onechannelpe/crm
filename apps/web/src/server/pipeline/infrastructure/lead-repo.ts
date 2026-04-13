@@ -1,3 +1,4 @@
+import { sql } from "kysely";
 import type {
   Insertable,
   SelectQueryBuilder,
@@ -25,13 +26,12 @@ function toLead(row: LeadRow): LeadRecord {
     ruc: row.ruc,
     razonSocial: row.razon_social,
     address: row.address,
+    district: row.district,
+    department: row.department,
     executiveId: row.executive_id,
     stage: row.stage,
     status: row.status,
     prioridad: row.prioridad,
-    engineCompanyName: row.engine_company_name,
-    engineAddress: row.engine_address,
-    engineFetchedAt: row.engine_fetched_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -42,13 +42,12 @@ function toNewLeadRow(values: LeadDraft): NewLeadRow {
     ruc: values.ruc,
     razon_social: values.razonSocial,
     address: values.address,
+    district: values.district,
+    department: values.department,
     executive_id: values.executiveId,
     stage: values.stage,
     status: values.status,
     prioridad: values.prioridad,
-    engine_company_name: values.engineCompanyName,
-    engine_address: values.engineAddress,
-    engine_fetched_at: values.engineFetchedAt,
     created_at: values.createdAt,
     updated_at: values.updatedAt,
   };
@@ -56,6 +55,10 @@ function toNewLeadRow(values: LeadDraft): NewLeadRow {
 
 function toLeadPatchRow(values: LeadPatch): LeadRowPatch {
   return {
+    razon_social: values.razonSocial,
+    address: values.address,
+    district: values.district,
+    department: values.department,
     executive_id: values.executiveId,
     stage: values.stage,
     status: values.status,
@@ -133,6 +136,29 @@ export function createLeadRepo(db: DatabaseExecutor) {
         .updateTable("pipeline_leads")
         .set(toLeadPatchRow(values))
         .where("id", "=", id)
+        .execute();
+    },
+
+    async updateByRuc(
+      ruc: string,
+      fields: Pick<
+        LeadRecord,
+        "razonSocial" | "address" | "district" | "department"
+      >,
+    ) {
+      await db
+        .updateTable("pipeline_leads")
+        .set({
+          razon_social: sql<
+            string | null
+          >`COALESCE(razon_social, ${fields.razonSocial})`,
+          address: sql<string | null>`COALESCE(address, ${fields.address})`,
+          district: sql<string | null>`COALESCE(district, ${fields.district})`,
+          department: sql<
+            string | null
+          >`COALESCE(department, ${fields.department})`,
+        })
+        .where("ruc", "=", ruc)
         .execute();
     },
 
