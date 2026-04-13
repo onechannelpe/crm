@@ -16,7 +16,7 @@ export function validateSecret(key: string, value: string): void {
 
   if (
     SEQUENTIAL_CHARS.includes(value) ||
-    SEQUENTIAL_CHARS.split("").reverse().join("").includes(value)
+    SEQUENTIAL_CHARS.split("").toReversed().join("").includes(value)
   ) {
     throw new Error(`${key} cannot be a simple sequential string`);
   }

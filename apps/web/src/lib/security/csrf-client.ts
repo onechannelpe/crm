@@ -1,6 +1,6 @@
 import { CSRF_CONFIG } from "./csrf-config";
 
-const SAFE_METHODS = ["GET", "HEAD", "OPTIONS", "TRACE"];
+const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS", "TRACE"]);
 
 /**
  * Patches window.fetch to automatically include the CSRF token header for mutations.
@@ -21,7 +21,7 @@ export function setupCsrfInterceptor() {
   ): Promise<Response> => {
     const method = init?.method?.toUpperCase() || "GET";
 
-    if (!SAFE_METHODS.includes(method)) {
+    if (!SAFE_METHODS.has(method)) {
       const token = getCsrfMetaToken();
 
       if (token) {

@@ -53,7 +53,7 @@ function getDocEntry(path: string, module: DocModule): DocEntry {
 
 export const docs = Object.entries(docModules)
   .map(([path, module]) => getDocEntry(path, module))
-  .sort((left, right) => left.order - right.order);
+  .toSorted((left, right) => left.order - right.order);
 
 export type DocSlug = (typeof docs)[number]["slug"];
 

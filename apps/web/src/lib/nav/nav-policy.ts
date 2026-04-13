@@ -38,7 +38,7 @@ export function getSidebarEntries(
 ): SidebarEntry[] {
   return SIDEBAR_ENTRIES.filter(
     (entry) => entry.section === section && canAccessPath(role, entry.href),
-  ).sort(sortByOrder);
+  ).toSorted(sortByOrder);
 }
 
 export function getSidebarGrouped(
@@ -51,12 +51,15 @@ export function getSidebarGrouped(
 
   for (const entry of entries) {
     const key = entry.group;
-    if (!seen.has(key)) {
+    const items = seen.get(key);
+    if (!items) {
       const items: SidebarEntry[] = [];
       seen.set(key, items);
       groups.push({ label: key, items });
+      items.push(entry);
+      continue;
     }
-    seen.get(key)!.push(entry);
+    items.push(entry);
   }
 
   return groups;
@@ -71,7 +74,7 @@ export function getSidebarChildren(
 
   return entry.children
     .filter((child) => canAccessPath(role, child.href))
-    .sort((a, b) => a.order - b.order);
+    .toSorted((a, b) => a.order - b.order);
 }
 
 export function getNavigableRoutes(role: Role): SidebarEntry[] {

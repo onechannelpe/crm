@@ -49,7 +49,7 @@ export async function listManagedExecutives(
     return Ok(
       summaries
         .filter((value): value is ManagedExecutiveView => value !== null)
-        .sort((a, b) => a.fullName.localeCompare(b.fullName)),
+        .toSorted((a, b) => a.fullName.localeCompare(b.fullName)),
     );
   } catch (error) {
     return Err(

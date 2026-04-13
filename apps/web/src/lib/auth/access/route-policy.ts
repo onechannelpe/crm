@@ -23,7 +23,7 @@ function resolvePermission(pathname: string): Permission | null {
   const prefix = Object.keys(ROUTE_MANIFEST)
     .filter(isAppPath)
     .filter((p) => pathname.startsWith(`${p}/`))
-    .sort((a, b) => b.length - a.length)[0];
+    .toSorted((a, b) => b.length - a.length)[0];
 
   return prefix ? (ROUTE_MANIFEST[prefix].permission ?? null) : null;
 }
@@ -45,7 +45,7 @@ export function getDefaultAppPath(role: Role): string {
   const candidate = Object.keys(ROUTE_MANIFEST)
     .filter(isAppPath)
     .filter((key) => ROUTE_MANIFEST[key].landingPriority !== undefined)
-    .sort(
+    .toSorted(
       (a, b) =>
         (ROUTE_MANIFEST[a].landingPriority ?? 0) -
         (ROUTE_MANIFEST[b].landingPriority ?? 0),
