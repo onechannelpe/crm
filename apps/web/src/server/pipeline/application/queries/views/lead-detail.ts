@@ -76,16 +76,9 @@ export type LeadDetailSaleView = {
 };
 
 export type LeadDetailSourceStatusView = {
-  engine: {
-    status: "available" | "missing" | "failed";
-    fetchedAt: number | null;
-    fields: Array<"razonSocial" | "address">;
-  };
   sunat: {
     status: SunatSourceStatus;
     fetchedAt: number | null;
-    legalName: string | null;
-    address: string | null;
     district: string | null;
     department: string | null;
     contributorStatus: string | null;

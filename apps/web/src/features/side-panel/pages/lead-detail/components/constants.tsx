@@ -32,7 +32,6 @@ export type DisplayField = {
   key:
     | "ruc"
     | "razonSocial"
-    | "address"
     | "status"
     | "prioridad"
     | "stage"
@@ -67,7 +66,6 @@ export const HIDDEN_TAB_ITEMS: ReadonlyArray<{
 export const FIELD_ROWS: ReadonlyArray<DisplayField> = [
   { label: "RUC", icon: MapIcon, key: "ruc" },
   { label: "Razón social", icon: Building2, key: "razonSocial" },
-  { label: "Dirección", icon: MapIcon, key: "address" },
   { label: "Estado", icon: Package, key: "status" },
   { label: "Prioridad", icon: Checkbox, key: "prioridad" },
   { label: "Etapa", icon: Package, key: "stage" },

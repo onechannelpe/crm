@@ -35,7 +35,7 @@ const COMMON_COLUMNS: ReadonlyArray<DataGridColumn<LeadListRowView>> = [
         <span class={styles.fieldIcon}>
           <Building2 size={14} />
         </span>
-        <span class={styles.cellText}>{lead.razonSocial || "Sin datos"}</span>
+        <span class={styles.cellText}>{lead.razonSocial ?? ""}</span>
       </div>
     ),
   },
@@ -50,7 +50,7 @@ const COMMON_COLUMNS: ReadonlyArray<DataGridColumn<LeadListRowView>> = [
         <span class={styles.fieldIcon}>
           <House size={14} />
         </span>
-        <span class={styles.mutedCellText}>{lead.address || "Sin datos"}</span>
+        <span class={styles.mutedCellText}>{lead.address ?? ""}</span>
       </div>
     ),
   },

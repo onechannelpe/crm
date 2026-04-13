@@ -36,12 +36,7 @@ export async function getLeadDetail(
       deps.leadQuotations.listByLeadId(input.leadId),
       deps.leadSales.findByLeadId(input.leadId),
       deps.leadHistory.listByLeadId(input.leadId),
-      deps.sourceStatuses.findByLead({
-        ruc: lead.ruc,
-        razonSocial: lead.razonSocial,
-        address: lead.address,
-        leadUpdatedAt: lead.updatedAt,
-      }),
+      deps.sourceStatuses.findByRuc(lead.ruc),
     ]);
 
   if (!historyResult.ok) {
