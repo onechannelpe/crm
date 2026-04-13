@@ -157,6 +157,28 @@ export function createSearchEnrichmentRepo(
             }),
           )
           .execute();
+
+        await trx
+          .insertInto("search_enrichment_completion_outbox")
+          .values({
+            document_type: overlay.document_type,
+            document_value: overlay.document_value,
+            legal_name: overlay.legal_name,
+            address: overlay.address,
+            district: overlay.district,
+            department: overlay.department,
+            fetched_at: overlay.fetched_at,
+            status: "queued",
+            attempt_count: 0,
+            max_attempts: 5,
+            available_at: now,
+            lease_owner: null,
+            lease_until: null,
+            error_message: null,
+            created_at: now,
+            processed_at: null,
+          })
+          .execute();
       });
     },
 

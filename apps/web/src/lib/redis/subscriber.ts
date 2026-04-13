@@ -33,6 +33,10 @@ export async function startJobSubscriber(triggers: {
       },
       { key: "SALES_EXPORT", channel: JOB_CHANNELS.SALES_EXPORT },
       { key: "ENRICHMENT", channel: JOB_CHANNELS.ENRICHMENT },
+      {
+        key: "ENRICHMENT_WRITEBACK",
+        channel: JOB_CHANNELS.ENRICHMENT_WRITEBACK,
+      },
     ] as const;
     const keyByChannel = new Map<string, keyof typeof JOB_CHANNELS>(
       channelEntries.map(({ key, channel }) => [channel, key]),

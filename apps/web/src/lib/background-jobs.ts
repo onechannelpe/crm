@@ -38,6 +38,8 @@ export function startBackgroundJobs() {
   const salesExportQueue = createSalesExportQueue(WORKER_ID);
   const enrichmentQueue =
     serverRuntime.clientSearch.createEnrichmentQueue(WORKER_ID);
+  const sunatEnrichmentWritebackQueue =
+    serverRuntime.pipeline.createSunatEnrichmentWritebackQueue(WORKER_ID);
   const queues: QueueRunner[] = [
     crmExportQueue,
     crmImportQueue,
@@ -45,6 +47,7 @@ export function startBackgroundJobs() {
     readyForQuotationOutboxQueue,
     salesExportQueue,
     enrichmentQueue,
+    sunatEnrichmentWritebackQueue,
   ];
   const runAllQueues = () => {
     for (const queue of queues) {
@@ -87,6 +90,10 @@ export function startBackgroundJobs() {
     },
     ENRICHMENT: () => {
       void enrichmentQueue.runOnce();
+      void sunatEnrichmentWritebackQueue.runOnce();
+    },
+    ENRICHMENT_WRITEBACK: () => {
+      void sunatEnrichmentWritebackQueue.runOnce();
     },
   });
 

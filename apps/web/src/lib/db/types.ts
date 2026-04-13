@@ -639,6 +639,26 @@ export interface SearchEnrichmentOverlaysTable {
   payload_json: string;
 }
 
+export interface SearchEnrichmentCompletionOutboxTable {
+  id: Generated<number>;
+  document_type: "dni" | "ruc";
+  document_value: string;
+  legal_name: string | null;
+  address: string | null;
+  district: string | null;
+  department: string | null;
+  fetched_at: number;
+  status: "queued" | "running" | "completed" | "failed";
+  attempt_count: ColumnType<number, number | undefined, number>;
+  max_attempts: ColumnType<number, number | undefined, number>;
+  available_at: number;
+  lease_owner: string | null;
+  lease_until: number | null;
+  error_message: string | null;
+  created_at: number;
+  processed_at: number | null;
+}
+
 export interface PasskeysTable {
   id: string;
   user_id: number;
@@ -998,6 +1018,7 @@ export interface Database {
   report_export_downloads: ReportExportDownloadsTable;
   search_enrichment_jobs: SearchEnrichmentJobsTable;
   search_enrichment_overlays: SearchEnrichmentOverlaysTable;
+  search_enrichment_completion_outbox: SearchEnrichmentCompletionOutboxTable;
   passkeys: PasskeysTable;
   webauthn_challenges: WebauthnChallengesTable;
   user_oauth_accounts: UserOAuthAccountsTable;

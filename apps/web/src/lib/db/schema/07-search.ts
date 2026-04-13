@@ -94,4 +94,31 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .on("search_enrichment_overlays")
     .columns(["expires_at"])
     .execute();
+
+  await db.schema
+    .createTable("search_enrichment_completion_outbox")
+    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("document_type", "varchar(8)", (col) => col.notNull())
+    .addColumn("document_value", "varchar(32)", (col) => col.notNull())
+    .addColumn("legal_name", "varchar(255)")
+    .addColumn("address", "text")
+    .addColumn("district", "varchar(128)")
+    .addColumn("department", "varchar(128)")
+    .addColumn("fetched_at", "integer", (col) => col.notNull())
+    .addColumn("status", "varchar(20)", (col) => col.notNull())
+    .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
+    .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(5))
+    .addColumn("available_at", "integer", (col) => col.notNull())
+    .addColumn("lease_owner", "varchar(64)")
+    .addColumn("lease_until", "integer")
+    .addColumn("error_message", "text")
+    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("processed_at", "integer")
+    .execute();
+
+  await db.schema
+    .createIndex("idx_search_enrichment_completion_outbox_status")
+    .on("search_enrichment_completion_outbox")
+    .columns(["status", "available_at", "lease_until", "created_at"])
+    .execute();
 }
