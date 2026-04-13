@@ -13,10 +13,7 @@ export function createRecordIndexSetup<
     title,
     ariaLabel: adapter.ariaLabel,
     class: adapter.class,
-    pickerIcon: adapter.pickerIcon,
     selectable: adapter.selectable ?? false,
-    emptyState: adapter.emptyState,
-    createAction: adapter.createAction,
     views: adapter.views,
     exportAction: adapter.exportAction,
     columns: adapter.columns.map((column) => ({

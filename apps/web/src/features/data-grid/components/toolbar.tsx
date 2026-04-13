@@ -2,17 +2,25 @@ import type { JSX } from "solid-js";
 
 import ChevronDown from "~/components/icons/chevron-down";
 
-import type { DataGridPicker } from "../model/types";
-
 import styles from "../styles/data-grid.module.css";
 
-export function DataGridToolbar(props: {
-  picker: DataGridPicker;
-  pickerDropdown?: JSX.Element;
-  rightContent: JSX.Element;
-}) {
-  const PickerIcon = props.picker.icon;
+type ToolbarSlot = () => JSX.Element;
 
+type DataGridToolbarPicker = {
+  label: string;
+  meta?: string;
+  onClick?: () => void;
+  hasDropdown: boolean;
+  renderIcon: ToolbarSlot;
+};
+
+export function DataGridToolbar(props: {
+  picker: DataGridToolbarPicker;
+  slots: {
+    dropdown?: ToolbarSlot;
+    actions: ToolbarSlot;
+  };
+}) {
   return (
     <div class={styles.viewBar}>
       <div class={styles.viewBarTop}>
@@ -20,11 +28,11 @@ export function DataGridToolbar(props: {
           <button
             type="button"
             class={styles.viewPicker}
-            aria-haspopup={props.pickerDropdown ? "menu" : undefined}
+            aria-haspopup={props.picker.hasDropdown ? "menu" : undefined}
             onClick={props.picker.onClick}
           >
             <span class={styles.viewPickerIcon}>
-              <PickerIcon size={16} />
+              {props.picker.renderIcon()}
             </span>
             <span class={styles.viewPickerLabel}>{props.picker.label}</span>
             <span class={styles.viewPickerMeta}>
@@ -32,9 +40,9 @@ export function DataGridToolbar(props: {
               <ChevronDown size={14} />
             </span>
           </button>
-          {props.pickerDropdown}
+          {props.slots.dropdown?.()}
         </div>
-        <div class={styles.viewActions}>{props.rightContent}</div>
+        <div class={styles.viewActions}>{props.slots.actions()}</div>
       </div>
     </div>
   );

@@ -76,14 +76,11 @@ export type RecordIndexSetup = {
   title: Accessor<string>;
   ariaLabel: string;
   class?: string;
-  pickerIcon?: DataGridIcon;
   selectable: boolean;
   columns: ReadonlyArray<{
     key: string;
     label: string;
   }>;
-  emptyState: RecordIndexEmptyState;
-  createAction?: RecordIndexCreateAction;
   views?: RecordIndexViews;
   exportAction?: () => Promise<void>;
   filter?: {
