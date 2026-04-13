@@ -37,7 +37,7 @@ export async function applyImportRows(
     ok: false,
     reason: row.reason,
   }));
-  const sortedRows = [...input.validRows].sort((a, b) => a.row - b.row);
+  const sortedRows = input.validRows.toSorted((a, b) => a.row - b.row);
   let applied = 0;
   const outboxPlan = createEmptyOutboxPlan();
 
@@ -77,9 +77,9 @@ export async function applyImportRows(
     });
   });
 
-  results.sort(resultSort);
+  const sortedResults = results.toSorted(resultSort);
   return {
-    results,
+    results: sortedResults,
     applied,
     failed: results.filter((row) => !row.ok).length,
   };

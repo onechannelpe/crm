@@ -27,7 +27,7 @@ async function runAfterAllHooks(suite: Suite): Promise<void> {
   }
 
   const hooks = TestRunner.getSuiteHooks(suite).afterAll;
-  for (const hook of hooks.slice().reverse()) {
+  for (const hook of hooks.toReversed()) {
     await hook(suite);
   }
 }
