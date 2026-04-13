@@ -158,6 +158,19 @@ export function createSearchEnrichmentRepo(
           )
           .execute();
 
+        const activeOutboxEntry = await trx
+          .selectFrom("search_enrichment_completion_outbox")
+          .select("id")
+          .where("document_type", "=", overlay.document_type)
+          .where("document_value", "=", overlay.document_value)
+          .where("status", "in", ["queued", "running"])
+          .limit(1)
+          .executeTakeFirst();
+
+        if (activeOutboxEntry) {
+          return;
+        }
+
         await trx
           .insertInto("search_enrichment_completion_outbox")
           .values({

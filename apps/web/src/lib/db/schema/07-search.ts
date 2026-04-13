@@ -121,4 +121,12 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .on("search_enrichment_completion_outbox")
     .columns(["status", "available_at", "lease_until", "created_at"])
     .execute();
+
+  await db.schema
+    .createIndex("idx_search_enrichment_completion_outbox_active_doc")
+    .unique()
+    .on("search_enrichment_completion_outbox")
+    .columns(["document_type", "document_value"])
+    .where(sql.ref("status"), "in", ["queued", "running"])
+    .execute();
 }
