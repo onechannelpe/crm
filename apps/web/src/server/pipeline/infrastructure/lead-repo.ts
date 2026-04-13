@@ -1,4 +1,3 @@
-import { sql } from "kysely";
 import type {
   Insertable,
   SelectQueryBuilder,
@@ -136,29 +135,6 @@ export function createLeadRepo(db: DatabaseExecutor) {
         .updateTable("pipeline_leads")
         .set(toLeadPatchRow(values))
         .where("id", "=", id)
-        .execute();
-    },
-
-    async updateByRuc(
-      ruc: string,
-      fields: Pick<
-        LeadRecord,
-        "razonSocial" | "address" | "district" | "department"
-      >,
-    ) {
-      await db
-        .updateTable("pipeline_leads")
-        .set({
-          razon_social: sql<
-            string | null
-          >`COALESCE(razon_social, ${fields.razonSocial})`,
-          address: sql<string | null>`COALESCE(address, ${fields.address})`,
-          district: sql<string | null>`COALESCE(district, ${fields.district})`,
-          department: sql<
-            string | null
-          >`COALESCE(department, ${fields.department})`,
-        })
-        .where("ruc", "=", ruc)
         .execute();
     },
 
