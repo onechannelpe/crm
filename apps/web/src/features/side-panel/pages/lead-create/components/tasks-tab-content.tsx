@@ -17,7 +17,7 @@ export function TasksTabContent(props: {
     },
     {
       title: "Bootstrap desde Engine",
-      meta: props.engineStatus ?? "Pendiente",
+      meta: props.engineStatus ?? "",
     },
     {
       title: "Crear lead",

@@ -82,7 +82,7 @@ export function LeadCreatePage() {
     const preview = latestBootstrapPreview();
 
     if (!value) {
-      return "Esperando RUC válido";
+      return "";
     }
 
     if (bootstrapPreview.loading && preview === null) {
@@ -150,7 +150,7 @@ export function LeadCreatePage() {
       navigateTo(
         createLeadDetailSidePanelPage({
           leadId: result.leadId,
-          title: value,
+          title: latestBootstrapPreview()?.razonSocial ?? "",
           subtitle: `RUC ${value}`,
         }),
         { resetStack: true },

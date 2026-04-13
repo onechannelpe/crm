@@ -58,9 +58,9 @@ export function HomeTabContent(props: HomeTabContentProps) {
                   ) : (
                     <span class={styles.fieldTextValue}>
                       {field.key === "razonSocial"
-                        ? (props.razonSocial ?? "Pendiente de bootstrap")
+                        ? (props.razonSocial ?? "")
                         : field.key === "address"
-                          ? (props.address ?? "Pendiente de bootstrap")
+                          ? (props.address ?? "")
                           : (field.value ?? "")}
                     </span>
                   )}
@@ -92,7 +92,7 @@ export function HomeTabContent(props: HomeTabContentProps) {
             <div class={styles.relationRow}>
               <span>
                 {widget.title === "Bootstrap desde Engine"
-                  ? (props.engineStatus ?? "Esperando RUC válido")
+                  ? (props.engineStatus ?? "")
                   : "Se encola al registrar el lead"}
               </span>
               <Show when={widget.title === "Bootstrap desde Engine"}>

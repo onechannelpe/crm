@@ -1,7 +1,6 @@
 import Building2 from "~/components/icons/building-2";
 import CalendarDays from "~/components/icons/calendar-days";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
-import House from "~/components/icons/house";
 import Info from "~/components/icons/info";
 import Package from "~/components/icons/package";
 import Target from "~/components/icons/target";
@@ -28,29 +27,14 @@ const COMMON_COLUMNS: ReadonlyArray<DataGridColumn<LeadListRowView>> = [
     key: "razonSocial",
     label: "Razón social",
     icon: Building2,
-    minWidth: 220,
-    grow: true,
+    minWidth: 240,
+    maxWidth: 420,
     renderCell: (lead) => (
       <div class={styles.fieldWithIcon}>
         <span class={styles.fieldIcon}>
           <Building2 size={14} />
         </span>
         <span class={styles.cellText}>{lead.razonSocial ?? ""}</span>
-      </div>
-    ),
-  },
-  {
-    key: "address",
-    label: "Dirección",
-    icon: House,
-    minWidth: 220,
-    maxWidth: 300,
-    renderCell: (lead) => (
-      <div class={styles.fieldWithIcon}>
-        <span class={styles.fieldIcon}>
-          <House size={14} />
-        </span>
-        <span class={styles.mutedCellText}>{lead.address ?? ""}</span>
       </div>
     ),
   },
