@@ -49,6 +49,7 @@ export function LeadDetailPage() {
 
   // Poll detail while SUNAT enrichment is active, revalidate list when it completes.
   let prevSunatStatus: string | undefined;
+  let pollStartedAt: number | undefined;
   createEffect(() => {
     const detail = data();
     if (!detail) return;
@@ -61,20 +62,19 @@ export function LeadDetailPage() {
       status !== "running"
     ) {
       void revalidate(leadListQuery.key);
+      pollStartedAt = undefined;
     }
     prevSunatStatus = status;
 
     if (status !== "queued" && status !== "running") return;
 
-    const leadId = pageState().leadId;
-    let elapsed = 0;
+    if (pollStartedAt === undefined) {
+      pollStartedAt = Date.now();
+    }
+    if (Date.now() - pollStartedAt >= POLL_TIMEOUT_MS) return;
 
+    const leadId = pageState().leadId;
     const id = setInterval(() => {
-      elapsed += POLL_INTERVAL_MS;
-      if (elapsed >= POLL_TIMEOUT_MS) {
-        clearInterval(id);
-        return;
-      }
       void revalidate(leadDetailQuery.keyFor(leadId));
     }, POLL_INTERVAL_MS);
 

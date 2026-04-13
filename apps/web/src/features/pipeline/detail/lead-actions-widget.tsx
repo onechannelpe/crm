@@ -1,5 +1,4 @@
-import { useAction } from "@solidjs/router";
-import { A } from "@solidjs/router";
+import { A, useAction } from "@solidjs/router";
 import { createSignal, For, onCleanup, onMount, Show } from "solid-js";
 
 import ChevronRight from "~/components/icons/chevron-right";
@@ -11,6 +10,7 @@ import { mapLeadActionsToUi } from "./lead-workflow-ui";
 import { ReassignLeadModal } from "./reassign-lead-modal";
 import { ReviewLeadModal } from "./review-lead-modal";
 
+import widgetStyles from "./lead-actions-widget.module.css";
 import styles from "../../side-panel/pages/lead-detail/page.module.css";
 
 type OpenModal = "review-lead" | "reassign-lead" | null;
@@ -18,20 +18,13 @@ type OpenModal = "review-lead" | "reassign-lead" | null;
 export function LeadActionsWidget(props: {
   leadId: number;
   availableActions: LeadAvailableAction[];
-  canReassign: boolean;
 }) {
   const approve = useAction(approveForSaleMutation);
   const [openModal, setOpenModal] = createSignal<OpenModal>(null);
   const [approving, setApproving] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
 
-  const actions = () => {
-    const all = mapLeadActionsToUi(props.leadId, props.availableActions);
-    if (!props.canReassign) {
-      return all.filter((a) => a.id !== "reassign-lead");
-    }
-    return all;
-  };
+  const actions = () => mapLeadActionsToUi(props.leadId, props.availableActions);
 
   onMount(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -82,7 +75,9 @@ export function LeadActionsWidget(props: {
                   <button
                     type="button"
                     class={styles.actionRowButton}
-                    disabled={approving() && action.id === "approve-for-sale"}
+                    disabled={
+                      approving() && action.id === "approve-for-sale"
+                    }
                     onClick={() => handleButtonAction(action.id)}
                   >
                     <span>
@@ -112,14 +107,7 @@ export function LeadActionsWidget(props: {
         </div>
         <Show when={error()}>
           {(message) => (
-            <p
-              style={{
-                color: "var(--destructive)",
-                "font-size": "12px",
-                padding: "0 8px 8px",
-                margin: 0,
-              }}
-            >
+            <p class={widgetStyles.errorText} style={{ padding: "0 8px 8px" }}>
               {message()}
             </p>
           )}

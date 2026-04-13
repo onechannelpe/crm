@@ -1,11 +1,9 @@
 import { For, Show } from "solid-js";
 
 import ChevronDown from "~/components/icons/chevron-down";
-import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { CommercialInputSection } from "~/features/pipeline/detail/commercial-input-section";
 import { LeadActionsWidget } from "~/features/pipeline/detail/lead-actions-widget";
 import { blockingFieldLabel } from "~/features/pipeline/detail/lead-workflow-ui";
-import { hasPermission } from "~/lib/auth/access/rbac";
 import { formatDateTime } from "~/lib/utils";
 import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
 
@@ -27,9 +25,6 @@ function fieldValue(props: {
 }
 
 export function HomeTabContent(props: { data: LeadDetailView }) {
-  const { currentUser } = useAuthenticatedSession();
-  const canReassign = () => hasPermission(currentUser().role, "lead:reassign");
-
   return (
     <div class={styles.homeContent}>
       <section class={styles.widget}>
@@ -107,7 +102,6 @@ export function HomeTabContent(props: { data: LeadDetailView }) {
       <LeadActionsWidget
         leadId={props.data.lead.id}
         availableActions={props.data.availableActions}
-        canReassign={canReassign()}
       />
     </div>
   );
