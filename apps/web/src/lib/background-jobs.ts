@@ -90,7 +90,6 @@ export function startBackgroundJobs() {
     },
     ENRICHMENT: () => {
       void enrichmentQueue.runOnce();
-      void sunatEnrichmentWritebackQueue.runOnce();
     },
     ENRICHMENT_WRITEBACK: () => {
       void sunatEnrichmentWritebackQueue.runOnce();

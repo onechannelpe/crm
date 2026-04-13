@@ -26,16 +26,19 @@ export async function applySunatEnrichment(input: {
   }
 
   const patch: LeadPatch = {};
-  if (input.overlay.legalName) {
+  if (input.overlay.legalName && input.overlay.legalName !== lead.razonSocial) {
     patch.razonSocial = input.overlay.legalName;
   }
-  if (input.overlay.address) {
+  if (input.overlay.address && input.overlay.address !== lead.address) {
     patch.address = input.overlay.address;
   }
-  if (input.overlay.district) {
+  if (input.overlay.district && input.overlay.district !== lead.district) {
     patch.district = input.overlay.district;
   }
-  if (input.overlay.department) {
+  if (
+    input.overlay.department &&
+    input.overlay.department !== lead.department
+  ) {
     patch.department = input.overlay.department;
   }
   if (Object.keys(patch).length < 1) {
