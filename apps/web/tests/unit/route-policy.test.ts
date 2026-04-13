@@ -12,13 +12,11 @@ import { getHeaderRoute } from "../../src/lib/nav/nav-policy";
 describe("route permissions", () => {
   it("resolves static and dynamic route permissions", () => {
     expect(getRoutePermission("/team")).toBe("team:read");
-    expect(getRoutePermission("/review")).toBe("lead:review");
-    expect(getRoutePermission("/review/123")).toBe("lead:review");
     expect(getRoutePermission("/quotations")).toBe("quotation:manage");
     expect(getRoutePermission("/quotations/123")).toBe("quotation:manage");
-    expect(getRoutePermission("/leads")).toBe("lead:pipeline");
-    expect(getRoutePermission("/leads/new")).toBe("lead:pipeline");
-    expect(getRoutePermission("/leads/123")).toBe("lead:pipeline");
+    expect(getRoutePermission("/leads")).toBeNull();
+    expect(getRoutePermission("/leads/new")).toBeNull();
+    expect(getRoutePermission("/leads/123")).toBeNull();
     expect(getRoutePermission("/sales/crm")).toBe("lead:sale:create");
     expect(getRoutePermission("/sales/new/123")).toBe("lead:sale:create");
     expect(getRoutePermission("/sales/123")).toBe("lead:sale:create");
@@ -40,7 +38,8 @@ describe("route permissions", () => {
       false,
     );
     expect(canAccessPath("executive", "/leads")).toBe(true);
-    expect(canAccessPath("admin", "/leads")).toBe(false);
+    expect(canAccessPath("admin", "/leads")).toBe(true);
+    expect(canAccessPath("logistics", "/leads")).toBe(true);
     expect(canAccessPath("executive", "/team")).toBe(false);
     expect(canAccessPath("hr", "/team")).toBe(true);
     expect(canAccessPath("admin", "/settings/catalog")).toBe(true);
@@ -61,7 +60,6 @@ describe("nav config structural invariants", () => {
     expect(getHeaderRoute("/sales/new/42").label).toBe("Registrar venta");
     expect(getHeaderRoute("/sales/new/42").icon).toBe("new-sale");
     expect(getHeaderRoute("/sales/42").label).toBe("Detalle de venta");
-    expect(getHeaderRoute("/review/42").label).toBe("Revisar prospecto");
   });
 
   it("uses fallback when no header rule exists", () => {

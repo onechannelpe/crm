@@ -51,7 +51,7 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
   "/team/invite": { permission: "team:manage" },
   "/team/import": { permission: "team:manage" },
   "/inventory": { permission: "inventory:read", landingPriority: 5 },
-  "/leads": { landingPriority: 2 },
+  "/leads": {},
   "/quotations": { permission: "quotation:manage", landingPriority: 3 },
   "/sales/crm": { permission: "lead:sale:create" },
   "/integrations": { permission: "integration:manage" },
