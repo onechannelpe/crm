@@ -8,8 +8,8 @@ import { For, Show, createEffect, createSignal, on } from "solid-js";
 
 import type { InviteManagement } from "~/actions/team/contracts";
 import { createTeamInvite } from "~/actions/team/invites";
-import { EmptyState } from "~/components/feedback/empty-state";
-import { useToast } from "~/components/feedback/toast-provider";
+import { EmptyState } from "~/components/feedback/empty-state/empty";
+import { useToast } from "~/components/feedback/toast/provider";
 import Mail from "~/components/icons/mail";
 import X from "~/components/icons/x";
 import { AppPageSection, AppPageSectionTitle } from "~/components/layout/page";

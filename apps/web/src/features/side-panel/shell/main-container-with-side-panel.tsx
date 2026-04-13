@@ -1,6 +1,6 @@
 import { type ParentProps, Suspense } from "solid-js";
 
-import { Loading } from "~/components/feedback/loading";
+import { Loading } from "~/components/feedback/loading/screen";
 import { cn } from "~/lib/utils";
 
 import { Host } from "./host";

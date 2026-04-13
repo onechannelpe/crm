@@ -5,7 +5,7 @@ import { AuthFlowShell } from "~/components/auth/flow/auth-flow-shell";
 import { AuthLoadingBlock } from "~/components/auth/flow/auth-loading-block";
 import { LegalFooter } from "~/components/auth/flow/legal-footer";
 import { OtpSlotInput } from "~/components/auth/flow/otp-slot-input";
-import { useToast } from "~/components/feedback/toast-provider";
+import { useToast } from "~/components/feedback/toast/provider";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
 import { parseLoginFlowId } from "~/lib/auth/login-route-flow";

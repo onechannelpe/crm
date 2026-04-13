@@ -3,7 +3,7 @@ import { Show, Suspense } from "solid-js";
 import { AuthFlowShell } from "~/components/auth/flow/auth-flow-shell";
 import { OtpSlotInput } from "~/components/auth/flow/otp-slot-input";
 import { RecoveryCodesPanel } from "~/components/auth/security-enrollment/recovery-codes-panel";
-import { Loading } from "~/components/feedback/loading";
+import { Loading } from "~/components/feedback/loading/screen";
 import { OnboardingProfileStep } from "~/components/onboarding/onboarding-profile-step";
 import { OnboardingSecurityStep } from "~/components/onboarding/onboarding-security-step";
 import { SessionProvider } from "~/components/providers/session-provider";

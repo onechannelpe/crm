@@ -9,9 +9,9 @@ import { Button } from "~/components/ui/input/button";
 import { DS_Z_INDEX } from "~/components/ui/theme/design-system";
 import { cn } from "~/lib/utils";
 
-import { useToast } from "./toast-provider";
+import { useToast } from "./provider";
 
-import styles from "./toast.module.css";
+import styles from "./container.module.css";
 
 export function ToastContainer() {
   const { toasts, removeToast, pauseToast, resumeToast } = useToast();

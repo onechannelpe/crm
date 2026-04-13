@@ -1,7 +1,7 @@
 import LoaderCircle from "~/components/icons/loader-circle";
 import { cn } from "~/lib/utils";
 
-import styles from "./loading.module.css";
+import styles from "./screen.module.css";
 
 interface LoadingProps {
   size?: "sm" | "md" | "lg";

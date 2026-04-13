@@ -7,8 +7,8 @@ import {
   type BulkApplyResult,
   type BulkPreviewResult,
 } from "~/actions/team/bulk-import";
-import { EmptyState } from "~/components/feedback/empty-state";
-import { useToast } from "~/components/feedback/toast-provider";
+import { EmptyState } from "~/components/feedback/empty-state/empty";
+import { useToast } from "~/components/feedback/toast/provider";
 import { AppPageSection, AppPageSectionTitle } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { FileInput } from "~/components/ui/input/file-input";

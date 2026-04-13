@@ -1,4 +1,4 @@
-import { Loader } from "~/components/feedback/loader";
+import { Loader } from "~/components/feedback/loading/loader";
 
 import styles from "./auth-loading-block.module.css";
 

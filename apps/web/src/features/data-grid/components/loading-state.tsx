@@ -1,4 +1,4 @@
-import { Loading } from "~/components/feedback/loading";
+import { Loading } from "~/components/feedback/loading/screen";
 
 import styles from "../styles/data-grid.module.css";
 

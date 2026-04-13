@@ -4,7 +4,7 @@ import {
   getUserLoginRetryReport,
   type UserLoginRetryReport,
 } from "~/actions/admin/auth-security";
-import { useToast } from "~/components/feedback/toast-provider";
+import { useToast } from "~/components/feedback/toast/provider";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import {

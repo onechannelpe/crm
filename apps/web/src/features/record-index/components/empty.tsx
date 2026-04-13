@@ -1,4 +1,4 @@
-import { EmptyState } from "~/components/feedback/empty-state";
+import { EmptyState } from "~/components/feedback/empty-state/empty";
 import Plus from "~/components/icons/plus";
 import { Button } from "~/components/ui/input/button";
 import { DataGrid } from "~/features/data-grid/components/grid";

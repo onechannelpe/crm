@@ -9,7 +9,7 @@ import { getSalesRecordBootstrap } from "~/actions/sales-records/read";
 import { AddressFields } from "~/components/features/sales/address-fields";
 import { ClientFields } from "~/components/features/sales/client-fields";
 import { ProductLineEditor } from "~/components/features/sales/product-line-editor";
-import { useToast } from "~/components/feedback/toast-provider";
+import { useToast } from "~/components/feedback/toast/provider";
 import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { useAsyncAction } from "~/hooks/use-async-action";
