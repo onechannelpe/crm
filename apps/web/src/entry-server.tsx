@@ -27,7 +27,7 @@ export default createHandler(
                 content="width=device-width, initial-scale=1"
               />
               <RequestMeta />
-              <title>CRM | One Channel</title>
+              <title>Culqi360</title>
               {assets}
             </head>
             <body>
