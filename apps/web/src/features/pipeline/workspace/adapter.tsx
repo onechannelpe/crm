@@ -27,7 +27,6 @@ import styles from "./styles.module.css";
 
 export function LeadsWorkspace() {
   const { currentUser } = useAuthenticatedSession();
-  // Role is stable for the session lifetime — snapshot once.
   const user = currentUser();
 
   const available = viewsForRole(user.role);
