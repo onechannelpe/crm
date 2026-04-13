@@ -9,7 +9,7 @@ export function useOpenLeadRecord() {
     createLeadDetailSidePanelPage({
       leadId: lead.id,
       title: lead.razonSocial ?? "",
-      subtitle: `RUC ${lead.ruc}`,
+      subtitle: lead.ruc,
     }),
   );
 

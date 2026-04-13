@@ -11,6 +11,45 @@ export type SunatLeadOverlay = {
   department: string | null;
 };
 
+function normalizeOverlayValue(value: string | null): string | null {
+  if (value === null) {
+    return null;
+  }
+  const normalized = value.trim();
+  return normalized.length > 0 ? normalized : null;
+}
+
+function toLeadPatchFromSunatOverlay(
+  overlay: SunatLeadOverlay,
+): Pick<LeadPatch, "razonSocial" | "address" | "district" | "department"> {
+  const patch: Pick<
+    LeadPatch,
+    "razonSocial" | "address" | "district" | "department"
+  > = {};
+
+  const razonSocial = normalizeOverlayValue(overlay.legalName);
+  if (razonSocial !== null) {
+    patch.razonSocial = razonSocial;
+  }
+
+  const address = normalizeOverlayValue(overlay.address);
+  if (address !== null) {
+    patch.address = address;
+  }
+
+  const district = normalizeOverlayValue(overlay.district);
+  if (district !== null) {
+    patch.district = district;
+  }
+
+  const department = normalizeOverlayValue(overlay.department);
+  if (department !== null) {
+    patch.department = department;
+  }
+
+  return patch;
+}
+
 export async function applySunatEnrichment(input: {
   overlay: SunatLeadOverlay;
   leads: LeadRepository;
@@ -20,32 +59,12 @@ export async function applySunatEnrichment(input: {
     return;
   }
 
-  const lead = await input.leads.findByRuc(input.overlay.documentValue);
-  if (!lead) {
-    return;
-  }
-
-  const patch: LeadPatch = {};
-  if (input.overlay.legalName && input.overlay.legalName !== lead.razonSocial) {
-    patch.razonSocial = input.overlay.legalName;
-  }
-  if (input.overlay.address && input.overlay.address !== lead.address) {
-    patch.address = input.overlay.address;
-  }
-  if (input.overlay.district && input.overlay.district !== lead.district) {
-    patch.district = input.overlay.district;
-  }
-  if (
-    input.overlay.department &&
-    input.overlay.department !== lead.department
-  ) {
-    patch.department = input.overlay.department;
-  }
+  const patch: LeadPatch = toLeadPatchFromSunatOverlay(input.overlay);
   if (Object.keys(patch).length < 1) {
     return;
   }
 
-  await input.leads.updateById(lead.id, {
+  await input.leads.updateByRuc(input.overlay.documentValue, {
     ...patch,
     updatedAt: input.now ?? Date.now(),
   });
