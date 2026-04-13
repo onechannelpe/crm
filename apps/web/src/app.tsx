@@ -2,9 +2,9 @@ import { Router } from "@solidjs/router";
 import { FileRoutes } from "@solidjs/start/router";
 import { Suspense } from "solid-js";
 
-import { AppErrorBoundary } from "./components/feedback/error-boundary";
-import { ToastContainer } from "./components/feedback/toast";
-import { ToastProvider } from "./components/feedback/toast-provider";
+import { AppErrorBoundary } from "./components/feedback/error/boundary";
+import { ToastContainer } from "./components/feedback/toast/container";
+import { ToastProvider } from "./components/feedback/toast/provider";
 
 import "./app.css";
 

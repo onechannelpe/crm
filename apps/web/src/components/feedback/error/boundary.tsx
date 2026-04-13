@@ -3,8 +3,8 @@ import { ErrorBoundary as SolidErrorBoundary } from "solid-js";
 
 import { createLogger } from "~/lib/observability/logger";
 
-import { getErrorMessage, reportBoundaryError } from "./error-boundary-utils";
-import { ErrorState } from "./error-state";
+import { getErrorMessage, reportBoundaryError } from "./boundary-utils";
+import { ErrorState } from "./state";
 
 interface AppErrorBoundaryProps {
   children: JSX.Element;

@@ -2,7 +2,7 @@ import { Show } from "solid-js";
 
 import { Button } from "~/components/ui/input/button";
 
-import styles from "./error-state.module.css";
+import styles from "./state.module.css";
 
 interface ErrorStateProps {
   title?: string;

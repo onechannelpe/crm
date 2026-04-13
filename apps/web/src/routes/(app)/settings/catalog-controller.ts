@@ -1,7 +1,7 @@
 import { useAction, useSubmissions } from "@solidjs/router";
 import { createMemo, createSignal } from "solid-js";
 
-import { useToast } from "~/components/feedback/toast-provider";
+import { useToast } from "~/components/feedback/toast/provider";
 import { getErrorMessage } from "~/lib/errors";
 import { updateProductPricingMutation } from "~/lib/mutations/settings";
 import { productCatalogQuery } from "~/lib/queries/settings";

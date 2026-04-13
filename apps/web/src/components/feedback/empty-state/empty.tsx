@@ -3,7 +3,7 @@ import type { Component, JSX } from "solid-js";
 import type { IconProps } from "~/components/icons/icon-base";
 import Inbox from "~/components/icons/inbox";
 
-import styles from "./empty-state.module.css";
+import styles from "./empty.module.css";
 
 type IconComponent = Component<Omit<IconProps, "name" | "iconNode">>;
 

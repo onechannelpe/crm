@@ -1,4 +1,4 @@
-import { EmptyState } from "~/components/feedback/empty-state";
+import { EmptyState } from "~/components/feedback/empty-state/empty";
 import CalendarDays from "~/components/icons/calendar-days";
 import { AppPage } from "~/components/layout/page";
 

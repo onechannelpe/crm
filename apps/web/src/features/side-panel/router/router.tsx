@@ -1,6 +1,6 @@
 import { ErrorBoundary, Show, Suspense } from "solid-js";
 
-import { Loading } from "~/components/feedback/loading";
+import { Loading } from "~/components/feedback/loading/screen";
 
 import { SIDE_PANEL_PAGES_CONFIG } from "../registry/page-registry";
 import { useSidePanel } from "../state/use-side-panel";

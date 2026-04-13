@@ -1,7 +1,7 @@
 import { createAsync, useNavigate } from "@solidjs/router";
 
 import type { SalesRecordQueueItemView } from "~/actions/sales-records/contracts";
-import { EmptyState } from "~/components/feedback/empty-state";
+import { EmptyState } from "~/components/feedback/empty-state/empty";
 import Building2 from "~/components/icons/building-2";
 import CalendarDays from "~/components/icons/calendar-days";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";

@@ -3,8 +3,8 @@ import { For, Show, createMemo, createSignal } from "solid-js";
 
 import type { SalesRecordQueueItemView } from "~/actions/sales-records/contracts";
 import { RejectionForm } from "~/components/features/sales/rejection-form";
-import { EmptyState } from "~/components/feedback/empty-state";
-import { useToast } from "~/components/feedback/toast-provider";
+import { EmptyState } from "~/components/feedback/empty-state/empty";
+import { useToast } from "~/components/feedback/toast/provider";
 import CalendarDays from "~/components/icons/calendar-days";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import UserRound from "~/components/icons/user-round";
