@@ -233,18 +233,8 @@
   text-align: left;
 }
 
-.fieldInput {
-  background: transparent;
-  border: none;
-  color: var(--foreground-secondary);
-  font: inherit;
-  outline: none;
-  padding: 0;
+.fieldInputControl {
   width: 100%;
-}
-
-.fieldInput::placeholder {
-  color: var(--foreground-tertiary);
 }
 
 .fieldTextValue {
