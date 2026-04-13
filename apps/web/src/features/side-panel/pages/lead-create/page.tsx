@@ -135,9 +135,7 @@ export function LeadCreatePage() {
     const value = validRuc();
 
     if (!value) {
-      setRucError(
-        "El RUC debe tener exactamente 11 dígitos numéricos. Intenta nuevamente.",
-      );
+      setRucError("El RUC debe tener 11 dígitos.");
       setActiveTab("home");
       return;
     }

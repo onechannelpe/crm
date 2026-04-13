@@ -1,13 +1,15 @@
 .field {
+  box-sizing: border-box;
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  position: relative;
 }
 
 .label {
-  color: var(--muted-foreground);
-  font-size: var(--font-size-label);
+  color: var(--foreground-tertiary);
+  display: block;
+  font-size: 11px;
   font-weight: var(--font-weight-semibold);
   margin-bottom: 4px;
 }
@@ -28,7 +30,11 @@
   height: 32px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background: color-mix(in oklab, var(--surface) 84%, var(--accent) 16%);
+  background: color-mix(
+    in srgb,
+    var(--background-transparent-light) 84%,
+    var(--background) 16%
+  );
   color: var(--foreground);
   font-size: var(--font-size-body);
   padding: 0 8px;
@@ -84,7 +90,11 @@
   min-height: 32px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background: color-mix(in oklab, var(--surface) 84%, var(--accent) 16%);
+  background: color-mix(
+    in srgb,
+    var(--background-transparent-light) 84%,
+    var(--background) 16%
+  );
   color: var(--foreground);
   font-size: var(--font-size-body);
   padding: 6px 8px;
@@ -95,7 +105,11 @@
   min-height: 96px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background: color-mix(in oklab, var(--surface) 84%, var(--accent) 16%);
+  background: color-mix(
+    in srgb,
+    var(--background-transparent-light) 84%,
+    var(--background) 16%
+  );
   color: var(--foreground);
   font-size: var(--font-size-body);
   padding: 8px;
@@ -103,12 +117,12 @@
 }
 
 .control::placeholder {
-  color: var(--muted-foreground);
+  color: var(--foreground-tertiary);
   font-weight: var(--font-weight-medium);
 }
 
 .textareaControl::placeholder {
-  color: var(--muted-foreground);
+  color: var(--foreground-tertiary);
 }
 
 .control:disabled {
@@ -118,7 +132,6 @@
 
 .control:focus {
   border-color: var(--info);
-  box-shadow: var(--focus-ring-shadow);
 }
 
 .errorControl {
@@ -127,8 +140,24 @@
 
 .errorText {
   color: var(--destructive);
-  font-size: var(--font-size-caption);
-  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-xs);
+  margin-top: 1px;
+  position: absolute;
+}
+
+.errorHelperWrap {
+  min-height: 16px;
+}
+
+.hintText {
+  color: var(--foreground-tertiary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-regular);
+  margin-top: 2px;
+}
+
+.hintTextDanger {
+  color: var(--destructive);
 }
 
 .checkboxLabel {

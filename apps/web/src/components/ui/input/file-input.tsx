@@ -2,6 +2,9 @@ import { createUniqueId, type JSX, splitProps } from "solid-js";
 
 import { cn } from "~/lib/utils";
 
+import { InputErrorHelper } from "./input-error-helper";
+import { InputLabel } from "./input-label";
+
 import styles from "./field.module.css";
 
 export interface FileInputProps extends JSX.InputHTMLAttributes<HTMLInputElement> {
@@ -16,10 +19,10 @@ export function FileInput(props: FileInputProps) {
   return (
     <div class={styles.field}>
       {local.label && (
-        <label for={inputId} class={styles.label}>
+        <InputLabel for={inputId}>
           {local.label}
           {props.required && <span class={styles.required}>*</span>}
-        </label>
+        </InputLabel>
       )}
       <input
         id={inputId}
@@ -31,7 +34,7 @@ export function FileInput(props: FileInputProps) {
         )}
         {...others}
       />
-      {local.error && <p class={styles.errorText}>{local.error}</p>}
+      {local.error && <InputErrorHelper>{local.error}</InputErrorHelper>}
     </div>
   );
 }
