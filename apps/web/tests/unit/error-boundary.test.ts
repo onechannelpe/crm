@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   getErrorMessage,
   reportBoundaryError,
-} from "../../src/components/feedback/error-boundary";
+} from "../../src/components/feedback/error-boundary-utils";
 
 describe("app error boundary helpers", () => {
   it("returns error message for Error instances", () => {
