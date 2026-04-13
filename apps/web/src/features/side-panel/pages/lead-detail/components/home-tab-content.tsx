@@ -1,28 +1,17 @@
-import { A } from "@solidjs/router";
 import { For, Show } from "solid-js";
 
 import ChevronDown from "~/components/icons/chevron-down";
-import ChevronRight from "~/components/icons/chevron-right";
-import {
-  blockingFieldLabel,
-  mapLeadActionsToUi,
-} from "~/features/pipeline/detail/lead-workflow-ui";
+import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
+import { CommercialInputSection } from "~/features/pipeline/detail/commercial-input-section";
+import { LeadActionsWidget } from "~/features/pipeline/detail/lead-actions-widget";
+import { blockingFieldLabel } from "~/features/pipeline/detail/lead-workflow-ui";
+import { hasPermission } from "~/lib/auth/access/rbac";
 import { formatDateTime } from "~/lib/utils";
 import type { LeadDetailView } from "~/server/pipeline/application/queries/views/lead-detail";
 
 import { FIELD_ROWS } from "./constants";
 
 import styles from "../page.module.css";
-
-type HomeTabContentProps = {
-  data: LeadDetailView;
-  approving?: boolean;
-  onApproveForSale?: () => void;
-};
-
-function actionItems(data: LeadDetailView) {
-  return mapLeadActionsToUi(data.lead.id, data.availableActions);
-}
 
 function fieldValue(props: {
   data: LeadDetailView;
@@ -37,8 +26,9 @@ function fieldValue(props: {
   return formatDateTime(props.data.lead.updatedAt);
 }
 
-export function HomeTabContent(props: HomeTabContentProps) {
-  const actions = () => actionItems(props.data);
+export function HomeTabContent(props: { data: LeadDetailView }) {
+  const { currentUser } = useAuthenticatedSession();
+  const canReassign = () => hasPermission(currentUser().role, "lead:reassign");
 
   return (
     <div class={styles.homeContent}>
@@ -71,6 +61,13 @@ export function HomeTabContent(props: HomeTabContentProps) {
           </For>
         </div>
       </section>
+
+      <Show when={props.data.lead.stage === "NEEDS_EXECUTIVE_INPUT"}>
+        <CommercialInputSection
+          leadId={props.data.lead.id}
+          initialValues={props.data.commercialInput}
+        />
+      </Show>
 
       <section class={styles.widget}>
         <div class={styles.widgetHeader}>
@@ -107,46 +104,11 @@ export function HomeTabContent(props: HomeTabContentProps) {
         </div>
       </section>
 
-      <section class={styles.widget}>
-        <div class={styles.widgetHeader}>
-          <h3 class={styles.widgetTitle}>Acciones</h3>
-        </div>
-        <div class={styles.relationList}>
-          <For each={actions()}>
-            {(action) => (
-              <Show
-                when={action.kind === "link" && action}
-                fallback={
-                  <button
-                    type="button"
-                    class={styles.actionRowButton}
-                    disabled={props.approving}
-                    onClick={() => props.onApproveForSale?.()}
-                  >
-                    <span>
-                      {props.approving ? "Aprobando..." : action.label}
-                    </span>
-                    <ChevronRight size={14} />
-                  </button>
-                }
-              >
-                {(linkAction) => (
-                  <A class={styles.actionRowLink} href={linkAction().href}>
-                    <span>{linkAction().label}</span>
-                    <ChevronRight size={14} />
-                  </A>
-                )}
-              </Show>
-            )}
-          </For>
-          <Show when={actions().length === 0}>
-            <div class={styles.relationRow}>
-              <span>Sin acciones disponibles</span>
-              <span class={styles.relationMeta}>Flujo al día</span>
-            </div>
-          </Show>
-        </div>
-      </section>
+      <LeadActionsWidget
+        leadId={props.data.lead.id}
+        availableActions={props.data.availableActions}
+        canReassign={canReassign()}
+      />
     </div>
   );
 }

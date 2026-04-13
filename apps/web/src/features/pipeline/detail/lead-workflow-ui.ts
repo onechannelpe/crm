@@ -64,13 +64,26 @@ export function mapLeadActionsToUi(
       case "approve-for-sale":
         items.push({ id: action, label: "Aprobar para venta", kind: "button" });
         break;
+      case "review-lead":
+        items.push({
+          id: action,
+          label: "Revisar prospecto",
+          kind: "button",
+        });
+        break;
+      case "reassign-lead":
+        items.push({
+          id: action,
+          label: "Reasignar prospecto",
+          kind: "button",
+        });
+        break;
+      // complete-commercial-input is rendered as an inline form section, not an action button.
+      case "complete-commercial-input":
       // Actions below have no implemented handler yet.
       // They are intentionally omitted rather than shown as disabled.
-      case "review-lead":
-      case "complete-commercial-input":
       case "log-call":
       case "add-note":
-      case "reassign-lead":
         break;
       default:
         break;
