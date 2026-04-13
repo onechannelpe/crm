@@ -119,10 +119,11 @@ export default function AuditAuthPage() {
   };
 
   const rows = createMemo<AuditAuthRow[]>(() =>
-    (latestSnapshot()?.recent ?? []).map((row, index) => ({
-      ...row,
-      id: index + 1,
-    })),
+    (latestSnapshot()?.recent ?? []).map((row, index) =>
+      Object.assign({}, row, {
+        id: index + 1,
+      }),
+    ),
   );
 
   const rowOpen = useSidePanelRowOpen<AuditAuthRow>((row) =>

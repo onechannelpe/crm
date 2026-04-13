@@ -62,12 +62,13 @@ export function RootPage() {
     const query = searchText().toLowerCase();
     if (!query) return commandGroups();
     return commandGroups()
-      .map((group) => ({
-        ...group,
-        items: group.items.filter((item) =>
-          item.label.toLowerCase().includes(query),
-        ),
-      }))
+      .map((group) =>
+        Object.assign({}, group, {
+          items: group.items.filter((item) =>
+            item.label.toLowerCase().includes(query),
+          ),
+        }),
+      )
       .filter((group) => group.items.length > 0);
   };
 

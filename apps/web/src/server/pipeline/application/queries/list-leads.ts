@@ -75,10 +75,11 @@ export async function listLeads(
   ]);
 
   return Ok({
-    rows: rows.map((row) => ({
-      ...row,
-      nextStep: presentLeadNextStep({ lead: row, sale: undefined }),
-    })),
+    rows: rows.map((row) =>
+      Object.assign({}, row, {
+        nextStep: presentLeadNextStep({ lead: row, sale: undefined }),
+      }),
+    ),
     totalCount,
   });
 }

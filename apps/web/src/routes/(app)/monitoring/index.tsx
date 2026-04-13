@@ -106,10 +106,11 @@ export default function MonitoringPage() {
   };
 
   const rows = createMemo<MonitoringRow[]>(() =>
-    (latestSnapshot()?.summary ?? []).map((row, index) => ({
-      ...row,
-      id: index + 1,
-    })),
+    (latestSnapshot()?.summary ?? []).map((row, index) =>
+      Object.assign({}, row, {
+        id: index + 1,
+      }),
+    ),
   );
 
   const rowOpen = useSidePanelRowOpen<MonitoringRow>((row) =>
