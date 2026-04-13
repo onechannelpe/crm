@@ -77,7 +77,7 @@ export async function commitSearchUsage(
 ): Promise<Result<void, DomainError>> {
   try {
     const reservation = await repos.searchUsageReservations.findById(
-      command.reservationId,
+      command.reservationId.value,
     );
     if (!reservation) {
       return Err(
@@ -89,11 +89,11 @@ export async function commitSearchUsage(
       );
     }
     await repos.searchUsageCommits.insert({
-      reservation_id: command.reservationId,
+      reservation_id: command.reservationId.value,
       amount: command.amount,
     });
     await repos.searchUsageReservations.updateStatus(
-      command.reservationId,
+      command.reservationId.value,
       "committed",
     );
     return Ok(undefined);
@@ -116,7 +116,7 @@ export async function cancelSearchUsage(
 ): Promise<Result<void, DomainError>> {
   try {
     const reservation = await repos.searchUsageReservations.findById(
-      command.reservationId,
+      command.reservationId.value,
     );
     if (!reservation) {
       return Err(
@@ -128,7 +128,7 @@ export async function cancelSearchUsage(
       );
     }
     await repos.searchUsageReservations.updateStatus(
-      command.reservationId,
+      command.reservationId.value,
       "cancelled",
     );
     return Ok(undefined);
