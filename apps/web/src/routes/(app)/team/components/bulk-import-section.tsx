@@ -48,9 +48,15 @@ export function BulkImportSection() {
   function readFileText(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () =>
+      const handleLoad = () => {
         resolve(typeof reader.result === "string" ? reader.result : "");
-      reader.onerror = () => reject(new Error("Error al leer el archivo"));
+      };
+      const handleError = () => {
+        reject(new Error("Error al leer el archivo"));
+      };
+
+      reader.addEventListener("load", handleLoad, { once: true });
+      reader.addEventListener("error", handleError, { once: true });
       reader.readAsText(file, "utf-8");
     });
   }
