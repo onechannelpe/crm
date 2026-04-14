@@ -23,18 +23,18 @@ export function decodeHtmlEntities(value: string): string {
   return value
     .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)))
     .replace(/&nbsp;/g, " ")
-    .replace(/&aacute;/g, "a")
-    .replace(/&Aacute;/g, "A")
-    .replace(/&eacute;/g, "e")
-    .replace(/&Eacute;/g, "E")
-    .replace(/&iacute;/g, "i")
-    .replace(/&Iacute;/g, "I")
-    .replace(/&oacute;/g, "o")
-    .replace(/&Oacute;/g, "O")
-    .replace(/&uacute;/g, "u")
-    .replace(/&Uacute;/g, "U")
-    .replace(/&ntilde;/g, "n")
-    .replace(/&Ntilde;/g, "N");
+    .replace(/&aacute;/g, "á")
+    .replace(/&Aacute;/g, "Á")
+    .replace(/&eacute;/g, "é")
+    .replace(/&Eacute;/g, "É")
+    .replace(/&iacute;/g, "í")
+    .replace(/&Iacute;/g, "Í")
+    .replace(/&oacute;/g, "ó")
+    .replace(/&Oacute;/g, "Ó")
+    .replace(/&uacute;/g, "ú")
+    .replace(/&Uacute;/g, "Ú")
+    .replace(/&ntilde;/g, "ñ")
+    .replace(/&Ntilde;/g, "Ñ");
 }
 
 export function normalizeLabel(label: string): string {

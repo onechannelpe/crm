@@ -2,6 +2,23 @@ import { describe, expect, it } from "vitest";
 
 import { readEconomicActivities } from "~/server/client-search/enrichment/sunat/consulta-ruc/activities";
 import { readSnapshot } from "~/server/client-search/enrichment/sunat/consulta-ruc/index";
+import { decodeHtmlEntities } from "~/server/client-search/enrichment/sunat/text";
+
+describe("decodeHtmlEntities", () => {
+  it("decodes named accented entities without stripping accents", () => {
+    expect(
+      decodeHtmlEntities(
+        "&aacute;&eacute;&iacute;&oacute;&uacute;&ntilde; &Aacute;&Eacute;&Iacute;&Oacute;&Uacute;&Ntilde;",
+      ),
+    ).toBe("áéíóúñ ÁÉÍÓÚÑ");
+  });
+
+  it("keeps literal accented text unchanged", () => {
+    expect(decodeHtmlEntities("Condición y actividad económica")).toBe(
+      "Condición y actividad económica",
+    );
+  });
+});
 
 describe("readEconomicActivities", () => {
   it("parses one activity per line", () => {
@@ -122,5 +139,54 @@ describe("readSnapshot", () => {
         description: "OTRAS ACTIVIDADES",
       },
     ]);
+  });
+
+  it("preserves accents in decoded display fields and labels", () => {
+    const html = `
+      <div class="row">
+        <div>
+          <div class="list-group-item">
+            <div class="row">
+              <div class="col-sm-5">
+                <h4 class="list-group-item-heading">Condici&oacute;n del Contribuyente:</h4>
+              </div>
+              <div class="col-sm-7">
+                <p class="list-group-item-text">H&Aacute;BIDO</p>
+              </div>
+            </div>
+          </div>
+          <div class="list-group-item">
+            <div class="row">
+              <div class="col-sm-5">
+                <h4 class="list-group-item-heading">Actividad(es) Econ&oacute;mica(s):</h4>
+              </div>
+              <div class="col-sm-7">
+                <table class="table tblResultado">
+                  <tbody>
+                    <tr><td>Principal - 62010 - CONSULTOR&Iacute;A Y DESARROLLO</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const snapshot = readSnapshot(html);
+
+    expect(snapshot.contributorCondition).toBe("HÁBIDO");
+    expect(snapshot.economicActivities).toEqual([
+      {
+        role: "principal",
+        order: null,
+        label: "Principal",
+        code: "62010",
+        description: "CONSULTORÍA Y DESARROLLO",
+      },
+    ]);
+    expect(snapshot.fields["Actividad(es) Económica(s):"]).toBe(
+      "Principal - 62010 - CONSULTORÍA Y DESARROLLO",
+    );
   });
 });
