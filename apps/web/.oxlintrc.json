@@ -4,7 +4,7 @@
   "categories": {
     "correctness": "error",
     "suspicious": "error",
-    "perf": "error",
+    "perf": "error"
   },
   "rules": {
     "typescript/no-non-null-assertion": "error"
