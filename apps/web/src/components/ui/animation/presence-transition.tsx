@@ -8,6 +8,13 @@ import {
 
 const DURATION_MS = 300;
 
+function prefersReducedMotion(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
+
 interface PresenceTransitionProps {
   show: boolean;
   children: JSX.Element;
@@ -19,17 +26,13 @@ export function PresenceTransition(props: PresenceTransitionProps) {
   let el: HTMLDivElement | undefined;
   let anim: Animation | undefined;
 
-  const reducedMotion = () =>
-    typeof window !== "undefined" &&
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
   createEffect(() => {
     const show = props.show;
 
     if (show) {
       setMounted(true);
 
-      if (reducedMotion()) return;
+      if (prefersReducedMotion()) return;
 
       // After mount, el ref is set
       // rAF ensures paint before animating
@@ -46,7 +49,7 @@ export function PresenceTransition(props: PresenceTransitionProps) {
         };
       });
     } else {
-      if (reducedMotion() || !el) {
+      if (prefersReducedMotion() || !el) {
         setMounted(false);
         return;
       }

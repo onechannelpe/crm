@@ -28,6 +28,10 @@ vi.mock("../../src/lib/auth/passkey/registration-client", () => ({
   isPasskeyRegistrationSupported,
 }));
 
+function noopDispose(): void {
+  return undefined;
+}
+
 describe("usePasskeyEnrollment", () => {
   beforeEach(() => {
     beginPasskeyRegistration.mockResolvedValue({
@@ -49,7 +53,7 @@ describe("usePasskeyEnrollment", () => {
       .fn<() => Promise<void>>()
       .mockResolvedValue(undefined);
 
-    let dispose: () => void = () => undefined;
+    let dispose: () => void = noopDispose;
     const enrollment = createRoot((rootDispose) => {
       dispose = rootDispose;
       return usePasskeyEnrollment({
@@ -77,7 +81,7 @@ describe("usePasskeyEnrollment", () => {
     const refreshStatus = vi.fn<() => void>();
     finishPasskeyRegistration.mockRejectedValue(new Error("boom"));
 
-    let dispose: () => void = () => undefined;
+    let dispose: () => void = noopDispose;
     const enrollment = createRoot((rootDispose) => {
       dispose = rootDispose;
       return usePasskeyEnrollment({

@@ -14,8 +14,20 @@ import {
   setIdentityPassword,
 } from "../support/test-identities";
 
+const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
+
+function runSeries(
+  count: number,
+  task: (index: number) => Promise<void>,
+): Promise<void> {
+  let sequence = Promise.resolve();
+  for (let index = 0; index < count; index += 1) {
+    sequence = sequence.then(() => task(index));
+  }
+  return sequence;
+}
+
 describe("password login service", () => {
-  const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
   let ctx: TestDbContext;
   const ipAddress = "198.51.100.44";
   const userAgent = "vitest-agent";
@@ -34,17 +46,6 @@ describe("password login service", () => {
     vi.useRealTimers();
     await cleanupTestDb(ctx);
   });
-
-  function runSeries(
-    count: number,
-    task: (index: number) => Promise<void>,
-  ): Promise<void> {
-    let sequence = Promise.resolve();
-    for (let index = 0; index < count; index += 1) {
-      sequence = sequence.then(() => task(index));
-    }
-    return sequence;
-  }
 
   it("blocks further attempts after repeated failures", async () => {
     await runSeries(6, async () => {

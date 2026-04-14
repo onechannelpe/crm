@@ -1,6 +1,5 @@
 import { createSignal, onMount } from "solid-js";
 
-import { PAGE_HEADER_SIDE_PANEL_BUTTON_CLICK_OUTSIDE_ID } from "~/features/side-panel/constants/side-panel-click-outside-id";
 import { SIDE_PANEL_HOTKEY } from "~/features/side-panel/constants/side-panel-hotkey";
 import { useSidePanel } from "~/features/side-panel/state/use-side-panel";
 import { createRootSidePanelPage } from "~/features/side-panel/types/side-panel-page";
@@ -30,23 +29,11 @@ export function useAppHeaderSidePanel() {
 
   useHotkey(SIDE_PANEL_HOTKEY, toggleSidePanel);
 
-  const focusExtensionWindow = () => {
-    const chrome = Reflect.get(globalThis, "chrome");
-    if (typeof chrome !== "object" || chrome === null) return;
-    const runtime = Reflect.get(chrome, "runtime");
-    if (typeof runtime !== "object" || runtime === null) return;
-    const send: unknown = Reflect.get(runtime, "sendMessage");
-    if (typeof send === "function")
-      send.call(runtime, { action: "focusWindow" });
-  };
-
   return {
     modKey,
     isSidePanelOpen: isOpen,
     extensionState,
     extensionError,
-    focusExtensionWindow,
     toggleSidePanel,
-    commandButtonClickOutsideId: PAGE_HEADER_SIDE_PANEL_BUTTON_CLICK_OUTSIDE_ID,
   };
 }
