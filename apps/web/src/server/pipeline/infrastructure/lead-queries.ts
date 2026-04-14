@@ -119,7 +119,6 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
     async count(filters: LeadListFilters): Promise<number> {
       let query = db
         .selectFrom("pipeline_leads as lead")
-        .innerJoin("users as executive", "executive.id", "lead.executive_id")
         .select((eb) => eb.fn.countAll<number>().as("count"));
 
       if (filters.executiveId !== undefined) {
