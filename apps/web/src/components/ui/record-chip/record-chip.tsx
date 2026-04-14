@@ -27,6 +27,8 @@ interface RecordChipProps {
 export function RecordChip(props: RecordChipProps) {
   const hue = createMemo(() => nameToHue(props.name));
   const shape = () => props.shape ?? "square";
+  const avatarShapeClass = () =>
+    shape() === "round" ? styles.avatarRound : styles.avatarSquare;
   const [imgError, setImgError] = createSignal(false);
 
   const showImage = () => Boolean(props.avatarUrl) && !imgError();
@@ -37,7 +39,7 @@ export function RecordChip(props: RecordChipProps) {
         when={showImage()}
         fallback={
           <span
-            class={`${styles.avatar} ${shape() === "round" ? styles.avatarRound : styles.avatarSquare}`}
+            class={`${styles.avatar} ${avatarShapeClass()}`}
             style={{
               "background-color": `hsl(${hue()} 60% 88%)`,
               color: `hsl(${hue()} 50% 32%)`,
@@ -51,7 +53,7 @@ export function RecordChip(props: RecordChipProps) {
         <img
           src={props.avatarUrl ?? undefined}
           alt=""
-          class={`${styles.avatar} ${styles.avatarRound} ${styles.avatarImage}`}
+          class={`${styles.avatar} ${avatarShapeClass()} ${styles.avatarImage}`}
           onError={() => setImgError(true)}
           aria-hidden="true"
         />
