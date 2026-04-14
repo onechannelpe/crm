@@ -23,7 +23,7 @@ import {
 const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
 
 describe("auth login service benchmark", () => {
-  let ctx: TestDbContext | null = null;
+  let ctx!: TestDbContext;
   let fixtures: LoginFixture[] = [];
   const cursor = { value: 0 };
 
@@ -49,9 +49,7 @@ describe("auth login service benchmark", () => {
   });
 
   afterAll(async () => {
-    if (!ctx) return;
     await cleanupTestDb(ctx);
-    ctx = null;
   });
 
   bench(
@@ -70,7 +68,7 @@ describe("auth login service benchmark", () => {
           ipAddress: fixture.ipAddress,
           userAgent: "codspeed-bench",
         },
-        ctx!.repos,
+        ctx.repos,
         sendPrivilegedLoginAlert,
       );
 

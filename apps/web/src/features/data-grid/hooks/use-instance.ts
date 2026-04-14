@@ -139,10 +139,8 @@ export function createDataGridInteraction<T extends { id: number }>(options: {
       });
     }
 
-    if (
-      reorderActiveRowId() !== undefined &&
-      !currentRowIds.includes(reorderActiveRowId()!)
-    ) {
+    const reorderRowId = reorderActiveRowId();
+    if (reorderRowId !== undefined && !currentRowIds.includes(reorderRowId)) {
       setReorderActiveRowId(undefined);
       setReorderSourceIndex(undefined);
       setReorderTargetIndex(undefined);

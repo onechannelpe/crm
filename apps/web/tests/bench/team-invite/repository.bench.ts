@@ -11,7 +11,7 @@ import { takeFromPool } from "../_shared/pool";
 import { QUERY_POOL_SIZE, seedTeamInviteFixtures } from "./fixtures";
 
 describe("team invite repository benchmark", () => {
-  let ctx: TestDbContext | null = null;
+  let ctx!: TestDbContext;
   let pendingInviteTokenHashes: string[] = [];
   const queryCursor = { value: 0 };
 
@@ -22,9 +22,7 @@ describe("team invite repository benchmark", () => {
   });
 
   afterAll(async () => {
-    if (!ctx) return;
     await cleanupTestDb(ctx);
-    ctx = null;
   });
 
   bench(
@@ -36,7 +34,7 @@ describe("team invite repository benchmark", () => {
         "team-invite repository pool exhausted before iterations completed",
       );
 
-      const row = await ctx!.repos.userInvites.findPendingByTokenHash(
+      const row = await ctx.repos.userInvites.findPendingByTokenHash(
         tokenHash,
         BENCH_NOW,
       );

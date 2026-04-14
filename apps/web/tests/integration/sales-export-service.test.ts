@@ -84,13 +84,16 @@ describe("sales export service", () => {
     await queue.runOnce();
 
     const job = await runtime.ctx.repos.reportExportJobs.findJobById(jobId);
-    expect(job?.status).toBe("completed");
-    expect(job?.rows_count).toBe(1);
-    expect(job?.file_storage_key).toMatch(/\.xlsx$/);
-    expect(job?.file_sha256).toMatch(/^[a-f0-9]{64}$/);
+    if (job == null) throw new Error("expected job to exist");
+    expect(job.status).toBe("completed");
+    expect(job.rows_count).toBe(1);
+    expect(job.file_storage_key).toMatch(/\.xlsx$/);
+    expect(job.file_sha256).toMatch(/^[a-f0-9]{64}$/);
 
+    if (job.file_storage_key == null)
+      throw new Error("expected file_storage_key to be set");
     const file = await runtime.sales.salesExportBlobStore.get(
-      job!.file_storage_key!,
+      job.file_storage_key,
     );
     const signature = String.fromCharCode(file[0] ?? 0, file[1] ?? 0);
     expect(signature).toBe("PK");

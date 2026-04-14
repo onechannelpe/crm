@@ -92,9 +92,9 @@ describe("login flow service", () => {
     const factor = await ctx.repos.userTotpFactors.findByUserId(
       superuserIdentity.userId,
     );
-    expect(factor).toBeDefined();
+    if (factor == null) throw new Error("totp factor not found");
     const code = generateCurrentTotpCode(
-      await decryptTotpSecret(factor!.secret_encrypted),
+      await decryptTotpSecret(factor.secret_encrypted),
     );
     const totpResult = await submitTotpForLoginFlow(
       {

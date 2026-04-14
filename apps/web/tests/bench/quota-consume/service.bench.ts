@@ -15,7 +15,7 @@ import { takeFromPool } from "../_shared/pool";
 import { seedQuotaUsers, USER_POOL_SIZE } from "./fixtures";
 
 describe("search capacity consume service benchmark", () => {
-  let ctx: TestDbContext | null = null;
+  let ctx!: TestDbContext;
   let userIds: number[] = [];
   const cursor = { value: 0 };
 
@@ -34,9 +34,7 @@ describe("search capacity consume service benchmark", () => {
   });
 
   afterAll(async () => {
-    if (!ctx) return;
     await cleanupTestDb(ctx);
-    ctx = null;
   });
 
   bench(
@@ -55,7 +53,7 @@ describe("search capacity consume service benchmark", () => {
           remainingCapacity: 2,
           reason: "direct_search",
         },
-        ctx!.repos,
+        ctx.repos,
       );
       if (!reserveResult.ok) {
         throw new Error(
@@ -65,7 +63,7 @@ describe("search capacity consume service benchmark", () => {
 
       const commitResult = await commitSearchUsage(
         { reservationId: reserveResult.value, amount: 1 },
-        ctx!.repos,
+        ctx.repos,
       );
       if (!commitResult.ok) {
         throw new Error(

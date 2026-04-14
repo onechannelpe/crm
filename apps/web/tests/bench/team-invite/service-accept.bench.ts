@@ -18,8 +18,8 @@ import {
 } from "./fixtures";
 
 describe("team invite accept benchmark", () => {
-  let ctx: TestDbContext | null = null;
-  let inviteAccept: InviteService["acceptInvite"] | null = null;
+  let ctx!: TestDbContext;
+  let inviteAccept!: InviteService["acceptInvite"];
   let acceptFixtures: AcceptFixture[] = [];
   const acceptCursor = { value: 0 };
 
@@ -35,10 +35,7 @@ describe("team invite accept benchmark", () => {
   });
 
   afterAll(async () => {
-    if (!ctx) return;
     await cleanupTestDb(ctx);
-    ctx = null;
-    inviteAccept = null;
   });
 
   bench(
@@ -50,7 +47,7 @@ describe("team invite accept benchmark", () => {
         "team-invite-accept service pool exhausted before iterations completed",
       );
 
-      const result = await inviteAccept!({
+      const result = await inviteAccept({
         token: fixture.token,
         password: "StrongPass123",
       });

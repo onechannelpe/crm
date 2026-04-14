@@ -14,7 +14,7 @@ import {
 } from "./fixtures";
 
 describe("sales create command benchmark", () => {
-  let ctx: TestDbContext | null = null;
+  let ctx!: TestDbContext;
   let userIds: number[] = [];
   const cursor = { value: 0 };
 
@@ -24,9 +24,7 @@ describe("sales create command benchmark", () => {
   });
 
   afterAll(async () => {
-    if (!ctx) return;
     await cleanupTestDb(ctx);
-    ctx = null;
   });
 
   bench(
@@ -38,7 +36,7 @@ describe("sales create command benchmark", () => {
         "sales-create pool exhausted before iterations completed",
       );
 
-      const result = await ctx!.salesRecords.createDraft({
+      const result = await ctx.salesRecords.createDraft({
         ...SALES_CREATE_BASE_DRAFT_INPUT,
         executiveUserId: userId,
         branchId: 1,

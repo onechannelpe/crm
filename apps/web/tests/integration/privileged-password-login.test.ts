@@ -136,9 +136,9 @@ describe("privileged password login", () => {
     const stored = await ctx.repos.userTotpFactors.findByUserId(
       identity.userId,
     );
-    expect(stored).toBeDefined();
+    if (stored == null) throw new Error("totp factor not found");
     const code = generateCurrentTotpCode(
-      await decryptTotpSecret(stored!.secret_encrypted),
+      await decryptTotpSecret(stored.secret_encrypted),
     );
 
     const passwordResult = await submitPasswordLogin(
